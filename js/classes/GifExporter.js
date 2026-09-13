@@ -380,33 +380,42 @@ class GifExporter {
 		if (!textMasks?.fill) {
 			throw new Error(`Missing text mask for layer ${layer.id}`);
 		}
+		const width = layer.textData.width;
+		const height = layer.textData.height;
+		const compositeCanvas = document.createElement('canvas');
+		compositeCanvas.width = width;
+		compositeCanvas.height = height;
+		const compositeCtx = compositeCanvas.getContext('2d', { alpha: true });
+		const draw = (maskCanvas, source, sourceKey) => {
+			if (!maskCanvas || !source) return;
+			const fillCanvas = this._createFilledMaskCanvas(
+				maskCanvas,
+				source,
+				layer,
+				frameIndex,
+				sourceKey,
+				frameMap,
+				flattenedFrameMap
+			);
+			compositeCtx.drawImage(fillCanvas, 0, 0, width, height);
+		};
 
 		const shadow = layer.textData.shadow;
 		if (shadow && textMasks.shadow) {
-			this._renderFilledTextMaskToCanvas(
-				layer,
-				ctx,
-				frameIndex,
+			draw(
 				textMasks.shadow,
 				this._getTextEffectSource(layer, 'shadow'),
-				this._getTextFrameKey(layer, 'shadow'),
-				frameMap,
-				flattenedFrameMap
+				this._getTextFrameKey(layer, 'shadow')
 			);
 		}
 
 		const border = layer.textData.border;
 		const renderBorder = () => {
 			if (!(border?.widthPx > 0) || !textMasks.border) return;
-			this._renderFilledTextMaskToCanvas(
-				layer,
-				ctx,
-				frameIndex,
+			draw(
 				textMasks.border,
 				this._getTextEffectSource(layer, 'border'),
-				this._getTextFrameKey(layer, 'border'),
-				frameMap,
-				flattenedFrameMap
+				this._getTextFrameKey(layer, 'border')
 			);
 		};
 		const drawBorderAfterFill = this._getBorderDrawOrder(border) === 'front';
@@ -415,20 +424,20 @@ class GifExporter {
 			renderBorder();
 		}
 
-		this._renderFilledTextMaskToCanvas(
-			layer,
-			ctx,
-			frameIndex,
+		draw(
 			textMasks.fill,
 			this._getTextEffectSource(layer, 'fill'),
-			this._getTextFrameKey(layer, 'fill'),
-			frameMap,
-			flattenedFrameMap
+			this._getTextFrameKey(layer, 'fill')
 		);
 
 		if (drawBorderAfterFill) {
 			renderBorder();
 		}
+
+		// Preview fades/transforms the wrapper around the complete span stack.
+		// Export must likewise composite the object's paints before applying its
+		// whole-layer opacity or animation, or overlapping effects show through.
+		this._drawTransformedCanvas(ctx, compositeCanvas, getLayerTransform(layer), width, height);
 	}
 
 	_shapeUsesGlitter(layer) {
@@ -482,12 +491,16 @@ class GifExporter {
 		const t = getLayerTransform(layer);
 		const w = masks.renderWidth;
 		const h = masks.renderHeight;
+		const compositeCanvas = document.createElement('canvas');
+		compositeCanvas.width = w;
+		compositeCanvas.height = h;
+		const compositeCtx = compositeCanvas.getContext('2d', { alpha: true });
 		const draw = (maskCanvas, slot) => {
 			if (!maskCanvas) return;
 			const source = this._getShapeEffectSource(layer, slot);
 			if (!source) return;
 			const fillCanvas = this._createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), frameMap, flattenedFrameMap);
-			this._drawTransformedCanvas(ctx, fillCanvas, t, w, h);
+			compositeCtx.drawImage(fillCanvas, 0, 0, w, h);
 		};
 		const drawBorder = () => {
 			if (d.border?.widthPx > 0 && masks.border) draw(masks.border, 'border');
@@ -500,6 +513,7 @@ class GifExporter {
 		if (this._getBorderDrawOrder(d.border) === 'front') {
 			drawBorder();
 		}
+		this._drawTransformedCanvas(ctx, compositeCanvas, t, w, h);
 	}
 
 	_getTextFrameKey(layer, slot) {
@@ -912,30 +926,6 @@ class GifExporter {
 		}
 
 		return sources;
-	}
-
-	_renderFilledTextMaskToCanvas(layer, ctx, frameIndex, maskCanvas, source, sourceKey, frameMap, flattenedFrameMap) {
-		if (!maskCanvas || !source) {
-			return;
-		}
-
-		const fillCanvas = this._createFilledMaskCanvas(
-			maskCanvas,
-			source,
-			layer,
-			frameIndex,
-			sourceKey,
-			frameMap,
-			flattenedFrameMap
-		);
-
-		this._drawTransformedCanvas(
-			ctx,
-			fillCanvas,
-			getLayerTransform(layer),
-			layer.textData.width,
-			layer.textData.height
-		);
 	}
 
 	_createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, sourceKey, frameMap, flattenedFrameMap) {

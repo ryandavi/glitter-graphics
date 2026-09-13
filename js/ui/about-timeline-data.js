@@ -14,6 +14,7 @@ const ABOUT_TIMELINE_ENTITY_LABELS = {
  "jasc": "JASC",
  "paint-shop-pro": "Paint Shop Pro",
  "world-wide-web": "World Wide Web",
+ "worldwideweb-browser": "WorldWideWeb / Nexus",
  "tripod": "Tripod",
  "mosaic": "NCSA Mosaic",
  "netscape": "Netscape Navigator",
@@ -159,7 +160,7 @@ const ABOUT_TIMELINE_COUNTRY_LABELS = {
 
 const ABOUT_TIMELINE = [
  {
-  "date": "29 Oct 1969",
+  "date": "1969–90",
   "type": "start",
   "tags": [
    "infrastructure"
@@ -170,7 +171,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1969,
   "decade": "1960s",
-  "html": "<strong>ARPANET</strong> sends its first message, between UCLA and Stanford — the internet's technical starting point."
+  "html": "<strong>ARPANET</strong> sends its first message in 1969 and is formally decommissioned in 1990 after evolving into the internet."
  },
  {
   "date": "1 May 1985",
@@ -232,18 +233,18 @@ const ABOUT_TIMELINE = [
   "html": "<strong>JASC Paint Shop Pro</strong> is first released."
  },
  {
-  "date": "1990",
+  "date": "1990–94",
   "type": "start",
   "tags": [
    "browser"
   ],
   "entities": [
-   "world-wide-web"
+   "worldwideweb-browser"
   ],
   "country": "international",
   "year": 1990,
   "decade": "1990s",
-  "html": "Tim Berners-Lee writes <strong>WorldWideWeb</strong> (soon renamed Nexus), the first browser, on a NeXT computer at CERN; a text-only Line Mode Browser follows in 1991 so people on ordinary terminals can read the web too."
+  "html": "Tim Berners-Lee creates the first browser, <strong>WorldWideWeb</strong>, in 1990; it is later renamed Nexus and discontinued in 1994."
  },
  {
   "date": "1991",
@@ -288,7 +289,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Tripod</strong> is founded by Williams College classmates Bo Peabody and Brett Hershey with economics professor Dick Sabot, originally offering advice and tools for young adults rather than a web platform."
  },
  {
-  "date": "Apr 1993",
+  "date": "1993–97",
   "type": "start",
   "tags": [
    "browser"
@@ -299,7 +300,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1993,
   "decade": "1990s",
-  "html": "<strong>NCSA Mosaic</strong> 1.0 is released, the first browser to bring inline images and mainstream ease-of-use to the web; its lead developer, Marc Andreessen, later leaves to found Netscape."
+  "html": "<strong>NCSA Mosaic</strong> popularizes graphical web browsing in 1993; development and support end in January 1997."
  },
  {
   "date": "15 Dec 1994",
@@ -387,7 +388,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Newgrounds</strong> begins as Tom Fulp's personal website, eventually growing into a major hub for independent web animation, games, and Flash culture."
  },
  {
-  "date": "1995",
+  "date": "1995–2006",
   "type": "start",
   "tags": [
    "program"
@@ -399,7 +400,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1995,
   "decade": "1990s",
-  "html": "<strong>Microsoft FrontPage</strong> is first released, helping make WYSIWYG personal-webpage creation accessible to non-programmers."
+  "html": "<strong>Microsoft FrontPage</strong> makes visual website building accessible to non-programmers until Microsoft discontinues it in 2006."
  },
  {
   "date": "16 Aug 1995",
@@ -698,7 +699,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>AOL Hometown</strong> launches, giving AOL subscribers free personal webpages."
  },
  {
-  "date": "24 Nov 1998",
+  "date": "1998–2008",
   "type": "acquisition",
   "tags": [
    "browser"
@@ -710,7 +711,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1998,
   "decade": "1990s",
-  "html": "AOL announces its acquisition of <strong>Netscape</strong> for about $4.2 billion."
+  "html": "AOL acquires <strong>Netscape</strong> in 1998; development and support for its browsers end in 2008."
  },
  {
   "date": "4 Jan 1999",
@@ -943,7 +944,7 @@ const ABOUT_TIMELINE = [
   "html": "Communities.com folds in the dot-com collapse, ending official development of <strong>The Palace</strong>; the community keeps it running independently."
  },
  {
-  "date": "Mar 2002",
+  "date": "2002–15",
   "type": "start",
   "tags": [
    "social-network"
@@ -954,7 +955,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2002,
   "decade": "2000s",
-  "html": "<strong>Friendster</strong> launches, an early social network that helps bridge the gap between personal homepages and the MySpace/Facebook era."
+  "html": "<strong>Friendster</strong> is founded in 2002 and launches in 2003; it pivots to gaming in 2011 and shuts down in 2015."
  },
  {
   "date": "18 Feb 2003",
@@ -1199,7 +1200,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2005,
   "decade": "2000s",
-  "html": "<strong>Bebo</strong> launches, becoming especially popular in the UK and Ireland as part of the MySpace-era wave of customizable profile pages."
+  "html": "Michael and Xochi Birch launch <strong>Bebo</strong>, which becomes especially popular in the UK and Ireland."
  },
  {
   "date": "14 Feb 2005",
@@ -1277,7 +1278,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Google Reader</strong> launches, becoming a major hub for following blogs and websites via RSS."
  },
  {
-  "date": "2005",
+  "date": "2005–12",
   "type": "start",
   "tags": [
    "social-network",
@@ -1286,10 +1287,10 @@ const ABOUT_TIMELINE = [
   "entities": [
    "piczo"
   ],
-  "country": "ca",
+  "country": "us",
   "year": 2005,
   "decade": "2000s",
-  "html": "<strong>Piczo</strong> launches."
+  "html": "Jim Conning launches <strong>Piczo</strong>, a teen-focused website builder and social network; after two acquisitions, it shuts down in November 2012."
  },
  {
   "date": "2005",
@@ -1438,6 +1439,21 @@ const ABOUT_TIMELINE = [
   "year": 2007,
   "decade": "2000s",
   "html": "Intuit acquires <strong>Homestead</strong>."
+ },
+ {
+  "date": "2008–13",
+  "type": "acquisition",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo",
+   "aol"
+  ],
+  "country": "us",
+  "year": 2008,
+  "decade": "2000s",
+  "html": "AOL buys <strong>Bebo</strong> for $850 million in 2008; its founders buy it back for $1 million before its 2013 shutdown."
  },
  {
   "date": "2 Sep 2008",
@@ -1783,6 +1799,20 @@ const ABOUT_TIMELINE = [
   "year": 2013,
   "decade": "2010s",
   "html": "Yahoo! shuts down <strong>AltaVista</strong>."
+ },
+ {
+  "date": "2014–19",
+  "type": "milestone",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo"
+  ],
+  "country": "us",
+  "year": 2014,
+  "decade": "2010s",
+  "html": "<strong>Bebo</strong> cycles through messaging, streaming, and esports products before Twitch acquires it in 2019."
  },
  {
   "date": "2014",
@@ -2380,6 +2410,21 @@ const ABOUT_TIMELINE = [
   "html": "<strong>AOL</strong> shuts down its dial-up internet service after 34 years."
  },
  {
+  "date": "2026",
+  "type": "milestone",
+  "tags": [
+   "social-network",
+   "hosting"
+  ],
+  "entities": [
+   "piczo"
+  ],
+  "country": "us",
+  "year": 2026,
+  "decade": "2020s",
+  "html": "A new <strong>Piczo</strong> pre-launch site appears, teasing a possible revival."
+ },
+ {
   "date": "24 Apr 2026",
   "type": "closure",
   "tags": [
@@ -2409,5 +2454,19 @@ const ABOUT_TIMELINE = [
   "year": 2026,
   "decade": "2020s",
   "html": "Google deprecates <strong>Tenor</strong>'s public API."
+ },
+ {
+  "date": "2021–26",
+  "type": "closure",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo"
+  ],
+  "country": "us",
+  "year": 2026,
+  "decade": "2020s",
+  "html": "A private-beta <strong>Bebo</strong> revival closes in 2022. Bebo returns in 2026, then closes on 1 September."
  }
 ];

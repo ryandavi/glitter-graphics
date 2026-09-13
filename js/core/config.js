@@ -1409,7 +1409,7 @@ const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).map
 function createAnimationPanelSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
 	return {
-		kind: 'card', title: 'Animation', classes: 'panel-module animation-module',
+		kind: 'card', title: 'Animation', badge: 'beta', classes: 'panel-module animation-module',
 		titleSummary: { id: id('Summary'), text: 'Off' },
 		toggle: { id: id('Enabled'), label: '', title: 'Enable Animation' },
 		// No `content` wrapper: items sit directly on the card, exactly like every

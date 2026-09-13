@@ -798,9 +798,8 @@
 		gap: var(--spacing-sm);
 		min-height: 28px;
 
-		// The title text takes the slack so the module summary always lands at the
-		// right edge - the same in an effect module, a paint slot, or the sticker
-		// Asset card.
+		// The title label takes the slack so the module summary lands at the right
+		// edge. Schema-built labels group their text and optional badge together.
 		> span:first-of-type {
 			flex: 1 1 auto;
 			min-width: 0;

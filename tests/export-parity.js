@@ -174,6 +174,48 @@ async function verifyAnimationIntegration(page) {
 	assert(result.fallbackType === 'pulse', `Unknown animation type did not fall back: ${JSON.stringify(result)}`);
 }
 
+async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
+	const result = await page.evaluate(() => {
+		const editor = window.editor;
+		const layer = editor.shapeGlitterManager.createLayer({
+			shapeId: 'circle',
+			width: 48,
+			height: 48,
+			position: { x: 80, y: 80 }
+		});
+		layer.shapeData.fill.mode = 'solid';
+		layer.shapeData.fill.color = '#ff0000';
+		layer.shapeData.border = null;
+		layer.shapeData.shadow = editor.shapeGlitterManager.getDefaultShadow();
+		layer.shapeData.shadow.mode = 'solid';
+		layer.shapeData.shadow.color = '#0000ff';
+		layer.shapeData.shadow.offsetX = 4;
+		layer.shapeData.shadow.offsetY = 4;
+		layer.opacity = 100;
+		const masks = editor.shapeGlitterManager.buildMaskEntry(layer);
+		const canvas = document.createElement('canvas');
+		canvas.width = 160;
+		canvas.height = 160;
+		const context = canvas.getContext('2d');
+		const sample = {
+			tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
+			skewX: 0, skewY: 0, opacity: 0.5, originX: 0.5, originY: 0.5
+		};
+		editor.exporter._activeLayerAnimation = { transform: getLayerTransform(layer), sample };
+		try {
+			editor.exporter._renderShapeLayerToCanvas(layer, context, 0, new Map(), new Map(), new Map([[layer.id, masks]]));
+		} finally {
+			editor.exporter._activeLayerAnimation = null;
+		}
+		const shapeRect = masks.measurement.shapeRect;
+		const x = Math.round(layer.shapeData.transform.position.x + shapeRect.x + shapeRect.width / 2 - masks.renderWidth / 2);
+		const y = Math.round(layer.shapeData.transform.position.y + shapeRect.y + shapeRect.height / 2 - masks.renderHeight / 2);
+		return Array.from(context.getImageData(x, y, 1, 1).data);
+	});
+	assert(result[0] === 255 && result[1] === 0 && result[2] === 0, `Animated shape fill revealed its shadow: ${JSON.stringify(result)}`);
+	assert(Math.abs(result[3] - 128) <= 1, `Animated shape opacity was applied per paint instead of once: ${JSON.stringify(result)}`);
+}
+
 async function exportBytes(page, exportOverrides = {}) {
 	return page.evaluate(async ({ exportTimeoutMs, exportOverrides }) => {
 		const editor = window.editor;
@@ -483,6 +525,8 @@ async function main() {
 			await buildComposition(page);
 			await verifyAnimationIntegration(page);
 			console.log('PASS Animation preview wrappers and persistence are wired');
+			await verifyAnimatedShapeCompositesBeforeOpacity(page);
+			console.log('PASS Animated shape paints composite before whole-object opacity');
 			await verifyStickerColorAdjustControls(page);
 			console.log('PASS Sticker HSB controls update in place inside Asset > Advanced');
 			await verifyGradientStopLiveEditing(page);

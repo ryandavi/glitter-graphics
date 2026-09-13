@@ -50,6 +50,18 @@ function panelCap(value) {
 	return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+// Panel schemas can attach the same maturity marker to any titled feature.
+// A string is the common shorthand; the object form allows display text and
+// the styling variant to diverge without adding renderer branches.
+function buildFeatureBadge(config) {
+	const options = typeof config === 'string' ? { label: panelCap(config), variant: config } : config;
+	const badge = document.createElement('span');
+	badge.className = 'feature-badge';
+	if (options.variant) badge.classList.add(`feature-badge-${options.variant}`);
+	badge.textContent = options.label;
+	return badge;
+}
+
 const PANEL_ROLES = Object.freeze({
 	paintSlot: Object.freeze({
 		sourceImage: 'Image',
@@ -1035,7 +1047,10 @@ function buildPanelItem(item, schema) {
 			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
 			if (item.title) {
-				title.querySelector(':scope > span').textContent = item.title;
+				const titleText = title.querySelector(':scope > span');
+				titleText.classList.add('subsection-title-label', 'feature-name');
+				titleText.textContent = item.title;
+				if (item.badge) titleText.appendChild(buildFeatureBadge(item.badge));
 				card.classList.add('has-subsection-title');
 				// A manager-driven readout beside the title (the project name on the
 				// no-selection Project card). Uses the same `.property-module-summary`
@@ -1157,10 +1172,7 @@ function buildPanelItem(item, schema) {
 				name.textContent = action.label;
 				button.appendChild(name);
 				if (action.badge) {
-					const badge = document.createElement('span');
-					badge.className = `feature-badge feature-badge-${action.badge}`;
-					badge.textContent = panelCap(action.badge);
-					button.appendChild(badge);
+					button.appendChild(buildFeatureBadge(action.badge));
 				}
 				if (action.title) button.title = action.title;
 				if (action.disabled) button.disabled = true;
@@ -1803,14 +1815,9 @@ function renderPanelSection(schema) {
 	const titleText = fragment.querySelector('.section-header-title-text');
 	titleText.textContent = schema.section.title;
 	if (schema.section.titleTextId) titleText.id = schema.section.titleTextId;
-	// `badge: 'beta'` (or 'alpha') marks a feature still under test — a small pill
-	// after the section title. Same `.feature-badge` component used on the canvas
-	// Auto Glitter banner.
+	// Sections use the same schema badge primitive as cards and actions.
 	if (schema.section.badge) {
-		const badge = document.createElement('span');
-		badge.className = `feature-badge feature-badge-${schema.section.badge}`;
-		badge.textContent = panelCap(schema.section.badge);
-		titleText.after(badge);
+		titleText.after(buildFeatureBadge(schema.section.badge));
 	}
 	fragment.querySelector('.section-header-action').id = `${sectionPrefix}Toggle`;
 	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;

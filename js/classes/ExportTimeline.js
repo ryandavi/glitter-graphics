@@ -243,18 +243,25 @@ class CompositeTimelinePlanner {
 	_chooseLoopDuration(timelines, fallbackDuration, maximumDuration) {
 		const animated = timelines.filter((timeline) => Number.isFinite(timeline.cycleDuration));
 		if (!animated.length) return { duration: fallbackDuration, exact: true, seamError: 0, completedSources: 0 };
+		// maximumDuration bounds the search for a shared multiple across several
+		// sources, but a single slow source must still complete one full cycle
+		// even if that cycle alone exceeds the cap — otherwise it gets truncated
+		// mid-motion and smart reduction collapses the leftover sliver to a few
+		// frames that don't resemble the animation at all.
+		const longestCycle = Math.max(...animated.map((timeline) => timeline.cycleDuration));
+		const effectiveMaximum = Math.max(maximumDuration, longestCycle);
 		let common = animated[0].cycleDuration;
 		for (let index = 1; index < animated.length; index++) {
-			common = this._lcmBounded(common, animated[index].cycleDuration, maximumDuration);
+			common = this._lcmBounded(common, animated[index].cycleDuration, effectiveMaximum);
 			if (common == null) break;
 		}
-		if (common != null && common <= maximumDuration) {
+		if (common != null && common <= effectiveMaximum) {
 			return { duration: common, exact: true, seamError: 0, completedSources: animated.length };
 		}
 
-		const candidates = new Set([maximumDuration]);
+		const candidates = new Set([effectiveMaximum]);
 		animated.forEach((timeline) => {
-			for (let multiple = timeline.cycleDuration; multiple <= maximumDuration; multiple += timeline.cycleDuration) {
+			for (let multiple = timeline.cycleDuration; multiple <= effectiveMaximum; multiple += timeline.cycleDuration) {
 				candidates.add(multiple);
 			}
 		});
@@ -269,7 +276,7 @@ class CompositeTimelinePlanner {
 				error += distance / timeline.cycleDuration;
 				if (distance === 0) completedSources++;
 			});
-			const score = error / animated.length - (duration / maximumDuration) * 0.001;
+			const score = error / animated.length - (duration / effectiveMaximum) * 0.001;
 			if (!best || score < best.score) best = { duration, score, seamError: error / animated.length, completedSources };
 		});
 		return { duration: best.duration, exact: false, seamError: best.seamError, completedSources: best.completedSources };

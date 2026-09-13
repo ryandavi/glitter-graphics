@@ -860,7 +860,10 @@ body.mask-editing {
 		background-repeat: repeat;
 	}
 
-	>img { position: relative; z-index: 2; }
+	// Not a direct-child (>) selector: the animation preview wrapper
+	// (layer-anim-wrapper) nests the image one level deeper once a layer
+	// animation is active, and this stacking still needs to apply then.
+	img.sticker-image { position: relative; z-index: 2; }
 	.sticker-effect-shadow { z-index: 0; }
 }
 

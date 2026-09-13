@@ -46,17 +46,17 @@ function initAboutTimeline(modalBody) {
 		if (item.decade) decadeCounts[item.decade] = (decadeCounts[item.decade] || 0) + 1;
 	});
 
-	const topicOptions = [{ value: 'all', label: `All topics (${ABOUT_TIMELINE.length})` }].concat(
+	const topicOptions = [{ value: 'all', label: 'All topics' }].concat(
 		Object.keys(tagCounts)
 			.sort((a, b) => (ABOUT_TIMELINE_TAG_LABELS[a] || a).localeCompare(ABOUT_TIMELINE_TAG_LABELS[b] || b))
 			.map(tag => ({ value: tag, label: `${ABOUT_TIMELINE_TAG_LABELS[tag] || tag} (${tagCounts[tag]})` }))
 	);
-	const countryOptions = [{ value: 'all', label: `All countries (${ABOUT_TIMELINE.length})` }].concat(
+	const countryOptions = [{ value: 'all', label: 'All countries' }].concat(
 		Object.keys(countryCounts)
 			.sort((a, b) => (ABOUT_TIMELINE_COUNTRY_LABELS[a] || a).localeCompare(ABOUT_TIMELINE_COUNTRY_LABELS[b] || b))
 			.map(code => ({ value: code, label: `${ABOUT_TIMELINE_COUNTRY_LABELS[code] || code} (${countryCounts[code]})` }))
 	);
-	const decadeOptions = [{ value: 'all', label: `All decades (${ABOUT_TIMELINE.length})` }].concat(
+	const decadeOptions = [{ value: 'all', label: 'All decades' }].concat(
 		Object.keys(decadeCounts).sort().map(decade => ({ value: decade, label: `${decade} (${decadeCounts[decade]})` }))
 	);
 

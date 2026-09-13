@@ -1259,9 +1259,14 @@ textarea {
   line-height: 1.4;
 }
 
-/* Feature maturity badge - "Beta" / "Alpha" pill next to a feature's title or
-   banner while it is still under test. Rendered by panel-renderer (section
-   `badge:`) and inline in index.html (Auto Glitter canvas banner). */
+/* Feature maturity badge next to a title, action, or status banner. Schema
+   surfaces opt in with `badge:`; static content can use the same component. */
+.feature-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
 .feature-badge {
   display: inline-flex;
   align-items: center;
@@ -4081,7 +4086,7 @@ body.mask-editing .sticker-element {
   pointer-events: none;
   background-repeat: repeat;
 }
-.sticker-element > img {
+.sticker-element img.sticker-image {
   position: relative;
   z-index: 2;
 }
@@ -8985,8 +8990,10 @@ body.modal-open {
   color: var(--color-text-secondary);
 }
 
-.modal-overlay > .content-dialog.onboarding-dialog {
-  width: 700px;
+.modal-overlay > .content-dialog.onboarding-dialog, .modal-overlay > .content-dialog.document-dialog {
+  --modal-width: var(--modal-width-reading);
+  height: 88vh;
+  height: 88dvh;
   max-height: 88vh;
   max-height: 88dvh;
 }
@@ -10149,11 +10156,17 @@ body.modal-open {
   gap: var(--spacing-md);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  padding: var(--spacing-md);
 }
 #aboutModal .timeline-legend-item {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
+}
+#aboutModal .timeline-updated {
+  margin-inline-start: auto;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
 }
 #aboutModal .timeline-dot {
   width: 9px;
@@ -10169,9 +10182,12 @@ body.modal-open {
   background: var(--color-bg-card);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
   margin: var(--spacing-lg) 0;
   background: var(--color-bg-tertiary);
+  padding: 0;
+}
+#aboutModal .timeline-panel > * + * {
+  border-top: 1px solid var(--color-border);
 }
 #aboutModal .timeline-list {
   list-style: none;
@@ -10181,8 +10197,7 @@ body.modal-open {
 #aboutModal .timeline-list li {
   display: flex;
   gap: var(--spacing-md);
-  padding: var(--spacing-sm) 0;
-  padding-left: var(--spacing-sm);
+  padding: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
   border-left: 3px solid var(--tl-color, var(--color-border));
 }
@@ -10214,8 +10229,7 @@ body.modal-open {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--spacing-sm) var(--spacing-md);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-md);
 }
 #aboutModal .timeline-filter {
   display: flex;
@@ -10322,11 +10336,44 @@ body.modal-open {
 }
 #aboutModal .timeline-filter-clear {
   align-self: flex-end;
+  min-height: var(--control-height);
+}
+@media (max-width: 600px) {
+  #aboutModal .timeline-updated {
+    flex-basis: 100%;
+    margin-inline-start: 0;
+  }
+  #aboutModal .timeline-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+  #aboutModal .timeline-filters .timeline-filter {
+    width: 100%;
+  }
+  #aboutModal .timeline-filters .timeline-filter:first-child, #aboutModal .timeline-filters .timeline-filter.timeline-filter-search {
+    grid-column: 1/-1;
+  }
+  #aboutModal .timeline-filters .timeline-filter select {
+    width: 100%;
+  }
+  #aboutModal .timeline-filters .timeline-filter-clear {
+    grid-column: 1/-1;
+    width: 100%;
+  }
+}
+@media (pointer: coarse) {
+  #aboutModal .timeline-filter select,
+  #aboutModal .timeline-filter-search input,
+  #aboutModal .timeline-filter-clear {
+    min-height: var(--touch-target-min);
+  }
 }
 #aboutModal .timeline-summary {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0;
+  padding: var(--spacing-md);
 }
 #aboutModal {
   /* Highlight animation for references */
@@ -10357,16 +10404,6 @@ body.modal-open {
 }
 #aboutModal > .modal-content > .modal-body ol li:hover {
   background-color: rgba(0, 102, 204, 0.05);
-}
-
-/* Inline "Feature Name [Beta]" label — .feature-badge is sized for a card
-   header/banner and sits too tall/close for running list copy, so give this
-   pairing its own gap and vertical centering without touching the shared
-   component. */
-#welcomeModal .feature-name {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
 }
 
 /* Same "term with a hover definition" treatment as #aboutModal .context,
@@ -11053,6 +11090,7 @@ label.settings-row-label-main {
   }
   #welcomeModal > .onboarding-dialog {
     width: 100%;
+    height: 100%;
     max-height: 100%;
   }
   #welcomeModal > .modal-content > .modal-footer {

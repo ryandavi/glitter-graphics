@@ -87,9 +87,14 @@ textarea {
 	line-height: 1.4;
 }
 
-/* Feature maturity badge - "Beta" / "Alpha" pill next to a feature's title or
-   banner while it is still under test. Rendered by panel-renderer (section
-   `badge:`) and inline in index.html (Auto Glitter canvas banner). */
+/* Feature maturity badge next to a title, action, or status banner. Schema
+   surfaces opt in with `badge:`; static content can use the same component. */
+.feature-name {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+}
+
 .feature-badge {
 	display: inline-flex;
 	align-items: center;
