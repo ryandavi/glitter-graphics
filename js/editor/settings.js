@@ -599,7 +599,7 @@ initializeExportSettings() {
 				maxSamplingFps: this.exportSettings.maxSamplingFps,
 				maxFrames: this.exportSettings.maxFrames,
 				manualFrameSkip: this.exportSettings.exportFrameSkip,
-				targetFrameRate: this.exportSettings.targetFrameRate,
+				baseImage: this.exportSettings.baseImage,
 				visualErrorThreshold: this.exportSettings.visualErrorThreshold
 			});
 			if (requestId !== this.exportDurationRequestId) return;
@@ -620,11 +620,7 @@ initializeExportSettings() {
 				const visualError = Number.isFinite(this.exportSettings.visualErrorThreshold)
 					? this.exportSettings.visualErrorThreshold
 					: stop.visualError;
-				const rateChanges = estimate.timingResolution?.rateReconciliation?.layers
-					.filter((layer) => layer.snapped && Math.abs(layer.nativeFps - layer.exportFps) >= 0.01)
-					.map((layer) => `${layer.key} ${Math.round(layer.nativeFps)}→${Math.round(layer.exportFps)} fps`) || [];
-				const rateDetail = rateChanges.length ? ` · ${rateChanges.join(', ')}` : '';
-				fidelityOutput.textContent = `~${estimate.estimatedFrameCount} frames · loop ${loopDurationSeconds.toFixed(1)} s · frames differ by ≤ ${(visualError * 100).toFixed(1)}%${rateDetail}`;
+				fidelityOutput.textContent = `~${estimate.estimatedFrameCount} frames · loop ${loopDurationSeconds.toFixed(1)} s · frames differ by ≤ ${(visualError * 100).toFixed(1)}%`;
 			}
 		} catch (error) {
 			if (requestId !== this.exportDurationRequestId) return;

@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=b14dc958">
+	<link rel="stylesheet" href="css/style.css?v=6e19abd7">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1259,7 +1259,7 @@
 						</details>
 						<details class="export-optimization-details" id="exportAssetAnalysis" hidden>
 							<summary>
-								<span>Asset analysis</span>
+								<span>Animation analysis</span>
 								<span class="export-details-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
 							</summary>
 							<dl class="export-asset-analysis-list" id="exportAssetAnalysisList"></dl>
@@ -1726,19 +1726,6 @@
 							</div>
 						</div>
 						<div class="settings-row-label-desc">How often the animation is checked for visual changes. Higher settings preserve faster motion, but can take longer and create a larger file. Slower source animations keep their original timing.</div>
-					</div>
-
-					<div class="settings-row">
-						<div class="settings-row-header">
-							<label class="settings-row-label-main" for="exportTargetFrameRate">Target frame rate</label>
-							<div class="settings-row-control">
-								<select id="exportTargetFrameRate">
-									<option value="auto">Automatic</option>
-									<option value="30">30 fps</option><option value="25">25 fps</option><option value="24">24 fps</option><option value="20">20 fps</option><option value="15">15 fps</option><option value="12">12 fps</option><option value="10">10 fps</option>
-								</select>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">Overrides the shared timing grid. Sources outside the safe drift limit keep their native rate.</div>
 					</div>
 
 					<div class="settings-row">
@@ -2467,7 +2454,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=e2a7db11"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=33d1baab"></script>
+	<script src="js/core/config.js?v=591fb721"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2483,9 +2470,9 @@
 	<script src="js/core/layer-elements.js?v=32584e3b"></script>
 	<script src="js/ui/slider.js?v=9388d0d4"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
-	<script src="js/ui/doc-modal.js?v=21e4656c"></script>
+	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline-data.js?v=8a760ded"></script>
-	<script src="js/ui/about-timeline.js?v=abb787cf"></script>
+	<script src="js/ui/about-timeline.js?v=f3af6616"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
@@ -2505,17 +2492,17 @@
 	<script src="js/effects/slot-effects.js?v=271ac780"></script>
 	<script src="js/ui/panel-renderer.js?v=3f2af898"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=3db8a3c8"></script>
-	<script src="js/ui/settings-store.js?v=428ffaea"></script>
+	<script src="js/ui/settings-store.js?v=e63ed119"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/editor/settings.js?v=c05f7e18"></script>
+	<script src="js/editor/settings.js?v=e15e6a32"></script>
 	<script src="js/editor/panels.js?v=136c2850"></script>
 	<script src="js/editor/disclosures.js?v=ca165a02"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
 	<script src="js/editor/transform-interaction.js?v=bd174854"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=157ea7ae"></script>
+		<script src="js/editor/modals-wiring.js?v=60ae39eb"></script>
 	<script src="js/editor/layer-panel.js?v=3d5b5ebe"></script>
 	<script src="js/editor/canvas-gestures.js?v=3be86e55"></script>
 	<script src="js/editor/canvas-size.js?v=28d9bd28"></script>
@@ -2530,11 +2517,11 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=d1d19211"></script>
+	<script src="js/classes/ExportTimeline.js?v=7683335d"></script>
 	<script src="js/classes/GifPalette.js?v=aece541e"></script>
 	<script src="js/classes/AnimationTicker.js?v=3a17e873"></script>
 	<script src="js/classes/AnimationPanelController.js?v=68cfbc74"></script>
-	<script src="js/classes/GifExporter.js?v=84b89f32"></script>
+	<script src="js/classes/GifExporter.js?v=0e5c2172"></script>
 	<script src="js/classes/Mp4Exporter.js?v=39ed19d0"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>

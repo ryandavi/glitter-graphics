@@ -83,6 +83,47 @@ class GifExporter {
 			.filter((warning) => bytes > warning.limit);
 	}
 
+	_appendProceduralSources(sourceTimelines, layers, { includeBaseImage = true } = {}) {
+		const shimmerBase = layers.find((layer) => {
+			if (!includeBaseImage || layer.type !== LayerType.BASE_IMAGE || layer.visible === false) return false;
+			const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
+			return ['image', 'gradient'].includes(layer.background?.mode || 'image') && settings.paletteEnabled && settings.paletteMode === 'dither'
+				&& settings.dither.shimmer && GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
+		});
+		if (shimmerBase) {
+			const settings = GlitterPixelEffects.normalizeSettings(shimmerBase.background?.pixelEffects || shimmerBase.background?.posterize, CONFIG.tools.pixelEffects);
+			const animation = GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
+			const frameDuration = CONFIG.tools.pixelEffects.animation.frameDurationMs;
+			sourceTimelines.push(new ProceduralAnimationSource({
+				key: '__base_dither',
+				label: 'Base image shimmer',
+				ownerLayerId: shimmerBase.id,
+				naturalPeriod: animation.frames * frameDuration,
+				preferredSamplingRate: 1000 / frameDuration,
+				sampler: (timestamp, period) => {
+					const cycleTime = ((timestamp % period) + period) % period;
+					return { frameIndex: Math.min(animation.frames - 1, Math.floor(cycleTime / period * animation.frames)) };
+				}
+			}));
+		}
+		layers.forEach((layer) => {
+			if (layer.type === LayerType.BASE_IMAGE || !GlitterAnimation.isActive(layer.animation)) return;
+			const animation = GlitterAnimation.normalizeAnimation(layer.animation);
+			sourceTimelines.push(new ProceduralAnimationSource({
+				key: `__anim_${layer.id}`,
+				label: `${layer.name || 'Layer'} animation`,
+				ownerLayerId: layer.id,
+				effectSlot: 'animation',
+				naturalPeriod: animation.periodMs,
+				phase: animation.phase,
+				preferredSamplingRate: CONFIG.tools.animation.exportFps,
+				sampler: (timestamp, period) => ({
+					sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, { layerId: layer.id })
+				})
+			}));
+		});
+	}
+
 	_renderPreviewTemplate(host, templateId, { format, isVideo }) {
 		const template = document.getElementById(templateId);
 		if (!host || !template) return;
@@ -1354,38 +1395,9 @@ class GifExporter {
 		));
 		const preset = timelineConfig.fidelityStops[fidelityIndex];
 		const sourceTimelines = [...(flattenedFrameMap.sourceTimelines || [])];
-		const shimmerBase = visibleLayers.find((layer) => {
-			if (layer.type !== LayerType.BASE_IMAGE || layer.visible === false || !exportSettings.baseImage) return false;
-			const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
-			return ['image', 'gradient'].includes(layer.background?.mode || 'image') && settings.paletteEnabled && settings.paletteMode === 'dither'
-				&& settings.dither.shimmer && GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
-		});
-		if (shimmerBase) {
-			const settings = GlitterPixelEffects.normalizeSettings(shimmerBase.background?.pixelEffects || shimmerBase.background?.posterize, CONFIG.tools.pixelEffects);
-			const animation = GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
-			sourceTimelines.push(new AnimationSourceTimeline({
-				key: '__base_dither',
-				label: 'Base image shimmer',
-				ownerLayerId: shimmerBase.id,
-				frames: Array.from({ length: animation.frames }, (_value, index) => index),
-				fallbackDuration: CONFIG.tools.pixelEffects.animation.frameDurationMs
-			}));
-		}
-		visibleLayers.forEach((layer) => {
-			if (layer.type === LayerType.BASE_IMAGE || !GlitterAnimation.isActive(layer.animation)) return;
-			const animation = GlitterAnimation.normalizeAnimation(layer.animation);
-			const framesForPeriod = Math.max(2, Math.round(animation.periodMs / 1000 * CONFIG.tools.animation.exportFps));
-			sourceTimelines.push(new AnimationSourceTimeline({
-				key: `__anim_${layer.id}`,
-				label: `${layer.name || 'Layer'} animation`,
-				ownerLayerId: layer.id,
-				effectSlot: 'animation',
-				frames: Array.from({ length: framesForPeriod }, (_value, index) => index),
-				fallbackDuration: animation.periodMs / framesForPeriod
-			}));
-		});
+		this._appendProceduralSources(sourceTimelines, visibleLayers, { includeBaseImage: exportSettings.baseImage });
 		if (watermark?.isAnimated) {
-			sourceTimelines.push(new AnimationSourceTimeline({
+			sourceTimelines.push(new AuthoredAnimationSource({
 				key: '__watermark',
 				label: 'Animated watermark',
 				frames: watermark.frames,
@@ -1412,19 +1424,8 @@ class GifExporter {
 			manualFrameSkip: exportSettings.exportFrameSkip,
 			reverse: exportSettings.exportReverse,
 			smartReduction: exportSettings.smartFrameReduction,
-			normalizeCadenceGroups: exportSettings.smartFrameReduction
-				&& preset.rateReconciliation
-				&& exportSettings.targetFrameRate === 'auto',
 			preRenderSampling: fidelityIndex >= 2,
 			preRenderBudgetMultiplier: fidelityIndex >= 3 ? timelineConfig.preRenderBudgetMultiplier : 1,
-			rateReconciliation: {
-				...timelineConfig.rateReconciliation,
-				enabled: exportSettings.smartFrameReduction && timelineConfig.rateReconciliation.enabled
-					&& (preset.rateReconciliation || Number.isFinite(Number(exportSettings.targetFrameRate))),
-				gridSource: exportSettings.targetFrameRate === 'auto'
-					? timelineConfig.rateReconciliation.gridSource
-					: exportSettings.targetFrameRate
-			},
 			visualErrorThreshold: Number.isFinite(exportSettings.visualErrorThreshold)
 				? exportSettings.visualErrorThreshold
 				: preset.visualError,
@@ -1481,10 +1482,6 @@ class GifExporter {
 		plan.reductions = [];
 		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
 		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
-		if (plan.timingResolution.cadenceGroupsNormalized) {
-			const detail = 'Aligned compatible source frame-rate groups to avoid a long redundant loop.';
-			callbacks.onStatus(detail);
-		}
 		if (plan.reduction.budgetCompromiseRequired) {
 			const detail = 'The hard frame limit requires a quality compromise; no frames were silently truncated.';
 			callbacks.onStatus(detail);
@@ -1759,7 +1756,8 @@ class GifExporter {
 			animationUnits.forEach((unit) => {
 				renderCtx.save();
 				if (unit.animData) {
-					const sample = GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id });
+					const sample = frameMap?.get(`__anim_${layer.id}`)?.sample
+						|| GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id });
 					if (layer.type === LayerType.GLITTER_FILL) {
 						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);
 						GlitterAnimation.applyToContext(renderCtx, sample, unit.anchorBox.width, unit.anchorBox.height);
@@ -1849,7 +1847,7 @@ class GifExporter {
 
 			for (let i = 0; i < frameCount; i++) {
 				const frameInfo = reader.frameInfo(i);
-				frameDelays.push(AnimationSourceTimeline.normalizeDuration(frameInfo.delay * 10, 100));
+				frameDelays.push(AuthoredAnimationSource.normalizeDuration(frameInfo.delay * 10, 100));
 
 				// Get full canvas data
 				const fullPixels = new Uint8ClampedArray(width * height * 4);
@@ -2065,7 +2063,7 @@ class GifExporter {
 			}
 
 			flattenedFrameMap.set(mapKey, flattenedFrames);
-			sourceTimelines.push(new AnimationSourceTimeline({
+			sourceTimelines.push(new AuthoredAnimationSource({
 				key: mapKey,
 				label: name,
 				ownerLayerId: String(mapKey).split(':')[0],
@@ -2094,7 +2092,7 @@ class GifExporter {
 		maxSamplingFps = 'auto',
 		maxFrames = CONFIG.export.defaults.maxFrames,
 		manualFrameSkip = CONFIG.export.defaults.frameSkip,
-		targetFrameRate = CONFIG.export.defaults.targetFrameRate,
+		baseImage = true,
 		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold
 	}) {
 		await this._loadMissingFrames(layers, library, {
@@ -2107,7 +2105,7 @@ class GifExporter {
 		const timelines = [];
 		const collectTimeline = (key, animation, name) => {
 			if (!animation?.frames?.length) return;
-			timelines.push(new AnimationSourceTimeline({
+			timelines.push(new AuthoredAnimationSource({
 				key,
 				label: name,
 				frames: animation.frames,
@@ -2118,6 +2116,7 @@ class GifExporter {
 		layers.forEach((layer) => {
 			this._buildLayerExportPlan(layer).flattenFrames(library, collectTimeline);
 		});
+		this._appendProceduralSources(timelines, layers, { includeBaseImage: baseImage });
 		const timelineConfig = CONFIG.export.timeline;
 		const requestedFidelity = Number(exportFidelity);
 		const fidelityIndex = Math.max(0, Math.min(
@@ -2125,12 +2124,6 @@ class GifExporter {
 			Number.isFinite(requestedFidelity) ? requestedFidelity : CONFIG.export.defaults.exportFidelity
 		));
 		const fidelity = timelineConfig.fidelityStops[fidelityIndex];
-		const rateReconciliation = {
-			...timelineConfig.rateReconciliation,
-			enabled: smartReduction && timelineConfig.rateReconciliation.enabled
-				&& (fidelity.rateReconciliation || Number.isFinite(Number(targetFrameRate))),
-			gridSource: targetFrameRate === 'auto' ? timelineConfig.rateReconciliation.gridSource : targetFrameRate
-		};
 		const plan = await new CompositeTimelinePlanner(timelineConfig).plan({
 			timelines,
 			fallbackDuration,
@@ -2139,20 +2132,27 @@ class GifExporter {
 			manualFrameSkip,
 			reverse: false,
 			smartReduction,
-			normalizeCadenceGroups: smartReduction
-				&& fidelity.rateReconciliation
-				&& targetFrameRate === 'auto',
 			preRenderSampling: fidelityIndex >= 2,
 			preRenderBudgetMultiplier: fidelityIndex >= 3 ? timelineConfig.preRenderBudgetMultiplier : 1,
-			rateReconciliation,
 			visualErrorThreshold: Number.isFinite(visualErrorThreshold) ? visualErrorThreshold : fidelity.visualError,
 			preferredFrameBudget: maxFrames,
 			hardFrameLimit: timelineConfig.hardFrameLimit,
 			renderFrame: (_timestamp, selection) => {
 				const data = new Uint8ClampedArray(Math.max(1, timelines.length) * 4);
 				timelines.forEach((timeline, index) => {
-					const frameIndex = selection.get(timeline.key)?.frameIndex || 0;
-					data[index * 4] = Math.round(frameIndex / Math.max(1, timeline.frames.length - 1) * 255);
+					const selected = selection.get(timeline.key);
+					if (timeline.kind === 'authored') {
+						data[index * 4] = Math.round((selected?.frameIndex || 0) / Math.max(1, timeline.frames.length - 1) * 255);
+					} else {
+						let hash = 2166136261;
+						for (const character of JSON.stringify(selected)) {
+							hash ^= character.charCodeAt(0);
+							hash = Math.imul(hash, 16777619);
+						}
+						data[index * 4] = hash & 0xff;
+						data[index * 4 + 1] = (hash >>> 8) & 0xff;
+						data[index * 4 + 2] = (hash >>> 16) & 0xff;
+					}
 					data[index * 4 + 3] = 255;
 				});
 				return new ImageData(data, Math.max(1, timelines.length), 1);
@@ -2565,10 +2565,10 @@ class GifExporter {
 				? reduction.selectionDuplicatesMerged + reduction.preRenderFramesSkipped
 				: 0;
 			const hasReduction = Boolean(reduction?.smartReductionEnabled && (pixelRemovedFrames > 0 || preRenderRemovedFrames > 0));
+			const proceduralFits = timelinePlan?.timingResolution?.proceduralPeriodFits || [];
 			const hasPlanWarning = Boolean(timelinePlan && (
-				timelinePlan.timingResolution?.cadenceGroupsNormalized
-					|| timelinePlan.timingResolution?.rateReconciliation
-					|| !timelinePlan.loopSeam.exact
+				!timelinePlan.loopSeam.exact
+					|| proceduralFits.some((fit) => Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01)
 					|| !reduction.preferredBudgetMet
 					|| reduction.budgetCompromiseRequired
 					|| !reduction.durationPreserved
@@ -2584,7 +2584,9 @@ class GifExporter {
 			assetAnalysisList.replaceChildren();
 			const groupedAssets = new Map();
 			sourceAnalysis.forEach((asset) => {
-				const groupKey = [asset.label, asset.frameCount, asset.nativeFps.toFixed(3), asset.resolvedFps.toFixed(3), asset.resolvedCycleDuration].join(':');
+				const groupKey = asset.kind === 'procedural'
+					? [asset.kind, asset.label, asset.requestedPeriod, asset.resolvedPeriod, asset.cycleCount].join(':')
+					: [asset.kind, asset.label, asset.frameCount, asset.nativeFps.toFixed(3), asset.nativeCycleDuration].join(':');
 				const group = groupedAssets.get(groupKey);
 				if (group) group.uses++;
 				else groupedAssets.set(groupKey, { ...asset, uses: 1 });
@@ -2593,15 +2595,32 @@ class GifExporter {
 				const row = document.createElement('div');
 				const name = document.createElement('dt');
 				const value = document.createElement('dd');
-				const nativeRate = `${asset.nativeFps.toFixed(1)} fps`;
-				const resolvedRate = `${asset.resolvedFps.toFixed(1)} fps`;
-				const rate = asset.variableTiming ? `${nativeRate} average` : nativeRate;
-				const timing = asset.timingChanged ? `${rate} → ${resolvedRate}` : rate;
-				name.textContent = asset.uses > 1 ? `${asset.label} ×${asset.uses}` : asset.label;
-				value.textContent = `${asset.frameCount} frames · ${timing} · ${(asset.resolvedCycleDuration / 1000).toFixed(2)} s loop`;
+				name.textContent = `${asset.uses > 1 ? `${asset.label} ×${asset.uses}` : asset.label} (${asset.kind})`;
+				if (asset.kind === 'procedural') {
+					const requestedPeriod = `${Math.round(asset.requestedPeriod)} ms`;
+					const resolvedPeriod = `${Math.round(asset.resolvedPeriod)} ms`;
+					const period = asset.periodChanged ? `${requestedPeriod} → ${resolvedPeriod}` : resolvedPeriod;
+					const cycles = Number.isInteger(asset.cycleCount) ? asset.cycleCount : Number(asset.cycleCount.toFixed(2));
+					value.textContent = `${period} period · ${cycles} ${cycles === 1 ? 'cycle' : 'cycles'}`;
+				} else {
+					const nativeRate = `${asset.nativeFps.toFixed(1)} fps${asset.variableTiming ? ' average' : ''}`;
+					value.textContent = `${asset.frameCount} frames · ${nativeRate} · ${(asset.nativeCycleDuration / 1000).toFixed(2)} s loop`;
+				}
 				row.append(name, value);
 				assetAnalysisList.append(row);
 			});
+			if (timelinePlan) {
+				const row = document.createElement('div');
+				const name = document.createElement('dt');
+				const value = document.createElement('dd');
+				const outputFps = timelinePlan.totalDuration > 0
+					? timelinePlan.reduction.outputFrameCount * 1000 / timelinePlan.totalDuration
+					: 0;
+				name.textContent = 'Composite export';
+				value.textContent = `${(timelinePlan.totalDuration / 1000).toFixed(2)} s · ${timelinePlan.reduction.outputFrameCount} rendered frames · ${outputFps.toFixed(1)} fps`;
+				row.append(name, value);
+				assetAnalysisList.append(row);
+			}
 			if (!reductionSummary.hidden) {
 				const title = document.getElementById('exportReductionTitle');
 				const summary = document.getElementById('exportReductionText');
@@ -2629,25 +2648,15 @@ class GifExporter {
 					document.getElementById('exportDetailErrorRow').hidden = reduction.nearDuplicatesMerged === 0;
 				} else {
 					summary.textContent = hasAssetAnalysis
-						? `${sourceAnalysis.length} animated ${sourceAnalysis.length === 1 ? 'asset' : 'assets'} contributed to this export.`
+						? `${sourceAnalysis.length} animated ${sourceAnalysis.length === 1 ? 'source' : 'sources'} contributed to this export.`
 						: '';
 				}
 
 				const planMessages = [];
-				if (timelinePlan.timingResolution?.cadenceGroupsNormalized) {
-					const resolutions = timelinePlan.timingResolution.groups.map((group) => {
-						const sourceRates = group.sourceCadences.map((duration) => `${duration} ms`).join(', ');
-						return `${sourceRates} to ${group.cadence} ms`;
-					});
-					planMessages.push(`Aligned compatible source timing (${resolutions.join('; ')}) so each group shares a shorter clean loop.`);
-				}
-				const reconciliation = timelinePlan.timingResolution?.rateReconciliation;
-				if (reconciliation) {
-					const changes = reconciliation.layers
-						.filter((layer) => layer.snapped && Math.abs(layer.nativeFps - layer.exportFps) >= 0.01)
-						.map((layer) => `${layer.key}: ${layer.nativeFps.toFixed(1)} → ${layer.exportFps.toFixed(1)} fps (${layer.driftPercent.toFixed(1)}% drift)`);
-					if (changes.length) planMessages.push(`Matched source timing to a shared ${(1000 / reconciliation.gridIntervalMs).toFixed(1)} fps grid: ${changes.join('; ')}.`);
-				}
+				const periodChanges = proceduralFits
+					.filter((fit) => fit.fitted && Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01)
+					.map((fit) => `${fit.label}: ${Math.round(fit.requestedPeriod)} → ${Math.round(fit.resolvedPeriod)} ms`);
+				if (periodChanges.length) planMessages.push(`Fit generated animation periods to the composite loop: ${periodChanges.join('; ')}.`);
 				if (!timelinePlan.loopSeam.exact) {
 					planMessages.push('The animations repeat at different times, so the beginning and ending may not match perfectly.');
 				}

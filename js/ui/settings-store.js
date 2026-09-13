@@ -30,7 +30,6 @@ const EXPORT_SETTINGS_SCHEMA = Object.freeze({
 	// 'auto' defers to the Export fidelity stop's own sampling rate. Without it the
 	// stored number always won, which made the goal's fidelity setting inert.
 	maxSamplingFps: { storageKey: 'exportMaxSamplingFps', element: 'exportMaxSamplingFps', group: 'optimization', default: () => CONFIG.export.defaults.maxSamplingFps, parse: (value) => value === 'auto' ? 'auto' : parseInt(value), validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 1, CONFIG.export.timeline.maxSamplingFps, CONFIG.export.defaults.maxSamplingFps, true) },
-	targetFrameRate: { storageKey: 'exportTargetFrameRate', element: 'exportTargetFrameRate', group: 'optimization', default: () => CONFIG.export.defaults.targetFrameRate, parse: (value) => value === 'auto' ? 'auto' : parseFloat(value), validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 1, 60, CONFIG.export.defaults.targetFrameRate) },
 	visualErrorThreshold: { storageKey: 'exportVisualErrorThreshold', element: 'exportVisualErrorThreshold', group: 'optimization', default: () => CONFIG.export.defaults.visualErrorThreshold, parse: (value) => value === '' ? 'auto' : parseFloat(value) / 100, format: (value) => value === 'auto' ? '' : value * 100, validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 0, 1, CONFIG.export.defaults.visualErrorThreshold) }
 });
 

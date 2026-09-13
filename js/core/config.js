@@ -148,11 +148,11 @@ function deepFreeze(value) {
 }
 
 const EXPORT_FIDELITY_STOPS = [
-	{ label: 'Exactly as previewed', visualError: 0, maxSamplingFps: 30, rateReconciliation: false },
-	{ label: 'High detail', visualError: 0.004, maxSamplingFps: 30, rateReconciliation: false },
-	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24, rateReconciliation: true },
-	{ label: 'Small file', visualError: 0.02, maxSamplingFps: 15, rateReconciliation: true },
-	{ label: 'Smallest file', visualError: 0.04, maxSamplingFps: 12, rateReconciliation: true }
+	{ label: 'Exactly as previewed', visualError: 0, maxSamplingFps: 30 },
+	{ label: 'High detail', visualError: 0.004, maxSamplingFps: 30 },
+	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24 },
+	{ label: 'Small file', visualError: 0.02, maxSamplingFps: 15 },
+	{ label: 'Smallest file', visualError: 0.04, maxSamplingFps: 12 }
 ];
 
 const CONFIG = deepFreeze({
@@ -874,8 +874,7 @@ const CONFIG = deepFreeze({
 		},
 		timeline: {
 			maxSamplingFps: 30,
-			nearCadenceTolerance: 0.12,
-			cadenceClusterSpanTolerance: 0.25,
+			proceduralPeriodTolerance: 0.10,
 			preRenderBudgetMultiplier: 1.5,
 			preferredFrameBudget: 60,
 			// Frame-count floor derived from the resolved loop length, so a long
@@ -887,13 +886,6 @@ const CONFIG = deepFreeze({
 			balancedVisualError: 0.008,
 			smallFileVisualError: 0.02,
 			maxLoopDurationMs: 12000,
-			rateReconciliation: {
-				enabled: true,
-				gridSource: 'auto',
-				maxCycleDriftRatio: 0.15,
-				niceIntervalsMs: [33.333, 40, 41.667, 50, 66.667, 80, 83.333, 100],
-				weights: { frames: 1, maxDrift: 400, meanDrift: 150, unsnapped: 250 }
-			},
 			fidelityStops: EXPORT_FIDELITY_STOPS,
 			defaultPreset: 'balanced',
 			presets: {
@@ -927,7 +919,6 @@ const CONFIG = deepFreeze({
 			exportFidelity: 2,
 			// 'auto' follows the chosen Export fidelity stop.
 			maxSamplingFps: 'auto',
-			targetFrameRate: 'auto',
 			visualErrorThreshold: 'auto',
 			watermarkEnabled: false,
 			watermark: 'images/watermark/2.png'

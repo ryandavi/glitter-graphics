@@ -1,13 +1,14 @@
 // Export timeline planning primitives. Loaded before GifExporter and Mp4Exporter.
-class AnimationSourceTimeline {
+class AuthoredAnimationSource {
 	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, frames = [], frameDurations = [], fallbackDuration = 100 }) {
+		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
 		this.ownerLayerId = ownerLayerId;
 		this.effectSlot = effectSlot;
 		this.frames = frames;
 		this.isStatic = frames.length <= 1;
-		this.frameDurations = frames.map((_, index) => AnimationSourceTimeline.normalizeDuration(
+		this.frameDurations = frames.map((_, index) => AuthoredAnimationSource.normalizeDuration(
 			frameDurations[index],
 			fallbackDuration
 		));
@@ -36,6 +37,10 @@ class AnimationSourceTimeline {
 		return Math.min(low, this.frames.length - 1);
 	}
 
+	sampleAt(timestamp) {
+		return { frameIndex: this.frameIndexAt(timestamp) };
+	}
+
 	boundariesUntil(duration) {
 		if (this.isStatic || !Number.isFinite(this.cycleDuration)) return [];
 		const boundaries = [];
@@ -46,6 +51,39 @@ class AnimationSourceTimeline {
 			}
 		}
 		return boundaries;
+	}
+}
+
+class ProceduralAnimationSource {
+	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, preferredSamplingRate, sampler, resolvedPeriod = null }) {
+		this.kind = 'procedural';
+		this.key = key;
+		this.label = label;
+		this.ownerLayerId = ownerLayerId;
+		this.effectSlot = effectSlot;
+		this.naturalPeriod = Math.max(1, Number(naturalPeriod));
+		this.resolvedPeriod = Number.isFinite(resolvedPeriod) ? Math.max(1, Number(resolvedPeriod)) : this.naturalPeriod;
+		this.phase = Number(phase) || 0;
+		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
+		this.sampler = sampler;
+	}
+
+	withPeriod(resolvedPeriod) {
+		return new ProceduralAnimationSource({
+			key: this.key,
+			label: this.label,
+			ownerLayerId: this.ownerLayerId,
+			effectSlot: this.effectSlot,
+			naturalPeriod: this.naturalPeriod,
+			phase: this.phase,
+			preferredSamplingRate: this.preferredSamplingRate,
+			sampler: this.sampler,
+			resolvedPeriod
+		});
+	}
+
+	sampleAt(timestamp) {
+		return this.sampler(timestamp, this.resolvedPeriod, this.phase);
 	}
 }
 
@@ -185,61 +223,6 @@ class CompositeTimelinePlanner {
 		return value > limit ? null : value;
 	}
 
-	_resolveCadenceClusters(timelines, enabled) {
-		const unchanged = { timelines, normalized: false, groups: [] };
-		if (!enabled
-			|| !Number.isFinite(this.config.nearCadenceTolerance)
-			|| !Number.isFinite(this.config.cadenceClusterSpanTolerance)) return unchanged;
-		const steady = timelines.map((timeline, index) => {
-			if (!Number.isFinite(timeline.cycleDuration)) return null;
-			const cadence = timeline.frameDurations[0];
-			return timeline.frameDurations.every((duration) => duration === cadence)
-				? { timeline, index, cadence }
-				: null;
-		}).filter(Boolean).sort((left, right) => left.cadence - right.cadence);
-		if (steady.length < 2) return unchanged;
-
-		const clusters = [];
-		steady.forEach((entry) => {
-			const cluster = clusters.at(-1);
-			const adjacent = cluster ? cluster.at(-1).cadence : null;
-			const clusterMinimum = cluster ? cluster[0].cadence : null;
-			const joinsAdjacent = cluster && (entry.cadence - adjacent) / adjacent <= this.config.nearCadenceTolerance;
-			const fitsCluster = cluster && (entry.cadence - clusterMinimum) / clusterMinimum <= this.config.cadenceClusterSpanTolerance;
-			if (joinsAdjacent && fitsCluster) cluster.push(entry);
-			else clusters.push([entry]);
-		});
-
-		const replacements = new Map();
-		const groups = [];
-		clusters.forEach((cluster) => {
-			const sourceCadences = [...new Set(cluster.map((entry) => entry.cadence))];
-			if (sourceCadences.length < 2) return;
-			// The weighted median minimizes how many source timelines are retimed.
-			// The upper entry on an even split selects the slower cadence.
-			const cadence = cluster[Math.floor(cluster.length / 2)].cadence;
-			cluster.forEach(({ timeline, index }) => {
-				if (timeline.frameDurations[0] === cadence) return;
-				replacements.set(index, new AnimationSourceTimeline({
-					key: timeline.key,
-					label: timeline.label,
-					ownerLayerId: timeline.ownerLayerId,
-					effectSlot: timeline.effectSlot,
-					frames: timeline.frames,
-					frameDurations: timeline.frames.map(() => cadence),
-					fallbackDuration: cadence
-				}));
-			});
-			groups.push({ sourceCadences, cadence });
-		});
-		if (!groups.length) return unchanged;
-		return {
-			timelines: timelines.map((timeline, index) => replacements.get(index) || timeline),
-			normalized: true,
-			groups
-		};
-	}
-
 	_chooseLoopDuration(timelines, fallbackDuration, maximumDuration) {
 		const animated = timelines.filter((timeline) => Number.isFinite(timeline.cycleDuration));
 		if (!animated.length) return { duration: fallbackDuration, exact: true, seamError: 0, completedSources: 0 };
@@ -282,85 +265,76 @@ class CompositeTimelinePlanner {
 		return { duration: best.duration, exact: false, seamError: best.seamError, completedSources: best.completedSources };
 	}
 
-	_reconcileRates(timelines, config = {}) {
-		const animated = timelines.filter((timeline) => Number.isFinite(timeline.cycleDuration));
-		const unchanged = { timelines, reconciled: false, gridIntervalMs: null, layers: [] };
-		if (!config.enabled || animated.length < 2) return unchanged;
-		const sourceData = animated.map((timeline) => ({
-			timeline,
-			interval: timeline.cycleDuration / timeline.frames.length
-		}));
-		const minimumInterval = Math.min(...sourceData.map((source) => source.interval));
-		const forcedFps = Number(config.gridSource);
-		const candidates = Number.isFinite(forcedFps) && forcedFps > 0
-			? [1000 / forcedFps]
-			: [
-				minimumInterval,
-				minimumInterval / 2,
-				minimumInterval / 3,
-				...sourceData.map((source) => source.interval),
-				...(config.niceIntervalsMs || [])
-			];
-		const weights = config.weights || {};
-		let best = null;
-		[...new Set(candidates.filter((value) => Number.isFinite(value) && value > 0).map((value) => Number(value.toFixed(6))))]
-			.forEach((gridIntervalMs) => {
-				const layers = sourceData.map(({ timeline, interval }) => {
-					const multiple = Math.max(1, Math.round(interval / gridIntervalMs));
-					const adjustedInterval = multiple * gridIntervalMs;
-					const drift = Math.abs(adjustedInterval - interval) / interval;
-					return {
-						timeline,
-						multiple,
-						adjustedInterval,
-						drift,
-						snapped: drift <= config.maxCycleDriftRatio
-					};
-				});
-				const snapped = layers.filter((layer) => layer.snapped);
-				let gridLoopFrames = 1;
-				snapped.forEach((layer) => {
-					gridLoopFrames = this._lcmBounded(gridLoopFrames, layer.multiple * layer.timeline.frames.length, Number.MAX_SAFE_INTEGER) || Number.MAX_SAFE_INTEGER;
-				});
-				const drifts = layers.map((layer) => layer.drift);
-				const maximumDrift = Math.max(...drifts);
-				const meanDrift = drifts.reduce((sum, drift) => sum + drift, 0) / drifts.length;
-				const unsnappedCount = layers.length - snapped.length;
-				const score = (weights.frames || 1) * gridLoopFrames
-					+ (weights.maxDrift || 0) * maximumDrift
-					+ (weights.meanDrift || 0) * meanDrift
-					+ (weights.unsnapped || 0) * unsnappedCount;
-				if (!best || score < best.score) best = { gridIntervalMs, layers, score };
-			});
-		if (!best || !best.layers.some((layer) => layer.snapped)) return unchanged;
-
-		const replacements = new Map();
-		best.layers.forEach((layer) => {
-			if (!layer.snapped) return;
-			const frameDurations = layer.timeline.frameDurations.map((duration) =>
-				Math.max(best.gridIntervalMs, Math.round(duration / best.gridIntervalMs) * best.gridIntervalMs)
-			);
-			replacements.set(layer.timeline, new AnimationSourceTimeline({
-				key: layer.timeline.key,
-				label: layer.timeline.label,
-				ownerLayerId: layer.timeline.ownerLayerId,
-				effectSlot: layer.timeline.effectSlot,
-				frames: layer.timeline.frames,
-				frameDurations,
-				fallbackDuration: best.gridIntervalMs
-			}));
+	_scoreProceduralCandidate(duration, procedural) {
+		const fits = procedural.map((source) => {
+			const cycles = Math.max(1, Math.round(duration / source.naturalPeriod));
+			const fittedPeriod = duration / cycles;
+			const drift = Math.abs(fittedPeriod - source.naturalPeriod) / source.naturalPeriod;
+			return { source, cycles, fittedPeriod, drift };
 		});
 		return {
+			duration,
+			fits,
+			maximumDrift: fits.length ? Math.max(...fits.map((fit) => fit.drift)) : 0,
+			totalDrift: fits.reduce((sum, fit) => sum + fit.drift, 0)
+		};
+	}
+
+	_isBetterProceduralCandidate(candidate, best) {
+		if (!best) return true;
+		if (candidate.maximumDrift !== best.maximumDrift) return candidate.maximumDrift < best.maximumDrift;
+		if (candidate.totalDrift !== best.totalDrift) return candidate.totalDrift < best.totalDrift;
+		return candidate.duration < best.duration;
+	}
+
+	_fitProceduralSources(timelines, fallbackDuration, maximumDuration) {
+		const authored = timelines.filter((timeline) => timeline.kind === 'authored' && Number.isFinite(timeline.cycleDuration));
+		const procedural = timelines.filter((timeline) => timeline.kind === 'procedural');
+		const authoredLoop = this._chooseLoopDuration(authored, fallbackDuration, maximumDuration);
+		if (!procedural.length) return { timelines, loop: authoredLoop, fits: [] };
+
+		const candidates = new Set();
+		if (authored.length) {
+			const candidateMaximum = Math.max(maximumDuration, authoredLoop.duration);
+			for (let duration = authoredLoop.duration; duration <= candidateMaximum; duration += authoredLoop.duration) candidates.add(duration);
+		} else {
+			procedural.forEach((source) => {
+				for (let duration = source.naturalPeriod; duration <= maximumDuration; duration += source.naturalPeriod) candidates.add(duration);
+			});
+			if (!candidates.size) candidates.add(maximumDuration);
+		}
+
+		let best = null;
+		candidates.forEach((duration) => {
+			const candidate = this._scoreProceduralCandidate(duration, procedural);
+			if (this._isBetterProceduralCandidate(candidate, best)) best = candidate;
+		});
+		const tolerance = this.config.proceduralPeriodTolerance;
+		const replacements = new Map();
+		const fits = best.fits.map((fit) => {
+			const fitted = fit.drift <= tolerance;
+			const resolvedPeriod = fitted ? fit.fittedPeriod : fit.source.naturalPeriod;
+			replacements.set(fit.source, fit.source.withPeriod(resolvedPeriod));
+			return {
+				key: fit.source.key,
+				label: fit.source.label || String(fit.source.key),
+				requestedPeriod: fit.source.naturalPeriod,
+				resolvedPeriod,
+				cycles: best.duration / resolvedPeriod,
+				driftPercent: fit.drift * 100,
+				fitted
+			};
+		});
+		const fittedCount = fits.filter((fit) => fit.fitted).length;
+		return {
 			timelines: timelines.map((timeline) => replacements.get(timeline) || timeline),
-			reconciled: true,
-			gridIntervalMs: best.gridIntervalMs,
-			layers: best.layers.map((layer) => ({
-				key: layer.timeline.key,
-				nativeFps: 1000 / layer.interval,
-				exportFps: layer.snapped ? 1000 / layer.adjustedInterval : 1000 / layer.interval,
-				driftPercent: layer.drift * 100,
-				snapped: layer.snapped
-			}))
+			loop: {
+				duration: best.duration,
+				exact: authoredLoop.exact && fittedCount === procedural.length,
+				seamError: authoredLoop.seamError + fits.filter((fit) => !fit.fitted).reduce((sum, fit) => sum + fit.driftPercent / 100, 0),
+				completedSources: authoredLoop.completedSources + fittedCount
+			},
+			fits
 		};
 	}
 
@@ -368,7 +342,12 @@ class CompositeTimelinePlanner {
 		const minimumInterval = 1000 / Math.max(1, maxSamplingFps);
 		const candidates = new Set([0, duration]);
 		let needsSamplingGrid = false;
+		let proceduralSamplingRate = 0;
 		timelines.forEach((timeline) => {
+			if (timeline.kind === 'procedural') {
+				proceduralSamplingRate = Math.max(proceduralSamplingRate, timeline.preferredSamplingRate);
+				return;
+			}
 			if (timeline.frameDurations.some((frameDuration) => frameDuration < minimumInterval)) {
 				needsSamplingGrid = true;
 				return;
@@ -378,25 +357,25 @@ class CompositeTimelinePlanner {
 		// The sampling limit applies to each source, not to the combined event
 		// stream. Independent low-rate animations can change close together and
 		// both changes must survive or one layer visibly holds on its old frame.
-		if (needsSamplingGrid) {
-			for (let timestamp = minimumInterval; timestamp < duration; timestamp += minimumInterval) {
+		const samplingRate = needsSamplingGrid
+			? maxSamplingFps
+			: Math.min(maxSamplingFps, proceduralSamplingRate);
+		if (samplingRate > 0) {
+			const samplingInterval = 1000 / samplingRate;
+			for (let timestamp = samplingInterval; timestamp < duration; timestamp += samplingInterval) {
 				candidates.add(timestamp);
 			}
 		}
 		return [...candidates].sort((left, right) => left - right);
 	}
 
-	estimateLoop(timelines, fallbackDuration, maximumDuration, normalizeCadenceGroups = false, rateReconciliation = null) {
-		const normalizedFallback = AnimationSourceTimeline.normalizeDuration(fallbackDuration, 100);
-		const resolved = this._resolveCadenceClusters(timelines, normalizeCadenceGroups);
-		const initialLoop = this._chooseLoopDuration(resolved.timelines, normalizedFallback, maximumDuration);
-		if (initialLoop.exact) return initialLoop;
-		const reconciliation = this._reconcileRates(resolved.timelines, rateReconciliation || {});
-		return this._chooseLoopDuration(reconciliation.timelines, normalizedFallback, maximumDuration);
+	estimateLoop(timelines, fallbackDuration, maximumDuration) {
+		const normalizedFallback = AuthoredAnimationSource.normalizeDuration(fallbackDuration, 100);
+		return this._fitProceduralSources(timelines, normalizedFallback, maximumDuration).loop;
 	}
 
 	_selectionSignature(selection) {
-		return [...selection.values()].map((entry) => entry.frameIndex).join(',');
+		return [...selection.entries()].map(([key, entry]) => `${key}:${JSON.stringify(entry)}`).join(',');
 	}
 
 	_collapseSelectionDuplicates(entries) {
@@ -459,29 +438,20 @@ class CompositeTimelinePlanner {
 
 	async plan(options) {
 		const sourceTimelines = options.timelines || [];
-		const fallbackDuration = AnimationSourceTimeline.normalizeDuration(options.fallbackDuration, 100);
-		const timingResolution = this._resolveCadenceClusters(sourceTimelines, options.normalizeCadenceGroups);
-		let timelines = timingResolution.timelines;
-		let loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
-		let rateReconciliation = { timelines, reconciled: false, gridIntervalMs: null, layers: [] };
-		if (!loop.exact) {
-			rateReconciliation = this._reconcileRates(timelines, options.rateReconciliation || {});
-			if (rateReconciliation.reconciled) {
-				timelines = rateReconciliation.timelines;
-				loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
-				const snappedChanges = rateReconciliation.layers
-					.filter((layer) => layer.snapped && Math.abs(layer.nativeFps - layer.exportFps) >= 0.01)
-					.map((layer) => `${layer.key} ${Math.round(layer.nativeFps)} → ${Math.round(layer.exportFps)} fps`);
-				const gridFps = Math.round(1000 / rateReconciliation.gridIntervalMs);
-				if (snappedChanges.length) options.onStatus?.(`Matched layer frame rates to a shared ${gridFps} fps grid (${snappedChanges.join(', ')}) so the loop stays short.`);
-			}
+		const fallbackDuration = AuthoredAnimationSource.normalizeDuration(options.fallbackDuration, 100);
+		const timingResolution = this._fitProceduralSources(sourceTimelines, fallbackDuration, options.maxLoopDurationMs);
+		const timelines = timingResolution.timelines;
+		const loop = timingResolution.loop;
+		const fittedChanges = timingResolution.fits.filter((fit) => fit.fitted && Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01);
+		if (fittedChanges.length) {
+			options.onStatus?.(`Fit ${fittedChanges.length} procedural ${fittedChanges.length === 1 ? 'period' : 'periods'} to the composite loop.`);
 		}
 		if (!loop.exact) options.onStatus?.('Loop optimized with a best-fit seam; the exact common loop was too long.');
 		const timestamps = this._buildTimestamps(timelines, loop.duration, options.maxSamplingFps);
 		let entries = [];
 		for (let index = 0; index < timestamps.length - 1; index++) {
 			const timestamp = timestamps[index];
-			const selection = new Map(timelines.map((timeline) => [timeline.key, { frameIndex: timeline.frameIndexAt(timestamp) }]));
+			const selection = new Map(timelines.map((timeline) => [timeline.key, timeline.sampleAt(timestamp)]));
 			entries.push({
 				timestamp,
 				duration: timestamps[index + 1] - timestamp,
@@ -530,30 +500,38 @@ class CompositeTimelinePlanner {
 		});
 		const totalDuration = reduced.frameDurations.reduce((sum, duration) => sum + duration, 0);
 		const sourceFrameSelections = new Map();
-		timelines.forEach((timeline) => {
+		timelines.filter((timeline) => timeline.kind === 'authored').forEach((timeline) => {
 			sourceFrameSelections.set(timeline.key, reduced.selections.map((selection) => selection.get(timeline.key)?.frameIndex ?? 0));
 		});
 		const resolvedTimelines = new Map(timelines.map((timeline) => [timeline.key, timeline]));
 		const sourceAnalysis = sourceTimelines
-			.filter((timeline) => Number.isFinite(timeline.cycleDuration))
+			.filter((timeline) => timeline.kind === 'procedural' || Number.isFinite(timeline.cycleDuration))
 			.map((timeline) => {
 				const resolved = resolvedTimelines.get(timeline.key) || timeline;
+				if (timeline.kind === 'procedural') {
+					return {
+						kind: 'procedural',
+						key: timeline.key,
+						label: timeline.label || String(timeline.key),
+						ownerLayerId: timeline.ownerLayerId,
+						effectSlot: timeline.effectSlot,
+						requestedPeriod: timeline.naturalPeriod,
+						resolvedPeriod: resolved.resolvedPeriod,
+						cycleCount: loop.duration / resolved.resolvedPeriod,
+						periodChanged: Math.abs(timeline.naturalPeriod - resolved.resolvedPeriod) >= 0.01
+					};
+				}
 				const nativeFps = timeline.frames.length * 1000 / timeline.cycleDuration;
-				const resolvedFps = resolved.frames.length * 1000 / resolved.cycleDuration;
-				const timingChanged = timeline.frameDurations.some((duration, index) =>
-					Math.abs(duration - resolved.frameDurations[index]) >= 0.01);
 				return {
+					kind: 'authored',
 					key: timeline.key,
 					label: timeline.label || String(timeline.key),
 					ownerLayerId: timeline.ownerLayerId,
 					effectSlot: timeline.effectSlot,
 					frameCount: timeline.frames.length,
 					nativeFps,
-					resolvedFps,
 					nativeCycleDuration: timeline.cycleDuration,
-					resolvedCycleDuration: resolved.cycleDuration,
-					variableTiming: new Set(timeline.frameDurations).size > 1,
-					timingChanged
+					variableTiming: new Set(timeline.frameDurations).size > 1
 				};
 			});
 
@@ -570,12 +548,7 @@ class CompositeTimelinePlanner {
 				duration: loop.duration
 			},
 			timingResolution: {
-				cadenceGroupsNormalized: timingResolution.normalized,
-				groups: timingResolution.groups,
-				rateReconciliation: rateReconciliation.reconciled ? {
-					gridIntervalMs: rateReconciliation.gridIntervalMs,
-					layers: rateReconciliation.layers
-				} : null
+				proceduralPeriodFits: timingResolution.fits
 			},
 			reduction: {
 				smartReductionEnabled: Boolean(options.smartReduction),

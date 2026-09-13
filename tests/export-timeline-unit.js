@@ -15,8 +15,8 @@ class ImageDataPolyfill {
 const context = { ImageData: ImageDataPolyfill, Uint8ClampedArray, Map, Set, Math, Number, Infinity };
 vm.createContext(context);
 const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'classes', 'ExportTimeline.js'), 'utf8');
-vm.runInContext(`${source}\nglobalThis.timelineExports = { AnimationSourceTimeline, CompositeFrameReducer, CompositeTimelinePlanner };`, context);
-const { AnimationSourceTimeline, CompositeFrameReducer, CompositeTimelinePlanner } = context.timelineExports;
+vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner };`, context);
+const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner } = context.timelineExports;
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
@@ -34,17 +34,25 @@ function frame(value, alpha = 255, size = 2) {
 }
 
 function timeline(key, count, durations) {
-	return new AnimationSourceTimeline({
+	return new AuthoredAnimationSource({
 		key,
 		frames: Array.from({ length: count }, (_, index) => frame(index)),
 		frameDurations: durations
 	});
 }
 
+function procedural(key, period, preferredSamplingRate = 12) {
+	return new ProceduralAnimationSource({
+		key,
+		naturalPeriod: period,
+		preferredSamplingRate,
+		sampler: (timestamp, resolvedPeriod) => ({ progress: (timestamp % resolvedPeriod) / resolvedPeriod })
+	});
+}
+
 async function buildPlan(timelines, overrides = {}) {
 	const planner = new CompositeTimelinePlanner({
-		nearCadenceTolerance: 0.12,
-		cadenceClusterSpanTolerance: 0.25,
+		proceduralPeriodTolerance: 0.10,
 		preRenderBudgetMultiplier: 1.5
 	});
 	return planner.plan({
@@ -89,59 +97,37 @@ async function main() {
 	assert(!longCommonLoop.loopSeam.exact && longCommonLoop.totalDuration <= 12000,
 		'Long exact common loop was not bounded with a reported seam decision.');
 
-	const reconciledRates = await buildPlan([
-		timeline('four-at-twenty-fps', 4, Array(4).fill(50)),
-		timeline('three-at-eleven-fps', 3, Array(3).fill(91))
-	], {
-		smartReduction: true,
-		visualErrorThreshold: 0,
-		rateReconciliation: {
-			enabled: true,
-			gridSource: 'auto',
-			maxCycleDriftRatio: 0.15,
-			niceIntervalsMs: [33.333, 40, 41.667, 50, 66.667, 80, 83.333, 100],
-			weights: { frames: 1, maxDrift: 400, meanDrift: 150, unsnapped: 250 }
-		}
-	});
-	const elevenFpsResolution = reconciledRates.timingResolution.rateReconciliation.layers
-		.find((layer) => layer.key === 'three-at-eleven-fps');
-	assert(reconciledRates.loopSeam.exact && reconciledRates.reduction.originalFrameCount <= 15,
-		'20 fps / 11 fps reconciliation did not produce a short exact loop.');
-	assert(elevenFpsResolution.snapped && Math.round(elevenFpsResolution.exportFps) === 10,
-		'The 11 fps source was not reported as snapped to 10 fps.');
+	const authoredWithEffect = await buildPlan([
+		timeline('authored', 3, [100, 100, 100]),
+		procedural('breath', 530, 30)
+	]);
+	const authoredAnalysis = authoredWithEffect.sourceAnalysis.find((source) => source.key === 'authored');
+	const breathAnalysis = authoredWithEffect.sourceAnalysis.find((source) => source.key === 'breath');
+	assert(authoredWithEffect.totalDuration === 9000 && authoredWithEffect.loopSeam.exact,
+		'Authored-loop multiples were not searched for the best procedural fit.');
+	assert(authoredAnalysis.nativeCycleDuration === 300 && authoredAnalysis.nativeFps === 10,
+		'Authored timing changed while fitting a procedural source.');
+	assert(breathAnalysis.periodChanged && Math.abs(breathAnalysis.resolvedPeriod - (9000 / 17)) < 0.001 && breathAnalysis.cycleCount === 17,
+		'Procedural period fitting was not reported as period and cycle data.');
 
-	const nearCadences = await buildPlan([
-		timeline('three-at-ten-fps', 3, [100, 100, 100]),
-		timeline('four-at-nine-fps', 4, [110, 110, 110, 110])
-	], { smartReduction: true, normalizeCadenceGroups: true });
-	assert(nearCadences.timingResolution.cadenceGroupsNormalized && nearCadences.reduction.originalFrameCount === 12,
-		'Near-identical source rates did not resolve to their compact shared-cadence loop.');
-	assert(nearCadences.timingResolution.groups[0].sourceCadences.join(',') === '100,110'
-		&& nearCadences.timingResolution.groups[0].cadence === 110,
-		'Near-identical source rates did not report their resolved cadence.');
-	assert(nearCadences.totalDuration === 1320 && nearCadences.loopSeam.exact,
-		'Shared-cadence resolution did not preserve a clean complete loop.');
+	const fallbackPerEffect = await buildPlan([
+		timeline('authored', 3, [100, 100, 100]),
+		procedural('fits', 590),
+		procedural('does-not-fit', 20000)
+	]);
+	const fallbackFits = fallbackPerEffect.timingResolution.proceduralPeriodFits;
+	assert(fallbackFits.find((fit) => fit.key === 'fits').fitted
+		&& !fallbackFits.find((fit) => fit.key === 'does-not-fit').fitted
+		&& fallbackPerEffect.sourceAnalysis.find((source) => source.key === 'does-not-fit').resolvedPeriod === 20000,
+		'Procedural tolerance fallback was not applied independently per effect.');
 
-	const mixedRates = await buildPlan([
-		timeline('ninety', 3, [90, 90, 90]),
-		timeline('one-hundred', 4, [100, 100, 100, 100]),
-		timeline('one-ten', 5, [110, 110, 110, 110, 110]),
-		timeline('two-hundred', 2, [200, 200]),
-		timeline('variable', 2, [70, 130])
-	], {
-		smartReduction: true,
-		normalizeCadenceGroups: true,
-		preRenderSampling: true,
-		preferredFrameBudget: 5,
-		hardFrameLimit: 100
-	});
-	assert(mixedRates.timingResolution.groups.length === 1
-		&& mixedRates.timingResolution.groups[0].sourceCadences.join(',') === '90,100,110'
-		&& mixedRates.timingResolution.groups[0].cadence === 100,
-		'Mixed rates did not cluster nearby steady cadences independently.');
-	assert(mixedRates.reduction.renderedFrameCount <= 8 && mixedRates.reduction.preRenderFramesSkipped > 0,
-		'Mixed-rate planning exceeded its bounded pre-render candidate budget.');
-	assert(mixedRates.reduction.durationPreserved, 'Pre-render candidate sampling changed the loop duration.');
+	const proceduralOnly = await buildPlan([procedural('one', 1300), procedural('two', 1750)]);
+	assert(proceduralOnly.totalDuration <= 12000 && proceduralOnly.timingResolution.proceduralPeriodFits.length === 2,
+		'Procedural-only sources did not use the bounded shared candidate search.');
+
+	const proceduralSampling = await buildPlan([procedural('smooth', 1000, 20)], { maxSamplingFps: 30 });
+	assert(proceduralSampling.reduction.originalFrameCount === 20,
+		'Procedural preferred sampling rate did not create the output sampling grid.');
 
 	const stressTimelines = [
 		timeline('rate-70', 3, [70, 70, 70]),
@@ -223,79 +209,16 @@ async function main() {
 	assert(underBudgetResult.framesRemoved === 0 && underBudgetResult.frames.length === 3,
 		'Under-budget motion was reduced even though it already fit the frame target.');
 
-	const balancedMixedRates = await buildPlan([
-		timeline('butterfly', 3, [125, 125, 125]),
-		timeline('text-glitter', 3, [91, 91, 91]),
-		timeline('shape-fill', 4, [100, 100, 100, 100])
-	], {
-		smartReduction: true,
-		preRenderSampling: true,
-		preRenderBudgetMultiplier: 1,
-		maxSamplingFps: 24,
-		preferredFrameBudget: 60,
-		visualErrorThreshold: 0,
-		normalizeCadenceGroups: true,
-		rateReconciliation: { enabled: true },
-		renderFrame: (_timestamp, selection) => {
-			const data = new Uint8ClampedArray(selection.size * 4);
-			[...selection.values()].forEach((selected, index) => {
-				data[index * 4] = selected.frameIndex;
-				data[index * 4 + 3] = 255;
-			});
-			return new ImageDataPolyfill(data, selection.size, 1);
-		}
-	});
-	assert(balancedMixedRates.timingResolution.cadenceGroupsNormalized
-		&& !balancedMixedRates.timingResolution.rateReconciliation,
-		'Balanced mixed-rate planning did not limit reconciliation to the nearby steady sources.');
-	assert(balancedMixedRates.totalDuration === 6000
-		&& balancedMixedRates.reduction.originalFrameCount === 96
-		&& balancedMixedRates.reduction.renderedFrameCount === 60
-		&& balancedMixedRates.reduction.preRenderFramesSkipped === 36,
-		'Mixed low-rate sources were not sampled evenly to the Balanced composition budget.');
-	assert(balancedMixedRates.frameDurations.reduce((sum, duration) => sum + duration, 0) === 6000,
-		'Balanced composition sampling changed the resolved loop duration.');
-
-	const balancedNearRates = await buildPlan([
+	const immutableNearRates = await buildPlan([
 		timeline('three-at-ten-fps', 3, [100, 100, 100]),
 		timeline('three-at-eleven-fps', 3, [91, 91, 91])
-	], {
-		smartReduction: true,
-		normalizeCadenceGroups: true,
-		preRenderSampling: true,
-		preRenderBudgetMultiplier: 1,
-		preferredFrameBudget: 60,
-		visualErrorThreshold: 0
-	});
-	assert(balancedNearRates.timingResolution.cadenceGroupsNormalized
-		&& balancedNearRates.totalDuration === 300
-		&& balancedNearRates.reduction.outputFrameCount === 3,
-		'Balanced did not reconcile equal-length 10 fps and 11 fps sources to a compact three-frame loop.');
-	const retimedNearSource = balancedNearRates.sourceAnalysis.find((asset) => asset.key === 'three-at-eleven-fps');
-	assert(balancedNearRates.sourceAnalysis.length === 2
-		&& retimedNearSource.timingChanged
-		&& Math.abs(retimedNearSource.nativeFps - 10.989) < 0.001
-		&& retimedNearSource.resolvedFps === 10,
-		'Asset analysis did not report the resolved source cadence.');
-
-	const cadenceDominanceCases = [
-		{ label: '10 fps dominant', tenFps: 5, elevenFps: 3, expectedCadence: 100 },
-		{ label: '11 fps dominant', tenFps: 3, elevenFps: 5, expectedCadence: 91 },
-		{ label: 'even split', tenFps: 4, elevenFps: 4, expectedCadence: 100 }
-	];
-	for (const testCase of cadenceDominanceCases) {
-		const sources = [
-			...Array.from({ length: testCase.tenFps }, (_, index) => timeline(`ten-${index}`, 3, [100, 100, 100])),
-			...Array.from({ length: testCase.elevenFps }, (_, index) => timeline(`eleven-${index}`, 3, [91, 91, 91]))
-		];
-		const result = await buildPlan(sources, {
-			smartReduction: true,
-			normalizeCadenceGroups: true,
-			visualErrorThreshold: 0
-		});
-		assert(result.timingResolution.groups[0]?.cadence === testCase.expectedCadence,
-			`${testCase.label} did not select the source-weighted cadence.`);
-	}
+	]);
+	const nearSource = immutableNearRates.sourceAnalysis.find((asset) => asset.key === 'three-at-eleven-fps');
+	assert(nearSource.kind === 'authored'
+		&& nearSource.nativeCycleDuration === 273
+		&& Math.abs(nearSource.nativeFps - 10.989) < 0.001
+		&& !('resolvedFps' in nearSource),
+		'Authored source analysis did not preserve and report only native timing.');
 
 	const exactOnlyResult = reducer.reduce({
 		frames: [frame(50, 255, 4), nearMiddle, frame(90, 255, 4)],
@@ -319,7 +242,7 @@ async function main() {
 	assert(sevenEleven.reduction.durationPreserved && sampled.reduction.durationPreserved,
 		'No-reduction and sampled plans did not preserve total duration.');
 
-	console.log(`PASS export timeline fixtures: reconciliation=${reconciledRates.reduction.originalFrameCount} frames; timing, seams, sampling, duplicates, alpha, effects, and visual error.`);
+	console.log('PASS export timeline fixtures: authored timing, procedural fitting, seams, sampling, duplicates, alpha, effects, and visual error.');
 }
 
 main().catch((error) => {
