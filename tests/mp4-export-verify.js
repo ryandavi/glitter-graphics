@@ -50,7 +50,23 @@ async function main() {
 			let blob;
 			try {
 				blob = await exporter._encode(
-					{ frames, frameDelay: 110, width, height, reductions: [] },
+					{
+						frames,
+						frameDelay: 110,
+						width,
+						height,
+						reductions: [],
+						loopSeam: { exact: true },
+						reduction: {
+							framesRemoved: 0,
+							selectionDuplicatesMerged: 0,
+							preRenderFramesSkipped: 0,
+							smartReductionEnabled: false,
+							preferredBudgetMet: true,
+							budgetCompromiseRequired: false,
+							durationPreserved: true
+						}
+					},
 					{ matteColor: '#ffffff', mp4Quality: 'standard', mp4LoopCount: 2 },
 					{ onProgress: () => {}, onStatus: () => {}, onComplete: () => {} }
 				);

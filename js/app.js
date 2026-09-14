@@ -379,9 +379,15 @@ class GlitterEditor {
 		initTooltips();
 		installClipboardHandlers(this);
 		this.exportResultPresenter = new ExportResultPresenter();
-		this.exporter = new GifExporter(this.exportResultPresenter);
+		this.gifEncodingPipeline = new GifEncodingPipeline();
+		this.authoredFrameResolver = new AuthoredFrameResolver();
+		this.exporter = new GifExporter({
+			resultPresenter: this.exportResultPresenter,
+			gifEncodingPipeline: this.gifEncodingPipeline,
+			authoredFrameResolver: this.authoredFrameResolver
+		});
 		this.mp4Exporter = new Mp4Exporter(this.exporter, this.exportResultPresenter);
-		this.stillImageExporter = new StillImageExporter(this.exporter, this.exportResultPresenter);
+		this.stillImageExporter = new StillImageExporter(this.exporter, this.exportResultPresenter, this.gifEncodingPipeline);
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
 		await this.brushTipManager.init();

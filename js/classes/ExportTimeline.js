@@ -1,14 +1,14 @@
 // Export timeline planning primitives. Loaded before GifExporter and Mp4Exporter.
 class AuthoredAnimationSource {
-	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, frames = [], frameDurations = [], fallbackDuration = 100 }) {
+	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100 }) {
 		this.kind = 'authored';
 		this.key = key;
 		this.label = label;
 		this.ownerLayerId = ownerLayerId;
 		this.effectSlot = effectSlot;
-		this.frames = frames;
-		this.isStatic = frames.length <= 1;
-		this.frameDurations = frames.map((_, index) => AuthoredAnimationSource.normalizeDuration(
+		this.frameCount = Math.max(0, Math.floor(Number(frameCount) || 0));
+		this.isStatic = this.frameCount <= 1;
+		this.frameDurations = Array.from({ length: this.frameCount }, (_, index) => AuthoredAnimationSource.normalizeDuration(
 			frameDurations[index],
 			fallbackDuration
 		));
@@ -34,7 +34,7 @@ class AuthoredAnimationSource {
 			if (this.cumulativeBoundaries[middle + 1] <= cycleTime) low = middle + 1;
 			else high = middle;
 		}
-		return Math.min(low, this.frames.length - 1);
+		return Math.min(low, Math.max(0, this.frameCount - 1));
 	}
 
 	sampleAt(timestamp) {
@@ -838,14 +838,14 @@ class CompositeTimelinePlanner {
 						periodChanged: Math.abs(timeline.naturalPeriod - resolved.resolvedPeriod) >= 0.01
 					};
 				}
-				const nativeFps = timeline.frames.length * 1000 / timeline.cycleDuration;
+				const nativeFps = timeline.frameCount * 1000 / timeline.cycleDuration;
 				return {
 					kind: 'authored',
 					key: timeline.key,
 					label: timeline.label || String(timeline.key),
 					ownerLayerId: timeline.ownerLayerId,
 					effectSlot: timeline.effectSlot,
-					frameCount: timeline.frames.length,
+					frameCount: timeline.frameCount,
 					nativeFps,
 					nativeCycleDuration: timeline.cycleDuration,
 					variableTiming: new Set(timeline.frameDurations).size > 1

@@ -26,19 +26,12 @@ function reportGifExportProgress(callbacks, phaseKey, ratio = 0, detail = '', ph
 }
 
 class GifExporter {
-	constructor(resultPresenter = typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null) {
+	constructor(options = {}) {
+		if (!options || typeof options.show === 'function') options = { resultPresenter: options };
 		const exportConfig = CONFIG.export || {};
 		this.config = {
-			workers: exportConfig.core?.workers ?? 4,
-			quality: exportConfig.core?.quality ?? 1,
-			workerScript: 'js/workers/gif.worker.js',
-			timing: {
-				forceDelay: exportConfig.core?.timing?.forceDelay ?? 100,
-				maxFrames: exportConfig.core?.timing?.maxFrames ?? 60
-			},
 			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug?.enabled : false,
-			watermarkAlphaThreshold: exportConfig.watermark?.alphaThreshold ?? 128,
-			useAdaptiveQuality: false // Add this flag
+			watermarkAlphaThreshold: exportConfig.watermark.alphaThreshold
 		};
 		this.fileName = `${exportConfig.core?.defaultBaseName || 'ryandavi-com_glitter'}.gif`;
 
@@ -53,7 +46,9 @@ class GifExporter {
 		this.basePixelEffectCache = new Map();
 		this.baseDitherPaletteCache = new Map();
 		this.filterGrainTileCache = new Map();
-		this.resultPresenter = resultPresenter;
+		this.resultPresenter = options.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null);
+		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
+		this.gifEncodingPipeline = options.gifEncodingPipeline || new GifEncodingPipeline();
 	}
 
 	_hasTransparency(canvasData) {
@@ -73,7 +68,8 @@ class GifExporter {
 	}
 
 
-	_appendProceduralSources(sourceTimelines, layers, { includeBaseImage = true } = {}) {
+	_collectProceduralSources(layers, { includeBaseImage = true } = {}) {
+		const sources = [];
 		const shimmerBase = layers.find((layer) => {
 			if (!includeBaseImage || layer.type !== LayerType.BASE_IMAGE || layer.visible === false) return false;
 			const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
@@ -84,22 +80,24 @@ class GifExporter {
 			const settings = GlitterPixelEffects.normalizeSettings(shimmerBase.background?.pixelEffects || shimmerBase.background?.posterize, CONFIG.tools.pixelEffects);
 			const animation = GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
 			const frameDuration = CONFIG.tools.pixelEffects.animation.frameDurationMs;
-			sourceTimelines.push(new ProceduralAnimationSource({
+			sources.push({
 				key: '__base_dither',
 				label: 'Base image shimmer',
 				ownerLayerId: shimmerBase.id,
 				naturalPeriod: animation.frames * frameDuration,
 				preferredSamplingRate: 1000 / frameDuration,
-				sampler: (timestamp, period) => {
+				naturalPeriod: animation.frames * frameDuration,
+				preferredSamplingRate: 1000 / frameDuration,
+				sampleAt: (timestamp, period = animation.frames * frameDuration) => {
 					const cycleTime = ((timestamp % period) + period) % period;
 					return { frameIndex: Math.min(animation.frames - 1, Math.floor(cycleTime / period * animation.frames)) };
 				}
-			}));
+			});
 		}
 		layers.forEach((layer) => {
 			if (layer.type === LayerType.BASE_IMAGE || !GlitterAnimation.isActive(layer.animation)) return;
 			const animation = GlitterAnimation.normalizeAnimation(layer.animation);
-			sourceTimelines.push(new ProceduralAnimationSource({
+			sources.push({
 				key: `__anim_${layer.id}`,
 				label: `${layer.name || 'Layer'} animation`,
 				ownerLayerId: layer.id,
@@ -107,55 +105,19 @@ class GifExporter {
 				naturalPeriod: animation.periodMs,
 				phase: animation.phase,
 				preferredSamplingRate: CONFIG.tools.animation.exportFps,
-				sampler: (timestamp, period) => ({
+				sampleAt: (timestamp, period = animation.periodMs) => ({
 					sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, { layerId: layer.id })
 				})
-			}));
+			});
 		});
+		return sources;
 	}
 
-	_analyzeGifColors(frames) {
-		const settings = CONFIG.export?.limits?.colorAnalysis;
-		if (!settings || !frames?.length) return null;
-
-		const frameSampleCount = Math.min(frames.length, settings.maxFrames);
-		const frameIndexes = new Set();
-		for (let index = 0; index < frameSampleCount; index++) {
-			const position = frameSampleCount === 1
-				? 0
-				: Math.round((index * (frames.length - 1)) / (frameSampleCount - 1));
-			frameIndexes.add(position);
-		}
-
-		let observedColorCount = 0;
-		for (const frameIndex of frameIndexes) {
-			const imageData = this._getFrameImageData(frames[frameIndex]);
-			if (!imageData) continue;
-			const pixelCount = imageData.width * imageData.height;
-			const pixelStep = Math.max(1, Math.ceil(pixelCount / settings.maxPixelsPerFrame));
-			const colors = new Set();
-			for (let pixel = 0; pixel < pixelCount; pixel += pixelStep) {
-				const offset = pixel * 4;
-				const color = (imageData.data[offset] << 16)
-					| (imageData.data[offset + 1] << 8)
-					| imageData.data[offset + 2];
-				colors.add(color);
-				if (colors.size > settings.significantColorCount) {
-					return {
-						significant: true,
-						observedColorCount: colors.size,
-						paletteSize: settings.paletteSize
-					};
-				}
-			}
-			observedColorCount = Math.max(observedColorCount, colors.size);
-		}
-
-		return {
-			significant: false,
-			observedColorCount,
-			paletteSize: settings.paletteSize
-		};
+	_createProceduralTimelines(proceduralSources) {
+		return proceduralSources.map((source) => new ProceduralAnimationSource({
+			...source,
+			sampler: source.sampleAt
+		}));
 	}
 
 	_getFrameImageData(frame, fallbackWidth = null, fallbackHeight = null) {
@@ -180,47 +142,6 @@ class GifExporter {
 		}
 
 		return null;
-	}
-
-	async _applyGifDither(frames, paletteBytes, settings, callbacks) {
-		if (!settings.ditherEnabled || settings.hasTransparency) return frames;
-		const palette = [];
-		for (let index = 0; index < paletteBytes.length; index += 3) palette.push(paletteBytes.slice(index, index + 3));
-		const type = String(settings.ditherType || '').toLowerCase();
-		const algorithm = type.includes('atkinson') ? 'atkinson'
-			: type.includes('falsefloyd') ? 'falsefloyd'
-				: type.includes('stucki') ? 'stucki'
-			: type.includes('bayer') ? 'bayer'
-				: type.includes('halftone') ? 'halftone' : 'floyd';
-		const encodedFrames = [];
-		for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
-			const frame = frames[frameIndex];
-			encodedFrames.push(new ImageData(GlitterPixelEffects.applyPixelEffects(frame.data, frame.width, frame.height, {
-				pixelateEnabled: false,
-				paletteEnabled: true,
-				pixelSize: 1,
-				paletteMode: 'dither',
-				dither: {
-					algorithm,
-					angle: 45,
-					strength: settings.ditherAmount,
-					scale: settings.ditherScale,
-					edgeProtection: settings.ditherEdgeProtection,
-					serpentine: type.includes('serpentine'),
-					shimmer: settings.ditherTemporalMode === 'animated',
-					palette: 'auto',
-					duotone: ['#000000', '#ffffff']
-				}
-			}, {
-				pixelEffects: CONFIG.tools.pixelEffects,
-				autoGlitter: CONFIG.tools.autoGlitter
-			}, frameIndex, palette), frame.width, frame.height));
-			reportGifExportProgress(callbacks, 'palette', 0.5 + (((frameIndex + 1) / frames.length) * 0.5), `Applying palette to frame ${frameIndex + 1} / ${frames.length}`, frameIndex + 1, frames.length);
-			if (frameIndex + 1 < frames.length && (frameIndex + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
-				await this._yieldForProgress();
-			}
-		}
-		return encodedFrames;
 	}
 
 	_getReducedFrameIndex(frameIndex, originalFrameCount, reducedFrameCount = null) {
@@ -300,19 +221,19 @@ class GifExporter {
 		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height };
 	}
 
-	_renderLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null) {
+	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null) {
 		const transform = getLayerTransform(layer);
 		const { isAnimated, width, height } = layer.stickerData;
 
 		// Determine which frame/image to use
 		let imageData;
 		if (isAnimated && layer.stickerData.frames) {
-			const frames = flattenedFrameMap?.get(layer.id);
+			const frames = resolvedFramesBySource?.get(layer.id);
 			if (!frames?.length) {
-				throw new Error(`Missing flattened sticker frames for layer ${layer.id}`);
+				throw new Error(`Missing resolved sticker frames for layer ${layer.id}`);
 			}
 
-			const reducedFrameCount = frameMap?.get(layer.id);
+			const reducedFrameCount = sourceSelectionMap?.get(layer.id);
 			const stickerFrameIndex = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
 			imageData = frames[stickerFrameIndex];
 			if (!imageData) {
@@ -327,7 +248,7 @@ class GifExporter {
 		// The same color-adjust matrix used by glitter/text/shape export also
 		// matches the sticker image's CSS preview filter.
 		const tempCanvas = this._patternSourceFromFrame(imageData, layer.stickerData.colorAdjust);
-		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, frameMap, flattenedFrameMap);
+		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource);
 
 		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height, {
 			smooth: layer.stickerData.isPixelated === false
@@ -350,7 +271,7 @@ class GifExporter {
 			: [];
 	}
 
-	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, frameMap, flattenedFrameMap) {
+	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource) {
 		const shadow = layer.stickerData?.shadow;
 		if (!shadow) return;
 		const pad = Math.ceil(Math.max(
@@ -364,14 +285,14 @@ class GifExporter {
 		const source = this._getStickerEffectSource(layer, 'shadow');
 		const effectMask = this._createOffsetMaskCanvas(mask, shadow.offsetX || 0, shadow.offsetY || 0);
 		if (!source || !effectMask) return;
-		const filled = this._createFilledMaskCanvas(effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), frameMap, flattenedFrameMap);
+		const filled = this._createFilledMaskCanvas(effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), sourceSelectionMap, resolvedFramesBySource);
 		// The shadow is the sticker's own silhouette, so it scales the same way.
 		this._drawTransformedCanvas(ctx, filled, getLayerTransform(layer), filled.width, filled.height, {
 			smooth: layer.stickerData.isPixelated === false
 		});
 	}
 
-	_renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null, textMaskCanvases = null) {
+	_renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, textMaskCanvases = null) {
 		const textMasks = textMaskCanvases?.get(layer.id);
 		if (!textMasks?.fill) {
 			throw new Error(`Missing text mask for layer ${layer.id}`);
@@ -390,8 +311,8 @@ class GifExporter {
 				layer,
 				frameIndex,
 				sourceKey,
-				frameMap,
-				flattenedFrameMap
+				sourceSelectionMap,
+				resolvedFramesBySource
 			);
 			compositeCtx.drawImage(fillCanvas, 0, 0, width, height);
 		};
@@ -460,7 +381,7 @@ class GifExporter {
 	}
 
 	// Per-slot glitter sources (like text) — each slot in glitter mode with a
-	// glitter contributes its own flattened frame set keyed by layer.id:slot.
+	// glitter contributes its own resolved frame set keyed by layer.id:slot.
 	_getShapeGlitterSources(layer) {
 		const d = layer.shapeData;
 		const sources = [];
@@ -478,7 +399,7 @@ class GifExporter {
 
 	// Mirror of _renderTextLayerToCanvas for shape layers (shadow, border, fill),
 	// reusing the generic _createFilledMaskCanvas + _drawTransformedCanvas.
-	_renderShapeLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, shapeMaskCanvases) {
+	_renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases) {
 		const masks = shapeMaskCanvases?.get(layer.id);
 		if (!masks?.fill) {
 			throw new Error(`Missing shape mask for layer ${layer.id}`);
@@ -495,7 +416,7 @@ class GifExporter {
 			if (!maskCanvas) return;
 			const source = this._getShapeEffectSource(layer, slot);
 			if (!source) return;
-			const fillCanvas = this._createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), frameMap, flattenedFrameMap);
+			const fillCanvas = this._createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), sourceSelectionMap, resolvedFramesBySource);
 			compositeCtx.drawImage(fillCanvas, 0, 0, w, h);
 		};
 		const drawBorder = () => {
@@ -530,6 +451,71 @@ class GifExporter {
 		return resolveEffectPaintSource(layer.textData?.[effectName]);
 	}
 
+	_createGlitterDescriptor(library, { key, label, ownerLayerId, effectSlot = null, glitterId, includeInTransparencyScan }) {
+		const glitter = library.find((item) => item.id === glitterId);
+		return {
+			key,
+			label: label || glitter?.name || String(glitterId),
+			ownerLayerId,
+			effectSlot,
+			role: 'glitter',
+			replayPolicy: 'derived-glitter',
+			sourceIdentity: glitter,
+			includeInTransparencyScan,
+			ensureLoaded: async (callbacks) => {
+				if (!glitter) throw new Error(`Missing glitter ${glitterId}`);
+				if (glitter.frames) return;
+				callbacks.onStatus(`Loading ${glitter.name}...`);
+				try { glitter.frames = await callbacks.parseGif(glitter.url); }
+				catch (error) { throw new Error(`Failed to load ${glitter.name}`); }
+			},
+			getAnimation: () => glitter?.frames
+		};
+	}
+
+	_createStickerDescriptor(layer) {
+		const stickerData = layer.stickerData;
+		return {
+			key: layer.id,
+			label: stickerData.name,
+			ownerLayerId: layer.id,
+			effectSlot: null,
+			role: 'sticker',
+			replayPolicy: 'native-layer',
+			sourceIdentity: stickerData,
+			includeInTransparencyScan: true,
+			ensureLoaded: async (callbacks) => {
+				if (stickerData.frames) return;
+				callbacks.onStatus(`Loading ${stickerData.name}...`);
+				try { stickerData.frames = await callbacks.parseGif(stickerData.url); }
+				catch (error) { throw new Error(`Failed to load sticker ${stickerData.name}`); }
+			},
+			getAnimation: () => stickerData.frames
+		};
+	}
+
+	_createAuthoredTimingSource(descriptor, fallbackDuration) {
+		const animation = descriptor.getAnimation();
+		if (!animation?.frames?.length) throw new Error(`Missing animation data for ${descriptor.key}`);
+		return new AuthoredAnimationSource({
+			key: descriptor.key,
+			label: descriptor.label,
+			ownerLayerId: descriptor.ownerLayerId,
+			effectSlot: descriptor.effectSlot,
+			frameCount: animation.frames.length,
+			frameDurations: animation.frameDelays || [],
+			fallbackDuration: animation.frameDelay || fallbackDuration
+		});
+	}
+
+	_validateAuthoredSourceKeys(descriptors) {
+		const keys = new Set();
+		for (const descriptor of descriptors) {
+			if (keys.has(descriptor.key)) throw new Error(`Duplicate authored source key: ${descriptor.key}`);
+			keys.add(descriptor.key);
+		}
+	}
+
 	_buildLayerExportPlan(layer) {
 		switch (layer?.type) {
 			case LayerType.BASE_IMAGE: {
@@ -537,35 +523,21 @@ class GifExporter {
 				const mode = background.mode || 'image';
 				return {
 					prepareMasks: async () => {},
-					loadSources: async (library, callbacks) => {
-						if (mode !== 'glitter') return;
-						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						if (!glitter) throw new Error(`Missing glitter ${layer.selectedGlitterId}`);
-						if (!glitter.frames) glitter.frames = await callbacks.parseGif(glitter.url);
-					},
-					flattenFrames: (library, flattenSource) => {
-						if (mode !== 'glitter') return;
-						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						if (glitter?.frames?.frames?.length) flattenSource(layer.id, glitter.frames, `${glitter.name} (background)`, false);
-					},
-					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
-						if (mode === 'glitter') allFrames.push(...(flattenedFrameMap?.get(layer.id) || []));
-					},
-					collectFrameCounts: (library, counts) => {
-						if (mode !== 'glitter') { counts.set(layer.id, 1); return; }
-						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						counts.set(layer.id, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
-					},
-					hasMultiFrameGlitter: (counts) => mode === 'glitter' && (counts.get(layer.id) || 0) > 1,
-					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, width, height }) => {
+					prepareStaticResources: async () => {},
+					getAuthoredSources: (library) => mode === 'glitter' ? [this._createGlitterDescriptor(library, {
+						key: layer.id, label: `${library.find((item) => item.id === layer.selectedGlitterId)?.name || 'Glitter'} (background)`,
+						ownerLayerId: layer.id, glitterId: layer.selectedGlitterId, includeInTransparencyScan: true
+					})] : [],
+					getStaticTransparencyInputs: () => [],
+					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
 						if (mode === 'image' || mode === 'gradient' || mode === 'none') return;
 						ctx.save();
 						ctx.globalAlpha = (background.opacity ?? 100) / 100;
 						if (mode === 'solid') ctx.fillStyle = background.color || '#ffffff';
 						else if (mode === 'gradient') ctx.fillStyle = createEffectCanvasGradient(ctx, background.gradient, { x: 0, y: 0, width, height });
 						else {
-							const frames = flattenedFrameMap?.get(layer.id) || [];
-							const reduced = frameMap?.get(layer.id);
+							const frames = resolvedFramesBySource?.get(layer.id) || [];
+							const reduced = sourceSelectionMap?.get(layer.id);
 							const frame = frames[this._getReducedFrameIndex(frameIndex, frames.length, reduced)];
 							if (!frame) throw new Error(`Missing background glitter frame for ${layer.id}`);
 							const pattern = ctx.createPattern(this._patternSourceFromFrame(frame, background.colorAdjust), 'repeat');
@@ -588,52 +560,23 @@ class GifExporter {
 						maskDataMap.set(layer.id, rawMask);
 						maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
 					},
-					loadSources: async (library, callbacks) => {
-						if (fillMode !== 'glitter') return;
-						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						if (!glitter) {
-							throw new Error(`Missing glitter ${layer.selectedGlitterId}`);
-						}
-						if (!glitter.frames) {
-							callbacks.onStatus(`Loading ${glitter.name}...`);
-							try {
-								glitter.frames = await callbacks.parseGif(glitter.url);
-							} catch (error) {
-								throw new Error(`Failed to load ${glitter.name}`);
-							}
-						}
-					},
-					flattenFrames: (library, flattenSource) => {
-						if (fillMode !== 'glitter') return;
-						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						if (!glitter?.frames?.frames?.length) return;
-						flattenSource(layer.id, glitter.frames, glitter.name, false);
-					},
-					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
-						if (fillMode !== 'glitter') return;
-						const frames = flattenedFrameMap?.get(layer.id);
-						if (frames?.length) {
-							allFrames.push(...frames);
-						}
-					},
-					collectFrameCounts: (library, layerFrameCounts) => {
-						if (fillMode !== 'glitter') { layerFrameCounts.set(layer.id, 1); return; }
-						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						layerFrameCounts.set(layer.id, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
-					},
-					hasMultiFrameGlitter: (layerFrameCounts) => fillMode === 'glitter' && (layerFrameCounts.get(layer.id) || 0) > 1,
-					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, maskCanvases, helperCtx, width, height }) => {
+					prepareStaticResources: async () => {},
+					getAuthoredSources: (library) => fillMode === 'glitter' ? [this._createGlitterDescriptor(library, {
+						key: layer.id, ownerLayerId: layer.id, glitterId: layer.selectedGlitterId, includeInTransparencyScan: true
+					})] : [],
+					getStaticTransparencyInputs: () => [],
+					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
 						const maskCanvas = maskCanvases.get(layer.id);
 						if (!maskCanvas) {
 							throw new Error(`Missing mask canvas for layer ${layer.id}`);
 						}
 
-						const frames = flattenedFrameMap?.get(layer.id);
+						const frames = resolvedFramesBySource?.get(layer.id);
 						if (fillMode === 'glitter' && !frames?.length) {
-							throw new Error(`Missing flattened glitter frames for layer ${layer.id}`);
+							throw new Error(`Missing resolved glitter frames for layer ${layer.id}`);
 						}
 
-						const reducedFrameCount = frameMap?.get(layer.id);
+						const reducedFrameCount = sourceSelectionMap?.get(layer.id);
 						const fIdx = fillMode === 'glitter' ? this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount) : 0;
 						const frameImageData = fillMode === 'glitter' ? frames[fIdx] : null;
 						if (fillMode === 'glitter' && !frameImageData) {
@@ -674,54 +617,17 @@ class GifExporter {
 						const fillMaskCanvas = await callbacks.renderTextMask(layer);
 						textMaskCanvases.set(layer.id, this._buildTextMaskEntry(layer, fillMaskCanvas));
 					},
-					loadSources: async (library, callbacks) => {
-						for (const source of glitterSources) {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							if (!glitter) {
-								throw new Error(`Missing glitter ${source.glitterId}`);
-							}
-							if (!glitter.frames) {
-								callbacks.onStatus(`Loading ${glitter.name}...`);
-								try {
-									glitter.frames = await callbacks.parseGif(glitter.url);
-								} catch (error) {
-									throw new Error(`Failed to load ${glitter.name}`);
-								}
-							}
-						}
-
-						try {
-							await callbacks.ensureTextFont(layer.textData.fontId);
-						} catch (error) {
-							throw new Error(error.message);
-						}
+					prepareStaticResources: async ({ callbacks }) => {
+						try { await callbacks.ensureTextFont(layer.textData.fontId); }
+						catch (error) { throw new Error(error.message); }
 					},
-					flattenFrames: (library, flattenSource) => {
-						glitterSources.forEach((source) => {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							if (!glitter?.frames?.frames?.length) return;
-							flattenSource(source.key, glitter.frames, `${glitter.name} (${source.slot})`, false);
-						});
-					},
-					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
-						glitterSources.forEach((source) => {
-							const frames = flattenedFrameMap?.get(source.key);
-							if (frames?.length) {
-								allFrames.push(...frames);
-							}
-						});
-					},
-					collectFrameCounts: (library, layerFrameCounts) => {
-						glitterSources.forEach((source) => {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
-						});
-					},
-					hasMultiFrameGlitter: (layerFrameCounts) => glitterSources.some((source) =>
-						(layerFrameCounts.get(source.key) || 0) > 1
-					),
-					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, textMaskCanvases }) => {
-						this._renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, textMaskCanvases);
+					getAuthoredSources: (library) => glitterSources.map((source) => this._createGlitterDescriptor(library, {
+						...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
+						ownerLayerId: layer.id, effectSlot: source.slot, includeInTransparencyScan: true
+					})),
+					getStaticTransparencyInputs: () => [],
+					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases }) => {
+						this._renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases);
 					}
 				};
 			}
@@ -734,49 +640,14 @@ class GifExporter {
 						// and shadow masks so preview/export stay in sync.
 						shapeMaskCanvases.set(layer.id, callbacks.renderShapeMask(layer));
 					},
-					loadSources: async (library, callbacks) => {
-						for (const source of glitterSources) {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							if (!glitter) {
-								throw new Error(`Missing glitter ${source.glitterId}`);
-							}
-							if (!glitter.frames) {
-								callbacks.onStatus(`Loading ${glitter.name}...`);
-								try {
-									glitter.frames = await callbacks.parseGif(glitter.url);
-								} catch (error) {
-									throw new Error(`Failed to load ${glitter.name}`);
-								}
-							}
-						}
-					},
-					flattenFrames: (library, flattenSource) => {
-						glitterSources.forEach((source) => {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							if (!glitter?.frames?.frames?.length) return;
-							flattenSource(source.key, glitter.frames, `${glitter.name} (${source.slot})`, false);
-						});
-					},
-					collectTransparencyFrames: () => {
-						// Safe-key selection historically ignored shape slots; keep that
-						// behavior for this refactor so export output stays unchanged.
-					},
-					collectFrameCounts: (library, layerFrameCounts) => {
-						if (glitterSources.length === 0) {
-							layerFrameCounts.set(layer.id, 1);
-							return;
-						}
-
-						glitterSources.forEach((source) => {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
-						});
-					},
-					hasMultiFrameGlitter: (layerFrameCounts) => glitterSources.some((source) =>
-						(layerFrameCounts.get(source.key) || 0) > 1
-					),
-					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, shapeMaskCanvases }) => {
-						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, shapeMaskCanvases);
+					prepareStaticResources: async () => {},
+					getAuthoredSources: (library) => glitterSources.map((source) => this._createGlitterDescriptor(library, {
+						...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
+						ownerLayerId: layer.id, effectSlot: source.slot, includeInTransparencyScan: false
+					})),
+					getStaticTransparencyInputs: () => [],
+					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases }) => {
+						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases);
 					}
 				};
 			}
@@ -785,17 +656,10 @@ class GifExporter {
 				const glitterSources = this._getStickerGlitterSources(layer);
 				return {
 					prepareMasks: async () => {},
-					loadSources: async (library, callbacks) => {
+					prepareStaticResources: async ({ callbacks }) => {
 						const stickerData = layer.stickerData;
-						if (stickerData.isAnimated && !stickerData.frames) {
-							callbacks.onStatus(`Loading ${stickerData.name}...`);
-							try {
-								stickerData.frames = await callbacks.parseGif(stickerData.url);
-							} catch (error) {
-								throw new Error(`Failed to load sticker ${stickerData.name}`);
-							}
-					} else if (!stickerData.isAnimated && !this._getFrameImageData(stickerData.staticImageData)) {
-						stickerData.staticImageData = null;
+						if (!stickerData.isAnimated && !this._getFrameImageData(stickerData.staticImageData)) {
+							stickerData.staticImageData = null;
 							callbacks.onStatus(`Loading ${stickerData.name}...`);
 							try {
 								stickerData.staticImageData = await this._loadStaticImage(stickerData.url);
@@ -803,50 +667,17 @@ class GifExporter {
 								throw new Error(`Failed to load static sticker ${stickerData.name}`);
 							}
 						}
-						for (const source of glitterSources) {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							if (!glitter) throw new Error(`Missing glitter ${source.glitterId}`);
-							if (!glitter.frames) glitter.frames = await callbacks.parseGif(glitter.url);
-						}
 					},
-					flattenFrames: (library, flattenSource) => {
-						const stickerData = layer.stickerData;
-						if (stickerData.isAnimated && stickerData.frames?.frames?.length) {
-							flattenSource(layer.id, stickerData.frames, stickerData.name, true);
-						}
-						glitterSources.forEach((source) => {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							if (glitter?.frames?.frames?.length) flattenSource(source.key, glitter.frames, `${glitter.name} (${source.slot})`, false);
-						});
-					},
-					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
-						const stickerData = layer.stickerData;
-						if (stickerData.isAnimated) {
-							const frames = flattenedFrameMap?.get(layer.id);
-							if (frames?.length) {
-								allFrames.push(...frames);
-							}
-						} else if (stickerData.staticImageData) {
-							allFrames.push(stickerData.staticImageData);
-						}
-						glitterSources.forEach((source) => {
-							const frames = flattenedFrameMap?.get(source.key);
-							if (frames?.length) allFrames.push(...frames);
-						});
-					},
-					collectFrameCounts: (library, layerFrameCounts) => {
-						const frameCount = layer.stickerData.isAnimated
-							? (layer.stickerData.frames?.frames?.length || layer.stickerData.frameCount || 1)
-							: 1;
-						layerFrameCounts.set(layer.id, frameCount);
-						glitterSources.forEach((source) => {
-							const glitter = library.find((item) => item.id === source.glitterId);
-							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
-						});
-					},
-					hasMultiFrameGlitter: (layerFrameCounts) => glitterSources.some((source) => (layerFrameCounts.get(source.key) || 0) > 1),
-					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap }) => {
-						this._renderLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap);
+					getAuthoredSources: (library) => [
+						...(layer.stickerData.isAnimated ? [this._createStickerDescriptor(layer)] : []),
+						...glitterSources.map((source) => this._createGlitterDescriptor(library, {
+							...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
+							ownerLayerId: layer.id, effectSlot: source.slot, includeInTransparencyScan: true
+						}))
+					],
+					getStaticTransparencyInputs: () => layer.stickerData.isAnimated || !layer.stickerData.staticImageData ? [] : [layer.stickerData.staticImageData],
+					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
+						this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource);
 					}
 				};
 			}
@@ -854,11 +685,9 @@ class GifExporter {
 			case LayerType.FILTER: {
 				return {
 					prepareMasks: async () => {},
-					loadSources: async () => {},
-					flattenFrames: () => {},
-					collectTransparencyFrames: () => {},
-					collectFrameCounts: (library, counts) => counts.set(layer.id, 1),
-					hasMultiFrameGlitter: () => false,
+					prepareStaticResources: async () => {},
+					getAuthoredSources: () => [],
+					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, width, height, needsTransparency, safeKey, alphaThreshold }) => {
 						if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
 						const caption = GlitterFilter.resolve(layer.filterData).caption;
@@ -879,22 +708,16 @@ class GifExporter {
 			default:
 				return {
 					prepareMasks: async () => {},
-					loadSources: async () => {},
-					flattenFrames: () => {},
-					collectTransparencyFrames: () => {},
-					collectFrameCounts: () => {},
-					hasMultiFrameGlitter: () => false,
+					prepareStaticResources: async () => {},
+					getAuthoredSources: () => [],
+					getStaticTransparencyInputs: () => [],
 					render: () => {}
 				};
 		}
 	}
 
 	_getTextEffectGlitterSources(layer) {
-		// Single chokepoint for every export-side text-glitter enumeration
-		// (frame flatten/load, total-frame count, transparency scan). A
-		// solid-mode fill renders no glitter — including its stale
-		// selectedGlitterId here would frame-count and flatten a source that
-		// never appears, breaking preview↔export parity and static-GIF output.
+		// Non-glitter modes must not declare stale selectedGlitterId values as sources.
 		const sources = [];
 
 		if (layer.textData?.fill?.mode === 'glitter') {
@@ -924,7 +747,7 @@ class GifExporter {
 		return sources;
 	}
 
-	_createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, sourceKey, frameMap, flattenedFrameMap) {
+	_createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource) {
 		const fillCanvas = document.createElement('canvas');
 		fillCanvas.width = maskCanvas.width;
 		fillCanvas.height = maskCanvas.height;
@@ -940,7 +763,7 @@ class GifExporter {
 				x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height
 			});
 		} else {
-			const frameImageData = this._getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap);
+			const frameImageData = this._getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource);
 			const patternSource = this._patternSourceFromFrame(frameImageData, source.colorAdjust);
 
 			const pattern = fillCtx.createPattern(patternSource, 'repeat');
@@ -980,7 +803,7 @@ class GifExporter {
 
 	// Build the repeating-pattern source canvas for a glitter frame, applying the
 	// WP4 color-adjust matrix when the layer/slot has a non-identity adjustment.
-	// The flattened frame is a shared cached ImageData, so a non-identity adjust
+	// The resolved frame is a shared cached ImageData, so a non-identity adjust
 	// works on a COPY — never mutate the cache. Identity adjust puts the original
 	// bytes straight through, keeping export byte-identical to pre-WP4 content.
 	_patternSourceFromFrame(frameImageData, colorAdjust) {
@@ -1069,13 +892,13 @@ class GifExporter {
 		return result;
 	}
 
-	_getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap) {
-		const frames = flattenedFrameMap?.get(sourceKey);
+	_getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource) {
+		const frames = resolvedFramesBySource?.get(sourceKey);
 		if (!frames?.length) {
-			throw new Error(`Missing flattened glitter frames for ${sourceKey}`);
+			throw new Error(`Missing resolved glitter frames for ${sourceKey}`);
 		}
 
-		const reducedFrameCount = frameMap?.get(sourceKey);
+		const reducedFrameCount = sourceSelectionMap?.get(sourceKey);
 		const frameIndexForLayer = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
 		const frameImageData = frames[frameIndexForLayer];
 		if (!frameImageData) {
@@ -1237,15 +1060,141 @@ class GifExporter {
 		});
 	}
 
+	_createWatermarkDescriptor(watermark) {
+		return {
+			key: '__watermark',
+			label: 'Animated watermark',
+			ownerLayerId: null,
+			effectSlot: null,
+			role: 'watermark',
+			replayPolicy: 'watermark-current',
+			sourceIdentity: watermark,
+			includeInTransparencyScan: true,
+			ensureLoaded: async () => {},
+			getAnimation: () => watermark,
+			transformResolvedFrame: (frame) => {
+				if (this.config.watermarkAlphaThreshold <= 0) return frame;
+				const copy = new ImageData(new Uint8ClampedArray(frame.data), frame.width, frame.height);
+				for (let offset = 3; offset < copy.data.length; offset += 4) {
+					copy.data[offset] = copy.data[offset] < this.config.watermarkAlphaThreshold ? 0 : 255;
+				}
+				return copy;
+			}
+		};
+	}
+
+	async _prepareExportContext(params) {
+		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
+		const settingsSnapshot = Object.freeze({ ...exportSettings });
+		const layerPlans = visibleLayers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
+		const authoredSources = layerPlans.flatMap(({ plan }) => plan.getAuthoredSources(glitterGifs));
+		this._validateAuthoredSourceKeys(authoredSources);
+		const sourceKeys = new Set(authoredSources.map((descriptor) => descriptor.key));
+		for (const descriptor of authoredSources) {
+			await descriptor.ensureLoaded(callbacks);
+		}
+		for (let index = 0; index < layerPlans.length; index++) {
+			await layerPlans[index].plan.prepareStaticResources({ callbacks, canvasData });
+			callbacks.onLayerLoaded?.(index + 1, layerPlans.length);
+		}
+		let watermark = null;
+		if (settingsSnapshot.watermarkEnabled) watermark = await this._loadWatermark(callbacks, settingsSnapshot.watermark);
+		const watermarkSource = watermark?.isAnimated ? this._createWatermarkDescriptor(watermark) : null;
+		if (watermarkSource) {
+			if (sourceKeys.has(watermarkSource.key)) throw new Error(`Duplicate authored source key: ${watermarkSource.key}`);
+			sourceKeys.add(watermarkSource.key);
+			authoredSources.push(watermarkSource);
+		}
+		const masks = {
+			raw: new Map(),
+			glitter: new Map(),
+			text: new Map(),
+			shape: new Map()
+		};
+		for (const { plan } of layerPlans) {
+			await plan.prepareMasks({
+				maskDataMap: masks.raw,
+				maskCanvases: masks.glitter,
+				textMaskCanvases: masks.text,
+				shapeMaskCanvases: masks.shape,
+				canvasData,
+				callbacks
+			});
+		}
+		this._indexPixelatedGlitters(glitterGifs);
+		return {
+			visibleLayers,
+			library: glitterGifs,
+			canvasData,
+			exportSettings: settingsSnapshot,
+			layerPlans,
+			masks,
+			authoredSources,
+			proceduralSources: this._collectProceduralSources(visibleLayers, { includeBaseImage: settingsSnapshot.baseImage }),
+			watermark,
+			watermarkSource
+		};
+	}
+
+	_resolveTransparencyState(context, { targetSupportsTransparency }) {
+		const { visibleLayers, canvasData, exportSettings, masks } = context;
+		const baseLayer = visibleLayers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseMode = baseLayer?.background?.mode || 'image';
+		const baseHasImageSource = baseMode !== 'image' || canvasData.hasBaseImage !== false;
+		const baseVisible = Boolean(baseLayer && baseLayer.visible !== false && exportSettings.baseImage && baseMode !== 'none' && baseHasImageSource);
+		const baseHasTransparency = !baseVisible
+			|| (baseLayer?.background?.opacity ?? 100) < 100
+			|| (baseMode === 'image' && this._hasTransparency(canvasData))
+			|| (baseMode === 'gradient' && normalizeEffectGradient(baseLayer.background.gradient).stops.some((stop) => stop.alpha < 1));
+		const transparencyFilled = this._isTransparencyFilled(visibleLayers, masks.raw, canvasData);
+		return {
+			baseLayer,
+			baseMode,
+			baseVisible,
+			baseHasTransparency,
+			transparencyFilled,
+			needsTransparency: Boolean(targetSupportsTransparency && exportSettings.transparency
+				&& (!baseVisible || (baseHasTransparency && !transparencyFilled)))
+		};
+	}
+
+	_resolveAllAuthored(context, session, fallbackDuration) {
+		const resolvedFramesBySource = new Map();
+		const authoredTimelines = [];
+		for (const descriptor of context.authoredSources) {
+			resolvedFramesBySource.set(descriptor.key, this.authoredFrameResolver.resolveAll(descriptor, session));
+			const sourceFallback = descriptor.role === 'watermark' ? fallbackDuration : CONFIG.export.defaults.frameDelay;
+			authoredTimelines.push(this._createAuthoredTimingSource(descriptor, sourceFallback));
+		}
+		return { resolvedFramesBySource, authoredTimelines };
+	}
+
+	_resolveSelectedAuthored(context, session, timestamp, fallbackDuration) {
+		const resolvedFramesBySource = new Map();
+		const sourceSelectionMap = new Map();
+		for (const descriptor of context.authoredSources) {
+			const sourceFallback = descriptor.role === 'watermark' ? fallbackDuration : CONFIG.export.defaults.frameDelay;
+			const timeline = this._createAuthoredTimingSource(descriptor, sourceFallback);
+			const nativeFrameIndex = timeline.frameIndexAt(timestamp);
+			resolvedFramesBySource.set(descriptor.key, [this.authoredFrameResolver.resolveFrame(descriptor, nativeFrameIndex, session)]);
+			sourceSelectionMap.set(descriptor.key, { frameIndex: 0, nativeFrameIndex });
+		}
+		for (const descriptor of context.proceduralSources) {
+			sourceSelectionMap.set(descriptor.key, descriptor.sampleAt(timestamp));
+		}
+		return { resolvedFramesBySource, sourceSelectionMap };
+	}
+
 
 	async process(params) {
-		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, frameSink = null, outputFormat = 'gif' } = params;
+		const { visibleLayers, glitterGifs, canvasData, callbacks, frameSink = null, outputFormat = 'gif' } = params;
+		const exportSettings = {
+			...params.exportSettings,
+			frameDelay: AuthoredAnimationSource.normalizeDuration(params.exportSettings.frameDelay, CONFIG.export.defaults.frameDelay)
+		};
 		this.filterGrainTileCache.clear();
 
-		// Validate frame delay at the start
-		exportSettings.frameDelay = Math.max(20, exportSettings.frameDelay || 100);
-
-		// 1. Ensure Frames Loaded
+		// Common preparation owns source loading, masks, and immutable settings.
 		reportGifExportProgress(callbacks, 'loading', 0, 'Loading animation sources…', 0, visibleLayers.length);
 		let loadingSourceCount = 0;
 		const loadingCallbacks = {
@@ -1268,80 +1217,29 @@ class GifExporter {
 				reportGifExportProgress(callbacks, 'loading', ratio, detail, current, total, { indeterminate: !hasTotal });
 			}
 		};
-		await this._loadMissingFrames(visibleLayers, glitterGifs, loadingCallbacks);
-		let watermark = null;
-		if (exportSettings.watermarkEnabled) {
-			watermark = await this._loadWatermark(loadingCallbacks, exportSettings.watermark);
-			if (watermark) dbg('[GifExporter] Watermark loaded:', watermark);
-		}
+		const context = await this._prepareExportContext({ ...params, visibleLayers, glitterGifs, canvasData, exportSettings, callbacks: loadingCallbacks });
+		const { proceduralSources } = context;
 		reportGifExportProgress(callbacks, 'loading', 1, 'Animation sources ready', visibleLayers.length, visibleLayers.length);
 
-		// 1.5. Prepare masks so preview and export share identical data
 		reportGifExportProgress(callbacks, 'masks', 0, 'Preparing layer masks…', 0, visibleLayers.length);
-		const maskDataMap = new Map();
-		const maskCanvases = new Map();
-		const textMaskCanvases = new Map();
-		const shapeMaskCanvases = new Map();
-		let preparedMaskCount = 0;
-		for (const layer of visibleLayers) {
-			await this._buildLayerExportPlan(layer).prepareMasks({
-				maskDataMap,
-				maskCanvases,
-				textMaskCanvases,
-				shapeMaskCanvases,
-				canvasData,
-				callbacks
-			});
-			preparedMaskCount++;
-			reportGifExportProgress(callbacks, 'masks', preparedMaskCount / visibleLayers.length, `Prepared mask ${preparedMaskCount} / ${visibleLayers.length}`, preparedMaskCount, visibleLayers.length);
-		}
+		reportGifExportProgress(callbacks, 'masks', 1, 'Layer masks ready', visibleLayers.length, visibleLayers.length);
 
-		// 2. De-Optimize Frames
+		// Animation retains full resolved arrays; still composition never enters this path.
 		reportGifExportProgress(callbacks, 'planning', 0, 'Indexing animation frames…');
 		await this._yieldForProgress();
-		this._indexPixelatedGlitters(glitterGifs);
-		const flattenedFrameMap = this._buildFlattenedFrameMap(visibleLayers, glitterGifs);
+		const resolutionSession = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
+		const { resolvedFramesBySource, authoredTimelines } = this._resolveAllAuthored(context, resolutionSession, exportSettings.frameDelay);
 
-		// De-optimize watermark if animated
-		if (watermark && watermark.isAnimated) {
-			await this._deoptimizeWatermarkFrames(watermark, callbacks);
-		}
-
-		// Around line 6596-6611 - Fix transparency detection when base is off
-		// 3. TRANSPARENCY DETECTION
-		const originalHasTransparency = this._hasTransparency(canvasData);
-		const transparencyIsFilled = this._isTransparencyFilled(visibleLayers, maskDataMap, canvasData);
-
-		// Check if the base layer is actually being rendered
-		const baseLayer = visibleLayers.find(l => l.type === LayerType.BASE_IMAGE);
-		const baseMode = baseLayer?.background?.mode || 'image';
-		const baseHasImageSource = baseMode !== 'image' || canvasData.hasBaseImage !== false;
-		const baseIsEffectivelyVisible = baseLayer && (baseLayer.visible !== false) && exportSettings.baseImage && baseMode !== 'none' && baseHasImageSource;
-		const baseOpacity = baseLayer?.background?.opacity ?? 100;
-		const baseHasTransparency = !baseIsEffectivelyVisible
-			|| baseOpacity < 100
-			|| (baseMode === 'image' && originalHasTransparency)
-			|| (baseMode === 'gradient' && normalizeEffectGradient(baseLayer.background.gradient).stops.some((stop) => stop.alpha < 1));
-
-		// If the base layer is hidden, the background is effectively transparent
-		const effectiveHasTransparency = baseHasTransparency;
-
-		// When base is off, honor transparency setting regardless of fill.
-		// When base is ON, only enable transparency if it's not being consumed by opaque fill
-		const needsTransparency = exportSettings.transparency && (
-			!baseIsEffectivelyVisible || // Base off = always respect transparency checkbox
-			(effectiveHasTransparency && !transparencyIsFilled) // Base on = only if not filled
-		);
-
-		const safeKey = needsTransparency
-			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark, flattenedFrameMap)
-			: null;
+		const transparencyState = this._resolveTransparencyState(context, {
+			targetSupportsTransparency: params.target?.supportsTransparency ?? outputFormat === 'gif'
+		});
+		const needsTransparency = transparencyState.needsTransparency;
+		const safeKey = needsTransparency ? this._findSafeTransparencyKey(context, resolvedFramesBySource) : null;
 
 		if (safeKey) {
 			dbg(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
 		}
 
-		// 4. Build a time-based plan from the timing of every visible source.
 		const timelineConfig = CONFIG.export.timeline;
 		const requestedFidelity = Number(exportSettings.exportFidelity);
 		const fidelityIndex = Math.max(0, Math.min(
@@ -1349,17 +1247,7 @@ class GifExporter {
 			Number.isFinite(requestedFidelity) ? requestedFidelity : CONFIG.export.defaults.exportFidelity
 		));
 		const preset = timelineConfig.fidelityStops[fidelityIndex];
-		const sourceTimelines = [...(flattenedFrameMap.sourceTimelines || [])];
-		this._appendProceduralSources(sourceTimelines, visibleLayers, { includeBaseImage: exportSettings.baseImage });
-		if (watermark?.isAnimated) {
-			sourceTimelines.push(new AuthoredAnimationSource({
-				key: '__watermark',
-				label: 'Animated watermark',
-				frames: watermark.frames,
-				frameDurations: watermark.frameDelays || [],
-				fallbackDuration: watermark.frameDelay || exportSettings.frameDelay
-			}));
-		}
+		const sourceTimelines = [...authoredTimelines, ...this._createProceduralTimelines(proceduralSources)];
 
 		callbacks.onStatus('Planning animation timing...');
 		reportGifExportProgress(callbacks, 'planning', 0.5, 'Resolving source timing…');
@@ -1394,22 +1282,14 @@ class GifExporter {
 			renderFrame: async (timestamp, frameSelection, candidateCount) => {
 				renderedCandidateCount++;
 				reportGifExportProgress(callbacks, 'composing', renderedCandidateCount / candidateCount, `Composing frame ${renderedCandidateCount} / ${candidateCount}`, renderedCandidateCount, candidateCount);
-				const frame = this._renderFrame(
-					0,
-					canvasData,
-					visibleLayers,
-					glitterGifs,
-					maskCanvases,
-					textMaskCanvases,
-					shapeMaskCanvases,
-					safeKey,
-					exportSettings,
-					watermark,
-					needsTransparency,
-					frameSelection,
-					flattenedFrameMap,
-					timestamp
-				);
+				const frame = this._renderFrame({
+					outputFrameIndex: 0,
+					timestamp,
+					context,
+					transparency: { ...transparencyState, safeKey },
+					sourceSelectionMap: frameSelection,
+					resolvedFramesBySource
+				});
 				if (renderedCandidateCount < candidateCount
 					&& renderedCandidateCount % CONFIG.export.progress.yieldEveryFrames === 0) {
 					await this._yieldForProgress();
@@ -1437,20 +1317,6 @@ class GifExporter {
 			framesAfterReduction: plan.renderClock.framesAfterReduction
 		});
 		reportGifExportProgress(callbacks, 'reducing', 1, `Removed ${plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged} duplicate or near-duplicate frames`, plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
-		reportGifExportProgress(callbacks, 'palette', 0, 'Analyzing export colors…');
-		await this._yieldForProgress();
-		plan.colorAnalysis = this._analyzeGifColors(plan.frames);
-		const gifColorCount = GifPalette.resolveColorCount(exportSettings.colorCount, plan.colorAnalysis);
-		const useNativePalette = exportSettings.colorCount === 'auto' && !exportSettings.ditherEnabled;
-		if (plan.colorAnalysis) {
-			plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled && !needsTransparency);
-			plan.colorAnalysis.paletteSize = gifColorCount;
-			plan.colorAnalysis.paletteMode = useNativePalette ? 'native' : 'shared';
-			plan.colorAnalysis.authoredDither = visibleLayers.some((layer) => {
-				const effects = layer.background?.pixelEffects;
-				return effects?.paletteEnabled && effects.paletteMode === 'dither';
-			});
-		}
 		plan.reductions = [];
 		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
 		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
@@ -1460,142 +1326,73 @@ class GifExporter {
 			reportGifExportProgress(callbacks, 'reducing', 1, detail);
 		}
 
-		// 5. Setup Encoder with Adaptive Quality
-		let finalQuality = exportSettings.quality;
-
-		if (this.config.useAdaptiveQuality && !exportSettings.quality) {
-			const pixelCount = canvasData.width * canvasData.height;
-			finalQuality = pixelCount > 100000 ? 10 : 5;
-			dbg(`[GifExporter] Using adaptive quality: ${finalQuality} (${pixelCount} pixels)`);
-		} else {
-			dbg(`[GifExporter] Using fixed quality: ${finalQuality}`);
+		if (frameSink) return frameSink(plan);
+		const encoded = await this.gifEncodingPipeline.encode({
+			frames: plan.frames,
+			delays: plan.frameDurations,
+			settings: exportSettings,
+			transparency: { needed: needsTransparency, safeKey },
+			mode: 'animation',
+			reportProgress: (phase, ratio, detail, current, total) => reportGifExportProgress(callbacks, phase, ratio, detail, current, total),
+			isCancelled: callbacks.isCancelled
+		});
+		plan.colorAnalysis = encoded.analysis;
+		if (plan.colorAnalysis) {
+			plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled && !needsTransparency);
+			plan.colorAnalysis.paletteSize = encoded.paletteSize;
+			plan.colorAnalysis.paletteMode = exportSettings.colorCount === 'auto' && !exportSettings.ditherEnabled ? 'native' : 'shared';
+			plan.colorAnalysis.authoredDither = visibleLayers.some((layer) => {
+				const effects = layer.background?.pixelEffects;
+				return effects?.paletteEnabled && effects.paletteMode === 'dither';
+			});
 		}
+		this._handleFileSave(encoded.blob, callbacks, plan);
+		return encoded.blob;
 
-		// Preserve gif.js's mature per-frame NeuQuant path for the clean default.
-		// The custom shared palette is an explicit aesthetic choice, not a tax on
-		// every export.
-		reportGifExportProgress(callbacks, 'palette', 0.25, useNativePalette ? 'Preparing per-frame colors…' : 'Choosing a shared palette…');
-		await this._yieldForProgress();
-		const globalPalette = useNativePalette ? null : GifPalette.build(plan.frames, gifColorCount, {
-			transparentColor: needsTransparency && safeKey ? safeKey.hex : null,
-			style: exportSettings.paletteStyle,
-			maxSamples: exportSettings.quality <= 1 ? 524288 : (exportSettings.quality <= 10 ? 262144 : 131072)
-		});
-		reportGifExportProgress(callbacks, 'palette', 0.5, exportSettings.ditherEnabled ? 'Applying the export palette…' : 'Palette ready');
-		await this._yieldForProgress();
-		const encodedFrames = useNativePalette ? plan.frames : await this._applyGifDither(plan.frames, globalPalette, {
-			...exportSettings,
-			hasTransparency: needsTransparency
-		}, callbacks);
-		reportGifExportProgress(callbacks, 'palette', 1, `Palette ready for ${plan.frames.length} frames`, plan.frames.length, plan.frames.length);
-		const gifOptions = {
-			workers: this.config.workers,
-			quality: finalQuality,
-			width: canvasData.width,
-			height: canvasData.height,
-			workerScript: this.config.workerScript,
-			dither: false
-		};
-		if (globalPalette) gifOptions.globalPalette = globalPalette;
-
-		if (needsTransparency && safeKey) {
-			gifOptions.transparent = safeKey.hex;
-			gifOptions.background = safeKey.hex;
-			dbg('[GifExporter] Transparency enabled with key:', safeKey.hex);
-		}
-
-		if (frameSink) {
-			return frameSink(plan);
-		}
-
-		const gif = new GIF(gifOptions);
-		encodedFrames.forEach((frame, index) => gif.addFrame(frame, {
-			delay: plan.frameDurations[index],
-			copy: true
-		}));
-
-		// 6. Output
-		reportGifExportProgress(callbacks, 'encoding', 0, 'Encoding… 0%', 0, plan.frames.length);
-
-		// NOTE: these fire from gif.js's event emitter, outside the caller's
-		// try/catch — throwing here would leave the progress bar stuck and the
-		// export button disabled forever. Route to the error callback instead.
-		gif.on('error', (error) => {
-			if (this.config.debug) console.error('GIF encoding error:', error);
-			if (callbacks.onError) callbacks.onError(new Error('GIF encoding failed: ' + error.message));
-		});
-
-		gif.on('abort', () => {
-			if (callbacks.onError) callbacks.onError(new Error('Export cancelled'));
-		});
-
-		gif.on('progress', (progress) => {
-			reportGifExportProgress(callbacks, 'encoding', progress, `Encoding… ${Math.round(progress * 100)}%`, Math.round(progress * plan.frames.length), plan.frames.length);
-		});
-
-		gif.on('finished', (blob) => {
-			reportGifExportProgress(callbacks, 'finalizing', 0, 'Preparing exported file…');
-			this._handleFileSave(blob, callbacks, plan);
-		});
-
-		dbg('Starting GIF render:', {
-			originalFrames: plan.reduction.originalFrameCount,
-			renderedFrames: plan.frames.length,
-			totalDuration: plan.totalDuration,
-			workers: this.config.workers,
-			quality: exportSettings.quality,
-			colors: gifColorCount,
-			key: safeKey,
-			transparencyActive: needsTransparency
-		});
-
-		gif.render();
 	}
 
 	async composeFrameAt(params) {
-		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, timestamp = 0 } = params;
+		const { visibleLayers, canvasData, exportSettings, callbacks, timestamp = 0 } = params;
 		this.filterGrainTileCache.clear();
 		callbacks.onProgress(0, 'Loading sources…', 0, visibleLayers.length, { phase: 'Preparing' });
-		await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
-		let watermark = null;
-		if (exportSettings.watermarkEnabled) watermark = await this._loadWatermark(callbacks, exportSettings.watermark);
-		const maskDataMap = new Map();
-		const maskCanvases = new Map();
-		const textMaskCanvases = new Map();
-		const shapeMaskCanvases = new Map();
-		for (const layer of visibleLayers) {
-			await this._buildLayerExportPlan(layer).prepareMasks({ maskDataMap, maskCanvases, textMaskCanvases, shapeMaskCanvases, canvasData, callbacks });
-		}
-		this._indexPixelatedGlitters(glitterGifs);
-		const flattenedFrameMap = this._buildFlattenedFrameMap(visibleLayers, glitterGifs);
-		if (watermark?.isAnimated) await this._deoptimizeWatermarkFrames(watermark, callbacks);
-		const baseLayer = visibleLayers.find((layer) => layer.type === LayerType.BASE_IMAGE);
-		const baseMode = baseLayer?.background?.mode || 'image';
-		const baseHasImageSource = baseMode !== 'image' || canvasData.hasBaseImage !== false;
-		const baseVisible = baseLayer && baseLayer.visible !== false && exportSettings.baseImage && baseMode !== 'none' && baseHasImageSource;
-		const baseTransparent = !baseVisible || (baseLayer?.background?.opacity ?? 100) < 100 || (baseMode === 'image' && this._hasTransparency(canvasData));
-		const transparencyFilled = this._isTransparencyFilled(visibleLayers, maskDataMap, canvasData);
-		const needsTransparency = exportSettings.transparency && (!baseVisible || (baseTransparent && !transparencyFilled));
-		const safeKey = needsTransparency ? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark, flattenedFrameMap) : null;
-		const timelines = [...(flattenedFrameMap.sourceTimelines || [])];
-		this._appendProceduralSources(timelines, visibleLayers, { includeBaseImage: exportSettings.baseImage });
-		if (watermark?.isAnimated) timelines.push(new AuthoredAnimationSource({ key: '__watermark', frames: watermark.frames, frameDurations: watermark.frameDelays, fallbackDuration: watermark.frameDelay || exportSettings.frameDelay }));
-		const selection = new Map(timelines.map((timeline) => [timeline.key, timeline.sampleAt(timestamp)]));
+		const context = await this._prepareExportContext(params);
+		const session = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
+		const { resolvedFramesBySource, sourceSelectionMap } = this._resolveSelectedAuthored(context, session, timestamp, exportSettings.frameDelay);
+		const transparencyState = this._resolveTransparencyState(context, {
+			targetSupportsTransparency: params.target?.supportsTransparency ?? true
+		});
+		const safeKey = transparencyState.needsTransparency
+			? this._findSafeTransparencyKey(context, resolvedFramesBySource, { sourceSelectionMap })
+			: null;
 		this.helperCanvas.width = this.layerBlendCanvas.width = this.canvas.width = canvasData.width;
 		this.helperCanvas.height = this.layerBlendCanvas.height = this.canvas.height = canvasData.height;
 		callbacks.onProgress(45, 'Composing still frame…', 1, 1, { phase: 'Composing' });
-		const imageData = this._renderFrame(0, canvasData, visibleLayers, glitterGifs, maskCanvases, textMaskCanvases, shapeMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, selection, flattenedFrameMap, timestamp);
-		if (needsTransparency && safeKey) {
+		const imageData = this._renderFrame({
+			outputFrameIndex: 0,
+			timestamp,
+			context,
+			transparency: { ...transparencyState, safeKey },
+			sourceSelectionMap,
+			resolvedFramesBySource
+		});
+		if (transparencyState.needsTransparency && safeKey) {
 			for (let i = 0; i < imageData.data.length; i += 4) {
 				if (imageData.data[i] === safeKey.r && imageData.data[i + 1] === safeKey.g && imageData.data[i + 2] === safeKey.b) imageData.data[i + 3] = 0;
 			}
 		}
-		return { imageData, width: canvasData.width, height: canvasData.height, timestamp, needsTransparency, transparentColor: needsTransparency ? safeKey : null };
+		return {
+			imageData,
+			width: canvasData.width,
+			height: canvasData.height,
+			timestamp,
+			transparency: { needed: transparencyState.needsTransparency, safeKey }
+		};
 	}
 
 	// --- HELPER METHODS ---
 
-	_findSafeTransparencyKey(layers, library, canvasData, watermark = null, flattenedFrameMap = null) {
+	_findSafeTransparencyKey(context, resolvedFramesBySource, { sourceSelectionMap = null } = {}) {
+		const { visibleLayers: layers, canvasData, watermark, layerPlans, authoredSources } = context;
 		const candidates = [
 			// Use colors far from black - start with bright magenta
 			{ name: 'Magenta', r: 255, g: 0, b: 255, hex: 0xFF00FF },
@@ -1611,20 +1408,23 @@ class GifExporter {
 		// Collect all frames from all sources
 		const allFrames = [];
 
-		layers.forEach(layer => {
-			this._buildLayerExportPlan(layer).collectTransparencyFrames(flattenedFrameMap, allFrames);
+		authoredSources.forEach((descriptor) => {
+			if (!descriptor.includeInTransparencyScan) return;
+			allFrames.push(...(resolvedFramesBySource.get(descriptor.key) || []));
 		});
+		layerPlans.forEach(({ plan }) => allFrames.push(...plan.getStaticTransparencyInputs(context)));
 		const baseLayer = layers.find((layer) => layer.type === LayerType.BASE_IMAGE && layer.visible !== false);
 		if (baseLayer && ['image', 'gradient'].includes(baseLayer.background?.mode || 'image')) {
-			allFrames.push(this._getBasePipelineImageData(baseLayer, canvasData, 0));
+			const baseFrameIndex = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? 0;
+			allFrames.push(this._getBasePipelineImageData(baseLayer, canvasData, baseFrameIndex));
 		}
 
 		// Add watermark frames if present
 		if (watermark) {
-			if (watermark.isAnimated && watermark.frames) {
-				allFrames.push(...watermark.frames);
-			} else if (!watermark.isAnimated && watermark.imageData) {
+			if (!watermark.isAnimated && watermark.imageData) {
 				allFrames.push(watermark.imageData);
+			} else if (!watermark.isAnimated && watermark.frames?.length) {
+				allFrames.push(watermark.frames[0]);
 			}
 		}
 
@@ -1682,8 +1482,13 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, textMaskCanvases, shapeMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null, timestamp = 0) {
-		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
+	_renderFrame({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
+		const { canvasData, visibleLayers: layers, exportSettings, watermark, layerPlans, masks } = context;
+		const { safeKey, needsTransparency } = transparency;
+		const maskCanvases = masks.glitter;
+		const textMaskCanvases = masks.text;
+		const shapeMaskCanvases = masks.shape;
+		const { width, height, originalAlpha, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
 
@@ -1716,7 +1521,7 @@ class GifExporter {
 		ctx.fillRect(0, 0, width, height);
 
 		if (shouldRenderBase && ((baseMode === 'image' && canvasData.hasBaseImage !== false) || baseMode === 'gradient')) {
-			const baseEffectFrame = frameMap?.get('__base_dither')?.frameIndex ?? frameIndex;
+			const baseEffectFrame = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? frameIndex;
 			const baseImage = this._getBasePipelineImageData(baseLayer, canvasData, baseEffectFrame);
 			if (needsTransparency) {
 				// SCENARIO A: GIF Transparency is ACTIVE.
@@ -1744,7 +1549,7 @@ class GifExporter {
 		}
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
-		layers.forEach((layer) => {
+		layerPlans.forEach(({ layer, plan }) => {
 			if (layer.visible === false) return;
 			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) return;
 			const blendMode = LAYER_UI_CONFIG[layer.type]?.blendable
@@ -1769,7 +1574,7 @@ class GifExporter {
 			animationUnits.forEach((unit) => {
 				renderCtx.save();
 				if (unit.animData) {
-					const sample = frameMap?.get(`__anim_${layer.id}`)?.sample
+					const sample = sourceSelectionMap?.get(`__anim_${layer.id}`)?.sample
 						|| GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id });
 					if (layer.type === LayerType.GLITTER_FILL) {
 						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);
@@ -1781,11 +1586,11 @@ class GifExporter {
 					}
 				}
 				try {
-					this._buildLayerExportPlan(layer).render({
+					plan.render({
 						ctx: renderCtx,
 						frameIndex,
-						frameMap,
-						flattenedFrameMap,
+						sourceSelectionMap,
+						resolvedFramesBySource,
 						maskCanvases,
 						textMaskCanvases,
 						shapeMaskCanvases,
@@ -1818,8 +1623,8 @@ class GifExporter {
 
 		// 6. Render Watermark
 		if (exportSettings.watermarkEnabled && watermark) {
-			const watermarkFrame = frameMap?.get('__watermark')?.frameIndex ?? frameIndex;
-			this._renderWatermarkToCanvas(watermark, ctx, width, height, watermarkFrame);
+			const watermarkFrame = sourceSelectionMap?.get('__watermark')?.frameIndex ?? frameIndex;
+			this._renderWatermarkToCanvas(watermark, ctx, width, height, watermarkFrame, resolvedFramesBySource?.get('__watermark'));
 		}
 
 		// 8. Debug logic for problem frames
@@ -1919,182 +1724,6 @@ class GifExporter {
 		return new Promise((resolve) => requestAnimationFrame(resolve));
 	}
 
-	_buildFlattenedFrameMap(layers, library) {
-		const flattenedFrameMap = new Map();
-		const sourceTimelines = [];
-		const flattenSource = (mapKey, animation, name, isSticker) => {
-			let glitterHasTransparency = false;
-			const rawFrames = animation.frames;
-			const width = animation.width;
-			const height = animation.height;
-			const flattenedFrames = [];
-
-			const canvas = document.createElement('canvas');
-			canvas.width = width;
-			canvas.height = height;
-			const ctx = canvas.getContext('2d', { willReadFrequently: true });
-			ctx.imageSmoothingEnabled = false;
-
-			const tempCanvas = document.createElement('canvas');
-			tempCanvas.width = width;
-			tempCanvas.height = height;
-			const tempCtx = tempCanvas.getContext('2d');
-			tempCtx.imageSmoothingEnabled = false;
-
-			let previousFrameData = null;
-			let previousDisposal = null;
-			let previousFrameRect = null;
-
-			if (rawFrames.length > 0) {
-				const firstFrameImage = this._getFrameImageData(rawFrames[0], width, height);
-				if (!firstFrameImage) {
-					throw new Error(`Invalid first frame for "${name}"`);
-				}
-
-				const firstFrameData = firstFrameImage.data;
-				for (let j = 3; j < firstFrameData.length; j += 4) {
-					if (firstFrameData[j] < 255) {
-						glitterHasTransparency = true;
-						dbg(`[GifExporter] "${name}" pre-check: Has transparency detected`);
-						break;
-					}
-				}
-			}
-
-			let useOriginalDisposal = isSticker;
-			let calculatedDisposal = null;
-
-			if (!useOriginalDisposal) {
-				let usesDeltas = false;
-				let needsClearing = false;
-				let isAnimation = false;
-
-				if (rawFrames.length > 1) {
-					const frame1Image = this._getFrameImageData(rawFrames[0], width, height);
-					const frame2Image = this._getFrameImageData(rawFrames[1], width, height);
-					if (!frame1Image || !frame2Image) {
-						throw new Error(`Invalid animation frames for "${name}"`);
-					}
-
-					const frame1Data = frame1Image.data;
-					const frame2Data = frame2Image.data;
-					let transparentCount = 0;
-					let opaqueCount = 0;
-					let differentPixels = 0;
-
-					for (let i = 0; i < frame2Data.length; i += 4) {
-						const alpha = frame2Data[i + 3];
-
-						if (alpha === 0) transparentCount++;
-						else if (alpha === 255) opaqueCount++;
-
-						if (Math.abs(frame1Data[i] - frame2Data[i]) > 10 ||
-							Math.abs(frame1Data[i + 1] - frame2Data[i + 1]) > 10 ||
-							Math.abs(frame1Data[i + 2] - frame2Data[i + 2]) > 10 ||
-							Math.abs(frame1Data[i + 3] - frame2Data[i + 3]) > 10) {
-							differentPixels++;
-						}
-					}
-
-					const totalPixels = frame2Data.length / 4;
-					const transparentPercent = (transparentCount / totalPixels) * 100;
-					const differentPercent = (differentPixels / totalPixels) * 100;
-
-					usesDeltas = (transparentPercent > 60 || transparentPercent < 30);
-					isAnimation = transparentPercent >= 30 && transparentPercent <= 60 && differentPercent < 25;
-					needsClearing = (differentPixels > 20 && !usesDeltas) || isAnimation;
-
-					dbg(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
-				}
-
-				if (glitterHasTransparency) {
-					calculatedDisposal = 2;
-				} else if (usesDeltas) {
-					calculatedDisposal = 1;
-				} else if (needsClearing) {
-					calculatedDisposal = 2;
-				} else {
-					calculatedDisposal = 1;
-				}
-				dbg(`[DISPOSAL] "${name}": Calculated strategy = ${calculatedDisposal === 1 ? 'STACK' : 'CLEAR'} (hasTransparency: ${glitterHasTransparency})`);
-			} else {
-				dbg(`[DISPOSAL] "${name}": Using original frame disposal methods (sticker)`);
-			}
-
-			for (let i = 0; i < rawFrames.length; i++) {
-				const frame = rawFrames[i];
-				const frameImageData = this._getFrameImageData(frame, width, height);
-				if (!frameImageData) {
-					throw new Error(`Invalid frame ${i} for "${name}"`);
-				}
-
-				const currentDisposal = useOriginalDisposal
-					? (frame.disposal === 0 || frame.disposal == null ? 1 : frame.disposal)
-					: calculatedDisposal;
-
-				if (i > 0 && previousDisposal === 2) {
-					// GIF89a disposal 2 ("restore to background") applies only to the
-					// previous frame's image-descriptor rect, not the whole logical
-					// screen. Clearing the full canvas here wiped pixels contributed
-					// by earlier non-disposed frames that the current (partial) frame
-					// never redraws — e.g. the top band of a sticker whose later
-					// frames only encode a sub-rectangle.
-					const r = previousFrameRect || { x: 0, y: 0, width, height };
-					ctx.clearRect(r.x, r.y, r.width, r.height);
-				} else if (i > 0 && previousDisposal === 3 && previousFrameData) {
-					ctx.putImageData(previousFrameData, 0, 0);
-				}
-
-				if (currentDisposal === 3) {
-					previousFrameData = ctx.getImageData(0, 0, width, height);
-				}
-
-				tempCtx.putImageData(frameImageData, 0, 0);
-				ctx.drawImage(tempCanvas, 0, 0);
-
-				const flattenedData = ctx.getImageData(0, 0, width, height);
-				flattenedFrames.push(flattenedData);
-
-				if (i === 0) {
-					const checkData = flattenedData.data;
-					for (let j = 3; j < checkData.length; j += 4) {
-						if (checkData[j] < 255) {
-							glitterHasTransparency = true;
-							break;
-						}
-					}
-					dbg(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${currentDisposal}`);
-				}
-
-				previousDisposal = currentDisposal;
-				previousFrameRect = {
-					x: frame.x || 0,
-					y: frame.y || 0,
-					width: frame.width || width,
-					height: frame.height || height
-				};
-			}
-
-			flattenedFrameMap.set(mapKey, flattenedFrames);
-			sourceTimelines.push(new AuthoredAnimationSource({
-				key: mapKey,
-				label: name,
-				ownerLayerId: String(mapKey).split(':')[0],
-				effectSlot: String(mapKey).includes(':') ? String(mapKey).split(':').at(-1) : null,
-				frames: flattenedFrames,
-				frameDurations: animation.frameDelays || [],
-				fallbackDuration: animation.frameDelay || CONFIG.export.defaults.frameDelay
-			}));
-		};
-
-		layers.forEach((layer) => {
-			this._buildLayerExportPlan(layer).flattenFrames(library, flattenSource);
-		});
-		flattenedFrameMap.sourceTimelines = sourceTimelines;
-
-		return flattenedFrameMap;
-	}
-
 	async estimateLoopDuration({
 		layers,
 		library,
@@ -2109,28 +1738,21 @@ class GifExporter {
 		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold,
 		outputFormat = 'gif'
 	}) {
-		await this._loadMissingFrames(layers, library, {
+		const callbacks = {
 			parseGif,
 			onStatus: () => {},
-			// Estimation only reads animation timing; fonts are needed later when
-			// the full export path renders text masks.
 			ensureTextFont: async () => {}
-		});
-		const timelines = [];
-		const collectTimeline = (key, animation, name) => {
-			if (!animation?.frames?.length) return;
-			timelines.push(new AuthoredAnimationSource({
-				key,
-				label: name,
-				frames: animation.frames,
-				frameDurations: animation.frameDelays || [],
-				fallbackDuration: animation.frameDelay || fallbackDuration
-			}));
 		};
-		layers.forEach((layer) => {
-			this._buildLayerExportPlan(layer).flattenFrames(library, collectTimeline);
-		});
-		this._appendProceduralSources(timelines, layers, { includeBaseImage: baseImage });
+		const layerPlans = layers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
+		const descriptors = layerPlans.flatMap(({ plan }) => plan.getAuthoredSources(library));
+		this._validateAuthoredSourceKeys(descriptors);
+		for (const descriptor of descriptors) {
+			await descriptor.ensureLoaded(callbacks);
+		}
+		const timelines = [
+			...descriptors.map((descriptor) => this._createAuthoredTimingSource(descriptor, fallbackDuration)),
+			...this._createProceduralTimelines(this._collectProceduralSources(layers, { includeBaseImage: baseImage }))
+		];
 		const timelineConfig = CONFIG.export.timeline;
 		const requestedFidelity = Number(exportFidelity);
 		const fidelityIndex = Math.max(0, Math.min(
@@ -2157,7 +1779,7 @@ class GifExporter {
 				timelines.forEach((timeline, index) => {
 					const selected = selection.get(timeline.key);
 					if (timeline.kind === 'authored') {
-						data[index * 4] = Math.round((selected?.frameIndex || 0) / Math.max(1, timeline.frames.length - 1) * 255);
+						data[index * 4] = Math.round((selected?.frameIndex || 0) / Math.max(1, timeline.frameCount - 1) * 255);
 					} else {
 						let hash = 2166136261;
 						for (const character of JSON.stringify(selected)) {
@@ -2182,55 +1804,16 @@ class GifExporter {
 		};
 	}
 
-	async _deoptimizeWatermarkFrames(watermark, callbacks) {
-		if (!watermark || !watermark.isAnimated) return;
-
-		const { width, height, frames } = watermark;
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-
-		let prevFrame = null;
-
-		for (let i = 0; i < frames.length; i++) {
-			const frame = frames[i];
-			const frameImageData = this._getFrameImageData(frame, width, height);
-			if (!frameImageData) throw new Error(`Invalid watermark frame ${i}`);
-
-			if (prevFrame && frame.disposal === 2) {
-				ctx.putImageData(prevFrame, 0, 0);
-			} else if (frame.disposal === 3) {
-				ctx.clearRect(0, 0, width, height);
-			}
-
-			ctx.putImageData(frameImageData, frame.x || 0, frame.y || 0);
-			const fullFrame = ctx.getImageData(0, 0, width, height);
-			frame.data = fullFrame;
-			frame.x = 0;
-			frame.y = 0;
-			frame.width = width;
-			frame.height = height;
-
-			if (frame.disposal === 2) {
-				prevFrame = ctx.getImageData(0, 0, width, height);
-			}
-			reportGifExportProgress(callbacks, 'planning', 0.1 + (((i + 1) / frames.length) * 0.3), `Preparing watermark frame ${i + 1} / ${frames.length}`, i + 1, frames.length);
-			if (i + 1 < frames.length && (i + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
-				await this._yieldForProgress();
-			}
-		}
-	}
-
-	_renderWatermarkToCanvas(watermark, ctx, canvasWidth, canvasHeight, frameIndex) {
+	_renderWatermarkToCanvas(watermark, ctx, canvasWidth, canvasHeight, frameIndex, resolvedFrames = null) {
 		if (!watermark) return;
 
 		// Determine which frame/image to use
 		let sourceData;
 		if (watermark.isAnimated) {
-			const frameCount = watermark.frames.length;
+			const frames = resolvedFrames || watermark.frames;
+			const frameCount = frames.length;
 			const watermarkFrameIndex = frameIndex % frameCount;
-			const frame = watermark.frames[watermarkFrameIndex];
+			const frame = frames[watermarkFrameIndex];
 			sourceData = this._getFrameImageData(frame, watermark.width, watermark.height);
 		} else if (watermark.frames?.length) {
 			// A one-frame GIF is static, but still uses the GIF frame representation.
@@ -2329,16 +1912,6 @@ class GifExporter {
 
 
 
-	async _loadMissingFrames(layers, library, callbacks) {
-		for (let index = 0; index < layers.length; index++) {
-			await this._buildLayerExportPlan(layers[index]).loadSources(library, callbacks);
-			if (callbacks.onLayerLoaded) {
-				callbacks.onLayerLoaded(index + 1, layers.length);
-				await this._yieldForProgress();
-			}
-		}
-	}
-
 	async _loadWatermark(callbacks, watermarkUrl = CONFIG.export.watermark.url) {
 		if (!watermarkUrl) {
 			return null;
@@ -2381,19 +1954,6 @@ class GifExporter {
 					callbacks.onSourceProgress?.(detail, current, total);
 				});
 
-				// Process alpha threshold ONCE during load if threshold is active
-				if (this.config.watermarkAlphaThreshold > 0) {
-					frames.frames.forEach(frame => {
-						// GIF frames store patch pixels directly as a typed array. Accept
-						// ImageData too so this stays compatible with other frame sources.
-						const data = frame.data?.data || frame.data;
-						if (!data) return;
-						for (let i = 3; i < data.length; i += 4) {
-							data[i] = data[i] < this.config.watermarkAlphaThreshold ? 0 : 255;
-						}
-					});
-				}
-
 				return {
 					isAnimated: frames.frameCount > 1,
 					width: frames.width,
@@ -2402,7 +1962,7 @@ class GifExporter {
 					frameCount: frames.frameCount,
 					frameDelay: frames.frameDelay,
 					frameDelays: frames.frameDelays,
-					alphaProcessed: true // Flag to skip processing in render
+					alphaProcessed: frames.frameCount > 1
 				};
 			} else {
 				// For static images

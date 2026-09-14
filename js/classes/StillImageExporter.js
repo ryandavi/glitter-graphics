@@ -5,7 +5,7 @@ function encodeCanvasToBlob(canvas, mimeType, quality) {
 }
 
 class StillImageExporter {
-	constructor(frameComposer, resultPresenter) { this.frameComposer = frameComposer; this.resultPresenter = resultPresenter; this.fileName = `${CONFIG.export.core.defaultBaseName}.png`; }
+	constructor(frameComposer, resultPresenter, gifEncodingPipeline = frameComposer?.gifEncodingPipeline || new GifEncodingPipeline()) { this.frameComposer = frameComposer; this.resultPresenter = resultPresenter; this.gifEncodingPipeline = gifEncodingPipeline; this.fileName = `${CONFIG.export.core.defaultBaseName}.png`; }
 	setFileName(fileName) { if (fileName) this.fileName = fileName; }
 	async process(params) {
 		const { target, callbacks, exportSettings } = params;
@@ -34,19 +34,20 @@ class StillImageExporter {
 	}
 	async _encodeGif(composed, settings, callbacks) {
 		callbacks.onProgress(65, 'Building palette…', 1, 1, { phase: 'Building palette' });
-		const { imageData, width, height, needsTransparency, transparentColor } = composed;
-		let frame = new ImageData(new Uint8ClampedArray(imageData.data), width, height);
-		const transparent = needsTransparency && transparentColor ? transparentColor.hex : null;
-		if (transparent != null) for (let i = 0; i < frame.data.length; i += 4) if (frame.data[i + 3] === 0) { frame.data[i] = transparentColor.r; frame.data[i + 1] = transparentColor.g; frame.data[i + 2] = transparentColor.b; frame.data[i + 3] = 255; }
-		const analysis = this.frameComposer._analyzeGifColors([frame]);
-		const colorCount = GifPalette.resolveColorCount(settings.colorCount, analysis);
-		const useNativePalette = settings.colorCount === 'auto' && !settings.ditherEnabled;
-		const globalPalette = useNativePalette ? null : GifPalette.build([frame], colorCount, { transparentColor: transparent, style: settings.paletteStyle });
-		if (globalPalette) [frame] = await this.frameComposer._applyGifDither([frame], globalPalette, { ...settings, ditherTemporalMode: 'stable', hasTransparency: transparent != null }, callbacks);
-		const options = { workers: this.frameComposer.config.workers, quality: settings.quality, width, height, workerScript: this.frameComposer.config.workerScript, dither: false };
-		if (globalPalette) options.globalPalette = globalPalette;
-		if (transparent != null) { options.transparent = transparent; options.background = transparent; }
-		const gif = new GIF(options); gif.addFrame(frame, { copy: true }); callbacks.onProgress(80, 'Encoding GIF…', 1, 1, { phase: 'Encoding GIF' });
-		return new Promise((resolve, reject) => { gif.on('finished', resolve); gif.on('error', reject); gif.on('abort', () => reject(new Error('Export cancelled'))); gif.render(); });
+		const encoded = await this.gifEncodingPipeline.encode({
+			frames: [composed.imageData],
+			settings,
+			transparency: composed.transparency,
+			mode: 'still',
+			reportProgress: (phase, ratio, detail, current, total) => callbacks.onProgress(
+				65 + ratio * 30,
+				detail,
+				current,
+				total,
+				{ phase: phase === 'encoding' ? 'Encoding GIF' : 'Building palette' }
+			),
+			isCancelled: callbacks.isCancelled
+		});
+		return encoded.blob;
 	}
 }

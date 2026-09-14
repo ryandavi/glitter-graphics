@@ -36,7 +36,7 @@ function frame(value, alpha = 255, size = 2) {
 function timeline(key, count, durations) {
 	return new AuthoredAnimationSource({
 		key,
-		frames: Array.from({ length: count }, (_, index) => frame(index)),
+		frameCount: count,
 		frameDurations: durations
 	});
 }

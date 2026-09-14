@@ -858,6 +858,7 @@ const CONFIG = deepFreeze({
 			// Base name for user-facing downloads; the project title overrides this.
 			defaultBaseName: 'ryandavi-com_glitter',
 			workers: 4,
+			workerScript: 'js/workers/gif.worker.js',
 			quality: 1,
 			timing: {
 				forceDelay: 100,

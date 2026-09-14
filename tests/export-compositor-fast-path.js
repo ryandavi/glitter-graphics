@@ -1,0 +1,284 @@
+'use strict';
+
+const { chromium } = require('playwright');
+const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
+
+function assert(condition, message) {
+	if (!condition) throw new Error(message);
+}
+
+(async () => {
+	const browser = await chromium.launch({ headless: true });
+	const page = await browser.newPage();
+	const errors = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await page.goto(APP_URL, { waitUntil: 'networkidle' });
+	await page.waitForFunction(() => window.editor?.settingsStore);
+
+	const result = await page.evaluate(async () => {
+		const check = (condition, message) => { if (!condition) throw new Error(message); };
+		const rawFrame = (width, height, rgba, options = {}) => {
+			const data = new Uint8ClampedArray(width * height * 4);
+			for (let offset = 0; offset < data.length; offset += 4) data.set(rgba, offset);
+			return { data, width, height, x: options.x || 0, y: options.y || 0, disposal: options.disposal ?? 1 };
+		};
+		const descriptor = (key, animation, replayPolicy = 'native-layer') => ({
+			key,
+			label: key,
+			replayPolicy,
+			sourceIdentity: animation,
+			getAnimation: () => animation
+		});
+		const bytes = (frame) => [...frame.data].join(',');
+
+		const resolver = new AuthoredFrameResolver();
+		const nativeAnimation = {
+			width: 2,
+			height: 1,
+			frames: [
+				rawFrame(2, 1, [255, 0, 0, 255], { disposal: 1 }),
+				rawFrame(1, 1, [0, 0, 255, 255], { x: 1, disposal: 2 }),
+				rawFrame(1, 1, [0, 255, 0, 255], { disposal: 3 })
+			]
+		};
+		for (const policy of ['native-layer', 'derived-glitter', 'watermark-current']) {
+			const source = descriptor(policy, nativeAnimation, policy);
+			const all = resolver.resolveAll(source, resolver.createSession());
+			for (const index of [0, 1, 2]) {
+				const selected = resolver.resolveFrame(source, index, resolver.createSession());
+				check(bytes(all[index]) === bytes(selected), `${policy} selected-frame replay diverged at ${index}`);
+			}
+		}
+
+		let highestRead = -1;
+		const trackedFrames = new Proxy(nativeAnimation.frames, {
+			get(target, property) {
+				if (/^\d+$/.test(String(property))) highestRead = Math.max(highestRead, Number(property));
+				return target[property];
+			}
+		});
+		const trackedAnimation = { ...nativeAnimation, frames: trackedFrames };
+		resolver.resolveFrame(descriptor('first', trackedAnimation, 'derived-glitter'), 0, resolver.createSession());
+		check(highestRead === 0, 'First-frame resolution read a later authored frame');
+		highestRead = -1;
+		resolver.resolveFrame(descriptor('middle', trackedAnimation, 'derived-glitter'), 1, resolver.createSession());
+		check(highestRead === 1, 'Selected-frame resolution read past its target');
+
+		let replayCalls = 0;
+		const originalReplay = resolver._replay.bind(resolver);
+		resolver._replay = (...args) => { replayCalls++; return originalReplay(...args); };
+		const sharedSession = resolver.createSession();
+		const sharedA = resolver.resolveAll(descriptor('logical-a', nativeAnimation), sharedSession);
+		const sharedB = resolver.resolveAll(descriptor('logical-b', nativeAnimation), sharedSession);
+		check(sharedA === sharedB && replayCalls === 1, 'Logical sources did not share physical full-frame resolution');
+		const selectedSession = resolver.createSession();
+		const selectedA = resolver.resolveFrame(descriptor('selected-a', nativeAnimation), 1, selectedSession);
+		const selectedB = resolver.resolveFrame(descriptor('selected-b', nativeAnimation), 1, selectedSession);
+		check(selectedA === selectedB, 'Logical sources did not share physical selected-frame resolution');
+
+		const watermarkAnimation = {
+			width: 2,
+			height: 1,
+			frames: [rawFrame(1, 1, [10, 20, 30, 100], { x: 1, disposal: 1 })]
+		};
+		const watermarkBefore = [...watermarkAnimation.frames[0].data];
+		const watermarkSource = {
+			...descriptor('watermark', watermarkAnimation, 'watermark-current'),
+			transformResolvedFrame: (frame) => {
+				const copy = new ImageData(new Uint8ClampedArray(frame.data), frame.width, frame.height);
+				for (let offset = 3; offset < copy.data.length; offset += 4) copy.data[offset] = copy.data[offset] < 128 ? 0 : 255;
+				return copy;
+			}
+		};
+		const resolvedWatermark = resolver.resolveFrame(watermarkSource, 0, resolver.createSession());
+		check(watermarkBefore.join(',') === [...watermarkAnimation.frames[0].data].join(',')
+			&& resolvedWatermark.data[7] === 0, 'Watermark resolution mutated raw patches or skipped alpha thresholding');
+
+		const timing = new AuthoredAnimationSource({ key: 'timing', frameCount: 3, frameDurations: [10, 50, 0], fallbackDuration: 80 });
+		check(!('frames' in timing) && timing.frameCount === 3 && timing.frameDurations.join(',') === '20,50,80'
+			&& timing.frameIndexAt(69) === 1 && timing.frameIndexAt(70) === 2,
+			'Authored timing still owns pixels or changed duration normalization');
+
+		const exporter = window.editor.exporter;
+		check(window.editor.authoredFrameResolver === exporter.authoredFrameResolver
+			&& window.editor.gifEncodingPipeline === exporter.gifEncodingPipeline
+			&& window.editor.gifEncodingPipeline === window.editor.stillImageExporter.gifEncodingPipeline,
+			'Application initialization did not share export services');
+		const library = [{ id: 'g1', name: 'One' }, { id: 'g2', name: 'Two' }, { id: 'g3', name: 'Three' }];
+		const keysFor = (layer) => exporter._buildLayerExportPlan(layer).getAuthoredSources(library).map((source) => source.key);
+		const base = { id: 'base', type: LayerType.BASE_IMAGE, selectedGlitterId: 'g1', background: { mode: 'solid' } };
+		check(keysFor(base).length === 0, 'Stale base glitter leaked from solid mode');
+		base.background.mode = 'glitter';
+		check(keysFor(base).join(',') === 'base', 'Base glitter descriptor key changed');
+		const fill = { id: 'fill', type: LayerType.GLITTER_FILL, selectedGlitterId: 'g1', fill: { mode: 'gradient' }, settings: {} };
+		check(keysFor(fill).length === 0, 'Stale fill glitter leaked from gradient mode');
+		fill.fill.mode = 'glitter';
+		check(keysFor(fill).join(',') === 'fill', 'Glitter-fill descriptor key changed');
+		const text = {
+			id: 'text', type: LayerType.TEXT_GLITTER, selectedGlitterId: 'g1', settings: {},
+			textData: { fill: { mode: 'glitter' }, border: { mode: 'glitter', widthPx: 0, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
+		};
+		check(keysFor(text).join(',') === 'text:fill,text:shadow', 'Text source activation matrix changed');
+		text.textData.border.widthPx = 2;
+		check(keysFor(text).join(',') === 'text:fill,text:border,text:shadow', 'Text border source activation changed');
+		const shape = {
+			id: 'shape', type: LayerType.SHAPE, selectedGlitterId: 'g1', settings: {},
+			shapeData: { fill: { mode: 'glitter' }, border: { mode: 'glitter', widthPx: 2, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
+		};
+		const shapeSources = exporter._buildLayerExportPlan(shape).getAuthoredSources(library);
+		check(shapeSources.map((source) => source.key).join(',') === 'shape:fill,shape:border,shape:shadow'
+			&& shapeSources.every((source) => !source.includeInTransparencyScan), 'Shape source keys or legacy safe-key exclusion changed');
+		const sticker = {
+			id: 'sticker', type: LayerType.STICKER, settings: {},
+			stickerData: { isAnimated: true, name: 'Sticker', shadow: { mode: 'glitter', glitterId: 'g2' } }
+		};
+		check(keysFor(sticker).join(',') === 'sticker,sticker:shadow', 'Sticker authored source keys changed');
+		exporter._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'b' }]);
+		let duplicateRejected = false;
+		try { exporter._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'a' }]); } catch (error) { duplicateRejected = /Duplicate authored source key/.test(error.message); }
+		check(duplicateRejected, 'Duplicate logical source keys were silently accepted');
+
+		const animatedLayer = { id: 'motion', type: LayerType.STICKER, name: 'Motion', animation: { type: 'rotate', periodMs: 1000, phase: 0 }, stickerData: {} };
+		const procedural = exporter._collectProceduralSources([animatedLayer], { includeBaseImage: false });
+		check(procedural.map((source) => source.key).join(',') === '__anim_motion'
+			&& exporter._createProceduralTimelines(procedural)[0].key === procedural[0].key,
+			'Procedural animation discovery diverged from timeline normalization');
+		const selectedProcedural = exporter._resolveSelectedAuthored({ authoredSources: [], proceduralSources: procedural }, resolver.createSession(), 250, 100);
+		check(selectedProcedural.sourceSelectionMap.has('__anim_motion'), 'Still sampling did not use the procedural descriptor collector');
+
+		const transparencyContext = {
+			visibleLayers: [{ id: 'base', type: LayerType.BASE_IMAGE, visible: true, background: { mode: 'gradient', opacity: 100, gradient: { stops: [{ offset: 0, color: '#ffffff', alpha: 0.5 }, { offset: 1, color: '#000000', alpha: 1 }] } } }],
+			canvasData: { originalAlpha: new Uint8ClampedArray([255]), alphaThreshold: 1, hasBaseImage: true },
+			exportSettings: { baseImage: true, transparency: true },
+			masks: { raw: new Map() }
+		};
+		check(exporter._resolveTransparencyState(transparencyContext, { targetSupportsTransparency: true }).needsTransparency,
+			'Gradient alpha was omitted from shared transparency state');
+		check(!exporter._resolveTransparencyState(transparencyContext, { targetSupportsTransparency: false }).needsTransparency,
+			'Opaque target requested keyed transparency');
+
+		const safeContext = {
+			visibleLayers: [], authoredSources: [], layerPlans: [], watermark: null,
+			canvasData: {
+				originalData: new Uint8ClampedArray([255, 0, 255, 255, 0, 0, 0, 0]),
+				originalAlpha: new Uint8ClampedArray([255, 0]), alphaThreshold: 1
+			}
+		};
+		const safeKey = exporter._findSafeTransparencyKey(safeContext, new Map());
+		check(safeKey.hex === 0x00ffff, 'Safe-key selection did not avoid opaque magenta');
+
+		const OriginalGif = window.GIF;
+		let gifOptions;
+		let encodedFrame;
+		window.GIF = class {
+			constructor(options) { gifOptions = options; this.handlers = {}; }
+			addFrame(frame) { encodedFrame = frame; }
+			on(name, callback) { this.handlers[name] = callback; }
+			render() { this.handlers.finished(new Blob(['gif'], { type: 'image/gif' })); }
+		};
+		try {
+			const frame = new ImageData(new Uint8ClampedArray([255, 0, 255, 255, 1, 2, 3, 0]), 2, 1);
+			await exporter.gifEncodingPipeline.encode({
+				frames: [frame], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
+				transparency: { needed: true, safeKey }, mode: 'still'
+			});
+			check(gifOptions.transparent === safeKey.hex && encodedFrame.data[0] === 255 && encodedFrame.data[1] === 0
+				&& encodedFrame.data[2] === 255 && encodedFrame.data[4] === 0 && encodedFrame.data[5] === 255,
+				'Still GIF did not propagate the compositor-selected key or preserve opaque magenta');
+		} finally { window.GIF = OriginalGif; }
+
+		await window.editor.loadBlankImage(8, 8, '#ffffff');
+		while (!window.editor.originalImage) await new Promise((resolve) => setTimeout(resolve, 10));
+		const visibleLayers = window.editor.layers.filter((layer) => layer.visible && layerHasVisibleContent(layer));
+		const canvasData = {
+			width: 8, height: 8,
+			originalData: new Uint8ClampedArray(window.editor.originalImageData.data),
+			originalAlpha: window.editor.originalAlphaChannel,
+			alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
+			hasBaseImage: true
+		};
+		const callbacks = {
+			onStatus: () => {}, onProgress: () => {}, onComplete: () => {}, parseGif: (url) => window.editor.glitterManager.parseGifFromUrl(url),
+			createMask: (layer) => window.editor.maskCompositor.getMaskData(layer),
+			renderTextMask: (layer) => window.editor.textGlitterManager.renderTextMask(layer),
+			renderShapeMask: (layer) => window.editor.shapeGlitterManager.buildMaskEntry(layer),
+			ensureTextFont: (fontId) => window.editor.textGlitterManager.ensureFontLoaded(fontId)
+		};
+		let planBuilds = 0;
+		const originalBuild = exporter._buildLayerExportPlan.bind(exporter);
+		exporter._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
+		const originalPlanner = CompositeTimelinePlanner.prototype.plan;
+		const originalReducer = CompositeFrameReducer.prototype.reduce;
+		exporter.authoredFrameResolver.resolveAll = () => { throw new Error('Still path called resolveAll'); };
+		CompositeTimelinePlanner.prototype.plan = () => { throw new Error('Still path invoked timeline planning'); };
+		CompositeFrameReducer.prototype.reduce = () => { throw new Error('Still path invoked frame reduction'); };
+		try {
+			await exporter.composeFrameAt({
+				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
+			});
+			check(planBuilds === visibleLayers.length, 'Still export rebuilt a layer plan after common preparation');
+		} finally {
+			exporter._buildLayerExportPlan = originalBuild;
+			delete exporter.authoredFrameResolver.resolveAll;
+			CompositeTimelinePlanner.prototype.plan = originalPlanner;
+			CompositeFrameReducer.prototype.reduce = originalReducer;
+		}
+
+		planBuilds = 0;
+		exporter._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
+		try {
+			await exporter.process({
+				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['animation:gif'], callbacks,
+				outputFormat: 'gif', frameSink: (plan) => plan
+			});
+			check(planBuilds === visibleLayers.length, 'Animation export rebuilt layer plans during rendering');
+		} finally { delete exporter._buildLayerExportPlan; }
+
+		const stillSettings = { ...structuredClone(window.editor.exportSettings), transparency: false, ditherEnabled: false, jpegGenerations: 2, jpegQuality: 80 };
+		const originalShow = window.editor.exportResultPresenter.show;
+		window.editor.exportResultPresenter.show = () => {};
+		try {
+			const stillBlob = await window.editor.stillImageExporter.process({
+				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				exportSettings: stillSettings, target: EXPORT_TARGETS['still:gif'], callbacks, timestamp: 0
+			});
+			check(stillBlob.type === 'image/gif' && stillBlob.size > 0, 'Shared GIF pipeline did not produce a still GIF');
+			for (const targetId of ['still:png', 'still:jpeg']) {
+				const target = EXPORT_TARGETS[targetId];
+				const blob = await window.editor.stillImageExporter.process({
+					visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+					exportSettings: stillSettings, target, callbacks, timestamp: 0
+				});
+				check(blob.type === target.mimeType && blob.size > 0, `${targetId} did not encode through shared still composition`);
+			}
+		} finally { window.editor.exportResultPresenter.show = originalShow; }
+		let cancelled = false;
+		try {
+			await exporter.gifEncodingPipeline.encode({
+				frames: [new ImageData(1, 1)], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
+				transparency: { needed: false, safeKey: null }, isCancelled: () => true
+			});
+		} catch (error) { cancelled = error.message === 'Export cancelled'; }
+		check(cancelled, 'GIF pipeline cancellation did not terminate the local encode job');
+		let resolverErrored = false;
+		try { resolver.resolveFrame(descriptor('invalid', { width: 1, height: 1, frames: [] }), 0, resolver.createSession()); }
+		catch (error) { resolverErrored = true; }
+		check(resolverErrored, 'Resolver error fixture did not fail');
+		check(Object.keys(exporter.authoredFrameResolver).length === 0
+			&& !Object.keys(exporter.gifEncodingPipeline).some((key) => /context|frame|session|source/i.test(key)),
+			'Shared services retained per-export resolution state');
+
+		return { sourceKeys: true, resolverParity: true, stillFastPath: true, safeKey: safeKey.hex };
+	});
+
+	assert(result.sourceKeys && result.resolverParity && result.stillFastPath && result.safeKey === 0x00ffff,
+		'Fast-path verifier returned incomplete results');
+	assert(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
+	console.log('PASS compositor descriptors, timing-only sources, resolver parity/caching, selected-frame work shape, transparency, GIF key propagation, and layer-plan reuse');
+	await browser.close();
+})().catch((error) => {
+	console.error('FAIL', error.stack || error.message);
+	process.exit(1);
+});
