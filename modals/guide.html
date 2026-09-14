@@ -51,7 +51,7 @@
             <ol>
                 <li><a href="#create-text">Create a Text Layer</a></li>
                 <li><a href="#text-typography">Typography &amp; Layout</a></li>
-                <li><a href="#text-effects">Fill, Border &amp; Shadow</a></li>
+                <li><a href="#text-effects">Fill, Background, Border &amp; Shadow</a></li>
             </ol>
         </li>
         <li>
@@ -1469,8 +1469,8 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="text-effects">Fill, Border &amp; Shadow</h4>
-            <p>Each part of the text keeps its own source — glitter, solid color, or gradient, with None also available for the fill.</p>
+            <h4 id="text-effects">Fill, Background, Border &amp; Shadow</h4>
+            <p>Fill, Border, and Shadow each keep their own source — glitter, solid color, or gradient, with None also available for the fill. Background uses its own glitter or solid source.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1482,6 +1482,24 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>Fill</strong> – Choose None, Glitter, Solid, or Gradient. Texture Scale is under Advanced → Texture for glitter, and Opacity applies to visible sources.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Background</strong> – Enable a shape behind the text, then choose a Glitter or Solid source. Start from a preset or adjust the horizontal and vertical padding, corner radius, texture, and opacity yourself.</p>
+                    <ul>
+                        <li><strong>Lines</strong> draws around each line. Keep lines Separate, Merge nearby lines into a stepped shape, or use Connected for a more permissive join; Merge Distance and Spacing Sensitivity control when they connect.</li>
+                        <li><strong>Text Bounds</strong> draws one shape around all visible text.</li>
+                        <li><strong>Text Box</strong> fills the complete frame of Box text.</li>
+                    </ul>
                 </div>
             </div>
 
@@ -1520,7 +1538,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Only one swatch is "active" for glitter picking at a time — click a swatch (Fill, Border, or Shadow) to send the next glitter you pick in the gallery to that part of the text.</p>
+                    <p>Only one swatch is "active" for glitter picking at a time — click a swatch (Fill, Background, Border, or Shadow) to send the next glitter you pick in the gallery to that part of the text.</p>
                 </div>
             </div>
         </div>
