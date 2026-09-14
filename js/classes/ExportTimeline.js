@@ -747,7 +747,7 @@ class CompositeTimelinePlanner {
 		return sampled;
 	}
 
-	async plan(options) {
+	planSchedule(options) {
 		const sourceTimelines = options.timelines || [];
 		const fallbackDuration = AuthoredAnimationSource.normalizeDuration(options.fallbackDuration, 100);
 		const timingResolution = this._planRenderClock({
@@ -789,36 +789,10 @@ class CompositeTimelinePlanner {
 		if (!clockOwnsCadence) entries = this._limitPreRenderCandidates(entries, preRenderBudget);
 		const preRenderFramesSkipped = manuallySampledFrameCount - entries.length;
 		if (options.reverse) entries.reverse();
-		// Audited encoder memory behaviour, not a planning choice: gif.js retains
-		// every added frame until render(), and the shared palette and dither
-		// passes both need the whole set before encoding can start, so rendered
-		// frames are held rather than streamed. Peak raw-frame memory is therefore
-		// bounded by the frame budget above, which is why the render clock is
-		// capped by it rather than by the hard limit alone.
-		for (let index = 0; index < entries.length; index++) {
-			entries[index].frame = await options.renderFrame(entries[index].timestamp, entries[index].selection, entries.length);
-		}
-		const renderedFrameCount = entries.length;
-
-		const reduced = this.reducer.reduce({
-			frames: entries.map((entry) => entry.frame),
-			frameDurations: entries.map((entry) => entry.duration),
-			selections: entries.map((entry) => entry.selection)
-		}, {
-			enabled: options.smartReduction,
-			visualErrorThreshold: options.visualErrorThreshold,
-			preferredFrameBudget,
-			hardFrameLimit: options.hardFrameLimit,
-			// Merging is only lossless for cadence while it does not stretch a
-			// delay past the longest gap the committed clock already displays.
-			maximumCadenceGap: clockOwnsCadence
-				? Math.max(...entries.map((entry) => entry.duration))
-				: Infinity
-		});
-		const totalDuration = reduced.frameDurations.reduce((sum, duration) => sum + duration, 0);
+		const totalDuration = entries.reduce((sum, entry) => sum + entry.duration, 0);
 		const sourceFrameSelections = new Map();
 		timelines.filter((timeline) => timeline.kind === 'authored').forEach((timeline) => {
-			sourceFrameSelections.set(timeline.key, reduced.selections.map((selection) => selection.get(timeline.key)?.frameIndex ?? 0));
+			sourceFrameSelections.set(timeline.key, entries.map((entry) => entry.selection.get(timeline.key)?.frameIndex ?? 0));
 		});
 		const resolvedTimelines = new Map(timelines.map((timeline) => [timeline.key, timeline]));
 		const sourceAnalysis = sourceTimelines
@@ -853,9 +827,10 @@ class CompositeTimelinePlanner {
 			});
 
 		return {
-			frames: reduced.frames,
-			frameDurations: reduced.frameDurations,
+			entries,
+			frameDurations: entries.map((entry) => entry.duration),
 			totalDuration,
+			frameCount: entries.length,
 			sourceFrameSelections,
 			sourceAnalysis,
 			loopSeam: {
@@ -876,8 +851,8 @@ class CompositeTimelinePlanner {
 				delays: clock.delays,
 				timestamps: clock.timestamps,
 				...clock.diagnostics,
-				framesBeforeReduction: renderedFrameCount,
-				framesAfterReduction: reduced.frames.length
+				framesBeforeReduction: entries.length,
+				framesAfterReduction: entries.length
 			},
 			reduction: {
 				smartReductionEnabled: Boolean(options.smartReduction),
@@ -885,14 +860,73 @@ class CompositeTimelinePlanner {
 				selectionDuplicatesMerged,
 				manuallySampledFrameCount,
 				preRenderFramesSkipped,
-				renderedFrameCount,
+				renderedFrameCount: 0,
+				outputFrameCount: entries.length,
+				exactDuplicatesMerged: 0,
+				nearDuplicatesMerged: 0,
+				framesRemoved: 0,
+				maximumVisualError: 0,
+				effectiveVisualErrorThreshold: options.visualErrorThreshold,
+				durationPreserved: Math.abs(totalDuration - loop.duration) < 0.001,
+				preferredBudgetMet: entries.length <= preferredFrameBudget,
+				budgetCompromiseRequired: entries.length > options.hardFrameLimit
+			}
+		};
+	}
+
+	async plan(options) {
+		const schedulePlan = this.planSchedule(options);
+		const entries = schedulePlan.entries;
+		// gif.js retains every added frame until render(), so the materialized GIF
+		// path remains bounded by the schedule budget before pixel reduction.
+		const frames = [];
+		for (let index = 0; index < entries.length; index++) {
+			frames.push(await options.renderFrame(entries[index].timestamp, entries[index].selection, entries.length));
+		}
+		const maximumCadenceGap = schedulePlan.renderClock.mode !== 'authored'
+			? Math.max(...entries.map((entry) => entry.duration))
+			: Infinity;
+		const reduced = this.reducer.reduce({
+			frames,
+			frameDurations: entries.map((entry) => entry.duration),
+			selections: entries.map((entry) => entry.selection)
+		}, {
+			enabled: options.smartReduction,
+			visualErrorThreshold: options.visualErrorThreshold,
+			preferredFrameBudget: this._frameBudgets(schedulePlan.loopSeam.duration, options).preferredFrameBudget,
+			hardFrameLimit: options.hardFrameLimit,
+			maximumCadenceGap
+		});
+		const totalDuration = reduced.frameDurations.reduce((sum, duration) => sum + duration, 0);
+		const authoredKeys = schedulePlan.sourceAnalysis
+			.filter((source) => source.kind === 'authored')
+			.map((source) => source.key);
+		const sourceFrameSelections = new Map(authoredKeys.map((key) => [
+			key,
+			reduced.selections.map((selection) => selection.get(key)?.frameIndex ?? 0)
+		]));
+		return {
+			...schedulePlan,
+			frames: reduced.frames,
+			frameDurations: reduced.frameDurations,
+			totalDuration,
+			frameCount: reduced.frames.length,
+			sourceFrameSelections,
+			renderClock: {
+				...schedulePlan.renderClock,
+				framesBeforeReduction: entries.length,
+				framesAfterReduction: reduced.frames.length
+			},
+			reduction: {
+				...schedulePlan.reduction,
+				renderedFrameCount: entries.length,
 				outputFrameCount: reduced.frames.length,
 				exactDuplicatesMerged: reduced.exactDuplicatesMerged,
 				nearDuplicatesMerged: reduced.nearDuplicatesMerged,
 				framesRemoved: reduced.framesRemoved,
 				maximumVisualError: reduced.maximumVisualError,
 				effectiveVisualErrorThreshold: reduced.effectiveVisualErrorThreshold,
-				durationPreserved: Math.abs(totalDuration - loop.duration) < 0.001,
+				durationPreserved: Math.abs(totalDuration - schedulePlan.loopSeam.duration) < 0.001,
 				preferredBudgetMet: reduced.preferredBudgetMet,
 				budgetCompromiseRequired: reduced.budgetCompromiseRequired
 			}

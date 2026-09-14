@@ -98,12 +98,17 @@ async function main() {
 			const height = editor.originalCanvas.height;
 			const source = editor.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
 			const preview = editor.baseBackgroundManager.getPixelEffectImageData(source, width, height, background.pixelEffects, 3);
-			const exported = editor.exporter._getBasePipelineImageData(layer, {
+			const canvasData = {
 				width, height,
 				originalData: new Uint8ClampedArray(editor.originalImageData.data),
 				originalAlpha: editor.originalAlphaChannel,
 				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
-			}, 3);
+			};
+			const context = {
+				canvasData,
+				basePipeline: editor.exporter._prepareBasePipeline([layer], canvasData, { baseImage: true })
+			};
+			const exported = editor.exporter._getBasePipelineImageData(context, 3);
 			const restored = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
 			return {
 				settings: layer.background.pixelEffects,

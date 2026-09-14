@@ -146,6 +146,101 @@ function assert(condition, message) {
 		const selectedProcedural = exporter._resolveSelectedAuthored({ authoredSources: [], proceduralSources: procedural }, resolver.createSession(), 250, 100);
 		check(selectedProcedural.sourceSelectionMap.has('__anim_motion'), 'Still sampling did not use the procedural descriptor collector');
 
+		const baseCanvasData = {
+			width: 2,
+			height: 1,
+			originalData: new Uint8ClampedArray([20, 40, 60, 255, 80, 100, 120, 255])
+		};
+		const baseLayer = {
+			type: LayerType.BASE_IMAGE,
+			visible: true,
+			background: {
+				mode: 'image',
+				opacity: 100,
+				colorAdjust: { ...COLOR_ADJUST_IDENTITY },
+				pixelEffects: { pixelateEnabled: true, pixelSize: 1, paletteEnabled: false }
+			}
+		};
+		const originalApplyPixelEffects = GlitterPixelEffects.applyPixelEffects;
+		let baseProcessCount = 0;
+		GlitterPixelEffects.applyPixelEffects = (...args) => {
+			baseProcessCount++;
+			return originalApplyPixelEffects(...args);
+		};
+		try {
+			const basePipelineContext = {
+				canvasData: baseCanvasData,
+				basePipeline: exporter._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
+			};
+			exporter._getBasePipelineImageData(basePipelineContext, 0);
+			exporter._getBasePipelineImageData(basePipelineContext, 7);
+			check(baseProcessCount === 1, 'Static base pipeline processing was not cached per export context');
+			baseLayer.background.pixelEffects = {
+				paletteEnabled: true,
+				paletteMode: 'dither',
+				dither: { algorithm: 'bayer', shimmer: true }
+			};
+			const shimmerPipelineContext = {
+				canvasData: baseCanvasData,
+				basePipeline: exporter._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
+			};
+			baseProcessCount = 0;
+			[0, 1, 8, 9].forEach((index) => exporter._getBasePipelineImageData(shimmerPipelineContext, index));
+			check(baseProcessCount === 2, 'Base shimmer processing did not cache by normalized shimmer state');
+		} finally {
+			GlitterPixelEffects.applyPixelEffects = originalApplyPixelEffects;
+		}
+
+		const paintMask = document.createElement('canvas');
+		paintMask.width = 8;
+		paintMask.height = 8;
+		paintMask.getContext('2d').fillRect(0, 0, 8, 8);
+		const renderTarget = document.createElement('canvas');
+		renderTarget.width = 32;
+		renderTarget.height = 32;
+		const renderCtx = renderTarget.getContext('2d');
+		const textLayer = editor.textGlitterManager.createLayer({ text: 'A' });
+		textLayer.textData.width = 8;
+		textLayer.textData.height = 8;
+		textLayer.textData.fill = { mode: 'solid', color: '#ff0000', opacity: 1 };
+		const shapeLayer = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 8, height: 8 });
+		shapeLayer.shapeData.fill = { mode: 'solid', color: '#00ff00', opacity: 1 };
+		const stickerLayer = editor.stickerManager.createLayer();
+		stickerLayer.stickerData.isEmpty = false;
+		stickerLayer.stickerData.width = 8;
+		stickerLayer.stickerData.height = 8;
+		stickerLayer.stickerData.staticImageData = new ImageData(new Uint8ClampedArray(8 * 8 * 4).fill(255), 8, 8);
+		stickerLayer.stickerData.shadow = { mode: 'solid', color: '#000000', opacity: 1, offsetX: 2, offsetY: 3 };
+		const textPlan = exporter._buildLayerExportPlan(textLayer);
+		const shapePlan = exporter._buildLayerExportPlan(shapeLayer);
+		const stickerPlan = exporter._buildLayerExportPlan(stickerLayer);
+		const watermarkCanvas = document.createElement('canvas');
+		const watermark = {
+			isAnimated: false,
+			width: 2,
+			height: 1,
+			imageData: new ImageData(new Uint8ClampedArray([255, 255, 255, 255, 0, 0, 0, 0]), 2, 1),
+			alphaProcessed: true
+		};
+		const originalCreateElement = document.createElement.bind(document);
+		let renderCanvasCreations = 0;
+		document.createElement = (name, options) => {
+			if (String(name).toLowerCase() === 'canvas') renderCanvasCreations++;
+			return originalCreateElement(name, options);
+		};
+		try {
+			for (let index = 0; index < 3; index++) {
+				textPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), textMaskCanvases: new Map([[textLayer.id, { fill: paintMask }]]) });
+				shapePlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), shapeMaskCanvases: new Map([[shapeLayer.id, { fill: paintMask, renderWidth: 8, renderHeight: 8 }]]) });
+				stickerPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map() });
+				exporter._renderPatternSourceInto(exporter.patternSourceCanvas, stickerLayer.stickerData.staticImageData, COLOR_ADJUST_IDENTITY);
+				exporter._renderWatermarkToCanvas(watermark, watermarkCanvas, renderCtx, 32, 32, index);
+			}
+		} finally {
+			document.createElement = originalCreateElement;
+		}
+		check(renderCanvasCreations === 0, 'Text, shape, sticker, pattern, or watermark rendering allocated a canvas per frame');
+
 		const transparencyContext = {
 			visibleLayers: [{ id: 'base', type: LayerType.BASE_IMAGE, visible: true, background: { mode: 'gradient', opacity: 100, gradient: { stops: [{ offset: 0, color: '#ffffff', alpha: 0.5 }, { offset: 1, color: '#000000', alpha: 1 }] } } }],
 			canvasData: { originalAlpha: new Uint8ClampedArray([255]), alphaThreshold: 1, hasBaseImage: true },
@@ -178,13 +273,17 @@ function assert(condition, message) {
 		};
 		try {
 			const frame = new ImageData(new Uint8ClampedArray([255, 0, 255, 255, 1, 2, 3, 0]), 2, 1);
+			const ownedFrames = [frame];
 			await exporter.gifEncodingPipeline.encode({
-				frames: [frame], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
+				frames: ownedFrames, settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
 				transparency: { needed: true, safeKey }, mode: 'still'
 			});
 			check(gifOptions.transparent === safeKey.hex && encodedFrame.data[0] === 255 && encodedFrame.data[1] === 0
 				&& encodedFrame.data[2] === 255 && encodedFrame.data[4] === 0 && encodedFrame.data[5] === 255,
 				'Still GIF did not propagate the compositor-selected key or preserve opaque magenta');
+			check(ownedFrames[0] === null, 'GIF pipeline retained the application-owned source frame after GIF.js copied it');
+			check(exporter.gifEncodingPipeline._analyzeColors([frame]).observedColorCount === 1,
+				'Fully transparent RGB influenced GIF color analysis');
 		} finally { window.GIF = OriginalGif; }
 
 		await window.editor.loadBlankImage(8, 8, '#ffffff');
@@ -231,7 +330,11 @@ function assert(condition, message) {
 			await exporter.process({
 				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
 				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['animation:gif'], callbacks,
-				outputFormat: 'gif', frameSink: (plan) => plan
+				outputFormat: 'mp4',
+				scheduleSink: ({ schedulePlan, renderScheduleEntry }) => {
+					schedulePlan.entries.forEach((entry, index) => renderScheduleEntry(entry, index));
+					return schedulePlan;
+				}
 			});
 			check(planBuilds === visibleLayers.length, 'Animation export rebuilt layer plans during rendering');
 		} finally { delete exporter._buildLayerExportPlan; }

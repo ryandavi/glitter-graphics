@@ -25,6 +25,19 @@ function reportGifExportProgress(callbacks, phaseKey, ratio = 0, detail = '', ph
 	});
 }
 
+function ensureCanvasSize(canvas, width, height) {
+	if (canvas.width !== width) canvas.width = width;
+	if (canvas.height !== height) canvas.height = height;
+}
+
+function resetCanvasContext(ctx, width, height, imageSmoothingEnabled = true) {
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
+	ctx.globalAlpha = 1;
+	ctx.globalCompositeOperation = 'source-over';
+	ctx.imageSmoothingEnabled = imageSmoothingEnabled;
+	ctx.clearRect(0, 0, width, height);
+}
+
 class GifExporter {
 	constructor(options = {}) {
 		if (!options || typeof options.show === 'function') options = { resultPresenter: options };
@@ -40,11 +53,11 @@ class GifExporter {
 		this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
 		this.helperCanvas = document.createElement('canvas');
-		this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+		this.helperCtx = this.helperCanvas.getContext('2d');
 		this.layerBlendCanvas = document.createElement('canvas');
-		this.layerBlendCtx = this.layerBlendCanvas.getContext('2d');
-		this.basePixelEffectCache = new Map();
-		this.baseDitherPaletteCache = new Map();
+		this.layerBlendCtx = this.layerBlendCanvas.getContext('2d', { willReadFrequently: true });
+		this.patternSourceCanvas = document.createElement('canvas');
+		this.patternSourceCtx = this.patternSourceCanvas.getContext('2d');
 		this.filterGrainTileCache = new Map();
 		this.resultPresenter = options.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null);
 		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
@@ -84,8 +97,6 @@ class GifExporter {
 				key: '__base_dither',
 				label: 'Base image shimmer',
 				ownerLayerId: shimmerBase.id,
-				naturalPeriod: animation.frames * frameDuration,
-				preferredSamplingRate: 1000 / frameDuration,
 				naturalPeriod: animation.frames * frameDuration,
 				preferredSamplingRate: 1000 / frameDuration,
 				sampleAt: (timestamp, period = animation.frames * frameDuration) => {
@@ -221,7 +232,7 @@ class GifExporter {
 		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height };
 	}
 
-	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null) {
+	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null) {
 		const transform = getLayerTransform(layer);
 		const { isAnimated, width, height } = layer.stickerData;
 
@@ -247,8 +258,10 @@ class GifExporter {
 
 		// The same color-adjust matrix used by glitter/text/shape export also
 		// matches the sticker image's CSS preview filter.
-		const tempCanvas = this._patternSourceFromFrame(imageData, layer.stickerData.colorAdjust);
-		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource);
+		const tempCanvas = scratch?.sourceCanvas;
+		if (!tempCanvas) throw new Error(`Missing sticker scratch for layer ${layer.id}`);
+		this._renderPatternSourceInto(tempCanvas, imageData, layer.stickerData.colorAdjust);
+		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
 
 		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height, {
 			smooth: layer.stickerData.isPixelated === false
@@ -271,41 +284,48 @@ class GifExporter {
 			: [];
 	}
 
-	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource) {
+	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch) {
 		const shadow = layer.stickerData?.shadow;
 		if (!shadow) return;
 		const pad = Math.ceil(Math.max(
 			Math.abs(shadow.offsetX || 0),
 			Math.abs(shadow.offsetY || 0)
 		)) + 2;
-		const mask = document.createElement('canvas');
-		mask.width = stickerCanvas.width + pad * 2;
-		mask.height = stickerCanvas.height + pad * 2;
-		mask.getContext('2d').drawImage(stickerCanvas, pad, pad);
 		const source = this._getStickerEffectSource(layer, 'shadow');
-		const effectMask = this._createOffsetMaskCanvas(mask, shadow.offsetX || 0, shadow.offsetY || 0);
-		if (!source || !effectMask) return;
-		const filled = this._createFilledMaskCanvas(effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), sourceSelectionMap, resolvedFramesBySource);
+		if (!source || !scratch?.shadowMaskCanvas || !scratch?.shadowFillCanvas) return;
+		const effectMask = scratch.shadowMaskCanvas;
+		ensureCanvasSize(effectMask, stickerCanvas.width + pad * 2, stickerCanvas.height + pad * 2);
+		const effectMaskCtx = scratch.shadowMaskCtx;
+		resetCanvasContext(effectMaskCtx, effectMask.width, effectMask.height);
+		const offsetX = shadow.offsetX || 0;
+		const offsetY = shadow.offsetY || 0;
+		effectMaskCtx.drawImage(stickerCanvas, pad + offsetX, pad + offsetY);
+		effectMask._textureOrigin = { x: offsetX, y: offsetY };
+		this._renderFilledMaskInto(scratch.shadowFillCanvas, effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), sourceSelectionMap, resolvedFramesBySource);
 		// The shadow is the sticker's own silhouette, so it scales the same way.
-		this._drawTransformedCanvas(ctx, filled, getLayerTransform(layer), filled.width, filled.height, {
+		this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, getLayerTransform(layer), scratch.shadowFillCanvas.width, scratch.shadowFillCanvas.height, {
 			smooth: layer.stickerData.isPixelated === false
 		});
 	}
 
-	_renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, textMaskCanvases = null) {
+	_renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, textMaskCanvases = null, scratch = null) {
 		const textMasks = textMaskCanvases?.get(layer.id);
 		if (!textMasks?.fill) {
 			throw new Error(`Missing text mask for layer ${layer.id}`);
 		}
 		const width = layer.textData.width;
 		const height = layer.textData.height;
-		const compositeCanvas = document.createElement('canvas');
-		compositeCanvas.width = width;
-		compositeCanvas.height = height;
-		const compositeCtx = compositeCanvas.getContext('2d', { alpha: true });
+		const compositeCanvas = scratch?.compositeCanvas;
+		const fillCanvas = scratch?.fillCanvas;
+		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing text scratch for layer ${layer.id}`);
+		ensureCanvasSize(compositeCanvas, width, height);
+		ensureCanvasSize(fillCanvas, width, height);
+		const compositeCtx = scratch.compositeCtx;
+		resetCanvasContext(compositeCtx, width, height);
 		const draw = (maskCanvas, source, sourceKey) => {
 			if (!maskCanvas || !source) return;
-			const fillCanvas = this._createFilledMaskCanvas(
+			this._renderFilledMaskInto(
+				fillCanvas,
 				maskCanvas,
 				source,
 				layer,
@@ -408,8 +428,8 @@ class GifExporter {
 	}
 
 	// Mirror of _renderTextLayerToCanvas for shape layers (shadow, border, fill),
-	// reusing the generic _createFilledMaskCanvas + _drawTransformedCanvas.
-	_renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases) {
+	// reusing the target-writing fill helper and _drawTransformedCanvas.
+	_renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases, scratch = null) {
 		const masks = shapeMaskCanvases?.get(layer.id);
 		if (!masks?.fill) {
 			throw new Error(`Missing shape mask for layer ${layer.id}`);
@@ -418,15 +438,18 @@ class GifExporter {
 		const t = getLayerTransform(layer);
 		const w = masks.renderWidth;
 		const h = masks.renderHeight;
-		const compositeCanvas = document.createElement('canvas');
-		compositeCanvas.width = w;
-		compositeCanvas.height = h;
-		const compositeCtx = compositeCanvas.getContext('2d', { alpha: true });
+		const compositeCanvas = scratch?.compositeCanvas;
+		const fillCanvas = scratch?.fillCanvas;
+		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing shape scratch for layer ${layer.id}`);
+		ensureCanvasSize(compositeCanvas, w, h);
+		ensureCanvasSize(fillCanvas, w, h);
+		const compositeCtx = scratch.compositeCtx;
+		resetCanvasContext(compositeCtx, w, h);
 		const draw = (maskCanvas, slot) => {
 			if (!maskCanvas) return;
 			const source = this._getShapeEffectSource(layer, slot);
 			if (!source) return;
-			const fillCanvas = this._createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), sourceSelectionMap, resolvedFramesBySource);
+			this._renderFilledMaskInto(fillCanvas, maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), sourceSelectionMap, resolvedFramesBySource);
 			compositeCtx.drawImage(fillCanvas, 0, 0, w, h);
 		};
 		const drawBorder = () => {
@@ -554,7 +577,7 @@ class GifExporter {
 							const reduced = sourceSelectionMap?.get(layer.id);
 							const frame = frames[this._getReducedFrameIndex(frameIndex, frames.length, reduced)];
 							if (!frame) throw new Error(`Missing background glitter frame for ${layer.id}`);
-							const pattern = ctx.createPattern(this._patternSourceFromFrame(frame, background.colorAdjust), 'repeat');
+							const pattern = ctx.createPattern(this._renderPatternSourceInto(this.patternSourceCanvas, frame, background.colorAdjust), 'repeat');
 							pattern.setTransform(new DOMMatrix()
 								.translateSelf(Number(background.textureOffsetX) || 0, Number(background.textureOffsetY) || 0)
 								.scaleSelf((background.scale || 100) / 100));
@@ -606,7 +629,7 @@ class GifExporter {
 						} else if (fillMode === 'gradient') {
 							helperCtx.fillStyle = createEffectCanvasGradient(helperCtx, layer.fill.gradient, { x: 0, y: 0, width, height });
 						} else {
-							const patternSource = this._patternSourceFromFrame(frameImageData, layer.settings.colorAdjust);
+							const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, layer.settings.colorAdjust);
 							const pattern = helperCtx.createPattern(patternSource, 'repeat');
 							const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
 							pattern.setTransform(new DOMMatrix()
@@ -626,6 +649,11 @@ class GifExporter {
 
 			case LayerType.TEXT_GLITTER: {
 				const glitterSources = this._getTextEffectGlitterSources(layer);
+				const scratch = {
+					compositeCanvas: document.createElement('canvas'),
+					fillCanvas: document.createElement('canvas')
+				};
+				scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
 				return {
 					prepareMasks: async ({ textMaskCanvases, callbacks }) => {
 						const fillMaskCanvas = await callbacks.renderTextMask(layer);
@@ -644,13 +672,18 @@ class GifExporter {
 					})),
 					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases }) => {
-						this._renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases);
+						this._renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases, scratch);
 					}
 				};
 			}
 
 			case LayerType.SHAPE: {
 				const glitterSources = this._getShapeGlitterSources(layer);
+				const scratch = {
+					compositeCanvas: document.createElement('canvas'),
+					fillCanvas: document.createElement('canvas')
+				};
+				scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
 				return {
 					prepareMasks: async ({ shapeMaskCanvases, callbacks }) => {
 						// The shape manager is the single source of truth for fill, border,
@@ -664,13 +697,19 @@ class GifExporter {
 					})),
 					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases }) => {
-						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases);
+						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases, scratch);
 					}
 				};
 			}
 
 			case LayerType.STICKER: {
 				const glitterSources = this._getStickerGlitterSources(layer);
+				const scratch = {
+					sourceCanvas: document.createElement('canvas'),
+					shadowMaskCanvas: document.createElement('canvas'),
+					shadowFillCanvas: document.createElement('canvas')
+				};
+				scratch.shadowMaskCtx = scratch.shadowMaskCanvas.getContext('2d', { alpha: true });
 				return {
 					prepareMasks: async () => {},
 					prepareStaticResources: async ({ callbacks }) => {
@@ -694,7 +733,7 @@ class GifExporter {
 					],
 					getStaticTransparencyInputs: () => layer.stickerData.isAnimated || !layer.stickerData.staticImageData ? [] : [layer.stickerData.staticImageData],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
-						this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource);
+						this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
 					}
 				};
 			}
@@ -772,13 +811,10 @@ class GifExporter {
 		return sources;
 	}
 
-	_createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource) {
-		const fillCanvas = document.createElement('canvas');
-		fillCanvas.width = maskCanvas.width;
-		fillCanvas.height = maskCanvas.height;
-		const fillCtx = fillCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
-
-		fillCtx.clearRect(0, 0, fillCanvas.width, fillCanvas.height);
+	_renderFilledMaskInto(fillCanvas, maskCanvas, source, layer, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource) {
+		ensureCanvasSize(fillCanvas, maskCanvas.width, maskCanvas.height);
+		const fillCtx = fillCanvas.getContext('2d', { alpha: true });
+		resetCanvasContext(fillCtx, fillCanvas.width, fillCanvas.height);
 		fillCtx.globalAlpha = source.opacity ?? 1;
 
 		if (source.mode === 'solid') {
@@ -789,7 +825,7 @@ class GifExporter {
 			});
 		} else {
 			const frameImageData = this._getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource);
-			const patternSource = this._patternSourceFromFrame(frameImageData, source.colorAdjust);
+			const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, source.colorAdjust);
 
 			const pattern = fillCtx.createPattern(patternSource, 'repeat');
 			const sourceScale = source.scale ?? layer.settings.scale;
@@ -831,13 +867,14 @@ class GifExporter {
 	// The resolved frame is a shared cached ImageData, so a non-identity adjust
 	// works on a COPY — never mutate the cache. Identity adjust puts the original
 	// bytes straight through, keeping export byte-identical to pre-WP4 content.
-	_patternSourceFromFrame(frameImageData, colorAdjust) {
+	_renderPatternSourceInto(patternSource, frameImageData, colorAdjust) {
 		const normalizedFrame = this._getFrameImageData(frameImageData);
 		if (!normalizedFrame) throw new Error('Invalid image frame data');
-		const patternSource = document.createElement('canvas');
-		patternSource.width = normalizedFrame.width;
-		patternSource.height = normalizedFrame.height;
-		const pctx = patternSource.getContext('2d');
+		ensureCanvasSize(patternSource, normalizedFrame.width, normalizedFrame.height);
+		const pctx = patternSource === this.patternSourceCanvas
+			? this.patternSourceCtx
+			: patternSource.getContext('2d');
+		resetCanvasContext(pctx, patternSource.width, patternSource.height);
 
 		if (colorAdjust && !isIdentityColorAdjust(colorAdjust)) {
 			const copy = new ImageData(
@@ -854,26 +891,16 @@ class GifExporter {
 		return patternSource;
 	}
 
-	_hashBasePixels(pixels) {
-		let hash = 2166136261;
-		for (let index = 0; index < pixels.length; index += 4) {
-			hash = Math.imul(hash ^ pixels[index], 16777619);
-			hash = Math.imul(hash ^ pixels[index + 1], 16777619);
-			hash = Math.imul(hash ^ pixels[index + 2], 16777619);
-			hash = Math.imul(hash ^ pixels[index + 3], 16777619);
-		}
-		return hash >>> 0;
-	}
-
-	_getBasePipelineImageData(layer, canvasData, frameIndex) {
+	_prepareBasePipeline(visibleLayers, canvasData, exportSettings) {
+		const layer = visibleLayers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+		const background = layer?.background;
+		if (!layer || layer.visible === false || !exportSettings.baseImage || !['image', 'gradient'].includes(background?.mode || 'image')) return null;
 		const { width, height, originalData } = canvasData;
-		const background = layer.background;
-		let source;
+		let source = null;
 		if (background.mode === 'gradient') {
 			const canvas = document.createElement('canvas');
-			canvas.width = width;
-			canvas.height = height;
-			const sourceCtx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+			ensureCanvasSize(canvas, width, height);
+			const sourceCtx = canvas.getContext('2d', { alpha: true });
 			sourceCtx.fillStyle = createEffectCanvasGradient(sourceCtx, background.gradient, { x: 0, y: 0, width, height });
 			sourceCtx.fillRect(0, 0, width, height);
 			source = sourceCtx.getImageData(0, 0, width, height);
@@ -881,39 +908,53 @@ class GifExporter {
 			source = new ImageData(new Uint8ClampedArray(originalData), width, height);
 		}
 		const settings = GlitterPixelEffects.normalizeSettings(background.pixelEffects || background.posterize, CONFIG.tools.pixelEffects);
-		const shimmerFrame = settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
-			&& GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects) ? frameIndex : 0;
-		const sourceHash = this._hashBasePixels(source.data);
-		const key = `${width}x${height}:${sourceHash}:${JSON.stringify(settings)}:${JSON.stringify(background.colorAdjust)}:${background.opacity}:${shimmerFrame}`;
-		const cached = this.basePixelEffectCache.get(key);
-		if (cached) return cached;
 		let ditherPalette = null;
 		if (settings.paletteEnabled && settings.paletteMode === 'dither') {
-			const paletteKey = `${width}x${height}:${sourceHash}:${settings.pixelSize}:${settings.colorCount}:${settings.paletteStyle}:${settings.mergeDistinctness}:${settings.dither.palette}:${settings.dither.duotone.join(',')}`;
-			ditherPalette = this.baseDitherPaletteCache.get(paletteKey);
-			if (!ditherPalette) {
-				const pixelized = GlitterPixelEffects.pixelize(source.data, width, height, settings.pixelateEnabled ? settings.pixelSize : 1);
-				ditherPalette = GlitterPixelEffects.getPalette(pixelized, width, height, settings, {
-					pixelEffects: CONFIG.tools.pixelEffects,
-					autoGlitter: CONFIG.tools.autoGlitter
-				});
-				this.baseDitherPaletteCache.set(paletteKey, ditherPalette);
-				while (this.baseDitherPaletteCache.size > 16) this.baseDitherPaletteCache.delete(this.baseDitherPaletteCache.keys().next().value);
-			}
-		}
-		const data = !settings.pixelateEnabled && !settings.paletteEnabled
-			? new Uint8ClampedArray(source.data)
-			: GlitterPixelEffects.applyPixelEffects(source.data, width, height, settings, {
+			const pixelized = GlitterPixelEffects.pixelize(source.data, width, height, settings.pixelateEnabled ? settings.pixelSize : 1);
+			ditherPalette = GlitterPixelEffects.getPalette(pixelized, width, height, settings, {
 				pixelEffects: CONFIG.tools.pixelEffects,
 				autoGlitter: CONFIG.tools.autoGlitter
-			}, shimmerFrame, ditherPalette);
-		const result = new ImageData(data, width, height);
-		applyColorAdjustToImageData(result, background.colorAdjust);
-		if ((background.opacity ?? 100) < 100) {
-			for (let offset = 3; offset < result.data.length; offset += 4) result.data[offset] = Math.round(result.data[offset] * background.opacity / 100);
+			});
 		}
-		this.basePixelEffectCache.set(key, result);
-		while (this.basePixelEffectCache.size > 32) this.basePixelEffectCache.delete(this.basePixelEffectCache.keys().next().value);
+		return {
+			source,
+			settings,
+			colorAdjust: normalizeColorAdjust(background.colorAdjust),
+			opacity: background.opacity ?? 100,
+			ditherPalette,
+			shimmerAnimation: settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
+				? GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects)
+				: null,
+			processedFrames: new Map()
+		};
+	}
+
+	_getBasePipelineImageData(context, frameIndex) {
+		const pipeline = context.basePipeline;
+		if (!pipeline) throw new Error('Missing prepared base pipeline');
+		const { width, height } = context.canvasData;
+		const shimmerFrame = pipeline.shimmerAnimation
+			? ((Math.floor(frameIndex) % pipeline.shimmerAnimation.frames) + pipeline.shimmerAnimation.frames) % pipeline.shimmerAnimation.frames
+			: 0;
+		const cached = pipeline.processedFrames.get(shimmerFrame);
+		if (cached) return cached;
+		const pixelEffectsActive = pipeline.settings.pixelateEnabled || pipeline.settings.paletteEnabled;
+		if (!pixelEffectsActive && isIdentityColorAdjust(pipeline.colorAdjust) && pipeline.opacity === 100) {
+			pipeline.processedFrames.set(shimmerFrame, pipeline.source);
+			return pipeline.source;
+		}
+		const data = !pipeline.settings.pixelateEnabled && !pipeline.settings.paletteEnabled
+			? new Uint8ClampedArray(pipeline.source.data)
+			: GlitterPixelEffects.applyPixelEffects(pipeline.source.data, width, height, pipeline.settings, {
+				pixelEffects: CONFIG.tools.pixelEffects,
+				autoGlitter: CONFIG.tools.autoGlitter
+			}, shimmerFrame, pipeline.ditherPalette);
+		const result = new ImageData(data, width, height);
+		applyColorAdjustToImageData(result, pipeline.colorAdjust);
+		if (pipeline.opacity < 100) {
+			for (let offset = 3; offset < result.data.length; offset += 4) result.data[offset] = Math.round(result.data[offset] * pipeline.opacity / 100);
+		}
+		pipeline.processedFrames.set(shimmerFrame, result);
 		return result;
 	}
 
@@ -1015,7 +1056,7 @@ class GifExporter {
 		canvas.width = sourceCanvas.width;
 		canvas.height = sourceCanvas.height;
 		this._copyTextureOrigin(canvas, sourceCanvas, offsetX, offsetY);
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		const ctx = canvas.getContext('2d', { alpha: true });
 		ctx.drawImage(sourceCanvas, offsetX, offsetY);
 		return canvas;
 	}
@@ -1032,7 +1073,7 @@ class GifExporter {
 		const canvas = document.createElement('canvas');
 		canvas.width = fillMaskCanvas.width;
 		canvas.height = fillMaskCanvas.height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		const ctx = canvas.getContext('2d', { alpha: true });
 
 		const radius = Math.max(1, widthPx);
 		// Lockstep with TextGlitterManager.getBorderOffsets — sample count scales
@@ -1125,6 +1166,7 @@ class GifExporter {
 		}
 		let watermark = null;
 		if (settingsSnapshot.watermarkEnabled) watermark = await this._loadWatermark(callbacks, settingsSnapshot.watermark);
+		const watermarkCanvas = watermark ? document.createElement('canvas') : null;
 		const watermarkSource = watermark?.isAnimated ? this._createWatermarkDescriptor(watermark) : null;
 		if (watermarkSource) {
 			if (sourceKeys.has(watermarkSource.key)) throw new Error(`Duplicate authored source key: ${watermarkSource.key}`);
@@ -1148,6 +1190,7 @@ class GifExporter {
 			});
 		}
 		this._indexPixelatedGlitters(glitterGifs);
+		const basePipeline = this._prepareBasePipeline(visibleLayers, canvasData, settingsSnapshot);
 		return {
 			visibleLayers,
 			library: glitterGifs,
@@ -1157,7 +1200,9 @@ class GifExporter {
 			masks,
 			authoredSources,
 			proceduralSources: this._collectProceduralSources(visibleLayers, { includeBaseImage: settingsSnapshot.baseImage }),
+			basePipeline,
 			watermark,
+			watermarkCanvas,
 			watermarkSource
 		};
 	}
@@ -1213,7 +1258,7 @@ class GifExporter {
 
 
 	async process(params) {
-		const { visibleLayers, glitterGifs, canvasData, callbacks, frameSink = null, outputFormat = 'gif' } = params;
+		const { visibleLayers, glitterGifs, canvasData, callbacks, scheduleSink = null, outputFormat = 'gif' } = params;
 		const exportSettings = {
 			...params.exportSettings,
 			frameDelay: AuthoredAnimationSource.normalizeDuration(params.exportSettings.frameDelay, CONFIG.export.defaults.frameDelay)
@@ -1277,15 +1322,12 @@ class GifExporter {
 
 		callbacks.onStatus('Planning animation timing...');
 		reportGifExportProgress(callbacks, 'planning', 0.5, 'Resolving source timing…');
-		this.helperCanvas.width = canvasData.width;
-		this.helperCanvas.height = canvasData.height;
-		this.layerBlendCanvas.width = canvasData.width;
-		this.layerBlendCanvas.height = canvasData.height;
-		this.canvas.width = canvasData.width;
-		this.canvas.height = canvasData.height;
+		ensureCanvasSize(this.helperCanvas, canvasData.width, canvasData.height);
+		ensureCanvasSize(this.layerBlendCanvas, canvasData.width, canvasData.height);
+		ensureCanvasSize(this.canvas, canvasData.width, canvasData.height);
 		let renderedCandidateCount = 0;
 		const planner = new CompositeTimelinePlanner(timelineConfig);
-		const plan = await planner.plan({
+		const plannerOptions = {
 			timelines: sourceTimelines,
 			outputFormat,
 			fallbackDuration: exportSettings.frameDelay,
@@ -1322,10 +1364,12 @@ class GifExporter {
 				}
 				return frame;
 			}
-		});
+		};
+		const plan = scheduleSink
+			? planner.planSchedule(plannerOptions)
+			: await planner.plan(plannerOptions);
 		plan.width = canvasData.width;
 		plan.height = canvasData.height;
-		plan.frameDelay = plan.totalDuration / plan.frames.length;
 		dbg('[GifExporter] Render clock:', {
 			mode: plan.renderClock.mode,
 			targetDuration: plan.renderClock.targetDuration,
@@ -1342,19 +1386,31 @@ class GifExporter {
 			framesBeforeReduction: plan.renderClock.framesBeforeReduction,
 			framesAfterReduction: plan.renderClock.framesAfterReduction
 		});
-		reportGifExportProgress(callbacks, 'reducing', 1, `Removed ${plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged} duplicate or near-duplicate frames`, plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
-		plan.reductions = [];
-		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
-		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
+		if (!scheduleSink) reportGifExportProgress(callbacks, 'reducing', 1, `Removed ${plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged} duplicate or near-duplicate frames`, plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
 		if (plan.reduction.budgetCompromiseRequired) {
 			const detail = 'The hard frame limit requires a quality compromise; no frames were silently truncated.';
 			callbacks.onStatus(detail);
 			reportGifExportProgress(callbacks, 'reducing', 1, detail);
 		}
 
-		if (frameSink) return frameSink(plan);
+		if (scheduleSink) {
+			return scheduleSink({
+				schedulePlan: plan,
+				renderScheduleEntry: (entry, scheduleIndex = 0) => this._renderFrameToCanvas({
+					outputFrameIndex: scheduleIndex,
+					timestamp: entry.timestamp,
+					context,
+					transparency: { ...transparencyState, safeKey },
+					sourceSelectionMap: entry.selection,
+					resolvedFramesBySource
+				})
+			});
+		}
+		const frames = plan.frames;
+		plan.frameCount = frames.length;
+		delete plan.frames;
 		const encoded = await this.gifEncodingPipeline.encode({
-			frames: plan.frames,
+			frames,
 			delays: plan.frameDurations,
 			settings: exportSettings,
 			transparency: { needed: needsTransparency, safeKey },
@@ -1390,8 +1446,9 @@ class GifExporter {
 		const safeKey = transparencyState.needsTransparency
 			? this._findSafeTransparencyKey(context, resolvedFramesBySource, { sourceSelectionMap })
 			: null;
-		this.helperCanvas.width = this.layerBlendCanvas.width = this.canvas.width = canvasData.width;
-		this.helperCanvas.height = this.layerBlendCanvas.height = this.canvas.height = canvasData.height;
+		ensureCanvasSize(this.helperCanvas, canvasData.width, canvasData.height);
+		ensureCanvasSize(this.layerBlendCanvas, canvasData.width, canvasData.height);
+		ensureCanvasSize(this.canvas, canvasData.width, canvasData.height);
 		callbacks.onProgress(45, 'Composing still frame…', 1, 1, { phase: 'Composing' });
 		const imageData = this._renderFrame({
 			outputFrameIndex: 0,
@@ -1439,10 +1496,9 @@ class GifExporter {
 			allFrames.push(...(resolvedFramesBySource.get(descriptor.key) || []));
 		});
 		layerPlans.forEach(({ plan }) => allFrames.push(...plan.getStaticTransparencyInputs(context)));
-		const baseLayer = layers.find((layer) => layer.type === LayerType.BASE_IMAGE && layer.visible !== false);
-		if (baseLayer && ['image', 'gradient'].includes(baseLayer.background?.mode || 'image')) {
+		if (context.basePipeline) {
 			const baseFrameIndex = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? 0;
-			allFrames.push(this._getBasePipelineImageData(baseLayer, canvasData, baseFrameIndex));
+			allFrames.push(this._getBasePipelineImageData(context, baseFrameIndex));
 		}
 
 		// Add watermark frames if present
@@ -1508,8 +1564,8 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
-		const { canvasData, visibleLayers: layers, exportSettings, watermark, layerPlans, masks } = context;
+	_renderFrameToCanvas({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
+		const { canvasData, visibleLayers: layers, exportSettings, watermark, watermarkCanvas, layerPlans, masks } = context;
 		const { safeKey, needsTransparency } = transparency;
 		const maskCanvases = masks.glitter;
 		const textMaskCanvases = masks.text;
@@ -1519,9 +1575,11 @@ class GifExporter {
 		const hCtx = this.helperCtx;
 
 		// 1. Reset/Setup Canvas
-		this.canvas.width = width;
-		this.canvas.height = height;
-		ctx.clearRect(0, 0, width, height);
+		ensureCanvasSize(this.canvas, width, height);
+		ensureCanvasSize(this.helperCanvas, width, height);
+		ensureCanvasSize(this.layerBlendCanvas, width, height);
+		resetCanvasContext(ctx, width, height);
+		resetCanvasContext(hCtx, width, height);
 
 		// 2. Identify Base Image Visibility
 		const baseLayer = layers.find(l => l.type === LayerType.BASE_IMAGE);
@@ -1548,7 +1606,7 @@ class GifExporter {
 
 		if (shouldRenderBase && ((baseMode === 'image' && canvasData.hasBaseImage !== false) || baseMode === 'gradient')) {
 			const baseEffectFrame = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? frameIndex;
-			const baseImage = this._getBasePipelineImageData(baseLayer, canvasData, baseEffectFrame);
+			const baseImage = this._getBasePipelineImageData(context, baseEffectFrame);
 			if (needsTransparency) {
 				// SCENARIO A: GIF Transparency is ACTIVE.
 				const bgImage = new ImageData(new Uint8ClampedArray(baseImage.data), width, height);
@@ -1566,9 +1624,7 @@ class GifExporter {
 				ctx.putImageData(bgImage, 0, 0);
 			} else {
 				// SCENARIO B: GIF Transparency is INACTIVE (Matte mode or Consumption mode).
-				hCtx.canvas.width = width;
-				hCtx.canvas.height = height;
-				hCtx.clearRect(0, 0, width, height);
+				resetCanvasContext(hCtx, width, height);
 				hCtx.putImageData(baseImage, 0, 0);
 				ctx.drawImage(this.helperCanvas, 0, 0);
 			}
@@ -1650,7 +1706,7 @@ class GifExporter {
 		// 6. Render Watermark
 		if (exportSettings.watermarkEnabled && watermark) {
 			const watermarkFrame = sourceSelectionMap?.get('__watermark')?.frameIndex ?? frameIndex;
-			this._renderWatermarkToCanvas(watermark, ctx, width, height, watermarkFrame, resolvedFramesBySource?.get('__watermark'));
+			this._renderWatermarkToCanvas(watermark, watermarkCanvas, ctx, width, height, watermarkFrame, resolvedFramesBySource?.get('__watermark'));
 		}
 
 		// 8. Debug logic for problem frames
@@ -1665,7 +1721,13 @@ class GifExporter {
 			dbg(`[GifExporter] Frame ${frameIndex} background color pixels: ${safeKeyInFrame}`);
 		}
 
-		return ctx.getImageData(0, 0, width, height);
+		return this.canvas;
+	}
+
+	_renderFrame(options) {
+		this._renderFrameToCanvas(options);
+		const { width, height } = options.context.canvasData;
+		return this.ctx.getImageData(0, 0, width, height);
 	}
 
 	async _parseGifWithMetadata(url, providedBytes = null, onProgress = null) {
@@ -1824,13 +1886,13 @@ class GifExporter {
 		return {
 			...plan.loopSeam,
 			duration: plan.totalDuration,
-			estimatedFrameCount: plan.frames.length,
+			estimatedFrameCount: plan.frameCount,
 			maximumVisualError: plan.reduction.maximumVisualError,
 			timingResolution: plan.timingResolution
 		};
 	}
 
-	_renderWatermarkToCanvas(watermark, ctx, canvasWidth, canvasHeight, frameIndex, resolvedFrames = null) {
+	_renderWatermarkToCanvas(watermark, watermarkCanvas, ctx, canvasWidth, canvasHeight, frameIndex, resolvedFrames = null) {
 		if (!watermark) return;
 
 		// Determine which frame/image to use
@@ -1853,10 +1915,10 @@ class GifExporter {
 			return;
 		}
 
-		const tempCanvas = document.createElement('canvas');
-		tempCanvas.width = watermark.width;
-		tempCanvas.height = watermark.height;
-		const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		if (!watermarkCanvas) throw new Error('Missing watermark scratch canvas');
+		ensureCanvasSize(watermarkCanvas, watermark.width, watermark.height);
+		const tempCtx = watermarkCanvas.getContext('2d', { alpha: true });
+		resetCanvasContext(tempCtx, watermark.width, watermark.height, false);
 
 		// Only process if not already done during load
 		if (watermark.alphaProcessed) {
@@ -1901,7 +1963,7 @@ class GifExporter {
 		ctx.save();
 		ctx.globalAlpha = CONFIG.export.watermark.opacity / 100;
 		ctx.imageSmoothingEnabled = false;
-		ctx.drawImage(tempCanvas, 0, 0, watermark.width, watermark.height, x, y, scaledWidth, scaledHeight);
+		ctx.drawImage(watermarkCanvas, 0, 0, watermark.width, watermark.height, x, y, scaledWidth, scaledHeight);
 		ctx.restore();
 	}
 
@@ -2003,7 +2065,7 @@ class GifExporter {
 						const canvas = document.createElement('canvas');
 						canvas.width = img.naturalWidth;
 						canvas.height = img.naturalHeight;
-						const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+						const ctx = canvas.getContext('2d', { alpha: true });
 						ctx.drawImage(img, 0, 0);
 
 						let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -2070,6 +2132,6 @@ class GifExporter {
 			lastModified: Date.now()
 		});
 
-		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:gif'], width: this.canvas.width, height: this.canvas.height, frameCount: plan.frames.length, duration: plan.totalDuration / 1000, timelinePlan: plan });
+		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:gif'], width: this.canvas.width, height: this.canvas.height, frameCount: plan.frameCount, duration: plan.totalDuration / 1000, timelinePlan: plan });
 	}
 }

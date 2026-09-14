@@ -5,10 +5,7 @@ const MP4_EXPORT_PROGRESS_PHASES = Object.freeze({
 	loading: { label: 'Loading sources', start: 0, end: 8 },
 	masks: { label: 'Preparing masks', start: 8, end: 12 },
 	planning: { label: 'Planning timing', start: 12, end: 15 },
-	composing: { label: 'Composing frames', start: 15, end: 65 },
-	reducing: { label: 'Reducing frames', start: 65, end: 70 },
-	palette: { label: 'Building palette', start: 70, end: 78 },
-	encoding: { label: 'Encoding', start: 78, end: 99 },
+	encoding: { label: 'Rendering / encoding', start: 15, end: 99 },
 	finalizing: { label: 'Finalizing', start: 99, end: 100 }
 });
 
@@ -72,23 +69,23 @@ class Mp4Exporter {
 			...params,
 			exportSettings: opaqueSettings,
 			outputFormat: 'mp4',
-			frameSink: (plan) => this._encode(plan, opaqueSettings, callbacks)
+			scheduleSink: (renderJob) => this._encode(renderJob, opaqueSettings, callbacks)
 		});
 	}
 
 	_buildOutputSchedule(frameDurations, planDuration, exportSettings) {
 		if (exportSettings.mp4LengthMode !== 'duration') {
 			return Array.from({ length: exportSettings.mp4LoopCount }, () => frameDurations)
-				.flatMap((durations) => durations.map((duration, frameIndex) => ({ frameIndex, duration })));
+				.flatMap((durations) => durations.map((duration, scheduleIndex) => ({ scheduleIndex, duration })));
 		}
 
 		const targetDuration = Math.round(exportSettings.mp4TargetDuration * 1000);
 		const schedule = [];
 		let elapsed = 0;
 		while (elapsed < targetDuration) {
-			for (let frameIndex = 0; frameIndex < frameDurations.length && elapsed < targetDuration; frameIndex++) {
-				const duration = Math.min(frameDurations[frameIndex], targetDuration - elapsed);
-				schedule.push({ frameIndex, duration });
+			for (let scheduleIndex = 0; scheduleIndex < frameDurations.length && elapsed < targetDuration; scheduleIndex++) {
+				const duration = Math.min(frameDurations[scheduleIndex], targetDuration - elapsed);
+				schedule.push({ scheduleIndex, duration });
 				elapsed += duration;
 			}
 			if (planDuration <= 0) break;
@@ -96,8 +93,8 @@ class Mp4Exporter {
 		return schedule;
 	}
 
-	async _encode(plan, exportSettings, callbacks) {
-		const frameDurations = plan.frameDurations || plan.frames.map(() => plan.frameDelay);
+	async _encode({ schedulePlan: plan, renderScheduleEntry }, exportSettings, callbacks) {
+		const frameDurations = plan.frameDurations;
 		const planDuration = plan.totalDuration || frameDurations.reduce((sum, duration) => sum + duration, 0);
 		const outputSchedule = this._buildOutputSchedule(frameDurations, planDuration, exportSettings);
 		const outputDuration = outputSchedule.reduce((sum, entry) => sum + entry.duration, 0);
@@ -138,39 +135,50 @@ class Mp4Exporter {
 		const canvas = document.createElement('canvas');
 		canvas.width = width;
 		canvas.height = height;
-		const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
+		const ctx = canvas.getContext('2d', { alpha: false });
 		const totalFrames = outputSchedule.length;
 		let outputIndex = 0;
 		let timestampMs = 0;
 
-		for (const outputFrame of outputSchedule) {
-			const imageData = plan.frames[outputFrame.frameIndex];
-			ctx.fillStyle = exportSettings.matteColor;
-			ctx.fillRect(0, 0, width, height);
-			ctx.putImageData(imageData, 0, 0);
-			const frame = new VideoFrame(canvas, {
-				timestamp: timestampMs * 1000,
-				duration: outputFrame.duration * 1000
-			});
-			encoder.encode(frame, { keyFrame: outputIndex % CONFIG.export.mp4.keyFrameInterval === 0 });
-			frame.close();
-			outputIndex++;
-			timestampMs += outputFrame.duration;
-			if (encoder.encodeQueueSize > CONFIG.export.mp4.maxEncodeQueueSize) await encoder.flush();
-			reportMp4ExportProgress(callbacks, 'encoding', outputIndex / totalFrames, `Encoding MP4 frame ${outputIndex} / ${totalFrames}`, outputIndex, totalFrames);
-		}
+		try {
+			for (const outputFrame of outputSchedule) {
+				if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
+				if (encoderError) throw encoderError;
+				const scheduleEntry = plan.entries[outputFrame.scheduleIndex];
+				const compositorCanvas = renderScheduleEntry(scheduleEntry, outputFrame.scheduleIndex);
+				resetCanvasContext(ctx, width, height);
+				ctx.fillStyle = exportSettings.matteColor;
+				ctx.fillRect(0, 0, width, height);
+				ctx.drawImage(compositorCanvas, 0, 0);
+				const frame = new VideoFrame(canvas, {
+					timestamp: timestampMs * 1000,
+					duration: outputFrame.duration * 1000
+				});
+				try {
+					encoder.encode(frame, { keyFrame: outputIndex % CONFIG.export.mp4.keyFrameInterval === 0 });
+				} finally {
+					frame.close();
+				}
+				outputIndex++;
+				timestampMs += outputFrame.duration;
+				if (encoder.encodeQueueSize > CONFIG.export.mp4.maxEncodeQueueSize) await encoder.flush();
+				reportMp4ExportProgress(callbacks, 'encoding', outputIndex / totalFrames, `Rendering / encoding MP4 frame ${outputIndex} / ${totalFrames}`, outputIndex, totalFrames);
+			}
 
-		reportMp4ExportProgress(callbacks, 'finalizing', 0, 'Finalizing MP4…');
-		await encoder.flush();
-		encoder.close();
-		if (encoderError) throw encoderError;
+			reportMp4ExportProgress(callbacks, 'finalizing', 0, 'Finalizing MP4…');
+			await encoder.flush();
+			if (encoderError) throw encoderError;
+		} finally {
+			if (encoder.state !== 'closed') encoder.close();
+		}
+		if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
 		muxer.finalize();
 		const blob = new Blob([target.buffer], { type: 'video/mp4' });
 		if (!blob.size) throw new Error('MP4 encoder produced an empty file.');
 
 		reportMp4ExportProgress(callbacks, 'finalizing', 1, 'Export complete');
 		callbacks.onStatus('Export complete!');
-		callbacks.onComplete({ smartReduced: plan.reductions.length > 0, timelinePlan: plan });
+		callbacks.onComplete({ smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan });
 		const file = new File([blob], this.fileName, { type: 'video/mp4', lastModified: Date.now() });
 		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:mp4'], width, height, frameCount: totalFrames, duration: timestampMs / 1000, timelinePlan: plan });
 		return blob;

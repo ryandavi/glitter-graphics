@@ -15,6 +15,11 @@ function frame(colors) {
 	return { data, width: colors.length, height: 1 };
 }
 
+function rgbaFrame(colors) {
+	const data = new Uint8ClampedArray(colors.flat());
+	return { data, width: colors.length, height: 1 };
+}
+
 const key = 0xff00ff;
 const palette = GifPalette.build([
 	frame([[255, 0, 255], [255, 0, 0], [0, 255, 0]]),
@@ -27,4 +32,6 @@ if (GifPalette.resolveColorCount(64) !== 64 || GifPalette.resolveColorCount('aut
 }
 const webSafe = GifPalette.build([frame([[17, 83, 149], [242, 118, 33]])], 32, { style: 'websafe' });
 if (!webSafe.every((channel) => channel % 51 === 0)) throw new Error('Web-safe palette contains a non-web-safe channel.');
+const alphaAware = GifPalette.build([rgbaFrame([[255, 0, 0, 0], [0, 0, 255, 255]])], 2);
+if (alphaAware.join(',') !== '0,0,255') throw new Error('Fully transparent RGB influenced palette construction.');
 console.log('PASS shared GIF palette fixtures: limits, automatic sizing, and transparency reservation.');

@@ -18,6 +18,7 @@ class GifPalette {
 			const step = Math.max(1, Math.ceil(pixelCount / frameBudget));
 			for (let pixel = 0; pixel < pixelCount; pixel += step) {
 				const offset = pixel * 4;
+				if (frame.data[offset + 3] === 0) continue;
 				const r = frame.data[offset];
 				const g = frame.data[offset + 1];
 				const b = frame.data[offset + 2];

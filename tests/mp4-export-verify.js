@@ -32,8 +32,8 @@ async function main() {
 				matteDisabled: document.getElementById('exportMatteColor').disabled,
 				matteRowDisabled: document.getElementById('matteColorRow').classList.contains('disabled')
 			};
-			const width = 64;
-			const height = 48;
+			const width = 63;
+			const height = 47;
 			const frames = [];
 			for (let index = 0; index < 3; index++) {
 				const canvas = document.createElement('canvas');
@@ -48,28 +48,60 @@ async function main() {
 			const originalDownload = window.downloadBlob;
 			window.downloadBlob = () => {};
 			let blob;
+			let renderCalls = 0;
 			try {
-				blob = await exporter._encode(
-					{
-						frames,
-						frameDelay: 110,
-						width,
-						height,
-						reductions: [],
-						loopSeam: { exact: true },
-						reduction: {
-							framesRemoved: 0,
-							selectionDuplicatesMerged: 0,
-							preRenderFramesSkipped: 0,
-							smartReductionEnabled: false,
-							preferredBudgetMet: true,
-							budgetCompromiseRequired: false,
-							durationPreserved: true
+				const compositorCanvas = document.createElement('canvas');
+				compositorCanvas.width = width;
+				compositorCanvas.height = height;
+				const compositorCtx = compositorCanvas.getContext('2d');
+				const renderJob = {
+						schedulePlan: {
+							entries: frames.map((frame, index) => ({ timestamp: index * 110, duration: 110, selection: new Map() })),
+							frameDurations: frames.map(() => 110),
+							frameCount: frames.length,
+							totalDuration: frames.length * 110,
+							width,
+							height,
+							loopSeam: { exact: true },
+							reduction: {
+								framesRemoved: 0,
+								selectionDuplicatesMerged: 0,
+								preRenderFramesSkipped: 0,
+								smartReductionEnabled: false,
+								preferredBudgetMet: true,
+								budgetCompromiseRequired: false,
+								durationPreserved: true
+							}
+						},
+						renderScheduleEntry: (_entry, scheduleIndex) => {
+							renderCalls++;
+							compositorCtx.putImageData(frames[scheduleIndex], 0, 0);
+							return compositorCanvas;
 						}
-					},
+					};
+				if ('frames' in renderJob.schedulePlan) throw new Error('MP4 schedule retained composed frames.');
+				blob = await exporter._encode(
+					renderJob,
 					{ matteColor: '#ffffff', mp4Quality: 'standard', mp4LoopCount: 2 },
 					{ onProgress: () => {}, onStatus: () => {}, onComplete: () => {} }
 				);
+				if (renderCalls !== 6) throw new Error(`MP4 did not rerender its three-entry schedule for both loops: ${renderCalls}`);
+				const durationSchedule = exporter._buildOutputSchedule([110, 110, 110], 330, {
+					mp4LengthMode: 'duration', mp4TargetDuration: 0.5
+				});
+				if (durationSchedule.length !== 5 || durationSchedule.at(-1).duration !== 60
+					|| durationSchedule.map((entry) => entry.scheduleIndex).join(',') !== '0,1,2,0,1') {
+					throw new Error('MP4 target-duration scheduling lost its partial final duration or logical indexes.');
+				}
+				let cancelled = false;
+				try {
+					await exporter._encode(renderJob,
+						{ matteColor: '#ffffff', mp4Quality: 'standard', mp4LoopCount: 1 },
+						{ onProgress: () => {}, onStatus: () => {}, onComplete: () => {}, isCancelled: () => true });
+				} catch (error) {
+					cancelled = error.message === 'Export cancelled';
+				}
+				if (!cancelled) throw new Error('MP4 cancellation did not stop before rendering another frame.');
 			} finally {
 				window.downloadBlob = originalDownload;
 			}
@@ -108,7 +140,7 @@ async function main() {
 			return;
 		}
 		if (result.type !== 'video/mp4' || result.size <= 0) throw new Error('MP4 Blob was empty or had the wrong MIME type.');
-		if (result.width !== 64 || result.height !== 48 || !(result.duration >= 0.65 && result.duration <= 0.67)) throw new Error('MP4 did not decode with the expected 110 ms frame timing.');
+		if (result.width !== 64 || result.height !== 48 || !(result.duration >= 0.65 && result.duration <= 0.67)) throw new Error('MP4 did not preserve timing or pad odd compositor dimensions to even output dimensions.');
 		if (!result.resultModal.visible || !result.resultModal.videoVisible || !result.resultModal.imageHidden) throw new Error('MP4 result modal did not show its video preview.');
 		if (result.resultModal.saveLabel !== 'Save MP4' || result.resultModal.openLabel !== 'Open MP4') throw new Error('MP4 result actions were not format-aware.');
 		if (!result.resultModal.duration.includes('0.66s') || !result.resultModal.size.match(/\d/)) throw new Error('MP4 result stats were incomplete.');

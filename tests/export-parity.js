@@ -203,7 +203,14 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 		};
 		editor.exporter._activeLayerAnimation = { transform: getLayerTransform(layer), sample };
 		try {
-			editor.exporter._renderShapeLayerToCanvas(layer, context, 0, new Map(), new Map(), new Map([[layer.id, masks]]));
+			const plan = editor.exporter._buildLayerExportPlan(layer);
+			plan.render({
+				ctx: context,
+				frameIndex: 0,
+				sourceSelectionMap: new Map(),
+				resolvedFramesBySource: new Map(),
+				shapeMaskCanvases: new Map([[layer.id, masks]])
+			});
 		} finally {
 			editor.exporter._activeLayerAnimation = null;
 		}
@@ -468,12 +475,17 @@ async function verifyBasePreviewExportParity(page, label, frameIndex = 0) {
 		if (background.opacity < 100) {
 			for (let offset = 3; offset < previewFinished.data.length; offset += 4) previewFinished.data[offset] = Math.round(previewFinished.data[offset] * background.opacity / 100);
 		}
-		const exported = editor.exporter._getBasePipelineImageData(layer, {
+		const canvasData = {
 			width, height,
 			originalData: new Uint8ClampedArray(editor.originalImageData.data),
 			originalAlpha: editor.originalAlphaChannel,
 			alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
-		}, frameIndex);
+		};
+		const context = {
+			canvasData,
+			basePipeline: editor.exporter._prepareBasePipeline([layer], canvasData, { baseImage: true })
+		};
+		const exported = editor.exporter._getBasePipelineImageData(context, frameIndex);
 		for (let index = 0; index < exported.data.length; index++) {
 			if (exported.data[index] !== previewFinished.data[index]) return { firstDiff: index };
 		}

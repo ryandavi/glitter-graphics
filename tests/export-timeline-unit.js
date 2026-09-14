@@ -50,8 +50,8 @@ function procedural(key, period, preferredSamplingRate = 12) {
 	});
 }
 
-async function buildPlan(timelines, overrides = {}) {
-	const planner = new CompositeTimelinePlanner({
+function createPlanner() {
+	return new CompositeTimelinePlanner({
 		proceduralPeriodTolerance: 0.10,
 		preRenderBudgetMultiplier: 1.5,
 		renderClock: {
@@ -63,6 +63,11 @@ async function buildPlan(timelines, overrides = {}) {
 			loopCandidateShortlist: 4
 		}
 	});
+
+}
+
+async function buildPlan(timelines, overrides = {}) {
+	const planner = createPlanner();
 	return planner.plan({
 		timelines,
 		fallbackDuration: 100,
@@ -90,6 +95,36 @@ async function main() {
 	const variable = timeline('variable', 3, [50, 150, 300]);
 	assert(variable.frameIndexAt(49) === 0 && variable.frameIndexAt(50) === 1 && variable.frameIndexAt(200) === 2,
 		'Variable-rate source lookup failed.');
+
+	let scheduleRenderCalls = 0;
+	const scheduleOptions = {
+		timelines: [timeline('schedule', 4, [80, 120, 90, 110]), procedural('schedule-motion', 400, 20)],
+		outputFormat: 'gif',
+		fallbackDuration: 100,
+		maxLoopDurationMs: 12000,
+		maxSamplingFps: 30,
+		manualFrameSkip: 2,
+		reverse: true,
+		smartReduction: true,
+		preRenderSampling: true,
+		preRenderBudgetMultiplier: 1.5,
+		visualErrorThreshold: 0.008,
+		preferredFrameBudget: 1000,
+		hardFrameLimit: 1000,
+		renderFrame: (_timestamp, selection) => {
+			scheduleRenderCalls++;
+			return frame([...selection.values()].reduce((sum, selected) => sum + (selected.frameIndex || 0), 0));
+		}
+	};
+	const schedulePlanner = createPlanner();
+	const schedule = schedulePlanner.planSchedule(scheduleOptions);
+	assert(scheduleRenderCalls === 0, 'planSchedule rendered pixels.');
+	const materializedSchedule = await schedulePlanner.plan(scheduleOptions);
+	const scheduleSignature = (plan) => plan.entries.map((entry) => [entry.timestamp, entry.duration, [...entry.selection.entries()]]);
+	assert(JSON.stringify(scheduleSignature(schedule)) === JSON.stringify(scheduleSignature(materializedSchedule))
+		&& schedule.renderClock.mode === materializedSchedule.renderClock.mode
+		&& schedule.loopSeam.duration === materializedSchedule.loopSeam.duration,
+		'plan and planSchedule did not share the same authoritative schedule.');
 
 	const sevenEleven = await buildPlan([
 		timeline('sticker', 7, Array(7).fill(100)),

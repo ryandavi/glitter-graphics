@@ -665,6 +665,7 @@ const ABOUT_TIMELINE = [
   "decade": "1990s",
   "html": "<strong>Yahoo! Pager</strong> launches (renamed Yahoo! Messenger in 1999)."
  },
+ 
  {
   "date": "1998",
   "type": "start",
