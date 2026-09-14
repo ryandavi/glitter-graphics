@@ -528,15 +528,45 @@ class GifExporter {
 	_createAuthoredTimingSource(descriptor, fallbackDuration) {
 		const animation = descriptor.getAnimation();
 		if (!animation?.frames?.length) throw new Error(`Missing animation data for ${descriptor.key}`);
+		const timing = this._reconcileAuthoredTiming(descriptor, animation, fallbackDuration);
 		return new AuthoredAnimationSource({
 			key: descriptor.key,
 			label: descriptor.label,
 			ownerLayerId: descriptor.ownerLayerId,
 			effectSlot: descriptor.effectSlot,
 			frameCount: animation.frames.length,
-			frameDurations: animation.frameDelays || [],
-			fallbackDuration: animation.frameDelay || fallbackDuration
+			frameDurations: timing.frameDurations,
+			fallbackDuration: timing.fallbackDuration
 		});
+	}
+
+	// Archival assets carry a curated frameRate/isVariableFramerate in their manifest
+	// (data/stickers/*.json, data/glitter/*.json). The GIF file's own embedded
+	// per-frame delays are decoded independently and occasionally turn out corrupted
+	// (e.g. a delay of 1cs instead of 100cs), which silently produces a wildly wrong
+	// export cadence. When the two disagree by more than 2x, trust the manifest.
+	_reconcileAuthoredTiming(descriptor, animation, fallbackDuration) {
+		const decodedDurations = animation.frameDelays || [];
+		const decodedFallback = animation.frameDelay || fallbackDuration;
+		const manifestFrameRate = Number(descriptor.sourceIdentity?.frameRate);
+		if (descriptor.sourceIdentity?.isVariableFramerate || !Number.isFinite(manifestFrameRate) || manifestFrameRate <= 0) {
+			return { frameDurations: decodedDurations, fallbackDuration: decodedFallback };
+		}
+		const manifestDuration = 1000 / manifestFrameRate;
+		const decodedAverage = decodedDurations.length
+			? decodedDurations.reduce((sum, duration) => sum + duration, 0) / decodedDurations.length
+			: decodedFallback;
+		const ratio = decodedAverage / manifestDuration;
+		if (ratio < 0.5 || ratio > 2) {
+			console.warn(
+				`[GifExporter] "${descriptor.label}" (${descriptor.key}): decoded GIF frame timing ` +
+				`(~${decodedAverage.toFixed(1)}ms/frame) disagrees with its authored frame rate ` +
+				`(${manifestFrameRate}fps = ${manifestDuration.toFixed(1)}ms/frame) by more than 2x. ` +
+				`Using the authored rate for export — the source GIF file's embedded delays may be corrupted.`
+			);
+			return { frameDurations: [], fallbackDuration: manifestDuration };
+		}
+		return { frameDurations: decodedDurations, fallbackDuration: decodedFallback };
 	}
 
 	_validateAuthoredSourceKeys(descriptors) {
