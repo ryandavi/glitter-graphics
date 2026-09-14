@@ -34,4 +34,15 @@ const webSafe = GifPalette.build([frame([[17, 83, 149], [242, 118, 33]])], 32, {
 if (!webSafe.every((channel) => channel % 51 === 0)) throw new Error('Web-safe palette contains a non-web-safe channel.');
 const alphaAware = GifPalette.build([rgbaFrame([[255, 0, 0, 0], [0, 0, 255, 255]])], 2);
 if (alphaAware.join(',') !== '0,0,255') throw new Error('Fully transparent RGB influenced palette construction.');
+
+// GIF-transparency threshold-aware sampling (alpha < 128 must not merely be
+// alpha === 0): a below-threshold pixel must be excluded from the histogram
+// even though it is not fully transparent.
+const thresholdAware = GifPalette.build([rgbaFrame([[255, 0, 0, 100], [0, 0, 255, 255]])], 2, { alphaThreshold: 128 });
+if (thresholdAware.join(',') !== '0,0,255') throw new Error('Alpha-threshold-aware sampling did not ignore a below-threshold, non-zero-alpha pixel.');
+const defaultThreshold = GifPalette.build([rgbaFrame([[255, 0, 0, 100], [0, 0, 255, 255]])], 2);
+const defaultColors = new Set([defaultThreshold.slice(0, 3).join(','), defaultThreshold.slice(3, 6).join(',')]);
+if (!defaultColors.has('255,0,0') || !defaultColors.has('0,0,255')) {
+	throw new Error('Default alpha threshold changed and now ignores non-fully-transparent pixels.');
+}
 console.log('PASS shared GIF palette fixtures: limits, automatic sizing, and transparency reservation.');

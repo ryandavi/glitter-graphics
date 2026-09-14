@@ -126,8 +126,7 @@ function assert(condition, message) {
 			shapeData: { fill: { mode: 'glitter' }, border: { mode: 'glitter', widthPx: 2, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
 		};
 		const shapeSources = exporter._buildLayerExportPlan(shape).getAuthoredSources(library);
-		check(shapeSources.map((source) => source.key).join(',') === 'shape:fill,shape:border,shape:shadow'
-			&& shapeSources.every((source) => !source.includeInTransparencyScan), 'Shape source keys or legacy safe-key exclusion changed');
+		check(shapeSources.map((source) => source.key).join(',') === 'shape:fill,shape:border,shape:shadow', 'Shape source keys changed');
 		const sticker = {
 			id: 'sticker', type: LayerType.STICKER, settings: {},
 			stickerData: { isAnimated: true, name: 'Sticker', shadow: { mode: 'glitter', glitterId: 'g2' } }
@@ -241,49 +240,56 @@ function assert(condition, message) {
 		}
 		check(renderCanvasCreations === 0, 'Text, shape, sticker, pattern, or watermark rendering allocated a canvas per frame');
 
-		const transparencyContext = {
-			visibleLayers: [{ id: 'base', type: LayerType.BASE_IMAGE, visible: true, background: { mode: 'gradient', opacity: 100, gradient: { stops: [{ offset: 0, color: '#ffffff', alpha: 0.5 }, { offset: 1, color: '#000000', alpha: 1 }] } } }],
-			canvasData: { originalAlpha: new Uint8ClampedArray([255]), alphaThreshold: 1, hasBaseImage: true },
-			exportSettings: { baseImage: true, transparency: true },
-			masks: { raw: new Map() }
-		};
-		check(exporter._resolveTransparencyState(transparencyContext, { targetSupportsTransparency: true }).needsTransparency,
-			'Gradient alpha was omitted from shared transparency state');
-		check(!exporter._resolveTransparencyState(transparencyContext, { targetSupportsTransparency: false }).needsTransparency,
-			'Opaque target requested keyed transparency');
-
-		const safeContext = {
-			visibleLayers: [], authoredSources: [], layerPlans: [], watermark: null,
-			canvasData: {
-				originalData: new Uint8ClampedArray([255, 0, 255, 255, 0, 0, 0, 0]),
-				originalAlpha: new Uint8ClampedArray([255, 0]), alphaThreshold: 1
-			}
-		};
-		const safeKey = exporter._findSafeTransparencyKey(safeContext, new Map());
-		check(safeKey.hex === 0x00ffff, 'Safe-key selection did not avoid opaque magenta');
+		check(exporter._resolvePreserveAlpha(true, { transparency: true }) === true
+			&& exporter._resolvePreserveAlpha(false, { transparency: true }) === false
+			&& exporter._resolvePreserveAlpha(true, { transparency: false }) === false,
+			'preserveAlpha no longer reflects target capability AND export setting alone');
 
 		const OriginalGif = window.GIF;
 		let gifOptions;
-		let encodedFrame;
+		const encodedFrames = [];
+		const transparentOptionSequence = [];
 		window.GIF = class {
 			constructor(options) { gifOptions = options; this.handlers = {}; }
-			addFrame(frame) { encodedFrame = frame; }
+			setOption(key, value) { if (key === 'transparent') transparentOptionSequence.push(value); }
+			addFrame(frame) { encodedFrames.push(frame); }
 			on(name, callback) { this.handlers[name] = callback; }
 			render() { this.handlers.finished(new Blob(['gif'], { type: 'image/gif' })); }
 		};
 		try {
-			const frame = new ImageData(new Uint8ClampedArray([255, 0, 255, 255, 1, 2, 3, 0]), 2, 1);
-			const ownedFrames = [frame];
-			await exporter.gifEncodingPipeline.encode({
-				frames: ownedFrames, settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
-				transparency: { needed: true, safeKey }, mode: 'still'
+			// Frame 0: pixel 0 is opaque magenta (must survive as opaque), pixel 1
+			// is alpha 0 (must become the sentinel). Magenta is itself the
+			// compositor's old chroma-key color, so this also proves the sentinel
+			// is chosen from the built visible palette, not a fixed guess.
+			// Frame 1 is fully opaque - a mixed animation (item 10/24 in the plan).
+			const transparentFrame = new ImageData(new Uint8ClampedArray([255, 0, 255, 255, 1, 2, 3, 0]), 2, 1);
+			const opaqueFrame = new ImageData(new Uint8ClampedArray([10, 20, 30, 255, 40, 50, 60, 255]), 2, 1);
+			const ownedFrames = [transparentFrame, opaqueFrame];
+			const encoded = await exporter.gifEncodingPipeline.encode({
+				frames: ownedFrames, delays: [100, 100], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
+				transparency: { enabled: true }, mode: 'animation'
 			});
-			check(gifOptions.transparent === safeKey.hex && encodedFrame.data[0] === 255 && encodedFrame.data[1] === 0
-				&& encodedFrame.data[2] === 255 && encodedFrame.data[4] === 0 && encodedFrame.data[5] === 255,
-				'Still GIF did not propagate the compositor-selected key or preserve opaque magenta');
-			check(ownedFrames[0] === null, 'GIF pipeline retained the application-owned source frame after GIF.js copied it');
-			check(exporter.gifEncodingPipeline._analyzeColors([frame]).observedColorCount === 1,
-				'Fully transparent RGB influenced GIF color analysis');
+			check(gifOptions.globalPalette.slice(0, 3).join(',') === '0,255,255', 'Sentinel (cyan, the first unused candidate) was not prepended to the global GIF palette');
+			check(gifOptions.globalPalette.slice(3).join(',').split(',').length === 9, 'Visible palette did not learn all three opaque colors across frames');
+			check(transparentOptionSequence[0] === 0x00ffff, 'A frame containing transparent pixels was not given the sentinel as its per-frame transparent option');
+			check(transparentOptionSequence[1] === null, 'A fully opaque frame in a mixed animation was not given a null per-frame transparent option');
+			check(encodedFrames[0].data[0] === 255 && encodedFrames[0].data[1] === 0 && encodedFrames[0].data[2] === 255 && encodedFrames[0].data[3] === 255,
+				'Opaque magenta pixel was not prequantized to its exact visible-palette RGB');
+			check(encodedFrames[0].data[4] === 0 && encodedFrames[0].data[5] === 255 && encodedFrames[0].data[6] === 255 && encodedFrames[0].data[7] === 255,
+				'Transparent pixel was not mapped to the sentinel RGB');
+			check(encodedFrames[1].data[3] === 255 && encodedFrames[1].data[7] === 255, 'Opaque frame pixels were not written back fully opaque');
+			check(encoded.paletteMode === 'shared' && encoded.transparencyUsed === true, 'Encoding result did not report its actual resolved transparency/palette mode');
+			check(ownedFrames[0] === null && ownedFrames[1] === null, 'GIF pipeline retained an application-owned source frame after GIF.js copied it');
+			check(exporter.gifEncodingPipeline._analyzeColors([transparentFrame], 128).observedColorCount === 1,
+				'Threshold-aware GIF color analysis counted a below-threshold pixel');
+
+			const opaqueOnly = new ImageData(new Uint8ClampedArray([5, 6, 7, 255, 8, 9, 10, 255]), 2, 1);
+			const opaqueEncoded = await exporter.gifEncodingPipeline.encode({
+				frames: [opaqueOnly], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
+				transparency: { enabled: true }, mode: 'still'
+			});
+			check(opaqueEncoded.transparencyUsed === false && opaqueEncoded.paletteMode === 'native',
+				'A fully opaque frame with transparency requested still reserved a sentinel/shared palette');
 		} finally { window.GIF = OriginalGif; }
 
 		await window.editor.loadBlankImage(8, 8, '#ffffff');
@@ -361,7 +367,7 @@ function assert(condition, message) {
 		try {
 			await exporter.gifEncodingPipeline.encode({
 				frames: [new ImageData(1, 1)], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
-				transparency: { needed: false, safeKey: null }, isCancelled: () => true
+				transparency: { enabled: false }, isCancelled: () => true
 			});
 		} catch (error) { cancelled = error.message === 'Export cancelled'; }
 		check(cancelled, 'GIF pipeline cancellation did not terminate the local encode job');
@@ -373,13 +379,13 @@ function assert(condition, message) {
 			&& !Object.keys(exporter.gifEncodingPipeline).some((key) => /context|frame|session|source/i.test(key)),
 			'Shared services retained per-export resolution state');
 
-		return { sourceKeys: true, resolverParity: true, stillFastPath: true, safeKey: safeKey.hex };
+		return { sourceKeys: true, resolverParity: true, stillFastPath: true };
 	});
 
-	assert(result.sourceKeys && result.resolverParity && result.stillFastPath && result.safeKey === 0x00ffff,
+	assert(result.sourceKeys && result.resolverParity && result.stillFastPath,
 		'Fast-path verifier returned incomplete results');
 	assert(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
-	console.log('PASS compositor descriptors, timing-only sources, resolver parity/caching, selected-frame work shape, transparency, GIF key propagation, and layer-plan reuse');
+	console.log('PASS compositor descriptors, timing-only sources, resolver parity/caching, selected-frame work shape, transparency, GIF sentinel/palette propagation, and layer-plan reuse');
 	await browser.close();
 })().catch((error) => {
 	console.error('FAIL', error.stack || error.message);

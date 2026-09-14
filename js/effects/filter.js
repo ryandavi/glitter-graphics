@@ -299,15 +299,13 @@
 			blendCtx.drawImage(renderedCanvas, 0, 0);
 			composited = blendCtx.getImageData(0, 0, width, height);
 		}
-		const safeKey = options.safeKey;
 		const threshold = options.alphaThreshold || 0;
 		if (options.keepAlpha) {
 			for (let index = 0; index < pre.data.length; index += 4) {
-				const keyPixel = safeKey && pre.data[index] === safeKey.r && pre.data[index + 1] === safeKey.g && pre.data[index + 2] === safeKey.b;
-				if (pre.data[index + 3] < threshold || keyPixel) {
-					composited.data[index] = safeKey?.r || 0;
-					composited.data[index + 1] = safeKey?.g || 0;
-					composited.data[index + 2] = safeKey?.b || 0;
+				if (pre.data[index + 3] < threshold) {
+					composited.data[index] = pre.data[index];
+					composited.data[index + 1] = pre.data[index + 1];
+					composited.data[index + 2] = pre.data[index + 2];
 					composited.data[index + 3] = pre.data[index + 3];
 				}
 			}

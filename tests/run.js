@@ -10,6 +10,7 @@ const SUITES = [
 	{ file: 'gif-palette-unit.js', tags: ['unit', 'export'] },
 	{ file: 'text-background-geometry-unit.js', tags: ['unit', 'effects'] },
 	{ file: 'export-compositor-fast-path.js', tags: ['export'] },
+	{ file: 'export-transparency-correctness.js', tags: ['export'] },
 	{ file: 'export-formats-verify.js', tags: ['export'] },
 	{ file: 'viewport-navigation-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'gesture-manager-unit.js', tags: ['unit', 'quick', 'touch'] },

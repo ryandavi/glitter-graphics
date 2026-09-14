@@ -64,14 +64,10 @@ class GifExporter {
 		this.gifEncodingPipeline = options.gifEncodingPipeline || new GifEncodingPipeline();
 	}
 
-	_hasTransparency(canvasData) {
-		const { originalAlpha, alphaThreshold } = canvasData;
-		for (let i = 0; i < originalAlpha.length; i++) {
-			if (originalAlpha[i] < alphaThreshold) {
-				return true; // Found at least one transparent pixel
-			}
-		}
-		return false; // No transparency in image
+	// The compositor no longer predicts whether transparency will remain
+	// visible after composition; it only decides where composition starts.
+	_resolvePreserveAlpha(targetSupportsTransparency, exportSettings) {
+		return Boolean(targetSupportsTransparency && exportSettings.transparency);
 	}
 
 	setFileName(fileName) {
@@ -488,7 +484,7 @@ class GifExporter {
 		return resolveEffectPaintSource(layer.textData?.[effectName]);
 	}
 
-	_createGlitterDescriptor(library, { key, label, ownerLayerId, effectSlot = null, glitterId, includeInTransparencyScan }) {
+	_createGlitterDescriptor(library, { key, label, ownerLayerId, effectSlot = null, glitterId }) {
 		const glitter = library.find((item) => item.id === glitterId);
 		return {
 			key,
@@ -498,7 +494,6 @@ class GifExporter {
 			role: 'glitter',
 			replayPolicy: 'derived-glitter',
 			sourceIdentity: glitter,
-			includeInTransparencyScan,
 			ensureLoaded: async (callbacks) => {
 				if (!glitter) throw new Error(`Missing glitter ${glitterId}`);
 				if (glitter.frames) return;
@@ -520,7 +515,6 @@ class GifExporter {
 			role: 'sticker',
 			replayPolicy: 'native-layer',
 			sourceIdentity: stickerData,
-			includeInTransparencyScan: true,
 			ensureLoaded: async (callbacks) => {
 				if (stickerData.frames) return;
 				callbacks.onStatus(`Loading ${stickerData.name}...`);
@@ -563,9 +557,8 @@ class GifExporter {
 					prepareStaticResources: async () => {},
 					getAuthoredSources: (library) => mode === 'glitter' ? [this._createGlitterDescriptor(library, {
 						key: layer.id, label: `${library.find((item) => item.id === layer.selectedGlitterId)?.name || 'Glitter'} (background)`,
-						ownerLayerId: layer.id, glitterId: layer.selectedGlitterId, includeInTransparencyScan: true
+						ownerLayerId: layer.id, glitterId: layer.selectedGlitterId
 					})] : [],
-					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
 						if (mode === 'image' || mode === 'gradient' || mode === 'none') return;
 						ctx.save();
@@ -599,9 +592,8 @@ class GifExporter {
 					},
 					prepareStaticResources: async () => {},
 					getAuthoredSources: (library) => fillMode === 'glitter' ? [this._createGlitterDescriptor(library, {
-						key: layer.id, ownerLayerId: layer.id, glitterId: layer.selectedGlitterId, includeInTransparencyScan: true
+						key: layer.id, ownerLayerId: layer.id, glitterId: layer.selectedGlitterId
 					})] : [],
-					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
 						const maskCanvas = maskCanvases.get(layer.id);
 						if (!maskCanvas) {
@@ -668,9 +660,8 @@ class GifExporter {
 					},
 					getAuthoredSources: (library) => glitterSources.map((source) => this._createGlitterDescriptor(library, {
 						...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-						ownerLayerId: layer.id, effectSlot: source.slot, includeInTransparencyScan: true
+						ownerLayerId: layer.id, effectSlot: source.slot
 					})),
-					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases }) => {
 						this._renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases, scratch);
 					}
@@ -693,9 +684,8 @@ class GifExporter {
 					prepareStaticResources: async () => {},
 					getAuthoredSources: (library) => glitterSources.map((source) => this._createGlitterDescriptor(library, {
 						...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-						ownerLayerId: layer.id, effectSlot: source.slot, includeInTransparencyScan: false
+						ownerLayerId: layer.id, effectSlot: source.slot
 					})),
-					getStaticTransparencyInputs: () => [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases }) => {
 						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases, scratch);
 					}
@@ -728,10 +718,9 @@ class GifExporter {
 						...(layer.stickerData.isAnimated ? [this._createStickerDescriptor(layer)] : []),
 						...glitterSources.map((source) => this._createGlitterDescriptor(library, {
 							...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-							ownerLayerId: layer.id, effectSlot: source.slot, includeInTransparencyScan: true
+							ownerLayerId: layer.id, effectSlot: source.slot
 						}))
 					],
-					getStaticTransparencyInputs: () => layer.stickerData.isAnimated || !layer.stickerData.staticImageData ? [] : [layer.stickerData.staticImageData],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
 						this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
 					}
@@ -743,14 +732,12 @@ class GifExporter {
 					prepareMasks: async () => {},
 					prepareStaticResources: async () => {},
 					getAuthoredSources: () => [],
-					getStaticTransparencyInputs: () => [],
-					render: ({ ctx, width, height, needsTransparency, safeKey, alphaThreshold }) => {
+					render: ({ ctx, width, height, keepAlpha, alphaThreshold }) => {
 						if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
 						const caption = GlitterFilter.resolve(layer.filterData).caption;
 						const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
 						GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
-							keepAlpha: needsTransparency,
-							safeKey,
+							keepAlpha,
 							alphaThreshold,
 							seed: layer.id,
 							tileCache: this.filterGrainTileCache,
@@ -766,7 +753,6 @@ class GifExporter {
 					prepareMasks: async () => {},
 					prepareStaticResources: async () => {},
 					getAuthoredSources: () => [],
-					getStaticTransparencyInputs: () => [],
 					render: () => {}
 				};
 		}
@@ -1102,31 +1088,6 @@ class GifExporter {
 		return canvas;
 	}
 
-	_isTransparencyFilled(layers, maskDataMap, canvasData) {
-		return layers.some(layer => {
-			if (
-				!layer.visible ||
-				layer.type !== LayerType.GLITTER_FILL ||
-				(layer.opacity ?? layer.settings.opacity ?? 100) !== 100
-			) {
-				return false;
-			}
-
-			const maskData = maskDataMap.get(layer.id);
-			if (!maskData) {
-				return false;
-			}
-
-			for (let i = 0; i < maskData.length; i++) {
-				if (maskData[i] > 0 && canvasData.originalAlpha[i] < canvasData.alphaThreshold) {
-					return true;
-				}
-			}
-
-			return false;
-		});
-	}
-
 	_createWatermarkDescriptor(watermark) {
 		return {
 			key: '__watermark',
@@ -1136,7 +1097,6 @@ class GifExporter {
 			role: 'watermark',
 			replayPolicy: 'watermark-current',
 			sourceIdentity: watermark,
-			includeInTransparencyScan: true,
 			ensureLoaded: async () => {},
 			getAnimation: () => watermark,
 			transformResolvedFrame: (frame) => {
@@ -1204,28 +1164,6 @@ class GifExporter {
 			watermark,
 			watermarkCanvas,
 			watermarkSource
-		};
-	}
-
-	_resolveTransparencyState(context, { targetSupportsTransparency }) {
-		const { visibleLayers, canvasData, exportSettings, masks } = context;
-		const baseLayer = visibleLayers.find((layer) => layer.type === LayerType.BASE_IMAGE);
-		const baseMode = baseLayer?.background?.mode || 'image';
-		const baseHasImageSource = baseMode !== 'image' || canvasData.hasBaseImage !== false;
-		const baseVisible = Boolean(baseLayer && baseLayer.visible !== false && exportSettings.baseImage && baseMode !== 'none' && baseHasImageSource);
-		const baseHasTransparency = !baseVisible
-			|| (baseLayer?.background?.opacity ?? 100) < 100
-			|| (baseMode === 'image' && this._hasTransparency(canvasData))
-			|| (baseMode === 'gradient' && normalizeEffectGradient(baseLayer.background.gradient).stops.some((stop) => stop.alpha < 1));
-		const transparencyFilled = this._isTransparencyFilled(visibleLayers, masks.raw, canvasData);
-		return {
-			baseLayer,
-			baseMode,
-			baseVisible,
-			baseHasTransparency,
-			transparencyFilled,
-			needsTransparency: Boolean(targetSupportsTransparency && exportSettings.transparency
-				&& (!baseVisible || (baseHasTransparency && !transparencyFilled)))
 		};
 	}
 
@@ -1301,15 +1239,7 @@ class GifExporter {
 		const resolutionSession = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
 		const { resolvedFramesBySource, authoredTimelines } = this._resolveAllAuthored(context, resolutionSession, exportSettings.frameDelay);
 
-		const transparencyState = this._resolveTransparencyState(context, {
-			targetSupportsTransparency: params.target?.supportsTransparency ?? outputFormat === 'gif'
-		});
-		const needsTransparency = transparencyState.needsTransparency;
-		const safeKey = needsTransparency ? this._findSafeTransparencyKey(context, resolvedFramesBySource) : null;
-
-		if (safeKey) {
-			dbg(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
-		}
+		const preserveAlpha = this._resolvePreserveAlpha(params.target?.supportsTransparency ?? outputFormat === 'gif', exportSettings);
 
 		const timelineConfig = CONFIG.export.timeline;
 		const requestedFidelity = Number(exportSettings.exportFidelity);
@@ -1354,7 +1284,7 @@ class GifExporter {
 					outputFrameIndex: 0,
 					timestamp,
 					context,
-					transparency: { ...transparencyState, safeKey },
+					transparency: { enabled: preserveAlpha },
 					sourceSelectionMap: frameSelection,
 					resolvedFramesBySource
 				});
@@ -1400,7 +1330,7 @@ class GifExporter {
 					outputFrameIndex: scheduleIndex,
 					timestamp: entry.timestamp,
 					context,
-					transparency: { ...transparencyState, safeKey },
+					transparency: { enabled: preserveAlpha },
 					sourceSelectionMap: entry.selection,
 					resolvedFramesBySource
 				})
@@ -1413,16 +1343,16 @@ class GifExporter {
 			frames,
 			delays: plan.frameDurations,
 			settings: exportSettings,
-			transparency: { needed: needsTransparency, safeKey },
+			transparency: { enabled: preserveAlpha },
 			mode: 'animation',
 			reportProgress: (phase, ratio, detail, current, total) => reportGifExportProgress(callbacks, phase, ratio, detail, current, total),
 			isCancelled: callbacks.isCancelled
 		});
 		plan.colorAnalysis = encoded.analysis;
 		if (plan.colorAnalysis) {
-			plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled && !needsTransparency);
+			plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled && !encoded.transparencyUsed);
 			plan.colorAnalysis.paletteSize = encoded.paletteSize;
-			plan.colorAnalysis.paletteMode = exportSettings.colorCount === 'auto' && !exportSettings.ditherEnabled ? 'native' : 'shared';
+			plan.colorAnalysis.paletteMode = encoded.paletteMode;
 			plan.colorAnalysis.authoredDither = visibleLayers.some((layer) => {
 				const effects = layer.background?.pixelEffects;
 				return effects?.paletteEnabled && effects.paletteMode === 'dither';
@@ -1440,12 +1370,7 @@ class GifExporter {
 		const context = await this._prepareExportContext(params);
 		const session = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
 		const { resolvedFramesBySource, sourceSelectionMap } = this._resolveSelectedAuthored(context, session, timestamp, exportSettings.frameDelay);
-		const transparencyState = this._resolveTransparencyState(context, {
-			targetSupportsTransparency: params.target?.supportsTransparency ?? true
-		});
-		const safeKey = transparencyState.needsTransparency
-			? this._findSafeTransparencyKey(context, resolvedFramesBySource, { sourceSelectionMap })
-			: null;
+		const preserveAlpha = this._resolvePreserveAlpha(params.target?.supportsTransparency ?? true, exportSettings);
 		ensureCanvasSize(this.helperCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.layerBlendCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.canvas, canvasData.width, canvasData.height);
@@ -1454,123 +1379,28 @@ class GifExporter {
 			outputFrameIndex: 0,
 			timestamp,
 			context,
-			transparency: { ...transparencyState, safeKey },
+			transparency: { enabled: preserveAlpha },
 			sourceSelectionMap,
 			resolvedFramesBySource
 		});
-		if (transparencyState.needsTransparency && safeKey) {
-			for (let i = 0; i < imageData.data.length; i += 4) {
-				if (imageData.data[i] === safeKey.r && imageData.data[i + 1] === safeKey.g && imageData.data[i + 2] === safeKey.b) imageData.data[i + 3] = 0;
-			}
-		}
 		return {
 			imageData,
 			width: canvasData.width,
 			height: canvasData.height,
 			timestamp,
-			transparency: { needed: transparencyState.needsTransparency, safeKey }
+			transparency: { enabled: preserveAlpha }
 		};
 	}
 
 	// --- HELPER METHODS ---
 
-	_findSafeTransparencyKey(context, resolvedFramesBySource, { sourceSelectionMap = null } = {}) {
-		const { visibleLayers: layers, canvasData, watermark, layerPlans, authoredSources } = context;
-		const candidates = [
-			// Use colors far from black - start with bright magenta
-			{ name: 'Magenta', r: 255, g: 0, b: 255, hex: 0xFF00FF },
-			{ name: 'Cyan', r: 0, g: 255, b: 255, hex: 0x00FFFF },
-			{ name: 'Yellow', r: 255, g: 255, b: 0, hex: 0xFFFF00 },
-			// Fallback to originals if needed
-			{ name: 'DarkGray1', r: 1, g: 1, b: 1, hex: 0x010101 },
-			{ name: 'DarkGray2', r: 2, g: 2, b: 2, hex: 0x020202 },
-			{ name: 'DarkGray3', r: 3, g: 3, b: 3, hex: 0x030303 },
-			{ name: 'OffGreen', r: 0, g: 1, b: 0, hex: 0x000100 }
-		];
-
-		// Collect all frames from all sources
-		const allFrames = [];
-
-		authoredSources.forEach((descriptor) => {
-			if (!descriptor.includeInTransparencyScan) return;
-			allFrames.push(...(resolvedFramesBySource.get(descriptor.key) || []));
-		});
-		layerPlans.forEach(({ plan }) => allFrames.push(...plan.getStaticTransparencyInputs(context)));
-		if (context.basePipeline) {
-			const baseFrameIndex = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? 0;
-			allFrames.push(this._getBasePipelineImageData(context, baseFrameIndex));
-		}
-
-		// Add watermark frames if present
-		if (watermark) {
-			if (!watermark.isAnimated && watermark.imageData) {
-				allFrames.push(watermark.imageData);
-			} else if (!watermark.isAnimated && watermark.frames?.length) {
-				allFrames.push(watermark.frames[0]);
-			}
-		}
-
-		for (const candidate of candidates) {
-			let isSafe = true;
-
-			// Check base image
-			const imgData = canvasData.originalData;
-			const imgLen = imgData.length;
-
-			for (let i = 0; i < imgLen; i += 4) {
-				const pixelIndex = i / 4;
-				if (canvasData.originalAlpha[pixelIndex] < canvasData.alphaThreshold) continue;
-
-				if (imgData[i] === candidate.r &&
-					imgData[i + 1] === candidate.g &&
-					imgData[i + 2] === candidate.b) {
-					isSafe = false;
-					break;
-				}
-			}
-
-			if (!isSafe) continue;
-
-			// Check all frames (glitter and stickers)
-			for (const frame of allFrames) {
-				const imageData = this._getFrameImageData(frame);
-				if (!imageData) {
-					isSafe = false;
-					break;
-				}
-
-				const data = imageData.data;
-				const len = data.length;
-
-				for (let i = 0; i < len; i += 4) {
-					if (data[i + 3] === 0) continue; // Skip transparent pixels
-					if (data[i] === candidate.r &&
-						data[i + 1] === candidate.g &&
-						data[i + 2] === candidate.b) {
-						isSafe = false;
-						break;
-					}
-				}
-				if (!isSafe) break;
-			}
-
-			if (isSafe) {
-				dbg(`[GifExporter] Found safe transparency key: ${candidate.name} RGB(${candidate.r}, ${candidate.g}, ${candidate.b})`);
-				return candidate;
-			}
-		}
-
-		if (this.config.debug) console.warn('[GifExporter] All candidates failed. Using ultra-dark fallback.');
-		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
-	}
-
 	_renderFrameToCanvas({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
 		const { canvasData, visibleLayers: layers, exportSettings, watermark, watermarkCanvas, layerPlans, masks } = context;
-		const { safeKey, needsTransparency } = transparency;
+		const { enabled: preserveAlpha } = transparency;
 		const maskCanvases = masks.glitter;
 		const textMaskCanvases = masks.text;
 		const shapeMaskCanvases = masks.shape;
-		const { width, height, originalAlpha, alphaThreshold } = canvasData;
+		const { width, height, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
 
@@ -1587,47 +1417,23 @@ class GifExporter {
 		const shouldRenderBase = exportSettings.baseImage && isBaseLayerVisible;
 		const baseMode = baseLayer?.background?.mode || 'image';
 
-		// 3. Determine Background Fill Color
-		let bgR, bgG, bgB;
-		if (needsTransparency && safeKey) {
-			bgR = safeKey.r;
-			bgG = safeKey.g;
-			bgB = safeKey.b;
-		} else {
+		// 3. Start from the matte, or leave the canvas clear for real alpha.
+		// The compositor never predicts final transparency or paints an RGB key.
+		if (!preserveAlpha) {
 			const matte = this._parseHexColor(exportSettings.matteColor || '#ffffff');
-			bgR = matte.r;
-			bgG = matte.g;
-			bgB = matte.b;
+			ctx.fillStyle = `rgb(${matte.r}, ${matte.g}, ${matte.b})`;
+			ctx.fillRect(0, 0, width, height);
 		}
 
-		// 4. Draw Base Image or Fill Background
-		ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
-		ctx.fillRect(0, 0, width, height);
-
+		// 4. Draw the base image with its real RGBA alpha. When the compositor
+		// is transparent this reveals the base's own alpha; when it holds a
+		// matte, normal alpha compositing blends the base against it.
 		if (shouldRenderBase && ((baseMode === 'image' && canvasData.hasBaseImage !== false) || baseMode === 'gradient')) {
 			const baseEffectFrame = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? frameIndex;
 			const baseImage = this._getBasePipelineImageData(context, baseEffectFrame);
-			if (needsTransparency) {
-				// SCENARIO A: GIF Transparency is ACTIVE.
-				const bgImage = new ImageData(new Uint8ClampedArray(baseImage.data), width, height);
-				const data = bgImage.data;
-
-				for (let i = 0; i < originalAlpha.length; i++) {
-					if (data[i * 4 + 3] < alphaThreshold) {
-						const offset = i * 4;
-						data[offset] = bgR;
-						data[offset + 1] = bgG;
-						data[offset + 2] = bgB;
-						data[offset + 3] = 255;
-					}
-				}
-				ctx.putImageData(bgImage, 0, 0);
-			} else {
-				// SCENARIO B: GIF Transparency is INACTIVE (Matte mode or Consumption mode).
-				resetCanvasContext(hCtx, width, height);
-				hCtx.putImageData(baseImage, 0, 0);
-				ctx.drawImage(this.helperCanvas, 0, 0);
-			}
+			resetCanvasContext(hCtx, width, height);
+			hCtx.putImageData(baseImage, 0, 0);
+			ctx.drawImage(this.helperCanvas, 0, 0);
 		}
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
@@ -1679,8 +1485,7 @@ class GifExporter {
 						helperCtx: hCtx,
 						width,
 						height,
-						needsTransparency,
-						safeKey,
+						keepAlpha: preserveAlpha,
 						alphaThreshold
 					});
 				} finally {
@@ -1707,18 +1512,6 @@ class GifExporter {
 		if (exportSettings.watermarkEnabled && watermark) {
 			const watermarkFrame = sourceSelectionMap?.get('__watermark')?.frameIndex ?? frameIndex;
 			this._renderWatermarkToCanvas(watermark, watermarkCanvas, ctx, width, height, watermarkFrame, resolvedFramesBySource?.get('__watermark'));
-		}
-
-		// 8. Debug logic for problem frames
-		if (this.config.debug && (frameIndex === 0 || frameIndex === 1)) {
-			let safeKeyInFrame = 0;
-			let data = ctx.getImageData(0, 0, width, height).data;
-			for (let i = 0; i < data.length; i += 4) {
-				if (data[i] === bgR && data[i + 1] === bgG && data[i + 2] === bgB) {
-					safeKeyInFrame++;
-				}
-			}
-			dbg(`[GifExporter] Frame ${frameIndex} background color pixels: ${safeKeyInFrame}`);
 		}
 
 		return this.canvas;

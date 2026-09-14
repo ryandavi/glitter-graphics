@@ -10,7 +10,7 @@ class GifPalette {
 		return 256;
 	}
 
-	static build(frames, maximumColors = 128, { transparentColor = null, maxSamples = 262144, style = 'vivid' } = {}) {
+	static build(frames, maximumColors = 128, { transparentColor = null, maxSamples = 262144, style = 'vivid', alphaThreshold = 1 } = {}) {
 		const histogram = new Map();
 		const frameBudget = Math.max(1, Math.floor(maxSamples / Math.max(1, frames.length)));
 		frames.forEach((frame) => {
@@ -18,7 +18,7 @@ class GifPalette {
 			const step = Math.max(1, Math.ceil(pixelCount / frameBudget));
 			for (let pixel = 0; pixel < pixelCount; pixel += step) {
 				const offset = pixel * 4;
-				if (frame.data[offset + 3] === 0) continue;
+				if (frame.data[offset + 3] < alphaThreshold) continue;
 				const r = frame.data[offset];
 				const g = frame.data[offset + 1];
 				const b = frame.data[offset + 2];
