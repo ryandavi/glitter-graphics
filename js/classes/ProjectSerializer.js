@@ -210,13 +210,15 @@ class ProjectSerializer {
 			if (issue.kind === 'font') layer.textData.fontId = CONFIG.tools.text.defaultFontId;
 			if (issue.kind === 'shape') layer.shapeData.shapeId = ShapeLibrary.FILL_SHAPES[0].id;
 			if (issue.kind === 'glitter') {
+				const context = LAYER_TYPE_GLITTER_CONTEXT[layer.type];
 				const replace = (value, path = '') => {
 					if (!value || typeof value !== 'object') return;
 					Object.entries(value).forEach(([key, child]) => {
 						if ((key === 'glitterId' || key === 'selectedGlitterId') && child === issue.id) {
-							value[key] = path.includes('border') ? CONFIG.tools.glitter.defaults.borderGlitterId
-								: path.includes('shadow') ? CONFIG.tools.glitter.defaults.shadowGlitterId
-									: CONFIG.tools.glitter.defaults.fillGlitterId;
+							value[key] = path.includes('border') ? CONFIG.tools.glitter.defaults.borderGlitterId[context]
+								: path.includes('shadow') ? CONFIG.tools.glitter.defaults.shadowGlitterId[context]
+									: path.includes('textBackground') ? CONFIG.tools.glitter.defaults.backgroundGlitterId
+										: CONFIG.tools.glitter.defaults.fillGlitterId[context];
 						} else if (typeof child === 'object') replace(child, `${path}.${key}`);
 					});
 				};

@@ -114,7 +114,17 @@ class Mp4Exporter {
 			throw new Error(`MP4 export cannot encode a ${width} × ${height} canvas with this browser's available H.264 profiles.`);
 		}
 
-		const target = new Mp4Muxer.ArrayBufferTarget();
+		const muxedChunks = [];
+		let muxedLength = 0;
+		const target = new Mp4Muxer.StreamTarget({
+			chunked: true,
+			chunkSize: CONFIG.export.mp4.muxChunkSize,
+			onData: (data, position) => {
+				if (position !== muxedLength) throw new Error(`MP4 mux stream wrote out of order at byte ${position}.`);
+				muxedChunks.push(data);
+				muxedLength += data.byteLength;
+			}
+		});
 		const muxer = new Mp4Muxer.Muxer({
 			target,
 			video: {
@@ -123,7 +133,7 @@ class Mp4Exporter {
 				height,
 				frameRate: muxerFrameRate
 			},
-			fastStart: 'in-memory'
+			fastStart: 'fragmented'
 		});
 		let encoderError = null;
 		const encoder = new VideoEncoder({
@@ -173,7 +183,7 @@ class Mp4Exporter {
 		}
 		if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
 		muxer.finalize();
-		const blob = new Blob([target.buffer], { type: 'video/mp4' });
+		const blob = new Blob(muxedChunks, { type: 'video/mp4' });
 		if (!blob.size) throw new Error('MP4 encoder produced an empty file.');
 
 		reportMp4ExportProgress(callbacks, 'finalizing', 1, 'Export complete');

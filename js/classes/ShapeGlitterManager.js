@@ -353,9 +353,9 @@ class ShapeGlitterManager {
 				// fall back to the default glitter. The gallery opens only via the
 				// swatch/Change buttons (armPicker).
 				if (mode === 'glitter' && !this.getSlotGlitterId(layer, slot)) {
-					if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
-					else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId;
-					else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
+					if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
+					else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId.shape;
+					else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.shape;
 				}
 				this._refreshSourceUI(layer, slot);
 				this.invalidateMeasurement(layer);
@@ -589,9 +589,9 @@ class ShapeGlitterManager {
 		if (mode === 'glitter') {
 			// Glitter mode is never empty — fall back to the default glitter.
 			if (!this.getSlotGlitterId(layer, slot)) {
-				if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
-				else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId;
-				else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
+				if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
+				else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId.shape;
+				else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.shape;
 			}
 			const glitter = this.editor.glitterManager.getItemById(this.getSlotGlitterId(layer, slot));
 			const els = {
@@ -687,6 +687,8 @@ class ShapeGlitterManager {
 
 	// ===== DEFAULTS / DATA MODEL =====
 
+	// glitterId is intentionally omitted: fill shares layer.selectedGlitterId
+	// (see getSlotGlitterId), so this slot's own glitterId is never read.
 	getDefaultFill() {
 		return buildDefaultFill({ includeTexture: true });
 	}
@@ -698,7 +700,7 @@ class ShapeGlitterManager {
 			fallbackMode: 'glitter',
 			includeShapeStyle: true,
 			includeColorAdjust: true,
-			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId
+			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.shape
 		});
 	}
 
@@ -706,7 +708,7 @@ class ShapeGlitterManager {
 		return buildDefaultShadow({
 			config: CONFIG.tools.shapes.shadow || {},
 			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId,
+			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.shape,
 			includeColorAdjust: true
 		});
 	}
@@ -768,7 +770,7 @@ class ShapeGlitterManager {
 			visible: true,
 			locked: false,
 			opacity: 100,
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.shape,
 			settings: { scale: CONFIG.tools.effects.defaults.scale, opacity: CONFIG.tools.effects.defaults.opacity },
 			shapeData: {
 				shapeId,

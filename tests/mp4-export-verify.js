@@ -94,14 +94,20 @@ async function main() {
 					throw new Error('MP4 target-duration scheduling lost its partial final duration or logical indexes.');
 				}
 				let cancelled = false;
+				let cancellationProgress = 0;
 				try {
 					await exporter._encode(renderJob,
 						{ matteColor: '#ffffff', mp4Quality: 'standard', mp4LoopCount: 1 },
-						{ onProgress: () => {}, onStatus: () => {}, onComplete: () => {}, isCancelled: () => true });
+						{
+							onProgress: () => { cancellationProgress++; },
+							onStatus: () => {},
+							onComplete: () => {},
+							isCancelled: () => cancellationProgress > 0
+						});
 				} catch (error) {
 					cancelled = error.message === 'Export cancelled';
 				}
-				if (!cancelled) throw new Error('MP4 cancellation did not stop before rendering another frame.');
+				if (!cancelled || cancellationProgress !== 1) throw new Error('MP4 cancellation did not stop cleanly after a partial streaming encode.');
 			} finally {
 				window.downloadBlob = originalDownload;
 			}
@@ -130,7 +136,8 @@ async function main() {
 				height: video.videoHeight,
 				duration: video.duration,
 				resultModal,
-				settingsUi
+				settingsUi,
+				hasFragment: new TextDecoder('latin1').decode(await blob.arrayBuffer()).includes('moof')
 			};
 			URL.revokeObjectURL(url);
 			return output;
@@ -140,6 +147,7 @@ async function main() {
 			return;
 		}
 		if (result.type !== 'video/mp4' || result.size <= 0) throw new Error('MP4 Blob was empty or had the wrong MIME type.');
+		if (!result.hasFragment) throw new Error('MP4 output did not use fragmented streaming mux output.');
 		if (result.width !== 64 || result.height !== 48 || !(result.duration >= 0.65 && result.duration <= 0.67)) throw new Error('MP4 did not preserve timing or pad odd compositor dimensions to even output dimensions.');
 		if (!result.resultModal.visible || !result.resultModal.videoVisible || !result.resultModal.imageHidden) throw new Error('MP4 result modal did not show its video preview.');
 		if (result.resultModal.saveLabel !== 'Save MP4' || result.resultModal.openLabel !== 'Open MP4') throw new Error('MP4 result actions were not format-aware.');

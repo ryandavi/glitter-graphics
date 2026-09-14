@@ -4,6 +4,7 @@ class AuthoredFrameResolver {
 	createSession({ isCancelled = null } = {}) {
 		const cache = new WeakMap();
 		const analysisCache = new WeakMap();
+		const replayCache = new WeakMap();
 		return {
 			throwIfCancelled() {
 				if (isCancelled?.()) throw new Error('Export cancelled');
@@ -34,6 +35,15 @@ class AuthoredFrameResolver {
 				}
 				if (!policyCache.has(policy)) policyCache.set(policy, analyze());
 				return policyCache.get(policy);
+			},
+			getReplay(animation, policy, create) {
+				let policyCache = replayCache.get(animation);
+				if (!policyCache) {
+					policyCache = new Map();
+					replayCache.set(animation, policyCache);
+				}
+				if (!policyCache.has(policy)) policyCache.set(policy, create());
+				return policyCache.get(policy);
 			}
 		};
 	}
@@ -50,15 +60,133 @@ class AuthoredFrameResolver {
 
 	resolveFrame(descriptor, targetIndex, session) {
 		const animation = descriptor.getAnimation();
+		if (!animation.frames?.length) throw new Error(`No frames for "${descriptor.label || descriptor.key}"`);
 		const sourceIdentity = descriptor.sourceIdentity || animation;
 		const policy = descriptor.replayPolicy;
-		const boundedIndex = Math.max(0, Math.min(animation.frames.length - 1, targetIndex));
+		const boundedIndex = ((Math.trunc(targetIndex) % animation.frames.length) + animation.frames.length) % animation.frames.length;
 		const all = session.get(sourceIdentity, policy, 'all');
 		if (all) return all[boundedIndex];
-		const request = `frame:${boundedIndex}`;
-		const cached = session.get(sourceIdentity, policy, request);
+		const replay = session.getReplay(sourceIdentity, policy, () => ({
+			checkpoints: [{ nextIndex: 0 }],
+			blockStart: -1,
+			blockFrames: new Map(),
+			cursor: null
+		}));
+		const cached = replay.blockFrames.get(boundedIndex);
 		if (cached) return cached;
-		return session.set(sourceIdentity, policy, request, this._replay(descriptor, boundedIndex, false, session));
+		return this._replayFromCheckpoint(descriptor, animation, boundedIndex, session, replay);
+	}
+
+	_createReplaySurfaces(animation) {
+		const canvas = document.createElement('canvas');
+		canvas.width = animation.width;
+		canvas.height = animation.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.imageSmoothingEnabled = false;
+		const tempCanvas = document.createElement('canvas');
+		tempCanvas.width = animation.width;
+		tempCanvas.height = animation.height;
+		const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		tempCtx.imageSmoothingEnabled = false;
+		return { canvas, ctx, tempCanvas, tempCtx };
+	}
+
+	_restoreCheckpoint(surfaces, checkpoint) {
+		const { ctx, tempCtx } = surfaces;
+		if (checkpoint.canvasData) ctx.putImageData(checkpoint.canvasData, 0, 0);
+		if (checkpoint.tempCanvasData) tempCtx.putImageData(checkpoint.tempCanvasData, 0, 0);
+		return {
+			nextIndex: checkpoint.nextIndex,
+			previousFrameData: checkpoint.previousFrameData || null,
+			previousDisposal: checkpoint.previousDisposal ?? null,
+			previousFrameRect: checkpoint.previousFrameRect || null,
+			watermarkPrevious: checkpoint.watermarkPrevious || null
+		};
+	}
+
+	_captureCheckpoint(surfaces, state, width, height) {
+		return {
+			nextIndex: state.nextIndex,
+			canvasData: surfaces.ctx.getImageData(0, 0, width, height),
+			tempCanvasData: surfaces.tempCtx.getImageData(0, 0, width, height),
+			previousFrameData: state.previousFrameData,
+			previousDisposal: state.previousDisposal,
+			previousFrameRect: state.previousFrameRect,
+			watermarkPrevious: state.watermarkPrevious
+		};
+	}
+
+	_replayFromCheckpoint(descriptor, animation, targetIndex, session, replay) {
+		const interval = CONFIG.export.authoredFrames.checkpointInterval;
+		const derivedDisposal = descriptor.replayPolicy === 'derived-glitter' && targetIndex > 0
+			? session.getAnalysis(descriptor.sourceIdentity || animation, descriptor.replayPolicy, () => this._analyzeDerivedPolicy(animation))
+			: 1;
+		let checkpoint = replay.checkpoints[0];
+		for (const candidate of replay.checkpoints) {
+			if (candidate.nextIndex > targetIndex) break;
+			checkpoint = candidate;
+		}
+		const continuesForward = replay.cursor?.nextIndex === targetIndex
+			&& replay.cursor.state.derivedDisposal === derivedDisposal;
+		const surfaces = continuesForward ? replay.cursor.surfaces : this._createReplaySurfaces(animation);
+		const state = continuesForward ? replay.cursor.state : this._restoreCheckpoint(surfaces, checkpoint);
+		state.derivedDisposal = derivedDisposal;
+		if (!continuesForward) {
+			replay.blockStart = checkpoint.nextIndex;
+			replay.blockFrames = new Map();
+		}
+		let displayed = null;
+		for (let index = state.nextIndex; index <= targetIndex; index++) {
+			displayed = this._applyFrame(descriptor, animation, index, session, surfaces, state);
+			replay.blockFrames.set(index, displayed);
+			state.nextIndex = index + 1;
+			if (state.nextIndex % interval === 0) {
+				if (!replay.checkpoints.some((entry) => entry.nextIndex === state.nextIndex)) {
+					replay.checkpoints.push(this._captureCheckpoint(surfaces, state, animation.width, animation.height));
+					replay.checkpoints.sort((a, b) => a.nextIndex - b.nextIndex);
+				}
+				replay.blockStart = state.nextIndex;
+				replay.blockFrames.clear();
+			}
+		}
+		replay.cursor = { nextIndex: state.nextIndex, surfaces, state };
+		if (displayed && !replay.blockFrames.has(targetIndex)) replay.blockFrames.set(targetIndex, displayed);
+		return displayed;
+	}
+
+	_applyFrame(descriptor, animation, index, session, surfaces, state) {
+		session.throwIfCancelled();
+		const { width, height } = animation;
+		const frame = animation.frames[index];
+		const frameImageData = this._getFrameImageData(frame, width, height);
+		if (!frameImageData) throw new Error(`Invalid frame ${index} for "${descriptor.label || descriptor.key}"`);
+		const { ctx, tempCtx } = surfaces;
+		if (descriptor.replayPolicy === 'watermark-current') {
+			// Watermark disposal historically keys off the current patch; parity takes precedence here.
+			if (state.watermarkPrevious && frame.disposal === 2) ctx.putImageData(state.watermarkPrevious, 0, 0);
+			else if (frame.disposal === 3) ctx.clearRect(0, 0, width, height);
+			ctx.putImageData(frameImageData, frame.x || 0, frame.y || 0);
+			if (frame.disposal === 2) state.watermarkPrevious = ctx.getImageData(0, 0, width, height);
+		} else {
+			const currentDisposal = descriptor.replayPolicy === 'native-layer'
+				? (frame.disposal === 0 || frame.disposal == null ? 1 : frame.disposal)
+				: state.derivedDisposal;
+			if (index > 0 && state.previousDisposal === 2) {
+				const rect = state.previousFrameRect || { x: 0, y: 0, width, height };
+				ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
+			} else if (index > 0 && state.previousDisposal === 3 && state.previousFrameData) {
+				ctx.putImageData(state.previousFrameData, 0, 0);
+			}
+			if (currentDisposal === 3) state.previousFrameData = ctx.getImageData(0, 0, width, height);
+			// Layer replay intentionally retains the staging canvas and its origin-based patch placement.
+			tempCtx.putImageData(frameImageData, 0, 0);
+			ctx.drawImage(surfaces.tempCanvas, 0, 0);
+			state.previousDisposal = currentDisposal;
+			state.previousFrameRect = { x: frame.x || 0, y: frame.y || 0, width: frame.width || width, height: frame.height || height };
+		}
+		let displayed = ctx.getImageData(0, 0, width, height);
+		if (descriptor.transformResolvedFrame) displayed = descriptor.transformResolvedFrame(displayed);
+		return displayed;
 	}
 
 	_getFrameImageData(frame, width, height) {
@@ -112,59 +240,23 @@ class AuthoredFrameResolver {
 	_replay(descriptor, targetIndex, collectAll, session) {
 		const animation = descriptor.getAnimation();
 		const rawFrames = animation.frames;
-		const width = animation.width;
-		const height = animation.height;
 		if (!rawFrames?.length) throw new Error(`No frames for "${descriptor.label || descriptor.key}"`);
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-		ctx.imageSmoothingEnabled = false;
-		const tempCanvas = document.createElement('canvas');
-		tempCanvas.width = width;
-		tempCanvas.height = height;
-		const tempCtx = tempCanvas.getContext('2d', { alpha: true });
-		tempCtx.imageSmoothingEnabled = false;
+		const surfaces = this._createReplaySurfaces(animation);
 		const policy = descriptor.replayPolicy;
 		const derivedDisposal = policy === 'derived-glitter' && targetIndex > 0
 			? session.getAnalysis(descriptor.sourceIdentity || animation, policy, () => this._analyzeDerivedPolicy(animation))
 			: 1;
-		let previousFrameData = null;
-		let previousDisposal = null;
-		let previousFrameRect = null;
-		let watermarkPrevious = null;
+		const state = {
+			previousFrameData: null,
+			previousDisposal: null,
+			previousFrameRect: null,
+			watermarkPrevious: null,
+			derivedDisposal
+		};
 		const results = [];
 
 		for (let index = 0; index <= targetIndex; index++) {
-			session.throwIfCancelled();
-			const frame = rawFrames[index];
-			const frameImageData = this._getFrameImageData(frame, width, height);
-			if (!frameImageData) throw new Error(`Invalid frame ${index} for "${descriptor.label || descriptor.key}"`);
-			if (policy === 'watermark-current') {
-				// Watermark disposal historically keys off the current patch; parity takes precedence here.
-				if (watermarkPrevious && frame.disposal === 2) ctx.putImageData(watermarkPrevious, 0, 0);
-				else if (frame.disposal === 3) ctx.clearRect(0, 0, width, height);
-				ctx.putImageData(frameImageData, frame.x || 0, frame.y || 0);
-				if (frame.disposal === 2) watermarkPrevious = ctx.getImageData(0, 0, width, height);
-			} else {
-				const currentDisposal = policy === 'native-layer'
-					? (frame.disposal === 0 || frame.disposal == null ? 1 : frame.disposal)
-					: derivedDisposal;
-				if (index > 0 && previousDisposal === 2) {
-					const rect = previousFrameRect || { x: 0, y: 0, width, height };
-					ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
-				} else if (index > 0 && previousDisposal === 3 && previousFrameData) {
-					ctx.putImageData(previousFrameData, 0, 0);
-				}
-				if (currentDisposal === 3) previousFrameData = ctx.getImageData(0, 0, width, height);
-				// Layer replay intentionally retains the staging canvas and its origin-based patch placement.
-				tempCtx.putImageData(frameImageData, 0, 0);
-				ctx.drawImage(tempCanvas, 0, 0);
-				previousDisposal = currentDisposal;
-				previousFrameRect = { x: frame.x || 0, y: frame.y || 0, width: frame.width || width, height: frame.height || height };
-			}
-			let displayed = ctx.getImageData(0, 0, width, height);
-			if (descriptor.transformResolvedFrame) displayed = descriptor.transformResolvedFrame(displayed);
+			const displayed = this._applyFrame(descriptor, animation, index, session, surfaces, state);
 			if (collectAll) results.push(displayed);
 			else if (index === targetIndex) return displayed;
 		}

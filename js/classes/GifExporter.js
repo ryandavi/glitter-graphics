@@ -235,14 +235,14 @@ class GifExporter {
 		// Determine which frame/image to use
 		let imageData;
 		if (isAnimated && layer.stickerData.frames) {
-			const frames = resolvedFramesBySource?.get(layer.id);
-			if (!frames?.length) {
+			const source = resolvedFramesBySource?.get(layer.id);
+			if (!source?.length) {
 				throw new Error(`Missing resolved sticker frames for layer ${layer.id}`);
 			}
 
 			const reducedFrameCount = sourceSelectionMap?.get(layer.id);
-			const stickerFrameIndex = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
-			imageData = frames[stickerFrameIndex];
+			const stickerFrameIndex = this._getReducedFrameIndex(frameIndex, source.length, reducedFrameCount);
+			imageData = this._readResolvedSource(source, stickerFrameIndex);
 			if (!imageData) {
 				throw new Error(`Invalid sticker frame format for layer ${layer.id} frame ${stickerFrameIndex}`);
 			}
@@ -568,7 +568,7 @@ class GifExporter {
 						else {
 							const frames = resolvedFramesBySource?.get(layer.id) || [];
 							const reduced = sourceSelectionMap?.get(layer.id);
-							const frame = frames[this._getReducedFrameIndex(frameIndex, frames.length, reduced)];
+							const frame = this._readResolvedSource(frames, this._getReducedFrameIndex(frameIndex, frames.length, reduced));
 							if (!frame) throw new Error(`Missing background glitter frame for ${layer.id}`);
 							const pattern = ctx.createPattern(this._renderPatternSourceInto(this.patternSourceCanvas, frame, background.colorAdjust), 'repeat');
 							pattern.setTransform(new DOMMatrix()
@@ -607,7 +607,7 @@ class GifExporter {
 
 						const reducedFrameCount = sourceSelectionMap?.get(layer.id);
 						const fIdx = fillMode === 'glitter' ? this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount) : 0;
-						const frameImageData = fillMode === 'glitter' ? frames[fIdx] : null;
+						const frameImageData = fillMode === 'glitter' ? this._readResolvedSource(frames, fIdx) : null;
 						if (fillMode === 'glitter' && !frameImageData) {
 							throw new Error(`Invalid glitter frame format for layer ${layer.id} frame ${fIdx}`);
 						}
@@ -952,12 +952,16 @@ class GifExporter {
 
 		const reducedFrameCount = sourceSelectionMap?.get(sourceKey);
 		const frameIndexForLayer = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
-		const frameImageData = frames[frameIndexForLayer];
+		const frameImageData = this._readResolvedSource(frames, frameIndexForLayer);
 		if (!frameImageData) {
 			throw new Error(`Invalid glitter frame for ${sourceKey} frame ${frameIndexForLayer}`);
 		}
 
 		return frameImageData;
+	}
+
+	_readResolvedSource(source, frameIndex) {
+		return typeof source?.getFrame === 'function' ? source.getFrame(frameIndex) : source?.[frameIndex];
 	}
 
 	_buildTextMaskEntry(layer, fillMaskCanvas, backgroundMaskCanvas = null) {
@@ -1167,11 +1171,15 @@ class GifExporter {
 		};
 	}
 
-	_resolveAllAuthored(context, session, fallbackDuration) {
+	_prepareAuthoredResolution(context, session, fallbackDuration) {
 		const resolvedFramesBySource = new Map();
 		const authoredTimelines = [];
 		for (const descriptor of context.authoredSources) {
-			resolvedFramesBySource.set(descriptor.key, this.authoredFrameResolver.resolveAll(descriptor, session));
+			const animation = descriptor.getAnimation();
+			resolvedFramesBySource.set(descriptor.key, {
+				length: animation.frames.length,
+				getFrame: (frameIndex) => this.authoredFrameResolver.resolveFrame(descriptor, frameIndex, session)
+			});
 			const sourceFallback = descriptor.role === 'watermark' ? fallbackDuration : CONFIG.export.defaults.frameDelay;
 			authoredTimelines.push(this._createAuthoredTimingSource(descriptor, sourceFallback));
 		}
@@ -1233,11 +1241,11 @@ class GifExporter {
 		reportGifExportProgress(callbacks, 'masks', 0, 'Preparing layer masks…', 0, visibleLayers.length);
 		reportGifExportProgress(callbacks, 'masks', 1, 'Layer masks ready', visibleLayers.length, visibleLayers.length);
 
-		// Animation retains full resolved arrays; still composition never enters this path.
+		// Animation materializes authored frames on demand; still composition resolves one selected frame.
 		reportGifExportProgress(callbacks, 'planning', 0, 'Indexing animation frames…');
 		await this._yieldForProgress();
 		const resolutionSession = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
-		const { resolvedFramesBySource, authoredTimelines } = this._resolveAllAuthored(context, resolutionSession, exportSettings.frameDelay);
+		const { resolvedFramesBySource, authoredTimelines } = this._prepareAuthoredResolution(context, resolutionSession, exportSettings.frameDelay);
 
 		const preserveAlpha = this._resolvePreserveAlpha(params.target?.supportsTransparency ?? outputFormat === 'gif', exportSettings);
 
@@ -1694,7 +1702,7 @@ class GifExporter {
 			const frames = resolvedFrames || watermark.frames;
 			const frameCount = frames.length;
 			const watermarkFrameIndex = frameIndex % frameCount;
-			const frame = frames[watermarkFrameIndex];
+			const frame = this._readResolvedSource(frames, watermarkFrameIndex);
 			sourceData = this._getFrameImageData(frame, watermark.width, watermark.height);
 		} else if (watermark.frames?.length) {
 			// A one-frame GIF is static, but still uses the GIF frame representation.

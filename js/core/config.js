@@ -476,14 +476,27 @@ const CONFIG = deepFreeze({
 		},
 		glitter: {
 			defaults: {
-				// Fill/background/border/shadow each carry their own default glitter id AND solid
-				// color. Shared across every layer type that has that slot
-				// (glitter-fill, text, shape) so retuning one slot's default doesn't
-				// touch the others, and doesn't need to be set separately per layer type.
-				fillGlitterId: 111,
-				backgroundGlitterId: 111,
-				borderGlitterId: 9,
-				shadowGlitterId: 109,
+				// Fill/border/shadow default glitter ids are keyed per layer type so a
+				// fresh glitter-fill layer, text layer, shape, and canvas background
+				// each start on a visibly distinct glitter instead of all matching —
+				// retuning one type's default doesn't touch the others. backgroundGlitterId
+				// (text's background-effect fill) stays flat since only text has that slot.
+				fillGlitterId: {
+					glitterLayer: 111,
+					text: 17,
+					shape: 67,
+					canvasBackground: 101
+				},
+				backgroundGlitterId: 96,
+				borderGlitterId: {
+					text: 9,
+					shape: 68
+				},
+				shadowGlitterId: {
+					text: 109,
+					shape: 34,
+					sticker: 83
+				},
 				fillColor: '#ff66cc',
 				borderColor: '#000000',
 				shadowColor: '#000000',
@@ -881,6 +894,9 @@ const CONFIG = deepFreeze({
 	},
 
 	export: {
+		authoredFrames: {
+			checkpointInterval: 12
+		},
 		core: {
 			// Base name for user-facing downloads; the project title overrides this.
 			defaultBaseName: 'ryandavi-com_glitter',
@@ -999,7 +1015,8 @@ const CONFIG = deepFreeze({
 			supportProbeHeight: 16,
 			supportProbeFrameRate: 30,
 			keyFrameInterval: 30,
-			maxEncodeQueueSize: 8
+			maxEncodeQueueSize: 8,
+			muxChunkSize: 1024 * 1024
 		},
 		limits: {
 			maxFramesHardLimit: 1000,
@@ -1046,6 +1063,19 @@ const LayerType = {
 	SHAPE: 'shape',
 	BASE_IMAGE: 'base-image',
 	FILTER: 'filter'
+};
+
+// Maps a layer type to its key in CONFIG.tools.glitter.defaults.fillGlitterId
+// / borderGlitterId / shadowGlitterId (each keyed per layer type — see
+// glitter.defaults). Used wherever a missing/invalid glitterId needs
+// substituting without already knowing which manager is involved
+// (ProjectSerializer's missing-asset preflight).
+const LAYER_TYPE_GLITTER_CONTEXT = {
+	[LayerType.GLITTER_FILL]: 'glitterLayer',
+	[LayerType.TEXT_GLITTER]: 'text',
+	[LayerType.SHAPE]: 'shape',
+	[LayerType.BASE_IMAGE]: 'canvasBackground',
+	[LayerType.STICKER]: 'sticker'
 };
 
 const ToolType = {
@@ -1182,7 +1212,7 @@ const LAYER_UI_CONFIG = {
 			dataKey: 'background',
 			omit: ['name', 'settings'],
 			forceLocked: true,
-			defaultSelectedGlitterId: () => CONFIG.tools.glitter.defaults.fillGlitterId,
+			defaultSelectedGlitterId: () => CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
 			defaults: { image: null },
 			normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
 		},
@@ -1456,8 +1486,8 @@ const TEXT_BACKGROUND_PRESETS = {
 	labelPill: { mode: 'text-bounds', horizontalPadding: 28, verticalPadding: 6, cornerRadius: 100 }
 };
 const TEXT_BACKGROUND_PRESET_OPTIONS = [
-	{ value: '', label: 'Choose a preset…', selected: true },
-	{ value: 'instagram', label: 'Instagram' },
+	{ value: '', label: 'Choose a preset…' },
+	{ value: 'instagram', label: 'Instagram', selected: true },
 	{ value: 'tight', label: 'Tight Highlight' },
 	{ value: 'separateLines', label: 'Separate Lines' },
 	{ value: 'connectedBlock', label: 'Connected Block' },

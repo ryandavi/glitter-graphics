@@ -790,7 +790,7 @@ class TextGlitterManager {
 			config: CONFIG.tools.text.border || {},
 			fallbackWidthPx: 4,
 			fallbackMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId
+			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.text
 		});
 	}
 
@@ -798,7 +798,7 @@ class TextGlitterManager {
 		return buildDefaultShadow({
 			config: CONFIG.tools.text.shadow || {},
 			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId
+			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.text
 		});
 	}
 
@@ -819,16 +819,14 @@ class TextGlitterManager {
 		});
 	}
 
+	// Geometry defaults to the "Instagram" preset (TEXT_BACKGROUND_PRESETS,
+	// matches TEXT_BACKGROUND_PRESET_OPTIONS' default selection) rather than
+	// raw slider defaults, so a freshly enabled background already looks like a
+	// deliberate choice instead of the placeholder-preset "Choose a preset…" state.
 	getDefaultTextBackground() {
 		return {
 			enabled: false,
-			mode: 'lines',
-			lineConnection: 'separate',
-			horizontalPadding: CONFIG.ui.sliders.textBackgroundPaddingH.value,
-			verticalPadding: CONFIG.ui.sliders.textBackgroundPaddingV.value,
-			cornerRadius: CONFIG.ui.sliders.textBackgroundRadius.value,
-			mergeDistance: CONFIG.ui.sliders.textBackgroundMergeDistance.value,
-			lineSpacingSensitivity: CONFIG.ui.sliders.textBackgroundSpacing.value,
+			...TEXT_BACKGROUND_PRESETS.instagram,
 			fill: this.getDefaultBackgroundFill()
 		};
 	}
@@ -1661,7 +1659,7 @@ class TextGlitterManager {
 			visible: true,
 			locked: false,
 			opacity: 100,
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text,
 			settings: {
 				scale: CONFIG.tools.effects.defaults.scale,
 				opacity: CONFIG.tools.effects.defaults.opacity
@@ -1999,7 +1997,7 @@ class TextGlitterManager {
 		const usesGlitter = fillData.mode === 'glitter';
 		// Glitter mode is never empty — fall back to the default glitter.
 		if (usesGlitter && !layer.selectedGlitterId) {
-			layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
+			layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId.text;
 		}
 		const glitter = usesGlitter
 			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)

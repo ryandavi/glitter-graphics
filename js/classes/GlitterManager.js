@@ -207,7 +207,7 @@ async initBrowser() {
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.glitterLayer,
 			fill: { ...buildDefaultFill(), gradient: normalizeEffectGradient(CONFIG.rendering.gradient) },
 			settings: {
 				threshold: CONFIG.tools.selection.defaults.threshold,

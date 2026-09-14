@@ -35,7 +35,7 @@ class BaseBackgroundManager {
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.BASE_IMAGE) return null;
 		layer.locked = true;
-		layer.selectedGlitterId ||= CONFIG.tools.glitter.defaults.fillGlitterId;
+		layer.selectedGlitterId ||= CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground;
 		layer.background ||= {};
 		// Keep an already-normalized gradient intact. The gradient editor holds
 		// references to its stops while a range or preview handle is being dragged;

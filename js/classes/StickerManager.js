@@ -131,7 +131,7 @@ class StickerManager extends ContentManager {
 	}
 
 	getDefaultShadow() {
-		return buildDefaultShadow({ config: CONFIG.tools.stickers.shadow, defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId, includeColorAdjust: true });
+		return buildDefaultShadow({ config: CONFIG.tools.stickers.shadow, defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.sticker, includeColorAdjust: true });
 	}
 
 	bindColorAdjustControls() {
@@ -198,7 +198,7 @@ class StickerManager extends ContentManager {
 			if (!data) return;
 			data.mode = mode;
 			// Glitter mode is never empty — fall back to the slot's default glitter.
-			if (mode === 'glitter' && !data.glitterId) data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
+			if (mode === 'glitter' && !data.glitterId) data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.sticker;
 			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
 		};
 		this.ui[prefix + 'Glitter']?.addEventListener('click', () => setMode('glitter'));
@@ -374,7 +374,7 @@ class StickerManager extends ContentManager {
 		if (this.ui[prefix + 'Color']) this.ui[prefix + 'Color'].value = sd.color || '#000000';
 		syncPaintSlotSourceUI(this.ui[prefix + 'Glitter'], sd.mode);
 		if (sd.mode === 'glitter') {
-			if (!sd.glitterId) sd.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
+			if (!sd.glitterId) sd.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.sticker;
 			const glitter = this.editor.glitterManager.getItemById(sd.glitterId);
 			const els = {
 				thumbnail: this.ui[prefix + 'GlitterChip'],

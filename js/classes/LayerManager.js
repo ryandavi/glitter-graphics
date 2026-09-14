@@ -130,7 +130,7 @@ class LayerManager {
 			visible: true,
 			locked: true,
 			opacity: 100,
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
 			background: {
 				mode: 'image',
 				color: '#ffffff',

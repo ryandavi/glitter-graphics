@@ -44,10 +44,54 @@ function assert(condition, message) {
 		for (const policy of ['native-layer', 'derived-glitter', 'watermark-current']) {
 			const source = descriptor(policy, nativeAnimation, policy);
 			const all = resolver.resolveAll(source, resolver.createSession());
+			const sequentialSession = resolver.createSession();
 			for (const index of [0, 1, 2]) {
 				const selected = resolver.resolveFrame(source, index, resolver.createSession());
 				check(bytes(all[index]) === bytes(selected), `${policy} selected-frame replay diverged at ${index}`);
+				const sequential = resolver.resolveFrame(source, index, sequentialSession);
+				check(bytes(all[index]) === bytes(sequential), `${policy} sequential replay diverged at ${index}`);
 			}
+		}
+		const derivedRestartAnimation = {
+			width: 2,
+			height: 1,
+			frames: [
+				{ data: new Uint8ClampedArray([255, 0, 0, 0, 255, 0, 0, 255]), width: 2, height: 1, disposal: 1 },
+				rawFrame(1, 1, [0, 0, 255, 255])
+			]
+		};
+		const derivedRestartSource = descriptor('derived-restart', derivedRestartAnimation, 'derived-glitter');
+		const derivedBaseline = resolver.resolveAll(derivedRestartSource, resolver.createSession());
+		const derivedSequentialSession = resolver.createSession();
+		resolver.resolveFrame(derivedRestartSource, 0, derivedSequentialSession);
+		check(bytes(resolver.resolveFrame(derivedRestartSource, 1, derivedSequentialSession)) === bytes(derivedBaseline[1]),
+			'Derived replay did not restart when its deferred disposal analysis changed the frame-zero state');
+
+		const longAnimation = {
+			width: 2,
+			height: 1,
+			frames: Array.from({ length: 29 }, (_, index) => rawFrame(
+				index % 3 === 0 ? 2 : 1,
+				1,
+				[(index * 31) % 256, (index * 67) % 256, (index * 97) % 256, 255],
+				{ x: index % 2, disposal: index % 5 === 0 ? 3 : (index % 4 === 0 ? 2 : 1) }
+			))
+		};
+		const longSource = descriptor('checkpointed', longAnimation);
+		const baseline = resolver.resolveAll(longSource, resolver.createSession());
+		const streamingSession = resolver.createSession();
+		for (let index = 0; index < longAnimation.frames.length * 2; index++) {
+			check(bytes(resolver.resolveFrame(longSource, index, streamingSession)) === bytes(baseline[index % baseline.length]),
+				`Checkpointed modulo replay diverged at ${index}`);
+		}
+		const replayState = streamingSession.getReplay(longAnimation, 'native-layer', () => null);
+		check(replayState.blockFrames.size <= CONFIG.export.authoredFrames.checkpointInterval
+			&& replayState.checkpoints.length <= Math.ceil(longAnimation.frames.length / CONFIG.export.authoredFrames.checkpointInterval) + 1,
+			`Checkpointed replay retained an unbounded output-frame array (${replayState.blockFrames.size} frames, ${replayState.checkpoints.length} checkpoints)`);
+		const reverseSession = resolver.createSession();
+		for (let index = longAnimation.frames.length - 1; index >= 0; index--) {
+			check(bytes(resolver.resolveFrame(longSource, index, reverseSession)) === bytes(baseline[index]),
+				`Checkpointed reverse replay diverged at ${index}`);
 		}
 
 		let highestRead = -1;
