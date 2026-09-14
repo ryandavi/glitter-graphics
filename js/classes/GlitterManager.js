@@ -453,6 +453,11 @@ async initBrowser() {
 				shadow.glitterId = id;
 				shadow.mode = 'glitter';
 				shadow.colorAdjust = null;
+			} else if (target === 'backgroundFill') {
+				const background = this.editor.textGlitterManager.ensureEffectData(layer, 'backgroundFill');
+				background.glitterId = id;
+				background.mode = 'glitter';
+				background.colorAdjust = null;
 			} else {
 				layer.selectedGlitterId = id;
 				// Intent capture: picking a glitter for a solid-mode fill IS the
@@ -532,8 +537,9 @@ async initBrowser() {
 		this.editor.saveState('Edit glitter');
 		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
 			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
-			if (target === 'border' || target === 'shadow') {
-				this.editor.updateStatus(`Selected ${glitter.name} for the text ${target}`);
+			if (target === 'border' || target === 'shadow' || target === 'backgroundFill') {
+				const targetName = target === 'backgroundFill' ? 'background' : target;
+				this.editor.updateStatus(`Selected ${glitter.name} for the text ${targetName}`);
 			} else {
 				this.editor.updateStatus(`Selected ${glitter.name} for the text fill`);
 			}

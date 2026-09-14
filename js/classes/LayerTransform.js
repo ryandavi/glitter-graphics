@@ -247,7 +247,7 @@ updateTransform(updates) {
     getHandleFrame() {
         const dimensions = this.getDimensions();
         const textFrame = this.layer.type === LayerType.TEXT_GLITTER
-            ? this.editor.textGlitterManager?.getTextFrame?.(this.layer)
+            ? this.editor.textGlitterManager?.getIntrinsicTextFrame?.(this.layer)
             : null;
 
         if (textFrame) {

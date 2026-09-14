@@ -455,11 +455,12 @@ const CONFIG = deepFreeze({
 		},
 		glitter: {
 			defaults: {
-				// Fill/border/shadow each carry their own default glitter id AND solid
+				// Fill/background/border/shadow each carry their own default glitter id AND solid
 				// color. Shared across every layer type that has that slot
 				// (glitter-fill, text, shape) so retuning one slot's default doesn't
 				// touch the others, and doesn't need to be set separately per layer type.
 				fillGlitterId: 111,
+				backgroundGlitterId: 111,
 				borderGlitterId: 9,
 				shadowGlitterId: 109,
 				fillColor: '#ff66cc',
@@ -1427,7 +1428,6 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 const TEXT_BACKGROUND_PRESETS = {
 	instagram: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 20, verticalPadding: 10, cornerRadius: 16, mergeDistance: 20, lineSpacingSensitivity: 60 },
 	tight: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 8, verticalPadding: 4, cornerRadius: 4, mergeDistance: 6, lineSpacingSensitivity: 20 },
-	loose: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 32, verticalPadding: 16, cornerRadius: 16, mergeDistance: 40, lineSpacingSensitivity: 60 },
 	separateLines: { mode: 'lines', lineConnection: 'separate', horizontalPadding: 12, verticalPadding: 6, cornerRadius: 8 },
 	connectedBlock: { mode: 'lines', lineConnection: 'connected', horizontalPadding: 20, verticalPadding: 10, cornerRadius: 20, mergeDistance: 60, lineSpacingSensitivity: 90 },
 	textBounds: { mode: 'text-bounds', horizontalPadding: 16, verticalPadding: 8, cornerRadius: 8 },
@@ -1438,7 +1438,6 @@ const TEXT_BACKGROUND_PRESET_OPTIONS = [
 	{ value: '', label: 'Choose a preset…', selected: true },
 	{ value: 'instagram', label: 'Instagram' },
 	{ value: 'tight', label: 'Tight Highlight' },
-	{ value: 'loose', label: 'Loose Highlight' },
 	{ value: 'separateLines', label: 'Separate Lines' },
 	{ value: 'connectedBlock', label: 'Connected Block' },
 	{ value: 'textBounds', label: 'Text Bounds' },
@@ -2048,6 +2047,7 @@ const PANEL_SCHEMAS = {
 				color: '#000000', chipTitle: 'Choose background source',
 				primaryIds: { scale: 'textBackgroundScale', scaleRow: 'textBackgroundScaleRow', opacity: 'textBackgroundOpacity' },
 				afterSource: [
+					{ kind: 'select', id: 'textBackgroundPreset', label: 'Preset', visibleLabel: 'Preset', options: TEXT_BACKGROUND_PRESET_OPTIONS },
 					{ kind: 'set', label: 'Padding', items: [
 						{ kind: 'numberPair', label: 'Padding', items: [
 							{ id: 'textBackgroundPaddingH', slider: 'textBackgroundPaddingH', mark: 'H', label: 'Horizontal Padding' },
@@ -2055,31 +2055,30 @@ const PANEL_SCHEMAS = {
 						] }
 					] },
 					{ kind: 'set', label: 'Shape', items: [
-						{ kind: 'slider', id: 'textBackgroundRadius', slider: 'textBackgroundRadius' }
+						{ kind: 'slider', id: 'textBackgroundRadius', slider: 'textBackgroundRadius', title: 'How rounded the background corners are.' }
 					] }
 				],
 				post: [
 					{ kind: 'set', label: 'Mode', items: [
 						{ kind: 'stackRow', revert: true, groups: [
-							{ label: 'Mode', options: [
+							{ label: 'Mode', hint: 'Lines: one shape per text line. Text Bounds: one shape around all visible text. Text Box: one shape filling the box (box-mode text only).', options: [
 								{ id: 'textBackgroundModeLines', label: 'Lines', active: true, value: 'lines' },
 								{ id: 'textBackgroundModeBounds', label: 'Text Bounds', value: 'text-bounds' },
 								{ id: 'textBackgroundModeBox', label: 'Text Box', value: 'text-box' }
 							] },
-							{ label: 'Line Connection', options: [
+							{ label: 'Line Connection', hint: 'Separate: each line\'s own shape. Merge Adjacent: nearby lines combine into a stepped shape. Connected: a more permissive merge.', options: [
 								{ id: 'textBackgroundConnectionSeparate', label: 'Separate', active: true, value: 'separate' },
-								{ id: 'textBackgroundConnectionMerge', label: 'Merge Adjacent', value: 'merge-adjacent' },
+								{ id: 'textBackgroundConnectionMerge', label: 'Merge', value: 'merge-adjacent' },
 								{ id: 'textBackgroundConnectionConnected', label: 'Connected', value: 'connected' }
 							] }
 						] }
 					] },
 					{ kind: 'set', label: 'Merge', items: [
-						{ kind: 'numberPair', label: 'Merge', items: [
+						{ kind: 'numberPair', label: 'Merge', title: 'How close two lines of text need to be before their highlight boxes merge into one shape.', items: [
 							{ id: 'textBackgroundMergeDistance', slider: 'textBackgroundMergeDistance', mark: 'D', label: 'Merge Distance' },
-							{ id: 'textBackgroundSpacing', slider: 'textBackgroundSpacing', mark: 'S', label: 'Spacing Sensitivity' }
+							{ id: 'textBackgroundSpacing', slider: 'textBackgroundSpacing', mark: 'S', label: 'Spacing Sensitivity', title: 'How much tighter/looser-than-normal line spacing shifts the merge threshold.' }
 						] }
-					] },
-					{ kind: 'select', id: 'textBackgroundPreset', label: 'Preset', visibleLabel: 'Preset', options: TEXT_BACKGROUND_PRESET_OPTIONS }
+					] }
 				]
 			},
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border', redesign: true,

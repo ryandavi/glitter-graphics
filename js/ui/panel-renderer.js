@@ -590,6 +590,7 @@ function buildNumberFieldPair(options) {
 		mark.htmlFor = entry.id;
 		input.id = entry.id;
 		input.dataset.role = entry.role || entry.slider || 'value';
+		if (entry.title) mark.title = entry.title;
 		if (entry.min != null) input.min = String(entry.min);
 		else if (spec.min != null) input.min = String(spec.min);
 		if (spec.max != null) input.max = String(spec.max);
@@ -1401,7 +1402,8 @@ function buildPanelItem(item, schema) {
 				const control = group.control === 'select'
 					? buildSelectProxy(group.options, { label: group.label })
 					: buildSegmented(group.options);
-				const optionRow = buildOptionGroup(group.label, [control]);
+				const optionRow = buildOptionGroup(group.label, [control], '', group.hint);
+				optionRow.dataset.stackGroup = group.label;
 				if (group.control === 'select') optionRow.classList.remove('is-stacked');
 				if (item.revert || group.revert) attachOptionRevert(optionRow, control, { options: group.options, roleId: group.options[0]?.id || group.label, label: group.label });
 				row.appendChild(optionRow);

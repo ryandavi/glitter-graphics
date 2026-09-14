@@ -27,6 +27,7 @@ function buildDefaultFill(options = {}) {
 		textureOffsetY: coordinates.defaultOffsetY
 	};
 	if (options.includeTexture) {
+		fill.glitterId = options.defaultGlitterId ?? null;
 		fill.scale = 100;
 		fill.colorAdjust = null;
 	}

@@ -549,7 +549,6 @@ class TextGlitterManager {
 		this.ui.bgPreset?.addEventListener('change', async () => {
 			const layer = this.getActiveTextLayer();
 			const presetKey = this.ui.bgPreset.value;
-			this.ui.bgPreset.value = '';
 			if (!layer || !presetKey) return;
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
@@ -811,7 +810,10 @@ class TextGlitterManager {
 	// Text Background-specific paint model (DYNAMIC-TEXT-BACKGROUND-
 	// IMPLEMENTATION-PLAN.md "Fill integration").
 	getDefaultBackgroundFill() {
-		return buildDefaultFill({ includeTexture: true });
+		return buildDefaultFill({
+			includeTexture: true,
+			defaultGlitterId: CONFIG.tools.glitter.defaults.backgroundGlitterId
+		});
 	}
 
 	getDefaultTextBackground() {
@@ -920,6 +922,14 @@ class TextGlitterManager {
 		this.normalizeLayer(layer);
 		Object.assign(layer.textData.textBackground, preset);
 		this.normalizeTextBackground(layer);
+	}
+
+	findMatchingPreset(textBackground) {
+		if (!textBackground) return '';
+		const match = Object.entries(TEXT_BACKGROUND_PRESETS).find(([, preset]) =>
+			Object.entries(preset).every(([field, value]) => textBackground[field] === value)
+		);
+		return match?.[0] || '';
 	}
 
 	ensureFixedBox(layer) {
@@ -1965,10 +1975,11 @@ class TextGlitterManager {
 			[this.ui.bgConnMerge, 'merge-adjacent'],
 			[this.ui.bgConnConnected, 'connected']
 		].forEach(([button, connection]) => button?.classList.toggle('active', tb.lineConnection === connection));
+		if (this.ui.bgPreset) this.ui.bgPreset.value = this.findMatchingPreset(tb);
 		// Line Connection only matters in Lines mode; Merge Distance/Spacing
 		// Sensitivity only matter once lines can actually merge (plan: "expose
 		// only controls relevant to the active mode").
-		const connectionRow = this.ui.bgConnSeparate?.closest('.property-set, .effect-stack-row');
+		const connectionRow = this.ui.bgConnSeparate?.closest('[data-stack-group="Line Connection"]');
 		if (connectionRow) connectionRow.hidden = tb.mode !== 'lines';
 		const mergeSet = this.ui.bgMergeDistance?.closest('.property-set');
 		if (mergeSet) mergeSet.hidden = tb.mode !== 'lines' || tb.lineConnection === 'separate';
@@ -2153,7 +2164,7 @@ class TextGlitterManager {
 				const color = (fillData.color || '#000000').toUpperCase();
 				stripText = { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${color}).` };
 			} else {
-				stripText = formatPickerStripText(armedSlot, layer.name, 'text');
+				stripText = formatPickerStripText(this.getEffectTitle(armedSlot), layer.name, 'text');
 			}
 			renderPickerStrip({ ownsStrip: true, visible: true, armed: true, ...stripText });
 			return;
@@ -2175,6 +2186,7 @@ class TextGlitterManager {
 	}
 
 	getEffectTitle(effectName) {
+		if (effectName === 'fill') return 'fill';
 		if (effectName === 'shadow') return 'shadow';
 		if (effectName === 'backgroundFill') return 'background';
 		return 'border';
@@ -2628,6 +2640,25 @@ class TextGlitterManager {
 		const entry = measurement || this.getMeasurementEntry(layer);
 		const rect = entry.boxRect;
 		if (!rect) return null;
+		return {
+			width: rect.width,
+			height: rect.height,
+			offsetX: rect.x + rect.width / 2 - entry.width / 2,
+			offsetY: rect.y + rect.height / 2 - entry.height / 2
+		};
+	}
+
+	getIntrinsicTextFrame(layer, measurement = null) {
+		const fixedBoxFrame = this.getFixedBoxFrame(layer, measurement);
+		if (fixedBoxFrame) return fixedBoxFrame;
+
+		this.normalizeLayer(layer);
+		if (!layer?.textData) return null;
+		const entry = measurement || this.getMeasurementEntry(layer);
+		const rect = entry.textInkRect;
+		if (!rect || rect.width <= 0 || rect.height <= 0) {
+			return this.getTextFrame(layer, entry);
+		}
 		return {
 			width: rect.width,
 			height: rect.height,
