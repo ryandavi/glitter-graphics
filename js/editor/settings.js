@@ -187,9 +187,10 @@ initializeExportSettings() {
 
 ,
 	updateMatteColorUI() {
+		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		setSettingsRowInactive(
 			document.getElementById('matteColorRow'),
-			this.exportSettings.format !== 'mp4' && this.exportSettings.transparency
+			target.supportsTransparency && this.exportSettings.transparency
 		);
 	}
 
@@ -368,7 +369,15 @@ initializeExportSettings() {
 		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
 			button.addEventListener('click', () => {
 				if (button.disabled) return;
-				this.exportSettings.format = button.dataset.exportFormat;
+				if (this.exportSettings.outputMode === 'still') this.exportSettings.stillFormat = button.dataset.exportFormat;
+				else this.exportSettings.animationFormat = button.dataset.exportFormat;
+				this.updateExportFormatUI();
+				this.saveSettingsToStorage();
+			});
+		});
+		document.querySelectorAll('#exportModeControl [data-export-mode]').forEach((button) => {
+			button.addEventListener('click', () => {
+				this.exportSettings.outputMode = button.dataset.exportMode;
 				this.updateExportFormatUI();
 				this.saveSettingsToStorage();
 			});
@@ -376,11 +385,11 @@ initializeExportSettings() {
 
 		Mp4Exporter.isSupported().then((supported) => {
 			this.mp4ExportSupported = supported;
-			if (!supported && this.exportSettings.format === 'mp4') this.exportSettings.format = CONFIG.export.defaults.format;
+			if (!supported && this.exportSettings.animationFormat === 'mp4') { this.exportSettings.animationFormat = 'gif'; this.saveSettingsToStorage(); }
 			this.updateExportFormatUI();
 		}).catch(() => {
 			this.mp4ExportSupported = false;
-			if (this.exportSettings.format === 'mp4') this.exportSettings.format = CONFIG.export.defaults.format;
+			if (this.exportSettings.animationFormat === 'mp4') { this.exportSettings.animationFormat = 'gif'; this.saveSettingsToStorage(); }
 			this.updateExportFormatUI();
 		});
 
@@ -489,39 +498,75 @@ initializeExportSettings() {
 
 ,
 	updateExportFormatUI() {
-		const isMp4 = this.exportSettings.format === 'mp4' && this.mp4ExportSupported === true;
-		const activeFormat = isMp4 ? 'mp4' : 'gif';
+		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
+		const isMp4 = target.isVideo;
 		const formatDescription = document.getElementById('exportFormatDescription');
 		if (formatDescription) {
-			formatDescription.textContent = this.mp4ExportSupported === true
-				? 'Choose an animated GIF or a broadly compatible MP4 video.'
-				: 'Export an animated GIF.';
+			formatDescription.textContent = {
+				'still:png': 'Export a lossless still image with optional transparency.',
+				'still:jpeg': 'Export a compressed still image. Transparent areas use the matte color.',
+				'still:gif': 'Export one selected frame as a palette-based GIF.',
+				'animation:gif': 'Export an animated GIF.',
+				'animation:mp4': 'Export an H.264 video.'
+			}[target.id];
 		}
+		document.querySelectorAll('#exportModeControl [data-export-mode]').forEach((button) => {
+			const active = button.dataset.exportMode === target.mode;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
 		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
 			const format = button.dataset.exportFormat;
-			button.classList.toggle('active', format === activeFormat);
-			button.setAttribute('aria-pressed', String(format === activeFormat));
+			const inMode = button.dataset.exportMode === target.mode;
+			const active = inMode && format === target.format;
+			button.hidden = !inMode;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
 			if (format === 'mp4') {
 				const supported = this.mp4ExportSupported === true;
-				button.hidden = !supported;
+				button.hidden = !inMode || !supported;
 				button.disabled = !supported;
 				button.title = supported ? '' : 'MP4 export requires WebCodecs H.264 support in this browser.';
 			}
 		});
-		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = isMp4);
-		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !isMp4);
+		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = !target.isGif);
+		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !target.isVideo);
+		document.getElementById('transparencySettingsRow').hidden = !target.supportsTransparency;
+		document.getElementById('exportStillFrameRow').hidden = !target.isStill || !this.hasAnimatedExportContent();
+		document.getElementById('exportJpegQualityRow').hidden = !target.supportsJpegCompression;
+		document.getElementById('exportJpegGenerationsRow').hidden = !target.supportsJpegCompression;
+		document.querySelector('#exportDitherTemporalMode')?.closest('.settings-row')?.toggleAttribute('hidden', !target.supportsTemporalGifLook);
+		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
+			const title = group.querySelector('.settings-group-title-text')?.textContent;
+			if (title === 'Playback') group.hidden = !target.supportsPlaybackSettings;
+			if (title === 'Optimization') group.hidden = !target.supportsAnimationOptimization;
+		});
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
 		const targetDurationRow = document.getElementById('exportMp4TargetDurationRow');
 		const loopCountRow = document.getElementById('exportMp4LoopCountRow');
 		if (targetDurationRow) targetDurationRow.hidden = !isMp4 || !usesTargetDuration;
 		if (loopCountRow) loopCountRow.hidden = !isMp4 || usesTargetDuration;
 		const transparency = document.getElementById('exportTransparency');
-		if (transparency) transparency.disabled = isMp4;
+		if (transparency) transparency.disabled = !target.supportsTransparency;
 		this.updateMatteColorUI();
-		const buttonName = document.querySelector('#exportGif .name');
-		if (buttonName) buttonName.textContent = isMp4 ? 'Export MP4' : 'Export GIF';
+		this.updateExportActionUI?.();
 		this.exportSettingsFilter?.apply();
-		this.updateExportDuration();
+		if (target.isAnimation) this.updateExportDuration();
+		else this.clearExportDurationUI();
+	}
+
+,
+	hasAnimatedExportContent() {
+		return this.layers.some((layer) => layer.visible && (GlitterAnimation.isActive(layer.animation) || layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL));
+	}
+
+,
+	clearExportDurationUI() {
+		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
+		const duration = document.getElementById('exportMp4Duration');
+		const estimate = document.getElementById('exportFidelityEstimate');
+		if (duration) duration.textContent = '';
+		if (estimate) estimate.textContent = '';
 	}
 
 ,
@@ -603,7 +648,7 @@ initializeExportSettings() {
 				visualErrorThreshold: this.exportSettings.visualErrorThreshold,
 				// The render clock is format-specific, so the estimate must be
 				// realized by the same planner the export will actually use.
-				outputFormat: this.exportSettings.format
+				outputFormat: getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false }).format
 			});
 			if (requestId !== this.exportDurationRequestId) return;
 			const loopDurationSeconds = estimate.duration / 1000;
@@ -845,12 +890,44 @@ async resetAllSettings() {
 	setupExportListeners() {
 		const exportGif = document.getElementById('exportGif');
 		if (exportGif) {
-			exportGif.addEventListener('click', () => this.exportAnimatedGif());
+			exportGif.addEventListener('click', () => this.exportCurrentTarget());
 		}
+		document.querySelectorAll('[data-export-target]').forEach((item) => item.addEventListener('click', () => {
+			if (item.disabled || this.exportInProgress) return;
+			setActiveExportTarget(this.exportSettings, item.dataset.exportTarget);
+			this.saveSettingsToStorage();
+			this.syncExportSettingsToUI();
+			this.exportCurrentTarget();
+		}));
+		document.getElementById('exportSettingsMenuItem')?.addEventListener('click', () => this.modalManager.open('exportSettingsModal'));
 
 		const saveProject = document.getElementById('saveProject');
 		if (saveProject) {
 			saveProject.addEventListener('click', () => this.saveProjectFile());
 		}
+	}
+
+,
+	updateExportActionUI() {
+		if (!this.exportSettings) return;
+		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
+		const hasContent = this.layers?.some((layer) => layerHasVisibleContent(layer)) && !this.autoGlitterManager?.isSessionActive();
+		const main = document.getElementById('exportGif');
+		if (main) {
+			main.disabled = !hasContent || this.exportInProgress;
+			main.title = target.exportLabel;
+			main.setAttribute('aria-label', target.exportLabel);
+			main.querySelector('.name').textContent = target.exportLabel;
+		}
+		document.querySelectorAll('[data-export-target]').forEach((item) => {
+			const isMp4 = item.dataset.exportTarget === 'animation:mp4';
+			item.hidden = isMp4 && this.mp4ExportSupported === false;
+			item.disabled = !hasContent || this.exportInProgress || (isMp4 && this.mp4ExportSupported !== true);
+			const current = item.dataset.exportTarget === target.id;
+			item.classList.toggle('app-menu-item-current-target', current);
+			if (current) item.setAttribute('aria-current', 'true'); else item.removeAttribute('aria-current');
+		});
+		const settingsItem = document.getElementById('exportSettingsMenuItem');
+		if (settingsItem) settingsItem.disabled = this.exportInProgress;
 	}
 };

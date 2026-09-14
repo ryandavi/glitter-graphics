@@ -33,6 +33,12 @@ class AnimationTicker {
 		this.refresh();
 	}
 
+	getCurrentTime() {
+		if (this._isPreviewPaused()) return 0;
+		const starts = Array.from(this.targets.values(), (entry) => entry.startedAt);
+		return starts.length ? Math.max(0, performance.now() - Math.min(...starts)) : 0;
+	}
+
 	refresh() {
 		this._paint(performance.now());
 		if (this._isPreviewPaused() || !this.targets.size) this.stop();

@@ -96,10 +96,6 @@
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span>
 							<span class="app-menu-item-label">App Settings</span>
 						</button>
-						<button class="app-menu-item mobile-only-action" id="mobileExportSettingsBtn" type="button" role="menuitem">
-							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-export"></use></svg></span>
-							<span class="app-menu-item-label">Export Settings</span>
-						</button>
 
 						<div class="app-menu-separator" role="separator"></div>
 
@@ -775,7 +771,7 @@
 
 
 						<!-- Preview Controls -->
-						<div class="preview-controls ui-ignore-gestures" id="previewControls">
+						<div class="preview-controls ui-ignore-gestures visible" id="previewControls">
 							<div class="preview-controls-center">
 								<button class="btn-icon icon-wrapper" id="pauseMotionTool" type="button" title="Pause motion" aria-label="Pause motion" aria-pressed="false">
 									<svg class="icon"><use href="#icon-motion-pause"></use></svg>
@@ -817,16 +813,21 @@
 
 							</div>
 							<div class="preview-controls-right">
-								<button class="btn-icon export-action-btn icon-wrapper" id="exportSettingsBtn" title="Export Settings"><svg class="icon"><use href="#icon-gear"></use></svg><span class="name">Export Settings</span></button>
-								<!-- EXPORT ICON BUTTON -->
-								<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export glitter as GIF">
-									<svg class="icon">
-										<use href="#icon-export"></use>
-									</svg>
-									<span class="name">Export GIF</span>
-								</button>
-
-
+								<div class="app-menu export-split-control" id="exportMenu">
+									<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export GIF" aria-label="Export GIF"><svg class="icon"><use href="#icon-export"></use></svg><span class="name">Export GIF</span></button>
+									<button class="btn-icon export-action-btn app-menu-trigger icon-wrapper primary" id="exportMenuBtn" type="button" title="Export menu" aria-label="Export menu" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenuPanel"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Export menu</span></button>
+									<div class="app-menu-panel" id="exportMenuPanel" role="menu" aria-labelledby="exportMenuBtn" hidden>
+										<div class="app-menu-group-label">Still Image</div>
+										<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">Export PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:jpeg"><span class="app-menu-item-label">Export JPG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:gif"><span class="app-menu-item-label">Export Still GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<div class="app-menu-separator" role="separator"></div><div class="app-menu-group-label">Animation</div>
+										<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:gif"><span class="app-menu-item-label">Export GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:mp4"><span class="app-menu-item-label">Export MP4</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<div class="app-menu-separator" role="separator"></div>
+										<button class="app-menu-item" id="exportSettingsMenuItem" type="button" role="menuitem"><span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span><span class="app-menu-item-label">Export Settings…</span></button>
+									</div>
+								</div>
 							</div>
 						</div>
 
@@ -1222,9 +1223,10 @@
 
 				<div class="export-stats" id="exportStats" aria-label="Export details">
 					<div class="export-stat"><span class="export-stat-label">File size</span><strong id="exportStatSize">0 KB</strong></div>
-					<div class="export-stat"><span class="export-stat-label">Frames</span><strong id="exportStatFrames">0</strong></div>
+					<div class="export-stat" id="exportStatFramesRow"><span class="export-stat-label">Frames</span><strong id="exportStatFrames">0</strong></div>
 					<div class="export-stat" id="exportStatDurationRow"><span class="export-stat-label">Duration</span><strong id="exportStatDuration">0s</strong></div>
 					<div class="export-stat" id="exportStatDimensionsRow"><span class="export-stat-label">Dimensions</span><strong id="exportStatDimensions">0 × 0 px</strong></div>
+					<div class="export-stat"><span class="export-stat-label">Format</span><strong id="exportStatFormat">GIF</strong></div>
 				</div>
 				<div class="export-size-warnings" id="exportSizeWarnings" role="status" aria-label="File size warnings" hidden></div>
 				<div class="export-format-notices" id="exportFormatNotices" role="note" hidden>
@@ -1322,6 +1324,10 @@
 			<li><span class="export-step-number">1</span><span>Tap <strong>Share Video</strong>.</span></li>
 			<li><span class="export-step-number">2</span><span>Choose Save Video, Save to Files, AirDrop, Messages, or Mail.</span></li>
 		</ol>
+	</template>
+	<template id="tpl-export-instructions-ios-still">
+		<div class="export-instruction-heading"><div class="export-instruction-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div><strong class="export-instruction-title">Save the image on iPhone or iPad</strong></div>
+		<ol class="export-save-steps export-save-steps-short"><li><span class="export-step-number">1</span><span>Tap <strong>Share</strong>.</span></li><li><span class="export-step-number">2</span><span>Choose Save Image, Save to Files, AirDrop, Messages, or Mail.</span></li></ol>
 	</template>
 	<template id="tpl-export-instructions-ios-unsupported">
 		<div class="export-instruction-heading">
@@ -1500,18 +1506,20 @@
 				<div id="exportSettingsGroups">
 				<div class="settings-group">
 					<div class="settings-group-title"><span class="settings-group-title-text">Output</span><button class="btn-text small reset-section-btn" data-section="output">Reset</button></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Export Type</div><div class="settings-row-control"><div class="segmented-control" id="exportModeControl" role="group" aria-label="Export type"><button type="button" class="segmented-option" data-export-mode="still" aria-pressed="false">Still Image</button><button type="button" class="segmented-option active" data-export-mode="animation" aria-pressed="true">Animation</button></div></div></div></div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Format</div>
 							<div class="settings-row-control">
 								<div class="segmented-control" id="exportFormatControl" role="group" aria-label="Export format">
-									<button type="button" class="segmented-option active" data-export-format="gif" aria-pressed="true">GIF</button>
-									<button type="button" class="segmented-option" data-export-format="mp4" aria-pressed="false" hidden>MP4</button>
+									<button type="button" class="segmented-option" data-export-format="png" data-export-mode="still">PNG</button><button type="button" class="segmented-option" data-export-format="jpeg" data-export-mode="still">JPG</button><button type="button" class="segmented-option" data-export-format="gif" data-export-mode="still">GIF</button>
+									<button type="button" class="segmented-option active" data-export-format="gif" data-export-mode="animation">GIF</button><button type="button" class="segmented-option" data-export-format="mp4" data-export-mode="animation" hidden>MP4</button>
 								</div>
 							</div>
 						</div>
 						<div class="settings-row-label-desc" id="exportFormatDescription">Export an animated GIF.</div>
 					</div>
+					<div class="settings-row" id="exportStillFrameRow" hidden><div class="settings-row-header"><label class="settings-row-label-main" for="exportStillFrame">Frame</label><div class="settings-row-control"><select id="exportStillFrame"><option value="first">First frame</option><option value="current">Current frame</option></select></div></div><div class="settings-row-label-desc">Choose the animation moment used for this still image.</div></div>
 					<div class="settings-row" id="transparencySettingsRow" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<label class="settings-row-label-main" for="exportTransparency">Transparency</label>
@@ -1607,6 +1615,8 @@
 
 				<div class="settings-group">
 					<div class="settings-group-title"><span class="settings-group-title-text">Quality</span><button class="btn-text small reset-section-btn" data-section="quality">Reset</button></div>
+					<div class="settings-row" id="exportJpegQualityRow" hidden><div class="settings-row-header"><label class="settings-row-label-main" for="exportJpegQuality">JPG Quality</label><div class="settings-row-control"><span class="input-unit"><input type="number" id="exportJpegQuality" min="1" max="100" step="1" value="90"><span class="input-unit-suffix">%</span></span></div></div><div class="settings-row-label-desc">Controls JPEG compression quality.</div></div>
+					<div class="settings-row" id="exportJpegGenerationsRow" hidden><div class="settings-row-header"><label class="settings-row-label-main" for="exportJpegGenerations">Recompression</label><div class="settings-row-control"><span class="input-unit"><input type="number" id="exportJpegGenerations" min="1" max="10" step="1" value="1"><span class="input-unit-suffix">×</span></span></div></div><div class="settings-row-label-desc">Re-encode repeatedly to build authentic generational compression artifacts.</div></div>
 					<div class="settings-row" data-export-format-section="mp4" hidden>
 						<div class="settings-row-header"><label class="settings-row-label-main" for="exportMp4Quality">MP4 Quality</label><div class="settings-row-control">
 							<select id="exportMp4Quality"><option value="compact">Compact</option><option value="standard">Standard</option><option value="high">High</option></select>
@@ -1675,23 +1685,11 @@
 						</div>
 					</div>
 
-					<div class="settings-row" data-export-format-section="gif" data-search-aliases="color quality encoder accuracy precision">
-						<div class="settings-row-header">
-							<label class="settings-row-label-main" for="exportQuality">Encoder Precision</label>
-							<div class="settings-row-control">
-								<select id="exportQuality">
-									<option value="1">Best (slowest)</option>
-									<option value="10">Good</option>
-									<option value="20">Fast</option>
-								</select>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">How carefully the GIF encoder matches subtle color differences. Higher precision takes longer to export but does not change the image dimensions.</div>
-					</div>
 				</div>
 
 				<div class="settings-group">
 					<div class="settings-group-title"><span class="settings-group-title-text">Optimization</span><button class="btn-text small reset-section-btn" data-section="optimization">Reset</button></div>
+					<div class="settings-row" data-export-format-section="gif" data-search-aliases="color quality encoder accuracy precision"><div class="settings-row-header"><label class="settings-row-label-main" for="exportQuality">Encoder Precision</label><div class="settings-row-control"><select id="exportQuality"><option value="1">Best (slowest)</option><option value="10">Good</option><option value="20">Fast</option></select></div></div><div class="settings-row-label-desc">How carefully the GIF encoder matches subtle color differences. Higher precision takes longer to export but does not change the image dimensions.</div></div>
 
 					<div class="governed-set is-collapsed" id="exportFidelitySet" data-governed-set="exportFidelity">
 					<div class="settings-row" data-filter-pin>
@@ -2454,7 +2452,8 @@
 	<script src="js/vendor/mp4-muxer.js?v=e2a7db11"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=d6dc580f"></script>
+	<script src="js/core/config.js?v=4ade6117"></script>
+	<script src="js/core/export-target.js?v=09b1d623"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2492,17 +2491,18 @@
 	<script src="js/effects/slot-effects.js?v=271ac780"></script>
 	<script src="js/ui/panel-renderer.js?v=91adc7e1"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=3db8a3c8"></script>
-	<script src="js/ui/settings-store.js?v=e63ed119"></script>
+	<script src="js/ui/settings-store.js?v=7ee23526"></script>
+	<script src="js/ui/menu-popover.js?v=20e6b111"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/editor/settings.js?v=e15e6a32"></script>
+	<script src="js/editor/settings.js?v=1e6ce503"></script>
 	<script src="js/editor/panels.js?v=136c2850"></script>
 	<script src="js/editor/disclosures.js?v=ca165a02"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
 	<script src="js/editor/transform-interaction.js?v=bd174854"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=60ae39eb"></script>
+		<script src="js/editor/modals-wiring.js?v=eed7f9ed"></script>
 	<script src="js/editor/layer-panel.js?v=3d5b5ebe"></script>
 	<script src="js/editor/canvas-gestures.js?v=3be86e55"></script>
 	<script src="js/editor/canvas-size.js?v=28d9bd28"></script>
@@ -2517,12 +2517,14 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=4f796dac"></script>
+	<script src="js/classes/ExportTimeline.js?v=70c9068a"></script>
 	<script src="js/classes/GifPalette.js?v=aece541e"></script>
-	<script src="js/classes/AnimationTicker.js?v=3a17e873"></script>
+	<script src="js/classes/AnimationTicker.js?v=c741bb44"></script>
 	<script src="js/classes/AnimationPanelController.js?v=5c5e6dc8"></script>
-	<script src="js/classes/GifExporter.js?v=bd814d29"></script>
-	<script src="js/classes/Mp4Exporter.js?v=213e8501"></script>
+	<script src="js/classes/ExportResultPresenter.js?v=26078df5"></script>
+	<script src="js/classes/GifExporter.js?v=326140fd"></script>
+	<script src="js/classes/StillImageExporter.js?v=9098953c"></script>
+	<script src="js/classes/Mp4Exporter.js?v=17bc4e62"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
 	<script src="js/classes/ProjectSerializer.js?v=61bad0df"></script>
@@ -2552,7 +2554,7 @@
 		<script src="js/classes/MobileManager.js?v=b1a5756a"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=05fe5cb8"></script>
+	<script src="js/app.js?v=a347033b"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

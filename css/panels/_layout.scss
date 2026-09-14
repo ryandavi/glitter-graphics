@@ -167,6 +167,23 @@
 	background: var(--color-border);
 }
 
+.app-menu-group-label {
+	padding: var(--spacing-xs) var(--spacing-sm);
+	color: var(--color-text-muted);
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.app-menu-item-current { visibility: hidden; }
+.app-menu-item[aria-current="true"] .app-menu-item-current { visibility: visible; }
+
+.export-split-control {
+	> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+	> #exportMenuBtn { width: 26px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+	> .app-menu-panel { bottom: calc(100% + var(--spacing-xs)); top: auto; }
+}
+
 .app-menu-item {
 	display: flex;
 	align-items: center;

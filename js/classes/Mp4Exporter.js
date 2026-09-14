@@ -24,8 +24,9 @@ function reportMp4ExportProgress(callbacks, phaseKey, ratio = 0, detail = '', ph
 }
 
 class Mp4Exporter {
-	constructor(frameComposer) {
+	constructor(frameComposer, resultPresenter = frameComposer?.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null)) {
 		this.frameComposer = frameComposer;
+		this.resultPresenter = resultPresenter;
 		this.fileName = `${CONFIG.export.core.defaultBaseName}.mp4`;
 	}
 
@@ -171,16 +172,7 @@ class Mp4Exporter {
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({ smartReduced: plan.reductions.length > 0, timelinePlan: plan });
 		const file = new File([blob], this.fileName, { type: 'video/mp4', lastModified: Date.now() });
-		this.frameComposer.clearPreviewBlobUrl();
-		const url = URL.createObjectURL(blob);
-		this.frameComposer.previewBlobUrl = url;
-		this.frameComposer._showExportPreviewModal(url, file, totalFrames, blob.size, plan.reductions, {
-			format: 'mp4',
-			width,
-			height,
-			duration: timestampMs / 1000,
-			timelinePlan: plan
-		});
+		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:mp4'], width, height, frameCount: totalFrames, duration: timestampMs / 1000, timelinePlan: plan });
 		return blob;
 	}
 }

@@ -68,6 +68,7 @@ class GlitterEditor {
 		// ============================================================================
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
+		this.exportInProgress = false;
 
 		// Render schema-driven panel sections (js/ui/panel-renderer.js +
 		// PANEL_SCHEMAS), then the shared transform panels into the hosts the
@@ -377,8 +378,10 @@ class GlitterEditor {
 		initPixelScaler();
 		initTooltips();
 		installClipboardHandlers(this);
-		this.exporter = new GifExporter();
-		this.mp4Exporter = new Mp4Exporter(this.exporter);
+		this.exportResultPresenter = new ExportResultPresenter();
+		this.exporter = new GifExporter(this.exportResultPresenter);
+		this.mp4Exporter = new Mp4Exporter(this.exporter, this.exportResultPresenter);
+		this.stillImageExporter = new StillImageExporter(this.exporter, this.exportResultPresenter);
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
 		await this.brushTipManager.init();
@@ -1419,20 +1422,15 @@ class GlitterEditor {
 
 		if (clearAllTool) clearAllTool.disabled = !hasImage || autoPreviewActive;
 		if (layersBarClearAll) layersBarClearAll.disabled = !hasImage || autoPreviewActive;
-		if (exportGif) exportGif.disabled = !hasAnySelection || autoPreviewActive;
+		if (exportGif) exportGif.disabled = !hasAnySelection || autoPreviewActive || this.exportInProgress;
 		if (saveProject) saveProject.disabled = !hasImage || autoPreviewActive;
 
 		if (transparencyToggle) transparencyToggle.disabled = !hasImage;
 		if (boundsToggle) boundsToggle.disabled = !hasImage;
 
 		// --- Toggle visibility of the controls container ---
-		if (previewControls) {
-			if (hasImage) {
-				previewControls.classList.add('visible');
-			} else {
-				previewControls.classList.remove('visible');
-			}
-		}
+		if (previewControls) previewControls.classList.add('visible');
+		this.updateExportActionUI?.();
 
 		if (selectTool) selectTool.disabled = !hasImage || autoPreviewActive;
 		if (textTool) textTool.disabled = !hasImage || autoPreviewActive;
@@ -2644,7 +2642,8 @@ class GlitterEditor {
 		}
 	}
 
-	async exportAnimatedGif() {
+	async exportCurrentTarget() {
+		if (this.exportInProgress) return;
 		// Filter visible layers (ephemeral Auto Glitter previews never export)
 		const candidateLayers = this.layers.filter(l => {
 			if (!l.visible || l.isPreview) return false;
@@ -2663,16 +2662,26 @@ class GlitterEditor {
 
 		// Validate export settings before proceeding
 		this.validateExportSettings();
-		const format = this.exportSettings.format;
-		const activeExporter = format === 'mp4' ? this.mp4Exporter : this.exporter;
-		activeExporter.setFileName(this.getProjectFileName(format));
+		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
+		const exportSettings = structuredClone(this.exportSettings);
+		if (!target.supportsTransparency) exportSettings.transparency = false;
+		const activeExporter = target.isStill ? this.stillImageExporter : (target.isVideo ? this.mp4Exporter : this.exporter);
+		activeExporter.setFileName(this.getProjectFileName(target.extension));
 
-		const exportBtn = document.getElementById('exportGif');
-		exportBtn.disabled = true;
+		this.exportInProgress = true;
+		this.updateExportActionUI();
 		this.showExportProgress();
 
-		// USE this.exportSettings directly - no DOM reading!
-		dbg('Export settings:', this.exportSettings);
+		// Exporters receive this immutable snapshot; UI changes cannot alter a running job.
+		dbg('Export settings:', exportSettings);
+		let finished = false;
+		const finishExport = () => {
+			if (finished) return;
+			finished = true;
+			this.exportInProgress = false;
+			this.hideExportProgress();
+			this.updateExportActionUI();
+		};
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
@@ -2685,7 +2694,9 @@ class GlitterEditor {
 				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
 				hasBaseImage: this.baseBackgroundManager?.hasBaseImage() ?? true
 			},
-			exportSettings: this.exportSettings,
+			exportSettings,
+			target,
+			timestamp: target.isStill && exportSettings.stillFrame === 'current' ? this.animationTicker.getCurrentTime() : 0,
 			callbacks: {
 				onStatus: (msg) => this.updateStatus(msg),
 				onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
@@ -2693,18 +2704,17 @@ class GlitterEditor {
 					this.updateExportProgress(percent, text, currentFrame, totalFrames, progressInfo);
 				},
 				onComplete: () => {
-					exportBtn.disabled = false;
 					this.isSaved = true;
-					this.hideExportProgress();
+					finishExport();
 				},
 				onError: (error) => {
 					// Fired by gif.js encoder events, outside our try/catch below
-					exportBtn.disabled = false;
-					this.hideExportProgress();
+					finishExport();
 					if (error.message !== 'Export cancelled') {
 						this.showError('Export failed: ' + error.message);
 					}
 				},
+				isCancelled: () => this.exportCancelled,
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => this.maskCompositor.getMaskData(layer),
 				renderTextMask: (layer) => this.textGlitterManager.renderTextMask(layer),
@@ -2717,9 +2727,8 @@ class GlitterEditor {
 			try {
 				await activeExporter.process(exportParams);
 			} catch (error) {
-				console.error('Export error:', error);
-				exportBtn.disabled = false;
-				this.hideExportProgress();
+				dbg('Export error:', error);
+				finishExport();
 				if (error.message !== 'Export cancelled') {
 					this.showError('Export failed: ' + error.message);
 				}

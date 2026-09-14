@@ -911,7 +911,12 @@ const CONFIG = deepFreeze({
 			}
 		},
 		defaults: {
-			format: 'gif',
+			outputMode: 'animation',
+			stillFormat: 'png',
+			animationFormat: 'gif',
+			stillFrame: 'first',
+			jpegQuality: 90,
+			jpegGenerations: 1,
 			baseImage: true,
 			glitter: true,
 			stickers: true,

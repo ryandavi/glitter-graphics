@@ -26,7 +26,7 @@ function reportGifExportProgress(callbacks, phaseKey, ratio = 0, detail = '', ph
 }
 
 class GifExporter {
-	constructor() {
+	constructor(resultPresenter = typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null) {
 		const exportConfig = CONFIG.export || {};
 		this.config = {
 			workers: exportConfig.core?.workers ?? 4,
@@ -54,6 +54,7 @@ class GifExporter {
 		this.baseDitherPaletteCache = new Map();
 		this.filterGrainTileCache = new Map();
 		this.previewBlobUrl = null;
+		this.resultPresenter = resultPresenter;
 	}
 
 	_hasTransparency(canvasData) {
@@ -1597,6 +1598,47 @@ class GifExporter {
 		gif.render();
 	}
 
+	async composeFrameAt(params) {
+		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, timestamp = 0 } = params;
+		this.filterGrainTileCache.clear();
+		callbacks.onProgress(0, 'Loading sources…', 0, visibleLayers.length, { phase: 'Preparing' });
+		await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
+		let watermark = null;
+		if (exportSettings.watermarkEnabled) watermark = await this._loadWatermark(callbacks, exportSettings.watermark);
+		const maskDataMap = new Map();
+		const maskCanvases = new Map();
+		const textMaskCanvases = new Map();
+		const shapeMaskCanvases = new Map();
+		for (const layer of visibleLayers) {
+			await this._buildLayerExportPlan(layer).prepareMasks({ maskDataMap, maskCanvases, textMaskCanvases, shapeMaskCanvases, canvasData, callbacks });
+		}
+		this._indexPixelatedGlitters(glitterGifs);
+		const flattenedFrameMap = this._buildFlattenedFrameMap(visibleLayers, glitterGifs);
+		if (watermark?.isAnimated) await this._deoptimizeWatermarkFrames(watermark, callbacks);
+		const baseLayer = visibleLayers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseMode = baseLayer?.background?.mode || 'image';
+		const baseHasImageSource = baseMode !== 'image' || canvasData.hasBaseImage !== false;
+		const baseVisible = baseLayer && baseLayer.visible !== false && exportSettings.baseImage && baseMode !== 'none' && baseHasImageSource;
+		const baseTransparent = !baseVisible || (baseLayer?.background?.opacity ?? 100) < 100 || (baseMode === 'image' && this._hasTransparency(canvasData));
+		const transparencyFilled = this._isTransparencyFilled(visibleLayers, maskDataMap, canvasData);
+		const needsTransparency = exportSettings.transparency && (!baseVisible || (baseTransparent && !transparencyFilled));
+		const safeKey = needsTransparency ? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark, flattenedFrameMap) : null;
+		const timelines = [...(flattenedFrameMap.sourceTimelines || [])];
+		this._appendProceduralSources(timelines, visibleLayers, { includeBaseImage: exportSettings.baseImage });
+		if (watermark?.isAnimated) timelines.push(new AuthoredAnimationSource({ key: '__watermark', frames: watermark.frames, frameDurations: watermark.frameDelays, fallbackDuration: watermark.frameDelay || exportSettings.frameDelay }));
+		const selection = new Map(timelines.map((timeline) => [timeline.key, timeline.sampleAt(timestamp)]));
+		this.helperCanvas.width = this.layerBlendCanvas.width = this.canvas.width = canvasData.width;
+		this.helperCanvas.height = this.layerBlendCanvas.height = this.canvas.height = canvasData.height;
+		callbacks.onProgress(45, 'Composing still frame…', 1, 1, { phase: 'Composing' });
+		const imageData = this._renderFrame(0, canvasData, visibleLayers, glitterGifs, maskCanvases, textMaskCanvases, shapeMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, selection, flattenedFrameMap, timestamp);
+		if (needsTransparency && safeKey) {
+			for (let i = 0; i < imageData.data.length; i += 4) {
+				if (imageData.data[i] === safeKey.r && imageData.data[i + 1] === safeKey.g && imageData.data[i + 2] === safeKey.b) imageData.data[i + 3] = 0;
+			}
+		}
+		return { imageData, width: canvasData.width, height: canvasData.height, timestamp, needsTransparency };
+	}
+
 	// --- HELPER METHODS ---
 
 	_findSafeTransparencyKey(layers, library, canvasData, watermark = null, flattenedFrameMap = null) {
@@ -2497,17 +2539,7 @@ class GifExporter {
 			lastModified: Date.now()
 		});
 
-		this.clearPreviewBlobUrl();
-		const url = URL.createObjectURL(blob);
-		this.previewBlobUrl = url;
-
-		this._showExportPreviewModal(url, file, plan.frames.length, blob.size, plan.reductions, {
-			format: 'gif',
-			width: this.canvas.width,
-			height: this.canvas.height,
-			duration: plan.totalDuration / 1000,
-			timelinePlan: plan
-		});
+		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:gif'], width: this.canvas.width, height: this.canvas.height, frameCount: plan.frames.length, duration: plan.totalDuration / 1000, timelinePlan: plan });
 	}
 
 

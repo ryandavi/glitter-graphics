@@ -1,7 +1,12 @@
 'use strict';
 
 const EXPORT_SETTINGS_SCHEMA = Object.freeze({
-	format: { storageKey: 'exportFormat', default: () => CONFIG.export.defaults.format, group: 'output', validate: (value) => ['gif', 'mp4'].includes(value) ? value : CONFIG.export.defaults.format },
+	outputMode: { storageKey: 'exportOutputMode', default: () => CONFIG.export.defaults.outputMode, group: 'output', validate: (value) => ['still', 'animation'].includes(value) ? value : CONFIG.export.defaults.outputMode },
+	stillFormat: { storageKey: 'exportStillFormat', default: () => CONFIG.export.defaults.stillFormat, group: 'output', validate: (value) => ['png', 'jpeg', 'gif'].includes(value) ? value : CONFIG.export.defaults.stillFormat },
+	animationFormat: { storageKey: 'exportAnimationFormat', default: () => CONFIG.export.defaults.animationFormat, group: 'output', validate: (value) => ['gif', 'mp4'].includes(value) ? value : CONFIG.export.defaults.animationFormat },
+	stillFrame: { storageKey: 'exportStillFrame', element: 'exportStillFrame', default: () => CONFIG.export.defaults.stillFrame, group: 'output', validate: (value) => ['first', 'current'].includes(value) ? value : CONFIG.export.defaults.stillFrame },
+	jpegQuality: { storageKey: 'exportJpegQuality', element: 'exportJpegQuality', kind: 'integer', default: () => CONFIG.export.defaults.jpegQuality, group: 'quality', validate: (value) => clampNumber(value, 1, 100, CONFIG.export.defaults.jpegQuality, true) },
+	jpegGenerations: { storageKey: 'exportJpegGenerations', element: 'exportJpegGenerations', kind: 'integer', default: () => CONFIG.export.defaults.jpegGenerations, group: 'quality', validate: (value) => clampNumber(value, 1, 10, CONFIG.export.defaults.jpegGenerations, true) },
 	mp4LengthMode: { storageKey: 'exportMp4LengthMode', element: 'exportMp4LengthMode', default: () => CONFIG.export.mp4.lengthMode, group: 'playback', validate: (value) => ['duration', 'loops'].includes(value) ? value : CONFIG.export.mp4.lengthMode },
 	mp4TargetDuration: { storageKey: 'exportMp4TargetDuration', element: 'exportMp4TargetDuration', kind: 'number', default: () => CONFIG.export.mp4.targetDurationSeconds, group: 'playback', validate: (value) => clampNumber(value, CONFIG.export.mp4.minDurationSeconds, CONFIG.export.mp4.maxDurationSeconds, CONFIG.export.mp4.targetDurationSeconds) },
 	mp4LoopCount: { storageKey: 'exportMp4LoopCount', element: 'exportMp4LoopCount', kind: 'integer', default: () => CONFIG.export.mp4.loopCount, group: 'playback', validate: (value) => clampNumber(value, CONFIG.export.mp4.minLoopCount, CONFIG.export.mp4.maxLoopCount, CONFIG.export.mp4.loopCount, true) },
@@ -48,6 +53,12 @@ class SettingsStore {
 
 	load(source = {}) {
 		const migratedSource = { ...source };
+		if (!Object.prototype.hasOwnProperty.call(migratedSource, 'exportOutputMode')) {
+			migratedSource.exportOutputMode = 'animation';
+			migratedSource.exportAnimationFormat = ['gif', 'mp4'].includes(migratedSource.exportFormat)
+				? migratedSource.exportFormat
+				: CONFIG.export.defaults.animationFormat;
+		}
 		if (!Object.prototype.hasOwnProperty.call(migratedSource, 'exportFidelity')) {
 			const legacyPreset = migratedSource.exportOptimizationPreset ?? migratedSource.optimizationPreset;
 			const legacyStops = { highFidelity: 1, balanced: 2, smallFile: 3 };
