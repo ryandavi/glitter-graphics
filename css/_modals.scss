@@ -1856,6 +1856,76 @@ body.modal-open {
 		}
 	}
 
+	// Document tables share the inset-card vocabulary and scroll within their
+	// own frame so a wide dataset never widens the reading modal.
+	.table-wrapper {
+		max-width: 100%;
+		margin: var(--spacing-lg) 0;
+		overflow-x: auto;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-card);
+		-webkit-overflow-scrolling: touch;
+	}
+
+	table {
+		width: 100%;
+		min-width: 32rem;
+		border-collapse: separate;
+		border-spacing: 0;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-base);
+		line-height: var(--line-height-normal);
+
+		th,
+		td {
+			padding: var(--spacing-md) var(--spacing-lg);
+			border-bottom: 1px solid var(--color-border);
+			text-align: left;
+			vertical-align: top;
+		}
+
+		th {
+			@include bar-base;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+			letter-spacing: 0.03em;
+		}
+
+		th + th,
+		td + td { border-left: 1px solid var(--color-border); }
+
+		tbody {
+			>tr:nth-child(even) { background: var(--color-bg-tertiary); }
+			>tr:hover { background: var(--color-bg-accent-tint); }
+			>tr:last-child>td { border-bottom: 0; }
+		}
+	}
+
+	.dimensions-table {
+		min-width: 48rem;
+		table-layout: fixed;
+
+		th:first-child { width: 24%; }
+		th:nth-child(2) { width: 25%; }
+
+		td:first-child {
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-medium);
+		}
+
+		th:nth-child(2),
+		td:nth-child(2) {
+			font-variant-numeric: tabular-nums;
+		}
+
+		td:nth-child(2) {
+			color: var(--color-text-primary);
+			font-family: var(--font-mono);
+			font-size: var(--font-size-sm);
+		}
+	}
+
 
 
 

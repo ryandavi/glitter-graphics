@@ -10179,6 +10179,92 @@ body.modal-open {
 #historyModal .context:hover {
   color: var(--color-text-primary);
 }
+#aboutModal .table-wrapper,
+#historyModal .table-wrapper {
+  max-width: 100%;
+  margin: var(--spacing-lg) 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+  -webkit-overflow-scrolling: touch;
+}
+#aboutModal table,
+#historyModal table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+}
+#aboutModal table th,
+#aboutModal table td,
+#historyModal table th,
+#historyModal table td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+#aboutModal table th,
+#historyModal table th {
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
+  text-shadow: var(--bar-text-shadow);
+  color: var(--bar-title-color);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.03em;
+}
+#aboutModal table th + th,
+#aboutModal table td + td,
+#historyModal table th + th,
+#historyModal table td + td {
+  border-left: 1px solid var(--color-border);
+}
+#aboutModal table tbody > tr:nth-child(even),
+#historyModal table tbody > tr:nth-child(even) {
+  background: var(--color-bg-tertiary);
+}
+#aboutModal table tbody > tr:hover,
+#historyModal table tbody > tr:hover {
+  background: var(--color-bg-accent-tint);
+}
+#aboutModal table tbody > tr:last-child > td,
+#historyModal table tbody > tr:last-child > td {
+  border-bottom: 0;
+}
+#aboutModal .dimensions-table,
+#historyModal .dimensions-table {
+  min-width: 48rem;
+  table-layout: fixed;
+}
+#aboutModal .dimensions-table th:first-child,
+#historyModal .dimensions-table th:first-child {
+  width: 24%;
+}
+#aboutModal .dimensions-table th:nth-child(2),
+#historyModal .dimensions-table th:nth-child(2) {
+  width: 25%;
+}
+#aboutModal .dimensions-table td:first-child,
+#historyModal .dimensions-table td:first-child {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+#aboutModal .dimensions-table th:nth-child(2),
+#aboutModal .dimensions-table td:nth-child(2),
+#historyModal .dimensions-table th:nth-child(2),
+#historyModal .dimensions-table td:nth-child(2) {
+  font-variant-numeric: tabular-nums;
+}
+#aboutModal .dimensions-table td:nth-child(2),
+#historyModal .dimensions-table td:nth-child(2) {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
 #aboutModal .figure-wrapper + h3,
 #aboutModal p + h2,
 #aboutModal ol + h2,
