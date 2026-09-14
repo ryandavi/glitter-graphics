@@ -2724,6 +2724,7 @@ class GlitterEditor {
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => this.maskCompositor.getMaskData(layer),
 				renderTextMask: (layer) => this.textGlitterManager.renderTextMask(layer),
+			renderTextBackgroundMask: (layer) => this.textGlitterManager.renderTextBackgroundMask(layer),
 				renderShapeMask: (layer) => this.shapeGlitterManager.buildMaskEntry(layer),
 				ensureTextFont: (fontId) => this.textGlitterManager.ensureFontLoaded(fontId)
 			}

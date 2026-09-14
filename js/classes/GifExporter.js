@@ -317,6 +317,16 @@ class GifExporter {
 			compositeCtx.drawImage(fillCanvas, 0, 0, width, height);
 		};
 
+		// Text Background renders furthest back (behind shadow/border/fill),
+		// matching preview's getSpanDescriptors ordering exactly.
+		if (layer.textData.textBackground?.enabled && textMasks.background) {
+			draw(
+				textMasks.background,
+				this._getTextEffectSource(layer, 'backgroundFill'),
+				this._getTextFrameKey(layer, 'backgroundFill')
+			);
+		}
+
 		const shadow = layer.textData.shadow;
 		if (shadow && textMasks.shadow) {
 			draw(
@@ -446,6 +456,10 @@ class GifExporter {
 				opacity: layer.textData?.fill?.opacity ?? layer.settings.opacity ?? 100,
 				colorAdjust: layer.settings.colorAdjust
 			});
+		}
+
+		if (effectName === 'backgroundFill') {
+			return resolveEffectPaintSource(layer.textData?.textBackground?.fill);
 		}
 
 		return resolveEffectPaintSource(layer.textData?.[effectName]);
@@ -615,7 +629,10 @@ class GifExporter {
 				return {
 					prepareMasks: async ({ textMaskCanvases, callbacks }) => {
 						const fillMaskCanvas = await callbacks.renderTextMask(layer);
-						textMaskCanvases.set(layer.id, this._buildTextMaskEntry(layer, fillMaskCanvas));
+						const backgroundMaskCanvas = layer.textData?.textBackground?.enabled
+							? await callbacks.renderTextBackgroundMask(layer)
+							: null;
+						textMaskCanvases.set(layer.id, this._buildTextMaskEntry(layer, fillMaskCanvas, backgroundMaskCanvas));
 					},
 					prepareStaticResources: async ({ callbacks }) => {
 						try { await callbacks.ensureTextFont(layer.textData.fontId); }
@@ -741,6 +758,14 @@ class GifExporter {
 				key: this._getTextFrameKey(layer, 'shadow'),
 				slot: 'shadow',
 				glitterId: layer.textData.shadow.glitterId
+			});
+		}
+
+		if (layer.textData?.textBackground?.enabled && layer.textData.textBackground.fill?.mode === 'glitter' && layer.textData.textBackground.fill.glitterId) {
+			sources.push({
+				key: this._getTextFrameKey(layer, 'backgroundFill'),
+				slot: 'backgroundFill',
+				glitterId: layer.textData.textBackground.fill.glitterId
 			});
 		}
 
@@ -908,11 +933,12 @@ class GifExporter {
 		return frameImageData;
 	}
 
-	_buildTextMaskEntry(layer, fillMaskCanvas) {
+	_buildTextMaskEntry(layer, fillMaskCanvas, backgroundMaskCanvas = null) {
 		const entry = {
 			fill: fillMaskCanvas,
 			border: null,
-			shadow: null
+			shadow: null,
+			background: backgroundMaskCanvas
 		};
 
 		if (layer.textData?.shadow) {

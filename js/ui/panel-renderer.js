@@ -85,7 +85,8 @@ function createPanelGlyph(name) {
 const PANEL_ID_OVERRIDES = Object.freeze({
 	textFill: Object.freeze({ sourceNone: 'textFillUseNone', sourceGlitter: 'textFillUseGlitter', sourceSolid: 'textFillUseColor' }),
 	textBorder: Object.freeze({ sourceGlitter: 'textBorderUseGlitter', sourceSolid: 'textBorderUseColor' }),
-	textShadow: Object.freeze({ sourceGlitter: 'textShadowUseGlitter', sourceSolid: 'textShadowUseColor' })
+	textShadow: Object.freeze({ sourceGlitter: 'textShadowUseGlitter', sourceSolid: 'textShadowUseColor' }),
+	textBackground: Object.freeze({ sourceGlitter: 'textBackgroundUseGlitter', sourceSolid: 'textBackgroundUseColor' })
 });
 
 const TRANSFORM_ID_GRAMMAR = Object.freeze({

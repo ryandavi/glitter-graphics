@@ -129,6 +129,44 @@ class TextGlitterManager {
 			shadowScaleValue: document.getElementById('textShadowScaleValue'),
 			shadowOpacity: document.getElementById('textShadowOpacity'),
 			shadowOpacityValue: document.getElementById('textShadowOpacityValue'),
+			// Text Background (idPrefix 'textBackground' in PANEL_SCHEMAS; ui keys
+			// use 'backgroundFill'/'bg' so the generic border/shadow-style binders
+			// below can address this slot by effectName 'backgroundFill').
+			bgEnabled: document.getElementById('textBackgroundEnabled'),
+			bgControls: document.getElementById('textBackgroundControls'),
+			backgroundFillColor: document.getElementById('textBackgroundColor'),
+			backgroundFillColorRow: document.getElementById('textBackgroundColorRow'),
+			backgroundFillGlitterChip: document.getElementById('textBackgroundGlitterChip'),
+			backgroundFillGlitterChange: document.getElementById('textBackgroundGlitterChange'),
+			backgroundFillGlitterLabel: document.getElementById('textBackgroundGlitterLabel'),
+			backgroundFillGlitterBadges: document.getElementById('textBackgroundGlitterBadges'),
+			backgroundFillGlitterInfo: document.getElementById('textBackgroundGlitterInfo'),
+			backgroundFillGlitterSize: document.getElementById('textBackgroundGlitterSize'),
+			backgroundFillGlitterFrames: document.getElementById('textBackgroundGlitterFrames'),
+			backgroundFillUseColor: document.getElementById('textBackgroundUseColor'),
+			backgroundFillUseGlitter: document.getElementById('textBackgroundUseGlitter'),
+			backgroundFillScaleRow: document.getElementById('textBackgroundScaleRow'),
+			backgroundFillScale: document.getElementById('textBackgroundScale'),
+			backgroundFillScaleValue: document.getElementById('textBackgroundScaleValue'),
+			backgroundFillOpacity: document.getElementById('textBackgroundOpacity'),
+			backgroundFillOpacityValue: document.getElementById('textBackgroundOpacityValue'),
+			bgPaddingH: document.getElementById('textBackgroundPaddingH'),
+			bgPaddingHValue: document.getElementById('textBackgroundPaddingHValue'),
+			bgPaddingV: document.getElementById('textBackgroundPaddingV'),
+			bgPaddingVValue: document.getElementById('textBackgroundPaddingVValue'),
+			bgRadius: document.getElementById('textBackgroundRadius'),
+			bgRadiusValue: document.getElementById('textBackgroundRadiusValue'),
+			bgMergeDistance: document.getElementById('textBackgroundMergeDistance'),
+			bgMergeDistanceValue: document.getElementById('textBackgroundMergeDistanceValue'),
+			bgSpacing: document.getElementById('textBackgroundSpacing'),
+			bgSpacingValue: document.getElementById('textBackgroundSpacingValue'),
+			bgModeLines: document.getElementById('textBackgroundModeLines'),
+			bgModeBounds: document.getElementById('textBackgroundModeBounds'),
+			bgModeBox: document.getElementById('textBackgroundModeBox'),
+			bgConnSeparate: document.getElementById('textBackgroundConnectionSeparate'),
+			bgConnMerge: document.getElementById('textBackgroundConnectionMerge'),
+			bgConnConnected: document.getElementById('textBackgroundConnectionConnected'),
+			bgPreset: document.getElementById('textBackgroundPreset'),
 			resetEffects: document.getElementById('resetTextEffects'),
 			// D-1c gallery picker strip
 			gallerySection: document.getElementById('designGallerySection'),
@@ -148,14 +186,20 @@ class TextGlitterManager {
 				this.ui[`${slot}${axis}Value`] = document.getElementById(`text${slotCap}${axis}Value`);
 			});
 		});
+		// backgroundFill's DOM ids come from idPrefix 'textBackground' (not
+		// 'textBackgroundFill'), so it can't join the loop above.
+		['Hue', 'Saturation', 'Brightness'].forEach((axis) => {
+			this.ui[`backgroundFill${axis}`] = document.getElementById(`textBackground${axis}`);
+			this.ui[`backgroundFill${axis}Value`] = document.getElementById(`textBackground${axis}Value`);
+		});
 
 		const borderConfig = CONFIG.tools.text.border;
 		if (this.ui.borderWidth) {
 			this.ui.borderWidth.min = String(borderConfig.minWidthPx);
 			this.ui.borderWidth.max = String(borderConfig.maxWidthPx);
 		}
-		['textFill', 'textBorder', 'textShadow'].forEach((prefix) => {
-			const effectName = prefix === 'textFill' ? 'fill' : prefix === 'textBorder' ? 'border' : 'shadow';
+		['textFill', 'textBorder', 'textShadow', 'textBackground'].forEach((prefix) => {
+			const effectName = prefix === 'textFill' ? 'fill' : prefix === 'textBorder' ? 'border' : prefix === 'textShadow' ? 'shadow' : 'backgroundFill';
 			installEffectGradientEditor({
 				prefix,
 				getData: () => {
@@ -363,6 +407,7 @@ class TextGlitterManager {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
 					layer.textData.border = null;
 					layer.textData.shadow = null;
+					layer.textData.textBackground = this.getDefaultTextBackground();
 					delete layer.textData.effectDrafts;
 					delete layer.animation;
 				}, { saveHistory: true, refreshPreview: false });
@@ -425,10 +470,12 @@ class TextGlitterManager {
 		this._bindEffectColorAdjust('fill');
 		this._bindEffectColorAdjust('border');
 		this._bindEffectColorAdjust('shadow');
+		this._bindEffectColorAdjust('backgroundFill');
 		[
 			['textFill', 'fill'],
 			['textBorder', 'border'],
-			['textShadow', 'shadow']
+			['textShadow', 'shadow'],
+			['textBackground', 'backgroundFill']
 		].forEach(([prefix, slot]) => {
 			bindSlotTextureCoordinateControls({
 				prefix,
@@ -437,6 +484,118 @@ class TextGlitterManager {
 				render: (layer) => this.renderLayer(layer),
 				save: () => this.editor.saveState('Edit text')
 			});
+		});
+
+		this.setupTextBackgroundEventListeners();
+	}
+
+	// Text Background: toggle has bespoke semantics (a persistent
+	// `enabled` boolean, unlike border/shadow's null-when-disabled — its
+	// geometry properties must survive being switched off, per the plan's
+	// "Do not destroy the other Text Background property values when
+	// switching modes"), so it does not use bindEffectToggle. Everything else
+	// (fill picker/color/scale/opacity/color-adjust/texture-position) reuses
+	// the generic border/shadow binders above via effectName 'backgroundFill'.
+	setupTextBackgroundEventListeners() {
+		this.ui.bgEnabled?.addEventListener('change', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureTextBackground(layer).enabled = Boolean(this.ui.bgEnabled.checked);
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+
+		this.bindEffectGlitterPicker([this.ui.backgroundFillGlitterChip, this.ui.backgroundFillGlitterChange], 'backgroundFill');
+		this.bindEffectUseColor(this.ui.backgroundFillUseColor, 'backgroundFill');
+		this.bindEffectUseGlitter(this.ui.backgroundFillUseGlitter, 'backgroundFill');
+		this.bindEffectColorInput(this.ui.backgroundFillColor, 'backgroundFill');
+
+		this.attachSlider(this.ui.backgroundFillScale, this.ui.backgroundFillScaleValue, '%', (value, layer) => {
+			this.ensureEffectData(layer, 'backgroundFill').scale = value;
+		}, this.getDefaultBackgroundFill().scale, false);
+
+		this.attachSlider(this.ui.backgroundFillOpacity, this.ui.backgroundFillOpacityValue, '%', (value, layer) => {
+			this.ensureEffectData(layer, 'backgroundFill').opacity = value;
+		}, this.getDefaultBackgroundFill().opacity, false);
+
+		const defaults = this.getDefaultTextBackground();
+		this.attachSlider(this.ui.bgPaddingH, this.ui.bgPaddingHValue, 'px', (value, layer) => {
+			this.ensureTextBackground(layer).horizontalPadding = value;
+		}, defaults.horizontalPadding);
+		this.attachSlider(this.ui.bgPaddingV, this.ui.bgPaddingVValue, 'px', (value, layer) => {
+			this.ensureTextBackground(layer).verticalPadding = value;
+		}, defaults.verticalPadding);
+		this.attachSlider(this.ui.bgRadius, this.ui.bgRadiusValue, 'px', (value, layer) => {
+			this.ensureTextBackground(layer).cornerRadius = value;
+		}, defaults.cornerRadius);
+		this.attachSlider(this.ui.bgMergeDistance, this.ui.bgMergeDistanceValue, 'px', (value, layer) => {
+			this.ensureTextBackground(layer).mergeDistance = value;
+		}, defaults.mergeDistance);
+		this.attachSlider(this.ui.bgSpacing, this.ui.bgSpacingValue, '%', (value, layer) => {
+			this.ensureTextBackground(layer).lineSpacingSensitivity = value;
+		}, defaults.lineSpacingSensitivity);
+
+		this.bindTextBackgroundMode(this.ui.bgModeLines, 'lines');
+		this.bindTextBackgroundMode(this.ui.bgModeBounds, 'text-bounds');
+		this.bindTextBackgroundMode(this.ui.bgModeBox, 'text-box');
+		this.bindTextBackgroundConnection(this.ui.bgConnSeparate, 'separate');
+		this.bindTextBackgroundConnection(this.ui.bgConnMerge, 'merge-adjacent');
+		this.bindTextBackgroundConnection(this.ui.bgConnConnected, 'connected');
+
+		this.ui.bgPreset?.addEventListener('change', async () => {
+			const layer = this.getActiveTextLayer();
+			const presetKey = this.ui.bgPreset.value;
+			this.ui.bgPreset.value = '';
+			if (!layer || !presetKey) return;
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.applyTextBackgroundPreset(layer, presetKey);
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+	}
+
+	ensureTextBackground(layer) {
+		this.normalizeLayer(layer);
+		return layer.textData.textBackground;
+	}
+
+	bindTextBackgroundMode(button, mode) {
+		if (!button) return;
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			if (this.ensureTextBackground(layer).mode === mode) return;
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureTextBackground(layer).mode = mode;
+					this.normalizeTextBackground(layer);
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+	}
+
+	bindTextBackgroundConnection(button, lineConnection) {
+		if (!button) return;
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			if (this.ensureTextBackground(layer).lineConnection === lineConnection) return;
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureTextBackground(layer).lineConnection = lineConnection;
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
 		});
 	}
 
@@ -647,6 +806,28 @@ class TextGlitterManager {
 		return buildDefaultFill();
 	}
 
+	// textBackground.fill is its own full paint slot (scale/colorAdjust
+	// included, like border/shadow) — the canonical Fill representation, not a
+	// Text Background-specific paint model (DYNAMIC-TEXT-BACKGROUND-
+	// IMPLEMENTATION-PLAN.md "Fill integration").
+	getDefaultBackgroundFill() {
+		return buildDefaultFill({ includeTexture: true });
+	}
+
+	getDefaultTextBackground() {
+		return {
+			enabled: false,
+			mode: 'lines',
+			lineConnection: 'separate',
+			horizontalPadding: CONFIG.ui.sliders.textBackgroundPaddingH.value,
+			verticalPadding: CONFIG.ui.sliders.textBackgroundPaddingV.value,
+			cornerRadius: CONFIG.ui.sliders.textBackgroundRadius.value,
+			mergeDistance: CONFIG.ui.sliders.textBackgroundMergeDistance.value,
+			lineSpacingSensitivity: CONFIG.ui.sliders.textBackgroundSpacing.value,
+			fill: this.getDefaultBackgroundFill()
+		};
+	}
+
 	getMinBoxSize() {
 		return Math.max(1, Math.round(CONFIG.tools.text.minBoxSize || 40));
 	}
@@ -682,6 +863,7 @@ class TextGlitterManager {
 		if (!layer.textData.verticalAlign) {
 			layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign || 'top';
 		}
+		this.normalizeTextBackground(layer);
 		if (!layer.textData.lineHeight) {
 			layer.textData.lineHeight = CONFIG.tools.text.lineHeight;
 		}
@@ -694,6 +876,50 @@ class TextGlitterManager {
 		if (!['none', 'upper', 'lower', 'title'].includes(layer.textData.textCase)) {
 			layer.textData.textCase = CONFIG.tools.text.defaultTextCase;
 		}
+	}
+
+	// Phase 2 (data model): defaults, clamping, and the point-vs-box mode
+	// guard. `enabled`/`mode`/`lineConnection`/padding/radius/merge fields and
+	// `fill` (the canonical Fill shape) are the ONLY persisted state — presets
+	// just write into these same fields (see applyTextBackgroundPreset).
+	normalizeTextBackground(layer) {
+		const defaults = this.getDefaultTextBackground();
+		if (!layer.textData.textBackground || typeof layer.textData.textBackground !== 'object') {
+			layer.textData.textBackground = defaults;
+			return;
+		}
+		const tb = layer.textData.textBackground;
+		tb.enabled = Boolean(tb.enabled);
+		if (!TEXT_BACKGROUND_MODES.includes(tb.mode)) tb.mode = defaults.mode;
+		if (!TEXT_BACKGROUND_CONNECTIONS.includes(tb.lineConnection)) tb.lineConnection = defaults.lineConnection;
+		const clamp = (value, fallback, min, max) => {
+			const num = Number(value);
+			return Number.isFinite(num) ? Math.max(min, Math.min(max, num)) : fallback;
+		};
+		tb.horizontalPadding = clamp(tb.horizontalPadding, defaults.horizontalPadding, 0, 400);
+		tb.verticalPadding = clamp(tb.verticalPadding, defaults.verticalPadding, 0, 400);
+		tb.cornerRadius = clamp(tb.cornerRadius, defaults.cornerRadius, 0, 400);
+		tb.mergeDistance = clamp(tb.mergeDistance, defaults.mergeDistance, 0, 400);
+		tb.lineSpacingSensitivity = clamp(tb.lineSpacingSensitivity, defaults.lineSpacingSensitivity, 0, 100);
+		tb.fill = mergeSlotEffectDefaults(tb.fill, defaults.fill);
+		normalizeSlotTextureCoordinates(tb.fill);
+		// Point text has no independent container — Text Box can only ever be
+		// reached from box text, and a box→point switch must not leave it stuck.
+		if (tb.mode === 'text-box' && (layer.textData.boxMode || 'auto') !== 'fixed') {
+			tb.mode = 'text-bounds';
+		}
+	}
+
+	// Writes a preset's values into the SAME persisted fields a manual edit
+	// would touch (plan: "Selecting a preset should write normal values...
+	// Afterward, editing any control simply changes those properties" — no
+	// preset identifier is stored). `fill` and `enabled` are left untouched.
+	applyTextBackgroundPreset(layer, presetKey) {
+		const preset = TEXT_BACKGROUND_PRESETS[presetKey];
+		if (!preset) return;
+		this.normalizeLayer(layer);
+		Object.assign(layer.textData.textBackground, preset);
+		this.normalizeTextBackground(layer);
 	}
 
 	ensureFixedBox(layer) {
@@ -742,9 +968,19 @@ class TextGlitterManager {
 	}
 
 	// mergeBorderDefaults is false: normalizeLayer already backfills border keys.
+	// 'backgroundFill' is Text Background's nested `textBackground.fill` slot —
+	// routed to a different root so it reuses every generic paint-slot binder
+	// (toggle excepted: the whole effect's enable/disable is
+	// `textBackground.enabled`, not fill nullability) without a parallel
+	// implementation.
 	ensureEffectData(layer, effectName) {
 		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
+		if (effectName === 'backgroundFill') {
+			return ensureSlotEffectData(layer.textData.textBackground, 'fill', {
+				builders: { fill: () => this.getDefaultBackgroundFill() }
+			});
+		}
 		return ensureSlotEffectData(layer.textData, effectName, {
 			builders: {
 				fill: () => this.getDefaultFill(),
@@ -757,6 +993,9 @@ class TextGlitterManager {
 
 	getEffectData(layer, effectName) {
 		this.normalizeLayer(layer);
+		if (effectName === 'backgroundFill') {
+			return getSlotEffectData(layer?.textData?.textBackground, 'fill');
+		}
 		return getSlotEffectData(layer?.textData, effectName);
 	}
 
@@ -800,6 +1039,9 @@ class TextGlitterManager {
 		}
 		if (target === 'shadow') {
 			return layer.textData.shadow?.glitterId ?? null;
+		}
+		if (target === 'backgroundFill') {
+			return layer.textData.textBackground?.fill?.glitterId ?? null;
 		}
 
 		return layer.selectedGlitterId ?? null;
@@ -1664,19 +1906,72 @@ class TextGlitterManager {
 			}
 		}
 
+		this.syncTextBackgroundUI(layer);
+
 		// Color adjust (WP4): fill aliases layer.settings; border/shadow read their
 		// own effect data (identity when the effect is absent).
 		this._loadEffectColorAdjust('fill', layer.settings?.colorAdjust);
 		this._loadEffectColorAdjust('border', border?.colorAdjust);
 		this._loadEffectColorAdjust('shadow', shadow?.colorAdjust);
+		this._loadEffectColorAdjust('backgroundFill', layer.textData.textBackground?.fill?.colorAdjust);
 		syncSlotTextureCoordinateControls('textFill', layer.textData.fill);
 		syncSlotTextureCoordinateControls('textBorder', border || borderDefaults);
 		syncSlotTextureCoordinateControls('textShadow', shadow || shadowDefaults);
+		syncSlotTextureCoordinateControls('textBackground', layer.textData.textBackground?.fill || this.getDefaultBackgroundFill());
 
 		this.updateFillSourceUI(layer);
 		this.updateEffectSourceUI(layer, 'border');
 		this.updateEffectSourceUI(layer, 'shadow');
+		this.updateEffectSourceUI(layer, 'backgroundFill');
 		this.updateEffectTargetButtons(layer);
+	}
+
+	syncTextBackgroundUI(layer) {
+		const tb = this.ensureTextBackground(layer);
+		syncPanelEffectToggle(this.ui.bgEnabled, Boolean(tb.enabled));
+
+		const setSlider = (input, display, value, unit) => {
+			if (!input) return;
+			input.value = value;
+			if (display) display.innerHTML = formatUnit(value, unit);
+		};
+		setSlider(this.ui.bgPaddingH, this.ui.bgPaddingHValue, tb.horizontalPadding, 'px');
+		setSlider(this.ui.bgPaddingV, this.ui.bgPaddingVValue, tb.verticalPadding, 'px');
+		setSlider(this.ui.bgRadius, this.ui.bgRadiusValue, tb.cornerRadius, 'px');
+		setSlider(this.ui.bgMergeDistance, this.ui.bgMergeDistanceValue, tb.mergeDistance, 'px');
+		setSlider(this.ui.bgSpacing, this.ui.bgSpacingValue, tb.lineSpacingSensitivity, '%');
+
+		const fill = tb.fill;
+		if (this.ui.backgroundFillColor) this.ui.backgroundFillColor.value = fill.color;
+		if (this.ui.backgroundFillScale) {
+			this.ui.backgroundFillScale.value = fill.scale ?? 100;
+			if (this.ui.backgroundFillScaleValue) this.ui.backgroundFillScaleValue.innerHTML = formatUnit(fill.scale ?? 100, '%');
+		}
+		if (this.ui.backgroundFillOpacity) {
+			this.ui.backgroundFillOpacity.value = fill.opacity ?? 100;
+			if (this.ui.backgroundFillOpacityValue) this.ui.backgroundFillOpacityValue.innerHTML = formatUnit(fill.opacity ?? 100, '%');
+		}
+
+		const isBoxText = (layer.textData.boxMode || 'auto') === 'fixed';
+		this.ui.bgModeBox?.toggleAttribute('disabled', !isBoxText);
+		if (this.ui.bgModeBox) this.ui.bgModeBox.hidden = !isBoxText;
+		[
+			[this.ui.bgModeLines, 'lines'],
+			[this.ui.bgModeBounds, 'text-bounds'],
+			[this.ui.bgModeBox, 'text-box']
+		].forEach(([button, mode]) => button?.classList.toggle('active', tb.mode === mode));
+		[
+			[this.ui.bgConnSeparate, 'separate'],
+			[this.ui.bgConnMerge, 'merge-adjacent'],
+			[this.ui.bgConnConnected, 'connected']
+		].forEach(([button, connection]) => button?.classList.toggle('active', tb.lineConnection === connection));
+		// Line Connection only matters in Lines mode; Merge Distance/Spacing
+		// Sensitivity only matter once lines can actually merge (plan: "expose
+		// only controls relevant to the active mode").
+		const connectionRow = this.ui.bgConnSeparate?.closest('.property-set, .effect-stack-row');
+		if (connectionRow) connectionRow.hidden = tb.mode !== 'lines';
+		const mergeSet = this.ui.bgMergeDistance?.closest('.property-set');
+		if (mergeSet) mergeSet.hidden = tb.mode !== 'lines' || tb.lineConnection === 'separate';
 	}
 
 	// Fill's shape ({mode, color} + glitterId on layer.selectedGlitterId) differs
@@ -1788,6 +2083,8 @@ class TextGlitterManager {
 		this.ui.borderGlitterChange?.classList.toggle('target-active', activeTarget === 'border');
 		this.ui.shadowGlitterChip?.classList.toggle('target-active', activeTarget === 'shadow');
 		this.ui.shadowGlitterChange?.classList.toggle('target-active', activeTarget === 'shadow');
+		this.ui.backgroundFillGlitterChip?.classList.toggle('target-active', activeTarget === 'backgroundFill');
+		this.ui.backgroundFillGlitterChange?.classList.toggle('target-active', activeTarget === 'backgroundFill');
 		this.updatePickerStrip();
 	}
 
@@ -1827,7 +2124,9 @@ class TextGlitterManager {
 			? 'textBorderGlitterChip'
 			: slot === 'shadow'
 				? 'textShadowGlitterChip'
-				: 'textFillGlitterChip';
+				: slot === 'backgroundFill'
+					? 'textBackgroundGlitterChip'
+					: 'textFillGlitterChip';
 		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: chipId });
 	}
 
@@ -1867,12 +2166,25 @@ class TextGlitterManager {
 		});
 	}
 
+	// Shared by border/shadow/backgroundFill so getDefaultXxx() stays the one
+	// place each slot's fallback values live.
+	getEffectDefaults(effectName) {
+		if (effectName === 'shadow') return this.getDefaultShadow();
+		if (effectName === 'backgroundFill') return this.getDefaultBackgroundFill();
+		return this.getDefaultBorder();
+	}
+
+	getEffectTitle(effectName) {
+		if (effectName === 'shadow') return 'shadow';
+		if (effectName === 'backgroundFill') return 'background';
+		return 'border';
+	}
+
 	updateEffectSourceUI(layer, effectName) {
 		const effectData = this.getEffectData(layer, effectName);
 		// Glitter mode is never empty — fall back to the slot's default glitter.
 		if (effectData && this.effectUsesGlitter(effectData) && !effectData.glitterId) {
-			const def = effectName === 'shadow' ? this.getDefaultShadow() : this.getDefaultBorder();
-			effectData.glitterId = def.glitterId;
+			effectData.glitterId = this.getEffectDefaults(effectName).glitterId;
 		}
 		const config = effectName === 'border'
 			? {
@@ -1888,19 +2200,33 @@ class TextGlitterManager {
 				colorRow: this.ui.borderColorRow,
 				scaleRow: this.ui.borderScaleRow
 			}
-			: {
-				button: this.ui.shadowGlitterChip,
-				changeButton: this.ui.shadowGlitterChange,
-				label: this.ui.shadowGlitterLabel,
-				badges: this.ui.shadowGlitterBadges,
-				info: this.ui.shadowGlitterInfo,
-				size: this.ui.shadowGlitterSize,
-				frames: this.ui.shadowGlitterFrames,
-				useColor: this.ui.shadowUseColor,
-				useGlitter: this.ui.shadowUseGlitter,
-				colorRow: this.ui.shadowColorRow,
-				scaleRow: this.ui.shadowScaleRow
-			};
+			: effectName === 'backgroundFill'
+				? {
+					button: this.ui.backgroundFillGlitterChip,
+					changeButton: this.ui.backgroundFillGlitterChange,
+					label: this.ui.backgroundFillGlitterLabel,
+					badges: this.ui.backgroundFillGlitterBadges,
+					info: this.ui.backgroundFillGlitterInfo,
+					size: this.ui.backgroundFillGlitterSize,
+					frames: this.ui.backgroundFillGlitterFrames,
+					useColor: this.ui.backgroundFillUseColor,
+					useGlitter: this.ui.backgroundFillUseGlitter,
+					colorRow: this.ui.backgroundFillColorRow,
+					scaleRow: this.ui.backgroundFillScaleRow
+				}
+				: {
+					button: this.ui.shadowGlitterChip,
+					changeButton: this.ui.shadowGlitterChange,
+					label: this.ui.shadowGlitterLabel,
+					badges: this.ui.shadowGlitterBadges,
+					info: this.ui.shadowGlitterInfo,
+					size: this.ui.shadowGlitterSize,
+					frames: this.ui.shadowGlitterFrames,
+					useColor: this.ui.shadowUseColor,
+					useGlitter: this.ui.shadowUseGlitter,
+					colorRow: this.ui.shadowColorRow,
+					scaleRow: this.ui.shadowScaleRow
+				};
 
 		if (!config.button || !config.label || !config.useColor || !config.useGlitter || !config.colorRow) {
 			return;
@@ -1948,10 +2274,8 @@ class TextGlitterManager {
 	}
 
 	getEffectSourceSummary(effectData, effectName) {
-		const defaultColor = effectName === 'shadow'
-			? this.getDefaultShadow().color
-			: this.getDefaultBorder().color;
-		const effectTitle = effectName === 'shadow' ? 'shadow' : 'border';
+		const defaultColor = this.getEffectDefaults(effectName).color;
+		const effectTitle = this.getEffectTitle(effectName);
 		if (!effectData) {
 			return {
 				label: defaultColor.toUpperCase(),
@@ -2027,6 +2351,19 @@ class TextGlitterManager {
 			textData.border ? [textData.border.widthPx, this.getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
+			// Text Background's geometry-affecting fields only (never `fill` —
+			// paint-only changes must not invalidate layout/geometry caching).
+			textData.textBackground?.enabled
+				? [
+					textData.textBackground.mode,
+					textData.textBackground.lineConnection,
+					textData.textBackground.horizontalPadding,
+					textData.textBackground.verticalPadding,
+					textData.textBackground.cornerRadius,
+					textData.textBackground.mergeDistance,
+					textData.textBackground.lineSpacingSensitivity
+				]
+				: null,
 			shouldUseCrispMaskEdges(),
 			CONFIG.rendering.maskAlphaThreshold
 		]);
@@ -2114,15 +2451,32 @@ class TextGlitterManager {
 			}
 		}
 
+		// Canonical per-line layout for Text Background (docs/DYNAMIC-TEXT-
+		// BACKGROUND-IMPLEMENTATION-PLAN.md "Expose canonical layout geometry"):
+		// one positioned+aligned rect per visible line, in the same unshifted
+		// local space as textInk*/box* below. `blank` lines (no ink) carry no
+		// rect — Text Background treats them as hard separators, never their
+		// own rectangle.
+		const positionedLines = [];
+
 		visibleLines.forEach((line, index) => {
-			if (!line.text) return;
 			const offsetX = this.getAlignOffset(layer.textData.align, layoutWidth, line.width);
 			const baselineY = contentOffsetY + ascent + index * lineHeightPx;
+			const isBlank = !line.text || (line.inkRight - line.inkLeft) <= 0;
+			if (isBlank) {
+				positionedLines.push({ blank: true });
+				return;
+			}
 			hasInk = true;
-			textInkLeft = Math.min(textInkLeft, offsetX - line.inkLeft);
-			textInkRight = Math.max(textInkRight, offsetX + line.inkRight);
-			textInkTop = Math.min(textInkTop, baselineY - line.ascent);
-			textInkBottom = Math.max(textInkBottom, baselineY + line.descent);
+			const left = offsetX - line.inkLeft;
+			const right = offsetX + line.inkRight;
+			const top = baselineY - line.ascent;
+			const bottom = baselineY + line.descent;
+			positionedLines.push({ left, top, right, bottom, blank: false });
+			textInkLeft = Math.min(textInkLeft, left);
+			textInkRight = Math.max(textInkRight, right);
+			textInkTop = Math.min(textInkTop, top);
+			textInkBottom = Math.max(textInkBottom, bottom);
 		});
 
 		if (!hasInk) {
@@ -2132,10 +2486,28 @@ class TextGlitterManager {
 			textInkBottom = 0;
 		}
 
-		const artLeft = Math.min(textInkLeft - borderWidth, textInkLeft + shadowOffsetX);
-		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX);
-		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY);
-		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY);
+		// Geometry is generated here (unshifted local space, same origin as
+		// textInk*/box* above) so its bounds can widen the mask canvas's frame
+		// before layoutX/Y are fixed — an enabled background must contribute to
+		// visual/export bounds, or padded backgrounds could be clipped.
+		const textBackgroundProps = layer.textData.textBackground;
+		let textBackgroundGeometry = null;
+		if (textBackgroundProps?.enabled) {
+			textBackgroundGeometry = generateTextBackgroundGeometry({
+				lines: positionedLines,
+				textInkRect: hasInk ? { x: textInkLeft, y: textInkTop, width: textInkRight - textInkLeft, height: textInkBottom - textInkTop } : null,
+				boxRect: boxMode === 'fixed' ? { x: 0, y: 0, width: layoutWidth, height: layoutHeight } : null,
+				lineHeightPx,
+				ascent,
+				descent
+			}, textBackgroundProps);
+		}
+		const backgroundBounds = textBackgroundGeometry?.bounds;
+
+		const artLeft = Math.min(textInkLeft - borderWidth, textInkLeft + shadowOffsetX, backgroundBounds ? backgroundBounds.x : Infinity);
+		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY, backgroundBounds ? backgroundBounds.y : Infinity);
+		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		const frameLeft = boxMode === 'fixed' ? Math.min(0, artLeft) : artLeft;
 		const frameRight = boxMode === 'fixed' ? Math.max(layoutWidth, artRight) : artRight;
 		const frameTop = boxMode === 'fixed' ? Math.min(0, artTop) : artTop;
@@ -2177,12 +2549,21 @@ class TextGlitterManager {
 			key,
 			canvas,
 			lines: measuredLines,
+			positionedLines,
 			width: canvasWidth,
 			height: canvasHeight,
 			textWidth: layoutWidth,
 			textHeight: layoutHeight,
 			ascent,
+			descent,
 			lineHeightPx,
+			// Final canvas-local space (translated from the unshifted space used
+			// above), ready to rasterize directly via renderTextBackgroundGeometry —
+			// see getTextBackgroundMaskCanvas, the single call site preview and
+			// every export path share.
+			textBackgroundGeometry: textBackgroundGeometry
+				? translateTextBackgroundGeometry(textBackgroundGeometry, layoutX, layoutY)
+				: null,
 			layoutWidth,
 			layoutHeight,
 			layoutOffsetX: layoutX,
@@ -2412,6 +2793,18 @@ class TextGlitterManager {
 		return this.getMeasurementEntry(layer).canvas;
 	}
 
+	// Export's callback counterpart to getTextBackgroundMaskCanvas above — same
+	// function, called after the font (and therefore the measurement/geometry)
+	// is guaranteed ready. Returns null when disabled/empty, same as preview.
+	async renderTextBackgroundMask(layer) {
+		if (!layer || layer.type !== LayerType.TEXT_GLITTER) {
+			throw new Error('Invalid text layer');
+		}
+
+		await this.ensureFontLoaded(layer.textData.fontId);
+		return this.getTextBackgroundMaskCanvas(layer);
+	}
+
 	renderContent(layersToShow) {
 		const keep = new Set();
 		layersToShow.forEach((layer) => {
@@ -2615,6 +3008,24 @@ class TextGlitterManager {
 		const border = this.getEffectData(layer, 'border');
 		const drawBorderAfterFill = this.getBorderDrawOrder(border) === 'front';
 
+		// Text Background renders furthest back (plan "Rendering order": layer
+		// transform -> background -> text), so it is pushed before every other
+		// descriptor. Same mask canvas (getTextBackgroundMaskCanvas) export uses.
+		if (layer.textData.textBackground?.enabled && measurement.textBackgroundGeometry?.shapes?.length) {
+			const backgroundCanvas = this.getTextBackgroundMaskCanvas(layer, measurement);
+			if (backgroundCanvas) {
+				descriptors.push({
+					key: 'background',
+					offsetX: 0,
+					offsetY: 0,
+					source: this.getEffectPaintSource(layer, 'backgroundFill'),
+					maskType: 'background',
+					maskCanvas: backgroundCanvas,
+					maskCacheKey: measurement.key
+				});
+			}
+		}
+
 		if (shadow) {
 			descriptors.push({
 				key: 'shadow',
@@ -2707,6 +3118,35 @@ class TextGlitterManager {
 		}
 		measurement._borderMaskCache = { key: cacheKey, canvas };
 		return { canvas, cacheKey: `${measurement.key}|${cacheKey}` };
+	}
+
+	// The ONE Text Background mask builder — preview (getSpanDescriptors above)
+	// and every export path (GifExporter, via the `getTextBackgroundMask`
+	// callback) call this exact function against the same pre-computed
+	// `measurement.textBackgroundGeometry` (already in the mask canvas's own
+	// local space; see getMeasurementEntry). Cached on the measurement entry
+	// the same way the border mask is, so it isn't rebuilt per animation frame.
+	getTextBackgroundMaskCanvas(layer, measurement = this.getMeasurementEntry(layer)) {
+		const geometry = measurement.textBackgroundGeometry;
+		if (!geometry?.shapes?.length) return null;
+		if (measurement._backgroundMaskCache?.key === measurement.key) {
+			return measurement._backgroundMaskCache.canvas;
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = measurement.width;
+		canvas.height = measurement.height;
+		canvas._textureOrigin = { ...measurement.canvas._textureOrigin };
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.fillStyle = '#ffffff';
+		renderTextBackgroundGeometry(ctx, geometry);
+
+		if (shouldUseCrispMaskEdges()) {
+			binarizeCanvasAlpha(ctx, canvas.width, canvas.height);
+		}
+
+		measurement._backgroundMaskCache = { key: measurement.key, canvas };
+		return canvas;
 	}
 
 	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.

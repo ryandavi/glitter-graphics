@@ -813,6 +813,11 @@ const CONFIG = deepFreeze({
 			shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 0 },
 			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
+			textBackgroundPaddingH: { label: 'Horizontal Padding', unit: 'px', min: 0, max: 200, value: 16 },
+			textBackgroundPaddingV: { label: 'Vertical Padding', unit: 'px', min: 0, max: 200, value: 8 },
+			textBackgroundRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 12 },
+			textBackgroundMergeDistance: { label: 'Merge Distance', unit: 'px', min: 0, max: 120, value: 24 },
+			textBackgroundSpacing: { label: 'Spacing Sensitivity', unit: '%', min: 0, max: 100, value: 50 },
 			threshold: { label: 'Color Tolerance', unit: '', min: 0, max: 255, value: 50 },
 			feather: { label: 'Edge Feather', unit: 'px', min: 0, max: 50, value: 0 },
 			textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
@@ -1413,6 +1418,34 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 	selected: value === CONFIG.layers.defaultBlendMode
 }));
 
+// Text Background presets (DYNAMIC-TEXT-BACKGROUND-IMPLEMENTATION-PLAN.md,
+// "Presets"): the one table both the UI select and
+// TextGlitterManager.applyTextBackgroundPreset read from. A preset writes
+// plain values into textData.textBackground and is not itself persisted —
+// selecting one is indistinguishable from a user manually matching the same
+// values. `fill`/`enabled` are deliberately untouched by every preset.
+const TEXT_BACKGROUND_PRESETS = {
+	instagram: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 20, verticalPadding: 10, cornerRadius: 16, mergeDistance: 20, lineSpacingSensitivity: 60 },
+	tight: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 8, verticalPadding: 4, cornerRadius: 4, mergeDistance: 6, lineSpacingSensitivity: 20 },
+	loose: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 32, verticalPadding: 16, cornerRadius: 16, mergeDistance: 40, lineSpacingSensitivity: 60 },
+	separateLines: { mode: 'lines', lineConnection: 'separate', horizontalPadding: 12, verticalPadding: 6, cornerRadius: 8 },
+	connectedBlock: { mode: 'lines', lineConnection: 'connected', horizontalPadding: 20, verticalPadding: 10, cornerRadius: 20, mergeDistance: 60, lineSpacingSensitivity: 90 },
+	textBounds: { mode: 'text-bounds', horizontalPadding: 16, verticalPadding: 8, cornerRadius: 8 },
+	textBox: { mode: 'text-box', horizontalPadding: 0, verticalPadding: 0, cornerRadius: 8 },
+	labelPill: { mode: 'text-bounds', horizontalPadding: 28, verticalPadding: 6, cornerRadius: 100 }
+};
+const TEXT_BACKGROUND_PRESET_OPTIONS = [
+	{ value: '', label: 'Choose a preset…', selected: true },
+	{ value: 'instagram', label: 'Instagram' },
+	{ value: 'tight', label: 'Tight Highlight' },
+	{ value: 'loose', label: 'Loose Highlight' },
+	{ value: 'separateLines', label: 'Separate Lines' },
+	{ value: 'connectedBlock', label: 'Connected Block' },
+	{ value: 'textBounds', label: 'Text Bounds' },
+	{ value: 'textBox', label: 'Text Box' },
+	{ value: 'labelPill', label: 'Label / Pill' }
+];
+
 const ANIMATION_PRESET_GROUPS = {
 	Ambient: ['breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse'],
 	Attention: ['heartbeat', 'blink', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band'],
@@ -2008,6 +2041,47 @@ const PANEL_SCHEMAS = {
 			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
+			{ kind: 'paintSlot', slot: 'textBackground', idPrefix: 'textBackground', title: 'Background', redesign: true,
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
+				texturePosition: true,
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
+				color: '#000000', chipTitle: 'Choose background source',
+				primaryIds: { scale: 'textBackgroundScale', scaleRow: 'textBackgroundScaleRow', opacity: 'textBackgroundOpacity' },
+				afterSource: [
+					{ kind: 'set', label: 'Padding', items: [
+						{ kind: 'numberPair', label: 'Padding', items: [
+							{ id: 'textBackgroundPaddingH', slider: 'textBackgroundPaddingH', mark: 'H', label: 'Horizontal Padding' },
+							{ id: 'textBackgroundPaddingV', slider: 'textBackgroundPaddingV', mark: 'V', label: 'Vertical Padding' }
+						] }
+					] },
+					{ kind: 'set', label: 'Shape', items: [
+						{ kind: 'slider', id: 'textBackgroundRadius', slider: 'textBackgroundRadius' }
+					] }
+				],
+				post: [
+					{ kind: 'set', label: 'Mode', items: [
+						{ kind: 'stackRow', revert: true, groups: [
+							{ label: 'Mode', options: [
+								{ id: 'textBackgroundModeLines', label: 'Lines', active: true, value: 'lines' },
+								{ id: 'textBackgroundModeBounds', label: 'Text Bounds', value: 'text-bounds' },
+								{ id: 'textBackgroundModeBox', label: 'Text Box', value: 'text-box' }
+							] },
+							{ label: 'Line Connection', options: [
+								{ id: 'textBackgroundConnectionSeparate', label: 'Separate', active: true, value: 'separate' },
+								{ id: 'textBackgroundConnectionMerge', label: 'Merge Adjacent', value: 'merge-adjacent' },
+								{ id: 'textBackgroundConnectionConnected', label: 'Connected', value: 'connected' }
+							] }
+						] }
+					] },
+					{ kind: 'set', label: 'Merge', items: [
+						{ kind: 'numberPair', label: 'Merge', items: [
+							{ id: 'textBackgroundMergeDistance', slider: 'textBackgroundMergeDistance', mark: 'D', label: 'Merge Distance' },
+							{ id: 'textBackgroundSpacing', slider: 'textBackgroundSpacing', mark: 'S', label: 'Spacing Sensitivity' }
+						] }
+					] },
+					{ kind: 'select', id: 'textBackgroundPreset', label: 'Preset', visibleLabel: 'Preset', options: TEXT_BACKGROUND_PRESET_OPTIONS }
+				]
+			},
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,

@@ -8,6 +8,7 @@ const SUITES = [
 	{ file: 'touch-handle-verify.js', tags: ['quick', 'touch'] },
 	{ file: 'export-timeline-unit.js', tags: ['unit', 'export'] },
 	{ file: 'gif-palette-unit.js', tags: ['unit', 'export'] },
+	{ file: 'text-background-geometry-unit.js', tags: ['unit', 'effects'] },
 	{ file: 'export-compositor-fast-path.js', tags: ['export'] },
 	{ file: 'export-formats-verify.js', tags: ['export'] },
 	{ file: 'viewport-navigation-unit.js', tags: ['unit', 'quick'] },

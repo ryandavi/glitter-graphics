@@ -1320,22 +1320,34 @@
 			}
 		},
 		{
-			"id": "glitterAnimControls",
-			"tag": "div",
-			"classes": "subsection-content",
+			"id": "glitterAnimPresetPrev",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
 			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimType",
 			"tag": "select",
 			"classes": "",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
+		},
+		{
+			"id": "glitterAnimPresetNext",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
+			"parent": "glitterSettingsControls"
+		},
+		{
+			"id": "glitterAnimLoopHint",
+			"tag": "div",
+			"classes": "animation-loop-hint property-note",
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimPeriodMs",
 			"tag": "input",
 			"classes": "",
-			"parent": "glitterAnimControls",
+			"parent": "glitterSettingsControls",
 			"input": {
 				"type": "range",
 				"min": "120",
@@ -1348,19 +1360,19 @@
 			"id": "glitterAnimPeriodMsValue",
 			"tag": "span",
 			"classes": "property-value",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "resetGlitterAnimPeriodMs",
 			"tag": "button",
 			"classes": "property-revert",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimAmountRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimAmount",
@@ -1391,7 +1403,7 @@
 			"id": "glitterAnimAngleRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimAngle",
@@ -1422,7 +1434,7 @@
 			"id": "glitterAnimDistanceRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimDistance",
@@ -1453,7 +1465,7 @@
 			"id": "glitterAnimRadiusRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimRadius",
@@ -1484,7 +1496,7 @@
 			"id": "glitterAnimTurnsRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimTurns",
@@ -1493,9 +1505,9 @@
 			"parent": "glitterAnimTurnsRow",
 			"input": {
 				"type": "range",
-				"min": "-8",
+				"min": "1",
 				"max": "8",
-				"step": "0.1",
+				"step": "1",
 				"value": "1"
 			}
 		},
@@ -1515,7 +1527,7 @@
 			"id": "glitterAnimDutyRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimDuty",
@@ -1546,7 +1558,7 @@
 			"id": "glitterAnimOpacityFloorRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimOpacityFloor",
@@ -1577,7 +1589,7 @@
 			"id": "glitterAnimOvershootRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimOvershoot",
@@ -1605,16 +1617,10 @@
 			"parent": "glitterAnimOvershootRow"
 		},
 		{
-			"id": "glitterAnimLoopHint",
-			"tag": "div",
-			"classes": "animation-loop-hint property-note",
-			"parent": "glitterAnimControls"
-		},
-		{
 			"id": "glitterAnimAdvanced",
 			"tag": "div",
 			"classes": "advanced-disclosure",
-			"parent": "glitterAnimControls"
+			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterAnimEasing",
@@ -2771,22 +2777,34 @@
 			}
 		},
 		{
-			"id": "stickerAnimControls",
-			"tag": "div",
-			"classes": "subsection-content",
+			"id": "stickerAnimPresetPrev",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
 			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimType",
 			"tag": "select",
 			"classes": "",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
+		},
+		{
+			"id": "stickerAnimPresetNext",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
+			"parent": "stickerSettingsControls"
+		},
+		{
+			"id": "stickerAnimLoopHint",
+			"tag": "div",
+			"classes": "animation-loop-hint property-note",
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimPeriodMs",
 			"tag": "input",
 			"classes": "",
-			"parent": "stickerAnimControls",
+			"parent": "stickerSettingsControls",
 			"input": {
 				"type": "range",
 				"min": "120",
@@ -2799,19 +2817,19 @@
 			"id": "stickerAnimPeriodMsValue",
 			"tag": "span",
 			"classes": "property-value",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "resetStickerAnimPeriodMs",
 			"tag": "button",
 			"classes": "property-revert",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimAmountRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimAmount",
@@ -2842,7 +2860,7 @@
 			"id": "stickerAnimAngleRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimAngle",
@@ -2873,7 +2891,7 @@
 			"id": "stickerAnimDistanceRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimDistance",
@@ -2904,7 +2922,7 @@
 			"id": "stickerAnimRadiusRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimRadius",
@@ -2935,7 +2953,7 @@
 			"id": "stickerAnimTurnsRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimTurns",
@@ -2944,9 +2962,9 @@
 			"parent": "stickerAnimTurnsRow",
 			"input": {
 				"type": "range",
-				"min": "-8",
+				"min": "1",
 				"max": "8",
-				"step": "0.1",
+				"step": "1",
 				"value": "1"
 			}
 		},
@@ -2966,7 +2984,7 @@
 			"id": "stickerAnimDutyRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimDuty",
@@ -2997,7 +3015,7 @@
 			"id": "stickerAnimOpacityFloorRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimOpacityFloor",
@@ -3028,7 +3046,7 @@
 			"id": "stickerAnimOvershootRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimOvershoot",
@@ -3056,16 +3074,10 @@
 			"parent": "stickerAnimOvershootRow"
 		},
 		{
-			"id": "stickerAnimLoopHint",
-			"tag": "div",
-			"classes": "animation-loop-hint property-note",
-			"parent": "stickerAnimControls"
-		},
-		{
 			"id": "stickerAnimAdvanced",
 			"tag": "div",
 			"classes": "advanced-disclosure",
-			"parent": "stickerAnimControls"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerAnimEasing",
@@ -3917,6 +3929,398 @@
 			"parent": "textTransformPanelHost"
 		},
 		{
+			"id": "textBackgroundEnabled",
+			"tag": "input",
+			"classes": "",
+			"parent": "textSettingsContent",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "textBackgroundControls",
+			"tag": "div",
+			"classes": "property-module-content",
+			"parent": "textSettingsContent"
+		},
+		{
+			"id": "textBackgroundUseGlitter",
+			"tag": "button",
+			"classes": "active segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundUseColor",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundGradient",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundGlitterInfo",
+			"tag": "div",
+			"classes": "asset-info glitter-source-glitter",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundGlitterChip",
+			"tag": "div",
+			"classes": "asset-info-thumbnail",
+			"parent": "textBackgroundGlitterInfo"
+		},
+		{
+			"id": "textBackgroundGlitterLabel",
+			"tag": "div",
+			"classes": "asset-info-name",
+			"parent": "textBackgroundGlitterInfo"
+		},
+		{
+			"id": "textBackgroundGlitterBadges",
+			"tag": "div",
+			"classes": "asset-info-badges",
+			"parent": "textBackgroundGlitterInfo"
+		},
+		{
+			"id": "textBackgroundGlitterSize",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundGlitterInfo"
+		},
+		{
+			"id": "textBackgroundGlitterFrames",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundGlitterInfo"
+		},
+		{
+			"id": "textBackgroundGlitterChange",
+			"tag": "button",
+			"classes": "asset-info-change btn-simple",
+			"parent": "textBackgroundGlitterInfo"
+		},
+		{
+			"id": "textBackgroundColorRow",
+			"tag": "div",
+			"classes": "glitter-source-solid property-color-row property-row",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundColor",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundColorRow",
+			"input": {
+				"type": "color",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "#000000"
+			}
+		},
+		{
+			"id": "textBackgroundPaddingH",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "number",
+				"min": "0",
+				"max": "200",
+				"step": "1",
+				"value": ""
+			}
+		},
+		{
+			"id": "textBackgroundPaddingV",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "number",
+				"min": "0",
+				"max": "200",
+				"step": "1",
+				"value": ""
+			}
+		},
+		{
+			"id": "textBackgroundRadius",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "range",
+				"min": "0",
+				"max": "100",
+				"step": null,
+				"value": "12"
+			}
+		},
+		{
+			"id": "textBackgroundRadiusValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "resetTextBackgroundRadius",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundScaleRow",
+			"tag": "div",
+			"classes": "paint-slot-scale property-row",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundScale",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundScaleRow",
+			"input": {
+				"type": "range",
+				"min": "25",
+				"max": "300",
+				"step": null,
+				"value": "100"
+			}
+		},
+		{
+			"id": "textBackgroundScaleValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundScaleRow"
+		},
+		{
+			"id": "resetTextBackgroundScale",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundScaleRow"
+		},
+		{
+			"id": "textBackgroundOpacity",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "range",
+				"min": "0",
+				"max": "100",
+				"step": null,
+				"value": "100"
+			}
+		},
+		{
+			"id": "textBackgroundOpacityValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "resetTextBackgroundOpacity",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundModeLines",
+			"tag": "button",
+			"classes": "active segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundModeBounds",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundModeBox",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundConnectionSeparate",
+			"tag": "button",
+			"classes": "active segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundConnectionMerge",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundConnectionConnected",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundMergeDistance",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "number",
+				"min": "0",
+				"max": "120",
+				"step": "1",
+				"value": ""
+			}
+		},
+		{
+			"id": "textBackgroundSpacing",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "number",
+				"min": "0",
+				"max": "100",
+				"step": "1",
+				"value": ""
+			}
+		},
+		{
+			"id": "textBackgroundPreset",
+			"tag": "select",
+			"classes": "",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundHue",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "range",
+				"min": "-180",
+				"max": "180",
+				"step": null,
+				"value": "0"
+			}
+		},
+		{
+			"id": "textBackgroundHueValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "resetTextBackgroundHue",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundSaturation",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "range",
+				"min": "0",
+				"max": "200",
+				"step": null,
+				"value": "100"
+			}
+		},
+		{
+			"id": "textBackgroundSaturationValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "resetTextBackgroundSaturation",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundBrightness",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "range",
+				"min": "25",
+				"max": "200",
+				"step": null,
+				"value": "100"
+			}
+		},
+		{
+			"id": "textBackgroundBrightnessValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "resetTextBackgroundBrightness",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundTextureAnchorArtwork",
+			"tag": "button",
+			"classes": "active segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundTextureAnchorCanvas",
+			"tag": "button",
+			"classes": "segmented-option",
+			"parent": "textBackgroundControls"
+		},
+		{
+			"id": "textBackgroundTextureOffsetX",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "number",
+				"min": "-500",
+				"max": "500",
+				"step": "1",
+				"value": ""
+			}
+		},
+		{
+			"id": "textBackgroundTextureOffsetY",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBackgroundControls",
+			"input": {
+				"type": "number",
+				"min": "-500",
+				"max": "500",
+				"step": "1",
+				"value": ""
+			}
+		},
+		{
+			"id": "textBackgroundResetTexturePosition",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBackgroundControls"
+		},
+		{
 			"id": "textBorderEnabled",
 			"tag": "input",
 			"classes": "",
@@ -4575,22 +4979,34 @@
 			}
 		},
 		{
-			"id": "textAnimControls",
-			"tag": "div",
-			"classes": "subsection-content",
+			"id": "textAnimPresetPrev",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
 			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimType",
 			"tag": "select",
 			"classes": "",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
+		},
+		{
+			"id": "textAnimPresetNext",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
+			"parent": "textSettingsContent"
+		},
+		{
+			"id": "textAnimLoopHint",
+			"tag": "div",
+			"classes": "animation-loop-hint property-note",
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimPeriodMs",
 			"tag": "input",
 			"classes": "",
-			"parent": "textAnimControls",
+			"parent": "textSettingsContent",
 			"input": {
 				"type": "range",
 				"min": "120",
@@ -4603,19 +5019,19 @@
 			"id": "textAnimPeriodMsValue",
 			"tag": "span",
 			"classes": "property-value",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "resetTextAnimPeriodMs",
 			"tag": "button",
 			"classes": "property-revert",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimAmountRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimAmount",
@@ -4646,7 +5062,7 @@
 			"id": "textAnimAngleRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimAngle",
@@ -4677,7 +5093,7 @@
 			"id": "textAnimDistanceRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimDistance",
@@ -4708,7 +5124,7 @@
 			"id": "textAnimRadiusRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimRadius",
@@ -4739,7 +5155,7 @@
 			"id": "textAnimTurnsRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimTurns",
@@ -4748,9 +5164,9 @@
 			"parent": "textAnimTurnsRow",
 			"input": {
 				"type": "range",
-				"min": "-8",
+				"min": "1",
 				"max": "8",
-				"step": "0.1",
+				"step": "1",
 				"value": "1"
 			}
 		},
@@ -4770,7 +5186,7 @@
 			"id": "textAnimDutyRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimDuty",
@@ -4801,7 +5217,7 @@
 			"id": "textAnimOpacityFloorRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimOpacityFloor",
@@ -4832,7 +5248,7 @@
 			"id": "textAnimOvershootRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimOvershoot",
@@ -4860,16 +5276,10 @@
 			"parent": "textAnimOvershootRow"
 		},
 		{
-			"id": "textAnimLoopHint",
-			"tag": "div",
-			"classes": "animation-loop-hint property-note",
-			"parent": "textAnimControls"
-		},
-		{
 			"id": "textAnimAdvanced",
 			"tag": "div",
 			"classes": "advanced-disclosure",
-			"parent": "textAnimControls"
+			"parent": "textSettingsContent"
 		},
 		{
 			"id": "textAnimEasing",
@@ -6348,22 +6758,34 @@
 			}
 		},
 		{
-			"id": "shapeAnimControls",
-			"tag": "div",
-			"classes": "subsection-content",
+			"id": "shapeAnimPresetPrev",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
 			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimType",
 			"tag": "select",
 			"classes": "",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
+		},
+		{
+			"id": "shapeAnimPresetNext",
+			"tag": "button",
+			"classes": "btn-icon-simple icon-wrapper",
+			"parent": "shapeSettingsContent"
+		},
+		{
+			"id": "shapeAnimLoopHint",
+			"tag": "div",
+			"classes": "animation-loop-hint property-note",
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimPeriodMs",
 			"tag": "input",
 			"classes": "",
-			"parent": "shapeAnimControls",
+			"parent": "shapeSettingsContent",
 			"input": {
 				"type": "range",
 				"min": "120",
@@ -6376,19 +6798,19 @@
 			"id": "shapeAnimPeriodMsValue",
 			"tag": "span",
 			"classes": "property-value",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "resetShapeAnimPeriodMs",
 			"tag": "button",
 			"classes": "property-revert",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimAmountRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimAmount",
@@ -6419,7 +6841,7 @@
 			"id": "shapeAnimAngleRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimAngle",
@@ -6450,7 +6872,7 @@
 			"id": "shapeAnimDistanceRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimDistance",
@@ -6481,7 +6903,7 @@
 			"id": "shapeAnimRadiusRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimRadius",
@@ -6512,7 +6934,7 @@
 			"id": "shapeAnimTurnsRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimTurns",
@@ -6521,9 +6943,9 @@
 			"parent": "shapeAnimTurnsRow",
 			"input": {
 				"type": "range",
-				"min": "-8",
+				"min": "1",
 				"max": "8",
-				"step": "0.1",
+				"step": "1",
 				"value": "1"
 			}
 		},
@@ -6543,7 +6965,7 @@
 			"id": "shapeAnimDutyRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimDuty",
@@ -6574,7 +6996,7 @@
 			"id": "shapeAnimOpacityFloorRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimOpacityFloor",
@@ -6605,7 +7027,7 @@
 			"id": "shapeAnimOvershootRow",
 			"tag": "div",
 			"classes": "property-row",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimOvershoot",
@@ -6633,16 +7055,10 @@
 			"parent": "shapeAnimOvershootRow"
 		},
 		{
-			"id": "shapeAnimLoopHint",
-			"tag": "div",
-			"classes": "animation-loop-hint property-note",
-			"parent": "shapeAnimControls"
-		},
-		{
 			"id": "shapeAnimAdvanced",
 			"tag": "div",
 			"classes": "advanced-disclosure",
-			"parent": "shapeAnimControls"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeAnimEasing",
@@ -7752,8 +8168,10 @@
 				"glitterFillResetTexturePosition": "shown",
 				"glitterAnimSummary": "shown",
 				"glitterAnimEnabled": "shown",
-				"glitterAnimControls": "hidden",
+				"glitterAnimPresetPrev": "shown",
 				"glitterAnimType": "shown",
+				"glitterAnimPresetNext": "shown",
+				"glitterAnimLoopHint": "shown",
 				"glitterAnimPeriodMs": "shown",
 				"glitterAnimPeriodMsValue": "shown",
 				"resetGlitterAnimPeriodMs": "shown",
@@ -7789,7 +8207,6 @@
 				"glitterAnimOvershoot": "shown",
 				"glitterAnimOvershootValue": "shown",
 				"resetGlitterAnimOvershoot": "shown",
-				"glitterAnimLoopHint": "shown",
 				"glitterAnimAdvanced": "shown",
 				"glitterAnimEasing": "shown",
 				"glitterAnimStepsRow": "shown",
@@ -7939,8 +8356,10 @@
 				"stickerShadowResetTexturePosition": "shown",
 				"stickerAnimSummary": "shown",
 				"stickerAnimEnabled": "shown",
-				"stickerAnimControls": "hidden",
+				"stickerAnimPresetPrev": "shown",
 				"stickerAnimType": "shown",
+				"stickerAnimPresetNext": "shown",
+				"stickerAnimLoopHint": "shown",
 				"stickerAnimPeriodMs": "shown",
 				"stickerAnimPeriodMsValue": "shown",
 				"resetStickerAnimPeriodMs": "shown",
@@ -7976,7 +8395,6 @@
 				"stickerAnimOvershoot": "shown",
 				"stickerAnimOvershootValue": "shown",
 				"resetStickerAnimOvershoot": "shown",
-				"stickerAnimLoopHint": "shown",
 				"stickerAnimAdvanced": "shown",
 				"stickerAnimEasing": "shown",
 				"stickerAnimStepsRow": "shown",
@@ -8088,6 +8506,55 @@
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
+				"textBackgroundEnabled": "shown",
+				"textBackgroundControls": "shown",
+				"textBackgroundUseGlitter": "shown",
+				"textBackgroundUseColor": "shown",
+				"textBackgroundGradient": "shown",
+				"textBackgroundGlitterInfo": "shown",
+				"textBackgroundGlitterChip": "shown",
+				"textBackgroundGlitterLabel": "shown",
+				"textBackgroundGlitterBadges": "shown",
+				"textBackgroundGlitterSize": "shown",
+				"textBackgroundGlitterFrames": "shown",
+				"textBackgroundGlitterChange": "shown",
+				"textBackgroundColorRow": "hidden",
+				"textBackgroundColor": "shown",
+				"textBackgroundPaddingH": "shown",
+				"textBackgroundPaddingV": "shown",
+				"textBackgroundRadius": "shown",
+				"textBackgroundRadiusValue": "shown",
+				"resetTextBackgroundRadius": "shown",
+				"textBackgroundScaleRow": "shown",
+				"textBackgroundScale": "shown",
+				"textBackgroundScaleValue": "shown",
+				"resetTextBackgroundScale": "shown",
+				"textBackgroundOpacity": "shown",
+				"textBackgroundOpacityValue": "shown",
+				"resetTextBackgroundOpacity": "shown",
+				"textBackgroundModeLines": "shown",
+				"textBackgroundModeBounds": "shown",
+				"textBackgroundModeBox": "shown",
+				"textBackgroundConnectionSeparate": "shown",
+				"textBackgroundConnectionMerge": "shown",
+				"textBackgroundConnectionConnected": "shown",
+				"textBackgroundMergeDistance": "shown",
+				"textBackgroundSpacing": "shown",
+				"textBackgroundPreset": "shown",
+				"textBackgroundHue": "shown",
+				"textBackgroundHueValue": "shown",
+				"resetTextBackgroundHue": "shown",
+				"textBackgroundSaturation": "shown",
+				"textBackgroundSaturationValue": "shown",
+				"resetTextBackgroundSaturation": "shown",
+				"textBackgroundBrightness": "shown",
+				"textBackgroundBrightnessValue": "shown",
+				"resetTextBackgroundBrightness": "shown",
+				"textBackgroundTextureAnchorArtwork": "shown",
+				"textBackgroundTextureAnchorCanvas": "shown",
+				"textBackgroundTextureOffsetX": "shown",
+				"textBackgroundTextureOffsetY": "shown",
+				"textBackgroundResetTexturePosition": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
 				"textBorderUseGlitter": "shown",
@@ -8172,8 +8639,10 @@
 				"textShadowResetTexturePosition": "shown",
 				"textAnimSummary": "shown",
 				"textAnimEnabled": "shown",
-				"textAnimControls": "hidden",
+				"textAnimPresetPrev": "shown",
 				"textAnimType": "shown",
+				"textAnimPresetNext": "shown",
+				"textAnimLoopHint": "shown",
 				"textAnimPeriodMs": "shown",
 				"textAnimPeriodMsValue": "shown",
 				"resetTextAnimPeriodMs": "shown",
@@ -8209,7 +8678,6 @@
 				"textAnimOvershoot": "shown",
 				"textAnimOvershootValue": "shown",
 				"resetTextAnimOvershoot": "shown",
-				"textAnimLoopHint": "shown",
 				"textAnimAdvanced": "shown",
 				"textAnimEasing": "shown",
 				"textAnimStepsRow": "shown",
@@ -8401,8 +8869,10 @@
 				"shapeShadowResetTexturePosition": "shown",
 				"shapeAnimSummary": "shown",
 				"shapeAnimEnabled": "shown",
-				"shapeAnimControls": "hidden",
+				"shapeAnimPresetPrev": "shown",
 				"shapeAnimType": "shown",
+				"shapeAnimPresetNext": "shown",
+				"shapeAnimLoopHint": "shown",
 				"shapeAnimPeriodMs": "shown",
 				"shapeAnimPeriodMsValue": "shown",
 				"resetShapeAnimPeriodMs": "shown",
@@ -8438,7 +8908,6 @@
 				"shapeAnimOvershoot": "shown",
 				"shapeAnimOvershootValue": "shown",
 				"resetShapeAnimOvershoot": "shown",
-				"shapeAnimLoopHint": "shown",
 				"shapeAnimAdvanced": "shown",
 				"shapeAnimEasing": "shown",
 				"shapeAnimStepsRow": "shown",
@@ -9151,6 +9620,170 @@
 							"textFillTextureOffsetX": "shown",
 							"textFillTextureOffsetY": "shown",
 							"textFillResetTexturePosition": "shown"
+						}
+					}
+				},
+				"textBackgroundUseGlitter": {
+					"textBackgroundUseGlitter": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundUseColor": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundGradient": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -10168,8 +10801,10 @@
 				"glitterFillResetTexturePosition": "shown",
 				"glitterAnimSummary": "shown",
 				"glitterAnimEnabled": "shown",
-				"glitterAnimControls": "hidden",
+				"glitterAnimPresetPrev": "shown",
 				"glitterAnimType": "shown",
+				"glitterAnimPresetNext": "shown",
+				"glitterAnimLoopHint": "shown",
 				"glitterAnimPeriodMs": "shown",
 				"glitterAnimPeriodMsValue": "shown",
 				"resetGlitterAnimPeriodMs": "shown",
@@ -10205,7 +10840,6 @@
 				"glitterAnimOvershoot": "shown",
 				"glitterAnimOvershootValue": "shown",
 				"resetGlitterAnimOvershoot": "shown",
-				"glitterAnimLoopHint": "shown",
 				"glitterAnimAdvanced": "shown",
 				"glitterAnimEasing": "shown",
 				"glitterAnimStepsRow": "shown",
@@ -10355,8 +10989,10 @@
 				"stickerShadowResetTexturePosition": "shown",
 				"stickerAnimSummary": "shown",
 				"stickerAnimEnabled": "shown",
-				"stickerAnimControls": "hidden",
+				"stickerAnimPresetPrev": "shown",
 				"stickerAnimType": "shown",
+				"stickerAnimPresetNext": "shown",
+				"stickerAnimLoopHint": "shown",
 				"stickerAnimPeriodMs": "shown",
 				"stickerAnimPeriodMsValue": "shown",
 				"resetStickerAnimPeriodMs": "shown",
@@ -10392,7 +11028,6 @@
 				"stickerAnimOvershoot": "shown",
 				"stickerAnimOvershootValue": "shown",
 				"resetStickerAnimOvershoot": "shown",
-				"stickerAnimLoopHint": "shown",
 				"stickerAnimAdvanced": "shown",
 				"stickerAnimEasing": "shown",
 				"stickerAnimStepsRow": "shown",
@@ -10504,6 +11139,55 @@
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
+				"textBackgroundEnabled": "shown",
+				"textBackgroundControls": "shown",
+				"textBackgroundUseGlitter": "shown",
+				"textBackgroundUseColor": "shown",
+				"textBackgroundGradient": "shown",
+				"textBackgroundGlitterInfo": "shown",
+				"textBackgroundGlitterChip": "shown",
+				"textBackgroundGlitterLabel": "shown",
+				"textBackgroundGlitterBadges": "shown",
+				"textBackgroundGlitterSize": "shown",
+				"textBackgroundGlitterFrames": "shown",
+				"textBackgroundGlitterChange": "shown",
+				"textBackgroundColorRow": "hidden",
+				"textBackgroundColor": "shown",
+				"textBackgroundPaddingH": "shown",
+				"textBackgroundPaddingV": "shown",
+				"textBackgroundRadius": "shown",
+				"textBackgroundRadiusValue": "shown",
+				"resetTextBackgroundRadius": "shown",
+				"textBackgroundScaleRow": "shown",
+				"textBackgroundScale": "shown",
+				"textBackgroundScaleValue": "shown",
+				"resetTextBackgroundScale": "shown",
+				"textBackgroundOpacity": "shown",
+				"textBackgroundOpacityValue": "shown",
+				"resetTextBackgroundOpacity": "shown",
+				"textBackgroundModeLines": "shown",
+				"textBackgroundModeBounds": "shown",
+				"textBackgroundModeBox": "shown",
+				"textBackgroundConnectionSeparate": "shown",
+				"textBackgroundConnectionMerge": "shown",
+				"textBackgroundConnectionConnected": "shown",
+				"textBackgroundMergeDistance": "shown",
+				"textBackgroundSpacing": "shown",
+				"textBackgroundPreset": "shown",
+				"textBackgroundHue": "shown",
+				"textBackgroundHueValue": "shown",
+				"resetTextBackgroundHue": "shown",
+				"textBackgroundSaturation": "shown",
+				"textBackgroundSaturationValue": "shown",
+				"resetTextBackgroundSaturation": "shown",
+				"textBackgroundBrightness": "shown",
+				"textBackgroundBrightnessValue": "shown",
+				"resetTextBackgroundBrightness": "shown",
+				"textBackgroundTextureAnchorArtwork": "shown",
+				"textBackgroundTextureAnchorCanvas": "shown",
+				"textBackgroundTextureOffsetX": "shown",
+				"textBackgroundTextureOffsetY": "shown",
+				"textBackgroundResetTexturePosition": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
 				"textBorderUseGlitter": "shown",
@@ -10588,8 +11272,10 @@
 				"textShadowResetTexturePosition": "shown",
 				"textAnimSummary": "shown",
 				"textAnimEnabled": "shown",
-				"textAnimControls": "hidden",
+				"textAnimPresetPrev": "shown",
 				"textAnimType": "shown",
+				"textAnimPresetNext": "shown",
+				"textAnimLoopHint": "shown",
 				"textAnimPeriodMs": "shown",
 				"textAnimPeriodMsValue": "shown",
 				"resetTextAnimPeriodMs": "shown",
@@ -10625,7 +11311,6 @@
 				"textAnimOvershoot": "shown",
 				"textAnimOvershootValue": "shown",
 				"resetTextAnimOvershoot": "shown",
-				"textAnimLoopHint": "shown",
 				"textAnimAdvanced": "shown",
 				"textAnimEasing": "shown",
 				"textAnimStepsRow": "shown",
@@ -10817,8 +11502,10 @@
 				"shapeShadowResetTexturePosition": "shown",
 				"shapeAnimSummary": "shown",
 				"shapeAnimEnabled": "shown",
-				"shapeAnimControls": "shown",
+				"shapeAnimPresetPrev": "shown",
 				"shapeAnimType": "shown",
+				"shapeAnimPresetNext": "shown",
+				"shapeAnimLoopHint": "shown",
 				"shapeAnimPeriodMs": "shown",
 				"shapeAnimPeriodMsValue": "shown",
 				"resetShapeAnimPeriodMs": "shown",
@@ -10854,7 +11541,6 @@
 				"shapeAnimOvershoot": "shown",
 				"shapeAnimOvershootValue": "shown",
 				"resetShapeAnimOvershoot": "shown",
-				"shapeAnimLoopHint": "shown",
 				"shapeAnimAdvanced": "shown",
 				"shapeAnimEasing": "shown",
 				"shapeAnimStepsRow": "hidden",
@@ -11567,6 +12253,170 @@
 							"textFillTextureOffsetX": "shown",
 							"textFillTextureOffsetY": "shown",
 							"textFillResetTexturePosition": "shown"
+						}
+					}
+				},
+				"textBackgroundUseGlitter": {
+					"textBackgroundUseGlitter": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundUseColor": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundGradient": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -12584,8 +13434,10 @@
 				"glitterFillResetTexturePosition": "shown",
 				"glitterAnimSummary": "shown",
 				"glitterAnimEnabled": "shown",
-				"glitterAnimControls": "hidden",
+				"glitterAnimPresetPrev": "shown",
 				"glitterAnimType": "shown",
+				"glitterAnimPresetNext": "shown",
+				"glitterAnimLoopHint": "shown",
 				"glitterAnimPeriodMs": "shown",
 				"glitterAnimPeriodMsValue": "shown",
 				"resetGlitterAnimPeriodMs": "shown",
@@ -12621,7 +13473,6 @@
 				"glitterAnimOvershoot": "shown",
 				"glitterAnimOvershootValue": "shown",
 				"resetGlitterAnimOvershoot": "shown",
-				"glitterAnimLoopHint": "shown",
 				"glitterAnimAdvanced": "shown",
 				"glitterAnimEasing": "shown",
 				"glitterAnimStepsRow": "shown",
@@ -12771,8 +13622,10 @@
 				"stickerShadowResetTexturePosition": "shown",
 				"stickerAnimSummary": "shown",
 				"stickerAnimEnabled": "shown",
-				"stickerAnimControls": "hidden",
+				"stickerAnimPresetPrev": "shown",
 				"stickerAnimType": "shown",
+				"stickerAnimPresetNext": "shown",
+				"stickerAnimLoopHint": "shown",
 				"stickerAnimPeriodMs": "shown",
 				"stickerAnimPeriodMsValue": "shown",
 				"resetStickerAnimPeriodMs": "shown",
@@ -12808,7 +13661,6 @@
 				"stickerAnimOvershoot": "shown",
 				"stickerAnimOvershootValue": "shown",
 				"resetStickerAnimOvershoot": "shown",
-				"stickerAnimLoopHint": "shown",
 				"stickerAnimAdvanced": "shown",
 				"stickerAnimEasing": "shown",
 				"stickerAnimStepsRow": "shown",
@@ -12920,6 +13772,55 @@
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
+				"textBackgroundEnabled": "shown",
+				"textBackgroundControls": "shown",
+				"textBackgroundUseGlitter": "shown",
+				"textBackgroundUseColor": "shown",
+				"textBackgroundGradient": "shown",
+				"textBackgroundGlitterInfo": "hidden",
+				"textBackgroundGlitterChip": "shown",
+				"textBackgroundGlitterLabel": "shown",
+				"textBackgroundGlitterBadges": "shown",
+				"textBackgroundGlitterSize": "shown",
+				"textBackgroundGlitterFrames": "shown",
+				"textBackgroundGlitterChange": "shown",
+				"textBackgroundColorRow": "hidden",
+				"textBackgroundColor": "shown",
+				"textBackgroundPaddingH": "shown",
+				"textBackgroundPaddingV": "shown",
+				"textBackgroundRadius": "shown",
+				"textBackgroundRadiusValue": "shown",
+				"resetTextBackgroundRadius": "shown",
+				"textBackgroundScaleRow": "hidden",
+				"textBackgroundScale": "shown",
+				"textBackgroundScaleValue": "shown",
+				"resetTextBackgroundScale": "shown",
+				"textBackgroundOpacity": "shown",
+				"textBackgroundOpacityValue": "shown",
+				"resetTextBackgroundOpacity": "shown",
+				"textBackgroundModeLines": "shown",
+				"textBackgroundModeBounds": "shown",
+				"textBackgroundModeBox": "hidden",
+				"textBackgroundConnectionSeparate": "shown",
+				"textBackgroundConnectionMerge": "shown",
+				"textBackgroundConnectionConnected": "shown",
+				"textBackgroundMergeDistance": "shown",
+				"textBackgroundSpacing": "shown",
+				"textBackgroundPreset": "shown",
+				"textBackgroundHue": "shown",
+				"textBackgroundHueValue": "shown",
+				"resetTextBackgroundHue": "shown",
+				"textBackgroundSaturation": "shown",
+				"textBackgroundSaturationValue": "shown",
+				"resetTextBackgroundSaturation": "shown",
+				"textBackgroundBrightness": "shown",
+				"textBackgroundBrightnessValue": "shown",
+				"resetTextBackgroundBrightness": "shown",
+				"textBackgroundTextureAnchorArtwork": "shown",
+				"textBackgroundTextureAnchorCanvas": "shown",
+				"textBackgroundTextureOffsetX": "shown",
+				"textBackgroundTextureOffsetY": "shown",
+				"textBackgroundResetTexturePosition": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
 				"textBorderUseGlitter": "shown",
@@ -13004,8 +13905,10 @@
 				"textShadowResetTexturePosition": "shown",
 				"textAnimSummary": "shown",
 				"textAnimEnabled": "shown",
-				"textAnimControls": "shown",
+				"textAnimPresetPrev": "shown",
 				"textAnimType": "shown",
+				"textAnimPresetNext": "shown",
+				"textAnimLoopHint": "shown",
 				"textAnimPeriodMs": "shown",
 				"textAnimPeriodMsValue": "shown",
 				"resetTextAnimPeriodMs": "shown",
@@ -13041,7 +13944,6 @@
 				"textAnimOvershoot": "shown",
 				"textAnimOvershootValue": "shown",
 				"resetTextAnimOvershoot": "shown",
-				"textAnimLoopHint": "shown",
 				"textAnimAdvanced": "shown",
 				"textAnimEasing": "shown",
 				"textAnimStepsRow": "hidden",
@@ -13233,8 +14135,10 @@
 				"shapeShadowResetTexturePosition": "shown",
 				"shapeAnimSummary": "shown",
 				"shapeAnimEnabled": "shown",
-				"shapeAnimControls": "hidden",
+				"shapeAnimPresetPrev": "shown",
 				"shapeAnimType": "shown",
+				"shapeAnimPresetNext": "shown",
+				"shapeAnimLoopHint": "shown",
 				"shapeAnimPeriodMs": "shown",
 				"shapeAnimPeriodMsValue": "shown",
 				"resetShapeAnimPeriodMs": "shown",
@@ -13270,7 +14174,6 @@
 				"shapeAnimOvershoot": "shown",
 				"shapeAnimOvershootValue": "shown",
 				"resetShapeAnimOvershoot": "shown",
-				"shapeAnimLoopHint": "shown",
 				"shapeAnimAdvanced": "shown",
 				"shapeAnimEasing": "shown",
 				"shapeAnimStepsRow": "shown",
@@ -13983,6 +14886,170 @@
 							"textFillTextureOffsetX": "shown",
 							"textFillTextureOffsetY": "shown",
 							"textFillResetTexturePosition": "shown"
+						}
+					}
+				},
+				"textBackgroundUseGlitter": {
+					"textBackgroundUseGlitter": {
+						"paintMode": "glitter",
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "hidden",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundUseColor": {
+						"paintMode": "solid",
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown",
+							"textBackgroundUseColor": "shown+active",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "hidden",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "shown",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "hidden",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "hidden",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundGradient": {
+						"paintMode": "gradient",
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown+active",
+							"textBackgroundGlitterInfo": "hidden",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "hidden",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "hidden",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -15000,8 +16067,10 @@
 				"glitterFillResetTexturePosition": "shown",
 				"glitterAnimSummary": "shown",
 				"glitterAnimEnabled": "shown",
-				"glitterAnimControls": "hidden",
+				"glitterAnimPresetPrev": "shown",
 				"glitterAnimType": "shown",
+				"glitterAnimPresetNext": "shown",
+				"glitterAnimLoopHint": "shown",
 				"glitterAnimPeriodMs": "shown",
 				"glitterAnimPeriodMsValue": "shown",
 				"resetGlitterAnimPeriodMs": "shown",
@@ -15037,7 +16106,6 @@
 				"glitterAnimOvershoot": "shown",
 				"glitterAnimOvershootValue": "shown",
 				"resetGlitterAnimOvershoot": "shown",
-				"glitterAnimLoopHint": "shown",
 				"glitterAnimAdvanced": "shown",
 				"glitterAnimEasing": "shown",
 				"glitterAnimStepsRow": "shown",
@@ -15187,8 +16255,10 @@
 				"stickerShadowResetTexturePosition": "shown",
 				"stickerAnimSummary": "shown",
 				"stickerAnimEnabled": "shown",
-				"stickerAnimControls": "shown",
+				"stickerAnimPresetPrev": "shown",
 				"stickerAnimType": "shown",
+				"stickerAnimPresetNext": "shown",
+				"stickerAnimLoopHint": "shown",
 				"stickerAnimPeriodMs": "shown",
 				"stickerAnimPeriodMsValue": "shown",
 				"resetStickerAnimPeriodMs": "shown",
@@ -15224,7 +16294,6 @@
 				"stickerAnimOvershoot": "shown",
 				"stickerAnimOvershootValue": "shown",
 				"resetStickerAnimOvershoot": "shown",
-				"stickerAnimLoopHint": "shown",
 				"stickerAnimAdvanced": "shown",
 				"stickerAnimEasing": "shown",
 				"stickerAnimStepsRow": "hidden",
@@ -15336,6 +16405,55 @@
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
+				"textBackgroundEnabled": "shown",
+				"textBackgroundControls": "shown",
+				"textBackgroundUseGlitter": "shown",
+				"textBackgroundUseColor": "shown",
+				"textBackgroundGradient": "shown",
+				"textBackgroundGlitterInfo": "shown",
+				"textBackgroundGlitterChip": "shown",
+				"textBackgroundGlitterLabel": "shown",
+				"textBackgroundGlitterBadges": "shown",
+				"textBackgroundGlitterSize": "shown",
+				"textBackgroundGlitterFrames": "shown",
+				"textBackgroundGlitterChange": "shown",
+				"textBackgroundColorRow": "hidden",
+				"textBackgroundColor": "shown",
+				"textBackgroundPaddingH": "shown",
+				"textBackgroundPaddingV": "shown",
+				"textBackgroundRadius": "shown",
+				"textBackgroundRadiusValue": "shown",
+				"resetTextBackgroundRadius": "shown",
+				"textBackgroundScaleRow": "shown",
+				"textBackgroundScale": "shown",
+				"textBackgroundScaleValue": "shown",
+				"resetTextBackgroundScale": "shown",
+				"textBackgroundOpacity": "shown",
+				"textBackgroundOpacityValue": "shown",
+				"resetTextBackgroundOpacity": "shown",
+				"textBackgroundModeLines": "shown",
+				"textBackgroundModeBounds": "shown",
+				"textBackgroundModeBox": "shown",
+				"textBackgroundConnectionSeparate": "shown",
+				"textBackgroundConnectionMerge": "shown",
+				"textBackgroundConnectionConnected": "shown",
+				"textBackgroundMergeDistance": "shown",
+				"textBackgroundSpacing": "shown",
+				"textBackgroundPreset": "shown",
+				"textBackgroundHue": "shown",
+				"textBackgroundHueValue": "shown",
+				"resetTextBackgroundHue": "shown",
+				"textBackgroundSaturation": "shown",
+				"textBackgroundSaturationValue": "shown",
+				"resetTextBackgroundSaturation": "shown",
+				"textBackgroundBrightness": "shown",
+				"textBackgroundBrightnessValue": "shown",
+				"resetTextBackgroundBrightness": "shown",
+				"textBackgroundTextureAnchorArtwork": "shown",
+				"textBackgroundTextureAnchorCanvas": "shown",
+				"textBackgroundTextureOffsetX": "shown",
+				"textBackgroundTextureOffsetY": "shown",
+				"textBackgroundResetTexturePosition": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
 				"textBorderUseGlitter": "shown",
@@ -15420,8 +16538,10 @@
 				"textShadowResetTexturePosition": "shown",
 				"textAnimSummary": "shown",
 				"textAnimEnabled": "shown",
-				"textAnimControls": "hidden",
+				"textAnimPresetPrev": "shown",
 				"textAnimType": "shown",
+				"textAnimPresetNext": "shown",
+				"textAnimLoopHint": "shown",
 				"textAnimPeriodMs": "shown",
 				"textAnimPeriodMsValue": "shown",
 				"resetTextAnimPeriodMs": "shown",
@@ -15457,7 +16577,6 @@
 				"textAnimOvershoot": "shown",
 				"textAnimOvershootValue": "shown",
 				"resetTextAnimOvershoot": "shown",
-				"textAnimLoopHint": "shown",
 				"textAnimAdvanced": "shown",
 				"textAnimEasing": "shown",
 				"textAnimStepsRow": "shown",
@@ -15649,8 +16768,10 @@
 				"shapeShadowResetTexturePosition": "shown",
 				"shapeAnimSummary": "shown",
 				"shapeAnimEnabled": "shown",
-				"shapeAnimControls": "hidden",
+				"shapeAnimPresetPrev": "shown",
 				"shapeAnimType": "shown",
+				"shapeAnimPresetNext": "shown",
+				"shapeAnimLoopHint": "shown",
 				"shapeAnimPeriodMs": "shown",
 				"shapeAnimPeriodMsValue": "shown",
 				"resetShapeAnimPeriodMs": "shown",
@@ -15686,7 +16807,6 @@
 				"shapeAnimOvershoot": "shown",
 				"shapeAnimOvershootValue": "shown",
 				"resetShapeAnimOvershoot": "shown",
-				"shapeAnimLoopHint": "shown",
 				"shapeAnimAdvanced": "shown",
 				"shapeAnimEasing": "shown",
 				"shapeAnimStepsRow": "shown",
@@ -16399,6 +17519,170 @@
 							"textFillTextureOffsetX": "shown",
 							"textFillTextureOffsetY": "shown",
 							"textFillResetTexturePosition": "shown"
+						}
+					}
+				},
+				"textBackgroundUseGlitter": {
+					"textBackgroundUseGlitter": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundUseColor": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundGradient": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -17416,8 +18700,10 @@
 				"glitterFillResetTexturePosition": "shown",
 				"glitterAnimSummary": "shown",
 				"glitterAnimEnabled": "shown",
-				"glitterAnimControls": "shown",
+				"glitterAnimPresetPrev": "shown",
 				"glitterAnimType": "shown",
+				"glitterAnimPresetNext": "shown",
+				"glitterAnimLoopHint": "shown",
 				"glitterAnimPeriodMs": "shown",
 				"glitterAnimPeriodMsValue": "shown",
 				"resetGlitterAnimPeriodMs": "shown",
@@ -17453,7 +18739,6 @@
 				"glitterAnimOvershoot": "shown",
 				"glitterAnimOvershootValue": "shown",
 				"resetGlitterAnimOvershoot": "shown",
-				"glitterAnimLoopHint": "shown",
 				"glitterAnimAdvanced": "shown",
 				"glitterAnimEasing": "shown",
 				"glitterAnimStepsRow": "hidden",
@@ -17603,8 +18888,10 @@
 				"stickerShadowResetTexturePosition": "shown",
 				"stickerAnimSummary": "shown",
 				"stickerAnimEnabled": "shown",
-				"stickerAnimControls": "hidden",
+				"stickerAnimPresetPrev": "shown",
 				"stickerAnimType": "shown",
+				"stickerAnimPresetNext": "shown",
+				"stickerAnimLoopHint": "shown",
 				"stickerAnimPeriodMs": "shown",
 				"stickerAnimPeriodMsValue": "shown",
 				"resetStickerAnimPeriodMs": "shown",
@@ -17640,7 +18927,6 @@
 				"stickerAnimOvershoot": "shown",
 				"stickerAnimOvershootValue": "shown",
 				"resetStickerAnimOvershoot": "shown",
-				"stickerAnimLoopHint": "shown",
 				"stickerAnimAdvanced": "shown",
 				"stickerAnimEasing": "shown",
 				"stickerAnimStepsRow": "shown",
@@ -17752,6 +19038,55 @@
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
+				"textBackgroundEnabled": "shown",
+				"textBackgroundControls": "shown",
+				"textBackgroundUseGlitter": "shown",
+				"textBackgroundUseColor": "shown",
+				"textBackgroundGradient": "shown",
+				"textBackgroundGlitterInfo": "shown",
+				"textBackgroundGlitterChip": "shown",
+				"textBackgroundGlitterLabel": "shown",
+				"textBackgroundGlitterBadges": "shown",
+				"textBackgroundGlitterSize": "shown",
+				"textBackgroundGlitterFrames": "shown",
+				"textBackgroundGlitterChange": "shown",
+				"textBackgroundColorRow": "hidden",
+				"textBackgroundColor": "shown",
+				"textBackgroundPaddingH": "shown",
+				"textBackgroundPaddingV": "shown",
+				"textBackgroundRadius": "shown",
+				"textBackgroundRadiusValue": "shown",
+				"resetTextBackgroundRadius": "shown",
+				"textBackgroundScaleRow": "shown",
+				"textBackgroundScale": "shown",
+				"textBackgroundScaleValue": "shown",
+				"resetTextBackgroundScale": "shown",
+				"textBackgroundOpacity": "shown",
+				"textBackgroundOpacityValue": "shown",
+				"resetTextBackgroundOpacity": "shown",
+				"textBackgroundModeLines": "shown",
+				"textBackgroundModeBounds": "shown",
+				"textBackgroundModeBox": "shown",
+				"textBackgroundConnectionSeparate": "shown",
+				"textBackgroundConnectionMerge": "shown",
+				"textBackgroundConnectionConnected": "shown",
+				"textBackgroundMergeDistance": "shown",
+				"textBackgroundSpacing": "shown",
+				"textBackgroundPreset": "shown",
+				"textBackgroundHue": "shown",
+				"textBackgroundHueValue": "shown",
+				"resetTextBackgroundHue": "shown",
+				"textBackgroundSaturation": "shown",
+				"textBackgroundSaturationValue": "shown",
+				"resetTextBackgroundSaturation": "shown",
+				"textBackgroundBrightness": "shown",
+				"textBackgroundBrightnessValue": "shown",
+				"resetTextBackgroundBrightness": "shown",
+				"textBackgroundTextureAnchorArtwork": "shown",
+				"textBackgroundTextureAnchorCanvas": "shown",
+				"textBackgroundTextureOffsetX": "shown",
+				"textBackgroundTextureOffsetY": "shown",
+				"textBackgroundResetTexturePosition": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
 				"textBorderUseGlitter": "shown",
@@ -17836,8 +19171,10 @@
 				"textShadowResetTexturePosition": "shown",
 				"textAnimSummary": "shown",
 				"textAnimEnabled": "shown",
-				"textAnimControls": "hidden",
+				"textAnimPresetPrev": "shown",
 				"textAnimType": "shown",
+				"textAnimPresetNext": "shown",
+				"textAnimLoopHint": "shown",
 				"textAnimPeriodMs": "shown",
 				"textAnimPeriodMsValue": "shown",
 				"resetTextAnimPeriodMs": "shown",
@@ -17873,7 +19210,6 @@
 				"textAnimOvershoot": "shown",
 				"textAnimOvershootValue": "shown",
 				"resetTextAnimOvershoot": "shown",
-				"textAnimLoopHint": "shown",
 				"textAnimAdvanced": "shown",
 				"textAnimEasing": "shown",
 				"textAnimStepsRow": "shown",
@@ -18065,8 +19401,10 @@
 				"shapeShadowResetTexturePosition": "shown",
 				"shapeAnimSummary": "shown",
 				"shapeAnimEnabled": "shown",
-				"shapeAnimControls": "hidden",
+				"shapeAnimPresetPrev": "shown",
 				"shapeAnimType": "shown",
+				"shapeAnimPresetNext": "shown",
+				"shapeAnimLoopHint": "shown",
 				"shapeAnimPeriodMs": "shown",
 				"shapeAnimPeriodMsValue": "shown",
 				"resetShapeAnimPeriodMs": "shown",
@@ -18102,7 +19440,6 @@
 				"shapeAnimOvershoot": "shown",
 				"shapeAnimOvershootValue": "shown",
 				"resetShapeAnimOvershoot": "shown",
-				"shapeAnimLoopHint": "shown",
 				"shapeAnimAdvanced": "shown",
 				"shapeAnimEasing": "shown",
 				"shapeAnimStepsRow": "shown",
@@ -18815,6 +20152,170 @@
 							"textFillTextureOffsetX": "shown",
 							"textFillTextureOffsetY": "shown",
 							"textFillResetTexturePosition": "shown"
+						}
+					}
+				},
+				"textBackgroundUseGlitter": {
+					"textBackgroundUseGlitter": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundUseColor": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
+						}
+					},
+					"textBackgroundGradient": {
+						"paintMode": null,
+						"controls": {
+							"textBackgroundEnabled": "shown",
+							"textBackgroundControls": "shown",
+							"textBackgroundUseGlitter": "shown+active",
+							"textBackgroundUseColor": "shown",
+							"textBackgroundGradient": "shown",
+							"textBackgroundGlitterInfo": "shown",
+							"textBackgroundGlitterChip": "shown",
+							"textBackgroundGlitterLabel": "shown",
+							"textBackgroundGlitterBadges": "shown",
+							"textBackgroundGlitterSize": "shown",
+							"textBackgroundGlitterFrames": "shown",
+							"textBackgroundGlitterChange": "shown",
+							"textBackgroundColorRow": "hidden",
+							"textBackgroundColor": "shown",
+							"textBackgroundPaddingH": "shown",
+							"textBackgroundPaddingV": "shown",
+							"textBackgroundRadius": "shown",
+							"textBackgroundRadiusValue": "shown",
+							"resetTextBackgroundRadius": "shown",
+							"textBackgroundScaleRow": "shown",
+							"textBackgroundScale": "shown",
+							"textBackgroundScaleValue": "shown",
+							"resetTextBackgroundScale": "shown",
+							"textBackgroundOpacity": "shown",
+							"textBackgroundOpacityValue": "shown",
+							"resetTextBackgroundOpacity": "shown",
+							"textBackgroundModeLines": "shown+active",
+							"textBackgroundModeBounds": "shown",
+							"textBackgroundModeBox": "shown",
+							"textBackgroundConnectionSeparate": "shown+active",
+							"textBackgroundConnectionMerge": "shown",
+							"textBackgroundConnectionConnected": "shown",
+							"textBackgroundMergeDistance": "shown",
+							"textBackgroundSpacing": "shown",
+							"textBackgroundPreset": "shown",
+							"textBackgroundHue": "shown",
+							"textBackgroundHueValue": "shown",
+							"resetTextBackgroundHue": "shown",
+							"textBackgroundSaturation": "shown",
+							"textBackgroundSaturationValue": "shown",
+							"resetTextBackgroundSaturation": "shown",
+							"textBackgroundBrightness": "shown",
+							"textBackgroundBrightnessValue": "shown",
+							"resetTextBackgroundBrightness": "shown",
+							"textBackgroundTextureAnchorArtwork": "shown+active",
+							"textBackgroundTextureAnchorCanvas": "shown",
+							"textBackgroundTextureOffsetX": "shown",
+							"textBackgroundTextureOffsetY": "shown",
+							"textBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
