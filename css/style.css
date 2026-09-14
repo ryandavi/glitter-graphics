@@ -2548,7 +2548,8 @@ input[type=range]:disabled {
   display: flex;
   align-items: center;
 }
-.app-menu > .app-menu-trigger.icon-wrapper > svg.icon {
+
+#appMenu > .app-menu-trigger.icon-wrapper > svg.icon {
   width: var(--app-header-mark-size);
   height: var(--app-header-mark-size);
   font-size: var(--app-header-mark-size);
@@ -2604,10 +2605,6 @@ input[type=range]:disabled {
 .export-split-control > #exportMenuBtn {
   width: 26px;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
-.export-split-control > .app-menu-panel {
-  bottom: calc(100% + var(--spacing-xs));
-  top: auto;
 }
 
 .app-menu-item {

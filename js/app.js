@@ -1429,7 +1429,7 @@ class GlitterEditor {
 		if (boundsToggle) boundsToggle.disabled = !hasImage;
 
 		// --- Toggle visibility of the controls container ---
-		if (previewControls) previewControls.classList.add('visible');
+		if (previewControls) previewControls.classList.toggle('visible', hasImage);
 		this.updateExportActionUI?.();
 
 		if (selectTool) selectTool.disabled = !hasImage || autoPreviewActive;
@@ -1510,7 +1510,7 @@ class GlitterEditor {
 		// ======================
 		// Core image + data state
 		// ======================
-		this.exporter?.clearPreviewBlobUrl?.();
+		this.exportResultPresenter?.clear();
 		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
 			URL.revokeObjectURL(this.originalImage.src);
 		}
@@ -1789,7 +1789,7 @@ class GlitterEditor {
 			}
 		}
 
-		this.exporter?.clearPreviewBlobUrl?.();
+		this.exportResultPresenter?.clear();
 		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
 			URL.revokeObjectURL(this.originalImage.src);
 		}

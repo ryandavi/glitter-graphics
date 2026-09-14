@@ -131,13 +131,16 @@
 	display: flex;
 	align-items: center;
 
-	// Keep the trigger glyph the same size as the other header marks even though
-	// it is no longer a direct child of .app-header-right.
-	>.app-menu-trigger.icon-wrapper > svg.icon {
-		width: var(--app-header-mark-size);
-		height: var(--app-header-mark-size);
-		font-size: var(--app-header-mark-size);
-	}
+}
+
+// Keep the header "…" trigger glyph the same size as the other header marks
+// even though it is no longer a direct child of .app-header-right. Scoped to
+// the header menu specifically so other .app-menu instances (e.g. the export
+// split button) keep their own .btn-icon sizing instead of inheriting this.
+#appMenu > .app-menu-trigger.icon-wrapper > svg.icon {
+	width: var(--app-header-mark-size);
+	height: var(--app-header-mark-size);
+	font-size: var(--app-header-mark-size);
 }
 
 .app-menu-panel {
@@ -181,7 +184,6 @@
 .export-split-control {
 	> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
 	> #exportMenuBtn { width: 26px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-	> .app-menu-panel { bottom: calc(100% + var(--spacing-xs)); top: auto; }
 }
 
 .app-menu-item {

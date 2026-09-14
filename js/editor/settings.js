@@ -541,6 +541,11 @@ initializeExportSettings() {
 			if (title === 'Playback') group.hidden = !target.supportsPlaybackSettings;
 			if (title === 'Optimization') group.hidden = !target.supportsAnimationOptimization;
 		});
+		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
+			if (group.hidden) return;
+			const hasVisibleRow = Array.from(group.children).some((child) => child !== group.firstElementChild && !child.hidden);
+			group.hidden = !hasVisibleRow;
+		});
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
 		const targetDurationRow = document.getElementById('exportMp4TargetDurationRow');
 		const loopCountRow = document.getElementById('exportMp4LoopCountRow');

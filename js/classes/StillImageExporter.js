@@ -17,7 +17,7 @@ class StillImageExporter {
 		let blob;
 		if (target.format === 'png') { callbacks.onProgress(75, 'Encoding PNG…', 1, 1, { phase: 'Encoding PNG' }); blob = await encodeCanvasToBlob(canvas, target.mimeType); }
 		else if (target.format === 'jpeg') blob = await this._encodeJpegGenerations(canvas, exportSettings, callbacks);
-		else blob = await this._encodeGif(composed.imageData, composed.width, composed.height, exportSettings, callbacks);
+		else blob = await this._encodeGif(composed, exportSettings, callbacks);
 		callbacks.onProgress(100, 'Export complete', 1, 1, { phase: 'Finalizing' }); callbacks.onStatus('Export complete!');
 		const file = new File([blob], this.fileName, { type: target.mimeType, lastModified: Date.now() });
 		callbacks.onComplete({ still: true }); this.resultPresenter.show({ blob, file, target, width: composed.width, height: composed.height }); return blob;
@@ -32,10 +32,12 @@ class StillImageExporter {
 		}
 		return blob;
 	}
-	async _encodeGif(imageData, width, height, settings, callbacks) {
+	async _encodeGif(composed, settings, callbacks) {
 		callbacks.onProgress(65, 'Building palette…', 1, 1, { phase: 'Building palette' });
-		let frame = new ImageData(new Uint8ClampedArray(imageData.data), width, height); const transparent = settings.transparency ? 0xFF00FF : null;
-		if (transparent != null) for (let i = 0; i < frame.data.length; i += 4) if (frame.data[i + 3] === 0) { frame.data[i] = 255; frame.data[i + 1] = 0; frame.data[i + 2] = 255; frame.data[i + 3] = 255; }
+		const { imageData, width, height, needsTransparency, transparentColor } = composed;
+		let frame = new ImageData(new Uint8ClampedArray(imageData.data), width, height);
+		const transparent = needsTransparency && transparentColor ? transparentColor.hex : null;
+		if (transparent != null) for (let i = 0; i < frame.data.length; i += 4) if (frame.data[i + 3] === 0) { frame.data[i] = transparentColor.r; frame.data[i + 1] = transparentColor.g; frame.data[i + 2] = transparentColor.b; frame.data[i + 3] = 255; }
 		const analysis = this.frameComposer._analyzeGifColors([frame]);
 		const colorCount = GifPalette.resolveColorCount(settings.colorCount, analysis);
 		const useNativePalette = settings.colorCount === 'auto' && !settings.ditherEnabled;
