@@ -219,8 +219,8 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 		}
 	}
 
-	// (`.paint-slot-primary-row` still holds Scale + Opacity for Glitter, a lone
-	// Opacity for Solid; for Gradient it collapses — Opacity moved out above.)
+	// The primary row holds opacity only. Glitter texture scale lives beside
+	// anchor and offset inside the glitter-only Advanced disclosure.
 	const slotToggle = slot.querySelector(':scope > .subsection-title input[data-paint-slot-toggle]');
 	if (slotToggle) slotToggle.checked = normalizedMode !== 'none';
 	sourceButton.closest('.segmented-control')?.querySelectorAll('.segmented-option').forEach((button) => {
@@ -233,11 +233,9 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 		element.hidden = element.dataset.paintSourceMode !== normalizedMode;
 	});
 	const primaryRow = slot.querySelector('.paint-slot-primary-row');
-	const scale = primaryRow?.querySelector('.paint-slot-scale');
-	if (scale) scale.hidden = normalizedMode !== 'glitter';
 	const opacity = primaryRow?.querySelector('.paint-slot-opacity');
 	const hidePrimaryModes = new Set((slot.dataset.hidePrimaryModes || '').split(/\s+/).filter(Boolean));
-	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || hidePrimaryModes.has(normalizedMode) || (normalizedMode !== 'glitter' && !opacity);
+	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || hidePrimaryModes.has(normalizedMode) || !opacity;
 	// Two module-level Advanced disclosures share the slot: the glitter source's
 	// own (color adjust / texture position) is glitter-only; the gradient
 	// editor's `.gradient-advanced` (Smoothing) is gradient-only — and the

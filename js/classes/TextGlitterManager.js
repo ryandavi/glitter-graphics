@@ -378,7 +378,7 @@ class TextGlitterManager {
 							delete layer.textData.boxWidth;
 							delete layer.textData.boxHeight;
 						}
-					}, { saveHistory: true });
+					}, { saveHistory: true, preservePointAnchor: true });
 				} catch (error) {
 					this.reportFontLoadError(error);
 				}
@@ -658,12 +658,15 @@ class TextGlitterManager {
 	}
 
 	preparePendingAnchorPreservation(layer) {
-		if (!layer || layer._pendingPointAnchorSnapshot) return;
+		if (!layer || layer._pendingPointAnchorSnapshot
+			|| (layer.textData?.boxMode || 'auto') !== 'auto') return;
 		layer._pendingPointAnchorSnapshot = this.getPointAnchorSnapshot(layer);
 	}
 
 	async runLayoutRefreshWithAnchor(layer, mutateFn, options = {}) {
-		const snapshot = this.getPointAnchorSnapshot(layer);
+		const snapshot = ((layer.textData?.boxMode || 'auto') === 'auto' || options.preservePointAnchor)
+			? this.getPointAnchorSnapshot(layer)
+			: null;
 		await mutateFn();
 		return this.refreshLayer(layer, {
 			...options,
@@ -1349,7 +1352,7 @@ class TextGlitterManager {
 	}
 
 	attachSlider(slider, valueDisplay, suffix, applyValue, resetValue, refreshTextLayout = true) {
-		if (!slider || !valueDisplay) return;
+		if (!slider) return;
 		const resetId = 'reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1);
 		const resetButton = document.getElementById(resetId);
 
@@ -1838,7 +1841,7 @@ class TextGlitterManager {
 
 		if (this.ui.boxModeHint) {
 			this.ui.boxModeHint.textContent = mode === 'fixed'
-				? 'Box text wraps inside the frame. Drag any resize handle to change the box without scaling the text.'
+				? 'Box text wraps inside the frame. Side handles resize the box; corner handles scale the text and box together.'
 				: 'Point text hugs the glyphs. Corner handles scale it. Switch to Box for wrapping inside a resizable frame.';
 		}
 
@@ -2461,6 +2464,13 @@ class TextGlitterManager {
 					textInkBottom - textInkTop
 				) - textInkTop;
 			}
+			// The first pass exists only to derive the vertical alignment offset.
+			// Rebuild the canonical bounds from the positioned lines below so the
+			// unaligned top/bottom cannot leak into Text Bounds geometry.
+			textInkLeft = Infinity;
+			textInkTop = Infinity;
+			textInkRight = -Infinity;
+			textInkBottom = -Infinity;
 		}
 
 		// Canonical per-line layout for Text Background (docs/DYNAMIC-TEXT-

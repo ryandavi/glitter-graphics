@@ -563,7 +563,7 @@ const CONFIG = deepFreeze({
 			defaultLetterSpacing: 0,
 			minLetterSpacing: -5,
 			maxLetterSpacing: 40,
-			lineHeight: 1.1,
+			lineHeight: 1,
 			maxTextLength: 200,
 			border: {
 				minWidthPx: 1,
@@ -823,7 +823,7 @@ const CONFIG = deepFreeze({
 			feather: { label: 'Edge Feather', unit: 'px', min: 0, max: 50, value: 0 },
 			textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
 			textLetterSpacing: { label: 'Letter Spacing', unit: 'px', min: -20, max: 40, value: 0 },
-			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 110 },
+			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 100 },
 			transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, value: 100 },
 			transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
 			transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },

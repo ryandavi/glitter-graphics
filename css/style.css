@@ -4635,11 +4635,9 @@ body.mask-editing .sticker-element {
   resize: vertical;
 }
 
-/* Point text has no frame to align within, and line-height only matters for
-   wrapped copy — hide both in point ("auto") mode.
-   (dataset set by TextGlitterManager.updateBoxModeSelection) */
-.text-settings-section[data-box-mode=auto] .text-valign-row,
-.text-settings-section[data-box-mode=auto] .text-line-height-row {
+/* Point text has no frame to align within, so vertical alignment is only
+   available for box text. Line height still controls explicit line breaks. */
+.text-settings-section[data-box-mode=auto] .text-valign-row {
   display: none;
 }
 
@@ -8891,6 +8889,32 @@ body.modal-open {
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > :not(ol) {
   grid-column: 2;
 }
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li {
+  /* third-level nested list (e.g. h5s under an h4) should also align under content */
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > ol {
+  grid-column: 2;
+  margin-top: 0.25em;
+  margin-left: 0;
+  counter-reset: subsubitem;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > ol > li {
+  counter-increment: subsubitem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  -moz-column-gap: 0.5em;
+  column-gap: 0.5em;
+  align-items: start;
+  padding: var(--spacing-2xs);
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > ol > li::before {
+  content: counter(item) "." counter(subitem) "." counter(subsubitem);
+  grid-column: 1;
+  align-self: start;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > ol > li > :not(ol) {
+  grid-column: 2;
+}
 .modal-overlay > .modal-content > .modal-footer {
   flex-shrink: 0;
   padding: var(--spacing-lg);
@@ -9185,6 +9209,17 @@ body.modal-open {
 }
 .document-nav .document-toc-menu > ol > li > ol > li::before {
   content: counter(item) "." counter(subitem);
+}
+.document-nav .document-toc-menu > ol > li > ol > li > ol {
+  grid-column: 2;
+  margin-top: var(--spacing-xs);
+  counter-reset: subsubitem;
+}
+.document-nav .document-toc-menu > ol > li > ol > li > ol > li {
+  counter-increment: subsubitem;
+}
+.document-nav .document-toc-menu > ol > li > ol > li > ol > li::before {
+  content: counter(item) "." counter(subitem) "." counter(subsubitem);
 }
 .document-nav .document-toc-menu li {
   display: grid;

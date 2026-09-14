@@ -232,6 +232,34 @@ body.modal-open {
 								> :not(ol) {
 									grid-column: 2;
 								}
+
+								/* third-level nested list (e.g. h5s under an h4) should also align under content */
+								>ol {
+									grid-column: 2;
+									margin-top: 0.25em;
+									margin-left: 0;
+									counter-reset: subsubitem;
+
+									>li {
+										counter-increment: subsubitem;
+										display: grid;
+										grid-template-columns: auto 1fr;
+										-moz-column-gap: 0.5em;
+										column-gap: 0.5em;
+										align-items: start;
+										padding: var(--spacing-2xs);
+
+										&::before {
+											content: counter(item) "." counter(subitem) "." counter(subsubitem);
+											grid-column: 1;
+											align-self: start;
+										}
+
+										> :not(ol) {
+											grid-column: 2;
+										}
+									}
+								}
 							}
 						}
 					}
@@ -582,6 +610,18 @@ body.modal-open {
 						counter-increment: subitem;
 
 						&::before { content: counter(item) "." counter(subitem); }
+
+						>ol {
+							grid-column: 2;
+							margin-top: var(--spacing-xs);
+							counter-reset: subsubitem;
+
+							>li {
+								counter-increment: subsubitem;
+
+								&::before { content: counter(item) "." counter(subitem) "." counter(subsubitem); }
+							}
+						}
 					}
 				}
 			}

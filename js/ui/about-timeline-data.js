@@ -85,6 +85,7 @@ const ABOUT_TIMELINE_ENTITY_LABELS = {
  "pinterest": "Pinterest",
  "instagram": "Instagram",
  "vine": "Vine",
+ "snapchat": "Snapchat",
  "giphy": "GIPHY",
  "creative-cloud": "Creative Cloud",
  "neocities": "Neocities",
@@ -160,7 +161,7 @@ const ABOUT_TIMELINE_COUNTRY_LABELS = {
 
 const ABOUT_TIMELINE = [
  {
-  "date": "1969–90",
+  "date": "1969",
   "type": "start",
   "tags": [
    "infrastructure"
@@ -171,7 +172,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1969,
   "decade": "1960s",
-  "html": "<strong>ARPANET</strong> sends its first message in 1969 and is formally decommissioned in 1990 after evolving into the internet."
+  "html": "<strong>ARPANET</strong> sends its first message, the starting point for what would evolve into the modern internet."
  },
  {
   "date": "1 May 1985",
@@ -233,7 +234,21 @@ const ABOUT_TIMELINE = [
   "html": "<strong>JASC Paint Shop Pro</strong> is first released."
  },
  {
-  "date": "1990–94",
+  "date": "1990",
+  "type": "closure",
+  "tags": [
+   "infrastructure"
+  ],
+  "entities": [
+   "arpanet"
+  ],
+  "country": "us",
+  "year": 1990,
+  "decade": "1990s",
+  "html": "<strong>ARPANET</strong> is formally decommissioned, having fully evolved into the modern internet."
+ },
+ {
+  "date": "1990",
   "type": "start",
   "tags": [
    "browser"
@@ -244,7 +259,7 @@ const ABOUT_TIMELINE = [
   "country": "international",
   "year": 1990,
   "decade": "1990s",
-  "html": "Tim Berners-Lee creates the first browser, <strong>WorldWideWeb</strong>, in 1990; it is later renamed Nexus and discontinued in 1994."
+  "html": "Tim Berners-Lee creates the first browser, <strong>WorldWideWeb</strong>, at CERN."
  },
  {
   "date": "1991",
@@ -289,7 +304,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Tripod</strong> is founded by Williams College classmates Bo Peabody and Brett Hershey with economics professor Dick Sabot, originally offering advice and tools for young adults rather than a web platform."
  },
  {
-  "date": "1993–97",
+  "date": "1993",
   "type": "start",
   "tags": [
    "browser"
@@ -300,7 +315,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1993,
   "decade": "1990s",
-  "html": "<strong>NCSA Mosaic</strong> popularizes graphical web browsing in 1993; development and support end in January 1997."
+  "html": "<strong>NCSA Mosaic</strong> popularizes graphical web browsing."
  },
  {
   "date": "15 Dec 1994",
@@ -329,6 +344,20 @@ const ABOUT_TIMELINE = [
   "year": 1994,
   "decade": "1990s",
   "html": "The <strong>World Wide Web Consortium (W3C)</strong> is founded by Tim Berners-Lee."
+ },
+ {
+  "date": "1994",
+  "type": "closure",
+  "tags": [
+   "browser"
+  ],
+  "entities": [
+   "worldwideweb-browser"
+  ],
+  "country": "international",
+  "year": 1994,
+  "decade": "1990s",
+  "html": "<strong>WorldWideWeb</strong>, renamed Nexus, is discontinued."
  },
  {
   "date": "Nov 1994",
@@ -388,7 +417,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Newgrounds</strong> begins as Tom Fulp's personal website, eventually growing into a major hub for independent web animation, games, and Flash culture."
  },
  {
-  "date": "1995–2006",
+  "date": "1995",
   "type": "start",
   "tags": [
    "program"
@@ -400,7 +429,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1995,
   "decade": "1990s",
-  "html": "<strong>Microsoft FrontPage</strong> makes visual website building accessible to non-programmers until Microsoft discontinues it in 2006."
+  "html": "<strong>Microsoft FrontPage</strong> makes visual website building accessible to non-programmers."
  },
  {
   "date": "16 Aug 1995",
@@ -548,6 +577,20 @@ const ABOUT_TIMELINE = [
   "year": 1996,
   "decade": "1990s",
   "html": "<strong>ICQ</strong> launches, one of the first mass-market instant messengers."
+ },
+ {
+  "date": "Jan 1997",
+  "type": "closure",
+  "tags": [
+   "browser"
+  ],
+  "entities": [
+   "mosaic"
+  ],
+  "country": "us",
+  "year": 1997,
+  "decade": "1990s",
+  "html": "Development and support for <strong>NCSA Mosaic</strong> ends."
  },
  {
   "date": "1997",
@@ -699,7 +742,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>AOL Hometown</strong> launches, giving AOL subscribers free personal webpages."
  },
  {
-  "date": "1998–2008",
+  "date": "1998",
   "type": "acquisition",
   "tags": [
    "browser"
@@ -711,7 +754,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1998,
   "decade": "1990s",
-  "html": "AOL acquires <strong>Netscape</strong> in 1998; development and support for its browsers end in 2008."
+  "html": "<strong>AOL</strong> acquires <strong>Netscape</strong>."
  },
  {
   "date": "4 Jan 1999",
@@ -944,7 +987,7 @@ const ABOUT_TIMELINE = [
   "html": "Communities.com folds in the dot-com collapse, ending official development of <strong>The Palace</strong>; the community keeps it running independently."
  },
  {
-  "date": "2002–15",
+  "date": "2002",
   "type": "start",
   "tags": [
    "social-network"
@@ -955,7 +998,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2002,
   "decade": "2000s",
-  "html": "<strong>Friendster</strong> is founded in 2002 and launches in 2003; it pivots to gaming in 2011 and shuts down in 2015."
+  "html": "<strong>Friendster</strong> is founded (it launches publicly the following year)."
  },
  {
   "date": "18 Feb 2003",
@@ -1278,7 +1321,7 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Google Reader</strong> launches, becoming a major hub for following blogs and websites via RSS."
  },
  {
-  "date": "2005–12",
+  "date": "2005",
   "type": "start",
   "tags": [
    "social-network",
@@ -1290,7 +1333,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2005,
   "decade": "2000s",
-  "html": "Jim Conning launches <strong>Piczo</strong>, a teen-focused website builder and social network; after two acquisitions, it shuts down in November 2012."
+  "html": "Jim Conning launches <strong>Piczo</strong>, a teen-focused website builder and social network."
  },
  {
   "date": "2005",
@@ -1305,6 +1348,21 @@ const ABOUT_TIMELINE = [
   "year": 2005,
   "decade": "2000s",
   "html": "<strong>FortuneCity</strong> is acquired by Dotster."
+ },
+ {
+  "date": "2006",
+  "type": "closure",
+  "tags": [
+   "program"
+  ],
+  "entities": [
+   "frontpage",
+   "microsoft"
+  ],
+  "country": "us",
+  "year": 2006,
+  "decade": "2000s",
+  "html": "Microsoft discontinues <strong>FrontPage</strong>."
  },
  {
   "date": "June 2006",
@@ -1441,7 +1499,7 @@ const ABOUT_TIMELINE = [
   "html": "Intuit acquires <strong>Homestead</strong>."
  },
  {
-  "date": "2008–13",
+  "date": "2008",
   "type": "acquisition",
   "tags": [
    "social-network"
@@ -1453,7 +1511,22 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2008,
   "decade": "2000s",
-  "html": "AOL buys <strong>Bebo</strong> for $850 million in 2008; its founders buy it back for $1 million before its 2013 shutdown."
+  "html": "AOL buys <strong>Bebo</strong> for $850 million."
+ },
+ {
+  "date": "1 Mar 2008",
+  "type": "closure",
+  "tags": [
+   "browser"
+  ],
+  "entities": [
+   "netscape",
+   "aol"
+  ],
+  "country": "us",
+  "year": 2008,
+  "decade": "2000s",
+  "html": "<strong>AOL</strong> ends development and support for <strong>Netscape</strong>'s browsers."
  },
  {
   "date": "2 Sep 2008",
@@ -1638,6 +1711,20 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Yahoo! Search</strong> begins offering its own cached-page links, by way of the search technology it now shares with Microsoft's Bing."
  },
  {
+  "date": "2011",
+  "type": "milestone",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "friendster"
+  ],
+  "country": "us",
+  "year": 2011,
+  "decade": "2010s",
+  "html": "<strong>Friendster</strong> relaunches as a social-gaming site, dropping its original social-networking features."
+ },
+ {
   "date": "10 May 2011",
   "type": "acquisition",
   "tags": [
@@ -1668,6 +1755,20 @@ const ABOUT_TIMELINE = [
   "html": "Specific Media, with Justin Timberlake as co-owner, buys <strong>MySpace</strong> from News Corp for $35 million and relaunches it."
  },
  {
+  "date": "Sep 2011",
+  "type": "start",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "snapchat"
+  ],
+  "country": "us",
+  "year": 2011,
+  "decade": "2010s",
+  "html": "<strong>Snapchat</strong> launches, relaunched from the earlier Picaboo app."
+ },
+ {
   "date": "30 Apr 2012",
   "type": "closure",
   "tags": [
@@ -1680,6 +1781,21 @@ const ABOUT_TIMELINE = [
   "year": 2012,
   "decade": "2010s",
   "html": "<strong>FortuneCity</strong> ends its free web-hosting service, taking another GeoCities-era personal-hosting platform offline."
+ },
+ {
+  "date": "Nov 2012",
+  "type": "closure",
+  "tags": [
+   "social-network",
+   "hosting"
+  ],
+  "entities": [
+   "piczo"
+  ],
+  "country": "us",
+  "year": 2012,
+  "decade": "2010s",
+  "html": "<strong>Piczo</strong> shuts down after two acquisitions."
  },
  {
   "date": "24 Jan 2013",
@@ -1801,7 +1917,38 @@ const ABOUT_TIMELINE = [
   "html": "Yahoo! shuts down <strong>AltaVista</strong>."
  },
  {
-  "date": "2014–19",
+  "date": "7 Aug 2013",
+  "type": "closure",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo",
+   "aol"
+  ],
+  "country": "us",
+  "year": 2013,
+  "decade": "2010s",
+  "html": "Bebo's founders buy it back from AOL for $1 million and shut it down immediately after."
+ },
+ {
+  "date": "19 Feb 2014",
+  "type": "acquisition",
+  "tags": [
+   "messaging-app"
+  ],
+  "entities": [
+   "whatsapp",
+   "facebook",
+   "meta"
+  ],
+  "country": "us",
+  "year": 2014,
+  "decade": "2010s",
+  "html": "<strong>Facebook</strong> announces its acquisition of <strong>WhatsApp</strong> for about $19 billion (the deal closes that October)."
+ },
+ {
+  "date": "2014",
   "type": "milestone",
   "tags": [
    "social-network"
@@ -1812,7 +1959,7 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2014,
   "decade": "2010s",
-  "html": "<strong>Bebo</strong> cycles through messaging, streaming, and esports products before Twitch acquires it in 2019."
+  "html": "<strong>Bebo</strong> relaunches as a messaging app, the first of several product pivots (through streaming and esports) over the next few years."
  },
  {
   "date": "2014",
@@ -1857,6 +2004,20 @@ const ABOUT_TIMELINE = [
   "year": 2014,
   "decade": "2010s",
   "html": "Google shuts down <strong>Orkut</strong>."
+ },
+ {
+  "date": "2015",
+  "type": "closure",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "friendster"
+  ],
+  "country": "us",
+  "year": 2015,
+  "decade": "2010s",
+  "html": "<strong>Friendster</strong> shuts down for good."
  },
  {
   "date": "29 Jul 2015",
@@ -1922,7 +2083,7 @@ const ABOUT_TIMELINE = [
  },
  {
   "date": "27 Oct 2016",
-  "type": "closure",
+  "type": "milestone",
   "tags": [
    "video-platform"
   ],
@@ -1933,7 +2094,38 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2016,
   "decade": "2010s",
-  "html": "Twitter announces it's discontinuing <strong>Vine</strong>."
+  "html": "Twitter announces it's discontinuing <strong>Vine</strong>, disabling new uploads while leaving viewing and downloads active."
+ },
+ {
+  "date": "17 Jan 2017",
+  "type": "closure",
+  "tags": [
+   "video-platform"
+  ],
+  "entities": [
+   "vine",
+   "twitter"
+  ],
+  "country": "us",
+  "year": 2017,
+  "decade": "2010s",
+  "html": "Twitter officially shuts down <strong>Vine</strong>; the app's remaining functionality is discontinued a few months later."
+ },
+ {
+  "date": "20 Jan 2017",
+  "type": "start",
+  "tags": [
+   "video-platform",
+   "archive"
+  ],
+  "entities": [
+   "vine",
+   "twitter"
+  ],
+  "country": "us",
+  "year": 2017,
+  "decade": "2010s",
+  "html": "Twitter launches an online archive of every <strong>Vine</strong> video ever published."
  },
  {
   "date": "2017",
@@ -2029,6 +2221,22 @@ const ABOUT_TIMELINE = [
   "html": "SSENSE acquires <strong>Polyvore</strong> from Oath and shuts it down immediately, redirecting the site to SSENSE — a notorious loss of user-created web content."
  },
  {
+  "date": "Apr 2018",
+  "type": "closure",
+  "tags": [
+   "video-platform",
+   "archive"
+  ],
+  "entities": [
+   "vine",
+   "twitter"
+  ],
+  "country": "us",
+  "year": 2018,
+  "decade": "2010s",
+  "html": "The <strong>Vine</strong> archive is officially discontinued."
+ },
+ {
   "date": "17 Jul 2018",
   "type": "closure",
   "tags": [
@@ -2055,7 +2263,21 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2019,
   "decade": "2010s",
-  "html": "<strong>MySpace</strong> confirms losing 50 million songs — 12 years of uploads (2003–2015) — in a botched server migration."
+  "html": "<strong>MySpace</strong> confirms a botched server migration permanently deleted 12 years of user content (2003–2015): over 50 million tracks from roughly 14 million artists, plus millions of personal photos and videos, early blog posts, comments, and private messages."
+ },
+ {
+  "date": "18 Jun 2019",
+  "type": "acquisition",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo"
+  ],
+  "country": "us",
+  "year": 2019,
+  "decade": "2010s",
+  "html": "Twitch acquires <strong>Bebo</strong> for up to $25 million to bolster its esports efforts."
  },
  {
   "date": "12 Aug 2019",
@@ -2175,6 +2397,49 @@ const ABOUT_TIMELINE = [
   "year": 2021,
   "decade": "2020s",
   "html": "<strong>We Heart It</strong> removes several social features, including articles, messages, and some community functionality, as the platform changes direction."
+ },
+ {
+  "date": "29 Jan 2021",
+  "type": "start",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo"
+  ],
+  "country": "us",
+  "year": 2021,
+  "decade": "2020s",
+  "html": "A private-beta revival of <strong>Bebo</strong> is announced."
+ },
+ {
+  "date": "28 Oct 2021",
+  "type": "milestone",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "facebook",
+   "meta"
+  ],
+  "country": "us",
+  "year": 2021,
+  "decade": "2020s",
+  "html": "<strong>Facebook</strong> rebrands its parent company as <strong>Meta</strong>."
+ },
+ {
+  "date": "May 2022",
+  "type": "closure",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo"
+  ],
+  "country": "us",
+  "year": 2022,
+  "decade": "2020s",
+  "html": "The private-beta <strong>Bebo</strong> revival shuts down."
  },
  {
   "date": "14 Mar 2022",
@@ -2456,7 +2721,21 @@ const ABOUT_TIMELINE = [
   "html": "Google deprecates <strong>Tenor</strong>'s public API."
  },
  {
-  "date": "2021–26",
+  "date": "2026",
+  "type": "start",
+  "tags": [
+   "social-network"
+  ],
+  "entities": [
+   "bebo"
+  ],
+  "country": "us",
+  "year": 2026,
+  "decade": "2020s",
+  "html": "<strong>Bebo</strong> returns again."
+ },
+ {
+  "date": "1 Sep 2026",
   "type": "closure",
   "tags": [
    "social-network"
@@ -2467,6 +2746,6 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 2026,
   "decade": "2020s",
-  "html": "A private-beta <strong>Bebo</strong> revival closes in 2022. Bebo returns in 2026, then closes on 1 September."
+  "html": "<strong>Bebo</strong> closes."
  }
 ];

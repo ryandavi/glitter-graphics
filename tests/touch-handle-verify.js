@@ -514,6 +514,93 @@ async function checkFixedTextEdgeResizeHandle(page, drag, label) {
 	);
 }
 
+async function checkTextLayoutControls(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+
+	const layerId = await createFixedBoxTextLayer(page, {
+		text: 'Align\ninside',
+		position: { x: 120, y: 90 },
+		boxWidth: 150,
+		boxHeight: 100
+	});
+	const result = await page.evaluate(async (activeLayerId) => {
+		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
+		const manager = window.editor.textGlitterManager;
+		const before = { ...layer.textData.transform.position };
+
+		await manager.runLayoutRefreshWithAnchor(layer, () => {
+			layer.textData.align = 'right';
+		});
+		const afterHorizontal = { ...layer.textData.transform.position };
+
+		await manager.runLayoutRefreshWithAnchor(layer, () => {
+			layer.textData.verticalAlign = 'bottom';
+		});
+		const afterVertical = { ...layer.textData.transform.position };
+		const background = manager.ensureTextBackground(layer);
+		background.enabled = true;
+		background.mode = 'text-bounds';
+		background.verticalPadding = 7;
+		await manager.refreshLayer(layer, { refreshPreview: false });
+		const measurement = manager.getMeasurementEntry(layer);
+		const originBeforeModeSwitch = manager.getTextOriginWorldPosition(layer, measurement);
+		await manager.runLayoutRefreshWithAnchor(layer, () => {
+			layer.textData.boxMode = 'auto';
+			delete layer.textData.boxWidth;
+			delete layer.textData.boxHeight;
+		}, { preservePointAnchor: true, refreshPreview: false });
+		const originInPointMode = manager.getTextOriginWorldPosition(layer);
+		await manager.runLayoutRefreshWithAnchor(layer, () => {
+			manager.ensureFixedBox(layer);
+		}, { preservePointAnchor: true, refreshPreview: false });
+		const originBackInBoxMode = manager.getTextOriginWorldPosition(layer);
+		const scaleControls = Array.from(document.querySelectorAll('.paint-slot-scale'));
+
+		return {
+			before,
+			afterHorizontal,
+			afterVertical,
+			ink: measurement.textInkRect,
+			box: measurement.boxRect,
+			background: measurement.textBackgroundGeometry.bounds,
+			originBeforeModeSwitch,
+			originInPointMode,
+			originBackInBoxMode,
+			scaleControlCount: scaleControls.length,
+			scaleControlsAdvanced: scaleControls.every((control) => (
+				control.closest('.advanced-disclosure') && !control.closest('.paint-slot-primary-row')
+			))
+		};
+	}, layerId);
+
+	const samePosition = (a, b) => Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) < 0.01;
+	assert(samePosition(result.before, result.afterHorizontal),
+		`Horizontal text alignment moved the fixed box (${JSON.stringify(result.before)} -> ${JSON.stringify(result.afterHorizontal)})`);
+	assert(samePosition(result.before, result.afterVertical),
+		`Vertical text alignment moved the fixed box (${JSON.stringify(result.before)} -> ${JSON.stringify(result.afterVertical)})`);
+	assert(Math.abs(result.ink.y + result.ink.height - (result.box.y + result.box.height)) < 0.01,
+		'Bottom-aligned text ink does not end at the bottom of its fixed box');
+	assert(Math.abs(result.background.y - (result.ink.y - 7)) < 0.01
+		&& Math.abs(result.background.height - (result.ink.height + 14)) < 0.01,
+		'Text Bounds vertical padding does not expand symmetrically from the aligned ink');
+	assert(result.scaleControlCount > 0 && result.scaleControlsAdvanced,
+		'A glitter texture Scale control is outside Advanced');
+	assert(samePosition(result.originBeforeModeSwitch, result.originInPointMode)
+		&& samePosition(result.originBeforeModeSwitch, result.originBackInBoxMode),
+		'Text origin moved while switching between fitted Box and Point modes');
+
+	await page.evaluate(() => {
+		const input = document.getElementById('textBackgroundPaddingV');
+		input.value = '23';
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+	});
+	await page.waitForFunction((activeLayerId) => {
+		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
+		return layer?.textData?.textBackground?.verticalPadding === 23;
+	}, layerId);
+}
+
 async function checkGroupMoveHandle(page, drag, label) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
@@ -669,6 +756,7 @@ async function main() {
 
 	try {
 		const checks = [
+			['Text alignment preserves the fixed box position', checkTextLayoutControls],
 			['Touch drag on rotation handle rotates the selected sticker', (page) => checkRotationHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on corner handle scales the selected sticker', (page) => checkCornerScaleHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on fixed-text edge handle resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, oneFingerDrag, 'touch')],

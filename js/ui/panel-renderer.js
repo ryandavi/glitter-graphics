@@ -850,12 +850,12 @@ function buildPaintSource(slot) {
 	return source;
 }
 
-// Canonical [Texture Scale | Opacity] row (FILL-CONSISTENCY-PLAN spec);
-// syncPaintSlotSourceUI drives its per-mode visibility at runtime.
-function buildPrimaryRow(prefix, ids = {}, redesign = false, noSlotOpacity = false) {
+// Canonical paint opacity row. Glitter scale lives with its texture anchor and
+// offset controls in Advanced, so every paint slot keeps texture geometry in
+// one place.
+function buildPrimaryRow(prefix, ids = {}, noSlotOpacity = false) {
 	const row = tplClone('tpl-two-column');
 	row.classList.add('paint-slot-primary-row');
-	row.appendChild(buildSliderRow({ id: ids.scale || `${prefix}Scale`, rowId: ids.scaleRow, slider: 'textureScale', label: redesign ? 'Scale' : null, extraClass: 'paint-slot-scale', role: 'texture-scale' }));
 	// v2 opacity model: single-paint layer types (Fill layer, canvas background)
 	// carry only a whole-layer opacity, so the slot's own opacity column is
 	// suppressed. syncPaintSlotSourceUI tolerates the missing `.paint-slot-opacity`.
@@ -911,7 +911,15 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	content.appendChild(colorGroup);
 
 	if (options.texturePosition) {
-		const textureGroup = buildAdvancedControlGroup('Texture position', 'advanced-texture-position-group');
+		const textureGroup = buildAdvancedControlGroup('Texture', 'advanced-texture-position-group');
+		textureGroup.appendChild(buildSliderRow({
+			id: ids.scale || `${prefix}Scale`,
+			rowId: ids.scaleRow,
+			slider: 'textureScale',
+			label: 'Scale',
+			extraClass: 'paint-slot-scale',
+			role: 'texture-scale'
+		}));
 		const anchor = buildSegmented([
 			{ id: `${prefix}TextureAnchorArtwork`, label: 'Artwork', active: true },
 			{ id: `${prefix}TextureAnchorCanvas`, label: 'Canvas' }
@@ -1004,18 +1012,18 @@ function buildPaintSlotCard(slot) {
 	}
 	main.appendChild(wrapPropertySet([source]));
 	(slot.afterSource || []).forEach((item) => addChunk(buildPanelItem(item)));
-	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.redesign, slot.noSlotOpacity);
+	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.noSlotOpacity);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = slot.primaryToggle.id;
 		toggle.querySelector('span').textContent = slot.primaryToggle.label;
 		if (slot.primaryToggle.title) toggle.querySelector('span').title = slot.primaryToggle.title;
 		main.appendChild(wrapPropertySet([buildOptionGroup('Scale & Opacity', [toggle, primaryRow])]));
-	} else {
+	} else if (primaryRow.children.length) {
 		main.appendChild(wrapPropertySet([primaryRow]));
 	}
 	(slot.post || []).forEach((item) => addChunk(buildPanelItem(item)));
-	const advanced = buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
+	const advanced = buildAdvancedDisclosure(slot.idPrefix, { ...slot.advancedIds, ...slot.primaryIds }, {
 		texturePosition: slot.texturePosition,
 		coordinateFields: slot.coordinateFields ?? slot.redesign
 	});
