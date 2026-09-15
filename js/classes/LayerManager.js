@@ -504,6 +504,7 @@ class LayerManager {
 		this.editor.requestPreviewUpdate();
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateSidePanelUI(activeLayer);
+		if (selectedCount === 1 && activeLayer) this.editor.animationPanel?.load(activeLayer);
 
 		if (selectedCount === 1 && activeLayer) {
 			const config = LAYER_UI_CONFIG[activeLayer.type];

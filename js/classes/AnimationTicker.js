@@ -5,27 +5,27 @@ class AnimationTicker {
 		this.targets = new Map();
 		this.frameRequest = null;
 		this.paused = false;
+		this.timelineStartedAt = null;
 		this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)') || null;
 		this.reducedMotion?.addEventListener?.('change', () => this.refresh());
 	}
 
 	register(layerId, target) {
 		const now = performance.now();
-		const existing = this.targets.get(layerId);
 		const data = target.getData();
-		// Restart the clock only when the animation is newly enabled or the
-		// preset changed; keep it running across re-renders triggered by
-		// unrelated slider tweaks so a finite-iteration preset (fade, pop, ...)
-		// actually gets to play instead of always sampling far-future elapsed
-		// time and rendering its already-finished pose.
-		const startedAt = existing && existing.data?.type === data?.type ? existing.startedAt : now;
-		this.targets.set(layerId, { list: [target], startedAt, data });
+		// Preview and export share one document timeline. A layer added later joins
+		// the current phase; its authored phase value is the deliberate offset.
+		if (this.timelineStartedAt == null) this.timelineStartedAt = now;
+		this.targets.set(layerId, { list: [target], data });
 		this.refresh();
 	}
 
 	unregister(layerId) {
 		this.targets.delete(layerId);
-		if (!this.targets.size) this.stop();
+		if (!this.targets.size) {
+			this.timelineStartedAt = null;
+			this.stop();
+		}
 	}
 
 	setPaused(paused) {
@@ -35,8 +35,7 @@ class AnimationTicker {
 
 	getCurrentTime() {
 		if (this._isPreviewPaused()) return 0;
-		const starts = Array.from(this.targets.values(), (entry) => entry.startedAt);
-		return starts.length ? Math.max(0, performance.now() - Math.min(...starts)) : 0;
+		return this.timelineStartedAt == null ? 0 : Math.max(0, performance.now() - this.timelineStartedAt);
 	}
 
 	refresh() {
@@ -76,7 +75,8 @@ class AnimationTicker {
 			live.forEach((target) => {
 				const wrapper = target.getWrapper();
 				entry.data = target.getData();
-				const sample = GlitterAnimation.sampleAt(entry.data, frozen ? 0 : now - entry.startedAt, { layerId });
+				const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
+				const sample = GlitterAnimation.sampleAt(entry.data, frozen ? 0 : elapsed, { layerId });
 				const layer = target.getLayer();
 				const transform = layer.type === LayerType.GLITTER_FILL
 					? { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false }

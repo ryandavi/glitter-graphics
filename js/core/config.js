@@ -521,7 +521,7 @@ const CONFIG = deepFreeze({
 			defaultType: 'pulse',
 			presets: {
 				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity, anchor: 'center' },
-				float: { periodMs: 3600, easing: 'easeInOut', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
+				float: { periodMs: 3600, easing: 'linear', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
 				sway: { periodMs: 2600, easing: 'easeInOut', amount: 8, direction: 'alternate', iterations: Infinity, anchor: 'top-center' },
 				dim: { periodMs: 2000, easing: 'easeInOut', opacityFloor: 40, direction: 'alternate', iterations: Infinity },
 				drift: { periodMs: 6000, easing: 'linear', distance: 120, angle: 0, direction: 'normal', iterations: Infinity },
@@ -798,7 +798,7 @@ const CONFIG = deepFreeze({
 			animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
 			animOvershoot: { label: 'Overshoot', unit: '%', min: 0, max: 100, step: 1, value: 30 },
 			animDelay: { label: 'Delay', unit: 'ms', min: 0, max: 20000, step: 10, value: 0 },
-			animPhase: { label: 'Phase', unit: '%', min: 0, max: 100, step: 1, value: 0 },
+			animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 			animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 			animAnchorY: { label: 'Anchor Y', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 			filterInstagramStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },

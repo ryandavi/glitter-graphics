@@ -85,24 +85,6 @@ const GlitterAnimation = (() => {
 		return mulberry32(hashString(layerId) ^ Math.floor(Number(tMs) / quantum) ^ (Number(seed) || 0))();
 	}
 
-	// Same seeded stream as seededRandom01, but smoothstep-interpolated across
-	// the quantum window instead of holding flat then jumping. Animations that
-	// layer this jitter onto an otherwise-continuous curve (float's hover
-	// flutter) need a value with no discontinuity, or the jump reads as a
-	// stutter — most visible right where the base motion is slowest (float's
-	// apex) and worst with pixel-snap, where even a sub-pixel jump can round
-	// to a full-pixel pop. Animations that want an abrupt, jittery look
-	// (shake, tremble, twinkle) should keep using seededRandom01 as-is.
-	function seededRandomSmooth01(layerId, tMs, seed = 0) {
-		const quantum = config().jitterQuantMs;
-		const q = Number(tMs) / quantum;
-		const index = Math.floor(q);
-		const frac = q - index;
-		const eased = frac * frac * (3 - 2 * frac);
-		const at = (i) => mulberry32(hashString(layerId) ^ i ^ (Number(seed) || 0))();
-		return at(index) + (at(index + 1) - at(index)) * eased;
-	}
-
 	function resolveOrigin(data) {
 		if (data.anchor === 'custom') return [Number(data.anchorX), Number(data.anchorY)];
 		const values = {
@@ -131,25 +113,13 @@ const GlitterAnimation = (() => {
 		const angle = (Number(data.angle) || 0) * Math.PI / 180;
 		const vector = (distance) => { out.tx += Math.cos(angle) * distance; out.ty += Math.sin(angle) * distance; };
 		const random = (salt = 0) => seededRandom01(options.layerId, tMs, (options.seed || 0) + salt) * 2 - 1;
-		const randomSmooth = (salt = 0) => seededRandomSmooth01(options.layerId, tMs, (options.seed || 0) + salt) * 2 - 1;
 		switch (data.type) {
 			case 'breath': out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; break;
-			// Signed oscillation (not `wave`) so it rises and falls evenly around
-			// the resting position instead of only ever lifting upward. Direction
-			// rides the shared Angle control (default 270°/up) rather than a
-			// dedicated axis field, so the same preset covers a vertical bob and a
-			// horizontal wander just by turning the Angle dial. The jitter is
-			// perpendicular to travel and stays enveloped by `wave` (peaks at
-			// p=0.5, the fast mid-transit point, and is exactly 0 at the p=0/1 loop
-			// seam) so the noise is masked by motion instead of spiking right at
-			// the top/bottom of the arc, which read as a stutter.
+			// Float stays on a deterministic axis; Shake and Tremble own jitter.
 			case 'float': {
 				const lift = amount * oscillation;
 				out.tx += Math.cos(angle) * lift;
 				out.ty += Math.sin(angle) * lift;
-				const jitter = randomSmooth(1) * amount * 0.08 * wave;
-				out.tx += Math.cos(angle + Math.PI / 2) * jitter;
-				out.ty += Math.sin(angle + Math.PI / 2) * jitter;
 				break;
 			}
 			case 'sway': out.rotate = amount * oscillation; break;
@@ -275,7 +245,7 @@ const GlitterAnimation = (() => {
 
 	return {
 		ANIMATION_TYPES, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, sampleAt, seededRandom01, seededRandomSmooth01, domTransformString, applyToContext
+		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext
 	};
 })();
 

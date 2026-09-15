@@ -70,6 +70,21 @@ assert.strictEqual(Animation.sampleAt(delayed, 1100).rotate, 0);
 const forwardsHeld = Animation.sampleAt({ ...delayed, fillMode: 'forwards' }, 1100).rotate;
 assert.strictEqual(forwardsHeld, 360);
 
+const blink = Animation.normalizeAnimation({ type: 'blink', easing: 'linear', duty: 75 });
+assert.strictEqual(Animation.sampleAt(blink, 0).opacity, 1);
+assert.strictEqual(Animation.sampleAt(blink, 749).opacity, 1);
+assert.strictEqual(Animation.sampleAt(blink, 750).opacity, 0);
+assert.strictEqual(Animation.sampleAt(blink, 1000).opacity, 1);
+
+const offsetPulse = Animation.normalizeAnimation({ type: 'pulse', phase: 0.25 });
+assert.deepStrictEqual(
+	Animation.sampleAt(offsetPulse, 0, { layerId: 'offset' }),
+	Animation.sampleAt({ ...offsetPulse, phase: 0 }, offsetPulse.periodMs * 0.25, { layerId: 'offset' })
+);
+
+const verticalFloat = Animation.sampleAt({ ...presets.float, type: 'float', angle: 270 }, 125, { layerId: 'float' });
+assert(near(verticalFloat.tx, 0));
+
 const snapped = Animation.sampleAt({ ...presets.move, type: 'move', snapMode: 'pixel-snap' }, 330, { layerId: 'snap' });
 assert(Number.isInteger(snapped.tx) && Number.isInteger(snapped.ty));
 const normal = Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, { layerId: 'direction' });

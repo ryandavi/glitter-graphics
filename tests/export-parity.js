@@ -162,16 +162,36 @@ async function verifyAnimationIntegration(page) {
 		const serialized = editor.layerManager.serializeLayer(animated[0]);
 		const restored = await editor.layerManager.deserializeLayer(serialized);
 		const unknown = await editor.layerManager.deserializeLayer({ ...serialized, animation: { type: 'future-preset' } });
+		const animatedSticker = editor.layerManager.layers.find((layer) => layer.type === LayerType.STICKER && GlitterAnimation.isActive(layer.animation));
+		const staticSticker = editor.layerManager.layers.find((layer) => layer.type === LayerType.STICKER && !GlitterAnimation.isActive(layer.animation));
+		editor.layerManager.setActiveLayer(animatedSticker.id);
+		const animatedStickerChecked = document.getElementById('stickerAnimEnabled')?.checked;
+		editor.layerManager.setActiveLayer(staticSticker.id);
+		const staticStickerChecked = document.getElementById('stickerAnimEnabled')?.checked;
+		const text = editor.layerManager.layers.find((layer) => layer.type === LayerType.TEXT_GLITTER);
+		editor.layerManager.setActiveLayer(text.id);
+		const textChecked = document.getElementById('textAnimEnabled')?.checked;
+		const shape = editor.layerManager.layers.find((layer) => layer.type === LayerType.SHAPE);
+		editor.layerManager.setActiveLayer(shape.id);
+		const shapeChecked = document.getElementById('shapeAnimEnabled')?.checked;
 		return {
 			animated: animated.length,
 			wrappers: document.querySelectorAll('.layer-anim-wrapper').length,
 			restoredType: restored.animation?.type,
-			fallbackType: unknown.animation?.type
+			fallbackType: unknown.animation?.type,
+			animatedStickerChecked,
+			staticStickerChecked,
+			textChecked,
+			shapeChecked
 		};
 	});
 	assert(result.animated === 1 && result.wrappers >= 1, 'Animated layer did not register its preview wrapper');
 	assert(result.restoredType === 'heartbeat', 'Animation did not survive layer serialization');
 	assert(result.fallbackType === 'pulse', `Unknown animation type did not fall back: ${JSON.stringify(result)}`);
+	assert(result.animatedStickerChecked === true, `Animated sticker checkbox was not restored: ${JSON.stringify(result)}`);
+	assert(result.staticStickerChecked === false, `Static sticker inherited the previous checkbox state: ${JSON.stringify(result)}`);
+	assert(result.textChecked === false, `Text animation checkbox was not reset: ${JSON.stringify(result)}`);
+	assert(result.shapeChecked === false, `Shape animation checkbox was not reset: ${JSON.stringify(result)}`);
 }
 
 async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
