@@ -1240,6 +1240,19 @@ body.modal-open {
 			grid-template-columns: 1fr;
 		}
 
+		// Share/Save/Open labels vary a lot in length ("Share" vs "Save Animated
+		// GIF"), so a single row of shrinking flex items clips unevenly at phone
+		// width - stack them full-width instead, matching #confirmationModal.
+		.modal-footer {
+			flex-direction: column;
+			align-items: stretch;
+
+			>button {
+				width: 100%;
+				min-width: 0;
+			}
+		}
+
 	}
 }
 

@@ -930,7 +930,10 @@ const CONFIG = deepFreeze({
 		core: {
 			// Base name for user-facing downloads; the project title overrides this.
 			defaultBaseName: 'ryandavi-com_glitter',
-			workers: 4,
+			// Capped at 4 on desktop/unknown, but never oversubscribes a low-core
+			// phone - more GIF-encoding workers than cores adds context-switch
+			// overhead instead of speed.
+			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
 			workerScript: 'js/workers/gif.worker.js',
 			quality: 1,
 			timing: {

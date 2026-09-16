@@ -9723,6 +9723,14 @@ body.modal-open {
   #exportPreviewModal .export-reduction-summary .export-optimization-details dl {
     grid-template-columns: 1fr;
   }
+  #exportPreviewModal .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #exportPreviewModal .modal-footer > button {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .gallery-tabs {
