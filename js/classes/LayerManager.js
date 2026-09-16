@@ -1387,7 +1387,7 @@ class LayerManager {
 
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
-		const getFillDisplay = (paint, glitterId) => {
+		const getFillDisplay = (paint, glitterId, imageAsset = null) => {
 			const mode = paint?.mode || 'glitter';
 			const modeLabel = mode === 'none' ? 'No' : panelCap(mode);
 			const glitter = mode === 'glitter'
@@ -1402,6 +1402,8 @@ class LayerManager {
 				const first = formatColor(stops[0]?.color);
 				const last = formatColor(stops.at(-1)?.color);
 				name = first && last ? `${first} → ${last}` : 'Gradient Fill';
+			} else if (mode === 'image') {
+				name = imageAsset?.name || 'Image Fill';
 			} else if (mode === 'none') {
 				name = 'Transparent';
 			}
@@ -1431,7 +1433,11 @@ class LayerManager {
 				break;
 			}
 			case LayerType.SHAPE: {
-				const fill = getFillDisplay(layer.shapeData?.fill, layer.selectedGlitterId);
+				const fill = getFillDisplay(
+					layer.shapeData?.fill,
+					layer.selectedGlitterId,
+					this.editor.shapeGlitterManager?.getImageFillAsset(layer.shapeData?.fill?.imageRef)
+				);
 				nameText.textContent = layer.name || 'Shape';
 				typeText.textContent = `Shape · ${fill.modeLabel}`;
 				break;
@@ -1644,7 +1650,7 @@ class LayerManager {
 			return;
 		}
 
-		const renderPaint = (source, glitterId, colorAdjust) => {
+		const renderPaint = (source, glitterId, colorAdjust, imageAsset = null) => {
 			const mode = source?.mode || 'glitter';
 			if (mode === 'solid') {
 				swatch.style.backgroundColor = source?.color || '#ff66cc';
@@ -1652,6 +1658,12 @@ class LayerManager {
 			}
 			if (mode === 'gradient') {
 				swatch.style.backgroundImage = effectGradientToCss(source?.gradient);
+				return true;
+			}
+			if (mode === 'image' && imageAsset?.url) {
+				swatch.style.backgroundImage = `url(${imageAsset.url})`;
+				swatch.style.backgroundSize = 'cover';
+				swatch.style.backgroundPosition = 'center';
 				return true;
 			}
 			if (mode === 'none') return false;
@@ -1686,7 +1698,8 @@ class LayerManager {
 		}
 
 		if (layer.type === LayerType.SHAPE) {
-			if (!renderPaint(layer.shapeData?.fill, layer.selectedGlitterId, layer.shapeData?.fill?.colorAdjust)) swatch.classList.add('empty');
+			const imageAsset = this.editor.shapeGlitterManager?.getImageFillAsset(layer.shapeData?.fill?.imageRef);
+			if (!renderPaint(layer.shapeData?.fill, layer.selectedGlitterId, layer.shapeData?.fill?.colorAdjust, imageAsset)) swatch.classList.add('empty');
 			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
 			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
 			swatch.style.maskImage = shapeMask;

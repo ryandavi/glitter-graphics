@@ -19,14 +19,28 @@ async function main() {
 		});
 		await page.waitForFunction(() => Boolean(window.editor?.originalImage));
 
-		const result = await page.evaluate(() => {
+		const result = await page.evaluate(async () => {
 			const sweep = PREVIEW_EXPORT_SWEEP;
 			const editor = window.editor;
 			const glitterId = editor.glitterManager.content[0]?.id;
 			if (!glitterId) throw new Error('Combinatorial parity requires one glitter asset');
+			const imageCanvas = document.createElement('canvas');
+			imageCanvas.width = 12;
+			imageCanvas.height = 8;
+			const imageContext = imageCanvas.getContext('2d');
+			imageContext.fillStyle = '#ef247a';
+			imageContext.fillRect(0, 0, 6, 8);
+			imageContext.fillStyle = '#25b9e8';
+			imageContext.fillRect(6, 0, 6, 8);
+			await editor.shapeGlitterManager.registerImageFillAsset('parity-image', {
+				dataUrl: imageCanvas.toDataURL('image/png'),
+				name: 'Parity Image',
+				mimeType: 'image/png'
+			});
 
 			const makeFill = (mode) => {
 				if (mode === 'glitter') return { mode, glitterId };
+				if (mode === 'image') return { mode, imageRef: 'parity-image', fit: 'cover', offsetXPercent: 25, offsetYPercent: 75, opacity: 83 };
 				if (mode === 'gradient') {
 					return {
 						mode,
@@ -141,8 +155,8 @@ async function main() {
 			return { textCases, shapeCases };
 		});
 
-		assert(result.textCases === 36, `Expected 36 text combinations, got ${result.textCases}`);
-		assert(result.shapeCases === 36, `Expected 36 shape combinations, got ${result.shapeCases}`);
+		assert(result.textCases === 48, `Expected 48 text combinations, got ${result.textCases}`);
+		assert(result.shapeCases === 48, `Expected 48 shape combinations, got ${result.shapeCases}`);
 		process.stdout.write(`Combinatorial preview/export parity passed (${result.textCases + result.shapeCases} cases)\n`);
 	} finally {
 		await browser.close();

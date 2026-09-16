@@ -18,10 +18,18 @@
 function buildDefaultFill(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;
+	const imageFill = CONFIG.tools.shapes.imageFill;
 	const fill = {
 		mode: 'glitter',
 		color: defaults.fillColor,
 		opacity: 100,
+		imageRef: null,
+		fit: imageFill.defaultFit,
+		imageScalePercent: imageFill.defaultScalePercent,
+		offsetXPercent: imageFill.defaultOffsetXPercent,
+		offsetYPercent: imageFill.defaultOffsetYPercent,
+		tile: imageFill.defaultTile,
+		imageRendering: imageFill.defaultRendering,
 		textureAnchor: coordinates.defaultAnchor,
 		textureOffsetX: coordinates.defaultOffsetX,
 		textureOffsetY: coordinates.defaultOffsetY

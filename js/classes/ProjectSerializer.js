@@ -70,6 +70,7 @@ class ProjectSerializer {
 			layers,
 			activeLayerId: this.editor.activeLayerId,
 			masks: await this.serializeMasks(),
+			shapeFillImages: this.serializeShapeFillImages(layers),
 			customStickers: await this.serializeCustomStickers(layers)
 		};
 	}
@@ -132,6 +133,8 @@ class ProjectSerializer {
 		await this.loadBaseImage(migrated);
 		// Base-image loading resets manager state, so embedded assets must bind after it.
 		await this.registerCustomStickers(migrated.customStickers || {});
+		this.editor.shapeGlitterManager.clearImageFillAssets();
+		await this.registerShapeFillImages(migrated.shapeFillImages || {});
 
 		this.editor.layers = [];
 		for (const layerData of migrated.layers) {
@@ -347,6 +350,36 @@ class ProjectSerializer {
 		}
 
 		return customStickers;
+	}
+
+	serializeShapeFillImages(layers) {
+		const images = {};
+		const usedRefs = new Set(
+			layers
+				.filter((layer) => layer?.type === LayerType.SHAPE && layer.shapeData?.fill?.imageRef)
+				.map((layer) => layer.shapeData.fill.imageRef)
+		);
+		usedRefs.forEach((imageRef) => {
+			const asset = this.editor.shapeGlitterManager.getImageFillAsset(imageRef);
+			if (!asset?.dataUrl) return;
+			images[imageRef] = {
+				name: asset.name,
+				mimeType: asset.mimeType,
+				data: asset.dataUrl
+			};
+		});
+		return images;
+	}
+
+	async registerShapeFillImages(images) {
+		for (const [imageRef, payload] of Object.entries(images || {})) {
+			if (!payload?.data) continue;
+			await this.editor.shapeGlitterManager.registerImageFillAsset(imageRef, {
+				dataUrl: payload.data,
+				name: payload.name,
+				mimeType: payload.mimeType
+			});
+		}
 	}
 
 	async registerCustomStickers(customStickers) {

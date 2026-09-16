@@ -30,6 +30,26 @@ function resolveEffectPaintSource(effectData, options = {}) {
 		};
 	}
 
+	if (effectData.mode === 'image') {
+		const imageAsset = typeof options.imageResolver === 'function'
+			? options.imageResolver(effectData.imageRef)
+			: null;
+		if (!imageAsset?.image) return null;
+		return {
+			mode: 'image',
+			imageRef: effectData.imageRef,
+			image: imageAsset.image,
+			url: imageAsset.url || imageAsset.dataUrl || imageAsset.image.src,
+			fit: normalizeImageFit(effectData.fit),
+			imageScalePercent: normalizeImageScalePercent(effectData.imageScalePercent),
+			offsetXPercent: normalizeImagePositionPercent(effectData.offsetXPercent),
+			offsetYPercent: normalizeImagePositionPercent(effectData.offsetYPercent),
+			tile: Boolean(effectData.tile ?? CONFIG.tools.shapes.imageFill.defaultTile),
+			imageRendering: normalizeImageRendering(effectData.imageRendering),
+			opacity: opacity / 100
+		};
+	}
+
 	if (wantsGlitter && glitterId && glitterAvailable) {
 		return {
 			mode: 'glitter',
@@ -47,6 +67,79 @@ function resolveEffectPaintSource(effectData, options = {}) {
 		mode: 'solid',
 		color: solidColor,
 		opacity: opacity / 100
+	};
+}
+
+function normalizeImageFit(fit) {
+	const config = CONFIG.tools.shapes.imageFill;
+	return config.fitOptions.some((option) => option.value === fit) ? fit : config.defaultFit;
+}
+
+function normalizeImagePositionPercent(value) {
+	const number = Number(value);
+	return Number.isFinite(number)
+		? Math.max(0, Math.min(100, number))
+		: CONFIG.tools.shapes.imageFill.defaultOffsetXPercent;
+}
+
+function normalizeImageScalePercent(value) {
+	const slider = CONFIG.ui.sliders.shapeImageScale;
+	const number = Number(value);
+	return Number.isFinite(number)
+		? Math.max(slider.min, Math.min(slider.max, number))
+		: CONFIG.tools.shapes.imageFill.defaultScalePercent;
+}
+
+function normalizeImageRendering(value) {
+	return value === 'pixelated' ? 'pixelated' : CONFIG.tools.shapes.imageFill.defaultRendering;
+}
+
+// CSS background placement and canvas drawImage share this exact geometry.
+// dx/dy are relative to the supplied box, not the padded mask surface.
+function computeImageFitPlacement(fit, imageWidth, imageHeight, boxWidth, boxHeight, positionXPercent, positionYPercent, imageScalePercent) {
+	const iw = Math.max(1, Number(imageWidth) || 1);
+	const ih = Math.max(1, Number(imageHeight) || 1);
+	const bw = Math.max(0, Number(boxWidth) || 0);
+	const bh = Math.max(0, Number(boxHeight) || 0);
+	let dw = iw;
+	let dh = ih;
+	const normalizedFit = normalizeImageFit(fit);
+	if (normalizedFit === 'fill') {
+		dw = bw;
+		dh = bh;
+	} else if (normalizedFit === 'cover' || normalizedFit === 'contain' || normalizedFit === 'scale-down') {
+		const containScale = Math.min(bw / iw, bh / ih);
+		const scale = normalizedFit === 'cover'
+			? Math.max(bw / iw, bh / ih)
+			: normalizedFit === 'scale-down' ? Math.min(1, containScale) : containScale;
+		dw = iw * scale;
+			dh = ih * scale;
+	}
+	const imageScale = normalizeImageScalePercent(imageScalePercent) / 100;
+	dw *= imageScale;
+	dh *= imageScale;
+	const x = normalizeImagePositionPercent(positionXPercent) / 100;
+	const y = normalizeImagePositionPercent(positionYPercent) / 100;
+	return { dx: (bw - dw) * x, dy: (bh - dh) * y, dw, dh };
+}
+
+function getImageFillPlacement(source, paintBox) {
+	const box = paintBox || { x: 0, y: 0, width: 0, height: 0 };
+	const placement = computeImageFitPlacement(
+		source.fit,
+		source.image.naturalWidth || source.image.width,
+		source.image.naturalHeight || source.image.height,
+		box.width,
+		box.height,
+		source.offsetXPercent,
+		source.offsetYPercent,
+		source.imageScalePercent
+	);
+	return {
+		dx: box.x + placement.dx,
+		dy: box.y + placement.dy,
+		dw: placement.dw,
+		dh: placement.dh
 	};
 }
 
@@ -240,7 +333,7 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	// own (color adjust / texture position) is glitter-only; the gradient
 	// editor's `.gradient-advanced` (Smoothing) is gradient-only — and the
 	// editor's render() narrows it further to the Smooth blend.
-	const advanced = slot.querySelector('.advanced-disclosure:not(.gradient-advanced)');
+	const advanced = slot.querySelector('.advanced-disclosure.glitter-source-glitter');
 	if (advanced) advanced.hidden = normalizedMode !== 'glitter';
 	const gradientAdvanced = slot.querySelector('.gradient-advanced');
 	if (gradientAdvanced && normalizedMode !== 'gradient') gradientAdvanced.hidden = true;
@@ -293,7 +386,7 @@ function installEffectGradientEditor(options) {
 	const primarySet = slotCard?.querySelector('.paint-slot-primary-row')?.closest('.property-set');
 	if (primarySet) { primarySet.before(stopSet); primarySet.before(panel); }
 	else { paintMain.appendChild(stopSet); paintMain.appendChild(panel); }
-	const moduleAdvanced = slotCard?.querySelector('.advanced-disclosure:not(.gradient-advanced)');
+	const moduleAdvanced = slotCard?.querySelector('.advanced-disclosure.glitter-source-glitter');
 	if (advanced) (moduleAdvanced ? moduleAdvanced.before(advanced) : slotCard?.appendChild(advanced));
 	const defaults = CONFIG.rendering.gradient;
 	const update = (commit) => {

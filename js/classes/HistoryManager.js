@@ -40,6 +40,7 @@ class HistoryManager {
 		if (coalesceKey && current?.coalesceKey === coalesceKey) {
 			this.history[this.historyIndex] = state;
 			this.editor.glitterManager?.prunePaintHistory();
+			this.editor.shapeGlitterManager?.pruneImageFillAssets();
 			this.updateButtons();
 			return;
 		}
@@ -52,6 +53,7 @@ class HistoryManager {
 
 		this.history.push(state);
 		this.editor.glitterManager?.prunePaintHistory();
+		this.editor.shapeGlitterManager?.pruneImageFillAssets();
 		this.updateButtons();
 	}
 
@@ -144,6 +146,7 @@ class HistoryManager {
 		}
 
 		this.editor.glitterManager?.prunePaintHistory();
+		this.editor.shapeGlitterManager?.pruneImageFillAssets();
 		this.updateButtons();
 	}
 

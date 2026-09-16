@@ -26,6 +26,9 @@ class ShapeGlitterManager {
 		this.measurementCache = new Map();
 		this.maxMeasurementCacheEntries = 4;
 		this.maskUrlCache = new Map();
+		// Uploaded pixels stay outside JSON-cloned layer/history state. Layers keep
+		// only an immutable ref, so old refs remain available to undo/redo.
+		this.imageFillAssets = new Map();
 		this.ui = {};
 		// Shape id used for the NEXT shape created by the tool (set by the picker).
 		this.activeShapeId = CONFIG.tools.shapes.defaultShapeId;
@@ -96,7 +99,7 @@ class ShapeGlitterManager {
 
 		// Per-slot source-control refs (segmented buttons, glitter display, color).
 		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
-			['None', 'Glitter', 'Solid'].forEach((m) => { this.ui[prefix + m] = id(prefix + m); });
+			['None', 'Image', 'Glitter', 'Solid'].forEach((m) => { this.ui[prefix + m] = id(prefix + m); });
 			this.ui[prefix + 'GlitterInfo'] = id(prefix + 'GlitterInfo');
 			this.ui[prefix + 'GlitterChip'] = id(prefix + 'GlitterChip');
 			this.ui[prefix + 'GlitterChange'] = id(prefix + 'GlitterChange');
@@ -110,6 +113,22 @@ class ShapeGlitterManager {
 			const info = this.ui[prefix + 'GlitterInfo'];
 			this.ui[prefix + 'Advanced'] = info?.closest('.paint-slot-card')?.querySelector('.advanced-disclosure') || null;
 		});
+		this.ui.fillImageInfo = id('shapeFillImageInfo');
+		this.ui.fillImageThumbnail = id('shapeFillImageThumbnail');
+		this.ui.fillImageName = id('shapeFillImageName');
+		this.ui.fillImageChange = id('shapeFillImageChange');
+		this.ui.fillImageFit = id('shapeFillImageFit');
+		this.ui.fillImageScale = id('shapeFillImageScale');
+		this.ui.fillImageOffsetX = id('shapeFillImageOffsetX');
+		this.ui.fillImageOffsetY = id('shapeFillImageOffsetY');
+		this.ui.fillImageTile = id('shapeFillImageTile');
+		this.ui.fillImageRendering = Array.from(document.querySelectorAll('[data-fill-rendering]'));
+		this.ui.fillImageInput = document.createElement('input');
+		this.ui.fillImageInput.type = 'file';
+		this.ui.fillImageInput.accept = 'image/*';
+		this.ui.fillImageInput.hidden = true;
+		this.ui.fillImageInput.className = 'ui-ignore-gestures';
+		document.body.appendChild(this.ui.fillImageInput);
 		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
 			const slot = prefix === 'shapeFill' ? 'fill' : prefix === 'shapeBorder' ? 'border' : 'shadow';
 			installEffectGradientEditor({
@@ -230,7 +249,7 @@ class ShapeGlitterManager {
 		});
 
 		// Fill / Border / Shadow source segmented controls.
-		this._bindSource('shapeFill', 'fill', ['none', 'glitter', 'solid']);
+		this._bindSource('shapeFill', 'fill', ['none', 'image', 'glitter', 'solid']);
 		this._bindSource('shapeBorder', 'border', ['glitter', 'solid']);
 		this._bindSource('shapeShadow', 'shadow', ['glitter', 'solid']);
 
@@ -238,6 +257,73 @@ class ShapeGlitterManager {
 		this._bindColor('shapeFillColor', 'fill');
 		this._bindColor('shapeBorderColor', 'border');
 		this._bindColor('shapeShadowColor', 'shadow');
+
+		[this.ui.fillImageThumbnail, this.ui.fillImageChange].filter(Boolean).forEach((control) => {
+			control.addEventListener('click', () => this.chooseFillImage());
+		});
+		this.ui.fillImageInput?.addEventListener('change', async () => {
+			const file = this.ui.fillImageInput.files?.[0];
+			const layerId = this.ui.fillImageInput.dataset.layerId;
+			this.ui.fillImageInput.value = '';
+			if (file) await this.setFillImageFromFile(layerId, file);
+		});
+		this.ui.fillImageFit?.addEventListener('change', () => {
+			const layer = this.getActiveShapeLayer();
+			if (!layer) return;
+			this.ensureEffectData(layer, 'fill').fit = normalizeImageFit(this.ui.fillImageFit.value);
+			this.renderLayer(layer);
+			this.editor.saveState('Edit shape');
+		});
+		this.ui.fillImageTile?.addEventListener('change', () => {
+			const layer = this.getActiveShapeLayer();
+			if (!layer) return;
+			this.ensureEffectData(layer, 'fill').tile = this.ui.fillImageTile.checked;
+			this.renderLayer(layer);
+			this.editor.saveState('Edit shape');
+		});
+		this.ui.fillImageRendering.forEach((button) => {
+			button.addEventListener('click', () => {
+				const layer = this.getActiveShapeLayer();
+				if (!layer) return;
+				const fill = this.ensureEffectData(layer, 'fill');
+				fill.imageRendering = normalizeImageRendering(button.dataset.fillRendering);
+				this.syncFillImageRendering(fill);
+				this.renderLayer(layer);
+				this.editor.saveState('Edit shape');
+			});
+		});
+		document.querySelectorAll('[data-fill-align], [data-fill-valign]').forEach((button) => {
+			button.addEventListener('click', () => {
+				const layer = this.getActiveShapeLayer();
+				if (!layer) return;
+				const fill = this.ensureEffectData(layer, 'fill');
+				if (button.dataset.fillAlign != null) fill.offsetXPercent = Number(button.dataset.fillAlign);
+				if (button.dataset.fillValign != null) fill.offsetYPercent = Number(button.dataset.fillValign);
+				this.syncFillImageControls(fill);
+				this.renderLayer(layer);
+				this.editor.saveState('Edit shape');
+			});
+		});
+		[
+			[this.ui.fillImageScale, 'imageScalePercent', 'shapeImageScale'],
+			[this.ui.fillImageOffsetX, 'offsetXPercent', 'shapeImageOffsetX'],
+			[this.ui.fillImageOffsetY, 'offsetYPercent', 'shapeImageOffsetY']
+		].forEach(([input, key, sliderKey]) => {
+			bindSlider(input, document.getElementById(`${input?.id}Value`), {
+				suffix: '%',
+				resetValue: CONFIG.ui.sliders[sliderKey].value,
+				resetButton: document.getElementById(`reset${this._cap(input?.id || '')}`),
+				apply: (value) => {
+					const layer = this.getActiveShapeLayer();
+					if (!layer) return;
+					const fill = this.ensureEffectData(layer, 'fill');
+					fill[key] = value;
+					if (key !== 'imageScalePercent') this.syncFillImageAlignment(fill);
+					this.renderLayer(layer);
+				},
+				onCommit: () => this.editor.saveState('Edit shape')
+			});
+		});
 
 		// Glitter chip / Change → arm the gallery picker for that slot (shows the
 		// strip + Done, like text). v1: all glitter slots share the one swatch.
@@ -375,6 +461,101 @@ class ShapeGlitterManager {
 			this.renderLayer(layer);
 		});
 		input?.addEventListener('change', () => this.editor.saveState('Edit shape'));
+	}
+
+	chooseFillImage() {
+		const layer = this.getActiveShapeLayer();
+		if (!layer || !this.ui.fillImageInput) return;
+		this.ui.fillImageInput.dataset.layerId = layer.id;
+		this.ui.fillImageInput.click();
+	}
+
+	async setFillImageFromFile(layerId, file) {
+		const layer = this.editor.layerManager.getLayerById(layerId);
+		if (!layer || layer.type !== LayerType.SHAPE) return false;
+		const maxSize = CONFIG.tools.shapes.imageFill.maxUploadSize;
+		if (!file.type?.startsWith('image/')) {
+			this.editor.showError('Please choose a valid image file.');
+			return false;
+		}
+		if (file.size > maxSize) {
+			this.editor.showError(`File is too large. Maximum size is ${Math.round(maxSize / 1024 / 1024)}MB.`);
+			return false;
+		}
+		try {
+			const dataUrl = await this.readFileAsDataUrl(file);
+			const imageRef = `shape-fill-${Date.now()}-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
+			await this.registerImageFillAsset(imageRef, {
+				dataUrl,
+				name: file.name,
+				mimeType: file.type
+			});
+			const targetLayer = this.editor.layerManager.getLayerById(layerId);
+			if (!targetLayer || targetLayer.type !== LayerType.SHAPE) {
+				this.pruneImageFillAssets();
+				return false;
+			}
+			const fill = this.ensureEffectData(targetLayer, 'fill');
+			fill.imageRef = imageRef;
+			fill.mode = 'image';
+			this.renderLayer(targetLayer);
+			if (this.getActiveShapeLayer()?.id === targetLayer.id) this.loadLayerSettings(targetLayer);
+			this.editor.saveState('Edit shape');
+			this.editor.layerManager.renderLayersList();
+			return true;
+		} catch (error) {
+			this.editor.showError(error.message || 'Could not load that image.');
+			return false;
+		}
+	}
+
+	readFileAsDataUrl(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(reader.result);
+			reader.onerror = () => reject(new Error('Could not read that image.'));
+			reader.readAsDataURL(file);
+		});
+	}
+
+	async registerImageFillAsset(imageRef, payload) {
+		if (!imageRef || !payload?.dataUrl) return null;
+		const image = await new Promise((resolve, reject) => {
+			const candidate = new Image();
+			candidate.onload = () => resolve(candidate);
+			candidate.onerror = () => reject(new Error('Could not decode that image.'));
+			candidate.src = payload.dataUrl;
+		});
+		const asset = {
+			image,
+			url: payload.dataUrl,
+			dataUrl: payload.dataUrl,
+			name: payload.name || 'Image',
+			mimeType: payload.mimeType || 'image/png'
+		};
+		this.imageFillAssets.set(imageRef, asset);
+		return asset;
+	}
+
+	getImageFillAsset(imageRef) {
+		return imageRef ? this.imageFillAssets.get(imageRef) || null : null;
+	}
+
+	clearImageFillAssets() {
+		this.imageFillAssets.clear();
+	}
+
+	pruneImageFillAssets() {
+		const used = new Set();
+		const collect = (layers) => (layers || []).forEach((layer) => {
+			const imageRef = layer?.type === LayerType.SHAPE ? layer.shapeData?.fill?.imageRef : null;
+			if (imageRef) used.add(imageRef);
+		});
+		collect(this.editor.layers);
+		(this.editor.historyManager?.history || []).forEach((state) => collect(state.layers));
+		Array.from(this.imageFillAssets.keys()).forEach((imageRef) => {
+			if (!used.has(imageRef)) this.imageFillAssets.delete(imageRef);
+		});
 	}
 
 	_bindSlotAdvanced(prefix, slot) {
@@ -671,6 +852,7 @@ class ShapeGlitterManager {
 		if (this.ui.fillOpacity) { this.ui.fillOpacity.value = d.fill.opacity ?? fillDefaults.opacity; this.ui.fillOpacityValue.innerHTML = formatUnit(d.fill.opacity ?? fillDefaults.opacity, '%'); }
 		this._loadColorAdjust('shapeFill', d.fill.colorAdjust, d.fill.scale ?? fillDefaults.scale);
 		syncSlotTextureCoordinateControls('shapeFill', d.fill);
+		this.syncFillImageControls(d.fill);
 		syncSlotTextureCoordinateControls('shapeBorder', bd);
 
 		this._refreshSourceUI(layer, 'fill');
@@ -682,6 +864,68 @@ class ShapeGlitterManager {
 		// sticker/text/glitter panels get this sweep via loadActiveLayerSettings —
 		// shapes load through LAYER_UI_CONFIG.onActivate instead).
 		syncPropertyReverts();
+	}
+
+	syncFillImageControls(fill) {
+		const asset = this.getImageFillAsset(fill?.imageRef);
+		if (this.ui.fillImageThumbnail) {
+			this.ui.fillImageThumbnail.replaceChildren();
+			if (asset) {
+				const image = document.createElement('img');
+				image.src = asset.url;
+				image.alt = '';
+				this.ui.fillImageThumbnail.appendChild(image);
+			}
+			this.ui.fillImageThumbnail.classList.toggle('empty', !asset);
+		}
+		if (this.ui.fillImageName) this.ui.fillImageName.textContent = asset?.name || 'No image selected';
+		if (this.ui.fillImageChange) this.ui.fillImageChange.textContent = asset ? 'Change' : 'Choose Image';
+		if (this.ui.fillImageFit) this.ui.fillImageFit.value = normalizeImageFit(fill?.fit);
+		const imageScale = normalizeImageScalePercent(fill?.imageScalePercent);
+		const x = normalizeImagePositionPercent(fill?.offsetXPercent);
+		const y = normalizeImagePositionPercent(fill?.offsetYPercent);
+		if (this.ui.fillImageScale) {
+			this.ui.fillImageScale.value = String(imageScale);
+			const value = document.getElementById('shapeFillImageScaleValue');
+			if (value) value.innerHTML = formatUnit(imageScale, '%');
+		}
+		if (this.ui.fillImageOffsetX) {
+			this.ui.fillImageOffsetX.value = String(x);
+			const value = document.getElementById('shapeFillImageOffsetXValue');
+			if (value) value.innerHTML = formatUnit(x, '%');
+		}
+		if (this.ui.fillImageOffsetY) {
+			this.ui.fillImageOffsetY.value = String(y);
+			const value = document.getElementById('shapeFillImageOffsetYValue');
+			if (value) value.innerHTML = formatUnit(y, '%');
+		}
+		if (this.ui.fillImageTile) this.ui.fillImageTile.checked = Boolean(fill?.tile ?? CONFIG.tools.shapes.imageFill.defaultTile);
+		this.syncFillImageAlignment(fill);
+		this.syncFillImageRendering(fill);
+	}
+
+	syncFillImageRendering(fill) {
+		const rendering = normalizeImageRendering(fill?.imageRendering);
+		this.ui.fillImageRendering.forEach((button) => {
+			const active = button.dataset.fillRendering === rendering;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+	}
+
+	syncFillImageAlignment(fill) {
+		const x = normalizeImagePositionPercent(fill?.offsetXPercent);
+		const y = normalizeImagePositionPercent(fill?.offsetYPercent);
+		document.querySelectorAll('[data-fill-align]').forEach((button) => {
+			const active = Number(button.dataset.fillAlign) === x;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+		document.querySelectorAll('[data-fill-valign]').forEach((button) => {
+			const active = Number(button.dataset.fillValign) === y;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
 	}
 
 	// ===== DEFAULTS / DATA MODEL =====
@@ -962,7 +1206,8 @@ class ShapeGlitterManager {
 		return resolveEffectPaintSource(this.getEffectData(layer, slot), {
 			allowNone: slot === 'fill',
 			glitterId: this.getSlotGlitterId(layer, slot),
-			glitterAvailable: (glitterId) => Boolean(this.editor.glitterManager.getItemById(glitterId))
+			glitterAvailable: (glitterId) => Boolean(this.editor.glitterManager.getItemById(glitterId)),
+			imageResolver: (imageRef) => this.getImageFillAsset(imageRef)
 		});
 	}
 
@@ -1064,6 +1309,7 @@ class ShapeGlitterManager {
 			layoutX,
 			layoutY
 		};
+		canvas._paintBox = entry.shapeRect;
 
 		this.measurementCache.set(key, entry);
 		while (this.measurementCache.size > this.maxMeasurementCacheEntries) {
@@ -1417,7 +1663,23 @@ class ShapeGlitterManager {
 			span.style.backgroundColor = 'transparent';
 			span.style.backgroundSize = '';
 			span.style.backgroundPosition = '';
+			span.style.backgroundRepeat = '';
+			span.style.imageRendering = '';
 			span.style.opacity = '1';
+			span.style.filter = '';
+			span.classList.remove('pixelated');
+			return;
+		}
+
+		if (source.mode === 'image') {
+			const placement = getImageFillPlacement(source, maskCanvas?._paintBox);
+			span.style.backgroundImage = `url(${source.url})`;
+			span.style.backgroundColor = 'transparent';
+			span.style.backgroundSize = `${placement.dw}px ${placement.dh}px`;
+			span.style.backgroundPosition = `${placement.dx}px ${placement.dy}px`;
+			span.style.backgroundRepeat = source.tile ? 'repeat' : 'no-repeat';
+			span.style.imageRendering = source.imageRendering === 'pixelated' ? 'pixelated' : 'auto';
+			span.style.opacity = String(source.opacity ?? 1);
 			span.style.filter = '';
 			span.classList.remove('pixelated');
 			return;
@@ -1428,6 +1690,8 @@ class ShapeGlitterManager {
 			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
 			span.style.backgroundSize = '';
 			span.style.backgroundPosition = '';
+			span.style.backgroundRepeat = '';
+			span.style.imageRendering = '';
 			span.style.opacity = String(source.opacity ?? 1);
 			span.style.filter = '';
 			span.classList.remove('pixelated');
@@ -1452,6 +1716,8 @@ class ShapeGlitterManager {
 			localOffsetY
 		});
 		span.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
+		span.style.backgroundRepeat = 'repeat';
+		span.style.imageRendering = '';
 		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
 	}
 

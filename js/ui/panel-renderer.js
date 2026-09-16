@@ -1035,6 +1035,8 @@ function buildPaintSlotCard(slot) {
 	} else {
 		container.appendChild(advanced);
 	}
+	const sourceAdvancedAnchor = advanced.parentNode === container ? advanced : null;
+	(slot.sourceAdvanced || []).forEach((item) => container.insertBefore(buildPanelItem(item), sourceAdvancedAnchor));
 	return card;
 }
 
@@ -1212,6 +1214,7 @@ function buildPanelItem(item, schema) {
 			const set = addPanelClasses(panelDiv('property-set'), item.classes);
 			if (item.id) set.id = item.id;
 			if (item.hidden) set.hidden = true;
+			Object.entries(item.attrs || {}).forEach(([name, value]) => set.setAttribute(name, value));
 			if (item.label) {
 				const heading = panelDiv('property-set-label');
 				heading.textContent = item.label;
@@ -1395,6 +1398,7 @@ function buildPanelItem(item, schema) {
 			advanced.classList.remove('glitter-source-glitter');
 			if (item.id) advanced.id = item.id;
 			if (item.hidden) advanced.hidden = true;
+			Object.entries(item.attrs || {}).forEach(([name, value]) => advanced.setAttribute(name, value));
 			addPanelClasses(advanced, item.classes);
 			advanced.querySelector('.advanced-disclosure-label').textContent = item.label || 'Advanced';
 			const content = advanced.querySelector('[data-advanced-content]');

@@ -384,7 +384,8 @@ class GlitterEditor {
 		this.exporter = new GifExporter({
 			resultPresenter: this.exportResultPresenter,
 			gifEncodingPipeline: this.gifEncodingPipeline,
-			authoredFrameResolver: this.authoredFrameResolver
+			authoredFrameResolver: this.authoredFrameResolver,
+			resolveShapeFillImage: (imageRef) => this.shapeGlitterManager.getImageFillAsset(imageRef)
 		});
 		this.mp4Exporter = new Mp4Exporter(this.exporter, this.exportResultPresenter);
 		this.stillImageExporter = new StillImageExporter(this.exporter, this.exportResultPresenter, this.gifEncodingPipeline);

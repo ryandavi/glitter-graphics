@@ -618,6 +618,22 @@ const CONFIG = deepFreeze({
 			defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
 			defaultSize: 160,           // intrinsic px for a click (no-drag) create
 			minSize: 8,
+			imageFill: {
+				defaultFit: 'cover',
+				defaultScalePercent: 100,
+				defaultOffsetXPercent: 50,
+				defaultOffsetYPercent: 50,
+				defaultTile: false,
+				defaultRendering: 'smooth',
+				maxUploadSize: 10 * 1024 * 1024,
+				fitOptions: [
+					{ value: 'cover', label: 'Cover' },
+					{ value: 'contain', label: 'Contain' },
+					{ value: 'fill', label: 'Fill' },
+					{ value: 'none', label: 'None' },
+					{ value: 'scale-down', label: 'Scale Down' }
+				]
+			},
 			border: {
 				minWidthPx: 1,
 				maxWidthPx: 100,
@@ -846,6 +862,9 @@ const CONFIG = deepFreeze({
 			textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4 },
 			borderDotSpacing: { label: 'Dot Spacing', unit: 'px', min: 1, max: 60, value: 10 },
 			shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 0 },
+			shapeImageOffsetX: { label: 'Horizontal Offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
+			shapeImageOffsetY: { label: 'Vertical Offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
+			shapeImageScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
 			textBackgroundPaddingH: { label: 'Horizontal Padding', unit: 'px', min: 0, max: 200, value: 16 },
@@ -1413,7 +1432,7 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Shape',
 			icon: 'square',
-			description: 'Add a shape with glitter, color, or a gradient',
+			description: 'Add a shape with an image, glitter, color, or a gradient',
 			quickAddId: 'quickActionAddShape',
 			quickAddOrder: 3
 		},
@@ -2204,8 +2223,43 @@ const PANEL_SCHEMAS = {
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
-					modes: ['none', 'glitter', 'solid'], activeMode: 'solid',
-					color: '#ff66cc', chipTitle: 'Choose fill glitter' }
+					modes: ['none', 'image', 'glitter', 'solid'], activeMode: 'solid',
+					color: '#ff66cc', chipTitle: 'Choose fill glitter',
+					imageAsset: {
+						info: 'shapeFillImageInfo', thumbnail: 'shapeFillImageThumbnail',
+						name: 'shapeFillImageName', badges: 'shapeFillImageBadges',
+						change: 'shapeFillImageChange', title: 'Choose fill image', compact: true, redesign: true
+					},
+					sourceAdvanced: [
+						{ kind: 'advanced', id: 'shapeFillImageAdvanced', label: 'Advanced', hidden: true,
+							attrs: { 'data-paint-source-mode': 'image' }, items: [
+							{ kind: 'set', id: 'shapeFillImageControls', label: 'Placement', items: [
+							{ kind: 'select', id: 'shapeFillImageFit', label: 'Image fit', visibleLabel: 'Fit', options: CONFIG.tools.shapes.imageFill.fitOptions },
+							{ kind: 'slider', id: 'shapeFillImageScale', slider: 'shapeImageScale' },
+							{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Horizontal image alignment', options: [
+								{ label: 'Left', icon: 'align-left', attrs: { 'data-fill-align': '0' } },
+								{ label: 'Center', icon: 'align-center-x', active: true, attrs: { 'data-fill-align': '50' } },
+								{ label: 'Right', icon: 'align-right', attrs: { 'data-fill-align': '100' } }
+							] },
+							{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical image alignment', options: [
+								{ label: 'Top', icon: 'align-top', attrs: { 'data-fill-valign': '0' } },
+								{ label: 'Middle', icon: 'align-center-y', active: true, attrs: { 'data-fill-valign': '50' } },
+								{ label: 'Bottom', icon: 'align-bottom', attrs: { 'data-fill-valign': '100' } }
+							] },
+							{ kind: 'slider', id: 'shapeFillImageOffsetX', slider: 'shapeImageOffsetX' },
+							{ kind: 'slider', id: 'shapeFillImageOffsetY', slider: 'shapeImageOffsetY' }
+							] },
+							{ kind: 'set', label: 'Rendering', items: [
+								{ kind: 'checkboxList', items: [
+									{ id: 'shapeFillImageTile', label: 'Tile Image' }
+								] },
+								{ kind: 'segmented', visibleLabel: 'Sampling', label: 'Image rendering', options: [
+									{ label: 'Smooth', active: true, attrs: { 'data-fill-rendering': 'smooth' } },
+									{ label: 'Pixelated', attrs: { 'data-fill-rendering': 'pixelated' } }
+								] }
+							] }
+						] }
+					] }
 			] },
 			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
 		],

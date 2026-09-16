@@ -6,6 +6,12 @@ const PREVIEW_EXPORT_TWINS = [
 		export: ['GifExporter._getTextEffectSource', 'GifExporter._getShapeEffectSource']
 	},
 	{
+		feature: 'shape image fill placement',
+		shared: 'getImageFillPlacement',
+		preview: ['ShapeGlitterManager.applyPaintSource'],
+		export: ['GifExporter._renderFilledMaskInto']
+	},
+	{
 		feature: 'mask dilation',
 		shared: 'createDilatedMaskCanvas',
 		preview: ['TextGlitterManager.createDilatedMaskCanvas'],
@@ -47,5 +53,5 @@ const PREVIEW_EXPORT_SWEEP = Object.freeze({
 	placements: Object.freeze(['outside', 'center', 'inside']),
 	edgeStyles: Object.freeze(['round', 'hard']),
 	drawOrders: Object.freeze(['behind', 'front']),
-	fillModes: Object.freeze(['solid', 'gradient', 'glitter'])
+	fillModes: Object.freeze(['solid', 'gradient', 'glitter', 'image'])
 });

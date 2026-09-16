@@ -62,6 +62,7 @@ class GifExporter {
 		this.resultPresenter = options.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null);
 		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
 		this.gifEncodingPipeline = options.gifEncodingPipeline || new GifEncodingPipeline();
+		this.resolveShapeFillImage = options.resolveShapeFillImage || (() => null);
 	}
 
 	// The compositor no longer predicts whether transparency will remain
@@ -398,7 +399,8 @@ class GifExporter {
 	_getShapeEffectSource(layer, slot) {
 		return resolveEffectPaintSource(slot === 'fill' ? layer.shapeData?.fill : layer.shapeData?.[slot], {
 			allowNone: slot === 'fill',
-			glitterId: slot === 'fill' ? layer.selectedGlitterId : layer.shapeData?.[slot]?.glitterId
+			glitterId: slot === 'fill' ? layer.selectedGlitterId : layer.shapeData?.[slot]?.glitterId,
+			imageResolver: this.resolveShapeFillImage
 		});
 	}
 
@@ -833,12 +835,30 @@ class GifExporter {
 		resetCanvasContext(fillCtx, fillCanvas.width, fillCanvas.height);
 		fillCtx.globalAlpha = source.opacity ?? 1;
 
+		let fillsSurface = true;
 		if (source.mode === 'solid') {
 			fillCtx.fillStyle = source.color;
 		} else if (source.mode === 'gradient') {
 			fillCtx.fillStyle = createEffectCanvasGradient(fillCtx, source.gradient, {
 				x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height
 			});
+		} else if (source.mode === 'image') {
+			const paintBox = maskCanvas._paintBox || { x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height };
+			const placement = getImageFillPlacement(source, paintBox);
+			fillCtx.imageSmoothingEnabled = source.imageRendering !== 'pixelated';
+			if (source.tile) {
+				const pattern = fillCtx.createPattern(source.image, 'repeat');
+				pattern.setTransform(new DOMMatrix()
+					.translateSelf(placement.dx, placement.dy)
+					.scaleSelf(
+						placement.dw / (source.image.naturalWidth || source.image.width),
+						placement.dh / (source.image.naturalHeight || source.image.height)
+					));
+				fillCtx.fillStyle = pattern;
+			} else {
+				fillsSurface = false;
+				fillCtx.drawImage(source.image, placement.dx, placement.dy, placement.dw, placement.dh);
+			}
 		} else {
 			const frameImageData = this._getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource);
 			const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, source.colorAdjust);
@@ -855,7 +875,7 @@ class GifExporter {
 			fillCtx.fillStyle = pattern;
 		}
 
-		fillCtx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
+		if (fillsSurface) fillCtx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
 		fillCtx.globalCompositeOperation = 'destination-in';
 		fillCtx.drawImage(maskCanvas, 0, 0);
 		fillCtx.globalCompositeOperation = 'source-over';
