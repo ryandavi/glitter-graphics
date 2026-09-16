@@ -1,0 +1,37 @@
+{
+    "id": 240,
+    "name": "YASS",
+    "filename": "21416_256.png",
+    "url": "images/stickers/twitter/21416_256.png",
+    "thumbnailUrl": "images/stickers/twitter/21416_256.png",
+    "category": "twitter",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "gold",
+        "white",
+        "yellow"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#292521",
+        "#F2F2F2",
+        "#EEE103"
+    ],
+    "colorWeights": [
+        0.53,
+        0.27,
+        0.2
+    ],
+    "paletteType": "gradient",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 256,
+    "height": 256,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 20347,
+    "sortOrder": 0
+}

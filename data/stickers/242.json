@@ -1,0 +1,39 @@
+{
+    "id": 242,
+    "name": "#Twinning",
+    "filename": "21430_256.png",
+    "url": "images/stickers/twitter/21430_256.png",
+    "thumbnailUrl": "images/stickers/twitter/21430_256.png",
+    "category": "twitter",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "green",
+        "purple",
+        "white"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#9369CA",
+        "#A8EFAD",
+        "#FBFCFD",
+        "#C0B3DC"
+    ],
+    "colorWeights": [
+        0.32,
+        0.31,
+        0.31,
+        0.07
+    ],
+    "paletteType": "multicolor",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 256,
+    "height": 256,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 9459,
+    "sortOrder": 0
+}

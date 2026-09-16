@@ -1,0 +1,39 @@
+{
+    "id": 245,
+    "name": "#FLAWLESS",
+    "filename": "21428_256.png",
+    "url": "images/stickers/twitter/21428_256.png",
+    "thumbnailUrl": "images/stickers/twitter/21428_256.png",
+    "category": "twitter",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "pink",
+        "purple",
+        "white"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#9469CB",
+        "#FEFDFE",
+        "#FF8DBC",
+        "#EACAE7"
+    ],
+    "colorWeights": [
+        0.32,
+        0.31,
+        0.31,
+        0.06
+    ],
+    "paletteType": "gradient",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 256,
+    "height": 256,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 9533,
+    "sortOrder": 0
+}

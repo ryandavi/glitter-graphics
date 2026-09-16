@@ -5,7 +5,7 @@
     "url": "images/stickers/frame/frame_chrome.gif",
     "thumbnailUrl": "images/stickers/frame/frame_chrome.gif",
     "category": "frame",
-    "attribution": "",
+    "attribution": null,
     "stickerText": null,
     "tags": [
         "chrome"

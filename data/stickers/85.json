@@ -5,7 +5,9 @@
     "url": "images/stickers/people/snoop-dogg_dance.gif",
     "thumbnailUrl": "images/stickers/people/snoop-dogg_dance.gif",
     "category": "people",
-    "attribution": "Snoop Dogg - Drop It Like It's Hot (2004)",
+    "attribution": {
+        "notes": "Snoop Dogg - Drop It Like It's Hot (2004)"
+    },
     "stickerText": null,
     "tags": [
         "black",

@@ -1,0 +1,31 @@
+{
+    "id": 237,
+    "name": "Blue Bow",
+    "filename": "11660_256.png",
+    "url": "images/stickers/twitter/11660_256.png",
+    "thumbnailUrl": "images/stickers/twitter/11660_256.png",
+    "category": "twitter",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "blue"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#1895E8"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "paletteType": "single",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 256,
+    "height": 256,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 11818,
+    "sortOrder": 0
+}

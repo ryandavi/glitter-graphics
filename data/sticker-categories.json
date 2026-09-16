@@ -3,7 +3,7 @@
         "id": "user-uploads",
         "name": "User Uploads",
         "icon": "images/stickers/decorative/heart_pink-glitter.gif",
-        "color": "#9575CD",
+        "color": "#9575cd",
         "description": "Stickers uploaded by user",
         "count": 0
     },
@@ -30,6 +30,22 @@
         "color": "#FF6FA5",
         "description": "Stickers in the flower category",
         "count": 22
+    },
+    {
+        "id": "twitter",
+        "name": "Twitter",
+        "icon": "images/stickers/twitter/21416_256.png",
+        "color": "#1da1f2",
+        "description": "Twitter\u2019s official sticker collection, introduced on June 27, 2016 for decorating photos before posting. Stickers could be resized, rotated, and placed anywhere on an image, and public posts using them could be discovered through the sticker itself. The feature was discontinued in April 2026 when X replaced its previous image-editing interface with a new Photo Editor.",
+        "count": 21,
+        "attribution": {
+            "author": "The Iconfactory",
+            "authorUrl": "https://iconfactory.com/",
+            "source": "Twitter Stickers",
+            "sourceUrl": "https://design.iconfactory.com/twitter-stickers/",
+            "license": "unknown",
+            "notes": "Designed by The Iconfactory for Twitter in 2016. The Iconfactory created sticker sets based on themes supplied by Twitter, including hats, props, wigs, and masks."
+        }
     },
     {
         "id": "decorative",
@@ -84,11 +100,12 @@
         "name": "ryandavi",
         "icon": "images/stickers/ryandavi/ryandavi_wow.png",
         "color": "#1100ff",
-        "description": "Original stickers by Ryan Davis",
+        "description": "Original stickers by Ryan Davi",
         "count": 11,
         "attribution": {
-            "author": "Ryan Davis",
-            "authorUrl": "https://ryandavi.com"
+            "author": "Ryan Davi",
+            "authorUrl": "https://ryandavi.com",
+            "license": "personal-use"
         }
     },
     {

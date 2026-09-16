@@ -5417,7 +5417,6 @@ body.mask-editing .sticker-element {
   align-items: flex-start;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
   background: var(--color-bg-tertiary);
 }
 .gallery-picker-strip[hidden] {

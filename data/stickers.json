@@ -6,7 +6,7 @@
         "url": "images/stickers/background/checkerboard_emo_rainbow.gif",
         "thumbnailUrl": "images/stickers/background/checkerboard_emo_rainbow.gif",
         "category": "background",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "checkerboard",
@@ -35,7 +35,7 @@
         "url": "images/stickers/clothing/crown_gold-glitter.gif",
         "thumbnailUrl": "images/stickers/clothing/crown_gold-glitter.gif",
         "category": "clothing",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "crown",
@@ -67,7 +67,7 @@
         "url": "images/stickers/clothing/bow_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/clothing/bow_pink-glitter.gif",
         "category": "clothing",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bow",
@@ -99,7 +99,7 @@
         "url": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
         "thumbnailUrl": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
         "category": "emoji",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "like",
@@ -128,7 +128,7 @@
         "url": "images/stickers/emoji/kaomoji_love_pink.gif",
         "thumbnailUrl": "images/stickers/emoji/kaomoji_love_pink.gif",
         "category": "emoji",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "cute",
@@ -157,7 +157,7 @@
         "url": "images/stickers/emoji/smilie_bong_yellow.gif",
         "thumbnailUrl": "images/stickers/emoji/smilie_bong_yellow.gif",
         "category": "emoji",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -188,7 +188,7 @@
         "url": "images/stickers/flower/flower_gold-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/flower_gold-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -217,7 +217,7 @@
         "url": "images/stickers/flower/flowers_red-green-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/flowers_red-green-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flowers",
@@ -247,7 +247,7 @@
         "url": "images/stickers/flower/lily_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/lily_pink-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -277,7 +277,7 @@
         "url": "images/stickers/flower/pansy_yellow-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/pansy_yellow-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -307,7 +307,7 @@
         "url": "images/stickers/flower/red_pansy.gif",
         "thumbnailUrl": "images/stickers/flower/red_pansy.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -336,7 +336,7 @@
         "url": "images/stickers/flower/rose_bloom.gif",
         "thumbnailUrl": "images/stickers/flower/rose_bloom.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bloom",
@@ -365,7 +365,7 @@
         "url": "images/stickers/flower/rose_bloom_red-green-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/rose_bloom_red-green-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bloom",
@@ -397,7 +397,7 @@
         "url": "images/stickers/flower/rose_red-green-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/rose_red-green-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -428,7 +428,7 @@
         "url": "images/stickers/flower/rose_rotate.gif",
         "thumbnailUrl": "images/stickers/flower/rose_rotate.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -458,7 +458,7 @@
         "url": "images/stickers/flower/rose_shimmer.gif",
         "thumbnailUrl": "images/stickers/flower/rose_shimmer.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -488,7 +488,7 @@
         "url": "images/stickers/flower/tulip_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/tulip_pink-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -518,7 +518,7 @@
         "url": "images/stickers/flower/callalillies_hummingbirds_yellow-green.gif",
         "thumbnailUrl": "images/stickers/flower/callalillies_hummingbirds_yellow-green.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "birds",
@@ -550,7 +550,7 @@
         "url": "images/stickers/flower/flower-small_red.gif",
         "thumbnailUrl": "images/stickers/flower/flower-small_red.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -579,7 +579,7 @@
         "url": "images/stickers/flower/hibiscus_red.gif",
         "thumbnailUrl": "images/stickers/flower/hibiscus_red.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -609,7 +609,7 @@
         "url": "images/stickers/flower/marijuana-leaf-small_green-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/marijuana-leaf-small_green-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -641,7 +641,7 @@
         "url": "images/stickers/flower/marijuana-leaf-small_green-glitter_2.gif",
         "thumbnailUrl": "images/stickers/flower/marijuana-leaf-small_green-glitter_2.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -673,7 +673,7 @@
         "url": "images/stickers/flower/marijuana-leaf-small_green-glitter_3.gif",
         "thumbnailUrl": "images/stickers/flower/marijuana-leaf-small_green-glitter_3.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -705,7 +705,7 @@
         "url": "images/stickers/flower/marijuana-leaf_green-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/marijuana-leaf_green-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -737,7 +737,7 @@
         "url": "images/stickers/flower/marijuana-leaf_green-glitter_2.gif",
         "thumbnailUrl": "images/stickers/flower/marijuana-leaf_green-glitter_2.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -769,7 +769,7 @@
         "url": "images/stickers/flower/rose-in-heart_red-gold-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/rose-in-heart_red-gold-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "flower",
@@ -802,7 +802,7 @@
         "url": "images/stickers/flower/rose_bouquet_pink-silver-glitter.gif",
         "thumbnailUrl": "images/stickers/flower/rose_bouquet_pink-silver-glitter.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bouquet",
@@ -834,7 +834,7 @@
         "url": "images/stickers/flower/roses_glitter_blue.gif",
         "thumbnailUrl": "images/stickers/flower/roses_glitter_blue.gif",
         "category": "flower",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -864,7 +864,7 @@
         "url": "images/stickers/frame/frame_chrome.gif",
         "thumbnailUrl": "images/stickers/frame/frame_chrome.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "chrome"
@@ -891,7 +891,7 @@
         "url": "images/stickers/frame/frame_silver.gif",
         "thumbnailUrl": "images/stickers/frame/frame_silver.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "silver"
@@ -918,7 +918,7 @@
         "url": "images/stickers/frame/heart_red-glitter.gif",
         "thumbnailUrl": "images/stickers/frame/heart_red-glitter.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -947,7 +947,7 @@
         "url": "images/stickers/frame/heart_rhinestone_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/frame/heart_rhinestone_purple-glitter.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -977,7 +977,7 @@
         "url": "images/stickers/frame/heart_rhinestone_silver-glitter.gif",
         "thumbnailUrl": "images/stickers/frame/heart_rhinestone_silver-glitter.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -1007,7 +1007,7 @@
         "url": "images/stickers/frame/heart-frame_pink-jewel.gif",
         "thumbnailUrl": "images/stickers/frame/heart-frame_pink-jewel.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "heart",
@@ -1036,7 +1036,7 @@
         "url": "images/stickers/frame/leaf_gold-glitter.gif",
         "thumbnailUrl": "images/stickers/frame/leaf_gold-glitter.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -1065,7 +1065,7 @@
         "url": "images/stickers/frame/big-sparkle-frame.gif",
         "thumbnailUrl": "images/stickers/frame/big-sparkle-frame.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "sparkle"
@@ -1092,7 +1092,7 @@
         "url": "images/stickers/frame/confetti_gold-glitter.gif",
         "thumbnailUrl": "images/stickers/frame/confetti_gold-glitter.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "confetti",
@@ -1121,7 +1121,7 @@
         "url": "images/stickers/frame/heart-frame_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/frame/heart-frame_pink-glitter.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -1151,7 +1151,7 @@
         "url": "images/stickers/frame/rose-heart_frame_red.gif",
         "thumbnailUrl": "images/stickers/frame/rose-heart_frame_red.gif",
         "category": "frame",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "heart",
@@ -1181,7 +1181,7 @@
         "url": "images/stickers/jewelry/bling-bling-necklace_gold-silver.gif",
         "thumbnailUrl": "images/stickers/jewelry/bling-bling-necklace_gold-silver.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Bling Bling",
         "tags": [
             "bling bling",
@@ -1212,7 +1212,7 @@
         "url": "images/stickers/jewelry/bling-bling-necklace_rose-gold.gif",
         "thumbnailUrl": "images/stickers/jewelry/bling-bling-necklace_rose-gold.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Bling Bling",
         "tags": [
             "bling bling",
@@ -1242,7 +1242,7 @@
         "url": "images/stickers/jewelry/bling-bling-necklace_silver.gif",
         "thumbnailUrl": "images/stickers/jewelry/bling-bling-necklace_silver.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Bling Bling",
         "tags": [
             "bling bling",
@@ -1272,7 +1272,7 @@
         "url": "images/stickers/jewelry/cutie-necklace_blue-pink.gif",
         "thumbnailUrl": "images/stickers/jewelry/cutie-necklace_blue-pink.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Cutie",
         "tags": [
             "blue",
@@ -1303,7 +1303,7 @@
         "url": "images/stickers/jewelry/dollar-sign-necklace_gold.gif",
         "thumbnailUrl": "images/stickers/jewelry/dollar-sign-necklace_gold.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "$",
         "tags": [
             "dollar sign",
@@ -1333,7 +1333,7 @@
         "url": "images/stickers/jewelry/dollar-sign-necklace_sparkle_green-glitter.gif",
         "thumbnailUrl": "images/stickers/jewelry/dollar-sign-necklace_sparkle_green-glitter.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "$",
         "tags": [
             "dollar sign",
@@ -1365,7 +1365,7 @@
         "url": "images/stickers/jewelry/gangsta-necklace_gold.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_gold.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1395,7 +1395,7 @@
         "url": "images/stickers/jewelry/gangsta-necklace_gold_2.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_gold_2.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1425,7 +1425,7 @@
         "url": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1455,7 +1455,7 @@
         "url": "images/stickers/jewelry/gangsta-necklace_gold_5.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_gold_5.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1485,7 +1485,7 @@
         "url": "images/stickers/jewelry/gangsta-necklace_silver.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_silver.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1515,7 +1515,7 @@
         "url": "images/stickers/jewelry/gangsta-necklace_silver_2.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_silver_2.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1545,7 +1545,7 @@
         "url": "images/stickers/jewelry/gangsta_gold-silver.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta_gold-silver.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "gangsta",
@@ -1575,7 +1575,7 @@
         "url": "images/stickers/jewelry/gangsta_necklace_gold_3.gif",
         "thumbnailUrl": "images/stickers/jewelry/gangsta_necklace_gold_3.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "chain",
@@ -1605,7 +1605,7 @@
         "url": "images/stickers/jewelry/hottie-necklace_hot-pink-silver.gif",
         "thumbnailUrl": "images/stickers/jewelry/hottie-necklace_hot-pink-silver.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Hottie",
         "tags": [
             "hottie",
@@ -1636,7 +1636,7 @@
         "url": "images/stickers/jewelry/naughty-necklace_pink.gif",
         "thumbnailUrl": "images/stickers/jewelry/naughty-necklace_pink.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Naughty",
         "tags": [
             "naughty",
@@ -1665,7 +1665,7 @@
         "url": "images/stickers/jewelry/pimpin-necklace_silver.gif",
         "thumbnailUrl": "images/stickers/jewelry/pimpin-necklace_silver.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Pimpin",
         "tags": [
             "necklace",
@@ -1694,7 +1694,7 @@
         "url": "images/stickers/jewelry/tupac-necklace_gold.gif",
         "thumbnailUrl": "images/stickers/jewelry/tupac-necklace_gold.gif",
         "category": "jewelry",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Tupac",
         "tags": [
             "2pac",
@@ -1725,7 +1725,7 @@
         "url": "images/stickers/logo/playboy_silver-glitter.gif",
         "thumbnailUrl": "images/stickers/logo/playboy_silver-glitter.gif",
         "category": "logo",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bunny",
@@ -1755,7 +1755,7 @@
         "url": "images/stickers/logo/ayumi-hamasaki_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/logo/ayumi-hamasaki_pink-glitter.gif",
         "category": "logo",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -1783,7 +1783,7 @@
         "url": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
         "category": "logo",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -1852,7 +1852,7 @@
         "url": "images/stickers/object/lava-lamp_blue.gif",
         "thumbnailUrl": "images/stickers/object/lava-lamp_blue.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -1882,7 +1882,7 @@
         "url": "images/stickers/object/weed_lit.gif",
         "thumbnailUrl": "images/stickers/object/weed_lit.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "leaf",
@@ -1911,7 +1911,7 @@
         "url": "images/stickers/object/weed_lit-2.gif",
         "thumbnailUrl": "images/stickers/object/weed_lit-2.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "leaf",
@@ -1940,7 +1940,7 @@
         "url": "images/stickers/object/wine-rose_gold-glitter.gif",
         "thumbnailUrl": "images/stickers/object/wine-rose_gold-glitter.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "drink",
@@ -1970,7 +1970,7 @@
         "url": "images/stickers/object/cigar.gif",
         "thumbnailUrl": "images/stickers/object/cigar.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "cigar",
@@ -1998,7 +1998,7 @@
         "url": "images/stickers/object/fire_1.gif",
         "thumbnailUrl": "images/stickers/object/fire_1.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "fire",
@@ -2027,7 +2027,7 @@
         "url": "images/stickers/object/fire_2.gif",
         "thumbnailUrl": "images/stickers/object/fire_2.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "fire",
@@ -2056,7 +2056,7 @@
         "url": "images/stickers/object/fire_3.gif",
         "thumbnailUrl": "images/stickers/object/fire_3.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "fire",
@@ -2085,7 +2085,7 @@
         "url": "images/stickers/object/fire_4.gif",
         "thumbnailUrl": "images/stickers/object/fire_4.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "fire",
@@ -2114,7 +2114,7 @@
         "url": "images/stickers/object/money-stacks_gold-glitter-green.gif",
         "thumbnailUrl": "images/stickers/object/money-stacks_gold-glitter-green.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "cash",
@@ -2147,7 +2147,7 @@
         "url": "images/stickers/object/money_wave_green.gif",
         "thumbnailUrl": "images/stickers/object/money_wave_green.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "cash",
@@ -2178,7 +2178,7 @@
         "url": "images/stickers/object/weed_rotating_green.gif",
         "thumbnailUrl": "images/stickers/object/weed_rotating_green.gif",
         "category": "object",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "420",
@@ -2210,7 +2210,7 @@
         "url": "images/stickers/people/lips_kiss.gif",
         "thumbnailUrl": "images/stickers/people/lips_kiss.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "kiss",
@@ -2239,7 +2239,7 @@
         "url": "images/stickers/people/lips_kiss_2.gif",
         "thumbnailUrl": "images/stickers/people/lips_kiss_2.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "kiss",
@@ -2268,7 +2268,7 @@
         "url": "images/stickers/people/lips_light-pink-glitter.gif",
         "thumbnailUrl": "images/stickers/people/lips_light-pink-glitter.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2298,7 +2298,7 @@
         "url": "images/stickers/people/lips_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/people/lips_pink-glitter.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2327,7 +2327,7 @@
         "url": "images/stickers/people/lips_pink-glitter-2.gif",
         "thumbnailUrl": "images/stickers/people/lips_pink-glitter-2.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2356,7 +2356,7 @@
         "url": "images/stickers/people/lips_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/people/lips_purple-glitter.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2385,7 +2385,7 @@
         "url": "images/stickers/people/lips_purple-glitter-2.gif",
         "thumbnailUrl": "images/stickers/people/lips_purple-glitter-2.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2414,7 +2414,7 @@
         "url": "images/stickers/people/lips_red-glitter.gif",
         "thumbnailUrl": "images/stickers/people/lips_red-glitter.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2443,7 +2443,7 @@
         "url": "images/stickers/people/woman_headset_talk.gif",
         "thumbnailUrl": "images/stickers/people/woman_headset_talk.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "headset",
@@ -2473,7 +2473,9 @@
         "url": "images/stickers/people/snoop-dogg_dance.gif",
         "thumbnailUrl": "images/stickers/people/snoop-dogg_dance.gif",
         "category": "people",
-        "attribution": "Snoop Dogg - Drop It Like It's Hot (2004)",
+        "attribution": {
+            "notes": "Snoop Dogg - Drop It Like It's Hot (2004)"
+        },
         "stickerText": null,
         "tags": [
             "black",
@@ -2506,7 +2508,7 @@
         "url": "images/stickers/people/snoop-dogg_dance_big.gif",
         "thumbnailUrl": "images/stickers/people/snoop-dogg_dance_big.gif",
         "category": "people",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "dancing",
@@ -2542,7 +2544,7 @@
         "url": "images/stickers/sparkle/confetti_gold.gif",
         "thumbnailUrl": "images/stickers/sparkle/confetti_gold.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "celebration",
@@ -2572,7 +2574,7 @@
         "url": "images/stickers/sparkle/corner_sparkle_rainbow.gif",
         "thumbnailUrl": "images/stickers/sparkle/corner_sparkle_rainbow.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "corner",
@@ -2601,7 +2603,7 @@
         "url": "images/stickers/sparkle/fireworks_yellow-pink.gif",
         "thumbnailUrl": "images/stickers/sparkle/fireworks_yellow-pink.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "celebration",
@@ -2632,7 +2634,7 @@
         "url": "images/stickers/sparkle/heaers_exploding_red.gif",
         "thumbnailUrl": "images/stickers/sparkle/heaers_exploding_red.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "burst",
@@ -2663,7 +2665,7 @@
         "url": "images/stickers/sparkle/hearts_exploding_pink.gif",
         "thumbnailUrl": "images/stickers/sparkle/hearts_exploding_pink.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "burst",
@@ -2694,7 +2696,7 @@
         "url": "images/stickers/sparkle/hearts_falling_pink.gif",
         "thumbnailUrl": "images/stickers/sparkle/hearts_falling_pink.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "falling",
@@ -2724,7 +2726,7 @@
         "url": "images/stickers/sparkle/hearts_floating_pink.gif",
         "thumbnailUrl": "images/stickers/sparkle/hearts_floating_pink.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "floating",
@@ -2754,7 +2756,7 @@
         "url": "images/stickers/sparkle/hearts_floating_red.gif",
         "thumbnailUrl": "images/stickers/sparkle/hearts_floating_red.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "floating",
@@ -2784,7 +2786,7 @@
         "url": "images/stickers/sparkle/hearts_floating_red_2.gif",
         "thumbnailUrl": "images/stickers/sparkle/hearts_floating_red_2.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "floating",
@@ -2814,7 +2816,7 @@
         "url": "images/stickers/sparkle/hearts_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/sparkle/hearts_pink-glitter.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -2845,7 +2847,7 @@
         "url": "images/stickers/sparkle/rose-petals_falling_red.gif",
         "thumbnailUrl": "images/stickers/sparkle/rose-petals_falling_red.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "falling",
@@ -2876,7 +2878,7 @@
         "url": "images/stickers/sparkle/shooting-star_yellow.gif",
         "thumbnailUrl": "images/stickers/sparkle/shooting-star_yellow.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "shooting star",
@@ -2906,7 +2908,7 @@
         "url": "images/stickers/sparkle/snow_falling_white.gif",
         "thumbnailUrl": "images/stickers/sparkle/snow_falling_white.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "falling",
@@ -2936,7 +2938,7 @@
         "url": "images/stickers/sparkle/sparkle-stars_black-background.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle-stars_black-background.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "black",
@@ -2966,7 +2968,7 @@
         "url": "images/stickers/sparkle/sparkle_big_white.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_big_white.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "big",
@@ -2995,7 +2997,7 @@
         "url": "images/stickers/sparkle/sparkle_blue.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_blue.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -3023,7 +3025,7 @@
         "url": "images/stickers/sparkle/sparkle_blue_2.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_blue_2.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -3051,7 +3053,7 @@
         "url": "images/stickers/sparkle/sparkle_blue_3.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_blue_3.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -3079,7 +3081,7 @@
         "url": "images/stickers/sparkle/sparkle_blue_4.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_blue_4.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -3107,7 +3109,7 @@
         "url": "images/stickers/sparkle/sparkle_gold.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_gold.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "gold",
@@ -3135,7 +3137,7 @@
         "url": "images/stickers/sparkle/sparkle_green.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_green.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "green",
@@ -3163,7 +3165,7 @@
         "url": "images/stickers/sparkle/sparkle_orange.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_orange.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "orange",
@@ -3191,7 +3193,7 @@
         "url": "images/stickers/sparkle/sparkle_pink.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_pink.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "pink",
@@ -3219,7 +3221,7 @@
         "url": "images/stickers/sparkle/sparkle_pink_2.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_pink_2.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "pink",
@@ -3247,7 +3249,7 @@
         "url": "images/stickers/sparkle/sparkle_pink_3.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_pink_3.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "pink",
@@ -3275,7 +3277,7 @@
         "url": "images/stickers/sparkle/sparkle_purple.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_purple.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "purple",
@@ -3303,7 +3305,7 @@
         "url": "images/stickers/sparkle/sparkle_rainbow.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_rainbow.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "rainbow",
@@ -3331,7 +3333,7 @@
         "url": "images/stickers/sparkle/sparkle_rainbow_2.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_rainbow_2.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "rainbow",
@@ -3359,7 +3361,7 @@
         "url": "images/stickers/sparkle/sparkle_silver.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_silver.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "silver",
@@ -3387,7 +3389,7 @@
         "url": "images/stickers/sparkle/sparkle_silver_2.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_silver_2.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "silver",
@@ -3415,7 +3417,7 @@
         "url": "images/stickers/sparkle/sparkle_silver_3.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_silver_3.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "silver",
@@ -3443,7 +3445,7 @@
         "url": "images/stickers/sparkle/sparkle_white.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_white.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "sparkle",
@@ -3471,7 +3473,7 @@
         "url": "images/stickers/sparkle/sparkle_yellow.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_yellow.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "sparkle",
@@ -3499,7 +3501,7 @@
         "url": "images/stickers/sparkle/sparkle_yellow_2.gif",
         "thumbnailUrl": "images/stickers/sparkle/sparkle_yellow_2.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "sparkle",
@@ -3527,7 +3529,7 @@
         "url": "images/stickers/sparkle/stars_falling_rainbow-pastel.gif",
         "thumbnailUrl": "images/stickers/sparkle/stars_falling_rainbow-pastel.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "falling",
@@ -3557,7 +3559,7 @@
         "url": "images/stickers/sparkle/stars_yellow.gif",
         "thumbnailUrl": "images/stickers/sparkle/stars_yellow.gif",
         "category": "sparkle",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "sparkle",
@@ -3810,7 +3812,7 @@
         "url": "images/stickers/text/sweetie_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/sweetie_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Sweetie",
         "tags": [
             "glitter",
@@ -3851,7 +3853,7 @@
         "url": "images/stickers/text/whimsy_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/whimsy_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Whimsy",
         "tags": [
             "blue",
@@ -3880,7 +3882,7 @@
         "url": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Aloha Hibiscus",
         "tags": [
             "aloha hibiscus",
@@ -3917,7 +3919,7 @@
         "url": "images/stickers/text/angel_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/angel_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Angel",
         "tags": [
             "angel",
@@ -3962,7 +3964,7 @@
         "url": "images/stickers/text/babyface_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/babyface_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Babyface",
         "tags": [
             "babyface",
@@ -3991,7 +3993,7 @@
         "url": "images/stickers/text/baby-girl_gothic_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/baby-girl_gothic_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Baby Girl",
         "tags": [
             "baby girl",
@@ -4021,7 +4023,7 @@
         "url": "images/stickers/text/baby-gurl_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/baby-gurl_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Baby Gurl",
         "tags": [
             "baby gurl",
@@ -4050,7 +4052,7 @@
         "url": "images/stickers/text/beautiful_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/beautiful_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Beautiful",
         "tags": [
             "beautiful",
@@ -4079,7 +4081,7 @@
         "url": "images/stickers/text/blonde-angel_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/blonde-angel_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Blonde Angel",
         "tags": [
             "blonde angel",
@@ -4108,7 +4110,7 @@
         "url": "images/stickers/text/blondie_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/blondie_purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Blondie",
         "tags": [
             "blondie",
@@ -4137,7 +4139,7 @@
         "url": "images/stickers/text/butterfly-princess_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/butterfly-princess_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Butterfly Princess",
         "tags": [
             "butterfly princess",
@@ -4166,7 +4168,7 @@
         "url": "images/stickers/text/chiquita_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/chiquita_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Chiquita",
         "tags": [
             "chiquita",
@@ -4195,7 +4197,7 @@
         "url": "images/stickers/text/crazy_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/crazy_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Crazy",
         "tags": [
             "blue",
@@ -4224,7 +4226,7 @@
         "url": "images/stickers/text/cutie_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/cutie_purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Cutie",
         "tags": [
             "cutie",
@@ -4253,7 +4255,7 @@
         "url": "images/stickers/text/girly_pink-purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/girly_pink-purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Girly",
         "tags": [
             "girly",
@@ -4283,7 +4285,7 @@
         "url": "images/stickers/text/glow_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/glow_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Glow",
         "tags": [
             "glitter",
@@ -4312,7 +4314,7 @@
         "url": "images/stickers/text/gorgeous.gif",
         "thumbnailUrl": "images/stickers/text/gorgeous.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gorgeous",
         "tags": [
             "gorgeous"
@@ -4339,7 +4341,7 @@
         "url": "images/stickers/text/happy-new-year_silver-glitter.gif",
         "thumbnailUrl": "images/stickers/text/happy-new-year_silver-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Happy New Year",
         "tags": [
             "glitter",
@@ -4378,7 +4380,7 @@
         "url": "images/stickers/text/heartbreaker_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/heartbreaker_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Heartbreaker",
         "tags": [
             "glitter",
@@ -4407,7 +4409,7 @@
         "url": "images/stickers/text/heaven-sent_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/heaven-sent_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Heaven Sent",
         "tags": [
             "blue",
@@ -4436,7 +4438,7 @@
         "url": "images/stickers/text/hello_butterflies_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/hello_butterflies_purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Hello",
         "tags": [
             "butterflies",
@@ -4466,7 +4468,7 @@
         "url": "images/stickers/text/i-miss-you_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/i-miss-you_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "I Miss You",
         "tags": [
             "glitter",
@@ -4495,7 +4497,7 @@
         "url": "images/stickers/text/keepin-it-gangsta_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/keepin-it-gangsta_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Keepin It Gangsta",
         "tags": [
             "blue",
@@ -4524,7 +4526,7 @@
         "url": "images/stickers/text/love-always_glitter.gif",
         "thumbnailUrl": "images/stickers/text/love-always_glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Love Always",
         "tags": [
             "glitter",
@@ -4552,7 +4554,7 @@
         "url": "images/stickers/text/much-appreciated_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/much-appreciated_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Much Appreciated",
         "tags": [
             "glitter",
@@ -4581,7 +4583,7 @@
         "url": "images/stickers/text/muchas-gracias-a-todo_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/muchas-gracias-a-todo_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Muchas Gracias A Todo",
         "tags": [
             "blue",
@@ -4610,7 +4612,7 @@
         "url": "images/stickers/text/my-friends_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/my-friends_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "My Friends",
         "tags": [
             "glitter",
@@ -4639,7 +4641,7 @@
         "url": "images/stickers/text/naughty_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/naughty_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Naughty",
         "tags": [
             "glitter",
@@ -4668,7 +4670,7 @@
         "url": "images/stickers/text/naughty_pink-red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/naughty_pink-red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Naughty",
         "tags": [
             "glitter",
@@ -4698,7 +4700,7 @@
         "url": "images/stickers/text/princess_silver-red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/princess_silver-red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Princess",
         "tags": [
             "glitter",
@@ -4728,7 +4730,7 @@
         "url": "images/stickers/text/shy-little-me_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/shy-little-me_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Shy Little Me",
         "tags": [
             "blue",
@@ -4757,7 +4759,7 @@
         "url": "images/stickers/text/smile_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/smile_purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Smile",
         "tags": [
             "glitter",
@@ -4786,7 +4788,7 @@
         "url": "images/stickers/text/smile_rainbow-glitter.gif",
         "thumbnailUrl": "images/stickers/text/smile_rainbow-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Smile",
         "tags": [
             "glitter",
@@ -4815,7 +4817,7 @@
         "url": "images/stickers/text/spoiled_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/spoiled_purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Spoiled",
         "tags": [
             "glitter",
@@ -4844,7 +4846,7 @@
         "url": "images/stickers/text/star_yellow-glitter.gif",
         "thumbnailUrl": "images/stickers/text/star_yellow-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Star",
         "tags": [
             "glitter",
@@ -4873,7 +4875,7 @@
         "url": "images/stickers/text/stars_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/stars_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Stars",
         "tags": [
             "glitter",
@@ -4902,7 +4904,7 @@
         "url": "images/stickers/text/sweet-angel_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/sweet-angel_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Sweet Angel",
         "tags": [
             "glitter",
@@ -4931,7 +4933,7 @@
         "url": "images/stickers/text/sweety_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/sweety_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Sweety",
         "tags": [
             "glitter",
@@ -4960,7 +4962,7 @@
         "url": "images/stickers/text/tortured-heart_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/tortured-heart_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Tortured Heart",
         "tags": [
             "glitter",
@@ -4989,7 +4991,7 @@
         "url": "images/stickers/text/welcome.gif",
         "thumbnailUrl": "images/stickers/text/welcome.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Welcome",
         "tags": [
             "welcome"
@@ -5016,7 +5018,7 @@
         "url": "images/stickers/text/welcome_blue-glitter.gif",
         "thumbnailUrl": "images/stickers/text/welcome_blue-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Welcome",
         "tags": [
             "blue",
@@ -5045,7 +5047,7 @@
         "url": "images/stickers/text/welcome_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/text/welcome_pink-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Welcome",
         "tags": [
             "glitter",
@@ -5074,7 +5076,7 @@
         "url": "images/stickers/text/welcome_purple-glitter.gif",
         "thumbnailUrl": "images/stickers/text/welcome_purple-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Welcome",
         "tags": [
             "glitter",
@@ -5103,7 +5105,7 @@
         "url": "images/stickers/text/welcome_red-glitter.gif",
         "thumbnailUrl": "images/stickers/text/welcome_red-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Welcome",
         "tags": [
             "glitter",
@@ -5132,7 +5134,7 @@
         "url": "images/stickers/text/sexy_arrow_purple.gif",
         "thumbnailUrl": "images/stickers/text/sexy_arrow_purple.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "arrow",
@@ -5162,7 +5164,7 @@
         "url": "images/stickers/text/420_rotate_green.gif",
         "thumbnailUrl": "images/stickers/text/420_rotate_green.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "420",
         "tags": [
             "420",
@@ -5193,7 +5195,7 @@
         "url": "images/stickers/text/bling-bling_silver-glitter.gif",
         "thumbnailUrl": "images/stickers/text/bling-bling_silver-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Bling Bling",
         "tags": [
             "bling bling",
@@ -5235,7 +5237,7 @@
         "url": "images/stickers/text/dope_marijuana-leaf_green-glitter.gif",
         "thumbnailUrl": "images/stickers/text/dope_marijuana-leaf_green-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Dope",
         "tags": [
             "420",
@@ -5268,7 +5270,7 @@
         "url": "images/stickers/text/emo_rainbow-gradient-pink-orange-yellow-green.gif",
         "thumbnailUrl": "images/stickers/text/emo_rainbow-gradient-pink-orange-yellow-green.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Emo",
         "tags": [
             "emo",
@@ -5301,7 +5303,7 @@
         "url": "images/stickers/text/emo_wings_black-pink.gif",
         "thumbnailUrl": "images/stickers/text/emo_wings_black-pink.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Emo",
         "tags": [
             "black",
@@ -5332,7 +5334,7 @@
         "url": "images/stickers/text/gangsta-pirncess_heart-tiara_silver-glitter-pink.gif",
         "thumbnailUrl": "images/stickers/text/gangsta-pirncess_heart-tiara_silver-glitter-pink.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta Princess",
         "tags": [
             "gangsta princess",
@@ -5364,7 +5366,7 @@
         "url": "images/stickers/text/gangsta_purple-ember-glitter.gif",
         "thumbnailUrl": "images/stickers/text/gangsta_purple-ember-glitter.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Gangsta",
         "tags": [
             "ember",
@@ -5394,7 +5396,7 @@
         "url": "images/stickers/text/good-morning_blue-bird_flower_blue.gif",
         "thumbnailUrl": "images/stickers/text/good-morning_blue-bird_flower_blue.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Good Morning",
         "tags": [
             "bird",
@@ -5424,7 +5426,7 @@
         "url": "images/stickers/text/good-morning_butterfly_blue.gif",
         "thumbnailUrl": "images/stickers/text/good-morning_butterfly_blue.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Good Morning",
         "tags": [
             "blue",
@@ -5453,7 +5455,7 @@
         "url": "images/stickers/text/good-morning_gradient-star_orange-yellow-blue.gif",
         "thumbnailUrl": "images/stickers/text/good-morning_gradient-star_orange-yellow-blue.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Good Morning",
         "tags": [
             "blue",
@@ -5485,7 +5487,7 @@
         "url": "images/stickers/text/good-morning_rose_red.gif",
         "thumbnailUrl": "images/stickers/text/good-morning_rose_red.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Good Morning",
         "tags": [
             "good morning",
@@ -5514,7 +5516,7 @@
         "url": "images/stickers/text/happy-new-year_snow_red-blue.gif",
         "thumbnailUrl": "images/stickers/text/happy-new-year_snow_red-blue.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "Happy New Year",
         "tags": [
             "blue",
@@ -5544,7 +5546,7 @@
         "url": "images/stickers/text/i-love-you_heart-arrow_red.gif",
         "thumbnailUrl": "images/stickers/text/i-love-you_heart-arrow_red.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "I Love You",
         "tags": [
             "arrow",
@@ -5575,7 +5577,7 @@
         "url": "images/stickers/text/i-love-you_heart-rose_pink.gif",
         "thumbnailUrl": "images/stickers/text/i-love-you_heart-rose_pink.gif",
         "category": "text",
-        "attribution": "",
+        "attribution": null,
         "stickerText": "I Love You",
         "tags": [
             "heart",
@@ -5697,7 +5699,7 @@
         "url": "images/stickers/animal/dove_gold-glitter.gif",
         "thumbnailUrl": "images/stickers/animal/dove_gold-glitter.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bird",
@@ -5727,7 +5729,7 @@
         "url": "images/stickers/animal/butterflies_red.gif",
         "thumbnailUrl": "images/stickers/animal/butterflies_red.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "butterflies",
@@ -5756,7 +5758,7 @@
         "url": "images/stickers/animal/butterfly_blue-purple.gif",
         "thumbnailUrl": "images/stickers/animal/butterfly_blue-purple.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "blue",
@@ -5786,7 +5788,7 @@
         "url": "images/stickers/animal/butterfly_orange.gif",
         "thumbnailUrl": "images/stickers/animal/butterfly_orange.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "butterfly",
@@ -5814,7 +5816,7 @@
         "url": "images/stickers/animal/butterfly_pink.gif",
         "thumbnailUrl": "images/stickers/animal/butterfly_pink.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "butterfly",
@@ -5842,7 +5844,7 @@
         "url": "images/stickers/animal/butterfly_red.gif",
         "thumbnailUrl": "images/stickers/animal/butterfly_red.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "butterfly",
@@ -5870,7 +5872,7 @@
         "url": "images/stickers/animal/butterfly_red_2.gif",
         "thumbnailUrl": "images/stickers/animal/butterfly_red_2.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "butterfly",
@@ -5898,7 +5900,7 @@
         "url": "images/stickers/animal/cardinal_blue.gif",
         "thumbnailUrl": "images/stickers/animal/cardinal_blue.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bird",
@@ -5927,7 +5929,7 @@
         "url": "images/stickers/animal/dove-illustration_flying_white.gif",
         "thumbnailUrl": "images/stickers/animal/dove-illustration_flying_white.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bird",
@@ -5957,7 +5959,7 @@
         "url": "images/stickers/animal/dove_big_white.gif",
         "thumbnailUrl": "images/stickers/animal/dove_big_white.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bird",
@@ -5992,7 +5994,7 @@
         "url": "images/stickers/animal/dove_flying_white.gif",
         "thumbnailUrl": "images/stickers/animal/dove_flying_white.gif",
         "category": "animal",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "bird",
@@ -6092,7 +6094,7 @@
         "url": "images/stickers/character/star_dance.gif",
         "thumbnailUrl": "images/stickers/character/star_dance.gif",
         "category": "character",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "cute",
@@ -6121,7 +6123,7 @@
         "url": "images/stickers/decorative/divider-swash_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/divider-swash_pink-glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "divider",
@@ -6151,7 +6153,7 @@
         "url": "images/stickers/decorative/gem_pink.gif",
         "thumbnailUrl": "images/stickers/decorative/gem_pink.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "crystal",
@@ -6182,7 +6184,7 @@
         "url": "images/stickers/decorative/heart-gem_yellow.gif",
         "thumbnailUrl": "images/stickers/decorative/heart-gem_yellow.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "gem",
@@ -6213,7 +6215,7 @@
         "url": "images/stickers/decorative/heart_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/heart_pink-glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -6243,7 +6245,7 @@
         "url": "images/stickers/decorative/heart_silver-glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/heart_silver-glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -6273,7 +6275,7 @@
         "url": "images/stickers/decorative/hearts_red-chrome.gif",
         "thumbnailUrl": "images/stickers/decorative/hearts_red-chrome.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "chrome",
@@ -6303,7 +6305,7 @@
         "url": "images/stickers/decorative/pearl_white.gif",
         "thumbnailUrl": "images/stickers/decorative/pearl_white.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "pearl",
@@ -6331,7 +6333,7 @@
         "url": "images/stickers/decorative/rainbow_glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/rainbow_glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "colorful",
@@ -6361,7 +6363,7 @@
         "url": "images/stickers/decorative/red_heart_rotate.gif",
         "thumbnailUrl": "images/stickers/decorative/red_heart_rotate.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "heart",
@@ -6391,7 +6393,7 @@
         "url": "images/stickers/decorative/red_heart_rotate_2.gif",
         "thumbnailUrl": "images/stickers/decorative/red_heart_rotate_2.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "heart",
@@ -6421,7 +6423,7 @@
         "url": "images/stickers/decorative/sketchy-heart_red.gif",
         "thumbnailUrl": "images/stickers/decorative/sketchy-heart_red.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "hand-drawn",
@@ -6452,7 +6454,7 @@
         "url": "images/stickers/decorative/sketchy-heart_white-pink.gif",
         "thumbnailUrl": "images/stickers/decorative/sketchy-heart_white-pink.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "hand-drawn",
@@ -6484,7 +6486,7 @@
         "url": "images/stickers/decorative/skull-crossbones_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/skull-crossbones_pink-glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "crossbones",
@@ -6531,7 +6533,7 @@
         "url": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
         "thumbnailUrl": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "crossbones",
@@ -6575,7 +6577,7 @@
         "url": "images/stickers/decorative/star-ring_rotate_red.gif",
         "thumbnailUrl": "images/stickers/decorative/star-ring_rotate_red.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "red",
@@ -6605,7 +6607,7 @@
         "url": "images/stickers/decorative/star-ring_rotate_silver.gif",
         "thumbnailUrl": "images/stickers/decorative/star-ring_rotate_silver.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "ring",
@@ -6635,7 +6637,7 @@
         "url": "images/stickers/decorative/star.gif",
         "thumbnailUrl": "images/stickers/decorative/star.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "sparkle",
@@ -6663,7 +6665,7 @@
         "url": "images/stickers/decorative/star_pink-glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/star_pink-glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -6693,7 +6695,7 @@
         "url": "images/stickers/decorative/star_silver-glitter.gif",
         "thumbnailUrl": "images/stickers/decorative/star_silver-glitter.gif",
         "category": "decorative",
-        "attribution": "",
+        "attribution": null,
         "stickerText": null,
         "tags": [
             "glitter",
@@ -7115,6 +7117,793 @@
         "frameRate": 0,
         "isVariableFramerate": 0,
         "fileSize": 5266,
+        "sortOrder": 0
+    },
+    {
+        "id": 245,
+        "name": "#FLAWLESS",
+        "filename": "21428_256.png",
+        "url": "images/stickers/twitter/21428_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21428_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "pink",
+            "purple",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#9469CB",
+            "#FEFDFE",
+            "#FF8DBC",
+            "#EACAE7"
+        ],
+        "colorWeights": [
+            0.32,
+            0.31,
+            0.31,
+            0.06
+        ],
+        "paletteType": "gradient",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 9533,
+        "sortOrder": 0
+    },
+    {
+        "id": 243,
+        "name": "#GOALS",
+        "filename": "21431_256.png",
+        "url": "images/stickers/twitter/21431_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21431_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "green",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#A3E9A7",
+            "#070807",
+            "#FBFBFB"
+        ],
+        "colorWeights": [
+            0.34,
+            0.33,
+            0.3
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 10968,
+        "sortOrder": 0
+    },
+    {
+        "id": 255,
+        "name": "#MeRightNow",
+        "filename": "21434_256.png",
+        "url": "images/stickers/twitter/21434_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21434_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "orange",
+            "purple",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FED71A",
+            "#F8783F",
+            "#9A67C1"
+        ],
+        "colorWeights": [
+            0.41,
+            0.32,
+            0.27
+        ],
+        "paletteType": "multicolor",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 10043,
+        "sortOrder": 0
+    },
+    {
+        "id": 244,
+        "name": "#MOOD",
+        "filename": "21432_256.png",
+        "url": "images/stickers/twitter/21432_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21432_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "blue",
+            "pink"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#2F282B",
+            "#6FDFF9",
+            "#FC87B7"
+        ],
+        "colorWeights": [
+            0.35,
+            0.33,
+            0.32
+        ],
+        "paletteType": "two-tone",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 11012,
+        "sortOrder": 0
+    },
+    {
+        "id": 254,
+        "name": "#SMH",
+        "filename": "21433_256.png",
+        "url": "images/stickers/twitter/21433_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21433_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "orange",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#090706",
+            "#FDFDFC",
+            "#F5723D"
+        ],
+        "colorWeights": [
+            0.37,
+            0.35,
+            0.27
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 10961,
+        "sortOrder": 0
+    },
+    {
+        "id": 246,
+        "name": "#SQUAD",
+        "filename": "21427_256.png",
+        "url": "images/stickers/twitter/21427_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21427_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "white",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FAFAF9",
+            "#262221",
+            "#F6D617"
+        ],
+        "colorWeights": [
+            0.34,
+            0.32,
+            0.32
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 10887,
+        "sortOrder": 0
+    },
+    {
+        "id": 248,
+        "name": "#TBT",
+        "filename": "21429_256.png",
+        "url": "images/stickers/twitter/21429_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21429_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "pink",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FB86B6",
+            "#070503",
+            "#F8D817"
+        ],
+        "colorWeights": [
+            0.36,
+            0.33,
+            0.31
+        ],
+        "paletteType": "two-tone",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 8789,
+        "sortOrder": 0
+    },
+    {
+        "id": 242,
+        "name": "#Twinning",
+        "filename": "21430_256.png",
+        "url": "images/stickers/twitter/21430_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21430_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "green",
+            "purple",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#9369CA",
+            "#A8EFAD",
+            "#FBFCFD",
+            "#C0B3DC"
+        ],
+        "colorWeights": [
+            0.32,
+            0.31,
+            0.31,
+            0.07
+        ],
+        "paletteType": "multicolor",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 9459,
+        "sortOrder": 0
+    },
+    {
+        "id": 250,
+        "name": "BAE Arrow Through Heart",
+        "filename": "21424_256.png",
+        "url": "images/stickers/twitter/21424_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21424_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "red",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#F94464",
+            "#1D191A",
+            "#F2F1F1",
+            "#82D2EE",
+            "#4390C9"
+        ],
+        "colorWeights": [
+            0.63,
+            0.17,
+            0.14,
+            0.03,
+            0.02
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 16977,
+        "sortOrder": 0
+    },
+    {
+        "id": 247,
+        "name": "BFF Pink Heart",
+        "filename": "21426_256.png",
+        "url": "images/stickers/twitter/21426_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21426_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "pink",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FE87B8",
+            "#33262A",
+            "#FBFBFB",
+            "#F8055D"
+        ],
+        "colorWeights": [
+            0.58,
+            0.23,
+            0.15,
+            0.05
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 20588,
+        "sortOrder": 0
+    },
+    {
+        "id": 237,
+        "name": "Blue Bow",
+        "filename": "11660_256.png",
+        "url": "images/stickers/twitter/11660_256.png",
+        "thumbnailUrl": "images/stickers/twitter/11660_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "blue"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#1895E8"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 11818,
+        "sortOrder": 0
+    },
+    {
+        "id": 256,
+        "name": "Breaking NEWS Lower Third",
+        "filename": "21436_256.png",
+        "url": "images/stickers/twitter/21436_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21436_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "blue",
+            "red",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FA4D6D",
+            "#FDFEFE",
+            "#59ADEE",
+            "#231F20"
+        ],
+        "colorWeights": [
+            0.42,
+            0.28,
+            0.24,
+            0.07
+        ],
+        "paletteType": "multicolor",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 9544,
+        "sortOrder": 0
+    },
+    {
+        "id": 239,
+        "name": "Kawaii Anime Eyes",
+        "filename": "11699_256.png",
+        "url": "images/stickers/twitter/11699_256.png",
+        "thumbnailUrl": "images/stickers/twitter/11699_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "blue",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#242021",
+            "#F6F6F6",
+            "#29A9DF"
+        ],
+        "colorWeights": [
+            0.69,
+            0.24,
+            0.06
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 12919,
+        "sortOrder": 0
+    },
+    {
+        "id": 253,
+        "name": "LIT Flame",
+        "filename": "21417_256.png",
+        "url": "images/stickers/twitter/21417_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21417_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "orange",
+            "red"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FFCB4D",
+            "#F08F0D",
+            "#201A17",
+            "#E2334D"
+        ],
+        "colorWeights": [
+            0.39,
+            0.33,
+            0.19,
+            0.09
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 17613,
+        "sortOrder": 0
+    },
+    {
+        "id": 252,
+        "name": "LOL Chat Bubble",
+        "filename": "21418_256.png",
+        "url": "images/stickers/twitter/21418_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21418_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "purple",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FCFCFC",
+            "#1A161C",
+            "#9756FD",
+            "#A3E9A7"
+        ],
+        "colorWeights": [
+            0.63,
+            0.17,
+            0.13,
+            0.06
+        ],
+        "paletteType": "multicolor",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 14760,
+        "sortOrder": 0
+    },
+    {
+        "id": 251,
+        "name": "OMG",
+        "filename": "21423_256.png",
+        "url": "images/stickers/twitter/21423_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21423_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "blue",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#F9EB01",
+            "#272421",
+            "#6EDDF7"
+        ],
+        "colorWeights": [
+            0.38,
+            0.37,
+            0.25
+        ],
+        "paletteType": "two-tone",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 19211,
+        "sortOrder": 0
+    },
+    {
+        "id": 236,
+        "name": "Pacifer",
+        "filename": "11650_256.png",
+        "url": "images/stickers/twitter/11650_256.png",
+        "thumbnailUrl": "images/stickers/twitter/11650_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "blue",
+            "gold",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#1DA1F2",
+            "#FFC100",
+            "#0173C7",
+            "#FF8500",
+            "#010458"
+        ],
+        "colorWeights": [
+            0.46,
+            0.32,
+            0.11,
+            0.06,
+            0.04
+        ],
+        "paletteType": "two-tone",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 16364,
+        "sortOrder": 0
+    },
+    {
+        "id": 241,
+        "name": "Pie Splat",
+        "filename": "20258_256.png",
+        "url": "images/stickers/twitter/20258_256.png",
+        "thumbnailUrl": "images/stickers/twitter/20258_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "silver",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#BDC4C3",
+            "#F9F097"
+        ],
+        "colorWeights": [
+            0.54,
+            0.46
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 20662,
+        "sortOrder": 0
+    },
+    {
+        "id": 238,
+        "name": "Pink and Purple Split Dye Wig",
+        "filename": "11661_256.png",
+        "url": "images/stickers/twitter/11661_256.png",
+        "thumbnailUrl": "images/stickers/twitter/11661_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "pink",
+            "purple"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#A86CFF",
+            "#FF9DE7"
+        ],
+        "colorWeights": [
+            0.59,
+            0.41
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 26655,
+        "sortOrder": 0
+    },
+    {
+        "id": 249,
+        "name": "WACK Fanburst",
+        "filename": "21425_256.png",
+        "url": "images/stickers/twitter/21425_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21425_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "blue",
+            "red",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#272222",
+            "#FCEE05",
+            "#55AAEB",
+            "#FE4666",
+            "#E0DFDF"
+        ],
+        "colorWeights": [
+            0.38,
+            0.27,
+            0.14,
+            0.12,
+            0.09
+        ],
+        "paletteType": "multicolor",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 17394,
+        "sortOrder": 0
+    },
+    {
+        "id": 240,
+        "name": "YASS",
+        "filename": "21416_256.png",
+        "url": "images/stickers/twitter/21416_256.png",
+        "thumbnailUrl": "images/stickers/twitter/21416_256.png",
+        "category": "twitter",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "gold",
+            "white",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#292521",
+            "#F2F2F2",
+            "#EEE103"
+        ],
+        "colorWeights": [
+            0.53,
+            0.27,
+            0.2
+        ],
+        "paletteType": "gradient",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 0,
+        "width": 256,
+        "height": 256,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 20347,
         "sortOrder": 0
     }
 ]

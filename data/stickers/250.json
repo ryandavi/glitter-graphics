@@ -1,0 +1,40 @@
+{
+    "id": 250,
+    "name": "BAE Arrow Through Heart",
+    "filename": "21424_256.png",
+    "url": "images/stickers/twitter/21424_256.png",
+    "thumbnailUrl": "images/stickers/twitter/21424_256.png",
+    "category": "twitter",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "red",
+        "white"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#F94464",
+        "#1D191A",
+        "#F2F1F1",
+        "#82D2EE",
+        "#4390C9"
+    ],
+    "colorWeights": [
+        0.63,
+        0.17,
+        0.14,
+        0.03,
+        0.02
+    ],
+    "paletteType": "single",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 256,
+    "height": 256,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 16977,
+    "sortOrder": 0
+}

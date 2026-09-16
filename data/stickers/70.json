@@ -5,7 +5,7 @@
     "url": "images/stickers/text/welcome.gif",
     "thumbnailUrl": "images/stickers/text/welcome.gif",
     "category": "text",
-    "attribution": "",
+    "attribution": null,
     "stickerText": "Welcome",
     "tags": [
         "welcome"

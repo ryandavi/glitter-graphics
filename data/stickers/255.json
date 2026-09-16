@@ -1,0 +1,37 @@
+{
+    "id": 255,
+    "name": "#MeRightNow",
+    "filename": "21434_256.png",
+    "url": "images/stickers/twitter/21434_256.png",
+    "thumbnailUrl": "images/stickers/twitter/21434_256.png",
+    "category": "twitter",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "orange",
+        "purple",
+        "yellow"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#FED71A",
+        "#F8783F",
+        "#9A67C1"
+    ],
+    "colorWeights": [
+        0.41,
+        0.32,
+        0.27
+    ],
+    "paletteType": "multicolor",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 256,
+    "height": 256,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 10043,
+    "sortOrder": 0
+}
