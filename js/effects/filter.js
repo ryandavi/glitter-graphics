@@ -202,6 +202,23 @@
 		return canvas;
 	}
 
+	// Reused across calls (see EXPORT-PERFORMANCE-PLAN.md Part 2a): both are
+	// fully consumed within renderToCanvas's color-burn branch (composited is
+	// written back via context.putImageData before the function returns) and
+	// never stored past that call, so pooling is safe. renderToCanvas is only
+	// ever invoked sequentially from GifExporter.js, never re-entrantly.
+	let colorBurnScaledSourceScratch = null;
+	let colorBurnCompositedScratch = null;
+	function getColorBurnScratch(slot, width, height, sourceData) {
+		const current = slot === 'source' ? colorBurnScaledSourceScratch : colorBurnCompositedScratch;
+		const scratch = (current && current.width === width && current.height === height)
+			? current
+			: new ImageData(width, height);
+		if (slot === 'source') colorBurnScaledSourceScratch = scratch; else colorBurnCompositedScratch = scratch;
+		scratch.data.set(sourceData);
+		return scratch;
+	}
+
 	function paintGradient(context, width, height, spec) {
 		if (spec.type === 'linear') {
 			const radians = (spec.angle - 90) * Math.PI / 180;
@@ -284,9 +301,9 @@
 			// Chromium's canvas color-burn mishandles opaque dark pixels when the
 			// source is otherwise-transparent; composite the pixels directly (see
 			// BlendModes.compositeColorBurn) instead of drawing through canvas.
-			const scaledSource = new ImageData(new Uint8ClampedArray(rendered.data), width, height);
+			const scaledSource = getColorBurnScratch('source', width, height, rendered.data);
 			for (let index = 3; index < scaledSource.data.length; index += 4) scaledSource.data[index] = Math.round(scaledSource.data[index] * amount);
-			composited = new ImageData(new Uint8ClampedArray(pre.data), width, height);
+			composited = getColorBurnScratch('composited', width, height, pre.data);
 			BlendModes.compositeColorBurn(composited, scaledSource);
 		} else {
 			const preCanvas = createScratch(width, height);

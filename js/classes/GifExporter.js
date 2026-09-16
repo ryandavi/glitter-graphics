@@ -58,6 +58,7 @@ class GifExporter {
 		this.layerBlendCtx = this.layerBlendCanvas.getContext('2d', { willReadFrequently: true });
 		this.patternSourceCanvas = document.createElement('canvas');
 		this.patternSourceCtx = this.patternSourceCanvas.getContext('2d');
+		this._patternAdjustScratch = null;
 		this.filterGrainTileCache = new Map();
 		this.resultPresenter = options.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null);
 		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
@@ -964,11 +965,8 @@ class GifExporter {
 		resetCanvasContext(pctx, patternSource.width, patternSource.height);
 
 		if (colorAdjust && !isIdentityColorAdjust(colorAdjust)) {
-			const copy = new ImageData(
-				new Uint8ClampedArray(normalizedFrame.data),
-				normalizedFrame.width,
-				normalizedFrame.height
-			);
+			const copy = this._getPatternAdjustScratch(normalizedFrame.width, normalizedFrame.height);
+			copy.data.set(normalizedFrame.data);
 			applyColorAdjustToImageData(copy, colorAdjust);
 			pctx.putImageData(copy, 0, 0);
 		} else {
@@ -976,6 +974,20 @@ class GifExporter {
 		}
 
 		return patternSource;
+	}
+
+	// Reused across frames/calls (see EXPORT-PERFORMANCE-PLAN.md Part 2a): the
+	// copy is consumed synchronously within this call via putImageData and never
+	// stored past it, so pooling is safe. Must track the CURRENT glitter frame's
+	// dimensions, not the export canvas's — different glitter/sticker sources
+	// (and even different frames of the same animated source) can legitimately
+	// hand this a different width/height, so this resizes on every mismatch.
+	_getPatternAdjustScratch(width, height) {
+		const scratch = this._patternAdjustScratch;
+		if (scratch && scratch.width === width && scratch.height === height) return scratch;
+		const next = new ImageData(width, height);
+		this._patternAdjustScratch = next;
+		return next;
 	}
 
 	_prepareBasePipeline(visibleLayers, canvasData, exportSettings) {

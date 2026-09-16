@@ -331,9 +331,15 @@ class Mp4RenderClockPlanner {
 
 class CompositeFrameReducer {
 	static hash(frame) {
+		// Sampled, not exhaustive (see EXPORT-PERFORMANCE-PLAN.md Part 2) — same
+		// strided-prefilter idea as difference() below. Safe because callers only
+		// use this hash to decide whether to run the full equals() check; a real
+		// duplicate's sampled bytes always match too, so this can't miss one, it
+		// can only occasionally send a non-duplicate to equals() for real proof.
 		let hash = 2166136261;
 		const data = frame.data;
-		for (let index = 0; index < data.length; index++) {
+		const stride = Math.max(4, Math.floor(data.length / 4096 / 4) * 4);
+		for (let index = 0; index < data.length; index += stride) {
 			hash ^= data[index];
 			hash = Math.imul(hash, 16777619);
 		}
