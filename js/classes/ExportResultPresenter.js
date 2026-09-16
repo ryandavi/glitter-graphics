@@ -41,11 +41,15 @@ class ExportResultPresenter {
 		try { canShare = Boolean(navigator.canShare?.({ files: [file] })); } catch (error) { canShare = false; }
 		const share = document.getElementById('exportPreviewShare'); share.disabled = !canShare;
 		const isIOS = CONFIG.debug.forceIOSExportPreview || /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-		modal.classList.toggle('is-ios', isIOS);
+		// Direct downloads of animated GIF/video on iOS Safari have historically
+		// dropped the animation, so those formats route through the Share sheet
+		// instead. Stills don't have that problem — they save normally, like desktop.
+		const needsShareWorkaround = isIOS && target.isAnimation;
+		modal.classList.toggle('is-ios', needsShareWorkaround);
 		const instructions = modal.querySelector('.export-preview-instructions');
 		instructions.replaceChildren();
-		if (isIOS) {
-			const templateId = !canShare ? 'tpl-export-instructions-ios-unsupported' : target.isVideo ? 'tpl-export-instructions-ios-video' : target.isStill ? 'tpl-export-instructions-ios-still' : 'tpl-export-instructions-ios-gif';
+		if (needsShareWorkaround) {
+			const templateId = !canShare ? 'tpl-export-instructions-ios-unsupported' : target.isVideo ? 'tpl-export-instructions-ios-video' : 'tpl-export-instructions-ios-gif';
 			const template = document.getElementById(templateId);
 			if (template) instructions.append(template.content.cloneNode(true));
 			instructions.hidden = false;
