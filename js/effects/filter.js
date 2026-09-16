@@ -195,10 +195,22 @@
 		return styles;
 	}
 
-	function createScratch(width, height) {
-		const canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
+	// Reused across calls (see EXPORT-PERFORMANCE-PLAN.md Part 2b): one canvas
+	// per named role instead of a fresh allocation per call. Safe because
+	// renderToCanvas is only ever invoked from GifExporter.js (verified — no
+	// live-preview call site) with layers rendered strictly sequentially, never
+	// re-entrantly or in parallel, so a given slot can't be clobbered mid-use by
+	// another renderToCanvas call. If that ever changes (e.g. parallel layer
+	// rendering), this pooling breaks and needs revisiting.
+	const scratchCanvasSlots = new Map();
+	function getScratchCanvas(slot, width, height) {
+		let canvas = scratchCanvasSlots.get(slot);
+		if (!canvas) {
+			canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+			scratchCanvasSlots.set(slot, canvas);
+		}
+		if (canvas.width !== width) canvas.width = width;
+		if (canvas.height !== height) canvas.height = height;
 		return canvas;
 	}
 
@@ -254,12 +266,12 @@
 		if (!isActive(value, strength * 100)) return;
 		const resolved = resolve(value);
 		const pre = context.getImageData(0, 0, width, height);
-		const sourceCanvas = createScratch(width, height);
+		const sourceCanvas = getScratchCanvas('source', width, height);
 		const sourceContext = sourceCanvas.getContext('2d');
 		sourceContext.putImageData(pre, 0, 0);
 		if (options.renderSource) options.renderSource(sourceContext);
 		const post = sourceContext.getImageData(0, 0, width, height);
-		const canvas = createScratch(width, height);
+		const canvas = getScratchCanvas('ops', width, height);
 		const scratch = canvas.getContext('2d');
 		scratch.putImageData(post, 0, 0);
 		for (const op of resolved.ops) {
@@ -306,10 +318,10 @@
 			composited = getColorBurnScratch('composited', width, height, pre.data);
 			BlendModes.compositeColorBurn(composited, scaledSource);
 		} else {
-			const preCanvas = createScratch(width, height);
+			const preCanvas = getScratchCanvas('preBlend', width, height);
 			const blendCtx = preCanvas.getContext('2d');
 			blendCtx.putImageData(pre, 0, 0);
-			const renderedCanvas = createScratch(width, height);
+			const renderedCanvas = getScratchCanvas('renderedBlend', width, height);
 			renderedCanvas.getContext('2d').putImageData(rendered, 0, 0);
 			blendCtx.globalAlpha = amount;
 			blendCtx.globalCompositeOperation = BlendModes.cssToGCO(blendMode);
