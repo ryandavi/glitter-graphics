@@ -100,20 +100,36 @@ const ABOUT_TIMELINE_ENTITY_LABELS = {
  "bauer": "Bauer Media Group",
  "communities-com": "Communities.com",
  "corel": "Corel",
+ "crowdgather": "CrowdGather",
  "elon-musk": "Elon Musk",
+ "expage": "Expage",
+ "ezboard": "ezboard",
+ "freewebs": "Freewebs",
  "futuresplash": "FutureSplash Animator",
+ "geocities-japan": "GeoCities Japan",
  "intuit": "Intuit",
+ "invisionfree": "InvisionFree",
  "lycos": "Lycos",
  "meta": "Meta",
  "mia": "M.I.A.",
  "news-corp": "News Corp",
  "oath": "Oath",
+ "proboards": "ProBoards",
  "sega": "Sega",
  "shutterstock": "Shutterstock",
  "specific-media": "Specific Media",
  "ssense": "SSENSE",
  "steve-wilhite": "Steve Wilhite",
- "verizon": "Verizon"
+ "tapatalk": "Tapatalk",
+ "verizon": "Verizon",
+ "verticalscope": "VerticalScope",
+ "vistaprint": "Vistaprint",
+ "webs": "Webs",
+ "whowhere": "WhoWhere",
+ "yahoo-japan": "Yahoo! Japan",
+ "yuku": "Yuku",
+ "zathyus": "Zathyus Networks",
+ "zetaboards": "ZetaBoards"
 };
 
 const ABOUT_TIMELINE_TAG_LABELS = {
@@ -125,6 +141,7 @@ const ABOUT_TIMELINE_TAG_LABELS = {
  "fashion": "Fashion",
  "file-sharing": "File Sharing",
  "format": "File Formats",
+ "forum": "Forums",
  "game": "Games",
  "gif-platform": "GIF Platforms",
  "hosting": "Web Hosting",
@@ -532,7 +549,21 @@ const ABOUT_TIMELINE = [
   "country": "us",
   "year": 1996,
   "decade": "1990s",
-  "html": "<strong>Angelfire</strong> is founded."
+  "html": "<strong>Angelfire</strong> is founded, originally combining website building with an unrelated medical-transcription service."
+ },
+ {
+  "date": "1996",
+  "type": "start",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "ezboard"
+  ],
+  "country": "us",
+  "year": 1996,
+  "decade": "1990s",
+  "html": "<strong>ezboard</strong> launches as a free forum-hosting service."
  },
  {
   "date": "1996",
@@ -621,6 +652,50 @@ const ABOUT_TIMELINE = [
   "html": "<strong>FortuneCity</strong> launches as a free personal-web-hosting community, joining services such as GeoCities, Tripod, and Angelfire."
  },
  {
+  "date": "1997",
+  "type": "start",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "expage"
+  ],
+  "country": "us",
+  "year": 1997,
+  "decade": "1990s",
+  "html": "<strong>Expage</strong> (Express Page) launches as a free personal-website hosting service."
+ },
+ {
+  "date": "15 Sep 1997",
+  "type": "start",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "geocities-japan",
+   "geocities"
+  ],
+  "country": "jp",
+  "year": 1997,
+  "decade": "1990s",
+  "html": "<strong>GeoCities Japan</strong> launches as a joint venture between the American GeoCities and SoftBank."
+ },
+ {
+  "date": "1997",
+  "type": "acquisition",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "angelfire",
+   "whowhere"
+  ],
+  "country": "us",
+  "year": 1997,
+  "decade": "1990s",
+  "html": "<strong>WhoWhere</strong> acquires <strong>Angelfire</strong>."
+ },
+ {
   "date": "1 May 1997",
   "type": "start",
   "tags": [
@@ -682,20 +757,35 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Adobe ImageReady</strong> 1.0 is released."
  },
  {
-  "date": "1998",
+  "date": "Feb 1998",
   "type": "acquisition",
   "tags": [
    "hosting"
   ],
   "entities": [
    "tripod",
-   "angelfire",
    "lycos"
   ],
   "country": "us",
   "year": 1998,
   "decade": "1990s",
-  "html": "Lycos acquires <strong>Tripod</strong> and <strong>Angelfire</strong>."
+  "html": "<strong>Lycos</strong> acquires <strong>Tripod</strong> for $58 million in stock."
+ },
+ {
+  "date": "Aug 1998",
+  "type": "acquisition",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "whowhere",
+   "lycos",
+   "angelfire"
+  ],
+  "country": "us",
+  "year": 1998,
+  "decade": "1990s",
+  "html": "<strong>Lycos</strong> acquires <strong>WhoWhere</strong> for $133 million, bringing <strong>Angelfire</strong> under the same company as Tripod."
  },
  {
   "date": "4 Sep 1998",
@@ -872,6 +962,35 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Neopets</strong> launches."
  },
  {
+  "date": "1 Jan 2000",
+  "type": "start",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "proboards"
+  ],
+  "country": "us",
+  "year": 2000,
+  "decade": "2000s",
+  "html": "<strong>ProBoards</strong> officially launches as a free forum-hosting service."
+ },
+ {
+  "date": "1 Mar 2000",
+  "type": "acquisition",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "geocities-japan",
+   "yahoo-japan"
+  ],
+  "country": "jp",
+  "year": 2000,
+  "decade": "2000s",
+  "html": "<strong>Yahoo! Japan</strong> absorbs <strong>GeoCities Japan</strong>, renaming it Yahoo! GeoCities Japan."
+ },
+ {
   "date": "28 Mar 2000",
   "type": "start",
   "tags": [
@@ -913,6 +1032,20 @@ const ABOUT_TIMELINE = [
   "year": 2000,
   "decade": "2000s",
   "html": "<strong>LimeWire</strong> is founded by Mark Gorton."
+ },
+ {
+  "date": "2001",
+  "type": "start",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "freewebs"
+  ],
+  "country": "us",
+  "year": 2001,
+  "decade": "2000s",
+  "html": "<strong>Freewebs</strong> launches as a free personal-website hosting service."
  },
  {
   "date": "30 Jan 2001",
@@ -1000,6 +1133,21 @@ const ABOUT_TIMELINE = [
   "year": 2002,
   "decade": "2000s",
   "html": "<strong>Friendster</strong> is founded (it launches publicly the following year)."
+ },
+ {
+  "date": "Sep 2002",
+  "type": "start",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "invisionfree",
+   "zathyus"
+  ],
+  "country": "us",
+  "year": 2002,
+  "decade": "2000s",
+  "html": "<strong>InvisionFree</strong> launches as a free remotely hosted forum service from Zathyus Networks."
  },
  {
   "date": "18 Feb 2003",
@@ -1454,6 +1602,35 @@ const ABOUT_TIMELINE = [
   "html": "<strong>We Heart It</strong> is founded by Fabio Giolito, initially as a visual-bookmarking tool before developing into an image-based social network centered on collecting and sharing inspirational imagery."
  },
  {
+  "date": "1 Mar 2007",
+  "type": "closure",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "expage"
+  ],
+  "country": "us",
+  "year": 2007,
+  "decade": "2000s",
+  "html": "<strong>Expage</strong> shuts down completely."
+ },
+ {
+  "date": "2007",
+  "type": "start",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "zetaboards",
+   "zathyus"
+  ],
+  "country": "us",
+  "year": 2007,
+  "decade": "2000s",
+  "html": "<strong>ZetaBoards</strong> begins public testing as Zathyus Networks' next-generation forum platform, succeeding InvisionFree."
+ },
+ {
   "date": "Mar 2007",
   "type": "closure",
   "tags": [
@@ -1498,6 +1675,21 @@ const ABOUT_TIMELINE = [
   "year": 2007,
   "decade": "2000s",
   "html": "Intuit acquires <strong>Homestead</strong>."
+ },
+ {
+  "date": "15 Jan 2008",
+  "type": "milestone",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "ezboard",
+   "yuku"
+  ],
+  "country": "us",
+  "year": 2008,
+  "decade": "2000s",
+  "html": "<strong>ezboard</strong>'s homepage begins redirecting to its successor, <strong>Yuku</strong>, as communities are moved over rather than the service simply closing."
  },
  {
   "date": "2008",
@@ -1558,6 +1750,21 @@ const ABOUT_TIMELINE = [
   "year": 2008,
   "decade": "2000s",
   "html": "<strong>AOL Hometown</strong> shuts down."
+ },
+ {
+  "date": "14 Nov 2008",
+  "type": "milestone",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "freewebs",
+   "webs"
+  ],
+  "country": "us",
+  "year": 2008,
+  "decade": "2000s",
+  "html": "<strong>Freewebs</strong> is renamed <strong>Webs</strong>."
  },
  {
   "date": "2009",
@@ -1633,6 +1840,20 @@ const ABOUT_TIMELINE = [
   "year": 2009,
   "decade": "2000s",
   "html": "<strong>GeoCities</strong> (US) shuts down."
+ },
+ {
+  "date": "2010",
+  "type": "milestone",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "angelfire"
+  ],
+  "country": "us",
+  "year": 2010,
+  "decade": "2010s",
+  "html": "<strong>Angelfire</strong> undergoes a major redesign and stops creating new classic free sites, though existing free pages stay online for years to come."
  },
  {
   "date": "Mar 2010",
@@ -1757,6 +1978,21 @@ const ABOUT_TIMELINE = [
  },
  {
   "date": "Sep 2011",
+  "type": "acquisition",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "yuku",
+   "crowdgather"
+  ],
+  "country": "us",
+  "year": 2011,
+  "decade": "2010s",
+  "html": "CrowdGather acquires <strong>Yuku</strong> and the legacy ezboard domains, after earlier ownership stints under KickApps and Inform Technologies."
+ },
+ {
+  "date": "Sep 2011",
   "type": "start",
   "tags": [
    "social-network"
@@ -1770,6 +2006,21 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Snapchat</strong> launches, relaunched from the earlier Picaboo app."
  },
  {
+  "date": "28 Dec 2011",
+  "type": "acquisition",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "webs",
+   "vistaprint"
+  ],
+  "country": "us",
+  "year": 2011,
+  "decade": "2010s",
+  "html": "Vistaprint acquires <strong>Webs</strong> for roughly $117.5 million."
+ },
+ {
   "date": "30 Apr 2012",
   "type": "closure",
   "tags": [
@@ -1781,7 +2032,7 @@ const ABOUT_TIMELINE = [
   "country": "gb",
   "year": 2012,
   "decade": "2010s",
-  "html": "<strong>FortuneCity</strong> ends its free web-hosting service, taking another GeoCities-era personal-hosting platform offline."
+  "html": "<strong>FortuneCity</strong> ends its free web-hosting service, citing rising costs that made it financially unsustainable, and directs users toward paid hosting — taking another GeoCities-era personal-hosting platform offline."
  },
  {
   "date": "Nov 2012",
@@ -2067,6 +2318,21 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Blingee</strong>'s near-shutdown is averted by user outcry and emergency funding."
  },
  {
+  "date": "2016",
+  "type": "acquisition",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "yuku",
+   "tapatalk"
+  ],
+  "country": "us",
+  "year": 2016,
+  "decade": "2010s",
+  "html": "Tapatalk acquires <strong>Yuku</strong>."
+ },
+ {
   "date": "Oct 2016",
   "type": "start",
   "tags": [
@@ -2132,6 +2398,38 @@ const ABOUT_TIMELINE = [
   "date": "2017",
   "type": "acquisition",
   "tags": [
+   "forum"
+  ],
+  "entities": [
+   "zathyus",
+   "tapatalk",
+   "invisionfree",
+   "zetaboards"
+  ],
+  "country": "us",
+  "year": 2017,
+  "decade": "2010s",
+  "html": "Tapatalk acquires Zathyus Networks, bringing <strong>InvisionFree</strong> and <strong>ZetaBoards</strong> under its umbrella."
+ },
+ {
+  "date": "2017",
+  "type": "closure",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "yuku",
+   "tapatalk"
+  ],
+  "country": "us",
+  "year": 2017,
+  "decade": "2010s",
+  "html": "Tapatalk migrates <strong>Yuku</strong>'s forums onto its own platform, ending Yuku as a standalone service."
+ },
+ {
+  "date": "2017",
+  "type": "acquisition",
+  "tags": [
    "social-network"
   ],
   "entities": [
@@ -2188,6 +2486,22 @@ const ABOUT_TIMELINE = [
   "year": 2017,
   "decade": "2010s",
   "html": "<strong>AOL Instant Messenger (AIM)</strong> shuts down after 20 years."
+ },
+ {
+  "date": "2018",
+  "type": "closure",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "invisionfree",
+   "zetaboards",
+   "tapatalk"
+  ],
+  "country": "us",
+  "year": 2018,
+  "decade": "2010s",
+  "html": "<strong>InvisionFree</strong> and <strong>ZetaBoards</strong> are wound down as their communities are migrated to Tapatalk Groups."
  },
  {
   "date": "27 Mar 2018",
@@ -2251,6 +2565,21 @@ const ABOUT_TIMELINE = [
   "year": 2018,
   "decade": "2010s",
   "html": "<strong>Yahoo! Messenger</strong> shuts down."
+ },
+ {
+  "date": "31 Mar 2019",
+  "type": "closure",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "geocities-japan",
+   "yahoo-japan"
+  ],
+  "country": "jp",
+  "year": 2019,
+  "decade": "2010s",
+  "html": "<strong>GeoCities Japan</strong> shuts down, nearly a decade after its American counterpart."
  },
  {
   "date": "18 Mar 2019",
@@ -2414,6 +2743,21 @@ const ABOUT_TIMELINE = [
   "html": "A private-beta revival of <strong>Bebo</strong> is announced."
  },
  {
+  "date": "7 Oct 2021",
+  "type": "acquisition",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "proboards",
+   "verticalscope"
+  ],
+  "country": "us",
+  "year": 2021,
+  "decade": "2020s",
+  "html": "VerticalScope acquires <strong>ProBoards</strong>' assets for $4.2 million; the service continues operating."
+ },
+ {
   "date": "28 Oct 2021",
   "type": "milestone",
   "tags": [
@@ -2533,6 +2877,21 @@ const ABOUT_TIMELINE = [
   "year": 2023,
   "decade": "2020s",
   "html": "Musk rebrands <strong>Twitter</strong> as <strong>X</strong>, retiring the bird logo."
+ },
+ {
+  "date": "2023",
+  "type": "closure",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "webs",
+   "vistaprint"
+  ],
+  "country": "us",
+  "year": 2023,
+  "decade": "2020s",
+  "html": "<strong>Webs</strong> shuts down."
  },
  {
   "date": "2023",
@@ -2689,6 +3048,36 @@ const ABOUT_TIMELINE = [
   "year": 2026,
   "decade": "2020s",
   "html": "A new <strong>Piczo</strong> pre-launch site appears, teasing a possible revival."
+ },
+ {
+  "date": "Jan 2026",
+  "type": "milestone",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "angelfire"
+  ],
+  "country": "us",
+  "year": 2026,
+  "decade": "2020s",
+  "html": "A major outage leaves <strong>Angelfire</strong>'s user-hosted sites inaccessible."
+ },
+ {
+  "date": "6 Mar 2026",
+  "type": "milestone",
+  "tags": [
+   "hosting"
+  ],
+  "entities": [
+   "angelfire",
+   "tripod",
+   "lycos"
+  ],
+  "country": "us",
+  "year": 2026,
+  "decade": "2020s",
+  "html": "<strong>Lycos</strong> announces the final closure of both <strong>Angelfire</strong> and <strong>Tripod</strong>."
  },
  {
   "date": "24 Apr 2026",

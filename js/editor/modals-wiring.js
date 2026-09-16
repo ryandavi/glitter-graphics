@@ -84,7 +84,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=2',
+				externalContentUrl: 'modals/history.html?v=7',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
