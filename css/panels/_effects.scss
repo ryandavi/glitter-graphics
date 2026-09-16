@@ -318,9 +318,11 @@
 }
 
 // D-1c gallery picker strip: names the gallery's armed destination in picker
-// mode, or shows a passive hint for a solid-fill text layer in browse mode.
-// Sticky within the gallery content (not the viewport) so it stays visible as
-// the grid scrolls and works identically inside the mobile design drawer.
+// mode, or the default target (e.g. Fill) in browse mode, so a swatch
+// click's effect is never a guess. Same look in both states — only the Done
+// button (armed only) differs. Sticky within the gallery content (not the
+// viewport) so it stays visible as the grid scrolls and works identically
+// inside the mobile design drawer.
 .gallery-picker-strip {
 	position: sticky;
 	top: 0;
@@ -334,16 +336,6 @@
 
 	&[hidden] {
 		display: none;
-	}
-
-	// Browse-mode passive hint: quieter, no accent, no Done.
-	&.is-hint {
-		background: var(--color-bg-primary);
-
-		.gallery-picker-strip-title {
-			color: var(--color-text-tertiary);
-			font-weight: 400;
-		}
 	}
 }
 

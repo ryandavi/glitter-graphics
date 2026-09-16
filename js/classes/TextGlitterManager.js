@@ -2142,10 +2142,9 @@ class TextGlitterManager {
 		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: chipId });
 	}
 
-	// D-1c: the gallery status strip. Picker mode (armed slot on the active
-	// layer) shows an accent strip naming the destination + a Done button;
-	// browse mode shows a passive one-line hint only when the active text
-	// layer's fill is solid; otherwise the strip is hidden. Driven from
+	// D-1c: the gallery status strip. Same copy/look whether armed or not —
+	// picker mode (an armed slot) adds a Done button; browse mode names the
+	// default slot (fill) a swatch click applies to. Driven from
 	// updateEffectTargetButtons (arm/disarm, fill-mode flips, layer activate)
 	// and app.updateSidePanelUI (switching to any layer type).
 	updatePickerStrip() {
@@ -2170,12 +2169,10 @@ class TextGlitterManager {
 			renderPickerStrip({ ownsStrip: true, visible: true, armed: true, ...stripText });
 			return;
 		}
-		renderPickerStrip({
-			ownsStrip: true,
-			visible: fillIsSolid,
-			hint: fillIsSolid,
-			title: 'Text fill is a solid color — picking a glitter will switch it.'
-		});
+		const stripText = fillIsSolid
+			? { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${(fillData.color || '#000000').toUpperCase()}).` }
+			: formatPickerStripText('fill', layer.name, 'text');
+		renderPickerStrip({ ownsStrip: true, visible: true, hint: true, ...stripText });
 	}
 
 	// Shared by border/shadow/backgroundFill so getDefaultXxx() stays the one

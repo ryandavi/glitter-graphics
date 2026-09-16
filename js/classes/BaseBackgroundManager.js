@@ -639,8 +639,9 @@ class BaseBackgroundManager {
 		const armed = this.hasActivePickerSession();
 		renderPickerStrip({
 			ownsStrip: true,
-			visible: armed,
+			visible: true,
 			armed,
+			hint: !armed,
 			title: 'Choosing background glitter',
 			detail: 'Applying to Canvas Background'
 		});

@@ -2020,26 +2020,63 @@ body.modal-open {
 
 	/* Chronological reference list in the Timeline section — a plain ul so
 	   it inherits the h3/ul spacing rules above instead of needing its own.
-	   .timeline-start/-acquisition/-closure set --tl-color once per item;
-	   the left border (on li) and the dot (in the legend) both read it,
-	   so the three category colors only exist in one place below. */
+	   Event classes set --tl-color once; list borders and filter dots share it. */
+	.timeline-all { --tl-color: var(--color-accent); }
 	.timeline-start { --tl-color: var(--color-success); }
 	.timeline-acquisition { --tl-color: var(--color-info); }
 	.timeline-closure { --tl-color: var(--color-danger); }
+	.timeline-milestone { --tl-color: var(--color-text-tertiary); }
 
 	.timeline-legend {
 		display: flex;
-		flex-wrap: wrap;
+		align-items: center;
 		gap: var(--spacing-md);
 		font-size: var(--font-size-sm);
 		color: var(--color-text-secondary);
 		padding: var(--spacing-md);
 	}
 
+	.timeline-type-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+	}
+
 	.timeline-legend-item {
+		appearance: none;
 		display: inline-flex;
 		align-items: center;
 		gap: var(--spacing-xs);
+		min-height: var(--control-height-compact);
+		padding: var(--spacing-2xs) var(--spacing-sm);
+		border: 1px solid transparent;
+		border-radius: var(--radius-pill);
+		outline: 2px solid transparent;
+		outline-offset: 2px;
+		background: transparent;
+		color: var(--color-text-secondary);
+		font: inherit;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
+
+		&:hover {
+			border-color: var(--color-border-hover);
+			background: var(--color-bg-secondary);
+		}
+
+		&[aria-pressed='true'] {
+			border-color: var(--tl-color);
+			background: var(--color-bg-secondary);
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		&[aria-pressed='false'] .timeline-dot {
+			background: transparent;
+			box-shadow: inset 0 0 0 1.5px var(--tl-color);
+		}
+
+		&:focus-visible { outline-color: var(--color-accent); }
 	}
 
 	.timeline-updated {
@@ -2205,6 +2242,10 @@ body.modal-open {
 	}
 
 	@media (max-width: 600px) {
+		.timeline-legend { flex-wrap: wrap; }
+
+		.timeline-type-filters { flex-basis: 100%; }
+
 		.timeline-updated {
 			flex-basis: 100%;
 			margin-inline-start: 0;
@@ -2234,6 +2275,7 @@ body.modal-open {
 	}
 
 	@media (pointer: coarse) {
+		.timeline-legend-item,
 		.timeline-filter select,
 		.timeline-filter-search input,
 		.timeline-filter-clear {

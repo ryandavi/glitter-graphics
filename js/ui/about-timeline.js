@@ -2,20 +2,21 @@
 
 /**
  * Renders the Preservation modal's Timeline section from ABOUT_TIMELINE (see
- * js/ui/about-timeline-data.js) and wires up its Topic/Country/Decade/company
- * filters. modals-wiring.js calls this from preservationModal's onContentLoaded,
- * before initDocumentModalNavigation indexes the modal for search — so the
- * page's search box sees the (unfiltered) rendered entries too.
+ * js/ui/about-timeline-data.js) and wires up its event-type/Topic/Country/
+ * Decade/company filters. modals-wiring.js calls this from preservationModal's
+ * onContentLoaded, before initDocumentModalNavigation indexes the modal, so
+ * the page's search box sees the (unfiltered) rendered entries too.
  */
 function initPreservationTimeline(modalBody) {
 	const filtersEl = modalBody.querySelector('#PreservationTimelineFilters');
 	const listEl = modalBody.querySelector('#PreservationTimelineList');
 	const summaryEl = modalBody.querySelector('#PreservationTimelineSummary');
-	if (!filtersEl || !listEl || !summaryEl || typeof ABOUT_TIMELINE === 'undefined') return;
+	const typeButtons = [...modalBody.querySelectorAll('[data-timeline-type]')];
+	if (!filtersEl || !listEl || !summaryEl || !typeButtons.length || typeof ABOUT_TIMELINE === 'undefined') return;
 	if (filtersEl.dataset.initialized === 'true') return;
 	filtersEl.dataset.initialized = 'true';
 
-	const state = { topic: 'all', country: 'all', decade: 'all', entity: '' };
+	const state = { types: new Set(), topic: 'all', country: 'all', decade: 'all', entity: '' };
 
 	const makeSelect = (id, labelText, options) => {
 		const wrap = document.createElement('div');
@@ -129,6 +130,7 @@ function initPreservationTimeline(modalBody) {
 	const render = () => {
 		const query = state.entity.trim().toLowerCase();
 		const matches = ABOUT_TIMELINE.filter(item => {
+			if (state.types.size > 0 && !state.types.has(item.type)) return false;
 			if (state.topic !== 'all' && !item.tags.includes(state.topic)) return false;
 			if (state.country !== 'all' && item.country !== state.country) return false;
 			if (state.decade !== 'all' && item.decade !== state.decade) return false;
@@ -144,7 +146,12 @@ function initPreservationTimeline(modalBody) {
 		listEl.scrollTop = 0;
 		initTooltipsInContainer(listEl);
 
-		const filtersActive = state.topic !== 'all' || state.country !== 'all' || state.decade !== 'all' || query !== '';
+		typeButtons.forEach(button => {
+			const type = button.dataset.timelineType;
+			button.setAttribute('aria-pressed', String(type === 'all' ? state.types.size === 0 : state.types.has(type)));
+		});
+
+		const filtersActive = state.types.size > 0 || state.topic !== 'all' || state.country !== 'all' || state.decade !== 'all' || query !== '';
 		clearBtn.disabled = !filtersActive;
 		listEl.classList.toggle('timeline-list-empty', matches.length === 0);
 
@@ -159,6 +166,20 @@ function initPreservationTimeline(modalBody) {
 			? `${count} match these filters · ${range}`
 			: `${count} · ${range}`;
 	};
+
+	typeButtons.forEach(button => {
+		button.addEventListener('click', () => {
+			const type = button.dataset.timelineType;
+			if (type === 'all') {
+				state.types.clear();
+			} else if (state.types.has(type)) {
+				state.types.delete(type);
+			} else {
+				state.types.add(type);
+			}
+			render();
+		});
+	});
 
 	[[topic.select, 'topic'], [country.select, 'country'], [decade.select, 'decade']].forEach(([select, key]) => {
 		select.addEventListener('change', () => {
@@ -177,6 +198,7 @@ function initPreservationTimeline(modalBody) {
 	});
 
 	clearBtn.addEventListener('click', () => {
+		state.types.clear();
 		state.topic = 'all';
 		state.country = 'all';
 		state.decade = 'all';

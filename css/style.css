@@ -5423,13 +5423,6 @@ body.mask-editing .sticker-element {
 .gallery-picker-strip[hidden] {
   display: none;
 }
-.gallery-picker-strip.is-hint {
-  background: var(--color-bg-primary);
-}
-.gallery-picker-strip.is-hint .gallery-picker-strip-title {
-  color: var(--color-text-tertiary);
-  font-weight: 400;
-}
 
 .gallery-picker-strip-text {
   display: flex;
@@ -10440,9 +10433,12 @@ body.modal-open {
 #preservationModal {
   /* Chronological reference list in the Timeline section — a plain ul so
      it inherits the h3/ul spacing rules above instead of needing its own.
-     .timeline-start/-acquisition/-closure set --tl-color once per item;
-     the left border (on li) and the dot (in the legend) both read it,
-     so the three category colors only exist in one place below. */
+     Event classes set --tl-color once; list borders and filter dots share it. */
+}
+#aboutModal .timeline-all,
+#historyModal .timeline-all,
+#preservationModal .timeline-all {
+  --tl-color: var(--color-accent);
 }
 #aboutModal .timeline-start,
 #historyModal .timeline-start,
@@ -10459,22 +10455,73 @@ body.modal-open {
 #preservationModal .timeline-closure {
   --tl-color: var(--color-danger);
 }
+#aboutModal .timeline-milestone,
+#historyModal .timeline-milestone,
+#preservationModal .timeline-milestone {
+  --tl-color: var(--color-text-tertiary);
+}
 #aboutModal .timeline-legend,
 #historyModal .timeline-legend,
 #preservationModal .timeline-legend {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--spacing-md);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   padding: var(--spacing-md);
 }
+#aboutModal .timeline-type-filters,
+#historyModal .timeline-type-filters,
+#preservationModal .timeline-type-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
 #aboutModal .timeline-legend-item,
 #historyModal .timeline-legend-item,
 #preservationModal .timeline-legend-item {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
+  min-height: var(--control-height-compact);
+  padding: var(--spacing-2xs) var(--spacing-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
+}
+#aboutModal .timeline-legend-item:hover,
+#historyModal .timeline-legend-item:hover,
+#preservationModal .timeline-legend-item:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-secondary);
+}
+#aboutModal .timeline-legend-item[aria-pressed=true],
+#historyModal .timeline-legend-item[aria-pressed=true],
+#preservationModal .timeline-legend-item[aria-pressed=true] {
+  border-color: var(--tl-color);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+#aboutModal .timeline-legend-item[aria-pressed=false] .timeline-dot,
+#historyModal .timeline-legend-item[aria-pressed=false] .timeline-dot,
+#preservationModal .timeline-legend-item[aria-pressed=false] .timeline-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--tl-color);
+}
+#aboutModal .timeline-legend-item:focus-visible,
+#historyModal .timeline-legend-item:focus-visible,
+#preservationModal .timeline-legend-item:focus-visible {
+  outline-color: var(--color-accent);
 }
 #aboutModal .timeline-updated,
 #historyModal .timeline-updated,
@@ -10730,6 +10777,16 @@ body.modal-open {
   min-height: var(--control-height);
 }
 @media (max-width: 600px) {
+  #aboutModal .timeline-legend,
+  #historyModal .timeline-legend,
+  #preservationModal .timeline-legend {
+    flex-wrap: wrap;
+  }
+  #aboutModal .timeline-type-filters,
+  #historyModal .timeline-type-filters,
+  #preservationModal .timeline-type-filters {
+    flex-basis: 100%;
+  }
   #aboutModal .timeline-updated,
   #historyModal .timeline-updated,
   #preservationModal .timeline-updated {
@@ -10768,12 +10825,15 @@ body.modal-open {
   }
 }
 @media (pointer: coarse) {
+  #aboutModal .timeline-legend-item,
   #aboutModal .timeline-filter select,
   #aboutModal .timeline-filter-search input,
   #aboutModal .timeline-filter-clear,
+  #historyModal .timeline-legend-item,
   #historyModal .timeline-filter select,
   #historyModal .timeline-filter-search input,
   #historyModal .timeline-filter-clear,
+  #preservationModal .timeline-legend-item,
   #preservationModal .timeline-filter select,
   #preservationModal .timeline-filter-search input,
   #preservationModal .timeline-filter-clear {

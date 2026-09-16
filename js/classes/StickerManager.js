@@ -324,12 +324,10 @@ class StickerManager extends ContentManager {
 		const assetArmed = this.pickerSession?.kind === 'asset' && this.pickerSession.layerId === layer.id;
 		const glitterArmed = this.pickerSession?.kind !== 'asset' && this.pickerSession?.layerId === layer.id && layer.stickerData?.[this.pickerSession.slot];
 		const armed = Boolean(assetArmed || glitterArmed);
-		const stripText = !armed
-			? {}
-			: assetArmed
-				? formatAssetPickerStripText('sticker', layer.name)
-				: formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker');
-		renderPickerStrip({ ownsStrip: true, visible: armed, armed, pickerMode: glitterArmed, ...stripText });
+		const stripText = glitterArmed
+			? formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker')
+			: formatAssetPickerStripText('sticker', layer.name);
+		renderPickerStrip({ ownsStrip: true, visible: true, armed, hint: !armed, pickerMode: glitterArmed, ...stripText });
 	}
 
 	getGlitterSelectionTarget(layer = this.editor.layerManager.getActiveLayer()) {

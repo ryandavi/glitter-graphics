@@ -43,12 +43,16 @@
 <h3 id="PreservationTimeline">Timeline</h3>
 <p>A chronology of the platforms, programs, and websites that shaped the personal web: when they launched, when they changed hands, and when (or if) they went dark.</p>
 <div class="timeline-panel" id="PreservationTimelinePanel">
-	<p class="timeline-legend">
-		<span class="timeline-legend-item"><span class="timeline-dot timeline-start"></span>Founded / launched</span>
-		<span class="timeline-legend-item"><span class="timeline-dot timeline-acquisition"></span>Acquired</span>
-		<span class="timeline-legend-item"><span class="timeline-dot timeline-closure"></span>Shut down / discontinued</span>
+	<div class="timeline-legend">
+		<div class="timeline-type-filters" role="group" aria-label="Filter by event type">
+			<button type="button" class="timeline-legend-item timeline-all" data-timeline-type="all" aria-pressed="true"><span class="timeline-dot"></span>All events</button>
+			<button type="button" class="timeline-legend-item timeline-start" data-timeline-type="start" aria-pressed="false"><span class="timeline-dot"></span>Founded / launched</button>
+			<button type="button" class="timeline-legend-item timeline-acquisition" data-timeline-type="acquisition" aria-pressed="false"><span class="timeline-dot"></span>Acquired</button>
+			<button type="button" class="timeline-legend-item timeline-closure" data-timeline-type="closure" aria-pressed="false"><span class="timeline-dot"></span>Shut down / discontinued</button>
+			<button type="button" class="timeline-legend-item timeline-milestone" data-timeline-type="milestone" aria-pressed="false"><span class="timeline-dot"></span>Other milestones</button>
+		</div>
 		<span class="timeline-updated">Last updated <time datetime="2026-09-14">14 September 2026</time></span>
-	</p>
+	</div>
 	<div class="timeline-filters" id="PreservationTimelineFilters"></div>
 	<p class="timeline-summary" id="PreservationTimelineSummary"></p>
 	<ul class="timeline-list" id="PreservationTimelineList" tabindex="0" aria-label="Timeline events"></ul>
