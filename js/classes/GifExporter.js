@@ -527,6 +527,42 @@ class GifExporter {
 		};
 	}
 
+	// Animated GIF shape fills are read exactly like any other animated asset
+	// (glitter/sticker GIFs): decode lazily via the same parseGif callback,
+	// cache the frames on the asset, and replay them with native-layer
+	// disposal — this is what gives the composite planner exact frame
+	// boundaries instead of collapsing an image-only animation to one frame.
+	_createShapeFillImageDescriptor(layer, slot, asset) {
+		return {
+			key: `${this._getShapeFrameKey(layer, slot)}:image`,
+			label: `${layer.name || 'Shape'} ${slot} image`,
+			ownerLayerId: layer.id,
+			effectSlot: slot,
+			role: 'shape-fill-image',
+			replayPolicy: 'native-layer',
+			sourceIdentity: asset,
+			ensureLoaded: async (callbacks) => {
+				if (asset.frames) return;
+				callbacks.onStatus(`Loading ${asset.name || 'image'}...`);
+				try { asset.frames = await callbacks.parseGif(asset.dataUrl); }
+				catch (error) { throw new Error(`Failed to load animated fill ${asset.name || ''}`); }
+			},
+			getAnimation: () => asset.frames
+		};
+	}
+
+	_getShapeImageFillDescriptors(layer) {
+		const descriptors = [];
+		['fill', 'border', 'shadow'].forEach((slot) => {
+			const effectData = slot === 'fill' ? layer.shapeData?.fill : layer.shapeData?.[slot];
+			if (effectData?.mode !== 'image') return;
+			const asset = this.resolveShapeFillImage(effectData.imageRef);
+			if (!asset?.isAnimated) return;
+			descriptors.push(this._createShapeFillImageDescriptor(layer, slot, asset));
+		});
+		return descriptors;
+	}
+
 	_createAuthoredTimingSource(descriptor, fallbackDuration) {
 		const animation = descriptor.getAnimation();
 		if (!animation?.frames?.length) throw new Error(`Missing animation data for ${descriptor.key}`);
@@ -714,10 +750,13 @@ class GifExporter {
 						shapeMaskCanvases.set(layer.id, callbacks.renderShapeMask(layer));
 					},
 					prepareStaticResources: async () => {},
-					getAuthoredSources: (library) => glitterSources.map((source) => this._createGlitterDescriptor(library, {
-						...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-						ownerLayerId: layer.id, effectSlot: source.slot
-					})),
+					getAuthoredSources: (library) => [
+						...this._getShapeImageFillDescriptors(layer),
+						...glitterSources.map((source) => this._createGlitterDescriptor(library, {
+							...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
+							ownerLayerId: layer.id, effectSlot: source.slot
+						}))
+					],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases }) => {
 						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases, scratch);
 					}
@@ -845,9 +884,21 @@ class GifExporter {
 		} else if (source.mode === 'image') {
 			const paintBox = maskCanvas._paintBox || { x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height };
 			const placement = getImageFillPlacement(source, paintBox);
+			// An animated GIF fill is registered as an authored source (like a
+			// glitter/sticker GIF), so it gets exact-frame-boundary sampling from
+			// the composite timeline planner instead of being invisible to it —
+			// present only when this slot's asset actually decoded as animated.
+			const imageSourceKey = `${sourceKey}:image`;
+			const drawable = resolvedFramesBySource?.get(imageSourceKey)
+				? this._renderPatternSourceInto(
+					this.patternSourceCanvas,
+					this._getResolvedFrame(imageSourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource),
+					null
+				)
+				: source.image;
 			fillCtx.imageSmoothingEnabled = source.imageRendering !== 'pixelated';
 			if (source.tile) {
-				const pattern = fillCtx.createPattern(source.image, 'repeat');
+				const pattern = fillCtx.createPattern(drawable, 'repeat');
 				pattern.setTransform(new DOMMatrix()
 					.translateSelf(placement.dx, placement.dy)
 					.scaleSelf(
@@ -857,7 +908,7 @@ class GifExporter {
 				fillCtx.fillStyle = pattern;
 			} else {
 				fillsSurface = false;
-				fillCtx.drawImage(source.image, placement.dx, placement.dy, placement.dw, placement.dh);
+				fillCtx.drawImage(drawable, placement.dx, placement.dy, placement.dw, placement.dh);
 			}
 		} else {
 			const frameImageData = this._getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource);

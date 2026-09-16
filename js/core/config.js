@@ -632,6 +632,17 @@ const CONFIG = deepFreeze({
 					{ value: 'fill', label: 'Fill' },
 					{ value: 'none', label: 'None' },
 					{ value: 'scale-down', label: 'Scale Down' }
+				],
+				// UI-only: "Tile" is sugar over fit:'none' + tile:true (the only
+				// combination where tiling is visually distinct — see
+				// docs/ANIMATED-IMAGE-FILL-PLAN.md Part A). Not a real fit value.
+				fitUIOptions: [
+					{ value: 'cover', label: 'Cover' },
+					{ value: 'contain', label: 'Contain' },
+					{ value: 'fill', label: 'Fill' },
+					{ value: 'none', label: 'None' },
+					{ value: 'tile', label: 'Tile' },
+					{ value: 'scale-down', label: 'Scale Down' }
 				]
 			},
 			border: {
@@ -2234,7 +2245,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'advanced', id: 'shapeFillImageAdvanced', label: 'Advanced', hidden: true,
 							attrs: { 'data-paint-source-mode': 'image' }, items: [
 							{ kind: 'set', id: 'shapeFillImageControls', label: 'Placement', items: [
-							{ kind: 'select', id: 'shapeFillImageFit', label: 'Image fit', visibleLabel: 'Fit', options: CONFIG.tools.shapes.imageFill.fitOptions },
+							{ kind: 'select', id: 'shapeFillImageFit', label: 'Image fit', visibleLabel: 'Fit', options: CONFIG.tools.shapes.imageFill.fitUIOptions },
 							{ kind: 'slider', id: 'shapeFillImageScale', slider: 'shapeImageScale' },
 							{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Horizontal image alignment', options: [
 								{ label: 'Left', icon: 'align-left', attrs: { 'data-fill-align': '0' } },
@@ -2250,9 +2261,6 @@ const PANEL_SCHEMAS = {
 							{ kind: 'slider', id: 'shapeFillImageOffsetY', slider: 'shapeImageOffsetY' }
 							] },
 							{ kind: 'set', label: 'Rendering', items: [
-								{ kind: 'checkboxList', items: [
-									{ id: 'shapeFillImageTile', label: 'Tile Image' }
-								] },
 								{ kind: 'segmented', visibleLabel: 'Sampling', label: 'Image rendering', options: [
 									{ label: 'Smooth', active: true, attrs: { 'data-fill-rendering': 'smooth' } },
 									{ label: 'Pixelated', attrs: { 'data-fill-rendering': 'pixelated' } }

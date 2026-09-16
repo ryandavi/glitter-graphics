@@ -121,7 +121,6 @@ class ShapeGlitterManager {
 		this.ui.fillImageScale = id('shapeFillImageScale');
 		this.ui.fillImageOffsetX = id('shapeFillImageOffsetX');
 		this.ui.fillImageOffsetY = id('shapeFillImageOffsetY');
-		this.ui.fillImageTile = id('shapeFillImageTile');
 		this.ui.fillImageRendering = Array.from(document.querySelectorAll('[data-fill-rendering]'));
 		this.ui.fillImageInput = document.createElement('input');
 		this.ui.fillImageInput.type = 'file';
@@ -270,14 +269,15 @@ class ShapeGlitterManager {
 		this.ui.fillImageFit?.addEventListener('change', () => {
 			const layer = this.getActiveShapeLayer();
 			if (!layer) return;
-			this.ensureEffectData(layer, 'fill').fit = normalizeImageFit(this.ui.fillImageFit.value);
-			this.renderLayer(layer);
-			this.editor.saveState('Edit shape');
-		});
-		this.ui.fillImageTile?.addEventListener('change', () => {
-			const layer = this.getActiveShapeLayer();
-			if (!layer) return;
-			this.ensureEffectData(layer, 'fill').tile = this.ui.fillImageTile.checked;
+			const fill = this.ensureEffectData(layer, 'fill');
+			const selected = this.ui.fillImageFit.value;
+			if (selected === 'tile') {
+				fill.fit = 'none';
+				fill.tile = true;
+			} else {
+				fill.fit = normalizeImageFit(selected);
+				fill.tile = false;
+			}
 			this.renderLayer(layer);
 			this.editor.saveState('Edit shape');
 		});
@@ -531,10 +531,30 @@ class ShapeGlitterManager {
 			url: payload.dataUrl,
 			dataUrl: payload.dataUrl,
 			name: payload.name || 'Image',
-			mimeType: payload.mimeType || 'image/png'
+			mimeType: payload.mimeType || 'image/png',
+			// Multi-frame GIFs get a real decode (frames/durations) lazily, only
+			// when the exporter actually needs them (registerShapeFillImageDescriptor
+			// in GifExporter.js) — same laziness as glitter/sticker GIFs. isAnimated
+			// is a cheap up-front probe (GifReader parses block structure without
+			// decompressing pixels) so the exporter knows which slots to even ask for.
+			isAnimated: false,
+			frames: null
 		};
+		if (asset.mimeType === 'image/gif') {
+			try {
+				asset.isAnimated = await this._probeAnimatedGif(payload.dataUrl);
+			} catch (error) {
+				console.warn('Animated GIF probe failed; treating fill as static.', error);
+			}
+		}
 		this.imageFillAssets.set(imageRef, asset);
 		return asset;
+	}
+
+	async _probeAnimatedGif(dataUrl) {
+		const response = await fetch(dataUrl);
+		const bytes = new Uint8Array(await response.arrayBuffer());
+		return new GifReader(bytes).numFrames() > 1;
 	}
 
 	getImageFillAsset(imageRef) {
@@ -880,7 +900,10 @@ class ShapeGlitterManager {
 		}
 		if (this.ui.fillImageName) this.ui.fillImageName.textContent = asset?.name || 'No image selected';
 		if (this.ui.fillImageChange) this.ui.fillImageChange.textContent = asset ? 'Change' : 'Choose Image';
-		if (this.ui.fillImageFit) this.ui.fillImageFit.value = normalizeImageFit(fill?.fit);
+		if (this.ui.fillImageFit) {
+			const normalizedFit = normalizeImageFit(fill?.fit);
+			this.ui.fillImageFit.value = (normalizedFit === 'none' && fill?.tile) ? 'tile' : normalizedFit;
+		}
 		const imageScale = normalizeImageScalePercent(fill?.imageScalePercent);
 		const x = normalizeImagePositionPercent(fill?.offsetXPercent);
 		const y = normalizeImagePositionPercent(fill?.offsetYPercent);
@@ -899,7 +922,6 @@ class ShapeGlitterManager {
 			const value = document.getElementById('shapeFillImageOffsetYValue');
 			if (value) value.innerHTML = formatUnit(y, '%');
 		}
-		if (this.ui.fillImageTile) this.ui.fillImageTile.checked = Boolean(fill?.tile ?? CONFIG.tools.shapes.imageFill.defaultTile);
 		this.syncFillImageAlignment(fill);
 		this.syncFillImageRendering(fill);
 	}
