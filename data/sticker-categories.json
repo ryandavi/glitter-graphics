@@ -4,31 +4,31 @@
         "name": "User Uploads",
         "icon": "images/stickers/decorative/heart_pink-glitter.gif",
         "color": "#9575cd",
-        "description": "Stickers uploaded by user",
+        "description": "",
         "count": 0
     },
     {
         "id": "text",
         "name": "Text",
         "icon": "images/stickers/text/sexy_arrow_purple.gif",
-        "color": "#66BB6A",
-        "description": "Stickers in the text category",
+        "color": "#66bb6a",
+        "description": "",
         "count": 65
     },
     {
         "id": "sparkle",
         "name": "Sparkle",
         "icon": "images/stickers/sparkle/fireworks_yellow-pink.gif",
-        "color": "#E8C547",
-        "description": "Stickers in the sparkle category",
+        "color": "#e8c547",
+        "description": "",
         "count": 36
     },
     {
         "id": "flower",
         "name": "Flower",
         "icon": "images/stickers/flower/rose_red-green-glitter.gif",
-        "color": "#FF6FA5",
-        "description": "Stickers in the flower category",
+        "color": "#ff6fa5",
+        "description": "",
         "count": 22
     },
     {
@@ -51,32 +51,32 @@
         "id": "decorative",
         "name": "Decorative",
         "icon": "images/stickers/decorative/rainbow_glitter.gif",
-        "color": "#F2A65A",
-        "description": "Stickers in the decorative category",
+        "color": "#f2a65a",
+        "description": "",
         "count": 19
     },
     {
         "id": "jewelry",
         "name": "Jewelry",
         "icon": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
-        "color": "#4FC3D9",
-        "description": "Stickers in the jewelry category",
+        "color": "#4fc3d9",
+        "description": "",
         "count": 18
     },
     {
         "id": "animal",
         "name": "Animal",
         "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
-        "color": "#A0703B",
-        "description": "Stickers in the animal category",
+        "color": "#a0703b",
+        "description": "",
         "count": 14
     },
     {
         "id": "object",
         "name": "Object",
         "icon": "images/stickers/object/money_wave_green.gif",
-        "color": "#78909C",
-        "description": "Stickers in the object category",
+        "color": "#78909c",
+        "description": "",
         "count": 13
     },
     {
@@ -84,15 +84,15 @@
         "name": "Frame",
         "icon": "images/stickers/frame/rose-heart_frame_red.gif",
         "color": "#8d6e63",
-        "description": "Stickers in the frame category",
+        "description": "",
         "count": 11
     },
     {
         "id": "people",
         "name": "People",
         "icon": "images/stickers/people/lips_red-glitter.gif",
-        "color": "#FF8A65",
-        "description": "Stickers in the people category",
+        "color": "#ff8a65",
+        "description": "",
         "count": 11
     },
     {
@@ -100,7 +100,7 @@
         "name": "ryandavi",
         "icon": "images/stickers/ryandavi/ryandavi_wow.png",
         "color": "#1100ff",
-        "description": "Original stickers by Ryan Davi",
+        "description": "Original stickers by Ryan Davi, designed in 2016.",
         "count": 11,
         "attribution": {
             "author": "Ryan Davi",
@@ -112,40 +112,40 @@
         "id": "character",
         "name": "Character",
         "icon": "images/stickers/character/star_dance.gif",
-        "color": "#E0559F",
-        "description": "Stickers in the character category",
+        "color": "#e0559f",
+        "description": "",
         "count": 3
     },
     {
         "id": "emoji",
         "name": "Emoji",
         "icon": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
-        "color": "#FFC93C",
-        "description": "Stickers in the emoji category",
+        "color": "#ffc93c",
+        "description": "",
         "count": 3
     },
     {
         "id": "logo",
         "name": "Logo",
         "icon": "images/stickers/logo/playboy_silver-glitter.gif",
-        "color": "#607D8B",
-        "description": "Stickers in the logo category",
+        "color": "#607d8b",
+        "description": "",
         "count": 3
     },
     {
         "id": "clothing",
         "name": "Clothing",
         "icon": "images/stickers/clothing/crown_gold-glitter.gif",
-        "color": "#9B59B6",
-        "description": "Stickers in the clothing category",
+        "color": "#9b59b6",
+        "description": "",
         "count": 2
     },
     {
         "id": "background",
         "name": "Background",
         "icon": "images/stickers/background/checkerboard_emo_rainbow.gif",
-        "color": "#5B8DEF",
-        "description": "Stickers in the background category",
+        "color": "#5b8def",
+        "description": "",
         "count": 1
     }
 ]

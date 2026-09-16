@@ -405,11 +405,15 @@ async loadUntilItemFound(itemId) {
 		this.elements.backBtn.disabled = false;
 		this.elements.title.textContent = category.name;
 		this.collectionInfo.replaceChildren();
-		const info = this.contentManager.createCollectionInfo?.(category);
-		if (info) {
-			this.collectionInfo.appendChild(info);
-			this.collectionInfo.hidden = false;
+		if (category.description) {
+			const description = document.createElement('p');
+			description.className = 'asset-browser-collection-description';
+			description.textContent = category.description;
+			this.collectionInfo.appendChild(description);
 		}
+		const info = this.contentManager.createCollectionInfo?.(category);
+		if (info) this.collectionInfo.appendChild(info);
+		this.collectionInfo.hidden = !this.collectionInfo.childElementCount;
 
 		// Show item grid
 		this.elements.itemGrid.classList.add('visible');
