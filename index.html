@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=4cf907fa">
+	<link rel="stylesheet" href="css/style.css?v=f4ae36f8">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -80,6 +80,10 @@
 						<button class="app-menu-item" id="historyBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-clock-history"></use></svg></span>
 							<span class="app-menu-item-label">History</span>
+						</button>
+						<button class="app-menu-item" id="preservationBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-archive"></use></svg></span>
+							<span class="app-menu-item-label">Preservation</span>
 						</button>
 						<button class="app-menu-item" id="aboutBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-circle-info"></use></svg></span>
@@ -1939,6 +1943,44 @@
 		</div>
 	</div>
 
+	<!-- Preservation Modal -->
+	<div class="modal-overlay" id="preservationModal">
+		<div class="modal-content modal-reading content-dialog document-dialog preservation-dialog">
+			<div class="modal-header">
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon"><use href="#icon-archive"></use></svg>
+						<span class="name">Preservation</span>
+					</span>
+					<span class="modal-title-text">Preservation</span>
+				</div>
+				<button class="btn-icon icon-wrapper modal-close" id="closePreservationModal">
+					<svg class="icon"><use href="#icon-x-mark"></use></svg>
+					<span class="name">Close</span>
+				</button>
+			</div>
+			<div class="modal-nav document-nav search-toggle-row" aria-label="Preservation navigation" hidden>
+				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="preservationDocumentTocPanel">
+					<span>Contents</span>
+					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+				</button>
+				<label class="search-input-wrapper">
+					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+					<input type="search" class="document-search-input" placeholder="Search Preservation" aria-label="Search Preservation" aria-controls="preservationDocumentSearchResults">
+				</label>
+				<span class="document-search-status" role="status" aria-live="polite"></span>
+				<button type="button" class="btn-icon icon-wrapper document-back-to-top" aria-label="Back to top" title="Back to top" hidden>
+					<svg class="icon"><use href="#icon-chevron-up"></use></svg>
+				</button>
+				<div class="document-toc-panel" id="preservationDocumentTocPanel" hidden></div>
+				<div class="document-search-results" id="preservationDocumentSearchResults" hidden></div>
+			</div>
+			<div class="modal-body">
+				<!-- Content loaded externally -->
+			</div>
+		</div>
+	</div>
+
 	<!-- Guide Modal -->
 	<div class="modal-overlay" id="guideModal">
 		<div class="modal-content modal-reading content-dialog document-dialog guide-dialog">
@@ -2159,6 +2201,7 @@
 			<symbol id="icon-chevron-up" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4 10 4-4 4 4" /></symbol>
 			<symbol id="icon-question-circle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M6.2 6.1a1.9 1.9 0 1 1 2.7 1.75c-.55.3-.9.85-.9 1.5v.25" /><path fill="currentColor" stroke="none" d="M8 11.1a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z" /></symbol>
 			<symbol id="icon-clock-history" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2.2 1.3" /></symbol>
+			<symbol id="icon-archive" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5h11v8.5h-11zM2 2.5h12v2.5H2z" /><path d="M6 8h4" /></symbol>
 			<symbol id="icon-minus" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10" /></symbol>
 			<symbol id="icon-layers" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 6 3-6 3-6-3 6-3Z" /><path d="m2 8 6 3 6-3M2 11l6 3 6-3" /></symbol>
 			<symbol id="icon-sliders" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h5.4M11.1 4.5h2.4M2.5 8h1.9M7.6 8h5.9M2.5 11.5h3.4M9.1 11.5h4.4" /><circle cx="9.5" cy="4.5" r="1.6" /><circle cx="6" cy="8" r="1.6" /><circle cx="7.5" cy="11.5" r="1.6" /></symbol>
@@ -2470,8 +2513,8 @@
 	<script src="js/ui/slider.js?v=9388d0d4"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
-	<script src="js/ui/about-timeline-data.js?v=374a0d6d"></script>
-	<script src="js/ui/about-timeline.js?v=f3af6616"></script>
+	<script src="js/ui/about-timeline-data.js?v=943eab47"></script>
+	<script src="js/ui/about-timeline.js?v=382f7afb"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
@@ -2503,7 +2546,7 @@
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
 	<script src="js/editor/transform-interaction.js?v=bd174854"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=d0ff562e"></script>
+		<script src="js/editor/modals-wiring.js?v=30550b3e"></script>
 	<script src="js/editor/layer-panel.js?v=3d5b5ebe"></script>
 	<script src="js/editor/canvas-gestures.js?v=3be86e55"></script>
 	<script src="js/editor/canvas-size.js?v=28d9bd28"></script>

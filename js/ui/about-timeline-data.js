@@ -1,5 +1,5 @@
 /**
- * Data for the About modal's Timeline section (js/ui/about-timeline.js renders it).
+ * Data for the Preservation modal's Timeline section (js/ui/about-timeline.js renders it).
  * Kept separate from the renderer so the ~150 entries don't drown the logic.
  * Generated from modals/about.html's prior static markup — edit here, not there.
  */

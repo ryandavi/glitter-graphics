@@ -84,7 +84,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=7',
+				externalContentUrl: 'modals/history.html?v=9',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -92,14 +92,11 @@ updateOrientationButtons(width, height) {
 					// Initialize pixel-scaled images
 					initPixelScalerInContainer(modalBody);
 
-					// Render the Timeline section from data before the nav below
-					// indexes the modal for search, so rendered entries are searchable.
-					initAboutTimeline(modalBody);
-
 					// Initialize references (sup ↔ reference list interaction)
 					initModalReferences(modalBody, {
 						referenceListSelector: 'ol#HistoryReferencesList'
 					});
+					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
 
 					const modal = document.getElementById('historyModal');
 					initDocumentModalNavigation(modal);
@@ -109,10 +106,30 @@ updateOrientationButtons(width, height) {
 					initTooltipsInContainer(modalBody);
 				}
 			})
+			.register('preservationModal', {
+				openBtnId: 'preservationBtn',
+				closeBtnId: 'closePreservationModal',
+				externalContentUrl: 'modals/preservation.html?v=3',
+				cacheContent: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
+				onContentLoaded: (modalBody) => {
+					initPixelScalerInContainer(modalBody);
+
+					// Render before indexing so document search includes every event.
+					initPreservationTimeline(modalBody);
+					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
+
+					const modal = document.getElementById('preservationModal');
+					initDocumentModalNavigation(modal);
+					initModalSmoothScroll(modal);
+					initTooltipsInContainer(modalBody);
+				}
+			})
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=14',
+				externalContentUrl: 'modals/about.html?v=15',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -128,7 +145,7 @@ updateOrientationButtons(width, height) {
 						referenceListSelector: 'ol#AboutReferencesList'
 					});
 
-					// Jump-to-History links in the intro prose
+					// Jump to the related long-form documents from the intro prose.
 					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
 
 					const modal = document.getElementById('aboutModal');

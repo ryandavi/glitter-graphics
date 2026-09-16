@@ -10170,14 +10170,13 @@ body.modal-open {
   opacity: 0.85;
 }
 
-/* ===== ABOUT & HISTORY MODALS =====
-   Split from a single "About" document into two: History (the researched,
-   cited chronology of glitter graphics) and About (the personal essay about
-   this project). They still share one prose/timeline/reference stylesheet
-   since both are the same "long-form document" shape — only the content
+/* ===== ABOUT, HISTORY & PRESERVATION MODALS =====
+   History, Preservation, and About share one prose/timeline/reference stylesheet
+   since all use the same "long-form document" shape — only the content
    differs. */
 #aboutModal .doc-inline-link,
-#historyModal .doc-inline-link {
+#historyModal .doc-inline-link,
+#preservationModal .doc-inline-link {
   padding: 0;
   border: 0;
   background: none;
@@ -10188,25 +10187,31 @@ body.modal-open {
 }
 #aboutModal .doc-inline-link:hover, #aboutModal .doc-inline-link:focus-visible,
 #historyModal .doc-inline-link:hover,
-#historyModal .doc-inline-link:focus-visible {
+#historyModal .doc-inline-link:focus-visible,
+#preservationModal .doc-inline-link:hover,
+#preservationModal .doc-inline-link:focus-visible {
   color: var(--color-text-primary);
 }
 #aboutModal .modal-hero-image,
-#historyModal .modal-hero-image {
+#historyModal .modal-hero-image,
+#preservationModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
 #aboutModal .modal-hero-image > h2,
-#historyModal .modal-hero-image > h2 {
+#historyModal .modal-hero-image > h2,
+#preservationModal .modal-hero-image > h2 {
   display: none;
 }
 #aboutModal .center,
-#historyModal .center {
+#historyModal .center,
+#preservationModal .center {
   display: block;
   margin: 0 auto;
   text-align: center;
 }
 #aboutModal .context,
-#historyModal .context {
+#historyModal .context,
+#preservationModal .context {
   font-weight: bold;
   cursor: help;
   color: inherit;
@@ -10219,11 +10224,13 @@ body.modal-open {
   text-decoration-skip-ink: auto;
 }
 #aboutModal .context:hover,
-#historyModal .context:hover {
+#historyModal .context:hover,
+#preservationModal .context:hover {
   color: var(--color-text-primary);
 }
 #aboutModal .table-wrapper,
-#historyModal .table-wrapper {
+#historyModal .table-wrapper,
+#preservationModal .table-wrapper {
   max-width: 100%;
   margin: var(--spacing-lg) 0;
   overflow-x: auto;
@@ -10233,7 +10240,8 @@ body.modal-open {
   -webkit-overflow-scrolling: touch;
 }
 #aboutModal table,
-#historyModal table {
+#historyModal table,
+#preservationModal table {
   width: 100%;
   min-width: 32rem;
   border-collapse: separate;
@@ -10245,14 +10253,17 @@ body.modal-open {
 #aboutModal table th,
 #aboutModal table td,
 #historyModal table th,
-#historyModal table td {
+#historyModal table td,
+#preservationModal table th,
+#preservationModal table td {
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
 }
 #aboutModal table th,
-#historyModal table th {
+#historyModal table th,
+#preservationModal table th {
   background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
@@ -10263,47 +10274,59 @@ body.modal-open {
 #aboutModal table th + th,
 #aboutModal table td + td,
 #historyModal table th + th,
-#historyModal table td + td {
+#historyModal table td + td,
+#preservationModal table th + th,
+#preservationModal table td + td {
   border-left: 1px solid var(--color-border);
 }
 #aboutModal table tbody > tr:nth-child(even),
-#historyModal table tbody > tr:nth-child(even) {
+#historyModal table tbody > tr:nth-child(even),
+#preservationModal table tbody > tr:nth-child(even) {
   background: var(--color-bg-tertiary);
 }
 #aboutModal table tbody > tr:hover,
-#historyModal table tbody > tr:hover {
+#historyModal table tbody > tr:hover,
+#preservationModal table tbody > tr:hover {
   background: var(--color-bg-accent-tint);
 }
 #aboutModal table tbody > tr:last-child > td,
-#historyModal table tbody > tr:last-child > td {
+#historyModal table tbody > tr:last-child > td,
+#preservationModal table tbody > tr:last-child > td {
   border-bottom: 0;
 }
 #aboutModal .dimensions-table,
-#historyModal .dimensions-table {
+#historyModal .dimensions-table,
+#preservationModal .dimensions-table {
   min-width: 48rem;
   table-layout: fixed;
 }
 #aboutModal .dimensions-table th:first-child,
-#historyModal .dimensions-table th:first-child {
+#historyModal .dimensions-table th:first-child,
+#preservationModal .dimensions-table th:first-child {
   width: 24%;
 }
 #aboutModal .dimensions-table th:nth-child(2),
-#historyModal .dimensions-table th:nth-child(2) {
+#historyModal .dimensions-table th:nth-child(2),
+#preservationModal .dimensions-table th:nth-child(2) {
   width: 25%;
 }
 #aboutModal .dimensions-table td:first-child,
-#historyModal .dimensions-table td:first-child {
+#historyModal .dimensions-table td:first-child,
+#preservationModal .dimensions-table td:first-child {
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
 }
 #aboutModal .dimensions-table th:nth-child(2),
 #aboutModal .dimensions-table td:nth-child(2),
 #historyModal .dimensions-table th:nth-child(2),
-#historyModal .dimensions-table td:nth-child(2) {
+#historyModal .dimensions-table td:nth-child(2),
+#preservationModal .dimensions-table th:nth-child(2),
+#preservationModal .dimensions-table td:nth-child(2) {
   font-variant-numeric: tabular-nums;
 }
 #aboutModal .dimensions-table td:nth-child(2),
-#historyModal .dimensions-table td:nth-child(2) {
+#historyModal .dimensions-table td:nth-child(2),
+#preservationModal .dimensions-table td:nth-child(2) {
   color: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
@@ -10321,7 +10344,14 @@ body.modal-open {
 #historyModal ul + h2,
 #historyModal p + h3,
 #historyModal ol + h3,
-#historyModal ul + h3 {
+#historyModal ul + h3,
+#preservationModal .figure-wrapper + h3,
+#preservationModal p + h2,
+#preservationModal ol + h2,
+#preservationModal ul + h2,
+#preservationModal p + h3,
+#preservationModal ol + h3,
+#preservationModal ul + h3 {
   margin-top: var(--spacing-xl);
 }
 #aboutModal p + p,
@@ -10331,7 +10361,11 @@ body.modal-open {
 #historyModal p + p,
 #historyModal p + h4,
 #historyModal ol + h4,
-#historyModal ul + h4 {
+#historyModal ul + h4,
+#preservationModal p + p,
+#preservationModal p + h4,
+#preservationModal ol + h4,
+#preservationModal ul + h4 {
   margin-top: var(--spacing-md);
 }
 #aboutModal h2 + p,
@@ -10367,7 +10401,24 @@ body.modal-open {
 #historyModal ol + h5,
 #historyModal ul + h5,
 #historyModal ol + ul,
-#historyModal ul + ol {
+#historyModal ul + ol,
+#preservationModal h2 + p,
+#preservationModal h2 + ol,
+#preservationModal h2 + ul,
+#preservationModal h3 + p,
+#preservationModal h3 + ol,
+#preservationModal h3 + ul,
+#preservationModal ol + p,
+#preservationModal ul + p,
+#preservationModal p + ol,
+#preservationModal p + ul,
+#preservationModal ol + ol,
+#preservationModal ul + ul,
+#preservationModal p + h5,
+#preservationModal ol + h5,
+#preservationModal ul + h5,
+#preservationModal ol + ul,
+#preservationModal ul + ol {
   margin-top: var(--spacing-sm);
 }
 #aboutModal h4 + ul,
@@ -10377,11 +10428,16 @@ body.modal-open {
 #historyModal h4 + ul,
 #historyModal h4 + ol,
 #historyModal h5 + ul,
-#historyModal h5 + ol {
+#historyModal h5 + ol,
+#preservationModal h4 + ul,
+#preservationModal h4 + ol,
+#preservationModal h5 + ul,
+#preservationModal h5 + ol {
   margin-top: var(--spacing-xs);
 }
 #aboutModal,
-#historyModal {
+#historyModal,
+#preservationModal {
   /* Chronological reference list in the Timeline section — a plain ul so
      it inherits the h3/ul spacing rules above instead of needing its own.
      .timeline-start/-acquisition/-closure set --tl-color once per item;
@@ -10389,19 +10445,23 @@ body.modal-open {
      so the three category colors only exist in one place below. */
 }
 #aboutModal .timeline-start,
-#historyModal .timeline-start {
+#historyModal .timeline-start,
+#preservationModal .timeline-start {
   --tl-color: var(--color-success);
 }
 #aboutModal .timeline-acquisition,
-#historyModal .timeline-acquisition {
+#historyModal .timeline-acquisition,
+#preservationModal .timeline-acquisition {
   --tl-color: var(--color-info);
 }
 #aboutModal .timeline-closure,
-#historyModal .timeline-closure {
+#historyModal .timeline-closure,
+#preservationModal .timeline-closure {
   --tl-color: var(--color-danger);
 }
 #aboutModal .timeline-legend,
-#historyModal .timeline-legend {
+#historyModal .timeline-legend,
+#preservationModal .timeline-legend {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-md);
@@ -10410,19 +10470,22 @@ body.modal-open {
   padding: var(--spacing-md);
 }
 #aboutModal .timeline-legend-item,
-#historyModal .timeline-legend-item {
+#historyModal .timeline-legend-item,
+#preservationModal .timeline-legend-item {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 #aboutModal .timeline-updated,
-#historyModal .timeline-updated {
+#historyModal .timeline-updated,
+#preservationModal .timeline-updated {
   margin-inline-start: auto;
   color: var(--color-text-tertiary);
   white-space: nowrap;
 }
 #aboutModal .timeline-dot,
-#historyModal .timeline-dot {
+#historyModal .timeline-dot,
+#preservationModal .timeline-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -10430,7 +10493,8 @@ body.modal-open {
   flex: 0 0 auto;
 }
 #aboutModal .timeline-panel,
-#historyModal .timeline-panel {
+#historyModal .timeline-panel,
+#preservationModal .timeline-panel {
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -10442,17 +10506,34 @@ body.modal-open {
   padding: 0;
 }
 #aboutModal .timeline-panel > * + *,
-#historyModal .timeline-panel > * + * {
+#historyModal .timeline-panel > * + *,
+#preservationModal .timeline-panel > * + * {
   border-top: 1px solid var(--color-border);
 }
+#aboutModal .preservation-dialog .timeline-panel,
+#historyModal .preservation-dialog .timeline-panel,
+#preservationModal .preservation-dialog .timeline-panel {
+  height: clamp(32rem, 78dvh, 46rem);
+}
+#aboutModal .preservation-dialog .timeline-panel .timeline-list,
+#historyModal .preservation-dialog .timeline-panel .timeline-list,
+#preservationModal .preservation-dialog .timeline-panel .timeline-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-anchor: none;
+  -webkit-overflow-scrolling: touch;
+}
 #aboutModal .timeline-list,
-#historyModal .timeline-list {
+#historyModal .timeline-list,
+#preservationModal .timeline-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 #aboutModal .timeline-list li,
-#historyModal .timeline-list li {
+#historyModal .timeline-list li,
+#preservationModal .timeline-list li {
   display: flex;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
@@ -10460,11 +10541,13 @@ body.modal-open {
   border-left: 3px solid var(--tl-color, var(--color-border));
 }
 #aboutModal .timeline-list li:last-child,
-#historyModal .timeline-list li:last-child {
+#historyModal .timeline-list li:last-child,
+#preservationModal .timeline-list li:last-child {
   border-bottom: none;
 }
 #aboutModal .timeline-list .timeline-date,
-#historyModal .timeline-list .timeline-date {
+#historyModal .timeline-list .timeline-date,
+#preservationModal .timeline-list .timeline-date {
   flex: 0 0 auto;
   width: 6.5rem;
   font-weight: 600;
@@ -10477,17 +10560,20 @@ body.modal-open {
 }
 @media (max-width: 480px) {
   #aboutModal .timeline-list li,
-  #historyModal .timeline-list li {
+  #historyModal .timeline-list li,
+  #preservationModal .timeline-list li {
     flex-direction: column;
     gap: var(--spacing-xs);
   }
   #aboutModal .timeline-list .timeline-date,
-  #historyModal .timeline-list .timeline-date {
+  #historyModal .timeline-list .timeline-date,
+  #preservationModal .timeline-list .timeline-date {
     width: auto;
   }
 }
 #aboutModal .timeline-filters,
-#historyModal .timeline-filters {
+#historyModal .timeline-filters,
+#preservationModal .timeline-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -10495,19 +10581,22 @@ body.modal-open {
   padding: var(--spacing-md);
 }
 #aboutModal .timeline-filter,
-#historyModal .timeline-filter {
+#historyModal .timeline-filter,
+#preservationModal .timeline-filter {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 #aboutModal .timeline-filter label,
-#historyModal .timeline-filter label {
+#historyModal .timeline-filter label,
+#preservationModal .timeline-filter label {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 #aboutModal .timeline-filter select,
-#historyModal .timeline-filter select {
+#historyModal .timeline-filter select,
+#preservationModal .timeline-filter select {
   max-width: 100%;
   min-width: 0;
   min-height: var(--control-height);
@@ -10519,42 +10608,49 @@ body.modal-open {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-#aboutModal .timeline-filter select::-moz-placeholder, #historyModal .timeline-filter select::-moz-placeholder {
+#aboutModal .timeline-filter select::-moz-placeholder, #historyModal .timeline-filter select::-moz-placeholder, #preservationModal .timeline-filter select::-moz-placeholder {
   color: var(--color-text-tertiary);
   opacity: 1;
 }
 #aboutModal .timeline-filter select::placeholder,
-#historyModal .timeline-filter select::placeholder {
+#historyModal .timeline-filter select::placeholder,
+#preservationModal .timeline-filter select::placeholder {
   color: var(--color-text-tertiary);
   opacity: 1;
 }
 #aboutModal .timeline-filter select:hover:not(:disabled),
-#historyModal .timeline-filter select:hover:not(:disabled) {
+#historyModal .timeline-filter select:hover:not(:disabled),
+#preservationModal .timeline-filter select:hover:not(:disabled) {
   border-color: var(--color-border-hover);
 }
 #aboutModal .timeline-filter select:focus-visible,
-#historyModal .timeline-filter select:focus-visible {
+#historyModal .timeline-filter select:focus-visible,
+#preservationModal .timeline-filter select:focus-visible {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: var(--control-focus-ring);
 }
 #aboutModal .timeline-filter select:disabled,
-#historyModal .timeline-filter select:disabled {
+#historyModal .timeline-filter select:disabled,
+#preservationModal .timeline-filter select:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 #aboutModal .timeline-filter-search,
-#historyModal .timeline-filter-search {
+#historyModal .timeline-filter-search,
+#preservationModal .timeline-filter-search {
   flex: 1 1 220px;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper,
-#historyModal .timeline-filter-search .search-input-wrapper {
+#historyModal .timeline-filter-search .search-input-wrapper,
+#preservationModal .timeline-filter-search .search-input-wrapper {
   position: relative;
   display: flex;
   min-width: 0;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper .search-input-icon,
-#historyModal .timeline-filter-search .search-input-wrapper .search-input-icon {
+#historyModal .timeline-filter-search .search-input-wrapper .search-input-icon,
+#preservationModal .timeline-filter-search .search-input-wrapper .search-input-icon {
   position: absolute;
   top: 50%;
   left: var(--spacing-sm);
@@ -10566,11 +10662,13 @@ body.modal-open {
   pointer-events: none;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon,
-#historyModal .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon {
+#historyModal .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon,
+#preservationModal .timeline-filter-search .search-input-wrapper .search-input-icon > svg.icon {
   font-size: 1rem;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper input,
-#historyModal .timeline-filter-search .search-input-wrapper input {
+#historyModal .timeline-filter-search .search-input-wrapper input,
+#preservationModal .timeline-filter-search .search-input-wrapper input {
   min-width: 0;
   min-height: var(--control-height);
   padding: var(--spacing-sm) var(--control-padding-inline);
@@ -10581,32 +10679,37 @@ body.modal-open {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-#aboutModal .timeline-filter-search .search-input-wrapper input::-moz-placeholder, #historyModal .timeline-filter-search .search-input-wrapper input::-moz-placeholder {
+#aboutModal .timeline-filter-search .search-input-wrapper input::-moz-placeholder, #historyModal .timeline-filter-search .search-input-wrapper input::-moz-placeholder, #preservationModal .timeline-filter-search .search-input-wrapper input::-moz-placeholder {
   color: var(--color-text-tertiary);
   opacity: 1;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper input::placeholder,
-#historyModal .timeline-filter-search .search-input-wrapper input::placeholder {
+#historyModal .timeline-filter-search .search-input-wrapper input::placeholder,
+#preservationModal .timeline-filter-search .search-input-wrapper input::placeholder {
   color: var(--color-text-tertiary);
   opacity: 1;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper input:hover:not(:disabled),
-#historyModal .timeline-filter-search .search-input-wrapper input:hover:not(:disabled) {
+#historyModal .timeline-filter-search .search-input-wrapper input:hover:not(:disabled),
+#preservationModal .timeline-filter-search .search-input-wrapper input:hover:not(:disabled) {
   border-color: var(--color-border-hover);
 }
 #aboutModal .timeline-filter-search .search-input-wrapper input:focus-visible,
-#historyModal .timeline-filter-search .search-input-wrapper input:focus-visible {
+#historyModal .timeline-filter-search .search-input-wrapper input:focus-visible,
+#preservationModal .timeline-filter-search .search-input-wrapper input:focus-visible {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: var(--control-focus-ring);
 }
 #aboutModal .timeline-filter-search .search-input-wrapper input:disabled,
-#historyModal .timeline-filter-search .search-input-wrapper input:disabled {
+#historyModal .timeline-filter-search .search-input-wrapper input:disabled,
+#preservationModal .timeline-filter-search .search-input-wrapper input:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 #aboutModal .timeline-filter-search .search-input-wrapper input,
-#historyModal .timeline-filter-search .search-input-wrapper input {
+#historyModal .timeline-filter-search .search-input-wrapper input,
+#preservationModal .timeline-filter-search .search-input-wrapper input {
   width: 100%;
   box-sizing: border-box;
   padding-left: calc(var(--spacing-sm) * 2 + 1rem);
@@ -10614,41 +10717,52 @@ body.modal-open {
 #aboutModal .timeline-filter-search .search-input-wrapper input::-webkit-search-decoration, #aboutModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-button, #aboutModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration,
 #historyModal .timeline-filter-search .search-input-wrapper input::-webkit-search-decoration,
 #historyModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-button,
-#historyModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration {
+#historyModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration,
+#preservationModal .timeline-filter-search .search-input-wrapper input::-webkit-search-decoration,
+#preservationModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-button,
+#preservationModal .timeline-filter-search .search-input-wrapper input::-webkit-search-results-decoration {
   display: none;
 }
 #aboutModal .timeline-filter-clear,
-#historyModal .timeline-filter-clear {
+#historyModal .timeline-filter-clear,
+#preservationModal .timeline-filter-clear {
   align-self: flex-end;
   min-height: var(--control-height);
 }
 @media (max-width: 600px) {
   #aboutModal .timeline-updated,
-  #historyModal .timeline-updated {
+  #historyModal .timeline-updated,
+  #preservationModal .timeline-updated {
     flex-basis: 100%;
     margin-inline-start: 0;
   }
   #aboutModal .timeline-filters,
-  #historyModal .timeline-filters {
+  #historyModal .timeline-filters,
+  #preservationModal .timeline-filters {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
   }
   #aboutModal .timeline-filters .timeline-filter,
-  #historyModal .timeline-filters .timeline-filter {
+  #historyModal .timeline-filters .timeline-filter,
+  #preservationModal .timeline-filters .timeline-filter {
     width: 100%;
   }
   #aboutModal .timeline-filters .timeline-filter:first-child, #aboutModal .timeline-filters .timeline-filter.timeline-filter-search,
   #historyModal .timeline-filters .timeline-filter:first-child,
-  #historyModal .timeline-filters .timeline-filter.timeline-filter-search {
+  #historyModal .timeline-filters .timeline-filter.timeline-filter-search,
+  #preservationModal .timeline-filters .timeline-filter:first-child,
+  #preservationModal .timeline-filters .timeline-filter.timeline-filter-search {
     grid-column: 1/-1;
   }
   #aboutModal .timeline-filters .timeline-filter select,
-  #historyModal .timeline-filters .timeline-filter select {
+  #historyModal .timeline-filters .timeline-filter select,
+  #preservationModal .timeline-filters .timeline-filter select {
     width: 100%;
   }
   #aboutModal .timeline-filters .timeline-filter-clear,
-  #historyModal .timeline-filters .timeline-filter-clear {
+  #historyModal .timeline-filters .timeline-filter-clear,
+  #preservationModal .timeline-filters .timeline-filter-clear {
     grid-column: 1/-1;
     width: 100%;
   }
@@ -10659,30 +10773,37 @@ body.modal-open {
   #aboutModal .timeline-filter-clear,
   #historyModal .timeline-filter select,
   #historyModal .timeline-filter-search input,
-  #historyModal .timeline-filter-clear {
+  #historyModal .timeline-filter-clear,
+  #preservationModal .timeline-filter select,
+  #preservationModal .timeline-filter-search input,
+  #preservationModal .timeline-filter-clear {
     min-height: var(--touch-target-min);
   }
 }
 #aboutModal .timeline-summary,
-#historyModal .timeline-summary {
+#historyModal .timeline-summary,
+#preservationModal .timeline-summary {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0;
   padding: var(--spacing-md);
 }
 #aboutModal,
-#historyModal {
+#historyModal,
+#preservationModal {
   /* Highlight animation for references */
 }
 #aboutModal .highlight,
-#historyModal .highlight {
+#historyModal .highlight,
+#preservationModal .highlight {
   background: var(--theme-glitter-image) repeat;
   color: var(--color-accent);
   transition: background-color 0.3s ease;
   border-radius: 2px;
 }
 #aboutModal sup,
-#historyModal sup {
+#historyModal sup,
+#preservationModal sup {
   margin-left: 2px;
   font-size: 0.7em;
   line-height: 1;
@@ -10691,20 +10812,24 @@ body.modal-open {
   top: -0.5em;
 }
 #aboutModal sup .ref-num,
-#historyModal sup .ref-num {
+#historyModal sup .ref-num,
+#preservationModal sup .ref-num {
   transition: color var(--transition-fast);
 }
 #aboutModal sup .ref-num:hover,
-#historyModal sup .ref-num:hover {
+#historyModal sup .ref-num:hover,
+#preservationModal sup .ref-num:hover {
   color: var(--color-accent-hover);
   text-decoration: underline;
 }
 #aboutModal > .modal-content > .modal-body ol li,
-#historyModal > .modal-content > .modal-body ol li {
+#historyModal > .modal-content > .modal-body ol li,
+#preservationModal > .modal-content > .modal-body ol li {
   transition: background-color 0.2s ease;
 }
 #aboutModal > .modal-content > .modal-body ol li:hover,
-#historyModal > .modal-content > .modal-body ol li:hover {
+#historyModal > .modal-content > .modal-body ol li:hover,
+#preservationModal > .modal-content > .modal-body ol li:hover {
   background-color: rgba(0, 102, 204, 0.05);
 }
 
@@ -11370,17 +11495,25 @@ label.settings-row-label-main {
   }
   #aboutModal,
   #historyModal,
+  #preservationModal,
   #guideModal {
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   }
   #aboutModal > .about-dialog,
   #aboutModal > .history-dialog,
+  #aboutModal > .preservation-dialog,
   #aboutModal > .guide-dialog,
   #historyModal > .about-dialog,
   #historyModal > .history-dialog,
+  #historyModal > .preservation-dialog,
   #historyModal > .guide-dialog,
+  #preservationModal > .about-dialog,
+  #preservationModal > .history-dialog,
+  #preservationModal > .preservation-dialog,
+  #preservationModal > .guide-dialog,
   #guideModal > .about-dialog,
   #guideModal > .history-dialog,
+  #guideModal > .preservation-dialog,
   #guideModal > .guide-dialog {
     width: 100%;
     height: 100%;

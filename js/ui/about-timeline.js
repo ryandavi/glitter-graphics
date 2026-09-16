@@ -1,16 +1,16 @@
 'use strict';
 
 /**
- * Renders the History modal's Timeline section from ABOUT_TIMELINE (see
+ * Renders the Preservation modal's Timeline section from ABOUT_TIMELINE (see
  * js/ui/about-timeline-data.js) and wires up its Topic/Country/Decade/company
- * filters. modals-wiring.js calls this from historyModal's onContentLoaded,
+ * filters. modals-wiring.js calls this from preservationModal's onContentLoaded,
  * before initDocumentModalNavigation indexes the modal for search — so the
  * page's search box sees the (unfiltered) rendered entries too.
  */
-function initAboutTimeline(modalBody) {
-	const filtersEl = modalBody.querySelector('#HistoryTimelineFilters');
-	const listEl = modalBody.querySelector('#HistoryTimelineList');
-	const summaryEl = modalBody.querySelector('#HistoryTimelineSummary');
+function initPreservationTimeline(modalBody) {
+	const filtersEl = modalBody.querySelector('#PreservationTimelineFilters');
+	const listEl = modalBody.querySelector('#PreservationTimelineList');
+	const summaryEl = modalBody.querySelector('#PreservationTimelineSummary');
 	if (!filtersEl || !listEl || !summaryEl || typeof ABOUT_TIMELINE === 'undefined') return;
 	if (filtersEl.dataset.initialized === 'true') return;
 	filtersEl.dataset.initialized = 'true';
@@ -60,14 +60,14 @@ function initAboutTimeline(modalBody) {
 		Object.keys(decadeCounts).sort().map(decade => ({ value: decade, label: `${decade} (${decadeCounts[decade]})` }))
 	);
 
-	const topic = makeSelect('HistoryTimelineTopic', 'Topic', topicOptions);
-	const country = makeSelect('HistoryTimelineCountry', 'Country', countryOptions);
-	const decade = makeSelect('HistoryTimelineDecade', 'Decade', decadeOptions);
+	const topic = makeSelect('PreservationTimelineTopic', 'Topic', topicOptions);
+	const country = makeSelect('PreservationTimelineCountry', 'Country', countryOptions);
+	const decade = makeSelect('PreservationTimelineDecade', 'Decade', decadeOptions);
 
 	const entityWrap = document.createElement('div');
 	entityWrap.className = 'timeline-filter timeline-filter-search';
 	const entityLabel = document.createElement('label');
-	entityLabel.htmlFor = 'HistoryTimelineEntity';
+	entityLabel.htmlFor = 'PreservationTimelineEntity';
 	entityLabel.textContent = 'Company / service';
 	const entityInputWrap = document.createElement('div');
 	entityInputWrap.className = 'search-input-wrapper';
@@ -77,12 +77,12 @@ function initAboutTimeline(modalBody) {
 	entityIcon.appendChild(createIcon('magnifying-glass'));
 	const entityInput = document.createElement('input');
 	entityInput.type = 'search';
-	entityInput.id = 'HistoryTimelineEntity';
-	entityInput.setAttribute('list', 'HistoryTimelineEntityList');
+	entityInput.id = 'PreservationTimelineEntity';
+	entityInput.setAttribute('list', 'PreservationTimelineEntityList');
 	entityInput.setAttribute('autocomplete', 'off');
 	entityInput.placeholder = 'e.g. Yahoo, Blingee, GeoCities…';
 	const datalist = document.createElement('datalist');
-	datalist.id = 'HistoryTimelineEntityList';
+	datalist.id = 'PreservationTimelineEntityList';
 	[...new Set(Object.values(ABOUT_TIMELINE_ENTITY_LABELS))]
 		.sort((a, b) => a.localeCompare(b))
 		.forEach(label => {
@@ -141,9 +141,11 @@ function initAboutTimeline(modalBody) {
 
 		listEl.replaceChildren();
 		matches.forEach(item => listEl.appendChild(buildTimelineItem(item)));
+		listEl.scrollTop = 0;
 		initTooltipsInContainer(listEl);
 
 		const filtersActive = state.topic !== 'all' || state.country !== 'all' || state.decade !== 'all' || query !== '';
+		clearBtn.disabled = !filtersActive;
 		listEl.classList.toggle('timeline-list-empty', matches.length === 0);
 
 		if (matches.length === 0) {
