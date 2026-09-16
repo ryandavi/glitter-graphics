@@ -58,6 +58,44 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.updateHistoryButtons();
 	}
 
+	// Bounding box (canvas pixel coords) of everything that counts as
+	// "artwork": every movable layer's handle frame (same getFrameMetrics used
+	// by zoomToSelection/snapping — see transform-interaction.js). The base
+	// image is deliberately NOT included — it defines the canvas by
+	// construction (canvas dims = image dims on load) and is almost always
+	// opaque edge-to-edge, so folding it in would make this a no-op for the
+	// common case. Glitter-fill paint isn't included either: it has no bounds
+	// independent of the base image it sits on. Returns null if there's
+	// nothing to bound (no movable layers). Feeds cropCanvasToArtwork
+	// (canvas-size.js).
+,
+	getArtworkBounds() {
+		if (!this.originalImage) return null;
+		let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+		this.layers.forEach((layer) => {
+			if (layer.visible === false) return;
+			const metrics = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+			if (!metrics) return;
+			minX = Math.min(minX, metrics.minX);
+			minY = Math.min(minY, metrics.minY);
+			maxX = Math.max(maxX, metrics.maxX);
+			maxY = Math.max(maxY, metrics.maxY);
+		});
+
+		if (!Number.isFinite(minX) || !Number.isFinite(maxX)) return null;
+
+		// Deliberately NOT clamped to the current canvas: content sticking out
+		// past an edge should grow the canvas out to meet it, not get truncated
+		// back to the edge it's already past.
+		minX = Math.floor(minX);
+		minY = Math.floor(minY);
+		maxX = Math.ceil(maxX);
+		maxY = Math.ceil(maxY);
+
+		return { minX, minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
+	}
+
 	// Structural canvas resize (Photoshop "Canvas Size"): change the canvas
 	// bounds WITHOUT resampling. Content keeps its pixel size; it's translated by
 	// (offsetX, offsetY) — where the old top-left lands in the new canvas — then

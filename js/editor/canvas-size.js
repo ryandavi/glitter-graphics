@@ -16,6 +16,9 @@ get CANVAS_ANCHORS() {
 		const extensionMode = document.getElementById('canvasExtensionMode');
 		const applyBtn = document.getElementById('canvasSizeApply');
 		const resetBtn = document.getElementById('canvasSizeReset');
+		const artworkPaddingInput = document.getElementById('artworkCropPadding');
+		const artworkCropApplyBtn = document.getElementById('artworkCropApply');
+		const artworkCropResetBtn = document.getElementById('artworkCropReset');
 		if (!anchorGrid || !widthInput || !heightInput || !applyBtn) return;
 
 		// Center anchor by default.
@@ -76,11 +79,24 @@ get CANVAS_ANCHORS() {
 		});
 		applyBtn.addEventListener('click', () => this.applyCanvasSize());
 
+		artworkPaddingInput?.addEventListener('input', () => {
+			this.updateArtworkCropSummary();
+			this.syncDocumentSizeReverts();
+		});
+		artworkCropResetBtn?.addEventListener('click', () => {
+			if (artworkPaddingInput) {
+				artworkPaddingInput.value = '0';
+				artworkPaddingInput.dispatchEvent(new Event('input', { bubbles: true }));
+			}
+		});
+		artworkCropApplyBtn?.addEventListener('click', () => this.cropCanvasToArtwork());
+
 		// Keep the inputs showing the live canvas size whenever an image loads or
 		// the panel could become visible.
 		window.addEventListener('imageLoaded', () => {
 			this.syncCanvasSizeInputs();
 			this.syncCanvasExtensionControls();
+			this.updateArtworkCropSummary();
 		});
 		this.setupDocumentSizeModeControls();
 		this.syncCanvasSizeInputs();
@@ -120,7 +136,8 @@ get CANVAS_ANCHORS() {
 			scaleDesignWidth: width,
 			scaleDesignHeight: height,
 			scaleDesignTextures: true,
-			scaleDesignEffects: true
+			scaleDesignEffects: true,
+			artworkCropPadding: 0
 		};
 	}
 
@@ -178,16 +195,23 @@ get CANVAS_ANCHORS() {
 
 ,
 	setDocumentSizeMode(mode) {
-		const resolved = mode === 'canvas' ? 'canvas' : 'image';
+		const resolved = ['canvas', 'artwork'].includes(mode) ? mode : 'image';
 		const sizeSummary = document.getElementById('noLayerSizeSummary');
-		if (sizeSummary) sizeSummary.textContent = resolved === 'canvas' ? 'Canvas Size' : 'Image Size';
+		if (sizeSummary) {
+			sizeSummary.textContent = resolved === 'canvas' ? 'Canvas' : resolved === 'artwork' ? 'Artwork' : 'Image';
+		}
+		// A note's `data-size-mode-note` is one mode, or several space-separated
+		// (the shared extension-fill block applies to both Canvas Size and
+		// Artwork, since both can grow the canvas beyond its current bounds).
 		document.querySelectorAll('#documentSizeGroup [data-size-mode-note]').forEach((note) => {
-			note.hidden = note.dataset.sizeModeNote !== resolved;
+			note.hidden = !note.dataset.sizeModeNote.split(/\s+/).includes(resolved);
 		});
 		document.getElementById('scaleDesignPanel').hidden = resolved !== 'image';
 		document.getElementById('canvasSizePanel').hidden = resolved !== 'canvas';
+		document.getElementById('artworkCropPanel').hidden = resolved !== 'artwork';
 		document.getElementById('scaleDesignActions')?.toggleAttribute('hidden', resolved !== 'image');
 		document.getElementById('canvasSizeActions')?.toggleAttribute('hidden', resolved !== 'canvas');
+		document.getElementById('artworkCropActions')?.toggleAttribute('hidden', resolved !== 'artwork');
 		document.querySelectorAll('#documentSizeMode [data-size-mode]').forEach((button) => {
 			const active = button.dataset.sizeMode === resolved;
 			button.classList.toggle('active', active);
@@ -195,6 +219,7 @@ get CANVAS_ANCHORS() {
 		});
 		if (resolved === 'canvas') this.updateCanvasResizePreview();
 		else this.hideCanvasResizePreview();
+		if (resolved === 'artwork') this.updateArtworkCropSummary();
 		this.syncDocumentSizeReverts();
 	}
 
@@ -299,6 +324,73 @@ get CANVAS_ANCHORS() {
 			: null;
 		this.resizeCanvas(newWidth, newHeight, offsetX, offsetY, { extensionColor });
 		this.syncCanvasSizeInputs();
+	}
+
+	// The Artwork mode's target rect: the artwork bounds (getArtworkBounds,
+	// canvas-resize.js) grown by the Padding field on every side. Shared by the
+	// live summary and the apply action so they can never disagree.
+,
+	getArtworkCropTarget() {
+		const bounds = this.getArtworkBounds();
+		if (!bounds) return null;
+		const padding = Math.max(0, Math.round(Number(document.getElementById('artworkCropPadding')?.value) || 0));
+		return {
+			bounds,
+			padding,
+			minX: bounds.minX - padding,
+			minY: bounds.minY - padding,
+			width: bounds.width + padding * 2,
+			height: bounds.height + padding * 2
+		};
+	}
+
+,
+	updateArtworkCropSummary() {
+		const host = document.getElementById('artworkCropSummary');
+		if (!host) return;
+		const target = this.getArtworkCropTarget();
+		if (!target) {
+			host.textContent = 'Nothing to crop to — canvas has no artwork.';
+			host.classList.remove('is-error');
+			return;
+		}
+		const { bounds, padding, width, height } = target;
+		const overLimit = width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight;
+		host.textContent = padding > 0
+			? `Artwork is ${bounds.width} × ${bounds.height} px. With ${padding}px padding, the canvas becomes ${width} × ${height} px.`
+			: `Artwork is ${bounds.width} × ${bounds.height} px.`;
+		if (overLimit) {
+			host.textContent += ` Exceeds the ${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight} px canvas limit.`;
+		}
+		host.classList.toggle('is-error', overLimit);
+	}
+
+	// Resize the canvas down (or up) to exactly enclose the current artwork,
+	// plus any Padding. Reuses resizeCanvas, so this gets the same undoable
+	// history checkpoint as every other canvas-size change — no separate
+	// confirmation dialog needed — and the same extension-fill choice
+	// (canvasExtensionMode/canvasExtensionColor) Canvas Size mode uses for the
+	// margins padding adds beyond the old canvas edges.
+,
+	cropCanvasToArtwork() {
+		if (!this.originalImage) return;
+		const target = this.getArtworkCropTarget();
+		if (!target) {
+			this.updateStatus('Nothing to crop to — canvas has no artwork.');
+			return;
+		}
+		const { minX, minY, width, height } = target;
+		if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) return;
+		if (minX === 0 && minY === 0 && width === this.originalCanvas.width && height === this.originalCanvas.height) {
+			this.updateStatus('Canvas already matches the artwork bounds.');
+			return;
+		}
+		const extensionColor = this.canvasExtensionMode === 'color'
+			? document.getElementById('canvasExtensionColor')?.value || '#ffffff'
+			: null;
+		this.resizeCanvas(width, height, -minX, -minY, { extensionColor });
+		this.syncCanvasSizeInputs();
+		this.updateArtworkCropSummary();
 	}
 
 ,

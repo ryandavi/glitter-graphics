@@ -2339,28 +2339,27 @@ const PANEL_SCHEMAS = {
 		fragmentId: 'documentSizeGroup',
 		fragmentHost: 'noLayerCanvasSizeHost',
 		fragmentClasses: 'document-size-group',
-		fragmentCard: { title: 'Size', collapsible: true, summaryId: 'noLayerSizeSummary', summaryText: 'Image Size' },
+		fragmentCard: { title: 'Size', collapsible: true, summaryId: 'noLayerSizeSummary', summaryText: 'Image' },
 		items: [
 			// Operation and its mode-specific explanation form one property set;
 			// the selected mode panel begins the next divided set of controls.
 			{ kind: 'set', items: [
 				{ kind: 'segmented', id: 'documentSizeMode', visibleLabel: 'Operation', label: 'Sizing operation',
 					classes: 'document-size-mode', stacked: false, options: [
-						{ label: 'Image Size', active: true, attrs: { 'data-size-mode': 'image', 'aria-pressed': 'true' } },
-						{ label: 'Canvas Size', attrs: { 'data-size-mode': 'canvas', 'aria-pressed': 'false' } }
+						{ label: 'Image', active: true, attrs: { 'data-size-mode': 'image', 'aria-pressed': 'true' } },
+						{ label: 'Canvas', attrs: { 'data-size-mode': 'canvas', 'aria-pressed': 'false' } },
+						{ label: 'Artwork', attrs: { 'data-size-mode': 'artwork', 'aria-pressed': 'false' } }
 					] },
 				{ kind: 'host', classes: 'property-note', attrs: { 'data-size-mode-note': 'image' }, text: 'Resize the canvas and everything in the design. Proportions stay linked.' },
-				{ kind: 'host', classes: 'property-note', attrs: { 'data-size-mode-note': 'canvas', hidden: 'hidden' }, text: 'Crop or extend the canvas without scaling content.' }
+				{ kind: 'host', classes: 'property-note', attrs: { 'data-size-mode-note': 'canvas', hidden: 'hidden' }, text: 'Crop or extend the canvas without scaling content.' },
+				{ kind: 'host', classes: 'property-note', attrs: { 'data-size-mode-note': 'artwork', hidden: 'hidden' }, text: 'Crop or extend the canvas to fit the artwork, with optional padding.' }
 			] },
-			// `#canvasSizePanel` / `#scaleDesignPanel` are zero-padding `.property-set`
-			// wrappers (canvas-size.js toggles their `hidden`); Operation → mode
-			// panel and the inner groups are all hairline-divided by the shared
-			// `.property-set + .property-set` rule, the same as the Transform grid.
-			// Each mode panel is a zero-padding `.property-set` wrapper (canvas-size.js
-			// toggles its `hidden`); its inner `.property-set` groups — notes, the
-			// size fields, the fill — are hairline-divided by `.property-set +
-			// .property-set`, the same as the Transform grid. The Reset/Apply rows
-			// are top-level card items so buildPanelItem lifts them to card footers.
+			// `#canvasSizePanel` / `#scaleDesignPanel` / `#artworkCropPanel` are
+			// zero-padding `.property-set` wrappers (canvas-size.js toggles their
+			// `hidden`); Operation → mode panel and the inner groups are all
+			// hairline-divided by the shared `.property-set + .property-set` rule,
+			// the same as the Transform grid. The Reset/Apply rows are top-level
+			// card items so buildPanelItem lifts them to card footers.
 			{ kind: 'content', id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, items: [
 				{ kind: 'set', items: [
 					{ kind: 'host', id: 'canvasSizeLimitMessage', classes: 'property-note canvas-size-limit-message', attrs: { role: 'status' } },
@@ -2371,15 +2370,6 @@ const PANEL_SCHEMAS = {
 					{ kind: 'checkboxList', items: [ { id: 'canvasSizeRelative', label: 'Relative', revert: 'canvasSizeRelative' } ] },
 					{ kind: 'labeled', label: 'Anchor', stacked: true, revert: 'canvasSizeAnchor', control: { kind: 'host', id: 'canvasSizeAnchor',
 						classes: 'anchor-grid', attrs: { role: 'radiogroup', 'aria-label': 'Canvas resize anchor' } } }
-				] },
-				{ kind: 'set', items: [
-					{ kind: 'segmented', id: 'canvasExtensionMode', visibleLabel: 'Extension', label: 'Canvas extension fill',
-						classes: 'canvas-extension-mode', stacked: false, revertFor: 'canvasExtensionMode', options: [
-							{ label: 'Transparent', active: true, attrs: { 'data-extension-mode': 'transparent', 'aria-pressed': 'true' } },
-							{ label: 'Color', attrs: { 'data-extension-mode': 'color', 'aria-pressed': 'false' } }
-						] },
-					{ kind: 'field', id: 'canvasExtensionColor', rowId: 'canvasExtensionColorRow', label: 'Fill Color',
-						type: 'color', value: '#ffffff', hidden: true, revert: true }
 				] }
 			] },
 			{ kind: 'content', id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', items: [
@@ -2397,13 +2387,36 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
+			{ kind: 'content', id: 'artworkCropPanel', classes: 'document-size-panel artwork-crop-controls', hidden: true, items: [
+				{ kind: 'set', items: [
+					{ kind: 'host', id: 'artworkCropSummary', classes: 'property-note artwork-crop-summary', attrs: { role: 'status' } },
+					{ kind: 'field', id: 'artworkCropPadding', label: 'Padding', type: 'number', unit: 'px', min: 0, step: 1, value: 0, revert: 'artworkCropPadding' }
+				] }
+			] },
+			// Extension fill applies to both structural resizes that can grow the
+			// canvas beyond its current bounds — Canvas Size, and Artwork padding
+			// that pushes past the old edges — so it's one shared block (not
+			// duplicated per panel) shown for either mode.
+			{ kind: 'set', hidden: true, attrs: { 'data-size-mode-note': 'canvas artwork' }, items: [
+				{ kind: 'segmented', id: 'canvasExtensionMode', visibleLabel: 'Extension', label: 'Canvas extension fill',
+					classes: 'canvas-extension-mode', stacked: false, revertFor: 'canvasExtensionMode', options: [
+						{ label: 'Transparent', active: true, attrs: { 'data-extension-mode': 'transparent', 'aria-pressed': 'true' } },
+						{ label: 'Color', attrs: { 'data-extension-mode': 'color', 'aria-pressed': 'false' } }
+					] },
+				{ kind: 'field', id: 'canvasExtensionColor', rowId: 'canvasExtensionColorRow', label: 'Fill Color',
+					type: 'color', value: '#ffffff', hidden: true, revert: true }
+			] },
 			{ kind: 'actionRow', id: 'canvasSizeActions', classes: 'canvas-size-actions is-split', hidden: true, actions: [
 				{ id: 'canvasSizeReset', label: 'Reset' },
 				{ id: 'canvasSizeApply', label: 'Resize Canvas', primary: true }
 			] },
 			{ kind: 'actionRow', id: 'scaleDesignActions', classes: 'scale-design-actions is-split', actions: [
 				{ id: 'scaleDesignReset', label: 'Reset' },
-				{ id: 'scaleDesignApply', label: 'Apply', primary: true }
+				{ id: 'scaleDesignApply', label: 'Scale Image', primary: true }
+			] },
+			{ kind: 'actionRow', id: 'artworkCropActions', classes: 'artwork-crop-actions is-split', hidden: true, actions: [
+				{ id: 'artworkCropReset', label: 'Reset' },
+				{ id: 'artworkCropApply', label: 'Crop to Artwork', primary: true }
 			] }
 		]
 	}
