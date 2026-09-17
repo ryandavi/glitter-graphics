@@ -128,6 +128,28 @@
         "sortOrder": 131
     },
     {
+        "id": 223,
+        "name": "Bird_flowers_glitter",
+        "filename": "bird_flowers_glitter.gif",
+        "url": "images/stickers/flower/bird_flowers_glitter.gif",
+        "thumbnailUrl": "images/stickers/flower/bird_flowers_glitter.gif",
+        "category": "flower",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "bird",
+            "branch",
+            "flower",
+            "glitter",
+            "pink"
+        ],
+        "searchTerms": [],
+        "isAnimated": 1,
+        "hasTransparency": 1,
+        "isPixelated": 1,
+        "sortOrder": 0
+    },
+    {
         "id": 6,
         "name": "Flower Gold Glitter",
         "filename": "flower_gold-glitter.gif",
@@ -4157,6 +4179,28 @@
         "hasTransparency": 1,
         "isPixelated": 1,
         "sortOrder": 4
+    },
+    {
+        "id": 222,
+        "name": "Heart_rhinestone_silver",
+        "filename": "heart_rhinestone_silver.gif",
+        "url": "images/stickers/decorative/heart_rhinestone_silver.gif",
+        "thumbnailUrl": "images/stickers/decorative/heart_rhinestone_silver.gif",
+        "category": "decorative",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "chrome",
+            "glitter",
+            "heart",
+            "rhinestone",
+            "white"
+        ],
+        "searchTerms": [],
+        "isAnimated": 1,
+        "hasTransparency": 1,
+        "isPixelated": 1,
+        "sortOrder": 0
     },
     {
         "id": 5,

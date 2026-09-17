@@ -901,7 +901,6 @@ class StickerManager extends ContentManager {
 
 			// Update data
 			activeLayer.stickerData.isEmpty = false;
-			activeLayer.stickerData.url = stickerInfo.url;
 			activeLayer.stickerData.baseUrl = stickerInfo.url;
 			activeLayer.stickerData.variantUrls = stickerInfo.variantUrls || null;
 			activeLayer.stickerData.name = stickerInfo.name;
@@ -911,6 +910,15 @@ class StickerManager extends ContentManager {
 			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
 			activeLayer.stickerData.isPixelated = stickerInfo.isPixelated !== false;
 			activeLayer.stickerData.frameCount = stickerInfo.frameCount || 1;
+
+			// Pick the resolution that matches the layer's current (possibly
+			// scaled-up) size, not always the base — same rule commitResolutionSwap
+			// applies after a resize gesture.
+			const scalePercent = activeLayer.transform?.scale?.x ?? 100;
+			const renderedWidth = stickerInfo.width * (scalePercent / 100);
+			activeLayer.stickerData.url = StickerVariants.pickBestUrl(
+				stickerInfo.url, stickerInfo.width, stickerInfo.variantUrls, renderedWidth
+			);
 
 			// Clear cached frame data when changing sticker
 			activeLayer.stickerData.frames = null;

@@ -29,12 +29,12 @@
         "icon": "images/stickers/flower/rose_red-green-glitter.gif",
         "color": "#ff6fa5",
         "description": "",
-        "count": 22
+        "count": 23
     },
     {
         "id": "twitter",
         "name": "Twitter",
-        "icon": "images/stickers/twitter/21416_256.png",
+        "icon": "images/stickers/twitter/21416.png",
         "color": "#1da1f2",
         "description": "Twitter\u2019s official sticker collection, introduced on June 27, 2016 for decorating photos before posting. Stickers could be resized, rotated, and placed anywhere on an image, and public posts using them could be discovered through the sticker itself. The feature was discontinued in April 2026 when X replaced its previous image-editing interface with a new Photo Editor.",
         "count": 21,
@@ -53,7 +53,7 @@
         "icon": "images/stickers/decorative/rainbow_glitter.gif",
         "color": "#f2a65a",
         "description": "",
-        "count": 19
+        "count": 20
     },
     {
         "id": "jewelry",

@@ -188,6 +188,58 @@
         "variantUrls": []
     },
     {
+        "id": 223,
+        "name": "Bird_flowers_glitter",
+        "filename": "bird_flowers_glitter.gif",
+        "url": "images/stickers/flower/bird_flowers_glitter.gif",
+        "thumbnailUrl": "images/stickers/flower/bird_flowers_glitter.gif",
+        "category": "flower",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "bird",
+            "branch",
+            "flower",
+            "glitter",
+            "pink"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#171717",
+            "#DEDEDE",
+            "#5A5A00",
+            "#FF33FF",
+            "#BF0112",
+            "#002B82",
+            "#009920",
+            "#0666FF",
+            "#06D6FF"
+        ],
+        "colorWeights": [
+            0.25,
+            0.14,
+            0.08,
+            0.07,
+            0.06,
+            0.03,
+            0.02,
+            0.02,
+            0.02
+        ],
+        "paletteType": "multicolor",
+        "isAnimated": 1,
+        "hasTransparency": 1,
+        "isPixelated": 1,
+        "width": 131,
+        "height": 358,
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": 0,
+        "fileSize": 9597,
+        "sortOrder": 0,
+        "variantUrls": []
+    },
+    {
         "id": 6,
         "name": "Flower Gold Glitter",
         "filename": "flower_gold-glitter.gif",
@@ -6316,6 +6368,46 @@
         "isVariableFramerate": 0,
         "fileSize": 4623,
         "sortOrder": 4,
+        "variantUrls": []
+    },
+    {
+        "id": 222,
+        "name": "Heart_rhinestone_silver",
+        "filename": "heart_rhinestone_silver.gif",
+        "url": "images/stickers/decorative/heart_rhinestone_silver.gif",
+        "thumbnailUrl": "images/stickers/decorative/heart_rhinestone_silver.gif",
+        "category": "decorative",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "chrome",
+            "glitter",
+            "heart",
+            "rhinestone",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#D6D9D8",
+            "#3C3C3B",
+            "#858687"
+        ],
+        "colorWeights": [
+            0.56,
+            0.21,
+            0.18
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 1,
+        "hasTransparency": 1,
+        "isPixelated": 1,
+        "width": 100,
+        "height": 100,
+        "frameCount": 6,
+        "frameRate": 10,
+        "isVariableFramerate": 0,
+        "fileSize": 23878,
+        "sortOrder": 0,
         "variantUrls": []
     },
     {
