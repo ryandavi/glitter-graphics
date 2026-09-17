@@ -22,15 +22,17 @@ class AdminDashboard {
 		this.bulkActions = {
 			activate: { label: count => `Publish ${count}`, confirm: count => `Publish ${count} pending asset(s)? They ship on the next Export JSON.` },
 			register: { label: count => `Add ${count} to library`, confirm: count => `Add ${count} unregistered file(s)? Each is analyzed and lands as pending review.` },
-			reanalyze: { label: count => `Re-analyze ${count}`, confirm: count => `Re-analyze ${count} asset(s)?` }
+			reanalyze: { label: count => `Re-analyze ${count}`, confirm: count => `Re-analyze ${count} asset(s)?` },
+			attach_variants: { label: count => `Attach variants to ${count}`, confirm: count => `Attach the detected size variants to ${count} sticker(s)?` }
 		};
 		// Each overview tile owns the set of issue codes it counts, so the
 		// count and the filtered queue can never disagree.
 		this.overviewGroups = {
 			'Pending review': ['pending'],
 			'Broken references': ['missing', 'unreadable_file', 'unsafe_file_type'],
-			'Unregistered files': ['orphan'],
-			'Analysis stale/failed': ['analysis_missing', 'analysis_stale']
+			'Unregistered files': ['orphan', 'orphaned_variant'],
+			'Analysis stale/failed': ['analysis_missing', 'analysis_stale'],
+			'Variants available': ['variant_available']
 		};
 		this.issueCopy = {
 			pending: ['Pending review', 'This upload is waiting for a publishing decision.'],
@@ -42,7 +44,9 @@ class AdminDashboard {
 			thumbnail_missing: ['Thumbnail missing', 'The stored thumbnail is unavailable.'],
 			category_path_mismatch: ['Category path mismatch', 'The URL folder does not match the assigned category slug.'],
 			unsafe_file_type: ['Unsupported file', 'The file type is outside the configured safe formats.'],
-			unreadable_file: ['Unreadable file', 'The file is empty or cannot be read.']
+			unreadable_file: ['Unreadable file', 'The file is empty or cannot be read.'],
+			orphaned_variant: ['Orphaned variant', 'This file looks like a size variant, but its base file is missing — it will not be attached to anything.'],
+			variant_available: ['Variant available', 'A larger or smaller version of this asset was found on disk and can be attached.']
 		};
 	}
 
@@ -208,6 +212,7 @@ class AdminDashboard {
 		if (item.issue === 'pending') return item.details?.ingest ? null : 'activate';
 		if (item.issue === 'orphan') return 'register';
 		if (item.issue === 'analysis_missing' || item.issue === 'analysis_stale') return 'reanalyze';
+		if (item.issue === 'variant_available') return 'attach_variants';
 		return null;
 	}
 
@@ -255,7 +260,8 @@ class AdminDashboard {
 			const summary = await ({
 				activate: () => this.bulkActivate(items),
 				register: () => this.bulkRegister(items),
-				reanalyze: () => this.bulkReanalyze(items)
+				reanalyze: () => this.bulkReanalyze(items),
+				attach_variants: () => this.bulkAttachVariants(items)
 			})[action]();
 			this.toast(summary);
 			this.selection = new Set();
@@ -414,6 +420,27 @@ class AdminDashboard {
 		return `${updated} re-analyzed`;
 	}
 
+	async bulkAttachVariants(items) {
+		let attached = 0;
+		const failures = [];
+		for (const [index, item] of items.entries()) {
+			this.setBulkProgress(`Attaching ${index + 1} of ${items.length}…`);
+			try {
+				await AdminAPI.json(`includes/api.php?action=attach_variants&type=${encodeURIComponent(item.asset_type)}`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: item.id })
+				});
+				attached++;
+			} catch (error) {
+				failures.push(`${item.name}: ${error.message}`);
+			}
+		}
+		if (!failures.length) return `${attached} attached`;
+		this.bulkReport = { title: `${attached} attached, ${failures.length} failed`, lines: failures };
+		return `${attached} attached, ${failures.length} failed`;
+	}
+
 	groupByType(items) {
 		const groups = new Map();
 		for (const item of items) {
@@ -459,8 +486,8 @@ class AdminDashboard {
 
 	issueTone(issue) {
 		if (['missing', 'duplicate', 'unsafe_file_type', 'unreadable_file'].includes(issue)) return 'critical';
-		if (['orphan', 'thumbnail_missing'].includes(issue)) return 'info';
-		if (['pending', 'analysis_missing', 'analysis_stale', 'category_path_mismatch'].includes(issue)) return 'warning';
+		if (['orphan', 'thumbnail_missing', 'variant_available'].includes(issue)) return 'info';
+		if (['pending', 'analysis_missing', 'analysis_stale', 'category_path_mismatch', 'orphaned_variant'].includes(issue)) return 'warning';
 		return 'info';
 	}
 
@@ -474,9 +501,11 @@ class AdminDashboard {
 			missing: `<a class="btn btn-primary btn-sm" href="${page}?asset=${item.id}">Open record</a>`,
 			duplicate: `<a class="btn btn-primary btn-sm" href="${page}?asset=${item.id}">Review records</a>`,
 			analysis_missing: `<a class="btn btn-primary btn-sm" href="${page}?asset=${item.id}&analyze=1">Re-analyze</a>`,
-			analysis_stale: `<a class="btn btn-primary btn-sm" href="${page}?asset=${item.id}&analyze=1">Re-analyze</a>`
-		}[item.issue] || `<a class="btn btn-secondary btn-sm" href="${page}?asset=${item.id || ''}">Review</a>`;
-		return primary;
+			analysis_stale: `<a class="btn btn-primary btn-sm" href="${page}?asset=${item.id}&analyze=1">Re-analyze</a>`,
+			variant_available: `<a class="btn btn-primary btn-sm" href="${page}?asset=${item.id}">Open record</a>`,
+			orphaned_variant: ''
+		}[item.issue];
+		return primary !== undefined ? primary : `<a class="btn btn-secondary btn-sm" href="${page}?asset=${item.id || ''}">Review</a>`;
 	}
 
 	renderActivity(events) {

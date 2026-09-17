@@ -1,6 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/assetPathService.php');
+require_once(__DIR__ . '/assetVariantService.php');
 require_once(__DIR__ . '/exportStateService.php');
 
 class AssetHealthService
@@ -10,6 +11,7 @@ class AssetHealthService
 	private $assetType;
 	private $tables;
 	private $paths;
+	private $variants;
 
 	public function __construct($db, $config, $assetType)
 	{
@@ -18,6 +20,7 @@ class AssetHealthService
 		$this->assetType = $assetType;
 		$this->tables = $config['asset_types'][$assetType];
 		$this->paths = new AssetPathService($config);
+		$this->variants = new AssetVariantService($config);
 	}
 
 	public function report()
@@ -115,17 +118,88 @@ class AssetHealthService
 		}
 	}
 
+	// A file is only a "variant" of another (and never listed as its own
+	// orphan) when a base file with the same stem exists — see
+	// docs/STICKER-MULTI-RESOLUTION-PLAN.md's "Variant detection rule". This
+	// runs as a standing scan, not just at initial add, so a `_1024` sibling
+	// dropped next to a sticker that's been live for months is picked up the
+	// same way a brand-new one would be, and surfaces as `variant_available`
+	// on the existing row rather than a fresh orphan.
 	private function findOrphans($knownUrls, &$issues)
 	{
 		$root = $this->paths->managedRoot($this->assetType);
 		if (!is_dir($root)) return;
 		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
+
+		// Multi-resolution variants are a sticker-only concept (see
+		// docs/STICKER-MULTI-RESOLUTION-PLAN.md's Scope) — every other asset
+		// type keeps the plain orphan-only scan it always had.
+		$variantAware = $this->assetType === 'sticker';
+
+		$plainFiles = [];
+		$variantsByBaseUrl = [];
 		foreach ($iterator as $file) {
 			if (!$file->isFile() || strpos($file->getPathname(), DIRECTORY_SEPARATOR . '.thumbs' . DIRECTORY_SEPARATOR) !== false) continue;
 			$extension = strtolower($file->getExtension());
 			if (!isset($this->config['allowed_asset_types'][$extension])) continue;
+
+			$directory = dirname($file->getPathname());
+			$filename = $file->getFilename();
+			$parsed = $variantAware ? $this->variants->parseVariantFilename($filename) : null;
+			if (!$parsed) {
+				$plainFiles[] = $file;
+				continue;
+			}
+
+			// The base file may not exist (that's exactly the orphaned_variant
+			// case), so its URL is derived from this file's own real URL
+			// rather than resolved through fileToUrl(), which requires the
+			// path it's given to exist on disk.
 			$url = $this->paths->fileToUrl($file->getPathname(), $this->assetType);
-			if (isset($knownUrls[$url])) continue;
+			$baseUrl = substr($url, 0, strrpos($url, '/') + 1) . $parsed['baseStem'] . '.' . $extension;
+			$baseExists = $this->variants->baseFileExists($directory, $parsed['baseStem'], $extension) || isset($knownUrls[$baseUrl]);
+			if (!$baseExists) {
+				$issues[] = [
+					'issue' => 'orphaned_variant',
+					'severity' => $this->severity('orphaned_variant'),
+					'asset_type' => $this->assetType,
+					'id' => null,
+					'name' => basename($url),
+					'url' => $url,
+					'thumbnail_url' => $url,
+					'category' => null,
+					'details' => ['expected_base' => $baseUrl],
+					'actions' => [],
+				];
+				continue;
+			}
+			$dimensions = @getimagesize($file->getPathname());
+			if (!$dimensions) continue;
+			$width = (int)$dimensions[0];
+			$variantsByBaseUrl[$baseUrl][(string)$width] = ['url' => $url, 'width' => $width, 'height' => (int)$dimensions[1]];
+		}
+
+		foreach ($plainFiles as $file) {
+			$url = $this->paths->fileToUrl($file->getPathname(), $this->assetType);
+			$detectedVariants = $variantsByBaseUrl[$url] ?? [];
+			if (isset($knownUrls[$url])) {
+				$row = $knownUrls[$url][0];
+				$newVariants = array_diff_key($detectedVariants, $this->variants->decodeVariantUrls($row['variant_urls'] ?? null));
+				if (!$newVariants) continue;
+				$issues[] = [
+					'issue' => 'variant_available',
+					'severity' => $this->severity('variant_available'),
+					'asset_type' => $this->assetType,
+					'id' => (int)$row['id'],
+					'name' => $row['name'],
+					'url' => $url,
+					'thumbnail_url' => $url,
+					'category' => $row['category_name'] ?? null,
+					'details' => ['variants' => $newVariants],
+					'actions' => ['attach_variants'],
+				];
+				continue;
+			}
 			$parts = explode('/', $url);
 			$issues[] = [
 				'issue' => 'orphan',
@@ -136,7 +210,7 @@ class AssetHealthService
 				'url' => $url,
 				'thumbnail_url' => $url,
 				'category' => count($parts) > 2 ? $parts[count($parts) - 2] : null,
-				'details' => ['bytes' => (int)$file->getSize()],
+				'details' => ['bytes' => (int)$file->getSize(), 'variants' => $detectedVariants],
 				'actions' => ['review_add'],
 			];
 		}

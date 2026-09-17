@@ -1,9 +1,9 @@
 {
     "id": 247,
     "name": "BFF Pink Heart",
-    "filename": "21426_256.png",
-    "url": "images/stickers/twitter/21426_256.png",
-    "thumbnailUrl": "images/stickers/twitter/21426_256.png",
+    "filename": "21426.png",
+    "url": "images/stickers/twitter/21426.png",
+    "thumbnailUrl": "images/stickers/twitter/21426.png",
     "category": "twitter",
     "attribution": null,
     "stickerText": "BFF",
@@ -36,5 +36,22 @@
     "frameRate": 0,
     "isVariableFramerate": 0,
     "fileSize": 20588,
-    "sortOrder": 0
+    "sortOrder": 0,
+    "variantUrls": {
+        "1024": {
+            "url": "images/stickers/twitter/21426_1024.png",
+            "width": 1024,
+            "height": 1024
+        },
+        "512": {
+            "url": "images/stickers/twitter/21426_512.png",
+            "width": 512,
+            "height": 512
+        },
+        "2048": {
+            "url": "images/stickers/twitter/21426_2048.png",
+            "width": 2048,
+            "height": 2048
+        }
+    }
 }

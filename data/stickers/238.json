@@ -1,9 +1,9 @@
 {
     "id": 238,
     "name": "Pink and Purple Split Dye Wig",
-    "filename": "11661_256.png",
-    "url": "images/stickers/twitter/11661_256.png",
-    "thumbnailUrl": "images/stickers/twitter/11661_256.png",
+    "filename": "11661.png",
+    "url": "images/stickers/twitter/11661.png",
+    "thumbnailUrl": "images/stickers/twitter/11661.png",
     "category": "twitter",
     "attribution": null,
     "stickerText": null,
@@ -30,5 +30,22 @@
     "frameRate": 0,
     "isVariableFramerate": 0,
     "fileSize": 26655,
-    "sortOrder": 0
+    "sortOrder": 0,
+    "variantUrls": {
+        "1024": {
+            "url": "images/stickers/twitter/11661_1024.png",
+            "width": 1024,
+            "height": 1024
+        },
+        "512": {
+            "url": "images/stickers/twitter/11661_512.png",
+            "width": 512,
+            "height": 512
+        },
+        "2048": {
+            "url": "images/stickers/twitter/11661_2048.png",
+            "width": 2048,
+            "height": 2048
+        }
+    }
 }

@@ -1,9 +1,9 @@
 {
     "id": 242,
     "name": "#Twinning",
-    "filename": "21430_256.png",
-    "url": "images/stickers/twitter/21430_256.png",
-    "thumbnailUrl": "images/stickers/twitter/21430_256.png",
+    "filename": "21430.png",
+    "url": "images/stickers/twitter/21430.png",
+    "thumbnailUrl": "images/stickers/twitter/21430.png",
     "category": "twitter",
     "attribution": null,
     "stickerText": "#Twinning",
@@ -35,5 +35,22 @@
     "frameRate": 0,
     "isVariableFramerate": 0,
     "fileSize": 9459,
-    "sortOrder": 0
+    "sortOrder": 0,
+    "variantUrls": {
+        "1024": {
+            "url": "images/stickers/twitter/21430_1024.png",
+            "width": 1024,
+            "height": 1024
+        },
+        "512": {
+            "url": "images/stickers/twitter/21430_512.png",
+            "width": 512,
+            "height": 512
+        },
+        "2048": {
+            "url": "images/stickers/twitter/21430_2048.png",
+            "width": 2048,
+            "height": 2048
+        }
+    }
 }

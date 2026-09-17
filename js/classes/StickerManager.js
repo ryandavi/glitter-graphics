@@ -853,6 +853,11 @@ class StickerManager extends ContentManager {
 			stickerData: {
 				isEmpty: !sticker,
 				url: sticker?.url || null,
+				// Fixed canonical/native-resolution source; `url` is the
+				// currently-displayed source and may be swapped to a variant.
+				// See StickerManager.commitResolutionSwap.
+				baseUrl: sticker?.url || null,
+				variantUrls: sticker?.variantUrls || null,
 				name: sticker?.name || 'Select a Sticker',
 				source: sticker?.source || null,
 				isAnimated: sticker?.isAnimated || false,
@@ -897,6 +902,8 @@ class StickerManager extends ContentManager {
 			// Update data
 			activeLayer.stickerData.isEmpty = false;
 			activeLayer.stickerData.url = stickerInfo.url;
+			activeLayer.stickerData.baseUrl = stickerInfo.url;
+			activeLayer.stickerData.variantUrls = stickerInfo.variantUrls || null;
 			activeLayer.stickerData.name = stickerInfo.name;
 			activeLayer.stickerData.source = stickerInfo.source;
 			activeLayer.stickerData.width = stickerInfo.width;
@@ -930,6 +937,32 @@ class StickerManager extends ContentManager {
 			this.editor.updateStickerSelection();
 			this.editor.updateStatus('Sticker added');
 		}
+	}
+
+	// ===== RESOLUTION SWAP =====
+
+	// Called once a resize gesture ends (LayerTransform.handleHandlePointerUp).
+	// While actively dragging it's fine to look blurry at the sticker's
+	// current resolution, matching Twitter's own behavior; this picks the
+	// best-fitting variant for the settled size and swaps in, or does nothing
+	// if the sticker has no variants (everything pre-migration).
+	async commitResolutionSwap(layer) {
+		if (layer.type !== LayerType.STICKER || layer.stickerData.isEmpty) return;
+		const { baseUrl, variantUrls, width: nativeWidth } = layer.stickerData;
+		if (!baseUrl || !variantUrls || !Object.keys(variantUrls).length) return;
+
+		const scalePercent = layer.transform?.scale?.x ?? 100;
+		const renderedWidth = nativeWidth * (scalePercent / 100);
+		const bestUrl = StickerVariants.pickBestUrl(baseUrl, nativeWidth, variantUrls, renderedWidth);
+		if (bestUrl === layer.stickerData.url) return;
+
+		try {
+			await AssetImageCache.get(bestUrl);
+		} catch (error) {
+			return; // Keep the current source if the variant fails to load.
+		}
+		layer.stickerData.url = bestUrl;
+		this.renderLayer(layer);
 	}
 
 	// ===== RENDERING =====
@@ -1176,6 +1209,8 @@ updateTransform(layerId, updates) {
 		// Serialized blob URLs belong to the session that saved the project. Always
 		// bind the layer to the freshly resolved library/embedded asset URL.
 		layerData.stickerData.url = sticker.url;
+		layerData.stickerData.baseUrl = sticker.url;
+		layerData.stickerData.variantUrls = sticker.variantUrls || null;
 		layerData.stickerData.name = sticker.name;
 		layerData.stickerData.source = sticker.source;
 		// Geometry belongs to the saved layer, not to asynchronously hydrated

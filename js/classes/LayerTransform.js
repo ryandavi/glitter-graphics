@@ -1359,6 +1359,8 @@ removeTransformHandles() {
                 await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
             } else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
                 this.editor.shapeGlitterManager?.commitScale(this.layer);
+            } else if (this.layer.type === LayerType.STICKER && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
+                await this.editor.stickerManager?.commitResolutionSwap(this.layer);
             }
 			if (completedDrag?.didMove) {
 				if (completedDrag.targetLayerId) {

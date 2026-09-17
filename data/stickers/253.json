@@ -1,9 +1,9 @@
 {
     "id": 253,
     "name": "LIT Flame",
-    "filename": "21417_256.png",
-    "url": "images/stickers/twitter/21417_256.png",
-    "thumbnailUrl": "images/stickers/twitter/21417_256.png",
+    "filename": "21417.png",
+    "url": "images/stickers/twitter/21417.png",
+    "thumbnailUrl": "images/stickers/twitter/21417.png",
     "category": "twitter",
     "attribution": null,
     "stickerText": "LIT",
@@ -35,5 +35,22 @@
     "frameRate": 0,
     "isVariableFramerate": 0,
     "fileSize": 17613,
-    "sortOrder": 0
+    "sortOrder": 0,
+    "variantUrls": {
+        "1024": {
+            "url": "images/stickers/twitter/21417_1024.png",
+            "width": 1024,
+            "height": 1024
+        },
+        "512": {
+            "url": "images/stickers/twitter/21417_512.png",
+            "width": 512,
+            "height": 512
+        },
+        "2048": {
+            "url": "images/stickers/twitter/21417_2048.png",
+            "width": 2048,
+            "height": 2048
+        }
+    }
 }

@@ -1,9 +1,9 @@
 {
     "id": 245,
     "name": "#FLAWLESS",
-    "filename": "21428_256.png",
-    "url": "images/stickers/twitter/21428_256.png",
-    "thumbnailUrl": "images/stickers/twitter/21428_256.png",
+    "filename": "21428.png",
+    "url": "images/stickers/twitter/21428.png",
+    "thumbnailUrl": "images/stickers/twitter/21428.png",
     "category": "twitter",
     "attribution": null,
     "stickerText": "#FLAWLESS",
@@ -35,5 +35,22 @@
     "frameRate": 0,
     "isVariableFramerate": 0,
     "fileSize": 9533,
-    "sortOrder": 0
+    "sortOrder": 0,
+    "variantUrls": {
+        "1024": {
+            "url": "images/stickers/twitter/21428_1024.png",
+            "width": 1024,
+            "height": 1024
+        },
+        "512": {
+            "url": "images/stickers/twitter/21428_512.png",
+            "width": 512,
+            "height": 512
+        },
+        "2048": {
+            "url": "images/stickers/twitter/21428_2048.png",
+            "width": 2048,
+            "height": 2048
+        }
+    }
 }

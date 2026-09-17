@@ -976,6 +976,8 @@ class LayerManager {
 				transform: clonedTransform,
 				stickerData: {
 					url: sourceLayer.stickerData.url,
+					baseUrl: sourceLayer.stickerData.baseUrl,
+					variantUrls: sourceLayer.stickerData.variantUrls,
 					name: sourceLayer.stickerData.name,
 					source: sourceLayer.stickerData.source,
 					width: sourceLayer.stickerData.width,
@@ -1108,6 +1110,8 @@ class LayerManager {
 				transform: clonedTransform,
 				stickerData: {
 					url: sourceLayer.stickerData.url,
+					baseUrl: sourceLayer.stickerData.baseUrl,
+					variantUrls: sourceLayer.stickerData.variantUrls,
 					name: sourceLayer.stickerData.name,
 					source: sourceLayer.stickerData.source,
 					width: sourceLayer.stickerData.width,

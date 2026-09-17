@@ -145,6 +145,8 @@ $CONFIG = [
         'category_path_mismatch' => 'warning',
         'unsafe_file_type' => 'critical',
         'unreadable_file' => 'critical',
+        'orphaned_variant' => 'warning',
+        'variant_available' => 'info',
     ],
     
     // Asset types

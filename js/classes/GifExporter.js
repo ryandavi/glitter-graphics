@@ -776,13 +776,20 @@ class GifExporter {
 					prepareMasks: async () => {},
 					prepareStaticResources: async ({ callbacks }) => {
 						const stickerData = layer.stickerData;
-						if (!stickerData.isAnimated && !this._getFrameImageData(stickerData.staticImageData)) {
-							stickerData.staticImageData = null;
-							callbacks.onStatus(`Loading ${stickerData.name}...`);
-							try {
-								stickerData.staticImageData = await this._loadStaticImage(stickerData.url);
-							} catch (error) {
-								throw new Error(`Failed to load static sticker ${stickerData.name}`);
+						if (!stickerData.isAnimated) {
+							// Resolved independently of whatever resolution the live
+							// canvas last swapped to, so exports stay crisp regardless
+							// of the zoom level last used while editing.
+							const resolvedUrl = this._resolveStickerExportUrl(layer);
+							if (!this._getFrameImageData(stickerData.staticImageData) || stickerData._exportResolvedUrl !== resolvedUrl) {
+								stickerData.staticImageData = null;
+								callbacks.onStatus(`Loading ${stickerData.name}...`);
+								try {
+									stickerData.staticImageData = await this._loadStaticImage(resolvedUrl);
+									stickerData._exportResolvedUrl = resolvedUrl;
+								} catch (error) {
+									throw new Error(`Failed to load static sticker ${stickerData.name}`);
+								}
 							}
 						}
 					},
@@ -2016,20 +2023,26 @@ class GifExporter {
 
 
 	async _loadStaticImage(url) {
-		return new Promise((resolve, reject) => {
-			const img = new Image();
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				canvas.width = img.naturalWidth;
-				canvas.height = img.naturalHeight;
-				const ctx = canvas.getContext('2d');
-				ctx.drawImage(img, 0, 0);
-				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-				resolve(imageData);
-			};
-			img.onerror = () => reject(new Error('Failed to load image'));
-			img.src = url;
-		});
+		const img = await AssetImageCache.get(url);
+		const canvas = document.createElement('canvas');
+		canvas.width = img.naturalWidth;
+		canvas.height = img.naturalHeight;
+		const ctx = canvas.getContext('2d');
+		ctx.drawImage(img, 0, 0);
+		return ctx.getImageData(0, 0, canvas.width, canvas.height);
+	}
+
+	// Picks the best-fitting variant for the layer's *settled* on-canvas size
+	// (native width × transform scale — canvas-space, so it's already
+	// independent of editor viewport zoom), the same rule the live canvas
+	// applies at resize-gesture-end. See StickerManager.commitResolutionSwap.
+	_resolveStickerExportUrl(layer) {
+		const stickerData = layer.stickerData;
+		const baseUrl = stickerData.baseUrl || stickerData.url;
+		if (!stickerData.variantUrls || !Object.keys(stickerData.variantUrls).length) return baseUrl;
+		const scalePercent = layer.transform?.scale?.x ?? 100;
+		const renderedWidth = (stickerData.width || 0) * (scalePercent / 100);
+		return StickerVariants.pickBestUrl(baseUrl, stickerData.width, stickerData.variantUrls, renderedWidth);
 	}
 
 	_handleFileSave(blob, callbacks, plan) {

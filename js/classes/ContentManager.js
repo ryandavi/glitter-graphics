@@ -207,6 +207,10 @@ class ContentManager {
 			isActive: this.normalizeBooleanValue(raw.isActive, defaults.isActive ?? true),
 			featured: this.normalizeBooleanValue(raw.featured, defaults.featured ?? false),
 			source: raw.source ?? defaults.source ?? null,
+			// Sticker multi-resolution: {"512": {url,width,height}, ...}, keyed
+			// by measured width. Only ever populated via the lazy detail fetch
+			// (excluded from the slim index) — see StickerManager.pickVariantUrl.
+			variantUrls: raw.variantUrls && typeof raw.variantUrls === 'object' ? raw.variantUrls : (defaults.variantUrls ?? null),
 		};
 	}
 

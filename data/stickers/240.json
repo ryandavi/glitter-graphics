@@ -1,9 +1,9 @@
 {
     "id": 240,
     "name": "YASS",
-    "filename": "21416_256.png",
-    "url": "images/stickers/twitter/21416_256.png",
-    "thumbnailUrl": "images/stickers/twitter/21416_256.png",
+    "filename": "21416.png",
+    "url": "images/stickers/twitter/21416.png",
+    "thumbnailUrl": "images/stickers/twitter/21416.png",
     "category": "twitter",
     "attribution": null,
     "stickerText": "YASS",
@@ -33,5 +33,22 @@
     "frameRate": 0,
     "isVariableFramerate": 0,
     "fileSize": 20347,
-    "sortOrder": 0
+    "sortOrder": 0,
+    "variantUrls": {
+        "1024": {
+            "url": "images/stickers/twitter/21416_1024.png",
+            "width": 1024,
+            "height": 1024
+        },
+        "512": {
+            "url": "images/stickers/twitter/21416_512.png",
+            "width": 512,
+            "height": 512
+        },
+        "2048": {
+            "url": "images/stickers/twitter/21416_2048.png",
+            "width": 2048,
+            "height": 2048
+        }
+    }
 }

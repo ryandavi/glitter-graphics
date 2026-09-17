@@ -65,6 +65,7 @@ $mutatingActions = [
     'ingest_approve',
     'ingest_reject',
     'register_existing',
+    'attach_variants',
     'tag_alias_add',
     'tag_update',
     'tag_merge',
@@ -165,6 +166,14 @@ try {
 
         case 'health':
             echo json_encode($api->healthReport());
+            break;
+
+        case 'attach_variants':
+            if (!method_exists($api, 'attachDetectedVariants')) {
+                throw new Exception('Variants are only supported for stickers');
+            }
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->attachDetectedVariants((int)($data['id'] ?? 0)));
             break;
 
         case 'analysis_view':
