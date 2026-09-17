@@ -1970,6 +1970,20 @@ body.modal-open {
 		}
 	}
 
+	// Archival chronology: a narrow date column that keeps its digits aligned,
+	// so the reader can scan the dates without reading the rows.
+	.chronology-table {
+		min-width: 40rem;
+
+		th:first-child { width: 18%; }
+		th:nth-child(2) { width: 30%; }
+
+		td:first-child {
+			color: var(--color-text-primary);
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
 
 
 
