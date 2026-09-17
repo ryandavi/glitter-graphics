@@ -1900,6 +1900,33 @@ body.modal-open {
 		}
 	}
 
+	// Extended verbatim quotes sit outside the paragraph flow: running them
+	// inline forces competing quotation marks into prose that already quotes.
+	blockquote {
+		margin: var(--spacing-lg) 0;
+		padding: var(--spacing-sm) 0 var(--spacing-sm) var(--spacing-lg);
+		border-left: 2px solid var(--color-border);
+		color: var(--color-text-secondary);
+
+		>p {
+			margin: 0;
+
+			+p { margin-top: var(--spacing-sm); }
+		}
+
+		>cite {
+			display: block;
+			margin-top: var(--spacing-sm);
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-sm);
+			font-style: normal;
+		}
+
+		@include mobile {
+			padding-left: var(--spacing-md);
+		}
+	}
+
 	// Document tables share the inset-card vocabulary and scroll within their
 	// own frame so a wide dataset never widens the reading modal.
 	.table-wrapper {

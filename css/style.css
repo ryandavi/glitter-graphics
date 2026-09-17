@@ -10235,6 +10235,40 @@ body.modal-open {
 #preservationModal .context:hover {
   color: var(--color-text-primary);
 }
+#aboutModal blockquote,
+#historyModal blockquote,
+#preservationModal blockquote {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-sm) 0 var(--spacing-sm) var(--spacing-lg);
+  border-left: 2px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+#aboutModal blockquote > p,
+#historyModal blockquote > p,
+#preservationModal blockquote > p {
+  margin: 0;
+}
+#aboutModal blockquote > p + p,
+#historyModal blockquote > p + p,
+#preservationModal blockquote > p + p {
+  margin-top: var(--spacing-sm);
+}
+#aboutModal blockquote > cite,
+#historyModal blockquote > cite,
+#preservationModal blockquote > cite {
+  display: block;
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-style: normal;
+}
+@media (max-width: 800px) {
+  #aboutModal blockquote,
+  #historyModal blockquote,
+  #preservationModal blockquote {
+    padding-left: var(--spacing-md);
+  }
+}
 #aboutModal .table-wrapper,
 #historyModal .table-wrapper,
 #preservationModal .table-wrapper {
@@ -10337,6 +10371,27 @@ body.modal-open {
   color: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
+}
+#aboutModal .chronology-table,
+#historyModal .chronology-table,
+#preservationModal .chronology-table {
+  min-width: 40rem;
+}
+#aboutModal .chronology-table th:first-child,
+#historyModal .chronology-table th:first-child,
+#preservationModal .chronology-table th:first-child {
+  width: 18%;
+}
+#aboutModal .chronology-table th:nth-child(2),
+#historyModal .chronology-table th:nth-child(2),
+#preservationModal .chronology-table th:nth-child(2) {
+  width: 30%;
+}
+#aboutModal .chronology-table td:first-child,
+#historyModal .chronology-table td:first-child,
+#preservationModal .chronology-table td:first-child {
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 #aboutModal .figure-wrapper + h3,
 #aboutModal p + h2,
