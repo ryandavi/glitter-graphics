@@ -530,7 +530,7 @@ const CONFIG = deepFreeze({
 			presets: {
 				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity, anchor: 'center' },
 				float: { periodMs: 3600, easing: 'linear', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
-				sway: { periodMs: 2600, easing: 'easeInOut', amount: 8, direction: 'alternate', iterations: Infinity, anchor: 'top-center' },
+				sway: { periodMs: 2600, easing: 'linear', amount: 8, direction: 'normal', iterations: Infinity, anchor: 'top-center' },
 				dim: { periodMs: 2000, easing: 'easeInOut', opacityFloor: 40, direction: 'alternate', iterations: Infinity },
 				drift: { periodMs: 6000, easing: 'linear', distance: 120, angle: 0, direction: 'normal', iterations: Infinity },
 				twinkle: { periodMs: 1400, easing: 'linear', duty: 60, opacityFloor: 20, direction: 'normal', iterations: Infinity },
@@ -544,12 +544,12 @@ const CONFIG = deepFreeze({
 				jello: { periodMs: 1000, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				tada: { periodMs: 1000, easing: 'easeInOut', amount: 10, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				swing: { periodMs: 1000, easing: 'easeOut', amount: 15, direction: 'normal', iterations: Infinity, anchor: 'top-center' },
-				'rubber-band': { periodMs: 1000, easing: 'easeOut', amount: 25, overshoot: 30, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				'rubber-band': { periodMs: 1000, easing: 'easeOut', amount: 25, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				move: { periodMs: 2000, easing: 'easeInOut', distance: 60, angle: 0, direction: 'alternate', iterations: Infinity },
 				orbit: { periodMs: 3000, easing: 'linear', radius: 40, direction: 'normal', iterations: Infinity },
 				rotate: { periodMs: 3000, easing: 'linear', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				zoom: { periodMs: 8000, easing: 'easeInOut', amount: 15, direction: 'alternate', iterations: Infinity, anchor: 'center' },
+				zoom: { periodMs: 8000, easing: 'easeOut', amount: 15, direction: 'alternate', iterations: Infinity, anchor: 'center' },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true },
 				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity }
@@ -832,7 +832,6 @@ const CONFIG = deepFreeze({
 			animTurns: { label: 'Turns', unit: '×', min: 1, max: 8, step: 1, value: 1 },
 			animDuty: { label: 'Duty cycle', unit: '%', min: 5, max: 95, step: 1, value: 50 },
 			animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
-			animOvershoot: { label: 'Overshoot', unit: '%', min: 0, max: 100, step: 1, value: 30 },
 			animDelay: { label: 'Delay', unit: 'ms', min: 0, max: 20000, step: 10, value: 0 },
 			animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 			animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
@@ -1585,8 +1584,7 @@ function createAnimationPanelSpec(prefix) {
 				{ kind: 'slider', id: id('Radius'), slider: 'animRadius', rowId: id('RadiusRow'), hidden: true },
 				{ kind: 'slider', id: id('Turns'), slider: 'animTurns', rowId: id('TurnsRow'), hidden: true },
 				{ kind: 'slider', id: id('Duty'), slider: 'animDuty', rowId: id('DutyRow'), hidden: true },
-				{ kind: 'slider', id: id('OpacityFloor'), slider: 'animOpacityFloor', rowId: id('OpacityFloorRow'), hidden: true },
-				{ kind: 'slider', id: id('Overshoot'), slider: 'animOvershoot', rowId: id('OvershootRow'), hidden: true }
+				{ kind: 'slider', id: id('OpacityFloor'), slider: 'animOpacityFloor', rowId: id('OpacityFloorRow'), hidden: true }
 			] },
 			{ kind: 'advanced', id: id('Advanced'), items: [
 				{ kind: 'set', items: [

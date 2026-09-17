@@ -14,7 +14,7 @@ const GlitterAnimation = (() => {
 	const BASE_DEFAULTS = Object.freeze({
 		periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
 		delayMs: 0, phase: 0, fillMode: 'none', amount: 0, angle: 0, distance: 0,
-		radius: 0, turns: 0, duty: 50, opacityFloor: 0, overshoot: 0,
+		radius: 0, turns: 0, duty: 50, opacityFloor: 0,
 		anchor: 'center', anchorX: 0.5, anchorY: 0.5, snapMode: 'smooth'
 	});
 

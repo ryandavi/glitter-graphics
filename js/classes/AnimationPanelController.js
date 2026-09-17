@@ -9,7 +9,7 @@ class AnimationPanelController {
 		]);
 		this.fields = {
 			PeriodMs: 'periodMs', Amount: 'amount', Angle: 'angle', Distance: 'distance', Radius: 'radius',
-			Turns: 'turns', Duty: 'duty', OpacityFloor: 'opacityFloor', Overshoot: 'overshoot',
+			Turns: 'turns', Duty: 'duty', OpacityFloor: 'opacityFloor',
 			DelayMs: 'delayMs', Phase: 'phase', AnchorX: 'anchorX', AnchorY: 'anchorY'
 		};
 		this.prefixByType.forEach((_prefix, type) => this._bind(type));
@@ -186,8 +186,7 @@ class AnimationPanelController {
 			// (drift falls back to it when Distance is 0, so it stays listed).
 			Amount: ['breath', 'float', 'sway', 'drift', 'pulse', 'heartbeat', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band', 'zoom', 'rotate'],
 			Angle: ['move', 'bounce', 'drift', 'marquee', 'float', 'flip'], Distance: ['move', 'drift', 'marquee'], Radius: ['orbit', 'ping'],
-			Turns: ['rotate', 'flip'], Duty: ['blink', 'twinkle'], OpacityFloor: ['dim', 'twinkle', 'ping', 'move'],
-			Overshoot: ['tada', 'rubber-band']
+			Turns: ['rotate', 'flip'], Duty: ['blink', 'twinkle'], OpacityFloor: ['dim', 'twinkle', 'ping', 'move']
 		};
 		Object.entries(rows).forEach(([suffix, types]) => {
 			const row = this._id(prefix, `${suffix}Row`);
