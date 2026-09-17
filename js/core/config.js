@@ -21,18 +21,26 @@ const RELEASES = [
 		date: '2026-10-01',
 		dateLabel: 'October 1, 2026',
 		projectFormat: 2,
-		summary: 'Added layer animation, filter layers, text backgrounds, still-image export, and more faithful animation output.',
+		summary: 'Added layer animation, filter layers, text backgrounds, still-image export, shape image fills, and more faithful animation output.',
 		features: [
 			{ type: 'added', text: 'Added Animation to Glitter Fill, Sticker, Text, and Shape layers, with presets for ambient movement, attention effects, motion, and one-time transitions.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added Filter layers that non-destructively process every layer beneath them, with Instagram presets, basic adjustments, tint, vignette, grain, blur, invert, grayscale, and sepia.', guide: 'filters' },
 			{ type: 'added', text: 'Added backgrounds to Text layers, with glitter or solid fills, presets, adjustable padding and corners, and layouts for individual lines, text bounds, or the complete text box.', guide: 'text-effects' },
+			{ type: 'added', text: 'Added image fills for Shape layers, with fit, scale, alignment, offset, and pixelated or smooth sampling controls.', guide: 'shape-fill' },
 			{ type: 'added', text: 'Added still-image export as PNG, JPG, or GIF, with a choice of the first or current animation frame and optional generational JPG recompression.', guide: 'exporting-process' },
 			{ type: 'changed', text: 'Rebuilt animation export planning so generated motion and animated assets share a deliberate render clock, close their loops more cleanly, and preserve authored GIF timing.', guide: 'export-settings' },
 			{ type: 'added', text: 'Added layer blend modes including Multiply, Screen, Overlay, Difference, Hue, Color, and Luminosity.', guide: 'working-with-layers' },
+			{ type: 'added', text: 'Added a Crop to Artwork canvas sizing mode that trims or extends the canvas to match the artwork, with adjustable padding.', guide: 'canvas-view-options' },
 			{ type: 'changed', text: 'Expanded export results and animation analysis with clearer timing, frame reduction, optimization, and output details.', guide: 'export-settings' },
 			{ type: 'changed', text: 'Improved GIF color selection for better gradients and overall palette quality.', guide: 'export-settings' },
+			{ type: 'fixed', text: 'Fixed transparency edges and color sampling accuracy in GIF exports.', guide: 'export-settings' },
 			{ type: 'added', text: 'Added source and license attribution for brushes, fonts, and stickers in their asset details.' },
-			{ type: 'changed', text: 'Expanded the site history into a searchable timeline and moved it into its own History section.' }
+			{ type: 'added', text: 'Added 2016 Twitter sticker collection.', guide: 'add-stickers' },
+			{ type: 'changed', text: 'Improved sticker sharpness by automatically using higher-resolution source art when a sticker is scaled up.', guide: 'add-stickers' },
+			{ type: 'changed', text: 'Expanded the site history into a searchable timeline and moved it into its own History section.' },
+			{ type: 'added', text: 'Added a Preservation section describing how stickers, glitters, and site history are kept available long-term.' },
+			{ type: 'changed', text: 'Gave each layer type its own default glitter, so a new Fill Layer, Text, Shape, and Background no longer all start on the same one.' },
+			{ type: 'fixed', text: 'Fixed still-image exports on iOS showing sharing instructions meant for animated exports.', guide: 'exporting-process' }
 		]
 	},
 	{
