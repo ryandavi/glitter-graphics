@@ -40,7 +40,10 @@ class StickerAPI extends AssetAPI
         $row = $this->fetchOneAssoc($stmt->get_result());
         $stmt->close();
         $existing = $this->variants->decodeVariantUrls($row['variant_urls'] ?? null);
-        $merged = array_merge($existing, $detected);
+        // Not array_merge(): these maps are keyed by measured width, and PHP
+        // coerces numeric-string keys ("512") to int keys, which array_merge
+        // then renumbers sequentially instead of merging by key.
+        $merged = array_replace($existing, $detected);
         $this->updateAssetRecord((int)$id, ['variant_urls' => $this->variants->encodeVariantUrls($merged)], ['updated_at = NOW()']);
         $this->events->record($this->assetType, (int)$id, 'variants_attached', ['variants' => array_keys($detected)]);
         $this->exportState->markDirty($this->assetType);

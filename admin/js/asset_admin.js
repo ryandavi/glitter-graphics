@@ -239,27 +239,44 @@ class AssetEditor {
         }
         // Sections are named for what the user is trying to answer, not for
         // which table the columns live in. Order is declared here, not
-        // inferred from FIELDS declaration order.
-        const sectionLabels = { basic: 'Identity', organization: 'Organization', color: 'Color', tech: 'File & animation', publishing: 'Publishing' };
+        // inferred from FIELDS declaration order. Tags live inside
+        // Organization rather than as their own section, so it always renders
+        // even for asset types with no organization fields of their own.
+        const sectionLabels = { basic: 'Identity', organization: 'Organization', color: 'Color', tech: 'File & animation', attribution: 'Attribution', publishing: 'Publishing' };
+        if (!sections.has('organization')) sections.set('organization', []);
         const ordered = Object.keys(sectionLabels).filter(key => sections.has(key))
             .concat([...sections.keys()].filter(key => !(key in sectionLabels)));
         editor.innerHTML = `<div class="editor-title-row">
                 <h1>${this.escapeHtml(this.currentAsset.name)}</h1>
                 <button class="btn btn-secondary btn-sm" type="button" onclick="app.analyzeCurrentAsset()">Auto-Analyze</button>
             </div>
-            ${ordered.map(section => `<details class="admin-section" open>
+            ${ordered.map(section => `<details class="admin-section" ${section === 'attribution' && !this.hasAttributionContent() ? '' : 'open'}>
                 <summary class="admin-section-title">${sectionLabels[section] || section}</summary>
-                <div class="property-list">${this.renderFieldGroups(sections.get(section)).join('')}</div>
-            </details>`).join('')}
-            <details class="admin-section" open>
-                <summary class="admin-section-title">Tags</summary>
-                <div class="tag-section"><div class="tag-list" id="tagList"></div>
-                    <input type="search" id="tagSearch" placeholder="Search tag names and aliases" oninput="app.updateTagDisplay()">
-                    <select id="tagSelect" onchange="app.addTag(); this.value='';"></select>
-                    <div id="tagSearchHint" class="tag-search-hint"></div>
-                </div>
-            </details>`;
+                <div class="property-list">${this.renderFieldGroups(sections.get(section)).join('')}${section === 'organization' ? this.renderTagSection() : ''}</div>
+            </details>`).join('')}`;
         this.updateTagDisplay();
+    }
+
+    // Attribution is supplementary metadata, so it starts collapsed unless
+    // this asset already has some recorded — an empty section every asset
+    // has to open manually would just be clutter.
+    hasAttributionContent() {
+        const field = (this.constructor.FIELDS || []).find(candidate => candidate.input === 'attribution');
+        if (!field) return false;
+        return Object.keys(this.parseAttribution(this.currentAsset[field.key])).length > 0;
+    }
+
+    renderTagSection() {
+        return this.propertyRow('Tags', `<div class="tag-section">
+            <div class="tag-list" id="tagList"></div>
+            <div class="tag-search-wrap">
+                <input type="search" id="tagSearch" placeholder="Search or add a tag…" autocomplete="off"
+                    role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-controls="tagResultsList" aria-autocomplete="list"
+                    oninput="app.updateTagResults()" onfocus="app.updateTagResults()"
+                    onkeydown="app.handleTagSearchKeydown(event)" onblur="app.handleTagSearchBlur()">
+                <div id="tagResults" class="tag-results" hidden></div>
+            </div>
+        </div>`, { tall: true });
     }
 
     // Renders one row per field, except fields sharing a `group` key
@@ -344,11 +361,11 @@ class AssetEditor {
             const opt = (v, l) => `<option value="${v}" ${(a.license || '') === v ? 'selected' : ''}>${l}</option>`;
             const text = (key) => `<input type="text" id="attr_${key}" value="${this.escapeHtml(a[key] || '')}">`;
             return this.propertyRow(field.label, text('author'), { htmlFor: 'attr_author' })
-                + this.propertyRow('Author URL', text('authorUrl'), { htmlFor: 'attr_authorUrl', continued: true })
-                + this.propertyRow('Source', text('source'), { htmlFor: 'attr_source', continued: true })
-                + this.propertyRow('Source URL', text('sourceUrl'), { htmlFor: 'attr_sourceUrl', continued: true })
-                + this.propertyRow('License', `<select id="attr_license">${opt('', '— none —')}${opt('unknown', 'License unknown')}${opt('personal-use', 'Personal use only')}${opt('commercial', 'Commercial use OK')}${opt('public-domain', 'Public domain')}${opt('CC0-1.0', 'CC0 1.0')}${opt('CC-BY-4.0', 'CC BY 4.0')}${opt('CC-BY-SA-4.0', 'CC BY-SA 4.0')}${opt('OFL-1.1', 'SIL Open Font License 1.1')}${opt('system', 'System font')}</select>`, { htmlFor: 'attr_license', continued: true })
-                + this.propertyRow('Notes', `<textarea id="attr_notes" rows="2">${this.escapeHtml(a.notes || '')}</textarea>`, { htmlFor: 'attr_notes', continued: true, tall: true });
+                + this.propertyRow('Author URL', text('authorUrl'), { htmlFor: 'attr_authorUrl' })
+                + this.propertyRow('Source', text('source'), { htmlFor: 'attr_source' })
+                + this.propertyRow('Source URL', text('sourceUrl'), { htmlFor: 'attr_sourceUrl' })
+                + this.propertyRow('License', `<select id="attr_license">${opt('', '— none —')}${opt('unknown', 'License unknown')}${opt('personal-use', 'Personal use only')}${opt('commercial', 'Commercial use OK')}${opt('public-domain', 'Public domain')}${opt('CC0-1.0', 'CC0 1.0')}${opt('CC-BY-4.0', 'CC BY 4.0')}${opt('CC-BY-SA-4.0', 'CC BY-SA 4.0')}${opt('OFL-1.1', 'SIL Open Font License 1.1')}${opt('system', 'System font')}</select>`, { htmlFor: 'attr_license' })
+                + this.propertyRow('Notes', `<textarea id="attr_notes" rows="2">${this.escapeHtml(a.notes || '')}</textarea>`, { htmlFor: 'attr_notes', tall: true });
         }
         if (field.input === 'colors') {
             const colors = value ? String(value).split(',') : [];
@@ -677,18 +694,11 @@ class AssetEditor {
     }
 
     // ===== TAG EDITING (for current asset) =====
-
-    async addTag() {
-        const tagId = document.getElementById('tagSelect').value;
-        if (!tagId) return;
-
-        const tag = this.tags.find(t => t.id == tagId);
-        if (!tag) return;
-
-        this.currentAsset.tags.push(tag);
-        this.updateTagDisplay();
-        this.setDirty(true);
-    }
+    //
+    // The search input drives one relevance-sorted results panel (built by
+    // updateTagResults/computeTagResults/renderTagResultsPanel) rather than a
+    // native <select> — clicking or Enter-ing a result adds it immediately,
+    // matching the type -> see matches -> pick -> type next tag workflow.
 
     removeTag(tagId) {
         this.currentAsset.tags = this.currentAsset.tags.filter(t => t.id != tagId);
@@ -703,67 +713,194 @@ class AssetEditor {
                 <span>${this.escapeHtml(tag.name)}</span>
                 <button type="button" onclick="app.removeTag(${tag.id})" class="tag-remove" aria-label="Remove tag ${this.escapeHtml(tag.name)}">×</button>
             </span>`).join('');
+        const list = document.getElementById('tagList');
+        if (list) list.innerHTML = tagListHtml;
+        this.updateTagResults();
+    }
 
-        document.getElementById('tagList').innerHTML = tagListHtml;
+    // How closely a tag matches the query — lower sorts first. Exact name
+    // beats a name prefix beats an exact alias beats a name substring beats
+    // an alias substring, so the strongest match always leads the list.
+    tagMatchScore(tag, query) {
+        const name = String(tag.name).toLowerCase();
+        if (name === query) return 0;
+        if (name.startsWith(query)) return 1;
+        if ((tag.aliases || []).some(alias => String(alias).toLowerCase() === query)) return 2;
+        if (name.includes(query)) return 3;
+        return 4;
+    }
 
-        const tagSelect = document.getElementById('tagSelect');
-        const query = document.getElementById('tagSearch')?.value.trim().toLowerCase() || '';
-        const availableTags = this.tags.filter(t => {
-            if (s.tags.find(st => Number(st.id) === Number(t.id))) return false;
-            if (!query) return true;
-            return [t.name, ...(t.aliases || [])].some(value => String(value).toLowerCase().includes(query));
-        });
-        const groupedTags = this.groupTagsByCategory(availableTags);
+    tagMatchesQuery(tag, query) {
+        if (String(tag.name).toLowerCase().includes(query)) return true;
+        return (tag.aliases || []).some(alias => String(alias).toLowerCase().includes(query));
+    }
 
-        tagSelect.innerHTML = `
-            <option value="">Add tag...</option>
-            ${groupedTags.map(group => `
-                <optgroup label="${group.category}">
-                    ${group.tags.map(tag => `<option value="${tag.id}">${tag.name}</option>`).join('')}
-                </optgroup>
-            `).join('')}
-        `;
-        const hint = document.getElementById('tagSearchHint');
-        if (hint) {
-            const exact = this.tags.some(tag =>
-                String(tag.name).toLowerCase() === query
-                || (tag.aliases || []).some(alias => String(alias).toLowerCase() === query)
-            );
-            const probable = query && this.tags.find(tag => {
-                const canonical = String(tag.name).toLowerCase();
-                return `${canonical}s` === query || `${query}s` === canonical
-                    || (canonical.endsWith('y') && `${canonical.slice(0, -1)}ies` === query)
-                    || (query.endsWith('y') && `${query.slice(0, -1)}ies` === canonical);
-            });
-            hint.innerHTML = query && !exact
-                ? `${probable ? `<span>Possible duplicate of ${this.escapeHtml(probable.name)}.</span>` : ''}<button type="button" class="btn btn-quiet btn-sm" onclick="app.createTagFromSearch()">Create tag “${this.escapeHtml(query)}”</button>`
-                : '';
+    computeTagResults() {
+        const input = document.getElementById('tagSearch');
+        const rawQuery = input?.value.trim() || '';
+        const query = rawQuery.toLowerCase();
+        const applied = new Set(this.currentAsset.tags.map(tag => Number(tag.id)));
+        const matches = query
+            ? this.tags.filter(tag => !applied.has(Number(tag.id)) && this.tagMatchesQuery(tag, query))
+            : [];
+        matches.sort((a, b) => this.tagMatchScore(a, query) - this.tagMatchScore(b, query) || a.name.localeCompare(b.name));
+        const exact = this.tags.some(tag =>
+            String(tag.name).toLowerCase() === query
+            || (tag.aliases || []).some(alias => String(alias).toLowerCase() === query)
+        );
+        const entries = matches.slice(0, 30).map(tag => ({ type: 'tag', tag }));
+        if (query && !exact) entries.push({ type: 'create', query: rawQuery });
+        this.tagResultEntries = entries;
+        if (this.tagResultIndex == null || this.tagResultIndex < 0 || this.tagResultIndex >= entries.length) {
+            this.tagResultIndex = entries.length ? 0 : -1;
         }
     }
 
-    async createTagFromSearch() {
-        const query = document.getElementById('tagSearch')?.value.trim();
-        if (!query) return;
+    // The matching tags render in a scrollable listbox; "Create tag" (if
+    // present) renders as a pinned sibling below it, so it's always visible
+    // without scrolling.
+    renderTagResultsPanel() {
+        const panel = document.getElementById('tagResults');
+        const input = document.getElementById('tagSearch');
+        if (!panel) return;
+        const entries = this.tagResultEntries || [];
+        if (!entries.length) {
+            panel.hidden = true;
+            panel.innerHTML = '';
+            input?.setAttribute('aria-expanded', 'false');
+            input?.removeAttribute('aria-activedescendant');
+            return;
+        }
+        const renderEntry = (entry, index) => {
+            const active = index === this.tagResultIndex;
+            const optionAttrs = `id="tagResult-${index}" role="option" aria-selected="${active}"`;
+            if (entry.type === 'create') {
+                return `<button type="button" ${optionAttrs} class="tag-result tag-result-create${active ? ' active' : ''}" onmousedown="event.preventDefault()" onclick="app.selectTagResult(${index})">+ Create tag “${this.escapeHtml(entry.query)}”</button>`;
+            }
+            const tag = entry.tag;
+            return `<button type="button" ${optionAttrs} class="tag-result${active ? ' active' : ''}" onmousedown="event.preventDefault()" onclick="app.selectTagResult(${index})">
+                ${tag.hex_color ? `<span class="tag-color" style="--tag-color:${this.escapeHtml(tag.hex_color)}"></span>` : ''}
+                <span class="tag-result-name">${this.escapeHtml(tag.name)}</span>
+                <span class="badge tag-result-facet">${this.escapeHtml(tag.category_name || '')}</span>
+            </button>`;
+        };
+        const indexed = entries.map((entry, index) => ({ entry, index }));
+        const matches = indexed.filter(item => item.entry.type === 'tag');
+        const create = indexed.find(item => item.entry.type === 'create');
+        panel.hidden = false;
+        panel.innerHTML = `<div id="tagResultsList" class="tag-results-list" role="listbox" aria-label="Matching tags">
+                ${matches.map(item => renderEntry(item.entry, item.index)).join('')}
+            </div>
+            ${create ? renderEntry(create.entry, create.index) : ''}`;
+        input?.setAttribute('aria-expanded', 'true');
+        if (this.tagResultIndex >= 0) input?.setAttribute('aria-activedescendant', `tagResult-${this.tagResultIndex}`);
+        else input?.removeAttribute('aria-activedescendant');
+    }
+
+    updateTagResults() {
+        this.computeTagResults();
+        this.renderTagResultsPanel();
+    }
+
+    handleTagSearchKeydown(event) {
+        const entries = this.tagResultEntries || [];
+        if (event.key === 'ArrowDown') {
+            if (!entries.length) return;
+            event.preventDefault();
+            this.tagResultIndex = (this.tagResultIndex + 1) % entries.length;
+            this.renderTagResultsPanel();
+        } else if (event.key === 'ArrowUp') {
+            if (!entries.length) return;
+            event.preventDefault();
+            this.tagResultIndex = (this.tagResultIndex - 1 + entries.length) % entries.length;
+            this.renderTagResultsPanel();
+        } else if (event.key === 'Enter') {
+            if (this.tagResultIndex < 0 || !entries[this.tagResultIndex]) return;
+            event.preventDefault();
+            this.selectTagResult(this.tagResultIndex);
+        } else if (event.key === 'Escape') {
+            this.hideTagResults();
+        }
+    }
+
+    // Blur fires before a result button's click when the pointer moves off
+    // the input, so hiding is deferred long enough for that click to land.
+    handleTagSearchBlur() {
+        setTimeout(() => {
+            if (!document.activeElement?.closest('#tagResults')) this.hideTagResults();
+        }, 150);
+    }
+
+    hideTagResults() {
+        const panel = document.getElementById('tagResults');
+        if (panel) {
+            panel.hidden = true;
+            panel.innerHTML = '';
+        }
+        const input = document.getElementById('tagSearch');
+        input?.setAttribute('aria-expanded', 'false');
+        input?.removeAttribute('aria-activedescendant');
+    }
+
+    selectTagResult(index) {
+        const entry = this.tagResultEntries?.[index];
+        if (!entry) return;
+        if (entry.type === 'create') {
+            this.createTagFromSearch(entry.query);
+            return;
+        }
+        this.currentAsset.tags.push(entry.tag);
+        this.setDirty(true);
+        this.updateTagDisplay();
+        this.resetTagSearch();
+    }
+
+    // Applied after a tag is added (existing or newly created): the search
+    // box clears and refocuses so the next tag can be typed immediately.
+    resetTagSearch() {
+        const input = document.getElementById('tagSearch');
+        if (input) input.value = '';
+        this.tagResultEntries = [];
+        this.tagResultIndex = -1;
+        this.hideTagResults();
+        input?.focus();
+    }
+
+    // Reopens the search box with a given query after the Add Tag flow is
+    // cancelled or fails to resolve to a tag — the asset's tags are untouched.
+    restoreTagSearch(query) {
+        const input = document.getElementById('tagSearch');
+        if (!input) return;
+        input.value = query || '';
+        input.focus();
+        this.updateTagResults();
+    }
+
+    // Adds a tag just created via the search box's "Create tag" action,
+    // refreshes the chips, and hands focus back to the search input so the
+    // whole create -> attach flow never needs a page refresh.
+    applyCreatedTag(tag) {
+        if (!this.currentAsset.tags.some(existing => Number(existing.id) === Number(tag.id))) {
+            this.currentAsset.tags.push(tag);
+        }
+        this.setDirty(true);
+        this.updateTagDisplay();
+        this.resetTagSearch();
+    }
+
+    // Launched from the search box's "Create tag" result: opens the existing
+    // Manage Tags / Add Tag modals (no parallel form), pre-filled with the
+    // query, and flags the TagManager so a successful create attaches the
+    // new tag back to this asset instead of leaving the manager open.
+    async createTagFromSearch(query) {
+        const term = (query ?? document.getElementById('tagSearch')?.value ?? '').trim();
+        if (!term) return;
         this.showManageTagsModal();
         await this.tagManager.load();
         this.tagManager.openForm();
-        this.tagManager.form.elements.name.value = query;
+        this.tagManager.form.elements.name.value = term;
         this.tagManager.updateDuplicateWarning();
-    }
-
-    groupTagsByCategory(tags) {
-        const grouped = {};
-        tags.forEach(tag => {
-            if (!grouped[tag.category_name]) {
-                grouped[tag.category_name] = [];
-            }
-            grouped[tag.category_name].push(tag);
-        });
-
-        return Object.entries(grouped).map(([category, tags]) => ({
-            category,
-            tags
-        }));
+        this.tagManager.assetSearchContext = { query: term };
     }
 
     // ===== EXPORT =====

@@ -33,6 +33,19 @@ class AssetVariantService
         return is_file($directory . DIRECTORY_SEPARATOR . $baseStem . '.' . $extension);
     }
 
+    // A numeric `_<label>` suffix is only actually a size variant if the
+    // label *is* the file's measured width — that's the naming convention's
+    // whole point ("suffixed with its actual measured width", not an
+    // arbitrary index). Libraries also use trailing numbers for unrelated
+    // alternates (`necklace_gold.gif`, `necklace_gold_2.gif`, `..._3.gif`,
+    // each a different graphic, not a different resolution of the same one)
+    // — those numbers don't match either file's real width, so this is what
+    // tells the two conventions apart instead of just "does a base exist".
+    public function labelMatchesMeasuredWidth($label, $measuredWidth)
+    {
+        return (string)$label === (string)$measuredWidth;
+    }
+
     // Scans the directory containing $url for sibling variant files of the
     // asset at $url, returning a map keyed by measured pixel width matching
     // the `variant_urls` column shape:
@@ -54,6 +67,7 @@ class AssetVariantService
             $dimensions = @getimagesize($path);
             if (!$dimensions) continue;
             $width = (int)$dimensions[0];
+            if (!$this->labelMatchesMeasuredWidth($parsed['label'], $width)) continue;
             $variants[(string)$width] = [
                 'url' => $this->paths->fileToUrl($path, $assetType),
                 'width' => $width,

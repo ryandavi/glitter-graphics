@@ -163,7 +163,8 @@ class TagManager {
 	async create() {
 		const data = Object.fromEntries(new FormData(this.form));
 		if (this.editing) data.id = this.editing.id;
-		await AdminAPI.json(`includes/api.php?action=${this.editing ? 'tag_update' : 'add_tag'}&type=${this.editor.config.assetType}`, {
+		const wasCreate = !this.editing;
+		const result = await AdminAPI.json(`includes/api.php?action=${this.editing ? 'tag_update' : 'add_tag'}&type=${this.editor.config.assetType}`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
@@ -172,12 +173,30 @@ class TagManager {
 		this.dialog.close();
 		await this.editor.loadTags();
 		await this.load();
+		// Launched from the asset's tag search box: close back to the asset
+		// and attach the new tag instead of leaving the taxonomy list open.
+		if (this.assetSearchContext) {
+			const context = this.assetSearchContext;
+			this.assetSearchContext = null;
+			this.editor.hideManageTagsModal();
+			const tag = wasCreate && result?.id ? this.tags.find(candidate => Number(candidate.id) === Number(result.id)) : null;
+			if (tag) this.editor.applyCreatedTag(tag);
+			else this.editor.restoreTagSearch(context.query);
+		}
 	}
 
 	requestCloseForm() {
 		if (this.formDirty && !confirm('Discard your changes? The information entered in this dialog will be lost.')) return false;
 		this.formDirty = false;
 		this.dialog.close();
+		// Cancelling a create launched from the asset's tag search returns to
+		// the asset untouched, rather than leaving the taxonomy list open.
+		if (this.assetSearchContext) {
+			const context = this.assetSearchContext;
+			this.assetSearchContext = null;
+			this.editor.hideManageTagsModal();
+			this.editor.restoreTagSearch(context.query);
+		}
 		return true;
 	}
 

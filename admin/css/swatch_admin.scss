@@ -1477,7 +1477,7 @@ input[type="checkbox"] {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-xs);
-    min-height: 24px;
+    min-height: var(--control-height);
     padding: 0 var(--spacing-xs) 0 var(--spacing-sm);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
@@ -1534,6 +1534,87 @@ input[type="checkbox"] {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    // .property-row-tall's control column is align-items: flex-start (so
+    // multi-line controls don't stretch to full height); without this the
+    // row would size to the section's content instead of the column width.
+    align-self: stretch;
+    width: 100%;
+}
+
+// Search box for adding tags to the current asset. The results list is an
+// overlay (like .manager-dialog) rather than a layout section, so typing
+// never pushes the rest of the form down.
+.tag-search-wrap {
+    position: relative;
+}
+
+.tag-results {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + var(--spacing-2xs));
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; // clip the scrolling list to the panel's rounded corners
+    border: 1px solid var(--color-border-hover);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-secondary);
+    box-shadow: var(--admin-shadow-lg);
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+// Matches scroll; the create action below is a pinned sibling so it never
+// needs a scroll to reach.
+.tag-results-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.tag-result {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    background: none;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    text-align: left;
+    cursor: pointer;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover,
+    &.active {
+        background: var(--color-bg-tertiary);
+    }
+}
+
+.tag-result-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tag-result-facet {
+    flex: 0 0 auto;
+}
+
+// Visually separated from the matches above it, per the "type -> pick or
+// create" flow — it is an action, not another result.
+.tag-result-create {
+    border-top: 1px solid var(--color-border-hover);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-medium);
 }
 
 // ============================================
@@ -2340,14 +2421,6 @@ input[type="checkbox"] {
 		opacity: var(--opacity-disabled);
 		cursor: not-allowed;
 	}
-}
-
-.tag-search-hint {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-xs);
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-sm);
 }
 
 @media (max-width: 760px) {

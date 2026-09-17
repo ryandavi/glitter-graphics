@@ -119,12 +119,18 @@ class AssetHealthService
 	}
 
 	// A file is only a "variant" of another (and never listed as its own
-	// orphan) when a base file with the same stem exists — see
-	// docs/STICKER-MULTI-RESOLUTION-PLAN.md's "Variant detection rule". This
-	// runs as a standing scan, not just at initial add, so a `_1024` sibling
-	// dropped next to a sticker that's been live for months is picked up the
-	// same way a brand-new one would be, and surfaces as `variant_available`
-	// on the existing row rather than a fresh orphan.
+	// orphan) when its numeric suffix is its own measured width *and* a base
+	// file with the same stem exists — see
+	// docs/STICKER-MULTI-RESOLUTION-PLAN.md's "Variant detection rule". The
+	// width check is what tells a real resolution variant (`_512.png`
+	// measuring 512px) apart from a library's unrelated "different graphic,
+	// same name, numbered" convention (`necklace_gold_2.gif` measuring some
+	// unrelated width) — without it, every such file falsely looks like a
+	// variant of its numberless sibling. This runs as a standing scan, not
+	// just at initial add, so a `_1024` sibling dropped next to a sticker
+	// that's been live for months is picked up the same way a brand-new one
+	// would be, and surfaces as `variant_available` on the existing row
+	// rather than a fresh orphan.
 	private function findOrphans($knownUrls, &$issues)
 	{
 		$root = $this->paths->managedRoot($this->assetType);
@@ -151,6 +157,18 @@ class AssetHealthService
 				continue;
 			}
 
+			// The label has to actually be this file's measured width before
+			// it's treated as a variant at all — otherwise a library's plain
+			// "numbered alternate" convention (different graphic, same name,
+			// `_2`/`_3`/...) reads as a bogus variant of its numberless
+			// sibling. A label/width mismatch just means this is its own
+			// ordinary file, not a variant of anything.
+			$dimensions = @getimagesize($file->getPathname());
+			if (!$dimensions || !$this->variants->labelMatchesMeasuredWidth($parsed['label'], (int)$dimensions[0])) {
+				$plainFiles[] = $file;
+				continue;
+			}
+
 			// The base file may not exist (that's exactly the orphaned_variant
 			// case), so its URL is derived from this file's own real URL
 			// rather than resolved through fileToUrl(), which requires the
@@ -173,8 +191,6 @@ class AssetHealthService
 				];
 				continue;
 			}
-			$dimensions = @getimagesize($file->getPathname());
-			if (!$dimensions) continue;
 			$width = (int)$dimensions[0];
 			$variantsByBaseUrl[$baseUrl][(string)$width] = ['url' => $url, 'width' => $width, 'height' => (int)$dimensions[1]];
 		}

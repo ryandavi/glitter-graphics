@@ -2999,7 +2999,7 @@ input[type=range]:disabled {
   color: var(--color-text-tertiary);
 }
 .layers-section > .layers-list > .layer-item > .layer-drag-handle {
-  display: flex;
+  display: none;
   width: 18px;
   height: var(--icon-size-sm);
   flex-basis: 18px;
