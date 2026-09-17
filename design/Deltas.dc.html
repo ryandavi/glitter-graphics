@@ -91,6 +91,83 @@
         <p>Auto Glitter needs a scrolling body with a pinned "Create Layers" action, a live status host and a
         dynamic results list. Needs <span class="src">.panel-scroll</span> + <span class="src">.panel-footer</span>
         primitives that do not break the spacing rules.</p></div>
+
+      <div class="item"><b>Multi-thumbnail category schema</b>
+        <p>Category grid tiles show a 4-swatch montage (glitter/stickers) or 3-example montage (brush sets); the
+        real schema (<span class="src">data/*-categories.json</span>, every category) only has one
+        <span class="src">icon</span> string, rendered singular by <span class="src">createCategoryCard()</span>
+        in <span class="src">AssetBrowser.js</span>. Needs a decision: curated <span class="src">thumbnails[]</span>
+        array vs. auto-picked from category members at render/save time. Whichever is chosen, selection must be
+        stable across renders — never re-randomized — or the tile stops reading as a consistent identity for that
+        category. See <span class="src">BrowserGallery.dc.html</span> / <span class="src">BrowserShapesBrush.dc.html</span> spec notes.</p></div>
+
+      <div class="item"><b>Category-specific empty-state copy</b>
+        <p><span class="src">AssetBrowser.loadCategoryItems()</span> shows one generic "No items in this category"
+        message for every empty category today. The "User Uploads" empty state (upload prompt + action button) in
+        <span class="src">BrowserEmpty.dc.html</span> needs either a <span class="src">category.id === 'user-uploads'</span>
+        special case or a general per-category empty-copy schema field.</p></div>
+
+      <div class="item"><b>User Uploads must always appear in the category grid, even at 0</b>
+        <p><span class="src">populateCategoryCards()</span> (<span class="src">AssetBrowser.js</span>) does
+        <span class="src">if (count === 0) return;</span> &mdash; every zero-item category is skipped, so
+        <span class="src">user-uploads</span> currently vanishes from the grid until the user's first upload. Needs
+        an always-show exception, ideally a schema flag (e.g. <span class="src">alwaysShow: true</span>) rather than
+        hardcoding the id in <span class="src">AssetBrowser.js</span>.</p></div>
+
+      <div class="item"><b>User Uploads sorts last, not by JSON order</b>
+        <p><span class="src">this.categories</span> is just <span class="src">await response.json()</span> array
+        order, no sort step. <span class="src">user-uploads</span> is currently the first entry in
+        <span class="src">data/sticker-categories.json</span>, so it shows first. Needs to move to the end of the
+        grid regardless of file order &mdash; either reorder the JSON or add explicit sort-last handling.</p></div>
+
+      <div class="item"><b>User Uploads tile thumbnail should show the user's own upload</b>
+        <p><span class="src">createCategoryCard()</span> only reads the static <span class="src">category.icon</span>
+        string today. For <span class="src">user-uploads</span> specifically, once the user has any uploads the tile
+        should show one of their own images (most recent, for a consistent "as it changes" identity) instead of a
+        generic icon; falls back to the generic upload glyph at 0.</p></div>
+
+      <div class="item"><b>Header icon gap closed on the two leaf-detail boards</b>
+        <p><span class="src">BrowserCategory.dc.html</span> and <span class="src">BrowserBrushSet.dc.html</span> were missed in the first collapsed-icon pass and had no search/filter icons at all &mdash; real inconsistency, not a style nit. Added to both; <span class="src">BrowserCategory.dc.html</span>'s filter icon carries a dot since its <span class="src">.summary</span> already shows 2 active filters.</p></div>
+
+      <div class="item"><b><span class="src">.catdesc</span> was a bare <span class="src">&lt;p&gt;</span> with no margin reset</b>
+        <p>The browser's default paragraph margin was stacking on top of the intentional 8px flex gap in <span class="src">.catmeta</span>, making the spacing around the description read as irregular even after the earlier symmetric-8px pass fixed the surrounding blocks. <span class="src">.credit</span>'s own internal paragraph already had <span class="src">margin:0</span> (the correct precedent) &mdash; <span class="src">.catdesc</span> just never got it. One-line fix.</p></div>
+
+      <div class="item"><b>Search/filter collapse to header icons on EVERY board, desktop included</b>
+        <p><b>Ryan-said:</b> this was mobile-only-collapsed / desktop-always-expanded; now it's one pattern everywhere. Default state on every board (<span class="src">BrowserGallery.dc.html</span>, <span class="src">BrowserGalleryStickers.dc.html</span>, <span class="src">BrowserShapesBrush.dc.html</span> &times;2, <span class="src">BrowserShowAll.dc.html</span>, <span class="src">BrowserEmpty.dc.html</span> panels 1&amp;2): two icon buttons in the header next to the title, no reserved full-width row. Also: <b>Ryan-said</b> even an active search/filter must be manually collapsible — the old rule ("stays expanded while active") trapped the user. Added <span class="src">.closebtn</span> to every expanded/active row (<span class="src">BrowserFilter.dc.html</span>, <span class="src">BrowserEmpty.dc.html</span> panel 3, <span class="src">BrowserMobile.dc.html</span> frame 2) — collapsing shows a small accent dot on the icon so the hidden-but-active state isn't lost. The active-filter chip summary is untouched by any of this; it's a separate "what's applied" readout. <span class="src">BrowserFilter.dc.html</span> now draws both active states (expanded-closable and collapsed-with-dot) side by side as the canonical reference.</p></div>
+
+      <div class="item"><b>Upload icon removed from the Glitter board</b>
+        <p><span class="src">BrowserGallery.dc.html</span> &mdash; <b>Ryan-said:</b> uploading is sticker-only. An earlier draft drew the upload button greyed/for-reference on the Glitter board too, which read as if Glitter supported uploads. Removed; the real, genuinely-visible button only lives in <span class="src">BrowserGalleryStickers.dc.html</span>.</p></div>
+
+      <div class="item"><b>Spacing rhythm fixed in BrowserCategory.dc.html and BrowserMobile.dc.html</b>
+        <p>Uneven gaps between the filter-tag summary, description/attribution, and the grid &mdash; asymmetric padding (e.g. 2px one side, 4px the other) instead of a consistent unit. Standardized every stacked section to symmetric 8px padding so adjacent-block gaps read the same throughout both artboards; also brought <span class="src">BrowserMobile.dc.html</span>'s <span class="src">.searchrow</span> padding (was 6px) in line with the 8px every desktop board uses for the same row.</p></div>
+
+      <div class="item"><b>On-device privacy note: dropped the card treatment</b>
+        <p><span class="src">BrowserEmpty.dc.html</span>'s <span class="src">.privacy</span> note had a bordered/filled box (<span class="src">background:var(--sunk);border:1px solid var(--border)</span>) &mdash; <b>Ryan-said</b> it looked too much like the search box. Corrected to plain text (icon + tertiary copy, no box), matching <span class="src">.panel-note</span>'s real treatment elsewhere in the app.</p></div>
+
+      <div class="item"><b>Asset-browser parity pass across all nine artboards</b>
+        <p>Found and fixed real inconsistencies, not just style: (1) <span class="src">.abh .back</span> was missing its <span class="src">:hover</span>/<span class="src">:disabled</span> rules entirely in <span class="src">BrowserEmpty.dc.html</span>, <span class="src">BrowserGalleryStickers.dc.html</span> and <span class="src">BrowserMobile.dc.html</span>. (2) <span class="src">BrowserEmpty.dc.html</span> had the back button's disabled STATE backwards in two of its three panels &mdash; disabled on a "User Uploads" (category-detail) panel where it should work, enabled on a "Glitter" root-search panel where it shouldn't. (3) The search-glyph and filter-glyph icon paths had drifted to slightly different coordinates in <span class="src">BrowserEmpty.dc.html</span> only &mdash; same icons, redrawn differently; unified to the one path every other board uses. (4) <span class="src">.filterbtn</span> was being redefined per-file (sunk/default in 4 files, accent/"active" in 3) instead of ONE base class plus a <span class="src">.filterbtn.on</span> modifier like every other toggle in this system (<span class="src">.viewtoggle button.on</span>, <span class="src">.item.on</span>, <span class="src">.chip.on</span>) &mdash; added the modifier everywhere, and unified the active-state label to "Filter &middot; N" (was inconsistently "Filter &middot; 3" / bare "2" / bare "3" across three boards).</p></div>
+
+      <div class="item"><b>Stickers drop the "By category / Show all" toggle</b>
+        <p><span class="src">BrowserGalleryStickers.dc.html</span> &mdash; <b>Ryan-said:</b> the sticker library is headed toward thousands of items eventually, where flattening the whole collection into one scrollable grid (the <span class="src">BrowserShowAll.dc.html</span> pattern, fine for glitter/brush tips at their current scale) stops being usable. Removed the toggle for stickers; category browsing + search/filter is the one path there, not a visual-parity exception.</p></div>
+
+      <div class="item"><b>New artboard: sticker-context category grid</b>
+        <p><span class="src">BrowserGalleryStickers.dc.html</span> &mdash; the previous Browser artboards only ever showed the Glitter context (with the upload button drawn hidden/for-reference). This one is genuinely Sticker mode: real upload button visible, real categories from <span class="src">data/sticker-categories.json</span> (Sparkle, Flower, Twitter, Decorative, Jewelry, Animal), single-icon tiles (not the glitter-only swatch montage), User Uploads pinned last.</p></div>
+
+      <div class="item"><b>New artboard: mobile drawer chrome</b>
+        <p><span class="src">BrowserMobile.dc.html</span> &mdash; three phone-width (390px) states: collapsed icon-only search on the category list, expanded/tinted search + single-row scrolling filter chips when a search or filter is active, and an armed picker session. <b>Ryan-said (corrected after first draft):</b> the header must stay the same shape &mdash; icon, title, collapse chevron, search/filter icon slots &mdash; in every view state, never reshaped or missing a control depending on mode; consistency across views outranks saving a row. First draft folded the picker title/detail into the header itself (replacing "Design", swapping the chevron for Done) &mdash; corrected so the picker strip stays its own row in the same position it occupies on desktop, only compacted to one line (title + Done, no detail subtitle) instead of merged into the header. See <span class="src">docs/PANEL-REDESIGN.md</span> &sect;10 "Mobile drawer chrome" for the code-level plan this draws from.</p></div>
+
+      <div class="item"><b>Attribution fixed to reuse the real component, not a lighter version</b>
+        <p><span class="src">BrowserCategory.dc.html</span>'s category attribution went through two wrong drafts before landing: first invented phrasing ("Curated by X · license"), then a compact byline-only line with no card box. Both read as ad-hoc formatting rather than the app's one real attribution component. Corrected to reuse the literal SAME <span class="src">.credit</span> box as <span class="src">BrowserBrushSet.dc.html</span> (bordered card, uppercase "Source &amp; usage" head, byline, dot-separated meta line) &mdash; the real <span class="src">Attribution.buildCreditElement</span> shape, just omitting the archival-note disclosure and links row a category never has.</p></div>
+
+      <div class="item"><b>Stale armed-picker state removed from BrowserCategory.dc.html</b>
+        <p>The artboard was still showing the OLD picker strip armed by default, left over from before the header-consistency fix. Removed &mdash; this artboard's job is the normal browse view (description/attribution/filters), and the armed-picker state now has its own dedicated demonstration in <span class="src">BrowserMobile.dc.html</span> frame 3.</p></div>
+
+      <div class="item"><b>On-device privacy note for User Uploads</b>
+        <p>New copy, no existing component: "Stays on your device — never uploaded to the site," pinned above the
+        grid/empty-state whenever viewing <span class="src">user-uploads</span> (uploads are genuinely local —
+        <span class="src">handleUserUpload()</span> in <span class="src">StickerManager.js</span> only ever creates
+        a <span class="src">blob:</span> URL via <span class="src">URL.createObjectURL()</span>, no network call).
+        Closest existing precedent is <span class="src">.panel-note</span>.</p></div>
     </div>
 
     <div class="block park">
@@ -174,6 +251,12 @@
       <div class="item"><b>Image Size: Scale Textures / Scale Effects</b>
         <p>Both toggles stay, under the Image Size mode of the Canvas Size control. Earlier draft wrongly implied
         they were dropped.</p></div>
+      <div class="item"><b>Category description</b>
+        <p><span class="src">category.description</span> already exists on every category and already renders in
+        <span class="src">AssetBrowser.renderCategoryDetail()</span> (e.g. the "twitter" sticker category) — the
+        design just hadn't drawn it yet. Now shown in <span class="src">BrowserCategory.dc.html</span>, detail view
+        only, never on the grid tile.</p></div>
+
       <div class="item"><b>Canvas Size: anchor grid + extension fill</b>
         <p>The 9-cell anchor (<span class="src">canvasSizeAnchor</span>) and the Transparent / Color extension
         with a conditional fill-color row stay, re-drawn in the row vocabulary.</p></div>

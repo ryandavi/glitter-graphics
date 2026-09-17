@@ -170,7 +170,7 @@
       "x": 0,
       "y": 0,
       "w": 452,
-      "h": 660,
+      "h": 860,
       "title": "Browser: category view",
       "page": "page-6"
     },
@@ -188,7 +188,7 @@
       "x": 1048,
       "y": 0,
       "w": 452,
-      "h": 640,
+      "h": 840,
       "title": "Browser: inside a category",
       "page": "page-6"
     },
@@ -196,23 +196,23 @@
       "file": "BrowserFilter.dc.html",
       "x": 1572,
       "y": 0,
-      "w": 452,
-      "h": 900,
+      "w": 900,
+      "h": 1050,
       "title": "Browser: search + filter",
       "page": "page-6"
     },
     {
       "file": "BrowserShapesBrush.dc.html",
-      "x": 2096,
+      "x": 2552,
       "y": 0,
       "w": 940,
-      "h": 900,
+      "h": 1080,
       "title": "Browser: shapes + brush tips",
       "page": "page-6"
     },
     {
       "file": "BrowserBrushSet.dc.html",
-      "x": 3088,
+      "x": 3572,
       "y": 0,
       "w": 452,
       "h": 640,
@@ -233,7 +233,7 @@
       "x": 600,
       "y": 0,
       "w": 568,
-      "h": 3200,
+      "h": 4400,
       "title": "Deltas: current app vs this design",
       "page": "page-1"
     },
@@ -311,11 +311,29 @@
     },
     {
       "file": "BrowserEmpty.dc.html",
-      "x": 3620,
-      "y": 0,
-      "w": 900,
-      "h": 600,
+      "x": 4104,
+      "y": 19,
+      "w": 920,
+      "h": 1550,
       "title": "Browser: empty states",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserGalleryStickers.dc.html",
+      "x": 5104,
+      "y": 0,
+      "w": 452,
+      "h": 900,
+      "title": "Browser: sticker category view",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserMobile.dc.html",
+      "x": 5636,
+      "y": 0,
+      "w": 1300,
+      "h": 760,
+      "title": "Browser: mobile drawer chrome",
       "page": "page-6"
     }
   ],

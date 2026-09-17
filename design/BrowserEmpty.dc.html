@@ -24,9 +24,21 @@
       color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
     .phead .sp{flex:1 1 auto}
     .phead svg{width:14px;height:14px;opacity:.85}
+    .searchcollapsed{display:flex;gap:4px}
+    .icnbtn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#fff;
+      opacity:.85;background:none;border:0;cursor:pointer;position:relative;flex:0 0 auto}
+    .icnbtn:hover{opacity:1}
+    .icnbtn svg{width:14px;height:14px;opacity:1}
+    .icnbtn .dot{position:absolute;top:1px;right:1px;width:6px;height:6px;border-radius:50%;
+      background:var(--accent);border:1.5px solid #2b2f35}
+    .closebtn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--t2);
+      background:none;border:0;border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    .closebtn:hover{color:var(--t1);background:var(--card)}
+    .closebtn svg{width:12px;height:12px}
     .abh{display:flex;align-items:center;gap:6px;height:32px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
-    .abh .back{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t2);background:none;border:0;border-radius:var(--r-field);flex:0 0 auto}
-    .abh .back:disabled{color:var(--t3);opacity:.35}
+    .abh .back{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t2);background:none;border:0;border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    .abh .back:hover:not(:disabled){color:var(--t1);background:var(--card)}
+    .abh .back:disabled{color:var(--t3);opacity:.35;cursor:default}
     .abh .back svg{width:13px;height:13px}
     .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1;min-width:0}
     .abh .count{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
@@ -35,8 +47,9 @@
       border:1px solid var(--border);border-radius:var(--r-field);font-size:12px;color:var(--t1)}
     .searchbox svg{width:12px;height:12px;color:var(--t3);flex:0 0 auto}
     .searchbox .x{margin-left:auto;color:var(--t3)}
-    .filterbtn{display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;background:var(--accent-surface);
-      border:1px solid var(--accent);border-radius:var(--r-field);font-size:11px;font-weight:500;color:var(--t1)}
+    .filterbtn{display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;color:var(--t2);cursor:pointer}
+    .filterbtn.on{background:var(--accent-surface);border-color:var(--accent);color:var(--t1)}
     .filterbtn svg{width:13px;height:13px}
 
     /* .property-empty — the ONE empty-state component: icon, title, subtext, optional action.
@@ -52,6 +65,31 @@
       background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
     .browserbody{flex:1;min-height:300px;display:flex;padding:0 var(--pad) var(--pad)}
 
+    /* on-device privacy note: pinned above the grid whenever category === user-uploads, empty or
+       populated. Plain text, no card — a bordered/filled box read too much like the search box.
+       Same treatment as .panel-note elsewhere in the app: icon + tertiary text, nothing else. */
+    .privacy{display:flex;align-items:center;gap:6px;margin:0 var(--pad) 8px;padding:0 2px;
+      font-size:10.5px;color:var(--t3);line-height:1.4}
+    .privacy svg{width:12px;height:12px;flex:0 0 auto;color:var(--t3)}
+    .empty .privacy{margin:2px 0 0}
+
+    .uploadgrid{padding:0 var(--pad) var(--pad);display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .uploadgrid .item{display:flex;flex-direction:column;gap:3px}
+    .uploadgrid .th{aspect-ratio:1;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.14);
+      background:var(--card);display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .uploadgrid .th img{width:100%;height:100%;object-fit:cover}
+    .uploadgrid .nm{font-size:9.5px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+
+    .tilerow{display:flex;gap:14px;align-items:flex-start}
+    .tile{width:150px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
+    .tile .montage{height:60px;display:flex;align-items:center;justify-content:center;background:var(--sunk);color:var(--t3)}
+    .tile .montage svg{width:22px;height:22px}
+    .tile .montage img{width:100%;height:100%;object-fit:cover}
+    .tile .lbl{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:6px 8px}
+    .tile .lbl b{font-size:12px;font-weight:600}
+    .tile .lbl i{font-size:10px;font-style:normal;color:var(--t3)}
+    .tilecap{font-size:10.5px;color:var(--t3);text-align:center;margin-top:6px;width:150px}
+
     .caption{width:404px;font-size:11px;color:var(--t3);text-align:center;margin-top:-12px}
     .specnote{width:832px;max-width:100%;margin:4px auto 0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);
       font-size:10.5px;line-height:1.45;color:var(--t3)}
@@ -66,22 +104,44 @@
       <div class="phead">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a6 6 0 1 0 0 12c.7 0 1.2-.6 1.2-1.3 0-.9.7-1.5 1.6-1.5H13a2 2 0 0 0 2-2c0-4-3.1-7.2-7-7.2Z"/></svg>
         <span class="sp">Design</span>
+        <div class="searchcollapsed">
+          <button class="icnbtn" title="Search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg></button>
+        </div>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
       </div>
-      <div class="abh"><button class="back" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">Custom Stickers</span><span class="count">0</span></div>
-      <div class="searchrow">
-        <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg><span style="color:var(--t3)">Search stickers</span></div>
-      </div>
+      <div class="abh"><button class="back" title="Back to Stickers"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">User Uploads</span><span class="count">0</span></div>
       <div class="browserbody">
         <div class="empty">
           <span class="ei"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M2.5 11l3-3 2.5 2.5L11 7l2.5 2.5"/><circle cx="6" cy="6" r="1"/></svg></span>
           <span class="et">No custom stickers yet</span>
           <span class="es">Upload a PNG or GIF, or drop one on the canvas, to add it here.</span>
           <button class="ea">Upload sticker</button>
+          <div class="privacy"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="11" height="6.5" rx="1.5"/><path d="M5 7V4.5a3 3 0 0 1 6 0V7"/></svg>Stays on your device &mdash; never uploaded to the site.</div>
         </div>
       </div>
     </div>
-    <div class="caption">Collection genuinely empty &mdash; has an action.</div>
+    <div class="caption">Collection genuinely empty &mdash; has an action. Real category id is <code>user-uploads</code> ("User Uploads"), holds every sticker the user has uploaded themselves. Always present in the category list, even at 0 &mdash; see spec note.</div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <div class="phead">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a6 6 0 1 0 0 12c.7 0 1.2-.6 1.2-1.3 0-.9.7-1.5 1.6-1.5H13a2 2 0 0 0 2-2c0-4-3.1-7.2-7-7.2Z"/></svg>
+        <span class="sp">Design</span>
+        <div class="searchcollapsed">
+          <button class="icnbtn" title="Search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg></button>
+        </div>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+      <div class="abh"><button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">User Uploads</span><span class="count">3</span></div>
+      <div class="privacy" style="margin-top:0"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="11" height="6.5" rx="1.5"/><path d="M5 7V4.5a3 3 0 0 1 6 0V7"/></svg>Stays on your device &mdash; never uploaded to the site.</div>
+      <div class="uploadgrid">
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ffb3d1,#ff6fa8)"></span><span class="nm">birthday_cat.png</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#a3e4ff,#4fb8ff)"></span><span class="nm">my_logo.png</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ffe8a3,#ffc94f)"></span><span class="nm">IMG_4821.gif</span></div>
+      </div>
+    </div>
+    <div class="caption">Populated &mdash; same on-device note stays pinned above the grid; the category tile back on the list (next) can now show one of these as its thumbnail instead of a generic icon.</div>
   </div>
 
   <div>
@@ -91,14 +151,15 @@
         <span class="sp">Design</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
       </div>
-      <div class="abh"><button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">Glitter</span><span class="count">0</span></div>
+      <div class="abh"><button class="back" disabled title="Back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">Glitter</span><span class="count">0</span></div>
       <div class="searchrow">
-        <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg><span>holographic pink</span><svg class="x" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></div>
-        <button class="filterbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M4.5 8h7M7 13h2"/></svg>2</button>
+        <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg><span>holographic pink</span><svg class="x" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></div>
+        <button class="filterbtn on"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M4 8h8M6 12h4"/></svg>Filter &middot; 2</button>
+        <button class="closebtn" title="Hide search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
       </div>
       <div class="browserbody">
         <div class="empty">
-          <span class="ei"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg></span>
+          <span class="ei"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg></span>
           <span class="et">No glitter matches</span>
           <span class="es">Nothing matches &ldquo;holographic pink&rdquo; with 2 filters. Try a broader term or clear the filters.</span>
           <button class="ea">Clear search &amp; filters</button>
@@ -108,7 +169,27 @@
     <div class="caption">Search / filter returns nothing &mdash; action clears the query.</div>
   </div>
 
-  <div class="specnote">Both states are the ONE <code>.property-empty</code> component (icon in a round well, 12.5/600 title, 11px subtext capped ~240px, optional action button) &mdash; <code>setSettingsEmptyState()</code> signature kept, <code>display:none</code> until <code>.visible</code> is added. Only the copy, glyph and action differ: an <b>empty collection</b> points at how to add content; <b>no results</b> names the query and offers to clear it. Same component covers Welcome, the protected-canvas notice, and every <code>*BrowserEmpty</code> node.</div>
+  <div style="width:100%">
+    <div class="tilerow" style="justify-content:center">
+      <div>
+        <div class="tile">
+          <div class="montage"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M3 12v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1"/></svg></div>
+          <div class="lbl"><b>User Uploads</b><i>0</i></div>
+        </div>
+        <div class="tilecap">Empty &mdash; generic upload glyph, tile still shows.</div>
+      </div>
+      <div>
+        <div class="tile">
+          <div class="montage"><img src="" style="background:linear-gradient(135deg,#ffb3d1,#ff6fa8)" alt=""></div>
+          <div class="lbl"><b>User Uploads</b><i>3</i></div>
+        </div>
+        <div class="tilecap">Populated &mdash; thumbnail becomes the user's own most recent upload.</div>
+      </div>
+    </div>
+    <div class="tilecap" style="width:100%;margin-top:10px">Both shown as the <b>last</b> tile in the category grid, after every regular category &mdash; not sorted alphabetically/by count with the rest.</div>
+  </div>
+
+  <div class="specnote">Both empty/no-results states are the ONE <code>.property-empty</code> component (icon in a round well, 12.5/600 title, 11px subtext capped ~240px, optional action button) &mdash; <code>setSettingsEmptyState()</code> signature kept, <code>display:none</code> until <code>.visible</code> is added. Only the copy, glyph and action differ: an <b>empty collection</b> points at how to add content; <b>no results</b> names the query and offers to clear it. Same component covers Welcome, the protected-canvas notice, and every <code>*BrowserEmpty</code> node. &mdash; Implementation gaps, all real code changes, not just markup: (1) <code>AssetBrowser.loadCategoryItems()</code> shows one generic "No items in this category" for every empty category today &mdash; needs a <code>category.id === 'user-uploads'</code> special case or a per-category empty-copy schema field. (2) <code>populateCategoryCards()</code> (<code>AssetBrowser.js</code>) currently does <code>if (count === 0) return;</code> &mdash; it skips building a card for any category with zero items, so <b>User Uploads disappears from the grid entirely at 0</b>. Needs an always-show exception (schema flag, e.g. <code>alwaysShow: true</code>, rather than hardcoding the id). (3) Category order is just JSON array order (<code>this.categories = await response.json()</code>, no sort) and <code>user-uploads</code> is currently the *first* entry in <code>data/sticker-categories.json</code> &mdash; needs to move to last, or gain explicit sort-last handling so it doesn't depend on JSON authoring order. (4) The tile thumbnail needs to become dynamic for this one category: most-recent (or first) user upload once any exist, falling back to the generic glyph at 0 &mdash; today <code>createCategoryCard()</code> only reads the static <code>category.icon</code> string. (5) The on-device privacy note is new copy with no existing component home yet; closest precedent is <code>.panel-note</code>. &mdash; Search collapses to an icon in the header (panels 1 &amp; 2 have no active search); panel 3's active search+2 filters is still expanded but now closable (<code>.closebtn</code>) &mdash; full mechanism in <code>BrowserFilter.dc.html</code>'s spec note.</div>
 
 </div>
 
