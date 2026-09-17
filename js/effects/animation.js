@@ -5,11 +5,11 @@ const GlitterAnimation = (() => {
 		'breath', 'float', 'sway', 'dim', 'drift', 'twinkle',
 		'pulse', 'heartbeat', 'blink', 'bounce', 'shake', 'tremble',
 		'wobble', 'jello', 'tada', 'swing', 'rubber-band',
-		'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'
+		'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee', 'rainbow'
 	]);
 	const IDENTITY = Object.freeze({
 		tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
-		skewX: 0, skewY: 0, opacity: 1, originX: 0.5, originY: 0.5
+		skewX: 0, skewY: 0, opacity: 1, originX: 0.5, originY: 0.5, hue: 0
 	});
 	const BASE_DEFAULTS = Object.freeze({
 		periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
@@ -42,6 +42,7 @@ const GlitterAnimation = (() => {
 		if (['orbit', 'ping'].includes(data.type)) return data.radius !== 0;
 		if (['rotate', 'flip'].includes(data.type)) return data.turns !== 0;
 		if (['move', 'drift', 'marquee'].includes(data.type)) return data.distance !== 0;
+		if (data.type === 'rainbow') return true;
 		return data.amount !== 0;
 	}
 
@@ -186,6 +187,11 @@ const GlitterAnimation = (() => {
 			}
 			case 'zoom': out.scaleX = out.scaleY = 1 + amount / 100 * wave; break;
 			case 'ping': out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; break;
+			// A pure hue cycle — no transform, so it composes with any other
+			// preset's motion via the same outer hue-rotate filter/matrix. p is
+			// already the eased, direction-adjusted 0..1 progress through the
+			// period, so one full 360° turn always lands exactly on a period.
+			case 'rainbow': out.hue = 360 * p; break;
 		}
 		// Pixel-snap only whole-pixel-aligns position, keeping pixel art crisp at
 		// rest. Rounding rotation/scale to coarse steps has no such benefit (a
@@ -225,7 +231,11 @@ const GlitterAnimation = (() => {
 		if (Number.isFinite(data.iterations)) return false;
 		const a = sampleAt(data, 0, { layerId: '__seam__' });
 		const b = sampleAt(data, data.periodMs, { layerId: '__seam__' });
-		return Object.keys(IDENTITY).every((key) => Math.abs(a[key] - b[key]) <= 1e-3);
+		// hue wraps at 360deg (0deg and 360deg render identically), so it needs a
+		// modular comparison instead of the other channels' exact equality.
+		const transformSeamless = Object.keys(IDENTITY).filter((key) => key !== 'hue').every((key) => Math.abs(a[key] - b[key]) <= 1e-3);
+		const hueSeamless = Math.abs(((a.hue - b.hue) % 360 + 360) % 360) <= 1e-3;
+		return transformSeamless && hueSeamless;
 	}
 
 	function domTransformString(sample) {

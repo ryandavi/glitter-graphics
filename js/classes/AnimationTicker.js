@@ -94,6 +94,9 @@ class AnimationTicker {
 				wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
 				wrapper.style.opacity = String(sample.opacity);
 				wrapper.style.transformOrigin = `${sample.originX * 100}% ${sample.originY * 100}%`;
+				// hue-rotate on the wrapper composes with each child's own static
+				// filter (fill/shadow color adjust) rather than overwriting it.
+				wrapper.style.filter = sample.hue ? `hue-rotate(${sample.hue}deg)` : '';
 			});
 		});
 	}

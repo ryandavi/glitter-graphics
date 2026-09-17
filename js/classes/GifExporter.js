@@ -206,6 +206,16 @@ class GifExporter {
 			ctx.translate(width / 2, height / 2);
 		}
 
+		// Rainbow: rotate hue on the isolated source canvas before it's composited,
+		// mirroring the live-preview wrapper filter. sourceCanvas is rebuilt fresh
+		// every frame, so mutating it in place here is safe.
+		if (animation?.hue) {
+			const sourceCtx = sourceCanvas.getContext('2d');
+			const pixels = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+			applyColorAdjustToImageData(pixels, { hue: animation.hue, saturation: 100, brightness: 100 });
+			sourceCtx.putImageData(pixels, 0, 0);
+		}
+
 		ctx.drawImage(
 			sourceCanvas,
 			-width / 2,
@@ -663,7 +673,7 @@ class GifExporter {
 					getAuthoredSources: (library) => fillMode === 'glitter' ? [this._createGlitterDescriptor(library, {
 						key: layer.id, ownerLayerId: layer.id, glitterId: layer.selectedGlitterId
 					})] : [],
-					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
+					render: ({ ctx, frameIndex, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
 						const maskCanvas = maskCanvases.get(layer.id);
 						if (!maskCanvas) {
 							throw new Error(`Missing mask canvas for layer ${layer.id}`);
@@ -703,6 +713,12 @@ class GifExporter {
 						helperCtx.globalCompositeOperation = 'destination-in';
 						helperCtx.drawImage(maskCanvas, 0, 0);
 						helperCtx.restore();
+
+						if (rainbowHue) {
+							const pixels = helperCtx.getImageData(0, 0, width, height);
+							applyColorAdjustToImageData(pixels, { hue: rainbowHue, saturation: 100, brightness: 100 });
+							helperCtx.putImageData(pixels, 0, 0);
+						}
 
 						ctx.drawImage(this.helperCanvas, 0, 0);
 					}
@@ -1589,9 +1605,11 @@ class GifExporter {
 				: [{ animData: null, anchorBox: null }];
 			animationUnits.forEach((unit) => {
 				renderCtx.save();
+				let rainbowHue = 0;
 				if (unit.animData) {
 					const sample = sourceSelectionMap?.get(`__anim_${layer.id}`)?.sample
 						|| GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id });
+					rainbowHue = sample.hue || 0;
 					if (layer.type === LayerType.GLITTER_FILL) {
 						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);
 						GlitterAnimation.applyToContext(renderCtx, sample, unit.anchorBox.width, unit.anchorBox.height);
@@ -1605,6 +1623,7 @@ class GifExporter {
 					plan.render({
 						ctx: renderCtx,
 						frameIndex,
+						rainbowHue,
 						sourceSelectionMap,
 						resolvedFramesBySource,
 						maskCanvases,

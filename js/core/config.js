@@ -35,7 +35,7 @@ const RELEASES = [
 			{ type: 'changed', text: 'Improved GIF color selection for better gradients and overall palette quality.', guide: 'export-settings' },
 			{ type: 'fixed', text: 'Fixed transparency edges and color sampling accuracy in GIF exports.', guide: 'export-settings' },
 			{ type: 'added', text: 'Added source and license attribution for brushes, fonts, and stickers in their asset details.' },
-			{ type: 'added', text: 'Added 2016 Twitter sticker collection.', guide: 'add-stickers' },
+			{ type: 'added', text: 'Added Twitter\'s 2016  sticker collection.', guide: 'add-stickers' },
 			{ type: 'changed', text: 'Improved sticker sharpness by automatically using higher-resolution source art when a sticker is scaled up.', guide: 'add-stickers' },
 			{ type: 'changed', text: 'Expanded the site history into a searchable timeline and moved it into its own History section.' },
 			{ type: 'added', text: 'Added a Preservation section describing how stickers, glitters, and site history are kept available long-term.' },
@@ -551,7 +551,8 @@ const CONFIG = deepFreeze({
 				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				zoom: { periodMs: 8000, easing: 'easeInOut', amount: 15, direction: 'alternate', iterations: Infinity, anchor: 'center' },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true }
+				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true },
+				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity }
 			},
 			jitterQuantMs: 60,
 			maxPeriodMs: 20000,
@@ -663,7 +664,7 @@ const CONFIG = deepFreeze({
 				defaultDotSpacingPx: 10,
 				defaultPlacement: 'outside',
 				defaultDrawOrder: 'behind',
-				defaultSource: 'solid',
+				defaultSource: 'glitter',
 				defaultEdgeStyle: 'round',
 				// Canvas bevels a miter join once its point would exceed this many
 				// line-widths -- also doubles as the outside/center canvas padding
@@ -1540,7 +1541,8 @@ const TEXT_BACKGROUND_PRESET_OPTIONS = [
 const ANIMATION_PRESET_GROUPS = {
 	Ambient: ['breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse'],
 	Attention: ['heartbeat', 'blink', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band'],
-	Movement: ['move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee']
+	Movement: ['move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'],
+	Color: ['rainbow']
 };
 const ANIMATION_PRESET_GROUP_BY_TYPE = Object.fromEntries(
 	Object.entries(ANIMATION_PRESET_GROUPS).flatMap(([group, types]) => types.map((type) => [type, group]))
