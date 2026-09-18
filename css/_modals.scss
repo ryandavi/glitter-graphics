@@ -1907,19 +1907,37 @@ body.modal-open {
 
 	// Links whose original site is gone (Tripod, Angelfire, GeoCities...).
 	// Kept as text with the old URL in data-href, styled like a struck link.
+	// Paired with one reason modifier describing *why* it's gone (host shut
+	// down entirely, domain now resolves to something unrelated, the service
+	// itself closed, or the specific page/site is just offline for unclear
+	// reasons). Site identity (which host) is a data-host value, not a class
+	// - it's a lookup value, not something that needs its own visual rule.
+	// Modifiers are reserved hooks with no styling of their own yet.
 	.dead-link {
 		color: var(--color-text-tertiary);
 		text-decoration: underline line-through;
 		text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 70%, transparent);
 		cursor: help;
 	}
+	.dead-link.host-closed { }
+	.dead-link.domain-repurposed { }
+	.dead-link.service-closed { }
+	.dead-link.page-offline { }
 
 	// A working preservation copy (Wayback, Oocities, a known mirror) paired
 	// with a .dead-link original right beside it. Not for ordinary in-prose
 	// citations that happen to point at an archive.org capture; those stay
 	// plain .external. Hook only: still a normal link, just distinguishable
-	// from the dead original it's paired with.
+	// from the dead original it's paired with. Modifiers describe what kind
+	// of preservation link this is; .archive-service marks a link to the
+	// preservation service itself (Oocities, GeoCities.ws) rather than to an
+	// archived page, and isn't paired with a .dead-link.
 	.archive-link { font-style: italic; }
+	.archive-link.archive-wayback { }
+	.archive-link.archive-mirror { }
+	.archive-link.archive-index { }
+	.archive-link.historical-snapshot { }
+	.archive-service { font-style: italic; }
 
 	.modal-hero-image {
 		//tiled background
