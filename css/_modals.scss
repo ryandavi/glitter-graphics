@@ -1914,6 +1914,13 @@ body.modal-open {
 		cursor: help;
 	}
 
+	// A working preservation copy (Wayback, Oocities, a known mirror) paired
+	// with a .dead-link original right beside it. Not for ordinary in-prose
+	// citations that happen to point at an archive.org capture; those stay
+	// plain .external. Hook only: still a normal link, just distinguishable
+	// from the dead original it's paired with.
+	.archive-link { font-style: italic; }
+
 	.modal-hero-image {
 		//tiled background
 		background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;

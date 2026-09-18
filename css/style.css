@@ -10260,6 +10260,11 @@ body.modal-open {
   text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 70%, transparent);
   cursor: help;
 }
+#aboutModal .archive-link,
+#historyModal .archive-link,
+#preservationModal .archive-link {
+  font-style: italic;
+}
 #aboutModal .modal-hero-image,
 #historyModal .modal-hero-image,
 #preservationModal .modal-hero-image {
