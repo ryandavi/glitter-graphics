@@ -6,6 +6,9 @@
 
 const ABOUT_TIMELINE_ENTITY_LABELS = {
  "arpanet": "ARPANET",
+ "usenet": "Usenet",
+ "google-groups": "Google Groups",
+ "deja-news": "Deja News",
  "aol": "America Online (AOL)",
  "gif": "GIF",
  "compuserve": "CompuServe",
@@ -125,6 +128,9 @@ const ABOUT_TIMELINE_ENTITY_LABELS = {
  "verticalscope": "VerticalScope",
  "vistaprint": "Vistaprint",
  "webs": "Webs",
+ "webtv": "WebTV",
+ "mica": "Mica",
+ "dan-411": "Dan (DAN-411)",
  "whowhere": "WhoWhere",
  "yahoo-japan": "Yahoo! Japan",
  "yuku": "Yuku",
@@ -190,6 +196,20 @@ const ABOUT_TIMELINE = [
   "year": 1969,
   "decade": "1960s",
   "html": "<strong>ARPANET</strong> sends its first message, the starting point for what would evolve into the modern internet."
+ },
+ {
+  "date": "1980",
+  "type": "start",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "usenet"
+  ],
+  "country": "us",
+  "year": 1980,
+  "decade": "1980s",
+  "html": "<strong>Usenet</strong> is established, a worldwide distributed discussion system built on the Unix-to-Unix Copy (UUCP) dial-up network architecture. Tom Truscott and Jim Ellis had conceived the idea the year before, in 1979."
  },
  {
   "date": "1 May 1985",
@@ -596,6 +616,20 @@ const ABOUT_TIMELINE = [
   "html": "The <strong>Internet Archive</strong> is founded by Brewster Kahle, beginning the crawl-and-preserve project that would later save much of the era this timeline covers."
  },
  {
+  "date": "1996",
+  "type": "start",
+  "tags": [
+   "isp"
+  ],
+  "entities": [
+   "webtv"
+  ],
+  "country": "us",
+  "year": 1996,
+  "decade": "1990s",
+  "html": "<strong>WebTV</strong> launches, a set-top box and online service that let people browse the web and send email on a television instead of a computer. A small circle of WebTV users passing animations to one another by email in early 2001 is the traceable origin of the glitter tile family preserved in this editor."
+ },
+ {
   "date": "15 Nov 1996",
   "type": "start",
   "tags": [
@@ -622,6 +656,21 @@ const ABOUT_TIMELINE = [
   "year": 1997,
   "decade": "1990s",
   "html": "Development and support for <strong>NCSA Mosaic</strong> ends."
+ },
+ {
+  "date": "1997",
+  "type": "acquisition",
+  "tags": [
+   "isp"
+  ],
+  "entities": [
+   "webtv",
+   "microsoft"
+  ],
+  "country": "us",
+  "year": 1997,
+  "decade": "1990s",
+  "html": "Microsoft buys <strong>WebTV</strong> Networks."
  },
  {
   "date": "1997",
@@ -1048,6 +1097,23 @@ const ABOUT_TIMELINE = [
   "html": "<strong>Freewebs</strong> launches as a free personal-website hosting service."
  },
  {
+  "date": "Early 2001",
+  "type": "milestone",
+  "tags": [
+   "web-animation",
+   "person"
+  ],
+  "entities": [
+   "webtv",
+   "mica",
+   "dan-411"
+  ],
+  "country": "us",
+  "year": 2001,
+  "decade": "2000s",
+  "html": "A small circle of <strong>WebTV</strong> users trading animations by email, later remembered as the \"Glitter Connection,\" produces the glitter tile family preserved in this editor. <strong>Mica</strong>'s tile becomes the shared basis; <strong>Dan</strong> recolors it into flat jewel tones under his own gemstone names."
+ },
+ {
   "date": "30 Jan 2001",
   "type": "start",
   "tags": [
@@ -1061,6 +1127,23 @@ const ABOUT_TIMELINE = [
   "year": 2001,
   "decade": "2000s",
   "html": "<strong>Yahoo! Groups</strong> launches, combining mailing lists, forums, and file archives into one community platform (later peaking at over 100 million users)."
+ },
+ {
+  "date": "Feb 2001",
+  "type": "acquisition",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "google",
+   "google-groups",
+   "deja-news",
+   "usenet"
+  ],
+  "country": "us",
+  "year": 2001,
+  "decade": "2000s",
+  "html": "Google acquires Deja.com's Usenet archive, <strong>Deja News</strong> (operational since March 1995), and relaunches it as <strong>Google Groups</strong>."
  },
  {
   "date": "Feb 2001",
@@ -2184,6 +2267,21 @@ const ABOUT_TIMELINE = [
   "html": "Bebo's founders buy it back from AOL for $1 million and shut it down immediately after."
  },
  {
+  "date": "30 Sep 2013",
+  "type": "closure",
+  "tags": [
+   "isp"
+  ],
+  "entities": [
+   "webtv",
+   "microsoft"
+  ],
+  "country": "us",
+  "year": 2013,
+  "decade": "2010s",
+  "html": "Microsoft shuts down <strong>WebTV</strong>, renamed MSN TV in July 2001, ending the service."
+ },
+ {
   "date": "19 Feb 2014",
   "type": "acquisition",
   "tags": [
@@ -2922,6 +3020,22 @@ const ABOUT_TIMELINE = [
   "year": 2024,
   "decade": "2020s",
   "html": "<strong>Google</strong> retires its \"Cached\" page feature, citing improved page reliability across the modern web."
+ },
+ {
+  "date": "22 Feb 2024",
+  "type": "closure",
+  "tags": [
+   "forum"
+  ],
+  "entities": [
+   "google-groups",
+   "google",
+   "usenet"
+  ],
+  "country": "us",
+  "year": 2024,
+  "decade": "2020s",
+  "html": "<strong>Google Groups</strong> stops supporting posting or viewing new Usenet content; existing archives remain available."
  },
  {
   "date": "26 Jun 2024",
