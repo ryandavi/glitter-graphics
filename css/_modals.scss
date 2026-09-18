@@ -1910,9 +1910,9 @@ body.modal-open {
 	// Paired with one reason modifier describing *why* it's gone (host shut
 	// down entirely, domain now resolves to something unrelated, the service
 	// itself closed, or the specific page/site is just offline for unclear
-	// reasons). Site identity (which host) is a data-host value, not a class
-	// - it's a lookup value, not something that needs its own visual rule.
-	// Modifiers are reserved hooks with no styling of their own yet.
+	// reasons). Site identity (which host) is carried in data-host and,
+	// redundantly, in a host-X class below - neither needs its own visual
+	// rule. Modifiers are reserved hooks with no styling of their own yet.
 	.dead-link {
 		color: var(--color-text-tertiary);
 		text-decoration: underline line-through;
@@ -1923,6 +1923,14 @@ body.modal-open {
 	.dead-link.domain-repurposed { }
 	.dead-link.service-closed { }
 	.dead-link.page-offline { }
+	// Specific-host hooks, layered on top of the reason modifier above
+	// (host-closed or domain-repurposed). Redundant with data-host but kept
+	// as classes too since some tooling/authors prefer selecting by class.
+	.dead-link.host-geocities { }
+	.dead-link.host-tripod { }
+	.dead-link.host-angelfire { }
+	.dead-link.host-wtv-zone { }
+	.dead-link.host-aol-hometown { }
 
 	// A working preservation copy (Wayback, Oocities, a known mirror) paired
 	// with a .dead-link original right beside it. Not for ordinary in-prose
@@ -1937,6 +1945,7 @@ body.modal-open {
 	.archive-link.archive-mirror { }
 	.archive-link.archive-index { }
 	.archive-link.historical-snapshot { }
+	.archive-link.preservation-copy { }
 	.archive-service { font-style: italic; }
 
 	.modal-hero-image {

@@ -10265,6 +10265,11 @@ body.modal-open {
 #preservationModal .archive-link {
   font-style: italic;
 }
+#aboutModal .archive-service,
+#historyModal .archive-service,
+#preservationModal .archive-service {
+  font-style: italic;
+}
 #aboutModal .modal-hero-image,
 #historyModal .modal-hero-image,
 #preservationModal .modal-hero-image {
