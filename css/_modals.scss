@@ -1888,6 +1888,7 @@ body.modal-open {
 		white-space: nowrap;
 	}
 
+	a[data-username],
 	.username-cast {
 		color: color-mix(in srgb, var(--username-hue) 70%, var(--color-text-primary));
 		background-color: color-mix(in srgb, var(--username-hue) 16%, transparent);
@@ -1903,7 +1904,7 @@ body.modal-open {
 	// aol-hometown, homestead, plus every other named platform slug below). Applies to
 	// .username and .person (people), .site-name (a site, e.g. Sparkelies -> tripod,
 	// including when that site name is itself the text of a link - the link's href might
-	// go to a Wayback capture, but the icon is about what the named site was, not about
+	// go to a Wayback capture, but the icon is about what the named site was, not news
 	// the destination of this particular click), and .context (a first-use tooltip term
 	// that names a platform itself, e.g. the GeoCities/Angelfire/Tripod definitions).
 	// Driven by the $history-platform-icons map below (icon files aren't made for every
@@ -2240,6 +2241,15 @@ body.modal-open {
 			-webkit-mask-position: center;
 		}
 	}
+
+	// no whitespace in reference
+
+	ol,ul {
+		a.external {
+			white-space: unset!important;
+		}
+	}
+	
 
 	// Plain-text mentions of the sites in the provenance trail (Bring On The
 	// Glitter, Sparkelies, Flashites, WTV-Zone...). Links already carry .external.

@@ -10219,29 +10219,44 @@ body.modal-open {
   background-color: color-mix(in srgb, var(--username-hue) 8%, transparent);
   white-space: nowrap;
 }
+#aboutModal a[data-username],
 #aboutModal .username-cast,
+#historyModal a[data-username],
 #historyModal .username-cast,
+#preservationModal a[data-username],
 #preservationModal .username-cast {
   color: color-mix(in srgb, var(--username-hue) 70%, var(--color-text-primary));
   background-color: color-mix(in srgb, var(--username-hue) 16%, transparent);
 }
+#aboutModal a[data-username][data-username=mica],
 #aboutModal .username-cast[data-username=mica],
+#historyModal a[data-username][data-username=mica],
 #historyModal .username-cast[data-username=mica],
+#preservationModal a[data-username][data-username=mica],
 #preservationModal .username-cast[data-username=mica] {
   --username-hue: #2bb3a3;
 }
+#aboutModal a[data-username][data-username=dan-411],
 #aboutModal .username-cast[data-username=dan-411],
+#historyModal a[data-username][data-username=dan-411],
 #historyModal .username-cast[data-username=dan-411],
+#preservationModal a[data-username][data-username=dan-411],
 #preservationModal .username-cast[data-username=dan-411] {
   --username-hue: #9b59d0;
 }
+#aboutModal a[data-username][data-username=aylana],
 #aboutModal .username-cast[data-username=aylana],
+#historyModal a[data-username][data-username=aylana],
 #historyModal .username-cast[data-username=aylana],
+#preservationModal a[data-username][data-username=aylana],
 #preservationModal .username-cast[data-username=aylana] {
   --username-hue: #e0559b;
 }
+#aboutModal a[data-username][data-username=moondogee],
 #aboutModal .username-cast[data-username=moondogee],
+#historyModal a[data-username][data-username=moondogee],
 #historyModal .username-cast[data-username=moondogee],
+#preservationModal a[data-username][data-username=moondogee],
 #preservationModal .username-cast[data-username=moondogee] {
   --username-hue: #4a90e2;
 }
@@ -14384,6 +14399,13 @@ body.modal-open {
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
+}
+#aboutModal ol a.external, #aboutModal ul a.external,
+#historyModal ol a.external,
+#historyModal ul a.external,
+#preservationModal ol a.external,
+#preservationModal ul a.external {
+  white-space: unset !important;
 }
 #aboutModal .site-name,
 #historyModal .site-name,
