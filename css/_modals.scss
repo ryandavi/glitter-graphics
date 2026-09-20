@@ -1849,14 +1849,12 @@ body.modal-open {
 	}
 }
 
-/* ===== ABOUT, HISTORY & PRESERVATION MODALS =====
-   History, Personal Web, Preservation, and About share one prose/timeline/reference stylesheet
-   since all use the same "long-form document" shape — only the content
-   differs. */
-#aboutModal,
-#historyModal,
-#personalWebModal,
-#preservationModal {
+/* ===== DOCUMENT MODALS (About, History, Personal Web, Preservation) =====
+   These share one prose/timeline/reference stylesheet since all use the same
+   "long-form document" shape; only the content differs. A modal opts in with
+   the .document-modal class on its overlay (see index.html), so adding another
+   document needs no change here. The Guide keeps its own #guideModal rules. */
+.modal-overlay.document-modal {
 
 	// An inline, button-based "text link" for jumping to another document
 	// modal from prose (see js/ui/doc-modal.js initModalCrossLinks). Unlike
@@ -1940,8 +1938,9 @@ body.modal-open {
 		"freeservers", "the-palace", "cyworld", "sayclub", "netmarble", "hangame", "daum",
 		"buddy-buddy", "freechal", "wayback-machine", "msn", "yahoo", "hi5", "piczo", "lycos",
 		"tumblr", "whatsapp", "tenor", "giphy", "klipy", "boomspeed", "tinypic", "photobucket",
-		"compuserve", "neopets", "usenet", "xanga", "gaia-online", "qbee", "picmix",
-		"online-image-editor", "facebook", "gifcities", "goatcounter", "ko-fi";
+		"compuserve", "microsoft", "neopets", "usenet", "xanga", "gaia-online", "qbee", "picmix",
+		"online-image-editor", "facebook", "gifcities", "goatcounter", "ko-fi",
+		"sony", "philips", "google", "twitter", "youtube", "wikipedia", "bauer";
 
 	.username[data-platform]::before,
 	.person[data-platform]::before,
@@ -2341,7 +2340,33 @@ body.modal-open {
 		-webkit-mask-repeat: no-repeat;
 		-webkit-mask-position: center;
 	}
-	.file-name { white-space: nowrap; }
+	.file-name {
+		white-space: nowrap;
+		font-family: monospace;
+	}
+
+	// A Usenet address (<span class="usenet-address">news:alt.discuss.4-webtv</span>). Its own
+	// class instead of <code> so Usenet-specific markers (an icon before the address, say) can
+	// be added here later without touching the HTML. Addresses are long and have no spaces, so
+	// they're allowed to break anywhere instead of forcing a horizontal scroll.
+	.usenet-address {
+		font-family: monospace;
+		overflow-wrap: anywhere;
+	}
+
+	// A directory (<span class="file-name file-name-directory">/MUSIK</span>) or a page
+	// (<span class="file-name file-name-page">TOOLS.html</span>) gets its own glyph instead of
+	// the image-file one above. Same currentColor-mask treatment; the icons are expected at
+	// images/modal/history/platform-icons/directory.svg and page-file.svg. Until those files
+	// exist the marker just reserves its space.
+	.file-name.file-name-directory::before {
+		mask-image: url("../images/modal/history/platform-icons/directory.svg");
+		-webkit-mask-image: url("../images/modal/history/platform-icons/directory.svg");
+	}
+	.file-name.file-name-page::before {
+		mask-image: url("../images/modal/history/platform-icons/page-file.svg");
+		-webkit-mask-image: url("../images/modal/history/platform-icons/page-file.svg");
+	}
 
 	.modal-hero-image {
 		//tiled background
@@ -3635,10 +3660,7 @@ label.settings-row-label-main { cursor: pointer; }
 		}
 	}
 
-	#aboutModal,
-	#historyModal,
-	#personalWebModal,
-	#preservationModal,
+	.modal-overlay.document-modal,
 	#guideModal {
 		padding:
 			max(8px, env(safe-area-inset-top))
@@ -3646,11 +3668,7 @@ label.settings-row-label-main { cursor: pointer; }
 			max(8px, env(safe-area-inset-bottom))
 			max(8px, env(safe-area-inset-left));
 
-		>.about-dialog,
-		>.history-dialog,
-		>.personal-web-dialog,
-		>.preservation-dialog,
-		>.guide-dialog {
+		>.document-dialog {
 			width: 100%;
 			height: 100%;
 			max-width: 100%;
