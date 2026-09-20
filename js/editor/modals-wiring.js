@@ -84,7 +84,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=21',
+				externalContentUrl: 'modals/history.html?v=22',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -103,6 +103,29 @@ updateOrientationButtons(width, height) {
 					initModalSmoothScroll(modal);
 
 					// Initialize tooltips for dynamically loaded content
+					initTooltipsInContainer(modalBody);
+				}
+			})
+			.register('personalWebModal', {
+				openBtnId: 'personalWebBtn',
+				closeBtnId: 'closePersonalWebModal',
+				externalContentUrl: 'modals/personal-web.html?v=1',
+				cacheContent: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
+				onContentLoaded: (modalBody) => {
+					initPixelScalerInContainer(modalBody);
+
+					// Initialize references (sup ↔ reference list interaction)
+					initModalReferences(modalBody, {
+						referenceListSelector: 'ol#PersonalWebReferencesList'
+					});
+					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
+
+					const modal = document.getElementById('personalWebModal');
+					initDocumentModalNavigation(modal);
+					initModalSmoothScroll(modal);
+
 					initTooltipsInContainer(modalBody);
 				}
 			})
@@ -129,7 +152,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=15',
+				externalContentUrl: 'modals/about.html?v=16',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

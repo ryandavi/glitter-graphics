@@ -1850,11 +1850,12 @@ body.modal-open {
 }
 
 /* ===== ABOUT, HISTORY & PRESERVATION MODALS =====
-   History, Preservation, and About share one prose/timeline/reference stylesheet
+   History, Personal Web, Preservation, and About share one prose/timeline/reference stylesheet
    since all use the same "long-form document" shape — only the content
    differs. */
 #aboutModal,
 #historyModal,
+#personalWebModal,
 #preservationModal {
 
 	// An inline, button-based "text link" for jumping to another document
@@ -3636,6 +3637,7 @@ label.settings-row-label-main { cursor: pointer; }
 
 	#aboutModal,
 	#historyModal,
+	#personalWebModal,
 	#preservationModal,
 	#guideModal {
 		padding:
@@ -3646,6 +3648,7 @@ label.settings-row-label-main { cursor: pointer; }
 
 		>.about-dialog,
 		>.history-dialog,
+		>.personal-web-dialog,
 		>.preservation-dialog,
 		>.guide-dialog {
 			width: 100%;

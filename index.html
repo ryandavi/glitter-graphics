@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=884a368f">
+	<link rel="stylesheet" href="css/style.css?v=dd1dc414">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -80,6 +80,10 @@
 						<button class="app-menu-item" id="historyBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-clock-history"></use></svg></span>
 							<span class="app-menu-item-label">History</span>
+						</button>
+						<button class="app-menu-item" id="personalWebBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg></span>
+							<span class="app-menu-item-label">Personal Web</span>
 						</button>
 						<button class="app-menu-item" id="preservationBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-archive"></use></svg></span>
@@ -1939,6 +1943,51 @@
 		</div>
 	</div>
 
+	<!-- Personal Web Modal -->
+	<div class="modal-overlay" id="personalWebModal">
+		<div class="modal-content modal-reading content-dialog document-dialog personal-web-dialog">
+			<div class="modal-header">
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-palette"></use>
+						</svg>
+						<span class="name">Personal Web</span>
+					</span>
+
+					<span class="modal-title-text">Personal Web</span>
+				</div>
+
+				<button class="btn-icon icon-wrapper modal-close" id="closePersonalWebModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Close</span>
+				</button>
+			</div>
+			<div class="modal-nav document-nav search-toggle-row" aria-label="Personal Web navigation" hidden>
+				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="personalWebDocumentTocPanel">
+					<span>Contents</span>
+					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+				</button>
+				<label class="search-input-wrapper">
+					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+					<input type="search" class="document-search-input" placeholder="Search Personal Web" aria-label="Search Personal Web" aria-controls="personalWebDocumentSearchResults">
+				</label>
+				<span class="document-search-status" role="status" aria-live="polite"></span>
+				<button type="button" class="btn-icon icon-wrapper document-back-to-top" aria-label="Back to top" title="Back to top" hidden>
+					<svg class="icon"><use href="#icon-chevron-up"></use></svg>
+				</button>
+				<div class="document-toc-panel" id="personalWebDocumentTocPanel" hidden></div>
+				<div class="document-search-results" id="personalWebDocumentSearchResults" hidden></div>
+			</div>
+			<div class="modal-body">
+				<!-- Content loaded externally -->
+			</div>
+		</div>
+	</div>
+
 	<!-- Preservation Modal -->
 	<div class="modal-overlay" id="preservationModal">
 		<div class="modal-content modal-reading content-dialog document-dialog preservation-dialog">
@@ -2491,7 +2540,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=e2a7db11"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=f93158eb"></script>
+	<script src="js/core/config.js?v=c7d64911"></script>
 	<script src="js/core/export-target.js?v=09b1d623"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
@@ -2510,7 +2559,7 @@
 	<script src="js/ui/slider.js?v=9388d0d4"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
-	<script src="js/ui/about-timeline-data.js?v=943eab47"></script>
+	<script src="js/ui/about-timeline-data.js?v=f7cbbb98"></script>
 	<script src="js/ui/about-timeline.js?v=973baa4c"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -2527,7 +2576,7 @@
 	<script src="js/effects/filter.js?v=dae1e966"></script>
 	<script src="js/effects/effect-source.js?v=8d8aa31a"></script>
 	<script src="js/effects/easing.js?v=7b2c85e4"></script>
-	<script src="js/effects/animation.js?v=58d46732"></script>
+	<script src="js/effects/animation.js?v=90414ad7"></script>
 	<script src="js/effects/slot-effects.js?v=80aae6ba"></script>
 	<script src="js/effects/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/panel-renderer.js?v=3f35dddc"></script>
@@ -2543,7 +2592,7 @@
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
 	<script src="js/editor/transform-interaction.js?v=bd174854"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=4a8ef7e5"></script>
+		<script src="js/editor/modals-wiring.js?v=591b6c42"></script>
 	<script src="js/editor/layer-panel.js?v=3d5b5ebe"></script>
 	<script src="js/editor/canvas-gestures.js?v=3be86e55"></script>
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>
@@ -2562,10 +2611,10 @@
 	<script src="js/classes/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/classes/AuthoredFrameResolver.js?v=77616a99"></script>
 	<script src="js/classes/GifEncodingPipeline.js?v=c872073d"></script>
-	<script src="js/classes/AnimationTicker.js?v=0fe2971a"></script>
-	<script src="js/classes/AnimationPanelController.js?v=5c5e6dc8"></script>
+	<script src="js/classes/AnimationTicker.js?v=0cd4fe66"></script>
+	<script src="js/classes/AnimationPanelController.js?v=3c5047f0"></script>
 	<script src="js/classes/ExportResultPresenter.js?v=eade9640"></script>
-	<script src="js/classes/GifExporter.js?v=80bfe425"></script>
+	<script src="js/classes/GifExporter.js?v=79ffe479"></script>
 	<script src="js/classes/StillImageExporter.js?v=759f01c2"></script>
 	<script src="js/classes/Mp4Exporter.js?v=42724c8f"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
@@ -2590,7 +2639,7 @@
 	<script src="js/classes/AutoGlitterManager.js?v=16dd5368"></script>
 	<script src="js/classes/TextGlitterManager.js?v=9aeb2eeb"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=7e860f9b"></script>
-	<script src="js/classes/StickerManager.js?v=b91c8152"></script>
+	<script src="js/classes/StickerManager.js?v=3b97a308"></script>
 	<script src="js/classes/FilterLayerManager.js?v=1bc40164"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
