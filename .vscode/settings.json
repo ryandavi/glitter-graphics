@@ -1,0 +1,93 @@
+{
+	"highlight.regexes": {
+		"(\\{(?:site|user|person|tool|franchise|usenet):[^{}\\r\\n]*\\})": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"color": "theme.symbolIcon.classForeground",
+					"fontWeight": "bold"
+				}
+			]
+		},
+		"(\\{(?:date|y):[^{}\\r\\n]*\\})": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"fontWeight": "bold",
+					"borderRadius": "3px",
+					"dark": {
+						"color": "#4ec9b0",
+						"backgroundColor": "#4ec9b026"
+					},
+					"light": {
+						"color": "#007a6a",
+						"backgroundColor": "#007a6a1a"
+					}
+				}
+			]
+		},
+		"(\\{(?:file|dir|page|toc):[^{}\\r\\n]*\\})": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"fontWeight": "bold",
+					"dark": {
+						"color": "#a5d66b"
+					},
+					"light": {
+						"color": "#4d7c0f"
+					}
+				}
+			]
+		},
+		"(\\[@[a-z0-9][a-z0-9-]*\\])": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"fontWeight": "bold",
+					"borderRadius": "3px",
+					"dark": {
+						"color": "#ff7eb6",
+						"backgroundColor": "#ff7eb62b"
+					},
+					"light": {
+						"color": "#b0125a",
+						"backgroundColor": "#b0125a1a"
+					}
+				}
+			]
+		},
+		"(\\{(?:ref [a-z0-9][a-z0-9-]*|/ref)\\})": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"fontWeight": "bold",
+					"dark": {
+						"color": "#ff9ecb",
+						"borderColor": "#ff7eb680",
+						"border": "0 0 1px 0 solid #ff7eb680"
+					},
+					"light": {
+						"color": "#c2185b",
+						"border": "0 0 1px 0 solid #c2185b80"
+					}
+				}
+			]
+		},
+		"(\\{(?:tip|link|dead|goto|open):[^{}\\r\\n]*\\}|\\{/(?:tip|link|dead|goto|open)\\})": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"color": "theme.symbolIcon.methodForeground",
+					"fontWeight": "bold"
+				}
+			]
+		}
+	}
+}

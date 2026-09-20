@@ -84,7 +84,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=31',
+				externalContentUrl: 'modals/history.html?v=6e6526b6',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -109,7 +109,7 @@ updateOrientationButtons(width, height) {
 			.register('personalWebModal', {
 				openBtnId: 'personalWebBtn',
 				closeBtnId: 'closePersonalWebModal',
-				externalContentUrl: 'modals/personal-web.html?v=3',
+				externalContentUrl: 'modals/personal-web.html?v=afbd4328',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

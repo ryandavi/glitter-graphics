@@ -1,0 +1,65 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "lint modals",
+			"type": "shell",
+			"command": "node tools/modal-lint.js",
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				}
+			}
+		},
+		{
+			"label": "build modals",
+			"type": "shell",
+			"command": "node tools/build-modals.js",
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				}
+			}
+		},
+		{
+			"label": "watch modals",
+			"type": "shell",
+			"command": "node tools/build-modals.js --watch",
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^watching content/src for modal changes$",
+					"endsPattern": "^watching content/src for modal changes$"
+				}
+			}
+		}
+	]
+}

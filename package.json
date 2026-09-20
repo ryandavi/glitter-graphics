@@ -4,6 +4,10 @@
 	"scripts": {
 		"cache:bust": "node tools/bump-cache.js",
 		"manifests:split": "node tools/split-manifests.js",
+		"lint:modals": "node tools/modal-lint.js",
+		"build:modals": "node tools/build-modals.js",
+		"check:modals": "node tools/build-modals.js --check",
+		"test:modals": "node tests/modal-lint-unit.js && node tests/modal-build-unit.js",
 		"lint": "eslint js admin/js",
 		"test": "node tests/run.js",
 		"test:quick": "node tests/run.js --tag quick",
