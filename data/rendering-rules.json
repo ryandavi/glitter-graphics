@@ -1,5 +1,5 @@
 {
-	"_comment": "Single source of truth for how an asset's image-rendering is decided. Read by admin/includes/config.php for library analysis and fetched by js/classes/StickerManager.js for user uploads, so the admin's Auto-Analyze and an upload's self-classification can never drift apart. Edit here, nowhere else.",
+	"_comment": "Single source of truth for how an asset's image-rendering is decided. Read by admin/includes/config.php for library analysis and fetched by js/layers/StickerManager.js for user uploads, so the admin's Auto-Analyze and an upload's self-classification can never drift apart. Edit here, nowhere else.",
 
 	"_model": "No single test settles this, so the signals are weighted and summed: positive scores smooth, zero or negative stays pixelated. Ties resolve to pixelated because that is the library's overwhelming majority and the safe default for art that was drawn crisp. Every asset contributes exactly one alpha verdict and one palette verdict, plus any format weight, and the itemised evidence is stored with the analysis so a verdict can always be explained.",
 

@@ -740,7 +740,8 @@ const CONFIG = deepFreeze({
 		zoom: {
 			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 			pixelGridMinZoom: 6,
-			pixelGridEnabled: true
+			pixelGridEnabled: true,
+			pixelGridColor: 'rgba(128, 128, 128, 0.55)'
 		},
 		gradientEditor: {
 			keyboardStep: 0.01,

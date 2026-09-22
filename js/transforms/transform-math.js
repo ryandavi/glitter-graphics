@@ -74,20 +74,55 @@ function screenPixelsToCanvasUnits(value, zoom) {
 	return value / Math.max(0.01, Number(zoom) || 1);
 }
 
+// A layer is placed by its center, so an odd-sized layer centered on a whole
+// pixel has its top-left corner on a half pixel and straddles the document's
+// pixel grid (blurry or doubled edges when zoomed in, and preview/export
+// disagree). When the layer is axis-aligned, shift the rendered center so the
+// top-left corner lands on a whole pixel. Other rotations resample anyway.
+// Preview, export, and the selection frame all place layers through this.
+function snapLayerCenter(centerX, centerY, displayWidth, displayHeight, rotationDeg) {
+	const quarterTurns = rotationDeg / 90;
+	if (Math.abs(quarterTurns - Math.round(quarterTurns)) > 1e-9) {
+		return { x: centerX, y: centerY };
+	}
+	const swapped = Math.abs(Math.round(quarterTurns)) % 2 === 1;
+	const boxWidth = swapped ? displayHeight : displayWidth;
+	const boxHeight = swapped ? displayWidth : displayHeight;
+	return {
+		x: Math.round(centerX - boxWidth / 2) + boxWidth / 2,
+		y: Math.round(centerY - boxHeight / 2) + boxHeight / 2
+	};
+}
+
+// `transform` with `position` replaced by the rendered (snapped) center, for
+// geometry that must agree with what is on screen, such as hit testing.
+function withRenderedPosition(transform, dimensions) {
+	const metrics = computeLayerTransform(transform, dimensions);
+	return { ...transform, position: { x: metrics.centerX, y: metrics.centerY } };
+}
+
 function computeLayerTransform(transform, dimensions = {}) {
 	const resolved = cloneTransform(transform);
 	const width = Number(dimensions.width) || 0;
 	const height = Number(dimensions.height) || 0;
 	const scaleX = (resolved.scale.x || 100) / 100;
 	const scaleY = (resolved.scale.y || 100) / 100;
+	const center = snapLayerCenter(
+		resolved.position.x,
+		resolved.position.y,
+		width * scaleX,
+		height * scaleY,
+		resolved.rotation
+	);
 
 	return {
 		position: {
 			x: resolved.position.x,
 			y: resolved.position.y
 		},
-		centerX: resolved.position.x,
-		centerY: resolved.position.y,
+		// Rendered center: `position` after pixel-grid snapping.
+		centerX: center.x,
+		centerY: center.y,
 		width,
 		height,
 		displayWidth: width * scaleX,

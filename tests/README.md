@@ -2,9 +2,11 @@
 
 Plain Node scripts, most of them driving the real app in headless Chromium through Playwright. There is no test framework: each file exits non-zero on failure.
 
+Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for preview/export contracts, `ui/` for browser interaction, and `admin/` for PHP contracts. Shared fixtures remain in `fixtures/`; `run.js` is the tagged entry point.
+
 ## Running
 
-- The browser suites need the app served at `http://localhost/glitter/` (XAMPP). Override the URL with `GLITTER_URL`, for example in PowerShell: `$env:GLITTER_URL='http://localhost/glitter/'; node tests/touch-smoke.js`.
+- The browser suites need the app served at `http://localhost/glitter/` (XAMPP). Override the URL with `GLITTER_URL`, for example in PowerShell: `$env:GLITTER_URL='http://localhost/glitter/'; node tests/ui/touch-smoke.js`.
 - Run files directly with `node`. `npm run` scripts break on stdin in this environment.
 - `node tests/run.js --tag <tag>` runs every file with that tag. The tag table is at the top of `tests/run.js`; add new files there.
 
@@ -20,8 +22,8 @@ Plain Node scripts, most of them driving the real app in headless Chromium throu
 
 ## What to run when
 
-- **Always, after a change:** `node tests/touch-smoke.js` and `node tests/touch-handle-verify.js`.
-- **After touching export, effect sources, or the text or shape managers:** also `node tests/export-parity.js` and `node tests/shape-border-verify.js`, or `node tests/run.js --tag export`.
+- **Always, after a change:** `node tests/ui/touch-smoke.js` and `node tests/ui/touch-handle-verify.js`.
+- **After touching export, effect sources, or the text or shape managers:** also `node tests/parity/export-parity.js` and `node tests/parity/shape-border-verify.js`, or `node tests/run.js --tag export`.
 - **Export fragility routine** after touching `GifExporter` or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed.
 - **Don't run the full suite unless asked.** Ryan does manual testing himself.
 
@@ -38,15 +40,15 @@ Test behavior, not implementation. Before writing a new test, check whether an e
 
 ## Touch smoke harness
 
-`tests/touch-smoke.js` is the touch regression harness that now covers the TOUCH-2 unified pointer pipeline and the shipped TOUCH-3 touch affordances.
+`tests/ui/touch-smoke.js` is the touch regression harness that now covers the TOUCH-2 unified pointer pipeline and the shipped TOUCH-3 touch affordances.
 
 ### Run it
 
 1. Make sure the app is available at `http://localhost/glitter/` in XAMPP.
 2. Install Playwright if it is not already present in the repo's Node environment, for example `npm install --save-dev playwright`.
-3. Run `node tests/touch-smoke.js`.
+3. Run `node tests/ui/touch-smoke.js`.
 
-You can override the target URL with `GLITTER_URL`. In PowerShell that looks like `$env:GLITTER_URL='http://localhost/glitter/'; node tests/touch-smoke.js`.
+You can override the target URL with `GLITTER_URL`. In PowerShell that looks like `$env:GLITTER_URL='http://localhost/glitter/'; node tests/ui/touch-smoke.js`.
 
 ### Helper structure
 
@@ -120,11 +122,11 @@ This is a documented headless gap rather than an app-code change.
 
 ## Suite notes
 
-### Transform-handle verification (`tests/touch-handle-verify.js`)
+### Transform-handle verification (`tests/ui/touch-handle-verify.js`)
 
 Check 18 above only exercises the move/bounding-box handle. Rotation, corner-scale, and fixed-text edge-resize handles get their own small deterministic script rather than more numbered checks in the main suite, so `touch-smoke.js` stays anchored at checks 1-22.
 
-Run it the same way: `node tests/touch-handle-verify.js`.
+Run it the same way: `node tests/ui/touch-handle-verify.js`.
 
 It drives each handle once via touch and once via mouse (six checks total), confirming the shared pointer-event handle path in `LayerTransform.attachHandleListeners` behaves the same for both input types:
 
@@ -132,17 +134,17 @@ It drives each handle once via touch and once via mouse (six checks total), conf
 2. Touch/mouse drag on a corner handle scales the selected sticker.
 3. Touch/mouse drag on a fixed-text box's edge handle resizes it.
 
-While building this, touch dragging on these three handle types turned out not to work at all — `GestureManager`'s capture-phase `pointerdown` listener on `previewContainer` claimed every touch (including ones landing on a handle) before `LayerTransform`'s own handle listeners ever saw them, the same class of conflict `MaskEditor.js` already guards against for `.transform-handles`. `GestureManager.handlePointerDown` (`js/classes/GestureManager.js`) now also lets touches on `.transform-handle-wrapper` (corner/edge/rotation handles) fall through untouched, matching how `.ui-ignore-gestures` is already excluded. The move handle's bounding box (`.transform-bounding-box`) is deliberately *not* excluded — two-finger pinch/rotate/translate on a selected layer is routed through GestureManager's own composite-gesture math, and a broader exclusion there breaks that path (see checks 14-15 in the main suite, which sit on top of it).
+While building this, touch dragging on these three handle types turned out not to work at all — `GestureManager`'s capture-phase `pointerdown` listener on `previewContainer` claimed every touch (including ones landing on a handle) before `LayerTransform`'s own handle listeners ever saw them, the same class of conflict `MaskEditor.js` already guards against for `.transform-handles`. `GestureManager.handlePointerDown` (`js/systems/GestureManager.js`) now also lets touches on `.transform-handle-wrapper` (corner/edge/rotation handles) fall through untouched, matching how `.ui-ignore-gestures` is already excluded. The move handle's bounding box (`.transform-bounding-box`) is deliberately *not* excluded — two-finger pinch/rotate/translate on a selected layer is routed through GestureManager's own composite-gesture math, and a broader exclusion there breaks that path (see checks 14-15 in the main suite, which sit on top of it).
 
-### Document-start verification (`tests/document-start-verify.js`)
+### Document-start verification (`tests/ui/document-start-verify.js`)
 
-Run it with `node tests/document-start-verify.js`.
+Run it with `node tests/ui/document-start-verify.js`.
 
 It checks the shared desktop/mobile start surface, configured canvas presets and limits, mobile navigation state, image drops becoming new Sticker layers in an existing document, and explicit base-image replacement preserving the layer stack.
 
-### Shape-border verification (`tests/shape-border-verify.js`)
+### Shape-border verification (`tests/parity/shape-border-verify.js`)
 
-Run it the same way: `node tests/shape-border-verify.js`.
+Run it the same way: `node tests/parity/shape-border-verify.js`.
 
 It covers the non-touch shape-border regressions that are easy to miss visually:
 
@@ -150,9 +152,9 @@ It covers the non-touch shape-border regressions that are easy to miss visually:
 2. The same alignment holds for a rotated shape with a shadow, proving shadow padding is excluded from the frame while border width is included.
 3. Dotted shape borders toggle the spacing UI correctly and still produce a border mask through the shared shape mask pipeline.
 
-### Export parity verification (`tests/export-parity.js`)
+### Export parity verification (`tests/parity/export-parity.js`)
 
-Run it the same way: `node tests/export-parity.js`.
+Run it the same way: `node tests/parity/export-parity.js`.
 
 It builds one real mixed composition and then checks the exporter’s byte stability:
 

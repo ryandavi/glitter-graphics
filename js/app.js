@@ -13,6 +13,8 @@ class GlitterEditor {
 		this.previewContainer = document.getElementById('previewContainer');
 		this.previewWrapper = document.getElementById('previewWrapper');
 		this.canvasElementsContainer = document.getElementById('canvasElementsContainer');
+		APP_MEMORY_LEDGER.trackCanvas(this.originalCanvas, 'Document/originalCanvas');
+		APP_MEMORY_LEDGER.trackCanvas(this.previewCanvas, 'Preview/previewCanvas');
 
 		// ============================================================================
 		// CANVAS SETUP
@@ -113,6 +115,7 @@ class GlitterEditor {
 		this.historyManager = new HistoryManager(this);
 		this.projectSerializer = new ProjectSerializer(this);
 		this.htmlSceneExporter = null;
+		this._registerMemoryMeasurements();
 
 		// ============================================================================
 		// INITIALIZATION
@@ -131,6 +134,28 @@ class GlitterEditor {
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
 		this.initializeModalFilters();
+	}
+
+	_registerMemoryMeasurements() {
+		const bytesOfFrames = (items) => items.reduce((total, item) => {
+			const decoded = item?.frames;
+			if (!decoded) return total;
+			if (Array.isArray(decoded.frames)) return total + decoded.frames.reduce((sum, frame) => sum + (frame?.data?.byteLength || frame?.data?.length || 0), 0);
+			return total;
+		}, 0);
+		APP_MEMORY_LEDGER.register({ id: 'decoded-assets', label: 'Decoded glitter and sticker frames', category: 'Decoded assets', measure: () => bytesOfFrames([
+			...(this.glitterManager?.content || []),
+			...(this.stickerManager?.content || []),
+			...this.layers.map((layer) => layer.stickerData)
+		]) });
+		APP_MEMORY_LEDGER.register({ id: 'paint-history', label: 'Paint history', category: 'History', measure: () => this.glitterManager?.paintHistoryBytes || 0 });
+		APP_MEMORY_LEDGER.register({ id: 'undo-history', label: 'Undo history JSON', category: 'History', measure: () => {
+			try { return JSON.stringify(this.historyManager?.history || []).length * 2; } catch (_) { return 0; }
+		} });
+		APP_MEMORY_LEDGER.register({ id: 'base-image', label: 'Base image buffers', category: 'Document', measure: () =>
+			(this.originalImageData?.data?.byteLength || 0) + (this.originalAlphaChannel?.byteLength || 0) });
+		APP_MEMORY_LEDGER.register({ id: 'pixel-effect-cache', label: 'Pixel effect cache', category: 'Preview caches', measure: () =>
+			Array.from(this.baseBackgroundManager?.pixelEffectCache?.values() || []).reduce((sum, value) => sum + (value?.data?.byteLength || 0), 0) });
 	}
 
 	initializeAltDuplicateFeedback() {
@@ -835,7 +860,7 @@ class GlitterEditor {
 	}
 
 	async loadBlankImage(width, height, color = CONFIG.canvas.defaults.blankDocument.color, options = {}) {
-		const canvas = document.createElement('canvas');
+		const canvas = createAppCanvas(0, 0, 'app');
 		canvas.width = width;
 		canvas.height = height;
 		const ctx = canvas.getContext('2d');
@@ -2598,7 +2623,7 @@ class GlitterEditor {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		const exportSettings = structuredClone(this.exportSettings);
 		if (!target.supportsTransparency) exportSettings.transparency = false;
-		const activeExporter = target.isStill ? this.stillImageExporter : (target.isVideo ? this.mp4Exporter : this.exporter);
+		const activeExporter = this[target.exporter];
 		activeExporter.setFileName(this.getProjectFileName(target.extension));
 
 		this.exportInProgress = true;

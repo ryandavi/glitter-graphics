@@ -91,6 +91,8 @@ saveSettingsToStorage() {
 
 ,
 initializeExportSettings() {
+	renderRegisteredSelect('exportPaletteStyle', 'paletteStyle');
+	renderRegisteredSelect('exportDitherTemporalMode', 'ditherTemporalMode');
 	let savedSettings = this.loadSettingsFromStorage();
 	if (savedSettings?.exportColorCount != null && savedSettings.exportDitherPipelineVersion !== 2) {
 		// The first palette-pipeline rollout made a strongly stylized 128-color

@@ -7,7 +7,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		const scaleX = newWidth / oldWidth;
 		const scaleY = newHeight / oldHeight;
-		const scaled = document.createElement('canvas');
+		const scaled = createAppCanvas(0, 0, 'editor/canvas-resize');
 		scaled.width = newWidth;
 		scaled.height = newHeight;
 		const scaledCtx = scaled.getContext('2d', { willReadFrequently: true });
@@ -120,7 +120,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		}
 
 		// 1. Re-anchor the base image pixels onto a new canvas-sized buffer.
-		const rebased = document.createElement('canvas');
+		const rebased = createAppCanvas(0, 0, 'editor/canvas-resize');
 		rebased.width = newWidth;
 		rebased.height = newHeight;
 		const rebasedCtx = rebased.getContext('2d', { willReadFrequently: true });

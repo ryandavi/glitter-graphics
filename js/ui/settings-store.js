@@ -1,9 +1,20 @@
 'use strict';
 
+function renderRegisteredSelect(id, optionName) {
+	const select = document.getElementById(id);
+	if (!select) return;
+	select.replaceChildren(...getOptions(optionName).map(({ value, label }) => {
+		const option = document.createElement('option');
+		option.value = value;
+		option.textContent = label;
+		return option;
+	}));
+}
+
 const EXPORT_SETTINGS_SCHEMA = Object.freeze({
 	outputMode: { storageKey: 'exportOutputMode', default: () => CONFIG.export.defaults.outputMode, group: 'output', validate: (value) => ['still', 'animation'].includes(value) ? value : CONFIG.export.defaults.outputMode },
-	stillFormat: { storageKey: 'exportStillFormat', default: () => CONFIG.export.defaults.stillFormat, group: 'output', validate: (value) => ['png', 'jpeg', 'gif'].includes(value) ? value : CONFIG.export.defaults.stillFormat },
-	animationFormat: { storageKey: 'exportAnimationFormat', default: () => CONFIG.export.defaults.animationFormat, group: 'output', validate: (value) => ['gif', 'mp4'].includes(value) ? value : CONFIG.export.defaults.animationFormat },
+	stillFormat: { storageKey: 'exportStillFormat', default: () => CONFIG.export.defaults.stillFormat, group: 'output', validate: (value) => getExportFormats('still').includes(value) ? value : CONFIG.export.defaults.stillFormat },
+	animationFormat: { storageKey: 'exportAnimationFormat', default: () => CONFIG.export.defaults.animationFormat, group: 'output', validate: (value) => getExportFormats('animation').includes(value) ? value : CONFIG.export.defaults.animationFormat },
 	stillFrame: { storageKey: 'exportStillFrame', element: 'exportStillFrame', default: () => CONFIG.export.defaults.stillFrame, group: 'output', validate: (value) => ['first', 'current'].includes(value) ? value : CONFIG.export.defaults.stillFrame },
 	jpegQuality: { storageKey: 'exportJpegQuality', element: 'exportJpegQuality', kind: 'integer', default: () => CONFIG.export.defaults.jpegQuality, group: 'quality', validate: (value) => clampNumber(value, 1, 100, CONFIG.export.defaults.jpegQuality, true) },
 	jpegGenerations: { storageKey: 'exportJpegGenerations', element: 'exportJpegGenerations', kind: 'integer', default: () => CONFIG.export.defaults.jpegGenerations, group: 'quality', validate: (value) => clampNumber(value, 1, 10, CONFIG.export.defaults.jpegGenerations, true) },
@@ -17,9 +28,9 @@ const EXPORT_SETTINGS_SCHEMA = Object.freeze({
 	colorCount: { storageKey: 'exportColorCount', element: 'exportColorCount', default: () => CONFIG.export.defaults.colorCount, group: 'quality', validate: (value) => value === 'auto' || [32, 64, 128, 256].includes(Number(value)) ? (value === 'auto' ? value : Number(value)) : CONFIG.export.defaults.colorCount },
 	ditherAmount: { storageKey: 'exportDitherAmount', element: 'exportDitherAmount', kind: 'integer', default: () => CONFIG.export.defaults.ditherAmount, group: 'quality', validate: (value) => clampNumber(value, 0, 100, CONFIG.export.defaults.ditherAmount, true) },
 	ditherScale: { storageKey: 'exportDitherScale', element: 'exportDitherScale', kind: 'integer', default: () => CONFIG.export.defaults.ditherScale, group: 'quality', validate: (value) => clampNumber(value, 1, 4, CONFIG.export.defaults.ditherScale, true) },
-	ditherTemporalMode: { storageKey: 'exportDitherTemporalMode', element: 'exportDitherTemporalMode', default: () => CONFIG.export.defaults.ditherTemporalMode, group: 'quality', validate: (value) => ['stable', 'animated'].includes(value) ? value : CONFIG.export.defaults.ditherTemporalMode },
+	ditherTemporalMode: { storageKey: 'exportDitherTemporalMode', element: 'exportDitherTemporalMode', default: () => CONFIG.export.defaults.ditherTemporalMode, group: 'quality', validate: (value) => isOptionValue('ditherTemporalMode', value) ? value : CONFIG.export.defaults.ditherTemporalMode },
 	ditherEdgeProtection: { storageKey: 'exportDitherEdgeProtection', element: 'exportDitherEdgeProtection', kind: 'checkbox', default: () => CONFIG.export.defaults.ditherEdgeProtection, group: 'quality', validate: Boolean },
-	paletteStyle: { storageKey: 'exportPaletteStyle', element: 'exportPaletteStyle', default: () => CONFIG.export.defaults.paletteStyle, group: 'quality', validate: (value) => ['vivid', 'balanced', 'natural', 'websafe'].includes(value) ? value : CONFIG.export.defaults.paletteStyle },
+	paletteStyle: { storageKey: 'exportPaletteStyle', element: 'exportPaletteStyle', default: () => CONFIG.export.defaults.paletteStyle, group: 'quality', validate: (value) => isOptionValue('paletteStyle', value) ? value : CONFIG.export.defaults.paletteStyle },
 	ditherPreset: { storageKey: 'exportDitherPreset', element: 'exportDitherPreset', default: () => CONFIG.export.defaults.ditherPreset, group: 'quality', validate: (value) => ['classic', 'clean', 'textured', 'crunchy', 'shimmer', 'custom'].includes(value) ? value : CONFIG.export.defaults.ditherPreset },
 	baseImage: { storageKey: 'exportBaseImage', element: 'exportBaseImage', kind: 'checkbox', default: () => CONFIG.export.defaults.baseImage, group: 'output', validate: Boolean },
 	frameDelay: { storageKey: 'exportFrameDelay', element: 'exportFrameDelay', kind: 'integer', default: () => CONFIG.export.defaults.frameDelay, group: 'playback', validate: (value) => Number.isFinite(value) && value >= 20 ? Math.round(value) : 20 },
@@ -55,7 +66,7 @@ class SettingsStore {
 		const migratedSource = { ...source };
 		if (!Object.prototype.hasOwnProperty.call(migratedSource, 'exportOutputMode')) {
 			migratedSource.exportOutputMode = 'animation';
-			migratedSource.exportAnimationFormat = ['gif', 'mp4'].includes(migratedSource.exportFormat)
+			migratedSource.exportAnimationFormat = getExportFormats('animation').includes(migratedSource.exportFormat)
 				? migratedSource.exportFormat
 				: CONFIG.export.defaults.animationFormat;
 		}

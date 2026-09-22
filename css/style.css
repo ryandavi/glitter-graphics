@@ -3500,6 +3500,16 @@ body.no-document .main-content > .design-panel {
   margin-left: auto;
 }
 
+.pixel-grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+.pixel-grid-overlay[hidden] {
+  display: none;
+}
+
 .welcome-actions {
   display: flex;
   flex-wrap: wrap;
@@ -3525,15 +3535,6 @@ body.no-document .main-content > .design-panel {
 .preview-wrapper.shows-pixels, .preview-wrapper.shows-pixels * {
   image-rendering: crisp-edges;
   image-rendering: pixelated;
-}
-.preview-wrapper.shows-pixel-grid::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1001;
-  pointer-events: none;
-  background-image: linear-gradient(to right, rgba(128, 128, 128, 0.55) calc(1px / var(--zoom)), transparent calc(1px / var(--zoom))), linear-gradient(to bottom, rgba(128, 128, 128, 0.55) calc(1px / var(--zoom)), transparent calc(1px / var(--zoom)));
-  background-size: 1px 1px;
 }
 .preview-wrapper.viewport-transition {
   transition: transform var(--transition-base);
@@ -3570,6 +3571,28 @@ body.no-document .main-content > .design-panel {
 }
 .preview-wrapper.hasImage > .preview-canvas:not(.selected) {
   outline: calc(1px / var(--zoom, 1)) solid var(--gray-600);
+}
+.preview-wrapper.viewport-transforming::after {
+  display: none;
+}
+
+.memory-overlay {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10000;
+  max-width: min(430px, 100vw - 24px);
+  max-height: calc(100vh - 24px);
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(18, 18, 22, 0.94);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  color: #f4f4f7;
+  font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+  pointer-events: none;
 }
 
 .mask-brush-cursor {

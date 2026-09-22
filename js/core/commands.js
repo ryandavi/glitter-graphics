@@ -4,6 +4,16 @@ const COMMANDS = {
 	zoomReset: { label: 'Reset Zoom (100%)', group: 'View', keys: ['mod+1'], displayKey: 'Ctrl/Cmd + 1', run: (editor) => editor.viewport.resetZoom({ animate: true }) },
 	zoomFit: { label: 'Fit Screen', group: 'View', keys: ['mod+0'], displayKey: 'Ctrl/Cmd + 0', run: (editor) => editor.viewport.zoomToFit({ animate: true }) },
 	zoomFill: { run: (editor) => editor.viewport.zoomToFill({ animate: true }) },
+	toggleMemoryOverlay: {
+		label: 'Toggle Memory Overlay', group: 'View', keys: ['mod+shift+alt+m'], displayKey: 'Ctrl/Cmd + Alt + Shift + M',
+		run: (editor) => {
+			if (!CONFIG.debug.enabled) {
+				editor.updateStatus('Memory overlay is available when debug mode is enabled');
+				return;
+			}
+			APP_MEMORY_LEDGER.toggleOverlay();
+		}
+	},
 	zoomSelection: {
 		label: 'Zoom to Selection', group: 'View', keys: ['shift+2'], displayKey: 'Shift + 2',
 		when: (editor) => editor.getSelectedActionableLayers().length > 0,

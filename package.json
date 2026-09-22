@@ -7,13 +7,13 @@
 		"lint:modals": "node tools/modal-lint.js",
 		"build:modals": "node tools/build-modals.js",
 		"check:modals": "node tools/build-modals.js --check",
-		"test:modals": "node tests/modal-lint-unit.js && node tests/modal-build-unit.js",
+		"test:modals": "node tests/unit/modal-lint-unit.js && node tests/unit/modal-build-unit.js",
 		"lint": "eslint js admin/js",
 		"test": "node tests/run.js",
 		"test:quick": "node tests/run.js --tag quick",
 		"test:export": "node tests/run.js --tag export",
-		"test:touch": "node tests/touch-smoke.js",
-		"test:export-timeline": "node tests/export-timeline-unit.js",
+		"test:touch": "node tests/ui/touch-smoke.js",
+		"test:export-timeline": "node tests/unit/export-timeline-unit.js",
 		"build:css": "sass css/style.scss css/style.css --no-source-map"
 	},
 	"devDependencies": {

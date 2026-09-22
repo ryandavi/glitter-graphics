@@ -3,7 +3,7 @@
 	const Grain = root.GlitterGrain || (typeof require === 'function' ? require('./grain.js') : null);
 	const Blur = root.GlitterBlur || (typeof require === 'function' ? require('./blur.js') : null);
 	const BlendModes = root.GlitterBlendModes || (typeof require === 'function' ? require('./blend-modes.js') : null);
-	const Presets = root.FILTER_PRESETS || (typeof require === 'function' ? require('../core/filter-presets.js') : null);
+	const Presets = root.FILTER_PRESETS || (typeof require === 'function' ? require('./filter-presets.js') : null);
 	const FILTER_TYPES = Object.freeze(['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram']);
 
 	function config() {
@@ -148,7 +148,7 @@
 	function tileDataUrl(tile) {
 		if (typeof tile.toDataURL === 'function') return tile.toDataURL();
 		if (typeof document === 'undefined') return '';
-		const canvas = document.createElement('canvas');
+		const canvas = createAppCanvas(0, 0, 'effects/filter');
 		canvas.width = tile.width;
 		canvas.height = tile.height;
 		const context = canvas.getContext('2d');
@@ -206,7 +206,7 @@
 	function getScratchCanvas(slot, width, height) {
 		let canvas = scratchCanvasSlots.get(slot);
 		if (!canvas) {
-			canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : document.createElement('canvas');
+			canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(width, height) : createAppCanvas(0, 0, 'effects/filter');
 			scratchCanvasSlots.set(slot, canvas);
 		}
 		if (canvas.width !== width) canvas.width = width;
@@ -356,33 +356,6 @@
 		context.restore();
 	}
 
-	function renderCssThumbnail(element, value, strength = 1) {
-		if (!element) return;
-		const data = normalizeFilterData(value);
-		const resolved = resolve(data);
-		FILTER_TYPES.forEach((type) => element.classList.remove(`filter-css-thumbnail-${type}`));
-		element.classList.add('filter-css-thumbnail', `filter-css-thumbnail-${data.type}`);
-		element.style.opacity = clamp(number(strength, 1), 0, 1);
-		element.replaceChildren();
-
-		const base = document.createElement('span');
-		base.className = 'filter-css-thumbnail-base';
-		const toneFilter = Tone.toneCssFilterString(resolved.tone);
-		if (toneFilter) base.style.filter = toneFilter;
-		if (resolved.blur) base.style.filter = `${base.style.filter} ${Blur.cssBlurString(resolved.blur, 1)}`.trim();
-		element.appendChild(base);
-
-		resolved.ops.forEach((op) => {
-			const overlay = document.createElement('span');
-			overlay.className = `filter-css-thumbnail-overlay filter-css-thumbnail-${op.kind}`;
-			overlay.style.mixBlendMode = op.mode;
-			overlay.style.opacity = op.kind === 'grain' ? op.amount : op.opacity;
-			if (op.kind === 'fill') overlay.style.background = op.color;
-			else if (op.kind === 'gradient') overlay.style.backgroundImage = gradientCss(op.gradient);
-			element.appendChild(overlay);
-		});
-	}
-
 	function nameCaptionSpec(text, { width, height } = {}) {
 		const caption = config().nameCaption;
 		const available = width * caption.maxWidthFraction;
@@ -393,7 +366,7 @@
 			textAlign: 'center', textBaseline: 'middle' };
 	}
 
-	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, overlayLayerStyles, renderToCanvas, drawCaption, renderCssThumbnail, nameCaptionSpec };
+	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec };
 	root.GlitterFilter = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

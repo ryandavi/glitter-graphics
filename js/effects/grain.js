@@ -79,7 +79,7 @@
 
 	function buildTile(value, seed, tileSize = 256) {
 		const Canvas = typeof OffscreenCanvas !== 'undefined' ? OffscreenCanvas : null;
-		const canvas = Canvas ? new Canvas(tileSize, tileSize) : (typeof document !== 'undefined' ? document.createElement('canvas') : null);
+		const canvas = Canvas ? new Canvas(tileSize, tileSize) : (typeof document !== 'undefined' ? createAppCanvas(0, 0, 'effects/grain') : null);
 		if (!canvas) {
 			return { width: tileSize, height: tileSize, data: createNoise(value, seed, tileSize) };
 		}

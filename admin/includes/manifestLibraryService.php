@@ -67,7 +67,7 @@ class ManifestLibraryService
 		$this->validateShapes($manifest);
 	}
 
-	// Mirrors BrushLibrary.applyManifest (js/classes/BrushLibrary.js). Flat shape
+	// Mirrors BrushLibrary.applyManifest (js/assets/BrushLibrary.js). Flat shape
 	// (packs[] metadata + brushes[] with `brush.pack`) mirrors shapes.json. This
 	// admin edits pack + brush metadata; the tips + dynamics come from the ABR
 	// importer (tools/abr-import.js), so those are validated but not created here.

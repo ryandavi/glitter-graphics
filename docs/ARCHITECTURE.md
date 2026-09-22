@@ -11,7 +11,7 @@ A map of how the Glitter Graphics editor fits together. Referenced from `AGENTS.
 
 ## Boot sequence
 
-1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core` and `js/transforms`, `js/ui` widgets, `js/effects`, the panel renderers, the `js/editor` method bags, then `js/classes`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
+1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core`, `js/effects`, `js/paint`, `js/transforms` and `js/ui`, followed by the `js/editor` method bags, domain classes in `js/layers`, `js/assets`, `js/export` and `js/systems`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
 2. `js/app.js` mixes the `js/editor/*` method bags (`EDITOR_SETTINGS_METHODS`, `EDITOR_PANEL_METHODS`, …) into `GlitterEditor.prototype` with `Object.assign`.
 3. An async IIFE at the bottom of `app.js` loads the shape and brush manifests, then constructs `GlitterEditor`.
 4. The constructor renders the sidebar from `PANEL_SCHEMAS` (`renderPanelSections`, then `renderTransformPanels`) and the context toolbars from `CONFIG.ui.contextToolbars`, then constructs the managers and subsystems. Managers may cache panel elements in their constructors, which is why schemas render first.
@@ -53,7 +53,9 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
 | Runtime user preferences | `PREFERENCES` in `js/core/preferences.js` | `PREFERENCES.get(key)` / `set(key, value)`, persisted to `localStorage`. |
 | Export settings | `EXPORT_SETTINGS_SCHEMA` + `SettingsStore` in `js/ui/settings-store.js` | Declares storage key, default and validation per setting. |
-| Export targets | `EXPORT_TARGETS` in `js/core/export-target.js` | Capabilities per format. |
+| Shared option lists | `OPTION_REGISTRY` in `js/core/options.js` | Canonical values and labels for repeated choices. |
+| Export targets | `EXPORT_TARGETS` in `js/core/export-target.js` | Capabilities and exporter dispatch per format. |
+| Memory instrumentation | `MemoryLedger` in `js/systems/MemoryLedger.js` | App-owned buffers and every `createAppCanvas` backing store; inspect with `window.glitterMemory()`. |
 | Document content | layer objects in `editor.layers` | See "Layer data model". |
 | Painted masks | `GlitterManager` paint store | Binary buffers, **not** in layer JSON. Layers hold `maskVersion` pointers. |
 | Base image pixels | `editor.originalImageData`, `originalAlphaChannel`, `originalCanvas` | Replace-only: never mutate them in place, because history snapshots share them by reference. |
@@ -71,7 +73,7 @@ Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` 
 | `shape` | `shapeData`: `shapeId`, size, `fill`, `border`, `shadow`, `transform` |
 | `filter` | `filterData` |
 
-**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. `resolveEffectPaintSource` (`js/effects/effect-source.js`) turns slot data into a render source for both preview and export. Known inconsistency: a fill's glitter id and some texture settings still live on the layer (`selectedGlitterId`, `settings`) instead of in the slot. See audit section A1.
+**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. `resolveEffectPaintSource` (`js/paint/effect-source.js`) turns slot data into a render source for both preview and export. Known inconsistency: a fill's glitter id and some texture settings still live on the layer (`selectedGlitterId`, `settings`) instead of in the slot. See audit section A1.
 
 **Transforms.** Movable layers (sticker, text, shape) keep a transform `{ position, rotation, scale, flipX, flipY }`. Read it with `getLayerTransform(layer)` (`js/transforms/transform-math.js`); `layer.transform` currently aliases the object inside the type's data. Scale writes go through `LayerTransform.updateTransform`, which clamps with `clampLayerScale`.
 
@@ -85,12 +87,12 @@ Preview is DOM, export is canvas. Every visual feature exists twice, and the two
    - Glitter fills: an animated GIF `background-image` plus a CSS `mask-image` blob.
    - Text and shapes: a stack of masked spans, one per paint slot (background, shadow, border, fill).
    - Stickers: an `img`, plus an optional shadow span.
-4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`. Above 100% it applies nearest-neighbor display to the whole stack; at 600% and above the optional pixel grid appears. `will-change` is active only during a viewport transition so the final zoom repaints sharply.
+4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`. Above 100% it applies nearest-neighbor display to the whole stack and commits a compositor repaint after continuous input settles. At 600% and above the optional pixel grid appears. `PixelGridOverlay` draws it on an unscaled canvas beside the wrapper, placing each one-device-pixel line from the viewport transform and `devicePixelRatio`; it hides only during animated view transitions. `will-change` is active only during active viewport movement.
 5. Layer animation is sampled by `GlitterAnimation.sampleAt` and applied by `AnimationTicker` to a `.layer-anim-wrapper`. Export samples the same function, so preview and export share one timeline.
 
 ## Export path
 
-1. `editor.exportCurrentTarget()` resolves the active `EXPORT_TARGETS` entry and snapshots the settings.
+1. `editor.exportCurrentTarget()` resolves the active `EXPORT_TARGETS` entry, snapshots the settings and dispatches through that target's `exporter` key.
 2. `GifExporter` prepares masks, fonts and sources, then builds one export plan per layer (`_buildLayerExportPlan`).
 3. `ExportTimeline` and `AuthoredFrameResolver` decide which frames to render and their timing.
 4. `composeFrameAt` renders a frame to canvas. **All formats use it:** `GifExporter` encodes with `GifEncodingPipeline` and `GifPalette`; `Mp4Exporter` encodes with WebCodecs and the vendored `mp4-muxer`; `StillImageExporter` encodes PNG, JPEG or a still GIF.
@@ -111,7 +113,7 @@ Pixel-level math only: never `ctx.filter`, because iOS Safari doesn't support it
 - Errors: `editor.showError(message)`, which queues an accessible toast.
 - Confirmation: `await editor.confirmAction({ … })`.
 
-The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/notification-policy.js` enforces it. Debug output goes through `dbg()` (`js/core/debug.js`), which prints only when `CONFIG.debug.enabled`.
+The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notification-policy.js` enforces it. Debug output goes through `dbg()` (`js/core/debug.js`), which prints only when `CONFIG.debug.enabled`.
 
 ## Asset data
 
