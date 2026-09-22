@@ -194,6 +194,9 @@
 		},
 		"youtube": {
 			"label": "YouTube"
+		},
+		"fortunecity": {
+			"label": "FortuneCity"
 		}
 	},
 	"usernames": {
@@ -629,6 +632,10 @@
 		},
 		"avril-lavigne": {
 			"display": "Avril Lavigne",
+			"platform": "other"
+		},
+		"ayumi-hamasaki": {
+			"display": "Ayumi Hamasaki",
 			"platform": "other"
 		},
 		"becky-bw": {

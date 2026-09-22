@@ -109,7 +109,7 @@ updateOrientationButtons(width, height) {
 			.register('personalWebModal', {
 				openBtnId: 'personalWebBtn',
 				closeBtnId: 'closePersonalWebModal',
-				externalContentUrl: 'modals/personal-web.html?v=afbd4328',
+				externalContentUrl: 'modals/personal-web.html?v=0cc39d10',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

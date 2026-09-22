@@ -16,6 +16,11 @@
 				document.documentElement.dataset.theme = savedTheme;
 			}
 		} catch (_error) {}
+
+		// See docs/RESTORE-HISTORY-PERSONAL-WEB-PRESERVATION.md — gates .wip-hidden elements.
+		if (['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)) {
+			document.documentElement.classList.add('is-localhost');
+		}
 	</script>
 
 	<!-- Page title -->
@@ -77,11 +82,11 @@
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-question-circle"></use></svg></span>
 							<span class="app-menu-item-label">Guide</span>
 						</button>
-						<button class="app-menu-item" id="historyBtn" type="button" role="menuitem">
+						<button class="app-menu-item wip-hidden" id="historyBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-clock-history"></use></svg></span>
 							<span class="app-menu-item-label">History</span>
 						</button>
-						<button class="app-menu-item" id="personalWebBtn" type="button" role="menuitem">
+						<button class="app-menu-item wip-hidden" id="personalWebBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg></span>
 							<span class="app-menu-item-label">Personal Web</span>
 						</button>

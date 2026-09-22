@@ -34,6 +34,13 @@ html {
 	display: none !important;
 }
 
+// Work-in-progress features that are wired up but not ready for public access.
+// Hidden everywhere except localhost (see js bootstrap in index.html that adds
+// `is-localhost` to <html>). See docs/RESTORE-HISTORY-PERSONAL-WEB-PRESERVATION.md
+html:not(.is-localhost) .wip-hidden {
+	display: none;
+}
+
 p,
 span,
 input,
