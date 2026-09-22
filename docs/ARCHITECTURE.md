@@ -1,0 +1,130 @@
+# Architecture
+
+A map of how the Glitter Graphics editor fits together. Referenced from `AGENTS.md`. It describes the system as it is. Planned changes live in the active plans in `docs/plans/` (local-only), chiefly the architecture audit. Update this file as those changes land.
+
+## Stack
+
+- **Editor:** `index.html` plus plain browser scripts in `js/`. No framework, no bundler, no modules. Every file defines globals (`class Foo {}`, `function bar()`, `const BAZ = …`).
+- **Admin:** PHP and MySQL under `admin/`, run on local XAMPP. See `admin/README.md`.
+- **Styles:** SCSS partials under `css/`, compiled to `css/style.css` by Ryan.
+- **Asset data:** JSON manifests in `data/`, written by the admin export (see "Asset data" below).
+
+## Boot sequence
+
+1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core` and `js/transforms`, `js/ui` widgets, `js/effects`, the panel renderers, the `js/editor` method bags, then `js/classes`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. `tools/bump-cache.js` adds content hashes to every local tag.
+2. `js/app.js` mixes the `js/editor/*` method bags (`EDITOR_SETTINGS_METHODS`, `EDITOR_PANEL_METHODS`, …) into `GlitterEditor.prototype` with `Object.assign`.
+3. An async IIFE at the bottom of `app.js` loads the shape and brush manifests, then constructs `GlitterEditor`.
+4. The constructor renders the sidebar from `PANEL_SCHEMAS` (`renderPanelSections`, then `renderTransformPanels`) and the context toolbars from `CONFIG.ui.contextToolbars`, then constructs the managers and subsystems. Managers may cache panel elements in their constructors, which is why schemas render first.
+5. `editor.init()` creates the exporters, then initializes the sticker, glitter, brush-tip and font libraries.
+6. `window.editor` is the live instance, which is useful in DevTools and headless probes.
+
+## Who owns what
+
+The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Manager` exist; see the `js/` naming notes in `AGENTS.md`.
+
+| Concern | Owner | Notes |
+|---|---|---|
+| Layer list, selection, ordering, serialization | `LayerManager` (`editor.layerManager`) | `editor.layers` and `editor.activeLayerId` are getters over it. |
+| Glitter-fill layers, and the glitter asset library | `GlitterManager` | Also owns painted masks and their version history (`paintHistory`). |
+| Sticker layers and sticker assets | `StickerManager` | |
+| Text layers and fonts | `TextGlitterManager` | |
+| Shape layers and shape image fills | `ShapeGlitterManager` | Shape definitions come from `ShapeLibrary`. |
+| Canvas background (image, solid, gradient, glitter) | `BaseBackgroundManager` | The base-image layer. |
+| Filter layers | `FilterLayerManager` | |
+| Undo and redo | `HistoryManager` | |
+| Zoom and pan | `ViewportManager` (`editor.viewport`) | |
+| Touch and pointer input | `GestureManager` | |
+| Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | |
+| Brush and eraser mask painting | `MaskEditor`, composed by `MaskCompositor` | |
+| Auto Glitter | `AutoGlitterManager` | A session tool that emits glitter-fill layers. |
+| Export | `GifExporter` (composes frames for every format), `Mp4Exporter`, `StillImageExporter` | See "Export path". |
+| Project files | `ProjectSerializer` | `.glitter.json`, with versioned migrations. |
+| Modals, mobile drawers | `ModalManager`, `MobileManager` | |
+| User feedback | `NotificationCenter` (`editor.notifications`) | See "User feedback". |
+
+## Where state lives
+
+| Kind | Where | Rule |
+|---|---|---|
+| Static defaults and tunables | `CONFIG` in `js/core/config.js` | Recursively frozen. Never assigned at runtime. Any user-tunable or twice-used value goes here; inline `??` fallbacks that restate a CONFIG default are forbidden. |
+| Layer-type definitions | `LayerType`, `LAYER_UI_CONFIG` in `js/core/config.js` | See `docs/LAYER-TYPE-CONTRACT.md`. |
+| Sidebar structure | `PANEL_SCHEMAS` in `js/core/config.js` | Rendered by `js/ui/panel-renderer.js`. |
+| Tools | `ToolType`, `TOOL_GROUPS` in `js/core/config.js` | |
+| Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
+| Runtime user preferences | `PREFERENCES` in `js/core/preferences.js` | `PREFERENCES.get(key)` / `set(key, value)`, persisted to `localStorage`. |
+| Export settings | `EXPORT_SETTINGS_SCHEMA` + `SettingsStore` in `js/ui/settings-store.js` | Declares storage key, default and validation per setting. |
+| Export targets | `EXPORT_TARGETS` in `js/core/export-target.js` | Capabilities per format. |
+| Document content | layer objects in `editor.layers` | See "Layer data model". |
+| Painted masks | `GlitterManager` paint store | Binary buffers, **not** in layer JSON. Layers hold `maskVersion` pointers. |
+| Base image pixels | `editor.originalImageData`, `originalAlphaChannel`, `originalCanvas` | Replace-only: never mutate them in place, because history snapshots share them by reference. |
+
+## Layer data model
+
+Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` and `opacity` (0–100, the canonical whole-layer opacity). Most also have `selectedGlitterId`, and optionally `blendMode` and `animation`. Type-specific data lives under one key:
+
+| `LayerType` | Data |
+|---|---|
+| `base-image` | `background`: `{ mode, color, gradient, scale, colorAdjust, pixelEffects, … }` |
+| `glitter-fill` | `selections` (color-picked regions), `settings` (threshold, feather, invert, contiguous, texture scale, color adjust), `fill`, `maskVersion` |
+| `sticker` | `stickerData` (custom serializer in `StickerManager`) |
+| `text-glitter` | `textData`: text, font, layout, `fill`, `border`, `shadow`, `textBackground`, `transform` |
+| `shape` | `shapeData`: `shapeId`, size, `fill`, `border`, `shadow`, `transform` |
+| `filter` | `filterData` |
+
+**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. `resolveEffectPaintSource` (`js/effects/effect-source.js`) turns slot data into a render source for both preview and export. Known inconsistency: a fill's glitter id and some texture settings still live on the layer (`selectedGlitterId`, `settings`) instead of in the slot. See audit section A1.
+
+**Transforms.** Movable layers (sticker, text, shape) keep a transform `{ position, rotation, scale, flipX, flipY }`. Read it with `getLayerTransform(layer)` (`js/transforms/transform-math.js`); `layer.transform` currently aliases the object inside the type's data. Scale writes go through `LayerTransform.updateTransform`, which clamps with `clampLayerScale`.
+
+## Render path (live preview)
+
+Preview is DOM, export is canvas. Every visual feature exists twice, and the two must match.
+
+1. Code that changes what's visible calls `editor.requestPreviewUpdate()`. It coalesces to one `requestAnimationFrame`. Don't call `updatePreview()` directly.
+2. `updatePreview()` redraws the base canvas (`renderPreviewCanvas`) and calls each layer manager's `renderContent(visibleLayers)`.
+3. Managers **reconcile** their DOM under `.canvas-elements-container`; they never clear and rebuild it.
+   - Glitter fills: an animated GIF `background-image` plus a CSS `mask-image` blob.
+   - Text and shapes: a stack of masked spans, one per paint slot (background, shadow, border, fill).
+   - Stickers: an `img`, plus an optional shadow span.
+4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`.
+5. Layer animation is sampled by `GlitterAnimation.sampleAt` and applied by `AnimationTicker` to a `.layer-anim-wrapper`. Export samples the same function, so preview and export share one timeline.
+
+## Export path
+
+1. `editor.exportCurrentTarget()` resolves the active `EXPORT_TARGETS` entry and snapshots the settings.
+2. `GifExporter` prepares masks, fonts and sources, then builds one export plan per layer (`_buildLayerExportPlan`).
+3. `ExportTimeline` and `AuthoredFrameResolver` decide which frames to render and their timing.
+4. `composeFrameAt` renders a frame to canvas. **All formats use it:** `GifExporter` encodes with `GifEncodingPipeline` and `GifPalette`; `Mp4Exporter` encodes with WebCodecs and the vendored `mp4-muxer`; `StillImageExporter` encodes PNG, JPEG or a still GIF.
+5. `ExportResultPresenter` shows the result.
+
+Pixel-level math only: never `ctx.filter`, because iOS Safari doesn't support it. Masks are binarized (`CONFIG.rendering.crispMaskEdges`) so transparent GIF exports don't fringe.
+
+## Undo and redo
+
+- Call `editor.saveState(label)` once per **committed** user edit, not on every slider tick. Slider bindings usually save on commit.
+- Repeated small edits share a `coalesceKey`, for example `saveState('Move layer', { coalesceKey: \`nudge:${ids}\` })`.
+- A snapshot is `LayerManager.serializeLayer` for every layer, plus canvas size and base-image references. Painted masks are stored separately as versioned binaries; snapshots hold `maskVersion` pointers. Anything that serializes state must account for that.
+- Restoring rebuilds the layer objects. Anything cached on a layer object is lost unless it is carried over (see `GlitterManager.reconcileHistoryVisualCaches`).
+
+## User feedback
+
+- Status line: `editor.updateStatus(message)`.
+- Errors: `editor.showError(message)`, which queues an accessible toast.
+- Confirmation: `await editor.confirmAction({ … })`.
+
+The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/notification-policy.js` enforces it. Debug output goes through `dbg()` (`js/core/debug.js`), which prints only when `CONFIG.debug.enabled`.
+
+## Asset data
+
+- `data/glitter.json`, `data/stickers.json` and their category files are written by the admin **export** (`admin/includes/assetAPI.php`). The export also writes a lightweight `*.index.json` for browsing and per-asset detail files under `data/glitter/` and `data/stickers/`. The editor loads the index at boot and fetches details on selection.
+- `data/fonts.json`, `data/shapes.json` and `data/brushes.json` are edited through the admin manifest pages (`admin/fonts.php`, `shapes.php`, `brushes.php`).
+- `data/rendering-rules.json` holds analyzer weights shared by the admin upload path and the analyzer.
+- Don't hand-edit generated manifests. Re-export from the admin, or run `node tools/split-manifests.js` to regenerate the index and detail files from a full manifest.
+- Attribution (author, source, license) follows one schema across brushes, stickers and fonts: `js/core/attribution.js`.
+
+## Content modals
+
+`modals/*.html` are loaded into document modals at runtime. The article pages (`history.html`, `personal-web.html`, and any local-only pages) are generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only) governs the history page's voice and citations.
+
+## Workers
+
+`js/workers/` holds `auto-glitter.worker.js` (palette analysis), `pixel-effects.worker.js` (background pixel effects) and `gif.worker.js` (GIF encoding). Workers load shared code with `importScripts`, so anything they import must be DOM-free. Their script URLs carry hand-maintained `?v=` numbers that `bump-cache.js` does not update yet; bump them by hand when their dependencies change.
