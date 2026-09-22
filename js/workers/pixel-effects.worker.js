@@ -1,4 +1,4 @@
-importScripts('../effects/palette-analysis.js?v=1', '../effects/pixel-effects.js?v=9');
+importScripts('../effects/palette-analysis.js?v=0394371e', '../effects/pixel-effects.js?v=c68cfdfc');
 
 let posterizeSegmentKey = null;
 let posterizeSegment = null;

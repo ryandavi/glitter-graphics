@@ -26,6 +26,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		this.previewCanvas.width = newWidth;
 		this.previewCanvas.height = newHeight;
+		this._basePreviewCache = null;
 		this.previewWrapper.style.width = `${newWidth}px`;
 		this.previewWrapper.style.height = `${newHeight}px`;
 
@@ -147,6 +148,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		// 2. Preview surface + wrapper.
 		this.previewCanvas.width = newWidth;
 		this.previewCanvas.height = newHeight;
+		this._basePreviewCache = null;
 		this.previewWrapper.style.width = newWidth + 'px';
 		this.previewWrapper.style.height = newHeight + 'px';
 
@@ -218,6 +220,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		this.previewCanvas.width = width;
 		this.previewCanvas.height = height;
+		this._basePreviewCache = null;
 		this.previewWrapper.style.width = width + 'px';
 		this.previewWrapper.style.height = height + 'px';
 

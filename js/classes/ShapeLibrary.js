@@ -314,14 +314,6 @@ const ShapeLibrary = {
 		const w = (g.bounds.maxX - g.bounds.minX) || 1;
 		const h = (g.bounds.maxY - g.bounds.minY) || 1;
 		return w / h;
-	},
-
-	isFillShape(id) {
-		return this.FILL_SHAPES.some((shape) => shape.id === id);
-	},
-
-	isBrushShape(id) {
-		return this.BRUSH_SHAPES.some((shape) => shape.id === id);
 	}
 };
 

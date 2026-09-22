@@ -35,7 +35,6 @@ body.tool-text {
 	position: absolute;
 	transform-origin: center;
 	pointer-events: auto !important;
-	will-change: transform;
 	touch-action: none;
 }
 
@@ -54,13 +53,9 @@ body.tool-text {
 		display: block;
 		width: 100%;
 		height: 100%;
-		// The canvas stack declares image-rendering: pixelated and children
-		// inherit it, so smooth art has to name `auto` to escape it. The class
-		// below comes from the sticker's isPixelated flag.
 		image-rendering: auto;
 	}
 
-	&.pixelated img { image-rendering: pixelated; }
 }
 
 .text-glitter-element,
@@ -95,7 +90,6 @@ body.tool-text {
 	overflow: visible;
 	pointer-events: none;
 
-	&.pixelated { image-rendering: pixelated; }
 }
 
 .text-glitter-element.text-overflowing.selected>.text-glitter-stack::before {
@@ -204,7 +198,6 @@ body.tool-select {
 	width: 100%; // Wrapper must be full size of workspace
 	height: 100%;
 	pointer-events: none;
-	will-change: filter;
 
 	.glitter-background {
 		width: 100%;
@@ -221,9 +214,6 @@ body.tool-select {
 			display: block;
 		}
 
-		&.pixelated {
-			image-rendering: pixelated;
-		}
 	}
 }
 
@@ -252,6 +242,5 @@ body.tool-select {
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
-	will-change: transform, opacity;
 	image-rendering: inherit;
 }

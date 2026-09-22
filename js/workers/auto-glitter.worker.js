@@ -1,4 +1,4 @@
-importScripts('../effects/palette-analysis.js?v=1');
+importScripts('../effects/palette-analysis.js?v=0394371e');
 
 let segmentCache = null;
 

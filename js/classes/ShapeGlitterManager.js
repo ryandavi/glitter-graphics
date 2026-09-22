@@ -1493,6 +1493,10 @@ class ShapeGlitterManager {
 		});
 	}
 
+	clearElements() {
+		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
+	}
+
 	renderLayer(layer) {
 		if (layer.type !== LayerType.SHAPE) return;
 		this.normalizeLayer(layer);

@@ -1625,27 +1625,6 @@ class MaskEditor {
 		});
 	}
 
-	_queueLivePreviewRefresh(layer) {
-		if (CONFIG.tools.maskBrush.livePreview.throttle !== 'raf' || this.livePreviewQueued) {
-			return;
-		}
-
-		this.livePreviewQueued = true;
-		requestAnimationFrame(() => {
-			this.livePreviewQueued = false;
-			if (!this.strokeActive || !this.isEditing) {
-				return;
-			}
-
-			this.editor.glitterManager.renderLayer(
-				layer,
-				this.editor.originalCanvas.width,
-				this.editor.originalCanvas.height,
-				{ draftMask: true }
-			);
-		});
-	}
-
 	_getStampCanvas() {
 		// Flow (and pressure) are applied as globalAlpha at draw time instead of
 		// being baked in here, since pressure varies per-stamp along a stroke.
@@ -1722,10 +1701,6 @@ class MaskEditor {
 		// the shape itself. Brush stamps are uniform → same half-extent for W and H.
 		ShapeLibrary.trace(shape, ctx, shapeRadius, shapeRadius);
 		ctx.restore();
-	}
-
-	_getCanvasPoint(event) {
-		return this._getCanvasPointFromScreen(event.clientX, event.clientY);
 	}
 
 	_getCanvasPointFromScreen(screenX, screenY) {

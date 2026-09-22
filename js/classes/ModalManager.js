@@ -198,7 +198,7 @@ class ModalManager {
 
 		if (!options.fromHistory) this.pushModalHistory(id);
 
-		if (config.onOpen) config.onOpen();
+		if (config.onOpen) await config.onOpen();
 		this.focusInitialElement(config);
 	}
 
@@ -264,7 +264,7 @@ class ModalManager {
 			}
 
 			modalBody.innerHTML = html;
-			if (config.onContentLoaded) config.onContentLoaded(modalBody);
+			if (config.onContentLoaded) await config.onContentLoaded(modalBody);
 		} catch (error) {
 			console.error(`Error loading modal content for ${config.id}:`, error);
 			modalBody.innerHTML = `<div class="modal-error">Failed to load content. Please try again.</div>`;
@@ -295,15 +295,6 @@ class ModalManager {
 			if (scrollBehavior) element.style.scrollBehavior = scrollBehavior;
 			else element.style.removeProperty('scroll-behavior');
 		});
-	}
-
-	async reloadContent(id) {
-		const config = this.modals.get(id);
-		if (!config || !config.externalContentUrl) return;
-
-		config.contentLoaded = false;
-		config.cachedContent = null;
-		await this.loadExternalContent(config);
 	}
 
 	closeTopModal() {
@@ -468,7 +459,4 @@ class ModalManager {
 		return false;
 	}
 
-	getOpenModalId() {
-		return this.getTopOpenModalConfig()?.id || null;
-	}
 }

@@ -601,6 +601,10 @@ async initBrowser() {
 		if (baseLayer?.visible && baseLayer.background?.mode === 'glitter') this.renderBaseBackground(baseLayer);
 	}
 
+	clearElements() {
+		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
+	}
+
 	renderBaseBackground(layer) {
 		this.editor.baseBackgroundManager?.normalizeLayer(layer);
 		const glitter = this.getItemById(layer.selectedGlitterId);

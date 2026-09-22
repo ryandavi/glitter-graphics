@@ -36,6 +36,7 @@ class ViewportManager {
 		this.lastViewportHeight = 0;
 		this.resizeTimeout = null;
 		this.viewTransitionTimer = null;
+		this.transformActivityTimer = null;
 
 		// Canvas dimensions (set by editor when image loads)
 		this.canvasWidth = 0;
@@ -651,31 +652,20 @@ class ViewportManager {
 	// ===== TRANSFORM APPLICATION =====
 
 	applyTransform() {
-		// 1. Apply the visual transform
+		this.previewWrapper.classList.add('viewport-transforming');
+		clearTimeout(this.transformActivityTimer);
+		this.transformActivityTimer = setTimeout(() => {
+			this.previewWrapper.classList.remove('viewport-transforming');
+		}, 120);
+
 		this.previewWrapper.style.transform =
 			`translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
 
 		// 2. Pass the zoom value to CSS as a variable
 		// We set it on previewWrapper so all children (stickers, canvas) can see it
 		this.previewWrapper.style.setProperty('--zoom', this.currentZoom);
-
-
-		// Update the SVG filter radius to stay consistent with zoom
-		const filter = document.getElementById('selection-glow');
-		if (filter) {
-			const outer = filter.querySelector('feMorphology[result="outer_edge"]');
-			const inner = filter.querySelector('feMorphology[result="inner_edge"]');
-
-			// CALCULATIONS
-			// Divide by zoom to keep them visually consistent on screen
-			const scaledOffset = CONFIG.tools.glitter.preview.selectedOutlineOffset; //  / this.currentZoom;
-			const scaledTotal = Math.max(scaledOffset + 1, (CONFIG.tools.glitter.preview.selectedOutlineOffset + CONFIG.tools.glitter.preview.selectedOutlineWidth) / this.currentZoom);
-
-			if (inner) inner.setAttribute('radius', scaledOffset);
-			if (outer) outer.setAttribute('radius', scaledTotal);
-		}
-
-
+		this.previewWrapper.classList.toggle('shows-pixels', this.currentZoom > 1);
+		this.previewWrapper.classList.toggle('shows-pixel-grid', this.currentZoom >= CONFIG.ui.zoom.pixelGridMinZoom && PREFERENCES.get('pixelGrid'));
 	}
 
 	// ===== PRIVATE HELPERS =====

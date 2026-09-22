@@ -50,6 +50,10 @@ class StickerManager extends ContentManager {
 		);
 	}
 
+	clearElements() {
+		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
+	}
+
 	removeLayerElement(layerId) {
 		removeManagedLayerElement(this.layerElements, layerId);
 	}
@@ -409,21 +413,6 @@ class StickerManager extends ContentManager {
 			element.style.filter = buildCssColorFilter(effectData.colorAdjust);
 		} else element.style.backgroundColor = source.color;
 		element.style.opacity = String(source.opacity ?? 1);
-	}
-
-	createStickerEffectSpan(layer, effectData, className, offsetX, offsetY) {
-		const span = document.createElement('span');
-		span.className = `sticker-effect-layer ${className}`;
-		span.style.maskImage = `url(${layer.stickerData.url})`;
-		span.style.webkitMaskImage = `url(${layer.stickerData.url})`;
-		span.style.maskSize = '100% 100%';
-		span.style.webkitMaskSize = '100% 100%';
-		span.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-		this.applyEffectPaint(span, resolveEffectPaintSource(effectData, {
-			glitterId: effectData.glitterId,
-			glitterAvailable: Boolean(this.editor.glitterManager.getItemById(effectData.glitterId))
-		}), effectData, layer);
-		return span;
 	}
 
 	reconcileStickerEffectSpan(layer, element) {

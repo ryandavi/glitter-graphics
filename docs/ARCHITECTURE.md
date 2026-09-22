@@ -11,7 +11,7 @@ A map of how the Glitter Graphics editor fits together. Referenced from `AGENTS.
 
 ## Boot sequence
 
-1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core` and `js/transforms`, `js/ui` widgets, `js/effects`, the panel renderers, the `js/editor` method bags, then `js/classes`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. `tools/bump-cache.js` adds content hashes to every local tag.
+1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core` and `js/transforms`, `js/ui` widgets, `js/effects`, the panel renderers, the `js/editor` method bags, then `js/classes`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
 2. `js/app.js` mixes the `js/editor/*` method bags (`EDITOR_SETTINGS_METHODS`, `EDITOR_PANEL_METHODS`, …) into `GlitterEditor.prototype` with `Object.assign`.
 3. An async IIFE at the bottom of `app.js` loads the shape and brush manifests, then constructs `GlitterEditor`.
 4. The constructor renders the sidebar from `PANEL_SCHEMAS` (`renderPanelSections`, then `renderTransformPanels`) and the context toolbars from `CONFIG.ui.contextToolbars`, then constructs the managers and subsystems. Managers may cache panel elements in their constructors, which is why schemas render first.
@@ -80,12 +80,12 @@ Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` 
 Preview is DOM, export is canvas. Every visual feature exists twice, and the two must match.
 
 1. Code that changes what's visible calls `editor.requestPreviewUpdate()`. It coalesces to one `requestAnimationFrame`. Don't call `updatePreview()` directly.
-2. `updatePreview()` redraws the base canvas (`renderPreviewCanvas`) and calls each layer manager's `renderContent(visibleLayers)`.
+2. `updatePreview()` reuses the processed base-canvas pixels when the background signature is unchanged, then iterates the registered layer managers and calls each one's `renderContent(visibleLayers)`.
 3. Managers **reconcile** their DOM under `.canvas-elements-container`; they never clear and rebuild it.
    - Glitter fills: an animated GIF `background-image` plus a CSS `mask-image` blob.
    - Text and shapes: a stack of masked spans, one per paint slot (background, shadow, border, fill).
    - Stickers: an `img`, plus an optional shadow span.
-4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`.
+4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`. Above 100% it applies nearest-neighbor display to the whole stack; at 600% and above the optional pixel grid appears. `will-change` is active only during a viewport transition so the final zoom repaints sharply.
 5. Layer animation is sampled by `GlitterAnimation.sampleAt` and applied by `AnimationTicker` to a `.layer-anim-wrapper`. Export samples the same function, so preview and export share one timeline.
 
 ## Export path
@@ -127,4 +127,4 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/notification
 
 ## Workers
 
-`js/workers/` holds `auto-glitter.worker.js` (palette analysis), `pixel-effects.worker.js` (background pixel effects) and `gif.worker.js` (GIF encoding). Workers load shared code with `importScripts`, so anything they import must be DOM-free. Their script URLs carry hand-maintained `?v=` numbers that `bump-cache.js` does not update yet; bump them by hand when their dependencies change.
+`js/workers/` holds `auto-glitter.worker.js` (palette analysis), `pixel-effects.worker.js` (background pixel effects) and `gif.worker.js` (GIF encoding). Workers load shared code with `importScripts`, so anything they import must be DOM-free. `tools/bump-cache.js` stamps both worker constructor URLs and their `importScripts` dependencies.

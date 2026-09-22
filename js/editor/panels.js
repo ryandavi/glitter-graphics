@@ -280,18 +280,6 @@ isLayerContentLocked(layer) {
 	}
 
 ,
-	updateGlitterOptionsState() {
-		const hasActiveLayer = this.activeLayerId !== null;
-		document.querySelectorAll('.asset-option').forEach(opt => {
-			if (hasActiveLayer) {
-				opt.classList.remove('disabled');
-			} else {
-				opt.classList.add('disabled');
-			}
-		});
-	}
-
-,
 	syncNoLayerPanelState() {
 		const selectedLayers = this.layerManager?.getSelectedLayers?.() || [];
 		const multiCount = selectedLayers.length;

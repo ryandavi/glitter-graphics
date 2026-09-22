@@ -1829,8 +1829,7 @@ function renderPanelSection(schema) {
 	const host = document.getElementById(schema.section.id);
 	if (!host) return;
 	addPanelClasses(host, schema.section.classes);
-	if (schema.replaceStatic) host.replaceChildren();
-	else if (host.querySelector(':scope > .section-header')) return;
+	host.replaceChildren();
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
 	const sectionPrefix = schema.sectionPrefix || `${schema.prefix}Settings`;
 	fragment.querySelector('.section-header').id = `${sectionPrefix}Header`;

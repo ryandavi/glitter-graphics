@@ -1020,6 +1020,10 @@ html {
   display: none !important;
 }
 
+html:not(.is-localhost) .wip-hidden {
+  display: none;
+}
+
 p,
 span,
 input,
@@ -3512,14 +3516,24 @@ body.no-document .main-content > .design-panel {
   top: 0;
   left: 0;
   transform-origin: 0 0;
-  will-change: transform;
   pointer-events: auto;
-  /* image-rendering inherits: one declaration keeps every canvas, img, and
-     background-image inside the zoomed wrapper hard-pixeled instead of
-     bilinear-smoothed when the zoom transform upscales them. pixelated must
-     come LAST — the later declaration wins, crisp-edges is only the fallback. */
+  image-rendering: auto;
+}
+.preview-wrapper.viewport-transforming, .preview-wrapper.viewport-transition {
+  will-change: transform;
+}
+.preview-wrapper.shows-pixels, .preview-wrapper.shows-pixels * {
   image-rendering: crisp-edges;
   image-rendering: pixelated;
+}
+.preview-wrapper.shows-pixel-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  pointer-events: none;
+  background-image: linear-gradient(to right, rgba(128, 128, 128, 0.55) calc(1px / var(--zoom)), transparent calc(1px / var(--zoom))), linear-gradient(to bottom, rgba(128, 128, 128, 0.55) calc(1px / var(--zoom)), transparent calc(1px / var(--zoom)));
+  background-size: 1px 1px;
 }
 .preview-wrapper.viewport-transition {
   transition: transform var(--transition-base);
@@ -3528,12 +3542,7 @@ body.no-document .main-content > .design-panel {
   cursor: crosshair;
 }
 .preview-wrapper > .preview-canvas,
-.preview-wrapper > .mask-overlay-canvas,
-.preview-wrapper .canvas-elements-container > .glitter-background {
-  /* crisp-edges first: it's the FALLBACK — the later pixelated must win */
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  -ms-interpolation-mode: nearest-neighbor;
+.preview-wrapper > .mask-overlay-canvas {
   width: 100%;
   height: 100%;
 }
@@ -5741,7 +5750,6 @@ body.tool-text .preview-wrapper {
   position: absolute;
   transform-origin: center;
   pointer-events: auto !important;
-  will-change: transform;
   touch-action: none;
 }
 
@@ -5754,9 +5762,6 @@ body.tool-text .preview-wrapper {
   width: 100%;
   height: 100%;
   image-rendering: auto;
-}
-.sticker-element.pixelated img {
-  image-rendering: pixelated;
 }
 
 .text-glitter-element,
@@ -5792,10 +5797,6 @@ body.tool-text .preview-wrapper {
   background-repeat: repeat;
   overflow: visible;
   pointer-events: none;
-}
-.text-glitter-content.pixelated,
-.shape-glitter-content.pixelated {
-  image-rendering: pixelated;
 }
 
 .text-glitter-element.text-overflowing.selected > .text-glitter-stack::before {
@@ -5894,7 +5895,6 @@ body.tool-select .preview-canvas {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  will-change: filter;
 }
 .glitter-element .glitter-background {
   width: 100%;
@@ -5908,9 +5908,6 @@ body.tool-select .preview-canvas {
 }
 .glitter-element .glitter-background.visible {
   display: block;
-}
-.glitter-element .glitter-background.pixelated {
-  image-rendering: pixelated;
 }
 
 .filter-layer-overlay {
@@ -5937,7 +5934,6 @@ body.tool-select .preview-canvas {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  will-change: transform, opacity;
   image-rendering: inherit;
 }
 

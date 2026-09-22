@@ -3294,10 +3294,6 @@ class TextGlitterManager {
 		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
 	}
 
-	updateExistingBackground(layer) {
-		this.renderLayer(layer);
-	}
-
 	updateLiveTextContent(layerId, text) {
 		const wrapper = this.layerElements.get(layerId);
 		if (!wrapper) return;

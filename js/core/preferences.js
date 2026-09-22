@@ -7,6 +7,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	scaleEffects: { default: () => CONFIG.rendering.transformBehavior.scaleEffects },
 	scaleTextures: { default: () => CONFIG.rendering.transformBehavior.scaleTextures },
 	panInertia: { default: () => CONFIG.ui.gestures.inertia.enabled },
+	pixelGrid: { default: () => CONFIG.ui.zoom.pixelGridEnabled },
 	reduceMotion: { default: () => false }
 });
 

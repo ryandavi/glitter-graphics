@@ -112,7 +112,7 @@ class GlitterEditor {
 		this.maskEditor = new MaskEditor(this);
 		this.historyManager = new HistoryManager(this);
 		this.projectSerializer = new ProjectSerializer(this);
-		this.htmlSceneExporter = new HtmlSceneExporter(this);
+		this.htmlSceneExporter = null;
 
 		// ============================================================================
 		// INITIALIZATION
@@ -130,7 +130,6 @@ class GlitterEditor {
 		initializePanelResize(this);
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
-		this.htmlSceneExporter.initialize();
 		this.initializeModalFilters();
 	}
 
@@ -271,17 +270,6 @@ class GlitterEditor {
 
 	// ===== UTILITY METHODS =====
 
-	// Execute async function with element disabled
-	async withDisabled(element, asyncFn) {
-		if (!element) return;
-		element.disabled = true;
-		try {
-			await asyncFn();
-		} finally {
-			element.disabled = false;
-		}
-	}
-
 	initializeProjectNameInput() {
 		const input = document.getElementById('projectNameInput');
 		if (!input) return;
@@ -340,19 +328,6 @@ class GlitterEditor {
 			this.requestPreviewUpdate();
 		}
 		this.saveState('Edit document');
-	}
-
-	// Layer type helpers
-	isGlitterLayer(layer) {
-		return layer && layer.type === LayerType.GLITTER_FILL;
-	}
-
-	isStickerLayer(layer) {
-		return layer && layer.type === LayerType.STICKER;
-	}
-
-	isTextLayer(layer) {
-		return layer && layer.type === LayerType.TEXT_GLITTER;
 	}
 
 	// ===== GETTERS & SETTERS =====
@@ -451,37 +426,7 @@ class GlitterEditor {
 
 		if (!slider || !valueDisplay) return;
 
-		const appBindingConfig = {
-			threshold: {
-				onApply: () => {
-					this.saveActiveLayerSettings();
-					this.debouncedSliderUpdate();
-				},
-				onCommit: () => this.saveState('Edit document')
-			},
-			feather: {
-				onApply: () => {
-					this.saveActiveLayerSettings();
-					this.debouncedSliderUpdate();
-				},
-				onCommit: () => this.saveState('Edit document')
-			},
-			scale: {
-				onApply: () => {
-					this.saveActiveLayerSettings();
-					this.debouncedSliderUpdate();
-				},
-				onCommit: () => this.saveState('Edit document')
-			},
-			opacity: {
-				onApply: () => {
-					this.saveActiveLayerSettings();
-					this.debouncedSliderUpdate();
-				},
-				onCommit: () => this.saveState('Edit document')
-			}
-		};
-		const binding = appBindingConfig[sliderId] || null;
+		const usesDocumentBinding = ['threshold', 'feather', 'scale', 'opacity'].includes(sliderId);
 
 		bindSlider(slider, valueDisplay, {
 			suffix,
@@ -491,9 +436,12 @@ class GlitterEditor {
 				if (typeof updateCallback === 'function') {
 					updateCallback(event || { target: sliderEl });
 				}
-				binding?.onApply?.(value, sliderEl);
+				if (usesDocumentBinding) {
+					this.saveActiveLayerSettings();
+					this.debouncedSliderUpdate();
+				}
 			},
-			onCommit: binding?.onCommit ? (value, sliderEl, event) => binding.onCommit(value, sliderEl, event) : null
+			onCommit: usesDocumentBinding ? () => this.saveState('Edit document') : null
 		});
 	}
 
@@ -1418,7 +1366,6 @@ class GlitterEditor {
 		const handTool = document.getElementById('handTool');
 		const zoomTool = document.getElementById('zoomTool');
 		const brushTool = document.getElementById('brushTool');
-		const zoomControls = document.getElementById('zoomControls');
 		const addBtn = document.getElementById('addLayerBtn');
 		const previewToggle = document.getElementById('previewModeToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
@@ -1809,6 +1756,7 @@ class GlitterEditor {
 		this.originalCanvas.height = height;
 		this.previewCanvas.width = width;
 		this.previewCanvas.height = height;
+		this._basePreviewCache = null;
 
 		this.previewWrapper.style.width = width + 'px';
 		this.previewWrapper.style.height = height + 'px';
@@ -2412,49 +2360,31 @@ class GlitterEditor {
 
 	clearPreview() {
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+		this._basePreviewCache = null;
 		if (this.originalImageData) this.renderPreviewCanvas([]);
 
-		// Clear glitter backgrounds
-		this.canvasElementsContainer.innerHTML = '';
-		if (this.glitterManager) {
-			this.glitterManager.layerElements.clear();
-		}
-
-		// Clear sticker elements
-		if (this.stickerManager) {
-			this.stickerManager.layerElements.forEach((element, layerId) => {
-				if (element.parentNode) {
-					element.parentNode.removeChild(element);
-				}
-			});
-			this.stickerManager.layerElements.clear();
-		}
-
-		if (this.textGlitterManager) {
-			this.textGlitterManager.clearElements();
-		}
-		this.filterLayerManager?.clearElements();
+		this.getLayerRenderManagers().forEach((manager) => manager.clearElements());
 	}
 
 	// ===== PREVIEW & RENDERING =====
-	requestPreviewUpdate(scope = 'all') {
-		this._pendingPreviewScope = this._pendingPreviewScope == null || this._pendingPreviewScope === scope
-			? scope
-			: 'all';
+	requestPreviewUpdate() {
 		if (this._previewFrame) return;
 		this._previewFrame = requestAnimationFrame(() => {
 			this._previewFrame = null;
-			const pendingScope = this._pendingPreviewScope;
-			this._pendingPreviewScope = null;
-			this.updatePreview(pendingScope);
+			this.updatePreview();
 		});
+	}
+
+	getLayerRenderManagers() {
+		return [...new Set(Object.values(LAYER_UI_CONFIG)
+			.map((config) => config?.managerKey && this[config.managerKey])
+			.filter((manager) => manager?.renderContent && manager?.clearElements))];
 	}
 
 	updatePreview() {
 		if (this._previewFrame) {
 			cancelAnimationFrame(this._previewFrame);
 			this._previewFrame = null;
-			this._pendingPreviewScope = null;
 		}
 		if (!this.originalImageData) {
 			this.clearPreview();
@@ -2465,31 +2395,11 @@ class GlitterEditor {
 			? this.layers.filter(l => l.visible && layerHasVisibleContent(l))
 			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && layerHasVisibleContent(l));
 
-		if (layersToShow.length === 0) {
-			this.renderPreviewCanvas(layersToShow);
-			this.glitterManager.renderContent(layersToShow);
-			this.stickerManager.renderContent(layersToShow);
-			this.textGlitterManager.renderContent(layersToShow);
-			this.shapeGlitterManager.renderContent(layersToShow);
-			this.filterLayerManager.renderContent(layersToShow);
-			return;
-		}
-
 		this.renderPreviewCanvas(layersToShow);
-
-		// Use the manager to render the glitter backgrounds
-		this.glitterManager.renderContent(layersToShow);
-
-		this.stickerManager.renderContent(layersToShow);
-		this.textGlitterManager.renderContent(layersToShow);
-		this.shapeGlitterManager.renderContent(layersToShow);
-		this.filterLayerManager.renderContent(layersToShow);
+		this.getLayerRenderManagers().forEach((manager) => manager.renderContent(layersToShow));
 	}
 
 	renderPreviewCanvas(layersToShow) {
-		// Clear canvas first
-		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-
 		// ============================================================
 		// UPDATED LOGIC: BASE IMAGE VISIBILITY
 		// ============================================================
@@ -2499,6 +2409,7 @@ class GlitterEditor {
 
 		// If the base layer exists and is set to hidden, stop here (leave canvas transparent)
 		if (baseLayer && !baseLayer.visible) {
+			this.clearBasePreviewCanvas();
 			return;
 		}
 
@@ -2514,16 +2425,24 @@ class GlitterEditor {
 				: this.baseBackgroundManager.getPreviewImageData(source, width, height, settings);
 			this.renderBasePreviewImageData(background, processed);
 		} else if (mode === 'solid') {
+			const key = `solid:${this.previewCanvas.width}x${this.previewCanvas.height}:${background.color}:${background.opacity}`;
+			if (this._basePreviewCache?.key === key) return;
+			this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 			this.previewCtx.save();
 			this.previewCtx.globalAlpha = background.opacity / 100;
 			this.previewCtx.fillStyle = background.color;
 			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 			this.previewCtx.restore();
+			this._basePreviewCache = { key };
+		} else {
+			this.clearBasePreviewCanvas();
 		}
 	}
 
 	renderBasePreviewImageData(background, processed) {
 		if (!processed) return;
+		const key = `${processed.width}x${processed.height}:${background.opacity}:${JSON.stringify(background.colorAdjust)}`;
+		if (this._basePreviewCache?.key === key && this._basePreviewCache.source === processed) return;
 		const image = new ImageData(new Uint8ClampedArray(processed.data), processed.width, processed.height);
 		applyColorAdjustToImageData(image, background.colorAdjust);
 		if (background.opacity < 100) {
@@ -2531,6 +2450,13 @@ class GlitterEditor {
 		}
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this.previewCtx.putImageData(image, 0, 0);
+		this._basePreviewCache = { key, source: processed, image };
+	}
+
+	clearBasePreviewCanvas() {
+		if (this._basePreviewCache?.key === 'transparent') return;
+		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+		this._basePreviewCache = { key: 'transparent' };
 	}
 
 	// ===== EXPORT PROGRESS =====
@@ -2746,10 +2672,6 @@ class GlitterEditor {
 
 	showError(message) {
 		this.notifications.notify('error', message);
-	}
-
-	hideError() {
-		this.notifications.dismissError();
 	}
 
 	updateStatus(message) {

@@ -32,7 +32,7 @@ class Mp4Exporter {
 	}
 
 	static async getSupportedConfig(width, height, bitrate) {
-		if (!window.VideoEncoder || !window.VideoFrame || !window.Mp4Muxer) return null;
+		if (!window.VideoEncoder || !window.VideoFrame) return null;
 
 		for (const codec of CONFIG.export.mp4.codecs) {
 			const config = {
@@ -94,6 +94,7 @@ class Mp4Exporter {
 	}
 
 	async _encode({ schedulePlan: plan, renderScheduleEntry }, exportSettings, callbacks) {
+		await loadScriptOnce('js/vendor/mp4-muxer.js?v=e2a7db11');
 		const frameDurations = plan.frameDurations;
 		const planDuration = plan.totalDuration || frameDurations.reduce((sum, duration) => sum + duration, 0);
 		const outputSchedule = this._buildOutputSchedule(frameDurations, planDuration, exportSettings);

@@ -45,7 +45,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=dd1dc414">
+	<link rel="stylesheet" href="css/style.css?v=0ac62685">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -670,21 +670,7 @@
 							</div>
 
 							<!-- Base Layer Settings Section -->
-							<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection">
-								<div class="section-content">
-									<div class="property-empty visible">
-										<div class="property-empty-icon icon-wrapper xl">
-											<svg class="icon">
-												<use href="#icon-lock"></use>
-											</svg>
-										</div>
-										<div class="property-empty-title">Canvas Properties</div>
-										<div class="property-empty-text">
-											The background is protected from moving or deletion, but its appearance can be edited.
-										</div>
-									</div>
-								</div>
-							</div>
+							<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection"></div>
 
 							<!-- NO LAYER SELECTED (image loaded, nothing selected). Headerless —
 							     sits under the shared Design gallery header. Contents rendered
@@ -846,127 +832,22 @@
 
 
 						<!-- Zoom Controls -->
-						<div class="zoom-controls ui-ignore-gestures" id="zoomControls">
-
-							<!-- Zoom Out Button -->
-							<button class="icon-wrapper btn-icon" id="zoomOut" title="Zoom Out (-)">
-								<svg class="icon">
-									<use href="#icon-minus"></use>
-								</svg>
-								<span class="name">Zoom Out</span>
-							</button>
-
-							<!-- Zoom Percentage -->
-							<div class="zoom-percentage" id="zoomPercentage" title="Click to reset to 100%">100%</div>
-
-							<!-- Zoom In Button -->
-							<button class="icon-wrapper btn-icon" id="zoomIn" title="Zoom In (+)">
-								<svg class="icon">
-									<use href="#icon-plus"></use>
-								</svg>
-								<span class="name">Zoom In</span>
-							</button>
-
-							<!-- Fit/Fill Screen -->
-							<button class="icon-wrapper btn-icon" id="fitScreen" title="Fit Screen (Ctrl+0)">
-								<svg class="icon">
-									<use href="#icon-fit-screen"></use>
-								</svg>
-								<span class="name">Fit Screen</span>
-							</button>
-
-							<button class="icon-wrapper btn-icon" id="fillScreen" title="Fill Screen">
-								<svg class="icon">
-									<use href="#icon-maximize"></use>
-								</svg>
-								<span class="name">Fill Screen</span>
-							</button>
-
-
-						</div>
+						<div class="zoom-controls ui-ignore-gestures" id="zoomControls"></div>
 
 						<!-- Color Fill Controls -->
-						<div class="color-picker-controls ui-ignore-gestures" id="colorPickerControls">
-							<!-- Threshold Slider -->
-							<div class="context-slider-group">
-								<span class="context-label">Threshold</span>
-								<input type="range" id="contextThreshold" min="0" max="255" value="50" class="context-slider">
-								<span class="context-value" id="contextThresholdValue">50</span>
-							</div>
-
-							<div>
-								<!-- Multi-Select Toggle -->
-								<label class="context-checkbox-group">
-									<input type="checkbox" id="contextMultiSelect">
-									<span>Multi</span>
-									<span class="context-count" id="contextSelectionCount"></span>
-								</label>
-
-								<!-- Contiguous Toggle -->
-								<label class="context-checkbox-group">
-									<input type="checkbox" id="contextContiguous">
-									<span>Contiguous</span>
-								</label>
-							</div>
-						</div>
+						<div class="color-picker-controls ui-ignore-gestures" id="colorPickerControls"></div>
 
 						<!-- Mask Brush Controls: quick brush-size access while painting.
 						     Mirrors the canonical #maskBrushSize slider in Mask Settings
 						     sidebar section — see setupMaskEditorListeners' syncQuickSlider. -->
-						<div class="mask-brush-controls ui-ignore-gestures" id="maskBrushControls">
-							<div class="segmented-control context-segmented-control" id="maskBrushMode">
-								<button class="segmented-option active" type="button" data-brush-mode="add" aria-pressed="true" title="Paint mask (B)">Paint</button>
-								<button class="segmented-option" type="button" data-brush-mode="sub" aria-pressed="false" title="Erase mask (E / X)">Erase</button>
-							</div>
-							<div class="context-slider-group">
-								<span class="context-label">Size</span>
-								<input type="range" id="maskBrushSizeQuick" min="1" max="300" value="40" class="context-slider">
-								<span class="context-value" id="maskBrushSizeQuickValue">40px</span>
-							</div>
-						</div>
+						<div class="mask-brush-controls ui-ignore-gestures" id="maskBrushControls"></div>
 
 
 						<!-- Pan Controls -->
-						<div class="pan-controls ui-ignore-gestures" id="panControls">
-							<!-- Center Horizontally -->
-							<button class="icon-wrapper btn-icon" id="centerCanvasHorizontal" title="Center Horizontally">
-								<svg class="icon">
-									<use href="#icon-align-center-x"></use>
-								</svg>
-								<span class="name">Center H</span>
-							</button>
-
-							<!-- Center Vertically -->
-							<button class="icon-wrapper btn-icon" id="centerCanvasVertical" title="Center Vertically">
-								<svg class="icon">
-									<use href="#icon-align-center-y"></use>
-								</svg>
-								<span class="name">Center V</span>
-							</button>
-						</div>
+						<div class="pan-controls ui-ignore-gestures" id="panControls"></div>
 
 						<!-- Layer Center Controls (sticker + text + shape layers) -->
-						<div class="layer-center-controls ui-ignore-gestures" id="layerCenterControls">
-							<!-- Center Layer Horizontally -->
-							<button class="icon-wrapper btn-icon" id="centerLayerHorizontal" title="Center Horizontally">
-								<svg class="icon">
-									<use href="#icon-align-center-x"></use>
-								</svg>
-								<span class="name">Center H</span>
-							</button>
-
-							<!-- Center Layer Vertically -->
-							<button class="icon-wrapper btn-icon" id="centerLayerVertical" title="Center Vertically">
-								<svg class="icon">
-									<use href="#icon-align-center-y"></use>
-								</svg>
-								<span class="name">Center V</span>
-							</button>
-							<button class="icon-wrapper btn-icon" id="duplicateLayerSelection" title="Duplicate selected layer(s) (Ctrl+D)">
-								<svg class="icon"><use href="#icon-clone"></use></svg>
-								<span class="name">Duplicate</span>
-							</button>
-						</div>
+						<div class="layer-center-controls ui-ignore-gestures" id="layerCenterControls"></div>
 
 						<!-- Helpful Message -->
 						<div class="helpful-message ui-ignore-gestures" id="helpfulMessage">
@@ -1445,6 +1326,7 @@
 					<div class="settings-row" data-search-aliases="click pick layer canvas"><div class="settings-row-header"><label class="settings-row-label-main" for="autoSelectLayers">Auto-Select Layers</label><div class="settings-row-control"><label class="switch" for="autoSelectLayers"><input type="checkbox" id="autoSelectLayers" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Clicking the canvas selects the layer under the pointer. Turn off to keep the current selection while dragging on the canvas.</div></div>
 					<div class="settings-row" data-search-aliases="snap align guides magnetic"><div class="settings-row-header"><label class="settings-row-label-main" for="snappingEnabled">Snapping</label><div class="settings-row-control"><label class="switch" for="snappingEnabled"><input type="checkbox" id="snappingEnabled" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Align layers to the canvas edges, its center, and other layers while dragging.</div></div>
 					<div class="settings-row" data-search-aliases="momentum pan flick scroll"><div class="settings-row-header"><label class="settings-row-label-main" for="panInertia">Pan Momentum</label><div class="settings-row-control"><label class="switch" for="panInertia"><input type="checkbox" id="panInertia" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Let the canvas keep gliding after a flick with the Hand tool. Turn off for panning that stops the moment you let go.</div></div>
+					<div class="settings-row" data-search-aliases="pixels zoom grid photoshop"><div class="settings-row-header"><label class="settings-row-label-main" for="pixelGrid">Pixel Grid</label><div class="settings-row-control"><label class="switch" for="pixelGrid"><input type="checkbox" id="pixelGrid" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show a one-screen-pixel grid at 600% zoom and above.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="antialiasMaskEdges">Antialias Edges</label><div class="settings-row-control"><label class="switch" for="antialiasMaskEdges"><input type="checkbox" id="antialiasMaskEdges" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Smooth rendered edges on text and shapes, plus edges of future Fill layer mask strokes. Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="scaleEffectsOnTransform">Scale Borders &amp; Effects</label><div class="settings-row-control"><label class="switch" for="scaleEffectsOnTransform"><input type="checkbox" id="scaleEffectsOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale border widths, dotted spacing, and shadow offsets when text or shapes are resized.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="scaleTexturesOnTransform">Transform Textures</label><div class="settings-row-control"><label class="switch" for="scaleTexturesOnTransform"><input type="checkbox" id="scaleTexturesOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.</div></div>
@@ -2324,33 +2206,6 @@
 		</defs>
 	</svg>
 
-	<svg style="position: absolute; width: 0; height: 0;">
-		<filter id="selection-glow" x="-20%" y="-20%" width="140%" height="140%">
-			<!-- 1. Expand shapes -->
-			<feMorphology operator="dilate" radius="4" in="SourceAlpha" result="outer_edge" />
-			<feMorphology operator="dilate" radius="2" in="SourceAlpha" result="inner_edge" />
-
-			<!-- 2. Create the ring -->
-			<feComposite in="outer_edge" in2="inner_edge" operator="out" result="ring" />
-
-			<!-- 3. COLOR & OPACITY -->
-
-			<feFlood
-				flood-color="var(--selected-outline-color, #00ffff)"
-				flood-opacity=".5"
-				result="color" />
-
-			<!-- 4. Apply color to ring -->
-			<feComposite in="color" in2="ring" operator="in" result="outline" />
-
-			<!-- 5. Merge -->
-			<feMerge>
-				<feMergeNode in="outline" />
-				<feMergeNode in="SourceGraphic" />
-			</feMerge>
-		</filter>
-	</svg>
-
 	<!-- ============ SIDEBAR PANEL TEMPLATES ============
 	     Shared markup primitives for renderer-built settings panels
 	     Structure only: ids, labels, ranges,
@@ -2542,16 +2397,15 @@
 	<!-- External Libs (self-hosted; gif.js pairs with js/workers/gif.worker.js) -->
 	<script src="js/vendor/omggif.js?v=5014f913"></script>
 	<script src="js/vendor/gif.js?v=d3648ca8"></script>
-	<script src="js/vendor/mp4-muxer.js?v=e2a7db11"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=c7d64911"></script>
+	<script src="js/core/config.js?v=ebffa31f"></script>
 	<script src="js/core/export-target.js?v=09b1d623"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=166f962a"></script>
+	<script src="js/core/preferences.js?v=7e0c5963"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=f7f90caf"></script>
-	<script src="js/core/dom.js?v=12f02905"></script>
+	<script src="js/core/dom.js?v=b728eda1"></script>
 	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
 	<script src="js/transforms/transform-math.js?v=dcb077df"></script>
 	<script src="js/transforms/movable-layer.js?v=98aa9235"></script>
@@ -2564,7 +2418,6 @@
 	<script src="js/ui/slider.js?v=9388d0d4"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
-	<script src="js/ui/about-timeline-data.js?v=f7cbbb98"></script>
 	<script src="js/ui/about-timeline.js?v=973baa4c"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -2584,24 +2437,24 @@
 	<script src="js/effects/animation.js?v=90414ad7"></script>
 	<script src="js/effects/slot-effects.js?v=80aae6ba"></script>
 	<script src="js/effects/text-background-geometry.js?v=115bc203"></script>
-	<script src="js/ui/panel-renderer.js?v=3f35dddc"></script>
+	<script src="js/ui/panel-renderer.js?v=2a8a3c54"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=3db8a3c8"></script>
 	<script src="js/ui/settings-store.js?v=7ee23526"></script>
 	<script src="js/ui/menu-popover.js?v=20e6b111"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/editor/settings.js?v=cd6ac963"></script>
-	<script src="js/editor/panels.js?v=136c2850"></script>
+	<script src="js/editor/settings.js?v=000ae184"></script>
+	<script src="js/editor/panels.js?v=0f8298c1"></script>
 	<script src="js/editor/disclosures.js?v=ca165a02"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
 	<script src="js/editor/transform-interaction.js?v=bd174854"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=a9138a59"></script>
+		<script src="js/editor/modals-wiring.js?v=9417c573"></script>
 	<script src="js/editor/layer-panel.js?v=3d5b5ebe"></script>
 	<script src="js/editor/canvas-gestures.js?v=3be86e55"></script>
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>
-	<script src="js/editor/canvas-resize.js?v=66960ee2"></script>
+	<script src="js/editor/canvas-resize.js?v=fc00ee90"></script>
 		<script src="js/ui/hints.js?v=6a83a9aa"></script>
 	<script src="js/ui/picker-session.js?v=164f3036"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=50ca26d6"></script>
@@ -2611,7 +2464,7 @@
 
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
-	<script src="js/classes/ModalManager.js?v=98627037"></script>
+	<script src="js/classes/ModalManager.js?v=1066d7cd"></script>
 	<script src="js/classes/ExportTimeline.js?v=17f01ecd"></script>
 	<script src="js/classes/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/classes/AuthoredFrameResolver.js?v=77616a99"></script>
@@ -2619,17 +2472,16 @@
 	<script src="js/classes/AnimationTicker.js?v=0cd4fe66"></script>
 	<script src="js/classes/AnimationPanelController.js?v=3c5047f0"></script>
 	<script src="js/classes/ExportResultPresenter.js?v=eade9640"></script>
-	<script src="js/classes/GifExporter.js?v=79ffe479"></script>
+	<script src="js/classes/GifExporter.js?v=fa020e44"></script>
 	<script src="js/classes/StillImageExporter.js?v=759f01c2"></script>
-	<script src="js/classes/Mp4Exporter.js?v=42724c8f"></script>
-	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
+	<script src="js/classes/Mp4Exporter.js?v=982ca14e"></script>
+	<script src="js/classes/ViewportManager.js?v=a5665d99"></script>
 	<script src="js/classes/HistoryManager.js?v=9f835c52"></script>
 	<script src="js/classes/ProjectSerializer.js?v=78eb935e"></script>
-	<script src="js/classes/HtmlSceneExporter.js?v=dbeaced1"></script>
-	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
-	<script src="js/classes/ShapeLibrary.js?v=0ad174f3"></script>
+	<script src="js/classes/MaskCompositor.js?v=8ef8faf1"></script>
+	<script src="js/classes/ShapeLibrary.js?v=58e33a95"></script>
 	<script src="js/classes/BrushLibrary.js?v=345503fb"></script>
-	<script src="js/classes/MaskEditor.js?v=de28a63b"></script>
+	<script src="js/classes/MaskEditor.js?v=0ecc9802"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=949acc45"></script>
@@ -2638,20 +2490,20 @@
 	<script src="js/classes/AssetBrowser.js?v=7013e5b2"></script>
 	<script src="js/classes/ContentManager.js?v=8a395d2e"></script>
 	<script src="js/classes/BrushTipManager.js?v=fbdac4b4"></script>
-	<script src="js/classes/LayerTransform.js?v=ac6a2c83"></script>
-	<script src="js/classes/GlitterManager.js?v=cf50c783"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=cf249d92"></script>
-	<script src="js/classes/AutoGlitterManager.js?v=16dd5368"></script>
-	<script src="js/classes/TextGlitterManager.js?v=9aeb2eeb"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=7e860f9b"></script>
-	<script src="js/classes/StickerManager.js?v=3b97a308"></script>
+	<script src="js/classes/LayerTransform.js?v=8134cc9a"></script>
+	<script src="js/classes/GlitterManager.js?v=1c62f09e"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=8c18a0dc"></script>
+	<script src="js/classes/AutoGlitterManager.js?v=6b00b2ae"></script>
+	<script src="js/classes/TextGlitterManager.js?v=7995eda7"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=a6c8dd1e"></script>
+	<script src="js/classes/StickerManager.js?v=4b01fa9e"></script>
 	<script src="js/classes/FilterLayerManager.js?v=1bc40164"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
 		<script src="js/classes/MobileManager.js?v=b1a5756a"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=d0786f70"></script>
+	<script src="js/app.js?v=a4f1af41"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

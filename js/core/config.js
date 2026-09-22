@@ -738,7 +738,9 @@ const CONFIG = deepFreeze({
 	ui: {
 		independentCollapsibleSections: ['layersPanel'],
 		zoom: {
-			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16]
+			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
+			pixelGridMinZoom: 6,
+			pixelGridEnabled: true
 		},
 		gradientEditor: {
 			keyboardStep: 0.01,
@@ -1714,7 +1716,6 @@ const PANEL_SCHEMAS = {
 		prefix: 'autoGlitter',
 		sectionPrefix: 'autoGlitterSettings',
 		mobileKey: 'autoGlitter',
-		replaceStatic: true,
 		section: { id: 'autoGlitterSettingsSection', classes: 'panel-redesign', icon: 'magic-wand', iconName: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
 		groups: [
 			{ title: 'Preview', region: 'header', static: true, bare: true, items: [
@@ -1772,7 +1773,6 @@ const PANEL_SCHEMAS = {
 		prefix: 'filter',
 		sectionPrefix: 'filterSettings',
 		mobileKey: 'filter',
-		replaceStatic: true,
 		section: { id: 'filterSettingsSection', classes: 'panel-redesign', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
@@ -1829,7 +1829,6 @@ const PANEL_SCHEMAS = {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',
 		mobileKey: 'background',
-		replaceStatic: true,
 		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties', classes: 'panel-redesign' },
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
@@ -1917,7 +1916,6 @@ const PANEL_SCHEMAS = {
 		prefix: 'brush',
 		sectionPrefix: 'brushSettings',
 		mobileKey: 'brush',
-		replaceStatic: true,
 		section: {
 			id: 'brushSettingsSection', classes: 'panel-redesign', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
 			titleIconId: 'brushSettingsTitleIcon', titleTextId: 'brushSettingsTitleText'
@@ -1997,7 +1995,6 @@ const PANEL_SCHEMAS = {
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',
 			mobileKey: 'tool',
-			replaceStatic: true,
 			section: { id: 'layerSettingsSection', classes: 'panel-redesign', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',

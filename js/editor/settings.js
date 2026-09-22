@@ -153,6 +153,7 @@ initializeExportSettings() {
 			autoSelectLayers: { checked: PREFERENCES.get('autoSelect') },
 			snappingEnabled: { checked: PREFERENCES.get('snappingEnabled') },
 			panInertia: { checked: PREFERENCES.get('panInertia') },
+			pixelGrid: { checked: PREFERENCES.get('pixelGrid') },
 			reduceMotion: { checked: PREFERENCES.get('reduceMotion') },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
@@ -458,6 +459,7 @@ initializeExportSettings() {
 			document.getElementById('snappingToggle')?.classList.toggle('active', value);
 		});
 		this.bindPreferenceToggle('panInertia', 'panInertia');
+		this.bindPreferenceToggle('pixelGrid', 'pixelGrid', () => this.viewport?.applyTransform());
 		this.bindPreferenceToggle('reduceMotion', 'reduceMotion', () => this.applyReduceMotion());
 
 		document.getElementById('resetToolbarPlacement')?.addEventListener('click', () => this.resetToolbarPlacement());
@@ -793,7 +795,7 @@ async resetSettingsSection(section) {
 			break;
 
 		case 'tools':
-			['crispMaskEdges', 'scaleEffects', 'scaleTextures', 'autoSelect', 'snappingEnabled', 'panInertia']
+			['crispMaskEdges', 'scaleEffects', 'scaleTextures', 'autoSelect', 'snappingEnabled', 'panInertia', 'pixelGrid']
 				.forEach((key) => PREFERENCES.reset(key));
 			this.antialiasEdges = !PREFERENCES.get('crispMaskEdges');
 			this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
@@ -802,6 +804,7 @@ async resetSettingsSection(section) {
 			this.maskEditor?.resetToolSettingsToDefaults();
 			this.applyDefaultPanelLayout();
 			this.contextToolbarRenderer?.resetPlacement?.();
+			this.viewport?.applyTransform();
 			break;
 
 		// Export sections map one-to-one onto the headings in the Export
@@ -851,6 +854,7 @@ async resetAllSettings() {
 	this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
 	this.refreshMaskEdgeRendering();
 	this.applyReduceMotion();
+	this.viewport?.applyTransform();
 	this.syncCanvasPreferenceControls();
 	this.contextToolbarRenderer?.resetPlacement?.();
 	this.interfaceTheme = 'dark';

@@ -1,4 +1,13 @@
 const MODAL_METHODS = {
+async ensureHtmlSceneExporter() {
+		if (this.htmlSceneExporter) return this.htmlSceneExporter;
+		await loadScriptOnce('js/classes/HtmlSceneExporter.js?v=0f03efe8');
+		this.htmlSceneExporter = new HtmlSceneExporter(this);
+		this.htmlSceneExporter.initialize();
+		return this.htmlSceneExporter;
+	}
+
+,
 updateOrientationButtons(width, height) {
 		const portraitBtn = document.getElementById('orientationPortrait');
 		const landscapeBtn = document.getElementById('orientationLandscape');
@@ -51,8 +60,9 @@ updateOrientationButtons(width, height) {
 				openBtnId: 'settingsBtn',
 				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
 				resetScrollOnOpen: true,
-				onOpen: () => {
-					this.htmlSceneExporter?.refreshStickerMetadata();
+				onOpen: async () => {
+					const htmlSceneExporter = await this.ensureHtmlSceneExporter();
+					htmlSceneExporter.refreshStickerMetadata();
 					this.settingsFilter?.refresh();
 					this.settingsFilter?.reset();
 				}
@@ -136,10 +146,11 @@ updateOrientationButtons(width, height) {
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
-				onContentLoaded: (modalBody) => {
+				onContentLoaded: async (modalBody) => {
 					initPixelScalerInContainer(modalBody);
 
 					// Render before indexing so document search includes every event.
+					await loadScriptOnce('js/ui/about-timeline-data.js?v=f7cbbb98');
 					initPreservationTimeline(modalBody);
 					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
 
@@ -649,23 +660,4 @@ setupWelcomeModalListeners() {
 		});
 	}
 
-,
-	alertAction(options = {}) {
-		const {
-			title = 'Notice',
-			message = ''
-		} = options;
-
-		if (!this.modalManager || !document.getElementById('confirmationModal')) {
-			alert(message);
-			return Promise.resolve();
-		}
-
-		const cancelBtn = document.getElementById('confirmationCancelBtn');
-		if (cancelBtn) cancelBtn.style.display = 'none';
-
-		return this.confirmAction({ title, message, confirmLabel: 'OK' }).then(() => {
-			if (cancelBtn) cancelBtn.style.display = '';
-		});
-	}
 };

@@ -327,15 +327,6 @@ class HtmlSceneExporter {
 		return /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value || '') ? value : 'transparent';
 	}
 
-	normalizeBlendMode(value) {
-		const supported = [
-			'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
-			'color-dodge', 'color-burn', 'hard-light', 'soft-light',
-			'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity'
-		];
-		return supported.includes(value) ? value : 'normal';
-	}
-
 	async assetToDataUrl(url) {
 		if (url.startsWith('data:')) return url;
 		const response = await fetch(url);

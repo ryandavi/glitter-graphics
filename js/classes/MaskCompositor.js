@@ -3,11 +3,6 @@ class MaskCompositor {
 		this.editor = editor;
 		this.cache = new Map();
 		this.selectionCanvasCache = new Map();
-		this.filterCanvas = document.createElement('canvas');
-		this.filterCtx = this.filterCanvas.getContext('2d', { willReadFrequently: true });
-		this.outputCanvas = document.createElement('canvas');
-		this.outputCtx = this.outputCanvas.getContext('2d', { willReadFrequently: true });
-		this.blurSupported = typeof this.filterCtx.filter === 'string';
 	}
 
 	getMaskCanvas(layer, options = {}) {
@@ -146,17 +141,7 @@ class MaskCompositor {
 
 	_applyFeatherToCanvas(sourceCanvas, feather, draft) {
 		if (!feather || feather <= 0 || draft) {
-			return this._cloneCanvas(sourceCanvas);
-		}
-
-		if (this.blurSupported) {
-			this.filterCanvas.width = sourceCanvas.width;
-			this.filterCanvas.height = sourceCanvas.height;
-			this.filterCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
-			this.filterCtx.filter = `blur(${feather}px)`;
-			this.filterCtx.drawImage(sourceCanvas, 0, 0);
-			this.filterCtx.filter = 'none';
-			return this._cloneCanvas(this.filterCanvas);
+			return sourceCanvas;
 		}
 
 		const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
@@ -172,17 +157,14 @@ class MaskCompositor {
 
 	_applyInvertIfNeeded(sourceCanvas, invert) {
 		if (!invert) {
-			return this._cloneCanvas(sourceCanvas);
+			return sourceCanvas;
 		}
 
 		const width = sourceCanvas.width;
 		const height = sourceCanvas.height;
-		this.outputCanvas.width = width;
-		this.outputCanvas.height = height;
-		this.outputCtx.clearRect(0, 0, width, height);
-		this.outputCtx.drawImage(sourceCanvas, 0, 0);
-
-		const imageData = this.outputCtx.getImageData(0, 0, width, height);
+		const outputCanvas = this._cloneCanvas(sourceCanvas);
+		const outputCtx = outputCanvas.getContext('2d', { willReadFrequently: true });
+		const imageData = outputCtx.getImageData(0, 0, width, height);
 		const alphaChannel = this.editor.originalAlphaChannel;
 
 		for (let i = 0; i < width * height; i++) {
@@ -193,8 +175,8 @@ class MaskCompositor {
 			}
 		}
 
-		this.outputCtx.putImageData(imageData, 0, 0);
-		return this._cloneCanvas(this.outputCanvas);
+		outputCtx.putImageData(imageData, 0, 0);
+		return outputCanvas;
 	}
 
 	_createCanvasFromMaskData(maskData, width, height) {
@@ -223,4 +205,3 @@ class MaskCompositor {
 		return canvas;
 	}
 }
-

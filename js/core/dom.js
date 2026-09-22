@@ -27,3 +27,28 @@ function createIcon(name) {
 	svg.querySelector('use').setAttribute('href', `#icon-${name}`);
 	return svg;
 }
+
+const SCRIPT_LOADS = new Map();
+
+function loadScriptOnce(src) {
+	if (SCRIPT_LOADS.has(src)) return SCRIPT_LOADS.get(src);
+	const existing = Array.from(document.scripts).find((script) => script.src === new URL(src, document.baseURI).href);
+	if (existing?.dataset.loaded === 'true') return Promise.resolve(existing);
+	const promise = new Promise((resolve, reject) => {
+		const script = existing || document.createElement('script');
+		script.addEventListener('load', () => {
+			script.dataset.loaded = 'true';
+			resolve(script);
+		}, { once: true });
+		script.addEventListener('error', () => {
+			SCRIPT_LOADS.delete(src);
+			reject(new Error(`Could not load script: ${src}`));
+		}, { once: true });
+		if (!existing) {
+			script.src = src;
+			document.head.appendChild(script);
+		}
+	});
+	SCRIPT_LOADS.set(src, promise);
+	return promise;
+}

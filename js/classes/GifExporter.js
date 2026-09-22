@@ -395,15 +395,6 @@ class GifExporter {
 		this._drawTransformedCanvas(ctx, compositeCanvas, getLayerTransform(layer), width, height);
 	}
 
-	_shapeUsesGlitter(layer) {
-		const d = layer.shapeData;
-		if (!d) return false;
-		if (d.fill?.mode === 'glitter') return true;
-		if (d.border && d.border.mode === 'glitter') return true;
-		if (d.shadow && d.shadow.mode === 'glitter') return true;
-		return false;
-	}
-
 	// Shared with ShapeGlitterManager via resolveEffectPaintSource. Each slot has
 	// its own glitter: fill uses layer.selectedGlitterId, border/shadow use their
 	// own effectData.glitterId.

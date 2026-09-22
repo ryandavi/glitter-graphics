@@ -11,6 +11,7 @@ class BaseBackgroundManager {
 		this.pixelEffectPendingKey = null;
 		this.pixelEffectDebounceTimer = null;
 		this.lastPixelEffectPreview = null;
+		this.backgroundSourceCache = null;
 		this.shimmerPreview = { key: null, frameIndex: 0, timer: null, pending: false, requestId: 0 };
 		this.setupUI();
 		this.setupEventListeners();
@@ -355,7 +356,7 @@ class BaseBackgroundManager {
 
 	ensurePixelEffectWorker() {
 		if (this.pixelEffectWorker) return this.pixelEffectWorker;
-		this.pixelEffectWorker = new Worker('js/workers/pixel-effects.worker.js?v=5');
+		this.pixelEffectWorker = new Worker('js/workers/pixel-effects.worker.js?v=50bd1bf8');
 		this.pixelEffectWorker.addEventListener('error', (error) => {
 			dbg('[BaseBackgroundManager] Palette effect worker failed:', error);
 			this.pixelEffectPendingKey = null;
@@ -493,13 +494,17 @@ class BaseBackgroundManager {
 	getBackgroundSourceImageData(background, width, height) {
 		if (background.mode === 'image') return this.editor.originalImageData;
 		if (background.mode !== 'gradient') return null;
+		const key = `${width}x${height}:${JSON.stringify(background.gradient)}`;
+		if (this.backgroundSourceCache?.key === key) return this.backgroundSourceCache.data;
 		const canvas = document.createElement('canvas');
 		canvas.width = width;
 		canvas.height = height;
 		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 		ctx.fillStyle = createEffectCanvasGradient(ctx, background.gradient, { x: 0, y: 0, width, height });
 		ctx.fillRect(0, 0, width, height);
-		return ctx.getImageData(0, 0, width, height);
+		const data = ctx.getImageData(0, 0, width, height);
+		this.backgroundSourceCache = { key, data };
+		return data;
 	}
 
 	getAutoGlitterAvailability(layer = this.editor.layers?.find((entry) => entry.type === LayerType.BASE_IMAGE)) {
