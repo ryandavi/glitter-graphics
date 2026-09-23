@@ -51,7 +51,8 @@ Required for an addable type:
 - `designPanelSections`, `mobileSettingsSections` and `panelMode`: which sidebar sections show and which mobile drawers they map to. This entry is what makes mobile drawers work.
 - `onActivate(editor, layer)`: runs when the layer becomes active.
 - `hasVisibleContent(layer)`: whether the layer has anything to draw (read by `layerHasVisibleContent`).
-- `paintSlots`: the type's paint slots, back to front. Each is `{ key, role, path }` plus optional `enabledPath`, `draftPath`, `glitterDefault`, `wholeLayer`, `sourceLabel`, `countsAsEffect`, `framePadding` and `documentPixels`. The field meanings are documented at the top of `js/paint/paint-slots.js`.
+- `paintSlots`: the type's paint slots, back to front. Each is `{ key, role, path }` plus optional `enabledPath`, `draftPath`, `glitterDefault`, `wholeLayer`, `sourceLabel`, `countsAsEffect`, `framePadding`, `panelPrefix`, `modes` and `fields`. Every slot of a role carries that role's editable fields (`PAINT_SLOT_ROLE_FIELDS`); `fields: { path: 'specKey' }` adds or re-specs one, such as a type-specific border width. The meanings are documented at the top of `js/paint/paint-slots.js`.
+- `fields`: bindings of the type's other editable properties onto layer data, `{ path, field, id, factor, geometry, documentScale, minimum }` (see `js/core/fields.js`). A slot or type field's spec, in `FIELDS`, gives its range, unit and default.
 
 Common optional fields:
 

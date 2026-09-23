@@ -64,7 +64,7 @@ async function settle(page) {
 
 // Structural fingerprint, captured once at boot with no layers: id, tag,
 // sorted classes, nearest [id] ancestor (catches re-parenting), and input
-// ranges/defaults (catches CONFIG.ui.sliders drift).
+// ranges/defaults (catches FIELDS drift).
 async function captureStructure(page) {
 	return page.evaluate((sectionIds) => {
 		document.querySelectorAll('.paint-slot-card[data-slot]').forEach((slot) => {

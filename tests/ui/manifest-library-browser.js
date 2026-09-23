@@ -15,7 +15,7 @@ async function main() {
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
 		await page.waitForFunction(() => Boolean(window.editor));
 		const result = await page.evaluate(async () => {
-			await window.editor.textGlitterManager.loadFontsManifest();
+			await FontLibrary.loadManifest();
 			const normalizedShapes = Object.entries(ShapeLibrary.DEFS)
 				.filter(([, definition]) => definition.sourceBounds)
 				.map(([id, definition]) => {
@@ -49,8 +49,8 @@ async function main() {
 					};
 				});
 			return {
-				fonts: window.editor.textGlitterManager.fontManifest.length,
-				fontTagGroups: window.editor.textGlitterManager.fontTagGroups.length,
+				fonts: FontLibrary.fonts.length,
+				fontTagGroups: FontLibrary.tagGroups.length,
 				fillShapes: ShapeLibrary.FILL_SHAPES.length,
 				fillShapeCategories: ShapeLibrary.FILL_SHAPE_CATEGORIES.length,
 				brushShapes: ShapeLibrary.BRUSH_SHAPES.length,

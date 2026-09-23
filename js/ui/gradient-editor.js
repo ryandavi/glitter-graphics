@@ -1,5 +1,5 @@
 function installEffectGradientEditor(options) {
-	const solid = document.getElementById(`${options.prefix}UseColor`) || document.getElementById(`${options.prefix}Solid`);
+	const solid = document.getElementById(`${options.prefix}Solid`);
 	const group = solid?.closest('.segmented-control');
 	if (!group || document.getElementById(`${options.prefix}Gradient`)) return;
 	const button = document.createElement('button');

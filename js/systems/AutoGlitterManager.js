@@ -72,7 +72,7 @@ class AutoGlitterManager {
 			// Claim the button so the shared property-revert fallback leaves it alone.
 			resetBtn.dataset.revertBound = '';
 			resetBtn.addEventListener('click', () => {
-				input.value = CONFIG.ui.sliders[input.id].value;
+				input.value = FIELDS[input.id].value;
 				input.dispatchEvent(new Event('input', { bubbles: true }));
 			});
 		});
@@ -176,14 +176,9 @@ class AutoGlitterManager {
 	updateControlReadout(input) {
 		const value = document.getElementById(`${input.id}Value`);
 		if (!value) return;
-		const spec = CONFIG.ui.sliders[input.id] || {};
 		// Same styled `value + unit` markup as every other panel readout; a
 		// `valueScale: percent` row shows the 0-100% position through its range.
-		if (value.dataset.valueScale === 'percent') {
-			value.innerHTML = formatRangePercent(input.value, spec.min, spec.max);
-			return;
-		}
-		value.innerHTML = formatUnit(input.value, spec.unit || '');
+		value.innerHTML = formatSliderReadout(input, value, input.value);
 	}
 
 	scheduleReduce() {

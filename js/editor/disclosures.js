@@ -230,18 +230,9 @@ initializeCollapsibleSections() {
 ,
 	applyColorAdjustToSliders(prefix, adjust) {
 		const a = normalizeColorAdjust(adjust);
-		const set = (id, value, suffix) => {
-			const slider = document.getElementById(id);
-			const display = document.getElementById(id + 'Value');
-			if (slider) slider.value = String(value);
-			if (display) display.innerHTML = formatUnit(value, suffix);
-		};
-		set(prefix + 'Hue', a.hue, '°');
-		set(prefix + 'Saturation', a.saturation, '%');
-		set(prefix + 'Brightness', a.brightness, '%');
-		this.updateResetButton(prefix + 'Hue');
-		this.updateResetButton(prefix + 'Saturation');
-		this.updateResetButton(prefix + 'Brightness');
+		syncSlider(document.getElementById(`${prefix}Hue`), a.hue);
+		syncSlider(document.getElementById(`${prefix}Saturation`), a.saturation);
+		syncSlider(document.getElementById(`${prefix}Brightness`), a.brightness);
 	}
 
 	// The colorAdjust that tints a layer's layers-list swatch — the FILL slot's,

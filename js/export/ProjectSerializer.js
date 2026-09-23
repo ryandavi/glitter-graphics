@@ -229,7 +229,7 @@ class ProjectSerializer {
 	}
 
 	async preflight(data) {
-		await this.editor.textGlitterManager.loadFontsManifest();
+		await FontLibrary.loadManifest();
 		const issues = [];
 		if (data.version > ProjectSerializer.FORMAT_VERSION) {
 			issues.push({
@@ -248,7 +248,7 @@ class ProjectSerializer {
 			if (layer.type === LayerType.STICKER && layer.stickerSourceId && !embedded[layer.stickerSourceId] && !this.editor.stickerManager.getItemById(layer.stickerSourceId)) {
 				issues.push({ kind: 'sticker', index, id: layer.stickerSourceId, message: `${label}: sticker “${layer.stickerSourceId}” is missing — the layer will load empty` });
 			}
-			if (layer.type === LayerType.TEXT_GLITTER && layer.textData?.fontId && !this.editor.textGlitterManager.fontsById.has(layer.textData.fontId)) {
+			if (layer.type === LayerType.TEXT_GLITTER && layer.textData?.fontId && !FontLibrary.has(layer.textData.fontId)) {
 				issues.push({ kind: 'font', index, id: layer.textData.fontId, message: `${label}: font “${layer.textData.fontId}” is unavailable — the default font will be used` });
 			}
 			if (layer.type === LayerType.SHAPE && !ShapeLibrary.FILL_SHAPES.some((shape) => shape.id === layer.shapeData?.shapeId)) {
@@ -277,13 +277,9 @@ class ProjectSerializer {
 			if (issue.kind === 'glitter') {
 				// Each declared slot (and its parked draft) knows which default
 				// glitter replaces a missing one. Anything else falls back to fill.
-				const context = LAYER_TYPE_GLITTER_CONTEXT[layer.type];
-				const defaultKeyBySlot = new Map(getLayerPaintSlots(layer, { includeDrafts: true })
-					.map((entry) => [entry.data, entry.definition.glitterDefault || 'fillGlitterId']));
-				const defaultGlitterFor = (slot) => {
-					const defaults = CONFIG.tools.glitter.defaults[defaultKeyBySlot.get(slot) || 'fillGlitterId'];
-					return typeof defaults === 'object' ? defaults[context] : defaults;
-				};
+				const definitionBySlot = new Map(getLayerPaintSlots(layer, { includeDrafts: true })
+					.map((entry) => [entry.data, entry.definition]));
+				const defaultGlitterFor = (slot) => getPaintSlotDefaultGlitterId(layer.type, definitionBySlot.get(slot));
 				const replace = (value) => {
 					if (!value || typeof value !== 'object') return;
 					Object.entries(value).forEach(([key, child]) => {

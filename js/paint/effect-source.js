@@ -79,15 +79,15 @@ function normalizeImagePositionPercent(value) {
 	const number = Number(value);
 	return Number.isFinite(number)
 		? Math.max(0, Math.min(100, number))
-		: CONFIG.tools.shapes.imageFill.defaultOffsetXPercent;
+		: FIELDS.shapeImageOffsetX.value;
 }
 
 function normalizeImageScalePercent(value) {
-	const slider = CONFIG.ui.sliders.shapeImageScale;
+	const slider = FIELDS.shapeImageScale;
 	const number = Number(value);
 	return Number.isFinite(number)
 		? Math.max(slider.min, Math.min(slider.max, number))
-		: CONFIG.tools.shapes.imageFill.defaultScalePercent;
+		: FIELDS.shapeImageScale.value;
 }
 
 function normalizeImageRendering(value) {
@@ -149,7 +149,7 @@ function normalizeEffectGradient(gradient) {
 	const stops = Array.isArray(source.stops) && source.stops.length >= 2
 		? source.stops
 		: defaults.stops;
-	const smoothing = CONFIG.ui.sliders.gradientSmoothing;
+	const smoothing = FIELDS.gradientSmoothing;
 	const subdivisions = Math.round(Number(source.smoothSubdivisions ?? defaults.smoothSubdivisions));
 	return {
 		type: source.type === 'radial' ? 'radial' : 'linear',

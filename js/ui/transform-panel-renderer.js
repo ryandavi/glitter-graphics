@@ -50,7 +50,7 @@ function redesignTransformFragment(fragment) {
 		return set;
 	};
 
-	card.classList.add('panel-card', 'panel-module');
+	card.classList.add('panel-module');
 	card.dataset.panelRedesign = '';
 	card.dataset.collapsible = '';
 	const lock = header.querySelector('[data-transform-lock]');
@@ -128,18 +128,14 @@ function redesignTransformFragment(fragment) {
 		align
 	);
 
-	actions.classList.add('panel-actions');
 	card.appendChild(actions);
 }
 
 function buildTransformPanel(editor, container, prefix, capabilities) {
 	const ids = editor.getTransformIds(prefix);
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
-	// The transform card is injected AFTER renderPanelSection's
-	// applyPanelRedesignClasses pass, so stamp the same redesign aliases here:
-	// `property-card`, and `property-block` for the L2-block layout (flex title
-	// row, etc.) that keyed off `.subsection-content-group:where(:not(section-group))`
-	// before it became a positive class.
+	// The transform card is injected after its section's finishPanelMarkup
+	// pass, so stamp the L2-block class here too.
 	fragment.querySelectorAll('.subsection-content-group').forEach((card) => {
 		card.classList.add('property-card');
 		if (!card.classList.contains('subsection-section-group') && !card.classList.contains('effects-stack')) {
@@ -171,10 +167,10 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 		if (id) element.id = id;
 	});
 	const transformSliderSpecs = {
-		scaleX: CONFIG.ui.sliders.transformScale,
-		scaleY: CONFIG.ui.sliders.transformScale,
-		rotation: CONFIG.ui.sliders.transformRotation,
-		opacity: CONFIG.ui.sliders.transformOpacity
+		scaleX: FIELDS.transformScale,
+		scaleY: FIELDS.transformScale,
+		rotation: FIELDS.transformRotation,
+		opacity: FIELDS.transformOpacity
 	};
 	Object.entries(transformSliderSpecs).forEach(([role, spec]) => {
 		const input = fragment.querySelector(`input[data-transform-role="${role}"]`);

@@ -54,7 +54,7 @@ class BaseBackgroundManager {
 		Object.assign(layer.background, {
 			mode: isOptionValue('paintMode', layer.background.mode) ? layer.background.mode : 'image',
 			color: layer.background.color || '#ffffff',
-			scale: Number(layer.background.scale ?? CONFIG.tools.effects.defaults.scale),
+			scale: Number(layer.background.scale ?? FIELDS.textureScale.value),
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
 		});
 		normalizeSlotTextureCoordinates(layer.background);
@@ -165,7 +165,7 @@ class BaseBackgroundManager {
 		const bindRange = (id, path, slider) => {
 			const input = document.getElementById(id);
 			if (!input) return;
-			const spec = CONFIG.ui.sliders[slider];
+			const spec = FIELDS[slider];
 			bindSlider(input, document.getElementById(`${id}Value`), {
 				suffix: spec.unit,
 				parseValue: (rawValue) => Number(rawValue),
@@ -436,7 +436,7 @@ class BaseBackgroundManager {
 		const input = document.getElementById(`baseBackground${name}`);
 		const value = document.getElementById(`baseBackground${name}Value`);
 		if (!input) return;
-		const spec = CONFIG.ui.sliders[name === 'Scale' ? 'textureScale' : 'slotOpacity'];
+		const spec = FIELDS[name === 'Scale' ? 'textureScale' : 'slotOpacity'];
 		bindSlider(input, value, {
 			suffix: '%', resetValue: spec.value,
 			resetButton: document.getElementById(`resetBaseBackground${name}`),
@@ -456,7 +456,7 @@ class BaseBackgroundManager {
 		const value = document.getElementById(`baseBackground${name}Value`);
 		if (!input) return;
 		const key = name.toLowerCase();
-		const spec = CONFIG.ui.sliders[key];
+		const spec = FIELDS[key];
 		bindSlider(input, value, {
 			suffix: name === 'Hue' ? '\u00b0' : '%', resetValue: spec.value,
 			resetButton: document.getElementById(`resetBaseBackground${name}`),
@@ -529,12 +529,8 @@ class BaseBackgroundManager {
 		const modeButton = document.getElementById(`baseBackground${layer.background.mode[0].toUpperCase()}${layer.background.mode.slice(1)}`);
 		syncPaintSlotSourceUI(modeButton || document.getElementById('baseBackgroundImage'), layer.background.mode);
 		if (this.ui.color) this.ui.color.value = layer.background.color;
-		[['Scale', layer.background.scale], ['Opacity', layer.opacity]].forEach(([name, current]) => {
-			const input = document.getElementById(`baseBackground${name}`);
-			const value = document.getElementById(`baseBackground${name}Value`);
-			if (input) input.value = current;
-			if (value) value.innerHTML = formatUnit(current, '%');
-		});
+		syncSlider(document.getElementById('baseBackgroundScale'), layer.background.scale);
+		syncSlider(document.getElementById('baseBackgroundOpacity'), layer.opacity);
 		this.editor.applyColorAdjustToSliders('baseBackground', layer.background.colorAdjust);
 		syncSlotTextureCoordinateControls('baseBackground', layer.background);
 		const hasImage = this.hasBaseImage();

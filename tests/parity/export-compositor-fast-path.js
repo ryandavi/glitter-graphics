@@ -350,7 +350,7 @@ function assert(condition, message) {
 			onStatus: () => {}, onProgress: () => {}, onComplete: () => {}, parseGif: (url) => window.editor.glitterManager.parseGifFromUrl(url),
 			createMask: (layer) => window.editor.maskCompositor.getMaskData(layer),
 			renderSlotMasks: (layer) => getLayerManagerForType(window.editor, layer.type).renderSlotMasks(layer),
-			ensureTextFont: (fontId) => window.editor.textGlitterManager.ensureFontLoaded(fontId)
+			ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
 		};
 		let planBuilds = 0;
 		const originalBuild = exporter._buildLayerExportPlan.bind(exporter);

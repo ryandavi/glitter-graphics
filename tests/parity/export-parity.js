@@ -310,7 +310,7 @@ async function exportBytes(page, exportOverrides = {}) {
 					parseGif: (url) => editor.glitterManager.parseGifFromUrl(url),
 					createMask: (layer) => editor.maskCompositor.getMaskData(layer),
 					renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
-					ensureTextFont: (fontId) => editor.textGlitterManager.ensureFontLoaded(fontId)
+					ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
 				}
 			}).catch((error) => {
 				clearTimeout(timeout);

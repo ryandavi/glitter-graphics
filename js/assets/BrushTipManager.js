@@ -9,16 +9,7 @@ class BrushTipManager extends ContentManager {
 	}
 
 	setupUI() {
-		this.ui = {
-			panel: document.getElementById('brushTipOptions'),
-			searchInput: document.getElementById('brushTipSearch'),
-			filterToggle: document.getElementById('brushTipFilterToggleBtn'),
-			filtersContainer: document.getElementById('brushTipFiltersContainer'),
-			clearFiltersBtn: document.getElementById('clearBrushTipFiltersBtn'),
-			closeFiltersBtn: document.getElementById('closeBrushTipFiltersBtn'),
-			activeFilterSummary: document.getElementById('brushTipActiveFilterSummary'),
-			categoryChips: document.getElementById('brushTipCategoryChips')
-		};
+		this.ui = getAssetBrowserUi('brushTip');
 	}
 
 	async loadContent() {
@@ -27,13 +18,7 @@ class BrushTipManager extends ContentManager {
 	}
 
 	async initBrowser() {
-		this.browser = new AssetBrowser(this, {
-			browser: 'brushTipBrowser', backBtn: 'brushTipBrowserBack', title: 'brushTipBrowserTitle',
-			content: 'brushTipBrowserContent', categoryGrid: 'brushTipCategoryGrid',
-			searchResults: 'brushTipSearchResults', itemGrid: 'brushTipItemGrid',
-			sentinel: 'brushTipBrowserSentinel', emptyState: 'brushTipBrowserEmpty',
-			emptyText: 'brushTipBrowserEmptyText'
-		}, 'Brush Tips');
+		this.browser = new AssetBrowser(this, getAssetBrowserElementIds('brushTip'), getAssetBrowserSchema('brushTip').title);
 		await this.browser.init(CONFIG.tools.maskBrush.brushTips.categories);
 	}
 

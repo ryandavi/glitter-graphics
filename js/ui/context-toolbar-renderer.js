@@ -309,7 +309,7 @@ class ContextToolbarRenderer {
 			return node;
 		}
 		if (control.kind === 'slider') {
-			const spec = control.slider ? CONFIG.ui.sliders[control.slider] : control;
+			const spec = control.slider ? FIELDS[control.slider] : control;
 			const node = document.getElementById('tpl-context-slider').content.firstElementChild.cloneNode(true);
 			node.querySelector('.context-label').textContent = control.label || spec.label;
 			const input = node.querySelector('input'); input.id = control.id;

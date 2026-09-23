@@ -18,42 +18,83 @@
 //   sourceLabel    export source label suffix (null for none; defaults to key)
 //   countsAsEffect false keeps the slot's color adjust out of the Effects badge
 //   framePadding   (data) => px the slot paints outside the layer frame
-//   documentPixels pixel fields rescaled with the document:
-//                  { hostPath?, fields?, signedFields?, minimum? }
+//   panelPrefix    id prefix of the slot's panel controls (PANEL_SCHEMAS idPrefix)
+//   modes          paint modes its source control offers
+//   fields         { path: 'specKey' } adds or re-specs role fields (below)
+
+// Editable fields each slot of a role carries, keyed by path inside the slot
+// object (field bindings, see js/core/fields.js). `suffix` completes the panel
+// control id after the slot's panelPrefix. A role field without a spec (border
+// width differs per layer type) exists only on slots whose declaration names
+// one in `fields`.
+const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
+	all: {
+		opacity: { field: 'slotOpacity', suffix: 'Opacity' },
+		scale: { field: 'textureScale', suffix: 'Scale', documentScale: 'texture' },
+		'colorAdjust.hue': { field: 'hue', suffix: 'Hue', colorAdjust: true },
+		'colorAdjust.saturation': { field: 'saturation', suffix: 'Saturation', colorAdjust: true },
+		'colorAdjust.brightness': { field: 'brightness', suffix: 'Brightness', colorAdjust: true }
+	},
+	fill: {
+		imageScalePercent: { suffix: 'ImageScale' },
+		offsetXPercent: { suffix: 'ImageOffsetX' },
+		offsetYPercent: { suffix: 'ImageOffsetY' }
+	},
+	border: {
+		widthPx: { suffix: 'Width', geometry: true, documentScale: 'effect' },
+		dotSpacingPx: { suffix: 'DotSpacing', geometry: true, documentScale: 'effect' }
+	},
+	shadow: {
+		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', control: 'number', geometry: true, documentScale: 'effect' },
+		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' }
+	}
+});
 
 const PAINT_SLOT_ROLES = Object.freeze(['fill', 'border', 'shadow', 'background']);
 
-function splitPaintSlotPath(path) {
-	return path ? Object.freeze(String(path).split('.')) : null;
-}
+// Kept for callers that read slot paths; field paths use the same format.
+const readPaintSlotPath = readFieldPath;
 
-function readPaintSlotPath(root, keys) {
-	if (!keys) return null;
-	let value = root;
-	for (const key of keys) {
-		if (value == null) return null;
-		value = value[key];
-	}
-	return value ?? null;
+function buildPaintSlotFields(definition, type) {
+	const roleFields = { ...PAINT_SLOT_ROLE_FIELDS.all, ...(PAINT_SLOT_ROLE_FIELDS[definition.role] || {}) };
+	const specs = definition.fields || {};
+	Object.keys(specs).forEach((path) => {
+		if (!roleFields[path]) throw new Error(`Unknown ${definition.role} slot field ${path} on layer type ${type}`);
+	});
+	return Object.freeze(Object.entries(roleFields)
+		.map(([path, base]) => ({ ...base, path, field: specs[path] ?? base.field }))
+		.filter((binding) => binding.field)
+		.map((binding) => normalizeFieldBinding(binding, `${type}.${definition.key}`)));
 }
 
 function normalizePaintSlotDefinition(definition, type) {
 	if (!definition?.key || !PAINT_SLOT_ROLES.includes(definition.role) || !definition.path) {
 		throw new Error(`Invalid paint slot on layer type ${type}`);
 	}
-	const documentPixels = definition.documentPixels
-		? Object.freeze({
-			...definition.documentPixels,
-			hostKeys: splitPaintSlotPath(definition.documentPixels.hostPath)
-		})
-		: null;
 	return Object.freeze({
 		...definition,
-		pathKeys: splitPaintSlotPath(definition.path),
-		enabledKeys: splitPaintSlotPath(definition.enabledPath),
-		draftKeys: splitPaintSlotPath(definition.draftPath),
-		documentPixels
+		pathKeys: splitFieldPath(definition.path),
+		enabledKeys: splitFieldPath(definition.enabledPath),
+		draftKeys: splitFieldPath(definition.draftPath),
+		fields: buildPaintSlotFields(definition, type)
 	});
+}
+
+function getPaintSlotDefinition(type, key) {
+	return LAYER_UI_CONFIG[type]?.paintSlots?.find((entry) => entry.key === key) || null;
+}
+
+// The glitter a slot falls back to when it has none (a fresh glitter source,
+// or a project whose glitter is missing).
+function getPaintSlotDefaultGlitterId(type, definition) {
+	const defaults = CONFIG.tools.glitter.defaults[definition?.glitterDefault || 'fillGlitterId'];
+	return typeof defaults === 'object' ? defaults[LAYER_TYPE_GLITTER_CONTEXT[type]] : defaults;
+}
+
+// Default value of one slot field, from its spec. fallback covers slots that
+// do not carry the field.
+function getPaintSlotFieldDefault(definition, path, fallback) {
+	return definition?.fields.find((binding) => binding.path === path)?.spec?.value ?? fallback;
 }
 
 // A zero-width border is present (it keeps its settings and badge) but draws
@@ -94,7 +135,7 @@ function getLayerPaintSlots(layer, { includeDrafts = false } = {}) {
 }
 
 function getLayerPaintSlot(layer, key) {
-	const definition = LAYER_UI_CONFIG[layer?.type]?.paintSlots?.find((entry) => entry.key === key);
+	const definition = getPaintSlotDefinition(layer?.type, key);
 	return definition ? readPaintSlotPath(layer, definition.pathKeys) : null;
 }
 

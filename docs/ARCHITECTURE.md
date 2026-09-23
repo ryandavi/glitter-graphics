@@ -27,7 +27,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Layer list, selection, ordering, serialization | `LayerManager` (`editor.layerManager`) | `editor.layers` and `editor.activeLayerId` are getters over it. |
 | Glitter-fill layers, and the glitter asset library | `GlitterManager` | Also owns painted masks and their version history (`paintHistory`). |
 | Sticker layers and sticker assets | `StickerManager` | |
-| Text layers and fonts | `TextGlitterManager` | |
+| Text layers | `TextGlitterManager` | Fonts (manifest and FontFace loading) come from `FontLibrary`; the font picker UI stays in the text panel. |
 | Shape layers and shape image fills | `ShapeGlitterManager` | Shape definitions come from `ShapeLibrary`. |
 | Canvas background (image, solid, gradient, glitter) | `BaseBackgroundManager` | The base-image layer. |
 | Filter layers | `FilterLayerManager` | |
@@ -49,6 +49,8 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Static defaults and tunables | `CONFIG` in `js/core/config.js` | Recursively frozen. Never assigned at runtime. Any user-tunable or twice-used value goes here; inline `??` fallbacks that restate a CONFIG default are forbidden. |
 | Layer-type definitions | `LayerType` and `registerLayerType` in `js/core/config.js`; one definition per type in `js/layers/types/<type>.js`, collected into `LAYER_UI_CONFIG` | See `docs/LAYER-TYPE-CONTRACT.md`. |
 | Sidebar structure | `PANEL_SCHEMAS` in `js/core/config.js` | Rendered by `js/ui/panel-renderer.js`. |
+| Editable property specs | `FIELDS` in `js/core/fields.js` | Label, unit, range and default per property. Panel rows stamp them; slot and layer defaults read them. |
+| Asset browsers | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | Glitter, sticker and brush-tip search, filters and browser, rendered from two templates. |
 | Tools | `ToolType`, `TOOL_GROUPS` in `js/core/config.js` | |
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
 | Runtime user preferences | `PREFERENCES` in `js/core/preferences.js` | `PREFERENCES.get(key)` / `set(key, value)`, persisted to `localStorage`. |
@@ -73,12 +75,14 @@ Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` 
 | `shape` | `shapeData`: `shapeId`, size, `fill`, `border`, `shadow` |
 | `filter` | `filterData` |
 
-**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. Every slot is one self-contained object. Each layer type declares its slots once, back to front, in its `paintSlots` list (key, role, path on the layer, draft path, default glitter, pixel fields that scale with the document). `js/paint/paint-slots.js` owns the concept:
+**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. Every slot is one self-contained object. Each layer type declares its slots once, back to front, in its `paintSlots` list (key, role, path on the layer, draft path, default glitter, panel id prefix, source modes, editable fields). `js/paint/paint-slots.js` owns the concept:
 
 - `getLayerPaintSlots(layer)` lists a layer's slots with their data and whether each is present and renders. `getLayerFillSlot(layer)` returns the fill slot whatever the type. Preloading, document scaling, the Effects badge, export culling and project-load glitter repair all iterate this list instead of naming slots per type.
 - `resolvePaintSlotSource` turns slot data into a render source (through `resolveEffectPaintSource` in `js/paint/effect-source.js`). Preview uses `resolvePaintSlotPreviewSource`, which adds only a live check that the glitter is in the library.
 - `buildSlotStack(layer, resolveSource)` returns the slots to draw in paint order. It holds the one ordering rule: a border drawn in front moves after the fill. The preview span stack and the export compositor both read it.
 - `applyPaintSourceToElement` is the one DOM painter for a resolved source: text and shape spans, the sticker shadow, the glitter fill and the canvas background.
+
+**Editable fields.** A type's `fields` and its slots' fields are bindings: a data path plus a `FIELDS` spec. One declaration drives the control's range and default, the slot's default value, document rescaling (`documentScale`, read by `js/core/document-scaler.js`) and the panel binding. `bindFieldControls(host)` / `syncFieldControls(host, layer)` in `js/ui/paint-slot-controls.js` bind and sync every declared control by id (`panelPrefix` + suffix for slots): sliders, number fields, source modes, glitter chips, colors, effect toggles, border options, texture position and the gradient editor. The text, shape and sticker managers supply only a host that says how their layer re-renders and records history. `syncSlider` in `js/ui/slider.js` is how any other code shows a programmatically set slider value.
 
 **Canonical state.** A layer is normalized once, where it enters the document: its manager's `createLayer`, `LayerManager.deserializeLayer` (undo/redo, clipboard, project load, cloning) through `LAYER_UI_CONFIG[type].serialization.normalize`. Getters and render paths read the canonical shape and never write defaults. Older data is brought to the current shape by `ProjectSerializer.migrateLayerState`, which runs in the versioned project migrations and on every deserialize (clipboard payloads can come from an older build).
 

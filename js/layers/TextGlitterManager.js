@@ -9,13 +9,7 @@ class TextGlitterManager {
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
 
-		this.fontManifest = [];
-		this.fontTagGroups = [];
-		this.fontsById = new Map();
-		this.fontManifestPromise = null;
-		this.fontLoadPromises = new Map();
-		this.fontFaces = new Map();
-		this.fontPickerPreloadPromise = null;
+		this.fontPickerRendered = false;
 
 		this.textMaskCache = new Map();
 		this.measureCanvas = createAppCanvas(0, 0, 'layers/TextGlitterManager');
@@ -42,6 +36,7 @@ class TextGlitterManager {
 		this.setupUI();
 		this.setupEventListeners();
 		this.setupPickerStripListeners();
+		FontLibrary.loadManifest().then(() => this.renderFontPicker()).catch((error) => this.reportFontLoadError(error));
 	}
 
 	setupUI() {
@@ -52,120 +47,18 @@ class TextGlitterManager {
 			fontBold: document.getElementById('textFontBold'),
 			fontItalic: document.getElementById('textFontItalic'),
 			textCaseSelect: document.getElementById('textCaseSelect'),
-			fontSize: document.getElementById('textFontSize'),
-			fontSizeValue: document.getElementById('textFontSizeValue'),
-			letterSpacing: document.getElementById('textLetterSpacing'),
-			letterSpacingValue: document.getElementById('textLetterSpacingValue'),
-			lineHeight: document.getElementById('textLineHeight'),
-			lineHeightValue: document.getElementById('textLineHeightValue'),
-			fillGlitterChip: document.getElementById('textFillGlitterChip'),
-			fillGlitterChange: document.getElementById('textFillGlitterChange'),
-			fillGlitterLabel: document.getElementById('textFillGlitterLabel'),
-			fillGlitterBadges: document.getElementById('textFillGlitterBadges'),
-			fillGlitterInfo: document.getElementById('textFillGlitterInfo'),
-			fillGlitterSize: document.getElementById('textFillGlitterSize'),
-			fillGlitterFrames: document.getElementById('textFillGlitterFrames'),
-			fillUseColor: document.getElementById('textFillUseColor'),
-			fillUseGlitter: document.getElementById('textFillUseGlitter'),
-			fillUseNone: document.getElementById('textFillUseNone'),
-			fillColor: document.getElementById('textFillColor'),
-			fillColorRow: document.getElementById('textFillColorRow'),
-			textureScaleRow: document.getElementById('textTextureScaleRow'),
-			textureScale: document.getElementById('textTextureScale'),
-			textureScaleValue: document.getElementById('textTextureScaleValue'),
-			textureOpacity: document.getElementById('textTextureOpacity'),
-			textureOpacityValue: document.getElementById('textTextureOpacityValue'),
 			alignButtons: Array.from(document.querySelectorAll('[data-text-align]')),
 			verticalAlignButtons: Array.from(document.querySelectorAll('[data-text-valign]')),
 			boxModeButtons: Array.from(document.querySelectorAll('[data-text-box-mode]')),
 			boxModeHint: document.getElementById('textBoxModeHint'),
 			fitBoxToContent: document.getElementById('textFitBoxToContent'),
-			borderEnabled: document.getElementById('textBorderEnabled'),
-			borderControls: document.getElementById('textBorderControls'),
-			borderWidth: document.getElementById('textBorderWidth'),
-			borderWidthValue: document.getElementById('textBorderWidthValue'),
-			borderColor: document.getElementById('textBorderColor'),
-			borderColorRow: document.getElementById('textBorderColorRow'),
-			borderGlitterChip: document.getElementById('textBorderGlitterChip'),
-			borderGlitterChange: document.getElementById('textBorderGlitterChange'),
-			borderGlitterLabel: document.getElementById('textBorderGlitterLabel'),
-			borderGlitterBadges: document.getElementById('textBorderGlitterBadges'),
-			borderGlitterInfo: document.getElementById('textBorderGlitterInfo'),
-			borderGlitterSize: document.getElementById('textBorderGlitterSize'),
-			borderGlitterFrames: document.getElementById('textBorderGlitterFrames'),
-			borderUseColor: document.getElementById('textBorderUseColor'),
-			borderUseGlitter: document.getElementById('textBorderUseGlitter'),
-			borderScaleRow: document.getElementById('textBorderScaleRow'),
-			borderScale: document.getElementById('textBorderScale'),
-			borderScaleValue: document.getElementById('textBorderScaleValue'),
-			borderOpacity: document.getElementById('textBorderOpacity'),
-			borderOpacityValue: document.getElementById('textBorderOpacityValue'),
-			borderEdgeRounded: document.getElementById('textBorderEdgeRounded'),
-			borderEdgeHard: document.getElementById('textBorderEdgeHard'),
-			borderPositionOutside: document.getElementById('textBorderPositionOutside'),
-			borderPositionCenter: document.getElementById('textBorderPositionCenter'),
-			borderPositionInside: document.getElementById('textBorderPositionInside'),
-			borderOrderBehind: document.getElementById('textBorderOrderBehind'),
-			borderOrderFront: document.getElementById('textBorderOrderFront'),
-			shadowEnabled: document.getElementById('textShadowEnabled'),
-			shadowControls: document.getElementById('textShadowControls'),
-			shadowOffsetX: document.getElementById('textShadowOffsetX'),
-			shadowOffsetXValue: document.getElementById('textShadowOffsetXValue'),
-			shadowOffsetY: document.getElementById('textShadowOffsetY'),
-			shadowOffsetYValue: document.getElementById('textShadowOffsetYValue'),
-			shadowColor: document.getElementById('textShadowColor'),
-			shadowColorRow: document.getElementById('textShadowColorRow'),
-			shadowGlitterChip: document.getElementById('textShadowGlitterChip'),
-			shadowGlitterChange: document.getElementById('textShadowGlitterChange'),
-			shadowGlitterLabel: document.getElementById('textShadowGlitterLabel'),
-			shadowGlitterBadges: document.getElementById('textShadowGlitterBadges'),
-			shadowGlitterInfo: document.getElementById('textShadowGlitterInfo'),
-			shadowGlitterSize: document.getElementById('textShadowGlitterSize'),
-			shadowGlitterFrames: document.getElementById('textShadowGlitterFrames'),
-			shadowUseColor: document.getElementById('textShadowUseColor'),
-			shadowUseGlitter: document.getElementById('textShadowUseGlitter'),
-			shadowScaleRow: document.getElementById('textShadowScaleRow'),
-			shadowScale: document.getElementById('textShadowScale'),
-			shadowScaleValue: document.getElementById('textShadowScaleValue'),
-			shadowOpacity: document.getElementById('textShadowOpacity'),
-			shadowOpacityValue: document.getElementById('textShadowOpacityValue'),
-			// Text Background (idPrefix 'textBackground' in PANEL_SCHEMAS; ui keys
-			// use 'backgroundFill'/'bg' so the generic border/shadow-style binders
-			// below can address this slot by effectName 'backgroundFill').
-			bgEnabled: document.getElementById('textBackgroundEnabled'),
-			bgControls: document.getElementById('textBackgroundControls'),
-			backgroundFillColor: document.getElementById('textBackgroundColor'),
-			backgroundFillColorRow: document.getElementById('textBackgroundColorRow'),
-			backgroundFillGlitterChip: document.getElementById('textBackgroundGlitterChip'),
-			backgroundFillGlitterChange: document.getElementById('textBackgroundGlitterChange'),
-			backgroundFillGlitterLabel: document.getElementById('textBackgroundGlitterLabel'),
-			backgroundFillGlitterBadges: document.getElementById('textBackgroundGlitterBadges'),
-			backgroundFillGlitterInfo: document.getElementById('textBackgroundGlitterInfo'),
-			backgroundFillGlitterSize: document.getElementById('textBackgroundGlitterSize'),
-			backgroundFillGlitterFrames: document.getElementById('textBackgroundGlitterFrames'),
-			backgroundFillUseColor: document.getElementById('textBackgroundUseColor'),
-			backgroundFillUseGlitter: document.getElementById('textBackgroundUseGlitter'),
-			backgroundFillScaleRow: document.getElementById('textBackgroundScaleRow'),
-			backgroundFillScale: document.getElementById('textBackgroundScale'),
-			backgroundFillScaleValue: document.getElementById('textBackgroundScaleValue'),
-			backgroundFillOpacity: document.getElementById('textBackgroundOpacity'),
-			backgroundFillOpacityValue: document.getElementById('textBackgroundOpacityValue'),
-			bgPaddingH: document.getElementById('textBackgroundPaddingH'),
-			bgPaddingHValue: document.getElementById('textBackgroundPaddingHValue'),
-			bgPaddingV: document.getElementById('textBackgroundPaddingV'),
-			bgPaddingVValue: document.getElementById('textBackgroundPaddingVValue'),
-			bgRadius: document.getElementById('textBackgroundRadius'),
-			bgRadiusValue: document.getElementById('textBackgroundRadiusValue'),
-			bgMergeDistance: document.getElementById('textBackgroundMergeDistance'),
-			bgMergeDistanceValue: document.getElementById('textBackgroundMergeDistanceValue'),
-			bgSpacing: document.getElementById('textBackgroundSpacing'),
-			bgSpacingValue: document.getElementById('textBackgroundSpacingValue'),
 			bgModeLines: document.getElementById('textBackgroundModeLines'),
 			bgModeBounds: document.getElementById('textBackgroundModeBounds'),
 			bgModeBox: document.getElementById('textBackgroundModeBox'),
 			bgConnSeparate: document.getElementById('textBackgroundConnectionSeparate'),
 			bgConnMerge: document.getElementById('textBackgroundConnectionMerge'),
 			bgConnConnected: document.getElementById('textBackgroundConnectionConnected'),
+			bgMergeDistance: document.getElementById('textBackgroundMergeDistance'),
 			bgPreset: document.getElementById('textBackgroundPreset'),
 			resetEffects: document.getElementById('resetTextEffects'),
 			// D-1c gallery picker strip
@@ -175,53 +68,42 @@ class TextGlitterManager {
 			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
 			pickerStripDone: document.getElementById('galleryPickerStripDone')
 		};
-
-		// Color adjust (WP4) HSB sliders, one set per slot. Registered as a compact
-		// 3×3 loop instead of nine literal entries above. IDs follow
-		// text{Fill,Border,Shadow}{Hue,Saturation,Brightness}[Value].
-		['fill', 'border', 'shadow'].forEach((slot) => {
-			const slotCap = slot.charAt(0).toUpperCase() + slot.slice(1);
-			['Hue', 'Saturation', 'Brightness'].forEach((axis) => {
-				this.ui[`${slot}${axis}`] = document.getElementById(`text${slotCap}${axis}`);
-				this.ui[`${slot}${axis}Value`] = document.getElementById(`text${slotCap}${axis}Value`);
-			});
-		});
-		// backgroundFill's DOM ids come from idPrefix 'textBackground' (not
-		// 'textBackgroundFill'), so it can't join the loop above.
-		['Hue', 'Saturation', 'Brightness'].forEach((axis) => {
-			this.ui[`backgroundFill${axis}`] = document.getElementById(`textBackground${axis}`);
-			this.ui[`backgroundFill${axis}Value`] = document.getElementById(`textBackground${axis}Value`);
-		});
-
-		const borderConfig = CONFIG.tools.text.border;
-		if (this.ui.borderWidth) {
-			this.ui.borderWidth.min = String(borderConfig.minWidthPx);
-			this.ui.borderWidth.max = String(borderConfig.maxWidthPx);
-		}
-		['textFill', 'textBorder', 'textShadow', 'textBackground'].forEach((prefix) => {
-			const effectName = prefix === 'textFill' ? 'fill' : prefix === 'textBorder' ? 'border' : prefix === 'textShadow' ? 'shadow' : 'backgroundFill';
-			installEffectGradientEditor({
-				prefix,
-				getData: () => {
-					const layer = this.getActiveTextLayer();
-					return layer ? this.ensureEffectData(layer, effectName) : null;
-				},
-				onUpdate: (commit) => {
-					const layer = this.getActiveTextLayer();
-					if (!layer) return;
-					this.renderLayer(layer);
-					if (commit) this.editor.saveState('Edit text');
-				}
-			});
-		});
 	}
 
-	// colorAdjust lives on each slot's own effect data. See paint/slot-effects.js.
-	ensureColorAdjust(target) {
-		return ensureSlotColorAdjust(target);
+	// How the declared field binder (ui/paint-slot-controls.js) edits text: every
+	// change re-measures the text around its point anchor. Live edits skip
+	// history and re-render the whole preview only when the footprint changes.
+	createFieldHost() {
+		return {
+			type: LayerType.TEXT_GLITTER,
+			editor: this.editor,
+			getLayer: () => this.getActiveTextLayer(),
+			ensureSlot: (layer, key) => this.ensureEffectData(layer, key),
+			getSlotDefaults: (key) => this.getEffectDefaults(key),
+			apply: (layer, mutate, change) => this.runLayoutRefreshWithAnchor(layer, mutate, change.live
+				? { saveHistory: false, refreshLayerList: false, refreshPreview: Boolean(change.geometry) }
+				: { saveHistory: true, refreshPreview: false }
+			).catch((error) => this.reportFontLoadError(error)),
+			render: (layer) => this.renderLayer(layer),
+			commit: () => {
+				this.editor.saveState('Edit text');
+				this.editor.layerManager.renderLayersList();
+			},
+			armPicker: (key) => this.armPicker(key),
+			getArmedSlot: (layer) => this.getGlitterSelectionTarget(layer),
+			// The gallery can't stay armed for a slot that no longer exists.
+			onSlotDisabled: (layer, key) => {
+				if (this.pickerSession?.layerId === layer.id && this.pickerSession?.slot === key) {
+					this.closePickerSession();
+				}
+			}
+		};
 	}
 
 	setupEventListeners() {
+		this.fieldHost = this.createFieldHost();
+		bindFieldControls(this.fieldHost);
+
 		if (this.ui.textInput) {
 			this.ui.textInput.addEventListener('input', () => {
 				const layer = this.getActiveTextLayer();
@@ -257,7 +139,7 @@ class TextGlitterManager {
 				try {
 					await this.runLayoutRefreshWithAnchor(layer, async () => {
 						layer.textData.fontId = fontId;
-						await this.ensureFontLoaded(fontId);
+						await FontLibrary.ensureLoaded(fontId);
 					}, { saveHistory: true });
 				} catch (error) {
 					this.reportFontLoadError(error);
@@ -282,364 +164,97 @@ class TextGlitterManager {
 			await this.runLayoutRefreshWithAnchor(layer, () => { layer.textData.textCase = this.ui.textCaseSelect.value; }, { saveHistory: true });
 		});
 
-		this.attachSlider(this.ui.fontSize, this.ui.fontSizeValue, 'px', (value, layer) => {
-			layer.textData.fontSize = value;
-		}, CONFIG.tools.text.defaultFontSize);
-
-		this.attachSlider(this.ui.letterSpacing, this.ui.letterSpacingValue, 'px', (value, layer) => {
-			layer.textData.letterSpacing = value;
-		}, CONFIG.tools.text.defaultLetterSpacing);
-
-		this.attachSlider(this.ui.lineHeight, this.ui.lineHeightValue, '%', (value, layer) => {
-			layer.textData.lineHeight = value / 100;
-		}, Math.round(CONFIG.tools.text.lineHeight * 100));
-
-		if (this.ui.fillGlitterChip || this.ui.fillGlitterChange) {
-			[this.ui.fillGlitterChip, this.ui.fillGlitterChange].filter(Boolean).forEach((button) => {
-				button.addEventListener('click', () => {
-					const layer = this.getActiveTextLayer();
-					if (!layer) return;
-
-					this.setGlitterSelectionTarget('fill', layer);
-
-					const selectedGlitterId = this.resolveSelectedGlitterId(layer);
-					if (selectedGlitterId) {
-						this.editor.glitterManager?.scrollToContent(selectedGlitterId);
-					}
-
-					revealAssetBrowser(this.editor, this.editor.glitterManager);
-					this.editor.updateStatus('Choose fill glitter, then press Esc or Done.');
-				});
-			});
-		}
-
-		this.attachSlider(this.ui.textureScale, this.ui.textureScaleValue, '%', (value, layer) => {
-			layer.textData.fill.scale = value;
-		}, CONFIG.tools.effects.defaults.scale, false);
-
-		this.attachSlider(this.ui.textureOpacity, this.ui.textureOpacityValue, '%', (value, layer) => {
-			layer.textData.fill.opacity = value;
-		}, CONFIG.tools.effects.defaults.opacity, false);
+		// One layout edit: mutate, re-measure around the anchor, record history.
+		const editLayout = async (layer, mutate, options = {}) => {
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, mutate, { saveHistory: true, ...options });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		};
 
 		this.ui.alignButtons.forEach((button) => {
-			button.addEventListener('click', async () => {
+			button.addEventListener('click', () => {
 				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-
 				const align = button.dataset.textAlign;
-				if (!align || align === layer.textData.align) return;
-
-				try {
-					await this.runLayoutRefreshWithAnchor(layer, () => {
-						layer.textData.align = align;
-					}, { saveHistory: true });
-				} catch (error) {
-					this.reportFontLoadError(error);
-				}
+				if (!layer || !align || align === layer.textData.align) return;
+				editLayout(layer, () => { layer.textData.align = align; });
 			});
 		});
 
 		this.ui.verticalAlignButtons.forEach((button) => {
-			button.addEventListener('click', async () => {
+			button.addEventListener('click', () => {
 				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-
 				const verticalAlign = button.dataset.textValign;
-				if (!verticalAlign || verticalAlign === layer.textData.verticalAlign) return;
-
-				try {
-					await this.runLayoutRefreshWithAnchor(layer, () => {
-						layer.textData.verticalAlign = verticalAlign;
-					}, { saveHistory: true });
-				} catch (error) {
-					this.reportFontLoadError(error);
-				}
+				if (!layer || !verticalAlign || verticalAlign === layer.textData.verticalAlign) return;
+				editLayout(layer, () => { layer.textData.verticalAlign = verticalAlign; });
 			});
 		});
 
 		this.ui.boxModeButtons.forEach((button) => {
-			button.addEventListener('click', async () => {
+			button.addEventListener('click', () => {
 				const layer = this.getActiveTextLayer();
 				if (!layer) return;
-
 				const nextMode = button.dataset.textBoxMode;
-				const currentMode = layer.textData.boxMode || 'auto';
-				if (!nextMode || nextMode === currentMode) return;
-
-				try {
-					await this.runLayoutRefreshWithAnchor(layer, () => {
-						if (nextMode === 'fixed') {
-							this.ensureFixedBox(layer);
-						} else {
-							layer.textData.boxMode = 'auto';
-							delete layer.textData.boxWidth;
-							delete layer.textData.boxHeight;
-							// Text Box backgrounds need a box; fall back to text bounds.
-							this.normalizeTextBackground(layer);
-						}
-					}, { saveHistory: true, preservePointAnchor: true });
-				} catch (error) {
-					this.reportFontLoadError(error);
-				}
+				if (!nextMode || nextMode === (layer.textData.boxMode || 'auto')) return;
+				editLayout(layer, () => {
+					if (nextMode === 'fixed') {
+						this.ensureFixedBox(layer);
+					} else {
+						layer.textData.boxMode = 'auto';
+						delete layer.textData.boxWidth;
+						delete layer.textData.boxHeight;
+						// Text Box backgrounds need a box; fall back to text bounds.
+						this.normalizeTextBackground(layer);
+					}
+				}, { preservePointAnchor: true });
 			});
 		});
 
-		this.ui.fitBoxToContent?.addEventListener('click', async () => {
+		this.ui.fitBoxToContent?.addEventListener('click', () => {
 			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.fitBoxToText(layer);
-				}, { saveHistory: true });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
+			if (layer) editLayout(layer, () => this.fitBoxToText(layer));
 		});
 
-		this.bindEffectToggle(this.ui.borderEnabled, 'border');
-		this.bindEffectToggle(this.ui.shadowEnabled, 'shadow');
 		this.ui.resetEffects?.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					layer.textData.border = null;
-					layer.textData.shadow = null;
-					layer.textData.textBackground = this.getDefaultTextBackground();
-					delete layer.textData.effectDrafts;
-					delete layer.animation;
-				}, { saveHistory: true, refreshPreview: false });
-				this.editor.animationPanel?.load(layer);
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
+			await editLayout(layer, () => {
+				layer.textData.border = null;
+				layer.textData.shadow = null;
+				layer.textData.textBackground = this.getDefaultTextBackground();
+				delete layer.textData.effectDrafts;
+				delete layer.animation;
+			}, { refreshPreview: false });
+			this.editor.animationPanel?.load(layer);
 		});
 
-		this.attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (value, layer) => {
-			this.ensureEffectData(layer, 'border').widthPx = value;
-		}, this.getDefaultBorder().widthPx);
-
-		bindEffectOffsetPair({
-			prefix: 'textShadow',
-			getLayer: () => this.getActiveTextLayer(),
-			getData: (layer) => this.ensureEffectData(layer, 'shadow'),
-			render: (layer) => this.renderLayer(layer),
-			save: () => this.editor.saveState('Edit text')
-		});
-
-		this.bindEffectGlitterPicker([this.ui.borderGlitterChip, this.ui.borderGlitterChange], 'border');
-		this.bindEffectGlitterPicker([this.ui.shadowGlitterChip, this.ui.shadowGlitterChange], 'shadow');
-		this.bindEffectUseColor(this.ui.borderUseColor, 'border');
-		this.bindEffectUseColor(this.ui.shadowUseColor, 'shadow');
-		this.bindEffectUseGlitter(this.ui.borderUseGlitter, 'border');
-		this.bindEffectUseGlitter(this.ui.shadowUseGlitter, 'shadow');
-		this.bindEffectColorInput(this.ui.borderColor, 'border');
-		this.bindEffectColorInput(this.ui.shadowColor, 'shadow');
-
-		this.bindFillUseColor();
-		this.bindFillUseGlitter();
-		this.bindFillUseNone();
-		this.bindFillColorInput();
-
-		this.attachSlider(this.ui.borderScale, this.ui.borderScaleValue, '%', (value, layer) => {
-			this.ensureEffectData(layer, 'border').scale = value;
-		}, this.getDefaultBorder().scale, false);
-
-		this.attachSlider(this.ui.borderOpacity, this.ui.borderOpacityValue, '%', (value, layer) => {
-			this.ensureEffectData(layer, 'border').opacity = value;
-		}, this.getDefaultBorder().opacity, false);
-
-		this.bindBorderPlacement(this.ui.borderPositionOutside, 'outside');
-		this.bindBorderPlacement(this.ui.borderPositionCenter, 'center');
-		this.bindBorderPlacement(this.ui.borderPositionInside, 'inside');
-		this.bindBorderEdgeStyle(this.ui.borderEdgeRounded, 'round');
-		this.bindBorderEdgeStyle(this.ui.borderEdgeHard, 'hard');
-		this.bindBorderOrder(this.ui.borderOrderBehind, 'behind');
-		this.bindBorderOrder(this.ui.borderOrderFront, 'front');
-
-		this.attachSlider(this.ui.shadowScale, this.ui.shadowScaleValue, '%', (value, layer) => {
-			this.ensureEffectData(layer, 'shadow').scale = value;
-		}, this.getDefaultShadow().scale, false);
-
-		this.attachSlider(this.ui.shadowOpacity, this.ui.shadowOpacityValue, '%', (value, layer) => {
-			this.ensureEffectData(layer, 'shadow').opacity = value;
-		}, this.getDefaultShadow().opacity, false);
-
-		this._bindEffectColorAdjust('fill');
-		this._bindEffectColorAdjust('border');
-		this._bindEffectColorAdjust('shadow');
-		this._bindEffectColorAdjust('backgroundFill');
-		[
-			['textFill', 'fill'],
-			['textBorder', 'border'],
-			['textShadow', 'shadow'],
-			['textBackground', 'backgroundFill']
-		].forEach(([prefix, slot]) => {
-			bindSlotTextureCoordinateControls({
-				prefix,
-				getLayer: () => this.getActiveTextLayer(),
-				getData: (layer) => this.ensureEffectData(layer, slot),
-				render: (layer) => this.renderLayer(layer),
-				save: () => this.editor.saveState('Edit text')
+		// Text Background shape options. Its toggle, source and geometry sliders
+		// are declared fields (js/layers/types/text.js); the toggle flips
+		// `textBackground.enabled` so the geometry survives being switched off.
+		const bindBackgroundOption = (button, key, value) => {
+			button?.addEventListener('click', () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer || layer.textData.textBackground[key] === value) return;
+				editLayout(layer, () => {
+					layer.textData.textBackground[key] = value;
+					this.normalizeTextBackground(layer);
+				}, { refreshPreview: false });
 			});
-		});
+		};
+		bindBackgroundOption(this.ui.bgModeLines, 'mode', 'lines');
+		bindBackgroundOption(this.ui.bgModeBounds, 'mode', 'text-bounds');
+		bindBackgroundOption(this.ui.bgModeBox, 'mode', 'text-box');
+		bindBackgroundOption(this.ui.bgConnSeparate, 'lineConnection', 'separate');
+		bindBackgroundOption(this.ui.bgConnMerge, 'lineConnection', 'merge-adjacent');
+		bindBackgroundOption(this.ui.bgConnConnected, 'lineConnection', 'connected');
 
-		this.setupTextBackgroundEventListeners();
-	}
-
-	// Text Background: toggle has bespoke semantics (a persistent
-	// `enabled` boolean, unlike border/shadow's null-when-disabled — its
-	// geometry properties must survive being switched off, per the plan's
-	// "Do not destroy the other Text Background property values when
-	// switching modes"), so it does not use bindEffectToggle. Everything else
-	// (fill picker/color/scale/opacity/color-adjust/texture-position) reuses
-	// the generic border/shadow binders above via effectName 'backgroundFill'.
-	setupTextBackgroundEventListeners() {
-		this.ui.bgEnabled?.addEventListener('change', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureTextBackground(layer).enabled = Boolean(this.ui.bgEnabled.checked);
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-
-		this.bindEffectGlitterPicker([this.ui.backgroundFillGlitterChip, this.ui.backgroundFillGlitterChange], 'backgroundFill');
-		this.bindEffectUseColor(this.ui.backgroundFillUseColor, 'backgroundFill');
-		this.bindEffectUseGlitter(this.ui.backgroundFillUseGlitter, 'backgroundFill');
-		this.bindEffectColorInput(this.ui.backgroundFillColor, 'backgroundFill');
-
-		this.attachSlider(this.ui.backgroundFillScale, this.ui.backgroundFillScaleValue, '%', (value, layer) => {
-			this.ensureEffectData(layer, 'backgroundFill').scale = value;
-		}, this.getDefaultBackgroundFill().scale, false);
-
-		this.attachSlider(this.ui.backgroundFillOpacity, this.ui.backgroundFillOpacityValue, '%', (value, layer) => {
-			this.ensureEffectData(layer, 'backgroundFill').opacity = value;
-		}, this.getDefaultBackgroundFill().opacity, false);
-
-		const defaults = this.getDefaultTextBackground();
-		this.attachSlider(this.ui.bgPaddingH, this.ui.bgPaddingHValue, 'px', (value, layer) => {
-			this.ensureTextBackground(layer).horizontalPadding = value;
-		}, defaults.horizontalPadding);
-		this.attachSlider(this.ui.bgPaddingV, this.ui.bgPaddingVValue, 'px', (value, layer) => {
-			this.ensureTextBackground(layer).verticalPadding = value;
-		}, defaults.verticalPadding);
-		this.attachSlider(this.ui.bgRadius, this.ui.bgRadiusValue, 'px', (value, layer) => {
-			this.ensureTextBackground(layer).cornerRadius = value;
-		}, defaults.cornerRadius);
-		this.attachSlider(this.ui.bgMergeDistance, this.ui.bgMergeDistanceValue, 'px', (value, layer) => {
-			this.ensureTextBackground(layer).mergeDistance = value;
-		}, defaults.mergeDistance);
-		this.attachSlider(this.ui.bgSpacing, this.ui.bgSpacingValue, '%', (value, layer) => {
-			this.ensureTextBackground(layer).lineSpacingSensitivity = value;
-		}, defaults.lineSpacingSensitivity);
-
-		this.bindTextBackgroundMode(this.ui.bgModeLines, 'lines');
-		this.bindTextBackgroundMode(this.ui.bgModeBounds, 'text-bounds');
-		this.bindTextBackgroundMode(this.ui.bgModeBox, 'text-box');
-		this.bindTextBackgroundConnection(this.ui.bgConnSeparate, 'separate');
-		this.bindTextBackgroundConnection(this.ui.bgConnMerge, 'merge-adjacent');
-		this.bindTextBackgroundConnection(this.ui.bgConnConnected, 'connected');
-
-		this.ui.bgPreset?.addEventListener('change', async () => {
+		this.ui.bgPreset?.addEventListener('change', () => {
 			const layer = this.getActiveTextLayer();
 			const presetKey = this.ui.bgPreset.value;
 			if (!layer || !presetKey) return;
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.applyTextBackgroundPreset(layer, presetKey);
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
+			editLayout(layer, () => this.applyTextBackgroundPreset(layer, presetKey), { refreshPreview: false });
 		});
-	}
-
-	ensureTextBackground(layer) {
-		return layer.textData.textBackground;
-	}
-
-	bindTextBackgroundMode(button, mode) {
-		if (!button) return;
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			if (this.ensureTextBackground(layer).mode === mode) return;
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureTextBackground(layer).mode = mode;
-					this.normalizeTextBackground(layer);
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindTextBackgroundConnection(button, lineConnection) {
-		if (!button) return;
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			if (this.ensureTextBackground(layer).lineConnection === lineConnection) return;
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureTextBackground(layer).lineConnection = lineConnection;
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	// Wire a slot's three HSB sliders (WP4); each writes its own slot's effect
-	// data. attachSlider handles the live preview refresh and one history entry
-	// on release.
-	_bindEffectColorAdjust(slot) {
-		const axes = [
-			['Hue', 'hue', '°'],
-			['Saturation', 'saturation', '%'],
-			['Brightness', 'brightness', '%']
-		];
-		axes.forEach(([suffixName, key, unit]) => {
-			const slider = this.ui[`${slot}${suffixName}`];
-			const display = this.ui[`${slot}${suffixName}Value`];
-			if (!slider) return;
-			const fallback = COLOR_ADJUST_IDENTITY[key];
-			this.attachSlider(slider, display, unit, (value, layer) => {
-				this.ensureColorAdjust(this.ensureEffectData(layer, slot))[key] = value;
-				this.refreshSlotSwatch(layer, slot);
-			}, fallback, false);
-		});
-	}
-
-	// Live-tint this slot's glitter chip (and, for fill, the layers-list swatch) to
-	// match a colorAdjust drag without a full panel reload. Render paths bake the
-	// same filter in on load via renderGlitterAssetDisplay.
-	refreshSlotSwatch(layer, slot) {
-		const chip = this.ui[`${slot}GlitterChip`];
-		if (chip) {
-			chip.style.filter = buildCssColorFilter(this.getEffectData(layer, slot)?.colorAdjust);
-		}
-		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
-	}
-
-	// Push a slot's stored colorAdjust out to its three HSB sliders.
-	_loadEffectColorAdjust(slot, adjust) {
-		const a = normalizeColorAdjust(adjust);
-		const set = (suffixName, value, unit) => {
-			const slider = this.ui[`${slot}${suffixName}`];
-			const display = this.ui[`${slot}${suffixName}Value`];
-			if (slider) slider.value = String(value);
-			if (display) display.innerHTML = formatUnit(value, unit);
-		};
-		set('Hue', a.hue, '°');
-		set('Saturation', a.saturation, '%');
-		set('Brightness', a.brightness, '%');
 	}
 
 	getPointAnchorSnapshot(layer) {
@@ -780,8 +395,8 @@ class TextGlitterManager {
 	// moment it's enabled. See buildDefaultBorder in effects/slot-effects.js.
 	getDefaultBorder() {
 		return buildDefaultBorder({
-			config: CONFIG.tools.text.border || {},
-			fallbackWidthPx: 4,
+			config: CONFIG.tools.text.border,
+			slot: getPaintSlotDefinition(LayerType.TEXT_GLITTER, 'border'),
 			fallbackMode: 'glitter',
 			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.text
 		});
@@ -789,7 +404,6 @@ class TextGlitterManager {
 
 	getDefaultShadow() {
 		return buildDefaultShadow({
-			config: CONFIG.tools.text.shadow || {},
 			defaultMode: 'glitter',
 			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.text
 		});
@@ -854,7 +468,7 @@ class TextGlitterManager {
 		}
 		this.normalizeTextBackground(layer);
 		if (!layer.textData.lineHeight) {
-			layer.textData.lineHeight = CONFIG.tools.text.lineHeight;
+			layer.textData.lineHeight = FIELDS.textLineHeight.value / 100;
 		}
 		if (!layer.textData.fontWeight) {
 			layer.textData.fontWeight = CONFIG.tools.text.defaultFontWeight || 400;
@@ -1020,435 +634,27 @@ class TextGlitterManager {
 	}
 
 	resolveSelectedGlitterId(layer) {
-		if (!layer || layer.type !== LayerType.TEXT_GLITTER) {
-			return null;
-		}
-
-		const target = this.getGlitterSelectionTarget(layer);
-		if (target === 'border') {
-			return layer.textData.border?.glitterId ?? null;
-		}
-		if (target === 'shadow') {
-			return layer.textData.shadow?.glitterId ?? null;
-		}
-		if (target === 'backgroundFill') {
-			return layer.textData.textBackground?.fill?.glitterId ?? null;
-		}
-
-		return layer.textData.fill?.glitterId ?? null;
+		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return null;
+		return getLayerPaintSlot(layer, this.getGlitterSelectionTarget(layer))?.glitterId ?? null;
 	}
 
-	bindEffectToggle(toggle, effectName) {
-		if (!toggle) return;
-
-		toggle.addEventListener('change', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					layer.textData.effectDrafts ||= {};
-					if (toggle.checked) {
-						layer.textData[effectName] = layer.textData.effectDrafts[effectName]
-							|| this.ensureEffectData(layer, effectName);
-						delete layer.textData.effectDrafts[effectName];
-					} else {
-						if (layer.textData[effectName]) layer.textData.effectDrafts[effectName] = layer.textData[effectName];
-						layer.textData[effectName] = null;
-						// If the gallery was armed for the slot we just disabled,
-						// exit picker mode — its destination no longer exists.
-						if (this.pickerSession?.layerId === layer.id
-							&& this.pickerSession?.slot === effectName) {
-							this.closePickerSession();
-						}
-					}
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindEffectGlitterPicker(buttons, effectName) {
-		const buttonList = Array.isArray(buttons) ? buttons : [buttons];
-		buttonList.filter(Boolean).forEach((button) => {
-			button.addEventListener('click', () => {
-				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-
-				this.ensureEffectData(layer, effectName);
-				this.setGlitterSelectionTarget(effectName, layer);
-
-				const selectedGlitterId = this.resolveSelectedGlitterId(layer);
-				if (selectedGlitterId) {
-					this.editor.glitterManager?.scrollToContent(selectedGlitterId);
-				}
-
-				revealAssetBrowser(this.editor, this.editor.glitterManager);
-				this.editor.updateStatus(`Choose ${effectName} glitter, then press Esc or Done.`);
-			});
-		});
-	}
-
-	bindEffectUseColor(button, effectName) {
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			// Already solid (mode solid, or legacy data with no glitterId)? No-op.
-			if (!this.effectUsesGlitter(this.getEffectData(layer, effectName))) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					const effectData = this.ensureEffectData(layer, effectName);
-					effectData.glitterId = null;
-					effectData.mode = 'solid';
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindEffectUseGlitter(button, effectName) {
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			if (this.effectUsesGlitter(this.getEffectData(layer, effectName))) return;
-
-			// Switch the slot to glitter mode in place. This does NOT open the
-			// gallery — if no glitter was ever picked it falls back to the slot's
-			// default glitter (never an empty "no glitter" state); the gallery opens
-			// only when the user clicks the swatch or Change (bindEffectGlitterPicker).
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					const data = this.ensureEffectData(layer, effectName);
-					data.mode = 'glitter';
-					if (!data.glitterId) {
-						const def = effectName === 'shadow' ? this.getDefaultShadow() : this.getDefaultBorder();
-						data.glitterId = def.glitterId;
-					}
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-
-			this.editor.updateStatus(`Text ${effectName} is using glitter — click the swatch or Change to pick a different one.`);
-		});
-	}
-
-	bindEffectColorInput(input, effectName) {
-		if (!input) return;
-
-		input.addEventListener('input', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					const effectData = this.ensureEffectData(layer, effectName);
-					effectData.color = input.value;
-					effectData.glitterId = null;
-					effectData.mode = 'solid';
-				}, {
-					saveHistory: false,
-					refreshLayerList: false,
-					refreshPreview: false
-				});
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-
-		input.addEventListener('change', () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			this.editor.saveState('Edit text');
-			this.loadLayerSettings(layer);
-		});
-	}
-
-	bindBorderPlacement(button, placement) {
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			const border = this.ensureEffectData(layer, 'border');
-			if (getBorderPlacement(border) === placement) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureEffectData(layer, 'border').placement = placement;
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindBorderEdgeStyle(button, edgeStyle) {
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			const border = this.ensureEffectData(layer, 'border');
-			if (getBorderEdgeStyle(border) === edgeStyle) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureEffectData(layer, 'border').edgeStyle = edgeStyle;
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindBorderOrder(button, drawOrder) {
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			const border = this.ensureEffectData(layer, 'border');
-			if (getBorderDrawOrder(border) === drawOrder) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureEffectData(layer, 'border').drawOrder = drawOrder;
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	// The fill slot is always present (it can't be toggled off like
-	// border/shadow; 'none' is its off state), so it gets these bespoke mode
-	// handlers instead of the generic bindEffect* helpers.
-	bindFillUseColor() {
-		const button = this.ui.fillUseColor;
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			if (this.getEffectData(layer, 'fill')?.mode === 'solid') return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureEffectData(layer, 'fill').mode = 'solid';
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindFillUseGlitter() {
-		const button = this.ui.fillUseGlitter;
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			if (this.getEffectData(layer, 'fill')?.mode === 'glitter') return;
-
-			// Switching mode only flips the mode in place — it shows the fill's
-			// existing glitter. It deliberately does NOT open the gallery; that
-			// only happens when the user clicks the swatch or Change.
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureEffectData(layer, 'fill').mode = 'glitter';
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-
-			this.editor.updateStatus('Text fill is using glitter — click the swatch or Change to pick a different one.');
-		});
-	}
-
-	bindFillUseNone() {
-		const button = this.ui.fillUseNone;
-		if (!button) return;
-
-		button.addEventListener('click', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-			if (this.getEffectData(layer, 'fill')?.mode === 'none') return;
-
-			// No fill → the text reads as an outline (its border becomes hollow).
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					this.ensureEffectData(layer, 'fill').mode = 'none';
-				}, { saveHistory: true, refreshPreview: false });
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	bindFillColorInput() {
-		const input = this.ui.fillColor;
-		if (!input) return;
-
-		input.addEventListener('input', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			try {
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					const fillData = this.ensureEffectData(layer, 'fill');
-					fillData.color = input.value;
-					fillData.mode = 'solid';
-				}, {
-					saveHistory: false,
-					refreshLayerList: false,
-					refreshPreview: false
-				});
-			} catch (error) {
-				this.reportFontLoadError(error);
-			}
-		});
-
-		input.addEventListener('change', () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			this.editor.saveState('Edit text');
-			this.loadLayerSettings(layer);
-		});
-	}
-
-	attachSlider(slider, valueDisplay, suffix, applyValue, resetValue, refreshTextLayout = true) {
-		if (!slider) return;
-		const resetId = 'reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1);
-		const resetButton = document.getElementById(resetId);
-
-		bindSlider(slider, valueDisplay, {
-			suffix,
-			resetValue,
-			resetButton,
-			apply: async (value) => {
-				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					applyValue(value, layer);
-				}, {
-					saveHistory: false,
-					refreshLayerList: false,
-					refreshPreview: refreshTextLayout
-				});
-			},
-			onCommit: () => {
-				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-				this.editor.saveState('Edit text');
-				this.editor.layerManager.renderLayersList();
-			},
-			onError: (error) => {
-				this.reportFontLoadError(error);
-			}
-		});
-	}
-
-	async loadFontsManifest() {
-		if (this.fontManifestPromise) {
-			return this.fontManifestPromise;
-		}
-
-		this.fontManifestPromise = (async () => {
-			const response = await fetch(CONFIG.tools.text.fontsManifest, { cache: 'no-store' });
-			if (!response.ok) {
-				throw new Error(`Failed to load fonts manifest (${response.status})`);
-			}
-
-			const manifest = await response.json();
-			this.validateFontsManifest(manifest);
-			this.fontManifest = manifest.fonts;
-			this.fontTagGroups = manifest.tagGroups;
-			// Resolve each font's credit once: the manifest default (a foundry /
-			// license that covers the bundled set) with per-font overrides on top.
-			// System fonts ship with the OS, so they skip the bundled-set default.
-			const manifestAttribution = Attribution.sanitize(manifest.attribution, 'fonts manifest');
-			this.fontsById.clear();
-			this.fontManifest.forEach((font) => {
-				font.attribution = Attribution.resolve(font.system ? null : manifestAttribution, font.attribution);
-				this.fontsById.set(font.id, font);
-			});
-
-			this.renderFontPicker();
-			return this.fontManifest;
-		})();
-
-		try {
-			return await this.fontManifestPromise;
-		} catch (error) {
-			this.fontManifestPromise = null;
-			throw error;
-		}
-	}
-
-	validateFontsManifest(manifest) {
-		if (!Array.isArray(manifest?.tagGroups) || !Array.isArray(manifest?.fonts)) {
-			throw new Error('Fonts manifest must contain tagGroups and fonts arrays');
-		}
-		const tagIds = new Set();
-		const groupIds = new Set();
-		manifest.tagGroups.forEach((group) => {
-			if (!/^[a-z][a-z0-9-]*$/.test(group?.id) || !group?.label || groupIds.has(group.id) || !Array.isArray(group.tags)) {
-				throw new Error('Fonts manifest contains an invalid or duplicate tag group');
-			}
-			groupIds.add(group.id);
-			group.tags.forEach((tag) => {
-				if (!/^[a-z][a-z0-9-]*$/.test(tag?.id) || !tag?.label || tagIds.has(tag.id)) {
-					throw new Error('Fonts manifest contains an invalid or duplicate tag');
-				}
-				tagIds.add(tag.id);
-			});
-		});
-
-		const ids = new Set();
-		manifest.fonts.forEach((font) => {
-			if (!/^[a-z][a-z0-9-]*$/.test(font?.id) || !font?.name || ids.has(font.id)) {
-				throw new Error('Fonts manifest contains an invalid or duplicate font');
-			}
-			if (!Number.isInteger(font.weight) || font.weight < 100 || font.weight > 900) {
-				throw new Error(`Font "${font.id}" has an invalid weight`);
-			}
-			if (!Array.isArray(font.scripts) || !font.scripts.length) {
-				throw new Error(`Font "${font.id}" needs at least one script`);
-			}
-			if (font.system ? !font.family : !font.file) {
-				throw new Error(`Font "${font.id}" is missing its source`);
-			}
-			if (!Array.isArray(font.tags) || font.tags.some((tagId) => !tagIds.has(tagId))) {
-				throw new Error(`Font "${font.id}" contains an unknown tag`);
-			}
-			ids.add(font.id);
-		});
-		if (!ids.has(CONFIG.tools.text.defaultFontId)) {
-			throw new Error('Fonts manifest is missing the default font');
-		}
-		manifest.fonts.forEach((font) => {
-			if (font.fallbackFontId && !ids.has(font.fallbackFontId)) {
-				throw new Error(`Font "${font.id}" has an unknown fallback font`);
-			}
-		});
+	// The slot's glitter chip or Change button: arm the gallery for that slot.
+	armPicker(key) {
+		const layer = this.getActiveTextLayer();
+		if (!layer) return;
+		this.ensureEffectData(layer, key);
+		this.setGlitterSelectionTarget(key, layer);
+		const selectedGlitterId = this.resolveSelectedGlitterId(layer);
+		if (selectedGlitterId) this.editor.glitterManager?.scrollToContent(selectedGlitterId);
+		revealAssetBrowser(this.editor, this.editor.glitterManager);
+		this.editor.updateStatus(`Choose ${this.getEffectTitle(key)} glitter, then press Esc or Done.`);
 	}
 
 	renderFontPicker() {
 		if (!this.ui.fontPicker) return;
+		this.fontPickerRendered = true;
 
-		const fonts = [...this.fontManifest].sort(
+		const fonts = [...FontLibrary.fonts].sort(
 			(a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))
 		);
 
@@ -1474,7 +680,7 @@ class TextGlitterManager {
 
 			const sample = document.createElement('span');
 			sample.className = 'text-font-option-sample';
-			sample.style.fontFamily = this.getFontFamily(font);
+			sample.style.fontFamily = FontLibrary.getFamily(font);
 			sample.textContent = sampleTextByScript[sampleScript];
 			card.appendChild(sample);
 
@@ -1500,98 +706,12 @@ class TextGlitterManager {
 		});
 	}
 
-	async ensureFontPickerFontsLoaded() {
-		await this.loadFontsManifest();
-
-		if (this.fontPickerPreloadPromise) {
-			return this.fontPickerPreloadPromise;
-		}
-
-		this.fontPickerPreloadPromise = Promise.all(
-			this.fontManifest.map((font) =>
-				this.ensureFontLoaded(font.id).catch((error) => {
-					this.reportFontLoadError(error);
-				})
-			)
-		);
-
-		return this.fontPickerPreloadPromise;
-	}
-
-	getFontById(fontId) {
-		return this.fontsById.get(fontId) || this.fontsById.get(CONFIG.tools.text.defaultFontId) || null;
-	}
-
-	getFontFamily(font) {
-		if (!font) return 'sans-serif';
-		// System fonts carry their own full stack (device coverage varies).
-		if (font.family) return font.family;
-		return `"${font.name}", ${font.fallback || 'sans-serif'}`;
-	}
-
-	getFontDeclaration(font, fontSize, fontWeight = null, fontStyle = 'normal') {
-		const weight = fontWeight || font?.weight || 400;
-		if (!font?.name) {
-			return `${fontStyle} ${weight} ${fontSize}px sans-serif`;
-		}
-		// System fonts need the whole stack in canvas font strings too, so a
-		// device without the face falls back the same way preview DOM does.
-		const family = font.family || `"${font.name}"`;
-		return `${fontStyle} ${weight} ${fontSize}px ${family}`;
-	}
-
-	async ensureFontLoaded(fontId) {
-		await this.loadFontsManifest();
-
-		const font = this.getFontById(fontId);
-		if (!font) {
-			throw new Error(`Unknown text font "${fontId}"`);
-		}
-
-		if (this.fontLoadPromises.has(font.id)) {
-			return this.fontLoadPromises.get(font.id);
-		}
-
-		const fontPromise = (async () => {
-			// Installed-on-device face: nothing to fetch — the family stack's
-			// fallback covers devices without it (Android ships neither Comic
-			// Sans nor Impact). document.fonts.load still warms measurement.
-			if (font.system) {
-				if (font.fallbackFontId) {
-					await this.ensureFontLoaded(font.fallbackFontId);
-				}
-				await document.fonts.load(this.getFontDeclaration(font, CONFIG.tools.text.defaultFontSize), 'Hg');
-				return null;
-			}
-			try {
-				const response = await fetch(font.file);
-				if (!response.ok) {
-					throw new Error(`Failed to load font "${font.name}" (${response.status})`);
-				}
-
-				const data = await response.arrayBuffer();
-				const face = new FontFace(font.name, data, {
-					weight: String(font.weight || 400)
-				});
-
-				await face.load();
-				document.fonts.add(face);
-				await document.fonts.load(this.getFontDeclaration(font, CONFIG.tools.text.defaultFontSize), 'Hg');
-				this.fontFaces.set(font.id, face);
-				return face;
-			} catch (error) {
-				throw new Error(`Failed to load font "${font.name}": ${error.message}`);
-			}
-		})();
-
-		this.fontLoadPromises.set(font.id, fontPromise);
-
-		try {
-			return await fontPromise;
-		} catch (error) {
-			this.fontLoadPromises.delete(font.id);
-			throw error;
-		}
+	// The picker's samples render in their own faces, so the panel loads every
+	// font the first time it opens.
+	async ensureFontPickerReady() {
+		await FontLibrary.loadManifest();
+		if (!this.fontPickerRendered) this.renderFontPicker();
+		return FontLibrary.ensureAllLoaded((error) => this.reportFontLoadError(error));
 	}
 
 	reportFontLoadError(error) {
@@ -1643,9 +763,9 @@ class TextGlitterManager {
 				fontWeight: CONFIG.tools.text.defaultFontWeight || 400,
 				fontStyle: CONFIG.tools.text.defaultFontStyle || 'normal',
 				textCase: CONFIG.tools.text.defaultTextCase,
-				fontSize: CONFIG.tools.text.defaultFontSize,
-				letterSpacing: CONFIG.tools.text.defaultLetterSpacing,
-				lineHeight: CONFIG.tools.text.lineHeight,
+				fontSize: FIELDS.textFontSize.value,
+				letterSpacing: FIELDS.textLetterSpacing.value,
+				lineHeight: FIELDS.textLineHeight.value / 100,
 				align: initialAlign,
 				verticalAlign: CONFIG.tools.text.defaultVerticalAlign || 'top',
 				boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode || 'auto',
@@ -1657,7 +777,7 @@ class TextGlitterManager {
 		};
 
 		this.normalizeLayer(layer);
-		this.ensureFontLoaded(layer.textData.fontId).catch((error) => {
+		FontLibrary.ensureLoaded(layer.textData.fontId).catch((error) => {
 			this.reportFontLoadError(error);
 		});
 		if (options.anchorPosition) {
@@ -1673,7 +793,7 @@ class TextGlitterManager {
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return;
 
-		this.ensureFontPickerFontsLoaded().catch((error) => {
+		this.ensureFontPickerReady().catch((error) => {
 			this.reportFontLoadError(error);
 		});
 
@@ -1681,39 +801,15 @@ class TextGlitterManager {
 			this.ui.textInput.value = layer.textData.text;
 		}
 
-		if (this.ui.fontSize && this.ui.fontSizeValue) {
-			this.ui.fontSize.value = layer.textData.fontSize;
-			this.ui.fontSizeValue.innerHTML = formatUnit(layer.textData.fontSize, 'px');
-		}
-
-		if (this.ui.letterSpacing && this.ui.letterSpacingValue) {
-			this.ui.letterSpacing.value = layer.textData.letterSpacing;
-			this.ui.letterSpacingValue.innerHTML = formatUnit(layer.textData.letterSpacing, 'px');
-		}
-
-		if (this.ui.lineHeight && this.ui.lineHeightValue) {
-			const lineHeightPercent = Math.round((layer.textData.lineHeight || CONFIG.tools.text.lineHeight) * 100);
-			this.ui.lineHeight.value = lineHeightPercent;
-			this.ui.lineHeightValue.innerHTML = formatUnit(lineHeightPercent, '%');
-		}
-
-		if (this.ui.textureScale && this.ui.textureScaleValue) {
-			this.ui.textureScale.value = layer.textData.fill.scale;
-			this.ui.textureScaleValue.innerHTML = formatUnit(layer.textData.fill.scale, '%');
-		}
-
-		if (this.ui.textureOpacity && this.ui.textureOpacityValue) {
-			const fillOpacity = layer.textData.fill.opacity;
-			this.ui.textureOpacity.value = fillOpacity;
-			this.ui.textureOpacityValue.innerHTML = formatUnit(fillOpacity, '%');
-		}
+		syncFieldControls(this.fieldHost, layer);
 
 		this.updateFontSelection(layer.textData.fontId);
 		this.updateFontStyleSelection(layer.textData);
 		this.updateAlignmentSelection(layer.textData.align);
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
 		this.updateBoxModeSelection(layer);
-		this.updateEffectControls(layer);
+		this.syncTextBackgroundUI(layer);
+		this.updatePickerStrip();
 		this.editor.loadTransformSettings?.(layer, 'text');
 	}
 
@@ -1822,116 +918,10 @@ class TextGlitterManager {
 		}
 	}
 
-	updateEffectControls(layer) {
-
-		const border = this.getEffectData(layer, 'border');
-		const shadow = this.getEffectData(layer, 'shadow');
-		const borderDefaults = this.getDefaultBorder();
-		const shadowDefaults = this.getDefaultShadow();
-
-		syncPanelEffectToggle(this.ui.borderEnabled, Boolean(border));
-		syncPanelEffectToggle(this.ui.shadowEnabled, Boolean(shadow));
-
-		if (border) {
-			this.ui.borderWidth.value = border.widthPx;
-			this.ui.borderWidthValue.innerHTML = formatUnit(border.widthPx, 'px');
-			this.ui.borderColor.value = border.color;
-			if (this.ui.borderScale) {
-				this.ui.borderScale.value = border.scale ?? borderDefaults.scale;
-				this.ui.borderScaleValue.innerHTML = formatUnit(border.scale ?? borderDefaults.scale, '%');
-			}
-			if (this.ui.borderOpacity) {
-				this.ui.borderOpacity.value = border.opacity ?? borderDefaults.opacity;
-				this.ui.borderOpacityValue.innerHTML = formatUnit(border.opacity ?? borderDefaults.opacity, '%');
-			}
-			this.syncBorderOptionUI(border);
-		} else {
-			const defaults = borderDefaults;
-			this.ui.borderWidth.value = defaults.widthPx;
-			this.ui.borderWidthValue.innerHTML = formatUnit(defaults.widthPx, 'px');
-			this.ui.borderColor.value = defaults.color;
-			if (this.ui.borderScale) {
-				this.ui.borderScale.value = defaults.scale;
-				this.ui.borderScaleValue.innerHTML = formatUnit(defaults.scale, '%');
-			}
-			if (this.ui.borderOpacity) {
-				this.ui.borderOpacity.value = defaults.opacity;
-				this.ui.borderOpacityValue.innerHTML = formatUnit(defaults.opacity, '%');
-			}
-			this.syncBorderOptionUI(defaults);
-		}
-
-		if (shadow) {
-			syncEffectOffsetPair('textShadow', shadow);
-			this.ui.shadowColor.value = shadow.color;
-			if (this.ui.shadowScale) {
-				this.ui.shadowScale.value = shadow.scale ?? shadowDefaults.scale;
-				this.ui.shadowScaleValue.innerHTML = formatUnit(shadow.scale ?? shadowDefaults.scale, '%');
-			}
-			if (this.ui.shadowOpacity) {
-				this.ui.shadowOpacity.value = shadow.opacity ?? shadowDefaults.opacity;
-				this.ui.shadowOpacityValue.innerHTML = formatUnit(shadow.opacity ?? shadowDefaults.opacity, '%');
-			}
-		} else {
-			const defaults = shadowDefaults;
-			syncEffectOffsetPair('textShadow', defaults);
-			this.ui.shadowColor.value = defaults.color;
-			if (this.ui.shadowScale) {
-				this.ui.shadowScale.value = defaults.scale;
-				this.ui.shadowScaleValue.innerHTML = formatUnit(defaults.scale, '%');
-			}
-			if (this.ui.shadowOpacity) {
-				this.ui.shadowOpacity.value = defaults.opacity;
-				this.ui.shadowOpacityValue.innerHTML = formatUnit(defaults.opacity, '%');
-			}
-		}
-
-		this.syncTextBackgroundUI(layer);
-
-		// Color adjust (WP4): each slot reads its own effect data (identity when
-		// the effect is absent).
-		this._loadEffectColorAdjust('fill', layer.textData.fill.colorAdjust);
-		this._loadEffectColorAdjust('border', border?.colorAdjust);
-		this._loadEffectColorAdjust('shadow', shadow?.colorAdjust);
-		this._loadEffectColorAdjust('backgroundFill', layer.textData.textBackground?.fill?.colorAdjust);
-		syncSlotTextureCoordinateControls('textFill', layer.textData.fill);
-		syncSlotTextureCoordinateControls('textBorder', border || borderDefaults);
-		syncSlotTextureCoordinateControls('textShadow', shadow || shadowDefaults);
-		syncSlotTextureCoordinateControls('textBackground', layer.textData.textBackground?.fill || this.getDefaultBackgroundFill());
-
-		this.updateFillSourceUI(layer);
-		this.updateEffectSourceUI(layer, 'border');
-		this.updateEffectSourceUI(layer, 'shadow');
-		this.updateEffectSourceUI(layer, 'backgroundFill');
-		this.updateEffectTargetButtons(layer);
-	}
-
+	// Text Background's mode and line-connection options, and the rows that
+	// only apply to some modes.
 	syncTextBackgroundUI(layer) {
-		const tb = this.ensureTextBackground(layer);
-		syncPanelEffectToggle(this.ui.bgEnabled, Boolean(tb.enabled));
-
-		const setSlider = (input, display, value, unit) => {
-			if (!input) return;
-			input.value = value;
-			if (display) display.innerHTML = formatUnit(value, unit);
-		};
-		setSlider(this.ui.bgPaddingH, this.ui.bgPaddingHValue, tb.horizontalPadding, 'px');
-		setSlider(this.ui.bgPaddingV, this.ui.bgPaddingVValue, tb.verticalPadding, 'px');
-		setSlider(this.ui.bgRadius, this.ui.bgRadiusValue, tb.cornerRadius, 'px');
-		setSlider(this.ui.bgMergeDistance, this.ui.bgMergeDistanceValue, tb.mergeDistance, 'px');
-		setSlider(this.ui.bgSpacing, this.ui.bgSpacingValue, tb.lineSpacingSensitivity, '%');
-
-		const fill = tb.fill;
-		if (this.ui.backgroundFillColor) this.ui.backgroundFillColor.value = fill.color;
-		if (this.ui.backgroundFillScale) {
-			this.ui.backgroundFillScale.value = fill.scale ?? 100;
-			if (this.ui.backgroundFillScaleValue) this.ui.backgroundFillScaleValue.innerHTML = formatUnit(fill.scale ?? 100, '%');
-		}
-		if (this.ui.backgroundFillOpacity) {
-			this.ui.backgroundFillOpacity.value = fill.opacity ?? 100;
-			if (this.ui.backgroundFillOpacityValue) this.ui.backgroundFillOpacityValue.innerHTML = formatUnit(fill.opacity ?? 100, '%');
-		}
-
+		const tb = layer.textData.textBackground;
 		const isBoxText = (layer.textData.boxMode || 'auto') === 'fixed';
 		this.ui.bgModeBox?.toggleAttribute('disabled', !isBoxText);
 		if (this.ui.bgModeBox) this.ui.bgModeBox.hidden = !isBoxText;
@@ -1955,100 +945,8 @@ class TextGlitterManager {
 		if (mergeSet) mergeSet.hidden = tb.mode !== 'lines' || tb.lineConnection === 'separate';
 	}
 
-	// Fill has a 'none' mode and no on/off toggle, so it gets its own
-	// summary/update logic rather than sharing getEffectSourceSummary/
-	// updateEffectSourceUI — but mirrors their visible behavior exactly.
-	updateFillSourceUI(layer) {
-		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel) return;
-
-		const fillData = this.ensureEffectData(layer, 'fill');
-		const usesGlitter = fillData.mode === 'glitter';
-		// Glitter mode is never empty — fall back to the default glitter.
-		if (usesGlitter && !fillData.glitterId) {
-			fillData.glitterId = CONFIG.tools.glitter.defaults.fillGlitterId.text;
-		}
-		const glitter = usesGlitter
-			? this.editor.glitterManager?.getItemById(fillData.glitterId)
-			: null;
-
-		// Segmented control reflects the mode; at most one source display shows
-		// (None shows neither — the text becomes an outline via its border).
-		syncPaintSlotSourceUI(this.ui.fillUseGlitter, fillData.mode);
-
-		if (usesGlitter && glitter) {
-			// Reuse the exact Glitter-Properties asset display (thumbnail, name,
-			// badges, size, frames) so the two stay visually identical.
-			this.editor.renderGlitterAssetDisplay({
-				thumbnail: this.ui.fillGlitterChip,
-				name: this.ui.fillGlitterLabel,
-				badges: this.ui.fillGlitterBadges,
-				size: this.ui.fillGlitterSize,
-				frames: this.ui.fillGlitterFrames
-			}, glitter, fillData.colorAdjust);
-			const title = `Current fill glitter: ${glitter.name}. Click to choose another glitter.`;
-			this.ui.fillGlitterChip.title = title;
-			if (this.ui.fillGlitterChange) this.ui.fillGlitterChange.title = title;
-		} else if (usesGlitter) {
-			this.clearGlitterAssetDisplay({
-				thumbnail: this.ui.fillGlitterChip,
-				name: this.ui.fillGlitterLabel,
-				badges: this.ui.fillGlitterBadges,
-				size: this.ui.fillGlitterSize,
-				frames: this.ui.fillGlitterFrames
-			});
-			const title = 'Pick a glitter for the text fill';
-			this.ui.fillGlitterChip.title = title;
-			if (this.ui.fillGlitterChange) this.ui.fillGlitterChange.title = title;
-		}
-
-		if (this.ui.fillColor) this.ui.fillColor.value = fillData.color || '#000000';
-	}
-
-	// Glitter mode but the asset couldn't be resolved (missing/unloaded) — reset
-	// the display to a neutral placeholder. Shared by fill and border/shadow.
-	clearGlitterAssetDisplay(els, placeholder = 'No glitter selected') {
-		[els.thumbnail, els.name, els.badges, els.size, els.frames]
-			.filter(Boolean)
-			.forEach((node) => { delete node.dataset.assetId; });
-		if (els.thumbnail) {
-			els.thumbnail.classList.remove('glitter-bg');
-			els.thumbnail.style.backgroundImage = 'none';
-			els.thumbnail.style.backgroundColor = 'transparent';
-			els.thumbnail.style.filter = '';
-		}
-		if (els.name) {
-			els.name.textContent = placeholder;
-			els.name.title = '';
-		}
-		if (els.badges) els.badges.innerHTML = '';
-		if (els.size) els.size.textContent = '';
-		if (els.frames) els.frames.textContent = '';
-	}
-
-	syncBorderOptionUI(borderData) {
-		const placement = getBorderPlacement(borderData);
-		const edgeStyle = getBorderEdgeStyle(borderData);
-		const drawOrder = getBorderDrawOrder(borderData);
-
-		this.ui.borderEdgeRounded?.classList.toggle('active', edgeStyle === 'round');
-		this.ui.borderEdgeHard?.classList.toggle('active', edgeStyle === 'hard');
-		this.ui.borderPositionOutside?.classList.toggle('active', placement === 'outside');
-		this.ui.borderPositionCenter?.classList.toggle('active', placement === 'center');
-		this.ui.borderPositionInside?.classList.toggle('active', placement === 'inside');
-		this.ui.borderOrderBehind?.classList.toggle('active', drawOrder === 'behind');
-		this.ui.borderOrderFront?.classList.toggle('active', drawOrder === 'front');
-	}
-
 	updateEffectTargetButtons(layer) {
-		const activeTarget = this.getGlitterSelectionTarget(layer);
-		this.ui.fillGlitterChip?.classList.toggle('target-active', activeTarget === 'fill');
-		this.ui.fillGlitterChange?.classList.toggle('target-active', activeTarget === 'fill');
-		this.ui.borderGlitterChip?.classList.toggle('target-active', activeTarget === 'border');
-		this.ui.borderGlitterChange?.classList.toggle('target-active', activeTarget === 'border');
-		this.ui.shadowGlitterChip?.classList.toggle('target-active', activeTarget === 'shadow');
-		this.ui.shadowGlitterChange?.classList.toggle('target-active', activeTarget === 'shadow');
-		this.ui.backgroundFillGlitterChip?.classList.toggle('target-active', activeTarget === 'backgroundFill');
-		this.ui.backgroundFillGlitterChange?.classList.toggle('target-active', activeTarget === 'backgroundFill');
+		syncPaintSlotPickerTargets(this.fieldHost, layer);
 		this.updatePickerStrip();
 	}
 
@@ -2127,150 +1025,16 @@ class TextGlitterManager {
 		renderPickerStrip({ ownsStrip: true, visible: true, hint: true, ...stripText });
 	}
 
-	// Shared by border/shadow/backgroundFill so getDefaultXxx() stays the one
-	// place each slot's fallback values live.
+	// One place each slot's default comes from.
 	getEffectDefaults(effectName) {
+		if (effectName === 'fill') return this.getDefaultFill();
 		if (effectName === 'shadow') return this.getDefaultShadow();
 		if (effectName === 'backgroundFill') return this.getDefaultBackgroundFill();
 		return this.getDefaultBorder();
 	}
 
 	getEffectTitle(effectName) {
-		if (effectName === 'fill') return 'fill';
-		if (effectName === 'shadow') return 'shadow';
-		if (effectName === 'backgroundFill') return 'background';
-		return 'border';
-	}
-
-	updateEffectSourceUI(layer, effectName) {
-		const effectData = this.getEffectData(layer, effectName);
-		// Glitter mode is never empty — fall back to the slot's default glitter.
-		if (effectData && this.effectUsesGlitter(effectData) && !effectData.glitterId) {
-			effectData.glitterId = this.getEffectDefaults(effectName).glitterId;
-		}
-		const config = effectName === 'border'
-			? {
-				button: this.ui.borderGlitterChip,
-				changeButton: this.ui.borderGlitterChange,
-				label: this.ui.borderGlitterLabel,
-				badges: this.ui.borderGlitterBadges,
-				info: this.ui.borderGlitterInfo,
-				size: this.ui.borderGlitterSize,
-				frames: this.ui.borderGlitterFrames,
-				useColor: this.ui.borderUseColor,
-				useGlitter: this.ui.borderUseGlitter,
-				colorRow: this.ui.borderColorRow,
-				scaleRow: this.ui.borderScaleRow
-			}
-			: effectName === 'backgroundFill'
-				? {
-					button: this.ui.backgroundFillGlitterChip,
-					changeButton: this.ui.backgroundFillGlitterChange,
-					label: this.ui.backgroundFillGlitterLabel,
-					badges: this.ui.backgroundFillGlitterBadges,
-					info: this.ui.backgroundFillGlitterInfo,
-					size: this.ui.backgroundFillGlitterSize,
-					frames: this.ui.backgroundFillGlitterFrames,
-					useColor: this.ui.backgroundFillUseColor,
-					useGlitter: this.ui.backgroundFillUseGlitter,
-					colorRow: this.ui.backgroundFillColorRow,
-					scaleRow: this.ui.backgroundFillScaleRow
-				}
-				: {
-					button: this.ui.shadowGlitterChip,
-					changeButton: this.ui.shadowGlitterChange,
-					label: this.ui.shadowGlitterLabel,
-					badges: this.ui.shadowGlitterBadges,
-					info: this.ui.shadowGlitterInfo,
-					size: this.ui.shadowGlitterSize,
-					frames: this.ui.shadowGlitterFrames,
-					useColor: this.ui.shadowUseColor,
-					useGlitter: this.ui.shadowUseGlitter,
-					colorRow: this.ui.shadowColorRow,
-					scaleRow: this.ui.shadowScaleRow
-				};
-
-		if (!config.button || !config.label || !config.useColor || !config.useGlitter || !config.colorRow) {
-			return;
-		}
-
-		const summary = this.getEffectSourceSummary(effectData, effectName);
-		const usesGlitter = summary.usesGlitter;
-
-		syncPaintSlotSourceUI(config.useGlitter, effectData?.mode || (usesGlitter ? 'glitter' : 'solid'));
-
-		config.button.title = summary.buttonTitle;
-		if (config.changeButton) config.changeButton.title = summary.buttonTitle;
-
-		if (usesGlitter && summary.glitter) {
-			this.editor.renderGlitterAssetDisplay({
-				thumbnail: config.button,
-				name: config.label,
-				badges: config.badges,
-				size: config.size,
-				frames: config.frames
-			}, summary.glitter, effectData?.colorAdjust);
-		} else if (usesGlitter) {
-			// Glitter mode selected but nothing picked yet — show the empty
-			// "choose a glitter" state (the chip/Change tooltip prompts to pick).
-			this.clearGlitterAssetDisplay({
-				thumbnail: config.button,
-				name: config.label,
-				badges: config.badges,
-				size: config.size,
-				frames: config.frames
-			});
-		}
-		// Solid mode: the color display is shown instead of the glitter info,
-		// so the thumbnail/label (now hidden) need no painting.
-	}
-
-	// Whether a border/shadow slot is in glitter mode for UI purposes. Explicit
-	// `mode` wins (so "Glitter" can be selected before a glitter is picked);
-	// legacy data without `mode` falls back to glitterId truthiness.
-	effectUsesGlitter(effectData) {
-		if (!effectData) return false;
-		if (effectData.mode === 'glitter') return true;
-		if (effectData.mode === 'solid') return false;
-		return Boolean(effectData.glitterId);
-	}
-
-	getEffectSourceSummary(effectData, effectName) {
-		const defaultColor = this.getEffectDefaults(effectName).color;
-		const effectTitle = this.getEffectTitle(effectName);
-		if (!effectData) {
-			return {
-				label: defaultColor.toUpperCase(),
-				buttonTitle: `Pick a glitter for the text ${effectTitle}`,
-				backgroundImage: 'none',
-				backgroundColor: defaultColor,
-				usesGlitter: false
-			};
-		}
-
-		if (this.effectUsesGlitter(effectData)) {
-			const glitter = effectData.glitterId
-				? this.editor.glitterManager.getItemById(effectData.glitterId)
-				: null;
-			return {
-				label: glitter ? glitter.name : 'No glitter selected',
-				buttonTitle: glitter
-					? `Current ${effectTitle} glitter: ${glitter.name}. Click to choose another glitter.`
-					: `Pick a glitter for the text ${effectTitle}`,
-				backgroundImage: glitter ? `url(${glitter.url})` : 'none',
-				backgroundColor: 'transparent',
-				usesGlitter: true,
-				glitter
-			};
-		}
-
-		return {
-			label: (effectData.color || defaultColor).toUpperCase(),
-			buttonTitle: `The text ${effectTitle} is using a solid color. Click to choose a glitter instead.`,
-			backgroundImage: 'none',
-			backgroundColor: effectData.color || '#000000',
-			usesGlitter: false
-		};
+		return effectName === 'backgroundFill' ? 'background' : effectName;
 	}
 
 	scheduleTextCommit(layer) {
@@ -2300,7 +1064,7 @@ class TextGlitterManager {
 			// FontFace resolves. Without this flag that fallback-font measurement
 			// (and its rasterized canvas) is cached under the same key the real
 			// font would use, so the fallback sticks for the whole session.
-			this.fontFaces.has(textData.fontId),
+			FontLibrary.isLoaded(textData.fontId),
 			textData.fontSize,
 			textData.letterSpacing,
 			textData.lineHeight,
@@ -2340,7 +1104,7 @@ class TextGlitterManager {
 			return cached;
 		}
 
-		const font = this.getFontById(layer.textData.fontId);
+		const font = FontLibrary.getFont(layer.textData.fontId);
 		const ctx = this.measureCtx;
 		const lines = this.applyTextCase(layer.textData.text, layer.textData.textCase).split('\n');
 		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
@@ -2352,7 +1116,7 @@ class TextGlitterManager {
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
 		const boxMode = layer.textData.boxMode || 'auto';
 
-		ctx.font = this.getFontDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
+		ctx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
 		ctx.textBaseline = 'alphabetic';
 
 		const sampleMetrics = ctx.measureText('Hg');
@@ -2492,7 +1256,7 @@ class TextGlitterManager {
 		const maskCtx = canvas.getContext('2d', { willReadFrequently: true });
 		maskCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 		maskCtx.fillStyle = '#ffffff';
-		maskCtx.font = this.getFontDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
+		maskCtx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
 		maskCtx.textBaseline = 'alphabetic';
 		maskCtx.textAlign = 'left';
 
@@ -2775,7 +1539,7 @@ class TextGlitterManager {
 			throw new Error('Invalid text layer');
 		}
 
-		await this.ensureFontLoaded(layer.textData.fontId);
+		await FontLibrary.ensureLoaded(layer.textData.fontId);
 		const measurement = this.getMeasurementEntry(layer);
 		const masks = {
 			fill: measurement.canvas,
@@ -2836,7 +1600,7 @@ class TextGlitterManager {
 
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 
-		if (!this.fontFaces.has(layer.textData.fontId)) {
+		if (!FontLibrary.isLoaded(layer.textData.fontId)) {
 			wrapper.style.visibility = 'hidden';
 		}
 
@@ -2853,7 +1617,7 @@ class TextGlitterManager {
 			this.layerTransforms.set(layer.id, transform);
 		}
 
-		this.ensureFontLoaded(layer.textData.fontId)
+		FontLibrary.ensureLoaded(layer.textData.fontId)
 			.then(() => {
 				if (!this.layerElements.has(layer.id)) return;
 
@@ -3063,7 +1827,7 @@ class TextGlitterManager {
 			preservePointAnchorFrom = null
 		} = options;
 
-		await this.ensureFontLoaded(layer.textData.fontId);
+		await FontLibrary.ensureLoaded(layer.textData.fontId);
 		const measurement = this.getMeasurementEntry(layer);
 		if (preservePointAnchorFrom) {
 			this.applyPointAnchorSnapshot(layer, preservePointAnchorFrom, measurement);
@@ -3274,8 +2038,8 @@ class TextGlitterManager {
 		const worldCenter = this.getFrameCenterWorldPosition(layer);
 		const previousFontSize = layer.textData.fontSize;
 		const nextFontSize = Math.max(
-			CONFIG.tools.text.minFontSize,
-			Math.min(CONFIG.tools.text.maxFontSize, Math.round(previousFontSize * scaleFactor))
+			FIELDS.textFontSize.min,
+			Math.min(FIELDS.textFontSize.max, Math.round(previousFontSize * scaleFactor))
 		);
 		const bakedFactor = nextFontSize / Math.max(1, previousFontSize);
 		layer.textData.fontSize = nextFontSize;

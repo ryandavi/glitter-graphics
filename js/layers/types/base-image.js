@@ -8,6 +8,10 @@ registerLayerType(LayerType.BASE_IMAGE, {
 	paintSlots: [
 		{ key: 'background', role: 'fill', path: 'background', wholeLayer: true, sourceLabel: 'background', glitterDefault: 'fillGlitterId', countsAsEffect: false }
 	],
+	// A pixel size of 1 means Pixelate is off; only a real mosaic rescales.
+	fields: [
+		{ path: 'background.pixelEffects.pixelSize', field: 'pixelEffectsPixelSize', documentScale: 'effect', when: (value) => value > 1 }
+	],
 	hasVisibleContent: () => true,
 	serialization: {
 		dataKey: 'background',

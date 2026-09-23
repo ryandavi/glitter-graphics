@@ -68,7 +68,7 @@ class FilterLayerManager {
 
 	bindRange(control, key) {
 		if (!control) return;
-		const suffix = CONFIG.ui.sliders[control.dataset.role]?.unit || '';
+		const suffix = FIELDS[control.dataset.role]?.unit || '';
 		bindSlider(control, document.getElementById(`${control.id}Value`), {
 			suffix,
 			parseValue: (value) => Number(value),

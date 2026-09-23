@@ -8,8 +8,14 @@ registerLayerType(LayerType.STICKER, {
 		{
 			key: 'shadow', role: 'shadow', path: 'stickerData.shadow', draftPath: 'stickerData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId', framePadding: getShadowCanvasPadding,
-			documentPixels: { signedFields: ['offsetX', 'offsetY'] }
+			panelPrefix: 'stickerShadow', modes: ['glitter', 'solid']
 		}
+	],
+	// Color adjust of the sticker image itself.
+	fields: [
+		{ path: 'stickerData.colorAdjust.hue', field: 'hue', id: 'stickerHue', colorAdjust: true },
+		{ path: 'stickerData.colorAdjust.saturation', field: 'saturation', id: 'stickerSaturation', colorAdjust: true },
+		{ path: 'stickerData.colorAdjust.brightness', field: 'brightness', id: 'stickerBrightness', colorAdjust: true }
 	],
 	contentScalesWithTransform: true,
 	hasVisibleContent: (layer) => !layer.stickerData || !layer.stickerData.isEmpty,

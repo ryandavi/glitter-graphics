@@ -135,7 +135,7 @@ class LayerManager {
 				color: '#ffffff',
 				gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
 				glitterId: CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
-				scale: CONFIG.tools.effects.defaults.scale,
+				scale: FIELDS.textureScale.value,
 				colorAdjust: null,
 				pixelEffects: JSON.parse(JSON.stringify(CONFIG.tools.pixelEffects.defaults))
 			}

@@ -27,21 +27,36 @@ function writeSliderValue(el, value) {
 	el.value = String(sliderScaleFor(el).toPosition(value));
 }
 
+// The readout text for a slider value: a percent of the slider's range when the
+// readout asks for it (buildSliderRow's `valueScale: 'percent'`), otherwise the
+// value with its unit. The unit defaults to the one the renderer stamped.
+function formatSliderReadout(slider, valueEl, value, unit = slider.dataset.unit ?? '') {
+	if (valueEl?.dataset?.valueScale === 'percent') {
+		return formatRangePercent(value, Number(slider.dataset.scaleMin ?? slider.min), Number(slider.dataset.scaleMax ?? slider.max));
+	}
+	return formatUnit(value, unit);
+}
+
+// Show a value a panel set programmatically: track position, readout and
+// revert state. Programmatic writes fire no input/change events, so the
+// listeners bindSlider installed never see them.
+function syncSlider(slider, value, options = {}) {
+	if (!slider) return;
+	const valueEl = options.valueEl !== undefined ? options.valueEl : document.getElementById(`${slider.id}Value`);
+	writeSliderValue(slider, value);
+	if (valueEl) valueEl.innerHTML = formatSliderReadout(slider, valueEl, value, options.unit);
+	if (typeof syncPropertyRevert === 'function') syncPropertyRevert(slider);
+}
+
 function bindSlider(slider, valueEl, options = {}) {
 	if (!slider) return null;
 
 	// A `.property-value` stamped `data-value-scale="percent"` (buildSliderRow's
 	// `valueScale: 'percent'`) reads as its 0–100 % position through the slider's
 	// real range — the readout the caller gets for free, no custom formatValue.
-	const asPercent = valueEl?.dataset?.valueScale === 'percent';
-	const scaleMin = asPercent ? Number(slider.dataset.scaleMin ?? slider.min) : 0;
-	const scaleMax = asPercent ? Number(slider.dataset.scaleMax ?? slider.max) : 1;
-
 	const {
-		suffix = '',
-		formatValue = asPercent
-			? (value) => formatRangePercent(value, scaleMin, scaleMax)
-			: (value) => formatUnit(value, suffix),
+		suffix = slider.dataset.unit ?? '',
+		formatValue = (value) => formatSliderReadout(slider, valueEl, value, suffix),
 		parseValue = (rawValue) => parseInt(rawValue, 10),
 		apply = null,
 		onCommit = null,

@@ -6,17 +6,30 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		{
 			key: 'backgroundFill', role: 'background', path: 'textData.textBackground.fill', enabledPath: 'textData.textBackground.enabled',
 			sourceLabel: 'backgroundFill', glitterDefault: 'backgroundGlitterId',
-			documentPixels: { hostPath: 'textData.textBackground', fields: ['horizontalPadding', 'verticalPadding', 'cornerRadius', 'mergeDistance'] }
+			panelPrefix: 'textBackground', modes: ['glitter', 'solid']
 		},
 		{
 			key: 'shadow', role: 'shadow', path: 'textData.shadow', draftPath: 'textData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', documentPixels: { signedFields: ['offsetX', 'offsetY'] }
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'textShadow', modes: ['glitter', 'solid']
 		},
 		{
 			key: 'border', role: 'border', path: 'textData.border', draftPath: 'textData.effectDrafts.border',
-			glitterDefault: 'borderGlitterId', documentPixels: { fields: ['widthPx'], minimum: 1 }
+			glitterDefault: 'borderGlitterId', panelPrefix: 'textBorder', modes: ['glitter', 'solid'],
+			fields: { widthPx: 'textBorderWidth' }
 		},
-		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId' }
+		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId', panelPrefix: 'textFill', modes: ['none', 'glitter', 'solid'] }
+	],
+	fields: [
+		{ path: 'textData.fontSize', field: 'textFontSize', id: 'textFontSize', geometry: true, documentScale: 'geometry', minimum: 1 },
+		{ path: 'textData.letterSpacing', field: 'textLetterSpacing', id: 'textLetterSpacing', geometry: true, documentScale: 'geometry' },
+		{ path: 'textData.lineHeight', field: 'textLineHeight', id: 'textLineHeight', factor: 100, geometry: true },
+		{ path: 'textData.boxWidth', documentScale: 'geometry', minimum: 1 },
+		{ path: 'textData.boxHeight', documentScale: 'geometry', minimum: 1 },
+		{ path: 'textData.textBackground.horizontalPadding', field: 'textBackgroundPaddingH', id: 'textBackgroundPaddingH', geometry: true, documentScale: 'effect' },
+		{ path: 'textData.textBackground.verticalPadding', field: 'textBackgroundPaddingV', id: 'textBackgroundPaddingV', geometry: true, documentScale: 'effect' },
+		{ path: 'textData.textBackground.cornerRadius', field: 'textBackgroundRadius', id: 'textBackgroundRadius', geometry: true, documentScale: 'effect' },
+		{ path: 'textData.textBackground.mergeDistance', field: 'textBackgroundMergeDistance', id: 'textBackgroundMergeDistance', geometry: true, documentScale: 'effect' },
+		{ path: 'textData.textBackground.lineSpacingSensitivity', field: 'textBackgroundSpacing', id: 'textBackgroundSpacing', geometry: true }
 	],
 	hasVisibleContent: (layer) => Boolean(layer.textData?.text?.trim()),
 	animatable: true,
@@ -26,7 +39,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		defaultName: (editor, data) => editor.textGlitterManager?.getLayerName(data?.text || ''),
 		normalize: (editor, layer) => editor.textGlitterManager?.normalizeLayer(layer),
 		hydrate: async (editor, layer) => {
-			if (layer.textData?.fontId) await editor.textGlitterManager?.ensureFontLoaded(layer.textData.fontId);
+			if (layer.textData?.fontId) await FontLibrary.ensureLoaded(layer.textData.fontId);
 		}
 	},
 	addedStatusMessage: 'New text layer added',

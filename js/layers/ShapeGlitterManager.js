@@ -51,8 +51,6 @@ class ShapeGlitterManager {
 		this.ui.assetThumbnail = id('shapeAssetThumbnail');
 		this.ui.assetName = id('shapeAssetName');
 		this.ui.assetChange = id('shapeAssetChange');
-		this.ui.radius = id('shapeRadius');
-		this.ui.radiusValue = id('shapeRadiusValue');
 		this.ui.radiusRow = id('shapeRadiusRow');
 		// Shared gallery picker strip (same DOM the text picker uses).
 		this.ui.gallerySection = id('designGallerySection');
@@ -60,64 +58,11 @@ class ShapeGlitterManager {
 		this.ui.pickerStripTitle = id('galleryPickerStripTitle');
 		this.ui.pickerStripDetail = id('galleryPickerStripDetail');
 		this.ui.pickerStripDone = id('galleryPickerStripDone');
-		this.ui.opacity = id('shapeLayerOpacity');
-		this.ui.opacityValue = id('shapeLayerOpacityValue');
-		this.ui.rotation = id('shapeRotation');
-		this.ui.rotationValue = id('shapeRotationValue');
-		this.ui.posX = id('shapePosX');
-		this.ui.posY = id('shapePosY');
-		this.ui.flipX = id('shapeFlipX');
-		this.ui.flipY = id('shapeFlipY');
-		this.ui.borderEnabled = id('shapeBorderEnabled');
-		this.ui.borderControls = id('shapeBorderControls');
-		this.ui.borderWidth = id('shapeBorderWidth');
-		this.ui.borderWidthValue = id('shapeBorderWidthValue');
-		this.ui.borderStyleSolid = id('shapeBorderStyleSolid');
-		this.ui.borderStyleDotted = id('shapeBorderStyleDotted');
-		this.ui.borderDotSpacing = id('shapeBorderDotSpacing');
-		this.ui.borderDotSpacingValue = id('shapeBorderDotSpacingValue');
-		this.ui.borderDotSpacingRow = id('shapeBorderDotSpacingRow');
-		this.ui.borderOpacity = id('shapeBorderOpacity');
-		this.ui.borderOpacityValue = id('shapeBorderOpacityValue');
-		this.ui.borderEdgeRounded = id('shapeBorderEdgeRounded');
-		this.ui.borderEdgeHard = id('shapeBorderEdgeHard');
-		this.ui.borderPositionOutside = id('shapeBorderPositionOutside');
-		this.ui.borderPositionCenter = id('shapeBorderPositionCenter');
-		this.ui.borderPositionInside = id('shapeBorderPositionInside');
-		this.ui.borderOrderBehind = id('shapeBorderOrderBehind');
-		this.ui.borderOrderFront = id('shapeBorderOrderFront');
-		this.ui.shadowEnabled = id('shapeShadowEnabled');
-		this.ui.shadowControls = id('shapeShadowControls');
-		this.ui.shadowOpacity = id('shapeShadowOpacity');
-		this.ui.shadowOpacityValue = id('shapeShadowOpacityValue');
 		this.ui.resetEffects = id('resetShapeEffects');
-		this.ui.fillOpacity = id('shapeFillOpacity');
-		this.ui.fillOpacityValue = id('shapeFillOpacityValue');
-
-		// Per-slot source-control refs (segmented buttons, glitter display, color).
-		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
-			['None', 'Image', 'Glitter', 'Solid'].forEach((m) => { this.ui[prefix + m] = id(prefix + m); });
-			this.ui[prefix + 'GlitterInfo'] = id(prefix + 'GlitterInfo');
-			this.ui[prefix + 'GlitterChip'] = id(prefix + 'GlitterChip');
-			this.ui[prefix + 'GlitterChange'] = id(prefix + 'GlitterChange');
-			this.ui[prefix + 'GlitterLabel'] = id(prefix + 'GlitterLabel');
-			this.ui[prefix + 'GlitterBadges'] = id(prefix + 'GlitterBadges');
-			this.ui[prefix + 'GlitterSize'] = id(prefix + 'GlitterSize');
-			this.ui[prefix + 'GlitterFrames'] = id(prefix + 'GlitterFrames');
-			this.ui[prefix + 'ColorRow'] = id(prefix + 'ColorRow');
-			this.ui[prefix + 'Color'] = id(prefix + 'Color');
-			// The slot's Advanced (color-adjust) block — glitter-only.
-			const info = this.ui[prefix + 'GlitterInfo'];
-			this.ui[prefix + 'Advanced'] = info?.closest('.paint-slot-card')?.querySelector('.advanced-disclosure') || null;
-		});
-		this.ui.fillImageInfo = id('shapeFillImageInfo');
 		this.ui.fillImageThumbnail = id('shapeFillImageThumbnail');
 		this.ui.fillImageName = id('shapeFillImageName');
 		this.ui.fillImageChange = id('shapeFillImageChange');
 		this.ui.fillImageFit = id('shapeFillImageFit');
-		this.ui.fillImageScale = id('shapeFillImageScale');
-		this.ui.fillImageOffsetX = id('shapeFillImageOffsetX');
-		this.ui.fillImageOffsetY = id('shapeFillImageOffsetY');
 		this.ui.fillImageRendering = Array.from(document.querySelectorAll('[data-fill-rendering]'));
 		this.ui.fillImageInput = document.createElement('input');
 		this.ui.fillImageInput.type = 'file';
@@ -125,35 +70,39 @@ class ShapeGlitterManager {
 		this.ui.fillImageInput.hidden = true;
 		this.ui.fillImageInput.className = 'ui-ignore-gestures';
 		document.body.appendChild(this.ui.fillImageInput);
-		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
-			const slot = prefix === 'shapeFill' ? 'fill' : prefix === 'shapeBorder' ? 'border' : 'shadow';
-			installEffectGradientEditor({
-				prefix,
-				getData: () => {
-					const layer = this.getActiveShapeLayer();
-					return layer ? this.ensureEffectData(layer, slot) : null;
-				},
-				onUpdate: (commit) => {
-					const layer = this.getActiveShapeLayer();
-					if (!layer) return;
-					this.renderLayer(layer);
-					if (commit) this.editor.saveState('Edit shape');
-				}
-			});
-		});
-
-		const borderConfig = CONFIG.tools.shapes.border || {};
-		if (this.ui.borderWidth) {
-			this.ui.borderWidth.min = String(borderConfig.minWidthPx ?? 1);
-			this.ui.borderWidth.max = String(borderConfig.maxWidthPx ?? 60);
-		}
-		if (this.ui.borderDotSpacing) {
-			this.ui.borderDotSpacing.min = String(borderConfig.minDotSpacingPx ?? 1);
-			this.ui.borderDotSpacing.max = String(borderConfig.maxDotSpacingPx ?? 60);
-		}
 
 		this.renderShapePicker();
 		this.renderShapeGallery();
+	}
+
+	// How the declared field binder (ui/paint-slot-controls.js) edits a shape.
+	// Edits that change the mask footprint keep the shape itself in place.
+	createFieldHost() {
+		return {
+			type: LayerType.SHAPE,
+			editor: this.editor,
+			getLayer: () => this.getActiveShapeLayer(),
+			ensureSlot: (layer, key) => this.ensureEffectData(layer, key),
+			getSlotDefaults: (key) => this.getSlotDefaults(key),
+			apply: (layer, mutate, change) => {
+				if (change.geometry) this.mutateGeometryPreservingShape(layer, mutate);
+				else mutate();
+				this.renderLayer(layer);
+				if (change.live) return;
+				this.loadLayerSettings(layer);
+				this.editor.saveState('Edit shape');
+				this.editor.layerManager.renderLayersList();
+			},
+			render: (layer) => this.renderLayer(layer),
+			commit: () => {
+				this.editor.saveState('Edit shape');
+				this.editor.layerManager.renderLayersList();
+			},
+			armPicker: (key) => this.armPicker(key),
+			afterFieldChange: (layer, key, binding) => {
+				if (key === 'fill' && binding.path.startsWith('offset')) this.syncFillImageAlignment(layer.shapeData.fill);
+			}
+		};
 	}
 
 	renderShapePicker() {
@@ -229,6 +178,9 @@ class ShapeGlitterManager {
 	}
 
 	setupEventListeners() {
+		this.fieldHost = this.createFieldHost();
+		bindFieldControls(this.fieldHost);
+
 		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
 			control.addEventListener('click', () => this.armShapeAssetPicker());
 		});
@@ -243,16 +195,6 @@ class ShapeGlitterManager {
 			if (layer) this.applyShapeToLayer(layer, card.dataset.shape);
 			this._syncPickerActive();
 		});
-
-		// Fill / Border / Shadow source segmented controls.
-		this._bindSource('shapeFill', 'fill', ['none', 'image', 'glitter', 'solid']);
-		this._bindSource('shapeBorder', 'border', ['glitter', 'solid']);
-		this._bindSource('shapeShadow', 'shadow', ['glitter', 'solid']);
-
-		// Solid color inputs.
-		this._bindColor('shapeFillColor', 'fill');
-		this._bindColor('shapeBorderColor', 'border');
-		this._bindColor('shapeShadowColor', 'shadow');
 
 		[this.ui.fillImageThumbnail, this.ui.fillImageChange].filter(Boolean).forEach((control) => {
 			control.addEventListener('click', () => this.chooseFillImage());
@@ -296,38 +238,9 @@ class ShapeGlitterManager {
 				const fill = this.ensureEffectData(layer, 'fill');
 				if (button.dataset.fillAlign != null) fill.offsetXPercent = Number(button.dataset.fillAlign);
 				if (button.dataset.fillValign != null) fill.offsetYPercent = Number(button.dataset.fillValign);
-				this.syncFillImageControls(fill);
+				this.loadLayerSettings(layer);
 				this.renderLayer(layer);
 				this.editor.saveState('Edit shape');
-			});
-		});
-		[
-			[this.ui.fillImageScale, 'imageScalePercent', 'shapeImageScale'],
-			[this.ui.fillImageOffsetX, 'offsetXPercent', 'shapeImageOffsetX'],
-			[this.ui.fillImageOffsetY, 'offsetYPercent', 'shapeImageOffsetY']
-		].forEach(([input, key, sliderKey]) => {
-			bindSlider(input, document.getElementById(`${input?.id}Value`), {
-				suffix: '%',
-				resetValue: CONFIG.ui.sliders[sliderKey].value,
-				resetButton: document.getElementById(`reset${this._cap(input?.id || '')}`),
-				apply: (value) => {
-					const layer = this.getActiveShapeLayer();
-					if (!layer) return;
-					const fill = this.ensureEffectData(layer, 'fill');
-					fill[key] = value;
-					if (key !== 'imageScalePercent') this.syncFillImageAlignment(fill);
-					this.renderLayer(layer);
-				},
-				onCommit: () => this.editor.saveState('Edit shape')
-			});
-		});
-
-		// Glitter chip / Change → arm the gallery picker for that slot (shows the
-		// strip + Done, like text). v1: all glitter slots share the one swatch.
-		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
-			const slot = prefix === 'shapeFill' ? 'fill' : prefix === 'shapeBorder' ? 'border' : 'shadow';
-			[this.ui[prefix + 'GlitterChip'], this.ui[prefix + 'GlitterChange']].forEach((btn) => {
-				btn?.addEventListener('click', () => this.armPicker(slot));
 			});
 		});
 
@@ -344,66 +257,7 @@ class ShapeGlitterManager {
 			this.handlePickerDone();
 		});
 
-		// Effect enable toggles.
-		this.ui.borderEnabled?.addEventListener('change', () => this._toggleEffect('border', this.ui.borderEnabled.checked));
-		this.ui.shadowEnabled?.addEventListener('change', () => this._toggleEffect('shadow', this.ui.shadowEnabled.checked));
 		this.ui.resetEffects?.addEventListener('click', () => this._resetEffects());
-
-		// Geometry sliders (change the mask → invalidate).
-		this._attachSlider(this.ui.radius, this.ui.radiusValue, 'px', (v, l) => { l.shapeData.cornerRadiusPx = v; }, CONFIG.ui.sliders.shapeRadius.value, true);
-		this._attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').widthPx = v; }, this.getDefaultBorder().widthPx, true);
-		this._attachSlider(this.ui.borderDotSpacing, this.ui.borderDotSpacingValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').dotSpacingPx = v; }, this.getDefaultBorder().dotSpacingPx, true);
-
-		// Shadow Offset is number fields (parity with Text Properties). It grows the
-		// mask footprint, so the write goes through mutateGeometryPreservingShape.
-		bindEffectOffsetPair({
-			prefix: 'shapeShadow',
-			slider: 'shadowOffsetX',
-			getLayer: () => this.getActiveShapeLayer(),
-			getData: (layer) => this.ensureEffectData(layer, 'shadow'),
-			render: (layer) => this.renderLayer(layer),
-			save: () => { this.editor.saveState('Edit shape'); this.editor.layerManager.renderLayersList(); },
-			applyValue: (layer, mutate) => {
-				this.mutateGeometryPreservingShape(layer, mutate);
-				this.renderLayer(layer);
-			}
-		});
-
-		// Non-geometry sliders (opacity, hsb) — re-render only.
-		this._attachSlider(this.ui.borderOpacity, this.ui.borderOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'border').opacity = v; }, 100, false);
-		this._attachSlider(this.ui.shadowOpacity, this.ui.shadowOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'shadow').opacity = v; }, 100, false);
-		this._attachSlider(this.ui.fillOpacity, this.ui.fillOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'fill').opacity = v; }, 100, false);
-		// Position / Transform / Scale / Flip are wired by the shared
-		// app.setupTransformListeners('shape', …) — same code as sticker + text.
-
-		// Per-slot Advanced: Scale + HSB (color adjust). Scale is a texture scale
-		// (non-geometry). All reuse the color-adjust module.
-		this._bindSlotAdvanced('shapeFill', 'fill');
-		this._bindSlotAdvanced('shapeBorder', 'border');
-		this._bindSlotAdvanced('shapeShadow', 'shadow');
-		[
-			['shapeFill', 'fill'],
-			['shapeBorder', 'border'],
-			['shapeShadow', 'shadow']
-		].forEach(([prefix, slot]) => {
-			bindSlotTextureCoordinateControls({
-				prefix,
-				getLayer: () => this.getActiveShapeLayer(),
-				getData: (layer) => this.ensureEffectData(layer, slot),
-				render: (layer) => this.renderLayer(layer),
-				save: () => this.editor.saveState('Edit shape')
-			});
-		});
-
-		this.ui.borderStyleSolid?.addEventListener('click', () => this.setBorderStyle('solid'));
-		this.ui.borderStyleDotted?.addEventListener('click', () => this.setBorderStyle('dotted'));
-		this.ui.borderEdgeRounded?.addEventListener('click', () => this.setBorderEdgeStyle('round'));
-		this.ui.borderEdgeHard?.addEventListener('click', () => this.setBorderEdgeStyle('hard'));
-		this.ui.borderPositionOutside?.addEventListener('click', () => this.setBorderPlacement('outside'));
-		this.ui.borderPositionCenter?.addEventListener('click', () => this.setBorderPlacement('center'));
-		this.ui.borderPositionInside?.addEventListener('click', () => this.setBorderPlacement('inside'));
-		this.ui.borderOrderBehind?.addEventListener('click', () => this.setBorderDrawOrder('behind'));
-		this.ui.borderOrderFront?.addEventListener('click', () => this.setBorderDrawOrder('front'));
 	}
 
 	applyShapeToLayer(layer, shapeId) {
@@ -420,44 +274,6 @@ class ShapeGlitterManager {
 		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 		return true;
-	}
-
-	_cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-
-	_bindSource(prefix, slot, modes) {
-		modes.forEach((mode) => {
-			const btn = this.ui[prefix + this._cap(mode)];
-			btn?.addEventListener('click', () => {
-				const layer = this.getActiveShapeLayer();
-				if (!layer) return;
-				const data = this.ensureEffectData(layer, slot);
-				data.mode = mode;
-				// Switching to glitter never opens the gallery and is never empty —
-				// fall back to the default glitter. The gallery opens only via the
-				// swatch/Change buttons (armPicker).
-				if (mode === 'glitter' && !this.getSlotGlitterId(layer, slot)) {
-					if (slot === 'fill') data.glitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
-					else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId.shape;
-					else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.shape;
-				}
-				this._refreshSourceUI(layer, slot);
-				this.invalidateMeasurement(layer);
-				this.renderLayer(layer);
-				this.editor.saveState('Edit shape');
-				this.editor.layerManager.renderLayersList();
-			});
-		});
-	}
-
-	_bindColor(id, slot) {
-		const input = document.getElementById(id);
-		input?.addEventListener('input', () => {
-			const layer = this.getActiveShapeLayer();
-			if (!layer) return;
-			this.ensureEffectData(layer, slot).color = input.value;
-			this.renderLayer(layer);
-		});
-		input?.addEventListener('change', () => this.editor.saveState('Edit shape'));
 	}
 
 	chooseFillImage() {
@@ -575,58 +391,6 @@ class ShapeGlitterManager {
 		});
 	}
 
-	_bindSlotAdvanced(prefix, slot) {
-		const axes = [
-			['Scale', 'scale', '%'],
-			['Hue', 'hue', '°'],
-			['Saturation', 'saturation', '%'],
-			['Brightness', 'brightness', '%']
-		];
-		axes.forEach(([suffix, key, unit]) => {
-			const slider = document.getElementById(prefix + suffix);
-			const valueEl = document.getElementById(prefix + suffix + 'Value');
-			if (!slider) return;
-			this._attachSlider(slider, valueEl, unit, (v, layer) => {
-				const data = this.ensureEffectData(layer, slot);
-				if (key === 'scale') {
-					data.scale = v;
-				} else {
-					this.ensureColorAdjust(data)[key] = v;
-					this.refreshSlotSwatch(layer, slot);
-				}
-			}, key === 'scale' ? 100 : COLOR_ADJUST_IDENTITY[key], false);
-		});
-	}
-
-	ensureColorAdjust(target) {
-		return ensureSlotColorAdjust(target);
-	}
-
-	_attachSlider(slider, valueEl, suffix, apply, resetValue, geometry) {
-		if (!slider) return;
-		const resetBtn = document.getElementById('reset' + this._cap(slider.id));
-
-		bindSlider(slider, valueEl, {
-			suffix,
-			resetValue,
-			resetButton: resetBtn,
-			apply: (value) => {
-				const layer = this.getActiveShapeLayer();
-				if (!layer) return;
-				if (geometry) {
-					this.mutateGeometryPreservingShape(layer, () => apply(value, layer));
-				} else {
-					apply(value, layer);
-				}
-				this.renderLayer(layer);
-			},
-			onCommit: () => {
-				this.editor.saveState('Edit shape');
-				this.editor.layerManager.renderLayersList();
-			}
-		});
-	}
-
 	// Shared transform interface (same contract as StickerManager.updateTransform)
 	// so app.setupTransformListeners drives the shape's Position/Transform/Scale/
 	// Flip panel exactly like stickers and text. Scale is applied as a live CSS
@@ -643,25 +407,6 @@ class ShapeGlitterManager {
 			transform.applyTransform(element, { width: measurement.width, height: measurement.height });
 			if (transform.transformHandles) transform.updateHandlePositions();
 		}
-	}
-
-	_toggleEffect(slot, enabled) {
-		const layer = this.getActiveShapeLayer();
-		if (!layer) return;
-		this.mutateGeometryPreservingShape(layer, () => {
-			layer.shapeData.effectDrafts ||= {};
-			if (enabled) {
-				layer.shapeData[slot] = layer.shapeData.effectDrafts[slot] || this.ensureEffectData(layer, slot);
-				delete layer.shapeData.effectDrafts[slot];
-			} else {
-				if (layer.shapeData[slot]) layer.shapeData.effectDrafts[slot] = layer.shapeData[slot];
-				layer.shapeData[slot] = null;
-			}
-		});
-		this.loadLayerSettings(layer);
-		this.renderLayer(layer);
-		this.editor.saveState('Edit shape');
-		this.editor.layerManager.renderLayersList();
 	}
 
 	_resetEffects() {
@@ -775,105 +520,19 @@ class ShapeGlitterManager {
 		returnFromPickerToProperties(this.editor, { section: 'shapeSettings', focusId: chipId });
 	}
 
-	_refreshSourceUI(layer, slot) {
-		const prefix = slot === 'fill' ? 'shapeFill' : slot === 'border' ? 'shapeBorder' : 'shapeShadow';
-		const data = this.getEffectData(layer, slot);
-		const mode = data?.mode || 'solid';
-
-		const glitterInfo = this.ui[prefix + 'GlitterInfo'];
-		syncPaintSlotSourceUI(this.ui[prefix + 'Glitter'], mode);
-
-		if (mode === 'glitter') {
-			// Glitter mode is never empty — fall back to the default glitter.
-			if (!this.getSlotGlitterId(layer, slot)) {
-				if (slot === 'fill') data.glitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
-				else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId.shape;
-				else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.shape;
-			}
-			const glitter = this.editor.glitterManager.getItemById(this.getSlotGlitterId(layer, slot));
-			const els = {
-				thumbnail: this.ui[prefix + 'GlitterChip'],
-				name: this.ui[prefix + 'GlitterLabel'],
-				badges: this.ui[prefix + 'GlitterBadges'],
-				size: this.ui[prefix + 'GlitterSize'],
-				frames: this.ui[prefix + 'GlitterFrames']
-			};
-			if (glitter) {
-				this.editor.renderGlitterAssetDisplay(els, glitter, this.getSlotColorAdjust(layer, slot));
-			} else if (this.editor.clearGlitterAssetDisplay) {
-				this.editor.clearGlitterAssetDisplay(els);
-			}
-		}
-	}
-
-	_loadColorAdjust(prefix, adjust, scale) {
-		const a = normalizeColorAdjust(adjust);
-		const set = (suffix, value, unit) => {
-			const slider = document.getElementById(prefix + suffix);
-			const display = document.getElementById(prefix + suffix + 'Value');
-			if (slider) slider.value = String(value);
-			if (display) display.innerHTML = formatUnit(value, unit);
-		};
-		set('Scale', scale ?? 100, '%');
-		set('Hue', a.hue, '°');
-		set('Saturation', a.saturation, '%');
-		set('Brightness', a.brightness, '%');
-	}
-
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const d = layer.shapeData;
-		const fillDefaults = this.getDefaultFill();
-		const borderDefaults = this.getDefaultBorder();
-		const shadowDefaults = this.getDefaultShadow();
 		if (this.ui.assetThumbnail) this.ui.assetThumbnail.innerHTML = ShapeLibrary.getIconSvg(d.shapeId);
 		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
-		if (this.ui.radius) this.ui.radius.value = d.cornerRadiusPx;
-		if (this.ui.radiusValue) this.ui.radiusValue.innerHTML = formatUnit(d.cornerRadiusPx, 'px');
 		if (this.ui.radiusRow) this.ui.radiusRow.hidden = d.shapeId !== 'square';
 
 		this._syncPickerActive();
 
 		// Position/Transform/Scale/Flip use the shared transform panel.
 		this.editor.loadTransformSettings?.(layer, 'shape');
-
-		// Border
-		const border = d.border;
-		syncPanelEffectToggle(this.ui.borderEnabled, Boolean(border));
-		// .property-module-content is display:none until it has the .visible class
-		// (NOT the hidden attribute) — reuse the same mechanism as text.
-		const bd = border || borderDefaults;
-		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.innerHTML = formatUnit(bd.widthPx, 'px'); }
-		if (this.ui.borderDotSpacing) { this.ui.borderDotSpacing.value = bd.dotSpacingPx ?? borderDefaults.dotSpacingPx; this.ui.borderDotSpacingValue.innerHTML = formatUnit(bd.dotSpacingPx ?? borderDefaults.dotSpacingPx, 'px'); }
-		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? borderDefaults.opacity; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? borderDefaults.opacity, '%'); }
-		if (this.ui.shapeBorderColor) this.ui.shapeBorderColor.value = bd.color || '#000000';
-		this._syncBorderStyleUI(bd);
-		this._syncBorderEdgeUI(bd);
-		this._syncBorderPlacementUI(bd);
-		this._syncBorderDrawOrderUI(bd);
-		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale ?? borderDefaults.scale);
-
-		// Shadow
-		const shadow = d.shadow;
-		syncPanelEffectToggle(this.ui.shadowEnabled, Boolean(shadow));
-		const sd = shadow || shadowDefaults;
-		syncEffectOffsetPair('shapeShadow', sd);
-		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? shadowDefaults.opacity; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? shadowDefaults.opacity, '%'); }
-		if (this.ui.shapeShadowColor) this.ui.shapeShadowColor.value = sd.color || '#000000';
-		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale ?? shadowDefaults.scale);
-		syncSlotTextureCoordinateControls('shapeShadow', sd);
-
-		// Fill
-		if (this.ui.shapeFillColor) this.ui.shapeFillColor.value = d.fill.color || '#ff66cc';
-		if (this.ui.fillOpacity) { this.ui.fillOpacity.value = d.fill.opacity ?? fillDefaults.opacity; this.ui.fillOpacityValue.innerHTML = formatUnit(d.fill.opacity ?? fillDefaults.opacity, '%'); }
-		this._loadColorAdjust('shapeFill', d.fill.colorAdjust, d.fill.scale ?? fillDefaults.scale);
-		syncSlotTextureCoordinateControls('shapeFill', d.fill);
+		syncFieldControls(this.fieldHost, layer);
 		this.syncFillImageControls(d.fill);
-		syncSlotTextureCoordinateControls('shapeBorder', bd);
-
-		this._refreshSourceUI(layer, 'fill');
-		this._refreshSourceUI(layer, 'border');
-		this._refreshSourceUI(layer, 'shadow');
 
 		// This method writes slider values and option-active classes directly, which
 		// fires no events; sweep the reverts so they match what's on screen (the
@@ -882,6 +541,8 @@ class ShapeGlitterManager {
 		syncPropertyReverts();
 	}
 
+	// The image source's asset display, fit, alignment and sampling. Its scale
+	// and position sliders are declared fill fields.
 	syncFillImageControls(fill) {
 		const asset = this.getImageFillAsset(fill?.imageRef);
 		if (this.ui.fillImageThumbnail) {
@@ -899,24 +560,6 @@ class ShapeGlitterManager {
 		if (this.ui.fillImageFit) {
 			const normalizedFit = normalizeImageFit(fill?.fit);
 			this.ui.fillImageFit.value = (normalizedFit === 'none' && fill?.tile) ? 'tile' : normalizedFit;
-		}
-		const imageScale = normalizeImageScalePercent(fill?.imageScalePercent);
-		const x = normalizeImagePositionPercent(fill?.offsetXPercent);
-		const y = normalizeImagePositionPercent(fill?.offsetYPercent);
-		if (this.ui.fillImageScale) {
-			this.ui.fillImageScale.value = String(imageScale);
-			const value = document.getElementById('shapeFillImageScaleValue');
-			if (value) value.innerHTML = formatUnit(imageScale, '%');
-		}
-		if (this.ui.fillImageOffsetX) {
-			this.ui.fillImageOffsetX.value = String(x);
-			const value = document.getElementById('shapeFillImageOffsetXValue');
-			if (value) value.innerHTML = formatUnit(x, '%');
-		}
-		if (this.ui.fillImageOffsetY) {
-			this.ui.fillImageOffsetY.value = String(y);
-			const value = document.getElementById('shapeFillImageOffsetYValue');
-			if (value) value.innerHTML = formatUnit(y, '%');
 		}
 		this.syncFillImageAlignment(fill);
 		this.syncFillImageRendering(fill);
@@ -954,8 +597,8 @@ class ShapeGlitterManager {
 
 	getDefaultBorder() {
 		return buildDefaultBorder({
-			config: CONFIG.tools.shapes.border || {},
-			fallbackWidthPx: 6,
+			config: CONFIG.tools.shapes.border,
+			slot: getPaintSlotDefinition(LayerType.SHAPE, 'border'),
 			fallbackMode: 'glitter',
 			includeShapeStyle: true,
 			includeColorAdjust: true,
@@ -965,11 +608,16 @@ class ShapeGlitterManager {
 
 	getDefaultShadow() {
 		return buildDefaultShadow({
-			config: CONFIG.tools.shapes.shadow || {},
 			defaultMode: 'glitter',
 			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.shape,
 			includeColorAdjust: true
 		});
+	}
+
+	getSlotDefaults(key) {
+		if (key === 'border') return this.getDefaultBorder();
+		if (key === 'shadow') return this.getDefaultShadow();
+		return this.getDefaultFill();
 	}
 
 	// Runs where a shape enters the document (create, deserialize, project
@@ -977,7 +625,7 @@ class ShapeGlitterManager {
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const data = layer.shapeData;
-		data.cornerRadiusPx ??= CONFIG.ui.sliders.shapeRadius.value;
+		data.cornerRadiusPx ??= FIELDS.shapeRadius.value;
 		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
 		if (data.border === undefined) data.border = null;
 		if (data.border) data.border = mergeSlotEffectDefaults(data.border, this.getDefaultBorder());
@@ -1075,121 +723,14 @@ class ShapeGlitterManager {
 		});
 	}
 
-	setBorderStyle(style) {
-		const layer = this.getActiveShapeLayer();
-		if (!layer) return;
-
-		const border = this.ensureEffectData(layer, 'border');
-		if (border.style === style) return;
-
-		this.mutateGeometryPreservingShape(layer, () => {
-			this.ensureEffectData(layer, 'border').style = style === 'dotted' ? 'dotted' : 'solid';
-		});
-		this._syncBorderStyleUI(this.getEffectData(layer, 'border'));
-		this.renderLayer(layer);
-		this.editor.saveState('Edit shape');
-		this.editor.layerManager.renderLayersList();
-	}
-
-	setBorderEdgeStyle(edgeStyle) {
-		const layer = this.getActiveShapeLayer();
-		if (!layer) return;
-
-		const border = this.ensureEffectData(layer, 'border');
-		if (getBorderEdgeStyle(border) === edgeStyle) return;
-
-		this.mutateGeometryPreservingShape(layer, () => {
-			this.ensureEffectData(layer, 'border').edgeStyle = edgeStyle === 'hard' ? 'hard' : 'round';
-		});
-		this._syncBorderEdgeUI(this.getEffectData(layer, 'border'));
-		this.renderLayer(layer);
-		this.editor.saveState('Edit shape');
-		this.editor.layerManager.renderLayersList();
-	}
-
-	setBorderPlacement(placement) {
-		const layer = this.getActiveShapeLayer();
-		if (!layer) return;
-
-		const border = this.ensureEffectData(layer, 'border');
-		if (getBorderPlacement(border) === placement) return;
-
-		this.mutateGeometryPreservingShape(layer, () => {
-			this.ensureEffectData(layer, 'border').placement = placement;
-		});
-		this._syncBorderPlacementUI(this.getEffectData(layer, 'border'));
-		this.renderLayer(layer);
-		this.editor.saveState('Edit shape');
-		this.editor.layerManager.renderLayersList();
-	}
-
-	setBorderDrawOrder(drawOrder) {
-		const layer = this.getActiveShapeLayer();
-		if (!layer) return;
-
-		const border = this.ensureEffectData(layer, 'border');
-		if (getBorderDrawOrder(border) === drawOrder) return;
-
-		border.drawOrder = drawOrder;
-		this._syncBorderDrawOrderUI(border);
-		this.renderLayer(layer);
-		this.editor.saveState('Edit shape');
-		this.editor.layerManager.renderLayersList();
-	}
-
-	_syncBorderStyleUI(borderData) {
-		const style = borderData?.style === 'dotted' ? 'dotted' : 'solid';
-		this.ui.borderStyleSolid?.classList.toggle('active', style === 'solid');
-		this.ui.borderStyleDotted?.classList.toggle('active', style === 'dotted');
-		if (this.ui.borderDotSpacingRow) {
-			this.ui.borderDotSpacingRow.hidden = style !== 'dotted';
-		}
-		if (this.ui.borderDotSpacing) {
-			this.ui.borderDotSpacing.disabled = style !== 'dotted';
-		}
-	}
-
 	getBorderOutsidePadding(borderData) {
 		return getBorderOutsidePadding(borderData, {
 			miterLimit: CONFIG.tools.shapes.border.hardEdgeMiterLimit
 		});
 	}
 
-	_syncBorderEdgeUI(borderData) {
-		const edgeStyle = getBorderEdgeStyle(borderData);
-		this.ui.borderEdgeRounded?.classList.toggle('active', edgeStyle === 'round');
-		this.ui.borderEdgeHard?.classList.toggle('active', edgeStyle === 'hard');
-	}
-
-	_syncBorderPlacementUI(borderData) {
-		const placement = getBorderPlacement(borderData);
-		this.ui.borderPositionOutside?.classList.toggle('active', placement === 'outside');
-		this.ui.borderPositionCenter?.classList.toggle('active', placement === 'center');
-		this.ui.borderPositionInside?.classList.toggle('active', placement === 'inside');
-	}
-
-	_syncBorderDrawOrderUI(borderData) {
-		const drawOrder = getBorderDrawOrder(borderData);
-		this.ui.borderOrderBehind?.classList.toggle('active', drawOrder === 'behind');
-		this.ui.borderOrderFront?.classList.toggle('active', drawOrder === 'front');
-	}
-
 	getSlotGlitterId(layer, slot) {
 		return this.getEffectData(layer, slot)?.glitterId;
-	}
-
-	// Each slot's colorAdjust lives on its own effect object (fill = shapeData.fill).
-	getSlotColorAdjust(layer, slot) {
-		return this.getEffectData(layer, slot)?.colorAdjust;
-	}
-
-	// Live-tint this slot's glitter chip (and, for fill, the layers-list swatch) to
-	// match a colorAdjust drag without a full panel reload.
-	refreshSlotSwatch(layer, slot) {
-		const prefix = slot === 'fill' ? 'shapeFill' : slot === 'border' ? 'shapeBorder' : 'shapeShadow';
-		const chip = this.ui[prefix + 'GlitterChip'];
-		if (chip) chip.style.filter = buildCssColorFilter(this.getSlotColorAdjust(layer, slot));
-		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
 	}
 
 	getEffectPaintSource(layer, key) {

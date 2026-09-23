@@ -1,13 +1,10 @@
 'use strict';
 
-// Shared per-slot (fill / border / shadow) effect-data helpers for
-// TextGlitterManager and ShapeGlitterManager. Both store the same
-// color/glitter defaults (CONFIG.tools.glitter.defaults) and the same
-// glitter-vs-solid + scale/opacity model per slot; they differ only in the
-// CONFIG geometry block (CONFIG.tools.text vs CONFIG.tools.shapes), a few
-// shape-only keys (style, dotSpacingPx), and the data root
-// (layer.textData vs layer.shapeData). Each manager parameterizes these with
-// an options object supplied by thin wrapper methods.
+// Shared per-slot (fill / border / shadow) effect-data helpers. Every slot
+// stores the same color/glitter defaults (CONFIG.tools.glitter.defaults) and
+// the same source + scale/opacity model. Numeric defaults come from the field
+// specs the slot declares (options.slot, see js/paint/paint-slots.js); the
+// CONFIG block (options.config) supplies the per-type option defaults.
 
 function buildDefaultFill(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
@@ -16,19 +13,19 @@ function buildDefaultFill(options = {}) {
 	const fill = {
 		mode: 'glitter',
 		color: defaults.fillColor,
-		opacity: 100,
+		opacity: FIELDS.slotOpacity.value,
 		imageRef: null,
 		fit: imageFill.defaultFit,
-		imageScalePercent: imageFill.defaultScalePercent,
-		offsetXPercent: imageFill.defaultOffsetXPercent,
-		offsetYPercent: imageFill.defaultOffsetYPercent,
+		imageScalePercent: FIELDS.shapeImageScale.value,
+		offsetXPercent: FIELDS.shapeImageOffsetX.value,
+		offsetYPercent: FIELDS.shapeImageOffsetY.value,
 		tile: imageFill.defaultTile,
 		imageRendering: imageFill.defaultRendering,
 		textureAnchor: coordinates.defaultAnchor,
 		textureOffsetX: coordinates.defaultOffsetX,
 		textureOffsetY: coordinates.defaultOffsetY,
 		glitterId: options.defaultGlitterId ?? null,
-		scale: CONFIG.tools.effects.defaults.scale,
+		scale: FIELDS.textureScale.value,
 		colorAdjust: null
 	};
 	return fill;
@@ -43,11 +40,11 @@ function buildDefaultBorder(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;
 	const border = {
-		widthPx: config.defaultWidthPx ?? options.fallbackWidthPx ?? 4
+		widthPx: getPaintSlotFieldDefault(options.slot, 'widthPx', 4)
 	};
 	if (options.includeShapeStyle) {
 		border.style = config.defaultStyle ?? 'solid';
-		border.dotSpacingPx = config.defaultDotSpacingPx ?? 10;
+		border.dotSpacingPx = getPaintSlotFieldDefault(options.slot, 'dotSpacingPx', 10);
 	}
 	border.placement = config.defaultPlacement ?? 'outside';
 	border.edgeStyle = config.defaultEdgeStyle ?? 'round';
@@ -55,8 +52,8 @@ function buildDefaultBorder(options = {}) {
 	border.mode = config.defaultSource ?? options.fallbackMode ?? 'glitter';
 	border.glitterId = options.defaultGlitterId ?? null;
 	border.color = defaults.borderColor;
-	border.scale = 100;
-	border.opacity = 100;
+	border.scale = FIELDS.textureScale.value;
+	border.opacity = FIELDS.slotOpacity.value;
 	border.textureAnchor = coordinates.defaultAnchor;
 	border.textureOffsetX = coordinates.defaultOffsetX;
 	border.textureOffsetY = coordinates.defaultOffsetY;
@@ -67,17 +64,16 @@ function buildDefaultBorder(options = {}) {
 }
 
 function buildDefaultShadow(options = {}) {
-	const config = options.config || {};
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;
 	const shadow = {
-		offsetX: config.defaultOffsetX ?? 6,
-		offsetY: config.defaultOffsetY ?? 6,
+		offsetX: FIELDS.shadowOffsetX.value,
+		offsetY: FIELDS.shadowOffsetY.value,
 		mode: options.defaultMode ?? 'glitter',
 		glitterId: options.defaultGlitterId ?? null,
 		color: defaults.shadowColor,
-		scale: 100,
-		opacity: 100,
+		scale: FIELDS.textureScale.value,
+		opacity: FIELDS.slotOpacity.value,
 		textureAnchor: coordinates.defaultAnchor,
 		textureOffsetX: coordinates.defaultOffsetX,
 		textureOffsetY: coordinates.defaultOffsetY
@@ -105,6 +101,28 @@ function ensureSlotEffectData(root, slot, options = {}) {
 	if (!builders?.[slot]) return null;
 	root[slot] ||= builders[slot]();
 	return root[slot];
+}
+
+// Switch an optional effect slot on or off, remembering its settings while
+// off: switching off parks the slot at its draftPath, switching on restores
+// the parked copy or builds a default. Slots gated by an enabledPath (text
+// background) keep their data and flip the flag instead.
+function toggleSlotEffect(layer, definition, enabled, buildDefault) {
+	if (definition.enabledKeys) {
+		writeFieldPath(layer, definition.enabledKeys, Boolean(enabled));
+		return;
+	}
+	const current = readFieldPath(layer, definition.pathKeys);
+	const draft = definition.draftKeys ? readFieldPath(layer, definition.draftKeys) : null;
+	const draftHost = definition.draftKeys ? definition.draftKeys.slice(0, -1) : null;
+	if (draftHost && !readFieldPath(layer, draftHost)) writeFieldPath(layer, draftHost, {});
+	if (enabled) {
+		writeFieldPath(layer, definition.pathKeys, draft || current || buildDefault());
+		if (draftHost) delete readFieldPath(layer, draftHost)[definition.draftKeys.at(-1)];
+	} else {
+		if (current && draftHost) writeFieldPath(layer, definition.draftKeys, current);
+		writeFieldPath(layer, definition.pathKeys, null);
+	}
 }
 
 function getSlotEffectData(root, slot) {

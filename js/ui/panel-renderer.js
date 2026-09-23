@@ -2,7 +2,7 @@
 
 // Sidebar panel renderer. Clones the tpl-*
 // <template> primitives in index.html per PANEL_SCHEMAS (core/config.js) and
-// stamps ids, labels, and slider ranges (CONFIG.ui.sliders). Renders ONCE at
+// stamps ids, labels, and slider ranges (FIELDS, js/core/fields.js). Renders ONCE at
 // boot, before any manager caches or binds panel elements — managers keep
 // updating values in place; nothing here re-renders after boot (rebuilding a
 // section would orphan every listener bound to it). Stamped controls also
@@ -80,15 +80,6 @@ function createPanelGlyph(name) {
 	return createIcon(name.startsWith('icon-') ? name.slice(5) : name);
 }
 
-// Full legacy ids are explicit exceptions to the default
-// `{prefix}{Slot}{Role}` grammar. Managers continue binding these unchanged.
-const PANEL_ID_OVERRIDES = Object.freeze({
-	textFill: Object.freeze({ sourceNone: 'textFillUseNone', sourceGlitter: 'textFillUseGlitter', sourceSolid: 'textFillUseColor' }),
-	textBorder: Object.freeze({ sourceGlitter: 'textBorderUseGlitter', sourceSolid: 'textBorderUseColor' }),
-	textShadow: Object.freeze({ sourceGlitter: 'textShadowUseGlitter', sourceSolid: 'textShadowUseColor' }),
-	textBackground: Object.freeze({ sourceGlitter: 'textBackgroundUseGlitter', sourceSolid: 'textBackgroundUseColor' })
-});
-
 const TRANSFORM_ID_GRAMMAR = Object.freeze({
 	posX: '{p}PosX',
 	posY: '{p}PosY',
@@ -140,15 +131,12 @@ function getPanelTransformIds(prefix) {
 }
 
 function panelRoleId(prefix, role) {
-	return PANEL_ID_OVERRIDES[prefix]?.[role] || prefix + PANEL_ROLES.paintSlot[role];
+	return prefix + PANEL_ROLES.paintSlot[role];
 }
 
-// Every slider's default, keyed by the element id it ends up carrying. One
-// registry, filled wherever a spec is applied (schema rows, legacy template
-// cards, the transform panel), so rule D's "revert is inert at default" holds
-// for all of them instead of the seven that were hand-listed in app.js.
-const PANEL_SLIDER_DEFAULTS = Object.create(null);
-
+// Every control a spec is applied to carries its default and unit
+// (`data-default`, `data-unit`), so rule D's "revert is inert at default" and
+// the readout unit hold for every slider without a registry beside the DOM.
 function applySliderSpec(input, spec) {
 	if (spec.scale === 'log') {
 		// The DOM range is a 0..positions integer track; data-scale maps it
@@ -168,14 +156,17 @@ function applySliderSpec(input, spec) {
 		input.setAttribute('value', String(spec.value));
 		if (spec.step != null) input.step = String(spec.step);
 	}
-	if (input.id) PANEL_SLIDER_DEFAULTS[input.id] = spec.value;
+	input.dataset.default = String(spec.value);
+	input.dataset.unit = spec.unit ?? '';
 }
 
 // The revert target for a slider: normally its registered default, but the mask
 // brush's Size/Spacing follow the active raster tip's manifest value instead.
 function panelSliderDefault(id) {
 	const brushDefault = window.editor?.maskEditor?.rasterSliderDefault?.(id);
-	return brushDefault !== undefined ? brushDefault : PANEL_SLIDER_DEFAULTS[id];
+	if (brushDefault !== undefined) return brushDefault;
+	const stamped = document.getElementById(id)?.dataset.default;
+	return stamped !== undefined ? Number(stamped) : undefined;
 }
 
 // Rule D, applied to any revert the panel owns: the control is disabled (and
@@ -438,11 +429,11 @@ function initializeEditablePropertyValues(root = document) {
 const PROPERTY_WIDE_SLIDERS = new Set([]);
 
 // One property row (R1): label | control | value | revert. Ids follow the role
-// grammar (`{id}Value`, `reset{Id}`); ranges come from CONFIG.ui.sliders.
+// grammar (`{id}Value`, `reset{Id}`); ranges come from FIELDS.
 // The boot value text is plain `value+unit` to match the static markup —
 // bindSlider swaps in formatUnit markup on first interaction, as it always has.
 function buildSliderRow(options) {
-	const spec = CONFIG.ui.sliders[options.slider];
+	const spec = FIELDS[options.slider];
 	const row = tplClone('tpl-slider-row');
 	if (options.rowId) row.id = options.rowId;
 	if (options.hidden) row.hidden = true;
@@ -491,7 +482,7 @@ function buildPairRow(item) {
 
 	const pair = panelDiv('property-pair');
 	item.items.forEach((entry) => {
-		const spec = CONFIG.ui.sliders[entry.slider];
+		const spec = FIELDS[entry.slider];
 		const cell = panelDiv('property-pair-cell');
 		if (item.fields) cell.classList.add('numf');
 		const mark = document.createElement('span');
@@ -581,7 +572,7 @@ function buildNumberFieldPair(options) {
 		groups.slice(1).forEach((group) => group.remove());
 	}
 	options.items.forEach((entry, index) => {
-		const spec = entry.slider ? (CONFIG.ui.sliders[entry.slider] || {}) : {};
+		const spec = entry.slider ? (FIELDS[entry.slider] || {}) : {};
 		const group = groups[index];
 		const mark = group.querySelector('label');
 		const input = group.querySelector('input');
@@ -598,9 +589,7 @@ function buildNumberFieldPair(options) {
 		if (entry.inputMode) input.inputMode = entry.inputMode;
 		input.setAttribute('aria-label', entry.label || spec.label || entry.mark);
 		if (suffix) suffix.textContent = entry.unit ?? spec.unit ?? '';
-		if (entry.id && PANEL_SLIDER_DEFAULTS[entry.id] === undefined && spec.value != null) {
-			PANEL_SLIDER_DEFAULTS[entry.id] = spec.value;
-		}
+		if (spec.value != null) input.dataset.default = String(spec.value);
 	});
 	row.appendChild(pair);
 
@@ -1652,8 +1641,7 @@ function syncPanelEffectAvailability(card, available) {
 function initializePanelGroupNode(node, prefix, title, { collapsible = true } = {}) {
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');
-	label.className = 'panel-group-label';
-	if (node.closest('.panel-redesign')) label.classList.add('property-group-label');
+	label.className = 'property-group-label';
 	label.textContent = title;
 	header.appendChild(label);
 	if (!collapsible) return { header, chevron: null };
@@ -1705,7 +1693,7 @@ function buildPanelGroup(group, schema) {
 		if (child.classList?.contains('property-actions')) {
 			// A group-level action row is a panel-end action set — no card, no
 			// surface, no divider above it. Card footers (an actionRow inside a
-			// card's items) never reach here, so they keep `.panel-actions`.
+			// card's items) never reach here.
 			child.classList.add('section-actions');
 			actions.push(child);
 		} else blocks.appendChild(child);
@@ -1720,24 +1708,18 @@ function buildPanelGroup(group, schema) {
 	return node;
 }
 
-// The panel-redesign class-bridge pass: schema markup carries the semantic
-// classes, this stamps the redesign aliases the redesign SCSS also keys on.
-// Extracted so the bare-section and fragment renderers get the identical
-// treatment as a full schema section.
-function applyPanelRedesignClasses(root) {
+// The finishing pass every rendered schema root gets (full section, bare
+// section, fragment): the L2-block class and the editable value readouts.
+function finishPanelMarkup(root) {
 	// `querySelectorAll` never matches `root` itself, so include it in each pass.
 	// `renderPanelFragment` hands us the lone card node directly — without this it
-	// would never pick up `.property-block`/`.panel-card`, and its
+	// would never pick up `.property-block`, and its
 	// `.subsection-title` would stay `display:block` (module summary not flush).
 	const withRoot = (selector) => {
 		const matches = Array.from(root.querySelectorAll(selector));
 		if (root.matches?.(selector)) matches.unshift(root);
 		return matches;
 	};
-	withRoot('.property-card').forEach((node) => node.classList.add('panel-card'));
-	withRoot('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
-	withRoot('.property-actions').forEach((node) => node.classList.add('panel-actions'));
-	withRoot('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
 	// The L2 block: a `.subsection-content-group` that is neither an L1
 	// section-group nor the effects stack. A positive class lets the SCSS nest
 	// the DOM directly instead of `:where(:not(.subsection-section-group)…)`.
@@ -1786,7 +1768,7 @@ function renderBarePanelSection(schema) {
 	(schema.preamble || []).forEach((item) => content.appendChild(buildPanelItem(item, schema)));
 	renderPanelSubsections(schema, content);
 	initializeScrollBoundaryFades(host);
-	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) applyPanelRedesignClasses(host);
+	finishPanelMarkup(host);
 }
 
 // A schema fragment with no section of its own: builds one self-contained
@@ -1821,7 +1803,7 @@ function renderPanelFragment(schema) {
 		title.appendChild(summary);
 	}
 	mount.appendChild(card);
-	applyPanelRedesignClasses(card);
+	finishPanelMarkup(card);
 }
 
 function renderPanelSection(schema) {
@@ -1890,7 +1872,7 @@ function renderPanelSection(schema) {
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
 	initializeScrollBoundaryFades(host);
-	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) applyPanelRedesignClasses(host);
+	finishPanelMarkup(host);
 }
 
 // Boot entry point. Must run before renderTransformPanels (it creates the

@@ -687,7 +687,7 @@
 	}
 
 	// L2 block: title + rows. This is the DEFAULT. `.property-block` is stamped
-	// by the renderer (applyPanelRedesignClasses) on exactly the
+	// by the renderer (finishPanelMarkup) on exactly the
 	// `.subsection-content-group`s that are neither an L1 section-group nor the
 	// effects stack, so this one class == the old
 	// `:where(:not(.subsection-section-group):not(.effects-stack))` at the same
@@ -1254,7 +1254,7 @@
 		+ .property-meta-cell > .property-value::before { content: '\00b7'; padding-inline: 5px; }
 	}
 
-	.panel-actions {
+	.property-actions {
 		gap: 6px;
 		padding: var(--property-pad);
 		border-top: 1px solid var(--color-border);
@@ -1751,7 +1751,7 @@ body.is-resizing-panel {
 		box-sizing: border-box;
 	}
 
-	.panel-card:not(.panel-module) > .subsection-title {
+	.property-card:not(.panel-module) > .subsection-title {
 		font-size: 12px;
 		font-weight: var(--font-weight-semibold);
 		color: var(--color-text-primary);

@@ -21,18 +21,7 @@ class StickerManager extends ContentManager {
 	}
 
 	async initBrowser() {
-		this.browser = new AssetBrowser(this, {
-			browser: 'stickerBrowser',
-			backBtn: 'stickerBrowserBack',
-			title: 'stickerBrowserTitle',
-			content: 'stickerBrowserContent',
-			categoryGrid: 'stickerCategoryGrid',
-			searchResults: 'stickerSearchResults',
-			itemGrid: 'stickerItemGrid',
-			sentinel: 'stickerBrowserSentinel',
-			emptyState: 'stickerBrowserEmpty',
-			emptyText: 'stickerBrowserEmptyText'
-		}, 'Stickers');
+		this.browser = new AssetBrowser(this, getAssetBrowserElementIds('sticker'), getAssetBrowserSchema('sticker').title);
 
 		await this.browser.init('data/sticker-categories.json');
 	}
@@ -60,53 +49,46 @@ class StickerManager extends ContentManager {
 
 	setupUI() {
 		this.ui = {
-			panel: document.getElementById('stickersOptions'),
-			searchInput: document.getElementById('stickersSearch'),
-			filterToggle: document.getElementById('stickerFilterToggleBtn'),
-			filtersContainer: document.getElementById('stickerFiltersContainer'),
-			clearFiltersBtn: document.getElementById('clearStickerFiltersBtn'),
-			closeFiltersBtn: document.getElementById('closeStickerFiltersBtn'),
-			activeFilterSummary: document.getElementById('stickerActiveFilterSummary'),
-			categoryChips: document.getElementById('stickerCategoryChips'),
-			searchNameOnly: document.getElementById('searchStickerNameOnly'),
+			...getAssetBrowserUi('sticker'),
 			fitCanvas: document.getElementById('stickerFitCanvas'),
 			fillCanvas: document.getElementById('stickerFillCanvas'),
 			assetThumbnail: document.getElementById('stickerAssetThumbnail')
 		};
-		['Hue', 'Saturation', 'Brightness'].forEach((suffix) => {
-			this.ui['color' + suffix] = document.getElementById('sticker' + suffix);
-			this.ui['color' + suffix + 'Value'] = document.getElementById('sticker' + suffix + 'Value');
-		});
 		// Shared gallery picker strip (same DOM the text and shape pickers use).
 		this.ui.gallerySection = document.getElementById('designGallerySection');
 		this.ui.pickerStrip = document.getElementById('galleryPickerStrip');
 		this.ui.pickerStripTitle = document.getElementById('galleryPickerStripTitle');
 		this.ui.pickerStripDetail = document.getElementById('galleryPickerStripDetail');
 		this.ui.pickerStripDone = document.getElementById('galleryPickerStripDone');
-		// Shadow slot controls (static markup in index.html, same structure and
-		// ids scheme as the shape/text effect slots).
-		['Enabled', 'Controls', 'Glitter', 'Solid', 'GlitterInfo', 'GlitterChip', 'GlitterChange',
-			'GlitterLabel', 'GlitterBadges', 'GlitterSize', 'GlitterFrames', 'ColorRow', 'Color',
-			'OffsetX', 'OffsetXValue', 'OffsetY', 'OffsetYValue', 'Scale', 'ScaleValue',
-			'Opacity', 'OpacityValue', 'Hue', 'HueValue', 'Saturation', 'SaturationValue',
-			'Brightness', 'BrightnessValue'
-		].forEach((suffix) => {
-			this.ui['stickerShadow' + suffix] = document.getElementById('stickerShadow' + suffix);
-		});
 		this.ui.resetEffects = document.getElementById('resetStickerEffects');
-		installEffectGradientEditor({
-			prefix: 'stickerShadow',
-			getData: () => {
+	}
+
+	// How the declared field binder (ui/paint-slot-controls.js) edits a sticker:
+	// its image color adjust and its shadow slot.
+	createFieldHost() {
+		return {
+			type: LayerType.STICKER,
+			editor: this.editor,
+			getLayer: () => {
 				const layer = this.editor.layerManager.getActiveLayer();
-				return layer?.type === LayerType.STICKER ? layer.stickerData.shadow : null;
+				return layer?.type === LayerType.STICKER ? layer : null;
 			},
-			onUpdate: (commit) => {
-				const layer = this.editor.layerManager.getActiveLayer();
-				if (layer?.type !== LayerType.STICKER) return;
+			ensureSlot: (layer, key) => (layer.stickerData[key] ||= this.getDefaultShadow()),
+			getSlotDefaults: () => this.getDefaultShadow(),
+			apply: (layer, mutate, change) => {
+				mutate();
 				this.renderLayer(layer);
-				if (commit) this.editor.saveState('Edit sticker');
+				if (change.live) return;
+				this.loadLayerSettings(layer);
+				this.editor.saveState('Edit sticker');
+			},
+			render: (layer) => this.renderLayer(layer),
+			commit: () => this.editor.saveState('Edit sticker'),
+			armPicker: (key) => this.armPicker(key),
+			afterFieldChange: (layer, key, binding) => {
+				if (!key && binding.colorAdjust) this.refreshColorAdjustVisuals(layer);
 			}
-		});
+		};
 	}
 
 	setupEventListeners() {
@@ -117,8 +99,19 @@ class StickerManager extends ContentManager {
 		this.setupFilterChips();
 		this.ui.fitCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fit'));
 		this.ui.fillCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fill'));
-		this.bindColorAdjustControls();
-		this.bindEffectsControls();
+		this.fieldHost = this.createFieldHost();
+		bindFieldControls(this.fieldHost);
+		this.ui.resetEffects?.addEventListener('click', () => {
+			const layer = this.fieldHost.getLayer();
+			if (!layer) return;
+			layer.stickerData.shadow = null;
+			delete layer.stickerData.effectDrafts;
+			delete layer.animation;
+			this.renderLayer(layer);
+			this.loadLayerSettings(layer);
+			this.editor.animationPanel?.load(layer);
+			this.editor.saveState('Edit sticker');
+		});
 		// Shared picker strip: Done (only acts while a sticker is armed) + global Esc.
 		this.ui.pickerStripDone?.addEventListener('click', () => {
 			if (this.editor.layerManager.getActiveLayer()?.type === LayerType.STICKER && this.pickerSession) this.closePicker();
@@ -135,30 +128,7 @@ class StickerManager extends ContentManager {
 	}
 
 	getDefaultShadow() {
-		return buildDefaultShadow({ config: CONFIG.tools.stickers.shadow, defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.sticker, includeColorAdjust: true });
-	}
-
-	bindColorAdjustControls() {
-		[
-			['Hue', 'hue', '°'],
-			['Saturation', 'saturation', '%'],
-			['Brightness', 'brightness', '%']
-		].forEach(([suffix, key, unit]) => {
-			const slider = this.ui['color' + suffix];
-			if (!slider) return;
-			bindSlider(slider, this.ui['color' + suffix + 'Value'], {
-				suffix: unit,
-				resetValue: COLOR_ADJUST_IDENTITY[key],
-				resetButton: document.getElementById('reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1)),
-				apply: (value) => {
-					const layer = this.editor.layerManager.getActiveLayer();
-					if (layer?.type !== LayerType.STICKER) return;
-					ensureSlotColorAdjust(layer.stickerData)[key] = value;
-					this.refreshColorAdjustVisuals(layer);
-				},
-				onCommit: () => this.editor.saveState('Edit sticker')
-			});
-		});
+		return buildDefaultShadow({ defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.sticker, includeColorAdjust: true });
 	}
 
 	refreshColorAdjustVisuals(layer) {
@@ -169,99 +139,6 @@ class StickerManager extends ContentManager {
 			this.ui.assetThumbnail.style.filter = filter;
 		}
 		this.editor.refreshLayerSwatchFilter(layer);
-	}
-
-	bindEffectsControls() {
-		const prefix = 'stickerShadow';
-		const active = () => {
-			const layer = this.editor.layerManager.getActiveLayer();
-			return layer?.type === LayerType.STICKER ? layer : null;
-		};
-		this.ui[prefix + 'Enabled']?.addEventListener('change', () => {
-			const layer = active(); if (!layer) return;
-			layer.stickerData.effectDrafts ||= {};
-			if (this.ui[prefix + 'Enabled'].checked) {
-				layer.stickerData.shadow = layer.stickerData.effectDrafts.shadow || this.getDefaultShadow();
-				delete layer.stickerData.effectDrafts.shadow;
-			} else {
-				if (layer.stickerData.shadow) layer.stickerData.effectDrafts.shadow = layer.stickerData.shadow;
-				layer.stickerData.shadow = null;
-			}
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
-		});
-		this.ui.resetEffects?.addEventListener('click', () => {
-			const layer = active(); if (!layer) return;
-			layer.stickerData.shadow = null;
-			delete layer.stickerData.effectDrafts;
-			delete layer.animation;
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.animationPanel?.load(layer); this.editor.saveState('Edit sticker');
-		});
-		const setMode = (mode) => {
-			const layer = active();
-			const data = layer?.stickerData.shadow;
-			if (!data) return;
-			data.mode = mode;
-			// Glitter mode is never empty — fall back to the slot's default glitter.
-			if (mode === 'glitter' && !data.glitterId) data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.sticker;
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
-		};
-		this.ui[prefix + 'Glitter']?.addEventListener('click', () => setMode('glitter'));
-		this.ui[prefix + 'Solid']?.addEventListener('click', () => setMode('solid'));
-		// Glitter chip / Change → arm the gallery picker (strip + Done, like text/shape).
-		[this.ui[prefix + 'GlitterChip'], this.ui[prefix + 'GlitterChange']].forEach((btn) => {
-			btn?.addEventListener('click', () => this.armPicker('shadow'));
-		});
-		const attach = (suffix, unit, apply, resetValue) => {
-			const slider = this.ui[prefix + suffix];
-			if (!slider) return;
-			bindSlider(slider, this.ui[prefix + suffix + 'Value'], {
-				suffix: unit,
-				resetValue,
-				resetButton: document.getElementById('reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1)),
-				apply: (value) => {
-					const layer = active();
-					const data = layer?.stickerData.shadow;
-					if (!data) return;
-					apply(value, data, layer);
-					this.renderLayer(layer);
-				},
-				onCommit: () => this.editor.saveState('Edit sticker')
-			});
-		};
-		const defaults = this.getDefaultShadow();
-		bindEffectOffsetPair({
-			prefix,
-			getLayer: active,
-			getData: (layer) => layer.stickerData.shadow,
-			render: (layer) => this.renderLayer(layer),
-			save: () => this.editor.saveState('Edit sticker')
-		});
-		attach('Scale', '%', (value, data) => { data.scale = value; }, 100);
-		attach('Opacity', '%', (value, data) => { data.opacity = value; }, 100);
-		attach('Hue', '°', (value, data) => { ensureSlotColorAdjust(data).hue = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.hue);
-		attach('Saturation', '%', (value, data) => { ensureSlotColorAdjust(data).saturation = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.saturation);
-		attach('Brightness', '%', (value, data) => { ensureSlotColorAdjust(data).brightness = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.brightness);
-		bindSlotTextureCoordinateControls({
-			prefix,
-			getLayer: active,
-			getData: (layer) => layer.stickerData.shadow || this.getDefaultShadow(),
-			render: (layer) => this.renderLayer(layer),
-			save: () => this.editor.saveState('Edit sticker')
-		});
-		this.ui[prefix + 'Color']?.addEventListener('input', () => {
-			const layer = active();
-			if (!layer?.stickerData.shadow) return;
-			layer.stickerData.shadow.color = this.ui[prefix + 'Color'].value;
-			this.renderLayer(layer);
-		});
-		this.ui[prefix + 'Color']?.addEventListener('change', () => this.editor.saveState('Edit sticker'));
-	}
-
-	// Live-tint the shadow's glitter chip to match a colorAdjust drag without a
-	// full panel reload (same idea as ShapeGlitterManager.refreshSlotSwatch).
-	refreshShadowSwatch(shadowData) {
-		const chip = this.ui.stickerShadowGlitterChip;
-		if (chip) chip.style.filter = buildCssColorFilter(shadowData.colorAdjust);
 	}
 
 	// 'fit' = contain (whole sticker visible), 'fill' = cover (canvas fully
@@ -343,52 +220,8 @@ class StickerManager extends ContentManager {
 	loadLayerSettings(layer) {
 		if (layer?.type !== LayerType.STICKER) return;
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.closePicker();
-		const colorAdjust = normalizeColorAdjust(layer.stickerData.colorAdjust);
-		const setColorAdjust = (suffix, key, value, unit) => {
-			const slider = this.ui['color' + suffix];
-			const display = this.ui['color' + suffix + 'Value'];
-			if (slider) slider.value = String(value);
-			if (display) display.innerHTML = formatUnit(value, unit);
-			const reset = slider && document.getElementById('reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1));
-			if (reset) reset.disabled = value === COLOR_ADJUST_IDENTITY[key];
-		};
-		setColorAdjust('Hue', 'hue', colorAdjust.hue, '°');
-		setColorAdjust('Saturation', 'saturation', colorAdjust.saturation, '%');
-		setColorAdjust('Brightness', 'brightness', colorAdjust.brightness, '%');
+		syncFieldControls(this.fieldHost, layer);
 		this.refreshColorAdjustVisuals(layer);
-		const prefix = 'stickerShadow';
-		const data = layer.stickerData.shadow;
-		syncPanelEffectToggle(this.ui[prefix + 'Enabled'], Boolean(data));
-		const sd = data || this.getDefaultShadow();
-		const set = (suffix, value, unit) => {
-			const input = this.ui[prefix + suffix];
-			const display = this.ui[prefix + suffix + 'Value'];
-			if (input) input.value = value;
-			if (display) display.innerHTML = formatUnit(value, unit);
-		};
-		syncEffectOffsetPair(prefix, sd);
-		set('Scale', sd.scale ?? 100, '%');
-		set('Opacity', sd.opacity ?? 100, '%');
-		const adjust = normalizeColorAdjust(sd.colorAdjust);
-		set('Hue', adjust.hue, '°');
-		set('Saturation', adjust.saturation, '%');
-		set('Brightness', adjust.brightness, '%');
-		if (this.ui[prefix + 'Color']) this.ui[prefix + 'Color'].value = sd.color || '#000000';
-		syncPaintSlotSourceUI(this.ui[prefix + 'Glitter'], sd.mode);
-		if (sd.mode === 'glitter') {
-			if (!sd.glitterId) sd.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.sticker;
-			const glitter = this.editor.glitterManager.getItemById(sd.glitterId);
-			const els = {
-				thumbnail: this.ui[prefix + 'GlitterChip'],
-				name: this.ui[prefix + 'GlitterLabel'],
-				badges: this.ui[prefix + 'GlitterBadges'],
-				size: this.ui[prefix + 'GlitterSize'],
-				frames: this.ui[prefix + 'GlitterFrames']
-			};
-			if (glitter) this.editor.renderGlitterAssetDisplay(els, glitter, sd.colorAdjust);
-			else this.editor.clearGlitterAssetDisplay?.(els);
-		}
-		syncSlotTextureCoordinateControls(prefix, sd);
 		this.updatePickerStrip();
 	}
 

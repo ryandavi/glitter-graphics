@@ -79,6 +79,7 @@ class GlitterEditor {
 		// boot; rebuilding would orphan listeners). MobileManager later moves
 		// these same nodes into drawers, so bindings survive re-parenting.
 		renderPanelSections(this);
+		renderAssetBrowsers();
 		this.renderTransformPanels();
 		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
 		this.contextToolbarRenderer.render();
@@ -750,7 +751,7 @@ class GlitterEditor {
 		}, CONFIG.tools.selection.defaults.threshold);
 
 		this.setupSlider('feather', 'featherValue', '', null, CONFIG.tools.selection.defaults.feather);
-		this.setupSlider('scale', 'scaleValue', '%', null, CONFIG.tools.effects.defaults.scale);
+		this.setupSlider('scale', 'scaleValue', '%', null, FIELDS.textureScale.value);
 		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.layers.defaultOpacity);
 	}
 
@@ -774,7 +775,7 @@ class GlitterEditor {
 		// (the resulting stroke is baked into the mask), so no live re-render.
 		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
 			() => this.maskEditor?.rasterSliderDefault('maskBrushSpacing')
-				?? CONFIG.ui.sliders.maskBrushSpacing.value);
+				?? FIELDS.maskBrushSpacing.value);
 
 		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
 		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
@@ -836,16 +837,16 @@ class GlitterEditor {
 		const resetValues = {
 			threshold: CONFIG.tools.selection.defaults.threshold,
 			feather: CONFIG.tools.selection.defaults.feather,
-			scale: CONFIG.tools.effects.defaults.scale,
-			opacity: CONFIG.tools.effects.defaults.opacity,
+			scale: FIELDS.textureScale.value,
+			opacity: FIELDS.layerOpacity.value,
 			glitterHue: CONFIG.tools.glitter.defaults.colorAdjust.hue,
 			glitterSaturation: CONFIG.tools.glitter.defaults.colorAdjust.saturation,
 			glitterBrightness: CONFIG.tools.glitter.defaults.colorAdjust.brightness
 		};
-		// Explicit overrides first, then the slider's own declared default from
-		// CONFIG.ui.sliders (registered at render time). Every slider gets
+		// Explicit overrides first, then the default the renderer stamped on the
+		// slider from its FIELDS spec. Every slider gets
 		// default-aware revert state, not just the seven listed above.
-		return resetValues[sliderId] !== undefined ? resetValues[sliderId] : PANEL_SLIDER_DEFAULTS[sliderId];
+		return resetValues[sliderId] !== undefined ? resetValues[sliderId] : panelSliderDefault(sliderId);
 	}
 
 	updateResetButton(sliderId) {
@@ -1848,7 +1849,7 @@ class GlitterEditor {
 		this.updateHelpfulMessage();
 
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
-		this.textGlitterManager?.ensureFontLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});
+		FontLibrary.ensureLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});
 		window.dispatchEvent(new Event('imageLoaded'));
 		return true;
 	}
@@ -2670,7 +2671,7 @@ class GlitterEditor {
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => this.maskCompositor.getMaskData(layer),
 				renderSlotMasks: (layer) => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
-				ensureTextFont: (fontId) => this.textGlitterManager.ensureFontLoaded(fontId)
+				ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
 			}
 		};
 

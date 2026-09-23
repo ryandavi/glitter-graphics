@@ -105,7 +105,7 @@ class AnimationPanelController {
 			if (!slider) return;
 			const sliderRole = slider.closest('.property-row')?.dataset.role?.replace(/-row$/, '');
 			bindSlider(slider, this._id(prefix, `${suffix}Value`), {
-				suffix: CONFIG.ui.sliders[sliderRole]?.unit || '',
+				suffix: FIELDS[sliderRole]?.unit || '',
 				parseValue: Number,
 				apply: (value) => {
 					const layer = this._active(type);
@@ -179,7 +179,7 @@ class AnimationPanelController {
 			if (!readout) return;
 			const sliderRole = control.closest('.property-row')?.dataset.role?.replace(/-row$/, '');
 			const rounded = Math.round(value * 10) / 10;
-			readout.innerHTML = formatUnit(rounded, CONFIG.ui.sliders[sliderRole]?.unit || '');
+			readout.innerHTML = formatUnit(rounded, FIELDS[sliderRole]?.unit || '');
 		});
 		const rows = {
 			// Intensity only does something where pose() actually reads `amount`

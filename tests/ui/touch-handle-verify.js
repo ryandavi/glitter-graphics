@@ -538,7 +538,7 @@ async function checkTextLayoutControls(page) {
 			layer.textData.verticalAlign = 'bottom';
 		});
 		const afterVertical = { ...layer.transform.position };
-		const background = manager.ensureTextBackground(layer);
+		const background = layer.textData.textBackground;
 		background.enabled = true;
 		background.mode = 'text-bounds';
 		background.verticalPadding = 7;

@@ -58,18 +58,7 @@ class GlitterManager extends ContentManager {
 	}
 
 async initBrowser() {
-	this.browser = new AssetBrowser(this, {
-		browser: 'glitterBrowser',
-		backBtn: 'glitterBrowserBack',
-		title: 'glitterBrowserTitle',
-		content: 'glitterBrowserContent',
-		categoryGrid: 'glitterCategoryGrid',
-		searchResults: 'glitterSearchResults',
-		itemGrid: 'glitterItemGrid',
-		sentinel: 'glitterBrowserSentinel',
-		emptyState: 'glitterBrowserEmpty',
-		emptyText: 'glitterBrowserEmptyText'
-	}, 'Glitter');
+	this.browser = new AssetBrowser(this, getAssetBrowserElementIds('glitter'), getAssetBrowserSchema('glitter').title);
 	
 	await this.browser.init('data/glitter-categories.json');
 }
@@ -80,15 +69,7 @@ async initBrowser() {
 
 	setupUI() {
 		this.ui = {
-			panel: document.getElementById('glitterOptions'),
-			searchInput: document.getElementById('glitterSearch'),
-			filterToggle: document.getElementById('filterToggleBtn'),
-			filtersContainer: document.getElementById('filtersContainer'),
-			clearFiltersBtn: document.getElementById('clearFiltersBtn'),
-			closeFiltersBtn: document.getElementById('closeGlitterFiltersBtn'),
-			activeFilterSummary: document.getElementById('glitterActiveFilterSummary'),
-			categoryChips: document.getElementById('glitterCategoryChips'),
-			searchNameOnly: document.getElementById('searchGlitterNameOnly'),
+			...getAssetBrowserUi('glitter'),
 			gallerySection: document.getElementById('designGallerySection'),
 			pickerStrip: document.getElementById('galleryPickerStrip'),
 			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),

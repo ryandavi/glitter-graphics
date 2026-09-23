@@ -401,12 +401,6 @@ const CONFIG = deepFreeze({
 				sliderDebounceMs: 150
 			}
 		},
-		effects: {
-			defaults: {
-				scale: 100,
-				opacity: 100
-			}
-		},
 		maskBrush: {
 			limits: {
 				minSize: 1,
@@ -583,10 +577,6 @@ const CONFIG = deepFreeze({
 			rotationSnapTolerance: 5,
 			transform: {
 				roundValues: true
-			},
-			shadow: {
-				defaultOffsetX: 6,
-				defaultOffsetY: 6
 			}
 		},
 		text: {
@@ -601,26 +591,14 @@ const CONFIG = deepFreeze({
 			defaultBoxMode: 'auto',
 			defaultVerticalAlign: 'top',
 			minBoxSize: 4,
-			defaultFontSize: 64,
-			minFontSize: 12,
-			maxFontSize: 256,
-			defaultLetterSpacing: 0,
-			minLetterSpacing: -5,
-			maxLetterSpacing: 40,
-			lineHeight: 1,
 			maxTextLength: 200,
+			// Font size, letter spacing, line height and the border width and
+			// shadow offset defaults are field specs (js/core/fields.js).
 			border: {
-				minWidthPx: 1,
-				maxWidthPx: 24,
-				defaultWidthPx: 4,
 				defaultPlacement: 'outside',
 				defaultDrawOrder: 'behind',
 				defaultSource: 'glitter',
 				defaultEdgeStyle: 'round'
-			},
-			shadow: {
-				defaultOffsetX: 6,
-				defaultOffsetY: 6
 			}
 		},
 		shapes: {
@@ -629,10 +607,9 @@ const CONFIG = deepFreeze({
 			defaultSize: 160,           // intrinsic px for a click (no-drag) create
 			minSize: 8,
 			imageFill: {
+				// Scale and position defaults are field specs (shapeImageScale,
+				// shapeImageOffsetX/Y in js/core/fields.js).
 				defaultFit: 'cover',
-				defaultScalePercent: 100,
-				defaultOffsetXPercent: 50,
-				defaultOffsetYPercent: 50,
 				defaultTile: false,
 				defaultRendering: 'smooth',
 				maxUploadSize: 10 * 1024 * 1024,
@@ -655,14 +632,10 @@ const CONFIG = deepFreeze({
 					{ value: 'scale-down', label: 'Scale Down' }
 				]
 			},
+			// Width and dot spacing ranges and defaults are field specs
+			// (borderWidth, borderDotSpacing in js/core/fields.js).
 			border: {
-				minWidthPx: 1,
-				maxWidthPx: 100,
-				defaultWidthPx: 6,
 				defaultStyle: 'solid',
-				minDotSpacingPx: 1,
-				maxDotSpacingPx: 60,
-				defaultDotSpacingPx: 10,
 				defaultPlacement: 'outside',
 				defaultDrawOrder: 'behind',
 				defaultSource: 'glitter',
@@ -679,10 +652,6 @@ const CONFIG = deepFreeze({
 				// vertex (heart notch, star inner corners) self-intersects the clip
 				// and the fill splits into disconnected slivers. Keep this low.
 				hardEdgeInsideMiterLimit: 2
-			},
-			shadow: {
-				defaultOffsetX: 6,
-				defaultOffsetY: 6
 			}
 		}
 	},
@@ -714,7 +683,7 @@ const CONFIG = deepFreeze({
 			interpolation: 'linear',
 			// Default subdivision count for the 'smooth' blend approximation; each
 			// gradient carries its own value (editable via the Smoothing slider,
-			// CONFIG.ui.sliders.gradientSmoothing, shown in the gradient editor's
+			// FIELDS.gradientSmoothing, shown in the gradient editor's
 			// Advanced disclosure only when Blend = Smooth).
 			smoothSubdivisions: 8,
 			stops: [
@@ -820,92 +789,6 @@ const CONFIG = deepFreeze({
 				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', label: 'Size', min: 1, max: 1000, value: 40, unit: 'px', scale: 'log' }
 			] }
 		],
-		// Ranges/defaults for renderer-stamped panel sliders (js/ui/panel-renderer.js
-		// + PANEL_SCHEMAS). Values are preserved byte-for-byte from the
-		// pre-template static markup. Known, deliberate-for-now inconsistencies
-		// (reconciling them is a product decision, never a refactor side effect):
-		// textureScale max 300 vs the transform panel's 500 scale max;
-		// borderWidth/borderDotSpacing maxes are boot defaults that
-		// ShapeGlitterManager raises from CONFIG.tools.shapes.border at bind time.
-			sliders: {
-			animSpeed: { label: 'Speed', unit: 'ms', min: 120, max: 20000, step: 10, value: 1400 },
-			animAmount: { label: 'Intensity', unit: '', min: 0, max: 200, step: 1, value: 10 },
-			animAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 0 },
-			animDistance: { label: 'Distance', unit: 'px', min: 0, max: 2000, step: 1, value: 60 },
-			animRadius: { label: 'Radius', unit: 'px', min: 0, max: 1000, step: 1, value: 40 },
-			animTurns: { label: 'Turns', unit: '×', min: 1, max: 8, step: 1, value: 1 },
-			animDuty: { label: 'Duty cycle', unit: '%', min: 5, max: 95, step: 1, value: 50 },
-			animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
-			animDelay: { label: 'Delay', unit: 'ms', min: 0, max: 20000, step: 10, value: 0 },
-			animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
-			animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-			animAnchorY: { label: 'Anchor Y', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-			filterInstagramStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			filterBrightness: { label: 'Brightness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
-			filterContrast: { label: 'Contrast', unit: '%', min: -100, max: 100, step: 1, value: 0 },
-			filterSaturation: { label: 'Saturation', unit: '%', min: -100, max: 100, step: 1, value: 0 },
-			filterHue: { label: 'Hue', unit: '°', min: -180, max: 180, step: 1, value: 0 },
-			filterInvertAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			filterGrayscaleAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			filterSepiaAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			filterTintAmount: { label: 'Density', unit: '%', min: 0, max: 100, step: 1, value: 40 },
-			filterVignetteAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 45 },
-			filterVignetteMidpoint: { label: 'Midpoint', unit: '%', min: 0, max: 100, step: 1, value: 55 },
-			filterVignetteRoundness: { label: 'Roundness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
-			filterVignetteFeather: { label: 'Feather', unit: '%', min: 1, max: 100, step: 1, value: 60 },
-			filterGrainAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 25 },
-			filterGrainSize: { label: 'Size', unit: '%', min: 0, max: 100, step: 1, value: 25 },
-			filterGrainRoughness: { label: 'Roughness', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-			filterBlurRadius: { label: 'Radius', unit: 'px', min: 0, max: 64, step: 1, value: 1 },
-			autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
-			autoGlitterMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
-			autoGlitterDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
-			pixelEffectsPixelSize: { label: 'Pixel Size', unit: 'px', min: 1, max: 8, step: 1, value: 1 },
-			pixelEffectsColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
-			pixelEffectsMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
-			pixelEffectsDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
-			pixelEffectsStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			pixelEffectsDitherScale: { label: 'Texture Scale', unit: '×', min: 1, max: 4, step: 1, value: 1 },
-			pixelEffectsAngle: { label: 'Angle', unit: '°', min: 0, max: 360, step: 1, value: 45 },
-			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 1000, value: 40, scale: 'log' },
-			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
-			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
-			maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, value: 1 },
-			maskBrushSmoothing: { label: 'Smoothing', unit: '%', min: 0, max: 100, value: 0 },
-			textureScale: { label: 'Texture Scale', unit: '%', min: 25, max: 300, value: 100 },
-			textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
-			textureOffsetY: { label: 'Offset Y', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
-			slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
-			layerOpacity: { label: 'Layer Opacity', unit: '%', min: 0, max: 100, value: 100 },
-			gradientSmoothing: { label: 'Smoothing', unit: '×', min: 3, max: 16, step: 1, value: 8 },
-			hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
-			saturation: { label: 'Saturation', unit: '%', min: 0, max: 200, value: 100 },
-			brightness: { label: 'Brightness', unit: '%', min: 25, max: 200, value: 100 },
-			borderWidth: { label: 'Width', unit: 'px', min: 1, max: 60, value: 6 },
-			textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4 },
-			borderDotSpacing: { label: 'Dot Spacing', unit: 'px', min: 1, max: 60, value: 10 },
-			shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 0 },
-			shapeImageOffsetX: { label: 'Horizontal Offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-			shapeImageOffsetY: { label: 'Vertical Offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-			shapeImageScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
-			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
-			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
-			textBackgroundPaddingH: { label: 'Horizontal Padding', unit: 'px', min: 0, max: 200, value: 16 },
-			textBackgroundPaddingV: { label: 'Vertical Padding', unit: 'px', min: 0, max: 200, value: 8 },
-			textBackgroundRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 12 },
-			textBackgroundMergeDistance: { label: 'Merge Distance', unit: 'px', min: 0, max: 120, value: 24 },
-			textBackgroundSpacing: { label: 'Spacing Sensitivity', unit: '%', min: 0, max: 100, value: 50 },
-			threshold: { label: 'Color Tolerance', unit: '', min: 0, max: 255, value: 50 },
-			feather: { label: 'Edge Feather', unit: 'px', min: 0, max: 50, value: 0 },
-			textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
-			textLetterSpacing: { label: 'Letter Spacing', unit: 'px', min: -20, max: 40, value: 0 },
-			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 100 },
-			transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, value: 100 },
-			transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
-			transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
-			multiSelectionOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			documentScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 }
-		},
 		// Valid values for the Settings > Theme select; each needs a matching
 		// :root[data-theme="…"] token block in css/_themes.scss.
 		themes: ['dark', 'llama', 'cyber-chrome', 'light', 'bubblegum', 'bliss', 'dew', 'aqua', 'p2p', 'homepage', 'buddy-list'],
@@ -1206,23 +1089,25 @@ const LAYER_UI_CONFIG = {
 // Layer types register themselves from js/layers/types/<type>.js, which load
 // right after this file. A definition carries the type's panel wiring, its
 // serialization spec, capability flags (transformable, blendable,
-// animatable), hasVisibleContent(layer), and its paint slots (see
-// js/paint/paint-slots.js), declared back to front.
+// animatable), hasVisibleContent(layer), its paint slots (see
+// js/paint/paint-slots.js), declared back to front, and `fields`: bindings of
+// its other editable properties onto layer data (see js/core/fields.js).
 function registerLayerType(type, definition) {
 	if (!Object.values(LayerType).includes(type)) throw new Error(`Unknown layer type ${type}`);
 	if (LAYER_UI_CONFIG[type]) throw new Error(`Layer type ${type} is already registered`);
 	LAYER_UI_CONFIG[type] = {
 		...definition,
-		paintSlots: Object.freeze((definition.paintSlots || []).map((slot) => normalizePaintSlotDefinition(slot, type)))
+		paintSlots: Object.freeze((definition.paintSlots || []).map((slot) => normalizePaintSlotDefinition(slot, type))),
+		fields: Object.freeze((definition.fields || []).map((binding) => normalizeFieldBinding(binding, type)))
 	};
 }
 
 // Declarative sidebar panel structure consumed by js/ui/panel-renderer.js.
 // Structure, ordering, and capabilities
 // only — markup lives in the index.html tpl-* <template>s, slider ranges in
-// CONFIG.ui.sliders. Stamped element ids preserve the legacy names exactly
+// FIELDS (js/core/fields.js). Stamped element ids preserve the legacy names
 // (managers keep binding by id); paintSlot ids derive as idPrefix +
-// capitalized role. Panels not listed here are still static index.html
+// capitalized role, the grammar the paint-slot binder reads. Panels not listed here are still static index.html
 // markup awaiting migration.
 const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 	value,
@@ -1237,7 +1122,13 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 // selecting one is indistinguishable from a user manually matching the same
 // values. `fill`/`enabled` are deliberately untouched by every preset.
 const TEXT_BACKGROUND_PRESETS = {
-	instagram: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 20, verticalPadding: 10, cornerRadius: 16, mergeDistance: 20, lineSpacingSensitivity: 60 },
+	// The default look: its geometry is the text background field defaults.
+	instagram: {
+		mode: 'lines', lineConnection: 'merge-adjacent',
+		horizontalPadding: FIELDS.textBackgroundPaddingH.value, verticalPadding: FIELDS.textBackgroundPaddingV.value,
+		cornerRadius: FIELDS.textBackgroundRadius.value, mergeDistance: FIELDS.textBackgroundMergeDistance.value,
+		lineSpacingSensitivity: FIELDS.textBackgroundSpacing.value
+	},
 	tight: { mode: 'lines', lineConnection: 'merge-adjacent', horizontalPadding: 8, verticalPadding: 4, cornerRadius: 4, mergeDistance: 6, lineSpacingSensitivity: 20 },
 	separateLines: { mode: 'lines', lineConnection: 'separate', horizontalPadding: 12, verticalPadding: 6, cornerRadius: 8 },
 	connectedBlock: { mode: 'lines', lineConnection: 'connected', horizontalPadding: 20, verticalPadding: 10, cornerRadius: 20, mergeDistance: 60, lineSpacingSensitivity: 90 },
@@ -1563,8 +1454,7 @@ const PANEL_SCHEMAS = {
 						info: 'baseBackgroundImageInfo', thumbnail: 'baseBackgroundImageThumbnail',
 						name: 'baseBackgroundImageName', badges: 'baseBackgroundImageBadges',
 						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true, redesign: true
-					},
-					primaryIds: { scale: 'baseBackgroundScale' }
+					}
 				}
 			] },
 			{ title: 'Canvas', collapsible: false, items: [
@@ -1839,8 +1729,7 @@ const PANEL_SCHEMAS = {
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
-					chipTitle: 'Choose fill glitter',
-					primaryIds: { scale: 'textTextureScale', scaleRow: 'textTextureScaleRow', opacity: 'textTextureOpacity' }
+					chipTitle: 'Choose fill glitter'
 				}
 			] },
 			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
@@ -1851,7 +1740,6 @@ const PANEL_SCHEMAS = {
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose background source',
-				primaryIds: { scale: 'textBackgroundScale', scaleRow: 'textBackgroundScaleRow', opacity: 'textBackgroundOpacity' },
 				afterSource: [
 					{ kind: 'select', id: 'textBackgroundPreset', label: 'Preset', visibleLabel: 'Preset', options: TEXT_BACKGROUND_PRESET_OPTIONS },
 					{ kind: 'set', label: 'Padding', items: [
@@ -1892,7 +1780,6 @@ const PANEL_SCHEMAS = {
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose border source',
-				primaryIds: { scale: 'textBorderScale', scaleRow: 'textBorderScaleRow', opacity: 'textBorderOpacity' },
 				afterSource: [
 					{ kind: 'set', label: 'Stroke', items: [
 						{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }
@@ -1923,7 +1810,6 @@ const PANEL_SCHEMAS = {
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose shadow source',
-				primaryIds: { scale: 'textShadowScale', scaleRow: 'textShadowScaleRow', opacity: 'textShadowOpacity' },
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }

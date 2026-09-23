@@ -462,6 +462,28 @@ isLayerContentLocked(layer) {
 		}
 	}
 
+	// A glitter source whose asset can't be resolved (missing or not loaded
+	// yet): reset the display to a neutral placeholder.
+,
+	clearGlitterAssetDisplay(els, placeholder = 'No glitter selected') {
+		[els.thumbnail, els.name, els.badges, els.size, els.frames]
+			.filter(Boolean)
+			.forEach((node) => { delete node.dataset.assetId; });
+		if (els.thumbnail) {
+			els.thumbnail.classList.remove('glitter-bg');
+			els.thumbnail.style.backgroundImage = 'none';
+			els.thumbnail.style.backgroundColor = 'transparent';
+			els.thumbnail.style.filter = '';
+		}
+		if (els.name) {
+			els.name.textContent = placeholder;
+			els.name.title = '';
+		}
+		if (els.badges) els.badges.innerHTML = '';
+		if (els.size) els.size.textContent = '';
+		if (els.frames) els.frames.textContent = '';
+	}
+
 	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text
 	// layer's Fill/Border/Shadow glitter pickers — same badge vocabulary
 	// (category/animated/transparency/variable-fps) wherever a glitter or
@@ -570,44 +592,18 @@ isLayerContentLocked(layer) {
 		const contiguous = document.getElementById('contiguous');
 		const invert = document.getElementById('invert');
 		const multiSelect = document.getElementById('multiSelect');
-		const threshold = document.getElementById('threshold');
-		const thresholdValue = document.getElementById('thresholdValue');
-		const feather = document.getElementById('feather');
-		const featherValue = document.getElementById('featherValue');
-		const scale = document.getElementById('scale');
-		const scaleValue = document.getElementById('scaleValue');
-		const opacity = document.getElementById('opacity');
-		const opacityValue = document.getElementById('opacityValue');
 
 		if (contiguous) contiguous.checked = s.contiguous;
 		if (invert) invert.checked = s.invert;
 		if (multiSelect) multiSelect.checked = s.multiSelect;
 
-		if (threshold && thresholdValue) {
-			threshold.value = s.threshold;
-			thresholdValue.textContent = s.threshold;
-			this.updateResetButton('threshold');
-		}
-
-		if (feather && featherValue) {
-			feather.value = s.feather;
-			featherValue.textContent = s.feather;
-			this.updateResetButton('feather');
-		}
-
-		if (scale && scaleValue) {
-			scale.value = layer.fill.scale;
-			scaleValue.innerHTML = formatUnit(layer.fill.scale, '%');
-			this.updateResetButton('scale');
-		}
-
-		if (opacity && opacityValue) {
-			// A Fill layer is a single masked paint, so the whole-layer opacity is
-			// its only opacity control.
-			opacity.value = layer.opacity;
-			opacityValue.innerHTML = formatUnit(layer.opacity, '%');
-			this.updateResetButton('opacity');
-		}
+		// Threshold and feather readouts are plain numbers, like their bindings.
+		syncSlider(document.getElementById('threshold'), s.threshold, { unit: '' });
+		syncSlider(document.getElementById('feather'), s.feather, { unit: '' });
+		syncSlider(document.getElementById('scale'), layer.fill.scale);
+		// A Fill layer is a single masked paint, so the whole-layer opacity is
+		// its only opacity control.
+		syncSlider(document.getElementById('opacity'), layer.opacity);
 
 		// Color adjust (WP4): populate the Advanced HSB sliders from this layer.
 		this.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);

@@ -5,13 +5,23 @@ registerLayerType(LayerType.SHAPE, {
 	paintSlots: [
 		{
 			key: 'shadow', role: 'shadow', path: 'shapeData.shadow', draftPath: 'shapeData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', documentPixels: { signedFields: ['offsetX', 'offsetY'] }
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'shapeShadow', modes: ['glitter', 'solid']
 		},
 		{
 			key: 'border', role: 'border', path: 'shapeData.border', draftPath: 'shapeData.effectDrafts.border',
-			glitterDefault: 'borderGlitterId', documentPixels: { fields: ['widthPx', 'dotSpacingPx'], minimum: 1 }
+			glitterDefault: 'borderGlitterId', panelPrefix: 'shapeBorder', modes: ['glitter', 'solid'],
+			fields: { widthPx: 'borderWidth', dotSpacingPx: 'borderDotSpacing' }
 		},
-		{ key: 'fill', role: 'fill', path: 'shapeData.fill', glitterDefault: 'fillGlitterId' }
+		{
+			key: 'fill', role: 'fill', path: 'shapeData.fill', glitterDefault: 'fillGlitterId',
+			panelPrefix: 'shapeFill', modes: ['none', 'image', 'glitter', 'solid'],
+			fields: { imageScalePercent: 'shapeImageScale', offsetXPercent: 'shapeImageOffsetX', offsetYPercent: 'shapeImageOffsetY' }
+		}
+	],
+	fields: [
+		{ path: 'shapeData.cornerRadiusPx', field: 'shapeRadius', id: 'shapeRadius', geometry: true, documentScale: 'geometry' },
+		{ path: 'shapeData.width', documentScale: 'geometry', minimum: 1 },
+		{ path: 'shapeData.height', documentScale: 'geometry', minimum: 1 }
 	],
 	hasVisibleContent: (layer) => Boolean(layer.shapeData),
 	animatable: true,
