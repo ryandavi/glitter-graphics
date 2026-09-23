@@ -456,10 +456,10 @@ input[type="range"] {
 }
 
 // Transform Handles (Figma-style)
-// Drawn in the screen-space selection overlay (js/transforms/selection-overlay.js),
-// outside the zoomed canvas, so every size here is a plain screen pixel. JS
-// snaps positions to device pixels; keep hit-target sizes even so centering
-// them with translate(-50%, -50%) stays on whole pixels.
+// Drawn in the screen-space selection overlay (js/transforms/selection-overlay.js,
+// selection-chrome.js), outside the zoomed canvas, so every size here is a plain
+// screen pixel. JS snaps positions to device pixels; keep the hit sizes in
+// config even so centering them with translate(-50%, -50%) stays on whole pixels.
 .selection-overlay {
 	position: absolute;
 	inset: 0;
@@ -484,7 +484,8 @@ input[type="range"] {
 	cursor: move;
 }
 
-// Real hitbox wrappers (not pseudo-elements)
+// Real hitbox wrappers (not pseudo-elements). JS sets their size from
+// CONFIG.ui.stickerHandles.handleHitSize so drawing and hit-testing share it.
 .transform-handle-wrapper {
 	pointer-events: auto;
 	position: absolute;
@@ -493,36 +494,6 @@ input[type="range"] {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-
-	&[data-handle-type^="corner-"] {
-		width: 32px;
-		height: 32px;
-	}
-
-	&[data-handle-type^="edge-"] {
-		width: 36px;
-		height: 36px;
-	}
-
-	&[data-handle-type="rotation"] {
-		width: 40px;
-		height: 40px;
-	}
-}
-
-@media (pointer: coarse) {
-	.transform-handle-wrapper {
-		&[data-handle-type^="corner-"],
-		&[data-handle-type^="edge-"] {
-			width: var(--touch-target-min);
-			height: var(--touch-target-min);
-		}
-
-		&[data-handle-type="rotation"] {
-			width: 48px;
-			height: 48px;
-		}
-	}
 }
 
 .transform-handle {

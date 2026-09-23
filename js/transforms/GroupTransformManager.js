@@ -2,6 +2,7 @@ class GroupTransformManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.transformHandles = null;
+		this.chrome = null;
 		this.activeHandleType = null;
 		this.activeHandleElement = null;
 		this.activeHandlePointerId = null;
@@ -14,17 +15,6 @@ class GroupTransformManager {
 		this.handlePointerMove = this.handlePointerMove.bind(this);
 		this.handlePointerUp = this.handlePointerUp.bind(this);
 		this.syncHandlePositions = () => this.updateHandlePositions();
-	}
-
-	normalizeRotation(angle) {
-		let next = angle % 360;
-		if (next < 0) next += 360;
-		return next;
-	}
-
-	getPointerAngle(bounds, event) {
-		const canvasPos = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
-		return Math.atan2(canvasPos.y - bounds.centerY, canvasPos.x - bounds.centerX) * (180 / Math.PI);
 	}
 
 	applyLayerStateDelta(layerStates, bounds, options = {}) {
@@ -59,7 +49,7 @@ class GroupTransformManager {
 					x: clampLayerScale(scale.x * scaleFactor),
 					y: clampLayerScale(scale.y * scaleFactor)
 				},
-				rotation: this.normalizeRotation(rotation + rotateDeg)
+				rotation: normalizeRotationDeg(rotation + rotateDeg)
 			});
 		});
 	}
@@ -414,50 +404,19 @@ class GroupTransformManager {
 
 		this.removeTransformHandles();
 
-		const container = document.createElement('div');
-		container.className = 'transform-handles group-transform-handles';
-		container.dataset.layerId = 'group-selection';
-
-		const boundingBox = document.createElement('div');
-		boundingBox.className = 'transform-bounding-box';
-		boundingBox.dataset.handleType = 'move';
-		container.appendChild(boundingBox);
-
-		['tl', 'tr', 'br', 'bl'].forEach((corner) => {
-			const wrapper = document.createElement('div');
-			wrapper.className = 'transform-handle-wrapper';
-			wrapper.dataset.handleType = `corner-${corner}`;
-
-			const handle = document.createElement('div');
-			handle.className = `transform-handle transform-handle-corner corner-${corner}`;
-
-			wrapper.appendChild(handle);
-			container.appendChild(wrapper);
+		this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
+			layerId: 'group-selection',
+			className: 'transform-handles group-transform-handles',
+			handles: ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl', 'rotation']
 		});
-
-		const rotationLine = document.createElement('div');
-		rotationLine.className = 'transform-rotation-line';
-		container.appendChild(rotationLine);
-
-		const rotationWrapper = document.createElement('div');
-		rotationWrapper.className = 'transform-handle-wrapper';
-		rotationWrapper.dataset.handleType = 'rotation';
-
-		const rotationHandle = document.createElement('div');
-		rotationHandle.className = 'transform-handle transform-handle-rotation';
-
-		rotationWrapper.appendChild(rotationHandle);
-		container.appendChild(rotationWrapper);
-
-		this.editor.viewport.selectionOverlay.append(container);
-		this.transformHandles = container;
+		this.transformHandles = this.chrome.element;
 		this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
 		this.updateHandlePositions();
 		this.attachHandleListeners();
 	}
 
 	updateHandlePositions() {
-		if (!this.transformHandles) return;
+		if (!this.chrome) return;
 
 		const bounds = this.getBounds();
 		if (!bounds) {
@@ -465,57 +424,16 @@ class GroupTransformManager {
 			return;
 		}
 
-		// Bounds are canvas units; outsets and the stalk are screen pixels.
-		const overlay = this.editor.viewport.selectionOverlay;
-		const view = overlay.getMapping();
-		const config = CONFIG.ui.stickerHandles;
-		const topLeft = overlay.toScreen({ x: bounds.left, y: bounds.top }, view);
-		const bottomRight = overlay.toScreen({ x: bounds.right, y: bounds.bottom }, view);
-		const centerX = (topLeft.x + bottomRight.x) / 2;
-
-		const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
-		if (boundingBox) {
-			overlay.placeFrame(boundingBox, {
-				centerX: bounds.centerX,
-				centerY: bounds.centerY,
-				width: bounds.width,
-				height: bounds.height,
-				rotation: 0
-			}, view);
-		}
-
-		const outset = config.outwardOffset;
-		const corners = {
-			tl: { x: topLeft.x - outset, y: topLeft.y - outset },
-			tr: { x: bottomRight.x + outset, y: topLeft.y - outset },
-			br: { x: bottomRight.x + outset, y: bottomRight.y + outset },
-			bl: { x: topLeft.x - outset, y: bottomRight.y + outset }
-		};
-		Object.entries(corners).forEach(([corner, point]) => {
-			const wrapper = this.transformHandles.querySelector(`[data-handle-type="corner-${corner}"]`);
-			if (!wrapper) return;
-			overlay.placePoint(wrapper, point);
-			wrapper.style.cursor = corner === 'tl' || corner === 'br' ? 'nwse-resize' : 'nesw-resize';
+		this.chrome.render({
+			frame: { centerX: bounds.centerX, centerY: bounds.centerY, width: bounds.width, height: bounds.height, rotation: 0 }
 		});
-
-		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
-		if (rotationWrapper) {
-			overlay.placePoint(rotationWrapper, { x: centerX, y: topLeft.y - config.rotationHandleDistance });
-			rotationWrapper.style.cursor = ROTATION_CURSOR;
-		}
-
-		const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
-		if (rotationLine) {
-			overlay.placeStalk(rotationLine, { x: centerX, y: topLeft.y }, config.rotationHandleDistance, 0);
-		}
 	}
 
 	removeTransformHandles() {
 		this.editor.viewport.selectionOverlay.removeSyncer(this.syncHandlePositions);
 		this.removeDocumentHandleListeners();
-		if (this.transformHandles?.parentNode) {
-			this.transformHandles.parentNode.removeChild(this.transformHandles);
-		}
+		this.chrome?.remove();
+		this.chrome = null;
 
 		document.querySelectorAll('.group-transform-handles').forEach((element) => {
 			if (element.parentNode) {
@@ -540,86 +458,95 @@ class GroupTransformManager {
 	attachHandleListeners() {
 		if (!this.transformHandles) return;
 
-		this.transformHandles.querySelectorAll('[data-handle-type]').forEach((handle) => {
-			const handleType = handle.dataset.handleType;
+		this.chrome.onPointerDown((handleType, event, handle) => this.beginHandleDrag(handleType, event, handle));
 
-			handle.addEventListener('pointerdown', (event) => {
-				if (event.pointerType === 'mouse' && event.button !== 0) {
-					return;
-				}
-
-				if (handleType === 'move' && this.handleMoveSelectionIntent(event)) {
-					return;
-				}
-
-				event.preventDefault();
-				event.stopPropagation();
-				event.stopImmediatePropagation();
-
-				const bounds = this.getBounds();
-				const layerStates = this.getLayerEntries().map(({ layer, transform }) => ({
-					layer,
-					transform,
-					position: { ...transform.getTransform().position },
-					scale: { ...transform.getTransform().scale },
-					rotation: transform.getTransform().rotation || 0
-				}));
-				this.ensureHistoryBaseline();
-
-				this.activeHandleType = handleType;
-				this.activeHandleElement = handle;
-				this.activeHandlePointerId = event.pointerId;
-				this.isDraggingHandle = true;
-				handle.setPointerCapture?.(event.pointerId);
-
-				this.dragStartState = {
-					canvasX: this.editor.viewport.screenToCanvas(event.clientX, event.clientY).x,
-					canvasY: this.editor.viewport.screenToCanvas(event.clientX, event.clientY).y,
-					bounds,
-					layerStates,
-					startAngle: handleType === 'rotation'
-						? this.getPointerAngle(bounds, event)
-						: null,
-					lockedAxis: null,
-					didMove: false,
-					selectionCandidateId: handleType === 'move'
-						? this.getTopSelectedLayerAtCanvasPoint(
-							Math.round(this.editor.viewport.screenToCanvas(event.clientX, event.clientY).x),
-							Math.round(this.editor.viewport.screenToCanvas(event.clientX, event.clientY).y)
-						)?.id || null
-						: null,
-					altDuplicatePending: handleType === 'move' && event.altKey,
-					originalSelectionIds: handleType === 'move' && event.altKey ? this.getSelectedLayerIds() : null
-				};
-
-				// Keep the drag alive even if cloning/reordering moves the original
-				// handle node and the browser releases its pointer capture.
-				document.addEventListener('pointermove', this.handlePointerMove);
-				document.addEventListener('pointerup', this.handlePointerUp);
-				document.addEventListener('pointercancel', this.handlePointerUp);
-			});
-
-			if (handleType === 'move') {
-				handle.addEventListener('click', (event) => {
-					if (event.shiftKey || event.altKey) {
-						return;
-					}
-
-					const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
-					const selectedLayer = this.getTopSelectedLayerAtCanvasPoint(
-						Math.round(point.x),
-						Math.round(point.y)
-					);
-					if (!selectedLayer) {
-						return;
-					}
-
-					event.preventDefault();
-					event.stopPropagation();
-					this.editor.layerManager.selectLayerFromCanvas(selectedLayer.id);
-				});
+		this.chrome.box.addEventListener('click', (event) => {
+			if (event.shiftKey || event.altKey) {
+				return;
 			}
+
+			const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+			const selectedLayer = this.getTopSelectedLayerAtCanvasPoint(
+				Math.round(point.x),
+				Math.round(point.y)
+			);
+			if (!selectedLayer) {
+				return;
+			}
+
+			event.preventDefault();
+			event.stopPropagation();
+			this.editor.layerManager.selectLayerFromCanvas(selectedLayer.id);
 		});
+	}
+
+	beginHandleDrag(handleType, event, handle) {
+		if (event.pointerType === 'mouse' && event.button !== 0) {
+			return;
+		}
+
+		if (handleType === 'move' && this.handleMoveSelectionIntent(event)) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+		event.stopImmediatePropagation();
+
+		const bounds = this.getBounds();
+		const layerStates = this.getLayerEntries().map(({ layer, transform }) => ({
+			layer,
+			transform,
+			position: { ...transform.getTransform().position },
+			scale: { ...transform.getTransform().scale },
+			rotation: transform.getTransform().rotation || 0
+		}));
+		this.ensureHistoryBaseline();
+
+		this.activeHandleType = handleType;
+		this.activeHandleElement = handle;
+		this.activeHandlePointerId = event.pointerId;
+		this.isDraggingHandle = true;
+		handle.setPointerCapture?.(event.pointerId);
+
+		const grab = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		this.dragStartState = {
+			clientX: event.clientX,
+			clientY: event.clientY,
+			canvasX: grab.x,
+			canvasY: grab.y,
+			bounds,
+			layerStates,
+			// The grabbed corner's true point, so scale follows the pointer's movement.
+			handlePoint: bounds ? getFrameHandlePoint(this.getBoundsMetrics(bounds), handleType) : null,
+			lockedAxis: null,
+			didMove: false,
+			selectionCandidateId: handleType === 'move'
+				? this.getTopSelectedLayerAtCanvasPoint(Math.round(grab.x), Math.round(grab.y))?.id || null
+				: null,
+			altDuplicatePending: handleType === 'move' && event.altKey,
+			originalSelectionIds: handleType === 'move' && event.altKey ? this.getSelectedLayerIds() : null
+		};
+
+		// Keep the drag alive even if cloning/reordering moves the original
+		// handle node and the browser releases its pointer capture.
+		document.addEventListener('pointermove', this.handlePointerMove);
+		document.addEventListener('pointerup', this.handlePointerUp);
+		document.addEventListener('pointercancel', this.handlePointerUp);
+	}
+
+	// Bounds as getFrameMetrics-style metrics (unrotated corners).
+	getBoundsMetrics(bounds) {
+		return {
+			centerX: bounds.centerX,
+			centerY: bounds.centerY,
+			corners: [
+				{ x: bounds.left, y: bounds.top },
+				{ x: bounds.right, y: bounds.top },
+				{ x: bounds.right, y: bounds.bottom },
+				{ x: bounds.left, y: bounds.bottom }
+			]
+		};
 	}
 
 	handlePointerMove(event) {
@@ -633,6 +560,9 @@ class GroupTransformManager {
 
 		event.preventDefault();
 		event.stopPropagation();
+
+		const start = this.dragStartState;
+		if (!start.didMove && !hasPassedDragThreshold({ x: start.clientX, y: start.clientY }, event)) return;
 
 		if (this.activeHandleType === 'move') {
 			this.handleMoveDrag(event);
@@ -709,9 +639,6 @@ class GroupTransformManager {
 		const canvasPos = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
 		const deltaX = canvasPos.x - this.dragStartState.canvasX;
 		const deltaY = canvasPos.y - this.dragStartState.canvasY;
-		if (!this.dragStartState.didMove && Math.hypot(deltaX, deltaY) < 3) {
-			return;
-		}
 		if (!this.dragStartState.didMove && this.dragStartState.altDuplicatePending) {
 			const sourceTransforms = this.dragStartState.originalSelectionIds.map((id) => {
 				const layer = this.editor.layerManager.getLayerById(id);
@@ -763,9 +690,9 @@ class GroupTransformManager {
 	}
 
 	handleCornerDrag(event) {
-		const canvasPos = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
-		const bounds = this.dragStartState.bounds;
-		if (!bounds) return;
+		const start = this.dragStartState;
+		const bounds = start.bounds;
+		if (!bounds || !start.handlePoint) return;
 
 		const halfWidth = Math.max(1, bounds.width / 2);
 		const halfHeight = Math.max(1, bounds.height / 2);
@@ -774,25 +701,20 @@ class GroupTransformManager {
 		const signY = corner.includes('t') ? -1 : 1;
 		const oppositeX = bounds.centerX - (signX * halfWidth);
 		const oppositeY = bounds.centerY - (signY * halfHeight);
-		const outset = CONFIG.ui.stickerHandles.outwardOffset;
-		// The handle is drawn just outside the true corner. Convert its pointer
-		// position back to the artwork corner, then measure from the fixed opposite
-		// corner. Measuring from center made group scale run about 2× ahead.
-		const draggedCornerX = canvasPos.x - (signX * outset);
-		const draggedCornerY = canvasPos.y - (signY * outset);
-		const scaleX = Math.abs(draggedCornerX - oppositeX) / Math.max(1, bounds.width);
-		const scaleY = Math.abs(draggedCornerY - oppositeY) / Math.max(1, bounds.height);
+		// Measure the dragged corner (its grab-time point plus the pointer's
+		// movement) from the fixed opposite corner.
+		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		const dragged = anchoredHandlePoint(start.handlePoint, { x: start.canvasX, y: start.canvasY }, point);
+		const scaleX = Math.abs(dragged.x - oppositeX) / Math.max(1, bounds.width);
+		const scaleY = Math.abs(dragged.y - oppositeY) / Math.max(1, bounds.height);
 		const scaleFactor = Math.max(0.1, Math.min(5, Math.max(scaleX, scaleY)));
-		if (!this.dragStartState.didMove && Math.abs(scaleFactor - 1) < 0.01) {
-			return;
-		}
 
-		this.dragStartState.didMove = true;
+		start.didMove = true;
 		const translateX = event.altKey ? 0 : signX * halfWidth * (scaleFactor - 1);
 		const translateY = event.altKey ? 0 : signY * halfHeight * (scaleFactor - 1);
-		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { scaleFactor, translateX, translateY });
+		this.applyLayerStateDelta(start.layerStates, bounds, { scaleFactor, translateX, translateY });
 
-		this.applyEntries(this.dragStartState.layerStates);
+		this.applyEntries(start.layerStates);
 	}
 
 	cancelActiveDrag() {
@@ -819,23 +741,18 @@ class GroupTransformManager {
 		return true;
 	}
 
+	// Relative rotation about the group's center; Shift snaps the turn to 15° steps.
 	handleRotationDrag(event) {
-		const bounds = this.dragStartState?.bounds;
+		const start = this.dragStartState;
+		const bounds = start?.bounds;
 		if (!bounds) return;
 
-		const currentAngle = this.getPointerAngle(bounds, event);
-		let rotateDeg = currentAngle - (this.dragStartState.startAngle || 0);
-		if (rotateDeg > 180) rotateDeg -= 360;
-		if (rotateDeg < -180) rotateDeg += 360;
-		if (event.shiftKey) {
-			rotateDeg = Math.round(rotateDeg / 15) * 15;
-		}
-		if (!this.dragStartState.didMove && Math.abs(rotateDeg) < 0.5) {
-			return;
-		}
+		const pivot = { x: bounds.centerX, y: bounds.centerY };
+		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		const rotateDeg = snapRotationDeg(rotationDeltaDeg(pivot, { x: start.canvasX, y: start.canvasY }, point), event.shiftKey);
 
-		this.dragStartState.didMove = true;
-		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { rotateDeg });
-		this.applyEntries(this.dragStartState.layerStates);
+		start.didMove = true;
+		this.applyLayerStateDelta(start.layerStates, bounds, { rotateDeg, originX: pivot.x, originY: pivot.y });
+		this.applyEntries(start.layerStates);
 	}
 }

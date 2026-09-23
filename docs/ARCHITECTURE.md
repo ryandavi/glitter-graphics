@@ -35,7 +35,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Undo and redo | `HistoryManager` | |
 | Zoom and pan | `ViewportManager` (`editor.viewport`) | |
 | Touch and pointer input | `GestureManager` | |
-| Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | |
+| Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | Both describe their handles to `SelectionChrome`, which draws them in the screen-space `SelectionOverlay` (`editor.viewport.selectionOverlay`) and hit-tests them. Drag math is shared in `transform-gestures.js`. |
 | Brush and eraser mask painting | `MaskEditor`, composed by `MaskCompositor` | |
 | Auto Glitter | `AutoGlitterManager` | A session tool that emits glitter-fill layers. |
 | Export | `SceneCompositor` (`editor.sceneCompositor`, composes frames for every format); encoders `GifExporter` (`editor.exporter`), `Mp4Exporter`, `StillImageExporter` | See "Export path". |
@@ -88,6 +88,10 @@ Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` 
 **Canonical state.** A layer is normalized once, where it enters the document: its manager's `createLayer`, `LayerManager.deserializeLayer` (undo/redo, clipboard, project load, cloning) through `LAYER_UI_CONFIG[type].serialization.normalize`. Getters and render paths read the canonical shape and never write defaults. Older data is brought to the current shape by `ProjectSerializer.migrateLayerState`, which runs in the versioned project migrations and on every deserialize (clipboard payloads can come from an older build).
 
 **Transforms.** Movable layers (sticker, text, shape) keep a transform `{ position, rotation, scale, flipX, flipY }`. It lives only at `layer.transform`; `getLayerTransform(layer)` (`js/transforms/transform-math.js`) reads it and returns an unstored identity placement for types without one. Scale writes go through `LayerTransform.updateTransform`, which clamps with `clampLayerScale`.
+
+**Layer frames.** Each movable type declares two layer-local boxes on its `registerLayerType` definition, read through `getLayerFrame` and `getLayerVisualBounds`. The `frame` is the object's body (content, border and background plate, no shadow); handles, click hit-testing (`LayerManager.isPointInLayer`), alignment, snapping and group bounds use it. `visualBounds` adds the shadow and covers every painted pixel; export culling and crop-to-artwork use it.
+
+**Handle gestures.** Handle drags are relative to the grab point: nothing changes until the pointer travels `dragThresholdPx` screen pixels, scale handles follow the pointer's movement from the true frame corner, and rotation adds the pointer's change in angle around the frame center (Shift snaps to 15°). Selection chrome is sized in screen pixels, outside the zoomed canvas.
 
 ## Render path (live preview)
 

@@ -1698,29 +1698,7 @@ input[type=range]:disabled {
   align-items: center;
   justify-content: center;
 }
-.transform-handle-wrapper[data-handle-type^=corner-] {
-  width: 32px;
-  height: 32px;
-}
-.transform-handle-wrapper[data-handle-type^=edge-] {
-  width: 36px;
-  height: 36px;
-}
-.transform-handle-wrapper[data-handle-type=rotation] {
-  width: 40px;
-  height: 40px;
-}
 
-@media (pointer: coarse) {
-  .transform-handle-wrapper[data-handle-type^=corner-], .transform-handle-wrapper[data-handle-type^=edge-] {
-    width: var(--touch-target-min);
-    height: var(--touch-target-min);
-  }
-  .transform-handle-wrapper[data-handle-type=rotation] {
-    width: 48px;
-    height: 48px;
-  }
-}
 .transform-handle {
   flex: none;
   pointer-events: none;

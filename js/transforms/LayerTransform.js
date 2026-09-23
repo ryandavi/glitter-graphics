@@ -13,6 +13,7 @@ class LayerTransform {
 
 		// Transform handles state (desktop only)
 		this.transformHandles = null;
+		this.chrome = null;
 		this.activeHandleType = null;
 		this.activeHandleElement = null;
 		this.activeHandlePointerId = null;
@@ -871,68 +872,21 @@ createTransformHandles() {
 		this.element.classList.add('has-transform-handles');
 	}
 
-	// Create container
-	const container = document.createElement('div');
-	container.className = 'transform-handles';
-	container.dataset.layerId = this.layer.id;
-
-	// Create bounding box (draggable for moving)
-	const boundingBox = document.createElement('div');
-	boundingBox.className = 'transform-bounding-box';
-	boundingBox.dataset.handleType = 'move';
-	boundingBox.title = 'Move. Shift constrains movement; Alt-drag duplicates; Ctrl bypasses snapping.';
-	container.appendChild(boundingBox);
-
-	// Create corner handles
-	const corners = ['tl', 'tr', 'br', 'bl'];
-	corners.forEach(corner => {
-		const handleWrapper = document.createElement('div');
-		handleWrapper.className = 'transform-handle-wrapper';
-		handleWrapper.dataset.handleType = `corner-${corner}`;
-		handleWrapper.title = 'Resize. Alt resizes from the center.';
-
-		const handle = document.createElement('div');
-		handle.className = `transform-handle transform-handle-corner corner-${corner}`;
-
-		handleWrapper.appendChild(handle);
-		container.appendChild(handleWrapper);
-	});
-
-	if (this.supportsEdgeResize()) {
-		const edges = ['top', 'right', 'bottom', 'left'];
-		edges.forEach(edge => {
-			const handleWrapper = document.createElement('div');
-			handleWrapper.className = 'transform-handle-wrapper';
-			handleWrapper.dataset.handleType = `edge-${edge}`;
-			handleWrapper.title = 'Resize one side. Alt resizes from the center.';
-
-			const handle = document.createElement('div');
-			handle.className = `transform-handle transform-handle-edge edge-${edge}`;
-
-			handleWrapper.appendChild(handle);
-			container.appendChild(handleWrapper);
-		});
-	}
-
-	// Create rotation handle
-	const rotationLine = document.createElement('div');
-	rotationLine.className = 'transform-rotation-line';
-	container.appendChild(rotationLine);
-
-	const rotationWrapper = document.createElement('div');
-	rotationWrapper.className = 'transform-handle-wrapper';
-	rotationWrapper.dataset.handleType = 'rotation';
-	rotationWrapper.title = 'Rotate. Hold Shift to snap to 15 degree increments.';
-
-	const rotationHandle = document.createElement('div');
-	rotationHandle.className = 'transform-handle transform-handle-rotation';
-
-	rotationWrapper.appendChild(rotationHandle);
-	container.appendChild(rotationWrapper);
-
+	const handles = ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
+	if (this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
+	handles.push('rotation');
 	// Selection chrome lives in the screen-space overlay, outside the zoom.
-	this.editor.viewport.selectionOverlay.append(container);
-	this.transformHandles = container;
+	this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
+		layerId: this.layer.id,
+		handles,
+		titles: {
+			move: 'Move. Shift constrains movement; Alt-drag duplicates; Ctrl bypasses snapping.',
+			corner: 'Resize. Alt resizes from the center.',
+			edge: 'Resize one side. Alt resizes from the center.',
+			rotation: 'Rotate. Hold Shift to snap to 15 degree increments.'
+		}
+	});
+	this.transformHandles = this.chrome.element;
 	this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
 
 	// Position handles - this will now use the correct transform that was just applied
@@ -942,106 +896,27 @@ createTransformHandles() {
 	this.attachHandleListeners();
 }
 
-	/**
-	 * Update positions of transform handles based on current transform.
-	 * The chrome lives in the screen-space selection overlay: frames are
-	 * measured in canvas units, then mapped to screen pixels, where handle
-	 * outsets and the rotation stalk are fixed pixel distances.
-	 */
-	updateHandlePositions() {
-		if (!this.transformHandles) return;
-
+	// The chrome's description (see SelectionChrome): the frame, and for area
+	// text the box its edge handles resize.
+	getChromeModel() {
 		const transform = this.getTransform();
-		const frame = this.getFrame();
-		const resizeFrame = this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) || frame;
-		const config = CONFIG.ui.stickerHandles;
-		const overlay = this.editor.viewport.selectionOverlay;
-		const view = overlay.getMapping();
-		const metrics = this.getFrameMetrics(transform, frame);
-		const resizeMetrics = resizeFrame === frame ? metrics : this.getFrameMetrics(transform, resizeFrame);
-		const { cos, sin } = metrics;
-
-		// Points are local offsets from a screen-space center, rotated with the layer.
-		const toScreenPoint = (centerMetrics, local) => {
-			const center = overlay.toScreen({ x: centerMetrics.centerX, y: centerMetrics.centerY }, view);
-			return {
-				x: center.x + (local.x * cos - local.y * sin),
-				y: center.y + (local.x * sin + local.y * cos)
-			};
-		};
-		const hw = metrics.displayWidth * view.zoom / 2;
-		const hh = metrics.displayHeight * view.zoom / 2;
-		const resizeHw = resizeMetrics.displayWidth * view.zoom / 2;
-		const resizeHh = resizeMetrics.displayHeight * view.zoom / 2;
-		const outset = config.outwardOffset;
-
-		const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
-		if (boundingBox) {
-			overlay.placeFrame(boundingBox, {
-				centerX: metrics.centerX,
-				centerY: metrics.centerY,
-				width: metrics.displayWidth,
-				height: metrics.displayHeight,
-				rotation: transform.rotation
-			}, view);
-		}
-
-		// Handles sit just outside the selection border. The bounding box remains
-		// exact, so the visual outset cannot change transform geometry.
-		const corners = {
-			tl: { x: -hw - outset, y: -hh - outset },
-			tr: { x: hw + outset, y: -hh - outset },
-			br: { x: hw + outset, y: hh + outset },
-			bl: { x: -hw - outset, y: hh + outset }
-		};
-		Object.entries(corners).forEach(([corner, local]) => {
-			const wrapper = this.transformHandles.querySelector(`[data-handle-type="corner-${corner}"]`);
-			if (!wrapper) return;
-			overlay.placePoint(wrapper, toScreenPoint(metrics, local));
-			wrapper.style.cursor = this.getCornerCursor(corner, transform.rotation);
+		const describe = (metrics) => ({
+			centerX: metrics.centerX,
+			centerY: metrics.centerY,
+			width: metrics.displayWidth,
+			height: metrics.displayHeight,
+			rotation: transform.rotation
 		});
+		const boxFrame = this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer);
+		return {
+			frame: describe(this.getFrameMetrics(transform)),
+			resizeFrame: boxFrame ? describe(this.getFrameMetrics(transform, boxFrame)) : null
+		};
+	}
 
-		if (this.supportsEdgeResize()) {
-			const edges = {
-				top: { x: 0, y: -resizeHh - outset },
-				right: { x: resizeHw + outset, y: 0 },
-				bottom: { x: 0, y: resizeHh + outset },
-				left: { x: -resizeHw - outset, y: 0 }
-			};
-			Object.entries(edges).forEach(([edge, local]) => {
-				const wrapper = this.transformHandles.querySelector(`[data-handle-type="edge-${edge}"]`);
-				if (!wrapper) return;
-				overlay.placePoint(wrapper, toScreenPoint(resizeMetrics, local));
-				wrapper.style.cursor = this.getEdgeCursor(edge, transform.rotation);
-			});
-		}
-
-		// Rotation handle and its stalk, above the top center.
-		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
-		if (rotationWrapper) {
-			overlay.placePoint(rotationWrapper, toScreenPoint(metrics, { x: 0, y: -hh - config.rotationHandleDistance }));
-			rotationWrapper.style.cursor = ROTATION_CURSOR;
-		}
-		const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
-		if (rotationLine) {
-			overlay.placeStalk(rotationLine, toScreenPoint(metrics, { x: 0, y: -hh }), config.rotationHandleDistance, transform.rotation);
-		}
-
-		const compactTouchWidth = navigator.maxTouchPoints > 0
-			&& hw * 2 < config.touchMinHandleSpan;
-		const compactTouchHeight = navigator.maxTouchPoints > 0
-			&& hh * 2 < config.touchMinHandleSpan;
-		this.transformHandles.querySelectorAll('.transform-handle-wrapper').forEach((wrapper) => {
-			const type = wrapper.dataset.handleType || '';
-			const overlapsCompactDimension = type.startsWith('corner-')
-				? compactTouchWidth || compactTouchHeight
-				: type === 'edge-left' || type === 'edge-right'
-					? compactTouchWidth
-					: type === 'edge-top' || type === 'edge-bottom' || type === 'rotation'
-						? compactTouchHeight
-						: false;
-			wrapper.style.pointerEvents = overlapsCompactDimension ? 'none' : 'auto';
-		});
+	updateHandlePositions() {
+		if (!this.chrome) return;
+		this.chrome.render(this.getChromeModel());
 	}
 
 	/**
@@ -1056,10 +931,9 @@ removeTransformHandles() {
 			this.element.classList.remove('has-transform-handles');
 		}
 
-		if (this.transformHandles.parentNode) {
-			this.transformHandles.parentNode.removeChild(this.transformHandles);
-		}
+		this.chrome?.remove();
 	}
+	this.chrome = null;
 
 	this.activeHandleType = null;
 	this.activeHandleElement = null;
@@ -1087,79 +961,74 @@ removeTransformHandles() {
 	attachHandleListeners() {
 		if (!this.transformHandles) return;
 
-		const handles = this.transformHandles.querySelectorAll('[data-handle-type]');
+		this.chrome.onPointerDown((handleType, e, handle) => this.beginHandleDrag(handleType, e, handle));
+		// Captured pointer events land on the grabbed element and bubble here.
+		this.transformHandles.addEventListener('pointermove', this.handleHandlePointerMove);
+		this.transformHandles.addEventListener('pointerup', this.handleHandlePointerUp);
+		this.transformHandles.addEventListener('pointercancel', this.handleHandlePointerUp);
+	}
 
-		handles.forEach(handle => {
-			const handleType = handle.dataset.handleType;
+	beginHandleDrag(handleType, e, handle) {
+		if (this.layer.locked) return;
+		if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-			handle.addEventListener('pointerdown', (e) => {
-				if (this.layer.locked) return;
-				if (e.pointerType === 'mouse' && e.button !== 0) {
-					return;
-				}
+		const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
+		if (handleType === 'move' && e.pointerType === 'mouse' && e.altKey) {
+			this.startAltDuplicateHandleDrag(e);
+			return;
+		}
+		if (handleType === 'move' && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPoint, {
+			toggleSelection: e.shiftKey,
+			cycleDeep: e.altKey
+		})) {
+			return;
+		}
 
-				const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
-				const boundingRect = this.transformHandles
-					.querySelector('.transform-bounding-box')
-					?.getBoundingClientRect();
-				const touchHitsMoveInterior = e.pointerType === 'touch'
-					&& handleType !== 'move'
-					&& boundingRect
-					&& e.clientX >= boundingRect.left + (boundingRect.width * 0.25)
-					&& e.clientX <= boundingRect.right - (boundingRect.width * 0.25)
-					&& e.clientY >= boundingRect.top + (boundingRect.height * 0.25)
-					&& e.clientY <= boundingRect.bottom - (boundingRect.height * 0.25);
-				const effectiveHandleType = touchHitsMoveInterior ? 'move' : handleType;
-				if (handleType === 'move' && e.pointerType === 'mouse' && e.altKey) {
-					this.startAltDuplicateHandleDrag(e);
-					return;
-				}
-				if (effectiveHandleType === 'move' && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPoint, {
-					toggleSelection: e.shiftKey,
-					cycleDeep: e.altKey
-				})) {
-					return;
-				}
+		e.preventDefault();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
 
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation();
+		this.activeHandleType = handleType;
+		this.activeHandleElement = handle;
+		this.activeHandlePointerId = e.pointerId;
+		this.isDraggingHandle = true;
+		handle.setPointerCapture?.(e.pointerId);
 
-				this.activeHandleType = effectiveHandleType;
-				this.activeHandleElement = handle;
-				this.activeHandlePointerId = e.pointerId;
-				this.isDraggingHandle = true;
-				handle.setPointerCapture?.(e.pointerId);
+		const transform = this.getTransform();
+		const dimensions = this.getDimensions();
+		const frame = this.getFrame();
+		const textBoxFrame = this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null;
+		const frameMetrics = this.getFrameMetrics(transform, frame);
+		// Edge handles of area text sit on its box, not the frame.
+		const handleMetrics = handleType.startsWith('edge-') && textBoxFrame
+			? this.getFrameMetrics(transform, textBoxFrame)
+			: frameMetrics;
 
-				const transform = this.getTransform();
-				const dimensions = this.getDimensions();
-
-				this.dragStartState = {
-					mouseX: e.clientX,
-					mouseY: e.clientY,
-					canvasX: this.editor.viewport.screenToCanvas(e.clientX, e.clientY).x,
-					canvasY: this.editor.viewport.screenToCanvas(e.clientX, e.clientY).y,
-					transform: {
-						position: { ...transform.position },
-						scale: { ...transform.scale },
-						rotation: transform.rotation
-					},
-					width: dimensions.width,
-					height: dimensions.height,
-					boxWidth: this.layer.textData?.boxWidth ?? null,
-					boxHeight: this.layer.textData?.boxHeight ?? null,
-					handleFrame: this.getFrame(),
-					textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null,
-					didMove: false,
-					altDuplicatePending: effectiveHandleType === 'move' && e.altKey,
-					targetTransform: this
-				};
-			});
-
-			handle.addEventListener('pointermove', this.handleHandlePointerMove);
-			handle.addEventListener('pointerup', this.handleHandlePointerUp);
-			handle.addEventListener('pointercancel', this.handleHandlePointerUp);
-		});
+		this.dragStartState = {
+			mouseX: e.clientX,
+			mouseY: e.clientY,
+			canvasX: canvasPoint.x,
+			canvasY: canvasPoint.y,
+			transform: {
+				position: { ...transform.position },
+				scale: { ...transform.scale },
+				rotation: transform.rotation
+			},
+			width: dimensions.width,
+			height: dimensions.height,
+			boxWidth: this.layer.textData?.boxWidth ?? null,
+			boxHeight: this.layer.textData?.boxHeight ?? null,
+			handleFrame: frame,
+			textBoxFrame,
+			// Where the grabbed handle's true point (frame corner or edge
+			// midpoint) was, so scale drags follow the pointer's movement.
+			handlePoint: getFrameHandlePoint(handleMetrics, handleType),
+			// Rotation turns about the frame center.
+			pivot: { x: frameMetrics.centerX, y: frameMetrics.centerY },
+			didMove: false,
+			altDuplicatePending: handleType === 'move' && e.altKey,
+			targetTransform: this
+		};
 	}
 
 	startAltDuplicateHandleDrag(event) {
@@ -1194,7 +1063,7 @@ removeTransformHandles() {
 			const point = this.editor.viewport.screenToCanvas(moveEvent.clientX, moveEvent.clientY);
 			const deltaX = point.x - start.x;
 			const deltaY = point.y - start.y;
-			if (!didMove && Math.hypot(deltaX, deltaY) < 3) return;
+			if (!didMove && !hasPassedDragThreshold({ x: event.clientX, y: event.clientY }, moveEvent)) return;
 			if (!clone) {
 				this.editor.groupTransformManager?.ensureHistoryBaseline?.();
 				clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true, skipSelection: true });
@@ -1248,6 +1117,9 @@ removeTransformHandles() {
 
 		e.preventDefault();
 		e.stopPropagation();
+
+		const start = this.dragStartState;
+		if (!start.didMove && !hasPassedDragThreshold({ x: start.mouseX, y: start.mouseY }, e)) return;
 
 		if (this.activeHandleType.startsWith('corner-')) {
 			this.dragStartState.didMove = true;
@@ -1349,7 +1221,6 @@ removeTransformHandles() {
 
 		const deltaX = canvasPos.x - this.dragStartState.canvasX;
 		const deltaY = canvasPos.y - this.dragStartState.canvasY;
-		if (!this.dragStartState.didMove && Math.hypot(deltaX, deltaY) < 3) return;
 		if (!this.dragStartState.didMove && this.dragStartState.altDuplicatePending) {
 			this.editor.groupTransformManager?.ensureHistoryBaseline?.();
 			const clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true, skipSelection: true });
@@ -1421,7 +1292,7 @@ removeTransformHandles() {
 	 * Handle dragging of corner handles (scale)
 	 */
 	handleCornerDrag(e) {
-		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		const canvasPos = this.getAnchoredHandlePoint(e);
 		// Point and box text scale from their visible frame. Area text's edge
 		// handles resize/reflow its box without scaling the artwork.
 		const transform = this.getTransform();
@@ -1517,7 +1388,7 @@ removeTransformHandles() {
 		const edge = this.activeHandleType.replace('edge-', '');
 		const textManager = this.editor.textGlitterManager;
 		if (textManager?.canResizeBoxEdges?.(this.layer)) {
-			const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+			const canvasPos = this.getAnchoredHandlePoint(e);
 			textManager.resizeBoxFromHandle(this.layer, edge, this.dragStartState, canvasPos, { ctrlKey: e.ctrlKey });
 			return;
 		}
@@ -1529,7 +1400,7 @@ removeTransformHandles() {
 	// scaleY). Same local-space projection as handleCornerDrag.
 	handleOneAxisScale(e, edge) {
 		const transform = this.getTransform();
-		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		const canvasPos = this.getAnchoredHandlePoint(e);
 		const start = this.dragStartState;
 		const frame = start.handleFrame || { width: start.width, height: start.height, offsetX: 0, offsetY: 0 };
 
@@ -1611,84 +1482,27 @@ removeTransformHandles() {
 		this.updateHandlePositions();
 	}
 
-	/**
-	 * Handle dragging of rotation handle
-	 */
+	// The grabbed handle's true point now (see anchoredHandlePoint): scale
+	// math measures from here, so the grab offset and handle outset never
+	// make the layer jump.
+	getAnchoredHandlePoint(e) {
+		const start = this.dragStartState;
+		const point = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		return anchoredHandlePoint(start.handlePoint, { x: start.canvasX, y: start.canvasY }, point);
+	}
+
+	// Relative rotation about the frame center: the layer turns by the
+	// pointer's change in angle, and the frame center stays put.
 	handleRotationDrag(e) {
-		const transform = this.getTransform();
-		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-		const metrics = this.getFrameMetrics(transform);
+		const start = this.dragStartState;
+		const point = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		const delta = rotationDeltaDeg(start.pivot, { x: start.canvasX, y: start.canvasY }, point);
+		const rotation = normalizeRotationDeg(snapRotationDeg(start.transform.rotation + delta, e.shiftKey));
+		const position = rotatePointAbout(start.transform.position, start.pivot, rotation - start.transform.rotation);
 
-		// Calculate angle from center to mouse
-		const centerX = metrics.centerX;
-		const centerY = metrics.centerY;
-		const angle = Math.atan2(canvasPos.y - centerY, canvasPos.x - centerX) * (180 / Math.PI);
-
-		// Adjust for initial offset (rotation handle is at top = -90 degrees)
-		let newRotation = angle + 90;
-
-		// Photoshop parity: hold Shift to snap rotation to 15° increments.
-		if (e.shiftKey) {
-			newRotation = Math.round(newRotation / 15) * 15;
-		}
-
-		// Normalize to 0-360
-		if (newRotation < 0) newRotation += 360;
-		if (newRotation >= 360) newRotation -= 360;
-
-		this.updateTransform({
-			rotation: newRotation
-		});
-
-		// Re-apply transform to element
-		const dimensions = this.getDimensions();
-		this.applyTransform(this.element, dimensions);
-
+		this.updateTransform({ rotation, position });
+		this.applyTransform(this.element, this.getDimensions());
 		this.updateHandlePositions();
-	}
-
-	/**
-	 * Get appropriate cursor for corner handle based on rotation
-	 */
-	getCornerCursor(corner, rotation) {
-		// Normalize rotation to 0-360
-		let angle = rotation % 360;
-		if (angle < 0) angle += 360;
-
-		// Base cursors for each corner (at 0 rotation)
-		const baseCursors = {
-			tl: 'nwse-resize',
-			tr: 'nesw-resize',
-			br: 'nwse-resize',
-			bl: 'nesw-resize'
-		};
-
-		// Determine which cursor to use based on rotation
-		// Every 45 degrees, cursors rotate
-		const cursorIndex = Math.round(angle / 45) % 8;
-		const cursors = ['nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize'];
-
-		// Get base cursor index
-		const baseIndex = {
-			tl: 0,
-			tr: 2,
-			br: 4,
-			bl: 6
-		}[corner];
-
-		const finalIndex = (baseIndex + cursorIndex) % 8;
-		return cursors[finalIndex];
-	}
-
-	getEdgeCursor(edge, rotation) {
-		let angle = rotation % 360;
-		if (angle < 0) angle += 360;
-
-		const baseIndex = (edge === 'top' || edge === 'bottom') ? 1 : 3;
-		const cursorIndex = Math.round(angle / 45) % 8;
-		const cursors = ['nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize'];
-
-		return cursors[(baseIndex + cursorIndex) % 8];
 	}
 
 	/**

@@ -600,15 +600,17 @@ const CONFIG = deepFreeze({
 		themes: ['dark', 'llama', 'cyber-chrome', 'light', 'bubblegum', 'bliss', 'dew', 'aqua', 'p2p', 'homepage', 'buddy-list'],
 		stickerHandles: {
 			enabled: true,
-			cornerSize: 8,
+			// Handle geometry, in screen pixels. Colors and line widths are CSS
+			// tokens (--handle-*, --selection-*).
 			outwardOffset: 4,
-			rotationHandleRadius: 5,
 			rotationHandleDistance: 30,
-			handleFill: '#ffffff',
-			handleStroke: 'var(--color-bg-secondary)',
-			handleStrokeWidth: 1.5,
-			boundingBoxColor: 'var(--color-accent)',
-			boundingBoxWidth: 1.5,
+			// Invisible hit squares around each handle (selection-chrome.js).
+			// Coarse pointers get at least the 44px touch-target minimum.
+			handleHitSize: { corner: 32, edge: 36, rotation: 40 },
+			handleHitSizeCoarse: { corner: 44, edge: 44, rotation: 48 },
+			// Screen pixels a pointer must travel before a handle drag starts, so a
+			// click never nudges, scales or rotates a layer.
+			dragThresholdPx: 3,
 			// Screen pixels added around a layer's frame when hit-testing clicks,
 			// so thin layers (a 1px line, a small text) stay clickable.
 			frameHitTolerance: 4,
