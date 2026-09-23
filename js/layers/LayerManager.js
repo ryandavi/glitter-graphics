@@ -129,18 +129,18 @@ class LayerManager {
 			image: null,
 			visible: true,
 			locked: true,
-			opacity: 100,
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
+			opacity: CONFIG.layers.defaultOpacity,
 			background: {
 				mode: 'image',
 				color: '#ffffff',
 				gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
+				glitterId: CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
 				scale: CONFIG.tools.effects.defaults.scale,
-				opacity: 100,
 				colorAdjust: null,
 				pixelEffects: JSON.parse(JSON.stringify(CONFIG.tools.pixelEffects.defaults))
 			}
 		};
+		this.editor.baseBackgroundManager.normalizeLayer(layer);
 		return layer;
 	}
 
@@ -155,11 +155,11 @@ class LayerManager {
 		}
 
 		const serialized = {};
-		['id', 'type', 'name', 'visible', 'locked', 'selectedGlitterId'].forEach((key) => {
+		['id', 'type', 'name', 'visible', 'locked'].forEach((key) => {
 			if (!spec.omit?.includes(key)) serialized[key] = key === 'type' ? type : layer[key];
 		});
-		// Canonical whole-layer opacity (0-100), shared by every layer type.
-		serialized.opacity = Number.isFinite(layer.opacity) ? layer.opacity : 100;
+		serialized.opacity = layer.opacity;
+		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
 		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
 		if (layer.animation && [LayerType.GLITTER_FILL, LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(type)) {
 			serialized.animation = structuredClone(layer.animation);
@@ -176,6 +176,8 @@ class LayerManager {
 
 	async deserializeLayer(layerData) {
 		if (!layerData) return null;
+		// Clipboard payloads can come from an older editor build.
+		ProjectSerializer.migrateLayerState(layerData);
 		const type = layerData.type || LayerType.GLITTER_FILL;
 		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
 		if (spec.custom) {
@@ -188,8 +190,8 @@ class LayerManager {
 			type,
 			visible: layerData.visible,
 			locked: spec.forceLocked ? true : layerData.locked,
-			selectedGlitterId: layerData.selectedGlitterId ?? spec.defaultSelectedGlitterId?.(),
-			opacity: Number.isFinite(layerData.opacity) ? layerData.opacity : 100,
+			opacity: layerData.opacity,
+			...(isTransformableLayerType(type) ? { transform: cloneTransform(layerData.transform) } : {}),
 			...(LAYER_UI_CONFIG[type]?.blendable ? { blendMode: GlitterBlendModes.forLayer(layerData) } : {}),
 			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
@@ -608,7 +610,7 @@ class LayerManager {
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'glitter') return;
 
 		this.setActiveLayer(layerId);
-		revealAssetBrowser(this.editor, this.editor.glitterManager, layer.selectedGlitterId);
+		revealAssetBrowser(this.editor, this.editor.glitterManager, getLayerFillGlitterId(layer));
 	}
 
 	goToSticker(layerId) {
@@ -672,9 +674,9 @@ class LayerManager {
 			else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
 			else if (layer.type === LayerType.SHAPE) name = layer.name || 'Shape';
 			else if (layer.type === LayerType.GLITTER_FILL) {
-				const fillMode = layer.fill?.mode || 'glitter';
+				const fillMode = layer.fill.mode;
 				const glitter = fillMode === 'glitter'
-					? this.editor.glitterManager.getItemById(layer.selectedGlitterId)
+					? this.editor.glitterManager.getItemById(layer.fill.glitterId)
 					: null;
 				name = layer.name || glitter?.name || `${panelCap(fillMode)} Fill`;
 			}
@@ -819,7 +821,7 @@ class LayerManager {
 			!this.editor.originalCanvas
 			|| layer?.type !== LayerType.GLITTER_FILL
 			|| layer.fill?.mode === 'none'
-			|| (layer.opacity ?? layer.settings?.opacity ?? 100) <= 0
+			|| layer.opacity <= 0
 		) {
 			return false;
 		}
@@ -942,135 +944,16 @@ class LayerManager {
 	}
 
 	cloneLayer(layerId, options = {}) {
-		const positionOffset = options.positionOffset || { x: 20, y: 20 };
 		const sourceLayer = this.getLayerById(layerId);
 		if (!sourceLayer) return null;
-
-		// Can't clone locked layers (base image)
-		if (sourceLayer.locked) {
-			this.editor.showError('Cannot clone locked layer');
-			return null;
-		}
-
 		if (!this.requireLayerCapacity()) return null;
+		const clonedLayer = this.buildClonedLayer(sourceLayer, options);
+		if (!clonedLayer) return null;
 
-		// Create new layer based on type
-		let clonedLayer;
-
-		if (sourceLayer.type === LayerType.STICKER) {
-			const sourceTransform = getLayerTransform(sourceLayer);
-			const clonedTransform = cloneTransform(sourceTransform, {
-				position: {
-					x: sourceTransform.position.x + positionOffset.x,
-					y: sourceTransform.position.y + positionOffset.y
-				}
-			});
-			// Clone sticker layer - deep copy the stickerData structure
-			clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.STICKER,
-				name: sourceLayer.name, // COPY THE NAME
-				visible: sourceLayer.visible,
-				locked: false,
-				stickerSourceId: sourceLayer.stickerSourceId, // Make sure this is copied!
-				transform: clonedTransform,
-				stickerData: {
-					url: sourceLayer.stickerData.url,
-					baseUrl: sourceLayer.stickerData.baseUrl,
-					variantUrls: sourceLayer.stickerData.variantUrls,
-					name: sourceLayer.stickerData.name,
-					source: sourceLayer.stickerData.source,
-					width: sourceLayer.stickerData.width,
-					height: sourceLayer.stickerData.height,
-					isEmpty: sourceLayer.stickerData.isEmpty,
-					isAnimated: sourceLayer.stickerData.isAnimated,
-					// Never share the frames object with the source layer — the exporter
-					// no longer mutates shared frame data, and the clone reloads
-					// animation data on demand so each layer keeps its own frame cache.
-					frames: null,
-					transform: clonedTransform
-					// Don't copy element - it will be created fresh
-				}
-			};
-
-			// Clone the DOM element via stickerManager
-			this.editor.stickerManager.cloneStickerElement(sourceLayer, clonedLayer);
-
-		} else if (sourceLayer.type === LayerType.TEXT_GLITTER) {
-			clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.TEXT_GLITTER,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				selectedGlitterId: sourceLayer.selectedGlitterId,
-				settings: { ...sourceLayer.settings },
-				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
-			};
-			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += positionOffset.x;
-			transform.position.y += positionOffset.y;
-		} else if (sourceLayer.type === LayerType.SHAPE) {
-			clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.SHAPE,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				selectedGlitterId: sourceLayer.selectedGlitterId,
-				settings: { ...sourceLayer.settings },
-				shapeData: JSON.parse(JSON.stringify(sourceLayer.shapeData))
-			};
-			// Nudge so the copy is visible, mirroring the other clone paths' intent.
-			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += positionOffset.x;
-			transform.position.y += positionOffset.y;
-		} else if (sourceLayer.type === LayerType.FILTER) {
-			clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.FILTER,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				opacity: sourceLayer.opacity,
-				filterData: structuredClone(sourceLayer.filterData)
-			};
-		} else {
-			// Clone fill layer
-			clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.GLITTER_FILL,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				maskVersion: 0,
-				maskHasContent: false,
-				selections: sourceLayer.selections.map(sel => ({ ...sel })),
-				selectedGlitterId: sourceLayer.selectedGlitterId,
-				settings: { ...sourceLayer.settings }
-			};
-
-			// Clone the glitter background element
-			const sourceElement = this.canvasElementsContainer.querySelector(
-				`[data-layer-id="${sourceLayer.id}"]`
-			);
-			if (sourceElement) {
-				const clonedElement = sourceElement.cloneNode(true);
-				clonedElement.dataset.layerId = clonedLayer.id;
-				this.canvasElementsContainer.appendChild(clonedElement);
-			}
-
-			this.editor.glitterManager.clonePaintData(sourceLayer, clonedLayer);
-		}
-
-		// Find original layer index and insert clone right after it
-		if (LAYER_UI_CONFIG[sourceLayer.type]?.blendable) clonedLayer.blendMode = GlitterBlendModes.forLayer(sourceLayer);
-		// (Higher index = visually above in the stack)
+		// Insert right after the source (higher index = visually above).
 		const sourceIndex = this.layers.findIndex(l => l.id === layerId);
 		this.layers.splice(sourceIndex + 1, 0, clonedLayer);
-		if ([LayerType.TEXT_GLITTER, LayerType.SHAPE, LayerType.FILTER].includes(sourceLayer.type)) {
-			this.renderClonedLayerPreview(clonedLayer);
-		}
+		this.renderClonedLayerPreview(clonedLayer);
 
 		// Make the clone active and re-render
 		if (!options.skipSelection) this.setActiveLayer(clonedLayer.id);
@@ -1083,6 +966,10 @@ class LayerManager {
 		return clonedLayer;
 	}
 
+	// A clone is the source's serialized state under a new id, so it carries
+	// every persisted field (opacity, fill, effects, animation) the same way
+	// undo and project load do. Painted masks live outside the layer object and
+	// are copied separately.
 	buildClonedLayer(sourceLayer, options = {}) {
 		const positionOffset = options.positionOffset || { x: 20, y: 20 };
 		if (!sourceLayer) return null;
@@ -1091,99 +978,18 @@ class LayerManager {
 			return null;
 		}
 
-		if (sourceLayer.type === LayerType.STICKER) {
-			const sourceTransform = getLayerTransform(sourceLayer);
-			const clonedTransform = cloneTransform(sourceTransform, {
-				position: {
-					x: sourceTransform.position.x + positionOffset.x,
-					y: sourceTransform.position.y + positionOffset.y
-				}
-			});
-
-			return {
-				id: this.generateLayerId(),
-				type: LayerType.STICKER,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				stickerSourceId: sourceLayer.stickerSourceId,
-				transform: clonedTransform,
-				stickerData: {
-					url: sourceLayer.stickerData.url,
-					baseUrl: sourceLayer.stickerData.baseUrl,
-					variantUrls: sourceLayer.stickerData.variantUrls,
-					name: sourceLayer.stickerData.name,
-					source: sourceLayer.stickerData.source,
-					width: sourceLayer.stickerData.width,
-					height: sourceLayer.stickerData.height,
-					isEmpty: sourceLayer.stickerData.isEmpty,
-					isAnimated: sourceLayer.stickerData.isAnimated,
-					frames: null,
-					transform: clonedTransform
-				}
-			};
+		const clonedLayer = structuredClone(this.serializeLayer(sourceLayer, { includeMaskVersion: false }));
+		clonedLayer.id = this.generateLayerId();
+		clonedLayer.locked = false;
+		if (isTransformableLayerType(clonedLayer.type)) {
+			clonedLayer.transform.position.x += positionOffset.x;
+			clonedLayer.transform.position.y += positionOffset.y;
 		}
-
-		if (sourceLayer.type === LayerType.TEXT_GLITTER) {
-			const clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.TEXT_GLITTER,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				selectedGlitterId: sourceLayer.selectedGlitterId,
-				settings: { ...sourceLayer.settings },
-				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
-			};
-			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += positionOffset.x;
-			transform.position.y += positionOffset.y;
-			return clonedLayer;
+		if (clonedLayer.type === LayerType.GLITTER_FILL) {
+			clonedLayer.maskVersion = 0;
+			clonedLayer.maskHasContent = false;
+			this.editor.glitterManager.clonePaintData(sourceLayer, clonedLayer);
 		}
-
-		if (sourceLayer.type === LayerType.SHAPE) {
-			const clonedLayer = {
-				id: this.generateLayerId(),
-				type: LayerType.SHAPE,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				selectedGlitterId: sourceLayer.selectedGlitterId,
-				settings: { ...sourceLayer.settings },
-				shapeData: JSON.parse(JSON.stringify(sourceLayer.shapeData))
-			};
-			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += positionOffset.x;
-			transform.position.y += positionOffset.y;
-			return clonedLayer;
-		}
-
-		if (sourceLayer.type === LayerType.FILTER) {
-			return {
-				id: this.generateLayerId(),
-				type: LayerType.FILTER,
-				name: sourceLayer.name,
-				visible: sourceLayer.visible,
-				locked: false,
-				opacity: sourceLayer.opacity,
-				filterData: structuredClone(sourceLayer.filterData)
-			};
-		}
-
-		const clonedLayer = {
-			id: this.generateLayerId(),
-			type: LayerType.GLITTER_FILL,
-			name: sourceLayer.name,
-			visible: sourceLayer.visible,
-			locked: false,
-			maskVersion: 0,
-			maskHasContent: false,
-			selections: sourceLayer.selections.map((sel) => ({ ...sel })),
-			selectedGlitterId: sourceLayer.selectedGlitterId,
-			settings: { ...sourceLayer.settings }
-		};
-
-		this.editor.glitterManager.clonePaintData(sourceLayer, clonedLayer);
 		return clonedLayer;
 	}
 
@@ -1391,11 +1197,11 @@ class LayerManager {
 
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
-		const getFillDisplay = (paint, glitterId, imageAsset = null) => {
+		const getFillDisplay = (paint, imageAsset = null) => {
 			const mode = paint?.mode || 'glitter';
 			const modeLabel = mode === 'none' ? 'No' : panelCap(mode);
 			const glitter = mode === 'glitter'
-				? this.editor.glitterManager.getItemById(glitterId)
+				? this.editor.glitterManager.getItemById(paint?.glitterId)
 				: null;
 			const formatColor = (color) => /^#[0-9a-f]{6}$/i.test(color || '') ? color.toUpperCase() : null;
 			let name = null;
@@ -1422,7 +1228,7 @@ class LayerManager {
 				break;
 			}
 			case LayerType.GLITTER_FILL: {
-				const fill = getFillDisplay(layer.fill, layer.selectedGlitterId);
+				const fill = getFillDisplay(layer.fill);
 				nameText.textContent = layer.name
 					|| fill.glitter?.name
 					|| fill.name
@@ -1431,7 +1237,7 @@ class LayerManager {
 				break;
 			}
 			case LayerType.TEXT_GLITTER: {
-				const fill = getFillDisplay(layer.textData?.fill, layer.selectedGlitterId);
+				const fill = getFillDisplay(layer.textData?.fill);
 				nameText.textContent = layer.name || 'Text';
 				typeText.textContent = `Text · ${fill.modeLabel}`;
 				break;
@@ -1439,7 +1245,6 @@ class LayerManager {
 			case LayerType.SHAPE: {
 				const fill = getFillDisplay(
 					layer.shapeData?.fill,
-					layer.selectedGlitterId,
 					this.editor.shapeGlitterManager?.getImageFillAsset(layer.shapeData?.fill?.imageRef)
 				);
 				nameText.textContent = layer.name || 'Shape';
@@ -1654,7 +1459,7 @@ class LayerManager {
 			return;
 		}
 
-		const renderPaint = (source, glitterId, colorAdjust, imageAsset = null) => {
+		const renderPaint = (source, imageAsset = null) => {
 			const mode = source?.mode || 'glitter';
 			if (mode === 'solid') {
 				swatch.style.backgroundColor = source?.color || '#ff66cc';
@@ -1672,10 +1477,10 @@ class LayerManager {
 			}
 			if (mode === 'none') return false;
 			if (mode !== 'glitter') return false;
-			const glitter = this.editor.glitterManager.getItemById(glitterId);
+			const glitter = this.editor.glitterManager.getItemById(source?.glitterId);
 			if (!glitter) return false;
 			swatch.style.backgroundImage = `url(${glitter.url})`;
-			swatch.style.filter = buildCssColorFilter(colorAdjust);
+			swatch.style.filter = buildCssColorFilter(source.colorAdjust);
 			swatch.classList.add('glitter');
 			if (glitter.isPixelated) swatch.classList.add('pixelated');
 			return true;
@@ -1695,7 +1500,7 @@ class LayerManager {
 		}
 
 		if (layer.type === LayerType.TEXT_GLITTER) {
-			if (!renderPaint(layer.textData?.fill, layer.selectedGlitterId, layer.settings?.colorAdjust)) swatch.classList.add('empty');
+			if (!renderPaint(layer.textData?.fill)) swatch.classList.add('empty');
 			swatch.classList.add('text-layer');
 			if (!compact) swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
 			return;
@@ -1703,7 +1508,7 @@ class LayerManager {
 
 		if (layer.type === LayerType.SHAPE) {
 			const imageAsset = this.editor.shapeGlitterManager?.getImageFillAsset(layer.shapeData?.fill?.imageRef);
-			if (!renderPaint(layer.shapeData?.fill, layer.selectedGlitterId, layer.shapeData?.fill?.colorAdjust, imageAsset)) swatch.classList.add('empty');
+			if (!renderPaint(layer.shapeData?.fill, imageAsset)) swatch.classList.add('empty');
 			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
 			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
 			swatch.style.maskImage = shapeMask;
@@ -1719,7 +1524,7 @@ class LayerManager {
 			if (background.mode === 'image' && this.editor.baseBackgroundManager?.hasBaseImage() && this.editor.originalImage) {
 				swatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl || this.editor.originalImage.src})`;
 				swatch.classList.add('baseImage');
-			} else if (!renderPaint(background, layer.selectedGlitterId, background.colorAdjust)) {
+			} else if (!renderPaint(background)) {
 				swatch.classList.add('empty');
 			}
 			return;
@@ -1733,7 +1538,7 @@ class LayerManager {
 			return;
 		}
 
-		if (!renderPaint(layer.fill, layer.selectedGlitterId, layer.settings?.colorAdjust)) swatch.classList.add('empty');
+		if (!renderPaint(layer.fill)) swatch.classList.add('empty');
 	}
 
 	updateMobileLayersSwatch() {

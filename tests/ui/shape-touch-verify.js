@@ -270,8 +270,8 @@ async function getShapeSummary(page) {
 			latest: latest ? {
 				id: latest.id,
 				position: {
-					x: latest.shapeData.transform.position.x,
-					y: latest.shapeData.transform.position.y
+					x: latest.transform.position.x,
+					y: latest.transform.position.y
 				},
 				width: latest.shapeData.width,
 				height: latest.shapeData.height

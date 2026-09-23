@@ -59,15 +59,15 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			}
 			break;
 		case LayerType.GLITTER_FILL:
-			if (shouldScaleTextures && layer.settings) layer.settings.scale = scaleTexture(layer.settings.scale);
+			if (shouldScaleTextures) layer.fill.scale = scaleTexture(layer.fill.scale);
 			break;
 		case LayerType.STICKER:
 			scalePosition(getLayerTransform(layer));
 			compensateStickerShadow(layer.stickerData?.shadow);
 			compensateStickerShadow(layer.stickerData?.effectDrafts?.shadow);
-			if (layer.stickerData?.transform?.scale) {
-				layer.stickerData.transform.scale.x *= uniformScale;
-				layer.stickerData.transform.scale.y *= uniformScale;
+			if (layer.transform?.scale) {
+				layer.transform.scale.x *= uniformScale;
+				layer.transform.scale.y *= uniformScale;
 			}
 			break;
 		case LayerType.TEXT_GLITTER: {
@@ -81,7 +81,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			scaleBorder(data.border);
 			scaleShadow(data.shadow);
 			scaleEffectDrafts(data.effectDrafts);
-			if (shouldScaleTextures && layer.settings) layer.settings.scale = scaleTexture(layer.settings.scale);
+			if (shouldScaleTextures) data.fill.scale = scaleTexture(data.fill.scale);
 			break;
 		}
 		case LayerType.SHAPE: {
@@ -94,7 +94,6 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			scaleBorder(data.border, true);
 			scaleShadow(data.shadow);
 			scaleEffectDrafts(data.effectDrafts, true);
-			if (shouldScaleTextures && layer.settings) layer.settings.scale = scaleTexture(layer.settings.scale);
 			break;
 		}
 	}

@@ -8,11 +8,8 @@
 // — reusing the shared leaf modules (ShapeLibrary geometry, color-adjust,
 // LayerTransform, and the exporter's generic fill/border/offset helpers).
 //
-// v1 simplification vs text: all glitter-mode slots share ONE swatch
-// (layer.selectedGlitterId), so a shape has a single glitter frame source keyed
-// by layer.id (like a glitter-fill layer). Per-slot independent glitter is a
-// future enhancement; the data model already carries per-slot scale/opacity/
-// colorAdjust.
+// Every slot (fill, border, shadow) is a self-contained paint slot with its
+// own glitterId, scale, opacity and colorAdjust.
 //
 // Scale answer (the "mixels" question): live drag uses cheap CSS transform;
 // on release commitScale() bakes the scale into shapeData.width/height and
@@ -439,7 +436,7 @@ class ShapeGlitterManager {
 				// fall back to the default glitter. The gallery opens only via the
 				// swatch/Change buttons (armPicker).
 				if (mode === 'glitter' && !this.getSlotGlitterId(layer, slot)) {
-					if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
+					if (slot === 'fill') data.glitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
 					else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId.shape;
 					else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.shape;
 				}
@@ -789,7 +786,7 @@ class ShapeGlitterManager {
 		if (mode === 'glitter') {
 			// Glitter mode is never empty — fall back to the default glitter.
 			if (!this.getSlotGlitterId(layer, slot)) {
-				if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
+				if (slot === 'fill') data.glitterId = CONFIG.tools.glitter.defaults.fillGlitterId.shape;
 				else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId.shape;
 				else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId.shape;
 			}
@@ -825,7 +822,6 @@ class ShapeGlitterManager {
 
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
-		this.normalizeLayer(layer);
 		const d = layer.shapeData;
 		const fillDefaults = this.getDefaultFill();
 		const borderDefaults = this.getDefaultBorder();
@@ -952,10 +948,8 @@ class ShapeGlitterManager {
 
 	// ===== DEFAULTS / DATA MODEL =====
 
-	// glitterId is intentionally omitted: fill shares layer.selectedGlitterId
-	// (see getSlotGlitterId), so this slot's own glitterId is never read.
 	getDefaultFill() {
-		return buildDefaultFill({ includeTexture: true });
+		return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.shape });
 	}
 
 	getDefaultBorder() {
@@ -978,11 +972,11 @@ class ShapeGlitterManager {
 		});
 	}
 
+	// Runs where a shape enters the document (create, deserialize, project
+	// load). Getters and render paths read the canonical shape directly.
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const data = layer.shapeData;
-		// The rounded rectangle folded into the parametric square (corner radius 0).
-		if (data.shapeId === 'roundedRectangle') data.shapeId = 'square';
 		data.cornerRadiusPx ??= CONFIG.ui.sliders.shapeRadius.value;
 		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
 		if (data.border === undefined) data.border = null;
@@ -992,10 +986,7 @@ class ShapeGlitterManager {
 		normalizeSlotTextureCoordinates(data.fill);
 		normalizeSlotTextureCoordinates(data.border);
 		normalizeSlotTextureCoordinates(data.shadow);
-		if (!data.transform) {
-			data.transform = createDefaultTransform();
-		}
-		syncLayerTransformReference(layer, data.transform);
+		layer.transform ||= createDefaultTransform();
 	}
 
 	getShapeLabel(shapeId) {
@@ -1034,22 +1025,19 @@ class ShapeGlitterManager {
 			name: this.getShapeLabel(shapeId),
 			visible: true,
 			locked: false,
-			opacity: 100,
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.shape,
-			settings: { scale: CONFIG.tools.effects.defaults.scale, opacity: CONFIG.tools.effects.defaults.opacity },
+			opacity: CONFIG.layers.defaultOpacity,
+			transform,
 			shapeData: {
 				shapeId,
 				width,
 				height,
-				transform,
 				fill: this.getDefaultFill(),
 				border: null,
 				shadow: null
 			}
 		};
 
-		layer.transform = transform;
-		syncLayerTransformReference(layer, transform);
+		this.normalizeLayer(layer);
 		return layer;
 	}
 
@@ -1067,28 +1055,23 @@ class ShapeGlitterManager {
 	getActiveShapeLayer() {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type === LayerType.SHAPE) {
-			this.normalizeLayer(layer);
 			return layer;
 		}
 		return null;
 	}
 
 	getEffectData(layer, slot) {
-		this.normalizeLayer(layer);
 		return getSlotEffectData(layer?.shapeData, slot);
 	}
 
-	// mergeBorderDefaults is true: backfill newer border keys onto legacy data.
 	ensureEffectData(layer, slot) {
-		this.normalizeLayer(layer);
 		if (!layer?.shapeData) return null;
 		return ensureSlotEffectData(layer.shapeData, slot, {
 			builders: {
 				fill: () => this.getDefaultFill(),
 				border: () => this.getDefaultBorder(),
 				shadow: () => this.getDefaultShadow()
-			},
-			mergeBorderDefaults: true
+			}
 		});
 	}
 
@@ -1203,10 +1186,8 @@ class ShapeGlitterManager {
 		this.ui.borderOrderFront?.classList.toggle('active', drawOrder === 'front');
 	}
 
-	// Glitter id for a slot: fill shares the layer swatch (like text); border and
-	// shadow carry their own so each can be an independent glitter.
 	getSlotGlitterId(layer, slot) {
-		return slot === 'fill' ? layer.selectedGlitterId : this.getEffectData(layer, slot)?.glitterId;
+		return this.getEffectData(layer, slot)?.glitterId;
 	}
 
 	// Each slot's colorAdjust lives on its own effect object (fill = shapeData.fill).
@@ -1253,7 +1234,6 @@ class ShapeGlitterManager {
 	// per CONFIG.rendering.crispMaskEdges — same GIF-fringe reasoning). Returns the
 	// canvas plus the shape's frame rect within it (for handles/selection).
 	getMeasurementEntry(layer) {
-		this.normalizeLayer(layer);
 		const key = this.getMeasurementCacheKey(layer);
 		const cached = this.measurementCache.get(key);
 		if (cached) {
@@ -1350,7 +1330,6 @@ class ShapeGlitterManager {
 	// (hit-test frame, returns raw {x,y,width,height} in a different shape) and a
 	// second same-named method here would silently shadow one of them.
 	getShapeHandleFrame(layer, measurement = null) {
-		this.normalizeLayer(layer);
 		if (!layer?.shapeData) return null;
 
 		const entry = measurement || this.getMeasurementEntry(layer);
@@ -1499,7 +1478,6 @@ class ShapeGlitterManager {
 
 	renderLayer(layer) {
 		if (layer.type !== LayerType.SHAPE) return;
-		this.normalizeLayer(layer);
 
 		let wrapper = this.layerElements.get(layer.id);
 		let stack = wrapper?.querySelector('.shape-glitter-stack');
@@ -1517,7 +1495,7 @@ class ShapeGlitterManager {
 		}
 
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-		wrapper.style.opacity = String((layer.opacity ?? layer.shapeData.transform.opacity ?? 100) / 100);
+		wrapper.style.opacity = String(layer.opacity / 100);
 		if (!wrapper.parentNode) {
 			this.editor.canvasElementsContainer.appendChild(wrapper);
 		}
@@ -1750,8 +1728,8 @@ class ShapeGlitterManager {
 	syncStackGeometry(stack, layer, measurement = null) {
 		if (!stack || !layer?.shapeData) return;
 		const entry = measurement || this.getMeasurementEntry(layer);
-		const scaleX = (layer.shapeData.transform.scale.x || 100) / 100;
-		const scaleY = (layer.shapeData.transform.scale.y || 100) / 100;
+		const scaleX = (layer.transform.scale.x || 100) / 100;
+		const scaleY = (layer.transform.scale.y || 100) / 100;
 		stack.style.position = 'relative';
 		stack.style.width = `${entry.width}px`;
 		stack.style.height = `${entry.height}px`;
@@ -1797,8 +1775,7 @@ class ShapeGlitterManager {
 	// on scale-handle release.
 	commitScale(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
-		this.normalizeLayer(layer);
-		const t = layer.shapeData.transform;
+		const t = layer.transform;
 		const sx = (t.scale.x || 100) / 100;
 		const sy = (t.scale.y || 100) / 100;
 		if (Math.abs(sx - 1) < 1e-3 && Math.abs(sy - 1) < 1e-3) return;
@@ -1836,7 +1813,6 @@ class ShapeGlitterManager {
 
 	setShapeSize(layer, width, height) {
 		if (!layer || layer.type !== LayerType.SHAPE) return false;
-		this.normalizeLayer(layer);
 		layer.shapeData.width = Math.max(CONFIG.tools.shapes.minSize, Math.round(width));
 		layer.shapeData.height = Math.max(CONFIG.tools.shapes.minSize, Math.round(height));
 		this.invalidateMeasurement(layer);
@@ -1922,7 +1898,6 @@ class ShapeGlitterManager {
 
 	// Hit-test frame in canvas space (for the transform system / selection).
 	getShapeFrame(layer) {
-		this.normalizeLayer(layer);
 		const measurement = this.getMeasurementEntry(layer);
 		return measurement.frameRect;
 	}

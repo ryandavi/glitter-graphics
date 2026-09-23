@@ -59,8 +59,7 @@ async function buildComposition(page) {
 		const glitterLayer = editor.glitterManager.createLayer();
 		editor.layerManager.insertLayer(glitterLayer);
 		glitterLayer.blendMode = 'screen';
-		glitterLayer.selectedGlitterId = glitterA;
-		glitterLayer.fill = { mode: 'gradient', gradient: { type: 'linear', angle: 35, interpolation: 'steps', stops: [{ offset: 0, color: '#ff0066', alpha: 1 }, { offset: 1, color: '#3344ff', alpha: 0.75 }] } };
+		glitterLayer.fill = { ...glitterLayer.fill, glitterId: glitterA, mode: 'gradient', gradient: { type: 'linear', angle: 35, interpolation: 'steps', stops: [{ offset: 0, color: '#ff0066', alpha: 1 }, { offset: 1, color: '#3344ff', alpha: 0.75 }] } };
 		const paint = editor.glitterManager.ensurePaintMask(glitterLayer.id);
 		const paintCtx = paint.add.getContext('2d', { willReadFrequently: true });
 		paintCtx.fillStyle = '#ffffff';
@@ -73,11 +72,11 @@ async function buildComposition(page) {
 		const stickerLayer = editor.stickerManager.createLayer(animatedSticker.id);
 		editor.layerManager.insertLayer(stickerLayer);
 		stickerLayer.blendMode = 'multiply';
-		stickerLayer.stickerData.transform.position = { x: 250, y: 72 };
-		stickerLayer.stickerData.transform.rotation = 28;
-		stickerLayer.stickerData.transform.scale.x = 145;
-		stickerLayer.stickerData.transform.scale.y = 120;
-		stickerLayer.stickerData.transform.flipX = true;
+		stickerLayer.transform.position = { x: 250, y: 72 };
+		stickerLayer.transform.rotation = 28;
+		stickerLayer.transform.scale.x = 145;
+		stickerLayer.transform.scale.y = 120;
+		stickerLayer.transform.flipX = true;
 		stickerLayer.stickerData.colorAdjust = { hue: 55, saturation: 135, brightness: 92 };
 		stickerLayer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
 		stickerLayer.stickerData.shadow.mode = 'glitter';
@@ -87,7 +86,7 @@ async function buildComposition(page) {
 		const staticStickerLayer = editor.stickerManager.createLayer(staticSticker.id);
 		editor.layerManager.insertLayer(staticStickerLayer);
 		staticStickerLayer.blendMode = 'color-burn';
-		staticStickerLayer.stickerData.transform.position = { x: 68, y: 180 };
+		staticStickerLayer.transform.position = { x: 68, y: 180 };
 		// A project saved by an older build could restore this transient cache as a
 		// plain object. Export must discard and reload it before calling putImageData.
 		staticStickerLayer.stickerData.staticImageData = { width: 1, height: 1, data: { 0: 255 } };
@@ -101,11 +100,11 @@ async function buildComposition(page) {
 		});
 		editor.layerManager.insertLayer(textLayer);
 		textLayer.blendMode = 'overlay';
-		textLayer.selectedGlitterId = glitterA;
 		textLayer.textData.fill = editor.textGlitterManager.getDefaultFill();
+		textLayer.textData.fill.glitterId = glitterA;
 		textLayer.textData.fill.mode = 'gradient';
 		textLayer.textData.fill.gradient = { type: 'linear', angle: 70, interpolation: 'smooth', stops: [{ offset: 0, color: '#ff3300', alpha: 1 }, { offset: 0.45, color: '#ffee00', alpha: 0.8 }, { offset: 1, color: '#6633ff', alpha: 1 }] };
-		textLayer.settings.colorAdjust = { hue: 90, saturation: 140, brightness: 110 };
+		textLayer.textData.fill.colorAdjust = { hue: 90, saturation: 140, brightness: 110 };
 		textLayer.textData.border = editor.textGlitterManager.getDefaultBorder();
 		textLayer.textData.border.mode = 'solid';
 		textLayer.textData.border.color = '#113355';
@@ -115,10 +114,10 @@ async function buildComposition(page) {
 		textLayer.textData.shadow.glitterId = glitterB;
 		textLayer.textData.shadow.offsetX = 8;
 		textLayer.textData.shadow.offsetY = 6;
-		textLayer.textData.transform.rotation = 344;
-		textLayer.textData.transform.scale.x = 125;
-		textLayer.textData.transform.scale.y = 125;
-		textLayer.textData.transform.flipY = true;
+		textLayer.transform.rotation = 344;
+		textLayer.transform.scale.x = 125;
+		textLayer.transform.scale.y = 125;
+		textLayer.transform.flipY = true;
 		await editor.textGlitterManager.refreshLayer(textLayer, { saveHistory: false });
 
 		const shapeLayer = editor.shapeGlitterManager.createLayer({
@@ -129,7 +128,7 @@ async function buildComposition(page) {
 		});
 		editor.layerManager.insertLayer(shapeLayer);
 		shapeLayer.blendMode = 'soft-light';
-		shapeLayer.selectedGlitterId = glitterB;
+		shapeLayer.shapeData.fill.glitterId = glitterB;
 		shapeLayer.shapeData.fill.mode = 'gradient';
 		shapeLayer.shapeData.fill.gradient = { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#ffffff', alpha: 1 }, { offset: 1, color: '#00aacc', alpha: 0.65 }] };
 		shapeLayer.shapeData.fill.colorAdjust = { hue: -45, saturation: 130, brightness: 120 };
@@ -142,10 +141,10 @@ async function buildComposition(page) {
 		shapeLayer.shapeData.shadow.glitterId = glitterA;
 		shapeLayer.shapeData.shadow.offsetX = -6;
 		shapeLayer.shapeData.shadow.offsetY = 8;
-		shapeLayer.shapeData.transform.rotation = 22;
-		shapeLayer.shapeData.transform.scale.x = 135;
-		shapeLayer.shapeData.transform.scale.y = 90;
-		shapeLayer.shapeData.transform.flipX = true;
+		shapeLayer.transform.rotation = 22;
+		shapeLayer.transform.scale.x = 135;
+		shapeLayer.transform.scale.y = 90;
+		shapeLayer.transform.flipX = true;
 		editor.shapeGlitterManager.renderLayer(shapeLayer);
 
 		editor.layerManager.renderLayersList();
@@ -221,7 +220,7 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 			tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
 			skewX: 0, skewY: 0, opacity: 0.5, originX: 0.5, originY: 0.5
 		};
-		editor.exporter._activeLayerAnimation = { transform: getLayerTransform(layer), sample };
+		editor.exporter._activeLayerAnimation = { layer, sample };
 		try {
 			const plan = editor.exporter._buildLayerExportPlan(layer);
 			plan.render({
@@ -235,8 +234,8 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 			editor.exporter._activeLayerAnimation = null;
 		}
 		const shapeRect = masks.measurement.shapeRect;
-		const x = Math.round(layer.shapeData.transform.position.x + shapeRect.x + shapeRect.width / 2 - masks.renderWidth / 2);
-		const y = Math.round(layer.shapeData.transform.position.y + shapeRect.y + shapeRect.height / 2 - masks.renderHeight / 2);
+		const x = Math.round(layer.transform.position.x + shapeRect.x + shapeRect.width / 2 - masks.renderWidth / 2);
+		const y = Math.round(layer.transform.position.y + shapeRect.y + shapeRect.height / 2 - masks.renderHeight / 2);
 		return Array.from(context.getImageData(x, y, 1, 1).data);
 	});
 	assert(result[0] === 255 && result[1] === 0 && result[2] === 0, `Animated shape fill revealed its shadow: ${JSON.stringify(result)}`);

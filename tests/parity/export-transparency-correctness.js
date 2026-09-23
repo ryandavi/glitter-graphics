@@ -60,7 +60,6 @@ function assert(condition, message) {
 		{
 			const shapeLayer = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 40, height: 40 });
 			shapeLayer.opacity = 50;
-			shapeLayer.settings.opacity = 50;
 			shapeLayer.shapeData.fill = { mode: 'solid', color: '#ff0000', opacity: 100 };
 			const visibleLayers = [shapeLayer];
 			const composed = await exporter.composeFrameAt({

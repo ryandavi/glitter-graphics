@@ -255,7 +255,7 @@ renderTransformPanels() {
 		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
 		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);
 		if (layerOpacity && layerOpacityValue) {
-			const value = Number.isFinite(layer.opacity) ? layer.opacity : (transform.opacity ?? 100);
+			const value = layer.opacity;
 			layerOpacity.value = value;
 			layerOpacityValue.innerHTML = formatUnit(Math.round(value), '%');
 			const resetLayerOpacity = document.getElementById(`reset${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}LayerOpacity`);

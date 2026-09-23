@@ -62,20 +62,22 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 
 ## Layer data model
 
-Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` and `opacity` (0–100, the canonical whole-layer opacity). Most also have `selectedGlitterId`, and optionally `blendMode` and `animation`. Type-specific data lives under one key:
+Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` and `opacity` (0–100, the only whole-layer opacity; nothing mirrors it). Movable layers also have `transform`, and optionally `blendMode` and `animation`. Type-specific data lives under one key:
 
 | `LayerType` | Data |
 |---|---|
-| `base-image` | `background`: `{ mode, color, gradient, scale, colorAdjust, pixelEffects, … }` |
-| `glitter-fill` | `selections` (color-picked regions), `settings` (threshold, feather, invert, contiguous, texture scale, color adjust), `fill`, `maskVersion` |
+| `base-image` | `background`: the fill slot, plus `pixelEffects` |
+| `glitter-fill` | `selections` (color-picked regions), `settings` (threshold, feather, invert, contiguous, multiSelect), `fill`, `maskVersion` |
 | `sticker` | `stickerData` (custom serializer in `StickerManager`) |
-| `text-glitter` | `textData`: text, font, layout, `fill`, `border`, `shadow`, `textBackground`, `transform` |
-| `shape` | `shapeData`: `shapeId`, size, `fill`, `border`, `shadow`, `transform` |
+| `text-glitter` | `textData`: text, font, layout, `fill`, `border`, `shadow`, `textBackground` |
+| `shape` | `shapeData`: `shapeId`, size, `fill`, `border`, `shadow` |
 | `filter` | `filterData` |
 
-**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. `resolveEffectPaintSource` (`js/paint/effect-source.js`) turns slot data into a render source for both preview and export. Known inconsistency: a fill's glitter id and some texture settings still live on the layer (`selectedGlitterId`, `settings`) instead of in the slot. See audit section A1.
+**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. Every slot is one self-contained object; `getLayerFillSlot(layer)` (`js/paint/slot-effects.js`) returns a layer's fill slot whatever its type. `resolveEffectPaintSource` (`js/paint/effect-source.js`) turns slot data into a render source for both preview and export.
 
-**Transforms.** Movable layers (sticker, text, shape) keep a transform `{ position, rotation, scale, flipX, flipY }`. Read it with `getLayerTransform(layer)` (`js/transforms/transform-math.js`); `layer.transform` currently aliases the object inside the type's data. Scale writes go through `LayerTransform.updateTransform`, which clamps with `clampLayerScale`.
+**Canonical state.** A layer is normalized once, where it enters the document: its manager's `createLayer`, `LayerManager.deserializeLayer` (undo/redo, clipboard, project load, cloning) through `LAYER_UI_CONFIG[type].serialization.normalize`. Getters and render paths read the canonical shape and never write defaults. Older data is brought to the current shape by `ProjectSerializer.migrateLayerState`, which runs in the versioned project migrations and on every deserialize (clipboard payloads can come from an older build).
+
+**Transforms.** Movable layers (sticker, text, shape) keep a transform `{ position, rotation, scale, flipX, flipY }`. It lives only at `layer.transform`; `getLayerTransform(layer)` (`js/transforms/transform-math.js`) reads it and returns an unstored identity placement for types without one. Scale writes go through `LayerTransform.updateTransform`, which clamps with `clampLayerScale`.
 
 ## Render path (live preview)
 

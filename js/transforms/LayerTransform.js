@@ -123,7 +123,7 @@ applyTransform(element, dimensions) {
 		`width: ${metrics.displayWidth}px`,
 		`height: ${metrics.displayHeight}px`,
 		`transform: ${transforms.join(' ')}`,
-		`opacity: ${metrics.opacity}`,
+		`opacity: ${this.layer.opacity / 100}`,
 		`pointer-events: ${pointerEvents}`,
 		`display: ${this.layer.visible ? 'block' : 'none'}`,
 		`z-index: ${zIndex}`,
@@ -186,10 +186,7 @@ updateTransform(updates) {
 	}
 
 	if (updates.opacity !== undefined) {
-		// v2 opacity model: whole-layer opacity is canonical on layer.opacity.
-		// transform.opacity is a render mirror (syncLayerTransformReference).
 		this.layer.opacity = updates.opacity;
-		transform.opacity = updates.opacity;
 	}
 
 	if (updates.flipX !== undefined) {

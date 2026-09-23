@@ -123,7 +123,6 @@ class FilterLayerManager {
 
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.FILTER) return;
-		this.normalizeLayer(layer);
 		const data = layer.filterData;
 		this.ui.type.value = data.type;
 		const settingsIds = {

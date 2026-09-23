@@ -564,7 +564,7 @@ isLayerContentLocked(layer) {
 			return;
 		}
 
-		// Load glitter layer settings (existing code)
+		if (layer.type !== LayerType.GLITTER_FILL) return;
 		const s = layer.settings;
 
 		const contiguous = document.getElementById('contiguous');
@@ -596,33 +596,28 @@ isLayerContentLocked(layer) {
 		}
 
 		if (scale && scaleValue) {
-			scale.value = s.scale;
-			scaleValue.innerHTML = formatUnit(s.scale, '%');
+			scale.value = layer.fill.scale;
+			scaleValue.innerHTML = formatUnit(layer.fill.scale, '%');
 			this.updateResetButton('scale');
 		}
 
 		if (opacity && opacityValue) {
-			// Canonical whole-layer opacity (v2 model); a Fill layer is a single
-			// masked paint, so this is its only opacity control.
-			const layerOpacity = Number.isFinite(layer.opacity) ? layer.opacity : (s.opacity ?? 100);
-			opacity.value = layerOpacity;
-			opacityValue.innerHTML = formatUnit(layerOpacity, '%');
+			// A Fill layer is a single masked paint, so the whole-layer opacity is
+			// its only opacity control.
+			opacity.value = layer.opacity;
+			opacityValue.innerHTML = formatUnit(layer.opacity, '%');
 			this.updateResetButton('opacity');
 		}
 
 		// Color adjust (WP4): populate the Advanced HSB sliders from this layer.
-		this.applyColorAdjustToSliders('glitter', s.colorAdjust);
-		layer.fill = { ...buildDefaultFill(), ...(layer.fill || {}) };
+		this.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
 		syncSlotTextureCoordinateControls('glitterFill', layer.fill);
 
-		if (layer.selectedGlitterId) {
-			const glitter = this.glitterManager.getItemById(layer.selectedGlitterId);
-			if (glitter) {
-				this.updateGlitterAssetInfo(glitter);
-			}
+		const glitter = this.glitterManager.getItemById(layer.fill.glitterId);
+		if (glitter) {
+			this.updateGlitterAssetInfo(glitter);
 		}
-		const fillMode = layer.fill?.mode || 'glitter';
-		syncPaintSlotSourceUI(document.getElementById('glitterFillGlitter'), fillMode);
+		syncPaintSlotSourceUI(document.getElementById('glitterFillGlitter'), layer.fill.mode);
 
 		// Tint the asset-info thumbnail (and list/mobile swatches) to match the hue.
 		this.refreshGlitterSwatchVisuals(layer);
@@ -648,31 +643,33 @@ isLayerContentLocked(layer) {
 	}
 
 ,
-	saveActiveLayerSettings() {
-		const settings = {
-			threshold: parseInt(document.getElementById('threshold').value),
-			feather: parseInt(document.getElementById('feather').value),
-			scale: parseInt(document.getElementById('scale').value),
-			opacity: parseInt(document.getElementById('opacity').value),
-			contiguous: document.getElementById('contiguous').checked,
-			invert: document.getElementById('invert').checked,
-			multiSelect: document.getElementById('multiSelect').checked,
-			// Color adjust (WP4). Always an identity object for untouched layers, so
-			// export stays byte-identical (isIdentityColorAdjust short-circuits it).
-			colorAdjust: this.readColorAdjust('glitter')
-		};
-
-		const activeLayer = this.layerManager.getActiveLayer();
-		// Only apply to active layer if it is a Glitter Fill layer
-		if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL) {
-			activeLayer.settings = settings;
-			// v2 opacity model: the '#opacity' slider is this layer's canonical
-			// whole-layer opacity. settings.opacity is kept in sync for legacy
-			// readers but render/export read layer.opacity.
-			activeLayer.opacity = settings.opacity;
-			this.maskCompositor.invalidate(activeLayer.id);
+	// Each Fill layer control writes the one field it edits. The mask cache is
+	// keyed by the selection fields, so no invalidation is needed here.
+	saveFillLayerControl(controlId) {
+		const layer = this.layerManager.getActiveLayer();
+		if (layer?.type !== LayerType.GLITTER_FILL) return;
+		const read = (id) => parseInt(document.getElementById(id).value, 10);
+		const checked = (id) => document.getElementById(id).checked;
+		switch (controlId) {
+			case 'threshold':
+			case 'feather':
+				layer.settings[controlId] = read(controlId);
+				break;
+			case 'contiguous':
+			case 'invert':
+			case 'multiSelect':
+				layer.settings[controlId] = checked(controlId);
+				break;
+			case 'scale':
+				layer.fill.scale = read('scale');
+				break;
+			case 'opacity':
+				layer.opacity = read('opacity');
+				break;
+			case 'colorAdjust':
+				layer.fill.colorAdjust = this.readColorAdjust('glitter');
+				break;
 		}
-
 	}
 
 ,
@@ -684,7 +681,7 @@ isLayerContentLocked(layer) {
 				? this.shapeGlitterManager?.resolveSelectedGlitterId(layer)
 				: layer?.type === LayerType.STICKER
 					? layer.stickerData?.[this.stickerManager.getGlitterSelectionTarget(layer)]?.glitterId
-				: layer?.selectedGlitterId;
+				: getLayerFillGlitterId(layer);
 
 		// Query all glitter options in BOTH traditional grid AND asset browser
 		const glitterOptions = document.querySelectorAll(

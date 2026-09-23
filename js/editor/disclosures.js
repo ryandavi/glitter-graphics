@@ -245,15 +245,11 @@ initializeCollapsibleSections() {
 	}
 
 	// The colorAdjust that tints a layer's layers-list swatch — the FILL slot's,
-	// since that's the glitter the swatch shows. Fill aliases layer.settings for
-	// glitter-fill + text; shapes keep it on shapeData.fill.
+	// since that's the glitter the swatch shows. A sticker's swatch is its image.
 ,
 	getLayerFillColorAdjust(layer) {
-		if (!layer) return null;
-		if (layer.type === LayerType.SHAPE) return layer.shapeData?.fill?.colorAdjust;
-		if (layer.type === LayerType.BASE_IMAGE) return layer.background?.colorAdjust;
-		if (layer.type === LayerType.STICKER) return layer.stickerData?.colorAdjust;
-		return layer.settings?.colorAdjust;
+		if (layer?.type === LayerType.STICKER) return layer.stickerData?.colorAdjust;
+		return getLayerFillSlot(layer)?.colorAdjust;
 	}
 
 	// Tint the layers-list swatch + mobile swatch for any glitter-bearing layer to
@@ -280,7 +276,7 @@ initializeCollapsibleSections() {
 	refreshGlitterSwatchVisuals(layer) {
 		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
 		const thumb = document.getElementById('glitterAssetThumbnail');
-		if (thumb) thumb.style.filter = buildCssColorFilter(layer.settings?.colorAdjust);
+		if (thumb) thumb.style.filter = buildCssColorFilter(layer.fill.colorAdjust);
 		this.refreshLayerSwatchFilter(layer);
 	}
 
@@ -307,7 +303,7 @@ initializeCollapsibleSections() {
 				resetValue: this.getResetValueForSlider(id),
 				resetButton: resetBtn,
 				apply: () => {
-					this.saveActiveLayerSettings();
+					this.saveFillLayerControl('colorAdjust');
 					this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
 					this.debouncedSliderUpdate();
 				},

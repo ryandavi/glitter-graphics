@@ -1882,9 +1882,8 @@ class MaskEditor {
 	}
 
 	_getOverlayPalette(layer) {
-		const glitter = layer?.selectedGlitterId
-			? this.editor.glitterManager?.getItemById(layer.selectedGlitterId)
-			: null;
+		const glitterId = getLayerFillGlitterId(layer);
+		const glitter = glitterId ? this.editor.glitterManager?.getItemById(glitterId) : null;
 		const fillColor = this._normalizeOverlayColor(glitter?.colorCodes?.[0]) || CONFIG.tools.maskBrush.overlay.color;
 		return {
 			fillColor,

@@ -48,11 +48,11 @@ async function createStickerLayer(page, label) {
 		layer.stickerData.name = layerLabel;
 		layer.stickerData.width = canvas.width;
 		layer.stickerData.height = canvas.height;
-		layer.stickerData.transform.position.x = editor.previewCanvas.width / 2;
-		layer.stickerData.transform.position.y = editor.previewCanvas.height / 2;
-		layer.stickerData.transform.rotation = 0;
-		layer.stickerData.transform.scale.x = 100;
-		layer.stickerData.transform.scale.y = 100;
+		layer.transform.position.x = editor.previewCanvas.width / 2;
+		layer.transform.position.y = editor.previewCanvas.height / 2;
+		layer.transform.rotation = 0;
+		layer.transform.scale.x = 100;
+		layer.transform.scale.y = 100;
 
 		editor.layerManager.insertLayer(layer);
 		editor.stickerManager.renderLayer(layer);

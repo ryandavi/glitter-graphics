@@ -5,16 +5,29 @@
 // color/glitter defaults (CONFIG.tools.glitter.defaults) and the same
 // glitter-vs-solid + scale/opacity model per slot; they differ only in the
 // CONFIG geometry block (CONFIG.tools.text vs CONFIG.tools.shapes), a few
-// shape-only keys (style, dotSpacingPx), text's fill slot deferring
-// scale/opacity/colorAdjust to layer.settings, and the data root
+// shape-only keys (style, dotSpacingPx), and the data root
 // (layer.textData vs layer.shapeData). Each manager parameterizes these with
-// an options object supplied by thin wrapper methods, so no call site changes.
-// Semantics are byte-identical to the pre-extraction per-manager bodies.
+// an options object supplied by thin wrapper methods.
 
-// The fill slot's texture scale/colorAdjust are (for text) still the existing
-// layer-level settings.scale/settings.colorAdjust, not duplicated on the slot;
-// text omits them (includeTexture false) while shape carries its own. Per the
-// v2 opacity model, `opacity` is always a real per-slot field on every fill.
+// The paint slot that fills a layer's own artwork. Every slot is one
+// self-contained object: mode, color, gradient, glitterId, scale, colorAdjust,
+// opacity and texture registration. Glitter fill and canvas background layers
+// are a single paint, so their whole-layer opacity is their only fade and the
+// slot opacity is not read for them.
+function getLayerFillSlot(layer) {
+	switch (layer?.type) {
+		case LayerType.GLITTER_FILL: return layer.fill || null;
+		case LayerType.TEXT_GLITTER: return layer.textData?.fill || null;
+		case LayerType.SHAPE: return layer.shapeData?.fill || null;
+		case LayerType.BASE_IMAGE: return layer.background || null;
+		default: return null;
+	}
+}
+
+function getLayerFillGlitterId(layer) {
+	return getLayerFillSlot(layer)?.glitterId ?? null;
+}
+
 function buildDefaultFill(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;
@@ -32,13 +45,11 @@ function buildDefaultFill(options = {}) {
 		imageRendering: imageFill.defaultRendering,
 		textureAnchor: coordinates.defaultAnchor,
 		textureOffsetX: coordinates.defaultOffsetX,
-		textureOffsetY: coordinates.defaultOffsetY
+		textureOffsetY: coordinates.defaultOffsetY,
+		glitterId: options.defaultGlitterId ?? null,
+		scale: CONFIG.tools.effects.defaults.scale,
+		colorAdjust: null
 	};
-	if (options.includeTexture) {
-		fill.glitterId = options.defaultGlitterId ?? null;
-		fill.scale = 100;
-		fill.colorAdjust = null;
-	}
 	return fill;
 }
 
@@ -105,17 +116,13 @@ function ensureSlotColorAdjust(target) {
 }
 
 // root is layer.textData or layer.shapeData. options.builders maps slot ->
-// default factory; options.mergeBorderDefaults backfills newer border keys
-// onto legacy data (shape does this here; text does it in normalizeLayer).
+// default factory for a slot that is switched on. Existing slots are already
+// canonical: legacy keys are backfilled where the layer enters the document.
 function ensureSlotEffectData(root, slot, options = {}) {
-	const { builders, mergeBorderDefaults = false } = options;
+	const { builders } = options;
 	if (!root) return null;
 	if (!builders?.[slot]) return null;
-	if (!root[slot]) {
-		root[slot] = builders[slot]();
-	} else if (slot === 'border' && mergeBorderDefaults) {
-		root[slot] = mergeSlotEffectDefaults(root[slot], builders.border());
-	}
+	root[slot] ||= builders[slot]();
 	return root[slot];
 }
 

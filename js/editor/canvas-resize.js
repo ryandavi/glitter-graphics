@@ -157,19 +157,16 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		// 4. Sticker / text positions shift with the content (canvas coords).
 		this.layers.forEach((layer) => {
-			if (layer.type === LayerType.STICKER && layer.stickerData?.transform?.position) {
-				const position = layer.stickerData.transform.position;
+			if (!isTransformableLayerType(layer.type)) return;
+			const position = layer.transform.position;
+			if (layer.type === LayerType.STICKER) {
 				this.stickerManager?.updateTransform(layer.id, {
 					position: { x: position.x + offsetX, y: position.y + offsetY }
 				});
-			} else if (layer.type === LayerType.TEXT_GLITTER && layer.textData?.transform?.position) {
-				layer.textData.transform.position.x += offsetX;
-				layer.textData.transform.position.y += offsetY;
-				this.textGlitterManager?.renderLayer(layer);
-			} else if (layer.type === LayerType.SHAPE && layer.shapeData?.transform?.position) {
-				layer.shapeData.transform.position.x += offsetX;
-				layer.shapeData.transform.position.y += offsetY;
-				this.shapeGlitterManager?.renderLayer(layer);
+			} else {
+				position.x += offsetX;
+				position.y += offsetY;
+				getLayerManagerForType(this, layer.type)?.renderLayer(layer);
 			}
 		});
 

@@ -26,6 +26,10 @@ class BaseBackgroundManager {
 		return layer?.type === LayerType.BASE_IMAGE ? layer : null;
 	}
 
+	getBaseLayer() {
+		return this.editor.layers?.find((layer) => layer.type === LayerType.BASE_IMAGE) || null;
+	}
+
 	hasBaseImage() {
 		const source = this.editor.baseImageSource;
 		if (!source) return false;
@@ -33,11 +37,13 @@ class BaseBackgroundManager {
 		return source.kind !== 'preset';
 	}
 
+	// Runs where the canvas layer enters the document (create, deserialize,
+	// project load). Everything else reads the canonical shape directly.
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.BASE_IMAGE) return null;
 		layer.locked = true;
-		layer.selectedGlitterId ||= CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground;
 		layer.background ||= {};
+		layer.background.glitterId ??= CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground;
 		// Keep an already-normalized gradient intact. The gradient editor holds
 		// references to its stops while a range or preview handle is being dragged;
 		// replacing this object from getData() makes those references stale after
@@ -45,16 +51,10 @@ class BaseBackgroundManager {
 		if (!layer.background.gradient || !Array.isArray(layer.background.gradient.stops) || layer.background.gradient.stops.length < 2) {
 			layer.background.gradient = normalizeEffectGradient(layer.background.gradient);
 		}
-		// v2 opacity model: the canvas layer's opacity is the canonical top-level
-		// `layer.opacity`. `background.opacity` is kept mirrored for legacy readers.
-		if (!Number.isFinite(layer.opacity)) {
-			layer.opacity = Number(layer.background.opacity ?? 100);
-		}
 		Object.assign(layer.background, {
 			mode: isOptionValue('paintMode', layer.background.mode) ? layer.background.mode : 'image',
 			color: layer.background.color || '#ffffff',
 			scale: Number(layer.background.scale ?? CONFIG.tools.effects.defaults.scale),
-			opacity: Number(layer.opacity ?? layer.background.opacity ?? 100),
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
 		});
 		normalizeSlotTextureCoordinates(layer.background);
@@ -128,7 +128,7 @@ class BaseBackgroundManager {
 		if (documentSize && canvasHost) canvasHost.appendChild(documentSize);
 		installEffectGradientEditor({
 			prefix: 'baseBackground',
-			getData: () => this.normalizeLayer(this.getActiveLayer())?.background || null,
+			getData: () => this.getActiveLayer()?.background || null,
 			onUpdate: (commit) => this.applyChange(commit)
 		});
 	}
@@ -138,7 +138,7 @@ class BaseBackgroundManager {
 			document.getElementById(`baseBackground${mode[0].toUpperCase()}${mode.slice(1)}`)?.addEventListener('click', () => this.setMode(mode));
 		});
 		this.ui.color?.addEventListener('input', () => {
-			const layer = this.normalizeLayer(this.getActiveLayer());
+			const layer = this.getActiveLayer();
 			if (!layer) return;
 			layer.background.mode = 'solid';
 			layer.background.color = this.ui.color.value;
@@ -154,7 +154,7 @@ class BaseBackgroundManager {
 		bindSlotTextureCoordinateControls({
 			prefix: 'baseBackground',
 			getLayer: () => this.getActiveLayer(),
-			getData: (layer) => this.normalizeLayer(layer)?.background,
+			getData: (layer) => layer?.background,
 			render: () => this.applyChange(false),
 			save: () => this.editor.saveState('Edit background')
 		});
@@ -207,7 +207,7 @@ class BaseBackgroundManager {
 	}
 
 	resetPixelEffects() {
-		const layer = this.normalizeLayer(this.getActiveLayer());
+		const layer = this.getActiveLayer();
 		if (!layer) return;
 		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings(CONFIG.tools.pixelEffects.defaults, CONFIG.tools.pixelEffects);
 		this.invalidatePixelEffects();
@@ -216,8 +216,7 @@ class BaseBackgroundManager {
 	}
 
 	disablePixelEffects({ apply = true, commit = true } = {}) {
-		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
-		const layer = this.normalizeLayer(baseLayer);
+		const layer = this.getBaseLayer();
 		if (!layer) return false;
 		const settings = layer.background.pixelEffects;
 		if (!settings.pixelateEnabled && !settings.paletteEnabled) return false;
@@ -230,7 +229,7 @@ class BaseBackgroundManager {
 	}
 
 	updatePixelSetting(path, value, commit) {
-		const layer = this.normalizeLayer(this.getActiveLayer());
+		const layer = this.getActiveLayer();
 		if (!layer) return;
 		const keys = path.split('.');
 		let target = layer.background.pixelEffects;
@@ -282,7 +281,7 @@ class BaseBackgroundManager {
 
 	scheduleShimmerPreview(delay = CONFIG.tools.pixelEffects.animation.frameDurationMs) {
 		if (!this.shimmerPreview.key || this.shimmerPreview.pending || this.shimmerPreview.timer || document.hidden) return;
-		const layer = this.normalizeLayer(this.editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE));
+		const layer = this.getBaseLayer();
 		const applicable = layer?.visible !== false && ((layer?.background.mode === 'image' && this.hasBaseImage()) || layer?.background.mode === 'gradient');
 		if (!applicable || !this.isShimmerPreviewEnabled(layer.background.pixelEffects)) return;
 		this.shimmerPreview.timer = setTimeout(() => {
@@ -295,7 +294,7 @@ class BaseBackgroundManager {
 		const state = this.shimmerPreview;
 		if (!state.key || state.pending || document.hidden) return;
 		const worker = this.ensurePixelEffectWorker();
-		const layer = this.normalizeLayer(this.editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE));
+		const layer = this.getBaseLayer();
 		const animation = layer && GlitterPixelEffects.getShimmerAnimation(layer.background.pixelEffects.dither.algorithm, CONFIG.tools.pixelEffects);
 		if (!animation) return;
 		const requestId = `shimmer-${++state.requestId}`;
@@ -315,10 +314,10 @@ class BaseBackgroundManager {
 			const result = new ImageData(new Uint8ClampedArray(data.pixels), this.editor.previewCanvas.width, this.editor.previewCanvas.height);
 			state.frameIndex = frameIndex;
 			this.lastPixelEffectPreview = result;
-			const layer = this.normalizeLayer(this.editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE));
+			const layer = this.getBaseLayer();
 			const applicable = layer?.visible !== false && ((layer?.background.mode === 'image' && this.hasBaseImage()) || layer?.background.mode === 'gradient');
 			if (applicable && this.isShimmerPreviewEnabled(layer.background.pixelEffects)) {
-				this.editor.renderBasePreviewImageData(layer.background, result);
+				this.editor.renderBasePreviewImageData(layer, result);
 			}
 			const elapsed = performance.now() - startedAt;
 			this.scheduleShimmerPreview(Math.max(0, CONFIG.tools.pixelEffects.animation.frameDurationMs - elapsed));
@@ -442,12 +441,10 @@ class BaseBackgroundManager {
 			suffix: '%', resetValue: spec.value,
 			resetButton: document.getElementById(`resetBaseBackground${name}`),
 			apply: (next) => {
-				const layer = this.normalizeLayer(this.getActiveLayer());
+				const layer = this.getActiveLayer();
 				if (!layer) return;
-				layer.background[key] = next;
-				// v2 opacity model: the canvas layer's opacity is canonical on
-				// layer.opacity; keep background.opacity mirrored for legacy readers.
 				if (key === 'opacity') layer.opacity = next;
+				else layer.background[key] = next;
 				this.applyChange(false);
 			},
 			onCommit: () => this.editor.saveState('Edit background')
@@ -464,7 +461,7 @@ class BaseBackgroundManager {
 			suffix: name === 'Hue' ? '\u00b0' : '%', resetValue: spec.value,
 			resetButton: document.getElementById(`resetBaseBackground${name}`),
 			apply: (next) => {
-				const layer = this.normalizeLayer(this.getActiveLayer());
+				const layer = this.getActiveLayer();
 				if (!layer) return;
 				layer.background.colorAdjust[key] = next;
 				this.applyChange(false);
@@ -474,7 +471,7 @@ class BaseBackgroundManager {
 	}
 
 	setMode(mode) {
-		const layer = this.normalizeLayer(this.getActiveLayer());
+		const layer = this.getActiveLayer();
 		if (!layer) return;
 		this.invalidatePixelEffects();
 		layer.background.mode = mode;
@@ -484,7 +481,7 @@ class BaseBackgroundManager {
 
 	applyChange(commit) {
 		this.updateAutoGlitterAvailability();
-		const layer = this.normalizeLayer(this.getActiveLayer());
+		const layer = this.getActiveLayer();
 		if (layer) this.loadPixelEffectSettings(layer);
 		this.editor.requestPreviewUpdate();
 		this.editor.layerManager.renderLayersList();
@@ -507,8 +504,8 @@ class BaseBackgroundManager {
 		return data;
 	}
 
-	getAutoGlitterAvailability(layer = this.editor.layers?.find((entry) => entry.type === LayerType.BASE_IMAGE)) {
-		layer = this.normalizeLayer(layer);
+	getAutoGlitterAvailability(layer = this.getBaseLayer()) {
+		if (layer?.type !== LayerType.BASE_IMAGE) layer = null;
 		if (!this.hasBaseImage() || !this.editor.originalImageData) {
 			return { available: false, message: 'Choose a Base Image before using Auto Glitter' };
 		}
@@ -527,18 +524,16 @@ class BaseBackgroundManager {
 	}
 
 	loadLayerSettings(layer) {
-		layer = this.normalizeLayer(layer);
-		if (!layer) return;
+		if (layer?.type !== LayerType.BASE_IMAGE) return;
 		this.updateAutoGlitterAvailability(layer);
 		const modeButton = document.getElementById(`baseBackground${layer.background.mode[0].toUpperCase()}${layer.background.mode.slice(1)}`);
 		syncPaintSlotSourceUI(modeButton || document.getElementById('baseBackgroundImage'), layer.background.mode);
 		if (this.ui.color) this.ui.color.value = layer.background.color;
-		['Scale', 'Opacity'].forEach((name) => {
-			const key = name.toLowerCase();
+		[['Scale', layer.background.scale], ['Opacity', layer.opacity]].forEach(([name, current]) => {
 			const input = document.getElementById(`baseBackground${name}`);
 			const value = document.getElementById(`baseBackground${name}Value`);
-			if (input) input.value = layer.background[key];
-			if (value) value.innerHTML = formatUnit(layer.background[key], '%');
+			if (input) input.value = current;
+			if (value) value.innerHTML = formatUnit(current, '%');
 		});
 		this.editor.applyColorAdjustToSliders('baseBackground', layer.background.colorAdjust);
 		syncSlotTextureCoordinateControls('baseBackground', layer.background);
@@ -614,7 +609,7 @@ class BaseBackgroundManager {
 	}
 
 	updateGlitterInfo(layer) {
-		const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+		const glitter = this.editor.glitterManager.getItemById(layer.background.glitterId);
 		if (!glitter) return;
 		this.editor.renderGlitterAssetDisplay({
 			thumbnail: this.ui.glitterChip,
@@ -630,7 +625,7 @@ class BaseBackgroundManager {
 		if (!layer) return;
 		pickerOpenSession(this, { layerId: layer.id }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, layer.selectedGlitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, layer.background.glitterId)
 		});
 	}
 

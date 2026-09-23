@@ -180,15 +180,16 @@ class GifExporter {
 	// `smooth` mirrors the preview's image-rendering: pixel art stays crisp under
 	// the layer scale, art flagged smooth gets the browser's bilinear filtering
 	// so the export matches what the canvas showed.
-	_drawTransformedCanvas(ctx, sourceCanvas, transform, width, height, { smooth = false } = {}) {
+	_drawTransformedCanvas(ctx, sourceCanvas, layer, width, height, { smooth = false } = {}) {
+		const transform = getLayerTransform(layer);
 		const metrics = computeLayerTransform(transform, { width, height });
-		const animation = this._activeLayerAnimation?.transform === transform
+		const animation = this._activeLayerAnimation?.layer === layer
 			? this._activeLayerAnimation.sample
 			: null;
 
 		ctx.save();
 		ctx.imageSmoothingEnabled = smooth;
-		ctx.globalAlpha *= metrics.opacity;
+		ctx.globalAlpha *= layer.opacity / 100;
 		if (animation) {
 			ctx.globalAlpha *= animation.opacity;
 			ctx.translate(animation.tx, animation.ty);
@@ -241,7 +242,6 @@ class GifExporter {
 	}
 
 	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null) {
-		const transform = getLayerTransform(layer);
 		const { isAnimated, width, height } = layer.stickerData;
 
 		// Determine which frame/image to use
@@ -271,7 +271,7 @@ class GifExporter {
 		this._renderPatternSourceInto(tempCanvas, imageData, layer.stickerData.colorAdjust);
 		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
 
-		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height, {
+		this._drawTransformedCanvas(ctx, tempCanvas, layer, width, height, {
 			smooth: layer.stickerData.isPixelated === false
 		});
 	}
@@ -311,7 +311,7 @@ class GifExporter {
 		effectMask._textureOrigin = { x: offsetX, y: offsetY };
 		this._renderFilledMaskInto(scratch.shadowFillCanvas, effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), sourceSelectionMap, resolvedFramesBySource);
 		// The shadow is the sticker's own silhouette, so it scales the same way.
-		this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, getLayerTransform(layer), scratch.shadowFillCanvas.width, scratch.shadowFillCanvas.height, {
+		this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, scratch.shadowFillCanvas.width, scratch.shadowFillCanvas.height, {
 			smooth: layer.stickerData.isPixelated === false
 		});
 	}
@@ -392,16 +392,14 @@ class GifExporter {
 		// Preview fades/transforms the wrapper around the complete span stack.
 		// Export must likewise composite the object's paints before applying its
 		// whole-layer opacity or animation, or overlapping effects show through.
-		this._drawTransformedCanvas(ctx, compositeCanvas, getLayerTransform(layer), width, height);
+		this._drawTransformedCanvas(ctx, compositeCanvas, layer, width, height);
 	}
 
-	// Shared with ShapeGlitterManager via resolveEffectPaintSource. Each slot has
-	// its own glitter: fill uses layer.selectedGlitterId, border/shadow use their
-	// own effectData.glitterId.
+	// Shared with ShapeGlitterManager via resolveEffectPaintSource. Each slot
+	// carries its own glitterId.
 	_getShapeEffectSource(layer, slot) {
-		return resolveEffectPaintSource(slot === 'fill' ? layer.shapeData?.fill : layer.shapeData?.[slot], {
+		return resolveEffectPaintSource(layer.shapeData?.[slot], {
 			allowNone: slot === 'fill',
-			glitterId: slot === 'fill' ? layer.selectedGlitterId : layer.shapeData?.[slot]?.glitterId,
 			imageResolver: this.resolveShapeFillImage
 		});
 	}
@@ -415,8 +413,8 @@ class GifExporter {
 	_getShapeGlitterSources(layer) {
 		const d = layer.shapeData;
 		const sources = [];
-		if (d.fill?.mode === 'glitter' && layer.selectedGlitterId) {
-			sources.push({ key: this._getShapeFrameKey(layer, 'fill'), slot: 'fill', glitterId: layer.selectedGlitterId });
+		if (d.fill?.mode === 'glitter' && d.fill.glitterId) {
+			sources.push({ key: this._getShapeFrameKey(layer, 'fill'), slot: 'fill', glitterId: d.fill.glitterId });
 		}
 		if (d.border && d.border.widthPx > 0 && d.border.mode === 'glitter' && d.border.glitterId) {
 			sources.push({ key: this._getShapeFrameKey(layer, 'border'), slot: 'border', glitterId: d.border.glitterId });
@@ -435,7 +433,6 @@ class GifExporter {
 			throw new Error(`Missing shape mask for layer ${layer.id}`);
 		}
 		const d = layer.shapeData;
-		const t = getLayerTransform(layer);
 		const w = masks.renderWidth;
 		const h = masks.renderHeight;
 		const compositeCanvas = scratch?.compositeCanvas;
@@ -463,7 +460,7 @@ class GifExporter {
 		if (this._getBorderDrawOrder(d.border) === 'front') {
 			drawBorder();
 		}
-		this._drawTransformedCanvas(ctx, compositeCanvas, t, w, h);
+		this._drawTransformedCanvas(ctx, compositeCanvas, layer, w, h);
 	}
 
 	_getTextFrameKey(layer, slot) {
@@ -472,13 +469,7 @@ class GifExporter {
 
 	_getTextEffectSource(layer, effectName) {
 		if (effectName === 'fill') {
-			return resolveEffectPaintSource(layer.textData?.fill, {
-				allowNone: true,
-				glitterId: layer.selectedGlitterId,
-				scale: layer.settings.scale ?? 100,
-				opacity: layer.textData?.fill?.opacity ?? layer.settings.opacity ?? 100,
-				colorAdjust: layer.settings.colorAdjust
-			});
+			return resolveEffectPaintSource(layer.textData?.fill, { allowNone: true });
 		}
 
 		if (effectName === 'backgroundFill') {
@@ -626,13 +617,13 @@ class GifExporter {
 					prepareMasks: async () => {},
 					prepareStaticResources: async () => {},
 					getAuthoredSources: (library) => mode === 'glitter' ? [this._createGlitterDescriptor(library, {
-						key: layer.id, label: `${library.find((item) => item.id === layer.selectedGlitterId)?.name || 'Glitter'} (background)`,
-						ownerLayerId: layer.id, glitterId: layer.selectedGlitterId
+						key: layer.id, label: `${library.find((item) => item.id === background.glitterId)?.name || 'Glitter'} (background)`,
+						ownerLayerId: layer.id, glitterId: background.glitterId
 					})] : [],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
 						if (mode === 'image' || mode === 'gradient' || mode === 'none') return;
 						ctx.save();
-						ctx.globalAlpha = (background.opacity ?? 100) / 100;
+						ctx.globalAlpha = layer.opacity / 100;
 						if (mode === 'solid') ctx.fillStyle = background.color || '#ffffff';
 						else if (mode === 'gradient') ctx.fillStyle = createEffectCanvasGradient(ctx, background.gradient, { x: 0, y: 0, width, height });
 						else {
@@ -644,7 +635,7 @@ class GifExporter {
 							pattern.setTransform(new DOMMatrix()
 								.translateSelf(Number(background.textureOffsetX) || 0, Number(background.textureOffsetY) || 0)
 								.scaleSelf((background.scale || 100) / 100));
-							ctx.imageSmoothingEnabled = !this._isGlitterPixelated(layer.selectedGlitterId);
+							ctx.imageSmoothingEnabled = !this._isGlitterPixelated(background.glitterId);
 							ctx.fillStyle = pattern;
 						}
 						ctx.fillRect(0, 0, width, height);
@@ -653,7 +644,7 @@ class GifExporter {
 				};
 			}
 			case LayerType.GLITTER_FILL:
-				const fillMode = layer.fill?.mode || 'glitter';
+				const fillMode = layer.fill.mode;
 				return {
 					prepareMasks: async ({ maskDataMap, maskCanvases, canvasData, callbacks }) => {
 						const rawMask = callbacks.createMask(layer);
@@ -662,7 +653,7 @@ class GifExporter {
 					},
 					prepareStaticResources: async () => {},
 					getAuthoredSources: (library) => fillMode === 'glitter' ? [this._createGlitterDescriptor(library, {
-						key: layer.id, ownerLayerId: layer.id, glitterId: layer.selectedGlitterId
+						key: layer.id, ownerLayerId: layer.id, glitterId: layer.fill.glitterId
 					})] : [],
 					render: ({ ctx, frameIndex, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
 						const maskCanvas = maskCanvases.get(layer.id);
@@ -685,19 +676,19 @@ class GifExporter {
 						helperCtx.save();
 						helperCtx.clearRect(0, 0, width, height);
 
-						helperCtx.globalAlpha = (layer.opacity ?? layer.settings.opacity ?? 100) / 100;
+						helperCtx.globalAlpha = layer.opacity / 100;
 						if (fillMode === 'solid') {
 							helperCtx.fillStyle = layer.fill.color;
 						} else if (fillMode === 'gradient') {
 							helperCtx.fillStyle = createEffectCanvasGradient(helperCtx, layer.fill.gradient, { x: 0, y: 0, width, height });
 						} else {
-							const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, layer.settings.colorAdjust);
+							const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, layer.fill.colorAdjust);
 							const pattern = helperCtx.createPattern(patternSource, 'repeat');
-							const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+							const scale = (layer.fill.scale <= 0 ? 1 : layer.fill.scale) / 100;
 							pattern.setTransform(new DOMMatrix()
-								.translateSelf(Number(layer.fill?.textureOffsetX) || 0, Number(layer.fill?.textureOffsetY) || 0)
+								.translateSelf(Number(layer.fill.textureOffsetX) || 0, Number(layer.fill.textureOffsetY) || 0)
 								.scaleSelf(scale, scale));
-							helperCtx.imageSmoothingEnabled = !this._isGlitterPixelated(layer.selectedGlitterId);
+							helperCtx.imageSmoothingEnabled = !this._isGlitterPixelated(layer.fill.glitterId);
 							helperCtx.fillStyle = pattern;
 						}
 						helperCtx.fillRect(0, 0, width, height);
@@ -845,14 +836,14 @@ class GifExporter {
 	}
 
 	_getTextEffectGlitterSources(layer) {
-		// Non-glitter modes must not declare stale selectedGlitterId values as sources.
+		// Non-glitter modes must not declare stale glitter ids as sources.
 		const sources = [];
 
 		if (layer.textData?.fill?.mode === 'glitter') {
 			sources.push({
 				key: this._getTextFrameKey(layer, 'fill'),
 				slot: 'fill',
-				glitterId: layer.selectedGlitterId
+				glitterId: layer.textData.fill.glitterId
 			});
 		}
 
@@ -930,7 +921,7 @@ class GifExporter {
 			const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, source.colorAdjust);
 
 			const pattern = fillCtx.createPattern(patternSource, 'repeat');
-			const sourceScale = source.scale ?? layer.settings.scale;
+			const sourceScale = source.scale;
 			const scale = (sourceScale <= 0 ? 1 : sourceScale) / 100;
 			const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer);
 			const matrix = new DOMMatrix()
@@ -1033,7 +1024,7 @@ class GifExporter {
 			source,
 			settings,
 			colorAdjust: normalizeColorAdjust(background.colorAdjust),
-			opacity: background.opacity ?? 100,
+			opacity: layer.opacity,
 			ditherPalette,
 			shimmerAnimation: settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
 				? GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects)
@@ -1607,7 +1598,7 @@ class GifExporter {
 						renderCtx.translate(-unit.anchorBox.x, -unit.anchorBox.y);
 						renderCtx.globalAlpha *= sample.opacity;
 					} else {
-						this._activeLayerAnimation = { transform: getLayerTransform(layer), sample };
+						this._activeLayerAnimation = { layer, sample };
 					}
 				}
 				try {

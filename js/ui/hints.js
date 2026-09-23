@@ -25,7 +25,7 @@ const HINT_RULES = [
 	{ id: 'layer-locked', when: (editor, { layer }) => editor.isLayerContentLocked(layer), hint: 'This layer is locked', context: 'Its settings are available to inspect. Unlock it in the Layers panel to make changes.' },
 	{ id: 'sticker-empty', when: (_editor, { layer }) => layer?.type === LayerType.STICKER && !layer.stickerSourceId, hint: 'No sticker chosen—select a sticker from the gallery to place on your canvas' },
 	{ id: 'text-empty', when: (_editor, { layer }) => layer?.type === LayerType.TEXT_GLITTER && !layer.textData.text.trim(), hint: 'This text layer is empty - type something in the Text section to reveal the glitter fill', context: 'Choose a font, adjust spacing and alignment, and pick a glitter in the browser for the fill.' },
-	{ id: 'glitter-missing-source', when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && !layer.selectedGlitterId, hint: 'No glitter selected—choose a glitter style from the gallery to apply it' },
+	{ id: 'glitter-missing-source', when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && !layer.fill.glitterId, hint: 'No glitter selected—choose a glitter style from the gallery to apply it' },
 	{
 		id: 'glitter-empty',
 		when: (_editor, { layer, tool }) => layer?.type === LayerType.GLITTER_FILL && !hasMaskContent(layer) && tool !== ToolType.COLOR_PICKER,
@@ -59,7 +59,7 @@ const HINT_RULES = [
 			if (layer.type === LayerType.TEXT_GLITTER) return { hint: 'Switch to the Select tool to move glitter text, or choose a glitter in the browser for the fill' };
 			if (layer.type !== LayerType.GLITTER_FILL) return null;
 			if (!hasMaskContent(layer)) {
-				return layer.selectedGlitterId
+				return layer.fill.glitterId
 					? { hint: 'Click colors on your image to select areas for glitter, or use the Mask Brush (B) to paint directly', context: 'Threshold determines how similar colors need to be to get selected together.' }
 					: { hint: 'Choose a glitter style from the gallery, then click colors or paint to fill' };
 			}
@@ -85,7 +85,7 @@ const HINT_RULES = [
 	},
 	{
 		id: 'glitter-refine',
-		when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && layer.selectedGlitterId,
+		when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && layer.fill.glitterId,
 		hint: (_editor, { isMobile }) => isMobile ? 'Tap settings to adjust scale, opacity, or refine your selection' : 'Use the settings panel to adjust scale, opacity, threshold, or feather — or paint with the Mask Brush',
 		context: (_editor, { isMobile }) => isMobile ? 'Higher Color Tolerance selects more similar colors.' : 'Color Tolerance selects similar colors. Edge Feather softens the boundary. The Mask Brush adds painted detail.'
 	},

@@ -115,7 +115,7 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		pickerOpenSession(this, { layerId: layer.id }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this, layer.selectedGlitterId)
+			reveal: () => revealAssetBrowser(this.editor, this, layer.fill.glitterId)
 		});
 	}
 
@@ -152,8 +152,8 @@ async initBrowser() {
 			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
 		};
 		const refreshLayerPresentation = (layer) => {
-			const selectedGlitter = this.getItemById(layer.selectedGlitterId);
-			if (layer.fill?.mode !== 'glitter' && layer.name === selectedGlitter?.name) layer.name = null;
+			const selectedGlitter = this.getItemById(layer.fill.glitterId);
+			if (layer.fill.mode !== 'glitter' && layer.name === selectedGlitter?.name) layer.name = null;
 			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
 			this.editor.layerManager.renderLayersList();
 			this.updatePickerStrip();
@@ -161,27 +161,23 @@ async initBrowser() {
 		['glitter', 'solid'].forEach((mode) => document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`).addEventListener('click', () => {
 			const layer = active();
 			if (!layer) return;
-			layer.fill ||= { color: '#ff4fa3' };
 			layer.fill.mode = mode;
 			syncPaintSlotSourceUI(document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
 			refreshLayerPresentation(layer);
 			this.editor.saveState('Edit glitter');
 		}));
 		const color = document.getElementById('glitterFillColor');
-		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill ||= {}; layer.fill.mode = 'solid'; layer.fill.color = color.value; refreshLayerPresentation(layer); });
+		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill.mode = 'solid'; layer.fill.color = color.value; refreshLayerPresentation(layer); });
 		color.addEventListener('change', () => this.editor.saveState('Edit glitter'));
 		installEffectGradientEditor({
 			prefix: 'glitterFill',
-			getData: () => { const layer = active(); if (!layer) return null; layer.fill ||= { mode: 'glitter', color: '#ff4fa3' }; return layer.fill; },
+			getData: () => active()?.fill || null,
 			onUpdate: (commit) => { const layer = active(); if (!layer) return; refreshLayerPresentation(layer); if (commit) this.editor.saveState('Edit glitter'); }
 		});
 		bindSlotTextureCoordinateControls({
 			prefix: 'glitterFill',
 			getLayer: active,
-			getData: (layer) => {
-				layer.fill = { ...buildDefaultFill(), ...(layer.fill || {}) };
-				return normalizeSlotTextureCoordinates(layer.fill);
-			},
+			getData: (layer) => layer.fill,
 			render: refreshLayerPresentation,
 			save: () => this.editor.saveState('Edit glitter')
 		});
@@ -203,17 +199,14 @@ async initBrowser() {
 			type: this.getLayerType(),
 			visible: true,
 			locked: false,
-			opacity: 100,
+			opacity: CONFIG.layers.defaultOpacity,
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.glitterLayer,
-			fill: { ...buildDefaultFill(), gradient: normalizeEffectGradient(CONFIG.rendering.gradient) },
+			fill: this.getDefaultFill(),
 			settings: {
 				threshold: CONFIG.tools.selection.defaults.threshold,
 				feather: CONFIG.tools.selection.defaults.feather,
-				scale: CONFIG.tools.effects.defaults.scale,
-				opacity: CONFIG.tools.effects.defaults.opacity,
 				contiguous: false,
 				invert: false,
 				multiSelect: false
@@ -221,6 +214,20 @@ async initBrowser() {
 		};
 
 		return layer;
+	}
+
+	getDefaultFill() {
+		return {
+			...buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.glitterLayer }),
+			gradient: normalizeEffectGradient(CONFIG.rendering.gradient)
+		};
+	}
+
+	// Runs where a fill layer enters the document (deserialize, project load).
+	normalizeLayer(layer) {
+		if (layer?.type !== LayerType.GLITTER_FILL) return;
+		layer.fill = mergeSlotEffectDefaults(layer.fill, this.getDefaultFill());
+		normalizeSlotTextureCoordinates(layer.fill);
 	}
 
 	customizeItemElement(element, item) {
@@ -403,7 +410,7 @@ async initBrowser() {
 			return;
 		}
 		const previousGlitter = layer.type === LayerType.GLITTER_FILL
-			? this.getItemById(layer.selectedGlitterId)
+			? this.getItemById(layer.fill.glitterId)
 			: null;
 		const glitter = await this.ensureAssetDetails(id);
 
@@ -436,8 +443,7 @@ async initBrowser() {
 		await this.ensureAssetImageReady(glitter);
 
 		if (layer.type === LayerType.BASE_IMAGE) {
-			this.editor.baseBackgroundManager?.normalizeLayer(layer);
-			layer.selectedGlitterId = id;
+			layer.background.glitterId = id;
 			layer.background.mode = 'glitter';
 			layer.background.colorAdjust = normalizeColorAdjust(null);
 		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
@@ -459,26 +465,23 @@ async initBrowser() {
 				background.mode = 'glitter';
 				background.colorAdjust = null;
 			} else {
-				layer.selectedGlitterId = id;
 				// Intent capture: picking a glitter for a solid-mode fill IS the
 				// statement "I want glitter here", so flip the slot to glitter.
-				// Otherwise the gallery click writes selectedGlitterId, highlights
+				// Otherwise the gallery click writes the glitter id, highlights
 				// the swatch, and saves history with zero visible change.
-				this.editor.textGlitterManager.ensureEffectData(layer, 'fill').mode = 'glitter';
-				if (layer.settings) layer.settings.colorAdjust = null;
+				const fill = this.editor.textGlitterManager.ensureEffectData(layer, 'fill');
+				fill.glitterId = id;
+				fill.mode = 'glitter';
+				fill.colorAdjust = null;
 			}
 		} else if (layer.type === LayerType.SHAPE) {
-			// Each slot has its own glitter: fill uses the layer swatch; border and
-			// shadow store their own glitterId so they're independent.
+			// Each slot (fill, border, shadow) stores its own glitterId.
 			const sgm = this.editor.shapeGlitterManager;
 			const target = sgm?.getGlitterSelectionTarget?.() || 'fill';
-			if (target === 'fill') {
-				layer.selectedGlitterId = id;
-			}
 			if (sgm) {
 				const slotData = sgm.ensureEffectData(layer, target);
 				slotData.mode = 'glitter';
-				if (target !== 'fill') slotData.glitterId = id;
+				slotData.glitterId = id;
 				// Fresh swatch → reset that slot's hue/sat/bright.
 				slotData.colorAdjust = null;
 			}
@@ -490,22 +493,15 @@ async initBrowser() {
 			effect.mode = 'glitter';
 			effect.colorAdjust = null;
 		} else if (layer.type === LayerType.GLITTER_FILL) {
-			layer.selectedGlitterId = id;
 			// Auto Glitter layers use their swatch as the initial name. Keep that
 			// generated name live, while preserving names the user entered.
 			if (layer.name === previousGlitter?.name) layer.name = glitter.name;
-			layer.fill ||= {
-				mode: 'glitter',
-				color: '#ff4fa3',
-				gradient: normalizeEffectGradient(CONFIG.rendering.gradient)
-			};
+			layer.fill.glitterId = id;
 			layer.fill.mode = 'glitter';
 			// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
 			// the new glitter shows its true colors, and sync the HSB sliders to match.
-			if (layer.settings) {
-				layer.settings.colorAdjust = normalizeColorAdjust(null);
-				this.editor.applyColorAdjustToSliders('glitter', layer.settings.colorAdjust);
-			}
+			layer.fill.colorAdjust = normalizeColorAdjust(null);
+			this.editor.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
 		}
 
 		this.editor.updateGlitterSelection();
@@ -606,8 +602,7 @@ async initBrowser() {
 	}
 
 	renderBaseBackground(layer) {
-		this.editor.baseBackgroundManager?.normalizeLayer(layer);
-		const glitter = this.getItemById(layer.selectedGlitterId);
+		const glitter = this.getItemById(layer.background.glitterId);
 		if (!glitter) return;
 		let wrapper = this.layerElements.get(layer.id);
 		if (!wrapper) {
@@ -623,7 +618,7 @@ async initBrowser() {
 		inner.style.backgroundColor = 'transparent';
 		inner.style.backgroundSize = `${Math.round((glitter.frames?.width || 50) * layer.background.scale / 100)}px`;
 		inner.style.backgroundPosition = `${layer.background.textureOffsetX}px ${layer.background.textureOffsetY}px`;
-		inner.style.opacity = (layer.opacity ?? layer.background.opacity ?? 100) / 100;
+		inner.style.opacity = layer.opacity / 100;
 		inner.style.filter = buildCssColorFilter(layer.background.colorAdjust);
 		inner.style.maskImage = 'none';
 		inner.style.webkitMaskImage = 'none';
@@ -634,11 +629,8 @@ async initBrowser() {
 
 	renderLayer(layer, width, height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
-		layer.fill = { ...buildDefaultFill(), ...(layer.fill || {}) };
-		normalizeSlotTextureCoordinates(layer.fill);
-
-		const glitter = this.getItemById(layer.selectedGlitterId);
-		const fillMode = layer.fill?.mode || 'glitter';
+		const glitter = this.getItemById(layer.fill.glitterId);
+		const fillMode = layer.fill.mode;
 		if (fillMode === 'glitter' && !glitter) return;
 
 		let wrapper = this.layerElements.get(layer.id);
@@ -669,12 +661,12 @@ async initBrowser() {
 		// Apply glitter texture
 		inner.style.backgroundImage = fillMode === 'gradient' ? effectGradientToCss(layer.fill.gradient) : fillMode === 'glitter' ? `url(${glitter.url})` : 'none';
 		inner.style.backgroundColor = fillMode === 'solid' ? layer.fill.color : 'transparent';
-		inner.style.opacity = (layer.opacity ?? layer.settings.opacity ?? 100) / 100;
+		inner.style.opacity = layer.opacity / 100;
 		// Color adjust (WP4): CSS filter mirrors the export matrix pass. Empty
 		// string for an identity/absent adjust clears any previous filter.
-		inner.style.filter = fillMode === 'glitter' ? buildCssColorFilter(layer.settings.colorAdjust) : '';
+		inner.style.filter = fillMode === 'glitter' ? buildCssColorFilter(layer.fill.colorAdjust) : '';
 
-		const glitterScale = layer.settings.scale / 100;
+		const glitterScale = layer.fill.scale / 100;
 		const baseSize = (glitter?.frames && glitter.frames.width) ? glitter.frames.width : 50;
 		inner.style.backgroundSize = fillMode === 'glitter' ? `${Math.round(baseSize * glitterScale)}px` : 'cover';
 		inner.style.backgroundPosition = fillMode === 'glitter'
@@ -720,7 +712,6 @@ async initBrowser() {
 
 		this.removeLayerElement(layer.id);
 		this.revokeMaskImageCache(layer);
-		delete layer._maskCache;
 		delete layer._selectionMaskCache;
 		this.removePaintMask(layer.id);
 		this.editor.maskCompositor?.invalidate(layer.id);
@@ -763,23 +754,16 @@ async initBrowser() {
 
 	async ensureLayersPreviewAssetsReady(layers) {
 		const glitterIds = new Set();
-		const addSlot = (slot, fallbackId = null) => {
-			if (slot?.mode !== 'glitter') return;
-			const id = slot.glitterId ?? fallbackId;
-			if (id != null) glitterIds.add(id);
+		const addSlot = (slot) => {
+			if (slot?.mode === 'glitter' && slot.glitterId != null) glitterIds.add(slot.glitterId);
 		};
 		layers.forEach((layer) => {
 			if (!layer.visible) return;
-			if (layer.type === LayerType.BASE_IMAGE) {
-				addSlot(layer.background, layer.selectedGlitterId);
-			} else if (layer.type === LayerType.GLITTER_FILL) {
-				addSlot(layer.fill || { mode: 'glitter' }, layer.selectedGlitterId);
-			} else if (layer.type === LayerType.TEXT_GLITTER) {
-				addSlot(layer.textData?.fill, layer.selectedGlitterId);
+			addSlot(getLayerFillSlot(layer));
+			if (layer.type === LayerType.TEXT_GLITTER) {
 				addSlot(layer.textData?.border);
 				addSlot(layer.textData?.shadow);
 			} else if (layer.type === LayerType.SHAPE) {
-				addSlot(layer.shapeData?.fill, layer.selectedGlitterId);
 				addSlot(layer.shapeData?.border);
 				addSlot(layer.shapeData?.shadow);
 			} else if (layer.type === LayerType.STICKER) {
@@ -997,45 +981,6 @@ async initBrowser() {
 		};
 
 		dbg(`[G-1] createSelectionMaskForLayer total: ${(performance.now() - buildStart).toFixed(1)}ms`);
-		return new Uint8Array(mask);
-	}
-
-	createMaskForLayer(layer) {
-		const cacheKey = JSON.stringify([
-			layer.selections,
-			layer.settings.threshold,
-			layer.settings.feather,
-			layer.settings.contiguous,
-			layer.settings.invert
-		]);
-
-		if (layer._maskCache && layer._maskCache.key === cacheKey) {
-			return new Uint8Array(layer._maskCache.mask);
-		}
-
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-		const len = width * height;
-		const mask = this.createSelectionMaskForLayer(layer);
-		const alphaChannel = this.editor.originalAlphaChannel;
-
-		if (layer.settings.invert) {
-			for (let i = 0; i < len; i++) {
-				if (alphaChannel[i] >= CONFIG.tools.selection.transparency.alphaThreshold) {
-					mask[i] = 255 - mask[i];
-				}
-			}
-		}
-
-		if (layer.settings.feather > 0) {
-			this.applyFeatherToMask(mask, layer.settings.feather);
-		}
-
-		layer._maskCache = {
-			key: cacheKey,
-			mask: new Uint8Array(mask)
-		};
-
 		return new Uint8Array(mask);
 	}
 

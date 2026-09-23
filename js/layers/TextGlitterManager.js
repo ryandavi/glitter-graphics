@@ -216,8 +216,7 @@ class TextGlitterManager {
 		});
 	}
 
-	// colorAdjust lives on the effect data (border/shadow) or on layer.settings
-	// (fill, which aliases the layer like its scale/opacity). See effects/slot-effects.js.
+	// colorAdjust lives on each slot's own effect data. See paint/slot-effects.js.
 	ensureColorAdjust(target) {
 		return ensureSlotColorAdjust(target);
 	}
@@ -315,13 +314,11 @@ class TextGlitterManager {
 		}
 
 		this.attachSlider(this.ui.textureScale, this.ui.textureScaleValue, '%', (value, layer) => {
-			layer.settings.scale = value;
+			layer.textData.fill.scale = value;
 		}, CONFIG.tools.effects.defaults.scale, false);
 
 		this.attachSlider(this.ui.textureOpacity, this.ui.textureOpacityValue, '%', (value, layer) => {
-			// v2 opacity model: this is the Fill slot's per-paint opacity, stored
-			// on the slot like border/shadow (no longer aliased to settings.opacity).
-			this.ensureEffectData(layer, 'fill').opacity = value;
+			layer.textData.fill.opacity = value;
 		}, CONFIG.tools.effects.defaults.opacity, false);
 
 		this.ui.alignButtons.forEach((button) => {
@@ -377,6 +374,8 @@ class TextGlitterManager {
 							layer.textData.boxMode = 'auto';
 							delete layer.textData.boxWidth;
 							delete layer.textData.boxHeight;
+							// Text Box backgrounds need a box; fall back to text bounds.
+							this.normalizeTextBackground(layer);
 						}
 					}, { saveHistory: true, preservePointAnchor: true });
 				} catch (error) {
@@ -561,7 +560,6 @@ class TextGlitterManager {
 	}
 
 	ensureTextBackground(layer) {
-		this.normalizeLayer(layer);
 		return layer.textData.textBackground;
 	}
 
@@ -598,9 +596,9 @@ class TextGlitterManager {
 		});
 	}
 
-	// Wire a slot's three HSB sliders (WP4). Fill writes to layer.settings
-	// (aliased); border/shadow write to their own effect data. attachSlider
-	// handles the live preview refresh and one history entry on release.
+	// Wire a slot's three HSB sliders (WP4); each writes its own slot's effect
+	// data. attachSlider handles the live preview refresh and one history entry
+	// on release.
 	_bindEffectColorAdjust(slot) {
 		const axes = [
 			['Hue', 'hue', '°'],
@@ -613,8 +611,7 @@ class TextGlitterManager {
 			if (!slider) return;
 			const fallback = COLOR_ADJUST_IDENTITY[key];
 			this.attachSlider(slider, display, unit, (value, layer) => {
-				const target = slot === 'fill' ? layer.settings : this.ensureEffectData(layer, slot);
-				this.ensureColorAdjust(target)[key] = value;
+				this.ensureColorAdjust(this.ensureEffectData(layer, slot))[key] = value;
 				this.refreshSlotSwatch(layer, slot);
 			}, fallback, false);
 		});
@@ -626,10 +623,7 @@ class TextGlitterManager {
 	refreshSlotSwatch(layer, slot) {
 		const chip = this.ui[`${slot}GlitterChip`];
 		if (chip) {
-			const adjust = slot === 'fill'
-				? layer.settings?.colorAdjust
-				: this.getEffectData(layer, slot)?.colorAdjust;
-			chip.style.filter = buildCssColorFilter(adjust);
+			chip.style.filter = buildCssColorFilter(this.getEffectData(layer, slot)?.colorAdjust);
 		}
 		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
 	}
@@ -649,7 +643,6 @@ class TextGlitterManager {
 	}
 
 	getPointAnchorSnapshot(layer) {
-		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
 
 		return {
@@ -802,10 +795,8 @@ class TextGlitterManager {
 		});
 	}
 
-	// The fill slot's texture scale/opacity are (deliberately) the existing
-	// layer-level settings.scale/settings.opacity — not duplicated here.
 	getDefaultFill() {
-		return buildDefaultFill();
+		return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text });
 	}
 
 	// textBackground.fill is its own full paint slot (scale/colorAdjust
@@ -814,7 +805,6 @@ class TextGlitterManager {
 	// IMPLEMENTATION-PLAN.md "Fill integration").
 	getDefaultBackgroundFill() {
 		return buildDefaultFill({
-			includeTexture: true,
 			defaultGlitterId: CONFIG.tools.glitter.defaults.backgroundGlitterId
 		});
 	}
@@ -835,15 +825,11 @@ class TextGlitterManager {
 		return Math.max(1, Math.round(CONFIG.tools.text.minBoxSize || 40));
 	}
 
+	// Runs where a text layer enters the document (create, deserialize, project
+	// load). Getters and render paths read the canonical shape directly.
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER || !layer.textData) return;
-		if (!layer.textData.transform) {
-			layer.textData.transform = createDefaultTransform();
-		}
-		syncLayerTransformReference(layer, layer.textData.transform);
-		if (Number.isFinite(Number(layer.settings?.scale))) {
-			layer.settings.scale = roundSlotTextureScale(layer.settings.scale);
-		}
+		layer.transform ||= createDefaultTransform();
 		if (layer.textData.border === undefined) {
 			layer.textData.border = null;
 		}
@@ -934,7 +920,6 @@ class TextGlitterManager {
 	}
 
 	ensureFixedBox(layer) {
-		this.normalizeLayer(layer);
 
 		if (layer.textData.boxWidth && layer.textData.boxHeight) {
 			layer.textData.boxMode = 'fixed';
@@ -963,7 +948,6 @@ class TextGlitterManager {
 	// mode just echo the current boxWidth/boxHeight and don't grow to fit
 	// overflowing content).
 	fitBoxToText(layer) {
-		this.normalizeLayer(layer);
 		if ((layer.textData.boxMode || 'auto') !== 'fixed') return;
 
 		const entry = this.getMeasurementEntry(layer);
@@ -978,14 +962,12 @@ class TextGlitterManager {
 		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(fullHeight) + 1);
 	}
 
-	// mergeBorderDefaults is false: normalizeLayer already backfills border keys.
 	// 'backgroundFill' is Text Background's nested `textBackground.fill` slot —
 	// routed to a different root so it reuses every generic paint-slot binder
 	// (toggle excepted: the whole effect's enable/disable is
 	// `textBackground.enabled`, not fill nullability) without a parallel
 	// implementation.
 	ensureEffectData(layer, effectName) {
-		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
 		if (effectName === 'backgroundFill') {
 			return ensureSlotEffectData(layer.textData.textBackground, 'fill', {
@@ -997,13 +979,11 @@ class TextGlitterManager {
 				fill: () => this.getDefaultFill(),
 				border: () => this.getDefaultBorder(),
 				shadow: () => this.getDefaultShadow()
-			},
-			mergeBorderDefaults: false
+			}
 		});
 	}
 
 	getEffectData(layer, effectName) {
-		this.normalizeLayer(layer);
 		if (effectName === 'backgroundFill') {
 			return getSlotEffectData(layer?.textData?.textBackground, 'fill');
 		}
@@ -1055,7 +1035,7 @@ class TextGlitterManager {
 			return layer.textData.textBackground?.fill?.glitterId ?? null;
 		}
 
-		return layer.selectedGlitterId ?? null;
+		return layer.textData.fill?.glitterId ?? null;
 	}
 
 	bindEffectToggle(toggle, effectName) {
@@ -1249,11 +1229,9 @@ class TextGlitterManager {
 		});
 	}
 
-	// The fill slot's glitter-vs-solid choice lives in layer.textData.fill.mode
-	// (glitterId itself stays on layer.selectedGlitterId — the pre-existing
-	// convention the gallery/picker-target code already relies on), unlike
-	// border/shadow which keep glitterId on the effect object itself. Hence
-	// these three bespoke handlers instead of the generic bindEffect* helpers.
+	// The fill slot is always present (it can't be toggled off like
+	// border/shadow; 'none' is its off state), so it gets these bespoke mode
+	// handlers instead of the generic bindEffect* helpers.
 	bindFillUseColor() {
 		const button = this.ui.fillUseColor;
 		if (!button) return;
@@ -1631,7 +1609,6 @@ class TextGlitterManager {
 	getActiveTextLayer() {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type === LayerType.TEXT_GLITTER) {
-			this.normalizeLayer(layer);
 			return layer;
 		}
 		return null;
@@ -1658,12 +1635,8 @@ class TextGlitterManager {
 			name: this.getLayerName(defaultText),
 			visible: true,
 			locked: false,
-			opacity: 100,
-			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text,
-			settings: {
-				scale: CONFIG.tools.effects.defaults.scale,
-				opacity: CONFIG.tools.effects.defaults.opacity
-			},
+			opacity: CONFIG.layers.defaultOpacity,
+			transform,
 			textData: {
 				text: defaultText,
 				fontId: CONFIG.tools.text.defaultFontId,
@@ -1679,11 +1652,11 @@ class TextGlitterManager {
 				width: 0,
 				height: 0,
 				border: null,
-				shadow: null,
-				transform
+				shadow: null
 			}
 		};
 
+		this.normalizeLayer(layer);
 		this.ensureFontLoaded(layer.textData.fontId).catch((error) => {
 			this.reportFontLoadError(error);
 		});
@@ -1694,14 +1667,11 @@ class TextGlitterManager {
 			};
 		}
 
-		layer.transform = transform;
-		syncLayerTransformReference(layer, transform);
 		return layer;
 	}
 
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return;
-		this.normalizeLayer(layer);
 
 		this.ensureFontPickerFontsLoaded().catch((error) => {
 			this.reportFontLoadError(error);
@@ -1728,12 +1698,12 @@ class TextGlitterManager {
 		}
 
 		if (this.ui.textureScale && this.ui.textureScaleValue) {
-			this.ui.textureScale.value = layer.settings.scale;
-			this.ui.textureScaleValue.innerHTML = formatUnit(layer.settings.scale, '%');
+			this.ui.textureScale.value = layer.textData.fill.scale;
+			this.ui.textureScaleValue.innerHTML = formatUnit(layer.textData.fill.scale, '%');
 		}
 
 		if (this.ui.textureOpacity && this.ui.textureOpacityValue) {
-			const fillOpacity = this.getEffectData(layer, 'fill')?.opacity ?? layer.settings.opacity ?? 100;
+			const fillOpacity = layer.textData.fill.opacity;
 			this.ui.textureOpacity.value = fillOpacity;
 			this.ui.textureOpacityValue.innerHTML = formatUnit(fillOpacity, '%');
 		}
@@ -1853,7 +1823,6 @@ class TextGlitterManager {
 	}
 
 	updateEffectControls(layer) {
-		this.normalizeLayer(layer);
 
 		const border = this.getEffectData(layer, 'border');
 		const shadow = this.getEffectData(layer, 'shadow');
@@ -1919,9 +1888,9 @@ class TextGlitterManager {
 
 		this.syncTextBackgroundUI(layer);
 
-		// Color adjust (WP4): fill aliases layer.settings; border/shadow read their
-		// own effect data (identity when the effect is absent).
-		this._loadEffectColorAdjust('fill', layer.settings?.colorAdjust);
+		// Color adjust (WP4): each slot reads its own effect data (identity when
+		// the effect is absent).
+		this._loadEffectColorAdjust('fill', layer.textData.fill.colorAdjust);
 		this._loadEffectColorAdjust('border', border?.colorAdjust);
 		this._loadEffectColorAdjust('shadow', shadow?.colorAdjust);
 		this._loadEffectColorAdjust('backgroundFill', layer.textData.textBackground?.fill?.colorAdjust);
@@ -1986,8 +1955,7 @@ class TextGlitterManager {
 		if (mergeSet) mergeSet.hidden = tb.mode !== 'lines' || tb.lineConnection === 'separate';
 	}
 
-	// Fill's shape ({mode, color} + glitterId on layer.selectedGlitterId) differs
-	// from border/shadow's ({glitterId, color} directly), so it gets its own
+	// Fill has a 'none' mode and no on/off toggle, so it gets its own
 	// summary/update logic rather than sharing getEffectSourceSummary/
 	// updateEffectSourceUI — but mirrors their visible behavior exactly.
 	updateFillSourceUI(layer) {
@@ -1996,11 +1964,11 @@ class TextGlitterManager {
 		const fillData = this.ensureEffectData(layer, 'fill');
 		const usesGlitter = fillData.mode === 'glitter';
 		// Glitter mode is never empty — fall back to the default glitter.
-		if (usesGlitter && !layer.selectedGlitterId) {
-			layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId.text;
+		if (usesGlitter && !fillData.glitterId) {
+			fillData.glitterId = CONFIG.tools.glitter.defaults.fillGlitterId.text;
 		}
 		const glitter = usesGlitter
-			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
+			? this.editor.glitterManager?.getItemById(fillData.glitterId)
 			: null;
 
 		// Segmented control reflects the mode; at most one source display shows
@@ -2016,7 +1984,7 @@ class TextGlitterManager {
 				badges: this.ui.fillGlitterBadges,
 				size: this.ui.fillGlitterSize,
 				frames: this.ui.fillGlitterFrames
-			}, glitter, layer.settings?.colorAdjust);
+			}, glitter, fillData.colorAdjust);
 			const title = `Current fill glitter: ${glitter.name}. Click to choose another glitter.`;
 			this.ui.fillGlitterChip.title = title;
 			if (this.ui.fillGlitterChange) this.ui.fillGlitterChange.title = title;
@@ -2336,7 +2304,6 @@ class TextGlitterManager {
 	}
 
 	getCacheKeyForLayer(layer) {
-		this.normalizeLayer(layer);
 		const textData = layer.textData;
 		return JSON.stringify([
 			textData.text,
@@ -2380,7 +2347,6 @@ class TextGlitterManager {
 	}
 
 	getMeasurementEntry(layer) {
-		this.normalizeLayer(layer);
 
 		const key = this.getCacheKeyForLayer(layer);
 		const cached = this.textMaskCache.get(key);
@@ -2622,7 +2588,6 @@ class TextGlitterManager {
 	// The user-facing visible-art frame in text-local units, centered relative
 	// to the mask canvas. Fixed text keeps its layout box separately.
 	getTextFrame(layer, measurement = null) {
-		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
 
 		const entry = measurement || this.getMeasurementEntry(layer);
@@ -2638,7 +2603,6 @@ class TextGlitterManager {
 	}
 
 	getFixedBoxFrame(layer, measurement = null) {
-		this.normalizeLayer(layer);
 		if (!layer?.textData || (layer.textData.boxMode || 'auto') !== 'fixed') {
 			return null;
 		}
@@ -2657,7 +2621,6 @@ class TextGlitterManager {
 		const fixedBoxFrame = this.getFixedBoxFrame(layer, measurement);
 		if (fixedBoxFrame) return fixedBoxFrame;
 
-		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
 		const entry = measurement || this.getMeasurementEntry(layer);
 		const rect = entry.textInkRect;
@@ -2856,14 +2819,13 @@ class TextGlitterManager {
 
 	renderLayer(layer) {
 		if (layer.type !== LayerType.TEXT_GLITTER) return;
-		this.normalizeLayer(layer);
 
 		if (!layer.textData.text.trim()) {
 			this.removeLayerElement(layer.id);
 			return;
 		}
 
-		const fillGlitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+		const fillGlitter = this.editor.glitterManager.getItemById(layer.textData.fill.glitterId);
 		if (!fillGlitter) {
 			this.removeLayerElement(layer.id);
 			return;
@@ -2999,8 +2961,8 @@ class TextGlitterManager {
 		if (!stack || !layer?.textData) return;
 
 		const entry = measurement || this.getMeasurementEntry(layer);
-		const scaleX = (layer.textData.transform.scale.x || 100) / 100;
-		const scaleY = (layer.textData.transform.scale.y || 100) / 100;
+		const scaleX = (layer.transform.scale.x || 100) / 100;
+		const scaleY = (layer.transform.scale.y || 100) / 100;
 
 		stack.style.width = `${entry.width}px`;
 		stack.style.height = `${entry.height}px`;
@@ -3188,14 +3150,7 @@ class TextGlitterManager {
 	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.
 	getEffectPaintSource(layer, effectName) {
 		if (effectName === 'fill') {
-			const fillData = this.ensureEffectData(layer, 'fill');
-			return resolveEffectPaintSource(fillData, {
-				allowNone: true,
-				glitterId: layer.selectedGlitterId,
-				scale: layer.settings.scale ?? 100,
-				opacity: fillData?.opacity ?? layer.settings.opacity ?? 100,
-				colorAdjust: layer.settings.colorAdjust
-			});
+			return resolveEffectPaintSource(layer.textData.fill, { allowNone: true });
 		}
 
 		return resolveEffectPaintSource(this.getEffectData(layer, effectName), {
@@ -3309,7 +3264,6 @@ class TextGlitterManager {
 			preservePointAnchorFrom = null
 		} = options;
 
-		this.normalizeLayer(layer);
 		await this.ensureFontLoaded(layer.textData.fontId);
 		const measurement = this.getMeasurementEntry(layer);
 		if (preservePointAnchorFrom) {
@@ -3337,7 +3291,6 @@ class TextGlitterManager {
 	}
 
 	canResizeBoxEdges(layer) {
-		this.normalizeLayer(layer);
 		return Boolean(layer?.type === LayerType.TEXT_GLITTER && layer.textData?.boxMode === 'fixed');
 	}
 
@@ -3396,8 +3349,8 @@ class TextGlitterManager {
 		const nextOffsetX = nextFrame.offsetX * metrics.scaleX;
 		const nextOffsetY = nextFrame.offsetY * metrics.scaleY;
 
-		layer.textData.transform.position.x = desiredFrameCenterX - (nextOffsetX * metrics.worldCos - nextOffsetY * metrics.worldSin);
-		layer.textData.transform.position.y = desiredFrameCenterY - (nextOffsetX * metrics.worldSin + nextOffsetY * metrics.worldCos);
+		layer.transform.position.x = desiredFrameCenterX - (nextOffsetX * metrics.worldCos - nextOffsetY * metrics.worldSin);
+		layer.transform.position.y = desiredFrameCenterY - (nextOffsetX * metrics.worldSin + nextOffsetY * metrics.worldCos);
 
 		const transform = this.layerTransforms.get(layer.id);
 		if (transform) {
@@ -3508,7 +3461,6 @@ class TextGlitterManager {
 	async commitScaleToFontSize(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return;
 
-		this.normalizeLayer(layer);
 		const transform = getLayerTransform(layer);
 		const scaleX = Math.max(0.01, (transform.scale.x || 100) / 100);
 		const scaleY = Math.max(0.01, (transform.scale.y || 100) / 100);
@@ -3541,7 +3493,7 @@ class TextGlitterManager {
 			layer.textData.shadow.offsetY *= bakedFactor;
 		}
 		if (PREFERENCES.get('scaleTextures')) {
-			layer.settings.scale = roundSlotTextureScale((layer.settings.scale ?? 100) * bakedFactor);
+			layer.textData.fill.scale = roundSlotTextureScale(layer.textData.fill.scale * bakedFactor);
 			if (layer.textData.border) {
 				layer.textData.border.scale = roundSlotTextureScale((layer.textData.border.scale ?? 100) * bakedFactor);
 			}

@@ -1,6 +1,6 @@
 class ProjectSerializer {
 	static FORMAT = 'glitter-project';
-	static FORMAT_VERSION = 2;
+	static FORMAT_VERSION = 3;
 
 	/*
 	Format rules:
@@ -41,8 +41,70 @@ class ProjectSerializer {
 				if (layer.opacity == null) layer.opacity = layerOpacity;
 			});
 			data.version = 2;
+		},
+		// v2 -> v3: canonical layer state. See migrateLayerState.
+		2(data) {
+			(data.layers || []).forEach((layer) => ProjectSerializer.migrateLayerState(layer));
+			data.version = 3;
 		}
 	};
+
+	// Brings one serialized layer to the current canonical shape. Idempotent, so
+	// it also runs on every deserialize, where clipboard payloads from an older
+	// build and project data meet the same code.
+	// - The transform lives only at `layer.transform` (it used to be aliased as
+	//   stickerData/textData/shapeData.transform).
+	// - `layer.opacity` is the only whole-layer opacity; the `transform.opacity`,
+	//   `settings.opacity` and `background.opacity` mirrors are dropped.
+	// - The fill slot is self-contained (see migrateFillSlot).
+	static migrateLayerState(layer) {
+		if (!layer || typeof layer !== 'object') return layer;
+		const hosts = [layer.stickerData, layer.textData, layer.shapeData].filter(Boolean);
+		hosts.forEach((host) => {
+			if (host.transform && !layer.transform) layer.transform = host.transform;
+			delete host.transform;
+		});
+		if (!Number.isFinite(layer.opacity)) {
+			layer.opacity = layer.transform?.opacity ?? layer.background?.opacity ?? layer.settings?.opacity ?? CONFIG.layers.defaultOpacity;
+		}
+		if (layer.transform) delete layer.transform.opacity;
+		if (layer.background) delete layer.background.opacity;
+		if (layer.settings) delete layer.settings.opacity;
+		ProjectSerializer.migrateFillSlot(layer);
+		// The rounded rectangle folded into the parametric square (corner radius 0).
+		if (layer.shapeData?.shapeId === 'roundedRectangle') layer.shapeData.shapeId = 'square';
+		return layer;
+	}
+
+	// The fill slot used to be split across the layer: its glitter was
+	// `layer.selectedGlitterId`, and text and glitter fill layers kept its texture
+	// scale and color adjust in `layer.settings`. All of it now lives on the slot
+	// (see getLayerFillSlot). Glitter fill `settings` keep only the selection
+	// parameters; text and shape layers have no `settings`.
+	static migrateFillSlot(layer) {
+		const fillKey = {
+			[LayerType.GLITTER_FILL]: 'fill',
+			[LayerType.BASE_IMAGE]: 'background'
+		}[layer.type];
+		const root = fillKey ? layer : layer.textData || layer.shapeData;
+		const key = fillKey || 'fill';
+		const hasLegacyFill = 'selectedGlitterId' in layer
+			|| ['scale', 'colorAdjust'].some((field) => layer.settings && field in layer.settings);
+		if (root && hasLegacyFill) {
+			const fill = root[key] || (root[key] = {});
+			if ('selectedGlitterId' in layer) fill.glitterId = layer.selectedGlitterId ?? null;
+			if (layer.type !== LayerType.SHAPE && layer.settings) {
+				if ('scale' in layer.settings) fill.scale = layer.settings.scale;
+				if ('colorAdjust' in layer.settings) fill.colorAdjust = layer.settings.colorAdjust;
+			}
+		}
+		delete layer.selectedGlitterId;
+		if (layer.settings) {
+			delete layer.settings.scale;
+			delete layer.settings.colorAdjust;
+		}
+		if (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) delete layer.settings;
+	}
 
 	constructor(editor) {
 		this.editor = editor;
@@ -195,7 +257,7 @@ class ProjectSerializer {
 			const visit = (value) => {
 				if (!value || typeof value !== 'object') return;
 				Object.entries(value).forEach(([key, child]) => {
-					if ((key === 'glitterId' || key === 'selectedGlitterId') && child && !this.editor.glitterManager.getItemById(child)) {
+					if (key === 'glitterId' && child && !this.editor.glitterManager.getItemById(child)) {
 						issues.push({ kind: 'glitter', index, id: child, key, message: `${label}: glitter “${child}” is unavailable — default glitter will be substituted` });
 					} else if (typeof child === 'object') visit(child);
 				});
@@ -217,7 +279,7 @@ class ProjectSerializer {
 				const replace = (value, path = '') => {
 					if (!value || typeof value !== 'object') return;
 					Object.entries(value).forEach(([key, child]) => {
-						if ((key === 'glitterId' || key === 'selectedGlitterId') && child === issue.id) {
+						if (key === 'glitterId' && child === issue.id) {
 							value[key] = path.includes('border') ? CONFIG.tools.glitter.defaults.borderGlitterId[context]
 								: path.includes('shadow') ? CONFIG.tools.glitter.defaults.shadowGlitterId[context]
 									: path.includes('textBackground') ? CONFIG.tools.glitter.defaults.backgroundGlitterId

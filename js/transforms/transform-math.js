@@ -11,7 +11,6 @@ function cloneTransform(transform = null, overrides = {}) {
 			y: overrides.scale?.y ?? source.scale?.y ?? 100
 		},
 		proportionalScale: overrides.proportionalScale ?? source.proportionalScale ?? true,
-		opacity: overrides.opacity ?? source.opacity ?? 100,
 		flipX: overrides.flipX ?? source.flipX ?? false,
 		flipY: overrides.flipY ?? source.flipY ?? false
 	};
@@ -21,40 +20,12 @@ function createDefaultTransform(overrides = {}) {
 	return cloneTransform(CONFIG.tools.stickers.defaults.transform, overrides);
 }
 
-function getLegacyTransformHost(layer) {
-	if (!layer) return null;
-	if (layer.stickerData) return layer.stickerData;
-	if (layer.textData) return layer.textData;
-	if (layer.shapeData) return layer.shapeData;
-	return null;
-}
-
-function syncLayerTransformReference(layer, transform = null) {
-	if (!layer) return null;
-
-	const host = getLegacyTransformHost(layer);
-	const resolved = transform || layer.transform || host?.transform || createDefaultTransform();
-
-	// v2 opacity model: `layer.opacity` is the canonical whole-layer opacity.
-	// `transform.opacity` is a read mirror kept in sync here so the render/export
-	// metrics pipeline (computeLayerTransform -> metrics.opacity) stays unchanged.
-	if (Number.isFinite(layer.opacity)) {
-		resolved.opacity = layer.opacity;
-	} else if (Number.isFinite(resolved.opacity)) {
-		layer.opacity = resolved.opacity;
-	}
-
-	layer.transform = resolved;
-	if (host) {
-		host.transform = resolved;
-	}
-
-	return resolved;
-}
-
+// `layer.transform` is the only transform address, and a transformable layer
+// always has one from the moment it enters the document. Layer types without a
+// transform read an identity placement that is never stored.
 function getLayerTransform(layer) {
 	if (!layer) return null;
-	return syncLayerTransformReference(layer);
+	return layer.transform || createDefaultTransform();
 }
 
 // Single source of truth for layer scale limits (percent units). Every scale
@@ -133,7 +104,6 @@ function computeLayerTransform(transform, dimensions = {}) {
 		signedScaleY: scaleY * (resolved.flipY ? -1 : 1),
 		rotationDeg: resolved.rotation,
 		rotationRad: resolved.rotation * Math.PI / 180,
-		opacity: (resolved.opacity ?? 100) / 100,
 		flipX: Boolean(resolved.flipX),
 		flipY: Boolean(resolved.flipY)
 	};

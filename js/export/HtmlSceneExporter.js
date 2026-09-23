@@ -210,7 +210,7 @@ class HtmlSceneExporter {
 				width: numberOr(layer.stickerData.width, 1) * numberOr(transform.scale.x, 100) / 100,
 				height: numberOr(layer.stickerData.height, 1) * numberOr(transform.scale.y, 100) / 100,
 				rotation: numberOr(transform.rotation, 0),
-				opacity: numberOr(transform.opacity, 100) / 100,
+				opacity: numberOr(layer.opacity, 100) / 100,
 				flipX: transform.flipX,
 				flipY: transform.flipY,
 				filter: buildCssColorFilter(layer.stickerData.colorAdjust),
@@ -288,7 +288,7 @@ class HtmlSceneExporter {
 
 		const background = {
 			mode,
-			opacity: Math.max(0, Math.min(1, Number(baseLayer?.opacity ?? data.opacity ?? 100) / 100)),
+			opacity: Math.max(0, Math.min(1, Number(baseLayer?.opacity ?? CONFIG.layers.defaultOpacity) / 100)),
 			filter: ['gradient', 'glitter'].includes(mode) ? buildCssColorFilter(data.colorAdjust) : ''
 		};
 		if (mode === 'solid') {
@@ -298,7 +298,7 @@ class HtmlSceneExporter {
 		} else if (mode === 'gradient') {
 			background.image = effectGradientToCss(data.gradient);
 		} else if (mode === 'glitter') {
-			const glitter = this.editor.glitterManager.getItemById(baseLayer?.selectedGlitterId);
+			const glitter = this.editor.glitterManager.getItemById(data.glitterId);
 			if (!glitter?.url) return { mode: 'transparent', opacity: 1, filter: '' };
 			background.image = this.toCssUrl(await this.resolveAssetSource(glitter.url, options.embedAssets));
 			background.size = Math.max(1, Math.round((glitter.frames?.width || 50) * Number(data.scale ?? 100) / 100));

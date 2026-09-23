@@ -20,7 +20,7 @@ const RELEASES = [
 		name: 'Animation, Filters & Export',
 		date: '2026-10-01',
 		dateLabel: 'October 1, 2026',
-		projectFormat: 2,
+		projectFormat: 3,
 		summary: 'Added layer animation, filter layers, text backgrounds, still-image export, shape image fills, and more faithful animation output.',
 		features: [
 			{ type: 'added', text: 'Added Animation to Glitter Fill, Sticker, Text, and Shape layers, with presets for ambient movement, attention effects, motion, and one-time transitions.', guide: 'layer-animation' },
@@ -281,6 +281,8 @@ const CONFIG = deepFreeze({
 
 	layers: {
 		defaultBlendMode: 'normal',
+		// Whole-layer opacity (0-100) a new layer starts with and Reset returns to.
+		defaultOpacity: 100,
 		blendModes: [
 			'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
 			'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
@@ -574,7 +576,6 @@ const CONFIG = deepFreeze({
 					rotation: 0,
 					scale: { x: 100, y: 100 },
 					proportionalScale: true,
-					opacity: 100,
 					flipX: false,
 					flipY: false
 				}
@@ -1172,11 +1173,11 @@ function hasMaskContent(layer) {
 }
 
 function layerHasActiveColorAdjust(layer) {
-	const colorAdjusts = [layer?.settings?.colorAdjust];
+	const colorAdjusts = layer?.type === LayerType.BASE_IMAGE ? [] : [getLayerFillSlot(layer)?.colorAdjust];
 	if (layer?.type === LayerType.TEXT_GLITTER) {
 		colorAdjusts.push(layer.textData?.border?.colorAdjust, layer.textData?.shadow?.colorAdjust);
 	} else if (layer?.type === LayerType.SHAPE) {
-		colorAdjusts.push(layer.shapeData?.fill?.colorAdjust, layer.shapeData?.border?.colorAdjust, layer.shapeData?.shadow?.colorAdjust);
+		colorAdjusts.push(layer.shapeData?.border?.colorAdjust, layer.shapeData?.shadow?.colorAdjust);
 	}
 
 	return colorAdjusts.some((adjust) => adjust && !isIdentityColorAdjust(adjust));
@@ -1256,7 +1257,6 @@ const LAYER_UI_CONFIG = {
 			dataKey: 'background',
 			omit: ['name', 'settings'],
 			forceLocked: true,
-			defaultSelectedGlitterId: () => CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
 			defaults: { image: null },
 			normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
 		},
@@ -1273,7 +1273,7 @@ const LAYER_UI_CONFIG = {
 		displayName: 'Filter',
 		serialization: {
 			dataKey: 'filterData',
-			omit: ['settings', 'selectedGlitterId'],
+			omit: ['settings'],
 			defaultName: () => 'Filter',
 			normalize: (editor, layer) => editor.filterLayerManager?.normalizeLayer(layer)
 		},
@@ -1304,7 +1304,8 @@ const LAYER_UI_CONFIG = {
 		serialization: {
 			extraKeys: ['selections', 'fill', 'autoGlitter'],
 			includeMaskVersion: true,
-			defaults: { maskHasContent: false }
+			defaults: { maskHasContent: false },
+			normalize: (editor, layer) => editor.glitterManager?.normalizeLayer(layer)
 		},
 		addedStatusMessage: 'New fill layer added',
 		goTo: 'glitter',
@@ -1323,7 +1324,7 @@ const LAYER_UI_CONFIG = {
 		blendable: true,
 		autoOpenDesignDrawerOnCreate: true,
 		onActivate: (editor, layer) => {
-			if (!layer.locked && !hasMaskContent(layer) && layer.selectedGlitterId && editor.currentTool !== ToolType.BRUSH) {
+			if (!layer.locked && !hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
 				editor.setTool(ToolType.COLOR_PICKER);
 			}
 			editor.updateGlitterSelection();
@@ -1390,6 +1391,7 @@ const LAYER_UI_CONFIG = {
 		displayName: 'Text',
 		serialization: {
 			dataKey: 'textData',
+			omit: ['settings'],
 			defaultName: (editor, data) => editor.textGlitterManager?.getLayerName(data?.text || ''),
 			normalize: (editor, layer) => editor.textGlitterManager?.normalizeLayer(layer),
 			hydrate: async (editor, layer) => {
@@ -1449,6 +1451,7 @@ const LAYER_UI_CONFIG = {
 		displayName: 'Shape',
 		serialization: {
 			dataKey: 'shapeData',
+			omit: ['settings'],
 			defaultName: () => 'Shape',
 			normalize: (editor, layer) => editor.shapeGlitterManager?.normalizeLayer(layer)
 		},

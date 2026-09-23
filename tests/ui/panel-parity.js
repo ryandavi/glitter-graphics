@@ -283,7 +283,7 @@ const LAYER_SETUPS = {
 			const editor = window.editor;
 			const layer = editor.glitterManager.createLayer();
 			editor.layerManager.insertLayer(layer);
-			layer.selectedGlitterId = editor.glitterManager.content[0].id;
+			layer.fill.glitterId = editor.glitterManager.content[0].id;
 			editor.layerManager.setActiveLayer(layer.id);
 		});
 	}

@@ -121,12 +121,6 @@ setupLayerTypePickerListeners() {
 	setMultiSelectionLayerOpacity(layer, value) {
 		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
 		layer.opacity = value;
-		// Keep the transform mirror current for transformable types so the live
-		// element updates without waiting for a getLayerTransform() pass.
-		if ([LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(layer.type)) {
-			const transform = getLayerTransform(layer);
-			if (transform) transform.opacity = value;
-		}
 	}
 
 ,

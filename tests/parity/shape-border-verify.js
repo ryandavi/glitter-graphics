@@ -53,7 +53,7 @@ async function createBorderedShape(page, options = {}) {
 		}
 
 		if (shapeOptions.rotation != null) {
-			layer.shapeData.transform.rotation = shapeOptions.rotation;
+			layer.transform.rotation = shapeOptions.rotation;
 		}
 
 		editor.shapeGlitterManager.renderLayer(layer);
@@ -81,7 +81,7 @@ async function captureShapeSnapshot(page, layerId, label) {
 			tfRight: styleValue('--tf-right'),
 			tfBottom: styleValue('--tf-bottom'),
 			tfLeft: styleValue('--tf-left'),
-			transform: layer?.shapeData?.transform ? JSON.parse(JSON.stringify(layer.shapeData.transform)) : null
+			transform: layer?.transform ? JSON.parse(JSON.stringify(layer.transform)) : null
 		};
 	}, { id: layerId, tag: label });
 }

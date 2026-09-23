@@ -273,8 +273,8 @@ class GlitterEditor {
 			const layer = this.stickerManager.createLayer(stickerId);
 
 			// Override position from preset
-			layer.stickerData.transform.position.x = stickerPreset.x;
-			layer.stickerData.transform.position.y = stickerPreset.y;
+			layer.transform.position.x = stickerPreset.x;
+			layer.transform.position.y = stickerPreset.y;
 
 			// Insert layer
 			this.layerManager.insertLayer(layer);
@@ -346,12 +346,10 @@ class GlitterEditor {
 		return `${baseName}${suffix}.${CONFIG.project.extension}`;
 	}
 
-	// Common layer update pattern
-	updateLayerAndSave(updatePreview = true) {
-		this.saveActiveLayerSettings();
-		if (updatePreview) {
-			this.requestPreviewUpdate();
-		}
+	// Common Fill layer control update pattern
+	updateLayerAndSave(controlId) {
+		this.saveFillLayerControl(controlId);
+		this.requestPreviewUpdate();
 		this.saveState('Edit document');
 	}
 
@@ -462,7 +460,7 @@ class GlitterEditor {
 					updateCallback(event || { target: sliderEl });
 				}
 				if (usesDocumentBinding) {
-					this.saveActiveLayerSettings();
+					this.saveFillLayerControl(sliderId);
 					this.debouncedSliderUpdate();
 				}
 			},
@@ -629,7 +627,7 @@ class GlitterEditor {
 				this.updateResetButton('threshold');
 
 				// Save and debounce preview update
-				this.saveActiveLayerSettings();
+				this.saveFillLayerControl('threshold');
 				this.debouncedSliderUpdate();
 			});
 
@@ -648,7 +646,7 @@ class GlitterEditor {
 		// Contiguous is handled by bidirectional sync
 		if (contextContiguous) {
 			contextContiguous.addEventListener('change', () => {
-				this.updateLayerAndSave();
+				this.updateLayerAndSave('contiguous');
 			});
 		}
 	}
@@ -688,7 +686,7 @@ class GlitterEditor {
 
 		if (contiguous) {
 			contiguous.addEventListener('change', () => {
-				this.updateLayerAndSave();
+				this.updateLayerAndSave('contiguous');
 			});
 		}
 
@@ -714,7 +712,7 @@ class GlitterEditor {
 					}
 				}
 
-				this.saveActiveLayerSettings();
+				this.saveFillLayerControl('invert');
 				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.glitterManager.getPaintMask(layer.id))) {
 					this.glitterManager.commitPaintState(layer);
 				}
@@ -753,7 +751,7 @@ class GlitterEditor {
 
 		this.setupSlider('feather', 'featherValue', '', null, CONFIG.tools.selection.defaults.feather);
 		this.setupSlider('scale', 'scaleValue', '%', null, CONFIG.tools.effects.defaults.scale);
-		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.tools.effects.defaults.opacity);
+		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.layers.defaultOpacity);
 	}
 
 	setupMaskEditorListeners() {
@@ -887,10 +885,9 @@ class GlitterEditor {
 			}
 		});
 		const baseLayer = this.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
-		const normalizedBase = this.baseBackgroundManager?.normalizeLayer(baseLayer);
-		if (normalizedBase) {
-			normalizedBase.background.mode = color === 'transparent' ? 'none' : 'solid';
-			if (color !== 'transparent') normalizedBase.background.color = color;
+		if (baseLayer) {
+			baseLayer.background.mode = color === 'transparent' ? 'none' : 'solid';
+			if (color !== 'transparent') baseLayer.background.color = color;
 			// loadImageFile establishes the new project's initial history snapshot;
 			// replace it with the authored background mode, not the PNG transport.
 			this.historyManager.reset(this.historyManager.createStateSnapshot());
@@ -1682,10 +1679,7 @@ class GlitterEditor {
 		if (previousImageUrl && previousImageUrl !== objectUrl) URL.revokeObjectURL(previousImageUrl);
 		this.layerManager.updateBaseImageSwatchCache();
 		const layer = this.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
-		if (layer) {
-			const normalized = this.baseBackgroundManager?.normalizeLayer(layer);
-			if (normalized) normalized.background.mode = 'image';
-		}
+		if (layer) layer.background.mode = 'image';
 		this.requestPreviewUpdate();
 		this.layerManager.renderLayersList();
 		if (layer) this.baseBackgroundManager?.loadLayerSettings(layer);
@@ -2438,7 +2432,7 @@ class GlitterEditor {
 			return;
 		}
 
-		const background = this.baseBackgroundManager?.normalizeLayer(baseLayer)?.background;
+		const background = baseLayer?.background;
 		const mode = background?.mode || 'image';
 		if ((mode === 'image' && this.baseBackgroundManager?.hasBaseImage()) || mode === 'gradient') {
 			const width = this.previewCanvas.width;
@@ -2448,13 +2442,13 @@ class GlitterEditor {
 			const processed = !settings.pixelateEnabled && !settings.paletteEnabled
 				? source
 				: this.baseBackgroundManager.getPreviewImageData(source, width, height, settings);
-			this.renderBasePreviewImageData(background, processed);
+			this.renderBasePreviewImageData(baseLayer, processed);
 		} else if (mode === 'solid') {
-			const key = `solid:${this.previewCanvas.width}x${this.previewCanvas.height}:${background.color}:${background.opacity}`;
+			const key = `solid:${this.previewCanvas.width}x${this.previewCanvas.height}:${background.color}:${baseLayer.opacity}`;
 			if (this._basePreviewCache?.key === key) return;
 			this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 			this.previewCtx.save();
-			this.previewCtx.globalAlpha = background.opacity / 100;
+			this.previewCtx.globalAlpha = baseLayer.opacity / 100;
 			this.previewCtx.fillStyle = background.color;
 			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 			this.previewCtx.restore();
@@ -2464,14 +2458,15 @@ class GlitterEditor {
 		}
 	}
 
-	renderBasePreviewImageData(background, processed) {
+	renderBasePreviewImageData(baseLayer, processed) {
 		if (!processed) return;
-		const key = `${processed.width}x${processed.height}:${background.opacity}:${JSON.stringify(background.colorAdjust)}`;
+		const { background, opacity } = baseLayer;
+		const key = `${processed.width}x${processed.height}:${opacity}:${JSON.stringify(background.colorAdjust)}`;
 		if (this._basePreviewCache?.key === key && this._basePreviewCache.source === processed) return;
 		const image = new ImageData(new Uint8ClampedArray(processed.data), processed.width, processed.height);
 		applyColorAdjustToImageData(image, background.colorAdjust);
-		if (background.opacity < 100) {
-			for (let offset = 3; offset < image.data.length; offset += 4) image.data[offset] = Math.round(image.data[offset] * background.opacity / 100);
+		if (opacity < 100) {
+			for (let offset = 3; offset < image.data.length; offset += 4) image.data[offset] = Math.round(image.data[offset] * opacity / 100);
 		}
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this.previewCtx.putImageData(image, 0, 0);

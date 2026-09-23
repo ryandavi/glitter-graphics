@@ -150,24 +150,24 @@ function assert(condition, message) {
 			'Application initialization did not share export services');
 		const library = [{ id: 'g1', name: 'One' }, { id: 'g2', name: 'Two' }, { id: 'g3', name: 'Three' }];
 		const keysFor = (layer) => exporter._buildLayerExportPlan(layer).getAuthoredSources(library).map((source) => source.key);
-		const base = { id: 'base', type: LayerType.BASE_IMAGE, selectedGlitterId: 'g1', background: { mode: 'solid' } };
+		const base = { id: 'base', type: LayerType.BASE_IMAGE, background: { mode: 'solid', glitterId: 'g1' } };
 		check(keysFor(base).length === 0, 'Stale base glitter leaked from solid mode');
 		base.background.mode = 'glitter';
 		check(keysFor(base).join(',') === 'base', 'Base glitter descriptor key changed');
-		const fill = { id: 'fill', type: LayerType.GLITTER_FILL, selectedGlitterId: 'g1', fill: { mode: 'gradient' }, settings: {} };
+		const fill = { id: 'fill', type: LayerType.GLITTER_FILL, fill: { mode: 'gradient', glitterId: 'g1' }, settings: {} };
 		check(keysFor(fill).length === 0, 'Stale fill glitter leaked from gradient mode');
 		fill.fill.mode = 'glitter';
 		check(keysFor(fill).join(',') === 'fill', 'Glitter-fill descriptor key changed');
 		const text = {
-			id: 'text', type: LayerType.TEXT_GLITTER, selectedGlitterId: 'g1', settings: {},
-			textData: { fill: { mode: 'glitter' }, border: { mode: 'glitter', widthPx: 0, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
+			id: 'text', type: LayerType.TEXT_GLITTER,
+			textData: { fill: { mode: 'glitter', glitterId: 'g1' }, border: { mode: 'glitter', widthPx: 0, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
 		};
 		check(keysFor(text).join(',') === 'text:fill,text:shadow', 'Text source activation matrix changed');
 		text.textData.border.widthPx = 2;
 		check(keysFor(text).join(',') === 'text:fill,text:border,text:shadow', 'Text border source activation changed');
 		const shape = {
-			id: 'shape', type: LayerType.SHAPE, selectedGlitterId: 'g1', settings: {},
-			shapeData: { fill: { mode: 'glitter' }, border: { mode: 'glitter', widthPx: 2, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
+			id: 'shape', type: LayerType.SHAPE,
+			shapeData: { fill: { mode: 'glitter', glitterId: 'g1' }, border: { mode: 'glitter', widthPx: 2, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
 		};
 		const shapeSources = exporter._buildLayerExportPlan(shape).getAuthoredSources(library);
 		check(shapeSources.map((source) => source.key).join(',') === 'shape:fill,shape:border,shape:shadow', 'Shape source keys changed');

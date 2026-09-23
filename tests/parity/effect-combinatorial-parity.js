@@ -107,9 +107,7 @@ async function main() {
 							};
 							const textLayer = {
 								id: `text-${textCases}`,
-								selectedGlitterId: glitterId,
-								settings: { scale: 100, opacity: 100, colorAdjust: { hue: 0, saturation: 100, brightness: 100 } },
-								textData: { fill: makeFill(fillMode), border }
+								textData: { fill: { scale: 100, opacity: 100, colorAdjust: { hue: 0, saturation: 100, brightness: 100 }, ...makeFill(fillMode), glitterId }, border }
 							};
 							const measurement = {
 								key: `text-mask-${textCases}`,
@@ -138,8 +136,7 @@ async function main() {
 								position: { x: 80, y: 60 }
 							});
 							shapeLayer.id = `shape-${shapeCases}`;
-							shapeLayer.selectedGlitterId = glitterId;
-							shapeLayer.shapeData.fill = makeFill(fillMode);
+							shapeLayer.shapeData.fill = { ...makeFill(fillMode), glitterId };
 							shapeLayer.shapeData.border = border;
 							const shapeMeasurement = editor.shapeGlitterManager.getMeasurementEntry(shapeLayer);
 							const previewShapeMask = editor.shapeGlitterManager.getBorderMaskCanvas(shapeMeasurement, border);

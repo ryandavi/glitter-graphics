@@ -283,9 +283,8 @@ snapTransformPosition(transform, position, options = {}) {
 			});
 		}
 
-		// v2 opacity model: the standalone "Layer Opacity" row in the panel's
-		// Appearance group. Writes layer.opacity (updateTransform mirrors it onto
-		// transform.opacity and re-applies the element).
+		// The standalone "Layer Opacity" row in the panel's Appearance group.
+		// Writes layer.opacity through updateTransform, which re-applies the element.
 		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
 		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);
 		const resetLayerOpacity = document.getElementById(`reset${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}LayerOpacity`);
@@ -300,7 +299,7 @@ snapTransformPosition(transform, position, options = {}) {
 		}
 		if (resetLayerOpacity) {
 			resetLayerOpacity.addEventListener('click', () => {
-				const fallback = CONFIG.tools.stickers.defaults.transform.opacity;
+				const fallback = CONFIG.layers.defaultOpacity;
 				if (layerOpacity) layerOpacity.value = fallback;
 				showUnit(layerOpacityValue, fallback, '%');
 				const active = activeManager();

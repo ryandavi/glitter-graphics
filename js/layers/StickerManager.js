@@ -834,7 +834,7 @@ class StickerManager extends ContentManager {
 			name: sticker?.name || 'New Sticker',
 			visible: true,
 			locked: false,
-			opacity: 100,
+			opacity: CONFIG.layers.defaultOpacity,
 			blendMode: CONFIG.layers.defaultBlendMode,
 			stickerSourceId: stickerSourceId,
 			transform,
@@ -856,16 +856,12 @@ class StickerManager extends ContentManager {
 				height: sticker?.height || 100,
 				frames: null,
 				colorAdjust: { ...COLOR_ADJUST_IDENTITY },
-
-				transform,
-
 				element: null,
 				maskEnabled: false,
 				shadow: null
 			}
 		};
 
-		syncLayerTransformReference(layer, transform);
 		return layer;
 	}
 
@@ -1128,48 +1124,30 @@ updateTransform(layerId, updates) {
 		}
 	}
 
-	// ===== CLONING =====
-
-	cloneStickerElement(sourceLayer, clonedLayer) {
-		// Just render the cloned layer normally
-		// LayerTransform will handle all the setup
-		this.renderLayer(clonedLayer);
-	}
-
 	// ===== SERIALIZATION =====
 
 	serializeSticker(layer) {
 		// For undo/redo - exclude non-serializable data
-		const sourceTransform = getLayerTransform(layer);
-		const transform = {
-			position: { ...sourceTransform.position },
-			rotation: sourceTransform.rotation,
-			scale: { ...sourceTransform.scale },
-			proportionalScale: sourceTransform.proportionalScale,
-			opacity: sourceTransform.opacity,
-			flipX: sourceTransform.flipX,
-			flipY: sourceTransform.flipY
-		};
 		const stickerData = {
 			...layer.stickerData,
 			element: null,    // Can't serialize DOM
 			frames: null,      // Don't need frames for undo/redo - reload from URL on restore
-			staticImageData: null,
-
-			// Deep copy transform object for undo/redo
-			transform
+			staticImageData: null
 		};
 		delete stickerData.blendMode;
 		return {
 			...layer,
 			blendMode: GlitterBlendModes.forLayer(layer),
-			transform,
+			transform: cloneTransform(getLayerTransform(layer)),
 			stickerSourceId: layer.stickerSourceId,
 			stickerData
 		};
 	}
 
-	async deserializeSticker(layerData) {
+	async deserializeSticker(serialized) {
+		// Restore into a copy: the serialized object is a history snapshot, and the
+		// live layer must not alias it.
+		const layerData = structuredClone(serialized);
 		layerData.blendMode = GlitterBlendModes.forLayer(layerData);
 		if (layerData.animation) layerData.animation = GlitterAnimation.normalizeAnimation(layerData.animation);
 		if (layerData.stickerData) {
@@ -1177,12 +1155,9 @@ updateTransform(layerId, updates) {
 			layerData.stickerData.frames = null;
 			layerData.stickerData.staticImageData = null;
 		}
-		if (!Number.isFinite(layerData.opacity)) {
-			layerData.opacity = layerData.stickerData?.transform?.opacity ?? layerData.transform?.opacity ?? 100;
-		}
+		layerData.transform ||= createDefaultTransform();
 		// Handle empty sticker layers (no sticker selected yet)
 		if (!layerData.stickerSourceId) {
-			syncLayerTransformReference(layerData, layerData.stickerData?.transform || layerData.transform);
 			return layerData;
 		}
 
@@ -1196,10 +1171,8 @@ updateTransform(layerId, updates) {
 				...(layerData.stickerData || {}),
 				isEmpty: true,
 				url: null,
-				name: 'Missing Sticker',
-				transform: layerData.stickerData?.transform || layerData.transform
+				name: 'Missing Sticker'
 			};
-			syncLayerTransformReference(layerData, layerData.stickerData.transform);
 			return layerData;
 		}
 
@@ -1223,7 +1196,6 @@ updateTransform(layerId, updates) {
 		// Sticker borders were removed; drop them from older snapshots/projects.
 		layerData.stickerData.border = null;
 		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...this.getDefaultShadow(), ...layerData.stickerData.shadow };
-		syncLayerTransformReference(layerData, layerData.stickerData.transform || layerData.transform);
 
 		return layerData;
 	}

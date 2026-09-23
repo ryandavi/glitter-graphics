@@ -445,11 +445,11 @@ async function createTestSticker(page, options = {}) {
 		layer.stickerData.source = 'touch-smoke';
 		layer.stickerData.width = canvas.width;
 		layer.stickerData.height = canvas.height;
-		layer.stickerData.transform.position.x = positionX ?? (editor.previewCanvas.width / 2);
-		layer.stickerData.transform.position.y = positionY ?? (editor.previewCanvas.height / 2);
-		layer.stickerData.transform.rotation = 0;
-		layer.stickerData.transform.scale.x = 100;
-		layer.stickerData.transform.scale.y = 100;
+		layer.transform.position.x = positionX ?? (editor.previewCanvas.width / 2);
+		layer.transform.position.y = positionY ?? (editor.previewCanvas.height / 2);
+		layer.transform.rotation = 0;
+		layer.transform.scale.x = 100;
+		layer.transform.scale.y = 100;
 
 		editor.layerManager.insertLayer(layer);
 		editor.stickerManager.renderLayer(layer);
@@ -460,8 +460,8 @@ async function createTestSticker(page, options = {}) {
 		return {
 			layerId: layer.id,
 			position: {
-				x: layer.stickerData.transform.position.x,
-				y: layer.stickerData.transform.position.y
+				x: layer.transform.position.x,
+				y: layer.transform.position.y
 			}
 		};
 	}, {
@@ -519,14 +519,14 @@ async function getStickerState(page, layerId) {
 		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
 		return {
 			position: {
-				x: layer.stickerData.transform.position.x,
-				y: layer.stickerData.transform.position.y
+				x: layer.transform.position.x,
+				y: layer.transform.position.y
 			},
 			scale: {
-				x: layer.stickerData.transform.scale.x,
-				y: layer.stickerData.transform.scale.y
+				x: layer.transform.scale.x,
+				y: layer.transform.scale.y
 			},
-			rotation: layer.stickerData.transform.rotation
+			rotation: layer.transform.rotation
 		};
 	}, layerId);
 }
@@ -536,12 +536,12 @@ async function getTextState(page, layerId) {
 		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
 		return {
 			position: {
-				x: layer.textData.transform.position.x,
-				y: layer.textData.transform.position.y
+				x: layer.transform.position.x,
+				y: layer.transform.position.y
 			},
 			scale: {
-				x: layer.textData.transform.scale.x,
-				y: layer.textData.transform.scale.y
+				x: layer.transform.scale.x,
+				y: layer.transform.scale.y
 			}
 		};
 	}, layerId);

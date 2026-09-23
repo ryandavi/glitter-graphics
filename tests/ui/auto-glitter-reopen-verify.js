@@ -32,7 +32,7 @@ async function main() {
 			const createdAt = Date.now();
 			const layers = [0, 1].map((side) => {
 				const layer = window.editor.glitterManager.createLayer({ skipLimitCheck: true });
-				layer.selectedGlitterId = glitter.id;
+				layer.fill.glitterId = glitter.id;
 				layer.fill.color = side === 0 ? 'rgb(255, 0, 0)' : '#0000ff';
 				layer.name = side === 0 ? 'Left Region' : 'Right Region';
 				const paint = window.editor.glitterManager.ensurePaintMask(layer.id);
@@ -137,7 +137,7 @@ async function main() {
 			const [first, second] = editor.glitterManager.getAllContent().filter((item) => item.isAnimated).slice(0, 2);
 			if (!first || !second) throw new Error('Need two animated glitters for layer-name coverage');
 			const layer = editor.glitterManager.createLayer();
-			layer.selectedGlitterId = first.id;
+			layer.fill.glitterId = first.id;
 			layer.name = first.name;
 			editor.layerManager.insertLayer(layer);
 			editor.glitterManager.armAssetPicker();

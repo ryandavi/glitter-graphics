@@ -250,11 +250,11 @@ async function createTestSticker(page, options = {}) {
 		layer.stickerData.source = 'touch-handle-verify';
 		layer.stickerData.width = canvas.width;
 		layer.stickerData.height = canvas.height;
-		layer.stickerData.transform.position.x = positionX ?? (editor.previewCanvas.width / 2);
-		layer.stickerData.transform.position.y = positionY ?? (editor.previewCanvas.height / 2);
-		layer.stickerData.transform.rotation = 0;
-		layer.stickerData.transform.scale.x = 100;
-		layer.stickerData.transform.scale.y = 100;
+		layer.transform.position.x = positionX ?? (editor.previewCanvas.width / 2);
+		layer.transform.position.y = positionY ?? (editor.previewCanvas.height / 2);
+		layer.transform.rotation = 0;
+		layer.transform.scale.x = 100;
+		layer.transform.scale.y = 100;
 
 		editor.layerManager.insertLayer(layer);
 		editor.stickerManager.renderLayer(layer);
@@ -298,9 +298,9 @@ async function getStickerState(page, layerId) {
 	return page.evaluate((activeLayerId) => {
 		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
 		return {
-			position: { x: layer.stickerData.transform.position.x, y: layer.stickerData.transform.position.y },
-			scale: { x: layer.stickerData.transform.scale.x, y: layer.stickerData.transform.scale.y },
-			rotation: layer.stickerData.transform.rotation
+			position: { x: layer.transform.position.x, y: layer.transform.position.y },
+			scale: { x: layer.transform.scale.x, y: layer.transform.scale.y },
+			rotation: layer.transform.rotation
 		};
 	}, layerId);
 }
@@ -527,17 +527,17 @@ async function checkTextLayoutControls(page) {
 	const result = await page.evaluate(async (activeLayerId) => {
 		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
 		const manager = window.editor.textGlitterManager;
-		const before = { ...layer.textData.transform.position };
+		const before = { ...layer.transform.position };
 
 		await manager.runLayoutRefreshWithAnchor(layer, () => {
 			layer.textData.align = 'right';
 		});
-		const afterHorizontal = { ...layer.textData.transform.position };
+		const afterHorizontal = { ...layer.transform.position };
 
 		await manager.runLayoutRefreshWithAnchor(layer, () => {
 			layer.textData.verticalAlign = 'bottom';
 		});
-		const afterVertical = { ...layer.textData.transform.position };
+		const afterVertical = { ...layer.transform.position };
 		const background = manager.ensureTextBackground(layer);
 		background.enabled = true;
 		background.mode = 'text-bounds';

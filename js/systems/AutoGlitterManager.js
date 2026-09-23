@@ -225,7 +225,6 @@ class AutoGlitterManager {
 	captureGeneratedState(layer) {
 		return {
 			maskVersion: layer.maskVersion || 0,
-			selectedGlitterId: layer.selectedGlitterId,
 			name: layer.name,
 			visible: layer.visible,
 			locked: layer.locked,
@@ -361,8 +360,8 @@ class AutoGlitterManager {
 			return {
 				r, g, b,
 				count: 0,
-				selectedGlitterId: layer.selectedGlitterId,
-				selectedColorAdjust: layer.settings?.colorAdjust ? JSON.parse(JSON.stringify(layer.settings.colorAdjust)) : null,
+				selectedGlitterId: layer.fill.glitterId,
+				selectedColorAdjust: layer.fill.colorAdjust ? JSON.parse(JSON.stringify(layer.fill.colorAdjust)) : null,
 				sourceLayer: layer
 			};
 		});
@@ -900,9 +899,9 @@ class AutoGlitterManager {
 			const color = palette[rootIndex];
 			const glitter = glitters.find((item) => String(item.id) === String(color.selectedGlitterId));
 			layer._autoGlitterRoot = rootIndex;
-			layer.selectedGlitterId = glitter?.id ?? color.selectedGlitterId;
+			layer.fill.glitterId = glitter?.id ?? color.selectedGlitterId;
 			layer.name = color.sourceLayer?.name || glitter?.name || `Color ${rootIndex + 1}`;
-			layer.settings.colorAdjust = color.selectedColorAdjust ? normalizeColorAdjust(color.selectedColorAdjust) : null;
+			layer.fill.colorAdjust = color.selectedColorAdjust ? normalizeColorAdjust(color.selectedColorAdjust) : null;
 			layer.fill.color = `rgb(${color.r}, ${color.g}, ${color.b})`;
 			layer.fill.mode = this.session.previewMode === 'flat' ? 'solid' : 'glitter';
 			layer.visible = this.session.previewMode !== 'original' && !color.skipped;

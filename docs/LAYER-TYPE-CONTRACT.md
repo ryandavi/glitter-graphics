@@ -34,7 +34,7 @@ Each layer manager exposes these members, so shared code can route through `mana
 - `removeLayerElement(id)`
 - `releaseLayerResources(layer)`: safe during deletion. Removes DOM, transforms and any cached resources the layer owns.
 - `loadLayerSettings(layer)`: syncs the sidebar controls from the layer.
-- `normalizeLayer(layer)`: makes restored, history-loaded or project-loaded data safe for the current runtime shape.
+- `normalizeLayer(layer)`: fills in defaults so a created, restored, history-loaded or project-loaded layer has the canonical runtime shape. Call it only where a layer enters the document (`createLayer` and the `serialization.normalize` hook), never from getters or render paths. Renames and moved fields belong in `ProjectSerializer.migrateLayerState` instead.
 - `layerElements`: a `Map` of live preview DOM. It is the source of truth for visibility toggles and selection highlighting.
 - `layerTransforms`: a `Map` of `LayerTransform` instances, for transformable types only.
 
