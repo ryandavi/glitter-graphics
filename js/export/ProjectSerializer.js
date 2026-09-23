@@ -65,7 +65,7 @@ class ProjectSerializer {
 			delete host.transform;
 		});
 		if (!Number.isFinite(layer.opacity)) {
-			layer.opacity = layer.transform?.opacity ?? layer.background?.opacity ?? layer.settings?.opacity ?? CONFIG.layers.defaultOpacity;
+			layer.opacity = layer.transform?.opacity ?? layer.background?.opacity ?? layer.settings?.opacity ?? FIELDS.layerOpacity.value;
 		}
 		if (layer.transform) delete layer.transform.opacity;
 		if (layer.background) delete layer.background.opacity;
@@ -257,7 +257,7 @@ class ProjectSerializer {
 			const visit = (value) => {
 				if (!value || typeof value !== 'object') return;
 				Object.entries(value).forEach(([key, child]) => {
-					if (key === 'glitterId' && child && !this.editor.glitterManager.getItemById(child)) {
+					if (key === 'glitterId' && child && !this.editor.glitterLibrary.getItemById(child)) {
 						issues.push({ kind: 'glitter', index, id: child, key, message: `${label}: glitter “${child}” is unavailable — default glitter will be substituted` });
 					} else if (typeof child === 'object') visit(child);
 				});
@@ -366,7 +366,7 @@ class ProjectSerializer {
 		for (const layer of this.editor.layers) {
 			if (layer.type !== LayerType.GLITTER_FILL) continue;
 
-			const paint = this.editor.glitterManager.getPaintMask(layer.id);
+			const paint = this.editor.paintMaskStore.getPaintMask(layer.id);
 			if (paint?.hasContent) {
 				masks[layer.id] = {
 					add: paint.add.toDataURL('image/png'),
@@ -376,7 +376,7 @@ class ProjectSerializer {
 			}
 
 			const snapshot = layer.maskVersion
-				? this.editor.glitterManager.findPaintSnapshot(layer.id, layer.maskVersion)
+				? this.editor.paintMaskStore.findPaintSnapshot(layer.id, layer.maskVersion)
 				: null;
 			if (!snapshot?.hasContent) {
 				continue;
@@ -507,10 +507,10 @@ class ProjectSerializer {
 				continue;
 			}
 
-			const paint = this.editor.glitterManager.ensurePaintMask(layer.id);
+			const paint = this.editor.paintMaskStore.ensurePaintMask(layer.id);
 			await this.drawMaskData(paint.add, maskEntry.add);
 			await this.drawMaskData(paint.sub, maskEntry.sub);
-			this.editor.glitterManager.commitPaintState(layer);
+			this.editor.paintMaskStore.commitPaintState(layer);
 		}
 	}
 
@@ -518,7 +518,7 @@ class ProjectSerializer {
 		const canvas = createAppCanvas(0, 0, 'export/ProjectSerializer');
 		canvas.width = this.editor.originalCanvas.width;
 		canvas.height = this.editor.originalCanvas.height;
-		this.editor.glitterManager.blitAlphaToCanvas(canvas, alphaData);
+		this.editor.paintMaskStore.blitAlphaToCanvas(canvas, alphaData);
 		return canvas.toDataURL('image/png');
 	}
 

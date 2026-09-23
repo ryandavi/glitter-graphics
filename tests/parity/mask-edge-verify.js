@@ -34,7 +34,7 @@ async function getBrushAlphaProfile(page, { crisp, softness, flow = 100 }) {
 		const stampAlpha = [...new Set(Array.from(stampPixels).filter((_, index) => index % 4 === 3))].sort((a, b) => a - b);
 
 		const layer = editor.glitterManager.createLayer();
-		const paint = editor.glitterManager.ensurePaintMask(layer.id);
+		const paint = editor.paintMaskStore.ensurePaintMask(layer.id);
 		maskEditor._stampAtPoint(layer, paint, 100.25, 100.75, null);
 		const paintPixels = paint.add.getContext('2d', { willReadFrequently: true })
 			.getImageData(70, 70, 60, 60).data;

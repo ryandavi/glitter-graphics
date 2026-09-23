@@ -413,7 +413,7 @@ class AutoGlitterManager {
 		this.analysisRunId = analysisId;
 		this.setCanvasPreviewState(true, this.segmentDirty ? 'Analyzing image…' : 'Updating preview…');
 		this.ui.status.textContent = this.segmentDirty ? 'Finding distinct colors…' : 'Updating color matches…';
-		const swatches = this.editor.glitterManager.getAllContent()
+		const swatches = this.editor.glitterLibrary.getAllContent()
 			.filter(glitter => glitter.isActive !== false
 				&& !glitter.hasTransparency
 				&& glitter.colorCodes?.length
@@ -520,7 +520,7 @@ class AutoGlitterManager {
 
 	renderReviewResults() {
 		const template = document.getElementById('tpl-auto-glitter-match');
-		const glitters = this.editor.glitterManager.getAllContent().filter(glitter => glitter.isActive !== false && !glitter.hasTransparency);
+		const glitters = this.editor.glitterLibrary.getAllContent().filter(glitter => glitter.isActive !== false && !glitter.hasTransparency);
 		this.ui.results.replaceChildren();
 		const activeIndices = this.getActivePaletteIndices();
 		const orderedIndices = activeIndices.flatMap((root) => [
@@ -631,7 +631,7 @@ class AutoGlitterManager {
 
 	selectPickerGlitter(id) {
 		if (!this.hasActivePickerSession()) return;
-		const glitter = this.editor.glitterManager.getItemById(id);
+		const glitter = this.editor.glitterLibrary.getItemById(id);
 		if (!glitter || glitter.isActive === false) return;
 		if (glitter.hasTransparency) {
 			this.editor.showError('Choose a glitter without transparency for Auto Glitter');
@@ -763,7 +763,7 @@ class AutoGlitterManager {
 	}
 
 	updateMatchThumbnail(row, color) {
-		const glitter = this.editor.glitterManager.getAllContent().find(item => String(item.id) === String(color.selectedGlitterId));
+		const glitter = this.editor.glitterLibrary.getAllContent().find(item => String(item.id) === String(color.selectedGlitterId));
 		const image = row.querySelector('img');
 		image.src = glitter?.thumbnailUrl || glitter?.url || '';
 		image.alt = '';
@@ -870,7 +870,7 @@ class AutoGlitterManager {
 			this.removeSessionLayer(this.session.layers.pop());
 		}
 
-		const glitters = this.editor.glitterManager.getAllContent();
+		const glitters = this.editor.glitterLibrary.getAllContent();
 		const baseIndex = this.editor.layers.findIndex((layer) => layer.type === LayerType.BASE_IMAGE);
 		roots.forEach((rootIndex, position) => {
 			let layer = this.session.layers[position];
@@ -919,7 +919,7 @@ class AutoGlitterManager {
 		const labels = this.result.labels;
 		const memberSet = new Uint8Array(manualRoots.length);
 		members.forEach((index) => { memberSet[index] = 1; });
-		const paint = this.editor.glitterManager.ensurePaintMask(layer.id);
+		const paint = this.editor.paintMaskStore.ensurePaintMask(layer.id);
 		const context = paint.add.getContext('2d', { willReadFrequently: true });
 		const mask = context.createImageData(width, height);
 		for (let pixelIndex = 0, offset = 0; pixelIndex < labels.length; pixelIndex++, offset += 4) {
@@ -931,7 +931,7 @@ class AutoGlitterManager {
 			mask.data[offset + 3] = data[offset + 3];
 		}
 		context.putImageData(mask, 0, 0);
-		this.editor.glitterManager.markPaintTransient(layer);
+		this.editor.paintMaskStore.markPaintTransient(layer);
 		this.session.maskSignatures.set(layer.id, signature);
 	}
 
@@ -1010,7 +1010,7 @@ class AutoGlitterManager {
 			layer.visible = wasEditingPrevious && sourceVisible != null ? sourceVisible : true;
 			layer.locked = wasEditingPrevious && sourceLocked != null ? sourceLocked : false;
 			layer.fill.mode = 'glitter';
-			this.editor.glitterManager.commitPaintState(layer);
+			this.editor.paintMaskStore.commitPaintState(layer);
 		});
 		kept.forEach((layer) => {
 			layer.autoGlitter = {

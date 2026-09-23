@@ -7,13 +7,13 @@ const PREVIEW_EXPORT_TWINS = [
 		feature: 'slot stack order',
 		shared: 'buildSlotStack',
 		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack'],
-		export: ['GifExporter._renderSlotStackToCanvas', 'GifExporter._renderStickerEffects']
+		export: ['SceneCompositor._renderSlotStackToCanvas', 'SceneCompositor._renderStickerEffects']
 	},
 	{
 		feature: 'paint source',
 		shared: 'resolvePaintSlotSource',
 		preview: ['paintSlots.resolvePaintSlotPreviewSource'],
-		export: ['GifExporter._getSlotSource']
+		export: ['SceneCompositor._getSlotSource']
 	},
 	{
 		feature: 'text slot masks',
@@ -31,13 +31,13 @@ const PREVIEW_EXPORT_TWINS = [
 		feature: 'image fill placement',
 		shared: 'getImageFillPlacement',
 		preview: ['paintSlots.applyPaintSourceToElement'],
-		export: ['GifExporter._paintSourceInto']
+		export: ['SceneCompositor._paintSourceInto']
 	},
 	{
 		feature: 'texture registration',
 		shared: 'getSlotTexturePatternOrigin',
 		preview: ['paintSlots.applyPaintSourceToElement'],
-		export: ['GifExporter._paintSourceInto']
+		export: ['SceneCompositor._paintSourceInto']
 	}
 ];
 

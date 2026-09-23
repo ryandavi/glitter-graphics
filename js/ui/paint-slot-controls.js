@@ -434,7 +434,7 @@ function syncPaintSlotControls(host, layer) {
 		const chip = byId(`${prefix}GlitterChip`);
 		const change = byId(`${prefix}GlitterChange`);
 		if (shown.mode === 'glitter' && chip) {
-			const glitter = editor.glitterManager?.getItemById(shown.glitterId);
+			const glitter = editor.glitterLibrary?.getItemById(shown.glitterId);
 			const els = {
 				thumbnail: chip,
 				name: byId(`${prefix}GlitterLabel`),

@@ -21,7 +21,7 @@ function reportMp4ExportProgress(callbacks, phaseKey, ratio = 0, detail = '', ph
 }
 
 class Mp4Exporter {
-	constructor(frameComposer, resultPresenter = frameComposer?.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null)) {
+	constructor(frameComposer, resultPresenter = (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null)) {
 		this.frameComposer = frameComposer;
 		this.resultPresenter = resultPresenter;
 		this.fileName = `${CONFIG.export.core.defaultBaseName}.mp4`;
@@ -65,12 +65,13 @@ class Mp4Exporter {
 	async process(params) {
 		const { exportSettings, callbacks } = params;
 		const opaqueSettings = { ...exportSettings, transparency: false };
-		return this.frameComposer.process({
+		const { plan, renderScheduleEntry } = await this.frameComposer.planAnimation({
 			...params,
 			exportSettings: opaqueSettings,
 			outputFormat: 'mp4',
-			scheduleSink: (renderJob) => this._encode(renderJob, opaqueSettings, callbacks)
+			schedule: true
 		});
+		return this._encode({ schedulePlan: plan, renderScheduleEntry }, opaqueSettings, callbacks);
 	}
 
 	_buildOutputSchedule(frameDurations, planDuration, exportSettings) {

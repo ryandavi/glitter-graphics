@@ -60,14 +60,14 @@ async function buildComposition(page) {
 		editor.layerManager.insertLayer(glitterLayer);
 		glitterLayer.blendMode = 'screen';
 		glitterLayer.fill = { ...glitterLayer.fill, glitterId: glitterA, mode: 'gradient', gradient: { type: 'linear', angle: 35, interpolation: 'steps', stops: [{ offset: 0, color: '#ff0066', alpha: 1 }, { offset: 1, color: '#3344ff', alpha: 0.75 }] } };
-		const paint = editor.glitterManager.ensurePaintMask(glitterLayer.id);
+		const paint = editor.paintMaskStore.ensurePaintMask(glitterLayer.id);
 		const paintCtx = paint.add.getContext('2d', { willReadFrequently: true });
 		paintCtx.fillStyle = '#ffffff';
 		paintCtx.fillRect(24, 28, 88, 72);
 		paint.hasContent = true;
 		paint.liveRevision += 1;
 		glitterLayer.maskHasContent = true;
-		editor.glitterManager.commitPaintState(glitterLayer);
+		editor.paintMaskStore.commitPaintState(glitterLayer);
 
 		const stickerLayer = editor.stickerManager.createLayer(animatedSticker.id);
 		editor.layerManager.insertLayer(stickerLayer);
@@ -220,9 +220,9 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 			tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
 			skewX: 0, skewY: 0, opacity: 0.5, originX: 0.5, originY: 0.5
 		};
-		editor.exporter._activeLayerAnimation = { layer, sample };
+		editor.sceneCompositor._activeLayerAnimation = { layer, sample };
 		try {
-			const plan = editor.exporter._buildLayerExportPlan(layer);
+			const plan = editor.sceneCompositor._buildLayerExportPlan(layer);
 			plan.render({
 				ctx: context,
 				frameIndex: 0,
@@ -231,7 +231,7 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 				slotMaskCanvases: new Map([[layer.id, masks]])
 			});
 		} finally {
-			editor.exporter._activeLayerAnimation = null;
+			editor.sceneCompositor._activeLayerAnimation = null;
 		}
 		const shapeRect = masks.measurement.shapeRect;
 		const x = Math.round(layer.transform.position.x + shapeRect.x + shapeRect.width / 2 - masks.renderWidth / 2);
@@ -307,7 +307,6 @@ async function exportBytes(page, exportOverrides = {}) {
 						exporter._handleFileSave = originalHandleFileSave;
 						reject(error);
 					},
-					parseGif: (url) => editor.glitterManager.parseGifFromUrl(url),
 					createMask: (layer) => editor.maskCompositor.getMaskData(layer),
 					renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
 					ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
@@ -501,9 +500,9 @@ async function verifyBasePreviewExportParity(page, label, frameIndex = 0) {
 		};
 		const context = {
 			canvasData,
-			basePipeline: editor.exporter._prepareBasePipeline([layer], canvasData, { baseImage: true })
+			basePipeline: editor.sceneCompositor._prepareBasePipeline([layer], canvasData, { baseImage: true })
 		};
-		const exported = editor.exporter._getBasePipelineImageData(context, frameIndex);
+		const exported = editor.sceneCompositor._getBasePipelineImageData(context, frameIndex);
 		for (let index = 0; index < exported.data.length; index++) {
 			if (exported.data[index] !== previewFinished.data[index]) return { firstDiff: index };
 		}

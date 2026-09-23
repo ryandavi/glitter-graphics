@@ -345,13 +345,11 @@ class ShapeGlitterManager {
 			dataUrl: payload.dataUrl,
 			name: payload.name || 'Image',
 			mimeType: payload.mimeType || 'image/png',
-			// Multi-frame GIFs get a real decode (frames/durations) lazily, only
-			// when the exporter actually needs them (registerShapeFillImageDescriptor
-			// in GifExporter.js) — same laziness as glitter/sticker GIFs. isAnimated
-			// is a cheap up-front probe (GifReader parses block structure without
-			// decompressing pixels) so the exporter knows which slots to even ask for.
-			isAnimated: false,
-			frames: null
+			// Multi-frame GIFs are decoded only when an export needs them
+			// (SceneCompositor), like glitter and sticker GIFs. isAnimated is a
+			// cheap up-front probe (readGifTiming decodes no pixels) so the
+			// exporter knows which slots to ask for.
+			isAnimated: false
 		};
 		if (asset.mimeType === 'image/gif') {
 			try {
@@ -365,9 +363,7 @@ class ShapeGlitterManager {
 	}
 
 	async _probeAnimatedGif(dataUrl) {
-		const response = await fetch(dataUrl);
-		const bytes = new Uint8Array(await response.arrayBuffer());
-		return new GifReader(bytes).numFrames() > 1;
+		return readGifTiming(await fetchGifBytes(dataUrl)).frameCount > 1;
 	}
 
 	getImageFillAsset(imageRef) {
@@ -673,7 +669,7 @@ class ShapeGlitterManager {
 			name: this.getShapeLabel(shapeId),
 			visible: true,
 			locked: false,
-			opacity: CONFIG.layers.defaultOpacity,
+			opacity: FIELDS.layerOpacity.value,
 			transform,
 			shapeData: {
 				shapeId,
@@ -1048,7 +1044,7 @@ class ShapeGlitterManager {
 			width: measurement.width,
 			height: measurement.height,
 			layer,
-			glitterLibrary: this.editor.glitterManager,
+			glitterLibrary: this.editor.glitterLibrary,
 			getMask: (item) => {
 				const mask = this.getSlotMask(measurement, item);
 				return mask && { canvas: mask.canvas, url: this.getPreviewMaskDataUrl(mask.canvas, mask.cacheKey) };

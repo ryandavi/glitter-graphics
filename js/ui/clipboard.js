@@ -62,10 +62,10 @@ async function pasteLayerPayload(editor, payload) {
 		editor.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
 		const mask = payload.masks?.[sourceId];
 		if (layer.type === LayerType.GLITTER_FILL && (mask?.add || mask?.sub)) {
-			const paint = editor.glitterManager.ensurePaintMask(layer.id);
+			const paint = editor.paintMaskStore.ensurePaintMask(layer.id);
 			await editor.projectSerializer.drawMaskData(paint.add, mask.add);
 			await editor.projectSerializer.drawMaskData(paint.sub, mask.sub);
-			editor.glitterManager.commitPaintState(layer);
+			editor.paintMaskStore.commitPaintState(layer);
 		}
 		pastedIds.push(layer.id);
 	}

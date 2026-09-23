@@ -636,18 +636,17 @@ initializeExportSettings() {
 		}
 		if (fidelityOutput) fidelityOutput.textContent = 'Calculating animation estimate…';
 
-		if (!this.exporter || !this.glitterManager?.content) return;
+		if (!this.sceneCompositor || !this.glitterLibrary?.content) return;
 		const visibleLayers = this.layers.filter((layer) => layer.visible
 			&& layerHasVisibleContent(layer)
 			&& this._layerIntersectsExportCanvas(layer));
 		if (!visibleLayers.length) return;
 
 		try {
-			const estimate = await this.exporter.estimateLoopDuration({
+			const estimate = await this.sceneCompositor.estimateLoopDuration({
 				layers: visibleLayers,
-				library: this.glitterManager.content,
+				library: this.glitterLibrary.content,
 				fallbackDuration: this.exportSettings.frameDelay,
-				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				smartReduction: this.exportSettings.smartFrameReduction,
 				exportFidelity: this.exportSettings.exportFidelity,
 				maxSamplingFps: this.exportSettings.maxSamplingFps,
@@ -695,9 +694,7 @@ initializeExportSettings() {
 ,
 	refreshMaskEdgeRendering() {
 		this.textGlitterManager?.textMaskCache.clear();
-		this.layers
-			.filter((layer) => layer.type === LayerType.TEXT_GLITTER)
-			.forEach((layer) => this.textGlitterManager?.revokePreviewMaskCache(layer));
+		this.textGlitterManager?.clearPreviewMaskUrls();
 		this.shapeGlitterManager?.invalidateMeasurement();
 		this.maskEditor?._syncAntialiasControls();
 		this.requestPreviewUpdate();

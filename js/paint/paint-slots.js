@@ -198,14 +198,14 @@ function resolvePaintSlotSource(layer, entry, options = {}) {
 // the glitter is in the library (a missing one shows the slot color).
 function resolvePaintSlotPreviewSource(editor, layer, entry) {
 	return resolvePaintSlotSource(layer, entry, {
-		glitterAvailable: (glitterId) => Boolean(editor.glitterManager?.getItemById(glitterId)),
+		glitterAvailable: (glitterId) => Boolean(editor.glitterLibrary?.getItemById(glitterId)),
 		imageResolver: (imageRef) => editor.shapeGlitterManager?.getImageFillAsset(imageRef)
 	});
 }
 
 // Back-to-front paint order for one layer: declaration order, except that a
 // border drawn in front of its fill moves after it. The DOM preview
-// (reconcileSlotStack) and the export compositor (GifExporter) both read this
+// (reconcileSlotStack) and the export compositor (SceneCompositor) both read this
 // list, so the ordering rules live here only. resolveSource(entry) returns a
 // paint source or null to skip the slot.
 function buildSlotStack(layer, resolveSource) {
@@ -249,7 +249,7 @@ function getShadowCanvasPadding(shadow) {
 // Displayed tile width of a glitter at 100% scale. The manifest width is
 // authoritative; decoded frames only exist once the GIF has been parsed.
 function getGlitterTileSize(glitter) {
-	return glitter?.frames?.width || glitter?.width || 50;
+	return glitter?.width || 50;
 }
 
 // ===== DOM PREVIEW =====

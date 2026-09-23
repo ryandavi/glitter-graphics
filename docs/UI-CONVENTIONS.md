@@ -5,7 +5,7 @@ Visual and interaction conventions for the editor UI: sidebar panels, layout nam
 ## Sidebar panels
 
 - **Naming.** "\<Thing\> Properties" means attributes of the selected layer (Glitter Properties, Sticker Properties, Text Properties). "\<Tool\> Settings" means tool configuration (Mask Settings, Color Fill Settings). Section *ids* are historically `*SettingsSection` regardless of title. Don't rename ids.
-- **Built from schemas.** Every sidebar section is a `PANEL_SCHEMAS` entry in `js/core/config.js`, composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`. Never copy live sidebar markup into `index.html`.
+- **Built from schemas.** Every sidebar section is a `PANEL_SCHEMAS` entry in `js/ui/panel-schemas.js`, composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`. Never copy live sidebar markup into `index.html`.
 - **The guide mirrors the UI.** `modals/guide.html` must mirror every new panel title, tool and keyboard shortcut. Shortcuts are defined in `COMMANDS` (`js/core/commands.js`); `tests/unit/shortcut-coverage.js` checks the guide against it.
 - **Reuse the existing patterns:** gallery cards (font, sticker and brush-shape pickers), segmented controls, carded effect subsections, paint-slot cards, and the shared `renderGlitterAssetDisplay` asset chips.
 

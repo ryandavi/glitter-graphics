@@ -1,7 +1,7 @@
 'use strict';
 
 // Sidebar panel renderer. Clones the tpl-*
-// <template> primitives in index.html per PANEL_SCHEMAS (core/config.js) and
+// <template> primitives in index.html per PANEL_SCHEMAS (ui/panel-schemas.js) and
 // stamps ids, labels, and slider ranges (FIELDS, js/core/fields.js). Renders ONCE at
 // boot, before any manager caches or binds panel elements — managers keep
 // updating values in place; nothing here re-renders after boot (rebuilding a

@@ -39,7 +39,7 @@ class HistoryManager {
 		const current = this.history[this.historyIndex];
 		if (coalesceKey && current?.coalesceKey === coalesceKey) {
 			this.history[this.historyIndex] = state;
-			this.editor.glitterManager?.prunePaintHistory();
+			this.editor.paintMaskStore?.prunePaintHistory();
 			this.editor.shapeGlitterManager?.pruneImageFillAssets();
 			this.updateButtons();
 			return;
@@ -52,7 +52,7 @@ class HistoryManager {
 		}
 
 		this.history.push(state);
-		this.editor.glitterManager?.prunePaintHistory();
+		this.editor.paintMaskStore?.prunePaintHistory();
 		this.editor.shapeGlitterManager?.pruneImageFillAssets();
 		this.updateButtons();
 	}
@@ -85,9 +85,8 @@ class HistoryManager {
 		// Keep the current layer collection renderable across async font/image
 		// preparation, then commit the restored collection in one step.
 		await this.editor.glitterManager?.ensureLayersPreviewAssetsReady(restoredLayers);
-		this.editor.glitterManager?.reconcileHistoryVisualCaches(previousLayers, restoredLayers);
 		this.editor.layers = restoredLayers;
-		this.editor.glitterManager?.restorePaintState(this.editor.layers);
+		this.editor.paintMaskStore?.restorePaintState(this.editor.layers);
 		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds);
 
 		this.editor.layerManager.renderLayersList();
@@ -145,7 +144,7 @@ class HistoryManager {
 			this.historyIndex = -1;
 		}
 
-		this.editor.glitterManager?.prunePaintHistory();
+		this.editor.paintMaskStore?.prunePaintHistory();
 		this.editor.shapeGlitterManager?.pruneImageFillAssets();
 		this.updateButtons();
 	}

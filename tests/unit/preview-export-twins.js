@@ -8,7 +8,7 @@ const root = path.join(__dirname, '..', '..');
 const sources = {
 	TextGlitterManager: fs.readFileSync(path.join(root, 'js/layers/TextGlitterManager.js'), 'utf8'),
 	ShapeGlitterManager: fs.readFileSync(path.join(root, 'js/layers/ShapeGlitterManager.js'), 'utf8'),
-	GifExporter: fs.readFileSync(path.join(root, 'js/export/GifExporter.js'), 'utf8'),
+	SceneCompositor: fs.readFileSync(path.join(root, 'js/export/SceneCompositor.js'), 'utf8'),
 	paintSlots: fs.readFileSync(path.join(root, 'js/paint/paint-slots.js'), 'utf8')
 };
 const paritySource = fs.readFileSync(path.join(root, 'tests/parity/preview-export-parity.js'), 'utf8');

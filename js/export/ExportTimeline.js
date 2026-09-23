@@ -1,4 +1,4 @@
-// Export timeline planning primitives. Loaded before GifExporter and Mp4Exporter.
+// Export timeline planning primitives. Loaded before SceneCompositor and the exporters.
 class AuthoredAnimationSource {
 	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, frameCount = 0, frameDurations = [], fallbackDuration = 100 }) {
 		this.kind = 'authored';
@@ -20,8 +20,7 @@ class AuthoredAnimationSource {
 	}
 
 	static normalizeDuration(duration, fallback = 100) {
-		const value = Number.isFinite(duration) && duration > 0 ? duration : fallback;
-		return Math.max(20, Math.round(value || 100));
+		return normalizeFrameDuration(duration, fallback);
 	}
 
 	frameIndexAt(timestamp) {

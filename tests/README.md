@@ -24,7 +24,7 @@ Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for 
 
 - **Always, after a change:** `node tests/ui/touch-smoke.js` and `node tests/ui/touch-handle-verify.js`.
 - **After touching export, effect sources, or the text or shape managers:** also `node tests/parity/export-parity.js` and `node tests/parity/shape-border-verify.js`, or `node tests/run.js --tag export`.
-- **Export fragility routine** after touching `GifExporter` or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed.
+- **Export fragility routine** after touching `SceneCompositor`, an exporter, or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed.
 - **Don't run the full suite unless asked.** Ryan does manual testing himself.
 
 Test behavior, not implementation. Before writing a new test, check whether an existing one can be extended, and prefer table-driven cases over near-duplicate tests.

@@ -12,6 +12,9 @@ class TextGlitterManager {
 		this.fontPickerRendered = false;
 
 		this.textMaskCache = new Map();
+		// Preview mask data URL per layer id and mask bucket (fill, border, ...),
+		// each keyed by content. Dropped when the layer's element is removed.
+		this.previewMaskUrls = new Map();
 		this.measureCanvas = createAppCanvas(0, 0, 'layers/TextGlitterManager');
 		this.measureCtx = this.measureCanvas.getContext('2d');
 
@@ -27,7 +30,7 @@ class TextGlitterManager {
 		// browse mode — the old sticky-target layer-switch trap is impossible.
 		//
 		// This is pure UI state. The exporter never reads it: per-slot paint
-		// resolution (resolvePaintSlotSource, shared with GifExporter) depends
+		// resolution (resolvePaintSlotSource, shared with SceneCompositor) depends
 		// only on layer.textData, so preview↔export parity is unaffected.
 		this.pickerSession = null;
 	}
@@ -755,7 +758,7 @@ class TextGlitterManager {
 			name: this.getLayerName(defaultText),
 			visible: true,
 			locked: false,
-			opacity: CONFIG.layers.defaultOpacity,
+			opacity: FIELDS.layerOpacity.value,
 			transform,
 			textData: {
 				text: defaultText,
@@ -1577,7 +1580,7 @@ class TextGlitterManager {
 		}
 
 		const fill = layer.textData.fill;
-		if (fill.mode === 'glitter' && !this.editor.glitterManager.getItemById(fill.glitterId)) {
+		if (fill.mode === 'glitter' && !this.editor.glitterLibrary.getItemById(fill.glitterId)) {
 			this.removeLayerElement(layer.id);
 			return;
 		}
@@ -1669,7 +1672,7 @@ class TextGlitterManager {
 			width: measurement.width,
 			height: measurement.height,
 			layer,
-			glitterLibrary: this.editor.glitterManager,
+			glitterLibrary: this.editor.glitterLibrary,
 			getMask: (item) => {
 				const mask = this.getSlotMask(layer, measurement, item);
 				return mask && {
@@ -2131,10 +2134,7 @@ class TextGlitterManager {
 	}
 
 	removeLayerElement(layerId) {
-		const layer = this.editor.layerManager.getLayerById(layerId);
-		if (layer) {
-			this.revokePreviewMaskCache(layer);
-		}
+		this.previewMaskUrls.delete(layerId);
 
 		const element = this.layerElements.get(layerId);
 		if (element?.parentNode) {
@@ -2159,9 +2159,8 @@ class TextGlitterManager {
 		});
 	}
 
-	revokePreviewMaskCache(layer) {
-		// Data URLs aren't allocated objects — nothing to revoke, just drop the cache.
-		delete layer._previewMaskCache;
+	clearPreviewMaskUrls() {
+		this.previewMaskUrls.clear();
 	}
 
 	// Each mask "slot" (fill, border, ...) gets its own cached data URL — border
@@ -2169,10 +2168,11 @@ class TextGlitterManager {
 	// Synchronous (toDataURL, not toBlob+Image) so a live box-resize drag never
 	// shows a stale mask stretched to the new box size while a blob decodes.
 	getPreviewMaskDataUrl(layer, maskType, canvas, cacheKey) {
-		if (!layer._previewMaskCache) {
-			layer._previewMaskCache = {};
+		let bucket = this.previewMaskUrls.get(layer.id);
+		if (!bucket) {
+			bucket = {};
+			this.previewMaskUrls.set(layer.id, bucket);
 		}
-		const bucket = layer._previewMaskCache;
 		const cached = bucket[maskType];
 
 		if (cached?.key === cacheKey) {

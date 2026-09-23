@@ -11,7 +11,7 @@ A map of how the Glitter Graphics editor fits together. Referenced from `AGENTS.
 
 ## Boot sequence
 
-1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core/config.js`, `js/paint/paint-slots.js` and the layer-type definitions in `js/layers/types/` (each calls `registerLayerType`), then the rest of `js/core`, `js/effects`, `js/paint`, `js/transforms` and `js/ui`, followed by the `js/editor` method bags, domain classes in `js/layers`, `js/assets`, `js/export` and `js/systems`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
+1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core/releases.js`, `js/core/fields.js`, `js/core/config.js`, `js/core/layer-types.js`, `js/ui/panel-schemas.js`, `js/paint/paint-slots.js` and the layer-type definitions in `js/layers/types/` (each calls `registerLayerType`), then the rest of `js/core`, `js/effects`, `js/paint`, `js/transforms` and `js/ui`, followed by the `js/editor` method bags, domain classes in `js/layers`, `js/assets`, `js/export` and `js/systems`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
 2. `js/app.js` mixes the `js/editor/*` method bags (`EDITOR_SETTINGS_METHODS`, `EDITOR_PANEL_METHODS`, …) into `GlitterEditor.prototype` with `Object.assign`.
 3. An async IIFE at the bottom of `app.js` loads the shape and brush manifests, then constructs `GlitterEditor`.
 4. The constructor renders the sidebar from `PANEL_SCHEMAS` (`renderPanelSections`, then `renderTransformPanels`) and the context toolbars from `CONFIG.ui.contextToolbars`, then constructs the managers and subsystems. Managers may cache panel elements in their constructors, which is why schemas render first.
@@ -25,11 +25,12 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Concern | Owner | Notes |
 |---|---|---|
 | Layer list, selection, ordering, serialization | `LayerManager` (`editor.layerManager`) | `editor.layers` and `editor.activeLayerId` are getters over it. |
-| Glitter-fill layers, and the glitter asset library | `GlitterManager` | Also owns painted masks and their version history (`paintHistory`). |
+| Glitter-fill layers, and the glitter asset library | `GlitterManager` | Code that only needs a glitter asset reads `editor.glitterLibrary` (today the same object). |
+| Painted masks and their version history | `PaintMaskStore` (`editor.paintMaskStore`) | Live add/sub canvases per glitter-fill layer plus the versioned snapshots that undo states name through `maskVersion`. |
 | Sticker layers and sticker assets | `StickerManager` | |
 | Text layers | `TextGlitterManager` | Fonts (manifest and FontFace loading) come from `FontLibrary`; the font picker UI stays in the text panel. |
 | Shape layers and shape image fills | `ShapeGlitterManager` | Shape definitions come from `ShapeLibrary`. |
-| Canvas background (image, solid, gradient, glitter) | `BaseBackgroundManager` | The base-image layer. |
+| Canvas background (image, solid, gradient, glitter) | `BaseBackgroundManager` | The base-image layer, including its glitter-mode preview element. |
 | Filter layers | `FilterLayerManager` | |
 | Undo and redo | `HistoryManager` | |
 | Zoom and pan | `ViewportManager` (`editor.viewport`) | |
@@ -37,7 +38,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | |
 | Brush and eraser mask painting | `MaskEditor`, composed by `MaskCompositor` | |
 | Auto Glitter | `AutoGlitterManager` | A session tool that emits glitter-fill layers. |
-| Export | `GifExporter` (composes frames for every format), `Mp4Exporter`, `StillImageExporter` | See "Export path". |
+| Export | `SceneCompositor` (`editor.sceneCompositor`, composes frames for every format); encoders `GifExporter` (`editor.exporter`), `Mp4Exporter`, `StillImageExporter` | See "Export path". |
 | Project files | `ProjectSerializer` | `.glitter.json`, with versioned migrations. |
 | Modals, mobile drawers | `ModalManager`, `MobileManager` | |
 | User feedback | `NotificationCenter` (`editor.notifications`) | See "User feedback". |
@@ -47,8 +48,8 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Kind | Where | Rule |
 |---|---|---|
 | Static defaults and tunables | `CONFIG` in `js/core/config.js` | Recursively frozen. Never assigned at runtime. Any user-tunable or twice-used value goes here; inline `??` fallbacks that restate a CONFIG default are forbidden. |
-| Layer-type definitions | `LayerType` and `registerLayerType` in `js/core/config.js`; one definition per type in `js/layers/types/<type>.js`, collected into `LAYER_UI_CONFIG` | See `docs/LAYER-TYPE-CONTRACT.md`. |
-| Sidebar structure | `PANEL_SCHEMAS` in `js/core/config.js` | Rendered by `js/ui/panel-renderer.js`. |
+| Layer-type definitions | `LayerType` and `registerLayerType` in `js/core/layer-types.js`; one definition per type in `js/layers/types/<type>.js`, collected into `LAYER_UI_CONFIG` | See `docs/LAYER-TYPE-CONTRACT.md`. |
+| Sidebar structure | `PANEL_SCHEMAS` in `js/ui/panel-schemas.js` | Rendered by `js/ui/panel-renderer.js`. |
 | Editable property specs | `FIELDS` in `js/core/fields.js` | Label, unit, range and default per property. Panel rows stamp them; slot and layer defaults read them. |
 | Asset browsers | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | Glitter, sticker and brush-tip search, filters and browser, rendered from two templates. |
 | Tools | `ToolType`, `TOOL_GROUPS` in `js/core/config.js` | |
@@ -59,7 +60,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Export targets | `EXPORT_TARGETS` in `js/core/export-target.js` | Capabilities and exporter dispatch per format. |
 | Memory instrumentation | `MemoryLedger` in `js/systems/MemoryLedger.js` | App-owned buffers and every `createAppCanvas` backing store; inspect with `window.glitterMemory()`. |
 | Document content | layer objects in `editor.layers` | See "Layer data model". |
-| Painted masks | `GlitterManager` paint store | Binary buffers, **not** in layer JSON. Layers hold `maskVersion` pointers. |
+| Painted masks | `PaintMaskStore` | Binary buffers, **not** in layer JSON. Layers hold `maskVersion` pointers. |
 | Base image pixels | `editor.originalImageData`, `originalAlphaChannel`, `originalCanvas` | Replace-only: never mutate them in place, because history snapshots share them by reference. |
 
 ## Layer data model
@@ -104,9 +105,9 @@ Preview is DOM, export is canvas. Every visual feature exists twice, and the two
 ## Export path
 
 1. `editor.exportCurrentTarget()` resolves the active `EXPORT_TARGETS` entry, snapshots the settings and dispatches through that target's `exporter` key.
-2. `GifExporter` prepares masks, fonts and sources, then builds one export plan per layer (`_buildLayerExportPlan`). Text and shape layers share one plan: their manager's `renderSlotMasks(layer)` builds every slot mask with the same functions the preview uses, and `_renderSlotStackToCanvas` composites `buildSlotStack` in order. Every slot, the glitter fill and the canvas background paint through `_paintSourceInto`, and authored sources come from the declared slots (`_getSlotAuthoredSources`).
+2. `SceneCompositor` prepares masks, fonts and sources, then builds one export plan per layer (`_buildLayerExportPlan`). Text and shape layers share one plan: their manager's `renderSlotMasks(layer)` builds every slot mask with the same functions the preview uses, and `_renderSlotStackToCanvas` composites `buildSlotStack` in order. Every slot, the glitter fill and the canvas background paint through `_paintSourceInto`, and authored sources come from the declared slots (`_getSlotAuthoredSources`).
 3. `ExportTimeline` and `AuthoredFrameResolver` decide which frames to render and their timing.
-4. `composeFrameAt` renders a frame to canvas. **All formats use it:** `GifExporter` encodes with `GifEncodingPipeline` and `GifPalette`; `Mp4Exporter` encodes with WebCodecs and the vendored `mp4-muxer`; `StillImageExporter` encodes PNG, JPEG or a still GIF.
+4. `SceneCompositor` renders every frame: `planAnimation` plans an animation (GIF pre-renders its kept frames, MP4 gets a schedule and a renderer for its entries) and `composeFrameAt` composes one still. **All formats use it:** `GifExporter` encodes with `GifEncodingPipeline` and `GifPalette`; `Mp4Exporter` encodes with WebCodecs and the vendored `mp4-muxer`; `StillImageExporter` encodes PNG, JPEG or a still GIF.
 5. `ExportResultPresenter` shows the result.
 
 Pixel-level math only: never `ctx.filter`, because iOS Safari doesn't support it. Masks are binarized (`CONFIG.rendering.crispMaskEdges`) so transparent GIF exports don't fringe.
@@ -116,7 +117,7 @@ Pixel-level math only: never `ctx.filter`, because iOS Safari doesn't support it
 - Call `editor.saveState(label)` once per **committed** user edit, not on every slider tick. Slider bindings usually save on commit.
 - Repeated small edits share a `coalesceKey`, for example `saveState('Move layer', { coalesceKey: \`nudge:${ids}\` })`.
 - A snapshot is `LayerManager.serializeLayer` for every layer, plus canvas size and base-image references. Painted masks are stored separately as versioned binaries; snapshots hold `maskVersion` pointers. Anything that serializes state must account for that.
-- Restoring rebuilds the layer objects. Anything cached on a layer object is lost unless it is carried over (see `GlitterManager.reconcileHistoryVisualCaches`).
+- Restoring rebuilds the layer objects, so nothing is cached on them. Preview caches live in their manager, keyed by layer id plus a content key (`GlitterManager.maskImages`, `TextGlitterManager.previewMaskUrls`, `ShapeGlitterManager.maskUrlCache`, the `MaskCompositor` caches), so a restored layer reuses them when its content matches.
 
 ## User feedback
 

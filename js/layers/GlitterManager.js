@@ -16,11 +16,11 @@ class GlitterManager extends ContentManager {
 
 		this.useBrowser = true;
 		this.layerElements = new Map();
-		this.paintMasks = new Map();
-		this.paintHistory = new Map();
-		this.paintHistoryBytes = 0;
-		this.paintHistoryByteLimit = CONFIG.canvas.limits.paintHistoryMaxMB * 1024 * 1024;
-		this.nextPaintVersion = 1;
+		// Encoded mask PNG per fill layer: { key, url, pending, fullApplied }.
+		// Keyed by layer id and a content key, so an undo that restores the same
+		// layer keeps its URL, and an in-flight encode lands on whichever layer
+		// object is current. Entries for deleted layers are revoked on render.
+		this.maskImages = new Map();
 		this.pickerSession = null;
 
 		// G-1: tracks in-flight mask encodes per layer (for the busy cursor / status)
@@ -180,14 +180,14 @@ async initBrowser() {
 			type: this.getLayerType(),
 			visible: true,
 			locked: false,
-			opacity: CONFIG.layers.defaultOpacity,
+			opacity: FIELDS.layerOpacity.value,
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
 			fill: this.getDefaultFill(),
 			settings: {
-				threshold: CONFIG.tools.selection.defaults.threshold,
-				feather: CONFIG.tools.selection.defaults.feather,
+				threshold: FIELDS.threshold.value,
+				feather: FIELDS.feather.value,
 				contiguous: false,
 				invert: false,
 				multiSelect: false
@@ -275,7 +275,6 @@ async initBrowser() {
 				fallbackPath: 'data/glitter.json',
 				detailBasePath: 'data/glitter',
 				defaults: {
-					frames: null,
 					brightness: null,
 					sortOrder: 0,
 					hue: null,
@@ -306,62 +305,6 @@ async initBrowser() {
 			this.editor.showError('Failed to load glitter library');
 		}
 	}
-
-	async parseGifFromUrl(url) {
-		try {
-			const response = await fetch(url);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			const arrayBuffer = await response.arrayBuffer();
-			if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
-
-			const uintArray = new Uint8Array(arrayBuffer);
-			const reader = new GifReader(uintArray);
-			const frameCount = reader.numFrames();
-
-			if (frameCount === 0) throw new Error('GIF has 0 frames');
-
-			const width = reader.width;
-			const height = reader.height;
-			const frames = [];
-			const frameDelays = [];
-
-			for (let i = 0; i < frameCount; i++) {
-				const info = reader.frameInfo(i);
-				frameDelays.push(info.delay * 10 || 100);
-				const pixels = new Uint8ClampedArray(width * height * 4);
-				reader.decodeAndBlitFrameRGBA(i, pixels);
-
-				// CRITICAL: Must return object with imageData property, not just ImageData
-				frames.push({
-					imageData: new ImageData(pixels, width, height),
-					disposal: info.disposal,
-					x: info.x || 0,
-					y: info.y || 0,
-					width: info.width || width,
-					height: info.height || height
-				});
-			}
-
-			const isVariableFramerate = new Set(frameDelays).size > 1;
-			const averageDelay = frameDelays.reduce((sum, delay) => sum + delay, 0) / frameDelays.length;
-			const frameRate = Math.round((1000 / averageDelay) * 10) / 10;
-			return {
-				width,
-				height,
-				frames,
-				frameCount,
-				frameDelay: frameDelays[0],
-				frameDelays,
-				frameRate,
-				isVariableFramerate
-			};
-		} catch (error) {
-			console.error(`[parseGifFromUrl] Error loading ${url}:`, error);
-			throw error;
-		}
-	}
-
-
 
 	// ===== SELECTION LOGIC =====
 
@@ -400,27 +343,9 @@ async initBrowser() {
 			return;
 		}
 
-		// Lazy load frames
-		if (!glitter.frames) {
-			this.editor.updateStatus(`Downloading ${glitter.name} glitter...`);
-			document.body.style.cursor = 'wait';
-
-			try {
-				const frames = await this.parseGifFromUrl(glitter.url);
-				glitter.frames = frames;
-			} catch (error) {
-				console.error('Failed to load glitter:', error);
-				this.editor.showError(`Failed to load ${glitter.name} glitter`);
-				document.body.style.cursor = 'default';
-				return;
-			} finally {
-				document.body.style.cursor = 'default';
-			}
-		}
-
 		// Keep the current fill painted until the browser has decoded the first
-		// frame of its replacement. Frame parsing warms fetch data, not the CSS
-		// image decode cache used by the live DOM preview.
+		// frame of its replacement. Preview shows the GIF file itself; its tile
+		// size comes from the manifest, so no frames are decoded here.
 		await this.ensureAssetImageReady(glitter);
 
 		if (layer.type === LayerType.BASE_IMAGE) {
@@ -562,8 +487,6 @@ async initBrowser() {
 		const height = this.editor.originalCanvas?.height;
 
 		const keep = new Set();
-		const baseLayer = this.editor.layerManager.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
-		if (baseLayer?.visible && baseLayer.background?.mode === 'glitter') keep.add(baseLayer.id);
 		layersToShow.forEach((layer) => {
 			if (layer.type === layerType) keep.add(layer.id);
 		});
@@ -571,37 +494,23 @@ async initBrowser() {
 		Array.from(this.layerElements.keys()).forEach((layerId) => {
 			if (!keep.has(layerId)) this.removeLayerElement(layerId);
 		});
+		this.pruneMaskImages();
 
 		layersToShow.forEach((layer) => {
 			if (layer.type === layerType) this.renderLayer(layer, width, height);
 		});
-		if (baseLayer?.visible && baseLayer.background?.mode === 'glitter') this.renderBaseBackground(baseLayer);
+	}
+
+	// Hidden layers keep their URL; only layers gone from the document drop it.
+	pruneMaskImages() {
+		const existing = new Set(this.editor.layerManager.layers.map((layer) => layer.id));
+		Array.from(this.maskImages.keys()).forEach((layerId) => {
+			if (!existing.has(layerId)) this.revokeMaskImage(layerId);
+		});
 	}
 
 	clearElements() {
 		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
-	}
-
-	renderBaseBackground(layer) {
-		const glitter = this.getItemById(layer.background.glitterId);
-		if (!glitter) return;
-		let wrapper = this.layerElements.get(layer.id);
-		if (!wrapper) {
-			wrapper = document.createElement('div');
-			wrapper.className = 'glitter-element base-background-element';
-			wrapper.dataset.layerId = layer.id;
-			wrapper.appendChild(document.createElement('div'));
-			this.editor.canvasElementsContainer.appendChild(wrapper);
-		}
-		const inner = wrapper.firstElementChild;
-		inner.className = 'glitter-background visible';
-		const [entry] = getLayerPaintSlots(layer);
-		applyPaintSourceToElement(inner, resolvePaintSlotPreviewSource(this.editor, layer, entry), { glitterLibrary: this });
-		inner.style.maskImage = 'none';
-		inner.style.webkitMaskImage = 'none';
-		inner.style.visibility = '';
-		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-		this.layerElements.set(layer.id, wrapper);
 	}
 
 	renderLayer(layer, width, height, options = {}) {
@@ -672,9 +581,8 @@ async initBrowser() {
 		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
 
 		this.removeLayerElement(layer.id);
-		this.revokeMaskImageCache(layer);
-		delete layer._selectionMaskCache;
-		this.removePaintMask(layer.id);
+		this.revokeMaskImage(layer.id);
+		this.editor.paintMaskStore?.removePaintMask(layer.id);
 		this.editor.maskCompositor?.invalidate(layer.id);
 	}
 
@@ -682,35 +590,12 @@ async initBrowser() {
 		removeManagedLayerElement(this.layerElements, layerId);
 	}
 
-	revokeMaskImageCache(layer) {
-		const currentUrl = layer?._maskImageCache?.url;
+	revokeMaskImage(layerId) {
+		const currentUrl = this.maskImages.get(layerId)?.url;
 		if (currentUrl) {
 			URL.revokeObjectURL(currentUrl);
 		}
-
-		delete layer._maskImageCache;
-	}
-
-	reconcileHistoryVisualCaches(previousLayers, restoredLayers) {
-		const restoredById = new Map(restoredLayers.map((layer) => [layer.id, layer]));
-
-		previousLayers.forEach((previousLayer) => {
-			if (previousLayer.type !== LayerType.GLITTER_FILL || !previousLayer._maskImageCache) return;
-			const restoredLayer = restoredById.get(previousLayer.id);
-			if (restoredLayer?.type === LayerType.GLITTER_FILL) {
-				const cache = previousLayer._maskImageCache;
-				// In-flight encoders still close over the previous layer object.
-				// Preserve its visible URL, but force the restored layer to start
-				// its own encode instead of inheriting an orphaned pending state.
-				restoredLayer._maskImageCache = cache.pending
-					? { key: null, url: cache.url || null, pending: false, fullApplied: false }
-					: cache;
-				delete previousLayer._maskImageCache;
-				return;
-			}
-			this.removeLayerElement(previousLayer.id);
-			this.revokeMaskImageCache(previousLayer);
-		});
+		this.maskImages.delete(layerId);
 	}
 
 	async ensureLayersPreviewAssetsReady(layers) {
@@ -741,7 +626,7 @@ async initBrowser() {
 	getMaskObjectUrlForLayer(layer, width, height, options = {}) {
 		const draftMask = Boolean(options.draftMask);
 		const cacheKey = `${this.editor.maskCompositor.getCacheKey(layer, { draft: draftMask })}|${width}x${height}`;
-		const currentCache = layer._maskImageCache;
+		const currentCache = this.maskImages.get(layer.id);
 
 		if (currentCache?.key === cacheKey) {
 			return currentCache.url || null;
@@ -754,12 +639,12 @@ async initBrowser() {
 		const maskCanvas = this.editor.maskCompositor.getMaskCanvas(layer, { draft: draftMask });
 		dbg(`[G-1] getMaskCanvas (${draftMask ? 'brush-draft' : 'full'}): ${(performance.now() - canvasStart).toFixed(1)}ms`);
 
-		layer._maskImageCache = {
+		this.maskImages.set(layer.id, {
 			key: cacheKey,
 			url: currentCache?.url || null,
 			pending: true,
 			fullApplied: false
-		};
+		});
 
 		// G-1c: for a full-accuracy request (color-picker clicks — NOT brush
 		// live-painting, which already gets its speed from MaskCompositor's own
@@ -813,7 +698,7 @@ async initBrowser() {
 			return;
 		}
 
-		const latestCache = layer._maskImageCache;
+		const latestCache = this.maskImages.get(layer.id);
 		if (!latestCache || latestCache.key !== cacheKey || (isDraft && latestCache.fullApplied)) {
 			// Superseded by a newer click/generation, or the full-res encode for
 			// this generation already won — never let a stale/lower-quality
@@ -832,7 +717,7 @@ async initBrowser() {
 		img.onload = () => {
 			dbg(`[G-1] ${isDraft ? 'draft' : 'full'} decode: ${(performance.now() - decodeStart).toFixed(1)}ms`);
 
-			const cacheNow = layer._maskImageCache;
+			const cacheNow = this.maskImages.get(layer.id);
 			if (!cacheNow || cacheNow.key !== cacheKey || (isDraft && cacheNow.fullApplied)) {
 				URL.revokeObjectURL(nextUrl);
 				this._decrementMaskPending(layer.id);
@@ -840,12 +725,12 @@ async initBrowser() {
 			}
 
 			const previousUrl = cacheNow.url;
-			layer._maskImageCache = {
+			this.maskImages.set(layer.id, {
 				key: cacheKey,
 				url: nextUrl,
 				pending: cacheNow.pending,
 				fullApplied: isDraft ? Boolean(cacheNow.fullApplied) : true
-			};
+			});
 
 			this.applyMaskObjectUrl(layer.id, nextUrl);
 
@@ -874,12 +759,8 @@ async initBrowser() {
 		]);
 	}
 
-	createSelectionMaskForLayer(layer) {
-		const cacheKey = this.getSelectionCacheKey(layer);
-		if (layer._selectionMaskCache?.key === cacheKey) {
-			return new Uint8Array(layer._selectionMaskCache.mask);
-		}
-
+	// Pure: MaskCompositor caches the result per layer id.
+	buildSelectionMask(layer) {
 		const buildStart = performance.now();
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
@@ -922,423 +803,33 @@ async initBrowser() {
 			dbg(`[G-1] non-contiguous scan: ${(performance.now() - scanStart).toFixed(1)}ms`);
 		});
 
-		layer._selectionMaskCache = {
-			key: cacheKey,
-			mask: new Uint8Array(mask)
-		};
-
-		dbg(`[G-1] createSelectionMaskForLayer total: ${(performance.now() - buildStart).toFixed(1)}ms`);
-		return new Uint8Array(mask);
+		dbg(`[G-1] buildSelectionMask total: ${(performance.now() - buildStart).toFixed(1)}ms`);
+		return mask;
 	}
 
-	getPaintMask(layerId) {
-		return this.paintMasks.get(layerId) || null;
-	}
-
-	ensurePaintMask(layerId) {
-		if (this.paintMasks.has(layerId)) {
-			return this.paintMasks.get(layerId);
-		}
-
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-		const paint = {
-			add: createAppCanvas(0, 0, 'layers/GlitterManager'),
-			sub: createAppCanvas(0, 0, 'layers/GlitterManager'),
-			version: 0,
-			liveRevision: 0,
-			hasContent: false
-		};
-
-		paint.add.width = width;
-		paint.add.height = height;
-		paint.sub.width = width;
-		paint.sub.height = height;
-
-		this.paintMasks.set(layerId, paint);
-		return paint;
-	}
-
-	removePaintMask(layerId) {
-		this.paintMasks.delete(layerId);
-	}
-
-	// Drop all live paint buffers so restorePaintState recreates them at the
-	// current canvas size. Used when an undo/redo changes the canvas dimensions:
-	// the existing buffers are the wrong size and blitAlphaToCanvas assumes the
-	// destination matches the (per-entry, correctly-sized) snapshot.
-	discardLivePaintBuffers() {
-		this.paintMasks.clear();
-		this.editor.maskCompositor?.reset();
-	}
-
-	// Structural canvas resize support (see GlitterEditor.resizeCanvas): re-anchor
-	// every live paint buffer onto a new canvas-sized buffer, shift color-selection
-	// seeds, drop stale caches, and re-snapshot paint at the new dimensions so the
-	// history baseline references valid (new-size) snapshots.
-	reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, layers) {
-		this.paintMasks.forEach((paint) => {
-			paint.add = this._reanchorCanvas(paint.add, newWidth, newHeight, offsetX, offsetY);
-			paint.sub = this._reanchorCanvas(paint.sub, newWidth, newHeight, offsetX, offsetY);
-			paint.liveRevision++;
-		});
-
+	// Canvas resize: color-selection seeds live in canvas space, so they move
+	// with the content. The painted part of the mask moves in PaintMaskStore.
+	reanchorSelectionsForCanvasResize(offsetX, offsetY, layers) {
 		(layers || []).forEach((layer) => {
 			if (layer.type !== LayerType.GLITTER_FILL) return;
-
-			// Color-selection seed coords live in canvas space; shift them so the
-			// same pixel stays selected. The sampled color (r/g/b) is unchanged.
+			// The sampled color (r/g/b) is unchanged; only the seed pixel moves.
 			(layer.selections || []).forEach((sel) => {
 				if (typeof sel.x === 'number') sel.x += offsetX;
 				if (typeof sel.y === 'number') sel.y += offsetY;
 			});
-			layer._selectionMaskCache = null;
 			this.editor.maskCompositor?.invalidate(layer.id);
-		});
-
-		// Re-capture paint at the new size (old snapshots were captured at the old
-		// dimensions and would blit inconsistently after the history reset).
-		(layers || []).forEach((layer) => {
-			if (layer.type === LayerType.GLITTER_FILL && this.paintMasks.has(layer.id)) {
-				this.commitPaintState(layer);
-			}
 		});
 	}
 
-	// Design scaling resamples canvas-sized paint buffers and selection seeds.
-	// Nearest-neighbor plus the normal mask threshold keeps painted edges binary.
-	scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, layers) {
-		this.paintMasks.forEach((paint) => {
-			paint.add = this._scaleCanvas(paint.add, newWidth, newHeight);
-			paint.sub = this._scaleCanvas(paint.sub, newWidth, newHeight);
-			paint.liveRevision++;
-		});
-
+	scaleSelectionsForCanvasResize(newWidth, newHeight, scaleX, scaleY, layers) {
 		(layers || []).forEach((layer) => {
 			if (layer.type !== LayerType.GLITTER_FILL) return;
 			(layer.selections || []).forEach((selection) => {
 				if (typeof selection.x === 'number') selection.x = Math.max(0, Math.min(newWidth - 1, Math.round(selection.x * scaleX)));
 				if (typeof selection.y === 'number') selection.y = Math.max(0, Math.min(newHeight - 1, Math.round(selection.y * scaleY)));
 			});
-			layer._selectionMaskCache = null;
 			this.editor.maskCompositor?.invalidate(layer.id);
 		});
-
-		(layers || []).forEach((layer) => {
-			if (layer.type === LayerType.GLITTER_FILL && this.paintMasks.has(layer.id)) {
-				this.commitPaintState(layer);
-			}
-		});
-	}
-
-	_scaleCanvas(source, newWidth, newHeight) {
-		const canvas = createAppCanvas(0, 0, 'layers/GlitterManager');
-		canvas.width = newWidth;
-		canvas.height = newHeight;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		ctx.imageSmoothingEnabled = false;
-		ctx.drawImage(source, 0, 0, newWidth, newHeight);
-		return canvas;
-	}
-
-	_reanchorCanvas(source, newWidth, newHeight, offsetX, offsetY) {
-		const canvas = createAppCanvas(0, 0, 'layers/GlitterManager');
-		canvas.width = newWidth;
-		canvas.height = newHeight;
-		canvas.getContext('2d', { willReadFrequently: true }).drawImage(source, offsetX, offsetY);
-		return canvas;
-	}
-
-	clearAllPaintData() {
-		this.paintMasks.clear();
-		this.paintHistory.clear();
-		this.paintHistoryBytes = 0;
-		this.nextPaintVersion = 1;
-		this.editor.maskCompositor?.reset();
-	}
-
-	paintCanvasHasContent(canvas) {
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-		for (let i = 3; i < data.length; i += 4) {
-			if (data[i] > 0) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	// Registers uncommitted paint content so the mask pipeline rebuilds (cache
-	// keys include paint.version) WITHOUT snapshotting into paintHistory —
-	// Auto Glitter session reconciles run per live change and would otherwise
-	// spam full-size snapshots. commitPaintState() finalizes with a real one.
-	markPaintTransient(layer) {
-		const paint = this.paintMasks.get(layer.id);
-		if (!paint) return;
-		paint.version = this.nextPaintVersion++;
-		paint.liveRevision = 0;
-		paint.hasContent = true;
-		layer.maskHasContent = true;
-		this.editor.maskCompositor?.invalidate(layer.id);
-	}
-
-	commitPaintState(layer) {
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) {
-			return 0;
-		}
-
-		const paint = this.paintMasks.get(layer.id);
-		if (!paint) {
-			return layer.maskVersion || 0;
-		}
-
-		const snapshot = this.capturePaintSnapshot(paint);
-		const version = this.nextPaintVersion++;
-		paint.version = version;
-		paint.liveRevision = 0;
-		paint.hasContent = snapshot.hasContent;
-
-		this.storePaintSnapshot(layer.id, {
-			version,
-			add: snapshot.add,
-			sub: snapshot.sub,
-			hasContent: snapshot.hasContent,
-			bytes: snapshot.bytes,
-			timestamp: performance.now()
-		});
-
-		layer.maskVersion = version;
-		layer.maskHasContent = snapshot.hasContent;
-		this.editor.maskCompositor?.invalidate(layer.id);
-
-		return version;
-	}
-
-	storePaintSnapshot(layerId, snapshot) {
-		const snapshots = this.paintHistory.get(layerId) || [];
-		snapshots.push(snapshot);
-		this.paintHistoryBytes += snapshot.bytes;
-		this.paintHistory.set(layerId, snapshots);
-	}
-
-	findPaintSnapshot(layerId, version) {
-		const snapshots = this.paintHistory.get(layerId);
-		if (!snapshots?.length) {
-			return null;
-		}
-
-		for (let i = snapshots.length - 1; i >= 0; i--) {
-			if (snapshots[i].version === version) {
-				return snapshots[i];
-			}
-		}
-
-		return null;
-	}
-
-	restorePaintState(layers) {
-		const activeIds = new Set();
-
-		layers.forEach((layer) => {
-			if (layer.type !== LayerType.GLITTER_FILL) {
-				return;
-			}
-
-			activeIds.add(layer.id);
-
-			if (!layer.maskVersion) {
-				this.removePaintMask(layer.id);
-				layer.maskHasContent = false;
-				layer.maskVersion = 0;
-				this.editor.maskCompositor?.invalidate(layer.id);
-				return;
-			}
-
-			const snapshot = this.findPaintSnapshot(layer.id, layer.maskVersion);
-			if (!snapshot) {
-				this.removePaintMask(layer.id);
-				layer.maskHasContent = false;
-				layer.maskVersion = 0;
-				this.editor.maskCompositor?.invalidate(layer.id);
-				return;
-			}
-
-			const paint = this.ensurePaintMask(layer.id);
-			this.blitAlphaToCanvas(paint.add, snapshot.add);
-			this.blitAlphaToCanvas(paint.sub, snapshot.sub);
-			paint.version = snapshot.version;
-			paint.liveRevision = 0;
-			paint.hasContent = snapshot.hasContent;
-			layer.maskHasContent = snapshot.hasContent;
-			this.editor.maskCompositor?.invalidate(layer.id);
-		});
-
-		this.paintMasks.forEach((_, layerId) => {
-			if (!activeIds.has(layerId)) {
-				this.paintMasks.delete(layerId);
-			}
-		});
-	}
-
-	clearPaintForLayer(layer) {
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) {
-			return false;
-		}
-
-		if (!layer.maskHasContent && !this.paintMasks.has(layer.id) && !layer.maskVersion) {
-			return false;
-		}
-
-		const paint = this.ensurePaintMask(layer.id);
-		paint.add.getContext('2d', { willReadFrequently: true }).clearRect(0, 0, paint.add.width, paint.add.height);
-		paint.sub.getContext('2d', { willReadFrequently: true }).clearRect(0, 0, paint.sub.width, paint.sub.height);
-		paint.liveRevision++;
-		this.commitPaintState(layer);
-		this.editor.maskCompositor?.invalidate(layer.id);
-		return true;
-	}
-
-	clonePaintData(sourceLayer, clonedLayer) {
-		if (!sourceLayer || !clonedLayer || sourceLayer.type !== LayerType.GLITTER_FILL) {
-			return;
-		}
-
-		const sourceVersion = sourceLayer.maskVersion || 0;
-		if (!sourceVersion && !this.paintMasks.has(sourceLayer.id)) {
-			clonedLayer.maskVersion = 0;
-			clonedLayer.maskHasContent = false;
-			return;
-		}
-
-		let snapshot = sourceVersion ? this.findPaintSnapshot(sourceLayer.id, sourceVersion) : null;
-		if (!snapshot) {
-			const livePaint = this.paintMasks.get(sourceLayer.id);
-			if (!livePaint) {
-				clonedLayer.maskVersion = 0;
-				clonedLayer.maskHasContent = false;
-				return;
-			}
-			snapshot = this.capturePaintSnapshot(livePaint);
-		}
-
-		const clonedPaint = this.ensurePaintMask(clonedLayer.id);
-		this.blitAlphaToCanvas(clonedPaint.add, snapshot.add);
-		this.blitAlphaToCanvas(clonedPaint.sub, snapshot.sub);
-		clonedPaint.hasContent = snapshot.hasContent;
-		clonedPaint.liveRevision = 0;
-		this.commitPaintState(clonedLayer);
-	}
-
-	capturePaintSnapshot(paint) {
-		const add = this.extractAlphaFromCanvas(paint.add);
-		const sub = this.extractAlphaFromCanvas(paint.sub);
-		const hasContent = add.some((value) => value > 0) || sub.some((value) => value > 0);
-		return {
-			add,
-			sub,
-			hasContent,
-			bytes: add.byteLength + sub.byteLength
-		};
-	}
-
-	extractAlphaFromCanvas(canvas) {
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-		const alpha = new Uint8Array(canvas.width * canvas.height);
-		for (let i = 0; i < alpha.length; i++) {
-			alpha[i] = imageData[i * 4 + 3];
-		}
-		return alpha;
-	}
-
-	blitAlphaToCanvas(canvas, alpha) {
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		const imageData = ctx.createImageData(canvas.width, canvas.height);
-		for (let i = 0; i < alpha.length; i++) {
-			imageData.data[i * 4 + 3] = alpha[i];
-		}
-		ctx.putImageData(imageData, 0, 0);
-	}
-
-	prunePaintHistory() {
-		const referenced = this.collectReferencedMaskVersions();
-		let nextByteTotal = 0;
-
-		this.paintHistory.forEach((snapshots, layerId) => {
-			const keepVersions = referenced.get(layerId);
-			const keptSnapshots = snapshots.filter((snapshot) => keepVersions?.has(snapshot.version));
-			if (keptSnapshots.length > 0) {
-				this.paintHistory.set(layerId, keptSnapshots);
-				nextByteTotal += keptSnapshots.reduce((sum, snapshot) => sum + snapshot.bytes, 0);
-			} else {
-				this.paintHistory.delete(layerId);
-			}
-		});
-
-		this.paintHistoryBytes = nextByteTotal;
-
-		if (this.paintHistoryBytes <= this.paintHistoryByteLimit) {
-			return;
-		}
-
-		const orderedSnapshots = [];
-		this.paintHistory.forEach((snapshots, layerId) => {
-			snapshots.forEach((snapshot) => {
-				orderedSnapshots.push({ layerId, snapshot });
-			});
-		});
-
-		orderedSnapshots.sort((left, right) => left.snapshot.timestamp - right.snapshot.timestamp);
-
-		// Over budget: evict oldest first. Everything left is referenced by some
-		// history state (unreferenced snapshots were dropped above), so eviction
-		// trades deep-undo paint fidelity for bounded memory — restorePaintState
-		// clears paint gracefully when a snapshot is missing. Never evict a live
-		// layer's current version; that one backs the state the user is looking at.
-		const liveVersions = new Map();
-		(this.editor.layerManager?.layers || []).forEach((layer) => {
-			if (layer.type === LayerType.GLITTER_FILL && layer.maskVersion) {
-				liveVersions.set(layer.id, layer.maskVersion);
-			}
-		});
-
-		for (const entry of orderedSnapshots) {
-			if (this.paintHistoryBytes <= this.paintHistoryByteLimit) {
-				break;
-			}
-
-			if (liveVersions.get(entry.layerId) === entry.snapshot.version) {
-				continue;
-			}
-
-			const snapshots = this.paintHistory.get(entry.layerId);
-			if (!snapshots) continue;
-
-			const filtered = snapshots.filter((snapshot) => snapshot.version !== entry.snapshot.version);
-			this.paintHistory.set(entry.layerId, filtered);
-			this.paintHistoryBytes -= entry.snapshot.bytes;
-		}
-	}
-
-	collectReferencedMaskVersions() {
-		const referenced = new Map();
-		const history = this.editor.historyManager?.history || [];
-
-		history.forEach((state) => {
-			state.layers.forEach((layer) => {
-				if (layer.type !== LayerType.GLITTER_FILL || !layer.maskVersion) {
-					return;
-				}
-
-				if (!referenced.has(layer.id)) {
-					referenced.set(layer.id, new Set());
-				}
-
-				referenced.get(layer.id).add(layer.maskVersion);
-			});
-		});
-
-		return referenced;
 	}
 
 	floodFill(mask, startX, startY, targetColor, thresholdSq) {

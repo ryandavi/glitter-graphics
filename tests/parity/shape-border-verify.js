@@ -315,7 +315,7 @@ async function check7(page) {
 		const source = editor.shapeGlitterManager.getEffectPaintSource(layer, 'fill');
 		const span = editor.shapeGlitterManager.layerElements.get(layer.id).querySelector('[data-span-key="fill"]');
 		const output = document.createElement('canvas');
-		editor.exporter._renderFilledMaskInto(output, measurement.canvas, source, layer, 0, `${layer.id}:fill`, new Map(), new Map());
+		editor.sceneCompositor._renderFilledMaskInto(output, measurement.canvas, source, layer, 0, `${layer.id}:fill`, new Map(), new Map());
 		const center = output.getContext('2d').getImageData(
 			Math.floor(measurement.shapeRect.x + 20), Math.floor(measurement.shapeRect.y + 20), 1, 1
 		).data;
@@ -338,7 +338,7 @@ async function check7(page) {
 		editor.shapeGlitterManager.loadLayerSettings(layer);
 		const tiledSource = editor.shapeGlitterManager.getEffectPaintSource(layer, 'fill');
 		const tiledOutput = document.createElement('canvas');
-		editor.exporter._renderFilledMaskInto(tiledOutput, measurement.canvas, tiledSource, layer, 0, `${layer.id}:fill`, new Map(), new Map());
+		editor.sceneCompositor._renderFilledMaskInto(tiledOutput, measurement.canvas, tiledSource, layer, 0, `${layer.id}:fill`, new Map(), new Map());
 		const tiledContext = tiledOutput.getContext('2d');
 		const sample = (x) => Array.from(tiledContext.getImageData(Math.floor(measurement.shapeRect.x + x), Math.floor(measurement.shapeRect.y + 5), 1, 1).data);
 		const tiledPixels = [sample(5), sample(15), sample(25)];

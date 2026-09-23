@@ -92,7 +92,12 @@ class GlitterEditor {
 		this.layerManager = new LayerManager(this);
 		this.animationTicker = new AnimationTicker();
 		this.stickerManager = new StickerManager(this);
+		this.paintMaskStore = new PaintMaskStore(this);
 		this.glitterManager = new GlitterManager(this);
+		// The glitter asset library (lookup, detail and image loading). Code that
+		// only needs a glitter asset reads it here, not through the fill-layer
+		// controller that currently implements it.
+		this.glitterLibrary = this.glitterManager;
 		this.brushTipManager = new BrushTipManager(this);
 		this.baseBackgroundManager = new BaseBackgroundManager(this);
 		this.autoGlitterManager = new AutoGlitterManager(this);
@@ -138,18 +143,8 @@ class GlitterEditor {
 	}
 
 	_registerMemoryMeasurements() {
-		const bytesOfFrames = (items) => items.reduce((total, item) => {
-			const decoded = item?.frames;
-			if (!decoded) return total;
-			if (Array.isArray(decoded.frames)) return total + decoded.frames.reduce((sum, frame) => sum + (frame?.data?.byteLength || frame?.data?.length || 0), 0);
-			return total;
-		}, 0);
-		APP_MEMORY_LEDGER.register({ id: 'decoded-assets', label: 'Decoded glitter and sticker frames', category: 'Decoded assets', measure: () => bytesOfFrames([
-			...(this.glitterManager?.content || []),
-			...(this.stickerManager?.content || []),
-			...this.layers.map((layer) => layer.stickerData)
-		]) });
-		APP_MEMORY_LEDGER.register({ id: 'paint-history', label: 'Paint history', category: 'History', measure: () => this.glitterManager?.paintHistoryBytes || 0 });
+		APP_MEMORY_LEDGER.register({ id: 'decoded-assets', label: 'Decoded glitter and sticker frames (export)', category: 'Decoded assets', measure: () => this.sceneCompositor?.getDecodedSourceBytes() || 0 });
+		APP_MEMORY_LEDGER.register({ id: 'paint-history', label: 'Paint history', category: 'History', measure: () => this.paintMaskStore?.paintHistoryBytes || 0 });
 		APP_MEMORY_LEDGER.register({ id: 'undo-history', label: 'Undo history JSON', category: 'History', measure: () => {
 			try { return JSON.stringify(this.historyManager?.history || []).length * 2; } catch (_) { return 0; }
 		} });
@@ -380,14 +375,16 @@ class GlitterEditor {
 		this.exportResultPresenter = new ExportResultPresenter();
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
-		this.exporter = new GifExporter({
-			resultPresenter: this.exportResultPresenter,
-			gifEncodingPipeline: this.gifEncodingPipeline,
+		this.sceneCompositor = new SceneCompositor({
 			authoredFrameResolver: this.authoredFrameResolver,
 			resolveShapeFillImage: (imageRef) => this.shapeGlitterManager.getImageFillAsset(imageRef)
 		});
-		this.mp4Exporter = new Mp4Exporter(this.exporter, this.exportResultPresenter);
-		this.stillImageExporter = new StillImageExporter(this.exporter, this.exportResultPresenter, this.gifEncodingPipeline);
+		this.exporter = new GifExporter(this.sceneCompositor, {
+			resultPresenter: this.exportResultPresenter,
+			gifEncodingPipeline: this.gifEncodingPipeline
+		});
+		this.mp4Exporter = new Mp4Exporter(this.sceneCompositor, this.exportResultPresenter);
+		this.stillImageExporter = new StillImageExporter(this.sceneCompositor, this.exportResultPresenter, this.gifEncodingPipeline);
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
 		await this.brushTipManager.init();
@@ -714,8 +711,8 @@ class GlitterEditor {
 				}
 
 				this.saveFillLayerControl('invert');
-				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.glitterManager.getPaintMask(layer.id))) {
-					this.glitterManager.commitPaintState(layer);
+				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.paintMaskStore.getPaintMask(layer.id))) {
+					this.paintMaskStore.commitPaintState(layer);
 				}
 				this.requestPreviewUpdate();
 				this.layerManager.renderLayersList();
@@ -748,11 +745,11 @@ class GlitterEditor {
 			const contextThresholdValue = document.getElementById('contextThresholdValue');
 			if (contextThreshold) contextThreshold.value = e.target.value;
 			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
-		}, CONFIG.tools.selection.defaults.threshold);
+		}, FIELDS.threshold.value);
 
-		this.setupSlider('feather', 'featherValue', '', null, CONFIG.tools.selection.defaults.feather);
+		this.setupSlider('feather', 'featherValue', '', null, FIELDS.feather.value);
 		this.setupSlider('scale', 'scaleValue', '%', null, FIELDS.textureScale.value);
-		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.layers.defaultOpacity);
+		this.setupSlider('opacity', 'opacityValue', '%', null, FIELDS.layerOpacity.value);
 	}
 
 	setupMaskEditorListeners() {
@@ -761,15 +758,15 @@ class GlitterEditor {
 		// vector tips. Passed as a thunk so bindSlider resolves it per click.
 		this.setupSlider('maskBrushSize', 'maskBrushSizeValue', 'px', () => {
 			this.maskEditor?._updateBrushCursorSize();
-		}, () => this.maskEditor?.rasterSliderDefault('maskBrushSize') ?? CONFIG.tools.maskBrush.defaults.size);
+		}, () => this.maskEditor?.rasterSliderDefault('maskBrushSize') ?? FIELDS.maskBrushSize.value);
 
 		this.setupSlider('maskBrushSoftness', 'maskBrushSoftnessValue', '%', () => {
 			this.maskEditor?.renderOverlay();
-		}, CONFIG.tools.maskBrush.defaults.softness);
+		}, FIELDS.maskBrushSoftness.value);
 
 		this.setupSlider('maskBrushFlow', 'maskBrushFlowValue', '%', () => {
 			this.maskEditor?.renderOverlay();
-		}, CONFIG.tools.maskBrush.defaults.flow);
+		}, FIELDS.maskBrushFlow.value);
 
 		// Spacing is a percentage of brush size; it only affects future stamps
 		// (the resulting stroke is baked into the mask), so no live re-render.
@@ -779,7 +776,7 @@ class GlitterEditor {
 
 		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
 		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
-			CONFIG.tools.maskBrush.defaults.smoothing ?? 0);
+			FIELDS.maskBrushSmoothing.value);
 
 		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
 
@@ -835,13 +832,13 @@ class GlitterEditor {
 
 	getResetValueForSlider(sliderId) {
 		const resetValues = {
-			threshold: CONFIG.tools.selection.defaults.threshold,
-			feather: CONFIG.tools.selection.defaults.feather,
+			threshold: FIELDS.threshold.value,
+			feather: FIELDS.feather.value,
 			scale: FIELDS.textureScale.value,
 			opacity: FIELDS.layerOpacity.value,
-			glitterHue: CONFIG.tools.glitter.defaults.colorAdjust.hue,
-			glitterSaturation: CONFIG.tools.glitter.defaults.colorAdjust.saturation,
-			glitterBrightness: CONFIG.tools.glitter.defaults.colorAdjust.brightness
+			glitterHue: FIELDS.hue.value,
+			glitterSaturation: FIELDS.saturation.value,
+			glitterBrightness: FIELDS.brightness.value
 		};
 		// Explicit overrides first, then the default the renderer stamped on the
 		// slider from its FIELDS spec. Every slider gets
@@ -1502,7 +1499,7 @@ class GlitterEditor {
 			this.layerManager.layers.forEach(layer => {
 				this.glitterManager.releaseLayerResources(layer);
 			});
-			this.glitterManager.clearAllPaintData();
+			this.paintMaskStore.clearAllPaintData();
 		}
 
 		this.layerManager.layers = [];
@@ -1816,7 +1813,7 @@ class GlitterEditor {
 			this.layerManager.layers.forEach((layer) => {
 				this.glitterManager.releaseLayerResources(layer);
 			});
-			this.glitterManager.clearAllPaintData();
+			this.paintMaskStore.clearAllPaintData();
 		}
 		this.layers = [];
 		this.canvasElementsContainer.innerHTML = '';
@@ -2638,7 +2635,7 @@ class GlitterEditor {
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
-			glitterGifs: this.glitterManager.content,
+			glitterGifs: this.glitterLibrary.content,
 			canvasData: {
 				width: this.originalCanvas.width,
 				height: this.originalCanvas.height,
@@ -2668,7 +2665,6 @@ class GlitterEditor {
 					}
 				},
 				isCancelled: () => this.exportCancelled,
-				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => this.maskCompositor.getMaskData(layer),
 				renderSlotMasks: (layer) => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
 				ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
@@ -2684,6 +2680,9 @@ class GlitterEditor {
 				if (error.message !== 'Export cancelled') {
 					this.showError('Export failed: ' + error.message);
 				}
+			} finally {
+				// Decoded animation frames are only needed while composing.
+				this.sceneCompositor.releaseDecodedSources();
 			}
 		}, 50);
 	}

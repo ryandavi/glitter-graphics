@@ -452,8 +452,8 @@ isLayerContentLocked(layer) {
 		// them in this shared renderer so Shape, Text, Background, and effect fills
 		// all show the same authoritative metadata. Asset markers prevent a slow
 		// response from repainting a slot after another glitter has been selected.
-		if (!glitter._detailLoaded && this.glitterManager?.ensureAssetDetails) {
-			this.glitterManager.ensureAssetDetails(glitter).then((detailedGlitter) => {
+		if (!glitter._detailLoaded && this.glitterLibrary?.ensureAssetDetails) {
+			this.glitterLibrary.ensureAssetDetails(glitter).then((detailedGlitter) => {
 				if (!detailedGlitter || displayNodes.some((node) => node.dataset.assetId !== assetId)) return;
 				if (els.badges) this.renderAssetBadges(els.badges, detailedGlitter, this.glitterManager, () => []);
 				if (els.size) els.size.innerHTML = this.formatAssetSize(detailedGlitter);
@@ -609,7 +609,7 @@ isLayerContentLocked(layer) {
 		this.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
 		syncSlotTextureCoordinateControls('glitterFill', layer.fill);
 
-		const glitter = this.glitterManager.getItemById(layer.fill.glitterId);
+		const glitter = this.glitterLibrary.getItemById(layer.fill.glitterId);
 		if (glitter) {
 			this.updateGlitterAssetInfo(glitter);
 		}

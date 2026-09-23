@@ -12,6 +12,11 @@ class BaseBackgroundManager {
 		this.pixelEffectDebounceTimer = null;
 		this.lastPixelEffectPreview = null;
 		this.backgroundSourceCache = null;
+		// Glitter mode paints the background as a DOM element above the base
+		// canvas; image and gradient modes draw into the canvas (app.js
+		// renderPreviewCanvas). Not in a layerElements map: the background is
+		// never outlined as selected or hidden per element.
+		this.backgroundElement = null;
 		this.shimmerPreview = { key: null, frameIndex: 0, timer: null, pending: false, requestId: 0 };
 		this.setupUI();
 		this.setupEventListeners();
@@ -19,6 +24,40 @@ class BaseBackgroundManager {
 			if (document.hidden) this.pauseShimmerPreview();
 			else this.scheduleShimmerPreview();
 		});
+	}
+
+	renderContent() {
+		const layer = this.getBaseLayer();
+		const glitter = layer?.visible && layer.background?.mode === 'glitter'
+			? this.editor.glitterLibrary.getItemById(layer.background.glitterId)
+			: null;
+		if (!glitter) {
+			// A missing glitter keeps the last element, as the fill layers do.
+			if (!layer?.visible || layer.background?.mode !== 'glitter') this.clearElements();
+			return;
+		}
+		let wrapper = this.backgroundElement;
+		if (!wrapper) {
+			wrapper = document.createElement('div');
+			wrapper.className = 'glitter-element base-background-element';
+			wrapper.appendChild(document.createElement('div'));
+			this.editor.canvasElementsContainer.appendChild(wrapper);
+			this.backgroundElement = wrapper;
+		}
+		wrapper.dataset.layerId = layer.id;
+		const inner = wrapper.firstElementChild;
+		inner.className = 'glitter-background visible';
+		const [entry] = getLayerPaintSlots(layer);
+		applyPaintSourceToElement(inner, resolvePaintSlotPreviewSource(this.editor, layer, entry), { glitterLibrary: this.editor.glitterLibrary });
+		inner.style.maskImage = 'none';
+		inner.style.webkitMaskImage = 'none';
+		inner.style.visibility = '';
+		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+	}
+
+	clearElements() {
+		this.backgroundElement?.remove();
+		this.backgroundElement = null;
 	}
 
 	getActiveLayer() {
@@ -605,7 +644,7 @@ class BaseBackgroundManager {
 	}
 
 	updateGlitterInfo(layer) {
-		const glitter = this.editor.glitterManager.getItemById(layer.background.glitterId);
+		const glitter = this.editor.glitterLibrary.getItemById(layer.background.glitterId);
 		if (!glitter) return;
 		this.editor.renderGlitterAssetDisplay({
 			thumbnail: this.ui.glitterChip,

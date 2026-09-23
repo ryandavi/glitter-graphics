@@ -26,6 +26,7 @@ function assert(condition, message) {
 		const check = (condition, message) => { if (!condition) throw new Error(message); };
 		const editor = window.editor;
 		const exporter = editor.exporter;
+		const compositor = editor.sceneCompositor;
 
 		const SIZE = 64;
 		await editor.loadBlankImage(SIZE, SIZE, '#ffffff');
@@ -33,7 +34,6 @@ function assert(condition, message) {
 
 		const callbacks = {
 			onStatus: () => {}, onProgress: () => {}, onComplete: () => {},
-			parseGif: (url) => editor.glitterManager.parseGifFromUrl(url),
 			createMask: (layer) => editor.maskCompositor.getMaskData(layer),
 			renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
 			ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
@@ -61,7 +61,7 @@ function assert(condition, message) {
 			shapeLayer.opacity = 50;
 			shapeLayer.shapeData.fill = { mode: 'solid', color: '#ff0000', opacity: 100 };
 			const visibleLayers = [shapeLayer];
-			const composed = await exporter.composeFrameAt({
+			const composed = await compositor.composeFrameAt({
 				visibleLayers, glitterGifs: editor.glitterManager.content, canvasData: baseCanvasData(),
 				exportSettings: { ...structuredClone(editor.exportSettings), baseImage: false, transparency: true },
 				target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
@@ -99,7 +99,7 @@ function assert(condition, message) {
 		{
 			const shapeLayer = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 8, height: 8 });
 			shapeLayer.shapeData.fill = { mode: 'solid', color: '#0000ff', opacity: 100 };
-			const composed = await exporter.composeFrameAt({
+			const composed = await compositor.composeFrameAt({
 				visibleLayers: [shapeLayer], glitterGifs: editor.glitterManager.content, canvasData: baseCanvasData(),
 				exportSettings: { ...structuredClone(editor.exportSettings), baseImage: false, transparency: false, matteColor: '#00ff00' },
 				target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
@@ -186,10 +186,10 @@ function assert(condition, message) {
 		// --- preserveAlpha SSOT: verify the compositor decision matches the
 		// documented formula exactly (no base-content prediction involved).
 		{
-			check(exporter._resolvePreserveAlpha(true, { transparency: true }) === true
-				&& exporter._resolvePreserveAlpha(true, { transparency: false }) === false
-				&& exporter._resolvePreserveAlpha(false, { transparency: true }) === false
-				&& exporter._resolvePreserveAlpha(false, { transparency: false }) === false,
+			check(compositor._resolvePreserveAlpha(true, { transparency: true }) === true
+				&& compositor._resolvePreserveAlpha(true, { transparency: false }) === false
+				&& compositor._resolvePreserveAlpha(false, { transparency: true }) === false
+				&& compositor._resolvePreserveAlpha(false, { transparency: false }) === false,
 				'preserveAlpha diverged from targetSupportsTransparency && exportSettings.transparency');
 		}
 

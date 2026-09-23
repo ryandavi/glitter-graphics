@@ -288,7 +288,7 @@ class HtmlSceneExporter {
 
 		const background = {
 			mode,
-			opacity: Math.max(0, Math.min(1, Number(baseLayer?.opacity ?? CONFIG.layers.defaultOpacity) / 100)),
+			opacity: Math.max(0, Math.min(1, Number(baseLayer?.opacity ?? FIELDS.layerOpacity.value) / 100)),
 			filter: ['gradient', 'glitter'].includes(mode) ? buildCssColorFilter(data.colorAdjust) : ''
 		};
 		if (mode === 'solid') {
@@ -298,7 +298,7 @@ class HtmlSceneExporter {
 		} else if (mode === 'gradient') {
 			background.image = effectGradientToCss(data.gradient);
 		} else if (mode === 'glitter') {
-			const glitter = this.editor.glitterManager.getItemById(data.glitterId);
+			const glitter = this.editor.glitterLibrary.getItemById(data.glitterId);
 			if (!glitter?.url) return { mode: 'transparent', opacity: 1, filter: '' };
 			background.image = this.toCssUrl(await this.resolveAssetSource(glitter.url, options.embedAssets));
 			background.size = Math.max(1, Math.round(getGlitterTileSize(glitter) * Number(data.scale ?? 100) / 100));

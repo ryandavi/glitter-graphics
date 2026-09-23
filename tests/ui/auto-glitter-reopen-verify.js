@@ -35,11 +35,11 @@ async function main() {
 				layer.fill.glitterId = glitter.id;
 				layer.fill.color = side === 0 ? 'rgb(255, 0, 0)' : '#0000ff';
 				layer.name = side === 0 ? 'Left Region' : 'Right Region';
-				const paint = window.editor.glitterManager.ensurePaintMask(layer.id);
+				const paint = window.editor.paintMaskStore.ensurePaintMask(layer.id);
 				const context = paint.add.getContext('2d');
 				context.fillStyle = '#fff';
 				context.fillRect(side * 20, 0, 20, 20);
-				window.editor.glitterManager.commitPaintState(layer);
+				window.editor.paintMaskStore.commitPaintState(layer);
 				window.editor.layers.splice(baseIndex + 1 + side, 0, layer);
 				layer.autoGlitter = {
 					batchId,

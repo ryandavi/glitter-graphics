@@ -249,7 +249,7 @@ class StickerManager extends ContentManager {
 		span.style.webkitMaskSize = '100% 100%';
 		span.style.transform = `translate(${shadow.offsetX}px, ${shadow.offsetY}px)`;
 		applyPaintSourceToElement(span, shadow.source, {
-			glitterLibrary: this.editor.glitterManager,
+			glitterLibrary: this.editor.glitterLibrary,
 			layer,
 			maskCanvas: { width: layer.stickerData.width || 0, height: layer.stickerData.height || 0 }
 		});
@@ -319,7 +319,6 @@ class StickerManager extends ContentManager {
 				frameRate: 10,
 				isVariableFramerate: false,
 				fileSize: 0,
-				frames: null,
 				sortOrder: 0,
 				featured: false,
 				source: 'preset'
@@ -404,7 +403,6 @@ class StickerManager extends ContentManager {
 			width: 0,
 			height: 0,
 			frameCount: null,
-			frames: null,
 
 			// State
 			isLoading: true,
@@ -467,7 +465,6 @@ class StickerManager extends ContentManager {
 			width: 0,
 			height: 0,
 			frameCount: null,
-			frames: null,
 			isLoading: true,
 			error: null
 		};
@@ -493,12 +490,11 @@ class StickerManager extends ContentManager {
 		// Detect if animated GIF
 		if (file.type === 'image/gif') {
 			try {
-				const frames = await this.editor.glitterManager.parseGifFromUrl(userSticker.url);
-				userSticker.isAnimated = frames.frames.length > 1;
-				userSticker.frameCount = frames.frames.length;
-				userSticker.frames = frames;
-				userSticker.frameRate = frames.frameRate;
-				userSticker.isVariableFramerate = frames.isVariableFramerate;
+				const timing = readGifTiming(await fetchGifBytes(userSticker.url));
+				userSticker.isAnimated = timing.frameCount > 1;
+				userSticker.frameCount = timing.frameCount;
+				userSticker.frameRate = timing.frameRate;
+				userSticker.isVariableFramerate = timing.isVariableFramerate;
 			} catch (error) {
 				console.warn('Failed to parse GIF frames:', error);
 			}
@@ -648,7 +644,7 @@ class StickerManager extends ContentManager {
 			name: sticker?.name || 'New Sticker',
 			visible: true,
 			locked: false,
-			opacity: CONFIG.layers.defaultOpacity,
+			opacity: FIELDS.layerOpacity.value,
 			blendMode: CONFIG.layers.defaultBlendMode,
 			stickerSourceId: stickerSourceId,
 			transform,
@@ -668,7 +664,6 @@ class StickerManager extends ContentManager {
 				frameCount: sticker?.frameCount || 1,
 				width: sticker?.width || 100,
 				height: sticker?.height || 100,
-				frames: null,
 				colorAdjust: { ...COLOR_ADJUST_IDENTITY },
 				element: null,
 				maskEnabled: false,
@@ -719,8 +714,7 @@ class StickerManager extends ContentManager {
 				stickerInfo.url, stickerInfo.width, stickerInfo.variantUrls, renderedWidth
 			);
 
-			// Clear cached frame data when changing sticker
-			activeLayer.stickerData.frames = null;
+			// Clear the cached still frame when changing sticker
 			activeLayer.stickerData.staticImageData = null;
 
 			// New sticker → its colors are unrelated to the old ones, so a prior
@@ -945,7 +939,6 @@ updateTransform(layerId, updates) {
 		const stickerData = {
 			...layer.stickerData,
 			element: null,    // Can't serialize DOM
-			frames: null,      // Don't need frames for undo/redo - reload from URL on restore
 			staticImageData: null
 		};
 		delete stickerData.blendMode;
@@ -966,7 +959,6 @@ updateTransform(layerId, updates) {
 		if (layerData.animation) layerData.animation = GlitterAnimation.normalizeAnimation(layerData.animation);
 		if (layerData.stickerData) {
 			delete layerData.stickerData.blendMode;
-			layerData.stickerData.frames = null;
 			layerData.stickerData.staticImageData = null;
 		}
 		layerData.transform ||= createDefaultTransform();

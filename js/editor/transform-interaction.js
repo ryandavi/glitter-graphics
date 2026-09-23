@@ -299,7 +299,7 @@ snapTransformPosition(transform, position, options = {}) {
 		}
 		if (resetLayerOpacity) {
 			resetLayerOpacity.addEventListener('click', () => {
-				const fallback = CONFIG.layers.defaultOpacity;
+				const fallback = FIELDS.layerOpacity.value;
 				if (layerOpacity) layerOpacity.value = fallback;
 				showUnit(layerOpacityValue, fallback, '%');
 				const active = activeManager();

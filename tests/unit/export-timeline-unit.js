@@ -14,6 +14,7 @@ class ImageDataPolyfill {
 
 const context = { ImageData: ImageDataPolyfill, Uint8ClampedArray, Map, Set, Math, Number, Infinity };
 vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'core', 'gif-decode.js'), 'utf8'), context);
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 'ExportTimeline.js'), 'utf8');
 vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner };`, context);
 const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner } = context.timelineExports;

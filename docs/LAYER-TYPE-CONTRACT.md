@@ -7,8 +7,8 @@ How to add a layer type, and the interface every layer manager shares. Reference
 Adding a new layer type should need four things:
 
 1. A manager class that implements the manager interface below.
-2. One `LayerType` constant in `js/core/config.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow or background the type paints with.
-3. One export-plan entry in `GifExporter._buildLayerExportPlan` (canvas export; also used by MP4 and still export).
+2. One `LayerType` constant in `js/core/layer-types.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow or background the type paints with.
+3. One export-plan entry in `SceneCompositor._buildLayerExportPlan` (canvas export for every format).
 4. One `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`, with its title mirrored in `modals/guide.html`.
 
 If a new type needs a branch anywhere else, treat that as an architecture bug: fix the dispatch site so it reads `LAYER_UI_CONFIG`, instead of adding one more `if (layer.type === …)`.
@@ -17,7 +17,7 @@ If a new type needs a branch anywhere else, treat that as an architecture bug: f
 
 As of 2026-09-22, these sites still branch on layer type by hand. A new type must be checked against each one until later phases of the architecture audit (sections D2 and D4, in `docs/plans/`, local-only) remove them:
 
-- `GifExporter._buildLayerExportPlan` (one case per type; text and shape already share one slot-stack plan)
+- `SceneCompositor._buildLayerExportPlan` (one case per type; text and shape already share one slot-stack plan)
 - `LayerManager.renderLayerSwatch` (layers-list thumbnail) and the `isPointIn*` hit tests
 - the non-slot geometry in `scaleDocumentLayerState` (`js/core/document-scaler.js`): font size, box and shape size, sticker scale
 - `LayerTransform.getHandleFrame` and `supportsEdgeResize`

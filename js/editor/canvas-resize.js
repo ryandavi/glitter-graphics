@@ -30,7 +30,8 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.previewWrapper.style.width = `${newWidth}px`;
 		this.previewWrapper.style.height = `${newHeight}px`;
 
-		this.glitterManager?.scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
+		this.glitterManager?.scaleSelectionsForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
+		this.paintMaskStore.scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
 		scaleDocumentLayerStates(this.layers, scaleX, scaleY, uniformScale, options);
 		this.baseBackgroundManager?.invalidatePixelEffects();
 
@@ -153,7 +154,8 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.previewWrapper.style.height = newHeight + 'px';
 
 		// 3. Glitter paint buffers, selection seeds, and mask caches.
-		this.glitterManager?.reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, this.layers);
+		this.glitterManager?.reanchorSelectionsForCanvasResize(offsetX, offsetY, this.layers);
+		this.paintMaskStore.reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, this.layers);
 
 		// 4. Sticker / text positions shift with the content (canvas coords).
 		this.layers.forEach((layer) => {
@@ -224,7 +226,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		if (!sameSize) {
 			// Live paint buffers are now the wrong size; restorePaintState (runs
 			// next) rebuilds them at this size from each layer's snapshot.
-			this.glitterManager?.discardLivePaintBuffers();
+			this.paintMaskStore?.discardLivePaintBuffers();
 			this.viewport.setCanvasDimensions(width, height);
 			this.viewport.resetZoomSmart();
 			this.updateZoomUI();

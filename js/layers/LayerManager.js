@@ -129,7 +129,7 @@ class LayerManager {
 			image: null,
 			visible: true,
 			locked: true,
-			opacity: CONFIG.layers.defaultOpacity,
+			opacity: FIELDS.layerOpacity.value,
 			background: {
 				mode: 'image',
 				color: '#ffffff',
@@ -676,7 +676,7 @@ class LayerManager {
 			else if (layer.type === LayerType.GLITTER_FILL) {
 				const fillMode = layer.fill.mode;
 				const glitter = fillMode === 'glitter'
-					? this.editor.glitterManager.getItemById(layer.fill.glitterId)
+					? this.editor.glitterLibrary.getItemById(layer.fill.glitterId)
 					: null;
 				name = layer.name || glitter?.name || `${panelCap(fillMode)} Fill`;
 			}
@@ -988,7 +988,7 @@ class LayerManager {
 		if (clonedLayer.type === LayerType.GLITTER_FILL) {
 			clonedLayer.maskVersion = 0;
 			clonedLayer.maskHasContent = false;
-			this.editor.glitterManager.clonePaintData(sourceLayer, clonedLayer);
+			this.editor.paintMaskStore.clonePaintData(sourceLayer, clonedLayer);
 		}
 		return clonedLayer;
 	}
@@ -1201,7 +1201,7 @@ class LayerManager {
 			const mode = paint?.mode || 'glitter';
 			const modeLabel = mode === 'none' ? 'No' : panelCap(mode);
 			const glitter = mode === 'glitter'
-				? this.editor.glitterManager.getItemById(paint?.glitterId)
+				? this.editor.glitterLibrary.getItemById(paint?.glitterId)
 				: null;
 			const formatColor = (color) => /^#[0-9a-f]{6}$/i.test(color || '') ? color.toUpperCase() : null;
 			let name = null;
@@ -1475,7 +1475,7 @@ class LayerManager {
 			}
 			if (mode === 'none') return false;
 			if (mode !== 'glitter') return false;
-			const glitter = this.editor.glitterManager.getItemById(source?.glitterId);
+			const glitter = this.editor.glitterLibrary.getItemById(source?.glitterId);
 			if (!glitter) return false;
 			swatch.style.backgroundImage = `url(${glitter.url})`;
 			swatch.style.filter = buildCssColorFilter(source.colorAdjust);

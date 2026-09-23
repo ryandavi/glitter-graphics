@@ -5,7 +5,7 @@ function encodeCanvasToBlob(canvas, mimeType, quality) {
 }
 
 class StillImageExporter {
-	constructor(frameComposer, resultPresenter, gifEncodingPipeline = frameComposer?.gifEncodingPipeline || new GifEncodingPipeline()) { this.frameComposer = frameComposer; this.resultPresenter = resultPresenter; this.gifEncodingPipeline = gifEncodingPipeline; this.fileName = `${CONFIG.export.core.defaultBaseName}.png`; }
+	constructor(frameComposer, resultPresenter, gifEncodingPipeline = new GifEncodingPipeline()) { this.frameComposer = frameComposer; this.resultPresenter = resultPresenter; this.gifEncodingPipeline = gifEncodingPipeline; this.fileName = `${CONFIG.export.core.defaultBaseName}.png`; }
 	setFileName(fileName) { if (fileName) this.fileName = fileName; }
 	async process(params) {
 		const { target, callbacks, exportSettings } = params;

@@ -86,7 +86,7 @@ async function main() {
 			// border must land after the fill and a behind border before it.
 			const assertStackParity = (manager, layer, drawOrder, label) => {
 				const preview = manager.getSlotStack(layer);
-				const exported = buildSlotStack(layer, (entry) => editor.exporter._getSlotSource(layer, entry));
+				const exported = buildSlotStack(layer, (entry) => editor.sceneCompositor._getSlotSource(layer, entry));
 				const keys = (stack) => stack.map((item) => item.key).join(',');
 				if (keys(preview) !== keys(exported)) throw new Error(`${label}: stack order diverged (${keys(preview)} vs ${keys(exported)})`);
 				preview.forEach((item, index) => {

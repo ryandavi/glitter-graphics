@@ -2,6 +2,9 @@ class MaskCompositor {
 	constructor(editor) {
 		this.editor = editor;
 		this.cache = new Map();
+		// Per layer id, keyed by the selection inputs; cleared by invalidate/reset
+		// (canvas resize, paint reset), so they survive undo of unrelated edits.
+		this.selectionMaskCache = new Map();
 		this.selectionCanvasCache = new Map();
 	}
 
@@ -34,7 +37,7 @@ class MaskCompositor {
 	// The key covers every input of _buildMask, so edits never need to
 	// invalidate by hand. A draft key also changes with every live stroke.
 	getCacheKey(layer, { draft = false } = {}) {
-		const paint = this.editor.glitterManager.getPaintMask(layer.id);
+		const paint = this.editor.paintMaskStore.getPaintMask(layer.id);
 		const parts = [
 			this.editor.originalCanvas.width,
 			this.editor.originalCanvas.height,
@@ -60,10 +63,10 @@ class MaskCompositor {
 	_buildMask(layer, { draft = false } = {}) {
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
-		const paint = this.editor.glitterManager.getPaintMask(layer.id);
+		const paint = this.editor.paintMaskStore.getPaintMask(layer.id);
 		const mask = paint?.hasContent
 			? this._composePaintedMask(layer, paint, width, height)
-			: this.editor.glitterManager.createSelectionMaskForLayer(layer);
+			: this._getSelectionMask(layer);
 
 		// Inverting selects every opaque pixel outside the mask; transparent
 		// pixels are never part of an inverted mask.
@@ -97,12 +100,25 @@ class MaskCompositor {
 
 	invalidate(layerId) {
 		this.cache.delete(layerId);
+		this.selectionMaskCache.delete(layerId);
 		this.selectionCanvasCache.delete(layerId);
 	}
 
 	reset() {
 		this.cache.clear();
+		this.selectionMaskCache.clear();
 		this.selectionCanvasCache.clear();
+	}
+
+	// A copy, since callers combine it with paint in place.
+	_getSelectionMask(layer) {
+		const key = this.editor.glitterManager.getSelectionCacheKey(layer);
+		let cached = this.selectionMaskCache.get(layer.id);
+		if (cached?.key !== key) {
+			cached = { key, mask: this.editor.glitterManager.buildSelectionMask(layer) };
+			this.selectionMaskCache.set(layer.id, cached);
+		}
+		return new Uint8Array(cached.mask);
 	}
 
 	_getSelectionMaskCanvas(layer, width, height) {
@@ -113,7 +129,7 @@ class MaskCompositor {
 		}
 
 		const canvas = this._createCanvasFromMaskData(
-			this.editor.glitterManager.createSelectionMaskForLayer(layer),
+			this._getSelectionMask(layer),
 			width,
 			height
 		);

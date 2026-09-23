@@ -20,6 +20,7 @@ registerLayerType(LayerType.BASE_IMAGE, {
 		defaults: { image: null },
 		normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
 	},
+	managerKey: 'baseBackgroundManager',
 	goTo: null,
 	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'baseLayerSettingsSection'],
 	mobileSettingsSections: ['background'],

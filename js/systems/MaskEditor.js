@@ -109,7 +109,7 @@ class MaskEditor {
 				return;
 			}
 
-			this.editor.glitterManager.clearPaintForLayer(layer);
+			this.editor.paintMaskStore.clearPaintForLayer(layer);
 			this.editor.requestPreviewUpdate();
 			this.editor.layerManager.renderLayersList();
 			this.editor.updateActionButtons();
@@ -151,12 +151,12 @@ class MaskEditor {
 	_defaultToolSettings() {
 		const mb = CONFIG.tools.maskBrush;
 		const base = {
-			size: mb.defaults.size,
-			softness: mb.defaults.softness,
-			flow: mb.defaults.flow,
-			spacing: Math.round(mb.stroke.stampSpacing * 100),
-			smoothing: mb.defaults.smoothing ?? 0,
-			shape: mb.defaults.shape || 'round',
+			size: FIELDS.maskBrushSize.value,
+			softness: FIELDS.maskBrushSoftness.value,
+			flow: FIELDS.maskBrushFlow.value,
+			spacing: FIELDS.maskBrushSpacing.value,
+			smoothing: FIELDS.maskBrushSmoothing.value,
+			shape: mb.defaultShape || 'round',
 			pressure: true
 		};
 		// Eraser inherits the shared defaults, overriding only the listed keys.
@@ -222,12 +222,12 @@ class MaskEditor {
 			// A raster tip is its own brush, not the round default: keep it
 			// selected and restore ITS authored values, dropping this brush's
 			// Scatter & Jitter overrides too.
-			const lim = CONFIG.tools.maskBrush.limits;
+			const lim = FIELDS.maskBrushSize;
 			const man = (typeof BrushLibrary !== 'undefined' && BrushLibrary.get(shape)?.dynamics) || {};
 			this.toolSettings[mode] = {
 				...base,
 				shape,
-				size: Math.round(maskClamp(man.diameter || base.size, lim.minSize, lim.maxSize)),
+				size: Math.round(maskClamp(man.diameter || base.size, lim.min, lim.max)),
 				spacing: maskClamp(this._rasterSpacingPct(man), 1, 200)
 			};
 			if (this.brushDynamics[shape]) {
@@ -429,9 +429,9 @@ class MaskEditor {
 			this._saveBrushDynamics();
 		}
 		if (MaskEditor.isRasterBrush(shape)) {
-			const lim = CONFIG.tools.maskBrush.limits;
+			const lim = FIELDS.maskBrushSize;
 			const man = BrushLibrary.get(shape)?.dynamics || {};
-			settings.size = Math.round(maskClamp(this.brushDynamics[shape]?.size ?? (man.diameter || 128), lim.minSize, lim.maxSize));
+			settings.size = Math.round(maskClamp(this.brushDynamics[shape]?.size ?? (man.diameter || 128), lim.min, lim.max));
 			settings.spacing = maskClamp(this.brushDynamics[shape]?.spacing ?? this._rasterSpacingPct(man), 1, 200);
 		}
 		this._applyShapeToPicker(shape);
@@ -457,8 +457,8 @@ class MaskEditor {
 		if (!MaskEditor.isRasterBrush(shape) || typeof BrushLibrary === 'undefined') return undefined;
 		const man = BrushLibrary.get(shape)?.dynamics;
 		if (!man) return undefined;
-		const lim = CONFIG.tools.maskBrush.limits;
-		if (sliderId === 'maskBrushSize') return Math.round(maskClamp(man.diameter || 128, lim.minSize, lim.maxSize));
+		const lim = FIELDS.maskBrushSize;
+		if (sliderId === 'maskBrushSize') return Math.round(maskClamp(man.diameter || 128, lim.min, lim.max));
 		if (sliderId === 'maskBrushSpacing') return maskClamp(this._rasterSpacingPct(man), 1, 200);
 		return undefined;
 	}
@@ -860,10 +860,10 @@ class MaskEditor {
 		}
 
 		// Work in logical px, not the raw slider position — Size runs a log scale.
-		const currentValue = readSliderValue(slider) || CONFIG.tools.maskBrush.defaults.size;
+		const currentValue = readSliderValue(slider) || FIELDS.maskBrushSize.value;
 		const nextValue = Math.max(
-			CONFIG.tools.maskBrush.limits.minSize,
-			Math.min(CONFIG.tools.maskBrush.limits.maxSize, currentValue + delta)
+			FIELDS.maskBrushSize.min,
+			Math.min(FIELDS.maskBrushSize.max, currentValue + delta)
 		);
 
 		if (nextValue === currentValue) {
@@ -937,7 +937,7 @@ class MaskEditor {
 	// stroke started. Erasing a selection-only mask isn't highlighted here — the
 	// composite still visibly recedes. The work canvas is reused between frames.
 	_getEraseBiteCanvas(layer) {
-		const paint = this.editor.glitterManager.getPaintMask(layer.id);
+		const paint = this.editor.paintMaskStore.getPaintMask(layer.id);
 		if (!paint || !this.scratchSubCanvas || !this.scratchAddCanvas) {
 			return null;
 		}
@@ -1029,7 +1029,7 @@ class MaskEditor {
 		event.stopPropagation();
 
 		const layer = this.editor.layerManager.getActiveLayer();
-		const paint = layer ? this.editor.glitterManager.getPaintMask(layer.id) : null;
+		const paint = layer ? this.editor.paintMaskStore.getPaintMask(layer.id) : null;
 		if (!paint) {
 			return;
 		}
@@ -1160,7 +1160,7 @@ class MaskEditor {
 		}
 
 		const layer = this.editor.layerManager.getActiveLayer();
-		const paint = layer ? this.editor.glitterManager.getPaintMask(layer.id) : null;
+		const paint = layer ? this.editor.paintMaskStore.getPaintMask(layer.id) : null;
 		if (!layer || layer.id !== this.currentLayerId || !paint) {
 			return false;
 		}
@@ -1219,7 +1219,7 @@ class MaskEditor {
 		}
 
 		if (this.strokeChanged) {
-			this.editor.glitterManager.commitPaintState(layer);
+			this.editor.paintMaskStore.commitPaintState(layer);
 			this.editor.requestPreviewUpdate();
 			this.editor.layerManager.renderLayersList();
 			this.editor.updateActionButtons();
@@ -1239,7 +1239,7 @@ class MaskEditor {
 
 	_cancelStroke() {
 		const layer = this.editor.layerManager.getActiveLayer();
-		const paint = layer ? this.editor.glitterManager.getPaintMask(layer.id) : null;
+		const paint = layer ? this.editor.paintMaskStore.getPaintMask(layer.id) : null;
 		if (paint && this.scratchAddCanvas && this.scratchSubCanvas) {
 			const addCtx = paint.add.getContext('2d', { willReadFrequently: true });
 			const subCtx = paint.sub.getContext('2d', { willReadFrequently: true });
@@ -1247,7 +1247,7 @@ class MaskEditor {
 			subCtx.clearRect(0, 0, paint.sub.width, paint.sub.height);
 			addCtx.drawImage(this.scratchAddCanvas, 0, 0);
 			subCtx.drawImage(this.scratchSubCanvas, 0, 0);
-			paint.hasContent = this.editor.glitterManager.paintCanvasHasContent(paint.add) || this.editor.glitterManager.paintCanvasHasContent(paint.sub);
+			paint.hasContent = this.editor.paintMaskStore.paintCanvasHasContent(paint.add) || this.editor.paintMaskStore.paintCanvasHasContent(paint.sub);
 			if (layer) {
 				layer.maskHasContent = paint.hasContent;
 			}
@@ -1315,7 +1315,7 @@ class MaskEditor {
 			return false;
 		}
 
-		const paint = this.editor.glitterManager.ensurePaintMask(layer.id);
+		const paint = this.editor.paintMaskStore.ensurePaintMask(layer.id);
 		this.strokeActive = true;
 		this.strokeChanged = false;
 		this.activePointerId = options.pointerId ?? null;
@@ -1883,7 +1883,7 @@ class MaskEditor {
 
 	_getOverlayPalette(layer) {
 		const glitterId = getLayerFillGlitterId(layer);
-		const glitter = glitterId ? this.editor.glitterManager?.getItemById(glitterId) : null;
+		const glitter = glitterId ? this.editor.glitterLibrary?.getItemById(glitterId) : null;
 		const fillColor = this._normalizeOverlayColor(glitter?.colorCodes?.[0]) || CONFIG.tools.maskBrush.overlay.color;
 		return {
 			fillColor,

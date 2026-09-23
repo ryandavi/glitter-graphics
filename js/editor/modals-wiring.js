@@ -1,7 +1,7 @@
 const MODAL_METHODS = {
 async ensureHtmlSceneExporter() {
 		if (this.htmlSceneExporter) return this.htmlSceneExporter;
-		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=61c22677');
+		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=1c720099');
 		this.htmlSceneExporter = new HtmlSceneExporter(this);
 		this.htmlSceneExporter.initialize();
 		return this.htmlSceneExporter;

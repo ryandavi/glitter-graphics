@@ -144,12 +144,13 @@ function assert(condition, message) {
 			'Authored timing still owns pixels or changed duration normalization');
 
 		const exporter = window.editor.exporter;
-		check(window.editor.authoredFrameResolver === exporter.authoredFrameResolver
+		const compositor = window.editor.sceneCompositor;
+		check(window.editor.authoredFrameResolver === compositor.authoredFrameResolver
 			&& window.editor.gifEncodingPipeline === exporter.gifEncodingPipeline
 			&& window.editor.gifEncodingPipeline === window.editor.stillImageExporter.gifEncodingPipeline,
 			'Application initialization did not share export services');
 		const library = [{ id: 'g1', name: 'One' }, { id: 'g2', name: 'Two' }, { id: 'g3', name: 'Three' }];
-		const keysFor = (layer) => exporter._buildLayerExportPlan(layer).getAuthoredSources(library).map((source) => source.key);
+		const keysFor = (layer) => compositor._buildLayerExportPlan(layer).getAuthoredSources(library).map((source) => source.key);
 		const base = { id: 'base', type: LayerType.BASE_IMAGE, background: { mode: 'solid', glitterId: 'g1' } };
 		check(keysFor(base).length === 0, 'Stale base glitter leaked from solid mode');
 		base.background.mode = 'glitter';
@@ -169,24 +170,24 @@ function assert(condition, message) {
 			id: 'shape', type: LayerType.SHAPE,
 			shapeData: { fill: { mode: 'glitter', glitterId: 'g1' }, border: { mode: 'glitter', widthPx: 2, glitterId: 'g2' }, shadow: { mode: 'glitter', glitterId: 'g3' } }
 		};
-		const shapeSources = exporter._buildLayerExportPlan(shape).getAuthoredSources(library);
+		const shapeSources = compositor._buildLayerExportPlan(shape).getAuthoredSources(library);
 		check(shapeSources.map((source) => source.key).join(',') === 'shape:fill,shape:border,shape:shadow', 'Shape source keys changed');
 		const sticker = {
 			id: 'sticker', type: LayerType.STICKER, settings: {},
 			stickerData: { isAnimated: true, name: 'Sticker', shadow: { mode: 'glitter', glitterId: 'g2' } }
 		};
 		check(keysFor(sticker).join(',') === 'sticker,sticker:shadow', 'Sticker authored source keys changed');
-		exporter._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'b' }]);
+		compositor._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'b' }]);
 		let duplicateRejected = false;
-		try { exporter._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'a' }]); } catch (error) { duplicateRejected = /Duplicate authored source key/.test(error.message); }
+		try { compositor._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'a' }]); } catch (error) { duplicateRejected = /Duplicate authored source key/.test(error.message); }
 		check(duplicateRejected, 'Duplicate logical source keys were silently accepted');
 
 		const animatedLayer = { id: 'motion', type: LayerType.STICKER, name: 'Motion', animation: { type: 'rotate', periodMs: 1000, phase: 0 }, stickerData: {} };
-		const procedural = exporter._collectProceduralSources([animatedLayer], { includeBaseImage: false });
+		const procedural = compositor._collectProceduralSources([animatedLayer], { includeBaseImage: false });
 		check(procedural.map((source) => source.key).join(',') === '__anim_motion'
-			&& exporter._createProceduralTimelines(procedural)[0].key === procedural[0].key,
+			&& compositor._createProceduralTimelines(procedural)[0].key === procedural[0].key,
 			'Procedural animation discovery diverged from timeline normalization');
-		const selectedProcedural = exporter._resolveSelectedAuthored({ authoredSources: [], proceduralSources: procedural }, resolver.createSession(), 250, 100);
+		const selectedProcedural = compositor._resolveSelectedAuthored({ authoredSources: [], proceduralSources: procedural }, resolver.createSession(), 250, 100);
 		check(selectedProcedural.sourceSelectionMap.has('__anim_motion'), 'Still sampling did not use the procedural descriptor collector');
 
 		const baseCanvasData = {
@@ -213,10 +214,10 @@ function assert(condition, message) {
 		try {
 			const basePipelineContext = {
 				canvasData: baseCanvasData,
-				basePipeline: exporter._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
+				basePipeline: compositor._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
 			};
-			exporter._getBasePipelineImageData(basePipelineContext, 0);
-			exporter._getBasePipelineImageData(basePipelineContext, 7);
+			compositor._getBasePipelineImageData(basePipelineContext, 0);
+			compositor._getBasePipelineImageData(basePipelineContext, 7);
 			check(baseProcessCount === 1, 'Static base pipeline processing was not cached per export context');
 			baseLayer.background.pixelEffects = {
 				paletteEnabled: true,
@@ -225,10 +226,10 @@ function assert(condition, message) {
 			};
 			const shimmerPipelineContext = {
 				canvasData: baseCanvasData,
-				basePipeline: exporter._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
+				basePipeline: compositor._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
 			};
 			baseProcessCount = 0;
-			[0, 1, 8, 9].forEach((index) => exporter._getBasePipelineImageData(shimmerPipelineContext, index));
+			[0, 1, 8, 9].forEach((index) => compositor._getBasePipelineImageData(shimmerPipelineContext, index));
 			check(baseProcessCount === 2, 'Base shimmer processing did not cache by normalized shimmer state');
 		} finally {
 			GlitterPixelEffects.applyPixelEffects = originalApplyPixelEffects;
@@ -254,9 +255,9 @@ function assert(condition, message) {
 		stickerLayer.stickerData.height = 8;
 		stickerLayer.stickerData.staticImageData = new ImageData(new Uint8ClampedArray(8 * 8 * 4).fill(255), 8, 8);
 		stickerLayer.stickerData.shadow = { mode: 'solid', color: '#000000', opacity: 1, offsetX: 2, offsetY: 3 };
-		const textPlan = exporter._buildLayerExportPlan(textLayer);
-		const shapePlan = exporter._buildLayerExportPlan(shapeLayer);
-		const stickerPlan = exporter._buildLayerExportPlan(stickerLayer);
+		const textPlan = compositor._buildLayerExportPlan(textLayer);
+		const shapePlan = compositor._buildLayerExportPlan(shapeLayer);
+		const stickerPlan = compositor._buildLayerExportPlan(stickerLayer);
 		const watermarkCanvas = document.createElement('canvas');
 		const watermark = {
 			isAnimated: false,
@@ -276,17 +277,17 @@ function assert(condition, message) {
 				textPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), slotMaskCanvases: new Map([[textLayer.id, { fill: paintMask, renderWidth: textLayer.textData.width, renderHeight: textLayer.textData.height }]]) });
 				shapePlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), slotMaskCanvases: new Map([[shapeLayer.id, { fill: paintMask, renderWidth: 8, renderHeight: 8 }]]) });
 				stickerPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map() });
-				exporter._renderPatternSourceInto(exporter.patternSourceCanvas, stickerLayer.stickerData.staticImageData, COLOR_ADJUST_IDENTITY);
-				exporter._renderWatermarkToCanvas(watermark, watermarkCanvas, renderCtx, 32, 32, index);
+				compositor._renderPatternSourceInto(compositor.patternSourceCanvas, stickerLayer.stickerData.staticImageData, COLOR_ADJUST_IDENTITY);
+				compositor._renderWatermarkToCanvas(watermark, watermarkCanvas, renderCtx, 32, 32, index);
 			}
 		} finally {
 			document.createElement = originalCreateElement;
 		}
 		check(renderCanvasCreations === 0, 'Text, shape, sticker, pattern, or watermark rendering allocated a canvas per frame');
 
-		check(exporter._resolvePreserveAlpha(true, { transparency: true }) === true
-			&& exporter._resolvePreserveAlpha(false, { transparency: true }) === false
-			&& exporter._resolvePreserveAlpha(true, { transparency: false }) === false,
+		check(compositor._resolvePreserveAlpha(true, { transparency: true }) === true
+			&& compositor._resolvePreserveAlpha(false, { transparency: true }) === false
+			&& compositor._resolvePreserveAlpha(true, { transparency: false }) === false,
 			'preserveAlpha no longer reflects target capability AND export setting alone');
 
 		const OriginalGif = window.GIF;
@@ -347,34 +348,34 @@ function assert(condition, message) {
 			hasBaseImage: true
 		};
 		const callbacks = {
-			onStatus: () => {}, onProgress: () => {}, onComplete: () => {}, parseGif: (url) => window.editor.glitterManager.parseGifFromUrl(url),
+			onStatus: () => {}, onProgress: () => {}, onComplete: () => {},
 			createMask: (layer) => window.editor.maskCompositor.getMaskData(layer),
 			renderSlotMasks: (layer) => getLayerManagerForType(window.editor, layer.type).renderSlotMasks(layer),
 			ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
 		};
 		let planBuilds = 0;
-		const originalBuild = exporter._buildLayerExportPlan.bind(exporter);
-		exporter._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
+		const originalBuild = compositor._buildLayerExportPlan.bind(compositor);
+		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
 		const originalPlanner = CompositeTimelinePlanner.prototype.plan;
 		const originalReducer = CompositeFrameReducer.prototype.reduce;
-		exporter.authoredFrameResolver.resolveAll = () => { throw new Error('Still path called resolveAll'); };
+		compositor.authoredFrameResolver.resolveAll = () => { throw new Error('Still path called resolveAll'); };
 		CompositeTimelinePlanner.prototype.plan = () => { throw new Error('Still path invoked timeline planning'); };
 		CompositeFrameReducer.prototype.reduce = () => { throw new Error('Still path invoked frame reduction'); };
 		try {
-			await exporter.composeFrameAt({
+			await compositor.composeFrameAt({
 				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
 				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
 			});
 			check(planBuilds === visibleLayers.length, 'Still export rebuilt a layer plan after common preparation');
 		} finally {
-			exporter._buildLayerExportPlan = originalBuild;
-			delete exporter.authoredFrameResolver.resolveAll;
+			compositor._buildLayerExportPlan = originalBuild;
+			delete compositor.authoredFrameResolver.resolveAll;
 			CompositeTimelinePlanner.prototype.plan = originalPlanner;
 			CompositeFrameReducer.prototype.reduce = originalReducer;
 		}
 
 		planBuilds = 0;
-		exporter._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
+		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
 		try {
 			await exporter.process({
 				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
@@ -386,7 +387,7 @@ function assert(condition, message) {
 				}
 			});
 			check(planBuilds === visibleLayers.length, 'Animation export rebuilt layer plans during rendering');
-		} finally { delete exporter._buildLayerExportPlan; }
+		} finally { delete compositor._buildLayerExportPlan; }
 
 		const stillSettings = { ...structuredClone(window.editor.exportSettings), transparency: false, ditherEnabled: false, jpegGenerations: 2, jpegQuality: 80 };
 		const originalShow = window.editor.exportResultPresenter.show;
@@ -418,7 +419,7 @@ function assert(condition, message) {
 		try { resolver.resolveFrame(descriptor('invalid', { width: 1, height: 1, frames: [] }), 0, resolver.createSession()); }
 		catch (error) { resolverErrored = true; }
 		check(resolverErrored, 'Resolver error fixture did not fail');
-		check(Object.keys(exporter.authoredFrameResolver).length === 0
+		check(Object.keys(compositor.authoredFrameResolver).length === 0
 			&& !Object.keys(exporter.gifEncodingPipeline).some((key) => /context|frame|session|source/i.test(key)),
 			'Shared services retained per-export resolution state');
 

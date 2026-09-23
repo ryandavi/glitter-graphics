@@ -106,9 +106,9 @@ async function main() {
 			};
 			const context = {
 				canvasData,
-				basePipeline: editor.exporter._prepareBasePipeline([layer], canvasData, { baseImage: true })
+				basePipeline: editor.sceneCompositor._prepareBasePipeline([layer], canvasData, { baseImage: true })
 			};
-			const exported = editor.exporter._getBasePipelineImageData(context, 3);
+			const exported = editor.sceneCompositor._getBasePipelineImageData(context, 3);
 			const restored = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
 			return {
 				settings: layer.background.pixelEffects,

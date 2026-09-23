@@ -197,7 +197,7 @@
 
 	// Reused across calls (see EXPORT-PERFORMANCE-PLAN.md Part 2b): one canvas
 	// per named role instead of a fresh allocation per call. Safe because
-	// renderToCanvas is only ever invoked from GifExporter.js (verified — no
+	// renderToCanvas is only ever invoked from SceneCompositor.js (verified — no
 	// live-preview call site) with layers rendered strictly sequentially, never
 	// re-entrantly or in parallel, so a given slot can't be clobbered mid-use by
 	// another renderToCanvas call. If that ever changes (e.g. parallel layer
@@ -218,7 +218,7 @@
 	// fully consumed within renderToCanvas's color-burn branch (composited is
 	// written back via context.putImageData before the function returns) and
 	// never stored past that call, so pooling is safe. renderToCanvas is only
-	// ever invoked sequentially from GifExporter.js, never re-entrantly.
+	// ever invoked sequentially from SceneCompositor.js, never re-entrantly.
 	let colorBurnScaledSourceScratch = null;
 	let colorBurnCompositedScratch = null;
 	function getColorBurnScratch(slot, width, height, sourceData) {
