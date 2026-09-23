@@ -752,7 +752,7 @@ class ShapeGlitterManager {
 
 	// Rasterize the shape into a padded mask canvas (crisp-thresholded like text,
 	// per CONFIG.rendering.crispMaskEdges — same GIF-fringe reasoning). Returns the
-	// canvas plus the shape's frame rect within it (for handles/selection).
+	// canvas plus the shape's body and visual rects within it.
 	getMeasurementEntry(layer) {
 		const key = this.getMeasurementCacheKey(layer);
 		const cached = this.measurementCache.get(key);
@@ -815,11 +815,20 @@ class ShapeGlitterManager {
 			canvas,
 			width: canvasWidth,
 			height: canvasHeight,
+			// Every visible pixel: body plus shadow (the layer's visual bounds).
 			frameRect: {
 				x: layoutX + frameLeft,
 				y: layoutY + frameTop,
 				width: frameRight - frameLeft,
 				height: frameBottom - frameTop
+			},
+			// The layer's frame: the shape plus its nominal outward border, no
+			// shadow (handles, hit-testing, alignment; see getShapeBodyFrame).
+			bodyRect: {
+				x: layoutX - borderExtent,
+				y: layoutY - borderExtent,
+				width: w + borderExtent * 2,
+				height: h + borderExtent * 2
 			},
 			shapeRect: { x: layoutX, y: layoutY, width: w, height: h },
 			// Kept so the border can be re-derived as a vector STROKE of the path
@@ -843,25 +852,20 @@ class ShapeGlitterManager {
 		return entry;
 	}
 
-	// The user-facing frame in shape-local units, centered relative to the padded
-	// mask canvas (mirrors TextGlitterManager.getTextFrame). It includes border
-	// and shadow so selection, snapping, and transforms describe visible pixels.
-	// NOT named getShapeFrame(layer): that name is already a class method below
-	// (hit-test frame, returns raw {x,y,width,height} in a different shape) and a
-	// second same-named method here would silently shadow one of them.
-	getShapeHandleFrame(layer, measurement = null) {
+	// Layer frame (see getLayerFrame): the shape plus its nominal outward border.
+	// Uses the nominal border extent, not the hard-miter canvas reservation, so
+	// the box hugs the shape instead of the reservation.
+	getShapeBodyFrame(layer, measurement = null) {
 		if (!layer?.shapeData) return null;
-
 		const entry = measurement || this.getMeasurementEntry(layer);
-		const rect = entry.frameRect;
-		if (!rect) return null;
+		return frameFromCanvasRect(entry.bodyRect, entry.width, entry.height);
+	}
 
-		return {
-			width: rect.width,
-			height: rect.height,
-			offsetX: rect.x + rect.width / 2 - entry.width / 2,
-			offsetY: rect.y + rect.height / 2 - entry.height / 2
-		};
+	// Layer visual bounds: the body plus shadow.
+	getShapeVisualFrame(layer, measurement = null) {
+		if (!layer?.shapeData) return null;
+		const entry = measurement || this.getMeasurementEntry(layer);
+		return frameFromCanvasRect(entry.frameRect, entry.width, entry.height);
 	}
 
 	// A smooth OUTER border, calculated by stroking the shape's actual vector path
@@ -1092,7 +1096,8 @@ class ShapeGlitterManager {
 		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
 		stack.style.setProperty('--layer-scale', String(Math.max(scaleX, scaleY) || 1));
 
-		const frame = this.getShapeHandleFrame(layer, entry);
+		// Hover outline follows the layer's frame.
+		const frame = this.getShapeBodyFrame(layer, entry);
 		if (frame) {
 			const left = (entry.width / 2) + frame.offsetX - (frame.width / 2);
 			const top = (entry.height / 2) + frame.offsetY - (frame.height / 2);
@@ -1240,11 +1245,5 @@ class ShapeGlitterManager {
 
 	createTransformHandles(layerId) {
 		movableCreateTransformHandles(this, layerId);
-	}
-
-	// Hit-test frame in canvas space (for the transform system / selection).
-	getShapeFrame(layer) {
-		const measurement = this.getMeasurementEntry(layer);
-		return measurement.frameRect;
 	}
 }

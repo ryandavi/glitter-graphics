@@ -61,7 +61,8 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	transformable: true,
 	managerKey: 'textGlitterManager',
 	blendable: true,
-	hitTestMethod: 'isPointInText',
+	frame: (editor, layer) => editor.textGlitterManager?.getTextBodyFrame(layer) || null,
+	visualBounds: (editor, layer) => editor.textGlitterManager?.getTextVisualFrame(layer) || null,
 	transformPrefix: 'text',
 	transformCapabilities: {
 		panelRedesign: true,

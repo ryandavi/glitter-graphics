@@ -61,8 +61,8 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 	}
 
 	// Bounding box (canvas pixel coords) of everything that counts as
-	// "artwork": every movable layer's handle frame (same getFrameMetrics used
-	// by zoomToSelection/snapping — see transform-interaction.js). The base
+	// "artwork": every movable layer's visual bounds (every painted pixel,
+	// shadows included; see getLayerVisualBounds). The base
 	// image is deliberately NOT included — it defines the canvas by
 	// construction (canvas dims = image dims on load) and is almost always
 	// opaque edge-to-edge, so folding it in would make this a no-op for the
@@ -77,7 +77,8 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		this.layers.forEach((layer) => {
 			if (layer.visible === false) return;
-			const metrics = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+			const transform = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id);
+			const metrics = transform?.getFrameMetrics(undefined, transform.getVisualBounds());
 			if (!metrics) return;
 			minX = Math.min(minX, metrics.minX);
 			minY = Math.min(minY, metrics.minY);

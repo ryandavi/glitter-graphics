@@ -1517,6 +1517,7 @@ class GlitterEditor {
 
 		this.clearPreview();
 		this.canvasElementsContainer.innerHTML = '';
+		this.viewport.selectionOverlay.clear();
 
 		// ======================
 		// Upload / dropzone UI
@@ -1817,6 +1818,7 @@ class GlitterEditor {
 		}
 		this.layers = [];
 		this.canvasElementsContainer.innerHTML = '';
+		this.viewport.selectionOverlay.clear();
 
 			if (CONFIG.app.startup.layers.createBaseImage) {
 			const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
@@ -2137,7 +2139,7 @@ class GlitterEditor {
 			}
 
 		} else if (layer.type === LayerType.STICKER) {
-			const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
+			const hitSticker = this.layerManager.isPointInLayer(layer, x, y);
 
 			if (hitSticker) {
 
@@ -2561,31 +2563,12 @@ class GlitterEditor {
 		try {
 			const context = this.getMovableLayerContext(layer);
 			const layerTransform = context?.manager?.layerTransforms?.get(layer.id) || new LayerTransform(layer, this);
-			const metrics = layerTransform.getFrameMetrics();
-			let minX = metrics.minX;
-			let maxX = metrics.maxX;
-			let minY = metrics.minY;
-			let maxY = metrics.maxY;
-
-			// Text and shape handle frames already include their border and shadow.
-			// Slots that paint outside the frame (a sticker shadow) declare the
-			// padding, added conservatively before testing intersection.
-			const padding = getLayerSlotFramePadding(layer);
-			if (padding > 0) {
-				const localX = padding * Math.abs(metrics.scaleX);
-				const localY = padding * Math.abs(metrics.scaleY);
-				const worldX = Math.abs(metrics.cos) * localX + Math.abs(metrics.sin) * localY;
-				const worldY = Math.abs(metrics.sin) * localX + Math.abs(metrics.cos) * localY;
-				minX -= worldX;
-				maxX += worldX;
-				minY -= worldY;
-				maxY += worldY;
-			}
-
-			return maxX > 0
-				&& maxY > 0
-				&& minX < this.originalCanvas.width
-				&& minY < this.originalCanvas.height;
+			// Visual bounds cover every painted pixel, shadows included.
+			const metrics = layerTransform.getFrameMetrics(undefined, layerTransform.getVisualBounds());
+			return metrics.maxX > 0
+				&& metrics.maxY > 0
+				&& metrics.minX < this.originalCanvas.width
+				&& metrics.minY < this.originalCanvas.height;
 		} catch (error) {
 			dbg('[Export] Could not measure layer bounds; keeping layer in export.', layer?.id, error);
 			return true;

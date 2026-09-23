@@ -805,7 +805,12 @@
      theme accent and the drop shadow separates it from light artwork. */
   --handle-fill: #ffffff;
   --handle-border-color: var(--color-accent);
-  --handle-shadow: 0 calc(1px / var(--zoom, 1)) calc(3px / var(--zoom, 1)) rgb(0 0 0 / 35%);
+  --handle-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  /* Selection chrome is drawn in screen space (the selection overlay), so
+     line widths are plain CSS pixels chosen to land on whole device pixels:
+     1px lines at 1x, 1.5px accent with 0.5px halos at 2x and above. */
+  --selection-stroke: 1px;
+  --selection-halo: 1px;
   /* Backdrop blur behind translucent chrome; glass themes can turn it up. */
   --glass-blur: 4px;
   /* Modal context must remain recognizable across themes. */
@@ -990,6 +995,12 @@
   --settings-desc-measure: 64ch;
 }
 
+@media (min-resolution: 2dppx) {
+  :root {
+    --selection-stroke: 1.5px;
+    --selection-halo: 0.5px;
+  }
+}
 /* ===== BASE ===== */
 * {
   margin: 0;
@@ -1656,80 +1667,81 @@ input[type=range]:disabled {
   color: var(--color-text-secondary);
 }
 
+.selection-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .transform-handles {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
-  z-index: var(--z-header-menu-elevated);
 }
 
 .transform-bounding-box {
-  border: var(--color-accent) solid;
-  border-width: calc(1.5px / var(--zoom, 1));
-  box-shadow: 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(255, 255, 255, 0.8), inset 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(0, 0, 0, 0.45);
+  position: absolute;
+  border: var(--selection-stroke) solid var(--color-accent);
+  box-shadow: 0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8), inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
   pointer-events: auto;
+  touch-action: none;
   cursor: move;
 }
 
 .transform-handle-wrapper {
   pointer-events: auto;
   position: absolute;
+  transform: translate(-50%, -50%);
   touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .transform-handle-wrapper[data-handle-type^=corner-] {
-  width: calc(32px / var(--zoom, 1));
-  height: calc(32px / var(--zoom, 1));
+  width: 32px;
+  height: 32px;
 }
 .transform-handle-wrapper[data-handle-type^=edge-] {
-  width: calc(36px / var(--zoom, 1));
-  height: calc(36px / var(--zoom, 1));
+  width: 36px;
+  height: 36px;
 }
 .transform-handle-wrapper[data-handle-type=rotation] {
-  width: calc(40px / var(--zoom, 1));
-  height: calc(40px / var(--zoom, 1));
+  width: 40px;
+  height: 40px;
 }
 
 @media (pointer: coarse) {
-  .transform-handle-wrapper[data-handle-type^=corner-] {
-    width: calc(var(--touch-target-min) / var(--zoom, 1));
-    height: calc(var(--touch-target-min) / var(--zoom, 1));
-  }
-  .transform-handle-wrapper[data-handle-type^=edge-] {
-    width: calc(var(--touch-target-min) / var(--zoom, 1));
-    height: calc(var(--touch-target-min) / var(--zoom, 1));
+  .transform-handle-wrapper[data-handle-type^=corner-], .transform-handle-wrapper[data-handle-type^=edge-] {
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
   }
   .transform-handle-wrapper[data-handle-type=rotation] {
-    width: calc(48px / var(--zoom, 1));
-    height: calc(48px / var(--zoom, 1));
+    width: 48px;
+    height: 48px;
   }
 }
 .transform-handle {
+  flex: none;
   pointer-events: none;
   box-sizing: border-box;
   background: var(--handle-fill);
-  border: calc(1.5px / var(--zoom, 1)) solid var(--handle-border-color);
+  border: var(--selection-stroke) solid var(--handle-border-color);
   box-shadow: var(--handle-shadow);
 }
 .transform-handle.transform-handle-corner {
-  width: calc(8px / var(--zoom, 1));
-  height: calc(8px / var(--zoom, 1));
-  border-radius: calc(2px / var(--zoom, 1));
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
 }
 .transform-handle.transform-handle-rotation {
-  width: calc(10px / var(--zoom, 1));
-  height: calc(10px / var(--zoom, 1));
+  width: 10px;
+  height: 10px;
   border-radius: var(--radius-full);
 }
 .transform-handle.transform-handle-edge {
-  width: calc(12px / var(--zoom, 1));
-  height: calc(12px / var(--zoom, 1));
+  width: 12px;
+  height: 12px;
   border-radius: var(--radius-full);
 }
 
@@ -1739,6 +1751,9 @@ input[type=range]:disabled {
 }
 
 .transform-rotation-line {
+  position: absolute;
+  width: var(--selection-stroke);
+  transform-origin: top center;
   background: var(--color-accent);
   pointer-events: none;
 }
@@ -2422,7 +2437,7 @@ input[type=range]:disabled {
 .subsection-section-group > .subsection-title {
   cursor: pointer;
 }
-.subsection-section-group .panel-group-label {
+.subsection-section-group .property-group-label {
   min-width: 0;
 }
 .subsection-section-group .panel-group-chevron {
@@ -5749,22 +5764,15 @@ body.tool-text .preview-wrapper {
 
 .smart-guide {
   position: absolute;
-  z-index: 1002;
   background: var(--smart-guide-color);
-  box-shadow: 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(255, 255, 255, 0.9), 0 0 calc(3px / var(--zoom, 1)) calc(0.5px / var(--zoom, 1)) rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.9), 0 0 3px 0.5px rgba(0, 0, 0, 0.65);
   pointer-events: none;
 }
 .smart-guide-x {
-  top: 0;
-  bottom: 0;
-  width: calc(1.5px / var(--zoom, 1));
-  transform: translateX(-50%);
+  width: var(--selection-stroke);
 }
 .smart-guide-y {
-  left: 0;
-  right: 0;
-  height: calc(1.5px / var(--zoom, 1));
-  transform: translateY(-50%);
+  height: var(--selection-stroke);
 }
 
 .sticker-element,
@@ -5873,10 +5881,9 @@ body.tool-select .preview-canvas {
 
 .transform-hover-outline {
   position: absolute;
-  z-index: var(--z-header-menu-elevated);
   box-sizing: border-box;
-  border: calc(1.5px / var(--zoom, 1)) dashed var(--selected-outline-color);
-  box-shadow: 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
+  border: var(--selection-stroke) dashed var(--selected-outline-color);
+  box-shadow: 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
 
@@ -7883,7 +7890,7 @@ body.tool-select .preview-canvas {
   content: "·";
   padding-inline: 5px;
 }
-.property-panel .panel-redesign .panel-actions {
+.property-panel .panel-redesign .property-actions {
   gap: 6px;
   padding: var(--property-pad);
   border-top: 1px solid var(--color-border);
@@ -8284,7 +8291,7 @@ body.is-resizing-panel canvas {
   max-height: 34px;
   box-sizing: border-box;
 }
-.property-panel .panel-redesign .panel-card:not(.panel-module) > .subsection-title {
+.property-panel .panel-redesign .property-card:not(.panel-module) > .subsection-title {
   font-size: 12px;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);

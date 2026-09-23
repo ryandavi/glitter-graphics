@@ -39,12 +39,6 @@ function clampLayerScale(value) {
 	return Math.max(min, Math.min(max, value));
 }
 
-// Canvas overlays inherit the viewport transform, so screen-sized UI distances
-// must be expressed in canvas units before they are positioned.
-function screenPixelsToCanvasUnits(value, zoom) {
-	return value / Math.max(0.01, Number(zoom) || 1);
-}
-
 // A layer is placed by its center, so an odd-sized layer centered on a whole
 // pixel has its top-left corner on a half pixel and straddles the document's
 // pixel grid (blurry or doubled edges when zoomed in, and preview/export
@@ -107,4 +101,48 @@ function computeLayerTransform(transform, dimensions = {}) {
 		flipX: Boolean(resolved.flipX),
 		flipY: Boolean(resolved.flipY)
 	};
+}
+
+// Layer frames. Every transformable type declares two layer-local boxes in
+// its registerLayerType definition, each { width, height, offsetX, offsetY }
+// in unscaled layer units with the offset measured from the element center:
+// - frame: the object's body (content, border and background plate, no
+//   shadow). Handles, hit-testing, alignment, snapping, group bounds.
+// - visualBounds: every painted pixel (the frame plus shadow and effect
+//   padding). Export culling and crop-to-artwork.
+function getLayerFrame(editor, layer) {
+	return LAYER_UI_CONFIG[layer?.type]?.frame?.(editor, layer) || null;
+}
+
+function getLayerVisualBounds(editor, layer) {
+	return LAYER_UI_CONFIG[layer?.type]?.visualBounds?.(editor, layer) || getLayerFrame(editor, layer);
+}
+
+// Frame for a rect in a centered mask canvas's pixel space.
+function frameFromCanvasRect(rect, canvasWidth, canvasHeight) {
+	if (!rect) return null;
+	return {
+		width: rect.width,
+		height: rect.height,
+		offsetX: rect.x + rect.width / 2 - canvasWidth / 2,
+		offsetY: rect.y + rect.height / 2 - canvasHeight / 2
+	};
+}
+
+function unionRects(a, b) {
+	if (!a) return b || null;
+	if (!b) return a;
+	const x = Math.min(a.x, b.x);
+	const y = Math.min(a.y, b.y);
+	return {
+		x,
+		y,
+		width: Math.max(a.x + a.width, b.x + b.width) - x,
+		height: Math.max(a.y + a.height, b.y + b.height) - y
+	};
+}
+
+function padFrame(frame, padding) {
+	if (!frame || !(padding > 0)) return frame;
+	return { ...frame, width: frame.width + padding * 2, height: frame.height + padding * 2 };
 }

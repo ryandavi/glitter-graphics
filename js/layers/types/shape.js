@@ -49,7 +49,8 @@ registerLayerType(LayerType.SHAPE, {
 	transformable: true,
 	managerKey: 'shapeGlitterManager',
 	blendable: true,
-	hitTestMethod: 'isPointInShape',
+	frame: (editor, layer) => editor.shapeGlitterManager?.getShapeBodyFrame(layer) || null,
+	visualBounds: (editor, layer) => editor.shapeGlitterManager?.getShapeVisualFrame(layer) || null,
 	transformPrefix: 'shape',
 	transformCapabilities: {
 		panelRedesign: true,

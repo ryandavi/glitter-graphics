@@ -39,7 +39,12 @@ registerLayerType(LayerType.STICKER, {
 	transformable: true,
 	managerKey: 'stickerManager',
 	blendable: true,
-	hitTestMethod: 'isPointInSticker',
+	// The image box; the shadow only widens the visual bounds. An empty
+	// sticker has no frame, so it can't be clicked.
+	frame: (editor, layer) => (layer.stickerData && !layer.stickerData.isEmpty && layer.stickerData.url
+		? { width: layer.stickerData.width, height: layer.stickerData.height, offsetX: 0, offsetY: 0 }
+		: null),
+	visualBounds: (editor, layer) => padFrame(getLayerFrame(editor, layer), getLayerSlotFramePadding(layer)),
 	transformPrefix: 'sticker',
 	transformCapabilities: {
 		panelRedesign: true,

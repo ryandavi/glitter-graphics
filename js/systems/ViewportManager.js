@@ -43,6 +43,8 @@ class ViewportManager {
 		this.canvasHeight = 0;
 
 		this.pixelGrid = new PixelGridOverlay(previewContainer, previewWrapper);
+		// After the grid in DOM order, so selection chrome paints above it.
+		this.selectionOverlay = new SelectionOverlay(this, this.pixelGrid.canvas);
 
 		// Initialize
 		this.initializeViewportDimensions();

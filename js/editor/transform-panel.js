@@ -114,7 +114,7 @@ renderTransformPanels() {
 			};
 		}
 
-		const frame = this.textGlitterManager?.layerTransforms?.get(layer.id)?.getHandleFrame?.();
+		const frame = this.textGlitterManager?.layerTransforms?.get(layer.id)?.getFrame?.();
 		return {
 			visible: Boolean(frame),
 			width: Math.max(1, Math.round((frame?.width || 1) * ((transform.scale.x || 100) / 100))),

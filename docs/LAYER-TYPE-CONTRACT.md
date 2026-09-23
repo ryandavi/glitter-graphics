@@ -18,9 +18,9 @@ If a new type needs a branch anywhere else, treat that as an architecture bug: f
 As of 2026-09-22, these sites still branch on layer type by hand. A new type must be checked against each one until later phases of the architecture audit (sections D2 and D4, in `docs/plans/`, local-only) remove them:
 
 - `SceneCompositor._buildLayerExportPlan` (one case per type; text and shape already share one slot-stack plan)
-- `LayerManager.renderLayerSwatch` (layers-list thumbnail) and the `isPointIn*` hit tests
+- `LayerManager.renderLayerSwatch` (layers-list thumbnail)
 - the non-slot geometry in `scaleDocumentLayerState` (`js/core/document-scaler.js`): font size, box and shape size, sticker scale
-- `LayerTransform.getHandleFrame` and `supportsEdgeResize`
+- `LayerTransform.supportsEdgeResize`
 
 Paint slots need no branches: preloading, document scaling of slot fields, the Effects badge, export culling padding and project-load glitter repair all read the `paintSlots` declaration.
 
@@ -60,7 +60,7 @@ Common optional fields:
 - `addableViaModal`: `{ label, icon, description }` for the Add Layer modal card. Omit it if users shouldn't add the type there.
 - `goTo`: `'glitter'`, `'sticker'` or `null`, for the layers-list "go to source" action.
 - `transformable`, `transformPrefix`, `transformCapabilities`: participation in transform handles and the transform panel's control-id prefix.
-- `hitTestMethod`: the `LayerManager` hit-test method name used for selection.
+- `frame(editor, layer)` and `visualBounds(editor, layer)`: required for transformable types. Each returns a layer-local box `{ width, height, offsetX, offsetY }` in unscaled layer units, offset from the element center (`frameFromCanvasRect` converts a rect in a padded mask canvas). `frame` is the object's body (content, border and background plate, no shadow); handles, hit-testing, alignment, snapping and group bounds use it. `visualBounds` covers every painted pixel, shadow included, for export culling and crop-to-artwork; it defaults to `frame`. Return `null` from `frame` when the layer has nothing to click. Read them through `getLayerFrame` / `getLayerVisualBounds` (`js/transforms/transform-math.js`).
 - `blendable`: whether the layer has a blend mode.
 - `animatable`: whether the layer can carry `animation`.
 - `contentScalesWithTransform`: the type's slots scale with its transform (stickers), so document scaling compensates them instead of rescaling them.

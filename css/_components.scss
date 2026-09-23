@@ -456,24 +456,31 @@ input[type="range"] {
 }
 
 // Transform Handles (Figma-style)
+// Drawn in the screen-space selection overlay (js/transforms/selection-overlay.js),
+// outside the zoomed canvas, so every size here is a plain screen pixel. JS
+// snaps positions to device pixels; keep hit-target sizes even so centering
+// them with translate(-50%, -50%) stays on whole pixels.
+.selection-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
 .transform-handles {
 	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
+	inset: 0;
 	pointer-events: none;
-	z-index: var(--z-header-menu-elevated);
 }
 
 .transform-bounding-box {
-	border: var(--color-accent) solid;
-	border-width: calc(1.5px / var(--zoom, 1));
+	position: absolute;
+	border: var(--selection-stroke) solid var(--color-accent);
 	box-shadow:
-		0 0 0 calc(0.75px / var(--zoom, 1)) rgba(255, 255, 255, 0.8),
-		inset 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(0, 0, 0, 0.45);
+		0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8),
+		inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
 	box-sizing: border-box;
 	pointer-events: auto; // Now draggable
+	touch-action: none;
 	cursor: move;
 }
 
@@ -481,71 +488,69 @@ input[type="range"] {
 .transform-handle-wrapper {
 	pointer-events: auto;
 	position: absolute;
+	transform: translate(-50%, -50%);
 	touch-action: none;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 
 	&[data-handle-type^="corner-"] {
-		width: calc(32px / var(--zoom, 1));
-		height: calc(32px / var(--zoom, 1));
+		width: 32px;
+		height: 32px;
 	}
 
 	&[data-handle-type^="edge-"] {
-		width: calc(36px / var(--zoom, 1));
-		height: calc(36px / var(--zoom, 1));
+		width: 36px;
+		height: 36px;
 	}
 
 	&[data-handle-type="rotation"] {
-		width: calc(40px / var(--zoom, 1));
-		height: calc(40px / var(--zoom, 1));
+		width: 40px;
+		height: 40px;
 	}
 }
 
 @media (pointer: coarse) {
 	.transform-handle-wrapper {
-		&[data-handle-type^="corner-"] {
-			width: calc(var(--touch-target-min) / var(--zoom, 1));
-			height: calc(var(--touch-target-min) / var(--zoom, 1));
-		}
-
+		&[data-handle-type^="corner-"],
 		&[data-handle-type^="edge-"] {
-			width: calc(var(--touch-target-min) / var(--zoom, 1));
-			height: calc(var(--touch-target-min) / var(--zoom, 1));
+			width: var(--touch-target-min);
+			height: var(--touch-target-min);
 		}
 
 		&[data-handle-type="rotation"] {
-			width: calc(48px / var(--zoom, 1));
-			height: calc(48px / var(--zoom, 1));
+			width: 48px;
+			height: 48px;
 		}
 	}
 }
 
 .transform-handle {
+	flex: none;
 	pointer-events: none; // Wrapper handles clicks
 	box-sizing: border-box;
 	// White fill + theme-accent ring (Figma convention) — the old
 	// text-primary fill went near-black on light themes and muddied against
 	// the accent bounding box. Shadow separates the handle from light artwork.
 	background: var(--handle-fill);
-	border: calc(1.5px / var(--zoom, 1)) solid var(--handle-border-color);
+	border: var(--selection-stroke) solid var(--handle-border-color);
 	box-shadow: var(--handle-shadow);
 
 	&.transform-handle-corner {
-		width: calc(8px / var(--zoom, 1));
-		height: calc(8px / var(--zoom, 1));
-		border-radius: calc(2px / var(--zoom, 1));
+		width: 8px;
+		height: 8px;
+		border-radius: 2px;
 	}
 
 	&.transform-handle-rotation {
-		width: calc(10px / var(--zoom, 1));
-		height: calc(10px / var(--zoom, 1));
+		width: 10px;
+		height: 10px;
 		border-radius: var(--radius-full);
 	}
 
 	&.transform-handle-edge {
-		width: calc(12px / var(--zoom, 1));
-		height: calc(12px / var(--zoom, 1));
+		width: 12px;
+		height: 12px;
 		border-radius: var(--radius-full);
 	}
 }
@@ -557,6 +562,9 @@ input[type="range"] {
 }
 
 .transform-rotation-line {
+	position: absolute;
+	width: var(--selection-stroke);
+	transform-origin: top center;
 	background: var(--color-accent);
 	pointer-events: none;
 }

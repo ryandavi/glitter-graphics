@@ -13,6 +13,7 @@ class GroupTransformManager {
 
 		this.handlePointerMove = this.handlePointerMove.bind(this);
 		this.handlePointerUp = this.handlePointerUp.bind(this);
+		this.syncHandlePositions = () => this.updateHandlePositions();
 	}
 
 	normalizeRotation(angle) {
@@ -448,8 +449,9 @@ class GroupTransformManager {
 		rotationWrapper.appendChild(rotationHandle);
 		container.appendChild(rotationWrapper);
 
-		this.editor.canvasElementsContainer.appendChild(container);
+		this.editor.viewport.selectionOverlay.append(container);
 		this.transformHandles = container;
+		this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
 		this.updateHandlePositions();
 		this.attachHandleListeners();
 	}
@@ -463,72 +465,53 @@ class GroupTransformManager {
 			return;
 		}
 
+		// Bounds are canvas units; outsets and the stalk are screen pixels.
+		const overlay = this.editor.viewport.selectionOverlay;
+		const view = overlay.getMapping();
+		const config = CONFIG.ui.stickerHandles;
+		const topLeft = overlay.toScreen({ x: bounds.left, y: bounds.top }, view);
+		const bottomRight = overlay.toScreen({ x: bounds.right, y: bounds.bottom }, view);
+		const centerX = (topLeft.x + bottomRight.x) / 2;
+
 		const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
 		if (boundingBox) {
-			boundingBox.style.cssText = `
-				position: absolute;
-				left: ${bounds.left}px;
-				top: ${bounds.top}px;
-				width: ${bounds.width}px;
-				height: ${bounds.height}px;
-				pointer-events: auto;
-				cursor: move;
-			`;
+			overlay.placeFrame(boundingBox, {
+				centerX: bounds.centerX,
+				centerY: bounds.centerY,
+				width: bounds.width,
+				height: bounds.height,
+				rotation: 0
+			}, view);
 		}
 
-		const zoom = this.editor.viewport.currentZoom;
-		const outset = screenPixelsToCanvasUnits(CONFIG.ui.stickerHandles.outwardOffset, zoom);
+		const outset = config.outwardOffset;
 		const corners = {
-			tl: { x: bounds.left - outset, y: bounds.top - outset },
-			tr: { x: bounds.right + outset, y: bounds.top - outset },
-			br: { x: bounds.right + outset, y: bounds.bottom + outset },
-			bl: { x: bounds.left - outset, y: bounds.bottom + outset }
+			tl: { x: topLeft.x - outset, y: topLeft.y - outset },
+			tr: { x: bottomRight.x + outset, y: topLeft.y - outset },
+			br: { x: bottomRight.x + outset, y: bottomRight.y + outset },
+			bl: { x: topLeft.x - outset, y: bottomRight.y + outset }
 		};
-
 		Object.entries(corners).forEach(([corner, point]) => {
 			const wrapper = this.transformHandles.querySelector(`[data-handle-type="corner-${corner}"]`);
 			if (!wrapper) return;
-
-			wrapper.style.cssText = `
-				position: absolute;
-				left: ${point.x}px;
-				top: ${point.y}px;
-				transform: translate(-50%, -50%);
-			`;
+			overlay.placePoint(wrapper, point);
 			wrapper.style.cursor = corner === 'tl' || corner === 'br' ? 'nwse-resize' : 'nesw-resize';
 		});
 
-		const rotationDistance = screenPixelsToCanvasUnits(CONFIG.ui.stickerHandles.rotationHandleDistance, zoom);
-		const topCenterX = bounds.centerX;
-		const topCenterY = bounds.top - rotationDistance;
 		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
 		if (rotationWrapper) {
-			rotationWrapper.style.cssText = `
-				position: absolute;
-				left: ${topCenterX}px;
-				top: ${topCenterY}px;
-				transform: translate(-50%, -50%);
-				cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='white' stroke='black' stroke-width='1' d='M12 3v4m0 10v4M3 12h4m10 0h4M6.34 6.34l2.83 2.83m5.66 5.66l2.83 2.83M6.34 17.66l2.83-2.83m5.66-5.66l2.83-2.83'/%3E%3C/svg%3E") 12 12, auto;
-			`;
+			overlay.placePoint(rotationWrapper, { x: centerX, y: topLeft.y - config.rotationHandleDistance });
+			rotationWrapper.style.cursor = ROTATION_CURSOR;
 		}
 
 		const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
 		if (rotationLine) {
-			const lineWidth = screenPixelsToCanvasUnits(CONFIG.ui.stickerHandles.boundingBoxWidth, zoom);
-			rotationLine.style.cssText = `
-				position: absolute;
-				left: ${bounds.centerX}px;
-				top: ${bounds.top}px;
-				width: ${lineWidth}px;
-				height: ${rotationDistance}px;
-				transform: translate(-50%, 0);
-				transform-origin: top center;
-				pointer-events: none;
-			`;
+			overlay.placeStalk(rotationLine, { x: centerX, y: topLeft.y }, config.rotationHandleDistance, 0);
 		}
 	}
 
 	removeTransformHandles() {
+		this.editor.viewport.selectionOverlay.removeSyncer(this.syncHandlePositions);
 		this.removeDocumentHandleListeners();
 		if (this.transformHandles?.parentNode) {
 			this.transformHandles.parentNode.removeChild(this.transformHandles);

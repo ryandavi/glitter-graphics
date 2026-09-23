@@ -789,11 +789,8 @@ class GestureManager {
 	}
 
 	isPointInLayer(layer, screenX, screenY) {
-		const hitTestMethod = LAYER_UI_CONFIG[layer.type]?.hitTestMethod;
-		if (!hitTestMethod) return false;
-
 		const point = this.viewport.screenToCanvas(screenX, screenY);
-		return this.editor.layerManager[hitTestMethod](layer, point.x, point.y);
+		return this.editor.layerManager.isPointInLayer(layer, point.x, point.y);
 	}
 
 	getLayerById(layerId) {

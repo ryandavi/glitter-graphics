@@ -68,7 +68,7 @@ async function captureShapeSnapshot(page, layerId, label) {
 		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
 		const wrapper = editor.shapeGlitterManager.layerElements.get(id);
 		const stack = wrapper?.querySelector('.shape-glitter-stack');
-		const frame = editor.shapeGlitterManager.getShapeHandleFrame(layer);
+		const frame = editor.shapeGlitterManager.getShapeBodyFrame(layer);
 		const handles = document.querySelector(`.transform-handles[data-layer-id="${id}"]`);
 		const box = handles?.querySelector('.transform-bounding-box');
 		const styleValue = (name) => stack?.style.getPropertyValue(name) || '';
@@ -265,7 +265,7 @@ async function check6(page) {
 		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
 		const read = () => {
 			editor.shapeGlitterManager.invalidateMeasurement(layer);
-			return editor.shapeGlitterManager.getShapeHandleFrame(layer);
+			return editor.shapeGlitterManager.getShapeBodyFrame(layer);
 		};
 		layer.shapeData.border.edgeStyle = 'round';
 		const round = read();

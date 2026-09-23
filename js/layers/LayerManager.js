@@ -711,10 +711,9 @@ class LayerManager {
 			if (movableOnly && !this.isLayerMovable(layer)) continue;
 
 			let isHit = false;
-			const hitTestMethod = LAYER_UI_CONFIG[layer.type]?.hitTestMethod;
 
-			if (hitTestMethod) {
-				isHit = this[hitTestMethod](layer, x, y);
+			if (isTransformableLayerType(layer.type)) {
+				isHit = this.isPointInLayer(layer, x, y);
 			} else if (layer.type === LayerType.GLITTER_FILL) {
 				isHit = this.isPixelInLayerSelection(layer, x, y);
 			} else if (includeBase && layer.type === LayerType.BASE_IMAGE && this.editor.originalImage) {
@@ -747,73 +746,16 @@ class LayerManager {
 		return hitStack[(currentIndex + 1) % hitStack.length];
 	}
 
-	isPointInTransformBox(transform, width, height, clickX, clickY) {
-		let dx = clickX - transform.position.x;
-		let dy = clickY - transform.position.y;
-
-		const angleRad = -transform.rotation * (Math.PI / 180);
-		const rx = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
-		const ry = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
-
-		const sx = transform.scale.x / 100;
-		const sy = transform.scale.y / 100;
-		const lx = rx / sx;
-		const ly = ry / sy;
-
-		const halfW = width / 2;
-		const halfH = height / 2;
-
-		return (lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH);
-	}
-
-	// Calculates if click (x,y) is inside a rotated/scaled sticker
-	isPointInSticker(layer, clickX, clickY) {
-		if (layer.stickerData.isEmpty || !layer.stickerData.url) return false;
-
-		const w = layer.stickerData.width;
-		const h = layer.stickerData.height;
-		const t = withRenderedPosition(getLayerTransform(layer), { width: w, height: h });
-
-		return this.isPointInTransformBox(t, w, h, clickX, clickY);
-	}
-
-	isPointInText(layer, clickX, clickY) {
-		if (!layer.textData?.text?.trim()) return false;
-
-		const t = withRenderedPosition(getLayerTransform(layer), layer.textData);
-
-		// Hit-test the visible frame (box rect / ink bounds), not the padded mask canvas
-		const frame = this.editor.textGlitterManager?.getTextFrame?.(layer);
-		if (!frame) {
-			return this.isPointInTransformBox(t, layer.textData.width, layer.textData.height, clickX, clickY);
-		}
-
-		const rotationRad = (t.rotation * Math.PI) / 180;
-		const cos = Math.cos(rotationRad);
-		const sin = Math.sin(rotationRad);
-		const offsetX = frame.offsetX * (t.scale.x / 100);
-		const offsetY = frame.offsetY * (t.scale.y / 100);
-		const frameCenter = {
-			x: t.position.x + offsetX * cos - offsetY * sin,
-			y: t.position.y + offsetX * sin + offsetY * cos
-		};
-
-		return this.isPointInTransformBox(
-			{ ...t, position: frameCenter },
-			frame.width,
-			frame.height,
-			clickX,
-			clickY
-		);
-	}
-
-	isPointInShape(layer, clickX, clickY) {
-		if (layer.type !== LayerType.SHAPE) return false;
-		const measurement = this.editor.shapeGlitterManager?.getMeasurementEntry(layer);
-		const w = measurement?.width || layer.shapeData.renderWidth || layer.shapeData.width;
-		const h = measurement?.height || layer.shapeData.renderHeight || layer.shapeData.height;
-		const t = withRenderedPosition(getLayerTransform(layer), { width: w, height: h });
-		return this.isPointInTransformBox(t, w, h, clickX, clickY);
+	// A transformable layer is hit inside its frame (see getLayerFrame), plus a
+	// few screen pixels of tolerance. Empty layers have nothing to hit.
+	isPointInLayer(layer, clickX, clickY) {
+		if (!isTransformableLayerType(layer?.type)) return false;
+		if (LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) === false) return false;
+		if (!getLayerFrame(this.editor, layer)) return false;
+		const transform = this.editor.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)
+			|| new LayerTransform(layer, this.editor);
+		const zoom = Math.max(0.01, this.editor.viewport?.currentZoom || 1);
+		return transform.containsPoint({ x: clickX, y: clickY }, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {

@@ -1242,6 +1242,13 @@ class TextGlitterManager {
 		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
 		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY, backgroundBounds ? backgroundBounds.y : Infinity);
 		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
+		// Body (the layer's frame for handles and hit-testing): the layout box,
+		// the glyphs with their border, and the background plate. No shadow, and
+		// the layout box rather than ink, so the box holds still while typing.
+		const bodyLeft = Math.min(0, hasInk ? textInkLeft - borderWidth : 0, backgroundBounds ? backgroundBounds.x : Infinity);
+		const bodyRight = Math.max(layoutWidth, hasInk ? textInkRight + borderWidth : 0, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const bodyTop = Math.min(0, hasInk ? textInkTop - borderWidth : 0, backgroundBounds ? backgroundBounds.y : Infinity);
+		const bodyBottom = Math.max(layoutHeight, hasInk ? textInkBottom + borderWidth : 0, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		const frameLeft = boxMode === 'fixed' ? Math.min(0, artLeft) : artLeft;
 		const frameRight = boxMode === 'fixed' ? Math.max(layoutWidth, artRight) : artRight;
 		const frameTop = boxMode === 'fixed' ? Math.min(0, artTop) : artTop;
@@ -1314,8 +1321,15 @@ class TextGlitterManager {
 			boxRect: boxMode === 'fixed'
 				? { x: layoutX, y: layoutY, width: layoutWidth, height: layoutHeight }
 				: null,
-			// Selection and transform bounds describe every visible pixel. Area
-			// text keeps a separate boxRect for its reflow handles.
+			// The layer's frame: handles, hit-testing, alignment (see getTextBodyFrame).
+			bodyRect: {
+				x: layoutX + bodyLeft,
+				y: layoutY + bodyTop,
+				width: Math.max(1, bodyRight - bodyLeft),
+				height: Math.max(1, bodyBottom - bodyTop)
+			},
+			// Every visible pixel, shadow included. Area text keeps a separate
+			// boxRect for its reflow handles.
 			frameRect: {
 				x: layoutX + frameLeft,
 				y: layoutY + frameTop,
@@ -1368,22 +1382,18 @@ class TextGlitterManager {
 		};
 	}
 
-	getIntrinsicTextFrame(layer, measurement = null) {
-		const fixedBoxFrame = this.getFixedBoxFrame(layer, measurement);
-		if (fixedBoxFrame) return fixedBoxFrame;
-
+	// Layer frame (see getLayerFrame): layout box + glyph border + background.
+	getTextBodyFrame(layer, measurement = null) {
 		if (!layer?.textData) return null;
 		const entry = measurement || this.getMeasurementEntry(layer);
-		const rect = entry.textInkRect;
-		if (!rect || rect.width <= 0 || rect.height <= 0) {
-			return this.getTextFrame(layer, entry);
-		}
-		return {
-			width: rect.width,
-			height: rect.height,
-			offsetX: rect.x + rect.width / 2 - entry.width / 2,
-			offsetY: rect.y + rect.height / 2 - entry.height / 2
-		};
+		return frameFromCanvasRect(entry.bodyRect, entry.width, entry.height);
+	}
+
+	// Layer visual bounds: the body plus shadow.
+	getTextVisualFrame(layer, measurement = null) {
+		if (!layer?.textData) return null;
+		const entry = measurement || this.getMeasurementEntry(layer);
+		return frameFromCanvasRect(unionRects(entry.frameRect, entry.bodyRect), entry.width, entry.height);
 	}
 
 	getAlignOffset(align, maxWidth, lineWidth) {
@@ -1697,7 +1707,8 @@ class TextGlitterManager {
 		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
 		stack.style.setProperty('--layer-scale', String(Math.max(scaleX, scaleY) || 1));
 
-		const rect = entry.frameRect;
+		// Hover outline and overflow marker follow the layer's frame.
+		const rect = entry.bodyRect;
 		if (rect) {
 			stack.style.setProperty('--tf-top', `${rect.y}px`);
 			stack.style.setProperty('--tf-left', `${rect.x}px`);

@@ -61,11 +61,25 @@ snapTransformPosition(transform, position, options = {}) {
 	renderSmartGuides(x, y) {
 		this.clearSmartGuides();
 		if (x == null && y == null) return;
+		// Guides span the canvas and are drawn in the screen-space overlay.
+		const overlay = this.viewport.selectionOverlay;
+		const view = overlay.getMapping();
+		const start = overlay.toScreen({ x: 0, y: 0 }, view);
+		const end = overlay.toScreen({ x: this.originalCanvas.width, y: this.originalCanvas.height }, view);
 		const add = (axis, value) => {
 			const guide = document.createElement('div');
 			guide.className = `smart-guide smart-guide-${axis} ui-ignore-gestures`;
-			guide.style[axis === 'x' ? 'left' : 'top'] = `${value}px`;
-			this.canvasElementsContainer.appendChild(guide);
+			const point = overlay.toScreen({ x: value, y: value }, view);
+			if (axis === 'x') {
+				guide.style.left = `${SelectionOverlay.snap(point.x)}px`;
+				guide.style.top = `${start.y}px`;
+				guide.style.height = `${end.y - start.y}px`;
+			} else {
+				guide.style.top = `${SelectionOverlay.snap(point.y)}px`;
+				guide.style.left = `${start.x}px`;
+				guide.style.width = `${end.x - start.x}px`;
+			}
+			overlay.append(guide);
 		};
 		if (x != null) add('x', x);
 		if (y != null) add('y', y);
@@ -98,7 +112,7 @@ snapTransformPosition(transform, position, options = {}) {
 
 ,
 	clearSmartGuides() {
-		this.canvasElementsContainer?.querySelectorAll('.smart-guide').forEach((guide) => guide.remove());
+		this.viewport?.selectionOverlay?.element.querySelectorAll('.smart-guide').forEach((guide) => guide.remove());
 	}
 
 ,

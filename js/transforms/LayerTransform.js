@@ -26,6 +26,9 @@ class LayerTransform {
 		// Bind methods for event listeners
 		this.handleHandlePointerMove = this.handleHandlePointerMove.bind(this);
 		this.handleHandlePointerUp = this.handleHandlePointerUp.bind(this);
+		// Selection-overlay syncers: redraw chrome when the view pans or zooms.
+		this.syncHandlePositions = () => this.updateHandlePositions();
+		this.syncHoverOutline = () => this.updateHoverOutlinePosition();
 
 		// rAF flag for settings-panel sync during drags
 		this._settingsSyncScheduled = false;
@@ -241,30 +244,18 @@ updateTransform(updates) {
 		throw new Error('Layer does not have dimensions');
 	}
 
-	getHandleFrame() {
+	// The layer's frame (see getLayerFrame): handles, hit-testing, alignment,
+	// snapping and group bounds. Falls back to the element box.
+	getFrame() {
+		const frame = getLayerFrame(this.editor, this.layer);
+		if (frame) return frame;
 		const dimensions = this.getDimensions();
-		const textFrame = this.layer.type === LayerType.TEXT_GLITTER
-			? this.editor.textGlitterManager?.getIntrinsicTextFrame?.(this.layer)
-			: null;
+		return { width: dimensions.width, height: dimensions.height, offsetX: 0, offsetY: 0 };
+	}
 
-		if (textFrame) {
-			return textFrame;
-		}
-
-		const shapeFrame = this.layer.type === LayerType.SHAPE
-			? this.editor.shapeGlitterManager?.getShapeHandleFrame?.(this.layer)
-			: null;
-
-		if (shapeFrame) {
-			return shapeFrame;
-		}
-
-		return {
-			width: dimensions.width,
-			height: dimensions.height,
-			offsetX: 0,
-			offsetY: 0
-		};
+	// Every painted pixel, shadow included: export culling and crop-to-artwork.
+	getVisualBounds() {
+		return getLayerVisualBounds(this.editor, this.layer) || this.getFrame();
 	}
 
 	// Where the layer's element is actually drawn: `position` after the
@@ -274,7 +265,7 @@ updateTransform(updates) {
 		return withRenderedPosition(transform, this.getDimensions()).position;
 	}
 
-	getFrameMetrics(transform = this.getTransform(), frame = this.getHandleFrame()) {
+	getFrameMetrics(transform = this.getTransform(), frame = this.getFrame()) {
 		const scaleX = (transform.scale.x || 100) / 100;
 		const scaleY = (transform.scale.y || 100) / 100;
 		const displayWidth = frame.width * scaleX;
@@ -317,6 +308,19 @@ updateTransform(updates) {
 		};
 	}
 
+	// Hit test against the frame in canvas units. `tolerance` (canvas units)
+	// widens every side so thin layers stay clickable.
+	containsPoint(point, tolerance = 0) {
+		const metrics = this.getFrameMetrics();
+		const dx = point.x - metrics.centerX;
+		const dy = point.y - metrics.centerY;
+		// Undo the rotation to test in the frame's own axes.
+		const localX = dx * metrics.cos + dy * metrics.sin;
+		const localY = -dx * metrics.sin + dy * metrics.cos;
+		return Math.abs(localX) <= Math.abs(metrics.displayWidth) / 2 + tolerance
+			&& Math.abs(localY) <= Math.abs(metrics.displayHeight) / 2 + tolerance;
+	}
+
 	showHoverOutline() {
 		if (
 			this.layer.type !== LayerType.STICKER
@@ -328,8 +332,9 @@ updateTransform(updates) {
 		const outline = document.createElement('div');
 		outline.className = 'transform-hover-outline';
 		outline.dataset.layerId = this.layer.id;
-		this.editor.canvasElementsContainer.appendChild(outline);
+		this.editor.viewport.selectionOverlay.append(outline);
 		this.hoverOutline = outline;
+		this.editor.viewport.selectionOverlay.addSyncer(this.syncHoverOutline);
 		this.updateHoverOutlinePosition();
 	}
 
@@ -337,16 +342,17 @@ updateTransform(updates) {
 		if (!this.hoverOutline) return;
 		const transform = this.getTransform();
 		const metrics = this.getFrameMetrics(transform);
-		this.hoverOutline.style.cssText = `
-			left: ${metrics.centerX}px;
-			top: ${metrics.centerY}px;
-			width: ${metrics.displayWidth}px;
-			height: ${metrics.displayHeight}px;
-			transform: translate(-50%, -50%) rotate(${transform.rotation}deg);
-		`;
+		this.editor.viewport.selectionOverlay.placeFrame(this.hoverOutline, {
+			centerX: metrics.centerX,
+			centerY: metrics.centerY,
+			width: metrics.displayWidth,
+			height: metrics.displayHeight,
+			rotation: transform.rotation
+		});
 	}
 
 	removeHoverOutline() {
+		this.editor.viewport.selectionOverlay.removeSyncer(this.syncHoverOutline);
 		this.hoverOutline?.remove();
 		this.hoverOutline = null;
 	}
@@ -924,9 +930,10 @@ createTransformHandles() {
 	rotationWrapper.appendChild(rotationHandle);
 	container.appendChild(rotationWrapper);
 
-	// Add to canvas
-	this.editor.canvasElementsContainer.appendChild(container);
+	// Selection chrome lives in the screen-space overlay, outside the zoom.
+	this.editor.viewport.selectionOverlay.append(container);
 	this.transformHandles = container;
+	this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
 
 	// Position handles - this will now use the correct transform that was just applied
 	this.updateHandlePositions();
@@ -936,44 +943,48 @@ createTransformHandles() {
 }
 
 	/**
-	 * Update positions of transform handles based on current transform
+	 * Update positions of transform handles based on current transform.
+	 * The chrome lives in the screen-space selection overlay: frames are
+	 * measured in canvas units, then mapped to screen pixels, where handle
+	 * outsets and the rotation stalk are fixed pixel distances.
 	 */
 	updateHandlePositions() {
 		if (!this.transformHandles) return;
 
 		const transform = this.getTransform();
-		const frame = this.getHandleFrame();
+		const frame = this.getFrame();
 		const resizeFrame = this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) || frame;
 		const config = CONFIG.ui.stickerHandles;
+		const overlay = this.editor.viewport.selectionOverlay;
+		const view = overlay.getMapping();
+		const metrics = this.getFrameMetrics(transform, frame);
+		const resizeMetrics = resizeFrame === frame ? metrics : this.getFrameMetrics(transform, resizeFrame);
+		const { cos, sin } = metrics;
 
-		// Calculate display dimensions
-		const displayWidth = frame.width * (transform.scale.x / 100);
-		const displayHeight = frame.height * (transform.scale.y / 100);
+		// Points are local offsets from a screen-space center, rotated with the layer.
+		const toScreenPoint = (centerMetrics, local) => {
+			const center = overlay.toScreen({ x: centerMetrics.centerX, y: centerMetrics.centerY }, view);
+			return {
+				x: center.x + (local.x * cos - local.y * sin),
+				y: center.y + (local.x * sin + local.y * cos)
+			};
+		};
+		const hw = metrics.displayWidth * view.zoom / 2;
+		const hh = metrics.displayHeight * view.zoom / 2;
+		const resizeHw = resizeMetrics.displayWidth * view.zoom / 2;
+		const resizeHh = resizeMetrics.displayHeight * view.zoom / 2;
+		const outset = config.outwardOffset;
 
-		// Get rotation in radians
-		const rotationRad = (transform.rotation * Math.PI) / 180;
-		const cos = Math.cos(rotationRad);
-		const sin = Math.sin(rotationRad);
-		// Frame offsets are text-local units; scale them into display space.
-		const frameOffsetX = frame.offsetX * (transform.scale.x / 100);
-		const frameOffsetY = frame.offsetY * (transform.scale.y / 100);
-		const origin = this.getRenderedPosition(transform);
-		const centerX = origin.x + frameOffsetX * cos - frameOffsetY * sin;
-		const centerY = origin.y + frameOffsetX * sin + frameOffsetY * cos;
-		const resizeWidth = resizeFrame.width * (transform.scale.x / 100);
-		const resizeHeight = resizeFrame.height * (transform.scale.y / 100);
-		const resizeOffsetX = resizeFrame.offsetX * (transform.scale.x / 100);
-		const resizeOffsetY = resizeFrame.offsetY * (transform.scale.y / 100);
-		const resizeCenterX = origin.x + resizeOffsetX * cos - resizeOffsetY * sin;
-		const resizeCenterY = origin.y + resizeOffsetX * sin + resizeOffsetY * cos;
-
-		// Half dimensions
-		const hw = displayWidth / 2;
-		const hh = displayHeight / 2;
-		const resizeHw = resizeWidth / 2;
-		const resizeHh = resizeHeight / 2;
-		const zoom = this.editor.viewport.currentZoom;
-		const outset = screenPixelsToCanvasUnits(config.outwardOffset, zoom);
+		const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
+		if (boundingBox) {
+			overlay.placeFrame(boundingBox, {
+				centerX: metrics.centerX,
+				centerY: metrics.centerY,
+				width: metrics.displayWidth,
+				height: metrics.displayHeight,
+				rotation: transform.rotation
+			}, view);
+		}
 
 		// Handles sit just outside the selection border. The bounding box remains
 		// exact, so the visual outset cannot change transform geometry.
@@ -983,124 +994,43 @@ createTransformHandles() {
 			br: { x: hw + outset, y: hh + outset },
 			bl: { x: -hw - outset, y: hh + outset }
 		};
-
-		const edges = {
-			top: { x: 0, y: -resizeHh - outset },
-			right: { x: resizeHw + outset, y: 0 },
-			bottom: { x: 0, y: resizeHh + outset },
-			left: { x: -resizeHw - outset, y: 0 }
-		};
-
-		// Rotate corners and translate to position
-		const rotatePoint = (local) => ({
-			x: centerX + (local.x * cos - local.y * sin),
-			y: centerY + (local.x * sin + local.y * cos)
-		});
-		const rotateResizePoint = (local) => ({
-			x: resizeCenterX + (local.x * cos - local.y * sin),
-			y: resizeCenterY + (local.x * sin + local.y * cos)
-		});
-
-		const rotatedCorners = {};
-		Object.keys(corners).forEach(key => {
-			rotatedCorners[key] = rotatePoint(corners[key]);
-		});
-
-		// Position bounding box
-		const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
-		if (boundingBox) {
-			boundingBox.style.cssText = `
-				position: absolute;
-				left: ${centerX}px;
-				top: ${centerY}px;
-				width: ${displayWidth}px;
-				height: ${displayHeight}px;
-				transform: translate(-50%, -50%) rotate(${transform.rotation}deg);
-				pointer-events: auto;
-				touch-action: none;
-				cursor: move;
-			`;
-		}
-
-		// Position corner handle wrappers
-		Object.keys(rotatedCorners).forEach(corner => {
+		Object.entries(corners).forEach(([corner, local]) => {
 			const wrapper = this.transformHandles.querySelector(`[data-handle-type="corner-${corner}"]`);
-			if (wrapper) {
-				const pos = rotatedCorners[corner];
-				wrapper.style.cssText = `
-					position: absolute;
-					left: ${pos.x}px;
-					top: ${pos.y}px;
-					transform: translate(-50%, -50%);
-				`;
-				wrapper.style.cursor = this.getCornerCursor(corner, transform.rotation);
-			}
+			if (!wrapper) return;
+			overlay.placePoint(wrapper, toScreenPoint(metrics, local));
+			wrapper.style.cursor = this.getCornerCursor(corner, transform.rotation);
 		});
 
 		if (this.supportsEdgeResize()) {
-			Object.keys(edges).forEach(edge => {
+			const edges = {
+				top: { x: 0, y: -resizeHh - outset },
+				right: { x: resizeHw + outset, y: 0 },
+				bottom: { x: 0, y: resizeHh + outset },
+				left: { x: -resizeHw - outset, y: 0 }
+			};
+			Object.entries(edges).forEach(([edge, local]) => {
 				const wrapper = this.transformHandles.querySelector(`[data-handle-type="edge-${edge}"]`);
 				if (!wrapper) return;
-
-				const pos = rotateResizePoint(edges[edge]);
-				wrapper.style.cssText = `
-					position: absolute;
-					left: ${pos.x}px;
-					top: ${pos.y}px;
-					transform: translate(-50%, -50%);
-				`;
+				overlay.placePoint(wrapper, toScreenPoint(resizeMetrics, local));
 				wrapper.style.cursor = this.getEdgeCursor(edge, transform.rotation);
 			});
 		}
 
-		// Position rotation handle (above top center)
-		const rotationHandleDistance = screenPixelsToCanvasUnits(config.rotationHandleDistance, zoom);
-		const topCenterLocal = { x: 0, y: -hh - rotationHandleDistance };
-		const topCenter = {
-			x: centerX + (topCenterLocal.x * cos - topCenterLocal.y * sin),
-			y: centerY + (topCenterLocal.x * sin + topCenterLocal.y * cos)
-		};
-
+		// Rotation handle and its stalk, above the top center.
 		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
 		if (rotationWrapper) {
-			rotationWrapper.style.cssText = `
-				position: absolute;
-				left: ${topCenter.x}px;
-				top: ${topCenter.y}px;
-				transform: translate(-50%, -50%);
-				cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='white' stroke='black' stroke-width='1' d='M12 3v4m0 10v4M3 12h4m10 0h4M6.34 6.34l2.83 2.83m5.66 5.66l2.83 2.83M6.34 17.66l2.83-2.83m5.66-5.66l2.83-2.83'/%3E%3C/svg%3E") 12 12, auto;
-			`;
+			overlay.placePoint(rotationWrapper, toScreenPoint(metrics, { x: 0, y: -hh - config.rotationHandleDistance }));
+			rotationWrapper.style.cursor = ROTATION_CURSOR;
 		}
-
-		// Position rotation line
 		const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
 		if (rotationLine) {
-			const topBoxLocal = { x: 0, y: -hh };
-			const topBox = {
-				x: centerX + (topBoxLocal.x * cos - topBoxLocal.y * sin),
-				y: centerY + (topBoxLocal.x * sin + topBoxLocal.y * cos)
-			};
-
-			const lineLength = rotationHandleDistance;
-			const lineAngle = transform.rotation;
-			const lineWidth = screenPixelsToCanvasUnits(config.boundingBoxWidth, zoom);
-
-			rotationLine.style.cssText = `
-				position: absolute;
-				left: ${topBox.x}px;
-				top: ${topBox.y}px;
-				width: ${lineWidth}px;
-				height: ${lineLength}px;
-				transform: translate(-50%, 0) rotate(${lineAngle}deg);
-				transform-origin: top center;
-				pointer-events: none;
-			`;
+			overlay.placeStalk(rotationLine, toScreenPoint(metrics, { x: 0, y: -hh }), config.rotationHandleDistance, transform.rotation);
 		}
 
 		const compactTouchWidth = navigator.maxTouchPoints > 0
-			&& displayWidth * zoom < config.touchMinHandleSpan;
+			&& hw * 2 < config.touchMinHandleSpan;
 		const compactTouchHeight = navigator.maxTouchPoints > 0
-			&& displayHeight * zoom < config.touchMinHandleSpan;
+			&& hh * 2 < config.touchMinHandleSpan;
 		this.transformHandles.querySelectorAll('.transform-handle-wrapper').forEach((wrapper) => {
 			const type = wrapper.dataset.handleType || '';
 			const overlapsCompactDimension = type.startsWith('corner-')
@@ -1118,6 +1048,7 @@ createTransformHandles() {
 	 * Remove transform handles
 	 */
 removeTransformHandles() {
+	this.editor.viewport.selectionOverlay.removeSyncer(this.syncHandlePositions);
 	// Remove handles stored in this instance
 	if (this.transformHandles) {
 		// Re-enable pointer events on element
@@ -1217,7 +1148,7 @@ removeTransformHandles() {
 					height: dimensions.height,
 					boxWidth: this.layer.textData?.boxWidth ?? null,
 					boxHeight: this.layer.textData?.boxHeight ?? null,
-					handleFrame: this.getHandleFrame(),
+					handleFrame: this.getFrame(),
 					textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null,
 					didMove: false,
 					altDuplicatePending: effectiveHandleType === 'move' && e.altKey,

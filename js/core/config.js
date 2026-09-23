@@ -609,7 +609,9 @@ const CONFIG = deepFreeze({
 			handleStrokeWidth: 1.5,
 			boundingBoxColor: 'var(--color-accent)',
 			boundingBoxWidth: 1.5,
-			handleHitboxPadding: 8,
+			// Screen pixels added around a layer's frame when hit-testing clicks,
+			// so thin layers (a 1px line, a small text) stay clickable.
+			frameHitTolerance: 4,
 			touchMinHandleSpan: 72,
 			// Layer scale limits. enabled:false = Figma/Photoshop parity (no max);
 			// hardMin/hardMax stay as safety rails so scale can never hit 0 or
