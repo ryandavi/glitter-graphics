@@ -9,25 +9,6 @@
 // (layer.textData vs layer.shapeData). Each manager parameterizes these with
 // an options object supplied by thin wrapper methods.
 
-// The paint slot that fills a layer's own artwork. Every slot is one
-// self-contained object: mode, color, gradient, glitterId, scale, colorAdjust,
-// opacity and texture registration. Glitter fill and canvas background layers
-// are a single paint, so their whole-layer opacity is their only fade and the
-// slot opacity is not read for them.
-function getLayerFillSlot(layer) {
-	switch (layer?.type) {
-		case LayerType.GLITTER_FILL: return layer.fill || null;
-		case LayerType.TEXT_GLITTER: return layer.textData?.fill || null;
-		case LayerType.SHAPE: return layer.shapeData?.fill || null;
-		case LayerType.BASE_IMAGE: return layer.background || null;
-		default: return null;
-	}
-}
-
-function getLayerFillGlitterId(layer) {
-	return getLayerFillSlot(layer)?.glitterId ?? null;
-}
-
 function buildDefaultFill(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;

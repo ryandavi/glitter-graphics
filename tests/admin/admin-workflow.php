@@ -1,11 +1,11 @@
 <?php
 
-require_once(__DIR__ . '/../admin/includes/config.php');
-require_once(__DIR__ . '/../admin/includes/assetPathService.php');
-require_once(__DIR__ . '/../admin/includes/tagTaxonomyService.php');
-require_once(__DIR__ . '/../admin/includes/assetAnalysisResult.php');
-require_once(__DIR__ . '/../admin/includes/assetNaming.php');
-require_once(__DIR__ . '/../admin/includes/gifAnalyzer.php');
+require_once(__DIR__ . '/../../admin/includes/config.php');
+require_once(__DIR__ . '/../../admin/includes/assetPathService.php');
+require_once(__DIR__ . '/../../admin/includes/tagTaxonomyService.php');
+require_once(__DIR__ . '/../../admin/includes/assetAnalysisResult.php');
+require_once(__DIR__ . '/../../admin/includes/assetNaming.php');
+require_once(__DIR__ . '/../../admin/includes/gifAnalyzer.php');
 
 function assertTrue($condition, $label)
 {

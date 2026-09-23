@@ -1,9 +1,9 @@
 <?php
 
-require_once(__DIR__ . '/../admin/includes/config.php');
-require_once(__DIR__ . '/../admin/includes/colorClassifier.php');
-require_once(__DIR__ . '/../admin/includes/gifAnalyzer.php');
-require_once(__DIR__ . '/../admin/includes/stickerAPI.php');
+require_once(__DIR__ . '/../../admin/includes/config.php');
+require_once(__DIR__ . '/../../admin/includes/colorClassifier.php');
+require_once(__DIR__ . '/../../admin/includes/gifAnalyzer.php');
+require_once(__DIR__ . '/../../admin/includes/stickerAPI.php');
 
 function cluster($hex, $coverage)
 {

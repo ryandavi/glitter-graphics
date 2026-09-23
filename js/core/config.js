@@ -1172,58 +1172,9 @@ function hasMaskContent(layer) {
 	);
 }
 
-function layerHasActiveColorAdjust(layer) {
-	const colorAdjusts = layer?.type === LayerType.BASE_IMAGE ? [] : [getLayerFillSlot(layer)?.colorAdjust];
-	if (layer?.type === LayerType.TEXT_GLITTER) {
-		colorAdjusts.push(layer.textData?.border?.colorAdjust, layer.textData?.shadow?.colorAdjust);
-	} else if (layer?.type === LayerType.SHAPE) {
-		colorAdjusts.push(layer.shapeData?.border?.colorAdjust, layer.shapeData?.shadow?.colorAdjust);
-	}
-
-	return colorAdjusts.some((adjust) => adjust && !isIdentityColorAdjust(adjust));
-}
-
-function layerHasBorderEffect(layer) {
-	if (layer?.type === LayerType.TEXT_GLITTER) {
-		return Boolean(layer.textData?.border);
-	}
-
-	if (layer?.type === LayerType.SHAPE) {
-		return Boolean(layer.shapeData?.border);
-	}
-
-	return false;
-}
-
-function layerHasShadowEffect(layer) {
-	if (layer?.type === LayerType.TEXT_GLITTER) {
-		return Boolean(layer.textData?.shadow);
-	}
-
-	if (layer?.type === LayerType.SHAPE) {
-		return Boolean(layer.shapeData?.shadow);
-	}
-
-	return false;
-}
-
+// Each layer type answers this itself (registerLayerType hasVisibleContent).
 function layerHasVisibleContent(layer) {
-	switch (layer?.type) {
-		case LayerType.STICKER:
-			return !layer.stickerData || !layer.stickerData.isEmpty;
-		case LayerType.TEXT_GLITTER:
-			return Boolean(layer.textData?.text?.trim());
-		case LayerType.SHAPE:
-			return Boolean(layer.shapeData);
-		case LayerType.GLITTER_FILL:
-			return hasMaskContent(layer);
-		case LayerType.BASE_IMAGE:
-			return true;
-		case LayerType.FILTER:
-			return GlitterFilter.isActive(layer.filterData, layer.opacity);
-		default:
-			return false;
-	}
+	return Boolean(LAYER_UI_CONFIG[layer?.type]?.hasVisibleContent?.(layer));
 }
 
 // Sidebar panel naming convention (keep new panels consistent with this):
@@ -1249,260 +1200,22 @@ const LAYER_UI_CONFIG = {
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'autoGlitterSettingsSection'],
 		mobileSettingsSections: ['autoGlitter'],
 		panelMode: 'auto-glitter'
-	},
-
-	[LayerType.BASE_IMAGE]: {
-		displayName: 'Base Image',
-		serialization: {
-			dataKey: 'background',
-			omit: ['name', 'settings'],
-			forceLocked: true,
-			defaults: { image: null },
-			normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
-		},
-		goTo: null,
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'baseLayerSettingsSection'],
-		mobileSettingsSections: ['background'],
-		panelMode: 'base-layer',
-		onActivate: (editor, layer) => {
-			editor.baseBackgroundManager?.loadLayerSettings(layer);
-		}
-	},
-
-	[LayerType.FILTER]: {
-		displayName: 'Filter',
-		serialization: {
-			dataKey: 'filterData',
-			omit: ['settings'],
-			defaultName: () => 'Filter',
-			normalize: (editor, layer) => editor.filterLayerManager?.normalizeLayer(layer)
-		},
-		addedStatusMessage: 'New filter layer added',
-		goTo: null,
-		addableViaModal: {
-			label: 'Filter',
-			icon: 'sliders',
-			description: 'Adjust the appearance of every layer below'
-		},
-		showDesignGallery: false,
-		designPanelSections: ['filterSettingsSection'],
-		mobileSettingsSections: ['filter'],
-		panelMode: 'filter',
-		elementClass: 'filter-layer-overlay',
-		transformable: false,
-		managerKey: 'filterLayerManager',
-		blendable: true,
-		mobileCreateDrawer: 'edit',
-		onActivate: (editor, layer) => {
-			editor.setTool(ToolType.SELECT);
-			editor.filterLayerManager?.loadLayerSettings(layer);
-		}
-	},
-
-	[LayerType.GLITTER_FILL]: {
-		displayName: 'Fill Layer',
-		serialization: {
-			extraKeys: ['selections', 'fill', 'autoGlitter'],
-			includeMaskVersion: true,
-			defaults: { maskHasContent: false },
-			normalize: (editor, layer) => editor.glitterManager?.normalizeLayer(layer)
-		},
-		addedStatusMessage: 'New fill layer added',
-		goTo: 'glitter',
-		addableViaModal: {
-			label: 'Fill Layer',
-			icon: 'glitter',
-			description: 'Paint glitter, color, or a gradient onto the canvas',
-			quickAddId: 'quickActionAddGlitter',
-			quickAddOrder: 4
-		},
-		designPanelSections: ['brushTipSearchSection', 'brushTipOptions', 'glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
-		mobileSettingsSections: ['glitter'],
-		panelMode: 'glitter',
-		elementClass: 'glitter-element',
-		managerKey: 'glitterManager',
-		blendable: true,
-		autoOpenDesignDrawerOnCreate: true,
-		onActivate: (editor, layer) => {
-			if (!layer.locked && !hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
-				editor.setTool(ToolType.COLOR_PICKER);
-			}
-			editor.updateGlitterSelection();
-			editor.setSettingsEmptyState('layerSettings', false);
-			editor.setSettingsEmptyState('glitterSettings', false);
-			editor.loadActiveLayerSettings();
-		}
-	},
-
-	[LayerType.STICKER]: {
-		displayName: 'Sticker',
-		serialization: {
-			custom: { serialize: 'serializeSticker', deserialize: 'deserializeSticker' }
-		},
-		addedStatusMessage: 'New sticker layer added',
-		goTo: 'sticker',
-		addableViaModal: {
-			label: 'Sticker',
-			icon: 'sticker',
-			description: 'Place an image or animated graphic',
-			quickAddId: 'quickActionAddSticker',
-			quickAddOrder: 2
-		},
-		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'glitterSearchSection', 'glitterOptions', 'stickerSettingsSection'],
-		mobileSettingsSections: ['sticker'],
-		panelMode: 'sticker',
-		elementClass: 'sticker-element',
-		transformable: true,
-		managerKey: 'stickerManager',
-		blendable: true,
-		hitTestMethod: 'isPointInSticker',
-		transformPrefix: 'sticker',
-		transformCapabilities: {
-			panelRedesign: true,
-			position: true,
-			size: true,
-			scaleReadout: true,
-			scaleReset: true,
-			lockAspect: true,
-			rotation: true,
-			opacity: true,
-			flip: true,
-			align: true,
-			reset: true
-		},
-		autoOpenDesignDrawerOnCreate: true,
-		onActivate: (editor, layer) => {
-			editor.setTool(ToolType.SELECT);
-
-			const stickerContent = document.getElementById('stickerSettingsContent');
-			if (layer.stickerSourceId) {
-				editor.setSettingsEmptyState('stickerSettings', false);
-				editor.loadStickerSettings(layer);
-			} else {
-				if (stickerContent) stickerContent.classList.remove('visible');
-				editor.setSettingsEmptyState('stickerSettings', true);
-			}
-
-			editor.updateStickerSelection();
-		}
-	},
-
-	[LayerType.TEXT_GLITTER]: {
-		displayName: 'Text',
-		serialization: {
-			dataKey: 'textData',
-			omit: ['settings'],
-			defaultName: (editor, data) => editor.textGlitterManager?.getLayerName(data?.text || ''),
-			normalize: (editor, layer) => editor.textGlitterManager?.normalizeLayer(layer),
-			hydrate: async (editor, layer) => {
-				if (layer.textData?.fontId) await editor.textGlitterManager?.ensureFontLoaded(layer.textData.fontId);
-			}
-		},
-		addedStatusMessage: 'New text layer added',
-		goTo: 'glitter',
-		addableViaModal: {
-			label: 'Text',
-			icon: 'text',
-			description: 'Add editable text with glitter, color, or a gradient',
-			quickAddId: 'quickActionAddText',
-			quickAddOrder: 1
-		},
-		// No layerSettingsSection / 'tool': Selection Settings only applies to
-		// color-picked glitter fills — text layers hide it instead of showing an
-		// explanatory empty state.
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection'],
-		mobileSettingsSections: ['text'],
-		panelMode: 'text',
-		elementClass: 'text-glitter-element',
-		transformable: true,
-		managerKey: 'textGlitterManager',
-		blendable: true,
-		hitTestMethod: 'isPointInText',
-		transformPrefix: 'text',
-		transformCapabilities: {
-			panelRedesign: true,
-			position: true,
-			size: true,
-			scaleReadout: true,
-			lockAspect: true,
-			rotation: true,
-			opacity: true,
-			flip: true,
-			align: true,
-			reset: true
-		},
-		createOptionsKey: 'textLayer',
-		autoOpenDesignDrawerOnCreate: true,
-		// Reopening the side panel after every tap-created layer is desktop
-		// convenience, not a mobile ask - Editor.finishLayerCreation() reads this.
-		mobileCreateBehavior: { skipReload: true },
-		onActivate: (editor, layer) => {
-			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.BRUSH]);
-			if (!validTools.has(editor.currentTool)) {
-				editor.setTool(ToolType.SELECT);
-			}
-
-			editor.updateGlitterSelection();
-			editor.textGlitterManager?.loadLayerSettings(layer);
-		}
-	},
-
-	[LayerType.SHAPE]: {
-		displayName: 'Shape',
-		serialization: {
-			dataKey: 'shapeData',
-			omit: ['settings'],
-			defaultName: () => 'Shape',
-			normalize: (editor, layer) => editor.shapeGlitterManager?.normalizeLayer(layer)
-		},
-		addedStatusMessage: 'New shape layer added',
-		goTo: 'glitter',
-		addableViaModal: {
-			label: 'Shape',
-			icon: 'square',
-			description: 'Add a shape with an image, glitter, color, or a gradient',
-			quickAddId: 'quickActionAddShape',
-			quickAddOrder: 3
-		},
-		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
-		// Shape Properties panel. Selection Settings doesn't apply.
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapesOptions', 'shapeSettingsSection'],
-		mobileSettingsSections: ['shape'],
-		panelMode: 'shape',
-		elementClass: 'shape-glitter-element',
-		transformable: true,
-		managerKey: 'shapeGlitterManager',
-		blendable: true,
-		hitTestMethod: 'isPointInShape',
-		transformPrefix: 'shape',
-		transformCapabilities: {
-			panelRedesign: true,
-			position: true,
-			size: true,
-			scaleReadout: true,
-			lockAspect: true,
-			rotation: true,
-			opacity: true,
-			flip: true,
-			align: true,
-			reset: true
-		},
-		createOptionsKey: 'shapeLayer',
-		// Unlike text/glitter/sticker, tapping the Shape tool repeatedly to place
-		// several shapes shouldn't keep yanking the Design drawer open on mobile.
-		autoOpenDesignDrawerOnCreate: false,
-		mobileCreateBehavior: { skipReload: true },
-		onActivate: (editor, layer) => {
-			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.SHAPE]);
-			if (!validTools.has(editor.currentTool)) {
-				editor.setTool(ToolType.SELECT);
-			}
-
-			editor.updateGlitterSelection();
-			editor.shapeGlitterManager?.loadLayerSettings(layer);
-		}
 	}
 };
+
+// Layer types register themselves from js/layers/types/<type>.js, which load
+// right after this file. A definition carries the type's panel wiring, its
+// serialization spec, capability flags (transformable, blendable,
+// animatable), hasVisibleContent(layer), and its paint slots (see
+// js/paint/paint-slots.js), declared back to front.
+function registerLayerType(type, definition) {
+	if (!Object.values(LayerType).includes(type)) throw new Error(`Unknown layer type ${type}`);
+	if (LAYER_UI_CONFIG[type]) throw new Error(`Layer type ${type} is already registered`);
+	LAYER_UI_CONFIG[type] = {
+		...definition,
+		paintSlots: Object.freeze((definition.paintSlots || []).map((slot) => normalizePaintSlotDefinition(slot, type)))
+	};
+}
 
 // Declarative sidebar panel structure consumed by js/ui/panel-renderer.js.
 // Structure, ordering, and capabilities
@@ -2443,6 +2156,10 @@ function isTransformableLayerType(type) {
 	return Boolean(LAYER_UI_CONFIG[type]?.transformable);
 }
 
+function isAnimatableLayerType(type) {
+	return Boolean(LAYER_UI_CONFIG[type]?.animatable);
+}
+
 // CSS selector matching layer overlay elements. Pass a layerId to scope to one
 // layer's element (any type); omit it to match every layer element of the
 // matching kind (e.g. rebuilding DOM order). transformableOnly excludes types
@@ -2501,10 +2218,21 @@ const LAYER_BADGES = [
 	}
 ];
 
-// Precomputed once at load (LAYER_UI_CONFIG is static): the common "every
-// layer element" and "every transformable layer element" selectors.
-const ALL_LAYER_ELEMENT_SELECTOR = getLayerElementSelector();
-const TRANSFORMABLE_LAYER_ELEMENT_SELECTOR = getLayerElementSelector(null, { transformableOnly: true });
+// The common "every layer element" and "every transformable layer element"
+// selectors, computed on first use because the layer types register after
+// this file loads.
+let allLayerElementSelector = null;
+let transformableLayerElementSelector = null;
+
+function getAllLayerElementSelector() {
+	allLayerElementSelector ||= getLayerElementSelector();
+	return allLayerElementSelector;
+}
+
+function getTransformableLayerElementSelector() {
+	transformableLayerElementSelector ||= getLayerElementSelector(null, { transformableOnly: true });
+	return transformableLayerElementSelector;
+}
 
 const ASSET_TYPE_CONFIG = {
 	glitter: {

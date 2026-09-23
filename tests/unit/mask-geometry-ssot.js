@@ -6,39 +6,29 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..', '..');
-const SOURCES = {
-	text: fs.readFileSync(path.join(ROOT, 'js/layers/TextGlitterManager.js'), 'utf8'),
-	shape: fs.readFileSync(path.join(ROOT, 'js/layers/ShapeGlitterManager.js'), 'utf8'),
-	exporter: fs.readFileSync(path.join(ROOT, 'js/export/GifExporter.js'), 'utf8')
-};
+const SHARED_GEOMETRY = [
+	'createMaskDifferenceCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
+	'getMorphOffsets', 'getBorderPlacement', 'getBorderEdgeStyle', 'getBorderDrawOrder'
+];
 
-function methodBody(source, name) {
-	const pattern = new RegExp(`\\n\\s*${name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\n\\s*\\}`);
-	return source.match(pattern)?.[1] || '';
-}
-
-[
-	['text', 'createMaskDifferenceCanvas', 'createMaskDifferenceCanvas'],
-	['text', 'createDilatedMaskCanvas', 'createDilatedMaskCanvas'],
-	['text', 'createErodedMaskCanvas', 'createErodedMaskCanvas'],
-	['text', 'getMorphOffsets', 'getMorphOffsets'],
-	['exporter', '_createMaskDifferenceCanvas', 'createMaskDifferenceCanvas'],
-	['exporter', '_createDilatedMaskCanvas', 'createDilatedMaskCanvas'],
-	['exporter', '_createErodedMaskCanvas', 'createErodedMaskCanvas'],
-	['exporter', '_getMorphOffsets', 'getMorphOffsets']
-].forEach(([sourceName, methodName, delegateName]) => {
-	const body = methodBody(SOURCES[sourceName], methodName);
-	assert(body.includes(`return ${delegateName}(`), `${sourceName}.${methodName} must delegate to mask-geometry.js`);
-	assert(body.trim().split(/\r?\n/).length <= 3, `${sourceName}.${methodName} reimplements shared geometry`);
-});
-
-['text', 'shape'].forEach((sourceName) => {
-	['getBorderPlacement', 'getBorderEdgeStyle', 'getBorderDrawOrder', 'getBorderOutsidePadding'].forEach((methodName) => {
-		const body = methodBody(SOURCES[sourceName], methodName);
-		assert(body.includes(`return ${methodName}(`), `${sourceName}.${methodName} must delegate to mask-geometry.js`);
-		assert(body.trim().split(/\r?\n/).length <= 5, `${sourceName}.${methodName} reimplements shared geometry`);
+// Mask morphology and border option parsing live only in mask-geometry.js:
+// no layer manager or exporter may define (or wrap) its own copy.
+function listJs(directory) {
+	return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+		const target = path.join(directory, entry.name);
+		if (entry.isDirectory()) return entry.name === 'vendor' ? [] : listJs(target);
+		return entry.name.endsWith('.js') ? [target] : [];
 	});
-});
+}
+listJs(path.join(ROOT, 'js'))
+	.filter((file) => !file.endsWith(path.join('paint', 'mask-geometry.js')))
+	.forEach((file) => {
+		const source = fs.readFileSync(file, 'utf8');
+		SHARED_GEOMETRY.forEach((name) => {
+			const definition = new RegExp(`(?:^|\\n)(?:function\\s+|\\t+_?)${name}\\([^)]*\\)\\s*\\{`);
+			assert(!definition.test(source), `${path.relative(ROOT, file)} redefines ${name}; call the mask-geometry.js function`);
+		});
+	});
 
 process.stdout.write('PASS mask geometry delegates to one implementation\n');
 

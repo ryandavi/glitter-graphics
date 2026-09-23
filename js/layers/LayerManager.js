@@ -161,7 +161,7 @@ class LayerManager {
 		serialized.opacity = layer.opacity;
 		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
 		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
-		if (layer.animation && [LayerType.GLITTER_FILL, LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(type)) {
+		if (layer.animation && isAnimatableLayerType(type)) {
 			serialized.animation = structuredClone(layer.animation);
 		}
 		if (spec.forceLocked) serialized.locked = true;
@@ -202,7 +202,7 @@ class LayerManager {
 			restored[key] = layerData[key] == null ? fallback : structuredClone(layerData[key]);
 		});
 		if (spec.includeMaskVersion) restored.maskVersion = layerData.maskVersion || 0;
-		if (layerData.animation && [LayerType.GLITTER_FILL, LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(type)) {
+		if (layerData.animation && isAnimatableLayerType(type)) {
 			restored.animation = GlitterAnimation.normalizeAnimation(layerData.animation);
 		}
 		spec.normalize?.(this.editor, restored);
@@ -1228,7 +1228,7 @@ class LayerManager {
 				break;
 			}
 			case LayerType.GLITTER_FILL: {
-				const fill = getFillDisplay(layer.fill);
+				const fill = getFillDisplay(getLayerFillSlot(layer));
 				nameText.textContent = layer.name
 					|| fill.glitter?.name
 					|| fill.name
@@ -1237,16 +1237,14 @@ class LayerManager {
 				break;
 			}
 			case LayerType.TEXT_GLITTER: {
-				const fill = getFillDisplay(layer.textData?.fill);
+				const fill = getFillDisplay(getLayerFillSlot(layer));
 				nameText.textContent = layer.name || 'Text';
 				typeText.textContent = `Text · ${fill.modeLabel}`;
 				break;
 			}
 			case LayerType.SHAPE: {
-				const fill = getFillDisplay(
-					layer.shapeData?.fill,
-					this.editor.shapeGlitterManager?.getImageFillAsset(layer.shapeData?.fill?.imageRef)
-				);
+				const fillSlot = getLayerFillSlot(layer);
+				const fill = getFillDisplay(fillSlot, this.editor.shapeGlitterManager?.getImageFillAsset(fillSlot?.imageRef));
 				nameText.textContent = layer.name || 'Shape';
 				typeText.textContent = `Shape · ${fill.modeLabel}`;
 				break;
@@ -1500,15 +1498,16 @@ class LayerManager {
 		}
 
 		if (layer.type === LayerType.TEXT_GLITTER) {
-			if (!renderPaint(layer.textData?.fill)) swatch.classList.add('empty');
+			if (!renderPaint(getLayerFillSlot(layer))) swatch.classList.add('empty');
 			swatch.classList.add('text-layer');
 			if (!compact) swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
 			return;
 		}
 
 		if (layer.type === LayerType.SHAPE) {
-			const imageAsset = this.editor.shapeGlitterManager?.getImageFillAsset(layer.shapeData?.fill?.imageRef);
-			if (!renderPaint(layer.shapeData?.fill, imageAsset)) swatch.classList.add('empty');
+			const fill = getLayerFillSlot(layer);
+			const imageAsset = this.editor.shapeGlitterManager?.getImageFillAsset(fill?.imageRef);
+			if (!renderPaint(fill, imageAsset)) swatch.classList.add('empty');
 			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
 			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
 			swatch.style.maskImage = shapeMask;
@@ -1520,7 +1519,7 @@ class LayerManager {
 		}
 
 		if (layer.type === LayerType.BASE_IMAGE) {
-			const background = layer.background || { mode: 'image' };
+			const background = getLayerFillSlot(layer) || { mode: 'image' };
 			if (background.mode === 'image' && this.editor.baseBackgroundManager?.hasBaseImage() && this.editor.originalImage) {
 				swatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl || this.editor.originalImage.src})`;
 				swatch.classList.add('baseImage');
@@ -1538,7 +1537,7 @@ class LayerManager {
 			return;
 		}
 
-		if (!renderPaint(layer.fill)) swatch.classList.add('empty');
+		if (!renderPaint(getLayerFillSlot(layer))) swatch.classList.add('empty');
 	}
 
 	updateMobileLayersSwatch() {
@@ -1923,12 +1922,12 @@ class LayerManager {
 
 		// Keep every transformable preview element in sync with layer order.
 		const existingElements = new Map();
-		container.querySelectorAll(ALL_LAYER_ELEMENT_SELECTOR).forEach(el => {
+		container.querySelectorAll(getAllLayerElementSelector()).forEach(el => {
 			existingElements.set(el.dataset.layerId, el);
 		});
 
 		const transformHandleNodes = Array.from(container.children).filter(el => el.classList.contains('transform-handles'));
-		const layerElements = Array.from(container.children).filter(el => el.matches(ALL_LAYER_ELEMENT_SELECTOR));
+		const layerElements = Array.from(container.children).filter(el => el.matches(getAllLayerElementSelector()));
 
 		layerElements.forEach(el => el.remove());
 

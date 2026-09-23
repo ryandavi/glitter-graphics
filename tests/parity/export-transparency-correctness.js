@@ -35,8 +35,7 @@ function assert(condition, message) {
 			onStatus: () => {}, onProgress: () => {}, onComplete: () => {},
 			parseGif: (url) => editor.glitterManager.parseGifFromUrl(url),
 			createMask: (layer) => editor.maskCompositor.getMaskData(layer),
-			renderTextMask: (layer) => editor.textGlitterManager.renderTextMask(layer),
-			renderShapeMask: (layer) => editor.shapeGlitterManager.buildMaskEntry(layer),
+			renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
 			ensureTextFont: (fontId) => editor.textGlitterManager.ensureFontLoaded(fontId)
 		};
 

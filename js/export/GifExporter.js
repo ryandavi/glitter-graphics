@@ -276,207 +276,85 @@ class GifExporter {
 		});
 	}
 
-	_getStickerEffectSource(layer, slot) {
-		const data = layer.stickerData?.[slot];
-		return data ? resolveEffectPaintSource(data, { glitterId: data.glitterId }) : null;
-	}
-
-	_getStickerFrameKey(layer, slot) {
-		return `${layer.id}:${slot}`;
-	}
-
-	_getStickerGlitterSources(layer) {
-		const data = layer.stickerData?.shadow;
-		return data?.mode === 'glitter' && data.glitterId
-			? [{ key: this._getStickerFrameKey(layer, 'shadow'), slot: 'shadow', glitterId: data.glitterId }]
-			: [];
-	}
-
+	// Sticker shadows share the slot paint path. The shadow is the sticker's own
+	// silhouette on a canvas padded by its offset, so it is drawn with the
+	// sticker transform rather than composited into a slot stack.
 	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch) {
-		const shadow = layer.stickerData?.shadow;
-		if (!shadow) return;
-		const pad = Math.ceil(Math.max(
-			Math.abs(shadow.offsetX || 0),
-			Math.abs(shadow.offsetY || 0)
-		)) + 2;
-		const source = this._getStickerEffectSource(layer, 'shadow');
-		if (!source || !scratch?.shadowMaskCanvas || !scratch?.shadowFillCanvas) return;
-		const effectMask = scratch.shadowMaskCanvas;
-		ensureCanvasSize(effectMask, stickerCanvas.width + pad * 2, stickerCanvas.height + pad * 2);
-		const effectMaskCtx = scratch.shadowMaskCtx;
-		resetCanvasContext(effectMaskCtx, effectMask.width, effectMask.height);
-		const offsetX = shadow.offsetX || 0;
-		const offsetY = shadow.offsetY || 0;
-		effectMaskCtx.drawImage(stickerCanvas, pad + offsetX, pad + offsetY);
-		effectMask._textureOrigin = { x: offsetX, y: offsetY };
-		this._renderFilledMaskInto(scratch.shadowFillCanvas, effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), sourceSelectionMap, resolvedFramesBySource);
-		// The shadow is the sticker's own silhouette, so it scales the same way.
-		this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, scratch.shadowFillCanvas.width, scratch.shadowFillCanvas.height, {
-			smooth: layer.stickerData.isPixelated === false
+		if (!scratch?.shadowMaskCanvas || !scratch?.shadowFillCanvas) return;
+		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
+			const pad = getShadowCanvasPadding(item.data);
+			const effectMask = scratch.shadowMaskCanvas;
+			ensureCanvasSize(effectMask, stickerCanvas.width + pad * 2, stickerCanvas.height + pad * 2);
+			const effectMaskCtx = scratch.shadowMaskCtx;
+			resetCanvasContext(effectMaskCtx, effectMask.width, effectMask.height);
+			effectMaskCtx.drawImage(stickerCanvas, pad + item.offsetX, pad + item.offsetY);
+			effectMask._textureOrigin = { x: item.offsetX, y: item.offsetY };
+			this._renderFilledMaskInto(scratch.shadowFillCanvas, effectMask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
+			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, scratch.shadowFillCanvas.width, scratch.shadowFillCanvas.height, {
+				smooth: layer.stickerData.isPixelated === false
+			});
 		});
 	}
 
-	_renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, textMaskCanvases = null, scratch = null) {
-		const textMasks = textMaskCanvases?.get(layer.id);
-		if (!textMasks?.fill) {
-			throw new Error(`Missing text mask for layer ${layer.id}`);
+	// Composite a text or shape layer's slot stack (buildSlotStack order, the
+	// same list the preview span stack reads) into one surface, then place it.
+	// Preview fades/transforms the wrapper around the complete span stack, so
+	// export must composite the object's paints before applying its
+	// whole-layer opacity or animation, or overlapping effects show through.
+	_renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMasks, scratch) {
+		if (!slotMasks?.fill) {
+			throw new Error(`Missing slot masks for layer ${layer.id}`);
 		}
-		const width = layer.textData.width;
-		const height = layer.textData.height;
+		const width = slotMasks.renderWidth;
+		const height = slotMasks.renderHeight;
 		const compositeCanvas = scratch?.compositeCanvas;
 		const fillCanvas = scratch?.fillCanvas;
-		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing text scratch for layer ${layer.id}`);
+		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing slot scratch for layer ${layer.id}`);
 		ensureCanvasSize(compositeCanvas, width, height);
 		ensureCanvasSize(fillCanvas, width, height);
 		const compositeCtx = scratch.compositeCtx;
 		resetCanvasContext(compositeCtx, width, height);
-		const draw = (maskCanvas, source, sourceKey) => {
-			if (!maskCanvas || !source) return;
-			this._renderFilledMaskInto(
-				fillCanvas,
-				maskCanvas,
-				source,
-				layer,
-				frameIndex,
-				sourceKey,
-				sourceSelectionMap,
-				resolvedFramesBySource
-			);
+		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
+			const maskCanvas = slotMasks[item.key];
+			if (!maskCanvas) return;
+			this._renderFilledMaskInto(fillCanvas, maskCanvas, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
 			compositeCtx.drawImage(fillCanvas, 0, 0, width, height);
-		};
-
-		// Text Background renders furthest back (behind shadow/border/fill),
-		// matching preview's getSpanDescriptors ordering exactly.
-		if (layer.textData.textBackground?.enabled && textMasks.background) {
-			draw(
-				textMasks.background,
-				this._getTextEffectSource(layer, 'backgroundFill'),
-				this._getTextFrameKey(layer, 'backgroundFill')
-			);
-		}
-
-		const shadow = layer.textData.shadow;
-		if (shadow && textMasks.shadow) {
-			draw(
-				textMasks.shadow,
-				this._getTextEffectSource(layer, 'shadow'),
-				this._getTextFrameKey(layer, 'shadow')
-			);
-		}
-
-		const border = layer.textData.border;
-		const renderBorder = () => {
-			if (!(border?.widthPx > 0) || !textMasks.border) return;
-			draw(
-				textMasks.border,
-				this._getTextEffectSource(layer, 'border'),
-				this._getTextFrameKey(layer, 'border')
-			);
-		};
-		const drawBorderAfterFill = this._getBorderDrawOrder(border) === 'front';
-
-		if (!drawBorderAfterFill) {
-			renderBorder();
-		}
-
-		draw(
-			textMasks.fill,
-			this._getTextEffectSource(layer, 'fill'),
-			this._getTextFrameKey(layer, 'fill')
-		);
-
-		if (drawBorderAfterFill) {
-			renderBorder();
-		}
-
-		// Preview fades/transforms the wrapper around the complete span stack.
-		// Export must likewise composite the object's paints before applying its
-		// whole-layer opacity or animation, or overlapping effects show through.
+		});
 		this._drawTransformedCanvas(ctx, compositeCanvas, layer, width, height);
 	}
 
-	// Shared with ShapeGlitterManager via resolveEffectPaintSource. Each slot
-	// carries its own glitterId.
-	_getShapeEffectSource(layer, slot) {
-		return resolveEffectPaintSource(layer.shapeData?.[slot], {
-			allowNone: slot === 'fill',
-			imageResolver: this.resolveShapeFillImage
+	// The preview resolves the same slot with resolvePaintSlotSource, adding
+	// only the live glitter-availability check.
+	_getSlotSource(layer, entry) {
+		return resolvePaintSlotSource(layer, entry, { imageResolver: this.resolveShapeFillImage });
+	}
+
+	// Authored animation sources for every slot that will actually draw:
+	// animated image fills, then glitter frames from the front slot back. That
+	// is the order exports have always listed them in; the timeline planner
+	// reads sources in list order.
+	_getSlotAuthoredSources(layer, library) {
+		const images = [];
+		const glitters = [];
+		getLayerPaintSlots(layer).reverse().forEach((entry) => {
+			if (!entry.renders) return;
+			const source = this._getSlotSource(layer, entry);
+			if (source?.mode === 'glitter') {
+				const suffix = entry.definition.sourceLabel === undefined ? entry.key : entry.definition.sourceLabel;
+				const name = library.find((item) => item.id === source.glitterId)?.name || 'Glitter';
+				glitters.push(this._createGlitterDescriptor(library, {
+					key: getPaintSlotSourceKey(layer, entry),
+					label: suffix ? `${name} (${suffix})` : undefined,
+					ownerLayerId: layer.id,
+					effectSlot: entry.definition.wholeLayer ? null : entry.key,
+					glitterId: source.glitterId
+				}));
+			} else if (entry.data.mode === 'image') {
+				const asset = this.resolveShapeFillImage(entry.data.imageRef);
+				if (asset?.isAnimated) images.push(this._createSlotImageDescriptor(layer, entry, asset));
+			}
 		});
-	}
-
-	_getShapeFrameKey(layer, slot) {
-		return `${layer.id}:${slot}`;
-	}
-
-	// Per-slot glitter sources (like text) — each slot in glitter mode with a
-	// glitter contributes its own resolved frame set keyed by layer.id:slot.
-	_getShapeGlitterSources(layer) {
-		const d = layer.shapeData;
-		const sources = [];
-		if (d.fill?.mode === 'glitter' && d.fill.glitterId) {
-			sources.push({ key: this._getShapeFrameKey(layer, 'fill'), slot: 'fill', glitterId: d.fill.glitterId });
-		}
-		if (d.border && d.border.widthPx > 0 && d.border.mode === 'glitter' && d.border.glitterId) {
-			sources.push({ key: this._getShapeFrameKey(layer, 'border'), slot: 'border', glitterId: d.border.glitterId });
-		}
-		if (d.shadow && d.shadow.mode === 'glitter' && d.shadow.glitterId) {
-			sources.push({ key: this._getShapeFrameKey(layer, 'shadow'), slot: 'shadow', glitterId: d.shadow.glitterId });
-		}
-		return sources;
-	}
-
-	// Mirror of _renderTextLayerToCanvas for shape layers (shadow, border, fill),
-	// reusing the target-writing fill helper and _drawTransformedCanvas.
-	_renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases, scratch = null) {
-		const masks = shapeMaskCanvases?.get(layer.id);
-		if (!masks?.fill) {
-			throw new Error(`Missing shape mask for layer ${layer.id}`);
-		}
-		const d = layer.shapeData;
-		const w = masks.renderWidth;
-		const h = masks.renderHeight;
-		const compositeCanvas = scratch?.compositeCanvas;
-		const fillCanvas = scratch?.fillCanvas;
-		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing shape scratch for layer ${layer.id}`);
-		ensureCanvasSize(compositeCanvas, w, h);
-		ensureCanvasSize(fillCanvas, w, h);
-		const compositeCtx = scratch.compositeCtx;
-		resetCanvasContext(compositeCtx, w, h);
-		const draw = (maskCanvas, slot) => {
-			if (!maskCanvas) return;
-			const source = this._getShapeEffectSource(layer, slot);
-			if (!source) return;
-			this._renderFilledMaskInto(fillCanvas, maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), sourceSelectionMap, resolvedFramesBySource);
-			compositeCtx.drawImage(fillCanvas, 0, 0, w, h);
-		};
-		const drawBorder = () => {
-			if (d.border?.widthPx > 0 && masks.border) draw(masks.border, 'border');
-		};
-		if (d.shadow && masks.shadow) draw(masks.shadow, 'shadow');
-		if (this._getBorderDrawOrder(d.border) !== 'front') {
-			drawBorder();
-		}
-		draw(masks.fill, 'fill');
-		if (this._getBorderDrawOrder(d.border) === 'front') {
-			drawBorder();
-		}
-		this._drawTransformedCanvas(ctx, compositeCanvas, layer, w, h);
-	}
-
-	_getTextFrameKey(layer, slot) {
-		return `${layer.id}:${slot}`;
-	}
-
-	_getTextEffectSource(layer, effectName) {
-		if (effectName === 'fill') {
-			return resolveEffectPaintSource(layer.textData?.fill, { allowNone: true });
-		}
-
-		if (effectName === 'backgroundFill') {
-			return resolveEffectPaintSource(layer.textData?.textBackground?.fill);
-		}
-
-		return resolveEffectPaintSource(layer.textData?.[effectName]);
+		return [...images, ...glitters];
 	}
 
 	_createGlitterDescriptor(library, { key, label, ownerLayerId, effectSlot = null, glitterId }) {
@@ -520,17 +398,17 @@ class GifExporter {
 		};
 	}
 
-	// Animated GIF shape fills are read exactly like any other animated asset
+	// Animated GIF image fills are read exactly like any other animated asset
 	// (glitter/sticker GIFs): decode lazily via the same parseGif callback,
 	// cache the frames on the asset, and replay them with native-layer
 	// disposal — this is what gives the composite planner exact frame
 	// boundaries instead of collapsing an image-only animation to one frame.
-	_createShapeFillImageDescriptor(layer, slot, asset) {
+	_createSlotImageDescriptor(layer, entry, asset) {
 		return {
-			key: `${this._getShapeFrameKey(layer, slot)}:image`,
-			label: `${layer.name || 'Shape'} ${slot} image`,
+			key: `${getPaintSlotSourceKey(layer, entry)}:image`,
+			label: `${layer.name || 'Shape'} ${entry.key} image`,
 			ownerLayerId: layer.id,
-			effectSlot: slot,
+			effectSlot: entry.key,
 			role: 'shape-fill-image',
 			replayPolicy: 'native-layer',
 			sourceIdentity: asset,
@@ -542,18 +420,6 @@ class GifExporter {
 			},
 			getAnimation: () => asset.frames
 		};
-	}
-
-	_getShapeImageFillDescriptors(layer) {
-		const descriptors = [];
-		['fill', 'border', 'shadow'].forEach((slot) => {
-			const effectData = slot === 'fill' ? layer.shapeData?.fill : layer.shapeData?.[slot];
-			if (effectData?.mode !== 'image') return;
-			const asset = this.resolveShapeFillImage(effectData.imageRef);
-			if (!asset?.isAnimated) return;
-			descriptors.push(this._createShapeFillImageDescriptor(layer, slot, asset));
-		});
-		return descriptors;
 	}
 
 	_createAuthoredTimingSource(descriptor, fallbackDuration) {
@@ -609,42 +475,30 @@ class GifExporter {
 	}
 
 	_buildLayerExportPlan(layer) {
+		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
 		switch (layer?.type) {
 			case LayerType.BASE_IMAGE: {
-				const background = layer.background || { mode: 'image' };
-				const mode = background.mode || 'image';
+				// Image and gradient backgrounds go through the base pixel
+				// pipeline (_prepareBasePipeline); solid and glitter paint here.
+				const mode = layer.background?.mode || 'image';
 				return {
 					prepareMasks: async () => {},
 					prepareStaticResources: async () => {},
-					getAuthoredSources: (library) => mode === 'glitter' ? [this._createGlitterDescriptor(library, {
-						key: layer.id, label: `${library.find((item) => item.id === background.glitterId)?.name || 'Glitter'} (background)`,
-						ownerLayerId: layer.id, glitterId: background.glitterId
-					})] : [],
+					getAuthoredSources,
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
-						if (mode === 'image' || mode === 'gradient' || mode === 'none') return;
+						if (mode !== 'solid' && mode !== 'glitter') return;
+						const [entry] = getLayerPaintSlots(layer);
+						const source = this._getSlotSource(layer, entry);
+						if (!source) return;
 						ctx.save();
-						ctx.globalAlpha = layer.opacity / 100;
-						if (mode === 'solid') ctx.fillStyle = background.color || '#ffffff';
-						else if (mode === 'gradient') ctx.fillStyle = createEffectCanvasGradient(ctx, background.gradient, { x: 0, y: 0, width, height });
-						else {
-							const frames = resolvedFramesBySource?.get(layer.id) || [];
-							const reduced = sourceSelectionMap?.get(layer.id);
-							const frame = this._readResolvedSource(frames, this._getReducedFrameIndex(frameIndex, frames.length, reduced));
-							if (!frame) throw new Error(`Missing background glitter frame for ${layer.id}`);
-							const pattern = ctx.createPattern(this._renderPatternSourceInto(this.patternSourceCanvas, frame, background.colorAdjust), 'repeat');
-							pattern.setTransform(new DOMMatrix()
-								.translateSelf(Number(background.textureOffsetX) || 0, Number(background.textureOffsetY) || 0)
-								.scaleSelf((background.scale || 100) / 100));
-							ctx.imageSmoothingEnabled = !this._isGlitterPixelated(background.glitterId);
-							ctx.fillStyle = pattern;
-						}
-						ctx.fillRect(0, 0, width, height);
+						this._paintSourceInto(ctx, width, height, source, {
+							frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
+						});
 						ctx.restore();
 					}
 				};
 			}
 			case LayerType.GLITTER_FILL:
-				const fillMode = layer.fill.mode;
 				return {
 					prepareMasks: async ({ maskDataMap, maskCanvases, canvasData, callbacks }) => {
 						const rawMask = callbacks.createMask(layer);
@@ -652,48 +506,21 @@ class GifExporter {
 						maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
 					},
 					prepareStaticResources: async () => {},
-					getAuthoredSources: (library) => fillMode === 'glitter' ? [this._createGlitterDescriptor(library, {
-						key: layer.id, ownerLayerId: layer.id, glitterId: layer.fill.glitterId
-					})] : [],
+					getAuthoredSources,
 					render: ({ ctx, frameIndex, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
 						const maskCanvas = maskCanvases.get(layer.id);
 						if (!maskCanvas) {
 							throw new Error(`Missing mask canvas for layer ${layer.id}`);
 						}
-
-						const frames = resolvedFramesBySource?.get(layer.id);
-						if (fillMode === 'glitter' && !frames?.length) {
-							throw new Error(`Missing resolved glitter frames for layer ${layer.id}`);
-						}
-
-						const reducedFrameCount = sourceSelectionMap?.get(layer.id);
-						const fIdx = fillMode === 'glitter' ? this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount) : 0;
-						const frameImageData = fillMode === 'glitter' ? this._readResolvedSource(frames, fIdx) : null;
-						if (fillMode === 'glitter' && !frameImageData) {
-							throw new Error(`Invalid glitter frame format for layer ${layer.id} frame ${fIdx}`);
-						}
+						const [entry] = getLayerPaintSlots(layer);
+						const source = this._getSlotSource(layer, entry);
+						if (!source) return;
 
 						helperCtx.save();
 						helperCtx.clearRect(0, 0, width, height);
-
-						helperCtx.globalAlpha = layer.opacity / 100;
-						if (fillMode === 'solid') {
-							helperCtx.fillStyle = layer.fill.color;
-						} else if (fillMode === 'gradient') {
-							helperCtx.fillStyle = createEffectCanvasGradient(helperCtx, layer.fill.gradient, { x: 0, y: 0, width, height });
-						} else {
-							const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, layer.fill.colorAdjust);
-							const pattern = helperCtx.createPattern(patternSource, 'repeat');
-							const scale = (layer.fill.scale <= 0 ? 1 : layer.fill.scale) / 100;
-							pattern.setTransform(new DOMMatrix()
-								.translateSelf(Number(layer.fill.textureOffsetX) || 0, Number(layer.fill.textureOffsetY) || 0)
-								.scaleSelf(scale, scale));
-							helperCtx.imageSmoothingEnabled = !this._isGlitterPixelated(layer.fill.glitterId);
-							helperCtx.fillStyle = pattern;
-						}
-						helperCtx.fillRect(0, 0, width, height);
-						helperCtx.globalCompositeOperation = 'destination-in';
-						helperCtx.drawImage(maskCanvas, 0, 0);
+						this._paintMaskedSource(helperCtx, width, height, maskCanvas, source, {
+							frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
+						});
 						helperCtx.restore();
 
 						if (rainbowHue) {
@@ -706,64 +533,30 @@ class GifExporter {
 					}
 				};
 
-			case LayerType.TEXT_GLITTER: {
-				const glitterSources = this._getTextEffectGlitterSources(layer);
+			case LayerType.TEXT_GLITTER:
+			case LayerType.SHAPE: {
 				const scratch = {
 					compositeCanvas: createAppCanvas(0, 0, 'export/GifExporter'),
 					fillCanvas: createAppCanvas(0, 0, 'export/GifExporter')
 				};
 				scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
 				return {
-					prepareMasks: async ({ textMaskCanvases, callbacks }) => {
-						const fillMaskCanvas = await callbacks.renderTextMask(layer);
-						const backgroundMaskCanvas = layer.textData?.textBackground?.enabled
-							? await callbacks.renderTextBackgroundMask(layer)
-							: null;
-						textMaskCanvases.set(layer.id, this._buildTextMaskEntry(layer, fillMaskCanvas, backgroundMaskCanvas));
+					// The layer's manager builds every slot mask (the same masks its
+					// preview uses), so preview and export never diverge.
+					prepareMasks: async ({ slotMaskCanvases, callbacks }) => {
+						slotMaskCanvases.set(layer.id, await callbacks.renderSlotMasks(layer));
 					},
 					prepareStaticResources: async ({ callbacks }) => {
-						try { await callbacks.ensureTextFont(layer.textData.fontId); }
-						catch (error) { throw new Error(error.message); }
+						if (layer.type === LayerType.TEXT_GLITTER) await callbacks.ensureTextFont(layer.textData.fontId);
 					},
-					getAuthoredSources: (library) => glitterSources.map((source) => this._createGlitterDescriptor(library, {
-						...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-						ownerLayerId: layer.id, effectSlot: source.slot
-					})),
-					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases }) => {
-						this._renderTextLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, textMaskCanvases, scratch);
-					}
-				};
-			}
-
-			case LayerType.SHAPE: {
-				const glitterSources = this._getShapeGlitterSources(layer);
-				const scratch = {
-					compositeCanvas: createAppCanvas(0, 0, 'export/GifExporter'),
-					fillCanvas: createAppCanvas(0, 0, 'export/GifExporter')
-				};
-				scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
-				return {
-					prepareMasks: async ({ shapeMaskCanvases, callbacks }) => {
-						// The shape manager is the single source of truth for fill, border,
-						// and shadow masks so preview/export stay in sync.
-						shapeMaskCanvases.set(layer.id, callbacks.renderShapeMask(layer));
-					},
-					prepareStaticResources: async () => {},
-					getAuthoredSources: (library) => [
-						...this._getShapeImageFillDescriptors(layer),
-						...glitterSources.map((source) => this._createGlitterDescriptor(library, {
-							...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-							ownerLayerId: layer.id, effectSlot: source.slot
-						}))
-					],
-					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases }) => {
-						this._renderShapeLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, shapeMaskCanvases, scratch);
+					getAuthoredSources,
+					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases }) => {
+						this._renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases?.get(layer.id), scratch);
 					}
 				};
 			}
 
 			case LayerType.STICKER: {
-				const glitterSources = this._getStickerGlitterSources(layer);
 				const scratch = {
 					sourceCanvas: createAppCanvas(0, 0, 'export/GifExporter'),
 					shadowMaskCanvas: createAppCanvas(0, 0, 'export/GifExporter'),
@@ -793,10 +586,7 @@ class GifExporter {
 					},
 					getAuthoredSources: (library) => [
 						...(layer.stickerData.isAnimated ? [this._createStickerDescriptor(layer)] : []),
-						...glitterSources.map((source) => this._createGlitterDescriptor(library, {
-							...source, label: `${library.find((item) => item.id === source.glitterId)?.name || 'Glitter'} (${source.slot})`,
-							ownerLayerId: layer.id, effectSlot: source.slot
-						}))
+						...getAuthoredSources(library)
 					],
 					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
 						this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
@@ -835,60 +625,39 @@ class GifExporter {
 		}
 	}
 
-	_getTextEffectGlitterSources(layer) {
-		// Non-glitter modes must not declare stale glitter ids as sources.
-		const sources = [];
-
-		if (layer.textData?.fill?.mode === 'glitter') {
-			sources.push({
-				key: this._getTextFrameKey(layer, 'fill'),
-				slot: 'fill',
-				glitterId: layer.textData.fill.glitterId
-			});
-		}
-
-		if (layer.textData?.border?.mode === 'glitter' && layer.textData.border.widthPx > 0 && layer.textData.border.glitterId) {
-			sources.push({
-				key: this._getTextFrameKey(layer, 'border'),
-				slot: 'border',
-				glitterId: layer.textData.border.glitterId
-			});
-		}
-
-		if (layer.textData?.shadow?.mode === 'glitter' && layer.textData.shadow.glitterId) {
-			sources.push({
-				key: this._getTextFrameKey(layer, 'shadow'),
-				slot: 'shadow',
-				glitterId: layer.textData.shadow.glitterId
-			});
-		}
-
-		if (layer.textData?.textBackground?.enabled && layer.textData.textBackground.fill?.mode === 'glitter' && layer.textData.textBackground.fill.glitterId) {
-			sources.push({
-				key: this._getTextFrameKey(layer, 'backgroundFill'),
-				slot: 'backgroundFill',
-				glitterId: layer.textData.textBackground.fill.glitterId
-			});
-		}
-
-		return sources;
-	}
-
 	_renderFilledMaskInto(fillCanvas, maskCanvas, source, layer, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource) {
 		ensureCanvasSize(fillCanvas, maskCanvas.width, maskCanvas.height);
 		const fillCtx = fillCanvas.getContext('2d', { alpha: true });
 		resetCanvasContext(fillCtx, fillCanvas.width, fillCanvas.height);
-		fillCtx.globalAlpha = source.opacity ?? 1;
+		this._paintMaskedSource(fillCtx, fillCanvas.width, fillCanvas.height, maskCanvas, source, {
+			layer, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource
+		});
+		return fillCanvas;
+	}
+
+	// Paint a source across the surface, then keep only what the mask covers.
+	_paintMaskedSource(ctx, width, height, maskCanvas, source, paintOptions) {
+		this._paintSourceInto(ctx, width, height, source, { ...paintOptions, maskCanvas });
+		ctx.globalCompositeOperation = 'destination-in';
+		ctx.drawImage(maskCanvas, 0, 0);
+		ctx.globalCompositeOperation = 'source-over';
+	}
+
+	// Fill a width x height surface with one resolved paint source at the
+	// source opacity. maskCanvas (optional) supplies the texture origin and the
+	// image-fill paint box; layer is only read for canvas-anchored textures.
+	_paintSourceInto(ctx, width, height, source, { maskCanvas = null, layer = null, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource }) {
+		ctx.globalAlpha = source.opacity ?? 1;
 
 		let fillsSurface = true;
 		if (source.mode === 'solid') {
-			fillCtx.fillStyle = source.color;
+			ctx.fillStyle = source.color;
 		} else if (source.mode === 'gradient') {
-			fillCtx.fillStyle = createEffectCanvasGradient(fillCtx, source.gradient, {
-				x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height
+			ctx.fillStyle = createEffectCanvasGradient(ctx, source.gradient, {
+				x: 0, y: 0, width, height
 			});
 		} else if (source.mode === 'image') {
-			const paintBox = maskCanvas._paintBox || { x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height };
+			const paintBox = maskCanvas?._paintBox || { x: 0, y: 0, width, height };
 			const placement = getImageFillPlacement(source, paintBox);
 			// An animated GIF fill is registered as an authored source (like a
 			// glitter/sticker GIF), so it gets exact-frame-boundary sampling from
@@ -902,25 +671,25 @@ class GifExporter {
 					null
 				)
 				: source.image;
-			fillCtx.imageSmoothingEnabled = source.imageRendering !== 'pixelated';
+			ctx.imageSmoothingEnabled = source.imageRendering !== 'pixelated';
 			if (source.tile) {
-				const pattern = fillCtx.createPattern(drawable, 'repeat');
+				const pattern = ctx.createPattern(drawable, 'repeat');
 				pattern.setTransform(new DOMMatrix()
 					.translateSelf(placement.dx, placement.dy)
 					.scaleSelf(
 						placement.dw / (source.image.naturalWidth || source.image.width),
 						placement.dh / (source.image.naturalHeight || source.image.height)
 					));
-				fillCtx.fillStyle = pattern;
+				ctx.fillStyle = pattern;
 			} else {
 				fillsSurface = false;
-				fillCtx.drawImage(drawable, placement.dx, placement.dy, placement.dw, placement.dh);
+				ctx.drawImage(drawable, placement.dx, placement.dy, placement.dw, placement.dh);
 			}
 		} else {
 			const frameImageData = this._getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource);
 			const patternSource = this._renderPatternSourceInto(this.patternSourceCanvas, frameImageData, source.colorAdjust);
 
-			const pattern = fillCtx.createPattern(patternSource, 'repeat');
+			const pattern = ctx.createPattern(patternSource, 'repeat');
 			const sourceScale = source.scale;
 			const scale = (sourceScale <= 0 ? 1 : sourceScale) / 100;
 			const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer);
@@ -928,16 +697,11 @@ class GifExporter {
 				.translateSelf(textureOrigin.x, textureOrigin.y)
 				.scaleSelf(scale, scale);
 			pattern.setTransform(matrix);
-			fillCtx.imageSmoothingEnabled = !this._isGlitterPixelated(source.glitterId);
-			fillCtx.fillStyle = pattern;
+			ctx.imageSmoothingEnabled = !this._isGlitterPixelated(source.glitterId);
+			ctx.fillStyle = pattern;
 		}
 
-		if (fillsSurface) fillCtx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
-		fillCtx.globalCompositeOperation = 'destination-in';
-		fillCtx.drawImage(maskCanvas, 0, 0);
-		fillCtx.globalCompositeOperation = 'source-over';
-
-		return fillCanvas;
+		if (fillsSurface) ctx.fillRect(0, 0, width, height);
 	}
 
 	// Which glitters are pixel art, by id, for the length of one export. A texture
@@ -1082,134 +846,6 @@ class GifExporter {
 		return typeof source?.getFrame === 'function' ? source.getFrame(frameIndex) : source?.[frameIndex];
 	}
 
-	_buildTextMaskEntry(layer, fillMaskCanvas, backgroundMaskCanvas = null) {
-		const entry = {
-			fill: fillMaskCanvas,
-			border: null,
-			shadow: null,
-			background: backgroundMaskCanvas
-		};
-
-		if (layer.textData?.shadow) {
-			entry.shadow = this._createOffsetMaskCanvas(
-				fillMaskCanvas,
-				layer.textData.shadow.offsetX || 0,
-				layer.textData.shadow.offsetY || 0
-			);
-		}
-
-		if (layer.textData?.border?.widthPx > 0) {
-			entry.border = this._createPlacedBorderMaskCanvas(fillMaskCanvas, layer.textData.border);
-		}
-
-		return entry;
-	}
-
-	_getBorderPlacement(borderData) {
-		return getBorderPlacement(borderData);
-	}
-
-	_getBorderDrawOrder(borderData) {
-		return getBorderDrawOrder(borderData);
-	}
-
-	_getBorderEdgeStyle(borderData) {
-		return getBorderEdgeStyle(borderData);
-	}
-
-	_createPlacedBorderMaskCanvas(fillMaskCanvas, borderData) {
-		const widthPx = Math.max(0, borderData?.widthPx || 0);
-		if (widthPx <= 0) {
-			return null;
-		}
-
-		const placement = this._getBorderPlacement(borderData);
-		const edgeStyle = this._getBorderEdgeStyle(borderData);
-		if (placement === 'inside') {
-			return this._createMaskDifferenceCanvas(
-				fillMaskCanvas,
-				this._createErodedMaskCanvas(fillMaskCanvas, widthPx, edgeStyle)
-			);
-		}
-		if (placement === 'center') {
-			return this._createMaskDifferenceCanvas(
-				this._createDilatedMaskCanvas(fillMaskCanvas, Math.ceil(widthPx / 2), edgeStyle),
-				this._createErodedMaskCanvas(fillMaskCanvas, Math.floor(widthPx / 2), edgeStyle)
-			);
-		}
-		return this._createMaskDifferenceCanvas(
-			this._createDilatedMaskCanvas(fillMaskCanvas, widthPx, edgeStyle),
-			fillMaskCanvas
-		);
-	}
-
-	_createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
-		return createMaskDifferenceCanvas(baseCanvas, subtractCanvas);
-	}
-
-	_createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		return createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle);
-	}
-
-	_createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		return createErodedMaskCanvas(sourceCanvas, radius, edgeStyle);
-	}
-
-	_getMorphOffsets(widthPx) {
-		return getMorphOffsets(widthPx);
-	}
-
-	_createOffsetMaskCanvas(sourceCanvas, offsetX, offsetY) {
-		const canvas = createAppCanvas(0, 0, 'export/GifExporter');
-		canvas.width = sourceCanvas.width;
-		canvas.height = sourceCanvas.height;
-		this._copyTextureOrigin(canvas, sourceCanvas, offsetX, offsetY);
-		const ctx = canvas.getContext('2d', { alpha: true });
-		ctx.drawImage(sourceCanvas, offsetX, offsetY);
-		return canvas;
-	}
-
-	_copyTextureOrigin(targetCanvas, sourceCanvas, offsetX = 0, offsetY = 0) {
-		const sourceOrigin = sourceCanvas?._textureOrigin || { x: 0, y: 0 };
-		targetCanvas._textureOrigin = {
-			x: sourceOrigin.x + offsetX,
-			y: sourceOrigin.y + offsetY
-		};
-	}
-
-	_createBorderMaskCanvas(fillMaskCanvas, widthPx, cutOutFill = false) {
-		const canvas = createAppCanvas(0, 0, 'export/GifExporter');
-		canvas.width = fillMaskCanvas.width;
-		canvas.height = fillMaskCanvas.height;
-		const ctx = canvas.getContext('2d', { alpha: true });
-
-		const radius = Math.max(1, widthPx);
-		// Lockstep with TextGlitterManager.getBorderOffsets — sample count scales
-		// with radius so wide borders don't scallop.
-		const steps = Math.max(16, Math.min(64, Math.ceil(radius * 4)));
-		const seen = new Set();
-
-		for (let index = 0; index < steps; index++) {
-			const angle = (Math.PI * 2 * index) / steps;
-			const x = Math.round(Math.cos(angle) * radius);
-			const y = Math.round(Math.sin(angle) * radius);
-			const key = `${x},${y}`;
-			if (seen.has(key) || (x === 0 && y === 0)) {
-				continue;
-			}
-			seen.add(key);
-			ctx.drawImage(fillMaskCanvas, x, y);
-		}
-
-		if (cutOutFill) {
-			ctx.globalCompositeOperation = 'destination-out';
-			ctx.drawImage(fillMaskCanvas, 0, 0);
-			ctx.globalCompositeOperation = 'source-over';
-		}
-
-		return canvas;
-	}
-
 	_createWatermarkDescriptor(watermark) {
 		return {
 			key: '__watermark',
@@ -1258,15 +894,13 @@ class GifExporter {
 		const masks = {
 			raw: new Map(),
 			glitter: new Map(),
-			text: new Map(),
-			shape: new Map()
+			slot: new Map()
 		};
 		for (const { plan } of layerPlans) {
 			await plan.prepareMasks({
 				maskDataMap: masks.raw,
 				maskCanvases: masks.glitter,
-				textMaskCanvases: masks.text,
-				shapeMaskCanvases: masks.shape,
+				slotMaskCanvases: masks.slot,
 				canvasData,
 				callbacks
 			});
@@ -1524,8 +1158,7 @@ class GifExporter {
 		const { canvasData, visibleLayers: layers, exportSettings, watermark, watermarkCanvas, layerPlans, masks } = context;
 		const { enabled: preserveAlpha } = transparency;
 		const maskCanvases = masks.glitter;
-		const textMaskCanvases = masks.text;
-		const shapeMaskCanvases = masks.shape;
+		const slotMaskCanvases = masks.slot;
 		const { width, height, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
@@ -1609,8 +1242,7 @@ class GifExporter {
 						sourceSelectionMap,
 						resolvedFramesBySource,
 						maskCanvases,
-						textMaskCanvases,
-						shapeMaskCanvases,
+						slotMaskCanvases,
 						helperCtx: hCtx,
 						width,
 						height,

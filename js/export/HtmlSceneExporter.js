@@ -301,7 +301,7 @@ class HtmlSceneExporter {
 			const glitter = this.editor.glitterManager.getItemById(data.glitterId);
 			if (!glitter?.url) return { mode: 'transparent', opacity: 1, filter: '' };
 			background.image = this.toCssUrl(await this.resolveAssetSource(glitter.url, options.embedAssets));
-			background.size = Math.max(1, Math.round((glitter.frames?.width || 50) * Number(data.scale ?? 100) / 100));
+			background.size = Math.max(1, Math.round(getGlitterTileSize(glitter) * Number(data.scale ?? 100) / 100));
 			background.offsetX = Number(data.textureOffsetX) || 0;
 			background.offsetY = Number(data.textureOffsetY) || 0;
 			background.pixelated = Boolean(glitter.isPixelated);

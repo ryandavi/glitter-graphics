@@ -1096,7 +1096,7 @@ class ShapeGlitterManager {
 		if (!layer) return;
 
 		const border = this.ensureEffectData(layer, 'border');
-		if (this.getBorderEdgeStyle(border) === edgeStyle) return;
+		if (getBorderEdgeStyle(border) === edgeStyle) return;
 
 		this.mutateGeometryPreservingShape(layer, () => {
 			this.ensureEffectData(layer, 'border').edgeStyle = edgeStyle === 'hard' ? 'hard' : 'round';
@@ -1112,7 +1112,7 @@ class ShapeGlitterManager {
 		if (!layer) return;
 
 		const border = this.ensureEffectData(layer, 'border');
-		if (this.getBorderPlacement(border) === placement) return;
+		if (getBorderPlacement(border) === placement) return;
 
 		this.mutateGeometryPreservingShape(layer, () => {
 			this.ensureEffectData(layer, 'border').placement = placement;
@@ -1128,7 +1128,7 @@ class ShapeGlitterManager {
 		if (!layer) return;
 
 		const border = this.ensureEffectData(layer, 'border');
-		if (this.getBorderDrawOrder(border) === drawOrder) return;
+		if (getBorderDrawOrder(border) === drawOrder) return;
 
 		border.drawOrder = drawOrder;
 		this._syncBorderDrawOrderUI(border);
@@ -1149,18 +1149,6 @@ class ShapeGlitterManager {
 		}
 	}
 
-	getBorderPlacement(borderData) {
-		return getBorderPlacement(borderData);
-	}
-
-	getBorderEdgeStyle(borderData) {
-		return getBorderEdgeStyle(borderData);
-	}
-
-	getBorderDrawOrder(borderData) {
-		return getBorderDrawOrder(borderData);
-	}
-
 	getBorderOutsidePadding(borderData) {
 		return getBorderOutsidePadding(borderData, {
 			miterLimit: CONFIG.tools.shapes.border.hardEdgeMiterLimit
@@ -1168,20 +1156,20 @@ class ShapeGlitterManager {
 	}
 
 	_syncBorderEdgeUI(borderData) {
-		const edgeStyle = this.getBorderEdgeStyle(borderData);
+		const edgeStyle = getBorderEdgeStyle(borderData);
 		this.ui.borderEdgeRounded?.classList.toggle('active', edgeStyle === 'round');
 		this.ui.borderEdgeHard?.classList.toggle('active', edgeStyle === 'hard');
 	}
 
 	_syncBorderPlacementUI(borderData) {
-		const placement = this.getBorderPlacement(borderData);
+		const placement = getBorderPlacement(borderData);
 		this.ui.borderPositionOutside?.classList.toggle('active', placement === 'outside');
 		this.ui.borderPositionCenter?.classList.toggle('active', placement === 'center');
 		this.ui.borderPositionInside?.classList.toggle('active', placement === 'inside');
 	}
 
 	_syncBorderDrawOrderUI(borderData) {
-		const drawOrder = this.getBorderDrawOrder(borderData);
+		const drawOrder = getBorderDrawOrder(borderData);
 		this.ui.borderOrderBehind?.classList.toggle('active', drawOrder === 'behind');
 		this.ui.borderOrderFront?.classList.toggle('active', drawOrder === 'front');
 	}
@@ -1204,14 +1192,9 @@ class ShapeGlitterManager {
 		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
 	}
 
-	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.
-	getEffectPaintSource(layer, slot) {
-		return resolveEffectPaintSource(this.getEffectData(layer, slot), {
-			allowNone: slot === 'fill',
-			glitterId: this.getSlotGlitterId(layer, slot),
-			glitterAvailable: (glitterId) => Boolean(this.editor.glitterManager.getItemById(glitterId)),
-			imageResolver: (imageRef) => this.getImageFillAsset(imageRef)
-		});
+	getEffectPaintSource(layer, key) {
+		const entry = getLayerPaintSlots(layer).find((slot) => slot.key === key);
+		return entry ? resolvePaintSlotPreviewSource(this.editor, layer, entry) : null;
 	}
 
 	// ===== MASK / MEASUREMENT =====
@@ -1223,7 +1206,7 @@ class ShapeGlitterManager {
 			d.width,
 			d.height,
 			d.shapeId === 'square' ? d.cornerRadiusPx : null,
-			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border), this.getBorderEdgeStyle(d.border)] : null,
+			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null,
 			shouldUseCrispMaskEdges(),
 			CONFIG.rendering.maskAlphaThreshold
@@ -1357,9 +1340,9 @@ class ShapeGlitterManager {
 		}
 
 		const borderStyle = borderData?.style === 'dotted' ? 'dotted' : 'solid';
-		const drawOrder = this.getBorderDrawOrder(borderData);
-		const placement = this.getBorderPlacement(borderData);
-		const edgeStyle = this.getBorderEdgeStyle(borderData);
+		const drawOrder = getBorderDrawOrder(borderData);
+		const placement = getBorderPlacement(borderData);
+		const edgeStyle = getBorderEdgeStyle(borderData);
 		const effectivePlacement = borderStyle === 'dotted' && placement === 'outside' && drawOrder === 'front'
 			? 'center'
 			: placement;
@@ -1421,40 +1404,25 @@ class ShapeGlitterManager {
 		return canvas;
 	}
 
-	// Full mask set for a shape (fill / border / shadow) in local render space.
-	// SINGLE source of truth used by both the live preview (getSpanDescriptors)
-	// and the exporter (via the renderShapeMask callback) — so they never diverge.
-	buildMaskEntry(layer) {
+	// Every slot mask for a shape in local render space, keyed by slot key.
+	// The preview (getSlotMask) and the exporter (renderSlotMasks callback)
+	// build masks through the same functions, so they never diverge. Export
+	// bakes the shadow offset into its mask; preview translates the span.
+	renderSlotMasks(layer) {
 		const measurement = this.getMeasurementEntry(layer);
-		const d = layer.shapeData;
-		const entry = {
+		const masks = {
 			fill: measurement.canvas,
-			border: null,
-			shadow: null,
 			renderWidth: measurement.width,
 			renderHeight: measurement.height,
 			measurement
 		};
-		if (d.shadow) {
-			entry.shadow = this._offsetCanvas(measurement.canvas, d.shadow.offsetX || 0, d.shadow.offsetY || 0);
-		}
-		if (d.border?.widthPx > 0) {
-			entry.border = this.getBorderMaskCanvas(measurement, d.border);
-		}
-		return entry;
-	}
-
-	_offsetCanvas(sourceCanvas, offsetX, offsetY) {
-		const canvas = createAppCanvas(0, 0, 'layers/ShapeGlitterManager');
-		canvas.width = sourceCanvas.width;
-		canvas.height = sourceCanvas.height;
-		const sourceOrigin = sourceCanvas._textureOrigin || { x: 0, y: 0 };
-		canvas._textureOrigin = {
-			x: sourceOrigin.x + offsetX,
-			y: sourceOrigin.y + offsetY
-		};
-		canvas.getContext('2d', { willReadFrequently: true }).drawImage(sourceCanvas, offsetX, offsetY);
-		return canvas;
+		getLayerPaintSlots(layer).forEach((entry) => {
+			if (!entry.renders || entry.key === 'fill') return;
+			masks[entry.key] = entry.role === 'shadow'
+				? createOffsetMaskCanvas(measurement.canvas, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				: this.getBorderMaskCanvas(measurement, entry.data);
+		});
+		return masks;
 	}
 
 	// ===== PREVIEW RENDER (span stack) =====
@@ -1534,90 +1502,34 @@ class ShapeGlitterManager {
 
 	reconcileSpans(stack, layer, measurement) {
 		this.syncStackGeometry(stack, layer, measurement);
-
-		const descriptors = this.getSpanDescriptors(layer, measurement);
-		const existing = new Map();
-		Array.from(stack.children).forEach((child) => {
-			if (child.dataset.spanKey) existing.set(child.dataset.spanKey, child);
-		});
-
-		descriptors.forEach((descriptor) => {
-			let span = existing.get(descriptor.key);
-			if (!span) {
-				span = document.createElement('span');
-				span.className = 'shape-glitter-content';
-				span.dataset.spanKey = descriptor.key;
+		reconcileSlotStack(stack, this.getSlotStack(layer), {
+			spanClassName: 'shape-glitter-content',
+			width: measurement.width,
+			height: measurement.height,
+			layer,
+			glitterLibrary: this.editor.glitterManager,
+			getMask: (item) => {
+				const mask = this.getSlotMask(measurement, item);
+				return mask && { canvas: mask.canvas, url: this.getPreviewMaskDataUrl(mask.canvas, mask.cacheKey) };
 			}
-			const maskUrl = this.getPreviewMaskDataUrl(descriptor.maskCanvas, descriptor.maskCacheKey);
-			this.applySpanStyles(span, measurement, maskUrl);
-			this.applySpanOffset(span, descriptor.offsetX, descriptor.offsetY);
-			this.applyPaintSource(
-				span,
-				descriptor.source,
-				layer,
-				descriptor.maskCanvas,
-				descriptor.offsetX,
-				descriptor.offsetY
-			);
-			stack.appendChild(span);
-			existing.delete(descriptor.key);
 		});
-
-		existing.forEach((span) => span.remove());
 	}
 
-	getSpanDescriptors(layer, measurement) {
-		const descriptors = [];
-		const shadow = this.getEffectData(layer, 'shadow');
-		const border = this.getEffectData(layer, 'border');
-		const drawBorderAfterFill = this.getBorderDrawOrder(border) === 'front';
+	getSlotStack(layer) {
+		return buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry));
+	}
 
-		// Preview shadow uses the un-offset silhouette + a live CSS translate (so
-		// dragging the offset is cheap); export bakes the same offset into the mask.
-		if (shadow) {
-			descriptors.push({
-				key: 'shadow',
-				offsetX: shadow.offsetX || 0,
-				offsetY: shadow.offsetY || 0,
-				source: this.getEffectPaintSource(layer, 'shadow'),
-				maskCanvas: measurement.canvas,
-				maskCacheKey: `${measurement.key}|fill`
-			});
+	// The mask a slot paints through: the vector-stroked border mask, or the
+	// shape silhouette for the fill and (offset by the caller) the shadow.
+	getSlotMask(measurement, slot) {
+		if (slot.key === 'border') {
+			const border = slot.data;
+			return {
+				canvas: this.getBorderMaskCanvas(measurement, border),
+				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}`
+			};
 		}
-
-		// Vector-stroked outer border (same getBorderMaskCanvas the exporter uses).
-		const borderDescriptor = border?.widthPx > 0
-			? {
-				key: 'border',
-				offsetX: 0,
-				offsetY: 0,
-				source: this.getEffectPaintSource(layer, 'border'),
-				maskCanvas: this.getBorderMaskCanvas(measurement, border),
-				maskCacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${this.getBorderPlacement(border)}:${this.getBorderDrawOrder(border)}:${this.getBorderEdgeStyle(border)}`
-			}
-			: null;
-
-		if (borderDescriptor && !drawBorderAfterFill) {
-			descriptors.push(borderDescriptor);
-		}
-
-		const fillSource = this.getEffectPaintSource(layer, 'fill');
-		if (fillSource) {
-			descriptors.push({
-				key: 'fill',
-				offsetX: 0,
-				offsetY: 0,
-				source: fillSource,
-				maskCanvas: measurement.canvas,
-				maskCacheKey: `${measurement.key}|fill`
-			});
-		}
-
-		if (borderDescriptor && drawBorderAfterFill) {
-			descriptors.push(borderDescriptor);
-		}
-
-		return descriptors;
+		return { canvas: measurement.canvas, cacheKey: `${measurement.key}|fill` };
 	}
 
 	getPreviewMaskDataUrl(canvas, cacheKey) {
@@ -1630,99 +1542,6 @@ class ShapeGlitterManager {
 			this.maskUrlCache.delete(firstKey);
 		}
 		return url;
-	}
-
-	applySpanStyles(span, measurement, maskUrl) {
-		span.style.display = 'block';
-		span.style.position = 'absolute';
-		span.style.left = '0';
-		span.style.top = '0';
-		span.style.width = `${measurement.width}px`;
-		span.style.height = `${measurement.height}px`;
-		span.style.maskSize = `${measurement.width}px ${measurement.height}px`;
-		span.style.maskRepeat = 'no-repeat';
-		span.style.maskPosition = '0 0';
-		span.style.webkitMaskSize = `${measurement.width}px ${measurement.height}px`;
-		span.style.webkitMaskRepeat = 'no-repeat';
-		span.style.webkitMaskPosition = '0 0';
-		if (maskUrl) {
-			span.style.maskImage = `url(${maskUrl})`;
-			span.style.webkitMaskImage = `url(${maskUrl})`;
-			span.style.visibility = '';
-		} else {
-			span.style.visibility = 'hidden';
-		}
-	}
-
-	applySpanOffset(span, offsetX = 0, offsetY = 0) {
-		const x = offsetX || 0;
-		const y = offsetY || 0;
-		span.style.transform = (x || y) ? `translate(${x}px, ${y}px)` : 'none';
-	}
-
-	// Mirror of TextGlitterManager.applyPaintSource (glitter/solid + colorAdjust).
-	applyPaintSource(span, source, layer = null, maskCanvas = null, localOffsetX = 0, localOffsetY = 0) {
-		if (!source) {
-			span.style.backgroundImage = 'none';
-			span.style.backgroundColor = 'transparent';
-			span.style.backgroundSize = '';
-			span.style.backgroundPosition = '';
-			span.style.backgroundRepeat = '';
-			span.style.imageRendering = '';
-			span.style.opacity = '1';
-			span.style.filter = '';
-			span.classList.remove('pixelated');
-			return;
-		}
-
-		if (source.mode === 'image') {
-			const placement = getImageFillPlacement(source, maskCanvas?._paintBox);
-			span.style.backgroundImage = `url(${source.url})`;
-			span.style.backgroundColor = 'transparent';
-			span.style.backgroundSize = `${placement.dw}px ${placement.dh}px`;
-			span.style.backgroundPosition = `${placement.dx}px ${placement.dy}px`;
-			span.style.backgroundRepeat = source.tile ? 'repeat' : 'no-repeat';
-			span.style.imageRendering = source.imageRendering === 'pixelated' ? 'pixelated' : 'auto';
-			span.style.opacity = String(source.opacity ?? 1);
-			span.style.filter = '';
-			span.classList.remove('pixelated');
-			return;
-		}
-
-		if (source.mode === 'solid' || source.mode === 'gradient') {
-			span.style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
-			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
-			span.style.backgroundSize = '';
-			span.style.backgroundPosition = '';
-			span.style.backgroundRepeat = '';
-			span.style.imageRendering = '';
-			span.style.opacity = String(source.opacity ?? 1);
-			span.style.filter = '';
-			span.classList.remove('pixelated');
-			return;
-		}
-
-		const glitter = this.editor.glitterManager.getItemById(source.glitterId);
-		if (!glitter) {
-			this.applyPaintSource(span, { mode: 'solid', color: '#000000', opacity: 1 });
-			return;
-		}
-
-		span.style.backgroundImage = `url(${glitter.url})`;
-		span.style.backgroundColor = 'transparent';
-		span.style.opacity = String(source.opacity ?? 1);
-		span.style.filter = buildCssColorFilter(source.colorAdjust);
-		const glitterScale = (source.scale ?? 100) / 100;
-		const baseSize = glitter.frames?.width || glitter.width || 50;
-		span.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
-		const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer, {
-			localOffsetX,
-			localOffsetY
-		});
-		span.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
-		span.style.backgroundRepeat = 'repeat';
-		span.style.imageRendering = '';
-		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
 	}
 
 	syncStackGeometry(stack, layer, measurement = null) {
@@ -1754,17 +1573,7 @@ class ShapeGlitterManager {
 		if (!stack) return;
 		const measurement = this.getMeasurementEntry(layer);
 		this.syncStackGeometry(stack, layer, measurement);
-		const spans = new Map(Array.from(stack.children).map((span) => [span.dataset.spanKey, span]));
-		this.getSpanDescriptors(layer, measurement).forEach((descriptor) => {
-			if (descriptor.source?.mode !== 'glitter' || descriptor.source.textureAnchor !== 'canvas') return;
-			const span = spans.get(descriptor.key);
-			if (!span) return;
-			const origin = getSlotTexturePatternOrigin(descriptor.maskCanvas, descriptor.source, layer, {
-				localOffsetX: descriptor.offsetX,
-				localOffsetY: descriptor.offsetY
-			});
-			span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
-		});
+		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(measurement, item).canvas);
 	}
 
 	// ===== TRANSFORM COMMIT (re-rasterize on scale) =====

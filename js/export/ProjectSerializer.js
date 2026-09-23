@@ -275,16 +275,20 @@ class ProjectSerializer {
 			if (issue.kind === 'font') layer.textData.fontId = CONFIG.tools.text.defaultFontId;
 			if (issue.kind === 'shape') layer.shapeData.shapeId = ShapeLibrary.FILL_SHAPES[0].id;
 			if (issue.kind === 'glitter') {
+				// Each declared slot (and its parked draft) knows which default
+				// glitter replaces a missing one. Anything else falls back to fill.
 				const context = LAYER_TYPE_GLITTER_CONTEXT[layer.type];
-				const replace = (value, path = '') => {
+				const defaultKeyBySlot = new Map(getLayerPaintSlots(layer, { includeDrafts: true })
+					.map((entry) => [entry.data, entry.definition.glitterDefault || 'fillGlitterId']));
+				const defaultGlitterFor = (slot) => {
+					const defaults = CONFIG.tools.glitter.defaults[defaultKeyBySlot.get(slot) || 'fillGlitterId'];
+					return typeof defaults === 'object' ? defaults[context] : defaults;
+				};
+				const replace = (value) => {
 					if (!value || typeof value !== 'object') return;
 					Object.entries(value).forEach(([key, child]) => {
-						if (key === 'glitterId' && child === issue.id) {
-							value[key] = path.includes('border') ? CONFIG.tools.glitter.defaults.borderGlitterId[context]
-								: path.includes('shadow') ? CONFIG.tools.glitter.defaults.shadowGlitterId[context]
-									: path.includes('textBackground') ? CONFIG.tools.glitter.defaults.backgroundGlitterId
-										: CONFIG.tools.glitter.defaults.fillGlitterId[context];
-						} else if (typeof child === 'object') replace(child, `${path}.${key}`);
+						if (key === 'glitterId' && child === issue.id) value[key] = defaultGlitterFor(value);
+						else if (typeof child === 'object') replace(child);
 					});
 				};
 				replace(layer);

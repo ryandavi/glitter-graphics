@@ -613,13 +613,9 @@ async initBrowser() {
 			this.editor.canvasElementsContainer.appendChild(wrapper);
 		}
 		const inner = wrapper.firstElementChild;
-		inner.className = `glitter-background visible${glitter.isPixelated ? ' pixelated' : ''}`;
-		inner.style.backgroundImage = `url(${glitter.url})`;
-		inner.style.backgroundColor = 'transparent';
-		inner.style.backgroundSize = `${Math.round((glitter.frames?.width || 50) * layer.background.scale / 100)}px`;
-		inner.style.backgroundPosition = `${layer.background.textureOffsetX}px ${layer.background.textureOffsetY}px`;
-		inner.style.opacity = layer.opacity / 100;
-		inner.style.filter = buildCssColorFilter(layer.background.colorAdjust);
+		inner.className = 'glitter-background visible';
+		const [entry] = getLayerPaintSlots(layer);
+		applyPaintSourceToElement(inner, resolvePaintSlotPreviewSource(this.editor, layer, entry), { glitterLibrary: this });
 		inner.style.maskImage = 'none';
 		inner.style.webkitMaskImage = 'none';
 		inner.style.visibility = '';
@@ -629,9 +625,7 @@ async initBrowser() {
 
 	renderLayer(layer, width, height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
-		const glitter = this.getItemById(layer.fill.glitterId);
-		const fillMode = layer.fill.mode;
-		if (fillMode === 'glitter' && !glitter) return;
+		if (layer.fill.mode === 'glitter' && !this.getItemById(layer.fill.glitterId)) return;
 
 		let wrapper = this.layerElements.get(layer.id);
 		let inner = wrapper?.querySelector('.glitter-background');
@@ -656,22 +650,8 @@ async initBrowser() {
 		}
 
 		inner.className = 'glitter-background visible';
-		if (fillMode === 'glitter' && glitter.isPixelated) inner.classList.add('pixelated');
-
-		// Apply glitter texture
-		inner.style.backgroundImage = fillMode === 'gradient' ? effectGradientToCss(layer.fill.gradient) : fillMode === 'glitter' ? `url(${glitter.url})` : 'none';
-		inner.style.backgroundColor = fillMode === 'solid' ? layer.fill.color : 'transparent';
-		inner.style.opacity = layer.opacity / 100;
-		// Color adjust (WP4): CSS filter mirrors the export matrix pass. Empty
-		// string for an identity/absent adjust clears any previous filter.
-		inner.style.filter = fillMode === 'glitter' ? buildCssColorFilter(layer.fill.colorAdjust) : '';
-
-		const glitterScale = layer.fill.scale / 100;
-		const baseSize = (glitter?.frames && glitter.frames.width) ? glitter.frames.width : 50;
-		inner.style.backgroundSize = fillMode === 'glitter' ? `${Math.round(baseSize * glitterScale)}px` : 'cover';
-		inner.style.backgroundPosition = fillMode === 'glitter'
-			? `${layer.fill.textureOffsetX}px ${layer.fill.textureOffsetY}px`
-			: '';
+		const [entry] = getLayerPaintSlots(layer);
+		applyPaintSourceToElement(inner, resolvePaintSlotPreviewSource(this.editor, layer, entry), { glitterLibrary: this });
 
 		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height, options);
 		if (maskObjectUrl) {
@@ -753,23 +733,9 @@ async initBrowser() {
 	}
 
 	async ensureLayersPreviewAssetsReady(layers) {
-		const glitterIds = new Set();
-		const addSlot = (slot) => {
-			if (slot?.mode === 'glitter' && slot.glitterId != null) glitterIds.add(slot.glitterId);
-		};
-		layers.forEach((layer) => {
-			if (!layer.visible) return;
-			addSlot(getLayerFillSlot(layer));
-			if (layer.type === LayerType.TEXT_GLITTER) {
-				addSlot(layer.textData?.border);
-				addSlot(layer.textData?.shadow);
-			} else if (layer.type === LayerType.SHAPE) {
-				addSlot(layer.shapeData?.border);
-				addSlot(layer.shapeData?.shadow);
-			} else if (layer.type === LayerType.STICKER) {
-				addSlot(layer.stickerData?.shadow);
-			}
-		});
+		const glitterIds = new Set(layers
+			.filter((layer) => layer.visible)
+			.flatMap((layer) => getLayerSlotGlitterIds(layer)));
 
 		await Promise.all([...glitterIds].map((id) => {
 			const glitter = this.getItemById(id);

@@ -155,7 +155,7 @@ async function check3(page) {
 	const dotted = await page.evaluate((id) => {
 		const editor = window.editor;
 		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
-		const masks = editor.shapeGlitterManager.buildMaskEntry(layer);
+		const masks = editor.shapeGlitterManager.renderSlotMasks(layer);
 		return {
 			style: layer.shapeData.border.style,
 			spacingRowHidden: document.getElementById('shapeBorderDotSpacingRow')?.hidden,

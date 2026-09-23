@@ -392,31 +392,11 @@ class StickerManager extends ContentManager {
 		this.updatePickerStrip();
 	}
 
-	applyEffectPaint(element, source, effectData, layer) {
-		if (!element || !source) return;
-		element.style.backgroundColor = '';
-		element.style.backgroundImage = '';
-		element.style.backgroundPosition = '';
-		element.style.backgroundSize = '';
-		element.style.filter = '';
-		if (source.mode === 'gradient') element.style.backgroundImage = effectGradientToCss(source.gradient);
-		else if (source.mode === 'glitter') {
-			const glitter = this.editor.glitterManager.getItemById(effectData.glitterId);
-			element.style.backgroundImage = glitter ? `url(${glitter.url})` : 'none';
-			const baseSize = glitter?.frames?.width || glitter?.width || 50;
-			element.style.backgroundSize = `${Math.round(baseSize * (effectData.scale || 100) / 100)}px`;
-			const textureOrigin = getSlotTexturePatternOrigin({
-				width: layer?.stickerData?.width || 0,
-				height: layer?.stickerData?.height || 0
-			}, effectData, layer);
-			element.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
-			element.style.filter = buildCssColorFilter(effectData.colorAdjust);
-		} else element.style.backgroundColor = source.color;
-		element.style.opacity = String(source.opacity ?? 1);
-	}
-
+	// The shadow is the sticker's own image used as a mask, painted with the
+	// shadow slot and shifted by its offset.
 	reconcileStickerEffectSpan(layer, element) {
-		const shadow = layer.stickerData.shadow;
+		const shadow = buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry))
+			.find((item) => item.role === 'shadow');
 		let span = element.querySelector('.sticker-effect-shadow');
 		if (!shadow) {
 			span?.remove();
@@ -435,10 +415,11 @@ class StickerManager extends ContentManager {
 		span.style.maskSize = '100% 100%';
 		span.style.webkitMaskSize = '100% 100%';
 		span.style.transform = `translate(${shadow.offsetX}px, ${shadow.offsetY}px)`;
-		this.applyEffectPaint(span, resolveEffectPaintSource(shadow, {
-			glitterId: shadow.glitterId,
-			glitterAvailable: Boolean(this.editor.glitterManager.getItemById(shadow.glitterId))
-		}), shadow, layer);
+		applyPaintSourceToElement(span, shadow.source, {
+			glitterLibrary: this.editor.glitterManager,
+			layer,
+			maskCanvas: { width: layer.stickerData.width || 0, height: layer.stickerData.height || 0 }
+		});
 	}
 
 	setupFilterChips() {

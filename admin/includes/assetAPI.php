@@ -1647,8 +1647,11 @@ abstract class AssetAPI
             'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source',
         ];
         if ($this->assetType === 'glitter') {
+            // width/height size the preview tile before the GIF is decoded.
             $fields[] = 'colorCodes';
             $fields[] = 'colorWeights';
+            $fields[] = 'width';
+            $fields[] = 'height';
         }
         return array_intersect_key($asset, array_flip($fields));
     }

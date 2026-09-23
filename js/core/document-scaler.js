@@ -18,53 +18,36 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 	const scaleTexture = (value, factor = uniformScale) => Number.isFinite(Number(value))
 		? Math.max(1, roundSlotTextureScale(Number(value) * factor))
 		: value;
-	const scaleShadow = (shadow) => {
-		if (!shadow) return;
-		if (shouldScaleEffects) {
-			shadow.offsetX = scalePixel(shadow.offsetX, uniformScale, -Infinity);
-			shadow.offsetY = scalePixel(shadow.offsetY, uniformScale, -Infinity);
+	// Paint slots (and their parked drafts) rescale their declared pixel
+	// fields and texture scale. Sticker slots scale with the sticker's own
+	// transform, so they are compensated only for the options that are off.
+	const scalesWithTransform = Boolean(LAYER_UI_CONFIG[layer.type]?.contentScalesWithTransform);
+	const slotFactor = (enabled) => {
+		if (scalesWithTransform) return enabled ? 1 : 1 / uniformScale;
+		return enabled ? uniformScale : 1;
+	};
+	const effectFactor = slotFactor(shouldScaleEffects);
+	const textureFactor = slotFactor(shouldScaleTextures);
+	getLayerPaintSlots(layer, { includeDrafts: true }).forEach(({ definition, data, draft }) => {
+		const pixels = definition.documentPixels;
+		if (pixels && effectFactor !== 1) {
+			const host = pixels.hostKeys ? (draft ? null : readPaintSlotPath(layer, pixels.hostKeys)) : data;
+			if (host) {
+				(pixels.fields || []).forEach((field) => { host[field] = scalePixel(host[field], effectFactor, pixels.minimum ?? 0); });
+				(pixels.signedFields || []).forEach((field) => { host[field] = scalePixel(host[field], effectFactor, -Infinity); });
+			}
 		}
-		if (shouldScaleTextures) shadow.scale = scaleTexture(shadow.scale);
-	};
-	const scaleBorder = (border, includeDots = false) => {
-		if (!border) return;
-		if (shouldScaleEffects) {
-			border.widthPx = scalePixel(border.widthPx, uniformScale, 1);
-			if (includeDots) border.dotSpacingPx = scalePixel(border.dotSpacingPx, uniformScale, 1);
-		}
-		if (shouldScaleTextures) border.scale = scaleTexture(border.scale);
-	};
-	const scaleEffectDrafts = (drafts, includeDots = false) => {
-		if (!drafts) return;
-		scaleBorder(drafts.border, includeDots);
-		scaleShadow(drafts.shadow);
-		if (shouldScaleTextures && drafts.fill) drafts.fill.scale = scaleTexture(drafts.fill.scale);
-	};
-	const compensateStickerShadow = (shadow) => {
-		if (!shadow) return;
-		if (!shouldScaleEffects) {
-			shadow.offsetX = scalePixel(shadow.offsetX, 1 / uniformScale, -Infinity);
-			shadow.offsetY = scalePixel(shadow.offsetY, 1 / uniformScale, -Infinity);
-		}
-		if (!shouldScaleTextures) shadow.scale = scaleTexture(shadow.scale, 1 / uniformScale);
-	};
+		if (textureFactor !== 1 && 'scale' in data) data.scale = scaleTexture(data.scale, textureFactor);
+	});
 
 	switch (layer.type) {
 		case LayerType.BASE_IMAGE:
-			if (shouldScaleTextures && layer.background?.mode === 'glitter') {
-				layer.background.scale = scaleTexture(layer.background.scale);
-			}
 			if (shouldScaleEffects && layer.background?.pixelEffects?.pixelSize > 1) {
 				layer.background.pixelEffects.pixelSize = scalePixel(layer.background.pixelEffects.pixelSize, uniformScale, 1);
 			}
 			break;
-		case LayerType.GLITTER_FILL:
-			if (shouldScaleTextures) layer.fill.scale = scaleTexture(layer.fill.scale);
-			break;
 		case LayerType.STICKER:
 			scalePosition(getLayerTransform(layer));
-			compensateStickerShadow(layer.stickerData?.shadow);
-			compensateStickerShadow(layer.stickerData?.effectDrafts?.shadow);
 			if (layer.transform?.scale) {
 				layer.transform.scale.x *= uniformScale;
 				layer.transform.scale.y *= uniformScale;
@@ -78,10 +61,6 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			data.letterSpacing = scalePixel(data.letterSpacing, uniformScale, -Infinity);
 			if (Number.isFinite(Number(data.boxWidth))) data.boxWidth = scalePixel(data.boxWidth, uniformScale, 1);
 			if (Number.isFinite(Number(data.boxHeight))) data.boxHeight = scalePixel(data.boxHeight, uniformScale, 1);
-			scaleBorder(data.border);
-			scaleShadow(data.shadow);
-			scaleEffectDrafts(data.effectDrafts);
-			if (shouldScaleTextures) data.fill.scale = scaleTexture(data.fill.scale);
 			break;
 		}
 		case LayerType.SHAPE: {
@@ -90,10 +69,6 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			scalePosition(getLayerTransform(layer));
 			data.width = scalePixel(data.width, uniformScale, 1);
 			data.height = scalePixel(data.height, uniformScale, 1);
-			if (shouldScaleTextures && data.fill) data.fill.scale = scaleTexture(data.fill.scale);
-			scaleBorder(data.border, true);
-			scaleShadow(data.shadow);
-			scaleEffectDrafts(data.effectDrafts, true);
 			break;
 		}
 	}

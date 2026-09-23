@@ -42,6 +42,18 @@ function createMaskCanvasLike(sourceCanvas) {
 	return canvas;
 }
 
+// A same-size copy of the mask shifted by a shadow offset. The texture origin
+// moves with it so the pattern stays registered to the shifted artwork.
+function createOffsetMaskCanvas(sourceCanvas, offsetX, offsetY) {
+	const canvas = createMaskCanvasLike(sourceCanvas);
+	canvas._textureOrigin = {
+		x: canvas._textureOrigin.x + offsetX,
+		y: canvas._textureOrigin.y + offsetY
+	};
+	canvas.getContext('2d', { willReadFrequently: true }).drawImage(sourceCanvas, offsetX, offsetY);
+	return canvas;
+}
+
 function createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
 	const canvas = createMaskCanvasLike(baseCanvas);
 	const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });

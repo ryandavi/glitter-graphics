@@ -1,9 +1,9 @@
 <?php
 
-require_once(__DIR__ . '/../admin/includes/config.php');
-require_once(__DIR__ . '/../admin/includes/database.php');
-require_once(__DIR__ . '/../admin/includes/glitterAPI.php');
-require_once(__DIR__ . '/../admin/includes/stickerAPI.php');
+require_once(__DIR__ . '/../../admin/includes/config.php');
+require_once(__DIR__ . '/../../admin/includes/database.php');
+require_once(__DIR__ . '/../../admin/includes/glitterAPI.php');
+require_once(__DIR__ . '/../../admin/includes/stickerAPI.php');
 
 function failContract($message)
 {
@@ -38,8 +38,8 @@ foreach ($apis as $type => $api) {
 		}
 	}
 	$manifestName = $type === 'sticker' ? 'stickers' : 'glitter';
-	$indexPath = __DIR__ . "/../data/$manifestName.index.json";
-	$detailDirectory = __DIR__ . "/../data/$manifestName";
+	$indexPath = __DIR__ . "/../../data/$manifestName.index.json";
+	$detailDirectory = __DIR__ . "/../../data/$manifestName";
 	$index = json_decode(file_get_contents($indexPath), true);
 	if (!is_array($index) || count($index) !== count($assets)) failContract("$type browse index count differs");
 	$indexById = [];
@@ -50,6 +50,9 @@ foreach ($apis as $type => $api) {
 		}
 		if ($type === 'glitter' && (!array_key_exists('colorCodes', $record) || !array_key_exists('colorWeights', $record))) {
 			failContract('glitter browse index omits palette metadata needed for Auto Glitter');
+		}
+		if ($type === 'glitter' && (empty($record['width']) || empty($record['height']))) {
+			failContract('glitter browse index omits the tile size the preview needs before decoding');
 		}
 	}
 	foreach ($assets as $asset) {

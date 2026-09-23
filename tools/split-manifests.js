@@ -9,7 +9,8 @@ const browseFields = new Set([
 ]);
 
 const typeBrowseFields = {
-	glitter: new Set(['colorCodes', 'colorWeights'])
+	// width/height size the preview tile before the GIF is decoded.
+	glitter: new Set(['colorCodes', 'colorWeights', 'width', 'height'])
 };
 
 for (const type of ['glitter', 'stickers']) {

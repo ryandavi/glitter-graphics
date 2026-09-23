@@ -211,7 +211,7 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 		layer.shapeData.shadow.offsetX = 4;
 		layer.shapeData.shadow.offsetY = 4;
 		layer.opacity = 100;
-		const masks = editor.shapeGlitterManager.buildMaskEntry(layer);
+		const masks = editor.shapeGlitterManager.renderSlotMasks(layer);
 		const canvas = document.createElement('canvas');
 		canvas.width = 160;
 		canvas.height = 160;
@@ -228,7 +228,7 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 				frameIndex: 0,
 				sourceSelectionMap: new Map(),
 				resolvedFramesBySource: new Map(),
-				shapeMaskCanvases: new Map([[layer.id, masks]])
+				slotMaskCanvases: new Map([[layer.id, masks]])
 			});
 		} finally {
 			editor.exporter._activeLayerAnimation = null;
@@ -309,8 +309,7 @@ async function exportBytes(page, exportOverrides = {}) {
 					},
 					parseGif: (url) => editor.glitterManager.parseGifFromUrl(url),
 					createMask: (layer) => editor.maskCompositor.getMaskData(layer),
-					renderTextMask: (layer) => editor.textGlitterManager.renderTextMask(layer),
-					renderShapeMask: (layer) => editor.shapeGlitterManager.buildMaskEntry(layer),
+					renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
 					ensureTextFont: (fontId) => editor.textGlitterManager.ensureFontLoaded(fontId)
 				}
 			}).catch((error) => {

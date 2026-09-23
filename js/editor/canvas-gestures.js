@@ -76,7 +76,7 @@ togglePreview() {
 			}
 			if (this.currentTool === ToolType.SELECT && this.originalImage && e.button === 0 &&
 				!e.altKey &&
-				!e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR) &&
+				!e.target.closest(getTransformableLayerElementSelector()) &&
 				!e.target.closest('.group-transform-handles')) {
 				this.startSelectionMarquee(e);
 				return;

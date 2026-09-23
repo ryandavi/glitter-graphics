@@ -1,51 +1,43 @@
+// Preview and export read one slot stack (buildSlotStack) and one set of
+// paint helpers. Each entry names the shared function and the preview/export
+// members that must call it; tests/unit/preview-export-twins.js checks that.
+// Members are Class.method, or paintSlots.functionName for js/paint/paint-slots.js.
 const PREVIEW_EXPORT_TWINS = [
 	{
+		feature: 'slot stack order',
+		shared: 'buildSlotStack',
+		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack'],
+		export: ['GifExporter._renderSlotStackToCanvas', 'GifExporter._renderStickerEffects']
+	},
+	{
 		feature: 'paint source',
-		shared: 'resolveEffectPaintSource',
-		preview: ['TextGlitterManager.getEffectPaintSource', 'ShapeGlitterManager.getEffectPaintSource'],
-		export: ['GifExporter._getTextEffectSource', 'GifExporter._getShapeEffectSource']
+		shared: 'resolvePaintSlotSource',
+		preview: ['paintSlots.resolvePaintSlotPreviewSource'],
+		export: ['GifExporter._getSlotSource']
 	},
 	{
-		feature: 'shape image fill placement',
+		feature: 'text slot masks',
+		shared: 'getSlotMask',
+		preview: ['TextGlitterManager.reconcileTextSpans'],
+		export: ['TextGlitterManager.renderSlotMasks']
+	},
+	{
+		feature: 'shape border mask',
+		shared: 'getBorderMaskCanvas',
+		preview: ['ShapeGlitterManager.getSlotMask'],
+		export: ['ShapeGlitterManager.renderSlotMasks']
+	},
+	{
+		feature: 'image fill placement',
 		shared: 'getImageFillPlacement',
-		preview: ['ShapeGlitterManager.applyPaintSource'],
-		export: ['GifExporter._renderFilledMaskInto']
+		preview: ['paintSlots.applyPaintSourceToElement'],
+		export: ['GifExporter._paintSourceInto']
 	},
 	{
-		feature: 'mask dilation',
-		shared: 'createDilatedMaskCanvas',
-		preview: ['TextGlitterManager.createDilatedMaskCanvas'],
-		export: ['GifExporter._createDilatedMaskCanvas']
-	},
-	{
-		feature: 'mask erosion',
-		shared: 'createErodedMaskCanvas',
-		preview: ['TextGlitterManager.createErodedMaskCanvas'],
-		export: ['GifExporter._createErodedMaskCanvas']
-	},
-	{
-		feature: 'mask difference',
-		shared: 'createMaskDifferenceCanvas',
-		preview: ['TextGlitterManager.createMaskDifferenceCanvas'],
-		export: ['GifExporter._createMaskDifferenceCanvas']
-	},
-	{
-		feature: 'border placement',
-		shared: 'getBorderPlacement',
-		preview: ['TextGlitterManager.getBorderPlacement', 'ShapeGlitterManager.getBorderPlacement'],
-		export: ['GifExporter._getBorderPlacement']
-	},
-	{
-		feature: 'border edge style',
-		shared: 'getBorderEdgeStyle',
-		preview: ['TextGlitterManager.getBorderEdgeStyle', 'ShapeGlitterManager.getBorderEdgeStyle'],
-		export: ['GifExporter._getBorderEdgeStyle']
-	},
-	{
-		feature: 'border draw order',
-		shared: 'getBorderDrawOrder',
-		preview: ['TextGlitterManager.getBorderDrawOrder', 'ShapeGlitterManager.getBorderDrawOrder'],
-		export: ['GifExporter._getBorderDrawOrder']
+		feature: 'texture registration',
+		shared: 'getSlotTexturePatternOrigin',
+		preview: ['paintSlots.applyPaintSourceToElement'],
+		export: ['GifExporter._paintSourceInto']
 	}
 ];
 

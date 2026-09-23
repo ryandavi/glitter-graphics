@@ -33,8 +33,8 @@ class TextGlitterManager {
 		// browse mode — the old sticky-target layer-switch trap is impossible.
 		//
 		// This is pure UI state. The exporter never reads it: per-slot paint
-		// resolution (getEffectPaintSource ↔ GifExporter._getTextEffectSource)
-		// depends only on layer.textData, so preview↔export parity is unaffected.
+		// resolution (resolvePaintSlotSource, shared with GifExporter) depends
+		// only on layer.textData, so preview↔export parity is unaffected.
 		this.pickerSession = null;
 	}
 
@@ -1179,7 +1179,7 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 			const border = this.ensureEffectData(layer, 'border');
-			if (this.getBorderPlacement(border) === placement) return;
+			if (getBorderPlacement(border) === placement) return;
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
@@ -1198,7 +1198,7 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 			const border = this.ensureEffectData(layer, 'border');
-			if (this.getBorderEdgeStyle(border) === edgeStyle) return;
+			if (getBorderEdgeStyle(border) === edgeStyle) return;
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
@@ -1217,7 +1217,7 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 			const border = this.ensureEffectData(layer, 'border');
-			if (this.getBorderDrawOrder(border) === drawOrder) return;
+			if (getBorderDrawOrder(border) === drawOrder) return;
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
@@ -2025,26 +2025,10 @@ class TextGlitterManager {
 		if (els.frames) els.frames.textContent = '';
 	}
 
-	getBorderPlacement(borderData) {
-		return getBorderPlacement(borderData);
-	}
-
-	getBorderEdgeStyle(borderData) {
-		return getBorderEdgeStyle(borderData);
-	}
-
-	getBorderDrawOrder(borderData) {
-		return getBorderDrawOrder(borderData);
-	}
-
-	getBorderOutsidePadding(borderData) {
-		return getBorderOutsidePadding(borderData);
-	}
-
 	syncBorderOptionUI(borderData) {
-		const placement = this.getBorderPlacement(borderData);
-		const edgeStyle = this.getBorderEdgeStyle(borderData);
-		const drawOrder = this.getBorderDrawOrder(borderData);
+		const placement = getBorderPlacement(borderData);
+		const edgeStyle = getBorderEdgeStyle(borderData);
+		const drawOrder = getBorderDrawOrder(borderData);
 
 		this.ui.borderEdgeRounded?.classList.toggle('active', edgeStyle === 'round');
 		this.ui.borderEdgeHard?.classList.toggle('active', edgeStyle === 'hard');
@@ -2325,7 +2309,7 @@ class TextGlitterManager {
 			textData.boxMode || 'auto',
 			textData.boxWidth ?? null,
 			textData.boxHeight ?? null,
-			textData.border ? [textData.border.widthPx, this.getBorderPlacement(textData.border)] : null,
+			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
 			// Text Background's geometry-affecting fields only (never `fill` —
@@ -2363,7 +2347,7 @@ class TextGlitterManager {
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;
 		const lineHeightPx = fontSize * layer.textData.lineHeight;
-		const borderWidth = this.getBorderOutsidePadding(layer.textData.border);
+		const borderWidth = getBorderOutsidePadding(layer.textData.border);
 		const shadowOffsetX = layer.textData.shadow?.offsetX || 0;
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
 		const boxMode = layer.textData.boxMode || 'auto';
@@ -2783,25 +2767,28 @@ class TextGlitterManager {
 		}
 	}
 
-	async renderTextMask(layer) {
+	// Every slot mask for export, in text-local space: the canvases the
+	// preview masks with, with the shadow offset baked in (preview translates
+	// the unshifted mask instead).
+	async renderSlotMasks(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) {
 			throw new Error('Invalid text layer');
 		}
 
 		await this.ensureFontLoaded(layer.textData.fontId);
-		return this.getMeasurementEntry(layer).canvas;
-	}
-
-	// Export's callback counterpart to getTextBackgroundMaskCanvas above — same
-	// function, called after the font (and therefore the measurement/geometry)
-	// is guaranteed ready. Returns null when disabled/empty, same as preview.
-	async renderTextBackgroundMask(layer) {
-		if (!layer || layer.type !== LayerType.TEXT_GLITTER) {
-			throw new Error('Invalid text layer');
-		}
-
-		await this.ensureFontLoaded(layer.textData.fontId);
-		return this.getTextBackgroundMaskCanvas(layer);
+		const measurement = this.getMeasurementEntry(layer);
+		const masks = {
+			fill: measurement.canvas,
+			renderWidth: layer.textData.width,
+			renderHeight: layer.textData.height
+		};
+		getLayerPaintSlots(layer).forEach((entry) => {
+			if (!entry.renders || entry.key === 'fill') return;
+			masks[entry.key] = entry.role === 'shadow'
+				? createOffsetMaskCanvas(measurement.canvas, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				: this.getSlotMask(layer, measurement, entry)?.canvas || null;
+		});
+		return masks;
 	}
 
 	renderContent(layersToShow) {
@@ -2825,8 +2812,8 @@ class TextGlitterManager {
 			return;
 		}
 
-		const fillGlitter = this.editor.glitterManager.getItemById(layer.textData.fill.glitterId);
-		if (!fillGlitter) {
+		const fill = layer.textData.fill;
+		if (fill.mode === 'glitter' && !this.editor.glitterManager.getItemById(fill.glitterId)) {
 			this.removeLayerElement(layer.id);
 			return;
 		}
@@ -2913,46 +2900,20 @@ class TextGlitterManager {
 
 	reconcileTextSpans(stack, layer, measurement) {
 		this.syncStackGeometry(stack, layer, measurement);
-
-		const descriptors = this.getSpanDescriptors(layer, measurement);
-		const existing = new Map();
-		Array.from(stack.children).forEach((child) => {
-			if (child.dataset.spanKey) {
-				existing.set(child.dataset.spanKey, child);
+		reconcileSlotStack(stack, this.getSlotStack(layer), {
+			spanClassName: 'text-glitter-content',
+			width: measurement.width,
+			height: measurement.height,
+			layer,
+			glitterLibrary: this.editor.glitterManager,
+			getMask: (item) => {
+				const mask = this.getSlotMask(layer, measurement, item);
+				return mask && {
+					canvas: mask.canvas,
+					url: this.getPreviewMaskDataUrl(layer, mask.bucket, mask.canvas, mask.cacheKey)
+				};
 			}
 		});
-
-		descriptors.forEach((descriptor) => {
-			let span = existing.get(descriptor.key);
-			if (!span) {
-				span = document.createElement('span');
-				span.className = 'text-glitter-content';
-				span.dataset.spanKey = descriptor.key;
-			}
-
-			span.textContent = '';
-			span.dataset.maskType = descriptor.maskType;
-			const maskUrl = this.getPreviewMaskDataUrl(
-				layer,
-				descriptor.maskType,
-				descriptor.maskCanvas,
-				descriptor.maskCacheKey
-			);
-			this.applyTextStyles(span, measurement, maskUrl);
-			this.applySpanOffset(span, descriptor.offsetX, descriptor.offsetY);
-			this.applyPaintSource(
-				span,
-				descriptor.source,
-				layer,
-				descriptor.maskCanvas,
-				descriptor.offsetX,
-				descriptor.offsetY
-			);
-			stack.appendChild(span);
-			existing.delete(descriptor.key);
-		});
-
-		existing.forEach((span) => span.remove());
 	}
 
 	// The stack is a local-space surface sized to the mask canvas in text-local
@@ -2987,102 +2948,38 @@ class TextGlitterManager {
 		if (!stack) return;
 		const measurement = this.getMeasurementEntry(layer);
 		this.syncStackGeometry(stack, layer, measurement);
-		const spans = new Map(Array.from(stack.children).map((span) => [span.dataset.spanKey, span]));
-		this.getSpanDescriptors(layer, measurement).forEach((descriptor) => {
-			if (descriptor.source?.mode !== 'glitter' || descriptor.source.textureAnchor !== 'canvas') return;
-			const span = spans.get(descriptor.key);
-			if (!span) return;
-			const origin = getSlotTexturePatternOrigin(descriptor.maskCanvas, descriptor.source, layer, {
-				localOffsetX: descriptor.offsetX,
-				localOffsetY: descriptor.offsetY
-			});
-			span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
-		});
+		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(layer, measurement, item)?.canvas);
 	}
 
-	getSpanDescriptors(layer, measurement) {
-		const descriptors = [];
-		const shadow = this.getEffectData(layer, 'shadow');
-		const border = this.getEffectData(layer, 'border');
-		const drawBorderAfterFill = this.getBorderDrawOrder(border) === 'front';
-
-		// Text Background renders furthest back (plan "Rendering order": layer
-		// transform -> background -> text), so it is pushed before every other
-		// descriptor. Same mask canvas (getTextBackgroundMaskCanvas) export uses.
-		if (layer.textData.textBackground?.enabled && measurement.textBackgroundGeometry?.shapes?.length) {
-			const backgroundCanvas = this.getTextBackgroundMaskCanvas(layer, measurement);
-			if (backgroundCanvas) {
-				descriptors.push({
-					key: 'background',
-					offsetX: 0,
-					offsetY: 0,
-					source: this.getEffectPaintSource(layer, 'backgroundFill'),
-					maskType: 'background',
-					maskCanvas: backgroundCanvas,
-					maskCacheKey: measurement.key
-				});
-			}
-		}
-
-		if (shadow) {
-			descriptors.push({
-				key: 'shadow',
-				offsetX: shadow.offsetX || 0,
-				offsetY: shadow.offsetY || 0,
-				source: this.getEffectPaintSource(layer, 'shadow'),
-				maskType: 'fill',
-				maskCanvas: measurement.canvas,
-				maskCacheKey: measurement.key
-			});
-		}
-
-		const borderDescriptor = border?.widthPx > 0
-			? (() => {
-				const { canvas: borderCanvas, cacheKey: borderCacheKey } = this.getBorderMaskCanvas(layer, measurement, border);
-				return {
-					key: 'border',
-					offsetX: 0,
-					offsetY: 0,
-					source: this.getEffectPaintSource(layer, 'border'),
-					maskType: 'border',
-					maskCanvas: borderCanvas,
-					maskCacheKey: borderCacheKey
-				};
-			})()
-			: null;
-
-		if (borderDescriptor && !drawBorderAfterFill) {
-			descriptors.push(borderDescriptor);
-		}
-
-		const fillSource = this.getEffectPaintSource(layer, 'fill');
-		if (fillSource) {
-			descriptors.push({
-				key: 'fill',
-				offsetX: 0,
-				offsetY: 0,
-				source: fillSource,
-				maskType: 'fill',
-				maskCanvas: measurement.canvas,
-				maskCacheKey: measurement.key
-			});
-		}
-
-		if (borderDescriptor && drawBorderAfterFill) {
-			descriptors.push(borderDescriptor);
-		}
-
-		return descriptors;
+	getSlotStack(layer) {
+		return buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry));
 	}
 
-	// One continuous stroke, like a Photoshop stroke: stamp the glyph mask at
-	// N angles around a ring onto a single canvas (union, not N separate
-	// layers), then texture that one shape once. Mirrors
-	// GifExporter._createBorderMaskCanvas so the live preview matches export.
+	// The mask a slot paints through, in text-local space. The fill and shadow
+	// share the glyph mask (the shadow is offset by the caller); the text
+	// background exists only once its geometry has shapes. bucket and cacheKey
+	// address the per-layer preview mask URL cache.
+	getSlotMask(layer, measurement, slot) {
+		if (slot.key === 'backgroundFill') {
+			const canvas = measurement.textBackgroundGeometry?.shapes?.length
+				? this.getTextBackgroundMaskCanvas(layer, measurement)
+				: null;
+			return canvas ? { canvas, bucket: 'background', cacheKey: measurement.key } : null;
+		}
+		if (slot.key === 'border') {
+			const { canvas, cacheKey } = this.getBorderMaskCanvas(layer, measurement, slot.data);
+			return { canvas, bucket: 'border', cacheKey };
+		}
+		return { canvas: measurement.canvas, bucket: 'fill', cacheKey: measurement.key };
+	}
+
+	// One continuous stroke, like a Photoshop stroke: the glyph mask grown,
+	// shrunk or both by the border width (mask-geometry.js), textured once.
+	// Preview and export both read it through getSlotMask.
 	getBorderMaskCanvas(layer, measurement, borderData = this.getEffectData(layer, 'border')) {
 		const widthPx = Math.max(0, borderData?.widthPx || 0);
-		const placement = this.getBorderPlacement(borderData);
-		const edgeStyle = this.getBorderEdgeStyle(borderData);
+		const placement = getBorderPlacement(borderData);
+		const edgeStyle = getBorderEdgeStyle(borderData);
 		const cacheKey = `border:${widthPx}:${placement}:${edgeStyle}`;
 
 		if (measurement._borderMaskCache?.key === cacheKey) {
@@ -3094,18 +2991,18 @@ class TextGlitterManager {
 
 		if (widthPx > 0) {
 			if (placement === 'inside') {
-				canvas = this.createMaskDifferenceCanvas(
+				canvas = createMaskDifferenceCanvas(
 					fillMask,
-					this.createErodedMaskCanvas(fillMask, widthPx, edgeStyle)
+					createErodedMaskCanvas(fillMask, widthPx, edgeStyle)
 				);
 			} else if (placement === 'center') {
-				canvas = this.createMaskDifferenceCanvas(
-					this.createDilatedMaskCanvas(fillMask, Math.ceil(widthPx / 2), edgeStyle),
-					this.createErodedMaskCanvas(fillMask, Math.floor(widthPx / 2), edgeStyle)
+				canvas = createMaskDifferenceCanvas(
+					createDilatedMaskCanvas(fillMask, Math.ceil(widthPx / 2), edgeStyle),
+					createErodedMaskCanvas(fillMask, Math.floor(widthPx / 2), edgeStyle)
 				);
 			} else {
-				canvas = this.createMaskDifferenceCanvas(
-					this.createDilatedMaskCanvas(fillMask, widthPx, edgeStyle),
+				canvas = createMaskDifferenceCanvas(
+					createDilatedMaskCanvas(fillMask, widthPx, edgeStyle),
 					fillMask
 				);
 			}
@@ -3118,9 +3015,8 @@ class TextGlitterManager {
 		return { canvas, cacheKey: `${measurement.key}|${cacheKey}` };
 	}
 
-	// The ONE Text Background mask builder — preview (getSpanDescriptors above)
-	// and every export path (GifExporter, via the `getTextBackgroundMask`
-	// callback) call this exact function against the same pre-computed
+	// The ONE Text Background mask builder: preview and export both reach it
+	// through getSlotMask, against the same pre-computed
 	// `measurement.textBackgroundGeometry` (already in the mask canvas's own
 	// local space; see getMeasurementEntry). Cached on the measurement entry
 	// the same way the border mask is, so it isn't rebuilt per animation frame.
@@ -3147,106 +3043,9 @@ class TextGlitterManager {
 		return canvas;
 	}
 
-	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.
-	getEffectPaintSource(layer, effectName) {
-		if (effectName === 'fill') {
-			return resolveEffectPaintSource(layer.textData.fill, { allowNone: true });
-		}
-
-		return resolveEffectPaintSource(this.getEffectData(layer, effectName), {
-			glitterAvailable: (glitterId) => Boolean(this.editor.glitterManager.getItemById(glitterId))
-		});
-	}
-
-	createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
-		return createMaskDifferenceCanvas(baseCanvas, subtractCanvas);
-	}
-
-	createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		return createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle);
-	}
-
-	createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		return createErodedMaskCanvas(sourceCanvas, radius, edgeStyle);
-	}
-
-	getMorphOffsets(widthPx) {
-		return getMorphOffsets(widthPx);
-	}
-
-	applyTextStyles(span, measurement, maskObjectUrl) {
-		// Vertical alignment is already baked into the shared mask geometry.
-		span.style.display = 'block';
-		span.style.width = `${measurement.width}px`;
-		span.style.height = `${measurement.height}px`;
-		span.style.padding = '0';
-		span.style.maskSize = `${measurement.width}px ${measurement.height}px`;
-		span.style.maskRepeat = 'no-repeat';
-		span.style.maskPosition = '0 0';
-		span.style.webkitMaskSize = `${measurement.width}px ${measurement.height}px`;
-		span.style.webkitMaskRepeat = 'no-repeat';
-		span.style.webkitMaskPosition = '0 0';
-
-		if (maskObjectUrl) {
-			span.style.maskImage = `url(${maskObjectUrl})`;
-			span.style.webkitMaskImage = `url(${maskObjectUrl})`;
-			span.style.visibility = '';
-		} else {
-			span.style.visibility = 'hidden';
-		}
-	}
-
-	applySpanOffset(span, offsetX = 0, offsetY = 0) {
-		const x = offsetX || 0;
-		const y = offsetY || 0;
-		span.style.transform = (x || y)
-			? `translate(${x}px, ${y}px)`
-			: 'none';
-	}
-
-	applyPaintSource(span, source, layer, maskCanvas = null, localOffsetX = 0, localOffsetY = 0) {
-		if (!source) {
-			span.style.backgroundImage = 'none';
-			span.style.backgroundColor = 'transparent';
-			span.style.backgroundSize = '';
-			span.style.backgroundPosition = '';
-			span.style.opacity = '1';
-			span.classList.remove('pixelated');
-			return;
-		}
-
-		if (source.mode === 'solid' || source.mode === 'gradient') {
-			span.style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
-			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
-			span.style.backgroundSize = '';
-			span.style.backgroundPosition = '';
-			span.style.opacity = String(source.opacity ?? 1);
-			span.style.filter = '';
-			span.classList.remove('pixelated');
-			return;
-		}
-
-		const glitter = this.editor.glitterManager.getItemById(source.glitterId);
-		if (!glitter) {
-			this.applyPaintSource(span, { mode: 'solid', color: '#000000', opacity: 1 }, layer);
-			return;
-		}
-
-		span.style.backgroundImage = `url(${glitter.url})`;
-		span.style.backgroundColor = 'transparent';
-		span.style.opacity = String(source.opacity ?? 1);
-		// Color adjust (WP4): CSS filter mirrors the export matrix pass per slot.
-		span.style.filter = buildCssColorFilter(source.colorAdjust);
-
-		const glitterScale = (source.scale ?? 100) / 100;
-		const baseSize = glitter.frames?.width || glitter.width || 50;
-		span.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
-		const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer, {
-			localOffsetX,
-			localOffsetY
-		});
-		span.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
-		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
+	getEffectPaintSource(layer, key) {
+		const entry = getLayerPaintSlots(layer).find((slot) => slot.key === key);
+		return entry ? resolvePaintSlotPreviewSource(this.editor, layer, entry) : null;
 	}
 
 	updateLiveTextContent(layerId, text) {

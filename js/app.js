@@ -182,7 +182,7 @@ class GlitterEditor {
 			if (this.originalImage) this.viewport.resetZoom({ animate: true });
 		});
 		this.previewContainer?.addEventListener('dblclick', (event) => {
-			if (this.currentTool !== ToolType.SELECT || !event.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) return;
+			if (this.currentTool !== ToolType.SELECT || !event.target.closest(getTransformableLayerElementSelector())) return;
 			const layer = this.layerManager.getActiveLayer();
 			if (layer?.type !== LayerType.TEXT_GLITTER) return;
 			this.textGlitterManager?.focusTextInput?.(true);
@@ -2045,7 +2045,7 @@ class GlitterEditor {
 					// Continue to handle this event
 				}
 				// CRITICAL FIX: Allow mousedown on transformable overlays to pass through
-				else if (this.currentTool === ToolType.SELECT && e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) {
+				else if (this.currentTool === ToolType.SELECT && e.target.closest(getTransformableLayerElementSelector())) {
 					dbg('✅ SELECT tool: Allowing transformable overlay mousedown to pass through');
 					// Don't return - let it fall through, but don't process it here
 					// The sticker's own mousedown handler will handle it
@@ -2058,7 +2058,7 @@ class GlitterEditor {
 			}
 		}
 
-		const hitTransformableOverlay = e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR);
+		const hitTransformableOverlay = e.target.closest(getTransformableLayerElementSelector());
 
 		// Check if click is within the canvas area using viewport coordinates
 		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
@@ -2556,7 +2556,7 @@ class GlitterEditor {
 	}
 
 	_layerIntersectsExportCanvas(layer) {
-		if (![LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(layer?.type)) return true;
+		if (!isTransformableLayerType(layer?.type)) return true;
 		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
 		if (GlitterAnimation.includesOffCanvas(layer.animation)) return true;
 
@@ -2570,11 +2570,10 @@ class GlitterEditor {
 			let maxY = metrics.maxY;
 
 			// Text and shape handle frames already include their border and shadow.
-			// Sticker handles describe the sticker itself, so conservatively add the
-			// padded shadow canvas used by GifExporter before testing intersection.
-			if (layer.type === LayerType.STICKER && layer.stickerData?.shadow) {
-				const shadow = layer.stickerData.shadow;
-				const padding = Math.ceil(Math.max(Math.abs(shadow.offsetX || 0), Math.abs(shadow.offsetY || 0))) + 2;
+			// Slots that paint outside the frame (a sticker shadow) declare the
+			// padding, added conservatively before testing intersection.
+			const padding = getLayerSlotFramePadding(layer);
+			if (padding > 0) {
 				const localX = padding * Math.abs(metrics.scaleX);
 				const localY = padding * Math.abs(metrics.scaleY);
 				const worldX = Math.abs(metrics.cos) * localX + Math.abs(metrics.sin) * localY;
@@ -2670,9 +2669,7 @@ class GlitterEditor {
 				isCancelled: () => this.exportCancelled,
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => this.maskCompositor.getMaskData(layer),
-				renderTextMask: (layer) => this.textGlitterManager.renderTextMask(layer),
-			renderTextBackgroundMask: (layer) => this.textGlitterManager.renderTextBackgroundMask(layer),
-				renderShapeMask: (layer) => this.shapeGlitterManager.buildMaskEntry(layer),
+				renderSlotMasks: (layer) => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
 				ensureTextFont: (fontId) => this.textGlitterManager.ensureFontLoaded(fontId)
 			}
 		};

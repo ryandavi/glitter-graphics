@@ -81,14 +81,25 @@ async function main() {
 				}
 			};
 
-			const textFillMask = document.createElement('canvas');
-			textFillMask.width = 48;
-			textFillMask.height = 40;
-			textFillMask._textureOrigin = { x: 0, y: 0 };
-			const textContext = textFillMask.getContext('2d');
-			textContext.fillStyle = '#ffffff';
-			textContext.fillRect(9, 7, 25, 21);
-			textContext.clearRect(18, 14, 7, 6);
+			// Preview spans and the export composite both read buildSlotStack, so
+			// they must agree on order and on every resolved paint source; a front
+			// border must land after the fill and a behind border before it.
+			const assertStackParity = (manager, layer, drawOrder, label) => {
+				const preview = manager.getSlotStack(layer);
+				const exported = buildSlotStack(layer, (entry) => editor.exporter._getSlotSource(layer, entry));
+				const keys = (stack) => stack.map((item) => item.key).join(',');
+				if (keys(preview) !== keys(exported)) throw new Error(`${label}: stack order diverged (${keys(preview)} vs ${keys(exported)})`);
+				preview.forEach((item, index) => {
+					if (JSON.stringify(item.source) !== JSON.stringify(exported[index].source)) {
+						throw new Error(`${label}: ${item.key} source diverged`);
+					}
+				});
+				const order = keys(preview).split(',');
+				const borderAfterFill = order.indexOf('border') > order.indexOf('fill');
+				if (order.includes('fill') && borderAfterFill !== (drawOrder === 'front')) {
+					throw new Error(`${label}: border drawn on the wrong side of the fill`);
+				}
+			};
 
 			let textCases = 0;
 			let shapeCases = 0;
@@ -107,26 +118,10 @@ async function main() {
 							};
 							const textLayer = {
 								id: `text-${textCases}`,
+								type: LayerType.TEXT_GLITTER,
 								textData: { fill: { scale: 100, opacity: 100, colorAdjust: { hue: 0, saturation: 100, brightness: 100 }, ...makeFill(fillMode), glitterId }, border }
 							};
-							const measurement = {
-								key: `text-mask-${textCases}`,
-								canvas: textFillMask,
-								_borderMaskCache: null
-							};
-							const previewTextMask = editor.textGlitterManager
-								.getBorderMaskCanvas(textLayer, measurement, border).canvas;
-							const exportTextMask = editor.exporter._createPlacedBorderMaskCanvas(textFillMask, border);
-							assertPixels(previewTextMask, exportTextMask, `text ${placement}/${edgeStyle}/${drawOrder}/${fillMode}`);
-							if (editor.textGlitterManager.getBorderDrawOrder(border) !== editor.exporter._getBorderDrawOrder(border)) {
-								throw new Error('Text border draw order diverged');
-							}
-							if (
-								JSON.stringify(editor.textGlitterManager.getEffectPaintSource(textLayer, 'fill'))
-								!== JSON.stringify(editor.exporter._getTextEffectSource(textLayer, 'fill'))
-							) {
-								throw new Error(`Text fill source diverged for ${fillMode}`);
-							}
+							assertStackParity(editor.textGlitterManager, textLayer, drawOrder, `text ${placement}/${edgeStyle}/${drawOrder}/${fillMode}`);
 							textCases += 1;
 
 							const shapeLayer = editor.shapeGlitterManager.createLayer({
@@ -140,17 +135,9 @@ async function main() {
 							shapeLayer.shapeData.border = border;
 							const shapeMeasurement = editor.shapeGlitterManager.getMeasurementEntry(shapeLayer);
 							const previewShapeMask = editor.shapeGlitterManager.getBorderMaskCanvas(shapeMeasurement, border);
-							const exportShapeMask = editor.shapeGlitterManager.buildMaskEntry(shapeLayer).border;
+							const exportShapeMask = editor.shapeGlitterManager.renderSlotMasks(shapeLayer).border;
 							assertPixels(previewShapeMask, exportShapeMask, `shape ${placement}/${edgeStyle}/${drawOrder}/${fillMode}`);
-							if (editor.shapeGlitterManager.getBorderDrawOrder(border) !== editor.exporter._getBorderDrawOrder(border)) {
-								throw new Error('Shape border draw order diverged');
-							}
-							if (
-								JSON.stringify(editor.shapeGlitterManager.getEffectPaintSource(shapeLayer, 'fill'))
-								!== JSON.stringify(editor.exporter._getShapeEffectSource(shapeLayer, 'fill'))
-							) {
-								throw new Error(`Shape fill source diverged for ${fillMode}`);
-							}
+							assertStackParity(editor.shapeGlitterManager, shapeLayer, drawOrder, `shape ${placement}/${edgeStyle}/${drawOrder}/${fillMode}`);
 							shapeCases += 1;
 						}
 					}

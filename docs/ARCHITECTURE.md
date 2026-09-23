@@ -11,7 +11,7 @@ A map of how the Glitter Graphics editor fits together. Referenced from `AGENTS.
 
 ## Boot sequence
 
-1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core`, `js/effects`, `js/paint`, `js/transforms` and `js/ui`, followed by the `js/editor` method bags, domain classes in `js/layers`, `js/assets`, `js/export` and `js/systems`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
+1. `index.html` loads scripts in dependency order. Roughly: vendor libraries, then `js/core/config.js`, `js/paint/paint-slots.js` and the layer-type definitions in `js/layers/types/` (each calls `registerLayerType`), then the rest of `js/core`, `js/effects`, `js/paint`, `js/transforms` and `js/ui`, followed by the `js/editor` method bags, domain classes in `js/layers`, `js/assets`, `js/export` and `js/systems`, and finally `js/app.js`. **Order matters:** a script can only use globals defined by scripts above it at load time. Put a new script tag after everything it depends on at the top level. Large optional payloads (`mp4-muxer`, the Preservation timeline data and `HtmlSceneExporter`) load on first use through `loadScriptOnce`. `tools/bump-cache.js` adds content hashes to local tags, lazy script URLs, worker URLs and worker `importScripts` dependencies.
 2. `js/app.js` mixes the `js/editor/*` method bags (`EDITOR_SETTINGS_METHODS`, `EDITOR_PANEL_METHODS`, …) into `GlitterEditor.prototype` with `Object.assign`.
 3. An async IIFE at the bottom of `app.js` loads the shape and brush manifests, then constructs `GlitterEditor`.
 4. The constructor renders the sidebar from `PANEL_SCHEMAS` (`renderPanelSections`, then `renderTransformPanels`) and the context toolbars from `CONFIG.ui.contextToolbars`, then constructs the managers and subsystems. Managers may cache panel elements in their constructors, which is why schemas render first.
@@ -47,7 +47,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Kind | Where | Rule |
 |---|---|---|
 | Static defaults and tunables | `CONFIG` in `js/core/config.js` | Recursively frozen. Never assigned at runtime. Any user-tunable or twice-used value goes here; inline `??` fallbacks that restate a CONFIG default are forbidden. |
-| Layer-type definitions | `LayerType`, `LAYER_UI_CONFIG` in `js/core/config.js` | See `docs/LAYER-TYPE-CONTRACT.md`. |
+| Layer-type definitions | `LayerType` and `registerLayerType` in `js/core/config.js`; one definition per type in `js/layers/types/<type>.js`, collected into `LAYER_UI_CONFIG` | See `docs/LAYER-TYPE-CONTRACT.md`. |
 | Sidebar structure | `PANEL_SCHEMAS` in `js/core/config.js` | Rendered by `js/ui/panel-renderer.js`. |
 | Tools | `ToolType`, `TOOL_GROUPS` in `js/core/config.js` | |
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
@@ -73,7 +73,12 @@ Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` 
 | `shape` | `shapeData`: `shapeId`, size, `fill`, `border`, `shadow` |
 | `filter` | `filterData` |
 
-**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. Every slot is one self-contained object; `getLayerFillSlot(layer)` (`js/paint/slot-effects.js`) returns a layer's fill slot whatever its type. `resolveEffectPaintSource` (`js/paint/effect-source.js`) turns slot data into a render source for both preview and export.
+**Paint slots.** `fill`, `border`, `shadow` and the text background's `fill` are "paint slots": a source mode (`none`, `solid`, `gradient`, `glitter`, `image`) plus color, gradient, glitter id, scale, opacity, color adjust and texture offset. Every slot is one self-contained object. Each layer type declares its slots once, back to front, in its `paintSlots` list (key, role, path on the layer, draft path, default glitter, pixel fields that scale with the document). `js/paint/paint-slots.js` owns the concept:
+
+- `getLayerPaintSlots(layer)` lists a layer's slots with their data and whether each is present and renders. `getLayerFillSlot(layer)` returns the fill slot whatever the type. Preloading, document scaling, the Effects badge, export culling and project-load glitter repair all iterate this list instead of naming slots per type.
+- `resolvePaintSlotSource` turns slot data into a render source (through `resolveEffectPaintSource` in `js/paint/effect-source.js`). Preview uses `resolvePaintSlotPreviewSource`, which adds only a live check that the glitter is in the library.
+- `buildSlotStack(layer, resolveSource)` returns the slots to draw in paint order. It holds the one ordering rule: a border drawn in front moves after the fill. The preview span stack and the export compositor both read it.
+- `applyPaintSourceToElement` is the one DOM painter for a resolved source: text and shape spans, the sticker shadow, the glitter fill and the canvas background.
 
 **Canonical state.** A layer is normalized once, where it enters the document: its manager's `createLayer`, `LayerManager.deserializeLayer` (undo/redo, clipboard, project load, cloning) through `LAYER_UI_CONFIG[type].serialization.normalize`. Getters and render paths read the canonical shape and never write defaults. Older data is brought to the current shape by `ProjectSerializer.migrateLayerState`, which runs in the versioned project migrations and on every deserialize (clipboard payloads can come from an older build).
 
@@ -87,7 +92,7 @@ Preview is DOM, export is canvas. Every visual feature exists twice, and the two
 2. `updatePreview()` reuses the processed base-canvas pixels when the background signature is unchanged, then iterates the registered layer managers and calls each one's `renderContent(visibleLayers)`.
 3. Managers **reconcile** their DOM under `.canvas-elements-container`; they never clear and rebuild it.
    - Glitter fills: an animated GIF `background-image` plus a CSS `mask-image` blob.
-   - Text and shapes: a stack of masked spans, one per paint slot (background, shadow, border, fill).
+   - Text and shapes: a stack of masked spans, one per paint slot, reconciled by `reconcileSlotStack` from `buildSlotStack`. Each manager's `getSlotMask` supplies the mask for a slot.
    - Stickers: an `img`, plus an optional shadow span.
 4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`. Above 100% it applies nearest-neighbor display to the whole stack and commits a compositor repaint after continuous input settles. At 600% and above the optional pixel grid appears. `PixelGridOverlay` draws it on an unscaled canvas beside the wrapper, placing each one-device-pixel line from the viewport transform and `devicePixelRatio`; it hides only during animated view transitions. `will-change` is active only during active viewport movement.
 5. Layer animation is sampled by `GlitterAnimation.sampleAt` and applied by `AnimationTicker` to a `.layer-anim-wrapper`. Export samples the same function, so preview and export share one timeline.
@@ -95,7 +100,7 @@ Preview is DOM, export is canvas. Every visual feature exists twice, and the two
 ## Export path
 
 1. `editor.exportCurrentTarget()` resolves the active `EXPORT_TARGETS` entry, snapshots the settings and dispatches through that target's `exporter` key.
-2. `GifExporter` prepares masks, fonts and sources, then builds one export plan per layer (`_buildLayerExportPlan`).
+2. `GifExporter` prepares masks, fonts and sources, then builds one export plan per layer (`_buildLayerExportPlan`). Text and shape layers share one plan: their manager's `renderSlotMasks(layer)` builds every slot mask with the same functions the preview uses, and `_renderSlotStackToCanvas` composites `buildSlotStack` in order. Every slot, the glitter fill and the canvas background paint through `_paintSourceInto`, and authored sources come from the declared slots (`_getSlotAuthoredSources`).
 3. `ExportTimeline` and `AuthoredFrameResolver` decide which frames to render and their timing.
 4. `composeFrameAt` renders a frame to canvas. **All formats use it:** `GifExporter` encodes with `GifEncodingPipeline` and `GifPalette`; `Mp4Exporter` encodes with WebCodecs and the vendored `mp4-muxer`; `StillImageExporter` encodes PNG, JPEG or a still GIF.
 5. `ExportResultPresenter` shows the result.

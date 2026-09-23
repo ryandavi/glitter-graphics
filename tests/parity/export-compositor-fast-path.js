@@ -273,8 +273,8 @@ function assert(condition, message) {
 		};
 		try {
 			for (let index = 0; index < 3; index++) {
-				textPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), textMaskCanvases: new Map([[textLayer.id, { fill: paintMask }]]) });
-				shapePlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), shapeMaskCanvases: new Map([[shapeLayer.id, { fill: paintMask, renderWidth: 8, renderHeight: 8 }]]) });
+				textPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), slotMaskCanvases: new Map([[textLayer.id, { fill: paintMask, renderWidth: textLayer.textData.width, renderHeight: textLayer.textData.height }]]) });
+				shapePlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map(), slotMaskCanvases: new Map([[shapeLayer.id, { fill: paintMask, renderWidth: 8, renderHeight: 8 }]]) });
 				stickerPlan.render({ ctx: renderCtx, frameIndex: index, sourceSelectionMap: new Map(), resolvedFramesBySource: new Map() });
 				exporter._renderPatternSourceInto(exporter.patternSourceCanvas, stickerLayer.stickerData.staticImageData, COLOR_ADJUST_IDENTITY);
 				exporter._renderWatermarkToCanvas(watermark, watermarkCanvas, renderCtx, 32, 32, index);
@@ -349,8 +349,7 @@ function assert(condition, message) {
 		const callbacks = {
 			onStatus: () => {}, onProgress: () => {}, onComplete: () => {}, parseGif: (url) => window.editor.glitterManager.parseGifFromUrl(url),
 			createMask: (layer) => window.editor.maskCompositor.getMaskData(layer),
-			renderTextMask: (layer) => window.editor.textGlitterManager.renderTextMask(layer),
-			renderShapeMask: (layer) => window.editor.shapeGlitterManager.buildMaskEntry(layer),
+			renderSlotMasks: (layer) => getLayerManagerForType(window.editor, layer.type).renderSlotMasks(layer),
 			ensureTextFont: (fontId) => window.editor.textGlitterManager.ensureFontLoaded(fontId)
 		};
 		let planBuilds = 0;
