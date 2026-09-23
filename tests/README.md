@@ -16,7 +16,7 @@ Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for 
 | `export` | export parity, formats, transparency, timeline, palette, MP4, shape borders, mask edges. CI runs it. |
 | `unit` | pure-logic suites that need no page |
 | `effects` | pixel effects, Auto Glitter analysis, shimmer, combinatorial effect parity |
-| `panels` | panel parity, shortcuts and guide coverage, hints, notification policy, settings modals |
+| `panels` | panel parity, shortcut structure and generated-guide freshness, icon references, hints, notification policy, settings modals |
 | `touch`, `shape`, `mask`, `layers`, `document`, `assets` | the named areas |
 | `admin` | PHP contract tests for the admin (run with `php`) |
 

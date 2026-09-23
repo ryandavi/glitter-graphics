@@ -791,16 +791,33 @@ class LayerManager {
 			container.appendChild(insertionLine);
 		}
 
-		container.innerHTML = '';
-		container.appendChild(insertionLine);
+		if (container.firstChild !== insertionLine) container.prepend(insertionLine);
 
-		// Render layers in reverse order (visual stacking). Ephemeral Auto
-		// Glitter session layers stay out of the list until committed.
-		[...this.layers].reverse().forEach((layer, index) => {
+		// Reconcile rows by layer id instead of rebuilding the list: a row whose
+		// markup is unchanged is kept, so animated swatches keep playing and
+		// keyboard focus stays put. Rows are kept only for the same layer object,
+		// because their handlers close over it (undo and project load replace
+		// layer objects). Layers render in reverse order (visual stacking);
+		// ephemeral Auto Glitter session layers stay out until committed.
+		const rows = new Map();
+		container.querySelectorAll(':scope > .layer-item').forEach((row) => rows.set(row.dataset.layerId, row));
+		let previous = insertionLine;
+		[...this.layers].reverse().forEach((layer) => {
 			if (layer.isPreview) return;
-			const layerEl = this.createLayerElement(layer);
-			container.appendChild(layerEl);
+			const fresh = this.createLayerElement(layer);
+			const current = rows.get(layer.id);
+			rows.delete(layer.id);
+			let row = fresh;
+			if (current?._layer === layer && current.outerHTML === fresh.outerHTML) {
+				row = current;
+			} else {
+				current?.remove();
+			}
+			row._layer = layer;
+			if (previous.nextSibling !== row) previous.after(row);
+			previous = row;
 		});
+		rows.forEach((row) => row.remove());
 
 		// Update layer count displays
 		this.updateLayerCount();

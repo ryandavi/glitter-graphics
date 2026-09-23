@@ -14,6 +14,8 @@ const SUITES = [
 	{ file: 'parity/export-formats-verify.js', tags: ['export'] },
 	{ file: 'unit/viewport-navigation-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/gesture-manager-unit.js', tags: ['unit', 'quick', 'touch'] },
+	{ file: 'unit/transform-gestures-unit.js', tags: ['unit', 'quick', 'touch'] },
+	{ file: 'unit/icon-references.js', tags: ['unit', 'quick', 'panels'] },
 	{ file: 'unit/pixel-effects.js', tags: ['unit', 'effects'] },
 	{ file: 'unit/auto-glitter-analysis.js', tags: ['unit', 'effects'] },
 	{ file: 'unit/shimmer-preview-worker.js', tags: ['unit', 'effects'] },

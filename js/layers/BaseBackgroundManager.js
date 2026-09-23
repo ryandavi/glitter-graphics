@@ -5,7 +5,11 @@ class BaseBackgroundManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.pickerSession = null;
-		this.pixelEffectCache = new Map();
+		this.pixelEffectCache = new ByteBudgetCache({
+			id: 'pixel-effect-cache',
+			label: 'Pixel effect cache',
+			measure: (imageData) => imageData?.data?.byteLength || 0
+		});
 		this.pixelEffectRequest = 0;
 		this.pixelEffectWorker = null;
 		this.pixelEffectPendingKey = null;
@@ -388,7 +392,6 @@ class BaseBackgroundManager {
 		}, shimmerFrame);
 		const result = new ImageData(data, width, height);
 		this.pixelEffectCache.set(key, result);
-		while (this.pixelEffectCache.size > 16) this.pixelEffectCache.delete(this.pixelEffectCache.keys().next().value);
 		return result;
 	}
 

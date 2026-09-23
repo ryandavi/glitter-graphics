@@ -1,0 +1,32 @@
+{
+	"_about": "Which sprite icon (index.html #icon-KEY) each recurring action uses. One action, one icon, everywhere: toolbar, context bar, sidebar, modal, menu, empty state and hint. Tool icons live on TOOLS entries (js/core/tools.js). tests/unit/icon-references.js checks every key here and every icon referenced in code or markup against the sprite.",
+	"actions": {
+		"Delete layer or thing": "trash",
+		"Clear canvas or all": "broom",
+		"Close, dismiss, clear search": "x-mark",
+		"Remove from a set (for example a gradient stop)": "x-mark",
+		"Add item": "plus",
+		"Import or upload": "upload",
+		"Reveal source, go to layer": "locate",
+		"Reset one control (not history undo)": "reset",
+		"Undo history": "undo",
+		"Redo history": "redo",
+		"Center horizontally (canvas or layer)": "align-center-x",
+		"Center vertically (canvas or layer)": "align-center-y",
+		"All settings surfaces": "gear",
+		"Help or guide": "question-circle",
+		"Info or about": "circle-info",
+		"New canvas": "new-canvas",
+		"Open project": "open-project",
+		"Save project": "save",
+		"Open image": "open-image",
+		"Export (media out)": "export",
+		"Snapping": "magnet",
+		"Bounds toggle": "bounding-box",
+		"Fit view": "fit-screen",
+		"Fill view": "maximize",
+		"Auto Glitter": "magic-wand",
+		"Product, start creating": "glitter",
+		"Collapse or disclosure": "chevron-down"
+	}
+}

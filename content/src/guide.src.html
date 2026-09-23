@@ -1,4 +1,3 @@
-<!-- GENERATED from content/src/guide.src.html by tools/build-modals.js. Do not edit. -->
 <div class="modal-hero-image">
     <img src="images/modal/tutorials_flames.gif" data-pixel-scale="3" class="center"
         alt="Tutorials">
@@ -38,7 +37,7 @@
             <ol>
                 <li><a href="#create-glitter">Create a Glitter Layer</a></li>
                 <li><a href="#select-colors">Select Colors</a></li>
-                <li><a href="#glitter-settings">Adjust Fill Properties</a></li>
+                <li><a href="#glitter-settings">Adjust {panel:glitterSettingsSection}</a></li>
                 <li><a href="#mask-brush">Mask Brush</a></li>
             </ol>
         </li>
@@ -171,7 +170,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Edit the canvas</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>Canvas Properties</strong>.</p>
+                    <p><strong>Edit the canvas</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>{panel:baseLayerSettingsSection}</strong>.</p>
                     <ul>
                         <li><strong>Background</strong> – Choose Image, Transparent, Glitter, Solid, or Gradient. <strong>Replace</strong> is the explicit way to change the base image without disturbing other layers.</li>
 						<li><strong>Image</strong> – Enter a linked pixel size or percentage to resize the canvas and every editable layer together. Choose whether glitter textures and visual effects scale with the design.</li>
@@ -212,12 +211,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-hand-pointer"></use>
+                            {tool-icon:select}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Select Tool (<kbd class="guide-kbd">V</kbd>)</strong> – Pick layers and move stickers, text, and shapes. Turn off <strong>Auto-Select</strong> in the Select options when canvas drags should keep moving the layer already selected in the Layers panel. Nudge the selected layer with the arrow keys (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps).</p>
+                    <p><strong>{tool:select}</strong> – Pick layers and move stickers, text, and shapes. Turn off <strong>Auto-Select</strong> in the Select options when canvas drags should keep moving the layer already selected in the Layers panel. Nudge the selected layer with the arrow keys (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps).</p>
 
                     <p>When a sticker, text, or shape layer is selected, alignment buttons appear:</p>
                     <ul>
@@ -232,12 +231,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-hand"></use>
+                            {tool-icon:hand}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Hand Tool (<kbd class="guide-kbd">H</kbd>)</strong> – Click and drag to pan around the canvas. Hold <kbd class="guide-kbd">Space</kbd> to use the Hand tool temporarily, then release it to return to the previous tool.</p>
+                    <p><strong>{tool:hand}</strong> – Click and drag to pan around the canvas. Hold <kbd class="guide-kbd">Space</kbd> to use the Hand tool temporarily, then release it to return to the previous tool.</p>
                     <ul>
                         <li><strong>Touch</strong> – Use one or two fingers to pan from any tool; the separate Hand tool is hidden because it is redundant.</li>
                     </ul>
@@ -255,12 +254,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-paint-bucket"></use>
+                            {tool-icon:colorPicker}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Color Fill (<kbd class="guide-kbd">I</kbd>)</strong> – With a glitter layer or base image selected, click on the canvas to create a color selection based on the base image.</p>
+                    <p><strong>{tool:colorPicker}</strong> – With a glitter layer or base image selected, click on the canvas to create a color selection based on the base image.</p>
                 </div>
             </div>
 
@@ -268,12 +267,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-brush"></use>
+                            {tool-icon:brush}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Mask Brush (<kbd class="guide-kbd">B</kbd>)</strong> – Paint or erase the mask of a Glitter Fill layer directly on the canvas. Painting while another layer type is selected creates a separate Glitter Fill layer.</p>
+                    <p><strong>{tool:brush}</strong> – Paint or erase the mask of a Glitter Fill layer directly on the canvas. Painting while another layer type is selected creates a separate Glitter Fill layer.</p>
                     <ul>
                         <li>See <a href="#mask-brush">Mask Brush</a> under Glitter for painting modes and brush settings.</li>
                     </ul>
@@ -284,12 +283,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-text"></use>
+                            {tool-icon:text}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Text Tool (<kbd class="guide-kbd">T</kbd>)</strong> – Click the canvas to place Point text, or drag to define a Box that wraps text inside a resizable frame.</p>
+                    <p><strong>{tool:text}</strong> – Click the canvas to place Point text, or drag to define a Box that wraps text inside a resizable frame.</p>
                     <ul>
                         <li>See <a href="#text">Text</a> for typography, layout, and fill/border/shadow options.</li>
                     </ul>
@@ -300,12 +299,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-square"></use>
+                            {tool-icon:shape}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Shape Tool (<kbd class="guide-kbd">U</kbd>)</strong> – Drag on the canvas to draw a shape at that size (<kbd class="guide-kbd">Shift</kbd> = square), or click for a default size.</p>
+                    <p><strong>{tool:shape}</strong> – Drag on the canvas to draw a shape at that size (<kbd class="guide-kbd">Shift</kbd> = square), or click for a default size.</p>
                     <ul>
                         <li>See <a href="#shapes">Shapes</a> for shape choices and fill/border/shadow options.</li>
                     </ul>
@@ -317,12 +316,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            <use href="#icon-magnifying-glass"></use>
+                            {tool-icon:zoom}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-					<p><strong>Zoom Tool (<kbd class="guide-kbd">Z</kbd>)</strong> – Click to zoom in, <kbd class="guide-kbd">Alt</kbd>-click to zoom out, or drag right/up and left/down for smooth scrubby zoom. Double-click the Zoom tool to return to 100<span class="setting-unit">%</span>.</p>
+					<p><strong>{tool:zoom}</strong> – Click to zoom in, <kbd class="guide-kbd">Alt</kbd>-click to zoom out, or drag right/up and left/down for smooth scrubby zoom. Double-click the Zoom tool to return to 100<span class="setting-unit">%</span>.</p>
 					<ul>
 						<li><strong>Touch</strong> – Two-finger pinch to zoom.</li>
 						<li><strong>Trackpad</strong> – Pinch to zoom smoothly around the gesture position; swipe with two fingers to pan in any direction.</li>
@@ -1014,9 +1013,9 @@
 
 
         <div class="guide-subsection">
-            <h4 id="glitter-settings">Adjust Fill Properties</h4>
-            <p>In the <strong>Fill Properties</strong> panel, customize your glitter layer:</p>
-			<p>Use <strong>Change</strong> in the Fill asset card to open the glitter gallery for the selected layer. The picker strip identifies the destination; choose glitter, then press <strong>Done</strong> to return to Fill Properties.</p>
+            <h4 id="glitter-settings">Adjust {panel:glitterSettingsSection}</h4>
+            <p>In the <strong>{panel:glitterSettingsSection}</strong> panel, customize your glitter layer:</p>
+			<p>Use <strong>Change</strong> in the Fill asset card to open the glitter gallery for the selected layer. The picker strip identifies the destination; choose glitter, then press <strong>Done</strong> to return to {panel:glitterSettingsSection}.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1238,7 +1237,7 @@
                 </div>
             </div>
 
-            <h4>Sticker Properties</h4>
+            <h4>{panel:stickerSettingsSection}</h4>
             <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
@@ -1379,7 +1378,7 @@
 
         <div class="guide-subsection">
             <h4 id="text-typography">Typography &amp; Layout</h4>
-            <p>In the <strong>Text Properties</strong> panel, edit the copy, choose a non-destructive letter case, and control how it is laid out. Double-click or double-tap text to open and select its copy.</p>
+            <p>In the <strong>{panel:textSettingsSection}</strong> panel, edit the copy, choose a non-destructive letter case, and control how it is laid out. Double-click or double-tap text to open and select its copy.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -1586,7 +1585,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Add shapes from the <strong>Shapes</strong> area of the Design gallery. Scroll through the category headings — there is no extra category screen to open. If a shape layer is already selected, choosing a gallery shape replaces that layer's shape; otherwise it creates a new shape layer. Shape Properties controls the selected shape's fill, transform, border, and shadow. Resize, rotate, and move it with the transform handles — shapes re-render crisply at their new size.</p>
+                    <p>Add shapes from the <strong>Shapes</strong> area of the Design gallery. Scroll through the category headings — there is no extra category screen to open. If a shape layer is already selected, choosing a gallery shape replaces that layer's shape; otherwise it creates a new shape layer. {panel:shapeSettingsSection} controls the selected shape's fill, transform, border, and shadow. Resize, rotate, and move it with the transform handles — shapes re-render crisply at their new size.</p>
                 </div>
             </div>
         </div>
@@ -1647,7 +1646,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click <strong>+</strong> in the Layers panel and choose <strong>Filter</strong>. It starts as a Basic adjustment — switch types any time from Filter Properties.</p>
+                    <p>Click <strong>+</strong> in the Layers panel and choose <strong>Filter</strong>. It starts as a Basic adjustment — switch types any time from {panel:filterSettingsSection}.</p>
                 </div>
             </div>
 
@@ -1680,7 +1679,7 @@
 
         <div class="guide-subsection">
             <h4 id="filter-types">Filter Types</h4>
-            <p>Pick a type from the picker at the top of Filter Properties; each one swaps in its own controls. <strong>Opacity</strong> fades the whole filter layer the same way it does on every other layer type.</p>
+            <p>Pick a type from the picker at the top of {panel:filterSettingsSection}; each one swaps in its own controls. <strong>Opacity</strong> fades the whole filter layer the same way it does on every other layer type.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -2191,187 +2190,7 @@
             <h4 id="keyboard-shortcuts">Keyboard Shortcuts &amp; Gestures</h4>
             <p>Every shortcut and gesture, generated from the editor's command list. Open <strong>Commands &amp; Shortcuts</strong> from the toolbar to search them.</p>
 
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Essentials</strong></p>
-                    <ul>
-                        <li><strong>Copy Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">C</kbd></span></li>
-                        <li><strong>Paste Image or Layer(s)</strong> – Paste <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">V</kbd></span></li>
-                        <li><strong>Save Project</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">S</kbd></span></li>
-                        <li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Z</kbd></span></li>
-                        <li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Y</kbd></span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Tools</strong></p>
-                    <ul>
-                        <li><strong>Select Tool</strong> – <kbd class="guide-kbd">V</kbd></li>
-                        <li><strong>Text Tool</strong> – <kbd class="guide-kbd">T</kbd></li>
-                        <li><strong>Shape Tool</strong> – <kbd class="guide-kbd">U</kbd></li>
-                        <li><strong>Color Fill Tool</strong> – <kbd class="guide-kbd">I</kbd></li>
-                        <li><strong>Mask Brush Tool</strong> – <kbd class="guide-kbd">B</kbd></li>
-                        <li><strong>Mask Eraser Tool</strong> – <kbd class="guide-kbd">E</kbd></li>
-                        <li><strong>Hand Tool</strong> – <kbd class="guide-kbd">H</kbd></li>
-                        <li><strong>Zoom Tool</strong> – <kbd class="guide-kbd">Z</kbd></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Canvas &amp; View</strong></p>
-                    <ul>
-                        <li><strong>Zoom In</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">+</kbd></span></li>
-                        <li><strong>Zoom Out</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">-</kbd></span></li>
-                        <li><strong>Reset Zoom (100%)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">1</kbd></span></li>
-                        <li><strong>Fit Screen</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">0</kbd></span></li>
-                        <li><strong>Toggle Memory Overlay</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Alt</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">M</kbd></span></li>
-                        <li><strong>Zoom to Selection</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">2</kbd></span></li>
-                        <li><strong>Temporarily Use Hand Tool</strong> – Hold <kbd class="guide-kbd">Space</kbd></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Selection</strong></p>
-                    <ul>
-                        <li><strong>Select All Movable Layers</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">A</kbd></span></li>
-                        <li><strong>Cancel Active Transform / Clear Multi-Selection</strong> – <kbd class="guide-kbd">Escape</kbd></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Transform</strong></p>
-                    <ul>
-                        <li><strong>Duplicate Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">D</kbd></span></li>
-                        <li><strong>Delete Selected Layer(s)</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
-                        <li><strong>Nudge Selected Layer</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
-                        <li><strong>Nudge Selected Layer 10px</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Brush</strong></p>
-                    <ul>
-                        <li><strong>Swap Paint/Erase (Mask Brush)</strong> – <kbd class="guide-kbd">X</kbd></li>
-                        <li><strong>Decrease Brush Size</strong> – <kbd class="guide-kbd">[</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">[</kbd></span></li>
-                        <li><strong>Increase Brush Size</strong> – <kbd class="guide-kbd">]</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">]</kbd></span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-keyboard"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Gradient</strong></p>
-                    <ul>
-                        <li><strong>Move Focused Gradient Stop 1%</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
-                        <li><strong>Move Focused Gradient Stop 5%</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
-                        <li><strong>Delete Focused Gradient Stop</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-pointer"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Navigate</strong></p>
-                    <ul>
-                        <li><strong>Pan Canvas</strong> – Trackpad: two-finger swipe</li>
-                        <li><strong>Zoom Around Pointer</strong> – Trackpad: pinch</li>
-                        <li><strong>Pan Canvas</strong> – Touch: drag empty canvas</li>
-                        <li><strong>Pan Canvas from Any Tool</strong> – Mouse: middle-button drag</li>
-                        <li><strong>Smooth Zoom with Zoom Tool</strong> – Mouse: drag right/up or left/down</li>
-                        <li><strong>Fit Canvas to Workspace</strong> – Mouse: double-click hand tool</li>
-                        <li><strong>Reset Zoom to 100%</strong> – Mouse: double-click zoom tool</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-pointer"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Move &amp; Transform</strong></p>
-                    <ul>
-                        <li><strong>Move, Scale, and Rotate Selection</strong> – Touch: two-finger transform</li>
-                        <li><strong>Duplicate Layer(s) While Dragging</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag</li>
-                        <li><strong>Duplicate Gradient Stop While Dragging</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag gradient stop</li>
-                        <li><strong>Snap Gradient Stop to 5% Steps</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-drag gradient stop</li>
-                        <li><strong>Axis-lock Selected Layer Move</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-drag</li>
-                        <li><strong>Temporarily Disable Snapping</strong> – Hold Mouse: <kbd class="guide-kbd">Ctrl</kbd>-drag</li>
-                        <li><strong>Snap Rotation to 15deg</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-rotate</li>
-                        <li><strong>Resize Layer(s) from Center</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-resize</li>
-                    </ul>
-                </div>
-            </div>
+{shortcuts}
         </div>
 
     </div>

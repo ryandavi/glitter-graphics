@@ -40,7 +40,7 @@ class ExportResultPresenter {
 		let canShare = false;
 		try { canShare = Boolean(navigator.canShare?.({ files: [file] })); } catch (error) { canShare = false; }
 		const share = document.getElementById('exportPreviewShare'); share.disabled = !canShare;
-		const isIOS = CONFIG.debug.forceIOSExportPreview || /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+		const isIOS = CONFIG.debug.forceIOSExportPreview || isIOSDevice();
 		// Direct downloads of animated GIF/video on iOS Safari have historically
 		// dropped the animation, so those formats route through the Share sheet
 		// instead. Stills don't have that problem — they save normally, like desktop.

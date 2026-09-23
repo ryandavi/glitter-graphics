@@ -34,6 +34,28 @@ defineOptions('paletteStyle', [
 	{ value: 'natural', label: 'Natural' },
 	{ value: 'websafe', label: 'Web Safe' }
 ]);
+defineOptions('gifLook', [
+	{ value: 'clean', label: 'Clean · Automatic' },
+	{ value: 'classic', label: 'Classic Web' },
+	{ value: 'textured', label: 'Textured 64' },
+	{ value: 'crunchy', label: 'Crunchy Pixel' },
+	{ value: 'shimmer', label: 'Sparkle Noise' },
+	{ value: 'custom', label: 'Custom' }
+]);
+// Theme picker. Values must match CONFIG.ui.themes (the load-time allow-list).
+defineOptions('interfaceTheme', [
+	{ value: 'dark', label: 'Default Dark', group: 'Dark themes' },
+	{ value: 'llama', label: 'Llama', group: 'Dark themes' },
+	{ value: 'cyber-chrome', label: 'Cyber Chrome', group: 'Dark themes' },
+	{ value: 'light', label: 'Default Light', group: 'Light themes' },
+	{ value: 'bubblegum', label: 'Bubblegum', group: 'Light themes' },
+	{ value: 'bliss', label: 'Bliss', group: 'Light themes' },
+	{ value: 'dew', label: 'Dew', group: 'Light themes' },
+	{ value: 'aqua', label: 'Aqua', group: 'Light themes' },
+	{ value: 'p2p', label: 'P2P', group: 'Light themes' },
+	{ value: 'homepage', label: 'Homepage', group: 'Light themes' },
+	{ value: 'buddy-list', label: 'Buddy List', group: 'Light themes' }
+]);
 defineOptions('ditherTemporalMode', [
 	{ value: 'stable', label: 'Stable' },
 	{ value: 'animated', label: 'Animated shimmer' }

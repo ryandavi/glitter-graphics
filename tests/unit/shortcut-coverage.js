@@ -7,7 +7,6 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const source = fs.readFileSync(path.join(root, 'js/core/commands.js'), 'utf8');
-const guide = fs.readFileSync(path.join(root, 'modals/guide.html'), 'utf8').toLowerCase();
 const context = {};
 vm.createContext(context);
 vm.runInContext(`${source}\nglobalThis.__commands = COMMANDS; globalThis.__getShortcutGroups = getShortcutGroups;`, context);
@@ -15,8 +14,13 @@ vm.runInContext(`${source}\nglobalThis.__commands = COMMANDS; globalThis.__getSh
 Object.entries(context.__commands).forEach(([id, command]) => {
 	if (!command.keys?.length) return;
 	assert(command.label, `${id} has keys but no user-facing label`);
-	assert(guide.includes(command.label.toLowerCase()), `${id} (${command.label}) is missing from modals/guide.html`);
 });
+
+// The guide's shortcut list, tool headings and panel titles are generated from
+// COMMANDS, TOOLS and PANEL_SCHEMAS by tools/build-modals.js. Fail when the
+// committed guide is stale, so a new or renamed command is always documented.
+const guideBuild = require(path.join(root, 'tools/build-modals.js')).buildOne('guide', { check: true, stamp: false });
+assert(guideBuild.ok, 'modals/guide.html is out of date: run node tools/build-modals.js guide');
 
 [
 	'trackpadPan',
@@ -36,4 +40,4 @@ const gestureGroups = Array.from(context.__getShortcutGroups('gesture'), ({ titl
 assert.deepStrictEqual(keyboardGroups, ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Gradient']);
 assert.deepStrictEqual(gestureGroups, ['Navigate', 'Move & Transform']);
 
-process.stdout.write('PASS documented keyboard commands are covered by the guide\n');
+process.stdout.write('PASS shortcut structure; generated guide is current\n');

@@ -34,6 +34,8 @@ class HistoryManager {
 
 	saveState(label = null, { coalesceKey = null } = {}) {
 		const state = { ...this.createStateSnapshot(), label, coalesceKey };
+		// Serialized layers are the bytes a state holds on its own (UTF-16).
+		state.bytes = JSON.stringify(state.layers).length * 2;
 
 		this.history = this.history.slice(0, this.historyIndex + 1);
 		const current = this.history[this.historyIndex];
@@ -52,9 +54,47 @@ class HistoryManager {
 		}
 
 		this.history.push(state);
+		this.trimToByteBudget();
 		this.editor.paintMaskStore?.prunePaintHistory();
 		this.editor.shapeGlitterManager?.pruneImageFillAssets();
 		this.updateButtons();
+	}
+
+	// Bytes undo history holds: each state's serialized layers, plus base-image
+	// buffers from before a canvas resize or image change. Those are shared
+	// between states, so each counts once, and the current one belongs to the
+	// document, not history.
+	getHistoryBytes() {
+		const buffers = new Set([this.editor.originalImageData]);
+		return this.history.reduce((total, state) => {
+			let bytes = total + (state.bytes || 0);
+			const imageData = state.canvas?.imageData;
+			if (imageData && !buffers.has(imageData)) {
+				buffers.add(imageData);
+				bytes += (imageData.data?.byteLength || 0) + (state.canvas.alphaChannel?.byteLength || 0);
+			}
+			return bytes;
+		}, 0);
+	}
+
+	// Past the device's history budget, drop the oldest steps (keeping at least
+	// CONFIG.memory.minHistorySteps) and say so once per session.
+	trimToByteBudget() {
+		const budget = getMemoryBudget().historyBytes;
+		let trimmed = 0;
+		while (
+			this.history.length > CONFIG.memory.minHistorySteps
+			&& this.historyIndex > 0
+			&& this.getHistoryBytes() > budget
+		) {
+			this.history.shift();
+			this.historyIndex--;
+			trimmed++;
+		}
+		if (trimmed && !this.trimNoticeShown) {
+			this.trimNoticeShown = true;
+			this.editor.updateStatus('This project is large, so older undo steps were cleared.');
+		}
 	}
 
 	async restoreState(state) {

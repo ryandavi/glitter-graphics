@@ -28,6 +28,7 @@ const CONFIG = deepFreeze({
 		releases: PUBLISHED_RELEASES,
 		limits: {
 			maxLayers: 25,
+			// Most undo steps kept; CONFIG.memory can trim below this by bytes.
 			historyLimit: 30
 		},
 		startup: {
@@ -81,7 +82,6 @@ const CONFIG = deepFreeze({
 		limits: {
 			maxWidth: 1024,
 			maxHeight: 1024,
-			paintHistoryMaxMB: 128,
 			maxFileSizeMB: 10
 		},
 		defaults: {
@@ -777,8 +777,8 @@ const CONFIG = deepFreeze({
 			alphaThreshold: 128,
 			url: 'images/watermark/2.png',
 			options: [
-				{ label: 'Made with Rybaby', url: 'images/watermark/1.gif' },
-				{ label: 'Rybaby Signature', url: 'images/watermark/2.png' }
+				{ label: 'Rybaby Signature', url: 'images/watermark/2.png' },
+				{ label: 'Made with Rybaby', url: 'images/watermark/1.gif' }
 			],
 			position: 'bottom-right',
 			paddingX: 5,
@@ -788,49 +788,25 @@ const CONFIG = deepFreeze({
 		}
 	},
 
+	// Byte budgets (getMemoryBudget in js/systems/MemoryLedger.js). iOS Safari
+	// and low-memory devices kill the tab far below desktop limits, so they get
+	// the constrained set.
+	memory: {
+		budgets: {
+			standard: { historyMB: 192, paintHistoryMB: 128, previewCacheMB: 96, exportMB: 2048 },
+			constrained: { historyMB: 64, paintHistoryMB: 48, previewCacheMB: 32, exportMB: 512 }
+		},
+		// Undo keeps at least this many steps whatever their size.
+		minHistorySteps: 5,
+		// A GIF export holds every composed frame (RGBA) plus its indexed copy.
+		gifBytesPerPixel: 5
+	},
+
 	debug: {
 		forceIOSExportPreview: false,
 		enabled: false
 	},
 });
-
-const ToolType = {
-	SELECT: 'select',
-	TEXT: 'text',
-	SHAPE: 'shape',
-	HAND: 'hand',
-	COLOR_PICKER: 'colorPicker',
-	BRUSH: 'brush',
-	ZOOM: 'zoom'
-};
-
-// Reusable capability groups for focused editor modes. A preview session can
-// permit whole groups and add individual tool exceptions through one policy.
-const TOOL_GROUPS = Object.freeze({
-	navigation: Object.freeze([ToolType.HAND, ToolType.ZOOM]),
-	selection: Object.freeze([ToolType.SELECT]),
-	creation: Object.freeze([ToolType.TEXT, ToolType.SHAPE]),
-	paint: Object.freeze([ToolType.COLOR_PICKER, ToolType.BRUSH]),
-	contentEditing: Object.freeze([
-		ToolType.SELECT,
-		ToolType.TEXT,
-		ToolType.SHAPE,
-		ToolType.COLOR_PICKER,
-		ToolType.BRUSH
-	]),
-	all: Object.freeze(Object.values(ToolType))
-});
-
-function toolAllowedByAccess(tool, access = {}) {
-	const tools = Array.isArray(access.tools) ? access.tools : [];
-	const groups = Array.isArray(access.groups) ? access.groups : [];
-	return tools.includes(tool) || groups.some((name) => TOOL_GROUPS[name]?.includes(tool));
-}
-
-const TOOL_TOUCH_ROUTES = {
-	[ToolType.SHAPE]: 'creationDrag',
-	[ToolType.TEXT]: 'tapCreate'
-};
 
 // Text Background presets (DYNAMIC-TEXT-BACKGROUND-IMPLEMENTATION-PLAN.md,
 // "Presets"): the one table both the UI select and

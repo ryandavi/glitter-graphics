@@ -8,7 +8,7 @@
 // history state never holds pixels; it names a version, and restorePaintState
 // blits that version back into the live buffers. prunePaintHistory drops the
 // versions no history state references and then evicts the oldest ones past
-// CONFIG.canvas.limits.paintHistoryMaxMB, never a live layer's current one.
+// the device's paint-history budget (getMemoryBudget), never a live layer's current one.
 // MaskCompositor combines these buffers with the color selection.
 // ============================================
 class PaintMaskStore {
@@ -17,7 +17,6 @@ class PaintMaskStore {
 		this.paintMasks = new Map();
 		this.paintHistory = new Map();
 		this.paintHistoryBytes = 0;
-		this.paintHistoryByteLimit = CONFIG.canvas.limits.paintHistoryMaxMB * 1024 * 1024;
 		this.nextPaintVersion = 1;
 	}
 
@@ -344,7 +343,7 @@ class PaintMaskStore {
 
 		this.paintHistoryBytes = nextByteTotal;
 
-		if (this.paintHistoryBytes <= this.paintHistoryByteLimit) {
+		if (this.paintHistoryBytes <= getMemoryBudget().paintHistoryBytes) {
 			return;
 		}
 
@@ -370,7 +369,7 @@ class PaintMaskStore {
 		});
 
 		for (const entry of orderedSnapshots) {
-			if (this.paintHistoryBytes <= this.paintHistoryByteLimit) {
+			if (this.paintHistoryBytes <= getMemoryBudget().paintHistoryBytes) {
 				break;
 			}
 

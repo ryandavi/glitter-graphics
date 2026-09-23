@@ -82,3 +82,103 @@ class MemoryLedger {
 
 const APP_MEMORY_LEDGER = new MemoryLedger();
 window.glitterMemory = () => APP_MEMORY_LEDGER.snapshot();
+
+function isIOSDevice() {
+	return /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+// Byte budgets for this device, from CONFIG.memory. Browsers can't report
+// real memory limits, so iOS and devices reporting 4 GB or less get the
+// constrained set.
+function getMemoryBudget() {
+	const constrained = isIOSDevice() || (Number(navigator.deviceMemory) > 0 && navigator.deviceMemory <= 4);
+	const budget = CONFIG.memory.budgets[constrained ? 'constrained' : 'standard'];
+	const megabyte = 1024 * 1024;
+	return {
+		constrained,
+		historyBytes: budget.historyMB * megabyte,
+		paintHistoryBytes: budget.paintHistoryMB * megabyte,
+		previewCacheBytes: budget.previewCacheMB * megabyte,
+		exportBytes: budget.exportMB * megabyte
+	};
+}
+
+// Preview caches hold results that can always be rebuilt. They share one
+// byte budget: past it, the least recently used entries across all of them
+// are dropped (never the one just written).
+const PREVIEW_CACHE_POOL = {
+	caches: new Set(),
+	clock: 0,
+	enforce() {
+		const budget = getMemoryBudget().previewCacheBytes;
+		const entries = [];
+		let total = 0;
+		this.caches.forEach((cache) => cache.map.forEach((entry, key) => {
+			const bytes = cache.measure(entry.value);
+			total += bytes;
+			entries.push({ cache, key, entry, bytes });
+		}));
+		if (total <= budget) return;
+		entries.sort((a, b) => a.entry.used - b.entry.used);
+		for (const item of entries) {
+			if (total <= budget) break;
+			if (item.entry.used === this.clock) continue;
+			item.cache.map.delete(item.key);
+			total -= item.bytes;
+		}
+	}
+};
+
+// A Map-like cache in the shared preview budget. `measure(value)` returns the
+// bytes one value holds; it runs when the budget is checked, so values that
+// grow after being stored (a canvas attached later) are still counted.
+class ByteBudgetCache {
+	constructor({ id, label, measure }) {
+		this.map = new Map();
+		this.measure = measure;
+		PREVIEW_CACHE_POOL.caches.add(this);
+		APP_MEMORY_LEDGER.register({ id, label, category: 'Preview caches', measure: () => this.bytes() });
+	}
+
+	get(key) {
+		const entry = this.map.get(key);
+		if (!entry) return undefined;
+		entry.used = ++PREVIEW_CACHE_POOL.clock;
+		return entry.value;
+	}
+
+	has(key) { return this.map.has(key); }
+
+	set(key, value) {
+		this.map.set(key, { value, used: ++PREVIEW_CACHE_POOL.clock });
+		PREVIEW_CACHE_POOL.enforce();
+		return this;
+	}
+
+	delete(key) { return this.map.delete(key); }
+
+	// Drop every entry whose key matches (for example all of one layer's).
+	deleteWhere(predicate) {
+		Array.from(this.map.keys()).forEach((key) => {
+			if (predicate(key)) this.map.delete(key);
+		});
+	}
+
+	clear() { this.map.clear(); }
+
+	get size() { return this.map.size; }
+
+	keys() { return this.map.keys(); }
+
+	*values() {
+		for (const entry of this.map.values()) yield entry.value;
+	}
+
+	bytes() {
+		let total = 0;
+		this.map.forEach((entry) => { total += this.measure(entry.value); });
+		return total;
+	}
+}
+
+const canvasBytes = (canvas) => (canvas ? (Number(canvas.width) || 0) * (Number(canvas.height) || 0) * 4 : 0);

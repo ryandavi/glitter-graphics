@@ -6,7 +6,7 @@ Visual and interaction conventions for the editor UI: sidebar panels, layout nam
 
 - **Naming.** "\<Thing\> Properties" means attributes of the selected layer (Glitter Properties, Sticker Properties, Text Properties). "\<Tool\> Settings" means tool configuration (Mask Settings, Color Fill Settings). Section *ids* are historically `*SettingsSection` regardless of title. Don't rename ids.
 - **Built from schemas.** Every sidebar section is a `PANEL_SCHEMAS` entry in `js/ui/panel-schemas.js`, composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`. Never copy live sidebar markup into `index.html`.
-- **The guide mirrors the UI.** `modals/guide.html` must mirror every new panel title, tool and keyboard shortcut. Shortcuts are defined in `COMMANDS` (`js/core/commands.js`); `tests/unit/shortcut-coverage.js` checks the guide against it.
+- **The guide mirrors the UI by generation.** Write guide copy in `content/src/guide.src.html` and build it with `node tools/build-modals.js guide`. Tool headings (`{tool:select}`), tool icons (`{tool-icon:select}`), panel titles (`{panel:textSettingsSection}`) and the full shortcut list (`{shortcuts}`) come from `TOOLS`, `PANEL_SCHEMAS` and `COMMANDS`; use the tokens instead of typing those names. `tests/unit/shortcut-coverage.js` fails when the built guide is stale.
 - **Reuse the existing patterns:** gallery cards (font, sticker and brush-shape pickers), segmented controls, carded effect subsections, paint-slot cards, and the shared `renderGlitterAssetDisplay` asset chips.
 
 ## Layout chrome names purpose, not position
@@ -35,34 +35,7 @@ All icons are `<use href="#icon-NAME">` against the one SVG sprite in `index.htm
 
 ### Icon registry (action → key)
 
-| Action | Key |
-|---|---|
-| Delete layer or thing | `trash` |
-| Clear canvas or all | `broom` |
-| Close, dismiss, clear search | `x-mark` |
-| Remove from a set (for example a gradient stop) | `x-mark` |
-| Add item | `plus` |
-| Import or upload | `upload` |
-| Reveal source, go to layer | `locate` |
-| Reset one control | `reset` (circular arrow, not `undo`) |
-| Undo / redo history | `undo` / `redo` |
-| Center on an axis (canvas or layer) | `align-center-x` / `align-center-y` (shared with the multi-select align panel) |
-| All settings surfaces | `gear` |
-| Help or guide | `question-circle` |
-| Info or about | `circle-info` |
-| New canvas | `new-canvas` |
-| Open project | `open-project` |
-| Save project | `save` |
-| Open image | `open-image` |
-| Export (media out) | `export` |
-| Snapping | `magnet` |
-| Bounds toggle | `bounding-box` |
-| Fit view / fill view | `fit-screen` / `maximize` |
-| Auto Glitter | `magic-wand` |
-| Product, "start creating" | `glitter` |
-| Collapse or disclosure | `chevron-down` |
-
-Tool icons live in `LAYER_UI_CONFIG` and the toolbar, and are mirrored by the tool hint table in `js/ui/hints.js`. Keep those in sync until the tool registry (audit section H4) makes them one source.
+The action → key registry lives in `content/icon-registry.json`; add a row there when an action gets a standard icon. Tool icons live on their `TOOLS` entries (`js/core/tools.js`), which also drive the toolbar, the canvas hint chip and the guide. `tests/unit/icon-references.js` checks every registry key and every icon referenced in markup, schemas, `createIcon` calls and registries against the sprite.
 
 ## Buttons
 

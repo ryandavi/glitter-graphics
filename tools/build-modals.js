@@ -13,6 +13,105 @@ const defaultSourceDir = path.join(root, 'content', 'src');
 const defaultOutputDir = path.join(root, 'modals');
 const defaultWiringPath = path.join(root, 'js', 'editor', 'modals-wiring.js');
 const keyPattern = '[a-z0-9][a-z0-9-]*';
+// modal-lint encodes the history/article style guide; the guide is
+// instructional copy with its own conventions.
+const lintExempt = new Set(['guide']);
+
+// App registries the guide mirrors (tools, commands, panel titles), loaded
+// from the browser scripts once per build.
+let appRegistries = null;
+function getAppRegistries() {
+	if (appRegistries) return appRegistries;
+	const vm = require('vm');
+	const context = {
+		console,
+		navigator: { hardwareConcurrency: 4, userAgent: '' },
+		window: {},
+		document: {},
+		localStorage: { getItem: () => null }
+	};
+	vm.createContext(context);
+	[
+		'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js',
+		'js/core/layer-types.js', 'js/core/options.js', 'js/core/key-labels.js', 'js/core/commands.js',
+		'js/ui/panel-schemas.js'
+	].forEach(file => vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file }));
+	vm.runInContext('globalThis.__registries = { TOOLS, COMMANDS, PANEL_SCHEMAS, getShortcutGroups };', context);
+	appRegistries = context.__registries;
+	return appRegistries;
+}
+
+function escapeHtml(value) {
+	return String(value).replace(/[&<>"]/gu, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[character]);
+}
+
+// "Ctrl/Cmd + Shift + Z / Ctrl/Cmd + Y" -> alternatives of kbd sequences.
+function renderKeys(displayKey) {
+	return displayKey.split(' / ').map(alternative => {
+		const keys = alternative.split(' + ').map(key => `<kbd class="guide-kbd">${escapeHtml(key)}</kbd>`);
+		return keys.length > 1 ? `<span class="guide-shortcut">${keys.join('')}</span>` : keys[0];
+	}).join(' or ');
+}
+
+function renderGesture(command) {
+	const labels = { alt: 'Alt', shift: 'Shift', control: 'Ctrl', command: 'Cmd' };
+	const device = { pointer: 'Mouse', touch: 'Touch', trackpad: 'Trackpad' }[command.binding.device] || command.binding.device;
+	const modifiers = (command.binding.modifiers || []).map(modifier => `<kbd class="guide-kbd">${labels[modifier] || modifier}</kbd>`).join('');
+	return `${device}: ${modifiers ? `${modifiers}-` : ''}${escapeHtml(command.binding.gesture.toLowerCase())}`;
+}
+
+// The full shortcut reference, generated from COMMANDS.
+function renderShortcutReference() {
+	const { getShortcutGroups } = getAppRegistries();
+	// Same two-column guide-item as the hand-written sections: icon cell, then content.
+	const icons = { keyboard: 'keyboard', gesture: 'pointer' };
+	const block = (kind, render) => Array.from(getShortcutGroups(kind), ({ title, items }) => [
+		'            <div class="guide-item">',
+		'                <div class="guide-item-icon">',
+		'                    <span class="icon-wrapper sm">',
+		'                        <svg class="icon">',
+		`                            <use href="#icon-${icons[kind]}"></use>`,
+		'                        </svg>',
+		'                    </span>',
+		'                </div>',
+		'                <div class="guide-item-content">',
+		`                    <p><strong>${escapeHtml(title)}</strong></p>`,
+		'                    <ul>',
+		...items.map(command => `                        <li><strong>${escapeHtml(command.label)}</strong> – ${command.instruction ? `${escapeHtml(command.instruction)} ` : ''}${render(command)}</li>`),
+		'                    </ul>',
+		'                </div>',
+		'            </div>'
+	].join('\n')).join('\n\n');
+	return `${block('keyboard', command => renderKeys(command.displayKey))}\n\n${block('gesture', renderGesture)}`;
+}
+
+function panelTitle(sectionId) {
+	const schema = Object.values(getAppRegistries().PANEL_SCHEMAS).find(entry => entry?.section?.id === sectionId);
+	return schema?.section?.title || null;
+}
+
+// Registry-backed helpers: {tool:select}, {tool-icon:select},
+// {panel:sectionId} and {shortcuts}.
+function expandRegistryHelper(remaining, token, index, originalSource, diagnostics) {
+	const match = remaining.match(/^\{(tool|tool-icon|panel):([A-Za-z][\w-]*)\}/u) || remaining.match(/^\{(shortcuts)\}/u);
+	if (!match) return null;
+	const [text, kind, name] = match;
+	const fail = message => {
+		diagnostics.push(diagnostic(originalSource, token.start + index, 'error', 'registry-token', message));
+		return { value: text, length: text.length };
+	};
+	const { TOOLS, COMMANDS } = getAppRegistries();
+	if (kind === 'shortcuts') return { value: renderShortcutReference(), length: text.length };
+	if (kind === 'panel') {
+		const title = panelTitle(name);
+		return title ? { value: escapeHtml(title), length: text.length } : fail(`Unknown panel section "${name}".`);
+	}
+	const tool = TOOLS[name];
+	if (!tool) return fail(`Unknown tool "${name}".`);
+	if (kind === 'tool-icon') return { value: `<use href="#icon-${tool.icon}"></use>`, length: text.length };
+	const key = COMMANDS[tool.command]?.displayKey;
+	return { value: `${escapeHtml(tool.hintName || tool.name)}${key ? ` (${renderKeys(key)})` : ''}`, length: text.length };
+}
 
 function lineColAt(source, offset) {
 	const before = source.slice(0, offset);
@@ -230,6 +329,9 @@ function entityError(originalSource, offset, diagnostics, message) {
 }
 
 function expandHelper(remaining, token, index, originalSource, numbers, diagnostics) {
+	const registryHelper = expandRegistryHelper(remaining, token, index, originalSource, diagnostics);
+	if (registryHelper) return registryHelper;
+
 	let match = remaining.match(/^\{usenet:([^|{}<\r\n]+)\}/u);
 	if (match) return { value: `<span class="usenet-address">${match[1]}</span>`, length: match[0].length };
 
@@ -660,7 +762,7 @@ function buildOne(name, options = {}) {
 	const source = fs.readFileSync(sourcePath, 'utf8');
 	const compiled = compile(source, { name, header: true });
 	const diagnostics = [...compiled.diagnostics];
-	if (!hasErrors(diagnostics) && options.lint !== false) {
+	if (!hasErrors(diagnostics) && options.lint !== false && !lintExempt.has(name)) {
 		for (const item of lintSource(sourceFile, compiled.output)) {
 			const outputLine = Math.max(1, item.line - 1);
 			diagnostics.push({ ...item, file: undefined, line: compiled.lineMap[outputLine - 1] || outputLine });

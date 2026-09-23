@@ -91,8 +91,6 @@ saveSettingsToStorage() {
 
 ,
 initializeExportSettings() {
-	renderRegisteredSelect('exportPaletteStyle', 'paletteStyle');
-	renderRegisteredSelect('exportDitherTemporalMode', 'ditherTemporalMode');
 	let savedSettings = this.loadSettingsFromStorage();
 	if (savedSettings?.exportColorCount != null && savedSettings.exportDitherPipelineVersion !== 2) {
 		// The first palette-pipeline rollout made a strongly stylized 128-color
@@ -643,21 +641,7 @@ initializeExportSettings() {
 		if (!visibleLayers.length) return;
 
 		try {
-			const estimate = await this.sceneCompositor.estimateLoopDuration({
-				layers: visibleLayers,
-				library: this.glitterLibrary.content,
-				fallbackDuration: this.exportSettings.frameDelay,
-				smartReduction: this.exportSettings.smartFrameReduction,
-				exportFidelity: this.exportSettings.exportFidelity,
-				maxSamplingFps: this.exportSettings.maxSamplingFps,
-				maxFrames: this.exportSettings.maxFrames,
-				manualFrameSkip: this.exportSettings.exportFrameSkip,
-				baseImage: this.exportSettings.baseImage,
-				visualErrorThreshold: this.exportSettings.visualErrorThreshold,
-				// The render clock is format-specific, so the estimate must be
-				// realized by the same planner the export will actually use.
-				outputFormat: getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false }).format
-			});
+			const estimate = await this.estimateExportAnimation(visibleLayers);
 			if (requestId !== this.exportDurationRequestId) return;
 			const loopDurationSeconds = estimate.duration / 1000;
 			if (output && usesTargetDuration) {
@@ -684,6 +668,58 @@ initializeExportSettings() {
 			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
 			if (fidelityOutput) fidelityOutput.textContent = 'Could not estimate this animation. Export will calculate it again.';
 		}
+	}
+
+,
+	// Timing-only plan of the next export (no frames are composed): loop
+	// duration and frame count for the current export settings.
+	estimateExportAnimation(layers) {
+		return this.sceneCompositor.estimateLoopDuration({
+			layers,
+			library: this.glitterLibrary.content,
+			fallbackDuration: this.exportSettings.frameDelay,
+			smartReduction: this.exportSettings.smartFrameReduction,
+			exportFidelity: this.exportSettings.exportFidelity,
+			maxSamplingFps: this.exportSettings.maxSamplingFps,
+			maxFrames: this.exportSettings.maxFrames,
+			manualFrameSkip: this.exportSettings.exportFrameSkip,
+			baseImage: this.exportSettings.baseImage,
+			visualErrorThreshold: this.exportSettings.visualErrorThreshold,
+			// The render clock is format-specific, so the estimate must be
+			// realized by the same planner the export will actually use.
+			outputFormat: getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false }).format
+		});
+	}
+
+,
+	// An animated GIF holds every composed frame until it is encoded. When the
+	// estimate is past this device's export budget, ask before starting rather
+	// than letting the tab run out of memory. MP4 and stills encode frame by
+	// frame, so they skip the check. An estimate failure never blocks export.
+	async confirmExportMemory(target, layers) {
+		if (target.isStill || target.format !== 'gif') return true;
+		let estimate;
+		try {
+			estimate = await this.estimateExportAnimation(layers);
+		} catch (error) {
+			dbg('[Export] Memory estimate failed; exporting anyway.', error);
+			return true;
+		}
+		const width = this.originalCanvas.width;
+		const height = this.originalCanvas.height;
+		const bytes = estimate.estimatedFrameCount * width * height * CONFIG.memory.gifBytesPerPixel;
+		if (bytes <= getMemoryBudget().exportBytes) return true;
+		return this.confirmAction({
+			title: 'Large Export',
+			message: 'This GIF may need more memory than this device has, which can stop the export or reload the page. Lower Frame Limit or Export Fidelity in Export Settings, or use a smaller canvas.',
+			facts: [
+				{ label: 'Frames', value: `about ${estimate.estimatedFrameCount}` },
+				{ label: 'Canvas', value: `${width} × ${height} px` },
+				{ label: 'Memory', value: `about ${Math.ceil(bytes / (1024 * 1024))} MB` }
+			],
+			confirmLabel: 'Export Anyway',
+			cancelLabel: 'Cancel'
+		});
 	}
 
 ,

@@ -1,11 +1,24 @@
 class MaskCompositor {
 	constructor(editor) {
 		this.editor = editor;
-		this.cache = new Map();
+		// All three rebuild on demand, so they live in the shared preview budget.
+		this.cache = new ByteBudgetCache({
+			id: 'fill-mask-cache',
+			label: 'Fill mask cache',
+			measure: (entry) => (entry?.data?.byteLength || 0) + canvasBytes(entry?.canvas)
+		});
 		// Per layer id, keyed by the selection inputs; cleared by invalidate/reset
 		// (canvas resize, paint reset), so they survive undo of unrelated edits.
-		this.selectionMaskCache = new Map();
-		this.selectionCanvasCache = new Map();
+		this.selectionMaskCache = new ByteBudgetCache({
+			id: 'selection-mask-cache',
+			label: 'Color selection masks',
+			measure: (entry) => entry?.mask?.byteLength || 0
+		});
+		this.selectionCanvasCache = new ByteBudgetCache({
+			id: 'selection-canvas-cache',
+			label: 'Color selection mask canvases',
+			measure: (entry) => canvasBytes(entry?.canvas)
+		});
 	}
 
 	// One mask pipeline for every fill layer, painted or not: color selection,

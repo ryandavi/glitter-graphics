@@ -14,7 +14,12 @@ class TextGlitterManager {
 		this.textMaskCache = new Map();
 		// Preview mask data URL per layer id and mask bucket (fill, border, ...),
 		// each keyed by content. Dropped when the layer's element is removed.
-		this.previewMaskUrls = new Map();
+		// Keyed `${layerId}|${maskType}`; rebuilt on demand, so in the preview budget.
+		this.previewMaskUrls = new ByteBudgetCache({
+			id: 'text-preview-masks',
+			label: 'Text preview mask URLs',
+			measure: (entry) => (entry?.url?.length || 0) * 2
+		});
 		this.measureCanvas = createAppCanvas(0, 0, 'layers/TextGlitterManager');
 		this.measureCtx = this.measureCanvas.getContext('2d');
 
@@ -2145,7 +2150,7 @@ class TextGlitterManager {
 	}
 
 	removeLayerElement(layerId) {
-		this.previewMaskUrls.delete(layerId);
+		this.previewMaskUrls.deleteWhere((key) => key.startsWith(`${layerId}|`));
 
 		const element = this.layerElements.get(layerId);
 		if (element?.parentNode) {
@@ -2179,19 +2184,15 @@ class TextGlitterManager {
 	// Synchronous (toDataURL, not toBlob+Image) so a live box-resize drag never
 	// shows a stale mask stretched to the new box size while a blob decodes.
 	getPreviewMaskDataUrl(layer, maskType, canvas, cacheKey) {
-		let bucket = this.previewMaskUrls.get(layer.id);
-		if (!bucket) {
-			bucket = {};
-			this.previewMaskUrls.set(layer.id, bucket);
-		}
-		const cached = bucket[maskType];
+		const slotKey = `${layer.id}|${maskType}`;
+		const cached = this.previewMaskUrls.get(slotKey);
 
 		if (cached?.key === cacheKey) {
 			return cached.url;
 		}
 
 		const url = canvas.toDataURL('image/png');
-		bucket[maskType] = { key: cacheKey, url };
+		this.previewMaskUrls.set(slotKey, { key: cacheKey, url });
 		return url;
 	}
 }

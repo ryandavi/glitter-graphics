@@ -52,7 +52,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Sidebar structure | `PANEL_SCHEMAS` in `js/ui/panel-schemas.js` | Rendered by `js/ui/panel-renderer.js`. |
 | Editable property specs | `FIELDS` in `js/core/fields.js` | Label, unit, range and default per property. Panel rows stamp them; slot and layer defaults read them. |
 | Asset browsers | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | Glitter, sticker and brush-tip search, filters and browser, rendered from two templates. |
-| Tools | `ToolType`, `TOOL_GROUPS` in `js/core/config.js` | |
+| Tools | `TOOLS` in `js/core/tools.js` | One entry per tool: button, icon, shortcut command, availability, canvas cursor and `onCanvasAction`. `ToolType`, `TOOL_GROUPS` and `TOOL_TOUCH_ROUTES` derive from it. |
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
 | Runtime user preferences | `PREFERENCES` in `js/core/preferences.js` | `PREFERENCES.get(key)` / `set(key, value)`, persisted to `localStorage`. |
 | Export settings | `EXPORT_SETTINGS_SCHEMA` + `SettingsStore` in `js/ui/settings-store.js` | Declares storage key, default and validation per setting. |
@@ -90,6 +90,10 @@ Every layer has `id`, `type` (a `LayerType` value), `name`, `visible`, `locked` 
 **Transforms.** Movable layers (sticker, text, shape) keep a transform `{ position, rotation, scale, flipX, flipY }`. It lives only at `layer.transform`; `getLayerTransform(layer)` (`js/transforms/transform-math.js`) reads it and returns an unstored identity placement for types without one. Scale writes go through `LayerTransform.updateTransform`, which clamps with `clampLayerScale`.
 
 **Layer frames.** Each movable type declares two layer-local boxes on its `registerLayerType` definition, read through `getLayerFrame` and `getLayerVisualBounds`. The `frame` is the object's body (content, border and background plate, no shadow); handles, click hit-testing (`LayerManager.isPointInLayer`), alignment, snapping and group bounds use it. `visualBounds` adds the shadow and covers every painted pixel; export culling and crop-to-artwork use it.
+
+**Settings modals.** The Export Settings and Settings modals render from `EXPORT_SETTINGS_LAYOUT` and `APP_SETTINGS_LAYOUT` (`js/ui/settings-store.js`) through `js/ui/settings-renderer.js`. Export rows take their label, description and control from their `EXPORT_SETTINGS_SCHEMA` entry. Custom widgets (the type and format controls, the GIF Look preview, the fidelity slider, the HTML Scene group) are `<template>`s in `index.html`.
+
+**Memory.** `getMemoryBudget()` (`js/systems/MemoryLedger.js`) returns this device's byte budgets from `CONFIG.memory` (a smaller set on iOS and devices reporting 4 GB or less). Undo history trims its oldest steps past the history budget, keeping `minHistorySteps`; paint history evicts past its own budget; rebuildable preview caches are `ByteBudgetCache`s that share one LRU budget; an animated GIF export asks first when its estimated peak memory exceeds the export budget.
 
 **Handle gestures.** Handle drags are relative to the grab point: nothing changes until the pointer travels `dragThresholdPx` screen pixels, scale handles follow the pointer's movement from the true frame corner, and rotation adds the pointer's change in angle around the frame center (Shift snaps to 15°). Selection chrome is sized in screen pixels, outside the zoomed canvas.
 
@@ -141,7 +145,7 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 
 ## Content modals
 
-`modals/*.html` are loaded into document modals at runtime. The article pages (`history.html`, `personal-web.html`, and any local-only pages) are generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only) governs the history page's voice and citations.
+`modals/*.html` are loaded into document modals at runtime. The guide and the article pages (`guide.html`, `history.html`, `personal-web.html`, and any local-only pages) are generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. The guide's `{tool:…}`, `{tool-icon:…}`, `{panel:…}` and `{shortcuts}` tokens are filled from the app registries at build time, and `tests/unit/shortcut-coverage.js` fails when the built guide is stale. The article lint (`modal-lint`) doesn't apply to the guide. `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only) governs the history page's voice and citations.
 
 ## Workers
 

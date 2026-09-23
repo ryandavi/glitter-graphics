@@ -83,6 +83,8 @@ class GlitterEditor {
 		this.renderTransformPanels();
 		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
 		this.contextToolbarRenderer.render();
+		renderToolButtons(document.getElementById('toolbarToolsGroup'));
+		renderSettingsModals();
 
 		// ============================================================================
 		// MANAGERS
@@ -145,13 +147,9 @@ class GlitterEditor {
 	_registerMemoryMeasurements() {
 		APP_MEMORY_LEDGER.register({ id: 'decoded-assets', label: 'Decoded glitter and sticker frames (export)', category: 'Decoded assets', measure: () => this.sceneCompositor?.getDecodedSourceBytes() || 0 });
 		APP_MEMORY_LEDGER.register({ id: 'paint-history', label: 'Paint history', category: 'History', measure: () => this.paintMaskStore?.paintHistoryBytes || 0 });
-		APP_MEMORY_LEDGER.register({ id: 'undo-history', label: 'Undo history JSON', category: 'History', measure: () => {
-			try { return JSON.stringify(this.historyManager?.history || []).length * 2; } catch (_) { return 0; }
-		} });
+		APP_MEMORY_LEDGER.register({ id: 'undo-history', label: 'Undo history', category: 'History', measure: () => this.historyManager?.getHistoryBytes() || 0 });
 		APP_MEMORY_LEDGER.register({ id: 'base-image', label: 'Base image buffers', category: 'Document', measure: () =>
 			(this.originalImageData?.data?.byteLength || 0) + (this.originalAlphaChannel?.byteLength || 0) });
-		APP_MEMORY_LEDGER.register({ id: 'pixel-effect-cache', label: 'Pixel effect cache', category: 'Preview caches', measure: () =>
-			Array.from(this.baseBackgroundManager?.pixelEffectCache?.values() || []).reduce((sum, value) => sum + (value?.data?.byteLength || 0), 0) });
 	}
 
 	initializeAltDuplicateFeedback() {
@@ -497,24 +495,10 @@ class GlitterEditor {
 
 	// ===== TOOLBAR LISTENERS =====
 	setupToolbarListeners() {
-		const tools = [
-			{ id: 'selectTool', type: ToolType.SELECT },
-			{ id: 'textTool', type: ToolType.TEXT },
-			{ id: 'shapeTool', type: ToolType.SHAPE },
-			{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
-			{ id: 'handTool', type: ToolType.HAND },
-			{ id: 'zoomTool', type: ToolType.ZOOM }
-		];
-
-		tools.forEach(({ id, type }) => {
-			const btn = document.getElementById(id);
-			if (btn) btn.addEventListener('click', () => this.setTool(type));
-		});
-
-		// One Mask Brush button; Paint vs Erase lives in the mask-brush context bar
-		// (and X / E). Re-selecting the tool keeps whichever mode was last used.
-		document.getElementById('brushTool')?.addEventListener('click', () => {
-			this.setTool(ToolType.BRUSH);
+		// One button per registered tool. The Mask Brush's Paint vs Erase lives in
+		// its context bar (and X / E); re-selecting it keeps the last mode.
+		TOOL_ORDER.forEach((tool) => {
+			document.getElementById(getToolButtonId(tool))?.addEventListener('click', () => this.setTool(tool));
 		});
 
 		const actions = [
@@ -934,7 +918,7 @@ class GlitterEditor {
 
 
 		// Remove all tool classes from body
-		document.body.classList.remove('tool-select', 'tool-text', 'tool-shape', 'tool-hand', 'tool-colorPicker', 'tool-zoom', 'tool-brush');
+		document.body.classList.remove(...TOOL_ORDER.map((name) => `tool-${name}`));
 
 		// Add current tool class
 		document.body.classList.add(`tool-${tool}`);
@@ -944,37 +928,18 @@ class GlitterEditor {
 			btn.classList.remove('active');
 		});
 
-		// Fix: The tool name needs to match the button ID exactly
-		const toolButtonIds = {
-			'select': 'selectTool',
-			'text': 'textTool',
-			'shape': 'shapeTool',
-			'hand': 'handTool',
-			'colorPicker': 'colorPickerTool',
-			'brush': 'brushTool',
-			'zoom': 'zoomTool'
-		};
+		document.getElementById(getToolButtonId(tool))?.classList.add('active');
 
-		const activeBtn = document.getElementById(toolButtonIds[tool]);
-		if (activeBtn) {
-			activeBtn.classList.add('active');
-		}
-
-		// 2. Update Cursors
+		// 2. Update Cursors (each tool declares its canvas cursor classes)
+		const definition = TOOLS[tool];
 		if (this.previewContainer) {
-			this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
-			if (tool === ToolType.ZOOM) {
-				this.previewContainer.classList.add('zoom-cursor');
-			} else if (tool === ToolType.HAND) {
-				this.previewContainer.classList.add('hand-cursor');
-			}
+			this.previewContainer.classList.remove('zoom-out-mode', ...TOOL_ORDER.map((name) => TOOLS[name].containerClass).filter(Boolean));
+			if (definition?.containerClass) this.previewContainer.classList.add(definition.containerClass);
 		}
 
 		if (this.previewWrapper) {
-			this.previewWrapper.classList.remove('color-picker-mode');
-			if (tool === ToolType.COLOR_PICKER) {
-				this.previewWrapper.classList.add('color-picker-mode');
-			}
+			this.previewWrapper.classList.remove(...TOOL_ORDER.map((name) => TOOLS[name].wrapperClass).filter(Boolean));
+			if (definition?.wrapperClass) this.previewWrapper.classList.add(definition.wrapperClass);
 		}
 
 		// NEW: Handle transform handles visibility
@@ -1367,6 +1332,18 @@ class GlitterEditor {
 		this.historyManager.updateButtons();
 	}
 
+	// Enable each toolbar tool button from its registry availability rule.
+	updateToolButtons() {
+		const state = {
+			hasImage: this.originalImage !== null,
+			autoPreviewActive: Boolean(this.autoGlitterManager?.isSessionActive())
+		};
+		TOOL_ORDER.forEach((tool) => {
+			const button = document.getElementById(getToolButtonId(tool));
+			if (button) button.disabled = !TOOLS[tool].available(this, state);
+		});
+	}
+
 	updateActionButtons() {
 		const hasImage = this.originalImage !== null;
 		const autoPreviewActive = Boolean(this.autoGlitterManager?.isSessionActive());
@@ -1379,13 +1356,6 @@ class GlitterEditor {
 		const layersBarClearAll = document.getElementById('layersBarClearAll');
 		const exportGif = document.getElementById('exportGif');
 		const saveProject = document.getElementById('saveProject');
-		const selectTool = document.getElementById('selectTool');
-		const textTool = document.getElementById('textTool');
-		const shapeTool = document.getElementById('shapeTool');
-		const colorPickerTool = document.getElementById('colorPickerTool');
-		const handTool = document.getElementById('handTool');
-		const zoomTool = document.getElementById('zoomTool');
-		const brushTool = document.getElementById('brushTool');
 		const addBtn = document.getElementById('addLayerBtn');
 		const previewToggle = document.getElementById('previewModeToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
@@ -1406,14 +1376,7 @@ class GlitterEditor {
 		if (previewControls) previewControls.classList.toggle('visible', hasImage);
 		this.updateExportActionUI?.();
 
-		if (selectTool) selectTool.disabled = !hasImage || autoPreviewActive;
-		if (textTool) textTool.disabled = !hasImage || autoPreviewActive;
-		if (shapeTool) shapeTool.disabled = !hasImage || autoPreviewActive;
-		if (colorPickerTool) colorPickerTool.disabled = !hasImage || autoPreviewActive;
-		if (handTool) handTool.disabled = !hasImage;
-		if (zoomTool) zoomTool.disabled = !hasImage;
-		this.maskEditor?.updateToolButtonState();
-		if (brushTool) brushTool.disabled ||= autoPreviewActive;
+		this.updateToolButtons();
 		const layersPanel = document.getElementById('layersPanel');
 		if (layersPanel) layersPanel.inert = autoPreviewActive;
 
@@ -1916,85 +1879,7 @@ class GlitterEditor {
 		const x = Math.round(canvasPoint.x);
 		const y = Math.round(canvasPoint.y);
 
-		switch (tool) {
-			case ToolType.SELECT:
-				if (hitCanvas) {
-					this.handleLayerSelectAction(x, y, {
-						toggleSelection: Boolean(event?.shiftKey),
-						cycleDeep: Boolean(event?.altKey)
-					});
-				} else {
-					this.layerManager.clearSelection();
-				}
-				break;
-
-			case ToolType.TEXT:
-				if (!hitCanvas) {
-					return;
-				}
-				{
-					// Figma parity: clicking existing text with the text tool edits it;
-					// any other layer under the click is no obstacle — text goes on top.
-					const hitLayer = this.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
-					if (hitLayer?.type === LayerType.TEXT_GLITTER) {
-						this.layerManager.selectLayerFromCanvas(hitLayer.id);
-						this.textGlitterManager?.focusTextInput(true);
-						return;
-					}
-
-					const layer = this.layerManager.addLayer(LayerType.TEXT_GLITTER, {
-						textLayer: {
-							position: { x, y },
-							align: 'left',
-							anchorPosition: { x, y },
-							boxMode: 'auto'
-						}
-					});
-
-					this.finishLayerCreation(layer, {
-						onDesktopReload: () => this.textGlitterManager?.focusTextInput(true)
-					});
-				}
-				break;
-
-			case ToolType.SHAPE:
-				// Tap-to-create parity with desktop's plain click (startShapeDrag's
-				// isClick path); drag-to-size stays desktop-only (mouse pointerdown).
-				if (!hitCanvas || !this.originalImage) {
-					return;
-				}
-				{
-					const layer = this.layerManager.addLayer(LayerType.SHAPE, {
-						shapeLayer: {
-							shapeId: this.shapeGlitterManager.getActiveShapeId(),
-							position: { x, y }
-						}
-					});
-
-					this.finishLayerCreation(layer);
-				}
-				break;
-
-			case ToolType.COLOR_PICKER:
-				if (hitCanvas) {
-					this.handleColorPickAction(x, y, event);
-				} else {
-					this.setTool(ToolType.SELECT);
-				}
-				break;
-
-			case ToolType.HAND:
-				this.viewport.startPan(clientX, clientY);
-				break;
-
-			case ToolType.ZOOM:
-				if (this.originalImage) {
-					this.handleZoomAction(clientX, clientY, {
-						zoomOut: options.zoomOut || false
-					});
-				}
-				break;
-		}
+		TOOLS[tool]?.onCanvasAction?.(this, { x, y, clientX, clientY, hitCanvas, event, options });
 	}
 
 
@@ -2600,6 +2485,11 @@ class GlitterEditor {
 		if (!target.supportsTransparency) exportSettings.transparency = false;
 		const activeExporter = this[target.exporter];
 		activeExporter.setFileName(this.getProjectFileName(target.extension));
+
+		this.exportInProgress = true;
+		const memoryConfirmed = await this.confirmExportMemory(target, visibleLayers);
+		this.exportInProgress = false;
+		if (!memoryConfirmed) return;
 
 		this.exportInProgress = true;
 		this.updateExportActionUI();

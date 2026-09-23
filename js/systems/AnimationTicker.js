@@ -10,14 +10,21 @@ class AnimationTicker {
 		this.reducedMotion?.addEventListener?.('change', () => this.refresh());
 	}
 
+	// Every layer render calls this. Painting only the registered layer keeps
+	// a full preview pass linear in animated layers (repainting all of them
+	// here made it quadratic).
 	register(layerId, target) {
 		const now = performance.now();
-		const data = target.getData();
 		// Preview and export share one document timeline. A layer added later joins
 		// the current phase; its authored phase value is the deliberate offset.
 		if (this.timelineStartedAt == null) this.timelineStartedAt = now;
-		this.targets.set(layerId, { list: [target], data });
-		this.refresh();
+		const current = this.targets.get(layerId);
+		const unchanged = current
+			&& current.target.getWrapper() === target.getWrapper()
+			&& current.target.getLayer() === target.getLayer();
+		if (!unchanged) this.targets.set(layerId, { target });
+		this._paintEntry(layerId, this.targets.get(layerId), now, this._isPreviewPaused());
+		if (!this._isPreviewPaused()) this.start();
 	}
 
 	unregister(layerId) {
@@ -66,39 +73,38 @@ class AnimationTicker {
 
 	_paint(now) {
 		const frozen = this._isPreviewPaused();
-		this.targets.forEach((entry, layerId) => {
-			const live = entry.list.filter((target) => target.getWrapper()?.isConnected);
-			if (!live.length) {
-				this.targets.delete(layerId);
-				return;
-			}
-			live.forEach((target) => {
-				const wrapper = target.getWrapper();
-				entry.data = target.getData();
-				const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
-				const sample = GlitterAnimation.sampleAt(entry.data, frozen ? 0 : elapsed, { layerId });
-				const layer = target.getLayer();
-				const transform = layer.type === LayerType.GLITTER_FILL
-					? { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false }
-					: getLayerTransform(layer);
-				const radians = -(Number(transform.rotation) || 0) * Math.PI / 180;
-				const scaleX = Math.max(0.0001, (Number(transform.scale?.x) || 100) / 100) * (transform.flipX ? -1 : 1);
-				const scaleY = Math.max(0.0001, (Number(transform.scale?.y) || 100) / 100) * (transform.flipY ? -1 : 1);
-				const canvasTx = sample.tx;
-				const canvasTy = sample.ty;
-				const domSample = {
-					...sample,
-					tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) / scaleX,
-					ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) / scaleY
-				};
-				wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
-				wrapper.style.opacity = String(sample.opacity);
-				wrapper.style.transformOrigin = `${sample.originX * 100}% ${sample.originY * 100}%`;
-				// hue-rotate on the wrapper composes with each child's own static
-				// filter (fill/shadow color adjust) rather than overwriting it.
-				wrapper.style.filter = sample.hue ? `hue-rotate(${sample.hue}deg)` : '';
-			});
-		});
+		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, now, frozen));
+	}
+
+	_paintEntry(layerId, entry, now, frozen) {
+		const target = entry.target;
+		if (!target.getWrapper()?.isConnected) {
+			this.targets.delete(layerId);
+			return;
+		}
+		const wrapper = target.getWrapper();
+		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
+		const sample = GlitterAnimation.sampleAt(target.getData(), frozen ? 0 : elapsed, { layerId });
+		const layer = target.getLayer();
+		const transform = layer.type === LayerType.GLITTER_FILL
+			? { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false }
+			: getLayerTransform(layer);
+		const radians = -(Number(transform.rotation) || 0) * Math.PI / 180;
+		const scaleX = Math.max(0.0001, (Number(transform.scale?.x) || 100) / 100) * (transform.flipX ? -1 : 1);
+		const scaleY = Math.max(0.0001, (Number(transform.scale?.y) || 100) / 100) * (transform.flipY ? -1 : 1);
+		const canvasTx = sample.tx;
+		const canvasTy = sample.ty;
+		const domSample = {
+			...sample,
+			tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) / scaleX,
+			ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) / scaleY
+		};
+		wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
+		wrapper.style.opacity = String(sample.opacity);
+		wrapper.style.transformOrigin = `${sample.originX * 100}% ${sample.originY * 100}%`;
+		// hue-rotate on the wrapper composes with each child's own static
+		// filter (fill/shadow color adjust) rather than overwriting it.
+		wrapper.style.filter = sample.hue ? `hue-rotate(${sample.hue}deg)` : '';
 	}
 }
 

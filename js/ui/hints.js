@@ -99,16 +99,7 @@ function resolveHintField(field, editor, context) {
 }
 
 function getHintToolInfo(editor, tool) {
-	const toolMap = {
-		[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
-		[ToolType.TEXT]: { icon: 'icon-text', name: 'Text Tool' },
-		[ToolType.SHAPE]: { icon: 'icon-square', name: 'Shape Tool' },
-		[ToolType.COLOR_PICKER]: { icon: 'icon-paint-bucket', name: 'Color Fill' },
-		[ToolType.BRUSH]: editor.maskEditor?.mode === 'sub' ? { icon: 'icon-eraser', name: 'Eraser Tool' } : { icon: 'icon-brush', name: 'Mask Brush' },
-		[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
-		[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
-	};
-	return toolMap[tool] || { icon: '', name: '' };
+	return getToolHintInfo(editor, tool);
 }
 
 function updateHelpfulMessageFromRules(editor) {

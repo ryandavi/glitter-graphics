@@ -792,13 +792,9 @@ class MaskEditor {
 		}
 	}
 
+	// The brush button's availability lives in TOOLS; refresh the tool buttons.
 	updateToolButtonState() {
-		const enabled = this.canActivate();
-
-		const brushTool = document.getElementById('brushTool');
-		if (brushTool) {
-			brushTool.disabled = !enabled;
-		}
+		this.editor.updateToolButtons?.();
 	}
 
 	loadLayer(layer) {
