@@ -1094,18 +1094,6 @@ class ShapeGlitterManager {
 		stack.style.width = `${entry.width}px`;
 		stack.style.height = `${entry.height}px`;
 		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
-		stack.style.setProperty('--layer-scale', String(Math.max(scaleX, scaleY) || 1));
-
-		// Hover outline follows the layer's frame.
-		const frame = this.getShapeBodyFrame(layer, entry);
-		if (frame) {
-			const left = (entry.width / 2) + frame.offsetX - (frame.width / 2);
-			const top = (entry.height / 2) + frame.offsetY - (frame.height / 2);
-			stack.style.setProperty('--tf-top', `${top}px`);
-			stack.style.setProperty('--tf-left', `${left}px`);
-			stack.style.setProperty('--tf-right', `${entry.width - left - frame.width}px`);
-			stack.style.setProperty('--tf-bottom', `${entry.height - top - frame.height}px`);
-		}
 	}
 
 	// Called by LayerTransform.applyTransform during handle drags. Canvas-

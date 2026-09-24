@@ -479,7 +479,9 @@ const CONFIG = deepFreeze({
 		},
 		transformBehavior: {
 			scaleEffects: true,
-			scaleTextures: true
+			// Off: resizing text or a shape keeps the glitter repeat size, so
+			// the sparkle grain stays consistent across layers.
+			scaleTextures: false
 		},
 		gradient: {
 			type: 'linear',

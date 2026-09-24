@@ -1681,10 +1681,10 @@ input[type=range]:disabled {
 }
 
 .transform-bounding-box {
-  position: absolute;
+  box-sizing: border-box;
   border: var(--selection-stroke) solid var(--color-accent);
   box-shadow: 0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8), inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
-  box-sizing: border-box;
+  position: absolute;
   pointer-events: auto;
   touch-action: none;
   cursor: move;
@@ -5829,17 +5829,6 @@ body.tool-text .preview-wrapper {
   transform-origin: 0 0;
   pointer-events: none;
 }
-.text-glitter-stack::after,
-.shape-glitter-stack::after {
-  content: "";
-  position: absolute;
-  top: var(--tf-top, 0);
-  right: var(--tf-right, 0);
-  bottom: var(--tf-bottom, 0);
-  left: var(--tf-left, 0);
-  display: none;
-  pointer-events: none;
-}
 
 .text-glitter-content,
 .shape-glitter-content {
@@ -5890,28 +5879,24 @@ body.tool-select .text-glitter-element,
 body.tool-select .shape-glitter-element {
   cursor: move;
 }
-body.tool-select .text-glitter-element:not(.selected):hover > .text-glitter-stack::after,
-body.tool-select .shape-glitter-element:not(.selected):hover > .shape-glitter-stack::after {
-  display: block;
-  outline: calc(1px / var(--zoom, 1) / var(--layer-scale, 1)) dashed rgba(0, 0, 0, 0.55);
-  outline-offset: calc(-1px / var(--zoom, 1) / var(--layer-scale, 1));
-}
 body.tool-select .preview-canvas {
   cursor: pointer;
 }
 
 .transform-hover-outline {
-  position: absolute;
   box-sizing: border-box;
-  border: var(--selection-stroke) dashed var(--selected-outline-color);
-  box-shadow: 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.55);
+  border: var(--selection-stroke) solid var(--color-accent);
+  box-shadow: 0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8), inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
+  position: absolute;
   pointer-events: none;
 }
 
 .selection-marquee {
+  box-sizing: border-box;
+  border: var(--selection-stroke) solid var(--color-accent);
+  box-shadow: 0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8), inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
   position: absolute;
   z-index: 12;
-  border: 1px solid var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   pointer-events: none;
 }

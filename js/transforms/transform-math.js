@@ -209,14 +209,22 @@ function getLayerAnimationOrigin(editor, layer, dimensions) {
 	};
 }
 
-// Frame for a rect in a centered mask canvas's pixel space.
+// Frame for a rect in a centered mask canvas's pixel space. The rect comes
+// from font or geometry metrics and can be fractional, but the mask canvas is
+// whole pixels and sits on the document grid, so the rect is rounded out to
+// whole mask pixels: frame edges (selection box, snapping, alignment, X/Y)
+// then land on the grid and still cover every painted pixel.
 function frameFromCanvasRect(rect, canvasWidth, canvasHeight) {
 	if (!rect) return null;
+	const left = Math.floor(rect.x + 1e-6);
+	const top = Math.floor(rect.y + 1e-6);
+	const width = Math.ceil(rect.x + rect.width - 1e-6) - left;
+	const height = Math.ceil(rect.y + rect.height - 1e-6) - top;
 	return {
-		width: rect.width,
-		height: rect.height,
-		offsetX: rect.x + rect.width / 2 - canvasWidth / 2,
-		offsetY: rect.y + rect.height / 2 - canvasHeight / 2
+		width,
+		height,
+		offsetX: left + width / 2 - canvasWidth / 2,
+		offsetY: top + height / 2 - canvasHeight / 2
 	};
 }
 

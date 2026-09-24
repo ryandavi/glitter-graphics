@@ -328,9 +328,10 @@ updateTransform(updates) {
 
 	showHoverOutline() {
 		if (
-			this.layer.type !== LayerType.STICKER
-			|| this.editor.currentTool !== ToolType.SELECT
+			this.editor.currentTool !== ToolType.SELECT
 			|| this.editor.layerManager.isLayerSelected(this.layer.id)
+			|| this.layer.locked
+			|| !this.layer.visible
 		) return;
 
 		this.removeHoverOutline();
@@ -497,10 +498,20 @@ setupMouseDrag(element) {
 	let dragTransform = this;
 	let dragSourceTransform = this;
 	let altCloneId = null;
-	if (this.layer.type === LayerType.STICKER) {
-		element.addEventListener('mouseenter', () => this.showHoverOutline());
-		element.addEventListener('mouseleave', () => this.removeHoverOutline());
-	}
+	// Hover follows the same frame test as clicking, so the padding around
+	// text and shapes (shadow, effects) doesn't outline a layer a click there
+	// wouldn't select.
+	element.addEventListener('pointermove', (event) => {
+		if (event.pointerType !== 'mouse' || event.buttons) return;
+		const zoom = this.editor.viewport.currentZoom || 1;
+		const point = this.getCanvasPointFromClient(event.clientX, event.clientY);
+		if (this.containsPoint(point, CONFIG.ui.stickerHandles.frameHitTolerance / zoom)) {
+			if (!this.hoverOutline) this.showHoverOutline();
+		} else {
+			this.removeHoverOutline();
+		}
+	});
+	element.addEventListener('mouseleave', () => this.removeHoverOutline());
 
 const swallowFollowupClick = () => {
 	this.editor.ignoreNextClick = true;
@@ -695,8 +706,11 @@ const handleMouseMove = (e) => {
 		isDragging = false;
 		lockedAxis = null;
 		startPosition = null;
+		// The press was the layer's, so its click is too. Selecting puts the
+		// chrome under the pointer, so the click lands on the container and
+		// would read as a workspace click (clearing the selection off-canvas).
+		swallowFollowupClick();
 		if (didMove) {
-			swallowFollowupClick();
 			this.editor.saveState('Transform layer');
 		}
 		if (!didMove && altPending) {
@@ -1665,7 +1679,8 @@ removeTransformHandles() {
 		const insetY = metrics.displayHeight / 2 - sy * localY;
 		const scale = Math.max(0.01, Math.min(metrics.scaleX, metrics.scaleY));
 		const radius = Math.max(0, Math.min(FIELDS.shapeRadius.max, Math.min(this.layer.shapeData.width, this.layer.shapeData.height) / 2, (insetX + insetY) / (2 * scale)));
-		this.layer.shapeData.cornerRadiusPx = radius;
+		// Whole pixels, like the Radius slider it shares this value with.
+		this.layer.shapeData.cornerRadiusPx = Math.round(radius);
 		this.editor.shapeGlitterManager.invalidateMeasurement(this.layer);
 		this.editor.shapeGlitterManager.renderLayer(this.layer);
 		this.updateHandlePositions();

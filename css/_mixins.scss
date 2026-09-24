@@ -107,6 +107,17 @@ $mobile-breakpoint: 800px;
 }
 
 
+// The selection line: accent stroke with a white halo outside and a dark one
+// inside, so it reads on any artwork. Selection box, hover outline and marquee
+// all draw with it, so hover and marquee look like the selection they lead to.
+@mixin selection-line {
+	box-sizing: border-box;
+	border: var(--selection-stroke) solid var(--color-accent);
+	box-shadow:
+		0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.8),
+		inset 0 0 0 var(--selection-halo) rgba(0, 0, 0, 0.45);
+}
+
 @mixin selected {
 	outline-width: calc(2px / var(--zoom, 1));
 	outline-style: dashed;

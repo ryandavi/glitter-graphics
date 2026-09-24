@@ -1712,7 +1712,7 @@ class TextGlitterManager {
 		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
 		stack.style.setProperty('--layer-scale', String(Math.max(scaleX, scaleY) || 1));
 
-		// Hover outline and overflow marker follow the layer's frame.
+		// The overflow marker follows the layer's frame.
 		const rect = entry.bodyRect;
 		if (rect) {
 			stack.style.setProperty('--tf-top', `${rect.y}px`);
