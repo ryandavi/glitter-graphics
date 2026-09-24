@@ -513,16 +513,39 @@ input[type="range"] {
 		border-radius: 2px;
 	}
 
+	// Odd size so its center lands on a pixel center, on the 1px stalk's
+	// center line.
 	&.transform-handle-rotation {
-		width: 10px;
-		height: 10px;
+		width: 11px;
+		height: 11px;
 		border-radius: var(--radius-full);
 	}
 
 	&.transform-handle-edge {
-		width: 12px;
-		height: 12px;
+		display: none;
+	}
+
+	&.transform-handle-rotate {
+		display: none;
+	}
+
+	&.transform-handle-radius {
+		width: 8px;
+		height: 8px;
 		border-radius: var(--radius-full);
+	}
+
+	// Odd size so the 1px crosshair sits on a pixel center.
+	&.transform-handle-anchor {
+		width: 11px;
+		height: 11px;
+		border-radius: var(--radius-full);
+		background:
+			linear-gradient(var(--color-accent), var(--color-accent)) center / 100% var(--selection-stroke) no-repeat,
+			linear-gradient(90deg, var(--color-accent), var(--color-accent)) center / var(--selection-stroke) 100% no-repeat,
+			var(--handle-fill);
+		// Sits on the artwork itself, so it gets a double-width halo.
+		box-shadow: 0 0 0 calc(var(--selection-halo) * 2) rgb(255 255 255 / 80%), 0 1px 3px rgb(0 0 0 / 35%);
 	}
 }
 
@@ -532,10 +555,43 @@ input[type="range"] {
 	border-color: var(--handle-fill);
 }
 
+// A centered anchor is always there but faint: a bare crosshair with a white
+// halo. Hovering drops this and shows the normal handle hover state.
+.transform-handle-wrapper.is-subtle:not(:hover) .transform-handle-anchor {
+	border-color: transparent;
+	background:
+		linear-gradient(var(--color-accent), var(--color-accent)) center / 100% var(--selection-stroke) no-repeat border-box,
+		linear-gradient(90deg, var(--color-accent), var(--color-accent)) center / var(--selection-stroke) 100% no-repeat border-box;
+	box-shadow: none;
+	width: 13px;
+	height: 13px;
+	filter: drop-shadow(0 0 var(--selection-halo) #ffffff) drop-shadow(0 0 var(--selection-halo) #ffffff);
+	opacity: 0.9;
+}
+
+.transform-handles:has(.transform-handle-edge:hover) .transform-bounding-box {
+	border-width: calc(var(--selection-stroke) + 1px);
+}
+
+.selection-badge {
+	position: absolute;
+	transform: translate(-50%, -50%) rotate(var(--badge-angle, 0deg));
+	padding: 3px 6px;
+	border-radius: var(--radius-sm);
+	background: var(--color-accent);
+	color: var(--color-text-on-accent);
+	font-size: var(--font-size-xs);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
 .transform-rotation-line {
 	position: absolute;
 	width: var(--selection-stroke);
 	transform-origin: top center;
 	background: var(--color-accent);
+	box-shadow: var(--handle-halo);
 	pointer-events: none;
 }

@@ -78,7 +78,8 @@ assert.strictEqual(chrome.hitTest(300, 300, 'mouse'), null, 'Empty space hit som
 assert.strictEqual(chrome.hitTest(100, 52, 'mouse'), 'rotation', 'Overlap did not prefer the nearer rotation handle');
 assert.strictEqual(chrome.hitTest(100, 58, 'mouse'), 'edge-top', 'Overlap did not prefer the nearer edge handle');
 
-// On touch, the middle half of a small frame always moves, even under a handle square.
+// Explicit handle zones win over the body on every pointer type. Compact-frame
+// filtering removes unsuitable handles before hit testing.
 chrome.screen = {
 	center: { x: 100, y: 100 },
 	hw: 20,
@@ -87,7 +88,7 @@ chrome.screen = {
 	sin: 0,
 	handles: [{ handleType: 'edge-top', x: 100, y: 86, half: 22 }]
 };
-assert.strictEqual(chrome.hitTest(100, 100, 'touch'), 'move', 'Touch in the middle half grabbed a handle');
+assert.strictEqual(chrome.hitTest(100, 100, 'touch'), 'edge-top', 'Touch edge zone lost priority to the body');
 assert.strictEqual(chrome.hitTest(100, 100, 'mouse'), 'edge-top', 'Mouse under a handle square did not grab it');
 
 console.log('PASS transform gesture math and selection chrome hit testing');

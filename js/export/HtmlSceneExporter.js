@@ -194,6 +194,7 @@ class HtmlSceneExporter {
 		const height = this.editor.originalCanvas.height;
 		const items = await Promise.all(layers.map(async (layer) => {
 			const transform = getLayerTransform(layer);
+			const animationOrigin = getLayerAnimationOrigin(this.editor, layer, layer.stickerData);
 			const numberOr = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 			// Same pixel-grid-snapped center the editor preview and raster export use.
 			const placed = computeLayerTransform(transform, layer.stickerData);
@@ -210,6 +211,8 @@ class HtmlSceneExporter {
 				width: numberOr(layer.stickerData.width, 1) * numberOr(transform.scale.x, 100) / 100,
 				height: numberOr(layer.stickerData.height, 1) * numberOr(transform.scale.y, 100) / 100,
 				rotation: numberOr(transform.rotation, 0),
+				originX: animationOrigin.x,
+				originY: animationOrigin.y,
 				opacity: numberOr(layer.opacity, 100) / 100,
 				flipX: transform.flipX,
 				flipY: transform.flipY,
@@ -452,7 +455,8 @@ ${this.getSceneMarkup(scene)}
 				`left:${this.formatNumber(item.x / width * 100)}%`,
 				`top:${this.formatNumber(item.y / height * 100)}%`,
 				`width:${itemWidth}`,
-				`height:${itemHeight}`
+				`height:${itemHeight}`,
+				`transform-origin:${this.formatNumber(item.originX * 100)}% ${this.formatNumber(item.originY * 100)}%`
 			];
 			if (item.rotation !== 0) declarations.push(`rotate:${this.formatNumber(item.rotation)}deg`);
 			if (item.flipX || item.flipY) declarations.push(`scale:${item.flipX ? -1 : 1} ${item.flipY ? -1 : 1}`);

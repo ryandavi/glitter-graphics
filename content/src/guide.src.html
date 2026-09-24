@@ -378,7 +378,8 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-move"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Move, resize &amp; rotate.</strong> Drag inside the box to move, use the corner handles to resize or scale, and use the top handle to rotate. Side handles scale stickers and shapes along one axis. For text, Point mode handles scale the text while Box mode handles resize the frame without changing the type size.</p>
+                    <p><strong>Move, resize &amp; rotate.</strong> Drag inside the box to move, use the corner handles to resize or scale, drag anywhere along an edge to resize one axis, and drag just outside a corner to rotate. Hold <kbd class="guide-kbd">Shift</kbd> while resizing to temporarily invert the aspect lock, <kbd class="guide-kbd">Alt</kbd> to resize around the anchor, or <kbd class="guide-kbd">Ctrl</kbd>/<kbd class="guide-kbd">Cmd</kbd> to bypass snapping. For text, Point mode handles scale the text while Box mode edges resize the frame without changing the type size.</p>
+                    <p><strong>Anchor.</strong> The crosshair in the middle of a selected layer is its anchor: the point it rotates, flips and animates around, and the point <strong>X</strong>/<strong>Y</strong> report. Drag it to move it; it catches on the layer's corners, edge midpoints and center and on the canvas center. Hold <kbd class="guide-kbd">Shift</kbd> to jump to the nearest corner, edge or center, or <kbd class="guide-kbd">Ctrl</kbd>/<kbd class="guide-kbd">Cmd</kbd> to place it freely. <kbd class="guide-kbd">Alt</kbd>+click inside the layer puts the anchor there, and double-clicking the anchor resets it to the center. You can also pick a position from <strong>Anchor</strong> in the Transform panel.</p>
                     <ul>
                         <li><strong>Rotation snapping</strong> – Hold <kbd class="guide-kbd">Shift</kbd> while rotating (with the handle or the Rotation slider) to snap to 15<span class="setting-unit">°</span> increments.</li>
                         <li><strong>Axis-lock</strong> – Hold <kbd class="guide-kbd">Shift</kbd> while dragging to constrain movement to one axis.</li>
@@ -762,7 +763,7 @@
 					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
 				</div>
 				<div class="guide-item-content">
-					<p><strong>Tune the result</strong> – Use <strong>Speed</strong> and <strong>Intensity</strong> for the main adjustment. Open <strong>Advanced</strong> to control easing, direction, iterations, delay, start offset, fill mode, anchor, and motion sampling. Layer animations share one canvas timeline by default; <strong>Start offset</strong> shifts an individual layer around its loop by a percentage.</p>
+					<p><strong>Tune the result</strong> – Use <strong>Speed</strong> and <strong>Intensity</strong> for the main adjustment. Open <strong>Advanced</strong> to control easing, direction, iterations, delay, start offset, fill mode, the shared layer anchor, and motion sampling. Orbit keeps a separate orbit center. Layer animations share one canvas timeline by default; <strong>Start offset</strong> shifts an individual layer around its loop by a percentage.</p>
 					<ul>
 						<li><strong>Pixel snap</strong> keeps pixel-art movement aligned to the pixel grid.</li>
 						<li>Finite iterations play the effect a set number of times; continuous motion loops while the layer is visible.</li>

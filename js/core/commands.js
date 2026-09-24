@@ -36,6 +36,16 @@ const COMMANDS = {
 		when: (editor) => editor.getSelectedActionableLayers().length > 0,
 		run: (editor) => editor.cloneSelectedLayers()
 	},
+	flipHorizontal: {
+		label: 'Flip Horizontal', group: 'Transform', keys: ['shift+h'], displayKey: 'Shift + H',
+		when: (editor) => editor.getSelectedActionableLayers().length === 1 && Boolean(editor.getMovableLayerContext(editor.layerManager.getActiveLayer())),
+		run: (editor) => flipActiveLayer(editor, 'flipX')
+	},
+	flipVertical: {
+		label: 'Flip Vertical', group: 'Transform', keys: ['shift+v'], displayKey: 'Shift + V',
+		when: (editor) => editor.getSelectedActionableLayers().length === 1 && Boolean(editor.getMovableLayerContext(editor.layerManager.getActiveLayer())),
+		run: (editor) => flipActiveLayer(editor, 'flipY')
+	},
 	copySelection: {
 		label: 'Copy Selected Layer(s)', group: 'Clipboard', keys: ['mod+c'], displayKey: 'Ctrl/Cmd + C',
 		when: (editor) => editor.getSelectedActionableLayers().length > 0,
@@ -133,4 +143,16 @@ function centerSelection(editor, method, groupAxis) {
 	if (!editor.canEditLayer(layer, { notify: true })) return;
 	const context = editor.getMovableLayerContext(layer);
 	context?.manager?.[method]?.(layer.id);
+}
+
+function flipActiveLayer(editor, property) {
+	const layer = editor.layerManager.getActiveLayer();
+	const context = editor.getMovableLayerContext(layer);
+	if (!context || !editor.canEditLayer(layer, { notify: true })) return;
+	const transform = getLayerTransform(layer);
+	editor.applyTransformEditWithAnchor(layer, context.manager, () => context.manager.updateTransform(layer.id, {
+		[property]: !transform[property]
+	}));
+	editor.loadTransformSettings(layer, context.prefix);
+	editor.saveState('Transform layer');
 }

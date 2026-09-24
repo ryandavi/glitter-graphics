@@ -15,7 +15,7 @@ const GlitterAnimation = (() => {
 		periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
 		delayMs: 0, phase: 0, fillMode: 'none', amount: 0, angle: 0, distance: 0,
 		radius: 0, turns: 0, duty: 50, opacityFloor: 0,
-		anchor: 'center', anchorX: 0.5, anchorY: 0.5, snapMode: 'smooth'
+		orbitCenter: 'center', orbitCenterX: 0.5, orbitCenterY: 0.5, snapMode: 'smooth'
 	});
 
 	function config() {
@@ -86,14 +86,16 @@ const GlitterAnimation = (() => {
 		return mulberry32(hashString(layerId) ^ Math.floor(Number(tMs) / quantum) ^ (Number(seed) || 0))();
 	}
 
-	function resolveOrigin(data) {
-		if (data.anchor === 'custom') return [Number(data.anchorX), Number(data.anchorY)];
+	function resolveOrigin(data, field = 'anchor') {
+		const value = data[field];
+		if (value === 'custom') return [Number(data[`${field}X`]), Number(data[`${field}Y`])];
+		if (/^-?\d*\.?\d+,-?\d*\.?\d+$/.test(value)) return value.split(',').map(Number);
 		const values = {
 			'top-left': [0, 0], 'top-center': [0.5, 0], 'top-right': [1, 0],
 			'center-left': [0, 0.5], center: [0.5, 0.5], 'center-right': [1, 0.5],
 			'bottom-left': [0, 1], 'bottom-center': [0.5, 1], 'bottom-right': [1, 1]
 		};
-		return values[data.anchor] || values.center;
+		return values[value] || values.center;
 	}
 
 	function directedProgress(progress, cycle, direction) {
@@ -107,7 +109,7 @@ const GlitterAnimation = (() => {
 		let p = GlitterEasing.easingFn(data.easing, { steps: data.steps })(progress);
 		if (data.snapMode === 'step' && data.easing !== 'steps') p = GlitterEasing.stepsEase(p, data.steps);
 		const out = { ...IDENTITY };
-		[out.originX, out.originY] = resolveOrigin(data);
+		[out.originX, out.originY] = options.origin || [0.5, 0.5];
 		const amount = Number(data.amount) || 0;
 		const wave = Math.sin(Math.PI * p);
 		const oscillation = Math.sin(Math.PI * 2 * p);
@@ -162,7 +164,7 @@ const GlitterAnimation = (() => {
 			// the orbit instead of being inert (transform-origin alone can't do
 			// this — it has no effect on a pure translate).
 			case 'orbit': {
-				const [anchorX, anchorY] = resolveOrigin(data);
+				const [anchorX, anchorY] = resolveOrigin(data, 'orbitCenter');
 				const centerTx = (anchorX - 0.5) * 2 * data.radius;
 				const centerTy = (anchorY - 0.5) * 2 * data.radius;
 				out.tx = centerTx + data.radius * Math.cos(2 * Math.PI * p);
@@ -211,12 +213,12 @@ const GlitterAnimation = (() => {
 		const localTime = Number(tMs) - Number(data.delayMs);
 		let u = localTime / period + Number(data.phase || 0);
 		if (u < 0) {
-			if (!['backwards', 'both'].includes(data.fillMode)) return { ...IDENTITY, originX: resolveOrigin(data)[0], originY: resolveOrigin(data)[1] };
+			if (!['backwards', 'both'].includes(data.fillMode)) return { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
 			u = 0;
 		}
 		const iterations = data.iterations === Infinity ? Infinity : Math.max(0, Number(data.iterations));
 		if (Number.isFinite(iterations) && u >= iterations) {
-			if (!['forwards', 'both'].includes(data.fillMode)) return { ...IDENTITY, originX: resolveOrigin(data)[0], originY: resolveOrigin(data)[1] };
+			if (!['forwards', 'both'].includes(data.fillMode)) return { ...IDENTITY, originX: options.origin?.[0] ?? 0.5, originY: options.origin?.[1] ?? 0.5 };
 			const finalCycle = Math.max(0, Math.ceil(iterations) - 1);
 			const finalProgress = directedProgress(iterations - Math.floor(iterations) || 1, finalCycle, data.direction);
 			return pose(data, finalProgress, tMs, options);
@@ -255,7 +257,7 @@ const GlitterAnimation = (() => {
 
 	return {
 		ANIMATION_TYPES, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext
+		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext, resolveOrigin
 	};
 })();
 

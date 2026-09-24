@@ -38,6 +38,12 @@ const PREVIEW_EXPORT_TWINS = [
 		shared: 'getSlotTexturePatternOrigin',
 		preview: ['paintSlots.applyPaintSourceToElement'],
 		export: ['SceneCompositor._paintSourceInto']
+	},
+	{
+		feature: 'animation transform origin',
+		shared: 'getLayerAnimationOrigin',
+		preview: ['AnimationTicker._paintEntry'],
+		export: ['SceneCompositor._getAnimationBox', 'HtmlSceneExporter.createScene']
 	}
 ];
 

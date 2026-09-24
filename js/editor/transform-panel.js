@@ -91,6 +91,8 @@ renderTransformPanels() {
 		if (resetFlip) resetFlip.disabled = !(transform?.flipX || transform?.flipY);
 		const resetProportional = document.getElementById(ids.resetProportional);
 		if (resetProportional) resetProportional.disabled = transform?.proportionalScale !== false;
+		const resetAnchor = document.getElementById(ids.resetAnchor);
+		if (resetAnchor) resetAnchor.disabled = Math.abs(transform.anchor.x - 0.5) < 1e-6 && Math.abs(transform.anchor.y - 0.5) < 1e-6;
 	}
 
 ,
@@ -189,11 +191,24 @@ renderTransformPanels() {
 
 		const ids = this.getTransformIds(prefix);
 		const preserveInputId = options.preserveInputId || null;
+		// Never rewrite a field the user is typing in (it would replace a partial
+		// value like "1" with its clamped result). Sliders and toggles keep focus
+		// after a click, so they must still follow canvas edits and undo.
+		const isTyping = (input) => input === document.activeElement && ['number', 'text'].includes(input.type);
+		const canSyncInput = (input) => input && input.id !== preserveInputId && !isTyping(input);
 
 		const posX = document.getElementById(ids.posX);
 		const posY = document.getElementById(ids.posY);
-		if (posX && posX.id !== preserveInputId) posX.value = Math.round(transform.position.x);
-		if (posY && posY.id !== preserveInputId) posY.value = Math.round(transform.position.y);
+		const anchorPoint = getLayerAnchorPoint(this, layer) || transform.position;
+		if (canSyncInput(posX)) posX.value = Math.round(anchorPoint.x);
+		if (canSyncInput(posY)) posY.value = Math.round(anchorPoint.y);
+		const anchorSelect = document.getElementById(ids.anchorSelect);
+		if (anchorSelect) {
+			const preset = [0, 0.5, 1].includes(transform.anchor.x) && [0, 0.5, 1].includes(transform.anchor.y)
+				? `${transform.anchor.x},${transform.anchor.y}`
+				: 'custom';
+			anchorSelect.value = preset;
+		}
 
 		const sizeState = this.getTransformSizeState(layer, prefix);
 		const sizeGroup = document.getElementById(ids.sizeGroup);
@@ -202,8 +217,8 @@ renderTransformPanels() {
 		if (sizeGroup && sizeState) {
 			sizeGroup.hidden = !sizeState.visible;
 		}
-		if (sizeWidth && sizeState?.visible && sizeWidth.id !== preserveInputId) sizeWidth.value = sizeState.width;
-		if (sizeHeight && sizeState?.visible && sizeHeight.id !== preserveInputId) sizeHeight.value = sizeState.height;
+		if (sizeState?.visible && canSyncInput(sizeWidth)) sizeWidth.value = sizeState.width;
+		if (sizeState?.visible && canSyncInput(sizeHeight)) sizeHeight.value = sizeState.height;
 
 		const rotation = document.getElementById(ids.rotation);
 		const rotationValue = document.getElementById(ids.rotationValue);
@@ -241,7 +256,7 @@ renderTransformPanels() {
 			const input = document.getElementById(inputId);
 			const display = document.getElementById(valueId);
 			const reset = document.getElementById(resetId);
-			if (input) input.value = value;
+			if (canSyncInput(input)) input.value = value;
 			if (display) display.innerHTML = formatUnit(Math.round(value), '%');
 			if (reset) reset.disabled = Math.abs(value - 100) < 0.01;
 		});

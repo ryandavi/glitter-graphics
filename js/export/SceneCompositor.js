@@ -45,6 +45,7 @@ function resetCanvasContext(ctx, width, height, imageSmoothingEnabled = true) {
 
 class SceneCompositor {
 	constructor(options = {}) {
+		this.editor = options.editor || null;
 		const exportConfig = CONFIG.export || {};
 		this.config = {
 			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug?.enabled : false,
@@ -264,7 +265,8 @@ class SceneCompositor {
 		width = Number(width) || 1;
 		height = Number(height) || 1;
 		const metrics = computeLayerTransform(getLayerTransform(layer), { width, height });
-		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height };
+		const origin = getLayerAnimationOrigin(this.editor, layer, { width, height });
+		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height, origin };
 	}
 
 	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null) {
@@ -1232,8 +1234,11 @@ class SceneCompositor {
 				renderCtx.save();
 				let rainbowHue = 0;
 				if (unit.animData) {
-					const sample = sourceSelectionMap?.get(`__anim_${layer.id}`)?.sample
-						|| GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id });
+					const sampled = sourceSelectionMap?.get(`__anim_${layer.id}`)?.sample;
+					const origin = [unit.anchorBox.origin?.x ?? 0.5, unit.anchorBox.origin?.y ?? 0.5];
+					const sample = sampled
+						? { ...sampled, originX: origin[0], originY: origin[1] }
+						: GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id, origin });
 					rainbowHue = sample.hue || 0;
 					if (layer.type === LayerType.GLITTER_FILL) {
 						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);

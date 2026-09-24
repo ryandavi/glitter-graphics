@@ -38,6 +38,13 @@ const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).map
 	group: ANIMATION_PRESET_GROUP_BY_TYPE[value]
 }));
 
+const ANCHOR_SELECT_OPTIONS = Object.freeze([
+	{ value: '0,0', label: 'Top left' }, { value: '0.5,0', label: 'Top' }, { value: '1,0', label: 'Top right' },
+	{ value: '0,0.5', label: 'Left' }, { value: '0.5,0.5', label: 'Center' }, { value: '1,0.5', label: 'Right' },
+	{ value: '0,1', label: 'Bottom left' }, { value: '0.5,1', label: 'Bottom' }, { value: '1,1', label: 'Bottom right' },
+	{ value: 'custom', label: 'Custom', disabled: true }
+]);
+
 function createAnimationPanelSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
 	return {
@@ -98,12 +105,7 @@ function createAnimationPanelSpec(prefix) {
 						] }
 				] },
 				{ kind: 'set', items: [
-					{ kind: 'select', id: id('Anchor'), visibleLabel: 'Anchor', label: 'Anchor', options: [
-						{ value: 'top-left', label: 'Top left' }, { value: 'top-center', label: 'Top center' }, { value: 'top-right', label: 'Top right' },
-						{ value: 'center-left', label: 'Center left' }, { value: 'center', label: 'Center' }, { value: 'center-right', label: 'Center right' },
-						{ value: 'bottom-left', label: 'Bottom left' }, { value: 'bottom-center', label: 'Bottom center' }, { value: 'bottom-right', label: 'Bottom right' },
-						{ value: 'custom', label: 'Custom' }
-					] },
+					{ kind: 'select', id: id('Anchor'), visibleLabel: 'Anchor', label: 'Anchor', options: ANCHOR_SELECT_OPTIONS },
 					{ kind: 'slider', id: id('AnchorX'), slider: 'animAnchorX', rowId: id('AnchorXRow'), hidden: true },
 					{ kind: 'slider', id: id('AnchorY'), slider: 'animAnchorY', rowId: id('AnchorYRow'), hidden: true },
 					{ kind: 'select', id: id('SnapMode'), visibleLabel: 'Motion', label: 'Motion sampling', options: [

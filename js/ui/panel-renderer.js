@@ -83,6 +83,8 @@ function createPanelGlyph(name) {
 const TRANSFORM_ID_GRAMMAR = Object.freeze({
 	posX: '{p}PosX',
 	posY: '{p}PosY',
+	anchorSelect: '{p}TransformAnchor',
+	resetAnchor: 'reset{P}TransformAnchor',
 	sizeWidth: '{p}Width',
 	sizeHeight: '{p}Height',
 	sizeGroup: '{p}SizeGroup',
@@ -1310,6 +1312,7 @@ function buildPanelItem(item, schema) {
 				option.value = entry.value;
 				option.textContent = entry.label;
 				option.selected = Boolean(entry.selected || entry.active);
+				option.disabled = Boolean(entry.disabled);
 				let parent = select;
 				if (entry.group) {
 					parent = optgroups.get(entry.group);

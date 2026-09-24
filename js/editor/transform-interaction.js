@@ -1,4 +1,18 @@
 const TRANSFORM_INTERACTION_METHODS = {
+applyTransformEditWithAnchor(layer, manager, mutate) {
+		const before = getLayerAnchorPoint(this, layer);
+		const result = mutate();
+		const after = getLayerAnchorPoint(this, layer);
+		if (before && after) {
+			const position = getLayerTransform(layer).position;
+			position.x += before.x - after.x;
+			position.y += before.y - after.y;
+			manager.updateTransform(layer.id, {});
+		}
+		return result;
+	}
+
+,
 zoomToSelection(options = {}) {
 		const metrics = this.layerManager.getSelectedLayers()
 			.map((layer) => this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.())
@@ -137,9 +151,9 @@ snapTransformPosition(transform, position, options = {}) {
 				nextScaleY = uniform;
 			}
 
-			manager.updateTransform(layer.id, {
+			this.applyTransformEditWithAnchor(layer, manager, () => manager.updateTransform(layer.id, {
 				scale: { x: nextScaleX, y: nextScaleY }
-			});
+			}));
 			return true;
 		}
 
@@ -154,7 +168,7 @@ snapTransformPosition(transform, position, options = {}) {
 					nextWidth = Math.max(CONFIG.tools.shapes.minSize, Math.round(nextHeight * aspect));
 				}
 			}
-			return Boolean(manager.setShapeSize?.(layer, nextWidth, nextHeight));
+			return Boolean(this.applyTransformEditWithAnchor(layer, manager, () => manager.setShapeSize?.(layer, nextWidth, nextHeight)));
 		}
 
 		if (prefix === 'text' && (layer.textData?.boxMode || 'auto') === 'fixed') {
@@ -170,7 +184,7 @@ snapTransformPosition(transform, position, options = {}) {
 				if (axis === 'width') nextHeight = (value / displayAspect) / scaleY;
 				else nextWidth = (value * displayAspect) / scaleX;
 			}
-			return Boolean(manager.setBoxSize?.(layer, nextWidth, nextHeight));
+			return Boolean(this.applyTransformEditWithAnchor(layer, manager, () => manager.setBoxSize?.(layer, nextWidth, nextHeight)));
 		}
 
 		const current = this.getTransformSizeState(layer, prefix);
@@ -179,7 +193,7 @@ snapTransformPosition(transform, position, options = {}) {
 		const scale = { ...transform.scale };
 		if (axis === 'width') scale.x = clampLayerScale(scale.x * value / current.width);
 		else scale.y = clampLayerScale(scale.y * value / current.height);
-		manager.updateTransform(layer.id, { scale });
+		this.applyTransformEditWithAnchor(layer, manager, () => manager.updateTransform(layer.id, { scale }));
 		return true;
 	}
 
@@ -246,10 +260,29 @@ snapTransformPosition(transform, position, options = {}) {
 		};
 
 		bindNumberInput(ids.posX, (value, active) => {
-			active.manager.updateTransform(active.layer.id, { position: { x: value } });
+			const point = getLayerAnchorPoint(this, active.layer);
+			active.manager.updateTransform(active.layer.id, { position: { x: getLayerTransform(active.layer).position.x + value - point.x } });
 		});
 		bindNumberInput(ids.posY, (value, active) => {
-			active.manager.updateTransform(active.layer.id, { position: { y: value } });
+			const point = getLayerAnchorPoint(this, active.layer);
+			active.manager.updateTransform(active.layer.id, { position: { y: getLayerTransform(active.layer).position.y + value - point.y } });
+		});
+
+		const anchorSelect = document.getElementById(ids.anchorSelect);
+		anchorSelect?.addEventListener('change', (event) => {
+			const active = activeManager();
+			if (!active || event.target.value === 'custom') return;
+			const [x, y] = event.target.value.split(',').map(Number);
+			active.manager.updateTransform(active.layer.id, { anchor: { x, y } });
+			this.loadTransformSettings(active.layer, prefix);
+			this.saveState('Change anchor');
+		});
+		document.getElementById(ids.resetAnchor)?.addEventListener('click', () => {
+			const active = activeManager();
+			if (!active) return;
+			active.manager.updateTransform(active.layer.id, { anchor: { ...CONFIG.tools.stickers.defaults.transform.anchor } });
+			this.loadTransformSettings(active.layer, prefix);
+			this.saveState('Change anchor');
 		});
 		bindNumberInput(ids.sizeWidth, (value, active) => {
 			this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, 'width', value);
@@ -275,7 +308,7 @@ snapTransformPosition(transform, position, options = {}) {
 
 				const active = activeManager();
 				if (active) {
-					active.manager.updateTransform(active.layer.id, { rotation: value });
+					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { rotation: value }));
 					this.syncResetTransformState(prefix, active.layer);
 				}
 			});
@@ -290,7 +323,7 @@ snapTransformPosition(transform, position, options = {}) {
 
 				const active = activeManager();
 				if (active) {
-					active.manager.updateTransform(active.layer.id, { rotation: CONFIG.tools.stickers.defaults.transform.rotation });
+					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { rotation: CONFIG.tools.stickers.defaults.transform.rotation }));
 					this.syncResetTransformState(prefix, active.layer);
 					this.saveState('Transform layer');
 				}
@@ -356,7 +389,7 @@ snapTransformPosition(transform, position, options = {}) {
 					const previous = Math.max(0.01, current.scale[axis]);
 					scale[otherAxis] = clampLayerScale(current.scale[otherAxis] * value / previous);
 				}
-				active.manager.updateTransform(active.layer.id, { scale });
+				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { scale }));
 				this.loadTransformSettings(active.layer, prefix);
 			});
 			input.addEventListener('change', () => this.saveState('Transform layer'));
@@ -381,9 +414,9 @@ snapTransformPosition(transform, position, options = {}) {
 				const active = activeManager();
 				if (!active) return;
 				const value = clampLayerScale(parseFloat(event.target.value) || 100);
-				active.manager.updateTransform(active.layer.id, {
+				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, {
 					scale: { x: value, y: value }
-				});
+				}));
 				if (scaleSummary) {
 					scaleSummary.innerHTML = this.formatScaleSummary(this.getLayerTransformData(active.layer));
 				}
@@ -410,12 +443,12 @@ snapTransformPosition(transform, position, options = {}) {
 			resetScale.addEventListener('click', () => {
 				const active = activeManager();
 				if (!active) return;
-				active.manager.updateTransform(active.layer.id, {
-					scale: {
+					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, {
+						scale: {
 						x: CONFIG.tools.stickers.defaults.transform.scale.x,
 						y: CONFIG.tools.stickers.defaults.transform.scale.y
 					}
-				});
+					}));
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -429,7 +462,7 @@ snapTransformPosition(transform, position, options = {}) {
 			checkbox.addEventListener('change', (e) => {
 				const active = activeManager();
 				if (active) {
-					active.manager.updateTransform(active.layer.id, { [property]: e.target.checked });
+					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { [property]: e.target.checked }));
 					this.syncResetTransformState(prefix, active.layer);
 					this.saveState('Transform layer');
 				}
@@ -449,7 +482,7 @@ snapTransformPosition(transform, position, options = {}) {
 				const flipY = document.getElementById(ids.flipY);
 				if (flipX) flipX.checked = false;
 				if (flipY) flipY.checked = false;
-				active.manager.updateTransform(active.layer.id, { flipX: false, flipY: false });
+				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { flipX: false, flipY: false }));
 				this.syncResetTransformState(prefix, active.layer);
 				this.saveState('Transform layer');
 			});

@@ -92,7 +92,7 @@ class GlitterEditor {
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
 		this.viewport.editor = this;
 		this.layerManager = new LayerManager(this);
-		this.animationTicker = new AnimationTicker();
+		this.animationTicker = new AnimationTicker(this);
 		this.stickerManager = new StickerManager(this);
 		this.paintMaskStore = new PaintMaskStore(this);
 		this.glitterManager = new GlitterManager(this);
@@ -374,6 +374,7 @@ class GlitterEditor {
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
 		this.sceneCompositor = new SceneCompositor({
+			editor: this,
 			authoredFrameResolver: this.authoredFrameResolver,
 			resolveShapeFillImage: (imageRef) => this.shapeGlitterManager.getImageFillAsset(imageRef)
 		});

@@ -194,7 +194,9 @@ async function loadBlankCanvas(page, options = {}) {
 	});
 	await dismissVisibleModals(page);
 	await closeMobileChrome(page);
-	await page.waitForTimeout(120);
+	// Text selection closes the mobile drawer with a layout transition. Wait for
+	// the preview/selection overlay to settle before recording a handle center.
+	await page.waitForTimeout(300);
 }
 
 async function setTool(page, tool) {
@@ -500,7 +502,9 @@ async function checkFixedTextEdgeResizeHandle(page, drag, label) {
 
 	const layerId = await createFixedBoxTextLayer(page, { position: { x: 120, y: 90 } });
 	await selectLayer(page, layerId);
-	await page.waitForTimeout(100);
+	// The font-ready render can rebuild text chrome after selection; wait for
+	// that final handle set before recording the edge target.
+	await page.waitForTimeout(300);
 
 	const before = await getTextBoxWidth(page, layerId);
 	const handleCenter = await getTransformHandleCenter(page, layerId, 'edge-right');

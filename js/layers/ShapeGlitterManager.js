@@ -521,7 +521,7 @@ class ShapeGlitterManager {
 		const d = layer.shapeData;
 		if (this.ui.assetThumbnail) this.ui.assetThumbnail.innerHTML = ShapeLibrary.getIconSvg(d.shapeId);
 		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
-		if (this.ui.radiusRow) this.ui.radiusRow.hidden = d.shapeId !== 'square';
+		if (this.ui.radiusRow) this.ui.radiusRow.hidden = !LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer);
 
 		this._syncPickerActive();
 
@@ -742,7 +742,7 @@ class ShapeGlitterManager {
 			d.shapeId,
 			d.width,
 			d.height,
-			d.shapeId === 'square' ? d.cornerRadiusPx : null,
+			LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer) ? d.cornerRadiusPx : null,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null,
 			shouldUseCrispMaskEdges(),

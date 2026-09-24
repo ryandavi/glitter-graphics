@@ -138,7 +138,10 @@
 	   theme accent and the drop shadow separates it from light artwork. */
 	--handle-fill: #ffffff;
 	--handle-border-color: var(--color-accent);
-	--handle-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+	// White halo (same as the bounding box's) keeps handles readable over busy
+	// artwork; the soft shadow separates them from light artwork.
+	--handle-halo: 0 0 0 var(--selection-halo) rgb(255 255 255 / 80%);
+	--handle-shadow: var(--handle-halo), 0 1px 3px rgb(0 0 0 / 35%);
 	/* Selection chrome is drawn in screen space (the selection overlay), so
 	   line widths are plain CSS pixels chosen to land on whole device pixels:
 	   1px lines at 1x, 1.5px accent with 0.5px halos at 2x and above. */

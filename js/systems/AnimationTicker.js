@@ -1,7 +1,8 @@
 'use strict';
 
 class AnimationTicker {
-	constructor() {
+	constructor(editor) {
+		this.editor = editor;
 		this.targets = new Map();
 		this.frameRequest = null;
 		this.paused = false;
@@ -84,8 +85,9 @@ class AnimationTicker {
 		}
 		const wrapper = target.getWrapper();
 		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
-		const sample = GlitterAnimation.sampleAt(target.getData(), frozen ? 0 : elapsed, { layerId });
 		const layer = target.getLayer();
+		const origin = getLayerAnimationOrigin(this.editor, layer, { width: wrapper.offsetWidth, height: wrapper.offsetHeight });
+		const sample = GlitterAnimation.sampleAt(target.getData(), frozen ? 0 : elapsed, { layerId, origin: [origin.x, origin.y] });
 		const transform = layer.type === LayerType.GLITTER_FILL
 			? { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false }
 			: getLayerTransform(layer);

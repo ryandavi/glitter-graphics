@@ -35,13 +35,15 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Undo and redo | `HistoryManager` | |
 | Zoom and pan | `ViewportManager` (`editor.viewport`) | |
 | Touch and pointer input | `GestureManager` | |
-| Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | Both describe their handles to `SelectionChrome`, which draws them in the screen-space `SelectionOverlay` (`editor.viewport.selectionOverlay`) and hit-tests them. Drag math is shared in `transform-gestures.js`. |
+| Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | Both describe corners, full-edge strips, rotation zones, anchor/radius controls and the feedback badge to `SelectionChrome`, which draws them in the screen-space `SelectionOverlay` (`editor.viewport.selectionOverlay`) and hit-tests them. Drag math is shared in `transform-gestures.js`. |
 | Brush and eraser mask painting | `MaskEditor`, composed by `MaskCompositor` | |
 | Auto Glitter | `AutoGlitterManager` | A session tool that emits glitter-fill layers. |
 | Export | `SceneCompositor` (`editor.sceneCompositor`, composes frames for every format); encoders `GifExporter` (`editor.exporter`), `Mp4Exporter`, `StillImageExporter` | See "Export path". |
 | Project files | `ProjectSerializer` | `.glitter.json`, with versioned migrations. |
 | Modals, mobile drawers | `ModalManager`, `MobileManager` | |
 | User feedback | `NotificationCenter` (`editor.notifications`) | See "User feedback". |
+
+Transformable layers keep `transform.position` as the element center and store `transform.anchor` as fractions of the displayed frame after flip and before rotation. `getLayerAnchorPoint` resolves that pivot in canvas space; changing the anchor alone never moves artwork. Rotation, flip, numeric scale and Alt-resize keep it fixed. Pivot animations use the same anchor through `getLayerAnimationOrigin`; orbit motion keeps the independent `animation.orbitCenter` field.
 
 ## Where state lives
 

@@ -61,6 +61,7 @@ Common optional fields:
 - `goTo`: `'glitter'`, `'sticker'` or `null`, for the layers-list "go to source" action.
 - `transformable`, `transformPrefix`, `transformCapabilities`: participation in transform handles and the transform panel's control-id prefix.
 - `frame(editor, layer)` and `visualBounds(editor, layer)`: required for transformable types. Each returns a layer-local box `{ width, height, offsetX, offsetY }` in unscaled layer units, offset from the element center (`frameFromCanvasRect` converts a rect in a padded mask canvas). `frame` is the object's body (content, border and background plate, no shadow); handles, hit-testing, alignment, snapping and group bounds use it. `visualBounds` covers every painted pixel, shadow included, for export culling and crop-to-artwork; it defaults to `frame`. Return `null` from `frame` when the layer has nothing to click. Read them through `getLayerFrame` / `getLayerVisualBounds` (`js/transforms/transform-math.js`).
+- `supportsCornerRadius(layer)`: optional capability for a transformable type whose selected geometry exposes the shared on-canvas uniform-radius handles. Return true only while the layer's current geometry supports the existing radius field; the chrome must not branch on layer type.
 - `blendable`: whether the layer has a blend mode.
 - `animatable`: whether the layer can carry `animation`.
 - `contentScalesWithTransform`: the type's slots scale with its transform (stickers), so document scaling compensates them instead of rescaling them.

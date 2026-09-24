@@ -65,8 +65,19 @@ class GestureManager {
 			return;
 		}
 		const transformHandles = event.target.closest('.transform-handles');
-		if (transformHandles && !event.target.closest('.transform-bounding-box')) {
-			return;
+		if (transformHandles) {
+			if (!event.target.closest('.transform-bounding-box')) return;
+			const activeLayer = this.editor.layerManager.getActiveLayer();
+			const context = this.editor.getMovableLayerContext?.(activeLayer);
+			const owner = transformHandles.classList.contains('group-transform-handles')
+				? this.editor.groupTransformManager
+				: context?.manager?.layerTransforms?.get(activeLayer?.id);
+			const chromeHit = owner?.chrome?.hitTest(event.clientX, event.clientY, event.pointerType);
+			if (chromeHit && chromeHit !== 'move') {
+				const handle = owner.chrome.wrappers.get(chromeHit);
+				if (handle) owner.beginHandleDrag(chromeHit, event, handle);
+				return;
+			}
 		}
 
 		this.previewContainer.setPointerCapture?.(event.pointerId);

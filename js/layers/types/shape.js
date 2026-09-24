@@ -51,6 +51,7 @@ registerLayerType(LayerType.SHAPE, {
 	blendable: true,
 	frame: (editor, layer) => editor.shapeGlitterManager?.getShapeBodyFrame(layer) || null,
 	visualBounds: (editor, layer) => editor.shapeGlitterManager?.getShapeVisualFrame(layer) || null,
+	supportsCornerRadius: (layer) => layer?.shapeData?.shapeId === 'square',
 	transformPrefix: 'shape',
 	transformCapabilities: {
 		panelRedesign: true,

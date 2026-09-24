@@ -9,6 +9,18 @@
 // and PANEL_SCHEMAS) and BEFORE js/editor/transform-panel.js (its only caller).
 // ===========================================================================
 
+function buildTransformRevertControl(role) {
+	const node = document.createElement('button');
+	node.type = 'button';
+	node.className = 'property-revert';
+	node.dataset.transformRole = role;
+	node.title = 'Reset to default';
+	node.setAttribute('aria-label', 'Reset to default');
+	node.disabled = true;
+	node.appendChild(createIcon('reset'));
+	return node;
+}
+
 function redesignTransformFragment(fragment) {
 	const card = fragment.querySelector('[data-transform-card]');
 	const grid = card.querySelector('.transform-grid');
@@ -26,17 +38,6 @@ function redesignTransformFragment(fragment) {
 	// default to return to (Flip, Lock aspect ratio). editor-transform.js wires
 	// the click and toggles `disabled` from the layer state; the id is stamped by
 	// buildTransformPanel's [data-transform-role] pass.
-	const revertControl = (role) => {
-		const node = document.createElement('button');
-		node.type = 'button';
-		node.className = 'property-revert';
-		node.dataset.transformRole = role;
-		node.title = 'Reset to default';
-		node.setAttribute('aria-label', 'Reset to default');
-		node.disabled = true;
-		node.appendChild(createIcon('reset'));
-		return node;
-	};
 	const rowLabel = (text) => {
 		const node = document.createElement('span');
 		node.className = 'property-label';
@@ -60,7 +61,7 @@ function redesignTransformFragment(fragment) {
 	lockSwitch.className = 'property-switch';
 	lockSwitch.textContent = '';
 	lockSwitch.setAttribute('aria-hidden', 'true');
-	lock.replaceChildren(rowLabel('Lock aspect ratio'), lockInput, lockSwitch, revertControl('resetProportional'));
+	lock.replaceChildren(rowLabel('Lock aspect ratio'), lockInput, lockSwitch, buildTransformRevertControl('resetProportional'));
 	header.querySelector('.transform-panel-title-actions').remove();
 	const signal = document.createElement('button');
 	signal.type = 'button';
@@ -110,7 +111,7 @@ function redesignTransformFragment(fragment) {
 		flipControl.appendChild(option);
 	});
 	flip.className = 'property-row row';
-	flip.replaceChildren(rowLabel('Flip'), flipControl, revertControl('resetFlip'));
+	flip.replaceChildren(rowLabel('Flip'), flipControl, buildTransformRevertControl('resetFlip'));
 
 	// Labelled groups, hairline-divided (.transform-grid > .property-set in
 	// panels/_properties.scss). Same three groups for sticker / text / shape.
@@ -160,6 +161,20 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	if (!capabilities.panelRedesign) sizePair.dataset.transformRole = 'sizeGroup';
 	fragment.querySelector('[data-transform-number-pair="size"]').replaceWith(sizePair);
 	if (capabilities.panelRedesign) redesignTransformFragment(fragment);
+	if (capabilities.panelRedesign) {
+		const firstGroup = fragment.querySelector('.transform-grid > .property-set');
+		const row = buildPanelItem({
+			kind: 'select',
+			id: ids.anchorSelect,
+			visibleLabel: 'Anchor',
+			label: 'Anchor',
+			stacked: false,
+			rowClasses: 'transform-anchor-row',
+			options: ANCHOR_SELECT_OPTIONS
+		});
+		row.appendChild(buildTransformRevertControl('resetAnchor'));
+		firstGroup?.insertBefore(row, firstGroup.children[2] || null);
+	}
 	const transformCard = fragment.querySelector('[data-transform-card]');
 	transformCard.dataset.transformPrefix = prefix;
 	fragment.querySelectorAll('[data-transform-role]').forEach((element) => {

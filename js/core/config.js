@@ -330,30 +330,30 @@ const CONFIG = deepFreeze({
 		animation: {
 			defaultType: 'pulse',
 			presets: {
-				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity, anchor: 'center' },
+				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity },
 				float: { periodMs: 3600, easing: 'linear', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
-				sway: { periodMs: 2600, easing: 'linear', amount: 8, direction: 'normal', iterations: Infinity, anchor: 'top-center' },
+				sway: { periodMs: 2600, easing: 'linear', amount: 8, direction: 'normal', iterations: Infinity },
 				dim: { periodMs: 2000, easing: 'easeInOut', opacityFloor: 40, direction: 'alternate', iterations: Infinity },
 				drift: { periodMs: 6000, easing: 'linear', distance: 120, angle: 0, direction: 'normal', iterations: Infinity },
 				twinkle: { periodMs: 1400, easing: 'linear', duty: 60, opacityFloor: 20, direction: 'normal', iterations: Infinity },
-				pulse: { periodMs: 1400, easing: 'easeInOut', amount: 10, direction: 'alternate', iterations: Infinity, anchor: 'center' },
-				heartbeat: { periodMs: 1200, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				blink: { periodMs: 900, easing: 'steps', steps: 2, duty: 50, direction: 'normal', iterations: Infinity, fillMode: 'none', anchor: 'center' },
-				bounce: { periodMs: 1000, easing: 'bounceOut', amount: 40, angle: 90, direction: 'normal', iterations: Infinity, anchor: 'bottom-center' },
+				pulse: { periodMs: 1400, easing: 'easeInOut', amount: 10, direction: 'alternate', iterations: Infinity },
+				heartbeat: { periodMs: 1200, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity },
+				blink: { periodMs: 900, easing: 'steps', steps: 2, duty: 50, direction: 'normal', iterations: Infinity, fillMode: 'none' },
+				bounce: { periodMs: 1000, easing: 'bounceOut', amount: 40, angle: 90, direction: 'normal', iterations: Infinity },
 				shake: { periodMs: 600, easing: 'linear', amount: 8, direction: 'normal', iterations: Infinity },
 				tremble: { periodMs: 120, easing: 'linear', amount: 2, direction: 'normal', iterations: Infinity },
-				wobble: { periodMs: 1000, easing: 'easeInOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				jello: { periodMs: 1000, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				tada: { periodMs: 1000, easing: 'easeInOut', amount: 10, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				swing: { periodMs: 1000, easing: 'easeOut', amount: 15, direction: 'normal', iterations: Infinity, anchor: 'top-center' },
-				'rubber-band': { periodMs: 1000, easing: 'easeOut', amount: 25, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				wobble: { periodMs: 1000, easing: 'easeInOut', amount: 12, direction: 'normal', iterations: Infinity },
+				jello: { periodMs: 1000, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity },
+				tada: { periodMs: 1000, easing: 'easeInOut', amount: 10, direction: 'normal', iterations: Infinity },
+				swing: { periodMs: 1000, easing: 'easeOut', amount: 15, direction: 'normal', iterations: Infinity },
+				'rubber-band': { periodMs: 1000, easing: 'easeOut', amount: 25, direction: 'normal', iterations: Infinity },
 				move: { periodMs: 2000, easing: 'easeInOut', distance: 60, angle: 0, direction: 'alternate', iterations: Infinity },
 				orbit: { periodMs: 3000, easing: 'linear', radius: 40, direction: 'normal', iterations: Infinity },
-				rotate: { periodMs: 3000, easing: 'linear', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				zoom: { periodMs: 8000, easing: 'easeOut', amount: 15, direction: 'alternate', iterations: Infinity, anchor: 'center' },
-				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true },
+				rotate: { periodMs: 3000, easing: 'linear', turns: 1, direction: 'normal', iterations: Infinity },
+				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity },
+				zoom: { periodMs: 8000, easing: 'easeOut', amount: 15, direction: 'alternate', iterations: Infinity },
+				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity },
+				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, includeWhenOffCanvas: true },
 				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity }
 			},
 			jitterQuantMs: 60,
@@ -373,6 +373,7 @@ const CONFIG = deepFreeze({
 			defaults: {
 				transform: {
 					position: { x: 0, y: 0 },
+					anchor: { x: 0.5, y: 0.5 },
 					rotation: 0,
 					scale: { x: 100, y: 100 },
 					proportionalScale: true,
@@ -600,14 +601,26 @@ const CONFIG = deepFreeze({
 		themes: ['dark', 'llama', 'cyber-chrome', 'light', 'bubblegum', 'bliss', 'dew', 'aqua', 'p2p', 'homepage', 'buddy-list'],
 		stickerHandles: {
 			enabled: true,
+			rotationHandle: 'always',
 			// Handle geometry, in screen pixels. Colors and line widths are CSS
 			// tokens (--handle-*, --selection-*).
 			outwardOffset: 4,
 			rotationHandleDistance: 30,
+			edgeHitWidth: 8,
+			rotateZoneSize: 20,
+			minChromeSpan: 24,
+			badgeGap: 8,
+			// Screen px a layer's short side needs before a centered anchor
+			// shows; below it the center is where you grab the layer to move it.
+			anchorMinSpan: 48,
+			anchorClamp: { min: -1, max: 2 },
+			radiusHandleMinInset: 12,
+			radiusHandleMinSpan: 48,
+			radiusHandleCoarseMinSpan: 96,
 			// Invisible hit squares around each handle (selection-chrome.js).
 			// Coarse pointers get at least the 44px touch-target minimum.
-			handleHitSize: { corner: 32, edge: 36, rotation: 40 },
-			handleHitSizeCoarse: { corner: 44, edge: 44, rotation: 48 },
+			handleHitSize: { corner: 16, edge: 8, rotate: 20, rotation: 40, anchor: 12, radius: 16 },
+			handleHitSizeCoarse: { corner: 44, edge: 44, rotate: 48, rotation: 48, anchor: 44, radius: 44 },
 			// Screen pixels a pointer must travel before a handle drag starts, so a
 			// click never nudges, scales or rotates a layer.
 			dragThresholdPx: 3,

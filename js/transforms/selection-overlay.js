@@ -14,7 +14,29 @@
 // the container's top-left). During an animated zoom the CSS transition moves
 // the wrapper without the viewport numbers, so the mapping is read from the
 // wrapper's rendered rect instead, and the overlay follows it frame by frame.
-const ROTATION_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='white' stroke='black' stroke-width='1' d='M12 3v4m0 10v4M3 12h4m10 0h4M6.34 6.34l2.83 2.83m5.66 5.66l2.83 2.83M6.34 17.66l2.83-2.83m5.66-5.66l2.83-2.83'/%3E%3C/svg%3E") 12 12, auto`;
+const ROTATION_CURSOR_CACHE = new Map();
+
+// Rotation cursor: a quarter arc bowing out around a corner, with a filled
+// arrowhead at each end, black over a white halo so it reads on any image.
+// Drawn for the top-left corner at 0°; `rotation` turns it clockwise, so 90° is
+// top-right and 45° points straight up. Cached per 15° step because cursors
+// are resolved on every pointermove.
+function getRotationCursor(rotation) {
+	const angle = Math.round(normalizeRotationDeg(rotation) / 15) * 15 % 360;
+	if (ROTATION_CURSOR_CACHE.has(angle)) return ROTATION_CURSOR_CACHE.get(angle);
+	const arc = 'M7 16A9 9 0 0 1 16 7';
+	const heads = 'M3.5 16H10.5L7 20.5Z M16 3.5V10.5L20.5 7Z';
+	const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
+		+ `<g transform="rotate(${angle} 12 12)" stroke-linejoin="round">`
+		+ `<path d="${arc}" fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round"/>`
+		+ `<path d="${heads}" fill="white" stroke="white" stroke-width="3"/>`
+		+ `<path d="${arc}" fill="none" stroke="black" stroke-width="2"/>`
+		+ `<path d="${heads}" fill="black"/>`
+		+ '</g></svg>';
+	const cursor = `url("data:image/svg+xml,${encodeURIComponent(svg)}") 12 12, auto`;
+	ROTATION_CURSOR_CACHE.set(angle, cursor);
+	return cursor;
+}
 
 class SelectionOverlay {
 	constructor(viewport, insertAfter) {
@@ -83,6 +105,13 @@ class SelectionOverlay {
 	static snap(value) {
 		const dpr = window.devicePixelRatio || 1;
 		return Math.round(value * dpr) / dpr;
+	}
+
+	// The middle of the device pixel containing `value`: where a line one
+	// device pixel wide (or any odd width) is centered to render crisply.
+	static snapToPixelCenter(value) {
+		const dpr = window.devicePixelRatio || 1;
+		return (Math.floor(value * dpr) + 0.5) / dpr;
 	}
 
 	// Place a box given in canvas units ({ centerX, centerY, width, height,

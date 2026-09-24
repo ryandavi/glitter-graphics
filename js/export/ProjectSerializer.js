@@ -1,6 +1,6 @@
 class ProjectSerializer {
 	static FORMAT = 'glitter-project';
-	static FORMAT_VERSION = 3;
+	static FORMAT_VERSION = 4;
 
 	/*
 	Format rules:
@@ -46,6 +46,35 @@ class ProjectSerializer {
 		2(data) {
 			(data.layers || []).forEach((layer) => ProjectSerializer.migrateLayerState(layer));
 			data.version = 3;
+		},
+		// v3 -> v4: transform anchors own pivot animations; orbit retains its
+		// independent center so existing paths do not move.
+		3(data) {
+			const presets = {
+				'top-left': [0, 0], 'top-center': [0.5, 0], 'top-right': [1, 0],
+				'center-left': [0, 0.5], center: [0.5, 0.5], 'center-right': [1, 0.5],
+				'bottom-left': [0, 1], 'bottom-center': [0.5, 1], 'bottom-right': [1, 1]
+			};
+			(data.layers || []).forEach((layer) => {
+				if (layer.transform) layer.transform.anchor ||= { x: 0.5, y: 0.5 };
+				const animation = layer.animation;
+				if (!animation) return;
+				const legacy = animation.anchor || 'center';
+				const point = legacy === 'custom'
+					? [Number.isFinite(Number(animation.anchorX)) ? Number(animation.anchorX) : 0.5, Number.isFinite(Number(animation.anchorY)) ? Number(animation.anchorY) : 0.5]
+					: (presets[legacy] || presets.center);
+				if (animation.type === 'orbit') {
+					animation.orbitCenter = legacy;
+					animation.orbitCenterX = point[0];
+					animation.orbitCenterY = point[1];
+				} else if (layer.transform) {
+					layer.transform.anchor = { x: point[0], y: point[1] };
+				}
+				delete animation.anchor;
+				delete animation.anchorX;
+				delete animation.anchorY;
+			});
+			data.version = 4;
 		}
 	};
 

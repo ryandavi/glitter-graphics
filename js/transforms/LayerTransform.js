@@ -158,7 +158,7 @@ applyTransform(element, dimensions) {
 
 	/**
 	 * Update transform properties and re-apply to element
-	 * @param {Object} updates - Object with properties to update (position, scale, rotation, opacity, flipX, flipY)
+	 * @param {Object} updates - Transform properties to update.
 	 */
 updateTransform(updates) {
 	const transform = this.getTransform();
@@ -187,6 +187,10 @@ updateTransform(updates) {
 		newRotation = newRotation % 360;
 		if (newRotation < 0) newRotation += 360;
 		transform.rotation = newRotation;
+	}
+
+	if (updates.anchor) {
+		transform.anchor = { x: updates.anchor.x, y: updates.anchor.y };
 	}
 
 	if (updates.opacity !== undefined) {
@@ -464,6 +468,7 @@ updateTransform(updates) {
 		}
 		transform.flipX = next.flipX;
 		transform.flipY = next.flipY;
+		transform.anchor = { ...next.anchor };
 
 		if (this.element) {
 			this.applyTransform(this.element, this.getDimensions());
@@ -874,7 +879,10 @@ createTransformHandles() {
 
 	const handles = ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
 	if (this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
-	handles.push('rotation');
+	handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
+	if (LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer)) {
+		handles.push('radius-tl', 'radius-tr', 'radius-br', 'radius-bl');
+	}
 	// Selection chrome lives in the screen-space overlay, outside the zoom.
 	this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
 		layerId: this.layer.id,
@@ -908,10 +916,60 @@ createTransformHandles() {
 			rotation: transform.rotation
 		});
 		const boxFrame = this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer);
-		return {
+		const metrics = this.getFrameMetrics(transform);
+		const active = this.activeHandleType || '';
+		let badge = null;
+		if (active !== 'move') {
+			if (active === 'rotation' || active.startsWith('rotate-')) {
+				let angle = normalizeRotationDeg(transform.rotation);
+				if (angle > 180) angle -= 360;
+				badge = { mode: 'angle', text: `${this.dragStartState?.snapDisabled ? angle.toFixed(1) : Math.round(angle)}°` };
+			} else if (active.startsWith('radius-')) {
+				badge = { mode: 'radius', text: `Radius ${Math.round(this.layer.shapeData.cornerRadiusPx)}` };
+			} else {
+				const prefix = LAYER_UI_CONFIG[this.layer.type]?.transformPrefix;
+				const size = this.editor.getTransformSizeState?.(this.layer, prefix);
+				if (size?.visible) badge = { mode: 'size', text: `${size.width} × ${size.height}` };
+			}
+		}
+		const anchor = transform.anchor;
+		const customAnchor = Math.abs(anchor.x - 0.5) > 1e-6 || Math.abs(anchor.y - 0.5) > 1e-6;
+		const coarse = window.matchMedia?.('(pointer: coarse)').matches;
+		// A moved anchor always shows. A centered one shows faintly on fine
+		// pointers so it can be found and dragged, except while moving and on
+		// layers too small on screen, where the center is where you grab to move.
+		// On touch a finger on the middle means "move", so it stays hidden there.
+		const pivoting = active === 'rotation' || active.startsWith('rotate-') || (this.isDraggingHandle && this.dragStartState?.altKey);
+		const zoom = this.editor.viewport.currentZoom || 1;
+		const shortSide = Math.min(Math.abs(metrics.displayWidth), Math.abs(metrics.displayHeight)) * zoom;
+		const showCentered = !coarse && active !== 'move' && shortSide >= CONFIG.ui.stickerHandles.anchorMinSpan;
+		const showAnchor = customAnchor || active === 'anchor' || (!coarse && pivoting) || showCentered;
+		const model = {
 			frame: describe(this.getFrameMetrics(transform)),
-			resizeFrame: boxFrame ? describe(this.getFrameMetrics(transform, boxFrame)) : null
+			resizeFrame: boxFrame ? describe(this.getFrameMetrics(transform, boxFrame)) : null,
+			anchorPoint: showAnchor ? getLayerAnchorPoint(this.editor, this.layer) : null,
+			anchorSubtle: !customAnchor && !pivoting && active !== 'anchor',
+			badge
 		};
+		if (LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer) && !this.isDraggingHandle || active.startsWith('radius-')) {
+			const zoom = this.editor.viewport.currentZoom || 1;
+			const minSpan = window.matchMedia?.('(pointer: coarse)').matches
+				? CONFIG.ui.stickerHandles.radiusHandleCoarseMinSpan : CONFIG.ui.stickerHandles.radiusHandleMinSpan;
+			if (Math.min(metrics.displayWidth, metrics.displayHeight) * zoom >= minSpan) {
+				const inset = Math.max(this.layer.shapeData.cornerRadiusPx || 0, CONFIG.ui.stickerHandles.radiusHandleMinInset / zoom);
+				const hw = metrics.displayWidth / 2;
+				const hh = metrics.displayHeight / 2;
+				const point = (sx, sy) => ({
+					x: metrics.centerX + (sx * (hw - inset) * metrics.cos - sy * (hh - inset) * metrics.sin),
+					y: metrics.centerY + (sx * (hw - inset) * metrics.sin + sy * (hh - inset) * metrics.cos)
+				});
+				model.radiusPoints = {
+					'radius-tl': point(-1, -1), 'radius-tr': point(1, -1),
+					'radius-br': point(1, 1), 'radius-bl': point(-1, 1)
+				};
+			}
+		}
+		return model;
 	}
 
 	updateHandlePositions() {
@@ -924,6 +982,9 @@ createTransformHandles() {
 	 */
 removeTransformHandles() {
 	this.editor.viewport.selectionOverlay.removeSyncer(this.syncHandlePositions);
+	document.removeEventListener('pointermove', this.handleHandlePointerMove);
+	document.removeEventListener('pointerup', this.handleHandlePointerUp);
+	document.removeEventListener('pointercancel', this.handleHandlePointerUp);
 	// Remove handles stored in this instance
 	if (this.transformHandles) {
 		// Re-enable pointer events on element
@@ -962,10 +1023,13 @@ removeTransformHandles() {
 		if (!this.transformHandles) return;
 
 		this.chrome.onPointerDown((handleType, e, handle) => this.beginHandleDrag(handleType, e, handle));
-		// Captured pointer events land on the grabbed element and bubble here.
-		this.transformHandles.addEventListener('pointermove', this.handleHandlePointerMove);
-		this.transformHandles.addEventListener('pointerup', this.handleHandlePointerUp);
-		this.transformHandles.addEventListener('pointercancel', this.handleHandlePointerUp);
+		this.transformHandles.addEventListener('dblclick', (event) => {
+			if (!event.target.closest('[data-handle-type="anchor"]')) return;
+			this.getTransform().anchor = { ...CONFIG.tools.stickers.defaults.transform.anchor };
+			this.updateHandlePositions();
+			this.scheduleSettingsSync();
+			this.editor.saveState('Change anchor');
+		});
 	}
 
 	beginHandleDrag(handleType, e, handle) {
@@ -973,6 +1037,7 @@ removeTransformHandles() {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 
 		const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
+		if (handleType.startsWith('rotate-')) handleType = 'rotation';
 		if (handleType === 'move' && e.pointerType === 'mouse' && e.altKey) {
 			this.startAltDuplicateHandleDrag(e);
 			return;
@@ -993,6 +1058,9 @@ removeTransformHandles() {
 		this.activeHandlePointerId = e.pointerId;
 		this.isDraggingHandle = true;
 		handle.setPointerCapture?.(e.pointerId);
+		document.addEventListener('pointermove', this.handleHandlePointerMove);
+		document.addEventListener('pointerup', this.handleHandlePointerUp);
+		document.addEventListener('pointercancel', this.handleHandlePointerUp);
 
 		const transform = this.getTransform();
 		const dimensions = this.getDimensions();
@@ -1012,8 +1080,10 @@ removeTransformHandles() {
 			transform: {
 				position: { ...transform.position },
 				scale: { ...transform.scale },
-				rotation: transform.rotation
+				rotation: transform.rotation,
+				anchor: { ...transform.anchor }
 			},
+			cornerRadiusPx: this.layer.shapeData?.cornerRadiusPx,
 			width: dimensions.width,
 			height: dimensions.height,
 			boxWidth: this.layer.textData?.boxWidth ?? null,
@@ -1023,8 +1093,8 @@ removeTransformHandles() {
 			// Where the grabbed handle's true point (frame corner or edge
 			// midpoint) was, so scale drags follow the pointer's movement.
 			handlePoint: getFrameHandlePoint(handleMetrics, handleType),
-			// Rotation turns about the frame center.
-			pivot: { x: frameMetrics.centerX, y: frameMetrics.centerY },
+			pivot: getLayerAnchorPoint(this.editor, this.layer),
+			altKey: e.altKey,
 			didMove: false,
 			altDuplicatePending: handleType === 'move' && e.altKey,
 			targetTransform: this
@@ -1093,7 +1163,8 @@ removeTransformHandles() {
 				this.editor.saveState('Transform layer');
 			} else {
 				const point = this.getCanvasPointFromClient(upEvent.clientX, upEvent.clientY);
-				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
+				this.setAnchorFromCanvasPoint(point, { ctrlKey: upEvent.ctrlKey || upEvent.metaKey, shiftKey: upEvent.shiftKey });
+				this.editor.saveState('Change anchor');
 			}
 			this.editor.ignoreNextClick = true;
 			setTimeout(() => { this.editor.ignoreNextClick = false; }, 150);
@@ -1130,6 +1201,12 @@ removeTransformHandles() {
 		} else if (this.activeHandleType === 'rotation') {
 			this.dragStartState.didMove = true;
 			this.handleRotationDrag(e);
+		} else if (this.activeHandleType === 'anchor') {
+			this.dragStartState.didMove = true;
+			this.handleAnchorDrag(e);
+		} else if (this.activeHandleType.startsWith('radius-')) {
+			this.dragStartState.didMove = true;
+			this.handleRadiusDrag(e);
 		} else if (this.activeHandleType === 'move') {
 			this.handleMoveDrag(e);
 		}
@@ -1148,6 +1225,9 @@ removeTransformHandles() {
 		}
 
 		const completedHandle = this.activeHandleElement;
+		document.removeEventListener('pointermove', this.handleHandlePointerMove);
+		document.removeEventListener('pointerup', this.handleHandlePointerUp);
+		document.removeEventListener('pointercancel', this.handleHandlePointerUp);
 		if (this.isDraggingHandle) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -1158,6 +1238,8 @@ removeTransformHandles() {
 			// Shapes are parametric: bake a committed scale into pixel size and
 			// re-rasterize so large shapes stay crisp (no upscaled-raster mixels).
 			const ht = this.activeHandleType || '';
+			const anchorBeforeCommit = (ht.startsWith('corner-') || ht.startsWith('edge-'))
+				? getLayerAnchorPoint(this.editor, this.layer) : null;
 			// Clear the drag flag before committing so ShapeGlitterManager.renderLayer()'s
 			// handle-refresh guard doesn't skip rebuilding the (now differently-sized) box.
 			this.isDraggingHandle = false;
@@ -1171,11 +1253,19 @@ removeTransformHandles() {
 			} else if (this.layer.type === LayerType.STICKER && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
 				await this.editor.stickerManager?.commitResolutionSwap(this.layer);
 			}
+			if (anchorBeforeCommit) {
+				const anchorAfterCommit = getLayerAnchorPoint(this.editor, this.layer);
+				const transform = this.getTransform();
+				transform.position.x += anchorBeforeCommit.x - anchorAfterCommit.x;
+				transform.position.y += anchorBeforeCommit.y - anchorAfterCommit.y;
+				const context = this.editor.getMovableLayerContext(this.layer);
+				context?.manager?.updateTransform(this.layer.id, {});
+			}
 			if (completedDrag?.didMove) {
 				if (completedDrag.targetLayerId) {
 					this.editor.layerManager.setActiveLayer(completedDrag.targetLayerId);
 				}
-				this.editor.saveState('Transform layer');
+				this.editor.saveState(ht === 'anchor' ? 'Change anchor' : ht.startsWith('radius-') ? 'Change corner radius' : 'Transform layer');
 			} else if (completedDrag?.altDuplicatePending) {
 				const point = this.getCanvasPointFromClient(e.clientX, e.clientY);
 				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
@@ -1246,7 +1336,7 @@ removeTransformHandles() {
 		const newY = this.dragStartState.transform.position.y + nextDeltaY;
 
 		const targetTransform = this.dragStartState.targetTransform || this;
-		const snappedPosition = this.editor.snapTransformPosition(targetTransform, { x: newX, y: newY }, { ctrlKey: e.ctrlKey });
+		const snappedPosition = this.editor.snapTransformPosition(targetTransform, { x: newX, y: newY }, { ctrlKey: e.ctrlKey || e.metaKey });
 		targetTransform.updateTransform({
 			position: snappedPosition
 		});
@@ -1264,6 +1354,9 @@ removeTransformHandles() {
 		if (this.activeMouseDragCancel?.()) return true;
 		const start = this.dragStartState;
 		if (!this.isDraggingHandle || !start) return false;
+		document.removeEventListener('pointermove', this.handleHandlePointerMove);
+		document.removeEventListener('pointerup', this.handleHandlePointerUp);
+		document.removeEventListener('pointercancel', this.handleHandlePointerUp);
 		if (start.targetLayerId) {
 			this.editor.layerManager.deleteLayers([start.targetLayerId], { skipHistory: true, silent: true });
 			this.editor.layerManager.setActiveLayer(this.layer.id);
@@ -1272,6 +1365,8 @@ removeTransformHandles() {
 			transform.position = { ...start.transform.position };
 			transform.scale = { ...start.transform.scale };
 			transform.rotation = start.transform.rotation;
+			transform.anchor = { ...start.transform.anchor };
+			if (start.cornerRadiusPx != null && this.layer.shapeData) this.layer.shapeData.cornerRadiusPx = start.cornerRadiusPx;
 			if (start.boxWidth != null && this.layer.textData) this.layer.textData.boxWidth = start.boxWidth;
 			if (start.boxHeight != null && this.layer.textData) this.layer.textData.boxHeight = start.boxHeight;
 			this.applyTransform(this.element, this.getDimensions());
@@ -1317,7 +1412,7 @@ removeTransformHandles() {
 		const localX = vectorX * cos - vectorY * sin;
 		const localY = vectorX * sin + vectorY * cos;
 
-		const proportional = this.layer.type === LayerType.TEXT_GLITTER || transform.proportionalScale;
+		const proportional = this.layer.type === LayerType.TEXT_GLITTER || Boolean(transform.proportionalScale) !== Boolean(e.shiftKey);
 		let newScaleX;
 		let newScaleY;
 		let nextPosition = null;
@@ -1369,6 +1464,7 @@ removeTransformHandles() {
 			};
 		}
 
+		const fixedAnchor = e.altKey ? getLayerAnchorPoint(this.editor, this.layer) : null;
 		this.updateTransform({
 			position: nextPosition || undefined,
 			scale: {
@@ -1376,6 +1472,11 @@ removeTransformHandles() {
 				y: newScaleY
 			}
 		});
+		if (fixedAnchor) {
+			const after = getLayerAnchorPoint(this.editor, this.layer);
+			this.getTransform().position.x += fixedAnchor.x - after.x;
+			this.getTransform().position.y += fixedAnchor.y - after.y;
+		}
 
 		// Re-apply transform to element
 		const dimensions = this.getDimensions();
@@ -1423,7 +1524,7 @@ removeTransformHandles() {
 			x: start.transform.scale.x,
 			y: start.transform.scale.y
 		};
-		const lockAspect = Boolean(transform.proportionalScale);
+		const lockAspect = Boolean(transform.proportionalScale) !== Boolean(e.shiftKey);
 		const axisSign = edge === 'left' || edge === 'top' ? -1 : 1;
 		let nextPosition = null;
 		if (e.altKey) {
@@ -1477,7 +1578,13 @@ removeTransformHandles() {
 			};
 		}
 
+		const fixedAnchor = e.altKey ? getLayerAnchorPoint(this.editor, this.layer) : null;
 		this.updateTransform({ position: nextPosition || undefined, scale });
+		if (fixedAnchor) {
+			const after = getLayerAnchorPoint(this.editor, this.layer);
+			this.getTransform().position.x += fixedAnchor.x - after.x;
+			this.getTransform().position.y += fixedAnchor.y - after.y;
+		}
 		this.applyTransform(this.element, this.getDimensions());
 		this.updateHandlePositions();
 	}
@@ -1500,8 +1607,67 @@ removeTransformHandles() {
 		const rotation = normalizeRotationDeg(snapRotationDeg(start.transform.rotation + delta, e.shiftKey));
 		const position = rotatePointAbout(start.transform.position, start.pivot, rotation - start.transform.rotation);
 
-		this.updateTransform({ rotation, position });
+		this.updateTransform({ rotation });
+		this.getTransform().position = position;
 		this.applyTransform(this.element, this.getDimensions());
+		this.updateHandlePositions();
+	}
+
+	setAnchorFromCanvasPoint(point, options = {}) {
+		const transform = this.getTransform();
+		const target = getLayerAnchorFromPoint(this.editor, this.layer, point);
+		if (!target) return;
+		const clamp = CONFIG.ui.stickerHandles.anchorClamp;
+		let { x, y } = target;
+		// Shift jumps to the nearest of the nine frame points, like Shift snapping
+		// rotation to steps. Otherwise the anchor catches on those points, or on
+		// the canvas center, within the snap threshold. Ctrl/Cmd turns both off.
+		const grid = [0, 0.5, 1];
+		const nearest = (value) => grid.reduce((best, step) => Math.abs(value - step) < Math.abs(value - best) ? step : best);
+		if (options.shiftKey) {
+			x = nearest(x);
+			y = nearest(y);
+		} else if (!options.ctrlKey && CONFIG.snapping.enabled) {
+			const threshold = CONFIG.snapping.threshold / Math.max(0.01, this.editor.viewport.currentZoom);
+			const snapX = grid.find((value) => Math.abs((x - value) * target.width) <= threshold);
+			const snapY = grid.find((value) => Math.abs((y - value) * target.height) <= threshold);
+			const canvas = this.editor.originalCanvas;
+			const canvasCenter = canvas ? { x: canvas.width / 2, y: canvas.height / 2 } : null;
+			if (snapX === undefined && snapY === undefined && canvasCenter && CONFIG.snapping.snapToCanvas
+				&& Math.hypot(point.x - canvasCenter.x, point.y - canvasCenter.y) <= threshold) {
+				({ x, y } = getLayerAnchorFromPoint(this.editor, this.layer, canvasCenter));
+			} else {
+				if (snapX !== undefined) x = snapX;
+				if (snapY !== undefined) y = snapY;
+			}
+		}
+		transform.anchor.x = Math.max(clamp.min, Math.min(clamp.max, x));
+		transform.anchor.y = Math.max(clamp.min, Math.min(clamp.max, y));
+		this.updateHandlePositions();
+		this.scheduleSettingsSync();
+	}
+
+	handleAnchorDrag(e) {
+		this.setAnchorFromCanvasPoint(this.getCanvasPointFromClient(e.clientX, e.clientY), { ctrlKey: e.ctrlKey || e.metaKey, shiftKey: e.shiftKey });
+	}
+
+	handleRadiusDrag(e) {
+		const metrics = this.getFrameMetrics();
+		const point = this.getCanvasPointFromClient(e.clientX, e.clientY);
+		const dx = point.x - metrics.centerX;
+		const dy = point.y - metrics.centerY;
+		const localX = dx * metrics.cos + dy * metrics.sin;
+		const localY = -dx * metrics.sin + dy * metrics.cos;
+		const corner = this.activeHandleType.replace('radius-', '');
+		const sx = corner.includes('l') ? -1 : 1;
+		const sy = corner.includes('t') ? -1 : 1;
+		const insetX = metrics.displayWidth / 2 - sx * localX;
+		const insetY = metrics.displayHeight / 2 - sy * localY;
+		const scale = Math.max(0.01, Math.min(metrics.scaleX, metrics.scaleY));
+		const radius = Math.max(0, Math.min(FIELDS.shapeRadius.max, Math.min(this.layer.shapeData.width, this.layer.shapeData.height) / 2, (insetX + insetY) / (2 * scale)));
+		this.layer.shapeData.cornerRadiusPx = radius;
+		this.editor.shapeGlitterManager.invalidateMeasurement(this.layer);
+		this.editor.shapeGlitterManager.renderLayer(this.layer);
 		this.updateHandlePositions();
 	}
 

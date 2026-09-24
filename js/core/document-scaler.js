@@ -39,6 +39,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 
 	if (config?.transformable) {
 		const transform = getLayerTransform(layer);
+		// transform.anchor is frame-relative, so document resizing does not scale it.
 		if (transform?.position) {
 			transform.position.x *= scaleX;
 			transform.position.y *= scaleY;

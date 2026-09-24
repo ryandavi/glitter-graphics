@@ -407,7 +407,7 @@ class GroupTransformManager {
 		this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
 			layerId: 'group-selection',
 			className: 'transform-handles group-transform-handles',
-			handles: ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl', 'rotation']
+			handles: ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl', 'rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation']
 		});
 		this.transformHandles = this.chrome.element;
 		this.editor.viewport.selectionOverlay.addSyncer(this.syncHandlePositions);
@@ -424,8 +424,15 @@ class GroupTransformManager {
 			return;
 		}
 
+		let badge = null;
+		if (this.activeHandleType !== 'move') {
+			badge = this.activeHandleType === 'rotation'
+				? { mode: 'angle', text: `${Math.round(this.dragStartState?.rotateDeg || 0)}°` }
+				: { mode: 'size', text: `${Math.round(bounds.width)} × ${Math.round(bounds.height)}` };
+		}
 		this.chrome.render({
-			frame: { centerX: bounds.centerX, centerY: bounds.centerY, width: bounds.width, height: bounds.height, rotation: 0 }
+			frame: { centerX: bounds.centerX, centerY: bounds.centerY, width: bounds.width, height: bounds.height, rotation: 0 },
+			badge
 		});
 	}
 
@@ -481,6 +488,7 @@ class GroupTransformManager {
 	}
 
 	beginHandleDrag(handleType, event, handle) {
+		if (handleType.startsWith('rotate-')) handleType = 'rotation';
 		if (event.pointerType === 'mouse' && event.button !== 0) {
 			return;
 		}
@@ -672,7 +680,7 @@ class GroupTransformManager {
 		this.dragStartState.lockedAxis = axis;
 
 		const rawDelta = { x: axis === 'y' ? 0 : deltaX, y: axis === 'x' ? 0 : deltaY };
-		const snappedDelta = this.editor.snapGroupDelta(this.dragStartState.bounds, rawDelta, this.dragStartState.layerStates.map(({ layer }) => layer.id), { ctrlKey: event.ctrlKey });
+		const snappedDelta = this.editor.snapGroupDelta(this.dragStartState.bounds, rawDelta, this.dragStartState.layerStates.map(({ layer }) => layer.id), { ctrlKey: event.ctrlKey || event.metaKey });
 		const nextDeltaX = snappedDelta.x;
 		const nextDeltaY = snappedDelta.y;
 
@@ -752,6 +760,7 @@ class GroupTransformManager {
 		const rotateDeg = snapRotationDeg(rotationDeltaDeg(pivot, { x: start.canvasX, y: start.canvasY }, point), event.shiftKey);
 
 		start.didMove = true;
+		start.rotateDeg = rotateDeg;
 		this.applyLayerStateDelta(start.layerStates, bounds, { rotateDeg, originX: pivot.x, originY: pivot.y });
 		this.applyEntries(start.layerStates);
 	}
