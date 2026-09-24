@@ -163,18 +163,12 @@ applyTransform(element, dimensions) {
 updateTransform(updates) {
 	const transform = this.getTransform();
 
-	// Apply updates
-	if (updates.position) {
-		const newX = updates.position.x ?? transform.position.x;
-		const newY = updates.position.y ?? transform.position.y;
-
-		transform.position.x = CONFIG.tools.stickers.transform.roundValues ? Math.round(newX) : newX;
-		transform.position.y = CONFIG.tools.stickers.transform.roundValues ? Math.round(newY) : newY;
-	}
-
+	// Apply updates. Position goes last: rounding it depends on the new size
+	// and rotation.
 	if (updates.scale) {
 		transform.scale.x = clampLayerScale(updates.scale.x ?? transform.scale.x);
 		transform.scale.y = clampLayerScale(updates.scale.y ?? transform.scale.y);
+		snapLayerScaleToWholePixels(this.layer);
 	}
 
 	if (updates.proportionalScale !== undefined) {
@@ -203,6 +197,16 @@ updateTransform(updates) {
 
 	if (updates.flipY !== undefined) {
 		transform.flipY = updates.flipY;
+	}
+
+	if (updates.position) {
+		const newX = updates.position.x ?? transform.position.x;
+		const newY = updates.position.y ?? transform.position.y;
+		const next = CONFIG.tools.stickers.transform.roundValues
+			? roundLayerPosition(this.layer, newX, newY)
+			: { x: newX, y: newY };
+		transform.position.x = next.x;
+		transform.position.y = next.y;
 	}
 
 	// REMOVED: Handle update now happens in StickerManager after applyTransform
@@ -760,6 +764,7 @@ const handleMouseMove = (e) => {
 		this.gestureInteractionActive = true;
 		this.gestureInteractionChanged = false;
 		this.gestureRawPosition = { ...this.getTransform().position };
+		this.gestureStartScale = { ...this.getTransform().scale };
 	}
 
 	dragByScreenDelta(deltaX, deltaY) {
@@ -835,19 +840,48 @@ const handleMouseMove = (e) => {
 		}
 	}
 
-	endGestureInteraction() {
+	// Settle a finished scale gesture the way each type stays crisp: shapes bake
+	// the scale into pixel size, text into font size, stickers pick a matching
+	// resolution. The rerender can shift the frame, so the anchor is put back
+	// where the gesture left it.
+	async commitScaleChange(anchorBefore, options = {}) {
+		if (this.layer.type === LayerType.TEXT_GLITTER) {
+			if (options.text !== false) await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
+		} else if (this.layer.type === LayerType.SHAPE) {
+			this.editor.shapeGlitterManager?.commitScale(this.layer);
+		} else if (this.layer.type === LayerType.STICKER) {
+			await this.editor.stickerManager?.commitResolutionSwap(this.layer);
+		}
+		const anchorAfter = getLayerAnchorPoint(this.editor, this.layer);
+		const transform = this.getTransform();
+		transform.position.x += anchorBefore.x - anchorAfter.x;
+		transform.position.y += anchorBefore.y - anchorAfter.y;
+		this.editor.getMovableLayerContext(this.layer)?.manager?.updateTransform(this.layer.id, {});
+	}
+
+	async endGestureInteraction() {
 		if (!this.gestureInteractionActive) {
 			return;
 		}
 
-		if (this.gestureInteractionChanged) {
-			this.editor.saveState('Transform layer');
-		}
-
+		const changed = this.gestureInteractionChanged;
+		const startScale = this.gestureStartScale;
+		// Reset before the async commit so a gesture starting meanwhile begins clean.
 		this.gestureInteractionActive = false;
 		this.gestureInteractionChanged = false;
 		this.gestureRawPosition = null;
+		this.gestureStartScale = null;
 		this.editor.clearSmartGuides?.();
+
+		if (changed) {
+			// A two-finger pinch scales like a corner handle and commits the same
+			// way; a plain one-finger move has nothing to bake.
+			const scale = this.getTransform().scale;
+			const scaled = scale.x !== startScale?.x || scale.y !== startScale?.y;
+			const anchor = scaled ? getLayerAnchorPoint(this.editor, this.layer) : null;
+			if (anchor) await this.commitScaleChange(anchor);
+			this.editor.saveState('Transform layer');
+		}
 	}
 
 	// ===== TRANSFORM HANDLES (DESKTOP ONLY) =====
@@ -1257,23 +1291,9 @@ removeTransformHandles() {
 			// Clear the drag flag before committing so ShapeGlitterManager.renderLayer()'s
 			// handle-refresh guard doesn't skip rebuilding the (now differently-sized) box.
 			this.isDraggingHandle = false;
-			if (
-				this.layer.type === LayerType.TEXT_GLITTER
-				&& ht.startsWith('corner-')
-			) {
-				await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
-			} else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
-				this.editor.shapeGlitterManager?.commitScale(this.layer);
-			} else if (this.layer.type === LayerType.STICKER && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
-				await this.editor.stickerManager?.commitResolutionSwap(this.layer);
-			}
 			if (anchorBeforeCommit) {
-				const anchorAfterCommit = getLayerAnchorPoint(this.editor, this.layer);
-				const transform = this.getTransform();
-				transform.position.x += anchorBeforeCommit.x - anchorAfterCommit.x;
-				transform.position.y += anchorBeforeCommit.y - anchorAfterCommit.y;
-				const context = this.editor.getMovableLayerContext(this.layer);
-				context?.manager?.updateTransform(this.layer.id, {});
+				// Text edge handles resize the box; only its corners scale the type.
+				await this.commitScaleChange(anchorBeforeCommit, { text: ht.startsWith('corner-') });
 			}
 			if (completedDrag?.didMove) {
 				if (completedDrag.targetLayerId) {
@@ -1438,8 +1458,8 @@ removeTransformHandles() {
 			const initialY = (frame.height / 2) * (start.transform.scale.y / 100);
 			const factor = Math.max(0.01, (Math.abs(localX) * initialX + Math.abs(localY) * initialY)
 				/ Math.max(0.01, initialX * initialX + initialY * initialY));
-			newScaleX = proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX;
-			newScaleY = proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY;
+			newScaleX = this.snapStickerHandleScale(proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX, 'x', e);
+			newScaleY = this.snapStickerHandleScale(proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY, 'y', e, proportional ? clampLayerScale(start.transform.scale.x * factor) : undefined);
 		} else {
 			// Default corner resize keeps the opposite corner fixed.
 			const corner = this.activeHandleType.replace('corner-', '');
@@ -1461,8 +1481,8 @@ removeTransformHandles() {
 			const initialY = signY * frame.height * (start.transform.scale.y / 100);
 			const factor = Math.max(0.01, (localFromOppositeX * initialX + localFromOppositeY * initialY)
 				/ Math.max(0.01, initialX * initialX + initialY * initialY));
-			newScaleX = proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX;
-			newScaleY = proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY;
+			newScaleX = this.snapStickerHandleScale(proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX, 'x', e);
+			newScaleY = this.snapStickerHandleScale(proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY, 'y', e, proportional ? clampLayerScale(start.transform.scale.x * factor) : undefined);
 
 			const draggedLocalX = oppositeLocalX + signX * frame.width * (newScaleX / 100);
 			const draggedLocalY = oppositeLocalY + signY * frame.height * (newScaleY / 100);
@@ -1497,6 +1517,25 @@ removeTransformHandles() {
 		this.applyTransform(this.element, dimensions);
 
 		this.updateHandlePositions();
+	}
+
+	// A sticker handle drag lands on whole pixels here, before the caller
+	// derives the position from it: snapping afterwards (in updateTransform)
+	// shifted the size under an already-computed position and the fixed edge
+	// wobbled a pixel. Holding Ctrl/Cmd steps through 100/200/300%, where pixel
+	// art keeps every source pixel the same size (150% alternates 1- and 2-pixel
+	// columns). Typed and slider values are never snapped to multiples.
+	// `multipleOf` lets a locked-aspect drag pick one multiple for both axes;
+	// their percents differ slightly after whole-pixel rounding and would
+	// otherwise split at 150%.
+	snapStickerHandleScale(scale, axis, e, multipleOf = scale) {
+		if (this.layer.type !== LayerType.STICKER) return scale;
+		let next = scale;
+		if (CONFIG.tools.stickers.transform.wholeMultipleModifier && (e.ctrlKey || e.metaKey)) {
+			next = clampLayerScale(Math.max(100, Math.round(multipleOf / 100) * 100));
+		}
+		if (!CONFIG.tools.stickers.transform.roundValues) return next;
+		return snapScaleToWholePixels(next, axis === 'x' ? this.layer.stickerData.width : this.layer.stickerData.height);
 	}
 
 	handleEdgeResizeDrag(e) {
@@ -1574,6 +1613,9 @@ removeTransformHandles() {
 				scale.x = clampLayerScale(start.transform.scale.x * scale.y / Math.max(0.01, start.transform.scale.y));
 			}
 		}
+		// Only the axes this drag changes; an untouched axis keeps its value.
+		if (isHorizontal || lockAspect) scale.x = this.snapStickerHandleScale(scale.x, 'x', e);
+		if (!isHorizontal || lockAspect) scale.y = this.snapStickerHandleScale(scale.y, 'y', e);
 
 		if (!e.altKey) {
 			const visibleCenterLocalX = isHorizontal

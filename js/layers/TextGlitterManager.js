@@ -2062,17 +2062,19 @@ class TextGlitterManager {
 		);
 		const bakedFactor = nextFontSize / Math.max(1, previousFontSize);
 		layer.textData.fontSize = nextFontSize;
-		layer.textData.letterSpacing *= bakedFactor;
+		// Whole pixels, as the panel fields step and document resize rounds
+		// (scaleDocumentLayerState); a raw product shows as 4.109589px.
+		layer.textData.letterSpacing = Math.round(layer.textData.letterSpacing * bakedFactor);
 		if ((layer.textData.boxMode || 'auto') === 'fixed') {
-			layer.textData.boxWidth *= bakedFactor;
-			layer.textData.boxHeight *= bakedFactor;
+			layer.textData.boxWidth = Math.round(layer.textData.boxWidth * bakedFactor);
+			layer.textData.boxHeight = Math.round(layer.textData.boxHeight * bakedFactor);
 		}
 		if (layer.textData.border && PREFERENCES.get('scaleEffects')) {
-			layer.textData.border.widthPx *= bakedFactor;
+			layer.textData.border.widthPx = Math.max(1, Math.round(layer.textData.border.widthPx * bakedFactor));
 		}
 		if (layer.textData.shadow && PREFERENCES.get('scaleEffects')) {
-			layer.textData.shadow.offsetX *= bakedFactor;
-			layer.textData.shadow.offsetY *= bakedFactor;
+			layer.textData.shadow.offsetX = Math.round(layer.textData.shadow.offsetX * bakedFactor);
+			layer.textData.shadow.offsetY = Math.round(layer.textData.shadow.offsetY * bakedFactor);
 		}
 		if (PREFERENCES.get('scaleTextures')) {
 			layer.textData.fill.scale = roundSlotTextureScale(layer.textData.fill.scale * bakedFactor);

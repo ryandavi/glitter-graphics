@@ -1124,11 +1124,11 @@ class ShapeGlitterManager {
 		const effectScale = Math.max(sx, sy);
 		if (layer.shapeData.border && PREFERENCES.get('scaleEffects')) {
 			layer.shapeData.border.widthPx = Math.max(1, Math.round(layer.shapeData.border.widthPx * effectScale));
-			layer.shapeData.border.dotSpacingPx = Math.max(1, layer.shapeData.border.dotSpacingPx * effectScale);
+			layer.shapeData.border.dotSpacingPx = Math.max(1, Math.round(layer.shapeData.border.dotSpacingPx * effectScale));
 		}
 		if (layer.shapeData.shadow && PREFERENCES.get('scaleEffects')) {
-			layer.shapeData.shadow.offsetX *= sx;
-			layer.shapeData.shadow.offsetY *= sy;
+			layer.shapeData.shadow.offsetX = Math.round(layer.shapeData.shadow.offsetX * sx);
+			layer.shapeData.shadow.offsetY = Math.round(layer.shapeData.shadow.offsetY * sy);
 		}
 		if (PREFERENCES.get('scaleTextures')) {
 			layer.shapeData.fill.scale = roundSlotTextureScale((layer.shapeData.fill.scale ?? 100) * effectScale);

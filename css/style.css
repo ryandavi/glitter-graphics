@@ -5815,6 +5815,9 @@ body.tool-text .preview-wrapper {
   height: 100%;
   image-rendering: auto;
 }
+.sticker-element.pixelated img {
+  image-rendering: pixelated;
+}
 
 .text-glitter-element,
 .shape-glitter-element {

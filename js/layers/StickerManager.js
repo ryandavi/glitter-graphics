@@ -995,6 +995,9 @@ updateTransform(layerId, updates) {
 		layerData.stickerData.width = layerData.stickerData.width || sticker.width;
 		layerData.stickerData.height = layerData.stickerData.height || sticker.height;
 		layerData.stickerData.frameCount = layerData.stickerData.frameCount || sticker.frameCount || 1;
+		// Projects saved before scale snapping carry free percentages; bring them
+		// onto whole-pixel sizes the same way every scale edit does.
+		snapLayerScaleToWholePixels(layerData);
 		// The library asset owns this flag, so a project saved before an admin
 		// change picks up the corrected rendering on reopen.
 		layerData.stickerData.isPixelated = sticker.isPixelated !== false;

@@ -378,11 +378,22 @@ snapTransformPosition(transform, position, options = {}) {
 			const reset = document.getElementById(resetId);
 			if (!input) return;
 
+			// Keys on the slider or its editable readout. On a small sticker a 1%
+			// step is under a pixel, so the whole-pixel snap would land it back on
+			// the same size and the arrow keys would do nothing; step a pixel instead.
+			let keyStep = false;
+			input.closest('.property-row, .property-pair-cell')?.addEventListener('keydown', (event) => {
+				keyStep = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(event.key);
+			});
+
 			input.addEventListener('input', (event) => {
+				const stepped = keyStep;
+				keyStep = false;
 				const active = activeManager();
 				if (!active) return;
 				const value = clampLayerScale(parseFloat(event.target.value) || 100);
 				const current = getLayerTransform(active.layer);
+				const before = current.scale[axis];
 				const scale = { ...current.scale, [axis]: value };
 				if (document.getElementById(ids.proportional)?.checked) {
 					const otherAxis = axis === 'x' ? 'y' : 'x';
@@ -390,6 +401,11 @@ snapTransformPosition(transform, position, options = {}) {
 					scale[otherAxis] = clampLayerScale(current.scale[otherAxis] * value / previous);
 				}
 				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { scale }));
+				if (stepped && getLayerTransform(active.layer).scale[axis] === before && Math.round(value) !== Math.round(before)) {
+					const dimension = axis === 'x' ? 'width' : 'height';
+					const size = this.getTransformSizeState(active.layer, prefix);
+					if (size?.visible) this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, dimension, size[dimension] + Math.sign(value - before));
+				}
 				this.loadTransformSettings(active.layer, prefix);
 			});
 			input.addEventListener('change', () => this.saveState('Transform layer'));

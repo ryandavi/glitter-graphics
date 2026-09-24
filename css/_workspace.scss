@@ -53,6 +53,11 @@ body.tool-text {
 		image-rendering: auto;
 	}
 
+	// From the sticker's isPixelated flag (StickerManager.renderLayer), the
+	// same flag export uses. `.shows-pixels` only covers zoom above 100%, so
+	// without this a scaled-up pixel sticker is smoothed at 100% and below.
+	&.pixelated img { image-rendering: pixelated; }
+
 }
 
 .text-glitter-element,

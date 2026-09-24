@@ -57,7 +57,9 @@ registerLayerType(LayerType.SHAPE, {
 		panelRedesign: true,
 		position: true,
 		size: true,
-		scaleReadout: true,
+		// No Scale sliders: a shape's size is its pixel W/H. A percentage would
+		// sit as an unbaked CSS stretch; handles bake theirs on release.
+		scaleReadout: false,
 		lockAspect: true,
 		rotation: true,
 		opacity: true,

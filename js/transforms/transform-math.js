@@ -63,6 +63,56 @@ function snapLayerCenter(centerX, centerY, displayWidth, displayHeight, rotation
 	};
 }
 
+// Raster layers (stickers) keep their scale as a CSS scale on the native image
+// rather than re-rasterizing like shapes and text, so a scale whose rendered
+// size is not a whole number of pixels stretches the image across the document
+// pixel grid (blurry, or uneven pixels on pixel art) even though the panel
+// rounds it to "100%". Nudge the percent to the nearest whole-pixel size.
+function snapScaleToWholePixels(scalePercent, nativeSize) {
+	if (!(nativeSize > 0)) return scalePercent;
+	const pixels = Math.max(1, Math.round(nativeSize * scalePercent / 100));
+	return pixels / nativeSize * 100;
+}
+
+// Whole-pixel position. A sticker's size is already whole pixels, so round
+// its top-left corner (what snapLayerCenter renders) rather than its center:
+// rounding an odd-width sticker's x.5 center moved the edge a resize holds
+// still by a pixel every time the width changed parity. Other layers, and
+// stickers at a free rotation, round the center as before.
+function roundLayerPosition(layer, x, y) {
+	const transform = layer?.transform;
+	if (layer?.type === LayerType.STICKER && transform) {
+		const quarterTurns = (transform.rotation || 0) / 90;
+		if (Math.abs(quarterTurns - Math.round(quarterTurns)) <= 1e-9) {
+			return snapLayerCenter(
+				x,
+				y,
+				dropFloatResidue(layer.stickerData.width * transform.scale.x / 100),
+				dropFloatResidue(layer.stickerData.height * transform.scale.y / 100),
+				transform.rotation || 0
+			);
+		}
+	}
+	return { x: Math.round(x), y: Math.round(y) };
+}
+
+// Every path that writes a sticker's scale (updateTransform, project load,
+// document resize) ends here so the whole-pixel rule has one home.
+function snapLayerScaleToWholePixels(layer) {
+	if (layer?.type !== LayerType.STICKER || !CONFIG.tools.stickers.transform.roundValues) return;
+	const scale = layer.transform?.scale;
+	if (!scale) return;
+	scale.x = snapScaleToWholePixels(scale.x, layer.stickerData?.width);
+	scale.y = snapScaleToWholePixels(scale.y, layer.stickerData?.height);
+}
+
+// A snapped scale reproduces its whole-pixel size only to within float error
+// (142.99999999999997); settle those back onto the integer.
+function dropFloatResidue(value) {
+	const whole = Math.round(value);
+	return Math.abs(value - whole) < 1e-6 ? whole : value;
+}
+
 // `transform` with `position` replaced by the rendered (snapped) center, for
 // geometry that must agree with what is on screen, such as hit testing.
 function withRenderedPosition(transform, dimensions) {
@@ -76,11 +126,13 @@ function computeLayerTransform(transform, dimensions = {}) {
 	const height = Number(dimensions.height) || 0;
 	const scaleX = (resolved.scale.x || 100) / 100;
 	const scaleY = (resolved.scale.y || 100) / 100;
+	const displayWidth = dropFloatResidue(width * scaleX);
+	const displayHeight = dropFloatResidue(height * scaleY);
 	const center = snapLayerCenter(
 		resolved.position.x,
 		resolved.position.y,
-		width * scaleX,
-		height * scaleY,
+		displayWidth,
+		displayHeight,
 		resolved.rotation
 	);
 
@@ -94,8 +146,8 @@ function computeLayerTransform(transform, dimensions = {}) {
 		centerY: center.y,
 		width,
 		height,
-		displayWidth: width * scaleX,
-		displayHeight: height * scaleY,
+		displayWidth,
+		displayHeight,
 		scaleX,
 		scaleY,
 		signedScaleX: scaleX * (resolved.flipX ? -1 : 1),

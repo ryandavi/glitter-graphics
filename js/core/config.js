@@ -383,7 +383,11 @@ const CONFIG = deepFreeze({
 			},
 			rotationSnapTolerance: 5,
 			transform: {
-				roundValues: true
+				// Also snaps sticker scale to whole-pixel sizes (snapScaleToWholePixels).
+				roundValues: true,
+				// Ctrl/Cmd while dragging a sticker handle steps through 100/200/300%.
+				// See LayerTransform.snapStickerHandleScale.
+				wholeMultipleModifier: true
 			}
 		},
 		text: {
