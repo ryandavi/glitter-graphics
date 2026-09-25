@@ -150,9 +150,6 @@ body.modal-open {
 				margin-left: 2.5em;
 			}
 
-			ul {
-				margin-left: 1.5em;
-			}
 
 
 			.toc {
@@ -2661,6 +2658,7 @@ body.modal-open {
 		margin: var(--spacing-lg) 0;
 		background: var(--color-bg-tertiary);
 		padding: 0;
+		margin-bottom: 0;
 
 		> * + * {
 			border-top: 1px solid var(--color-border);
@@ -2798,10 +2796,51 @@ body.modal-open {
 		min-height: var(--control-height);
 	}
 
-	@media (max-width: 600px) {
-		.timeline-legend { flex-wrap: wrap; }
+	// Summary line doubles as the header for the collapsible filter toolbar:
+	// the toggle sits on the same row as the count instead of adding one.
+	.timeline-summary-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-sm) var(--spacing-md);
+		padding: var(--spacing-sm) var(--spacing-md);
+	}
 
-		.timeline-type-filters { flex-basis: 100%; }
+	.timeline-filters-toggle {
+		flex: 0 0 auto;
+		min-height: var(--control-height);
+
+		.timeline-filters-toggle-chevron {
+			transition: transform var(--transition-fast);
+		}
+
+		&[aria-expanded='true'] .timeline-filters-toggle-chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.timeline-legend {
+			flex-wrap: wrap;
+			gap: var(--spacing-xs);
+			padding: var(--spacing-sm) var(--spacing-md);
+		}
+
+		// One swipeable row instead of three wrapped rows of pills. The row
+		// bleeds to the panel edges so a cut-off pill reads as "scroll for
+		// more"; block padding keeps the focus outline from being clipped.
+		.timeline-type-filters {
+			flex-basis: 100%;
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scrollbar-width: none;
+			margin-inline: calc(-1 * var(--spacing-md));
+			padding: var(--spacing-2xs) var(--spacing-md);
+
+			&::-webkit-scrollbar { display: none; }
+		}
+
+		.timeline-legend-item { flex: 0 0 auto; white-space: nowrap; }
 
 		.timeline-updated {
 			flex-basis: 100%;
@@ -2831,8 +2870,9 @@ body.modal-open {
 		}
 	}
 
+	// Legend pills keep their desktop height on touch:
+	// at 44px the pills row alone ate a third of the fixed-height panel.
 	@media (pointer: coarse) {
-		.timeline-legend-item,
 		.timeline-filter select,
 		.timeline-filter-search input,
 		.timeline-filter-clear {
@@ -2841,10 +2881,10 @@ body.modal-open {
 	}
 
 	.timeline-summary {
+		min-width: 0;
 		font-size: var(--font-size-sm);
 		color: var(--color-text-secondary);
 		margin: 0;
-		padding: var(--spacing-md);
 	}
 
 

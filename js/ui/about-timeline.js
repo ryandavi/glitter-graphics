@@ -11,8 +11,9 @@ function initPreservationTimeline(modalBody) {
 	const filtersEl = modalBody.querySelector('#PreservationTimelineFilters');
 	const listEl = modalBody.querySelector('#PreservationTimelineList');
 	const summaryEl = modalBody.querySelector('#PreservationTimelineSummary');
+	const filtersToggle = modalBody.querySelector('#PreservationTimelineFiltersToggle');
 	const typeButtons = [...modalBody.querySelectorAll('[data-timeline-type]')];
-	if (!filtersEl || !listEl || !summaryEl || !typeButtons.length || typeof ABOUT_TIMELINE === 'undefined') return;
+	if (!filtersEl || !listEl || !summaryEl || !filtersToggle || !typeButtons.length || typeof ABOUT_TIMELINE === 'undefined') return;
 	if (filtersEl.dataset.initialized === 'true') return;
 	filtersEl.dataset.initialized = 'true';
 
@@ -105,6 +106,28 @@ function initPreservationTimeline(modalBody) {
 
 	filtersEl.append(topic.wrap, country.wrap, decade.wrap, entityWrap, clearBtn);
 
+	// The panel has a fixed height, so every row of filter chrome comes out of
+	// the list. Start collapsed where the controls stack (the same 600px
+	// breakpoint as the stacked grid in _modals.scss); on wider screens they
+	// fit on one row and stay open. The toggle carries the active-filter count
+	// so a collapsed toolbar never hides that filters are applied.
+	filtersToggle.appendChild(createIcon('magnifying-glass'));
+	const filtersToggleLabel = document.createElement('span');
+	filtersToggleLabel.className = 'name';
+	filtersToggle.appendChild(filtersToggleLabel);
+	const filtersToggleChevron = document.createElement('span');
+	filtersToggleChevron.className = 'icon-wrapper timeline-filters-toggle-chevron';
+	filtersToggleChevron.appendChild(createIcon('chevron-down'));
+	filtersToggle.appendChild(filtersToggleChevron);
+	const setFiltersExpanded = (expanded) => {
+		filtersToggle.setAttribute('aria-expanded', String(expanded));
+		filtersEl.hidden = !expanded;
+	};
+	setFiltersExpanded(!window.matchMedia('(max-width: 600px)').matches);
+	filtersToggle.addEventListener('click', () => {
+		setFiltersExpanded(filtersToggle.getAttribute('aria-expanded') !== 'true');
+	});
+
 	const buildTimelineItem = (item) => {
 		const li = document.createElement('li');
 		li.className = `timeline-${item.type}`;
@@ -151,8 +174,12 @@ function initPreservationTimeline(modalBody) {
 			button.setAttribute('aria-pressed', String(type === 'all' ? state.types.size === 0 : state.types.has(type)));
 		});
 
-		const filtersActive = state.types.size > 0 || state.topic !== 'all' || state.country !== 'all' || state.decade !== 'all' || query !== '';
+		// Type pills stay visible above the toolbar, so only the toolbar's own
+		// filters count toward the toggle badge.
+		const toolbarFilterCount = [state.topic !== 'all', state.country !== 'all', state.decade !== 'all', query !== ''].filter(Boolean).length;
+		const filtersActive = state.types.size > 0 || toolbarFilterCount > 0;
 		clearBtn.disabled = !filtersActive;
+		filtersToggleLabel.textContent = toolbarFilterCount ? `Filters (${toolbarFilterCount})` : 'Filters';
 		listEl.classList.toggle('timeline-list-empty', matches.length === 0);
 
 		if (matches.length === 0) {
