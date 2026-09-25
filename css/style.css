@@ -8759,12 +8759,6 @@ body.is-resizing-panel canvas {
   --entity-icon-tint: transparent;
 }
 
-[data-icon=link] {
-  --entity-icon-image: none;
-  --entity-icon-mask: url("../images/modal/history/platform-icons/link.svg");
-  --entity-icon-tint: currentColor;
-}
-
 [data-icon=neocities] {
   --entity-icon-image: url("../images/modal/history/platform-icons/neocities.color.svg");
   --entity-icon-mask: none;
@@ -8777,12 +8771,6 @@ body.is-resizing-panel canvas {
   --entity-icon-tint: transparent;
 }
 
-[data-icon=tool] {
-  --entity-icon-image: none;
-  --entity-icon-mask: url("../images/modal/history/platform-icons/tool.svg");
-  --entity-icon-tint: currentColor;
-}
-
 [data-icon=tripod] {
   --entity-icon-image: url("../images/modal/history/platform-icons/tripod.color.svg");
   --entity-icon-mask: none;
@@ -8793,22 +8781,6 @@ body.is-resizing-panel canvas {
   --entity-icon-image: url("../images/modal/history/platform-icons/wtv-zone.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
-}
-
-[data-entity=aylana] {
-  --entity-accent: #e0559b;
-}
-
-[data-entity=dan-411] {
-  --entity-accent: #9b59d0;
-}
-
-[data-entity=mica] {
-  --entity-accent: #2bb3a3;
-}
-
-[data-entity=moondogee] {
-  --entity-accent: #4a90e2;
 }
 
 /* ===== MODAL ===== */
@@ -10340,10 +10312,6 @@ body.modal-open {
   color: color-mix(in srgb, var(--color-accent) 40%, var(--color-text-primary));
 }
 
-.entity-handle.entity-accent {
-  color: color-mix(in srgb, var(--entity-accent) 75%, var(--color-text-primary));
-}
-
 .entity[data-card]:not([data-tooltip]) {
   -webkit-text-decoration: underline dotted transparent;
           text-decoration: underline dotted transparent;
@@ -10426,6 +10394,7 @@ body.modal-open {
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="angelfire.com"])::before {
   content: "";
@@ -10449,11 +10418,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="angelfire.com"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="hometown.aol.com"], [href*="members.aol.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/aol-hometown.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="hometown.aol.com"], [href*="members.aol.com"])::before {
   content: "";
@@ -10477,11 +10450,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="hometown.aol.com"], [href*="members.aol.com"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="blingee.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/blingee.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="blingee.com"])::before {
   content: "";
@@ -10505,11 +10482,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="blingee.com"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="deviantart.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/deviantart.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="deviantart.com"])::before {
   content: "";
@@ -10533,11 +10514,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="deviantart.com"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="geocities.com"], [href*="geocities.yahoo.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/geocities.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="geocities.com"], [href*="geocities.yahoo.com"])::before {
   content: "";
@@ -10561,39 +10546,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="addglitter.com"], [href*="alwayslisa.com"], [href*="animationfactory.com"], [href*="aromatic.wings.nu"], [href*="asd.gsfc.nasa.gov"], [href*="avpgalaxy.net"], [href*="banners.users1.50megs.com"], [href*="bearblog.dev"], [href*="bemymind.com"], [href*="biglobe.ne.jp"], [href*="binkybeads.tk"], [href*="blinkie.suppi.net"], [href*="blinkie.world"], [href*="blinkieobsession.freeservers.com"], [href*="blueyonder.co.uk"], [href*="boomspeed.com"], [href*="cameronsworld.net"], [href*="candybar.co.kr"], [href*="cardmaker.net"], [href*="catarific.com"], [href*="coolcherrycream.com"], [href*="cyp2.com"], [href*="dafont.com"], [href*="dazzlejunction.com"], [href*="deletedcity.net"], [href*="divergentrays.com"], [href*="dollzmania.com"], [href*="dragcave.net"], [href*="elouai.com"], [href*="emeraldpink.com"], [href*="facebook.com"], [href*="femicom.org"], [href*="flamingtext.com"], [href*="flickr.com"], [href*="forums.serebii.net"], [href*="funkychickens.com"], [href*="geocities.institute"], [href*="geocities.ws"], [href*="gifcities.org"], [href*="giphy.com"], [href*="glitter-graphics.com"], [href*="glitterfy.com"], [href*="glittermaker.com"], [href*="glitteryourway.com"], [href*="goatcounter.com"], [href*="grsites.com"], [href*="heta.moe"], [href*="hexedpixels.com"], [href*="homestead.com"], [href*="iconator.com"], [href*="jessicajournals.com"], [href*="ko-fi.com"], [href*="leonardwojcik.com"], [href*="linuxenvy.com"], [href*="lissaexplains.com"], [href*="livejournal.com"], [href*="magistream.com"], [href*="miss-behaved.net"], [href*="myglitterromance.com"], [href*="myspace.com"], [href*="namaii.com"], [href*="nekoweb.org"], [href*="neonlove.net"], [href*="neopets.com"], [href*="online-image-editor.com"], [href*="onyxsmiles.com"], [href*="oocities.org"], [href*="palaceplanet.net"], [href*="phoophie.com"], [href*="photobucket.com"], [href*="picmix.com"], [href*="piczo.com"], [href*="pokefarm.com"], [href*="reef.kingdra.net"], [href*="ryandavi.com"], [href*="salvaged.nu"], [href*="scented.minty.nu"], [href*="scri8e.com"], [href*="shatteredinnocents.com"], [href*="sheezy.art"], [href*="teleportacia.org"], [href*="tenor.com"], [href*="thedollpalace.com"], [href*="thefanlistings.org"], [href*="thepalace.com"], [href*="theqbee.net"], [href*="tinypic.com"], [href*="tumblr.com"], [href*="vlsicad.eecs.umich.edu"], [href*="web.badges.world"], [href*="webring.com"], [href*="webwenchdesign.com"], [href*="whisperscorner.com"], [href*="xandra.cc"], [href*="zine.yesterweb.org"]) {
-  --entity-icon-image: none;
-  --entity-icon-mask: url("../images/modal/history/platform-icons/link.svg");
-  --entity-icon-tint: currentColor;
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="addglitter.com"], [href*="alwayslisa.com"], [href*="animationfactory.com"], [href*="aromatic.wings.nu"], [href*="asd.gsfc.nasa.gov"], [href*="avpgalaxy.net"], [href*="banners.users1.50megs.com"], [href*="bearblog.dev"], [href*="bemymind.com"], [href*="biglobe.ne.jp"], [href*="binkybeads.tk"], [href*="blinkie.suppi.net"], [href*="blinkie.world"], [href*="blinkieobsession.freeservers.com"], [href*="blueyonder.co.uk"], [href*="boomspeed.com"], [href*="cameronsworld.net"], [href*="candybar.co.kr"], [href*="cardmaker.net"], [href*="catarific.com"], [href*="coolcherrycream.com"], [href*="cyp2.com"], [href*="dafont.com"], [href*="dazzlejunction.com"], [href*="deletedcity.net"], [href*="divergentrays.com"], [href*="dollzmania.com"], [href*="dragcave.net"], [href*="elouai.com"], [href*="emeraldpink.com"], [href*="facebook.com"], [href*="femicom.org"], [href*="flamingtext.com"], [href*="flickr.com"], [href*="forums.serebii.net"], [href*="funkychickens.com"], [href*="geocities.institute"], [href*="geocities.ws"], [href*="gifcities.org"], [href*="giphy.com"], [href*="glitter-graphics.com"], [href*="glitterfy.com"], [href*="glittermaker.com"], [href*="glitteryourway.com"], [href*="goatcounter.com"], [href*="grsites.com"], [href*="heta.moe"], [href*="hexedpixels.com"], [href*="homestead.com"], [href*="iconator.com"], [href*="jessicajournals.com"], [href*="ko-fi.com"], [href*="leonardwojcik.com"], [href*="linuxenvy.com"], [href*="lissaexplains.com"], [href*="livejournal.com"], [href*="magistream.com"], [href*="miss-behaved.net"], [href*="myglitterromance.com"], [href*="myspace.com"], [href*="namaii.com"], [href*="nekoweb.org"], [href*="neonlove.net"], [href*="neopets.com"], [href*="online-image-editor.com"], [href*="onyxsmiles.com"], [href*="oocities.org"], [href*="palaceplanet.net"], [href*="phoophie.com"], [href*="photobucket.com"], [href*="picmix.com"], [href*="piczo.com"], [href*="pokefarm.com"], [href*="reef.kingdra.net"], [href*="ryandavi.com"], [href*="salvaged.nu"], [href*="scented.minty.nu"], [href*="scri8e.com"], [href*="shatteredinnocents.com"], [href*="sheezy.art"], [href*="teleportacia.org"], [href*="tenor.com"], [href*="thedollpalace.com"], [href*="thefanlistings.org"], [href*="thepalace.com"], [href*="theqbee.net"], [href*="tinypic.com"], [href*="tumblr.com"], [href*="vlsicad.eecs.umich.edu"], [href*="web.badges.world"], [href*="webring.com"], [href*="webwenchdesign.com"], [href*="whisperscorner.com"], [href*="xandra.cc"], [href*="zine.yesterweb.org"])::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: var(--entity-icon-tint, transparent);
-  background-image: var(--entity-icon-image, none);
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: var(--entity-icon-mask, none);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: var(--entity-icon-mask, none);
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="geocities.com"], [href*="geocities.yahoo.com"])::after {
+  content: none;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="neocities.org"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/neocities.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="neocities.org"])::before {
   content: "";
@@ -10617,11 +10578,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="neocities.org"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="reddit.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/reddit.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="reddit.com"])::before {
   content: "";
@@ -10645,11 +10610,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="reddit.com"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="tripod.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/tripod.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="tripod.com"])::before {
   content: "";
@@ -10673,11 +10642,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="tripod.com"])::after {
+  content: none;
+}
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="wtv-zone.com"]) {
   --entity-icon-image: url("../images/modal/history/platform-icons/wtv-zone.color.svg");
   --entity-icon-mask: none;
   --entity-icon-tint: transparent;
   white-space: nowrap;
+  padding-right: 0;
 }
 .modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="wtv-zone.com"])::before {
   content: "";
@@ -10701,6 +10674,15 @@ body.modal-open {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="wtv-zone.com"])::after {
+  content: none;
+}
+.modal-overlay.document-modal a.external:is([data-icon], :has(.entity[data-icon])) {
+  padding-right: 0;
+}
+.modal-overlay.document-modal a.external:is([data-icon], :has(.entity[data-icon]))::after {
+  content: none;
+}
 .modal-overlay.document-modal ol a.external, .modal-overlay.document-modal ul a.external {
   white-space: unset !important;
 }
@@ -10716,51 +10698,16 @@ body.modal-open {
 .modal-overlay.document-modal .archive-service {
   font-style: italic;
 }
-.modal-overlay.document-modal a.external[href$=".gif" i],
-.modal-overlay.document-modal a.external[href$=".jpg" i],
-.modal-overlay.document-modal a.external[href$=".jpeg" i],
-.modal-overlay.document-modal a.external[href$=".png" i],
-.modal-overlay.document-modal a.external[href$=".webp" i] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external[href$=".gif" i]::before,
-.modal-overlay.document-modal a.external[href$=".jpg" i]::before,
-.modal-overlay.document-modal a.external[href$=".jpeg" i]::before,
-.modal-overlay.document-modal a.external[href$=".png" i]::before,
-.modal-overlay.document-modal a.external[href$=".webp" i]::before,
-.modal-overlay.document-modal .file-name::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/image-file.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/image-file.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
+.modal-overlay.document-modal .file-name,
+.modal-overlay.document-modal .usenet-address {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
 }
 .modal-overlay.document-modal .file-name {
   white-space: nowrap;
-  font-family: monospace;
 }
 .modal-overlay.document-modal .usenet-address {
-  font-family: monospace;
   overflow-wrap: anywhere;
-}
-.modal-overlay.document-modal .file-name.file-name-directory::before {
-  mask-image: url("../images/modal/history/platform-icons/directory.svg");
-  -webkit-mask-image: url("../images/modal/history/platform-icons/directory.svg");
-}
-.modal-overlay.document-modal .file-name.file-name-page::before {
-  mask-image: url("../images/modal/history/platform-icons/page-file.svg");
-  -webkit-mask-image: url("../images/modal/history/platform-icons/page-file.svg");
 }
 .modal-overlay.document-modal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;

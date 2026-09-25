@@ -20,11 +20,9 @@ const KINDS = {
 	person: 'Person',
 	handle: 'Handle'
 };
-const ENTITY_FIELDS = new Set(['kind', 'status', 'name', 'sortName', 'aliases', 'host', 'owner', 'person', 'domains', 'closed', 'gloss', 'icon', 'accent', 'tags']);
-const SOURCE_FIELDS = new Set(['status', 'author', 'title', 'url', 'link', 'dead', 'publisher', 'archive', 'note', 'notes', 'general', 'cite', 'type', 'date']);
+const ENTITY_FIELDS = new Set(['kind', 'status', 'name', 'sortName', 'aliases', 'host', 'owner', 'person', 'domains', 'closed', 'gloss', 'icon', 'aka', 'tags']);
+const SOURCE_FIELDS = new Set(['status', 'author', 'title', 'url', 'link', 'dead', 'publisher', 'archive', 'note', 'notes', 'general', 'description', 'type', 'date']);
 const DEAD_STATES = new Set(['domain-repurposed', 'host-closed', 'page-offline', 'service-closed']);
-// Generic glyphs by kind, used when neither the entity nor its host has an icon.
-const KIND_GLYPHS = { site: 'link', software: 'tool' };
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
 function readJson(file) {
@@ -58,7 +56,7 @@ function validateEntities(entities) {
 		if (entry.sortName && entry.kind !== 'person') fail('sortName is for persons only.');
 		if (entry.closed && !DEAD_STATES.has(entry.closed)) fail(`closed must be one of ${[...DEAD_STATES].join(', ')}.`);
 		if (entry.status && entry.status !== 'draft') fail('status can only be "draft".');
-		if (entry.accent && !/^#[0-9a-f]{6}$/iu.test(entry.accent)) fail('accent must be a #rrggbb color.');
+		if (entry.aka && (entry.kind !== 'person' || !Array.isArray(entry.aka))) fail('aka is a list, for persons only.');
 	}
 	return problems;
 }
@@ -69,7 +67,9 @@ function validateSources(sources) {
 		const fail = message => problems.push(`sources.json "${key}": ${message}`);
 		if (!SLUG_PATTERN.test(key)) fail('key must be lowercase words joined by hyphens.');
 		for (const field of Object.keys(source)) if (!SOURCE_FIELDS.has(field)) fail(`unknown field "${field}".`);
-		if (!source.cite && !source.title) fail('needs a title (or a pre-formatted cite).');
+		if (!source.title === !source.description) fail('needs a title, or a description for an untitled item (not both).');
+		if (source.type && source.type !== 'book') fail('type can only be "book".');
+		if (source.date && !/^\d{4}$/u.test(source.date)) fail('date is a year (books only).');
 		if (source.status && !['live', 'dead', 'draft'].includes(source.status)) fail('status must be live, dead or draft.');
 		if (source.dead && source.dead.state && !DEAD_STATES.has(source.dead.state)) fail(`dead.state must be one of ${[...DEAD_STATES].join(', ')}.`);
 		if (source.general && !Array.isArray(source.general)) fail('general must be a list of document names.');
@@ -89,8 +89,8 @@ function iconFiles(dir = iconDir) {
 	return files;
 }
 
-// Own icon, else an icon file named after the slug, else the host's, else
-// the kind's generic glyph (none for people and handles).
+// Own icon, else an icon file named after the slug, else the host's. No
+// generic glyph: an icon means "this place has a logo", never "this is a link".
 function resolveIcon(entities, slug, files = iconFiles(), seen = new Set()) {
 	const entry = entities[slug];
 	if (!entry || seen.has(slug)) return null;
@@ -101,7 +101,7 @@ function resolveIcon(entities, slug, files = iconFiles(), seen = new Set()) {
 		const hostIcon = resolveIcon(entities, entry.host, files, seen);
 		if (hostIcon) return hostIcon;
 	}
-	return KIND_GLYPHS[entry.kind] || null;
+	return null;
 }
 
 // The entity whose domains best match a URL (longest matching domain wins).
@@ -126,7 +126,7 @@ function findEntities(entities, query, limit = 10) {
 	if (!needle) return [];
 	const scored = [];
 	for (const [slug, entry] of Object.entries(entities)) {
-		const labels = [slug, entry.name, entry.sortName, ...(entry.aliases || []), ...(entry.domains || [])].filter(Boolean);
+		const labels = [slug, entry.name, entry.sortName, ...(entry.aliases || []), ...(entry.aka || []), ...(entry.domains || [])].filter(Boolean);
 		let best = Infinity;
 		for (const label of labels) {
 			const value = normalize(label);

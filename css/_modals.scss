@@ -1890,15 +1890,10 @@ body.modal-open {
 // are italic by convention.
 .entity-work { font-style: italic; }
 
-// A handle is tinted so "spruisious" reads as a username, not a typo. The
-// Glitter Connection cast each get their own accent (from entities.json), so
-// aliases like Moon / Moondogee share one color.
+// A handle is tinted so "spruisious" reads as a username, not a typo. People
+// (Mica, Dan, Moon) are plain text; their hover card lists their handles.
 .entity-handle {
 	color: color-mix(in srgb, var(--color-accent) 40%, var(--color-text-primary));
-}
-
-.entity-handle.entity-accent {
-	color: color-mix(in srgb, var(--entity-accent) 75%, var(--color-text-primary));
 }
 
 // A mention with a hover card (handles, hosted sites) but no gloss: a faint
@@ -1980,9 +1975,19 @@ body.modal-open {
 			--entity-icon-mask: #{map.get($spec, mask)};
 			--entity-icon-tint: #{map.get($spec, tint)};
 			white-space: nowrap;
+			padding-right: 0;
 
 			&::before { @include entity-icon-glyph; }
+			&::after { content: none; }
 		}
+	}
+
+	// One mark per link: when a logo already says where the link goes, it
+	// drops the external-link arrow. Links without a logo keep the arrow.
+	a.external:is([data-icon], :has(.entity[data-icon])) {
+		padding-right: 0;
+
+		&::after { content: none; }
 	}
 
 	// no whitespace in reference
@@ -2037,69 +2042,20 @@ body.modal-open {
 	.archive-link.preservation-copy { }
 	.archive-service { font-style: italic; }
 
-	// Small file-type marker before a link's text when the href points straight at an image
-	// file rather than a page (FB12.gif, sparkbutton.gif...). Pure attribute-selector match on
-	// the href's extension, so it applies automatically to every current and future link like
-	// this with no HTML changes. Same generic currentColor-mask treatment as the platform
-	// fallback icons above, since this isn't a brand mark either.
-	a.external[href$=".gif" i],
-	a.external[href$=".jpg" i],
-	a.external[href$=".jpeg" i],
-	a.external[href$=".png" i],
-	a.external[href$=".webp" i] { white-space: nowrap; }
-	a.external[href$=".gif" i]::before,
-	a.external[href$=".jpg" i]::before,
-	a.external[href$=".jpeg" i]::before,
-	a.external[href$=".png" i]::before,
-	a.external[href$=".webp" i]::before,
-	// Same marker for a filename mentioned in plain text with no link at all
-	// (<span class="file-name">FB12.gif</span>) - href-matching can't reach unlinked text, so
-	// this needs the explicit class instead.
-	.file-name::before {
-		content: "";
-		display: inline-block;
-		width: .9em;
-		height: .9em;
-		margin-right: 0.3em;
-		margin-top: -0.3em;
-		vertical-align: middle;
-		background-color: currentColor;
-		mask-image: url("../images/modal/history/platform-icons/image-file.svg");
-		mask-size: contain;
-		mask-repeat: no-repeat;
-		mask-position: center;
-		-webkit-mask-image: url("../images/modal/history/platform-icons/image-file.svg");
-		-webkit-mask-size: contain;
-		-webkit-mask-repeat: no-repeat;
-		-webkit-mask-position: center;
-	}
-	.file-name {
-		white-space: nowrap;
-		font-family: monospace;
-	}
-
-	// A Usenet address (<span class="usenet-address">news:alt.discuss.4-webtv</span>). Its own
-	// class instead of <code> so Usenet-specific markers (an icon before the address, say) can
-	// be added here later without touching the HTML. Addresses are long and have no spaces, so
-	// they're allowed to break anywhere instead of forcing a horizontal scroll.
+	// Names you would type: files, folders, pages and newsgroups. They look the
+	// same whether or not they're a link ({link:…}{file:FB12.gif}{/link}):
+	// the mono face at the prose's own size, no glyph. The token's font stack
+	// avoids the bare "monospace" keyword, which shrinks text to 13px.
+	.file-name,
 	.usenet-address {
-		font-family: monospace;
-		overflow-wrap: anywhere;
+		font-family: var(--font-mono);
+		font-size: 0.92em;
 	}
 
-	// A directory (<span class="file-name file-name-directory">/MUSIK</span>) or a page
-	// (<span class="file-name file-name-page">TOOLS.html</span>) gets its own glyph instead of
-	// the image-file one above. Same currentColor-mask treatment; the icons are expected at
-	// images/modal/history/platform-icons/directory.svg and page-file.svg. Until those files
-	// exist the marker just reserves its space.
-	.file-name.file-name-directory::before {
-		mask-image: url("../images/modal/history/platform-icons/directory.svg");
-		-webkit-mask-image: url("../images/modal/history/platform-icons/directory.svg");
-	}
-	.file-name.file-name-page::before {
-		mask-image: url("../images/modal/history/platform-icons/page-file.svg");
-		-webkit-mask-image: url("../images/modal/history/platform-icons/page-file.svg");
-	}
+	.file-name { white-space: nowrap; }
+
+	// Newsgroup names are long and have no spaces, so they may break anywhere.
+	.usenet-address { overflow-wrap: anywhere; }
 
 	.modal-hero-image {
 		//tiled background

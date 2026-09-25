@@ -32,8 +32,10 @@ function test(name, callback) {
 const entities = {
 	webtv: { kind: 'site', name: 'WebTV', gloss: 'A TV set-top box for the web' },
 	tripod: { kind: 'site', name: 'Tripod', domains: ['tripod.com'], closed: 'host-closed' },
-	sparkelies: { kind: 'site', name: 'Sparkelies', host: 'tripod', owner: 'dan-411' },
-	'dan-411': { kind: 'handle', name: 'Dan', aliases: ['DAN-411'], host: 'webtv', accent: '#9b59d0' },
+	sparkelies: { kind: 'site', name: 'Sparkelies', host: 'tripod', owner: 'dan' },
+	dan: { kind: 'person', name: 'Dan' },
+	'dan-411': { kind: 'handle', name: 'DAN-411', host: 'webtv', person: 'dan', gloss: 'The WebTV username' },
+	geekwire: { kind: 'site', name: 'GeekWire' },
 	'paint-shop-pro': { kind: 'software', name: 'Paint Shop Pro' },
 	'sailor-moon': { kind: 'work', name: 'Sailor Moon' },
 	'olia-lialina': { kind: 'person', name: 'Olia Lialina', sortName: 'Lialina, Olia' },
@@ -45,7 +47,9 @@ const sources = {
 	a: { title: 'Alpha', url: 'https://example.com/a' },
 	b: { author: '@olia-lialina', title: 'Beta', url: 'https://example.com/b', note: 'Cites [@c].' },
 	c: { title: 'Gamma', url: 'http://members.tripod.com/~x/', status: 'dead', archive: { url: 'https://web.archive.org/web/20040624034824/http://members.tripod.com/~x/', date: '2004-06-24' } },
-	d: { cite: 'Hand-formatted citation.', general: ['sample'] },
+	d: { description: 'Hand-formatted citation', general: ['sample'] },
+	f: { title: 'A Manual', type: 'book', publisher: '@microsoft', date: '2000', note: 'Note.' },
+	g: { author: '@microsoft', description: 'Email to subscribers' },
 	e: { author: 'Beschizza, Rob', title: 'Epsilon', url: 'https://example.com/e', general: ['sample'] }
 };
 const fixture = { entities, sources, iconFiles: new Map([['link', { file: 'link.svg', color: false }], ['tripod', { file: 'tripod.color.svg', color: true }]]), problems: [] };
@@ -66,13 +70,15 @@ const tokenCases = [
 	['file', '{file:FB12.gif}', '<span class="file-name">FB12.gif</span>'],
 	['directory', '{dir:/BAR}', '<span class="file-name file-name-directory">/BAR</span>'],
 	['page', '{page:TOOLS.html}', '<span class="file-name file-name-page">TOOLS.html</span>'],
-	['usenet', '{usenet:news:alt.discuss.4-webtv}', '<span class="usenet-address">news:alt.discuss.4-webtv</span>'],
 	['software', '{@paint-shop-pro}', '<span class="entity entity-software" data-entity="paint-shop-pro">Paint Shop Pro</span>'],
 	['work', '{@sailor-moon}', '<span class="entity entity-work" data-entity="sailor-moon">Sailor Moon</span>'],
 	['org', '{@microsoft}', '<span class="entity entity-org" data-entity="microsoft">Microsoft</span>'],
 	['person reads in text order', '{@olia-lialina}', '<span class="entity entity-person" data-entity="olia-lialina">Olia Lialina</span>'],
 	['override text', '{@olia-lialina|Lialina}', '<span class="entity entity-person" data-entity="olia-lialina">Lialina</span>'],
-	['handle with accent and card', '{@dan-411|DAN-411}', '<span class="entity entity-handle entity-accent" data-entity="dan-411" data-card>DAN-411</span>'],
+	['handle gets its gloss and a card', '{@dan-411}', '<span class="entity entity-handle context" data-entity="dan-411" data-tooltip="The WebTV username" data-card>DAN-411</span>'],
+	['person with handles gets a card', '{@dan}', '<span class="entity entity-person" data-entity="dan" data-card>Dan</span>'],
+	['site without a logo gets no generic glyph', '{@geekwire}', '<span class="entity entity-site" data-entity="geekwire">GeekWire</span>'],
+	['newsgroup by name', '{usenet:alt.discuss.4-webtv}', '<span class="usenet-address">alt.discuss.4-webtv</span>'],
 	['hosted site takes its host icon', '{@sparkelies}', '<span class="entity entity-site" data-entity="sparkelies" data-icon="tripod" data-card>Sparkelies</span>'],
 	['tooltip', '{tip:A short explanation}term{/tip}', '<strong class="context" data-tooltip="A short explanation">term</strong>'],
 	['span tooltip', '{tip:Inline note|tag=span}term{/tip}', '<span class="context" data-tooltip="Inline note">term</span>'],
@@ -191,10 +197,21 @@ test('tokens preserve line count; a references list maps to its token line', () 
 });
 
 test('TOC copies heading markup without tooltips or cards', () => {
-	const result = run('{toc:TestTOC}\n<h2 id="One">{@dan-411}</h2>\n<h3 id="Two">Two</h3>');
+	const result = run('{toc:TestTOC}\n<h2 id="One">{@dan}</h2>\n<h3 id="Two">Two</h3>');
 	assert(result.diagnostics.length === 0, `TOC diagnostics: ${JSON.stringify(result.diagnostics)}`);
-	assert(result.output.includes('<a href="#One"><span class="entity entity-handle entity-accent" data-entity="dan-411">Dan</span></a>'), 'TOC entry differed');
+	assert(result.output.includes('<a href="#One"><span class="entity entity-person" data-entity="dan">Dan</span></a>'), 'TOC entry differed');
 	assert(result.lineMap.slice(0, 11).every(line => line === 1), 'TOC lines did not map to the token line');
+});
+
+test('newsgroups are written without news:', () => {
+	const result = run('<p>{usenet:news:alt.test}</p>');
+	assert(result.diagnostics.some(item => item.rule === 'token-syntax' && /news:/u.test(item.message)), 'news: prefix was accepted');
+});
+
+test('books take an italic title and untitled items a description', () => {
+	const output = clean('<p>[@f][@g]</p>\n<ol id="SampleReferencesList">\n\t{references}\n</ol>');
+	assert(output.includes('<em>A Manual</em>. <span class="entity entity-org" data-entity="microsoft">Microsoft</span>, <time datetime="2000">2000</time>. Note.'), 'book citation differed');
+	assert(output.includes('Microsoft</span>. Email to subscribers.'), 'description citation differed');
 });
 
 test('header defaults on and can be disabled', () => {
@@ -207,7 +224,7 @@ test('tag sweep tags the first untagged mention per section', () => {
 	const source = '<h2 id="A">A</h2>\n<p>WebTV and WebTV, DAN-411, a GIF, {link:external|https://x}WebTV{/link}</p>\n<h2 id="B">B</h2>\n<p>{@webtv} then WebTV</p>';
 	const { edits } = planTags(source, entities);
 	const replacements = edits.map(edit => edit.replacement);
-	assert(JSON.stringify(replacements) === JSON.stringify(['{@webtv}', '{@dan-411|DAN-411}']), `got ${JSON.stringify(replacements)}`);
+	assert(JSON.stringify(replacements) === JSON.stringify(['{@webtv}', '{@dan-411}']), `got ${JSON.stringify(replacements)}`);
 });
 
 test('bare-name lint agrees with the tag sweep', () => {

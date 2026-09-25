@@ -5,14 +5,12 @@ const ENTITY_KIND_LABELS = {"site":"Site","software":"Software","org":"Organizat
 const ENTITY_DATA = {
 	"123glitter": {
 		"name": "123Glitter",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"4-webtv-newsgroup": {
 		"name": "4-WebTV NewsGroup",
 		"kind": "site",
-		"host": "usenet",
-		"icon": "link"
+		"host": "usenet"
 	},
 	"4sammy0": {
 		"name": "4sammy0",
@@ -22,13 +20,11 @@ const ENTITY_DATA = {
 	},
 	"50megs-banners": {
 		"name": "banners.users1.50megs.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"addglitter": {
 		"name": "AddGlitter.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"adobe": {
 		"name": "Adobe",
@@ -39,13 +35,11 @@ const ENTITY_DATA = {
 		"kind": "software",
 		"aliases": [
 			"Adobe ImageReady"
-		],
-		"icon": "tool"
+		]
 	},
 	"afternoon-tea": {
 		"name": "Afternoon Tea",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"aim": {
 		"name": "AIM",
@@ -54,7 +48,7 @@ const ENTITY_DATA = {
 			"AOL Instant Messenger",
 			"AOL Instant Messenger (AIM)"
 		],
-		"icon": "link"
+		"gloss": "AOL Instant Messenger, a widely used instant-messaging service launched in 1997 and shut down in 2017"
 	},
 	"ainna": {
 		"name": "Ainna",
@@ -62,8 +56,7 @@ const ENTITY_DATA = {
 	},
 	"albino-blacksheep": {
 		"name": "Albino Blacksheep",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"alexandra": {
 		"name": "Alexandra",
@@ -82,8 +75,7 @@ const ENTITY_DATA = {
 	},
 	"altavista": {
 		"name": "AltaVista",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"alwayslisa": {
 		"name": "alwayslisa",
@@ -92,8 +84,7 @@ const ENTITY_DATA = {
 	"alwayslisa-com": {
 		"name": "alwayslisa.com",
 		"kind": "site",
-		"owner": "alwayslisa",
-		"icon": "link"
+		"owner": "alwayslisa"
 	},
 	"ameya": {
 		"name": "Ameya",
@@ -104,17 +95,17 @@ const ENTITY_DATA = {
 	"angelfire": {
 		"name": "Angelfire",
 		"kind": "site",
+		"gloss": "A web hosting service owned by Lycos; its remaining sites went offline in 2026",
 		"icon": "angelfire"
 	},
 	"animation-factory": {
 		"name": "Animation Factory",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"animation-shop": {
 		"name": "Animation Shop",
 		"kind": "software",
-		"icon": "tool"
+		"gloss": "Jasc's program for creating animations and GIFs"
 	},
 	"ann": {
 		"name": "Ann",
@@ -140,17 +131,16 @@ const ENTITY_DATA = {
 	"aol-hometown": {
 		"name": "AOL Hometown",
 		"kind": "site",
+		"gloss": "A web hosting service that gave AOL subscribers space to publish their own websites until 2008",
 		"icon": "aol-hometown"
 	},
 	"aromatic": {
 		"name": "Aromatic",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"arpanet": {
 		"name": "ARPANET",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"atlus": {
 		"name": "Atlus",
@@ -175,8 +165,7 @@ const ENTITY_DATA = {
 	},
 	"avp-galaxy": {
 		"name": "AVP Galaxy Forums",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"avril-lavigne": {
 		"name": "Avril Lavigne",
@@ -221,13 +210,11 @@ const ENTITY_DATA = {
 	},
 	"bearblog": {
 		"name": "bearblog.dev",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"bebo": {
 		"name": "Bebo",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"becky-bw": {
 		"name": "Becky (BW)",
@@ -244,23 +231,19 @@ const ENTITY_DATA = {
 	"bemymind-com": {
 		"name": "bemymind.com",
 		"kind": "site",
-		"owner": "bemymind",
-		"icon": "link"
+		"owner": "bemymind"
 	},
 	"biglobe": {
 		"name": "biglobe.ne.jp",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"bing": {
 		"name": "Bing",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"binky-beads": {
 		"name": "Binky Beads",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"blacknwhite": {
 		"name": ":.blacknwhite.:",
@@ -273,34 +256,29 @@ const ENTITY_DATA = {
 	},
 	"blinkie-makers": {
 		"name": "Blinkie Makers",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"blinkie-obsession": {
 		"name": "Blinkie Obsession",
 		"kind": "site",
-		"host": "freeservers",
-		"icon": "link"
+		"host": "freeservers"
 	},
 	"blinkie-world": {
 		"name": "Blinkie World",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"blogger": {
 		"name": "Blogger",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"blueyonder": {
 		"name": "blueyonder.co.uk",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"boomspeed": {
 		"name": "Boomspeed",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "An early image and file host used by personal websites and eBay sellers"
 	},
 	"bprentice": {
 		"name": "bprentice",
@@ -328,8 +306,7 @@ const ENTITY_DATA = {
 	},
 	"buddy-buddy": {
 		"name": "Buddy Buddy",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"buffy-the-vampire-slayer": {
 		"name": "Buffy the Vampire Slayer",
@@ -341,18 +318,15 @@ const ENTITY_DATA = {
 	},
 	"camerons-world": {
 		"name": "Cameron's World",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"candybar": {
 		"name": "Candybar",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"cardmaker": {
 		"name": "cardmaker.net",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"carly-20032000": {
 		"name": "carly_20032000",
@@ -367,8 +341,7 @@ const ENTITY_DATA = {
 	"catarific-com": {
 		"name": "catarific.com",
 		"kind": "site",
-		"owner": "catarific",
-		"icon": "link"
+		"owner": "catarific"
 	},
 	"catchin-teardrops": {
 		"name": "catchin_teardrops",
@@ -378,8 +351,7 @@ const ENTITY_DATA = {
 	},
 	"cathies-crazie-creations": {
 		"name": "Cathie's Crazie Creations",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"caz": {
 		"name": "Caz",
@@ -387,18 +359,15 @@ const ENTITY_DATA = {
 	},
 	"cbox": {
 		"name": "Cbox",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"chewables": {
 		"name": "chewables.org",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"chrome": {
 		"name": "Google Chrome",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"cinni": {
 		"name": "Cinni",
@@ -410,8 +379,7 @@ const ENTITY_DATA = {
 		"aliases": [
 			"Club4WebbTv"
 		],
-		"host": "usenet",
-		"icon": "link"
+		"host": "usenet"
 	},
 	"communities-com": {
 		"name": "Communities.com",
@@ -419,7 +387,8 @@ const ENTITY_DATA = {
 	},
 	"compuserve": {
 		"name": "CompuServe",
-		"kind": "org"
+		"kind": "org",
+		"gloss": "An online-services company that developed the GIF format"
 	},
 	"corel": {
 		"name": "Corel",
@@ -427,8 +396,7 @@ const ENTITY_DATA = {
 	},
 	"creative-cloud": {
 		"name": "Creative Cloud",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"crowdgather": {
 		"name": "CrowdGather",
@@ -436,8 +404,7 @@ const ENTITY_DATA = {
 	},
 	"cute-spot": {
 		"name": "Cute-Spot",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"cyp2": {
 		"name": "CYP2",
@@ -446,13 +413,11 @@ const ENTITY_DATA = {
 			"ColorYourProfyle",
 			"ColorYourProfyle / CYP2",
 			"CYP2 / ColorYourProfyle"
-		],
-		"icon": "link"
+		]
 	},
 	"cyworld": {
 		"name": "Cyworld",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"da-brat": {
 		"name": "Da Brat",
@@ -466,49 +431,53 @@ const ENTITY_DATA = {
 	},
 	"dafont": {
 		"name": "DaFont",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
+	},
+	"dan": {
+		"name": "Dan",
+		"kind": "person",
+		"handles": [
+			"dan-411",
+			"osodeoro"
+		],
+		"sites": [
+			"sparkelies"
+		]
 	},
 	"dan-411": {
-		"name": "Dan",
+		"name": "DAN-411",
 		"kind": "handle",
 		"aliases": [
-			"DAN-411",
-			"Dan-411",
-			"Dan (DAN-411)"
+			"Dan-411"
 		],
-		"host": "wtv-zone",
+		"host": "webtv",
+		"person": "dan",
+		"gloss": "Dan's username on WebTV, where a username was also the email address",
 		"icon": "wtv-zone"
 	},
 	"darkest-faerie-lair": {
 		"name": "Darkest Faerie Lair",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"daum": {
 		"name": "Daum",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"dazzle-junction": {
 		"name": "Dazzle Junction",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"deja-news": {
 		"name": "Deja News",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"deleted-city": {
 		"name": "Deleted City",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"delicious": {
 		"name": "Delicious",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"designbyaylana": {
 		"name": "designbyAylana™",
@@ -532,8 +501,7 @@ const ENTITY_DATA = {
 	},
 	"divergent-rays": {
 		"name": "Divergent Rays",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"dollz": {
 		"name": "Dollz",
@@ -541,8 +509,7 @@ const ENTITY_DATA = {
 	},
 	"dollz-mania": {
 		"name": "Dollz Mania",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"donnasblinkies": {
 		"name": "donnasblinkies",
@@ -558,8 +525,7 @@ const ENTITY_DATA = {
 	},
 	"dragon-cave": {
 		"name": "Dragon Cave",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"dreamerzdesigns": {
 		"name": "DreamerzDesigns",
@@ -569,13 +535,11 @@ const ENTITY_DATA = {
 	},
 	"dreamweaver": {
 		"name": "Dreamweaver",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"edge": {
 		"name": "Microsoft Edge",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"elanger": {
 		"name": "elanger",
@@ -589,28 +553,24 @@ const ENTITY_DATA = {
 	},
 	"elouai": {
 		"name": "elouai.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"emeraldpink": {
 		"name": "EmeraldPink",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"expage": {
 		"name": "Expage",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"ezboard": {
 		"name": "ezboard",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"facebook": {
 		"name": "Facebook",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A social-networking service launched in 2004"
 	},
 	"fairytailpersian": {
 		"name": "fairytailpersian",
@@ -626,13 +586,11 @@ const ENTITY_DATA = {
 	},
 	"femicom": {
 		"name": "femicom.org",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"firefox": {
 		"name": "Firefox",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"firespirited": {
 		"name": "firespirited",
@@ -643,8 +601,7 @@ const ENTITY_DATA = {
 		"kind": "software",
 		"aliases": [
 			"Macromedia Fireworks"
-		],
-		"icon": "tool"
+		]
 	},
 	"fizzyflava": {
 		"name": "fizzyflava",
@@ -654,76 +611,63 @@ const ENTITY_DATA = {
 	},
 	"flamingtext": {
 		"name": "FlamingText",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"flash": {
 		"name": "Flash",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"flashites": {
 		"name": "Flashites",
 		"kind": "site",
-		"host": "wtv-zone",
-		"owner": "moondogee",
-		"icon": "wtv-zone"
+		"host": "scri8e",
+		"owner": "moon"
 	},
 	"flickr": {
 		"name": "Flickr",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"fortunecity": {
 		"name": "FortuneCity",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"freechal": {
 		"name": "Freechal",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"freeservers": {
 		"name": "FreeServers",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"freewebs": {
 		"name": "Freewebs",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"friends-of-webtv-and-msntv": {
 		"name": "Friends of Web TV and MSNTV",
 		"kind": "site",
-		"host": "facebook",
-		"icon": "link"
+		"host": "facebook"
 	},
 	"friendster": {
 		"name": "Friendster",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"frontpage": {
 		"name": "Microsoft FrontPage",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"funky-chickens": {
 		"name": "Funky Chickens",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"futuresplash": {
 		"name": "FutureSplash Animator",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"gaia-online": {
 		"name": "Gaia Online",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A virtual community and social-networking site launched in 2003"
 	},
 	"geekwire": {
 		"name": "GeekWire",
@@ -732,32 +676,29 @@ const ENTITY_DATA = {
 	"geocities": {
 		"name": "GeoCities",
 		"kind": "site",
+		"gloss": "A web hosting service that let users create and publish websites free of charge until 2009",
 		"icon": "geocities"
 	},
 	"geocities-institute": {
 		"name": "geocities.institute",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"geocities-japan": {
 		"name": "GeoCities Japan",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"geocities-ws": {
 		"name": "geocities.ws",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"gif": {
 		"name": "GIF",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"gifcities": {
 		"name": "GifCities",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "the Geocities Animated GIF Search hosted by the Internet Archive"
 	},
 	"ginger": {
 		"name": "Ginger",
@@ -766,7 +707,7 @@ const ENTITY_DATA = {
 	"giphy": {
 		"name": "GIPHY",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A GIF search and sharing platform"
 	},
 	"glitter-connection": {
 		"name": "Glitter Connection",
@@ -779,43 +720,35 @@ const ENTITY_DATA = {
 		"kind": "site",
 		"aliases": [
 			"Glitter-Graphics.com"
-		],
-		"icon": "link"
+		]
 	},
 	"glitterfy": {
 		"name": "Glitterfy",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"glitterkiss": {
 		"name": "GlitterKiss",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"glittermaker": {
 		"name": "GlitterMaker",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"glittertextgraphics": {
 		"name": "GlitterTextGraphics",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"glitteryourway": {
 		"name": "GlitterYourWay",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"glitzheaven": {
 		"name": "GlitzHeaven",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"goatcounter": {
 		"name": "GoatCounter",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"google": {
 		"name": "Google",
@@ -823,13 +756,11 @@ const ENTITY_DATA = {
 	},
 	"google-groups": {
 		"name": "Google Groups",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"google-reader": {
 		"name": "Google Reader",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"groovysmurf": {
 		"name": "groovysmurf",
@@ -839,8 +770,7 @@ const ENTITY_DATA = {
 	},
 	"grsites": {
 		"name": "GRSites",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"gurubii": {
 		"name": "Gurubii",
@@ -849,13 +779,11 @@ const ENTITY_DATA = {
 	"gypsy-jewels": {
 		"name": "Gypsy Jewels",
 		"kind": "site",
-		"host": "usenet",
-		"icon": "link"
+		"host": "usenet"
 	},
 	"habbo": {
 		"name": "Habbo Hotel",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"hajime-sorayama": {
 		"name": "Hajime Sorayama",
@@ -863,13 +791,11 @@ const ENTITY_DATA = {
 	},
 	"hangame": {
 		"name": "Hangame",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"happy-mix": {
 		"name": "happy-mix.net",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"harveysgraphics01": {
 		"name": "harveysgraphics01",
@@ -892,8 +818,7 @@ const ENTITY_DATA = {
 	},
 	"heta-moe": {
 		"name": "heta.moe",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"hevent2003": {
 		"name": "hevent2003",
@@ -903,13 +828,12 @@ const ENTITY_DATA = {
 	},
 	"hexed-pixels": {
 		"name": "Hexed Pixels",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"hi5": {
 		"name": "Hi5",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A social-networking service launched in 2003 and popular in parts of Latin America, Africa, and Southeast Asia"
 	},
 	"high-school-musical": {
 		"name": "High School Musical",
@@ -918,7 +842,7 @@ const ENTITY_DATA = {
 	"homestead": {
 		"name": "Homestead",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A website-building and hosting service launched in 1997"
 	},
 	"hoyt": {
 		"name": "Hoyt",
@@ -938,28 +862,24 @@ const ENTITY_DATA = {
 	},
 	"iconator": {
 		"name": "Iconator",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"icq": {
 		"name": "ICQ",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"imagemagick": {
 		"name": "ImageMagick",
 		"kind": "software",
-		"icon": "tool"
+		"gloss": "Free image-processing software; web front ends to it let WebTV users edit and composite images without a desktop graphics program"
 	},
 	"imageshack": {
 		"name": "ImageShack",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"instagram": {
 		"name": "Instagram",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"internet-archive": {
 		"name": "Internet Archive",
@@ -967,8 +887,7 @@ const ENTITY_DATA = {
 	},
 	"internet-explorer": {
 		"name": "Internet Explorer",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"intuit": {
 		"name": "Intuit",
@@ -980,8 +899,7 @@ const ENTITY_DATA = {
 	},
 	"invisionfree": {
 		"name": "InvisionFree",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"irina-kuleshova": {
 		"name": "Irina Kuleshova",
@@ -1012,8 +930,7 @@ const ENTITY_DATA = {
 	"jem": {
 		"name": "Jem",
 		"kind": "person",
-		"host": "qbee",
-		"icon": "link"
+		"host": "qbee"
 	},
 	"jenny": {
 		"name": "Jenny",
@@ -1025,8 +942,7 @@ const ENTITY_DATA = {
 	},
 	"jessicajournals": {
 		"name": "jessicajournals.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"jesterror": {
 		"name": "Jesterror",
@@ -1073,8 +989,7 @@ const ENTITY_DATA = {
 		"kind": "site",
 		"aliases": [
 			"kawaiiness.com"
-		],
-		"icon": "link"
+		]
 	},
 	"kelli-fox": {
 		"name": "~ KELLI FOX ~",
@@ -1089,18 +1004,16 @@ const ENTITY_DATA = {
 	},
 	"kitty-friends": {
 		"name": "Kitty Friends",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"klipy": {
 		"name": "Klipy",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A GIF, sticker, and meme API founded in 2021"
 	},
 	"ko-fi": {
 		"name": "Ko-fi",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"ladywolfette": {
 		"name": "LadyWolfette",
@@ -1112,8 +1025,7 @@ const ENTITY_DATA = {
 	},
 	"leonardwojcik": {
 		"name": "leonardwojcik.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"let-i-sparkle": {
 		"name": "let-i-sparkle",
@@ -1127,23 +1039,23 @@ const ENTITY_DATA = {
 	},
 	"limewire": {
 		"name": "LimeWire",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"linuxenvy": {
 		"name": "linuxenvy.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"lissa-brown": {
 		"name": "Melissa \"Lissa\" Brown",
-		"kind": "person"
+		"kind": "person",
+		"sites": [
+			"lissa-explains-it-all"
+		]
 	},
 	"lissa-explains-it-all": {
 		"name": "Lissa Explains it All",
 		"kind": "site",
-		"owner": "lissa-brown",
-		"icon": "link"
+		"owner": "lissa-brown"
 	},
 	"littleangelgraphics": {
 		"name": "littleangelgraphics",
@@ -1158,7 +1070,7 @@ const ENTITY_DATA = {
 	"livejournal": {
 		"name": "LiveJournal",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A blogging and social-networking service launched in 1999, built around personal journals, communities, comments, and userpics"
 	},
 	"lostletters": {
 		"name": "lostletters",
@@ -1168,7 +1080,8 @@ const ENTITY_DATA = {
 	},
 	"lycos": {
 		"name": "Lycos",
-		"kind": "org"
+		"kind": "org",
+		"gloss": "An American web portal and search company that owned Angelfire and Tripod"
 	},
 	"macromedia": {
 		"name": "Macromedia",
@@ -1176,13 +1089,11 @@ const ENTITY_DATA = {
 	},
 	"magick-studio": {
 		"name": "Magick Studio",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"magistream": {
 		"name": "MagiStream",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"mandy-clark": {
 		"name": "Mandy Clark",
@@ -1194,17 +1105,19 @@ const ENTITY_DATA = {
 	},
 	"mia": {
 		"name": "M.I.A.",
-		"kind": "person"
+		"kind": "person",
+		"gloss": "British rapper, singer, and songwriter"
 	},
 	"mica": {
 		"name": "Mica",
-		"kind": "handle",
-		"aliases": [
-			"Stardrops",
-			"Mica (Stardrops)"
+		"kind": "person",
+		"aka": [
+			"Michaela"
 		],
-		"host": "wtv-zone",
-		"icon": "wtv-zone"
+		"handles": [
+			"stardrops",
+			"stardrops-webtv"
+		]
 	},
 	"microsoft": {
 		"name": "Microsoft",
@@ -1224,38 +1137,49 @@ const ENTITY_DATA = {
 	},
 	"miss-behaved": {
 		"name": "miss-behaved.net",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"mona-young": {
 		"name": "Mona Young",
 		"kind": "person"
 	},
+	"moon": {
+		"name": "Moon",
+		"kind": "person",
+		"aka": [
+			"Josh"
+		],
+		"handles": [
+			"moondogee"
+		],
+		"sites": [
+			"flashites",
+			"scri8e"
+		]
+	},
 	"mooncandy": {
 		"name": "mooncandy.org",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"moondogee": {
-		"name": "Moon",
+		"name": "MOONDOGEE",
 		"kind": "handle",
 		"aliases": [
 			"Moondogee",
-			"Moondoggee",
-			"Moon (Moondogee)"
+			"Moondoggee"
 		],
-		"host": "wtv-zone",
+		"host": "webtv",
+		"person": "moon",
+		"gloss": "Moon's username on WebTV, where a username was also the email address",
 		"icon": "wtv-zone"
 	},
 	"mosaic": {
 		"name": "NCSA Mosaic",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"moyras-web-jewels": {
 		"name": "Moyra's Web Jewels",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"mozilla": {
 		"name": "Mozilla",
@@ -1264,18 +1188,15 @@ const ENTITY_DATA = {
 	"mslauralous-news-group": {
 		"name": "MsLauraLou's News Group",
 		"kind": "site",
-		"host": "usenet",
-		"icon": "link"
+		"host": "usenet"
 	},
 	"msn": {
 		"name": "MSN",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"msn-messenger": {
 		"name": "MSN Messenger",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"msn-tv": {
 		"name": "MSN TV",
@@ -1284,32 +1205,29 @@ const ENTITY_DATA = {
 	},
 	"myglitterromance": {
 		"name": "MyGlitterRomance",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"myspace": {
 		"name": "MySpace",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A social-networking service launched in 2003, known for extensively customizable profiles"
 	},
 	"namaii": {
 		"name": "Namaii",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"napster": {
 		"name": "Napster",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"nekoweb": {
 		"name": "Nekoweb",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"neocities": {
 		"name": "Neocities",
 		"kind": "site",
+		"gloss": "A free web-hosting service launched in 2013 and modeled partly on GeoCities",
 		"icon": "neocities"
 	},
 	"neonlove": {
@@ -1317,31 +1235,27 @@ const ENTITY_DATA = {
 		"kind": "site",
 		"aliases": [
 			"neonlove.net"
-		],
-		"icon": "link"
+		]
 	},
 	"neopets": {
 		"name": "Neopets",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A free-to-play virtual-pet browser game launched in 1999"
 	},
 	"netmarble": {
 		"name": "Netmarble",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"netscape": {
 		"name": "Netscape",
 		"kind": "software",
 		"aliases": [
 			"Netscape Navigator"
-		],
-		"icon": "tool"
+		]
 	},
 	"newgrounds": {
 		"name": "Newgrounds",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"news-corp": {
 		"name": "News Corp",
@@ -1349,8 +1263,7 @@ const ENTITY_DATA = {
 	},
 	"nicolshotel": {
 		"name": "NicolsHotel",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"nobuteru-yuki": {
 		"name": "Nobuteru Yuki",
@@ -1358,8 +1271,7 @@ const ENTITY_DATA = {
 	},
 	"notepad": {
 		"name": "Notepad",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"oath": {
 		"name": "Oath",
@@ -1371,8 +1283,7 @@ const ENTITY_DATA = {
 	},
 	"online-image-editor": {
 		"name": "Online Image Editor",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"onyxsmiles": {
 		"name": "OnyxSmiles",
@@ -1381,33 +1292,39 @@ const ENTITY_DATA = {
 	"onyxsmiles-com": {
 		"name": "onyxsmiles.com",
 		"kind": "site",
-		"owner": "onyxsmiles",
-		"icon": "link"
+		"owner": "onyxsmiles"
 	},
 	"oocities": {
 		"name": "oocities",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"orkut": {
 		"name": "Orkut",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
+	},
+	"osodeoro": {
+		"name": "osodeoro",
+		"kind": "handle",
+		"aliases": [
+			"~osodeoro"
+		],
+		"host": "tripod",
+		"person": "dan",
+		"gloss": "Dan's Tripod account: his site lived at members.tripod.com/~osodeoro",
+		"icon": "tripod"
 	},
 	"pagebuilder": {
 		"name": "PageBuilder",
 		"kind": "software",
-		"icon": "tool"
+		"gloss": "GeoCities' drag-and-drop site editor, launched to let members build a page without writing HTML"
 	},
 	"paint-shop-pro": {
 		"name": "Paint Shop Pro",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"palaceplanet": {
 		"name": "palaceplanet.net",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"philips": {
 		"name": "Philips",
@@ -1415,54 +1332,47 @@ const ENTITY_DATA = {
 	},
 	"phoophie": {
 		"name": "phoophie.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"photobucket": {
 		"name": "Photobucket",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "An image-hosting service that replaced many older embedded images with watermarks or upgrade notices"
 	},
 	"photoshop": {
 		"name": "Photoshop",
 		"kind": "software",
 		"aliases": [
 			"Adobe Photoshop"
-		],
-		"icon": "tool"
+		]
 	},
 	"pick-me": {
 		"name": "Pick Me!",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"picmix": {
 		"name": "PicMix",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"piczo": {
 		"name": "Piczo",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A social-networking and website-building service launched in 2005"
 	},
 	"pinterest": {
 		"name": "Pinterest",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"pocket-town": {
 		"name": "Pocket Town",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"pokefarm": {
 		"name": "PokéFarm",
 		"kind": "site",
 		"aliases": [
 			"PokéFarm Q"
-		],
-		"icon": "link"
+		]
 	},
 	"pokemon": {
 		"name": "Pokémon",
@@ -1470,23 +1380,19 @@ const ENTITY_DATA = {
 	},
 	"polyvore": {
 		"name": "Polyvore",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"proboards": {
 		"name": "ProBoards",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"purikura": {
 		"name": "Purikura",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"qbee": {
 		"name": "Q*Bee",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"r-hobbydrama": {
 		"name": "r/HobbyDrama",
@@ -1508,8 +1414,7 @@ const ENTITY_DATA = {
 	},
 	"randys-icon-bazaar": {
 		"name": "Randy's Icon Bazaar",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"rc-gif-manor": {
 		"name": "R&C Gif Manor",
@@ -1529,8 +1434,7 @@ const ENTITY_DATA = {
 	"reef-kingdra": {
 		"name": "reef.kingdra.net",
 		"kind": "site",
-		"owner": "reef",
-		"icon": "link"
+		"owner": "reef"
 	},
 	"robin": {
 		"name": "Robin",
@@ -1548,8 +1452,7 @@ const ENTITY_DATA = {
 	},
 	"ryandavi": {
 		"name": "ryandavi.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"saffy": {
 		"name": "Saffy",
@@ -1561,13 +1464,11 @@ const ENTITY_DATA = {
 	},
 	"salvaged": {
 		"name": "Salvaged",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"sayclub": {
 		"name": "SayClub",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"scar-ayres": {
 		"name": "Scar Ayres",
@@ -1579,18 +1480,17 @@ const ENTITY_DATA = {
 	},
 	"scented-angels": {
 		"name": "Scented Angels",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"scented-minty": {
 		"name": "scented.minty.nu",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"scri8e": {
 		"name": "scri8e.com",
 		"kind": "site",
-		"icon": "link"
+		"owner": "moon",
+		"gloss": "Moon's graphics site, first at wtv-zone.com/scri8e and later on its own domain"
 	},
 	"sega": {
 		"name": "Sega",
@@ -1608,8 +1508,7 @@ const ENTITY_DATA = {
 	},
 	"serebii-forums": {
 		"name": "forums.serebii.net",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"serilly": {
 		"name": "Serilly",
@@ -1619,13 +1518,11 @@ const ENTITY_DATA = {
 	},
 	"shattered-innocents": {
 		"name": "Shattered Innocents",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"sheezy-art": {
 		"name": "sheezy.art",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"shutterstock": {
 		"name": "Shutterstock",
@@ -1633,8 +1530,7 @@ const ENTITY_DATA = {
 	},
 	"skype": {
 		"name": "Skype",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"smhart": {
 		"name": "SMHart",
@@ -1644,8 +1540,7 @@ const ENTITY_DATA = {
 	},
 	"snapchat": {
 		"name": "Snapchat",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"sony": {
 		"name": "Sony",
@@ -1655,7 +1550,7 @@ const ENTITY_DATA = {
 		"name": "Sparkelies",
 		"kind": "site",
 		"host": "tripod",
-		"owner": "dan-411",
+		"owner": "dan",
 		"icon": "tripod"
 	},
 	"sparkling-dots": {
@@ -1673,8 +1568,7 @@ const ENTITY_DATA = {
 		"kind": "site",
 		"aliases": [
 			"Spider's Web"
-		],
-		"icon": "link"
+		]
 	},
 	"spruisious": {
 		"name": "spruisious",
@@ -1684,16 +1578,32 @@ const ENTITY_DATA = {
 	},
 	"squiby": {
 		"name": "Squiby",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"ssense": {
 		"name": "SSENSE",
 		"kind": "org"
 	},
+	"stardrops": {
+		"name": "Stardrops",
+		"kind": "handle",
+		"host": "wtv-zone",
+		"person": "mica",
+		"gloss": "Mica's WTV-Zone account: her pages lived at wtv-zone.com/Stardrops",
+		"icon": "wtv-zone"
+	},
+	"stardrops-webtv": {
+		"name": "Stardrops_",
+		"kind": "handle",
+		"host": "webtv",
+		"person": "mica",
+		"gloss": "Mica's username on WebTV, where a username was also the email address",
+		"icon": "wtv-zone"
+	},
 	"steve-wilhite": {
 		"name": "Steve Wilhite",
-		"kind": "person"
+		"kind": "person",
+		"gloss": "The computer scientist who led the CompuServe team that created GIF"
 	},
 	"stinkywetdog": {
 		"name": "StinkyWetDog",
@@ -1712,13 +1622,11 @@ const ENTITY_DATA = {
 		"kind": "site",
 		"aliases": [
 			"Sweet and Low"
-		],
-		"icon": "link"
+		]
 	},
 	"tagboard": {
 		"name": "TagBoard",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"tapatalk": {
 		"name": "Tapatalk",
@@ -1726,43 +1634,36 @@ const ENTITY_DATA = {
 	},
 	"teahouse-mb": {
 		"name": "Teahouse MB",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"teleportacia": {
 		"name": "teleportacia.org",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"tenor": {
 		"name": "Tenor",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A GIF search platform whose public API Google discontinued on 30 June 2026; Tenor's own apps and Google integrations remain available"
 	},
 	"the-doll-palace": {
 		"name": "The Doll Palace",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"the-fanlistings-network": {
 		"name": "The Fanlistings Network",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"the-palace": {
 		"name": "The Palace",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"the-quilting-bee": {
 		"name": "The Quilting Bee",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"the-vault": {
 		"name": "The Vault",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"thewebbedfeat": {
 		"name": "thewebbedfeat",
@@ -1773,7 +1674,7 @@ const ENTITY_DATA = {
 	"tinypic": {
 		"name": "TinyPic",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A free image host popular in the mid-2000s; it closed in 2019"
 	},
 	"tira": {
 		"name": "Tira",
@@ -1788,6 +1689,7 @@ const ENTITY_DATA = {
 	"tripod": {
 		"name": "Tripod",
 		"kind": "site",
+		"gloss": "A web hosting service owned by Lycos; its remaining sites went offline in 2026",
 		"icon": "tripod"
 	},
 	"troy-mich": {
@@ -1797,7 +1699,7 @@ const ENTITY_DATA = {
 	"tumblr": {
 		"name": "Tumblr",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A microblogging and social-networking platform launched in 2007"
 	},
 	"tutorialespsppirlilla": {
 		"name": "tutorialespsppirlilla",
@@ -1811,8 +1713,7 @@ const ENTITY_DATA = {
 	},
 	"twitter": {
 		"name": "Twitter",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"ulrich-leive": {
 		"name": "Ulrich Leive",
@@ -1822,8 +1723,7 @@ const ENTITY_DATA = {
 	},
 	"upsited": {
 		"name": "Upsited",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"urbanizeddork": {
 		"name": "urbanizedDORK",
@@ -1833,13 +1733,11 @@ const ENTITY_DATA = {
 	},
 	"usenet": {
 		"name": "Usenet",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"valenth": {
 		"name": "Valenth",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"vegasgal": {
 		"name": "VegasGal",
@@ -1860,8 +1758,7 @@ const ENTITY_DATA = {
 	},
 	"vine": {
 		"name": "Vine",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"vistaprint": {
 		"name": "Vistaprint",
@@ -1882,18 +1779,15 @@ const ENTITY_DATA = {
 	},
 	"wayback-machine": {
 		"name": "Wayback Machine",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"we-heart-it": {
 		"name": "We Heart It",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"web-badges-world": {
 		"name": "web.badges.world",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"webmagick": {
 		"name": "Webmagick",
@@ -1903,13 +1797,11 @@ const ENTITY_DATA = {
 	},
 	"webring": {
 		"name": "WebRing",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"webs": {
 		"name": "Webs",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"webtv": {
 		"name": "WebTV",
@@ -1918,13 +1810,12 @@ const ENTITY_DATA = {
 	},
 	"webwench": {
 		"name": "WebWench Graphics & Design",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"whatsapp": {
 		"name": "WhatsApp",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "An instant-messaging application used around the world"
 	},
 	"whisper": {
 		"name": "Whisper",
@@ -1932,18 +1823,15 @@ const ENTITY_DATA = {
 	},
 	"whispers-web-works": {
 		"name": "Whisper's Web Works",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"whisperscorner": {
 		"name": "whisperscorner.com",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"whowhere": {
 		"name": "WhoWhere",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"wikipedia": {
 		"name": "Wikipedia",
@@ -1954,18 +1842,15 @@ const ENTITY_DATA = {
 		"kind": "software",
 		"aliases": [
 			"Windows 95"
-		],
-		"icon": "tool"
+		]
 	},
 	"world-wide-web": {
 		"name": "World Wide Web",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"worldwideweb-browser": {
 		"name": "WorldWideWeb / Nexus",
-		"kind": "software",
-		"icon": "tool"
+		"kind": "software"
 	},
 	"wtv-zone": {
 		"name": "WTV-Zone",
@@ -1974,18 +1859,16 @@ const ENTITY_DATA = {
 	},
 	"x": {
 		"name": "X",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"xandra": {
 		"name": "xandra.cc",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"xanga": {
 		"name": "Xanga",
 		"kind": "site",
-		"icon": "link"
+		"gloss": "A blogging and social-networking service popular in the 2000s whose journals could be heavily customized with layouts, images, and HTML"
 	},
 	"xdancingladyx": {
 		"name": "xdancingladyx",
@@ -2005,8 +1888,7 @@ const ENTITY_DATA = {
 		"kind": "site",
 		"aliases": [
 			"Yahoo Groups"
-		],
-		"icon": "link"
+		]
 	},
 	"yahoo-japan": {
 		"name": "Yahoo! Japan",
@@ -2014,33 +1896,27 @@ const ENTITY_DATA = {
 	},
 	"yahoo-messenger": {
 		"name": "Yahoo! Messenger",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"yahoo-photos": {
 		"name": "Yahoo! Photos",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"yahoo-search": {
 		"name": "Yahoo! Search",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"yesterweb-zine": {
 		"name": "zine.yesterweb.org",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"youtube": {
 		"name": "YouTube",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"yuku": {
 		"name": "Yuku",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"zak-a-doodle-graphics": {
 		"name": "Zak-A-Doodle Graphics",
@@ -2054,8 +1930,7 @@ const ENTITY_DATA = {
 	},
 	"zetaboards": {
 		"name": "ZetaBoards",
-		"kind": "site",
-		"icon": "link"
+		"kind": "site"
 	},
 	"zilla774": {
 		"name": "zilla774",

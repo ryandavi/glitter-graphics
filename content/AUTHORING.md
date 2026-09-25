@@ -11,8 +11,8 @@ Every modal (history, personal-web, aylana, preservation, about, welcome, guide)
 | `{@aim\|notip}` / `{@aim\|tip}` | Keep the entity's gloss off this mention / put it here |
 | `{?Neonlove}` | "This should be an entity, deal with it later." Renders as plain text |
 | `{y:2001}` / `{date:2001-06-07\|7 June 2001}` | A year / any other date (ISO value, then the visible text) |
-| `{file:FB12.gif}` `{dir:/BAR}` `{page:TOOLS.html}` | File, folder and page names |
-| `{usenet:news:alt.discuss.4-webtv}` | A Usenet address |
+| `{file:FB12.gif}` `{dir:/BAR}` `{page:TOOLS.html}` | File, folder and page names. Inside a link too: `{link:…}{file:FB12.gif}{/link}` |
+| `{usenet:alt.discuss.4-webtv}` | A newsgroup name (no `news:` prefix) |
 | `{tip:Explanation}term{/tip}` | A tooltip on a term that isn't an entity (`\|tag=span` for a non-bold one) |
 | `{link:external\|URL}text{/link}` | A link. Other kinds: `archive-wayback`, `archive-index`, `archive-mirror`, `archive-service`, `historical-snapshot`. Options: `\|@slug`, `\|tip=…`, `\|preservation` |
 | `{dead:page-offline\|href=URL\|tip=Offline: this site no longer exists}text{/dead}` | A page that's gone. States: `page-offline`, `host-closed`, `domain-repurposed`, `service-closed`. Options: `\|@slug`, `\|host=slug` |
@@ -58,40 +58,45 @@ One map of slugs (lowercase words joined by hyphens) to entries:
 
 | Field | Meaning |
 |---|---|
-| `kind` | `site` (a place on the web or a network service), `software`, `org` (company, publisher, institution), `work` (franchise, show, band), `person` (a real name), `handle` (an online identity) |
+| `kind` | `site` (a place on the web or a network service), `software`, `org` (company, publisher, institution), `work` (franchise, show, band), `person` (someone by the name people called them: Olia Lialina, Mica, Moon), `handle` (one account on one service: DAN-411 on WebTV, osodeoro on Tripod) |
 | `name` | The name in reading order (`Olia Lialina`) |
 | `sortName` | Persons only: bibliography order (`Lialina, Olia`), used when the person is a source's author |
 | `aliases` | Other spellings; `find`, `tag` and the lint match them |
 | `host` | The site it lived on (a handle's home, a site's host). Its icon falls back to the host's |
 | `owner` | For a site: the handle or person who ran it |
-| `person` | For a handle: the real-name entity behind it |
+| `person` | For a handle: the person who used it |
+| `aka` | Persons only: other names people called them (`["Josh"]`), shown on the hover card |
 | `domains` | Domains it owns; a link to one gets its icon, and a dead source on one gets its `closed` state |
 | `closed` | For a host that's gone: `host-closed`, `domain-repurposed`, … |
 | `gloss` | A one-line definition, shown as a tooltip on the first mention per page |
 | `icon` | Icon file name when it isn't the slug (`"icon": "wtv-zone"` for WebTV) |
-| `accent` | A handle's text color (`#rrggbb`); the Glitter Connection cast have one each |
 | `tags` | Finer categories. `"term"` marks an everyday word (GIF, Dollz) the tag sweep and lint leave alone |
 | `status` | `"draft"` until Ryan confirms it |
 
-How entities look is decided by kind, never by slug: sites get an icon on their first mention per section (`--icons=all` shows every one), works are italic, handles are tinted, and people, software and orgs are plain text. Handles and hosted sites also get a hover card (host, owner, real name).
+How entities look is decided by kind, never by slug: a site with its own logo (or its host's) shows it on its first mention per section (`--icons=all` shows every one), works are italic, handles are tinted, and people, software and orgs are plain text. There is no generic icon: an icon always means "this place has a logo". A link shows one mark: the logo if it has one, otherwise the external-link arrow. Handles, hosted sites and people with handles get a hover card: each account on its service, whose it is, the sites they ran, and the gloss.
 
-**Icons:** drop `images/modal/history/platform-icons/<slug>.svg` (tinted to the text color) or `<slug>.color.svg` (drawn as is), rebuild, and recompile the SCSS. The build writes `css/generated/_entity-icons.scss`; no list to edit. `node tools/entities.js icons` lists the most-mentioned sites still drawn with the generic glyph.
+A person with several accounts gets one `person` entry and one `handle` per account, each with `host` and `person`. Write the name the prose uses (`{@dan}`) and the handle only where the account itself is the point (`signed {@dan-411}`).
+
+**Icons:** drop `images/modal/history/platform-icons/<slug>.svg` (tinted to the text color) or `<slug>.color.svg` (drawn as is), rebuild, and recompile the SCSS. The build writes `css/generated/_entity-icons.scss`; no list to edit. `node tools/entities.js icons` lists the most-mentioned sites with no logo yet (they show no icon).
 
 ## content/sources.json
 
 Shared by every page, so a source is written once however many pages cite it.
 
+Every citation renders in one style: `Author. "Title". <em>Publisher</em>. Archived D Month YYYY. Note`. There is no hand-formatted escape hatch; if a source doesn't fit, the fields below cover it (an untitled email gets a `description`, a second page goes in the `note`).
+
 | Field | Meaning |
 |---|---|
 | `author` / `publisher` | `"@slug"` for an entity (a person reads as their `sortName`) or plain text |
 | `title`, `url` | The cited page. `title` may hold tokens |
+| `description` | Instead of `title`, for something untitled: `Closure email to subscribers, sent …` renders unquoted |
+| `type`, `date` | `"type": "book"` renders the title in italics, then `Publisher, Year.` from `publisher` and `date` (a year) |
 | `status` | `live` (default), `dead` (the page is gone: the title renders as a dead link, its state from the host's `closed`), or `draft` |
 | `archive` | `{ "url": …, "date": "2004-08-20" }` renders "Archived 20 August 2004". `label` overrides the text |
-| `note` | Text after the citation. Tokens and `[@key]` allowed |
+| `note` | Text after the citation: what it shows, a quote, a second page ("See also …"). Tokens and `[@key]` allowed |
 | `notes` | `{ "aylana": "…" }`: a page-specific note that replaces `note` there |
 | `general` | Pages whose `{references:general}` list it |
 | `link`, `dead` | Rare overrides: the link kind, or `{ state, host, tip }` for a dead link |
-| `cite` | A hand-formatted citation, used as is. Only for citations the fields can't express |
 
 Keys follow `author-year-word` (`lialina-2015-kuleshova`); `cite.js add` suggests one.
 

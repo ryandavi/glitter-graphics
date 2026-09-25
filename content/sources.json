@@ -10,7 +10,16 @@
 		"note": "Pang, Natalie; Schafer, Valérie; et al."
 	},
 	"2001-pagebuilder": {
-		"cite": "{@yahoo}!. \"{link:archive-wayback|https://web.archive.org/web/20010413223144/http://geocities.yahoo.com/v/pb.html}{@pagebuilder}{/link}\". <em>{@geocities}</em>, archived {date:2001-04-13|13 April 2001}. \"Create a cool, full-featured site without any HTML coding. Customize your pages with pictures, sounds, Add-Ons and more.\""
+		"author": "{@yahoo|Yahoo!}",
+		"title": "{@pagebuilder}",
+		"url": "http://geocities.yahoo.com/v/pb.html",
+		"status": "dead",
+		"publisher": "@geocities",
+		"archive": {
+			"url": "https://web.archive.org/web/20010413223144/http://geocities.yahoo.com/v/pb.html",
+			"date": "2001-04-13"
+		},
+		"note": "\"Create a cool, full-featured site without any HTML coding. Customize your pages with pictures, sounds, Add-Ons and more.\""
 	},
 	"2006-boomspeed": {
 		"status": "dead",
@@ -143,13 +152,23 @@
 			"url": "https://web.archive.org/web/20000409010256/http://aylana.tripod.com/",
 			"date": "2000-04-09"
 		},
-		"note": "Lists the \"4-{@webtv} NewsGroup\" (news:alt.discuss.4-webtv, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}4webtvcharter.html{/link}, has no surviving content capture, only a later redirect.",
+		"note": "Lists the \"4-{@webtv} NewsGroup\" ({usenet:alt.discuss.4-webtv}, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}{file:4webtvcharter.html}{/link}, has no surviving content capture, only a later redirect.",
 		"notes": {
-			"aylana": "Signs off \"God Save The Internet Princess,\" with the email address InterNetPriNcesS@AyLana.Net. Separately lists the \"4-{@webtv} NewsGroup\" (news:alt.discuss.4-webtv, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}4webtvcharter.html{/link}, has no surviving content capture, only a later redirect."
+			"aylana": "Signs off \"God Save The Internet Princess,\" with the email address InterNetPriNcesS@AyLana.Net. Separately lists the \"4-{@webtv} NewsGroup\" ({usenet:alt.discuss.4-webtv}, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}{file:4webtvcharter.html}{/link}, has no surviving content capture, only a later redirect."
 		}
 	},
 	"aylana-aya-hospital-zone-bring": {
-		"cite": "{@aylana|Aylana (\"Aya\")}. \"{dead:domain-repurposed|host=wtv-zone|href=http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html|tip=Offline: this site no longer exists}HOSPITAL ZONE{/dead}\". <em>{@bring-on-the-glitter}</em>, {@wtv-zone}. {link:archive-wayback|https://web.archive.org/web/20021209174057/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}First captured {date:2002-12-09|9 December 2002}{/link} at the site's front page, still intact at the {link:archive-wayback|https://web.archive.org/web/20060327173729/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2006-03-27|27 March 2006} capture{/link}. The page then returned a 404 (\"The URL you have requested does not exist on the WTV Zone servers. It may have been deleted, renamed or moved.\") at every capture through that stretch: {link:archive-wayback|https://web.archive.org/web/20061112032141/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2006-11-12|12 November 2006}{/link}, {link:archive-wayback|https://web.archive.org/web/20070702123754/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-07-02|2 July 2007}{/link}, {link:archive-wayback|https://web.archive.org/web/20070713114029/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-07-13|13 July 2007}{/link}, and {link:archive-wayback|https://web.archive.org/web/20070816082716/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}16{/link} and {link:archive-wayback|https://web.archive.org/web/20070823162504/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-08-23|23 August 2007}{/link}. By the {link:archive-wayback|https://web.archive.org/web/20071012021655/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-10-12|12 October 2007} capture{/link} the page was back with {@bemymind}'s \"In honor of {@aylana}\" line added (also in the {link:archive-wayback|https://web.archive.org/web/20090604134256/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2009-06-04|4 June 2009} capture{/link}). The {link:archive-wayback|https://web.archive.org/web/20050110032420/http://www.wtv-zone.com/aylana/bringontheglitter/}{date:2005-01|January 2005} capture{/link} of the directory's front page, \"Thank You For Visiting,\" links to it. Its {link:archive-wayback|https://web.archive.org/web/20091125140820/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}last successful capture is {date:2009-11-25|25 November 2009}{/link}; by the {link:archive-wayback|https://web.archive.org/web/20091228012940/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2009-12-28|28 December 2009} capture{/link} it was 404 again, and no later capture ever finds it live again."
+		"author": "{@aylana|Aylana (\"Aya\")}",
+		"title": "HOSPITAL ZONE",
+		"url": "http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html",
+		"status": "dead",
+		"publisher": "@bring-on-the-glitter",
+		"archive": {
+			"url": "https://web.archive.org/web/20091125140820/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html",
+			"date": "2009-11-25",
+			"label": "Last archived {date:2009-11-25|25 November 2009}"
+		},
+		"note": "The notice first appears in the {link:archive-wayback|https://web.archive.org/web/20021209174057/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2002-12-09|9 December 2002} capture{/link} of the site's front page and is still intact on {link:archive-wayback|https://web.archive.org/web/20060327173729/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2006-03-27|27 March 2006}{/link}. The page then returned a 404 (\"The URL you have requested does not exist on the WTV Zone servers. It may have been deleted, renamed or moved.\") at every capture through that stretch: {link:archive-wayback|https://web.archive.org/web/20061112032141/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2006-11-12|12 November 2006}{/link}, {link:archive-wayback|https://web.archive.org/web/20070702123754/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-07-02|2 July 2007}{/link}, {link:archive-wayback|https://web.archive.org/web/20070713114029/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-07-13|13 July 2007}{/link}, and {link:archive-wayback|https://web.archive.org/web/20070816082716/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}16{/link} and {link:archive-wayback|https://web.archive.org/web/20070823162504/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-08-23|23 August 2007}{/link}. By the {link:archive-wayback|https://web.archive.org/web/20071012021655/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2007-10-12|12 October 2007} capture{/link} the page was back with {@bemymind}'s \"In honor of {@aylana}\" line added (also in the {link:archive-wayback|https://web.archive.org/web/20090604134256/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2009-06-04|4 June 2009} capture{/link}). The {link:archive-wayback|https://web.archive.org/web/20050110032420/http://www.wtv-zone.com/aylana/bringontheglitter/}{date:2005-01|January 2005} capture{/link} of the directory's front page, \"Thank You For Visiting,\" links to it. By the {link:archive-wayback|https://web.archive.org/web/20091228012940/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html}{date:2009-12-28|28 December 2009} capture{/link} it was 404 again, and no later capture finds it live."
 	},
 	"aylana-bring-on-the-glitter": {
 		"status": "dead",
@@ -161,7 +180,7 @@
 			"url": "https://web.archive.org/web/20020306142712/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter.html",
 			"date": "2002-03-06"
 		},
-		"note": "Later index at {link:archive-wayback|https://web.archive.org/web/20040712000530/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html}bringontheglitter-1.html{/link} (captures from {date:2002-12-09|9 December 2002}); {link:archive-wayback|https://web.archive.org/web/20040809212004/http://www.wtv-zone.com/aylana/bringontheglitter/clear/clear.html}Clear Glitter{/link} section captured from {date:2002-04-15|15 April 2002}. The site's full name is {@designbyaylana}, and {@bring-on-the-glitter} is a subsection. The copyright line, &copy;{y:1997} through {y:2002}, was never extended past {y:2002}; it dates her graphics work in general, not the glitter library."
+		"note": "Later index at {link:archive-wayback|https://web.archive.org/web/20040712000530/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html}{file:bringontheglitter-1.html}{/link} (captures from {date:2002-12-09|9 December 2002}); {link:archive-wayback|https://web.archive.org/web/20040809212004/http://www.wtv-zone.com/aylana/bringontheglitter/clear/clear.html}Clear Glitter{/link} section captured from {date:2002-04-15|15 April 2002}. The site's full name is {@designbyaylana}, and {@bring-on-the-glitter} is a subsection. The copyright line, &copy;{y:1997} through {y:2002}, was never extended past {y:2002}; it dates her graphics work in general, not the glitter library."
 	},
 	"bannerzrus-2005-powerlines": {
 		"status": "dead",
@@ -248,7 +267,7 @@
 	"club-4-webbtv-birthday-page": {
 		"title": "Club-4-WebbTv Birthday Page",
 		"url": "https://web.archive.org/web/20200712170746/http://club4_bdays.tripod.com/birthday/club4birthdaypage.html",
-		"note": "<em>club4_bdays.tripod.com</em>, archived {date:2020-07-12|12 July 2020}. Lists {@mica}, a {@ginger}, {@aylana}, {@dan-411}, and {@moondogee} among dozens of other {@webtv} handles and their birthdays."
+		"note": "<em>club4_bdays.tripod.com</em>, archived {date:2020-07-12|12 July 2020}. Lists {@mica}, a {@ginger}, {@aylana}, {@dan}, and {@moon} among dozens of other {@webtv} handles and their birthdays."
 	},
 	"compuserve": {
 		"title": "{@compuserve}",
@@ -273,7 +292,7 @@
 	},
 	"dan-411-2004-sparkelies": {
 		"status": "dead",
-		"author": "{@dan-411|Dan (DAN-411)}",
+		"author": "{@dan} ({@dan-411})",
 		"title": "{@sparkelies}",
 		"url": "http://members.tripod.com/~osodeoro/Sparklies/Sparkelies.html",
 		"publisher": "@tripod",
@@ -281,7 +300,7 @@
 			"url": "https://web.archive.org/web/20040624034824/http://members.tripod.com/~osodeoro/Sparklies/Sparkelies.html",
 			"date": "2004-06-24"
 		},
-		"note": "The page states it was \"created on {date:2001-11-22|11-22-01}\" and links {@aylana}'s {@bring-on-the-glitter}, {@moondogee}'s {@flashites}, {@da-brat}'s {@all-that-glitters}, and {@annacher}'s name requests. File comparison with this editor's fills is my own, made against the archived tile files."
+		"note": "The page states it was \"created on {date:2001-11-22|11-22-01}\" and links {@aylana}'s {@bring-on-the-glitter}, {@moon}'s {@flashites}, {@da-brat}'s {@all-that-glitters}, and {@annacher}'s name requests. File comparison with this editor's fills is my own, made against the archived tile files."
 	},
 	"darkest-faerie-lair": {
 		"title": "Darkest Faerie Lair",
@@ -308,7 +327,11 @@
 		"note": "Archived {date:2004-06-04|4 June 2004}. Sparkle picture tubes from the old Hoods Tube site, made by {@robin} and rehosted with permission. Picture tubes were stamped onto an image while building a texture; they are a different kind of resource from the small animated glitter tiles in this editor."
 	},
 	"dollz-mania-dollz-mania-dollz": {
-		"cite": "{dead:domain-repurposed|@dollz-mania|href=http://dollzmania.com/|tip=Offline: the original Dollz Mania is gone; this domain now hosts unrelated content}Dollz Mania{/dead}. \"{link:archive-mirror|https://dollzmaniabackup.neocities.org/|preservation}Dollz Mania Dollz / Dollmakers archive{/link}\". <em>Dollz Mania Backup</em>, {@neocities}."
+		"title": "Dollz Mania Dollz / Dollmakers archive",
+		"url": "https://dollzmaniabackup.neocities.org/",
+		"link": "archive-mirror",
+		"publisher": "Dollz Mania Backup",
+		"note": "A {@neocities} preservation copy of {dead:domain-repurposed|@dollz-mania|href=http://dollzmania.com/|tip=Offline: the original Dollz Mania is gone; this domain now hosts unrelated content}Dollz Mania{/dead}."
 	},
 	"download-upload": {
 		"status": "dead",
@@ -343,7 +366,10 @@
 		}
 	},
 	"emo": {
-		"cite": "\"{link:external|https://en.wikipedia.org/wiki/Emo}Emo{/link}\" and \"{link:external|https://en.wikipedia.org/wiki/Scene_(subculture)}Scene (subculture){/link}\". <em>{@wikipedia}</em>."
+		"title": "Emo",
+		"url": "https://en.wikipedia.org/wiki/Emo",
+		"publisher": "@wikipedia",
+		"note": "See also \"{link:external|https://en.wikipedia.org/wiki/Scene_(subculture)}Scene (subculture){/link}\"."
 	},
 	"evastars-pfft-illustrated-glossary": {
 		"author": "evastars / pfft",
@@ -484,7 +510,10 @@
 		"publisher": "ICS MEDIA"
 	},
 	"iframes-amateur-web-design": {
-		"cite": "Kurzmeier, Michael. <em>Political Expression in Web Defacements</em>. Notes that using the <code>iframe</code> element to divide a page was common among amateur web designers in the early {date:2000|2000s}, allowing separate pages to appear inside a larger page without duplicating their contents."
+		"author": "Kurzmeier, Michael",
+		"title": "Political Expression in Web Defacements",
+		"type": "book",
+		"note": "Notes that using the <code>iframe</code> element to divide a page was common among amateur web designers in the early {date:2000|2000s}, allowing separate pages to appear inside a larger page without duplicating their contents."
 	},
 	"internet-archive-gifcities": {
 		"title": "GifCities",
@@ -572,7 +601,9 @@
 		"note": "A participant's own shrine to {@qbee|q*bee}, from a member who was also part of {@teahouse-mb}."
 	},
 	"lycos-homepage-notice-to-our": {
-		"cite": "{@lycos}. Homepage notice: \"To our users of {@angelfire} and {@tripod}. We apologize for the service interruptions. Unfortunately we will be shutting down {@angelfire} and {@tripod} within the next 30 days. Please move your hosting to another host as soon as possible.\" Posted {date:2026-03-06|6 March 2026}; reappeared {date:2026-04-03|3 April 2026}. See also ArchiveTeam's {link:external|https://wiki.archiveteam.org/index.php/Tripod}{@tripod} shutdown record{/link}."
+		"author": "@lycos",
+		"description": "Homepage notice, posted {date:2026-03-06|6 March 2026} and again {date:2026-04-03|3 April 2026}",
+		"note": "\"To our users of {@angelfire} and {@tripod}. We apologize for the service interruptions. Unfortunately we will be shutting down {@angelfire} and {@tripod} within the next 30 days. Please move your hosting to another host as soon as possible.\" See also ArchiveTeam's {link:external|https://wiki.archiveteam.org/index.php/Tripod}{@tripod} shutdown record{/link}."
 	},
 	"m-i-a": {
 		"title": "M.I.A.",
@@ -580,7 +611,11 @@
 		"publisher": "@wikipedia"
 	},
 	"make-animate": {
-		"cite": "\"{link:archive-mirror|https://blinkiemaker.neocities.org/w_graphics|preservation}Make and Animate a Blinkie / Make a Blinkie Maker{/link}\". <em>Blinkie Makers</em>, {@neocities} preservation copy."
+		"title": "Make and Animate a Blinkie / Make a Blinkie Maker",
+		"url": "https://blinkiemaker.neocities.org/w_graphics",
+		"link": "archive-mirror",
+		"publisher": "Blinkie Makers",
+		"note": "A {@neocities} preservation copy."
 	},
 	"matching-sets-for-web-pages": {
 		"status": "dead",
@@ -603,7 +638,7 @@
 	},
 	"mica-2001-sparkbutton": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "SparkButton.gif",
 		"url": "http://wtv-zone.com/Stardrops/BAR/SparkButton.gif",
 		"publisher": "@wtv-zone",
@@ -611,11 +646,11 @@
 			"url": "https://web.archive.org/web/20010902035612/http://wtv-zone.com/Stardrops/BAR/SparkButton.gif",
 			"date": "2001-09-02"
 		},
-		"note": "The tile {@moondogee} calls \"That Famous Darned sparkbutton!\", in the folder {@moondogee} alludes to. The earliest capture of it I found."
+		"note": "The tile {@moon} calls \"That Famous Darned sparkbutton!\", in the folder {@moon} alludes to. The earliest capture of it I found."
 	},
 	"mica-2003-dansoriginalopal": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "DansOriginalOpal.gif",
 		"url": "http://wtv-zone.com/Stardrops/BAR/DansOriginalOpal.gif",
 		"publisher": "@wtv-zone",
@@ -627,7 +662,7 @@
 	},
 	"mica-2003-musik": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "MUSIK",
 		"url": "http://wtv-zone.com:80/Stardrops/MUSIK/",
 		"publisher": "@wtv-zone",
@@ -639,7 +674,7 @@
 	},
 	"mica-2003-tools": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "TOOLS.html",
 		"url": "http://www.wtv-zone.com:80/Stardrops/TOOLS.html",
 		"publisher": "@wtv-zone",
@@ -651,7 +686,7 @@
 	},
 	"mica-2004-bar": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "BAR",
 		"url": "http://wtv-zone.com/Stardrops/BAR/",
 		"publisher": "@wtv-zone",
@@ -663,7 +698,7 @@
 	},
 	"mica-2004-cropcrafts": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "CROPCRAFTS",
 		"url": "http://www.wtv-zone.com:80/Stardrops/CROPCRAFTS/",
 		"publisher": "@wtv-zone",
@@ -675,7 +710,7 @@
 	},
 	"mica-2004-gameroom": {
 		"status": "dead",
-		"author": "{@mica|Mica (Stardrops)}",
+		"author": "{@mica} ({@stardrops})",
 		"title": "GameRoom.html",
 		"url": "http://wtv-zone.com/Stardrops/Janes/GameRoom.html",
 		"publisher": "@wtv-zone",
@@ -728,7 +763,7 @@
 	},
 	"moon-moondogee-flashlites-i-f-s": {
 		"status": "dead",
-		"author": "{@moondogee|Moon (Moondogee)}",
+		"author": "{@moon} ({@moondogee})",
 		"title": "Flashlites - I.F.&#x27;s (I.mage F.iller&#x27;s)",
 		"url": "http://www.wtv-zone.com/scri8e/stars/flashites/index.html",
 		"publisher": "@wtv-zone",
@@ -736,10 +771,10 @@
 			"url": "https://web.archive.org/web/20020806161505/http://www.wtv-zone.com/scri8e/stars/flashites/index.html",
 			"date": "2002-08-06"
 		},
-		"note": "Includes \"I.F. That Famous Darned sparkbutton!\", the marquee \"***Note the date of file creation***\", and a counter reading \"since 01/07/{y:2002}.\" Wayback captures of {link:archive-wayback|https://web.archive.org/web/20020806161505/http://www.wtv-zone.com/scri8e/bars/anim/sparkbutton.gif}sparkbutton.gif{/link} exist from {date:2002-06-13|13 June} and {date:2002-08-26|26 August 2002}; the {date:2002-06|June} capture records the {@wtv-zone} server's last-modified date as {date:2001-06-07|7 June 2001}. That file is byte-identical to {file:FB12.gif}. The page's demonstration image, {link:archive-wayback|https://web.archive.org/web/20020806161505/http://www.wtv-zone.com/scri8e/wiz/aliens/chromgul_anim.gif}chromgul_anim.gif{/link}, carries a server date of {date:2001-07-13|13 July 2001}."
+		"note": "Includes \"I.F. That Famous Darned sparkbutton!\", the marquee \"***Note the date of file creation***\", and a counter reading \"since 01/07/{y:2002}.\" Wayback captures of {link:archive-wayback|https://web.archive.org/web/20020806161505/http://www.wtv-zone.com/scri8e/bars/anim/sparkbutton.gif}{file:sparkbutton.gif}{/link} exist from {date:2002-06-13|13 June} and {date:2002-08-26|26 August 2002}; the {date:2002-06|June} capture records the {@wtv-zone} server's last-modified date as {date:2001-06-07|7 June 2001}. That file is byte-identical to {file:FB12.gif}. The page's demonstration image, {link:archive-wayback|https://web.archive.org/web/20020806161505/http://www.wtv-zone.com/scri8e/wiz/aliens/chromgul_anim.gif}{file:chromgul_anim.gif}{/link}, carries a server date of {date:2001-07-13|13 July 2001}."
 	},
 	"moondogee-2004-flashites": {
-		"author": "{@moondogee|Moon (Moondogee)}",
+		"author": "{@moon} ({@moondogee})",
 		"title": "{@flashites}",
 		"url": "http://www.scri8e.com/stars/flashites/index.html",
 		"publisher": "@scri8e",
@@ -748,7 +783,7 @@
 			"date": "2004-08-20",
 			"link": "historical-snapshot"
 		},
-		"note": "Source for \"{@flashites} = Glitter Tiles,\" the early-{y:2001} \"{@glitter-connection},\" the seven methods for glittering part of an image, and the note on frame counts. The account of {@mica}'s tile (\"This is one of the very first glitter tiles\"), {@dan-411}'s and {@aylana}'s first tiles, and {@dan-411}'s jeweler background sits under {link:external|http://www.scri8e.com/stars/flashites/FB12.gif}FB12.gif{/link} on the current live page; the file there is byte-identical to a {y:2004} Wayback copy. A later retrospective account, not a period document. See also the {link:historical-snapshot|https://web.archive.org/web/20040707015142/http://www.scri8e.com/stars/flashites/FSs/index.html}FSs index, archived {date:2004-07-07|7 July 2004}{/link}."
+		"note": "Source for \"{@flashites} = Glitter Tiles,\" the early-{y:2001} \"{@glitter-connection},\" the seven methods for glittering part of an image, and the note on frame counts. The account of {@mica}'s tile (\"This is one of the very first glitter tiles\"), {@dan}'s and {@aylana}'s first tiles, and {@dan}'s jeweler background sits under {link:external|http://www.scri8e.com/stars/flashites/FB12.gif}{file:FB12.gif}{/link} on the current live page; the file there is byte-identical to a {y:2004} Wayback copy. A later retrospective account, not a period document. See also the {link:historical-snapshot|https://web.archive.org/web/20040707015142/http://www.scri8e.com/stars/flashites/FSs/index.html}FSs index, archived {date:2004-07-07|7 July 2004}{/link}."
 	},
 	"myspace": {
 		"title": "{@myspace}",
@@ -815,7 +850,13 @@
 		"url": "https://www.online-image-editor.com/"
 	},
 	"onyxsmiles-okay-lets-glitter-a": {
-		"cite": "{@onyxsmiles}. \"{link:archive-wayback|https://web.archive.org/web/20030804164224/http://onyxsmiles.com/glittername.html}Okay Lets Glitter a Name :o){/link}\", archived {date:2003-08-04|4 August 2003}; \"{link:archive-wayback|https://web.archive.org/web/20031011211627/http://www.onyxsmiles.com/glitterz.html}Glitterz by Onyx :o){/link}\", archived {date:2003-10-11|11 October 2003} with many images broken."
+		"author": "@onyxsmiles",
+		"title": "Okay Lets Glitter a Name :o)",
+		"url": "https://web.archive.org/web/20030804164224/http://onyxsmiles.com/glittername.html",
+		"archive": {
+			"date": "2003-08-04"
+		},
+		"note": "See also \"{link:archive-wayback|https://web.archive.org/web/20031011211627/http://www.onyxsmiles.com/glitterz.html}Glitterz by Onyx :o){/link}\", archived {date:2003-10-11|11 October 2003} with many images broken."
 	},
 	"paintshop-pro": {
 		"title": "PaintShop Pro",
@@ -828,7 +869,11 @@
 		"note": "{link:historical-snapshot|https://web.archive.org/web/20050826010445/http://photobucket.com/}Archived{/link} from the original on {date:2005-08-26|26 August 2005}."
 	},
 	"photoshop-6-screen-resolution": {
-		"cite": "<em>{@photoshop|Photoshop 6.0} User Guide</em>. {date:2000|2000}. Notes that a 15-inch monitor commonly displayed 800 × 600 pixels and recommends keeping web graphics smaller than the full screen to leave room for browser controls."
+		"title": "{@photoshop|Photoshop 6.0} User Guide",
+		"type": "book",
+		"publisher": "@adobe",
+		"date": "2000",
+		"note": "Notes that a 15-inch monitor commonly displayed 800 × 600 pixels and recommends keeping web graphics smaller than the full screen to leave room for browser controls."
 	},
 	"picmix": {
 		"title": "PicMix",
@@ -1076,7 +1121,9 @@
 		"note": "States it was created {date:2003-02-26|26 February 2003}; archived {date:2003-06-26|26 June 2003}. {link:archive-wayback|https://web.archive.org/web/20030422171814/http://www.whisperscorner.com/tuts/ezglitter/index2.html}Tester examples page{/link}, archived {date:2003-04-22|22 April 2003}."
 	},
 	"wtv-zone-2022-almost": {
-		"cite": "{@wtv-zone}. Closure email to subscribers, sent on or about {date:2022-11-28|28 November 2022}. Shared by {@mona-young} in the {link:external|https://www.facebook.com/groups/147425098797692/?multi_permalinks=2137790889761093}Friends of Web TV and MSNTV{/link} {@facebook} group. Quotes the Bumeder family directly: \"For almost 22 years my wife, Kari, and I have been blessed to have you as part of our WTV Zone family,\" and \"There was a cascading hardware failure that took out the server {date:2022-11-18|November 18, 2022} that is damaged beyond repair.\" Shared in a private group; not independently verifiable beyond what is quoted here."
+		"author": "@wtv-zone",
+		"description": "Closure email to subscribers, sent on or about {date:2022-11-28|28 November 2022}",
+		"note": "Shared by {@mona-young} in the {link:external|https://www.facebook.com/groups/147425098797692/?multi_permalinks=2137790889761093}Friends of Web TV and MSNTV{/link} {@facebook} group. Quotes the Bumeder family directly: \"For almost 22 years my wife, Kari, and I have been blessed to have you as part of our WTV Zone family,\" and \"There was a cascading hardware failure that took out the server {date:2022-11-18|November 18, 2022} that is damaged beyond repair.\" Shared in a private group; not independently verifiable beyond what is quoted here."
 	},
 	"xxxo": {
 		"title": "XXXO",

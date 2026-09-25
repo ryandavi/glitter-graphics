@@ -192,8 +192,7 @@
 			"Aya",
 			"Aylana (\"Aya\")"
 		],
-		"host": "wtv-zone",
-		"accent": "#e0559b"
+		"host": "wtv-zone"
 	},
 	"ayumi-hamasaki": {
 		"kind": "person",
@@ -487,16 +486,19 @@
 			"dafont.com"
 		]
 	},
+	"dan": {
+		"kind": "person",
+		"name": "Dan"
+	},
 	"dan-411": {
 		"kind": "handle",
-		"name": "Dan",
+		"name": "DAN-411",
 		"aliases": [
-			"DAN-411",
-			"Dan-411",
-			"Dan (DAN-411)"
+			"Dan-411"
 		],
-		"host": "wtv-zone",
-		"accent": "#9b59d0"
+		"host": "webtv",
+		"person": "dan",
+		"gloss": "Dan's username on WebTV, where a username was also the email address"
 	},
 	"darkest-faerie-lair": {
 		"kind": "site",
@@ -691,8 +693,8 @@
 	"flashites": {
 		"kind": "site",
 		"name": "Flashites",
-		"host": "wtv-zone",
-		"owner": "moondogee"
+		"host": "scri8e",
+		"owner": "moon"
 	},
 	"flickr": {
 		"kind": "site",
@@ -1238,14 +1240,11 @@
 		"gloss": "British rapper, singer, and songwriter"
 	},
 	"mica": {
-		"kind": "handle",
+		"kind": "person",
 		"name": "Mica",
-		"aliases": [
-			"Stardrops",
-			"Mica (Stardrops)"
-		],
-		"host": "wtv-zone",
-		"accent": "#2bb3a3"
+		"aka": [
+			"Michaela"
+		]
 	},
 	"microsoft": {
 		"kind": "org",
@@ -1274,20 +1273,27 @@
 		"kind": "person",
 		"name": "Mona Young"
 	},
+	"moon": {
+		"kind": "person",
+		"name": "Moon",
+		"aka": [
+			"Josh"
+		]
+	},
 	"mooncandy": {
 		"kind": "site",
 		"name": "mooncandy.org"
 	},
 	"moondogee": {
 		"kind": "handle",
-		"name": "Moon",
+		"name": "MOONDOGEE",
 		"aliases": [
 			"Moondogee",
-			"Moondoggee",
-			"Moon (Moondogee)"
+			"Moondoggee"
 		],
-		"host": "wtv-zone",
-		"accent": "#4a90e2"
+		"host": "webtv",
+		"person": "moon",
+		"gloss": "Moon's username on WebTV, where a username was also the email address"
 	},
 	"mosaic": {
 		"kind": "software",
@@ -1447,6 +1453,16 @@
 	"orkut": {
 		"kind": "site",
 		"name": "Orkut"
+	},
+	"osodeoro": {
+		"kind": "handle",
+		"name": "osodeoro",
+		"aliases": [
+			"~osodeoro"
+		],
+		"host": "tripod",
+		"person": "dan",
+		"gloss": "Dan's Tripod account: his site lived at members.tripod.com/~osodeoro"
 	},
 	"pagebuilder": {
 		"kind": "software",
@@ -1660,7 +1676,9 @@
 		"name": "scri8e.com",
 		"domains": [
 			"scri8e.com"
-		]
+		],
+		"owner": "moon",
+		"gloss": "Moon's graphics site, first at wtv-zone.com/scri8e and later on its own domain"
 	},
 	"sega": {
 		"kind": "org",
@@ -1726,7 +1744,7 @@
 		"kind": "site",
 		"name": "Sparkelies",
 		"host": "tripod",
-		"owner": "dan-411"
+		"owner": "dan"
 	},
 	"sparkling-dots": {
 		"kind": "site",
@@ -1759,6 +1777,20 @@
 	"ssense": {
 		"kind": "org",
 		"name": "SSENSE"
+	},
+	"stardrops": {
+		"kind": "handle",
+		"name": "Stardrops",
+		"host": "wtv-zone",
+		"person": "mica",
+		"gloss": "Mica's WTV-Zone account: her pages lived at wtv-zone.com/Stardrops"
+	},
+	"stardrops-webtv": {
+		"kind": "handle",
+		"name": "Stardrops_",
+		"host": "webtv",
+		"person": "mica",
+		"gloss": "Mica's username on WebTV, where a username was also the email address"
 	},
 	"steve-wilhite": {
 		"kind": "person",

@@ -1,7 +1,7 @@
 // Registry helpers for writing content/src pages. See content/AUTHORING.md.
 //
 //   node tools/entities.js find "neonlove.net"   which slug is this? (names, aliases, domains)
-//   node tools/entities.js icons                 sites still on the generic glyph, most-mentioned first
+//   node tools/entities.js icons                 sites with no logo yet, most-mentioned first
 //   node tools/entities.js tag history           tag the first untagged mention per section (shows a diff)
 //   node tools/entities.js tag history --write   ...and write it
 const fs = require('fs');
@@ -16,6 +16,8 @@ function describe(slug, entry, entities) {
 	if (entry.status === 'draft') facts.push('DRAFT');
 	if (entry.host) facts.push(`on ${entities[entry.host]?.name || entry.host}`);
 	if (entry.owner) facts.push(`by ${entities[entry.owner]?.name || entry.owner}`);
+	if (entry.person) facts.push(`used by ${entities[entry.person]?.name || entry.person}`);
+	if (entry.aka?.length) facts.push(`also called ${entry.aka.join(', ')}`);
 	if (entry.aliases?.length) facts.push(`aka ${entry.aliases.join(', ')}`);
 	return `{@${slug}}  ${entry.name}  (${facts.join('; ')})`;
 }
@@ -46,11 +48,11 @@ function icons() {
 		}
 	}
 	const generic = Object.entries(entities)
-		.filter(([slug, entry]) => entry.kind === 'site' && registry.resolveIcon(entities, slug, files) === 'link')
+		.filter(([slug, entry]) => entry.kind === 'site' && !registry.resolveIcon(entities, slug, files))
 		.map(([slug, entry]) => ({ slug, name: entry.name, count: counts.get(slug) || 0 }))
 		.filter(item => item.count > 0)
 		.sort((left, right) => right.count - left.count || left.slug.localeCompare(right.slug));
-	process.stdout.write('Sites drawn with the generic link glyph, by mentions in content/src.\n');
+	process.stdout.write('Sites with no logo yet (no icon), by mentions in content/src.\n');
 	process.stdout.write(`Add images/modal/history/platform-icons/<slug>.svg (mask) or <slug>.color.svg, then rebuild.\n\n`);
 	for (const item of generic) process.stdout.write(`${String(item.count).padStart(4)}  ${item.slug}  (${item.name})\n`);
 	return 0;
@@ -159,7 +161,7 @@ function main(args = process.argv.slice(2)) {
 	process.stdout.write([
 		'usage:',
 		'  node tools/entities.js find "<text>"      which slug is this?',
-		'  node tools/entities.js icons              sites still drawn with the generic glyph',
+		'  node tools/entities.js icons              sites with no logo yet',
 		'  node tools/entities.js tag <page> [--write]  tag untagged names, first mention per section',
 		''
 	].join('\n'));

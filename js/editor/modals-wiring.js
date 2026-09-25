@@ -94,7 +94,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=c5e8c1db',
+				externalContentUrl: 'modals/history.html?v=819ca191',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -119,7 +119,7 @@ updateOrientationButtons(width, height) {
 			.register('personalWebModal', {
 				openBtnId: 'personalWebBtn',
 				closeBtnId: 'closePersonalWebModal',
-				externalContentUrl: 'modals/personal-web.html?v=b88820a7',
+				externalContentUrl: 'modals/personal-web.html?v=c5d11692',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -142,7 +142,7 @@ updateOrientationButtons(width, height) {
 			.register('preservationModal', {
 				openBtnId: 'preservationBtn',
 				closeBtnId: 'closePreservationModal',
-				externalContentUrl: 'modals/preservation.html?v=16a639a7',
+				externalContentUrl: 'modals/preservation.html?v=e4ca68f9',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -150,8 +150,8 @@ updateOrientationButtons(width, height) {
 					initPixelScalerInContainer(modalBody);
 
 					// Render before indexing so document search includes every event.
-					await loadScriptOnce('js/generated/entities-data.js?v=f94f8e2e');
-					await loadScriptOnce('js/ui/about-timeline-data.js?v=f0de2ab5');
+					await loadScriptOnce('js/generated/entities-data.js?v=869d312f');
+					await loadScriptOnce('js/ui/about-timeline-data.js?v=c875b6a5');
 					initPreservationTimeline(modalBody);
 					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
 
@@ -164,7 +164,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=617a6b4f',
+				externalContentUrl: 'modals/about.html?v=7be60248',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

@@ -372,7 +372,7 @@ function ruleTooltipDup(context) {
 function ruleUsenetCode(context) {
 	return context.elements
 		.filter(node => node.tag === 'code' && /news:/iu.test(textContent(node)))
-		.map(node => finding(context, node, 'warning', 'usenet-code', 'Use class="usenet-address" instead of <code> for a Usenet address.'));
+		.map(node => finding(context, node, 'warning', 'usenet-code', 'Write a newsgroup as {usenet:alt.example}, not <code>news:…</code>.'));
 }
 
 function ruleTokenize() {

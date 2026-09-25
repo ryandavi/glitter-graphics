@@ -72,17 +72,22 @@ class TooltipManager {
 		const targets = container.querySelectorAll(TOOLTIP_TARGETS);
 		targets.forEach(el => this.attachTo(el));
 		if (typeof ENTITY_DATA === 'undefined' && [...targets].some(el => 'card' in el.dataset)) {
-			loadScriptOnce('js/generated/entities-data.js?v=f94f8e2e').catch((error) => dbg('Entity data failed to load:', error));
+			loadScriptOnce('js/generated/entities-data.js?v=869d312f').catch((error) => dbg('Entity data failed to load:', error));
 		}
 	}
 
-	// Header lines for an entity's hover card, or null when there is nothing
-	// beyond what the gloss already says.
+	// An entity's hover card: icon, name and kind, then one line per fact
+	// (where it lived, whose it is, the person's other accounts), then the
+	// gloss. Null when the element has no card or the data isn't loaded yet.
 	entityCard(element) {
 		if (!('card' in element.dataset) || typeof ENTITY_DATA === 'undefined') return null;
 		const entity = ENTITY_DATA[element.dataset.entity];
 		if (!entity) return null;
 		const nameOf = slug => ENTITY_DATA[slug]?.name || slug;
+		const account = slug => {
+			const handle = ENTITY_DATA[slug];
+			return handle?.host ? `${nameOf(slug)} on ${nameOf(handle.host)}` : nameOf(slug);
+		};
 		const card = document.createElement('div');
 		card.className = 'tooltip-entity';
 		const header = document.createElement('div');
@@ -99,19 +104,27 @@ class TooltipManager {
 		name.textContent = entity.name;
 		const kind = document.createElement('span');
 		kind.className = 'tooltip-entity-kind';
-		kind.textContent = ENTITY_KIND_LABELS[entity.kind] || entity.kind;
+		kind.textContent = entity.kind === 'handle'
+			? (entity.host ? `${nameOf(entity.host)} username` : 'Username')
+			: ENTITY_KIND_LABELS[entity.kind] || entity.kind;
 		header.append(name, kind);
 		card.append(header);
 		const facts = [];
-		if (entity.host) facts.push(`on ${nameOf(entity.host)}`);
-		if (entity.owner) facts.push(`by ${nameOf(entity.owner)}`);
-		if (entity.person) facts.push(`real name ${nameOf(entity.person)}`);
-		if (entity.handles?.length) facts.push(`also ${entity.handles.map(nameOf).join(', ')}`);
-		if (facts.length) {
-			const meta = document.createElement('div');
-			meta.className = 'tooltip-entity-meta';
-			meta.textContent = facts.join(' · ');
-			card.append(meta);
+		if (entity.kind === 'site' && entity.host) facts.push(`On ${nameOf(entity.host)}`);
+		if (entity.owner) facts.push(`Run by ${nameOf(entity.owner)}`);
+		if (entity.aka?.length) facts.push(`Also called ${entity.aka.join(' or ')}`);
+		if (entity.person) {
+			facts.push(`Used by ${nameOf(entity.person)}`);
+			const others = (ENTITY_DATA[entity.person]?.handles || []).filter(slug => slug !== element.dataset.entity);
+			if (others.length) facts.push(`Also ${others.map(account).join(', ')}`);
+		}
+		if (entity.handles?.length) facts.push(...entity.handles.map(account));
+		if (entity.sites?.length) facts.push(`${entity.sites.length > 1 ? 'Sites' : 'Site'}: ${entity.sites.map(nameOf).join(', ')}`);
+		for (const fact of facts) {
+			const line = document.createElement('div');
+			line.className = 'tooltip-entity-meta';
+			line.textContent = fact;
+			card.append(line);
 		}
 		return card;
 	}
@@ -183,10 +196,12 @@ class TooltipManager {
 		if (card) {
 			tooltip.classList.add('tooltip-has-entity');
 			tooltip.append(card);
-			if (element.dataset.tooltip) {
+			// The gloss shows on every mention's card, not only the first.
+			const glossText = element.dataset.tooltip || ENTITY_DATA[element.dataset.entity]?.gloss;
+			if (glossText) {
 				const gloss = document.createElement('div');
 				gloss.className = 'tooltip-entity-gloss';
-				gloss.textContent = element.dataset.tooltip;
+				gloss.textContent = glossText;
 				tooltip.append(gloss);
 			}
 		} else if (element.dataset.tooltip) {

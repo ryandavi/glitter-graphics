@@ -792,14 +792,21 @@
 		"body": "{@dafont}",
 		"description": "DaFont (site)"
 	},
+	"@dan": {
+		"scope": "html",
+		"prefix": [
+			"@dan"
+		],
+		"body": "{@dan}",
+		"description": "Dan (person)"
+	},
 	"@dan-411": {
 		"scope": "html",
 		"prefix": [
-			"@dan-411",
-			"@dan-dan-411"
+			"@dan-411"
 		],
 		"body": "{@dan-411}",
-		"description": "Dan (handle)"
+		"description": "DAN-411 (handle)"
 	},
 	"@darkest-faerie-lair": {
 		"scope": "html",
@@ -1936,12 +1943,10 @@
 	"@mica": {
 		"scope": "html",
 		"prefix": [
-			"@mica",
-			"@stardrops",
-			"@mica-stardrops"
+			"@mica"
 		],
 		"body": "{@mica}",
-		"description": "Mica (handle)"
+		"description": "Mica (person)"
 	},
 	"@microsoft": {
 		"scope": "html",
@@ -1991,6 +1996,14 @@
 		"body": "{@mona-young}",
 		"description": "Mona Young (person)"
 	},
+	"@moon": {
+		"scope": "html",
+		"prefix": [
+			"@moon"
+		],
+		"body": "{@moon}",
+		"description": "Moon (person)"
+	},
 	"@mooncandy": {
 		"scope": "html",
 		"prefix": [
@@ -2003,11 +2016,10 @@
 		"scope": "html",
 		"prefix": [
 			"@moondogee",
-			"@moondoggee",
-			"@moon-moondogee"
+			"@moondoggee"
 		],
 		"body": "{@moondogee}",
-		"description": "Moon (handle)"
+		"description": "MOONDOGEE (handle)"
 	},
 	"@mosaic": {
 		"scope": "html",
@@ -2242,6 +2254,14 @@
 		],
 		"body": "{@orkut}",
 		"description": "Orkut (site)"
+	},
+	"@osodeoro": {
+		"scope": "html",
+		"prefix": [
+			"@osodeoro"
+		],
+		"body": "{@osodeoro}",
+		"description": "osodeoro (handle)"
 	},
 	"@pagebuilder": {
 		"scope": "html",
@@ -2709,6 +2729,22 @@
 		],
 		"body": "{@ssense}",
 		"description": "SSENSE (org)"
+	},
+	"@stardrops": {
+		"scope": "html",
+		"prefix": [
+			"@stardrops"
+		],
+		"body": "{@stardrops}",
+		"description": "Stardrops (handle)"
+	},
+	"@stardrops-webtv": {
+		"scope": "html",
+		"prefix": [
+			"@stardrops-webtv"
+		],
+		"body": "{@stardrops-webtv}",
+		"description": "Stardrops_ (handle)"
 	},
 	"@steve-wilhite": {
 		"scope": "html",
@@ -3295,7 +3331,7 @@
 		"scope": "html",
 		"prefix": "[@2001-pagebuilder",
 		"body": "[@2001-pagebuilder]",
-		"description": "!. \"\". <em></em>, archived . \"Create a cool, full-featured site without any HTML"
+		"description": ""
 	},
 	"[@2006-boomspeed": {
 		"scope": "html",
@@ -3415,7 +3451,7 @@
 		"scope": "html",
 		"prefix": "[@aylana-aya-hospital-zone-bring",
 		"body": "[@aylana-aya-hospital-zone-bring]",
-		"description": ". \"HOSPITAL ZONE\". <em></em>, . First captured  at the site's front page, still "
+		"description": "HOSPITAL ZONE"
 	},
 	"[@aylana-bring-on-the-glitter": {
 		"scope": "html",
@@ -3559,7 +3595,7 @@
 		"scope": "html",
 		"prefix": "[@dollz-mania-dollz-mania-dollz",
 		"body": "[@dollz-mania-dollz-mania-dollz]",
-		"description": "Dollz Mania. \"Dollz Mania Dollz / Dollmakers archive\". <em>Dollz Mania Backup</e"
+		"description": "Dollz Mania Dollz / Dollmakers archive"
 	},
 	"[@download-upload": {
 		"scope": "html",
@@ -3589,7 +3625,7 @@
 		"scope": "html",
 		"prefix": "[@emo",
 		"body": "[@emo]",
-		"description": "\"Emo\" and \"Scene (subculture)\". <em></em>."
+		"description": "Emo"
 	},
 	"[@evastars-pfft-illustrated-glossary": {
 		"scope": "html",
@@ -3733,7 +3769,7 @@
 		"scope": "html",
 		"prefix": "[@iframes-amateur-web-design",
 		"body": "[@iframes-amateur-web-design]",
-		"description": "Kurzmeier, Michael. <em>Political Expression in Web Defacements</em>. Notes that"
+		"description": "Political Expression in Web Defacements"
 	},
 	"[@internet-archive-gifcities": {
 		"scope": "html",
@@ -3817,7 +3853,7 @@
 		"scope": "html",
 		"prefix": "[@lycos-homepage-notice-to-our",
 		"body": "[@lycos-homepage-notice-to-our]",
-		"description": ". Homepage notice: \"To our users of  and . We apologize for the service interrup"
+		"description": "Homepage notice, posted  and again "
 	},
 	"[@m-i-a": {
 		"scope": "html",
@@ -3829,7 +3865,7 @@
 		"scope": "html",
 		"prefix": "[@make-animate",
 		"body": "[@make-animate]",
-		"description": "\"Make and Animate a Blinkie / Make a Blinkie Maker\". <em>Blinkie Makers</em>,  p"
+		"description": "Make and Animate a Blinkie / Make a Blinkie Maker"
 	},
 	"[@matching-sets-for-web-pages": {
 		"scope": "html",
@@ -4015,7 +4051,7 @@
 		"scope": "html",
 		"prefix": "[@onyxsmiles-okay-lets-glitter-a",
 		"body": "[@onyxsmiles-okay-lets-glitter-a]",
-		"description": ". \"Okay Lets Glitter a Name :o)\", archived ; \"Glitterz by Onyx :o)\", archived  w"
+		"description": "Okay Lets Glitter a Name :o)"
 	},
 	"[@paintshop-pro": {
 		"scope": "html",
@@ -4033,7 +4069,7 @@
 		"scope": "html",
 		"prefix": "[@photoshop-6-screen-resolution",
 		"body": "[@photoshop-6-screen-resolution]",
-		"description": "<em> User Guide</em>. . Notes that a 15-inch monitor commonly displayed 800 × 60"
+		"description": " User Guide"
 	},
 	"[@picmix": {
 		"scope": "html",
@@ -4273,7 +4309,7 @@
 		"scope": "html",
 		"prefix": "[@wtv-zone-2022-almost",
 		"body": "[@wtv-zone-2022-almost]",
-		"description": ". Closure email to subscribers, sent on or about . Shared by  in the Friends of "
+		"description": "Closure email to subscribers, sent on or about "
 	},
 	"[@xxxo": {
 		"scope": "html",
