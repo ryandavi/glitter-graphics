@@ -17,6 +17,7 @@ Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for 
 | `unit` | pure-logic suites that need no page |
 | `effects` | pixel effects, Auto Glitter analysis, shimmer, combinatorial effect parity |
 | `panels` | panel parity, shortcut structure and generated-guide freshness, icon references, hints, notification policy, settings modals |
+| `modals` | the modal content build and lint: every `content/src` page builds with 0 errors and matches its `modals/` output, the registries validate, timeline entities exist |
 | `touch`, `shape`, `mask`, `layers`, `document`, `assets` | the named areas |
 | `admin` | PHP contract tests for the admin (run with `php`) |
 

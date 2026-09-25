@@ -1,14 +1,22 @@
 const fs = require('fs');
 const path = require('path');
 const { tokenize, buildTree, walk, textContent, closest } = require('./modal-tokenize');
+const { loadEntities } = require('./content-registry');
 
 const root = path.resolve(__dirname, '..');
 const defaultFiles = [
 	'modals/history.html',
 	'modals/personal-web.html',
 	'modals/aylana.html',
-	'modals/about.html'
+	'modals/preservation.html',
+	'modals/about.html',
+	'modals/welcome.html',
+	'modals/guide.html'
 ];
+// Prose-style rules apply to the long-form articles only; the guide and the
+// welcome screen get the token and structure rules.
+const articleFiles = new Set(['history', 'personal-web', 'aylana', 'preservation', 'about']);
+const PROSE_RULES = new Set(['em-dash', 'bare-name', 'bare-date']);
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 function classes(node) {
@@ -54,24 +62,7 @@ function finding(context, nodeOrToken, severity, rule, message, localOffset = 0)
 	};
 }
 
-function registryEntries(registry, category) {
-	return Object.entries(registry[category] || {}).filter(([key]) => !key.startsWith('_'));
-}
-
-function parsePlatformSlugs(source) {
-	const slugs = new Set(['independent', 'other', 'tool']);
-	const icons = source.match(/\$history-platform-icons\s*:\s*\(([\s\S]*?)\);/u);
-	if (icons) {
-		for (const match of icons[1].matchAll(/"([^"]+)"\s*:/gu)) slugs.add(match[1]);
-	}
-	const defaults = source.match(/\$history-website-defaults\s*:([\s\S]*?);/u);
-	if (defaults) {
-		for (const match of defaults[1].matchAll(/"([^"]+)"/gu)) slugs.add(match[1]);
-	}
-	return slugs;
-}
-
-function createContext(relativeFile, source, registry, platformSlugs) {
+function createContext(relativeFile, source, registry) {
 	const tokens = tokenize(source);
 	const tree = buildTree(tokens);
 	const elements = [];
@@ -89,63 +80,19 @@ function createContext(relativeFile, source, registry, platformSlugs) {
 		elements,
 		textNodes,
 		references,
-		registry,
-		platformSlugs
+		registry
 	};
 }
 
 function ruleSlugUnknown(context) {
 	const results = [];
-	const allowedPlatforms = new Set([
-		...context.platformSlugs,
-		...registryEntries(context.registry, 'platforms').map(([key]) => key)
-	]);
-	const allowedUsernames = new Set(registryEntries(context.registry, 'usernames').map(([key]) => key));
-	const allowedPersons = new Set(registryEntries(context.registry, 'persons').map(([key]) => key));
 	for (const node of context.elements) {
-		const checks = [
-			['data-platform', allowedPlatforms, 'platform'],
-			['data-username', allowedUsernames, 'username'],
-			['data-person', allowedPersons, 'person']
-		];
-		for (const [attribute, allowed, label] of checks) {
+		for (const attribute of ['data-entity', 'data-host']) {
 			const value = node.attrs[attribute];
-			if (value && value !== true && !allowed.has(value)) {
-				results.push(finding(context, node, 'error', 'slug-unknown', `Unknown ${label} "${value}".`));
+			if (value && value !== true && !context.registry[value]) {
+				results.push(finding(context, node, 'error', 'slug-unknown', `Unknown entity "${value}" in ${attribute}.`));
 			}
 		}
-	}
-	return results;
-}
-
-function rulePlatformMissing(context) {
-	const results = [];
-	for (const node of context.elements) {
-		const names = classes(node);
-		if (['site-name', 'username', 'person'].some(name => names.has(name)) && !node.attrs['data-platform']) {
-			results.push(finding(context, node, 'error', 'platform-missing', `${node.tag}.${[...names].join('.')} is missing data-platform.`));
-		}
-	}
-	return results;
-}
-
-function ruleRegistryConflict(context) {
-	const seen = new Map();
-	const results = [];
-	for (const node of context.elements) {
-		if (!hasClass(node, 'username')) continue;
-		const username = node.attrs['data-username'];
-		if (!username || username === true) continue;
-		if (!seen.has(username)) seen.set(username, { platforms: new Set(), cast: new Set(), node });
-		const record = seen.get(username);
-		if (node.attrs['data-platform']) record.platforms.add(node.attrs['data-platform']);
-		record.cast.add(hasClass(node, 'username-cast'));
-	}
-	for (const [username, record] of seen) {
-		const conflicts = [];
-		if (record.platforms.size > 1) conflicts.push(`platforms ${[...record.platforms].join(', ')}`);
-		if (record.cast.size > 1) conflicts.push('both cast and non-cast markup');
-		if (conflicts.length) results.push(finding(context, record.node, 'error', 'registry-conflict', `Username "${username}" appears with ${conflicts.join(' and ')}.`));
 	}
 	return results;
 }
@@ -261,11 +208,11 @@ function ruleLinkAttrs(context) {
 
 function ruleDeadLinkHref(context) {
 	// data-href only records the old URL for readers of the source (no runtime consumer). A host marker
-	// that wraps just a platform name (<span class="dead-link host-closed"><span class="site-name">Tripod</span></span>)
+	// that wraps just a site entity (<span class="dead-link host-closed"><span class="entity" data-entity="tripod">Tripod</span></span>)
 	// has no URL of its own to record, so it is exempt.
 	const hostMarker = node => {
 		const kids = (node.children || []).filter(child => child.type === 'element' || String(child.value || '').trim());
-		return kids.length === 1 && hasClass(kids[0], 'site-name');
+		return kids.length === 1 && hasClass(kids[0], 'entity');
 	};
 	return context.elements
 		.filter(node => hasClass(node, 'dead-link') && !node.attrs['data-href'] && !hostMarker(node))
@@ -274,6 +221,7 @@ function ruleDeadLinkHref(context) {
 
 function ruleTocSync(context) {
 	const results = [];
+	if (!context.elements.some(node => hasClass(node, 'toc'))) return results;
 	const ids = new Map();
 	for (const node of context.elements) {
 		if (node.attrs.id && node.attrs.id !== true && !ids.has(node.attrs.id)) ids.set(node.attrs.id, node);
@@ -307,39 +255,61 @@ function escapeRegex(value) {
 	return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 }
 
-function bareNameCandidates(registry) {
-	const names = new Set();
-	for (const [, entry] of registryEntries(registry, 'platforms')) if (entry.label) names.add(entry.label);
-	for (const category of ['usernames', 'persons']) {
-		for (const [, entry] of registryEntries(registry, category)) {
-			if (entry.display) names.add(entry.display);
-			for (const alias of entry.aliases || []) names.add(alias);
+// One alternation of every registry name and alias, longest first, so a
+// long name wins over a short name inside it, plus the slugs each name means.
+const bareNamePatterns = new WeakMap();
+function bareNamePattern(registry) {
+	if (bareNamePatterns.has(registry)) return bareNamePatterns.get(registry);
+	const slugsByName = new Map();
+	for (const [slug, entry] of Object.entries(registry)) {
+		// A "term" entity (GIF, Dollz) is also an everyday word; untagged mentions are fine.
+		if ((entry.tags || []).includes('term')) continue;
+		for (const name of [entry.name, ...(entry.aliases || [])]) {
+			if (!name || name.length < 3) continue;
+			if (!slugsByName.has(name)) slugsByName.set(name, []);
+			slugsByName.get(name).push(slug);
 		}
 	}
-	return [...names].filter(name => name.length >= 3).sort((left, right) => right.length - left.length || left.localeCompare(right));
+	const sorted = [...slugsByName.keys()].sort((left, right) => right.length - left.length || left.localeCompare(right));
+	const pattern = sorted.length ? new RegExp(`(?<![\\w-])(?:${sorted.map(escapeRegex).join('|')})(?![\\w-])`, 'gu') : null;
+	const result = { pattern, slugsByName };
+	bareNamePatterns.set(registry, result);
+	return result;
 }
 
+// The first untagged mention of an entity in a section (h2-h5) that has no
+// tagged mention before it: the same rule `node tools/entities.js tag`
+// fixes. Link and dead-link text, the TOC, references and code are exempt.
 function ruleBareName(context) {
 	const results = [];
-	const blockedClasses = new Set(['site-name', 'username', 'person', 'file-name']);
-	for (const node of context.textNodes) {
-		if (isInside(node, ancestor => ancestor.type === 'element' && (
-			['time', 'script', 'style'].includes(ancestor.tag) ||
-			[...classes(ancestor)].some(name => blockedClasses.has(name)) ||
-			(hasClass(ancestor, 'context') && ancestor.attrs['data-platform']) ||
-			hasClass(ancestor, 'toc')
-		))) continue;
-		if (quotedReferenceLink(node, context) || addressLinkText(node)) continue;
-		for (const name of bareNameCandidates(context.registry)) {
-			const pattern = new RegExp(`(?<![\\w-])${escapeRegex(name)}(?![\\w-])`, 'gu');
-			for (const match of node.value.matchAll(pattern)) {
-				const start = Math.max(0, match.index - 20);
-				const end = Math.min(node.value.length, match.index + name.length + 20);
-				const contextText = node.value.slice(start, end).replace(/\s+/gu, ' ').trim().slice(0, 40);
-				results.push(finding(context, node, 'warning', 'bare-name', `Bare name "${name}" near "${contextText}".`, match.index));
-			}
+	const { pattern, slugsByName } = bareNamePattern(context.registry);
+	if (!pattern) return results;
+	const blockedClasses = new Set(['entity', 'file-name', 'draft-marker', 'dead-link', 'toc', 'general-references-list']);
+	const seen = new Set();
+	walk(context.tree, node => {
+		if (node.type === 'element') {
+			if (/^h[2-5]$/u.test(node.tag)) seen.clear();
+			if (node.attrs['data-entity'] && node.attrs['data-entity'] !== true) seen.add(node.attrs['data-entity']);
+			return;
 		}
-	}
+		if (node.type !== 'text') return;
+		if (isInside(node, ancestor => ancestor.type === 'element' && (
+			['time', 'script', 'style', 'code', 'a'].includes(ancestor.tag) ||
+			[...classes(ancestor)].some(name => blockedClasses.has(name)) ||
+			String(ancestor.attrs.id || '').endsWith('ReferencesList')
+		))) return;
+		if (quotedReferenceLink(node, context) || addressLinkText(node)) return;
+		for (const match of node.value.matchAll(pattern)) {
+			const name = match[0];
+			const slugs = slugsByName.get(name) || [];
+			if (slugs.some(slug => seen.has(slug))) continue;
+			slugs.forEach(slug => seen.add(slug));
+			const start = Math.max(0, match.index - 20);
+			const end = Math.min(node.value.length, match.index + name.length + 20);
+			const contextText = node.value.slice(start, end).replace(/\s+/gu, ' ').trim().slice(0, 40);
+			results.push(finding(context, node, 'warning', 'bare-name', `Bare name "${name}" near "${contextText}". Tag it with {@${slugs[0]}} (node tools/entities.js tag fixes these).`, match.index));
+		}
+	});
 	return results;
 }
 
@@ -412,8 +382,6 @@ function ruleTokenize() {
 const RULES = {
 	tokenize: { severity: 'error', run: ruleTokenize },
 	'slug-unknown': { severity: 'error', run: ruleSlugUnknown },
-	'platform-missing': { severity: 'error', run: rulePlatformMissing },
-	'registry-conflict': { severity: 'error', run: ruleRegistryConflict },
 	'time-precision': { severity: 'error', run: ruleTimePrecision },
 	'cite-missing': { severity: 'error', run: ruleCiteMissing },
 	'refs-shape': { severity: 'error', run: ruleRefsShape },
@@ -430,12 +398,16 @@ const RULES = {
 	'usenet-code': { severity: 'warning', run: ruleUsenetCode }
 };
 
+function isArticle(file) {
+	return articleFiles.has(path.basename(file).replace(/(?:\.src)?\.html$/u, ''));
+}
+
 function lintSource(file, source, options = {}) {
-	const registry = options.registry || JSON.parse(fs.readFileSync(path.join(root, 'content', 'entities.json'), 'utf8'));
-	const platformSlugs = options.platformSlugs || parsePlatformSlugs(fs.readFileSync(path.join(root, 'css', '_modals.scss'), 'utf8'));
+	const registry = options.registry || loadEntities();
+	const prose = options.prose ?? isArticle(file);
 	let context;
 	try {
-		context = createContext(file, source, registry, platformSlugs);
+		context = createContext(file, source, registry);
 	} catch (error) {
 		return [{
 			file: file.replace(/\\/gu, '/'),
@@ -446,20 +418,18 @@ function lintSource(file, source, options = {}) {
 			message: error.message.replace(/ at \d+:\d+$/u, '')
 		}];
 	}
-	const selected = options.rule ? [options.rule] : Object.keys(RULES);
+	const selected = options.rule ? [options.rule] : Object.keys(RULES).filter(name => prose || !PROSE_RULES.has(name));
 	return selected.flatMap(name => RULES[name].run(context));
 }
 
 function lintFiles(files = defaultFiles, options = {}) {
-	const registry = options.registry || JSON.parse(fs.readFileSync(options.registryPath || path.join(root, 'content', 'entities.json'), 'utf8'));
-	const scss = fs.readFileSync(path.join(root, 'css', '_modals.scss'), 'utf8');
-	const platformSlugs = parsePlatformSlugs(scss);
+	const registry = options.registry || (options.registryPath ? loadEntities(options.registryPath) : loadEntities());
 	const results = [];
 	for (const file of files) {
 		const absoluteFile = path.resolve(root, file);
 		if (!fs.existsSync(absoluteFile)) continue;
 		const relativeFile = path.relative(root, absoluteFile);
-		results.push(...lintSource(relativeFile, fs.readFileSync(absoluteFile, 'utf8'), { ...options, registry, platformSlugs }));
+		results.push(...lintSource(relativeFile, fs.readFileSync(absoluteFile, 'utf8'), { ...options, registry }));
 	}
 	return results.sort((left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.col - right.col || left.rule.localeCompare(right.rule));
 }
@@ -511,4 +481,4 @@ if (require.main === module) {
 	}
 }
 
-module.exports = { RULES, createContext, lintSource, lintFiles, parsePlatformSlugs, summary, main };
+module.exports = { RULES, PROSE_RULES, createContext, lintSource, lintFiles, summary, main };

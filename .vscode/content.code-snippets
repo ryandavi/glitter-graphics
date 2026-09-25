@@ -1,0 +1,4308 @@
+{
+	"token date": {
+		"scope": "html",
+		"prefix": "{date",
+		"body": "{date:${1:2001-06-07}|${2:7 June 2001}}",
+		"description": "A date: ISO value, then visible text"
+	},
+	"token y": {
+		"scope": "html",
+		"prefix": "{y",
+		"body": "{y:${1:2001}}",
+		"description": "A bare year"
+	},
+	"token file": {
+		"scope": "html",
+		"prefix": "{file",
+		"body": "{file:${1:FB12.gif}}",
+		"description": "A file name"
+	},
+	"token dir": {
+		"scope": "html",
+		"prefix": "{dir",
+		"body": "{dir:${1:/BAR}}",
+		"description": "A directory name"
+	},
+	"token page": {
+		"scope": "html",
+		"prefix": "{page",
+		"body": "{page:${1:TOOLS.html}}",
+		"description": "A page file name"
+	},
+	"token tip": {
+		"scope": "html",
+		"prefix": "{tip",
+		"body": "{tip:${1:Explanation}}${2:term}{/tip}",
+		"description": "A tooltip on a term that is not an entity"
+	},
+	"token link": {
+		"scope": "html",
+		"prefix": "{link",
+		"body": "{link:${1|external,archive-wayback,archive-index,archive-mirror,archive-service,historical-snapshot|}|${2:https://}}${3:text}{/link}",
+		"description": "A link"
+	},
+	"token dead": {
+		"scope": "html",
+		"prefix": "{dead",
+		"body": "{dead:${1|page-offline,host-closed,domain-repurposed,service-closed|}|href=${2:http://}|tip=${3:Offline: this site no longer exists}}${4:text}{/dead}",
+		"description": "A link to a page that is gone"
+	},
+	"token goto": {
+		"scope": "html",
+		"prefix": "{goto",
+		"body": "{goto:${1:HeadingId}}${2:text}{/goto}",
+		"description": "A link to a heading on this page"
+	},
+	"token open": {
+		"scope": "html",
+		"prefix": "{open",
+		"body": "{open:${1:historyModal}}${2:text}{/open}",
+		"description": "A link that opens another modal"
+	},
+	"token tag-later": {
+		"scope": "html",
+		"prefix": "{tag-later",
+		"body": "{?${1:Name}}",
+		"description": "Mark a name to tag as an entity later"
+	},
+	"token todo-cite": {
+		"scope": "html",
+		"prefix": "{todo-cite",
+		"body": "[@todo: ${1:what source is needed}]",
+		"description": "A missing citation"
+	},
+	"token references": {
+		"scope": "html",
+		"prefix": "{references",
+		"body": "{references}",
+		"description": "The numbered references list"
+	},
+	"@123glitter": {
+		"scope": "html",
+		"prefix": [
+			"@123glitter"
+		],
+		"body": "{@123glitter}",
+		"description": "123Glitter (site)"
+	},
+	"@4-webtv-newsgroup": {
+		"scope": "html",
+		"prefix": [
+			"@4-webtv-newsgroup"
+		],
+		"body": "{@4-webtv-newsgroup}",
+		"description": "4-WebTV NewsGroup (site)"
+	},
+	"@4sammy0": {
+		"scope": "html",
+		"prefix": [
+			"@4sammy0"
+		],
+		"body": "{@4sammy0}",
+		"description": "4sammy0 (handle)"
+	},
+	"@50megs-banners": {
+		"scope": "html",
+		"prefix": [
+			"@50megs-banners"
+		],
+		"body": "{@50megs-banners}",
+		"description": "banners.users1.50megs.com (site)"
+	},
+	"@addglitter": {
+		"scope": "html",
+		"prefix": [
+			"@addglitter"
+		],
+		"body": "{@addglitter}",
+		"description": "AddGlitter.com (site)"
+	},
+	"@adobe": {
+		"scope": "html",
+		"prefix": [
+			"@adobe"
+		],
+		"body": "{@adobe}",
+		"description": "Adobe (org)"
+	},
+	"@adobe-imageready": {
+		"scope": "html",
+		"prefix": [
+			"@adobe-imageready"
+		],
+		"body": "{@adobe-imageready}",
+		"description": "ImageReady (software)"
+	},
+	"@afternoon-tea": {
+		"scope": "html",
+		"prefix": [
+			"@afternoon-tea"
+		],
+		"body": "{@afternoon-tea}",
+		"description": "Afternoon Tea (site)"
+	},
+	"@aim": {
+		"scope": "html",
+		"prefix": [
+			"@aim",
+			"@aol-instant-messenger",
+			"@aol-instant-messenger-aim"
+		],
+		"body": "{@aim}",
+		"description": "AIM (site)"
+	},
+	"@ainna": {
+		"scope": "html",
+		"prefix": [
+			"@ainna"
+		],
+		"body": "{@ainna}",
+		"description": "Ainna (handle)"
+	},
+	"@albino-blacksheep": {
+		"scope": "html",
+		"prefix": [
+			"@albino-blacksheep"
+		],
+		"body": "{@albino-blacksheep}",
+		"description": "Albino Blacksheep (site)"
+	},
+	"@alexandra": {
+		"scope": "html",
+		"prefix": [
+			"@alexandra"
+		],
+		"body": "{@alexandra}",
+		"description": "Alexandra (person)"
+	},
+	"@alicorn": {
+		"scope": "html",
+		"prefix": [
+			"@alicorn"
+		],
+		"body": "{@alicorn}",
+		"description": "Alicorn (handle)"
+	},
+	"@all-that-glitters": {
+		"scope": "html",
+		"prefix": [
+			"@all-that-glitters"
+		],
+		"body": "{@all-that-glitters}",
+		"description": "All that Glitters (site)"
+	},
+	"@altavista": {
+		"scope": "html",
+		"prefix": [
+			"@altavista"
+		],
+		"body": "{@altavista}",
+		"description": "AltaVista (site)"
+	},
+	"@alwayslisa": {
+		"scope": "html",
+		"prefix": [
+			"@alwayslisa"
+		],
+		"body": "{@alwayslisa}",
+		"description": "alwayslisa (handle)"
+	},
+	"@alwayslisa-com": {
+		"scope": "html",
+		"prefix": [
+			"@alwayslisa-com"
+		],
+		"body": "{@alwayslisa-com}",
+		"description": "alwayslisa.com (site)"
+	},
+	"@ameya": {
+		"scope": "html",
+		"prefix": [
+			"@ameya"
+		],
+		"body": "{@ameya}",
+		"description": "Ameya (handle)"
+	},
+	"@angelfire": {
+		"scope": "html",
+		"prefix": [
+			"@angelfire"
+		],
+		"body": "{@angelfire}",
+		"description": "Angelfire (site)"
+	},
+	"@animation-factory": {
+		"scope": "html",
+		"prefix": [
+			"@animation-factory"
+		],
+		"body": "{@animation-factory}",
+		"description": "Animation Factory (site)"
+	},
+	"@animation-shop": {
+		"scope": "html",
+		"prefix": [
+			"@animation-shop"
+		],
+		"body": "{@animation-shop}",
+		"description": "Animation Shop (software)"
+	},
+	"@ann": {
+		"scope": "html",
+		"prefix": [
+			"@ann"
+		],
+		"body": "{@ann}",
+		"description": "Ann (person)"
+	},
+	"@annacher": {
+		"scope": "html",
+		"prefix": [
+			"@annacher"
+		],
+		"body": "{@annacher}",
+		"description": "AnnaCher (handle)"
+	},
+	"@aol": {
+		"scope": "html",
+		"prefix": [
+			"@aol",
+			"@america-online",
+			"@america-online-aol"
+		],
+		"body": "{@aol}",
+		"description": "AOL (site)"
+	},
+	"@aol-hometown": {
+		"scope": "html",
+		"prefix": [
+			"@aol-hometown"
+		],
+		"body": "{@aol-hometown}",
+		"description": "AOL Hometown (site)"
+	},
+	"@aromatic": {
+		"scope": "html",
+		"prefix": [
+			"@aromatic"
+		],
+		"body": "{@aromatic}",
+		"description": "Aromatic (site)"
+	},
+	"@arpanet": {
+		"scope": "html",
+		"prefix": [
+			"@arpanet"
+		],
+		"body": "{@arpanet}",
+		"description": "ARPANET (site)"
+	},
+	"@atlus": {
+		"scope": "html",
+		"prefix": [
+			"@atlus"
+		],
+		"body": "{@atlus}",
+		"description": "Atlus (org)"
+	},
+	"@auburn-angel": {
+		"scope": "html",
+		"prefix": [
+			"@auburn-angel"
+		],
+		"body": "{@auburn-angel}",
+		"description": "Auburn Angel (handle)"
+	},
+	"@auburn-angels-graphics": {
+		"scope": "html",
+		"prefix": [
+			"@auburn-angels-graphics"
+		],
+		"body": "{@auburn-angels-graphics}",
+		"description": "Auburn Angel's Graphics (site)"
+	},
+	"@automattic": {
+		"scope": "html",
+		"prefix": [
+			"@automattic"
+		],
+		"body": "{@automattic}",
+		"description": "Automattic (org)"
+	},
+	"@avp-galaxy": {
+		"scope": "html",
+		"prefix": [
+			"@avp-galaxy"
+		],
+		"body": "{@avp-galaxy}",
+		"description": "AVP Galaxy Forums (site)"
+	},
+	"@avril-lavigne": {
+		"scope": "html",
+		"prefix": [
+			"@avril-lavigne"
+		],
+		"body": "{@avril-lavigne}",
+		"description": "Avril Lavigne (person)"
+	},
+	"@aylana": {
+		"scope": "html",
+		"prefix": [
+			"@aylana",
+			"@aya",
+			"@aylana-aya"
+		],
+		"body": "{@aylana}",
+		"description": "Aylana (handle)"
+	},
+	"@ayumi-hamasaki": {
+		"scope": "html",
+		"prefix": [
+			"@ayumi-hamasaki"
+		],
+		"body": "{@ayumi-hamasaki}",
+		"description": "Ayumi Hamasaki (person)"
+	},
+	"@background-flava": {
+		"scope": "html",
+		"prefix": [
+			"@background-flava"
+		],
+		"body": "{@background-flava}",
+		"description": "Background Flava (handle)"
+	},
+	"@bannerzrus": {
+		"scope": "html",
+		"prefix": [
+			"@bannerzrus"
+		],
+		"body": "{@bannerzrus}",
+		"description": "BannerzRus (site)"
+	},
+	"@barbie": {
+		"scope": "html",
+		"prefix": [
+			"@barbie"
+		],
+		"body": "{@barbie}",
+		"description": "Barbie (work)"
+	},
+	"@bauer": {
+		"scope": "html",
+		"prefix": [
+			"@bauer",
+			"@bauer-media-group"
+		],
+		"body": "{@bauer}",
+		"description": "Bauer Publishing (org)"
+	},
+	"@bearblog": {
+		"scope": "html",
+		"prefix": [
+			"@bearblog"
+		],
+		"body": "{@bearblog}",
+		"description": "bearblog.dev (site)"
+	},
+	"@bebo": {
+		"scope": "html",
+		"prefix": [
+			"@bebo"
+		],
+		"body": "{@bebo}",
+		"description": "Bebo (site)"
+	},
+	"@becky-bw": {
+		"scope": "html",
+		"prefix": [
+			"@becky-bw"
+		],
+		"body": "{@becky-bw}",
+		"description": "Becky (BW) (person)"
+	},
+	"@belle": {
+		"scope": "html",
+		"prefix": [
+			"@belle"
+		],
+		"body": "{@belle}",
+		"description": "Belle (handle)"
+	},
+	"@bemymind": {
+		"scope": "html",
+		"prefix": [
+			"@bemymind"
+		],
+		"body": "{@bemymind}",
+		"description": "Bemymind (handle)"
+	},
+	"@bemymind-com": {
+		"scope": "html",
+		"prefix": [
+			"@bemymind-com"
+		],
+		"body": "{@bemymind-com}",
+		"description": "bemymind.com (site)"
+	},
+	"@biglobe": {
+		"scope": "html",
+		"prefix": [
+			"@biglobe"
+		],
+		"body": "{@biglobe}",
+		"description": "biglobe.ne.jp (site)"
+	},
+	"@bing": {
+		"scope": "html",
+		"prefix": [
+			"@bing"
+		],
+		"body": "{@bing}",
+		"description": "Bing (site)"
+	},
+	"@binky-beads": {
+		"scope": "html",
+		"prefix": [
+			"@binky-beads"
+		],
+		"body": "{@binky-beads}",
+		"description": "Binky Beads (site)"
+	},
+	"@blacknwhite": {
+		"scope": "html",
+		"prefix": [
+			"@blacknwhite"
+		],
+		"body": "{@blacknwhite}",
+		"description": ":.blacknwhite.: (handle)"
+	},
+	"@blingee": {
+		"scope": "html",
+		"prefix": [
+			"@blingee"
+		],
+		"body": "{@blingee}",
+		"description": "Blingee (site)"
+	},
+	"@blinkie-makers": {
+		"scope": "html",
+		"prefix": [
+			"@blinkie-makers"
+		],
+		"body": "{@blinkie-makers}",
+		"description": "Blinkie Makers (site)"
+	},
+	"@blinkie-obsession": {
+		"scope": "html",
+		"prefix": [
+			"@blinkie-obsession"
+		],
+		"body": "{@blinkie-obsession}",
+		"description": "Blinkie Obsession (site)"
+	},
+	"@blinkie-world": {
+		"scope": "html",
+		"prefix": [
+			"@blinkie-world"
+		],
+		"body": "{@blinkie-world}",
+		"description": "Blinkie World (site)"
+	},
+	"@blogger": {
+		"scope": "html",
+		"prefix": [
+			"@blogger"
+		],
+		"body": "{@blogger}",
+		"description": "Blogger (site)"
+	},
+	"@blueyonder": {
+		"scope": "html",
+		"prefix": [
+			"@blueyonder"
+		],
+		"body": "{@blueyonder}",
+		"description": "blueyonder.co.uk (site)"
+	},
+	"@boomspeed": {
+		"scope": "html",
+		"prefix": [
+			"@boomspeed"
+		],
+		"body": "{@boomspeed}",
+		"description": "Boomspeed (site)"
+	},
+	"@bprentice": {
+		"scope": "html",
+		"prefix": [
+			"@bprentice"
+		],
+		"body": "{@bprentice}",
+		"description": "bprentice (handle)"
+	},
+	"@bring-on-the-glitter": {
+		"scope": "html",
+		"prefix": [
+			"@bring-on-the-glitter"
+		],
+		"body": "{@bring-on-the-glitter}",
+		"description": "Bring On The Glitter (site)"
+	},
+	"@britney-spears": {
+		"scope": "html",
+		"prefix": [
+			"@britney-spears"
+		],
+		"body": "{@britney-spears}",
+		"description": "Britney Spears (person)"
+	},
+	"@brokenhalos490": {
+		"scope": "html",
+		"prefix": [
+			"@brokenhalos490"
+		],
+		"body": "{@brokenhalos490}",
+		"description": "brokenhalos490 (handle)"
+	},
+	"@buddy-buddy": {
+		"scope": "html",
+		"prefix": [
+			"@buddy-buddy"
+		],
+		"body": "{@buddy-buddy}",
+		"description": "Buddy Buddy (site)"
+	},
+	"@buffy-the-vampire-slayer": {
+		"scope": "html",
+		"prefix": [
+			"@buffy-the-vampire-slayer"
+		],
+		"body": "{@buffy-the-vampire-slayer}",
+		"description": "Buffy the Vampire Slayer (work)"
+	},
+	"@cameron-askin": {
+		"scope": "html",
+		"prefix": [
+			"@cameron-askin"
+		],
+		"body": "{@cameron-askin}",
+		"description": "Cameron Askin (person)"
+	},
+	"@camerons-world": {
+		"scope": "html",
+		"prefix": [
+			"@camerons-world"
+		],
+		"body": "{@camerons-world}",
+		"description": "Cameron's World (site)"
+	},
+	"@candybar": {
+		"scope": "html",
+		"prefix": [
+			"@candybar"
+		],
+		"body": "{@candybar}",
+		"description": "Candybar (site)"
+	},
+	"@cardmaker": {
+		"scope": "html",
+		"prefix": [
+			"@cardmaker"
+		],
+		"body": "{@cardmaker}",
+		"description": "cardmaker.net (site)"
+	},
+	"@carly-20032000": {
+		"scope": "html",
+		"prefix": [
+			"@carly-20032000"
+		],
+		"body": "{@carly-20032000}",
+		"description": "carly_20032000 (handle)"
+	},
+	"@catarific": {
+		"scope": "html",
+		"prefix": [
+			"@catarific"
+		],
+		"body": "{@catarific}",
+		"description": "Catarific (handle)"
+	},
+	"@catarific-com": {
+		"scope": "html",
+		"prefix": [
+			"@catarific-com"
+		],
+		"body": "{@catarific-com}",
+		"description": "catarific.com (site)"
+	},
+	"@catchin-teardrops": {
+		"scope": "html",
+		"prefix": [
+			"@catchin-teardrops"
+		],
+		"body": "{@catchin-teardrops}",
+		"description": "catchin_teardrops (handle)"
+	},
+	"@cathies-crazie-creations": {
+		"scope": "html",
+		"prefix": [
+			"@cathies-crazie-creations"
+		],
+		"body": "{@cathies-crazie-creations}",
+		"description": "Cathie's Crazie Creations (site)"
+	},
+	"@caz": {
+		"scope": "html",
+		"prefix": [
+			"@caz"
+		],
+		"body": "{@caz}",
+		"description": "Caz (handle)"
+	},
+	"@cbox": {
+		"scope": "html",
+		"prefix": [
+			"@cbox"
+		],
+		"body": "{@cbox}",
+		"description": "Cbox (site)"
+	},
+	"@chewables": {
+		"scope": "html",
+		"prefix": [
+			"@chewables"
+		],
+		"body": "{@chewables}",
+		"description": "chewables.org (site)"
+	},
+	"@chrome": {
+		"scope": "html",
+		"prefix": [
+			"@chrome"
+		],
+		"body": "{@chrome}",
+		"description": "Google Chrome (software)"
+	},
+	"@cinni": {
+		"scope": "html",
+		"prefix": [
+			"@cinni"
+		],
+		"body": "{@cinni}",
+		"description": "Cinni (handle)"
+	},
+	"@club-4-webbtv": {
+		"scope": "html",
+		"prefix": [
+			"@club-4-webbtv",
+			"@club4webbtv"
+		],
+		"body": "{@club-4-webbtv}",
+		"description": "Club-4-WebbTv (site)"
+	},
+	"@communities-com": {
+		"scope": "html",
+		"prefix": [
+			"@communities-com"
+		],
+		"body": "{@communities-com}",
+		"description": "Communities.com (org)"
+	},
+	"@compuserve": {
+		"scope": "html",
+		"prefix": [
+			"@compuserve"
+		],
+		"body": "{@compuserve}",
+		"description": "CompuServe (org)"
+	},
+	"@corel": {
+		"scope": "html",
+		"prefix": [
+			"@corel"
+		],
+		"body": "{@corel}",
+		"description": "Corel (org)"
+	},
+	"@creative-cloud": {
+		"scope": "html",
+		"prefix": [
+			"@creative-cloud"
+		],
+		"body": "{@creative-cloud}",
+		"description": "Creative Cloud (software)"
+	},
+	"@crowdgather": {
+		"scope": "html",
+		"prefix": [
+			"@crowdgather"
+		],
+		"body": "{@crowdgather}",
+		"description": "CrowdGather (org)"
+	},
+	"@cute-spot": {
+		"scope": "html",
+		"prefix": [
+			"@cute-spot"
+		],
+		"body": "{@cute-spot}",
+		"description": "Cute-Spot (site)"
+	},
+	"@cyp2": {
+		"scope": "html",
+		"prefix": [
+			"@cyp2",
+			"@coloryourprofyle",
+			"@coloryourprofyle-cyp2",
+			"@cyp2-coloryourprofyle"
+		],
+		"body": "{@cyp2}",
+		"description": "CYP2 (site)"
+	},
+	"@cyworld": {
+		"scope": "html",
+		"prefix": [
+			"@cyworld"
+		],
+		"body": "{@cyworld}",
+		"description": "Cyworld (site)"
+	},
+	"@da-brat": {
+		"scope": "html",
+		"prefix": [
+			"@da-brat"
+		],
+		"body": "{@da-brat}",
+		"description": "Da Brat (handle)"
+	},
+	"@daakukitsune": {
+		"scope": "html",
+		"prefix": [
+			"@daakukitsune"
+		],
+		"body": "{@daakukitsune}",
+		"description": "daakukitsune (handle)"
+	},
+	"@dafont": {
+		"scope": "html",
+		"prefix": [
+			"@dafont"
+		],
+		"body": "{@dafont}",
+		"description": "DaFont (site)"
+	},
+	"@dan-411": {
+		"scope": "html",
+		"prefix": [
+			"@dan-411",
+			"@dan-dan-411"
+		],
+		"body": "{@dan-411}",
+		"description": "Dan (handle)"
+	},
+	"@darkest-faerie-lair": {
+		"scope": "html",
+		"prefix": [
+			"@darkest-faerie-lair"
+		],
+		"body": "{@darkest-faerie-lair}",
+		"description": "Darkest Faerie Lair (site)"
+	},
+	"@daum": {
+		"scope": "html",
+		"prefix": [
+			"@daum"
+		],
+		"body": "{@daum}",
+		"description": "Daum (site)"
+	},
+	"@dazzle-junction": {
+		"scope": "html",
+		"prefix": [
+			"@dazzle-junction"
+		],
+		"body": "{@dazzle-junction}",
+		"description": "Dazzle Junction (site)"
+	},
+	"@deja-news": {
+		"scope": "html",
+		"prefix": [
+			"@deja-news"
+		],
+		"body": "{@deja-news}",
+		"description": "Deja News (site)"
+	},
+	"@deleted-city": {
+		"scope": "html",
+		"prefix": [
+			"@deleted-city"
+		],
+		"body": "{@deleted-city}",
+		"description": "Deleted City (site)"
+	},
+	"@delicious": {
+		"scope": "html",
+		"prefix": [
+			"@delicious"
+		],
+		"body": "{@delicious}",
+		"description": "Delicious (site)"
+	},
+	"@designbyaylana": {
+		"scope": "html",
+		"prefix": [
+			"@designbyaylana"
+		],
+		"body": "{@designbyaylana}",
+		"description": "designbyAylana™ (site)"
+	},
+	"@deviantart": {
+		"scope": "html",
+		"prefix": [
+			"@deviantart"
+		],
+		"body": "{@deviantart}",
+		"description": "DeviantArt (site)"
+	},
+	"@disney": {
+		"scope": "html",
+		"prefix": [
+			"@disney"
+		],
+		"body": "{@disney}",
+		"description": "Disney (org)"
+	},
+	"@disney-channel": {
+		"scope": "html",
+		"prefix": [
+			"@disney-channel"
+		],
+		"body": "{@disney-channel}",
+		"description": "Disney Channel (org)"
+	},
+	"@divergent-rays": {
+		"scope": "html",
+		"prefix": [
+			"@divergent-rays"
+		],
+		"body": "{@divergent-rays}",
+		"description": "Divergent Rays (site)"
+	},
+	"@dollz": {
+		"scope": "html",
+		"prefix": [
+			"@dollz"
+		],
+		"body": "{@dollz}",
+		"description": "Dollz (work)"
+	},
+	"@dollz-mania": {
+		"scope": "html",
+		"prefix": [
+			"@dollz-mania"
+		],
+		"body": "{@dollz-mania}",
+		"description": "Dollz Mania (site)"
+	},
+	"@donnasblinkies": {
+		"scope": "html",
+		"prefix": [
+			"@donnasblinkies"
+		],
+		"body": "{@donnasblinkies}",
+		"description": "donnasblinkies (handle)"
+	},
+	"@donroby-geo": {
+		"scope": "html",
+		"prefix": [
+			"@donroby-geo"
+		],
+		"body": "{@donroby-geo}",
+		"description": "donroby.geo (handle)"
+	},
+	"@dragon-cave": {
+		"scope": "html",
+		"prefix": [
+			"@dragon-cave"
+		],
+		"body": "{@dragon-cave}",
+		"description": "Dragon Cave (site)"
+	},
+	"@dreamerzdesigns": {
+		"scope": "html",
+		"prefix": [
+			"@dreamerzdesigns"
+		],
+		"body": "{@dreamerzdesigns}",
+		"description": "DreamerzDesigns (handle)"
+	},
+	"@dreamweaver": {
+		"scope": "html",
+		"prefix": [
+			"@dreamweaver"
+		],
+		"body": "{@dreamweaver}",
+		"description": "Dreamweaver (software)"
+	},
+	"@edge": {
+		"scope": "html",
+		"prefix": [
+			"@edge"
+		],
+		"body": "{@edge}",
+		"description": "Microsoft Edge (software)"
+	},
+	"@elanger": {
+		"scope": "html",
+		"prefix": [
+			"@elanger"
+		],
+		"body": "{@elanger}",
+		"description": "elanger (handle)"
+	},
+	"@elon-musk": {
+		"scope": "html",
+		"prefix": [
+			"@elon-musk"
+		],
+		"body": "{@elon-musk}",
+		"description": "Elon Musk (person)"
+	},
+	"@elouai": {
+		"scope": "html",
+		"prefix": [
+			"@elouai"
+		],
+		"body": "{@elouai}",
+		"description": "elouai.com (site)"
+	},
+	"@emeraldpink": {
+		"scope": "html",
+		"prefix": [
+			"@emeraldpink"
+		],
+		"body": "{@emeraldpink}",
+		"description": "EmeraldPink (site)"
+	},
+	"@expage": {
+		"scope": "html",
+		"prefix": [
+			"@expage"
+		],
+		"body": "{@expage}",
+		"description": "Expage (site)"
+	},
+	"@ezboard": {
+		"scope": "html",
+		"prefix": [
+			"@ezboard"
+		],
+		"body": "{@ezboard}",
+		"description": "ezboard (site)"
+	},
+	"@facebook": {
+		"scope": "html",
+		"prefix": [
+			"@facebook"
+		],
+		"body": "{@facebook}",
+		"description": "Facebook (site)"
+	},
+	"@fairytailpersian": {
+		"scope": "html",
+		"prefix": [
+			"@fairytailpersian"
+		],
+		"body": "{@fairytailpersian}",
+		"description": "fairytailpersian (handle)"
+	},
+	"@fantasydreamin03": {
+		"scope": "html",
+		"prefix": [
+			"@fantasydreamin03"
+		],
+		"body": "{@fantasydreamin03}",
+		"description": "fantasydreamin03 (handle)"
+	},
+	"@femicom": {
+		"scope": "html",
+		"prefix": [
+			"@femicom"
+		],
+		"body": "{@femicom}",
+		"description": "femicom.org (site)"
+	},
+	"@firefox": {
+		"scope": "html",
+		"prefix": [
+			"@firefox"
+		],
+		"body": "{@firefox}",
+		"description": "Firefox (software)"
+	},
+	"@firespirited": {
+		"scope": "html",
+		"prefix": [
+			"@firespirited"
+		],
+		"body": "{@firespirited}",
+		"description": "firespirited (handle)"
+	},
+	"@fireworks": {
+		"scope": "html",
+		"prefix": [
+			"@fireworks",
+			"@macromedia-fireworks"
+		],
+		"body": "{@fireworks}",
+		"description": "Fireworks (software)"
+	},
+	"@fizzyflava": {
+		"scope": "html",
+		"prefix": [
+			"@fizzyflava"
+		],
+		"body": "{@fizzyflava}",
+		"description": "fizzyflava (handle)"
+	},
+	"@flamingtext": {
+		"scope": "html",
+		"prefix": [
+			"@flamingtext"
+		],
+		"body": "{@flamingtext}",
+		"description": "FlamingText (site)"
+	},
+	"@flash": {
+		"scope": "html",
+		"prefix": [
+			"@flash"
+		],
+		"body": "{@flash}",
+		"description": "Flash (software)"
+	},
+	"@flashites": {
+		"scope": "html",
+		"prefix": [
+			"@flashites"
+		],
+		"body": "{@flashites}",
+		"description": "Flashites (site)"
+	},
+	"@flickr": {
+		"scope": "html",
+		"prefix": [
+			"@flickr"
+		],
+		"body": "{@flickr}",
+		"description": "Flickr (site)"
+	},
+	"@fortunecity": {
+		"scope": "html",
+		"prefix": [
+			"@fortunecity"
+		],
+		"body": "{@fortunecity}",
+		"description": "FortuneCity (site)"
+	},
+	"@freechal": {
+		"scope": "html",
+		"prefix": [
+			"@freechal"
+		],
+		"body": "{@freechal}",
+		"description": "Freechal (site)"
+	},
+	"@freeservers": {
+		"scope": "html",
+		"prefix": [
+			"@freeservers"
+		],
+		"body": "{@freeservers}",
+		"description": "FreeServers (site)"
+	},
+	"@freewebs": {
+		"scope": "html",
+		"prefix": [
+			"@freewebs"
+		],
+		"body": "{@freewebs}",
+		"description": "Freewebs (site)"
+	},
+	"@friends-of-webtv-and-msntv": {
+		"scope": "html",
+		"prefix": [
+			"@friends-of-webtv-and-msntv"
+		],
+		"body": "{@friends-of-webtv-and-msntv}",
+		"description": "Friends of Web TV and MSNTV (site)"
+	},
+	"@friendster": {
+		"scope": "html",
+		"prefix": [
+			"@friendster"
+		],
+		"body": "{@friendster}",
+		"description": "Friendster (site)"
+	},
+	"@frontpage": {
+		"scope": "html",
+		"prefix": [
+			"@frontpage"
+		],
+		"body": "{@frontpage}",
+		"description": "Microsoft FrontPage (software)"
+	},
+	"@funky-chickens": {
+		"scope": "html",
+		"prefix": [
+			"@funky-chickens"
+		],
+		"body": "{@funky-chickens}",
+		"description": "Funky Chickens (site)"
+	},
+	"@futuresplash": {
+		"scope": "html",
+		"prefix": [
+			"@futuresplash"
+		],
+		"body": "{@futuresplash}",
+		"description": "FutureSplash Animator (software)"
+	},
+	"@gaia-online": {
+		"scope": "html",
+		"prefix": [
+			"@gaia-online"
+		],
+		"body": "{@gaia-online}",
+		"description": "Gaia Online (site)"
+	},
+	"@geekwire": {
+		"scope": "html",
+		"prefix": [
+			"@geekwire"
+		],
+		"body": "{@geekwire}",
+		"description": "GeekWire (org)"
+	},
+	"@geocities": {
+		"scope": "html",
+		"prefix": [
+			"@geocities"
+		],
+		"body": "{@geocities}",
+		"description": "GeoCities (site)"
+	},
+	"@geocities-institute": {
+		"scope": "html",
+		"prefix": [
+			"@geocities-institute"
+		],
+		"body": "{@geocities-institute}",
+		"description": "geocities.institute (site)"
+	},
+	"@geocities-japan": {
+		"scope": "html",
+		"prefix": [
+			"@geocities-japan"
+		],
+		"body": "{@geocities-japan}",
+		"description": "GeoCities Japan (site)"
+	},
+	"@geocities-ws": {
+		"scope": "html",
+		"prefix": [
+			"@geocities-ws"
+		],
+		"body": "{@geocities-ws}",
+		"description": "geocities.ws (site)"
+	},
+	"@gif": {
+		"scope": "html",
+		"prefix": [
+			"@gif"
+		],
+		"body": "{@gif}",
+		"description": "GIF (software)"
+	},
+	"@gifcities": {
+		"scope": "html",
+		"prefix": [
+			"@gifcities"
+		],
+		"body": "{@gifcities}",
+		"description": "GifCities (site)"
+	},
+	"@ginger": {
+		"scope": "html",
+		"prefix": [
+			"@ginger"
+		],
+		"body": "{@ginger}",
+		"description": "Ginger (person)"
+	},
+	"@giphy": {
+		"scope": "html",
+		"prefix": [
+			"@giphy"
+		],
+		"body": "{@giphy}",
+		"description": "GIPHY (site)"
+	},
+	"@glitter-connection": {
+		"scope": "html",
+		"prefix": [
+			"@glitter-connection"
+		],
+		"body": "{@glitter-connection}",
+		"description": "Glitter Connection (site)"
+	},
+	"@glitter-graphics": {
+		"scope": "html",
+		"prefix": [
+			"@glitter-graphics",
+			"@glitter-graphics-com"
+		],
+		"body": "{@glitter-graphics}",
+		"description": "Glitter-Graphics (site)"
+	},
+	"@glitterfy": {
+		"scope": "html",
+		"prefix": [
+			"@glitterfy"
+		],
+		"body": "{@glitterfy}",
+		"description": "Glitterfy (site)"
+	},
+	"@glitterkiss": {
+		"scope": "html",
+		"prefix": [
+			"@glitterkiss"
+		],
+		"body": "{@glitterkiss}",
+		"description": "GlitterKiss (site)"
+	},
+	"@glittermaker": {
+		"scope": "html",
+		"prefix": [
+			"@glittermaker"
+		],
+		"body": "{@glittermaker}",
+		"description": "GlitterMaker (site)"
+	},
+	"@glittertextgraphics": {
+		"scope": "html",
+		"prefix": [
+			"@glittertextgraphics"
+		],
+		"body": "{@glittertextgraphics}",
+		"description": "GlitterTextGraphics (site)"
+	},
+	"@glitteryourway": {
+		"scope": "html",
+		"prefix": [
+			"@glitteryourway"
+		],
+		"body": "{@glitteryourway}",
+		"description": "GlitterYourWay (site)"
+	},
+	"@glitzheaven": {
+		"scope": "html",
+		"prefix": [
+			"@glitzheaven"
+		],
+		"body": "{@glitzheaven}",
+		"description": "GlitzHeaven (site)"
+	},
+	"@goatcounter": {
+		"scope": "html",
+		"prefix": [
+			"@goatcounter"
+		],
+		"body": "{@goatcounter}",
+		"description": "GoatCounter (site)"
+	},
+	"@google": {
+		"scope": "html",
+		"prefix": [
+			"@google"
+		],
+		"body": "{@google}",
+		"description": "Google (org)"
+	},
+	"@google-groups": {
+		"scope": "html",
+		"prefix": [
+			"@google-groups"
+		],
+		"body": "{@google-groups}",
+		"description": "Google Groups (site)"
+	},
+	"@google-reader": {
+		"scope": "html",
+		"prefix": [
+			"@google-reader"
+		],
+		"body": "{@google-reader}",
+		"description": "Google Reader (site)"
+	},
+	"@groovysmurf": {
+		"scope": "html",
+		"prefix": [
+			"@groovysmurf"
+		],
+		"body": "{@groovysmurf}",
+		"description": "groovysmurf (handle)"
+	},
+	"@grsites": {
+		"scope": "html",
+		"prefix": [
+			"@grsites"
+		],
+		"body": "{@grsites}",
+		"description": "GRSites (site)"
+	},
+	"@gurubii": {
+		"scope": "html",
+		"prefix": [
+			"@gurubii"
+		],
+		"body": "{@gurubii}",
+		"description": "Gurubii (handle)"
+	},
+	"@gypsy-jewels": {
+		"scope": "html",
+		"prefix": [
+			"@gypsy-jewels"
+		],
+		"body": "{@gypsy-jewels}",
+		"description": "Gypsy Jewels (site)"
+	},
+	"@habbo": {
+		"scope": "html",
+		"prefix": [
+			"@habbo"
+		],
+		"body": "{@habbo}",
+		"description": "Habbo Hotel (site)"
+	},
+	"@hajime-sorayama": {
+		"scope": "html",
+		"prefix": [
+			"@hajime-sorayama"
+		],
+		"body": "{@hajime-sorayama}",
+		"description": "Hajime Sorayama (person)"
+	},
+	"@hangame": {
+		"scope": "html",
+		"prefix": [
+			"@hangame"
+		],
+		"body": "{@hangame}",
+		"description": "Hangame (site)"
+	},
+	"@happy-mix": {
+		"scope": "html",
+		"prefix": [
+			"@happy-mix"
+		],
+		"body": "{@happy-mix}",
+		"description": "happy-mix.net (site)"
+	},
+	"@harveysgraphics01": {
+		"scope": "html",
+		"prefix": [
+			"@harveysgraphics01"
+		],
+		"body": "{@harveysgraphics01}",
+		"description": "harveysgraphics01 (handle)"
+	},
+	"@hello-kitty": {
+		"scope": "html",
+		"prefix": [
+			"@hello-kitty"
+		],
+		"body": "{@hello-kitty}",
+		"description": "Hello Kitty (work)"
+	},
+	"@here2eternity": {
+		"scope": "html",
+		"prefix": [
+			"@here2eternity",
+			"@here2eternity1"
+		],
+		"body": "{@here2eternity}",
+		"description": "here2eternity (handle)"
+	},
+	"@heta-moe": {
+		"scope": "html",
+		"prefix": [
+			"@heta-moe"
+		],
+		"body": "{@heta-moe}",
+		"description": "heta.moe (site)"
+	},
+	"@hevent2003": {
+		"scope": "html",
+		"prefix": [
+			"@hevent2003"
+		],
+		"body": "{@hevent2003}",
+		"description": "hevent2003 (handle)"
+	},
+	"@hexed-pixels": {
+		"scope": "html",
+		"prefix": [
+			"@hexed-pixels"
+		],
+		"body": "{@hexed-pixels}",
+		"description": "Hexed Pixels (site)"
+	},
+	"@hi5": {
+		"scope": "html",
+		"prefix": [
+			"@hi5"
+		],
+		"body": "{@hi5}",
+		"description": "Hi5 (site)"
+	},
+	"@high-school-musical": {
+		"scope": "html",
+		"prefix": [
+			"@high-school-musical"
+		],
+		"body": "{@high-school-musical}",
+		"description": "High School Musical (work)"
+	},
+	"@homestead": {
+		"scope": "html",
+		"prefix": [
+			"@homestead"
+		],
+		"body": "{@homestead}",
+		"description": "Homestead (site)"
+	},
+	"@hoyt": {
+		"scope": "html",
+		"prefix": [
+			"@hoyt"
+		],
+		"body": "{@hoyt}",
+		"description": "Hoyt (person)"
+	},
+	"@icarly": {
+		"scope": "html",
+		"prefix": [
+			"@icarly"
+		],
+		"body": "{@icarly}",
+		"description": "iCarly (work)"
+	},
+	"@icexdragon": {
+		"scope": "html",
+		"prefix": [
+			"@icexdragon"
+		],
+		"body": "{@icexdragon}",
+		"description": "icexdragon (handle)"
+	},
+	"@iconator": {
+		"scope": "html",
+		"prefix": [
+			"@iconator"
+		],
+		"body": "{@iconator}",
+		"description": "Iconator (site)"
+	},
+	"@icq": {
+		"scope": "html",
+		"prefix": [
+			"@icq"
+		],
+		"body": "{@icq}",
+		"description": "ICQ (site)"
+	},
+	"@imagemagick": {
+		"scope": "html",
+		"prefix": [
+			"@imagemagick"
+		],
+		"body": "{@imagemagick}",
+		"description": "ImageMagick (software)"
+	},
+	"@imageshack": {
+		"scope": "html",
+		"prefix": [
+			"@imageshack"
+		],
+		"body": "{@imageshack}",
+		"description": "ImageShack (site)"
+	},
+	"@instagram": {
+		"scope": "html",
+		"prefix": [
+			"@instagram"
+		],
+		"body": "{@instagram}",
+		"description": "Instagram (site)"
+	},
+	"@internet-archive": {
+		"scope": "html",
+		"prefix": [
+			"@internet-archive"
+		],
+		"body": "{@internet-archive}",
+		"description": "Internet Archive (org)"
+	},
+	"@internet-explorer": {
+		"scope": "html",
+		"prefix": [
+			"@internet-explorer"
+		],
+		"body": "{@internet-explorer}",
+		"description": "Internet Explorer (software)"
+	},
+	"@intuit": {
+		"scope": "html",
+		"prefix": [
+			"@intuit"
+		],
+		"body": "{@intuit}",
+		"description": "Intuit (org)"
+	},
+	"@inverse-effect": {
+		"scope": "html",
+		"prefix": [
+			"@inverse-effect"
+		],
+		"body": "{@inverse-effect}",
+		"description": "Inverse Effect (handle)"
+	},
+	"@invisionfree": {
+		"scope": "html",
+		"prefix": [
+			"@invisionfree"
+		],
+		"body": "{@invisionfree}",
+		"description": "InvisionFree (site)"
+	},
+	"@irina-kuleshova": {
+		"scope": "html",
+		"prefix": [
+			"@irina-kuleshova"
+		],
+		"body": "{@irina-kuleshova}",
+		"description": "Irina Kuleshova (person)"
+	},
+	"@ivk": {
+		"scope": "html",
+		"prefix": [
+			"@ivk"
+		],
+		"body": "{@ivk}",
+		"description": "ivk (handle)"
+	},
+	"@jalena1989": {
+		"scope": "html",
+		"prefix": [
+			"@jalena1989"
+		],
+		"body": "{@jalena1989}",
+		"description": "jalena1989 (handle)"
+	},
+	"@jane": {
+		"scope": "html",
+		"prefix": [
+			"@jane"
+		],
+		"body": "{@jane}",
+		"description": "Jane (person)"
+	},
+	"@jasc": {
+		"scope": "html",
+		"prefix": [
+			"@jasc"
+		],
+		"body": "{@jasc}",
+		"description": "JASC (org)"
+	},
+	"@jem": {
+		"scope": "html",
+		"prefix": [
+			"@jem"
+		],
+		"body": "{@jem}",
+		"description": "Jem (person)"
+	},
+	"@jenny": {
+		"scope": "html",
+		"prefix": [
+			"@jenny"
+		],
+		"body": "{@jenny}",
+		"description": "Jenny (person)"
+	},
+	"@jeremy-hedley": {
+		"scope": "html",
+		"prefix": [
+			"@jeremy-hedley"
+		],
+		"body": "{@jeremy-hedley}",
+		"description": "Jeremy Hedley (person)"
+	},
+	"@jessicajournals": {
+		"scope": "html",
+		"prefix": [
+			"@jessicajournals"
+		],
+		"body": "{@jessicajournals}",
+		"description": "jessicajournals.com (site)"
+	},
+	"@jesterror": {
+		"scope": "html",
+		"prefix": [
+			"@jesterror"
+		],
+		"body": "{@jesterror}",
+		"description": "Jesterror (handle)"
+	},
+	"@jim-benton": {
+		"scope": "html",
+		"prefix": [
+			"@jim-benton"
+		],
+		"body": "{@jim-benton}",
+		"description": "Jim Benton (person)"
+	},
+	"@jonas-brothers": {
+		"scope": "html",
+		"prefix": [
+			"@jonas-brothers"
+		],
+		"body": "{@jonas-brothers}",
+		"description": "Jonas Brothers (work)"
+	},
+	"@juanita2": {
+		"scope": "html",
+		"prefix": [
+			"@juanita2"
+		],
+		"body": "{@juanita2}",
+		"description": "juanita2 (handle)"
+	},
+	"@justin-bieber": {
+		"scope": "html",
+		"prefix": [
+			"@justin-bieber"
+		],
+		"body": "{@justin-bieber}",
+		"description": "Justin Bieber (person)"
+	},
+	"@kalaiawolf": {
+		"scope": "html",
+		"prefix": [
+			"@kalaiawolf"
+		],
+		"body": "{@kalaiawolf}",
+		"description": "kalaiawolf (handle)"
+	},
+	"@katdr": {
+		"scope": "html",
+		"prefix": [
+			"@katdr"
+		],
+		"body": "{@katdr}",
+		"description": "katdr (handle)"
+	},
+	"@katrina-kimble": {
+		"scope": "html",
+		"prefix": [
+			"@katrina-kimble"
+		],
+		"body": "{@katrina-kimble}",
+		"description": "Katrina Kimble (handle)"
+	},
+	"@kawaiiness": {
+		"scope": "html",
+		"prefix": [
+			"@kawaiiness",
+			"@kawaiiness-com"
+		],
+		"body": "{@kawaiiness}",
+		"description": "Kawaiiness.com (site)"
+	},
+	"@kelli-fox": {
+		"scope": "html",
+		"prefix": [
+			"@kelli-fox"
+		],
+		"body": "{@kelli-fox}",
+		"description": "~ KELLI FOX ~ (handle)"
+	},
+	"@kirryn": {
+		"scope": "html",
+		"prefix": [
+			"@kirryn"
+		],
+		"body": "{@kirryn}",
+		"description": "Kirryn (handle)"
+	},
+	"@kitty-friends": {
+		"scope": "html",
+		"prefix": [
+			"@kitty-friends"
+		],
+		"body": "{@kitty-friends}",
+		"description": "Kitty Friends (site)"
+	},
+	"@klipy": {
+		"scope": "html",
+		"prefix": [
+			"@klipy"
+		],
+		"body": "{@klipy}",
+		"description": "Klipy (site)"
+	},
+	"@ko-fi": {
+		"scope": "html",
+		"prefix": [
+			"@ko-fi"
+		],
+		"body": "{@ko-fi}",
+		"description": "Ko-fi (site)"
+	},
+	"@ladywolfette": {
+		"scope": "html",
+		"prefix": [
+			"@ladywolfette"
+		],
+		"body": "{@ladywolfette}",
+		"description": "LadyWolfette (handle)"
+	},
+	"@lani": {
+		"scope": "html",
+		"prefix": [
+			"@lani"
+		],
+		"body": "{@lani}",
+		"description": "Lani (handle)"
+	},
+	"@leonardwojcik": {
+		"scope": "html",
+		"prefix": [
+			"@leonardwojcik"
+		],
+		"body": "{@leonardwojcik}",
+		"description": "leonardwojcik.com (site)"
+	},
+	"@let-i-sparkle": {
+		"scope": "html",
+		"prefix": [
+			"@let-i-sparkle"
+		],
+		"body": "{@let-i-sparkle}",
+		"description": "let-i-sparkle (handle)"
+	},
+	"@lilyonion": {
+		"scope": "html",
+		"prefix": [
+			"@lilyonion"
+		],
+		"body": "{@lilyonion}",
+		"description": "lilyonion (handle)"
+	},
+	"@limewire": {
+		"scope": "html",
+		"prefix": [
+			"@limewire"
+		],
+		"body": "{@limewire}",
+		"description": "LimeWire (software)"
+	},
+	"@linuxenvy": {
+		"scope": "html",
+		"prefix": [
+			"@linuxenvy"
+		],
+		"body": "{@linuxenvy}",
+		"description": "linuxenvy.com (site)"
+	},
+	"@lissa-brown": {
+		"scope": "html",
+		"prefix": [
+			"@lissa-brown"
+		],
+		"body": "{@lissa-brown}",
+		"description": "Melissa \"Lissa\" Brown (person)"
+	},
+	"@lissa-explains-it-all": {
+		"scope": "html",
+		"prefix": [
+			"@lissa-explains-it-all"
+		],
+		"body": "{@lissa-explains-it-all}",
+		"description": "Lissa Explains it All (site)"
+	},
+	"@littleangelgraphics": {
+		"scope": "html",
+		"prefix": [
+			"@littleangelgraphics"
+		],
+		"body": "{@littleangelgraphics}",
+		"description": "littleangelgraphics (handle)"
+	},
+	"@littlemissninja": {
+		"scope": "html",
+		"prefix": [
+			"@littlemissninja"
+		],
+		"body": "{@littlemissninja}",
+		"description": "littlemissninja (handle)"
+	},
+	"@livejournal": {
+		"scope": "html",
+		"prefix": [
+			"@livejournal"
+		],
+		"body": "{@livejournal}",
+		"description": "LiveJournal (site)"
+	},
+	"@lostletters": {
+		"scope": "html",
+		"prefix": [
+			"@lostletters"
+		],
+		"body": "{@lostletters}",
+		"description": "lostletters (handle)"
+	},
+	"@lycos": {
+		"scope": "html",
+		"prefix": [
+			"@lycos"
+		],
+		"body": "{@lycos}",
+		"description": "Lycos (org)"
+	},
+	"@macromedia": {
+		"scope": "html",
+		"prefix": [
+			"@macromedia"
+		],
+		"body": "{@macromedia}",
+		"description": "Macromedia (org)"
+	},
+	"@magick-studio": {
+		"scope": "html",
+		"prefix": [
+			"@magick-studio"
+		],
+		"body": "{@magick-studio}",
+		"description": "Magick Studio (site)"
+	},
+	"@magistream": {
+		"scope": "html",
+		"prefix": [
+			"@magistream"
+		],
+		"body": "{@magistream}",
+		"description": "MagiStream (site)"
+	},
+	"@mandy-clark": {
+		"scope": "html",
+		"prefix": [
+			"@mandy-clark"
+		],
+		"body": "{@mandy-clark}",
+		"description": "Mandy Clark (person)"
+	},
+	"@meta": {
+		"scope": "html",
+		"prefix": [
+			"@meta"
+		],
+		"body": "{@meta}",
+		"description": "Meta (org)"
+	},
+	"@mia": {
+		"scope": "html",
+		"prefix": [
+			"@mia"
+		],
+		"body": "{@mia}",
+		"description": "M.I.A. (person)"
+	},
+	"@mica": {
+		"scope": "html",
+		"prefix": [
+			"@mica",
+			"@stardrops",
+			"@mica-stardrops"
+		],
+		"body": "{@mica}",
+		"description": "Mica (handle)"
+	},
+	"@microsoft": {
+		"scope": "html",
+		"prefix": [
+			"@microsoft"
+		],
+		"body": "{@microsoft}",
+		"description": "Microsoft (org)"
+	},
+	"@midgee": {
+		"scope": "html",
+		"prefix": [
+			"@midgee"
+		],
+		"body": "{@midgee}",
+		"description": "Midgee (person)"
+	},
+	"@miley-cyrus": {
+		"scope": "html",
+		"prefix": [
+			"@miley-cyrus"
+		],
+		"body": "{@miley-cyrus}",
+		"description": "Miley Cyrus (person)"
+	},
+	"@misa": {
+		"scope": "html",
+		"prefix": [
+			"@misa"
+		],
+		"body": "{@misa}",
+		"description": "Misa (person)"
+	},
+	"@miss-behaved": {
+		"scope": "html",
+		"prefix": [
+			"@miss-behaved"
+		],
+		"body": "{@miss-behaved}",
+		"description": "miss-behaved.net (site)"
+	},
+	"@mona-young": {
+		"scope": "html",
+		"prefix": [
+			"@mona-young"
+		],
+		"body": "{@mona-young}",
+		"description": "Mona Young (person)"
+	},
+	"@mooncandy": {
+		"scope": "html",
+		"prefix": [
+			"@mooncandy"
+		],
+		"body": "{@mooncandy}",
+		"description": "mooncandy.org (site)"
+	},
+	"@moondogee": {
+		"scope": "html",
+		"prefix": [
+			"@moondogee",
+			"@moondoggee",
+			"@moon-moondogee"
+		],
+		"body": "{@moondogee}",
+		"description": "Moon (handle)"
+	},
+	"@mosaic": {
+		"scope": "html",
+		"prefix": [
+			"@mosaic"
+		],
+		"body": "{@mosaic}",
+		"description": "NCSA Mosaic (software)"
+	},
+	"@moyras-web-jewels": {
+		"scope": "html",
+		"prefix": [
+			"@moyras-web-jewels"
+		],
+		"body": "{@moyras-web-jewels}",
+		"description": "Moyra's Web Jewels (site)"
+	},
+	"@mozilla": {
+		"scope": "html",
+		"prefix": [
+			"@mozilla"
+		],
+		"body": "{@mozilla}",
+		"description": "Mozilla (org)"
+	},
+	"@mslauralous-news-group": {
+		"scope": "html",
+		"prefix": [
+			"@mslauralous-news-group"
+		],
+		"body": "{@mslauralous-news-group}",
+		"description": "MsLauraLou's News Group (site)"
+	},
+	"@msn": {
+		"scope": "html",
+		"prefix": [
+			"@msn"
+		],
+		"body": "{@msn}",
+		"description": "MSN (site)"
+	},
+	"@msn-messenger": {
+		"scope": "html",
+		"prefix": [
+			"@msn-messenger"
+		],
+		"body": "{@msn-messenger}",
+		"description": "MSN Messenger (site)"
+	},
+	"@msn-tv": {
+		"scope": "html",
+		"prefix": [
+			"@msn-tv"
+		],
+		"body": "{@msn-tv}",
+		"description": "MSN TV (site)"
+	},
+	"@myglitterromance": {
+		"scope": "html",
+		"prefix": [
+			"@myglitterromance"
+		],
+		"body": "{@myglitterromance}",
+		"description": "MyGlitterRomance (site)"
+	},
+	"@myspace": {
+		"scope": "html",
+		"prefix": [
+			"@myspace"
+		],
+		"body": "{@myspace}",
+		"description": "MySpace (site)"
+	},
+	"@namaii": {
+		"scope": "html",
+		"prefix": [
+			"@namaii"
+		],
+		"body": "{@namaii}",
+		"description": "Namaii (site)"
+	},
+	"@napster": {
+		"scope": "html",
+		"prefix": [
+			"@napster"
+		],
+		"body": "{@napster}",
+		"description": "Napster (site)"
+	},
+	"@nekoweb": {
+		"scope": "html",
+		"prefix": [
+			"@nekoweb"
+		],
+		"body": "{@nekoweb}",
+		"description": "Nekoweb (site)"
+	},
+	"@neocities": {
+		"scope": "html",
+		"prefix": [
+			"@neocities"
+		],
+		"body": "{@neocities}",
+		"description": "Neocities (site)"
+	},
+	"@neonlove": {
+		"scope": "html",
+		"prefix": [
+			"@neonlove",
+			"@neonlove-net"
+		],
+		"body": "{@neonlove}",
+		"description": "Neonlove (site)"
+	},
+	"@neopets": {
+		"scope": "html",
+		"prefix": [
+			"@neopets"
+		],
+		"body": "{@neopets}",
+		"description": "Neopets (site)"
+	},
+	"@netmarble": {
+		"scope": "html",
+		"prefix": [
+			"@netmarble"
+		],
+		"body": "{@netmarble}",
+		"description": "Netmarble (site)"
+	},
+	"@netscape": {
+		"scope": "html",
+		"prefix": [
+			"@netscape",
+			"@netscape-navigator"
+		],
+		"body": "{@netscape}",
+		"description": "Netscape (software)"
+	},
+	"@newgrounds": {
+		"scope": "html",
+		"prefix": [
+			"@newgrounds"
+		],
+		"body": "{@newgrounds}",
+		"description": "Newgrounds (site)"
+	},
+	"@news-corp": {
+		"scope": "html",
+		"prefix": [
+			"@news-corp"
+		],
+		"body": "{@news-corp}",
+		"description": "News Corp (org)"
+	},
+	"@nicolshotel": {
+		"scope": "html",
+		"prefix": [
+			"@nicolshotel"
+		],
+		"body": "{@nicolshotel}",
+		"description": "NicolsHotel (site)"
+	},
+	"@nobuteru-yuki": {
+		"scope": "html",
+		"prefix": [
+			"@nobuteru-yuki"
+		],
+		"body": "{@nobuteru-yuki}",
+		"description": "Nobuteru Yuki (person)"
+	},
+	"@notepad": {
+		"scope": "html",
+		"prefix": [
+			"@notepad"
+		],
+		"body": "{@notepad}",
+		"description": "Notepad (software)"
+	},
+	"@oath": {
+		"scope": "html",
+		"prefix": [
+			"@oath"
+		],
+		"body": "{@oath}",
+		"description": "Oath (org)"
+	},
+	"@olia-lialina": {
+		"scope": "html",
+		"prefix": [
+			"@olia-lialina"
+		],
+		"body": "{@olia-lialina}",
+		"description": "Olia Lialina (person)"
+	},
+	"@online-image-editor": {
+		"scope": "html",
+		"prefix": [
+			"@online-image-editor"
+		],
+		"body": "{@online-image-editor}",
+		"description": "Online Image Editor (site)"
+	},
+	"@onyxsmiles": {
+		"scope": "html",
+		"prefix": [
+			"@onyxsmiles"
+		],
+		"body": "{@onyxsmiles}",
+		"description": "OnyxSmiles (handle)"
+	},
+	"@onyxsmiles-com": {
+		"scope": "html",
+		"prefix": [
+			"@onyxsmiles-com"
+		],
+		"body": "{@onyxsmiles-com}",
+		"description": "onyxsmiles.com (site)"
+	},
+	"@oocities": {
+		"scope": "html",
+		"prefix": [
+			"@oocities"
+		],
+		"body": "{@oocities}",
+		"description": "oocities (site)"
+	},
+	"@orkut": {
+		"scope": "html",
+		"prefix": [
+			"@orkut"
+		],
+		"body": "{@orkut}",
+		"description": "Orkut (site)"
+	},
+	"@pagebuilder": {
+		"scope": "html",
+		"prefix": [
+			"@pagebuilder"
+		],
+		"body": "{@pagebuilder}",
+		"description": "PageBuilder (software)"
+	},
+	"@paint-shop-pro": {
+		"scope": "html",
+		"prefix": [
+			"@paint-shop-pro"
+		],
+		"body": "{@paint-shop-pro}",
+		"description": "Paint Shop Pro (software)"
+	},
+	"@palaceplanet": {
+		"scope": "html",
+		"prefix": [
+			"@palaceplanet"
+		],
+		"body": "{@palaceplanet}",
+		"description": "palaceplanet.net (site)"
+	},
+	"@philips": {
+		"scope": "html",
+		"prefix": [
+			"@philips"
+		],
+		"body": "{@philips}",
+		"description": "Philips (org)"
+	},
+	"@phoophie": {
+		"scope": "html",
+		"prefix": [
+			"@phoophie"
+		],
+		"body": "{@phoophie}",
+		"description": "phoophie.com (site)"
+	},
+	"@photobucket": {
+		"scope": "html",
+		"prefix": [
+			"@photobucket"
+		],
+		"body": "{@photobucket}",
+		"description": "Photobucket (site)"
+	},
+	"@photoshop": {
+		"scope": "html",
+		"prefix": [
+			"@photoshop",
+			"@adobe-photoshop"
+		],
+		"body": "{@photoshop}",
+		"description": "Photoshop (software)"
+	},
+	"@pick-me": {
+		"scope": "html",
+		"prefix": [
+			"@pick-me"
+		],
+		"body": "{@pick-me}",
+		"description": "Pick Me! (site)"
+	},
+	"@picmix": {
+		"scope": "html",
+		"prefix": [
+			"@picmix"
+		],
+		"body": "{@picmix}",
+		"description": "PicMix (site)"
+	},
+	"@piczo": {
+		"scope": "html",
+		"prefix": [
+			"@piczo"
+		],
+		"body": "{@piczo}",
+		"description": "Piczo (site)"
+	},
+	"@pinterest": {
+		"scope": "html",
+		"prefix": [
+			"@pinterest"
+		],
+		"body": "{@pinterest}",
+		"description": "Pinterest (site)"
+	},
+	"@pocket-town": {
+		"scope": "html",
+		"prefix": [
+			"@pocket-town"
+		],
+		"body": "{@pocket-town}",
+		"description": "Pocket Town (site)"
+	},
+	"@pokefarm": {
+		"scope": "html",
+		"prefix": [
+			"@pokefarm",
+			"@pokefarm-q"
+		],
+		"body": "{@pokefarm}",
+		"description": "PokéFarm (site)"
+	},
+	"@pokemon": {
+		"scope": "html",
+		"prefix": [
+			"@pokemon"
+		],
+		"body": "{@pokemon}",
+		"description": "Pokémon (work)"
+	},
+	"@polyvore": {
+		"scope": "html",
+		"prefix": [
+			"@polyvore"
+		],
+		"body": "{@polyvore}",
+		"description": "Polyvore (site)"
+	},
+	"@proboards": {
+		"scope": "html",
+		"prefix": [
+			"@proboards"
+		],
+		"body": "{@proboards}",
+		"description": "ProBoards (site)"
+	},
+	"@purikura": {
+		"scope": "html",
+		"prefix": [
+			"@purikura"
+		],
+		"body": "{@purikura}",
+		"description": "Purikura (software)"
+	},
+	"@qbee": {
+		"scope": "html",
+		"prefix": [
+			"@qbee"
+		],
+		"body": "{@qbee}",
+		"description": "Q*Bee (site)"
+	},
+	"@r-hobbydrama": {
+		"scope": "html",
+		"prefix": [
+			"@r-hobbydrama"
+		],
+		"body": "{@r-hobbydrama}",
+		"description": "r/HobbyDrama (site)"
+	},
+	"@r-internetmysteries": {
+		"scope": "html",
+		"prefix": [
+			"@r-internetmysteries"
+		],
+		"body": "{@r-internetmysteries}",
+		"description": "r/InternetMysteries (site)"
+	},
+	"@r-neocities": {
+		"scope": "html",
+		"prefix": [
+			"@r-neocities"
+		],
+		"body": "{@r-neocities}",
+		"description": "r/neocities (site)"
+	},
+	"@randys-icon-bazaar": {
+		"scope": "html",
+		"prefix": [
+			"@randys-icon-bazaar"
+		],
+		"body": "{@randys-icon-bazaar}",
+		"description": "Randy's Icon Bazaar (site)"
+	},
+	"@rc-gif-manor": {
+		"scope": "html",
+		"prefix": [
+			"@rc-gif-manor"
+		],
+		"body": "{@rc-gif-manor}",
+		"description": "R&C Gif Manor (site)"
+	},
+	"@reddit": {
+		"scope": "html",
+		"prefix": [
+			"@reddit"
+		],
+		"body": "{@reddit}",
+		"description": "Reddit (site)"
+	},
+	"@reef": {
+		"scope": "html",
+		"prefix": [
+			"@reef"
+		],
+		"body": "{@reef}",
+		"description": "Reef (handle)"
+	},
+	"@reef-kingdra": {
+		"scope": "html",
+		"prefix": [
+			"@reef-kingdra"
+		],
+		"body": "{@reef-kingdra}",
+		"description": "reef.kingdra.net (site)"
+	},
+	"@robin": {
+		"scope": "html",
+		"prefix": [
+			"@robin"
+		],
+		"body": "{@robin}",
+		"description": "Robin (person)"
+	},
+	"@roccooaction": {
+		"scope": "html",
+		"prefix": [
+			"@roccooaction"
+		],
+		"body": "{@roccooaction}",
+		"description": "roccooaction (handle)"
+	},
+	"@ryan-ford": {
+		"scope": "html",
+		"prefix": [
+			"@ryan-ford"
+		],
+		"body": "{@ryan-ford}",
+		"description": "Ryan Ford (person)"
+	},
+	"@ryandavi": {
+		"scope": "html",
+		"prefix": [
+			"@ryandavi"
+		],
+		"body": "{@ryandavi}",
+		"description": "ryandavi.com (site)"
+	},
+	"@saffy": {
+		"scope": "html",
+		"prefix": [
+			"@saffy"
+		],
+		"body": "{@saffy}",
+		"description": "Saffy (handle)"
+	},
+	"@sailor-moon": {
+		"scope": "html",
+		"prefix": [
+			"@sailor-moon"
+		],
+		"body": "{@sailor-moon}",
+		"description": "Sailor Moon (work)"
+	},
+	"@salvaged": {
+		"scope": "html",
+		"prefix": [
+			"@salvaged"
+		],
+		"body": "{@salvaged}",
+		"description": "Salvaged (site)"
+	},
+	"@sayclub": {
+		"scope": "html",
+		"prefix": [
+			"@sayclub"
+		],
+		"body": "{@sayclub}",
+		"description": "SayClub (site)"
+	},
+	"@scar-ayres": {
+		"scope": "html",
+		"prefix": [
+			"@scar-ayres"
+		],
+		"body": "{@scar-ayres}",
+		"description": "Scar Ayres (person)"
+	},
+	"@scarmander": {
+		"scope": "html",
+		"prefix": [
+			"@scarmander"
+		],
+		"body": "{@scarmander}",
+		"description": "Scarmander (handle)"
+	},
+	"@scented-angels": {
+		"scope": "html",
+		"prefix": [
+			"@scented-angels"
+		],
+		"body": "{@scented-angels}",
+		"description": "Scented Angels (site)"
+	},
+	"@scented-minty": {
+		"scope": "html",
+		"prefix": [
+			"@scented-minty"
+		],
+		"body": "{@scented-minty}",
+		"description": "scented.minty.nu (site)"
+	},
+	"@scri8e": {
+		"scope": "html",
+		"prefix": [
+			"@scri8e"
+		],
+		"body": "{@scri8e}",
+		"description": "scri8e.com (site)"
+	},
+	"@sega": {
+		"scope": "html",
+		"prefix": [
+			"@sega"
+		],
+		"body": "{@sega}",
+		"description": "Sega (org)"
+	},
+	"@seira55": {
+		"scope": "html",
+		"prefix": [
+			"@seira55"
+		],
+		"body": "{@seira55}",
+		"description": "seira55 (handle)"
+	},
+	"@selena-gomez": {
+		"scope": "html",
+		"prefix": [
+			"@selena-gomez"
+		],
+		"body": "{@selena-gomez}",
+		"description": "Selena Gomez (person)"
+	},
+	"@serebii-forums": {
+		"scope": "html",
+		"prefix": [
+			"@serebii-forums"
+		],
+		"body": "{@serebii-forums}",
+		"description": "forums.serebii.net (site)"
+	},
+	"@serilly": {
+		"scope": "html",
+		"prefix": [
+			"@serilly"
+		],
+		"body": "{@serilly}",
+		"description": "Serilly (handle)"
+	},
+	"@shattered-innocents": {
+		"scope": "html",
+		"prefix": [
+			"@shattered-innocents"
+		],
+		"body": "{@shattered-innocents}",
+		"description": "Shattered Innocents (site)"
+	},
+	"@sheezy-art": {
+		"scope": "html",
+		"prefix": [
+			"@sheezy-art"
+		],
+		"body": "{@sheezy-art}",
+		"description": "sheezy.art (site)"
+	},
+	"@shutterstock": {
+		"scope": "html",
+		"prefix": [
+			"@shutterstock"
+		],
+		"body": "{@shutterstock}",
+		"description": "Shutterstock (org)"
+	},
+	"@skype": {
+		"scope": "html",
+		"prefix": [
+			"@skype"
+		],
+		"body": "{@skype}",
+		"description": "Skype (software)"
+	},
+	"@smhart": {
+		"scope": "html",
+		"prefix": [
+			"@smhart"
+		],
+		"body": "{@smhart}",
+		"description": "SMHart (handle)"
+	},
+	"@snapchat": {
+		"scope": "html",
+		"prefix": [
+			"@snapchat"
+		],
+		"body": "{@snapchat}",
+		"description": "Snapchat (site)"
+	},
+	"@sony": {
+		"scope": "html",
+		"prefix": [
+			"@sony"
+		],
+		"body": "{@sony}",
+		"description": "Sony (org)"
+	},
+	"@sparkelies": {
+		"scope": "html",
+		"prefix": [
+			"@sparkelies"
+		],
+		"body": "{@sparkelies}",
+		"description": "Sparkelies (site)"
+	},
+	"@sparkling-dots": {
+		"scope": "html",
+		"prefix": [
+			"@sparkling-dots"
+		],
+		"body": "{@sparkling-dots}",
+		"description": "Sparkling Dots (site)"
+	},
+	"@specific-media": {
+		"scope": "html",
+		"prefix": [
+			"@specific-media"
+		],
+		"body": "{@specific-media}",
+		"description": "Specific Media (org)"
+	},
+	"@spiders-web": {
+		"scope": "html",
+		"prefix": [
+			"@spiders-web",
+			"@spider-s-web"
+		],
+		"body": "{@spiders-web}",
+		"description": "Spider's Web Tutorials (site)"
+	},
+	"@spruisious": {
+		"scope": "html",
+		"prefix": [
+			"@spruisious"
+		],
+		"body": "{@spruisious}",
+		"description": "spruisious (handle)"
+	},
+	"@squiby": {
+		"scope": "html",
+		"prefix": [
+			"@squiby"
+		],
+		"body": "{@squiby}",
+		"description": "Squiby (site)"
+	},
+	"@ssense": {
+		"scope": "html",
+		"prefix": [
+			"@ssense"
+		],
+		"body": "{@ssense}",
+		"description": "SSENSE (org)"
+	},
+	"@steve-wilhite": {
+		"scope": "html",
+		"prefix": [
+			"@steve-wilhite"
+		],
+		"body": "{@steve-wilhite}",
+		"description": "Steve Wilhite (person)"
+	},
+	"@stinkywetdog": {
+		"scope": "html",
+		"prefix": [
+			"@stinkywetdog"
+		],
+		"body": "{@stinkywetdog}",
+		"description": "StinkyWetDog (handle)"
+	},
+	"@summitgroup": {
+		"scope": "html",
+		"prefix": [
+			"@summitgroup"
+		],
+		"body": "{@summitgroup}",
+		"description": "summitgroup (handle)"
+	},
+	"@sweet-and-low": {
+		"scope": "html",
+		"prefix": [
+			"@sweet-and-low"
+		],
+		"body": "{@sweet-and-low}",
+		"description": "Sweet and Low Tutorials (site)"
+	},
+	"@tagboard": {
+		"scope": "html",
+		"prefix": [
+			"@tagboard"
+		],
+		"body": "{@tagboard}",
+		"description": "TagBoard (site)"
+	},
+	"@tapatalk": {
+		"scope": "html",
+		"prefix": [
+			"@tapatalk"
+		],
+		"body": "{@tapatalk}",
+		"description": "Tapatalk (org)"
+	},
+	"@teahouse-mb": {
+		"scope": "html",
+		"prefix": [
+			"@teahouse-mb"
+		],
+		"body": "{@teahouse-mb}",
+		"description": "Teahouse MB (site)"
+	},
+	"@teleportacia": {
+		"scope": "html",
+		"prefix": [
+			"@teleportacia"
+		],
+		"body": "{@teleportacia}",
+		"description": "teleportacia.org (site)"
+	},
+	"@tenor": {
+		"scope": "html",
+		"prefix": [
+			"@tenor"
+		],
+		"body": "{@tenor}",
+		"description": "Tenor (site)"
+	},
+	"@the-doll-palace": {
+		"scope": "html",
+		"prefix": [
+			"@the-doll-palace"
+		],
+		"body": "{@the-doll-palace}",
+		"description": "The Doll Palace (site)"
+	},
+	"@the-fanlistings-network": {
+		"scope": "html",
+		"prefix": [
+			"@the-fanlistings-network"
+		],
+		"body": "{@the-fanlistings-network}",
+		"description": "The Fanlistings Network (site)"
+	},
+	"@the-palace": {
+		"scope": "html",
+		"prefix": [
+			"@the-palace"
+		],
+		"body": "{@the-palace}",
+		"description": "The Palace (site)"
+	},
+	"@the-quilting-bee": {
+		"scope": "html",
+		"prefix": [
+			"@the-quilting-bee"
+		],
+		"body": "{@the-quilting-bee}",
+		"description": "The Quilting Bee (site)"
+	},
+	"@the-vault": {
+		"scope": "html",
+		"prefix": [
+			"@the-vault"
+		],
+		"body": "{@the-vault}",
+		"description": "The Vault (site)"
+	},
+	"@thewebbedfeat": {
+		"scope": "html",
+		"prefix": [
+			"@thewebbedfeat"
+		],
+		"body": "{@thewebbedfeat}",
+		"description": "thewebbedfeat (handle)"
+	},
+	"@tinypic": {
+		"scope": "html",
+		"prefix": [
+			"@tinypic"
+		],
+		"body": "{@tinypic}",
+		"description": "TinyPic (site)"
+	},
+	"@tira": {
+		"scope": "html",
+		"prefix": [
+			"@tira"
+		],
+		"body": "{@tira}",
+		"description": "Tira (handle)"
+	},
+	"@toasterstoasttoast": {
+		"scope": "html",
+		"prefix": [
+			"@toasterstoasttoast"
+		],
+		"body": "{@toasterstoasttoast}",
+		"description": "toasterstoasttoast (handle)"
+	},
+	"@tripod": {
+		"scope": "html",
+		"prefix": [
+			"@tripod"
+		],
+		"body": "{@tripod}",
+		"description": "Tripod (site)"
+	},
+	"@troy-mich": {
+		"scope": "html",
+		"prefix": [
+			"@troy-mich"
+		],
+		"body": "{@troy-mich}",
+		"description": "Troy-Mich (handle)"
+	},
+	"@tumblr": {
+		"scope": "html",
+		"prefix": [
+			"@tumblr"
+		],
+		"body": "{@tumblr}",
+		"description": "Tumblr (site)"
+	},
+	"@tutorialespsppirlilla": {
+		"scope": "html",
+		"prefix": [
+			"@tutorialespsppirlilla"
+		],
+		"body": "{@tutorialespsppirlilla}",
+		"description": "tutorialespsppirlilla (handle)"
+	},
+	"@twilight": {
+		"scope": "html",
+		"prefix": [
+			"@twilight"
+		],
+		"body": "{@twilight}",
+		"description": "Twilight (work)"
+	},
+	"@twitter": {
+		"scope": "html",
+		"prefix": [
+			"@twitter"
+		],
+		"body": "{@twitter}",
+		"description": "Twitter (site)"
+	},
+	"@ulrich-leive": {
+		"scope": "html",
+		"prefix": [
+			"@ulrich-leive"
+		],
+		"body": "{@ulrich-leive}",
+		"description": "Ulrich Leive (person)"
+	},
+	"@upsited": {
+		"scope": "html",
+		"prefix": [
+			"@upsited"
+		],
+		"body": "{@upsited}",
+		"description": "Upsited (site)"
+	},
+	"@urbanizeddork": {
+		"scope": "html",
+		"prefix": [
+			"@urbanizeddork"
+		],
+		"body": "{@urbanizeddork}",
+		"description": "urbanizedDORK (handle)"
+	},
+	"@usenet": {
+		"scope": "html",
+		"prefix": [
+			"@usenet"
+		],
+		"body": "{@usenet}",
+		"description": "Usenet (site)"
+	},
+	"@valenth": {
+		"scope": "html",
+		"prefix": [
+			"@valenth"
+		],
+		"body": "{@valenth}",
+		"description": "Valenth (site)"
+	},
+	"@vegasgal": {
+		"scope": "html",
+		"prefix": [
+			"@vegasgal"
+		],
+		"body": "{@vegasgal}",
+		"description": "VegasGal (handle)"
+	},
+	"@verizon": {
+		"scope": "html",
+		"prefix": [
+			"@verizon"
+		],
+		"body": "{@verizon}",
+		"description": "Verizon (org)"
+	},
+	"@verticalscope": {
+		"scope": "html",
+		"prefix": [
+			"@verticalscope"
+		],
+		"body": "{@verticalscope}",
+		"description": "VerticalScope (org)"
+	},
+	"@vine": {
+		"scope": "html",
+		"prefix": [
+			"@vine"
+		],
+		"body": "{@vine}",
+		"description": "Vine (site)"
+	},
+	"@vistaprint": {
+		"scope": "html",
+		"prefix": [
+			"@vistaprint"
+		],
+		"body": "{@vistaprint}",
+		"description": "Vistaprint (org)"
+	},
+	"@w3c": {
+		"scope": "html",
+		"prefix": [
+			"@w3c"
+		],
+		"body": "{@w3c}",
+		"description": "World Wide Web Consortium (W3C) (org)"
+	},
+	"@water117720032001": {
+		"scope": "html",
+		"prefix": [
+			"@water117720032001"
+		],
+		"body": "{@water117720032001}",
+		"description": "water117720032001 (handle)"
+	},
+	"@wayback-machine": {
+		"scope": "html",
+		"prefix": [
+			"@wayback-machine"
+		],
+		"body": "{@wayback-machine}",
+		"description": "Wayback Machine (site)"
+	},
+	"@we-heart-it": {
+		"scope": "html",
+		"prefix": [
+			"@we-heart-it"
+		],
+		"body": "{@we-heart-it}",
+		"description": "We Heart It (site)"
+	},
+	"@web-badges-world": {
+		"scope": "html",
+		"prefix": [
+			"@web-badges-world"
+		],
+		"body": "{@web-badges-world}",
+		"description": "web.badges.world (site)"
+	},
+	"@webmagick": {
+		"scope": "html",
+		"prefix": [
+			"@webmagick"
+		],
+		"body": "{@webmagick}",
+		"description": "Webmagick (site)"
+	},
+	"@webring": {
+		"scope": "html",
+		"prefix": [
+			"@webring"
+		],
+		"body": "{@webring}",
+		"description": "WebRing (site)"
+	},
+	"@webs": {
+		"scope": "html",
+		"prefix": [
+			"@webs"
+		],
+		"body": "{@webs}",
+		"description": "Webs (site)"
+	},
+	"@webtv": {
+		"scope": "html",
+		"prefix": [
+			"@webtv"
+		],
+		"body": "{@webtv}",
+		"description": "WebTV (site)"
+	},
+	"@webwench": {
+		"scope": "html",
+		"prefix": [
+			"@webwench"
+		],
+		"body": "{@webwench}",
+		"description": "WebWench Graphics & Design (site)"
+	},
+	"@whatsapp": {
+		"scope": "html",
+		"prefix": [
+			"@whatsapp"
+		],
+		"body": "{@whatsapp}",
+		"description": "WhatsApp (site)"
+	},
+	"@whisper": {
+		"scope": "html",
+		"prefix": [
+			"@whisper"
+		],
+		"body": "{@whisper}",
+		"description": "Whisper (handle)"
+	},
+	"@whispers-web-works": {
+		"scope": "html",
+		"prefix": [
+			"@whispers-web-works"
+		],
+		"body": "{@whispers-web-works}",
+		"description": "Whisper's Web Works (site)"
+	},
+	"@whisperscorner": {
+		"scope": "html",
+		"prefix": [
+			"@whisperscorner"
+		],
+		"body": "{@whisperscorner}",
+		"description": "whisperscorner.com (site)"
+	},
+	"@whowhere": {
+		"scope": "html",
+		"prefix": [
+			"@whowhere"
+		],
+		"body": "{@whowhere}",
+		"description": "WhoWhere (site)"
+	},
+	"@wikipedia": {
+		"scope": "html",
+		"prefix": [
+			"@wikipedia"
+		],
+		"body": "{@wikipedia}",
+		"description": "Wikipedia (org)"
+	},
+	"@windows": {
+		"scope": "html",
+		"prefix": [
+			"@windows",
+			"@windows-95"
+		],
+		"body": "{@windows}",
+		"description": "Windows (software)"
+	},
+	"@world-wide-web": {
+		"scope": "html",
+		"prefix": [
+			"@world-wide-web"
+		],
+		"body": "{@world-wide-web}",
+		"description": "World Wide Web (site)"
+	},
+	"@worldwideweb-browser": {
+		"scope": "html",
+		"prefix": [
+			"@worldwideweb-browser"
+		],
+		"body": "{@worldwideweb-browser}",
+		"description": "WorldWideWeb / Nexus (software)"
+	},
+	"@wtv-zone": {
+		"scope": "html",
+		"prefix": [
+			"@wtv-zone"
+		],
+		"body": "{@wtv-zone}",
+		"description": "WTV-Zone (site)"
+	},
+	"@x": {
+		"scope": "html",
+		"prefix": [
+			"@x"
+		],
+		"body": "{@x}",
+		"description": "X (site)"
+	},
+	"@xandra": {
+		"scope": "html",
+		"prefix": [
+			"@xandra"
+		],
+		"body": "{@xandra}",
+		"description": "xandra.cc (site)"
+	},
+	"@xanga": {
+		"scope": "html",
+		"prefix": [
+			"@xanga"
+		],
+		"body": "{@xanga}",
+		"description": "Xanga (site)"
+	},
+	"@xdancingladyx": {
+		"scope": "html",
+		"prefix": [
+			"@xdancingladyx"
+		],
+		"body": "{@xdancingladyx}",
+		"description": "xdancingladyx (handle)"
+	},
+	"@yahoo": {
+		"scope": "html",
+		"prefix": [
+			"@yahoo"
+		],
+		"body": "{@yahoo}",
+		"description": "Yahoo (org)"
+	},
+	"@yahoo-groups": {
+		"scope": "html",
+		"prefix": [
+			"@yahoo-groups"
+		],
+		"body": "{@yahoo-groups}",
+		"description": "Yahoo! Groups (site)"
+	},
+	"@yahoo-japan": {
+		"scope": "html",
+		"prefix": [
+			"@yahoo-japan"
+		],
+		"body": "{@yahoo-japan}",
+		"description": "Yahoo! Japan (org)"
+	},
+	"@yahoo-messenger": {
+		"scope": "html",
+		"prefix": [
+			"@yahoo-messenger"
+		],
+		"body": "{@yahoo-messenger}",
+		"description": "Yahoo! Messenger (site)"
+	},
+	"@yahoo-photos": {
+		"scope": "html",
+		"prefix": [
+			"@yahoo-photos"
+		],
+		"body": "{@yahoo-photos}",
+		"description": "Yahoo! Photos (site)"
+	},
+	"@yahoo-search": {
+		"scope": "html",
+		"prefix": [
+			"@yahoo-search"
+		],
+		"body": "{@yahoo-search}",
+		"description": "Yahoo! Search (site)"
+	},
+	"@yesterweb-zine": {
+		"scope": "html",
+		"prefix": [
+			"@yesterweb-zine"
+		],
+		"body": "{@yesterweb-zine}",
+		"description": "zine.yesterweb.org (site)"
+	},
+	"@youtube": {
+		"scope": "html",
+		"prefix": [
+			"@youtube"
+		],
+		"body": "{@youtube}",
+		"description": "YouTube (site)"
+	},
+	"@yuku": {
+		"scope": "html",
+		"prefix": [
+			"@yuku"
+		],
+		"body": "{@yuku}",
+		"description": "Yuku (site)"
+	},
+	"@zak-a-doodle-graphics": {
+		"scope": "html",
+		"prefix": [
+			"@zak-a-doodle-graphics"
+		],
+		"body": "{@zak-a-doodle-graphics}",
+		"description": "Zak-A-Doodle Graphics (site)"
+	},
+	"@zathyus": {
+		"scope": "html",
+		"prefix": [
+			"@zathyus"
+		],
+		"body": "{@zathyus}",
+		"description": "Zathyus Networks (org)"
+	},
+	"@zetaboards": {
+		"scope": "html",
+		"prefix": [
+			"@zetaboards"
+		],
+		"body": "{@zetaboards}",
+		"description": "ZetaBoards (site)"
+	},
+	"@zilla774": {
+		"scope": "html",
+		"prefix": [
+			"@zilla774"
+		],
+		"body": "{@zilla774}",
+		"description": "zilla774 (handle)"
+	},
+	"[@1991-kiss-gs": {
+		"scope": "html",
+		"prefix": "[@1991-kiss-gs",
+		"body": "[@1991-kiss-gs]",
+		"description": "KISS/GS (KISS General Specification) Manual"
+	},
+	"[@1995-four-datasets": {
+		"scope": "html",
+		"prefix": "[@1995-four-datasets",
+		"body": "[@1995-four-datasets]",
+		"description": "Four Datasets Derived from an Archive of Personal Homepages (–)"
+	},
+	"[@2001-pagebuilder": {
+		"scope": "html",
+		"prefix": "[@2001-pagebuilder",
+		"body": "[@2001-pagebuilder]",
+		"description": "!. \"\". <em></em>, archived . \"Create a cool, full-featured site without any HTML"
+	},
+	"[@2006-boomspeed": {
+		"scope": "html",
+		"prefix": "[@2006-boomspeed",
+		"body": "[@2006-boomspeed]",
+		"description": ""
+	},
+	"[@2006-sparkle-name": {
+		"scope": "html",
+		"prefix": "[@2006-sparkle-name",
+		"body": "[@2006-sparkle-name]",
+		"description": "Sparkle Name Banner Generator Tutorial"
+	},
+	"[@2013-microsoft-pulling": {
+		"scope": "html",
+		"prefix": "[@2013-microsoft-pulling",
+		"body": "[@2013-microsoft-pulling]",
+		"description": " pulling the plug on , 16 years after  acquisition"
+	},
+	"[@4sammy0-2005-name": {
+		"scope": "html",
+		"prefix": "[@4sammy0-2005-name",
+		"body": "[@4sammy0-2005-name]",
+		"description": "A_Name_Tute_1.html"
+	},
+	"[@88-31": {
+		"scope": "html",
+		"prefix": "[@88-31",
+		"body": "[@88-31]",
+		"description": "88 × 31"
+	},
+	"[@about-faq": {
+		"scope": "html",
+		"prefix": "[@about-faq",
+		"body": "[@about-faq]",
+		"description": "About &amp; FAQ"
+	},
+	"[@adobe-imageready": {
+		"scope": "html",
+		"prefix": "[@adobe-imageready",
+		"body": "[@adobe-imageready]",
+		"description": "Adobe "
+	},
+	"[@alexandra-the-museum-of-alexandra": {
+		"scope": "html",
+		"prefix": "[@alexandra-the-museum-of-alexandra",
+		"body": "[@alexandra-the-museum-of-alexandra]",
+		"description": "The Museum of Alexandra: History"
+	},
+	"[@alicorn-adding-glitter-to-a": {
+		"scope": "html",
+		"prefix": "[@alicorn-adding-glitter-to-a",
+		"body": "[@alicorn-adding-glitter-to-a]",
+		"description": "Adding Glitter to a Graphic"
+	},
+	"[@angelfire-lycos-archived-shut-down": {
+		"scope": "html",
+		"prefix": "[@angelfire-lycos-archived-shut-down",
+		"body": "[@angelfire-lycos-archived-shut-down]",
+		"description": ""
+	},
+	"[@angelfire-subdomain-signup": {
+		"scope": "html",
+		"prefix": "[@angelfire-subdomain-signup",
+		"body": "[@angelfire-subdomain-signup]",
+		"description": " Signup"
+	},
+	"[@angelfire-web-publishing-bootcamp": {
+		"scope": "html",
+		"prefix": "[@angelfire-web-publishing-bootcamp",
+		"body": "[@angelfire-web-publishing-bootcamp]",
+		"description": "Web Publishing Boot Camp"
+	},
+	"[@animation-shop": {
+		"scope": "html",
+		"prefix": "[@animation-shop",
+		"body": "[@animation-shop]",
+		"description": ""
+	},
+	"[@ann-ann-s-glitter-pegasus-tutorial": {
+		"scope": "html",
+		"prefix": "[@ann-ann-s-glitter-pegasus-tutorial",
+		"body": "[@ann-ann-s-glitter-pegasus-tutorial]",
+		"description": "Ann&#x27;s Glitter Pegasus Tutorial"
+	},
+	"[@annacher-names-by-request-wtv-zone": {
+		"scope": "html",
+		"prefix": "[@annacher-names-by-request-wtv-zone",
+		"body": "[@annacher-names-by-request-wtv-zone]",
+		"description": "Names By Request"
+	},
+	"[@aol-hometown-aol-archived-from": {
+		"scope": "html",
+		"prefix": "[@aol-hometown-aol-archived-from",
+		"body": "[@aol-hometown-aol-archived-from]",
+		"description": ""
+	},
+	"[@archived-calling-cards-page": {
+		"scope": "html",
+		"prefix": "[@archived-calling-cards-page",
+		"body": "[@archived-calling-cards-page]",
+		"description": "Archived Calling Cards page"
+	},
+	"[@auburn-angel-glitter-index-auburn": {
+		"scope": "html",
+		"prefix": "[@auburn-angel-glitter-index-auburn",
+		"body": "[@auburn-angel-glitter-index-auburn]",
+		"description": "Glitter Index"
+	},
+	"[@aylana-2000-tripod": {
+		"scope": "html",
+		"prefix": "[@aylana-2000-tripod",
+		"body": "[@aylana-2000-tripod]",
+		"description": "aylana.tripod.com"
+	},
+	"[@aylana-aya-hospital-zone-bring": {
+		"scope": "html",
+		"prefix": "[@aylana-aya-hospital-zone-bring",
+		"body": "[@aylana-aya-hospital-zone-bring]",
+		"description": ". \"HOSPITAL ZONE\". <em></em>, . First captured  at the site's front page, still "
+	},
+	"[@aylana-bring-on-the-glitter": {
+		"scope": "html",
+		"prefix": "[@aylana-bring-on-the-glitter",
+		"body": "[@aylana-bring-on-the-glitter]",
+		"description": ""
+	},
+	"[@bannerzrus-2005-powerlines": {
+		"scope": "html",
+		"prefix": "[@bannerzrus-2005-powerlines",
+		"body": "[@bannerzrus-2005-powerlines]",
+		"description": "Powerlines"
+	},
+	"[@bauer-media-group": {
+		"scope": "html",
+		"prefix": "[@bauer-media-group",
+		"body": "[@bauer-media-group]",
+		"description": "Bauer Media Group"
+	},
+	"[@bemymind-how-to-glitter-your": {
+		"scope": "html",
+		"prefix": "[@bemymind-how-to-glitter-your",
+		"body": "[@bemymind-how-to-glitter-your]",
+		"description": "How To Glitter Your Fonts Tutorial"
+	},
+	"[@beschizza-rob-2016-gifcities": {
+		"scope": "html",
+		"prefix": "[@beschizza-rob-2016-gifcities",
+		"body": "[@beschizza-rob-2016-gifcities]",
+		"description": "GifCities: a search engine for vintage GIFs"
+	},
+	"[@blair-sandy-simple-filters-archived": {
+		"scope": "html",
+		"prefix": "[@blair-sandy-simple-filters-archived",
+		"body": "[@blair-sandy-simple-filters-archived]",
+		"description": "Simple Filters"
+	},
+	"[@blingee-archived-from-the-original": {
+		"scope": "html",
+		"prefix": "[@blingee-archived-from-the-original",
+		"body": "[@blingee-archived-from-the-original]",
+		"description": ""
+	},
+	"[@cameron-s-world": {
+		"scope": "html",
+		"prefix": "[@cameron-s-world",
+		"body": "[@cameron-s-world]",
+		"description": "Cameron&#x27;s World"
+	},
+	"[@candybar-south": {
+		"scope": "html",
+		"prefix": "[@candybar-south",
+		"body": "[@candybar-south]",
+		"description": " was a South Korean gaming... website"
+	},
+	"[@carpenter-2018-palace": {
+		"scope": "html",
+		"prefix": "[@carpenter-2018-palace",
+		"body": "[@carpenter-2018-palace]",
+		"description": "On \"The Palace,\" you can be anyone you want to be"
+	},
+	"[@catarific-glitter-fun-archived-5": {
+		"scope": "html",
+		"prefix": "[@catarific-glitter-fun-archived-5",
+		"body": "[@catarific-glitter-fun-archived-5]",
+		"description": "Glitter Fun"
+	},
+	"[@chain-blinkies": {
+		"scope": "html",
+		"prefix": "[@chain-blinkies",
+		"body": "[@chain-blinkies]",
+		"description": "Chain Blinkies"
+	},
+	"[@cinni-study-early": {
+		"scope": "html",
+		"prefix": "[@cinni-study-early",
+		"body": "[@cinni-study-early]",
+		"description": "A Study of Early Web Kawaii Aesthetics: Preliminary Thoughts"
+	},
+	"[@club-4-webbtv-birthday-page": {
+		"scope": "html",
+		"prefix": "[@club-4-webbtv-birthday-page",
+		"body": "[@club-4-webbtv-birthday-page]",
+		"description": "Club-4-WebbTv Birthday Page"
+	},
+	"[@compuserve": {
+		"scope": "html",
+		"prefix": "[@compuserve",
+		"body": "[@compuserve]",
+		"description": ""
+	},
+	"[@compuserve-1990-graphics": {
+		"scope": "html",
+		"prefix": "[@compuserve-1990-graphics",
+		"body": "[@compuserve-1990-graphics]",
+		"description": "Graphics Interchange Format, Version 89a"
+	},
+	"[@creative-toolbox": {
+		"scope": "html",
+		"prefix": "[@creative-toolbox",
+		"body": "[@creative-toolbox]",
+		"description": "The Creative Toolbox:  Slices Away at Your Workload"
+	},
+	"[@cyp2-2004-archived": {
+		"scope": "html",
+		"prefix": "[@cyp2-2004-archived",
+		"body": "[@cyp2-2004-archived]",
+		"description": "Archived CYP2.com homepage ()"
+	},
+	"[@dan-411-2004-sparkelies": {
+		"scope": "html",
+		"prefix": "[@dan-411-2004-sparkelies",
+		"body": "[@dan-411-2004-sparkelies]",
+		"description": ""
+	},
+	"[@darkest-faerie-lair": {
+		"scope": "html",
+		"prefix": "[@darkest-faerie-lair",
+		"body": "[@darkest-faerie-lair]",
+		"description": "Darkest Faerie Lair"
+	},
+	"[@dazzle-junction-free-graphics": {
+		"scope": "html",
+		"prefix": "[@dazzle-junction-free-graphics",
+		"body": "[@dazzle-junction-free-graphics]",
+		"description": "Free Graphics, Greetings &amp; Creative Generators"
+	},
+	"[@deleted-city": {
+		"scope": "html",
+		"prefix": "[@deleted-city",
+		"body": "[@deleted-city]",
+		"description": "Deleted City"
+	},
+	"[@designs-by-traci-rose-hoods": {
+		"scope": "html",
+		"prefix": "[@designs-by-traci-rose-hoods",
+		"body": "[@designs-by-traci-rose-hoods]",
+		"description": "Hoods Tubes"
+	},
+	"[@dollz-mania-dollz-mania-dollz": {
+		"scope": "html",
+		"prefix": "[@dollz-mania-dollz-mania-dollz",
+		"body": "[@dollz-mania-dollz-mania-dollz]",
+		"description": "Dollz Mania. \"Dollz Mania Dollz / Dollmakers archive\". <em>Dollz Mania Backup</e"
+	},
+	"[@download-upload": {
+		"scope": "html",
+		"prefix": "[@download-upload",
+		"body": "[@download-upload]",
+		"description": "Download, Upload, Transload"
+	},
+	"[@dragon-cave-dragon-cave": {
+		"scope": "html",
+		"prefix": "[@dragon-cave-dragon-cave",
+		"body": "[@dragon-cave-dragon-cave]",
+		"description": "Dragon Cave"
+	},
+	"[@dreamerzdesigns-2002-animated": {
+		"scope": "html",
+		"prefix": "[@dreamerzdesigns-2002-animated",
+		"body": "[@dreamerzdesigns-2002-animated]",
+		"description": "Animated Glitter Text Tutorial"
+	},
+	"[@elouai-s-candybar-doll-maker-elouai": {
+		"scope": "html",
+		"prefix": "[@elouai-s-candybar-doll-maker-elouai",
+		"body": "[@elouai-s-candybar-doll-maker-elouai]",
+		"description": "eLouai's  Doll Maker"
+	},
+	"[@emo": {
+		"scope": "html",
+		"prefix": "[@emo",
+		"body": "[@emo]",
+		"description": "\"Emo\" and \"Scene (subculture)\". <em></em>."
+	},
+	"[@evastars-pfft-illustrated-glossary": {
+		"scope": "html",
+		"prefix": "[@evastars-pfft-illustrated-glossary",
+		"body": "[@evastars-pfft-illustrated-glossary]",
+		"description": "Illustrated Glossary"
+	},
+	"[@evastars-pfft-retrospective-interview": {
+		"scope": "html",
+		"prefix": "[@evastars-pfft-retrospective-interview",
+		"body": "[@evastars-pfft-retrospective-interview]",
+		"description": "evastars Retrospective Interview"
+	},
+	"[@facebook": {
+		"scope": "html",
+		"prefix": "[@facebook",
+		"body": "[@facebook]",
+		"description": ""
+	},
+	"[@firespirited-blinkie-makers": {
+		"scope": "html",
+		"prefix": "[@firespirited-blinkie-makers",
+		"body": "[@firespirited-blinkie-makers]",
+		"description": "Blinkie Makers!  preservation clone announcement"
+	},
+	"[@fireworks-dreamweaver-nutshell": {
+		"scope": "html",
+		"prefix": "[@fireworks-dreamweaver-nutshell",
+		"body": "[@fireworks-dreamweaver-nutshell]",
+		"description": "Fireworks"
+	},
+	"[@ford-ryan-a-brief-history": {
+		"scope": "html",
+		"prefix": "[@ford-ryan-a-brief-history",
+		"body": "[@ford-ryan-a-brief-history]",
+		"description": "A Brief History of DeviantART Stamps"
+	},
+	"[@fortunecity-archiveteam": {
+		"scope": "html",
+		"prefix": "[@fortunecity-archiveteam",
+		"body": "[@fortunecity-archiveteam]",
+		"description": ""
+	},
+	"[@free-background-sets": {
+		"scope": "html",
+		"prefix": "[@free-background-sets",
+		"body": "[@free-background-sets]",
+		"description": "Free Background Sets"
+	},
+	"[@free-neopets-images": {
+		"scope": "html",
+		"prefix": "[@free-neopets-images",
+		"body": "[@free-neopets-images]",
+		"description": "Free  Images"
+	},
+	"[@funky-chickens-html-help": {
+		"scope": "html",
+		"prefix": "[@funky-chickens-html-help",
+		"body": "[@funky-chickens-html-help]",
+		"description": "Funky Chickens HTML Help"
+	},
+	"[@gaia-online": {
+		"scope": "html",
+		"prefix": "[@gaia-online",
+		"body": "[@gaia-online]",
+		"description": ""
+	},
+	"[@geocities-yahoo-archived-from-the": {
+		"scope": "html",
+		"prefix": "[@geocities-yahoo-archived-from-the",
+		"body": "[@geocities-yahoo-archived-from-the]",
+		"description": ""
+	},
+	"[@giphy": {
+		"scope": "html",
+		"prefix": "[@giphy",
+		"body": "[@giphy]",
+		"description": ""
+	},
+	"[@graphics-info": {
+		"scope": "html",
+		"prefix": "[@graphics-info",
+		"body": "[@graphics-info]",
+		"description": "Graphics Info"
+	},
+	"[@graves-steve-2000-dreamweaver": {
+		"scope": "html",
+		"prefix": "[@graves-steve-2000-dreamweaver",
+		"body": "[@graves-steve-2000-dreamweaver]",
+		"description": "Dreamweaver, Fireworks create a Web design powerhouse"
+	},
+	"[@greenwood-2004-cartoon-dollz": {
+		"scope": "html",
+		"prefix": "[@greenwood-2004-cartoon-dollz",
+		"body": "[@greenwood-2004-cartoon-dollz]",
+		"description": "The Origin of Cartoon Dollz"
+	},
+	"[@grsites-absolute-background": {
+		"scope": "html",
+		"prefix": "[@grsites-absolute-background",
+		"body": "[@grsites-absolute-background]",
+		"description": "Absolute Background Textures Archive"
+	},
+	"[@hi5": {
+		"scope": "html",
+		"prefix": "[@hi5",
+		"body": "[@hi5]",
+		"description": ""
+	},
+	"[@holy-grail-layout": {
+		"scope": "html",
+		"prefix": "[@holy-grail-layout",
+		"body": "[@holy-grail-layout]",
+		"description": "Holy Grail Layout"
+	},
+	"[@homestead": {
+		"scope": "html",
+		"prefix": "[@homestead",
+		"body": "[@homestead]",
+		"description": ""
+	},
+	"[@human-factors-screen-resolution": {
+		"scope": "html",
+		"prefix": "[@human-factors-screen-resolution",
+		"body": "[@human-factors-screen-resolution]",
+		"description": "Screen Resolution"
+	},
+	"[@iconator-buddy-icons": {
+		"scope": "html",
+		"prefix": "[@iconator-buddy-icons",
+		"body": "[@iconator-buddy-icons]",
+		"description": "Buddy Icons, Avatars, Away Messages and More"
+	},
+	"[@ics-media-2000-html": {
+		"scope": "html",
+		"prefix": "[@ics-media-2000-html",
+		"body": "[@ics-media-2000-html]",
+		"description": "What HTML coding was like in the "
+	},
+	"[@iframes-amateur-web-design": {
+		"scope": "html",
+		"prefix": "[@iframes-amateur-web-design",
+		"body": "[@iframes-amateur-web-design]",
+		"description": "Kurzmeier, Michael. <em>Political Expression in Web Defacements</em>. Notes that"
+	},
+	"[@internet-archive-gifcities": {
+		"scope": "html",
+		"prefix": "[@internet-archive-gifcities",
+		"body": "[@internet-archive-gifcities]",
+		"description": "GifCities"
+	},
+	"[@internet-archive-gifcities-geocities": {
+		"scope": "html",
+		"prefix": "[@internet-archive-gifcities-geocities",
+		"body": "[@internet-archive-gifcities-geocities]",
+		"description": "GifCities — The  Animated GIF Search Engine"
+	},
+	"[@internet-art": {
+		"scope": "html",
+		"prefix": "[@internet-art",
+		"body": "[@internet-art]",
+		"description": "Internet art"
+	},
+	"[@its-nice-creative-legacy": {
+		"scope": "html",
+		"prefix": "[@its-nice-creative-legacy",
+		"body": "[@its-nice-creative-legacy]",
+		"description": "The creative legacy of GIFs: Past, present and future"
+	},
+	"[@katdr-2004-1kktools3": {
+		"scope": "html",
+		"prefix": "[@katdr-2004-1kktools3",
+		"body": "[@katdr-2004-1kktools3]",
+		"description": "1kktools3.html"
+	},
+	"[@kirryn-about-aromatic-reboot-of": {
+		"scope": "html",
+		"prefix": "[@kirryn-about-aromatic-reboot-of",
+		"body": "[@kirryn-about-aromatic-reboot-of]",
+		"description": "About Aromatic"
+	},
+	"[@kitsch": {
+		"scope": "html",
+		"prefix": "[@kitsch",
+		"body": "[@kitsch]",
+		"description": "Kitsch"
+	},
+	"[@lialina-olia-a-vernacular-web": {
+		"scope": "html",
+		"prefix": "[@lialina-olia-a-vernacular-web",
+		"body": "[@lialina-olia-a-vernacular-web]",
+		"description": "A Vernacular Web: The Indigenous and the Barbarians"
+	},
+	"[@lialina-olia-an-early-glitter": {
+		"scope": "html",
+		"prefix": "[@lialina-olia-an-early-glitter",
+		"body": "[@lialina-olia-an-early-glitter]",
+		"description": "An Early Glitter Graphic Found"
+	},
+	"[@lialina-olia-oral-history-irina": {
+		"scope": "html",
+		"prefix": "[@lialina-olia-oral-history-irina",
+		"body": "[@lialina-olia-oral-history-irina]",
+		"description": "Oral History: Irina Kuleshova"
+	},
+	"[@lialina-olia-vernacular-web-2": {
+		"scope": "html",
+		"prefix": "[@lialina-olia-vernacular-web-2",
+		"body": "[@lialina-olia-vernacular-web-2]",
+		"description": "Vernacular Web 2"
+	},
+	"[@logo-design-and-name-generator": {
+		"scope": "html",
+		"prefix": "[@logo-design-and-name-generator",
+		"body": "[@logo-design-and-name-generator]",
+		"description": "Logo Design and Name Generator"
+	},
+	"[@lostletters-the-quilting": {
+		"scope": "html",
+		"prefix": "[@lostletters-the-quilting",
+		"body": "[@lostletters-the-quilting]",
+		"description": "The * Quilting * Bee"
+	},
+	"[@lycos-homepage-notice-to-our": {
+		"scope": "html",
+		"prefix": "[@lycos-homepage-notice-to-our",
+		"body": "[@lycos-homepage-notice-to-our]",
+		"description": ". Homepage notice: \"To our users of  and . We apologize for the service interrup"
+	},
+	"[@m-i-a": {
+		"scope": "html",
+		"prefix": "[@m-i-a",
+		"body": "[@m-i-a]",
+		"description": "M.I.A."
+	},
+	"[@make-animate": {
+		"scope": "html",
+		"prefix": "[@make-animate",
+		"body": "[@make-animate]",
+		"description": "\"Make and Animate a Blinkie / Make a Blinkie Maker\". <em>Blinkie Makers</em>,  p"
+	},
+	"[@matching-sets-for-web-pages": {
+		"scope": "html",
+		"prefix": "[@matching-sets-for-web-pages",
+		"body": "[@matching-sets-for-web-pages]",
+		"description": "Matching Sets for Web Pages"
+	},
+	"[@maximalism": {
+		"scope": "html",
+		"prefix": "[@maximalism",
+		"body": "[@maximalism]",
+		"description": "Maximalism"
+	},
+	"[@mcbling": {
+		"scope": "html",
+		"prefix": "[@mcbling",
+		"body": "[@mcbling]",
+		"description": "McBling"
+	},
+	"[@mica-2001-sparkbutton": {
+		"scope": "html",
+		"prefix": "[@mica-2001-sparkbutton",
+		"body": "[@mica-2001-sparkbutton]",
+		"description": "SparkButton.gif"
+	},
+	"[@mica-2003-dansoriginalopal": {
+		"scope": "html",
+		"prefix": "[@mica-2003-dansoriginalopal",
+		"body": "[@mica-2003-dansoriginalopal]",
+		"description": "DansOriginalOpal.gif"
+	},
+	"[@mica-2003-musik": {
+		"scope": "html",
+		"prefix": "[@mica-2003-musik",
+		"body": "[@mica-2003-musik]",
+		"description": "MUSIK"
+	},
+	"[@mica-2003-tools": {
+		"scope": "html",
+		"prefix": "[@mica-2003-tools",
+		"body": "[@mica-2003-tools]",
+		"description": "TOOLS.html"
+	},
+	"[@mica-2004-bar": {
+		"scope": "html",
+		"prefix": "[@mica-2004-bar",
+		"body": "[@mica-2004-bar]",
+		"description": "BAR"
+	},
+	"[@mica-2004-cropcrafts": {
+		"scope": "html",
+		"prefix": "[@mica-2004-cropcrafts",
+		"body": "[@mica-2004-cropcrafts]",
+		"description": "CROPCRAFTS"
+	},
+	"[@mica-2004-gameroom": {
+		"scope": "html",
+		"prefix": "[@mica-2004-gameroom",
+		"body": "[@mica-2004-gameroom]",
+		"description": "GameRoom.html"
+	},
+	"[@microsoft-1992-wingdings": {
+		"scope": "html",
+		"prefix": "[@microsoft-1992-wingdings",
+		"body": "[@microsoft-1992-wingdings]",
+		"description": "Wingdings"
+	},
+	"[@microsoft-1997-acquire": {
+		"scope": "html",
+		"prefix": "[@microsoft-1997-acquire",
+		"body": "[@microsoft-1997-acquire]",
+		"description": " to Acquire  Networks"
+	},
+	"[@microsoft-1997-webdings": {
+		"scope": "html",
+		"prefix": "[@microsoft-1997-webdings",
+		"body": "[@microsoft-1997-webdings]",
+		"description": "Webdings"
+	},
+	"[@mirror-free-linkware": {
+		"scope": "html",
+		"prefix": "[@mirror-free-linkware",
+		"body": "[@mirror-free-linkware]",
+		"description": "Free Linkware, Graphic Sets, Background Tiles, Buttons and Dividers"
+	},
+	"[@misa-phoophie-com": {
+		"scope": "html",
+		"prefix": "[@misa-phoophie-com",
+		"body": "[@misa-phoophie-com]",
+		"description": "misa.phoophie.com"
+	},
+	"[@misc-sets-linkware-terms": {
+		"scope": "html",
+		"prefix": "[@misc-sets-linkware-terms",
+		"body": "[@misc-sets-linkware-terms]",
+		"description": "Misc. Sets / Linkware Terms"
+	},
+	"[@moon-moondogee-flashlites-i-f-s": {
+		"scope": "html",
+		"prefix": "[@moon-moondogee-flashlites-i-f-s",
+		"body": "[@moon-moondogee-flashlites-i-f-s]",
+		"description": "Flashlites - I.F.&#x27;s (I.mage F.iller&#x27;s)"
+	},
+	"[@moondogee-2004-flashites": {
+		"scope": "html",
+		"prefix": "[@moondogee-2004-flashites",
+		"body": "[@moondogee-2004-flashites]",
+		"description": ""
+	},
+	"[@myspace": {
+		"scope": "html",
+		"prefix": "[@myspace",
+		"body": "[@myspace]",
+		"description": ""
+	},
+	"[@myspace-layouts": {
+		"scope": "html",
+		"prefix": "[@myspace-layouts",
+		"body": "[@myspace-layouts]",
+		"description": " Layouts"
+	},
+	"[@nasa-goddard-cio-acknowledgments": {
+		"scope": "html",
+		"prefix": "[@nasa-goddard-cio-acknowledgments",
+		"body": "[@nasa-goddard-cio-acknowledgments]",
+		"description": "CIO Acknowledgments (including Randy&#x27;s Icon Bazaar)"
+	},
+	"[@neocities": {
+		"scope": "html",
+		"prefix": "[@neocities",
+		"body": "[@neocities]",
+		"description": ""
+	},
+	"[@neopets": {
+		"scope": "html",
+		"prefix": "[@neopets",
+		"body": "[@neopets]",
+		"description": ""
+	},
+	"[@neopets-new-features-january-2000": {
+		"scope": "html",
+		"prefix": "[@neopets-new-features-january-2000",
+		"body": "[@neopets-new-features-january-2000]",
+		"description": "New Features, "
+	},
+	"[@new-features-july-2000": {
+		"scope": "html",
+		"prefix": "[@new-features-july-2000",
+		"body": "[@new-features-july-2000]",
+		"description": "New Features, "
+	},
+	"[@new-features-october-2000": {
+		"scope": "html",
+		"prefix": "[@new-features-october-2000",
+		"body": "[@new-features-october-2000]",
+		"description": "New Features, "
+	},
+	"[@new-features-september-2000": {
+		"scope": "html",
+		"prefix": "[@new-features-september-2000",
+		"body": "[@new-features-september-2000]",
+		"description": "New Features, "
+	},
+	"[@old-graphics": {
+		"scope": "html",
+		"prefix": "[@old-graphics",
+		"body": "[@old-graphics]",
+		"description": "Old Graphics"
+	},
+	"[@olia-lialina-telling-gifs": {
+		"scope": "html",
+		"prefix": "[@olia-lialina-telling-gifs",
+		"body": "[@olia-lialina-telling-gifs]",
+		"description": "Telling GIFs From Animated JPEGs"
+	},
+	"[@online-image-editor": {
+		"scope": "html",
+		"prefix": "[@online-image-editor",
+		"body": "[@online-image-editor]",
+		"description": "Online Image Editor"
+	},
+	"[@onyxsmiles-okay-lets-glitter-a": {
+		"scope": "html",
+		"prefix": "[@onyxsmiles-okay-lets-glitter-a",
+		"body": "[@onyxsmiles-okay-lets-glitter-a]",
+		"description": ". \"Okay Lets Glitter a Name :o)\", archived ; \"Glitterz by Onyx :o)\", archived  w"
+	},
+	"[@paintshop-pro": {
+		"scope": "html",
+		"prefix": "[@paintshop-pro",
+		"body": "[@paintshop-pro]",
+		"description": "PaintShop Pro"
+	},
+	"[@photobucket": {
+		"scope": "html",
+		"prefix": "[@photobucket",
+		"body": "[@photobucket]",
+		"description": ""
+	},
+	"[@photoshop-6-screen-resolution": {
+		"scope": "html",
+		"prefix": "[@photoshop-6-screen-resolution",
+		"body": "[@photoshop-6-screen-resolution]",
+		"description": "<em> User Guide</em>. . Notes that a 15-inch monitor commonly displayed 800 × 60"
+	},
+	"[@picmix": {
+		"scope": "html",
+		"prefix": "[@picmix",
+		"body": "[@picmix]",
+		"description": "PicMix"
+	},
+	"[@piczo": {
+		"scope": "html",
+		"prefix": "[@piczo",
+		"body": "[@piczo]",
+		"description": ""
+	},
+	"[@pocket-town": {
+		"scope": "html",
+		"prefix": "[@pocket-town",
+		"body": "[@pocket-town]",
+		"description": "Pocket Town"
+	},
+	"[@pokemon-adoption-center": {
+		"scope": "html",
+		"prefix": "[@pokemon-adoption-center",
+		"body": "[@pokemon-adoption-center]",
+		"description": "Pokémon Adoption Center"
+	},
+	"[@purikura": {
+		"scope": "html",
+		"prefix": "[@purikura",
+		"body": "[@purikura]",
+		"description": "Purikura"
+	},
+	"[@r-c-gif-manor-the-vault": {
+		"scope": "html",
+		"prefix": "[@r-c-gif-manor-the-vault",
+		"body": "[@r-c-gif-manor-the-vault]",
+		"description": "The Vault #2, Inserts &amp; Accents"
+	},
+	"[@reddit-2026-question": {
+		"scope": "html",
+		"prefix": "[@reddit-2026-question",
+		"body": "[@reddit-2026-question]",
+		"description": "Question About Blinkies ( discussion of bead/block blinkies)"
+	},
+	"[@saffy-blinkie-makers": {
+		"scope": "html",
+		"prefix": "[@saffy-blinkie-makers",
+		"body": "[@saffy-blinkie-makers]",
+		"description": "Blinkie Makers!"
+	},
+	"[@senshi-card-mania-r": {
+		"scope": "html",
+		"prefix": "[@senshi-card-mania-r",
+		"body": "[@senshi-card-mania-r]",
+		"description": "Senshi Card-Mania! R"
+	},
+	"[@shamrocks": {
+		"scope": "html",
+		"prefix": "[@shamrocks",
+		"body": "[@shamrocks]",
+		"description": "Shamrocks"
+	},
+	"[@smhart-2009-glitters": {
+		"scope": "html",
+		"prefix": "[@smhart-2009-glitters",
+		"body": "[@smhart-2009-glitters]",
+		"description": "GLITTERS"
+	},
+	"[@sontag-susan-1964-notes-on": {
+		"scope": "html",
+		"prefix": "[@sontag-susan-1964-notes-on",
+		"body": "[@sontag-susan-1964-notes-on]",
+		"description": "Notes on 'Camp'"
+	},
+	"[@sousa-ana-matilde-blingee-hetamoe": {
+		"scope": "html",
+		"prefix": "[@sousa-ana-matilde-blingee-hetamoe",
+		"body": "[@sousa-ana-matilde-blingee-hetamoe]",
+		"description": ""
+	},
+	"[@sparkling-dots-2003-page1": {
+		"scope": "html",
+		"prefix": "[@sparkling-dots-2003-page1",
+		"body": "[@sparkling-dots-2003-page1]",
+		"description": "page1.html"
+	},
+	"[@spider-s-web-tutorials": {
+		"scope": "html",
+		"prefix": "[@spider-s-web-tutorials",
+		"body": "[@spider-s-web-tutorials]",
+		"description": "Spider's Web Tutorials"
+	},
+	"[@steve-wilhite": {
+		"scope": "html",
+		"prefix": "[@steve-wilhite",
+		"body": "[@steve-wilhite]",
+		"description": "Steve Wilhite"
+	},
+	"[@stinkywetdog-how-to-make-a": {
+		"scope": "html",
+		"prefix": "[@stinkywetdog-how-to-make-a",
+		"body": "[@stinkywetdog-how-to-make-a]",
+		"description": "How To Make A Three Color Sparkle Font"
+	},
+	"[@sweet-and-low-tutorials-simple": {
+		"scope": "html",
+		"prefix": "[@sweet-and-low-tutorials-simple",
+		"body": "[@sweet-and-low-tutorials-simple]",
+		"description": "Simple Animated Glitter Text"
+	},
+	"[@tenor": {
+		"scope": "html",
+		"prefix": "[@tenor",
+		"body": "[@tenor]",
+		"description": ""
+	},
+	"[@terms-of-service": {
+		"scope": "html",
+		"prefix": "[@terms-of-service",
+		"body": "[@terms-of-service]",
+		"description": "Terms of Service"
+	},
+	"[@the-doll-palace-archived-from": {
+		"scope": "html",
+		"prefix": "[@the-doll-palace-archived-from",
+		"body": "[@the-doll-palace-archived-from]",
+		"description": "The Doll Palace"
+	},
+	"[@the-neopets-html-guide": {
+		"scope": "html",
+		"prefix": "[@the-neopets-html-guide",
+		"body": "[@the-neopets-html-guide]",
+		"description": "The  HTML Guide"
+	},
+	"[@the-palace-client-manual": {
+		"scope": "html",
+		"prefix": "[@the-palace-client-manual",
+		"body": "[@the-palace-client-manual]",
+		"description": " client manual"
+	},
+	"[@the-yum-yum-shoppe": {
+		"scope": "html",
+		"prefix": "[@the-yum-yum-shoppe",
+		"body": "[@the-yum-yum-shoppe]",
+		"description": "The Yum-Yum Shoppe"
+	},
+	"[@thepalace-2003-palace": {
+		"scope": "html",
+		"prefix": "[@thepalace-2003-palace",
+		"body": "[@thepalace-2003-palace]",
+		"description": "The Palace"
+	},
+	"[@theqbee-net-2007-quilting": {
+		"scope": "html",
+		"prefix": "[@theqbee-net-2007-quilting",
+		"body": "[@theqbee-net-2007-quilting]",
+		"description": "The Quilting Bee"
+	},
+	"[@tinypic-archived-from-the-original": {
+		"scope": "html",
+		"prefix": "[@tinypic-archived-from-the-original",
+		"body": "[@tinypic-archived-from-the-original]",
+		"description": ""
+	},
+	"[@tripod-lycos-archived-shut-down": {
+		"scope": "html",
+		"prefix": "[@tripod-lycos-archived-shut-down",
+		"body": "[@tripod-lycos-archived-shut-down]",
+		"description": ""
+	},
+	"[@ttf-ttf2": {
+		"scope": "html",
+		"prefix": "[@ttf-ttf2",
+		"body": "[@ttf-ttf2]",
+		"description": "TTF / TTF2"
+	},
+	"[@tumblr": {
+		"scope": "html",
+		"prefix": "[@tumblr",
+		"body": "[@tumblr]",
+		"description": ""
+	},
+	"[@vegasgal-2001-animate": {
+		"scope": "html",
+		"prefix": "[@vegasgal-2001-animate",
+		"body": "[@vegasgal-2001-animate]",
+		"description": "Animate Your Name"
+	},
+	"[@web-2-0": {
+		"scope": "html",
+		"prefix": "[@web-2-0",
+		"body": "[@web-2-0]",
+		"description": "Web 2.0"
+	},
+	"[@web-badge": {
+		"scope": "html",
+		"prefix": "[@web-badge",
+		"body": "[@web-badge]",
+		"description": "Web badge"
+	},
+	"[@web-graphics": {
+		"scope": "html",
+		"prefix": "[@web-graphics",
+		"body": "[@web-graphics]",
+		"description": "Web Graphics"
+	},
+	"[@web-revival-glossary": {
+		"scope": "html",
+		"prefix": "[@web-revival-glossary",
+		"body": "[@web-revival-glossary]",
+		"description": "Web Revival Glossary"
+	},
+	"[@webring-history": {
+		"scope": "html",
+		"prefix": "[@webring-history",
+		"body": "[@webring-history]",
+		"description": "WebRing History"
+	},
+	"[@welcome-to-the-wtv-zone": {
+		"scope": "html",
+		"prefix": "[@welcome-to-the-wtv-zone",
+		"body": "[@welcome-to-the-wtv-zone]",
+		"description": "Welcome to The !"
+	},
+	"[@what-is-the-old-web": {
+		"scope": "html",
+		"prefix": "[@what-is-the-old-web",
+		"body": "[@what-is-the-old-web]",
+		"description": "What is the “Old Web”?"
+	},
+	"[@whisper-ez-animated-glitter-tiles": {
+		"scope": "html",
+		"prefix": "[@whisper-ez-animated-glitter-tiles",
+		"body": "[@whisper-ez-animated-glitter-tiles]",
+		"description": "EZ Animated Glitter Tiles"
+	},
+	"[@wtv-zone-2022-almost": {
+		"scope": "html",
+		"prefix": "[@wtv-zone-2022-almost",
+		"body": "[@wtv-zone-2022-almost]",
+		"description": ". Closure email to subscribers, sent on or about . Shared by  in the Friends of "
+	},
+	"[@xxxo": {
+		"scope": "html",
+		"prefix": "[@xxxo",
+		"body": "[@xxxo]",
+		"description": "XXXO"
+	},
+	"[@y-twi-t-how-to-work": {
+		"scope": "html",
+		"prefix": "[@y-twi-t-how-to-work",
+		"body": "[@y-twi-t-how-to-work]",
+		"description": "How to Work with Part of an Image"
+	},
+	"[@yesterweb-zine-dream-pixel": {
+		"scope": "html",
+		"prefix": "[@yesterweb-zine-dream-pixel",
+		"body": "[@yesterweb-zine-dream-pixel]",
+		"description": "I Dream of Pixel Paradise"
+	},
+	"[@yugioh-card-adoptables-thread": {
+		"scope": "html",
+		"prefix": "[@yugioh-card-adoptables-thread",
+		"body": "[@yugioh-card-adoptables-thread]",
+		"description": "Adoptables Thread: Show off your signature adoptables and get loads of clicks!"
+	},
+	"[@zak-a-doodle-graphics-calling-cards": {
+		"scope": "html",
+		"prefix": "[@zak-a-doodle-graphics-calling-cards",
+		"body": "[@zak-a-doodle-graphics-calling-cards]",
+		"description": "Calling Cards"
+	}
+}

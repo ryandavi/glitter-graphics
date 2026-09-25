@@ -37,7 +37,7 @@
             <ol>
                 <li><a href="#create-glitter">Create a Glitter Layer</a></li>
                 <li><a href="#select-colors">Select Colors</a></li>
-                <li><a href="#glitter-settings">Adjust {panel:glitterSettingsSection}</a></li>
+                <li><a href="#glitter-settings">Adjust {ui-panel:glitterSettingsSection}</a></li>
                 <li><a href="#mask-brush">Mask Brush</a></li>
             </ol>
         </li>
@@ -170,7 +170,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Edit the canvas</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>{panel:baseLayerSettingsSection}</strong>.</p>
+                    <p><strong>Edit the canvas</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>{ui-panel:baseLayerSettingsSection}</strong>.</p>
                     <ul>
                         <li><strong>Background</strong> – Choose Image, Transparent, Glitter, Solid, or Gradient. <strong>Replace</strong> is the explicit way to change the base image without disturbing other layers.</li>
 						<li><strong>Image</strong> – Enter a linked pixel size or percentage to resize the canvas and every editable layer together. Choose whether glitter textures and visual effects scale with the design.</li>
@@ -211,12 +211,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:select}
+                            {ui-tool-icon:select}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{tool:select}</strong> – Pick layers and move stickers, text, and shapes. Turn off <strong>Auto-Select</strong> in the Select options when canvas drags should keep moving the layer already selected in the Layers panel. Nudge the selected layer with the arrow keys (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps).</p>
+                    <p><strong>{ui-tool:select}</strong> – Pick layers and move stickers, text, and shapes. Turn off <strong>Auto-Select</strong> in the Select options when canvas drags should keep moving the layer already selected in the Layers panel. Nudge the selected layer with the arrow keys (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps).</p>
 
                     <p>When a sticker, text, or shape layer is selected, alignment buttons appear:</p>
                     <ul>
@@ -231,12 +231,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:hand}
+                            {ui-tool-icon:hand}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{tool:hand}</strong> – Click and drag to pan around the canvas. Hold <kbd class="guide-kbd">Space</kbd> to use the Hand tool temporarily, then release it to return to the previous tool.</p>
+                    <p><strong>{ui-tool:hand}</strong> – Click and drag to pan around the canvas. Hold <kbd class="guide-kbd">Space</kbd> to use the Hand tool temporarily, then release it to return to the previous tool.</p>
                     <ul>
                         <li><strong>Touch</strong> – Use one or two fingers to pan from any tool; the separate Hand tool is hidden because it is redundant.</li>
                     </ul>
@@ -254,12 +254,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:colorPicker}
+                            {ui-tool-icon:colorPicker}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{tool:colorPicker}</strong> – With a glitter layer or base image selected, click on the canvas to create a color selection based on the base image.</p>
+                    <p><strong>{ui-tool:colorPicker}</strong> – With a glitter layer or base image selected, click on the canvas to create a color selection based on the base image.</p>
                 </div>
             </div>
 
@@ -267,12 +267,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:brush}
+                            {ui-tool-icon:brush}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{tool:brush}</strong> – Paint or erase the mask of a Glitter Fill layer directly on the canvas. Painting while another layer type is selected creates a separate Glitter Fill layer.</p>
+                    <p><strong>{ui-tool:brush}</strong> – Paint or erase the mask of a Glitter Fill layer directly on the canvas. Painting while another layer type is selected creates a separate Glitter Fill layer.</p>
                     <ul>
                         <li>See <a href="#mask-brush">Mask Brush</a> under Glitter for painting modes and brush settings.</li>
                     </ul>
@@ -283,12 +283,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:text}
+                            {ui-tool-icon:text}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{tool:text}</strong> – Click the canvas to place Point text, or drag to define a Box that wraps text inside a resizable frame.</p>
+                    <p><strong>{ui-tool:text}</strong> – Click the canvas to place Point text, or drag to define a Box that wraps text inside a resizable frame.</p>
                     <ul>
                         <li>See <a href="#text">Text</a> for typography, layout, and fill/border/shadow options.</li>
                     </ul>
@@ -299,12 +299,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:shape}
+                            {ui-tool-icon:shape}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{tool:shape}</strong> – Drag on the canvas to draw a shape at that size (<kbd class="guide-kbd">Shift</kbd> = square), or click for a default size.</p>
+                    <p><strong>{ui-tool:shape}</strong> – Drag on the canvas to draw a shape at that size (<kbd class="guide-kbd">Shift</kbd> = square), or click for a default size.</p>
                     <ul>
                         <li>See <a href="#shapes">Shapes</a> for shape choices and fill/border/shadow options.</li>
                     </ul>
@@ -316,12 +316,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {tool-icon:zoom}
+                            {ui-tool-icon:zoom}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-					<p><strong>{tool:zoom}</strong> – Click to zoom in, <kbd class="guide-kbd">Alt</kbd>-click to zoom out, or drag right/up and left/down for smooth scrubby zoom. Double-click the Zoom tool to return to 100<span class="setting-unit">%</span>.</p>
+					<p><strong>{ui-tool:zoom}</strong> – Click to zoom in, <kbd class="guide-kbd">Alt</kbd>-click to zoom out, or drag right/up and left/down for smooth scrubby zoom. Double-click the Zoom tool to return to 100<span class="setting-unit">%</span>.</p>
 					<ul>
 						<li><strong>Touch</strong> – Two-finger pinch to zoom.</li>
 						<li><strong>Trackpad</strong> – Pinch to zoom smoothly around the gesture position; swipe with two fingers to pan in any direction.</li>
@@ -1014,9 +1014,9 @@
 
 
         <div class="guide-subsection">
-            <h4 id="glitter-settings">Adjust {panel:glitterSettingsSection}</h4>
-            <p>In the <strong>{panel:glitterSettingsSection}</strong> panel, customize your glitter layer:</p>
-			<p>Use <strong>Change</strong> in the Fill asset card to open the glitter gallery for the selected layer. The picker strip identifies the destination; choose glitter, then press <strong>Done</strong> to return to {panel:glitterSettingsSection}.</p>
+            <h4 id="glitter-settings">Adjust {ui-panel:glitterSettingsSection}</h4>
+            <p>In the <strong>{ui-panel:glitterSettingsSection}</strong> panel, customize your glitter layer:</p>
+			<p>Use <strong>Change</strong> in the Fill asset card to open the glitter gallery for the selected layer. The picker strip identifies the destination; choose glitter, then press <strong>Done</strong> to return to {ui-panel:glitterSettingsSection}.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1238,7 +1238,7 @@
                 </div>
             </div>
 
-            <h4>{panel:stickerSettingsSection}</h4>
+            <h4>{ui-panel:stickerSettingsSection}</h4>
             <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
@@ -1379,7 +1379,7 @@
 
         <div class="guide-subsection">
             <h4 id="text-typography">Typography &amp; Layout</h4>
-            <p>In the <strong>{panel:textSettingsSection}</strong> panel, edit the copy, choose a non-destructive letter case, and control how it is laid out. Double-click or double-tap text to open and select its copy.</p>
+            <p>In the <strong>{ui-panel:textSettingsSection}</strong> panel, edit the copy, choose a non-destructive letter case, and control how it is laid out. Double-click or double-tap text to open and select its copy.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -1586,7 +1586,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Add shapes from the <strong>Shapes</strong> area of the Design gallery. Scroll through the category headings — there is no extra category screen to open. If a shape layer is already selected, choosing a gallery shape replaces that layer's shape; otherwise it creates a new shape layer. {panel:shapeSettingsSection} controls the selected shape's fill, transform, border, and shadow. Resize, rotate, and move it with the transform handles — shapes re-render crisply at their new size.</p>
+                    <p>Add shapes from the <strong>Shapes</strong> area of the Design gallery. Scroll through the category headings — there is no extra category screen to open. If a shape layer is already selected, choosing a gallery shape replaces that layer's shape; otherwise it creates a new shape layer. {ui-panel:shapeSettingsSection} controls the selected shape's fill, transform, border, and shadow. Resize, rotate, and move it with the transform handles — shapes re-render crisply at their new size.</p>
                 </div>
             </div>
         </div>
@@ -1647,7 +1647,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click <strong>+</strong> in the Layers panel and choose <strong>Filter</strong>. It starts as a Basic adjustment — switch types any time from {panel:filterSettingsSection}.</p>
+                    <p>Click <strong>+</strong> in the Layers panel and choose <strong>Filter</strong>. It starts as a Basic adjustment — switch types any time from {ui-panel:filterSettingsSection}.</p>
                 </div>
             </div>
 
@@ -1680,7 +1680,7 @@
 
         <div class="guide-subsection">
             <h4 id="filter-types">Filter Types</h4>
-            <p>Pick a type from the picker at the top of {panel:filterSettingsSection}; each one swaps in its own controls. <strong>Opacity</strong> fades the whole filter layer the same way it does on every other layer type.</p>
+            <p>Pick a type from the picker at the top of {ui-panel:filterSettingsSection}; each one swaps in its own controls. <strong>Opacity</strong> fades the whole filter layer the same way it does on every other layer type.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -2191,7 +2191,7 @@
             <h4 id="keyboard-shortcuts">Keyboard Shortcuts &amp; Gestures</h4>
             <p>Every shortcut and gesture, generated from the editor's command list. Open <strong>Commands &amp; Shortcuts</strong> from the toolbar to search them.</p>
 
-{shortcuts}
+{ui-shortcuts}
         </div>
 
     </div>

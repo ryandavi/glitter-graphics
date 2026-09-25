@@ -2,7 +2,8 @@
 
 /**
  * Renders the Preservation modal's Timeline section from ABOUT_TIMELINE (see
- * js/ui/about-timeline-data.js) and wires up its event-type/Topic/Country/
+ * js/ui/about-timeline-data.js; entity names from js/generated/entities-data.js)
+ * and wires up its event-type/Topic/Country/
  * Decade/company filters. modals-wiring.js calls this from preservationModal's
  * onContentLoaded, before initDocumentModalNavigation indexes the modal, so
  * the page's search box sees the (unfiltered) rendered entries too.
@@ -85,11 +86,15 @@ function initPreservationTimeline(modalBody) {
 	entityInput.placeholder = 'e.g. Yahoo, Blingee, GeoCities…';
 	const datalist = document.createElement('datalist');
 	datalist.id = 'PreservationTimelineEntityList';
-	[...new Set(Object.values(ABOUT_TIMELINE_ENTITY_LABELS))]
-		.sort((a, b) => a.localeCompare(b))
-		.forEach(label => {
+	// Suggestions name each entity with its kind (Site, Software, Organization…)
+	// so "Yahoo" the company and "Yahoo! Groups" the service read differently.
+	[...new Set(ABOUT_TIMELINE.flatMap(item => item.entities))]
+		.map(slug => ENTITY_DATA[slug] || { name: slug })
+		.sort((a, b) => a.name.localeCompare(b.name))
+		.forEach(entity => {
 			const opt = document.createElement('option');
-			opt.value = label;
+			opt.value = entity.name;
+			if (entity.kind) opt.label = ENTITY_KIND_LABELS[entity.kind];
 			datalist.appendChild(opt);
 		});
 	entityInputWrap.append(entityIcon, entityInput, datalist);
@@ -158,8 +163,9 @@ function initPreservationTimeline(modalBody) {
 			if (state.country !== 'all' && item.country !== state.country) return false;
 			if (state.decade !== 'all' && item.decade !== state.decade) return false;
 			if (query && !item.entities.some(ent => {
-				const label = ABOUT_TIMELINE_ENTITY_LABELS[ent] || ent;
-				return label.toLowerCase().includes(query) || ent.includes(query);
+				const entity = ENTITY_DATA[ent];
+				const labels = [entity?.name || ent, ...(entity?.aliases || [])];
+				return labels.some(label => label.toLowerCase().includes(query)) || ent.includes(query);
 			})) return false;
 			return true;
 		});

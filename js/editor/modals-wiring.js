@@ -94,7 +94,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=6e6526b6',
+				externalContentUrl: 'modals/history.html?v=c5e8c1db',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -119,7 +119,7 @@ updateOrientationButtons(width, height) {
 			.register('personalWebModal', {
 				openBtnId: 'personalWebBtn',
 				closeBtnId: 'closePersonalWebModal',
-				externalContentUrl: 'modals/personal-web.html?v=0cc39d10',
+				externalContentUrl: 'modals/personal-web.html?v=b88820a7',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -142,7 +142,7 @@ updateOrientationButtons(width, height) {
 			.register('preservationModal', {
 				openBtnId: 'preservationBtn',
 				closeBtnId: 'closePreservationModal',
-				externalContentUrl: 'modals/preservation.html?v=4',
+				externalContentUrl: 'modals/preservation.html?v=16a639a7',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -150,7 +150,8 @@ updateOrientationButtons(width, height) {
 					initPixelScalerInContainer(modalBody);
 
 					// Render before indexing so document search includes every event.
-					await loadScriptOnce('js/ui/about-timeline-data.js?v=f7cbbb98');
+					await loadScriptOnce('js/generated/entities-data.js?v=f94f8e2e');
+					await loadScriptOnce('js/ui/about-timeline-data.js?v=f0de2ab5');
 					initPreservationTimeline(modalBody);
 					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
 
@@ -163,7 +164,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=16',
+				externalContentUrl: 'modals/about.html?v=617a6b4f',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -243,7 +244,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=7',
+			externalContentUrl: 'modals/welcome.html?v=ac5f8dfe',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',
@@ -281,8 +282,9 @@ updateOrientationButtons(width, height) {
 			}
 		});
 
-		// Check if should show welcome modal on page load
-		this.checkWelcomeModal();
+		// A #modal= link (see openModalFromHash) replaces the startup welcome.
+		if (!this.openModalFromHash()) this.checkWelcomeModal();
+		this.watchModalSources();
 
 
 		// Setup modal-specific interactions
@@ -449,6 +451,54 @@ setupWelcomeUpdatesActions(modalBody) {
 	if (pastUpdatesBtn) {
 		pastUpdatesBtn.addEventListener('click', () => this.openDocumentAt('aboutModal', 'AboutVersionHistory'));
 	}
+}
+
+,
+// index.html#modal=history&at=HistoryMicasTile opens a document modal at a
+// heading, so a writer can jump straight to the paragraph being edited.
+openModalFromHash() {
+	const params = new URLSearchParams(location.hash.slice(1));
+	const name = params.get('modal');
+	if (!name || !/^[a-z0-9-]+$/.test(name)) return false;
+	const config = [...this.modalManager.modals.values()].find(entry => entry.externalContentUrl?.startsWith(`modals/${name}.html`));
+	if (!config) return false;
+	this.openDocumentAt(config.id, params.get('at'));
+	return true;
+}
+
+,
+// On localhost only: while a document modal is open, re-render it in place
+// when its generated file changes (node tools/build-modals.js --watch), keeping
+// the scroll position. Production never polls.
+watchModalSources() {
+	if (!['localhost', '127.0.0.1'].includes(location.hostname)) return;
+	window.setInterval(async () => {
+		if (document.visibilityState !== 'visible') return;
+		const config = [...this.modalManager.modals.values()].find(entry => entry.externalContentUrl && entry.contentLoaded && entry.modal.classList.contains('visible'));
+		if (!config) return;
+		try {
+			const response = await fetch(config.externalContentUrl.replace(/\?.*$/, ''), { cache: 'no-store' });
+			if (!response.ok) return;
+			const html = await response.text();
+			if (html === config.cachedContent) return;
+			const modalBody = config.modal.querySelector('.modal-body');
+			const scrollTop = modalBody.scrollTop;
+			config.cachedContent = html;
+			modalBody.innerHTML = html;
+			// Navigation binds once per modal; a fresh copy lets it index the new headings.
+			const nav = config.modal.querySelector('.document-nav');
+			if (nav) {
+				const fresh = nav.cloneNode(true);
+				delete fresh.dataset.initialized;
+				nav.replaceWith(fresh);
+			}
+			if (config.onContentLoaded) await config.onContentLoaded(modalBody);
+			modalBody.scrollTop = scrollTop;
+			dbg(`Reloaded ${config.id} from source`);
+		} catch (error) {
+			dbg('Modal live reload failed:', error);
+		}
+	}, 1500);
 }
 
 ,

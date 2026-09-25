@@ -23,6 +23,7 @@
 	},
 	"ignorePatterns": [
 		"js/vendor/**",
+		"js/generated/**",
 		"node_modules/**"
 	]
 }

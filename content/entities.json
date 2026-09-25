@@ -1,758 +1,2134 @@
 {
-	"platforms": {
-		"aim": {
-			"label": "AIM"
-		},
-		"angelfire": {
-			"label": "Angelfire"
-		},
-		"aol": {
-			"label": "AOL"
-		},
-		"aol-hometown": {
-			"label": "AOL Hometown"
-		},
-		"bauer": {
-			"label": "Bauer Publishing"
-		},
-		"blingee": {
-			"label": "Blingee"
-		},
-		"boomspeed": {
-			"label": "Boomspeed"
-		},
-		"buddy-buddy": {
-			"label": "Buddy Buddy"
-		},
-		"candybar": {
-			"label": "Candybar"
-		},
-		"cbox": {
-			"label": "Cbox"
-		},
-		"compuserve": {
-			"label": "CompuServe"
-		},
-		"cyworld": {
-			"label": "Cyworld"
-		},
-		"daum": {
-			"label": "Daum"
-		},
-		"deviantart": {
-			"label": "DeviantArt"
-		},
-		"facebook": {
-			"label": "Facebook"
-		},
-		"franchise": {
-			"label": "Sailor Moon"
-		},
-		"freechal": {
-			"label": "Freechal"
-		},
-		"freeservers": {
-			"label": "FreeServers"
-		},
-		"gaia-online": {
-			"label": "Gaia Online"
-		},
-		"geocities": {
-			"label": "GeoCities"
-		},
-		"gifcities": {
-			"label": "GifCities"
-		},
-		"giphy": {
-			"label": "GIPHY"
-		},
-		"google": {
-			"label": "Google"
-		},
-		"hangame": {
-			"label": "Hangame"
-		},
-		"hi5": {
-			"label": "Hi5"
-		},
-		"homestead": {
-			"label": "Homestead"
-		},
-		"independent": {
-			"label": "Spider's Web Tutorials"
-		},
-		"klipy": {
-			"label": "Klipy"
-		},
-		"livejournal": {
-			"label": "LiveJournal"
-		},
-		"lycos": {
-			"label": "Lycos"
-		},
-		"microsoft": {
-			"label": "Microsoft"
-		},
-		"msn": {
-			"label": "MSN"
-		},
-		"msn-messenger": {
-			"label": "MSN Messenger"
-		},
-		"msn-tv": {
-			"label": "MSN TV"
-		},
-		"myspace": {
-			"label": "MySpace"
-		},
-		"neocities": {
-			"label": "Neocities"
-		},
-		"neopets": {
-			"label": "Neopets"
-		},
-		"netmarble": {
-			"label": "Netmarble"
-		},
-		"online-image-editor": {
-			"label": "Online Image Editor"
-		},
-		"other": {
-			"label": "Teahouse MB"
-		},
-		"philips": {
-			"label": "Philips"
-		},
-		"photobucket": {
-			"label": "Photobucket"
-		},
-		"picmix": {
-			"label": "PicMix"
-		},
-		"piczo": {
-			"label": "Piczo"
-		},
-		"qbee": {
-			"label": "Q*Bee"
-		},
-		"reddit": {
-			"label": "Reddit"
-		},
-		"sayclub": {
-			"label": "SayClub"
-		},
-		"sony": {
-			"label": "Sony"
-		},
-		"tagboard": {
-			"label": "TagBoard"
-		},
-		"tenor": {
-			"label": "Tenor"
-		},
-		"the-palace": {
-			"label": "The Palace"
-		},
-		"tinypic": {
-			"label": "TinyPic"
-		},
-		"tool": {
-			"label": "Paint Shop Pro"
-		},
-		"tripod": {
-			"label": "Tripod"
-		},
-		"tumblr": {
-			"label": "Tumblr"
-		},
-		"twitter": {
-			"label": "Twitter"
-		},
-		"usenet": {
-			"label": "Usenet"
-		},
-		"wayback-machine": {
-			"label": "Wayback Machine"
-		},
-		"webtv": {
-			"label": "WebTV"
-		},
-		"whatsapp": {
-			"label": "WhatsApp"
-		},
-		"wikipedia": {
-			"label": "Wikipedia"
-		},
-		"wtv-zone": {
-			"label": "WTV-Zone"
-		},
-		"xanga": {
-			"label": "Xanga"
-		},
-		"yahoo": {
-			"label": "Yahoo"
-		},
-		"youtube": {
-			"label": "YouTube"
-		},
-		"fortunecity": {
-			"label": "FortuneCity"
-		}
+	"123glitter": {
+		"kind": "site",
+		"name": "123Glitter"
 	},
-	"usernames": {
-		":.blacknwhite.:": {
-			"display": ":.blacknwhite.:",
-			"aliases": [],
-			"platform": "other"
-		},
-		"4sammy0": {
-			"display": "4sammy0",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"ainna": {
-			"display": "Ainna",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"alicorn": {
-			"display": "Alicorn",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"alwayslisa": {
-			"display": "alwayslisa",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"ameya": {
-			"display": "Ameya",
-			"aliases": [],
-			"platform": "neocities"
-		},
-		"annacher": {
-			"display": "AnnaCher",
-			"aliases": [],
-			"platform": "wtv-zone"
-		},
-		"auburn angel": {
-			"display": "Auburn Angel",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"aylana": {
-			"display": "Aylana",
-			"aliases": [
-				"Bring On The Glitter",
-				"designbyAylana&trade;",
-				"Aya",
-				"Aylana (\"Aya\")",
-				"Bring On the Glitter"
-			],
-			"platform": "wtv-zone",
-			"cast": true
-		},
-		"background flava": {
-			"display": "Background Flava",
-			"aliases": [],
-			"platform": "angelfire"
-		},
-		"belle": {
-			"display": "Belle",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"bemymind": {
-			"display": "Bemymind",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"bprentice": {
-			"display": "bprentice",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"brokenhalos490": {
-			"display": "brokenhalos490",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"carly_20032000": {
-			"display": "carly_20032000",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"catarific": {
-			"display": "Catarific",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"catchin_teardrops": {
-			"display": "catchin_teardrops",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"caz": {
-			"display": "Caz",
-			"aliases": [],
-			"platform": "other"
-		},
-		"cinni": {
-			"display": "Cinni",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"da brat": {
-			"display": "Da Brat",
-			"aliases": [],
-			"platform": "other"
-		},
-		"daakukitsune": {
-			"display": "daakukitsune",
-			"aliases": [],
-			"platform": "deviantart"
-		},
-		"dan-411": {
-			"display": "Dan",
-			"aliases": [
-				"DAN-411",
-				"Sparkelies",
-				"Dan-411",
-				"Dan (DAN-411)"
-			],
-			"platform": "wtv-zone",
-			"cast": true
-		},
-		"donnasblinkies": {
-			"display": "donnasblinkies",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"donroby.geo": {
-			"display": "donroby.geo",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"dreamerzdesigns": {
-			"display": "DreamerzDesigns",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"elanger": {
-			"display": "elanger",
-			"aliases": [],
-			"platform": "angelfire"
-		},
-		"fairytailpersian": {
-			"display": "fairytailpersian",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"fantasydreamin03": {
-			"display": "fantasydreamin03",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"firespirited": {
-			"display": "firespirited",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"fizzyflava": {
-			"display": "fizzyflava",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"groovysmurf": {
-			"display": "groovysmurf",
-			"aliases": [],
-			"platform": "angelfire"
-		},
-		"gurubii": {
-			"display": "Gurubii",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"harveysgraphics01": {
-			"display": "harveysgraphics01",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"here2eternity": {
-			"display": "here2eternity",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"here2eternity1": {
-			"display": "here2eternity",
-			"aliases": [
-				"here2eternity1"
-			],
-			"platform": "geocities"
-		},
-		"hevent2003": {
-			"display": "hevent2003",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"icexdragon": {
-			"display": "icexdragon",
-			"aliases": [],
-			"platform": "deviantart"
-		},
-		"inverse-effect": {
-			"display": "Inverse Effect",
-			"aliases": [],
-			"platform": "other"
-		},
-		"ivk": {
-			"display": "ivk",
-			"aliases": [],
-			"platform": "blingee"
-		},
-		"jalena1989": {
-			"display": "jalena1989",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"jesterror": {
-			"display": "Jesterror",
-			"aliases": [],
-			"platform": "neocities"
-		},
-		"juanita2": {
-			"display": "juanita2",
-			"aliases": [],
-			"platform": "angelfire"
-		},
-		"kalaiawolf": {
-			"display": "kalaiawolf",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"katdr": {
-			"display": "katdr",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"katrina kimble": {
-			"display": "Katrina Kimble",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"kelli fox": {
-			"display": "~ KELLI FOX ~",
-			"aliases": [
-				"Kelli Fox"
-			],
-			"platform": "other",
-			"cast": false
-		},
-		"kirryn": {
-			"display": "Kirryn",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"ladywolfette": {
-			"display": "LadyWolfette",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"lani": {
-			"display": "Lani",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"let-i-sparkle": {
-			"display": "let-i-sparkle",
-			"aliases": [],
-			"platform": "other"
-		},
-		"lilyonion": {
-			"display": "lilyonion",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"littleangelgraphics": {
-			"display": "littleangelgraphics",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"littlemissninja": {
-			"display": "littlemissninja",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"lostletters": {
-			"display": "lostletters",
-			"aliases": [],
-			"platform": "neocities"
-		},
-		"mica": {
-			"display": "Mica",
-			"aliases": [
-				"Stardrops",
-				"Mica (Stardrops)"
-			],
-			"platform": "wtv-zone",
-			"cast": true
-		},
-		"moondogee": {
-			"display": "Moon",
-			"aliases": [
-				"Moondogee",
-				"Flashites",
-				"Moondoggee",
-				"Moon (Moondogee)"
-			],
-			"platform": "wtv-zone",
-			"cast": true
-		},
-		"onyxsmiles": {
-			"display": "OnyxSmiles",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"reef": {
-			"display": "Reef",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"roccooaction": {
-			"display": "roccooaction",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"saffy": {
-			"display": "Saffy",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"scarmander": {
-			"display": "Scarmander",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"seira55": {
-			"display": "seira55",
-			"aliases": [],
-			"platform": "tripod"
-		},
-		"serilly": {
-			"display": "Serilly",
-			"aliases": [],
-			"platform": "neocities"
-		},
-		"smhart": {
-			"display": "SMHart",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"spruisious": {
-			"display": "spruisious",
-			"aliases": [],
-			"platform": "reddit"
-		},
-		"stinkywetdog": {
-			"display": "StinkyWetDog",
-			"aliases": [],
-			"platform": "wtv-zone"
-		},
-		"summitgroup": {
-			"display": "summitgroup",
-			"aliases": [],
-			"platform": "deviantart"
-		},
-		"thewebbedfeat": {
-			"display": "thewebbedfeat",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"tira": {
-			"display": "Tira",
-			"aliases": [],
-			"platform": "other"
-		},
-		"toasterstoasttoast": {
-			"display": "toasterstoasttoast",
-			"aliases": [],
-			"platform": "deviantart"
-		},
-		"troy-mich": {
-			"display": "Troy-Mich",
-			"aliases": [],
-			"platform": "other"
-		},
-		"tutorialespsppirlilla": {
-			"display": "tutorialespsppirlilla",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"urbanizeddork": {
-			"display": "urbanizedDORK",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"vegasgal": {
-			"display": "VegasGal",
-			"aliases": [
-				"Vegasgal"
-			],
-			"platform": "angelfire"
-		},
-		"water117720032001": {
-			"display": "water117720032001",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"whisper": {
-			"display": "Whisper",
-			"aliases": [],
-			"platform": "independent"
-		},
-		"xdancingladyx": {
-			"display": "xdancingladyx",
-			"aliases": [],
-			"platform": "geocities"
-		},
-		"zilla774": {
-			"display": "zilla774",
-			"aliases": [],
-			"platform": "deviantart"
-		}
+	"4-webtv-newsgroup": {
+		"kind": "site",
+		"name": "4-WebTV NewsGroup",
+		"host": "usenet"
 	},
-	"persons": {
-		"alexandra": {
-			"display": "Alexandra",
-			"platform": "independent"
-		},
-		"ann": {
-			"display": "Ann",
-			"platform": "geocities"
-		},
-		"avril-lavigne": {
-			"display": "Avril Lavigne",
-			"platform": "other"
-		},
-		"ayumi-hamasaki": {
-			"display": "Ayumi Hamasaki",
-			"platform": "other"
-		},
-		"becky-bw": {
-			"display": "Becky (BW)",
-			"platform": "other"
-		},
-		"britney-spears": {
-			"display": "Britney Spears",
-			"platform": "other"
-		},
-		"cameron-askin": {
-			"display": "Cameron Askin",
-			"platform": "independent"
-		},
-		"ginger": {
-			"display": "Ginger",
-			"platform": "other"
-		},
-		"hajime-sorayama": {
-			"display": "Hajime Sorayama",
-			"platform": "other"
-		},
-		"hoyt": {
-			"display": "Hoyt",
-			"platform": "webtv"
-		},
-		"irina-kuleshova": {
-			"display": "Irina Kuleshova",
-			"platform": "blingee"
-		},
-		"jane": {
-			"display": "Jane",
-			"platform": "other"
-		},
-		"jem": {
-			"display": "Jem",
-			"platform": "qbee"
-		},
-		"jenny": {
-			"display": "Jenny",
-			"platform": "independent"
-		},
-		"jeremy-hedley": {
-			"display": "Jeremy Hedley",
-			"platform": "other"
-		},
-		"jim-benton": {
-			"display": "Jim Benton",
-			"platform": "other"
-		},
-		"jonas-brothers": {
-			"display": "Jonas Brothers",
-			"platform": "other"
-		},
-		"justin-bieber": {
-			"display": "Justin Bieber",
-			"platform": "other"
-		},
-		"lissa-brown": {
-			"display": "Melissa \"Lissa\" Brown",
-			"platform": "independent"
-		},
-		"mandy-clark": {
-			"display": "Mandy Clark",
-			"platform": "other"
-		},
-		"mia": {
-			"display": "M.I.A.",
-			"platform": "other"
-		},
-		"midgee": {
-			"display": "Midgee",
-			"platform": "independent"
-		},
-		"miley-cyrus": {
-			"display": "Miley Cyrus",
-			"platform": "other"
-		},
-		"misa": {
-			"display": "Misa",
-			"platform": "independent"
-		},
-		"mona-young": {
-			"display": "Mona Young",
-			"platform": "other"
-		},
-		"nobuteru-yuki": {
-			"display": "Nobuteru Yuki",
-			"platform": "other"
-		},
-		"olia-lialina": {
-			"display": "Lialina, Olia",
-			"platform": "independent"
-		},
-		"robin": {
-			"display": "Robin",
-			"platform": "other"
-		},
-		"ryan-ford": {
-			"display": "Ryan Ford",
-			"platform": "independent"
-		},
-		"scar-ayres": {
-			"display": "Scar Ayres",
-			"platform": "independent"
-		},
-		"selena-gomez": {
-			"display": "Selena Gomez",
-			"platform": "other"
-		},
-		"steve-wilhite": {
-			"display": "Steve Wilhite",
-			"platform": "other"
-		},
-		"ulrich-leive": {
-			"display": "Ulrich Leive",
-			"platform": "geocities"
-		}
+	"4sammy0": {
+		"kind": "handle",
+		"name": "4sammy0",
+		"host": "tripod"
+	},
+	"50megs-banners": {
+		"kind": "site",
+		"name": "banners.users1.50megs.com",
+		"domains": [
+			"banners.users1.50megs.com"
+		]
+	},
+	"addglitter": {
+		"kind": "site",
+		"name": "AddGlitter.com",
+		"domains": [
+			"addglitter.com"
+		]
+	},
+	"adobe": {
+		"kind": "org",
+		"name": "Adobe"
+	},
+	"adobe-imageready": {
+		"kind": "software",
+		"name": "ImageReady",
+		"aliases": [
+			"Adobe ImageReady"
+		]
+	},
+	"afternoon-tea": {
+		"kind": "site",
+		"name": "Afternoon Tea"
+	},
+	"aim": {
+		"kind": "site",
+		"name": "AIM",
+		"aliases": [
+			"AOL Instant Messenger",
+			"AOL Instant Messenger (AIM)"
+		],
+		"gloss": "AOL Instant Messenger, a widely used instant-messaging service launched in 1997 and shut down in 2017"
+	},
+	"ainna": {
+		"kind": "handle",
+		"name": "Ainna"
+	},
+	"albino-blacksheep": {
+		"kind": "site",
+		"name": "Albino Blacksheep"
+	},
+	"alexandra": {
+		"kind": "person",
+		"name": "Alexandra"
+	},
+	"alicorn": {
+		"kind": "handle",
+		"name": "Alicorn"
+	},
+	"all-that-glitters": {
+		"kind": "site",
+		"name": "All that Glitters",
+		"host": "webtv",
+		"owner": "da-brat"
+	},
+	"altavista": {
+		"kind": "site",
+		"name": "AltaVista"
+	},
+	"alwayslisa": {
+		"kind": "handle",
+		"name": "alwayslisa"
+	},
+	"alwayslisa-com": {
+		"kind": "site",
+		"name": "alwayslisa.com",
+		"owner": "alwayslisa",
+		"domains": [
+			"alwayslisa.com"
+		]
+	},
+	"ameya": {
+		"kind": "handle",
+		"name": "Ameya",
+		"host": "neocities"
+	},
+	"angelfire": {
+		"kind": "site",
+		"name": "Angelfire",
+		"domains": [
+			"angelfire.com"
+		],
+		"closed": "host-closed",
+		"gloss": "A web hosting service owned by Lycos; its remaining sites went offline in 2026"
+	},
+	"animation-factory": {
+		"kind": "site",
+		"name": "Animation Factory",
+		"domains": [
+			"animationfactory.com"
+		]
+	},
+	"animation-shop": {
+		"kind": "software",
+		"name": "Animation Shop",
+		"gloss": "Jasc's program for creating animations and GIFs"
+	},
+	"ann": {
+		"kind": "person",
+		"name": "Ann",
+		"host": "geocities"
+	},
+	"annacher": {
+		"kind": "handle",
+		"name": "AnnaCher",
+		"host": "wtv-zone"
+	},
+	"aol": {
+		"kind": "site",
+		"name": "AOL",
+		"aliases": [
+			"America Online",
+			"America Online (AOL)"
+		],
+		"icon": "aol-hometown"
+	},
+	"aol-hometown": {
+		"kind": "site",
+		"name": "AOL Hometown",
+		"domains": [
+			"members.aol.com",
+			"hometown.aol.com"
+		],
+		"closed": "host-closed",
+		"gloss": "A web hosting service that gave AOL subscribers space to publish their own websites until 2008"
+	},
+	"aromatic": {
+		"kind": "site",
+		"name": "Aromatic",
+		"domains": [
+			"aromatic.wings.nu"
+		]
+	},
+	"arpanet": {
+		"kind": "site",
+		"name": "ARPANET"
+	},
+	"atlus": {
+		"kind": "org",
+		"name": "Atlus"
+	},
+	"auburn-angel": {
+		"kind": "handle",
+		"name": "Auburn Angel",
+		"host": "tripod"
+	},
+	"auburn-angels-graphics": {
+		"kind": "site",
+		"name": "Auburn Angel's Graphics",
+		"host": "tripod",
+		"owner": "auburn-angel"
+	},
+	"automattic": {
+		"kind": "org",
+		"name": "Automattic"
+	},
+	"avp-galaxy": {
+		"kind": "site",
+		"name": "AVP Galaxy Forums",
+		"domains": [
+			"avpgalaxy.net"
+		]
+	},
+	"avril-lavigne": {
+		"kind": "person",
+		"name": "Avril Lavigne"
+	},
+	"aylana": {
+		"kind": "handle",
+		"name": "Aylana",
+		"aliases": [
+			"Aya",
+			"Aylana (\"Aya\")"
+		],
+		"host": "wtv-zone",
+		"accent": "#e0559b"
+	},
+	"ayumi-hamasaki": {
+		"kind": "person",
+		"name": "Ayumi Hamasaki"
+	},
+	"background-flava": {
+		"kind": "handle",
+		"name": "Background Flava",
+		"host": "angelfire"
+	},
+	"bannerzrus": {
+		"kind": "site",
+		"name": "BannerzRus",
+		"host": "wtv-zone"
+	},
+	"barbie": {
+		"kind": "work",
+		"name": "Barbie"
+	},
+	"bauer": {
+		"kind": "org",
+		"name": "Bauer Publishing",
+		"aliases": [
+			"Bauer Media Group"
+		]
+	},
+	"bearblog": {
+		"kind": "site",
+		"name": "bearblog.dev",
+		"domains": [
+			"bearblog.dev"
+		]
+	},
+	"bebo": {
+		"kind": "site",
+		"name": "Bebo"
+	},
+	"becky-bw": {
+		"kind": "person",
+		"name": "Becky (BW)"
+	},
+	"belle": {
+		"kind": "handle",
+		"name": "Belle"
+	},
+	"bemymind": {
+		"kind": "handle",
+		"name": "Bemymind"
+	},
+	"bemymind-com": {
+		"kind": "site",
+		"name": "bemymind.com",
+		"owner": "bemymind",
+		"domains": [
+			"bemymind.com"
+		]
+	},
+	"biglobe": {
+		"kind": "site",
+		"name": "biglobe.ne.jp",
+		"domains": [
+			"biglobe.ne.jp"
+		]
+	},
+	"bing": {
+		"kind": "site",
+		"name": "Bing"
+	},
+	"binky-beads": {
+		"kind": "site",
+		"name": "Binky Beads",
+		"domains": [
+			"binkybeads.tk"
+		]
+	},
+	"blacknwhite": {
+		"kind": "handle",
+		"name": ":.blacknwhite.:"
+	},
+	"blingee": {
+		"kind": "site",
+		"name": "Blingee",
+		"domains": [
+			"blingee.com"
+		]
+	},
+	"blinkie-makers": {
+		"kind": "site",
+		"name": "Blinkie Makers",
+		"domains": [
+			"blinkie.suppi.net"
+		]
+	},
+	"blinkie-obsession": {
+		"kind": "site",
+		"name": "Blinkie Obsession",
+		"host": "freeservers",
+		"domains": [
+			"blinkieobsession.freeservers.com"
+		]
+	},
+	"blinkie-world": {
+		"kind": "site",
+		"name": "Blinkie World",
+		"domains": [
+			"blinkie.world"
+		]
+	},
+	"blogger": {
+		"kind": "site",
+		"name": "Blogger"
+	},
+	"blueyonder": {
+		"kind": "site",
+		"name": "blueyonder.co.uk",
+		"domains": [
+			"blueyonder.co.uk"
+		]
+	},
+	"boomspeed": {
+		"kind": "site",
+		"name": "Boomspeed",
+		"domains": [
+			"boomspeed.com"
+		],
+		"gloss": "An early image and file host used by personal websites and eBay sellers"
+	},
+	"bprentice": {
+		"kind": "handle",
+		"name": "bprentice"
+	},
+	"bring-on-the-glitter": {
+		"kind": "site",
+		"name": "Bring On The Glitter",
+		"aliases": [
+			"Bring On the Glitter"
+		],
+		"host": "wtv-zone",
+		"owner": "aylana"
+	},
+	"britney-spears": {
+		"kind": "person",
+		"name": "Britney Spears"
+	},
+	"brokenhalos490": {
+		"kind": "handle",
+		"name": "brokenhalos490",
+		"host": "geocities"
+	},
+	"buddy-buddy": {
+		"kind": "site",
+		"name": "Buddy Buddy"
+	},
+	"buffy-the-vampire-slayer": {
+		"kind": "work",
+		"name": "Buffy the Vampire Slayer"
+	},
+	"cameron-askin": {
+		"kind": "person",
+		"name": "Cameron Askin"
+	},
+	"camerons-world": {
+		"kind": "site",
+		"name": "Cameron's World",
+		"domains": [
+			"cameronsworld.net"
+		]
+	},
+	"candybar": {
+		"kind": "site",
+		"name": "Candybar",
+		"domains": [
+			"candybar.co.kr"
+		]
+	},
+	"cardmaker": {
+		"kind": "site",
+		"name": "cardmaker.net",
+		"domains": [
+			"cardmaker.net"
+		]
+	},
+	"carly-20032000": {
+		"kind": "handle",
+		"name": "carly_20032000",
+		"host": "geocities"
+	},
+	"catarific": {
+		"kind": "handle",
+		"name": "Catarific"
+	},
+	"catarific-com": {
+		"kind": "site",
+		"name": "catarific.com",
+		"owner": "catarific",
+		"domains": [
+			"catarific.com"
+		]
+	},
+	"catchin-teardrops": {
+		"kind": "handle",
+		"name": "catchin_teardrops",
+		"host": "geocities"
+	},
+	"cathies-crazie-creations": {
+		"kind": "site",
+		"name": "Cathie's Crazie Creations"
+	},
+	"caz": {
+		"kind": "handle",
+		"name": "Caz"
+	},
+	"cbox": {
+		"kind": "site",
+		"name": "Cbox"
+	},
+	"chewables": {
+		"kind": "site",
+		"name": "chewables.org"
+	},
+	"chrome": {
+		"kind": "software",
+		"name": "Google Chrome"
+	},
+	"cinni": {
+		"kind": "handle",
+		"name": "Cinni"
+	},
+	"club-4-webbtv": {
+		"kind": "site",
+		"name": "Club-4-WebbTv",
+		"aliases": [
+			"Club4WebbTv"
+		],
+		"host": "usenet"
+	},
+	"communities-com": {
+		"kind": "org",
+		"name": "Communities.com"
+	},
+	"compuserve": {
+		"kind": "org",
+		"name": "CompuServe",
+		"gloss": "An online-services company that developed the GIF format"
+	},
+	"corel": {
+		"kind": "org",
+		"name": "Corel"
+	},
+	"creative-cloud": {
+		"kind": "software",
+		"name": "Creative Cloud"
+	},
+	"crowdgather": {
+		"kind": "org",
+		"name": "CrowdGather"
+	},
+	"cute-spot": {
+		"kind": "site",
+		"name": "Cute-Spot"
+	},
+	"cyp2": {
+		"kind": "site",
+		"name": "CYP2",
+		"aliases": [
+			"ColorYourProfyle",
+			"ColorYourProfyle / CYP2",
+			"CYP2 / ColorYourProfyle"
+		],
+		"domains": [
+			"cyp2.com"
+		]
+	},
+	"cyworld": {
+		"kind": "site",
+		"name": "Cyworld"
+	},
+	"da-brat": {
+		"kind": "handle",
+		"name": "Da Brat"
+	},
+	"daakukitsune": {
+		"kind": "handle",
+		"name": "daakukitsune",
+		"host": "deviantart"
+	},
+	"dafont": {
+		"kind": "site",
+		"name": "DaFont",
+		"domains": [
+			"dafont.com"
+		]
+	},
+	"dan-411": {
+		"kind": "handle",
+		"name": "Dan",
+		"aliases": [
+			"DAN-411",
+			"Dan-411",
+			"Dan (DAN-411)"
+		],
+		"host": "wtv-zone",
+		"accent": "#9b59d0"
+	},
+	"darkest-faerie-lair": {
+		"kind": "site",
+		"name": "Darkest Faerie Lair"
+	},
+	"daum": {
+		"kind": "site",
+		"name": "Daum"
+	},
+	"dazzle-junction": {
+		"kind": "site",
+		"name": "Dazzle Junction",
+		"domains": [
+			"dazzlejunction.com"
+		]
+	},
+	"deja-news": {
+		"kind": "site",
+		"name": "Deja News"
+	},
+	"deleted-city": {
+		"kind": "site",
+		"name": "Deleted City",
+		"domains": [
+			"deletedcity.net"
+		]
+	},
+	"delicious": {
+		"kind": "site",
+		"name": "Delicious"
+	},
+	"designbyaylana": {
+		"kind": "site",
+		"name": "designbyAylana™",
+		"host": "wtv-zone",
+		"owner": "aylana"
+	},
+	"deviantart": {
+		"kind": "site",
+		"name": "DeviantArt",
+		"domains": [
+			"deviantart.com"
+		]
+	},
+	"disney": {
+		"kind": "org",
+		"name": "Disney"
+	},
+	"disney-channel": {
+		"kind": "org",
+		"name": "Disney Channel"
+	},
+	"divergent-rays": {
+		"kind": "site",
+		"name": "Divergent Rays",
+		"domains": [
+			"divergentrays.com"
+		]
+	},
+	"dollz": {
+		"kind": "work",
+		"status": "draft",
+		"name": "Dollz",
+		"tags": [
+			"term"
+		]
+	},
+	"dollz-mania": {
+		"kind": "site",
+		"name": "Dollz Mania",
+		"domains": [
+			"dollzmania.com"
+		]
+	},
+	"donnasblinkies": {
+		"kind": "handle",
+		"name": "donnasblinkies",
+		"host": "tripod"
+	},
+	"donroby-geo": {
+		"kind": "handle",
+		"name": "donroby.geo",
+		"host": "geocities"
+	},
+	"dragon-cave": {
+		"kind": "site",
+		"name": "Dragon Cave",
+		"domains": [
+			"dragcave.net"
+		]
+	},
+	"dreamerzdesigns": {
+		"kind": "handle",
+		"name": "DreamerzDesigns",
+		"host": "geocities"
+	},
+	"dreamweaver": {
+		"kind": "software",
+		"name": "Dreamweaver"
+	},
+	"edge": {
+		"kind": "software",
+		"name": "Microsoft Edge"
+	},
+	"elanger": {
+		"kind": "handle",
+		"name": "elanger",
+		"host": "angelfire"
+	},
+	"elon-musk": {
+		"kind": "person",
+		"name": "Elon Musk"
+	},
+	"elouai": {
+		"kind": "site",
+		"name": "elouai.com",
+		"domains": [
+			"elouai.com"
+		]
+	},
+	"emeraldpink": {
+		"kind": "site",
+		"name": "EmeraldPink",
+		"domains": [
+			"emeraldpink.com"
+		]
+	},
+	"expage": {
+		"kind": "site",
+		"name": "Expage"
+	},
+	"ezboard": {
+		"kind": "site",
+		"name": "ezboard"
+	},
+	"facebook": {
+		"kind": "site",
+		"name": "Facebook",
+		"domains": [
+			"facebook.com"
+		],
+		"gloss": "A social-networking service launched in 2004"
+	},
+	"fairytailpersian": {
+		"kind": "handle",
+		"name": "fairytailpersian",
+		"host": "geocities"
+	},
+	"fantasydreamin03": {
+		"kind": "handle",
+		"name": "fantasydreamin03",
+		"host": "geocities"
+	},
+	"femicom": {
+		"kind": "site",
+		"name": "femicom.org",
+		"domains": [
+			"femicom.org"
+		]
+	},
+	"firefox": {
+		"kind": "software",
+		"name": "Firefox"
+	},
+	"firespirited": {
+		"kind": "handle",
+		"name": "firespirited"
+	},
+	"fireworks": {
+		"kind": "software",
+		"name": "Fireworks",
+		"aliases": [
+			"Macromedia Fireworks"
+		]
+	},
+	"fizzyflava": {
+		"kind": "handle",
+		"name": "fizzyflava",
+		"host": "geocities"
+	},
+	"flamingtext": {
+		"kind": "site",
+		"name": "FlamingText",
+		"domains": [
+			"flamingtext.com"
+		]
+	},
+	"flash": {
+		"kind": "software",
+		"name": "Flash"
+	},
+	"flashites": {
+		"kind": "site",
+		"name": "Flashites",
+		"host": "wtv-zone",
+		"owner": "moondogee"
+	},
+	"flickr": {
+		"kind": "site",
+		"name": "Flickr",
+		"domains": [
+			"flickr.com"
+		]
+	},
+	"fortunecity": {
+		"kind": "site",
+		"name": "FortuneCity"
+	},
+	"freechal": {
+		"kind": "site",
+		"name": "Freechal"
+	},
+	"freeservers": {
+		"kind": "site",
+		"name": "FreeServers"
+	},
+	"freewebs": {
+		"kind": "site",
+		"name": "Freewebs"
+	},
+	"friends-of-webtv-and-msntv": {
+		"kind": "site",
+		"name": "Friends of Web TV and MSNTV",
+		"host": "facebook"
+	},
+	"friendster": {
+		"kind": "site",
+		"name": "Friendster"
+	},
+	"frontpage": {
+		"kind": "software",
+		"name": "Microsoft FrontPage"
+	},
+	"funky-chickens": {
+		"kind": "site",
+		"name": "Funky Chickens",
+		"domains": [
+			"funkychickens.com"
+		]
+	},
+	"futuresplash": {
+		"kind": "software",
+		"name": "FutureSplash Animator"
+	},
+	"gaia-online": {
+		"kind": "site",
+		"name": "Gaia Online",
+		"gloss": "A virtual community and social-networking site launched in 2003"
+	},
+	"geekwire": {
+		"kind": "org",
+		"name": "GeekWire"
+	},
+	"geocities": {
+		"kind": "site",
+		"name": "GeoCities",
+		"domains": [
+			"geocities.com",
+			"geocities.yahoo.com"
+		],
+		"closed": "host-closed",
+		"gloss": "A web hosting service that let users create and publish websites free of charge until 2009"
+	},
+	"geocities-institute": {
+		"kind": "site",
+		"name": "geocities.institute",
+		"domains": [
+			"geocities.institute"
+		]
+	},
+	"geocities-japan": {
+		"kind": "site",
+		"name": "GeoCities Japan"
+	},
+	"geocities-ws": {
+		"kind": "site",
+		"name": "geocities.ws",
+		"domains": [
+			"geocities.ws"
+		]
+	},
+	"gif": {
+		"kind": "software",
+		"status": "draft",
+		"name": "GIF",
+		"tags": [
+			"term"
+		]
+	},
+	"gifcities": {
+		"kind": "site",
+		"name": "GifCities",
+		"domains": [
+			"gifcities.org"
+		],
+		"gloss": "the Geocities Animated GIF Search hosted by the Internet Archive"
+	},
+	"ginger": {
+		"kind": "person",
+		"name": "Ginger"
+	},
+	"giphy": {
+		"kind": "site",
+		"name": "GIPHY",
+		"domains": [
+			"giphy.com"
+		],
+		"gloss": "A GIF search and sharing platform"
+	},
+	"glitter-connection": {
+		"kind": "site",
+		"name": "Glitter Connection",
+		"host": "webtv"
+	},
+	"glitter-graphics": {
+		"kind": "site",
+		"name": "Glitter-Graphics",
+		"aliases": [
+			"Glitter-Graphics.com"
+		],
+		"domains": [
+			"glitter-graphics.com"
+		]
+	},
+	"glitterfy": {
+		"kind": "site",
+		"name": "Glitterfy",
+		"domains": [
+			"glitterfy.com"
+		]
+	},
+	"glitterkiss": {
+		"kind": "site",
+		"name": "GlitterKiss"
+	},
+	"glittermaker": {
+		"kind": "site",
+		"name": "GlitterMaker",
+		"domains": [
+			"glittermaker.com"
+		]
+	},
+	"glittertextgraphics": {
+		"kind": "site",
+		"name": "GlitterTextGraphics"
+	},
+	"glitteryourway": {
+		"kind": "site",
+		"name": "GlitterYourWay",
+		"domains": [
+			"glitteryourway.com"
+		]
+	},
+	"glitzheaven": {
+		"kind": "site",
+		"name": "GlitzHeaven"
+	},
+	"goatcounter": {
+		"kind": "site",
+		"name": "GoatCounter",
+		"domains": [
+			"goatcounter.com"
+		]
+	},
+	"google": {
+		"kind": "org",
+		"name": "Google"
+	},
+	"google-groups": {
+		"kind": "site",
+		"name": "Google Groups"
+	},
+	"google-reader": {
+		"kind": "site",
+		"name": "Google Reader"
+	},
+	"groovysmurf": {
+		"kind": "handle",
+		"name": "groovysmurf",
+		"host": "angelfire"
+	},
+	"grsites": {
+		"kind": "site",
+		"name": "GRSites",
+		"domains": [
+			"grsites.com",
+			"vlsicad.eecs.umich.edu"
+		]
+	},
+	"gurubii": {
+		"kind": "handle",
+		"name": "Gurubii"
+	},
+	"gypsy-jewels": {
+		"kind": "site",
+		"name": "Gypsy Jewels",
+		"host": "usenet"
+	},
+	"habbo": {
+		"kind": "site",
+		"name": "Habbo Hotel"
+	},
+	"hajime-sorayama": {
+		"kind": "person",
+		"name": "Hajime Sorayama"
+	},
+	"hangame": {
+		"kind": "site",
+		"name": "Hangame"
+	},
+	"happy-mix": {
+		"kind": "site",
+		"name": "happy-mix.net"
+	},
+	"harveysgraphics01": {
+		"kind": "handle",
+		"name": "harveysgraphics01",
+		"host": "geocities"
+	},
+	"hello-kitty": {
+		"kind": "work",
+		"name": "Hello Kitty"
+	},
+	"here2eternity": {
+		"kind": "handle",
+		"name": "here2eternity",
+		"aliases": [
+			"here2eternity1"
+		],
+		"host": "geocities"
+	},
+	"heta-moe": {
+		"kind": "site",
+		"name": "heta.moe",
+		"domains": [
+			"heta.moe"
+		]
+	},
+	"hevent2003": {
+		"kind": "handle",
+		"name": "hevent2003",
+		"host": "geocities"
+	},
+	"hexed-pixels": {
+		"kind": "site",
+		"name": "Hexed Pixels",
+		"domains": [
+			"hexedpixels.com"
+		]
+	},
+	"hi5": {
+		"kind": "site",
+		"name": "Hi5",
+		"gloss": "A social-networking service launched in 2003 and popular in parts of Latin America, Africa, and Southeast Asia"
+	},
+	"high-school-musical": {
+		"kind": "work",
+		"name": "High School Musical"
+	},
+	"homestead": {
+		"kind": "site",
+		"name": "Homestead",
+		"domains": [
+			"homestead.com"
+		],
+		"gloss": "A website-building and hosting service launched in 1997"
+	},
+	"hoyt": {
+		"kind": "person",
+		"name": "Hoyt",
+		"host": "webtv"
+	},
+	"icarly": {
+		"kind": "work",
+		"name": "iCarly"
+	},
+	"icexdragon": {
+		"kind": "handle",
+		"name": "icexdragon",
+		"host": "deviantart"
+	},
+	"iconator": {
+		"kind": "site",
+		"name": "Iconator",
+		"domains": [
+			"iconator.com"
+		]
+	},
+	"icq": {
+		"kind": "site",
+		"name": "ICQ"
+	},
+	"imagemagick": {
+		"kind": "software",
+		"name": "ImageMagick",
+		"gloss": "Free image-processing software; web front ends to it let WebTV users edit and composite images without a desktop graphics program"
+	},
+	"imageshack": {
+		"kind": "site",
+		"name": "ImageShack"
+	},
+	"instagram": {
+		"kind": "site",
+		"name": "Instagram"
+	},
+	"internet-archive": {
+		"kind": "org",
+		"name": "Internet Archive"
+	},
+	"internet-explorer": {
+		"kind": "software",
+		"name": "Internet Explorer"
+	},
+	"intuit": {
+		"kind": "org",
+		"name": "Intuit"
+	},
+	"inverse-effect": {
+		"kind": "handle",
+		"name": "Inverse Effect"
+	},
+	"invisionfree": {
+		"kind": "site",
+		"name": "InvisionFree"
+	},
+	"irina-kuleshova": {
+		"kind": "person",
+		"name": "Irina Kuleshova",
+		"host": "blingee"
+	},
+	"ivk": {
+		"kind": "handle",
+		"name": "ivk",
+		"host": "blingee"
+	},
+	"jalena1989": {
+		"kind": "handle",
+		"name": "jalena1989",
+		"host": "tripod"
+	},
+	"jane": {
+		"kind": "person",
+		"name": "Jane"
+	},
+	"jasc": {
+		"kind": "org",
+		"name": "JASC"
+	},
+	"jem": {
+		"kind": "person",
+		"name": "Jem",
+		"host": "qbee"
+	},
+	"jenny": {
+		"kind": "person",
+		"name": "Jenny"
+	},
+	"jeremy-hedley": {
+		"kind": "person",
+		"name": "Jeremy Hedley"
+	},
+	"jessicajournals": {
+		"kind": "site",
+		"name": "jessicajournals.com",
+		"domains": [
+			"jessicajournals.com"
+		]
+	},
+	"jesterror": {
+		"kind": "handle",
+		"name": "Jesterror",
+		"host": "neocities"
+	},
+	"jim-benton": {
+		"kind": "person",
+		"name": "Jim Benton"
+	},
+	"jonas-brothers": {
+		"kind": "work",
+		"name": "Jonas Brothers"
+	},
+	"juanita2": {
+		"kind": "handle",
+		"name": "juanita2",
+		"host": "angelfire"
+	},
+	"justin-bieber": {
+		"kind": "person",
+		"name": "Justin Bieber"
+	},
+	"kalaiawolf": {
+		"kind": "handle",
+		"name": "kalaiawolf"
+	},
+	"katdr": {
+		"kind": "handle",
+		"name": "katdr",
+		"host": "tripod"
+	},
+	"katrina-kimble": {
+		"kind": "handle",
+		"name": "Katrina Kimble",
+		"host": "geocities"
+	},
+	"kawaiiness": {
+		"kind": "site",
+		"name": "Kawaiiness.com",
+		"aliases": [
+			"kawaiiness.com"
+		]
+	},
+	"kelli-fox": {
+		"kind": "handle",
+		"name": "~ KELLI FOX ~",
+		"aliases": [
+			"Kelli Fox"
+		]
+	},
+	"kirryn": {
+		"kind": "handle",
+		"name": "Kirryn"
+	},
+	"kitty-friends": {
+		"kind": "site",
+		"name": "Kitty Friends"
+	},
+	"klipy": {
+		"kind": "site",
+		"name": "Klipy",
+		"gloss": "A GIF, sticker, and meme API founded in 2021"
+	},
+	"ko-fi": {
+		"kind": "site",
+		"name": "Ko-fi",
+		"domains": [
+			"ko-fi.com"
+		]
+	},
+	"ladywolfette": {
+		"kind": "handle",
+		"name": "LadyWolfette"
+	},
+	"lani": {
+		"kind": "handle",
+		"name": "Lani"
+	},
+	"leonardwojcik": {
+		"kind": "site",
+		"name": "leonardwojcik.com",
+		"domains": [
+			"leonardwojcik.com"
+		]
+	},
+	"let-i-sparkle": {
+		"kind": "handle",
+		"name": "let-i-sparkle"
+	},
+	"lilyonion": {
+		"kind": "handle",
+		"name": "lilyonion",
+		"host": "tripod"
+	},
+	"limewire": {
+		"kind": "software",
+		"name": "LimeWire"
+	},
+	"linuxenvy": {
+		"kind": "site",
+		"name": "linuxenvy.com",
+		"domains": [
+			"linuxenvy.com"
+		]
+	},
+	"lissa-brown": {
+		"kind": "person",
+		"name": "Melissa \"Lissa\" Brown"
+	},
+	"lissa-explains-it-all": {
+		"kind": "site",
+		"name": "Lissa Explains it All",
+		"owner": "lissa-brown",
+		"domains": [
+			"lissaexplains.com"
+		]
+	},
+	"littleangelgraphics": {
+		"kind": "handle",
+		"name": "littleangelgraphics",
+		"host": "geocities"
+	},
+	"littlemissninja": {
+		"kind": "handle",
+		"name": "littlemissninja"
+	},
+	"livejournal": {
+		"kind": "site",
+		"name": "LiveJournal",
+		"domains": [
+			"livejournal.com"
+		],
+		"gloss": "A blogging and social-networking service launched in 1999, built around personal journals, communities, comments, and userpics"
+	},
+	"lostletters": {
+		"kind": "handle",
+		"name": "lostletters",
+		"host": "neocities"
+	},
+	"lycos": {
+		"kind": "org",
+		"name": "Lycos",
+		"gloss": "An American web portal and search company that owned Angelfire and Tripod"
+	},
+	"macromedia": {
+		"kind": "org",
+		"name": "Macromedia"
+	},
+	"magick-studio": {
+		"kind": "site",
+		"name": "Magick Studio"
+	},
+	"magistream": {
+		"kind": "site",
+		"name": "MagiStream",
+		"domains": [
+			"magistream.com"
+		]
+	},
+	"mandy-clark": {
+		"kind": "person",
+		"name": "Mandy Clark"
+	},
+	"meta": {
+		"kind": "org",
+		"name": "Meta"
+	},
+	"mia": {
+		"kind": "person",
+		"name": "M.I.A.",
+		"gloss": "British rapper, singer, and songwriter"
+	},
+	"mica": {
+		"kind": "handle",
+		"name": "Mica",
+		"aliases": [
+			"Stardrops",
+			"Mica (Stardrops)"
+		],
+		"host": "wtv-zone",
+		"accent": "#2bb3a3"
+	},
+	"microsoft": {
+		"kind": "org",
+		"name": "Microsoft"
+	},
+	"midgee": {
+		"kind": "person",
+		"name": "Midgee"
+	},
+	"miley-cyrus": {
+		"kind": "person",
+		"name": "Miley Cyrus"
+	},
+	"misa": {
+		"kind": "person",
+		"name": "Misa"
+	},
+	"miss-behaved": {
+		"kind": "site",
+		"name": "miss-behaved.net",
+		"domains": [
+			"miss-behaved.net"
+		]
+	},
+	"mona-young": {
+		"kind": "person",
+		"name": "Mona Young"
+	},
+	"mooncandy": {
+		"kind": "site",
+		"name": "mooncandy.org"
+	},
+	"moondogee": {
+		"kind": "handle",
+		"name": "Moon",
+		"aliases": [
+			"Moondogee",
+			"Moondoggee",
+			"Moon (Moondogee)"
+		],
+		"host": "wtv-zone",
+		"accent": "#4a90e2"
+	},
+	"mosaic": {
+		"kind": "software",
+		"name": "NCSA Mosaic"
+	},
+	"moyras-web-jewels": {
+		"kind": "site",
+		"name": "Moyra's Web Jewels"
+	},
+	"mozilla": {
+		"kind": "org",
+		"name": "Mozilla"
+	},
+	"mslauralous-news-group": {
+		"kind": "site",
+		"name": "MsLauraLou's News Group",
+		"host": "usenet"
+	},
+	"msn": {
+		"kind": "site",
+		"name": "MSN"
+	},
+	"msn-messenger": {
+		"kind": "site",
+		"name": "MSN Messenger"
+	},
+	"msn-tv": {
+		"kind": "site",
+		"name": "MSN TV",
+		"icon": "wtv-zone"
+	},
+	"myglitterromance": {
+		"kind": "site",
+		"name": "MyGlitterRomance",
+		"domains": [
+			"myglitterromance.com"
+		]
+	},
+	"myspace": {
+		"kind": "site",
+		"name": "MySpace",
+		"domains": [
+			"myspace.com"
+		],
+		"gloss": "A social-networking service launched in 2003, known for extensively customizable profiles"
+	},
+	"namaii": {
+		"kind": "site",
+		"name": "Namaii",
+		"domains": [
+			"namaii.com"
+		]
+	},
+	"napster": {
+		"kind": "site",
+		"name": "Napster"
+	},
+	"nekoweb": {
+		"kind": "site",
+		"name": "Nekoweb",
+		"domains": [
+			"nekoweb.org"
+		]
+	},
+	"neocities": {
+		"kind": "site",
+		"name": "Neocities",
+		"domains": [
+			"neocities.org"
+		],
+		"gloss": "A free web-hosting service launched in 2013 and modeled partly on GeoCities"
+	},
+	"neonlove": {
+		"kind": "site",
+		"name": "Neonlove",
+		"aliases": [
+			"neonlove.net"
+		],
+		"domains": [
+			"neonlove.net"
+		]
+	},
+	"neopets": {
+		"kind": "site",
+		"name": "Neopets",
+		"domains": [
+			"neopets.com"
+		],
+		"gloss": "A free-to-play virtual-pet browser game launched in 1999"
+	},
+	"netmarble": {
+		"kind": "site",
+		"name": "Netmarble"
+	},
+	"netscape": {
+		"kind": "software",
+		"name": "Netscape",
+		"aliases": [
+			"Netscape Navigator"
+		]
+	},
+	"newgrounds": {
+		"kind": "site",
+		"name": "Newgrounds"
+	},
+	"news-corp": {
+		"kind": "org",
+		"name": "News Corp"
+	},
+	"nicolshotel": {
+		"kind": "site",
+		"name": "NicolsHotel"
+	},
+	"nobuteru-yuki": {
+		"kind": "person",
+		"name": "Nobuteru Yuki"
+	},
+	"notepad": {
+		"kind": "software",
+		"name": "Notepad"
+	},
+	"oath": {
+		"kind": "org",
+		"name": "Oath"
+	},
+	"olia-lialina": {
+		"kind": "person",
+		"name": "Olia Lialina",
+		"sortName": "Lialina, Olia"
+	},
+	"online-image-editor": {
+		"kind": "site",
+		"name": "Online Image Editor",
+		"domains": [
+			"online-image-editor.com"
+		]
+	},
+	"onyxsmiles": {
+		"kind": "handle",
+		"name": "OnyxSmiles"
+	},
+	"onyxsmiles-com": {
+		"kind": "site",
+		"name": "onyxsmiles.com",
+		"owner": "onyxsmiles",
+		"domains": [
+			"onyxsmiles.com"
+		]
+	},
+	"oocities": {
+		"kind": "site",
+		"name": "oocities",
+		"domains": [
+			"oocities.org"
+		]
+	},
+	"orkut": {
+		"kind": "site",
+		"name": "Orkut"
+	},
+	"pagebuilder": {
+		"kind": "software",
+		"name": "PageBuilder",
+		"gloss": "GeoCities' drag-and-drop site editor, launched to let members build a page without writing HTML"
+	},
+	"paint-shop-pro": {
+		"kind": "software",
+		"name": "Paint Shop Pro"
+	},
+	"palaceplanet": {
+		"kind": "site",
+		"name": "palaceplanet.net",
+		"domains": [
+			"palaceplanet.net"
+		]
+	},
+	"philips": {
+		"kind": "org",
+		"name": "Philips"
+	},
+	"phoophie": {
+		"kind": "site",
+		"name": "phoophie.com",
+		"domains": [
+			"phoophie.com"
+		]
+	},
+	"photobucket": {
+		"kind": "site",
+		"name": "Photobucket",
+		"domains": [
+			"photobucket.com"
+		],
+		"gloss": "An image-hosting service that replaced many older embedded images with watermarks or upgrade notices"
+	},
+	"photoshop": {
+		"kind": "software",
+		"name": "Photoshop",
+		"aliases": [
+			"Adobe Photoshop"
+		]
+	},
+	"pick-me": {
+		"kind": "site",
+		"name": "Pick Me!"
+	},
+	"picmix": {
+		"kind": "site",
+		"name": "PicMix",
+		"domains": [
+			"picmix.com"
+		]
+	},
+	"piczo": {
+		"kind": "site",
+		"name": "Piczo",
+		"domains": [
+			"piczo.com"
+		],
+		"gloss": "A social-networking and website-building service launched in 2005"
+	},
+	"pinterest": {
+		"kind": "site",
+		"name": "Pinterest"
+	},
+	"pocket-town": {
+		"kind": "site",
+		"name": "Pocket Town"
+	},
+	"pokefarm": {
+		"kind": "site",
+		"name": "PokéFarm",
+		"aliases": [
+			"PokéFarm Q"
+		],
+		"domains": [
+			"pokefarm.com"
+		]
+	},
+	"pokemon": {
+		"kind": "work",
+		"name": "Pokémon"
+	},
+	"polyvore": {
+		"kind": "site",
+		"name": "Polyvore"
+	},
+	"proboards": {
+		"kind": "site",
+		"name": "ProBoards"
+	},
+	"purikura": {
+		"kind": "software",
+		"status": "draft",
+		"name": "Purikura"
+	},
+	"qbee": {
+		"kind": "site",
+		"name": "Q*Bee",
+		"domains": [
+			"theqbee.net"
+		]
+	},
+	"r-hobbydrama": {
+		"kind": "site",
+		"name": "r/HobbyDrama",
+		"host": "reddit"
+	},
+	"r-internetmysteries": {
+		"kind": "site",
+		"name": "r/InternetMysteries",
+		"host": "reddit"
+	},
+	"r-neocities": {
+		"kind": "site",
+		"name": "r/neocities",
+		"host": "reddit"
+	},
+	"randys-icon-bazaar": {
+		"kind": "site",
+		"name": "Randy's Icon Bazaar",
+		"domains": [
+			"asd.gsfc.nasa.gov"
+		]
+	},
+	"rc-gif-manor": {
+		"kind": "site",
+		"name": "R&C Gif Manor",
+		"host": "tripod"
+	},
+	"reddit": {
+		"kind": "site",
+		"name": "Reddit",
+		"domains": [
+			"reddit.com"
+		]
+	},
+	"reef": {
+		"kind": "handle",
+		"name": "Reef"
+	},
+	"reef-kingdra": {
+		"kind": "site",
+		"name": "reef.kingdra.net",
+		"owner": "reef",
+		"domains": [
+			"reef.kingdra.net"
+		]
+	},
+	"robin": {
+		"kind": "person",
+		"name": "Robin"
+	},
+	"roccooaction": {
+		"kind": "handle",
+		"name": "roccooaction",
+		"host": "geocities"
+	},
+	"ryan-ford": {
+		"kind": "person",
+		"name": "Ryan Ford"
+	},
+	"ryandavi": {
+		"kind": "site",
+		"name": "ryandavi.com",
+		"domains": [
+			"ryandavi.com"
+		]
+	},
+	"saffy": {
+		"kind": "handle",
+		"name": "Saffy"
+	},
+	"sailor-moon": {
+		"kind": "work",
+		"name": "Sailor Moon"
+	},
+	"salvaged": {
+		"kind": "site",
+		"name": "Salvaged",
+		"domains": [
+			"salvaged.nu"
+		]
+	},
+	"sayclub": {
+		"kind": "site",
+		"name": "SayClub"
+	},
+	"scar-ayres": {
+		"kind": "person",
+		"name": "Scar Ayres"
+	},
+	"scarmander": {
+		"kind": "handle",
+		"name": "Scarmander"
+	},
+	"scented-angels": {
+		"kind": "site",
+		"name": "Scented Angels"
+	},
+	"scented-minty": {
+		"kind": "site",
+		"name": "scented.minty.nu",
+		"domains": [
+			"scented.minty.nu"
+		]
+	},
+	"scri8e": {
+		"kind": "site",
+		"name": "scri8e.com",
+		"domains": [
+			"scri8e.com"
+		]
+	},
+	"sega": {
+		"kind": "org",
+		"name": "Sega"
+	},
+	"seira55": {
+		"kind": "handle",
+		"name": "seira55",
+		"host": "tripod"
+	},
+	"selena-gomez": {
+		"kind": "person",
+		"name": "Selena Gomez"
+	},
+	"serebii-forums": {
+		"kind": "site",
+		"name": "forums.serebii.net",
+		"domains": [
+			"forums.serebii.net"
+		]
+	},
+	"serilly": {
+		"kind": "handle",
+		"name": "Serilly",
+		"host": "neocities"
+	},
+	"shattered-innocents": {
+		"kind": "site",
+		"name": "Shattered Innocents",
+		"domains": [
+			"shatteredinnocents.com"
+		]
+	},
+	"sheezy-art": {
+		"kind": "site",
+		"name": "sheezy.art",
+		"domains": [
+			"sheezy.art"
+		]
+	},
+	"shutterstock": {
+		"kind": "org",
+		"name": "Shutterstock"
+	},
+	"skype": {
+		"kind": "software",
+		"name": "Skype"
+	},
+	"smhart": {
+		"kind": "handle",
+		"name": "SMHart",
+		"host": "geocities"
+	},
+	"snapchat": {
+		"kind": "site",
+		"name": "Snapchat"
+	},
+	"sony": {
+		"kind": "org",
+		"name": "Sony"
+	},
+	"sparkelies": {
+		"kind": "site",
+		"name": "Sparkelies",
+		"host": "tripod",
+		"owner": "dan-411"
+	},
+	"sparkling-dots": {
+		"kind": "site",
+		"name": "Sparkling Dots",
+		"host": "angelfire"
+	},
+	"specific-media": {
+		"kind": "org",
+		"name": "Specific Media"
+	},
+	"spiders-web": {
+		"kind": "site",
+		"name": "Spider's Web Tutorials",
+		"aliases": [
+			"Spider's Web"
+		],
+		"domains": [
+			"coolcherrycream.com"
+		]
+	},
+	"spruisious": {
+		"kind": "handle",
+		"name": "spruisious",
+		"host": "reddit"
+	},
+	"squiby": {
+		"kind": "site",
+		"name": "Squiby"
+	},
+	"ssense": {
+		"kind": "org",
+		"name": "SSENSE"
+	},
+	"steve-wilhite": {
+		"kind": "person",
+		"name": "Steve Wilhite",
+		"gloss": "The computer scientist who led the CompuServe team that created GIF"
+	},
+	"stinkywetdog": {
+		"kind": "handle",
+		"name": "StinkyWetDog",
+		"host": "wtv-zone"
+	},
+	"summitgroup": {
+		"kind": "handle",
+		"name": "summitgroup",
+		"host": "deviantart"
+	},
+	"sweet-and-low": {
+		"kind": "site",
+		"name": "Sweet and Low Tutorials",
+		"aliases": [
+			"Sweet and Low"
+		]
+	},
+	"tagboard": {
+		"kind": "site",
+		"name": "TagBoard"
+	},
+	"tapatalk": {
+		"kind": "org",
+		"name": "Tapatalk"
+	},
+	"teahouse-mb": {
+		"kind": "site",
+		"name": "Teahouse MB"
+	},
+	"teleportacia": {
+		"kind": "site",
+		"name": "teleportacia.org",
+		"domains": [
+			"teleportacia.org"
+		]
+	},
+	"tenor": {
+		"kind": "site",
+		"name": "Tenor",
+		"domains": [
+			"tenor.com"
+		],
+		"gloss": "A GIF search platform whose public API Google discontinued on 30 June 2026; Tenor's own apps and Google integrations remain available"
+	},
+	"the-doll-palace": {
+		"kind": "site",
+		"name": "The Doll Palace",
+		"domains": [
+			"thedollpalace.com"
+		]
+	},
+	"the-fanlistings-network": {
+		"kind": "site",
+		"name": "The Fanlistings Network",
+		"domains": [
+			"thefanlistings.org"
+		]
+	},
+	"the-palace": {
+		"kind": "site",
+		"name": "The Palace",
+		"domains": [
+			"thepalace.com"
+		]
+	},
+	"the-quilting-bee": {
+		"kind": "site",
+		"name": "The Quilting Bee"
+	},
+	"the-vault": {
+		"kind": "site",
+		"name": "The Vault"
+	},
+	"thewebbedfeat": {
+		"kind": "handle",
+		"name": "thewebbedfeat",
+		"host": "geocities"
+	},
+	"tinypic": {
+		"kind": "site",
+		"name": "TinyPic",
+		"domains": [
+			"tinypic.com"
+		],
+		"gloss": "A free image host popular in the mid-2000s; it closed in 2019"
+	},
+	"tira": {
+		"kind": "handle",
+		"name": "Tira"
+	},
+	"toasterstoasttoast": {
+		"kind": "handle",
+		"name": "toasterstoasttoast",
+		"host": "deviantart"
+	},
+	"tripod": {
+		"kind": "site",
+		"name": "Tripod",
+		"domains": [
+			"tripod.com"
+		],
+		"closed": "host-closed",
+		"gloss": "A web hosting service owned by Lycos; its remaining sites went offline in 2026"
+	},
+	"troy-mich": {
+		"kind": "handle",
+		"name": "Troy-Mich"
+	},
+	"tumblr": {
+		"kind": "site",
+		"name": "Tumblr",
+		"domains": [
+			"tumblr.com"
+		],
+		"gloss": "A microblogging and social-networking platform launched in 2007"
+	},
+	"tutorialespsppirlilla": {
+		"kind": "handle",
+		"name": "tutorialespsppirlilla",
+		"host": "geocities"
+	},
+	"twilight": {
+		"kind": "work",
+		"name": "Twilight"
+	},
+	"twitter": {
+		"kind": "site",
+		"name": "Twitter"
+	},
+	"ulrich-leive": {
+		"kind": "person",
+		"name": "Ulrich Leive",
+		"host": "geocities"
+	},
+	"upsited": {
+		"kind": "site",
+		"name": "Upsited"
+	},
+	"urbanizeddork": {
+		"kind": "handle",
+		"name": "urbanizedDORK",
+		"host": "geocities"
+	},
+	"usenet": {
+		"kind": "site",
+		"name": "Usenet"
+	},
+	"valenth": {
+		"kind": "site",
+		"name": "Valenth"
+	},
+	"vegasgal": {
+		"kind": "handle",
+		"name": "VegasGal",
+		"aliases": [
+			"Vegasgal"
+		],
+		"host": "angelfire"
+	},
+	"verizon": {
+		"kind": "org",
+		"name": "Verizon"
+	},
+	"verticalscope": {
+		"kind": "org",
+		"name": "VerticalScope"
+	},
+	"vine": {
+		"kind": "site",
+		"name": "Vine"
+	},
+	"vistaprint": {
+		"kind": "org",
+		"name": "Vistaprint"
+	},
+	"w3c": {
+		"kind": "org",
+		"name": "World Wide Web Consortium (W3C)",
+		"aliases": [
+			"W3C"
+		]
+	},
+	"water117720032001": {
+		"kind": "handle",
+		"name": "water117720032001",
+		"host": "geocities"
+	},
+	"wayback-machine": {
+		"kind": "site",
+		"name": "Wayback Machine"
+	},
+	"we-heart-it": {
+		"kind": "site",
+		"name": "We Heart It"
+	},
+	"web-badges-world": {
+		"kind": "site",
+		"name": "web.badges.world",
+		"domains": [
+			"web.badges.world"
+		]
+	},
+	"webmagick": {
+		"kind": "site",
+		"name": "Webmagick",
+		"host": "tripod"
+	},
+	"webring": {
+		"kind": "site",
+		"name": "WebRing",
+		"domains": [
+			"webring.com"
+		]
+	},
+	"webs": {
+		"kind": "site",
+		"name": "Webs"
+	},
+	"webtv": {
+		"kind": "site",
+		"name": "WebTV",
+		"icon": "wtv-zone"
+	},
+	"webwench": {
+		"kind": "site",
+		"name": "WebWench Graphics & Design",
+		"domains": [
+			"webwenchdesign.com"
+		]
+	},
+	"whatsapp": {
+		"kind": "site",
+		"name": "WhatsApp",
+		"gloss": "An instant-messaging application used around the world"
+	},
+	"whisper": {
+		"kind": "handle",
+		"name": "Whisper"
+	},
+	"whispers-web-works": {
+		"kind": "site",
+		"name": "Whisper's Web Works"
+	},
+	"whisperscorner": {
+		"kind": "site",
+		"name": "whisperscorner.com",
+		"domains": [
+			"whisperscorner.com"
+		]
+	},
+	"whowhere": {
+		"kind": "site",
+		"name": "WhoWhere"
+	},
+	"wikipedia": {
+		"kind": "org",
+		"name": "Wikipedia"
+	},
+	"windows": {
+		"kind": "software",
+		"name": "Windows",
+		"aliases": [
+			"Windows 95"
+		]
+	},
+	"world-wide-web": {
+		"kind": "site",
+		"status": "draft",
+		"name": "World Wide Web"
+	},
+	"worldwideweb-browser": {
+		"kind": "software",
+		"name": "WorldWideWeb / Nexus"
+	},
+	"wtv-zone": {
+		"kind": "site",
+		"name": "WTV-Zone",
+		"domains": [
+			"wtv-zone.com"
+		],
+		"closed": "domain-repurposed"
+	},
+	"x": {
+		"kind": "site",
+		"name": "X"
+	},
+	"xandra": {
+		"kind": "site",
+		"name": "xandra.cc",
+		"domains": [
+			"xandra.cc"
+		]
+	},
+	"xanga": {
+		"kind": "site",
+		"name": "Xanga",
+		"gloss": "A blogging and social-networking service popular in the 2000s whose journals could be heavily customized with layouts, images, and HTML"
+	},
+	"xdancingladyx": {
+		"kind": "handle",
+		"name": "xdancingladyx",
+		"host": "geocities"
+	},
+	"yahoo": {
+		"kind": "org",
+		"name": "Yahoo",
+		"aliases": [
+			"Yahoo!"
+		]
+	},
+	"yahoo-groups": {
+		"kind": "site",
+		"name": "Yahoo! Groups",
+		"aliases": [
+			"Yahoo Groups"
+		]
+	},
+	"yahoo-japan": {
+		"kind": "org",
+		"name": "Yahoo! Japan"
+	},
+	"yahoo-messenger": {
+		"kind": "site",
+		"name": "Yahoo! Messenger"
+	},
+	"yahoo-photos": {
+		"kind": "site",
+		"name": "Yahoo! Photos"
+	},
+	"yahoo-search": {
+		"kind": "site",
+		"name": "Yahoo! Search"
+	},
+	"yesterweb-zine": {
+		"kind": "site",
+		"name": "zine.yesterweb.org",
+		"domains": [
+			"zine.yesterweb.org"
+		]
+	},
+	"youtube": {
+		"kind": "site",
+		"name": "YouTube"
+	},
+	"yuku": {
+		"kind": "site",
+		"name": "Yuku"
+	},
+	"zak-a-doodle-graphics": {
+		"kind": "site",
+		"name": "Zak-A-Doodle Graphics",
+		"host": "tripod"
+	},
+	"zathyus": {
+		"kind": "org",
+		"name": "Zathyus Networks"
+	},
+	"zetaboards": {
+		"kind": "site",
+		"name": "ZetaBoards"
+	},
+	"zilla774": {
+		"kind": "handle",
+		"name": "zilla774",
+		"host": "deviantart"
 	}
 }

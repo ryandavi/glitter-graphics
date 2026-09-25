@@ -147,7 +147,14 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 
 ## Content modals
 
-`modals/*.html` are loaded into document modals at runtime. The guide and the article pages (`guide.html`, `history.html`, `personal-web.html`, and any local-only pages) are generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. The guide's `{tool:…}`, `{tool-icon:…}`, `{panel:…}` and `{shortcuts}` tokens are filled from the app registries at build time, and `tests/unit/shortcut-coverage.js` fails when the built guide is stale. The article lint (`modal-lint`) doesn't apply to the guide. `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only) governs the history page's voice and citations.
+`modals/*.html` are loaded into the modals at runtime. Every one (guide, welcome, about, preservation, history, personal-web, and any local-only pages) is generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. How to write a page is in [content/AUTHORING.md](../content/AUTHORING.md).
+
+- **Registries.** `content/entities.json` holds every named site, program, organization, work, person and handle, each with a `kind`; `content/sources.json` holds every citation, shared across pages. `tools/content-registry.js` loads and validates both.
+- **Rendering.** `{@slug}` renders by kind: sites get an icon on their first mention per section, glosses become a tooltip on the first mention per page, handles and hosted sites get a hover card (`js/ui/tooltip.js`, reading `js/generated/entities-data.js`). `{references}` renders a page's citations in first-citation order.
+- **Generated files.** Each build also writes `css/generated/_entity-icons.scss` (icon variables, handle accents and domain rules, used by `_modals.scss`), `js/generated/entities-data.js` (names, kinds and relations for the hover cards and the Preservation timeline filter) and `.vscode/content.code-snippets`. `--check` fails when any of them is stale.
+- **Lint.** `tools/modal-lint.js` runs token and structure rules on every page, and the prose rules (em dash, bare dates, bare names) on the articles only.
+- The guide's `{ui-tool:…}`, `{ui-tool-icon:…}`, `{ui-panel:…}` and `{ui-shortcuts}` tokens are filled from the app registries at build time, and `tests/unit/shortcut-coverage.js` fails when the built guide is stale. `tests/unit/modal-build-unit.js` fails when any built page is stale or a timeline entity is missing from the registry.
+- `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only) governs the articles' voice and citations.
 
 ## Workers
 

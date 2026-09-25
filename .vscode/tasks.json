@@ -2,9 +2,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "lint modals",
+			"label": "watch modals",
+			"detail": "Rebuild modals on save; unknown slugs and sources warn instead of failing while drafting",
 			"type": "shell",
-			"command": "node tools/modal-lint.js",
+			"command": "node tools/build-modals.js --watch",
+			"isBackground": true,
+			"runOptions": { "runOn": "folderOpen" },
+			"presentation": { "reveal": "silent" },
 			"problemMatcher": {
 				"owner": "modal-lint",
 				"fileLocation": ["relative", "${workspaceFolder}"],
@@ -16,6 +20,11 @@
 					"severity": 4,
 					"code": 5,
 					"message": 6
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^watching content/src for modal changes$",
+					"endsPattern": "^watching content/src for modal changes$"
 				}
 			}
 		},
@@ -38,10 +47,10 @@
 			}
 		},
 		{
-			"label": "watch modals",
+			"label": "check modals",
+			"detail": "The commit gate: strict, and fails when a generated file is stale",
 			"type": "shell",
-			"command": "node tools/build-modals.js --watch",
-			"isBackground": true,
+			"command": "node tools/build-modals.js --check",
 			"problemMatcher": {
 				"owner": "modal-lint",
 				"fileLocation": ["relative", "${workspaceFolder}"],
@@ -53,13 +62,102 @@
 					"severity": 4,
 					"code": 5,
 					"message": 6
-				},
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": "^watching content/src for modal changes$",
-					"endsPattern": "^watching content/src for modal changes$"
 				}
 			}
+		},
+		{
+			"label": "modal todo",
+			"detail": "Every {?Name}, [@todo], draft entity and draft source",
+			"type": "shell",
+			"command": "node tools/build-modals.js --todo",
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				}
+			}
+		},
+		{
+			"label": "tag entities",
+			"detail": "Tag untagged names, first mention per section",
+			"type": "shell",
+			"command": "node tools/entities.js tag ${input:modalPage} --write",
+			"problemMatcher": []
+		},
+		{
+			"label": "find entity",
+			"type": "shell",
+			"command": "node tools/entities.js find \"${input:entityQuery}\"",
+			"problemMatcher": []
+		},
+		{
+			"label": "cite add",
+			"detail": "Add a draft source from a URL (Wayback URLs too)",
+			"type": "shell",
+			"command": "node tools/cite.js add \"${input:sourceUrl}\"",
+			"problemMatcher": []
+		},
+		{
+			"label": "check voice",
+			"detail": "Optional second pass: likely teasers, negation openers and kicker closers",
+			"type": "shell",
+			"command": "node tools/voice-check.js ${input:modalPage}",
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				}
+			}
+		},
+		{
+			"label": "lint modals",
+			"type": "shell",
+			"command": "node tools/modal-lint.js",
+			"problemMatcher": {
+				"owner": "modal-lint",
+				"fileLocation": ["relative", "${workspaceFolder}"],
+				"pattern": {
+					"regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) ([\\w-]+): (.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"code": 5,
+					"message": 6
+				}
+			}
+		}
+	],
+	"inputs": [
+		{
+			"id": "modalPage",
+			"type": "pickString",
+			"description": "Which page?",
+			"options": ["history", "personal-web", "aylana", "preservation", "about", "welcome", "guide"]
+		},
+		{
+			"id": "entityQuery",
+			"type": "promptString",
+			"description": "Name, alias or domain to look up"
+		},
+		{
+			"id": "sourceUrl",
+			"type": "promptString",
+			"description": "URL of the source (a Wayback capture URL works too)"
 		}
 	]
 }

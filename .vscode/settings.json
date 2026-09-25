@@ -1,6 +1,6 @@
 {
 	"highlight.regexes": {
-		"(\\{(?:site|user|person|tool|franchise|usenet):[^{}\\r\\n]*\\})": {
+		"(\\{@[a-z0-9-]+(?:\\|[^{}\\r\\n]*)?\\}|\\{\\?[^{}\\r\\n]*\\}|\\{usenet:[^{}\\r\\n]*\\})": {
 			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
 			"filterLanguageRegex": "html",
 			"decorations": [
@@ -43,6 +43,21 @@
 				}
 			]
 		},
+		"(\\{ui-(?:tool|tool-icon|panel):[^{}\\r\\n]*\\}|\\{ui-shortcuts\\})": {
+			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
+			"filterLanguageRegex": "html",
+			"decorations": [
+				{
+					"fontWeight": "bold",
+					"dark": {
+						"color": "#a5d66b"
+					},
+					"light": {
+						"color": "#4d7c0f"
+					}
+				}
+			]
+		},
 		"(\\[@[a-z0-9][a-z0-9-]*\\])": {
 			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
 			"filterLanguageRegex": "html",
@@ -61,7 +76,7 @@
 				}
 			]
 		},
-		"(\\{(?:ref [a-z0-9][a-z0-9-]*|/ref)\\})": {
+		"(\\{references(?::general)?\\}|\\[@todo:[^\\]\\r\\n]*\\])": {
 			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",
 			"filterLanguageRegex": "html",
 			"decorations": [

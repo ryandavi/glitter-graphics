@@ -24,6 +24,8 @@ const SUITES = [
 	{ file: 'unit/preview-export-twins.js', tags: ['unit', 'export'] },
 	{ file: 'parity/effect-combinatorial-parity.js', tags: ['export', 'effects'] },
 	{ file: 'unit/shortcut-coverage.js', tags: ['unit', 'panels'] },
+	{ file: 'unit/modal-build-unit.js', tags: ['unit', 'modals'] },
+	{ file: 'unit/modal-lint-unit.js', tags: ['unit', 'modals'] },
 	{ file: 'unit/hint-rules-verify.js', tags: ['unit', 'panels'] },
 	{ file: 'unit/notification-policy.js', tags: ['unit', 'panels'] },
 	{ file: 'ui/keyboard-shortcuts-verify.js', tags: ['panels'] },

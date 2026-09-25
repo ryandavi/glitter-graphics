@@ -20,6 +20,11 @@ const Input = (() => {
 	return state;
 })();
 
+// Plain tooltips carry data-tooltip; entity mentions in the document modals
+// carry data-card and get a small header (icon, name, kind, host) above any
+// gloss, filled from ENTITY_DATA (js/generated/entities-data.js).
+const TOOLTIP_TARGETS = '[data-tooltip], [data-card]';
+
 class TooltipManager {
 	constructor(options = {}) {
 		this.config = {
@@ -64,7 +69,51 @@ class TooltipManager {
 	}
 
 	attachTooltipListeners(container = document) {
-		container.querySelectorAll('[data-tooltip]').forEach(el => this.attachTo(el));
+		const targets = container.querySelectorAll(TOOLTIP_TARGETS);
+		targets.forEach(el => this.attachTo(el));
+		if (typeof ENTITY_DATA === 'undefined' && [...targets].some(el => 'card' in el.dataset)) {
+			loadScriptOnce('js/generated/entities-data.js?v=f94f8e2e').catch((error) => dbg('Entity data failed to load:', error));
+		}
+	}
+
+	// Header lines for an entity's hover card, or null when there is nothing
+	// beyond what the gloss already says.
+	entityCard(element) {
+		if (!('card' in element.dataset) || typeof ENTITY_DATA === 'undefined') return null;
+		const entity = ENTITY_DATA[element.dataset.entity];
+		if (!entity) return null;
+		const nameOf = slug => ENTITY_DATA[slug]?.name || slug;
+		const card = document.createElement('div');
+		card.className = 'tooltip-entity';
+		const header = document.createElement('div');
+		header.className = 'tooltip-entity-header';
+		const icon = entity.kind === 'site' ? entity.icon : ENTITY_DATA[entity.host]?.icon;
+		if (icon) {
+			const mark = document.createElement('span');
+			mark.className = 'tooltip-entity-icon';
+			mark.dataset.icon = icon;
+			header.append(mark);
+		}
+		const name = document.createElement('strong');
+		name.className = 'tooltip-entity-name';
+		name.textContent = entity.name;
+		const kind = document.createElement('span');
+		kind.className = 'tooltip-entity-kind';
+		kind.textContent = ENTITY_KIND_LABELS[entity.kind] || entity.kind;
+		header.append(name, kind);
+		card.append(header);
+		const facts = [];
+		if (entity.host) facts.push(`on ${nameOf(entity.host)}`);
+		if (entity.owner) facts.push(`by ${nameOf(entity.owner)}`);
+		if (entity.person) facts.push(`real name ${nameOf(entity.person)}`);
+		if (entity.handles?.length) facts.push(`also ${entity.handles.map(nameOf).join(', ')}`);
+		if (facts.length) {
+			const meta = document.createElement('div');
+			meta.className = 'tooltip-entity-meta';
+			meta.textContent = facts.join(' · ');
+			card.append(meta);
+		}
+		return card;
 	}
 
 	// Idempotent per-element setup — safe to call again for dynamically loaded content
@@ -130,7 +179,21 @@ class TooltipManager {
 
 		const tooltip = document.createElement('div');
 		tooltip.className = 'tooltip';
-		tooltip.textContent = element.dataset.tooltip;
+		const card = this.entityCard(element);
+		if (card) {
+			tooltip.classList.add('tooltip-has-entity');
+			tooltip.append(card);
+			if (element.dataset.tooltip) {
+				const gloss = document.createElement('div');
+				gloss.className = 'tooltip-entity-gloss';
+				gloss.textContent = element.dataset.tooltip;
+				tooltip.append(gloss);
+			}
+		} else if (element.dataset.tooltip) {
+			tooltip.textContent = element.dataset.tooltip;
+		} else {
+			return;
+		}
 
 		// Read overrides from data attributes, fallback to config
 		tooltip.dataset.placement = element.dataset.placement || this.config.placement;
@@ -282,7 +345,7 @@ class TooltipManager {
 	}
 
 	dismissAll() {
-		document.querySelectorAll('[data-tooltip]').forEach(el => {
+		document.querySelectorAll(TOOLTIP_TARGETS).forEach(el => {
 			if (el._tooltip) this.hide(el);
 		});
 	}

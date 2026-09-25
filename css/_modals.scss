@@ -1,4 +1,7 @@
+@use 'sass:list';
+@use 'sass:map';
 @use 'mixins' as *;
+@use 'generated/entity-icons';
 
 /* ===== MODAL ===== */
 body.modal-open {
@@ -1846,6 +1849,99 @@ body.modal-open {
 	}
 }
 
+/* ===== ENTITIES =====
+   Every {@slug} in content/src renders as .entity.entity-<kind> with
+   data-entity; the styling follows the kind, never the slug. Icons mark
+   places: the build puts data-icon on a site's first mention per section, and
+   css/generated/_entity-icons.scss maps each icon name to its file (a .svg is
+   a currentColor mask, a .color.svg is drawn as is). Global rather than
+   document-modal scoped because the welcome screen uses entities too. */
+@mixin entity-icon-glyph {
+	content: "";
+	display: inline-block;
+	width: .9em;
+	height: .9em;
+	margin-right: 0.3em;
+	margin-top: -0.3em;
+	vertical-align: middle;
+	background-color: var(--entity-icon-tint, transparent);
+	background-image: var(--entity-icon-image, none);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	mask-image: var(--entity-icon-mask, none);
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-image: var(--entity-icon-mask, none);
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+}
+
+// nowrap keeps an icon glued to its name instead of stranding on its own line.
+.entity[data-icon] {
+	white-space: nowrap;
+
+	&::before { @include entity-icon-glyph; }
+}
+
+// Sites, software and organizations read as plain words; titles of works
+// are italic by convention.
+.entity-work { font-style: italic; }
+
+// A handle is tinted so "spruisious" reads as a username, not a typo. The
+// Glitter Connection cast each get their own accent (from entities.json), so
+// aliases like Moon / Moondogee share one color.
+.entity-handle {
+	color: color-mix(in srgb, var(--color-accent) 40%, var(--color-text-primary));
+}
+
+.entity-handle.entity-accent {
+	color: color-mix(in srgb, var(--entity-accent) 75%, var(--color-text-primary));
+}
+
+// A mention with a hover card (handles, hosted sites) but no gloss: a faint
+// underline on hover says there is more to see.
+.entity[data-card]:not([data-tooltip]) {
+	text-decoration: underline dotted transparent;
+	text-underline-offset: 2px;
+	transition: text-decoration-color var(--transition-fast);
+
+	&:hover { text-decoration-color: currentColor; }
+}
+
+// Hover card (js/ui/tooltip.js): icon, name and kind above any gloss.
+.tooltip-entity-header {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+}
+
+.tooltip-entity-icon {
+	@include entity-icon-glyph;
+	flex: none;
+	margin: 0;
+}
+
+.tooltip-entity-kind,
+.tooltip-entity-meta {
+	opacity: 0.75;
+}
+
+.tooltip-entity-kind { margin-left: auto; }
+
+.tooltip-entity-gloss {
+	margin-top: var(--spacing-2xs);
+}
+
+// Written under --watch only: an unknown slug or source, so a draft can be
+// previewed. --check refuses to pass while one is left.
+.draft-marker {
+	text-decoration: underline wavy var(--color-warning);
+	text-underline-offset: 3px;
+}
+
 /* ===== DOCUMENT MODALS (About, History, Personal Web, Preservation) =====
    These share one prose/timeline/reference stylesheet since all use the same
    "long-form document" shape; only the content differs. A modal opts in with
@@ -1870,373 +1966,22 @@ body.modal-open {
 		&:focus-visible { color: var(--color-text-primary); }
 	}
 
-	// Online handles in prose (<span class="username" data-username="...">),
-	// tinted like a chip so "spruisious" reads as a username, not a typo.
-	// The Glitter Connection cast gets a fixed hue each so they're easy to
-	// follow through the origin story; data-username is the canonical handle,
-	// so aliases (Moon / Moondogee) share one color.
-	.person,
-	.username {
-		--username-hue: var(--color-text-primary);
-		padding: 0 0.25em;
-		border-radius: var(--radius-sm);
-		background-color: color-mix(in srgb, var(--username-hue) 8%, transparent);
-		white-space: nowrap;
-	}
-
-	a[data-username],
-	.username-cast {
-		color: color-mix(in srgb, var(--username-hue) 70%, var(--color-text-primary));
-		background-color: color-mix(in srgb, var(--username-hue) 16%, transparent);
-
-		&[data-username="mica"] { --username-hue: #2bb3a3; }
-		&[data-username="dan-411"] { --username-hue: #9b59d0; }
-		&[data-username="aylana"] { --username-hue: #e0559b; }
-		&[data-username="moondogee"] { --username-hue: #4a90e2; }
-	}
-
-	// Platform-brand icon before a name or site, set via data-platform="<slug>" (reuses the
-	// data-host vocabulary from .dead-link below: geocities, tripod, angelfire, wtv-zone,
-	// aol-hometown, homestead, plus every other named platform slug below). Applies to
-	// .username and .person (people), .site-name (a site, e.g. Sparkelies -> tripod,
-	// including when that site name is itself the text of a link - the link's href might
-	// go to a Wayback capture, but the icon is about what the named site was, not news
-	// the destination of this particular click), and .context (a first-use tooltip term
-	// that names a platform itself, e.g. the GeoCities/Angelfire/Tripod definitions).
-	// Driven by the $history-platform-icons map below (icon files aren't made for every
-	// slug yet, so an unmade one just stays invisible until its
-	// images/modal/history/platform-icons/<file>.svg exists) so adding a new platform
-	// anywhere on the page is one new map entry, not a hand-copied selector block -
-	// that hand-copying was exactly how "homestead" once silently lost its own icon.
-	$history-platform-icons: (
-		"geocities": "geocities",
-		"tripod": "tripod",
-		"angelfire": "angelfire",
-		"wtv-zone": "wtv-zone",
-		"webtv": "wtv-zone",
-		"msn-tv": "wtv-zone",
-		"aol-hometown": "aol-hometown",
-		"aol": "aol-hometown",
-		"reddit": "reddit",
-		"neocities": "neocities",
-		"deviantart": "deviantart",
-		"blingee": "blingee",
-	);
-
-	// Brand slugs that exist (data-platform is set on real spans) but don't have their own
-	// icon file drawn yet. Rather than sit invisible until then, each falls back to one
-	// shared "generic website" glyph (the same link.svg/mask treatment as
-	// other/independent below) so there's still *something* there - a placeholder category
-	// icon, not a blank. The moment a specific file like myspace.svg exists, move that one
-	// slug up into $history-platform-icons above (icon: "myspace") and it'll pick up its
-	// own mark instead, no HTML changes needed either way.
-	$history-website-defaults:
-		"homestead", "candybar", "myspace", "livejournal", "aim", "msn-messenger",
-		"freeservers", "the-palace", "cyworld", "sayclub", "netmarble", "hangame", "daum",
-		"buddy-buddy", "freechal", "wayback-machine", "msn", "yahoo", "hi5", "piczo", "lycos",
-		"tumblr", "whatsapp", "tenor", "giphy", "klipy", "boomspeed", "tinypic", "photobucket",
-		"compuserve", "microsoft", "neopets", "usenet", "xanga", "gaia-online", "qbee", "picmix",
-		"online-image-editor", "facebook", "gifcities", "goatcounter", "ko-fi",
-		"sony", "philips", "google", "twitter", "youtube", "wikipedia", "bauer",
-		"franchise", "tagboard", "cbox";
-
-	.username[data-platform]::before,
-	.person[data-platform]::before,
-	.site-name[data-platform]::before,
-	.context[data-platform]::before {
-		content: "";
-		display: inline-block;
-		width: .9em;
-		height: .9em;
-		margin-right: 0.3em;
-		margin-top: -0.3em;
-		vertical-align: middle;
-		background-image: var(--platform-icon);
-		background-size: contain;
-		background-repeat: no-repeat;
-		background-position: center;
-	}
-
-	@each $slug, $icon in $history-platform-icons {
-		.username[data-platform="#{$slug}"],
-		.person[data-platform="#{$slug}"],
-		.site-name[data-platform="#{$slug}"],
-		.context[data-platform="#{$slug}"] { --platform-icon: url("../images/modal/history/platform-icons/#{$icon}.svg"); }
-	}
-
-	// Software: a downloadable program or desktop tool (Paint Shop Pro, Animation Shop,
-	// ImageMagick, Fireworks, PageBuilder, Netscape...) rather than a site anyone was
-	// hosted on. One shared generic icon like "other"/"independent" rather than a brand
-	// mark per program, since there's no single visual identity to reuse the way a
-	// website has a logo.
-	.username[data-platform="tool"],
-	.person[data-platform="tool"],
-	.site-name[data-platform="tool"],
-	.context[data-platform="tool"] {
-		&::before {
-			background-image: none;
-			background-color: currentColor;
-			mask-image: url("../images/modal/history/platform-icons/tool.svg");
-			mask-size: contain;
-			mask-repeat: no-repeat;
-			mask-position: center;
-			-webkit-mask-image: url("../images/modal/history/platform-icons/tool.svg");
-			-webkit-mask-size: contain;
-			-webkit-mask-repeat: no-repeat;
-			-webkit-mask-position: center;
+	// Links whose text isn't an entity get the icon of the entity that owns
+	// their domain (a Wayback-wrapped URL still contains it). Links that are, or
+	// contain, an entity carry their own data-icon instead, and a direct image
+	// link gets the file-type marker below.
+	@each $icon, $spec in entity-icons.$domain-icons {
+		$selectors: ();
+		@each $domain in map.get($spec, domains) {
+			$selectors: list.append($selectors, '[href*="#{$domain}"]', $separator: comma);
 		}
-	}
+		a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is(#{$selectors}) {
+			--entity-icon-image: #{map.get($spec, image)};
+			--entity-icon-mask: #{map.get($spec, mask)};
+			--entity-icon-tint: #{map.get($spec, tint)};
+			white-space: nowrap;
 
-	@each $slug in $history-website-defaults {
-		.username[data-platform="#{$slug}"],
-		.person[data-platform="#{$slug}"],
-		.site-name[data-platform="#{$slug}"],
-		.context[data-platform="#{$slug}"] {
-			&::before {
-				background-image: none;
-				background-color: currentColor;
-				mask-image: url("../images/modal/history/platform-icons/link.svg");
-				mask-size: contain;
-				mask-repeat: no-repeat;
-				mask-position: center;
-				-webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-				-webkit-mask-size: contain;
-				-webkit-mask-repeat: no-repeat;
-				-webkit-mask-position: center;
-			}
-		}
-	}
-
-	// Two generic (non-brand) fallbacks, both rendered as a mask tinted with currentColor
-	// instead of a flat image so they follow whatever color the name/site already has
-	// (theme, dark mode, a cast member's username-cast hue) instead of being hardcoded
-	// to one fixed color that could disappear against a light or a dark background. The
-	// icon glyph depends on what kind of thing is being marked, not on the
-	// other/independent distinction itself:
-	// - .username/.person always get the person glyph (other.svg), because the thing
-	//   being named is a person either way - "independent" only means we also know
-	//   their own domain, it doesn't change what kind of entity Bemymind is.
-	// - .site-name/.context are never a person, so they always get the link glyph
-	//   (link.svg) instead, for "other" (nothing else known about this site) exactly
-	//   the same as "independent" (a confirmed URL) - a site with no evidence still
-	//   isn't a person, so it never gets the person glyph.
-	.username[data-platform="other"],
-	.username[data-platform="independent"],
-	.person[data-platform="other"],
-	.person[data-platform="independent"] {
-		&::before {
-			background-image: none;
-			background-color: currentColor;
-			mask-image: url("../images/modal/history/platform-icons/other.svg");
-			mask-size: contain;
-			mask-repeat: no-repeat;
-			mask-position: center;
-			-webkit-mask-image: url("../images/modal/history/platform-icons/other.svg");
-			-webkit-mask-size: contain;
-			-webkit-mask-repeat: no-repeat;
-			-webkit-mask-position: center;
-		}
-	}
-
-	.site-name[data-platform="other"],
-	.site-name[data-platform="independent"],
-	.context[data-platform="other"],
-	.context[data-platform="independent"] {
-		&::before {
-			background-image: none;
-			background-color: currentColor;
-			mask-image: url("../images/modal/history/platform-icons/link.svg");
-			mask-size: contain;
-			mask-repeat: no-repeat;
-			mask-position: center;
-			-webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-			-webkit-mask-size: contain;
-			-webkit-mask-repeat: no-repeat;
-			-webkit-mask-position: center;
-		}
-	}
-
-	// Same platform icons, applied automatically to a link's own text by matching its
-	// href, for links whose visible text is generic ("main index," "Clear Glitter," "its
-	// list of animations") rather than the name of the platform or site itself.
-	// [href*="domain"] matches the domain anywhere in the URL, so it still catches a
-	// Wayback-wrapped link (…/web/20040809212004/http://www.wtv-zone.com/…) the same as
-	// a live one. Scoped to domains this page already treats as a specific person or
-	// site's platform - the named hosts plus every independent domain already confirmed
-	// elsewhere on the page - not to every external link, so citations to Wikipedia,
-	// NASA, YouTube, and the like stay plain and this doesn't turn into a badge on
-	// literally every link on the page. :not([data-platform]):not(:has([data-platform]))
-	// backs off when the link (or a span nested inside it) already carries an explicit
-	// data-platform, so a manually tagged link never fights with this auto-detection; the
-	// image-extension exclusion hands off to the file-type marker below instead, so a
-	// direct .gif/.jpg link gets that icon rather than this one.
-	$history-platform-domains: (
-		"tripod.com": "tripod",
-		"geocities.com": "geocities",
-		"angelfire.com": "angelfire",
-		"wtv-zone.com": "wtv-zone",
-		"members.aol.com": "aol-hometown",
-		"reddit.com": "reddit",
-		"neocities.org": "neocities",
-		"deviantart.com": "deviantart",
-		"blingee.com": "blingee",
-		// Same brand, different subdomain than the entries above (GeoCities-via-Yahoo,
-		// AOL's other hometown-pages subdomain) - not a separate platform.
-		"geocities.yahoo.com": "geocities",
-		"hometown.aol.com": "aol-hometown",
-	);
-	// Same "no dedicated icon drawn yet" situation as $history-website-defaults above, just
-	// for domains instead of data-platform spans: falls back to the shared link.svg mask.
-	// Move a domain up into $history-platform-domains once its brand icon exists. Also the
-	// catch-all for every other site/tool/service link on the page that isn't one of the
-	// five named hosts and isn't a citation to an institutional/encyclopedic source
-	// (Wikipedia, NASA's or Microsoft's own official pages, academic papers, press
-	// coverage, W3C specs) - those stay plain since they're being cited as evidence, not
-	// featured as a place someone made or used something. A community/preservation
-	// resource keeps its icon even when the domain that happens to host it looks
-	// institutional (Randy's Icon Bazaar living on a NASA subdomain, GRSites' mirror on a
-	// university server) because what's being linked is the resource, not the institution.
-	$history-independent-domains: (
-		"homestead.com",
-		"candybar.co.kr",
-		"myspace.com",
-		"livejournal.com",
-		"glitterfy.com",
-		"neopets.com",
-		"animationfactory.com",
-		"grsites.com",
-		"oocities.org",
-		"thefanlistings.org",
-		"banners.users1.50megs.com",
-		"blinkieobsession.freeservers.com",
-		"blinkie.world",
-		"glitter-graphics.com",
-		"geocities.ws",
-		"biglobe.ne.jp",
-		"addglitter.com",
-		"flickr.com",
-		"avpgalaxy.net",
-		"flamingtext.com",
-		"picmix.com",
-		"online-image-editor.com",
-		"facebook.com",
-		"tumblr.com",
-		"tenor.com",
-		"giphy.com",
-		"boomspeed.com",
-		"tinypic.com",
-		"photobucket.com",
-		"cardmaker.net",
-		"dafont.com",
-		"glittermaker.com",
-		"glitteryourway.com",
-		"myglitterromance.com",
-		"gifcities.org",
-		"deletedcity.net",
-		"nekoweb.org",
-		"web.badges.world",
-		"piczo.com",
-		"heta.moe",
-		"forums.serebii.net",
-		"palaceplanet.net",
-		"emeraldpink.com",
-		"elouai.com",
-		"sheezy.art",
-		"zine.yesterweb.org",
-		"jessicajournals.com",
-		"femicom.org",
-		"webring.com",
-		"asd.gsfc.nasa.gov",
-		"vlsicad.eecs.umich.edu",
-		"bemymind.com",
-		"catarific.com",
-		"whisperscorner.com",
-		"onyxsmiles.com",
-		"webwenchdesign.com",
-		"coolcherrycream.com",
-		"teleportacia.org",
-		"geocities.institute",
-		"cyp2.com",
-		"dollzmania.com",
-		"thedollpalace.com",
-		"funkychickens.com",
-		"lissaexplains.com",
-		"namaii.com",
-		"binkybeads.tk",
-		"scri8e.com",
-		"magistream.com",
-		"dragcave.net",
-		"pokefarm.com",
-		"neonlove.net",
-		"divergentrays.com",
-		"miss-behaved.net",
-		"xandra.cc",
-		"aromatic.wings.nu",
-		"phoophie.com",
-		"alwayslisa.com",
-		"salvaged.nu",
-		"blinkie.suppi.net",
-		"reef.kingdra.net",
-		"scented.minty.nu",
-		"bearblog.dev",
-		"theqbee.net",
-		"hexedpixels.com",
-		"blueyonder.co.uk",
-		"linuxenvy.com",
-		"leonardwojcik.com",
-		"cameronsworld.net",
-		"iconator.com",
-		"dazzlejunction.com",
-		"picmix.com",
-		"online-image-editor.com",
-		"thepalace.com",
-		"shatteredinnocents.com",
-		"goatcounter.com",
-		"ko-fi.com",
-		"ryandavi.com",
-	);
-
-	// nowrap on the link itself (not just the icon) keeps the icon glued to the link text -
-	// same fix, same reason, as .site-name's nowrap above: an inline-block icon can otherwise
-	// strand itself on its own line when the line breaks right after it.
-	@each $domain, $slug in $history-platform-domains {
-		a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="#{$domain}"] { white-space: nowrap; }
-		a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="#{$domain}"]::before {
-			content: "";
-			display: inline-block;
-			width: .9em;
-			height: .9em;
-			margin-right: 0.3em;
-			margin-top: -0.3em;
-			vertical-align: middle;
-			background-image: url("../images/modal/history/platform-icons/#{$slug}.svg");
-			background-size: contain;
-			background-repeat: no-repeat;
-			background-position: center;
-		}
-	}
-	@each $domain in $history-independent-domains {
-		a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="#{$domain}"] { white-space: nowrap; }
-		a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="#{$domain}"]::before {
-			content: "";
-			display: inline-block;
-			width: .9em;
-			height: .9em;
-			margin-right: 0.3em;
-			margin-top: -0.3em;
-			vertical-align: middle;
-			background-color: currentColor;
-			background-size: contain;
-			background-repeat: no-repeat;
-			background-position: center;
-			mask-image: url("../images/modal/history/platform-icons/link.svg");
-			mask-size: contain;
-			mask-repeat: no-repeat;
-			mask-position: center;
-			-webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-			-webkit-mask-size: contain;
-			-webkit-mask-repeat: no-repeat;
-			-webkit-mask-position: center;
+			&::before { @include entity-icon-glyph; }
 		}
 	}
 
@@ -2248,16 +1993,6 @@ body.modal-open {
 		}
 	}
 	
-
-	// Plain-text mentions of the sites in the provenance trail (Bring On The
-	// Glitter, Sparkelies, Flashites, WTV-Zone...). Links already carry .external.
-	// nowrap keeps a platform icon glued to its site name (see the data-platform rules
-	// above) instead of the icon stranding itself on its own line when the phrase wraps.
-	.site-name { font-style: italic; white-space: nowrap; }
-
-	// Real names (<span class="person" data-person="...">). Hook only: a real
-	// name already reads as a name, so it stays plain text.
-	.person { font-style: inherit; }
 
 	// Links whose original site is gone (Tripod, Angelfire, GeoCities...).
 	// Kept as text with the old URL in data-href, styled like a struck link.

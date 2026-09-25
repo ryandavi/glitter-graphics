@@ -8729,6 +8729,88 @@ body.is-resizing-panel canvas {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+[data-icon=angelfire] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/angelfire.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=aol-hometown] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/aol-hometown.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=blingee] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/blingee.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=deviantart] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/deviantart.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=geocities] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/geocities.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=link] {
+  --entity-icon-image: none;
+  --entity-icon-mask: url("../images/modal/history/platform-icons/link.svg");
+  --entity-icon-tint: currentColor;
+}
+
+[data-icon=neocities] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/neocities.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=reddit] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/reddit.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=tool] {
+  --entity-icon-image: none;
+  --entity-icon-mask: url("../images/modal/history/platform-icons/tool.svg");
+  --entity-icon-tint: currentColor;
+}
+
+[data-icon=tripod] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/tripod.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-icon=wtv-zone] {
+  --entity-icon-image: url("../images/modal/history/platform-icons/wtv-zone.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
+}
+
+[data-entity=aylana] {
+  --entity-accent: #e0559b;
+}
+
+[data-entity=dan-411] {
+  --entity-accent: #9b59d0;
+}
+
+[data-entity=mica] {
+  --entity-accent: #2bb3a3;
+}
+
+[data-entity=moondogee] {
+  --entity-accent: #4a90e2;
+}
+
 /* ===== MODAL ===== */
 body.modal-open {
   overflow: hidden;
@@ -10217,6 +10299,111 @@ body.modal-open {
   margin-inline: auto;
 }
 
+/* ===== ENTITIES =====
+   Every {@slug} in content/src renders as .entity.entity-<kind> with
+   data-entity; the styling follows the kind, never the slug. Icons mark
+   places: the build puts data-icon on a site's first mention per section, and
+   css/generated/_entity-icons.scss maps each icon name to its file (a .svg is
+   a currentColor mask, a .color.svg is drawn as is). Global rather than
+   document-modal scoped because the welcome screen uses entities too. */
+.entity[data-icon] {
+  white-space: nowrap;
+}
+.entity[data-icon]::before {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.3em;
+  margin-top: -0.3em;
+  vertical-align: middle;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  mask-image: var(--entity-icon-mask, none);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: var(--entity-icon-mask, none);
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.entity-work {
+  font-style: italic;
+}
+
+.entity-handle {
+  color: color-mix(in srgb, var(--color-accent) 40%, var(--color-text-primary));
+}
+
+.entity-handle.entity-accent {
+  color: color-mix(in srgb, var(--entity-accent) 75%, var(--color-text-primary));
+}
+
+.entity[data-card]:not([data-tooltip]) {
+  -webkit-text-decoration: underline dotted transparent;
+          text-decoration: underline dotted transparent;
+  text-underline-offset: 2px;
+  transition: text-decoration-color var(--transition-fast);
+}
+.entity[data-card]:not([data-tooltip]):hover {
+  text-decoration-color: currentColor;
+}
+
+.tooltip-entity-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.tooltip-entity-icon {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.3em;
+  margin-top: -0.3em;
+  vertical-align: middle;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  mask-image: var(--entity-icon-mask, none);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: var(--entity-icon-mask, none);
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  flex: none;
+  margin: 0;
+}
+
+.tooltip-entity-kind,
+.tooltip-entity-meta {
+  opacity: 0.75;
+}
+
+.tooltip-entity-kind {
+  margin-left: auto;
+}
+
+.tooltip-entity-gloss {
+  margin-top: var(--spacing-2xs);
+}
+
+.draft-marker {
+  -webkit-text-decoration: underline wavy var(--color-warning);
+          text-decoration: underline wavy var(--color-warning);
+  text-underline-offset: 3px;
+}
+
 /* ===== DOCUMENT MODALS (About, History, Personal Web, Preservation) =====
    These share one prose/timeline/reference stylesheet since all use the same
    "long-form document" shape; only the content differs. A modal opts in with
@@ -10234,3216 +10421,13 @@ body.modal-open {
 .modal-overlay.document-modal .doc-inline-link:hover, .modal-overlay.document-modal .doc-inline-link:focus-visible {
   color: var(--color-text-primary);
 }
-.modal-overlay.document-modal .person,
-.modal-overlay.document-modal .username {
-  --username-hue: var(--color-text-primary);
-  padding: 0 0.25em;
-  border-radius: var(--radius-sm);
-  background-color: color-mix(in srgb, var(--username-hue) 8%, transparent);
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="angelfire.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/angelfire.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a[data-username],
-.modal-overlay.document-modal .username-cast {
-  color: color-mix(in srgb, var(--username-hue) 70%, var(--color-text-primary));
-  background-color: color-mix(in srgb, var(--username-hue) 16%, transparent);
-}
-.modal-overlay.document-modal a[data-username][data-username=mica],
-.modal-overlay.document-modal .username-cast[data-username=mica] {
-  --username-hue: #2bb3a3;
-}
-.modal-overlay.document-modal a[data-username][data-username=dan-411],
-.modal-overlay.document-modal .username-cast[data-username=dan-411] {
-  --username-hue: #9b59d0;
-}
-.modal-overlay.document-modal a[data-username][data-username=aylana],
-.modal-overlay.document-modal .username-cast[data-username=aylana] {
-  --username-hue: #e0559b;
-}
-.modal-overlay.document-modal a[data-username][data-username=moondogee],
-.modal-overlay.document-modal .username-cast[data-username=moondogee] {
-  --username-hue: #4a90e2;
-}
-.modal-overlay.document-modal .username[data-platform]::before,
-.modal-overlay.document-modal .person[data-platform]::before,
-.modal-overlay.document-modal .site-name[data-platform]::before,
-.modal-overlay.document-modal .context[data-platform]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: var(--platform-icon);
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=geocities],
-.modal-overlay.document-modal .person[data-platform=geocities],
-.modal-overlay.document-modal .site-name[data-platform=geocities],
-.modal-overlay.document-modal .context[data-platform=geocities] {
-  --platform-icon: url("../images/modal/history/platform-icons/geocities.svg");
-}
-.modal-overlay.document-modal .username[data-platform=tripod],
-.modal-overlay.document-modal .person[data-platform=tripod],
-.modal-overlay.document-modal .site-name[data-platform=tripod],
-.modal-overlay.document-modal .context[data-platform=tripod] {
-  --platform-icon: url("../images/modal/history/platform-icons/tripod.svg");
-}
-.modal-overlay.document-modal .username[data-platform=angelfire],
-.modal-overlay.document-modal .person[data-platform=angelfire],
-.modal-overlay.document-modal .site-name[data-platform=angelfire],
-.modal-overlay.document-modal .context[data-platform=angelfire] {
-  --platform-icon: url("../images/modal/history/platform-icons/angelfire.svg");
-}
-.modal-overlay.document-modal .username[data-platform=wtv-zone],
-.modal-overlay.document-modal .person[data-platform=wtv-zone],
-.modal-overlay.document-modal .site-name[data-platform=wtv-zone],
-.modal-overlay.document-modal .context[data-platform=wtv-zone] {
-  --platform-icon: url("../images/modal/history/platform-icons/wtv-zone.svg");
-}
-.modal-overlay.document-modal .username[data-platform=webtv],
-.modal-overlay.document-modal .person[data-platform=webtv],
-.modal-overlay.document-modal .site-name[data-platform=webtv],
-.modal-overlay.document-modal .context[data-platform=webtv] {
-  --platform-icon: url("../images/modal/history/platform-icons/wtv-zone.svg");
-}
-.modal-overlay.document-modal .username[data-platform=msn-tv],
-.modal-overlay.document-modal .person[data-platform=msn-tv],
-.modal-overlay.document-modal .site-name[data-platform=msn-tv],
-.modal-overlay.document-modal .context[data-platform=msn-tv] {
-  --platform-icon: url("../images/modal/history/platform-icons/wtv-zone.svg");
-}
-.modal-overlay.document-modal .username[data-platform=aol-hometown],
-.modal-overlay.document-modal .person[data-platform=aol-hometown],
-.modal-overlay.document-modal .site-name[data-platform=aol-hometown],
-.modal-overlay.document-modal .context[data-platform=aol-hometown] {
-  --platform-icon: url("../images/modal/history/platform-icons/aol-hometown.svg");
-}
-.modal-overlay.document-modal .username[data-platform=aol],
-.modal-overlay.document-modal .person[data-platform=aol],
-.modal-overlay.document-modal .site-name[data-platform=aol],
-.modal-overlay.document-modal .context[data-platform=aol] {
-  --platform-icon: url("../images/modal/history/platform-icons/aol-hometown.svg");
-}
-.modal-overlay.document-modal .username[data-platform=reddit],
-.modal-overlay.document-modal .person[data-platform=reddit],
-.modal-overlay.document-modal .site-name[data-platform=reddit],
-.modal-overlay.document-modal .context[data-platform=reddit] {
-  --platform-icon: url("../images/modal/history/platform-icons/reddit.svg");
-}
-.modal-overlay.document-modal .username[data-platform=neocities],
-.modal-overlay.document-modal .person[data-platform=neocities],
-.modal-overlay.document-modal .site-name[data-platform=neocities],
-.modal-overlay.document-modal .context[data-platform=neocities] {
-  --platform-icon: url("../images/modal/history/platform-icons/neocities.svg");
-}
-.modal-overlay.document-modal .username[data-platform=deviantart],
-.modal-overlay.document-modal .person[data-platform=deviantart],
-.modal-overlay.document-modal .site-name[data-platform=deviantart],
-.modal-overlay.document-modal .context[data-platform=deviantart] {
-  --platform-icon: url("../images/modal/history/platform-icons/deviantart.svg");
-}
-.modal-overlay.document-modal .username[data-platform=blingee],
-.modal-overlay.document-modal .person[data-platform=blingee],
-.modal-overlay.document-modal .site-name[data-platform=blingee],
-.modal-overlay.document-modal .context[data-platform=blingee] {
-  --platform-icon: url("../images/modal/history/platform-icons/blingee.svg");
-}
-.modal-overlay.document-modal .username[data-platform=tool]::before,
-.modal-overlay.document-modal .person[data-platform=tool]::before,
-.modal-overlay.document-modal .site-name[data-platform=tool]::before,
-.modal-overlay.document-modal .context[data-platform=tool]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/tool.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/tool.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=homestead]::before,
-.modal-overlay.document-modal .person[data-platform=homestead]::before,
-.modal-overlay.document-modal .site-name[data-platform=homestead]::before,
-.modal-overlay.document-modal .context[data-platform=homestead]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=candybar]::before,
-.modal-overlay.document-modal .person[data-platform=candybar]::before,
-.modal-overlay.document-modal .site-name[data-platform=candybar]::before,
-.modal-overlay.document-modal .context[data-platform=candybar]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=myspace]::before,
-.modal-overlay.document-modal .person[data-platform=myspace]::before,
-.modal-overlay.document-modal .site-name[data-platform=myspace]::before,
-.modal-overlay.document-modal .context[data-platform=myspace]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=livejournal]::before,
-.modal-overlay.document-modal .person[data-platform=livejournal]::before,
-.modal-overlay.document-modal .site-name[data-platform=livejournal]::before,
-.modal-overlay.document-modal .context[data-platform=livejournal]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=aim]::before,
-.modal-overlay.document-modal .person[data-platform=aim]::before,
-.modal-overlay.document-modal .site-name[data-platform=aim]::before,
-.modal-overlay.document-modal .context[data-platform=aim]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=msn-messenger]::before,
-.modal-overlay.document-modal .person[data-platform=msn-messenger]::before,
-.modal-overlay.document-modal .site-name[data-platform=msn-messenger]::before,
-.modal-overlay.document-modal .context[data-platform=msn-messenger]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=freeservers]::before,
-.modal-overlay.document-modal .person[data-platform=freeservers]::before,
-.modal-overlay.document-modal .site-name[data-platform=freeservers]::before,
-.modal-overlay.document-modal .context[data-platform=freeservers]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=the-palace]::before,
-.modal-overlay.document-modal .person[data-platform=the-palace]::before,
-.modal-overlay.document-modal .site-name[data-platform=the-palace]::before,
-.modal-overlay.document-modal .context[data-platform=the-palace]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=cyworld]::before,
-.modal-overlay.document-modal .person[data-platform=cyworld]::before,
-.modal-overlay.document-modal .site-name[data-platform=cyworld]::before,
-.modal-overlay.document-modal .context[data-platform=cyworld]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=sayclub]::before,
-.modal-overlay.document-modal .person[data-platform=sayclub]::before,
-.modal-overlay.document-modal .site-name[data-platform=sayclub]::before,
-.modal-overlay.document-modal .context[data-platform=sayclub]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=netmarble]::before,
-.modal-overlay.document-modal .person[data-platform=netmarble]::before,
-.modal-overlay.document-modal .site-name[data-platform=netmarble]::before,
-.modal-overlay.document-modal .context[data-platform=netmarble]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=hangame]::before,
-.modal-overlay.document-modal .person[data-platform=hangame]::before,
-.modal-overlay.document-modal .site-name[data-platform=hangame]::before,
-.modal-overlay.document-modal .context[data-platform=hangame]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=daum]::before,
-.modal-overlay.document-modal .person[data-platform=daum]::before,
-.modal-overlay.document-modal .site-name[data-platform=daum]::before,
-.modal-overlay.document-modal .context[data-platform=daum]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=buddy-buddy]::before,
-.modal-overlay.document-modal .person[data-platform=buddy-buddy]::before,
-.modal-overlay.document-modal .site-name[data-platform=buddy-buddy]::before,
-.modal-overlay.document-modal .context[data-platform=buddy-buddy]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=freechal]::before,
-.modal-overlay.document-modal .person[data-platform=freechal]::before,
-.modal-overlay.document-modal .site-name[data-platform=freechal]::before,
-.modal-overlay.document-modal .context[data-platform=freechal]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=wayback-machine]::before,
-.modal-overlay.document-modal .person[data-platform=wayback-machine]::before,
-.modal-overlay.document-modal .site-name[data-platform=wayback-machine]::before,
-.modal-overlay.document-modal .context[data-platform=wayback-machine]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=msn]::before,
-.modal-overlay.document-modal .person[data-platform=msn]::before,
-.modal-overlay.document-modal .site-name[data-platform=msn]::before,
-.modal-overlay.document-modal .context[data-platform=msn]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=yahoo]::before,
-.modal-overlay.document-modal .person[data-platform=yahoo]::before,
-.modal-overlay.document-modal .site-name[data-platform=yahoo]::before,
-.modal-overlay.document-modal .context[data-platform=yahoo]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=hi5]::before,
-.modal-overlay.document-modal .person[data-platform=hi5]::before,
-.modal-overlay.document-modal .site-name[data-platform=hi5]::before,
-.modal-overlay.document-modal .context[data-platform=hi5]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=piczo]::before,
-.modal-overlay.document-modal .person[data-platform=piczo]::before,
-.modal-overlay.document-modal .site-name[data-platform=piczo]::before,
-.modal-overlay.document-modal .context[data-platform=piczo]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=lycos]::before,
-.modal-overlay.document-modal .person[data-platform=lycos]::before,
-.modal-overlay.document-modal .site-name[data-platform=lycos]::before,
-.modal-overlay.document-modal .context[data-platform=lycos]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=tumblr]::before,
-.modal-overlay.document-modal .person[data-platform=tumblr]::before,
-.modal-overlay.document-modal .site-name[data-platform=tumblr]::before,
-.modal-overlay.document-modal .context[data-platform=tumblr]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=whatsapp]::before,
-.modal-overlay.document-modal .person[data-platform=whatsapp]::before,
-.modal-overlay.document-modal .site-name[data-platform=whatsapp]::before,
-.modal-overlay.document-modal .context[data-platform=whatsapp]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=tenor]::before,
-.modal-overlay.document-modal .person[data-platform=tenor]::before,
-.modal-overlay.document-modal .site-name[data-platform=tenor]::before,
-.modal-overlay.document-modal .context[data-platform=tenor]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=giphy]::before,
-.modal-overlay.document-modal .person[data-platform=giphy]::before,
-.modal-overlay.document-modal .site-name[data-platform=giphy]::before,
-.modal-overlay.document-modal .context[data-platform=giphy]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=klipy]::before,
-.modal-overlay.document-modal .person[data-platform=klipy]::before,
-.modal-overlay.document-modal .site-name[data-platform=klipy]::before,
-.modal-overlay.document-modal .context[data-platform=klipy]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=boomspeed]::before,
-.modal-overlay.document-modal .person[data-platform=boomspeed]::before,
-.modal-overlay.document-modal .site-name[data-platform=boomspeed]::before,
-.modal-overlay.document-modal .context[data-platform=boomspeed]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=tinypic]::before,
-.modal-overlay.document-modal .person[data-platform=tinypic]::before,
-.modal-overlay.document-modal .site-name[data-platform=tinypic]::before,
-.modal-overlay.document-modal .context[data-platform=tinypic]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=photobucket]::before,
-.modal-overlay.document-modal .person[data-platform=photobucket]::before,
-.modal-overlay.document-modal .site-name[data-platform=photobucket]::before,
-.modal-overlay.document-modal .context[data-platform=photobucket]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=compuserve]::before,
-.modal-overlay.document-modal .person[data-platform=compuserve]::before,
-.modal-overlay.document-modal .site-name[data-platform=compuserve]::before,
-.modal-overlay.document-modal .context[data-platform=compuserve]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=microsoft]::before,
-.modal-overlay.document-modal .person[data-platform=microsoft]::before,
-.modal-overlay.document-modal .site-name[data-platform=microsoft]::before,
-.modal-overlay.document-modal .context[data-platform=microsoft]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=neopets]::before,
-.modal-overlay.document-modal .person[data-platform=neopets]::before,
-.modal-overlay.document-modal .site-name[data-platform=neopets]::before,
-.modal-overlay.document-modal .context[data-platform=neopets]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=usenet]::before,
-.modal-overlay.document-modal .person[data-platform=usenet]::before,
-.modal-overlay.document-modal .site-name[data-platform=usenet]::before,
-.modal-overlay.document-modal .context[data-platform=usenet]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=xanga]::before,
-.modal-overlay.document-modal .person[data-platform=xanga]::before,
-.modal-overlay.document-modal .site-name[data-platform=xanga]::before,
-.modal-overlay.document-modal .context[data-platform=xanga]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=gaia-online]::before,
-.modal-overlay.document-modal .person[data-platform=gaia-online]::before,
-.modal-overlay.document-modal .site-name[data-platform=gaia-online]::before,
-.modal-overlay.document-modal .context[data-platform=gaia-online]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=qbee]::before,
-.modal-overlay.document-modal .person[data-platform=qbee]::before,
-.modal-overlay.document-modal .site-name[data-platform=qbee]::before,
-.modal-overlay.document-modal .context[data-platform=qbee]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=picmix]::before,
-.modal-overlay.document-modal .person[data-platform=picmix]::before,
-.modal-overlay.document-modal .site-name[data-platform=picmix]::before,
-.modal-overlay.document-modal .context[data-platform=picmix]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=online-image-editor]::before,
-.modal-overlay.document-modal .person[data-platform=online-image-editor]::before,
-.modal-overlay.document-modal .site-name[data-platform=online-image-editor]::before,
-.modal-overlay.document-modal .context[data-platform=online-image-editor]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=facebook]::before,
-.modal-overlay.document-modal .person[data-platform=facebook]::before,
-.modal-overlay.document-modal .site-name[data-platform=facebook]::before,
-.modal-overlay.document-modal .context[data-platform=facebook]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=gifcities]::before,
-.modal-overlay.document-modal .person[data-platform=gifcities]::before,
-.modal-overlay.document-modal .site-name[data-platform=gifcities]::before,
-.modal-overlay.document-modal .context[data-platform=gifcities]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=goatcounter]::before,
-.modal-overlay.document-modal .person[data-platform=goatcounter]::before,
-.modal-overlay.document-modal .site-name[data-platform=goatcounter]::before,
-.modal-overlay.document-modal .context[data-platform=goatcounter]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=ko-fi]::before,
-.modal-overlay.document-modal .person[data-platform=ko-fi]::before,
-.modal-overlay.document-modal .site-name[data-platform=ko-fi]::before,
-.modal-overlay.document-modal .context[data-platform=ko-fi]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=sony]::before,
-.modal-overlay.document-modal .person[data-platform=sony]::before,
-.modal-overlay.document-modal .site-name[data-platform=sony]::before,
-.modal-overlay.document-modal .context[data-platform=sony]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=philips]::before,
-.modal-overlay.document-modal .person[data-platform=philips]::before,
-.modal-overlay.document-modal .site-name[data-platform=philips]::before,
-.modal-overlay.document-modal .context[data-platform=philips]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=google]::before,
-.modal-overlay.document-modal .person[data-platform=google]::before,
-.modal-overlay.document-modal .site-name[data-platform=google]::before,
-.modal-overlay.document-modal .context[data-platform=google]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=twitter]::before,
-.modal-overlay.document-modal .person[data-platform=twitter]::before,
-.modal-overlay.document-modal .site-name[data-platform=twitter]::before,
-.modal-overlay.document-modal .context[data-platform=twitter]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=youtube]::before,
-.modal-overlay.document-modal .person[data-platform=youtube]::before,
-.modal-overlay.document-modal .site-name[data-platform=youtube]::before,
-.modal-overlay.document-modal .context[data-platform=youtube]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=wikipedia]::before,
-.modal-overlay.document-modal .person[data-platform=wikipedia]::before,
-.modal-overlay.document-modal .site-name[data-platform=wikipedia]::before,
-.modal-overlay.document-modal .context[data-platform=wikipedia]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=bauer]::before,
-.modal-overlay.document-modal .person[data-platform=bauer]::before,
-.modal-overlay.document-modal .site-name[data-platform=bauer]::before,
-.modal-overlay.document-modal .context[data-platform=bauer]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=franchise]::before,
-.modal-overlay.document-modal .person[data-platform=franchise]::before,
-.modal-overlay.document-modal .site-name[data-platform=franchise]::before,
-.modal-overlay.document-modal .context[data-platform=franchise]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=tagboard]::before,
-.modal-overlay.document-modal .person[data-platform=tagboard]::before,
-.modal-overlay.document-modal .site-name[data-platform=tagboard]::before,
-.modal-overlay.document-modal .context[data-platform=tagboard]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=cbox]::before,
-.modal-overlay.document-modal .person[data-platform=cbox]::before,
-.modal-overlay.document-modal .site-name[data-platform=cbox]::before,
-.modal-overlay.document-modal .context[data-platform=cbox]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .username[data-platform=other]::before,
-.modal-overlay.document-modal .username[data-platform=independent]::before,
-.modal-overlay.document-modal .person[data-platform=other]::before,
-.modal-overlay.document-modal .person[data-platform=independent]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/other.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/other.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal .site-name[data-platform=other]::before,
-.modal-overlay.document-modal .site-name[data-platform=independent]::before,
-.modal-overlay.document-modal .context[data-platform=other]::before,
-.modal-overlay.document-modal .context[data-platform=independent]::before {
-  background-image: none;
-  background-color: currentColor;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tripod.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tripod.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/tripod.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/geocities.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="angelfire.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="angelfire.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/angelfire.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="wtv-zone.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="wtv-zone.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/wtv-zone.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="members.aol.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="members.aol.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/aol-hometown.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="reddit.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="reddit.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/reddit.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="neocities.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="neocities.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/neocities.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="deviantart.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="deviantart.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/deviantart.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blingee.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blingee.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/blingee.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.yahoo.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.yahoo.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/geocities.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="hometown.aol.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="hometown.aol.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-image: url("../images/modal/history/platform-icons/aol-hometown.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="homestead.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="homestead.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="candybar.co.kr"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="candybar.co.kr"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="myspace.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="myspace.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="livejournal.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="livejournal.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glitterfy.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glitterfy.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="neopets.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="neopets.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="animationfactory.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="animationfactory.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="grsites.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="grsites.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="oocities.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="oocities.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="thefanlistings.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="thefanlistings.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="banners.users1.50megs.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="banners.users1.50megs.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blinkieobsession.freeservers.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blinkieobsession.freeservers.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blinkie.world"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blinkie.world"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glitter-graphics.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glitter-graphics.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.ws"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.ws"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="biglobe.ne.jp"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="biglobe.ne.jp"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="addglitter.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="addglitter.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="flickr.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="flickr.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="avpgalaxy.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="avpgalaxy.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="flamingtext.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="flamingtext.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="picmix.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="picmix.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="online-image-editor.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="online-image-editor.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="facebook.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="facebook.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tumblr.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tumblr.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tenor.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tenor.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="giphy.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="giphy.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="boomspeed.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="boomspeed.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tinypic.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="tinypic.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="photobucket.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="photobucket.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="cardmaker.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="cardmaker.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dafont.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dafont.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glittermaker.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glittermaker.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glitteryourway.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="glitteryourway.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="myglitterromance.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="myglitterromance.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="gifcities.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="gifcities.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="deletedcity.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="deletedcity.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="nekoweb.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="nekoweb.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="web.badges.world"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="web.badges.world"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="piczo.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="piczo.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="heta.moe"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="heta.moe"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="forums.serebii.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="forums.serebii.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="palaceplanet.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="palaceplanet.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="emeraldpink.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="emeraldpink.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="elouai.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="elouai.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="sheezy.art"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="sheezy.art"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="zine.yesterweb.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="zine.yesterweb.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="jessicajournals.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="jessicajournals.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="femicom.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="femicom.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="webring.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="webring.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="asd.gsfc.nasa.gov"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="asd.gsfc.nasa.gov"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="vlsicad.eecs.umich.edu"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="vlsicad.eecs.umich.edu"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="bemymind.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="bemymind.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="catarific.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="catarific.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="whisperscorner.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="whisperscorner.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="onyxsmiles.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="onyxsmiles.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="webwenchdesign.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="webwenchdesign.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="coolcherrycream.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="coolcherrycream.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="teleportacia.org"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="teleportacia.org"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.institute"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="geocities.institute"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="cyp2.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="cyp2.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dollzmania.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dollzmania.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="thedollpalace.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="thedollpalace.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="funkychickens.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="funkychickens.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="lissaexplains.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="lissaexplains.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="namaii.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="namaii.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="binkybeads.tk"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="binkybeads.tk"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="scri8e.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="scri8e.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="magistream.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="magistream.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dragcave.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dragcave.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="pokefarm.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="pokefarm.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="neonlove.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="neonlove.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="divergentrays.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="divergentrays.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="miss-behaved.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="miss-behaved.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="xandra.cc"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="xandra.cc"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="aromatic.wings.nu"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="aromatic.wings.nu"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="phoophie.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="phoophie.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="alwayslisa.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="alwayslisa.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="salvaged.nu"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="salvaged.nu"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blinkie.suppi.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blinkie.suppi.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="reef.kingdra.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="reef.kingdra.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="scented.minty.nu"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="scented.minty.nu"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="bearblog.dev"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="bearblog.dev"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="theqbee.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="theqbee.net"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="hexedpixels.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="hexedpixels.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blueyonder.co.uk"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="blueyonder.co.uk"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="linuxenvy.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="linuxenvy.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="leonardwojcik.com"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="leonardwojcik.com"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.9em;
-  height: 0.9em;
-  margin-right: 0.3em;
-  margin-top: -0.3em;
-  vertical-align: middle;
-  background-color: currentColor;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="cameronsworld.net"] {
-  white-space: nowrap;
-}
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="cameronsworld.net"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="angelfire.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13451,23 +10435,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="iconator.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="hometown.aol.com"], [href*="members.aol.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/aol-hometown.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="iconator.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="hometown.aol.com"], [href*="members.aol.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13475,23 +10463,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dazzlejunction.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="blingee.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/blingee.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="dazzlejunction.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="blingee.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13499,23 +10491,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="picmix.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="deviantart.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/deviantart.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="picmix.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="deviantart.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13523,23 +10519,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="online-image-editor.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="geocities.com"], [href*="geocities.yahoo.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/geocities.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="online-image-editor.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="geocities.com"], [href*="geocities.yahoo.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13547,23 +10547,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="thepalace.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="addglitter.com"], [href*="alwayslisa.com"], [href*="animationfactory.com"], [href*="aromatic.wings.nu"], [href*="asd.gsfc.nasa.gov"], [href*="avpgalaxy.net"], [href*="banners.users1.50megs.com"], [href*="bearblog.dev"], [href*="bemymind.com"], [href*="biglobe.ne.jp"], [href*="binkybeads.tk"], [href*="blinkie.suppi.net"], [href*="blinkie.world"], [href*="blinkieobsession.freeservers.com"], [href*="blueyonder.co.uk"], [href*="boomspeed.com"], [href*="cameronsworld.net"], [href*="candybar.co.kr"], [href*="cardmaker.net"], [href*="catarific.com"], [href*="coolcherrycream.com"], [href*="cyp2.com"], [href*="dafont.com"], [href*="dazzlejunction.com"], [href*="deletedcity.net"], [href*="divergentrays.com"], [href*="dollzmania.com"], [href*="dragcave.net"], [href*="elouai.com"], [href*="emeraldpink.com"], [href*="facebook.com"], [href*="femicom.org"], [href*="flamingtext.com"], [href*="flickr.com"], [href*="forums.serebii.net"], [href*="funkychickens.com"], [href*="geocities.institute"], [href*="geocities.ws"], [href*="gifcities.org"], [href*="giphy.com"], [href*="glitter-graphics.com"], [href*="glitterfy.com"], [href*="glittermaker.com"], [href*="glitteryourway.com"], [href*="goatcounter.com"], [href*="grsites.com"], [href*="heta.moe"], [href*="hexedpixels.com"], [href*="homestead.com"], [href*="iconator.com"], [href*="jessicajournals.com"], [href*="ko-fi.com"], [href*="leonardwojcik.com"], [href*="linuxenvy.com"], [href*="lissaexplains.com"], [href*="livejournal.com"], [href*="magistream.com"], [href*="miss-behaved.net"], [href*="myglitterromance.com"], [href*="myspace.com"], [href*="namaii.com"], [href*="nekoweb.org"], [href*="neonlove.net"], [href*="neopets.com"], [href*="online-image-editor.com"], [href*="onyxsmiles.com"], [href*="oocities.org"], [href*="palaceplanet.net"], [href*="phoophie.com"], [href*="photobucket.com"], [href*="picmix.com"], [href*="piczo.com"], [href*="pokefarm.com"], [href*="reef.kingdra.net"], [href*="ryandavi.com"], [href*="salvaged.nu"], [href*="scented.minty.nu"], [href*="scri8e.com"], [href*="shatteredinnocents.com"], [href*="sheezy.art"], [href*="teleportacia.org"], [href*="tenor.com"], [href*="thedollpalace.com"], [href*="thefanlistings.org"], [href*="thepalace.com"], [href*="theqbee.net"], [href*="tinypic.com"], [href*="tumblr.com"], [href*="vlsicad.eecs.umich.edu"], [href*="web.badges.world"], [href*="webring.com"], [href*="webwenchdesign.com"], [href*="whisperscorner.com"], [href*="xandra.cc"], [href*="zine.yesterweb.org"]) {
+  --entity-icon-image: none;
+  --entity-icon-mask: url("../images/modal/history/platform-icons/link.svg");
+  --entity-icon-tint: currentColor;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="thepalace.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="addglitter.com"], [href*="alwayslisa.com"], [href*="animationfactory.com"], [href*="aromatic.wings.nu"], [href*="asd.gsfc.nasa.gov"], [href*="avpgalaxy.net"], [href*="banners.users1.50megs.com"], [href*="bearblog.dev"], [href*="bemymind.com"], [href*="biglobe.ne.jp"], [href*="binkybeads.tk"], [href*="blinkie.suppi.net"], [href*="blinkie.world"], [href*="blinkieobsession.freeservers.com"], [href*="blueyonder.co.uk"], [href*="boomspeed.com"], [href*="cameronsworld.net"], [href*="candybar.co.kr"], [href*="cardmaker.net"], [href*="catarific.com"], [href*="coolcherrycream.com"], [href*="cyp2.com"], [href*="dafont.com"], [href*="dazzlejunction.com"], [href*="deletedcity.net"], [href*="divergentrays.com"], [href*="dollzmania.com"], [href*="dragcave.net"], [href*="elouai.com"], [href*="emeraldpink.com"], [href*="facebook.com"], [href*="femicom.org"], [href*="flamingtext.com"], [href*="flickr.com"], [href*="forums.serebii.net"], [href*="funkychickens.com"], [href*="geocities.institute"], [href*="geocities.ws"], [href*="gifcities.org"], [href*="giphy.com"], [href*="glitter-graphics.com"], [href*="glitterfy.com"], [href*="glittermaker.com"], [href*="glitteryourway.com"], [href*="goatcounter.com"], [href*="grsites.com"], [href*="heta.moe"], [href*="hexedpixels.com"], [href*="homestead.com"], [href*="iconator.com"], [href*="jessicajournals.com"], [href*="ko-fi.com"], [href*="leonardwojcik.com"], [href*="linuxenvy.com"], [href*="lissaexplains.com"], [href*="livejournal.com"], [href*="magistream.com"], [href*="miss-behaved.net"], [href*="myglitterromance.com"], [href*="myspace.com"], [href*="namaii.com"], [href*="nekoweb.org"], [href*="neonlove.net"], [href*="neopets.com"], [href*="online-image-editor.com"], [href*="onyxsmiles.com"], [href*="oocities.org"], [href*="palaceplanet.net"], [href*="phoophie.com"], [href*="photobucket.com"], [href*="picmix.com"], [href*="piczo.com"], [href*="pokefarm.com"], [href*="reef.kingdra.net"], [href*="ryandavi.com"], [href*="salvaged.nu"], [href*="scented.minty.nu"], [href*="scri8e.com"], [href*="shatteredinnocents.com"], [href*="sheezy.art"], [href*="teleportacia.org"], [href*="tenor.com"], [href*="thedollpalace.com"], [href*="thefanlistings.org"], [href*="thepalace.com"], [href*="theqbee.net"], [href*="tinypic.com"], [href*="tumblr.com"], [href*="vlsicad.eecs.umich.edu"], [href*="web.badges.world"], [href*="webring.com"], [href*="webwenchdesign.com"], [href*="whisperscorner.com"], [href*="xandra.cc"], [href*="zine.yesterweb.org"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13571,23 +10575,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="shatteredinnocents.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="neocities.org"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/neocities.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="shatteredinnocents.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="neocities.org"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13595,23 +10603,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="goatcounter.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="reddit.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/reddit.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="goatcounter.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="reddit.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13619,23 +10631,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="ko-fi.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="tripod.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/tripod.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="ko-fi.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="tripod.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13643,23 +10659,27 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="ryandavi.com"] {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="wtv-zone.com"]) {
+  --entity-icon-image: url("../images/modal/history/platform-icons/wtv-zone.color.svg");
+  --entity-icon-mask: none;
+  --entity-icon-tint: transparent;
   white-space: nowrap;
 }
-.modal-overlay.document-modal a.external:not([data-platform]):not(:has([data-platform])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i])[href*="ryandavi.com"]::before {
+.modal-overlay.document-modal a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is([href*="wtv-zone.com"])::before {
   content: "";
   display: inline-block;
   width: 0.9em;
@@ -13667,28 +10687,22 @@ body.modal-open {
   margin-right: 0.3em;
   margin-top: -0.3em;
   vertical-align: middle;
-  background-color: currentColor;
+  background-color: var(--entity-icon-tint, transparent);
+  background-image: var(--entity-icon-image, none);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  mask-image: url("../images/modal/history/platform-icons/link.svg");
+  mask-image: var(--entity-icon-mask, none);
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  -webkit-mask-image: url("../images/modal/history/platform-icons/link.svg");
+  -webkit-mask-image: var(--entity-icon-mask, none);
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
 }
 .modal-overlay.document-modal ol a.external, .modal-overlay.document-modal ul a.external {
   white-space: unset !important;
-}
-.modal-overlay.document-modal .site-name {
-  font-style: italic;
-  white-space: nowrap;
-}
-.modal-overlay.document-modal .person {
-  font-style: inherit;
 }
 .modal-overlay.document-modal .dead-link {
   color: var(--color-text-tertiary);
