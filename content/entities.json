@@ -6,7 +6,10 @@
 	"4-webtv-newsgroup": {
 		"kind": "site",
 		"name": "4-WebTV NewsGroup",
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"4sammy0": {
 		"kind": "handle",
@@ -186,13 +189,29 @@
 		"name": "Avril Lavigne"
 	},
 	"aylana": {
-		"kind": "handle",
+		"kind": "person",
 		"name": "Aylana",
 		"aliases": [
 			"Aya",
 			"Aylana (\"Aya\")"
 		],
-		"host": "wtv-zone"
+		"aka": [
+			"Aya"
+		]
+	},
+	"aylana-webtv": {
+		"kind": "handle",
+		"name": "Aylana",
+		"host": "webtv",
+		"person": "aylana",
+		"gloss": "Aylana's username on WebTV, where a username was also the email address"
+	},
+	"aylana-wtv-zone": {
+		"kind": "handle",
+		"name": "Aylana",
+		"host": "wtv-zone",
+		"person": "aylana",
+		"gloss": "Aylana's WTV-Zone username: her pages lived at wtv-zone.com/aylana"
 	},
 	"ayumi-hamasaki": {
 		"kind": "person",
@@ -277,7 +296,8 @@
 		"name": "Blingee",
 		"domains": [
 			"blingee.com"
-		]
+		],
+		"gloss": "A website, launched in 2006, for layering glitter and other animated stamps onto photos"
 	},
 	"blinkie-makers": {
 		"kind": "site",
@@ -427,7 +447,10 @@
 		"aliases": [
 			"Club4WebbTv"
 		],
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"communities-com": {
 		"kind": "org",
@@ -895,7 +918,11 @@
 	"gypsy-jewels": {
 		"kind": "site",
 		"name": "Gypsy Jewels",
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		],
+		"gloss": "The name uses \"gypsy,\" a word now widely recognized as a slur against Romani people"
 	},
 	"habbo": {
 		"kind": "site",
@@ -1310,7 +1337,10 @@
 	"mslauralous-news-group": {
 		"kind": "site",
 		"name": "MsLauraLou's News Group",
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"msn": {
 		"kind": "site",
@@ -1942,7 +1972,8 @@
 	},
 	"usenet": {
 		"kind": "site",
-		"name": "Usenet"
+		"name": "Usenet",
+		"gloss": "An internet-wide system of discussion groups, called newsgroups, older than the web and not part of WebTV"
 	},
 	"valenth": {
 		"kind": "site",
@@ -2077,7 +2108,8 @@
 		"domains": [
 			"wtv-zone.com"
 		],
-		"closed": "domain-repurposed"
+		"closed": "domain-repurposed",
+		"gloss": "A web host, separate from WebTV itself, that offered space mainly to WebTV users"
 	},
 	"x": {
 		"kind": "site",

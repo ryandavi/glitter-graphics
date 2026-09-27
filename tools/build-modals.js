@@ -17,7 +17,9 @@ const keyPattern = '[a-z0-9][a-z0-9-]*';
 // Long-form articles get the prose-style lint rules (em dash, bare dates and
 // names). Every other modal gets only the token and structure rules.
 const articles = new Set(['history', 'personal-web', 'aylana', 'preservation', 'about']);
-const DEAD_TIP = 'Offline: this site no longer exists';
+// {usenet:} addresses: the first per page explains what one is.
+const USENET_KEY = '{usenet}';
+const USENET_TIP = 'The address of a Usenet newsgroup: you typed it into a newsreader to read the group and post to it';
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // App registries the guide mirrors (tools, commands, panel titles), loaded
@@ -214,6 +216,36 @@ function cardWorthy(entities, slug) {
 	return false;
 }
 
+// A link whose text names one entity ({goto:…}the {@glitter-connection}{/goto})
+// is that entity: the anchor carries its classes and icon, as with |@slug, so
+// the reader sees one link rather than a styled name nested inside another.
+// Returns null when the body holds anything but plain text and one known entity.
+function soleEntity(body, ctx) {
+	const match = body.match(/^([^{}]*)\{@([a-z0-9-]+)(?:\|([^|{}<\r\n]*))?\}([^{}]*)$/u);
+	if (!match || !ctx.entities[match[2]]) return null;
+	const [, before, slug, text, after] = match;
+	if (text === 'tip' || text === 'notip') return null;
+	return { slug, body: `${before}${text || escapeHtml(ctx.entities[slug].name)}${after}` };
+}
+
+// What a dead link's tooltip says: why the page is gone (tip= overrides the
+// state's sentence), then where the link goes instead.
+function deadTooltip(state, hostSlug, tip, archive, ctx) {
+	const host = hostSlug && ctx.entities[hostSlug]?.closed ? ctx.entities[hostSlug].name : null;
+	const reasons = {
+		'host-closed': host ? `${host} has shut down` : 'the site has shut down',
+		'domain-repurposed': 'the domain now hosts something else',
+		'service-closed': 'the service has shut down',
+		'page-offline': 'this page is gone'
+	};
+	const reason = tip ? tip.replace(/[.!]$/u, '') : `Offline: ${reasons[state]}`;
+	const stamp = archive && archive.match(/web\.archive\.org\/web\/(\d{4})(\d{2})?(\d{2})?\d*\//u);
+	const where = stamp
+		? `Opens the Wayback Machine copy from ${formatIsoDate([stamp[1], stamp[2], stamp[3]].filter(Boolean).join('-'))}.`
+		: archive && !archive.includes('*') ? 'Opens an archived copy.' : 'Opens the list of Wayback Machine captures.';
+	return `${reason}. ${where}`;
+}
+
 // {@slug}, {@slug|text}, {@slug|tip}, {@slug|notip}, {@slug|text|notip}
 function expandEntityToken(remaining, offset, ctx, flags) {
 	const match = remaining.match(/^\{@([a-z0-9-]+)((?:\|[^|{}<\r\n]*)*)\}/u);
@@ -247,7 +279,10 @@ function expandHelper(remaining, offset, ctx, flags) {
 	let match = remaining.match(/^\{usenet:([^|{}<\r\n]+)\}/u);
 	if (match) {
 		if (match[1].startsWith('news:')) report(ctx, offset, 'error', 'token-syntax', `Write the newsgroup without "news:": {usenet:${match[1].slice(5)}}.`);
-		return { value: `<span class="usenet-address">${match[1]}</span>`, length: match[0].length };
+		// Like a gloss, the explanation rides on the first address per page.
+		if (flags.noGloss || ctx.glossed.has(USENET_KEY)) return { value: `<span class="usenet-address">${match[1]}</span>`, length: match[0].length };
+		ctx.glossed.add(USENET_KEY);
+		return { value: `<span class="usenet-address context" data-tooltip="${USENET_TIP}">${match[1]}</span>`, length: match[0].length };
 	}
 
 	// {?Name}: "this should be an entity, deal with it later".
@@ -293,8 +328,10 @@ function expandHelper(remaining, offset, ctx, flags) {
 		const openLength = headerEnd + 1;
 		const close = remaining.indexOf('{/link}', openLength);
 		if (!kinds.has(kind) || !href || /["{}<>\r\n]/u.test(href) || !validOptions || (tooltip && /["{}<\r\n]/u.test(tooltip)) || (preservation && kind !== 'archive-mirror') || close === -1) return null;
-		const body = remaining.slice(openLength, close);
+		let body = remaining.slice(openLength, close);
 		if (!body || /[<\r\n]/u.test(body)) return null;
+		const hoisted = slug ? null : soleEntity(body, ctx);
+		if (hoisted) ({ slug, body } = hoisted);
 		const expanded = expandText(body, offset + openLength, ctx, { ...flags, noGloss: true, noCard: true });
 		// archive-service is a bare service link (oocities.org), not an archive-link capture.
 		const classes = [kind === 'external' ? 'external' : kind === 'archive-service' ? 'external archive-service' : `external archive-link ${kind}`];
@@ -332,12 +369,25 @@ function expandHelper(remaining, offset, ctx, flags) {
 		const closeTag = `{/${name}}`;
 		const close = remaining.indexOf(closeTag, openLength);
 		if (!/^[A-Za-z][\w-]*$/u.test(id) || close === -1) return null;
-		const body = remaining.slice(openLength, close);
+		let body = remaining.slice(openLength, close);
 		if (!body || /[<\r\n]/u.test(body)) return null;
+		// An in-page link to an entity's heading is that entity (see soleEntity).
+		// The open-modal button stays a plain button.
+		const hoisted = name === 'goto' ? soleEntity(body, ctx) : null;
+		let attributes = '';
+		if (hoisted) {
+			body = hoisted.body;
+			noteDraft(ctx, offset, hoisted.slug);
+			const presentation = entityPresentation(hoisted.slug, ctx, flags, { noTooltip: true });
+			attributes = ` class="${presentation.classes.join(' ')}" ${presentation.attributes.join(' ')}`;
+		}
 		const expanded = expandText(body, offset + openLength, ctx, { ...flags, noGloss: true, noCard: true });
-		return { value: `${build(id)}${expanded}${name === 'goto' ? '</a>' : '</button>'}`, length: close + closeTag.length };
+		const open = hoisted ? build(id).replace(/>$/u, `${attributes}>`) : build(id);
+		return { value: `${open}${expanded}${name === 'goto' ? '</a>' : '</button>'}`, length: close + closeTag.length };
 	}
 
+	// A page that's gone. It still links somewhere useful: the Wayback capture
+	// in archive=, or failing that the Wayback list of captures of its URL.
 	if (remaining.startsWith('{dead:')) {
 		const headerEnd = remaining.indexOf('}');
 		const header = headerEnd === -1 ? [] : remaining.slice(6, headerEnd).split('|');
@@ -353,19 +403,26 @@ function expandHelper(remaining, offset, ctx, flags) {
 			const separator = option.indexOf('=');
 			const key = separator === -1 ? '' : option.slice(0, separator);
 			const value = separator === -1 ? '' : option.slice(separator + 1);
-			if (!['host', 'href', 'tip'].includes(key) || !value || options.has(key)) validOptions = false;
+			if (!['host', 'href', 'archive', 'tip'].includes(key) || !value || options.has(key)) validOptions = false;
 			else options.set(key, value);
 		}
 		const host = options.get('host');
 		const href = options.get('href');
-		const tooltip = options.get('tip');
+		const archive = options.get('archive');
 		const openLength = headerEnd + 1;
 		const close = remaining.indexOf('{/dead}', openLength);
-		if (!registry.DEAD_STATES.has(state) || !validOptions || !tooltip || (host && slug) || /["{}<\r\n]/u.test(tooltip) || (href && /["{}<>\r\n]/u.test(href)) || close === -1) return null;
-		const body = remaining.slice(openLength, close);
+		const unsafe = value => value && /["{}<>\r\n]/u.test(value);
+		if (!registry.DEAD_STATES.has(state) || !validOptions || (host && slug) || unsafe(options.get('tip')) || unsafe(href) || unsafe(archive) || close === -1) return null;
+		if (!href) {
+			report(ctx, offset, 'error', 'dead-link-href', 'A dead link needs href= (the old URL) so it can point at the Wayback Machine. For a host that closed, write the plain {@slug}.');
+			return null;
+		}
+		let body = remaining.slice(openLength, close);
 		if (!body || /[<\r\n]/u.test(body)) return null;
+		const hoisted = slug || host ? null : soleEntity(body, ctx);
+		if (hoisted) ({ slug, body } = hoisted);
 		const expanded = expandText(body, offset + openLength, ctx, { ...flags, noGloss: true, noCard: true });
-		const classes = ['dead-link', state];
+		const classes = ['external', 'dead-link', state];
 		const attributes = [];
 		if (host) {
 			if (!ctx.entities[host]) reportMissing(ctx, offset, 'slug-unknown', `Unknown host "${host}".`);
@@ -383,9 +440,10 @@ function expandHelper(remaining, offset, ctx, flags) {
 				attributes.push(...presentation.attributes);
 			}
 		}
-		if (href) attributes.push(`data-href="${href}"`);
-		attributes.push(`data-tooltip="${tooltip}"`);
-		return { value: `<span class="${classes.join(' ')}" ${attributes.join(' ')}>${expanded}</span>`, length: close + 7 };
+		attributes.push(`data-href="${href}"`);
+		attributes.push(`data-tooltip="${escapeHtml(deadTooltip(state, host || registry.entityForUrl(ctx.entities, href), options.get('tip'), archive, ctx))}"`);
+		const target = archive || `https://web.archive.org/web/*/${href}`;
+		return { value: `<a href="${target}" class="${classes.join(' ')}" target="_blank" rel="noopener noreferrer" ${attributes.join(' ')}>${expanded}</a>`, length: close + 7 };
 	}
 	return null;
 }
@@ -552,7 +610,8 @@ function renderSource(key, source, ctx) {
 		const hostSlug = dead.host === undefined ? registry.entityForUrl(ctx.entities, url) : dead.host;
 		const host = hostSlug && ctx.entities[hostSlug]?.closed ? hostSlug : null;
 		const state = dead.state || (host ? ctx.entities[host].closed : 'page-offline');
-		title = `{dead:${state}${host ? `|host=${host}` : ''}|href=${url}|tip=${dead.tip || DEAD_TIP}}${source.title}{/dead}`;
+		const archive = source.archive?.url ? `|archive=${source.archive.url}` : '';
+		title = `{dead:${state}${host ? `|host=${host}` : ''}|href=${url}${archive}${dead.tip ? `|tip=${dead.tip}` : ''}}${source.title}{/dead}`;
 	} else {
 		title = `{link:${source.link || kindForUrl(url)}|${url}}${source.title}{/link}`;
 	}
@@ -566,10 +625,16 @@ function renderSource(key, source, ctx) {
 		text += `"${title}".`;
 	}
 	if (source.publisher && source.type !== 'book') text += ` <em>${sourceParty(source.publisher, ctx.entities)}</em>.`;
+	// A dead title already links to its capture, so the capture date is plain
+	// text there; a live page keeps a separate link to its archived copy.
 	if (source.archive) {
 		const archive = source.archive;
 		const label = archive.label || (archive.date ? `Archived {date:${archive.date}|${formatIsoDate(archive.date)}}` : 'Archived');
-		text += archive.url ? ` {link:${archive.link || kindForUrl(archive.url)}|${archive.url}}${label}{/link}.` : ` ${label}.`;
+		if (source.status === 'dead' && url) {
+			if (archive.label || archive.date) text += ` ${label}.`;
+		} else {
+			text += archive.url ? ` {link:${archive.link || kindForUrl(archive.url)}|${archive.url}}${label}{/link}.` : ` ${label}.`;
+		}
 	}
 	if (note) text += ` ${note}`;
 	return text;
@@ -854,8 +919,8 @@ function loadRegistry({ fresh = false } = {}) {
 
 const GENERATED_NOTE = 'GENERATED by tools/build-modals.js from content/entities.json and images/modal/history/platform-icons/. Do not edit.';
 
-// One variable block per icon file an entity resolves to, the domain rules
-// for links whose text isn't an entity.
+// One variable block per icon file an entity resolves to. Only a name gets a
+// logo; a link that merely points at a site's domain does not.
 function renderEntityScss(loaded) {
 	const { entities, iconFiles } = loaded;
 	const used = new Set();
@@ -874,24 +939,7 @@ function renderEntityScss(loaded) {
 	for (const icon of [...used].sort()) {
 		if (iconFiles.has(icon)) lines.push(`[data-icon="${icon}"] { ${iconVariables(icon)} }`);
 	}
-	const byIcon = new Map();
-	for (const [slug, entry] of Object.entries(entities)) {
-		for (const domain of entry.domains || []) {
-			const icon = registry.resolveIcon(entities, slug, iconFiles);
-			if (!icon || !iconFiles.get(icon)) continue;
-			if (!byIcon.has(icon)) byIcon.set(icon, []);
-			byIcon.get(icon).push(domain);
-		}
-	}
-	lines.push('', '// A link whose text is not itself an entity gets the icon of the entity that', '// owns its domain; _modals.scss turns this map into selectors.', '$domain-icons: (');
-	for (const icon of [...byIcon.keys()].sort()) {
-		const domains = [...new Set(byIcon.get(icon))].sort();
-		const file = iconFiles.get(icon);
-		const url = `url("../images/modal/history/platform-icons/${file.file}")`;
-		const paint = file.color ? `image: ${url}, mask: none, tint: transparent` : `image: none, mask: ${url}, tint: currentColor`;
-		lines.push(`\t"${icon}": (domains: (${domains.map(domain => `"${domain}"`).join(', ')}), ${paint}),`);
-	}
-	lines.push(');', '');
+	lines.push('');
 	return lines.join('\n');
 }
 
@@ -903,7 +951,7 @@ function renderEntitiesData(loaded) {
 	for (const [slug, entry] of Object.entries(entities)) {
 		const item = { name: entry.name, kind: entry.kind };
 		if (entry.aliases?.length) item.aliases = entry.aliases;
-		for (const field of ['host', 'owner', 'person', 'gloss', 'aka']) if (entry[field]) item[field] = entry[field];
+		for (const field of ['host', 'owner', 'person', 'gloss', 'aka', 'tags']) if (entry[field]) item[field] = entry[field];
 		const icon = registry.resolveIcon(entities, slug, iconFiles);
 		if (icon) item.icon = icon;
 		const handles = Object.keys(entities).filter(other => entities[other].person === slug);
@@ -939,7 +987,7 @@ function renderSnippets(loaded) {
 		['page', '{page:${1:TOOLS.html}}', 'A page file name'],
 		['tip', '{tip:${1:Explanation}}${2:term}{/tip}', 'A tooltip on a term that is not an entity'],
 		['link', '{link:${1|external,archive-wayback,archive-index,archive-mirror,archive-service,historical-snapshot|}|${2:https://}}${3:text}{/link}', 'A link'],
-		['dead', '{dead:${1|page-offline,host-closed,domain-repurposed,service-closed|}|href=${2:http://}|tip=${3:Offline: this site no longer exists}}${4:text}{/dead}', 'A link to a page that is gone'],
+		['dead', '{dead:${1|page-offline,host-closed,domain-repurposed,service-closed|}|href=${2:http://}|archive=${3:https://web.archive.org/web/}}${4:text}{/dead}', 'A link to a page that is gone, opening its Wayback capture'],
 		['goto', '{goto:${1:HeadingId}}${2:text}{/goto}', 'A link to a heading on this page'],
 		['open', '{open:${1:historyModal}}${2:text}{/open}', 'A link that opens another modal'],
 		['tag-later', '{?${1:Name}}', 'Mark a name to tag as an entity later'],

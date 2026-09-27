@@ -1,0 +1,15 @@
+As for her tattoos
+
+Aylana described her tattoos, which included something like a butterfly on her chest and a fairy on her wrist. Which was notable because the positions of the tattoos actually match up with the markings on the woman's skin in the lazy-girl.jpg picture, although it's not detailed enough for you to see their shapes. If I have time, I'll try to find and link some of these posts.
+
+https://web.archive.org/web/20041122134827/http://www.wtv-zone.com/aylana/group-page/pics/lazy-girl.jpg
+It's a 201x189 image of a girl laying down on her side. Blonde hair with brown roots. 
+
+The picture shows a young woman reclining on her side, propped up on one arm, looking toward the camera. She has long blonde or light-brown hair and is wearing a light-colored sleeveless top with a low neckline. The setting looks domestic, probably a bed or couch, with a beige wall behind her. The image is small, soft, and heavily compressed, which is consistent with a personal-web photo from that period.
+There are a few useful things we can say beyond the visual description.
+The archived file was captured by the Wayback Machine on November 22, 2004. Wayback Machine Your directory listing is more interesting historically: it gives the server-side file date as April 7, 2002 at 13:42, and a size of only about 4 KB. That date is likely much closer to when the image was uploaded to that directory than the Wayback capture date, although it is not necessarily the date the photograph itself was taken.
+The filename lazy-girl.jpg looks deliberately descriptive rather than like a camera filename such as DSC00023.jpg. That suggests somebody probably renamed or prepared the image for use on the site. Its placement under:
+/aylana/group-page/pics/
+also makes it look like an image associated with Aylana's group-page material rather than necessarily a photograph from her main personal homepage. I would be cautious about assuming from the directory alone that the woman is Aylana. It could be her, another group member, or even an image used decoratively on one of the group pages.
+The uploaded copy here is 201 × 189 pixels and contains no surviving EXIF or embedded metadata, so there is nothing in this particular copy identifying a camera, creation date, software, or person. The original archived JPEG might potentially retain JPEG comments or metadata that were lost when this copy was converted, although at only 4 KB I would not expect much.
+One thing I notice visually is that this does not immediately look like a polished stock photograph. The framing, lighting, pose, and low-resolution compression are consistent with an ordinary personal snapshot that was resized aggressively for the web. That makes it more plausible that it came from someone in the social circle, but it still does not establish who she is.

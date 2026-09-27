@@ -10,7 +10,10 @@ const ENTITY_DATA = {
 	"4-webtv-newsgroup": {
 		"name": "4-WebTV NewsGroup",
 		"kind": "site",
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"4sammy0": {
 		"name": "4sammy0",
@@ -173,12 +176,37 @@ const ENTITY_DATA = {
 	},
 	"aylana": {
 		"name": "Aylana",
-		"kind": "handle",
+		"kind": "person",
 		"aliases": [
 			"Aya",
 			"Aylana (\"Aya\")"
 		],
+		"aka": [
+			"Aya"
+		],
+		"handles": [
+			"aylana-webtv",
+			"aylana-wtv-zone"
+		],
+		"sites": [
+			"bring-on-the-glitter",
+			"designbyaylana"
+		]
+	},
+	"aylana-webtv": {
+		"name": "Aylana",
+		"kind": "handle",
+		"host": "webtv",
+		"person": "aylana",
+		"gloss": "Aylana's username on WebTV, where a username was also the email address",
+		"icon": "wtv-zone"
+	},
+	"aylana-wtv-zone": {
+		"name": "Aylana",
+		"kind": "handle",
 		"host": "wtv-zone",
+		"person": "aylana",
+		"gloss": "Aylana's WTV-Zone username: her pages lived at wtv-zone.com/aylana",
 		"icon": "wtv-zone"
 	},
 	"ayumi-hamasaki": {
@@ -252,6 +280,7 @@ const ENTITY_DATA = {
 	"blingee": {
 		"name": "Blingee",
 		"kind": "site",
+		"gloss": "A website, launched in 2006, for layering glitter and other animated stamps onto photos",
 		"icon": "blingee"
 	},
 	"blinkie-makers": {
@@ -379,7 +408,10 @@ const ENTITY_DATA = {
 		"aliases": [
 			"Club4WebbTv"
 		],
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"communities-com": {
 		"name": "Communities.com",
@@ -505,7 +537,10 @@ const ENTITY_DATA = {
 	},
 	"dollz": {
 		"name": "Dollz",
-		"kind": "work"
+		"kind": "work",
+		"tags": [
+			"term"
+		]
 	},
 	"dollz-mania": {
 		"name": "Dollz Mania",
@@ -693,7 +728,10 @@ const ENTITY_DATA = {
 	},
 	"gif": {
 		"name": "GIF",
-		"kind": "software"
+		"kind": "software",
+		"tags": [
+			"term"
+		]
 	},
 	"gifcities": {
 		"name": "GifCities",
@@ -779,7 +817,11 @@ const ENTITY_DATA = {
 	"gypsy-jewels": {
 		"name": "Gypsy Jewels",
 		"kind": "site",
-		"host": "usenet"
+		"host": "usenet",
+		"gloss": "The name uses \"gypsy,\" a word now widely recognized as a slur against Romani people",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"habbo": {
 		"name": "Habbo Hotel",
@@ -1188,7 +1230,10 @@ const ENTITY_DATA = {
 	"mslauralous-news-group": {
 		"name": "MsLauraLou's News Group",
 		"kind": "site",
-		"host": "usenet"
+		"host": "usenet",
+		"tags": [
+			"newsgroup"
+		]
 	},
 	"msn": {
 		"name": "MSN",
@@ -1733,7 +1778,8 @@ const ENTITY_DATA = {
 	},
 	"usenet": {
 		"name": "Usenet",
-		"kind": "site"
+		"kind": "site",
+		"gloss": "An internet-wide system of discussion groups, called newsgroups, older than the web and not part of WebTV"
 	},
 	"valenth": {
 		"name": "Valenth",
@@ -1855,6 +1901,7 @@ const ENTITY_DATA = {
 	"wtv-zone": {
 		"name": "WTV-Zone",
 		"kind": "site",
+		"gloss": "A web host, separate from WebTV itself, that offered space mainly to WebTV users",
 		"icon": "wtv-zone"
 	},
 	"x": {

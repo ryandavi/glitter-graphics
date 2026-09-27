@@ -44,8 +44,8 @@
 	"token dead": {
 		"scope": "html",
 		"prefix": "{dead",
-		"body": "{dead:${1|page-offline,host-closed,domain-repurposed,service-closed|}|href=${2:http://}|tip=${3:Offline: this site no longer exists}}${4:text}{/dead}",
-		"description": "A link to a page that is gone"
+		"body": "{dead:${1|page-offline,host-closed,domain-repurposed,service-closed|}|href=${2:http://}|archive=${3:https://web.archive.org/web/}}${4:text}{/dead}",
+		"description": "A link to a page that is gone, opening its Wayback capture"
 	},
 	"token goto": {
 		"scope": "html",
@@ -353,6 +353,22 @@
 			"@aylana-aya"
 		],
 		"body": "{@aylana}",
+		"description": "Aylana (person)"
+	},
+	"@aylana-webtv": {
+		"scope": "html",
+		"prefix": [
+			"@aylana-webtv"
+		],
+		"body": "{@aylana-webtv}",
+		"description": "Aylana (handle)"
+	},
+	"@aylana-wtv-zone": {
+		"scope": "html",
+		"prefix": [
+			"@aylana-wtv-zone"
+		],
+		"body": "{@aylana-wtv-zone}",
 		"description": "Aylana (handle)"
 	},
 	"@ayumi-hamasaki": {

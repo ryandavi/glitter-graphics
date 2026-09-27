@@ -15,7 +15,7 @@ Every modal (history, personal-web, aylana, preservation, about, welcome, guide)
 | `{usenet:alt.discuss.4-webtv}` | A newsgroup name (no `news:` prefix) |
 | `{tip:Explanation}term{/tip}` | A tooltip on a term that isn't an entity (`\|tag=span` for a non-bold one) |
 | `{link:external\|URL}text{/link}` | A link. Other kinds: `archive-wayback`, `archive-index`, `archive-mirror`, `archive-service`, `historical-snapshot`. Options: `\|@slug`, `\|tip=…`, `\|preservation` |
-| `{dead:page-offline\|href=URL\|tip=Offline: this site no longer exists}text{/dead}` | A page that's gone. States: `page-offline`, `host-closed`, `domain-repurposed`, `service-closed`. Options: `\|@slug`, `\|host=slug` |
+| `{dead:page-offline\|href=URL\|archive=WAYBACK-URL}text{/dead}` | A page that's gone. It opens the `archive` capture, or without one the Wayback list of captures of `href` (required). States: `page-offline`, `host-closed`, `domain-repurposed`, `service-closed`; each has a default tooltip, and `\|tip=…` replaces its first sentence. Options: `\|@slug`, `\|host=slug`. A host that closed is plain `{@geocities}`: its card says so |
 | `{goto:HeadingId}text{/goto}` / `{open:historyModal}text{/open}` | A link to a heading here / a button that opens another modal |
 | `[@lialina-2015-kuleshova]` `[@a][@b]` | A citation (numbered for you) |
 | `[@todo: Stardrops home page capture]` | A citation you don't have yet. Renders nothing; listed by `--todo` |
@@ -66,14 +66,14 @@ One map of slugs (lowercase words joined by hyphens) to entries:
 | `owner` | For a site: the handle or person who ran it |
 | `person` | For a handle: the person who used it |
 | `aka` | Persons only: other names people called them (`["Josh"]`), shown on the hover card |
-| `domains` | Domains it owns; a link to one gets its icon, and a dead source on one gets its `closed` state |
+| `domains` | Domains it owns; `entities.js find` matches them, and a dead source on one gets its `closed` state |
 | `closed` | For a host that's gone: `host-closed`, `domain-repurposed`, … |
 | `gloss` | A one-line definition, shown as a tooltip on the first mention per page |
 | `icon` | Icon file name when it isn't the slug (`"icon": "wtv-zone"` for WebTV) |
-| `tags` | Finer categories. `"term"` marks an everyday word (GIF, Dollz) the tag sweep and lint leave alone |
+| `tags` | Finer categories. `"term"` marks an everyday word (GIF, Dollz) the tag sweep and lint leave alone; `"newsgroup"` marks a Usenet group (a `site` with `"host": "usenet"`), whose card reads "Usenet newsgroup" |
 | `status` | `"draft"` until Ryan confirms it |
 
-How entities look is decided by kind, never by slug: a site with its own logo (or its host's) shows it on its first mention per section (`--icons=all` shows every one), works are italic, handles are tinted, and people, software and orgs are plain text. There is no generic icon: an icon always means "this place has a logo". A link shows one mark: the logo if it has one, otherwise the external-link arrow. Handles, hosted sites and people with handles get a hover card: each account on its service, whose it is, the sites they ran, and the gloss.
+How entities look is decided by kind, never by slug: a site with its own logo (or its host's) shows it in lists (references, resources, the timeline) and on its hover card, on its first mention per section (`--icons=all` shows every one), never in running text or headings. Works are italic, and people, handles, software and orgs are plain text. There is no generic icon: an icon always means "this name is a place with a logo"; a link to a site's domain whose text isn't the site's name gets none. A link shows one mark: the logo where one shows, otherwise the external-link arrow. A link whose text names one entity (`the {goto:…}{@glitter-connection}{/goto}`) becomes that entity, as if written with `|@slug`, so a name never sits styled inside a link. Link the name, not the words around it: "the" stays outside. Handles, hosted sites and people with handles get a hover card: each account on its service, whose it is, the sites they ran, and the gloss.
 
 A person with several accounts gets one `person` entry and one `handle` per account, each with `host` and `person`. Write the name the prose uses (`{@dan}`) and the handle only where the account itself is the point (`signed {@dan-411}`).
 

@@ -1,0 +1,168 @@
+Lady Wolfette hosts the Gypsy Jewels Tutorials:
+http://d21c.com/LadyWolfette/tutorial_index.html
+
+
+
+This tutorial index, compiled by LadyWolfette from posts originally shared in graphics newsgroup communities, preserves many of the techniques that were developing just before glitter graphics took off. Before glitter specifically became the effect, people were starting to composite tiled animations into text, dingbats, and shapes and finding new uses for small animated patterns that had previously appeared as divider bars and other webpage decorations. These experiments expanded what tiles could be used for, encouraged people to make and share larger collections of them, and helped create the conditions that glitter graphics grew out of.
+
+One of the communities where many of these methods were being worked out was the WebTV newsgroup Gypsy Jewels, formally <i>alt.discuss.clubs.public.hobby.collecting.gypsy_jewels</i>. The group was founded by webjewel, Nicolé, with a small group of friends and opened on April 13, 2001. Its members shared tutorials, graphics, tools, and techniques with one another, often building on methods that had already circulated through WebTV graphics communities. Among the people posting tutorials or resources there were Tiger Lilly, WIZZARD, Pat, Ginger, Kelli, G J, Kathy, Keechi, ~ BW ~, Pat~Ca, Moondoggee, Lee723, Watcher V, Janet, Karen, ~mslauralou~, Dan, also known as = DAN = and associated with Sparkelies, tencatsonedog, WILLOW, Barbara Hallmark Dee~, Sassy, ~Wolfy, webjewel/GyPsY_JeWeLs, Marie, ~Pink~™, and Tootsie~.
+
+On February 4, 2002, Nicolé announced that she was leaving MSN TV and planned to close Gypsy Jewels a few days later so she could spend more time with her family. Her farewell shows how strongly the group understood itself as a collaborative learning community. She thanked members for the work and time they had given one another, wrote that the group had “made Dreams happen,” and encouraged them to keep helping people who wanted to learn, just as they had helped one another.
+
+Rather than dispersing, much of the group moved almost immediately into a successor newsgroup. On February 7, 2002, ~mslauralou~ opened <i>alt.discuss.clubs.public.home.misc.mslauralou</i> and invited the Gypsy Jewels members to follow her there. The move preserved much of the same network of people and allowed the exchange of tutorials and graphics techniques to continue under a new group name, thankfully one without a slur, although it was a different time.
+
+The methods developed in Gypsy Jewels and MsLauraLou spread far beyond those two Usenet groups. Tutorials continued circulating through other Usenet graphics communities and were reposted on personal websites, while the finished graphics themselves were copied, shared, and displayed across the web. As more PC users encountered these effects, some began working out how to reproduce them with the tools they already had. They could follow the same browser-based procedures WebTV users had developed, but they could also adapt the techniques to desktop programs such as Paint Shop Pro and Animation Shop and publish tutorials of their own.
+
+As these methods moved between communities and software, animated tiles became material for increasingly elaborate effects rather than simply repeating webpage decorations. More tiles were made, collected, modified, and redistributed, but the sets created by Mica, Moon, Dan, and Aylana became some of the most widely circulated and recognizable. Their tiles appear repeatedly across later glitter collections and helped establish the visual vocabulary that came to define glitter graphics.
+
+
+
+
+
+-----
+
+ABOUT Gypsy Jewels, later known as MSlauralou's group:
+
+gypsyjewels: alt.discuss.clubs.public.hobby.collecting.gypsy_jewels
+later they move to another newsgroup called mslauralou, after the member with the same name: alt.discuss.clubs.public.home.misc.mslauralou
+
+
+https://web.archive.org/web/20260113215046/http://d21c.com/LadyWolfette/GJ_info.html
+Gypsy jewels was started by webjewel (Nicole) and opened opened it April 13, 2001:
+
+"How and when did the Gypsy Jewels Newsgoup come into being?
+
+From: webjewel
+Some very close Friends & Myself opened it April 13, 2001
+`Nicolé`"
+
+
+On February 4, 2002, it was annoucned Gypsy Jewels would be closed due to the owner leaving WebTV to focus on the real world.
+"IMPORTANT NOTE:
+Group: Gypsy Jewels
+Date: Mon, Feb 4, 2002
+From: (webjewel)
+
+I will be adding the delete post on the 7th,.. We opened on a holiday we will closed on it also..
+
+I can not thank you enough for all your hard work. and time for one another.. Like I told Becky tonight.. This News Group made Dreams happen and will make History..
+
+I have to go.. I'm also leaving MSNtv.. I will remain on the pc, My Family needs me now.. and I can not turn my check pretending there not in need.. I've been on webtv for 4 or 5 years now.. I have my son who will be 9.. and growing wayyyyyy to fast..:-( I need to start teaching him things for the world.. as he's a teacher him self...
+
+I hope you can understand.. This hurts me so much to do this to you.. I've become so close to you all.. I will even give my friends I've know a long time now.. my # so we can keep in touch.. some have it now.. :-) My line is aways open for you.. Day or night.. I'm a great listener..
+
+:-)
+
+Keep the faith you wonderful ppl.. You have so much to offer thoughts who need you.. They want to learn also like we did.. help them make that dream like we did for each other.. :-)
+
+Don't be sad.. think of it as a new beginning. as I did when we first opened this one..
+
+Lots and lots of Love to you all..
+
+Keep in touch... :-)
+`Nicolé`"
+
+
+On February Feb 7, 2002, Ms Laura Lou opened the follow up newsgroup, mslauralou:
+"IMPORTANT NOTE 2:
+Group: alt.discuss.clubs.public.hobby.collecting.gypsy_jewels
+Date: Thu, Feb 7, 2002
+From: (~mslauralou~)
+
+Come one!!! Come all!!!! Our New home is decorated and ready to move into. Bren, We have 12 potties, so you can take your pick where you want to be. PK, Yes the smoking is out by the Outhouse.. Everyone bring coffee and doughnuts, but most important bring YOURSELVES.
+
+Just follow the U-Hauls and I hope you find a place to park. We will be waiting... :=))
+
+Gypsy Jewels 2 [editor note: this is linking to alt.discuss.clubs.public.home.misc.mslauralou]"
+
+
+
+
+---
+https://web.archive.org/web/20260113224611/http://d21c.com/LadyWolfette/GIFworks1.html
+GifWorks Lesson (Newbies) posted by ginger on May 18, 2001
+got people using gifworks more?
+----
+https://web.archive.org/web/20210211054345/http://d21c.com/LadyWolfette/nametute.html
+Animated Name from a Bar
+A tutorial by Kelli from Gypsy Jewels
++
+With addenendums by kenyagirl in July, 2001
++
+https://web.archive.org/web/20210212013431/http://d21c.com/LadyWolfette/nametute2.html
+With addendenums by ~Ginger~ on Sun, May 20, 2001
+
+https://web.archive.org/web/20210314193152/http://d21c.com/LadyWolfette/change_color.html
+Bar recolor tutorial from Mary(Mimi) on Jun 12, 2001
+
+So this method was discovered by May 20, 2001.
+
+----
+https://web.archive.org/web/20260113224818/http://d21c.com/LadyWolfette/bar_info1.html
+Another animated bar tutorial from G J + Witchy Way on Tue, May 29, 2001
+Witchy Way: "i learned this from keechi"
+
+-----
+
+https://web.archive.org/web/20260113215208/http://d21c.com/LadyWolfette/name_banner3.html
+More Name Banner Effects from Keechi on Sun, Oct 28, 2001
+
+-----
+How to Work with Part of an Image
+https://web.archive.org/web/20210314185125/http://d21c.com/LadyWolfette/flashites.html
+Jan 12, 2002 by (_Y_) TWi§t, thanking Moondoggee - i think it's the same person.
+Glittering an object is really important to what glitter became on blingee and myspace, it's not just text.
+
+Moondogee first posted this tecnique Oct 26, 2001:
+https://web.archive.org/web/20260113220124/http://d21c.com/LadyWolfette/wizard.html
+Using transparent Blue and Pink Sparkles.
+---
+Dan was posting to Gypsy Jewels too
+https://web.archive.org/web/20260113220241/http://d21c.com/LadyWolfette/color_photo.html
+Tutorial from July 30, 2001. His tripod site is linked.
+
+
+
+
+
+
+
+
+
+
+
+-------
+
+	
+Tools
+I-M - ImageMagick
+	http://www.scri8e.com/IM_Tutor/index.html
+	https://web.archive.org/web/20210420082148/http://www.scri8e.com/IM_Tutor/my_IM_tutes/
+https://web.archive.org/web/20000831235233/http://www.gifworks.com/ - GifWorks - an online GIF image editor. People used it to reduce size of files, crop them
+https://web.archive.org/web/20030220194137/http://www.gifworks.com/ - Net Mechanix (Gifbot) 
+https://web.archive.org/web/20260113221243/http://madrabbit.net/webtools/source.html - to get dimensions of images
+https://web.archive.org/web/20210125213619/http://www.nbswebfx.com/ - had effects like fading
+https://web.archive.org/web/20260113223923/http://onnet-z.com/magick/members.html - new tool in 2001 - signup only
+
+
+Text Generators used in tutorials
+https://web.archive.org/web/20210314181410/http://www.flamingtext.com/ - flaming textm and other styles
+https://web.archive.org/web/20260113220835/http://www.3dtextmaker.com/ - 3d text maker
+https://web.archive.org/web/20260113215613/http://linuxenvy.com/bprentice/Banners/Banners.html
+https://web.archive.org/web/20210211054345/http://www.acme.com/labelmaker/
+https://web.archive.org/web/20210211054345/http://www.coder.com/creations/banner/banner-form.pl.cgi
+https://web.archive.org/web/20210619094536/http://www.linuxenvy.com/bprentice/Banners/Banners.html
+
+-----
+
+https://web.archive.org/web/20260113215046/http://d21c.com/LadyWolfette/GJ_info.html
+Gypsy Jewels members personal sites
+
+
+----- 
+
+Ginger's personal website.
+https://web.archive.org/web/20010724002217/http://angelfire.com/wv2/ginvan/
+Ginger by 2001 says she's 64 years young.
+
+"Hi and thanks for visiting my place in space. My name is Ginger, as you can see. We live in a small town in West Virginia, very small! I'm soon to be 64 yrs. young, love my WebTV, enjoy knitting, crocheting and various other crafts.Enjoy meeting new people and have made some very wonderful, lasting friendships on the web. WebTV people love dressing up their e-mail and so do I. Adding our names with a graphics is a real passion. That leads me to my reason for creating this site. Since my name is hard to find, I plan to list all the "Ginger" names I've collected. This will be added very soon so please come back."

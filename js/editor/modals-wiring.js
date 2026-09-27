@@ -94,7 +94,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=819ca191',
+				externalContentUrl: 'modals/history.html?v=f21ca511',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -119,7 +119,7 @@ updateOrientationButtons(width, height) {
 			.register('personalWebModal', {
 				openBtnId: 'personalWebBtn',
 				closeBtnId: 'closePersonalWebModal',
-				externalContentUrl: 'modals/personal-web.html?v=c5d11692',
+				externalContentUrl: 'modals/personal-web.html?v=aaae4024',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -150,7 +150,7 @@ updateOrientationButtons(width, height) {
 					initPixelScalerInContainer(modalBody);
 
 					// Render before indexing so document search includes every event.
-					await loadScriptOnce('js/generated/entities-data.js?v=869d312f');
+					await loadScriptOnce('js/generated/entities-data.js?v=edc746df');
 					await loadScriptOnce('js/ui/about-timeline-data.js?v=c875b6a5');
 					initPreservationTimeline(modalBody);
 					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
@@ -244,7 +244,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=ac5f8dfe',
+			externalContentUrl: 'modals/welcome.html?v=9ff78124',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',

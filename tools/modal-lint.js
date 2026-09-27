@@ -207,15 +207,10 @@ function ruleLinkAttrs(context) {
 }
 
 function ruleDeadLinkHref(context) {
-	// data-href only records the old URL for readers of the source (no runtime consumer). A host marker
-	// that wraps just a site entity (<span class="dead-link host-closed"><span class="entity" data-entity="tripod">Tripod</span></span>)
-	// has no URL of its own to record, so it is exempt.
-	const hostMarker = node => {
-		const kids = (node.children || []).filter(child => child.type === 'element' || String(child.value || '').trim());
-		return kids.length === 1 && hasClass(kids[0], 'entity');
-	};
+	// data-href records the old URL for readers of the source (no runtime consumer); the link itself
+	// opens the Wayback copy. The build requires it, so this catches hand-written markup.
 	return context.elements
-		.filter(node => hasClass(node, 'dead-link') && !node.attrs['data-href'] && !hostMarker(node))
+		.filter(node => hasClass(node, 'dead-link') && !node.attrs['data-href'])
 		.map(node => finding(context, node, 'warning', 'dead-link-href', 'dead-link element is missing data-href.'));
 }
 

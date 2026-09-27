@@ -152,9 +152,9 @@
 			"url": "https://web.archive.org/web/20000409010256/http://aylana.tripod.com/",
 			"date": "2000-04-09"
 		},
-		"note": "Lists the \"4-{@webtv} NewsGroup\" ({usenet:alt.discuss.4-webtv}, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}{file:4webtvcharter.html}{/link}, has no surviving content capture, only a later redirect.",
+		"note": "Its footer credits \"Web and domain hosting facilities for aylana.net\" to Net Names, Quick Domains and \"the Lycos Networks (through the facilities of Tripod).\" Lists the \"4-{@webtv} NewsGroup\" ({usenet:alt.discuss.4-webtv}, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}{file:4webtvcharter.html}{/link}, has no surviving content capture, only a later redirect.",
 		"notes": {
-			"aylana": "Signs off \"God Save The Internet Princess,\" with the email address InterNetPriNcesS@AyLana.Net. Separately lists the \"4-{@webtv} NewsGroup\" ({usenet:alt.discuss.4-webtv}, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}{file:4webtvcharter.html}{/link}, has no surviving content capture, only a later redirect."
+			"aylana": "Its footer credits \"Web and domain hosting facilities for aylana.net\" to Net Names, Quick Domains and \"the Lycos Networks (through the facilities of Tripod).\" Signs off \"God Save The Internet Princess,\" with the email address InterNetPriNcesS@AyLana.Net. Separately lists the \"4-{@webtv} NewsGroup\" ({usenet:alt.discuss.4-webtv}, captioned \"Not just a NewsGroup, but a Family ~ Making {@webtv} History ~ Overcoming Mendacity\") among several newsgroups she posted to. Its linked charter page, at {link:external|members.tripod.com/~posterweb/charterguide/4webtvcharter.html}{file:4webtvcharter.html}{/link}, has no surviving content capture, only a later redirect."
 		}
 	},
 	"aylana-aya-hospital-zone-bring": {
@@ -420,7 +420,7 @@
 		"title": "Free Background Sets",
 		"url": "https://www.geocities.ws/rainbowladie/",
 		"link": "archive-mirror",
-		"publisher": "{dead:host-closed|host=geocities|tip=Offline: this site no longer exists}{@geocities}{/dead} mirror"
+		"publisher": "{@geocities} mirror"
 	},
 	"free-neopets-images": {
 		"title": "Free {@neopets} Images",
@@ -744,7 +744,7 @@
 		"title": "Free Linkware, Graphic Sets, Background Tiles, Buttons and Dividers",
 		"url": "https://www.geocities.ws/irisheyes_1980/",
 		"link": "archive-mirror",
-		"publisher": "{dead:host-closed|host=geocities|tip=Offline: this site no longer exists}{@geocities}{/dead} mirror"
+		"publisher": "{@geocities} mirror"
 	},
 	"misa-phoophie-com": {
 		"author": "@misa",
@@ -759,7 +759,7 @@
 		"title": "Misc. Sets / Linkware Terms",
 		"url": "https://www.geocities.ws/mbookmaster/misc.html",
 		"link": "archive-mirror",
-		"publisher": "{dead:host-closed|host=geocities|tip=Offline: this site no longer exists}{@geocities}{/dead} mirror"
+		"publisher": "{@geocities} mirror"
 	},
 	"moon-moondogee-flashlites-i-f-s": {
 		"status": "dead",
@@ -1013,8 +1013,9 @@
 		"url": "http://www.thedollpalace.com/",
 		"archive": {
 			"url": "https://web.archive.org/web/20090422194012/http://www.thedollpalace.com/",
-			"label": "Archived{/link} from the original; the site closed in {y:2016}. A fuller reconstruction is maintained by {link:archive-mirror|https://emeraldpink.com/TDP-archive/testindex}EmeraldPink"
-		}
+			"date": "2009-04-22"
+		},
+		"note": "The site closed in {y:2016}. A fuller reconstruction is maintained by {link:archive-mirror|https://emeraldpink.com/TDP-archive/testindex}EmeraldPink{/link}."
 	},
 	"the-neopets-html-guide": {
 		"title": "The {@neopets} HTML Guide",

@@ -78,7 +78,7 @@ const tokenCases = [
 	['handle gets its gloss and a card', '{@dan-411}', '<span class="entity entity-handle context" data-entity="dan-411" data-tooltip="The WebTV username" data-card>DAN-411</span>'],
 	['person with handles gets a card', '{@dan}', '<span class="entity entity-person" data-entity="dan" data-card>Dan</span>'],
 	['site without a logo gets no generic glyph', '{@geekwire}', '<span class="entity entity-site" data-entity="geekwire">GeekWire</span>'],
-	['newsgroup by name', '{usenet:alt.discuss.4-webtv}', '<span class="usenet-address">alt.discuss.4-webtv</span>'],
+	['newsgroup by name explains the first address', '{usenet:alt.discuss.4-webtv}', '<span class="usenet-address context" data-tooltip="The address of a Usenet newsgroup: you typed it into a newsreader to read the group and post to it">alt.discuss.4-webtv</span>'],
 	['hosted site takes its host icon', '{@sparkelies}', '<span class="entity entity-site" data-entity="sparkelies" data-icon="tripod" data-card>Sparkelies</span>'],
 	['tooltip', '{tip:A short explanation}term{/tip}', '<strong class="context" data-tooltip="A short explanation">term</strong>'],
 	['span tooltip', '{tip:Inline note|tag=span}term{/tip}', '<span class="context" data-tooltip="Inline note">term</span>'],
@@ -88,9 +88,11 @@ const tokenCases = [
 	['entity link', '{link:archive-wayback|https://example.com|@sparkelies}Sparkelies{/link}', '<a href="https://example.com" class="external archive-link archive-wayback entity entity-site" target="_blank" rel="noopener noreferrer" data-entity="sparkelies" data-icon="tripod">Sparkelies</a>'],
 	['tooltip link', '{link:external|https://example.com|tip=A tool}Tool{/link}', '<a href="https://example.com" class="external context" target="_blank" rel="noopener noreferrer" data-tooltip="A tool">Tool</a>'],
 	['in-page anchor', '{goto:HistoryMakingGlitter}Making{/goto}', '<a href="#HistoryMakingGlitter">Making</a>'],
-	['open modal button', '{open:personalWebModal}Personal Web{/open}', '<button type="button" class="doc-inline-link" data-open-modal="personalWebModal">Personal Web</button>'],
-	['host dead link', '{dead:host-closed|host=tripod|href=http://example.com|tip=Offline}Example{/dead}', '<span class="dead-link host-closed host-tripod" data-host="tripod" data-href="http://example.com" data-tooltip="Offline">Example</span>'],
-	['entity dead link', '{dead:page-offline|@sparkelies|href=http://example.com|tip=Offline}Sparkelies{/dead}', '<span class="dead-link page-offline entity entity-site" data-entity="sparkelies" data-icon="tripod" data-href="http://example.com" data-tooltip="Offline">Sparkelies</span>']
+	['anchor naming one entity is that entity', '{goto:HistoryDan}the {@sparkelies}{/goto}', '<a href="#HistoryDan" class="entity entity-site" data-entity="sparkelies" data-icon="tripod">the Sparkelies</a>'],
+	['link naming one entity is that entity', '{link:external|https://example.com}{@sparkelies|Dan\'s site}, glitter{/link}', '<a href="https://example.com" class="external entity entity-site" target="_blank" rel="noopener noreferrer" data-entity="sparkelies" data-icon="tripod">Dan\'s site, glitter</a>'],
+	['open modal button','{open:personalWebModal}Personal Web{/open}', '<button type="button" class="doc-inline-link" data-open-modal="personalWebModal">Personal Web</button>'],
+	['host dead link opens its capture', '{dead:host-closed|host=tripod|href=http://example.com|archive=https://web.archive.org/web/20040624034824/http://example.com}Example{/dead}', '<a href="https://web.archive.org/web/20040624034824/http://example.com" class="external dead-link host-closed host-tripod" target="_blank" rel="noopener noreferrer" data-host="tripod" data-href="http://example.com" data-tooltip="Offline: Tripod has shut down. Opens the Wayback Machine copy from 24 June 2004.">Example</a>'],
+	['entity dead link without a capture opens the capture list', '{dead:page-offline|@sparkelies|href=http://example.com|tip=Offline: moved}Sparkelies{/dead}', '<a href="https://web.archive.org/web/*/http://example.com" class="external dead-link page-offline entity entity-site" target="_blank" rel="noopener noreferrer" data-entity="sparkelies" data-icon="tripod" data-href="http://example.com" data-tooltip="Offline: moved. Opens the list of Wayback Machine captures.">Sparkelies</a>']
 ];
 for (const [name, source, expected] of tokenCases) {
 	test(`compile token ${name}`, () => {
@@ -152,8 +154,12 @@ test('general references list sources tagged for the document, alphabetically', 
 
 test('a dead source renders as a dead link with its host and archive', () => {
 	const rendered = renderSource('c', sources.c, { name: 'sample', entities });
-	assert(rendered === '"{dead:host-closed|host=tripod|href=http://members.tripod.com/~x/|tip=Offline: this site no longer exists}Gamma{/dead}". {link:archive-wayback|https://web.archive.org/web/20040624034824/http://members.tripod.com/~x/}Archived {date:2004-06-24|24 June 2004}{/link}.', `got ${rendered}`);
+	assert(rendered === '"{dead:host-closed|host=tripod|href=http://members.tripod.com/~x/|archive=https://web.archive.org/web/20040624034824/http://members.tripod.com/~x/}Gamma{/dead}". Archived {date:2004-06-24|24 June 2004}.', `got ${rendered}`);
 	assert(formatIsoDate('2004-08') === 'August 2004' && formatIsoDate('2004') === '2004', 'date formatting differed');
+});
+
+test('a dead link without href= is an error', () => {
+	assert(run('<p>{dead:host-closed|host=tripod}{@tripod}{/dead}</p>').diagnostics.some(item => item.rule === 'dead-link-href' && item.severity === 'error'), 'dead-link-href did not fire');
 });
 
 test('[@todo: ...] renders nothing and is listed', () => {
@@ -201,6 +207,11 @@ test('TOC copies heading markup without tooltips or cards', () => {
 	assert(result.diagnostics.length === 0, `TOC diagnostics: ${JSON.stringify(result.diagnostics)}`);
 	assert(result.output.includes('<a href="#One"><span class="entity entity-person" data-entity="dan">Dan</span></a>'), 'TOC entry differed');
 	assert(result.lineMap.slice(0, 11).every(line => line === 1), 'TOC lines did not map to the token line');
+});
+
+test('only the first newsgroup address per page is explained', () => {
+	const output = clean('<p>{usenet:alt.a} and {usenet:alt.b}</p>');
+	assert((output.match(/data-tooltip=/gu) || []).length === 1 && output.includes('<span class="usenet-address">alt.b</span>'), `got ${output}`);
 });
 
 test('newsgroups are written without news:', () => {

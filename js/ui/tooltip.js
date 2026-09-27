@@ -39,6 +39,10 @@ class TooltipManager {
 
 		this.activeTooltip = null;
 		this.activeElement = null;
+		// Every tooltip still on screen. Tracked here rather than found through
+		// its element, because a re-rendered modal can replace the element while
+		// its tooltip is open, and nothing could reach that tooltip to close it.
+		this.openTooltips = new Set();
 		this.activeCoords = null; // Store cursor/touch position
 		this.isTouchDevice = Input.hasTouch || Input.isCoarse;
 		this.scrollContainers = new Set();
@@ -72,7 +76,7 @@ class TooltipManager {
 		const targets = container.querySelectorAll(TOOLTIP_TARGETS);
 		targets.forEach(el => this.attachTo(el));
 		if (typeof ENTITY_DATA === 'undefined' && [...targets].some(el => 'card' in el.dataset)) {
-			loadScriptOnce('js/generated/entities-data.js?v=869d312f').catch((error) => dbg('Entity data failed to load:', error));
+			loadScriptOnce('js/generated/entities-data.js?v=edc746df').catch((error) => dbg('Entity data failed to load:', error));
 		}
 	}
 
@@ -104,13 +108,17 @@ class TooltipManager {
 		name.textContent = entity.name;
 		const kind = document.createElement('span');
 		kind.className = 'tooltip-entity-kind';
+		// A handle or a newsgroup is named for the service it lived on ("WebTV
+		// username", "Usenet newsgroup"), which then needs no line of its own.
+		const newsgroup = entity.tags?.includes('newsgroup');
 		kind.textContent = entity.kind === 'handle'
 			? (entity.host ? `${nameOf(entity.host)} username` : 'Username')
+			: newsgroup ? (entity.host ? `${nameOf(entity.host)} newsgroup` : 'Newsgroup')
 			: ENTITY_KIND_LABELS[entity.kind] || entity.kind;
 		header.append(name, kind);
 		card.append(header);
 		const facts = [];
-		if (entity.kind === 'site' && entity.host) facts.push(`On ${nameOf(entity.host)}`);
+		if (entity.kind === 'site' && entity.host && !newsgroup) facts.push(`On ${nameOf(entity.host)}`);
 		if (entity.owner) facts.push(`Run by ${nameOf(entity.owner)}`);
 		if (entity.aka?.length) facts.push(`Also called ${entity.aka.join(' or ')}`);
 		if (entity.person) {
@@ -192,6 +200,8 @@ class TooltipManager {
 
 		const tooltip = document.createElement('div');
 		tooltip.className = 'tooltip';
+		// Article glosses run to a sentence, so their tooltips get more room.
+		if (element.closest('.document-modal')) tooltip.classList.add('tooltip-prose');
 		const card = this.entityCard(element);
 		if (card) {
 			tooltip.classList.add('tooltip-has-entity');
@@ -215,6 +225,7 @@ class TooltipManager {
 		tooltip.dataset.alignment = element.dataset.alignment || this.config.alignment;
 
 		document.body.appendChild(tooltip);
+		this.openTooltips.add(tooltip);
 
 		this.position(tooltip, element);
 
@@ -350,6 +361,7 @@ class TooltipManager {
 		const tooltip = element._tooltip;
 		if (tooltip) {
 			tooltip.remove();
+			this.openTooltips.delete(tooltip);
 			delete element._tooltip;
 			if (this.activeTooltip === tooltip) {
 				this.activeTooltip = null;
@@ -360,9 +372,12 @@ class TooltipManager {
 	}
 
 	dismissAll() {
-		document.querySelectorAll(TOOLTIP_TARGETS).forEach(el => {
-			if (el._tooltip) this.hide(el);
-		});
+		if (this.activeElement) this.hide(this.activeElement);
+		for (const tooltip of this.openTooltips) tooltip.remove();
+		this.openTooltips.clear();
+		this.activeTooltip = null;
+		this.activeElement = null;
+		this.activeCoords = null;
 	}
 
 	handleScroll() {
@@ -376,7 +391,7 @@ class TooltipManager {
 	}
 
 	handleMobileClick(e, element) {
-		if (element._tooltip) {
+		if (this.openTooltips.has(element._tooltip)) {
 			this.hide(element);
 		} else {
 			this.show(element, e);
@@ -399,6 +414,8 @@ function initTooltips() {
 
 const initTooltipsInContainer = (container = document) => {
 	if (!container) return;
-	initTooltips().attachTooltipListeners(container);
+	// New content replaces the old, so a tooltip opened on the old is stale.
+	initTooltips().dismissAll();
+	tooltipManager.attachTooltipListeners(container);
 };
 

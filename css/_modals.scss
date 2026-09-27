@@ -1,5 +1,3 @@
-@use 'sass:list';
-@use 'sass:map';
 @use 'mixins' as *;
 @use 'generated/entity-icons';
 
@@ -149,8 +147,16 @@ body.modal-open {
 				}
 			}
 
+			// The global reset zeroes list padding, so prose lists need their
+			// own gutter or the markers hang past the body's edge. Classed
+			// lists (TOC, timeline) lay themselves out.
 			ol {
 				margin-left: 2.5em;
+			}
+
+			ul:not([class]),
+			ul.general-references-list {
+				margin-left: 1.5em;
 			}
 
 
@@ -1879,8 +1885,11 @@ body.modal-open {
 	-webkit-mask-position: center;
 }
 
-// nowrap keeps an icon glued to its name instead of stranding on its own line.
-.entity[data-icon] {
+// Logos mark places in lists (references, resources, the timeline) and on
+// hover cards. In running text and headings a logo competes with the words
+// around it, so there the name stands alone. nowrap keeps an icon glued to
+// its name instead of stranding on its own line.
+.entity[data-icon]:where(li *):not(.toc *) {
 	white-space: nowrap;
 
 	&::before { @include entity-icon-glyph; }
@@ -1889,12 +1898,6 @@ body.modal-open {
 // Sites, software and organizations read as plain words; titles of works
 // are italic by convention.
 .entity-work { font-style: italic; }
-
-// A handle is tinted so "spruisious" reads as a username, not a typo. People
-// (Mica, Dan, Moon) are plain text; their hover card lists their handles.
-.entity-handle {
-	color: color-mix(in srgb, var(--color-accent) 40%, var(--color-text-primary));
-}
 
 // A mention with a hover card (handles, hosted sites) but no gloss: a faint
 // underline on hover says there is more to see.
@@ -1906,10 +1909,20 @@ body.modal-open {
 	&:hover { text-decoration-color: currentColor; }
 }
 
-// Hover card (js/ui/tooltip.js): icon, name and kind above any gloss.
+// A tooltip raised from article prose (js/ui/tooltip.js adds the class) keeps
+// the app's tooltip voice, small and uppercase at one size, with room for a
+// sentence-long gloss.
+.tooltip.tooltip-prose {
+	max-width: 280px;
+	line-height: 1.45;
+}
+
+// Hover card (js/ui/tooltip.js): name and kind, then one line per fact, then
+// any gloss. Every line is the same size; the bold name is the only emphasis,
+// and a little space, not a rule, sets the gloss apart.
 .tooltip-entity-header {
 	display: flex;
-	align-items: center;
+	align-items: baseline;
 	gap: var(--spacing-xs);
 }
 
@@ -1917,18 +1930,18 @@ body.modal-open {
 	@include entity-icon-glyph;
 	flex: none;
 	margin: 0;
+	align-self: center;
 }
 
-.tooltip-entity-kind,
-.tooltip-entity-meta {
-	opacity: 0.75;
+.tooltip-entity-kind {
+	margin-left: auto;
+	padding-left: var(--spacing-sm);
+	opacity: 0.65;
 }
 
-.tooltip-entity-kind { margin-left: auto; }
+.tooltip-entity-meta { opacity: 0.8; }
 
-.tooltip-entity-gloss {
-	margin-top: var(--spacing-2xs);
-}
+.tooltip-entity-gloss { margin-top: var(--spacing-xs); }
 
 // Written under --watch only: an unknown slug or source, so a draft can be
 // previewed. --check refuses to pass while one is left.
@@ -1943,6 +1956,15 @@ body.modal-open {
    the .document-modal class on its overlay (see index.html), so adding another
    document needs no change here. The Guide keeps its own #guideModal rules. */
 .modal-overlay.document-modal {
+
+	// The app-wide `* { user-select: none }` only re-enables p and span, which
+	// leaves dates, links, bold text, list items and table cells unselectable.
+	// A document is for reading and quoting, so all of its text selects.
+	.modal-body,
+	.modal-body * {
+		-webkit-user-select: text;
+		user-select: text;
+	}
 
 	// An inline, button-based "text link" for jumping to another document
 	// modal from prose (see js/ui/doc-modal.js initModalCrossLinks). Unlike
@@ -1961,30 +1983,11 @@ body.modal-open {
 		&:focus-visible { color: var(--color-text-primary); }
 	}
 
-	// Links whose text isn't an entity get the icon of the entity that owns
-	// their domain (a Wayback-wrapped URL still contains it). Links that are, or
-	// contain, an entity carry their own data-icon instead, and a direct image
-	// link gets the file-type marker below.
-	@each $icon, $spec in entity-icons.$domain-icons {
-		$selectors: ();
-		@each $domain in map.get($spec, domains) {
-			$selectors: list.append($selectors, '[href*="#{$domain}"]', $separator: comma);
-		}
-		a.external:not([data-entity]):not(:has([data-entity])):not([href$=".gif" i], [href$=".jpg" i], [href$=".jpeg" i], [href$=".png" i], [href$=".webp" i]):is(#{$selectors}) {
-			--entity-icon-image: #{map.get($spec, image)};
-			--entity-icon-mask: #{map.get($spec, mask)};
-			--entity-icon-tint: #{map.get($spec, tint)};
-			white-space: nowrap;
-			padding-right: 0;
-
-			&::before { @include entity-icon-glyph; }
-			&::after { content: none; }
-		}
-	}
-
-	// One mark per link: when a logo already says where the link goes, it
-	// drops the external-link arrow. Links without a logo keep the arrow.
-	a.external:is([data-icon], :has(.entity[data-icon])) {
+	// A logo belongs to a name: only a link whose text is a site (or the
+	// platform) carries one, never a link that merely points at that domain.
+	// Where the logo shows (see .entity[data-icon]) it replaces the
+	// external-link arrow, so a link has one mark.
+	li:not(.toc li) > a.external:is([data-icon], :has(.entity[data-icon])) {
 		padding-right: 0;
 
 		&::after { content: none; }
@@ -1999,32 +2002,22 @@ body.modal-open {
 	}
 	
 
-	// Links whose original site is gone (Tripod, Angelfire, GeoCities...).
-	// Kept as text with the old URL in data-href, styled like a struck link.
-	// Paired with one reason modifier describing *why* it's gone (host shut
-	// down entirely, domain now resolves to something unrelated, the service
-	// itself closed, or the specific page/site is just offline for unclear
-	// reasons). Site identity (which host) is carried in data-host and,
-	// redundantly, in a host-X class below - neither needs its own visual
-	// rule. Modifiers are reserved hooks with no styling of their own yet.
+	// A page that's gone (tools/build-modals.js {dead}). It still links, to its
+	// Wayback capture or the list of captures, so it reads as a quieter link
+	// with a rewind-clock mark in place of the external arrow. Striking it
+	// through would say "don't click". The state (host-closed, page-offline...)
+	// and data-host stay on the element as hooks; the tooltip says why.
 	.dead-link {
 		color: var(--color-text-tertiary);
-		text-decoration: underline line-through;
-		text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 70%, transparent);
-		cursor: help;
+		text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 60%, transparent);
+
+		&:visited { color: var(--color-text-tertiary); }
+
+		&::after {
+			background: currentColor;
+			mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center / contain no-repeat;
+		}
 	}
-	.dead-link.host-closed { }
-	.dead-link.domain-repurposed { }
-	.dead-link.service-closed { }
-	.dead-link.page-offline { }
-	// Specific-host hooks, layered on top of the reason modifier above
-	// (host-closed or domain-repurposed). Redundant with data-host but kept
-	// as classes too since some tooling/authors prefer selecting by class.
-	.dead-link.host-geocities { }
-	.dead-link.host-tripod { }
-	.dead-link.host-angelfire { }
-	.dead-link.host-wtv-zone { }
-	.dead-link.host-aol-hometown { }
 
 	// A working preservation copy (Wayback, Oocities, a known mirror) paired
 	// with a .dead-link original right beside it. Not for ordinary in-prose
@@ -2073,14 +2066,17 @@ body.modal-open {
 	}
 
 
+	// A term with a gloss keeps the weight of the text around it; the dotted
+	// underline alone says there is more on hover.
 	.context {
-		font-weight: bold;
+		font-weight: inherit;
 		cursor: help;
 		color: inherit;
 		display: inline;
 
 		-webkit-text-decoration: underline dotted;
 		text-decoration: underline dotted;
+		text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
 		text-decoration-thickness: 2px;
 		text-underline-offset: 2px;
 		-webkit-text-decoration-skip: ink;
@@ -2185,6 +2181,20 @@ body.modal-open {
 			color: var(--color-text-primary);
 			font-family: var(--font-mono);
 			font-size: var(--font-size-sm);
+		}
+	}
+
+	// A short list of files and their dates, set as a table so the dates line
+	// up instead of running through a sentence. It sizes to its content.
+	.table-wrapper:has(> .file-table) { width: fit-content; }
+
+	.file-table {
+		width: auto;
+		min-width: 0;
+
+		td:last-child {
+			font-variant-numeric: tabular-nums;
+			white-space: nowrap;
 		}
 	}
 
