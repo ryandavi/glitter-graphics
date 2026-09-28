@@ -4818,16 +4818,16 @@ body.mask-editing .sticker-element {
   border-color: color-mix(in srgb, var(--color-off-white) 32%, var(--color-border));
 }
 
-.filter-preset-picker {
+.preset-grid {
   --filter-picker-fade-size: 30px;
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-base);
-  max-height: 206px;
+  max-height: 292px;
   overflow-y: auto;
 }
-.filter-preset-picker::after {
+.preset-grid::after {
   content: "";
   position: sticky;
   left: 0;
@@ -4840,34 +4840,67 @@ body.mask-editing .sticker-element {
   pointer-events: none;
   transition: opacity var(--transition-fast);
 }
-.filter-preset-picker.has-overflow-bottom::after {
+.preset-grid.has-overflow-bottom::after {
   opacity: 1;
 }
 
-.filter-preset-option {
-  flex-shrink: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
+.filter-looks-picker {
+  box-sizing: border-box;
+}
+
+.preset-grid-group {
+  display: grid;
   gap: var(--spacing-sm);
-  padding: 6px 10px;
+}
+
+.preset-grid-heading {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.preset-grid-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.preset-grid-option {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 6px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   font: inherit;
-  text-align: left;
+  text-align: center;
   text-transform: none;
   border-radius: var(--radius-inner);
 }
 
-.filter-preset-swatch {
+.preset-grid-thumbnail {
   position: relative;
   overflow: hidden;
-  flex: 0 0 42px;
-  width: 42px;
-  height: 28px;
+  width: 100%;
+  height: 44px;
   display: block;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-inner);
+}
+
+.preset-grid-thumbnail.filter-css-thumbnail {
+  height: 44px;
+}
+
+.preset-grid-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-preset-picker {
+  max-height: 206px;
 }
 
 .filter-css-thumbnail {

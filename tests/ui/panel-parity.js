@@ -188,13 +188,15 @@ const LAYER_SETUPS = {
 			if (!section?.classList.contains('visible')) throw new Error('Filter Properties did not become visible');
 			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
 			if (document.getElementById('designPanel')?.dataset.galleryVisible !== 'false') throw new Error('Filter did not opt out of the Design Gallery');
-			const typeOptions = [...document.getElementById('filterType').options];
-			if (typeOptions[0]?.value !== 'basic' || typeOptions.at(-1)?.value !== 'instagram') throw new Error('Filter type order is incorrect');
-			if (!document.getElementById('filterType').closest('.property-set')?.closest('.property-card')) throw new Error('Filter Type is not grouped inside the Filter card');
+			const lookOptions = [...document.querySelectorAll('#filterLooksPicker .preset-grid-option')];
+			if (lookOptions[0]?.dataset.presetId !== 'basic' || lookOptions.at(-1)?.dataset.presetId !== 'dreamy-glow') throw new Error('Filter look order is incorrect');
+			if (!document.getElementById('filterLooksPicker').closest('.property-card')) throw new Error('Looks grid is not grouped inside the Looks card');
 			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Opacity') throw new Error('Filter opacity does not use the shared label');
-			const filterUnits = ['filterHueValue', 'filterGrainSizeValue', 'filterTintAmountValue'].map((id) => document.getElementById(id)?.textContent);
-			if (!filterUnits[0]?.endsWith('°') || !filterUnits[1]?.endsWith('%') || !filterUnits[2]?.endsWith('%')) throw new Error(`Filter control units are missing: ${filterUnits.join(', ')}`);
-			if (document.querySelector('#filterTintSettings .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
+			if (!document.getElementById('filterStrengthValue')?.textContent.endsWith('%')) throw new Error('Instagram strength unit is missing');
+			editor.filterLayerManager.chooseLook(GlitterFilters.looksLibrary.get('tint'));
+			const filterUnits = ['filterTintAmountValue'].map((id) => document.getElementById(id)?.textContent);
+			if (!filterUnits[0]?.endsWith('%')) throw new Error(`Filter control units are missing: ${filterUnits.join(', ')}`);
+			if (document.querySelector('#filterCustomizeControls .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
 			if (document.getElementById('filterTintMode')) throw new Error('Tint still exposes a separate blend mode');
 			const expectedBlendModes = CONFIG.layers.blendModes.join(',');
 			['glitterLayerBlendMode', 'stickerLayerBlendMode', 'textLayerBlendMode', 'shapeLayerBlendMode'].forEach((id) => {
@@ -207,7 +209,11 @@ const LAYER_SETUPS = {
 			if (document.getElementById('filterTintAmount')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Density') throw new Error('Tint strength is not labelled Density');
 			const tintPresets = [...document.getElementById('filterTintPreset').options];
 			if (tintPresets[0]?.value !== 'warming-85' || tintPresets.at(-1)?.value !== 'custom') throw new Error('Tint preset order is incorrect');
-			const firstPreset = document.querySelector('#filterPresetPicker .filter-preset-option');
+			editor.filterLayerManager.chooseLook(GlitterFilters.looksLibrary.get('instagram'));
+			layer.filterData = GlitterFilter.normalizeFilterData({ type: 'instagram', presetId: 'clarendon' });
+			editor.filterLayerManager.loadLayerSettings(layer);
+			editor.layerManager.renderLayersList();
+			const firstPreset = document.querySelector('#filterCustomizeControls .preset-grid-option');
 			if (firstPreset?.dataset.presetId !== 'rio') throw new Error('Rio de Janeiro is not the first Instagram preset');
 			if (!firstPreset.querySelector('.filter-css-thumbnail') || firstPreset.querySelector('canvas')) throw new Error('Instagram preset thumbnail is not CSS-only');
 			if (!document.querySelector('.layer-swatch.filter .filter-css-thumbnail') || document.querySelector('.layer-swatch.filter canvas')) throw new Error('Filter layer thumbnail is not CSS-only');

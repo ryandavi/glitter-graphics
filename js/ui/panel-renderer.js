@@ -1425,6 +1425,13 @@ function buildPanelItem(item, schema) {
 			wrap.appendChild(node);
 			return wrap;
 		}
+		case 'presetGrid': {
+			const grid = tplClone('tpl-preset-grid');
+			if (item.id) grid.id = item.id;
+			if (item.label) grid.setAttribute('aria-label', item.label);
+			addPanelClasses(grid, item.classes);
+			return grid;
+		}
 		case 'processingStatus':
 			return buildProcessingStatus(item);
 		case 'transformHost': {

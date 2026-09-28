@@ -53,6 +53,8 @@ Transformable layers keep `transform.position` as the element center and store `
 | Layer-type definitions | `LayerType` and `registerLayerType` in `js/core/layer-types.js`; one definition per type in `js/layers/types/<type>.js`, collected into `LAYER_UI_CONFIG` | See `docs/LAYER-TYPE-CONTRACT.md`. |
 | Sidebar structure | `PANEL_SCHEMAS` in `js/ui/panel-schemas.js` | Rendered by `js/ui/panel-renderer.js`. |
 | Editable property specs | `FIELDS` in `js/core/fields.js` | Label, unit, range and default per property. Panel rows stamp them; slot and layer defaults read them. |
+| Preset libraries | `createPresetLibrary` in `js/ui/preset-library.js` | Frozen, searchable entries from one or more sources. Applying an entry copies its plain value; `presetGrid` renders the shared grouped keyboard-navigable picker. |
+| Filter operations and looks | `FILTER_OPS` in `js/effects/filter-ops.js`; `FILTERS` in `js/effects/filters.js` | Operations own CSS and pixel painters. A look owns fields and a recipe; its render tier derives from its operations. The Looks grid and selected-look settings render from these entries. |
 | Asset browsers | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | Glitter, sticker and brush-tip search, filters and browser, rendered from two templates. |
 | Tools | `TOOLS` in `js/core/tools.js` | One entry per tool: button, icon, shortcut command, availability, canvas cursor and `onCanvasAction`. `ToolType`, `TOOL_GROUPS` and `TOOL_TOUCH_ROUTES` derive from it. |
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
@@ -109,6 +111,7 @@ Preview is DOM, export is canvas. Every visual feature exists twice, and the two
    - Glitter fills: an animated GIF `background-image` plus a CSS `mask-image` blob.
    - Text and shapes: a stack of masked spans, one per paint slot, reconciled by `reconcileSlotStack` from `buildSlotStack`. Each manager's `getSlotMask` supplies the mask for a slot.
    - Stickers: an `img`, plus an optional shadow span.
+	- Filters: recipe operations from `FILTERS` become CSS backdrop and overlay children through their `FILTER_OPS` painters; `GlitterFilter.renderToCanvas` runs the pixel twins for export.
 4. `ViewportManager` zooms and pans by transforming `.preview-wrapper`. Above 100% it applies nearest-neighbor display to the whole stack and commits a compositor repaint after continuous input settles. At 600% and above the optional pixel grid appears. `PixelGridOverlay` draws it on an unscaled canvas beside the wrapper, placing each one-device-pixel line from the viewport transform and `devicePixelRatio`; it hides only during animated view transitions. `will-change` is active only during active viewport movement.
 5. Layer animation is sampled from `GlitterAnimation.MOTION_REGISTRY` and applied by `AnimationTicker` to a `.layer-anim-wrapper`. Preview and export pass the same sampling context (`canvasW`, `canvasH`, `boxW`, `boxH`, `layerId`, `seed`) to the same sampler, and type definitions provide their ticker and timeline hooks.
 

@@ -23,10 +23,16 @@ Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for 
 
 ## What to run when
 
-- **Always, after a change:** `node tests/ui/touch-smoke.js` and `node tests/ui/touch-handle-verify.js`.
-- **After touching export, effect sources, or the text or shape managers:** also `node tests/parity/export-parity.js` and `node tests/parity/shape-border-verify.js`, or `node tests/run.js --tag export`.
+- **Default:** run the smallest existing unit, UI or parity test that directly covers the changed behavior. After JS changes, run `npm run lint`; documentation-only changes need no browser suite.
+- **Touch smoke:** run `node tests/ui/touch-smoke.js` after changing touch/pointer routing, `GestureManager`, viewport gestures, selection/hit testing, shared interaction selectors/capabilities, mobile interaction, or transform gesture routing.
+- **Transform handles:** run `node tests/ui/touch-handle-verify.js` after changing `LayerTransform`, transform handles, resize/rotate math, selection chrome, or group transforms. Run it with touch smoke when a change spans both routing and handles.
+- **Export parity:** run `node tests/parity/export-parity.js` after changing `SceneCompositor`, an exporter, authored/procedural frame handling, effect sources, animation sampling, or any preview/export twin. A manager edit by itself does not require export parity unless it changes rendered pixels or export-plan behavior.
+- **Shape-border parity:** run `node tests/parity/shape-border-verify.js` after changing shape geometry, shape masks, borders, image fills, or shared slot-stack geometry. Text-manager or generic manager edits do not require it by themselves.
 - **Export fragility routine** after touching `SceneCompositor`, an exporter, or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed.
-- **Don't run the full suite unless asked.** Ryan does manual testing himself.
+- **Broad suites:** run a full tag or the complete Playwright matrix only when asked, before a merge when requested, or when a cross-cutting change has no narrower reliable coverage. Ryan does manual testing himself.
+- **Avoid redundant reruns:** once a suite passes, rerun it only if later code changes affect its covered path or a failure appears flaky and needs confirmation. Documentation edits, cache bumps and test-only assertion changes do not invalidate an already-passing app suite.
+
+Prefer quiet output where a command supports it, and summarize passing checks instead of reproducing long logs in handoff notes.
 
 Test behavior, not implementation. Before writing a new test, check whether an existing one can be extended, and prefer table-driven cases over near-duplicate tests.
 

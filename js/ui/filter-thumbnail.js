@@ -23,6 +23,10 @@ function renderFilterCssThumbnail(element, value, strength = 1) {
 		overlay.style.opacity = op.kind === 'grain' ? op.amount : op.opacity;
 		if (op.kind === 'fill') overlay.style.background = op.color;
 		else if (op.kind === 'gradient') overlay.style.backgroundImage = GlitterFilter.gradientCss(op.gradient);
+		else if (op.kind === 'blur') {
+			overlay.style.backdropFilter = GlitterBlur.cssBlurString(op, 0.45);
+			overlay.style.webkitBackdropFilter = overlay.style.backdropFilter;
+		}
 		element.appendChild(overlay);
 	});
 }

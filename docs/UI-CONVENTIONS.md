@@ -8,6 +8,7 @@ Visual and interaction conventions for the editor UI: sidebar panels, layout nam
 - **Built from schemas.** Every sidebar section is a `PANEL_SCHEMAS` entry in `js/ui/panel-schemas.js`, composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`. Never copy live sidebar markup into `index.html`.
 - **The guide mirrors the UI by generation.** Write guide copy in `content/src/guide.src.html` and build it with `node tools/build-modals.js guide`. Tool headings (`{ui-tool:select}`), tool icons (`{ui-tool-icon:select}`), panel titles (`{ui-panel:textSettingsSection}`) and the full shortcut list (`{ui-shortcuts}`) come from `TOOLS`, `PANEL_SCHEMAS` and `COMMANDS`; use the tokens instead of typing those names. `tests/unit/shortcut-coverage.js` fails when the built guide is stale.
 - **Reuse the existing patterns:** gallery cards (font, sticker and brush-shape pickers), segmented controls, carded effect subsections, paint-slot cards, and the shared `renderGlitterAssetDisplay` asset chips.
+- **Preset grids.** Use the `presetGrid` schema primitive with a library from `createPresetLibrary`; managers supply only the active id and apply callback. Keep controls needed to understand or choose the selected preset visible; reserve a disclosure for genuinely optional detail.
 
 ## Layout chrome names purpose, not position
 

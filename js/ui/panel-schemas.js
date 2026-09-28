@@ -263,49 +263,13 @@ const PANEL_SCHEMAS = {
 			{ title: 'Appearance', collapsible: false, items: [
 				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Opacity' },
 				{ kind: 'select', id: 'filterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
-				{ kind: 'card', title: 'Filter', flatBody: true, items: [
-					{ kind: 'set', items: [
-						{ kind: 'select', id: 'filterType', label: 'Filter type', visibleLabel: 'Type', options: [
-						{ label: 'Basic', value: 'basic', active: true },
-						{ label: 'Invert', value: 'invert' }, { label: 'Grayscale', value: 'grayscale' },
-						{ label: 'Sepia', value: 'sepia' }, { label: 'Tint', value: 'tint' },
-						{ label: 'Vignette', value: 'vignette' }, { label: 'Grain', value: 'grain' }, { label: 'Blur', value: 'blur' },
-						{ label: 'Instagram', value: 'instagram' }
+				{ kind: 'card', title: 'Looks', flatBody: true, items: [
+					{ kind: 'set', label: 'Look', items: [
+						{ kind: 'presetGrid', id: 'filterLooksPicker', label: 'Filter looks', classes: 'property-inset property-scrollbox filter-looks-picker' }
+					] },
+					{ kind: 'set', id: 'filterCustomize', label: 'Settings', items: [
+						{ kind: 'host', id: 'filterCustomizeControls' }
 					] }
-					] },
-					{ kind: 'set', id: 'filterInstagramSettings', classes: 'filter-type-settings', hidden: true, label: 'Preset', items: [
-						{ kind: 'host', id: 'filterPresetPicker', classes: 'property-inset property-scrollbox filter-preset-picker' },
-						{ kind: 'slider', id: 'filterStrength', slider: 'filterInstagramStrength', revert: true },
-						{ kind: 'checkboxList', items: [{ id: 'filterShowName', label: 'Show Filter Name' }] }
-					] },
-					{ kind: 'set', id: 'filterBasicSettings', classes: 'filter-type-settings', label: 'Adjustments', items: [
-						{ kind: 'slider', id: 'filterBrightness', slider: 'filterBrightness', revert: true },
-						{ kind: 'slider', id: 'filterContrast', slider: 'filterContrast', revert: true },
-						{ kind: 'slider', id: 'filterSaturation', slider: 'filterSaturation', revert: true },
-						{ kind: 'slider', id: 'filterHue', slider: 'filterHue', revert: true }
-					] },
-					{ kind: 'set', id: 'filterInvertSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterInvertAmount', slider: 'filterInvertAmount', revert: true }] },
-					{ kind: 'set', id: 'filterGrayscaleSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterGrayscaleAmount', slider: 'filterGrayscaleAmount', revert: true }] },
-					{ kind: 'set', id: 'filterSepiaSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterSepiaAmount', slider: 'filterSepiaAmount', revert: true }] },
-					{ kind: 'set', id: 'filterTintSettings', classes: 'filter-type-settings', hidden: true, items: [
-						{ kind: 'select', id: 'filterTintPreset', label: 'Tint preset', visibleLabel: 'Preset', options: [] },
-						{ kind: 'field', id: 'filterTintColor', label: 'Color', type: 'color', value: '#ec8a00', revert: true },
-						{ kind: 'slider', id: 'filterTintAmount', slider: 'filterTintAmount', revert: true }
-					] },
-					{ kind: 'set', id: 'filterVignetteSettings', classes: 'filter-type-settings', hidden: true, items: [
-						{ kind: 'slider', id: 'filterVignetteAmount', slider: 'filterVignetteAmount', revert: true },
-						{ kind: 'slider', id: 'filterVignetteMidpoint', slider: 'filterVignetteMidpoint', revert: true },
-						{ kind: 'slider', id: 'filterVignetteRoundness', slider: 'filterVignetteRoundness', revert: true },
-						{ kind: 'slider', id: 'filterVignetteFeather', slider: 'filterVignetteFeather', revert: true },
-						{ kind: 'field', id: 'filterVignetteColor', label: 'Color', type: 'color', value: '#000000', revert: true }
-					] },
-					{ kind: 'set', id: 'filterGrainSettings', classes: 'filter-type-settings', hidden: true, items: [
-						{ kind: 'slider', id: 'filterGrainAmount', slider: 'filterGrainAmount', revert: true },
-						{ kind: 'slider', id: 'filterGrainSize', slider: 'filterGrainSize', revert: true },
-						{ kind: 'slider', id: 'filterGrainRoughness', slider: 'filterGrainRoughness', revert: true },
-						{ kind: 'checkboxList', items: [{ id: 'filterGrainMono', label: 'Monochrome', checked: true }] }
-					] },
-					{ kind: 'set', id: 'filterBlurSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterBlurRadius', slider: 'filterBlurRadius', revert: true }] }
 				] }
 			] }
 		]

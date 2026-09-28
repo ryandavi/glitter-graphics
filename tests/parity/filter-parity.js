@@ -4,15 +4,6 @@ global.CONFIG = {
 	tools: {
 		filter: {
 			defaultType: 'basic',
-			types: {
-				instagram: { presetId: 'rio', showName: false, strength: 100 },
-				basic: { brightness: 0, contrast: 0, saturation: 0, hue: 0 },
-				invert: { amount: 100 }, grayscale: { amount: 100 }, sepia: { amount: 100 },
-				tint: { presetId: 'warming-85', color: '#ec8a00', mode: 'soft-light', amount: 40 },
-				vignette: { amount: 45, midpoint: 55, roundness: 0, feather: 60, color: '#000000' },
-				grain: { amount: 25, size: 25, roughness: 50, monochrome: true, mode: 'soft-light' },
-				blur: { radius: 1 }
-			},
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
 				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },
@@ -30,10 +21,14 @@ global.CONFIG = {
 };
 
 const Blend = require('../../js/effects/blend-modes.js');
+const Fields = require('../../js/core/fields.js');
 const Tone = require('../../js/effects/tone-adjust.js');
 const Grain = require('../../js/effects/grain.js');
 const Blur = require('../../js/effects/blur.js');
 const Presets = require('../../js/effects/filter-presets.js');
+const PresetLibrary = require('../../js/ui/preset-library.js');
+const Ops = require('../../js/effects/filter-ops.js');
+const Filters = require('../../js/effects/filters.js');
 const Filter = require('../../js/effects/filter.js');
 
 assert.strictEqual(Blend.cssToGCO('normal'), 'source-over');
@@ -48,7 +43,7 @@ Blend.compositeColorBurn(colorBurnBackdrop, colorBurnSource);
 assert.deepStrictEqual(Array.from(colorBurnBackdrop.data), [0, 0, 0, 255, 57, 255, 20, 255]);
 assert.deepStrictEqual(Array.from(Tone.composeToneAffine(null).m), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
 assert.strictEqual(Filter.normalizeFilterData({}).type, 'basic');
-assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram']);
+assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow']);
 assert.strictEqual(Filter.normalizeFilterData({ type: 'instagram' }).presetId, 'rio');
 assert.strictEqual(Object.keys(Presets)[0], 'rio');
 
@@ -76,6 +71,28 @@ for (const type of Filter.FILTER_TYPES) {
 	assert(Object.hasOwn(resolved, 'tone'));
 	assert(Object.hasOwn(resolved, 'blur'));
 }
+
+for (const op of Ops.list()) {
+	assert(op.id && op.params, 'filter ops require id and params');
+	assert.strictEqual(typeof op.css, 'function', `${op.id} requires a CSS painter`);
+	assert.strictEqual(typeof op.pixel, 'function', `${op.id} requires a pixel painter`);
+}
+for (const entry of Filters.list()) {
+	assert(entry.id && entry.label && entry.group && entry.fields && entry.recipe, 'filter entries must conform');
+	Object.values(entry.fields).forEach((field) => {
+		if (field.kind === 'number') assert.strictEqual(field.spec, Fields[field.specId], `${entry.id}.${field.specId} must resolve through FIELDS`);
+	});
+	const normalized = Filters.normalize(entry.id);
+	for (const recipeStep of Filters.recipe(normalized)) assert(Ops.get(recipeStep.op), `${entry.id} uses unknown op ${recipeStep.op}`);
+	assert.strictEqual(Filters.tier(normalized), 1, `${entry.id} should be CSS-tier`);
+}
+for (const library of PresetLibrary.listPresetLibraries()) {
+	assert(library.id && library.entries.length, 'preset libraries require entries');
+	library.entries.forEach((entry) => assert.strictEqual(library.get(entry.id), entry));
+}
+const applied = Filters.looksLibrary.apply('scanlines');
+applied.type = 'mutated';
+assert.strictEqual(Filters.looksLibrary.get('scanlines').value.type, 'scanlines', 'preset values must be copied on apply');
 
 assert.strictEqual(Filter.toneCssFilter({ type: 'basic' }), '');
 assert.strictEqual(
@@ -115,6 +132,16 @@ assert.strictEqual(Filter.summaryText({ type: 'blur', radius: 24 }), 'Blur');
 assert.strictEqual(Filter.summaryText({ type: 'instagram', presetId: 'rio' }), 'Rio de Janeiro');
 assert.strictEqual(Filter.summaryText({ type: 'tint', presetId: 'warming-85' }), 'Warming Filter (85)');
 assert.strictEqual(Filter.summaryText({ type: 'tint', presetId: 'custom', color: '#ffffff' }), 'Custom Tint');
+assert.strictEqual(Filter.summaryText({ type: 'scanlines' }), 'Scanlines');
+assert(Filter.gradientCss(Filter.resolve({ type: 'scanlines' }).ops[0].gradient).startsWith('repeating-linear-gradient('));
+assert.strictEqual(Filter.resolve({ type: 'scanlines', spacing: 8 }).ops[0].gradient.size, 8);
+assert.strictEqual(Filter.isActive({ type: 'scanlines', strength: 0 }), false);
+assert.strictEqual(Filter.resolve({ type: 'light-leak' }).ops.length, 2);
+assert(Math.abs(Filter.resolve({ type: 'light-leak', size: 140 }).ops[0].gradient.radius - 1.05) < 1e-9);
+assert.deepStrictEqual(
+	[Filter.resolve({ type: 'dreamy-glow' }).ops[0].kind, Filter.resolve({ type: 'dreamy-glow' }).ops[0].mode],
+	['blur', 'normal']
+);
 assert.strictEqual(Filter.resolve({ type: 'vignette', color: '#ffffff' }).ops[0].mode, 'screen');
 assert.strictEqual(Filter.resolve({ type: 'vignette', color: '#000000' }).ops[0].mode, 'multiply');
 assert.strictEqual(Grain.isIdentityGrain({ amount: 0 }), true);
@@ -131,4 +158,4 @@ Blur.applyBlurToImageData(noBlur, 1);
 assert(noBlur.data[0] > 0 || noBlur.data[4] > 0 || noBlur.data[12] > 0, 'blur must spread a bright pixel');
 assert(Math.abs(noBlur.data.filter((value, index) => index % 4 === 0).reduce((sum, value) => sum + value, 0) - 255) <= 3, 'blur must preserve channel energy');
 
-console.log(`filter-parity: ${Object.keys(Presets).length} presets and ${Filter.FILTER_TYPES.length} filter types passed`);
+console.log(`filter-parity: ${Object.keys(Presets).length} presets, ${Ops.list().length} ops and ${Filter.FILTER_TYPES.length} looks passed`);

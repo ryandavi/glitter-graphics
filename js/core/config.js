@@ -185,17 +185,6 @@ const CONFIG = deepFreeze({
 		},
 		filter: {
 			defaultType: 'basic',
-			types: {
-				instagram: { presetId: 'rio', showName: false, strength: 100 },
-				basic: { brightness: 0, contrast: 0, saturation: 0, hue: 0 },
-				invert: { amount: 100 },
-				grayscale: { amount: 100 },
-				sepia: { amount: 100 },
-				tint: { presetId: 'warming-85', color: '#ec8a00', mode: 'soft-light', amount: 40 },
-				vignette: { amount: 45, midpoint: 55, roundness: 0, feather: 60, color: '#000000' },
-				grain: { amount: 25, size: 25, roughness: 50, monochrome: true, mode: 'soft-light' },
-				blur: { radius: 1 }
-			},
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
 				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },

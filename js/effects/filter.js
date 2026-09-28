@@ -3,8 +3,9 @@
 	const Grain = root.GlitterGrain || (typeof require === 'function' ? require('./grain.js') : null);
 	const Blur = root.GlitterBlur || (typeof require === 'function' ? require('./blur.js') : null);
 	const BlendModes = root.GlitterBlendModes || (typeof require === 'function' ? require('./blend-modes.js') : null);
-	const Presets = root.FILTER_PRESETS || (typeof require === 'function' ? require('./filter-presets.js') : null);
-	const FILTER_TYPES = Object.freeze(['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram']);
+	const Ops = root.GlitterFilterOps || (typeof require === 'function' ? require('./filter-ops.js') : null);
+	const Filters = root.GlitterFilters || (typeof require === 'function' ? require('./filters.js') : null);
+	const FILTER_TYPES = Filters.FILTER_TYPES;
 
 	function config() {
 		return CONFIG.tools.filter;
@@ -21,114 +22,29 @@
 
 	function normalizeFilterData(value) {
 		const source = value || {};
-		const type = FILTER_TYPES.includes(source.type) ? source.type : config().defaultType;
-		const defaults = config().types[type];
-		const normalized = { type };
-		Object.keys(defaults).forEach((key) => {
-			normalized[key] = source[key] == null ? structuredClone(defaults[key]) : structuredClone(source[key]);
-		});
-		if (type === 'instagram' && !Presets[normalized.presetId]) normalized.presetId = defaults.presetId;
-		if (type === 'instagram') {
-			normalized.strength = clamp(number(normalized.strength, defaults.strength), 0, 100);
-			normalized.showName = Boolean(normalized.showName);
-		} else if (type === 'basic') {
-			['brightness', 'contrast', 'saturation'].forEach((key) => { normalized[key] = clamp(number(normalized[key], defaults[key]), -100, 100); });
-			normalized.hue = clamp(number(normalized.hue, defaults.hue), -180, 180);
-		} else if (['invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain'].includes(type)) {
-			normalized.amount = clamp(number(normalized.amount, defaults.amount), 0, 100);
-		}
-		if (type === 'tint') {
-			normalized.color = /^#[0-9a-f]{6}$/i.test(normalized.color) ? normalized.color : defaults.color;
-			const matchingPreset = Object.entries(config().tintPresets).find(([, preset]) => preset.color?.toLowerCase() === normalized.color.toLowerCase())?.[0];
-			const requestedPreset = Object.hasOwn(source, 'presetId') ? source.presetId : (source.color == null ? defaults.presetId : matchingPreset || 'custom');
-			normalized.presetId = config().tintPresets[requestedPreset] ? requestedPreset : 'custom';
-			if (normalized.presetId !== 'custom') normalized.color = config().tintPresets[normalized.presetId].color;
-			normalized.mode = defaults.mode;
-		} else if (type === 'vignette') {
-			normalized.midpoint = clamp(number(normalized.midpoint, defaults.midpoint), 0, 100);
-			normalized.roundness = clamp(number(normalized.roundness, defaults.roundness), -100, 100);
-			normalized.feather = clamp(number(normalized.feather, defaults.feather), 1, 100);
-			normalized.color = /^#[0-9a-f]{6}$/i.test(normalized.color) ? normalized.color : defaults.color;
-		} else if (type === 'grain') {
-			normalized.size = clamp(number(normalized.size, defaults.size), 0, 100);
-			normalized.roughness = clamp(number(normalized.roughness, defaults.roughness), 0, 100);
-			normalized.monochrome = normalized.monochrome !== false;
-			normalized.mode = BlendModes.isBlendMode(normalized.mode) ? normalized.mode : defaults.mode;
-		} else if (type === 'blur') {
-			normalized.radius = clamp(number(normalized.radius, defaults.radius), 0, 64);
-		}
-		return normalized;
-	}
-
-	function presetFor(data) {
-		return Presets[data.presetId] || null;
+		return Filters.normalize(source.type, source);
 	}
 
 	function isActive(value, opacity = 100) {
 		if (number(opacity, 100) <= 0) return false;
-		const data = normalizeFilterData(value);
-		if (data.type === 'instagram') return Boolean(presetFor(data)) && (data.strength > 0 || data.showName);
-		if (data.type === 'basic') return Boolean(data.brightness || data.contrast || data.saturation || data.hue);
-		if (['invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain'].includes(data.type)) return number(data.amount, 0) > 0;
-		return data.type === 'blur' && number(data.radius, 0) > 0;
+		return Filters.recipe(normalizeFilterData(value)).some((entry) => Ops.get(entry.op)?.isActive?.(entry.params));
 	}
 
 	function summaryText(value) {
 		const data = normalizeFilterData(value);
-		if (data.type === 'instagram') return presetFor(data)?.name || presetFor(data)?.instagramName || 'Instagram';
-		if (data.type === 'tint') return data.presetId === 'custom'
-			? 'Custom Tint'
-			: (config().tintPresets[data.presetId]?.label || 'Tint');
-		return data.type.charAt(0).toUpperCase() + data.type.slice(1);
-	}
-
-	function lerpTone(value, amount) {
-		const tone = Tone.normalizeTone(value);
-		const output = { order: [...tone.order] };
-		for (const key of Object.keys(Tone.TONE_IDENTITY)) output[key] = Tone.TONE_IDENTITY[key] + (tone[key] - Tone.TONE_IDENTITY[key]) * amount;
-		return output;
-	}
-
-	function vignetteGradient(data) {
-		const midpoint = clamp(number(data.midpoint, 55) / 100, 0, 1);
-		const feather = clamp(number(data.feather, 60) / 100, 0.01, 1);
-		const edgeStart = clamp(midpoint - (1 - midpoint) * feather * 0.25, 0, 1);
-		const roundness = clamp(number(data.roundness, 0) / 100, -1, 1);
-		return {
-			type: 'radial', center: [0.5, 0.5], radius: 0.72,
-			radiusX: 0.72 * (roundness < 0 ? 1 + roundness * 0.45 : 1),
-			radiusY: 0.72 * (roundness > 0 ? 1 - roundness * 0.45 : 1),
-			shape: Math.abs(roundness) > 0.05 ? 'ellipse' : 'circle',
-			stops: [{ at: edgeStart, color: 'transparent' }, { at: 1, color: data.color }]
-		};
-	}
-
-	function vignetteBlendMode(color) {
-		const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
-		if (!match) return 'multiply';
-		const luminance = (0.299 * parseInt(match[1], 16) + 0.587 * parseInt(match[2], 16) + 0.114 * parseInt(match[3], 16)) / 255;
-		return luminance > 0.5 ? 'screen' : 'multiply';
+		const filter = Filters.get(data.type);
+		return filter.summary?.(data) || filter.label;
 	}
 
 	function resolve(value) {
-		const data = normalizeFilterData(value);
-		if (data.type === 'instagram') {
-			const preset = presetFor(data);
-			if (!preset) return { tone: null, blur: null, ops: [], caption: null };
-			const strength = clamp(number(data.strength, 100) / 100, 0, 1);
-			return {
-				tone: lerpTone(preset.tone, strength),
-				blur: null,
-				ops: preset.ops.map((op) => ({ ...structuredClone(op), opacity: number(op.opacity, 1) * strength })),
-				caption: data.showName ? (preset.name || preset.instagramName) : null
-			};
-		}
-		if (data.type === 'basic') return { tone: { brightness: 1 + data.brightness / 100, contrast: 1 + data.contrast / 100, saturate: 1 + data.saturation / 100, hueRotate: data.hue }, blur: null, ops: [], caption: null };
-		if (['invert', 'grayscale', 'sepia'].includes(data.type)) return { tone: { [data.type]: data.amount / 100 }, blur: null, ops: [], caption: null };
-		if (data.type === 'tint') return { tone: null, blur: null, ops: [{ kind: 'fill', color: data.color, mode: data.mode, opacity: data.amount / 100 }], caption: null };
-		if (data.type === 'vignette') return { tone: null, blur: null, ops: [{ kind: 'gradient', mode: vignetteBlendMode(data.color), opacity: data.amount / 100, gradient: vignetteGradient(data) }], caption: null };
-		if (data.type === 'grain') return { tone: null, blur: null, ops: [{ kind: 'grain', mode: data.mode, amount: data.amount / 100, size: data.size, roughness: data.roughness / 100, monochrome: data.monochrome }], caption: null };
-		return { tone: null, blur: { radius: data.radius }, ops: [], caption: null };
+		const resolved = { tone: null, blur: null, ops: [], caption: null, steps: Filters.recipe(normalizeFilterData(value)) };
+		resolved.steps.forEach((entry) => {
+			if (entry.op === 'tone') resolved.tone = entry.params.tone;
+			else if (entry.op === 'blur' && !entry.params.composite) resolved.blur = entry.params;
+			else if (entry.op === 'caption') resolved.caption = entry.params.text;
+			else resolved.ops.push({ kind: entry.op, ...entry.params });
+		});
+		return resolved;
 	}
 
 	function toneCssFilter(value) {
@@ -137,7 +53,8 @@
 
 	function gradientCss(gradient) {
 		const percent = (value) => Math.round(value * 100000) / 1000;
-		const stops = gradient.stops.map((entry) => `${entry.color} ${percent(entry.at)}%`).join(', ');
+		const stops = gradient.stops.map((entry) => `${entry.color} ${gradient.type === 'repeating-linear' ? entry.at * gradient.size : percent(entry.at)}${gradient.type === 'repeating-linear' ? 'px' : '%'}`).join(', ');
+		if (gradient.type === 'repeating-linear') return `repeating-linear-gradient(${gradient.angle}deg, ${stops})`;
 		if (gradient.type === 'linear') return `linear-gradient(${gradient.angle}deg, ${stops})`;
 		if (gradient.sizing === 'farthest-corner') return `radial-gradient(circle farthest-corner at ${percent(gradient.center[0])}% ${percent(gradient.center[1])}%, ${stops})`;
 		const radiusX = (gradient.radiusX || gradient.radius) * 100;
@@ -170,8 +87,9 @@
 		const filters = [Tone.toneCssFilterString(resolved.tone), Blur.cssBlurString(resolved.blur, viewScale)].filter(Boolean).join(' ');
 		for (const op of resolved.ops) {
 			const mode = resolveOpMode(op, blendMode);
-			if (op.kind === 'fill') styles.push({ className: 'filter-layer-fill', style: { background: op.color, mixBlendMode: mode, opacity: op.opacity } });
-			if (op.kind === 'gradient') styles.push({ className: 'filter-layer-gradient', style: { backgroundImage: gradientCss(op.gradient), mixBlendMode: mode, opacity: op.opacity } });
+			const params = { ...op, mode };
+			if (op.kind === 'fill') styles.push({ className: 'filter-layer-fill', style: Ops.get('fill').css(params) });
+			if (op.kind === 'gradient') styles.push({ className: 'filter-layer-gradient', style: Ops.get('gradient').css(params, { gradientCss }) });
 			if (op.kind === 'grain') {
 				const signature = `${Grain.tileSignature(op, seed)}|${config().grainTilePx}`;
 				if (tileCache && !tileCache.has(signature)) tileCache.set(signature, Grain.buildTile(op, seed, config().grainTilePx));
@@ -181,6 +99,7 @@
 				backgroundRepeat: 'repeat', backgroundSize: `${config().grainTilePx * viewScale}px`, mixBlendMode: mode, opacity: op.amount
 				} });
 			}
+			if (op.kind === 'blur') styles.push({ className: 'filter-layer-backdrop', style: Ops.get('blur').css(params, { viewScale }) });
 		}
 		// CSSgram filters the composited image after its ::before/::after blends.
 		if (filters) {
@@ -232,6 +151,19 @@
 	}
 
 	function paintGradient(context, width, height, spec) {
+		if (spec.type === 'repeating-linear') {
+			const size = Math.max(1, number(spec.size, 4));
+			const tile = getScratchCanvas('repeatingGradient', size, size);
+			const tileContext = tile.getContext('2d');
+			tileContext.clearRect(0, 0, size, size);
+			const gradient = tileContext.createLinearGradient(0, 0, 0, size);
+			spec.stops.forEach((entry) => gradient.addColorStop(clamp(entry.at, 0, 1), entry.color));
+			tileContext.fillStyle = gradient;
+			tileContext.fillRect(0, 0, size, size);
+			context.fillStyle = context.createPattern(tile, 'repeat');
+			context.fillRect(0, 0, width, height);
+			return;
+		}
 		if (spec.type === 'linear') {
 			const radians = (spec.angle - 90) * Math.PI / 180;
 			const length = Math.abs(width * Math.cos(radians)) + Math.abs(height * Math.sin(radians));
@@ -290,6 +222,12 @@
 				const pattern = scratch.createPattern(tile, 'repeat');
 				scratch.fillStyle = pattern;
 				scratch.fillRect(0, 0, width, height);
+			} else if (op.kind === 'blur') {
+				const blurred = scratch.getImageData(0, 0, width, height);
+				Ops.get('blur').pixel(blurred, op);
+				const blurredCanvas = getScratchCanvas('compositeBlur', width, height);
+				blurredCanvas.getContext('2d').putImageData(blurred, 0, 0);
+				scratch.drawImage(blurredCanvas, 0, 0);
 			}
 			scratch.restore();
 		}

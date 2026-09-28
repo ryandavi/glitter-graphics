@@ -39,6 +39,10 @@ const FIELDS = Object.freeze({
 	filterGrainSize: { label: 'Size', unit: '%', min: 0, max: 100, step: 1, value: 25 },
 	filterGrainRoughness: { label: 'Roughness', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	filterBlurRadius: { label: 'Radius', unit: 'px', min: 0, max: 64, step: 1, value: 1 },
+	filterLookStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+	filterScanlineSpacing: { label: 'Line Spacing', unit: 'px', min: 2, max: 12, step: 1, value: 4 },
+	filterLightLeakSize: { label: 'Leak Size', unit: '%', min: 40, max: 160, step: 1, value: 100 },
+	filterDreamyGlowRadius: { label: 'Glow Radius', unit: 'px', min: 1, max: 32, step: 1, value: 9 },
 	autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 	autoGlitterMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 	autoGlitterDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
@@ -90,6 +94,8 @@ const FIELDS = Object.freeze({
 	multiSelectionOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 	documentScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 }
 });
+
+if (typeof module !== 'undefined' && module.exports) module.exports = FIELDS;
 Object.values(FIELDS).forEach(Object.freeze);
 
 // ===== FIELD BINDINGS =====
