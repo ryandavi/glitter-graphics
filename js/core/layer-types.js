@@ -86,8 +86,15 @@ function registerLayerType(type, definition) {
 // factory means filling in the relevant fields above ONCE - these replace what
 // would otherwise be hand-maintained, easy-to-forget-one-type selector/dispatch
 // lists duplicated across LayerManager/LayerTransform/GestureManager/app.js.
+
 function isTransformableLayerType(type) {
-	return Boolean(LAYER_UI_CONFIG[type]?.transformable);
+	const transformable = LAYER_UI_CONFIG[type]?.transformable;
+	return typeof transformable === 'function' || Boolean(transformable);
+}
+
+function isLayerTransformable(layer) {
+	const transformable = LAYER_UI_CONFIG[layer?.type]?.transformable;
+	return typeof transformable === 'function' ? Boolean(transformable(layer)) : Boolean(transformable);
 }
 
 function isAnimatableLayerType(type) {
@@ -101,7 +108,7 @@ function isAnimatableLayerType(type) {
 function getLayerElementSelector(layerId = null, { transformableOnly = false } = {}) {
 	return Object.values(LayerType)
 		.map((type) => LAYER_UI_CONFIG[type])
-		.filter((cfg) => cfg?.elementClass && (!transformableOnly || cfg.transformable))
+		.filter((cfg) => cfg?.elementClass && (!transformableOnly || Boolean(cfg.transformable)))
 		.map((cfg) => `.${cfg.elementClass}${layerId != null ? `[data-layer-id="${layerId}"]` : ''}`)
 		.join(', ');
 }

@@ -106,47 +106,53 @@ class SceneCompositor {
 	}
 
 
-	_collectProceduralSources(layers, { includeBaseImage = true } = {}) {
-		const sources = [];
-		const shimmerBase = layers.find((layer) => {
-			if (!includeBaseImage || layer.type !== LayerType.BASE_IMAGE || layer.visible === false) return false;
-			const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
-			return ['image', 'gradient'].includes(layer.background?.mode || 'image') && settings.paletteEnabled && settings.paletteMode === 'dither'
-				&& settings.dither.shimmer && GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
-		});
-		if (shimmerBase) {
-			const settings = GlitterPixelEffects.normalizeSettings(shimmerBase.background?.pixelEffects || shimmerBase.background?.posterize, CONFIG.tools.pixelEffects);
-			const animation = GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
-			const frameDuration = CONFIG.tools.pixelEffects.animation.frameDurationMs;
-			sources.push({
-				key: '__base_dither',
-				label: 'Base image shimmer',
-				ownerLayerId: shimmerBase.id,
-				naturalPeriod: animation.frames * frameDuration,
-				preferredSamplingRate: 1000 / frameDuration,
-				sampleAt: (timestamp, period = animation.frames * frameDuration) => {
-					const cycleTime = ((timestamp % period) + period) % period;
-					return { frameIndex: Math.min(animation.frames - 1, Math.floor(cycleTime / period * animation.frames)) };
-				}
-			});
-		}
-		layers.forEach((layer) => {
-			if (layer.type === LayerType.BASE_IMAGE || !GlitterAnimation.isActive(layer.animation)) return;
-			const animation = GlitterAnimation.normalizeAnimation(layer.animation);
-			sources.push({
-				key: `__anim_${layer.id}`,
-				label: `${layer.name || 'Layer'} animation`,
-				ownerLayerId: layer.id,
-				effectSlot: 'animation',
-				naturalPeriod: animation.periodMs,
-				phase: animation.phase,
-				preferredSamplingRate: CONFIG.tools.animation.exportFps,
-				sampleAt: (timestamp, period = animation.periodMs) => ({
-					sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, { layerId: layer.id })
-				})
-			});
-		});
-		return sources;
+	_collectProceduralSources(layers, { includeBaseImage = true, canvasData = null } = {}) {
+		return layers.flatMap((layer) => LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, {
+			compositor: this,
+			includeBaseImage,
+			canvasData
+		}) || []);
+	}
+
+	_createBaseTimelineSources(layer, { includeBaseImage = true } = {}) {
+		if (!includeBaseImage || layer.visible === false) return [];
+		const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
+		const animation = ['image', 'gradient'].includes(layer.background?.mode || 'image')
+			&& settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
+			? GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects)
+			: null;
+		if (!animation) return [];
+		const frameDuration = CONFIG.tools.pixelEffects.animation.frameDurationMs;
+		return [{
+			key: '__base_dither',
+			label: 'Base image shimmer',
+			ownerLayerId: layer.id,
+			naturalPeriod: animation.frames * frameDuration,
+			preferredSamplingRate: 1000 / frameDuration,
+			sampleAt: (timestamp, period = animation.frames * frameDuration) => {
+				const cycleTime = ((timestamp % period) + period) % period;
+				return { frameIndex: Math.min(animation.frames - 1, Math.floor(cycleTime / period * animation.frames)) };
+			}
+		}];
+	}
+
+	_createLayerAnimationTimelineSources(layer, { canvasData = null } = {}) {
+		if (!GlitterAnimation.isActive(layer.animation)) return [];
+		const animation = GlitterAnimation.normalizeAnimation(layer.animation);
+		const box = this._getAnimationBox(layer, canvasData?.width || 1, canvasData?.height || 1);
+		const samplingContext = this._buildAnimationSamplingContext(layer, box, canvasData);
+		return [{
+			key: `__anim_${layer.id}`,
+			label: `${layer.name || 'Layer'} animation`,
+			ownerLayerId: layer.id,
+			effectSlot: 'animation',
+			naturalPeriod: animation.periodMs,
+			phase: animation.phase,
+			preferredSamplingRate: CONFIG.tools.animation.exportFps,
+			sampleAt: (timestamp, period = animation.periodMs) => ({
+				sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, samplingContext)
+			})
+		}];
 	}
 
 	_createProceduralTimelines(proceduralSources) {
@@ -256,17 +262,28 @@ class SceneCompositor {
 	}
 
 	_getAnimationBox(layer, canvasWidth, canvasHeight) {
-		if (layer.type === LayerType.GLITTER_FILL) return { x: 0, y: 0, width: canvasWidth, height: canvasHeight };
-		let width;
-		let height;
-		if (layer.type === LayerType.STICKER) ({ width, height } = layer.stickerData);
-		else if (layer.type === LayerType.TEXT_GLITTER) ({ width, height } = layer.textData);
-		else if (layer.type === LayerType.SHAPE) ({ width, height } = layer.shapeData);
+		const declared = LAYER_UI_CONFIG[layer.type]?.animationBox?.(this.editor, layer, {
+			width: canvasWidth,
+			height: canvasHeight
+		}) || {};
+		let { width, height } = declared;
 		width = Number(width) || 1;
 		height = Number(height) || 1;
+		if (Number.isFinite(declared.x) && Number.isFinite(declared.y)) return { ...declared, width, height };
 		const metrics = computeLayerTransform(getLayerTransform(layer), { width, height });
 		const origin = getLayerAnimationOrigin(this.editor, layer, { width, height });
 		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height, origin };
+	}
+
+	_buildAnimationSamplingContext(layer, box, canvasData = null) {
+		return {
+			canvasW: Number(canvasData?.width) || 1,
+			canvasH: Number(canvasData?.height) || 1,
+			boxW: Number(box?.width) || 1,
+			boxH: Number(box?.height) || 1,
+			layerId: layer.id,
+			seed: 0
+		};
 	}
 
 	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null) {
@@ -506,154 +523,143 @@ class SceneCompositor {
 	}
 
 	_buildLayerExportPlan(layer) {
+		const manager = getLayerManagerForType(this.editor, layer?.type);
+		if (!manager?.buildExportPlan) throw new Error(`Layer type ${layer?.type || 'unknown'} has no export-plan builder`);
+		return manager.buildExportPlan(layer, { compositor: this });
+	}
+
+	_buildBaseImageExportPlan(layer) {
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
-		switch (layer?.type) {
-			case LayerType.BASE_IMAGE: {
-				// Image and gradient backgrounds go through the base pixel
-				// pipeline (_prepareBasePipeline); solid and glitter paint here.
-				const mode = layer.background?.mode || 'image';
-				return {
-					prepareMasks: async () => {},
-					prepareStaticResources: async () => {},
-					getAuthoredSources,
-					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
-						if (mode !== 'solid' && mode !== 'glitter') return;
-						const [entry] = getLayerPaintSlots(layer);
-						const source = this._getSlotSource(layer, entry);
-						if (!source) return;
-						ctx.save();
-						this._paintSourceInto(ctx, width, height, source, {
-							frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
-						});
-						ctx.restore();
-					}
-				};
+		const mode = layer.background?.mode || 'image';
+		return {
+			prepareMasks: async () => {},
+			prepareStaticResources: async () => {},
+			getAuthoredSources,
+			render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
+				if (mode !== 'solid' && mode !== 'glitter') return;
+				const [entry] = getLayerPaintSlots(layer);
+				const source = this._getSlotSource(layer, entry);
+				if (!source) return;
+				ctx.save();
+				this._paintSourceInto(ctx, width, height, source, {
+					frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
+				});
+				ctx.restore();
 			}
-			case LayerType.GLITTER_FILL:
-				return {
-					prepareMasks: async ({ maskDataMap, maskCanvases, canvasData, callbacks }) => {
-						const rawMask = callbacks.createMask(layer);
-						maskDataMap.set(layer.id, rawMask);
-						maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
-					},
-					prepareStaticResources: async () => {},
-					getAuthoredSources,
-					render: ({ ctx, frameIndex, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
-						const maskCanvas = maskCanvases.get(layer.id);
-						if (!maskCanvas) {
-							throw new Error(`Missing mask canvas for layer ${layer.id}`);
+		};
+	}
+
+	_buildGlitterFillExportPlan(layer) {
+		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
+		return {
+			prepareMasks: async ({ maskDataMap, maskCanvases, canvasData, callbacks }) => {
+				const rawMask = callbacks.createMask(layer);
+				maskDataMap.set(layer.id, rawMask);
+				maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
+			},
+			prepareStaticResources: async () => {},
+			getAuthoredSources,
+			render: ({ ctx, frameIndex, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
+				const maskCanvas = maskCanvases.get(layer.id);
+				if (!maskCanvas) throw new Error(`Missing mask canvas for layer ${layer.id}`);
+				const [entry] = getLayerPaintSlots(layer);
+				const source = this._getSlotSource(layer, entry);
+				if (!source) return;
+				helperCtx.save();
+				helperCtx.clearRect(0, 0, width, height);
+				this._paintMaskedSource(helperCtx, width, height, maskCanvas, source, {
+					frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
+				});
+				helperCtx.restore();
+				if (rainbowHue) {
+					const pixels = helperCtx.getImageData(0, 0, width, height);
+					applyColorAdjustToImageData(pixels, { hue: rainbowHue, saturation: 100, brightness: 100 });
+					helperCtx.putImageData(pixels, 0, 0);
+				}
+				ctx.drawImage(this.helperCanvas, 0, 0);
+			}
+		};
+	}
+
+	_buildSlotStackExportPlan(layer, { ensureTextFont = false } = {}) {
+		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
+		const scratch = {
+			compositeCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			fillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
+		};
+		scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
+		return {
+			// The layer's manager builds every slot mask (the same masks its
+			// preview uses), so preview and export never diverge.
+			prepareMasks: async ({ slotMaskCanvases, callbacks }) => {
+				slotMaskCanvases.set(layer.id, await callbacks.renderSlotMasks(layer));
+			},
+			prepareStaticResources: async ({ callbacks }) => {
+				if (ensureTextFont) await callbacks.ensureTextFont(layer.textData.fontId);
+			},
+			getAuthoredSources,
+			render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases }) => {
+				this._renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases?.get(layer.id), scratch);
+			}
+		};
+	}
+
+	_buildStickerExportPlan(layer) {
+		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
+		const scratch = {
+			sourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			shadowMaskCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			shadowFillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
+		};
+		scratch.shadowMaskCtx = scratch.shadowMaskCanvas.getContext('2d', { alpha: true });
+		return {
+			prepareMasks: async () => {},
+			prepareStaticResources: async ({ callbacks }) => {
+				const stickerData = layer.stickerData;
+				if (!stickerData.isAnimated) {
+					// Export resolution is independent of the live canvas's last zoom.
+					const resolvedUrl = this._resolveStickerExportUrl(layer);
+					if (!this._getFrameImageData(stickerData.staticImageData) || stickerData._exportResolvedUrl !== resolvedUrl) {
+						stickerData.staticImageData = null;
+						callbacks.onStatus(`Loading ${stickerData.name}...`);
+						try {
+							stickerData.staticImageData = await this._loadStaticImage(resolvedUrl);
+							stickerData._exportResolvedUrl = resolvedUrl;
+						} catch (error) {
+							throw new Error(`Failed to load static sticker ${stickerData.name}`);
 						}
-						const [entry] = getLayerPaintSlots(layer);
-						const source = this._getSlotSource(layer, entry);
-						if (!source) return;
-
-						helperCtx.save();
-						helperCtx.clearRect(0, 0, width, height);
-						this._paintMaskedSource(helperCtx, width, height, maskCanvas, source, {
-							frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
-						});
-						helperCtx.restore();
-
-						if (rainbowHue) {
-							const pixels = helperCtx.getImageData(0, 0, width, height);
-							applyColorAdjustToImageData(pixels, { hue: rainbowHue, saturation: 100, brightness: 100 });
-							helperCtx.putImageData(pixels, 0, 0);
-						}
-
-						ctx.drawImage(this.helperCanvas, 0, 0);
 					}
-				};
-
-			case LayerType.TEXT_GLITTER:
-			case LayerType.SHAPE: {
-				const scratch = {
-					compositeCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
-					fillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
-				};
-				scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
-				return {
-					// The layer's manager builds every slot mask (the same masks its
-					// preview uses), so preview and export never diverge.
-					prepareMasks: async ({ slotMaskCanvases, callbacks }) => {
-						slotMaskCanvases.set(layer.id, await callbacks.renderSlotMasks(layer));
-					},
-					prepareStaticResources: async ({ callbacks }) => {
-						if (layer.type === LayerType.TEXT_GLITTER) await callbacks.ensureTextFont(layer.textData.fontId);
-					},
-					getAuthoredSources,
-					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases }) => {
-						this._renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases?.get(layer.id), scratch);
-					}
-				};
+				}
+			},
+			getAuthoredSources: (library) => [
+				...(layer.stickerData.isAnimated ? [this._createStickerDescriptor(layer)] : []),
+				...getAuthoredSources(library)
+			],
+			render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
+				this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
 			}
+		};
+	}
 
-			case LayerType.STICKER: {
-				const scratch = {
-					sourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
-					shadowMaskCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
-					shadowFillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
-				};
-				scratch.shadowMaskCtx = scratch.shadowMaskCanvas.getContext('2d', { alpha: true });
-				return {
-					prepareMasks: async () => {},
-					prepareStaticResources: async ({ callbacks }) => {
-						const stickerData = layer.stickerData;
-						if (!stickerData.isAnimated) {
-							// Resolved independently of whatever resolution the live
-							// canvas last swapped to, so exports stay crisp regardless
-							// of the zoom level last used while editing.
-							const resolvedUrl = this._resolveStickerExportUrl(layer);
-							if (!this._getFrameImageData(stickerData.staticImageData) || stickerData._exportResolvedUrl !== resolvedUrl) {
-								stickerData.staticImageData = null;
-								callbacks.onStatus(`Loading ${stickerData.name}...`);
-								try {
-									stickerData.staticImageData = await this._loadStaticImage(resolvedUrl);
-									stickerData._exportResolvedUrl = resolvedUrl;
-								} catch (error) {
-									throw new Error(`Failed to load static sticker ${stickerData.name}`);
-								}
-							}
-						}
-					},
-					getAuthoredSources: (library) => [
-						...(layer.stickerData.isAnimated ? [this._createStickerDescriptor(layer)] : []),
-						...getAuthoredSources(library)
-					],
-					render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
-						this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
-					}
-				};
+	_buildFilterExportPlan(layer) {
+		return {
+			prepareMasks: async () => {},
+			prepareStaticResources: async () => {},
+			getAuthoredSources: () => [],
+			render: ({ ctx, width, height, keepAlpha, alphaThreshold }) => {
+				if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
+				const caption = GlitterFilter.resolve(layer.filterData).caption;
+				const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
+				GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
+					keepAlpha,
+					alphaThreshold,
+					seed: layer.id,
+					tileCache: this.filterGrainTileCache,
+					blendMode: GlitterBlendModes.forLayer(layer),
+					renderSource: captionSpec ? (sourceContext) => GlitterFilter.drawCaption(sourceContext, captionSpec) : null
+				});
 			}
-
-			case LayerType.FILTER: {
-				return {
-					prepareMasks: async () => {},
-					prepareStaticResources: async () => {},
-					getAuthoredSources: () => [],
-					render: ({ ctx, width, height, keepAlpha, alphaThreshold }) => {
-						if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
-						const caption = GlitterFilter.resolve(layer.filterData).caption;
-						const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
-						GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
-							keepAlpha,
-							alphaThreshold,
-							seed: layer.id,
-							tileCache: this.filterGrainTileCache,
-							blendMode: GlitterBlendModes.forLayer(layer),
-							renderSource: captionSpec ? (sourceContext) => GlitterFilter.drawCaption(sourceContext, captionSpec) : null
-						});
-					}
-				};
-			}
-
-			default:
-				return {
-					prepareMasks: async () => {},
-					prepareStaticResources: async () => {},
-					getAuthoredSources: () => [],
-					render: () => {}
-				};
-		}
+		};
 	}
 
 	_renderFilledMaskInto(fillCanvas, maskCanvas, source, layer, frameIndex, sourceKey, sourceSelectionMap, resolvedFramesBySource) {
@@ -946,12 +952,19 @@ class SceneCompositor {
 			layerPlans,
 			masks,
 			authoredSources,
-			proceduralSources: this._collectProceduralSources(visibleLayers, { includeBaseImage: settingsSnapshot.baseImage }),
+			proceduralSources: this._collectProceduralSources(visibleLayers, {
+				includeBaseImage: settingsSnapshot.baseImage,
+				canvasData
+			}),
 			basePipeline,
 			watermark,
 			watermarkCanvas,
 			watermarkSource
 		};
+	}
+
+	async prepareContext(params) {
+		return this._prepareExportContext(params);
 	}
 
 	_prepareAuthoredResolution(context, session, fallbackDuration) {
@@ -1136,10 +1149,11 @@ class SceneCompositor {
 	}
 
 	async composeFrameAt(params) {
-		const { visibleLayers, canvasData, exportSettings, callbacks, timestamp = 0 } = params;
+		const { callbacks, timestamp = 0 } = params;
 		this.filterGrainTileCache.clear();
+		const context = params.preparedContext || await this.prepareContext(params);
+		const { visibleLayers, canvasData, exportSettings } = context;
 		callbacks.onProgress(0, 'Loading sources…', 0, visibleLayers.length, { phase: 'Preparing' });
-		const context = await this._prepareExportContext(params);
 		const session = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
 		const { resolvedFramesBySource, sourceSelectionMap } = this._resolveSelectedAuthored(context, session, timestamp, exportSettings.frameDelay);
 		const preserveAlpha = this._resolvePreserveAlpha(params.target?.supportsTransparency ?? true, exportSettings);
@@ -1238,7 +1252,10 @@ class SceneCompositor {
 					const origin = [unit.anchorBox.origin?.x ?? 0.5, unit.anchorBox.origin?.y ?? 0.5];
 					const sample = sampled
 						? { ...sampled, originX: origin[0], originY: origin[1] }
-						: GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id, origin });
+						: GlitterAnimation.sampleAt(unit.animData, timestamp, {
+							...this._buildAnimationSamplingContext(layer, unit.anchorBox, { width, height }),
+							origin
+						});
 					rainbowHue = sample.hue || 0;
 					if (layer.type === LayerType.GLITTER_FILL) {
 						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);

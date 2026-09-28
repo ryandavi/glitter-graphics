@@ -25,6 +25,9 @@ registerLayerType(LayerType.SHAPE, {
 	],
 	hasVisibleContent: (layer) => Boolean(layer.shapeData),
 	animatable: true,
+	animate: (...args) => animateTransformableLayerPreview(...args),
+	animationBox: (_editor, layer) => ({ width: layer.shapeData.width, height: layer.shapeData.height }),
+	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
 	serialization: {
 		dataKey: 'shapeData',
 		omit: ['settings'],
@@ -49,11 +52,25 @@ registerLayerType(LayerType.SHAPE, {
 	transformable: true,
 	managerKey: 'shapeGlitterManager',
 	blendable: true,
+	renderSwatch: (layer, context) => {
+		const fill = getLayerFillSlot(layer);
+		const imageAsset = context.editor.shapeGlitterManager?.getImageFillAsset(fill?.imageRef);
+		if (!context.renderPaint(fill, imageAsset)) context.swatch.classList.add('empty');
+		const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
+		const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
+		context.swatch.style.maskImage = shapeMask;
+		context.swatch.style.webkitMaskImage = shapeMask;
+		context.swatch.style.maskRepeat = context.swatch.style.webkitMaskRepeat = 'no-repeat';
+		context.swatch.style.maskPosition = context.swatch.style.webkitMaskPosition = 'center';
+		context.swatch.style.maskSize = context.swatch.style.webkitMaskSize = '80% 80%';
+		return true;
+	},
 	frame: (editor, layer) => editor.shapeGlitterManager?.getShapeBodyFrame(layer) || null,
 	visualBounds: (editor, layer) => editor.shapeGlitterManager?.getShapeVisualFrame(layer) || null,
 	supportsCornerRadius: (layer) => layer?.shapeData?.shapeId === 'square',
 	transformPrefix: 'shape',
 	transformCapabilities: {
+		edgeResize: true,
 		panelRedesign: true,
 		position: true,
 		size: true,

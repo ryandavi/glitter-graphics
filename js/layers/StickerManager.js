@@ -1035,4 +1035,8 @@ updateTransform(layerId, updates) {
 		this.layerElements.clear();
 		this.layerTransforms.clear();
 	}
+
+	buildExportPlan(layer, context) {
+		return context.compositor._buildStickerExportPlan(layer);
+	}
 }

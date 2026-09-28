@@ -353,6 +353,19 @@ function assert(condition, message) {
 			renderSlotMasks: (layer) => getLayerManagerForType(window.editor, layer.type).renderSlotMasks(layer),
 			ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
 		};
+		Object.values(LayerType).forEach((type) => {
+			const manager = getLayerManagerForType(window.editor, type);
+			check(typeof manager?.buildExportPlan === 'function', `${type} manager has no export-plan builder`);
+		});
+		const stickerTransformable = LAYER_UI_CONFIG[LayerType.STICKER].transformable;
+		try {
+			LAYER_UI_CONFIG[LayerType.STICKER].transformable = (layer) => !layer.pinned;
+			check(isTransformableLayerType(LayerType.STICKER), 'Per-layer transform predicate removed the type capability');
+			check(!isLayerTransformable({ type: LayerType.STICKER, pinned: true }), 'Pinned layer remained transformable');
+			check(isLayerTransformable({ type: LayerType.STICKER, pinned: false }), 'Unpinned layer lost transformability');
+		} finally {
+			LAYER_UI_CONFIG[LayerType.STICKER].transformable = stickerTransformable;
+		}
 		let planBuilds = 0;
 		const originalBuild = compositor._buildLayerExportPlan.bind(compositor);
 		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
@@ -373,6 +386,19 @@ function assert(condition, message) {
 			CompositeTimelinePlanner.prototype.plan = originalPlanner;
 			CompositeFrameReducer.prototype.reduce = originalReducer;
 		}
+
+		planBuilds = 0;
+		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
+		try {
+			const preparedContext = await compositor.prepareContext({
+				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				exportSettings: structuredClone(window.editor.exportSettings), callbacks
+			});
+			check(planBuilds === visibleLayers.length, 'Prepared context did not build exactly one plan per layer');
+			await compositor.composeFrameAt({ preparedContext, target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0 });
+			await compositor.composeFrameAt({ preparedContext, target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 100 });
+			check(planBuilds === visibleLayers.length, 'Prepared still composition rebuilt layer plans');
+		} finally { compositor._buildLayerExportPlan = originalBuild; }
 
 		planBuilds = 0;
 		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };

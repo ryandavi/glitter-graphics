@@ -7,6 +7,9 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	],
 	hasVisibleContent: (layer) => hasMaskContent(layer),
 	animatable: true,
+	animate: (...args) => animateCanvasLayerPreview(...args),
+	animationBox: (_editor, _layer, canvas) => ({ x: 0, y: 0, width: canvas.width, height: canvas.height }),
+	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
 	serialization: {
 		extraKeys: ['selections', 'fill', 'autoGlitter'],
 		includeMaskVersion: true,

@@ -1234,4 +1234,8 @@ class ShapeGlitterManager {
 	createTransformHandles(layerId) {
 		movableCreateTransformHandles(this, layerId);
 	}
+
+	buildExportPlan(layer, context) {
+		return context.compositor._buildSlotStackExportPlan(layer);
+	}
 }

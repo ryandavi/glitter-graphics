@@ -20,6 +20,9 @@ registerLayerType(LayerType.STICKER, {
 	contentScalesWithTransform: true,
 	hasVisibleContent: (layer) => !layer.stickerData || !layer.stickerData.isEmpty,
 	animatable: true,
+	animate: (...args) => animateTransformableLayerPreview(...args),
+	animationBox: (_editor, layer) => ({ width: layer.stickerData.width, height: layer.stickerData.height }),
+	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
 	serialization: {
 		custom: { serialize: 'serializeSticker', deserialize: 'deserializeSticker' }
 	},
@@ -39,6 +42,18 @@ registerLayerType(LayerType.STICKER, {
 	transformable: true,
 	managerKey: 'stickerManager',
 	blendable: true,
+	renderSwatch: (layer, context) => {
+		context.swatch.classList.add('sticker');
+		if (layer.stickerData?.isEmpty || !layer.stickerData?.url) {
+			context.swatch.classList.add('empty');
+			if (!context.compact) context.swatch.innerHTML = '<span>?</span>';
+		} else {
+			context.swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
+			context.swatch.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
+			if (layer.stickerData.isPixelated !== false) context.swatch.classList.add('pixelated');
+		}
+		return true;
+	},
 	// The image box; the shadow only widens the visual bounds. An empty
 	// sticker has no frame, so it can't be clicked.
 	frame: (editor, layer) => (layer.stickerData && !layer.stickerData.isEmpty && layer.stickerData.url
@@ -47,6 +62,7 @@ registerLayerType(LayerType.STICKER, {
 	visualBounds: (editor, layer) => padFrame(getLayerFrame(editor, layer), getLayerSlotFramePadding(layer)),
 	transformPrefix: 'sticker',
 	transformCapabilities: {
+		edgeResize: true,
 		panelRedesign: true,
 		position: true,
 		size: true,

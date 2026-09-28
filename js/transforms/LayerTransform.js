@@ -67,7 +67,7 @@ class LayerTransform {
 	}
 
 	supportsEdgeResize() {
-		return [LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(this.layer.type);
+		return Boolean(LAYER_UI_CONFIG[this.layer.type]?.transformCapabilities?.edgeResize);
 	}
 
 	// ===== CORE TRANSFORM APPLICATION =====
@@ -532,7 +532,7 @@ const swallowFollowupClick = () => {
 		&& !this.editor.layerManager.hasMultiSelection()
 		? (() => {
 			const activeLayer = this.editor.layerManager.getActiveLayer();
-			if (!activeLayer || activeLayer.locked || !isTransformableLayerType(activeLayer.type)) return null;
+			if (!activeLayer || activeLayer.locked || !isLayerTransformable(activeLayer)) return null;
 			const context = this.editor.getMovableLayerContext(activeLayer);
 			return context?.manager?.layerTransforms?.get(activeLayer.id) || null;
 		})()

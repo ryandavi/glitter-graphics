@@ -89,7 +89,7 @@ class LayerManager {
 			const layers = this.layers.filter((layer) => (
 				layer.visible
 				&& !layer.locked
-				&& isTransformableLayerType(layer.type)
+				&& isLayerTransformable(layer)
 			));
 			if (!layers.length) return;
 			event.preventDefault();
@@ -365,7 +365,7 @@ class LayerManager {
 	}
 
 	isLayerMovable(layer) {
-		return Boolean(layer && isTransformableLayerType(layer.type) && !layer.locked);
+		return Boolean(layer && isLayerTransformable(layer) && !layer.locked);
 	}
 
 	isLayerSelected(layerId) {
@@ -712,7 +712,7 @@ class LayerManager {
 
 			let isHit = false;
 
-			if (isTransformableLayerType(layer.type)) {
+			if (isLayerTransformable(layer)) {
 				isHit = this.isPointInLayer(layer, x, y);
 			} else if (layer.type === LayerType.GLITTER_FILL) {
 				isHit = this.isPixelInLayerSelection(layer, x, y);
@@ -749,7 +749,7 @@ class LayerManager {
 	// A transformable layer is hit inside its frame (see getLayerFrame), plus a
 	// few screen pixels of tolerance. Empty layers have nothing to hit.
 	isPointInLayer(layer, clickX, clickY) {
-		if (!isTransformableLayerType(layer?.type)) return false;
+		if (!isLayerTransformable(layer)) return false;
 		if (LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) === false) return false;
 		if (!getLayerFrame(this.editor, layer)) return false;
 		const transform = this.editor.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)
@@ -1443,60 +1443,14 @@ class LayerManager {
 			return true;
 		};
 
-		if (layer.type === LayerType.STICKER) {
-			swatch.classList.add('sticker');
-			if (layer.stickerData?.isEmpty || !layer.stickerData?.url) {
-				swatch.classList.add('empty');
-				if (!compact) swatch.innerHTML = '<span>?</span>';
-			} else {
-				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
-				swatch.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
-				if (layer.stickerData.isPixelated !== false) swatch.classList.add('pixelated');
-			}
-			return;
-		}
-
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			if (!renderPaint(getLayerFillSlot(layer))) swatch.classList.add('empty');
-			swatch.classList.add('text-layer');
-			if (!compact) swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
-			return;
-		}
-
-		if (layer.type === LayerType.SHAPE) {
-			const fill = getLayerFillSlot(layer);
-			const imageAsset = this.editor.shapeGlitterManager?.getImageFillAsset(fill?.imageRef);
-			if (!renderPaint(fill, imageAsset)) swatch.classList.add('empty');
-			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
-			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
-			swatch.style.maskImage = shapeMask;
-			swatch.style.webkitMaskImage = shapeMask;
-			swatch.style.maskRepeat = swatch.style.webkitMaskRepeat = 'no-repeat';
-			swatch.style.maskPosition = swatch.style.webkitMaskPosition = 'center';
-			swatch.style.maskSize = swatch.style.webkitMaskSize = '80% 80%';
-			return;
-		}
-
-		if (layer.type === LayerType.BASE_IMAGE) {
-			const background = getLayerFillSlot(layer) || { mode: 'image' };
-			if (background.mode === 'image' && this.editor.baseBackgroundManager?.hasBaseImage() && this.editor.originalImage) {
-				swatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl || this.editor.originalImage.src})`;
-				swatch.classList.add('baseImage');
-			} else if (!renderPaint(background)) {
-				swatch.classList.add('empty');
-			}
-			return;
-		}
-
-		if (layer.type === LayerType.FILTER) {
-			const thumbnail = document.createElement('span');
-			GlitterFilter.renderCssThumbnail(thumbnail, layer.filterData, layer.opacity / 100);
-			swatch.classList.add('filter');
-			swatch.append(thumbnail);
-			return;
-		}
-
-		if (!renderPaint(getLayerFillSlot(layer))) swatch.classList.add('empty');
+		const rendered = LAYER_UI_CONFIG[layer.type]?.renderSwatch?.(layer, {
+			editor: this.editor,
+			swatch,
+			compact,
+			renderPaint,
+			baseImageSwatchDataUrl: this.baseImageSwatchDataUrl
+		});
+		if (!rendered && !renderPaint(getLayerFillSlot(layer))) swatch.classList.add('empty');
 	}
 
 	updateMobileLayersSwatch() {

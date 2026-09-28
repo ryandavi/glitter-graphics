@@ -21,6 +21,17 @@ registerLayerType(LayerType.BASE_IMAGE, {
 		normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
 	},
 	managerKey: 'baseBackgroundManager',
+	timelineSources: (layer, context) => context.compositor._createBaseTimelineSources(layer, context),
+	renderSwatch: (layer, context) => {
+		const background = getLayerFillSlot(layer) || { mode: 'image' };
+		if (background.mode === 'image' && context.editor.baseBackgroundManager?.hasBaseImage() && context.editor.originalImage) {
+			context.swatch.style.backgroundImage = `url(${context.baseImageSwatchDataUrl || context.editor.originalImage.src})`;
+			context.swatch.classList.add('baseImage');
+		} else if (!context.renderPaint(background)) {
+			context.swatch.classList.add('empty');
+		}
+		return true;
+	},
 	goTo: null,
 	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'baseLayerSettingsSection'],
 	mobileSettingsSections: ['background'],

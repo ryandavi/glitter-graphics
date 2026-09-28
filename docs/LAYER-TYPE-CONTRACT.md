@@ -8,21 +8,10 @@ Adding a new layer type should need four things:
 
 1. A manager class that implements the manager interface below.
 2. One `LayerType` constant in `js/core/layer-types.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow or background the type paints with.
-3. One export-plan entry in `SceneCompositor._buildLayerExportPlan` (canvas export for every format).
+3. A `buildExportPlan(layer, context)` method on the manager (canvas export for every format).
 4. One `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`, with its title mirrored in `modals/guide.html`.
 
 If a new type needs a branch anywhere else, treat that as an architecture bug: fix the dispatch site so it reads `LAYER_UI_CONFIG`, instead of adding one more `if (layer.type === …)`.
-
-## Where that target is not yet met
-
-As of 2026-09-22, these sites still branch on layer type by hand. A new type must be checked against each one until later phases of the architecture audit (sections D2 and D4, in `docs/plans/`, local-only) remove them:
-
-- `SceneCompositor._buildLayerExportPlan` (one case per type; text and shape already share one slot-stack plan)
-- `LayerManager.renderLayerSwatch` (layers-list thumbnail)
-- the non-slot geometry in `scaleDocumentLayerState` (`js/core/document-scaler.js`): font size, box and shape size, sticker scale
-- `LayerTransform.supportsEdgeResize`
-
-Paint slots need no branches: preloading, document scaling of slot fields, the Effects badge, export culling padding and project-load glitter repair all read the `paintSlots` declaration.
 
 ## Manager interface
 
@@ -34,6 +23,7 @@ Each layer manager exposes these members, so shared code can route through `mana
 - `releaseLayerResources(layer)`: safe during deletion. Removes DOM, transforms and any cached resources the layer owns.
 - `loadLayerSettings(layer)`: syncs the sidebar controls from the layer.
 - `normalizeLayer(layer)`: fills in defaults so a created, restored, history-loaded or project-loaded layer has the canonical runtime shape. Call it only where a layer enters the document (`createLayer` and the `serialization.normalize` hook), never from getters or render paths. Renames and moved fields belong in `ProjectSerializer.migrateLayerState` instead.
+- `buildExportPlan(layer, context)`: returns the compositor plan for this layer. Text and shape delegate to the shared slot-stack plan builder.
 - `layerElements`: a `Map` of live preview DOM. It is the source of truth for visibility toggles and selection highlighting.
 - `layerTransforms`: a `Map` of `LayerTransform` instances, for transformable types only.
 - For types drawn as a slot stack (text, shape): `getSlotStack(layer)` and `getSlotMask(…, slot)` for the preview, and `renderSlotMasks(layer)` for export, which returns `{ [slotKey]: maskCanvas, renderWidth, renderHeight }` with shadow offsets baked in.
@@ -59,9 +49,11 @@ Common optional fields:
 - `addedStatusMessage`: status text after creation.
 - `addableViaModal`: `{ label, icon, description }` for the Add Layer modal card. Omit it if users shouldn't add the type there.
 - `goTo`: `'glitter'`, `'sticker'` or `null`, for the layers-list "go to source" action.
-- `transformable`, `transformPrefix`, `transformCapabilities`: participation in transform handles and the transform panel's control-id prefix.
+- `transformable`, `transformPrefix`, `transformCapabilities`: participation in transform handles and the transform panel's control-id prefix. `transformable` may be a per-layer predicate; `transformCapabilities.edgeResize` declares edge handles.
 - `frame(editor, layer)` and `visualBounds(editor, layer)`: required for transformable types. Each returns a layer-local box `{ width, height, offsetX, offsetY }` in unscaled layer units, offset from the element center (`frameFromCanvasRect` converts a rect in a padded mask canvas). `frame` is the object's body (content, border and background plate, no shadow); handles, hit-testing, alignment, snapping and group bounds use it. `visualBounds` covers every painted pixel, shadow included, for export culling and crop-to-artwork; it defaults to `frame`. Return `null` from `frame` when the layer has nothing to click. Read them through `getLayerFrame` / `getLayerVisualBounds` (`js/transforms/transform-math.js`).
 - `supportsCornerRadius(layer)`: optional capability for a transformable type whose selected geometry exposes the shared on-canvas uniform-radius handles. Return true only while the layer's current geometry supports the existing radius field; the chrome must not branch on layer type.
+- `renderSwatch(layer, context)`: optional layers-list thumbnail painter. Types without one use their fill paint slot.
+- `animationBox(editor, layer, canvas)`, `timelineSources(layer, context)` and `animate(layer, time, element, context)`: optional export/preview animation hooks. Motion sampling receives `{ canvasW, canvasH, boxW, boxH, layerId, seed }` in both paths.
 - `blendable`: whether the layer has a blend mode.
 - `animatable`: whether the layer can carry `animation`.
 - `contentScalesWithTransform`: the type's slots scale with its transform (stickers), so document scaling compensates them instead of rescaling them.
@@ -72,9 +64,8 @@ Common optional fields:
 
 1. Create the manager and construct it in the `GlitterEditor` constructor in `js/app.js`. Add its `<script>` tag to `index.html` after its dependencies, then run `node tools/bump-cache.js`.
 2. Add the `LayerType` constant and the `js/layers/types/<type>.js` definition, with its script tag after `js/paint/paint-slots.js` in `index.html`.
-3. Add the preview implementation (manager `renderContent`) and its export twin (the export-plan entry). The two must match; see "Preview is DOM, export is canvas" in `AGENTS.md`.
+3. Add the preview implementation (manager `renderContent`) and its export twin (`manager.buildExportPlan`). The two must match; see "Preview is DOM, export is canvas" in `AGENTS.md`.
 4. Add the panel schema and mirror its title in `modals/guide.html`.
-5. Check the "not yet met" list above.
-6. Run `node tests/run.js --tag quick` and `--tag export`, plus the export fragility routine from `AGENTS.md`.
+5. Run `node tests/run.js --tag quick` and `--tag export`, plus the export fragility routine from `AGENTS.md`.
 
 That should be enough for create, delete, visibility, selection, go-to-source, mobile settings routing, undo, clipboard, project save and load, and the Add Layer modal.

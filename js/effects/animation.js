@@ -1,12 +1,64 @@
 'use strict';
 
 const GlitterAnimation = (() => {
-	const ANIMATION_TYPES = Object.freeze([
-		'breath', 'float', 'sway', 'dim', 'drift', 'twinkle',
-		'pulse', 'heartbeat', 'blink', 'bounce', 'shake', 'tremble',
-		'wobble', 'jello', 'tada', 'swing', 'rubber-band',
-		'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee', 'rainbow'
-	]);
+	const motion = (pose, options = {}) => Object.freeze({
+		needsBounds: false,
+		particleSafe: true,
+		...options,
+		pose
+	});
+	const MOTION_DEFINITIONS = Object.freeze({
+		breath: motion(({ out, amount, oscillation }) => { out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }),
+		float: motion(({ out, amount, oscillation, angle }) => {
+			const lift = amount * oscillation;
+			out.tx += Math.cos(angle) * lift;
+			out.ty += Math.sin(angle) * lift;
+		}),
+		sway: motion(({ out, amount, oscillation }) => { out.rotate = amount * oscillation; }),
+		dim: motion(({ out, data, wave }) => { out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }),
+		drift: motion(({ data, amount, p, vector }) => vector((Number(data.distance) || amount) * p), { particleSafe: false }),
+		twinkle: motion(({ out, data, p, random }) => {
+			out.opacity = random(2) < (data.duty / 50 - 1) ? 1 : data.opacityFloor / 100;
+			if (p === 0 || p === 1) out.opacity = 1;
+		}),
+		pulse: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }),
+		heartbeat: motion(({ out, amount, p }) => {
+			const thump = p < 0.18 ? Math.sin(p / 0.18 * Math.PI) : p < 0.42 ? Math.sin((p - 0.24) / 0.18 * Math.PI) * 0.7 : 0;
+			out.scaleX = out.scaleY = 1 + Math.max(0, thump) * amount / 100;
+		}),
+		blink: motion(({ out, data, p }) => { out.opacity = p < data.duty / 100 ? 1 : 0; if (p === 1) out.opacity = 1; }),
+		bounce: motion(({ amount, p, wave, vector }) => vector(-amount * (1 - p) * wave)),
+		shake: motion(({ out, amount, wave, random }) => { out.tx = random(3) * amount * wave; out.rotate = random(4) * amount * 0.35 * wave; }),
+		tremble: motion(({ out, amount, wave, random }) => { out.tx = random(5) * amount * wave; out.ty = random(6) * amount * wave; }),
+		wobble: motion(({ out, amount, oscillation, p }) => { out.tx = amount * 1.5 * oscillation * (1 - p); out.rotate = amount * oscillation * (1 - p); }),
+		jello: motion(({ out, amount, oscillation, p }) => { out.skewX = amount * oscillation * (1 - p); out.skewY = -out.skewX * 0.7; }),
+		tada: motion(({ out, amount, wave, p }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; out.rotate = amount * 0.45 * Math.sin(8 * Math.PI * p) * wave; }, { particleSafe: false }),
+		swing: motion(({ out, amount, p }) => { out.rotate = amount * Math.sin(4 * Math.PI * p) * (1 - p); }),
+		'rubber-band': motion(({ out, amount, oscillation, p }) => { out.scaleX = 1 + amount / 100 * oscillation * (1 - p); out.scaleY = 1 - amount / 140 * oscillation * (1 - p); }),
+		move: motion(({ out, data, wave, vector }) => { vector(Number(data.distance) * wave); if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }),
+		orbit: motion(({ out, data, p }) => {
+			const [anchorX, anchorY] = resolveOrigin(data, 'orbitCenter');
+			out.tx = (anchorX - 0.5) * 2 * data.radius + data.radius * Math.cos(2 * Math.PI * p);
+			out.ty = (anchorY - 0.5) * 2 * data.radius + data.radius * Math.sin(2 * Math.PI * p);
+		}),
+		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }),
+		flip: motion(({ out, data, angle, p }) => {
+			const flipScale = Math.cos(data.turns * 2 * Math.PI * p);
+			if (Math.abs(Math.sin(angle)) > Math.abs(Math.cos(angle))) out.scaleY = flipScale;
+			else out.scaleX = flipScale;
+		}),
+		zoom: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }),
+		ping: motion(({ out, data, p }) => { out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; }),
+		// Bounds are available now; the current distance remains authoritative so
+		// existing projects render identically until auto-fit ships.
+		marquee: motion(({ data, p, vector }) => vector(Number(data.distance) * p), { needsBounds: true, particleSafe: false }),
+		rainbow: motion(({ out, p }) => { out.hue = 360 * p; })
+	});
+	const MOTION_REGISTRY = Object.freeze(Object.fromEntries(Object.entries(MOTION_DEFINITIONS).map(([id, definition]) => [
+		id,
+		Object.freeze({ id, ...definition })
+	])));
+	const ANIMATION_TYPES = Object.freeze(Object.keys(MOTION_REGISTRY));
 	const IDENTITY = Object.freeze({
 		tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
 		skewX: 0, skewY: 0, opacity: 1, originX: 0.5, originY: 0.5, hue: 0
@@ -116,85 +168,31 @@ const GlitterAnimation = (() => {
 		const angle = (Number(data.angle) || 0) * Math.PI / 180;
 		const vector = (distance) => { out.tx += Math.cos(angle) * distance; out.ty += Math.sin(angle) * distance; };
 		const random = (salt = 0) => seededRandom01(options.layerId, tMs, (options.seed || 0) + salt) * 2 - 1;
-		switch (data.type) {
-			case 'breath': out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; break;
-			// Float stays on a deterministic axis; Shake and Tremble own jitter.
-			case 'float': {
-				const lift = amount * oscillation;
-				out.tx += Math.cos(angle) * lift;
-				out.ty += Math.sin(angle) * lift;
-				break;
-			}
-			case 'sway': out.rotate = amount * oscillation; break;
-			case 'dim': out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; break;
-			case 'drift': vector((Number(data.distance) || amount) * p); break;
-			case 'twinkle': out.opacity = random(2) < (data.duty / 50 - 1) ? 1 : data.opacityFloor / 100; if (p === 0 || p === 1) out.opacity = 1; break;
-			case 'pulse': out.scaleX = out.scaleY = 1 + amount / 100 * wave; break;
-			case 'heartbeat': {
-				const thump = p < 0.18 ? Math.sin(p / 0.18 * Math.PI) : p < 0.42 ? Math.sin((p - 0.24) / 0.18 * Math.PI) * 0.7 : 0;
-				out.scaleX = out.scaleY = 1 + Math.max(0, thump) * amount / 100;
-				break;
-			}
-			case 'blink': out.opacity = p < data.duty / 100 ? 1 : 0; if (p === 1) out.opacity = 1; break;
-			case 'bounce': vector(-amount * (1 - p) * wave); break;
-			case 'shake': out.tx = random(3) * amount * wave; out.rotate = random(4) * amount * 0.35 * wave; break;
-			case 'tremble': out.tx = random(5) * amount * wave; out.ty = random(6) * amount * wave; break;
-			case 'wobble': out.tx = amount * 1.5 * oscillation * (1 - p); out.rotate = amount * oscillation * (1 - p); break;
-			case 'jello': out.skewX = amount * oscillation * (1 - p); out.skewY = -out.skewX * 0.7; break;
-			case 'tada': out.scaleX = out.scaleY = 1 + amount / 100 * wave; out.rotate = amount * 0.45 * Math.sin(8 * Math.PI * p) * wave; break;
-			case 'swing': out.rotate = amount * Math.sin(4 * Math.PI * p) * (1 - p); break;
-			case 'rubber-band': out.scaleX = 1 + amount / 100 * oscillation * (1 - p); out.scaleY = 1 - amount / 140 * oscillation * (1 - p); break;
+		MOTION_REGISTRY[data.type].pose({ out, data, p, tMs, options, amount, wave, oscillation, angle, vector, random });
 			// OpacityFloor is optional here (0 by default = plain move); dialing it
 			// up dips opacity in sync with the same `wave` driving the travel, so
 			// the layer fades out as it moves away and back in as it returns —
 			// a "move + fade" combo without a dedicated preset for it.
-			case 'move':
-				vector(Number(data.distance) * wave);
-				if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave;
-				break;
 			// Constant-speed one-way travel, restarting at 0 each loop (unlike
 			// drift/move, no wave/amount shaping — a marquee has to hold one
 			// speed edge-to-edge). The restart is a hard jump, not a seamless
 			// wrap; set Distance past the canvas + layer size so the jump lands
 			// while the layer is off-canvas and never reads as a cut.
-			case 'marquee': vector(Number(data.distance) * p); break;
 			// Centered on the layer's own resting position by default (anchor
 			// 'center'); other anchors bias the circle's center toward that
 			// corner/edge by up to one radius, so picking an anchor actually moves
 			// the orbit instead of being inert (transform-origin alone can't do
 			// this — it has no effect on a pure translate).
-			case 'orbit': {
-				const [anchorX, anchorY] = resolveOrigin(data, 'orbitCenter');
-				const centerTx = (anchorX - 0.5) * 2 * data.radius;
-				const centerTy = (anchorY - 0.5) * 2 * data.radius;
-				out.tx = centerTx + data.radius * Math.cos(2 * Math.PI * p);
-				out.ty = centerTy + data.radius * Math.sin(2 * Math.PI * p);
-				break;
-			}
 			// Amount is optional here (0 by default = plain spin); dialing it up
 			// pulses scale in sync with the same period, turning the spin into a
 			// vortex/spiral without a dedicated preset for it.
-			case 'rotate':
-				out.rotate = data.turns * 360 * p;
-				if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation;
-				break;
 			// Axis rides the shared Angle control (snapped to whichever of
 			// horizontal/vertical it's closer to) instead of a dedicated axis
 			// field, so one preset covers both flip orientations.
-			case 'flip': {
-				const flipScale = Math.cos(data.turns * 2 * Math.PI * p);
-				if (Math.abs(Math.sin(angle)) > Math.abs(Math.cos(angle))) out.scaleY = flipScale;
-				else out.scaleX = flipScale;
-				break;
-			}
-			case 'zoom': out.scaleX = out.scaleY = 1 + amount / 100 * wave; break;
-			case 'ping': out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; break;
 			// A pure hue cycle — no transform, so it composes with any other
 			// preset's motion via the same outer hue-rotate filter/matrix. p is
 			// already the eased, direction-adjusted 0..1 progress through the
 			// period, so one full 360° turn always lands exactly on a period.
-			case 'rainbow': out.hue = 360 * p; break;
-		}
 		// Pixel-snap only whole-pixel-aligns position, keeping pixel art crisp at
 		// rest. Rounding rotation/scale to coarse steps has no such benefit (a
 		// rotated bitmap is resampled regardless of angle granularity) and only
@@ -228,11 +226,12 @@ const GlitterAnimation = (() => {
 		return pose(data, progress, tMs, options);
 	}
 
-	function isSeamlessLoop(value) {
+	function isSeamlessLoop(value, samplingContext = {}) {
 		const data = normalizeAnimation(value);
 		if (Number.isFinite(data.iterations)) return false;
-		const a = sampleAt(data, 0, { layerId: '__seam__' });
-		const b = sampleAt(data, data.periodMs, { layerId: '__seam__' });
+		const context = { layerId: '__seam__', seed: 0, ...samplingContext };
+		const a = sampleAt(data, 0, context);
+		const b = sampleAt(data, data.periodMs, context);
 		// hue wraps at 360deg (0deg and 360deg render identically), so it needs a
 		// modular comparison instead of the other channels' exact equality.
 		const transformSeamless = Object.keys(IDENTITY).filter((key) => key !== 'hue').every((key) => Math.abs(a[key] - b[key]) <= 1e-3);
@@ -256,7 +255,7 @@ const GlitterAnimation = (() => {
 	}
 
 	return {
-		ANIMATION_TYPES, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
+		ANIMATION_TYPES, MOTION_REGISTRY, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
 		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext, resolveOrigin
 	};
 })();

@@ -33,6 +33,9 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	],
 	hasVisibleContent: (layer) => Boolean(layer.textData?.text?.trim()),
 	animatable: true,
+	animate: (...args) => animateTransformableLayerPreview(...args),
+	animationBox: (_editor, layer) => ({ width: layer.textData.width, height: layer.textData.height }),
+	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
 	serialization: {
 		dataKey: 'textData',
 		omit: ['settings'],
@@ -61,10 +64,17 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	transformable: true,
 	managerKey: 'textGlitterManager',
 	blendable: true,
+	renderSwatch: (layer, context) => {
+		if (!context.renderPaint(getLayerFillSlot(layer))) context.swatch.classList.add('empty');
+		context.swatch.classList.add('text-layer');
+		if (!context.compact) context.swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
+		return true;
+	},
 	frame: (editor, layer) => editor.textGlitterManager?.getTextBodyFrame(layer) || null,
 	visualBounds: (editor, layer) => editor.textGlitterManager?.getTextVisualFrame(layer) || null,
 	transformPrefix: 'text',
 	transformCapabilities: {
+		edgeResize: true,
 		panelRedesign: true,
 		position: true,
 		size: true,

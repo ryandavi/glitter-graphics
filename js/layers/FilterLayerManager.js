@@ -264,4 +264,8 @@ class FilterLayerManager {
 		this.layerElements.clear();
 		this.grainTileCache.clear();
 	}
+
+	buildExportPlan(layer, context) {
+		return context.compositor._buildFilterExportPlan(layer);
+	}
 }

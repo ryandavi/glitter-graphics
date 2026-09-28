@@ -700,4 +700,8 @@ class BaseBackgroundManager {
 	chooseReplacementImage() {
 		document.getElementById('imageUpload')?.click();
 	}
+
+	buildExportPlan(layer, context) {
+		return context.compositor._buildBaseImageExportPlan(layer);
+	}
 }

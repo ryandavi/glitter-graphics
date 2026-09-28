@@ -2197,4 +2197,8 @@ class TextGlitterManager {
 		this.previewMaskUrls.set(slotKey, { key: cacheKey, url });
 		return url;
 	}
+
+	buildExportPlan(layer, context) {
+		return context.compositor._buildSlotStackExportPlan(layer, { ensureTextFont: true });
+	}
 }

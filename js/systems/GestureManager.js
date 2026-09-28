@@ -796,7 +796,7 @@ class GestureManager {
 	}
 
 	isTransformableLayer(layer) {
-		return Boolean(layer && !layer.locked && isTransformableLayerType(layer.type));
+		return Boolean(layer && !layer.locked && isLayerTransformable(layer));
 	}
 
 	isPointInLayer(layer, screenX, screenY) {

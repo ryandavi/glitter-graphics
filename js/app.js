@@ -996,7 +996,7 @@ class GlitterEditor {
 		if (activeToolbar?.config.id === 'layerCenterControls') {
 			const canTransformSelection = (hasMultiSelection && this.layerManager.canTransformMultiSelection()) || Boolean(
 				layer
-				&& isTransformableLayerType(layer.type)
+				&& isLayerTransformable(layer)
 				&& !layer.locked
 				&& (layer.type !== LayerType.STICKER || layer.stickerSourceId)
 			);

@@ -37,7 +37,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			: scalePixel(value, factor, getFieldDocumentMinimum(binding)));
 	};
 
-	if (config?.transformable) {
+	if (isTransformableLayerType(layer.type)) {
 		const transform = getLayerTransform(layer);
 		// transform.anchor is frame-relative, so document resizing does not scale it.
 		if (scalesWithTransform && transform?.scale) {

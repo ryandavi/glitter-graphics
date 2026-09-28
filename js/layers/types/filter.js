@@ -24,6 +24,13 @@ registerLayerType(LayerType.FILTER, {
 	transformable: false,
 	managerKey: 'filterLayerManager',
 	blendable: true,
+	renderSwatch: (layer, context) => {
+		const thumbnail = document.createElement('span');
+		GlitterFilter.renderCssThumbnail(thumbnail, layer.filterData, layer.opacity / 100);
+		context.swatch.classList.add('filter');
+		context.swatch.append(thumbnail);
+		return true;
+	},
 	mobileCreateDrawer: 'edit',
 	onActivate: (editor, layer) => {
 		editor.setTool(ToolType.SELECT);

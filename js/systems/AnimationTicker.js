@@ -86,28 +86,54 @@ class AnimationTicker {
 		const wrapper = target.getWrapper();
 		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
 		const layer = target.getLayer();
-		const origin = getLayerAnimationOrigin(this.editor, layer, { width: wrapper.offsetWidth, height: wrapper.offsetHeight });
-		const sample = GlitterAnimation.sampleAt(target.getData(), frozen ? 0 : elapsed, { layerId, origin: [origin.x, origin.y] });
-		const transform = layer.type === LayerType.GLITTER_FILL
-			? { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false }
-			: getLayerTransform(layer);
-		const radians = -(Number(transform.rotation) || 0) * Math.PI / 180;
-		const scaleX = Math.max(0.0001, (Number(transform.scale?.x) || 100) / 100) * (transform.flipX ? -1 : 1);
-		const scaleY = Math.max(0.0001, (Number(transform.scale?.y) || 100) / 100) * (transform.flipY ? -1 : 1);
-		const canvasTx = sample.tx;
-		const canvasTy = sample.ty;
-		const domSample = {
-			...sample,
-			tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) / scaleX,
-			ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) / scaleY
-		};
-		wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
-		wrapper.style.opacity = String(sample.opacity);
-		wrapper.style.transformOrigin = `${sample.originX * 100}% ${sample.originY * 100}%`;
-		// hue-rotate on the wrapper composes with each child's own static
-		// filter (fill/shadow color adjust) rather than overwriting it.
-		wrapper.style.filter = sample.hue ? `hue-rotate(${sample.hue}deg)` : '';
+		LAYER_UI_CONFIG[layer.type]?.animate?.(layer, frozen ? 0 : elapsed, wrapper, {
+			editor: this.editor,
+			layerId,
+			data: target.getData()
+		});
 	}
+}
+
+function paintLayerAnimationPreview(layer, elapsed, wrapper, context, useLayerTransform) {
+	const boxW = Math.max(1, Number(wrapper.offsetWidth) || 1);
+	const boxH = Math.max(1, Number(wrapper.offsetHeight) || 1);
+	const origin = getLayerAnimationOrigin(context.editor, layer, { width: boxW, height: boxH });
+	const sample = GlitterAnimation.sampleAt(context.data, elapsed, {
+		canvasW: context.editor.originalCanvas?.width || context.editor.previewCanvas?.width || 1,
+		canvasH: context.editor.originalCanvas?.height || context.editor.previewCanvas?.height || 1,
+		boxW,
+		boxH,
+		layerId: context.layerId,
+		seed: 0,
+		origin: [origin.x, origin.y]
+	});
+	const transform = useLayerTransform
+		? getLayerTransform(layer)
+		: { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false };
+	const radians = -(Number(transform.rotation) || 0) * Math.PI / 180;
+	const scaleX = Math.max(0.0001, (Number(transform.scale?.x) || 100) / 100) * (transform.flipX ? -1 : 1);
+	const scaleY = Math.max(0.0001, (Number(transform.scale?.y) || 100) / 100) * (transform.flipY ? -1 : 1);
+	const canvasTx = sample.tx;
+	const canvasTy = sample.ty;
+	const domSample = {
+		...sample,
+		tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) / scaleX,
+		ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) / scaleY
+	};
+	wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
+	wrapper.style.opacity = String(sample.opacity);
+	wrapper.style.transformOrigin = `${sample.originX * 100}% ${sample.originY * 100}%`;
+	// hue-rotate on the wrapper composes with each child's own static
+	// filter (fill/shadow color adjust) rather than overwriting it.
+	wrapper.style.filter = sample.hue ? `hue-rotate(${sample.hue}deg)` : '';
+}
+
+function animateTransformableLayerPreview(layer, elapsed, wrapper, context) {
+	paintLayerAnimationPreview(layer, elapsed, wrapper, context, true);
+}
+
+function animateCanvasLayerPreview(layer, elapsed, wrapper, context) {
+	paintLayerAnimationPreview(layer, elapsed, wrapper, context, false);
 }
 
 function syncLayerAnimationPreview(element, layer, ticker) {

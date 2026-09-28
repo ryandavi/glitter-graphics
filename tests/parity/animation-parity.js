@@ -5,7 +5,7 @@ const assert = require('assert');
 const types = [
 	'breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse', 'heartbeat', 'blink',
 	'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band',
-	'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'
+	'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee', 'rainbow'
 ];
 const presets = Object.fromEntries(types.map((type) => [type, {
 	periodMs: 1000, easing: 'linear', amount: 10, distance: 20, radius: 20, turns: 1,
@@ -20,8 +20,19 @@ global.CONFIG = { tools: { animation: {
 global.GlitterEasing = require('../../js/effects/easing.js');
 const Animation = require('../../js/effects/animation.js');
 
-const keys = ['tx', 'ty', 'rotate', 'scaleX', 'scaleY', 'skewX', 'skewY', 'opacity', 'originX', 'originY'];
+const keys = ['tx', 'ty', 'rotate', 'scaleX', 'scaleY', 'skewX', 'skewY', 'opacity', 'originX', 'originY', 'hue'];
 const near = (a, b, tolerance = 1e-6) => Math.abs(a - b) <= tolerance;
+
+assert.deepStrictEqual(Object.keys(Animation.MOTION_REGISTRY), Animation.ANIMATION_TYPES);
+Animation.ANIMATION_TYPES.forEach((type) => {
+	const entry = Animation.MOTION_REGISTRY[type];
+	assert.strictEqual(entry.id, type);
+	assert.strictEqual(typeof entry.needsBounds, 'boolean');
+	assert.strictEqual(typeof entry.particleSafe, 'boolean');
+});
+assert.strictEqual(Animation.MOTION_REGISTRY.marquee.needsBounds, true);
+assert.strictEqual(Animation.MOTION_REGISTRY.rotate.particleSafe, true);
+assert.strictEqual(Animation.MOTION_REGISTRY.tada.particleSafe, false);
 
 types.forEach((type) => {
 	const data = Animation.normalizeAnimation({ type });
@@ -109,5 +120,12 @@ Animation.applyToContext(context, matrixSample, 80, 40);
 assert.deepStrictEqual(calls[0], ['translate', matrixSample.tx, matrixSample.ty]);
 assert.deepStrictEqual(calls[1], ['translate', matrixSample.originX * 80, matrixSample.originY * 40]);
 assert.deepStrictEqual(calls.at(-1), ['translate', -matrixSample.originX * 80, -matrixSample.originY * 40]);
+
+const bounds = { canvasW: 640, canvasH: 480, boxW: 80, boxH: 40, layerId: 'bounds', seed: 7 };
+assert.deepStrictEqual(
+	Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, bounds),
+	Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, bounds)
+);
+assert.strictEqual(Animation.isSeamlessLoop({ ...presets.rotate, type: 'rotate' }, bounds), true);
 
 console.log(`animation-parity: ${types.length} presets passed`);
