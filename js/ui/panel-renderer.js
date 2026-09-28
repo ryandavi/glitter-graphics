@@ -766,6 +766,7 @@ function buildAssetInfo(options) {
 	const change = info.querySelector('button');
 	change.id = options.change;
 	change.dataset.role = 'asset-change';
+	change.textContent = options.changeLabel || 'Change';
 	const meta = info.querySelectorAll('.asset-info-meta .property-value');
 	if (options.compact) {
 		info.querySelector('.asset-info-meta')?.remove();
@@ -1562,7 +1563,7 @@ function initializeModuleSummaries(root = document) {
 }
 
 function initializeScrollBoundaryFades(root = document) {
-	root.querySelectorAll('.text-font-picker, .filter-preset-picker').forEach((scrollbox) => {
+	root.querySelectorAll('.text-font-picker').forEach((scrollbox) => {
 		if (scrollbox.dataset.scrollBoundaryFade !== undefined) return;
 		scrollbox.dataset.scrollBoundaryFade = '';
 		const update = () => {

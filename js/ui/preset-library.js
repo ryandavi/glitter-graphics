@@ -2,6 +2,7 @@
 	'use strict';
 
 	const libraries = new Map();
+	const groupSelections = new Map();
 
 	function clone(value) {
 		return value == null ? value : structuredClone(value);
@@ -65,56 +66,90 @@
 		return library;
 	}
 
-	function renderPresetGrid(container, library, { activeId = null, onChoose = null } = {}) {
+	function renderPresetGrid(container, library, { activeId = null, contextId = null, onChoose = null, groupFilter = null, onGroupChange = null } = {}) {
 		if (!container || !library) return;
-		container.replaceChildren();
 		container.dataset.presetLibrary = library.id;
 		const groupIds = library.groups.length ? library.groups.map((group) => group.id) : [...new Set(library.entries.map((entry) => entry.group))];
-		groupIds.forEach((groupId) => {
-			const entries = library.list(groupId);
-			if (!entries.length) return;
-			const group = document.createElement('section');
-			group.className = 'preset-grid-group';
-			const groupSpec = library.groups.find((candidate) => candidate.id === groupId);
-			if (groupSpec?.label) {
-				const heading = document.createElement('h4');
-				heading.className = 'preset-grid-heading';
-				heading.textContent = groupSpec.label;
-				group.appendChild(heading);
+		const activeGroup = library.get(activeId)?.group || null;
+		const selectionKey = contextId == null ? library.id : `${library.id}:${contextId}`;
+		let selection = groupSelections.get(selectionKey);
+		if (!selection) selection = { activeId, groupId: activeGroup, userSelected: false };
+		else if (activeId != null && activeId !== selection.activeId && !selection.userSelected) selection.groupId = activeGroup;
+		selection.activeId = activeId;
+		groupSelections.set(selectionKey, selection);
+
+		const render = () => {
+			container.replaceChildren();
+			if (groupFilter && groupIds.length > 1) {
+				const choices = [{ id: null, label: 'All' }, ...library.groups];
+				groupFilter.replaceChildren();
+				choices.forEach((choice) => {
+					const option = document.createElement('option');
+					option.value = choice.id || '';
+					option.textContent = choice.label;
+					option.selected = choice.id === selection.groupId;
+					groupFilter.appendChild(option);
+				});
+				groupFilter.onchange = () => {
+					selection.groupId = groupFilter.value || null;
+					selection.userSelected = true;
+					render();
+					onGroupChange?.(selection.groupId);
+					groupFilter.focus();
+				};
 			}
-			const options = document.createElement('div');
-			options.className = 'preset-grid-options';
-			options.setAttribute('role', 'listbox');
-			options.setAttribute('aria-label', groupSpec?.label || 'Presets');
-			entries.forEach((entry) => {
-				const card = document.createElement('button');
-				card.type = 'button';
-				card.className = 'choice-card preset-grid-option';
-				card.dataset.presetId = entry.id;
-				card.setAttribute('role', 'option');
-				card.setAttribute('aria-selected', String(entry.id === activeId));
-				card.classList.toggle('active', entry.id === activeId);
-				const thumbnail = document.createElement('span');
-				thumbnail.className = 'preset-grid-thumbnail';
-				library.renderThumbnail?.(entry, thumbnail);
-				const label = document.createElement('span');
-				label.className = 'preset-grid-label';
-				label.textContent = entry.label;
-				card.append(thumbnail, label);
-				card.addEventListener('click', () => onChoose?.(entry));
-				options.appendChild(card);
+
+			const visibleGroupIds = groupFilter && selection.groupId ? [selection.groupId] : groupIds;
+			visibleGroupIds.forEach((groupId) => {
+				const entries = library.list(groupId);
+				if (!entries.length) return;
+				const group = document.createElement('section');
+				group.className = 'preset-grid-group';
+				const groupSpec = library.groups.find((candidate) => candidate.id === groupId);
+				if (groupSpec?.label && (!groupFilter || !selection.groupId)) {
+					const heading = document.createElement('h4');
+					heading.className = 'preset-grid-heading';
+					heading.textContent = groupSpec.label;
+					group.appendChild(heading);
+				}
+				const options = document.createElement('div');
+				options.className = 'preset-grid-options';
+				options.setAttribute('role', 'listbox');
+				options.setAttribute('aria-label', groupSpec?.label || 'Presets');
+				entries.forEach((entry) => {
+					const card = document.createElement('button');
+					card.type = 'button';
+					card.className = 'choice-card preset-grid-option';
+					card.dataset.presetId = entry.id;
+					card.setAttribute('role', 'option');
+					card.setAttribute('aria-selected', String(entry.id === activeId));
+					card.classList.toggle('active', entry.id === activeId);
+					const thumbnail = document.createElement('span');
+					thumbnail.className = 'preset-grid-thumbnail';
+					library.renderThumbnail?.(entry, thumbnail);
+					const label = document.createElement('span');
+					label.className = 'preset-grid-label';
+					label.textContent = entry.label;
+					card.append(thumbnail, label);
+					card.addEventListener('click', () => {
+						selection.activeId = entry.id;
+						onChoose?.(entry);
+					});
+					options.appendChild(card);
+				});
+				group.appendChild(options);
+				container.appendChild(group);
 			});
-			group.appendChild(options);
-			container.appendChild(group);
-		});
-		const cards = [...container.querySelectorAll('.preset-grid-option')];
-		cards.forEach((card, index) => card.addEventListener('keydown', (event) => {
-			const columns = Math.max(1, Math.round((card.parentElement?.clientWidth || card.offsetWidth) / Math.max(1, card.offsetWidth)));
-			const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
-			if (!Object.hasOwn(offsets, event.key)) return;
-			event.preventDefault();
-			cards[Math.max(0, Math.min(cards.length - 1, index + offsets[event.key]))]?.focus();
-		}));
+			const cards = [...container.querySelectorAll('.preset-grid-option')];
+			cards.forEach((card, index) => card.addEventListener('keydown', (event) => {
+				const columns = Math.max(1, Math.round((card.parentElement?.clientWidth || card.offsetWidth) / Math.max(1, card.offsetWidth)));
+				const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
+				if (!Object.hasOwn(offsets, event.key)) return;
+				event.preventDefault();
+				cards[Math.max(0, Math.min(cards.length - 1, index + offsets[event.key]))]?.focus();
+			}));
+		};
+		render();
 	}
 
 	function getPresetLibrary(id) {

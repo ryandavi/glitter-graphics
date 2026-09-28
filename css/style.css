@@ -4819,29 +4819,9 @@ body.mask-editing .sticker-element {
 }
 
 .preset-grid {
-  --filter-picker-fade-size: 30px;
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-base);
-  max-height: 292px;
-  overflow-y: auto;
-}
-.preset-grid::after {
-  content: "";
-  position: sticky;
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * var(--spacing-base));
-  flex: 0 0 var(--filter-picker-fade-size);
-  margin-top: calc(0px - var(--filter-picker-fade-size) - var(--spacing-base));
-  background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-fast);
-}
-.preset-grid.has-overflow-bottom::after {
-  opacity: 1;
 }
 
 .filter-looks-picker {
@@ -4862,7 +4842,7 @@ body.mask-editing .sticker-element {
 
 .preset-grid-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-sm);
 }
 
@@ -4880,27 +4860,24 @@ body.mask-editing .sticker-element {
 }
 
 .preset-grid-thumbnail {
+  --preset-grid-thumbnail-height: 36px;
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 44px;
+  height: var(--preset-grid-thumbnail-height);
   display: block;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-inner);
 }
 
 .preset-grid-thumbnail.filter-css-thumbnail {
-  height: 44px;
+  height: var(--preset-grid-thumbnail-height);
 }
 
 .preset-grid-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.filter-preset-picker {
-  max-height: 206px;
 }
 
 .filter-css-thumbnail {
@@ -4966,6 +4943,11 @@ body.mask-editing .sticker-element {
   background: radial-gradient(circle at 22% 68%, #217eb0 0 25%, transparent 26%), radial-gradient(circle at 73% 28%, #f6bc54 0 20%, transparent 21%), linear-gradient(135deg, #6b357c, #de5d72);
 }
 
+@media (max-width: 1200px) {
+  .preset-grid-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .brush-dynamics {
   display: flex;
   flex-direction: column;

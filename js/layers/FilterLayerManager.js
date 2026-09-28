@@ -35,8 +35,10 @@ class FilterLayerManager {
 	setupUI() {
 		const get = (id) => document.getElementById(id);
 		this.ui = {
-			opacity: get('filterLayerOpacity'), looks: get('filterLooksPicker'),
-			customize: get('filterCustomize'), customizeControls: get('filterCustomizeControls')
+			opacity: get('filterLayerOpacity'), lookGroup: get('filterLooksGroup'), looks: get('filterLooksPicker'),
+			currentInfo: get('filterCurrentLookInfo'), currentThumbnail: get('filterCurrentLookThumbnail'),
+			currentName: get('filterCurrentLookName'), currentBadges: get('filterCurrentLookBadges'), currentShow: get('filterCurrentLookShow'),
+			customize: get('filterCustomize'), customizeTitle: get('filterCustomizeTitle'), customizeControls: get('filterCustomizeControls')
 		};
 	}
 
@@ -72,6 +74,7 @@ class FilterLayerManager {
 
 	setupEventListeners() {
 		this.bindRange(this.ui.opacity, 'opacity');
+		this.ui.currentShow?.addEventListener('click', () => this.showActiveLookInLibrary());
 	}
 
 	chooseLook(entry) {
@@ -95,10 +98,57 @@ class FilterLayerManager {
 
 	renderLookPicker() {
 		if (!this.ui.looks) return;
+		const activeLayer = this.getActiveLayer();
+		const filterData = activeLayer?.filterData;
+		const activeId = filterData?.type === 'instagram' ? `instagram:${filterData.presetId}` : filterData?.type;
 		GlitterPresetLibrary.renderPresetGrid(this.ui.looks, GlitterFilters.looksLibrary, {
-			activeId: this.getActiveLayer()?.filterData?.type,
+			activeId,
+			contextId: activeLayer?.id,
+			groupFilter: this.ui.lookGroup,
+			onGroupChange: () => this.renderCurrentLookSummary(activeId),
 			onChoose: (entry) => this.chooseLook(entry)
 		});
+		this.renderCurrentLookSummary(activeId);
+	}
+
+	renderCurrentLookSummary(activeId) {
+		const entry = GlitterFilters.looksLibrary.get(activeId);
+		if (!this.ui.currentInfo) return;
+		if (!entry) {
+			this.ui.currentInfo.hidden = true;
+			if (this.ui.customizeTitle) this.ui.customizeTitle.textContent = '';
+			return;
+		}
+		const group = GlitterFilters.looksLibrary.groups.find((candidate) => candidate.id === entry.group);
+		this.ui.currentInfo.hidden = false;
+		this.ui.currentInfo.setAttribute('aria-label', `Current look: ${entry.label}`);
+		GlitterFilters.looksLibrary.renderThumbnail?.(entry, this.ui.currentThumbnail);
+		this.ui.currentName.textContent = entry.label;
+		this.ui.currentBadges.replaceChildren();
+		if (group) {
+			const badge = document.createElement('button');
+			badge.type = 'button';
+			badge.className = 'asset-info-badge badge-category';
+			badge.textContent = group.label;
+			badge.title = `Browse ${group.label} looks`;
+			badge.addEventListener('click', () => this.showActiveLookInLibrary());
+			this.ui.currentBadges.appendChild(badge);
+		}
+		const visibleCategory = this.ui.lookGroup?.value || null;
+		this.ui.currentShow.hidden = visibleCategory == null || visibleCategory === entry.group;
+		this.ui.currentShow.title = `Show ${entry.label} in ${group?.label || 'the library'}`;
+		if (this.ui.customizeTitle) this.ui.customizeTitle.textContent = `${entry.label} Settings`;
+	}
+
+	showActiveLookInLibrary() {
+		const layer = this.getActiveLayer();
+		const filterData = layer?.filterData;
+		const activeId = filterData?.type === 'instagram' ? `instagram:${filterData.presetId}` : filterData?.type;
+		const entry = GlitterFilters.looksLibrary.get(activeId);
+		if (!entry || !this.ui.lookGroup) return;
+		this.ui.lookGroup.value = entry.group;
+		this.ui.lookGroup.dispatchEvent(new Event('change'));
+		this.ui.looks.querySelector(`[data-preset-id="${entry.id}"]`)?.focus();
 	}
 
 	renderCustomizeControls(layer) {
@@ -107,19 +157,6 @@ class FilterLayerManager {
 		this.ui.customize.hidden = !fields.length;
 		this.ui.customizeControls.replaceChildren();
 		fields.forEach(([key, field]) => {
-			if (field.kind === 'preset') {
-				const grid = buildPanelItem({ kind: 'presetGrid', label: `${filter.label} presets`, classes: 'property-inset property-scrollbox filter-preset-picker' });
-				this.ui.customizeControls.appendChild(grid);
-				const library = GlitterPresetLibrary.getPresetLibrary(field.libraryId);
-				GlitterPresetLibrary.renderPresetGrid(grid, library, { activeId: layer.filterData[key], onChoose: (entry) => {
-					library.apply(entry, layer.filterData);
-					this.loadLayerSettings(layer);
-					this.editor.layerManager.renderLayersList();
-					this.editor.requestPreviewUpdate();
-					this.editor.saveState('Choose filter preset');
-				} });
-				return;
-			}
 			let item;
 			if (field.kind === 'number') item = { kind: 'slider', id: field.controlId, slider: field.specId, revert: true };
 			else if (field.kind === 'boolean') item = { kind: 'checkboxList', items: [{ id: field.controlId, label: field.label, checked: field.default }] };

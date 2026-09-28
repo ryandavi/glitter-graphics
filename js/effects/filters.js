@@ -10,7 +10,6 @@
 	const boolean = (defaultValue, controlId, label) => Object.freeze({ kind: 'boolean', default: defaultValue, controlId, label });
 	const color = (defaultValue, controlId, label = 'Color') => Object.freeze({ kind: 'color', default: defaultValue, controlId, label });
 	const select = (defaultValue, controlId, label, options) => Object.freeze({ kind: 'select', default: defaultValue, controlId, label, options });
-	const preset = (defaultValue, libraryId) => Object.freeze({ kind: 'preset', default: defaultValue, libraryId });
 	const step = (op, params) => ({ op, params });
 	const clone = (value) => value == null ? value : structuredClone(value);
 	const stop = (at, color) => ({ at, color });
@@ -18,18 +17,6 @@
 	function tintOptions() {
 		return Object.entries(CONFIG.tools.filter.tintPresets).map(([value, entry]) => ({ value, label: entry.label }));
 	}
-
-	const instagramEntries = Object.entries(Presets).map(([id, value]) => ({
-		id, label: value.name || value.instagramName, group: 'instagram', tags: [value.instagramName], attribution: value.attribution, value: { presetId: id }
-	}));
-	const instagramLibrary = PresetLibrary.createPresetLibrary({
-		id: 'instagram-filters',
-		groups: [{ id: 'instagram', label: 'Instagram' }],
-		entries: instagramEntries,
-		renderThumbnail(entry, element) {
-			root.GlitterFilter?.renderCssThumbnail?.(element, { type: 'instagram', presetId: entry.id, strength: 100, showName: false });
-		}
-	});
 
 	function instagramRecipe(values) {
 		const selected = Presets[values.presetId];
@@ -97,8 +84,8 @@
 			roughness: numeric('filterGrainRoughness', 'filterGrainRoughness'), monochrome: boolean(true, 'filterGrainMono', 'Monochrome')
 		}), recipe: (values) => [step('grain', { mode: 'soft-light', amount: values.amount / 100, size: values.size, roughness: values.roughness / 100, monochrome: values.monochrome })] }),
 		blur: Object.freeze({ id: 'blur', label: 'Blur', group: 'stylize', fields: Object.freeze({ radius: numeric('filterBlurRadius', 'filterBlurRadius') }), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 1 })] }),
-		instagram: Object.freeze({ id: 'instagram', label: 'Instagram', group: 'classic', tags: ['cssgram'], fields: Object.freeze({
-			presetId: preset('rio', instagramLibrary.id), strength: numeric('filterInstagramStrength', 'filterStrength'), showName: boolean(false, 'filterShowName', 'Show Filter Name')
+		instagram: Object.freeze({ id: 'instagram', label: 'Instagram', group: 'instagram', tags: ['cssgram'], fields: Object.freeze({
+			strength: numeric('filterInstagramStrength', 'filterStrength'), showName: boolean(false, 'filterShowName', 'Show Filter Name')
 		}), recipe: instagramRecipe, summary: (values) => Presets[values.presetId]?.name || Presets[values.presetId]?.instagramName || 'Instagram' }),
 		scanlines: Object.freeze({ id: 'scanlines', label: 'Scanlines', group: 'web', tags: ['crt', 'retro'], fields: Object.freeze({
 			strength: numeric('filterLookStrength', 'filterLookStrength'), spacing: numeric('filterScanlineSpacing', 'filterScanlineSpacing')
@@ -125,6 +112,7 @@
 	function normalize(type, value = {}) {
 		const filter = FILTERS[type] || FILTERS[CONFIG.tools.filter.defaultType];
 		const normalized = { type: filter.id };
+		if (filter.id === 'instagram') normalized.presetId = Object.hasOwn(Presets, value.presetId) ? value.presetId : 'rio';
 		Object.entries(filter.fields).forEach(([key, field]) => {
 			const sourceValue = value[key];
 			if (field.kind === 'number') {
@@ -136,7 +124,7 @@
 			else if (field.kind === 'select') {
 				const options = fieldOptions(field);
 				normalized[key] = options.some((entry) => entry.value === sourceValue) ? sourceValue : field.default;
-			} else if (field.kind === 'preset') normalized[key] = PresetLibrary.getPresetLibrary(field.libraryId)?.get(sourceValue) ? sourceValue : field.default;
+			}
 		});
 		filter.normalize?.(normalized, value);
 		return normalized;
@@ -151,17 +139,30 @@
 		return recipe(value).every((entry) => typeof Ops.get(entry.op)?.css === 'function') ? 1 : 3;
 	}
 
+	const instagramLookEntries = Object.entries(Presets).map(([presetId, preset]) => ({
+		id: `instagram:${presetId}`,
+		label: preset.name || preset.instagramName,
+		group: 'instagram',
+		tags: [preset.instagramName],
+		attribution: preset.attribution,
+		value: { type: 'instagram', presetId }
+	}));
 	const looksLibrary = PresetLibrary.createPresetLibrary({
 		id: 'filter-looks',
 		groups: [
 			{ id: 'adjust', label: 'Adjust' }, { id: 'stylize', label: 'Stylize' },
-			{ id: 'classic', label: 'Classic' }, { id: 'web', label: 'Web & Film' }
+			{ id: 'web', label: 'Web & Film' }, { id: 'instagram', label: 'Instagram' }
 		],
-		entries: FILTER_TYPES.map((id) => ({ id, label: FILTERS[id].label, group: FILTERS[id].group, tags: FILTERS[id].tags, value: { type: id } })),
-		renderThumbnail(entry, element) { root.GlitterFilter?.renderCssThumbnail?.(element, normalize(entry.id)); }
+		entries: [
+			...FILTER_TYPES.filter((id) => id !== 'instagram').map((id) => ({
+				id, label: FILTERS[id].label, group: FILTERS[id].group, tags: FILTERS[id].tags, value: { type: id }
+			})),
+			...instagramLookEntries
+		],
+		renderThumbnail(entry, element) { root.GlitterFilter?.renderCssThumbnail?.(element, normalize(entry.value.type, entry.value)); }
 	});
 
-	const api = { FILTERS, FILTER_TYPES, instagramLibrary, looksLibrary, get: (id) => FILTERS[id] || null, list: () => Object.values(FILTERS), fieldOptions, normalize, recipe, tier };
+	const api = { FILTERS, FILTER_TYPES, looksLibrary, get: (id) => FILTERS[id] || null, list: () => Object.values(FILTERS), fieldOptions, normalize, recipe, tier };
 	root.GlitterFilters = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

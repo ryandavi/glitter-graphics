@@ -264,10 +264,19 @@ const PANEL_SCHEMAS = {
 				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Opacity' },
 				{ kind: 'select', id: 'filterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'card', title: 'Looks', flatBody: true, items: [
-					{ kind: 'set', label: 'Look', items: [
-						{ kind: 'presetGrid', id: 'filterLooksPicker', label: 'Filter looks', classes: 'property-inset property-scrollbox filter-looks-picker' }
+					{ kind: 'set', items: [
+						{ kind: 'select', id: 'filterLooksGroup', label: 'Filter look category', visibleLabel: 'Category', options: [] }
 					] },
-					{ kind: 'set', id: 'filterCustomize', label: 'Settings', items: [
+					{ kind: 'set', items: [
+						{ kind: 'assetInfo', info: 'filterCurrentLookInfo', thumbnail: 'filterCurrentLookThumbnail',
+							name: 'filterCurrentLookName', badges: 'filterCurrentLookBadges', change: 'filterCurrentLookShow',
+							changeLabel: 'Show', title: 'Show the current look in the library', compact: true, redesign: true, hidden: true }
+					] },
+					{ kind: 'set', label: 'Look', items: [
+						{ kind: 'presetGrid', id: 'filterLooksPicker', label: 'Filter looks', classes: 'property-inset filter-looks-picker' }
+					] },
+					{ kind: 'set', id: 'filterCustomize', items: [
+						{ kind: 'host', id: 'filterCustomizeTitle', classes: 'property-group-label property-inset' },
 						{ kind: 'host', id: 'filterCustomizeControls' }
 					] }
 				] }

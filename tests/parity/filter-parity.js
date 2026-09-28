@@ -90,9 +90,20 @@ for (const library of PresetLibrary.listPresetLibraries()) {
 	assert(library.id && library.entries.length, 'preset libraries require entries');
 	library.entries.forEach((entry) => assert.strictEqual(library.get(entry.id), entry));
 }
+assert.strictEqual(Filters.looksLibrary.get('instagram'), null, 'Instagram must not render as a standalone look');
+assert.strictEqual(Filters.looksLibrary.groups.at(-1).label, 'Instagram', 'Instagram must be the last Looks group');
+for (const [presetId, preset] of Object.entries(Presets)) {
+	const entry = Filters.looksLibrary.get(`instagram:${presetId}`);
+	assert(entry, `${presetId} must resolve to a Looks entry`);
+	assert.strictEqual(entry.label, preset.name || preset.instagramName);
+	assert.deepStrictEqual(entry.value, { type: 'instagram', presetId });
+}
 const applied = Filters.looksLibrary.apply('scanlines');
 applied.type = 'mutated';
 assert.strictEqual(Filters.looksLibrary.get('scanlines').value.type, 'scanlines', 'preset values must be copied on apply');
+const appliedInstagram = Filters.looksLibrary.apply('instagram:clarendon');
+appliedInstagram.presetId = 'mutated';
+assert.strictEqual(Filters.looksLibrary.get('instagram:clarendon').value.presetId, 'clarendon', 'Instagram look values must be copied on apply');
 
 assert.strictEqual(Filter.toneCssFilter({ type: 'basic' }), '');
 assert.strictEqual(
