@@ -119,7 +119,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { aliases: 'animation accessibility motion transitions' })
 		] },
 		{ title: 'Tools & Workspace', section: 'tools', rows: [
-			{ field: { id: 'filterPreviewLevel', label: 'Pixel Filter Preview', description: 'Choose whether pixel-only filter layers render on the canvas. Animated previews use more memory and may fall back to Still.', control: { type: 'select', options: [{ value: 'off', label: 'Off' }, { value: 'still', label: 'Still' }, { value: 'animated', label: 'Animated' }] } } },
+			{ field: { id: 'filterPreviewLevel', label: 'Pixel Filter Preview', description: 'Choose whether pixel-only filter layers render on the canvas. Animated previews use more memory and may fall back to Still.', control: { type: 'select', options: [{ value: 'off', label: 'Off' }, { value: 'still', label: 'Still' }, { value: 'animated', label: 'Animated (uses more memory)' }] } } },
 			toggle('autoSelectLayers', 'Auto-Select Layers', 'Clicking the canvas selects the layer under the pointer. Turn off to keep the current selection while dragging on the canvas.', { aliases: 'click pick layer canvas' }),
 			toggle('snappingEnabled', 'Snapping', 'Align layers to the canvas edges, its center, and other layers while dragging.', { aliases: 'snap align guides magnetic' }),
 			toggle('panInertia', 'Pan Momentum', 'Let the canvas keep gliding after a flick with the Hand tool. Turn off for panning that stops the moment you let go.', { aliases: 'momentum pan flick scroll' }),

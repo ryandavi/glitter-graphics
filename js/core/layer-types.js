@@ -180,12 +180,16 @@ const LAYER_BADGES = [
 		}
 	},
 	{
-		id: 'export-filter',
+		id: 'pixel-filter',
 		icon: 'filter',
 		getState(layer) {
-			return layer?.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && PREFERENCES.get('filterPreviewLevel') === 'off'
-				? { title: 'Applies on export; pixel preview is off' }
-				: null;
+			if (layer?.type !== LayerType.FILTER || GlitterFilters.tier(layer.filterData) !== 3) return null;
+			const title = {
+				off: 'Pixel filter: shows only in exports. Preview is off in Settings.',
+				still: 'Pixel filter: the canvas shows a still frame. Layers below animate while you edit them.',
+				animated: 'Pixel filter: animated canvas preview. Pauses while you edit layers below.'
+			}[PREFERENCES.get('filterPreviewLevel')];
+			return title ? { title } : null;
 		}
 	}
 ];

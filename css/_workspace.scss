@@ -234,6 +234,13 @@ body.tool-select {
 	}
 }
 
+// Layers under a displayed pixel-filter snapshot (FilterLayerManager
+// .applySnapshotVisibility). Opacity, not visibility, so they stay
+// hit-testable: clicking or dragging them on the canvas still works.
+[data-filter-snapshot-hidden] {
+	opacity: 0 !important;
+}
+
 .filter-layer-name {
 	display: flex;
 	align-items: center;

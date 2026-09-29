@@ -1325,6 +1325,7 @@ class GlitterEditor {
 
 	saveState(label = null, options = {}) {
 		this.historyManager.saveState(label, options);
+		this.filterLayerManager?.noteSceneEdited();
 	}
 
 	async restoreState(state) {

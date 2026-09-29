@@ -7,7 +7,17 @@ class FilterLayerManager {
 		this.snapshotInputs = new ByteBudgetCache({ id: 'filter-snapshot-inputs', label: 'Pixel filter inputs', measure: (value) => value?.imageData?.data?.byteLength || 0 });
 		this.snapshotOutputs = new ByteBudgetCache({ id: 'filter-snapshot-outputs', label: 'Pixel filter outputs', measure: (value) => (value?.frames || []).reduce((sum, frame) => sum + canvasBytes(frame), 0) });
 		this.snapshotTimers = new Map();
-		this.snapshotTokens = new Map();
+		// Signature of the render each layer has queued, so repeated preview
+		// updates of an unchanged scene don't keep postponing it.
+		this.snapshotPending = new Map();
+		// Layers whose Still preview was switched to animated with the panel
+		// button; the switch lasts until the layer or its input is edited.
+		this.animatedPreviews = new Set();
+		// True while a pointer gesture edits a layer under a displayed snapshot:
+		// the live layers show instead so the edit is visible.
+		this.liveEditing = false;
+		this.displayedSnapshotLayerId = null;
+		this.lastLayersToShow = [];
 		this.snapshotPlaybackFrame = null;
 		this.lastOutputMs = new Map();
 		this.imageIdentities = new WeakMap();
@@ -91,8 +101,49 @@ class FilterLayerManager {
 		this.ui.currentShow?.addEventListener('click', () => this.showActiveLookInLibrary());
 		this.ui.renderPreview?.addEventListener('click', () => {
 			const layer = this.getActiveLayer();
-			if (layer && GlitterFilters.tier(layer.filterData) === 3) this.scheduleSnapshot(layer, { animated: true, immediate: true });
+			if (!layer || GlitterFilters.tier(layer.filterData) !== 3) return;
+			if (this.animatedPreviews.has(layer.id)) this.animatedPreviews.delete(layer.id);
+			else this.animatedPreviews.add(layer.id);
+			this.syncSnapshotControls(layer);
+			this.scheduleSnapshot(layer, { immediate: true });
 		});
+		// Canvas drags and handle gestures move layer elements directly without a
+		// preview update, so a displayed snapshot would hide the edit. Any
+		// pressed-pointer move while a layer under it is selected shows the live
+		// layers until the pointer is released.
+		document.addEventListener('pointermove', (event) => {
+			if (event.buttons && !this.liveEditing && this.shouldPauseForEdit()) this.pauseForEdit();
+		}, { capture: true, passive: true });
+		const resume = () => { if (this.liveEditing) this.resumeAfterEdit(); };
+		document.addEventListener('pointerup', resume, true);
+		document.addEventListener('pointercancel', resume, true);
+	}
+
+	shouldPauseForEdit() {
+		if (!this.displayedSnapshotLayerId || this.editor.viewport?.isPanning) return false;
+		const topIndex = this.editor.layers.findIndex((layer) => layer.id === this.displayedSnapshotLayerId);
+		const ids = new Set([...(this.editor.selectedLayerIds || []), this.editor.layerManager.activeLayerId]);
+		return this.editor.layers.some((layer, index) => index < topIndex && ids.has(layer.id));
+	}
+
+	pauseForEdit() {
+		this.liveEditing = true;
+		this.statusBeforeEdit = this.editor.notifications?.statusText?.textContent ?? '';
+		this.applySnapshotVisibility(this.lastLayersToShow);
+		this.editor.updateStatus('Pixel filter paused while you edit');
+	}
+
+	resumeAfterEdit() {
+		this.liveEditing = false;
+		this.resumeStatusPending = true;
+		this.editor.requestPreviewUpdate();
+	}
+
+	// Called after every history save: edits that don't go through a preview
+	// update (panel fields, nudges) still re-check each snapshot's input.
+	noteSceneEdited() {
+		if (PREFERENCES.get('filterPreviewLevel') === 'off') return;
+		if (this.editor.layers.some((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3)) this.editor.requestPreviewUpdate();
 	}
 
 	chooseLook(entry) {
@@ -118,11 +169,19 @@ class FilterLayerManager {
 	syncSnapshotControls(layer) {
 		const tier3 = GlitterFilters.tier(layer.filterData) === 3;
 		const level = PREFERENCES.get('filterPreviewLevel');
+		const animatedOn = this.animatedPreviews.has(layer.id);
 		if (this.ui.snapshotStatus) {
 			this.ui.snapshotStatus.hidden = !tier3;
-			this.ui.snapshotStatus.textContent = level === 'off' ? 'Applies on export. Pixel preview is off in Settings.' : (level === 'animated' ? 'Animated preview renders after edits settle.' : 'Still preview. Animation below pauses until you preview it.');
+			this.ui.snapshotStatus.classList.toggle('is-warning', level === 'off');
+			this.ui.snapshotStatus.textContent = {
+				off: 'This filter only shows in exports. Turn on Pixel Filter Preview in Settings to see it here.',
+				animated: 'Showing the animated filter preview.',
+				still: animatedOn ? 'Showing the animated filter preview until your next edit.' : 'Showing a still frame with this filter. Glitter animation resumes while you edit.'
+			}[level] || '';
 		}
-		if (this.ui.snapshotActions) this.ui.snapshotActions.hidden = !tier3 || level === 'off' || level === 'animated';
+		if (this.ui.snapshotActions) this.ui.snapshotActions.hidden = !tier3 || level !== 'still';
+		const label = this.ui.renderPreview?.querySelector('.name');
+		if (label) label.textContent = animatedOn ? 'Show still frame' : 'Preview animation';
 	}
 
 	renderLookPicker() {
@@ -224,8 +283,46 @@ class FilterLayerManager {
 	}
 
 	renderContent(layersToShow) {
+		this.lastLayersToShow = layersToShow;
 		reconcileLayerElements(this.layerElements, layersToShow, LayerType.FILTER, (layer) => this.renderLayer(layer));
+		const level = PREFERENCES.get('filterPreviewLevel');
+		let updating = false;
+		layersToShow.forEach((layer) => {
+			if (layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3) updating = this.syncSnapshot(layer, level) || updating;
+		});
 		this.applySnapshotVisibility(layersToShow);
+		if (this.resumeStatusPending) {
+			this.resumeStatusPending = false;
+			this.editor.updateStatus(updating ? 'Updating pixel filter preview…' : this.statusBeforeEdit);
+		}
+	}
+
+	getFilterSignature(layer) {
+		return `${JSON.stringify(layer.filterData)}|${layer.opacity}|${GlitterBlendModes.forLayer(layer)}`;
+	}
+
+	isAnimatedPreview(layer, level = PREFERENCES.get('filterPreviewLevel')) {
+		return this.animatedPreviews.has(layer.id) || (level === 'animated' && !getMemoryBudget().constrained);
+	}
+
+	// Keeps a tier-3 layer's snapshot matching the scene. A snapshot whose input
+	// (the layers below) changed is dropped at once so the live layers show; one
+	// whose own settings changed stays up until its replacement lands. Returns
+	// true while the live layers stand in for a pending render.
+	syncSnapshot(layer, level) {
+		if (level === 'off') return false;
+		const inputSignature = this.getInputSignature(layer, this.getSnapshotLayers(layer));
+		const filterSignature = this.getFilterSignature(layer);
+		const output = this.snapshotOutputs.get(layer.id);
+		if (output && (output.inputSignature !== inputSignature || output.filterSignature !== filterSignature) && this.animatedPreviews.delete(layer.id)) {
+			if (this.getActiveLayer()?.id === layer.id) this.syncSnapshotControls(layer);
+		}
+		if (output && output.inputSignature !== inputSignature) this.snapshotOutputs.delete(layer.id);
+		const current = this.snapshotOutputs.get(layer.id);
+		const signature = `${inputSignature}|${filterSignature}|${this.isAnimatedPreview(layer, level)}`;
+		if (current?.signature === signature) return false;
+		if (!this.liveEditing && this.snapshotPending.get(layer.id) !== signature) this.scheduleSnapshot(layer);
+		return !current;
 	}
 
 	renderLayer(layer) {
@@ -262,7 +359,6 @@ class FilterLayerManager {
 			canvas.style.zIndex = layerZIndex;
 			element.append(canvas);
 			this.paintSnapshotElement(layer, element);
-			this.scheduleSnapshot(layer);
 			return element;
 		}
 		element.querySelector('.filter-snapshot-canvas')?.remove();
@@ -351,20 +447,27 @@ class FilterLayerManager {
 	scheduleSnapshot(layer, options = {}) {
 		const level = PREFERENCES.get('filterPreviewLevel');
 		if (level === 'off' || GlitterFilters.tier(layer.filterData) !== 3) return;
-		const animated = options.animated || (level === 'animated' && !getMemoryBudget().constrained);
+		const animated = this.isAnimatedPreview(layer, level);
+		const signature = `${this.getInputSignature(layer, this.getSnapshotLayers(layer))}|${this.getFilterSignature(layer)}|${animated}`;
+		this.snapshotPending.set(layer.id, signature);
 		clearTimeout(this.snapshotTimers.get(layer.id));
 		const input = this.snapshotInputs.get(layer.id);
 		const delay = options.immediate ? 0 : (input && (this.lastOutputMs.get(layer.id) || Infinity) < 50 ? 0 : CONFIG.tools.filter.snapshot.settleMs);
 		this.snapshotTimers.set(layer.id, setTimeout(() => {
-			this.snapshotQueue = this.snapshotQueue.then(() => this.renderSnapshot(layer, animated)).catch((error) => console.error('Pixel filter preview queue failed:', error));
+			this.snapshotQueue = this.snapshotQueue.then(() => this.renderSnapshot(layer, animated, signature)).catch((error) => console.error('Pixel filter preview queue failed:', error));
 		}, delay));
 	}
 
-	async renderSnapshot(layer, animated = false) {
-		const token = (this.snapshotTokens.get(layer.id) || 0) + 1;
-		this.snapshotTokens.set(layer.id, token);
+	async renderSnapshot(layer, animated, signature) {
+		// A newer schedule supersedes this one; its own render follows in the queue.
+		// Direct calls (no signature) always render.
+		const superseded = () => signature !== undefined && this.snapshotPending.get(layer.id) !== signature;
+		if (superseded()) return;
 		const layers = this.getSnapshotLayers(layer);
 		const inputSignature = this.getInputSignature(layer, layers);
+		const filterSignature = this.getFilterSignature(layer);
+		const showingLive = !this.snapshotOutputs.get(layer.id);
+		if (showingLive && !animated) this.editor.updateStatus('Updating pixel filter preview…');
 		let input = this.snapshotInputs.get(layer.id);
 		try {
 			if (!input || input.signature !== inputSignature) {
@@ -390,7 +493,7 @@ class FilterLayerManager {
 			const frames = [];
 			const started = performance.now();
 			for (let index = 0; index < frameCount; index++) {
-				if (this.snapshotTokens.get(layer.id) !== token) return;
+				if (superseded()) return;
 				let source = input.imageData;
 				if (index > 0) source = (await this.snapshotCompositor.composeFrameAt({ ...input.params, preparedContext: input.preparedContext, timestamp: duration * index / frameCount })).imageData;
 				const canvas = createAppCanvas(source.width, source.height, 'layers/FilterLayerManager');
@@ -405,10 +508,18 @@ class FilterLayerManager {
 				if (animated) this.editor.updateStatus(`Rendering preview ${index + 1}/${frameCount}`);
 			}
 			this.lastOutputMs.set(layer.id, (performance.now() - started) / frameCount);
-			this.snapshotOutputs.set(layer.id, { signature: `${inputSignature}|${JSON.stringify(layer.filterData)}|${layer.opacity}`, frames, frameDuration: animated ? duration / frameCount : 0, startedAt: performance.now() });
+			this.snapshotOutputs.set(layer.id, {
+				signature: `${inputSignature}|${filterSignature}|${animated}`, inputSignature, filterSignature,
+				frames, frameDuration: animated ? duration / frameCount : 0, startedAt: performance.now()
+			});
+			if (!superseded()) this.snapshotPending.delete(layer.id);
 			this.editor.requestPreviewUpdate();
-			if (animated) this.startSnapshotPlayback();
+			if (animated) {
+				this.startSnapshotPlayback();
+				this.editor.updateStatus('Animated filter preview ready');
+			} else if (showingLive) this.editor.updateStatus('Pixel filter preview updated');
 		} catch (error) {
+			if (!superseded()) this.snapshotPending.delete(layer.id);
 			console.error('Pixel filter preview failed:', error);
 			this.editor.updateStatus('Pixel filter preview unavailable; it will still apply on export.');
 		}
@@ -442,18 +553,24 @@ class FilterLayerManager {
 
 	applySnapshotVisibility(layersToShow) {
 		this.editor.previewCanvas.style.visibility = '';
-		this.editor.canvasElementsContainer.querySelectorAll('[data-filter-snapshot-hidden="true"]').forEach((node) => {
-			node.style.visibility = '';
+		// [data-filter-snapshot-hidden] hides by opacity in _workspace.scss so the
+		// covered layers stay clickable under the snapshot.
+		this.editor.canvasElementsContainer.querySelectorAll('[data-filter-snapshot-hidden]').forEach((node) => {
 			delete node.dataset.filterSnapshotHidden;
 		});
-		const tier3 = layersToShow.filter((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && this.snapshotOutputs.get(layer.id)?.frames?.length);
+		const tier3 = this.liveEditing ? [] : layersToShow.filter((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && this.snapshotOutputs.get(layer.id)?.frames?.length);
+		this.layerElements.forEach((element, id) => {
+			const canvas = element.querySelector('.filter-snapshot-canvas');
+			if (canvas) canvas.style.visibility = tier3.some((layer) => layer.id === id) ? '' : 'hidden';
+		});
+		this.displayedSnapshotLayerId = null;
 		if (!tier3.length) return;
 		const top = tier3.reduce((winner, candidate) => this.editor.layers.indexOf(candidate) > this.editor.layers.indexOf(winner) ? candidate : winner);
 		const topIndex = this.editor.layers.indexOf(top);
+		this.displayedSnapshotLayerId = top.id;
 		this.editor.previewCanvas.style.visibility = 'hidden';
 		this.editor.layers.slice(0, topIndex).forEach((candidate) => {
 			this.editor.canvasElementsContainer.querySelectorAll(`[data-layer-id="${candidate.id}"]`).forEach((node) => {
-				node.style.visibility = 'hidden';
 				node.dataset.filterSnapshotHidden = 'true';
 			});
 		});
@@ -461,12 +578,18 @@ class FilterLayerManager {
 
 	refreshSnapshots() {
 		this.snapshotOutputs.clear();
+		this.snapshotPending.clear();
+		this.animatedPreviews.clear();
+		const active = this.getActiveLayer();
+		if (active) this.syncSnapshotControls(active);
 		this.editor.requestPreviewUpdate();
 	}
 
 	removeLayerElement(layerId) {
 		clearTimeout(this.snapshotTimers.get(layerId));
 		this.snapshotTimers.delete(layerId);
+		this.snapshotPending.delete(layerId);
+		this.animatedPreviews.delete(layerId);
 		this.snapshotInputs.delete(layerId);
 		this.snapshotOutputs.delete(layerId);
 		removeManagedLayerElement(this.layerElements, layerId);
@@ -484,6 +607,9 @@ class FilterLayerManager {
 		this.snapshotOutputs.clear();
 		this.snapshotTimers.forEach(clearTimeout);
 		this.snapshotTimers.clear();
+		this.snapshotPending.clear();
+		this.animatedPreviews.clear();
+		this.displayedSnapshotLayerId = null;
 		this.snapshotCompositor.releaseDecodedSources();
 		if (this.snapshotPlaybackFrame) cancelAnimationFrame(this.snapshotPlaybackFrame);
 		this.snapshotPlaybackFrame = null;

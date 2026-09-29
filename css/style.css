@@ -6078,6 +6078,10 @@ body.tool-select .preview-canvas {
   inset: 0;
 }
 
+[data-filter-snapshot-hidden] {
+  opacity: 0 !important;
+}
+
 .filter-layer-name {
   display: flex;
   align-items: center;

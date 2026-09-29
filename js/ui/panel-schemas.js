@@ -359,7 +359,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', id: 'filterCustomize', items: [
 						{ kind: 'host', id: 'filterCustomizeTitle', classes: 'property-group-label property-inset' },
 						{ kind: 'host', id: 'filterCustomizeControls' },
-						{ kind: 'host', id: 'filterSnapshotStatus', classes: 'property-description property-inset', hidden: true },
+						{ kind: 'host', id: 'filterSnapshotStatus', classes: 'property-note', attrs: { hidden: 'hidden', role: 'status', 'aria-live': 'polite' } },
 						{ kind: 'actionRow', id: 'filterSnapshotActions', hidden: true, actions: [
 							{ id: 'filterRenderPreview', label: 'Preview animation' }
 						] }
