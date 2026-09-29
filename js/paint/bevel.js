@@ -56,21 +56,19 @@ function createBevelMaskCanvases(sourceCanvas, bevelData) {
 	const lightStrength = Math.cos(altitude);
 	const size = Math.max(1, data.size);
 	const extent = size + soften;
+	const normalSettings = CONFIG.rendering.bevelNormals;
+	const normalRadius = Math.max(normalSettings.minRadius, Math.min(
+		normalSettings.maxRadius,
+		Math.round(extent / normalSettings.pixelsPerRadius)
+	));
 
 	for (let y = 0; y < field.height; y++) {
 		for (let x = 0; x < field.width; x++) {
 			const index = y * field.width + x;
 			const distance = field.distance[index];
 			if (!field.inside[index] || distance > extent) continue;
-			const left = field.distance[index - (x > 0 ? 1 : 0)];
-			const right = field.distance[index + (x + 1 < field.width ? 1 : 0)];
-			const up = field.distance[index - (y > 0 ? field.width : 0)];
-			const down = field.distance[index + (y + 1 < field.height ? field.width : 0)];
-			const gradientX = (right - left) * 0.5;
-			const gradientY = (down - up) * 0.5;
-			const gradientLength = Math.hypot(gradientX, gradientY) || 1;
 			const t = Math.max(0, Math.min(1, distance / extent));
-			const lighting = ((-gradientX / gradientLength) * lightX + (-gradientY / gradientLength) * lightY)
+			const lighting = getBevelNormalLighting(field, x, y, normalRadius, lightX, lightY)
 				* profile.slope(t) * lightStrength;
 			const edgeFade = soften && distance > size ? Math.max(0, (extent - distance) / soften) : 1;
 			const alpha = Math.round(Math.min(1, Math.abs(lighting) * depth * edgeFade) * 255);
@@ -80,6 +78,30 @@ function createBevelMaskCanvases(sourceCanvas, bevelData) {
 	highlightCtx.putImageData(highlightImage, 0, 0);
 	shadeCtx.putImageData(shadeImage, 0, 0);
 	return Object.freeze({ highlight, shade });
+}
+
+// A wide Sobel derivative averages both across and along the contour. The
+// radius follows the bevel width so enlarged pixel masks do not expose the
+// nearest-boundary seams of the exact Euclidean distance field.
+function getBevelNormalLighting(field, x, y, radius, lightX, lightY) {
+	const left = Math.max(0, x - radius);
+	const right = Math.min(field.width - 1, x + radius);
+	const up = Math.max(0, y - radius);
+	const down = Math.min(field.height - 1, y + radius);
+	const topOffset = up * field.width;
+	const middleOffset = y * field.width;
+	const bottomOffset = down * field.width;
+	const distance = field.distance;
+	const gradientX = (
+		distance[topOffset + right] + 2 * distance[middleOffset + right] + distance[bottomOffset + right]
+		- distance[topOffset + left] - 2 * distance[middleOffset + left] - distance[bottomOffset + left]
+	) / (4 * Math.max(1, right - left));
+	const gradientY = (
+		distance[bottomOffset + left] + 2 * distance[bottomOffset + x] + distance[bottomOffset + right]
+		- distance[topOffset + left] - 2 * distance[topOffset + x] - distance[topOffset + right]
+	) / (4 * Math.max(1, down - up));
+	const gradientLength = Math.hypot(gradientX, gradientY) || 1;
+	return (-gradientX / gradientLength) * lightX + (-gradientY / gradientLength) * lightY;
 }
 
 function writeGlossMask(field, image, depth, soften) {

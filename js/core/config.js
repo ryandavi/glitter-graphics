@@ -562,6 +562,13 @@ const CONFIG = deepFreeze({
 			minSteps: 16,
 			maxSteps: 64,
 			stepsPerPixel: 4
+		},
+		bevelNormals: {
+			// Wider distance-field derivatives prevent raster contour steps from
+			// becoming scalloped lighting bands without softening the silhouette.
+			minRadius: 1,
+			maxRadius: 16,
+			pixelsPerRadius: 3
 		}
 	},
 

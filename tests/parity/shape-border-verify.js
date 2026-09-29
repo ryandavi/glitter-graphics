@@ -494,13 +494,36 @@ async function check8(page) {
 			for (let index = 3; index < data.length; index += 4) if (data[index]) count++;
 			return count;
 		};
+		const circle = createAppCanvas(256, 256, 'tests/bevel-normal');
+		const circleCtx = circle.getContext('2d');
+		circleCtx.fillStyle = '#fff';
+		circleCtx.beginPath();
+		circleCtx.arc(128, 128, 100, 0, Math.PI * 2);
+		circleCtx.fill();
+		const circleBevel = createBevelMaskCanvases(circle, {
+			profile: 'smooth', size: 25, depth: 100, angle: 0, altitude: 0, soften: 0
+		});
+		const circleHighlight = highlightPixels(circleBevel.highlight);
+		const circleShade = highlightPixels(circleBevel.shade);
+		let angularJitter = 0;
+		let priorLighting = null;
+		for (let sample = 0; sample < 720; sample++) {
+			const angle = sample * Math.PI * 2 / 720;
+			const x = Math.round(128 + 85 * Math.cos(angle));
+			const y = Math.round(128 + 85 * Math.sin(angle));
+			const index = y * 256 + x;
+			const lighting = (circleHighlight[index] - circleShade[index]) / 255;
+			if (priorLighting !== null) angularJitter += Math.abs(lighting - priorLighting);
+			priorLighting = lighting;
+		}
 		return {
 			uiState,
 			profiles,
 			lightingResponds: angleZero.some((value, index) => value !== angleOpposite[index]) && highTotal < lowTotal,
 			fillPixels: alphaCount(masks.fill),
 			spreadPixels: alphaCount(masks.shadow),
-			spans: manager.layerElements.get(layer.id).querySelectorAll('[data-span-key="bevelHighlight"], [data-span-key="bevelShade"]').length
+			spans: manager.layerElements.get(layer.id).querySelectorAll('[data-span-key="bevelHighlight"], [data-span-key="bevelShade"]').length,
+			angularJitter: angularJitter / 719
 		};
 	});
 	assert(result.uiState.enabled && result.uiState.profile === 'gloss' && result.uiState.shadeOpacity === 55,
@@ -515,6 +538,7 @@ async function check8(page) {
 	});
 	assert(result.profiles.gloss.shade === 0, 'Gloss produced an inert shade mask');
 	assert(result.lightingResponds, 'Bevel angle and altitude did not change the generated lighting masks');
+	assert(result.angularJitter < 0.017, `Curved bevel lighting retained raster ridges: ${result.angularJitter}`);
 	assert(result.spreadPixels > result.fillPixels, 'Shadow spread did not dilate the silhouette');
 	assert(result.spans === 2, 'Bevel preview did not reconcile highlight and shade spans');
 }
