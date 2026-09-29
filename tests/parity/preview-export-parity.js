@@ -1,7 +1,8 @@
 // Preview and export read one slot stack (buildSlotStack) and one set of
 // paint helpers. Each entry names the shared function and the preview/export
 // members that must call it; tests/unit/preview-export-twins.js checks that.
-// Members are Class.method, or paintSlots.functionName for js/paint/paint-slots.js.
+// Members are Class.method, or paintSlots.functionName / sparkles.functionName
+// for the top-level functions of js/paint/paint-slots.js / js/paint/sparkles.js.
 const PREVIEW_EXPORT_TWINS = [
 	{
 		feature: 'slot stack order',
@@ -38,6 +39,24 @@ const PREVIEW_EXPORT_TWINS = [
 		shared: 'getSlotTexturePatternOrigin',
 		preview: ['paintSlots.applyPaintSourceToElement'],
 		export: ['SceneCompositor._paintSourceInto']
+	},
+	{
+		feature: 'sparkle layout',
+		shared: 'peekSparkleLayout',
+		preview: ['sparkles.reconcileSparkleLayers'],
+		export: ['SceneCompositor._drawLayerSparkles']
+	},
+	{
+		feature: 'sparkle particle poses',
+		shared: 'sampleSparkleFrame',
+		preview: ['sparkles.paintSparkleParticleFrame'],
+		export: ['sparkles.drawSparkleFrame']
+	},
+	{
+		feature: 'sparkle particle boxes',
+		shared: 'getSparkleParticleBox',
+		preview: ['sparkles.reconcileSparkleParticles'],
+		export: ['sparkles.drawSparkleFrame']
 	},
 	{
 		feature: 'animation transform origin',

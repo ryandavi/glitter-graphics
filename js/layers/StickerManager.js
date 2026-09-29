@@ -64,7 +64,7 @@ class StickerManager extends ContentManager {
 	}
 
 	// How the declared field binder (ui/paint-slot-controls.js) edits a sticker:
-	// its image color adjust and its shadow slot.
+	// its image color adjust and its shadow and sparkles slots.
 	createFieldHost() {
 		return {
 			type: LayerType.STICKER,
@@ -73,8 +73,8 @@ class StickerManager extends ContentManager {
 				const layer = this.editor.layerManager.getActiveLayer();
 				return layer?.type === LayerType.STICKER ? layer : null;
 			},
-			ensureSlot: (layer, key) => (layer.stickerData[key] ||= this.getDefaultShadow()),
-			getSlotDefaults: () => this.getDefaultShadow(),
+			ensureSlot: (layer, key) => (layer.stickerData[key] ||= this.getSlotDefaults(key)),
+			getSlotDefaults: (key) => this.getSlotDefaults(key),
 			apply: (layer, mutate, change) => {
 				mutate();
 				this.renderLayer(layer);
@@ -105,6 +105,7 @@ class StickerManager extends ContentManager {
 			const layer = this.fieldHost.getLayer();
 			if (!layer) return;
 			layer.stickerData.shadow = null;
+			layer.stickerData.sparkles = null;
 			delete layer.stickerData.effectDrafts;
 			delete layer.animation;
 			this.renderLayer(layer);
@@ -129,6 +130,10 @@ class StickerManager extends ContentManager {
 
 	getDefaultShadow() {
 		return buildDefaultShadow({ defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.sticker, includeColorAdjust: true });
+	}
+
+	getSlotDefaults(key) {
+		return key === 'sparkles' ? buildDefaultSparkles() : this.getDefaultShadow();
 	}
 
 	refreshColorAdjustVisuals(layer) {
@@ -808,6 +813,16 @@ class StickerManager extends ContentManager {
 		// inherits it, so smooth art needs the class toggle to opt back out.
 		element.classList.toggle('pixelated', layer.stickerData.isPixelated !== false);
 		this.reconcileStickerEffectSpan(layer, element);
+		// Behind-the-sticker sparkles sit between the shadow and the image, as
+		// the export composites them. The element is sized to the scaled box,
+		// so the sparkles stretch with it (fitBox).
+		reconcileSparkleLayers(img.parentElement, layer, {
+			editor: this.editor,
+			width: layer.stickerData.width,
+			height: layer.stickerData.height,
+			behindAnchor: img,
+			fitBox: true
+		});
 
 		// The map entry owns the live handles. Keep it across DOM refreshes so
 		// sidebar updates always target the live element.
@@ -1005,6 +1020,7 @@ updateTransform(layerId, updates) {
 		// Sticker borders were removed; drop them from older snapshots/projects.
 		layerData.stickerData.border = null;
 		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...this.getDefaultShadow(), ...layerData.stickerData.shadow };
+		layerData.stickerData.sparkles = normalizeSparklesData(layerData.stickerData.sparkles);
 
 		return layerData;
 	}

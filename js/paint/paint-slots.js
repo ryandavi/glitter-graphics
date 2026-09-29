@@ -8,7 +8,7 @@
 //
 // A slot declaration:
 //   key            stable id; also the export source-key suffix and span key
-//   role           'fill' | 'border' | 'shadow' | 'background'
+//   role           'fill' | 'border' | 'shadow' | 'background' | 'sparkles'
 //   path           where the slot object lives on the layer ('textData.fill')
 //   enabledPath    optional toggle that must be truthy for the slot to count
 //   draftPath      optional parked copy kept while the effect is switched off
@@ -47,10 +47,19 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 	shadow: {
 		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', control: 'number', geometry: true, documentScale: 'effect' },
 		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' }
+	},
+	// Particles (js/paint/sparkles.js). Sizes and spacing are host-local px.
+	sparkles: {
+		count: { field: 'sparkleCount', suffix: 'Count' },
+		sizeMin: { field: 'sparkleSizeMin', suffix: 'SizeMin', documentScale: 'effect' },
+		sizeMax: { field: 'sparkleSizeMax', suffix: 'SizeMax', documentScale: 'effect' },
+		cycleMs: { field: 'sparkleCycle', suffix: 'Cycle' },
+		sensitivity: { field: 'sparkleSensitivity', suffix: 'Sensitivity' },
+		spacing: { field: 'sparkleSpacing', suffix: 'Spacing', documentScale: 'effect' }
 	}
 });
 
-const PAINT_SLOT_ROLES = Object.freeze(['fill', 'border', 'shadow', 'background']);
+const PAINT_SLOT_ROLES = Object.freeze(['fill', 'border', 'shadow', 'background', 'sparkles']);
 
 // Kept for callers that read slot paths; field paths use the same format.
 const readPaintSlotPath = readFieldPath;
@@ -97,11 +106,14 @@ function getPaintSlotFieldDefault(definition, path, fallback) {
 	return definition?.fields.find((binding) => binding.path === path)?.spec?.value ?? fallback;
 }
 
-// A zero-width border is present (it keeps its settings and badge) but draws
-// nothing. Every other slot draws whenever it is present.
+// A zero-width border or a zero-count sparkles slot is present (it keeps its
+// settings and badge) but draws nothing. Every other slot draws whenever it
+// is present.
 function paintSlotRenders(definition, data) {
 	if (!data) return false;
-	return definition.role !== 'border' || Number(data.widthPx) > 0;
+	if (definition.role === 'border') return Number(data.widthPx) > 0;
+	if (definition.role === 'sparkles') return Number(data.count) > 0;
+	return true;
 }
 
 // present: the slot object exists and its toggle, if any, is on.
@@ -207,12 +219,13 @@ function resolvePaintSlotPreviewSource(editor, layer, entry) {
 // border drawn in front of its fill moves after it. The DOM preview
 // (reconcileSlotStack) and the export compositor (SceneCompositor) both read this
 // list, so the ordering rules live here only. resolveSource(entry) returns a
-// paint source or null to skip the slot.
+// paint source or null to skip the slot. Sparkles are particles, not a masked
+// surface; they draw through js/paint/sparkles.js instead.
 function buildSlotStack(layer, resolveSource) {
 	const stack = [];
 	const front = [];
 	getLayerPaintSlots(layer).forEach((entry) => {
-		if (!entry.renders) return;
+		if (!entry.renders || entry.role === 'sparkles') return;
 		const source = resolveSource(entry);
 		if (!source) return;
 		const isShadow = entry.role === 'shadow';

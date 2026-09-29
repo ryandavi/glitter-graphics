@@ -3,7 +3,7 @@
 const assert = require('assert');
 
 const types = [
-	'breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse', 'heartbeat', 'blink',
+	'breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'glint', 'pulse', 'heartbeat', 'blink',
 	'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band',
 	'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee', 'rainbow'
 ];

@@ -21,6 +21,9 @@ class BaseBackgroundManager {
 		// renderPreviewCanvas). Not in a layerElements map: the background is
 		// never outlined as selected or hidden per element.
 		this.backgroundElement = null;
+		this.sparkleElement = null;
+		this.sparkleImageKeys = new WeakMap();
+		this.sparkleImageCounter = 0;
 		this.shimmerPreview = { key: null, frameIndex: 0, timer: null, pending: false, requestId: 0 };
 		this.setupUI();
 		this.setupEventListeners();
@@ -31,13 +34,18 @@ class BaseBackgroundManager {
 	}
 
 	renderContent() {
+		this.renderBackgroundElement();
+		this.renderSparkleElement();
+	}
+
+	renderBackgroundElement() {
 		const layer = this.getBaseLayer();
 		const glitter = layer?.visible && layer.background?.mode === 'glitter'
 			? this.editor.glitterLibrary.getItemById(layer.background.glitterId)
 			: null;
 		if (!glitter) {
 			// A missing glitter keeps the last element, as the fill layers do.
-			if (!layer?.visible || layer.background?.mode !== 'glitter') this.clearElements();
+			if (!layer?.visible || layer.background?.mode !== 'glitter') this.clearBackgroundElement();
 			return;
 		}
 		let wrapper = this.backgroundElement;
@@ -59,9 +67,90 @@ class BaseBackgroundManager {
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 	}
 
-	clearElements() {
+	// Canvas sparkles cover the whole document just above the base image, in
+	// their own canvas-sized element at the base layer's z-index.
+	renderSparkleElement() {
+		const layer = this.getBaseLayer();
+		const size = this.getDocumentSize();
+		if (!layer?.visible || !getLayerSparkleEntries(layer).length || !size) {
+			this.sparkleElement?.remove();
+			this.sparkleElement = null;
+			return;
+		}
+		let host = this.sparkleElement;
+		if (!host) {
+			host = document.createElement('div');
+			host.className = 'sparkle-host-element';
+			this.sparkleElement = host;
+		}
+		if (this.backgroundElement) {
+			if (this.backgroundElement.nextSibling !== host) this.backgroundElement.after(host);
+		} else if (!host.parentNode) {
+			this.editor.canvasElementsContainer.appendChild(host);
+		}
+		host.dataset.layerId = layer.id;
+		host.style.width = `${size.width}px`;
+		host.style.height = `${size.height}px`;
+		host.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+		host.style.opacity = String(layer.opacity / 100);
+		reconcileSparkleLayers(host, layer, { editor: this.editor, width: size.width, height: size.height });
+	}
+
+	// The export composes at the original canvas size, so the sparkle host box
+	// uses it too.
+	getDocumentSize() {
+		const canvas = this.editor.originalCanvas?.width ? this.editor.originalCanvas : this.editor.previewCanvas;
+		return canvas?.width && canvas?.height ? { width: canvas.width, height: canvas.height } : null;
+	}
+
+	// Kira Kira reads the photo itself (not its pixel effects), which is
+	// replace-only, so its identity keys the detection cache.
+	getSparkleHost(layer) {
+		const size = this.getDocumentSize();
+		if (!size) return null;
+		const imageData = layer.background?.mode === 'image' && this.hasBaseImage() ? this.editor.originalImageData : null;
+		if (imageData && !this.sparkleImageKeys.has(imageData)) this.sparkleImageKeys.set(imageData, ++this.sparkleImageCounter);
+		return {
+			key: imageData ? `base:${this.sparkleImageKeys.get(imageData)}` : 'base:none',
+			width: size.width,
+			height: size.height,
+			loadPixels: () => imageData
+		};
+	}
+
+	// How the declared field binder edits the canvas's sparkles slot. The
+	// background slot itself keeps its own bindings above.
+	createSparkleFieldHost() {
+		return {
+			type: LayerType.BASE_IMAGE,
+			editor: this.editor,
+			getLayer: () => this.getActiveLayer(),
+			ensureSlot: (layer, key) => (layer.background[key] ||= buildDefaultSparkles()),
+			getSlotDefaults: () => buildDefaultSparkles(),
+			apply: (layer, mutate, change) => {
+				mutate();
+				this.renderContent();
+				if (change.live) return;
+				this.loadLayerSettings(layer);
+				this.editor.layerManager.renderLayersList();
+				this.editor.saveState('Edit canvas sparkles');
+			},
+			render: () => this.renderContent(),
+			commit: () => this.editor.saveState('Edit canvas sparkles'),
+			armPicker: (key) => this.armPicker(key),
+			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot : null)
+		};
+	}
+
+	clearBackgroundElement() {
 		this.backgroundElement?.remove();
 		this.backgroundElement = null;
+	}
+
+	clearElements() {
+		this.clearBackgroundElement();
+		this.sparkleElement?.remove();
+		this.sparkleElement = null;
 	}
 
 	getActiveLayer() {
@@ -101,6 +190,7 @@ class BaseBackgroundManager {
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
 		});
 		normalizeSlotTextureCoordinates(layer.background);
+		layer.background.sparkles = normalizeSparklesData(layer.background.sparkles);
 		const legacyPosterize = layer.background.posterize;
 		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings(
 			layer.background.pixelEffects || legacyPosterize,
@@ -189,6 +279,8 @@ class BaseBackgroundManager {
 		});
 		this.ui.color?.addEventListener('change', () => this.editor.saveState('Edit background'));
 		[this.ui.glitterChip, this.ui.glitterChange].forEach((button) => button?.addEventListener('click', () => this.armPicker()));
+		this.sparkleFieldHost = this.createSparkleFieldHost();
+		bindFieldControls(this.sparkleFieldHost);
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
 		this.ui.pickerDone?.addEventListener('click', () => { if (this.hasActivePickerSession()) this.closePicker(); });
 		this.bindRange('Scale', 'scale');
@@ -593,6 +685,7 @@ class BaseBackgroundManager {
 		if (this.ui.imageChange) this.ui.imageChange.textContent = hasImage ? 'Replace' : 'Choose Image';
 		this.updateGlitterInfo(layer);
 		this.loadPixelEffectSettings(layer);
+		if (this.sparkleFieldHost) syncFieldControls(this.sparkleFieldHost, layer);
 	}
 
 	loadPixelEffectSettings(layer) {
@@ -658,17 +751,23 @@ class BaseBackgroundManager {
 		}, glitter, layer.background.colorAdjust);
 	}
 
-	armPicker() {
+	// slot: 'background' (the canvas paint) or 'sparkles'.
+	armPicker(slot = 'background') {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
-		pickerOpenSession(this, { layerId: layer.id }, {
+		const glitterId = slot === 'sparkles' ? layer.background.sparkles?.glitterId : layer.background.glitterId;
+		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, layer.background.glitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, glitterId)
 		});
 	}
 
 	hasActivePickerSession() {
 		return Boolean(this.pickerSession && this.getActiveLayer()?.id === this.pickerSession.layerId);
+	}
+
+	getGlitterSelectionTarget() {
+		return this.hasActivePickerSession() ? this.pickerSession.slot || 'background' : 'background';
 	}
 
 	updatePickerStrip() {
@@ -680,14 +779,15 @@ class BaseBackgroundManager {
 			visible: true,
 			armed,
 			hint: !armed,
-			title: 'Choosing background glitter',
-			detail: 'Applying to Canvas Background'
+			title: this.getGlitterSelectionTarget() === 'sparkles' ? 'Choosing sparkle glitter' : 'Choosing background glitter',
+			detail: this.getGlitterSelectionTarget() === 'sparkles' ? 'Applying to Canvas Sparkles' : 'Applying to Canvas Background'
 		});
 	}
 
 	closePicker() {
+		const focusId = this.getGlitterSelectionTarget() === 'sparkles' ? 'canvasSparklesGlitterChip' : 'baseBackgroundGlitterChip';
 		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: 'baseLayerSettings', focusId: 'baseBackgroundGlitterChip' });
+		returnFromPickerToProperties(this.editor, { section: 'baseLayerSettings', focusId });
 	}
 
 	closePickerSession() {

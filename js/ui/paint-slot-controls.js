@@ -206,15 +206,96 @@ function syncSlotTextureCoordinateControls(prefix, data) {
 //   onSlotDisabled(layer, key)   optional, runs inside the toggle's mutation
 //   afterFieldChange(layer, key, binding)  optional; key is null for type fields
 
-const BORDER_OPTION_CONTROLS = Object.freeze([
-	{ key: 'style', geometry: true, read: getBorderStyle, options: Object.fromEntries(getOptions('borderStyle').map(({ value }) => [value, `Style${fieldControlCap(value)}`])) },
-	{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: { round: 'EdgeRounded', hard: 'EdgeHard' } },
-	{ key: 'placement', geometry: true, read: getBorderPlacement, options: { outside: 'PositionOutside', center: 'PositionCenter', inside: 'PositionInside' } },
-	{ key: 'drawOrder', read: getBorderDrawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }
-]);
-
 function fieldControlCap(value) {
 	return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+// value -> control id suffix for every option of a registry list.
+function optionControlSuffixes(name, prefix) {
+	return Object.fromEntries(getOptions(name).map(({ value }) => [value, `${prefix}${fieldControlCap(value)}`]));
+}
+
+// Enum options a slot role carries, each a group of buttons whose ids are the
+// slot's panelPrefix + suffix. Sparkles options are read lazily: the behavior
+// list comes from the motion library, which loads after this file.
+const SLOT_OPTION_CONTROLS = Object.freeze({
+	border: Object.freeze([
+		{ key: 'style', geometry: true, read: getBorderStyle, options: optionControlSuffixes('borderStyle', 'Style') },
+		{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: { round: 'EdgeRounded', hard: 'EdgeHard' } },
+		{ key: 'placement', geometry: true, read: getBorderPlacement, options: { outside: 'PositionOutside', center: 'PositionCenter', inside: 'PositionInside' } },
+		{ key: 'drawOrder', read: getBorderDrawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }
+	]),
+	sparkles: Object.freeze([
+		{ key: 'emitter', read: (data) => data.emitter, get options() { return optionControlSuffixes('sparkleEmitter', 'Emitter'); } },
+		{ key: 'style', read: (data) => data.style, get options() { return optionControlSuffixes('sparkleStyle', 'Style'); } },
+		{ key: 'behavior', read: (data) => data.behavior, get options() { return optionControlSuffixes('sparkleBehavior', 'Behavior'); } },
+		{ key: 'drawOrder', read: (data) => data.drawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }
+	])
+});
+
+function syncSlotOptionButtons(prefix, role, data) {
+	(SLOT_OPTION_CONTROLS[role] || []).forEach((option) => {
+		const current = option.read(data);
+		Object.entries(option.options).forEach(([value, suffix]) => {
+			const button = document.getElementById(`${prefix}${suffix}`);
+			if (!button) return;
+			button.classList.toggle('active', current === value);
+			button.setAttribute('aria-pressed', String(current === value));
+		});
+	});
+}
+
+// Sparkles controls beyond the declared fields and option groups: the preset
+// grid, the Scatter shape chips, the halo switch and Shuffle.
+function bindSparkleSlotControls(host, definition, withLayer) {
+	const prefix = definition.panelPrefix;
+	const key = definition.key;
+	Object.values(SPARKLE_GLYPHS).filter((glyph) => glyph.pickable).forEach((glyph) => {
+		document.getElementById(`${prefix}Glyph${fieldControlCap(glyph.id)}`)?.addEventListener('click', () => withLayer((layer) => {
+			const data = host.ensureSlot(layer, key);
+			const glyphs = { ...data.glyphs };
+			if (glyphs[glyph.id]) {
+				if (Object.keys(glyphs).length === 1) return undefined;
+				delete glyphs[glyph.id];
+			} else {
+				glyphs[glyph.id] = 1;
+			}
+			return host.apply(layer, () => { data.glyphs = glyphs; }, {});
+		}));
+	});
+	document.getElementById(`${prefix}Halo`)?.addEventListener('change', (event) => withLayer((layer) => (
+		host.apply(layer, () => { host.ensureSlot(layer, key).halo = event.target.checked; }, {})
+	)));
+	document.getElementById(`${prefix}Shuffle`)?.addEventListener('click', () => withLayer((layer) => (
+		host.apply(layer, () => { host.ensureSlot(layer, key).seed = Math.floor(Math.random() * 1e9) + 1; }, {})
+	)));
+}
+
+function syncSparkleSlotControls(host, definition, layer, data) {
+	const prefix = definition.panelPrefix;
+	Object.values(SPARKLE_GLYPHS).filter((glyph) => glyph.pickable).forEach((glyph) => {
+		const chip = document.getElementById(`${prefix}Glyph${fieldControlCap(glyph.id)}`);
+		if (!chip) return;
+		const on = Boolean(data.glyphs?.[glyph.id]);
+		chip.classList.toggle('active', on);
+		chip.setAttribute('aria-pressed', String(on));
+	});
+	const halo = document.getElementById(`${prefix}Halo`);
+	if (halo) halo.checked = Boolean(data.halo);
+	document.querySelectorAll(`[data-sparkle-controls="${prefix}"] [data-sparkle-emitter]`).forEach((element) => {
+		element.hidden = element.dataset.sparkleEmitter !== data.emitter;
+	});
+	const grid = document.getElementById(`${prefix}Presets`);
+	if (grid) {
+		GlitterPresetLibrary.renderPresetGrid(grid, SPARKLE_PRESETS, {
+			activeId: findSparklePresetId(data),
+			contextId: prefix,
+			onChoose: (entry) => {
+				const active = host.getLayer();
+				if (active) host.apply(active, () => SPARKLE_PRESETS.apply(entry, host.ensureSlot(active, definition.key)), {});
+			}
+		});
+	}
 }
 
 // Control value -> stored value. Color adjust axes create the identity
@@ -368,16 +449,15 @@ function bindPaintSlotControls(host) {
 			});
 		});
 
-		if (definition.role === 'border') {
-			BORDER_OPTION_CONTROLS.forEach((option) => {
-				Object.entries(option.options).forEach(([value, suffix]) => {
-					byId(`${prefix}${suffix}`)?.addEventListener('click', () => withLayer((layer) => {
-						if (option.read(host.ensureSlot(layer, key)) === value) return undefined;
-						return host.apply(layer, () => { host.ensureSlot(layer, key)[option.key] = value; }, { geometry: option.geometry });
-					}));
-				});
+		(SLOT_OPTION_CONTROLS[definition.role] || []).forEach((option) => {
+			Object.entries(option.options).forEach(([value, suffix]) => {
+				byId(`${prefix}${suffix}`)?.addEventListener('click', () => withLayer((layer) => {
+					if (option.read(host.ensureSlot(layer, key)) === value) return undefined;
+					return host.apply(layer, () => { host.ensureSlot(layer, key)[option.key] = value; }, { geometry: option.geometry });
+				}));
 			});
-		}
+		});
+		if (definition.role === 'sparkles') bindSparkleSlotControls(host, definition, withLayer);
 
 		bindSlotTextureCoordinateControls({
 			prefix,
@@ -459,15 +539,11 @@ function syncPaintSlotControls(host, layer) {
 			if (control) syncFieldControl(control, readFieldControlValue(shown, binding));
 		});
 
+		syncSlotOptionButtons(prefix, definition.role, shown);
+		if (definition.role === 'sparkles') syncSparkleSlotControls(host, definition, layer, shown);
 		if (definition.role === 'border') {
-			BORDER_OPTION_CONTROLS.forEach((option) => {
-				const current = option.read(shown);
-				Object.entries(option.options).forEach(([value, suffix]) => {
-					byId(`${prefix}${suffix}`)?.classList.toggle('active', current === value);
-				});
-			});
 			if (byId(`${prefix}StyleDotted`)) {
-				const dotted = BORDER_OPTION_CONTROLS[0].read(shown) === 'dotted';
+				const dotted = getBorderStyle(shown) === 'dotted';
 				const row = byId(`${prefix}DotSpacingRow`);
 				const spacing = byId(`${prefix}DotSpacing`);
 				if (row) row.hidden = !dotted;

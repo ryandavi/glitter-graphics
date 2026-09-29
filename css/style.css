@@ -4193,6 +4193,43 @@ body.mask-editing .sticker-element {
 .sticker-element .sticker-effect-shadow {
   z-index: 0;
 }
+.sticker-element .sparkle-layer {
+  z-index: 3;
+}
+.sticker-element .sparkle-layer[data-order=behind] {
+  z-index: 1;
+}
+
+.sparkle-layer,
+.sparkle-host-element {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.sparkle-particle,
+.sparkle-paint {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.sparkle-particle {
+  transform-origin: 50% 50%;
+}
+
+.sparkle-glyph {
+  left: 0;
+  top: 0;
+}
+
+.sparkle-paint {
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-position: 0 0;
+  -webkit-mask-position: 0 0;
+}
 
 .status-bar {
   height: 24px;
@@ -5209,6 +5246,36 @@ body.mask-editing .sticker-element {
   align-items: center;
   justify-content: center;
   gap: 0.4em;
+}
+
+.sparkle-glyph-chips {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+}
+
+.sparkle-glyph-chip {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-inner);
+}
+.sparkle-glyph-chip.active {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.sparkle-glyph-icon {
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
 }
 
 .glitter-source {

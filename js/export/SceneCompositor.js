@@ -62,6 +62,8 @@ class SceneCompositor {
 		this.layerBlendCtx = this.layerBlendCanvas.getContext('2d', { willReadFrequently: true });
 		this.patternSourceCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
 		this.patternSourceCtx = this.patternSourceCanvas.getContext('2d');
+		// One painted particle at a time (drawSparkleFrame draws it at once).
+		this.sparklePaintCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
 		this._patternAdjustScratch = null;
 		this.filterGrainTileCache = new Map();
 		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
@@ -155,6 +157,55 @@ class SceneCompositor {
 		}];
 	}
 
+	// One procedural source per sparkles slot, period = its cycle. The sampled
+	// value is the slot's own clock: the fitted period maps back onto cycleMs,
+	// so every particle (a whole number of blinks per cycle) closes the loop.
+	_createSparkleTimelineSources(layer) {
+		if (layer.visible === false) return [];
+		return getLayerSparkleEntries(layer).map((entry) => {
+			const cycle = Math.max(1, Number(entry.data.cycleMs) || FIELDS.sparkleCycle.value);
+			return {
+				key: this._getSparkleTimelineKey(layer, entry),
+				label: `${layer.name || 'Layer'} sparkles`,
+				ownerLayerId: layer.id,
+				effectSlot: entry.key,
+				naturalPeriod: cycle,
+				preferredSamplingRate: CONFIG.tools.sparkles.exportFps,
+				sampleAt: (timestamp, period = cycle) => ({ time: timestamp * cycle / period })
+			};
+		});
+	}
+
+	_getSparkleTimelineKey(layer, entry) {
+		return `__sparkles_${getSparkleSampleKey(layer, entry)}`;
+	}
+
+	// Draw a layer's sparkles slots of one draw order ('behind' | 'front') into
+	// a host-local surface. placement maps host px onto ctx (drawSparkleFrame).
+	_drawLayerSparkles(ctx, layer, order, frame, placement) {
+		getLayerSparkleEntries(layer).forEach((entry) => {
+			if ((entry.data.drawOrder === 'behind' ? 'behind' : 'front') !== order) return;
+			const layout = peekSparkleLayout(this.editor, layer, entry);
+			if (!layout?.length) return;
+			const source = this._getSlotSource(layer, entry);
+			if (!source) return;
+			const sourceKey = getPaintSlotSourceKey(layer, entry);
+			const time = frame.sourceSelectionMap?.get(this._getSparkleTimelineKey(layer, entry))?.time ?? frame.timestamp ?? 0;
+			drawSparkleFrame(ctx, entry.data, layout, time, getSparkleSampleKey(layer, entry), (maskCanvas, origin) => {
+				maskCanvas._textureOrigin = origin;
+				return this._renderFilledMaskInto(
+					this.sparklePaintCanvas, maskCanvas, source, layer,
+					frame.frameIndex, sourceKey, frame.sourceSelectionMap, frame.resolvedFramesBySource
+				);
+			}, placement);
+		});
+	}
+
+	// Host-local px a layer's sparkles may paint past its box.
+	_getSparklePadding(layer) {
+		return getLayerSparkleEntries(layer).reduce((pad, entry) => Math.max(pad, getSparkleFramePadding(entry.data)), 0);
+	}
+
 	_createProceduralTimelines(proceduralSources) {
 		return proceduralSources.map((source) => new ProceduralAnimationSource({
 			...source,
@@ -212,8 +263,11 @@ class SceneCompositor {
 
 	// `smooth` mirrors the preview's image-rendering: pixel art stays crisp under
 	// the layer scale, art flagged smooth gets the browser's bilinear filtering
-	// so the export matches what the canvas showed.
-	_drawTransformedCanvas(ctx, sourceCanvas, layer, width, height, { smooth = false } = {}) {
+	// so the export matches what the canvas showed. `pad` (layer px, or padX /
+	// padY per axis) says the source extends that far past the width x height
+	// box on each side (sparkles); the box, not the padding, anchors transform
+	// and animation.
+	_drawTransformedCanvas(ctx, sourceCanvas, layer, width, height, { smooth = false, pad = 0, padX = pad, padY = pad } = {}) {
 		const transform = getLayerTransform(layer);
 		const metrics = computeLayerTransform(transform, { width, height });
 		const animation = this._activeLayerAnimation?.layer === layer
@@ -252,10 +306,10 @@ class SceneCompositor {
 
 		ctx.drawImage(
 			sourceCanvas,
-			-width / 2,
-			-height / 2,
-			width,
-			height
+			-width / 2 - padX,
+			-height / 2 - padY,
+			width + padX * 2,
+			height + padY * 2
 		);
 
 		ctx.restore();
@@ -286,7 +340,7 @@ class SceneCompositor {
 		};
 	}
 
-	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null) {
+	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null, timestamp = 0) {
 		const { isAnimated, width, height } = layer.stickerData;
 
 		// Determine which frame/image to use
@@ -316,8 +370,35 @@ class SceneCompositor {
 		this._renderPatternSourceInto(tempCanvas, imageData, layer.stickerData.colorAdjust);
 		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
 
-		this._drawTransformedCanvas(ctx, tempCanvas, layer, width, height, {
-			smooth: layer.stickerData.isPixelated === false
+		// Sparkles composite around the image at the image's own pixel density
+		// (a resolution variant may be denser than the layer box), on a canvas
+		// padded so particles past the edge are kept, as the preview shows them.
+		const sparklePad = this._getSparklePadding(layer);
+		let drawCanvas = tempCanvas;
+		let padX = 0;
+		let padY = 0;
+		if (sparklePad > 0) {
+			const densityX = tempCanvas.width / Math.max(1, width);
+			const densityY = tempCanvas.height / Math.max(1, height);
+			const padPxX = Math.ceil(sparklePad * densityX);
+			const padPxY = Math.ceil(sparklePad * densityY);
+			drawCanvas = scratch.sparkleCanvas;
+			ensureCanvasSize(drawCanvas, tempCanvas.width + padPxX * 2, tempCanvas.height + padPxY * 2);
+			const sparkleCtx = drawCanvas.getContext('2d', { alpha: true });
+			resetCanvasContext(sparkleCtx, drawCanvas.width, drawCanvas.height);
+			const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
+			const placement = { offsetX: padPxX, offsetY: padPxY, scaleX: densityX, scaleY: densityY };
+			this._drawLayerSparkles(sparkleCtx, layer, 'behind', frame, placement);
+			sparkleCtx.drawImage(tempCanvas, padPxX, padPxY);
+			this._drawLayerSparkles(sparkleCtx, layer, 'front', frame, placement);
+			padX = padPxX / densityX;
+			padY = padPxY / densityY;
+		}
+
+		this._drawTransformedCanvas(ctx, drawCanvas, layer, width, height, {
+			smooth: layer.stickerData.isPixelated === false,
+			padX,
+			padY
 		});
 	}
 
@@ -346,7 +427,7 @@ class SceneCompositor {
 	// Preview fades/transforms the wrapper around the complete span stack, so
 	// export must composite the object's paints before applying its
 	// whole-layer opacity or animation, or overlapping effects show through.
-	_renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMasks, scratch) {
+	_renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMasks, scratch, timestamp = 0) {
 		if (!slotMasks?.fill) {
 			throw new Error(`Missing slot masks for layer ${layer.id}`);
 		}
@@ -355,17 +436,24 @@ class SceneCompositor {
 		const compositeCanvas = scratch?.compositeCanvas;
 		const fillCanvas = scratch?.fillCanvas;
 		if (!compositeCanvas || !fillCanvas) throw new Error(`Missing slot scratch for layer ${layer.id}`);
-		ensureCanvasSize(compositeCanvas, width, height);
+		// Sparkles may paint past the mask canvas; the preview's span stack
+		// does not clip them, so the composite grows by their padding.
+		const pad = Math.ceil(this._getSparklePadding(layer));
+		ensureCanvasSize(compositeCanvas, width + pad * 2, height + pad * 2);
 		ensureCanvasSize(fillCanvas, width, height);
 		const compositeCtx = scratch.compositeCtx;
-		resetCanvasContext(compositeCtx, width, height);
+		resetCanvasContext(compositeCtx, compositeCanvas.width, compositeCanvas.height);
+		const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
+		const placement = { offsetX: pad, offsetY: pad };
+		if (pad) this._drawLayerSparkles(compositeCtx, layer, 'behind', frame, placement);
 		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
 			const maskCanvas = slotMasks[item.key];
 			if (!maskCanvas) return;
 			this._renderFilledMaskInto(fillCanvas, maskCanvas, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
-			compositeCtx.drawImage(fillCanvas, 0, 0, width, height);
+			compositeCtx.drawImage(fillCanvas, pad, pad, width, height);
 		});
-		this._drawTransformedCanvas(ctx, compositeCanvas, layer, width, height);
+		if (pad) this._drawLayerSparkles(compositeCtx, layer, 'front', frame, placement);
+		this._drawTransformedCanvas(ctx, compositeCanvas, layer, width, height, { pad });
 	}
 
 	// The preview resolves the same slot with resolvePaintSlotSource, adding
@@ -535,15 +623,27 @@ class SceneCompositor {
 			prepareMasks: async () => {},
 			prepareStaticResources: async () => {},
 			getAuthoredSources,
-			render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
-				if (mode !== 'solid' && mode !== 'glitter') return;
+			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
 				const [entry] = getLayerPaintSlots(layer);
-				const source = this._getSlotSource(layer, entry);
-				if (!source) return;
+				const source = mode === 'solid' || mode === 'glitter' ? this._getSlotSource(layer, entry) : null;
+				if (source) {
+					ctx.save();
+					this._paintSourceInto(ctx, width, height, source, {
+						frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
+					});
+					ctx.restore();
+				}
+				// Canvas sparkles sit just above the base image (drawn before the
+				// layer loop), in document px; the preview host fades with the
+				// layer opacity.
+				const host = getLayerSparkleEntries(layer).length ? getSparkleHost(this.editor, layer) : null;
+				if (!host) return;
 				ctx.save();
-				this._paintSourceInto(ctx, width, height, source, {
-					frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
-				});
+				ctx.globalAlpha *= layer.opacity / 100;
+				const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
+				const placement = { scaleX: width / Math.max(1, host.width), scaleY: height / Math.max(1, host.height) };
+				this._drawLayerSparkles(ctx, layer, 'behind', frame, placement);
+				this._drawLayerSparkles(ctx, layer, 'front', frame, placement);
 				ctx.restore();
 			}
 		};
@@ -598,8 +698,8 @@ class SceneCompositor {
 				if (ensureTextFont) await callbacks.ensureTextFont(layer.textData.fontId);
 			},
 			getAuthoredSources,
-			render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases }) => {
-				this._renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases?.get(layer.id), scratch);
+			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases }) => {
+				this._renderSlotStackToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases?.get(layer.id), scratch, timestamp);
 			}
 		};
 	}
@@ -609,7 +709,8 @@ class SceneCompositor {
 		const scratch = {
 			sourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			shadowMaskCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
-			shadowFillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
+			shadowFillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			sparkleCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
 		};
 		scratch.shadowMaskCtx = scratch.shadowMaskCanvas.getContext('2d', { alpha: true });
 		return {
@@ -635,8 +736,8 @@ class SceneCompositor {
 				...(layer.stickerData.isAnimated ? [this._createStickerDescriptor(layer)] : []),
 				...getAuthoredSources(library)
 			],
-			render: ({ ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource }) => {
-				this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
+			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource }) => {
+				this._renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, timestamp);
 			}
 		};
 	}
@@ -919,6 +1020,8 @@ class SceneCompositor {
 			await layerPlans[index].plan.prepareStaticResources({ callbacks, canvasData });
 			callbacks.onLayerLoaded?.(index + 1, layerPlans.length);
 		}
+		// Fonts are ready now, so text hosts measure their final masks.
+		await prepareSparkleLayouts(this.editor, visibleLayers);
 		let watermark = null;
 		if (settingsSnapshot.watermarkEnabled) watermark = await this._loadWatermark(callbacks, settingsSnapshot.watermark);
 		const watermarkCanvas = watermark ? createAppCanvas(0, 0, 'export/SceneCompositor') : null;
@@ -1270,6 +1373,7 @@ class SceneCompositor {
 					plan.render({
 						ctx: renderCtx,
 						frameIndex,
+						timestamp,
 						rainbowHue,
 						sourceSelectionMap,
 						resolvedFramesBySource,

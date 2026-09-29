@@ -20,8 +20,17 @@ const GlitterAnimation = (() => {
 		twinkle: motion(({ out, data, p, random }) => {
 			out.opacity = random(2) < (data.duty / 50 - 1) ? 1 : data.opacityFloor / 100;
 			if (p === 0 || p === 1) out.opacity = 1;
-		}),
-		pulse: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }),
+		}, { particleLabel: 'Twinkle' }),
+		// A flash: grows from nothing and shrinks back within the first `duty`
+		// percent of the cycle, turning by `amount` degrees, then stays hidden.
+		glint: motion(({ out, data, amount, p }) => {
+			const window = Math.max(0.05, Math.min(1, data.duty / 100));
+			const flare = p < window ? Math.sin(Math.PI * p / window) : 0;
+			out.scaleX = out.scaleY = flare;
+			out.opacity = flare > 0 ? 1 : 0;
+			out.rotate = p < window ? amount * (p / window - 0.5) : 0;
+		}, { particleLabel: 'Glint' }),
+		pulse: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { particleLabel: 'Pulse' }),
 		heartbeat: motion(({ out, amount, p }) => {
 			const thump = p < 0.18 ? Math.sin(p / 0.18 * Math.PI) : p < 0.42 ? Math.sin((p - 0.24) / 0.18 * Math.PI) * 0.7 : 0;
 			out.scaleX = out.scaleY = 1 + Math.max(0, thump) * amount / 100;
@@ -41,7 +50,7 @@ const GlitterAnimation = (() => {
 			out.tx = (anchorX - 0.5) * 2 * data.radius + data.radius * Math.cos(2 * Math.PI * p);
 			out.ty = (anchorY - 0.5) * 2 * data.radius + data.radius * Math.sin(2 * Math.PI * p);
 		}),
-		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }),
+		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { particleLabel: 'Spin' }),
 		flip: motion(({ out, data, angle, p }) => {
 			const flipScale = Math.cos(data.turns * 2 * Math.PI * p);
 			if (Math.abs(Math.sin(angle)) > Math.abs(Math.cos(angle))) out.scaleY = flipScale;
@@ -94,7 +103,7 @@ const GlitterAnimation = (() => {
 		if (['orbit', 'ping'].includes(data.type)) return data.radius !== 0;
 		if (['rotate', 'flip'].includes(data.type)) return data.turns !== 0;
 		if (['move', 'drift', 'marquee'].includes(data.type)) return data.distance !== 0;
-		if (data.type === 'rainbow') return true;
+		if (['rainbow', 'glint'].includes(data.type)) return true;
 		return data.amount !== 0;
 	}
 
@@ -256,7 +265,8 @@ const GlitterAnimation = (() => {
 
 	return {
 		ANIMATION_TYPES, MOTION_REGISTRY, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext, resolveOrigin
+		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext, resolveOrigin,
+		hashString, mulberry32
 	};
 })();
 

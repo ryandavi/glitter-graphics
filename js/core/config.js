@@ -295,6 +295,7 @@ const CONFIG = deepFreeze({
 					canvasBackground: 101
 				},
 				backgroundGlitterId: 96,
+				sparklesGlitterId: 17,
 				borderGlitterId: {
 					text: 9,
 					shape: 68
@@ -325,6 +326,7 @@ const CONFIG = deepFreeze({
 				dim: { periodMs: 2000, easing: 'easeInOut', opacityFloor: 40, direction: 'alternate', iterations: Infinity },
 				drift: { periodMs: 6000, easing: 'linear', distance: 120, angle: 0, direction: 'normal', iterations: Infinity },
 				twinkle: { periodMs: 1400, easing: 'linear', duty: 60, opacityFloor: 20, direction: 'normal', iterations: Infinity },
+				glint: { periodMs: 1600, easing: 'linear', duty: 40, amount: 45, direction: 'normal', iterations: Infinity },
 				pulse: { periodMs: 1400, easing: 'easeInOut', amount: 10, direction: 'alternate', iterations: Infinity },
 				heartbeat: { periodMs: 1200, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity },
 				blink: { periodMs: 900, easing: 'steps', steps: 2, duty: 50, direction: 'normal', iterations: Infinity, fillMode: 'none' },
@@ -348,6 +350,35 @@ const CONFIG = deepFreeze({
 			jitterQuantMs: 60,
 			maxPeriodMs: 20000,
 			exportFps: 12
+		},
+		// The Sparkles effect (js/paint/sparkles.js). Particle counts are capped
+		// per slot; highlight detection runs on a copy of the host downscaled so
+		// its long side is at most analysisMaxSide.
+		sparkles: {
+			maxCount: 80,
+			analysisMaxSide: 360,
+			// Whole blinks per cycle, so every particle returns to its start when
+			// the slot's cycle ends and GIF loops close.
+			blinksPerCycle: [1, 3],
+			// Static tilt range (degrees) a scattered particle is drawn at.
+			tiltDegrees: 30,
+			// Halo disc size relative to its star, and its peak alpha.
+			haloScale: 1.9,
+			haloAlpha: 0.75,
+			// Highlight strength above which a star gets a halo.
+			haloStrength: 0.7,
+			exportFps: 15,
+			defaults: {
+				mode: 'solid',
+				color: '#ffffff',
+				emitter: 'inside',
+				behavior: 'glint',
+				glyphs: { sparkle: 3, glint: 2, dot: 1 },
+				style: 'kira',
+				halo: true,
+				drawOrder: 'front',
+				seed: 1
+			}
 		},
 		stickers: {
 			// null preserves an empty new sticker layer.

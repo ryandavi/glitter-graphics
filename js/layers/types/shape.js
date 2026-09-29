@@ -16,8 +16,14 @@ registerLayerType(LayerType.SHAPE, {
 			key: 'fill', role: 'fill', path: 'shapeData.fill', glitterDefault: 'fillGlitterId',
 			panelPrefix: 'shapeFill', modes: ['none', 'image', 'glitter', 'solid'],
 			fields: { imageScalePercent: 'shapeImageScale', offsetXPercent: 'shapeImageOffsetX', offsetYPercent: 'shapeImageOffsetY' }
+		},
+		{
+			key: 'sparkles', role: 'sparkles', path: 'shapeData.sparkles', draftPath: 'shapeData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'shapeSparkles', modes: ['glitter', 'solid']
 		}
 	],
+	sparkleHost: (editor, layer) => editor.shapeGlitterManager?.getSparkleHost(layer) || null,
 	fields: [
 		{ path: 'shapeData.cornerRadiusPx', field: 'shapeRadius', id: 'shapeRadius', geometry: true, documentScale: 'geometry' },
 		{ path: 'shapeData.width', documentScale: 'geometry', minimum: 1 },
@@ -27,7 +33,10 @@ registerLayerType(LayerType.SHAPE, {
 	animatable: true,
 	animate: (...args) => animateTransformableLayerPreview(...args),
 	animationBox: (_editor, layer) => ({ width: layer.shapeData.width, height: layer.shapeData.height }),
-	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
+	timelineSources: (layer, context) => [
+		...context.compositor._createLayerAnimationTimelineSources(layer, context),
+		...context.compositor._createSparkleTimelineSources(layer)
+	],
 	serialization: {
 		dataKey: 'shapeData',
 		omit: ['settings'],

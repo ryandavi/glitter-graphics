@@ -897,6 +897,37 @@ body.mask-editing {
 	// animation is active, and this stacking still needs to apply then.
 	img.sticker-image { position: relative; z-index: 2; }
 	.sticker-effect-shadow { z-index: 0; }
+	// Sparkles drawn behind sit between the shadow and the image.
+	.sparkle-layer { z-index: 3; }
+	.sparkle-layer[data-order="behind"] { z-index: 1; }
+}
+
+// Sparkles slot particles (js/paint/sparkles.js): a host-sized layer of
+// absolutely placed spans, one per particle, each painting the slot through
+// its glyph mask. AnimationTicker writes every particle's transform and
+// opacity; text and shape layers stack in DOM order.
+.sparkle-layer,
+.sparkle-host-element {
+	position: absolute;
+	left: 0;
+	top: 0;
+	pointer-events: none;
+}
+
+.sparkle-particle,
+.sparkle-paint {
+	position: absolute;
+	display: block;
+	pointer-events: none;
+}
+
+.sparkle-particle { transform-origin: 50% 50%; }
+
+.sparkle-paint {
+	mask-repeat: no-repeat;
+	-webkit-mask-repeat: no-repeat;
+	mask-position: 0 0;
+	-webkit-mask-position: 0 0;
 }
 
 .status-bar {

@@ -411,6 +411,7 @@ class ShapeGlitterManager {
 		this.mutateGeometryPreservingShape(layer, () => {
 			layer.shapeData.border = null;
 			layer.shapeData.shadow = null;
+			layer.shapeData.sparkles = null;
 			delete layer.shapeData.effectDrafts;
 			delete layer.animation;
 		});
@@ -613,6 +614,7 @@ class ShapeGlitterManager {
 	getSlotDefaults(key) {
 		if (key === 'border') return this.getDefaultBorder();
 		if (key === 'shadow') return this.getDefaultShadow();
+		if (key === 'sparkles') return buildDefaultSparkles();
 		return this.getDefaultFill();
 	}
 
@@ -627,6 +629,7 @@ class ShapeGlitterManager {
 		if (data.border) data.border = mergeSlotEffectDefaults(data.border, this.getDefaultBorder());
 		if (data.shadow === undefined) data.shadow = null;
 		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, this.getDefaultShadow());
+		data.sparkles = normalizeSparklesData(data.sparkles);
 		normalizeSlotTextureCoordinates(data.fill);
 		normalizeSlotTextureCoordinates(data.border);
 		normalizeSlotTextureCoordinates(data.shadow);
@@ -716,7 +719,8 @@ class ShapeGlitterManager {
 			builders: {
 				fill: () => this.getDefaultFill(),
 				border: () => this.getDefaultBorder(),
-				shadow: () => this.getDefaultShadow()
+				shadow: () => this.getDefaultShadow(),
+				sparkles: () => buildDefaultSparkles()
 			}
 		});
 	}
@@ -960,7 +964,7 @@ class ShapeGlitterManager {
 			measurement
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
-			if (!entry.renders || entry.key === 'fill') return;
+			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
 			masks[entry.key] = entry.role === 'shadow'
 				? createOffsetMaskCanvas(measurement.canvas, entry.data.offsetX || 0, entry.data.offsetY || 0)
 				: this.getBorderMaskCanvas(measurement, entry.data);
@@ -1056,6 +1060,20 @@ class ShapeGlitterManager {
 				return mask && { canvas: mask.canvas, url: this.getPreviewMaskDataUrl(mask.canvas, mask.cacheKey) };
 			}
 		});
+		reconcileSparkleLayers(stack, layer, { editor: this.editor, width: measurement.width, height: measurement.height });
+	}
+
+	// Sparkles read the shape mask painted with its fill, in mask-canvas space
+	// (the same box the export composites the slot stack in).
+	getSparkleHost(layer) {
+		const measurement = this.getMeasurementEntry(layer);
+		const fill = layer.shapeData.fill;
+		return {
+			key: `shape:${measurement.key}|${getSparkleMaskHostKey(fill)}`,
+			width: measurement.width,
+			height: measurement.height,
+			loadPixels: () => paintSparkleMaskHost(measurement.canvas, fill)
+		};
 	}
 
 	getSlotStack(layer) {

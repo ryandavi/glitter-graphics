@@ -349,36 +349,30 @@ async initBrowser() {
 		await this.ensureAssetImageReady(glitter);
 
 		if (layer.type === LayerType.BASE_IMAGE) {
-			layer.background.glitterId = id;
-			layer.background.mode = 'glitter';
-			layer.background.colorAdjust = normalizeColorAdjust(null);
-		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
-			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
-			// Picking a new swatch is a clean slate — drop that slot's hue/sat/bright.
-			if (target === 'border') {
-				const border = this.editor.textGlitterManager.ensureEffectData(layer, 'border');
-				border.glitterId = id;
-				border.mode = 'glitter';
-				border.colorAdjust = null;
-			} else if (target === 'shadow') {
-				const shadow = this.editor.textGlitterManager.ensureEffectData(layer, 'shadow');
-				shadow.glitterId = id;
-				shadow.mode = 'glitter';
-				shadow.colorAdjust = null;
-			} else if (target === 'backgroundFill') {
-				const background = this.editor.textGlitterManager.ensureEffectData(layer, 'backgroundFill');
-				background.glitterId = id;
-				background.mode = 'glitter';
-				background.colorAdjust = null;
+			const sparkles = this.editor.baseBackgroundManager?.getGlitterSelectionTarget() === 'sparkles'
+				? layer.background.sparkles
+				: null;
+			if (sparkles) {
+				sparkles.glitterId = id;
+				sparkles.mode = 'glitter';
+				sparkles.colorAdjust = null;
 			} else {
-				// Intent capture: picking a glitter for a solid-mode fill IS the
-				// statement "I want glitter here", so flip the slot to glitter.
-				// Otherwise the gallery click writes the glitter id, highlights
-				// the swatch, and saves history with zero visible change.
-				const fill = this.editor.textGlitterManager.ensureEffectData(layer, 'fill');
-				fill.glitterId = id;
-				fill.mode = 'glitter';
-				fill.colorAdjust = null;
+				layer.background.glitterId = id;
+				layer.background.mode = 'glitter';
+				layer.background.colorAdjust = normalizeColorAdjust(null);
+			}
+		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
+			// Picking a new swatch is a clean slate — drop that slot's hue/sat/bright.
+			// Intent capture: picking a glitter for a solid-mode slot IS the
+			// statement "I want glitter here", so flip the slot to glitter.
+			// Otherwise the gallery click writes the glitter id, highlights
+			// the swatch, and saves history with zero visible change.
+			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer) || 'fill';
+			const slotData = this.editor.textGlitterManager.ensureEffectData(layer, target);
+			if (slotData) {
+				slotData.glitterId = id;
+				slotData.mode = 'glitter';
+				slotData.colorAdjust = null;
 			}
 		} else if (layer.type === LayerType.SHAPE) {
 			// Each slot (fill, border, shadow) stores its own glitterId.

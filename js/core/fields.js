@@ -73,6 +73,12 @@ const FIELDS = Object.freeze({
 	shapeImageScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 	shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 	shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
+	sparkleCount: { label: 'Amount', unit: '', min: 1, max: 80, step: 1, value: 14 },
+	sparkleSizeMin: { label: 'Smallest', unit: 'px', min: 2, max: 120, step: 1, value: 8 },
+	sparkleSizeMax: { label: 'Largest', unit: 'px', min: 2, max: 120, step: 1, value: 22 },
+	sparkleCycle: { label: 'Speed', unit: 'ms', min: 400, max: 8000, step: 50, value: 2400 },
+	sparkleSensitivity: { label: 'Sensitivity', unit: '%', min: 0, max: 100, step: 1, value: 55 },
+	sparkleSpacing: { label: 'Spacing', unit: 'px', min: 2, max: 200, step: 1, value: 20 },
 	// A new text background uses the Instagram preset, whose geometry is these
 	// defaults (TEXT_BACKGROUND_PRESETS in config.js), so the reverts return there.
 	textBackgroundPaddingH: { label: 'Horizontal Padding', unit: 'px', min: 0, max: 200, value: 20 },

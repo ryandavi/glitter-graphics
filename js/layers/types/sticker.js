@@ -9,8 +9,26 @@ registerLayerType(LayerType.STICKER, {
 			key: 'shadow', role: 'shadow', path: 'stickerData.shadow', draftPath: 'stickerData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId', framePadding: getShadowCanvasPadding,
 			panelPrefix: 'stickerShadow', modes: ['glitter', 'solid']
+		},
+		{
+			key: 'sparkles', role: 'sparkles', path: 'stickerData.sparkles', draftPath: 'stickerData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'stickerSparkles', modes: ['glitter', 'solid']
 		}
 	],
+	// Sparkles read the sticker's own image; the base URL, so a resolution
+	// variant swap never moves the stars.
+	sparkleHost: (editor, layer) => {
+		const data = layer.stickerData;
+		const url = data?.baseUrl || data?.url;
+		if (!data || data.isEmpty || !url) return null;
+		return {
+			key: `sticker:${url}`,
+			width: data.width,
+			height: data.height,
+			loadPixels: () => loadSparkleImageHostPixels(url, data.isAnimated)
+		};
+	},
 	// Color adjust of the sticker image itself.
 	fields: [
 		{ path: 'stickerData.colorAdjust.hue', field: 'hue', id: 'stickerHue', colorAdjust: true },
@@ -22,7 +40,10 @@ registerLayerType(LayerType.STICKER, {
 	animatable: true,
 	animate: (...args) => animateTransformableLayerPreview(...args),
 	animationBox: (_editor, layer) => ({ width: layer.stickerData.width, height: layer.stickerData.height }),
-	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
+	timelineSources: (layer, context) => [
+		...context.compositor._createLayerAnimationTimelineSources(layer, context),
+		...context.compositor._createSparkleTimelineSources(layer)
+	],
 	serialization: {
 		custom: { serialize: 'serializeSticker', deserialize: 'deserializeSticker' }
 	},

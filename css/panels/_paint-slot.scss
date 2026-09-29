@@ -267,3 +267,36 @@
 	justify-content: center;
 	gap: 0.4em;
 }
+
+// Sparkles "Shapes" chips: one toggle per pickable glyph, drawn from the
+// glyph's own mask so the chip is the particle shape.
+.sparkle-glyph-chips {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: var(--spacing-xs);
+}
+
+.sparkle-glyph-chip {
+	display: grid;
+	place-items: center;
+	min-width: 0;
+	aspect-ratio: 1;
+	padding: 0;
+	background: var(--color-bg-tertiary);
+	border-radius: var(--radius-inner);
+
+	&.active {
+		outline: 2px solid var(--color-accent);
+		outline-offset: -2px;
+	}
+}
+
+.sparkle-glyph-icon {
+	width: 20px;
+	height: 20px;
+	background-color: currentColor;
+	mask-size: 100% 100%;
+	-webkit-mask-size: 100% 100%;
+	mask-repeat: no-repeat;
+	-webkit-mask-repeat: no-repeat;
+}

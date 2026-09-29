@@ -17,8 +17,14 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			glitterDefault: 'borderGlitterId', panelPrefix: 'textBorder', modes: ['glitter', 'solid'],
 			fields: { widthPx: 'textBorderWidth' }
 		},
-		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId', panelPrefix: 'textFill', modes: ['none', 'glitter', 'solid'] }
+		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId', panelPrefix: 'textFill', modes: ['none', 'glitter', 'solid'] },
+		{
+			key: 'sparkles', role: 'sparkles', path: 'textData.sparkles', draftPath: 'textData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'textSparkles', modes: ['glitter', 'solid']
+		}
 	],
+	sparkleHost: (editor, layer) => editor.textGlitterManager?.getSparkleHost(layer) || null,
 	fields: [
 		{ path: 'textData.fontSize', field: 'textFontSize', id: 'textFontSize', geometry: true, documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.letterSpacing', field: 'textLetterSpacing', id: 'textLetterSpacing', geometry: true, documentScale: 'geometry' },
@@ -35,7 +41,10 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	animatable: true,
 	animate: (...args) => animateTransformableLayerPreview(...args),
 	animationBox: (_editor, layer) => ({ width: layer.textData.width, height: layer.textData.height }),
-	timelineSources: (layer, context) => context.compositor._createLayerAnimationTimelineSources(layer, context),
+	timelineSources: (layer, context) => [
+		...context.compositor._createLayerAnimationTimelineSources(layer, context),
+		...context.compositor._createSparkleTimelineSources(layer)
+	],
 	serialization: {
 		dataKey: 'textData',
 		omit: ['settings'],

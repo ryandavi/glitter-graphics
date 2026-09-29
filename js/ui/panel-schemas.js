@@ -37,7 +37,7 @@ const TEXT_BACKGROUND_PRESET_OPTIONS = [
 ];
 
 const ANIMATION_PRESET_GROUPS = {
-	Ambient: ['breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse'],
+	Ambient: ['breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'glint', 'pulse'],
 	Attention: ['heartbeat', 'blink', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band'],
 	Movement: ['move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'],
 	Color: ['rainbow']
@@ -58,6 +58,20 @@ const ANCHOR_SELECT_OPTIONS = Object.freeze([
 	{ value: '0,1', label: 'Bottom left' }, { value: '0.5,1', label: 'Bottom' }, { value: '1,1', label: 'Bottom right' },
 	{ value: 'custom', label: 'Custom', disabled: true }
 ]);
+
+// The Sparkles effect card (a `sparkles` paint slot). Every host shares it:
+// its controls render from the sparkles registries (buildSparkleControls).
+function createSparklesPanelSpec(idPrefix) {
+	return {
+		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles', redesign: true,
+		sourceSelect: true, sourceRevert: true, colorRevert: true,
+		texturePosition: true,
+		toggle: true, sourceLabel: 'Paint', modes: ['glitter', 'solid'], activeMode: 'solid',
+		color: '#ffffff', chipTitle: 'Choose sparkle glitter',
+		pre: [{ kind: 'sparkleControls', part: 'presets', idPrefix }],
+		post: [{ kind: 'sparkleControls', part: 'customize', idPrefix }]
+	};
+}
 
 function createAnimationPanelSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
@@ -368,6 +382,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'property-note', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
 					] }
 				] },
+				createSparklesPanelSpec('canvasSparkles'),
 				{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
 					{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
 				] }
@@ -528,6 +543,7 @@ const PANEL_SCHEMAS = {
 					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]
 			},
+			createSparklesPanelSpec('stickerSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetStickerEffects', label: 'Reset Effects', secondary: true, title: 'Disable all sticker effects and clear their saved settings' }
 			] },
@@ -678,6 +694,7 @@ const PANEL_SCHEMAS = {
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]
 			},
+			createSparklesPanelSpec('textSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetTextEffects', label: 'Reset Effects', secondary: true, title: 'Disable all text effects and clear their saved settings' }
 			] },
@@ -796,6 +813,7 @@ const PANEL_SCHEMAS = {
 					] }
 				]
 			},
+			createSparklesPanelSpec('shapeSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetShapeEffects', label: 'Reset Effects', secondary: true, title: 'Disable all shape effects and clear their saved settings' }
 			] },

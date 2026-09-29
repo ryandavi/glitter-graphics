@@ -1426,6 +1426,8 @@ function buildPanelItem(item, schema) {
 			wrap.appendChild(node);
 			return wrap;
 		}
+		case 'sparkleControls':
+			return buildSparkleControls(item);
 		case 'presetGrid': {
 			const grid = tplClone('tpl-preset-grid');
 			if (item.id) grid.id = item.id;
@@ -1443,6 +1445,84 @@ function buildPanelItem(item, schema) {
 		default:
 			throw new Error(`panel-renderer: unknown item kind "${item.kind}"`);
 	}
+}
+
+// The Sparkles card body, generated from the sparkles registries at render
+// time (glyphs, emitter/style/behavior options, FIELDS specs). part
+// 'presets' is the preset grid that leads the card; part 'customize' holds
+// every other control (presets first, controls second). Control ids are the
+// slot's panelPrefix + the suffixes the binder reads
+// (ui/paint-slot-controls.js). Sets marked data-sparkle-emitter show only for
+// that emitter.
+function buildSparkleControls(item) {
+	const p = item.idPrefix;
+	if (item.part === 'presets') {
+		return buildPanelItem({ kind: 'set', label: 'Presets', items: [
+			{ kind: 'presetGrid', id: `${p}Presets`, label: 'Sparkle presets', classes: 'property-inset sparkle-presets' }
+		] });
+	}
+	const optionEntries = (name, suffix) => getOptions(name).map((option) => ({
+		id: `${p}${suffix}${panelCap(option.value)}`, label: option.label, value: option.value
+	}));
+	const customize = tplClone('tpl-advanced');
+	// Customize applies to every paint source, not just glitter.
+	customize.classList.remove('glitter-source-glitter');
+	customize.classList.add('sparkle-customize');
+	customize.dataset.sparkleControls = p;
+	customize.querySelector('.advanced-disclosure-label').textContent = 'Customize';
+	const content = customize.querySelector('[data-advanced-content]');
+	content.appendChild(buildPanelItem({ kind: 'set', label: 'Placement', items: [
+		{ kind: 'stackRow', groups: [
+			{ label: 'Place', options: optionEntries('sparkleEmitter', 'Emitter'), hint: 'Scatter over the layer, or put stars on its bright highlights (Kira Kira)' },
+			{ label: 'Layering', options: [
+				{ id: `${p}OrderBehind`, label: 'Behind', value: 'behind' },
+				{ id: `${p}OrderFront`, label: 'In front', value: 'front' }
+			] }
+		] }
+	] }));
+
+	const shapes = buildPanelItem({ kind: 'set', label: 'Shapes', classes: 'sparkle-glyph-set', attrs: { 'data-sparkle-emitter': 'inside' } });
+	const chips = panelDiv('sparkle-glyph-chips');
+	chips.setAttribute('role', 'group');
+	chips.setAttribute('aria-label', 'Sparkle shapes');
+	Object.values(SPARKLE_GLYPHS).filter((glyph) => glyph.pickable).forEach((glyph) => {
+		const chip = document.createElement('button');
+		chip.type = 'button';
+		chip.className = 'choice-card sparkle-glyph-chip';
+		chip.id = `${p}Glyph${panelCap(glyph.id)}`;
+		chip.title = glyph.label;
+		chip.setAttribute('aria-label', glyph.label);
+		chip.setAttribute('aria-pressed', 'false');
+		const icon = document.createElement('span');
+		icon.className = 'sparkle-glyph-icon';
+		const url = getSparkleGlyphMaskUrl(glyph.id, 24);
+		icon.style.maskImage = `url(${url})`;
+		icon.style.webkitMaskImage = `url(${url})`;
+		chip.appendChild(icon);
+		chips.appendChild(chip);
+	});
+	shapes.appendChild(chips);
+	content.appendChild(shapes);
+
+	content.appendChild(buildPanelItem({ kind: 'set', label: 'Highlights', attrs: { 'data-sparkle-emitter': 'highlights' }, items: [
+		{ kind: 'slider', id: `${p}Sensitivity`, slider: 'sparkleSensitivity', title: 'Higher finds more, dimmer highlights. It never brightens the image.' },
+		{ kind: 'slider', id: `${p}Spacing`, slider: 'sparkleSpacing', title: 'Minimum distance between stars' },
+		{ kind: 'stackRow', groups: [{ label: 'Style', options: optionEntries('sparkleStyle', 'Style') }] },
+		{ kind: 'checkboxList', items: [{ id: `${p}Halo`, label: 'Halo', title: 'A soft glow under the strongest stars' }] }
+	] }));
+	content.appendChild(buildPanelItem({ kind: 'set', label: 'Particles', items: [
+		{ kind: 'slider', id: `${p}Count`, slider: 'sparkleCount' },
+		{ kind: 'slider', id: `${p}SizeMin`, slider: 'sparkleSizeMin' },
+		{ kind: 'slider', id: `${p}SizeMax`, slider: 'sparkleSizeMax' }
+	] }));
+	content.appendChild(buildPanelItem({ kind: 'set', label: 'Motion', items: [
+		{ kind: 'stackRow', groups: [{ label: 'Motion', control: 'select', options: optionEntries('sparkleBehavior', 'Behavior') }] },
+		{ kind: 'slider', id: `${p}Cycle`, slider: 'sparkleCycle', title: 'Length of one sparkle cycle; each sparkle blinks one to three times per cycle' },
+		{ kind: 'actionRow', actions: [
+			{ id: `${p}Shuffle`, label: 'Shuffle', secondary: true, title: 'Place the sparkles somewhere new' }
+		] }
+	] }));
+	return customize;
 }
 
 // R5: a module row states what it is currently set to, so a collapsed effect

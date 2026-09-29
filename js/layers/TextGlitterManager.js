@@ -230,6 +230,7 @@ class TextGlitterManager {
 			await editLayout(layer, () => {
 				layer.textData.border = null;
 				layer.textData.shadow = null;
+				layer.textData.sparkles = null;
 				layer.textData.textBackground = this.getDefaultTextBackground();
 				delete layer.textData.effectDrafts;
 				delete layer.animation;
@@ -464,6 +465,7 @@ class TextGlitterManager {
 		if (layer.textData.shadow) {
 			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, this.getDefaultShadow());
 		}
+		layer.textData.sparkles = normalizeSparklesData(layer.textData.sparkles);
 		layer.textData.fill = mergeSlotEffectDefaults(layer.textData.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(layer.textData.fill);
 		normalizeSlotTextureCoordinates(layer.textData.border);
@@ -600,7 +602,8 @@ class TextGlitterManager {
 			builders: {
 				fill: () => this.getDefaultFill(),
 				border: () => this.getDefaultBorder(),
-				shadow: () => this.getDefaultShadow()
+				shadow: () => this.getDefaultShadow(),
+				sparkles: () => buildDefaultSparkles()
 			}
 		});
 	}
@@ -1044,6 +1047,7 @@ class TextGlitterManager {
 		if (effectName === 'fill') return this.getDefaultFill();
 		if (effectName === 'shadow') return this.getDefaultShadow();
 		if (effectName === 'backgroundFill') return this.getDefaultBackgroundFill();
+		if (effectName === 'sparkles') return buildDefaultSparkles();
 		return this.getDefaultBorder();
 	}
 
@@ -1571,7 +1575,7 @@ class TextGlitterManager {
 			renderHeight: layer.textData.height
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
-			if (!entry.renders || entry.key === 'fill') return;
+			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
 			masks[entry.key] = entry.role === 'shadow'
 				? createOffsetMaskCanvas(measurement.canvas, entry.data.offsetX || 0, entry.data.offsetY || 0)
 				: this.getSlotMask(layer, measurement, entry)?.canvas || null;
@@ -1702,6 +1706,20 @@ class TextGlitterManager {
 				};
 			}
 		});
+		reconcileSparkleLayers(stack, layer, { editor: this.editor, width: measurement.width, height: measurement.height });
+	}
+
+	// Sparkles read the text mask painted with its fill, in mask-canvas space
+	// (the same box the export composites the slot stack in).
+	getSparkleHost(layer) {
+		const measurement = this.getMeasurementEntry(layer);
+		const fill = layer.textData.fill;
+		return {
+			key: `text:${this.getCacheKeyForLayer(layer)}|${getSparkleMaskHostKey(fill)}`,
+			width: measurement.width,
+			height: measurement.height,
+			loadPixels: () => paintSparkleMaskHost(measurement.canvas, fill)
+		};
 	}
 
 	// The stack is a local-space surface sized to the mask canvas in text-local

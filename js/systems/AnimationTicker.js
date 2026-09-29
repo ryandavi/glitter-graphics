@@ -20,7 +20,10 @@ class AnimationTicker {
 		// the current phase; its authored phase value is the deliberate offset.
 		if (this.timelineStartedAt == null) this.timelineStartedAt = now;
 		const current = this.targets.get(layerId);
+		// A target with its own paint (a sparkles slot) closes over its layout,
+		// so a re-registration always replaces it.
 		const unchanged = current
+			&& !target.paint
 			&& current.target.getWrapper() === target.getWrapper()
 			&& current.target.getLayer() === target.getLayer();
 		if (!unchanged) this.targets.set(layerId, { target });
@@ -85,6 +88,10 @@ class AnimationTicker {
 		}
 		const wrapper = target.getWrapper();
 		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
+		if (target.paint) {
+			target.paint(frozen ? 0 : elapsed);
+			return;
+		}
 		const layer = target.getLayer();
 		LAYER_UI_CONFIG[layer.type]?.animate?.(layer, frozen ? 0 : elapsed, wrapper, {
 			editor: this.editor,

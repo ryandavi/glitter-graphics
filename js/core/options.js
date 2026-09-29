@@ -73,3 +73,14 @@ defineOptions('borderPlacement', [
 defineOptions('borderEdgeStyle', [{ value: 'round', label: 'Rounded' }, { value: 'hard', label: 'Hard' }]);
 defineOptions('borderDrawOrder', [{ value: 'behind', label: 'Behind' }, { value: 'front', label: 'In Front' }]);
 defineOptions('borderStyle', [{ value: 'solid', label: 'Solid' }, { value: 'dotted', label: 'Dotted' }]);
+// Where a Sparkles slot places its particles (js/paint/sparkles.js).
+defineOptions('sparkleEmitter', [
+	{ value: 'inside', label: 'Scatter' },
+	{ value: 'highlights', label: 'Highlights' }
+]);
+// How the Highlights (Kira Kira) emitter turns highlight strength into glyphs.
+defineOptions('sparkleStyle', [
+	{ value: 'kira', label: 'Kira' },
+	{ value: 'glint', label: 'Glint' },
+	{ value: 'soft', label: 'Soft' }
+]);

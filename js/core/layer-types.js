@@ -170,6 +170,7 @@ const LAYER_BADGES = [
 			const active = [];
 			if (layerHasBorderEffect(layer)) active.push('border');
 			if (layerHasShadowEffect(layer)) active.push('shadow');
+			if (layerHasPaintSlotRole(layer, 'sparkles')) active.push('sparkles');
 			if (layerHasActiveColorAdjust(layer)) active.push('color adjust');
 			return active.length ? { title: `Effects: ${active.join(', ')}` } : null;
 		}

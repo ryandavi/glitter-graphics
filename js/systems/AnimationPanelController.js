@@ -235,9 +235,9 @@ class AnimationPanelController {
 		const rows = {
 			// Intensity only does something where pose() actually reads `amount`
 			// (drift falls back to it when Distance is 0, so it stays listed).
-			Amount: ['breath', 'float', 'sway', 'drift', 'pulse', 'heartbeat', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band', 'zoom', 'rotate'],
+			Amount: ['breath', 'float', 'sway', 'drift', 'pulse', 'heartbeat', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band', 'zoom', 'rotate', 'glint'],
 			Angle: ['move', 'bounce', 'drift', 'marquee', 'float', 'flip'], Distance: ['move', 'drift', 'marquee'], Radius: ['orbit', 'ping'],
-			Turns: ['rotate', 'flip'], Duty: ['blink', 'twinkle'], OpacityFloor: ['dim', 'twinkle', 'ping', 'move']
+			Turns: ['rotate', 'flip'], Duty: ['blink', 'twinkle', 'glint'], OpacityFloor: ['dim', 'twinkle', 'ping', 'move']
 		};
 		Object.entries(rows).forEach(([suffix, types]) => {
 			const row = this._id(prefix, `${suffix}Row`);
