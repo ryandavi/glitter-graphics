@@ -3,6 +3,11 @@
 
 	const stop = (offset, color) => ({ offset, color, alpha: 1 });
 	const colors = (values) => values.map((color, index) => stop(index / (values.length - 1), color));
+	// Hard-band stops: each color's stop marks where its band starts, and a
+	// closing stop repeats the last color at 100% so every band has both ends
+	// on the strip. Rendering is the same without it (the last color runs to
+	// the edge either way); it keeps the band layout explicit for editing and
+	// for reverseEffectGradientStops.
 	const bands = (values, weights = values.map(() => 1)) => {
 		const total = weights.reduce((sum, weight) => sum + weight, 0);
 		let offset = 0;
@@ -24,11 +29,17 @@
 	});
 
 	const entries = [
+		// Basic matches CONFIG.rendering.gradient.stops, so a fresh gradient
+		// shows as this preset: a plain two-color start to build on.
+		{ id: 'basic', label: 'Basic', group: 'duotone', value: gradient(['#ff4fa3', '#6554ff']) },
+		{ id: 'pink-blue', label: 'Pink / Blue', group: 'duotone', value: gradient(['#ff3ea5', '#258dff']) },
+		{ id: 'purple-gold', label: 'Purple / Gold', group: 'duotone', value: gradient(['#5a189a', '#ffd166']) },
+		{ id: 'black-white', label: 'Black / White', group: 'duotone', value: gradient(['#000000', '#ffffff']) },
+
 		{ id: 'spectrum', label: 'Spectrum', group: 'rainbow', value: gradient(['#ff004c', '#ff8a00', '#ffe600', '#36d65c', '#00b7ff', '#5747ff', '#d62cff']) },
 		{ id: 'pastel-rainbow', label: 'Pastel', group: 'rainbow', value: gradient(['#ffb3c7', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#bdb2ff', '#ffc6ff']) },
 		{ id: 'neon-rainbow', label: 'Neon', group: 'rainbow', value: gradient(['#ff1493', '#ff5f00', '#fff700', '#39ff14', '#00e5ff', '#7a00ff']) },
 		{ id: 'y2k-candy', label: 'Y2K Candy', group: 'rainbow', value: gradient(['#ff71ce', '#ffce5c', '#7dffcf', '#01cdfe', '#b967ff']) },
-		{ id: 'rainbow-bands', label: 'Rainbow Bands', group: 'rainbow', value: { stops: bands(['#e40303', '#ff8c00', '#ffed00', '#008026', '#004dff', '#750787']), interpolation: 'steps' } },
 
 		flag('pride-6', 'Pride 6', ['#e40303', '#ff8c00', '#ffed00', '#008026', '#004dff', '#750787']),
 		flag('original-8', 'Original 8', ['#d6006e', '#e4002b', '#fe5000', '#ffcd00', '#00843d', '#009aa6', '#003da5', '#a634b2']),
@@ -55,20 +66,16 @@
 		{ id: 'aqua-glass', label: 'Aqua Glass', group: 'web', value: gradient(['#0067a8', '#75efff', '#e8ffff', '#0098d8']) },
 		{ id: 'frutiger-sky', label: 'Frutiger Sky', group: 'web', value: gradient(['#178bff', '#7edcff', '#f5ffff', '#70d14b']) },
 		{ id: 'candy-stripe', label: 'Candy Stripe', group: 'web', value: { stops: bands(['#ff72b6', '#ffffff', '#62d7ff', '#ffffff']), interpolation: 'steps' } },
-		{ id: 'myspace-blue', label: 'MySpace Blue', group: 'web', value: gradient(['#003399', '#2c65c8', '#8cb4e8', '#ffffff']) },
-
-		{ id: 'pink-blue', label: 'Pink / Blue', group: 'duotone', value: gradient(['#ff3ea5', '#258dff']) },
-		{ id: 'purple-gold', label: 'Purple / Gold', group: 'duotone', value: gradient(['#5a189a', '#ffd166']) },
-		{ id: 'black-white', label: 'Black / White', group: 'duotone', value: gradient(['#000000', '#ffffff']) }
+		{ id: 'myspace-blue', label: 'MySpace Blue', group: 'web', value: gradient(['#003399', '#2c65c8', '#8cb4e8', '#ffffff']) }
 	];
 
 	const library = root.GlitterPresetLibrary.createPresetLibrary({
 		id: 'gradients',
 		groups: [
+			{ id: 'duotone', label: 'Duotone' },
 			{ id: 'rainbow', label: 'Rainbow' },
 			{ id: 'pride', label: 'Pride' },
-			{ id: 'web', label: 'Y2K & Web' },
-			{ id: 'duotone', label: 'Duotone' }
+			{ id: 'web', label: 'Y2K & Web' }
 		],
 		entries,
 		renderThumbnail(entry, element) {

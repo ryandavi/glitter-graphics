@@ -370,12 +370,12 @@ function installEffectGradientEditor(options) {
 		update(true);
 		render();
 	});
-	// Reverse: mirror every stop's position; normalize re-sorts on commit.
+	// Reverse: mirror the gradient (band-aware under Steps; see effect-source.js).
 	stopSet.querySelector('.gradient-reverse').addEventListener('click', () => {
 		const data = options.getData();
 		if (!data) return;
 		data.gradient = normalizeEffectGradient(data.gradient);
-		data.gradient.stops.forEach((stop) => { stop.offset = 1 - stop.offset; });
+		data.gradient.stops = reverseEffectGradientStops(data.gradient);
 		update(true);
 		render();
 	});

@@ -70,11 +70,12 @@
 		if (!container || !library) return;
 		container.dataset.presetLibrary = library.id;
 		const groupIds = library.groups.length ? library.groups.map((group) => group.id) : [...new Set(library.entries.map((entry) => entry.group))];
-		const activeGroup = library.get(activeId)?.group || null;
+		// The group filter always opens on All and only changes when the user
+		// picks a group; a newly active tile is scrolled into view instead.
 		const selectionKey = contextId == null ? library.id : `${library.id}:${contextId}`;
 		let selection = groupSelections.get(selectionKey);
-		if (!selection) selection = { activeId, groupId: activeGroup, userSelected: false };
-		else if (activeId != null && activeId !== selection.activeId && !selection.userSelected) selection.groupId = activeGroup;
+		const revealActive = !selection || selection.activeId !== activeId;
+		if (!selection) selection = { activeId, groupId: null };
 		selection.activeId = activeId;
 		groupSelections.set(selectionKey, selection);
 
@@ -92,7 +93,6 @@
 				});
 				groupFilter.onchange = () => {
 					selection.groupId = groupFilter.value || null;
-					selection.userSelected = true;
 					render();
 					onGroupChange?.(selection.groupId);
 					groupFilter.focus();
@@ -143,6 +143,18 @@
 		};
 		bindPickerNavigation(container, '.preset-grid-option');
 		render();
+		if (revealActive) revealActiveOption(container);
+	}
+
+	// Scrolls only the grid's own scrollbox (never the panel) so a newly
+	// active tile below the fold is visible without moving the page.
+	function revealActiveOption(container) {
+		const card = container.querySelector('.preset-grid-option.active');
+		if (!card || container.scrollHeight <= container.clientHeight) return;
+		const box = container.getBoundingClientRect();
+		const rect = card.getBoundingClientRect();
+		if (rect.top >= box.top && rect.bottom <= box.bottom) return;
+		container.scrollTop += rect.top - box.top - (box.height - rect.height) / 2;
 	}
 
 	// Arrow-key movement shared by every picker (preset grids, the font list).

@@ -52,14 +52,14 @@
             <ol>
                 <li><a href="#create-text">Create a Text Layer</a></li>
                 <li><a href="#text-typography">Typography &amp; Layout</a></li>
-                <li><a href="#text-effects">Fill, Background, Border &amp; Shadow</a></li>
+                <li><a href="#text-effects">Fill, Background, Outline &amp; Shadow</a></li>
             </ol>
         </li>
         <li>
             <a href="#shapes">Shapes</a>
             <ol>
                 <li><a href="#create-shape">Draw a Shape</a></li>
-                <li><a href="#shape-fill">Fill, Border &amp; Shadow</a></li>
+                <li><a href="#shape-fill">Fill, Outline &amp; Shadow</a></li>
             </ol>
         </li>
         <li>
@@ -676,7 +676,7 @@
             <p><strong>Effects</strong> are non-destructive — turning one off keeps its settings, and each card has its own <strong>Enabled</strong> toggle. There are two kinds:</p>
             <ul>
                 <li><strong>Canvas effects</strong> apply to the whole Base Image — the <strong>Pixelate</strong> and <strong>Palette</strong> pipeline described below.</li>
-                <li><strong>Layer effects</strong> apply to a single layer — <strong>Shadow</strong> on Sticker layers, and <strong>Border</strong> and <strong>Shadow</strong> on Text and Shape layers, covered in each layer's own section.</li>
+                <li><strong>Layer effects</strong> apply to a single layer — <strong>Outline</strong>, <strong>Shadow</strong>, <strong>Bevel &amp; Gloss</strong>, and <strong>Sparkles</strong> on Sticker, Text, and Shape layers, covered in each layer's own section.</li>
             </ul>
             <p><strong>Reset Effects</strong> disables every effect on the selected canvas or layer and clears those saved settings. Canvas effects run in a fixed pipeline, each stage feeding the next:</p>
 
@@ -1322,6 +1322,19 @@
             </div>
 
             <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Outline</strong> – Trace the sticker's shape in glitter or a solid color. Choose smooth or pixel edges. <strong>Fill inside</strong> extends the outline paint behind the whole sticker as a backing, and <strong>Use all animation frames</strong> keeps an animated sticker's outline steady.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
                 </div>
@@ -1481,8 +1494,8 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="text-effects">Fill, Background, Border &amp; Shadow</h4>
-            <p>Fill, Border, and Shadow each keep their own source — glitter, solid color, or gradient, with None also available for the fill. Background uses its own glitter or solid source.</p>
+            <h4 id="text-effects">Fill, Background, Outline &amp; Shadow</h4>
+            <p>Fill, Outline, and Shadow each keep their own source — glitter, solid color, or gradient, with None also available for the fill. Background uses its own glitter or solid source.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1524,7 +1537,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-					<p><strong>Border</strong> – Enable an outline around the text and set its width. Choose Glitter, Solid, or Gradient, then control rounded/hard edges, outside/on-edge/inside placement, and whether the border sits behind or on top of the fill. Hard edges use four-connected pixel expansion, omitting diagonal corner pixels so outlines follow diagonal contours cleanly.</p>
+					<p><strong>Outline</strong> – Enable an outline around the text and set its width. Choose Glitter, Solid, or Gradient, then control smooth/pixel edges, outside/on-edge/inside placement, and whether the outline sits behind or on top of the fill. Hard edges use four-connected pixel expansion, omitting diagonal corner pixels so outlines follow diagonal contours cleanly.</p>
                 </div>
             </div>
 
@@ -1550,7 +1563,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Only one swatch is "active" for glitter picking at a time — click a swatch (Fill, Background, Border, or Shadow) to send the next glitter you pick in the gallery to that part of the text.</p>
+                    <p>Only one swatch is "active" for glitter picking at a time — click a swatch (Fill, Background, Outline, or Shadow) to send the next glitter you pick in the gallery to that part of the text.</p>
                 </div>
             </div>
         </div>
@@ -1599,8 +1612,8 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="shape-fill">Fill, Border &amp; Shadow</h4>
-            <p>Each shape has a Fill plus optional Border and Shadow. Fill can use an image, glitter, a solid color, or a gradient; Border and Shadow support glitter, solid color, or gradients.</p>
+            <h4 id="shape-fill">Fill, Outline &amp; Shadow</h4>
+            <p>Each shape has a Fill plus optional Outline and Shadow. Fill can use an image, glitter, a solid color, or a gradient; Outline and Shadow support glitter, solid color, or gradients.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1624,7 +1637,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter, solid color, or gradient, plus width/offset and opacity. Borders follow the shape's true outline, can be solid or dotted, and expose rounded/hard edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
+                    <p><strong>Outline</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter, solid color, or gradient, plus width/offset and opacity. Outlines follow the shape's true edge, can be solid or dotted, and expose smooth/pixel edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
                 </div>
             </div>
         </div>
@@ -1931,7 +1944,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Scale Borders &amp; Effects</strong> – Scale border widths, dotted spacing, and shadow offsets when Text or Shape layers are resized.</p>
+                    <p><strong>Scale Outlines &amp; Effects</strong> – Scale outline widths, dotted spacing, and shadow offsets when Text or Shape layers are resized.</p>
                 </div>
             </div>
 

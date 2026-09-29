@@ -148,8 +148,9 @@ class StickerManager extends ContentManager {
 	getDefaultBorder() {
 		return {
 			...buildDefaultBorder({
+				config: CONFIG.tools.stickers.outline,
 				slot: getPaintSlotDefinition(LayerType.STICKER, 'border'),
-				fallbackMode: 'solid',
+				fallbackMode: 'glitter',
 				defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.sticker,
 				includeColorAdjust: true
 			}),

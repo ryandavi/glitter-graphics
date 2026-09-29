@@ -168,6 +168,24 @@ function normalizeEffectGradient(gradient) {
 	};
 }
 
+// Reverse mirrors the gradient. Linear and smooth stops are points, so each
+// offset mirrors as-is. Steps stops mark where a band starts: band
+// [start, next) mirrors to [1 - next, 1 - start), so its stop moves to
+// 1 - next. A closing stop (the last color repeated at 100%, as bands() in
+// gradient-presets.js writes) stays the closer of the new last band.
+function reverseEffectGradientStops(gradient) {
+	const data = normalizeEffectGradient(gradient);
+	const stops = data.stops;
+	if (data.interpolation !== 'steps') return stops.map((stop) => ({ ...stop, offset: 1 - stop.offset })).reverse();
+	const last = stops[stops.length - 1];
+	const previous = stops[stops.length - 2];
+	const closes = stops.length > 2 && last.offset === 1 && last.color === previous.color && last.alpha === previous.alpha;
+	const bands = closes ? stops.slice(0, -1) : stops;
+	const reversed = bands.map((stop, index) => ({ ...stop, offset: 1 - (bands[index + 1]?.offset ?? 1) })).reverse();
+	if (closes) reversed.push({ ...reversed[reversed.length - 1], offset: 1 });
+	return reversed;
+}
+
 function parseHexColor(color) {
 	const hex = color.slice(1);
 	return [0, 2, 4].map((index) => parseInt(hex.slice(index, index + 2), 16));

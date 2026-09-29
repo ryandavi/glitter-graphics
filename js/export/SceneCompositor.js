@@ -379,6 +379,7 @@ class SceneCompositor {
 		let drawCanvas = tempCanvas;
 		let padX = 0;
 		let padY = 0;
+		let drawFrontSparkles = null;
 		if (sparklePad > 0) {
 			const densityX = tempCanvas.width / Math.max(1, width);
 			const densityY = tempCanvas.height / Math.max(1, height);
@@ -392,9 +393,19 @@ class SceneCompositor {
 			const placement = { offsetX: padPxX, offsetY: padPxY, scaleX: densityX, scaleY: densityY };
 			this._drawLayerSparkles(sparkleCtx, layer, 'behind', frame, placement);
 			sparkleCtx.drawImage(tempCanvas, padPxX, padPxY);
-			this._drawLayerSparkles(sparkleCtx, layer, 'front', frame, placement);
 			padX = padPxX / densityX;
 			padY = padPxY / densityY;
+			// Front sparkles go over the bevel, as the preview stacks them, so
+			// they are a second pass after the front effects.
+			drawFrontSparkles = () => {
+				resetCanvasContext(sparkleCtx, drawCanvas.width, drawCanvas.height);
+				this._drawLayerSparkles(sparkleCtx, layer, 'front', frame, placement);
+				this._drawTransformedCanvas(ctx, drawCanvas, layer, width, height, {
+					smooth: layer.stickerData.isPixelated === false,
+					padX,
+					padY
+				});
+			};
 		}
 
 		this._drawTransformedCanvas(ctx, drawCanvas, layer, width, height, {
@@ -403,6 +414,7 @@ class SceneCompositor {
 			padY
 		});
 		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, 'front');
+		drawFrontSparkles?.();
 	}
 
 	// Sticker effects share the slot paint path. Behind effects and front bevel
@@ -412,9 +424,13 @@ class SceneCompositor {
 		if (!scratch?.shadowMaskCanvas || !scratch?.shadowFillCanvas) return;
 		let maskStickerCanvas = stickerCanvas;
 		if (layer.stickerData.border?.unionFrames && layer.stickerData.isAnimated) {
-			const frames = resolvedFramesBySource?.get(layer.id) || [];
+			// Every native frame, as the preview's union reads them. The resolved
+			// map only holds the frames this export selects (a lazy getter for
+			// animated output, one frame for a still), not the whole GIF.
+			const frames = this.decodedSources.get(layer.stickerData.url)?.frames || [];
 			const union = scratch.unionSourceCanvas;
-			if (!scratch.unionReady) {
+			const unionKey = `${layer.stickerData.url}:${stickerCanvas.width}x${stickerCanvas.height}`;
+			if (scratch.unionKey !== unionKey) {
 				ensureCanvasSize(union, stickerCanvas.width, stickerCanvas.height);
 				const unionCtx = union.getContext('2d', { alpha: true });
 				resetCanvasContext(unionCtx, union.width, union.height);
@@ -427,7 +443,7 @@ class SceneCompositor {
 					frameCtx.putImageData(imageData, 0, 0);
 					unionCtx.drawImage(scratch.unionFrameCanvas, 0, 0, union.width, union.height);
 				});
-				scratch.unionReady = frames.length > 0;
+				scratch.unionKey = frames.length ? unionKey : null;
 			}
 			if (frames.length) maskStickerCanvas = union;
 		}

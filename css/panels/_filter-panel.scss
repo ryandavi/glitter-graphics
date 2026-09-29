@@ -57,8 +57,11 @@
 	white-space: nowrap;
 }
 
-// Filter thumbnails are abstract CSS studies of the filter recipe. They never
-// sample the base image, so changing artwork cannot restart or alter the chip.
+// Filter thumbnails paint every look over one shared CSS scene, so tiles
+// compare side by side like the same photo run through each filter. The scene
+// never samples the artwork, so changing the image cannot restart a chip. It
+// spans dark to near-white and warm to cool, plus a green and a pink, so tone,
+// hue and saturation changes all read at thumbnail size.
 .filter-css-thumbnail {
 	position: relative;
 	display: block;
@@ -66,7 +69,7 @@
 	height: 100%;
 	overflow: hidden;
 	isolation: isolate;
-	background: #8b789f;
+	background: #7b5cc4;
 
 	> span {
 		position: absolute;
@@ -78,44 +81,20 @@
 .filter-css-thumbnail-base {
 	inset: -8% !important;
 	background:
-		radial-gradient(circle at 73% 24%, #f6d17a 0 13%, transparent 14%),
-		radial-gradient(circle at 24% 76%, #3e8bb8 0 25%, transparent 26%),
-		linear-gradient(145deg, #473778 0 30%, #d15e75 31% 65%, #efae62 66%);
+		radial-gradient(ellipse 58% 42% at 18% 104%, #2f7a4f 0 97%, transparent 100%),
+		radial-gradient(ellipse 72% 38% at 88% 108%, #2a2146 0 97%, transparent 100%),
+		radial-gradient(circle at 68% 46%, #fff6dc 0 8%, #ffc86e 11%, transparent 24%),
+		linear-gradient(180deg, #243a8c 0%, #7b5cc4 34%, #f0709a 60%, #ffbe7a 80%, #fbe4bf 100%);
 }
 
-.filter-css-thumbnail-basic .filter-css-thumbnail-base {
-	background:
-		linear-gradient(90deg, transparent 48%, rgba(255, 255, 255, 0.34) 49% 52%, transparent 53%),
-		linear-gradient(145deg, #2e65b0 0 33%, #d83f77 34% 66%, #f0ba55 67%);
-}
-
-.filter-css-thumbnail-invert .filter-css-thumbnail-base {
-	background: linear-gradient(135deg, #f8f8f8 0 49%, #171923 50%);
-}
-
-.filter-css-thumbnail-grayscale .filter-css-thumbnail-base {
-	background: linear-gradient(135deg, #111 0%, #777 50%, #f4f4f4 100%);
-}
-
-.filter-css-thumbnail-sepia .filter-css-thumbnail-base {
-	background: linear-gradient(135deg, #372114 0%, #a06f3e 52%, #ead6aa 100%);
-}
-
-.filter-css-thumbnail-tint .filter-css-thumbnail-base {
-	background:
-		radial-gradient(circle at 72% 25%, #ffd283 0 18%, transparent 19%),
-		linear-gradient(135deg, #75395f, #ef8455);
-}
-
-.filter-css-thumbnail-vignette .filter-css-thumbnail-base {
-	background: radial-gradient(circle at center, #f4bf76 0 22%, #9b5268 46%, #15121d 100%);
+// A look's own blur radius is sized for full images and would vanish at chip
+// size, so the Blur tile gets a fixed, visible softening instead.
+.filter-css-thumbnail-blur .filter-css-thumbnail-base {
+	inset: -22% !important;
+	filter: blur(5px) !important;
 }
 
 .filter-css-thumbnail-grain {
-	.filter-css-thumbnail-base {
-		background: linear-gradient(135deg, #474b54, #b8aa98);
-	}
-
 	.filter-css-thumbnail-grain,
 	&::after {
 		content: '';
@@ -128,15 +107,6 @@
 		mix-blend-mode: soft-light;
 		opacity: 0.9;
 	}
-}
-
-.filter-css-thumbnail-blur .filter-css-thumbnail-base {
-	inset: -22% !important;
-	filter: blur(5px) !important;
-	background:
-		radial-gradient(circle at 22% 68%, #217eb0 0 25%, transparent 26%),
-		radial-gradient(circle at 73% 28%, #f6bc54 0 20%, transparent 21%),
-		linear-gradient(135deg, #6b357c, #de5d72);
 }
 
 @media (max-width: 1200px) {

@@ -639,9 +639,9 @@ const PANEL_SCHEMAS = {
 		effects: [
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'stickerBorder', title: 'Outline', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true, toggle: true, texturePosition: true,
-				sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid', color: '#ffffff', chipTitle: 'Choose outline glitter',
+				sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#000000', chipTitle: 'Choose outline glitter',
 				afterSource: [{ kind: 'slider', id: 'stickerBorderWidth', slider: 'stickerOutlineWidth' }],
-				post: [{ kind: 'optionGroup', label: 'Style', revert: true, options: [
+				post: [{ kind: 'optionGroup', label: 'Edges', revert: true, options: [
 					{ id: 'stickerBorderEdgeRounded', label: 'Smooth', value: 'round', active: true },
 					{ id: 'stickerBorderEdgeHard', label: 'Pixel', value: 'hard' }
 				] }, { kind: 'checkboxList', items: [
@@ -771,11 +771,11 @@ const PANEL_SCHEMAS = {
 					] }
 				]
 			},
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border', redesign: true,
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Outline', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
-				color: '#000000', chipTitle: 'Choose border source',
+				color: '#000000', chipTitle: 'Choose outline glitter',
 				afterSource: [
 					{ kind: 'set', label: 'Stroke', items: [
 						{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }
@@ -785,8 +785,8 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', label: 'Placement', items: [
 					{ kind: 'stackRow', revert: true, groups: [
 						{ label: 'Edges', options: [
-							{ id: 'textBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
-							{ id: 'textBorderEdgeHard', label: 'Hard', value: 'hard' }
+							{ id: 'textBorderEdgeRounded', label: 'Smooth', active: true, value: 'round' },
+							{ id: 'textBorderEdgeHard', label: 'Pixel', value: 'hard' }
 						] },
 						{ label: 'Placement', control: 'select', options: [
 							{ id: 'textBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
@@ -794,7 +794,7 @@ const PANEL_SCHEMAS = {
 							{ id: 'textBorderPositionInside', label: 'Inside', value: 'inside' }
 						] },
 						{ label: 'Layering', options: [
-							{ id: 'textBorderOrderBehind', label: 'Behind text', active: true, value: 'behind' },
+							{ id: 'textBorderOrderBehind', label: 'Behind', active: true, value: 'behind' },
 							{ id: 'textBorderOrderFront', label: 'On top', value: 'front' }
 						] }
 					] }
@@ -881,12 +881,12 @@ const PANEL_SCHEMAS = {
 			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border', redesign: true,
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Outline', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true, hideAdvanced: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
-				modes: ['glitter', 'solid'], activeMode: 'solid',
-				color: '#000000', chipTitle: 'Choose glitter',
+				modes: ['glitter', 'solid'], activeMode: 'glitter',
+				color: '#000000', chipTitle: 'Choose outline glitter',
 				afterSource: [
 					{ kind: 'set', label: 'Stroke', items: [
 						{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
@@ -902,8 +902,8 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', label: 'Placement', items: [
 					{ kind: 'stackRow', revert: true, groups: [
 						{ label: 'Edges', options: [
-							{ id: 'shapeBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
-							{ id: 'shapeBorderEdgeHard', label: 'Hard', value: 'hard' }
+							{ id: 'shapeBorderEdgeRounded', label: 'Smooth', active: true, value: 'round' },
+							{ id: 'shapeBorderEdgeHard', label: 'Pixel', value: 'hard' }
 						] },
 						{ label: 'Placement', control: 'select', options: [
 							{ id: 'shapeBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
@@ -912,7 +912,7 @@ const PANEL_SCHEMAS = {
 						] },
 						{ label: 'Layering', options: [
 							{ id: 'shapeBorderOrderBehind', label: 'Behind', active: true, value: 'behind' },
-							{ id: 'shapeBorderOrderFront', label: 'On Top', value: 'front' }
+							{ id: 'shapeBorderOrderFront', label: 'On top', value: 'front' }
 						] }
 					] }
 					] }
