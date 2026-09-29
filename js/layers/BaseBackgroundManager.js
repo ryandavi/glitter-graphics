@@ -68,7 +68,9 @@ class BaseBackgroundManager {
 	}
 
 	// Canvas sparkles cover the whole document just above the base image, in
-	// their own canvas-sized element at the base layer's z-index.
+	// their own canvas-sized element at the base layer's z-index. The photo is
+	// #previewCanvas at that same z-index, so the host goes right after it in
+	// the wrapper: DOM order puts the stars over the photo and under layer 2.
 	renderSparkleElement() {
 		const layer = this.getBaseLayer();
 		const size = this.getDocumentSize();
@@ -83,11 +85,8 @@ class BaseBackgroundManager {
 			host.className = 'sparkle-host-element';
 			this.sparkleElement = host;
 		}
-		if (this.backgroundElement) {
-			if (this.backgroundElement.nextSibling !== host) this.backgroundElement.after(host);
-		} else if (!host.parentNode) {
-			this.editor.canvasElementsContainer.appendChild(host);
-		}
+		const canvas = this.editor.previewCanvas;
+		if (canvas.nextSibling !== host) canvas.after(host);
 		host.dataset.layerId = layer.id;
 		host.style.width = `${size.width}px`;
 		host.style.height = `${size.height}px`;

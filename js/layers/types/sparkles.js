@@ -8,8 +8,8 @@ registerLayerType(LayerType.SPARKLES, {
 	paintSlots: [
 		{ key: 'sparkles', role: 'sparkles', path: 'sparkles', glitterDefault: 'sparklesGlitterId', panelPrefix: 'layerSparkles', modes: ['glitter', 'solid'] }
 	],
-	// The whole canvas, no pixels: Highlights of the whole scene wait for a
-	// scene snapshot.
+	// The whole canvas, no pixels of its own: Highlights reads the scene
+	// below the layer.
 	sparkleHost: (editor, layer) => editor.sparkleLayerManager?.getSparkleHost(layer) || null,
 	hasVisibleContent: (layer) => layerHasPaintSlotRole(layer, 'sparkles'),
 	timelineSources: (layer, context) => context.compositor._createSparkleTimelineSources(layer),

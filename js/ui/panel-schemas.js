@@ -70,7 +70,9 @@ function createSparklesPanelSpec(idPrefix, overrides = {}) {
 		toggle: true, sourceLabel: 'Paint', modes: ['glitter', 'solid'], activeMode: 'solid',
 		color: '#ffffff', chipTitle: 'Choose sparkle glitter',
 		pre: [{ kind: 'sparkleControls', part: 'presets', idPrefix }],
-		post: [{ kind: 'sparkleControls', part: 'customize', idPrefix }],
+		// Customize sits beside the source Advanced disclosure, not inside the
+		// source body.
+		sourceAdvanced: [{ kind: 'sparkleControls', part: 'customize', idPrefix }],
 		...overrides
 	};
 }

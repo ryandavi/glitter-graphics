@@ -22,6 +22,16 @@ class SparkleLayerManager {
 				this.loadLayerSettings(layer);
 			}
 		});
+		// Per layer: the scene signature the host key uses, and the newer one
+		// waiting out the settle delay, so dragging something below doesn't
+		// re-detect the scene on every preview update.
+		this.sceneKeys = new Map();
+		this.pendingSceneKeys = new Map();
+		this.sceneTimers = new Map();
+		this.sceneCompositor = new SceneCompositor({
+			editor,
+			resolveShapeFillImage: (imageRef) => editor.shapeGlitterManager.getImageFillAsset(imageRef)
+		});
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
 		this.setupOpacity();
@@ -110,11 +120,87 @@ class SparkleLayerManager {
 		return canvas?.width && canvas?.height ? { width: canvas.width, height: canvas.height } : null;
 	}
 
-	// The whole canvas, with no pixels of its own: Scatter covers the picture
-	// and Edges trace its border.
-	getSparkleHost() {
+	// The whole canvas. Scatter covers the picture and Edges trace its border,
+	// with no pixels; Highlights reads the scene below the layer.
+	getSparkleHost(layer) {
 		const size = this.getDocumentSize();
-		return size ? { key: 'sparkle-layer', width: size.width, height: size.height, loadPixels: () => null } : null;
+		if (!size) return null;
+		if (layer?.sparkles?.emitter !== 'highlights') return { key: 'sparkle-layer', width: size.width, height: size.height, loadPixels: () => null };
+		if (!this.sceneKeys.has(layer.id)) this.sceneKeys.set(layer.id, this.getSceneSignature(layer));
+		return {
+			key: `sparkle-scene:${layer.id}:${this.sceneKeys.get(layer.id)}`,
+			width: size.width,
+			height: size.height,
+			loadPixels: () => this.composeScene(layer)
+		};
+	}
+
+	// Every visible layer below this one except other Sparkles layers, so
+	// stars aren't detected on stars.
+	getSceneLayers(layer) {
+		const index = this.editor.layers.indexOf(layer);
+		return this.editor.layers.slice(0, Math.max(0, index)).filter((candidate) => candidate.type !== LayerType.SPARKLES
+			&& candidate.visible && !candidate.isPreview && layerHasVisibleContent(candidate));
+	}
+
+	getSceneSignature(layer) {
+		const signature = this.editor.filterLayerManager.getInputSignature(layer, this.getSceneLayers(layer));
+		return GlitterAnimation.hashString(signature).toString(36);
+	}
+
+	// A changed scene moves the stars once it has been still for
+	// sceneSettleMs; until then the old stars stay up.
+	syncSceneKey(layer) {
+		if (layer.sparkles?.emitter !== 'highlights') return;
+		const signature = this.getSceneSignature(layer);
+		if (!this.sceneKeys.has(layer.id) || this.sceneKeys.get(layer.id) === signature) {
+			this.sceneKeys.set(layer.id, signature);
+			this.clearPendingScene(layer.id);
+			return;
+		}
+		if (this.pendingSceneKeys.get(layer.id) === signature) return;
+		this.clearPendingScene(layer.id);
+		this.pendingSceneKeys.set(layer.id, signature);
+		this.sceneTimers.set(layer.id, setTimeout(() => {
+			this.clearPendingScene(layer.id);
+			this.sceneKeys.set(layer.id, signature);
+			this.editor.requestPreviewUpdate();
+		}, CONFIG.tools.sparkles.sceneSettleMs));
+	}
+
+	flushSceneKey(layer) {
+		if (layer.sparkles?.emitter !== 'highlights') return;
+		this.clearPendingScene(layer.id);
+		this.sceneKeys.set(layer.id, this.getSceneSignature(layer));
+	}
+
+	clearPendingScene(layerId) {
+		clearTimeout(this.sceneTimers.get(layerId));
+		this.sceneTimers.delete(layerId);
+		this.pendingSceneKeys.delete(layerId);
+	}
+
+	// The scene below, at document size. An animated scene is detected on the
+	// mean of a few frames across its loop, as an animated sticker host is, so
+	// the stars sit on persistently bright spots.
+	async composeScene(layer) {
+		const layers = this.getSceneLayers(layer);
+		const size = this.getDocumentSize();
+		if (!size) return null;
+		const params = this.editor.filterLayerManager.buildSnapshotParams(layers);
+		const preparedContext = await this.sceneCompositor.prepareContext(params);
+		const estimate = await this.sceneCompositor.estimateLoopDuration({
+			layers, library: this.editor.glitterLibrary.content,
+			fallbackDuration: CONFIG.export.defaults.frameDelay,
+			maxFrames: CONFIG.tools.sparkles.sceneSampleFrames, baseImage: true
+		});
+		const count = Math.max(1, Math.min(CONFIG.tools.sparkles.sceneSampleFrames, estimate.estimatedFrameCount || 1));
+		const frames = [];
+		for (let index = 0; index < count; index++) {
+			const { imageData } = await this.sceneCompositor.composeFrameAt({ ...params, preparedContext, timestamp: (estimate.duration || 0) * index / count });
+			frames.push(readSparkleAnalysisPixels(imageData, size.width, size.height));
+		}
+		return frames.length > 1 ? GlitterHighlightDetect.meanFrames(frames) : frames[0];
 	}
 
 	renderContent(layersToShow) {
@@ -137,11 +223,14 @@ class SparkleLayerManager {
 		host.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 		host.style.opacity = String(layer.opacity / 100);
 		host.style.mixBlendMode = GlitterBlendModes.forLayer(layer);
+		this.syncSceneKey(layer);
 		reconcileSparkleLayers(host, layer, { editor: this.editor, width: size.width, height: size.height });
 	}
 
 	removeLayerElement(layerId) {
 		removeManagedLayerElement(this.layerElements, layerId);
+		this.clearPendingScene(layerId);
+		this.sceneKeys.delete(layerId);
 	}
 
 	releaseLayerResources(layer) {
@@ -166,7 +255,9 @@ class SparkleLayerManager {
 		const compositor = context.compositor;
 		return {
 			prepareMasks: async () => {},
-			prepareStaticResources: async () => {},
+			// An export never waits out the settle delay: it detects on the scene
+			// as it is now.
+			prepareStaticResources: async () => this.flushSceneKey(layer),
 			getAuthoredSources: (library) => compositor._getSlotAuthoredSources(layer, library),
 			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
 				const host = getSparkleHost(this.editor, layer);

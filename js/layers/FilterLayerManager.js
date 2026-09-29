@@ -555,7 +555,9 @@ class FilterLayerManager {
 		this.editor.previewCanvas.style.visibility = '';
 		// [data-filter-snapshot-hidden] hides by opacity in _workspace.scss so the
 		// covered layers stay clickable under the snapshot.
-		this.editor.canvasElementsContainer.querySelectorAll('[data-filter-snapshot-hidden]').forEach((node) => {
+		// The wrapper, not the elements container: the base image's sparkles sit
+		// beside #previewCanvas (BaseBackgroundManager.renderSparkleElement).
+		this.editor.previewWrapper.querySelectorAll('[data-filter-snapshot-hidden]').forEach((node) => {
 			delete node.dataset.filterSnapshotHidden;
 		});
 		const tier3 = this.liveEditing ? [] : layersToShow.filter((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && this.snapshotOutputs.get(layer.id)?.frames?.length);
@@ -570,7 +572,7 @@ class FilterLayerManager {
 		this.displayedSnapshotLayerId = top.id;
 		this.editor.previewCanvas.style.visibility = 'hidden';
 		this.editor.layers.slice(0, topIndex).forEach((candidate) => {
-			this.editor.canvasElementsContainer.querySelectorAll(`[data-layer-id="${candidate.id}"]`).forEach((node) => {
+			this.editor.previewWrapper.querySelectorAll(`[data-layer-id="${candidate.id}"]`).forEach((node) => {
 				node.dataset.filterSnapshotHidden = 'true';
 			});
 		});

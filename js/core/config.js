@@ -375,6 +375,11 @@ const CONFIG = deepFreeze({
 			haloAlpha: 0.75,
 			// Highlight strength above which a star gets a halo.
 			haloStrength: 0.7,
+			// A Sparkles layer in Highlights reads the scene below it: edits there
+			// settle this long before the stars move, and an animated scene is
+			// detected on the mean of up to sceneSampleFrames frames.
+			sceneSettleMs: 400,
+			sceneSampleFrames: 6,
 			exportFps: 15,
 			defaults: {
 				mode: 'solid',
