@@ -825,13 +825,15 @@ class SceneCompositor {
 			prepareMasks: async () => {},
 			prepareStaticResources: async () => {},
 			getAuthoredSources: () => [],
-			render: ({ ctx, width, height, keepAlpha, alphaThreshold }) => {
+			render: async ({ ctx, width, height, keepAlpha, alphaThreshold, frameIndex, matteColor }) => {
 				if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
 				const caption = GlitterFilter.resolve(layer.filterData).caption;
 				const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
-				GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
+				await GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
 					keepAlpha,
 					alphaThreshold,
+					frameIndex,
+					matteColor,
 					seed: layer.id,
 					tileCache: this.filterGrainTileCache,
 					blendMode: GlitterBlendModes.forLayer(layer),
@@ -1270,7 +1272,7 @@ class SceneCompositor {
 			renderFrame: async (timestamp, frameSelection, candidateCount) => {
 				renderedCandidateCount++;
 				reportExportProgress(callbacks, 'composing', renderedCandidateCount / candidateCount, `Composing frame ${renderedCandidateCount} / ${candidateCount}`, renderedCandidateCount, candidateCount);
-				const frame = this._renderFrame({
+				const frame = await this._renderFrame({
 					outputFrameIndex: 0,
 					timestamp,
 					context,
@@ -1342,7 +1344,7 @@ class SceneCompositor {
 		ensureCanvasSize(this.layerBlendCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.canvas, canvasData.width, canvasData.height);
 		callbacks.onProgress(45, 'Composing still frame…', 1, 1, { phase: 'Composing' });
-		const imageData = this._renderFrame({
+		const imageData = await this._renderFrame({
 			outputFrameIndex: 0,
 			timestamp,
 			context,
@@ -1361,7 +1363,7 @@ class SceneCompositor {
 
 	// --- HELPER METHODS ---
 
-	_renderFrameToCanvas({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
+	async _renderFrameToCanvas({ outputFrameIndex: frameIndex, timestamp = 0, context, transparency, sourceSelectionMap = null, resolvedFramesBySource = null }) {
 		const { canvasData, visibleLayers: layers, exportSettings, watermark, watermarkCanvas, layerPlans, masks } = context;
 		const { enabled: preserveAlpha } = transparency;
 		const maskCanvases = masks.glitter;
@@ -1403,9 +1405,9 @@ class SceneCompositor {
 		}
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
-		layerPlans.forEach(({ layer, plan }) => {
-			if (layer.visible === false) return;
-			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) return;
+		for (const { layer, plan } of layerPlans) {
+			if (layer.visible === false) continue;
+			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) continue;
 			const blendMode = LAYER_UI_CONFIG[layer.type]?.blendable
 				? GlitterBlendModes.forLayer(layer)
 				: CONFIG.layers.defaultBlendMode;
@@ -1425,7 +1427,7 @@ class SceneCompositor {
 			const animationUnits = GlitterAnimation.isActive(layer.animation)
 				? [{ animData: layer.animation, anchorBox: this._getAnimationBox(layer, width, height) }]
 				: [{ animData: null, anchorBox: null }];
-			animationUnits.forEach((unit) => {
+			for (const unit of animationUnits) {
 				renderCtx.save();
 				let rainbowHue = 0;
 				if (unit.animData) {
@@ -1448,7 +1450,7 @@ class SceneCompositor {
 					}
 				}
 				try {
-					plan.render({
+					const renderResult = plan.render({
 						ctx: renderCtx,
 						frameIndex,
 						timestamp,
@@ -1461,13 +1463,15 @@ class SceneCompositor {
 						width,
 						height,
 						keepAlpha: preserveAlpha,
-						alphaThreshold
+						alphaThreshold,
+						matteColor: exportSettings.matteColor
 					});
+					if (renderResult?.then) await renderResult;
 				} finally {
 					this._activeLayerAnimation = null;
 					renderCtx.restore();
 				}
-			});
+			}
 			if (usesLayerGroupBlend && renderCtx === this.layerBlendCtx) {
 				if (blendMode === 'color-burn') {
 					const destination = ctx.getImageData(0, 0, width, height);
@@ -1481,8 +1485,7 @@ class SceneCompositor {
 					ctx.restore();
 				}
 			}
-		});
-
+		}
 		// 6. Render Watermark
 		if (exportSettings.watermarkEnabled && watermark) {
 			const watermarkFrame = sourceSelectionMap?.get('__watermark')?.frameIndex ?? frameIndex;
@@ -1492,8 +1495,8 @@ class SceneCompositor {
 		return this.canvas;
 	}
 
-	_renderFrame(options) {
-		this._renderFrameToCanvas(options);
+	async _renderFrame(options) {
+		await this._renderFrameToCanvas(options);
 		const { width, height } = options.context.canvasData;
 		return this.ctx.getImageData(0, 0, width, height);
 	}

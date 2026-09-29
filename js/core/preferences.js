@@ -8,7 +8,8 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	scaleTextures: { default: () => CONFIG.rendering.transformBehavior.scaleTextures },
 	panInertia: { default: () => CONFIG.ui.gestures.inertia.enabled },
 	pixelGrid: { default: () => CONFIG.ui.zoom.pixelGridEnabled },
-	reduceMotion: { default: () => false }
+	reduceMotion: { default: () => false },
+	filterPreviewLevel: { default: () => 'still' }
 });
 
 class Preferences {

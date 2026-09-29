@@ -16,21 +16,15 @@ class StillImageExporter {
 		ctx.putImageData(composed.imageData, 0, 0);
 		let blob;
 		if (target.format === 'png') { callbacks.onProgress(75, 'Encoding PNG…', 1, 1, { phase: 'Encoding PNG' }); blob = await encodeCanvasToBlob(canvas, target.mimeType); }
-		else if (target.format === 'jpeg') blob = await this._encodeJpegGenerations(canvas, exportSettings, callbacks);
+		else if (target.format === 'jpeg') blob = await this._encodeJpeg(canvas, exportSettings, callbacks);
 		else blob = await this._encodeGif(composed, exportSettings, callbacks);
 		callbacks.onProgress(100, 'Export complete', 1, 1, { phase: 'Finalizing' }); callbacks.onStatus('Export complete!');
 		const file = new File([blob], this.fileName, { type: target.mimeType, lastModified: Date.now() });
 		callbacks.onComplete({ still: true }); this.resultPresenter.show({ blob, file, target, width: composed.width, height: composed.height }); return blob;
 	}
-	async _encodeJpegGenerations(canvas, settings, callbacks) {
-		let blob; const quality = settings.jpegQuality / 100; const total = settings.jpegGenerations;
-		for (let generation = 1; generation <= total; generation++) {
-			callbacks.onProgress(60 + generation / total * 35, `Encoding JPG ${generation} / ${total}`, generation, total, { phase: 'Encoding JPG' });
-			blob = await encodeCanvasToBlob(canvas, 'image/jpeg', quality); if (generation === total) break;
-			if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
-			const bitmap = await createImageBitmap(blob); canvas.getContext('2d', { alpha: false }).drawImage(bitmap, 0, 0); bitmap.close();
-		}
-		return blob;
+	async _encodeJpeg(canvas, settings, callbacks) {
+		callbacks.onProgress(95, 'Encoding JPG…', 1, 1, { phase: 'Encoding JPG' });
+		return encodeCanvasToBlob(canvas, 'image/jpeg', settings.jpegQuality / 100);
 	}
 	async _encodeGif(composed, settings, callbacks) {
 		callbacks.onProgress(65, 'Building palette…', 1, 1, { phase: 'Building palette' });

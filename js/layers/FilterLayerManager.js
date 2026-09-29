@@ -4,6 +4,19 @@ class FilterLayerManager {
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
 		this.grainTileCache = new Map();
+		this.snapshotInputs = new ByteBudgetCache({ id: 'filter-snapshot-inputs', label: 'Pixel filter inputs', measure: (value) => value?.imageData?.data?.byteLength || 0 });
+		this.snapshotOutputs = new ByteBudgetCache({ id: 'filter-snapshot-outputs', label: 'Pixel filter outputs', measure: (value) => (value?.frames || []).reduce((sum, frame) => sum + canvasBytes(frame), 0) });
+		this.snapshotTimers = new Map();
+		this.snapshotTokens = new Map();
+		this.snapshotPlaybackFrame = null;
+		this.lastOutputMs = new Map();
+		this.imageIdentities = new WeakMap();
+		this.nextImageIdentity = 1;
+		this.snapshotCompositor = new SceneCompositor({
+			editor,
+			resolveShapeFillImage: (imageRef) => editor.shapeGlitterManager.getImageFillAsset(imageRef)
+		});
+		this.snapshotQueue = Promise.resolve();
 		this.setupUI();
 		this.setupEventListeners();
 		this.renderLookPicker();
@@ -38,7 +51,8 @@ class FilterLayerManager {
 			opacity: get('filterLayerOpacity'), lookGroup: get('filterLooksGroup'), looks: get('filterLooksPicker'),
 			currentInfo: get('filterCurrentLookInfo'), currentThumbnail: get('filterCurrentLookThumbnail'),
 			currentName: get('filterCurrentLookName'), currentBadges: get('filterCurrentLookBadges'), currentShow: get('filterCurrentLookShow'),
-			customize: get('filterCustomize'), customizeTitle: get('filterCustomizeTitle'), customizeControls: get('filterCustomizeControls')
+			customize: get('filterCustomize'), customizeTitle: get('filterCustomizeTitle'), customizeControls: get('filterCustomizeControls'),
+			snapshotStatus: get('filterSnapshotStatus'), snapshotActions: get('filterSnapshotActions'), renderPreview: get('filterRenderPreview')
 		};
 	}
 
@@ -75,6 +89,10 @@ class FilterLayerManager {
 	setupEventListeners() {
 		this.bindRange(this.ui.opacity, 'opacity');
 		this.ui.currentShow?.addEventListener('click', () => this.showActiveLookInLibrary());
+		this.ui.renderPreview?.addEventListener('click', () => {
+			const layer = this.getActiveLayer();
+			if (layer && GlitterFilters.tier(layer.filterData) === 3) this.scheduleSnapshot(layer, { animated: true, immediate: true });
+		});
 	}
 
 	chooseLook(entry) {
@@ -94,6 +112,17 @@ class FilterLayerManager {
 		this.loadingSettings = false;
 		this.renderLookPicker();
 		this.renderCustomizeControls(layer);
+		this.syncSnapshotControls(layer);
+	}
+
+	syncSnapshotControls(layer) {
+		const tier3 = GlitterFilters.tier(layer.filterData) === 3;
+		const level = PREFERENCES.get('filterPreviewLevel');
+		if (this.ui.snapshotStatus) {
+			this.ui.snapshotStatus.hidden = !tier3;
+			this.ui.snapshotStatus.textContent = level === 'off' ? 'Applies on export. Pixel preview is off in Settings.' : (level === 'animated' ? 'Animated preview renders after edits settle.' : 'Still preview. Animation below pauses until you preview it.');
+		}
+		if (this.ui.snapshotActions) this.ui.snapshotActions.hidden = !tier3 || level === 'off' || level === 'animated';
 	}
 
 	renderLookPicker() {
@@ -196,6 +225,7 @@ class FilterLayerManager {
 
 	renderContent(layersToShow) {
 		reconcileLayerElements(this.layerElements, layersToShow, LayerType.FILTER, (layer) => this.renderLayer(layer));
+		this.applySnapshotVisibility(layersToShow);
 	}
 
 	renderLayer(layer) {
@@ -211,15 +241,31 @@ class FilterLayerManager {
 		const height = this.editor.previewCanvas?.height || 1;
 		const viewScale = this.editor.viewport?.currentZoom || 1;
 		const blendMode = GlitterBlendModes.forLayer(layer);
+		const tier = GlitterFilters.tier(layer.filterData);
 		const signature = `${JSON.stringify(layer.filterData)}|${layer.opacity}|${blendMode}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}`;
-		if (element.dataset.renderSignature === signature) return element;
+		if (element.dataset.renderSignature === signature) {
+			if (tier === 3) this.paintSnapshotElement(layer, element);
+			return element;
+		}
 		element.dataset.renderSignature = signature;
+		element.dataset.filterTier = tier;
 		const layerZIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 		const layerOpacity = layer.opacity / 100;
 		element.style.zIndex = '';
 		element.style.opacity = '';
 		element.style.backdropFilter = '';
 		element.style.webkitBackdropFilter = '';
+		if (tier === 3) {
+			element.replaceChildren();
+			const canvas = createAppCanvas(width, height, 'layers/FilterLayerManager');
+			canvas.className = 'filter-snapshot-canvas';
+			canvas.style.zIndex = layerZIndex;
+			element.append(canvas);
+			this.paintSnapshotElement(layer, element);
+			this.scheduleSnapshot(layer);
+			return element;
+		}
+		element.querySelector('.filter-snapshot-canvas')?.remove();
 		// Not applied as element.style.mixBlendMode on this container: it paints
 		// no content of its own (children paint the tint/vignette/grain overlays,
 		// and tone/blur adjust the backdrop directly via CSS filter), so a
@@ -263,7 +309,166 @@ class FilterLayerManager {
 		return element;
 	}
 
+	getImageIdentity(value) {
+		if (!value || typeof value !== 'object') return 'none';
+		if (!this.imageIdentities.has(value)) this.imageIdentities.set(value, this.nextImageIdentity++);
+		return this.imageIdentities.get(value);
+	}
+
+	getSnapshotLayers(layer) {
+		const index = this.editor.layers.indexOf(layer);
+		return this.editor.layers.slice(0, Math.max(0, index)).filter((candidate) => candidate.visible && !candidate.isPreview && layerHasVisibleContent(candidate));
+	}
+
+	getInputSignature(layer, layers) {
+		const serialized = layers.map((candidate) => this.editor.layerManager.serializeLayer(candidate));
+		return `${this.editor.originalCanvas.width}x${this.editor.originalCanvas.height}|image:${this.getImageIdentity(this.editor.originalImageData)}|${JSON.stringify(serialized)}`;
+	}
+
+	buildSnapshotParams(layers) {
+		return {
+			visibleLayers: layers,
+			glitterGifs: this.editor.glitterLibrary.content,
+			canvasData: {
+				width: this.editor.originalCanvas.width,
+				height: this.editor.originalCanvas.height,
+				originalData: new Uint8ClampedArray(this.editor.originalImageData.data),
+				originalAlpha: this.editor.originalAlphaChannel,
+				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
+				hasBaseImage: this.editor.baseBackgroundManager?.hasBaseImage() ?? true
+			},
+			exportSettings: { ...this.editor.exportSettings, baseImage: true, watermarkEnabled: false, transparency: true },
+			target: { supportsTransparency: true },
+			callbacks: {
+				onStatus: () => {}, onProgress: () => {}, onLayerLoaded: () => {}, isCancelled: () => false,
+				createMask: (candidate) => this.editor.maskCompositor.getMaskData(candidate),
+				renderSlotMasks: (candidate) => getLayerManagerForType(this.editor, candidate.type).renderSlotMasks(candidate),
+				ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
+			}
+		};
+	}
+
+	scheduleSnapshot(layer, options = {}) {
+		const level = PREFERENCES.get('filterPreviewLevel');
+		if (level === 'off' || GlitterFilters.tier(layer.filterData) !== 3) return;
+		const animated = options.animated || (level === 'animated' && !getMemoryBudget().constrained);
+		clearTimeout(this.snapshotTimers.get(layer.id));
+		const input = this.snapshotInputs.get(layer.id);
+		const delay = options.immediate ? 0 : (input && (this.lastOutputMs.get(layer.id) || Infinity) < 50 ? 0 : CONFIG.tools.filter.snapshot.settleMs);
+		this.snapshotTimers.set(layer.id, setTimeout(() => {
+			this.snapshotQueue = this.snapshotQueue.then(() => this.renderSnapshot(layer, animated)).catch((error) => console.error('Pixel filter preview queue failed:', error));
+		}, delay));
+	}
+
+	async renderSnapshot(layer, animated = false) {
+		const token = (this.snapshotTokens.get(layer.id) || 0) + 1;
+		this.snapshotTokens.set(layer.id, token);
+		const layers = this.getSnapshotLayers(layer);
+		const inputSignature = this.getInputSignature(layer, layers);
+		let input = this.snapshotInputs.get(layer.id);
+		try {
+			if (!input || input.signature !== inputSignature) {
+				const params = this.buildSnapshotParams(layers);
+				const preparedContext = await this.snapshotCompositor.prepareContext(params);
+				const composed = await this.snapshotCompositor.composeFrameAt({ ...params, preparedContext, timestamp: 0 });
+				input = { signature: inputSignature, imageData: composed.imageData, preparedContext, params };
+				this.snapshotInputs.set(layer.id, input);
+			}
+			let duration = 0;
+			let frameCount = 1;
+			if (animated) {
+				const estimate = await this.snapshotCompositor.estimateLoopDuration({
+					layers, library: this.editor.glitterLibrary.content,
+					fallbackDuration: CONFIG.export.defaults.frameDelay,
+					maxFrames: 24, baseImage: true
+				});
+				duration = estimate.duration || 1200;
+				const frameBytes = input.imageData.width * input.imageData.height * 4;
+				const budgetFrames = Math.max(2, Math.floor(getMemoryBudget().previewCacheBytes / Math.max(1, frameBytes)) - 2);
+				frameCount = Math.max(2, Math.min(24, estimate.estimatedFrameCount || 24, budgetFrames));
+			}
+			const frames = [];
+			const started = performance.now();
+			for (let index = 0; index < frameCount; index++) {
+				if (this.snapshotTokens.get(layer.id) !== token) return;
+				let source = input.imageData;
+				if (index > 0) source = (await this.snapshotCompositor.composeFrameAt({ ...input.params, preparedContext: input.preparedContext, timestamp: duration * index / frameCount })).imageData;
+				const canvas = createAppCanvas(source.width, source.height, 'layers/FilterLayerManager');
+				const context = canvas.getContext('2d');
+				context.putImageData(source, 0, 0);
+				await GlitterFilter.renderToCanvas(context, source.width, source.height, layer.filterData, layer.opacity / 100, {
+					keepAlpha: true, alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
+					seed: layer.id, frameIndex: index, matteColor: this.editor.exportSettings.matteColor,
+					blendMode: GlitterBlendModes.forLayer(layer)
+				});
+				frames.push(canvas);
+				if (animated) this.editor.updateStatus(`Rendering preview ${index + 1}/${frameCount}`);
+			}
+			this.lastOutputMs.set(layer.id, (performance.now() - started) / frameCount);
+			this.snapshotOutputs.set(layer.id, { signature: `${inputSignature}|${JSON.stringify(layer.filterData)}|${layer.opacity}`, frames, frameDuration: animated ? duration / frameCount : 0, startedAt: performance.now() });
+			this.editor.requestPreviewUpdate();
+			if (animated) this.startSnapshotPlayback();
+		} catch (error) {
+			console.error('Pixel filter preview failed:', error);
+			this.editor.updateStatus('Pixel filter preview unavailable; it will still apply on export.');
+		}
+	}
+
+	paintSnapshotElement(layer, element) {
+		const output = this.snapshotOutputs.get(layer.id);
+		const canvas = element.querySelector('.filter-snapshot-canvas');
+		if (!output?.frames?.length || !canvas) return;
+		const index = output.frames.length > 1 ? Math.floor((performance.now() - output.startedAt) / output.frameDuration) % output.frames.length : 0;
+		const frame = output.frames[index];
+		if (canvas.width !== frame.width) canvas.width = frame.width;
+		if (canvas.height !== frame.height) canvas.height = frame.height;
+		canvas.getContext('2d').drawImage(frame, 0, 0);
+	}
+
+	startSnapshotPlayback() {
+		if (this.snapshotPlaybackFrame) return;
+		const tick = () => {
+			this.snapshotPlaybackFrame = null;
+			let active = false;
+			this.layerElements.forEach((element, id) => {
+				const layer = this.editor.layers.find((candidate) => candidate.id === id);
+				const output = this.snapshotOutputs.get(id);
+				if (layer && output?.frames?.length > 1) { active = true; this.paintSnapshotElement(layer, element); }
+			});
+			if (active) this.snapshotPlaybackFrame = requestAnimationFrame(tick);
+		};
+		this.snapshotPlaybackFrame = requestAnimationFrame(tick);
+	}
+
+	applySnapshotVisibility(layersToShow) {
+		this.editor.previewCanvas.style.visibility = '';
+		this.editor.canvasElementsContainer.querySelectorAll('[data-filter-snapshot-hidden="true"]').forEach((node) => {
+			node.style.visibility = '';
+			delete node.dataset.filterSnapshotHidden;
+		});
+		const tier3 = layersToShow.filter((layer) => layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && this.snapshotOutputs.get(layer.id)?.frames?.length);
+		if (!tier3.length) return;
+		const top = tier3.reduce((winner, candidate) => this.editor.layers.indexOf(candidate) > this.editor.layers.indexOf(winner) ? candidate : winner);
+		const topIndex = this.editor.layers.indexOf(top);
+		this.editor.previewCanvas.style.visibility = 'hidden';
+		this.editor.layers.slice(0, topIndex).forEach((candidate) => {
+			this.editor.canvasElementsContainer.querySelectorAll(`[data-layer-id="${candidate.id}"]`).forEach((node) => {
+				node.style.visibility = 'hidden';
+				node.dataset.filterSnapshotHidden = 'true';
+			});
+		});
+	}
+
+	refreshSnapshots() {
+		this.snapshotOutputs.clear();
+		this.editor.requestPreviewUpdate();
+	}
+
 	removeLayerElement(layerId) {
+		clearTimeout(this.snapshotTimers.get(layerId));
+		this.snapshotTimers.delete(layerId);
+		this.snapshotInputs.delete(layerId);
+		this.snapshotOutputs.delete(layerId);
 		removeManagedLayerElement(this.layerElements, layerId);
 	}
 
@@ -275,6 +480,13 @@ class FilterLayerManager {
 		this.layerElements.forEach((element) => element.remove());
 		this.layerElements.clear();
 		this.grainTileCache.clear();
+		this.snapshotInputs.clear();
+		this.snapshotOutputs.clear();
+		this.snapshotTimers.forEach(clearTimeout);
+		this.snapshotTimers.clear();
+		this.snapshotCompositor.releaseDecodedSources();
+		if (this.snapshotPlaybackFrame) cancelAnimationFrame(this.snapshotPlaybackFrame);
+		this.snapshotPlaybackFrame = null;
 	}
 
 	buildExportPlan(layer, context) {

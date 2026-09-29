@@ -74,14 +74,14 @@ async function captureExport(page, targetId, overrides = {}) {
 			return original.call(this, callback, type, quality);
 		};
 	});
-	const jpg = await captureExport(page, 'still:jpeg', { jpegQuality: 72, jpegGenerations: 3, matteColor: '#123456' });
+	const jpg = await captureExport(page, 'still:jpeg', { jpegQuality: 72, matteColor: '#123456' });
 	const jpegEncodes = await page.evaluate(() => window.__jpegEncodes);
-	assert(jpg.type === 'image/jpeg' && jpg.name.endsWith('.jpg') && jpegEncodes === 3, `JPG generations failed: ${JSON.stringify({ jpg, jpegEncodes })}`);
+	assert(jpg.type === 'image/jpeg' && jpg.name.endsWith('.jpg') && jpegEncodes === 1, `JPG encoding failed: ${JSON.stringify({ jpg, jpegEncodes })}`);
 
 	const stillGif = await captureExport(page, 'still:gif', { transparency: false, ditherEnabled: false });
 	assert(stillGif.type === 'image/gif' && stillGif.name.endsWith('.gif'), `Still GIF contract failed: ${JSON.stringify(stillGif)}`);
 	assert(await page.evaluate(() => !window.editor.exportInProgress), 'Export concurrency guard did not clear');
 	assert(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
-	console.log('PASS Export target migration, split-control state, PNG, JPG generations, and still GIF');
+	console.log('PASS Export target migration, split-control state, PNG, JPG, and still GIF');
 	await browser.close();
 })().catch((error) => { console.error('FAIL', error.message); process.exit(1); });

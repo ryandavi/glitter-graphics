@@ -2,6 +2,10 @@ const assert = require('assert');
 
 global.CONFIG = {
 	tools: {
+		pixelEffects: {
+			defaults: { pixelateEnabled: false, paletteEnabled: false, pixelSize: 1, paletteMode: 'posterize', colorCount: 4, paletteStyle: 'balanced', mergeDistinctness: 0.045, detail: 2, cleanEdges: true, dither: { algorithm: 'bayer', angle: 45, strength: 100, scale: 1, edgeProtection: true, serpentine: true, palette: 'bw', duotone: ['#000000', '#ffffff'], shimmer: false } },
+			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 24 }, analysis: { maxSamples: 100, iterations: 2 }, presets: { bw: ['#000000', '#ffffff'] }, animation: { algorithms: {} }
+		},
 		filter: {
 			defaultType: 'basic',
 			tintPresets: {
@@ -19,6 +23,7 @@ global.CONFIG = {
 		}
 	}
 };
+global.ImageData = class ImageData { constructor(data, width, height) { this.data = data; this.width = width; this.height = height; } };
 
 const Blend = require('../../js/effects/blend-modes.js');
 const Fields = require('../../js/core/fields.js');
@@ -43,7 +48,7 @@ Blend.compositeColorBurn(colorBurnBackdrop, colorBurnSource);
 assert.deepStrictEqual(Array.from(colorBurnBackdrop.data), [0, 0, 0, 255, 57, 255, 20, 255]);
 assert.deepStrictEqual(Array.from(Tone.composeToneAffine(null).m), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
 assert.strictEqual(Filter.normalizeFilterData({}).type, 'basic');
-assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow']);
+assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'gradient-map']);
 assert.strictEqual(Filter.normalizeFilterData({ type: 'instagram' }).presetId, 'rio');
 assert.strictEqual(Object.keys(Presets)[0], 'rio');
 
@@ -74,7 +79,6 @@ for (const type of Filter.FILTER_TYPES) {
 
 for (const op of Ops.list()) {
 	assert(op.id && op.params, 'filter ops require id and params');
-	assert.strictEqual(typeof op.css, 'function', `${op.id} requires a CSS painter`);
 	assert.strictEqual(typeof op.pixel, 'function', `${op.id} requires a pixel painter`);
 }
 for (const entry of Filters.list()) {
@@ -84,7 +88,7 @@ for (const entry of Filters.list()) {
 	});
 	const normalized = Filters.normalize(entry.id);
 	for (const recipeStep of Filters.recipe(normalized)) assert(Ops.get(recipeStep.op), `${entry.id} uses unknown op ${recipeStep.op}`);
-	assert.strictEqual(Filters.tier(normalized), 1, `${entry.id} should be CSS-tier`);
+	assert.strictEqual(Filters.tier(normalized), ['jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'gradient-map'].includes(entry.id) ? 3 : 1, `${entry.id} has the wrong render tier`);
 }
 for (const library of PresetLibrary.listPresetLibraries()) {
 	assert(library.id && library.entries.length, 'preset libraries require entries');
@@ -147,6 +151,14 @@ assert.strictEqual(Filter.summaryText({ type: 'scanlines' }), 'Scanlines');
 assert(Filter.gradientCss(Filter.resolve({ type: 'scanlines' }).ops[0].gradient).startsWith('repeating-linear-gradient('));
 assert.strictEqual(Filter.resolve({ type: 'scanlines', spacing: 8 }).ops[0].gradient.size, 8);
 assert.strictEqual(Filter.isActive({ type: 'scanlines', strength: 0 }), false);
+assert.strictEqual(Filters.recipe({ type: 'deep-fry', level: 'nuclear' }).at(-1).params.generations, 3);
+assert.strictEqual(Filters.recipe({ type: 'jpeg-crunch', quality: 17 }).at(-1).params.quality, 17);
+const splitFixture = new ImageData(new Uint8ClampedArray([10, 20, 30, 255, 100, 110, 120, 255, 200, 210, 220, 255]), 3, 1);
+Ops.get('rgbSplit').pixel(splitFixture, { offset: 1 });
+assert.deepStrictEqual(Array.from(splitFixture.data), [10, 20, 120, 255, 10, 110, 220, 255, 100, 210, 220, 255]);
+const mapFixture = new ImageData(new Uint8ClampedArray([0, 0, 0, 255, 255, 255, 255, 255]), 2, 1);
+Ops.get('gradientMap').pixel(mapFixture, { stops: [{ offset: 0, color: '#ff0000' }, { offset: 1, color: '#0000ff' }] });
+assert.deepStrictEqual(Array.from(mapFixture.data), [255, 0, 0, 255, 0, 0, 255, 255]);
 assert.strictEqual(Filter.resolve({ type: 'light-leak' }).ops.length, 2);
 assert(Math.abs(Filter.resolve({ type: 'light-leak', size: 140 }).ops[0].gradient.radius - 1.05) < 1e-9);
 assert.deepStrictEqual(

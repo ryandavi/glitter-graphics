@@ -178,6 +178,15 @@ const LAYER_BADGES = [
 			if (layerHasActiveColorAdjust(layer)) active.push('color adjust');
 			return active.length ? { title: `Effects: ${active.join(', ')}` } : null;
 		}
+	},
+	{
+		id: 'export-filter',
+		icon: 'filter',
+		getState(layer) {
+			return layer?.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3 && PREFERENCES.get('filterPreviewLevel') === 'off'
+				? { title: 'Applies on export; pixel preview is off' }
+				: null;
+		}
 	}
 ];
 

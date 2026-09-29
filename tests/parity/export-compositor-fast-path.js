@@ -415,7 +415,7 @@ function assert(condition, message) {
 			check(planBuilds === visibleLayers.length, 'Animation export rebuilt layer plans during rendering');
 		} finally { delete compositor._buildLayerExportPlan; }
 
-		const stillSettings = { ...structuredClone(window.editor.exportSettings), transparency: false, ditherEnabled: false, jpegGenerations: 2, jpegQuality: 80 };
+		const stillSettings = { ...structuredClone(window.editor.exportSettings), transparency: false, ditherEnabled: false, jpegQuality: 80 };
 		const originalShow = window.editor.exportResultPresenter.show;
 		window.editor.exportResultPresenter.show = () => {};
 		try {

@@ -1102,7 +1102,7 @@
 			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Image Rendering</div><div class="settings-row-control"><select id="htmlSceneImageRendering"><option value="pixelated">Pixelated</option><option value="auto">Smooth</option></select></div></div><div class="settings-row-label-desc">Keep classic sticker pixels crisp or let the browser smooth scaled art.</div></div>
 			<div class="settings-row" data-search-aliases="asset path url portable standalone"><div class="settings-row-header"><div class="settings-row-label-main">Embed Assets</div><div class="settings-row-control"><label class="switch" for="htmlSceneEmbedAssets"><input type="checkbox" id="htmlSceneEmbedAssets"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Embed sticker and glitter files for portable output. Off uses their existing paths; uploaded session-only assets still embed automatically.</div></div>
 			<div class="settings-row" data-search-aliases="link url href alt text title tooltip class css"><div class="settings-row-label-main">Sticker HTML</div><div class="settings-row-label-desc">Optional links, alt text, titles, and CSS classes for each visible sticker.</div><div class="html-scene-sticker-list" id="htmlSceneStickerMetadata"></div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Export Scene</div><div class="settings-row-control html-scene-export-actions"><button class="btn-simple" id="copyHtmlSceneSnippet" type="button">Copy Snippet</button><button class="btn-simple primary" id="exportHtmlScene" type="button">Export HTML</button></div></div><div class="settings-row-label-desc">Copy an embeddable scene with scoped CSS or download a complete standalone HTML page.</div><div class="settings-row-label-desc" id="htmlSceneStatus" role="status" aria-live="polite"></div></div>
+			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Export Scene</div><div class="settings-row-control html-scene-export-actions"><button class="btn-simple" id="copyHtmlSceneSnippet" type="button">Copy Snippet</button><button class="btn-simple primary" id="exportHtmlScene" type="button">Export HTML</button></div></div><div class="settings-row-label-desc">Copy an embeddable scene with scoped CSS or download a complete standalone HTML page. This experimental sticker-only format ignores Filter layers.</div><div class="settings-row-label-desc" id="htmlSceneStatus" role="status" aria-live="polite"></div></div>
 		</div>
 	</template>
 
@@ -1856,12 +1856,12 @@
 
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=52f7cd60"></script>
-	<script src="js/core/fields.js?v=cb50dbf6"></script>
-	<script src="js/core/config.js?v=923c33d3"></script>
+	<script src="js/core/fields.js?v=fdb51bc4"></script>
+	<script src="js/core/config.js?v=ae504ca8"></script>
 	<script src="js/core/tools.js?v=442b0974"></script>
-	<script src="js/core/layer-types.js?v=8899eb47"></script>
+	<script src="js/core/layer-types.js?v=77d20a1f"></script>
 	<script src="js/core/options.js?v=223ad907"></script>
-	<script src="js/ui/panel-schemas.js?v=df68ee0a"></script>
+	<script src="js/ui/panel-schemas.js?v=40064191"></script>
 	<script src="js/paint/paint-slots.js?v=802a1a39"></script>
 	<script src="js/layers/types/base-image.js?v=0d7ae1eb"></script>
 	<script src="js/layers/types/filter.js?v=39b55ff9"></script>
@@ -1876,7 +1876,7 @@
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
 	<script src="js/core/export-target.js?v=368d3fa5"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=7e0c5963"></script>
+	<script src="js/core/preferences.js?v=9e3607ca"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=bfa14352"></script>
 	<script src="js/core/dom.js?v=b728eda1"></script>
@@ -1906,9 +1906,9 @@
 	<script src="js/effects/grain.js?v=e7eda617"></script>
 	<script src="js/effects/blur.js?v=98b130a6"></script>
 	<script src="js/effects/filter-presets.js?v=28e6146c"></script>
-	<script src="js/effects/filter-ops.js?v=c540c563"></script>
-	<script src="js/effects/filters.js?v=f40d548e"></script>
-	<script src="js/effects/filter.js?v=198afb7c"></script>
+	<script src="js/effects/filter-ops.js?v=337051dc"></script>
+	<script src="js/effects/filters.js?v=d5d4e6be"></script>
+	<script src="js/effects/filter.js?v=0baddc36"></script>
 	<script src="js/ui/filter-thumbnail.js?v=e5334b55"></script>
 	<script src="js/paint/effect-source.js?v=36d8fe51"></script>
 	<script src="js/paint/gradient-presets.js?v=13f26de6"></script>
@@ -1929,11 +1929,11 @@
 	<script src="js/ui/panel-renderer.js?v=1035390d"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2adf10d6"></script>
 	<script src="js/ui/settings-renderer.js?v=9f7b668d"></script>
-	<script src="js/ui/settings-store.js?v=edaa36cf"></script>
+	<script src="js/ui/settings-store.js?v=e6b1176a"></script>
 	<script src="js/ui/menu-popover.js?v=20e6b111"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=4c66d155"></script>
-	<script src="js/editor/settings.js?v=eaccadf6"></script>
+	<script src="js/editor/settings.js?v=6935a746"></script>
 	<script src="js/editor/panels.js?v=7fab3ec6"></script>
 	<script src="js/editor/disclosures.js?v=dd91318d"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
@@ -1962,10 +1962,10 @@
 	<script src="js/systems/AnimationTicker.js?v=9130fa77"></script>
 	<script src="js/systems/AnimationPanelController.js?v=c5f5a16b"></script>
 	<script src="js/export/ExportResultPresenter.js?v=2fa2cb24"></script>
-	<script src="js/export/SceneCompositor.js?v=1790d421"></script>
+	<script src="js/export/SceneCompositor.js?v=38a00297"></script>
 	<script src="js/export/GifExporter.js?v=56f7c104"></script>
-	<script src="js/export/StillImageExporter.js?v=73b29fde"></script>
-	<script src="js/export/Mp4Exporter.js?v=057ba903"></script>
+	<script src="js/export/StillImageExporter.js?v=f8bbe2d7"></script>
+	<script src="js/export/Mp4Exporter.js?v=0572a08a"></script>
 	<script src="js/systems/PixelGridOverlay.js?v=f8614a9b"></script>
 	<script src="js/transforms/selection-overlay.js?v=73c30c00"></script>
 	<script src="js/transforms/transform-gestures.js?v=5b9f9908"></script>
@@ -1994,7 +1994,7 @@
 	<script src="js/layers/TextGlitterManager.js?v=8e534cfc"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=a42b9a99"></script>
 	<script src="js/layers/StickerManager.js?v=19e39a9e"></script>
-	<script src="js/layers/FilterLayerManager.js?v=3048b4e6"></script>
+	<script src="js/layers/FilterLayerManager.js?v=11f78ea8"></script>
 	<script src="js/layers/FrameLayerManager.js?v=401937a5"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=48bc48e4"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2b7c0f1e"></script>

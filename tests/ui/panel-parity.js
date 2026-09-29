@@ -189,12 +189,13 @@ const LAYER_SETUPS = {
 			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
 			if (document.getElementById('designPanel')?.dataset.galleryVisible !== 'false') throw new Error('Filter did not opt out of the Design Gallery');
 			const lookOptions = [...document.querySelectorAll('#filterLooksPicker .preset-grid-option')];
-			if (lookOptions[0]?.dataset.presetId !== 'instagram:rio' || lookOptions.at(-1)?.dataset.presetId !== 'instagram:hefe') throw new Error('Instagram look order is incorrect');
+			const instagramOptions = lookOptions.filter((option) => option.dataset.presetId.startsWith('instagram:'));
+			if (instagramOptions[0]?.dataset.presetId !== 'instagram:rio' || instagramOptions.at(-1)?.dataset.presetId !== 'instagram:hefe') throw new Error('Instagram look order is incorrect');
 			if (!document.querySelector('#filterLooksPicker [data-preset-id="instagram:clarendon"].active')) throw new Error('Loaded Instagram look is not active');
 			const lookGroups = document.getElementById('filterLooksGroup');
 			if (lookGroups.closest('.property-set')?.querySelector('.property-label')?.textContent !== 'Category') throw new Error('Filter look category dropdown is not in its own labelled property set');
 			if (document.getElementById('filterLooksPicker').contains(lookGroups) || document.getElementById('filterLooksPicker').closest('.property-set') === lookGroups.closest('.property-set')) throw new Error('Filter look group dropdown is nested inside the preset grid property set');
-			if ([...lookGroups.options].map((option) => option.textContent).join(',') !== 'All,Adjust,Stylize,Web & Film,Instagram') throw new Error('Filter look groups are incorrect');
+			if ([...lookGroups.options].map((option) => option.textContent).join(',') !== 'All,Adjust,Stylize,Web & Film,Pixel & Damage,Instagram') throw new Error('Filter look groups are incorrect');
 			if (document.getElementById('filterCurrentLookName')?.textContent !== 'Clarendon') throw new Error('Current Look summary is not synced to Clarendon');
 			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Clarendon Settings') throw new Error('Filter settings heading does not identify Clarendon');
 			lookGroups.value = '';
@@ -202,7 +203,7 @@ const LAYER_SETUPS = {
 			const allLookOptions = [...document.querySelectorAll('#filterLooksPicker .preset-grid-option')];
 			if (allLookOptions[0]?.dataset.presetId !== 'basic' || allLookOptions.at(-1)?.dataset.presetId !== 'instagram:hefe' || allLookOptions.some((option) => option.dataset.presetId === 'instagram')) throw new Error('Flattened Filter look order is incorrect');
 			if (!document.getElementById('filterLooksPicker').closest('.property-card')) throw new Error('Looks grid is not grouped inside the Looks card');
-			if (document.getElementById('filterLooksPicker').classList.contains('property-scrollbox')) throw new Error('Looks grid still uses nested scrollbox styling');
+			if (!document.getElementById('filterLooksPicker').classList.contains('property-scrollbox')) throw new Error('Looks grid is missing the shared preset scrollbox');
 			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Opacity') throw new Error('Filter opacity does not use the shared label');
 			if (!document.getElementById('filterStrengthValue')?.textContent.endsWith('%')) throw new Error('Instagram strength unit is missing');
 			editor.filterLayerManager.chooseLook(GlitterFilters.looksLibrary.get('tint'));
@@ -225,7 +226,7 @@ const LAYER_SETUPS = {
 			layer.filterData = GlitterFilter.normalizeFilterData({ type: 'instagram', presetId: 'clarendon' });
 			editor.filterLayerManager.loadLayerSettings(layer);
 			editor.layerManager.renderLayersList();
-			const firstPreset = document.querySelector('#filterLooksPicker .preset-grid-option');
+			const firstPreset = document.querySelector('#filterLooksPicker [data-preset-id^="instagram:"]');
 			if (firstPreset?.dataset.presetId !== 'instagram:rio') throw new Error('Rio de Janeiro is not the first Instagram look');
 			if (!firstPreset.querySelector('.filter-css-thumbnail') || firstPreset.querySelector('canvas')) throw new Error('Instagram look thumbnail is not CSS-only');
 			if (document.querySelector('#filterCustomizeControls .preset-grid-option')) throw new Error('Instagram Settings still render a nested preset grid');

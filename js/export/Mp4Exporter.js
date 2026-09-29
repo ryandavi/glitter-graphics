@@ -157,7 +157,7 @@ class Mp4Exporter {
 				if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
 				if (encoderError) throw encoderError;
 				const scheduleEntry = plan.entries[outputFrame.scheduleIndex];
-				const compositorCanvas = renderScheduleEntry(scheduleEntry, outputFrame.scheduleIndex);
+				const compositorCanvas = await renderScheduleEntry(scheduleEntry, outputFrame.scheduleIndex);
 				resetCanvasContext(ctx, width, height);
 				ctx.fillStyle = exportSettings.matteColor;
 				ctx.fillRect(0, 0, width, height);

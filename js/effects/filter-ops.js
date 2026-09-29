@@ -3,6 +3,76 @@
 
 	const Tone = root.GlitterToneAdjust || (typeof require === 'function' ? require('./tone-adjust.js') : null);
 	const Blur = root.GlitterBlur || (typeof require === 'function' ? require('./blur.js') : null);
+	const PixelEffects = root.GlitterPixelEffects || (typeof require === 'function' ? require('./pixel-effects.js') : null);
+
+	const clampByte = (value) => Math.max(0, Math.min(255, Math.round(value)));
+
+	function sharpen(imageData, amount = 1) {
+		const source = new Uint8ClampedArray(imageData.data);
+		const width = imageData.width;
+		const height = imageData.height;
+		const strength = Math.max(0, Number(amount) || 0);
+		for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+			const offset = (y * width + x) * 4;
+			for (let channel = 0; channel < 3; channel++) {
+				const neighbors = source[offset - 4 + channel] + source[offset + 4 + channel]
+					+ source[offset - width * 4 + channel] + source[offset + width * 4 + channel];
+				imageData.data[offset + channel] = clampByte(source[offset + channel] * (1 + 4 * strength) - neighbors * strength);
+			}
+		}
+		return imageData;
+	}
+
+	function noise(imageData, amount = 0, seed = '') {
+		let state = 2166136261;
+		for (const character of String(seed)) state = Math.imul(state ^ character.charCodeAt(0), 16777619);
+		const scale = Math.max(0, Number(amount) || 0) * 255;
+		for (let offset = 0; offset < imageData.data.length; offset += 4) {
+			state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
+			const delta = ((state >>> 0) / 4294967295 - 0.5) * scale;
+			for (let channel = 0; channel < 3; channel++) imageData.data[offset + channel] = clampByte(imageData.data[offset + channel] + delta);
+		}
+		return imageData;
+	}
+
+	function rgbSplit(imageData, offsetValue = 0) {
+		const source = new Uint8ClampedArray(imageData.data);
+		const width = imageData.width;
+		const height = imageData.height;
+		const shift = Math.max(0, Math.round(Number(offsetValue) || 0));
+		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+			const target = (y * width + x) * 4;
+			const red = (y * width + Math.max(0, x - shift)) * 4;
+			const blue = (y * width + Math.min(width - 1, x + shift)) * 4;
+			imageData.data[target] = source[red];
+			imageData.data[target + 2] = source[blue + 2];
+		}
+		return imageData;
+	}
+
+	function gradientMap(imageData, stops) {
+		const normalized = [...(stops || [])].sort((a, b) => (a.offset ?? a.at) - (b.offset ?? b.at)).map((entry) => {
+			const hex = String(entry.color || '#000000').replace('#', '');
+			return { at: Number(entry.offset ?? entry.at), rgb: [0, 2, 4].map((index) => parseInt(hex.slice(index, index + 2), 16) || 0) };
+		});
+		if (!normalized.length) return imageData;
+		for (let offset = 0; offset < imageData.data.length; offset += 4) {
+			const value = (0.2126 * imageData.data[offset] + 0.7152 * imageData.data[offset + 1] + 0.0722 * imageData.data[offset + 2]) / 255;
+			let rightIndex = normalized.findIndex((entry) => entry.at >= value);
+			if (rightIndex < 0) rightIndex = normalized.length - 1;
+			const right = normalized[rightIndex];
+			const left = normalized[Math.max(0, rightIndex - 1)];
+			const mix = right.at === left.at ? 0 : (value - left.at) / (right.at - left.at);
+			for (let channel = 0; channel < 3; channel++) imageData.data[offset + channel] = clampByte(left.rgb[channel] + (right.rgb[channel] - left.rgb[channel]) * mix);
+		}
+		return imageData;
+	}
+
+	function runPixelEffects(imageData, settings, context) {
+		const output = PixelEffects.applyPixelEffects(imageData.data, imageData.width, imageData.height, settings, context.pixelConfig, context.frameIndex || 0);
+		imageData.data.set(output);
+		return imageData;
+	}
 
 	const FILTER_OPS = Object.freeze({
 		tone: Object.freeze({
@@ -40,7 +110,19 @@
 			css: (params) => ({ text: params.text }),
 			pixel: (imageData, params, context = {}) => context.drawCaption?.(imageData, params),
 			isActive: (params) => Boolean(params.text)
-		})
+		}),
+		jpeg: Object.freeze({
+			id: 'jpeg', params: Object.freeze({ quality: Object.freeze({ min: 1, max: 100 }), generations: Object.freeze({ min: 1, max: 8 }), blockSize: Object.freeze({ min: 1, max: 12 }), chromaBleed: Object.freeze({ min: 0, max: 1 }) }),
+			pixel: (imageData, params, context = {}) => context.jpegRoundTrip(imageData, params),
+			isActive: () => true
+		}),
+		sharpen: Object.freeze({ id: 'sharpen', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 2 }) }), pixel: (imageData, params) => sharpen(imageData, params.amount), isActive: (params) => Number(params.amount) > 0 }),
+		noise: Object.freeze({ id: 'noise', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 1 }) }), pixel: (imageData, params, context = {}) => noise(imageData, params.amount, context.seed), isActive: (params) => Number(params.amount) > 0 }),
+		pixelate: Object.freeze({ id: 'pixelate', params: Object.freeze({ size: Object.freeze({ min: 1, max: 8 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: true, paletteEnabled: false, pixelSize: params.size }, context), isActive: (params) => Number(params.size) > 1 }),
+		posterize: Object.freeze({ id: 'posterize', params: Object.freeze({ colors: Object.freeze({ min: 2, max: 12 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: false, paletteEnabled: true, paletteMode: 'posterize', colorCount: params.colors }, context), isActive: () => true }),
+		dither: Object.freeze({ id: 'dither', params: Object.freeze({ colors: Object.freeze({ min: 2, max: 12 }), algorithm: Object.freeze({ kind: 'string' }), strength: Object.freeze({ min: 0, max: 100 }), scale: Object.freeze({ min: 1, max: 4 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: false, paletteEnabled: true, paletteMode: 'dither', colorCount: params.colors, dither: { ...context.pixelDefaults.dither, algorithm: params.algorithm, strength: params.strength, scale: params.scale } }, context), isActive: () => true }),
+		rgbSplit: Object.freeze({ id: 'rgbSplit', params: Object.freeze({ offset: Object.freeze({ min: 0, max: 40 }) }), pixel: (imageData, params) => rgbSplit(imageData, params.offset), isActive: (params) => Number(params.offset) > 0 }),
+		gradientMap: Object.freeze({ id: 'gradientMap', params: Object.freeze({ stops: Object.freeze({ kind: 'gradientStops' }) }), pixel: (imageData, params) => gradientMap(imageData, params.stops), isActive: () => true })
 	});
 
 	function get(id) {

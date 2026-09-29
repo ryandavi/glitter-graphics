@@ -171,3 +171,7 @@ It builds one real mixed composition and then checks the exporter’s byte stabi
 4. The same edit -> undo round-trip also preserves the transparent export bytes exactly.
 
 The composition intentionally includes a painted glitter-fill layer, an animated sticker layer, a text layer with glitter fill + solid border + glitter shadow + non-identity color adjust, and a shape layer with the same slot spread, then runs that scene through both matte and transparent export modes.
+
+### Pixel-filter verification (`tests/parity/pixel-filter-verify.js`)
+
+This focused browser check adds a Tier-3 filter above a real document, compares its cached preview pixels with `SceneCompositor` export pixels, verifies that JPEG Crunch performs the configured number of real browser JPEG round-trips, and locks the Off/Still/Animated setting plus removal of the legacy export-level `jpegGenerations` value.

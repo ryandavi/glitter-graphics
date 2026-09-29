@@ -205,7 +205,8 @@ const CONFIG = deepFreeze({
 				maxWidthFraction: 0.6,
 				stampField: 'name'
 			},
-			grainTilePx: 256
+			grainTilePx: 256,
+			snapshot: { settleMs: 300 }
 		},
 		selection: {
 			// Threshold and feather defaults and ranges: FIELDS.threshold / FIELDS.feather.
@@ -778,7 +779,6 @@ const CONFIG = deepFreeze({
 			animationFormat: 'gif',
 			stillFrame: 'first',
 			jpegQuality: 90,
-			jpegGenerations: 1,
 			baseImage: true,
 			glitter: true,
 			stickers: true,

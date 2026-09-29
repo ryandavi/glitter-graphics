@@ -18,6 +18,35 @@
 		return Object.entries(CONFIG.tools.filter.tintPresets).map(([value, entry]) => ({ value, label: entry.label }));
 	}
 
+	const ditherOptions = [
+		{ value: 'bayer', label: 'Bayer' }, { value: 'floyd', label: 'Floyd–Steinberg' },
+		{ value: 'atkinson', label: 'Atkinson' }, { value: 'halftone', label: 'Halftone' }
+	];
+	const deepFryOptions = [{ value: 'light', label: 'Light' }, { value: 'crispy', label: 'Crispy' }, { value: 'nuclear', label: 'Nuclear' }];
+	const gradientOptions = () => (root.GRADIENT_PRESETS?.entries || [
+		{ id: 'pink-blue', label: 'Pink / Blue' }, { id: 'purple-gold', label: 'Purple / Gold' }, { id: 'spectrum', label: 'Spectrum' }
+	]).map((entry) => ({ value: entry.id, label: entry.label }));
+	const gradientStops = (id) => {
+		const entry = root.GRADIENT_PRESETS?.get?.(id);
+		if (entry?.value?.stops) return entry.value.stops;
+		const fallback = { 'pink-blue': ['#ff3ea5', '#258dff'], 'purple-gold': ['#5a189a', '#ffd166'], spectrum: ['#ff004c', '#ffe600', '#00b7ff', '#d62cff'] }[id] || ['#000000', '#ffffff'];
+		return fallback.map((colorValue, index) => ({ offset: index / (fallback.length - 1), color: colorValue }));
+	};
+
+	function deepFryRecipe(values) {
+		const levels = {
+			light: { saturation: 1.35, contrast: 1.2, brightness: 1.04, sharpen: 0.35, noise: 0.05, quality: 48, generations: 1 },
+			crispy: { saturation: 1.8, contrast: 1.55, brightness: 1.08, sharpen: 0.75, noise: 0.12, quality: 26, generations: 2 },
+			nuclear: { saturation: 2.5, contrast: 2, brightness: 1.12, sharpen: 1.25, noise: 0.22, quality: 12, generations: 3 }
+		};
+		const level = levels[values.level] || levels.crispy;
+		return [
+			step('tone', { tone: { saturate: level.saturation, contrast: level.contrast, brightness: level.brightness, sepia: 0.12 } }),
+			step('sharpen', { amount: level.sharpen }), step('noise', { amount: level.noise }),
+			step('jpeg', { quality: level.quality, generations: level.generations, blockSize: 1, chromaBleed: 0.35 })
+		];
+	}
+
 	function instagramRecipe(values) {
 		const selected = Presets[values.presetId];
 		if (!selected) return [];
@@ -100,7 +129,30 @@
 		] }),
 		'dreamy-glow': Object.freeze({ id: 'dreamy-glow', label: 'Dreamy Glow', group: 'web', tags: ['soft', 'glow'], fields: Object.freeze({
 			strength: numeric('filterLookStrength', 'filterLookStrength'), radius: numeric('filterDreamyGlowRadius', 'filterDreamyGlowRadius')
-		}), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 0.62 * values.strength / 100, composite: true })] })
+		}), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 0.62 * values.strength / 100, composite: true })] }),
+		'jpeg-crunch': Object.freeze({ id: 'jpeg-crunch', label: 'JPEG Crunch', group: 'pixel', tags: ['compression', 'artifact'], fields: Object.freeze({
+			quality: numeric('filterJpegQuality', 'filterJpegQuality'), generations: numeric('filterJpegGenerations', 'filterJpegGenerations'),
+			blockSize: numeric('filterJpegBlockSize', 'filterJpegBlockSize'), chromaBleed: numeric('filterChromaBleed', 'filterChromaBleed')
+		}), recipe: (values) => [step('jpeg', { quality: values.quality, generations: values.generations, blockSize: values.blockSize, chromaBleed: values.chromaBleed / 100 })] }),
+		'deep-fry': Object.freeze({ id: 'deep-fry', label: 'Deep Fry', group: 'pixel', tags: ['meme', 'crispy'], fields: Object.freeze({
+			level: select('crispy', 'filterDeepFryLevel', 'Intensity', deepFryOptions)
+		}), recipe: deepFryRecipe }),
+		pixelate: Object.freeze({ id: 'pixelate', label: 'Pixelate', group: 'pixel', fields: Object.freeze({
+			size: numeric('pixelEffectsPixelSize', 'filterPixelSize')
+		}), recipe: (values) => [step('pixelate', { size: values.size })] }),
+		posterize: Object.freeze({ id: 'posterize', label: 'Posterize', group: 'pixel', fields: Object.freeze({
+			colors: numeric('paletteColorCount', 'filterPaletteColors')
+		}), recipe: (values) => [step('posterize', { colors: values.colors })] }),
+		dither: Object.freeze({ id: 'dither', label: 'Dither', group: 'pixel', fields: Object.freeze({
+			colors: numeric('paletteColorCount', 'filterDitherColors'), algorithm: select('bayer', 'filterDitherAlgorithm', 'Pattern', ditherOptions),
+			strength: numeric('pixelEffectsStrength', 'filterDitherStrength'), scale: numeric('pixelEffectsDitherScale', 'filterDitherScale')
+		}), recipe: (values) => [step('dither', { colors: values.colors, algorithm: values.algorithm, strength: values.strength, scale: values.scale })] }),
+		'rgb-split': Object.freeze({ id: 'rgb-split', label: 'RGB Split', group: 'pixel', fields: Object.freeze({
+			offset: numeric('filterRgbSplit', 'filterRgbSplit')
+		}), recipe: (values) => [step('rgbSplit', { offset: values.offset })] }),
+		'gradient-map': Object.freeze({ id: 'gradient-map', label: 'Gradient Map', group: 'pixel', fields: Object.freeze({
+			gradientId: select('pink-blue', 'filterGradientMap', 'Gradient', gradientOptions)
+		}), recipe: (values) => [step('gradientMap', { stops: gradientStops(values.gradientId) })] })
 	});
 
 	const FILTER_TYPES = Object.freeze(Object.keys(FILTERS));
@@ -151,7 +203,7 @@
 		id: 'filter-looks',
 		groups: [
 			{ id: 'adjust', label: 'Adjust' }, { id: 'stylize', label: 'Stylize' },
-			{ id: 'web', label: 'Web & Film' }, { id: 'instagram', label: 'Instagram' }
+			{ id: 'web', label: 'Web & Film' }, { id: 'pixel', label: 'Pixel & Damage' }, { id: 'instagram', label: 'Instagram' }
 		],
 		entries: [
 			...FILTER_TYPES.filter((id) => id !== 'instagram').map((id) => ({

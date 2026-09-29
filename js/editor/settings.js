@@ -155,6 +155,7 @@ initializeExportSettings() {
 			panInertia: { checked: PREFERENCES.get('panInertia') },
 			pixelGrid: { checked: PREFERENCES.get('pixelGrid') },
 			reduceMotion: { checked: PREFERENCES.get('reduceMotion') },
+			filterPreviewLevel: { value: PREFERENCES.get('filterPreviewLevel') },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
 
@@ -461,6 +462,14 @@ initializeExportSettings() {
 		this.bindPreferenceToggle('panInertia', 'panInertia');
 		this.bindPreferenceToggle('pixelGrid', 'pixelGrid', () => this.viewport?.applyTransform());
 		this.bindPreferenceToggle('reduceMotion', 'reduceMotion', () => this.applyReduceMotion());
+		const filterPreviewLevel = document.getElementById('filterPreviewLevel');
+		filterPreviewLevel?.addEventListener('change', () => {
+			const value = ['off', 'still', 'animated'].includes(filterPreviewLevel.value) ? filterPreviewLevel.value : 'still';
+			PREFERENCES.set('filterPreviewLevel', value);
+			this.filterLayerManager?.refreshSnapshots();
+			this.layerManager?.renderLayersList();
+			this.saveSettingsToStorage();
+		});
 
 		document.getElementById('resetToolbarPlacement')?.addEventListener('click', () => this.resetToolbarPlacement());
 	}
@@ -504,13 +513,18 @@ initializeExportSettings() {
 		const isMp4 = target.isVideo;
 		const formatDescription = document.getElementById('exportFormatDescription');
 		if (formatDescription) {
-			formatDescription.textContent = {
+			let description = {
 				'still:png': 'Export a lossless still image with optional transparency.',
 				'still:jpeg': 'Export a compressed still image. Transparent areas use the matte color.',
 				'still:gif': 'Export one selected frame as a palette-based GIF.',
 				'animation:gif': 'Export an animated GIF.',
 				'animation:mp4': 'Export an H.264 video.'
 			}[target.id];
+			const pixelLooks = this.layers.filter((layer) => layer.visible && layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3);
+			if (pixelLooks.length) description += ` Active pixel look${pixelLooks.length === 1 ? '' : 's'}: ${pixelLooks.map((layer) => GlitterFilter.summaryText(layer.filterData)).join(', ')}.`;
+			if (target.isGif && pixelLooks.some((layer) => ['dither', 'posterize'].includes(layer.filterData.type))) description += ' Clean GIF Look avoids quantizing these pixels a second time.';
+			if (target.isGif && pixelLooks.some((layer) => layer.filterData.type === 'jpeg-crunch')) description += ' JPEG Crunch can make the GIF larger.';
+			formatDescription.textContent = description;
 		}
 		document.querySelectorAll('#exportModeControl [data-export-mode]').forEach((button) => {
 			const active = button.dataset.exportMode === target.mode;
@@ -536,7 +550,6 @@ initializeExportSettings() {
 		document.getElementById('transparencySettingsRow').hidden = !target.supportsTransparency;
 		document.getElementById('exportStillFrameRow').hidden = !target.isStill || !this.hasAnimatedExportContent();
 		document.getElementById('exportJpegQualityRow').hidden = !target.supportsJpegCompression;
-		document.getElementById('exportJpegGenerationsRow').hidden = !target.supportsJpegCompression;
 		document.querySelector('#exportDitherTemporalMode')?.closest('.settings-row')?.toggleAttribute('hidden', !target.supportsTemporalGifLook);
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
 			const title = group.querySelector('.settings-group-title-text')?.textContent;
@@ -830,7 +843,7 @@ async resetSettingsSection(section) {
 			break;
 
 		case 'tools':
-			['crispMaskEdges', 'scaleEffects', 'scaleTextures', 'autoSelect', 'snappingEnabled', 'panInertia', 'pixelGrid']
+			['crispMaskEdges', 'scaleEffects', 'scaleTextures', 'autoSelect', 'snappingEnabled', 'panInertia', 'pixelGrid', 'filterPreviewLevel']
 				.forEach((key) => PREFERENCES.reset(key));
 			this.antialiasEdges = !PREFERENCES.get('crispMaskEdges');
 			this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
@@ -840,6 +853,7 @@ async resetSettingsSection(section) {
 			this.applyDefaultPanelLayout();
 			this.contextToolbarRenderer?.resetPlacement?.();
 			this.viewport?.applyTransform();
+			this.filterLayerManager?.refreshSnapshots();
 			break;
 
 		// Export sections map one-to-one onto the headings in the Export
@@ -890,6 +904,7 @@ async resetAllSettings() {
 	this.refreshMaskEdgeRendering();
 	this.applyReduceMotion();
 	this.viewport?.applyTransform();
+	this.filterLayerManager?.refreshSnapshots();
 	this.syncCanvasPreferenceControls();
 	this.contextToolbarRenderer?.resetPlacement?.();
 	this.interfaceTheme = 'dark';

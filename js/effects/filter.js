@@ -194,8 +194,100 @@
 		context.restore();
 	}
 
-	function renderToCanvas(context, width, height, value, strength, options = {}) {
+	function canvasBlob(canvas, type, quality) {
+		if (typeof canvas.convertToBlob === 'function') return canvas.convertToBlob({ type, quality });
+		return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('JPEG encoder produced no data.')), type, quality));
+	}
+
+	async function jpegRoundTrip(imageData, params, options = {}) {
+		const width = imageData.width;
+		const height = imageData.height;
+		const blockSize = Math.max(1, Math.round(params.blockSize || 1));
+		const encodedWidth = Math.max(1, Math.ceil(width / blockSize));
+		const encodedHeight = Math.max(1, Math.ceil(height / blockSize));
+		const alpha = new Uint8ClampedArray(width * height);
+		const threshold = options.alphaThreshold ?? 1;
+		const matte = options.matteColor || '#ffffff';
+		const source = createAppCanvas(width, height, 'effects/filter-jpeg');
+		const sourceContext = source.getContext('2d', { alpha: false });
+		sourceContext.fillStyle = matte;
+		sourceContext.fillRect(0, 0, width, height);
+		const opaque = new ImageData(new Uint8ClampedArray(imageData.data), width, height);
+		for (let index = 0, pixel = 0; index < opaque.data.length; index += 4, pixel++) {
+			alpha[pixel] = imageData.data[index + 3] >= threshold ? 255 : 0;
+		}
+		const opaqueCanvas = createAppCanvas(width, height, 'effects/filter-jpeg');
+		opaqueCanvas.getContext('2d').putImageData(opaque, 0, 0);
+		sourceContext.drawImage(opaqueCanvas, 0, 0);
+		let working = createAppCanvas(encodedWidth, encodedHeight, 'effects/filter-jpeg');
+		let workingContext = working.getContext('2d', { alpha: false });
+		workingContext.imageSmoothingEnabled = false;
+		workingContext.drawImage(source, 0, 0, encodedWidth, encodedHeight);
+		const bleed = Math.max(0, Math.min(1, Number(params.chromaBleed) || 0));
+		if (bleed > 0) {
+			const pixels = workingContext.getImageData(0, 0, encodedWidth, encodedHeight);
+			const original = new Uint8ClampedArray(pixels.data);
+			for (let y = 0; y < encodedHeight; y++) for (let x = 0; x < encodedWidth; x++) {
+				const offset = (y * encodedWidth + x) * 4;
+				const neighbor = (y * encodedWidth + Math.min(encodedWidth - 1, x + 1)) * 4;
+				pixels.data[offset] = original[offset] + (original[neighbor] - original[offset]) * bleed * 0.35;
+				pixels.data[offset + 2] = original[offset + 2] + (original[neighbor + 2] - original[offset + 2]) * bleed * 0.35;
+			}
+			workingContext.putImageData(pixels, 0, 0);
+		}
+		const generations = Math.max(1, Math.round(params.generations || 1));
+		for (let generation = 0; generation < generations; generation++) {
+			const blob = await canvasBlob(working, 'image/jpeg', Math.max(0.01, Math.min(1, Number(params.quality) / 100)));
+			const bitmap = await createImageBitmap(blob);
+			workingContext.clearRect(0, 0, encodedWidth, encodedHeight);
+			workingContext.drawImage(bitmap, 0, 0, encodedWidth, encodedHeight);
+			bitmap.close();
+		}
+		const restored = createAppCanvas(width, height, 'effects/filter-jpeg');
+		const restoredContext = restored.getContext('2d');
+		restoredContext.imageSmoothingEnabled = false;
+		restoredContext.clearRect(0, 0, width, height);
+		restoredContext.drawImage(working, 0, 0, width, height);
+		const output = restoredContext.getImageData(0, 0, width, height);
+		for (let index = 3, pixel = 0; index < output.data.length; index += 4, pixel++) output.data[index] = alpha[pixel];
+		return output;
+	}
+
+	async function renderPixelRecipe(context, width, height, value, strength, options) {
+		const before = context.getImageData(0, 0, width, height);
+		let rendered = new ImageData(new Uint8ClampedArray(before.data), width, height);
+		const pixelDefaults = GlitterPixelEffects.normalizeSettings({}, CONFIG.tools.pixelEffects);
+		const recipe = Filters.recipe(normalizeFilterData(value));
+		for (const entry of recipe) {
+			const op = Ops.get(entry.op);
+			if (!op?.pixel || op.isActive?.(entry.params) === false) continue;
+			const result = op.pixel(rendered, entry.params, {
+				...options,
+				seed: options.seed,
+				frameIndex: options.frameIndex || 0,
+				pixelDefaults,
+				pixelConfig: { pixelEffects: CONFIG.tools.pixelEffects, autoGlitter: CONFIG.tools.autoGlitter },
+				jpegRoundTrip: (data, params) => jpegRoundTrip(data, params, options)
+			});
+			rendered = await Promise.resolve(result || rendered);
+		}
+		const amount = clamp(number(strength, 1), 0, 1);
+		if (amount < 1) for (let index = 0; index < rendered.data.length; index++) {
+			rendered.data[index] = Math.round(before.data[index] + (rendered.data[index] - before.data[index]) * amount);
+		}
+		if (options.keepAlpha) {
+			const jpegAlpha = recipe.some((entry) => entry.op === 'jpeg');
+			const threshold = options.alphaThreshold ?? 1;
+			for (let index = 3; index < rendered.data.length; index += 4) {
+				rendered.data[index] = jpegAlpha ? (before.data[index] >= threshold ? 255 : 0) : before.data[index];
+			}
+		}
+		context.putImageData(rendered, 0, 0);
+	}
+
+	async function renderToCanvas(context, width, height, value, strength, options = {}) {
 		if (!isActive(value, strength * 100)) return;
+		if (Filters.tier(value) === 3) return renderPixelRecipe(context, width, height, value, strength, options);
 		const resolved = resolve(value);
 		const pre = context.getImageData(0, 0, width, height);
 		const sourceCanvas = getScratchCanvas('source', width, height);
@@ -304,7 +396,7 @@
 			textAlign: 'center', textBaseline: 'middle' };
 	}
 
-	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec };
+	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec, jpegRoundTrip };
 	root.GlitterFilter = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

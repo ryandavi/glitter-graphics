@@ -86,26 +86,26 @@ async function main() {
 			await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 			const looksGrid = document.getElementById('filterLooksPicker');
 			const initialIds = [...looksGrid.querySelectorAll('.preset-grid-option')].map((node) => node.dataset.presetId);
-			if (initialIds.join(',') !== 'basic,invert,grayscale,sepia') throw new Error(`Active Adjust group is incorrect: ${initialIds.join(',')}`);
+			if (!initialIds.includes('basic') || !initialIds.includes('jpeg-crunch') || !initialIds.includes('instagram:rio')) throw new Error(`Initial All group is incomplete: ${initialIds.join(',')}`);
 			const groupSelect = document.getElementById('filterLooksGroup');
 			if (groupSelect.closest('.property-set')?.querySelector('.property-label')?.textContent !== 'Category') throw new Error('Look category dropdown is not in its own labelled property set');
 			if (looksGrid.contains(groupSelect) || looksGrid.closest('.property-set') === groupSelect.closest('.property-set')) throw new Error('Look group dropdown is nested inside the preset grid property set');
 			const groupLabels = [...groupSelect.options].map((node) => node.textContent);
-			if (groupLabels.join(',') !== 'All,Adjust,Stylize,Web & Film,Instagram') throw new Error(`Unexpected look groups: ${groupLabels.join(',')}`);
-			if (groupSelect.value !== 'adjust') throw new Error('Active look group is not synced to Basic');
+			if (groupLabels.join(',') !== 'All,Adjust,Stylize,Web & Film,Pixel & Damage,Instagram') throw new Error(`Unexpected look groups: ${groupLabels.join(',')}`);
+			if (groupSelect.value !== '') throw new Error('Looks library does not open on All');
 			if (document.getElementById('filterCurrentLookName')?.textContent !== 'Basic') throw new Error('Current Look summary is not synced to Basic');
 			if (document.querySelector('#filterCurrentLookBadges .badge-category')?.textContent !== 'Adjust') throw new Error('Current Look summary is missing its category');
-			if (!document.getElementById('filterCurrentLookShow')?.hidden) throw new Error('Show action is visible while the current look is already in view');
+			if (!document.getElementById('filterCurrentLookShow')?.hidden) throw new Error('Show action is visible while All includes the current look');
 			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Basic Settings') throw new Error('Settings heading does not identify the current look');
-			if (looksGrid.querySelector('.preset-grid-heading')) throw new Error('Filtered Looks view repeats the selected category heading');
+			if (looksGrid.querySelectorAll('.preset-grid-heading').length !== 5) throw new Error('All Looks view is missing category headings');
 			groupSelect.value = '';
 			groupSelect.dispatchEvent(new Event('change'));
-			if (looksGrid.querySelectorAll('.preset-grid-heading').length !== 4) throw new Error('All Looks view is missing category headings');
+			if (looksGrid.querySelectorAll('.preset-grid-heading').length !== 5) throw new Error('All Looks view is missing category headings');
 			const ids = [...looksGrid.querySelectorAll('.preset-grid-option')].map((node) => node.dataset.presetId);
 			const firstThumbnail = looksGrid.querySelector('.preset-grid-thumbnail');
 			if (Math.abs(firstThumbnail.getBoundingClientRect().height - 36) > 1) throw new Error('Look thumbnails are not approximately 36px tall');
-			if (looksGrid.classList.contains('property-scrollbox')) throw new Error('Looks grid still uses nested scrollbox styling');
-			if (getComputedStyle(looksGrid).overflowY === 'auto' || getComputedStyle(looksGrid).maxHeight !== 'none') throw new Error('Looks grid still scrolls independently');
+			if (!looksGrid.classList.contains('property-scrollbox')) throw new Error('Looks grid is missing the shared preset scrollbox');
+			if (getComputedStyle(looksGrid).overflowY !== 'auto') throw new Error('Looks grid does not scroll within its preset frame');
 			if (getComputedStyle(looksGrid.querySelector('.preset-grid-options')).gridTemplateColumns.split(' ').length !== 3) throw new Error('Looks grid is not three columns wide');
 			const output = { ids, tiers: {}, canvasesChanged: {} };
 			const settings = {
@@ -167,7 +167,7 @@ async function main() {
 			if (!looksGrid.querySelector('[data-preset-id="instagram:juno"].active')) throw new Error('Loaded Instagram project did not activate its matching look');
 			return output;
 		});
-		if (result.ids.length !== 32 || result.ids[8] !== 'scanlines' || result.ids.at(-1) !== 'instagram:hefe' || result.ids.includes('instagram')) throw new Error(`Unexpected looks: ${result.ids.join(',')}`);
+		if (result.ids.length !== 39 || result.ids[8] !== 'scanlines' || !result.ids.includes('jpeg-crunch') || result.ids.at(-1) !== 'instagram:hefe' || result.ids.includes('instagram')) throw new Error(`Unexpected looks: ${result.ids.join(',')}`);
 		for (const type of ['scanlines', 'light-leak', 'dreamy-glow']) {
 			if (result.tiers[type] !== 1) throw new Error(`${type} is not Tier 1`);
 			if (!result.canvasesChanged[type]) throw new Error(`${type} export painter did not change pixels`);
