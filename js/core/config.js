@@ -444,6 +444,8 @@ const CONFIG = deepFreeze({
 		},
 		text: {
 			defaultTextCase: 'none',
+			// WARP_TYPES id (js/paint/text-warp.js); 'none' draws text flat.
+			defaultWarpType: 'none',
 			// Stage Two in-canvas typing is intentionally paused; this is its future gate.
 			canvasEditing: false,
 			fontsManifest: 'data/fonts.json?v=5',

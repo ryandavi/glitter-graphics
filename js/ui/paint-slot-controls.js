@@ -407,9 +407,14 @@ function bindPaintSlotControls(host) {
 		const prefix = definition.panelPrefix;
 		if (!prefix) return;
 		const key = definition.key;
+		// Every slot edit can move the layer onto or off a style preset, so the
+		// Style card's highlight and header follow once the edit lands.
 		const withLayer = (run) => {
 			const layer = host.getLayer();
-			return layer ? run(layer) : undefined;
+			if (!layer) return undefined;
+			const result = run(layer);
+			Promise.resolve(result).then(() => syncStylePresetSelection(host, host.getLayer())).catch(() => {});
+			return result;
 		};
 
 		byId(`${prefix}Enabled`)?.addEventListener('change', (event) => withLayer((layer) => {
@@ -582,8 +587,56 @@ function syncLayerFieldControls(host, layer) {
 	});
 }
 
+// The Style card's header names the matched look, or Custom once any value
+// it wrote has been changed (a style is many values, so there's no nearest
+// tile to keep highlighted the way a warp keeps its type).
+function syncStylePresetSummary(host, activeId) {
+	const summary = document.getElementById(`${PANEL_SCHEMAS[host.type].prefix}StyleSummary`);
+	if (summary) summary.textContent = activeId ? STYLE_PRESETS[host.type].get(activeId)?.label || '' : 'Custom';
+}
+
+// Live edits only move the highlight; the grid itself is rebuilt on load.
+function syncStylePresetSelection(host, layer) {
+	const library = STYLE_PRESETS[host.type];
+	const grid = library && layer && document.getElementById(`${PANEL_SCHEMAS[host.type].prefix}StylePresets`);
+	if (!grid) return;
+	const activeId = findStylePresetId(layer);
+	syncStylePresetSummary(host, activeId);
+	GlitterPresetLibrary.setPresetGridActive(grid, library, { activeId, contextId: host.type });
+}
+
+// The Style card's preset grid (js/paint/style-presets.js). A preset is one
+// edit through the host, so it takes one history step and the host's own
+// re-measure / geometry rules; any slot it switches off closes an armed picker.
+function syncStylePresetGrid(host, layer) {
+	const library = STYLE_PRESETS[host.type];
+	const grid = library && document.getElementById(`${PANEL_SCHEMAS[host.type].prefix}StylePresets`);
+	if (!grid) return;
+	setStylePresetGlitterResolver((glitterId) => host.editor.glitterLibrary?.getItemById(glitterId)?.url || null);
+	setStylePresetPreviewResolver((kind, entry) => (kind === 'sticker' ? null : getStylePresetPreview(host.editor, STYLE_PRESET_TARGETS[kind], entry)));
+	const activeId = findStylePresetId(layer);
+	syncStylePresetSummary(host, activeId);
+	GlitterPresetLibrary.renderPresetGrid(grid, library, {
+		activeId,
+		contextId: host.type,
+		onChoose: (entry) => {
+			const target = host.getLayer();
+			if (!target || !host.editor.canEditLayer(target, { notify: true })) return;
+			host.apply(target, () => library.apply(entry, {
+				layer: target,
+				context: {
+					getSlotDefaults: (key) => host.getSlotDefaults(key),
+					glitterAvailable: (glitterId) => Boolean(host.editor.glitterLibrary?.getItemById(glitterId)),
+					onSlotDisabled: (key) => host.onSlotDisabled?.(target, key)
+				}
+			}), { geometry: true });
+		}
+	});
+}
+
 function syncFieldControls(host, layer) {
 	if (!layer) return;
 	syncLayerFieldControls(host, layer);
 	syncPaintSlotControls(host, layer);
+	syncStylePresetGrid(host, layer);
 }

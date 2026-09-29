@@ -460,7 +460,7 @@ class SceneCompositor {
 			effectMaskCtx.drawImage(maskStickerCanvas, pad, pad);
 			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(effectMaskCtx);
 			let mask = effectMask;
-			if (item.role === 'shadow' && effectRadius > 0) mask = createDilatedMaskCanvas(effectMask, Math.round(effectRadius * density), 'round');
+			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(effectMask, Math.round(effectRadius * density), Math.round((Number(item.data.blur) || 0) * density));
 			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data), item.data.fillInterior);
 			if (item.role === 'bevel') {
 				const pair = createBevelMaskCanvases(effectMask, { ...layer.stickerData.bevel.highlight, size: layer.stickerData.bevel.highlight.size * density, soften: layer.stickerData.bevel.highlight.soften * density });
@@ -1355,7 +1355,7 @@ class SceneCompositor {
 			width: canvasData.width,
 			height: canvasData.height,
 			timestamp,
-			transparency: { enabled: preserveAlpha }
+			transparency: { enabled: preserveAlpha, ditherSoftEdges: preserveAlpha && visibleLayers.some(layerHasSoftShadow) }
 		};
 	}
 

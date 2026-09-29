@@ -1044,6 +1044,8 @@ function buildPanelItem(item, schema) {
 			// plain titled run of rows; editor-disclosures only stamps a chevron
 			// on blocks that ask for one or carry an effect toggle.
 			if (item.collapsible) card.dataset.collapsible = '';
+			// `collapsed`: a collapsible block that starts closed.
+			if (item.collapsible && item.collapsed) card.classList.add('is-collapsed');
 			if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
 			if (item.summaryFrom) {
 				card.dataset.summaryFrom = item.summaryFrom;

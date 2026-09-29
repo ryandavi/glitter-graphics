@@ -66,7 +66,10 @@
 		return library;
 	}
 
-	function renderPresetGrid(container, library, { activeId = null, contextId = null, onChoose = null, groupFilter = null, onGroupChange = null } = {}) {
+	// modified: the active tile is only the nearest preset, since the layer's
+	// values have been tuned off it (a warp's Bend moved); the tile stays
+	// highlighted, marked as edited, so the grid still names what's applied.
+	function renderPresetGrid(container, library, { activeId = null, modified = false, contextId = null, onChoose = null, groupFilter = null, onGroupChange = null } = {}) {
 		if (!container || !library) return;
 		container.dataset.presetLibrary = library.id;
 		const groupIds = library.groups.length ? library.groups.map((group) => group.id) : [...new Set(library.entries.map((entry) => entry.group))];
@@ -122,8 +125,7 @@
 					card.className = 'choice-card preset-grid-option';
 					card.dataset.presetId = entry.id;
 					card.setAttribute('role', 'option');
-					card.setAttribute('aria-selected', String(entry.id === activeId));
-					card.classList.toggle('active', entry.id === activeId);
+					markPresetCard(card, entry, activeId, modified);
 					const thumbnail = document.createElement('span');
 					thumbnail.className = 'preset-grid-thumbnail';
 					library.renderThumbnail?.(entry, thumbnail);
@@ -144,6 +146,27 @@
 		bindPickerNavigation(container, '.preset-grid-option');
 		render();
 		if (revealActive) revealActiveOption(container);
+	}
+
+	function markPresetCard(card, entry, activeId, modified) {
+		const active = entry.id === activeId;
+		card.setAttribute('aria-selected', String(active));
+		card.classList.toggle('active', active);
+		card.classList.toggle('is-modified', active && modified);
+		if (active && modified) card.title = `${entry.label} (edited)`;
+		else card.removeAttribute('title');
+	}
+
+	// Moves the highlight on an already rendered grid without rebuilding it,
+	// for live edits (a slider drag) that can change which tile matches.
+	function setPresetGridActive(container, library, { activeId = null, modified = false, contextId = null } = {}) {
+		if (!container || !library) return;
+		const selection = groupSelections.get(contextId == null ? library.id : `${library.id}:${contextId}`);
+		if (selection) selection.activeId = activeId;
+		container.querySelectorAll('.preset-grid-option').forEach((card) => {
+			const entry = library.get(card.dataset.presetId);
+			if (entry) markPresetCard(card, entry, activeId, modified);
+		});
 	}
 
 	// Scrolls only the grid's own scrollbox (never the panel) so a newly
@@ -185,7 +208,7 @@
 		return [...libraries.values()];
 	}
 
-	const api = { createPresetLibrary, renderPresetGrid, bindPickerNavigation, getPresetLibrary, listPresetLibraries };
+	const api = { createPresetLibrary, renderPresetGrid, setPresetGridActive, bindPickerNavigation, getPresetLibrary, listPresetLibraries };
 	root.GlitterPresetLibrary = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

@@ -70,6 +70,7 @@ function buildDefaultShadow(options = {}) {
 		offsetX: FIELDS.shadowOffsetX.value,
 		offsetY: FIELDS.shadowOffsetY.value,
 		spread: FIELDS.shadowSpread.value,
+		blur: FIELDS.shadowBlur.value,
 		mode: options.defaultMode ?? 'glitter',
 		glitterId: options.defaultGlitterId ?? null,
 		color: defaults.shadowColor,

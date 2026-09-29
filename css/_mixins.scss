@@ -173,6 +173,11 @@ $mobile-breakpoint: 800px;
 		outline-color: var(--color-accent);
 	}
 
+	// Active but tuned off its preset (see renderPresetGrid's `modified`).
+	&.active.is-modified {
+		outline-style: dashed;
+	}
+
 	&:focus-visible {
 		outline-color: var(--color-accent);
 		outline-width: 2px;

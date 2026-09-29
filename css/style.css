@@ -1397,6 +1397,9 @@ textarea {
 .choice-card:is(.active, .selected) {
   outline-color: var(--color-accent);
 }
+.choice-card.active.is-modified {
+  outline-style: dashed;
+}
 .choice-card:focus-visible {
   outline-color: var(--color-accent);
   outline-width: 2px;
@@ -4941,6 +4944,36 @@ body.mask-editing .sticker-element {
 }
 .preset-grid-thumbnail.is-drawn.pixelated {
   image-rendering: pixelated;
+}
+
+.preset-grid-thumbnail.style-preset-thumbnail {
+  display: grid;
+  place-items: center;
+  background-color: #ece6f3;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.preset-grid-thumbnail.style-preset-thumbnail.is-dark {
+  background-color: #241a33;
+}
+
+.style-preset-sample {
+  display: block;
+  font-family: "Arial Black", Impact, sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  background-size: 24px;
+  background-position: center;
+}
+.style-preset-sample.is-sticker {
+  font-size: 26px;
+}
+.style-preset-sample.is-shape {
+  width: 26px;
+  height: 20px;
+  border-radius: 6px;
 }
 
 .brush-dynamics {

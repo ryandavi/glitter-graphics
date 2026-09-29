@@ -151,7 +151,7 @@ initializeCollapsibleSections() {
 					title.dataset.subsectionToggle = '';
 					title.setAttribute('role', 'button');
 					title.setAttribute('tabindex', '0');
-					title.setAttribute('aria-expanded', 'true');
+					title.setAttribute('aria-expanded', subsection.classList.contains('is-collapsed') ? 'false' : 'true');
 					if (!title.querySelector('.subsection-chevron')) {
 						const chevron = document.createElement('span');
 						chevron.className = 'subsection-chevron icon-wrapper';

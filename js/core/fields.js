@@ -75,6 +75,8 @@ const FIELDS = Object.freeze({
 	shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 	shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
 	shadowSpread: { label: 'Spread', unit: 'px', min: 0, max: 100, value: 0 },
+	// 0 is a hard-edged shadow; above it the edge fades out over that many px (a glow).
+	shadowBlur: { label: 'Blur', unit: 'px', min: 0, max: 60, value: 0 },
 	bevelSize: { label: 'Size', unit: 'px', min: 1, max: 64, value: 6 },
 	bevelDepth: { label: 'Depth', unit: '%', min: 0, max: 100, value: 60 },
 	bevelAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 135 },
@@ -102,6 +104,7 @@ const FIELDS = Object.freeze({
 	textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
 	textLetterSpacing: { label: 'Letter Spacing', unit: 'px', min: -20, max: 40, value: 0 },
 	textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 100 },
+	textWarpBend: { label: 'Bend', unit: '%', min: -100, max: 100, step: 1, value: 50 },
 	transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, value: 100 },
 	transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
 	transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },

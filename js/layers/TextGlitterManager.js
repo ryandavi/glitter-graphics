@@ -55,6 +55,9 @@ class TextGlitterManager {
 			fontBold: document.getElementById('textFontBold'),
 			fontItalic: document.getElementById('textFontItalic'),
 			textCaseSelect: document.getElementById('textCaseSelect'),
+			warpPresets: document.getElementById('textWarpPresets'),
+			warpBendRow: document.getElementById('textWarpBendRow'),
+			warpSummary: document.getElementById('textWarpSummary'),
 			alignButtons: Array.from(document.querySelectorAll('[data-text-align]')),
 			verticalAlignButtons: Array.from(document.querySelectorAll('[data-text-valign]')),
 			boxModeButtons: Array.from(document.querySelectorAll('[data-text-box-mode]')),
@@ -93,6 +96,10 @@ class TextGlitterManager {
 				: { saveHistory: true, refreshPreview: false }
 			).catch((error) => this.reportFontLoadError(error)),
 			render: (layer) => this.renderLayer(layer),
+			// Bend can move the warp onto or off a preset tile mid-drag.
+			afterFieldChange: (layer, key, binding) => {
+				if (binding?.path === 'textData.warp.bend') this.syncWarpUI(layer, { live: true });
+			},
 			commit: () => {
 				this.editor.saveState('Edit text');
 				this.editor.layerManager.renderLayersList();
@@ -500,6 +507,7 @@ class TextGlitterManager {
 		if (!['none', 'upper', 'lower', 'title'].includes(layer.textData.textCase)) {
 			layer.textData.textCase = CONFIG.tools.text.defaultTextCase;
 		}
+		layer.textData.warp = normalizeTextWarp(layer.textData.warp);
 	}
 
 	// Phase 2 (data model): defaults, clamping, and the point-vs-box mode
@@ -836,8 +844,36 @@ class TextGlitterManager {
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
 		this.updateBoxModeSelection(layer);
 		this.syncTextBackgroundUI(layer);
+		this.syncWarpUI(layer);
 		this.updatePickerStrip();
 		this.editor.loadTransformSettings?.(layer, 'text');
+	}
+
+	// The warp grid applies a type and bend in one history step; Bend (a
+	// declared field) shows once a warp is chosen. A bend tuned off every
+	// preset keeps its nearest tile highlighted as edited, and the collapsed
+	// Warp header names it either way.
+	syncWarpUI(layer, { live = false } = {}) {
+		const warp = layer.textData.warp;
+		const match = matchWarpPreset(warp);
+		const entry = match && WARP_PRESETS.get(match.id);
+		if (this.ui.warpBendRow) this.ui.warpBendRow.hidden = warp.type === 'none';
+		if (this.ui.warpSummary) this.ui.warpSummary.textContent = entry ? entry.label : (WARP_TYPES[warp.type]?.label || '');
+		if (!this.ui.warpPresets) return;
+		const selection = { activeId: match?.id || null, modified: Boolean(match?.modified), contextId: 'text' };
+		if (live) {
+			GlitterPresetLibrary.setPresetGridActive(this.ui.warpPresets, WARP_PRESETS, selection);
+			return;
+		}
+		GlitterPresetLibrary.renderPresetGrid(this.ui.warpPresets, WARP_PRESETS, {
+			...selection,
+			onChoose: (entry) => {
+				const active = this.getActiveTextLayer();
+				if (!active || !this.editor.canEditLayer(active, { notify: true })) return;
+				this.runLayoutRefreshWithAnchor(active, () => WARP_PRESETS.apply(entry, active.textData), { saveHistory: true })
+					.catch((error) => this.reportFontLoadError(error));
+			}
+		});
 	}
 
 	focusTextInput(selectAll = false) {
@@ -1100,6 +1136,7 @@ class TextGlitterManager {
 			textData.letterSpacing,
 			textData.lineHeight,
 			textData.align,
+			isTextWarpActive(textData.warp) ? [textData.warp.type, textData.warp.bend] : null,
 			textData.verticalAlign || 'top',
 			textData.boxMode || 'auto',
 			textData.boxWidth ?? null,
@@ -1108,6 +1145,7 @@ class TextGlitterManager {
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
 			textData.shadow ? textData.shadow.spread : null,
+			textData.shadow ? textData.shadow.blur || 0 : null,
 			// Text Background's geometry-affecting fields only (never `fill` —
 			// paint-only changes must not invalidate layout/geometry caching).
 			textData.textBackground?.enabled
@@ -1146,7 +1184,8 @@ class TextGlitterManager {
 		const borderWidth = getBorderOutsidePadding(layer.textData.border);
 		const shadowOffsetX = layer.textData.shadow?.offsetX || 0;
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
-		const shadowSpread = Math.max(0, layer.textData.shadow?.spread || 0);
+		// A blurred shadow's fade reaches past its spread too.
+		const shadowSpread = getShadowReach(layer.textData.shadow);
 		const boxMode = layer.textData.boxMode || 'auto';
 
 		ctx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
@@ -1250,6 +1289,49 @@ class TextGlitterManager {
 			textInkBottom = 0;
 		}
 
+		// A warp re-places every glyph around the flat block's center, so the
+		// ink, the per-line rects (Text Background) and the frame all come from
+		// the warped glyphs. Unwarped text keeps the flat path.
+		const warpedGlyphs = hasInk && isTextWarpActive(layer.textData.warp)
+			? this.layoutWarpedTextGlyphs(ctx, visibleLines, {
+				warp: layer.textData.warp,
+				align: layer.textData.align,
+				layoutWidth,
+				contentOffsetY,
+				ascent,
+				lineHeightPx,
+				letterSpacing,
+				fontSize,
+				inkRect: { left: textInkLeft, top: textInkTop, right: textInkRight, bottom: textInkBottom }
+			})
+			: null;
+		if (warpedGlyphs) {
+			textInkLeft = Infinity;
+			textInkTop = Infinity;
+			textInkRight = -Infinity;
+			textInkBottom = -Infinity;
+			positionedLines.forEach((line, index) => {
+				if (line.blank) return;
+				const bounds = warpedGlyphs.filter((glyph) => glyph.line === index && glyph.bounds).map((glyph) => glyph.bounds);
+				if (!bounds.length) {
+					positionedLines[index] = { blank: true };
+					return;
+				}
+				const rect = {
+					left: Math.min(...bounds.map((box) => box.left)),
+					top: Math.min(...bounds.map((box) => box.top)),
+					right: Math.max(...bounds.map((box) => box.right)),
+					bottom: Math.max(...bounds.map((box) => box.bottom)),
+					blank: false
+				};
+				positionedLines[index] = rect;
+				textInkLeft = Math.min(textInkLeft, rect.left);
+				textInkTop = Math.min(textInkTop, rect.top);
+				textInkRight = Math.max(textInkRight, rect.right);
+				textInkBottom = Math.max(textInkBottom, rect.bottom);
+			});
+		}
+
 		// Geometry is generated here (unshifted local space, same origin as
 		// textInk*/box* above) so its bounds can widen the mask canvas's frame
 		// before layoutX/Y are fixed — an enabled background must contribute to
@@ -1275,10 +1357,12 @@ class TextGlitterManager {
 		// Body (the layer's frame for handles and hit-testing): the layout box,
 		// the glyphs with their border, and the background plate. No shadow, and
 		// the layout box rather than ink, so the box holds still while typing.
-		const bodyLeft = Math.min(0, hasInk ? textInkLeft - borderWidth : 0, backgroundBounds ? backgroundBounds.x : Infinity);
-		const bodyRight = Math.max(layoutWidth, hasInk ? textInkRight + borderWidth : 0, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
-		const bodyTop = Math.min(0, hasInk ? textInkTop - borderWidth : 0, backgroundBounds ? backgroundBounds.y : Infinity);
-		const bodyBottom = Math.max(layoutHeight, hasInk ? textInkBottom + borderWidth : 0, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
+		// Warped point text has left its flat layout box, so it hugs the ink.
+		const hugInk = Boolean(warpedGlyphs) && boxMode !== 'fixed';
+		const bodyLeft = Math.min(hugInk ? Infinity : 0, hasInk ? textInkLeft - borderWidth : 0, backgroundBounds ? backgroundBounds.x : Infinity);
+		const bodyRight = Math.max(hugInk ? -Infinity : layoutWidth, hasInk ? textInkRight + borderWidth : 0, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const bodyTop = Math.min(hugInk ? Infinity : 0, hasInk ? textInkTop - borderWidth : 0, backgroundBounds ? backgroundBounds.y : Infinity);
+		const bodyBottom = Math.max(hugInk ? -Infinity : layoutHeight, hasInk ? textInkBottom + borderWidth : 0, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		const frameLeft = boxMode === 'fixed' ? Math.min(0, artLeft) : artLeft;
 		const frameRight = boxMode === 'fixed' ? Math.max(layoutWidth, artRight) : artRight;
 		const frameTop = boxMode === 'fixed' ? Math.min(0, artTop) : artTop;
@@ -1300,13 +1384,25 @@ class TextGlitterManager {
 		maskCtx.textBaseline = 'alphabetic';
 		maskCtx.textAlign = 'left';
 
-		visibleLines.forEach((line, index) => {
-			this.drawLine(maskCtx, line.text, {
-				startX: layoutX + this.getAlignOffset(layer.textData.align, layoutWidth, line.width),
-				baselineY: layoutY + contentOffsetY + ascent + index * lineHeightPx,
-				letterSpacing
+		if (warpedGlyphs) {
+			warpedGlyphs.forEach((glyph) => {
+				if (!glyph.bounds) return;
+				maskCtx.save();
+				maskCtx.translate(layoutX + glyph.placement.x, layoutY + glyph.placement.y);
+				maskCtx.rotate(glyph.placement.rotation);
+				maskCtx.scale(1, glyph.placement.scaleY);
+				maskCtx.fillText(glyph.char, -glyph.advance / 2, 0);
+				maskCtx.restore();
 			});
-		});
+		} else {
+			visibleLines.forEach((line, index) => {
+				this.drawLine(maskCtx, line.text, {
+					startX: layoutX + this.getAlignOffset(layer.textData.align, layoutWidth, line.width),
+					baselineY: layoutY + contentOffsetY + ascent + index * lineHeightPx,
+					letterSpacing
+				});
+			});
+		}
 
 		if (shouldUseCrispMaskEdges()) {
 			// Hard pixel edges (editor aesthetic, MASK-FEATURE-PLAN decision 5).
@@ -1555,6 +1651,47 @@ class TextGlitterManager {
 		return { lines: wrappedLines };
 	}
 
+	// Glyph-by-glyph layout for warped text (js/paint/text-warp.js), in the
+	// same unshifted space as the flat layout. Each glyph keeps its flat advance
+	// (per-glyph drawing drops kerning, as letter spacing already does) and
+	// carries its warped placement and ink bounds; blank glyphs have no bounds.
+	layoutWarpedTextGlyphs(ctx, lines, options) {
+		const { warp, align, layoutWidth, contentOffsetY, ascent, lineHeightPx, letterSpacing, fontSize, inkRect } = options;
+		const glyphs = [];
+		lines.forEach((line, index) => {
+			const baselineY = contentOffsetY + ascent + index * lineHeightPx;
+			const chars = Array.from(line.text || '');
+			let cursor = this.getAlignOffset(align, layoutWidth, line.width);
+			chars.forEach((char, charIndex) => {
+				const metrics = ctx.measureText(char);
+				const advance = metrics.width;
+				const ink = {
+					left: -advance / 2 - (metrics.actualBoundingBoxLeft ?? 0),
+					right: -advance / 2 + (metrics.actualBoundingBoxRight ?? advance),
+					top: -(metrics.actualBoundingBoxAscent ?? fontSize * 0.8),
+					bottom: metrics.actualBoundingBoxDescent ?? fontSize * 0.2
+				};
+				const hasGlyphInk = !/^\s$/u.test(char) && ink.right > ink.left;
+				glyphs.push({ char, advance, line: index, x: cursor + advance / 2, y: baselineY, ink: hasGlyphInk ? ink : null });
+				cursor += advance + (charIndex < chars.length - 1 ? letterSpacing : 0);
+			});
+		});
+		const placements = layoutWarpedGlyphs(warp, glyphs, {
+			centerX: (inkRect.left + inkRect.right) / 2,
+			centerY: (inkRect.top + inkRect.bottom) / 2,
+			width: inkRect.right - inkRect.left,
+			fontSize,
+			ascent
+		});
+		return glyphs.map((glyph, index) => ({
+			char: glyph.char,
+			advance: glyph.advance,
+			line: glyph.line,
+			placement: placements[index],
+			bounds: glyph.ink ? getWarpedGlyphBounds(placements[index], glyph.ink) : null
+		}));
+	}
+
 	drawLine(ctx, text, options) {
 		const { startX, baselineY, letterSpacing } = options;
 
@@ -1793,9 +1930,10 @@ class TextGlitterManager {
 			const { canvas, cacheKey } = this.getBorderMaskCanvas(layer, measurement, slot.data);
 			return { canvas, bucket: 'border', cacheKey };
 		}
-		if (slot.role === 'shadow' && Number(slot.data.spread) > 0) {
-			const spread = Math.round(slot.data.spread);
-			return { canvas: createDilatedMaskCanvas(measurement.canvas, spread, 'round'), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${spread}` };
+		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {
+			const spread = Math.round(slot.data.spread || 0);
+			const blur = Math.round(slot.data.blur || 0);
+			return { canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
 		}
 		if (slot.role === 'bevel') {
 			const bevel = layer.textData.bevel?.highlight;
@@ -2126,6 +2264,7 @@ class TextGlitterManager {
 			layer.textData.shadow.offsetX = Math.round(layer.textData.shadow.offsetX * bakedFactor);
 			layer.textData.shadow.offsetY = Math.round(layer.textData.shadow.offsetY * bakedFactor);
 			layer.textData.shadow.spread = Math.round(layer.textData.shadow.spread * bakedFactor);
+			layer.textData.shadow.blur = Math.round((layer.textData.shadow.blur || 0) * bakedFactor);
 		}
 		if (layer.textData.bevel?.enabled && PREFERENCES.get('scaleEffects')) {
 			layer.textData.bevel.highlight.size = Math.max(1, Math.round(layer.textData.bevel.highlight.size * bakedFactor));

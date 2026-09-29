@@ -37,6 +37,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		{ path: 'textData.fontSize', field: 'textFontSize', id: 'textFontSize', geometry: true, documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.letterSpacing', field: 'textLetterSpacing', id: 'textLetterSpacing', geometry: true, documentScale: 'geometry' },
 		{ path: 'textData.lineHeight', field: 'textLineHeight', id: 'textLineHeight', factor: 100, geometry: true },
+		{ path: 'textData.warp.bend', field: 'textWarpBend', id: 'textWarpBend', geometry: true },
 		{ path: 'textData.boxWidth', documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.boxHeight', documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.textBackground.horizontalPadding', field: 'textBackgroundPaddingH', id: 'textBackgroundPaddingH', geometry: true, documentScale: 'effect' },

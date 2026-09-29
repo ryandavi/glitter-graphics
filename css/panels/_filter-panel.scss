@@ -125,3 +125,39 @@
 	// Pixel-art images (frame stickers) stay crisp, as on the canvas.
 	&.pixelated { image-rendering: pixelated; }
 }
+
+// Style preset thumbnails (js/paint/style-presets.js). Text and shape tiles
+// become the real render (`.is-rendered`, an inline background image from
+// ui/style-preset-thumbnails.js); until it lands, and always for stickers,
+// the tile is a CSS sketch: a glyph whose paint is clipped to the letters, or
+// a rounded tile for shapes, with outline, shadow and bevel set inline.
+.preset-grid-thumbnail.style-preset-thumbnail {
+	display: grid;
+	place-items: center;
+	background-color: #ece6f3;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+
+	// Glow looks (the preset's `backdrop: 'dark'`).
+	&.is-dark { background-color: #241a33; }
+}
+
+.style-preset-sample {
+	display: block;
+	// Heavy sans like the default text fonts; a preset naming a font sets it inline.
+	font-family: "Arial Black", Impact, sans-serif;
+	font-size: 24px;
+	font-weight: 900;
+	line-height: 1;
+	background-size: 24px;
+	background-position: center;
+
+	&.is-sticker { font-size: 26px; }
+
+	&.is-shape {
+		width: 26px;
+		height: 20px;
+		border-radius: 6px;
+	}
+}

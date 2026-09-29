@@ -282,7 +282,7 @@ class StickerManager extends ContentManager {
 		const effectScale = Math.max(scaleX, scaleY);
 		const width = Math.max(1, Math.round(layer.stickerData.width * scaleX));
 		const height = Math.max(1, Math.round(layer.stickerData.height * scaleY));
-		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, layer.stickerData.shadow?.spread || 0) * effectScale);
+		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, getShadowReach(layer.stickerData.shadow)) * effectScale);
 		const source = createAppCanvas(width + pad * 2, height + pad * 2, 'layers/StickerManager');
 		const sourceCtx = source.getContext('2d', { willReadFrequently: true, alpha: true });
 		const unionKey = `${layer.stickerData.baseUrl || layer.stickerData.url}:${width}x${height}`;
@@ -299,7 +299,7 @@ class StickerManager extends ContentManager {
 		let bevelMasks = null;
 		buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)).forEach((item) => {
 			let mask = source;
-			if (item.role === 'shadow' && Number(item.data.spread) > 0) mask = createDilatedMaskCanvas(source, item.data.spread * effectScale, 'round');
+			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(source, (item.data.spread || 0) * effectScale, (item.data.blur || 0) * effectScale);
 			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx * effectScale, getBorderEdgeStyle(item.data), item.data.fillInterior);
 			if (item.role === 'bevel') {
 				bevelMasks ||= createBevelMaskCanvases(source, {

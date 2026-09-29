@@ -47,7 +47,8 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 	shadow: {
 		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', control: 'number', geometry: true, documentScale: 'effect' },
 		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' },
-		spread: { field: 'shadowSpread', suffix: 'Spread', geometry: true, documentScale: 'effect' }
+		spread: { field: 'shadowSpread', suffix: 'Spread', geometry: true, documentScale: 'effect' },
+		blur: { field: 'shadowBlur', suffix: 'Blur', geometry: true, documentScale: 'effect' }
 	},
 	bevel: {
 		size: { field: 'bevelSize', suffix: 'Size', geometry: true, documentScale: 'effect' },
@@ -271,10 +272,16 @@ function getLayerSlotFramePadding(layer) {
 	), 0);
 }
 
+// A blurred shadow paints partial alpha (a glow), which a transparent GIF
+// can only keep by dithering it (see GifEncodingPipeline).
+function layerHasSoftShadow(layer) {
+	return getLayerPaintSlots(layer).some((entry) => entry.renders && entry.role === 'shadow' && Number(entry.data?.blur) > 0);
+}
+
 // A sticker shadow is drawn on a canvas padded by its offset (plus a
 // two-pixel margin) so the shifted silhouette is never clipped.
 function getShadowCanvasPadding(shadow) {
-	return Math.ceil(Math.max(Math.abs(shadow?.offsetX || 0), Math.abs(shadow?.offsetY || 0)) + Math.max(0, shadow?.spread || 0)) + 2;
+	return Math.ceil(Math.max(Math.abs(shadow?.offsetX || 0), Math.abs(shadow?.offsetY || 0)) + getShadowReach(shadow)) + 2;
 }
 
 // Displayed tile width of a glitter at 100% scale. The manifest width is

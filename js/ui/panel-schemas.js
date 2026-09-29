@@ -75,6 +75,20 @@ function createSparklesPanelSpec(idPrefix, overrides = {}) {
 	};
 }
 
+// The Style card that leads a layer's Appearance: a preset grid of whole
+// looks (js/paint/style-presets.js), filled and bound by
+// syncStylePresetGrid (ui/paint-slot-controls.js).
+function createStylePresetCardSpec(prefix) {
+	// Collapsed by default: the header names the applied look (or Custom), so
+	// a styled layer still reads at a glance.
+	return { kind: 'card', title: 'Style', flatBody: true, collapsible: true, collapsed: true,
+		titleSummary: { id: `${prefix}StyleSummary` }, items: [
+		{ kind: 'set', items: [
+			{ kind: 'presetGrid', id: `${prefix}StylePresets`, label: 'Style presets', classes: 'property-inset style-presets' }
+		] }
+	] };
+}
+
 function createBevelPanelSpecs(idPrefix) {
 	return [
 		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & Gloss', redesign: true,
@@ -629,6 +643,7 @@ const PANEL_SCHEMAS = {
 					] }
 				] },
 			{ title: 'Appearance', collapsible: false, items: [
+				createStylePresetCardSpec('sticker'),
 				{ kind: 'slider', id: 'stickerLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'stickerLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS }
 			] },
@@ -658,7 +673,8 @@ const PANEL_SCHEMAS = {
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'stickerShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
-				] }, { kind: 'slider', id: 'stickerShadowSpread', slider: 'shadowSpread' }]
+				] }, { kind: 'slider', id: 'stickerShadowSpread', slider: 'shadowSpread' },
+					{ kind: 'slider', id: 'stickerShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }]
 			},
 			createSparklesPanelSpec('stickerSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
@@ -716,9 +732,22 @@ const PANEL_SCHEMAS = {
 						{ label: 'Middle', icon: 'text-align-middle', attrs: { 'data-text-valign': 'middle' } },
 						{ label: 'Bottom', icon: 'text-align-bottom', attrs: { 'data-text-valign': 'bottom' } }
 					] }
+				] },
+				// Warp bends glyph placement (js/paint/text-warp.js): presets first,
+				// Bend tunes the chosen one. Collapsed by default with the warp's
+				// name in the header.
+				{ kind: 'card', title: 'Warp', flatBody: true, collapsible: true, collapsed: true,
+					titleSummary: { id: 'textWarpSummary' }, items: [
+					{ kind: 'set', label: 'Presets', items: [
+						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' }
+					] },
+					{ kind: 'set', items: [
+						{ kind: 'slider', id: 'textWarpBend', slider: 'textWarpBend', rowId: 'textWarpBendRow', title: 'How strongly the text bends. Negative values bend the other way.' }
+					] }
 				] }
 			] },
 			{ title: 'Appearance', collapsible: false, items: [
+				createStylePresetCardSpec('text'),
 				{ kind: 'slider', id: 'textLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'textLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', redesign: true,
@@ -809,7 +838,8 @@ const PANEL_SCHEMAS = {
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
-				] }, { kind: 'slider', id: 'textShadowSpread', slider: 'shadowSpread' }]
+				] }, { kind: 'slider', id: 'textShadowSpread', slider: 'shadowSpread' },
+					{ kind: 'slider', id: 'textShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }]
 			},
 			...createBevelPanelSpecs('textBevel'),
 			createSparklesPanelSpec('textSparkles'),
@@ -838,6 +868,7 @@ const PANEL_SCHEMAS = {
 			// (finalizePanelSchemaSections), mirroring the old shape branch of
 			// the pre-schema panel order.
 			{ title: 'Appearance', collapsible: false, items: [
+				createStylePresetCardSpec('shape'),
 				{ kind: 'slider', id: 'shapeLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'shapeLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true,
@@ -929,7 +960,8 @@ const PANEL_SCHEMAS = {
 						{ id: 'shapeShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 						{ id: 'shapeShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 					] },
-					{ kind: 'slider', id: 'shapeShadowSpread', slider: 'shadowSpread' }
+					{ kind: 'slider', id: 'shapeShadowSpread', slider: 'shadowSpread' },
+					{ kind: 'slider', id: 'shapeShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }
 				]
 			},
 			...createBevelPanelSpecs('shapeBevel'),

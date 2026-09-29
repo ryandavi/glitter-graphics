@@ -87,6 +87,40 @@ function createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	return createDistanceThresholdMaskCanvas(sourceCanvas, -nextRadius);
 }
 
+// How far a shadow's silhouette reaches past the mask it is cast from.
+function getShadowReach(shadow) {
+	return Math.max(0, Number(shadow?.spread) || 0) + Math.max(0, Number(shadow?.blur) || 0);
+}
+
+// A shadow's silhouette: the mask grown by `spread`, then, with `blur`, faded
+// out over the next `blur` px, so offset 0 plus blur is a soft glow. The fade
+// reads the signed distance field (exact, one pass, no canvas filter, so it
+// is the same in every browser and in export). Hard shadows keep the plain
+// dilation.
+function createShadowMaskCanvas(sourceCanvas, spread = 0, blur = 0) {
+	const radius = Math.max(0, Math.round(spread));
+	const soft = Math.max(0, Math.round(blur));
+	if (!soft) return createDilatedMaskCanvas(sourceCanvas, radius, 'round');
+	const field = createSignedDistanceField(sourceCanvas);
+	const canvas = createMaskCanvasLike(sourceCanvas);
+	const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+	const image = ctx.createImageData(canvas.width, canvas.height);
+	for (let index = 0; index < field.distance.length; index++) {
+		const beyond = -field.distance[index] - radius;
+		if (beyond <= 0) {
+			image.data[index * 4 + 3] = 255;
+			continue;
+		}
+		if (beyond >= soft) continue;
+		// Cosine ease, squared: full at the edge, a long faint tail like a
+		// gaussian glow, and exactly zero at `soft`.
+		const ease = 0.5 + 0.5 * Math.cos(Math.PI * beyond / soft);
+		image.data[index * 4 + 3] = Math.round(255 * ease * ease);
+	}
+	ctx.putImageData(image, 0, 0);
+	return canvas;
+}
+
 function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	const nextRadius = Math.max(0, Math.round(radius));
 	if (nextRadius <= 0) return sourceCanvas;

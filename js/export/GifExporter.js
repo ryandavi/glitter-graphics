@@ -27,7 +27,9 @@ class GifExporter {
 			frames,
 			delays: plan.frameDurations,
 			settings: exportSettings,
-			transparency: { enabled: preserveAlpha },
+			// A soft glow over transparency fades out as a dither instead of
+			// stopping at a hard edge where alpha crosses the cut.
+			transparency: { enabled: preserveAlpha, ditherSoftEdges: preserveAlpha && visibleLayers.some(layerHasSoftShadow) },
 			mode: 'animation',
 			reportProgress: (phase, ratio, detail, current, total) => reportExportProgress(callbacks, phase, ratio, detail, current, total),
 			isCancelled: callbacks.isCancelled

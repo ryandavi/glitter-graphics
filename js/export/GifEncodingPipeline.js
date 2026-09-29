@@ -149,8 +149,30 @@ class GifEncodingPipeline {
 		return { frame: copy, hasTransparentPixel };
 	}
 
+	// GIF keeps a pixel or drops it. Below the cut, keep a faint pixel with
+	// probability alpha / cut through a fixed 4x4 Bayer pattern, so a glow's
+	// tail reads as a fading dither and never flickers between frames. Pixels
+	// at or above the cut are untouched, so solid art is unchanged.
+	_ditherSoftEdges(frame, alphaThreshold) {
+		const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+		const copy = new ImageData(new Uint8ClampedArray(frame.data), frame.width, frame.height);
+		const data = copy.data;
+		for (let y = 0; y < frame.height; y++) {
+			for (let x = 0; x < frame.width; x++) {
+				const offset = (y * frame.width + x) * 4 + 3;
+				const alpha = data[offset];
+				if (alpha === 0 || alpha >= alphaThreshold) continue;
+				data[offset] = alpha / alphaThreshold > (bayer[(y & 3) * 4 + (x & 3)] + 0.5) / 16 ? 255 : 0;
+			}
+		}
+		return copy;
+	}
+
 	async encode({ frames, delays = [], settings, transparency, mode = 'animation', reportProgress, isCancelled }) {
 		if (isCancelled?.()) throw new Error('Export cancelled');
+		if (transparency?.enabled && transparency.ditherSoftEdges) {
+			frames = frames.map((frame) => this._ditherSoftEdges(frame, GIF_TRANSPARENCY_ALPHA_THRESHOLD));
+		}
 		reportProgress?.('palette', 0, 'Analyzing export colors');
 		const frameCount = frames.length;
 		const width = frames[0].width;

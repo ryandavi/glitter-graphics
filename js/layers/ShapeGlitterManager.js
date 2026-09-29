@@ -764,7 +764,7 @@ class ShapeGlitterManager {
 			d.height,
 			LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer) ? d.cornerRadiusPx : null,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
-			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY, d.shadow.spread] : null,
+			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY, d.shadow.spread, d.shadow.blur || 0] : null,
 			shouldUseCrispMaskEdges(),
 			CONFIG.rendering.maskAlphaThreshold
 		]);
@@ -796,7 +796,8 @@ class ShapeGlitterManager {
 		const borderExtent = getBorderOutsidePadding(d.border);
 		const shX = d.shadow?.offsetX || 0;
 		const shY = d.shadow?.offsetY || 0;
-		const shSpread = Math.max(0, d.shadow?.spread || 0);
+		// A blurred shadow's fade reaches past its spread too.
+		const shSpread = getShadowReach(d.shadow);
 
 		const inkLeft = Math.min(-borderReserve, shX - shSpread);
 		const inkRight = Math.max(w + borderReserve, w + shX + shSpread);
@@ -1106,9 +1107,10 @@ class ShapeGlitterManager {
 				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}`
 			};
 		}
-		if (slot.role === 'shadow' && Number(slot.data.spread) > 0) {
-			const spread = Math.round(slot.data.spread);
-			return { canvas: createDilatedMaskCanvas(measurement.canvas, spread, 'round'), cacheKey: `${measurement.key}|shadow:${spread}` };
+		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {
+			const spread = Math.round(slot.data.spread || 0);
+			const blur = Math.round(slot.data.blur || 0);
+			return { canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
 		}
 		if (slot.role === 'bevel') {
 			const bevel = layer?.shapeData?.bevel?.highlight || slot.data;
@@ -1176,6 +1178,7 @@ class ShapeGlitterManager {
 			layer.shapeData.shadow.offsetX = Math.round(layer.shapeData.shadow.offsetX * sx);
 			layer.shapeData.shadow.offsetY = Math.round(layer.shapeData.shadow.offsetY * sy);
 			layer.shapeData.shadow.spread = Math.round(layer.shapeData.shadow.spread * effectScale);
+			layer.shapeData.shadow.blur = Math.round((layer.shapeData.shadow.blur || 0) * effectScale);
 		}
 		if (layer.shapeData.bevel?.enabled && PREFERENCES.get('scaleEffects')) {
 			layer.shapeData.bevel.highlight.size = Math.max(1, Math.round(layer.shapeData.bevel.highlight.size * effectScale));
