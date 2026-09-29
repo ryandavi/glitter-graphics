@@ -101,3 +101,92 @@ function renderPickerStrip(state = {}) {
 	if (detail) detail.textContent = state.detail || '';
 	if (done) done.hidden = !armed || state.showDone === false;
 }
+
+// The glitter picker of a layer type whose paints are all declared slots
+// (Frame, Sparkles): arm a slot, route the next gallery pick into it, and
+// drive the gallery strip while such a layer is active. Registered with the
+// PickerRegistry like the managers' own sessions. Unarmed picks go to
+// defaultSlot.
+class SlotGlitterPicker {
+	constructor(editor, { type, defaultSlot, section, typeWord, ensureSlot, onPicked }) {
+		this.editor = editor;
+		this.type = type;
+		this.defaultSlot = defaultSlot;
+		this.section = section;
+		this.typeWord = typeWord;
+		this.ensureSlot = ensureSlot;
+		this.onPicked = onPicked;
+		this.pickerSession = null;
+		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => {
+			if (this.getArmedSlot(this.getLayer())) this.handlePickerDone();
+		});
+	}
+
+	getLayer() {
+		const layer = this.editor.layerManager.getActiveLayer();
+		return layer?.type === this.type ? layer : null;
+	}
+
+	arm(slot) {
+		const layer = this.getLayer();
+		if (!layer) return;
+		pickerOpenSession(this, { layerId: layer.id, slot }, {
+			refresh: () => this.updatePickerStrip(),
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, getLayerPaintSlot(layer, slot)?.glitterId)
+		});
+	}
+
+	getArmedSlot(layer) {
+		return pickerSelectionTarget(this, layer);
+	}
+
+	getTarget(layer) {
+		return this.getArmedSlot(layer) || this.defaultSlot;
+	}
+
+	resolveSelectedGlitterId(layer) {
+		const data = getLayerPaintSlot(layer, this.getTarget(layer));
+		return data?.mode === 'glitter' ? data.glitterId ?? null : null;
+	}
+
+	// A gallery pick: the target slot switches to that glitter, color adjust
+	// reset, as every other slot pick does.
+	applyPick(layer, glitterId) {
+		const data = this.ensureSlot(layer, this.getTarget(layer));
+		if (!data) return false;
+		data.glitterId = glitterId;
+		data.mode = 'glitter';
+		data.colorAdjust = null;
+		this.onPicked(layer);
+		this.updatePickerStrip();
+		return true;
+	}
+
+	updatePickerStrip() {
+		const layer = this.getLayer();
+		if (!layer) return;
+		if (this.pickerSession && this.pickerSession.layerId !== layer.id) pickerCloseSession(this);
+		const armed = Boolean(this.getArmedSlot(layer));
+		renderPickerStrip({
+			ownsStrip: true,
+			visible: true,
+			armed,
+			hint: !armed,
+			...formatPickerStripText(this.getTarget(layer), layer.name, this.typeWord)
+		});
+	}
+
+	handlePickerDone() {
+		const slot = this.pickerSession?.slot || this.defaultSlot;
+		const prefix = getPaintSlotDefinition(this.type, slot)?.panelPrefix;
+		this.closePickerSession();
+		returnFromPickerToProperties(this.editor, { section: this.section, focusId: prefix ? `${prefix}GlitterChip` : null });
+	}
+
+	closePickerSession() {
+		pickerCloseSession(this, {
+			refresh: () => this.updatePickerStrip(),
+			updateSelection: () => this.editor.updateGlitterSelection()
+		});
+	}
+}

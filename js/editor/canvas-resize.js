@@ -36,9 +36,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.baseBackgroundManager?.invalidatePixelEffects();
 
 		this.layers.forEach((layer) => {
-			if (layer.type === LayerType.STICKER) this.stickerManager?.renderLayer(layer);
-			else if (layer.type === LayerType.TEXT_GLITTER) this.textGlitterManager?.renderLayer(layer);
-			else if (layer.type === LayerType.SHAPE) this.shapeGlitterManager?.renderLayer(layer);
+			if (isTransformableLayerType(layer.type)) getLayerManagerForType(this, layer.type)?.renderLayer(layer);
 		});
 
 		this.layerManager.updateBaseImageSwatchCache();

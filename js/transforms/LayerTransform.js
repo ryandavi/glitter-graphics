@@ -116,7 +116,9 @@ applyTransform(element, dimensions) {
 	// Determine pointer-events based on tool mode
 	// Only allow interaction in SELECT tool
 	const isSelectTool = this.editor.currentTool === ToolType.SELECT;
-	const pointerEvents = (this.layer.visible && isSelectTool) ? 'auto' : 'none';
+	// A layer that is not transformable right now (a pinned frame) lets clicks
+	// through to the layers under it.
+	const pointerEvents = (this.layer.visible && isSelectTool && isLayerTransformable(this.layer)) ? 'auto' : 'none';
 
 	// Get z-index
 	const zIndex = this.editor.layerManager.getLayerZIndex(this.layer.id);
@@ -146,11 +148,7 @@ applyTransform(element, dimensions) {
 
 	// Text previews render in local space and scale via a CSS transform on the
 	// inner stack — keep it in sync (drags call applyTransform without renderLayer).
-	if (this.layer.type === LayerType.TEXT_GLITTER) {
-		this.editor.textGlitterManager?.syncElementScale?.(this.layer, element);
-	} else if (this.layer.type === LayerType.SHAPE) {
-		this.editor.shapeGlitterManager?.syncElementScale?.(this.layer, element);
-	}
+	getLayerManagerForType(this.editor, this.layer.type)?.syncElementScale?.(this.layer, element);
 	this.updateHoverOutlinePosition();
 }
 
@@ -250,6 +248,9 @@ updateTransform(updates) {
 				height: this.layer.shapeData.renderHeight || this.layer.shapeData.height
 			};
 		}
+		// Types whose element box is their frame (frames).
+		const frame = getLayerFrame(this.editor, this.layer);
+		if (frame) return { width: frame.width, height: frame.height };
 		throw new Error('Layer does not have dimensions');
 	}
 
@@ -851,6 +852,8 @@ const handleMouseMove = (e) => {
 			this.editor.shapeGlitterManager?.commitScale(this.layer);
 		} else if (this.layer.type === LayerType.STICKER) {
 			await this.editor.stickerManager?.commitResolutionSwap(this.layer);
+		} else {
+			getLayerManagerForType(this.editor, this.layer.type)?.commitScale?.(this.layer);
 		}
 		const anchorAfter = getLayerAnchorPoint(this.editor, this.layer);
 		const transform = this.getTransform();

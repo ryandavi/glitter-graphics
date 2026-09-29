@@ -76,7 +76,13 @@ defineOptions('borderStyle', [{ value: 'solid', label: 'Solid' }, { value: 'dott
 // Where a Sparkles slot places its particles (js/paint/sparkles.js).
 defineOptions('sparkleEmitter', [
 	{ value: 'inside', label: 'Scatter' },
+	{ value: 'edges', label: 'Edges' },
 	{ value: 'highlights', label: 'Highlights' }
+]);
+// How an image frame (js/paint/frames.js) fills the frame box.
+defineOptions('frameFit', [
+	{ value: 'stretch', label: 'Stretch' },
+	{ value: 'contain', label: 'Fit' }
 ]);
 // How the Highlights (Kira Kira) emitter turns highlight strength into glyphs.
 defineOptions('sparkleStyle', [

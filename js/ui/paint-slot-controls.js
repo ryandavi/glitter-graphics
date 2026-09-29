@@ -283,7 +283,7 @@ function syncSparkleSlotControls(host, definition, layer, data) {
 	const halo = document.getElementById(`${prefix}Halo`);
 	if (halo) halo.checked = Boolean(data.halo);
 	document.querySelectorAll(`[data-sparkle-controls="${prefix}"] [data-sparkle-emitter]`).forEach((element) => {
-		element.hidden = element.dataset.sparkleEmitter !== data.emitter;
+		element.hidden = !element.dataset.sparkleEmitter.split(' ').includes(data.emitter);
 	});
 	const grid = document.getElementById(`${prefix}Presets`);
 	if (grid) {

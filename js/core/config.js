@@ -292,7 +292,8 @@ const CONFIG = deepFreeze({
 					glitterLayer: 111,
 					text: 17,
 					shape: 67,
-					canvasBackground: 101
+					canvasBackground: 101,
+					frame: 9
 				},
 				backgroundGlitterId: 96,
 				sparklesGlitterId: 17,
@@ -345,7 +346,11 @@ const CONFIG = deepFreeze({
 				zoom: { periodMs: 8000, easing: 'easeOut', amount: 15, direction: 'alternate', iterations: Infinity },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity },
 				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, includeWhenOffCanvas: true },
-				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity }
+				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity },
+				// Particle-only motions (Sparkles): they need the emitter area to
+				// wrap in, so the layer animation picker leaves them out.
+				fall: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity, particleOnly: true },
+				rise: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity, particleOnly: true }
 			},
 			jitterQuantMs: 60,
 			maxPeriodMs: 20000,
@@ -378,6 +383,21 @@ const CONFIG = deepFreeze({
 				halo: true,
 				drawOrder: 'front',
 				seed: 1
+			}
+		},
+		// The Frame layer (js/paint/frames.js, js/layers/FrameLayerManager.js).
+		// A pinned frame fills the canvas minus its inset; imageCategory is the
+		// sticker category image frames come from.
+		frames: {
+			minSize: 16,
+			imageCategory: 'frame',
+			defaults: {
+				pinned: true,
+				kind: 'style',
+				style: 'solid',
+				fit: 'stretch',
+				fillMode: 'glitter',
+				color: '#ffd84a'
 			}
 		},
 		stickers: {

@@ -116,6 +116,30 @@ if (run('computeSparkleLayout(layoutData, { width: 400, height: 400, pixels: nul
 	fail('count is not capped');
 }
 
+// Edges: on the host's outline, or on its box edge when it has no pixels.
+context.edgeData = { ...defaults, glyphs: { ...defaults.glyphs }, emitter: 'edges', count: 30 };
+const edgeLayout = run('computeSparkleLayout(edgeData, hostHalf)');
+if (!edgeLayout.length) fail('edges placed no particles');
+edgeLayout.forEach((particle) => {
+	const nearOutline = particle.x <= 3 || Math.abs(particle.x - 100) <= 3 || particle.y <= 3 || particle.y >= 157;
+	if (!nearOutline || particle.x > 102) fail(`edge particle at ${particle.x},${particle.y} is off the opaque half's outline`);
+});
+run('computeSparkleLayout(edgeData, { width: 200, height: 100, pixels: null })').forEach((particle) => {
+	const onBox = particle.x === 0 || particle.x === 200 || particle.y === 0 || particle.y === 100;
+	if (!onBox) fail(`box-edge particle at ${particle.x},${particle.y} is off the perimeter`);
+});
+
+// Fall wraps inside the emitter area: particles move and stay within it.
+context.fallData = { ...defaults, glyphs: { ...defaults.glyphs }, behavior: 'fall', cycleMs: 3000 };
+context.fallLayout = first;
+const fallen = run("sampleSparkleFrame(fallData, fallLayout, 1000, 'fall')");
+if (!fallen.some((sample) => Math.abs(sample.ty) > 5)) fail('fall does not move particles');
+fallen.forEach((sample) => {
+	const y = sample.particle.y + sample.ty;
+	const margin = sample.particle.size;
+	if (y < -margin || y > 160 + margin) fail(`fallen particle at y ${y} left the emitter area`);
+});
+
 // Loop contract: every particle is back at its start after one cycle, for
 // every behavior.
 behaviors.forEach(({ value }) => {

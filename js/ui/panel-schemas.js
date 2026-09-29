@@ -45,7 +45,7 @@ const ANIMATION_PRESET_GROUPS = {
 const ANIMATION_PRESET_GROUP_BY_TYPE = Object.fromEntries(
 	Object.entries(ANIMATION_PRESET_GROUPS).flatMap(([group, types]) => types.map((type) => [type, group]))
 );
-const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).map((value) => ({
+const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).filter((value) => !CONFIG.tools.animation.presets[value].particleOnly).map((value) => ({
 	value,
 	label: value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '),
 	selected: value === CONFIG.tools.animation.defaultType,
@@ -61,7 +61,8 @@ const ANCHOR_SELECT_OPTIONS = Object.freeze([
 
 // The Sparkles effect card (a `sparkles` paint slot). Every host shares it:
 // its controls render from the sparkles registries (buildSparkleControls).
-function createSparklesPanelSpec(idPrefix) {
+// overrides: the Sparkles layer's card has no on/off switch.
+function createSparklesPanelSpec(idPrefix, overrides = {}) {
 	return {
 		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles', redesign: true,
 		sourceSelect: true, sourceRevert: true, colorRevert: true,
@@ -69,8 +70,19 @@ function createSparklesPanelSpec(idPrefix) {
 		toggle: true, sourceLabel: 'Paint', modes: ['glitter', 'solid'], activeMode: 'solid',
 		color: '#ffffff', chipTitle: 'Choose sparkle glitter',
 		pre: [{ kind: 'sparkleControls', part: 'presets', idPrefix }],
-		post: [{ kind: 'sparkleControls', part: 'customize', idPrefix }]
+		post: [{ kind: 'sparkleControls', part: 'customize', idPrefix }],
+		...overrides
 	};
+}
+
+// Option buttons for a registry option list, read at render time: the frame
+// registries (js/paint/frames.js) load after this file.
+function createRegistryOptionEntries(name, idPrefix) {
+	return getOptions(name).map((option) => ({
+		id: `${idPrefix}${option.value.charAt(0).toUpperCase()}${option.value.slice(1)}`,
+		label: option.label,
+		value: option.value
+	}));
 }
 
 function createAnimationPanelSpec(prefix) {
@@ -314,6 +326,74 @@ const PANEL_SCHEMAS = {
 			] }
 		]
 	},
+	[LayerType.FRAME]: {
+		prefix: 'frame',
+		sectionPrefix: 'frameSettings',
+		mobileKey: 'frame',
+		section: { id: 'frameSettingsSection', classes: 'panel-redesign', icon: 'frame', iconName: 'Frame', title: 'Frame Properties' },
+		groups: [
+			{ title: 'Content', collapsible: false, items: [
+				// Both kinds share one shape: Kind, then a grid of choices, then
+				// that kind's options, each a divided set (like the Looks card).
+				{ kind: 'card', title: 'Frame', flatBody: true, items: [
+					{ kind: 'set', items: [
+						{ kind: 'stackRow', groups: [
+							{ label: 'Kind', get options() { return createRegistryOptionEntries('frameKind', 'frameKind'); } }
+						] }
+					] },
+					{ kind: 'set', label: 'Presets', attrs: { 'data-frame-kind': 'style' }, items: [
+						{ kind: 'presetGrid', id: 'framePresets', label: 'Frame presets', classes: 'property-inset frame-presets' }
+					] },
+					{ kind: 'set', attrs: { 'data-frame-kind': 'style' }, items: [
+						{ kind: 'stackRow', groups: [
+							{ label: 'Style', control: 'select', get options() { return createRegistryOptionEntries('frameStyle', 'frameStyle'); } }
+						] },
+						{ kind: 'slider', id: 'frameShade', slider: 'frameShade', rowId: 'frameShadeRow', title: 'How much lighter and darker the bevel sides are' }
+					] },
+					{ kind: 'set', label: 'Frames', attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, items: [
+						{ kind: 'presetGrid', id: 'frameImagePicker', label: 'Frame images', classes: 'property-inset frame-images' }
+					] },
+					{ kind: 'set', attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, items: [
+						{ kind: 'stackRow', groups: [
+							{ label: 'Fit', get options() { return createRegistryOptionEntries('frameFit', 'frameFit'); } }
+						] }
+					] }
+				] },
+				{ kind: 'card', title: 'Size', items: [
+					{ kind: 'checkboxList', items: [
+						{ id: 'framePinned', label: 'Fit to Canvas', title: 'Follow the canvas edges. Turn off to move and resize the frame freely.' }
+					] },
+					{ kind: 'slider', id: 'frameInset', slider: 'frameInset', rowId: 'frameInsetRow' },
+					{ kind: 'slider', id: 'frameThickness', slider: 'frameThickness', rowId: 'frameThicknessRow' },
+					{ kind: 'slider', id: 'frameRadius', slider: 'frameRadius', rowId: 'frameRadiusRow' }
+				] }
+			] },
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'slider', id: 'frameLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
+				{ kind: 'select', id: 'frameLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Paint', redesign: true,
+					sourceSelect: true, sourceRevert: true, colorRevert: true,
+					texturePosition: true,
+					modes: ['glitter', 'solid'], activeMode: 'glitter',
+					color: CONFIG.tools.frames.defaults.color, chipTitle: 'Choose frame glitter' }
+			] },
+			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
+		],
+		effects: [createSparklesPanelSpec('frameSparkles')]
+	},
+	[LayerType.SPARKLES]: {
+		prefix: 'sparkleLayer',
+		sectionPrefix: 'sparkleLayerSettings',
+		mobileKey: 'sparkleLayer',
+		section: { id: 'sparkleLayerSettingsSection', classes: 'panel-redesign', icon: 'sparkles', iconName: 'Sparkles', title: 'Sparkles Properties' },
+		groups: [
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'slider', id: 'sparkleLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
+				{ kind: 'select', id: 'sparkleLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				createSparklesPanelSpec('layerSparkles', { toggle: false })
+			] }
+		]
+	},
 	[LayerType.BASE_IMAGE]: {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',
@@ -475,7 +555,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] }
 		],
-		effects: [createAnimationPanelSpec('glitter')],
+		effects: [createSparklesPanelSpec('glitterSparkles'), createAnimationPanelSpec('glitter')],
 		auxiliarySections: [{
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',

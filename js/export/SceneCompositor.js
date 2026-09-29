@@ -64,6 +64,8 @@ class SceneCompositor {
 		this.patternSourceCtx = this.patternSourceCanvas.getContext('2d');
 		// One painted particle at a time (drawSparkleFrame draws it at once).
 		this.sparklePaintCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
+		// Behind-order sparkles of a fill layer, before they go under its paint.
+		this.sparkleBehindCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
 		this._patternAdjustScratch = null;
 		this.filterGrainTileCache = new Map();
 		this.authoredFrameResolver = options.authoredFrameResolver || new AuthoredFrameResolver();
@@ -446,7 +448,8 @@ class SceneCompositor {
 		const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
 		const placement = { offsetX: pad, offsetY: pad };
 		if (pad) this._drawLayerSparkles(compositeCtx, layer, 'behind', frame, placement);
-		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
+		const buildStack = scratch.buildStack || ((resolveSource) => buildSlotStack(layer, resolveSource));
+		buildStack((entry) => this._getSlotSource(layer, entry)).forEach((item) => {
 			const maskCanvas = slotMasks[item.key];
 			if (!maskCanvas) return;
 			this._renderFilledMaskInto(fillCanvas, maskCanvas, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
@@ -659,7 +662,7 @@ class SceneCompositor {
 			},
 			prepareStaticResources: async () => {},
 			getAuthoredSources,
-			render: ({ ctx, frameIndex, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
+			render: ({ ctx, frameIndex, timestamp, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
 				const maskCanvas = maskCanvases.get(layer.id);
 				if (!maskCanvas) throw new Error(`Missing mask canvas for layer ${layer.id}`);
 				const [entry] = getLayerPaintSlots(layer);
@@ -670,6 +673,21 @@ class SceneCompositor {
 				this._paintMaskedSource(helperCtx, width, height, maskCanvas, source, {
 					frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
 				});
+				// Sparkles sit inside the fill layer's element in the preview, so
+				// they take its animation and rainbow too. Behind ones are drawn
+				// on their own surface, then slid under the painted fill.
+				if (getLayerSparkleEntries(layer).length) {
+					const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
+					const behind = this.sparkleBehindCanvas;
+					ensureCanvasSize(behind, width, height);
+					const behindCtx = behind.getContext('2d', { alpha: true });
+					resetCanvasContext(behindCtx, width, height);
+					this._drawLayerSparkles(behindCtx, layer, 'behind', frame, {});
+					helperCtx.globalCompositeOperation = 'destination-over';
+					helperCtx.drawImage(behind, 0, 0);
+					helperCtx.globalCompositeOperation = 'source-over';
+					this._drawLayerSparkles(helperCtx, layer, 'front', frame, {});
+				}
 				helperCtx.restore();
 				if (rainbowHue) {
 					const pixels = helperCtx.getImageData(0, 0, width, height);
@@ -681,11 +699,15 @@ class SceneCompositor {
 		};
 	}
 
-	_buildSlotStackExportPlan(layer, { ensureTextFont = false } = {}) {
+	// buildStack(resolveSource) replaces buildSlotStack for a type whose paint
+	// list is not one item per slot (a frame's shade bands); its items name
+	// the slotMasks key they paint through.
+	_buildSlotStackExportPlan(layer, { ensureTextFont = false, buildStack = null } = {}) {
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
 		const scratch = {
 			compositeCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
-			fillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
+			fillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			buildStack
 		};
 		scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
 		return {

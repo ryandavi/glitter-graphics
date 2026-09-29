@@ -86,18 +86,27 @@ async initBrowser() {
 		// Setup filter chips
 		this.setupFilterChips();
 		this.setupFillSourceControls();
+		this.sparkleFieldHost = this.createSparkleFieldHost();
+		bindFieldControls(this.sparkleFieldHost);
 		this.ui.pickerStripDone?.addEventListener('click', () => {
 			if (this.hasActivePickerSession()) this.handlePickerDone();
 		});
 	}
 
-	armAssetPicker() {
+	// slot: null for the fill itself, 'sparkles' for the sparkles slot.
+	armAssetPicker(slot = null) {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
-		pickerOpenSession(this, { layerId: layer.id }, {
+		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this, layer.fill.glitterId)
+			reveal: () => revealAssetBrowser(this.editor, this, (slot ? layer[slot] : layer.fill)?.glitterId)
 		});
+	}
+
+	// The slot data the next gallery pick writes to.
+	getGlitterSelectionSlot(layer) {
+		const slot = this.hasActivePickerSession() ? this.pickerSession.slot : null;
+		return slot && layer[slot] ? layer[slot] : layer.fill;
 	}
 
 	hasActivePickerSession() {
@@ -110,13 +119,14 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) pickerCloseSession(this);
 		const armed = this.hasActivePickerSession();
-		const copy = formatPickerStripText('fill', layer.name, 'fill layer');
+		const copy = formatPickerStripText((armed && this.pickerSession.slot) || 'fill', layer.name, 'fill layer');
 		renderPickerStrip({ ownsStrip: true, visible: true, armed, hint: !armed, ...copy });
 	}
 
 	handlePickerDone() {
+		const focusId = this.pickerSession?.slot === 'sparkles' ? 'glitterSparklesGlitterChip' : 'glitterAssetThumbnail';
 		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: 'glitterSettings', focusId: 'glitterAssetThumbnail' });
+		returnFromPickerToProperties(this.editor, { section: 'glitterSettings', focusId });
 	}
 
 	closePickerSession() {
@@ -209,6 +219,48 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		layer.fill = mergeSlotEffectDefaults(layer.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(layer.fill);
+		layer.sparkles = normalizeSparklesData(layer.sparkles);
+	}
+
+	// Sparkles read the layer's painted mask, in document px.
+	getSparkleHost(layer) {
+		const canvas = this.editor.originalCanvas;
+		if (!canvas?.width || !this.editor.maskCompositor) return null;
+		return {
+			key: `fill:${layer.id}:${this.editor.maskCompositor.getCacheKey(layer)}`,
+			width: canvas.width,
+			height: canvas.height,
+			loadPixels: () => this.editor.maskCompositor.getMaskCanvas(layer)
+		};
+	}
+
+	// How the declared field binder edits a fill layer's sparkles slot. The
+	// fill itself keeps its own bindings (editor-panels.js).
+	createSparkleFieldHost() {
+		const active = () => {
+			const layer = this.editor.layerManager.getActiveLayer();
+			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
+		};
+		const render = (layer) => this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+		return {
+			type: LayerType.GLITTER_FILL,
+			editor: this.editor,
+			getLayer: active,
+			ensureSlot: (layer, key) => (layer[key] ||= buildDefaultSparkles()),
+			getSlotDefaults: () => buildDefaultSparkles(),
+			apply: (layer, mutate, change) => {
+				mutate();
+				render(layer);
+				if (change.live) return;
+				syncFieldControls(this.sparkleFieldHost, layer);
+				this.editor.layerManager.renderLayersList();
+				this.editor.saveState('Edit fill sparkles');
+			},
+			render,
+			commit: () => this.editor.saveState('Edit fill sparkles'),
+			armPicker: (key) => this.armAssetPicker(key),
+			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot || null : null)
+		};
 	}
 
 	customizeItemElement(element, item) {
@@ -329,8 +381,25 @@ async initBrowser() {
 		}
 		if (!this.editor.canEditLayer(layer, { notify: true })) return;
 
-		if (layer.type !== LayerType.BASE_IMAGE && layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
+		// Types whose paints are all declared slots route picks through their
+		// SlotGlitterPicker (js/ui/picker-session.js).
+		const slotPicker = getLayerManagerForType(this.editor, layer.type)?.slotPicker || null;
+		if (!slotPicker && layer.type !== LayerType.BASE_IMAGE && layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
 			this.editor.showError('You can only add glitter to a background or supported layer effect');
+			return;
+		}
+		if (slotPicker) {
+			const glitter = await this.ensureAssetDetails(id);
+			if (!glitter) {
+				this.editor.showError('Failed to load selected glitter #' + id);
+				return;
+			}
+			await this.ensureAssetImageReady(glitter);
+			if (!slotPicker.applyPick(layer, id)) return;
+			this.editor.updateGlitterSelection();
+			this.editor.layerManager.renderLayersList();
+			this.editor.saveState('Edit glitter');
+			this.editor.updateStatus(`Selected ${glitter.name}`);
 			return;
 		}
 		const previousGlitter = layer.type === LayerType.GLITTER_FILL
@@ -395,13 +464,22 @@ async initBrowser() {
 		} else if (layer.type === LayerType.GLITTER_FILL) {
 			// Auto Glitter layers use their swatch as the initial name. Keep that
 			// generated name live, while preserving names the user entered.
-			if (layer.name === previousGlitter?.name) layer.name = glitter.name;
-			layer.fill.glitterId = id;
-			layer.fill.mode = 'glitter';
-			// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
-			// the new glitter shows its true colors, and sync the HSB sliders to match.
-			layer.fill.colorAdjust = normalizeColorAdjust(null);
-			this.editor.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
+			const slot = this.getGlitterSelectionSlot(layer);
+			if (slot === layer.fill) {
+				if (layer.name === previousGlitter?.name) layer.name = glitter.name;
+				layer.fill.glitterId = id;
+				layer.fill.mode = 'glitter';
+				// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
+				// the new glitter shows its true colors, and sync the HSB sliders to match.
+				layer.fill.colorAdjust = normalizeColorAdjust(null);
+				this.editor.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
+			} else {
+				slot.glitterId = id;
+				slot.mode = 'glitter';
+				slot.colorAdjust = null;
+				this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+				syncFieldControls(this.sparkleFieldHost, layer);
+			}
 		}
 
 		this.editor.updateGlitterSelection();
@@ -563,6 +641,9 @@ async initBrowser() {
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
 		syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
+		// Sparkles sit beside the masked paint (inside the animation wrapper
+		// when there is one), behind ones before it.
+		reconcileSparkleLayers(inner.parentNode, layer, { editor: this.editor, width, height, behindAnchor: inner });
 
 		// Update selection highlight for this layer if it's active
 		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);

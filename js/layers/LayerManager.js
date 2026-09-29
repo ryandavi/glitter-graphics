@@ -711,8 +711,13 @@ class LayerManager {
 			if (movableOnly && !this.isLayerMovable(layer)) continue;
 
 			let isHit = false;
+			const hitTest = LAYER_UI_CONFIG[layer.type]?.hitTest;
 
-			if (isLayerTransformable(layer)) {
+			if (hitTest) {
+				const zoom = Math.max(0.01, this.editor.viewport?.currentZoom || 1);
+				isHit = LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) !== false
+					&& hitTest(this.editor, layer, x, y, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
+			} else if (isLayerTransformable(layer)) {
 				isHit = this.isPointInLayer(layer, x, y);
 			} else if (layer.type === LayerType.GLITTER_FILL) {
 				isHit = this.isPixelInLayerSelection(layer, x, y);
@@ -954,33 +959,11 @@ class LayerManager {
 
 	renderClonedLayerPreview(layer) {
 		if (!layer) return;
-
-		if (layer.type === LayerType.STICKER) {
-			this.editor.stickerManager?.renderLayer(layer);
-			return;
-		}
-
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			this.editor.textGlitterManager?.renderLayer(layer);
-			return;
-		}
-
-		if (layer.type === LayerType.SHAPE) {
-			this.editor.shapeGlitterManager?.renderLayer(layer);
-			return;
-		}
-
-		if (layer.type === LayerType.FILTER) {
-			this.editor.filterLayerManager?.renderLayer(layer);
-			return;
-		}
-
+		const manager = getLayerManagerForType(this.editor, layer.type);
 		if (layer.type === LayerType.GLITTER_FILL) {
-			this.editor.glitterManager?.renderLayer(
-				layer,
-				this.editor.previewCanvas?.width,
-				this.editor.previewCanvas?.height
-			);
+			manager?.renderLayer(layer, this.editor.previewCanvas?.width, this.editor.previewCanvas?.height);
+		} else {
+			manager?.renderLayer?.(layer);
 		}
 	}
 
@@ -1216,9 +1199,11 @@ class LayerManager {
 				nameText.textContent = layer.name || 'Filter';
 				typeText.textContent = `Filter · ${GlitterFilter.summaryText(layer.filterData)}`;
 				break;
-			default:
-				nameText.textContent = 'Unknown Layer';
-				typeText.textContent = 'Unknown';
+			default: {
+				const displayName = LAYER_UI_CONFIG[layer.type]?.displayName;
+				nameText.textContent = layer.name || displayName || 'Unknown Layer';
+				typeText.textContent = displayName || 'Unknown';
+			}
 		}
 
 		typeText.title = typeText.textContent;

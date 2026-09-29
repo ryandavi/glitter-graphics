@@ -1453,7 +1453,7 @@ function buildPanelItem(item, schema) {
 // every other control (presets first, controls second). Control ids are the
 // slot's panelPrefix + the suffixes the binder reads
 // (ui/paint-slot-controls.js). Sets marked data-sparkle-emitter show only for
-// that emitter.
+// the emitters it lists.
 function buildSparkleControls(item) {
 	const p = item.idPrefix;
 	if (item.part === 'presets') {
@@ -1473,7 +1473,7 @@ function buildSparkleControls(item) {
 	const content = customize.querySelector('[data-advanced-content]');
 	content.appendChild(buildPanelItem({ kind: 'set', label: 'Placement', items: [
 		{ kind: 'stackRow', groups: [
-			{ label: 'Place', options: optionEntries('sparkleEmitter', 'Emitter'), hint: 'Scatter over the layer, or put stars on its bright highlights (Kira Kira)' },
+			{ label: 'Place', options: optionEntries('sparkleEmitter', 'Emitter'), hint: 'Scatter over the layer, trace its edges, or put stars on its bright highlights (Kira Kira)' },
 			{ label: 'Layering', options: [
 				{ id: `${p}OrderBehind`, label: 'Behind', value: 'behind' },
 				{ id: `${p}OrderFront`, label: 'In front', value: 'front' }
@@ -1481,7 +1481,7 @@ function buildSparkleControls(item) {
 		] }
 	] }));
 
-	const shapes = buildPanelItem({ kind: 'set', label: 'Shapes', classes: 'sparkle-glyph-set', attrs: { 'data-sparkle-emitter': 'inside' } });
+	const shapes = buildPanelItem({ kind: 'set', label: 'Shapes', classes: 'sparkle-glyph-set', attrs: { 'data-sparkle-emitter': 'inside edges' } });
 	const chips = panelDiv('sparkle-glyph-chips');
 	chips.setAttribute('role', 'group');
 	chips.setAttribute('aria-label', 'Sparkle shapes');

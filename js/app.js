@@ -107,15 +107,21 @@ class GlitterEditor {
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
 		this.filterLayerManager = new FilterLayerManager(this);
+		this.frameLayerManager = new FrameLayerManager(this);
+		this.sparkleLayerManager = new SparkleLayerManager(this);
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
+		// Registration order is the picker-strip refresh order: the text
+		// manager performs the initial hide for non-text layers.
 		[
-			this.glitterManager,
-			this.baseBackgroundManager,
 			this.textGlitterManager,
 			this.shapeGlitterManager,
 			this.stickerManager,
-			this.brushTipManager
+			this.glitterManager,
+			this.baseBackgroundManager,
+			this.brushTipManager,
+			this.frameLayerManager.slotPicker,
+			this.sparkleLayerManager.slotPicker
 		].forEach((manager) => this.pickers.register(manager));
 		this.groupTransformManager = new GroupTransformManager(this);
 		this.mobileManager = new MobileManager(this);
@@ -409,9 +415,10 @@ class GlitterEditor {
 		this.setupSliderListeners();
 		this.setupColorAdjustListeners();
 		this.setupMaskEditorListeners();
-		this.setupTransformListeners('sticker', LayerType.STICKER, () => this.stickerManager);
-		this.setupTransformListeners('text', LayerType.TEXT_GLITTER, () => this.textGlitterManager);
-		this.setupTransformListeners('shape', LayerType.SHAPE, () => this.shapeGlitterManager);
+		Object.values(LayerType).forEach((type) => {
+			const prefix = LAYER_UI_CONFIG[type]?.transformPrefix;
+			if (prefix) this.setupTransformListeners(prefix, type, () => getLayerManagerForType(this, type));
+		});
 		this.setupExportListeners();
 		this.setupImageListeners();
 		this.setupModalListeners();

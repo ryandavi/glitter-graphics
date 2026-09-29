@@ -4219,11 +4219,6 @@ body.mask-editing .sticker-element {
   transform-origin: 50% 50%;
 }
 
-.sparkle-glyph {
-  left: 0;
-  top: 0;
-}
-
 .sparkle-paint {
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
@@ -4960,6 +4955,16 @@ body.mask-editing .sticker-element {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+.preset-grid-thumbnail.is-drawn {
+  background-color: #241a33;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.preset-grid-thumbnail.is-drawn.pixelated {
+  image-rendering: pixelated;
+}
+
 .brush-dynamics {
   display: flex;
   flex-direction: column;
@@ -5888,6 +5893,12 @@ body.tool-text .preview-wrapper {
   touch-action: none;
 }
 
+.frame-layer-element {
+  position: absolute;
+  transform-origin: center;
+  touch-action: none;
+}
+
 .sticker-element.dragging {
   z-index: 1000 !important;
   cursor: grabbing;
@@ -5903,12 +5914,14 @@ body.tool-text .preview-wrapper {
 }
 
 .text-glitter-element,
-.shape-glitter-element {
+.shape-glitter-element,
+.frame-layer-element {
   overflow: visible;
 }
 
 .text-glitter-stack,
-.shape-glitter-stack {
+.shape-glitter-stack,
+.frame-layer-stack {
   position: absolute;
   top: 0;
   left: 0;
@@ -5916,8 +5929,20 @@ body.tool-text .preview-wrapper {
   pointer-events: none;
 }
 
+.frame-layer-image {
+  position: absolute;
+  display: block;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+.frame-layer-image.pixelated {
+  image-rendering: pixelated;
+}
+
 .text-glitter-content,
-.shape-glitter-content {
+.shape-glitter-content,
+.frame-layer-content {
   position: absolute;
   inset: 0;
   box-sizing: border-box;
@@ -8055,7 +8080,9 @@ body.tool-select .preview-canvas {
 .property-panel .panel-redesign :is(.transform-grid, .paint-slot-main) > .property-set {
   padding: var(--property-pad) 0;
 }
-.property-panel .panel-redesign :is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set + .property-set {
+.property-panel .panel-redesign :is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set:where(:not([hidden])) + .property-set,
+.property-panel .panel-redesign :is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set:where(:not([hidden])) + :where([hidden]) + .property-set,
+.property-panel .panel-redesign :is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set:where(:not([hidden])) + :where([hidden]) + :where([hidden]) + .property-set {
   border-top: 1px solid var(--color-border);
 }
 .property-panel .panel-redesign :is(.transform-grid, .paint-slot-main) > .property-set > .property-set-label {
@@ -8727,7 +8754,9 @@ body.is-resizing-panel canvas {
 .property-panel .panel-redesign .property-set {
   padding: var(--property-pad) 0;
 }
-.property-panel .panel-redesign .property-set + .property-set {
+.property-panel .panel-redesign .property-set:where(:not([hidden])) + .property-set,
+.property-panel .panel-redesign .property-set:where(:not([hidden])) + :where([hidden]) + .property-set,
+.property-panel .panel-redesign .property-set:where(:not([hidden])) + :where([hidden]) + :where([hidden]) + .property-set {
   border-top: 1px solid var(--color-border);
 }
 .property-panel .panel-redesign .property-set .property-set-label {

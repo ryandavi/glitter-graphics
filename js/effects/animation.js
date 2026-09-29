@@ -13,7 +13,7 @@ const GlitterAnimation = (() => {
 			const lift = amount * oscillation;
 			out.tx += Math.cos(angle) * lift;
 			out.ty += Math.sin(angle) * lift;
-		}),
+		}, { particleLabel: 'Float' }),
 		sway: motion(({ out, amount, oscillation }) => { out.rotate = amount * oscillation; }),
 		dim: motion(({ out, data, wave }) => { out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }),
 		drift: motion(({ data, amount, p, vector }) => vector((Number(data.distance) || amount) * p), { particleSafe: false }),
@@ -49,7 +49,7 @@ const GlitterAnimation = (() => {
 			const [anchorX, anchorY] = resolveOrigin(data, 'orbitCenter');
 			out.tx = (anchorX - 0.5) * 2 * data.radius + data.radius * Math.cos(2 * Math.PI * p);
 			out.ty = (anchorY - 0.5) * 2 * data.radius + data.radius * Math.sin(2 * Math.PI * p);
-		}),
+		}, { particleLabel: 'Orbit' }),
 		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { particleLabel: 'Spin' }),
 		flip: motion(({ out, data, angle, p }) => {
 			const flipScale = Math.cos(data.turns * 2 * Math.PI * p);
@@ -61,6 +61,11 @@ const GlitterAnimation = (() => {
 		// Bounds are available now; the current distance remains authoritative so
 		// existing projects render identically until auto-fit ships.
 		marquee: motion(({ data, p, vector }) => vector(Number(data.distance) * p), { needsBounds: true, particleSafe: false }),
+		// Particle weather: constant-speed travel of one bounds height per
+		// period (options.boxH), down or up. wrapY asks the particle sampler to
+		// wrap the position inside its emitter area, so the loop is seamless.
+		fall: motion(({ out, options, p }) => { out.ty = (Number(options.boxH) || 0) * p; }, { needsBounds: true, wrapY: true, particleLabel: 'Fall' }),
+		rise: motion(({ out, options, p }) => { out.ty = -(Number(options.boxH) || 0) * p; }, { needsBounds: true, wrapY: true, particleLabel: 'Rise' }),
 		rainbow: motion(({ out, p }) => { out.hue = 360 * p; })
 	});
 	const MOTION_REGISTRY = Object.freeze(Object.fromEntries(Object.entries(MOTION_DEFINITIONS).map(([id, definition]) => [

@@ -7,7 +7,9 @@ const LayerType = {
 	TEXT_GLITTER: 'text-glitter',
 	SHAPE: 'shape',
 	BASE_IMAGE: 'base-image',
-	FILTER: 'filter'
+	FILTER: 'filter',
+	FRAME: 'frame',
+	SPARKLES: 'sparkles'
 };
 
 // Maps a layer type to its key in CONFIG.tools.glitter.defaults.fillGlitterId
@@ -20,7 +22,8 @@ const LAYER_TYPE_GLITTER_CONTEXT = {
 	[LayerType.TEXT_GLITTER]: 'text',
 	[LayerType.SHAPE]: 'shape',
 	[LayerType.BASE_IMAGE]: 'canvasBackground',
-	[LayerType.STICKER]: 'sticker'
+	[LayerType.STICKER]: 'sticker',
+	[LayerType.FRAME]: 'frame'
 };
 
 function hasMaskContent(layer) {

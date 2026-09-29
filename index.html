@@ -45,7 +45,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=76997d03">
+	<link rel="stylesheet" href="css/style.css?v=40b333d9">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -359,6 +359,10 @@
 
 					<!-- Filter Properties Section -->
 					<div class="filter-settings-section section collapsible-section" id="filterSettingsSection"></div>
+
+					<!-- Generated from PANEL_SCHEMAS[LayerType.FRAME] / [LayerType.SPARKLES] at boot. -->
+					<div class="frame-settings-section section collapsible-section" id="frameSettingsSection"></div>
+					<div class="sparkle-layer-settings-section section collapsible-section" id="sparkleLayerSettingsSection"></div>
 
 					<!-- Color Fill Settings Section -->
 					<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
@@ -1564,6 +1568,8 @@
 			<symbol id="icon-unlock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.25" y="7" width="9.5" height="6.75" rx="1.25" /><path d="M5.5 7V5a2.5 2.5 0 0 1 4.8-1" /></symbol>
 			<symbol id="icon-hand-pointer" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V3.4a1.1 1.1 0 0 1 2.2 0v3.3" /><path d="M8.2 6.4a1.1 1.1 0 0 1 2.2 0V8" /><path d="M10.4 7.1a1.1 1.1 0 0 1 2.1 0v3.4A3.6 3.6 0 0 1 8.9 14h-.7a3.6 3.6 0 0 1-2.85-1.4L3 9.4s-.55-.95.25-1.55 1.7.2 1.7.2L6 9.6" /></symbol>
 			<symbol id="icon-square" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="10" height="10" rx="1.5" /></symbol>
+			<symbol id="icon-frame" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1" /><rect x="5" y="5" width="6" height="6" rx="0.5" /></symbol>
+			<symbol id="icon-sparkles" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v4M4 4h4M11 6v3.5M9.25 7.75h3.5M5 10.5v3M3.5 12h3" /></symbol>
 			<symbol id="icon-clone" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5" /><path d="M3 10.5A1.5 1.5 0 0 1 1.5 9V3A1.5 1.5 0 0 1 3 1.5h6A1.5 1.5 0 0 1 10.5 3" /></symbol>
 			<symbol id="icon-hand" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9V4.5a1 1 0 0 1 2 0v3M7.5 7.5V3.5a1 1 0 0 1 2 0V8M9.5 8V4a1 1 0 0 1 2 0v4.5M11.5 8.5a1 1 0 0 1 2 0v1.2a4.5 4.5 0 0 1-4.5 4.5A5 5 0 0 1 4 11.6l-1.4-2s-.5-1 .4-1.5 1.6.35 1.6.35l1 1.35" /></symbol>
 			<symbol id="icon-circle-info" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 7.3v3.4" /><path fill="currentColor" stroke="none" d="M8 4.4a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Z" /></symbol>
@@ -1850,18 +1856,20 @@
 
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=52f7cd60"></script>
-	<script src="js/core/fields.js?v=5e51bf9f"></script>
-	<script src="js/core/config.js?v=d1059c28"></script>
+	<script src="js/core/fields.js?v=32f2f618"></script>
+	<script src="js/core/config.js?v=da41f85a"></script>
 	<script src="js/core/tools.js?v=442b0974"></script>
-	<script src="js/core/layer-types.js?v=c90c0637"></script>
-	<script src="js/core/options.js?v=29026d1b"></script>
-	<script src="js/ui/panel-schemas.js?v=115fed3b"></script>
+	<script src="js/core/layer-types.js?v=9645b88e"></script>
+	<script src="js/core/options.js?v=a0b88122"></script>
+	<script src="js/ui/panel-schemas.js?v=643681fc"></script>
 	<script src="js/paint/paint-slots.js?v=095f2f7e"></script>
 	<script src="js/layers/types/base-image.js?v=0d7ae1eb"></script>
 	<script src="js/layers/types/filter.js?v=39b55ff9"></script>
-	<script src="js/layers/types/glitter-fill.js?v=84d5e46b"></script>
+	<script src="js/layers/types/glitter-fill.js?v=3dffd16a"></script>
 	<script src="js/layers/types/sticker.js?v=3c762294"></script>
 	<script src="js/layers/types/text.js?v=4e1e0c96"></script>
+	<script src="js/layers/types/frame.js?v=eb089326"></script>
+	<script src="js/layers/types/sparkles.js?v=3f557772"></script>
 	<script src="js/layers/types/shape.js?v=b1f5c787"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=995d5ea0"></script>
@@ -1904,16 +1912,17 @@
 	<script src="js/paint/effect-source.js?v=db19e703"></script>
 	<script src="js/paint/gradient-presets.js?v=326066f4"></script>
 	<script src="js/effects/easing.js?v=7b2c85e4"></script>
-	<script src="js/effects/animation.js?v=1f75ce94"></script>
+	<script src="js/effects/animation.js?v=21e615a9"></script>
 	<script src="js/effects/highlight-detect.js?v=8393431a"></script>
 	<script src="js/paint/slot-effects.js?v=e143f14a"></script>
-	<script src="js/paint/sparkles.js?v=fdf79471"></script>
-	<script src="js/ui/paint-slot-controls.js?v=bb8bc43f"></script>
+	<script src="js/paint/sparkles.js?v=ba65d8d3"></script>
+	<script src="js/paint/frames.js?v=e81eacfb"></script>
+	<script src="js/ui/paint-slot-controls.js?v=ca776ffe"></script>
 	<script src="js/ui/gradient-editor.js?v=086f7f95"></script>
 	<script src="js/ui/color-eyedropper.js?v=a1914b36"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=78af60f6"></script>
-	<script src="js/ui/panel-renderer.js?v=c0ce4824"></script>
+	<script src="js/ui/panel-renderer.js?v=ec9a8dfb"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2adf10d6"></script>
 	<script src="js/ui/settings-renderer.js?v=9f7b668d"></script>
 	<script src="js/ui/settings-store.js?v=38ef29cb"></script>
@@ -1921,19 +1930,19 @@
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=4c66d155"></script>
 	<script src="js/editor/settings.js?v=eaccadf6"></script>
-	<script src="js/editor/panels.js?v=045f4706"></script>
+	<script src="js/editor/panels.js?v=7fab3ec6"></script>
 	<script src="js/editor/disclosures.js?v=45caad61"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
-	<script src="js/editor/transform-panel.js?v=dba3dda8"></script>
-	<script src="js/editor/transform-interaction.js?v=d62c9600"></script>
+	<script src="js/editor/transform-panel.js?v=de345d49"></script>
+	<script src="js/editor/transform-interaction.js?v=3d1b90fa"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=502dc9b4"></script>
+		<script src="js/editor/modals-wiring.js?v=79600d8c"></script>
 	<script src="js/editor/layer-panel.js?v=923041fd"></script>
 	<script src="js/editor/canvas-gestures.js?v=efc9809b"></script>
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>
-	<script src="js/editor/canvas-resize.js?v=65e1c6ae"></script>
+	<script src="js/editor/canvas-resize.js?v=61138c3d"></script>
 		<script src="js/ui/hints.js?v=94bb3942"></script>
-	<script src="js/ui/picker-session.js?v=164f3036"></script>
+	<script src="js/ui/picker-session.js?v=e7f43abb"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=7ef5a58f"></script>
 	<script src="js/ui/modal-filter.js?v=2a5c14d8"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
@@ -1949,7 +1958,7 @@
 	<script src="js/systems/AnimationTicker.js?v=9130fa77"></script>
 	<script src="js/systems/AnimationPanelController.js?v=c5f5a16b"></script>
 	<script src="js/export/ExportResultPresenter.js?v=2fa2cb24"></script>
-	<script src="js/export/SceneCompositor.js?v=ccc73451"></script>
+	<script src="js/export/SceneCompositor.js?v=2ab6c787"></script>
 	<script src="js/export/GifExporter.js?v=33e39456"></script>
 	<script src="js/export/StillImageExporter.js?v=73b29fde"></script>
 	<script src="js/export/Mp4Exporter.js?v=057ba903"></script>
@@ -1968,26 +1977,28 @@
 	<script src="js/systems/MaskEditor.js?v=9ad90f6c"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=2b1ff0aa"></script>
+	<script src="js/layers/LayerManager.js?v=0ef7c464"></script>
 
 	<!-- Content -->
 	<script src="js/assets/AssetBrowser.js?v=7013e5b2"></script>
 	<script src="js/assets/ContentManager.js?v=8a395d2e"></script>
 	<script src="js/assets/BrushTipManager.js?v=85d0ceea"></script>
-	<script src="js/transforms/LayerTransform.js?v=47258682"></script>
-	<script src="js/layers/GlitterManager.js?v=5ffadbd5"></script>
+	<script src="js/transforms/LayerTransform.js?v=129b810a"></script>
+	<script src="js/layers/GlitterManager.js?v=dcd320cb"></script>
 	<script src="js/layers/BaseBackgroundManager.js?v=1443b857"></script>
 	<script src="js/systems/AutoGlitterManager.js?v=4ef54d13"></script>
 	<script src="js/layers/TextGlitterManager.js?v=717f271b"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=262e315e"></script>
 	<script src="js/layers/StickerManager.js?v=d0b8db37"></script>
 	<script src="js/layers/FilterLayerManager.js?v=3048b4e6"></script>
+	<script src="js/layers/FrameLayerManager.js?v=401937a5"></script>
+	<script src="js/layers/SparkleLayerManager.js?v=48bc48e4"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2b7c0f1e"></script>
 
 		<script src="js/systems/MobileManager.js?v=2031c7b5"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=350268bc"></script>
+	<script src="js/app.js?v=5e74d3fc"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

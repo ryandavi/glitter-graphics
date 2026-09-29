@@ -1,14 +1,11 @@
 const TRANSFORM_PANEL_METHODS = {
 renderTransformPanels() {
-		[
-			{ hostId: 'stickerTransformPanelHost', prefix: 'sticker', type: LayerType.STICKER },
-			{ hostId: 'textTransformPanelHost', prefix: 'text', type: LayerType.TEXT_GLITTER },
-			{ hostId: 'shapeTransformPanelHost', prefix: 'shape', type: LayerType.SHAPE }
-		].forEach(({ hostId, prefix, type }) => {
-			const host = document.getElementById(hostId);
+		Object.values(LayerType).forEach((type) => {
+			const prefix = LAYER_UI_CONFIG[type]?.transformPrefix;
+			const host = prefix && document.getElementById(`${prefix}TransformPanelHost`);
 			if (!host) return;
 
-			buildTransformPanel(this, host, prefix, LAYER_UI_CONFIG[type]?.transformCapabilities || {});
+			buildTransformPanel(this, host, prefix, LAYER_UI_CONFIG[type].transformCapabilities || {});
 		});
 		finalizePanelSchemaSections(this);
 	}
@@ -23,22 +20,15 @@ renderTransformPanels() {
 		return getLayerTransform(layer);
 	}
 
-	// Single source of truth for the three movable/transformable layer types.
-	// Anything keyed to "which manager + panel prefix owns this layer's transform"
-	// (arrow nudge, centering, panel load/save, context toolbars) resolves through
-	// here so sticker/text/shape stay in lockstep — register a new type once.
+	// Single source of truth for "which manager + panel prefix owns this
+	// layer's transform" (arrow nudge, centering, panel load/save, context
+	// toolbars): the type's transformPrefix and managerKey. A layer that is
+	// not transformable right now (a pinned frame) has none.
 ,
 	getMovableLayerContext(layer) {
-		switch (layer?.type) {
-			case LayerType.STICKER:
-				return { prefix: 'sticker', manager: this.stickerManager };
-			case LayerType.TEXT_GLITTER:
-				return { prefix: 'text', manager: this.textGlitterManager };
-			case LayerType.SHAPE:
-				return { prefix: 'shape', manager: this.shapeGlitterManager };
-			default:
-				return null;
-		}
+		const prefix = LAYER_UI_CONFIG[layer?.type]?.transformPrefix;
+		if (!prefix || !isLayerTransformable(layer)) return null;
+		return { prefix, manager: getLayerManagerForType(this, layer.type) };
 	}
 
 ,
@@ -116,7 +106,7 @@ renderTransformPanels() {
 			};
 		}
 
-		const frame = this.textGlitterManager?.layerTransforms?.get(layer.id)?.getFrame?.();
+		const frame = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrame?.();
 		return {
 			visible: Boolean(frame),
 			width: Math.max(1, Math.round((frame?.width || 1) * ((transform.scale.x || 100) / 100))),
@@ -284,59 +274,27 @@ renderTransformPanels() {
 
 ,
 	syncTransformHandlesForActiveLayer() {
-		if (!this.stickerManager || !this.textGlitterManager) return;
-
+		const managers = [...new Set(Object.values(LayerType)
+			.filter((type) => LAYER_UI_CONFIG[type]?.transformPrefix)
+			.map((type) => getLayerManagerForType(this, type))
+			.filter((manager) => manager?.removeTransformHandles))];
+		if (!managers.length) return;
 		const activeLayer = this.layerManager.getActiveLayer();
-		if (this.currentTool !== ToolType.SELECT || !activeLayer) {
-			this.stickerManager.removeTransformHandles();
-			this.textGlitterManager.removeTransformHandles();
-			this.shapeGlitterManager?.removeTransformHandles();
+		const owner = this.currentTool === ToolType.SELECT
+			&& activeLayer
+			&& !activeLayer.locked
+			&& !this.layerManager.hasMultiSelection()
+			&& isLayerTransformable(activeLayer)
+			? getLayerManagerForType(this, activeLayer.type)
+			: null;
+		managers.forEach((manager) => {
+			if (manager !== owner) manager.removeTransformHandles();
+		});
+		if (this.currentTool === ToolType.SELECT && activeLayer && this.layerManager.hasMultiSelection() && this.layerManager.canTransformMultiSelection()) {
+			this.groupTransformManager?.createTransformHandles();
+		} else {
 			this.groupTransformManager?.removeTransformHandles();
-			return;
 		}
-
-		if (this.layerManager.hasMultiSelection()) {
-			this.stickerManager.removeTransformHandles();
-			this.textGlitterManager.removeTransformHandles();
-			this.shapeGlitterManager?.removeTransformHandles();
-			if (this.layerManager.canTransformMultiSelection()) this.groupTransformManager?.createTransformHandles();
-			else this.groupTransformManager?.removeTransformHandles();
-			return;
-		}
-
-		if (activeLayer.locked) {
-			this.stickerManager.removeTransformHandles();
-			this.textGlitterManager.removeTransformHandles();
-			this.shapeGlitterManager?.removeTransformHandles();
-			this.groupTransformManager?.removeTransformHandles();
-			return;
-		}
-
-		this.groupTransformManager?.removeTransformHandles();
-
-		if (activeLayer.type === LayerType.STICKER) {
-			this.stickerManager.createTransformHandles(activeLayer.id);
-			this.textGlitterManager.removeTransformHandles();
-			this.shapeGlitterManager?.removeTransformHandles();
-			return;
-		}
-
-		if (activeLayer.type === LayerType.TEXT_GLITTER) {
-			this.textGlitterManager.createTransformHandles(activeLayer.id);
-			this.stickerManager.removeTransformHandles();
-			this.shapeGlitterManager?.removeTransformHandles();
-			return;
-		}
-
-		if (activeLayer.type === LayerType.SHAPE) {
-			this.shapeGlitterManager?.createTransformHandles(activeLayer.id);
-			this.stickerManager.removeTransformHandles();
-			this.textGlitterManager.removeTransformHandles();
-			return;
-		}
-
-		this.stickerManager.removeTransformHandles();
-		this.textGlitterManager.removeTransformHandles();
-		this.shapeGlitterManager?.removeTransformHandles();
+		owner?.createTransformHandles(activeLayer.id);
 	}
 };

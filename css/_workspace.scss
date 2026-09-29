@@ -35,6 +35,14 @@ body.tool-text {
 	touch-action: none;
 }
 
+// No forced pointer-events: a pinned frame covers the canvas, so
+// LayerTransform leaves it click-through until it is unpinned.
+.frame-layer-element {
+	position: absolute;
+	transform-origin: center;
+	touch-action: none;
+}
+
 .sticker-element {
 	&.dragging {
 		z-index: 1000 !important;
@@ -61,10 +69,12 @@ body.tool-text {
 }
 
 .text-glitter-element,
-.shape-glitter-element { overflow: visible; }
+.shape-glitter-element,
+.frame-layer-element { overflow: visible; }
 
 .text-glitter-stack,
-.shape-glitter-stack {
+.shape-glitter-stack,
+.frame-layer-stack {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -72,8 +82,21 @@ body.tool-text {
 	pointer-events: none;
 }
 
+// An image frame (FrameLayerManager): the frame sticker placed in the box,
+// stretched or fitted exactly as the export places it.
+.frame-layer-image {
+	position: absolute;
+	display: block;
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	pointer-events: none;
+
+	&.pixelated { image-rendering: pixelated; }
+}
+
 .text-glitter-content,
-.shape-glitter-content {
+.shape-glitter-content,
+.frame-layer-content {
 	position: absolute;
 	inset: 0;
 	box-sizing: border-box;

@@ -222,7 +222,7 @@ snapTransformPosition(transform, position, options = {}) {
 					scale: { x: clampLayerScale(current.scale.x * factor), y: clampLayerScale(current.scale.y * factor) }
 				});
 				if (prefix === 'text') await active.manager.commitScaleToFontSize?.(active.layer);
-				if (prefix === 'shape') active.manager.commitScale?.(active.layer);
+				else active.manager.commitScale?.(active.layer);
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});

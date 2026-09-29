@@ -153,12 +153,7 @@ isLayerContentLocked(layer) {
 		// changes to any type. The glitter, shape, text, and sticker managers each
 		// drive it for their own layer type and otherwise leave the active owner
 		// alone (the text manager performs the initial hide for non-text layers).
-		this.textGlitterManager?.updatePickerStrip();
-		this.shapeGlitterManager?.updatePickerStrip();
-		this.stickerManager?.updatePickerStrip();
-		this.glitterManager?.updatePickerStrip();
-		this.baseBackgroundManager?.updatePickerStrip();
-		this.brushTipManager?.updatePickerStrip();
+		this.pickers.managers.forEach((manager) => manager.updatePickerStrip?.());
 
 		// Canvas Size belongs to Canvas Background; drop its temporary preview
 		// when editing any content layer or when no image is loaded.
@@ -618,6 +613,7 @@ isLayerContentLocked(layer) {
 		// Tint the asset-info thumbnail (and list/mobile swatches) to match the hue.
 		this.refreshGlitterSwatchVisuals(layer);
 
+		if (this.glitterManager.sparkleFieldHost) syncFieldControls(this.glitterManager.sparkleFieldHost, layer);
 		this.updateSelectedColorsDisplay();
 		this.maskEditor?.loadLayer(layer);
 	}
@@ -671,7 +667,10 @@ isLayerContentLocked(layer) {
 ,
 	updateGlitterSelection() {
 		const layer = this.layerManager.getActiveLayer();
-		const selectedGlitterId = layer?.type === LayerType.TEXT_GLITTER
+		const slotPicker = getLayerManagerForType(this, layer?.type)?.slotPicker;
+		const selectedGlitterId = slotPicker
+			? slotPicker.resolveSelectedGlitterId(layer)
+			: layer?.type === LayerType.TEXT_GLITTER
 			? this.textGlitterManager?.resolveSelectedGlitterId(layer)
 			: layer?.type === LayerType.SHAPE
 				? this.shapeGlitterManager?.resolveSelectedGlitterId(layer)
@@ -685,7 +684,7 @@ isLayerContentLocked(layer) {
 		);
 
 		glitterOptions.forEach(opt => {
-			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE || layer.type === LayerType.STICKER) &&
+			const isSelected = layer && (slotPicker || layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE || layer.type === LayerType.STICKER) &&
 				parseInt(opt.dataset.id, 10) === selectedGlitterId;
 			opt.classList.toggle('selected', isSelected);
 		});

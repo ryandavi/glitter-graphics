@@ -142,3 +142,16 @@
 @media (max-width: 1200px) {
 	.preset-grid-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+// Thumbnails drawn as one image (frame and sparkle presets): shown whole and
+// centered on a dark backdrop, so light paint reads and the image never tiles
+// across the chip.
+.preset-grid-thumbnail.is-drawn {
+	background-color: #241a33;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+
+	// Pixel-art images (frame stickers) stay crisp, as on the canvas.
+	&.pixelated { image-rendering: pixelated; }
+}

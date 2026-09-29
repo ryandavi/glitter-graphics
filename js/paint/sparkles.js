@@ -9,12 +9,15 @@
 //   layout   computeSparkleLayout(data, host) -> particles in host-local px.
 //            Pure, seeded with GlitterAnimation.mulberry32. The emitter picks
 //            positions: `inside` scatters over the host's opaque pixels,
-//            `highlights` (Kira Kira) puts one star on each detected highlight
-//            (js/effects/highlight-detect.js).
+//            `edges` along the host's outline (its box edge when it has no
+//            pixels), `highlights` (Kira Kira) puts one star on each
+//            detected highlight (js/effects/highlight-detect.js).
 //   motion   sampleSparkleFrame(data, layout, t) samples each particle with a
 //            GlitterAnimation motion (particleLabel entries only), period
 //            cycleMs / blinks, so every particle returns to its start when
-//            the slot's cycle ends and GIF loops close.
+//            the slot's cycle ends and GIF loops close. Motions marked wrapY
+//            (fall, rise) travel one emitter-area height per period and wrap
+//            inside it.
 //   preview  reconcileSparkleLayer: a .sparkle-layer of masked spans in the
 //            host element, transformed each frame by AnimationTicker.
 //   export   drawSparkleFrame: the same particles, glyph masks, transforms and
@@ -243,6 +246,21 @@ function finishSparkleParticle(particle, random, tilt) {
 	return particle;
 }
 
+// Opaque analysis pixels with a transparent (or out-of-bounds) 4-neighbor,
+// as a flat [x0, y0, x1, y1, ...] list.
+function collectSparkleEdgePoints(pixels) {
+	const { data, width, height } = pixels;
+	const threshold = CONFIG.rendering.maskAlphaThreshold;
+	const opaque = (x, y) => x >= 0 && y >= 0 && x < width && y < height && data[(y * width + x) * 4 + 3] >= threshold;
+	const points = [];
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			if (opaque(x, y) && (!opaque(x - 1, y) || !opaque(x + 1, y) || !opaque(x, y - 1) || !opaque(x, y + 1))) points.push(x, y);
+		}
+	}
+	return points;
+}
+
 // host: { width, height, pixels } in host-local px; pixels (optional) is the
 // host downscaled to analysis size, { data, width, height }.
 function computeSparkleLayout(data, host) {
@@ -276,28 +294,59 @@ function computeSparkleLayout(data, host) {
 			}, random, config.tiltDegrees / 3));
 		});
 	} else {
+		let pickPoint;
+		let accept = () => true;
+		if (data.emitter === 'edges') {
+			const edges = pixels ? collectSparkleEdgePoints(pixels) : null;
+			if (edges && !edges.length) return particles;
+			pickPoint = edges
+				? () => {
+					const i = Math.floor(random() * edges.length / 2) * 2;
+					return [(edges[i] + random()) / scaleX, (edges[i + 1] + random()) / scaleY];
+				}
+				: () => {
+					// A point on the box's perimeter.
+					let d = random() * 2 * (width + height);
+					if (d < width) return [d, 0];
+					d -= width;
+					if (d < height) return [width, d];
+					d -= height;
+					if (d < width) return [width - d, height];
+					return [0, height - (d - width)];
+				};
+		} else {
+			pickPoint = () => [random() * width, random() * height];
+			accept = (x, y) => {
+				if (!pixels) return true;
+				const px = Math.min(pixels.width - 1, Math.floor(x * scaleX));
+				const py = Math.min(pixels.height - 1, Math.floor(y * scaleY));
+				return pixels.data[(py * pixels.width + px) * 4 + 3] >= CONFIG.rendering.maskAlphaThreshold;
+			};
+		}
 		const minGap = (low + high) / 4;
 		const attempts = count * 40;
-		const opaqueAt = (x, y) => {
-			if (!pixels) return true;
-			const px = Math.min(pixels.width - 1, Math.floor(x * scaleX));
-			const py = Math.min(pixels.height - 1, Math.floor(y * scaleY));
-			return pixels.data[(py * pixels.width + px) * 4 + 3] >= CONFIG.rendering.maskAlphaThreshold;
-		};
 		for (let attempt = 0; attempt < attempts && particles.length < count; attempt++) {
-			const x = random() * width;
-			const y = random() * height;
+			const [x, y] = pickPoint();
 			const size = Math.round(low + (high - low) * Math.pow(random(), 1.5));
 			const glyph = pickWeightedGlyph(data.glyphs, random);
-			if (!opaqueAt(x, y)) continue;
+			if (!accept(x, y)) continue;
 			// Crowding relaxes as attempts run out, so small hosts still fill.
 			const gap = minGap * (1 - attempt / attempts);
 			if (particles.some((other) => Math.hypot(other.x - x, other.y - y) < gap)) continue;
 			particles.push(finishSparkleParticle({ x, y, size, glyph, halo: false, strength: 1 }, random, config.tiltDegrees));
 		}
 	}
-	particles.forEach((particle, index) => { particle.index = index; });
+	particles.forEach((particle, index) => {
+		particle.index = index;
+		particle.areaHeight = height;
+	});
 	return particles;
+}
+
+// A wrapping particle's center stays within the emitter area plus its own
+// half extent, so it leaves one edge fully before entering the other.
+function getSparkleWrapMargin(particle) {
+	return (particle.halo ? getSparkleHaloSize(particle) : particle.size) / 2;
 }
 
 // ===== MOTION =====
@@ -310,8 +359,11 @@ function computeSparkleLayout(data, host) {
 function sampleSparkleFrame(data, layout, tMs, sampleKey) {
 	const cycle = Math.max(1, Number(data.cycleMs) || FIELDS.sparkleCycle.value);
 	const base = GlitterAnimation.normalizeAnimation({ type: data.behavior });
+	const wrapY = Boolean(GlitterAnimation.MOTION_REGISTRY[base.type]?.wrapY);
 	const localTime = ((Number(tMs) || 0) % cycle + cycle) % cycle;
 	return layout.map((particle) => {
+		const margin = wrapY ? getSparkleWrapMargin(particle) : 0;
+		const span = (particle.areaHeight || 0) + margin * 2;
 		const sample = GlitterAnimation.sampleAt({
 			...base,
 			periodMs: cycle / particle.blinks,
@@ -321,11 +373,16 @@ function sampleSparkleFrame(data, layout, tMs, sampleKey) {
 			iterations: Infinity,
 			fillMode: 'none',
 			snapMode: 'smooth'
-		}, localTime, { layerId: `${sampleKey}:${particle.index}`, seed: data.seed, origin: [0.5, 0.5] });
+		}, localTime, { layerId: `${sampleKey}:${particle.index}`, seed: data.seed, origin: [0.5, 0.5], boxH: span });
+		let ty = sample.ty;
+		if (wrapY && span > 0) {
+			const y = particle.y + ty + margin;
+			ty = ((y % span) + span) % span - margin - particle.y;
+		}
 		return {
 			particle,
 			tx: sample.tx,
-			ty: sample.ty,
+			ty,
 			rotate: particle.rotation + sample.rotate,
 			scaleX: sample.scaleX,
 			scaleY: sample.scaleY,
@@ -678,6 +735,7 @@ const SPARKLE_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 	id: 'sparkles',
 	groups: [
 		{ id: 'scatter', label: 'Scatter' },
+		{ id: 'weather', label: 'Weather' },
 		{ id: 'kira', label: 'Kira Kira' }
 	],
 	entries: [
@@ -692,6 +750,22 @@ const SPARKLE_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 		{ id: 'star-field', label: 'Star Field', group: 'scatter', value: {
 			emitter: 'inside', behavior: 'twinkle', glyphs: { star: 2, dot: 3 },
 			count: 40, sizeMin: 4, sizeMax: 12, cycleMs: 3000, color: '#fff6b0'
+		} },
+		{ id: 'winter-snow', label: 'Winter Snow', group: 'weather', value: {
+			emitter: 'inside', behavior: 'fall', glyphs: { snowflake: 2, dot: 3 },
+			count: 45, sizeMin: 4, sizeMax: 14, cycleMs: 6000, color: '#ffffff'
+		} },
+		{ id: 'falling-hearts', label: 'Falling Hearts', group: 'weather', value: {
+			emitter: 'inside', behavior: 'fall', glyphs: { heart: 1 },
+			count: 18, sizeMin: 8, sizeMax: 20, cycleMs: 5000, color: '#ff6fb5'
+		} },
+		{ id: 'confetti', label: 'Confetti', group: 'weather', value: {
+			emitter: 'inside', behavior: 'fall', glyphs: { star: 1, dot: 2, heart: 1 },
+			count: 50, sizeMin: 4, sizeMax: 10, cycleMs: 3600, color: '#ffd84a'
+		} },
+		{ id: 'fairy-dust', label: 'Fairy Dust', group: 'weather', value: {
+			emitter: 'edges', behavior: 'twinkle', glyphs: { sparkle: 2, dot: 3 },
+			count: 36, sizeMin: 4, sizeMax: 12, cycleMs: 2400, color: '#fff1a8'
 		} },
 		{ id: 'kira-kira', label: 'Kira Kira', group: 'kira', value: {
 			emitter: 'highlights', behavior: 'glint', style: 'kira', halo: true,
@@ -711,6 +785,7 @@ const SPARKLE_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 		} }
 	],
 	renderThumbnail(entry, element) {
+		element.classList.add('is-drawn');
 		element.style.backgroundImage = `url(${getSparklePresetThumbnail(entry)})`;
 	},
 	apply(entry, target, value) {
@@ -720,14 +795,13 @@ const SPARKLE_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 
 const SPARKLE_THUMBNAIL_CACHE = new Map();
 
-// A few of the preset's glyphs on a dark tile, drawn once per preset.
+// A few of the preset's glyphs, drawn once per preset on a transparent tile;
+// the preset grid supplies the dark backdrop.
 function getSparklePresetThumbnail(entry) {
 	if (SPARKLE_THUMBNAIL_CACHE.has(entry.id)) return SPARKLE_THUMBNAIL_CACHE.get(entry.id);
 	const size = 48;
 	const canvas = createAppCanvas(size, size, 'paint/sparkles');
 	const ctx = canvas.getContext('2d');
-	ctx.fillStyle = '#241a33';
-	ctx.fillRect(0, 0, size, size);
 	const value = entry.value;
 	const glyphs = value.emitter === 'highlights'
 		? SPARKLE_STYLE_TIERS[value.style].map(([, glyph]) => glyph)

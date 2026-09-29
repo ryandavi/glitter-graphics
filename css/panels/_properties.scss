@@ -1352,8 +1352,14 @@
 
 	// A run of chunks (Transform groups, the effect-body Source / Scale·Opacity /
 	// Stroke / Placement sets, a card body split into sets) is hairline-divided.
-	:is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set + .property-set {
-		border-top: 1px solid var(--color-border);
+	// Hidden sets in between are skipped (a Frame's Style vs Image controls),
+	// so whether a line shows depends only on what is showing.
+	:is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set:where(:not([hidden])) {
+		+ .property-set,
+		+ :where([hidden]) + .property-set,
+		+ :where([hidden]) + :where([hidden]) + .property-set {
+			border-top: 1px solid var(--color-border);
+		}
 	}
 
 	:is(.transform-grid, .paint-slot-main) > .property-set > .property-set-label {
@@ -2184,7 +2190,12 @@ body.is-resizing-panel {
 	.property-set {
 		padding: var(--property-pad) 0;
 
-		+ .property-set { border-top: 1px solid var(--color-border); }
+		// Hidden sets in between are skipped, like the card-body divider.
+		&:where(:not([hidden])) {
+			+ .property-set,
+			+ :where([hidden]) + .property-set,
+			+ :where([hidden]) + :where([hidden]) + .property-set { border-top: 1px solid var(--color-border); }
+		}
 
 		.property-set-label { display: none; }
 	}
