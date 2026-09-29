@@ -79,13 +79,7 @@ function createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'dilate');
 	}
 
-	const canvas = createMaskCanvasLike(sourceCanvas);
-	const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-	ctx.drawImage(sourceCanvas, 0, 0);
-	getMorphOffsets(nextRadius).forEach((offset) => {
-		ctx.drawImage(sourceCanvas, offset.x, offset.y);
-	});
-	return canvas;
+	return createDistanceThresholdMaskCanvas(sourceCanvas, -nextRadius);
 }
 
 function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
@@ -96,14 +90,97 @@ function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'erode');
 	}
 
+	return createDistanceThresholdMaskCanvas(sourceCanvas, nextRadius, true);
+}
+
+// Exact squared Euclidean distance transform (Felzenszwalb-Huttenlocher).
+// The returned field is positive inside the thresholded silhouette and
+// negative outside. Soft effect masks (bevel/gloss) deliberately consume the
+// unbinarized values they derive from this field; silhouette masks do not.
+function createSignedDistanceField(sourceCanvas, alphaThreshold = null) {
+	const width = sourceCanvas.width;
+	const height = sourceCanvas.height;
+	const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+	const rgba = ctx.getImageData(0, 0, width, height).data;
+	const inside = new Uint8Array(width * height);
+	const threshold = Number.isFinite(alphaThreshold) ? alphaThreshold : (CONFIG.rendering.maskAlphaThreshold ?? 128);
+	for (let index = 0; index < inside.length; index++) inside[index] = rgba[index * 4 + 3] >= threshold ? 1 : 0;
+	const toInside = exactEuclideanDistanceTransform(inside, width, height, 1);
+	const toOutside = exactEuclideanDistanceTransform(inside, width, height, 0);
+	const distance = new Float32Array(width * height);
+	for (let index = 0; index < distance.length; index++) {
+		distance[index] = inside[index] ? Math.sqrt(toOutside[index]) : -Math.sqrt(toInside[index]);
+	}
+	return Object.freeze({ width, height, distance, inside });
+}
+
+function exactEuclideanDistanceTransform(binary, width, height, targetValue) {
+	const infinity = Infinity;
+	let targetCount = 0;
+	for (let index = 0; index < binary.length; index++) targetCount += binary[index] === targetValue ? 1 : 0;
+	if (!targetCount) return new Float64Array(width * height).fill(infinity);
+	const scratch = new Float64Array(width * height);
+	const output = new Float64Array(width * height);
+	const maxLength = Math.max(width, height);
+	const f = new Float64Array(maxLength);
+	const d = new Float64Array(maxLength);
+	for (let x = 0; x < width; x++) {
+		for (let y = 0; y < height; y++) f[y] = binary[y * width + x] === targetValue ? 0 : infinity;
+		distanceTransform1D(f, d, height);
+		for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
+	}
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) f[x] = scratch[y * width + x];
+		distanceTransform1D(f, d, width);
+		for (let x = 0; x < width; x++) output[y * width + x] = d[x];
+	}
+	return output;
+}
+
+function distanceTransform1D(f, d, length) {
+	const v = new Int32Array(length);
+	const z = new Float64Array(length + 1);
+	let first = 0;
+	while (first < length && !Number.isFinite(f[first])) first++;
+	if (first === length) {
+		d.fill(Infinity, 0, length);
+		return;
+	}
+	let k = 0;
+	v[0] = first;
+	z[0] = -Infinity;
+	z[1] = Infinity;
+	for (let q = first + 1; q < length; q++) {
+		if (!Number.isFinite(f[q])) continue;
+		let s;
+		do {
+			const p = v[k];
+			s = ((f[q] + q * q) - (f[p] + p * p)) / (2 * q - 2 * p);
+			if (s <= z[k]) k--;
+		} while (s <= z[k]);
+		k++;
+		v[k] = q;
+		z[k] = s;
+		z[k + 1] = Infinity;
+	}
+	k = 0;
+	for (let q = 0; q < length; q++) {
+		while (z[k + 1] < q) k++;
+		const delta = q - v[k];
+		d[q] = delta * delta + f[v[k]];
+	}
+}
+
+function createDistanceThresholdMaskCanvas(sourceCanvas, threshold, erode = false) {
+	const field = createSignedDistanceField(sourceCanvas);
 	const canvas = createMaskCanvasLike(sourceCanvas);
 	const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-	ctx.drawImage(sourceCanvas, 0, 0);
-	ctx.globalCompositeOperation = 'destination-in';
-	getMorphOffsets(nextRadius).forEach((offset) => {
-		ctx.drawImage(sourceCanvas, -offset.x, -offset.y);
-	});
-	ctx.globalCompositeOperation = 'source-over';
+	const image = ctx.createImageData(canvas.width, canvas.height);
+	for (let index = 0; index < field.distance.length; index++) {
+		const filled = erode ? field.distance[index] > threshold : field.distance[index] >= threshold;
+		image.data[index * 4 + 3] = filled ? 255 : 0;
+	}
+	ctx.putImageData(image, 0, 0);
 	return canvas;
 }
 

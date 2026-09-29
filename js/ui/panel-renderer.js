@@ -939,6 +939,7 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 // items, Advanced. Order mirrors the pre-template static panels exactly.
 function buildPaintSlotCard(slot) {
 	const card = tplClone('tpl-paint-slot');
+	if (slot.id) card.id = slot.id;
 	card.classList.add('has-subsection-title');
 	if (slot.redesign) card.dataset.collapsible = '';
 	card.dataset.slot = slot.slot;

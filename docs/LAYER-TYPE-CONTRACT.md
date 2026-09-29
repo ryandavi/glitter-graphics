@@ -7,7 +7,7 @@ How to add a layer type, and the interface every layer manager shares. Reference
 Adding a new layer type should need four things:
 
 1. A manager class that implements the manager interface below.
-2. One `LayerType` constant in `js/core/layer-types.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow or background the type paints with.
+2. One `LayerType` constant in `js/core/layer-types.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow, bevel or background the type paints with.
 3. A `buildExportPlan(layer, context)` method on the manager (canvas export for every format).
 4. One `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`, with its title mirrored in `modals/guide.html`.
 

@@ -24,7 +24,7 @@ const PREVIEW_EXPORT_TWINS = [
 	},
 	{
 		feature: 'shape border mask',
-		shared: 'getBorderMaskCanvas',
+		shared: 'getSlotMask',
 		preview: ['ShapeGlitterManager.getSlotMask'],
 		export: ['ShapeGlitterManager.renderSlotMasks']
 	},
@@ -61,7 +61,7 @@ const PREVIEW_EXPORT_TWINS = [
 	{
 		feature: 'animation transform origin',
 		shared: 'getLayerAnimationOrigin',
-		preview: ['AnimationTicker._paintEntry'],
+		preview: ['animationPreview.paintLayerAnimationPreview'],
 		export: ['SceneCompositor._getAnimationBox', 'HtmlSceneExporter.createScene']
 	}
 ];

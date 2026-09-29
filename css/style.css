@@ -4193,8 +4193,14 @@ body.mask-editing .sticker-element {
 .sticker-element .sticker-effect-shadow {
   z-index: 0;
 }
-.sticker-element .sparkle-layer {
+.sticker-element .sticker-effect-border {
+  z-index: 1;
+}
+.sticker-element .sticker-effect-bevel {
   z-index: 3;
+}
+.sticker-element .sparkle-layer {
+  z-index: 4;
 }
 .sticker-element .sparkle-layer[data-order=behind] {
   z-index: 1;

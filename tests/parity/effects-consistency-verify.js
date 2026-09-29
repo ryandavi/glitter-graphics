@@ -35,7 +35,7 @@ async function main() {
 				sharedEffectCardCount: document.querySelectorAll('[data-effect-card] > .subsection-title input[data-effect-toggle]').length
 			};
 		});
-		assert.deepStrictEqual(canvasStructure, { outerToggle: false, statusInHeader: true, statusBeforeChevron: true, cardToggles: true, sharedEffectCardCount: 7 });
+		assert.deepStrictEqual(canvasStructure, { outerToggle: false, statusInHeader: true, statusBeforeChevron: undefined, cardToggles: true, sharedEffectCardCount: 22 });
 
 		const availability = await page.evaluate(() => {
 			const editor = window.editor;

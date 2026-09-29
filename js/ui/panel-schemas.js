@@ -75,6 +75,30 @@ function createSparklesPanelSpec(idPrefix, overrides = {}) {
 	};
 }
 
+function createBevelPanelSpecs(idPrefix) {
+	return [
+		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & Gloss', redesign: true,
+			sourceSelect: true, sourceRevert: true, colorRevert: true, toggle: true,
+			texturePosition: true, sourceLabel: 'Highlight', modes: ['glitter', 'solid'], activeMode: 'solid',
+			color: '#ffffff', chipTitle: 'Choose highlight glitter',
+			afterSource: [
+				{ kind: 'select', id: `${idPrefix}Profile`, label: 'Bevel profile', visibleLabel: 'Profile', revert: true,
+					options: getOptions('bevelProfile').map((option) => ({ ...option, selected: option.value === 'smooth' })) },
+				{ kind: 'set', label: 'Surface', items: [
+					{ kind: 'slider', id: `${idPrefix}Size`, slider: 'bevelSize', rowId: `${idPrefix}SizeRow` },
+					{ kind: 'slider', id: `${idPrefix}Depth`, slider: 'bevelDepth' },
+					{ kind: 'slider', id: `${idPrefix}Angle`, slider: 'bevelAngle', rowId: `${idPrefix}AngleRow` },
+					{ kind: 'slider', id: `${idPrefix}Altitude`, slider: 'bevelAltitude', rowId: `${idPrefix}AltitudeRow` },
+					{ kind: 'slider', id: `${idPrefix}Soften`, slider: 'bevelSoften' }
+				] },
+				{ kind: 'paintSlot', id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, title: 'Shade', redesign: false,
+					sourceSelect: true, sourceRevert: true, colorRevert: true, texturePosition: true,
+					modes: ['glitter', 'solid'], activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' }
+			]
+		}
+	];
+}
+
 // Option buttons for a registry option list, read at render time: the frame
 // registries (js/paint/frames.js) load after this file.
 function createRegistryOptionEntries(name, idPrefix) {
@@ -613,6 +637,18 @@ const PANEL_SCHEMAS = {
 			] }
 		],
 		effects: [
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'stickerBorder', title: 'Outline', redesign: true,
+				sourceSelect: true, sourceRevert: true, colorRevert: true, toggle: true, texturePosition: true,
+				sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid', color: '#ffffff', chipTitle: 'Choose outline glitter',
+				afterSource: [{ kind: 'slider', id: 'stickerBorderWidth', slider: 'stickerOutlineWidth' }],
+				post: [{ kind: 'optionGroup', label: 'Style', revert: true, options: [
+					{ id: 'stickerBorderEdgeRounded', label: 'Smooth', value: 'round', active: true },
+					{ id: 'stickerBorderEdgeHard', label: 'Pixel', value: 'hard' }
+				] }, { kind: 'checkboxList', items: [
+					{ id: 'stickerBorderUnionFrames', label: 'Use all animation frames', title: 'Build one stable outline from the union of every GIF frame' }
+				] }]
+			},
+			...createBevelPanelSpecs('stickerBevel'),
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
@@ -621,7 +657,7 @@ const PANEL_SCHEMAS = {
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'stickerShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
-				] }]
+				] }, { kind: 'slider', id: 'stickerShadowSpread', slider: 'shadowSpread' }]
 			},
 			createSparklesPanelSpec('stickerSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
@@ -772,8 +808,9 @@ const PANEL_SCHEMAS = {
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
-				] }]
+				] }, { kind: 'slider', id: 'textShadowSpread', slider: 'shadowSpread' }]
 			},
+			...createBevelPanelSpecs('textBevel'),
 			createSparklesPanelSpec('textSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetTextEffects', label: 'Reset Effects', secondary: true, title: 'Disable all text effects and clear their saved settings' }
@@ -890,9 +927,11 @@ const PANEL_SCHEMAS = {
 					{ kind: 'numberPair', label: 'Offset', items: [
 						{ id: 'shapeShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 						{ id: 'shapeShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
-					] }
+					] },
+					{ kind: 'slider', id: 'shapeShadowSpread', slider: 'shadowSpread' }
 				]
 			},
+			...createBevelPanelSpecs('shapeBevel'),
 			createSparklesPanelSpec('shapeSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetShapeEffects', label: 'Reset Effects', secondary: true, title: 'Disable all shape effects and clear their saved settings' }

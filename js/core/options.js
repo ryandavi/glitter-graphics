@@ -73,6 +73,14 @@ defineOptions('borderPlacement', [
 defineOptions('borderEdgeStyle', [{ value: 'round', label: 'Rounded' }, { value: 'hard', label: 'Hard' }]);
 defineOptions('borderDrawOrder', [{ value: 'behind', label: 'Behind' }, { value: 'front', label: 'In Front' }]);
 defineOptions('borderStyle', [{ value: 'solid', label: 'Solid' }, { value: 'dotted', label: 'Dotted' }]);
+defineOptions('stickerOutlineStyle', [{ value: 'smooth', label: 'Smooth' }, { value: 'pixel', label: 'Pixel' }]);
+defineOptions('bevelProfile', [
+	{ value: 'smooth', label: 'Smooth' },
+	{ value: 'chisel', label: 'Chisel' },
+	{ value: 'pillow', label: 'Pillow' },
+	{ value: 'emboss', label: 'Emboss' },
+	{ value: 'gloss', label: 'Gloss' }
+]);
 // Where a Sparkles slot places its particles (js/paint/sparkles.js).
 defineOptions('sparkleEmitter', [
 	{ value: 'inside', label: 'Scatter' },

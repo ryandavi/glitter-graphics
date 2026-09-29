@@ -11,6 +11,19 @@ registerLayerType(LayerType.STICKER, {
 			panelPrefix: 'stickerShadow', modes: ['glitter', 'solid']
 		},
 		{
+			key: 'border', role: 'border', path: 'stickerData.border', draftPath: 'stickerData.effectDrafts.border',
+			glitterDefault: 'borderGlitterId', framePadding: (data) => Math.max(0, data?.widthPx || 0),
+			panelPrefix: 'stickerBorder', modes: ['glitter', 'solid'], fields: { widthPx: 'stickerOutlineWidth' }
+		},
+		{
+			key: 'bevelHighlight', role: 'bevel', path: 'stickerData.bevel.highlight', enabledPath: 'stickerData.bevel.enabled',
+			glitterDefault: 'fillGlitterId', panelPrefix: 'stickerBevel', modes: ['glitter', 'solid']
+		},
+		{
+			key: 'bevelShade', role: 'bevel', path: 'stickerData.bevel.shade', enabledPath: 'stickerData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'stickerBevelShade', modes: ['glitter', 'solid']
+		},
+		{
 			key: 'sparkles', role: 'sparkles', path: 'stickerData.sparkles', draftPath: 'stickerData.effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'stickerSparkles', modes: ['glitter', 'solid']

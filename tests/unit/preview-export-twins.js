@@ -9,6 +9,7 @@ const sources = {
 	TextGlitterManager: fs.readFileSync(path.join(root, 'js/layers/TextGlitterManager.js'), 'utf8'),
 	ShapeGlitterManager: fs.readFileSync(path.join(root, 'js/layers/ShapeGlitterManager.js'), 'utf8'),
 	AnimationTicker: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),
+	animationPreview: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),
 	SceneCompositor: fs.readFileSync(path.join(root, 'js/export/SceneCompositor.js'), 'utf8'),
 	HtmlSceneExporter: fs.readFileSync(path.join(root, 'js/export/HtmlSceneExporter.js'), 'utf8'),
 	paintSlots: fs.readFileSync(path.join(root, 'js/paint/paint-slots.js'), 'utf8'),
@@ -23,7 +24,7 @@ vm.runInNewContext(`${paritySource}\nglobalThis.twins = PREVIEW_EXPORT_TWINS;`, 
 function memberBody(className, methodName) {
 	const source = sources[className];
 	if (!source) return null;
-	const [starts, end] = className === 'paintSlots' || className === 'sparkles'
+	const [starts, end] = className === 'paintSlots' || className === 'sparkles' || className === 'animationPreview'
 		? [[`\nfunction ${methodName}(`], '\n}\n']
 		: [[`\n\t${methodName}(`, `\n\tasync ${methodName}(`], '\n\t}\n'];
 	const index = starts.map((start) => source.indexOf(start)).find((found) => found !== -1) ?? -1;

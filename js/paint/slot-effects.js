@@ -69,6 +69,7 @@ function buildDefaultShadow(options = {}) {
 	const shadow = {
 		offsetX: FIELDS.shadowOffsetX.value,
 		offsetY: FIELDS.shadowOffsetY.value,
+		spread: FIELDS.shadowSpread.value,
 		mode: options.defaultMode ?? 'glitter',
 		glitterId: options.defaultGlitterId ?? null,
 		color: defaults.shadowColor,
@@ -82,6 +83,37 @@ function buildDefaultShadow(options = {}) {
 		shadow.colorAdjust = null;
 	}
 	return shadow;
+}
+
+function buildDefaultBevelPaint(color, options = {}) {
+	const coordinates = CONFIG.rendering.textureCoordinates;
+	return {
+		mode: options.defaultMode ?? 'solid',
+		glitterId: options.defaultGlitterId ?? null,
+		color,
+		scale: FIELDS.textureScale.value,
+		opacity: FIELDS.slotOpacity.value,
+		textureAnchor: coordinates.defaultAnchor,
+		textureOffsetX: coordinates.defaultOffsetX,
+		textureOffsetY: coordinates.defaultOffsetY,
+		colorAdjust: null,
+		...(options.geometry ? {
+			size: FIELDS.bevelSize.value,
+			depth: FIELDS.bevelDepth.value,
+			angle: FIELDS.bevelAngle.value,
+			altitude: FIELDS.bevelAltitude.value,
+			soften: FIELDS.bevelSoften.value,
+			profile: 'smooth'
+		} : {})
+	};
+}
+
+function buildDefaultBevel(options = {}) {
+	return {
+		enabled: false,
+		highlight: buildDefaultBevelPaint('#ffffff', { ...options, geometry: true }),
+		shade: buildDefaultBevelPaint('#000000', options)
+	};
 }
 
 // Lazily created as identity so untouched slots stay export-byte-identical.

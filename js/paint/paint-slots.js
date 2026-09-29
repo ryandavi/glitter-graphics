@@ -8,7 +8,7 @@
 //
 // A slot declaration:
 //   key            stable id; also the export source-key suffix and span key
-//   role           'fill' | 'border' | 'shadow' | 'background' | 'sparkles'
+//   role           'fill' | 'border' | 'shadow' | 'background' | 'bevel' | 'sparkles'
 //   path           where the slot object lives on the layer ('textData.fill')
 //   enabledPath    optional toggle that must be truthy for the slot to count
 //   draftPath      optional parked copy kept while the effect is switched off
@@ -46,7 +46,15 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 	},
 	shadow: {
 		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', control: 'number', geometry: true, documentScale: 'effect' },
-		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' }
+		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' },
+		spread: { field: 'shadowSpread', suffix: 'Spread', geometry: true, documentScale: 'effect' }
+	},
+	bevel: {
+		size: { field: 'bevelSize', suffix: 'Size', geometry: true, documentScale: 'effect' },
+		depth: { field: 'bevelDepth', suffix: 'Depth' },
+		angle: { field: 'bevelAngle', suffix: 'Angle' },
+		altitude: { field: 'bevelAltitude', suffix: 'Altitude' },
+		soften: { field: 'bevelSoften', suffix: 'Soften', geometry: true, documentScale: 'effect' }
 	},
 	// Particles (js/paint/sparkles.js). Sizes and spacing are host-local px.
 	sparkles: {
@@ -59,7 +67,7 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 	}
 });
 
-const PAINT_SLOT_ROLES = Object.freeze(['fill', 'border', 'shadow', 'background', 'sparkles']);
+const PAINT_SLOT_ROLES = Object.freeze(['fill', 'border', 'shadow', 'background', 'bevel', 'sparkles']);
 
 // Kept for callers that read slot paths; field paths use the same format.
 const readPaintSlotPath = readFieldPath;
@@ -149,6 +157,16 @@ function getLayerPaintSlots(layer, { includeDrafts = false } = {}) {
 function getLayerPaintSlot(layer, key) {
 	const definition = getPaintSlotDefinition(layer?.type, key);
 	return definition ? readPaintSlotPath(layer, definition.pathKeys) : null;
+}
+
+function ensureLayerPaintSlot(layer, key, buildDefault) {
+	const definition = getPaintSlotDefinition(layer?.type, key);
+	if (!definition) return null;
+	const current = readPaintSlotPath(layer, definition.pathKeys);
+	if (current) return current;
+	const created = buildDefault();
+	writeFieldPath(layer, definition.pathKeys, created);
+	return created;
 }
 
 // The paint slot that fills a layer's own artwork. Glitter fill and canvas
@@ -256,7 +274,7 @@ function getLayerSlotFramePadding(layer) {
 // A sticker shadow is drawn on a canvas padded by its offset (plus a
 // two-pixel margin) so the shifted silhouette is never clipped.
 function getShadowCanvasPadding(shadow) {
-	return Math.ceil(Math.max(Math.abs(shadow?.offsetX || 0), Math.abs(shadow?.offsetY || 0))) + 2;
+	return Math.ceil(Math.max(Math.abs(shadow?.offsetX || 0), Math.abs(shadow?.offsetY || 0)) + Math.max(0, shadow?.spread || 0)) + 2;
 }
 
 // Displayed tile width of a glitter at 100% scale. The manifest width is

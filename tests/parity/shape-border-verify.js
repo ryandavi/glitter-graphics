@@ -407,6 +407,118 @@ async function check7(page) {
 	assert(result.advancedParentIsPropertySet === false && result.advancedHasContract && result.advancedHiddenInSolid, 'Image Advanced disclosure does not match the module-level disclosure contract');
 }
 
+async function check8(page) {
+	const result = await page.evaluate(() => {
+		const editor = window.editor;
+		const manager = editor.shapeGlitterManager;
+		const layer = manager.createLayer({ shapeId: 'square', width: 96, height: 72, position: { x: 250, y: 200 } });
+		layer.shapeData.bevel = manager.getDefaultBevel();
+		layer.shapeData.shadow = manager.getDefaultShadow();
+		layer.shapeData.shadow.offsetX = 0;
+		layer.shapeData.shadow.offsetY = 0;
+		layer.shapeData.shadow.spread = 8;
+		editor.layerManager.insertLayer(layer);
+		editor.layerManager.setActiveLayer(layer.id);
+		manager.loadLayerSettings(layer);
+		const bevelToggle = document.getElementById('shapeBevelEnabled');
+		bevelToggle.checked = true;
+		bevelToggle.dispatchEvent(new Event('change', { bubbles: true }));
+		const profileSelect = document.getElementById('shapeBevelProfile');
+		profileSelect.value = 'gloss';
+		profileSelect.dispatchEvent(new Event('change', { bubbles: true }));
+		const glossVisibility = {
+			size: document.getElementById('shapeBevelSizeRow').hidden,
+			angle: document.getElementById('shapeBevelAngleRow').hidden,
+			altitude: document.getElementById('shapeBevelAltitudeRow').hidden,
+			shade: document.getElementById('shapeBevelShadeCard').hidden
+		};
+		profileSelect.value = 'smooth';
+		profileSelect.dispatchEvent(new Event('change', { bubbles: true }));
+		const bevelVisibility = ['SizeRow', 'AngleRow', 'AltitudeRow', 'ShadeCard']
+			.every((suffix) => !document.getElementById(`shapeBevel${suffix}`).hidden);
+		profileSelect.value = 'gloss';
+		profileSelect.dispatchEvent(new Event('change', { bubbles: true }));
+		const shadeOpacity = document.getElementById('shapeBevelShadeOpacity');
+		shadeOpacity.value = '55';
+		shadeOpacity.dispatchEvent(new Event('input', { bubbles: true }));
+		shadeOpacity.dispatchEvent(new Event('change', { bubbles: true }));
+		const uiState = {
+			enabled: layer.shapeData.bevel.enabled,
+			profile: layer.shapeData.bevel.highlight.profile,
+			profileControl: profileSelect.tagName,
+			shadeOpacity: layer.shapeData.bevel.shade.opacity,
+			shadeNested: bevelToggle.closest('[data-effect-card]').contains(shadeOpacity),
+			glossVisibility,
+			bevelVisibility
+		};
+		const profiles = {};
+		for (const profile of Object.keys(BEVEL_PROFILES)) {
+			layer.shapeData.bevel.highlight.profile = profile;
+			manager.measurementCache.clear();
+			manager.renderLayer(layer);
+			const measurement = manager.getMeasurementEntry(layer);
+			const previewHighlight = manager.getSlotMask(measurement, manager.getSlotStack(layer).find((item) => item.key === 'bevelHighlight'), layer).canvas;
+			const exported = manager.renderSlotMasks(layer);
+			const alpha = (canvas) => {
+				const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+				let sum = 0;
+				for (let index = 3; index < data.length; index += 4) sum += data[index];
+				return sum;
+			};
+			profiles[profile] = {
+				preview: alpha(previewHighlight),
+				export: alpha(exported.bevelHighlight),
+				shade: alpha(exported.bevelShade)
+			};
+		}
+		const highlightPixels = (canvas) => Array.from(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data)
+			.filter((value, index) => index % 4 === 3);
+		layer.shapeData.bevel.highlight.profile = 'smooth';
+		layer.shapeData.bevel.highlight.angle = 0;
+		layer.shapeData.bevel.highlight.altitude = 20;
+		manager.measurementCache.clear();
+		const lowLight = manager.renderSlotMasks(layer);
+		const angleZero = highlightPixels(lowLight.bevelHighlight);
+		const lowTotal = highlightPixels(lowLight.bevelHighlight).concat(highlightPixels(lowLight.bevelShade)).reduce((sum, value) => sum + value, 0);
+		layer.shapeData.bevel.highlight.angle = 180;
+		manager.measurementCache.clear();
+		const angleOpposite = highlightPixels(manager.renderSlotMasks(layer).bevelHighlight);
+		layer.shapeData.bevel.highlight.altitude = 80;
+		manager.measurementCache.clear();
+		const highLight = manager.renderSlotMasks(layer);
+		const highTotal = highlightPixels(highLight.bevelHighlight).concat(highlightPixels(highLight.bevelShade)).reduce((sum, value) => sum + value, 0);
+		const masks = manager.renderSlotMasks(layer);
+		const alphaCount = (canvas) => {
+			const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+			let count = 0;
+			for (let index = 3; index < data.length; index += 4) if (data[index]) count++;
+			return count;
+		};
+		return {
+			uiState,
+			profiles,
+			lightingResponds: angleZero.some((value, index) => value !== angleOpposite[index]) && highTotal < lowTotal,
+			fillPixels: alphaCount(masks.fill),
+			spreadPixels: alphaCount(masks.shadow),
+			spans: manager.layerElements.get(layer.id).querySelectorAll('[data-span-key="bevelHighlight"], [data-span-key="bevelShade"]').length
+		};
+	});
+	assert(result.uiState.enabled && result.uiState.profile === 'gloss' && result.uiState.shadeOpacity === 55,
+		'Bevel UI did not update the nested highlight/shade data');
+	assert(result.uiState.profileControl === 'SELECT', 'Bevel Profile must use the compact select control');
+	assert(result.uiState.shadeNested, 'Shade controls must live inside the single Bevel & Gloss effect card');
+	assert(Object.values(result.uiState.glossVisibility).every(Boolean), 'Gloss must hide controls that do not affect its mask');
+	assert(result.uiState.bevelVisibility, 'Lighting and shade controls must return for bevel profiles');
+	Object.entries(result.profiles).forEach(([profile, values]) => {
+		assert(values.preview > 0, `${profile} bevel produced an empty mask`);
+		assert(values.preview === values.export, `${profile} preview/export bevel masks differ`);
+	});
+	assert(result.profiles.gloss.shade === 0, 'Gloss produced an inert shade mask');
+	assert(result.lightingResponds, 'Bevel angle and altitude did not change the generated lighting masks');
+	assert(result.spreadPixels > result.fillPixels, 'Shadow spread did not dilate the silhouette');
+	assert(result.spans === 2, 'Bevel preview did not reconcile highlight and shade spans');
+}
+
 async function runCheck(browser, label, checkFn) {
 	const page = await browser.newPage({ viewport: VIEWPORT });
 	try {
@@ -428,6 +540,7 @@ async function main() {
 		await runCheck(browser, '5. Rounded rectangle radius updates geometry and conditional UI', check5);
 		await runCheck(browser, '6. Hard-edge border keeps the transform box tight to the shape', check6);
 		await runCheck(browser, '7. Image fill preview/export, fit, persistence, and history stay aligned', check7);
+		await runCheck(browser, '8. Bevel profiles and shadow spread share preview/export masks', check8);
 		console.log('\nShape border verification finished with all checks passing.');
 	} finally {
 		await browser.close();

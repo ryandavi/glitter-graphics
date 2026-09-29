@@ -13,6 +13,7 @@ const SUITES = [
 	{ file: 'unit/gradient-presets.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/sparkles-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/frames-unit.js', tags: ['unit', 'effects', 'quick'] },
+	{ file: 'unit/bevel-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'parity/export-compositor-fast-path.js', tags: ['export'] },
 	{ file: 'parity/export-transparency-correctness.js', tags: ['export'] },
 	{ file: 'parity/export-formats-verify.js', tags: ['export'] },

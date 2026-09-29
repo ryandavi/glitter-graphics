@@ -86,7 +86,7 @@ class TextGlitterManager {
 			type: LayerType.TEXT_GLITTER,
 			editor: this.editor,
 			getLayer: () => this.getActiveTextLayer(),
-			ensureSlot: (layer, key) => this.ensureEffectData(layer, key),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getEffectDefaults(key)),
 			getSlotDefaults: (key) => this.getEffectDefaults(key),
 			apply: (layer, mutate, change) => this.runLayoutRefreshWithAnchor(layer, mutate, change.live
 				? { saveHistory: false, refreshLayerList: false, refreshPreview: Boolean(change.geometry) }
@@ -230,6 +230,7 @@ class TextGlitterManager {
 			await editLayout(layer, () => {
 				layer.textData.border = null;
 				layer.textData.shadow = null;
+				layer.textData.bevel = buildDefaultBevel();
 				layer.textData.sparkles = null;
 				layer.textData.textBackground = this.getDefaultTextBackground();
 				delete layer.textData.effectDrafts;
@@ -418,6 +419,10 @@ class TextGlitterManager {
 		});
 	}
 
+	getDefaultBevel() {
+		return buildDefaultBevel();
+	}
+
 	getDefaultFill() {
 		return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text });
 	}
@@ -465,11 +470,17 @@ class TextGlitterManager {
 		if (layer.textData.shadow) {
 			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, this.getDefaultShadow());
 		}
+		layer.textData.bevel ||= this.getDefaultBevel();
+		layer.textData.bevel.highlight = mergeSlotEffectDefaults(layer.textData.bevel.highlight, this.getDefaultBevel().highlight);
+		layer.textData.bevel.shade = mergeSlotEffectDefaults(layer.textData.bevel.shade, this.getDefaultBevel().shade);
+		normalizeBevelData(layer.textData.bevel.highlight);
 		layer.textData.sparkles = normalizeSparklesData(layer.textData.sparkles);
 		layer.textData.fill = mergeSlotEffectDefaults(layer.textData.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(layer.textData.fill);
 		normalizeSlotTextureCoordinates(layer.textData.border);
 		normalizeSlotTextureCoordinates(layer.textData.shadow);
+		normalizeSlotTextureCoordinates(layer.textData.bevel.highlight);
+		normalizeSlotTextureCoordinates(layer.textData.bevel.shade);
 		if (!layer.textData.boxMode) {
 			layer.textData.boxMode = CONFIG.tools.text.defaultBoxMode || 'auto';
 		}
@@ -1048,6 +1059,8 @@ class TextGlitterManager {
 		if (effectName === 'shadow') return this.getDefaultShadow();
 		if (effectName === 'backgroundFill') return this.getDefaultBackgroundFill();
 		if (effectName === 'sparkles') return buildDefaultSparkles();
+		if (effectName === 'bevelHighlight') return this.getDefaultBevel().highlight;
+		if (effectName === 'bevelShade') return this.getDefaultBevel().shade;
 		return this.getDefaultBorder();
 	}
 
@@ -1094,6 +1107,7 @@ class TextGlitterManager {
 			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
+			textData.shadow ? textData.shadow.spread : null,
 			// Text Background's geometry-affecting fields only (never `fill` —
 			// paint-only changes must not invalidate layout/geometry caching).
 			textData.textBackground?.enabled
@@ -1132,6 +1146,7 @@ class TextGlitterManager {
 		const borderWidth = getBorderOutsidePadding(layer.textData.border);
 		const shadowOffsetX = layer.textData.shadow?.offsetX || 0;
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
+		const shadowSpread = Math.max(0, layer.textData.shadow?.spread || 0);
 		const boxMode = layer.textData.boxMode || 'auto';
 
 		ctx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
@@ -1253,10 +1268,10 @@ class TextGlitterManager {
 		}
 		const backgroundBounds = textBackgroundGeometry?.bounds;
 
-		const artLeft = Math.min(textInkLeft - borderWidth, textInkLeft + shadowOffsetX, backgroundBounds ? backgroundBounds.x : Infinity);
-		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
-		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY, backgroundBounds ? backgroundBounds.y : Infinity);
-		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
+		const artLeft = Math.min(textInkLeft - borderWidth, textInkLeft + shadowOffsetX - shadowSpread, backgroundBounds ? backgroundBounds.x : Infinity);
+		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX + shadowSpread, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY - shadowSpread, backgroundBounds ? backgroundBounds.y : Infinity);
+		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY + shadowSpread, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		// Body (the layer's frame for handles and hit-testing): the layout box,
 		// the glyphs with their border, and the background plate. No shadow, and
 		// the layout box rather than ink, so the box holds still while typing.
@@ -1576,9 +1591,10 @@ class TextGlitterManager {
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
 			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
-			masks[entry.key] = entry.role === 'shadow'
-				? createOffsetMaskCanvas(measurement.canvas, entry.data.offsetX || 0, entry.data.offsetY || 0)
-				: this.getSlotMask(layer, measurement, entry)?.canvas || null;
+			const slotMask = this.getSlotMask(layer, measurement, entry)?.canvas || null;
+			masks[entry.key] = entry.role === 'shadow' && slotMask
+				? createOffsetMaskCanvas(slotMask, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				: slotMask;
 		});
 		return masks;
 	}
@@ -1776,6 +1792,16 @@ class TextGlitterManager {
 		if (slot.key === 'border') {
 			const { canvas, cacheKey } = this.getBorderMaskCanvas(layer, measurement, slot.data);
 			return { canvas, bucket: 'border', cacheKey };
+		}
+		if (slot.role === 'shadow' && Number(slot.data.spread) > 0) {
+			const spread = Math.round(slot.data.spread);
+			return { canvas: createDilatedMaskCanvas(measurement.canvas, spread, 'round'), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${spread}` };
+		}
+		if (slot.role === 'bevel') {
+			const bevel = layer.textData.bevel?.highlight;
+			const key = `${bevel?.profile}:${bevel?.size}:${bevel?.depth}:${bevel?.angle}:${bevel?.altitude}:${bevel?.soften}`;
+			if (measurement._bevelMaskCache?.key !== key) measurement._bevelMaskCache = { key, ...createBevelMaskCanvases(measurement.canvas, bevel) };
+			return { canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, bucket: slot.key, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
 		}
 		return { canvas: measurement.canvas, bucket: 'fill', cacheKey: measurement.key };
 	}
@@ -2099,6 +2125,11 @@ class TextGlitterManager {
 		if (layer.textData.shadow && PREFERENCES.get('scaleEffects')) {
 			layer.textData.shadow.offsetX = Math.round(layer.textData.shadow.offsetX * bakedFactor);
 			layer.textData.shadow.offsetY = Math.round(layer.textData.shadow.offsetY * bakedFactor);
+			layer.textData.shadow.spread = Math.round(layer.textData.shadow.spread * bakedFactor);
+		}
+		if (layer.textData.bevel?.enabled && PREFERENCES.get('scaleEffects')) {
+			layer.textData.bevel.highlight.size = Math.max(1, Math.round(layer.textData.bevel.highlight.size * bakedFactor));
+			layer.textData.bevel.highlight.soften = Math.round(layer.textData.bevel.highlight.soften * bakedFactor);
 		}
 		if (PREFERENCES.get('scaleTextures')) {
 			layer.textData.fill.scale = roundSlotTextureScale(layer.textData.fill.scale * bakedFactor);
@@ -2107,6 +2138,10 @@ class TextGlitterManager {
 			}
 			if (layer.textData.shadow) {
 				layer.textData.shadow.scale = roundSlotTextureScale((layer.textData.shadow.scale ?? 100) * bakedFactor);
+			}
+			if (layer.textData.bevel?.enabled) {
+				layer.textData.bevel.highlight.scale = roundSlotTextureScale((layer.textData.bevel.highlight.scale ?? 100) * bakedFactor);
+				layer.textData.bevel.shade.scale = roundSlotTextureScale((layer.textData.bevel.shade.scale ?? 100) * bakedFactor);
 			}
 		}
 		transform.scale.x = (scaleX / bakedFactor) * 100;

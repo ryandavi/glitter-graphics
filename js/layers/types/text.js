@@ -19,6 +19,14 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		},
 		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId', panelPrefix: 'textFill', modes: ['none', 'glitter', 'solid'] },
 		{
+			key: 'bevelHighlight', role: 'bevel', path: 'textData.bevel.highlight', enabledPath: 'textData.bevel.enabled',
+			glitterDefault: 'fillGlitterId', panelPrefix: 'textBevel', modes: ['glitter', 'solid']
+		},
+		{
+			key: 'bevelShade', role: 'bevel', path: 'textData.bevel.shade', enabledPath: 'textData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'textBevelShade', modes: ['glitter', 'solid']
+		},
+		{
 			key: 'sparkles', role: 'sparkles', path: 'textData.sparkles', draftPath: 'textData.effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'textSparkles', modes: ['glitter', 'solid']

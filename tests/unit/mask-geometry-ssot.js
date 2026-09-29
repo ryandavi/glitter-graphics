@@ -87,3 +87,22 @@ assert(filled(9, 9), 'Hard border must retain diagonal contour steps inside the 
 assert(!filled(10, 10), 'Hard border must omit square corner pixels outside four-neighbor reach');
 assert.strictEqual(hardDilation.pixels.filter(Boolean).length, 13, 'Radius-two hard border must use a Manhattan-distance cross');
 process.stdout.write('PASS hard border uses four-neighbor expansion\n');
+
+const distanceGeometry = vm.runInNewContext(`${geometrySource}; ({ exactEuclideanDistanceTransform });`, {
+	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 }, maskAlphaThreshold: 128 } },
+	createAppCanvas: createCanvas,
+	getOptionValues: () => ['inside', 'center', 'outside'],
+	Math,
+	Set,
+	Float64Array,
+	Float32Array,
+	Int32Array,
+	Uint8Array
+});
+const fixture = new Uint8Array(25);
+fixture[2 * 5 + 2] = 1;
+const squared = distanceGeometry.exactEuclideanDistanceTransform(fixture, 5, 5, 1);
+assert.strictEqual(squared[2 * 5 + 2], 0, 'Distance at the target pixel must be zero');
+assert.strictEqual(squared[2 * 5 + 4], 4, 'Cardinal distance must be exact');
+assert.strictEqual(squared[4 * 5 + 4], 8, 'Diagonal distance must be exact');
+process.stdout.write('PASS exact Euclidean distance transform\n');

@@ -370,7 +370,7 @@ class SceneCompositor {
 		const tempCanvas = scratch?.sourceCanvas;
 		if (!tempCanvas) throw new Error(`Missing sticker scratch for layer ${layer.id}`);
 		this._renderPatternSourceInto(tempCanvas, imageData, layer.stickerData.colorAdjust);
-		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch);
+		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, 'behind');
 
 		// Sparkles composite around the image at the image's own pixel density
 		// (a resolution variant may be denser than the layer box), on a canvas
@@ -402,24 +402,60 @@ class SceneCompositor {
 			padX,
 			padY
 		});
+		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, 'front');
 	}
 
-	// Sticker shadows share the slot paint path. The shadow is the sticker's own
-	// silhouette on a canvas padded by its offset, so it is drawn with the
-	// sticker transform rather than composited into a slot stack.
-	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch) {
+	// Sticker effects share the slot paint path. Behind effects and front bevel
+	// masks are transformed with the authored image instead of entering the
+	// text/shape slot-stack compositor.
+	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, phase = 'behind') {
 		if (!scratch?.shadowMaskCanvas || !scratch?.shadowFillCanvas) return;
+		let maskStickerCanvas = stickerCanvas;
+		if (layer.stickerData.border?.unionFrames && layer.stickerData.isAnimated) {
+			const frames = resolvedFramesBySource?.get(layer.id) || [];
+			const union = scratch.unionSourceCanvas;
+			if (!scratch.unionReady) {
+				ensureCanvasSize(union, stickerCanvas.width, stickerCanvas.height);
+				const unionCtx = union.getContext('2d', { alpha: true });
+				resetCanvasContext(unionCtx, union.width, union.height);
+				frames.forEach((frame) => {
+					const imageData = this._getFrameImageData(frame, stickerCanvas.width, stickerCanvas.height);
+					if (!imageData) return;
+					ensureCanvasSize(scratch.unionFrameCanvas, imageData.width, imageData.height);
+					const frameCtx = scratch.unionFrameCanvas.getContext('2d', { alpha: true });
+					resetCanvasContext(frameCtx, imageData.width, imageData.height);
+					frameCtx.putImageData(imageData, 0, 0);
+					unionCtx.drawImage(scratch.unionFrameCanvas, 0, 0, union.width, union.height);
+				});
+				scratch.unionReady = frames.length > 0;
+			}
+			if (frames.length) maskStickerCanvas = union;
+		}
 		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
-			const pad = getShadowCanvasPadding(item.data);
+			if ((phase === 'front') !== (item.role === 'bevel')) return;
+			const density = maskStickerCanvas.width / Math.max(1, layer.stickerData.width);
+			const effectRadius = item.role === 'shadow' ? Number(item.data.spread) || 0 : item.role === 'border' ? Number(item.data.widthPx) || 0 : 0;
+			const pad = Math.ceil((item.role === 'shadow' ? getShadowCanvasPadding(item.data) : effectRadius + 2) * density);
 			const effectMask = scratch.shadowMaskCanvas;
-			ensureCanvasSize(effectMask, stickerCanvas.width + pad * 2, stickerCanvas.height + pad * 2);
+			ensureCanvasSize(effectMask, maskStickerCanvas.width + pad * 2, maskStickerCanvas.height + pad * 2);
 			const effectMaskCtx = scratch.shadowMaskCtx;
 			resetCanvasContext(effectMaskCtx, effectMask.width, effectMask.height);
-			effectMaskCtx.drawImage(stickerCanvas, pad + item.offsetX, pad + item.offsetY);
-			effectMask._textureOrigin = { x: item.offsetX, y: item.offsetY };
+			effectMaskCtx.drawImage(maskStickerCanvas, pad, pad);
+			let mask = effectMask;
+			if (item.role === 'shadow' && effectRadius > 0) mask = createDilatedMaskCanvas(effectMask, Math.round(effectRadius * density), 'round');
+			if (item.role === 'border') mask = createMaskDifferenceCanvas(createDilatedMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data)), effectMask);
+			if (item.role === 'bevel') {
+				const pair = createBevelMaskCanvases(effectMask, { ...layer.stickerData.bevel.highlight, size: layer.stickerData.bevel.highlight.size * density, soften: layer.stickerData.bevel.highlight.soften * density });
+				mask = item.key === 'bevelShade' ? pair.shade : pair.highlight;
+			}
+			mask._textureOrigin = { x: item.offsetX * density, y: item.offsetY * density };
 			this._renderFilledMaskInto(scratch.shadowFillCanvas, effectMask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
-			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, scratch.shadowFillCanvas.width, scratch.shadowFillCanvas.height, {
-				smooth: layer.stickerData.isPixelated === false
+			if (mask !== effectMask) this._renderFilledMaskInto(scratch.shadowFillCanvas, mask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
+			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, layer.stickerData.width, layer.stickerData.height, {
+				smooth: layer.stickerData.isPixelated === false,
+				pad: pad / density,
+				padX: pad / density - (item.offsetX || 0),
+				padY: pad / density - (item.offsetY || 0)
 			});
 		});
 	}
@@ -732,6 +768,8 @@ class SceneCompositor {
 			sourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			shadowMaskCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			shadowFillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			unionSourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			unionFrameCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			sparkleCanvas: createAppCanvas(0, 0, 'export/SceneCompositor')
 		};
 		scratch.shadowMaskCtx = scratch.shadowMaskCanvas.getContext('2d', { alpha: true });

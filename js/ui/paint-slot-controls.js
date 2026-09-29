@@ -363,6 +363,14 @@ function syncFieldControl(control, value) {
 	syncSlider(control, value);
 }
 
+function syncBevelProfileControls(prefix, profileValue) {
+	const gloss = getBevelProfile(profileValue).gloss === true;
+	[`${prefix}SizeRow`, `${prefix}AngleRow`, `${prefix}AltitudeRow`, `${prefix}ShadeCard`].forEach((id) => {
+		const element = document.getElementById(id);
+		if (element) element.hidden = gloss;
+	});
+}
+
 // Color adjust drags retint the slot's glitter chip, and the layers-list
 // swatch when the slot is the layer's own fill, without a panel reload.
 function refreshSlotFieldSwatch(host, layer, definition, binding) {
@@ -457,6 +465,13 @@ function bindPaintSlotControls(host) {
 				}));
 			});
 		});
+		if (definition.role === 'bevel') {
+			byId(`${prefix}Profile`)?.addEventListener('change', (event) => withLayer((layer) => {
+				const profile = getBevelProfile(event.target.value).id;
+				syncBevelProfileControls(prefix, profile);
+				return host.apply(layer, () => { host.ensureSlot(layer, key).profile = profile; }, { geometry: true });
+			}));
+		}
 		if (definition.role === 'sparkles') bindSparkleSlotControls(host, definition, withLayer);
 
 		bindSlotTextureCoordinateControls({
@@ -540,6 +555,11 @@ function syncPaintSlotControls(host, layer) {
 		});
 
 		syncSlotOptionButtons(prefix, definition.role, shown);
+		if (definition.role === 'bevel') {
+			const profile = byId(`${prefix}Profile`);
+			if (profile) profile.value = getBevelProfile(shown.profile).id;
+			syncBevelProfileControls(prefix, shown.profile);
+		}
 		if (definition.role === 'sparkles') syncSparkleSlotControls(host, definition, layer, shown);
 		if (definition.role === 'border') {
 			if (byId(`${prefix}StyleDotted`)) {

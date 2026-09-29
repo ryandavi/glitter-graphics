@@ -82,7 +82,7 @@ class ShapeGlitterManager {
 			type: LayerType.SHAPE,
 			editor: this.editor,
 			getLayer: () => this.getActiveShapeLayer(),
-			ensureSlot: (layer, key) => this.ensureEffectData(layer, key),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getSlotDefaults(key)),
 			getSlotDefaults: (key) => this.getSlotDefaults(key),
 			apply: (layer, mutate, change) => {
 				if (change.geometry) this.mutateGeometryPreservingShape(layer, mutate);
@@ -411,6 +411,7 @@ class ShapeGlitterManager {
 		this.mutateGeometryPreservingShape(layer, () => {
 			layer.shapeData.border = null;
 			layer.shapeData.shadow = null;
+			layer.shapeData.bevel = buildDefaultBevel();
 			layer.shapeData.sparkles = null;
 			delete layer.shapeData.effectDrafts;
 			delete layer.animation;
@@ -611,10 +612,16 @@ class ShapeGlitterManager {
 		});
 	}
 
+	getDefaultBevel() {
+		return buildDefaultBevel();
+	}
+
 	getSlotDefaults(key) {
 		if (key === 'border') return this.getDefaultBorder();
 		if (key === 'shadow') return this.getDefaultShadow();
 		if (key === 'sparkles') return buildDefaultSparkles();
+		if (key === 'bevelHighlight') return this.getDefaultBevel().highlight;
+		if (key === 'bevelShade') return this.getDefaultBevel().shade;
 		return this.getDefaultFill();
 	}
 
@@ -629,10 +636,16 @@ class ShapeGlitterManager {
 		if (data.border) data.border = mergeSlotEffectDefaults(data.border, this.getDefaultBorder());
 		if (data.shadow === undefined) data.shadow = null;
 		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, this.getDefaultShadow());
+		data.bevel ||= this.getDefaultBevel();
+		data.bevel.highlight = mergeSlotEffectDefaults(data.bevel.highlight, this.getDefaultBevel().highlight);
+		data.bevel.shade = mergeSlotEffectDefaults(data.bevel.shade, this.getDefaultBevel().shade);
+		normalizeBevelData(data.bevel.highlight);
 		data.sparkles = normalizeSparklesData(data.sparkles);
 		normalizeSlotTextureCoordinates(data.fill);
 		normalizeSlotTextureCoordinates(data.border);
 		normalizeSlotTextureCoordinates(data.shadow);
+		normalizeSlotTextureCoordinates(data.bevel.highlight);
+		normalizeSlotTextureCoordinates(data.bevel.shade);
 		layer.transform ||= createDefaultTransform();
 	}
 
@@ -682,7 +695,8 @@ class ShapeGlitterManager {
 				height,
 				fill,
 				border: null,
-				shadow: null
+				shadow: null,
+				bevel: this.getDefaultBevel()
 			}
 		};
 
@@ -750,7 +764,7 @@ class ShapeGlitterManager {
 			d.height,
 			LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer) ? d.cornerRadiusPx : null,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
-			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null,
+			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY, d.shadow.spread] : null,
 			shouldUseCrispMaskEdges(),
 			CONFIG.rendering.maskAlphaThreshold
 		]);
@@ -782,16 +796,17 @@ class ShapeGlitterManager {
 		const borderExtent = getBorderOutsidePadding(d.border);
 		const shX = d.shadow?.offsetX || 0;
 		const shY = d.shadow?.offsetY || 0;
+		const shSpread = Math.max(0, d.shadow?.spread || 0);
 
-		const inkLeft = Math.min(-borderReserve, shX);
-		const inkRight = Math.max(w + borderReserve, w + shX);
-		const inkTop = Math.min(-borderReserve, shY);
-		const inkBottom = Math.max(h + borderReserve, h + shY);
+		const inkLeft = Math.min(-borderReserve, shX - shSpread);
+		const inkRight = Math.max(w + borderReserve, w + shX + shSpread);
+		const inkTop = Math.min(-borderReserve, shY - shSpread);
+		const inkBottom = Math.max(h + borderReserve, h + shY + shSpread);
 
-		const frameLeft = Math.min(-borderExtent, shX);
-		const frameRight = Math.max(w + borderExtent, w + shX);
-		const frameTop = Math.min(-borderExtent, shY);
-		const frameBottom = Math.max(h + borderExtent, h + shY);
+		const frameLeft = Math.min(-borderExtent, shX - shSpread);
+		const frameRight = Math.max(w + borderExtent, w + shX + shSpread);
+		const frameTop = Math.min(-borderExtent, shY - shSpread);
+		const frameBottom = Math.max(h + borderExtent, h + shY + shSpread);
 
 		const layoutX = padding - inkLeft;
 		const layoutY = padding - inkTop;
@@ -965,9 +980,10 @@ class ShapeGlitterManager {
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
 			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
-			masks[entry.key] = entry.role === 'shadow'
-				? createOffsetMaskCanvas(measurement.canvas, entry.data.offsetX || 0, entry.data.offsetY || 0)
-				: this.getBorderMaskCanvas(measurement, entry.data);
+			const slotMask = this.getSlotMask(measurement, entry, layer)?.canvas || null;
+			masks[entry.key] = entry.role === 'shadow' && slotMask
+				? createOffsetMaskCanvas(slotMask, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				: slotMask;
 		});
 		return masks;
 	}
@@ -1056,7 +1072,7 @@ class ShapeGlitterManager {
 			layer,
 			glitterLibrary: this.editor.glitterLibrary,
 			getMask: (item) => {
-				const mask = this.getSlotMask(measurement, item);
+				const mask = this.getSlotMask(measurement, item, layer);
 				return mask && { canvas: mask.canvas, url: this.getPreviewMaskDataUrl(mask.canvas, mask.cacheKey) };
 			}
 		});
@@ -1082,13 +1098,23 @@ class ShapeGlitterManager {
 
 	// The mask a slot paints through: the vector-stroked border mask, or the
 	// shape silhouette for the fill and (offset by the caller) the shadow.
-	getSlotMask(measurement, slot) {
+	getSlotMask(measurement, slot, layer = null) {
 		if (slot.key === 'border') {
 			const border = slot.data;
 			return {
 				canvas: this.getBorderMaskCanvas(measurement, border),
 				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}`
 			};
+		}
+		if (slot.role === 'shadow' && Number(slot.data.spread) > 0) {
+			const spread = Math.round(slot.data.spread);
+			return { canvas: createDilatedMaskCanvas(measurement.canvas, spread, 'round'), cacheKey: `${measurement.key}|shadow:${spread}` };
+		}
+		if (slot.role === 'bevel') {
+			const bevel = layer?.shapeData?.bevel?.highlight || slot.data;
+			const key = `${bevel?.profile}:${bevel?.size}:${bevel?.depth}:${bevel?.angle}:${bevel?.altitude}:${bevel?.soften}`;
+			if (measurement._bevelMaskCache?.key !== key) measurement._bevelMaskCache = { key, ...createBevelMaskCanvases(measurement.canvas, bevel) };
+			return { canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
 		}
 		return { canvas: measurement.canvas, cacheKey: `${measurement.key}|fill` };
 	}
@@ -1123,7 +1149,7 @@ class ShapeGlitterManager {
 		if (!stack) return;
 		const measurement = this.getMeasurementEntry(layer);
 		this.syncStackGeometry(stack, layer, measurement);
-		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(measurement, item).canvas);
+		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(measurement, item, layer).canvas);
 	}
 
 	// ===== TRANSFORM COMMIT (re-rasterize on scale) =====
@@ -1149,6 +1175,11 @@ class ShapeGlitterManager {
 		if (layer.shapeData.shadow && PREFERENCES.get('scaleEffects')) {
 			layer.shapeData.shadow.offsetX = Math.round(layer.shapeData.shadow.offsetX * sx);
 			layer.shapeData.shadow.offsetY = Math.round(layer.shapeData.shadow.offsetY * sy);
+			layer.shapeData.shadow.spread = Math.round(layer.shapeData.shadow.spread * effectScale);
+		}
+		if (layer.shapeData.bevel?.enabled && PREFERENCES.get('scaleEffects')) {
+			layer.shapeData.bevel.highlight.size = Math.max(1, Math.round(layer.shapeData.bevel.highlight.size * effectScale));
+			layer.shapeData.bevel.highlight.soften = Math.round(layer.shapeData.bevel.highlight.soften * effectScale);
 		}
 		if (PREFERENCES.get('scaleTextures')) {
 			layer.shapeData.fill.scale = roundSlotTextureScale((layer.shapeData.fill.scale ?? 100) * effectScale);
@@ -1157,6 +1188,10 @@ class ShapeGlitterManager {
 			}
 			if (layer.shapeData.shadow) {
 				layer.shapeData.shadow.scale = roundSlotTextureScale((layer.shapeData.shadow.scale ?? 100) * effectScale);
+			}
+			if (layer.shapeData.bevel?.enabled) {
+				layer.shapeData.bevel.highlight.scale = roundSlotTextureScale((layer.shapeData.bevel.highlight.scale ?? 100) * effectScale);
+				layer.shapeData.bevel.shade.scale = roundSlotTextureScale((layer.shapeData.bevel.shade.scale ?? 100) * effectScale);
 			}
 		}
 		t.scale.x = 100;

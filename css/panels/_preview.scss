@@ -897,8 +897,10 @@ body.mask-editing {
 	// animation is active, and this stacking still needs to apply then.
 	img.sticker-image { position: relative; z-index: 2; }
 	.sticker-effect-shadow { z-index: 0; }
+	.sticker-effect-border { z-index: 1; }
+	.sticker-effect-bevel { z-index: 3; }
 	// Sparkles drawn behind sit between the shadow and the image.
-	.sparkle-layer { z-index: 3; }
+	.sparkle-layer { z-index: 4; }
 	.sparkle-layer[data-order="behind"] { z-index: 1; }
 }
 

@@ -292,6 +292,7 @@ const CONFIG = deepFreeze({
 					glitterLayer: 111,
 					text: 17,
 					shape: 67,
+					sticker: 17,
 					canvasBackground: 101,
 					frame: 9
 				},
@@ -299,7 +300,8 @@ const CONFIG = deepFreeze({
 				sparklesGlitterId: 17,
 				borderGlitterId: {
 					text: 9,
-					shape: 68
+					shape: 68,
+					sticker: 9
 				},
 				shadowGlitterId: {
 					text: 109,
@@ -858,7 +860,8 @@ const CONFIG = deepFreeze({
 		// Undo keeps at least this many steps whatever their size.
 		minHistorySteps: 5,
 		// A GIF export holds every composed frame (RGBA) plus its indexed copy.
-		gifBytesPerPixel: 5
+		gifBytesPerPixel: 5,
+		stickerEffectMaskCacheEntries: 8
 	},
 
 	debug: {

@@ -18,6 +18,14 @@ registerLayerType(LayerType.SHAPE, {
 			fields: { imageScalePercent: 'shapeImageScale', offsetXPercent: 'shapeImageOffsetX', offsetYPercent: 'shapeImageOffsetY' }
 		},
 		{
+			key: 'bevelHighlight', role: 'bevel', path: 'shapeData.bevel.highlight', enabledPath: 'shapeData.bevel.enabled',
+			glitterDefault: 'fillGlitterId', panelPrefix: 'shapeBevel', modes: ['glitter', 'solid']
+		},
+		{
+			key: 'bevelShade', role: 'bevel', path: 'shapeData.bevel.shade', enabledPath: 'shapeData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'shapeBevelShade', modes: ['glitter', 'solid']
+		},
+		{
 			key: 'sparkles', role: 'sparkles', path: 'shapeData.sparkles', draftPath: 'shapeData.effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'shapeSparkles', modes: ['glitter', 'solid']
