@@ -645,7 +645,8 @@ const PANEL_SCHEMAS = {
 					{ id: 'stickerBorderEdgeRounded', label: 'Smooth', value: 'round', active: true },
 					{ id: 'stickerBorderEdgeHard', label: 'Pixel', value: 'hard' }
 				] }, { kind: 'checkboxList', items: [
-					{ id: 'stickerBorderUnionFrames', label: 'Use all animation frames', title: 'Build one stable outline from the union of every GIF frame' }
+					{ id: 'stickerBorderFillInterior', label: 'Fill inside', title: 'Extend the outline paint behind the full sticker as a solid backing' },
+					{ id: 'stickerBorderUnionFrames', label: 'Use all animation frames', checked: true, title: 'Build one stable outline from the union of every GIF frame' }
 				] }]
 			},
 			...createBevelPanelSpecs('stickerBevel'),

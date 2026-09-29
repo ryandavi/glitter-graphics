@@ -44,6 +44,36 @@ async function getBrushAlphaProfile(page, { crisp, softness, flow = 100 }) {
 	}, { crispEdges: crisp, brushSoftness: softness, brushFlow: flow });
 }
 
+async function getStickerOutlineProfiles(page) {
+	return page.evaluate(() => {
+		PREFERENCES.set('crispMaskEdges', true);
+		const source = createAppCanvas(7, 7, 'tests/sticker-outline');
+		const ctx = source.getContext('2d', { willReadFrequently: true, alpha: true });
+		const image = ctx.createImageData(7, 7);
+		image.data[(3 * 7 + 3) * 4 + 3] = 255;
+		image.data[(3 * 7 + 2) * 4 + 3] = 96;
+		image.data[(3 * 7 + 4) * 4 + 3] = 180;
+		ctx.putImageData(image, 0, 0);
+		binarizeCanvasAlpha(ctx);
+
+		const profile = (canvas) => ({
+			alpha: [...new Set(Array.from(canvas.getContext('2d', { willReadFrequently: true })
+				.getImageData(0, 0, canvas.width, canvas.height).data)
+				.filter((_, index) => index % 4 === 3))].sort((a, b) => a - b),
+			center: canvas.getContext('2d', { willReadFrequently: true }).getImageData(3, 3, 1, 1).data[3]
+		});
+		const smooth = createOutlineMaskCanvas(source, 2, 'round', false);
+		const pixel = createOutlineMaskCanvas(source, 2, 'hard', false);
+		const backing = createOutlineMaskCanvas(source, 2, 'round', true);
+		return {
+			defaultUnionFrames: window.editor.stickerManager.getDefaultBorder().unionFrames,
+			smooth: profile(smooth),
+			pixel: profile(pixel),
+			backing: profile(backing)
+		};
+	});
+}
+
 async function main() {
 	const browser = await chromium.launch({ headless: true });
 	const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
@@ -62,6 +92,13 @@ async function main() {
 		const lowFlow = await getBrushAlphaProfile(page, { crisp: true, softness: 0, flow: 40 });
 		const nonzeroFlow = lowFlow.paintAlpha.filter((alpha) => alpha > 0);
 		assert(nonzeroFlow.length === 1, `Flow introduced a blurred edge ramp: ${lowFlow.paintAlpha}`);
+
+		const stickerOutlines = await getStickerOutlineProfiles(page);
+		assert(stickerOutlines.defaultUnionFrames, 'Sticker outlines did not default to all animation frames');
+		assert(stickerOutlines.smooth.alpha.every((alpha) => alpha === 0 || alpha === 255), `Smooth sticker outline retained partial alpha: ${stickerOutlines.smooth.alpha}`);
+		assert(stickerOutlines.pixel.alpha.every((alpha) => alpha === 0 || alpha === 255), `Pixel sticker outline retained partial alpha: ${stickerOutlines.pixel.alpha}`);
+		assert(stickerOutlines.smooth.center === 0, 'Outline-only sticker mask did not subtract its interior');
+		assert(stickerOutlines.backing.center === 255, 'Filled sticker outline did not retain its interior backing');
 
 		const pointerPressure = await page.evaluate(() => {
 			const maskEditor = window.editor.maskEditor;
@@ -101,6 +138,8 @@ async function main() {
 		console.log('PASS Disabling crisp mode restores antialiased brush edges');
 		console.log('PASS Softness remains feathered independently of antialiasing');
 		console.log('PASS Flow remains uniform across a crisp stamp');
+		console.log('PASS Sticker outline styles are binary in crisp mode and support a filled backing');
+		console.log('PASS Sticker outlines use all animation frames by default');
 		console.log('PASS Mouse and Force Touch trackpad input ignores pressure while pen pressure is preserved');
 		console.log('PASS Antialias Edges defaults off and persists when enabled');
 	} finally {

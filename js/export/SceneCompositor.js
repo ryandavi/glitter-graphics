@@ -440,10 +440,12 @@ class SceneCompositor {
 			ensureCanvasSize(effectMask, maskStickerCanvas.width + pad * 2, maskStickerCanvas.height + pad * 2);
 			const effectMaskCtx = scratch.shadowMaskCtx;
 			resetCanvasContext(effectMaskCtx, effectMask.width, effectMask.height);
+			effectMaskCtx.imageSmoothingEnabled = layer.stickerData.isPixelated === false;
 			effectMaskCtx.drawImage(maskStickerCanvas, pad, pad);
+			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(effectMaskCtx);
 			let mask = effectMask;
 			if (item.role === 'shadow' && effectRadius > 0) mask = createDilatedMaskCanvas(effectMask, Math.round(effectRadius * density), 'round');
-			if (item.role === 'border') mask = createMaskDifferenceCanvas(createDilatedMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data)), effectMask);
+			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data), item.data.fillInterior);
 			if (item.role === 'bevel') {
 				const pair = createBevelMaskCanvases(effectMask, { ...layer.stickerData.bevel.highlight, size: layer.stickerData.bevel.highlight.size * density, soften: layer.stickerData.bevel.highlight.soften * density });
 				mask = item.key === 'bevelShade' ? pair.shade : pair.highlight;

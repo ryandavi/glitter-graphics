@@ -71,6 +71,11 @@ function createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
 	return canvas;
 }
 
+function createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle = 'round', fillInterior = false) {
+	const expanded = createDilatedMaskCanvas(sourceCanvas, widthPx, edgeStyle);
+	return fillInterior ? expanded : createMaskDifferenceCanvas(expanded, sourceCanvas);
+}
+
 function createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	const nextRadius = Math.max(0, Math.round(radius));
 	if (nextRadius <= 0) return sourceCanvas;
@@ -152,12 +157,13 @@ function distanceTransform1D(f, d, length) {
 	z[1] = Infinity;
 	for (let q = first + 1; q < length; q++) {
 		if (!Number.isFinite(f[q])) continue;
-		let s;
-		do {
-			const p = v[k];
-			s = ((f[q] + q * q) - (f[p] + p * p)) / (2 * q - 2 * p);
-			if (s <= z[k]) k--;
-		} while (s <= z[k]);
+		// Recompute the intersection after every pop; z[0] = -Infinity stops it.
+		const intersect = (p) => ((f[q] + q * q) - (f[p] + p * p)) / (2 * q - 2 * p);
+		let s = intersect(v[k]);
+		while (s <= z[k]) {
+			k--;
+			s = intersect(v[k]);
+		}
 		k++;
 		v[k] = q;
 		z[k] = s;

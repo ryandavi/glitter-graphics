@@ -102,13 +102,16 @@ class StickerManager extends ContentManager {
 		this.ui.fillCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fill'));
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
-		document.getElementById('stickerBorderUnionFrames')?.addEventListener('change', (event) => {
+		[
+			['stickerBorderFillInterior', 'fillInterior'],
+			['stickerBorderUnionFrames', 'unionFrames']
+		].forEach(([id, property]) => document.getElementById(id)?.addEventListener('change', (event) => {
 			const layer = this.fieldHost.getLayer();
 			if (!layer) return;
 			this.fieldHost.apply(layer, () => {
-				this.fieldHost.ensureSlot(layer, 'border').unionFrames = event.target.checked;
+				this.fieldHost.ensureSlot(layer, 'border')[property] = event.target.checked;
 			}, { geometry: true });
-		});
+		}));
 		this.ui.resetEffects?.addEventListener('click', () => {
 			const layer = this.fieldHost.getLayer();
 			if (!layer) return;
@@ -143,12 +146,16 @@ class StickerManager extends ContentManager {
 	}
 
 	getDefaultBorder() {
-		return buildDefaultBorder({
-			slot: getPaintSlotDefinition(LayerType.STICKER, 'border'),
-			fallbackMode: 'solid',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.sticker,
-			includeColorAdjust: true
-		});
+		return {
+			...buildDefaultBorder({
+				slot: getPaintSlotDefinition(LayerType.STICKER, 'border'),
+				fallbackMode: 'solid',
+				defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.sticker,
+				includeColorAdjust: true
+			}),
+			fillInterior: CONFIG.tools.stickers.outline.fillInterior,
+			unionFrames: CONFIG.tools.stickers.outline.useAllFrames
+		};
 	}
 
 	getDefaultBevel() {
@@ -255,9 +262,11 @@ class StickerManager extends ContentManager {
 		syncFieldControls(this.fieldHost, layer);
 		const unionFrames = document.getElementById('stickerBorderUnionFrames');
 		if (unionFrames) {
-			unionFrames.checked = Boolean(layer.stickerData.border?.unionFrames);
+			unionFrames.checked = layer.stickerData.border?.unionFrames ?? CONFIG.tools.stickers.outline.useAllFrames;
 			unionFrames.disabled = !layer.stickerData.isAnimated;
 		}
+		const fillInterior = document.getElementById('stickerBorderFillInterior');
+		if (fillInterior) fillInterior.checked = layer.stickerData.border?.fillInterior ?? CONFIG.tools.stickers.outline.fillInterior;
 		this.refreshColorAdjustVisuals(layer);
 		this.updatePickerStrip();
 	}
@@ -266,27 +275,37 @@ class StickerManager extends ContentManager {
 	// never magnifies a small native outline into a lumpy edge.
 	reconcileStickerEffectSpans(layer, element, img) {
 		if (!img.complete || !img.naturalWidth) return;
-		const width = Math.max(1, Math.round(layer.stickerData.width));
-		const height = Math.max(1, Math.round(layer.stickerData.height));
-		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, layer.stickerData.shadow?.spread || 0));
+		const transform = getLayerTransform(layer);
+		const scaleX = Math.max(0.01, Math.abs(transform.scale.x) / 100);
+		const scaleY = Math.max(0.01, Math.abs(transform.scale.y) / 100);
+		const effectScale = Math.max(scaleX, scaleY);
+		const width = Math.max(1, Math.round(layer.stickerData.width * scaleX));
+		const height = Math.max(1, Math.round(layer.stickerData.height * scaleY));
+		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, layer.stickerData.shadow?.spread || 0) * effectScale);
 		const source = createAppCanvas(width + pad * 2, height + pad * 2, 'layers/StickerManager');
 		const sourceCtx = source.getContext('2d', { willReadFrequently: true, alpha: true });
 		const unionKey = `${layer.stickerData.baseUrl || layer.stickerData.url}:${width}x${height}`;
 		const union = layer.stickerData.border?.unionFrames ? this.effectMaskCache.get(unionKey) : null;
+		sourceCtx.imageSmoothingEnabled = layer.stickerData.isPixelated === false;
 		if (union) sourceCtx.drawImage(union, pad, pad, width, height);
 		else {
 			sourceCtx.drawImage(img, pad, pad, width, height);
 			if (layer.stickerData.border?.unionFrames) this.ensureStickerUnionMask(layer, unionKey);
 		}
+		if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(sourceCtx);
 		source._textureOrigin = { x: -pad, y: -pad };
 		const existing = new Map(Array.from(element.querySelectorAll('.sticker-effect-layer')).map((span) => [span.dataset.spanKey, span]));
 		let bevelMasks = null;
 		buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)).forEach((item) => {
 			let mask = source;
-			if (item.role === 'shadow' && Number(item.data.spread) > 0) mask = createDilatedMaskCanvas(source, item.data.spread, 'round');
-			if (item.role === 'border') mask = createMaskDifferenceCanvas(createDilatedMaskCanvas(source, item.data.widthPx, getBorderEdgeStyle(item.data)), source);
+			if (item.role === 'shadow' && Number(item.data.spread) > 0) mask = createDilatedMaskCanvas(source, item.data.spread * effectScale, 'round');
+			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx * effectScale, getBorderEdgeStyle(item.data), item.data.fillInterior);
 			if (item.role === 'bevel') {
-				bevelMasks ||= createBevelMaskCanvases(source, layer.stickerData.bevel.highlight);
+				bevelMasks ||= createBevelMaskCanvases(source, {
+					...layer.stickerData.bevel.highlight,
+					size: layer.stickerData.bevel.highlight.size * effectScale,
+					soften: layer.stickerData.bevel.highlight.soften * effectScale
+				});
 				mask = item.key === 'bevelShade' ? bevelMasks.shade : bevelMasks.highlight;
 			}
 			let span = existing.get(item.key);
@@ -299,7 +318,7 @@ class StickerManager extends ContentManager {
 			applySlotSpanMask(span, source.width, source.height, mask.toDataURL('image/png'));
 			span.style.left = `${-pad}px`;
 			span.style.top = `${-pad}px`;
-			applySlotSpanOffset(span, item.offsetX, item.offsetY);
+			applySlotSpanOffset(span, item.offsetX * scaleX, item.offsetY * scaleY);
 			span.style.imageRendering = item.role === 'border' && getBorderEdgeStyle(item.data) === 'hard' ? 'pixelated' : '';
 			applyPaintSourceToElement(span, item.source, { glitterLibrary: this.editor.glitterLibrary, layer, maskCanvas: mask });
 			existing.delete(item.key);
@@ -831,16 +850,23 @@ class StickerManager extends ContentManager {
 	async commitResolutionSwap(layer) {
 		if (layer.type !== LayerType.STICKER || layer.stickerData.isEmpty) return;
 		const { baseUrl, variantUrls, width: nativeWidth } = layer.stickerData;
-		if (!baseUrl || !variantUrls || !Object.keys(variantUrls).length) return;
+		if (!baseUrl || !variantUrls || !Object.keys(variantUrls).length) {
+			this.renderLayer(layer);
+			return;
+		}
 
 		const scalePercent = layer.transform?.scale?.x ?? 100;
 		const renderedWidth = nativeWidth * (scalePercent / 100);
 		const bestUrl = StickerVariants.pickBestUrl(baseUrl, nativeWidth, variantUrls, renderedWidth);
-		if (bestUrl === layer.stickerData.url) return;
+		if (bestUrl === layer.stickerData.url) {
+			this.renderLayer(layer);
+			return;
+		}
 
 		try {
 			await AssetImageCache.get(bestUrl);
 		} catch (error) {
+			this.renderLayer(layer);
 			return; // Keep the current source if the variant fails to load.
 		}
 		layer.stickerData.url = bestUrl;

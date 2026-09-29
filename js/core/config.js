@@ -423,6 +423,10 @@ const CONFIG = deepFreeze({
 					flipY: false
 				}
 			},
+			outline: {
+				useAllFrames: true,
+				fillInterior: false
+			},
 			rotationSnapTolerance: 5,
 			transform: {
 				// Also snaps sticker scale to whole-pixel sizes (snapScaleToWholePixels).

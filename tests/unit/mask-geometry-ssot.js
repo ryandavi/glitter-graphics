@@ -7,7 +7,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..', '..');
 const SHARED_GEOMETRY = [
-	'createMaskDifferenceCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
+	'createMaskDifferenceCanvas', 'createOutlineMaskCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
 	'getMorphOffsets', 'getBorderPlacement', 'getBorderEdgeStyle', 'getBorderDrawOrder'
 ];
 
@@ -56,9 +56,13 @@ const createCanvas = () => {
 						? sourcePixels[sourceY * source.width + sourceX]
 						: 0;
 					const index = y * canvas.width + x;
-					canvas.pixels[index] = context.globalCompositeOperation === 'destination-in'
-						? Math.min(canvas.pixels[index], sourceValue)
-						: Math.max(canvas.pixels[index], sourceValue);
+					if (context.globalCompositeOperation === 'destination-in') {
+						canvas.pixels[index] = Math.min(canvas.pixels[index], sourceValue);
+					} else if (context.globalCompositeOperation === 'destination-out') {
+						canvas.pixels[index] = sourceValue ? 0 : canvas.pixels[index];
+					} else {
+						canvas.pixels[index] = Math.max(canvas.pixels[index], sourceValue);
+					}
 				}
 			}
 		}
@@ -67,7 +71,7 @@ const createCanvas = () => {
 	return canvas;
 };
 const geometrySource = fs.readFileSync(path.join(ROOT, 'js/paint/mask-geometry.js'), 'utf8');
-const geometry = vm.runInNewContext(`${geometrySource}; ({ createDilatedMaskCanvas, createErodedMaskCanvas });`, {
+const geometry = vm.runInNewContext(`${geometrySource}; ({ createOutlineMaskCanvas, createDilatedMaskCanvas, createErodedMaskCanvas });`, {
 	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 } } },
 	document: { createElement: createCanvas },
 	createAppCanvas: createCanvas,
@@ -88,6 +92,13 @@ assert(!filled(10, 10), 'Hard border must omit square corner pixels outside four
 assert.strictEqual(hardDilation.pixels.filter(Boolean).length, 13, 'Radius-two hard border must use a Manhattan-distance cross');
 process.stdout.write('PASS hard border uses four-neighbor expansion\n');
 
+const ring = geometry.createOutlineMaskCanvas(sourceCanvas, 1, 'hard', false);
+const backing = geometry.createOutlineMaskCanvas(sourceCanvas, 1, 'hard', true);
+assert.strictEqual(ring.pixels[8 * ring.width + 8], 0, 'Outline-only mask must subtract the sticker interior');
+assert.strictEqual(ring.pixels[8 * ring.width + 9], 255, 'Outline-only mask must retain the expanded edge');
+assert.strictEqual(backing.pixels[8 * backing.width + 8], 255, 'Filled outline mask must retain the sticker interior');
+process.stdout.write('PASS sticker backing can fill the outline interior\n');
+
 const distanceGeometry = vm.runInNewContext(`${geometrySource}; ({ exactEuclideanDistanceTransform });`, {
 	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 }, maskAlphaThreshold: 128 } },
 	createAppCanvas: createCanvas,
@@ -105,4 +116,20 @@ const squared = distanceGeometry.exactEuclideanDistanceTransform(fixture, 5, 5, 
 assert.strictEqual(squared[2 * 5 + 2], 0, 'Distance at the target pixel must be zero');
 assert.strictEqual(squared[2 * 5 + 4], 4, 'Cardinal distance must be exact');
 assert.strictEqual(squared[4 * 5 + 4], 8, 'Diagonal distance must be exact');
+// Three or more sites per row exercise the lower-envelope pops; a stale
+// intersection there shortened round outlines on the right side only.
+let seed = 7;
+const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+for (let trial = 0; trial < 40; trial++) {
+	const width = 9 + trial, height = 5 + (trial % 7);
+	const binary = new Uint8Array(width * height).map(() => (random() < 0.15 ? 1 : 0));
+	const field = distanceGeometry.exactEuclideanDistanceTransform(binary, width, height, 1);
+	for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+		let best = Infinity;
+		for (let yy = 0; yy < height; yy++) for (let xx = 0; xx < width; xx++) {
+			if (binary[yy * width + xx]) best = Math.min(best, (x - xx) ** 2 + (y - yy) ** 2);
+		}
+		assert.strictEqual(field[y * width + x], best, `Distance must match brute force at ${x},${y} (trial ${trial})`);
+	}
+}
 process.stdout.write('PASS exact Euclidean distance transform\n');
