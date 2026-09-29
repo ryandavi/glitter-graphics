@@ -20,7 +20,7 @@ const ToolType = {
 	TEXT: 'text',
 	SHAPE: 'shape',
 	HAND: 'hand',
-	COLOR_PICKER: 'colorPicker',
+	GLITTER_FILL: 'glitterFill',
 	BRUSH: 'brush',
 	ZOOM: 'zoom'
 };
@@ -37,6 +37,7 @@ const TOOLS = {
 		icon: 'hand-pointer',
 		hintName: 'Select Tool',
 		command: 'toolSelect',
+		toolbarGroup: 'arrange',
 		groups: ['selection', 'contentEditing'],
 		available: editingAvailable,
 		onCanvasAction(editor, { x, y, hitCanvas, event }) {
@@ -56,6 +57,7 @@ const TOOLS = {
 		icon: 'hand',
 		hintName: 'Hand Tool',
 		command: 'toolHand',
+		toolbarGroup: 'view',
 		groups: ['navigation'],
 		available: navigationAvailable,
 		containerClass: 'hand-cursor',
@@ -69,6 +71,7 @@ const TOOLS = {
 		icon: 'magnifying-glass',
 		hintName: 'Zoom Tool',
 		command: 'toolZoom',
+		toolbarGroup: 'view',
 		groups: ['navigation'],
 		available: navigationAvailable,
 		containerClass: 'zoom-cursor',
@@ -77,12 +80,13 @@ const TOOLS = {
 			editor.handleZoomAction(clientX, clientY, { zoomOut: options.zoomOut || false });
 		}
 	},
-	[ToolType.COLOR_PICKER]: {
-		name: 'Color Fill',
-		buttonLabel: 'Color Fill',
+	[ToolType.GLITTER_FILL]: {
+		name: 'Glitter Fill',
+		buttonLabel: 'Glitter Fill',
 		icon: 'paint-bucket',
-		hintName: 'Color Fill',
-		command: 'toolColorFill',
+		hintName: 'Glitter Fill',
+		command: 'toolGlitterFill',
+		toolbarGroup: 'create',
 		groups: ['paint', 'contentEditing'],
 		available: editingAvailable,
 		wrapperClass: 'color-picker-mode',
@@ -95,14 +99,15 @@ const TOOLS = {
 		}
 	},
 	[ToolType.BRUSH]: {
-		name: 'Mask Brush',
-		buttonLabel: 'Mask Brush',
+		name: 'Glitter Brush',
+		buttonLabel: 'Glitter Brush',
 		icon: 'brush',
 		// The chip follows the brush's Paint/Erase mode.
 		hintInfo: (editor) => (editor.maskEditor?.mode === 'sub'
 			? { icon: 'eraser', name: 'Eraser Tool' }
-			: { icon: 'brush', name: 'Mask Brush' }),
+			: { icon: 'brush', name: 'Glitter Brush' }),
 		command: 'toolBrush',
+		toolbarGroup: 'create',
 		titleNote: ' — Paint/Erase in the context bar, or X to swap',
 		groups: ['paint', 'contentEditing'],
 		// The mask editor decides (a glitter fill layer must be active).
@@ -115,6 +120,7 @@ const TOOLS = {
 		icon: 'text',
 		hintName: 'Text Tool',
 		command: 'toolText',
+		toolbarGroup: 'create',
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'tapCreate',
 		available: editingAvailable,
@@ -149,6 +155,7 @@ const TOOLS = {
 		icon: 'square',
 		hintName: 'Shape Tool',
 		command: 'toolShape',
+		toolbarGroup: 'create',
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'creationDrag',
 		available: editingAvailable,
@@ -168,7 +175,15 @@ const TOOLS = {
 };
 
 // Toolbar order is the registry's insertion order.
-const TOOL_ORDER = Object.freeze(Object.keys(TOOLS));
+const TOOL_ORDER = Object.freeze([
+	ToolType.SELECT,
+	ToolType.TEXT,
+	ToolType.SHAPE,
+	ToolType.GLITTER_FILL,
+	ToolType.BRUSH,
+	ToolType.HAND,
+	ToolType.ZOOM
+]);
 
 function getToolButtonId(tool) {
 	return `${tool}Tool`;
@@ -213,8 +228,16 @@ function getToolHintInfo(editor, tool) {
 // (except Select) until updateContextToolbars applies each tool's availability.
 function renderToolButtons(container) {
 	if (!container) return;
-	container.replaceChildren(...TOOL_ORDER.map((tool) => {
+	let previousGroup = null;
+	const children = [];
+	TOOL_ORDER.forEach((tool) => {
 		const definition = TOOLS[tool];
+		if (previousGroup && definition.toolbarGroup !== previousGroup) {
+			const separator = document.createElement('span');
+			separator.className = 'toolbar-tool-separator';
+			separator.setAttribute('aria-hidden', 'true');
+			children.push(separator);
+		}
 		const button = document.createElement('button');
 		button.className = 'btn-icon icon-wrapper';
 		button.id = getToolButtonId(tool);
@@ -224,6 +247,8 @@ function renderToolButtons(container) {
 		button.disabled = tool !== ToolType.SELECT;
 		button.innerHTML = `<svg class="icon"><use href="#icon-${definition.icon}"></use></svg><span class="name"></span>`;
 		button.querySelector('.name').textContent = definition.buttonLabel;
-		return button;
-	}));
+		children.push(button);
+		previousGroup = definition.toolbarGroup;
+	});
+	container.replaceChildren(...children);
 }

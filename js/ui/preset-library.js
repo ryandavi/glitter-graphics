@@ -140,16 +140,29 @@
 				group.appendChild(options);
 				container.appendChild(group);
 			});
-			const cards = [...container.querySelectorAll('.preset-grid-option')];
-			cards.forEach((card, index) => card.addEventListener('keydown', (event) => {
-				const columns = Math.max(1, Math.round((card.parentElement?.clientWidth || card.offsetWidth) / Math.max(1, card.offsetWidth)));
-				const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
-				if (!Object.hasOwn(offsets, event.key)) return;
-				event.preventDefault();
-				cards[Math.max(0, Math.min(cards.length - 1, index + offsets[event.key]))]?.focus();
-			}));
 		};
+		bindPickerNavigation(container, '.preset-grid-option');
 		render();
+	}
+
+	// Arrow-key movement shared by every picker (preset grids, the font list).
+	// Columns are measured from the focused option, so a tile grid moves by row
+	// and a one-column list moves by item. Delegated and bound once per
+	// container, so re-rendering the options needs no rebinding.
+	function bindPickerNavigation(container, optionSelector) {
+		if (!container || container.dataset.pickerNavigation !== undefined) return;
+		container.dataset.pickerNavigation = '';
+		container.addEventListener('keydown', (event) => {
+			const card = event.target.closest?.(optionSelector);
+			if (!card || !container.contains(card)) return;
+			const cards = [...container.querySelectorAll(optionSelector)];
+			const index = cards.indexOf(card);
+			const columns = Math.max(1, Math.round((card.parentElement?.clientWidth || card.offsetWidth) / Math.max(1, card.offsetWidth)));
+			const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
+			if (!Object.hasOwn(offsets, event.key)) return;
+			event.preventDefault();
+			cards[Math.max(0, Math.min(cards.length - 1, index + offsets[event.key]))]?.focus();
+		});
 	}
 
 	function getPresetLibrary(id) {
@@ -160,7 +173,7 @@
 		return [...libraries.values()];
 	}
 
-	const api = { createPresetLibrary, renderPresetGrid, getPresetLibrary, listPresetLibraries };
+	const api = { createPresetLibrary, renderPresetGrid, bindPickerNavigation, getPresetLibrary, listPresetLibraries };
 	root.GlitterPresetLibrary = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

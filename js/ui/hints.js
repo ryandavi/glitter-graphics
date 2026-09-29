@@ -7,7 +7,7 @@ const HINT_RULES = [
 		when: (editor, { layer }) => editor.maskEditor?.isEditing && layer?.type === LayerType.GLITTER_FILL,
 		hint: (editor) => editor.maskEditor.mode === 'sub' ? 'Drag to erase glitter from this layer' : 'Drag to paint glitter directly onto this layer',
 		context: {
-			desktop: 'Press X to swap Paint/Erase, use [ or ] to resize the brush, and press Esc or change tools to exit the Mask Brush.',
+			desktop: 'Press X to swap Paint/Erase, use [ or ] to resize the brush, and press Esc or change tools to exit the Glitter Brush.',
 			mobile: 'Tap once for a single stamp. Use two fingers to pan or zoom, and switch Paint/Erase to add or remove glitter.'
 		}
 	},
@@ -20,7 +20,7 @@ const HINT_RULES = [
 			: isMobile ? 'Drag here to create a new glitter layer and start painting' : 'Paint here to create a new glitter layer automatically',
 		context: (editor) => editor.maskEditor.mode === 'sub'
 			? 'There\'s nothing here for the Eraser to remove.'
-			: 'The Mask Brush targets glitter layers. Starting a stroke on another layer creates a new glitter layer for you.'
+			: 'The Glitter Brush targets glitter layers. Starting a stroke on another layer creates a new glitter layer for you.'
 	},
 	{ id: 'layer-locked', when: (editor, { layer }) => editor.isLayerContentLocked(layer), hint: 'This layer is locked', context: 'Its settings are available to inspect. Unlock it in the Layers panel to make changes.' },
 	{ id: 'sticker-empty', when: (_editor, { layer }) => layer?.type === LayerType.STICKER && !layer.stickerSourceId, hint: 'No sticker chosen—select a sticker from the gallery to place on your canvas' },
@@ -28,9 +28,9 @@ const HINT_RULES = [
 	{ id: 'glitter-missing-source', when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && !layer.fill.glitterId, hint: 'No glitter selected—choose a glitter style from the gallery to apply it' },
 	{
 		id: 'glitter-empty',
-		when: (_editor, { layer, tool }) => layer?.type === LayerType.GLITTER_FILL && !hasMaskContent(layer) && tool !== ToolType.COLOR_PICKER,
-		hint: (_editor, { isMobile }) => `This glitter layer is empty—use the ${isMobile ? 'color fill' : 'Color Fill'} or Mask Brush to add glitter`,
-		context: { desktop: 'Click colors to build a selection, or paint directly with the Mask Brush.', mobile: 'Tap colors to build a selection, or paint directly in the editor.' }
+		when: (_editor, { layer, tool }) => layer?.type === LayerType.GLITTER_FILL && !hasMaskContent(layer) && tool !== ToolType.GLITTER_FILL,
+		hint: 'This glitter layer is empty—use Glitter Fill or the Glitter Brush to add glitter',
+		context: { desktop: 'Click colors to build a selection, or paint directly with the Glitter Brush.', mobile: 'Tap colors to build a selection, or paint directly in the editor.' }
 	},
 	{ id: 'zoom', tool: true, when: (_editor, { tool }) => tool === ToolType.ZOOM, hint: (_editor, { isMobile }) => isMobile ? 'Pinch to zoom in and out' : 'Click to zoom • drag to zoom smoothly • Alt-click to zoom out' },
 	{ id: 'hand', tool: true, when: (_editor, { tool }) => tool === ToolType.HAND, hint: (_editor, { isMobile }) => isMobile ? 'Use one or two fingers to pan around the canvas' : 'Drag to pan • middle-drag works from any tool' },
@@ -46,12 +46,12 @@ const HINT_RULES = [
 	{
 		id: 'color-fill',
 		tool: true,
-		when: (_editor, { tool }) => tool === ToolType.COLOR_PICKER,
+		when: (_editor, { tool }) => tool === ToolType.GLITTER_FILL,
 		resolve(editor, { layer }) {
 			if (!layer || layer.type === LayerType.BASE_IMAGE) {
 				if (editor.baseImageSource?.hasBaseImage === false) return {
-					hint: 'This canvas has one flat background color, so Color Fill will select the whole canvas',
-					context: 'Choose a glitter first, then tap once to fill it. Use the Mask Brush when you only want glitter in part of the canvas.'
+					hint: 'This canvas has one flat background color, so Glitter Fill will select the whole canvas',
+					context: 'Choose a glitter first, then tap once to fill it. Use the Glitter Brush when you only want glitter in part of the canvas.'
 				};
 				return { hint: 'Click anywhere on your image to create a glitter fill layer', context: 'Glitter fills are based on color selection from your base image.' };
 			}
@@ -60,7 +60,7 @@ const HINT_RULES = [
 			if (layer.type !== LayerType.GLITTER_FILL) return null;
 			if (!hasMaskContent(layer)) {
 				return layer.fill.glitterId
-					? { hint: 'Click colors on your image to select areas for glitter, or use the Mask Brush (B) to paint directly', context: 'Threshold determines how similar colors need to be to get selected together.' }
+					? { hint: 'Click colors on your image to select areas for glitter, or use the Glitter Brush (B) to paint directly', context: 'Threshold determines how similar colors need to be to get selected together.' }
 					: { hint: 'Choose a glitter style from the gallery, then click colors or paint to fill' };
 			}
 			if (el('multiSelect', { required: false })?.checked && layer.selections.length === 1) return { hint: 'Multi-select is on—click more colors to expand your selection' };
@@ -72,22 +72,22 @@ const HINT_RULES = [
 		tool: true,
 		when: (_editor, { tool }) => tool === ToolType.SELECT,
 		resolve(_editor, { layer, isMobile }) {
-			if (!layer) return { hint: 'Add a sticker layer to move items around, or use color fill for glitter' };
+			if (!layer) return { hint: 'Add a sticker layer to move items around, or use Glitter Fill for glitter' };
 			if (layer.type === LayerType.STICKER && layer.stickerSourceId) return isMobile
 				? { hint: 'Drag to move, pinch to scale and rotate', context: 'Or tap settings button to adjust position, flip, and opacity.' }
 				: { hint: 'Drag to move your sticker', context: 'Use the settings panel to rotate, scale, flip, or adjust opacity.' };
 			if (layer.type === LayerType.TEXT_GLITTER) return isMobile
 				? { hint: 'Drag to move, pinch to scale and rotate your glitter text', context: 'Use the Text section for copy, font, alignment, texture scale, and opacity.' }
 				: { hint: 'Drag to move your glitter text', context: 'Use the Text section to change the copy, font, size, spacing, alignment, and fill texture.' };
-			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.BASE_IMAGE) return { hint: 'Switch to the color fill or Mask Brush to add or modify glitter, or add a sticker layer' };
+			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.BASE_IMAGE) return { hint: 'Switch to Glitter Fill or the Glitter Brush to add or modify glitter, or add a sticker layer' };
 			return null;
 		}
 	},
 	{
 		id: 'glitter-refine',
 		when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && layer.fill.glitterId,
-		hint: (_editor, { isMobile }) => isMobile ? 'Tap settings to adjust scale, opacity, or refine your selection' : 'Use the settings panel to adjust scale, opacity, threshold, or feather — or paint with the Mask Brush',
-		context: (_editor, { isMobile }) => isMobile ? 'Higher Color Tolerance selects more similar colors.' : 'Color Tolerance selects similar colors. Edge Feather softens the boundary. The Mask Brush adds painted detail.'
+		hint: (_editor, { isMobile }) => isMobile ? 'Tap settings to adjust scale, opacity, or refine your selection' : 'Use the settings panel to adjust scale, opacity, threshold, or feather — or paint with the Glitter Brush',
+		context: (_editor, { isMobile }) => isMobile ? 'Higher Color Tolerance selects more similar colors.' : 'Color Tolerance selects similar colors. Edge Feather softens the boundary. The Glitter Brush adds painted detail.'
 	},
 	{ id: 'text-refine', when: (_editor, { layer }) => layer?.type === LayerType.TEXT_GLITTER && layer.textData.text.trim(), hint: 'Use the Text section to edit the copy, font, spacing, and alignment', context: 'The glitter browser controls the fill, and texture scale and opacity change the motion inside the letters.' }
 ];

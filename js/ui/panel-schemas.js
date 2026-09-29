@@ -11,6 +11,20 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 	selected: value === CONFIG.layers.defaultBlendMode
 }));
 
+function createPaletteControlItems(prefix, options = {}) {
+	const styleDefault = options.styleDefault || CONFIG.tools.pixelEffects.defaults.paletteStyle;
+	return [
+		{ kind: 'segmented', id: `${prefix}PaletteStyle`, classes: options.styleClasses, label: 'Palette style', visibleLabel: 'Style', revert: true,
+			options: getOptions('analysisPaletteStyle').map((entry) => ({
+				...entry,
+				active: entry.value === styleDefault,
+				attrs: options.styleTitles?.[entry.value] ? { title: options.styleTitles[entry.value] } : undefined
+			})) },
+		{ kind: 'slider', id: `${prefix}ColorCount`, slider: 'paletteColorCount', label: options.colorLabel || 'Colors' },
+		{ kind: 'slider', id: `${prefix}MergeDistinctness`, slider: 'paletteMerge', label: options.mergeLabel || 'Combine Similar', valueScale: 'percent' }
+	];
+}
+
 const TEXT_BACKGROUND_PRESET_OPTIONS = [
 	{ value: '', label: 'Choose a preset…' },
 	{ value: 'instagram', label: 'Instagram', selected: true },
@@ -220,14 +234,17 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Palette', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', items: [
-					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', classes: 'auto-glitter-palette-style', label: 'Palette style', visibleLabel: 'Style', revert: true, options: [
-						{ label: 'Faithful', value: 'natural', active: true, attrs: { title: 'Preserve the image\'s color balance without boosting saturation' } },
-						{ label: 'Balanced', value: 'balanced', attrs: { title: 'Gently favor colorful regions and boost glitter saturation' } },
-						{ label: 'Vibrant', value: 'vibrant', attrs: { title: 'Prioritize colorful accents and strongly boost glitter saturation' } }
-					] },
-					{ kind: 'host', classes: 'property-note', text: 'Faithful follows the image; Balanced and Vibrant progressively emphasize color.' },
-					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount', label: 'Colors' },
-					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness', label: 'Merge', valueScale: 'percent' },
+					...createPaletteControlItems('autoGlitter', {
+						styleDefault: CONFIG.tools.autoGlitter.defaults.paletteStyle,
+						styleClasses: 'auto-glitter-palette-style',
+						mergeLabel: 'Merge',
+						styleTitles: {
+							natural: 'Preserve the image\'s color balance without boosting saturation',
+							balanced: 'Gently favor colorful regions and boost glitter saturation',
+							vibrant: 'Prioritize colorful accents and strongly boost glitter saturation'
+						}
+					}),
+					{ kind: 'host', classes: 'property-note', text: 'Natural follows the image; Balanced and Vibrant progressively emphasize color.' },
 					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note' }
 				] }
 			] },
@@ -239,7 +256,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Advanced', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', items: [
-					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'autoGlitterDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels' },
+					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels' },
 					{ kind: 'checkboxList', items: [
 						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
 						{ id: 'autoGlitterTuneHue', label: 'Tune Matched Glitter Hue', checked: true, revert: true, title: 'Apply a small hue correction to improve the closest glitter match' }
@@ -326,14 +343,10 @@ const PANEL_SCHEMAS = {
 						{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' }
 					] },
 					{ kind: 'set', id: 'pixelEffectsPaletteControls', label: 'Colors', hidden: true, items: [
-						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', visibleLabel: 'Style', revert: true, options: [
-							{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
-						] },
-						{ kind: 'slider', id: 'pixelEffectsColorCount', slider: 'pixelEffectsColorCount' },
-						{ kind: 'slider', id: 'pixelEffectsMergeDistinctness', slider: 'pixelEffectsMergeDistinctness', valueScale: 'percent' }
+						...createPaletteControlItems('pixelEffects')
 					] },
 					{ kind: 'advanced', id: 'pixelEffectsPosterizeControls', label: 'Cleanup', hidden: true, items: [
-						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'pixelEffectsDetail' },
+						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'paletteDetail' },
 						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb tiny connected regions into their neighbors' }] }
 					] },
 					{ kind: 'set', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-dither-controls', label: 'Dither', hidden: true, items: [
@@ -452,7 +465,7 @@ const PANEL_SCHEMAS = {
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',
 			mobileKey: 'tool',
-			section: { id: 'layerSettingsSection', classes: 'panel-redesign', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
+			section: { id: 'layerSettingsSection', classes: 'panel-redesign', icon: 'paint-bucket', iconName: 'Sliders', title: 'Glitter Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
 				empty: { icon: 'paint-bucket', titleId: 'layerSettingsEmptyText', title: 'No layer selected', textId: 'layerSettingsEmptySubtext', text: '' }
@@ -742,10 +755,11 @@ const PANEL_SCHEMAS = {
 				afterSource: [
 					{ kind: 'set', label: 'Stroke', items: [
 						{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
-						{ kind: 'optionGroup', label: 'Style', glitterSource: true, revert: true, options: [
-							{ id: 'shapeBorderStyleSolid', label: 'Solid', active: true, value: 'solid' },
-							{ id: 'shapeBorderStyleDotted', label: 'Dotted', value: 'dotted' }
-						] },
+						{ kind: 'optionGroup', label: 'Style', glitterSource: true, revert: true, options: getOptions('borderStyle').map((option) => ({
+							...option,
+							id: `shapeBorderStyle${option.value.charAt(0).toUpperCase()}${option.value.slice(1)}`,
+							active: option.value === 'solid'
+						})) },
 						{ kind: 'slider', id: 'shapeBorderDotSpacing', slider: 'borderDotSpacing', rowId: 'shapeBorderDotSpacingRow', hidden: true }
 					] }
 				],

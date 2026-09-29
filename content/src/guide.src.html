@@ -38,7 +38,7 @@
                 <li><a href="#create-glitter">Create a Glitter Layer</a></li>
                 <li><a href="#select-colors">Select Colors</a></li>
                 <li><a href="#glitter-settings">Adjust {ui-panel:glitterSettingsSection}</a></li>
-                <li><a href="#mask-brush">Mask Brush</a></li>
+                <li><a href="#mask-brush">Glitter Brush</a></li>
             </ol>
         </li>
         <li>
@@ -254,12 +254,12 @@
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
                         <svg class="icon">
-                            {ui-tool-icon:colorPicker}
+							{ui-tool-icon:glitterFill}
                         </svg>
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>{ui-tool:colorPicker}</strong> – With a glitter layer or base image selected, click on the canvas to create a color selection based on the base image.</p>
+					<p><strong>{ui-tool:glitterFill}</strong> – With a glitter layer or base image selected, click on the canvas to create a color selection based on the base image.</p>
                 </div>
             </div>
 
@@ -274,7 +274,7 @@
                 <div class="guide-item-content">
                     <p><strong>{ui-tool:brush}</strong> – Paint or erase the mask of a Glitter Fill layer directly on the canvas. Painting while another layer type is selected creates a separate Glitter Fill layer.</p>
                     <ul>
-                        <li>See <a href="#mask-brush">Mask Brush</a> under Glitter for painting modes and brush settings.</li>
+                        <li>See <a href="#mask-brush">Glitter Brush</a> under Glitter for painting modes and brush settings.</li>
                     </ul>
                 </div>
             </div>
@@ -502,8 +502,8 @@
 				<div class="guide-item-content">
 					<p><strong>Editing shortcuts</strong></p>
 					<p>Open <strong>Commands &amp; Shortcuts</strong> from the header. Use the <strong>Keyboard</strong> and <strong>Canvas Gestures</strong> tabs to browse task-focused groups, or search by command, key, device, gesture, or section. Keyboard bindings use native Mac or Windows labels automatically; searches still treat <strong>Command</strong>/<strong>Control</strong> and <strong>Option</strong>/<strong>Alt</strong> as equivalents.</p>
-					<p><strong>Tool keys:</strong> Select Tool (V), Text Tool (T), Shape Tool (U), Color Fill Tool (I), Mask Brush Tool (B), Mask Eraser Tool (E), Hand Tool (H), and Zoom Tool (Z).</p>
-					<p><strong>Brush keys:</strong> Swap Paint/Erase (Mask Brush) with X; Decrease Brush Size with [; Increase Brush Size with ]. Hold Shift for larger steps.</p>
+					<p><strong>Tool keys:</strong> Select Tool (V), Text Tool (T), Shape Tool (U), Glitter Fill Tool (I), Glitter Brush Tool (B), Mask Eraser Tool (E), Hand Tool (H), and Zoom Tool (Z).</p>
+					<p><strong>Brush keys:</strong> Swap Paint/Erase (Glitter Brush) with X; Decrease Brush Size with [; Increase Brush Size with ]. Hold Shift for larger steps.</p>
 					<p><strong>View keys:</strong> Fit Screen with <span class="guide-key-label">Ctrl/Cmd</span> + 0; Reset Zoom (100%) with <span class="guide-key-label">Ctrl/Cmd</span> + 1; Zoom In or Zoom Out with <span class="guide-key-label">Ctrl/Cmd</span> + +/−.</p>
 					<p><strong>Layer keys:</strong> Select All Movable Layers with <span class="guide-key-label">Ctrl/Cmd</span> + A; Delete Selected Layer(s) with Delete/Backspace; Duplicate Selected Layer(s) with <span class="guide-key-label">Ctrl/Cmd</span> + D.</p>
 					<p><strong>Clipboard keys:</strong> Copy Selected Layer(s) with <span class="guide-key-label">Ctrl/Cmd</span> + C. <span class="guide-key-label">Ctrl/Cmd</span> + V pastes copied layers or an image from the clipboard.</p>
@@ -931,7 +931,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Use the <strong>Color Fill Tool (<kbd class="guide-kbd">I</kbd>)</strong> to click any color in your base image.</p>
+                    <p>Use the <strong>Glitter Fill Tool (<kbd class="guide-kbd">I</kbd>)</strong> to click any color in your base image.</p>
                     <ul>
                         <li>This tells the glitter layer which parts to fill.</li>
                         <li>A glitter layer will be empty until a selection is made.</li>
@@ -1059,15 +1059,15 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="mask-brush">Mask Brush</h4>
-            <p>Beyond color selections, use the <strong>Mask Brush</strong> to manually paint or erase exactly where a Glitter Fill layer appears. Text and Shape layers use their own rendered outlines and cannot hold painted masks.</p>
+            <h4 id="mask-brush">Glitter Brush</h4>
+            <p>Beyond color selections, use the <strong>Glitter Brush</strong> to manually paint or erase exactly where a Glitter Fill layer appears. Text and Shape layers use their own rendered outlines and cannot hold painted masks.</p>
 
             <div class="figure-wrapper guide-screenshot">
                 <figure>
-                    <img src="images/guide/mask-brush.png" alt="Mask Brush active with a Glitter Fill layer selected in the Layers panel and Brush Settings visible in the properties panel">
+                    <img src="images/guide/mask-brush.png" alt="Glitter Brush active with a Glitter Fill layer selected in the Layers panel and Brush Settings visible in the properties panel">
                     <figcaption>
-                        <cite>Mask Brush setup</cite>
-                        <span class="figure-description">Select a Glitter Fill layer, activate Mask Brush, then adjust its tip and stroke controls in Brush Settings.</span>
+                        <cite>Glitter Brush setup</cite>
+                        <span class="figure-description">Select a Glitter Fill layer, activate Glitter Brush, then adjust its tip and stroke controls in Brush Settings.</span>
                     </figcaption>
                 </figure>
             </div>
@@ -1081,7 +1081,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click the <strong>Mask Brush</strong> in the toolbar, or press <kbd class="guide-kbd">B</kbd>, to start painting. If a Glitter Fill layer is selected, the stroke edits that layer. Otherwise, the first painted stroke creates a new Glitter Fill layer. Erasing requires an existing Glitter Fill layer.</p>
+                    <p>Click the <strong>Glitter Brush</strong> in the toolbar, or press <kbd class="guide-kbd">B</kbd>, to start painting. If a Glitter Fill layer is selected, the stroke edits that layer. Otherwise, the first painted stroke creates a new Glitter Fill layer. Erasing requires an existing Glitter Fill layer.</p>
                 </div>
             </div>
 
@@ -1094,7 +1094,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Paint</strong> / <strong>Erase</strong> – With the Mask Brush active, switch to <strong>Erase</strong> in the context toolbar at the bottom of the canvas (press <kbd class="guide-kbd">E</kbd>, or <kbd class="guide-kbd">X</kbd> to swap between Paint and Erase) to remove glitter with each stroke instead of adding it — including areas added by color selection. On a pen tablet, flipping to the pen's eraser end erases automatically for that stroke.</p>
+                    <p><strong>Paint</strong> / <strong>Erase</strong> – With the Glitter Brush active, switch to <strong>Erase</strong> in the context toolbar at the bottom of the canvas (press <kbd class="guide-kbd">E</kbd>, or <kbd class="guide-kbd">X</kbd> to swap between Paint and Erase) to remove glitter with each stroke instead of adding it — including areas added by color selection. On a pen tablet, flipping to the pen's eraser end erases automatically for that stroke.</p>
                 </div>
             </div>
 
@@ -1827,7 +1827,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Antialias Edges</strong> – Smooth the one-pixel rendered edge of text and shapes, plus the edges of future strokes on Glitter Fill masks. It does not make Text or Shape layers paintable with the Mask Brush. Brush Softness remains a separate, wider feather.</p>
+                    <p><strong>Antialias Edges</strong> – Smooth the one-pixel rendered edge of text and shapes, plus the edges of future strokes on Glitter Fill masks. It does not make Text or Shape layers paintable with the Glitter Brush. Brush Softness remains a separate, wider feather.</p>
                 </div>
             </div>
 

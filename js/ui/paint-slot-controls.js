@@ -207,7 +207,7 @@ function syncSlotTextureCoordinateControls(prefix, data) {
 //   afterFieldChange(layer, key, binding)  optional; key is null for type fields
 
 const BORDER_OPTION_CONTROLS = Object.freeze([
-	{ key: 'style', geometry: true, read: (data) => (data?.style === 'dotted' ? 'dotted' : 'solid'), options: { solid: 'StyleSolid', dotted: 'StyleDotted' } },
+	{ key: 'style', geometry: true, read: getBorderStyle, options: Object.fromEntries(getOptions('borderStyle').map(({ value }) => [value, `Style${fieldControlCap(value)}`])) },
 	{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: { round: 'EdgeRounded', hard: 'EdgeHard' } },
 	{ key: 'placement', geometry: true, read: getBorderPlacement, options: { outside: 'PositionOutside', center: 'PositionCenter', inside: 'PositionInside' } },
 	{ key: 'drawOrder', read: getBorderDrawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }

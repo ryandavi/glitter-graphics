@@ -2807,6 +2807,13 @@ input[type=range]:disabled {
 .toolbar > .toolbar-group > .btn-icon.secondary:not(:disabled):active:before {
   filter: var(--btn-secondary-filter-active);
 }
+.toolbar > .toolbar-group > .toolbar-tool-separator {
+  display: block;
+  height: 2px;
+  margin: 3px 2px;
+  background: var(--color-border);
+  border-radius: 999px;
+}
 .toolbar > .toolbar-group.toolbar-utility-group {
   margin-top: auto;
 }
@@ -4726,32 +4733,6 @@ body.mask-editing .sticker-element {
   color: var(--color-text-tertiary);
 }
 
-.text-font-picker {
-  --font-picker-fade-size: 30px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-base);
-  max-height: 206px;
-  overflow: hidden;
-}
-.text-font-picker::after {
-  content: "";
-  position: sticky;
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * var(--spacing-base));
-  flex: 0 0 var(--font-picker-fade-size);
-  margin-top: calc(0px - var(--font-picker-fade-size) - var(--spacing-base));
-  background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-fast);
-}
-.text-font-picker.has-overflow-bottom::after {
-  opacity: 1;
-}
-
 .text-font-option {
   flex-shrink: 0;
   width: 100%;
@@ -4816,12 +4797,6 @@ body.mask-editing .sticker-element {
   background: color-mix(in srgb, var(--color-off-white) 14%, var(--color-bg-card));
   color: var(--color-off-white);
   border-color: color-mix(in srgb, var(--color-off-white) 32%, var(--color-border));
-}
-
-.preset-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-base);
 }
 
 .filter-looks-picker {
@@ -5316,7 +5291,11 @@ body.mask-editing .sticker-element {
   min-width: 0;
   cursor: pointer;
 }
-.gradient-stop-set .gradient-stop-color > input[type=color] {
+.gradient-stop-set .gradient-stop-color > .color-input-with-eyedropper {
+  flex: 0 0 auto;
+  grid-template-columns: var(--property-control-height) var(--property-control-height);
+}
+.gradient-stop-set .gradient-stop-color input[type=color] {
   flex: 0 0 auto;
   width: var(--property-control-height);
   height: var(--property-control-height);
@@ -5555,6 +5534,28 @@ body.mask-editing .sticker-element {
 }
 .property-color-row input[type=color] {
   width: 56px;
+}
+
+.color-input-with-eyedropper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--property-control-height);
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+.color-input-with-eyedropper > input[type=color] {
+  width: 100%;
+}
+.color-input-with-eyedropper > .color-eyedropper-button {
+  width: var(--property-control-height);
+  height: var(--property-control-height);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-icon-strong);
+}
+.color-input-with-eyedropper > .color-eyedropper-button.active {
+  color: var(--color-accent);
 }
 
 .design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title),
@@ -7172,6 +7173,14 @@ body.tool-select .preview-canvas {
 }
 
 .property-scrollbox {
+  --property-scrollbox-height: 232px;
+  --property-scrollbox-fade-size: 30px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-base);
+  box-sizing: border-box;
+  height: var(--property-scrollbox-height);
   padding: var(--spacing-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--property-r-field);
@@ -7179,6 +7188,22 @@ body.tool-select .preview-canvas {
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+.property-scrollbox::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--spacing-base));
+  flex: 0 0 var(--property-scrollbox-fade-size);
+  margin-top: calc(0px - var(--property-scrollbox-fade-size) - var(--spacing-base));
+  background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+.property-scrollbox.has-overflow-bottom::after {
+  opacity: 1;
 }
 
 .property-row.is-stacked {
@@ -8468,7 +8493,8 @@ body.is-resizing-panel canvas {
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
   gap: var(--property-field-gap);
 }
-.property-panel .panel-redesign .property-color-row > input[type=color] {
+.property-panel .panel-redesign .property-color-row > input[type=color],
+.property-panel .panel-redesign .property-color-row > .color-input-with-eyedropper {
   grid-column: 2/-2;
   justify-self: stretch;
   width: 100%;

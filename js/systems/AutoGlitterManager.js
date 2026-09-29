@@ -66,13 +66,18 @@ class AutoGlitterManager {
 			this.applyCapacity();
 			this.scheduleReduce();
 		}));
-		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => {
+		const paletteFields = new Map([
+			[this.ui.count, FIELDS.paletteColorCount],
+			[this.ui.mergeDistinctness, FIELDS.paletteMerge],
+			[this.ui.detail, FIELDS.paletteDetail]
+		]);
+		paletteFields.forEach((spec, input) => {
 			const resetBtn = document.getElementById(`reset${input.id.charAt(0).toUpperCase()}${input.id.slice(1)}`);
 			if (!resetBtn) return;
 			// Claim the button so the shared property-revert fallback leaves it alone.
 			resetBtn.dataset.revertBound = '';
 			resetBtn.addEventListener('click', () => {
-				input.value = FIELDS[input.id].value;
+				input.value = spec.value;
 				input.dispatchEvent(new Event('input', { bubbles: true }));
 			});
 		});
@@ -145,7 +150,7 @@ class AutoGlitterManager {
 		this.setPaletteStyle(paletteStyle);
 		this.ui.mergeDistinctness.value = saved
 			? saved.mergeDistinctness
-			: CONFIG.tools.autoGlitter.paletteStyles[paletteStyle].mergeDistinctness;
+			: defaults.mergeDistinctness;
 		this.ui.detail.value = saved ? saved.detail : defaults.detail;
 		this.ui.cleanEdges.checked = saved ? saved.cleanEdges : defaults.cleanEdges;
 		this.ui.tuneHue.checked = saved ? saved.tuneHue : defaults.tuneGlitterHue;

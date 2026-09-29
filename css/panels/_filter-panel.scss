@@ -1,9 +1,5 @@
-.preset-grid {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-base);
-}
-
+// Every preset grid is a `.property-scrollbox` (tpl-preset-grid): the frame,
+// fixed height and bottom fade come from there; this file styles the tiles.
 .filter-looks-picker {
 	box-sizing: border-box;
 }

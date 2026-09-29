@@ -123,9 +123,26 @@ function getAddableLayerTypes() {
 }
 
 function getQuickAddLayerTypes() {
-	return getAddableLayerTypes()
-		.filter((type) => Boolean(LAYER_UI_CONFIG[type].addableViaModal.quickAddId))
-		.sort((a, b) => LAYER_UI_CONFIG[a].addableViaModal.quickAddOrder - LAYER_UI_CONFIG[b].addableViaModal.quickAddOrder);
+	return [...new Set(getQuickAddLayerEntries().map((entry) => entry.type))];
+}
+
+function getQuickAddLayerEntries() {
+	return getAddableLayerTypes().flatMap((type) => {
+		const config = LAYER_UI_CONFIG[type].addableViaModal;
+		const entries = config.quickAddId ? [{
+			type,
+			id: config.quickAddId,
+			order: config.quickAddOrder,
+			label: config.label,
+			icon: config.icon,
+			description: config.description,
+			createOptions: config.createOptions || null
+		}] : [];
+		return entries.concat((config.quickAddVariants || []).map((variant) => ({
+			type,
+			...variant
+		})));
+	}).sort((a, b) => a.order - b.order);
 }
 
 const LAYER_BADGES = [

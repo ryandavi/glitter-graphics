@@ -1562,8 +1562,12 @@ function initializeModuleSummaries(root = document) {
 	});
 }
 
+// Every `.property-scrollbox` (font list, preset grids) fades its bottom edge
+// while more content sits below the fold.
 function initializeScrollBoundaryFades(root = document) {
-	root.querySelectorAll('.text-font-picker').forEach((scrollbox) => {
+	const scrollboxes = [...root.querySelectorAll('.property-scrollbox')];
+	if (root.matches?.('.property-scrollbox')) scrollboxes.unshift(root);
+	scrollboxes.forEach((scrollbox) => {
 		if (scrollbox.dataset.scrollBoundaryFade !== undefined) return;
 		scrollbox.dataset.scrollBoundaryFade = '';
 		const update = () => {

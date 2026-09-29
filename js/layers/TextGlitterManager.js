@@ -674,6 +674,9 @@ class TextGlitterManager {
 		const langLabels = { ja: 'JA', ko: 'KO', zh: 'ZH' };
 
 		this.ui.fontPicker.innerHTML = '';
+		this.ui.fontPicker.setAttribute('role', 'listbox');
+		this.ui.fontPicker.setAttribute('aria-label', 'Fonts');
+		GlitterPresetLibrary.bindPickerNavigation(this.ui.fontPicker, '.text-font-option');
 		fonts.forEach((font) => {
 			const scripts = font.scripts || ['latin'];
 			const sampleScript = scripts.find((script) => script !== 'latin' && sampleTextByScript[script]) || 'latin';
@@ -683,6 +686,8 @@ class TextGlitterManager {
 			card.className = 'choice-card text-font-option';
 			card.type = 'button';
 			card.dataset.fontId = font.id;
+			card.setAttribute('role', 'option');
+			card.setAttribute('aria-selected', 'false');
 			const credit = Attribution.creditLine(font.attribution);
 			card.title = credit ? `${font.name} — ${credit}` : font.name;
 
@@ -842,6 +847,7 @@ class TextGlitterManager {
 
 		this.ui.fontPicker.querySelectorAll('[data-font-id]').forEach((button) => {
 			button.classList.toggle('active', button.dataset.fontId === fontId);
+			button.setAttribute('aria-selected', String(button.dataset.fontId === fontId));
 		});
 
 		// Only reveal the active card when the font actually changed. This runs

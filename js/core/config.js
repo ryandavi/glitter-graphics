@@ -135,7 +135,7 @@ const CONFIG = deepFreeze({
 
 	tools: {
 		autoGlitter: {
-			defaults: { colorLayers: 5, paletteStyle: 'natural', tuneGlitterHue: true, cleanEdges: true, detail: 4 },
+			defaults: { colorLayers: FIELDS.paletteColorCount.value, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, cleanEdges: true, detail: FIELDS.paletteDetail.value },
 			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },
 			limits: { minColorLayers: 2, maxColorLayers: 20, maxSamples: 24000 },
 			timing: { reduceThrottleMs: 80 },
@@ -156,10 +156,10 @@ const CONFIG = deepFreeze({
 				paletteEnabled: false,
 				pixelSize: 1,
 				paletteMode: 'posterize',
-				colorCount: 5,
-				paletteStyle: 'balanced',
-				mergeDistinctness: 0.045,
-				detail: 4,
+				colorCount: FIELDS.paletteColorCount.value,
+				paletteStyle: 'natural',
+				mergeDistinctness: FIELDS.paletteMerge.value,
+				detail: FIELDS.paletteDetail.value,
 				cleanEdges: true,
 				dither: {
 					algorithm: 'bayer', angle: 45, strength: 100, scale: 1, edgeProtection: true, serpentine: true,
@@ -576,7 +576,7 @@ const CONFIG = deepFreeze({
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
 				]
 			},
-			{ id: 'colorPickerControls', tool: 'colorPicker', layerTypes: ['glitter-fill'], controls: [
+			{ id: 'colorPickerControls', tool: 'glitterFill', layerTypes: ['glitter-fill'], controls: [
 				{ kind: 'slider', id: 'contextThreshold', valueId: 'contextThresholdValue', slider: 'threshold' },
 				{ kind: 'group', controls: [
 					{ kind: 'toggle', id: 'contextMultiSelect', label: 'Multi', countId: 'contextSelectionCount' },

@@ -11,23 +11,26 @@ setupLayerTypePickerListeners() {
 
 			this.modalManager.close('layerTypePickerModal');
 			requestAnimationFrame(() => {
-				this.createLayerByType(button.dataset.layerType);
+				this.createLayerByType(button.dataset.layerType, button._createOptions);
 			});
 		});
 	}
 
 ,
-	createLayerByType(layerType) {
+	createLayerByType(layerType, createOptions = null) {
 		if (!LAYER_UI_CONFIG[layerType]?.addableViaModal) {
 			dbg(`Unknown add-layer type: ${layerType}`);
 			return;
 		}
 
-		this.layerManager.addLayer(layerType);
+		const layer = this.layerManager.addLayer(layerType, createOptions || {});
+		if (layer && createOptions?.shapeLayer?.openImagePicker) {
+			requestAnimationFrame(() => this.shapeGlitterManager?.chooseFillImage());
+		}
 	}
 
 ,
-	createLayerTypeOptionButton(type, { iconSizeClass = 'xl', id = null } = {}) {
+	createLayerTypeOptionButton(type, { iconSizeClass = 'xl', id = null, entry = null } = {}) {
 		const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
 		if (!modalConfig) return null;
 
@@ -37,9 +40,10 @@ setupLayerTypePickerListeners() {
 			button.id = id;
 		}
 		button.querySelector('.layer-type-icon').classList.add(iconSizeClass);
-		button.querySelector('use').setAttribute('href', `#icon-${modalConfig.icon}`);
-		button.querySelector('.layer-type-name').textContent = modalConfig.label;
-		button.querySelector('.layer-type-description').textContent = modalConfig.description;
+		button.querySelector('use').setAttribute('href', `#icon-${entry?.icon || modalConfig.icon}`);
+		button.querySelector('.layer-type-name').textContent = entry?.label || modalConfig.label;
+		button.querySelector('.layer-type-description').textContent = entry?.description || modalConfig.description;
+		button._createOptions = entry?.createOptions || null;
 		return button;
 	}
 
@@ -47,6 +51,13 @@ setupLayerTypePickerListeners() {
 	renderLayerTypePickerOptions(container, options = {}) {
 		container.innerHTML = '';
 		const iconSizeClass = options.iconSizeClass || 'xl';
+		if (options.entries) {
+			options.entries.forEach((entry) => {
+				const button = this.createLayerTypeOptionButton(entry.type, { iconSizeClass, id: entry.id, entry });
+				if (button) container.appendChild(button);
+			});
+			return;
+		}
 		const idMap = options.idMap || {};
 		const layerTypes = options.layerTypes || getAddableLayerTypes();
 
@@ -151,17 +162,16 @@ setupLayerTypePickerListeners() {
 
 		const quickAddOptions = document.getElementById('quickAddOptions');
 		if (quickAddOptions) {
-			const quickAddTypes = getQuickAddLayerTypes();
+			const quickAddEntries = getQuickAddLayerEntries();
 			this.renderLayerTypePickerOptions(quickAddOptions, {
 				iconSizeClass: '',
-				layerTypes: quickAddTypes,
-				idMap: Object.fromEntries(quickAddTypes.map((type) => [type, LAYER_UI_CONFIG[type].addableViaModal.quickAddId]))
+				entries: quickAddEntries
 			});
 
 			quickAddOptions.addEventListener('click', (event) => {
 				const button = event.target.closest('.layer-type-option');
 				if (!button) return;
-				this.createLayerByType(button.dataset.layerType);
+				this.createLayerByType(button.dataset.layerType, button._createOptions);
 			});
 		}
 

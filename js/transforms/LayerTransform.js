@@ -552,7 +552,7 @@ const swallowFollowupClick = () => {
 	// Check if we're in the right tool mode
 	if (this.editor.currentTool === ToolType.HAND ||
 		this.editor.currentTool === ToolType.ZOOM ||
-		this.editor.currentTool === ToolType.COLOR_PICKER) {
+		this.editor.currentTool === ToolType.GLITTER_FILL) {
 		return;
 	}
 

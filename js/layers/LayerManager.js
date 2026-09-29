@@ -348,7 +348,7 @@ class LayerManager {
 			this.editor.glitterManager?.closePickerSession?.();
 			this.editor.stickerManager?.closePickerSession?.();
 			this.editor.maskEditor?.releaseBrushTool?.({ commitStroke: true });
-			if (this.editor.currentTool === ToolType.COLOR_PICKER) this.editor.setTool(ToolType.SELECT);
+			if (this.editor.currentTool === ToolType.GLITTER_FILL) this.editor.setTool(ToolType.SELECT);
 		}
 		this.renderLayersList();
 		this.editor.syncTransformHandlesForActiveLayer?.();

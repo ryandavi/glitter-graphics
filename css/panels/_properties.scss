@@ -447,10 +447,21 @@
 	margin-inline: var(--property-gutter);
 }
 
-// A bounded scrolling control inside a card (font list, compact picker, etc.).
-// The inset locates it; this primitive owns only the scroll surface and its
-// equal internal clearance.
+// The shared picker frame (font list, every preset grid). The inset locates
+// it; this primitive owns the scroll surface, its internal clearance, and a
+// FIXED height: switching category or selection never reflows the panel below.
+// A short list leaves empty space instead of shrinking the box.
+// `has-overflow-bottom` (panel-renderer.js initializeScrollBoundaryFades)
+// fades the bottom edge while more options sit below the fold.
 .property-scrollbox {
+	--property-scrollbox-height: 232px;
+	--property-scrollbox-fade-size: 30px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-base);
+	box-sizing: border-box;
+	height: var(--property-scrollbox-height);
 	padding: var(--spacing-sm);
 	border: 1px solid var(--color-border);
 	border-radius: var(--property-r-field);
@@ -458,6 +469,22 @@
 	overflow: auto;
 	overscroll-behavior: contain;
 	scrollbar-gutter: stable;
+
+	&::after {
+		content: '';
+		position: sticky;
+		left: 0;
+		right: 0;
+		bottom: calc(-1 * var(--spacing-base));
+		flex: 0 0 var(--property-scrollbox-fade-size);
+		margin-top: calc(0px - var(--property-scrollbox-fade-size) - var(--spacing-base));
+		background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity var(--transition-fast);
+	}
+
+	&.has-overflow-bottom::after { opacity: 1; }
 }
 
 // R2: the control needs full width. Placement is explicit because the control
@@ -1942,7 +1969,8 @@ body.is-resizing-panel {
 			var(--property-revert-col);
 		gap: var(--property-field-gap);
 
-		> input[type="color"] {
+		> input[type="color"],
+		> .color-input-with-eyedropper {
 			grid-column: 2 / -2;
 			justify-self: stretch;
 			width: 100%;

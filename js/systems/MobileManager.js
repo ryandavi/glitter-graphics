@@ -80,7 +80,7 @@ class MobileManager {
 		if (this.editor.autoGlitterManager?.isSessionActive()) return [...LAYER_UI_CONFIG.AUTO_GLITTER.mobileSettingsSections];
 		if (!layer) return [];
 		const keys = [...(LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [])];
-		if (this.editor.currentTool === ToolType.COLOR_PICKER && layer.type === LayerType.GLITTER_FILL) {
+		if (this.editor.currentTool === ToolType.GLITTER_FILL && layer.type === LayerType.GLITTER_FILL) {
 			keys.unshift('tool');
 		}
 		return keys;

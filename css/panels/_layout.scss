@@ -311,6 +311,14 @@
 
 			@include gloss-button(true);
 		}
+
+		>.toolbar-tool-separator {
+			display: block;
+			height: 2px;
+			margin: 3px 2px;
+			background: var(--color-border);
+			border-radius: 999px;
+		}
 	}
 
 	>.toolbar-group.toolbar-utility-group { margin-top: auto; }

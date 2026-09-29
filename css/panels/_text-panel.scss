@@ -47,32 +47,8 @@
 	color: var(--color-text-tertiary);
 }
 
-.text-font-picker {
-	--font-picker-fade-size: 30px;
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-base);
-	max-height: 206px;
-	overflow: hidden;
-
-	&::after {
-		content: '';
-		position: sticky;
-		left: 0;
-		right: 0;
-		bottom: calc(-1 * var(--spacing-base));
-		flex: 0 0 var(--font-picker-fade-size);
-		margin-top: calc(0px - var(--font-picker-fade-size) - var(--spacing-base));
-		background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity var(--transition-fast);
-	}
-
-	&.has-overflow-bottom::after { opacity: 1; }
-}
-
+// The frame (fixed height, scroll, bottom fade) is the shared
+// `.property-scrollbox`; only the option cards are font-specific.
 // Gallery-card styling, reusing the .asset-option card conventions (outline
 // selection state, corner badge) instead of inventing a new visual language.
 .text-font-option {

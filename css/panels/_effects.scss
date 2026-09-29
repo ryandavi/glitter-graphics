@@ -110,8 +110,16 @@
 		min-width: 0;
 		cursor: pointer;
 
+		// Swatch + eyedropper are both fixed squares here. The shared wrapper's
+		// `1fr` swatch column has no width to resolve against inside this
+		// shrink-to-fit label, so it would collapse to 0.
+		> .color-input-with-eyedropper {
+			flex: 0 0 auto;
+			grid-template-columns: var(--property-control-height) var(--property-control-height);
+		}
+
 		// Square swatch, the same height as the Pos / Alpha number fields.
-		> input[type="color"] {
+		input[type="color"] {
 			flex: 0 0 auto;
 			width: var(--property-control-height);
 			height: var(--property-control-height);
@@ -383,6 +391,28 @@
 
 	input[type="color"] {
 		width: 56px;
+	}
+}
+
+.color-input-with-eyedropper {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) var(--property-control-height);
+	gap: var(--spacing-xs);
+	min-width: 0;
+
+	> input[type="color"] { width: 100%; }
+
+	// Chromeless glyph, like the layer-row icons (`.btn-icon-simple`).
+	> .color-eyedropper-button {
+		width: var(--property-control-height);
+		height: var(--property-control-height);
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-icon-strong);
+
+		&.active { color: var(--color-accent); }
 	}
 }
 

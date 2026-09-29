@@ -4,11 +4,18 @@ Visual and interaction conventions for the editor UI: sidebar panels, layout nam
 
 ## Sidebar panels
 
-- **Naming.** "\<Thing\> Properties" means attributes of the selected layer (Glitter Properties, Sticker Properties, Text Properties). "\<Tool\> Settings" means tool configuration (Mask Settings, Color Fill Settings). Section *ids* are historically `*SettingsSection` regardless of title. Don't rename ids.
+- **Naming.** "\<Thing\> Properties" means attributes of the selected layer (Glitter Properties, Sticker Properties, Text Properties). "\<Tool\> Settings" means tool configuration (Mask Settings, Glitter Fill Settings). Section *ids* are historically `*SettingsSection` regardless of title. Don't rename ids.
 - **Built from schemas.** Every sidebar section is a `PANEL_SCHEMAS` entry in `js/ui/panel-schemas.js`, composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`. Never copy live sidebar markup into `index.html`.
 - **The guide mirrors the UI by generation.** Write guide copy in `content/src/guide.src.html` and build it with `node tools/build-modals.js guide`. Tool headings (`{ui-tool:select}`), tool icons (`{ui-tool-icon:select}`), panel titles (`{ui-panel:textSettingsSection}`) and the full shortcut list (`{ui-shortcuts}`) come from `TOOLS`, `PANEL_SCHEMAS` and `COMMANDS`; use the tokens instead of typing those names. `tests/unit/shortcut-coverage.js` fails when the built guide is stale.
 - **Reuse the existing patterns:** gallery cards (font, sticker and brush-shape pickers), segmented controls, carded effect subsections, paint-slot cards, and the shared `renderGlitterAssetDisplay` asset chips.
+- **In-panel pickers** (font list, filter Looks, gradient presets) share one frame: `.property-scrollbox`, a fixed-height scroll box (`--property-scrollbox-height`) with a bottom fade on overflow, and `GlitterPresetLibrary.bindPickerNavigation` for arrow keys. A category filter is a `Category` row in its own `.property-set` above the picker's labelled set. Option layout stays per picker (list rows for fonts, thumbnail tiles for presets).
 - **Preset grids.** Use the `presetGrid` schema primitive with a library from `createPresetLibrary`; managers supply only the active id and apply callback. Keep controls needed to understand or choose the selected preset visible; reserve a disclosure for genuinely optional detail.
+- **Gradient presets.** Every shared gradient editor renders the `GRADIENT_PRESETS` library. Add a reusable gradient or stripe flag as one entry in `js/paint/gradient-presets.js`; applying one copies its stops and blend mode while preserving a customized angle.
+- **Color sampling.** Every `input[type="color"]` is decorated by `initializeColorEyedroppers`. Chromium uses the screen EyeDropper API; the fallback arms one canvas tap and samples a still from `SceneCompositor`. Do not add one-off eyedropper buttons in managers.
+
+## Toolbar groups
+
+Every `TOOLS` entry declares `toolbarGroup: 'create' | 'arrange' | 'view'`. `renderToolButtons` inserts separators when that value changes, so group order stays in `TOOL_ORDER` and is never hand-authored in `index.html`.
 
 ## Layout chrome names purpose, not position
 

@@ -3,6 +3,11 @@
 // Border resolution and mask morphology live here so preview and export
 // cannot acquire independent geometry policies.
 const BORDER_PLACEMENTS = Object.freeze(getOptionValues('borderPlacement'));
+const BORDER_STYLES = Object.freeze(getOptionValues('borderStyle'));
+
+function getBorderStyle(borderData) {
+	return BORDER_STYLES.includes(borderData?.style) ? borderData.style : 'solid';
+}
 
 function getBorderPlacement(borderData) {
 	return BORDER_PLACEMENTS.includes(borderData?.placement) ? borderData.placement : 'outside';

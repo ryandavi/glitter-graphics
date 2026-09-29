@@ -23,7 +23,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		icon: 'glitter',
 		description: 'Paint glitter, color, or a gradient onto the canvas',
 		quickAddId: 'quickActionAddGlitter',
-		quickAddOrder: 4
+		quickAddOrder: 5
 	},
 	designPanelSections: ['brushTipSearchSection', 'brushTipOptions', 'glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
 	mobileSettingsSections: ['glitter'],
@@ -34,7 +34,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	autoOpenDesignDrawerOnCreate: true,
 	onActivate: (editor, layer) => {
 		if (!layer.locked && !hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
-			editor.setTool(ToolType.COLOR_PICKER);
+			editor.setTool(ToolType.GLITTER_FILL);
 		}
 		editor.updateGlitterSelection();
 		editor.setSettingsEmptyState('layerSettings', false);

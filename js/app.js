@@ -85,6 +85,7 @@ class GlitterEditor {
 		this.contextToolbarRenderer.render();
 		renderToolButtons(document.getElementById('toolbarToolsGroup'));
 		renderSettingsModals();
+		initializeColorEyedroppers(this);
 
 		// ============================================================================
 		// MANAGERS
@@ -129,7 +130,8 @@ class GlitterEditor {
 		// INITIALIZATION
 		// ============================================================================
 		this.initializeProjectNameInput();
-		const rememberedTool = sessionStorage.getItem('glitter:lastTool');
+		const storedTool = sessionStorage.getItem('glitter:lastTool');
+		const rememberedTool = storedTool === 'colorPicker' ? ToolType.GLITTER_FILL : storedTool;
 		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
 		this.setTool(this.mobileManager.isMobile && initialTool === ToolType.HAND ? ToolType.SELECT : initialTool);
 		this.setupEventListeners();
@@ -1972,7 +1974,7 @@ class GlitterEditor {
 		});
 	}
 	handleColorPickAction(x, y, event = null) {
-		if (this.currentTool !== ToolType.COLOR_PICKER) return;
+		if (this.currentTool !== ToolType.GLITTER_FILL) return;
 
 		let layer = this.layerManager.getActiveLayer();
 
@@ -2034,7 +2036,7 @@ class GlitterEditor {
 					this.layerManager.insertLayer(newLayer);
 					this.glitterFillSelector(x, y, event);
 				} else {
-					this.updateStatus('Color Fill disabled on Sticker layers.');
+					this.updateStatus('Glitter Fill is unavailable on Sticker layers.');
 				}
 				return;
 			}
@@ -2111,7 +2113,7 @@ class GlitterEditor {
 		}
 		// Case 3: Sticker (or other) -> Block
 		else {
-			this.updateStatus('Color Fill disabled on Sticker layers.');
+			this.updateStatus('Glitter Fill is unavailable on Sticker layers.');
 			return;
 		}
 

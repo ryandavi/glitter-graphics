@@ -662,6 +662,8 @@ class ShapeGlitterManager {
 		const transform = createDefaultTransform({
 			position: { x: position.x, y: position.y }
 		});
+		const fill = this.getDefaultFill();
+		if (options.fillMode === 'image') fill.mode = 'image';
 
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
@@ -675,7 +677,7 @@ class ShapeGlitterManager {
 				shapeId,
 				width,
 				height,
-				fill: this.getDefaultFill(),
+				fill,
 				border: null,
 				shadow: null
 			}
@@ -880,7 +882,7 @@ class ShapeGlitterManager {
 			return null;
 		}
 
-		const borderStyle = borderData?.style === 'dotted' ? 'dotted' : 'solid';
+		const borderStyle = getBorderStyle(borderData);
 		const drawOrder = getBorderDrawOrder(borderData);
 		const placement = getBorderPlacement(borderData);
 		const edgeStyle = getBorderEdgeStyle(borderData);

@@ -174,7 +174,7 @@ isLayerContentLocked(layer) {
 		const visible = Boolean(
 			this.originalImage
 			&& !this.layerManager?.hasMultiSelection?.()
-			&& this.currentTool === ToolType.COLOR_PICKER
+			&& this.currentTool === ToolType.GLITTER_FILL
 			&& layer?.type === LayerType.GLITTER_FILL
 		);
 		section.classList.toggle('visible', visible);
@@ -215,7 +215,7 @@ isLayerContentLocked(layer) {
 		if (this.currentTool === ToolType.BRUSH) {
 			return 'brushSettings';
 		}
-		if (this.currentTool === ToolType.COLOR_PICKER && layer?.type === LayerType.GLITTER_FILL) {
+		if (this.currentTool === ToolType.GLITTER_FILL && layer?.type === LayerType.GLITTER_FILL) {
 			return 'layerSettings';
 		}
 

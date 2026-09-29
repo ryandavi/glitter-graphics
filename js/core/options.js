@@ -34,6 +34,11 @@ defineOptions('paletteStyle', [
 	{ value: 'natural', label: 'Natural' },
 	{ value: 'websafe', label: 'Web Safe' }
 ]);
+defineOptions('analysisPaletteStyle', [
+	{ value: 'natural', label: 'Natural' },
+	{ value: 'balanced', label: 'Balanced' },
+	{ value: 'vibrant', label: 'Vibrant' }
+]);
 defineOptions('gifLook', [
 	{ value: 'clean', label: 'Clean · Automatic' },
 	{ value: 'classic', label: 'Classic Web' },
@@ -67,3 +72,4 @@ defineOptions('borderPlacement', [
 ]);
 defineOptions('borderEdgeStyle', [{ value: 'round', label: 'Rounded' }, { value: 'hard', label: 'Hard' }]);
 defineOptions('borderDrawOrder', [{ value: 'behind', label: 'Behind' }, { value: 'front', label: 'In Front' }]);
+defineOptions('borderStyle', [{ value: 'solid', label: 'Solid' }, { value: 'dotted', label: 'Dotted' }]);

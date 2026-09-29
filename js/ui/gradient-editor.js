@@ -17,6 +17,29 @@ function installEffectGradientEditor(options) {
 	const stopSet = fragment.querySelector('.gradient-stop-set');
 	const panel = fragment.querySelector('.effect-gradient-editor');
 	const advanced = fragment.querySelector('.gradient-advanced');
+	// Presets mirror the filter Looks card: a Category row in its own set, then
+	// a labelled set holding the grid. Both are gradient-only, toggled by the
+	// shared `[data-paint-source-mode]` sync so they never show for other modes.
+	const presetGroup = document.createElement('select');
+	presetGroup.className = 'gradient-preset-group';
+	presetGroup.setAttribute('aria-label', 'Gradient preset category');
+	const presetGroupSet = document.createElement('div');
+	presetGroupSet.className = 'property-set gradient-preset-group-set';
+	presetGroupSet.appendChild(buildOptionGroup('Category', [presetGroup]));
+	const presetGrid = document.getElementById('tpl-preset-grid').content.firstElementChild.cloneNode(true);
+	presetGrid.classList.add('property-inset', 'gradient-preset-grid');
+	presetGrid.setAttribute('aria-label', 'Gradient presets');
+	const presetSet = document.createElement('div');
+	presetSet.className = 'property-set gradient-preset-set';
+	const presetLabel = document.createElement('div');
+	presetLabel.className = 'property-set-label';
+	presetLabel.textContent = 'Presets';
+	presetSet.append(presetLabel, presetGrid);
+	initializeScrollBoundaryFades(presetGrid);
+	[presetGroupSet, presetSet].forEach((set) => {
+		set.dataset.paintSourceMode = 'gradient';
+		set.hidden = true;
+	});
 
 	// Lay the editor out the way the glitter source is: NO set inside a set.
 	//   - the preview bar joins the Source `.property-set` as a mode-toggled
@@ -28,8 +51,9 @@ function installEffectGradientEditor(options) {
 	//     Advanced.
 	source.appendChild(previewBar);
 	const primarySet = slotCard?.querySelector('.paint-slot-primary-row')?.closest('.property-set');
-	if (primarySet) { primarySet.before(stopSet); primarySet.before(panel); }
-	else { paintMain.appendChild(stopSet); paintMain.appendChild(panel); }
+	const gradientSets = [presetGroupSet, presetSet, stopSet, panel];
+	if (primarySet) primarySet.before(...gradientSets);
+	else paintMain.append(...gradientSets);
 	const moduleAdvanced = slotCard?.querySelector('.advanced-disclosure.glitter-source-glitter');
 	if (advanced) (moduleAdvanced ? moduleAdvanced.before(advanced) : slotCard?.appendChild(advanced));
 	const defaults = CONFIG.rendering.gradient;
@@ -97,6 +121,8 @@ function installEffectGradientEditor(options) {
 		const isGradient = data.mode === 'gradient';
 		panel.hidden = !isGradient;
 		stopSet.hidden = !isGradient;
+		presetGroupSet.hidden = !isGradient;
+		presetSet.hidden = !isGradient;
 		panel._selectedStop = Math.max(0, Math.min(gradient.stops.length - 1, panel._selectedStop));
 
 		panel.querySelectorAll('[data-type]').forEach((item) => item.classList.toggle('active', item.dataset.type === gradient.type));
@@ -158,6 +184,16 @@ function installEffectGradientEditor(options) {
 			});
 			return row;
 		}));
+		GlitterPresetLibrary.renderPresetGrid(presetGrid, GRADIENT_PRESETS, {
+			activeId: findGradientPresetId(gradient),
+			contextId: options.prefix,
+			groupFilter: presetGroup,
+			onChoose: (entry) => {
+				GRADIENT_PRESETS.apply(entry, gradient);
+				update(true);
+				render();
+			}
+		});
 		applySelection();
 	};
 	// Direct manipulation on the strip: drag a handle to move its stop, click

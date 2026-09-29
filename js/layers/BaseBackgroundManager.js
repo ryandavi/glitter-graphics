@@ -219,9 +219,9 @@ class BaseBackgroundManager {
 			});
 		};
 		bindRange('pixelEffectsPixelSize', 'pixelSize', 'pixelEffectsPixelSize');
-		bindRange('pixelEffectsColorCount', 'colorCount', 'pixelEffectsColorCount');
-		bindRange('pixelEffectsMergeDistinctness', 'mergeDistinctness', 'pixelEffectsMergeDistinctness');
-		bindRange('pixelEffectsDetail', 'detail', 'pixelEffectsDetail');
+		bindRange('pixelEffectsColorCount', 'colorCount', 'paletteColorCount');
+		bindRange('pixelEffectsMergeDistinctness', 'mergeDistinctness', 'paletteMerge');
+		bindRange('pixelEffectsDetail', 'detail', 'paletteDetail');
 		bindRange('pixelEffectsStrength', 'dither.strength', 'pixelEffectsStrength');
 		bindRange('pixelEffectsDitherScale', 'dither.scale', 'pixelEffectsDitherScale');
 		bindRange('pixelEffectsAngle', 'dither.angle', 'pixelEffectsAngle');
