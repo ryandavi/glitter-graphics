@@ -36,7 +36,8 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		quickAddId: 'quickActionAddGlitter',
 		quickAddOrder: 5
 	},
-	designPanelSections: ['brushTipSearchSection', 'brushTipOptions', 'glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
+	library: 'glitter',
+	designPanelSections: ['glitterSettingsSection'],
 	mobileSettingsSections: ['glitter'],
 	panelMode: 'glitter',
 	elementClass: 'glitter-element',

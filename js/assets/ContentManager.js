@@ -270,6 +270,10 @@ class ContentManager {
 		return Attribution.buildCreditElement(category && category.attribution, { bylineVerb: 'Created by' });
 	}
 
+	getCategoryLabel(category) {
+		return category.charAt(0).toUpperCase() + category.slice(1);
+	}
+
 	populateCategoryChips() {
 		if (!this.ui.categoryChips || this.ui.categoryChips.children.length > 0) return;
 
@@ -286,7 +290,7 @@ class ContentManager {
 			chip.className = 'filter-chip text-filter-chip';
 			chip.dataset.value = category;  // Changed from dataset.category
 			chip.dataset.filter = 'category';
-			chip.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+			chip.textContent = this.getCategoryLabel(category);
 			chip.title = category;
 			chip.setAttribute('aria-pressed', 'false');
 
@@ -440,26 +444,116 @@ class ContentManager {
 		// Override in child classes to add custom classes/attributes
 	}
 
-	createItemElement(item, onSelect = null) {
+	// The card's own body. Kinds whose thumbnail isn't an image (font
+	// samples, shape icons) override this; it must not be a <button>, because
+	// the favorite heart is one.
+	createItemCard(item) {
 		const option = document.createElement('div');
 		option.className = 'choice-card asset-option';
-		option.title = item.name;
-
-		// Set both data-id and data-index for compatibility
-		option.dataset.id = item.id;
-
-		// Allow children to add custom classes/attributes
-		this.customizeItemElement(option, item);
-
-		// Add image
 		const img = document.createElement('img');
 		img.src = item.thumbnailUrl || item.url;
 		option.appendChild(img);
+		return option;
+	}
 
-		// Wire up click handler (delegate to child)
-		option.addEventListener('click', () => onSelect ? onSelect(item) : this.handleItemClick(item));
+	createItemElement(item, onSelect = null) {
+		const option = this.createItemCard(item);
+		option.title ||= item.name;
+		option.dataset.id = item.id;
+		option.tabIndex = 0;
+
+		// Allow children to add custom classes/attributes
+		this.customizeItemElement(option, item);
+		if (this.libraryKind) option.appendChild(this.createFavoriteToggle(item));
+
+		const select = async () => {
+			await (onSelect ? onSelect(item) : this.handleItemClick(item));
+			this.recordRecent(item.id);
+		};
+		option.addEventListener('click', (event) => {
+			if (event.target.closest('.asset-favorite-toggle')) return;
+			select();
+		});
+		option.addEventListener('keydown', (event) => {
+			if (event.target !== option || (event.key !== 'Enter' && event.key !== ' ')) return;
+			event.preventDefault();
+			select();
+		});
 
 		return option;
+	}
+
+	// ===== RECENTS + FAVORITES =====
+	// Per Library kind, by asset id, in PREFERENCES (never in projects). Ids
+	// that no longer resolve are skipped when read and dropped on the next write.
+
+	get libraryKind() {
+		return this.browser?.prefix || null;
+	}
+
+	getLibraryIds(preference) {
+		const ids = PREFERENCES.get(preference)?.[this.libraryKind];
+		return Array.isArray(ids) ? ids : [];
+	}
+
+	setLibraryIds(preference, ids) {
+		const known = ids.filter((id) => this.getItemById(id));
+		PREFERENCES.set(preference, { ...PREFERENCES.get(preference), [this.libraryKind]: known });
+	}
+
+	resolveLibraryIds(ids) {
+		return ids.map((id) => this.getItemById(id)).filter(Boolean);
+	}
+
+	getRecentItems() {
+		return this.resolveLibraryIds(this.getLibraryIds('libraryRecents'));
+	}
+
+	recordRecent(id) {
+		if (!this.libraryKind || !this.getItemById(id)) return;
+		const ids = this.getLibraryIds('libraryRecents').filter((entry) => String(entry) !== String(id));
+		this.setLibraryIds('libraryRecents', [id, ...ids].slice(0, CONFIG.ui.library.recentCount));
+	}
+
+	isFavorite(id) {
+		return this.getLibraryIds('libraryFavorites').some((entry) => String(entry) === String(id));
+	}
+
+	// Favorites in the order they were hearted, newest first, limited to `items`.
+	getFavoriteItems(items = this.getAllContent()) {
+		const allowed = new Set(items);
+		return this.resolveLibraryIds(this.getLibraryIds('libraryFavorites')).filter((item) => allowed.has(item));
+	}
+
+	toggleFavorite(id) {
+		if (!this.libraryKind) return;
+		const favorite = this.isFavorite(id);
+		const ids = this.getLibraryIds('libraryFavorites').filter((entry) => String(entry) !== String(id));
+		this.setLibraryIds('libraryFavorites', favorite ? ids : [id, ...ids]);
+		this.ui.panel?.querySelectorAll(`.asset-option[data-id="${CSS.escape(String(id))}"] > .asset-favorite-toggle`)
+			.forEach((toggle) => this.syncFavoriteToggle(toggle, !favorite));
+		this.browser?.handleFavoritesChanged();
+	}
+
+	createFavoriteToggle(item) {
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'asset-favorite-toggle';
+		toggle.appendChild(createIcon('heart'));
+		this.syncFavoriteToggle(toggle, this.isFavorite(item.id));
+		toggle.addEventListener('click', (event) => {
+			event.stopPropagation();
+			this.toggleFavorite(item.id);
+		});
+		return toggle;
+	}
+
+	syncFavoriteToggle(toggle, favorite) {
+		const label = favorite ? 'Remove from Favorites' : 'Add to Favorites';
+		toggle.classList.toggle('active', favorite);
+		toggle.setAttribute('aria-pressed', String(favorite));
+		toggle.setAttribute('aria-label', label);
+		toggle.title = label;
 	}
 
 	handleItemClick(item) {
@@ -641,18 +735,22 @@ class ContentManager {
 		this.updateClearFiltersButton();
 	}
 
+	getFilterValueLabel(key, value) {
+		const labelAliases = { neutral: 'Neutrals', earth: 'Earth tones', metallic: 'Metallics' };
+		return labelAliases[value] || String(value).replace(/[-_]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+	}
+
 	renderActiveFilterSummary() {
 		const summary = this.ui.activeFilterSummary;
 		if (!summary) return;
 		const filters = [];
-		const labelAliases = { neutral: 'Neutrals', earth: 'Earth tones', metallic: 'Metallics' };
-		const humanize = (value) => labelAliases[value] || String(value).replace(/[-_]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+		const humanize = (value, key) => this.getFilterValueLabel(key, value);
 		if (this.activeFilters.search) filters.push({ key: 'search', label: `Search: “${this.ui.searchInput?.value.trim() || this.activeFilters.search}”` });
 		Object.entries(this.activeFilters).forEach(([key, value]) => {
 			if (key === 'search' || key === 'nameOnly') return;
-			if (value instanceof Set) value.forEach((entry) => filters.push({ key, value: entry, label: humanize(entry) }));
+			if (value instanceof Set) value.forEach((entry) => filters.push({ key, value: entry, label: humanize(entry, key) }));
 			else if (key === 'animated' && value !== null) filters.push({ key, label: value ? 'Animated' : 'Static' });
-			else if (value !== null && value !== '' && value !== false) filters.push({ key, label: humanize(value) });
+			else if (value !== null && value !== '' && value !== false) filters.push({ key, label: humanize(value, key) });
 		});
 		if (this.activeFilters.search && this.activeFilters.nameOnly) filters.push({ key: 'nameOnly', label: 'Name only' });
 		summary.replaceChildren(...filters.map((filter) => {

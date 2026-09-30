@@ -18,7 +18,7 @@ class BrushTipManager extends ContentManager {
 	}
 
 	async initBrowser() {
-		this.browser = new AssetBrowser(this, getAssetBrowserElementIds('brushTip'), getAssetBrowserSchema('brushTip').title);
+		this.browser = new AssetBrowser(this, 'brushTip');
 		await this.browser.init(CONFIG.tools.maskBrush.brushTips.categories);
 	}
 
@@ -135,10 +135,11 @@ class BrushTipManager extends ContentManager {
 		};
 		renderPickerStrip({
 			ownsStrip: Boolean(this.pickerSession) || options.closing === true, visible: Boolean(this.pickerSession),
-			armed: Boolean(this.pickerSession), library: 'brush-tips', ...copy, showDone: false
+			armed: Boolean(this.pickerSession), library: 'brushTip', ...copy, showDone: false
 		});
 		if (!this.pickerSession && !this.editor.pickers.active) {
 			document.getElementById('designGallerySection')?.classList.remove('picker-mode');
+			syncLibraryView();
 		}
 	}
 }

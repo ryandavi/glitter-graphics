@@ -118,25 +118,8 @@
 
 .text-box-mode-group { width: 100%; }
 
-.shape-gallery-categories {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-lg);
-	padding: var(--spacing-md);
-
-	>.shape-gallery-section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-
-		>.shape-gallery-heading {
-			margin: 0;
-			@include field-label(var(--font-size-sm));
-		}
-	}
-}
-
-.shape-gallery-grid {
+// Shape cards in the Library's Shapes grids.
+.asset-grid {
 
 	>.shape-gallery-option {
 		display: flex;

@@ -29,7 +29,8 @@ registerLayerType(LayerType.SPARKLES, {
 		description: 'Snow, hearts or sparkles over the whole picture'
 	},
 	showDesignGallery: true,
-	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'sparkleLayerSettingsSection'],
+	library: 'glitter',
+	designPanelSections: ['sparkleLayerSettingsSection'],
 	mobileSettingsSections: ['sparkleLayer'],
 	panelMode: 'sparkles',
 	elementClass: 'sparkle-layer-element',

@@ -72,7 +72,6 @@ class ShapeGlitterManager {
 		document.body.appendChild(this.ui.fillImageInput);
 
 		this.renderShapePicker();
-		this.renderShapeGallery();
 	}
 
 	// How the declared field binder (ui/paint-slot-controls.js) edits a shape.
@@ -114,56 +113,24 @@ class ShapeGlitterManager {
 			card.setAttribute('role', 'option');
 			picker.appendChild(card);
 		});
-		this._syncPickerActive();
+		this.syncShapeSelection();
 	}
 
-	renderShapeGallery() {
-		if (!this.ui.gallery) return;
-
-		const categories = document.createElement('div');
-		categories.className = 'shape-gallery-categories';
-
-		ShapeLibrary.FILL_SHAPE_CATEGORIES.forEach(({ id: categoryId, label }) => {
-			const shapes = ShapeLibrary.FILL_SHAPES.filter((shape) => shape.category === categoryId);
-			if (!shapes.length) return;
-
-			const section = document.createElement('section');
-			section.className = 'shape-gallery-section';
-
-			const heading = document.createElement('h3');
-			heading.className = 'shape-gallery-heading';
-			heading.id = `shapeGallery${categoryId.charAt(0).toUpperCase()}${categoryId.slice(1)}`;
-			heading.textContent = label;
-			section.appendChild(heading);
-
-			const grid = document.createElement('div');
-			grid.className = 'asset-grid shape-gallery-grid';
-			grid.setAttribute('aria-labelledby', heading.id);
-
-			shapes.forEach(({ id, label: shapeLabel }) => {
-				const card = createShapeCard(id, shapeLabel, { className: 'asset-option shape-gallery-option' });
-				card.addEventListener('click', () => {
-					const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
-					const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
-					if (targetLayer) {
-						this.applyShapeToLayer(targetLayer, id);
-						if (this.shapeChangeLayerId) this.updatePickerStrip();
-						return;
-					}
-					const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: id } });
-					if (layer) this.editor.finishLayerCreation(layer);
-				});
-				grid.appendChild(card);
-			});
-			section.appendChild(grid);
-			categories.appendChild(section);
-		});
-
-		this.ui.gallery.replaceChildren(categories);
-		this._syncPickerActive();
+	// A Library pick: reshape the shape being replaced or the selected shape,
+	// or add a new shape layer.
+	pickLibraryShape(shapeId) {
+		const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
+		const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
+		if (targetLayer) {
+			this.applyShapeToLayer(targetLayer, shapeId);
+			if (this.shapeChangeLayerId) this.updatePickerStrip();
+			return;
+		}
+		const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId } });
+		if (layer) this.editor.finishLayerCreation(layer);
 	}
 
-	_syncPickerActive() {
+	syncShapeSelection() {
 		const activeLayer = this.getActiveShapeLayer();
 		const current = activeLayer ? activeLayer.shapeData.shapeId : this.getActiveShapeId();
 		this.ui.picker?.querySelectorAll('.brush-shape-option').forEach((el) => {
@@ -193,7 +160,7 @@ class ShapeGlitterManager {
 			this.activeShapeId = card.dataset.shape;
 			const layer = this.getActiveShapeLayer();
 			if (layer) this.applyShapeToLayer(layer, card.dataset.shape);
-			this._syncPickerActive();
+			this.syncShapeSelection();
 		});
 
 		[this.ui.fillImageThumbnail, this.ui.fillImageChange].filter(Boolean).forEach((control) => {
@@ -444,10 +411,7 @@ class ShapeGlitterManager {
 		this.shapeChangeLayerId = layer.id;
 		pickerCloseSession(this, { refresh: () => this.updatePickerStrip() });
 		this.updatePickerStrip();
-		revealAssetBrowser(this.editor);
-		requestAnimationFrame(() => requestAnimationFrame(() => {
-			this.ui.gallery?.scrollTo?.({ top: 0, behavior: 'smooth' });
-		}));
+		revealAssetBrowser(this.editor, this.editor.shapeBrowserManager, layer.shapeData.shapeId);
 	}
 
 	closePickerSession() {
@@ -525,7 +489,7 @@ class ShapeGlitterManager {
 		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
 		if (this.ui.radiusRow) this.ui.radiusRow.hidden = !LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer);
 
-		this._syncPickerActive();
+		this.syncShapeSelection();
 
 		// Position/Transform/Scale/Flip use the shared transform panel.
 		this.editor.loadTransformSettings?.(layer, 'shape');

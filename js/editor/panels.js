@@ -100,7 +100,8 @@ isLayerContentLocked(layer) {
 		// Canvas Quick Add / Project content while the picker is open.
 		if (this.brushTipManager?.pickerSession) {
 			config = {
-				designPanelSections: ['brushTipSearchSection', 'brushTipOptions'],
+				designPanelSections: [],
+				library: 'brushTip',
 				panelMode: 'brush-tips'
 			};
 		} else if (this.autoGlitterManager?.isSessionActive()) {
@@ -128,6 +129,7 @@ isLayerContentLocked(layer) {
 			if (designPanel) {
 				designPanel.dataset.panelMode = config.panelMode;
 				designPanel.dataset.galleryVisible = String(config.showDesignGallery !== false);
+				designPanel.dataset.homeLibrary = config.library || '';
 			}
 		}
 		this.syncLayerBlendModeControl(layer);
@@ -139,6 +141,7 @@ isLayerContentLocked(layer) {
 		}
 
 		this.syncNoLayerPanelState();
+		syncLibraryView();
 		// The document-size form is one self-contained "Size" card (PANEL_SCHEMAS
 		// .documentSize). Relocate the single node between the no-selection panel
 		// and Canvas Properties; it carries identical chrome in both.
@@ -310,9 +313,9 @@ isLayerContentLocked(layer) {
 
 		if (defaultGroups) defaultGroups.hidden = false;
 		if (multiGroup) multiGroup.hidden = true;
-		if (emptyText) emptyText.textContent = 'Design';
-		if (designTitle) designTitle.textContent = 'Design';
-		if (emptySubtext) emptySubtext.textContent = 'Nothing selected. Pick a layer to edit it, or add content below.';
+		if (emptyText) emptyText.textContent = 'Nothing selected';
+		if (designTitle) designTitle.textContent = 'Nothing selected';
+		if (emptySubtext) emptySubtext.textContent = 'Pick a layer to edit it, or add content below.';
 	}
 
 ,
@@ -678,10 +681,8 @@ isLayerContentLocked(layer) {
 					? layer.stickerData?.[this.stickerManager.getGlitterSelectionTarget(layer)]?.glitterId
 				: getLayerFillGlitterId(layer);
 
-		// Query all glitter options in BOTH traditional grid AND asset browser
-		const glitterOptions = document.querySelectorAll(
-			'.asset-options .asset-option, #glitterItemGrid .asset-option, #glitterSearchResults .asset-option'
-		);
+		// Only the glitter browser: other kinds reuse numeric ids.
+		const glitterOptions = document.querySelectorAll(`#${getAssetBrowserSchema('glitter').browserHost} .asset-option`);
 
 		glitterOptions.forEach(opt => {
 			const isSelected = layer && (slotPicker || layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE || layer.type === LayerType.STICKER) &&
@@ -699,7 +700,7 @@ isLayerContentLocked(layer) {
 		const layer = this.layerManager.getActiveLayer();
 
 		// Get all sticker options (from asset browser)
-		const stickerOptions = document.querySelectorAll('.asset-options .asset-option');
+		const stickerOptions = document.querySelectorAll(`#${getAssetBrowserSchema('sticker').browserHost} .asset-option`);
 
 		// Early return if no sticker layer is active
 		if (!layer || layer.type !== LayerType.STICKER || !layer.stickerSourceId) {

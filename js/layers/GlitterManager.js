@@ -58,7 +58,7 @@ class GlitterManager extends ContentManager {
 	}
 
 async initBrowser() {
-	this.browser = new AssetBrowser(this, getAssetBrowserElementIds('glitter'), getAssetBrowserSchema('glitter').title);
+	this.browser = new AssetBrowser(this, 'glitter');
 	
 	await this.browser.init('data/glitter-categories.json');
 }

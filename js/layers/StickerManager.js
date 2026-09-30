@@ -22,7 +22,7 @@ class StickerManager extends ContentManager {
 	}
 
 	async initBrowser() {
-		this.browser = new AssetBrowser(this, getAssetBrowserElementIds('sticker'), getAssetBrowserSchema('sticker').title);
+		this.browser = new AssetBrowser(this, 'sticker');
 
 		await this.browser.init('data/sticker-categories.json');
 	}

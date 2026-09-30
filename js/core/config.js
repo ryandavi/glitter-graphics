@@ -589,6 +589,10 @@ const CONFIG = deepFreeze({
 
 	ui: {
 		independentCollapsibleSections: ['layersPanel'],
+		// The Library's Recent strip, per asset kind.
+		library: {
+			recentCount: 12
+		},
 		zoom: {
 			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 			pixelGridMinZoom: 6,

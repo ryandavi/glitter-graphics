@@ -10,7 +10,10 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	pixelGrid: { default: () => CONFIG.ui.zoom.pixelGridEnabled },
 	reduceMotion: { default: () => false },
 	showAllControls: { default: () => false },
-	filterPreviewLevel: { default: () => 'still' }
+	filterPreviewLevel: { default: () => 'still' },
+	// The Library's per-kind asset id lists: { glitter: [id, ...], font: [...] }.
+	libraryRecents: { default: () => ({}), keepOnReset: true },
+	libraryFavorites: { default: () => ({}), keepOnReset: true }
 });
 
 class Preferences {
@@ -59,8 +62,10 @@ class Preferences {
 		return value;
 	}
 
+	// Settings only: `keepOnReset` entries are the user's collections, not settings.
 	resetAll() {
-		this.values = {};
+		this.values = Object.fromEntries(Object.entries(this.values)
+			.filter(([key]) => this.schema[key]?.keepOnReset));
 		this.persist();
 		Object.keys(this.schema).forEach((key) => {
 			const value = this.get(key);

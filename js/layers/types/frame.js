@@ -38,7 +38,8 @@ registerLayerType(LayerType.FRAME, {
 		order: 1,
 		description: 'Put a border or an ornate frame around the picture'
 	},
-	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'frameSettingsSection'],
+	library: 'glitter',
+	designPanelSections: ['frameSettingsSection'],
 	mobileSettingsSections: ['frame'],
 	panelMode: 'frame',
 	elementClass: 'frame-layer-element',

@@ -96,6 +96,7 @@ function renderPickerStrip(state = {}) {
 		if (visible && state.library) section.dataset.pickerLibrary = state.library;
 		else delete section.dataset.pickerLibrary;
 	}
+	syncLibraryView();
 	if (!visible) return;
 	if (title) title.textContent = state.title || '';
 	if (detail) detail.textContent = state.detail || '';

@@ -62,7 +62,8 @@ const LAYER_UI_CONFIG = {
 		panelMode: 'no-layer'
 	},
 	AUTO_GLITTER: {
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'autoGlitterSettingsSection'],
+		library: 'glitter',
+		designPanelSections: ['autoGlitterSettingsSection'],
 		mobileSettingsSections: ['autoGlitter'],
 		panelMode: 'auto-glitter'
 	}

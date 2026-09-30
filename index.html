@@ -45,7 +45,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=3b8cb301">
+	<link rel="stylesheet" href="css/style.css?v=4664ccbf">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -256,9 +256,9 @@
 									<svg class="icon">
 										<use href="#icon-palette"></use>
 									</svg>
-									<span class="name">Gallery</span>
+									<span class="name">Library</span>
 								</span>
-								<span class="section-header-title-text" id="designGalleryTitleText">Design</span>
+								<span class="section-header-title-text" id="designGalleryTitleText">Library</span>
 							</h3>
 							<div class="section-header-actions">
 								<div class="section-header-action btn-icon upload-sticker-action" id="uploadStickerBtn" data-no-accordion-toggle="true">
@@ -308,15 +308,20 @@
 								<button type="button" class="btn-simple gallery-picker-strip-done" id="galleryPickerStripDone">Done</button>
 							</div>
 
-							<div class="asset-options gallery-content" id="shapesOptions" data-gallery-content="shapes" aria-label="Shapes"></div>
-							<!-- Asset browsers: search/filter blocks and browsers render from
-							     tpl-asset-search / tpl-asset-browser (js/ui/asset-browser-markup.js). -->
+							<!-- The Library: one search/filter block + browser pair per asset kind
+							     (ASSET_BROWSERS in js/ui/asset-browser-markup.js), rendered from
+							     tpl-asset-search / tpl-asset-browser. syncLibraryView shows one kind.
+							     Each search host sits directly before its browser host. -->
 							<div class="section-content gallery-search-section" id="glitterSearchSection" data-gallery-search="glitter"></div>
 							<div class="asset-options glitter-options gallery-content" id="glitterOptions" data-gallery-content="glitter"></div>
 							<div class="section-content gallery-search-section" id="stickersSearchSection" data-gallery-search="stickers"></div>
 							<div class="asset-options stickers-options gallery-content" id="stickersOptions" data-gallery-content="stickers"></div>
 							<div class="section-content gallery-search-section" id="brushTipSearchSection" data-gallery-search="brush-tips"></div>
 							<div class="asset-options gallery-content brush-tip-options" id="brushTipOptions" data-gallery-content="brush-tips"></div>
+							<div class="section-content gallery-search-section" id="shapesSearchSection" data-gallery-search="shapes"></div>
+							<div class="asset-options gallery-content shapes-options" id="shapesOptions" data-gallery-content="shapes"></div>
+							<div class="section-content gallery-search-section" id="fontsSearchSection" data-gallery-search="fonts"></div>
+							<div class="asset-options gallery-content fonts-options" id="fontsOptions" data-gallery-content="fonts"></div>
 
 							<!-- Base Layer Settings Section -->
 							<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection"></div>
@@ -1480,7 +1485,7 @@
 		</div>
 
 		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="design" aria-controls="designPanel" aria-expanded="false">Design</button>
+			<button class="mobile-drawer-btn" data-drawer="design" aria-controls="designPanel" aria-expanded="false">Library</button>
 		</div>
 
 		<div class="mobile-drawer-btn-group">
@@ -1528,6 +1533,7 @@
 			     ============================================================ -->
 			<symbol id="icon-move" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v11M2.5 8h11M6 4.5 8 2.5l2 2M6 11.5 8 13.5l2-2M4.5 6 2.5 8l2 2M11.5 6 13.5 8l-2 2" /></symbol>
 			<symbol id="icon-motion-pause" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="2.5" width="3" height="11" rx=".75" /><rect x="9.5" y="2.5" width="3" height="11" rx=".75" /></symbol>
+			<symbol id="icon-heart" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path style="fill: var(--icon-heart-fill, none)" d="M8 13.5S2.5 10.3 2.5 6.4A2.9 2.9 0 0 1 8 4.9a2.9 2.9 0 0 1 5.5 1.5c0 3.9-5.5 7.1-5.5 7.1Z" /></symbol>
 			<symbol id="icon-brush" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2.6c.6.6.6 1.5 0 2.1l-5.2 5.2-2.1-2.1 5.2-5.2c.6-.6 1.5-.6 2.1 0Z" /><path d="M6.1 9.8c-1.2-.2-2.4.6-2.7 1.8-.2.8-.6 1.2-1.2 1.5 1 .9 2.9 1 4-.1.8-.8.9-2 .3-2.9" /></symbol>
 			<symbol id="icon-magic-wand" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 9.5 6.5M8.5 4.5l3 3" /><path d="M12 1.8l.5 1.5 1.5.5-1.5.5L12 6l-.5-1.5L10 4l1.5-.5zM4 2.3l.4 1.1 1.1.4-1.1.4L4 5.6l-.4-1.1L2.5 4l1.1-.4z" /></symbol>
 			<symbol id="icon-pointer" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 2.5 12 6.2l-3.6 1.1-1.1 3.6z" /></symbol>
@@ -1857,26 +1863,26 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=8b996878"></script>
 	<script src="js/core/fields.js?v=fdadf471"></script>
-	<script src="js/core/config.js?v=beb03adf"></script>
+	<script src="js/core/config.js?v=d6efe274"></script>
 	<script src="js/core/tools.js?v=442b0974"></script>
-	<script src="js/core/layer-types.js?v=f4f37457"></script>
+	<script src="js/core/layer-types.js?v=96e3fc2f"></script>
 	<script src="js/core/options.js?v=223ad907"></script>
-	<script src="js/ui/panel-schemas.js?v=397c684f"></script>
+	<script src="js/ui/panel-schemas.js?v=109f495e"></script>
 	<script src="js/paint/paint-slots.js?v=802a1a39"></script>
-	<script src="js/layers/types/base-image.js?v=beaddccc"></script>
+	<script src="js/layers/types/base-image.js?v=271e2694"></script>
 	<script src="js/layers/types/filter.js?v=f5e44e55"></script>
-	<script src="js/layers/types/glitter-fill.js?v=06850e37"></script>
-	<script src="js/layers/types/sticker.js?v=48ca41f3"></script>
-	<script src="js/layers/types/text.js?v=46fb9812"></script>
-	<script src="js/layers/types/frame.js?v=75156c64"></script>
-	<script src="js/layers/types/sparkles.js?v=827ef44f"></script>
-	<script src="js/layers/types/shape.js?v=efc93f03"></script>
+	<script src="js/layers/types/glitter-fill.js?v=23ea0af5"></script>
+	<script src="js/layers/types/sticker.js?v=3e69aba9"></script>
+	<script src="js/layers/types/text.js?v=965019db"></script>
+	<script src="js/layers/types/frame.js?v=a0619ace"></script>
+	<script src="js/layers/types/sparkles.js?v=980b665e"></script>
+	<script src="js/layers/types/shape.js?v=3bed5ee3"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=995d5ea0"></script>
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
 	<script src="js/core/export-target.js?v=368d3fa5"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=570c83b7"></script>
+	<script src="js/core/preferences.js?v=e393fb42"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=bfa14352"></script>
 	<script src="js/core/dom.js?v=b728eda1"></script>
@@ -1893,7 +1899,7 @@
 	<script src="js/ui/tooltip.js?v=3d7c98d2"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=2cd7921f"></script>
-	<script src="js/ui/gallery.js?v=9568db2b"></script>
+	<script src="js/ui/gallery.js?v=c74fc71f"></script>
 	<script src="js/ui/preset-library.js?v=7fe946cf"></script>
 	<script src="js/ui/template-library.js?v=da8982e6"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -1926,7 +1932,7 @@
 	<script src="js/ui/gradient-editor.js?v=ffb6725a"></script>
 	<script src="js/ui/color-eyedropper.js?v=a1914b36"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
-	<script src="js/ui/asset-browser-markup.js?v=78af60f6"></script>
+	<script src="js/ui/asset-browser-markup.js?v=657abbb3"></script>
 	<script src="js/ui/panel-renderer.js?v=8ddee003"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2adf10d6"></script>
 	<script src="js/ui/settings-renderer.js?v=9f7b668d"></script>
@@ -1935,7 +1941,7 @@
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=4c66d155"></script>
 	<script src="js/editor/settings.js?v=9297a907"></script>
-	<script src="js/editor/panels.js?v=7fab3ec6"></script>
+	<script src="js/editor/panels.js?v=0fb371f2"></script>
 	<script src="js/editor/disclosures.js?v=dd91318d"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=de345d49"></script>
@@ -1947,7 +1953,7 @@
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>
 	<script src="js/editor/canvas-resize.js?v=87d98f26"></script>
 		<script src="js/ui/hints.js?v=94bb3942"></script>
-	<script src="js/ui/picker-session.js?v=e7f43abb"></script>
+	<script src="js/ui/picker-session.js?v=39ebd0cf"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=7ef5a58f"></script>
 	<script src="js/ui/modal-filter.js?v=2a5c14d8"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
@@ -1985,18 +1991,20 @@
 	<script src="js/layers/LayerManager.js?v=be883bb8"></script>
 
 	<!-- Content -->
-	<script src="js/assets/AssetBrowser.js?v=7013e5b2"></script>
-	<script src="js/assets/ContentManager.js?v=8a395d2e"></script>
-	<script src="js/assets/BrushTipManager.js?v=85d0ceea"></script>
+	<script src="js/assets/AssetBrowser.js?v=36ccf5a5"></script>
+	<script src="js/assets/ContentManager.js?v=2aa60a88"></script>
+	<script src="js/assets/BrushTipManager.js?v=7ef86678"></script>
+	<script src="js/assets/ShapeBrowserManager.js?v=810e9e89"></script>
+	<script src="js/assets/FontBrowserManager.js?v=57bfd346"></script>
 	<script src="js/transforms/LayerTransform.js?v=129b810a"></script>
-	<script src="js/layers/GlitterManager.js?v=dcd320cb"></script>
+	<script src="js/layers/GlitterManager.js?v=b8545723"></script>
 	<script src="js/layers/BaseBackgroundManager.js?v=cbefcf71"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
 	<script src="js/systems/AutoGlitterManager.js?v=40f61f41"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
-	<script src="js/layers/TextGlitterManager.js?v=43de6c0b"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=001581bf"></script>
-	<script src="js/layers/StickerManager.js?v=20db51aa"></script>
+	<script src="js/layers/TextGlitterManager.js?v=ba8e3c9e"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=0f970582"></script>
+	<script src="js/layers/StickerManager.js?v=770d5b00"></script>
 	<script src="js/layers/FilterLayerManager.js?v=b0834b44"></script>
 	<script src="js/layers/FrameLayerManager.js?v=cd8c6d79"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=e4a1ef5f"></script>
@@ -2005,7 +2013,7 @@
 		<script src="js/systems/MobileManager.js?v=2031c7b5"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=46f2aeb1"></script>
+	<script src="js/app.js?v=dfccab48"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

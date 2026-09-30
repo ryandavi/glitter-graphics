@@ -71,7 +71,8 @@ registerLayerType(LayerType.STICKER, {
 		quickAddId: 'quickActionAddSticker',
 		quickAddOrder: 2
 	},
-	designPanelSections: ['stickersSearchSection', 'stickersOptions', 'glitterSearchSection', 'glitterOptions', 'stickerSettingsSection'],
+	library: 'sticker',
+	designPanelSections: ['stickerSettingsSection'],
 	mobileSettingsSections: ['sticker'],
 	panelMode: 'sticker',
 	elementClass: 'sticker-element',

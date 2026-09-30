@@ -24,52 +24,11 @@
 		// box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
 	}
 
-	&[data-panel-mode="sticker"] {
-
-		>.section>.section-header.glitter-header .upload-sticker-action {
-			visibility: visible;
-			pointer-events: auto;
-		}
-
-		// The sticker gallery shows ONE browser at a time: the sticker browser
-		// while browsing, the glitter browser only while a glitter picker
-		// session is armed (StickerManager toggles picker-mode on the section).
-		// Both pairs stay .visible via LAYER_UI_CONFIG; this picks between them.
-		.design-gallery-section:not(.picker-mode) {
-
-			[data-gallery-search="glitter"],
-			[data-gallery-content="glitter"] {
-				display: none;
-			}
-		}
-
-		.design-gallery-section.picker-mode {
-
-			[data-gallery-search="stickers"],
-			[data-gallery-content="stickers"] {
-				display: none;
-			}
-		}
-	}
-
-	&[data-panel-mode="shape"] {
-		.design-gallery-section:not(.picker-mode) {
-			[data-gallery-search="glitter"],
-			[data-gallery-content="glitter"] { display: none; }
-		}
-
-		.design-gallery-section.picker-mode [data-gallery-content="shapes"] { display: none; }
-	}
-
-	&[data-panel-mode="glitter"] {
-		.design-gallery-section:not([data-picker-library="brush-tips"]) {
-			[data-gallery-search="brush-tips"],
-			[data-gallery-content="brush-tips"] { display: none; }
-		}
-		.design-gallery-section[data-picker-library="brush-tips"] {
-			[data-gallery-search="glitter"],
-			[data-gallery-content="glitter"] { display: none; }
-		}
+	// The Library shows one asset kind at a time (syncLibraryView hides the
+	// other kinds' hosts); the sticker upload action belongs to Stickers.
+	>.design-gallery-section[data-library="sticker"]>.section-header.glitter-header .upload-sticker-action {
+		visibility: visible;
+		pointer-events: auto;
 	}
 
 	&[data-gallery-visible="false"] > .design-gallery-section {
@@ -339,22 +298,19 @@
 		}
 	}
 
-	> [data-gallery-search="glitter"].filters-open ~ [data-gallery-content="glitter"],
-	> [data-gallery-search="stickers"].filters-open ~ [data-gallery-content="stickers"],
-	> [data-gallery-search="brush-tips"].filters-open ~ [data-gallery-content="brush-tips"] {
+	// Every search host sits directly before its own browser host.
+	> .gallery-search-section.filters-open + .asset-options {
 		display: none;
 	}
 
-	> [data-gallery-search="glitter"].filters-returning ~ [data-gallery-content="glitter"],
-	> [data-gallery-search="stickers"].filters-returning ~ [data-gallery-content="stickers"],
-	> [data-gallery-search="brush-tips"].filters-returning ~ [data-gallery-content="brush-tips"] {
+	> .gallery-search-section.filters-returning + .asset-options {
 		animation: filter-surface-enter var(--transition-fast) ease-out;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.filters-container.visible,
-	.design-gallery-content > .gallery-search-section.filters-returning ~ .asset-options {
+	.design-gallery-content > .gallery-search-section.filters-returning + .asset-options {
 		animation: none;
 	}
 }

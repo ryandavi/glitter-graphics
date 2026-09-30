@@ -1,11 +1,14 @@
 'use strict';
 
-// The gallery's asset browsers (glitter, stickers, brush tips): one search +
-// filter block and one browser (category grid, search results, item grid,
-// lazy-load sentinel) each, rendered from the tpl-asset-search and
-// tpl-asset-browser templates into their hosts at boot, before the managers
-// bind. Element ids follow ASSET_BROWSER_ID_GRAMMAR; the managers read them
-// through getAssetBrowserUi() and getAssetBrowserElementIds().
+// The Library: one entry per pickable asset kind (glitter, stickers, brush
+// tips, shapes, fonts). Each kind gets one search + filter block and one
+// browser (category grid, search results, item grid, lazy-load sentinel),
+// rendered from the tpl-asset-search and tpl-asset-browser templates into its
+// hosts at boot, before the managers bind. Element ids follow
+// ASSET_BROWSER_ID_GRAMMAR; the managers read them through getAssetBrowserUi()
+// and getAssetBrowserElementIds(). The Library holds assets (files with
+// attribution); presets are values and stay in Properties next to what they
+// change.
 
 const ASSET_BROWSER_ID_GRAMMAR = Object.freeze({
 	search: '{p}Search',
@@ -37,10 +40,12 @@ const ASSET_BROWSER_COLOR_CHIPS = ['red', 'orange', 'yellow', 'green', 'blue', '
 //   { kind: 'chips', label, filter, swatch?, attribute?, options: [{ value, label }] }
 //     static chips; `swatch` draws color dots without text, `attribute`
 //     names the data-* key holding the value (default 'color')
+// `layout`: 'folders' opens a category to show its items; 'grouped' lists
+// every item under its category heading (small collections).
 const ASSET_BROWSERS = Object.freeze([
 	{
 		prefix: 'glitter', searchHost: 'glitterSearchSection', browserHost: 'glitterOptions',
-		title: 'Glitter', placeholder: 'Search by name or tag...',
+		title: 'Glitter', layout: 'folders', placeholder: 'Search by name or tag...',
 		filters: [
 			{ kind: 'nameOnly' },
 			{ kind: 'chips', label: 'Colors', filter: 'color', swatch: true, options: [
@@ -59,7 +64,7 @@ const ASSET_BROWSERS = Object.freeze([
 	},
 	{
 		prefix: 'sticker', searchHost: 'stickersSearchSection', browserHost: 'stickersOptions',
-		title: 'Stickers', placeholder: 'Search stickers...',
+		title: 'Stickers', layout: 'folders', placeholder: 'Search stickers...',
 		filters: [
 			{ kind: 'nameOnly' },
 			{ kind: 'chips', label: 'Motion', filter: 'animated', attribute: 'animated', options: [{ value: 'true', label: 'Animated' }, { value: 'false', label: 'Static' }] },
@@ -72,8 +77,24 @@ const ASSET_BROWSERS = Object.freeze([
 	},
 	{
 		prefix: 'brushTip', searchHost: 'brushTipSearchSection', browserHost: 'brushTipOptions',
-		title: 'Brush Tips', placeholder: 'Search brush tips...',
+		title: 'Brush Tips', layout: 'folders', placeholder: 'Search brush tips...',
 		filters: [{ kind: 'categories', label: 'Category' }]
+	},
+	{
+		prefix: 'shape', searchHost: 'shapesSearchSection', browserHost: 'shapesOptions',
+		title: 'Shapes', layout: 'grouped', placeholder: 'Search shapes...',
+		filters: [{ kind: 'categories', label: 'Category' }]
+	},
+	{
+		prefix: 'font', searchHost: 'fontsSearchSection', browserHost: 'fontsOptions',
+		title: 'Fonts', layout: 'grouped', placeholder: 'Search fonts...',
+		filters: [
+			{ kind: 'categories', label: 'Category' },
+			{ kind: 'chips', label: 'Language', filter: 'script', attribute: 'value', options: [
+				{ value: 'latin', label: 'Latin' }, { value: 'ja', label: 'Japanese' },
+				{ value: 'ko', label: 'Korean' }, { value: 'zh', label: 'Chinese' }
+			] }
+		]
 	}
 ]);
 

@@ -47,10 +47,8 @@
 	color: var(--color-text-tertiary);
 }
 
-// The frame (fixed height, scroll, bottom fade) is the shared
-// `.property-scrollbox`; only the option cards are font-specific.
-// Gallery-card styling, reusing the .asset-option card conventions (outline
-// selection state, corner badge) instead of inventing a new visual language.
+// The Library's font cards: .asset-option conventions (outline selection
+// state, corner badge), sized by their sample instead of a square tile.
 .text-font-option {
 	flex-shrink: 0;
 	width: 100%;
@@ -111,5 +109,21 @@
 		background: color-mix(in srgb, var(--color-off-white) 14%, var(--color-bg-card));
 		color: var(--color-off-white);
 		border-color: color-mix(in srgb, var(--color-off-white) 32%, var(--color-border));
+	}
+}
+
+// Text Properties' current-font row: the sample in the font itself stands in
+// for a thumbnail; the row opens the Library's Fonts.
+#textFontThumbnail {
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+	cursor: pointer;
+	color: var(--color-text-primary);
+
+	>.text-font-thumbnail-sample {
+		font-size: 24px;
+		line-height: 1;
+		white-space: nowrap;
 	}
 }

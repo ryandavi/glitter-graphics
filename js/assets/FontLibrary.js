@@ -2,9 +2,9 @@
 // FONT LIBRARY
 // ============================================
 // The text fonts: the data/fonts.json manifest (fonts, tag groups, resolved
-// credits) and FontFace loading. Text layout, the font picker, and export all
+// credits) and FontFace loading. Text layout, the Library's Fonts, and export all
 // read fonts from here. Like ShapeLibrary and BrushLibrary it is data and
-// loading only; the picker UI stays with the text panel (TextGlitterManager).
+// loading only; the picker UI is FontBrowserManager.
 
 const FontLibrary = {
 	fonts: [],

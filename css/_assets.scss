@@ -112,7 +112,95 @@
 		padding: var(--spacing-sm);
 	}
 	&.brush-tip-options .category-card.is-raster .category-card-image>img { image-rendering: pixelated; }
+
+	// Font cards are sample + name, not square tiles: two across in a normal
+	// sidebar.
+	&.fonts-options .asset-grid {
+		grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr));
+
+		>.asset-option {
+			aspect-ratio: auto;
+			min-width: 0;
+			// Room for the heart above the sample.
+			padding-top: 22px;
+
+			>.text-font-option-name {
+				max-width: 100%;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+		}
+	}
 }
+
+// ===== LIBRARY: RECENT + FAVORITES =====
+
+// The heart on every Library card. Shows on hover or focus; stays once hearted.
+// Touch screens have no hover, so it always shows there.
+.asset-favorite-toggle {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	z-index: 1;
+	display: grid;
+	place-items: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-full);
+	background: var(--color-bg-card);
+	color: var(--color-text-secondary);
+	box-shadow: 0 1px 3px var(--color-shadow-soft);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--transition-fast), color var(--transition-fast);
+
+	>.icon {
+		width: 12px;
+		height: 12px;
+	}
+
+	&:hover { color: var(--color-accent); }
+
+	&:focus-visible {
+		opacity: 1;
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
+	}
+
+	&.active {
+		--icon-heart-fill: currentColor;
+		opacity: 1;
+		color: var(--color-accent);
+	}
+
+	.asset-option:is(:hover, :focus-visible, :focus-within) > & { opacity: 1; }
+
+	@media (hover: none) { opacity: 0.85; }
+}
+
+// Recent: one row that scrolls sideways, above the categories.
+.asset-browser-recent {
+	&[hidden] { display: none; }
+
+	&:not([hidden]) + .asset-browser-index-lead,
+	&:not([hidden]) ~ .category-grid.visible,
+	&:not([hidden]) ~ .search-results-container.visible { margin-top: var(--spacing-md); }
+
+	>.asset-grid.asset-browser-recent-grid {
+		grid-auto-flow: column;
+		grid-template-columns: none;
+		grid-auto-columns: 64px;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		padding: 3px;
+		margin: -3px;
+	}
+}
+
+.fonts-options .asset-browser-recent > .asset-grid.asset-browser-recent-grid { grid-auto-columns: 130px; }
 
 :root[data-theme='light'] .brush-tip-options .asset-option {
 	&.is-vector>img { filter: none; }

@@ -339,12 +339,6 @@
 		min-width: 0;
 		overflow: hidden;
 
-		&[data-gallery-content="shapes"] {
-			overflow-y: auto;
-			overscroll-behavior: contain;
-			scrollbar-gutter: stable;
-		}
-
 		.asset-browser-content {
 			overflow-y: auto;
 			scrollbar-gutter: stable;

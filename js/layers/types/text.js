@@ -77,7 +77,8 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	// No layerSettingsSection / 'tool': Selection Settings only applies to
 	// color-picked glitter fills — text layers hide it instead of showing an
 	// explanatory empty state.
-	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection'],
+	library: 'glitter',
+	designPanelSections: ['textSettingsSection'],
 	mobileSettingsSections: ['text'],
 	panelMode: 'text',
 	elementClass: 'text-glitter-element',

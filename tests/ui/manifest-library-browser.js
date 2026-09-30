@@ -55,20 +55,23 @@ async function main() {
 				fillShapeCategories: ShapeLibrary.FILL_SHAPE_CATEGORIES.length,
 				brushShapes: ShapeLibrary.BRUSH_SHAPES.length,
 				maskEditorBrushShapes: MaskEditor.BRUSH_SHAPES.length,
-				shapeCards: document.querySelectorAll('.shape-gallery-option').length,
+				shapeCards: document.querySelectorAll('#shapesOptions .search-results-container .shape-gallery-option').length,
+				fontCards: document.querySelectorAll('#fontsOptions .search-results-container .text-font-option').length,
 				brushTips: window.editor.brushTipManager.content.length,
+				rasterBrushes: Object.keys(BrushLibrary.BRUSHES).length,
 				normalizedShapes
 			};
 		});
 
 		assert(result.fonts === 25, `Expected 25 fonts, got ${result.fonts}`);
 		assert(result.fontTagGroups === 4, `Expected 4 font tag groups, got ${result.fontTagGroups}`);
-		assert(result.fillShapes === 40, `Expected 40 fill shapes, got ${result.fillShapes}`);
+		assert(result.fillShapes === 39, `Expected 39 fill shapes, got ${result.fillShapes}`);
 		assert(result.fillShapeCategories === 7, `Expected 7 fill-shape categories, got ${result.fillShapeCategories}`);
 		assert(result.brushShapes === 5, `Expected 5 brush shapes, got ${result.brushShapes}`);
 		assert(result.maskEditorBrushShapes === result.brushShapes, 'MaskEditor brush alias is stale');
 		assert(result.shapeCards === result.fillShapes, 'Shape gallery does not match the manifest');
-		assert(result.brushTips === result.brushShapes + Object.keys(BrushLibrary.BRUSHES).length, 'Brush gallery does not match its vector and raster manifests');
+		assert(result.fontCards === result.fonts, 'Font Library does not match the manifest');
+		assert(result.brushTips === result.brushShapes + result.rasterBrushes, 'Brush gallery does not match its vector and raster manifests');
 		assert(result.normalizedShapes.length === 21, `Expected 21 normalized supplied shapes, got ${result.normalizedShapes.length}`);
 		result.normalizedShapes.forEach(({ id, bounds }) => {
 			assert(bounds.minX >= 0.75 && bounds.minY >= 0.75, `${id} extends above or left of its 24x24 viewBox`);

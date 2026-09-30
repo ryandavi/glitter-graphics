@@ -28,7 +28,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Glitter-fill layers, and the glitter asset library | `GlitterManager` | Code that only needs a glitter asset reads `editor.glitterLibrary` (today the same object). |
 | Painted masks and their version history | `PaintMaskStore` (`editor.paintMaskStore`) | Live add/sub canvases per glitter-fill layer plus the versioned snapshots that undo states name through `maskVersion`. |
 | Sticker layers and sticker assets | `StickerManager` | |
-| Text layers | `TextGlitterManager` | Fonts (manifest and FontFace loading) come from `FontLibrary`; the font picker UI stays in the text panel. |
+| Text layers | `TextGlitterManager` | Fonts (manifest and FontFace loading) come from `FontLibrary`; the Text panel shows the current font and the Library's Fonts (`FontBrowserManager`) picks one. |
 | Shape layers and shape image fills | `ShapeGlitterManager` | Shape definitions come from `ShapeLibrary`. |
 | Canvas background (image, solid, gradient, glitter) | `BaseBackgroundManager` | The base-image layer, including its glitter-mode preview element. |
 | Filter layers | `FilterLayerManager` | |
@@ -58,7 +58,7 @@ Transformable layers keep `transform.position` as the element center and store `
 | Editable property specs | `FIELDS` in `js/core/fields.js` | Label, unit, range and default per property. Panel rows stamp them; slot and layer defaults read them. |
 | Preset libraries | `createPresetLibrary` in `js/ui/preset-library.js` | Frozen, searchable entries from one or more sources. Applying an entry copies its plain value; `presetGrid` renders the shared grouped keyboard-navigable picker. |
 | Filter operations and looks | `FILTER_OPS` in `js/effects/filter-ops.js`; `FILTERS` in `js/effects/filters.js` | Operations own CSS and pixel painters. A look owns fields and a recipe; its render tier derives from its operations. The Looks grid and selected-look settings render from these entries. |
-| Asset browsers | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | Glitter, sticker and brush-tip search, filters and browser, rendered from two templates. |
+| Library kinds | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | One entry per pickable asset kind (glitter, stickers, brush tips, shapes, fonts): search, filters, browser `layout` (`folders` or `grouped`), rendered from two templates. Each kind is a `ContentManager` subclass with an `AssetBrowser`; recents and favorites come with the base class and live in `PREFERENCES` (`libraryRecents`, `libraryFavorites`). |
 | Tools | `TOOLS` in `js/core/tools.js` | One entry per tool: button, icon, shortcut command, availability, canvas cursor and `onCanvasAction`. `ToolType`, `TOOL_GROUPS` and `TOOL_TOUCH_ROUTES` derive from it. |
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
 | Runtime user preferences | `PREFERENCES` in `js/core/preferences.js` | `PREFERENCES.get(key)` / `set(key, value)`, persisted to `localStorage`. |

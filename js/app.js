@@ -106,6 +106,9 @@ class GlitterEditor {
 		this.autoGlitterManager = new AutoGlitterManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
+		// The Library's Shapes and Fonts kinds.
+		this.shapeBrowserManager = new ShapeBrowserManager(this);
+		this.fontBrowserManager = new FontBrowserManager(this);
 		this.filterLayerManager = new FilterLayerManager(this);
 		this.frameLayerManager = new FrameLayerManager(this);
 		this.sparkleLayerManager = new SparkleLayerManager(this);
@@ -115,6 +118,7 @@ class GlitterEditor {
 		// manager performs the initial hide for non-text layers.
 		[
 			this.textGlitterManager,
+			this.fontBrowserManager,
 			this.shapeGlitterManager,
 			this.stickerManager,
 			this.glitterManager,
@@ -397,6 +401,8 @@ class GlitterEditor {
 		await this.glitterManager.init(); // NEW
 		await this.brushTipManager.init();
 		await this.textGlitterManager.init();
+		await this.shapeBrowserManager.init();
+		await this.fontBrowserManager.init();
 		this.updateSidePanelUI(null);
 	}
 

@@ -1,5 +1,5 @@
-// Shared gallery reveal path for primary asset Change buttons and armed
-// paint-slot pickers. Mobile uses the Design drawer; desktop uses the same
+// Shared Library reveal path for primary asset Change buttons and armed
+// paint-slot pickers. Mobile uses the Library drawer; desktop uses the same
 // accordion section and scroll target for every asset manager.
 function revealAssetBrowser(editor, manager = null, assetId = null) {
 	const revealRequestedGallery = () => {
@@ -13,10 +13,8 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 	} else {
 		editor.setCollapsibleSectionOpen?.('designGallery', true, true);
 	}
-	// The Design section can contain more than one gallery (Shape layers show
-	// Shapes before Glitter). Align the requested gallery after the accordion or
-	// drawer has completed its layout instead of accepting a partially-visible
-	// `nearest` result that leaves the preceding gallery at the top.
+	// Align the requested browser after the accordion or drawer has completed
+	// its layout instead of accepting a partially-visible `nearest` result.
 	if (assetId != null) {
 		// navigateToItem owns the inner item scroll and centers the selection.
 		// Resetting the same container afterward would immediately hide it again.
@@ -26,9 +24,43 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 	}
 }
 
-// Single source for ShapeLibrary cards used by the shape tool picker and gallery.
-function createShapeCard(shapeId, label, { className = 'brush-shape-option', title = label } = {}) {
-	const card = tplClone('tpl-shape-card');
+// The Library shows one asset kind at a time: an armed picker's kind (a
+// glitter slot picker unless the strip names another library), else the
+// panel's home kind (LAYER_UI_CONFIG `library`). The section header names it;
+// with no kind (nothing selected) syncNoLayerPanelState owns the title.
+function syncLibraryView() {
+	const section = document.getElementById('designGallerySection');
+	if (!section) return null;
+	const home = document.getElementById('designPanel')?.dataset.homeLibrary || '';
+	const kind = section.dataset.pickerLibrary || (section.classList.contains('picker-mode') ? 'glitter' : home);
+	const schema = kind ? getAssetBrowserSchema(kind) : null;
+	if (schema) section.dataset.library = schema.prefix;
+	else delete section.dataset.library;
+	ASSET_BROWSERS.forEach((entry) => {
+		const active = entry === schema;
+		[entry.searchHost, entry.browserHost].forEach((id) => {
+			const host = document.getElementById(id);
+			if (!host) return;
+			host.style.display = active ? '' : 'none';
+			host.classList.toggle('visible', active);
+		});
+	});
+	const title = document.getElementById('designGalleryTitleText');
+	if (schema && title) title.textContent = schema.title;
+	return schema?.prefix || null;
+}
+
+// Single source for ShapeLibrary cards used by the shape tool picker and the
+// Library. `tag` 'div' builds a non-button card (a Library card holds its own
+// favorite button).
+function createShapeCard(shapeId, label, { className = 'brush-shape-option', title = label, tag = 'button' } = {}) {
+	let card = tplClone('tpl-shape-card');
+	if (tag !== 'button') {
+		const box = document.createElement(tag);
+		box.className = card.className;
+		box.append(...card.childNodes);
+		card = box;
+	}
 	card.classList.add(...className.split(/\s+/).filter(Boolean));
 	card.dataset.shape = shapeId;
 	card.title = title;

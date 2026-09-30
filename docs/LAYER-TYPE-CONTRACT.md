@@ -38,7 +38,8 @@ Required for an addable type:
 - `serialization`: how the layer is saved to history, clipboard and project files. Either `{ dataKey, extraKeys, omit, defaults, defaultName, normalize, hydrate, includeMaskVersion, forceLocked }`, or `{ custom: { serialize, deserialize } }` naming manager methods. See `LayerManager.serializeLayer`.
 - `managerKey`: the editor property holding the manager instance.
 - `elementClass`: the preview DOM class used by shared selectors.
-- `designPanelSections`, `mobileSettingsSections` and `panelMode`: which sidebar sections show and which mobile drawers they map to. This entry is what makes mobile drawers work.
+- `designPanelSections`, `mobileSettingsSections` and `panelMode`: which sidebar sections show and which mobile drawers they map to. This entry is what makes mobile drawers work. Library hosts never go in `designPanelSections`.
+- `library`: the Library kind (`ASSET_BROWSERS` prefix: `glitter`, `sticker`, `shape`, …) shown while the layer is selected. An armed picker overrides it; `syncLibraryView` (`js/ui/gallery.js`) is the one place that shows a kind.
 - `onActivate(editor, layer)`: runs when the layer becomes active.
 - `hasVisibleContent(layer)`: whether the layer has anything to draw (read by `layerHasVisibleContent`).
 - `paintSlots`: the type's paint slots, back to front. Each is `{ key, role, path }` plus optional `enabledPath`, `draftPath`, `glitterDefault`, `wholeLayer`, `sourceLabel`, `countsAsEffect`, `framePadding`, `panelPrefix`, `modes` and `fields`. Every slot of a role carries that role's editable fields (`PAINT_SLOT_ROLE_FIELDS`); `fields: { path: 'specKey' }` adds or re-specs one, such as a type-specific border width. The meanings are documented at the top of `js/paint/paint-slots.js`.

@@ -72,7 +72,8 @@ registerLayerType(LayerType.SHAPE, {
 	},
 	// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 	// Shape Properties panel. Selection Settings doesn't apply.
-	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapesOptions', 'shapeSettingsSection'],
+	library: 'shape',
+	designPanelSections: ['shapeSettingsSection'],
 	mobileSettingsSections: ['shape'],
 	panelMode: 'shape',
 	elementClass: 'shape-glitter-element',

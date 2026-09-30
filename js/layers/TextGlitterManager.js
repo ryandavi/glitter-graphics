@@ -9,8 +9,6 @@ class TextGlitterManager {
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
 
-		this.fontPickerRendered = false;
-
 		this.textMaskCache = new Map();
 		// Preview mask data URL per layer id and mask bucket (fill, border, ...),
 		// each keyed by content. Dropped when the layer's element is removed.
@@ -44,14 +42,15 @@ class TextGlitterManager {
 		this.setupUI();
 		this.setupEventListeners();
 		this.setupPickerStripListeners();
-		FontLibrary.loadManifest().then(() => this.renderFontPicker()).catch((error) => this.reportFontLoadError(error));
 	}
 
 	setupUI() {
 		this.ui = {
 			section: document.getElementById('textSettingsSection'),
 			textInput: document.getElementById('textLayerInput'),
-			fontPicker: document.getElementById('textFontPicker'),
+			fontThumbnail: document.getElementById('textFontThumbnail'),
+			fontName: document.getElementById('textFontName'),
+			fontChange: document.getElementById('textFontChange'),
 			fontBold: document.getElementById('textFontBold'),
 			fontItalic: document.getElementById('textFontItalic'),
 			textCaseSelect: document.getElementById('textCaseSelect'),
@@ -140,27 +139,10 @@ class TextGlitterManager {
 			});
 		}
 
-		if (this.ui.fontPicker) {
-			this.ui.fontPicker.addEventListener('click', async (event) => {
-				const button = event.target.closest('[data-font-id]');
-				if (!button) return;
-
-				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-
-				const fontId = button.dataset.fontId;
-				if (!fontId || fontId === layer.textData.fontId) return;
-
-				try {
-					await this.runLayoutRefreshWithAnchor(layer, async () => {
-						layer.textData.fontId = fontId;
-						await FontLibrary.ensureLoaded(fontId);
-					}, { saveHistory: true });
-				} catch (error) {
-					this.reportFontLoadError(error);
-				}
-			});
-		}
+		// The current-font row opens the Library's Fonts in picker mode.
+		[this.ui.fontThumbnail, this.ui.fontChange].filter(Boolean).forEach((control) => {
+			control.addEventListener('click', () => this.editor.fontBrowserManager?.openPicker());
+		});
 
 		const bindFontStyleToggle = (button, property, activeValue, inactiveValue) => {
 			button?.addEventListener('click', async () => {
@@ -680,73 +662,18 @@ class TextGlitterManager {
 		this.editor.updateStatus(`Choose ${this.getEffectTitle(key)} glitter, then press Esc or Done.`);
 	}
 
-	renderFontPicker() {
-		if (!this.ui.fontPicker) return;
-		this.fontPickerRendered = true;
-
-		const fonts = [...FontLibrary.fonts].sort(
-			(a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))
-		);
-
-		// Every font gets the same card: a same sample phrase rendered in the
-		// font itself (never the font's own name — that's shown separately
-		// below, in the UI font, like a gallery card's name caption), plus a
-		// corner badge for any script beyond plain Latin.
-		const sampleTextByScript = { latin: 'Glitter', ja: 'グリッター', ko: '글리터', zh: '闪粉' };
-		const langLabels = { ja: 'JA', ko: 'KO', zh: 'ZH' };
-
-		this.ui.fontPicker.innerHTML = '';
-		this.ui.fontPicker.setAttribute('role', 'listbox');
-		this.ui.fontPicker.setAttribute('aria-label', 'Fonts');
-		GlitterPresetLibrary.bindPickerNavigation(this.ui.fontPicker, '.text-font-option');
-		fonts.forEach((font) => {
-			const scripts = font.scripts || ['latin'];
-			const sampleScript = scripts.find((script) => script !== 'latin' && sampleTextByScript[script]) || 'latin';
-			const extraScripts = scripts.filter((script) => script !== 'latin');
-
-			const card = document.createElement('button');
-			card.className = 'choice-card text-font-option';
-			card.type = 'button';
-			card.dataset.fontId = font.id;
-			card.setAttribute('role', 'option');
-			card.setAttribute('aria-selected', 'false');
-			const credit = Attribution.creditLine(font.attribution);
-			card.title = credit ? `${font.name} — ${credit}` : font.name;
-
-			const sample = document.createElement('span');
-			sample.className = 'text-font-option-sample';
-			sample.style.fontFamily = FontLibrary.getFamily(font);
-			sample.textContent = sampleTextByScript[sampleScript];
-			card.appendChild(sample);
-
-			const name = document.createElement('span');
-			name.className = 'text-font-option-name';
-			name.textContent = font.name;
-			card.appendChild(name);
-
-			// One corner badge: extra scripts and/or the device-font marker
-			// (system faces render with a fallback on devices without them).
-			const badgeLabels = extraScripts.map((script) => langLabels[script] || script.toUpperCase());
-			if (font.system) badgeLabels.push('System');
-			if (badgeLabels.length > 0) {
-				const badge = document.createElement('span');
-				badge.className = 'text-font-option-badge';
-				extraScripts.forEach((script) => badge.classList.add(`is-${script}`));
-				if (font.system) badge.classList.add('is-system');
-				badge.textContent = badgeLabels.join(' · ');
-				card.appendChild(badge);
-			}
-
-			this.ui.fontPicker.appendChild(card);
-		});
-	}
-
-	// The picker's samples render in their own faces, so the panel loads every
-	// font the first time it opens.
-	async ensureFontPickerReady() {
-		await FontLibrary.loadManifest();
-		if (!this.fontPickerRendered) this.renderFontPicker();
-		return FontLibrary.ensureAllLoaded((error) => this.reportFontLoadError(error));
+	// One font change: re-measure around the anchor, one history step.
+	async setLayerFont(layer, fontId) {
+		if (!layer || !fontId || fontId === layer.textData.fontId) return;
+		if (!this.editor.canEditLayer(layer, { notify: true })) return;
+		try {
+			await this.runLayoutRefreshWithAnchor(layer, async () => {
+				layer.textData.fontId = fontId;
+				await FontLibrary.ensureLoaded(fontId);
+			}, { saveHistory: true });
+		} catch (error) {
+			this.reportFontLoadError(error);
+		}
 	}
 
 	reportFontLoadError(error) {
@@ -828,17 +755,14 @@ class TextGlitterManager {
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return;
 
-		this.ensureFontPickerReady().catch((error) => {
-			this.reportFontLoadError(error);
-		});
-
 		if (this.ui.textInput) {
 			this.ui.textInput.value = layer.textData.text;
 		}
 
 		syncFieldControls(this.fieldHost, layer);
 
-		this.updateFontSelection(layer.textData.fontId);
+		this.updateFontRow(layer.textData.fontId);
+		this.editor.fontBrowserManager?.updateSelection();
 		this.updateFontStyleSelection(layer.textData);
 		this.updateAlignmentSelection(layer.textData.align);
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
@@ -892,21 +816,19 @@ class TextGlitterManager {
 		});
 	}
 
-	updateFontSelection(fontId) {
-		if (!this.ui.fontPicker) return;
-
-		this.ui.fontPicker.querySelectorAll('[data-font-id]').forEach((button) => {
-			button.classList.toggle('active', button.dataset.fontId === fontId);
-			button.setAttribute('aria-selected', String(button.dataset.fontId === fontId));
-		});
-
-		// Only reveal the active card when the font actually changed. This runs
-		// on every panel sync, so scrolling unconditionally threw the list back
-		// to the selected font whenever anything else about the text changed -
-		// pressing Bold while browsing further down the list lost your place.
-		if (fontId !== this.lastRevealedFontId) {
-			this.lastRevealedFontId = fontId;
-			this.scrollActiveFontIntoView();
+	updateFontRow(fontId) {
+		const font = FontLibrary.getFont(fontId);
+		if (!font) return;
+		if (this.ui.fontName) this.ui.fontName.textContent = font.name;
+		if (this.ui.fontThumbnail) {
+			let sample = this.ui.fontThumbnail.querySelector('.text-font-thumbnail-sample');
+			if (!sample) {
+				sample = document.createElement('span');
+				sample.className = 'text-font-thumbnail-sample';
+				this.ui.fontThumbnail.replaceChildren(sample);
+			}
+			sample.style.fontFamily = FontLibrary.getFamily(font);
+			sample.textContent = getFontSampleText(font, 'short');
 		}
 	}
 
@@ -928,20 +850,6 @@ class TextGlitterManager {
 		if (mode === 'lower') return value.toLocaleLowerCase();
 		if (mode === 'title') return value.replace(/(^|\s)(\S)/gu, (match, space, letter) => space + letter.toLocaleUpperCase());
 		return value;
-	}
-
-	scrollActiveFontIntoView() {
-		const picker = this.ui.fontPicker;
-		const active = picker?.querySelector('.text-font-option.active');
-		if (!picker || !active || picker.scrollHeight <= picker.clientHeight) return;
-
-		const top = active.offsetTop;
-		const bottom = top + active.offsetHeight;
-		if (top < picker.scrollTop) {
-			picker.scrollTop = top;
-		} else if (bottom > picker.scrollTop + picker.clientHeight) {
-			picker.scrollTop = bottom - picker.clientHeight;
-		}
 	}
 
 	updateAlignmentSelection(align) {
@@ -1062,6 +970,11 @@ class TextGlitterManager {
 	// updateEffectTargetButtons (arm/disarm, fill-mode flips, layer activate)
 	// and app.updateSidePanelUI (switching to any layer type).
 	updatePickerStrip() {
+		// An open font picker owns the strip while it lasts.
+		if (this.editor.fontBrowserManager?.pickerSession) {
+			this.editor.fontBrowserManager.updatePickerStrip();
+			return;
+		}
 		const layer = this.getActiveTextLayer();
 		if (!layer) {
 			renderPickerStrip({ ownsStrip: true, visible: false });

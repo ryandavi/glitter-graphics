@@ -203,7 +203,7 @@ function createAnimationPanelSpec(prefix) {
 }
 
 const PANEL_SCHEMAS = {
-	// The "nothing selected" panel: sits under the shared Design gallery header
+	// The "nothing selected" panel: sits under the shared Library section header
 	// (so it renders headerless — `section.bare`) and carries two mutually
 	// exclusive `.settings-subsection` blocks. syncNoLayerPanelState toggles
 	// #noLayerDefaultGroups vs #multiLayerSelectionGroup by id; every control id
@@ -212,9 +212,9 @@ const PANEL_SCHEMAS = {
 		prefix: 'noLayer',
 		section: { id: 'noLayerSettingsSection', bare: true, classes: 'panel-redesign' },
 		preamble: [
-			{ kind: 'host', tag: 'span', id: 'noLayerEmptyText', text: 'Design', attrs: { hidden: 'hidden' } },
+			{ kind: 'host', tag: 'span', id: 'noLayerEmptyText', text: 'Nothing selected', attrs: { hidden: 'hidden' } },
 			{ kind: 'host', id: 'noLayerEmptySubtext', classes: 'property-note no-selection-intro',
-				text: 'Nothing selected. Pick a layer to edit it, or add content below.' }
+				text: 'Pick a layer to edit it, or add content below.' }
 		],
 		subsections: [
 			// One L1 group holding the default-state cards, exactly like Text's
@@ -673,7 +673,10 @@ const PANEL_SCHEMAS = {
 					] }
 				] },
 				{ kind: 'card', title: 'Font', items: [
-					{ kind: 'host', id: 'textFontPicker', classes: 'property-inset property-scrollbox text-font-picker' },
+					// The current font; Change opens the Library's Fonts.
+					{ kind: 'assetInfo', info: 'textFontInfo', thumbnail: 'textFontThumbnail',
+						name: 'textFontName', badges: 'textFontBadges', change: 'textFontChange',
+						title: 'Choose another font', compact: true, redesign: true },
 					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', revert: true, options: [
 						{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
 						{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
