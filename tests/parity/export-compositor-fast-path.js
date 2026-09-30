@@ -198,42 +198,18 @@ function assert(condition, message) {
 		const baseLayer = {
 			type: LayerType.BASE_IMAGE,
 			visible: true,
+			opacity: 100,
 			background: {
 				mode: 'image',
-				opacity: 100,
-				colorAdjust: { ...COLOR_ADJUST_IDENTITY },
-				pixelEffects: { pixelateEnabled: true, pixelSize: 1, paletteEnabled: false }
+				colorAdjust: { ...COLOR_ADJUST_IDENTITY, hue: 30 }
 			}
 		};
-		const originalApplyPixelEffects = GlitterPixelEffects.applyPixelEffects;
-		let baseProcessCount = 0;
-		GlitterPixelEffects.applyPixelEffects = (...args) => {
-			baseProcessCount++;
-			return originalApplyPixelEffects(...args);
+		const basePipelineContext = {
+			canvasData: baseCanvasData,
+			basePipeline: compositor._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
 		};
-		try {
-			const basePipelineContext = {
-				canvasData: baseCanvasData,
-				basePipeline: compositor._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
-			};
-			compositor._getBasePipelineImageData(basePipelineContext, 0);
-			compositor._getBasePipelineImageData(basePipelineContext, 7);
-			check(baseProcessCount === 1, 'Static base pipeline processing was not cached per export context');
-			baseLayer.background.pixelEffects = {
-				paletteEnabled: true,
-				paletteMode: 'dither',
-				dither: { algorithm: 'bayer', shimmer: true }
-			};
-			const shimmerPipelineContext = {
-				canvasData: baseCanvasData,
-				basePipeline: compositor._prepareBasePipeline([baseLayer], baseCanvasData, { baseImage: true })
-			};
-			baseProcessCount = 0;
-			[0, 1, 8, 9].forEach((index) => compositor._getBasePipelineImageData(shimmerPipelineContext, index));
-			check(baseProcessCount === 2, 'Base shimmer processing did not cache by normalized shimmer state');
-		} finally {
-			GlitterPixelEffects.applyPixelEffects = originalApplyPixelEffects;
-		}
+		const firstBase = compositor._getBasePipelineImageData(basePipelineContext);
+		check(compositor._getBasePipelineImageData(basePipelineContext) === firstBase, 'Static base pipeline processing was not cached per export context');
 
 		const paintMask = document.createElement('canvas');
 		paintMask.width = 8;

@@ -151,6 +151,10 @@ class FrameLayerManager {
 				sparkles: null
 			}
 		};
+		// The field defaults match the default preset (so a new frame's reverts
+		// read unchanged); applying it keeps the preset authoritative.
+		const preset = FRAME_PRESETS.get(defaults.preset);
+		if (preset) FRAME_PRESETS.apply(preset, layer.frameData);
 		this.normalizeLayer(layer);
 		return layer;
 	}

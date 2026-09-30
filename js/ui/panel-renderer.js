@@ -1724,18 +1724,6 @@ function syncPanelEffectToggle(toggle, enabled) {
 	card.querySelector(':scope > .property-module-content')?.classList.toggle('visible', next);
 }
 
-// Availability is separate from enablement: a card can retain enabled state
-// while its source type makes the effect temporarily inapplicable. The group
-// and its shared actions disappear when none of its effect cards are usable.
-function syncPanelEffectAvailability(card, available) {
-	if (!card) return;
-	card.hidden = !available;
-	const group = card.closest('[data-effect-group]');
-	if (!group) return;
-	group.hidden = !Array.from(group.querySelectorAll(':scope > .panel-group-content > .panel-group-blocks > [data-effect-card]'))
-		.some((effectCard) => !effectCard.hidden);
-}
-
 function initializePanelGroupNode(node, prefix, title, { collapsible = true } = {}) {
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');

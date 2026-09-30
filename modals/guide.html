@@ -28,7 +28,7 @@
         <li>
             <a href="#effects">Effects</a>
             <ol>
-                <li><a href="#canvas-effects">Canvas Effects</a></li>
+                <li><a href="#layer-effects">Layer Effects</a></li>
                 <li><a href="#layer-animation">Animation</a></li>
                 <li><a href="#auto-glitter">Auto Glitter</a></li>
             </ol>
@@ -75,6 +75,7 @@
             <ol>
                 <li><a href="#create-filter">Add a Filter Layer</a></li>
                 <li><a href="#filter-types">Filter Types</a></li>
+                <li><a href="#pixel-filters">Pixel Filters</a></li>
             </ol>
         </li>
         <li>
@@ -673,84 +674,9 @@
         </h3>
 
         <div class="guide-subsection">
-            <h4 id="canvas-effects">Canvas Effects</h4>
-            <p><strong>Effects</strong> are non-destructive — turning one off keeps its settings, and each card has its own <strong>Enabled</strong> toggle. There are two kinds:</p>
-            <ul>
-                <li><strong>Canvas effects</strong> apply to the whole Base Image — the <strong>Pixelate</strong> and <strong>Palette</strong> pipeline described below.</li>
-                <li><strong>Layer effects</strong> apply to a single layer — <strong>Outline</strong>, <strong>Shadow</strong>, <strong>Bevel &amp; Gloss</strong>, and <strong>Sparkles</strong> on Sticker, Text, and Shape layers, covered in each layer's own section.</li>
-            </ul>
-            <p><strong>Reset Effects</strong> disables every effect on the selected canvas or layer and clears those saved settings. Canvas effects run in a fixed pipeline, each stage feeding the next:</p>
-
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Pixelate → Palette → Color Adjust → Opacity</strong></p>
-                    <ul>
-                        <li><strong>Pixelate</strong> – Groups pixels into crisp mosaic cells.</li>
-                        <li><strong>Palette</strong> – Reduces colors, either by flattening connected regions with <strong>Posterize</strong> or approximating them with <strong>Dither</strong>.</li>
-                        <li><strong>Color Adjust</strong> – Shifts hue, saturation, and brightness.</li>
-                        <li><strong>Opacity</strong> – Fades the whole treated image.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Posterize</strong> – Flattens the image into a set number of solid color regions.</p>
-                    <ul>
-                        <li><strong>Colors</strong> – How many colors the palette is reduced to.</li>
-                        <li><strong>Cleanup</strong> – An optional disclosure with <strong>Detail</strong> and <strong>Clean Edges</strong> to tidy small specks and jagged region boundaries.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Dither</strong> – Approximates colors with a repeating pattern instead of flat regions. Pick a pattern style and a palette, then use <strong>Strength</strong> to control how pronounced the pattern is.</p>
-                    <p><strong>Pattern styles:</strong></p>
-                    <ul>
-                        <li><strong>Bayer</strong> – Ordered, grid-like dot matrix.</li>
-                        <li><strong>Floyd–Steinberg</strong> – Diffused, photographic grain.</li>
-                        <li><strong>Atkinson</strong> – Lighter diffusion with more contrast.</li>
-                        <li><strong>Halftone</strong> – Angled dots, like print screening.</li>
-                    </ul>
-                    <p><strong>Palettes:</strong></p>
-                    <ul>
-                        <li><strong>Auto</strong> – Colors sampled from your own image.</li>
-                        <li><strong>Black &amp; White</strong> – Pure black and white, two-tone.</li>
-                        <li><strong>Game Boy</strong> – The four shades of olive green from the original 1989 Game Boy's screen.</li>
-                        <li><strong>CGA</strong> – A vivid 1980s PC-graphics look, built from that era's high-contrast four-color sets (such as black, cyan, magenta, and white).</li>
-                        <li><strong>Sepia</strong> – Warm brown tones, like an aged photograph.</li>
-                        <li><strong>Duotone</strong> – A custom two-color pair you pick.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Shimmer</strong> – For the <strong>Bayer</strong> and <strong>Halftone</strong> patterns, offsets the pattern across frames to create living grain in both the live preview and the exported GIF. It can increase export size.</p>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p>Unlike <a href="#auto-glitter">Auto Glitter</a>, these effects stay a single editable Base Image treatment and never create layers.</p>
-                </div>
-            </div>
+            <h4 id="layer-effects">Layer Effects</h4>
+            <p><strong>Layer effects</strong> apply to a single layer: <strong>Outline</strong>, <strong>Shadow</strong>, <strong>Bevel &amp; Gloss</strong>, and <strong>Sparkles</strong> on Sticker, Text, and Shape layers, covered in each layer's own section. They are non-destructive: turning one off keeps its settings, and each card has its own <strong>Enabled</strong> toggle.</p>
+            <p><strong>Reset Effects</strong> disables every effect on the selected layer and clears those saved settings. To pixelate, posterize, or dither the picture, add a <a href="#pixel-filters">pixel filter</a> layer.</p>
         </div>
 
 		<div class="guide-subsection">
@@ -861,7 +787,6 @@
                 <div class="guide-item-content">
                     <p><strong>Create N Layers</strong> commits a new preview as normal, editable Glitter Fill layers. When reopening a set, <strong>Apply Changes</strong> replaces that set in place. Transparent areas of the image stay transparent, the Base Image is left unchanged, and your previous tool is restored.</p>
                     <ul>
-                        <li><strong>Canvas Effects</strong> – Any active canvas effects are turned off after creation, so the covered Base Image isn't processed during export. Their settings are preserved and the status bar notes the change.</li>
                         <li><strong>Re-running</strong> – Auto Glitter can replace the latest generated set or keep it and add another. If you have edited the generated layers, it defaults to the safer keep-and-add.</li>
                     </ul>
                 </div>
@@ -1882,6 +1807,68 @@
                 </div>
             </div>
         </div>
+
+        <div class="guide-subsection">
+            <h4 id="pixel-filters">Pixel Filters</h4>
+            <p>The <strong>Pixel &amp; Damage</strong> category holds the retro color and mosaic looks. Like every filter they process everything beneath them, so put one directly above the canvas to treat only the Base Image.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Pixelate</strong> – Groups pixels into crisp mosaic cells. <strong>Posterize</strong> and <strong>Dither</strong> also have their own <strong>Pixel Size</strong>, which reduces colors per cell so dither dots stay one cell wide.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Posterize</strong> – Flattens everything below into a set number of solid color regions.</p>
+                    <ul>
+                        <li><strong>Colors</strong> – How many colors the palette is reduced to.</li>
+                        <li><strong>Style</strong> and <strong>Combine Similar</strong> – How the palette favors vivid or neutral colors, and how readily near-identical colors merge.</li>
+                        <li><strong>Detail</strong> and <strong>Clean Edges</strong> – Tidy small specks and jagged region boundaries.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Dither</strong> – Approximates colors with a repeating pattern instead of flat regions. Pick a pattern and a color palette, then use <strong>Strength</strong> to control how pronounced the pattern is. <strong>Colors</strong>, <strong>Style</strong>, and <strong>Combine Similar</strong> appear with the Auto palette; <strong>Angle</strong> with Halftone.</p>
+                    <p><strong>Pattern styles:</strong></p>
+                    <ul>
+                        <li><strong>Bayer</strong> – Ordered, grid-like dot matrix.</li>
+                        <li><strong>Floyd–Steinberg</strong> – Diffused, photographic grain.</li>
+                        <li><strong>Atkinson</strong> – Lighter diffusion with more contrast.</li>
+                        <li><strong>Halftone</strong> – Angled dots, like print screening.</li>
+                    </ul>
+                    <p><strong>Palettes:</strong></p>
+                    <ul>
+                        <li><strong>Auto</strong> – Colors sampled from your own image.</li>
+                        <li><strong>Black &amp; White</strong> – Pure black and white, two-tone.</li>
+                        <li><strong>Game Boy</strong> – The four shades of olive green from the original 1989 Game Boy's screen.</li>
+                        <li><strong>CGA</strong> – A vivid 1980s PC-graphics look, built from that era's high-contrast four-color sets (such as black, cyan, magenta, and white).</li>
+                        <li><strong>Sepia</strong> – Warm brown tones, like an aged photograph.</li>
+                        <li><strong>Duotone</strong> – A custom two-color pair you pick.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Shimmer</strong> – For the <strong>Bayer</strong> and <strong>Halftone</strong> patterns, <strong>Animate Dither</strong> offsets the pattern across frames to create living grain in the animated filter preview and in exports, even over a still image. It can increase export size.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- SETTINGS -->
@@ -2076,7 +2063,7 @@
                 <div class="guide-item-content">
 					<p><strong>Quality</strong> – Start with <strong>Clean · Automatic</strong>, which keeps the encoder’s proven per-frame color selection and adds no export texture. The other GIF Look presets intentionally switch to a shared palette: 128 gives a classic-web balance, while 64 and 32 create progressively chunkier texture. The live preview shows the selected dither against gradients and hard edges. MP4 adds Compact, Standard, and High bitrate presets.</p>
 					<ul>
-						<li><strong>Creative dithering</strong> in the Base Image Palette effect is part of the artwork. It appears in preview, PNG-style rendering, GIF, and MP4 and may intentionally shimmer.</li>
+						<li><strong>Creative dithering</strong> from a Dither filter layer is part of the artwork. It appears in preview, PNG-style rendering, GIF, and MP4 and may intentionally shimmer.</li>
 						<li><strong>Export dithering</strong> happens afterward, only while fitting the completed artwork into a GIF palette. Keep it stable for clean animation or animate Bayer/Halftone for intentional noise.</li>
 						<li>Using both is allowed. It creates a second, finer export texture; the result screen calls this out so double dithering is deliberate.</li>
 						<li><strong>Texture Scale</strong> enlarges the pattern without lowering artwork resolution. Pixelate changes the artwork itself by making larger color cells.</li>

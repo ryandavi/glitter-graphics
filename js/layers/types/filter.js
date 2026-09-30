@@ -22,7 +22,14 @@ registerLayerType(LayerType.FILTER, {
 	panelMode: 'filter',
 	elementClass: 'filter-layer-overlay',
 	transformable: false,
+	// A pixel size of 1 means off; only a real mosaic rescales. Pixelate keeps
+	// it in `size`, which Grain and Light Leak also use for other units.
+	fields: [
+		{ path: 'filterData.size', field: 'pixelEffectsPixelSize', documentScale: 'effect', when: (value, layer) => layer.filterData?.type === 'pixelate' && value > 1 },
+		{ path: 'filterData.pixelSize', field: 'pixelEffectsPixelSize', documentScale: 'effect', when: (value) => value > 1 }
+	],
 	managerKey: 'filterLayerManager',
+	timelineSources: (layer, context) => context.compositor._createFilterTimelineSources(layer),
 	blendable: true,
 	renderSwatch: (layer, context) => {
 		const thumbnail = document.createElement('span');

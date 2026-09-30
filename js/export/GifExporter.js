@@ -39,10 +39,8 @@ class GifExporter {
 			plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled && !encoded.transparencyUsed);
 			plan.colorAnalysis.paletteSize = encoded.paletteSize;
 			plan.colorAnalysis.paletteMode = encoded.paletteMode;
-			plan.colorAnalysis.authoredDither = visibleLayers.some((layer) => {
-				const effects = layer.background?.pixelEffects;
-				return effects?.paletteEnabled && effects.paletteMode === 'dither';
-			});
+			plan.colorAnalysis.authoredDither = visibleLayers.some((layer) => layer.type === LayerType.FILTER
+				&& layer.filterData?.type === 'dither' && GlitterFilter.isActive(layer.filterData, layer.opacity));
 		}
 		this._handleFileSave(encoded.blob, callbacks, plan);
 		return encoded.blob;

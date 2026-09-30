@@ -26,50 +26,12 @@ async function main() {
 			const title = group.querySelector(':scope > .subsection-title');
 			return {
 				outerToggle: Boolean(title.querySelector('.checkbox-group')),
-				statusInHeader: document.getElementById('pixelEffectsStatus').parentElement === title,
-				statusBeforeChevron: document.getElementById('pixelEffectsStatus').nextElementSibling?.classList.contains('panel-group-chevron'),
-				cardToggles: ['pixelEffectsPixelateEnabled', 'pixelEffectsPaletteEnabled'].every((id) => {
-					const toggle = document.getElementById(id);
-					return toggle?.matches('[data-effect-toggle]') && Boolean(toggle.closest('[data-effect-card]'));
-				}),
+				// Pixelate and Palette moved to filter layers.
+				pixelCards: Boolean(document.getElementById('pixelEffectsPixelateEnabled') || document.getElementById('pixelEffectsPaletteEnabled')),
 				sharedEffectCardCount: document.querySelectorAll('[data-effect-card] > .subsection-title input[data-effect-toggle]').length
 			};
 		});
-		assert.deepStrictEqual(canvasStructure, { outerToggle: false, statusInHeader: true, statusBeforeChevron: undefined, cardToggles: true, sharedEffectCardCount: 22 });
-
-		const availability = await page.evaluate(() => {
-			const editor = window.editor;
-			const layer = editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
-			const group = document.querySelector('#baseLayerSettingsContent [data-effect-group]');
-			layer.background.mode = 'solid';
-			editor.baseBackgroundManager.loadLayerSettings(layer);
-			const hiddenWithoutEffects = group.hidden;
-			const resetHiddenWithGroup = document.getElementById('resetPixelEffects').closest('[data-effect-group]').hidden;
-			layer.background.mode = 'gradient';
-			editor.baseBackgroundManager.loadLayerSettings(layer);
-			return { hiddenWithoutEffects, resetHiddenWithGroup, shownWithEffects: !group.hidden };
-		});
-		assert.deepStrictEqual(availability, { hiddenWithoutEffects: true, resetHiddenWithGroup: true, shownWithEffects: true });
-
-		const autoGlitterEffectDisable = await page.evaluate(() => {
-			const editor = window.editor;
-			const layer = editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
-			layer.background.pixelEffects.pixelateEnabled = true;
-			layer.background.pixelEffects.paletteEnabled = true;
-			layer.background.pixelEffects.pixelSize = 6;
-			layer.background.pixelEffects.paletteMode = 'dither';
-			layer.background.pixelEffects.dither.algorithm = 'halftone';
-			const changed = editor.baseBackgroundManager.disablePixelEffects({ apply: false });
-			const unchanged = editor.baseBackgroundManager.disablePixelEffects({ apply: false });
-			return { changed, unchanged, settings: layer.background.pixelEffects };
-		});
-		assert.strictEqual(autoGlitterEffectDisable.changed, true);
-		assert.strictEqual(autoGlitterEffectDisable.unchanged, false);
-		assert.strictEqual(autoGlitterEffectDisable.settings.pixelateEnabled, false);
-		assert.strictEqual(autoGlitterEffectDisable.settings.paletteEnabled, false);
-		assert.strictEqual(autoGlitterEffectDisable.settings.pixelSize, 6);
-		assert.strictEqual(autoGlitterEffectDisable.settings.paletteMode, 'dither');
-		assert.strictEqual(autoGlitterEffectDisable.settings.dither.algorithm, 'halftone');
+		assert.deepStrictEqual(canvasStructure, { outerToggle: false, pixelCards: false, sharedEffectCardCount: 20 });
 
 		const shape = await page.evaluate(() => {
 			const editor = window.editor;

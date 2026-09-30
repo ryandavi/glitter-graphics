@@ -1026,8 +1026,6 @@ class AutoGlitterManager {
 				generatedState: JSON.stringify(this.captureGeneratedState(layer))
 			};
 		});
-		const canvasEffectsDisabled = this.editor.baseBackgroundManager?.disablePixelEffects({ apply: false }) || false;
-
 		this.session = null;
 		this.editor.historyManager.updateButtons();
 		this.editor.layerManager.renderLayersList();
@@ -1037,9 +1035,8 @@ class AutoGlitterManager {
 		this.editor.updateActionButtons();
 		this.editor.saveState('Apply Auto Glitter');
 		this.endSessionUI({ cancel: false, previousShowAllLayers, previousTool });
-		const effectNotice = canvasEffectsDisabled ? '; Canvas Effects turned off (settings preserved)' : '';
 		const action = wasEditingPrevious ? 'Updated' : 'Created';
-		this.editor.updateStatus(`${action} ${kept.length} editable glitter ${kept.length === 1 ? 'layer' : 'layers'}${effectNotice}`);
+		this.editor.updateStatus(`${action} ${kept.length} editable glitter ${kept.length === 1 ? 'layer' : 'layers'}`);
 	}
 
 	removePreviousBatch() {

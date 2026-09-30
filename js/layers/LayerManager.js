@@ -136,8 +136,7 @@ class LayerManager {
 				gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
 				glitterId: CONFIG.tools.glitter.defaults.fillGlitterId.canvasBackground,
 				scale: FIELDS.textureScale.value,
-				colorAdjust: null,
-				pixelEffects: JSON.parse(JSON.stringify(CONFIG.tools.pixelEffects.defaults))
+				colorAdjust: null
 			}
 		};
 		this.editor.baseBackgroundManager.normalizeLayer(layer);

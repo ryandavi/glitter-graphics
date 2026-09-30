@@ -2262,14 +2262,6 @@ body.is-resizing-panel {
 	}
 }
 
-// The Palette (pixel effects) card is dense enough that its `.property-set`
-// group labels earn their keep — Colors / Dither / Pattern / Shimmer. Opt this
-// one card back into showing them (the redesign hides set labels by default).
-.property-panel .panel-redesign .pixel-effects-card .property-set > .property-set-label {
-	display: block;
-	padding-inline: var(--property-card-inset);
-}
-
 // ===== Sticky-region panel layout ==========================================
 // A section with a fixed header and/or footer and one scrolling middle. Opt in
 // per schema group with `region: 'header' | 'scroll' | 'footer'`: the renderer

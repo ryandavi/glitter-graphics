@@ -6,10 +6,12 @@
 	const Ops = root.GlitterFilterOps || (typeof require === 'function' ? require('./filter-ops.js') : null);
 	const PresetLibrary = root.GlitterPresetLibrary || (typeof require === 'function' ? require('../ui/preset-library.js') : null);
 
-	const numeric = (specId, controlId) => Object.freeze({ kind: 'number', specId, spec: Fields[specId], controlId });
-	const boolean = (defaultValue, controlId, label) => Object.freeze({ kind: 'boolean', default: defaultValue, controlId, label });
-	const color = (defaultValue, controlId, label = 'Color') => Object.freeze({ kind: 'color', default: defaultValue, controlId, label });
-	const select = (defaultValue, controlId, label, options) => Object.freeze({ kind: 'select', default: defaultValue, controlId, label, options });
+	// `extra.when(values)` hides a control while it has no effect (e.g. the
+	// duotone colors outside the Duotone palette); the value is still kept.
+	const numeric = (specId, controlId, extra = {}) => Object.freeze({ kind: 'number', specId, spec: Fields[specId], controlId, ...extra });
+	const boolean = (defaultValue, controlId, label, extra = {}) => Object.freeze({ kind: 'boolean', default: defaultValue, controlId, label, ...extra });
+	const color = (defaultValue, controlId, label = 'Color', extra = {}) => Object.freeze({ kind: 'color', default: defaultValue, controlId, label, ...extra });
+	const select = (defaultValue, controlId, label, options, extra = {}) => Object.freeze({ kind: 'select', default: defaultValue, controlId, label, options, ...extra });
 	const step = (op, params) => ({ op, params });
 	const clone = (value) => value == null ? value : structuredClone(value);
 	const stop = (at, color) => ({ at, color });
@@ -22,6 +24,16 @@
 		{ value: 'bayer', label: 'Bayer' }, { value: 'floyd', label: 'Floyd–Steinberg' },
 		{ value: 'atkinson', label: 'Atkinson' }, { value: 'halftone', label: 'Halftone' }
 	];
+	const ditherPaletteOptions = [
+		{ value: 'auto', label: 'Auto (Image Colors)' }, { value: 'bw', label: 'Black & White' }, { value: 'gameboy', label: 'Game Boy' },
+		{ value: 'cga', label: 'CGA' }, { value: 'sepia', label: 'Sepia' }, { value: 'duotone', label: 'Duotone' }
+	];
+	const paletteStyleOptions = () => (typeof getOptions === 'function'
+		? getOptions('analysisPaletteStyle')
+		: [{ value: 'natural', label: 'Natural' }, { value: 'balanced', label: 'Balanced' }, { value: 'vibrant', label: 'Vibrant' }]
+	).map((entry) => ({ value: entry.value, label: entry.label }));
+	const autoPalette = (values) => values.palette == null || values.palette === 'auto';
+	const patterned = (values) => ['bayer', 'halftone'].includes(values.algorithm);
 	const deepFryOptions = [{ value: 'light', label: 'Light' }, { value: 'crispy', label: 'Crispy' }, { value: 'nuclear', label: 'Nuclear' }];
 	const gradientOptions = () => (root.GRADIENT_PRESETS?.entries || [
 		{ id: 'pink-blue', label: 'Pink / Blue' }, { id: 'purple-gold', label: 'Purple / Gold' }, { id: 'spectrum', label: 'Spectrum' }
@@ -140,13 +152,37 @@
 		pixelate: Object.freeze({ id: 'pixelate', label: 'Pixelate', group: 'pixel', fields: Object.freeze({
 			size: numeric('pixelEffectsPixelSize', 'filterPixelSize')
 		}), recipe: (values) => [step('pixelate', { size: values.size })] }),
+		// Posterize and Dither carry their own Pixel Size: the palette then runs
+		// on the mosaic cells (dither dots stay one cell wide), which a Pixelate
+		// filter stacked below can't reproduce.
 		posterize: Object.freeze({ id: 'posterize', label: 'Posterize', group: 'pixel', fields: Object.freeze({
-			colors: numeric('paletteColorCount', 'filterPaletteColors')
-		}), recipe: (values) => [step('posterize', { colors: values.colors })] }),
+			colors: numeric('paletteColorCount', 'filterPaletteColors'),
+			style: select('natural', 'filterPaletteStyle', 'Style', paletteStyleOptions),
+			merge: numeric('paletteMerge', 'filterPaletteMerge', { valueScale: 'percent' }),
+			detail: numeric('paletteDetail', 'filterPaletteDetail'),
+			cleanEdges: boolean(true, 'filterPaletteCleanEdges', 'Clean Edges'),
+			pixelSize: numeric('pixelEffectsPixelSize', 'filterPalettePixelSize')
+		}), recipe: (values) => [step('posterize', {
+			colors: values.colors, style: values.style, merge: values.merge, detail: values.detail, cleanEdges: values.cleanEdges, pixelSize: values.pixelSize
+		})] }),
 		dither: Object.freeze({ id: 'dither', label: 'Dither', group: 'pixel', fields: Object.freeze({
-			colors: numeric('paletteColorCount', 'filterDitherColors'), algorithm: select('bayer', 'filterDitherAlgorithm', 'Pattern', ditherOptions),
-			strength: numeric('pixelEffectsStrength', 'filterDitherStrength'), scale: numeric('pixelEffectsDitherScale', 'filterDitherScale')
-		}), recipe: (values) => [step('dither', { colors: values.colors, algorithm: values.algorithm, strength: values.strength, scale: values.scale })] }),
+			algorithm: select('bayer', 'filterDitherAlgorithm', 'Pattern', ditherOptions),
+			palette: select('auto', 'filterDitherPalette', 'Color Palette', ditherPaletteOptions),
+			colors: numeric('paletteColorCount', 'filterDitherColors', { when: autoPalette }),
+			style: select('natural', 'filterDitherStyle', 'Style', paletteStyleOptions, { when: autoPalette }),
+			merge: numeric('paletteMerge', 'filterDitherMerge', { valueScale: 'percent', when: autoPalette }),
+			duotoneDark: color('#000000', 'filterDitherDuotoneDark', 'Dark', { when: (values) => values.palette === 'duotone' }),
+			duotoneLight: color('#ffffff', 'filterDitherDuotoneLight', 'Light', { when: (values) => values.palette === 'duotone' }),
+			strength: numeric('pixelEffectsStrength', 'filterDitherStrength'),
+			scale: numeric('pixelEffectsDitherScale', 'filterDitherScale', { when: patterned }),
+			angle: numeric('pixelEffectsAngle', 'filterDitherAngle', { when: (values) => values.algorithm === 'halftone' }),
+			shimmer: boolean(false, 'filterDitherShimmer', 'Animate Dither', { when: patterned }),
+			pixelSize: numeric('pixelEffectsPixelSize', 'filterDitherPixelSize')
+		}), recipe: (values) => [step('dither', {
+			colors: values.colors, algorithm: values.algorithm, strength: values.strength, scale: values.scale, angle: values.angle,
+			palette: values.palette, duotone: [values.duotoneDark, values.duotoneLight], shimmer: values.shimmer,
+			style: values.style, merge: values.merge, pixelSize: values.pixelSize
+		})] }),
 		'rgb-split': Object.freeze({ id: 'rgb-split', label: 'RGB Split', group: 'pixel', fields: Object.freeze({
 			offset: numeric('filterRgbSplit', 'filterRgbSplit')
 		}), recipe: (values) => [step('rgbSplit', { offset: values.offset })] }),

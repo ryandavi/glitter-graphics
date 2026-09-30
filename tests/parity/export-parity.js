@@ -433,8 +433,10 @@ async function mutateTextAndUndo(page) {
 	});
 }
 
-async function configureBasePixelEffects(page, paletteMode, { shimmer = false } = {}) {
-	await page.evaluate(({ paletteMode, shimmer }) => {
+// Canvas Pixelate/Palette are filter layers now: one Posterize or Dither
+// filter directly above a graded, color-adjusted canvas.
+async function configurePixelFilter(page, type, { shimmer = false } = {}) {
+	await page.evaluate(({ type, shimmer }) => {
 		const editor = window.editor;
 		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
 		layer.background.mode = 'gradient';
@@ -447,50 +449,42 @@ async function configureBasePixelEffects(page, paletteMode, { shimmer = false } 
 		// (normalizeLayer mirrors it onto background.opacity).
 		layer.opacity = 73;
 		layer.background.opacity = 73;
-		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings({
-			pixelateEnabled: true,
-			paletteEnabled: true,
-			pixelSize: 3,
-			paletteMode,
-			colorCount: 5,
-			paletteStyle: 'balanced',
-			mergeDistinctness: 0.045,
-			detail: 4,
-			cleanEdges: true,
-			dither: {
-				algorithm: 'halftone', angle: 35, strength: 88,
-				palette: 'duotone', duotone: ['#120b24', '#ffd36a'], shimmer
-			}
-		}, CONFIG.tools.pixelEffects);
-		editor.baseBackgroundManager.invalidatePixelEffects();
+		let filter = editor.layers.find((entry) => entry.type === LayerType.FILTER && entry.name === 'Parity pixel filter');
+		if (!filter) {
+			filter = editor.filterLayerManager.createLayer();
+			filter.name = 'Parity pixel filter';
+			editor.layers.splice(editor.layers.indexOf(layer) + 1, 0, filter);
+		}
+		filter.filterData = GlitterFilter.normalizeFilterData(type === 'posterize'
+			? { type, colors: 5, style: 'balanced', merge: 0.045, detail: 4, cleanEdges: true, pixelSize: 3 }
+			: { type, algorithm: 'halftone', angle: 35, strength: 88, palette: 'duotone', duotoneDark: '#120b24', duotoneLight: '#ffd36a', shimmer, pixelSize: 3 });
 		editor.updatePreview();
 		editor.saveState();
-	}, { paletteMode, shimmer });
+	}, { type, shimmer });
 }
 
-async function mutateBaseEffectAndUndo(page) {
+async function mutatePixelFilterAndUndo(page) {
 	await page.evaluate(async () => {
 		const editor = window.editor;
-		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
-		layer.background.pixelEffects.dither.angle = 137;
+		const filter = editor.layers.find((entry) => entry.type === LayerType.FILTER && entry.name === 'Parity pixel filter');
+		filter.filterData.angle = 137;
 		editor.saveState();
 		await editor.undo();
 	});
 }
 
-async function verifyBasePreviewExportParity(page, label, frameIndex = 0) {
-	const result = await page.evaluate(({ frameIndex }) => {
+async function verifyBasePreviewExportParity(page, label) {
+	const result = await page.evaluate(() => {
 		const editor = window.editor;
 		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
 		const background = editor.baseBackgroundManager.normalizeLayer(layer).background;
 		const width = editor.originalCanvas.width;
 		const height = editor.originalCanvas.height;
 		const source = editor.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
-		const preview = editor.baseBackgroundManager.getPixelEffectImageData(source, width, height, background.pixelEffects, frameIndex);
-		const previewFinished = new ImageData(new Uint8ClampedArray(preview.data), width, height);
+		const previewFinished = new ImageData(new Uint8ClampedArray(source.data), width, height);
 		applyColorAdjustToImageData(previewFinished, background.colorAdjust);
-		if (background.opacity < 100) {
-			for (let offset = 3; offset < previewFinished.data.length; offset += 4) previewFinished.data[offset] = Math.round(previewFinished.data[offset] * background.opacity / 100);
+		if (layer.opacity < 100) {
+			for (let offset = 3; offset < previewFinished.data.length; offset += 4) previewFinished.data[offset] = Math.round(previewFinished.data[offset] * layer.opacity / 100);
 		}
 		const canvasData = {
 			width, height,
@@ -502,27 +496,27 @@ async function verifyBasePreviewExportParity(page, label, frameIndex = 0) {
 			canvasData,
 			basePipeline: editor.sceneCompositor._prepareBasePipeline([layer], canvasData, { baseImage: true })
 		};
-		const exported = editor.sceneCompositor._getBasePipelineImageData(context, frameIndex);
+		const exported = editor.sceneCompositor._getBasePipelineImageData(context);
 		for (let index = 0; index < exported.data.length; index++) {
 			if (exported.data[index] !== previewFinished.data[index]) return { firstDiff: index };
 		}
 		return { firstDiff: -1 };
-	}, { frameIndex });
+	});
 	if (result.firstDiff !== -1) throw new Error(`${label} preview/export base pixels first differ at byte ${result.firstDiff}`);
 }
 
-async function verifyBaseStateRoundTrip(page) {
+async function verifyPixelFilterStateRoundTrip(page) {
 	const result = await page.evaluate(async () => {
 		const editor = window.editor;
-		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
-		const serialized = editor.layerManager.serializeLayer(layer);
+		const filter = editor.layers.find((entry) => entry.type === LayerType.FILTER && entry.name === 'Parity pixel filter');
+		const serialized = editor.layerManager.serializeLayer(filter);
 		const restored = await editor.layerManager.deserializeLayer(serialized);
 		return {
-			expected: JSON.stringify(layer.background.pixelEffects),
-			actual: JSON.stringify(restored.background.pixelEffects)
+			expected: JSON.stringify(filter.filterData),
+			actual: JSON.stringify(restored.filterData)
 		};
 	});
-	if (result.expected !== result.actual) throw new Error('Base Image pixelEffects changed during layer serialization');
+	if (result.expected !== result.actual) throw new Error('Pixel filter state changed during layer serialization');
 }
 
 function assertByteIdentity(reference, candidate, label) {
@@ -626,9 +620,9 @@ async function main() {
 			assertByteIdentity(transparentFirst, transparentThird, 'Edit -> undo -> transparent export');
 			console.log(`PASS 4. Edit -> undo -> transparent export matched the original (${transparentThird.bytes.length} bytes, sha256 ${transparentThird.hash})`);
 
-			await configureBasePixelEffects(page, 'posterize');
-			await verifyBasePreviewExportParity(page, 'Posterize');
-			console.log('PASS Posterize preview/export base pixels matched exactly');
+			await configurePixelFilter(page, 'posterize');
+			await verifyBasePreviewExportParity(page, 'Graded canvas');
+			console.log('PASS Graded canvas preview/export base pixels matched exactly');
 			const posterizeFirstBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
 			const posterizeSecondBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
 			const posterizeFirst = { bytes: posterizeFirstBytes, hash: hashBytes(posterizeFirstBytes) };
@@ -636,11 +630,9 @@ async function main() {
 			assertByteIdentity(posterizeFirst, posterizeSecond, 'Back-to-back Posterize export');
 			console.log(`PASS 5. Back-to-back Posterize exports matched exactly (${posterizeFirst.bytes.length} bytes, sha256 ${posterizeFirst.hash})`);
 
-			await configureBasePixelEffects(page, 'dither', { shimmer: true });
-			await verifyBaseStateRoundTrip(page);
-			console.log('PASS Pixel-effect state survived Base Image serialization');
-			await verifyBasePreviewExportParity(page, 'Shimmer', 3);
-			console.log('PASS Shimmer preview/export base pixels matched exactly');
+			await configurePixelFilter(page, 'dither', { shimmer: true });
+			await verifyPixelFilterStateRoundTrip(page);
+			console.log('PASS Pixel filter state survived layer serialization');
 			const shimmerFirstBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
 			const shimmerSecondBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
 			const shimmerFirst = { bytes: shimmerFirstBytes, hash: hashBytes(shimmerFirstBytes) };
@@ -648,7 +640,7 @@ async function main() {
 			assertByteIdentity(shimmerFirst, shimmerSecond, 'Back-to-back Shimmer export');
 			console.log(`PASS 6. Back-to-back Shimmer exports matched exactly (${shimmerFirst.bytes.length} bytes, sha256 ${shimmerFirst.hash})`);
 
-			await mutateBaseEffectAndUndo(page);
+			await mutatePixelFilterAndUndo(page);
 			const shimmerUndoBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
 			const shimmerUndo = { bytes: shimmerUndoBytes, hash: hashBytes(shimmerUndoBytes) };
 			assertByteIdentity(shimmerFirst, shimmerUndo, 'Edit -> undo -> Shimmer export');

@@ -33,7 +33,6 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.glitterManager?.scaleSelectionsForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
 		this.paintMaskStore.scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
 		scaleDocumentLayerStates(this.layers, scaleX, scaleY, uniformScale, options);
-		this.baseBackgroundManager?.invalidatePixelEffects();
 
 		this.layers.forEach((layer) => {
 			if (isTransformableLayerType(layer.type)) getLayerManagerForType(this, layer.type)?.renderLayer(layer);

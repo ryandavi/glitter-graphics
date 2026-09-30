@@ -31,7 +31,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 		const factor = factors[binding.documentScale];
 		if (!factor || factor === 1) return;
 		const value = readFieldPath(root, binding.keys);
-		if (value == null || !Number.isFinite(Number(value)) ||(binding.when && !binding.when(Number(value)))) return;
+		if (value == null || !Number.isFinite(Number(value)) ||(binding.when && !binding.when(Number(value), root))) return;
 		writeFieldPath(root, binding.keys, binding.documentScale === 'texture'
 			? scaleTexture(value, factor)
 			: scalePixel(value, factor, getFieldDocumentMinimum(binding)));

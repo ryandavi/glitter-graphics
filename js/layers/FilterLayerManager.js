@@ -241,12 +241,14 @@ class FilterLayerManager {
 
 	renderCustomizeControls(layer) {
 		const filter = GlitterFilters.get(layer.filterData.type);
-		const fields = Object.entries(filter.fields);
+		// Controls with no effect under the current values (a field's `when`)
+		// stay out; select changes re-render, so they appear when relevant.
+		const fields = Object.entries(filter.fields).filter(([, field]) => !field.when || field.when(layer.filterData));
 		this.ui.customize.hidden = !fields.length;
 		this.ui.customizeControls.replaceChildren();
 		fields.forEach(([key, field]) => {
 			let item;
-			if (field.kind === 'number') item = { kind: 'slider', id: field.controlId, slider: field.specId, revert: true };
+			if (field.kind === 'number') item = { kind: 'slider', id: field.controlId, slider: field.specId, revert: true, ...(field.valueScale ? { valueScale: field.valueScale } : {}) };
 			else if (field.kind === 'boolean') item = { kind: 'checkboxList', items: [{ id: field.controlId, label: field.label, checked: field.default }] };
 			else if (field.kind === 'color') item = { kind: 'field', id: field.controlId, label: field.label, type: 'color', value: field.default, revert: true };
 			else if (field.kind === 'select') item = { kind: 'select', id: field.controlId, label: field.label, visibleLabel: field.label, options: GlitterFilters.fieldOptions(field) };
@@ -480,8 +482,10 @@ class FilterLayerManager {
 			let duration = 0;
 			let frameCount = 1;
 			if (animated) {
+				// The filter itself joins the estimate so an animated Dither's
+				// shimmer sets the loop even over a still scene.
 				const estimate = await this.snapshotCompositor.estimateLoopDuration({
-					layers, library: this.editor.glitterLibrary.content,
+					layers: [...layers, layer], library: this.editor.glitterLibrary.content,
 					fallbackDuration: CONFIG.export.defaults.frameDelay,
 					maxFrames: 24, baseImage: true
 				});
@@ -492,16 +496,18 @@ class FilterLayerManager {
 			}
 			const frames = [];
 			const started = performance.now();
+			const shimmerFrameMs = GlitterFilter.shimmerAnimation(layer.filterData) ? CONFIG.tools.pixelEffects.animation.frameDurationMs : 0;
 			for (let index = 0; index < frameCount; index++) {
 				if (superseded()) return;
+				const timestamp = duration * index / frameCount;
 				let source = input.imageData;
-				if (index > 0) source = (await this.snapshotCompositor.composeFrameAt({ ...input.params, preparedContext: input.preparedContext, timestamp: duration * index / frameCount })).imageData;
+				if (index > 0) source = (await this.snapshotCompositor.composeFrameAt({ ...input.params, preparedContext: input.preparedContext, timestamp })).imageData;
 				const canvas = createAppCanvas(source.width, source.height, 'layers/FilterLayerManager');
 				const context = canvas.getContext('2d');
 				context.putImageData(source, 0, 0);
 				await GlitterFilter.renderToCanvas(context, source.width, source.height, layer.filterData, layer.opacity / 100, {
 					keepAlpha: true, alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
-					seed: layer.id, frameIndex: index, matteColor: this.editor.exportSettings.matteColor,
+					seed: layer.id, frameIndex: shimmerFrameMs ? Math.floor(timestamp / shimmerFrameMs) : index, matteColor: this.editor.exportSettings.matteColor,
 					blendMode: GlitterBlendModes.forLayer(layer)
 				});
 				frames.push(canvas);

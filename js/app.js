@@ -2333,12 +2333,7 @@ class GlitterEditor {
 		if ((mode === 'image' && this.baseBackgroundManager?.hasBaseImage()) || mode === 'gradient') {
 			const width = this.previewCanvas.width;
 			const height = this.previewCanvas.height;
-			const source = this.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
-			const settings = background.pixelEffects;
-			const processed = !settings.pixelateEnabled && !settings.paletteEnabled
-				? source
-				: this.baseBackgroundManager.getPreviewImageData(source, width, height, settings);
-			this.renderBasePreviewImageData(baseLayer, processed);
+			this.renderBasePreviewImageData(baseLayer, this.baseBackgroundManager.getBackgroundSourceImageData(background, width, height));
 		} else if (mode === 'solid') {
 			const key = `solid:${this.previewCanvas.width}x${this.previewCanvas.height}:${background.color}:${baseLayer.opacity}`;
 			if (this._basePreviewCache?.key === key) return;

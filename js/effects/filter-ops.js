@@ -69,9 +69,43 @@
 	}
 
 	function runPixelEffects(imageData, settings, context) {
-		const output = PixelEffects.applyPixelEffects(imageData.data, imageData.width, imageData.height, settings, context.pixelConfig, context.frameIndex || 0);
+		const normalized = PixelEffects.normalizeSettings(settings, context.pixelConfig.pixelEffects);
+		const animation = normalized.paletteEnabled && normalized.paletteMode === 'dither' && normalized.dither.shimmer
+			? PixelEffects.getShimmerAnimation(normalized.dither.algorithm, context.pixelConfig.pixelEffects)
+			: null;
+		const frame = animation ? ((Math.floor(context.frameIndex || 0) % animation.frames) + animation.frames) % animation.frames : 0;
+		const output = PixelEffects.applyPixelEffects(imageData.data, imageData.width, imageData.height, normalized, context.pixelConfig, frame);
 		imageData.data.set(output);
 		return imageData;
+	}
+
+	// Posterize and Dither share the palette analysis settings; a Pixel Size
+	// above 1 runs the palette on mosaic cells.
+	function paletteSettings(params, context, paletteMode) {
+		const defaults = context.pixelDefaults;
+		const pixelSize = Number(params.pixelSize) || 1;
+		return {
+			...defaults, pixelateEnabled: pixelSize > 1, pixelSize, paletteEnabled: true, paletteMode,
+			colorCount: params.colors ?? defaults.colorCount,
+			paletteStyle: params.style ?? defaults.paletteStyle,
+			mergeDistinctness: params.merge ?? defaults.mergeDistinctness,
+			detail: params.detail ?? defaults.detail,
+			cleanEdges: params.cleanEdges ?? defaults.cleanEdges
+		};
+	}
+
+	function ditherSettings(params, context) {
+		const defaults = context.pixelDefaults.dither;
+		return {
+			...paletteSettings(params, context, 'dither'),
+			dither: {
+				...defaults,
+				algorithm: params.algorithm ?? defaults.algorithm, strength: params.strength ?? defaults.strength,
+				scale: params.scale ?? defaults.scale, angle: params.angle ?? defaults.angle,
+				palette: params.palette ?? defaults.palette, duotone: params.duotone ?? defaults.duotone,
+				shimmer: Boolean(params.shimmer)
+			}
+		};
 	}
 
 	const FILTER_OPS = Object.freeze({
@@ -119,8 +153,26 @@
 		sharpen: Object.freeze({ id: 'sharpen', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 2 }) }), pixel: (imageData, params) => sharpen(imageData, params.amount), isActive: (params) => Number(params.amount) > 0 }),
 		noise: Object.freeze({ id: 'noise', params: Object.freeze({ amount: Object.freeze({ min: 0, max: 1 }) }), pixel: (imageData, params, context = {}) => noise(imageData, params.amount, context.seed), isActive: (params) => Number(params.amount) > 0 }),
 		pixelate: Object.freeze({ id: 'pixelate', params: Object.freeze({ size: Object.freeze({ min: 1, max: 8 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: true, paletteEnabled: false, pixelSize: params.size }, context), isActive: (params) => Number(params.size) > 1 }),
-		posterize: Object.freeze({ id: 'posterize', params: Object.freeze({ colors: Object.freeze({ min: 2, max: 12 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: false, paletteEnabled: true, paletteMode: 'posterize', colorCount: params.colors }, context), isActive: () => true }),
-		dither: Object.freeze({ id: 'dither', params: Object.freeze({ colors: Object.freeze({ min: 2, max: 12 }), algorithm: Object.freeze({ kind: 'string' }), strength: Object.freeze({ min: 0, max: 100 }), scale: Object.freeze({ min: 1, max: 4 }) }), pixel: (imageData, params, context = {}) => runPixelEffects(imageData, { ...context.pixelDefaults, pixelateEnabled: false, paletteEnabled: true, paletteMode: 'dither', colorCount: params.colors, dither: { ...context.pixelDefaults.dither, algorithm: params.algorithm, strength: params.strength, scale: params.scale } }, context), isActive: () => true }),
+		posterize: Object.freeze({
+			id: 'posterize',
+			params: Object.freeze({
+				colors: Object.freeze({ min: 2, max: 12 }), style: Object.freeze({ kind: 'string' }), merge: Object.freeze({ min: 0.01, max: 0.12 }),
+				detail: Object.freeze({ min: 1, max: 64 }), cleanEdges: Object.freeze({ kind: 'boolean' }), pixelSize: Object.freeze({ min: 1, max: 8 })
+			}),
+			pixel: (imageData, params, context = {}) => runPixelEffects(imageData, paletteSettings(params, context, 'posterize'), context),
+			isActive: () => true
+		}),
+		dither: Object.freeze({
+			id: 'dither',
+			params: Object.freeze({
+				colors: Object.freeze({ min: 2, max: 12 }), algorithm: Object.freeze({ kind: 'string' }), strength: Object.freeze({ min: 0, max: 100 }),
+				scale: Object.freeze({ min: 1, max: 4 }), angle: Object.freeze({ min: 0, max: 360 }), palette: Object.freeze({ kind: 'string' }),
+				duotone: Object.freeze({ kind: 'colors' }), shimmer: Object.freeze({ kind: 'boolean' }), style: Object.freeze({ kind: 'string' }),
+				merge: Object.freeze({ min: 0.01, max: 0.12 }), pixelSize: Object.freeze({ min: 1, max: 8 })
+			}),
+			pixel: (imageData, params, context = {}) => runPixelEffects(imageData, ditherSettings(params, context), context),
+			isActive: () => true
+		}),
 		rgbSplit: Object.freeze({ id: 'rgbSplit', params: Object.freeze({ offset: Object.freeze({ min: 0, max: 40 }) }), pixel: (imageData, params) => rgbSplit(imageData, params.offset), isActive: (params) => Number(params.offset) > 0 }),
 		gradientMap: Object.freeze({ id: 'gradientMap', params: Object.freeze({ stops: Object.freeze({ kind: 'gradientStops' }) }), pixel: (imageData, params) => gradientMap(imageData, params.stops), isActive: () => true })
 	});

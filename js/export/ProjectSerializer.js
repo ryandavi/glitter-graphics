@@ -1,6 +1,6 @@
 class ProjectSerializer {
 	static FORMAT = 'glitter-project';
-	static FORMAT_VERSION = 4;
+	static FORMAT_VERSION = 5;
 
 	/*
 	Format rules:
@@ -75,8 +75,54 @@ class ProjectSerializer {
 				delete animation.anchorY;
 			});
 			data.version = 4;
+		},
+		// v4 -> v5: the canvas Pixelate and Palette effects became filter layers.
+		// See migrateCanvasPixelEffects.
+		4(data) {
+			ProjectSerializer.migrateCanvasPixelEffects(data);
+			data.version = 5;
 		}
 	};
+
+	// `background.pixelEffects` (or the older `background.posterize`) turns
+	// into one Pixelate, Posterize or Dither filter layer directly above the
+	// canvas. The old effect only ran on image and gradient backgrounds of a
+	// visible canvas; otherwise the filter is added hidden, keeping the
+	// settings without changing the picture.
+	static migrateCanvasPixelEffects(data) {
+		const layers = data.layers || [];
+		const baseIndex = layers.findIndex((layer) => layer?.type === LayerType.BASE_IMAGE);
+		const base = layers[baseIndex];
+		const legacy = base?.background?.pixelEffects || base?.background?.posterize;
+		if (base?.background) {
+			delete base.background.pixelEffects;
+			delete base.background.posterize;
+		}
+		if (!legacy) return;
+		const settings = GlitterPixelEffects.normalizeSettings(legacy, CONFIG.tools.pixelEffects);
+		if (!settings.pixelateEnabled && !settings.paletteEnabled) return;
+		const pixelSize = settings.pixelateEnabled ? settings.pixelSize : 1;
+		const { dither } = settings;
+		const filterData = !settings.paletteEnabled
+			? { type: 'pixelate', size: pixelSize }
+			: {
+				type: settings.paletteMode, pixelSize, colors: settings.colorCount, style: settings.paletteStyle,
+				merge: settings.mergeDistinctness, detail: settings.detail, cleanEdges: settings.cleanEdges,
+				algorithm: dither.algorithm, strength: dither.strength, scale: dither.scale, angle: dither.angle,
+				palette: dither.palette, duotoneDark: dither.duotone[0], duotoneLight: dither.duotone[1], shimmer: dither.shimmer
+			};
+		const applied = base.visible !== false && ['image', 'gradient'].includes(base.background.mode || 'image');
+		layers.splice(baseIndex + 1, 0, {
+			id: `${base.id}-pixel-filter`,
+			type: LayerType.FILTER,
+			name: GlitterFilters.get(filterData.type)?.label || 'Filter',
+			visible: applied,
+			locked: false,
+			opacity: 100,
+			blendMode: 'normal',
+			filterData
+		});
+	}
 
 	// Brings one serialized layer to the current canonical shape. Idempotent, so
 	// it also runs on every deserialize, where clipboard payloads from an older

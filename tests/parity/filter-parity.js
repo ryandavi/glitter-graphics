@@ -171,6 +171,31 @@ assert.strictEqual(Grain.isIdentityGrain({ amount: 0 }), true);
 assert.deepStrictEqual(Array.from(Grain.createNoise({ roughness: 0.5 }, 'fixed', 4)), Array.from(Grain.createNoise({ roughness: 0.5 }, 'fixed', 4)));
 assert.notStrictEqual(Grain.tileSignature({ size: 10 }, 'fixed'), Grain.tileSignature({ size: 80 }, 'fixed'));
 
+// Posterize/Dither carry the controls the old canvas Palette card had.
+const legacyDither = Filter.normalizeFilterData({ type: 'dither', colors: 4 });
+assert.deepStrictEqual([legacyDither.palette, legacyDither.pixelSize, legacyDither.shimmer, legacyDither.colors], ['auto', 1, false, 4]);
+const ditherFields = Filters.get('dither').fields;
+assert.strictEqual(ditherFields.duotoneDark.when(legacyDither), false);
+assert.strictEqual(ditherFields.duotoneDark.when({ ...legacyDither, palette: 'duotone' }), true);
+assert.strictEqual(ditherFields.colors.when({ ...legacyDither, palette: 'gameboy' }), false);
+assert.strictEqual(ditherFields.angle.when({ ...legacyDither, algorithm: 'halftone' }), true);
+assert.deepStrictEqual(Filters.recipe({ type: 'dither', palette: 'duotone', duotoneDark: '#112233' })[0].params.duotone, ['#112233', '#ffffff']);
+assert.deepStrictEqual(Object.keys(Filter.normalizeFilterData({ type: 'posterize' })).sort(), ['cleanEdges', 'colors', 'detail', 'merge', 'pixelSize', 'style', 'type']);
+const pixelContext = {
+	pixelDefaults: GlitterPixelEffects.normalizeSettings({}, CONFIG.tools.pixelEffects),
+	pixelConfig: { pixelEffects: CONFIG.tools.pixelEffects }
+};
+const mosaicPixels = new Uint8ClampedArray(4 * 4 * 4);
+for (let index = 0; index < 16; index++) mosaicPixels.set([(index * 53) % 256, (index * 97) % 256, (index * 31) % 256, 255], index * 4);
+['posterize', 'dither'].forEach((type) => {
+	const mosaic = new ImageData(new Uint8ClampedArray(mosaicPixels), 4, 4);
+	Ops.get(type).pixel(mosaic, Filters.recipe({ type, pixelSize: 2, palette: 'bw' })[0].params, pixelContext);
+	const at = (x, y) => Array.from(mosaic.data.slice((y * 4 + x) * 4, (y * 4 + x) * 4 + 4)).join();
+	[[0, 0], [2, 0], [0, 2], [2, 2]].forEach(([x, y]) => {
+		assert(at(x, y) === at(x + 1, y) && at(x, y) === at(x, y + 1) && at(x, y) === at(x + 1, y + 1), `${type} Pixel Size must paint whole 2x2 cells`);
+	});
+});
+
 const noBlur = { width: 3, height: 3, data: new Uint8ClampedArray(3 * 3 * 4) };
 for (let index = 3; index < noBlur.data.length; index += 4) noBlur.data[index] = 255;
 noBlur.data[16] = 255;

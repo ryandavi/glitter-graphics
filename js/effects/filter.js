@@ -47,6 +47,15 @@
 		return resolved;
 	}
 
+	// An animated Dither's shimmer cycle ({ frames, offsetPerFrame }), or null.
+	// Export samples it as its own timeline source so a still scene under the
+	// filter still exports as an animation.
+	function shimmerAnimation(value) {
+		const dither = Filters.recipe(normalizeFilterData(value)).find((entry) => entry.op === 'dither')?.params;
+		if (!dither?.shimmer) return null;
+		return GlitterPixelEffects.getShimmerAnimation(dither.algorithm, CONFIG.tools.pixelEffects);
+	}
+
 	function toneCssFilter(value) {
 		return Tone.toneCssFilterString(resolve(value).tone);
 	}
@@ -396,7 +405,7 @@
 			textAlign: 'center', textBaseline: 'middle' };
 	}
 
-	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec, jpegRoundTrip };
+	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, shimmerAnimation, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec, jpegRoundTrip };
 	root.GlitterFilter = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

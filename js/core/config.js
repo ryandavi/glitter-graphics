@@ -168,7 +168,6 @@ const CONFIG = deepFreeze({
 			},
 			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 24 },
 			analysis: { iterations: 10, maxSamples: 24000 },
-			timing: { previewDebounceMs: 80 },
 			animation: {
 				frameDurationMs: 100,
 				algorithms: {
@@ -395,11 +394,13 @@ const CONFIG = deepFreeze({
 		},
 		// The Frame layer (js/paint/frames.js, js/layers/FrameLayerManager.js).
 		// A pinned frame fills the canvas minus its inset; imageCategory is the
-		// sticker category image frames come from.
+		// sticker category image frames come from. A new frame takes its shape
+		// from `preset` (FRAME_PRESETS), so it starts on a named look.
 		frames: {
 			minSize: 16,
 			imageCategory: 'frame',
 			defaults: {
+				preset: 'thick-border',
 				pinned: true,
 				kind: 'style',
 				style: 'solid',

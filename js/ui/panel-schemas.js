@@ -12,7 +12,7 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 }));
 
 function createPaletteControlItems(prefix, options = {}) {
-	const styleDefault = options.styleDefault || CONFIG.tools.pixelEffects.defaults.paletteStyle;
+	const styleDefault = options.styleDefault || CONFIG.tools.autoGlitter.defaults.paletteStyle;
 	return [
 		{ kind: 'segmented', id: `${prefix}PaletteStyle`, classes: options.styleClasses, label: 'Palette style', visibleLabel: 'Style', revert: true,
 			options: getOptions('analysisPaletteStyle').map((entry) => ({
@@ -467,49 +467,7 @@ const PANEL_SCHEMAS = {
 			] },
 
 			{ title: 'Effects', collapsible: false, items: [
-				{ kind: 'card', classes: 'pixelate-effect-card panel-module', title: 'Pixelate', collapsible: true, toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
-					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
-					{ kind: 'host', classes: 'property-note', text: 'Larger cell sizes create a crisp mosaic before palette processing.' }
-				] },
-				{ kind: 'card', classes: 'pixel-effects-card panel-module', title: 'Palette', collapsible: true,
-					toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' },
-					summaryFrom: 'pixelEffectsPaletteMode', items: [
-					{ kind: 'set', items: [
-						{ kind: 'segmented', id: 'pixelEffectsPaletteMode', visibleLabel: 'Mode', label: 'Palette effect', options: [
-							{ label: 'Posterize', value: 'posterize', active: true }, { label: 'Dither', value: 'dither' }
-						] },
-						{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' }
-					] },
-					{ kind: 'set', id: 'pixelEffectsPaletteControls', label: 'Colors', hidden: true, items: [
-						...createPaletteControlItems('pixelEffects')
-					] },
-					{ kind: 'advanced', id: 'pixelEffectsPosterizeControls', label: 'Cleanup', hidden: true, items: [
-						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'paletteDetail' },
-						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb tiny connected regions into their neighbors' }] }
-					] },
-					{ kind: 'set', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-dither-controls', label: 'Dither', hidden: true, items: [
-						{ kind: 'select', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', visibleLabel: 'Algorithm', revert: true, options: [
-							{ label: 'Bayer', value: 'bayer', active: true }, { label: 'Floyd–Steinberg', value: 'floyd' }, { label: 'Atkinson', value: 'atkinson' }, { label: 'Halftone', value: 'halftone' }
-						] },
-						{ kind: 'select', id: 'pixelEffectsDitherPalette', label: 'Dither palette', visibleLabel: 'Color Palette', revert: true, options: [
-							{ label: 'Auto (Image Colors)', value: 'auto', active: true }, { label: 'Black & White', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
-						] },
-						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'property-color-row pixel-effects-duotone' }
-					] },
-					{ kind: 'set', classes: 'pixel-effects-dither-controls', label: 'Pattern', hidden: true, items: [
-						{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
-						{ kind: 'slider', id: 'pixelEffectsDitherScale', slider: 'pixelEffectsDitherScale' },
-						{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' }
-					] },
-					{ kind: 'set', classes: 'pixel-effects-dither-controls', label: 'Shimmer', hidden: true, items: [
-						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Animate Dither', title: 'Animate the Bayer or Halftone pattern in the preview and exported GIF' }] },
-						{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'property-note', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
-					] }
-				] },
-				createSparklesPanelSpec('canvasSparkles'),
-				{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
-					{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
-				] }
+				createSparklesPanelSpec('canvasSparkles')
 			] },
 			{ title: 'Actions', collapsible: false, items: [
 				{ kind: 'host', classes: 'property-note', text: 'Turn the image colors into editable glitter fill layers.' },

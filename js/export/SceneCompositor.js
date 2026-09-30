@@ -118,18 +118,16 @@ class SceneCompositor {
 		}) || []);
 	}
 
-	_createBaseTimelineSources(layer, { includeBaseImage = true } = {}) {
-		if (!includeBaseImage || layer.visible === false) return [];
-		const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
-		const animation = ['image', 'gradient'].includes(layer.background?.mode || 'image')
-			&& settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
-			? GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects)
-			: null;
+	// An animated Dither filter's shimmer, sampled on the shared clock so a
+	// still scene under it still exports as an animation.
+	_createFilterTimelineSources(layer) {
+		if (layer.visible === false || !GlitterFilter.isActive(layer.filterData, layer.opacity)) return [];
+		const animation = GlitterFilter.shimmerAnimation(layer.filterData);
 		if (!animation) return [];
 		const frameDuration = CONFIG.tools.pixelEffects.animation.frameDurationMs;
 		return [{
-			key: '__base_dither',
-			label: 'Base image shimmer',
+			key: `__filter_shimmer_${layer.id}`,
+			label: `${layer.name || 'Filter'} shimmer`,
 			ownerLayerId: layer.id,
 			naturalPeriod: animation.frames * frameDuration,
 			preferredSamplingRate: 1000 / frameDuration,
@@ -825,14 +823,14 @@ class SceneCompositor {
 			prepareMasks: async () => {},
 			prepareStaticResources: async () => {},
 			getAuthoredSources: () => [],
-			render: async ({ ctx, width, height, keepAlpha, alphaThreshold, frameIndex, matteColor }) => {
+			render: async ({ ctx, width, height, keepAlpha, alphaThreshold, frameIndex, matteColor, sourceSelectionMap }) => {
 				if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
 				const caption = GlitterFilter.resolve(layer.filterData).caption;
 				const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
 				await GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
 					keepAlpha,
 					alphaThreshold,
-					frameIndex,
+					frameIndex: sourceSelectionMap?.get(`__filter_shimmer_${layer.id}`)?.frameIndex ?? frameIndex,
 					matteColor,
 					seed: layer.id,
 					tileCache: this.filterGrainTileCache,
@@ -993,54 +991,28 @@ class SceneCompositor {
 		} else {
 			source = new ImageData(new Uint8ClampedArray(originalData), width, height);
 		}
-		const settings = GlitterPixelEffects.normalizeSettings(background.pixelEffects || background.posterize, CONFIG.tools.pixelEffects);
-		let ditherPalette = null;
-		if (settings.paletteEnabled && settings.paletteMode === 'dither') {
-			const pixelized = GlitterPixelEffects.pixelize(source.data, width, height, settings.pixelateEnabled ? settings.pixelSize : 1);
-			ditherPalette = GlitterPixelEffects.getPalette(pixelized, width, height, settings, {
-				pixelEffects: CONFIG.tools.pixelEffects,
-				autoGlitter: CONFIG.tools.autoGlitter
-			});
-		}
 		return {
 			source,
-			settings,
 			colorAdjust: normalizeColorAdjust(background.colorAdjust),
 			opacity: layer.opacity,
-			ditherPalette,
-			shimmerAnimation: settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
-				? GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects)
-				: null,
-			processedFrames: new Map()
+			processed: null
 		};
 	}
 
-	_getBasePipelineImageData(context, frameIndex) {
+	_getBasePipelineImageData(context) {
 		const pipeline = context.basePipeline;
 		if (!pipeline) throw new Error('Missing prepared base pipeline');
-		const { width, height } = context.canvasData;
-		const shimmerFrame = pipeline.shimmerAnimation
-			? ((Math.floor(frameIndex) % pipeline.shimmerAnimation.frames) + pipeline.shimmerAnimation.frames) % pipeline.shimmerAnimation.frames
-			: 0;
-		const cached = pipeline.processedFrames.get(shimmerFrame);
-		if (cached) return cached;
-		const pixelEffectsActive = pipeline.settings.pixelateEnabled || pipeline.settings.paletteEnabled;
-		if (!pixelEffectsActive && isIdentityColorAdjust(pipeline.colorAdjust) && pipeline.opacity === 100) {
-			pipeline.processedFrames.set(shimmerFrame, pipeline.source);
+		if (pipeline.processed) return pipeline.processed;
+		if (isIdentityColorAdjust(pipeline.colorAdjust) && pipeline.opacity === 100) {
+			pipeline.processed = pipeline.source;
 			return pipeline.source;
 		}
-		const data = !pipeline.settings.pixelateEnabled && !pipeline.settings.paletteEnabled
-			? new Uint8ClampedArray(pipeline.source.data)
-			: GlitterPixelEffects.applyPixelEffects(pipeline.source.data, width, height, pipeline.settings, {
-				pixelEffects: CONFIG.tools.pixelEffects,
-				autoGlitter: CONFIG.tools.autoGlitter
-			}, shimmerFrame, pipeline.ditherPalette);
-		const result = new ImageData(data, width, height);
+		const result = new ImageData(new Uint8ClampedArray(pipeline.source.data), pipeline.source.width, pipeline.source.height);
 		applyColorAdjustToImageData(result, pipeline.colorAdjust);
 		if (pipeline.opacity < 100) {
 			for (let offset = 3; offset < result.data.length; offset += 4) result.data[offset] = Math.round(result.data[offset] * pipeline.opacity / 100);
 		}
-		pipeline.processedFrames.set(shimmerFrame, result);
+		pipeline.processed = result;
 		return result;
 	}
 
@@ -1397,8 +1369,7 @@ class SceneCompositor {
 		// is transparent this reveals the base's own alpha; when it holds a
 		// matte, normal alpha compositing blends the base against it.
 		if (shouldRenderBase && ((baseMode === 'image' && canvasData.hasBaseImage !== false) || baseMode === 'gradient')) {
-			const baseEffectFrame = sourceSelectionMap?.get('__base_dither')?.frameIndex ?? frameIndex;
-			const baseImage = this._getBasePipelineImageData(context, baseEffectFrame);
+			const baseImage = this._getBasePipelineImageData(context);
 			resetCanvasContext(hCtx, width, height);
 			hCtx.putImageData(baseImage, 0, 0);
 			ctx.drawImage(this.helperCanvas, 0, 0);
