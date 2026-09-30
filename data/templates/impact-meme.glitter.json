@@ -1,0 +1,40 @@
+{
+	"format": "glitter-project",
+	"version": 6,
+	"name": "Meme Captions",
+	"canvas": { "width": 800, "height": 800 },
+	"baseImage": {
+		"mimeType": null,
+		"data": null,
+		"preset": { "width": 800, "height": 800, "color": "transparent" },
+		"hasBaseImage": false
+	},
+	"layers": [
+		{
+			"id": "meme-top",
+			"type": "text-glitter",
+			"name": "TOP TEXT",
+			"templateAnchor": "top",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": { "position": { "x": 400, "y": 82 }, "anchor": { "x": 0.5, "y": 0 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
+			"textData": { "text": "TOP TEXT", "fontId": "luckiest-guy", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 76, "letterSpacing": 0, "lineHeight": 1, "align": "center", "verticalAlign": "top", "boxMode": "auto", "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 7, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
+		},
+		{
+			"id": "meme-bottom",
+			"type": "text-glitter",
+			"name": "BOTTOM TEXT",
+			"templateAnchor": "bottom",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": { "position": { "x": 400, "y": 718 }, "anchor": { "x": 0.5, "y": 1 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
+			"textData": { "text": "BOTTOM TEXT", "fontId": "luckiest-guy", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 76, "letterSpacing": 0, "lineHeight": 1, "align": "center", "verticalAlign": "top", "boxMode": "auto", "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 7, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
+		}
+	],
+	"activeLayerId": "meme-bottom",
+	"masks": {},
+	"shapeFillImages": {},
+	"customStickers": {}
+}

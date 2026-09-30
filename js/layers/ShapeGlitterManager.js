@@ -414,7 +414,7 @@ class ShapeGlitterManager {
 			layer.shapeData.bevel = buildDefaultBevel();
 			layer.shapeData.sparkles = null;
 			delete layer.shapeData.effectDrafts;
-			delete layer.animation;
+			delete layer.animations;
 		});
 		this.loadLayerSettings(layer);
 		this.renderLayer(layer);

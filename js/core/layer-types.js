@@ -125,6 +125,53 @@ function getAddableLayerTypes() {
 	return Object.values(LayerType).filter((type) => Boolean(LAYER_UI_CONFIG[type]?.addableViaModal));
 }
 
+const ADD_MENU_GROUPS = Object.freeze([
+	{ id: 'basics', label: 'Basics', order: 1 },
+	{ id: 'decorate', label: 'Decorate', order: 2 },
+	{ id: 'effects', label: 'Effects', order: 3 },
+	{ id: 'generate', label: 'Generate', order: 4 }
+]);
+
+const ADD_MENU_COMMANDS = Object.freeze([
+	{
+		id: 'auto-glitter',
+		group: 'generate',
+		order: 1,
+		label: 'Auto Glitter',
+		icon: 'magic-wand',
+		description: 'Turn the base image into editable glitter layers',
+		run: (editor) => editor.autoGlitterManager?.open()
+	}
+]);
+
+function getAddMenuEntries() {
+	const layerEntries = getAddableLayerTypes().flatMap((type) => {
+		const config = LAYER_UI_CONFIG[type].addableViaModal;
+		const base = {
+			kind: 'layer',
+			type,
+			id: `add-${type}`,
+			group: config.group || 'basics',
+			order: config.order ?? 100,
+			label: config.label,
+			icon: config.icon,
+			description: config.description,
+			createOptions: config.createOptions || null
+		};
+		return [base, ...(config.quickAddVariants || []).map((variant) => ({
+			...base,
+			...variant,
+			id: variant.id,
+			createOptions: variant.createOptions || null
+		}))];
+	});
+	return [...layerEntries, ...ADD_MENU_COMMANDS.map((entry) => ({ kind: 'command', ...entry }))]
+		.sort((a, b) => {
+			const groupOrder = (id) => ADD_MENU_GROUPS.find((group) => group.id === id)?.order ?? 100;
+			return groupOrder(a.group) - groupOrder(b.group) || a.order - b.order;
+		});
+}
+
 function getQuickAddLayerTypes() {
 	return [...new Set(getQuickAddLayerEntries().map((entry) => entry.type))];
 }

@@ -139,22 +139,24 @@ class SceneCompositor {
 	}
 
 	_createLayerAnimationTimelineSources(layer, { canvasData = null } = {}) {
-		if (!GlitterAnimation.isActive(layer.animation)) return [];
-		const animation = GlitterAnimation.normalizeAnimation(layer.animation);
+		const animations = GlitterAnimation.normalizeAnimations(layer.animations);
+		if (!animations.some((animation) => GlitterAnimation.isActive(animation))) return [];
 		const box = this._getAnimationBox(layer, canvasData?.width || 1, canvasData?.height || 1);
 		const samplingContext = this._buildAnimationSamplingContext(layer, box, canvasData);
-		return [{
-			key: `__anim_${layer.id}`,
-			label: `${layer.name || 'Layer'} animation`,
-			ownerLayerId: layer.id,
-			effectSlot: 'animation',
-			naturalPeriod: animation.periodMs,
-			phase: animation.phase,
-			preferredSamplingRate: CONFIG.tools.animation.exportFps,
-			sampleAt: (timestamp, period = animation.periodMs) => ({
-				sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, samplingContext)
-			})
-		}];
+		return animations.map((animation, index) => ({ animation, index }))
+			.filter(({ animation }) => GlitterAnimation.isActive(animation))
+			.map(({ animation, index }) => ({
+				key: `__anim_${layer.id}_${index}`,
+				label: `${layer.name || 'Layer'} ${GlitterAnimation.summaryText(animation)}`,
+				ownerLayerId: layer.id,
+				effectSlot: `animation-${index}`,
+				naturalPeriod: animation.periodMs,
+				phase: animation.phase,
+				preferredSamplingRate: CONFIG.tools.animation.exportFps,
+				sampleAt: (timestamp, period = animation.periodMs) => ({
+					sample: GlitterAnimation.sampleAt({ ...animation, periodMs: period }, timestamp, samplingContext)
+				})
+			}));
 	}
 
 	// One procedural source per sparkles slot, period = its cycle. The sampled
@@ -290,7 +292,10 @@ class SceneCompositor {
 		ctx.scale(metrics.signedScaleX, metrics.signedScaleY);
 		if (animation) {
 			ctx.translate(-width / 2, -height / 2);
-			GlitterAnimation.applyToContext(ctx, { ...animation, tx: 0, ty: 0 }, width, height);
+			const localAnimation = animation.matrix
+				? { ...animation, tx: 0, ty: 0, matrix: { ...animation.matrix, e: 0, f: 0 } }
+				: { ...animation, tx: 0, ty: 0 };
+			GlitterAnimation.applyToContext(ctx, localAnimation, width, height);
 			ctx.translate(width / 2, height / 2);
 		}
 
@@ -1395,21 +1400,25 @@ class SceneCompositor {
 				renderCtx.globalCompositeOperation = 'source-over';
 				renderCtx.clearRect(0, 0, width, height);
 			}
-			const animationUnits = GlitterAnimation.isActive(layer.animation)
-				? [{ animData: layer.animation, anchorBox: this._getAnimationBox(layer, width, height) }]
+			const animationUnits = GlitterAnimation.isActive(layer.animations)
+				? [{ animData: layer.animations, anchorBox: this._getAnimationBox(layer, width, height) }]
 				: [{ animData: null, anchorBox: null }];
 			for (const unit of animationUnits) {
 				renderCtx.save();
 				let rainbowHue = 0;
 				if (unit.animData) {
-					const sampled = sourceSelectionMap?.get(`__anim_${layer.id}`)?.sample;
 					const origin = [unit.anchorBox.origin?.x ?? 0.5, unit.anchorBox.origin?.y ?? 0.5];
-					const sample = sampled
-						? { ...sampled, originX: origin[0], originY: origin[1] }
-						: GlitterAnimation.sampleAt(unit.animData, timestamp, {
-							...this._buildAnimationSamplingContext(layer, unit.anchorBox, { width, height }),
-							origin
-						});
+					const samplingContext = {
+						...this._buildAnimationSamplingContext(layer, unit.anchorBox, { width, height }),
+						origin
+					};
+					const sampled = unit.animData.map((animation, index) => ({ animation, index }))
+						.filter(({ animation }) => GlitterAnimation.isActive(animation))
+						.map(({ animation, index }) =>
+							sourceSelectionMap?.get(`__anim_${layer.id}_${index}`)?.sample
+							|| GlitterAnimation.sampleAt(animation, timestamp, samplingContext)
+						);
+					const sample = GlitterAnimation.composeSamples(sampled, { origin });
 					rainbowHue = sample.hue || 0;
 					if (layer.type === LayerType.GLITTER_FILL) {
 						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);

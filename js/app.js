@@ -129,6 +129,7 @@ class GlitterEditor {
 		this.maskEditor = new MaskEditor(this);
 		this.historyManager = new HistoryManager(this);
 		this.projectSerializer = new ProjectSerializer(this);
+		this.templateManager = new TemplateManager(this);
 		this.htmlSceneExporter = null;
 		this._registerMemoryMeasurements();
 
@@ -2449,7 +2450,7 @@ class GlitterEditor {
 	_layerIntersectsExportCanvas(layer) {
 		if (!isTransformableLayerType(layer?.type)) return true;
 		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
-		if (GlitterAnimation.includesOffCanvas(layer.animation)) return true;
+		if (GlitterAnimation.includesOffCanvas(layer.animations)) return true;
 
 		try {
 			const context = this.getMovableLayerContext(layer);

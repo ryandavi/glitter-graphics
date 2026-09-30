@@ -1,0 +1,23 @@
+{
+	"version": 1,
+	"templates": [
+		{
+			"id": "glitter-greeting",
+			"mode": "project",
+			"label": "Glitter Greeting",
+			"description": "A square greeting card with editable headline text",
+			"src": "data/templates/glitter-greeting.glitter.json",
+			"icon": "sparkles",
+			"aspectRatio": "1 / 1",
+			"preview": "linear-gradient(145deg, #250042, #8f2bd1 55%, #ff79d1)"
+		},
+		{
+			"id": "impact-meme",
+			"mode": "overlay",
+			"label": "Meme Captions",
+			"description": "Editable top and bottom Impact-style text",
+			"src": "data/templates/impact-meme.glitter.json",
+			"icon": "text"
+		}
+	]
+}

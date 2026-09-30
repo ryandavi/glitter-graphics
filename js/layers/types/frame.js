@@ -34,6 +34,8 @@ registerLayerType(LayerType.FRAME, {
 	addableViaModal: {
 		label: 'Frame',
 		icon: 'frame',
+		group: 'decorate',
+		order: 1,
 		description: 'Put a border or an ornate frame around the picture'
 	},
 	designPanelSections: ['glitterSearchSection', 'glitterOptions', 'frameSettingsSection'],

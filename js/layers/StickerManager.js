@@ -120,7 +120,7 @@ class StickerManager extends ContentManager {
 			layer.stickerData.bevel = buildDefaultBevel();
 			layer.stickerData.sparkles = null;
 			delete layer.stickerData.effectDrafts;
-			delete layer.animation;
+			delete layer.animations;
 			this.renderLayer(layer);
 			this.loadLayerSettings(layer);
 			this.editor.animationPanel?.load(layer);
@@ -1114,7 +1114,8 @@ updateTransform(layerId, updates) {
 		// live layer must not alias it.
 		const layerData = structuredClone(serialized);
 		layerData.blendMode = GlitterBlendModes.forLayer(layerData);
-		if (layerData.animation) layerData.animation = GlitterAnimation.normalizeAnimation(layerData.animation);
+		ProjectSerializer.migrateLayerState(layerData);
+		if (layerData.animations?.length) layerData.animations = GlitterAnimation.normalizeAnimations(layerData.animations);
 		if (layerData.stickerData) {
 			delete layerData.stickerData.blendMode;
 			layerData.stickerData.staticImageData = null;

@@ -132,8 +132,8 @@ setupImageListeners() {
 		host.className = 'new-canvas-preset-groups';
 		host.replaceChildren();
 		const groups = [
-			{ id: 'classic', label: 'Web Classics' },
 			{ id: 'social', label: 'Social Media' },
+			{ id: 'classic', label: 'Web Classics' },
 			{ id: 'general', label: 'General' }
 		];
 		groups.forEach((group) => {
@@ -176,6 +176,42 @@ setupImageListeners() {
 			section.append(title, grid);
 			host.appendChild(section);
 		});
+		TemplateLibrary.list('project').then((templates) => {
+			if (!templates.length || host.querySelector('[data-template-group]')) return;
+			const section = document.createElement('section');
+			section.className = 'new-canvas-preset-group';
+			section.dataset.templateGroup = '';
+			const title = document.createElement('h3');
+			title.className = 'new-canvas-preset-title';
+			title.textContent = 'Templates';
+			const grid = document.createElement('div');
+			grid.className = 'blank-image-grid';
+			templates.forEach((template) => {
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'blank-image-option new-canvas-template-btn';
+				button.dataset.templateId = template.id;
+				button.setAttribute('aria-pressed', 'false');
+				button.setAttribute('aria-label', `${template.label} template`);
+				const previewWrapper = document.createElement('span');
+				previewWrapper.className = 'blank-preview-wrapper template-preview-wrapper';
+				const preview = document.createElement('span');
+				preview.className = 'blank-preview template-preview';
+				preview.style.aspectRatio = template.aspectRatio || '1 / 1';
+				preview.style.background = template.preview || 'var(--color-bg-primary)';
+				previewWrapper.appendChild(preview);
+				const label = document.createElement('strong');
+				label.className = 'blank-label';
+				label.textContent = template.label;
+				const detail = document.createElement('span');
+				detail.className = 'blank-detail';
+				detail.textContent = template.description;
+				button.append(previewWrapper, label, detail);
+				grid.appendChild(button);
+			});
+			section.append(title, grid);
+			host.prepend(section);
+		}).catch((error) => console.warn('Templates unavailable:', error));
 	}
 
 ,
@@ -187,6 +223,12 @@ setupImageListeners() {
 		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
 		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
 		const colorRow = document.getElementById('canvasColorRow');
+		const host = document.getElementById('newCanvasPresets');
+		delete host?.dataset.selectedTemplateId;
+		host?.querySelectorAll('.new-canvas-template-btn').forEach((button) => {
+			button.classList.remove('active');
+			button.setAttribute('aria-pressed', 'false');
+		});
 
 		// Reset to defaults
 		if (widthInput) widthInput.value = CONFIG.canvas.defaults.blankDocument.width;
@@ -235,6 +277,7 @@ setupImageListeners() {
 		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
 		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
 		const colorRow = document.getElementById('canvasColorRow');
+		const presetsHost = document.getElementById('newCanvasPresets');
 		if (widthInput) widthInput.max = CONFIG.canvas.limits.maxWidth;
 		if (heightInput) heightInput.max = CONFIG.canvas.limits.maxHeight;
 
@@ -254,6 +297,11 @@ setupImageListeners() {
 		// Preset buttons
 		presetButtons.forEach(btn => {
 			btn.addEventListener('click', () => {
+				delete presetsHost?.dataset.selectedTemplateId;
+				presetsHost?.querySelectorAll('.new-canvas-template-btn').forEach((button) => {
+					button.classList.remove('active');
+					button.setAttribute('aria-pressed', 'false');
+				});
 				const width = parseInt(btn.dataset.width);
 				const height = parseInt(btn.dataset.height);
 
@@ -262,6 +310,20 @@ setupImageListeners() {
 
 				syncPresetHighlight();
 				this.updateOrientationButtons(width, height);
+			});
+		});
+		presetsHost?.addEventListener('click', (event) => {
+			const button = event.target.closest('.new-canvas-template-btn');
+			if (!button) return;
+			presetsHost.dataset.selectedTemplateId = button.dataset.templateId;
+			presetsHost.querySelectorAll('.new-canvas-template-btn').forEach((candidate) => {
+				const active = candidate === button;
+				candidate.classList.toggle('active', active);
+				candidate.setAttribute('aria-pressed', active ? 'true' : 'false');
+			});
+			presetButtons.forEach((candidate) => {
+				candidate.classList.remove('active');
+				candidate.setAttribute('aria-pressed', 'false');
 			});
 		});
 
@@ -322,6 +384,12 @@ setupImageListeners() {
 		// Create button
 		if (createBtn) {
 			createBtn.addEventListener('click', async () => {
+				const templateId = presetsHost?.dataset.selectedTemplateId;
+				if (templateId) {
+					const loaded = await this.templateManager.applyProject(templateId);
+					if (loaded) this.modalManager.close('newCanvasModal');
+					return;
+				}
 				const width = parseInt(widthInput.value);
 				const height = parseInt(heightInput.value);
 				if (!Number.isInteger(width) || !Number.isInteger(height) ||

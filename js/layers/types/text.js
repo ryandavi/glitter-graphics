@@ -68,6 +68,8 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	addableViaModal: {
 		label: 'Text',
 		icon: 'text',
+		group: 'basics',
+		order: 1,
 		description: 'Add editable text with glitter, color, or a gradient',
 		quickAddId: 'quickActionAddText',
 		quickAddOrder: 1

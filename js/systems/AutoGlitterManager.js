@@ -891,7 +891,7 @@ class AutoGlitterManager {
 					layer._autoGlitterSourceVisible = sourceLayer.visible;
 					layer._autoGlitterSourceLocked = sourceLayer.locked;
 				}
-				layer.isPreview = true;
+				PreviewLayerSession.stage(layer);
 				layer.settings.feather = 0;
 				this.editor.layers.splice(baseIndex + 1 + position, 0, layer);
 				this.session.layers[position] = layer;
@@ -1008,7 +1008,7 @@ class AutoGlitterManager {
 		kept.forEach((layer) => {
 			const sourceVisible = layer._autoGlitterSourceVisible;
 			const sourceLocked = layer._autoGlitterSourceLocked;
-			delete layer.isPreview;
+			PreviewLayerSession.commit([layer]);
 			delete layer._autoGlitterRoot;
 			delete layer._autoGlitterSourceVisible;
 			delete layer._autoGlitterSourceLocked;

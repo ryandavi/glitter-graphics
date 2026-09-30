@@ -105,7 +105,7 @@ function createBevelPanelSpecs(idPrefix) {
 					{ kind: 'slider', id: `${idPrefix}Depth`, slider: 'bevelDepth' },
 					{ kind: 'slider', id: `${idPrefix}Angle`, slider: 'bevelAngle', rowId: `${idPrefix}AngleRow` },
 					{ kind: 'slider', id: `${idPrefix}Altitude`, slider: 'bevelAltitude', rowId: `${idPrefix}AltitudeRow` },
-					{ kind: 'slider', id: `${idPrefix}Soften`, slider: 'bevelSoften' }
+					{ kind: 'slider', id: `${idPrefix}Soften`, slider: 'bevelSoften', advanced: true }
 				] },
 				{ kind: 'paintSlot', id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, title: 'Shade', redesign: false,
 					sourceSelect: true, sourceRevert: true, colorRevert: true, texturePosition: true,
@@ -140,6 +140,7 @@ function createAnimationPanelSpec(prefix) {
 		// `.subsection-card-body`, not nested inside it.
 		items: [
 			{ kind: 'set', items: [
+				{ kind: 'host', id: id('Stack'), classes: 'segmented-control animation-stack', attrs: { hidden: 'hidden' } },
 				{ kind: 'select', id: id('Type'), label: 'Animation type', visibleLabel: 'Preset', options: ANIMATION_PRESET_OPTIONS,
 					stacked: false,
 					stepper: {
@@ -191,6 +192,10 @@ function createAnimationPanelSpec(prefix) {
 					{ kind: 'select', id: id('SnapMode'), visibleLabel: 'Motion', label: 'Motion sampling', options: [
 						{ value: 'smooth', label: 'Smooth' }, { value: 'pixel-snap', label: 'Pixel snap' }, { value: 'step', label: 'Step' }
 					] }
+				] },
+				{ kind: 'actionRow', classes: 'animation-stack-actions', actions: [
+					{ id: id('Add'), label: 'Add animation', icon: 'plus' },
+					{ id: id('Remove'), label: 'Remove', icon: 'trash' }
 				] }
 			] }
 		]
@@ -322,7 +327,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Advanced', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', items: [
-					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels' },
+					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels', advanced: true },
 					{ kind: 'checkboxList', items: [
 						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
 						{ id: 'autoGlitterTuneHue', label: 'Tune Matched Glitter Hue', checked: true, revert: true, title: 'Apply a small hue correction to improve the closest glitter match' }
@@ -392,7 +397,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'stackRow', groups: [
 							{ label: 'Style', control: 'select', get options() { return createRegistryOptionEntries('frameStyle', 'frameStyle'); } }
 						] },
-						{ kind: 'slider', id: 'frameShade', slider: 'frameShade', rowId: 'frameShadeRow', title: 'How much lighter and darker the bevel sides are' }
+						{ kind: 'slider', id: 'frameShade', slider: 'frameShade', rowId: 'frameShadeRow', title: 'How much lighter and darker the bevel sides are', advanced: true }
 					] },
 					{ kind: 'set', label: 'Frames', attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, items: [
 						{ kind: 'presetGrid', id: 'frameImagePicker', label: 'Frame images', classes: 'property-inset frame-images' }

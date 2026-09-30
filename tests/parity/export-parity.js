@@ -81,7 +81,10 @@ async function buildComposition(page) {
 		stickerLayer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
 		stickerLayer.stickerData.shadow.mode = 'glitter';
 		stickerLayer.stickerData.shadow.glitterId = glitterB;
-		stickerLayer.animation = GlitterAnimation.normalizeAnimation({ type: 'heartbeat', periodMs: 400 });
+		stickerLayer.animations = [
+			GlitterAnimation.normalizeAnimation({ type: 'heartbeat', periodMs: 400 }),
+			GlitterAnimation.normalizeAnimation({ type: 'rainbow', periodMs: 900 })
+		];
 
 		const staticStickerLayer = editor.stickerManager.createLayer(staticSticker.id);
 		editor.layerManager.insertLayer(staticStickerLayer);
@@ -157,12 +160,12 @@ async function verifyAnimationIntegration(page) {
 	await page.waitForFunction(() => document.querySelectorAll('.layer-anim-wrapper').length >= 1);
 	const result = await page.evaluate(async () => {
 		const editor = window.editor;
-		const animated = editor.layerManager.layers.filter((layer) => GlitterAnimation.isActive(layer.animation));
+		const animated = editor.layerManager.layers.filter((layer) => GlitterAnimation.isActive(layer.animations));
 		const serialized = editor.layerManager.serializeLayer(animated[0]);
 		const restored = await editor.layerManager.deserializeLayer(serialized);
-		const unknown = await editor.layerManager.deserializeLayer({ ...serialized, animation: { type: 'future-preset' } });
-		const animatedSticker = editor.layerManager.layers.find((layer) => layer.type === LayerType.STICKER && GlitterAnimation.isActive(layer.animation));
-		const staticSticker = editor.layerManager.layers.find((layer) => layer.type === LayerType.STICKER && !GlitterAnimation.isActive(layer.animation));
+		const unknown = await editor.layerManager.deserializeLayer({ ...serialized, animations: [{ type: 'future-preset' }] });
+		const animatedSticker = editor.layerManager.layers.find((layer) => layer.type === LayerType.STICKER && GlitterAnimation.isActive(layer.animations));
+		const staticSticker = editor.layerManager.layers.find((layer) => layer.type === LayerType.STICKER && !GlitterAnimation.isActive(layer.animations));
 		editor.layerManager.setActiveLayer(animatedSticker.id);
 		const animatedStickerChecked = document.getElementById('stickerAnimEnabled')?.checked;
 		editor.layerManager.setActiveLayer(staticSticker.id);
@@ -176,8 +179,8 @@ async function verifyAnimationIntegration(page) {
 		return {
 			animated: animated.length,
 			wrappers: document.querySelectorAll('.layer-anim-wrapper').length,
-			restoredType: restored.animation?.type,
-			fallbackType: unknown.animation?.type,
+			restoredTypes: restored.animations?.map((animation) => animation.type),
+			fallbackType: unknown.animations?.[0]?.type,
 			animatedStickerChecked,
 			staticStickerChecked,
 			textChecked,
@@ -185,7 +188,7 @@ async function verifyAnimationIntegration(page) {
 		};
 	});
 	assert(result.animated === 1 && result.wrappers >= 1, 'Animated layer did not register its preview wrapper');
-	assert(result.restoredType === 'heartbeat', 'Animation did not survive layer serialization');
+	assert(result.restoredTypes?.join(',') === 'heartbeat,rainbow', 'Animation stack did not survive layer serialization');
 	assert(result.fallbackType === 'pulse', `Unknown animation type did not fall back: ${JSON.stringify(result)}`);
 	assert(result.animatedStickerChecked === true, `Animated sticker checkbox was not restored: ${JSON.stringify(result)}`);
 	assert(result.staticStickerChecked === false, `Static sticker inherited the previous checkbox state: ${JSON.stringify(result)}`);
@@ -584,9 +587,6 @@ async function main() {
 			const matteSecondBytes = await exportBytes(page, matteSettings);
 			const matteFirst = { bytes: matteFirstBytes, hash: hashBytes(matteFirstBytes) };
 			const matteSecond = { bytes: matteSecondBytes, hash: hashBytes(matteSecondBytes) };
-			const colorBurnBlackPixels = await countDecodedNearBlackPixels(page, matteFirstBytes, { x: 18, y: 130, width: 100, height: 100 });
-			assert(colorBurnBlackPixels > 50, `Color Burn sticker lost its black pixels in the encoded GIF (${colorBurnBlackPixels} found)`);
-
 			assertByteIdentity(matteFirst, matteSecond, 'Back-to-back matte export');
 			console.log(`PASS 1. Back-to-back matte exports matched exactly (${matteFirst.bytes.length} bytes, sha256 ${matteFirst.hash})`);
 
@@ -619,6 +619,9 @@ async function main() {
 			const transparentThird = { bytes: transparentThirdBytes, hash: hashBytes(transparentThirdBytes) };
 			assertByteIdentity(transparentFirst, transparentThird, 'Edit -> undo -> transparent export');
 			console.log(`PASS 4. Edit -> undo -> transparent export matched the original (${transparentThird.bytes.length} bytes, sha256 ${transparentThird.hash})`);
+
+			const colorBurnBlackPixels = await countDecodedNearBlackPixels(page, matteFirstBytes, { x: 18, y: 130, width: 100, height: 100 });
+			assert(colorBurnBlackPixels > 50, `Color Burn sticker lost its black pixels in the encoded GIF (${colorBurnBlackPixels} found)`);
 
 			await configurePixelFilter(page, 'posterize');
 			await verifyBasePreviewExportParity(page, 'Graded canvas');

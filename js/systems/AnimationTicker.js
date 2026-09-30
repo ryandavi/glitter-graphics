@@ -127,6 +127,7 @@ function paintLayerAnimationPreview(layer, elapsed, wrapper, context, useLayerTr
 		tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) / scaleX,
 		ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) / scaleY
 	};
+	if (sample.matrix) domSample.matrix = { ...sample.matrix, e: domSample.tx, f: domSample.ty };
 	wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
 	wrapper.style.opacity = String(sample.opacity);
 	wrapper.style.transformOrigin = `${sample.originX * 100}% ${sample.originY * 100}%`;
@@ -146,7 +147,7 @@ function animateCanvasLayerPreview(layer, elapsed, wrapper, context) {
 function syncLayerAnimationPreview(element, layer, ticker) {
 	if (!element || !ticker) return null;
 	let wrapper = Array.from(element.children).find((child) => child.classList.contains('layer-anim-wrapper'));
-	const active = GlitterAnimation.isActive(layer.animation);
+	const active = GlitterAnimation.isActive(layer.animations);
 	if (!active) {
 		if (wrapper) {
 			while (wrapper.firstChild) element.insertBefore(wrapper.firstChild, wrapper);
@@ -165,7 +166,7 @@ function syncLayerAnimationPreview(element, layer, ticker) {
 	});
 	ticker.register(layer.id, {
 		targetId: layer.id,
-		getData: () => layer.animation,
+		getData: () => layer.animations,
 		getLayer: () => layer,
 		getWrapper: () => wrapper
 	});

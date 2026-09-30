@@ -241,7 +241,7 @@ class TextGlitterManager {
 				layer.textData.sparkles = null;
 				layer.textData.textBackground = this.getDefaultTextBackground();
 				delete layer.textData.effectDrafts;
-				delete layer.animation;
+				delete layer.animations;
 			}, { refreshPreview: false });
 			this.editor.animationPanel?.load(layer);
 		});

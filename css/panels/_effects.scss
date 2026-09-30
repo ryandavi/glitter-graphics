@@ -445,6 +445,19 @@
 	}
 }
 
+.animation-stack {
+	flex-wrap: wrap;
+
+	&[hidden] { display: none; }
+
+	.animation-stack-item {
+		flex: 1 1 calc(50% - 1px);
+		min-width: 0;
+		text-transform: none;
+		letter-spacing: 0;
+	}
+}
+
 .auto-glitter-settings-section {
 	// Sticky-header / scroll-region / sticky-footer layout is the generic
 	// `.section.has-scroll-region` block in panels/_properties.scss. Only the

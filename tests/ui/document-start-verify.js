@@ -46,6 +46,7 @@ async function main() {
 		await startupContext.close();
 
 		const desktop = await openEditor(browser, { width: 1440, height: 900 });
+		await desktop.page.waitForFunction(() => document.querySelector('.new-canvas-template-btn'));
 		const startState = await desktop.page.evaluate(() => ({
 			startVisible: !document.getElementById('workspaceStart').hidden,
 			noLegacyImagePanel: !document.getElementById('imagePanelSection'),
@@ -59,7 +60,7 @@ async function main() {
 		assert(startState.startVisible, 'Desktop start surface is not visible without a document');
 		assert(startState.noLegacyImagePanel, 'Legacy Image panel is still present');
 		assert(startState.presetCount === 10, `Expected 10 canvas presets, got ${startState.presetCount}`);
-		assert(startState.presetGroups.join('|') === 'Social Media|Web Classics|General', 'Canvas preset groups are missing or out of order');
+		assert(startState.presetGroups.join('|') === 'Templates|Social Media|Web Classics|General', 'Canvas preset groups are missing or out of order');
 		assert(startState.maxWidth === 1024 && startState.maxHeight === 1024, 'Custom canvas limits are not 1024px');
 		assert(startState.panelsHidden, 'Document panels are visible during the no-document state');
 

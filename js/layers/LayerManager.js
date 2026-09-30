@@ -160,8 +160,8 @@ class LayerManager {
 		serialized.opacity = layer.opacity;
 		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
 		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
-		if (layer.animation && isAnimatableLayerType(type)) {
-			serialized.animation = structuredClone(layer.animation);
+		if (layer.animations?.length && isAnimatableLayerType(type)) {
+			serialized.animations = structuredClone(layer.animations);
 		}
 		if (spec.forceLocked) serialized.locked = true;
 		if (!spec.omit?.includes('settings')) serialized.settings = structuredClone(layer.settings || {});
@@ -201,8 +201,8 @@ class LayerManager {
 			restored[key] = layerData[key] == null ? fallback : structuredClone(layerData[key]);
 		});
 		if (spec.includeMaskVersion) restored.maskVersion = layerData.maskVersion || 0;
-		if (layerData.animation && isAnimatableLayerType(type)) {
-			restored.animation = GlitterAnimation.normalizeAnimation(layerData.animation);
+		if (layerData.animations?.length && isAnimatableLayerType(type)) {
+			restored.animations = GlitterAnimation.normalizeAnimations(layerData.animations);
 		}
 		spec.normalize?.(this.editor, restored);
 		try {

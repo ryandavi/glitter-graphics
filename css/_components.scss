@@ -222,7 +222,7 @@ textarea {
 		border: 0;
 		color: var(--color-text-secondary);
 		font: inherit;
-		font-size: var(--font-size-sm);
+		// font-size: var(--font-size-sm);
 		cursor: pointer;
 
 		&:hover { color: var(--color-text-primary); }
@@ -258,6 +258,11 @@ textarea {
 		>.advanced-disclosure-content { display: flex; }
 		.advanced-disclosure-chevron { transform: rotate(180deg); }
 	}
+}
+
+html[data-show-all-controls="true"] .advanced-disclosure {
+	> .advanced-disclosure-toggle { display: none; }
+	> .advanced-disclosure-content { display: flex; }
 }
 
 .subsection-card-body > .advanced-disclosure { margin: 0; }

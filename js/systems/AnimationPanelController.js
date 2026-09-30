@@ -12,6 +12,7 @@ class AnimationPanelController {
 			Turns: 'turns', Duty: 'duty', OpacityFloor: 'opacityFloor',
 			DelayMs: 'delayMs', Phase: 'phase', AnchorX: 'anchorX', AnchorY: 'anchorY'
 		};
+		this.selectedByLayer = new Map();
 		this.prefixByType.forEach((_prefix, type) => this._bind(type));
 		this.pauseButton = document.getElementById('pauseMotionTool');
 		this.pauseButton?.addEventListener('click', () => this.setPaused(!this.editor.animationTicker.paused));
@@ -58,6 +59,55 @@ class AnimationPanelController {
 		return layer?.type === type ? layer : null;
 	}
 
+	_animations(layer) {
+		return Array.isArray(layer?.animations) ? layer.animations : [];
+	}
+
+	_selectedIndex(layer) {
+		const animations = this._animations(layer);
+		const requested = this.selectedByLayer.get(layer.id) || 0;
+		return Math.max(0, Math.min(animations.length - 1, requested));
+	}
+
+	_selected(layer) {
+		return this._animations(layer)[this._selectedIndex(layer)] || null;
+	}
+
+	_createDefault(layer, type = CONFIG.tools.animation.defaultType) {
+		const animation = GlitterAnimation.normalizeAnimation({ type });
+		if (layer.type === LayerType.STICKER && layer.stickerData?.isPixelated !== false) animation.snapMode = 'pixel-snap';
+		return animation;
+	}
+
+	_renderStack(prefix, layer) {
+		const host = this._id(prefix, 'Stack');
+		if (!host) return;
+		const animations = this._animations(layer);
+		host.hidden = animations.length < 2;
+		host.replaceChildren();
+		animations.forEach((animation, index) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'segmented-option animation-stack-item';
+			button.classList.toggle('active', index === this._selectedIndex(layer));
+			button.setAttribute('aria-pressed', String(index === this._selectedIndex(layer)));
+			button.textContent = `${index + 1}. ${GlitterAnimation.summaryText(animation)}`;
+			button.addEventListener('click', () => {
+				this.selectedByLayer.set(layer.id, index);
+				this.load(layer);
+			});
+			host.appendChild(button);
+		});
+		const remove = this._id(prefix, 'Remove');
+		if (remove) remove.disabled = animations.length < 2;
+		const add = this._id(prefix, 'Add');
+		if (add) {
+			const atLimit = animations.length >= CONFIG.tools.animation.maxStackSize;
+			add.disabled = atLimit;
+			add.title = atLimit ? `Maximum of ${CONFIG.tools.animation.maxStackSize} animations` : '';
+		}
+	}
+
 	_renderLayer(layer) {
 		const manager = getLayerManagerForType(this.editor, layer.type);
 		if (layer.type === LayerType.GLITTER_FILL) {
@@ -90,16 +140,35 @@ class AnimationPanelController {
 			const layer = this._active(type);
 			if (!layer) return;
 			if (event.target.checked) {
-				layer.animation = GlitterAnimation.normalizeAnimation({ type: CONFIG.tools.animation.defaultType });
-				if (type === LayerType.STICKER && layer.stickerData?.isPixelated !== false) layer.animation.snapMode = 'pixel-snap';
-			} else delete layer.animation;
+				layer.animations = [this._createDefault(layer)];
+				this.selectedByLayer.set(layer.id, 0);
+			} else {
+				delete layer.animations;
+				this.selectedByLayer.delete(layer.id);
+			}
 			this._render(layer, true);
 		});
 		this._id(prefix, 'Type')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
-			if (!layer) return;
-			layer.animation = GlitterAnimation.normalizeAnimation({ type: event.target.value });
-			if (type === LayerType.STICKER && layer.stickerData?.isPixelated !== false) layer.animation.snapMode = 'pixel-snap';
+			const animation = this._selected(layer);
+			if (!animation) return;
+			layer.animations[this._selectedIndex(layer)] = this._createDefault(layer, event.target.value);
+			this._render(layer, true);
+		});
+		this._id(prefix, 'Add')?.addEventListener('click', () => {
+			const layer = this._active(type);
+			if (!layer || this._animations(layer).length >= CONFIG.tools.animation.maxStackSize) return;
+			layer.animations ||= [];
+			layer.animations.push(this._createDefault(layer));
+			this.selectedByLayer.set(layer.id, layer.animations.length - 1);
+			this._render(layer, true);
+		});
+		this._id(prefix, 'Remove')?.addEventListener('click', () => {
+			const layer = this._active(type);
+			if (!layer || this._animations(layer).length < 2) return;
+			const index = this._selectedIndex(layer);
+			layer.animations.splice(index, 1);
+			this.selectedByLayer.set(layer.id, Math.min(index, layer.animations.length - 1));
 			this._render(layer, true);
 		});
 		const cyclePreset = (direction) => {
@@ -120,77 +189,82 @@ class AnimationPanelController {
 				parseValue: Number,
 				apply: (value) => {
 					const layer = this._active(type);
-					if (!layer?.animation) return;
+					const animation = this._selected(layer);
+					if (!animation) return;
 					if (field === 'anchorX' || field === 'anchorY') {
 						const key = field.endsWith('X') ? 'x' : 'y';
-						if (layer.animation.type === 'orbit') layer.animation[`orbitCenter${key.toUpperCase()}`] = value / 100;
+						if (animation.type === 'orbit') animation[`orbitCenter${key.toUpperCase()}`] = value / 100;
 						else this._updateLayerAnchor(layer, { ...getLayerTransform(layer).anchor, [key]: value / 100 });
-					} else layer.animation[field] = field === 'phase' ? value / 100 : value;
+					} else animation[field] = field === 'phase' ? value / 100 : value;
 					this._renderLayer(layer);
-					this._syncSummary(prefix, layer.animation);
+					this._syncSummary(prefix, layer.animations, animation);
 				},
 				onCommit: () => {
 					const layer = this._active(type);
-					this.editor.saveState(layer?.animation?.type !== 'orbit' && (field === 'anchorX' || field === 'anchorY') ? 'Change anchor' : 'Edit animation');
+					this.editor.saveState(this._selected(layer)?.type !== 'orbit' && (field === 'anchorX' || field === 'anchorY') ? 'Change anchor' : 'Edit animation');
 				}
 			});
 		});
 		['Easing', 'Direction', 'FillMode', 'Anchor', 'SnapMode'].forEach((suffix) => {
 			this._id(prefix, suffix)?.addEventListener('change', (event) => {
 				const layer = this._active(type);
-				if (!layer?.animation) return;
+				const animation = this._selected(layer);
+				if (!animation) return;
 				const field = suffix.charAt(0).toLowerCase() + suffix.slice(1);
 				if (field === 'anchor') {
 					if (event.target.value === 'custom') return;
 					const [x, y] = event.target.value.split(',').map(Number);
-					if (layer.animation.type === 'orbit') {
-						layer.animation.orbitCenter = event.target.value;
-						layer.animation.orbitCenterX = x;
-						layer.animation.orbitCenterY = y;
+					if (animation.type === 'orbit') {
+						animation.orbitCenter = event.target.value;
+						animation.orbitCenterX = x;
+						animation.orbitCenterY = y;
 					}
 					else {
 						this._updateLayerAnchor(layer, { x, y });
 					}
-				} else layer.animation[field] = event.target.value;
+				} else animation[field] = event.target.value;
 				this._render(layer);
-				this.editor.saveState(field === 'anchor' && layer.animation.type !== 'orbit' ? 'Change anchor' : 'Edit animation');
+				this.editor.saveState(field === 'anchor' && animation.type !== 'orbit' ? 'Change anchor' : 'Edit animation');
 			});
 		});
 		this._id(prefix, 'Iterations')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
-			if (!layer?.animation) return;
-			layer.animation.iterations = event.target.value === 'Infinity' ? Infinity : Number(event.target.value);
+			const animation = this._selected(layer);
+			if (!animation) return;
+			animation.iterations = event.target.value === 'Infinity' ? Infinity : Number(event.target.value);
 			this._render(layer, true);
 		});
 		this._id(prefix, 'Steps')?.addEventListener('change', (event) => {
 			const layer = this._active(type);
-			if (!layer?.animation) return;
-			layer.animation.steps = Math.max(2, Math.min(60, Number(event.target.value) || 2));
+			const animation = this._selected(layer);
+			if (!animation) return;
+			animation.steps = Math.max(2, Math.min(60, Number(event.target.value) || 2));
 			this._render(layer, true);
 		});
 	}
 
-	_syncSummary(prefix, animation) {
+	_syncSummary(prefix, animations, selected = animations?.[0]) {
 		const summary = this._id(prefix, 'Summary');
-		if (summary) summary.textContent = GlitterAnimation.summaryText(animation);
+		if (summary) summary.textContent = GlitterAnimation.summaryText(animations);
 		const hint = this._id(prefix, 'LoopHint');
-		if (hint) hint.textContent = Number.isFinite(animation?.iterations)
+		if (hint) hint.textContent = Number.isFinite(selected?.iterations)
 			? 'Plays a fixed number of times'
-			: (GlitterAnimation.isSeamlessLoop(animation) ? 'Loops seamlessly' : 'Restarts abruptly each loop');
+			: (GlitterAnimation.isSeamlessLoop(selected) ? 'Loops seamlessly' : 'Restarts abruptly each loop');
 	}
 
 	load(layer) {
 		const prefix = this.prefixByType.get(layer?.type);
 		if (!prefix) return;
-		const enabled = Boolean(layer.animation && GlitterAnimation.isActive(layer.animation));
+		const enabled = GlitterAnimation.isActive(layer.animations);
 		// Same contract as every other effect module (shadow, border, pixel
 		// effects): the card's own is-collapsed accordion shows/hides the body,
 		// so there's no separate content wrapper to toggle by hand here.
 		syncPanelEffectToggle(this._id(prefix, 'Enabled'), enabled);
-		this._syncSummary(prefix, layer.animation);
+		this._syncSummary(prefix, layer.animations, this._selected(layer));
 		if (!enabled) return;
-		const data = GlitterAnimation.normalizeAnimation(layer.animation);
-		layer.animation = data;
+		layer.animations = GlitterAnimation.normalizeAnimations(layer.animations);
+		const data = this._selected(layer);
+		this._renderStack(prefix, layer);
 		const anchorControl = this._id(prefix, 'Anchor');
 		const anchorRow = anchorControl?.closest('.property-row');
 		const anchorLabel = anchorRow?.querySelector('.property-label');
@@ -249,7 +323,7 @@ class AnimationPanelController {
 			const row = this._id(prefix, `${suffix}Row`);
 			if (row) row.hidden = (data.type === 'orbit' ? this._orbitPreset(data) : this._anchorPreset(getLayerTransform(layer).anchor)) !== 'custom';
 		});
-		this._syncSummary(prefix, data);
+		this._syncSummary(prefix, layer.animations, data);
 	}
 
 	_anchorPreset(anchor) {

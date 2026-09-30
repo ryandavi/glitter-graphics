@@ -128,4 +128,20 @@ assert.deepStrictEqual(
 );
 assert.strictEqual(Animation.isSeamlessLoop({ ...presets.rotate, type: 'rotate' }, bounds), true);
 
+const stacked = Animation.sampleAt([
+	{ ...presets.move, type: 'move', angle: 0, distance: 20, opacityFloor: 0 },
+	{ ...presets.rotate, type: 'rotate', turns: 1 },
+	{ ...presets.rainbow, type: 'rainbow' },
+	{ ...presets.rainbow, type: 'rainbow', direction: 'reverse' },
+	{ ...presets.dim, type: 'dim', opacityFloor: 20 }
+], 250, { layerId: 'stacked' });
+assert(stacked.matrix, 'stacked animations should compose into one affine transform');
+assert(near(stacked.tx, 20 * Math.sin(Math.PI * 0.25)));
+assert(near(stacked.opacity, 1 - 0.8 * Math.sin(Math.PI * 0.25)));
+assert(near(stacked.hue, 360));
+assert(Animation.domTransformString(stacked).startsWith('matrix('));
+assert.strictEqual(Animation.normalizeAnimations({ type: 'pulse' }).length, 1);
+assert.strictEqual(Animation.summaryText([{ type: 'pulse' }, { type: 'rotate' }]), '2 animations');
+assert.strictEqual(Animation.includesOffCanvas([{ type: 'move' }, { type: 'marquee' }]), true);
+
 console.log(`animation-parity: ${types.length} presets passed`);

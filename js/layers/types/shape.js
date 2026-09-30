@@ -56,6 +56,8 @@ registerLayerType(LayerType.SHAPE, {
 	addableViaModal: {
 		label: 'Shape',
 		icon: 'square',
+		group: 'basics',
+		order: 3,
 		description: 'Add a shape with an image, glitter, color, or a gradient',
 		quickAddId: 'quickActionAddShape',
 		quickAddOrder: 3,

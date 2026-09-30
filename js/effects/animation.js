@@ -100,7 +100,15 @@ const GlitterAnimation = (() => {
 		return normalized;
 	}
 
+	function normalizeAnimations(value = []) {
+		const values = Array.isArray(value) ? value : (value ? [value] : []);
+		return values
+			.filter((animation) => animation && typeof animation === 'object')
+			.map((animation) => normalizeAnimation(animation));
+	}
+
 	function isActive(value) {
+		if (Array.isArray(value)) return value.some((animation) => isActive(animation));
 		if (!value || !ANIMATION_TYPES.includes(value.type)) return false;
 		const data = normalizeAnimation(value);
 		if (['dim', 'twinkle'].includes(data.type)) return data.opacityFloor < 100;
@@ -113,10 +121,17 @@ const GlitterAnimation = (() => {
 	}
 
 	function includesOffCanvas(value) {
+		if (Array.isArray(value)) return value.some((animation) => includesOffCanvas(animation));
 		return isActive(value) && normalizeAnimation(value).includeWhenOffCanvas === true;
 	}
 
 	function summaryText(value) {
+		if (Array.isArray(value)) {
+			const active = value.filter((animation) => isActive(animation));
+			if (!active.length) return 'Off';
+			if (active.length > 1) return `${active.length} animations`;
+			return summaryText(active[0]);
+		}
 		if (!isActive(value)) return 'Off';
 		const data = normalizeAnimation(value);
 		return data.type.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
@@ -220,6 +235,12 @@ const GlitterAnimation = (() => {
 	}
 
 	function sampleAt(value, tMs, options = {}) {
+		if (Array.isArray(value)) {
+			return composeSamples(
+				normalizeAnimations(value).filter((animation) => isActive(animation)).map((animation) => sampleAt(animation, tMs, options)),
+				options
+			);
+		}
 		const data = normalizeAnimation(value);
 		const period = Math.max(1, Number(data.periodMs));
 		const localTime = Number(tMs) - Number(data.delayMs);
@@ -240,6 +261,47 @@ const GlitterAnimation = (() => {
 		return pose(data, progress, tMs, options);
 	}
 
+	function multiplyMatrices(left, right) {
+		return {
+			a: left.a * right.a + left.c * right.b,
+			b: left.b * right.a + left.d * right.b,
+			c: left.a * right.c + left.c * right.d,
+			d: left.b * right.c + left.d * right.d,
+			e: left.a * right.e + left.c * right.f + left.e,
+			f: left.b * right.e + left.d * right.f + left.f
+		};
+	}
+
+	function sampleMatrix(sample) {
+		const radians = sample.rotate * Math.PI / 180;
+		const skewX = Math.tan(sample.skewX * Math.PI / 180);
+		const skewY = Math.tan(sample.skewY * Math.PI / 180);
+		const translate = { a: 1, b: 0, c: 0, d: 1, e: sample.tx, f: sample.ty };
+		const rotate = { a: Math.cos(radians), b: Math.sin(radians), c: -Math.sin(radians), d: Math.cos(radians), e: 0, f: 0 };
+		const scale = { a: sample.scaleX, b: 0, c: 0, d: sample.scaleY, e: 0, f: 0 };
+		const skew = { a: 1, b: skewY, c: skewX, d: 1, e: 0, f: 0 };
+		return multiplyMatrices(multiplyMatrices(multiplyMatrices(translate, rotate), scale), skew);
+	}
+
+	function composeSamples(samples, options = {}) {
+		const active = (samples || []).filter(Boolean);
+		const origin = options.origin || [active[0]?.originX ?? 0.5, active[0]?.originY ?? 0.5];
+		const matrix = active.reduce(
+			(composed, sample) => multiplyMatrices(composed, sample.matrix || sampleMatrix(sample)),
+			{ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }
+		);
+		return {
+			...IDENTITY,
+			tx: matrix.e,
+			ty: matrix.f,
+			opacity: active.reduce((opacity, sample) => opacity * sample.opacity, 1),
+			hue: active.reduce((hue, sample) => hue + sample.hue, 0),
+			originX: origin[0],
+			originY: origin[1],
+			matrix
+		};
+	}
+
 	function isSeamlessLoop(value, samplingContext = {}) {
 		const data = normalizeAnimation(value);
 		if (Number.isFinite(data.iterations)) return false;
@@ -254,12 +316,22 @@ const GlitterAnimation = (() => {
 	}
 
 	function domTransformString(sample) {
+		if (sample.matrix) {
+			const { a, b, c, d } = sample.matrix;
+			return `matrix(${a}, ${b}, ${c}, ${d}, ${sample.tx}, ${sample.ty})`;
+		}
 		return `translate(${sample.tx}px, ${sample.ty}px) rotate(${sample.rotate}deg) scale(${sample.scaleX}, ${sample.scaleY}) skew(${sample.skewX}deg, ${sample.skewY}deg)`;
 	}
 
 	function applyToContext(ctx, sample, localW, localH) {
 		const x = sample.originX * localW;
 		const y = sample.originY * localH;
+		if (sample.matrix) {
+			ctx.translate(x, y);
+			ctx.transform(sample.matrix.a, sample.matrix.b, sample.matrix.c, sample.matrix.d, sample.tx, sample.ty);
+			ctx.translate(-x, -y);
+			return;
+		}
 		ctx.translate(sample.tx, sample.ty);
 		ctx.translate(x, y);
 		ctx.rotate(sample.rotate * Math.PI / 180);
@@ -269,8 +341,8 @@ const GlitterAnimation = (() => {
 	}
 
 	return {
-		ANIMATION_TYPES, MOTION_REGISTRY, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, sampleAt, seededRandom01, domTransformString, applyToContext, resolveOrigin,
+		ANIMATION_TYPES, MOTION_REGISTRY, normalizeAnimation, normalizeAnimations, isActive, includesOffCanvas, summaryText, loopDurationMs,
+		isSeamlessLoop, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32
 	};
 })();

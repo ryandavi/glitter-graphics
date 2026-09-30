@@ -1033,6 +1033,29 @@ function buildPaintSlotCard(slot) {
 	return card;
 }
 
+function panelItemIsAdvanced(item) {
+	return item?.advanced ?? Boolean(item?.slider && FIELDS[item.slider]?.advanced);
+}
+
+function splitAdvancedPanelItems(items = []) {
+	const regular = [];
+	const advanced = [];
+	items.forEach((item) => {
+		if (item.kind === 'advanced' || panelItemIsAdvanced(item)) {
+			(item.kind === 'advanced' ? regular : advanced).push(item);
+			return;
+		}
+		if (item.kind === 'set' && item.items?.length) {
+			const split = splitAdvancedPanelItems(item.items);
+			if (split.regular.length) regular.push({ ...item, items: split.regular });
+			if (split.advanced.length) advanced.push({ ...item, items: split.advanced });
+			return;
+		}
+		regular.push(item);
+	});
+	return { regular, advanced };
+}
+
 function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
@@ -1090,7 +1113,11 @@ function buildPanelItem(item, schema) {
 			if (item.bare) body.classList.add('subsection-card-body-bare');
 			const edgeChildren = [];
 			const bodyChildren = [];
-			item.items.forEach((child) => {
+			const splitItems = splitAdvancedPanelItems(item.items);
+			const renderedItems = splitItems.advanced.length
+				? [...splitItems.regular, { kind: 'advanced', label: 'More', classes: 'schema-more-disclosure', items: splitItems.advanced }]
+				: splitItems.regular;
+			renderedItems.forEach((child) => {
 				const node = buildPanelItem(child, schema);
 				// Advanced and a trailing actions row are edge-to-edge card footers,
 				// not padded body content. Keeping that structural contract here means

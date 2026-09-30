@@ -1,6 +1,6 @@
 class ProjectSerializer {
 	static FORMAT = 'glitter-project';
-	static FORMAT_VERSION = 5;
+	static FORMAT_VERSION = 6;
 
 	/*
 	Format rules:
@@ -57,22 +57,25 @@ class ProjectSerializer {
 			};
 			(data.layers || []).forEach((layer) => {
 				if (layer.transform) layer.transform.anchor ||= { x: 0.5, y: 0.5 };
-				const animation = layer.animation;
-				if (!animation) return;
-				const legacy = animation.anchor || 'center';
-				const point = legacy === 'custom'
-					? [Number.isFinite(Number(animation.anchorX)) ? Number(animation.anchorX) : 0.5, Number.isFinite(Number(animation.anchorY)) ? Number(animation.anchorY) : 0.5]
-					: (presets[legacy] || presets.center);
-				if (animation.type === 'orbit') {
-					animation.orbitCenter = legacy;
-					animation.orbitCenterX = point[0];
-					animation.orbitCenterY = point[1];
-				} else if (layer.transform) {
-					layer.transform.anchor = { x: point[0], y: point[1] };
-				}
-				delete animation.anchor;
-				delete animation.anchorX;
-				delete animation.anchorY;
+				const animations = Array.isArray(layer.animations)
+					? layer.animations
+					: (layer.animation ? [layer.animation] : []);
+				animations.forEach((animation) => {
+					const legacy = animation.anchor || 'center';
+					const point = legacy === 'custom'
+						? [Number.isFinite(Number(animation.anchorX)) ? Number(animation.anchorX) : 0.5, Number.isFinite(Number(animation.anchorY)) ? Number(animation.anchorY) : 0.5]
+						: (presets[legacy] || presets.center);
+					if (animation.type === 'orbit') {
+						animation.orbitCenter = legacy;
+						animation.orbitCenterX = point[0];
+						animation.orbitCenterY = point[1];
+					} else if (layer.transform) {
+						layer.transform.anchor = { x: point[0], y: point[1] };
+					}
+					delete animation.anchor;
+					delete animation.anchorX;
+					delete animation.anchorY;
+				});
 			});
 			data.version = 4;
 		},
@@ -81,6 +84,12 @@ class ProjectSerializer {
 		4(data) {
 			ProjectSerializer.migrateCanvasPixelEffects(data);
 			data.version = 5;
+		},
+		// v5 -> v6: layer motion is an ordered stack. A single legacy animation
+		// becomes the first stack entry without changing its rendered result.
+		5(data) {
+			(data.layers || []).forEach((layer) => ProjectSerializer.migrateLayerState(layer));
+			data.version = 6;
 		}
 	};
 
@@ -132,8 +141,11 @@ class ProjectSerializer {
 	// - `layer.opacity` is the only whole-layer opacity; the `transform.opacity`,
 	//   `settings.opacity` and `background.opacity` mirrors are dropped.
 	// - The fill slot is self-contained (see migrateFillSlot).
+	// - A singular `animation` becomes the first entry in `animations`.
 	static migrateLayerState(layer) {
 		if (!layer || typeof layer !== 'object') return layer;
+		if (!Array.isArray(layer.animations) && layer.animation) layer.animations = [layer.animation];
+		delete layer.animation;
 		const hosts = [layer.stickerData, layer.textData, layer.shapeData].filter(Boolean);
 		hosts.forEach((host) => {
 			if (host.transform && !layer.transform) layer.transform = host.transform;

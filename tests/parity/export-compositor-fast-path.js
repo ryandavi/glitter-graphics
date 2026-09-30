@@ -182,13 +182,19 @@ function assert(condition, message) {
 		try { compositor._validateAuthoredSourceKeys([{ key: 'a' }, { key: 'a' }]); } catch (error) { duplicateRejected = /Duplicate authored source key/.test(error.message); }
 		check(duplicateRejected, 'Duplicate logical source keys were silently accepted');
 
-		const animatedLayer = { id: 'motion', type: LayerType.STICKER, name: 'Motion', animation: { type: 'rotate', periodMs: 1000, phase: 0 }, stickerData: {} };
+		const animatedLayer = {
+			id: 'motion', type: LayerType.STICKER, name: 'Motion', stickerData: {},
+			animations: [
+				{ type: 'rotate', periodMs: 1000, phase: 0 },
+				{ type: 'rainbow', periodMs: 1600, phase: 0 }
+			]
+		};
 		const procedural = compositor._collectProceduralSources([animatedLayer], { includeBaseImage: false });
-		check(procedural.map((source) => source.key).join(',') === '__anim_motion'
+		check(procedural.map((source) => source.key).join(',') === '__anim_motion_0,__anim_motion_1'
 			&& compositor._createProceduralTimelines(procedural)[0].key === procedural[0].key,
 			'Procedural animation discovery diverged from timeline normalization');
 		const selectedProcedural = compositor._resolveSelectedAuthored({ authoredSources: [], proceduralSources: procedural }, resolver.createSession(), 250, 100);
-		check(selectedProcedural.sourceSelectionMap.has('__anim_motion'), 'Still sampling did not use the procedural descriptor collector');
+		check(selectedProcedural.sourceSelectionMap.has('__anim_motion_0') && selectedProcedural.sourceSelectionMap.has('__anim_motion_1'), 'Still sampling did not use every animation descriptor');
 
 		const baseCanvasData = {
 			width: 2,

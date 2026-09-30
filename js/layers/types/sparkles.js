@@ -24,6 +24,8 @@ registerLayerType(LayerType.SPARKLES, {
 	addableViaModal: {
 		label: 'Sparkles',
 		icon: 'sparkles',
+		group: 'decorate',
+		order: 2,
 		description: 'Snow, hearts or sparkles over the whole picture'
 	},
 	showDesignGallery: true,

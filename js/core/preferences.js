@@ -9,6 +9,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	panInertia: { default: () => CONFIG.ui.gestures.inertia.enabled },
 	pixelGrid: { default: () => CONFIG.ui.zoom.pixelGridEnabled },
 	reduceMotion: { default: () => false },
+	showAllControls: { default: () => false },
 	filterPreviewLevel: { default: () => 'still' }
 });
 

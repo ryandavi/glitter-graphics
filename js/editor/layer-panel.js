@@ -3,16 +3,75 @@ setupLayerTypePickerListeners() {
 		const optionsContainer = document.querySelector('#layerTypePickerModal .layer-type-options');
 		if (!optionsContainer) return;
 
-		this.renderLayerTypePickerOptions(optionsContainer);
+		this.renderAddMenu(optionsContainer);
 
-		optionsContainer.addEventListener('click', (event) => {
+		optionsContainer.addEventListener('click', async (event) => {
 			const button = event.target.closest('.layer-type-option');
 			if (!button) return;
 
 			this.modalManager.close('layerTypePickerModal');
+			if (button.dataset.addKind === 'command') {
+				const command = ADD_MENU_COMMANDS.find((entry) => entry.id === button.dataset.addId);
+				requestAnimationFrame(() => command?.run(this));
+				return;
+			}
+			if (button.dataset.addKind === 'template') {
+				requestAnimationFrame(() => this.templateManager?.previewOverlay(button.dataset.addId));
+				return;
+			}
 			requestAnimationFrame(() => {
 				this.createLayerByType(button.dataset.layerType, button._createOptions);
 			});
+		});
+	}
+
+,
+	createAddMenuButton(entry) {
+		const button = tplClone('tpl-layer-type-option');
+		button.dataset.addKind = entry.kind;
+		button.dataset.addId = entry.id;
+		if (entry.type) button.dataset.layerType = entry.type;
+		button.querySelector('.layer-type-icon').classList.add('xl');
+		button.querySelector('use').setAttribute('href', `#icon-${entry.icon}`);
+		button.querySelector('.layer-type-name').textContent = entry.label;
+		button.querySelector('.layer-type-description').textContent = entry.description;
+		button._createOptions = entry.createOptions || null;
+		return button;
+	}
+
+,
+	async renderAddMenu(container) {
+		const staticEntries = getAddMenuEntries();
+		let templateEntries = [];
+		try {
+			templateEntries = (await TemplateLibrary.list('overlay')).map((template, index) => ({
+				kind: 'template',
+				id: template.id,
+				group: 'generate',
+				order: 10 + index,
+				label: template.label,
+				icon: template.icon || 'image',
+				description: template.description
+			}));
+		} catch (error) {
+			console.warn('Templates unavailable:', error);
+		}
+		const entries = [...staticEntries, ...templateEntries];
+		container.replaceChildren();
+		container.classList.add('add-menu-groups');
+		ADD_MENU_GROUPS.forEach((group) => {
+			const groupEntries = entries.filter((entry) => entry.group === group.id);
+			if (!groupEntries.length) return;
+			const section = document.createElement('section');
+			section.className = 'add-menu-group';
+			const title = document.createElement('h3');
+			title.className = 'add-menu-group-title';
+			title.textContent = group.label;
+			const grid = document.createElement('div');
+			grid.className = 'layer-type-options';
+			groupEntries.forEach((entry) => grid.appendChild(this.createAddMenuButton(entry)));
+			section.append(title, grid);
+			container.appendChild(section);
 		});
 	}
 

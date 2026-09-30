@@ -13,9 +13,7 @@ const context = vm.createContext({
 });
 vm.runInContext(`${source}\nglobalThis.ProjectSerializerForTest = ProjectSerializer;`, context);
 const Serializer = context.ProjectSerializerForTest;
-const serializer = Object.create(Serializer.prototype);
-
-const migrated = serializer.runMigrations({
+const migrated = {
 	format: Serializer.FORMAT,
 	version: 3,
 	layers: [
@@ -23,7 +21,8 @@ const migrated = serializer.runMigrations({
 		{ type: 'sticker', transform: {}, animation: { type: 'rotate', anchor: 'custom', anchorX: 0, anchorY: 0.25 } },
 		{ type: 'sticker', transform: {}, animation: { type: 'orbit', anchor: 'top-right', anchorX: 0.2, anchorY: 0.3 } }
 	]
-});
+};
+Serializer.MIGRATIONS[3](migrated);
 
 assert.strictEqual(migrated.version, 4);
 assert.deepStrictEqual({ ...migrated.layers[0].transform.anchor }, { x: 0.5, y: 1 });
@@ -33,5 +32,12 @@ assert.strictEqual(migrated.layers[2].animation.orbitCenter, 'top-right');
 assert.strictEqual(migrated.layers[2].animation.orbitCenterX, 1);
 assert.strictEqual(migrated.layers[2].animation.orbitCenterY, 0);
 assert(!('anchor' in migrated.layers[2].animation));
+
+migrated.version = 5;
+Serializer.MIGRATIONS[5](migrated);
+assert.strictEqual(migrated.version, 6);
+assert.strictEqual(migrated.layers[0].animations.length, 1);
+assert.strictEqual(migrated.layers[2].animations[0].orbitCenter, 'top-right');
+assert(!('animation' in migrated.layers[2]));
 
 console.log('PASS transform-anchor project migration');

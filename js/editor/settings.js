@@ -131,6 +131,7 @@ initializeExportSettings() {
 	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
 	this.applyInterfaceTheme();
 	this.applyReduceMotion();
+	this.applyShowAllControls();
 
 	// Sync UI to match exportSettings
 	this.syncExportSettingsToUI();
@@ -155,6 +156,7 @@ initializeExportSettings() {
 			panInertia: { checked: PREFERENCES.get('panInertia') },
 			pixelGrid: { checked: PREFERENCES.get('pixelGrid') },
 			reduceMotion: { checked: PREFERENCES.get('reduceMotion') },
+			showAllControls: { checked: PREFERENCES.get('showAllControls') },
 			filterPreviewLevel: { value: PREFERENCES.get('filterPreviewLevel') },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
@@ -462,6 +464,7 @@ initializeExportSettings() {
 		this.bindPreferenceToggle('panInertia', 'panInertia');
 		this.bindPreferenceToggle('pixelGrid', 'pixelGrid', () => this.viewport?.applyTransform());
 		this.bindPreferenceToggle('reduceMotion', 'reduceMotion', () => this.applyReduceMotion());
+		this.bindPreferenceToggle('showAllControls', 'showAllControls', () => this.applyShowAllControls());
 		const filterPreviewLevel = document.getElementById('filterPreviewLevel');
 		filterPreviewLevel?.addEventListener('change', () => {
 			const value = ['off', 'still', 'animated'].includes(filterPreviewLevel.value) ? filterPreviewLevel.value : 'still';
@@ -483,6 +486,17 @@ initializeExportSettings() {
 			PREFERENCES.set(preferenceKey, input.checked);
 			this.saveSettingsToStorage();
 			onChange?.(input.checked);
+		});
+	}
+
+,
+	applyShowAllControls() {
+		const showAll = PREFERENCES.get('showAllControls');
+		if (showAll) document.documentElement.dataset.showAllControls = 'true';
+		else delete document.documentElement.dataset.showAllControls;
+		document.querySelectorAll('[data-advanced]').forEach((disclosure) => {
+			disclosure.classList.toggle('is-open', showAll);
+			disclosure.querySelector('[data-advanced-toggle]')?.setAttribute('aria-expanded', showAll ? 'true' : 'false');
 		});
 	}
 
@@ -577,7 +591,7 @@ initializeExportSettings() {
 
 ,
 	hasAnimatedExportContent() {
-		return this.layers.some((layer) => layer.visible && (GlitterAnimation.isActive(layer.animation) || layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL));
+		return this.layers.some((layer) => layer.visible && (GlitterAnimation.isActive(layer.animations) || layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL));
 	}
 
 ,
@@ -838,6 +852,8 @@ async resetSettingsSection(section) {
 			this.applyInterfaceTheme();
 			PREFERENCES.reset('reduceMotion');
 			this.applyReduceMotion();
+			PREFERENCES.reset('showAllControls');
+			this.applyShowAllControls();
 			localStorage.removeItem('glitterEditor_welcomeModalSeen');
 			localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
 			break;
@@ -903,6 +919,7 @@ async resetAllSettings() {
 	this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
 	this.refreshMaskEdgeRendering();
 	this.applyReduceMotion();
+	this.applyShowAllControls();
 	this.viewport?.applyTransform();
 	this.filterLayerManager?.refreshSnapshots();
 	this.syncCanvasPreferenceControls();

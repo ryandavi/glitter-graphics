@@ -14,6 +14,8 @@ registerLayerType(LayerType.FILTER, {
 	addableViaModal: {
 		label: 'Filter',
 		icon: 'sliders',
+		group: 'effects',
+		order: 1,
 		description: 'Adjust the appearance of every layer below'
 	},
 	showDesignGallery: false,

@@ -54,6 +54,23 @@
 	}
 }
 
+.layer-type-options.add-menu-groups {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+
+	.add-menu-group-title {
+		margin: 0 0 var(--spacing-sm);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+	}
+
+	.add-menu-group > .layer-type-options {
+		grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr));
+	}
+}
+
 .no-layer-settings-section.panel-redesign .quick-add {
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--spacing-sm);

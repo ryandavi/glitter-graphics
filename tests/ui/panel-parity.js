@@ -273,6 +273,25 @@ const LAYER_SETUPS = {
 			if (wrapper?.style.mixBlendMode !== 'multiply') throw new Error('Shape Blend did not update the preview wrapper');
 			const restored = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
 			if (restored.blendMode !== 'multiply') throw new Error('Shape Blend did not survive serialization');
+			const animationEnabled = document.getElementById('shapeAnimEnabled');
+			animationEnabled.checked = true;
+			animationEnabled.dispatchEvent(new Event('change', { bubbles: true }));
+			document.getElementById('shapeAnimAdd').click();
+			if (layer.animations?.length !== 2) throw new Error('Add animation did not append a stack entry');
+			if (document.getElementById('shapeAnimStack').hidden) throw new Error('Animation stack picker stayed hidden');
+			const type = document.getElementById('shapeAnimType');
+			type.value = 'rainbow';
+			type.dispatchEvent(new Event('change', { bubbles: true }));
+			if (layer.animations[1].type !== 'rainbow') throw new Error('Animation preset did not edit the selected stack entry');
+			const stacked = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
+			if (stacked.animations?.map((animation) => animation.type).join(',') !== 'pulse,rainbow') throw new Error('Animation stack did not survive serialization');
+			document.getElementById('shapeAnimAdd').click();
+			document.getElementById('shapeAnimAdd').click();
+			if (layer.animations?.length !== CONFIG.tools.animation.maxStackSize) throw new Error('Animation stack exceeded its configured limit');
+			if (!document.getElementById('shapeAnimAdd').disabled) throw new Error('Add animation stayed enabled at the configured limit');
+			document.getElementById('shapeAnimRemove').click();
+			document.getElementById('shapeAnimRemove').click();
+			if (layer.animations?.length !== 1 || !document.getElementById('shapeAnimStack').hidden) throw new Error('Remove animation did not collapse the stack picker');
 		});
 	},
 	TEXT_GLITTER: async (page) => {

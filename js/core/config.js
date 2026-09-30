@@ -322,6 +322,7 @@ const CONFIG = deepFreeze({
 		},
 		animation: {
 			defaultType: 'pulse',
+			maxStackSize: 3,
 			presets: {
 				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity },
 				float: { periodMs: 3600, easing: 'linear', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
