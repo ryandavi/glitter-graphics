@@ -1093,20 +1093,18 @@ updateTransform(layerId, updates) {
 	// ===== SERIALIZATION =====
 
 	serializeSticker(layer) {
-		// For undo/redo - exclude non-serializable data
-		const stickerData = {
-			...layer.stickerData,
-			element: null,    // Can't serialize DOM
-			staticImageData: null
-		};
+		// For undo/redo: a deep copy, so an in-place edit to a live slot (outline
+		// width, shadow, bevel, sparkles) never rewrites a history state. The DOM
+		// element and decoded pixels are runtime-only and never copied.
+		const stickerData = { ...layer.stickerData, element: null, staticImageData: null };
 		delete stickerData.blendMode;
-		return {
+		return structuredClone({
 			...layer,
 			blendMode: GlitterBlendModes.forLayer(layer),
 			transform: cloneTransform(getLayerTransform(layer)),
 			stickerSourceId: layer.stickerSourceId,
 			stickerData
-		};
+		});
 	}
 
 	async deserializeSticker(serialized) {

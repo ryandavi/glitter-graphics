@@ -28,7 +28,7 @@ Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for 
 - **Transform handles:** run `node tests/ui/touch-handle-verify.js` after changing `LayerTransform`, transform handles, resize/rotate math, selection chrome, or group transforms. Run it with touch smoke when a change spans both routing and handles.
 - **Export parity:** run `node tests/parity/export-parity.js` after changing `SceneCompositor`, an exporter, authored/procedural frame handling, effect sources, animation sampling, or any preview/export twin. A manager edit by itself does not require export parity unless it changes rendered pixels or export-plan behavior.
 - **Shape-border parity:** run `node tests/parity/shape-border-verify.js` after changing shape geometry, shape masks, borders, image fills, or shared slot-stack geometry. Text-manager or generic manager edits do not require it by themselves.
-- **Export fragility routine** after touching `SceneCompositor`, an exporter, or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed.
+- **Export fragility routine** after touching `SceneCompositor`, an exporter, or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed. `node tests/parity/roadmap-export-fragility.js` runs it over the newer effects (outline, bevel, glow, sparkles and Kira Kira, text warp, frames, the Sparkles layer, CSS and pixel filter looks); add a new effect to its scene.
 - **Broad suites:** run a full tag or the complete Playwright matrix only when asked, before a merge when requested, or when a cross-cutting change has no narrower reliable coverage. Ryan does manual testing himself.
 - **Avoid redundant reruns:** once a suite passes, rerun it only if later code changes affect its covered path or a failure appears flaky and needs confirmation. Documentation edits, cache bumps and test-only assertion changes do not invalidate an already-passing app suite.
 
@@ -171,6 +171,10 @@ It builds one real mixed composition and then checks the exporter’s byte stabi
 4. The same edit -> undo round-trip also preserves the transparent export bytes exactly.
 
 The composition intentionally includes a painted glitter-fill layer, an animated sticker layer, a text layer with glitter fill + solid border + glitter shadow + non-identity color adjust, and a shape layer with the same slot spread, then runs that scene through both matte and transparent export modes.
+
+### Effect fragility (`tests/parity/roadmap-export-fragility.js`)
+
+One scene with every newer effect: an animated sticker with outline, glow, bevel and Kira Kira; warped text with a bevel style and sparkles; a shape with a glow spread; a pinned frame; the Sparkles layer; Scanlines, JPEG Crunch and RGB Split filters. It checks back-to-back matte and transparent exports, then edit -> undo -> export for four edits (sticker outline, text warp, frame style, filter look). It shares `tests/parity/export-harness.js` with export parity and caps exports at 8 frames to keep its twelve exports quick.
 
 ### Pixel-filter verification (`tests/parity/pixel-filter-verify.js`)
 

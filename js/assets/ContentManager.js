@@ -210,7 +210,8 @@ class ContentManager {
 			// Sticker multi-resolution: {"512": {url,width,height}, ...}, keyed
 			// by measured width. Only ever populated via the lazy detail fetch
 			// (excluded from the slim index) — see StickerManager.pickVariantUrl.
-			variantUrls: raw.variantUrls && typeof raw.variantUrls === 'object' ? raw.variantUrls : (defaults.variantUrls ?? null),
+			// An empty list (the detail JSON's []) is stored as null: both mean no variants.
+			variantUrls: raw.variantUrls && typeof raw.variantUrls === 'object' && Object.keys(raw.variantUrls).length ? raw.variantUrls : (defaults.variantUrls ?? null),
 		};
 	}
 
@@ -631,7 +632,7 @@ class ContentManager {
 			if (key === 'animated') return count + (value !== null ? 1 : 0);
 			return count + (value !== null && value !== '' && value !== false ? 1 : 0);
 		}, 0);
-		const searchSection = this.ui.searchInput?.closest('.glitter-search, .sticker-search');
+		const searchSection = this.ui.searchInput?.closest('.glitter-search');
 		searchSection?.classList.toggle('has-active-search', Boolean(this.activeFilters.search));
 		searchSection?.classList.toggle('has-active-filters', filterCount > 0);
 		this.renderActiveFilterSummary();

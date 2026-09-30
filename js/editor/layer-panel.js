@@ -137,6 +137,21 @@ setupLayerTypePickerListeners() {
 		const dropzone = document.getElementById('stickerUploadDropzone');
 		const input = document.getElementById('stickerUploadInput');
 
+		// The header button sits on a Library that may be collapsed (desktop
+		// accordion); open it so the upload lands somewhere visible.
+		document.getElementById('uploadStickerBtn')?.addEventListener('click', () => {
+			if (!this.mobileManager?.isMobile) this.setCollapsibleSectionOpen?.('designGallery', true, true);
+		});
+
+		// An upload is kept in User Uploads (handleUserUpload shows it there)
+		// and then used exactly like a Library click: it replaces the selected
+		// sticker layer's sticker, or adds a new sticker layer.
+		const uploadAndUse = async (file) => {
+			const sticker = await this.stickerManager.handleUserUpload(file);
+			this.modalManager.close('stickerUploadModal');
+			if (sticker && !sticker.error && this.originalImage) await this.stickerManager.handleItemClick(sticker);
+		};
+
 		// Dropzone click
 		if (dropzone && input) {
 			dropzone.addEventListener('click', () => {
@@ -149,9 +164,8 @@ setupLayerTypePickerListeners() {
 			input.addEventListener('change', async (e) => {
 				const file = e.target.files[0];
 				if (file) {
-					await this.stickerManager.handleUserUpload(file);
-					this.modalManager.close('stickerUploadModal');
 					input.value = '';
+					await uploadAndUse(file);
 				}
 			});
 		}
@@ -173,8 +187,7 @@ setupLayerTypePickerListeners() {
 
 				const file = e.dataTransfer.files[0];
 				if (file) {
-					await this.stickerManager.handleUserUpload(file);
-					this.modalManager.close('stickerUploadModal');
+					await uploadAndUse(file);
 				}
 			});
 		}

@@ -1,30 +1,15 @@
 'use strict';
 
 const { chromium } = require('playwright');
-const crypto = require('crypto');
+const { hashBytes, assertByteIdentity, exportBytes } = require('./export-harness');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 1200, height: 900 };
-const EXPORT_TIMEOUT_MS = 60000;
 
 function assert(condition, message) {
 	if (!condition) {
 		throw new Error(message);
 	}
-}
-
-function hashBytes(bytes) {
-	return crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');
-}
-
-function findFirstByteDiff(a, b) {
-	const limit = Math.min(a.length, b.length);
-	for (let index = 0; index < limit; index += 1) {
-		if (a[index] !== b[index]) {
-			return index;
-		}
-	}
-	return a.length === b.length ? -1 : limit;
 }
 
 async function openEditor(page) {
@@ -245,84 +230,6 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 	assert(Math.abs(result[3] - 128) <= 1, `Animated shape opacity was applied per paint instead of once: ${JSON.stringify(result)}`);
 }
 
-async function exportBytes(page, exportOverrides = {}) {
-	return page.evaluate(async ({ exportTimeoutMs, exportOverrides }) => {
-		const editor = window.editor;
-		Object.assign(editor.exportSettings, {
-			baseImage: false,
-			transparency: false,
-			watermarkEnabled: false,
-			exportReverse: false,
-			smartFrameReduction: false,
-			exportFrameSkip: 1,
-			maxFrames: 24,
-			frameDelay: 100,
-			quality: 10,
-			ditherEnabled: false,
-			matteColor: '#ffffff'
-		}, exportOverrides || {});
-
-		const visibleLayers = editor.layerManager.layers.filter((layer) => layer.visible && window.layerHasVisibleContent(layer));
-		if (visibleLayers.length < 4) {
-			throw new Error('Expected the parity composition to create at least four visible content layers');
-		}
-
-		return await new Promise((resolve, reject) => {
-			const exporter = editor.exporter;
-			const originalHandleFileSave = exporter._handleFileSave.bind(exporter);
-			const timeout = setTimeout(() => {
-				exporter._handleFileSave = originalHandleFileSave;
-				reject(new Error('Export timed out'));
-			}, exportTimeoutMs);
-
-			exporter._handleFileSave = async (blob, _callbacks, plan) => {
-				try {
-					clearTimeout(timeout);
-					const arrayBuffer = await blob.arrayBuffer();
-					exporter._handleFileSave = originalHandleFileSave;
-					// The committed render clock must be the only clock: stash what the
-					// planner intended so the emitted delays can be checked against it.
-					window.__exportPlannedDelays = [...(plan?.frameDurations || [])];
-					resolve(Array.from(new Uint8Array(arrayBuffer)));
-				} catch (error) {
-					exporter._handleFileSave = originalHandleFileSave;
-					reject(error);
-				}
-			};
-
-			exporter.process({
-				visibleLayers,
-				glitterGifs: editor.glitterManager.content,
-				canvasData: {
-					width: editor.originalCanvas.width,
-					height: editor.originalCanvas.height,
-					originalData: new Uint8ClampedArray(editor.originalImageData.data),
-					originalAlpha: editor.originalAlphaChannel,
-					alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
-				},
-				exportSettings: editor.exportSettings,
-				callbacks: {
-					onStatus: () => {},
-					onProgress: () => {},
-					onComplete: () => {},
-					onError: (error) => {
-						clearTimeout(timeout);
-						exporter._handleFileSave = originalHandleFileSave;
-						reject(error);
-					},
-					createMask: (layer) => editor.maskCompositor.getMaskData(layer),
-					renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
-					ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
-				}
-			}).catch((error) => {
-				clearTimeout(timeout);
-				exporter._handleFileSave = originalHandleFileSave;
-				reject(error);
-			});
-		});
-	}, { exportTimeoutMs: EXPORT_TIMEOUT_MS, exportOverrides });
-}
-
 // Graphic Control Extension: 0x21 0xF9 0x04 <packed> <delay lo> <delay hi>
 // <transparent index> 0x00. The delay is in centiseconds, which is the only
 // timing granularity a GIF can carry.
@@ -520,16 +427,6 @@ async function verifyPixelFilterStateRoundTrip(page) {
 		};
 	});
 	if (result.expected !== result.actual) throw new Error('Pixel filter state changed during layer serialization');
-}
-
-function assertByteIdentity(reference, candidate, label) {
-	const firstDiff = findFirstByteDiff(reference.bytes, candidate.bytes);
-	if (firstDiff !== -1) {
-		throw new Error(
-			`${label} was not byte-identical (first differing byte ${firstDiff}, ` +
-			`reference=${reference.hash}, candidate=${candidate.hash})`
-		);
-	}
 }
 
 async function countDecodedNearBlackPixels(page, bytes, bounds) {

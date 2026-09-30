@@ -1994,17 +1994,8 @@ function renderPanelSection(schema) {
 // earlier section schema — already exist.
 function renderPanelSections(editor) {
 	Object.values(PANEL_SCHEMAS).forEach((schema) => {
-		if (schema.template) renderLegacyPanelTemplate(schema.section.id, schema.template);
-		else if (schema.fragment) renderPanelFragment(schema);
+		if (schema.fragment) renderPanelFragment(schema);
 		else renderPanelSection(schema);
 		(schema.auxiliarySections || []).forEach((section) => renderPanelSection(section));
 	});
-}
-
-function renderLegacyPanelTemplate(sectionId, templateId) {
-	const section = document.getElementById(sectionId);
-	const template = document.getElementById(templateId);
-	if (!section || !template || section.querySelector(':scope > .section-header')) return;
-	section.appendChild(template.content.cloneNode(true));
-	template.remove();
 }

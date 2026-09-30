@@ -80,6 +80,7 @@ class GlitterEditor {
 		// these same nodes into drawers, so bindings survive re-parenting.
 		renderPanelSections(this);
 		renderAssetBrowsers();
+		setupLibrarySearchToggle(this);
 		this.renderTransformPanels();
 		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
 		this.contextToolbarRenderer.render();

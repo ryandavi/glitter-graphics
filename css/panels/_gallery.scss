@@ -35,6 +35,43 @@
 		display: none;
 	}
 
+	// The Library's search row folds behind the header search button
+	// (setupLibrarySearchToggle) on every screen, even while a search or filter
+	// is active. Folded, the active-filter chips still show, and the button
+	// carries an accent dot, so a narrowed grid is never unexplained.
+	>.design-gallery-section {
+		&[data-library]>.section-header>.section-header-actions>.library-search-action {
+			position: relative;
+			visibility: visible;
+			pointer-events: auto;
+
+			&.active { color: var(--color-accent); }
+		}
+
+		&:not(.library-search-open):has(>.design-gallery-content>.gallery-search-section.visible>.glitter-search:is(.has-active-search, .has-active-filters))>.section-header>.section-header-actions>.library-search-action::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			right: 0;
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--color-accent);
+		}
+
+		&:not(.library-search-open)>.design-gallery-content>.gallery-search-section>.glitter-search {
+			>.search-toggle-row,
+			>.filters-container { display: none; }
+
+			>.active-filter-summary { padding-top: var(--property-gutter); }
+		}
+
+		// Folded with nothing active, the host has nothing left to show.
+		&:not(.library-search-open)>.design-gallery-content>.gallery-search-section:not(:has(>.glitter-search>.active-filter-summary:not([hidden]))) {
+			display: none;
+		}
+	}
+
 
 }
 
@@ -68,6 +105,77 @@
 		&[hidden] { display: none; }
 	}
 
+}
+
+/* ===== PICKER STRIP ===== */
+// Names the Library's armed destination in picker mode, or the default target
+// (e.g. Fill) in browse mode, so a swatch click's effect is never a guess. One
+// compact line: title, then the target in secondary text, then Done (armed
+// only). Sticky within the gallery content so it stays put as the grid
+// scrolls, identically inside the mobile drawer.
+.gallery-picker-strip {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	min-height: var(--control-height);
+	padding: var(--spacing-2xs) var(--property-gutter, 12px);
+	background: var(--color-bg-tertiary);
+
+	&[hidden] { display: none; }
+}
+
+.gallery-picker-strip-text {
+	display: flex;
+	align-items: baseline;
+	gap: var(--spacing-xs);
+	flex: 1;
+	min-width: 0;
+	@include text-sm;
+	white-space: nowrap;
+}
+
+.gallery-picker-strip-title {
+	flex-shrink: 0;
+	color: var(--color-text-primary);
+	font-weight: 600;
+}
+
+.gallery-picker-strip-detail {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--color-text-tertiary);
+
+	&::before { content: '·'; margin-right: var(--spacing-xs); }
+
+	&:empty { display: none; }
+}
+
+.gallery-picker-strip-done.btn-simple {
+	flex-shrink: 0;
+	min-height: var(--control-height-compact);
+	padding: 0 var(--spacing-md);
+
+	&[hidden] { display: none; }
+}
+
+@include mobile {
+	// The drawer already belongs to the selected layer, so the target detail
+	// is dropped and the title may truncate instead.
+	.gallery-picker-strip-title {
+		flex-shrink: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.gallery-picker-strip-detail { display: none; }
+
+	// A full-height strip's Done is still a comfortable target without the
+	// 44px text-button floor, which alone doubled the row.
+	.gallery-picker-strip-done.btn-simple { min-height: var(--control-height); }
 }
 
 /* ===== FILTERS CONTAINER ===== */
@@ -244,7 +352,6 @@
 // asset grid below it. (The glitter-specific search chrome is the .glitter-search
 // block higher in this file.)
 
-.sticker-search,
 .glitter-search {
 	overflow: hidden;
 	height: 100%;

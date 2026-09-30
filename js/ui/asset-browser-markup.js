@@ -218,3 +218,31 @@ function renderAssetBrowsers() {
 		}
 	});
 }
+
+// Library header search button: unfolds the active kind's search row, which
+// _gallery.scss keeps folded on every screen. Folding is always allowed, even
+// mid-search; the active-filter chips and the button's accent dot stay.
+// On a collapsed Library (desktop accordion) the button opens the Library
+// with the row shown, never hides a row the user couldn't see.
+function setupLibrarySearchToggle(editor) {
+	const button = document.getElementById('librarySearchToggle');
+	const section = document.getElementById('designGallerySection');
+	if (!button || !section) return;
+	button.addEventListener('click', () => {
+		const collapsed = !section.classList.contains('is-open');
+		if (collapsed) editor?.setCollapsibleSectionOpen?.('designGallery', true, true);
+		const open = collapsed || !section.classList.contains('library-search-open');
+		section.classList.toggle('library-search-open', open);
+		button.classList.toggle('active', open);
+		button.setAttribute('aria-expanded', String(open));
+		button.title = open ? 'Hide search' : 'Search';
+		const host = document.getElementById(getAssetBrowserSchema(section.dataset.library)?.searchHost);
+		if (open) {
+			host?.querySelector('[data-browser-role="search"]')?.focus();
+		} else if (host?.classList.contains('filters-open')) {
+			// The filter sheet lives in the folded row; close it through its
+			// own button so the manager restores the drawer height.
+			host.querySelector('[data-browser-role="close"]')?.click();
+		}
+	});
+}

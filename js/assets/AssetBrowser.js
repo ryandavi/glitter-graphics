@@ -48,6 +48,8 @@ class AssetBrowser {
 		this.recentLead.className = 'asset-browser-recent';
 		this.recentLead.hidden = true;
 		this.elements.categoryGrid.before(this.recentLead);
+		// The strip is one row: as many recents as the panel width fits.
+		new ResizeObserver(() => this._fitRecentRow()).observe(this.recentLead);
 		this.indexLead = document.createElement('div');
 		this.indexLead.className = 'asset-browser-index-lead';
 		this.indexLead.hidden = true;
@@ -334,7 +336,20 @@ class AssetBrowser {
 		recent.forEach((item) => grid.appendChild(this.createItemElement(item)));
 		this.recentLead.append(heading, grid);
 		this.recentLead.hidden = false;
+		this._fitRecentRow();
 		this.contentManager.updateSelection?.();
+	}
+
+	// The grid's resolved auto-fill tracks are the count that fits one row;
+	// later recents hide rather than wrap or scroll.
+	_fitRecentRow() {
+		const grid = this.recentLead.querySelector('.asset-browser-recent-grid');
+		const tracks = grid ? getComputedStyle(grid).gridTemplateColumns : 'none';
+		if (!tracks || tracks === 'none') return;
+		const fits = tracks.trim().split(/\s+/).length;
+		Array.from(grid.children).forEach((item, index) => {
+			item.style.display = index < fits ? '' : 'none';
+		});
 	}
 
 	_renderIndexLead() {

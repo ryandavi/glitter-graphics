@@ -189,18 +189,14 @@
 	&:not([hidden]) ~ .category-grid.visible,
 	&:not([hidden]) ~ .search-results-container.visible { margin-top: var(--spacing-md); }
 
+	// One row, no scroller: AssetBrowser._fitRecentRow hides the recents past
+	// the auto-fill track count, so a wider panel shows more of them.
 	>.asset-grid.asset-browser-recent-grid {
-		grid-auto-flow: column;
-		grid-template-columns: none;
-		grid-auto-columns: 64px;
-		overflow-x: auto;
-		overscroll-behavior-x: contain;
-		padding: 3px;
-		margin: -3px;
+		grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
 	}
 }
 
-.fonts-options .asset-browser-recent > .asset-grid.asset-browser-recent-grid { grid-auto-columns: 130px; }
+.asset-options.fonts-options .asset-browser-recent > .asset-grid.asset-browser-recent-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 
 :root[data-theme='light'] .brush-tip-options .asset-option {
 	&.is-vector>img { filter: none; }
@@ -296,14 +292,15 @@
 		z-index: 2;
 		align-items: center;
 		gap: var(--spacing-sm);
+		// One compact line (the picker strip's height): back, then the title.
 		min-height: var(--control-height);
-		padding: var(--property-gutter, 10px);
+		padding: var(--spacing-2xs) var(--property-gutter, 12px) var(--spacing-2xs) var(--spacing-xs);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-bg-secondary);
 
 		>button {
-			width: var(--control-height-compact);
-			height: var(--control-height-compact);
+			width: var(--control-height);
+			height: var(--control-height);
 			flex-shrink: 0;
 
 			&:disabled {

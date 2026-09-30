@@ -654,6 +654,9 @@ class TextGlitterManager {
 	armPicker(key) {
 		const layer = this.getActiveTextLayer();
 		if (!layer) return;
+		// A font picker left open (no Done, e.g. a drawer tab back to Edit) owns
+		// the strip and the Library view; a slot pick supersedes it.
+		this.editor.fontBrowserManager?.closePickerSession();
 		this.ensureEffectData(layer, key);
 		this.setGlitterSelectionTarget(key, layer);
 		const selectedGlitterId = this.resolveSelectedGlitterId(layer);

@@ -349,7 +349,7 @@ const PANEL_SCHEMAS = {
 		section: { id: 'filterSettingsSection', classes: 'panel-redesign', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
-				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Opacity' },
+				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'filterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'card', title: 'Looks', flatBody: true, items: [
 					{ kind: 'set', items: [
@@ -633,18 +633,18 @@ const PANEL_SCHEMAS = {
 					{ id: 'stickerBorderUnionFrames', label: 'Use all animation frames', checked: true, title: 'Build one stable outline from the union of every GIF frame' }
 				] }]
 			},
-			...createBevelPanelSpecs('stickerBevel'),
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
-				color: '#000000', chipTitle: 'Choose glitter',
+				color: '#000000', chipTitle: 'Choose shadow glitter',
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'stickerShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }, { kind: 'slider', id: 'stickerShadowSpread', slider: 'shadowSpread' },
 					{ kind: 'slider', id: 'stickerShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }]
 			},
+			...createBevelPanelSpecs('stickerBevel'),
 			createSparklesPanelSpec('stickerSparkles'),
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetStickerEffects', label: 'Reset Effects', secondary: true, title: 'Disable all sticker effects and clear their saved settings' }
@@ -736,7 +736,7 @@ const PANEL_SCHEMAS = {
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
-				color: '#000000', chipTitle: 'Choose background source',
+				color: '#000000', chipTitle: 'Choose background glitter',
 				afterSource: [
 					{ kind: 'select', id: 'textBackgroundPreset', label: 'Preset', visibleLabel: 'Preset', options: TEXT_BACKGROUND_PRESET_OPTIONS },
 					{ kind: 'set', label: 'Padding', items: [
@@ -806,7 +806,7 @@ const PANEL_SCHEMAS = {
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
-				color: '#000000', chipTitle: 'Choose shadow source',
+				color: '#000000', chipTitle: 'Choose shadow glitter',
 				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
@@ -926,7 +926,7 @@ const PANEL_SCHEMAS = {
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
 				modes: ['glitter', 'solid'], activeMode: 'glitter',
-				color: '#000000', chipTitle: 'Choose glitter',
+				color: '#000000', chipTitle: 'Choose shadow glitter',
 				afterSource: [
 					{ kind: 'numberPair', label: 'Offset', items: [
 						{ id: 'shapeShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },

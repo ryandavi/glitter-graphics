@@ -1,5 +1,5 @@
 (function (root) {
-	// TODO(ryan): replace blank `name` values with the editor's display names.
+	// A blank `name` shows the Instagram name; set one only to rename a look.
 	const attribution = Object.freeze({ source: 'Recipe after CSSgram (Una Kravets, MIT)', license: 'MIT' });
 	const fill = (color, mode, opacity = 1) => ({ kind: 'fill', color, mode, opacity });
 	const radial = (radius, stops, mode, opacity = 1, center = [0.5, 0.5]) => ({

@@ -325,59 +325,6 @@
 	box-shadow: 0 0 0 1px var(--color-accent-border);
 }
 
-// D-1c gallery picker strip: names the gallery's armed destination in picker
-// mode, or the default target (e.g. Fill) in browse mode, so a swatch
-// click's effect is never a guess. Same look in both states — only the Done
-// button (armed only) differs. Sticky within the gallery content (not the
-// viewport) so it stays visible as the grid scrolls and works identically
-// inside the mobile design drawer.
-.gallery-picker-strip {
-	position: sticky;
-	top: 0;
-	z-index: 2;
-	display: flex;
-	align-items: flex-start;
-	gap: var(--spacing-md);
-	padding: var(--spacing-sm) var(--spacing-md);
-	background: var(--color-bg-tertiary);
-
-	&[hidden] {
-		display: none;
-	}
-}
-
-.gallery-picker-strip-text {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2xs);
-	min-width: 0;
-	flex: 1;
-}
-
-.gallery-picker-strip-title {
-	@include text-sm;
-	color: var(--color-text-primary);
-	font-weight: 600;
-}
-
-.gallery-picker-strip-detail {
-	@include text-sm;
-	color: var(--color-text-tertiary);
-
-	&:empty {
-		display: none;
-	}
-}
-
-.gallery-picker-strip-done {
-	flex-shrink: 0;
-	align-self: center;
-
-	&[hidden] {
-		display: none;
-	}
-}
-
 .asset-info-change {
 	flex-shrink: 0;
 	align-self: center;
