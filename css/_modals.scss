@@ -327,6 +327,12 @@ body.modal-open {
 
 }
 
+#layerTypePickerModal > .add-menu-modal {
+	--modal-width: 760px;
+
+	> .modal-body { overflow-y: auto; }
+}
+
 
 
 

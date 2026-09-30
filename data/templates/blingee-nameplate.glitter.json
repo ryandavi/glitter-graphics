@@ -1,0 +1,101 @@
+{
+	"format": "glitter-project",
+	"version": 6,
+	"name": "Glitter Nameplate",
+	"canvas": { "width": 800, "height": 800 },
+	"baseImage": {
+		"mimeType": null,
+		"data": null,
+		"preset": { "width": 800, "height": 800, "color": "#08000f" },
+		"hasBaseImage": false
+	},
+	"layers": [
+		{
+			"id": "nameplate-base",
+			"type": "base-image",
+			"visible": true,
+			"locked": true,
+			"opacity": 100,
+			"background": { "mode": "solid", "color": "#08000f", "scale": 100 }
+		},
+		{
+			"id": "nameplate-frame",
+			"type": "frame",
+			"name": "Rainbow Glitter Frame",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": { "position": { "x": 400, "y": 400 }, "anchor": { "x": 0.5, "y": 0.5 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
+			"frameData": {
+				"pinned": true,
+				"kind": "style",
+				"style": "ridge",
+				"fit": "stretch",
+				"inset": 14,
+				"widthPx": 30,
+				"radius": 22,
+				"shade": 45,
+				"width": 772,
+				"height": 772,
+				"fill": { "mode": "glitter", "glitterId": 106, "color": "#ff3c96", "opacity": 100, "scale": 100 },
+				"image": null,
+				"sparkles": null
+			}
+		},
+		{
+			"id": "nameplate-text",
+			"type": "text-glitter",
+			"name": "YOUR NAME",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": { "position": { "x": 400, "y": 400 }, "anchor": { "x": 0.5, "y": 0.5 }, "rotation": -5, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
+			"textData": {
+				"text": "YOUR NAME",
+				"fontId": "bungee",
+				"fontWeight": 400,
+				"fontStyle": "normal",
+				"textCase": "upper",
+				"fontSize": 126,
+				"letterSpacing": 1,
+				"lineHeight": 0.95,
+				"align": "center",
+				"verticalAlign": "top",
+				"boxMode": "auto",
+				"width": 0,
+				"height": 0,
+				"warp": { "type": "arch", "bend": 24 },
+				"fill": { "mode": "glitter", "glitterId": 89, "color": "#ff3c96", "opacity": 100, "scale": 100 },
+				"border": { "mode": "glitter", "glitterId": 21, "color": "#ffffff", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 },
+				"shadow": { "mode": "solid", "color": "#000000", "opacity": 85, "offsetX": 12, "offsetY": 14, "spread": 2, "blur": 8, "scale": 100 }
+			}
+		},
+		{
+			"id": "nameplate-sparkles",
+			"type": "sparkles",
+			"name": "Silver Glints",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"sparkles": {
+				"mode": "glitter",
+				"glitterId": 21,
+				"color": "#ffffff",
+				"opacity": 100,
+				"scale": 100,
+				"emitter": "inside",
+				"behavior": "glint",
+				"glyphs": { "sparkle": 3, "glint": 2, "dot": 1 },
+				"count": 30,
+				"sizeMin": 10,
+				"sizeMax": 30,
+				"cycleMs": 2200,
+				"seed": 2004
+			}
+		}
+	],
+	"activeLayerId": "nameplate-text",
+	"masks": {},
+	"shapeFillImages": {},
+	"customStickers": {}
+}

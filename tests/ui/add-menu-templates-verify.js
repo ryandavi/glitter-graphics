@@ -42,11 +42,15 @@ async function main() {
 		await overlay.page.waitForSelector('#confirmationModal.visible');
 		const preview = await overlay.page.evaluate(() => window.editor.layers.filter((layer) => layer.isPreview).map((layer) => ({
 			text: layer.textData.text,
+			fontId: layer.textData.fontId,
+			fontSize: layer.textData.fontSize,
 			x: layer.transform.position.x,
 			y: layer.transform.position.y
 		})));
-		assert(preview.length === 2 && preview[0].x === 200 && preview[0].y === 41 && preview[1].y === 359,
+		assert(preview.length === 2 && preview[0].x === 200 && preview[0].y === 32 && preview[1].y === 368,
 			'Overlay preview did not scale and preserve edge placement');
+		assert(preview.every((layer) => layer.fontId === 'impact' && layer.fontSize === 60),
+			'Meme captions did not use the larger Impact treatment');
 		await overlay.page.click('#confirmationConfirmBtn');
 		await overlay.page.waitForFunction(() => !window.editor.layers.some((layer) => layer.isPreview));
 		assert(await overlay.page.evaluate(() => window.editor.layers.filter((layer) => layer.type === LayerType.TEXT_GLITTER).length === 2),
@@ -65,15 +69,33 @@ async function main() {
 
 		const project = await openEditor(browser);
 		await project.page.click('#openNewCanvasBtn');
-		await project.page.waitForSelector('[data-template-id="glitter-greeting"]');
-		await project.page.click('[data-template-id="glitter-greeting"]');
+		await project.page.waitForSelector('[data-template-id="blingee-nameplate"]');
+		assert(await project.page.locator('[data-template-id="impact-meme-canvas"]').count() === 1,
+			'Meme captions are not available as a New Canvas template');
+		await project.page.click('[data-template-id="blingee-nameplate"]');
 		await project.page.click('#createCanvasBtn');
 		await project.page.waitForFunction(() => window.editor.originalCanvas?.width === 800
-			&& window.editor.layers.some((layer) => layer.textData?.text === 'MAKE IT\nSPARKLE'));
-		assert(await project.page.evaluate(() => window.editor.projectName === 'Glitter Greeting'),
+			&& window.editor.layers.some((layer) => layer.textData?.text === 'YOUR NAME'));
+		assert(await project.page.evaluate(() => window.editor.projectName === 'Glitter Nameplate'
+			&& window.editor.layers.some((layer) => layer.frameData?.fill?.glitterId === 106)
+			&& window.editor.layers.some((layer) => layer.textData?.fill?.glitterId === 89)
+			&& window.editor.layers.some((layer) => layer.type === LayerType.SPARKLES)),
 			'Project template did not load through the project path');
 		assert(project.errors.length === 0, `Browser errors: ${project.errors.join('; ')}`);
 		await project.context.close();
+
+		const memeProject = await openEditor(browser);
+		await memeProject.page.click('#openNewCanvasBtn');
+		await memeProject.page.waitForSelector('[data-template-id="impact-meme-canvas"]');
+		await memeProject.page.click('[data-template-id="impact-meme-canvas"]');
+		await memeProject.page.click('#createCanvasBtn');
+		await memeProject.page.waitForFunction(() => window.editor.layers.filter((layer) => layer.type === LayerType.TEXT_GLITTER).length === 2);
+		assert(await memeProject.page.evaluate(() => window.editor.projectName === 'Meme Captions'
+			&& window.editor.layers.filter((layer) => layer.type === LayerType.TEXT_GLITTER)
+				.every((layer) => layer.textData.fontId === 'impact' && layer.textData.fontSize === 120)),
+			'New Canvas meme template did not load its full-size Impact captions');
+		assert(memeProject.errors.length === 0, `Browser errors: ${memeProject.errors.join('; ')}`);
+		await memeProject.context.close();
 
 		console.log('Add menu and templates verification passed');
 	} finally {

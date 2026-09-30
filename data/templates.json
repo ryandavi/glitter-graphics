@@ -2,20 +2,30 @@
 	"version": 1,
 	"templates": [
 		{
-			"id": "glitter-greeting",
+			"id": "blingee-nameplate",
 			"mode": "project",
-			"label": "Glitter Greeting",
-			"description": "A square greeting card with editable headline text",
-			"src": "data/templates/glitter-greeting.glitter.json",
+			"label": "Glitter Nameplate",
+			"description": "A Y2K profile graphic with animated glitter type, frame and sparkles",
+			"src": "data/templates/blingee-nameplate.glitter.json",
 			"icon": "sparkles",
 			"aspectRatio": "1 / 1",
-			"preview": "linear-gradient(145deg, #250042, #8f2bd1 55%, #ff79d1)"
+			"preview": "linear-gradient(145deg, #08000f, #51116c 48%, #ff3c96 72%, #0bd2fa)"
+		},
+		{
+			"id": "impact-meme-canvas",
+			"mode": "project",
+			"label": "Classic Meme",
+			"description": "A blank square canvas with large editable Impact captions",
+			"src": "data/templates/impact-meme.glitter.json",
+			"icon": "text",
+			"aspectRatio": "1 / 1",
+			"preview": "linear-gradient(145deg, #262626, #090909)"
 		},
 		{
 			"id": "impact-meme",
 			"mode": "overlay",
 			"label": "Meme Captions",
-			"description": "Editable top and bottom Impact-style text",
+			"description": "Add large editable Impact captions to this image",
 			"src": "data/templates/impact-meme.glitter.json",
 			"icon": "text"
 		}

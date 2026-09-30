@@ -11,6 +11,14 @@
 	},
 	"layers": [
 		{
+			"id": "meme-base",
+			"type": "base-image",
+			"visible": true,
+			"locked": true,
+			"opacity": 100,
+			"background": { "mode": "image", "color": "#ffffff", "scale": 100 }
+		},
+		{
 			"id": "meme-top",
 			"type": "text-glitter",
 			"name": "TOP TEXT",
@@ -18,8 +26,8 @@
 			"visible": true,
 			"locked": false,
 			"opacity": 100,
-			"transform": { "position": { "x": 400, "y": 82 }, "anchor": { "x": 0.5, "y": 0 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
-			"textData": { "text": "TOP TEXT", "fontId": "luckiest-guy", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 76, "letterSpacing": 0, "lineHeight": 1, "align": "center", "verticalAlign": "top", "boxMode": "auto", "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 7, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
+			"transform": { "position": { "x": 400, "y": 64 }, "anchor": { "x": 0.5, "y": 0 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
+			"textData": { "text": "TOP TEXT", "fontId": "impact", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 120, "letterSpacing": 0, "lineHeight": 0.95, "align": "center", "verticalAlign": "top", "boxMode": "auto", "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
 		},
 		{
 			"id": "meme-bottom",
@@ -29,8 +37,8 @@
 			"visible": true,
 			"locked": false,
 			"opacity": 100,
-			"transform": { "position": { "x": 400, "y": 718 }, "anchor": { "x": 0.5, "y": 1 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
-			"textData": { "text": "BOTTOM TEXT", "fontId": "luckiest-guy", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 76, "letterSpacing": 0, "lineHeight": 1, "align": "center", "verticalAlign": "top", "boxMode": "auto", "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 7, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
+			"transform": { "position": { "x": 400, "y": 736 }, "anchor": { "x": 0.5, "y": 1 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
+			"textData": { "text": "BOTTOM TEXT", "fontId": "impact", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 120, "letterSpacing": 0, "lineHeight": 0.95, "align": "center", "verticalAlign": "top", "boxMode": "auto", "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
 		}
 	],
 	"activeLayerId": "meme-bottom",
