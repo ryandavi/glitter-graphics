@@ -319,12 +319,41 @@ class StickerManager extends ContentManager {
 			applySlotSpanMask(span, source.width, source.height, mask.toDataURL('image/png'));
 			span.style.left = `${-pad}px`;
 			span.style.top = `${-pad}px`;
-			applySlotSpanOffset(span, item.offsetX * scaleX, item.offsetY * scaleY);
+			span.dataset.effectScaleX = scaleX;
+			span.dataset.effectScaleY = scaleY;
+			span.dataset.effectOffsetX = item.offsetX || 0;
+			span.dataset.effectOffsetY = item.offsetY || 0;
+			this.syncStickerEffectSpan(layer, span);
 			span.style.imageRendering = item.role === 'border' && getBorderEdgeStyle(item.data) === 'hard' ? 'pixelated' : '';
 			applyPaintSourceToElement(span, item.source, { glitterLibrary: this.editor.glitterLibrary, layer, maskCanvas: mask });
 			existing.delete(item.key);
 		});
 		existing.forEach((span) => span.remove());
+	}
+
+	// Effect masks are expensive distance-field rasters, so resize their last
+	// crisp result with the sticker during a live gesture. The settled render
+	// rebuilds them at the exact final size.
+	syncElementScale(layer, element) {
+		element.querySelectorAll('.sticker-effect-layer').forEach((span) => {
+			this.syncStickerEffectSpan(layer, span);
+		});
+	}
+
+	syncStickerEffectSpan(layer, span) {
+		const transform = getLayerTransform(layer);
+		const scaleX = Math.max(0.01, Math.abs(transform.scale.x) / 100);
+		const scaleY = Math.max(0.01, Math.abs(transform.scale.y) / 100);
+		const rasterScaleX = Number(span.dataset.effectScaleX) || scaleX;
+		const rasterScaleY = Number(span.dataset.effectScaleY) || scaleY;
+		const centerShiftX = layer.stickerData.width * (scaleX - rasterScaleX) / 2;
+		const centerShiftY = layer.stickerData.height * (scaleY - rasterScaleY) / 2;
+		const offsetX = centerShiftX + ((Number(span.dataset.effectOffsetX) || 0) * scaleX);
+		const offsetY = centerShiftY + ((Number(span.dataset.effectOffsetY) || 0) * scaleY);
+		const ratioX = scaleX / rasterScaleX;
+		const ratioY = scaleY / rasterScaleY;
+		span.style.transformOrigin = 'center';
+		span.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${ratioX}, ${ratioY})`;
 	}
 
 	async ensureStickerUnionMask(layer, key) {
@@ -790,6 +819,17 @@ class StickerManager extends ContentManager {
 		// Otherwise, create a NEW layer.
 		if (activeLayer && activeLayer.type === LayerType.STICKER) {
 			if (!this.editor.canEditLayer(activeLayer, { notify: true })) return;
+			const scalePercent = activeLayer.transform?.scale?.x ?? 100;
+			const renderedWidth = stickerInfo.width * (scalePercent / 100);
+			const nextUrl = StickerVariants.pickBestUrl(
+				stickerInfo.url, stickerInfo.width, stickerInfo.variantUrls, renderedWidth
+			);
+			try {
+				await AssetImageCache.get(nextUrl);
+			} catch (error) {
+				this.editor.showError('Unable to load that sticker');
+				return;
+			}
 			// Replace the sticker in the current layer
 			activeLayer.name = stickerInfo.name;
 			activeLayer.stickerSourceId = stickerInfo.id;
@@ -809,11 +849,7 @@ class StickerManager extends ContentManager {
 			// Pick the resolution that matches the layer's current (possibly
 			// scaled-up) size, not always the base — same rule commitResolutionSwap
 			// applies after a resize gesture.
-			const scalePercent = activeLayer.transform?.scale?.x ?? 100;
-			const renderedWidth = stickerInfo.width * (scalePercent / 100);
-			activeLayer.stickerData.url = StickerVariants.pickBestUrl(
-				stickerInfo.url, stickerInfo.width, stickerInfo.variantUrls, renderedWidth
-			);
+			activeLayer.stickerData.url = nextUrl;
 
 			// Clear the cached still frame when changing sticker
 			activeLayer.stickerData.staticImageData = null;

@@ -439,6 +439,45 @@ async function checkCornerScaleHandle(page, drag, label) {
 	);
 }
 
+async function checkStickerOutlineTracksLiveScale(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const sticker = await createTestSticker(page, { position: { x: 130, y: 100 } });
+	await selectLayer(page, sticker.layerId);
+	await page.evaluate((layerId) => {
+		const layer = window.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		layer.stickerData.border = window.editor.stickerManager.getDefaultBorder();
+		window.editor.stickerManager.renderLayer(layer);
+	}, sticker.layerId);
+	await page.waitForTimeout(100);
+
+	const bounds = () => page.evaluate((layerId) => {
+		const element = document.querySelector(`.sticker-element[data-layer-id="${layerId}"]`);
+		const imageRect = element.querySelector('img.sticker-image').getBoundingClientRect();
+		const outlineRect = element.querySelector('.sticker-effect-border').getBoundingClientRect();
+		return {
+			image: { width: imageRect.width, centerX: imageRect.left + imageRect.width / 2, centerY: imageRect.top + imageRect.height / 2 },
+			outline: { width: outlineRect.width, centerX: outlineRect.left + outlineRect.width / 2, centerY: outlineRect.top + outlineRect.height / 2 }
+		};
+	}, sticker.layerId);
+
+	const before = await bounds();
+	const handle = await getTransformHandleCenter(page, sticker.layerId, 'corner-br');
+	await page.mouse.move(handle.x, handle.y);
+	await page.mouse.down();
+	await page.mouse.move(handle.x + 45, handle.y + 45, { steps: GESTURE_STEPS });
+	const during = await bounds();
+	await page.mouse.up();
+
+	const imageGrowth = during.image.width / before.image.width;
+	const outlineGrowth = during.outline.width / before.outline.width;
+	assert(imageGrowth > 1.1, 'Live outline check did not scale the sticker');
+	assert(Math.abs(outlineGrowth - imageGrowth) < 0.05,
+		`Sticker outline did not follow live scale (image ${imageGrowth}, outline ${outlineGrowth})`);
+	assert(Math.abs(during.outline.centerX - during.image.centerX) < 1 && Math.abs(during.outline.centerY - during.image.centerY) < 1,
+		'Sticker outline moved away from the image center during live scale');
+}
+
 async function checkAltCornerScaleFromCenter(page) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
@@ -770,8 +809,9 @@ async function main() {
 			['Mouse group rotation undoes every selected sticker', checkGroupRotationUndo],
 			['Alt + mouse group drag duplicates and moves every selected sticker', checkGroupAltDuplicateDrag],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
-				['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
-				['Locked sticker edge handle preserves aspect ratio', checkLockedStickerEdgeScale],
+			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
+			['Sticker outline follows a live corner scale', checkStickerOutlineTracksLiveScale],
+			['Locked sticker edge handle preserves aspect ratio', checkLockedStickerEdgeScale],
 			['Sidebar scale and Reset Transform resize the sticker transform box', checkSidebarScaleAndResetHandles],
 			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],
 			['Escape cancels a mouse corner transform without history', checkEscapeCancelsCornerScale],

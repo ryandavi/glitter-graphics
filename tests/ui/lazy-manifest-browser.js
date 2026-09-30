@@ -34,6 +34,60 @@ async function main() {
 				window.editor.stickerManager.ensureAssetDetails(sticker)
 			]);
 			const finalResources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
+
+			await window.editor.loadBlankImage(240, 180, '#ffffff');
+			const manager = window.editor.stickerManager;
+			const makeStickerUrl = (width, height, color) => {
+				const canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				const ctx = canvas.getContext('2d');
+				ctx.fillStyle = color;
+				ctx.fillRect(0, 0, width, height);
+				return canvas.toDataURL('image/png');
+			};
+			const oldUrl = makeStickerUrl(40, 40, '#ff0000');
+			const nextUrl = makeStickerUrl(80, 20, '#0000ff');
+			const layer = manager.createLayer();
+			layer.stickerSourceId = 'replacement-old';
+			Object.assign(layer.stickerData, {
+				isEmpty: false,
+				url: oldUrl,
+				baseUrl: oldUrl,
+				name: 'Old sticker',
+				width: 40,
+				height: 40
+			});
+			window.editor.layerManager.insertLayer(layer);
+			window.editor.layerManager.setActiveLayer(layer.id);
+			manager.renderLayer(layer);
+
+			const originalEnsureAssetDetails = manager.ensureAssetDetails;
+			const originalCacheGet = AssetImageCache.get;
+			let releasePreload;
+			const preload = new Promise((resolve) => { releasePreload = resolve; });
+			manager.ensureAssetDetails = async () => ({
+				id: 'replacement-next', name: 'Next sticker', url: nextUrl, source: 'test',
+				width: 80, height: 20, isAnimated: false, isPixelated: false, frameCount: 1
+			});
+			AssetImageCache.get = () => preload;
+			const replacement = manager.addStickerToCanvas('replacement-next');
+			await Promise.resolve();
+			await Promise.resolve();
+			const beforePreload = {
+				url: layer.stickerData.url,
+				width: layer.stickerData.width,
+				height: layer.stickerData.height
+			};
+			releasePreload(null);
+			await replacement;
+			const afterPreload = {
+				url: layer.stickerData.url,
+				width: layer.stickerData.width,
+				height: layer.stickerData.height
+			};
+			manager.ensureAssetDetails = originalEnsureAssetDetails;
+			AssetImageCache.get = originalCacheGet;
 			return {
 				initial,
 				glitterLoaded: glitter._detailLoaded,
@@ -41,7 +95,8 @@ async function main() {
 				glitterBrightness: glitter.brightness,
 				stickerFileSize: sticker.fileSize,
 				initialResources,
-				finalResources
+				finalResources,
+				replacement: { beforePreload, afterPreload, oldUrl, nextUrl }
 			};
 		});
 
@@ -61,6 +116,18 @@ async function main() {
 		assert(
 			result.finalResources.some((path) => path.endsWith(`/data/stickers/${result.initial.stickerId}.json`)),
 			'Sticker detail request was not lazy-loaded'
+		);
+		assert(
+			result.replacement.beforePreload.url === result.replacement.oldUrl
+				&& result.replacement.beforePreload.width === 40
+				&& result.replacement.beforePreload.height === 40,
+			'Sticker geometry changed before its replacement image finished preloading'
+		);
+		assert(
+			result.replacement.afterPreload.url === result.replacement.nextUrl
+				&& result.replacement.afterPreload.width === 80
+				&& result.replacement.afterPreload.height === 20,
+			'Sticker replacement did not commit its source and geometry together after preload'
 		);
 		process.stdout.write('Lazy asset manifest verification passed\n');
 	} finally {

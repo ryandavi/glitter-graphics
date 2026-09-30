@@ -67,6 +67,7 @@ async function getStickerOutlineProfiles(page) {
 		const backing = createOutlineMaskCanvas(source, 2, 'round', true);
 		return {
 			defaultUnionFrames: window.editor.stickerManager.getDefaultBorder().unionFrames,
+			defaultFillInterior: window.editor.stickerManager.getDefaultBorder().fillInterior,
 			smooth: profile(smooth),
 			pixel: profile(pixel),
 			backing: profile(backing)
@@ -95,6 +96,7 @@ async function main() {
 
 		const stickerOutlines = await getStickerOutlineProfiles(page);
 		assert(stickerOutlines.defaultUnionFrames, 'Sticker outlines did not default to all animation frames');
+		assert(stickerOutlines.defaultFillInterior, 'Sticker outlines did not default to filling their interior');
 		assert(stickerOutlines.smooth.alpha.every((alpha) => alpha === 0 || alpha === 255), `Smooth sticker outline retained partial alpha: ${stickerOutlines.smooth.alpha}`);
 		assert(stickerOutlines.pixel.alpha.every((alpha) => alpha === 0 || alpha === 255), `Pixel sticker outline retained partial alpha: ${stickerOutlines.pixel.alpha}`);
 		assert(stickerOutlines.smooth.center === 0, 'Outline-only sticker mask did not subtract its interior');
@@ -140,6 +142,7 @@ async function main() {
 		console.log('PASS Flow remains uniform across a crisp stamp');
 		console.log('PASS Sticker outline styles are binary in crisp mode and support a filled backing');
 		console.log('PASS Sticker outlines use all animation frames by default');
+		console.log('PASS Sticker outlines fill their interior by default');
 		console.log('PASS Mouse and Force Touch trackpad input ignores pressure while pen pressure is preserved');
 		console.log('PASS Antialias Edges defaults off and persists when enabled');
 	} finally {

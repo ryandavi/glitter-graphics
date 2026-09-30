@@ -432,13 +432,13 @@ const CONFIG = deepFreeze({
 			},
 			// The sticker Outline is the shared border slot; the default* keys
 			// mirror tools.text.border / tools.shapes.border. It has no
-			// placement or layering: the ring lies wholly outside the art, so
-			// behind and on top would look the same.
+			// placement or layering: its outline lies outside the art and its
+			// optional interior is always a backing plate behind the sticker.
 			outline: {
 				defaultSource: 'glitter',
 				defaultEdgeStyle: 'round',
 				useAllFrames: true,
-				fillInterior: false
+				fillInterior: true
 			},
 			rotationSnapTolerance: 5,
 			transform: {
