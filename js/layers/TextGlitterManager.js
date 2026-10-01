@@ -223,9 +223,7 @@ class TextGlitterManager {
 				layer.textData.sparkles = null;
 				layer.textData.textBackground = this.getDefaultTextBackground();
 				delete layer.textData.effectDrafts;
-				delete layer.animations;
 			}, { refreshPreview: false });
-			this.editor.animationPanel?.load(layer);
 		});
 
 		// Text Background shape options. Its toggle, source and geometry sliders
@@ -805,8 +803,6 @@ class TextGlitterManager {
 
 	focusTextInput(selectAll = false) {
 		if (!this.ui.textInput) return;
-		this.ui.textInput.closest('[data-panel-group]')?.classList.remove('collapsed');
-
 		if (!this.editor.mobileManager?.isMobile) {
 			this.editor.setCollapsibleSectionOpen?.('textSettings', true);
 		}

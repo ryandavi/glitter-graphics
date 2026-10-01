@@ -518,6 +518,9 @@ class GlitterEditor {
 		TOOL_ORDER.forEach((tool) => {
 			document.getElementById(getToolButtonId(tool))?.addEventListener('click', () => this.setTool(tool));
 		});
+		// The Fill layer's Mask card jumps to the two tools that edit its mask.
+		document.getElementById('fillMaskPickColors')?.addEventListener('click', () => this.setTool(ToolType.GLITTER_FILL));
+		document.getElementById('fillMaskPaint')?.addEventListener('click', () => this.setTool(ToolType.BRUSH));
 
 		const actions = [
 			{ id: 'undoTool', handler: () => this.undo() },

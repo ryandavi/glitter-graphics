@@ -129,7 +129,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('scaleEffectsOnTransform', 'Scale Outlines & Effects', 'Scale outline widths, dotted spacing, and shadow offsets when text or shapes are resized.'),
 			toggle('scaleTexturesOnTransform', 'Transform Textures', 'Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.'),
 			action('Brush & Eraser Defaults', 'Restore saved Brush and Eraser tip, stroke, and pressure settings.', { id: 'resetToolSettings', label: 'Reset Tools' }),
-			action('Panel Layout', 'Expand all collapsible property and tool groups.', { id: 'resetPanelLayout', label: 'Reset Panels' }),
+			action('Panel Layout', 'Return collapsible property and tool cards to their default open or closed state.', { id: 'resetPanelLayout', label: 'Reset Panels' }),
 			action('Toolbar Position', 'Return the floating tool bar to its default position at the bottom of the canvas.', { id: 'resetToolbarPlacement', label: 'Reset Toolbar' }, { aliases: 'context bar position moved dragged floating' })
 		] },
 		// Localhost-only experiment with bespoke widgets; kept as markup.

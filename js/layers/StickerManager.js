@@ -4,6 +4,15 @@
 // Now uses LayerTransform for all transform operations
 // ============================================
 class StickerManager extends ContentManager {
+	// Sticker layers, and image frames (frame images are stickers).
+	getProjectAssetIds(layers) {
+		return layers.map((layer) => {
+			if (layer.type === LayerType.STICKER) return layer.stickerSourceId;
+			if (layer.type === LayerType.FRAME && layer.frameData?.kind === 'image') return layer.frameData.image?.stickerId;
+			return null;
+		});
+	}
+
 	constructor(editor) {
 		super(editor);
 
@@ -120,10 +129,8 @@ class StickerManager extends ContentManager {
 			layer.stickerData.bevel = buildDefaultBevel();
 			layer.stickerData.sparkles = null;
 			delete layer.stickerData.effectDrafts;
-			delete layer.animations;
 			this.renderLayer(layer);
 			this.loadLayerSettings(layer);
-			this.editor.animationPanel?.load(layer);
 			this.editor.saveState('Edit sticker');
 		});
 		// Shared picker strip: Done (only acts while a sticker is armed) + global Esc.

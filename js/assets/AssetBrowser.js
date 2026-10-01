@@ -48,8 +48,16 @@ class AssetBrowser {
 		this.recentLead.className = 'asset-browser-recent';
 		this.recentLead.hidden = true;
 		this.elements.categoryGrid.before(this.recentLead);
-		// The strip is one row: as many recents as the panel width fits.
-		new ResizeObserver(() => this._fitRecentRow()).observe(this.recentLead);
+		// Assets the open project already uses, for "match the other one".
+		// Same one-row strip as Recent.
+		this.projectLead = document.createElement('div');
+		this.projectLead.className = 'asset-browser-recent asset-browser-project';
+		this.projectLead.hidden = true;
+		this.elements.categoryGrid.before(this.projectLead);
+		// Each strip is one row: as many items as the panel width fits.
+		const fitRows = () => this._fitLeadRows();
+		new ResizeObserver(fitRows).observe(this.recentLead);
+		new ResizeObserver(fitRows).observe(this.projectLead);
 		this.indexLead = document.createElement('div');
 		this.indexLead.className = 'asset-browser-index-lead';
 		this.indexLead.hidden = true;
@@ -105,6 +113,8 @@ class AssetBrowser {
 	}
 
 	setupEventListeners() {
+		// Arrow keys move between cards; Enter or Space picks (createItemElement).
+		GlitterPresetLibrary.bindPickerNavigation(this.elements.browser, '.asset-option');
 		this.elements.emptyClearFilters?.addEventListener('click', () => this.contentManager.clearFilters());
 		this.elements.backBtn.addEventListener('click', () => {
 			// If in search, clear the search input which will trigger return to category list
@@ -299,6 +309,7 @@ class AssetBrowser {
 		this.elements.backBtn.disabled = true;
 		this.elements.title.textContent = this.displayName;
 		this._renderRecentLead();
+		this._renderProjectLead();
 		this._renderIndexLead();
 
 		if (this.layout === 'grouped') {
@@ -324,31 +335,41 @@ class AssetBrowser {
 	// The last picks, newest first. Rebuilt only when the list is drawn, so a
 	// pick never reshuffles the strip under the pointer.
 	_renderRecentLead() {
+		this._renderLeadRow(this.recentLead, 'Recent', this.contentManager.getRecentItems());
+	}
+
+	_renderProjectLead() {
+		this._renderLeadRow(this.projectLead, 'In this project', this.contentManager.getProjectItems());
+	}
+
+	_renderLeadRow(lead, title, items) {
 		const filtered = new Set(this.getFilteredItems());
-		const recent = this.contentManager.getRecentItems().filter((item) => filtered.has(item));
-		this.recentLead.replaceChildren();
-		if (!recent.length) { this.recentLead.hidden = true; return; }
+		const shown = items.filter((item) => filtered.has(item));
+		lead.replaceChildren();
+		if (!shown.length) { lead.hidden = true; return; }
 		const heading = document.createElement('h3');
 		heading.className = 'asset-browser-section-title property-block-title';
-		heading.textContent = 'Recent';
+		heading.textContent = title;
 		const grid = document.createElement('div');
 		grid.className = 'asset-grid visible asset-browser-recent-grid';
-		recent.forEach((item) => grid.appendChild(this.createItemElement(item)));
-		this.recentLead.append(heading, grid);
-		this.recentLead.hidden = false;
-		this._fitRecentRow();
+		shown.forEach((item) => grid.appendChild(this.createItemElement(item)));
+		lead.append(heading, grid);
+		lead.hidden = false;
+		this._fitLeadRows();
 		this.contentManager.updateSelection?.();
 	}
 
 	// The grid's resolved auto-fill tracks are the count that fits one row;
-	// later recents hide rather than wrap or scroll.
-	_fitRecentRow() {
-		const grid = this.recentLead.querySelector('.asset-browser-recent-grid');
-		const tracks = grid ? getComputedStyle(grid).gridTemplateColumns : 'none';
-		if (!tracks || tracks === 'none') return;
-		const fits = tracks.trim().split(/\s+/).length;
-		Array.from(grid.children).forEach((item, index) => {
-			item.style.display = index < fits ? '' : 'none';
+	// later items hide rather than wrap or scroll.
+	_fitLeadRows() {
+		[this.recentLead, this.projectLead].forEach((lead) => {
+			const grid = lead?.querySelector('.asset-browser-recent-grid');
+			const tracks = grid ? getComputedStyle(grid).gridTemplateColumns : 'none';
+			if (!tracks || tracks === 'none') return;
+			const fits = tracks.trim().split(/\s+/).length;
+			Array.from(grid.children).forEach((item, index) => {
+				item.style.display = index < fits ? '' : 'none';
+			});
 		});
 	}
 
@@ -362,7 +383,7 @@ class AssetBrowser {
 	}
 
 	hasLeadItems() {
-		return Boolean(this.indexLead.querySelector('.asset-option') || this.recentLead.querySelector('.asset-option'));
+		return [this.indexLead, this.recentLead, this.projectLead].some((lead) => lead.querySelector('.asset-option'));
 	}
 
 	getFavoritesCategory(items = this.getFilteredItems()) {

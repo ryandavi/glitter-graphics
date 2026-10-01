@@ -34,6 +34,14 @@ class ShapeBrowserManager extends ContentManager {
 		return key === 'categories' ? this.getCategoryLabel(value) : super.getFilterValueLabel(key, value);
 	}
 
+	getSearchNameElement(option) {
+		return option.querySelector('.brush-shape-option-name');
+	}
+
+	getProjectAssetIds(layers) {
+		return layers.map((layer) => (layer.type === LayerType.SHAPE ? layer.shapeData?.shapeId : null));
+	}
+
 	createItemCard(item) {
 		return createShapeCard(item.id, item.name, { className: 'asset-option shape-gallery-option', tag: 'div' });
 	}

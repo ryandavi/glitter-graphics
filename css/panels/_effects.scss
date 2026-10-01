@@ -141,7 +141,7 @@
 	}
 
 	// Pos / Alpha: same box, size and unit treatment as a `.property-value`
-	// readout — mirrors `.property-panel .panel-redesign .property-row >
+	// readout — mirrors `.property-panel .property-section .property-row >
 	// .property-value` (an `<input>` fills it; the `%` is the shared `.setting-unit`).
 	.gradient-stop-field {
 		min-width: 0;
@@ -305,12 +305,6 @@
 	}
 }
 
-// Must follow the transform-host display declarations above so a collapsed
-// schema group also hides its generated transform host.
-.subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
-	display: none;
-}
-
 .effect-stack-row {
 	grid-template-columns: 1fr !important;
 }
@@ -361,13 +355,6 @@
 
 		&.active { color: var(--color-accent); }
 	}
-}
-
-// Collapsed panel groups are a state boundary. Keep this after every generated
-// transform-host layout rule so themes and host normalization cannot reopen it.
-.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title),
-.design-panel .panel-scroll-region > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
-	display: none !important;
 }
 
 // The animation preset picker: prev/next flank the select in one grid cell

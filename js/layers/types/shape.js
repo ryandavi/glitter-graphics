@@ -99,7 +99,6 @@ registerLayerType(LayerType.SHAPE, {
 	transformPrefix: 'shape',
 	transformCapabilities: {
 		edgeResize: true,
-		panelRedesign: true,
 		position: true,
 		size: true,
 		// No Scale sliders: a shape's size is its pixel W/H. A percentage would

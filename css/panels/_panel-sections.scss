@@ -51,16 +51,6 @@
 	}
 }
 
-.glitter-options,
-.sticker-options {
-	display: none;
-
-	&.visible {
-		display: flex;
-		flex-direction: column;
-	}
-}
-
 .section:is(.welcome-section, .base-layer-settings-section) > .section-content {
 	display: flex;
 	flex-direction: column;

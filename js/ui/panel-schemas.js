@@ -64,7 +64,7 @@ const ANCHOR_SELECT_OPTIONS = Object.freeze([
 // overrides: the Sparkles layer's card has no on/off switch.
 function createSparklesPanelSpec(idPrefix, overrides = {}) {
 	return {
-		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles', redesign: true,
+		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles',
 		sourceSelect: true, sourceRevert: true, colorRevert: true,
 		texturePosition: true,
 		toggle: true, sourceLabel: 'Paint', modes: ['glitter', 'solid'], activeMode: 'solid',
@@ -93,7 +93,7 @@ function createStylePresetCardSpec(prefix) {
 
 function createBevelPanelSpecs(idPrefix) {
 	return [
-		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & Gloss', redesign: true,
+		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & Gloss',
 			sourceSelect: true, sourceRevert: true, colorRevert: true, toggle: true,
 			texturePosition: true, sourceLabel: 'Highlight', modes: ['glitter', 'solid'], activeMode: 'solid',
 			color: '#ffffff', chipTitle: 'Choose highlight glitter',
@@ -107,7 +107,7 @@ function createBevelPanelSpecs(idPrefix) {
 					{ kind: 'slider', id: `${idPrefix}Altitude`, slider: 'bevelAltitude', rowId: `${idPrefix}AltitudeRow` },
 					{ kind: 'slider', id: `${idPrefix}Soften`, slider: 'bevelSoften', advanced: true }
 				] },
-				{ kind: 'paintSlot', id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, title: 'Shade', redesign: false,
+				{ kind: 'paintSlot', id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, title: 'Shade', nested: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true, texturePosition: true,
 					modes: ['glitter', 'solid'], activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' }
 			]
@@ -149,7 +149,7 @@ function createAnimationPanelSpec(prefix) {
 					} },
 				{ kind: 'host', id: id('LoopHint'), classes: 'property-note animation-loop-hint' }
 			] },
-			{ kind: 'set', label: 'Motion', items: [
+			{ kind: 'set', label: 'Movement', items: [
 				{ kind: 'slider', id: id('PeriodMs'), slider: 'animSpeed', label: 'Speed' },
 				{ kind: 'slider', id: id('Amount'), slider: 'animAmount', rowId: id('AmountRow') },
 				{ kind: 'slider', id: id('Angle'), slider: 'animAngle', rowId: id('AngleRow'), hidden: true },
@@ -210,7 +210,7 @@ const PANEL_SCHEMAS = {
 	// and its listener is preserved from the pre-schema static markup.
 	noSelection: {
 		prefix: 'noLayer',
-		section: { id: 'noLayerSettingsSection', bare: true, classes: 'panel-redesign' },
+		section: { id: 'noLayerSettingsSection', bare: true },
 		preamble: [
 			{ kind: 'host', tag: 'span', id: 'noLayerEmptyText', text: 'Nothing selected', attrs: { hidden: 'hidden' } },
 			{ kind: 'host', id: 'noLayerEmptySubtext', classes: 'property-note no-selection-intro',
@@ -219,9 +219,9 @@ const PANEL_SCHEMAS = {
 		subsections: [
 			// One L1 group holding the default-state cards, exactly like Text's
 			// "Content" group — so Quick add / Project / Size all get the ordinary
-			// `.property-card` treatment (not the `.property-block-list` override).
+			// `.property-card` treatment.
 			{ id: 'noLayerDefaultGroups', items: [
-				{ kind: 'group', title: 'Start', collapsible: false, items: [
+				{ kind: 'group', title: 'Start', items: [
 					{ kind: 'card', title: 'Quick add', items: [
 						{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }
 					] },
@@ -240,12 +240,12 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [
-				{ title: 'Appearance', collapsible: false, items: [
+				{ title: 'Appearance', items: [
 					{ kind: 'card', items: [
 						{ kind: 'slider', id: 'multiSelectionOpacity', slider: 'multiSelectionOpacity', label: 'Opacity' }
 					] }
 				] },
-				{ title: 'Align', collapsible: false, items: [
+				{ title: 'Align', items: [
 					{ kind: 'card', items: [
 						{ kind: 'segmented', id: 'multiSelectionAlignScope', visibleLabel: 'Align to',
 							label: 'Alignment reference', stacked: false, options: [
@@ -273,7 +273,7 @@ const PANEL_SCHEMAS = {
 				] },
 				// Panel-end actions: a group-level actionRow (no card wrapper) — the
 				// renderer stamps `.section-actions`, so no surface / border above.
-				{ title: 'Actions', collapsible: false, items: [
+				{ title: 'Actions', items: [
 					{ kind: 'actionRow', classes: 'multi-selection-actions', actions: [
 						{ id: 'multiSelectionDuplicateBtn', label: 'Duplicate' },
 						{ id: 'multiSelectionDeleteBtn', label: 'Delete' }
@@ -286,7 +286,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'autoGlitter',
 		sectionPrefix: 'autoGlitterSettings',
 		mobileKey: 'autoGlitter',
-		section: { id: 'autoGlitterSettingsSection', classes: 'panel-redesign', icon: 'magic-wand', iconName: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
+		section: { id: 'autoGlitterSettingsSection', icon: 'magic-wand', iconName: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
 		groups: [
 			{ title: 'Preview', region: 'header', static: true, bare: true, items: [
 				{ kind: 'card', classes: 'auto-glitter-preview-card', bare: true, items: [
@@ -303,7 +303,7 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Palette', region: 'scroll', collapsible: false, items: [
+			{ title: 'Palette', region: 'scroll', items: [
 				{ kind: 'card', items: [
 					...createPaletteControlItems('autoGlitter', {
 						styleDefault: CONFIG.tools.autoGlitter.defaults.paletteStyle,
@@ -319,13 +319,13 @@ const PANEL_SCHEMAS = {
 					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note' }
 				] }
 			] },
-			{ title: 'Color Matches', region: 'scroll', collapsible: false, items: [
+			{ title: 'Color Matches', region: 'scroll', items: [
 				{ kind: 'card', classes: 'auto-glitter-review', items: [
 					{ kind: 'host', id: 'autoGlitterStatus', classes: 'property-note', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
 					{ kind: 'host', id: 'autoGlitterResults', classes: 'property-inset property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
 				] }
 			] },
-			{ title: 'Advanced', region: 'scroll', collapsible: false, items: [
+			{ title: 'Advanced', region: 'scroll', items: [
 				{ kind: 'card', items: [
 					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels', advanced: true },
 					{ kind: 'checkboxList', items: [
@@ -346,9 +346,9 @@ const PANEL_SCHEMAS = {
 		prefix: 'filter',
 		sectionPrefix: 'filterSettings',
 		mobileKey: 'filter',
-		section: { id: 'filterSettingsSection', classes: 'panel-redesign', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
+		section: { id: 'filterSettingsSection', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
 		groups: [
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'filterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'card', title: 'Looks', flatBody: true, items: [
@@ -358,7 +358,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', items: [
 						{ kind: 'assetInfo', info: 'filterCurrentLookInfo', thumbnail: 'filterCurrentLookThumbnail',
 							name: 'filterCurrentLookName', badges: 'filterCurrentLookBadges', change: 'filterCurrentLookShow',
-							changeLabel: 'Show', title: 'Show the current look in the library', compact: true, redesign: true, hidden: true }
+							changeLabel: 'Show', title: 'Show the current look in the library', compact: true, hidden: true }
 					] },
 					{ kind: 'set', label: 'Look', items: [
 						{ kind: 'presetGrid', id: 'filterLooksPicker', label: 'Filter looks', classes: 'property-inset filter-looks-picker' }
@@ -379,12 +379,13 @@ const PANEL_SCHEMAS = {
 		prefix: 'frame',
 		sectionPrefix: 'frameSettings',
 		mobileKey: 'frame',
-		section: { id: 'frameSettingsSection', classes: 'panel-redesign', icon: 'frame', iconName: 'Frame', title: 'Frame Properties' },
+		section: { id: 'frameSettingsSection', icon: 'frame', iconName: 'Frame', title: 'Frame Properties' },
 		groups: [
-			{ title: 'Content', collapsible: false, items: [
+			{ title: 'Content', items: [
 				// Both kinds share one shape: Kind, then a grid of choices, then
 				// that kind's options, each a divided set (like the Looks card).
-				{ kind: 'card', title: 'Frame', flatBody: true, items: [
+				{ kind: 'card', title: 'Frame', flatBody: true, collapsible: true,
+					titleSummary: { id: 'frameContentSummary' }, items: [
 					{ kind: 'set', items: [
 						{ kind: 'stackRow', groups: [
 							{ label: 'Kind', get options() { return createRegistryOptionEntries('frameKind', 'frameKind'); } }
@@ -417,16 +418,16 @@ const PANEL_SCHEMAS = {
 					{ kind: 'slider', id: 'frameRadius', slider: 'frameRadius', rowId: 'frameRadiusRow' }
 				] }
 			] },
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				{ kind: 'slider', id: 'frameLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'frameLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Paint', redesign: true,
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter',
 					color: CONFIG.tools.frames.defaults.color, chipTitle: 'Choose frame glitter' }
 			] },
-			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
 		],
 		effects: [createSparklesPanelSpec('frameSparkles')]
 	},
@@ -434,9 +435,9 @@ const PANEL_SCHEMAS = {
 		prefix: 'sparkleLayer',
 		sectionPrefix: 'sparkleLayerSettings',
 		mobileKey: 'sparkleLayer',
-		section: { id: 'sparkleLayerSettingsSection', classes: 'panel-redesign', icon: 'sparkles', iconName: 'Sparkles', title: 'Sparkles Properties' },
+		section: { id: 'sparkleLayerSettingsSection', icon: 'sparkles', iconName: 'Sparkles', title: 'Sparkles Properties' },
 		groups: [
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				{ kind: 'slider', id: 'sparkleLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'sparkleLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				createSparklesPanelSpec('layerSparkles', { toggle: false })
@@ -447,14 +448,14 @@ const PANEL_SCHEMAS = {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',
 		mobileKey: 'background',
-		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties', classes: 'panel-redesign' },
+		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties' },
 		groups: [
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				// The canvas layer is a single paint; its only opacity IS the
 				// whole-layer opacity. Keeps legacy id `baseBackgroundOpacity`.
 				{ kind: 'slider', id: 'baseBackgroundOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
-					redesign: true, sourceSelect: true, sourceRevert: true, colorRevert: true,
+					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true, noSlotOpacity: true,
 					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
@@ -463,41 +464,36 @@ const PANEL_SCHEMAS = {
 					imageAsset: {
 						info: 'baseBackgroundImageInfo', thumbnail: 'baseBackgroundImageThumbnail',
 						name: 'baseBackgroundImageName', badges: 'baseBackgroundImageBadges',
-						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true, redesign: true
+						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true
 					}
 				}
 			] },
-			{ title: 'Canvas', collapsible: false, items: [
+			{ title: 'Canvas', items: [
 				{ kind: 'host', id: 'baseCanvasSizeHost' }
 			] },
-
-			{ title: 'Effects', collapsible: false, items: [
-				createSparklesPanelSpec('canvasSparkles')
-			] },
-			{ title: 'Actions', collapsible: false, items: [
+			{ title: 'Actions', items: [
 				{ kind: 'host', classes: 'property-note', text: 'Turn the image colors into editable glitter fill layers.' },
 				{ kind: 'actionRow', actions: [
 					{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', icon: 'magic-wand', badge: 'beta', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
 				] }
-			] },
-
-
-		]
+			] }
+		],
+		effects: [createSparklesPanelSpec('canvasSparkles')]
 	},
 	brush: {
 		prefix: 'brush',
 		sectionPrefix: 'brushSettings',
 		mobileKey: 'brush',
 		section: {
-			id: 'brushSettingsSection', classes: 'panel-redesign', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
+			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
 			titleIconId: 'brushSettingsTitleIcon', titleTextId: 'brushSettingsTitleText'
 		},
 		groups: [
-			{ title: 'Brush Tip', collapsible: false, items: [
+			{ title: 'Content', items: [
 				{ kind: 'card', title: 'Tip', collapsible: true, moduleSummary: 'asset', classes: 'panel-module', items: [
 					{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
 						name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
-						title: 'Choose another brush tip', compact: true, redesign: true },
+						title: 'Choose another brush tip', compact: true },
 					{ kind: 'checkboxList', items: [
 						{ id: 'brushAntialiasToggle', label: 'Antialias Edges',
 							title: 'Smooth the edges of mask strokes. Off gives crisp pixel edges; a shared setting with text and shapes.' }
@@ -505,7 +501,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'host', id: 'brushAntialiasNote', classes: 'property-note', attrs: { hidden: 'hidden' } }
 				] }
 			] },
-			{ title: 'Stroke', collapsible: false, items: [
+			{ title: 'Stroke', items: [
 				{ kind: 'card', title: 'Dynamics', items: [
 					{ kind: 'slider', id: 'maskBrushSize', slider: 'maskBrushSize' },
 					{ kind: 'slider', id: 'maskBrushSoftness', slider: 'maskBrushSoftness' },
@@ -520,7 +516,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'host', id: 'brushDynamicsHost', classes: 'brush-dynamics', wrapInContent: true }
 				] }
 			] },
-			{ title: 'Actions', collapsible: false, items: [
+			{ title: 'Actions', items: [
 				{ kind: 'host', classes: 'property-note', text: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.' },
 				{ kind: 'actionRow', actions: [
 					{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
@@ -534,15 +530,15 @@ const PANEL_SCHEMAS = {
 		prefix: 'glitter',
 		sectionPrefix: 'glitterSettings',
 		mobileKey: 'glitter',
-		section: { id: 'glitterSettingsSection', classes: 'panel-redesign', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
+		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				// A Fill layer is a single masked paint, so its only opacity IS the
 				// whole-layer opacity. Keeps legacy id `opacity` (panels.js binding).
 				{ kind: 'slider', id: 'opacity', valueId: 'opacityValue', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'glitterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', redesign: true,
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true, noSlotOpacity: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
@@ -556,24 +552,29 @@ const PANEL_SCHEMAS = {
 					advancedIds: { hue: 'glitterHue', saturation: 'glitterSaturation', brightness: 'glitterBrightness' }
 				}
 			] },
-			{ title: 'Mask', collapsible: false, items: [
+			{ title: 'Mask', items: [
 				{ kind: 'card', classes: 'fill-mask-summary', items: [
-					{ kind: 'host', classes: 'property-note', text: 'Edit color selections with the Color Picker, or paint the mask with the Brush and Eraser.' }
+					{ kind: 'host', classes: 'property-note', text: 'Pick the colors glitter covers with the Glitter Fill tool, or paint the mask with the Glitter Brush and Eraser.' },
+					{ kind: 'actionRow', classes: 'card-foot', actions: [
+						{ id: 'fillMaskPickColors', label: 'Pick Colors', title: 'Switch to the Glitter Fill tool' },
+						{ id: 'fillMaskPaint', label: 'Paint Mask', title: 'Switch to the Glitter Brush' }
+					] }
 				] }
 			] }
 		],
-		effects: [createSparklesPanelSpec('glitterSparkles'), createAnimationPanelSpec('glitter')],
+		effects: [createSparklesPanelSpec('glitterSparkles')],
+		motion: [createAnimationPanelSpec('glitter')],
 		auxiliarySections: [{
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',
 			mobileKey: 'tool',
-			section: { id: 'layerSettingsSection', classes: 'panel-redesign', icon: 'paint-bucket', iconName: 'Sliders', title: 'Glitter Fill Settings' },
+			section: { id: 'layerSettingsSection', icon: 'paint-bucket', iconName: 'Sliders', title: 'Glitter Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
 				empty: { icon: 'paint-bucket', titleId: 'layerSettingsEmptyText', title: 'No layer selected', textId: 'layerSettingsEmptySubtext', text: '' }
 			},
 			groups: [
-				{ title: 'Selection', collapsible: false, items: [
+				{ title: 'Selection', items: [
 					{ kind: 'card', title: 'Options', items: [
 						{ kind: 'checkboxList', items: [
 							{ id: 'contiguous', label: 'Contiguous', title: 'Select only connected pixels of the same color' },
@@ -600,40 +601,50 @@ const PANEL_SCHEMAS = {
 		prefix: 'sticker',
 		sectionPrefix: 'stickerSettings',
 		mobileKey: 'sticker',
-		section: { id: 'stickerSettingsSection', classes: 'panel-redesign', icon: 'sticker', iconName: 'Sticker', title: 'Sticker Properties' },
+		section: { id: 'stickerSettingsSection', icon: 'sticker', iconName: 'Sticker', title: 'Sticker Properties' },
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 			groups: [
-				{ title: 'Content', collapsible: false, items: [
+				{ title: 'Content', items: [
 					{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module sticker-asset-module', items: [
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
-							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker', redesign: true },
+							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
 						{ kind: 'colorAdjust', label: 'Adjust color' }
 					] }
 				] },
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				createStylePresetCardSpec('sticker'),
 				{ kind: 'slider', id: 'stickerLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'stickerLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS }
 			] },
-			{ title: 'Transform', collapsible: false, items: [
+			{ title: 'Transform', items: [
 				{ kind: 'transformHost' }
 			] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'stickerBorder', title: 'Outline', redesign: true,
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'stickerBorder', title: 'Outline',
 				sourceSelect: true, sourceRevert: true, colorRevert: true, toggle: true, texturePosition: true,
 				sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#000000', chipTitle: 'Choose outline glitter',
-				afterSource: [{ kind: 'slider', id: 'stickerBorderWidth', slider: 'stickerOutlineWidth' }],
-				post: [{ kind: 'optionGroup', label: 'Edges', revert: true, options: [
-					{ id: 'stickerBorderEdgeRounded', label: 'Smooth', value: 'round', active: true },
-					{ id: 'stickerBorderEdgeHard', label: 'Pixel', value: 'hard' }
+				afterSource: [
+					{ kind: 'set', label: 'Stroke', items: [
+						{ kind: 'slider', id: 'stickerBorderWidth', slider: 'stickerOutlineWidth' }
+					] }
+				],
+				// Same Stroke / Placement sets as text and shape. Stickers have no
+				// Placement or Layering choice, so the Placement set holds Edges only.
+				post: [{ kind: 'set', label: 'Placement', items: [
+					{ kind: 'stackRow', revert: true, groups: [
+						{ label: 'Edges', options: [
+							{ id: 'stickerBorderEdgeRounded', label: 'Smooth', active: true, value: 'round' },
+							{ id: 'stickerBorderEdgeHard', label: 'Pixel', value: 'hard' }
+						] }
+					] }
 				] }, { kind: 'checkboxList', items: [
 					{ id: 'stickerBorderFillInterior', label: 'Fill inside', checked: true, title: 'Extend the outline paint behind the full sticker as a solid backing' },
 					{ id: 'stickerBorderUnionFrames', label: 'Use all animation frames', checked: true, title: 'Build one stable outline from the union of every GIF frame' }
 				] }]
 			},
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow', redesign: true,
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow',
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
@@ -645,22 +656,20 @@ const PANEL_SCHEMAS = {
 					{ kind: 'slider', id: 'stickerShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }]
 			},
 			...createBevelPanelSpecs('stickerBevel'),
-			createSparklesPanelSpec('stickerSparkles'),
-			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
-				{ id: 'resetStickerEffects', label: 'Reset Effects', secondary: true, title: 'Disable all sticker effects and clear their saved settings' }
-			] },
-			createAnimationPanelSpec('sticker')
-		]
+			createSparklesPanelSpec('stickerSparkles')
+		],
+		effectsReset: { id: 'resetStickerEffects', title: 'Disable all sticker effects and clear their saved settings' },
+		motion: [createAnimationPanelSpec('sticker')]
 	},
 	[LayerType.TEXT_GLITTER]: {
 		prefix: 'text',
 		sectionPrefix: 'textSettings',
 		mobileKey: 'text',
-		section: { id: 'textSettingsSection', classes: 'panel-redesign', icon: 'text', iconName: 'Text', title: 'Text Properties' },
+		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
 		groups: [
 			// Text is schema-native like every other property panel: type it,
 			// choose the face, set the metrics, then place it.
-			{ title: 'Content', collapsible: false, items: [
+			{ title: 'Content', items: [
 				{ kind: 'card', title: 'Text', items: [
 					{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: 200, placeholder: 'Type your glitter text' },
 					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', revert: true, options: [
@@ -672,11 +681,11 @@ const PANEL_SCHEMAS = {
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
 				] },
-				{ kind: 'card', title: 'Font', items: [
+				{ kind: 'card', title: 'Font', collapsible: true, moduleSummary: 'asset', classes: 'panel-module text-font-module', items: [
 					// The current font; Change opens the Library's Fonts.
 					{ kind: 'assetInfo', info: 'textFontInfo', thumbnail: 'textFontThumbnail',
 						name: 'textFontName', badges: 'textFontBadges', change: 'textFontChange',
-						title: 'Choose another font', compact: true, redesign: true },
+						title: 'Choose another font', compact: true },
 					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', revert: true, options: [
 						{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
 						{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
@@ -718,21 +727,21 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				createStylePresetCardSpec('text'),
 				{ kind: 'slider', id: 'textLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'textLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', redesign: true,
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter'
 				}
 			] },
-			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'textBackground', idPrefix: 'textBackground', title: 'Background', redesign: true,
+			{ kind: 'paintSlot', slot: 'textBackground', idPrefix: 'textBackground', title: 'Background',
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
@@ -772,7 +781,7 @@ const PANEL_SCHEMAS = {
 					] }
 				]
 			},
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Outline', redesign: true,
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Outline',
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
@@ -802,7 +811,7 @@ const PANEL_SCHEMAS = {
 					] }
 				]
 			},
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow', redesign: true,
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow',
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
@@ -814,24 +823,22 @@ const PANEL_SCHEMAS = {
 					{ kind: 'slider', id: 'textShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }]
 			},
 			...createBevelPanelSpecs('textBevel'),
-			createSparklesPanelSpec('textSparkles'),
-			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
-				{ id: 'resetTextEffects', label: 'Reset Effects', secondary: true, title: 'Disable all text effects and clear their saved settings' }
-			] },
-			createAnimationPanelSpec('text')
-		]
+			createSparklesPanelSpec('textSparkles')
+		],
+		effectsReset: { id: 'resetTextEffects', title: 'Disable all text effects and clear their saved settings' },
+		motion: [createAnimationPanelSpec('text')]
 	},
 	[LayerType.SHAPE]: {
 		prefix: 'shape',
 		sectionPrefix: 'shapeSettings',
 		mobileKey: 'shape',
-		section: { id: 'shapeSettingsSection', classes: 'panel-redesign', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
+		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
 		groups: [
-			{ title: 'Content', collapsible: false, items: [
+			{ title: 'Content', items: [
 				{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module shape-asset-module', items: [
 					{ kind: 'assetInfo', info: 'shapeAssetInfo', thumbnail: 'shapeAssetThumbnail',
 						name: 'shapeAssetName', badges: 'shapeAssetBadges', change: 'shapeAssetChange',
-						title: 'Choose another shape', compact: true, redesign: true },
+						title: 'Choose another shape', compact: true },
 					{ kind: 'slider', id: 'shapeRadius', slider: 'shapeRadius', rowId: 'shapeRadiusRow', hidden: true }
 				] }
 			] },
@@ -839,11 +846,11 @@ const PANEL_SCHEMAS = {
 			// this group adopts it after renderTransformPanels runs
 			// (finalizePanelSchemaSections), mirroring the old shape branch of
 			// the pre-schema panel order.
-			{ title: 'Appearance', collapsible: false, items: [
+			{ title: 'Appearance', items: [
 				createStylePresetCardSpec('shape'),
 				{ kind: 'slider', id: 'shapeLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'select', id: 'shapeLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true,
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['none', 'image', 'glitter', 'solid'], activeMode: 'solid',
@@ -851,7 +858,7 @@ const PANEL_SCHEMAS = {
 					imageAsset: {
 						info: 'shapeFillImageInfo', thumbnail: 'shapeFillImageThumbnail',
 						name: 'shapeFillImageName', badges: 'shapeFillImageBadges',
-						change: 'shapeFillImageChange', title: 'Choose fill image', compact: true, redesign: true
+						change: 'shapeFillImageChange', title: 'Choose fill image', compact: true
 					},
 					sourceAdvanced: [
 						{ kind: 'advanced', id: 'shapeFillImageAdvanced', label: 'Advanced', hidden: true,
@@ -881,11 +888,11 @@ const PANEL_SCHEMAS = {
 						] }
 					] }
 			] },
-			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Outline', redesign: true,
-				sourceSelect: true, sourceRevert: true, colorRevert: true, hideAdvanced: true,
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Outline',
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
 				modes: ['glitter', 'solid'], activeMode: 'glitter',
@@ -921,7 +928,7 @@ const PANEL_SCHEMAS = {
 					] }
 				]
 			},
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow', redesign: true,
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow',
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
@@ -937,12 +944,10 @@ const PANEL_SCHEMAS = {
 				]
 			},
 			...createBevelPanelSpecs('shapeBevel'),
-			createSparklesPanelSpec('shapeSparkles'),
-			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
-				{ id: 'resetShapeEffects', label: 'Reset Effects', secondary: true, title: 'Disable all shape effects and clear their saved settings' }
-			] },
-			createAnimationPanelSpec('shape')
-		]
+			createSparklesPanelSpec('shapeSparkles')
+		],
+		effectsReset: { id: 'resetShapeEffects', title: 'Disable all shape effects and clear their saved settings' },
+		motion: [createAnimationPanelSpec('shape')]
 	},
 	// The document-size form (Image Size / Canvas Size). ONE self-contained
 	// "Size" card, mounted into #noLayerCanvasSizeHost at boot; updateSidePanelUI

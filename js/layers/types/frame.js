@@ -68,7 +68,6 @@ registerLayerType(LayerType.FRAME, {
 	transformPrefix: 'frame',
 	transformCapabilities: {
 		edgeResize: true,
-		panelRedesign: true,
 		position: true,
 		size: true,
 		scaleReadout: false,

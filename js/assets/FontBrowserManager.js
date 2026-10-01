@@ -113,6 +113,14 @@ class FontBrowserManager extends ContentManager {
 	// A sample phrase in the font itself, the name in the UI font, and one
 	// corner badge for extra scripts and the device-font marker (system faces
 	// render with a fallback on devices without them).
+	getSearchNameElement(option) {
+		return option.querySelector('.text-font-option-name');
+	}
+
+	getProjectAssetIds(layers) {
+		return layers.map((layer) => (layer.type === LayerType.TEXT_GLITTER ? layer.textData?.fontId : null));
+	}
+
 	createItemCard(item) {
 		const font = item.font;
 		const card = document.createElement('div');

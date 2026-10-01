@@ -180,23 +180,39 @@
 		container.scrollTop += rect.top - box.top - (box.height - rect.height) / 2;
 	}
 
-	// Arrow-key movement shared by every picker (preset grids, the font list).
-	// Columns are measured from the focused option, so a tile grid moves by row
-	// and a one-column list moves by item. Delegated and bound once per
-	// container, so re-rendering the options needs no rebinding.
+	// Arrow-key movement shared by every picker (preset grids, the font list,
+	// the Library). Left/Right step through the visible options in order;
+	// Up/Down move to the nearest option in the next row above or below, so it
+	// works across several grids (the Library's Recent row, then a category).
+	// Delegated and bound once per container, so re-rendering the options needs
+	// no rebinding.
 	function bindPickerNavigation(container, optionSelector) {
 		if (!container || container.dataset.pickerNavigation !== undefined) return;
 		container.dataset.pickerNavigation = '';
 		container.addEventListener('keydown', (event) => {
+			if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+			if (event.target.closest?.('input, textarea, select')) return;
 			const card = event.target.closest?.(optionSelector);
 			if (!card || !container.contains(card)) return;
-			const cards = [...container.querySelectorAll(optionSelector)];
-			const index = cards.indexOf(card);
-			const columns = Math.max(1, Math.round((card.parentElement?.clientWidth || card.offsetWidth) / Math.max(1, card.offsetWidth)));
-			const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
-			if (!Object.hasOwn(offsets, event.key)) return;
+			const cards = [...container.querySelectorAll(optionSelector)].filter((option) => option.getClientRects().length);
+			let next = null;
+			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+				next = cards[cards.indexOf(card) + (event.key === 'ArrowRight' ? 1 : -1)];
+			} else {
+				const down = event.key === 'ArrowDown';
+				const from = card.getBoundingClientRect();
+				const centerX = from.left + from.width / 2;
+				let best = Infinity;
+				cards.forEach((option) => {
+					const rect = option.getBoundingClientRect();
+					const gap = down ? rect.top - from.bottom : from.top - rect.bottom;
+					if (gap < -from.height / 2) return;
+					const score = gap * 1000 + Math.abs(rect.left + rect.width / 2 - centerX);
+					if (score < best) { best = score; next = option; }
+				});
+			}
 			event.preventDefault();
-			cards[Math.max(0, Math.min(cards.length - 1, index + offsets[event.key]))]?.focus();
+			next?.focus();
 		});
 	}
 

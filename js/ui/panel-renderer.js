@@ -771,7 +771,7 @@ function buildAssetInfo(options) {
 	if (options.compact) {
 		info.querySelector('.asset-info-meta')?.remove();
 	} else {
-		if (options.redesign) {
+		if (!options.nested) {
 			const details = info.querySelector('.asset-info-details');
 			const metaRow = info.querySelector('.asset-info-meta');
 			if (details && metaRow) details.appendChild(metaRow);
@@ -801,7 +801,7 @@ function buildPaintSource(slot) {
 		change: slot.assetIds?.change || `${assetPrefix}Change`,
 		size: slot.assetIds?.size || `${assetPrefix}Size`,
 		frames: slot.assetIds?.frames || `${assetPrefix}Frames`,
-		redesign: slot.redesign,
+		nested: slot.nested,
 		title: slot.chipTitle,
 		hidden: slot.activeMode !== 'glitter',
 		glitterSource: true
@@ -923,8 +923,8 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 			{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
 			{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
 		];
-		// Redesigned panels use the transform-panel number fields; the rest keep
-		// the slider pair. Offset X+Y read as one value and share a single revert
+		// Top-level slots use the transform-panel number fields; nested slots
+		// (Bevel Shade) keep the slider pair. Offset X+Y read as one value and share a single revert
 		// at the row's right edge (slot-effects.js `${prefix}ResetTexturePosition`).
 		textureGroup.appendChild(options.coordinateFields
 			? buildNumberFieldPair({ label: 'Offset', reset: { id: `${prefix}ResetTexturePosition`, title: 'Reset texture offset' }, items: offsetItems })
@@ -941,14 +941,14 @@ function buildPaintSlotCard(slot) {
 	const card = tplClone('tpl-paint-slot');
 	if (slot.id) card.id = slot.id;
 	card.classList.add('has-subsection-title');
-	if (slot.redesign) card.dataset.collapsible = '';
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
+	if (slot.nested) card.dataset.nested = '';
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
 	const header = card.querySelector('.subsection-title');
 	const title = header.querySelector(':scope > span');
 	title.textContent = slot.title;
-	if (slot.redesign) {
+	if (!slot.nested) {
 		// The swatch is a "current value" indicator, so it sits with the
 		// module summary at the right edge — not as a bullet before the name.
 		header.appendChild(panelDiv('property-module-swatch'));
@@ -970,7 +970,7 @@ function buildPaintSlotCard(slot) {
 		container = panelDiv('property-module-content');
 		container.id = `${slot.idPrefix}Controls`;
 		card.appendChild(container);
-	} else if (slot.redesign && slot.modes.includes('none')) {
+	} else if (!slot.nested && slot.modes.includes('none')) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.classList.add('effect-switch', 'paint-slot-enable');
 		toggle.title = `Enable ${slot.title}`;
@@ -1018,9 +1018,8 @@ function buildPaintSlotCard(slot) {
 	(slot.post || []).forEach((item) => addChunk(buildPanelItem(item)));
 	const advanced = buildAdvancedDisclosure(slot.idPrefix, { ...slot.advancedIds, ...slot.primaryIds }, {
 		texturePosition: slot.texturePosition,
-		coordinateFields: slot.coordinateFields ?? slot.redesign
+		coordinateFields: slot.coordinateFields ?? !slot.nested
 	});
-	if (slot.hideAdvanced) advanced.hidden = true;
 	if (slot.advancedStyle === 'flat') {
 		const flat = panelDiv('paint-slot-advanced-flat glitter-source-glitter');
 		flat.append(...advanced.querySelector('[data-advanced-content]').children);
@@ -1063,12 +1062,19 @@ function buildPanelItem(item, schema) {
 			if (item.bare) card.classList.remove('subsection-content-group', 'property-card');
 			if (item.id) card.id = item.id;
 			if (item.hidden) card.hidden = true;
-			// Opt-in collapsibility (rule E). Without this the block renders as a
-			// plain titled run of rows; editor-disclosures only stamps a chevron
-			// on blocks that ask for one or carry an effect toggle.
-			if (item.collapsible) card.dataset.collapsible = '';
-			// `collapsed`: a collapsible block that starts closed.
-			if (item.collapsible && item.collapsed) card.classList.add('is-collapsed');
+			// Opt-in collapsibility (rule E): only a card whose header can say what
+			// is inside (asset name, title summary) collapses. Without this the
+			// block renders as a plain titled run of rows; editor-disclosures only
+			// stamps a chevron on blocks that ask for one or carry an effect toggle.
+			if (item.collapsible) {
+				card.dataset.collapsible = '';
+				// `collapsed`: a collapsible block that starts closed.
+				if (item.collapsed) {
+					card.classList.add('is-collapsed');
+					card.dataset.collapseDefault = 'closed';
+				}
+				if (item.title) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${item.title}`;
+			}
 			if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
 			if (item.summaryFrom) {
 				card.dataset.summaryFrom = item.summaryFrom;
@@ -1153,8 +1159,7 @@ function buildPanelItem(item, schema) {
 		}
 		// A nested L1 group (title + `.panel-group-content > .panel-group-blocks`),
 		// the same primitive `renderPanelSection` uses at the top level — so cards
-		// inside it get the ordinary `.property-card` treatment, not the
-		// `.property-block-list` peer-card override.
+		// inside it get the ordinary `.property-card` treatment.
 		case 'group':
 			return buildPanelGroup(item, schema);
 		// R4. A boolean reads as a labelled switch on its own row, not as a
@@ -1650,7 +1655,7 @@ function syncModuleSummary(card) {
 }
 
 function initializeModuleSummaries(root = document) {
-	root.querySelectorAll('[data-role="paint-slot"][data-effect-card], [data-role="paint-slot"][data-collapsible], [data-module-summary-type]').forEach((card) => {
+	root.querySelectorAll('[data-role="paint-slot"]:not([data-nested]), [data-module-summary-type]').forEach((card) => {
 		if (card.dataset.moduleSummary !== undefined) return;
 		card.dataset.moduleSummary = '';
 		buildModuleSummary(card);
@@ -1751,28 +1756,53 @@ function syncPanelEffectToggle(toggle, enabled) {
 	card.querySelector(':scope > .property-module-content')?.classList.toggle('visible', next);
 }
 
-function initializePanelGroupNode(node, prefix, title, { collapsible = true } = {}) {
+// Remembered open/closed state for collapsible cards, keyed `prefix:title`
+// (data-collapse-key). Effect cards carry no key: their switch owns expansion.
+const PANEL_CARD_STATE_KEY = 'glitter.panelCards';
+
+function readPanelCardState() {
+	try { return JSON.parse(localStorage.getItem(PANEL_CARD_STATE_KEY) || '{}') || {}; } catch (error) { return {}; }
+}
+
+function setPanelCardCollapsed(card, collapsed) {
+	card.classList.toggle('is-collapsed', collapsed);
+	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+}
+
+function applyPanelCardState(card) {
+	const key = card?.dataset.collapseKey;
+	if (!key) return;
+	const open = readPanelCardState()[key];
+	if (typeof open === 'boolean') setPanelCardCollapsed(card, !open);
+}
+
+function rememberPanelCardState(card) {
+	const key = card?.dataset.collapseKey;
+	if (!key) return;
+	const state = readPanelCardState();
+	state[key] = !card.classList.contains('is-collapsed');
+	try { localStorage.setItem(PANEL_CARD_STATE_KEY, JSON.stringify(state)); } catch (error) { /* storage unavailable */ }
+}
+
+function resetPanelCardStates() {
+	try {
+		localStorage.removeItem(PANEL_CARD_STATE_KEY);
+		localStorage.removeItem('glitter.panelGroups');
+	} catch (error) { /* storage unavailable */ }
+	document.querySelectorAll('[data-collapse-key]').forEach((card) => {
+		setPanelCardCollapsed(card, card.dataset.collapseDefault === 'closed');
+	});
+}
+
+// Groups are fixed headings: a collapsed group would hide whether anything
+// inside it is on.
+function initializePanelGroupNode(node, title) {
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');
 	label.className = 'property-group-label';
 	label.textContent = title;
 	header.appendChild(label);
-	if (!collapsible) return { header, chevron: null };
-	node.dataset.collapsibleGroup = '';
-	const chevron = document.createElement('span');
-	chevron.className = 'panel-group-chevron icon-wrapper sm';
-	chevron.appendChild(createIcon('chevron-down'));
-	const key = `${prefix}:${title}`;
-	let state = {};
-	try { state = JSON.parse(localStorage.getItem('glitter.panelGroups') || '{}'); } catch (error) { state = {}; }
-	node.classList.toggle('collapsed', state[key] === false);
-	header.addEventListener('click', (event) => {
-		if (event.target.closest('input, label, button, [data-no-accordion-toggle]')) return;
-		node.classList.toggle('collapsed');
-		state[key] = !node.classList.contains('collapsed');
-		localStorage.setItem('glitter.panelGroups', JSON.stringify(state));
-	});
-	return { header, chevron };
+	return header;
 }
 
 function buildPanelGroup(group, schema) {
@@ -1789,14 +1819,13 @@ function buildPanelGroup(group, schema) {
 		});
 		return node;
 	}
-	const { header, chevron } = initializePanelGroupNode(node, schema.prefix, group.title, { collapsible: group.collapsible !== false });
+	const header = initializePanelGroupNode(node, group.title);
 	if (group.toggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = group.toggle.id;
 		toggle.querySelector('span').textContent = group.toggle.label;
 		header.appendChild(toggle);
 	}
-	if (chevron) header.appendChild(chevron);
 	node.dataset.panelGroup = group.title;
 	const content = panelDiv('panel-group-content');
 	const blocks = panelDiv('panel-group-blocks');
@@ -1817,7 +1846,6 @@ function buildPanelGroup(group, schema) {
 	content.appendChild(blocks);
 	actions.forEach((action) => content.appendChild(action));
 	node.appendChild(content);
-	if (blocks.querySelector(':scope > [data-effect-card]')) node.dataset.effectGroup = '';
 	return node;
 }
 
@@ -1847,8 +1875,7 @@ function finishPanelMarkup(root) {
 // Render one or more `.settings-subsection` blocks from a schema. `subsections`
 // lets a panel carry several keyed blocks (the no-selection panel toggles
 // #noLayerDefaultGroups vs #multiLayerSelectionGroup) whose entries are either
-// `groups` (buildPanelGroup) or bare `items` (buildPanelItem — the
-// `.property-block-list` peer-card layout).
+// `groups` (buildPanelGroup) or bare `items` (buildPanelItem).
 function renderPanelSubsections(schema, parent) {
 	const defs = schema.subsections || [{ groups: schema.groups }];
 	defs.forEach((def) => {
@@ -1870,6 +1897,7 @@ function renderPanelSubsections(schema, parent) {
 function renderBarePanelSection(schema) {
 	const host = document.getElementById(schema.section.id);
 	if (!host) return;
+	host.classList.add('property-section');
 	addPanelClasses(host, schema.section.classes);
 	let content = host.querySelector(':scope > .section-content');
 	if (!content) {
@@ -1923,6 +1951,9 @@ function renderPanelSection(schema) {
 	if (schema.section?.bare) return renderBarePanelSection(schema);
 	const host = document.getElementById(schema.section.id);
 	if (!host) return;
+	// Every schema-rendered section carries `.property-section`, the scope for
+	// the panel vocabulary in panels/_properties.scss.
+	host.classList.add('property-section');
 	addPanelClasses(host, schema.section.classes);
 	host.replaceChildren();
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
@@ -1948,8 +1979,7 @@ function renderPanelSection(schema) {
 	// header/footer groups first/last so DOM order matches. First user: Auto Glitter.
 	let scrollRegion = null;
 	let hasStickyRegions = false;
-	schema.groups.forEach((group) => {
-		const node = buildPanelGroup(group, schema);
+	const placeGroup = (group, node) => {
 		if (group.region === 'scroll') {
 			if (!scrollRegion) {
 				scrollRegion = panelDiv('panel-scroll-region');
@@ -1964,14 +1994,30 @@ function renderPanelSection(schema) {
 		} else {
 			subsection.appendChild(node);
 		}
-	});
-	if (hasStickyRegions) {
-		host.classList.add('has-scroll-region');
-	}
+	};
+	// Group order (docs/UI-CONVENTIONS.md): the schema's own groups, then
+	// Effects, then Motion, with an Actions group always last.
+	const isActions = (group) => group.title === 'Actions';
+	schema.groups.filter((group) => !isActions(group)).forEach((group) => placeGroup(group, buildPanelGroup(group, schema)));
 	if (schema.effects?.length) {
-		const stack = buildPanelGroup({ title: 'Effects', collapsible: false, items: schema.effects }, schema);
+		const items = [...schema.effects];
+		// Reset Effects ends the Effects group, and only when there is more
+		// than one effect to reset.
+		if (schema.effectsReset && schema.effects.length >= 2) {
+			items.push({ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
+				{ id: schema.effectsReset.id, label: 'Reset Effects', secondary: true, title: schema.effectsReset.title }
+			] });
+		}
+		const stack = buildPanelGroup({ title: 'Effects', items }, schema);
 		stack.classList.add('effects-stack');
 		subsection.appendChild(stack);
+	}
+	if (schema.motion?.length) {
+		subsection.appendChild(buildPanelGroup({ title: 'Motion', items: schema.motion }, schema));
+	}
+	schema.groups.filter(isActions).forEach((group) => placeGroup(group, buildPanelGroup(group, schema)));
+	if (hasStickyRegions) {
+		host.classList.add('has-scroll-region');
 	}
 	if (schema.controls) {
 		const content = fragment.querySelector('.section-content');

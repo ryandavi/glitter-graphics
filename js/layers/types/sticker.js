@@ -100,7 +100,6 @@ registerLayerType(LayerType.STICKER, {
 	transformPrefix: 'sticker',
 	transformCapabilities: {
 		edgeResize: true,
-		panelRedesign: true,
 		position: true,
 		size: true,
 		scaleReadout: true,

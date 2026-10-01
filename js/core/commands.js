@@ -55,6 +55,9 @@ const COMMANDS = {
 		label: 'Paste Image or Layer(s)', group: 'Clipboard', displayKey: 'Ctrl/Cmd + V',
 		instruction: 'Paste'
 	},
+	librarySearch: { label: 'Search the Library', group: 'View', keys: ['/', 'shift+/'], displayKey: '/',
+		when: (editor) => !editor.mobileManager?.isMobile && Boolean(document.getElementById('designGallerySection')?.dataset.library),
+		run: () => focusLibrarySearch() },
 	toolSelect: { label: 'Select Tool', group: 'Tools', keys: ['v'], displayKey: 'V', run: (editor) => editor.setTool(ToolType.SELECT) },
 	toolText: { label: 'Text Tool', group: 'Tools', keys: ['t'], displayKey: 'T', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.TEXT) },
 	toolShape: { label: 'Shape Tool', group: 'Tools', keys: ['u'], displayKey: 'U', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.SHAPE) },

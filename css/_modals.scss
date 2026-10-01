@@ -1347,17 +1347,7 @@ body.modal-open {
 }
 
 
-// ============================================
-// GALLERY CONTENT SECTIONS
-// ============================================
 
-.gallery-content {
-	display: none;
-
-	&.visible {
-		display: block;
-	}
-}
 
 .section {
 	>.gallery-search-section {

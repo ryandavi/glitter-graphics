@@ -2,8 +2,8 @@
 // TRANSFORM PANEL RENDERER
 // ---------------------------------------------------------------------------
 // Builds the shared transform card (Position / Size / Scale / Rotation / Align
-// / Flip) into the sticker / text / shape panels, applies the panel-redesign
-// arrangement, and does the one-time post-render host normalisation.
+// / Flip) into the sticker / text / shape / frame panels, arranges it into
+// labelled rows, and does the one-time post-render host normalisation.
 //
 // Plain global script — loads AFTER js/ui/panel-renderer.js (uses its builders
 // and PANEL_SCHEMAS) and BEFORE js/editor/transform-panel.js (its only caller).
@@ -21,7 +21,7 @@ function buildTransformRevertControl(role) {
 	return node;
 }
 
-function redesignTransformFragment(fragment) {
+function arrangeTransformFragment(fragment) {
 	const card = fragment.querySelector('[data-transform-card]');
 	const grid = card.querySelector('.transform-grid');
 	const header = card.querySelector('.transform-panel-title');
@@ -52,7 +52,6 @@ function redesignTransformFragment(fragment) {
 	};
 
 	card.classList.add('panel-module');
-	card.dataset.panelRedesign = '';
 	card.dataset.collapsible = '';
 	const lock = header.querySelector('[data-transform-lock]');
 	lock.className = 'property-row row is-toggle transform-lock-row';
@@ -145,7 +144,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	});
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
-		if (capabilities.panelRedesign) pair.className = 'property-pair number-field-pair';
+		pair.className = 'property-pair number-field-pair';
 		pair.querySelectorAll('.input-group').forEach((group, index) => {
 			const label = group.querySelector('label');
 			const input = group.querySelector('input');
@@ -158,25 +157,23 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	};
 	fragment.querySelector('[data-transform-number-pair="position"]').replaceWith(buildNumberPair(['posX', 'posY'], ['X', 'Y']));
 	const sizePair = buildNumberPair(['sizeWidth', 'sizeHeight'], ['W', 'H'], 1);
-	if (!capabilities.panelRedesign) sizePair.dataset.transformRole = 'sizeGroup';
 	fragment.querySelector('[data-transform-number-pair="size"]').replaceWith(sizePair);
-	if (capabilities.panelRedesign) redesignTransformFragment(fragment);
-	if (capabilities.panelRedesign) {
-		const firstGroup = fragment.querySelector('.transform-grid > .property-set');
-		const row = buildPanelItem({
-			kind: 'select',
-			id: ids.anchorSelect,
-			visibleLabel: 'Anchor',
-			label: 'Anchor',
-			stacked: false,
-			rowClasses: 'transform-anchor-row',
-			options: ANCHOR_SELECT_OPTIONS
-		});
-		row.appendChild(buildTransformRevertControl('resetAnchor'));
-		firstGroup?.insertBefore(row, firstGroup.children[2] || null);
-	}
+	arrangeTransformFragment(fragment);
+	const firstGroup = fragment.querySelector('.transform-grid > .property-set');
+	const anchorRow = buildPanelItem({
+		kind: 'select',
+		id: ids.anchorSelect,
+		visibleLabel: 'Anchor',
+		label: 'Anchor',
+		stacked: false,
+		rowClasses: 'transform-anchor-row',
+		options: ANCHOR_SELECT_OPTIONS
+	});
+	anchorRow.appendChild(buildTransformRevertControl('resetAnchor'));
+	firstGroup?.insertBefore(anchorRow, firstGroup.children[2] || null);
 	const transformCard = fragment.querySelector('[data-transform-card]');
 	transformCard.dataset.transformPrefix = prefix;
+	transformCard.dataset.collapseKey = `${prefix}:Transform`;
 	fragment.querySelectorAll('[data-transform-role]').forEach((element) => {
 		const id = ids[element.dataset.transformRole];
 		if (id) element.id = id;
@@ -207,18 +204,17 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	// each panel's Appearance group, not a card inside the Transform panel.
 	fragment.querySelector('[data-transform-opacity]')?.remove();
 	container.replaceChildren(fragment);
-	if (capabilities.panelRedesign) initializeEditablePropertyValues(container);
+	initializeEditablePropertyValues(container);
 }
 
-// Shared schema finalization: retitle the transform card, move the shared action
-// primitive to the group footer, and settle host card order. (v2 opacity model:
+// Shared schema finalization: retitle the transform card and settle host card
+// order. (The transform actions live inside the card.) (v2 opacity model:
 // there is no transform-panel opacity card any more — whole-layer opacity is a
 // standalone "Layer Opacity" row in each panel's Appearance group.)
 function normalizeTransformPanelHost(editor, prefix) {
 	const host = document.getElementById(`${prefix}TransformPanelHost`);
 	if (!host) return null;
 	const geometry = host.querySelector(':scope > [data-transform-prefix]');
-	const actions = host.querySelector('[data-transform-actions]');
 
 	const title = geometry?.querySelector(':scope > .subsection-title');
 	if (title) {
@@ -228,7 +224,6 @@ function normalizeTransformPanelHost(editor, prefix) {
 	}
 
 	if (geometry) host.appendChild(geometry);
-	if (actions && geometry && !geometry.hasAttribute('data-panel-redesign')) host.closest('.panel-group-content')?.appendChild(actions);
 	return host;
 }
 

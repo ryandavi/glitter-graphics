@@ -96,7 +96,6 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	transformPrefix: 'text',
 	transformCapabilities: {
 		edgeResize: true,
-		panelRedesign: true,
 		position: true,
 		size: true,
 		scaleReadout: true,

@@ -179,11 +179,11 @@
 	padding: var(--spacing-xs) var(--spacing-md);
 }
 
-// The redesign token set. `.property-panel` is the design sidebar + mobile
-// drawer; `.panel-redesign` lets any other surface (a modal body, the layers
+// The panel token set. `.property-panel` is the design sidebar + mobile
+// drawer; `.property-section` lets any other surface (a modal body, the layers
 // panel) opt into the same vocabulary by carrying that one class.
 .property-panel,
-.panel-redesign {
+.property-section {
 	// ---- geometry --------------------------------------------------------
 	--property-row-h: 26px;
 	--property-pad: 8px;
@@ -224,7 +224,7 @@
 	--switch-h: 18px;
 }
 
-.panel-redesign {
+.property-section {
 	--property-row-gap: 4px;
 	--property-block-gap: 8px;
 	--property-group-gap: 14px;
@@ -776,15 +776,6 @@
 	}
 }
 
-// A sequence of peer blocks outside an accordion group (for example the
-// no-selection Quick Add and Project blocks) uses the same block rhythm
-// without inventing another card surface.
-.property-panel .property-block-list {
-	display: flex;
-	flex-direction: column;
-	gap: var(--property-block-gap);
-}
-
 // ===== R5: module row ======================================================
 // Collapsed, a module is one line: switch, name, current value, chevron. The
 // summary is what makes that line worth reading.
@@ -811,11 +802,6 @@
 
 		> .subsection-title { padding: var(--property-card-inset); }
 
-	}
-
-	.property-block-list > .property-card {
-		margin-inline: 0;
-		--property-gutter: var(--property-card-inset);
 	}
 
 	[data-effect-card] > .subsection-title,
@@ -1169,7 +1155,7 @@
 	border-top: 1px solid var(--color-border);
 }
 
-.property-panel .panel-redesign .property-card > .property-actions {
+.property-panel .property-section .property-card > .property-actions {
 	border-top: 1px solid var(--color-border);
 	padding: var(--property-pad);
 }
@@ -1189,7 +1175,7 @@
 	}
 }
 
-.property-panel .panel-redesign {
+.property-panel .property-section {
 	.advanced-disclosure-content > .property-set + .property-set {
 		border-top: 1px solid var(--color-border);
 		padding-top: var(--property-pad);
@@ -1300,7 +1286,7 @@
 
 	// Collapsible modules wrap their body separately, so only the module itself
 	// removes the title-to-wrapper gap. Ordinary cards retain row rhythm.
-	.panel-module[data-collapsible] { gap: 0; }
+	.panel-module:is([data-collapsible], [data-role="paint-slot"]) { gap: 0; }
 }
 
 // ===== Rule F: nothing renders an empty shell ==============================
@@ -1323,7 +1309,7 @@
 
 // ===== Shared Transform module ============================================
 
-.property-panel .panel-redesign {
+.property-panel .property-section {
 	.transform-panel-title {
 		gap: var(--property-pad);
 
@@ -1422,18 +1408,18 @@
 	gap: var(--property-card-inset);
 }
 
-.property-panel .panel-redesign > .section-content > .settings-subsection {
+.property-panel .property-section > .section-content > .settings-subsection {
 	display: flex;
 	flex-direction: column;
 	padding: 0;
 }
 
-// The no-selection panel is a redesigned property panel without an accordion
+// The no-selection panel is a schema property section without an accordion
 // header (`section.bare`). Give its `.section-content` the SAME layout the
 // collapsible sections get from `.design-panel > .section.collapsible-section >
 // .section-content` — one column, gutter owned by the rows, a trailing edge —
 // so it is not a special case with its own padding rhythm.
-.property-panel .section.panel-redesign:not(.collapsible-section) > .section-content {
+.property-panel .section.property-section:not(.collapsible-section) > .section-content {
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-card-inset);
@@ -1494,7 +1480,7 @@
 // "Layer Opacity", "Texture Scale" and friends stop truncating to an ellipsis on
 // a resized-wide panel. Scoped to the property container (tracks the resize
 // handle, not the viewport) and set on the row itself so both the base and
-// `.panel-redesign` (`--property-label-col: var(--property-label-w)`) resolve it.
+// `.property-section` (`--property-label-col: var(--property-label-w)`) resolve it.
 @container propertypanel (min-width: 320px) {
 	.property-panel :is(.property-row, .property-pair-cell) {
 		--property-label-w: 92px;
@@ -1564,14 +1550,13 @@ body.is-resizing-panel {
 
 
 // ===== One chevron =========================================================
-// Three collapse affordances existed at three sizes and colors: the group
-// chevron (16px), the module chevron (a 24px glyph clipped into a 13.6px box)
-// and the Advanced chevron (14px). They all mean the same thing, so they look
+// Collapse affordances existed at different sizes and colors: the module
+// chevron (a 24px glyph clipped into a 13.6px box) and the Advanced chevron
+// (14px). They all mean the same thing, so they look
 // the same; what distinguishes them is where they sit and what they sit beside,
 // not their weight.
 
 .property-panel {
-	.panel-group-chevron,
 	.subsection-chevron,
 	.advanced-disclosure-chevron {
 		display: inline-flex;
@@ -1597,13 +1582,11 @@ body.is-resizing-panel {
 	// A header that can be clicked brightens its chevron on hover, so the
 	// affordance reads as interactive rather than decorative.
 	.subsection-title:hover > .subsection-chevron,
-	.subsection-title:hover > .panel-group-chevron,
 	.advanced-disclosure-toggle:hover > .advanced-disclosure-chevron {
 		color: var(--color-text-secondary);
 	}
 
 	// Collapsed states point the same way at every level.
-	.subsection-section-group.collapsed > .subsection-title > .panel-group-chevron,
 	[data-collapsible-subsection].is-collapsed > .subsection-title > .subsection-chevron {
 		transform: rotate(-90deg);
 	}
@@ -1624,13 +1607,13 @@ body.is-resizing-panel {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.property-panel .panel-redesign .property-actions:not(.is-stacked) {
+	.property-panel .property-section .property-actions:not(.is-stacked) {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
 	// `is-split` is an explicit opt-in to a two-up row (Open / Save Project,
 	// canvas Reset / Apply) — it keeps its two columns in the redesign panels.
-	.property-panel .panel-redesign .property-actions.is-split {
+	.property-panel .property-section .property-actions.is-split {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
@@ -1759,9 +1742,8 @@ body.is-resizing-panel {
 	.property-revert:disabled { opacity: 0.18; }
 }
 
-// P-Text opts into the redesign vocabulary without changing the established
-// geometry of the remaining property panels.
-.property-panel .panel-redesign {
+// Schema property sections: group and header rhythm.
+.property-panel .property-section {
 	.subsection-content-group.subsection-section-group,
 	.subsection-content-group.effects-stack { gap: 0; }
 
@@ -2102,12 +2084,12 @@ body.is-resizing-panel {
 }
 
 
-// The redesigned panels re-declare .property-row.is-pair and the pair grids
+// Property sections re-declare .property-row.is-pair and the pair grids
 // above, so the narrow-panel stack has to be restated AFTER them at matching
 // weight. Same tiny breakpoint as the base pair stack — above it, pairs keep the
 // label beside the inputs like every other row.
 @container propertypanel (max-width: 240px) {
-	.property-panel .panel-redesign {
+	.property-panel .property-section {
 		.property-row.is-pair {
 			grid-template-columns: minmax(0, 1fr);
 			row-gap: var(--spacing-2xs);
@@ -2129,14 +2111,14 @@ body.is-resizing-panel {
 
 
 
-// ===== The redesign: card surfaces, rhythm, footers ========================
+// ===== Property sections: card surfaces, rhythm, footers ===================
 // The settled overrides for the schema-rendered panels. Cards are flat
 // (no interior padding, primary ground); groups are divided by a single
 // hairline between `.property-set`s rather than boxed or gapped; footers sit
 // edge-to-edge on the card, except the layer-effects footer which floats.
 // This is the canonical direction — feature sheets defer to it.
 
-.property-panel .panel-redesign {
+.property-panel .property-section {
 
 	// ---- vertical rhythm -------------------------------------------------
 	.settings-subsection { gap: calc(var(--property-card-inset) * 1.5); }
@@ -2246,7 +2228,7 @@ body.is-resizing-panel {
 // Its horizontal inset matches the group label (`.subsection-section-group >
 // .subsection-title` = `--property-card-inset`), NOT the wider panel gutter —
 // so the buttons and any sibling note line up under "ACTIONS".
-.property-panel .panel-redesign {
+.property-panel .property-section {
 	.property-actions.section-actions {
 		background: none;
 		border: 0;
@@ -2335,7 +2317,7 @@ body.is-resizing-panel {
 // scroll-region / sticky-footer layout is now the generic
 // `.settings-subsection.has-scroll-region` block above; the scroll-region
 // internals, the color-match list and drag states live in panels/_effects.scss.
-.property-panel .panel-redesign.auto-glitter-settings-section {
+.property-panel .property-section.auto-glitter-settings-section {
 	// The preview-mode toggle spans the panel — it's a mode switch, not a
 	// property control inset by the gutter.
 	.auto-glitter-preview-card .segmented-control {

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 
-
 <head>
 	<!-- Basic meta -->
 	<meta charset="UTF-8">
@@ -51,7 +50,6 @@
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
 	<link rel="shortcut icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
 </head>
-
 
 <body class="no-document mobile-no-image">
 
@@ -230,18 +228,10 @@
 									<use href="#icon-broom"></use>
 								</svg><span class="name">Clear All</span></button>
 
-
 						</div>
 					</div>
 
-
-
-
-
 				</div>
-
-
-
 
 				<!-- DesignColumn -->
 				<div class="design-panel property-panel" id="designPanel">
@@ -250,7 +240,7 @@
 					</div>
 					<!-- Gallery Header with Tabs -->
 					<div class="section main-section collapsible-section design-gallery-section visible" id="designGallerySection">
-						<div class="section-header glitter-header section-header-with-action" id="designGalleryHeader">
+						<div class="section-header section-header-with-action" id="designGalleryHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
@@ -288,16 +278,6 @@
 								</div>
 							</div>
 
-
-
-
-
-
-
-
-
-
-
 						</div>
 
 						<div class="section-content design-gallery-content" id="designGalleryContent">
@@ -323,15 +303,15 @@
 							     tpl-asset-search / tpl-asset-browser. syncLibraryView shows one kind.
 							     Each search host sits directly before its browser host. -->
 							<div class="section-content gallery-search-section" id="glitterSearchSection" data-gallery-search="glitter"></div>
-							<div class="asset-options glitter-options gallery-content" id="glitterOptions" data-gallery-content="glitter"></div>
+							<div class="asset-options" id="glitterOptions" data-gallery-content="glitter"></div>
 							<div class="section-content gallery-search-section" id="stickersSearchSection" data-gallery-search="stickers"></div>
-							<div class="asset-options stickers-options gallery-content" id="stickersOptions" data-gallery-content="stickers"></div>
+							<div class="asset-options" id="stickersOptions" data-gallery-content="stickers"></div>
 							<div class="section-content gallery-search-section" id="brushTipSearchSection" data-gallery-search="brush-tips"></div>
-							<div class="asset-options gallery-content brush-tip-options" id="brushTipOptions" data-gallery-content="brush-tips"></div>
+							<div class="asset-options" id="brushTipOptions" data-gallery-content="brush-tips"></div>
 							<div class="section-content gallery-search-section" id="shapesSearchSection" data-gallery-search="shapes"></div>
-							<div class="asset-options gallery-content shapes-options" id="shapesOptions" data-gallery-content="shapes"></div>
+							<div class="asset-options" id="shapesOptions" data-gallery-content="shapes"></div>
 							<div class="section-content gallery-search-section" id="fontsSearchSection" data-gallery-search="fonts"></div>
-							<div class="asset-options gallery-content fonts-options" id="fontsOptions" data-gallery-content="fonts"></div>
+							<div class="asset-options" id="fontsOptions" data-gallery-content="fonts"></div>
 
 							<!-- Base Layer Settings Section -->
 							<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection"></div>
@@ -343,13 +323,11 @@
 							     Properties by editor-panels.js / BaseBackgroundManager.
 							     NOTE: kept inside #designGalleryContent — it shares the gallery's
 							     scroll region; its .section-content parity is handled in SCSS
-							     (.section.panel-redesign:not(.collapsible-section) > .section-content). -->
-							<div class="no-layer-settings-section section panel-redesign" id="noLayerSettingsSection">
+							     (.section.property-section:not(.collapsible-section) > .section-content). -->
+							<div class="no-layer-settings-section section" id="noLayerSettingsSection">
 								<div class="section-content visible" id="noLayerSettingsContent"></div>
 							</div>
 						</div>
-
-
 
 					</div>
 
@@ -436,7 +414,6 @@
 							<span class="mask-brush-cursor-dot"></span>
 						</div>
 
-
 						<!-- Preview Controls -->
 						<div class="preview-controls ui-ignore-gestures" id="previewControls">
 							<div class="preview-controls-center">
@@ -498,7 +475,6 @@
 							</div>
 						</div>
 
-
 						<!-- Zoom Controls -->
 						<div class="zoom-controls ui-ignore-gestures" id="zoomControls"></div>
 
@@ -509,7 +485,6 @@
 						     Mirrors the canonical #maskBrushSize slider in Mask Settings
 						     sidebar section — see setupMaskEditorListeners' syncQuickSlider. -->
 						<div class="mask-brush-controls ui-ignore-gestures" id="maskBrushControls"></div>
-
 
 						<!-- Pan Controls -->
 						<div class="pan-controls ui-ignore-gestures" id="panControls"></div>
@@ -598,9 +573,6 @@
 					<div class="settings-group-title">Presets</div>
 					<div class="settings-row">
 
-
-
-
 						<div class="blank-image-grid" id="newCanvasPresets">
 							<div class="blank-image-option new-canvas-preset-btn" data-width="400" data-height="400" data-color="#ffffff">
 								<div class="blank-preview-wrapper">
@@ -636,8 +608,6 @@
 
 						</div>
 
-
-
 					</div>
 
 					<!-- Dimensions -->
@@ -650,8 +620,6 @@
 							</div>
 						</div>
 
-
-
 					</div>
 					<div class="settings-row">
 
@@ -662,15 +630,10 @@
 							</div>
 						</div>
 
-
 					</div>
 					<div class="settings-row">
 
-
 						<!-- Orientation Toggle -->
-
-
-
 
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Orientation</div>
@@ -689,8 +652,6 @@
 								</div>
 							</div>
 						</div>
-
-
 
 					</div>
 
@@ -730,8 +691,6 @@
 						<div class="settings-row-reason" data-inactive-reason-text></div>
 					</div>
 
-
-
 				</div>
 			</div>
 
@@ -752,7 +711,6 @@
 			</div>
 		</div>
 	</div>
-
 
 	<!-- Export Preview Modal (iOS) -->
 	<div class="modal-overlay" id="exportPreviewModal">
@@ -1009,7 +967,6 @@
 					<span class="name">Close</span>
 				</button>
 
-
 			</div>
 
 			<div class="modal-nav search-toggle-row" data-modal-filter>
@@ -1034,10 +991,8 @@
 				<button class="btn-simple modal-action modal-close" id="closeExportSettingsModalFooter">Close</button>
 			</div>
 
-
 		</div>
 	</div>
-
 
 	<!-- Settings-modal widgets that are not plain rows. The modals themselves
 	     render from EXPORT_SETTINGS_LAYOUT / APP_SETTINGS_LAYOUT
@@ -1136,7 +1091,6 @@
 
 					<span class="modal-title-text">Commands & Shortcuts</span>
 				</div>
-
 
 				<button class="btn-icon icon-wrapper modal-close" id="closeShortcutsModal">
 					<svg class="icon">
@@ -1362,7 +1316,6 @@
 					<span class="modal-title-text">Guide</span>
 				</div>
 
-
 				<button class="btn-icon icon-wrapper modal-close" id="closeGuideModal">
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
@@ -1456,7 +1409,6 @@
 			<div class="modal-body">
 				<!-- Content loaded externally -->
 			</div>
-
 
 			<div class="modal-footer">
 				<label class="welcome-checkbox">
@@ -1727,6 +1679,7 @@
 				</div>
 				<button class="btn-icon icon-wrapper" data-browser-role="filterToggle" title="Open filters" aria-expanded="false"><svg class="icon"><use href="#icon-filter"></use></svg><span class="name">Filter</span></button>
 			</div>
+			<div class="recent-searches" data-browser-role="recentSearches" role="group" aria-label="Recent searches" hidden></div>
 			<div class="active-filter-summary" data-browser-role="summary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 			<div class="filters-container" data-browser-role="filters">
 				<div class="filters-container-inner" data-browser-role="filterSections"></div>

@@ -2,6 +2,38 @@
 // CONTENT MANAGER BASE CLASS
 // Handles common functionality for content pickers (glitter/stickers)
 // ============================================
+
+// Words people type that the Library spells differently: spelling variants,
+// and color names that land on the color tags the admin color-weights write.
+const LIBRARY_SEARCH_ALIASES = Object.freeze({
+	grey: ['gray'], gray: ['grey'], colour: ['color'], colours: ['colors'],
+	magenta: ['pink'], fuchsia: ['pink'], rose: ['pink'],
+	violet: ['purple'], lilac: ['purple'], lavender: ['purple'],
+	crimson: ['red'], scarlet: ['red'], maroon: ['red'],
+	navy: ['blue'], cyan: ['blue', 'teal'], aqua: ['blue', 'teal'], turquoise: ['teal', 'blue'],
+	lime: ['green'], mint: ['green'], emerald: ['green'],
+	amber: ['orange', 'yellow'], peach: ['orange', 'pink'],
+	golden: ['gold'], sparkly: ['sparkle'], glittery: ['glitter']
+});
+
+// True when `a` becomes `b` with one insertion, deletion, substitution or
+// swap of neighbouring letters.
+function isOneEditApart(a, b) {
+	if (a === b || Math.abs(a.length - b.length) > 1) return false;
+	let i = 0;
+	while (i < a.length && i < b.length && a[i] === b[i]) i++;
+	if (a.length === b.length) {
+		if (a.slice(i + 1) === b.slice(i + 1)) return true;
+		return a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
+	}
+	const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
+	return shorter.slice(i) === longer.slice(i + 1);
+}
+
+function escapeRegExp(text) {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 class ContentManager {
 	constructor(editor) {
 		this.editor = editor;
@@ -82,6 +114,12 @@ class ContentManager {
 			this.ui.searchInput.addEventListener('input', (e) => {
 				this.handleSearch(e.target.value);
 			});
+			this.ui.searchInput.addEventListener('keydown', (event) => {
+				if (event.key === 'Enter') this.recordSearch();
+			});
+			// `change` fires when the field loses focus with a new value.
+			this.ui.searchInput.addEventListener('change', () => this.recordSearch());
+			this.ui.searchInput.addEventListener('focus', () => this.renderRecentSearches());
 		}
 
 		// Filter toggle button
@@ -397,8 +435,20 @@ class ContentManager {
 		return { name, document };
 	}
 
-	searchTermMatches(tokens, term) {
-		return tokens.some((token) => token === term || (term.length >= 2 && token.startsWith(term)));
+	// A typed term plus the words it stands for (aliases, color groups).
+	getSearchTermVariants(term) {
+		return [...new Set([term, ...(LIBRARY_SEARCH_ALIASES[term] || []), ...this.getColorAliases(term)])];
+	}
+
+	// 3 exact word, 2 word prefix, 1 one typo away (terms of 4+ letters), 0 none.
+	searchTermMatchLevel(tokens, term) {
+		let level = 0;
+		for (const variant of this.getSearchTermVariants(term)) {
+			if (tokens.includes(variant)) return 3;
+			if (variant.length >= 2 && tokens.some((token) => token.startsWith(variant))) level = 2;
+		}
+		if (level) return level;
+		return term.length >= 4 && tokens.some((token) => isOneEditApart(token, term)) ? 1 : 0;
 	}
 
 	matchesSearch(item) {
@@ -406,9 +456,11 @@ class ContentManager {
 		if (!query) return true;
 		const { document } = this.getSearchText(item);
 		const tokens = document.split(' ');
-		return query.split(' ').every((term) => this.searchTermMatches(tokens, term));
+		return query.split(' ').every((term) => this.searchTermMatchLevel(tokens, term) > 0);
 	}
 
+	// Near misses (a term matched only through a typo) always sort below every
+	// exact or prefix result.
 	getSearchScore(item) {
 		const query = this.normalizeSearchText(this.activeFilters.search);
 		if (!query) return 0;
@@ -417,15 +469,101 @@ class ContentManager {
 		const nameTokens = name.split(' ');
 		const documentTokens = document.split(' ');
 		let score = 0;
+		let nearMiss = false;
 		if (name === query) score += 100;
 		else if (name.startsWith(query)) score += 60;
-		score += terms.reduce((total, term) => {
-			if (nameTokens.includes(term)) return total + 12;
-			if (this.searchTermMatches(nameTokens, term)) return total + 8;
-			if (documentTokens.includes(term)) return total + 3;
-			return total + (this.searchTermMatches(documentTokens, term) ? 1 : 0);
-		}, 0);
-		return score;
+		terms.forEach((term) => {
+			const inName = this.searchTermMatchLevel(nameTokens, term);
+			const inDocument = this.searchTermMatchLevel(documentTokens, term);
+			if (inName === 3) score += 12;
+			else if (inName === 2) score += 8;
+			else if (inDocument === 3) score += 3;
+			else if (inDocument === 2) score += 1;
+			else nearMiss = true;
+		});
+		return nearMiss ? score - 1000 : score;
+	}
+
+	// The visible name inside a card, for match highlighting. Kinds whose
+	// cards show a name override this.
+	getSearchNameElement(option) {
+		return null;
+	}
+
+	// Mark each name word the search matched (exact or prefix).
+	highlightSearchMatch(option) {
+		const element = this.getSearchNameElement(option);
+		const query = this.normalizeSearchText(this.activeFilters.search);
+		if (!element || !query) return;
+		const variants = query.split(' ')
+			.flatMap((term) => this.getSearchTermVariants(term))
+			.filter((term) => term.length >= 2)
+			.sort((a, b) => b.length - a.length);
+		if (!variants.length) return;
+		const pattern = new RegExp(`(^|[^a-z0-9])(${variants.map(escapeRegExp).join('|')})`, 'gi');
+		const text = element.textContent;
+		const nodes = [];
+		let last = 0;
+		for (const match of text.matchAll(pattern)) {
+			const start = match.index + match[1].length;
+			if (start > last) nodes.push(document.createTextNode(text.slice(last, start)));
+			const mark = document.createElement('mark');
+			mark.className = 'search-match';
+			mark.textContent = match[2];
+			nodes.push(mark);
+			last = start + match[2].length;
+		}
+		if (!nodes.length) return;
+		if (last < text.length) nodes.push(document.createTextNode(text.slice(last)));
+		element.replaceChildren(...nodes);
+	}
+
+	// ===== RECENT SEARCHES =====
+	// Per Library kind, in PREFERENCES. A search is recorded when it is
+	// committed: Enter, leaving the field, or picking a result.
+
+	getRecentSearches() {
+		const list = this.libraryKind ? PREFERENCES.get('librarySearches')?.[this.libraryKind] : null;
+		return Array.isArray(list) ? list : [];
+	}
+
+	recordSearch(query = this.ui.searchInput?.value) {
+		const text = String(query || '').trim();
+		if (!this.libraryKind || text.length < 2) return;
+		const list = this.getRecentSearches().filter((entry) => entry.toLowerCase() !== text.toLowerCase());
+		PREFERENCES.set('librarySearches', {
+			...PREFERENCES.get('librarySearches'),
+			[this.libraryKind]: [text, ...list].slice(0, CONFIG.ui.library.recentSearchCount)
+		});
+		this.renderRecentSearches();
+	}
+
+	// Chips under an empty search field; hidden while there is a query.
+	renderRecentSearches() {
+		const host = this.ui.recentSearches;
+		if (!host) return;
+		const list = this.getRecentSearches();
+		const show = list.length > 0 && !this.ui.searchInput?.value.trim();
+		host.hidden = !show;
+		if (!show) return;
+		const label = document.createElement('span');
+		label.className = 'recent-searches-label';
+		label.textContent = 'Recent';
+		host.replaceChildren(label, ...list.map((entry) => {
+			const chip = document.createElement('button');
+			chip.type = 'button';
+			chip.className = 'filter-chip text-filter-chip';
+			chip.textContent = entry;
+			chip.title = `Search for “${entry}”`;
+			chip.addEventListener('click', () => {
+				if (!this.ui.searchInput) return;
+				this.ui.searchInput.value = entry;
+				this.handleSearch(entry);
+				this.recordSearch(entry);
+				this.ui.searchInput.focus();
+			});
+			return chip;
+		}));
 	}
 
 	matchesColors(item) {
@@ -465,11 +603,13 @@ class ContentManager {
 
 		// Allow children to add custom classes/attributes
 		this.customizeItemElement(option, item);
+		if (this.activeFilters.search) this.highlightSearchMatch(option);
 		if (this.libraryKind) option.appendChild(this.createFavoriteToggle(item));
 
 		const select = async () => {
 			await (onSelect ? onSelect(item) : this.handleItemClick(item));
 			this.recordRecent(item.id);
+			if (this.activeFilters.search) this.recordSearch();
 		};
 		option.addEventListener('click', (event) => {
 			if (event.target.closest('.asset-favorite-toggle')) return;
@@ -508,6 +648,18 @@ class ContentManager {
 
 	getRecentItems() {
 		return this.resolveLibraryIds(this.getLibraryIds('libraryRecents'));
+	}
+
+	// Ids of this kind's assets that layers in the open project use, top
+	// layer first. Derived from the layers each time; nothing is stored.
+	getProjectAssetIds() {
+		return [];
+	}
+
+	getProjectItems() {
+		const layers = [...(this.editor.layerManager?.layers || [])].reverse();
+		const ids = [...new Set(this.getProjectAssetIds(layers).filter((id) => id != null))];
+		return ids.map((id) => this.getItemById(id)).filter(Boolean);
 	}
 
 	recordRecent(id) {
@@ -573,6 +725,7 @@ class ContentManager {
 		this.activeFilters.search = query.toLowerCase().trim();
 		this.browser.handleSearch(query);
 		this.updateClearFiltersButton();
+		this.renderRecentSearches();
 	}
 
 	toggleFiltersUI(forceVisible = null) {

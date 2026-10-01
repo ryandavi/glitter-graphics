@@ -147,6 +147,7 @@ initializeCollapsibleSections() {
 				// run of rows — spacing and typography carry the hierarchy, so a
 				// panel can no longer accumulate a collapsible level per card.
 				if (subsection.dataset.collapsible !== undefined || enabled) {
+					if (subsection.dataset.collapsibleSubsection === undefined) applyPanelCardState(subsection);
 					subsection.dataset.collapsibleSubsection = '';
 					title.dataset.subsectionToggle = '';
 					title.setAttribute('role', 'button');
@@ -175,6 +176,7 @@ initializeCollapsibleSections() {
 			if (!subsection) return;
 			const isCollapsed = subsection.classList.toggle('is-collapsed');
 			toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+			rememberPanelCardState(subsection);
 		};
 		// Every schema effect toggle uses the same expansion/state contract.
 		document.addEventListener('change', (event) => {

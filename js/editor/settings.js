@@ -809,7 +809,7 @@ async resetToolSettings() {
 async resetPanelLayout() {
 	const confirmed = await this.confirmSettingsAction({
 		title: 'Reset Panel Layout',
-		message: 'All collapsible property and tool groups will be expanded.',
+		message: 'Collapsible property and tool cards will return to their default open or closed state.',
 		confirmLabel: 'Reset Panels'
 	});
 	if (!confirmed) return;
@@ -819,8 +819,7 @@ async resetPanelLayout() {
 
 ,
 applyDefaultPanelLayout() {
-	localStorage.removeItem('glitter.panelGroups');
-	document.querySelectorAll('[data-panel-group].collapsed').forEach((group) => group.classList.remove('collapsed'));
+	resetPanelCardStates();
 }
 
 ,

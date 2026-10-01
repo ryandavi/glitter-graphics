@@ -40,6 +40,7 @@ class FrameLayerManager {
 		const id = (x) => document.getElementById(x);
 		this.ui = {
 			presets: id('framePresets'),
+			summary: id('frameContentSummary'),
 			pinned: id('framePinned'),
 			insetRow: id('frameInsetRow'),
 			shadeRow: id('frameShadeRow'),
@@ -648,9 +649,16 @@ class FrameLayerManager {
 		if (this.ui.transformGroup) this.ui.transformGroup.hidden = data.pinned;
 		const style = FRAME_STYLES[data.style];
 		if (this.ui.shadeRow) this.ui.shadeRow.hidden = !style.bands.some((band) => Object.values(band.shades).some(Boolean));
+		const presetId = findFramePresetId(data);
+		// The Frame card's header names what is inside, so it can collapse.
+		if (this.ui.summary) {
+			this.ui.summary.textContent = data.kind === 'image'
+				? (data.image?.name || 'None')
+				: (FRAME_PRESETS.get(presetId)?.label || 'Custom');
+		}
 		if (this.ui.presets) {
 			GlitterPresetLibrary.renderPresetGrid(this.ui.presets, FRAME_PRESETS, {
-				activeId: findFramePresetId(data),
+				activeId: presetId,
 				contextId: 'frame',
 				onChoose: (entry) => {
 					const active = this.getActiveLayer();

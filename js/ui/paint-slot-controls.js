@@ -138,7 +138,7 @@ function bindSlotTextureCoordinateControls(options) {
 	});
 
 	// One revert for the Offset pair (Anchor keeps its own). Resets X and Y only.
-	// Only the redesigned panels render this button.
+	// Nested slots (Bevel Shade) do not render this button.
 	document.getElementById(`${prefix}ResetTexturePosition`)?.addEventListener('click', () => {
 		const active = getActive();
 		if (!active) return;

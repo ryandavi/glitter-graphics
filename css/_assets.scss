@@ -1,6 +1,13 @@
 @use 'mixins' as *;
 
 /* ===== ASSET OPTIONS ===== */
+// One Library kind host shows at a time; syncLibraryView toggles `.visible`.
+[data-gallery-content] {
+	display: none;
+
+	&.visible { display: block; }
+}
+
 .asset-options {
 	position: relative;
 	z-index: 0;
@@ -61,7 +68,7 @@
 		}
 	}
 
-	&.stickers-options .asset-grid>.asset-option {
+	&[data-gallery-content="stickers"] .asset-grid>.asset-option {
 		background: var(--color-bg-tertiary);
 
 		>img {
@@ -89,7 +96,7 @@
 		}
 	}
 
-	&.brush-tip-options .asset-grid>.asset-option {
+	&[data-gallery-content="brush-tips"] .asset-grid>.asset-option {
 		background: var(--color-bg-tertiary);
 
 		>img {
@@ -101,21 +108,21 @@
 		&.is-raster>img { image-rendering: pixelated; }
 	}
 
-	&.brush-tip-options .brush-basic-grid {
+	&[data-gallery-content="brush-tips"] .brush-basic-grid {
 		grid-template-columns: repeat(5, minmax(0, 1fr));
 		gap: var(--spacing-xs);
 
 		>.asset-option>img { padding: var(--spacing-sm); }
 	}
 
-	&.brush-tip-options .category-card-image>img {
+	&[data-gallery-content="brush-tips"] .category-card-image>img {
 		padding: var(--spacing-sm);
 	}
-	&.brush-tip-options .category-card.is-raster .category-card-image>img { image-rendering: pixelated; }
+	&[data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image>img { image-rendering: pixelated; }
 
 	// Font cards are sample + name, not square tiles: two across in a normal
 	// sidebar.
-	&.fonts-options .asset-grid {
+	&[data-gallery-content="fonts"] .asset-grid {
 		grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr));
 
 		>.asset-option {
@@ -196,13 +203,13 @@
 	}
 }
 
-.asset-options.fonts-options .asset-browser-recent > .asset-grid.asset-browser-recent-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+.asset-options[data-gallery-content="fonts"] .asset-browser-recent > .asset-grid.asset-browser-recent-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 
-:root[data-theme='light'] .brush-tip-options .asset-option {
+:root[data-theme='light'] [data-gallery-content="brush-tips"] .asset-option {
 	&.is-vector>img { filter: none; }
 	&.is-raster>img { filter: invert(1); }
 }
-:root[data-theme='light'] .brush-tip-options .category-card.is-raster .category-card-image>img { filter: invert(1); }
+:root[data-theme='light'] [data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image>img { filter: invert(1); }
 
 .asset-browser-collection-info:not([hidden]) { display: block; }
 .asset-browser-collection-info:not([hidden]) + .asset-grid.visible { margin-top: var(--spacing-md); }

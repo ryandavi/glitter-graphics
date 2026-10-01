@@ -8,20 +8,7 @@
 	> .layers-section-bottom-bar { display: none; }
 }
 
-.subsection-section-group {
-	> .subsection-title { cursor: pointer; }
-	.property-group-label { min-width: 0; }
-	.panel-group-chevron {
-		margin-left: auto;
-		flex: 0 0 auto;
-		transition: transform var(--transition-fast);
-	}
-	> .subsection-title:has(> .property-header-switch) .panel-group-chevron { margin-left: 0; }
-	&.collapsed {
-		> .subsection-title .panel-group-chevron { transform: rotate(-90deg); }
-		> :not(.subsection-title) { display: none; }
-	}
-}
+.subsection-section-group .property-group-label { min-width: 0; }
 
 /* ===== APP STRUCTURE ===== */
 .app-container {

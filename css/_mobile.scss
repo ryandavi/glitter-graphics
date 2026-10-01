@@ -482,9 +482,9 @@
 		}
 	}
 
-	// Active-filter chips: one scrolling row, never two or three wrapped rows
-	// of drawer height.
-	.glitter-search > .active-filter-summary {
+	// Active-filter and recent-search chips: one scrolling row, never two or
+	// three wrapped rows of drawer height.
+	.glitter-search > :is(.active-filter-summary, .recent-searches) {
 		flex-wrap: nowrap;
 		overflow-x: auto;
 		overscroll-behavior-x: contain;

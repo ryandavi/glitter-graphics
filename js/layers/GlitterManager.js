@@ -3,6 +3,13 @@
 // Handles glitter library, filtering, rendering, and logic
 // ============================================
 class GlitterManager extends ContentManager {
+	// Every glitter a visible paint slot of any layer draws with (fills,
+	// outlines, shadows, sparkles, the canvas background).
+	getProjectAssetIds(layers) {
+		return layers.flatMap((layer) => getLayerPaintSlots(layer)
+			.map(({ data, renders }) => (renders && data.mode === 'glitter' ? data.glitterId : null)));
+	}
+
 	constructor(editor) {
 		super(editor);
 

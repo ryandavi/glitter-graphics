@@ -21,12 +21,11 @@
 	>.collapsible-section {
 		position: relative;
 		z-index: 100;
-		// box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
 	}
 
 	// The Library shows one asset kind at a time (syncLibraryView hides the
 	// other kinds' hosts); the sticker upload action belongs to Stickers.
-	>.design-gallery-section[data-library="sticker"]>.section-header.glitter-header .upload-sticker-action {
+	>.design-gallery-section[data-library="sticker"]>.section-header.section-header-with-action .upload-sticker-action {
 		visibility: visible;
 		pointer-events: auto;
 	}
@@ -61,6 +60,7 @@
 
 		&:not(.library-search-open)>.design-gallery-content>.gallery-search-section>.glitter-search {
 			>.search-toggle-row,
+			>.recent-searches,
 			>.filters-container { display: none; }
 
 			>.active-filter-summary { padding-top: var(--property-gutter); }
@@ -71,19 +71,13 @@
 			display: none;
 		}
 	}
-
-
 }
 
 .glitter-search {
 	display: flex;
 	flex-direction: column;
-
-
-
 	position: relative;
 	z-index: 100;
-	// box-shadow: 0px 5px 3px 0px rgba(0, 0, 0, 0.13);
 
 	>.search-toggle-row>.has-active-filters {
 		color: var(--color-accent);
@@ -105,6 +99,28 @@
 		&[hidden] { display: none; }
 	}
 
+	// Recent search chips under an empty search field (renderRecentSearches).
+	>.recent-searches {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-xs);
+		padding: 0 var(--property-gutter) var(--property-gutter);
+
+		&[hidden] { display: none; }
+
+		>.recent-searches-label {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+	}
+}
+
+// The part of a card name the Library search matched.
+.asset-option mark.search-match {
+	background: none;
+	color: var(--color-accent);
+	font-weight: var(--font-weight-semibold);
 }
 
 /* ===== PICKER STRIP ===== */
@@ -234,7 +250,6 @@
 			grid-auto-rows: auto;
 			gap: var(--spacing-sm);
 		}
-
 
 	}
 

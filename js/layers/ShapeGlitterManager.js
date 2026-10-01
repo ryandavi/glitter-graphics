@@ -381,11 +381,9 @@ class ShapeGlitterManager {
 			layer.shapeData.bevel = buildDefaultBevel();
 			layer.shapeData.sparkles = null;
 			delete layer.shapeData.effectDrafts;
-			delete layer.animations;
 		});
 		this.loadLayerSettings(layer);
 		this.renderLayer(layer);
-		this.editor.animationPanel?.load(layer);
 		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}

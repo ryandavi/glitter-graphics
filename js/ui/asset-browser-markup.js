@@ -14,6 +14,7 @@ const ASSET_BROWSER_ID_GRAMMAR = Object.freeze({
 	search: '{p}Search',
 	filterToggle: '{p}FilterToggleBtn',
 	summary: '{p}ActiveFilterSummary',
+	recentSearches: '{p}RecentSearches',
 	filters: '{p}FiltersContainer',
 	nameOnly: 'search{P}NameOnly',
 	categoryChips: '{p}CategoryChips',
@@ -121,6 +122,7 @@ function getAssetBrowserUi(prefix) {
 		clearFiltersBtn: byId(ids.clear),
 		closeFiltersBtn: byId(ids.close),
 		activeFilterSummary: byId(ids.summary),
+		recentSearches: byId(ids.recentSearches),
 		categoryChips: byId(ids.categoryChips),
 		searchNameOnly: byId(ids.nameOnly)
 	};
@@ -200,6 +202,7 @@ function renderAssetBrowsers() {
 			toggle.id = ids.filterToggle;
 			toggle.setAttribute('aria-controls', ids.filters);
 			role(search, 'summary').id = ids.summary;
+			role(search, 'recentSearches').id = ids.recentSearches;
 			role(search, 'filters').id = ids.filters;
 			role(search, 'clear').id = ids.clear;
 			role(search, 'close').id = ids.close;
@@ -217,6 +220,19 @@ function renderAssetBrowsers() {
 			browserHost.appendChild(browser);
 		}
 	});
+}
+
+// `/` (desktop): unfold the Library's search row if needed and focus it.
+function focusLibrarySearch() {
+	const section = document.getElementById('designGallerySection');
+	const host = document.getElementById(getAssetBrowserSchema(section?.dataset.library)?.searchHost);
+	if (!host) return;
+	if (!section.classList.contains('is-open') || !section.classList.contains('library-search-open')) {
+		document.getElementById('librarySearchToggle')?.click();
+	}
+	const input = host.querySelector('[data-browser-role="search"]');
+	input?.focus();
+	input?.select();
 }
 
 // Library header search button: unfolds the active kind's search row, which
