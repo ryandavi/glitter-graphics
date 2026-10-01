@@ -170,7 +170,7 @@ It builds one real mixed composition and then checks the exporter’s byte stabi
 3. Editing the text layer, undoing it, and exporting again produces the exact same matte GIF bytes as the original export.
 4. The same edit -> undo round-trip also preserves the transparent export bytes exactly.
 
-The composition intentionally includes a painted glitter-fill layer, an animated sticker layer, a text layer with glitter fill + solid border + glitter shadow + non-identity color adjust, and a shape layer with the same slot spread, then runs that scene through both matte and transparent export modes.
+The composition intentionally includes a painted glitter-fill layer with outline and shadow, an animated sticker layer, a text layer with glitter fill + solid border + glitter shadow + non-identity color adjust, and a shape layer with the same slot spread, then runs that scene through both matte and transparent export modes.
 
 ### Effect fragility (`tests/parity/roadmap-export-fragility.js`)
 

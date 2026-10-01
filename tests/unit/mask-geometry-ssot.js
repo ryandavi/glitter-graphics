@@ -7,8 +7,8 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..', '..');
 const SHARED_GEOMETRY = [
-	'createMaskDifferenceCanvas', 'createOutlineMaskCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
-	'getMorphOffsets', 'getBorderPlacement', 'getBorderEdgeStyle', 'getBorderDrawOrder'
+	'createMaskDifferenceCanvas', 'createOutlineMaskCanvas', 'createBorderMaskCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
+	'fillEnclosedMaskAreas', 'getMorphOffsets', 'getBorderPlacement', 'getBorderEdgeStyle', 'getBorderDrawOrder'
 ];
 
 // Mask morphology and border option parsing live only in mask-geometry.js:
@@ -65,6 +65,16 @@ const createCanvas = () => {
 					}
 				}
 			}
+		},
+		getImageData: () => {
+			ensurePixels();
+			const data = new Uint8ClampedArray(canvas.pixels.length * 4);
+			canvas.pixels.forEach((alpha, index) => { data[index * 4 + 3] = alpha; });
+			return { data, width: canvas.width, height: canvas.height };
+		},
+		putImageData: (image) => {
+			ensurePixels();
+			for (let index = 0; index < canvas.pixels.length; index++) canvas.pixels[index] = image.data[index * 4 + 3];
 		}
 	};
 	canvas.getContext = () => context;
@@ -72,7 +82,7 @@ const createCanvas = () => {
 };
 const geometrySource = fs.readFileSync(path.join(ROOT, 'js/paint/mask-geometry.js'), 'utf8');
 const geometry = vm.runInNewContext(`${geometrySource}; ({ createOutlineMaskCanvas, createDilatedMaskCanvas, createErodedMaskCanvas });`, {
-	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 } } },
+	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 }, maskAlphaThreshold: 128 } },
 	document: { createElement: createCanvas },
 	createAppCanvas: createCanvas,
 	getOptionValues: () => ['inside', 'center', 'outside'],
@@ -98,6 +108,26 @@ assert.strictEqual(ring.pixels[8 * ring.width + 8], 0, 'Outline-only mask must s
 assert.strictEqual(ring.pixels[8 * ring.width + 9], 255, 'Outline-only mask must retain the expanded edge');
 assert.strictEqual(backing.pixels[8 * backing.width + 8], 255, 'Filled outline mask must retain the sticker interior');
 process.stdout.write('PASS sticker backing can fill the outline interior\n');
+
+const counters = createCanvas();
+counters.width = 20;
+counters.height = 9;
+counters.getContext().clearRect();
+for (let x = 1; x <= 6; x++) {
+	counters.pixels[1 * counters.width + x] = 255;
+	counters.pixels[7 * counters.width + x] = 255;
+}
+for (let y = 1; y <= 7; y++) {
+	counters.pixels[y * counters.width + 1] = 255;
+	counters.pixels[y * counters.width + 6] = 255;
+	counters.pixels[y * counters.width + 10] = 255;
+	counters.pixels[y * counters.width + 17] = 255;
+}
+for (let x = 10; x <= 17; x++) counters.pixels[7 * counters.width + x] = 255;
+const enclosed = geometry.createOutlineMaskCanvas(counters, 1, 'hard', false, true);
+assert.strictEqual(enclosed.pixels[4 * enclosed.width + 3], 255, 'Closed transparent counters must be filled');
+assert.strictEqual(enclosed.pixels[4 * enclosed.width + 13], 0, 'Open concave regions must remain transparent');
+process.stdout.write('PASS outline fills only enclosed transparent areas\n');
 
 const distanceGeometry = vm.runInNewContext(`${geometrySource}; ({ exactEuclideanDistanceTransform });`, {
 	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 }, maskAlphaThreshold: 128 } },

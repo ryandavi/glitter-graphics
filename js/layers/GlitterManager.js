@@ -28,6 +28,9 @@ class GlitterManager extends ContentManager {
 		// layer keeps its URL, and an in-flight encode lands on whichever layer
 		// object is current. Entries for deleted layers are revoked on render.
 		this.maskImages = new Map();
+		// One decoded data URL per derived effect mask. A changed mask is decoded
+		// before it replaces the visible one, so painting never flashes unmasked.
+		this.effectMaskImages = new Map();
 		this.pickerSession = null;
 
 		// G-1: tracks in-flight mask encodes per layer (for the busy cursor / status)
@@ -81,7 +84,8 @@ async initBrowser() {
 			pickerStrip: document.getElementById('galleryPickerStrip'),
 			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),
 			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
-			pickerStripDone: document.getElementById('galleryPickerStripDone')
+			pickerStripDone: document.getElementById('galleryPickerStripDone'),
+			resetEffects: document.getElementById('resetGlitterEffects')
 
 		};
 	}
@@ -93,8 +97,20 @@ async initBrowser() {
 		// Setup filter chips
 		this.setupFilterChips();
 		this.setupFillSourceControls();
-		this.sparkleFieldHost = this.createSparkleFieldHost();
-		bindFieldControls(this.sparkleFieldHost);
+		this.fieldHost = this.createFieldHost();
+		bindFieldControls(this.fieldHost);
+		this.ui.resetEffects?.addEventListener('click', () => {
+			const layer = this.fieldHost.getLayer();
+			if (!layer) return;
+			layer.border = null;
+			layer.shadow = null;
+			layer.sparkles = null;
+			delete layer.effectDrafts;
+			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+			syncFieldControls(this.fieldHost, layer);
+			this.editor.layerManager.renderLayersList();
+			this.editor.saveState('Reset fill effects');
+		});
 		this.ui.pickerStripDone?.addEventListener('click', () => {
 			if (this.hasActivePickerSession()) this.handlePickerDone();
 		});
@@ -131,7 +147,8 @@ async initBrowser() {
 	}
 
 	handlePickerDone() {
-		const focusId = this.pickerSession?.slot === 'sparkles' ? 'glitterSparklesGlitterChip' : 'glitterAssetThumbnail';
+		const focusIds = { border: 'glitterBorderGlitterChip', shadow: 'glitterShadowGlitterChip', sparkles: 'glitterSparklesGlitterChip' };
+		const focusId = focusIds[this.pickerSession?.slot] || 'glitterAssetThumbnail';
 		this.closePickerSession();
 		returnFromPickerToProperties(this.editor, { section: 'glitterSettings', focusId });
 	}
@@ -208,7 +225,10 @@ async initBrowser() {
 				contiguous: false,
 				invert: false,
 				multiSelect: false
-			}
+			},
+			border: null,
+			shadow: null,
+			sparkles: null
 		};
 
 		return layer;
@@ -221,11 +241,40 @@ async initBrowser() {
 		};
 	}
 
+	getDefaultBorder() {
+		return buildDefaultBorder({
+			config: CONFIG.tools.glitter.border,
+			slot: getPaintSlotDefinition(LayerType.GLITTER_FILL, 'border'),
+			fallbackMode: 'glitter',
+			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.glitterLayer,
+			includeColorAdjust: true
+		});
+	}
+
+	getDefaultShadow() {
+		return buildDefaultShadow({
+			defaultMode: 'glitter',
+			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.glitterLayer,
+			includeColorAdjust: true
+		});
+	}
+
+	getSlotDefaults(key) {
+		if (key === 'border') return this.getDefaultBorder();
+		if (key === 'shadow') return this.getDefaultShadow();
+		if (key === 'sparkles') return buildDefaultSparkles();
+		return this.getDefaultFill();
+	}
+
 	// Runs where a fill layer enters the document (deserialize, project load).
 	normalizeLayer(layer) {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		layer.fill = mergeSlotEffectDefaults(layer.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(layer.fill);
+		if (layer.border) layer.border = mergeSlotEffectDefaults(layer.border, this.getDefaultBorder());
+		if (layer.shadow) layer.shadow = mergeSlotEffectDefaults(layer.shadow, this.getDefaultShadow());
+		normalizeSlotTextureCoordinates(layer.border);
+		normalizeSlotTextureCoordinates(layer.shadow);
 		layer.sparkles = normalizeSparklesData(layer.sparkles);
 	}
 
@@ -241,9 +290,9 @@ async initBrowser() {
 		};
 	}
 
-	// How the declared field binder edits a fill layer's sparkles slot. The
-	// fill itself keeps its own bindings (editor-panels.js).
-	createSparkleFieldHost() {
+	// How the declared field binder edits a fill layer's effect slots. The fill
+	// itself keeps its legacy bindings (editor-panels.js).
+	createFieldHost() {
 		const active = () => {
 			const layer = this.editor.layerManager.getActiveLayer();
 			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
@@ -253,18 +302,18 @@ async initBrowser() {
 			type: LayerType.GLITTER_FILL,
 			editor: this.editor,
 			getLayer: active,
-			ensureSlot: (layer, key) => (layer[key] ||= buildDefaultSparkles()),
-			getSlotDefaults: () => buildDefaultSparkles(),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getSlotDefaults(key)),
+			getSlotDefaults: (key) => this.getSlotDefaults(key),
 			apply: (layer, mutate, change) => {
 				mutate();
 				render(layer);
 				if (change.live) return;
-				syncFieldControls(this.sparkleFieldHost, layer);
+				syncFieldControls(this.fieldHost, layer);
 				this.editor.layerManager.renderLayersList();
-				this.editor.saveState('Edit fill sparkles');
+				this.editor.saveState('Edit fill effect');
 			},
 			render,
-			commit: () => this.editor.saveState('Edit fill sparkles'),
+			commit: () => this.editor.saveState('Edit fill effect'),
 			armPicker: (key) => this.armAssetPicker(key),
 			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot || null : null)
 		};
@@ -485,7 +534,7 @@ async initBrowser() {
 				slot.mode = 'glitter';
 				slot.colorAdjust = null;
 				this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
-				syncFieldControls(this.sparkleFieldHost, layer);
+				syncFieldControls(this.fieldHost, layer);
 			}
 		}
 
@@ -592,12 +641,76 @@ async initBrowser() {
 		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
 	}
 
+	getSlotStack(layer) {
+		return buildSlotStack(layer, (entry) => {
+			const source = resolvePaintSlotPreviewSource(this.editor, layer, entry);
+			return entry.key === 'fill' && source ? { ...source, opacity: 1 } : source;
+		});
+	}
+
+	getSlotMask(layer, item, fillMask, baseKey = this.editor.maskCompositor.getCacheKey(layer)) {
+		if (item.key === 'fill') return { canvas: fillMask, cacheKey: `${baseKey}|fill` };
+		if (item.role === 'border') {
+			const data = item.data;
+			return {
+				canvas: createBorderMaskCanvas(fillMask, data),
+				cacheKey: `${baseKey}|border:${data.widthPx}:${getBorderPlacement(data)}:${getBorderEdgeStyle(data)}:${Boolean(data.fillEnclosed)}`
+			};
+		}
+		if (item.role === 'shadow') {
+			const spread = Math.round(item.data.spread || 0);
+			const blur = Math.round(item.data.blur || 0);
+			return {
+				canvas: createShadowMaskCanvas(fillMask, spread, blur),
+				cacheKey: `${baseKey}|shadow:${spread}:${blur}`
+			};
+		}
+		return null;
+	}
+
+	renderSlotMasks(layer, fillMask = null) {
+		const mask = fillMask || this.editor.maskCompositor.getMaskCanvas(layer);
+		const masks = { fill: mask, renderWidth: mask.width, renderHeight: mask.height };
+		getLayerPaintSlots(layer).forEach((entry) => {
+			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
+			const item = { key: entry.key, role: entry.role, data: entry.data };
+			const slotMask = this.getSlotMask(layer, item, mask)?.canvas || null;
+			masks[entry.key] = entry.role === 'shadow' && slotMask
+				? createOffsetMaskCanvas(slotMask, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				: slotMask;
+		});
+		return masks;
+	}
+
+	getEffectMaskUrl(layer, item, mask) {
+		if (!mask?.canvas) return null;
+		const slotKey = `${layer.id}|${item.key}`;
+		const cached = this.effectMaskImages.get(slotKey);
+		if (cached?.key === mask.cacheKey) return cached.url || null;
+		if (cached?.pendingKey !== mask.cacheKey) {
+			const url = mask.canvas.toDataURL('image/png');
+			this.effectMaskImages.set(slotKey, { ...cached, pendingKey: mask.cacheKey });
+			const image = new Image();
+			image.onload = () => {
+				const pending = this.effectMaskImages.get(slotKey);
+				if (pending?.pendingKey !== mask.cacheKey) return;
+				this.effectMaskImages.set(slotKey, { key: mask.cacheKey, url });
+				const current = this.editor.layerManager.getLayerById(layer.id);
+				if (current?.type === LayerType.GLITTER_FILL) {
+					this.renderLayer(current, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+				}
+			};
+			image.src = url;
+		}
+		return cached?.url || null;
+	}
+
 	renderLayer(layer, width, height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 		if (layer.fill.mode === 'glitter' && !this.getItemById(layer.fill.glitterId)) return;
 
 		let wrapper = this.layerElements.get(layer.id);
-		let inner = wrapper?.querySelector('.glitter-background');
+		let stack = wrapper?.querySelector('.glitter-fill-stack');
 
 		if (!wrapper) {
 			// 1. Create the WRAPPER
@@ -609,37 +722,37 @@ async initBrowser() {
 
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 		wrapper.style.mixBlendMode = GlitterBlendModes.forLayer(layer);
+		wrapper.style.opacity = String(layer.opacity / 100);
 
-		if (!inner) {
-			// 2. Create the INNER Background
-			// This handles the glitter texture and the MASK
-			inner = document.createElement('div');
-			inner.className = 'glitter-background visible';
-			wrapper.replaceChildren(inner);
+		if (!stack) {
+			// Reconcile effects in place so changing a control never restarts an
+			// animated glitter source or briefly drops its decoded mask.
+			stack = document.createElement('div');
+			stack.className = 'glitter-fill-stack';
+			wrapper.replaceChildren(stack);
 		}
 
-		inner.className = 'glitter-background visible';
-		const [entry] = getLayerPaintSlots(layer);
-		applyPaintSourceToElement(inner, resolvePaintSlotPreviewSource(this.editor, layer, entry), { glitterLibrary: this });
+		const draftMask = Boolean(options.draftMask);
+		const fillMask = this.editor.maskCompositor.getMaskCanvas(layer, { draft: draftMask });
+		const fillMaskKey = this.editor.maskCompositor.getCacheKey(layer, { draft: draftMask });
 
 		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height, options);
-		if (maskObjectUrl) {
-			inner.style.maskImage = `url(${maskObjectUrl})`;
-			inner.style.webkitMaskImage = `url(${maskObjectUrl})`;
+		reconcileSlotStack(stack, this.getSlotStack(layer), {
+			spanClassName: 'glitter-fill-content', width, height, layer, glitterLibrary: this,
+			getMask: (item) => {
+				const mask = this.getSlotMask(layer, item, fillMask, fillMaskKey);
+				if (!mask?.canvas) return null;
+				return { canvas: mask.canvas, url: item.key === 'fill' ? maskObjectUrl : this.getEffectMaskUrl(layer, item, mask) };
+			}
+		});
+		const inner = stack.querySelector('[data-span-key="fill"]');
+		if (inner) {
+			inner.classList.add('glitter-background', 'visible');
 			// Unconditional: a no-op for full-res masks, but required when the
 			// currently-applied mask is a downscaled G-1c draft.
 			inner.style.maskSize = '100% 100%';
 			inner.style.webkitMaskSize = '100% 100%';
-			inner.style.visibility = '';
-		} else {
-			// No decoded mask yet (first render of this layer): keep the element
-			// hidden until applyMaskObjectUrl reveals it — an unmasked frame
-			// paints glitter over the whole canvas.
-			inner.style.maskImage = 'none';
-			inner.style.webkitMaskImage = 'none';
-			inner.style.visibility = 'hidden';
 		}
-
 		// 3. Assemble
 		if (!wrapper.parentNode) {
 			this.editor.canvasElementsContainer.appendChild(wrapper);
@@ -650,7 +763,7 @@ async initBrowser() {
 		syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
 		// Sparkles sit beside the masked paint (inside the animation wrapper
 		// when there is one), behind ones before it.
-		reconcileSparkleLayers(inner.parentNode, layer, { editor: this.editor, width, height, behindAnchor: inner });
+		reconcileSparkleLayers(stack, layer, { editor: this.editor, width, height, behindAnchor: inner });
 
 		// Update selection highlight for this layer if it's active
 		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
@@ -678,6 +791,9 @@ async initBrowser() {
 			URL.revokeObjectURL(currentUrl);
 		}
 		this.maskImages.delete(layerId);
+		Array.from(this.effectMaskImages.keys()).forEach((key) => {
+			if (key.startsWith(`${layerId}|`)) this.effectMaskImages.delete(key);
+		});
 	}
 
 	async ensureLayersPreviewAssetsReady(layers) {

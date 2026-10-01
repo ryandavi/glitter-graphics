@@ -43,7 +43,7 @@ async function buildComposition(page) {
 
 		const glitterLayer = editor.glitterManager.createLayer();
 		editor.layerManager.insertLayer(glitterLayer);
-		glitterLayer.blendMode = 'screen';
+		glitterLayer.blendMode = 'normal';
 		glitterLayer.fill = { ...glitterLayer.fill, glitterId: glitterA, mode: 'gradient', gradient: { type: 'linear', angle: 35, interpolation: 'steps', stops: [{ offset: 0, color: '#ff0066', alpha: 1 }, { offset: 1, color: '#3344ff', alpha: 0.75 }] } };
 		const paint = editor.paintMaskStore.ensurePaintMask(glitterLayer.id);
 		const paintCtx = paint.add.getContext('2d', { willReadFrequently: true });
@@ -53,6 +53,17 @@ async function buildComposition(page) {
 		paint.liveRevision += 1;
 		glitterLayer.maskHasContent = true;
 		editor.paintMaskStore.commitPaintState(glitterLayer);
+		glitterLayer.border = editor.glitterManager.getDefaultBorder();
+		glitterLayer.border.mode = 'solid';
+		glitterLayer.border.color = '#ffe600';
+		glitterLayer.border.widthPx = 5;
+		glitterLayer.shadow = editor.glitterManager.getDefaultShadow();
+		glitterLayer.shadow.mode = 'solid';
+		glitterLayer.shadow.color = '#550099';
+		glitterLayer.shadow.offsetX = 6;
+		glitterLayer.shadow.offsetY = 4;
+		glitterLayer.shadow.spread = 2;
+		glitterLayer.shadow.blur = 2;
 
 		const stickerLayer = editor.stickerManager.createLayer(animatedSticker.id);
 		editor.layerManager.insertLayer(stickerLayer);

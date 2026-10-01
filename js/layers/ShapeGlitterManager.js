@@ -922,6 +922,7 @@ class ShapeGlitterManager {
 			ctx.drawImage(measurement.canvas, 0, 0);
 			ctx.globalCompositeOperation = 'source-over';
 		}
+		if (borderData?.fillEnclosed) fillEnclosedMaskAreas(canvas, measurement.canvas);
 
 		if (shouldUseCrispMaskEdges()) {
 			binarizeCanvasAlpha(ctx);
@@ -1066,7 +1067,7 @@ class ShapeGlitterManager {
 			const border = slot.data;
 			return {
 				canvas: this.getBorderMaskCanvas(measurement, border),
-				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}`
+				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}`
 			};
 		}
 		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {

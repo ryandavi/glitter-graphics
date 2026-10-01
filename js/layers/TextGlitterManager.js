@@ -1863,33 +1863,15 @@ class TextGlitterManager {
 		const widthPx = Math.max(0, borderData?.widthPx || 0);
 		const placement = getBorderPlacement(borderData);
 		const edgeStyle = getBorderEdgeStyle(borderData);
-		const cacheKey = `border:${widthPx}:${placement}:${edgeStyle}`;
+		const fillEnclosed = Boolean(borderData?.fillEnclosed);
+		const cacheKey = `border:${widthPx}:${placement}:${edgeStyle}:${fillEnclosed}`;
 
 		if (measurement._borderMaskCache?.key === cacheKey) {
 			return { canvas: measurement._borderMaskCache.canvas, cacheKey: `${measurement.key}|${cacheKey}` };
 		}
 
 		const fillMask = measurement.canvas;
-		let canvas = null;
-
-		if (widthPx > 0) {
-			if (placement === 'inside') {
-				canvas = createMaskDifferenceCanvas(
-					fillMask,
-					createErodedMaskCanvas(fillMask, widthPx, edgeStyle)
-				);
-			} else if (placement === 'center') {
-				canvas = createMaskDifferenceCanvas(
-					createDilatedMaskCanvas(fillMask, Math.ceil(widthPx / 2), edgeStyle),
-					createErodedMaskCanvas(fillMask, Math.floor(widthPx / 2), edgeStyle)
-				);
-			} else {
-				canvas = createMaskDifferenceCanvas(
-					createDilatedMaskCanvas(fillMask, widthPx, edgeStyle),
-					fillMask
-				);
-			}
-		}
+		const canvas = createBorderMaskCanvas(fillMask, borderData);
 
 		if (canvas) {
 			canvas._textureOrigin = { ...fillMask._textureOrigin };

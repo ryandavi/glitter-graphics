@@ -191,6 +191,7 @@
 // Recent: one row that scrolls sideways, above the categories.
 .asset-browser-recent {
 	&[hidden] { display: none; }
+	&:not([hidden]) ~ .asset-browser-recent:not([hidden]) { margin-top: var(--spacing-md); }
 
 	&:not([hidden]) + .asset-browser-index-lead,
 	&:not([hidden]) ~ .category-grid.visible,
@@ -301,7 +302,7 @@
 		gap: var(--spacing-sm);
 		// One compact line (the picker strip's height): back, then the title.
 		min-height: var(--control-height);
-		padding: var(--spacing-2xs) var(--property-gutter, 12px) var(--spacing-2xs) var(--spacing-xs);
+		padding: var(--spacing-xs);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-bg-secondary);
 

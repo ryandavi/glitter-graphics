@@ -49,6 +49,7 @@ function buildDefaultBorder(options = {}) {
 	border.placement = config.defaultPlacement ?? 'outside';
 	border.edgeStyle = config.defaultEdgeStyle ?? 'round';
 	border.drawOrder = config.defaultDrawOrder ?? 'behind';
+	border.fillEnclosed = false;
 	border.mode = config.defaultSource ?? options.fallbackMode ?? 'glitter';
 	border.glitterId = options.defaultGlitterId ?? null;
 	border.color = defaults.borderColor;

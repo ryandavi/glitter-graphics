@@ -299,11 +299,13 @@ const CONFIG = deepFreeze({
 				backgroundGlitterId: 96,
 				sparklesGlitterId: 17,
 				borderGlitterId: {
+					glitterLayer: 9,
 					text: 9,
 					shape: 68,
 					sticker: 9
 				},
 				shadowGlitterId: {
+					glitterLayer: 109,
 					text: 109,
 					shape: 34,
 					sticker: 83
@@ -314,6 +316,12 @@ const CONFIG = deepFreeze({
 			},
 			ui: {
 				settingsOpenByDefault: false
+			},
+			border: {
+				defaultPlacement: 'outside',
+				defaultDrawOrder: 'behind',
+				defaultSource: 'glitter',
+				defaultEdgeStyle: 'round'
 			},
 			preview: {
 				selectedOutlineOffset: 2,

@@ -3,6 +3,15 @@
 registerLayerType(LayerType.GLITTER_FILL, {
 	displayName: 'Fill Layer',
 	paintSlots: [
+		{
+			key: 'shadow', role: 'shadow', path: 'shadow', draftPath: 'effectDrafts.shadow',
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'glitterShadow', modes: ['glitter', 'solid']
+		},
+		{
+			key: 'border', role: 'border', path: 'border', draftPath: 'effectDrafts.border',
+			glitterDefault: 'borderGlitterId', panelPrefix: 'glitterBorder', modes: ['glitter', 'solid'],
+			fields: { widthPx: 'borderWidth' }
+		},
 		{ key: 'fill', role: 'fill', path: 'fill', wholeLayer: true, sourceLabel: null, glitterDefault: 'fillGlitterId' },
 		{
 			key: 'sparkles', role: 'sparkles', path: 'sparkles', draftPath: 'effectDrafts.sparkles',
@@ -20,7 +29,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		...context.compositor._createSparkleTimelineSources(layer)
 	],
 	serialization: {
-		extraKeys: ['selections', 'fill', 'autoGlitter', 'sparkles', 'effectDrafts'],
+		extraKeys: ['selections', 'fill', 'border', 'shadow', 'autoGlitter', 'sparkles', 'effectDrafts'],
 		includeMaskVersion: true,
 		defaults: { maskHasContent: false },
 		normalize: (editor, layer) => editor.glitterManager?.normalizeLayer(layer)

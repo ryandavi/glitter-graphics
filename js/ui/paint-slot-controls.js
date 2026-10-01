@@ -470,6 +470,11 @@ function bindPaintSlotControls(host) {
 				}));
 			});
 		});
+		if (definition.role === 'border') {
+			byId(`${prefix}FillEnclosed`)?.addEventListener('change', (event) => withLayer((layer) => (
+				host.apply(layer, () => { host.ensureSlot(layer, key).fillEnclosed = event.target.checked; }, { geometry: true })
+			)));
+		}
 		if (definition.role === 'bevel') {
 			byId(`${prefix}Profile`)?.addEventListener('change', (event) => withLayer((layer) => {
 				const profile = getBevelProfile(event.target.value).id;
@@ -567,6 +572,8 @@ function syncPaintSlotControls(host, layer) {
 		}
 		if (definition.role === 'sparkles') syncSparkleSlotControls(host, definition, layer, shown);
 		if (definition.role === 'border') {
+			const fillEnclosed = byId(`${prefix}FillEnclosed`);
+			if (fillEnclosed) fillEnclosed.checked = Boolean(shown.fillEnclosed);
 			if (byId(`${prefix}StyleDotted`)) {
 				const dotted = getBorderStyle(shown) === 'dotted';
 				const row = byId(`${prefix}DotSpacingRow`);

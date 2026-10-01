@@ -307,7 +307,7 @@ class StickerManager extends ContentManager {
 		buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)).forEach((item) => {
 			let mask = source;
 			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(source, (item.data.spread || 0) * effectScale, (item.data.blur || 0) * effectScale);
-			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx * effectScale, getBorderEdgeStyle(item.data), item.data.fillInterior);
+			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx * effectScale, getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
 			if (item.role === 'bevel') {
 				bevelMasks ||= createBevelMaskCanvases(source, {
 					...layer.stickerData.bevel.highlight,

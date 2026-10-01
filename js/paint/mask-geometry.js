@@ -71,9 +71,74 @@ function createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
 	return canvas;
 }
 
-function createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle = 'round', fillInterior = false) {
+function createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle = 'round', fillInterior = false, fillEnclosed = false) {
 	const expanded = createDilatedMaskCanvas(sourceCanvas, widthPx, edgeStyle);
-	return fillInterior ? expanded : createMaskDifferenceCanvas(expanded, sourceCanvas);
+	const outline = fillInterior ? expanded : createMaskDifferenceCanvas(expanded, sourceCanvas);
+	return fillEnclosed ? fillEnclosedMaskAreas(outline, sourceCanvas) : outline;
+}
+
+function createBorderMaskCanvas(sourceCanvas, borderData) {
+	const widthPx = Math.max(0, borderData?.widthPx || 0);
+	if (!widthPx) return null;
+	const placement = getBorderPlacement(borderData);
+	const edgeStyle = getBorderEdgeStyle(borderData);
+	let canvas;
+	if (placement === 'inside') {
+		canvas = createMaskDifferenceCanvas(sourceCanvas, createErodedMaskCanvas(sourceCanvas, widthPx, edgeStyle));
+	} else if (placement === 'center') {
+		canvas = createMaskDifferenceCanvas(
+			createDilatedMaskCanvas(sourceCanvas, Math.ceil(widthPx / 2), edgeStyle),
+			createErodedMaskCanvas(sourceCanvas, Math.floor(widthPx / 2), edgeStyle)
+		);
+	} else {
+		canvas = createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle);
+	}
+	if (borderData?.fillEnclosed) fillEnclosedMaskAreas(canvas, sourceCanvas);
+	return canvas;
+}
+
+// Keep edge-connected transparency open while adding every closed counter to
+// an effect mask. Four-neighbor reachability matches the mask's pixel grid:
+// diagonal contact alone does not make an enclosed letter counter open.
+function fillEnclosedMaskAreas(targetCanvas, sourceCanvas) {
+	const width = sourceCanvas.width;
+	const height = sourceCanvas.height;
+	if (!width || !height || targetCanvas.width !== width || targetCanvas.height !== height) return targetCanvas;
+	const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+	const source = sourceCtx.getImageData(0, 0, width, height).data;
+	const threshold = CONFIG.rendering.maskAlphaThreshold ?? 128;
+	const outside = new Uint8Array(width * height);
+	const queue = new Int32Array(width * height);
+	let head = 0;
+	let tail = 0;
+	const addOutside = (index) => {
+		if (outside[index] || source[index * 4 + 3] >= threshold) return;
+		outside[index] = 1;
+		queue[tail++] = index;
+	};
+	for (let x = 0; x < width; x++) {
+		addOutside(x);
+		addOutside((height - 1) * width + x);
+	}
+	for (let y = 1; y < height - 1; y++) {
+		addOutside(y * width);
+		addOutside(y * width + width - 1);
+	}
+	while (head < tail) {
+		const index = queue[head++];
+		const x = index % width;
+		if (x > 0) addOutside(index - 1);
+		if (x + 1 < width) addOutside(index + 1);
+		if (index >= width) addOutside(index - width);
+		if (index + width < outside.length) addOutside(index + width);
+	}
+	const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+	const target = targetCtx.getImageData(0, 0, width, height);
+	for (let index = 0; index < outside.length; index++) {
+		if (source[index * 4 + 3] < threshold && !outside[index]) target.data[index * 4 + 3] = 255;
+	}
+	targetCtx.putImageData(target, 0, 0);
+	return targetCanvas;
 }
 
 function createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {

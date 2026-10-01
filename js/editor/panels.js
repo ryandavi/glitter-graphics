@@ -616,7 +616,7 @@ isLayerContentLocked(layer) {
 		// Tint the asset-info thumbnail (and list/mobile swatches) to match the hue.
 		this.refreshGlitterSwatchVisuals(layer);
 
-		if (this.glitterManager.sparkleFieldHost) syncFieldControls(this.glitterManager.sparkleFieldHost, layer);
+		if (this.glitterManager.fieldHost) syncFieldControls(this.glitterManager.fieldHost, layer);
 		this.updateSelectedColorsDisplay();
 		this.maskEditor?.loadLayer(layer);
 	}

@@ -464,7 +464,7 @@ class SceneCompositor {
 			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(effectMaskCtx);
 			let mask = effectMask;
 			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(effectMask, Math.round(effectRadius * density), Math.round((Number(item.data.blur) || 0) * density));
-			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data), item.data.fillInterior);
+			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
 			if (item.role === 'bevel') {
 				const pair = createBevelMaskCanvases(effectMask, { ...layer.stickerData.bevel.highlight, size: layer.stickerData.bevel.highlight.size * density, soften: layer.stickerData.bevel.highlight.soften * density });
 				mask = item.key === 'bevelShade' ? pair.shade : pair.highlight;
@@ -711,47 +711,44 @@ class SceneCompositor {
 
 	_buildGlitterFillExportPlan(layer) {
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
+		const fillCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
 		return {
-			prepareMasks: async ({ maskDataMap, maskCanvases, canvasData, callbacks }) => {
+			prepareMasks: async ({ maskDataMap, maskCanvases, slotMaskCanvases, canvasData, callbacks }) => {
 				const rawMask = callbacks.createMask(layer);
 				maskDataMap.set(layer.id, rawMask);
-				maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
+				const fillMask = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
+				maskCanvases.set(layer.id, fillMask);
+				slotMaskCanvases.set(layer.id, this.editor.glitterManager.renderSlotMasks(layer, fillMask));
 			},
 			prepareStaticResources: async () => {},
 			getAuthoredSources,
-			render: ({ ctx, frameIndex, timestamp, rainbowHue, sourceSelectionMap, resolvedFramesBySource, maskCanvases, helperCtx, width, height }) => {
-				const maskCanvas = maskCanvases.get(layer.id);
-				if (!maskCanvas) throw new Error(`Missing mask canvas for layer ${layer.id}`);
-				const [entry] = getLayerPaintSlots(layer);
-				const source = this._getSlotSource(layer, entry);
-				if (!source) return;
+			render: ({ ctx, frameIndex, timestamp, rainbowHue, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases, helperCtx, width, height }) => {
+				const slotMasks = slotMaskCanvases.get(layer.id);
+				if (!slotMasks?.fill) throw new Error(`Missing mask canvas for layer ${layer.id}`);
 				helperCtx.save();
 				helperCtx.clearRect(0, 0, width, height);
-				this._paintMaskedSource(helperCtx, width, height, maskCanvas, source, {
-					frameIndex, sourceKey: getPaintSlotSourceKey(layer, entry), sourceSelectionMap, resolvedFramesBySource
+				const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
+				buildSlotStack(layer, (entry) => {
+					const source = this._getSlotSource(layer, entry);
+					return entry.key === 'fill' && source ? { ...source, opacity: 1 } : source;
+				}).forEach((item) => {
+					if (item.key === 'fill') this._drawLayerSparkles(helperCtx, layer, 'behind', frame, {});
+					const maskCanvas = slotMasks[item.key];
+					if (!maskCanvas) return;
+					this._renderFilledMaskInto(fillCanvas, maskCanvas, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
+					helperCtx.drawImage(fillCanvas, 0, 0);
 				});
-				// Sparkles sit inside the fill layer's element in the preview, so
-				// they take its animation and rainbow too. Behind ones are drawn
-				// on their own surface, then slid under the painted fill.
-				if (getLayerSparkleEntries(layer).length) {
-					const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
-					const behind = this.sparkleBehindCanvas;
-					ensureCanvasSize(behind, width, height);
-					const behindCtx = behind.getContext('2d', { alpha: true });
-					resetCanvasContext(behindCtx, width, height);
-					this._drawLayerSparkles(behindCtx, layer, 'behind', frame, {});
-					helperCtx.globalCompositeOperation = 'destination-over';
-					helperCtx.drawImage(behind, 0, 0);
-					helperCtx.globalCompositeOperation = 'source-over';
-					this._drawLayerSparkles(helperCtx, layer, 'front', frame, {});
-				}
+				this._drawLayerSparkles(helperCtx, layer, 'front', frame, {});
 				helperCtx.restore();
 				if (rainbowHue) {
 					const pixels = helperCtx.getImageData(0, 0, width, height);
 					applyColorAdjustToImageData(pixels, { hue: rainbowHue, saturation: 100, brightness: 100 });
 					helperCtx.putImageData(pixels, 0, 0);
 				}
+				ctx.save();
+				ctx.globalAlpha *= layer.opacity / 100;
 				ctx.drawImage(this.helperCanvas, 0, 0);
+				ctx.restore();
 			}
 		};
 	}

@@ -394,11 +394,11 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', label: 'Presets', attrs: { 'data-frame-kind': 'style' }, items: [
 						{ kind: 'presetGrid', id: 'framePresets', label: 'Frame presets', classes: 'property-inset frame-presets' }
 					] },
-					{ kind: 'set', attrs: { 'data-frame-kind': 'style' }, items: [
+					{ kind: 'set', label: 'Customize', attrs: { 'data-frame-kind': 'style' }, items: [
 						{ kind: 'stackRow', groups: [
 							{ label: 'Style', control: 'select', get options() { return createRegistryOptionEntries('frameStyle', 'frameStyle'); } }
 						] },
-						{ kind: 'slider', id: 'frameShade', slider: 'frameShade', rowId: 'frameShadeRow', title: 'How much lighter and darker the bevel sides are', advanced: true }
+						{ kind: 'slider', id: 'frameShade', slider: 'frameShade', rowId: 'frameShadeRow', title: 'How much lighter and darker the bevel sides are' }
 					] },
 					{ kind: 'set', label: 'Frames', attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, items: [
 						{ kind: 'presetGrid', id: 'frameImagePicker', label: 'Frame images', classes: 'property-inset frame-images' }
@@ -407,15 +407,15 @@ const PANEL_SCHEMAS = {
 						{ kind: 'stackRow', groups: [
 							{ label: 'Fit', get options() { return createRegistryOptionEntries('frameFit', 'frameFit'); } }
 						] }
-					] }
-				] },
-				{ kind: 'card', title: 'Size', items: [
-					{ kind: 'checkboxList', items: [
-						{ id: 'framePinned', label: 'Fit to Canvas', title: 'Follow the canvas edges. Turn off to move and resize the frame freely.' }
 					] },
-					{ kind: 'slider', id: 'frameInset', slider: 'frameInset', rowId: 'frameInsetRow' },
-					{ kind: 'slider', id: 'frameThickness', slider: 'frameThickness', rowId: 'frameThicknessRow' },
-					{ kind: 'slider', id: 'frameRadius', slider: 'frameRadius', rowId: 'frameRadiusRow' }
+					{ kind: 'set', label: 'Size', items: [
+						{ kind: 'checkboxList', items: [
+							{ id: 'framePinned', label: 'Fit to Canvas', title: 'Follow the canvas edges. Turn off to move and resize the frame freely.' }
+						] },
+						{ kind: 'slider', id: 'frameInset', slider: 'frameInset', rowId: 'frameInsetRow' },
+						{ kind: 'slider', id: 'frameThickness', slider: 'frameThickness', rowId: 'frameThicknessRow' },
+						{ kind: 'slider', id: 'frameRadius', slider: 'frameRadius', rowId: 'frameRadiusRow' }
+					] }
 				] }
 			] },
 			{ title: 'Appearance', items: [
@@ -562,7 +562,54 @@ const PANEL_SCHEMAS = {
 				] }
 			] }
 		],
-		effects: [createSparklesPanelSpec('glitterSparkles')],
+		effects: [
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'glitterBorder', title: 'Outline',
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
+				texturePosition: true,
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
+				color: '#000000', chipTitle: 'Choose outline glitter',
+				afterSource: [
+					{ kind: 'set', label: 'Stroke', items: [
+						{ kind: 'slider', id: 'glitterBorderWidth', slider: 'borderWidth' }
+					] }
+				],
+				post: [
+					{ kind: 'set', label: 'Placement', items: [
+						{ kind: 'stackRow', revert: true, groups: [
+							{ label: 'Edges', options: [
+								{ id: 'glitterBorderEdgeRounded', label: 'Smooth', active: true, value: 'round' },
+								{ id: 'glitterBorderEdgeHard', label: 'Pixel', value: 'hard' }
+							] },
+							{ label: 'Placement', control: 'select', options: [
+								{ id: 'glitterBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
+								{ id: 'glitterBorderPositionCenter', label: 'On Edge', value: 'center' },
+								{ id: 'glitterBorderPositionInside', label: 'Inside', value: 'inside' }
+							] },
+							{ label: 'Layering', options: [
+								{ id: 'glitterBorderOrderBehind', label: 'Behind', active: true, value: 'behind' },
+								{ id: 'glitterBorderOrderFront', label: 'On top', value: 'front' }
+							] }
+						] }
+					] },
+					{ kind: 'checkboxList', items: [
+						{ id: 'glitterBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas completely enclosed by the fill mask' }
+					] }
+				]
+			},
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'glitterShadow', title: 'Shadow',
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
+				texturePosition: true,
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
+				color: '#000000', chipTitle: 'Choose shadow glitter',
+				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
+					{ id: 'glitterShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
+					{ id: 'glitterShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
+				] }, { kind: 'slider', id: 'glitterShadowSpread', slider: 'shadowSpread' },
+					{ kind: 'slider', id: 'glitterShadowBlur', slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }]
+			},
+			createSparklesPanelSpec('glitterSparkles')
+		],
+		effectsReset: { id: 'resetGlitterEffects', title: 'Disable all fill effects and clear their saved settings' },
 		motion: [createAnimationPanelSpec('glitter')],
 		auxiliarySections: [{
 			prefix: 'layer',
@@ -640,7 +687,8 @@ const PANEL_SCHEMAS = {
 						] }
 					] }
 				] }, { kind: 'checkboxList', items: [
-					{ id: 'stickerBorderFillInterior', label: 'Fill inside', checked: true, title: 'Extend the outline paint behind the full sticker as a solid backing' },
+					{ id: 'stickerBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas that are completely enclosed by the sticker silhouette' },
+					{ id: 'stickerBorderFillInterior', label: 'Backing plate', checked: true, title: 'Extend the outline paint behind the full sticker as a solid backing' },
 					{ id: 'stickerBorderUnionFrames', label: 'Use all animation frames', checked: true, title: 'Build one stable outline from the union of every GIF frame' }
 				] }]
 			},
@@ -808,6 +856,9 @@ const PANEL_SCHEMAS = {
 							{ id: 'textBorderOrderFront', label: 'On top', value: 'front' }
 						] }
 					] }
+					] },
+					{ kind: 'checkboxList', items: [
+						{ id: 'textBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas that are completely enclosed by the text silhouette' }
 					] }
 				]
 			},
@@ -925,6 +976,9 @@ const PANEL_SCHEMAS = {
 							{ id: 'shapeBorderOrderFront', label: 'On top', value: 'front' }
 						] }
 					] }
+					] },
+					{ kind: 'checkboxList', items: [
+						{ id: 'shapeBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas that are completely enclosed by the shape silhouette' }
 					] }
 				]
 			},
