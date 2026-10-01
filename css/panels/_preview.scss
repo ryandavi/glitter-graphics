@@ -135,7 +135,7 @@ body.no-document .main-content {
 	flex-direction: column;
 	align-items: center;
 	gap: var(--spacing-xl);
-	padding: clamp(24px, 4vw, 40px);
+	padding: clamp(12px, 2vw, 20px) clamp(24px, 4vw, 40px);
 }
 
 .workspace-start-copy {

@@ -192,6 +192,14 @@ setupImageListeners() {
 		if (!host || host.dataset.rendered === 'true') return;
 		host.dataset.rendered = 'true';
 		host.replaceChildren();
+		// Each group is a titled panel card holding its tiles.
+		const addGroup = (label, grid) => {
+			const card = buildPanelItem({ kind: 'card', title: label, flatBody: true, items: [] });
+			card.querySelector('.subsection-card-body').appendChild(grid);
+			host.appendChild(card);
+			finishPanelMarkup(card);
+			return card;
+		};
 		// Display order. Templates load asynchronously and always come last.
 		const groups = [
 			{ id: 'classic', label: 'Web Classics' },
@@ -201,11 +209,6 @@ setupImageListeners() {
 		groups.forEach((group) => {
 			const presets = CONFIG.canvas.presets.filter((preset) => preset.group === group.id);
 			if (!presets.length) return;
-			const section = document.createElement('section');
-			section.className = 'new-canvas-preset-group';
-			const title = document.createElement('div');
-			title.className = 'property-group-label';
-			title.textContent = group.label;
 			const grid = document.createElement('div');
 			grid.className = 'blank-image-grid';
 			presets.forEach((preset) => {
@@ -235,17 +238,10 @@ setupImageListeners() {
 				button.append(previewWrapper, label, dimensions, detail);
 				grid.appendChild(button);
 			});
-			section.append(title, grid);
-			host.appendChild(section);
+			addGroup(group.label, grid);
 		});
 		TemplateLibrary.list('project').then((templates) => {
 			if (!templates.length || host.querySelector('[data-template-group]')) return;
-			const section = document.createElement('section');
-			section.className = 'new-canvas-preset-group';
-			section.dataset.templateGroup = '';
-			const title = document.createElement('div');
-			title.className = 'property-group-label';
-			title.textContent = 'Templates';
 			const grid = document.createElement('div');
 			grid.className = 'blank-image-grid';
 			templates.forEach((template) => {
@@ -271,8 +267,7 @@ setupImageListeners() {
 				button.append(previewWrapper, label, detail);
 				grid.appendChild(button);
 			});
-			section.append(title, grid);
-			host.appendChild(section);
+			addGroup('Templates', grid).dataset.templateGroup = '';
 		}).catch((error) => console.warn('Templates unavailable:', error));
 	}
 

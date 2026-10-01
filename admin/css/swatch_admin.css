@@ -306,7 +306,7 @@
   --z-tooltip: 100000;
   /* ===== MODALS ===== */
   /* Two widths only. Settings-shaped modals read as a single column of rows;
-     reading modals carry two columns of prose or shortcuts. */
+     reading modals carry long-form prose. */
   --modal-width-browse: 720px;
   --modal-width-reading: 880px;
   --modal-browse-height: 720px;

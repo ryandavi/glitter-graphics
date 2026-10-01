@@ -42,6 +42,7 @@ updateOrientationButtons(width, height) {
 				onOpen: () => {
 					this.exportSettingsFilter?.reset();
 					this.updateExportDuration();
+					syncFieldReverts(document.getElementById('exportSettingsModal'));
 				}
 			})
 			.register('settingsModal', {
@@ -49,13 +50,15 @@ updateOrientationButtons(width, height) {
 				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
 				resetScrollOnOpen: true,
 				onOpen: async () => {
+					// Canvas controls write some of these switches without an event.
+					syncFieldReverts(document.getElementById('settingsModal'));
 					const htmlSceneExporter = await this.ensureHtmlSceneExporter();
 					htmlSceneExporter.refreshStickerMetadata();
 					this.settingsFilter?.refresh();
 					this.settingsFilter?.reset();
 				}
 			})
-			.register('exportPreviewModal', {  // ADD THIS
+			.register('exportPreviewModal', {
 				closeBtnId: 'closeExportPreviewModal',
 				resetScrollOnOpen: false
 			})
@@ -233,7 +236,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=b89feb72',
+			externalContentUrl: 'modals/welcome.html?v=34c08d90',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',
@@ -421,22 +424,9 @@ buildVersionHistoryEntry(release, { open = false } = {}) {
 }
 
 ,
-// "Show more" reveals the rest of the changelog inline, collapsed; "See all
-// past updates" jumps straight to About's full (also collapsed) history.
+// Welcome keeps the latest release concise; the full history lives in About.
 setupWelcomeUpdatesActions(modalBody) {
-	const showMoreBtn = modalBody.querySelector('[data-welcome-show-more]');
 	const pastUpdatesBtn = modalBody.querySelector('[data-welcome-past-updates]');
-
-	if (showMoreBtn) {
-		if (CONFIG.app.releases.length <= 1) {
-			showMoreBtn.hidden = true;
-		} else {
-			showMoreBtn.addEventListener('click', () => {
-				this.renderVersionHistory(modalBody, { openCount: 1 });
-				showMoreBtn.hidden = true;
-			}, { once: true });
-		}
-	}
 
 	if (pastUpdatesBtn) {
 		pastUpdatesBtn.addEventListener('click', () => this.openDocumentAt('aboutModal', 'AboutVersionHistory'));

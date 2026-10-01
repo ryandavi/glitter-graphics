@@ -193,9 +193,12 @@
 	&[hidden] { display: none; }
 	&:not([hidden]) ~ .asset-browser-recent:not([hidden]) { margin-top: var(--spacing-md); }
 
+	// Whichever view follows the strips: hidden siblings sit between them.
 	&:not([hidden]) + .asset-browser-index-lead,
 	&:not([hidden]) ~ .category-grid.visible,
-	&:not([hidden]) ~ .search-results-container.visible { margin-top: var(--spacing-md); }
+	&:not([hidden]) ~ .search-results-container.visible,
+	&:not([hidden]) ~ .asset-browser-collection-info:not([hidden]),
+	&:not([hidden]) ~ .asset-grid.visible { margin-top: var(--spacing-md); }
 
 	// One row, no scroller: AssetBrowser._fitRecentRow hides the recents past
 	// the auto-fill track count, so a wider panel shows more of them.

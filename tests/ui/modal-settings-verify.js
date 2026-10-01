@@ -48,7 +48,7 @@ function check(name, cond, detail='') {
 	// ---- control widths are uniform --------------------------------------
 	const widths = await page.evaluate(() => {
 		// Selects, number fields and action buttons fill the same control column.
-		const controls = [...document.querySelectorAll('#settingsGroups .settings-row > .property-row > :is(select, .input-unit, button)')]
+		const controls = [...document.querySelectorAll('#settingsGroups .settings-row > .property-row > :is(select, .input-unit, button:not(.property-revert))')]
 			.filter(control => control.offsetParent !== null);
 		return controls.map(control => {
 			const rect = control.getBoundingClientRect();
@@ -59,6 +59,41 @@ function check(name, cond, detail='') {
 	const controlEdges = [...new Set(widths.map(w => w.right))];
 	check('value controls share one width and one right edge', widths.length > 0 && controlWidths.length === 1 && controlEdges.length === 1,
 		JSON.stringify({ controlWidths, controlEdges }));
+
+	// ---- resets are the panel's reverts ------------------------------------
+	// A row revert is inert at the default and restores its control through the
+	// control's own change event; a card reset replays the lit reverts in it.
+	const resetState = () => page.evaluate(() => ({
+		row: !document.querySelector('[data-revert-for="panInertia"]').disabled,
+		group: !document.querySelector('[data-section="tools"] .property-card-reset').disabled,
+		value: PREFERENCES.get('panInertia'),
+		theme: document.documentElement.dataset.theme
+	}));
+	const resetInitial = await resetState();
+	check('reverts are inert at the defaults', !resetInitial.row && !resetInitial.group, JSON.stringify(resetInitial));
+	await page.click('label:has(#panInertia) .property-switch');
+	const resetChanged = await resetState();
+	check('changing a setting lights its revert and its card reset',
+		resetChanged.row && resetChanged.group && resetChanged.value !== resetInitial.value, JSON.stringify(resetChanged));
+	await page.click('[data-revert-for="panInertia"]');
+	const resetReverted = await resetState();
+	check('a row revert restores the default', !resetReverted.row && !resetReverted.group && resetReverted.value === resetInitial.value,
+		JSON.stringify(resetReverted));
+	await page.selectOption('#interfaceTheme', 'light');
+	await page.click('[data-section="interface"] .property-card-reset');
+	const resetGroup = await resetState();
+	check('a card reset restores its rows without a confirmation',
+		resetGroup.theme === 'dark' && await page.evaluate(() => document.getElementById('interfaceTheme').value === 'dark'
+			&& document.querySelector('[data-section="interface"] .property-card-reset').disabled),
+		JSON.stringify(resetGroup));
+
+	// ---- a confirmed reset returns to the modal that asked -----------------
+	await page.click('#resetToolSettings');
+	await page.waitForTimeout(300);
+	await page.click('#confirmationConfirmBtn');
+	await page.waitForTimeout(600);
+	const afterConfirm = await page.evaluate(() => [...document.querySelectorAll('.modal-overlay.visible')].map((modal) => modal.id));
+	check('settings reopens after a confirmed reset', afterConfirm.length === 1 && afterConfirm[0] === 'settingsModal', JSON.stringify(afterConfirm));
 
 	// ---- new settings present --------------------------------------------
 	const newSettings = await page.evaluate(() => ['autoSelectLayers','snappingEnabled','panInertia','reduceMotion','resetToolbarPlacement']
@@ -94,23 +129,22 @@ function check(name, cond, detail='') {
 	const gifLook = await page.evaluate(() => {
 		const set = document.getElementById('exportGifLookSet');
 		return {
-			collapsed: set.classList.contains('is-collapsed'),
+			collapsed: !set.classList.contains('is-open'),
 			railVisible: getComputedStyle(document.getElementById('exportGifLookRail')).display !== 'none',
-			summary: document.querySelector('[data-governed-summary]').textContent,
-			toggleLabel: document.querySelector('[data-governed-toggle-label]').textContent
+			summary: document.querySelector('[data-governed-summary]').textContent
 		};
 	});
 	check('GIF Look collapsed by default with a summary', gifLook.collapsed && !gifLook.railVisible && gifLook.summary.length > 0,
 		JSON.stringify(gifLook));
 
-	await page.click('[data-governed-toggle]');
+	await page.click('#exportGifLookSet [data-advanced-toggle]');
 	await page.waitForTimeout(200);
 	const expanded = await page.evaluate(() => ({
-		collapsed: document.getElementById('exportGifLookSet').classList.contains('is-collapsed'),
+		collapsed: !document.getElementById('exportGifLookSet').classList.contains('is-open'),
 		railVisible: getComputedStyle(document.getElementById('exportGifLookRail')).display !== 'none',
-		label: document.querySelector('[data-governed-toggle-label]').textContent
+		expanded: document.querySelector('#exportGifLookSet [data-advanced-toggle]').getAttribute('aria-expanded')
 	}));
-	check('Customize expands the rail', !expanded.collapsed && expanded.railVisible && expanded.label === 'Done', JSON.stringify(expanded));
+	check('Customize expands the governed rows', !expanded.collapsed && expanded.railVisible && expanded.expanded === 'true', JSON.stringify(expanded));
 
 	// ---- inactive rows carry real disabled + a reason ---------------------
 	const inactive = await page.evaluate(() => {
@@ -141,7 +175,7 @@ function check(name, cond, detail='') {
 	await page.selectOption('#exportDitherPreset', 'textured');
 	await page.waitForTimeout(300);
 	const preset = await page.evaluate(() => ({
-		collapsed: document.getElementById('exportGifLookSet').classList.contains('is-collapsed'),
+		collapsed: !document.getElementById('exportGifLookSet').classList.contains('is-open'),
 		colors: document.getElementById('exportColorCount').value,
 		type: document.getElementById('exportDitherType').value,
 		summary: document.querySelector('[data-governed-summary]').textContent,
@@ -162,8 +196,8 @@ function check(name, cond, detail='') {
 	const precision = await page.evaluate(() => {
 		const row = document.getElementById('exportQuality').closest('.settings-row');
 		return {
-			inRail: !!row.closest('.governed-rail'),
-			group: row.closest('.settings-group').querySelector('.settings-group-title-text').textContent,
+			inRail: !!row.closest('[data-advanced-content]'),
+			group: row.closest('.settings-group').querySelector('.subsection-title-label').textContent,
 			label: row.querySelector('.property-label').textContent
 		};
 	});
@@ -224,7 +258,7 @@ function check(name, cond, detail='') {
 	check('shortcuts modal does not resize when scope changes',
 		before.w === after.w && before.h === after.h, JSON.stringify({ before, after }));
 	check('scope control switches the list', after.selected === 'gesture' && after.gestureGroups > 0, JSON.stringify(after));
-	check('shortcuts shell is 880 wide', after.w === 880, JSON.stringify(after));
+	check('shortcuts shell is 720 wide', after.w === 720, JSON.stringify(after));
 
 	// ---- nav bars share a height -------------------------------------------
 	await page.evaluate(() => window.editor.modalManager.close('shortcutsModal'));

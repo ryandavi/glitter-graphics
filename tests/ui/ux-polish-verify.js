@@ -31,7 +31,7 @@ async function main() {
 			inChrome: !!document.querySelector('#shortcutsModal > .modal-content > .modal-nav [data-shortcut-view]'),
 			tabIconSize: getComputedStyle(document.querySelector('#shortcutsModal .modal-nav-scope svg.icon')).width
 		}));
-		assert(shortcutKeyboardState.tabs === 2 && shortcutKeyboardState.selected === 'keyboard' && shortcutKeyboardState.groups === 6,
+		assert(shortcutKeyboardState.tabs === 2 && shortcutKeyboardState.selected === 'keyboard' && shortcutKeyboardState.groups === 7,
 			`Commands panel keyboard organization is incomplete: ${JSON.stringify(shortcutKeyboardState)}`);
 		// The scope control filters the list; it belongs in the modal's chrome bar
 		// beside the text filter, not inside the body it scrolls with.
@@ -70,40 +70,34 @@ async function main() {
 		console.log('PASS Organized keyboard and canvas-gesture command views');
 
 		const modalAudit = await page.evaluate(() => {
-			const advanced = document.querySelector('#exportSettingsModal .export-advanced-settings');
 			return {
-				advancedCount: document.querySelectorAll('#exportSettingsModal [data-advanced]').length,
-				advancedIds: advanced ? [...advanced.querySelectorAll('[id]')].map((node) => node.id) : [],
+				// The only disclosures are the two Customize footers; nothing else
+				// in Export Settings is nested behind one.
+				disclosureIds: [...document.querySelectorAll('#exportSettingsModal [data-advanced]')].map((node) => node.id).sort(),
 				creativeIds: ['exportTransparency', 'exportMatteColor', 'exportWatermarkEnabled', 'exportFrameDelay', 'exportReverse']
 					.filter((id) => !document.getElementById(id)?.closest('[data-advanced]')),
-				// Every visible heading owns a Reset, and every Reset names a real
-				// schema group — the two were previously unrelated, which is why
-				// the group-reset code was unreachable.
+				// Every group is a titled card that owns a reset.
 				exportSections: [...document.querySelectorAll('#exportSettingsModal .settings-group')].map((group) => ({
-					title: group.querySelector('.settings-group-title-text')?.textContent,
-					section: group.querySelector('.reset-section-btn')?.dataset.section
+					title: group.querySelector('.subsection-title-label')?.textContent,
+					section: group.dataset.section,
+					reset: !!group.querySelector(':scope > .subsection-title > .property-card-reset')
 				})),
-				schemaGroups: [...new Set(Object.values(EXPORT_SETTINGS_SCHEMA).map((spec) => spec.group))].sort(),
 				settingsRows: ['interfaceTheme', 'showHelpfulHints', 'showWelcomeOnStartup', 'confirmDestructiveActions']
 					.filter((id) => document.getElementById(id)).length
 			};
 		});
-		assert(modalAudit.advancedCount === 0, `Export Settings still contains a nested Advanced disclosure (${modalAudit.advancedCount})`);
-		for (const id of ['exportDitherEnabled', 'exportDitherType', 'exportQuality', 'exportMaxFrames', 'exportSmartFrameReduction', 'exportFrameSkip']) {
-			assert(!modalAudit.advancedIds.includes(id), `${id} is unexpectedly nested inside Export Advanced`);
-		}
+		assert(modalAudit.disclosureIds.join() === 'exportFidelitySet,exportGifLookSet',
+			`Export Settings disclosures are not the two Customize footers: ${modalAudit.disclosureIds}`);
 		assert(modalAudit.creativeIds.length === 5, 'Creative export controls are not all top-level');
-		assert(modalAudit.exportSections.length === 4 && modalAudit.exportSections.every((s) => s.title && s.section),
-			`Export Settings groups are missing a heading or a Reset: ${JSON.stringify(modalAudit.exportSections)}`);
-		assert(JSON.stringify(modalAudit.exportSections.map((s) => s.section).sort()) === JSON.stringify(modalAudit.schemaGroups),
-			`Export Reset buttons do not map onto the settings schema groups: ${JSON.stringify(modalAudit)}`);
+		assert(modalAudit.exportSections.length === 4 && modalAudit.exportSections.every((s) => s.title && s.section && s.reset),
+			`Export Settings groups are missing a title or a reset: ${JSON.stringify(modalAudit.exportSections)}`);
 		assert(modalAudit.settingsRows === 4, 'Settings modal is missing backed interface controls');
 		console.log('PASS Export and Settings modal hierarchy');
 
 		await page.evaluate(() => window.editor.modalManager.open('exportSettingsModal'));
-		assert(await page.locator('#exportSettingsModal [data-advanced-toggle]').count() === 0,
-			'Export Settings unexpectedly renders an Advanced disclosure toggle');
-		console.log('PASS Export settings remain flat and searchable');
+		assert(await page.locator('#exportSettingsModal [data-advanced-toggle]').count() === 2,
+			'Export Settings should render exactly the two Customize toggles');
+		console.log('PASS Export settings stay flat apart from the Customize footers');
 
 		await page.evaluate(() => window.editor.modalManager.close('exportSettingsModal'));
 		await page.waitForTimeout(350);

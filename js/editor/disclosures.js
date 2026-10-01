@@ -198,8 +198,7 @@ initializeCollapsibleSections() {
 			if (!toggle) return;
 			const disclosure = toggle.closest('[data-advanced]');
 			if (!disclosure) return;
-			const isOpen = disclosure.classList.toggle('is-open');
-			toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+			setAdvancedDisclosureOpen(disclosure, !disclosure.classList.contains('is-open'));
 		});
 		document.addEventListener('keydown', (event) => {
 			const toggle = event.target.closest?.('[data-subsection-toggle]');
@@ -306,10 +305,19 @@ initializeCollapsibleSections() {
 	}
 
 ,
+	// A form modal: a property section holding a note and one titled card per
+	// command group, each command a property row whose control is its chips.
 	initializeShortcutsModal() {
-		const list = document.getElementById('shortcutList');
-		if (!list) return;
-		list.replaceChildren();
+		const section = document.getElementById('shortcutSection');
+		if (!section) return;
+		section.classList.add('property-section');
+		const content = panelDiv('section-content');
+		const description = panelDiv('property-note');
+		description.id = 'shortcutViewDescription';
+		const list = panelDiv('settings-subsection');
+		list.id = 'shortcutList';
+		content.append(description, list);
+		section.replaceChildren(content);
 		// Native modifier names come from js/core/key-labels.js, shared with the
 		// guide so the two never disagree about what a key is called here.
 		const keyLabels = getKeyLabels();
@@ -317,6 +325,7 @@ initializeCollapsibleSections() {
 			keyboard: 'Shortcuts use the keys for this device. Alternate bindings are separated by “or.”',
 			gesture: 'Trackpad, touch, and pointer controls remain available without changing tools unless noted.'
 		};
+		description.textContent = gestureDescriptions.keyboard;
 		const deviceIcons = {
 			trackpad: 'icon-arrows-left-right',
 			touch: 'icon-hand-pointer',
@@ -366,26 +375,20 @@ initializeCollapsibleSections() {
 		};
 
 		['keyboard', 'gesture'].forEach((kind) => getShortcutGroups(kind).forEach(({ title: groupTitle, items }) => {
-			const group = document.createElement('div');
-			group.className = 'shortcut-group';
+			// `shortcut-group` / `shortcut-item` are hooks for the scope switch
+			// and the search filter.
+			const group = buildPanelItem({ kind: 'card', title: groupTitle, items: items.map((command) => ({
+				kind: 'labeled', label: command.label, stacked: false, rowClasses: 'shortcut-item',
+				control: { kind: 'host', classes: 'shortcut-keys shortcut-sequence' }
+			})) });
+			group.classList.add('shortcut-group');
 			group.dataset.shortcutKind = kind;
 			group.hidden = kind !== 'keyboard';
 
-			const title = document.createElement('div');
-			title.className = 'shortcut-group-title';
-			title.textContent = groupTitle;
-			group.appendChild(title);
-
-			items.forEach((command) => {
-				const item = document.createElement('div');
-				item.className = 'shortcut-item';
-
-				const action = document.createElement('div');
-				action.className = 'shortcut-action';
-				action.textContent = command.label;
-
-				const keys = document.createElement('div');
-				keys.className = 'shortcut-keys shortcut-sequence';
+			const rows = group.querySelectorAll('.shortcut-item');
+			items.forEach((command, index) => {
+				const item = rows[index];
+				const keys = item.querySelector('.shortcut-keys');
 				item.dataset.searchAliases = `${command.displayKey || ''} ${command.binding?.device || ''} ${command.binding?.gesture || ''} ${(command.binding?.modifiers || []).join(' ')}`;
 
 				if (command.instruction) {
@@ -397,20 +400,16 @@ initializeCollapsibleSections() {
 
 				if (kind === 'gesture') appendGestureBinding(keys, command);
 				else appendKeyboardBinding(keys, command);
-
-				item.appendChild(action);
-				item.appendChild(keys);
-				group.appendChild(item);
 			});
 
 			list.appendChild(group);
 		}));
+		finishPanelMarkup(section);
 
 		// Keyboard vs Canvas Gestures narrows which commands are listed — it is a
 		// scope filter, not a set of pages — so it uses the shared segmented
 		// control in the chrome bar, alongside the text filter it works with.
 		const scopeButtons = Array.from(document.querySelectorAll('#shortcutsModal [data-shortcut-view]'));
-		const description = document.getElementById('shortcutViewDescription');
 		const setView = (kind, options = {}) => {
 			scopeButtons.forEach((button) => {
 				const active = button.dataset.shortcutView === kind;
@@ -420,7 +419,7 @@ initializeCollapsibleSections() {
 			list.querySelectorAll('.shortcut-group').forEach((group) => {
 				group.hidden = group.dataset.shortcutKind !== kind;
 			});
-			if (description) description.textContent = gestureDescriptions[kind];
+			description.textContent = gestureDescriptions[kind];
 			this.shortcutsFilter?.refresh();
 			if (options.focus) scopeButtons.find((button) => button.dataset.shortcutView === kind)?.focus();
 		};
@@ -446,7 +445,7 @@ initializeCollapsibleSections() {
 			emptySelector: '#shortcutSearchEmpty',
 			itemSelector: '.shortcut-item',
 			groupSelector: '.shortcut-group',
-			groupTitleSelector: '.shortcut-group-title',
+			groupTitleSelector: '.subsection-title',
 			singularLabel: 'shortcut',
 			pluralLabel: 'shortcuts'
 		});
@@ -458,7 +457,7 @@ initializeCollapsibleSections() {
 			emptySelector: '#exportSettingsSearchEmpty',
 			itemSelector: '.settings-row',
 			groupSelector: '.settings-group',
-			groupTitleSelector: '.settings-group-title',
+			groupTitleSelector: '.subsection-title',
 			singularLabel: 'setting',
 			pluralLabel: 'settings'
 		});
@@ -470,7 +469,7 @@ initializeCollapsibleSections() {
 			emptySelector: '#settingsSearchEmpty',
 			itemSelector: '.settings-row',
 			groupSelector: '.settings-group',
-			groupTitleSelector: '.settings-group-title',
+			groupTitleSelector: '.subsection-title',
 			singularLabel: 'setting',
 			pluralLabel: 'settings'
 		});

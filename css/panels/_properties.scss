@@ -633,26 +633,6 @@
 	}
 }
 
-// Rule D, tier 2: a set-scoped reset sits at the right edge of its set label.
-.property-panel .has-set-reset {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: var(--spacing-sm);
-}
-
-.property-panel .property-set-reset {
-	flex: 0 0 auto;
-	padding: 0;
-	font-size: var(--font-size-xs);
-	font-weight: 500;
-	letter-spacing: 0;
-	text-transform: none;
-	color: var(--color-text-tertiary);
-
-	&:hover { color: var(--color-accent); }
-}
-
 // ===== Grouping: dividers, not boxes (rule B) ==============================
 
 .property-panel {
@@ -1639,12 +1619,15 @@ body.is-resizing-panel {
 	&.is-stacked > .glitter-source { grid-area: 2 / 1 / 3 / 4; margin-inline: 0; }
 }
 
-// ===== A set-scoped reset is the same icon, one step quieter ==============
-.property-panel .property-set-reset {
+// Rule D, tier 2: a card reset is the same icon in the card's title, over the
+// revert column of the rows below. The title is padded by the card inset and
+// the rows by the card gutter, so the icon steps in by the difference. The
+// negative block margin keeps a title with a reset as tall as one without.
+.property-panel .property-card > .subsection-title > .property-card-reset {
 	flex: 0 0 auto;
-	width: var(--property-revert-col);
-	height: var(--property-revert-col);
+	margin-block: -3px;
 	margin-left: auto;
+	margin-right: calc(var(--property-gutter) - var(--property-card-inset));
 }
 
 // ===== Inline placeholders speak the panel's language =====================

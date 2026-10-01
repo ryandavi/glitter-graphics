@@ -5,22 +5,32 @@
 // Builds the settings modals from declarations, so a setting's label,
 // description and control (with its option list) are written once. The markup
 // is the property-panel vocabulary (js/ui/panel-renderer.js): a group is a
-// panel group holding one card, and each setting is a `.property-set` in it,
+// titled card, and each setting is a `.property-set` in it,
 // a property row followed by its description as a `.property-note`. The
 // `settings-group` / `settings-row` classes are hooks for the search filter
-// and the editor's settings code; they carry no layout.
+// and the editor's settings code; they carry no layout. A group's card also
+// carries its `section` as data-section.
 // ============================================
 // A group is { title, section, id?, hidden?, badge?, rows }. `section` names
-// the group's Reset button target (data-section). A row is one of:
+// the group and gives the card's title a reset. A row is one of:
 // - a field row: { field, ...rowOptions }, where `field` is
-//   { id, label, description, control } (export settings pass their
+//   { id, label, description, control, default } (export settings pass their
 //   EXPORT_SETTINGS_SCHEMA entry, whose `element` is the control id);
 // - { host: 'templateId' }: a custom widget cloned from a <template>;
-// - { governed: { id, set, label, railId, header, rows, ...rowOptions } }:
-//   a header row whose value sets the rows in a collapsible rail.
+// - { governed: { id, label, railId, header, rows, rowReverts, formatSection } }:
+//   a header row whose value sets the rows under it. The header is an ordinary
+//   row in the card body; the governed rows sit in the panel's Advanced
+//   disclosure (labelled Customize, id `id`), which is the card's footer as in
+//   a sidebar card, so a governed row is the last row of its group. A host
+//   header takes `revert`, the field its control edits.
+//
+// Resets follow the panel's rule D. A field that declares a `default` (a value
+// or a function) gets the row revert; the card reset replays the reverts of the
+// rows in it. Rows a preset writes (`rowReverts: false`) have none: the
+// preset row's revert restores them together.
 // Row options: rowId, hidden, formatSection (data-export-format-section),
-// aliases (data-search-aliases), filterPin, dependent (the dependent-row
-// style), inactiveReason (why the row is disabled; adds the reason line),
+// aliases (data-search-aliases), filterPin, inactiveReason (why the row is
+// disabled; adds the reason line),
 // afterHeader / afterDescription (template ids for extra content), descId,
 // statusId (a live status line under the description).
 //
@@ -45,9 +55,28 @@ function cloneSettingsTemplate(templateId) {
 	return template.content.cloneNode(true);
 }
 
+// The control-side value of a field's declared default; undefined when it
+// declares none.
+function settingsFieldDefault(field) {
+	if (field.default === undefined) return undefined;
+	const value = typeof field.default === 'function' ? field.default() : field.default;
+	return field.format ? field.format(value) : value;
+}
+
+// The shared handler in initializePropertyReverts restores the control and
+// fires its change event, so the setting's own listener does the rest.
+function attachSettingsRevert(node, field) {
+	const value = settingsFieldDefault(field);
+	if (value === undefined) return;
+	const row = node.matches?.('.property-row') ? node : node.querySelector('.property-row');
+	const button = buildFieldRevert(field.id || field.element, value);
+	button.setAttribute('aria-label', `Reset ${field.label}`);
+	row.appendChild(button);
+}
+
 // A slider keeps its own range and readout id, so it is stamped onto the
-// shared slider row directly instead of through FIELDS. Group Reset is the
-// modal's revert, so the row's own revert button is dropped.
+// shared slider row directly instead of through FIELDS. The template's revert
+// follows the sidebar's id grammar; attachSettingsRevert adds this row's.
 function buildSettingsRangeRow(id, field) {
 	const control = field.control;
 	const row = tplClone('tpl-slider-row');
@@ -91,7 +120,8 @@ function buildSettingsControl(field) {
 			return buildSettingsRangeRow(id, field);
 		case 'segmented':
 			return buildPanelItem({ kind: 'segmented', id: control.id, visibleLabel: field.label,
-				label: control.ariaLabel || field.label, stacked: false, options: control.options });
+				label: control.ariaLabel || field.label, stacked: false, options: control.options,
+				revertFor: control.revertFor });
 		case 'button':
 			return buildPanelItem({ kind: 'labeled', label: field.label, stacked: false, control: {
 				kind: 'host', tag: 'button', id: control.id, classes: 'btn-text-with-icon', text: control.label, attrs: { type: 'button' }
@@ -123,17 +153,18 @@ function buildSettingsNote(text, id) {
 	return note;
 }
 
-function buildSettingsFieldRow(row) {
+function buildSettingsFieldRow(row, rowReverts = true) {
 	const field = row.field;
 	const set = panelDiv('property-set settings-row');
-	if (row.dependent) set.classList.add('settings-row--dependent');
 	if (row.rowId) set.id = row.rowId;
 	if (row.hidden) set.hidden = true;
 	if (row.formatSection) set.dataset.exportFormatSection = row.formatSection;
 	if (row.aliases) set.dataset.searchAliases = row.aliases;
 	if (row.filterPin) set.dataset.filterPin = '';
 	if (row.inactiveReason) set.dataset.inactiveReason = row.inactiveReason;
-	set.appendChild(buildSettingsControl(field));
+	const control = buildSettingsControl(field);
+	if (rowReverts) attachSettingsRevert(control, field);
+	set.appendChild(control);
 	if (row.afterHeader) set.appendChild(cloneSettingsTemplate(row.afterHeader));
 	if (field.description) set.appendChild(buildSettingsNote(field.description, row.descId));
 	if (row.afterDescription) set.appendChild(cloneSettingsTemplate(row.afterDescription));
@@ -155,52 +186,48 @@ function buildSettingsFieldRow(row) {
 	return set;
 }
 
-function buildSettingsRow(row) {
+function buildSettingsRow(row, rowReverts = true) {
 	if (row.host) return cloneSettingsTemplate(row.host);
-	if (!row.governed) return buildSettingsFieldRow(row);
-	const governed = row.governed;
-	const set = panelDiv('property-set governed-set is-collapsed');
-	set.id = governed.id;
-	set.dataset.governedSet = governed.set;
-	if (governed.formatSection) set.dataset.exportFormatSection = governed.formatSection;
-	set.appendChild(governed.header.host ? cloneSettingsTemplate(governed.header.host) : buildSettingsFieldRow(governed.header));
-	const rail = panelDiv('governed-rail');
-	rail.id = governed.railId;
-	rail.setAttribute('role', 'group');
-	rail.setAttribute('aria-label', governed.label);
-	governed.rows.forEach((child) => rail.appendChild(buildSettingsRow(child)));
-	set.appendChild(rail);
-	return set;
+	return buildSettingsFieldRow(row, rowReverts);
+}
+
+function buildGovernedHeader(governed) {
+	if (!governed.header.host) return buildSettingsFieldRow({ ...governed.header, formatSection: governed.formatSection });
+	const header = cloneSettingsTemplate(governed.header.host);
+	if (governed.header.revert) attachSettingsRevert(header, governed.header.revert);
+	if (governed.formatSection) header.firstElementChild.dataset.exportFormatSection = governed.formatSection;
+	return header;
+}
+
+function buildGovernedDisclosure(governed) {
+	const disclosure = buildPanelItem({ kind: 'advanced', id: governed.id, label: 'Customize', items: [] });
+	if (governed.formatSection) disclosure.dataset.exportFormatSection = governed.formatSection;
+	const content = disclosure.querySelector('[data-advanced-content]');
+	content.id = governed.railId;
+	content.setAttribute('role', 'group');
+	content.setAttribute('aria-label', governed.label);
+	disclosure.querySelector('[data-advanced-toggle]').setAttribute('aria-controls', governed.railId);
+	governed.rows.forEach((child) => content.appendChild(buildSettingsRow(child, governed.rowReverts !== false)));
+	return disclosure;
 }
 
 function buildSettingsGroup(group) {
-	const card = buildPanelItem({ kind: 'card', flatBody: true, items: [] });
+	const card = buildPanelItem({ kind: 'card', title: group.title, id: group.id, hidden: group.hidden,
+		flatBody: true, items: [],
+		badge: group.badge ? { label: group.badge } : null,
+		reset: group.section ? { title: `Reset ${group.title} settings` } : null });
 	const body = card.querySelector('.subsection-card-body');
-	group.rows.forEach((row) => body.appendChild(buildSettingsRow(row)));
-	const node = buildPanelGroup({ title: group.title, items: [] });
-	node.querySelector('.panel-group-blocks').appendChild(card);
-	node.classList.add('settings-group');
-	if (group.id) node.id = group.id;
-	if (group.hidden) node.hidden = true;
-	const header = node.querySelector('.subsection-title');
-	header.classList.add('settings-group-title');
-	const label = header.querySelector('.property-group-label');
-	label.classList.add('settings-group-title-text');
-	if (group.badge) {
-		const badge = document.createElement('span');
-		badge.className = 'badge';
-		badge.textContent = group.badge;
-		label.appendChild(badge);
-	}
-	if (group.section) {
-		const reset = document.createElement('button');
-		reset.type = 'button';
-		reset.className = 'btn-text small reset-section-btn';
-		reset.dataset.section = group.section;
-		reset.textContent = 'Reset';
-		header.appendChild(reset);
-	}
-	return node;
+	group.rows.forEach((row) => {
+		if (!row.governed) {
+			body.appendChild(buildSettingsRow(row));
+			return;
+		}
+		body.appendChild(buildGovernedHeader(row.governed));
+		card.appendChild(buildGovernedDisclosure(row.governed));
+	});
+	card.classList.add('settings-group');
+	if (group.section) card.dataset.section = group.section;
+	return card;
 }
 
 // `container` is the modal's `.section` host; it becomes a property section

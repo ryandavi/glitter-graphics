@@ -31,7 +31,7 @@ function createModalFilter(options) {
 	const readableText = (element) => {
 		if (!element) return '';
 		const copy = element.cloneNode(true);
-		copy.querySelectorAll('button, .badge').forEach((node) => node.remove());
+		copy.querySelectorAll('button, .badge, .feature-badge').forEach((node) => node.remove());
 		return copy.textContent || '';
 	};
 
@@ -48,7 +48,7 @@ function createModalFilter(options) {
 				group,
 				// A preset row owns the rows beneath it, so it stays visible
 				// whenever anything in its group matches — otherwise a match on
-				// a governed row leaves an indented rail under no heading.
+				// a governed row leaves its disclosure under no heading.
 				isPinned: item.hasAttribute('data-filter-pin'),
 				searchText: expandAliases(`${groupTitle} ${itemText} ${item.dataset.searchAliases || ''}`)
 			};

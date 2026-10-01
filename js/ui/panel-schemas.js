@@ -1012,9 +1012,8 @@ const PANEL_SCHEMAS = {
 	newCanvas: {
 		prefix: 'newCanvas',
 		section: { id: 'newCanvasSettingsSection', bare: true },
-		groups: [
-			{ title: 'Dimensions', items: [
-				{ kind: 'card', items: [
+		subsections: [{ items: [
+				{ kind: 'card', title: 'Dimensions', items: [
 					{ kind: 'numberPair', label: 'Size', items: [
 						{ id: 'newCanvasWidth', mark: 'W', label: 'Width', min: CONFIG.canvas.limits.minSize, step: 1, inputMode: 'numeric' },
 						{ id: 'newCanvasHeight', mark: 'H', label: 'Height', min: CONFIG.canvas.limits.minSize, step: 1, inputMode: 'numeric' }
@@ -1024,10 +1023,8 @@ const PANEL_SCHEMAS = {
 							{ id: 'orientationPortrait', icon: 'portrait', label: 'Portrait', showLabel: true, value: 'portrait' },
 							{ id: 'orientationLandscape', icon: 'landscape', label: 'Landscape', showLabel: true, value: 'landscape' }
 						] }
-				] }
-			] },
-			{ title: 'Background', items: [
-				{ kind: 'card', items: [
+				] },
+				{ kind: 'card', title: 'Background', items: [
 					{ kind: 'segmented', id: 'newCanvasBackground', visibleLabel: 'Fill', label: 'Canvas background',
 						stacked: false, options: [
 							{ label: 'Color', value: 'color', active: true },
@@ -1036,8 +1033,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'field', id: 'newCanvasColor', rowId: 'canvasColorRow', label: 'Color',
 						type: 'color', value: CONFIG.canvas.defaults.blankDocument.color }
 				] }
-			] }
-		]
+		] }]
 	},
 	// The document-size form (Image Size / Canvas Size). ONE self-contained
 	// "Size" card, mounted into #noLayerCanvasSizeHost at boot; updateSidePanelUI

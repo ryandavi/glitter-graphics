@@ -765,35 +765,28 @@ body.modal-open {
 // `.property-section` (a PANEL_SCHEMAS section, or the groups built by
 // js/ui/settings-renderer.js), and groups, cards, rows and notes all come from
 // panels/_properties.scss. Only what the wider column changes is set here.
-// Group labels and cards carry their own inset, so neither the body nor the
-// section content adds one at the sides. The body closes with the card inset,
-// so the last card clears the footer by what it clears the sides. Written
-// against the shell's own body selector so it also outranks the
+// Cards carry their own inset, so neither the body nor the section content
+// adds one at the sides. The body opens and closes with the card inset, so
+// the first and last cards clear its edges by what they clear the sides.
+// Written against the shell's own body selector so it also outranks the
 // narrow-viewport body padding.
 .modal-overlay > .modal-content > .modal-body.modal-form {
 	// The body is the panel scope, where this token is wider than inside a
 	// `.property-section`; match the section so the two edges agree.
 	--property-card-inset: var(--property-pad);
-	padding: 0 0 var(--property-card-inset);
+	padding: var(--property-card-inset) 0;
 }
 
 .modal-form {
 	&.property-panel .section.property-section > .section-content { padding: 0; }
 
-	// Groups are separated by their labels alone: no hairline between them.
-	.subsection-content-group.subsection-section-group + .subsection-content-group.subsection-section-group {
-		border-top: 0;
-	}
-
-	// No row here has a revert, so its reserved column closes up.
-	.property-section { --property-revert-w: 0px; }
-
 	// A modal is several sidebars wide: the label takes two thirds of a row and
 	// the control the rest, so the controls share one right-hand column.
 	&.property-panel .property-row { --property-label-col: minmax(0, 2fr); }
 
-	// Every control ends on the same edge as a select or segmented control.
-	.property-row > :is(.input-unit, button) { grid-column: 2 / -2; }
+	// Every control ends on the same edge as a select or segmented control,
+	// short of the revert column.
+	.property-row > :is(.input-unit, button:not(.property-revert)) { grid-column: 2 / -2; }
 
 	// Helper text keeps a readable measure in the wide column.
 	.property-note {
@@ -814,18 +807,12 @@ body.modal-open {
 		max-height: min(90dvh, 820px);
 	}
 
-	// The preset groups read as panel groups: the same label and the same
-	// inset as the cards below.
+	// The preset groups and the form are one run of titled cards.
+	.modal-body.modal-form,
 	.new-canvas-preset-groups {
 		display: flex;
 		flex-direction: column;
-	}
-
-	.new-canvas-preset-group {
-		> .property-group-label {
-			margin: 0;
-			padding: calc(var(--property-pad) * 1.5) var(--property-pad);
-		}
+		gap: var(--property-card-inset);
 	}
 
 	.template-preview-wrapper {
@@ -842,7 +829,7 @@ body.modal-open {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: var(--spacing-sm);
-		padding-inline: var(--property-pad);
+		padding: var(--property-pad);
 
 		// The presets are `.action-card`s; only the preview box is sized here.
 		.blank-image-option {
@@ -1650,7 +1637,6 @@ body.modal-open {
 	.version-history-content {
 		padding-bottom: var(--spacing-md);
 
-		>p,
 		>ul {
 			margin-top: var(--spacing-sm);
 		}
@@ -2659,65 +2645,25 @@ body.modal-open {
 }
 
 /* ===== SHORTCUTS MODAL ===== */
-// Keyboard vs Canvas Gestures is a scope filter, not a set of pages, so it
-// lives in the chrome bar as the shared `.segmented-control` rather than a
-// bespoke tab strip inside the scrolling body.
-#shortcutsModal {
-	.shortcut-help {
-		min-height: 1.4em;
-		margin: 0 0 var(--spacing-lg);
-		color: var(--color-text-tertiary);
-		font-size: var(--font-size-sm);
-	}
+// A form modal (see FORM MODALS above): each command group is a titled card
+// and each command a property row. Keyboard vs Canvas Gestures is a scope
+// filter, not a set of pages, so it lives in the chrome bar as the shared
+// `.segmented-control`. Only the row's control differs from a setting: it is
+// a run of key or gesture chips, as wide as it needs, ending on the row edge.
+#shortcutsModal .property-row.shortcut-item {
+	grid-template-columns: minmax(0, 1fr) auto;
 
-	.shortcut-list {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		align-items: start;
-		gap: var(--spacing-xl);
+	// A command name is read, not scanned beside a control: on a narrow
+	// modal it wraps instead of truncating.
+	> .property-label { white-space: normal; }
 
-		>.shortcut-group {
-			display: flex;
-			flex-direction: column;
-			gap: var(--spacing-sm);
-
-			&[hidden] { display: none; }
-
-			>.shortcut-group-title {
-				font-size: var(--font-size-sm);
-				font-weight: 600;
-				color: var(--color-text-primary);
-				padding-bottom: var(--spacing-sm);
-				border-bottom: 1px solid var(--color-border);
-			}
-		}
-	}
-
-	.shortcut-item {
+	> .shortcut-keys {
+		grid-column: 2;
 		display: flex;
-		min-height: 30px;
-		justify-content: space-between;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--spacing-md);
-
-		>.shortcut-action {
-			min-width: 0;
-			font-size: var(--font-size-sm);
-			color: var(--color-text-secondary);
-			font-weight: 500;
-		}
-
-		>.shortcut-keys {
-			display: flex;
-			align-items: center;
-			gap: var(--spacing-xs);
-			flex-wrap: wrap;
-			justify-content: flex-end;
-		}
-	}
-
-	@media (max-width: 640px) {
-		.shortcut-list { grid-template-columns: minmax(0, 1fr); }
+		justify-content: flex-end;
+		gap: var(--spacing-xs);
 	}
 }
 
@@ -2955,26 +2901,11 @@ body.modal-open {
 
 /* ===== SETTINGS MODALS ===== */
 // Settings and Export Settings are form modals (see FORM MODALS above): each
-// group is a panel group with one card, each setting a `.property-set` in it.
-// `.settings-group` and `.settings-row` are hooks for the search filter and
-// the settings code. What follows is only what a settings list adds to the
-// panel vocabulary: a Reset beside the group label, inactive rows, and rails.
-.settings-group-title {
-	justify-content: space-between;
-
-	>.settings-group-title-text {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		min-width: 0;
-
-		// A badge keeps its own case beside the uppercase group label.
-		>.badge {
-			letter-spacing: 0;
-			text-transform: none;
-		}
-	}
-}
+// group is a titled card, each setting a `.property-set` in it, and row and
+// card resets are the panel's own (rule D). `.settings-group` and
+// `.settings-row` are hooks for the search filter and the settings code. What
+// follows is only what a settings list adds to the panel vocabulary: custom
+// widgets, inactive rows, and the search's divider rule.
 
 .export-fidelity-ticks {
 	display: flex;
@@ -3027,75 +2958,52 @@ body.modal-open {
 // this class only carries the look, and the reason note says what to turn
 // on. Never `pointer-events: none`: that stops the mouse and not the Tab
 // key, which leaves a "disabled" control a keyboard user can still change.
+// The row's revert stays live, so the dimming is applied around it.
 .settings-row.is-inactive {
-	> :not([data-inactive-reason-text]) { opacity: var(--disabled-opacity); }
+	> :not([data-inactive-reason-text]):not(.property-row),
+	> .property-row > :not(.property-revert) { opacity: var(--disabled-opacity); }
 	.property-label { cursor: not-allowed; }
 }
 
 .settings-row > [data-inactive-reason-text] { font-style: italic; }
 
 // ---- Subordination ------------------------------------------------------
-// A row governed by the single row above it (Watermark → Watermark Style,
-// `.settings-row--dependent`) sits flush with its parent; its inactive state
-// and reason note say what controls it.
+// A row governed by the single row above it (Watermark → Watermark Style)
+// sits flush with its parent; its inactive state and reason note say what
+// controls it.
 //
 // A preset that writes many values (GIF Look → its palette and texture rows)
-// keeps them in an indented rail under a disclosure: collapse, summary,
-// Customize. The set is itself a `.property-set` (one divided unit in the
-// card), so it gives up the set's own padding to the header row and rail rows
-// inside it. Rows own the card gutter, so the rail starts one gutter in and
-// its rows keep theirs.
-.modal-form .governed-set {
-	padding: 0;
-
-	>.governed-rail {
-		display: flex;
-		flex-direction: column;
-		margin-bottom: var(--property-pad);
-		margin-left: var(--property-gutter);
-		border-left: 2px solid var(--color-border);
-	}
-
-	&.is-collapsed > .governed-rail { display: none; }
-}
-
+// keeps them in the panel's Advanced disclosure, labelled Customize: the
+// card's footer, styled by the panel as in any sidebar card. Its header row,
+// the last row of the card body, ends on a summary of what they currently are.
+//
+// What the governed rows currently amount to, stated as the header's last note.
 .governed-summary {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--spacing-md);
-	flex-wrap: wrap;
-}
-
-.governed-summary-values {
-	min-width: 0;
 	color: var(--color-text-secondary);
-	font-size: var(--font-size-sm);
 	font-variant-numeric: tabular-nums;
 
 	&:empty { display: none; }
 }
 
-.governed-toggle {
-	flex: 0 0 auto;
-	display: inline-flex;
-	align-items: center;
-	gap: var(--spacing-xs);
+// A search hides rows with `.is-filtered-out`, which the panel's divider rule
+// cannot see: it skips `[hidden]` siblings, and `hidden` here belongs to the
+// format gating. While a query is active a set is divided from the one above
+// only when an earlier set in the same run is showing.
+.is-filtering .modal-body.modal-form {
+	&.property-panel .property-section .property-set { border-top: 0; }
 
-	>.governed-toggle-chevron {
-		width: 12px;
-		height: 12px;
-		transition: transform var(--transition-fast);
-
-		>svg.icon { font-size: 12px; }
+	&.property-panel .property-section .property-set:not([hidden], .is-filtered-out) ~ .property-set {
+		border-top: 1px solid var(--color-border);
 	}
 
-	&[aria-expanded="true"] > .governed-toggle-chevron { transform: rotate(180deg); }
+	// A live search has to be able to reveal a governed row, so filtering
+	// forces every disclosure open for as long as there is a query, and drops
+	// one whose rows are all filtered out.
+	.settings-group > .advanced-disclosure {
+		> .advanced-disclosure-content { display: flex; }
+		&:not(:has(.settings-row:not(.is-filtered-out))) { display: none; }
+	}
 }
-
-// A live search has to be able to reveal a governed row, so filtering forces
-// every rail open for as long as there is a query.
-.is-filtering .governed-set.is-collapsed > .governed-rail { display: flex; }
 
 // The GIF Look's illustration: what the current palette and texture settings
 // actually do, drawn from the live values rather than described in prose.
@@ -3356,8 +3264,6 @@ body.modal-open {
 		--property-row-h: var(--touch-target-min);
 	}
 
-	.settings-group-title > .btn-text,
-	.governed-toggle,
 	.modal-nav .segmented-option {
 		min-height: var(--touch-target-min);
 	}

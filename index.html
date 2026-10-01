@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=734b16ba">
+	<link rel="stylesheet" href="css/style.css?v=2be8a847">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -582,7 +582,7 @@
 			     body, and the form itself a schema section (PANEL_SCHEMAS.newCanvas). -->
 			<div class="modal-body modal-form property-panel">
 				<!-- Rendered from CONFIG.canvas.presets (renderNewCanvasPresets). -->
-				<div class="new-canvas-preset-groups" id="newCanvasPresets"></div>
+				<div class="new-canvas-preset-groups property-section" id="newCanvasPresets"></div>
 				<div class="section" id="newCanvasSettingsSection"></div>
 			</div>
 
@@ -833,7 +833,7 @@
 				<div class="section" id="settingsGroups"></div>
 				<div class="modal-filter-empty" id="settingsSearchEmpty" hidden>No settings match your search.</div>
 			</div>
-			<div class="modal-footer left-right"><button class="btn-text modal-action secondary reset-all-settings-btn">Reset Everything</button><button class="btn-simple modal-action modal-close" id="closeSettingsModalFooter">Close</button></div></div>
+			<div class="modal-footer left-right"><button class="btn-text-with-icon icon-wrapper modal-action secondary reset-all-settings-btn"><svg class="icon"><use href="#icon-reset"></use></svg><span class="name">Reset Everything</span></button><button class="btn-simple modal-action modal-close" id="closeSettingsModalFooter">Close</button></div></div>
 	</div>
 
 	<!-- Export Settings Modal -->
@@ -875,11 +875,8 @@
 				<div class="modal-filter-empty" id="exportSettingsSearchEmpty" hidden>No export settings match your search.</div>
 			</div>
 
-			<!-- Footer with Reset All button -->
 			<div class="modal-footer left-right">
-				<button class="btn-text modal-action secondary reset-export-settings-btn">
-					Reset All Export Settings
-				</button>
+				<button class="btn-text-with-icon icon-wrapper modal-action secondary reset-export-settings-btn"><svg class="icon"><use href="#icon-reset"></use></svg><span class="name">Reset Export Settings</span></button>
 				<button class="btn-simple modal-action modal-close" id="closeExportSettingsModalFooter">Close</button>
 			</div>
 
@@ -904,13 +901,7 @@
 	<template id="tplExportGifLookPreview">
 		<canvas id="exportDitherPreview" class="export-dither-preview property-inset" width="240" height="72" aria-label="Live preview of the selected GIF look"></canvas>
 		<div class="property-note" id="exportDitherPreviewDescription" aria-live="polite"></div>
-		<div class="governed-summary property-inset">
-			<span class="governed-summary-values" data-governed-summary></span>
-			<button type="button" class="btn-text small governed-toggle" data-governed-toggle aria-expanded="false" aria-controls="exportGifLookRail">
-				<span data-governed-toggle-label>Customize</span>
-				<span class="governed-toggle-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
-			</button>
-		</div>
+		<div class="property-note governed-summary" data-governed-summary></div>
 	</template>
 	<template id="tplExportFidelityHeader">
 		<div class="property-set settings-row" data-filter-pin>
@@ -922,19 +913,13 @@
 			<datalist id="exportFidelityStops"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option></datalist>
 			<div class="export-fidelity-ticks property-inset" aria-hidden="true"><span>Exact</span><span>High</span><span>Balanced</span><span>Small</span><span>Smallest</span></div>
 			<div class="property-note export-fidelity-estimate" id="exportFidelityEstimate">Calculating animation estimate…</div>
-			<div class="governed-summary property-inset">
-				<span class="governed-summary-values" data-export-fidelity-summary></span>
-				<button type="button" class="btn-text small governed-toggle" data-governed-toggle aria-expanded="false" aria-controls="exportFidelityRail">
-					<span data-governed-toggle-label>Customize</span>
-					<span class="governed-toggle-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
-				</button>
-			</div>
+			<div class="property-note governed-summary" data-export-fidelity-summary></div>
 		</div>
 	</template>
 
 	<!-- Shortcuts Modal -->
 	<div class="modal-overlay" id="shortcutsModal">
-		<div class="modal-content modal-reading">
+		<div class="modal-content modal-browse">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -974,11 +959,10 @@
 				</label>
 				<button type="button" class="btn-icon icon-wrapper" data-modal-filter-clear aria-label="Clear keyboard shortcut search" title="Clear search" hidden><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Clear search</span></button>
 			</div>
-			<div class="modal-body">
-				<p class="shortcut-help" id="shortcutViewDescription">Shortcuts use the keys for this device. Alternate bindings are separated by “or.”</p>
-				<div class="shortcut-list" id="shortcutList">
-					<!-- Populated via JS -->
-				</div>
+			<!-- A form modal: initializeShortcutsModal renders the command groups
+			     as panel cards into the section. -->
+			<div class="modal-body modal-form property-panel">
+				<div class="section" id="shortcutSection"></div>
 				<div class="modal-filter-empty" id="shortcutSearchEmpty" hidden>No commands or shortcuts match your search.</div>
 			</div>
 		</div>
@@ -1686,7 +1670,7 @@
 	<script src="js/core/tools.js?v=442b0974"></script>
 	<script src="js/core/layer-types.js?v=ca933e82"></script>
 	<script src="js/core/options.js?v=223ad907"></script>
-	<script src="js/ui/panel-schemas.js?v=a478fcfa"></script>
+	<script src="js/ui/panel-schemas.js?v=d29118b3"></script>
 	<script src="js/paint/paint-slots.js?v=802a1a39"></script>
 	<script src="js/layers/types/base-image.js?v=271e2694"></script>
 	<script src="js/layers/types/filter.js?v=f5e44e55"></script>
@@ -1752,21 +1736,21 @@
 	<script src="js/ui/color-eyedropper.js?v=a1914b36"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=dc1bc2dc"></script>
-	<script src="js/ui/panel-renderer.js?v=4373ea16"></script>
+	<script src="js/ui/panel-renderer.js?v=35e81104"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=e395dff4"></script>
-	<script src="js/ui/settings-renderer.js?v=944afb5c"></script>
-	<script src="js/ui/settings-store.js?v=2f2625cf"></script>
+	<script src="js/ui/settings-renderer.js?v=f2c89a5c"></script>
+	<script src="js/ui/settings-store.js?v=08262b50"></script>
 	<script src="js/ui/menu-popover.js?v=20e6b111"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=4c66d155"></script>
-	<script src="js/editor/settings.js?v=6f48d669"></script>
+	<script src="js/editor/settings.js?v=fa92e122"></script>
 	<script src="js/editor/panels.js?v=2e87e5bb"></script>
-	<script src="js/editor/disclosures.js?v=51663fe5"></script>
+	<script src="js/editor/disclosures.js?v=1be96619"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=3b804a8b"></script>
 	<script src="js/editor/transform-interaction.js?v=3d1b90fa"></script>
-	<script src="js/editor/document-start.js?v=47935f02"></script>
-		<script src="js/editor/modals-wiring.js?v=84d4720e"></script>
+	<script src="js/editor/document-start.js?v=15f7cce5"></script>
+		<script src="js/editor/modals-wiring.js?v=4d19ea3b"></script>
 	<script src="js/editor/layer-panel.js?v=49e9b9f2"></script>
 	<script src="js/editor/canvas-gestures.js?v=c88600e6"></script>
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>
@@ -1774,13 +1758,13 @@
 		<script src="js/ui/hints.js?v=fa9b6b06"></script>
 	<script src="js/ui/picker-session.js?v=39ebd0cf"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=7ef5a58f"></script>
-	<script src="js/ui/modal-filter.js?v=2a5c14d8"></script>
+	<script src="js/ui/modal-filter.js?v=39b1a396"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
 	<script src="js/systems/GestureManager.js?v=da981317"></script>
-	<script src="js/systems/ModalManager.js?v=1066d7cd"></script>
+	<script src="js/systems/ModalManager.js?v=34a62a73"></script>
 	<script src="js/export/ExportTimeline.js?v=ca9a59d7"></script>
 	<script src="js/export/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/export/AuthoredFrameResolver.js?v=3139d2c3"></script>

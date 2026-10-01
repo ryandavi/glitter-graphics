@@ -286,7 +286,10 @@ function syncFieldRevert(button) {
 	const at = (id) => {
 		const el = document.getElementById(id);
 		if (!el) return true;
-		return el.type === 'checkbox' ? String(el.checked) === wanted : String(el.value) === wanted;
+		if (el.type === 'checkbox') return String(el.checked) === wanted;
+		// A typed "5.0" is still the default 5; an empty field is not 0.
+		if ((el.type === 'number' || el.type === 'range') && el.value !== '' && wanted !== '') return Number(el.value) === Number(wanted);
+		return String(el.value) === wanted;
 	};
 	button.disabled = button.dataset.revertFor.split(/\s+/).filter(Boolean).every(at);
 }
@@ -876,24 +879,10 @@ function wrapPropertySet(nodes) {
 	return set;
 }
 
-// Rule D, tier 2: a set-scoped reset lives at the right edge of the set's own
-// label, never as a full-width button of its own. `reset` supplies the id and
-// wording; the affordance itself is identical everywhere.
-function buildAdvancedControlGroup(title, className, reset = null) {
+function buildAdvancedControlGroup(title, className) {
 	const group = panelDiv(`property-set ${className}`);
 	const heading = panelDiv('property-set-label');
 	heading.textContent = title;
-	if (reset) {
-		const button = document.createElement('button');
-		button.type = 'button';
-		button.className = 'property-revert property-set-reset';
-		button.id = reset.id;
-		button.title = reset.title || 'Reset to default';
-		button.setAttribute('aria-label', reset.title || `Reset ${title}`);
-		button.appendChild(createIcon('reset'));
-		heading.classList.add('has-set-reset');
-		heading.appendChild(button);
-	}
 	group.appendChild(heading);
 	return group;
 }
@@ -1107,6 +1096,7 @@ function buildPanelItem(item, schema) {
 					summary.textContent = item.titleSummary.text || '';
 					title.appendChild(summary);
 				}
+				if (item.reset) title.appendChild(buildPanelCardReset(card, item.title, item.reset));
 			}
 			else title.remove();
 			if (item.toggle) {
@@ -1776,6 +1766,12 @@ function setPanelCardCollapsed(card, collapsed) {
 	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 }
 
+// The open state of a `[data-advanced]` disclosure, for every caller.
+function setAdvancedDisclosureOpen(disclosure, open) {
+	disclosure.classList.toggle('is-open', open);
+	disclosure.querySelector(':scope > [data-advanced-toggle]')?.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
 function applyPanelCardState(card) {
 	const key = card?.dataset.collapseKey;
 	if (!key) return;
@@ -1810,6 +1806,33 @@ function initializePanelGroupNode(node, title) {
 	label.textContent = title;
 	header.appendChild(label);
 	return header;
+}
+
+// Rule D, tier 2: a card-scoped reset at the right edge of the card's title.
+// It holds no defaults of its own: it replays every lit revert on the rows
+// showing in its card, so it is inert exactly when all of them are.
+function buildPanelCardReset(node, title, spec) {
+	const button = document.createElement('button');
+	button.type = 'button';
+	button.className = 'property-revert property-card-reset';
+	button.dataset.revertBound = '';
+	button.disabled = true;
+	button.title = spec.title || `Reset ${title}`;
+	button.setAttribute('aria-label', button.title);
+	button.appendChild(createIcon('reset'));
+	const reverts = () => Array.from(node.querySelectorAll('button.property-revert')).filter((revert) => revert !== button);
+	const isLit = (revert) => !revert.disabled && !revert.closest('[hidden]');
+	button.addEventListener('click', () => {
+		// Checked as it goes: one revert can light, clear or reveal a later one.
+		reverts().forEach((revert) => { if (isLit(revert)) revert.click(); });
+	});
+	new MutationObserver(() => {
+		// Assigned only on a change: writing `disabled` again is itself a
+		// mutation, which would re-enter this observer forever.
+		const inert = !reverts().some(isLit);
+		if (button.disabled !== inert) button.disabled = inert;
+	}).observe(node, { subtree: true, childList: true, attributes: true, attributeFilter: ['disabled', 'hidden'] });
+	return button;
 }
 
 function buildPanelGroup(group, schema) {

@@ -173,6 +173,10 @@ class ModalManager {
 			return;
 		}
 
+		// A modal closed a moment ago is still navigating back. Opening before
+		// that popstate lands would have it close this modal instead.
+		if (this.pendingHistoryBack) await this.pendingHistoryBack;
+
 		const activeModal = document.activeElement?.closest?.('.modal-overlay');
 		const activeConfig = activeModal ? this.modals.get(activeModal.id) : null;
 		config.previouslyFocused = options.restoreFocusTarget
@@ -441,7 +445,13 @@ class ModalManager {
 	}
 
 	popModalHistory(id) {
-		if (history.state?.[this.historyStateKey] === id) history.back();
+		if (history.state?.[this.historyStateKey] !== id) return;
+		const landed = new Promise((resolve) => window.addEventListener('popstate', resolve, { once: true }));
+		this.pendingHistoryBack = landed;
+		landed.then(() => {
+			if (this.pendingHistoryBack === landed) this.pendingHistoryBack = null;
+		});
+		history.back();
 	}
 
 	getTopOpenModalConfig() {

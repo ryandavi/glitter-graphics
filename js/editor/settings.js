@@ -4,11 +4,12 @@
 // control the reader can see. It stays in place, carries the real `disabled`
 // property on its own controls, and says what to turn on. Hiding it instead
 // would teach nothing; `pointer-events: none` alone would leave it reachable
-// by Tab.
+// by Tab. Its revert is left alone: `disabled` there means "at the default",
+// and a held-off value can still be put back.
 function setSettingsRowInactive(row, inactive) {
 	if (!row) return;
 	row.classList.toggle('is-inactive', inactive);
-	row.querySelectorAll('input, select, textarea, button').forEach((control) => {
+	row.querySelectorAll('input, select, textarea, button:not(.property-revert)').forEach((control) => {
 		control.disabled = inactive;
 	});
 	const reason = row.querySelector('[data-inactive-reason-text]');
@@ -138,7 +139,7 @@ initializeExportSettings() {
 
 	// Setup listeners
 	this.setupExportSettingsListeners();
-	this.setupSettingsResetListeners(); // ADD THIS LINE
+	this.setupSettingsResetListeners();
 }
 
 ,
@@ -178,6 +179,8 @@ initializeExportSettings() {
 		const ditherAmountValue = document.getElementById('exportDitherAmountValue');
 		if (ditherAmountValue) ditherAmountValue.textContent = `${this.exportSettings.ditherAmount}%`;
 		this.renderExportDitherPreview?.();
+		// The controls above were written without events.
+		syncFieldReverts();
 	}
 
 ,
@@ -256,29 +259,17 @@ initializeExportSettings() {
 	}
 
 ,
-	// A primary setting plus the rail of rows it governs. The rail is collapsed
-	// by default because the summary already states its effective values.
+	// A primary setting plus the rows it governs, which sit in the panel's
+	// Advanced disclosure (its shared click handler toggles it). Closed by
+	// default because the summary already states the effective values.
 	setupGovernedSets() {
-		document.querySelectorAll('[data-governed-set]').forEach((set) => {
-			const toggle = set.querySelector('[data-governed-toggle]');
-			if (!toggle || toggle.dataset.bound === 'true') return;
-			toggle.dataset.bound = 'true';
-			toggle.addEventListener('click', () => {
-				this.setGovernedSetExpanded(set, set.classList.contains('is-collapsed'));
-			});
-		});
 		this.setGifLookExpanded(this.exportSettings.ditherPreset === 'custom');
 		this.setExportFidelityExpanded(false);
 	}
 
 ,
-	setGovernedSetExpanded(set, expanded) {
-		if (!set) return;
-		set.classList.toggle('is-collapsed', !expanded);
-		const toggle = set.querySelector('[data-governed-toggle]');
-		const label = set.querySelector('[data-governed-toggle-label]');
-		if (toggle) toggle.setAttribute('aria-expanded', String(expanded));
-		if (label) label.textContent = expanded ? 'Done' : 'Customize';
+	setGovernedSetExpanded(disclosure, expanded) {
+		if (disclosure) setAdvancedDisclosureOpen(disclosure, expanded);
 	}
 
 ,
@@ -385,6 +376,19 @@ initializeExportSettings() {
 				this.updateExportFormatUI();
 				this.saveSettingsToStorage();
 			});
+		});
+		// Type and Format are button groups, so their reverts are bound here;
+		// updateExportFormatUI keeps them inert at the default.
+		document.querySelector('[data-revert-for="exportModeControl"]')?.addEventListener('click', () => {
+			this.exportSettings.outputMode = CONFIG.export.defaults.outputMode;
+			this.updateExportFormatUI();
+			this.saveSettingsToStorage();
+		});
+		document.querySelector('[data-revert-for="exportFormatControl"]')?.addEventListener('click', () => {
+			const key = this.exportSettings.outputMode === 'still' ? 'stillFormat' : 'animationFormat';
+			this.exportSettings[key] = CONFIG.export.defaults[key];
+			this.updateExportFormatUI();
+			this.saveSettingsToStorage();
 		});
 
 		Mp4Exporter.isSupported().then((supported) => {
@@ -494,10 +498,7 @@ initializeExportSettings() {
 		const showAll = PREFERENCES.get('showAllControls');
 		if (showAll) document.documentElement.dataset.showAllControls = 'true';
 		else delete document.documentElement.dataset.showAllControls;
-		document.querySelectorAll('[data-advanced]').forEach((disclosure) => {
-			disclosure.classList.toggle('is-open', showAll);
-			disclosure.querySelector('[data-advanced-toggle]')?.setAttribute('aria-expanded', showAll ? 'true' : 'false');
-		});
+		document.querySelectorAll('[data-advanced]').forEach((disclosure) => setAdvancedDisclosureOpen(disclosure, showAll));
 	}
 
 ,
@@ -559,6 +560,10 @@ initializeExportSettings() {
 				button.title = supported ? '' : 'MP4 export requires WebCodecs H.264 support in this browser.';
 			}
 		});
+		const modeRevert = document.querySelector('[data-revert-for="exportModeControl"]');
+		if (modeRevert) modeRevert.disabled = target.mode === CONFIG.export.defaults.outputMode;
+		const formatRevert = document.querySelector('[data-revert-for="exportFormatControl"]');
+		if (formatRevert) formatRevert.disabled = target.format === CONFIG.export.defaults[target.isStill ? 'stillFormat' : 'animationFormat'];
 		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = !target.isGif);
 		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !target.isVideo);
 		document.getElementById('transparencySettingsRow').hidden = !target.supportsTransparency;
@@ -566,13 +571,15 @@ initializeExportSettings() {
 		document.getElementById('exportJpegQualityRow').hidden = !target.supportsJpegCompression;
 		document.querySelector('#exportDitherTemporalMode')?.closest('.settings-row')?.toggleAttribute('hidden', !target.supportsTemporalGifLook);
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
-			const title = group.querySelector('.settings-group-title-text')?.textContent;
-			if (title === 'Playback') group.hidden = !target.supportsPlaybackSettings;
-			if (title === 'Optimization') group.hidden = !target.supportsAnimationOptimization;
+			const section = group.dataset.section;
+			// Assigned for every group: the pass below hides one whose rows are
+			// all hidden, and it has to come back when the format changes.
+			group.hidden = (section === 'playback' && !target.supportsPlaybackSettings)
+				|| (section === 'optimization' && !target.supportsAnimationOptimization);
 		});
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
 			if (group.hidden) return;
-			// The card body's children are the group's rows and governed sets.
+			// The card body's children are the group's rows.
 			const hasVisibleRow = Array.from(group.querySelectorAll('.subsection-card-body > *')).some((child) => !child.hidden);
 			group.hidden = !hasVisibleRow;
 		});
@@ -765,17 +772,10 @@ initializeExportSettings() {
 	}
 
 ,
+// Row and group resets belong to the panel renderer (rule D): a row revert
+// restores its control and a group reset replays the reverts under it. Only
+// the footer resets, which also clear state no row shows, are bound here.
 setupSettingsResetListeners() {
-	// Per-section reset buttons
-	document.querySelectorAll('.reset-section-btn').forEach(btn => {
-		btn.addEventListener('click', (e) => {
-			e.stopPropagation();
-			const section = btn.dataset.section;
-			this.resetSettingsSection(section);
-		});
-	});
-
-	// Reset all button
 	const resetExportBtn = document.querySelector('.reset-export-settings-btn');
 	if (resetExportBtn) {
 		resetExportBtn.addEventListener('click', () => {
@@ -824,67 +824,15 @@ applyDefaultPanelLayout() {
 }
 
 ,
-async confirmSettingsAction(options) {
+// The confirmation replaces the modal that asked, so the modal comes back
+// afterwards, where it was scrolled to.
+async confirmSettingsAction(options, modalId = 'settingsModal') {
+	const body = document.querySelector(`#${modalId} .modal-body`);
+	const scrollTop = body ? body.scrollTop : 0;
 	const confirmed = await this.confirmAction(options);
-	await this.modalManager?.open('settingsModal');
+	await this.modalManager?.open(modalId, { resetScroll: false });
+	if (body) this.modalManager.setScrollPosition(body, scrollTop);
 	return confirmed;
-}
-
-,
-async resetSettingsSection(section) {
-	const sectionName = this.getSectionDisplayName(section);
-
-	const confirmed = await this.confirmSettingsAction({
-		title: `Reset ${sectionName}`,
-		message: 'These settings will be restored to their defaults.',
-		confirmLabel: 'Reset'
-	});
-	if (!confirmed) {
-		return;
-	}
-
-	switch(section) {
-		case 'interface':
-			this.showHints = CONFIG.ui.hints.enabledByDefault;
-			this.showWelcomeOnStartup = true;
-			this.confirmDestructiveActions = true;
-			this.interfaceTheme = 'dark';
-			this.applyInterfaceTheme();
-			PREFERENCES.reset('reduceMotion');
-			this.applyReduceMotion();
-			PREFERENCES.reset('showAllControls');
-			this.applyShowAllControls();
-			localStorage.removeItem('glitterEditor_welcomeModalSeen');
-			localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
-			break;
-
-		case 'tools':
-			['crispMaskEdges', 'scaleEffects', 'scaleTextures', 'autoSelect', 'snappingEnabled', 'panInertia', 'pixelGrid', 'filterPreviewLevel']
-				.forEach((key) => PREFERENCES.reset(key));
-			this.antialiasEdges = !PREFERENCES.get('crispMaskEdges');
-			this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
-			this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
-			this.refreshMaskEdgeRendering();
-			this.maskEditor?.resetToolSettingsToDefaults();
-			this.applyDefaultPanelLayout();
-			this.contextToolbarRenderer?.resetPlacement?.();
-			this.viewport?.applyTransform();
-			this.filterLayerManager?.refreshSnapshots();
-			break;
-
-		// Export sections map one-to-one onto the headings in the Export
-		// Settings modal, so a group Reset restores exactly the rows below it.
-		case 'output':
-		case 'playback':
-		case 'quality':
-		case 'optimization':
-			this.settingsStore.reset(this.exportSettings, section);
-			break;
-	}
-
-	this.syncCanvasPreferenceControls();
-	this.syncExportSettingsToUI();
-	this.saveSettingsToStorage();
 }
 
 ,
@@ -937,29 +885,16 @@ async resetAllSettings() {
 
 ,
 	async resetExportSettings() {
-		const confirmed = await this.confirmAction({
-			title: 'Reset All Export Settings',
+		const confirmed = await this.confirmSettingsAction({
+			title: 'Reset Export Settings',
 			message: 'Every setting in this window — Output, Playback, Quality, and Optimization — will be restored to its default.',
 			confirmLabel: 'Reset'
-		});
+		}, 'exportSettingsModal');
 		if (!confirmed) return;
 
 		this.settingsStore.reset(this.exportSettings);
 		this.syncExportSettingsToUI();
 		this.saveSettingsToStorage();
-	}
-
-,
-	getSectionDisplayName(section) {
-		const names = {
-			'interface': 'Interface Settings',
-			'tools': 'Tools & Workspace Settings',
-			'output': 'Output Settings',
-			'playback': 'Playback Settings',
-			'quality': 'Quality Settings',
-			'optimization': 'Optimization Settings'
-		};
-		return names[section] || 'Settings';
 	}
 
 ,

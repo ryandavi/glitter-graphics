@@ -73,7 +73,7 @@ async function main() {
 			startVisible: !document.getElementById('workspaceStart').hidden,
 			noLegacyImagePanel: !document.getElementById('imagePanelSection'),
 			presetCount: document.querySelectorAll('.new-canvas-preset-btn').length,
-			presetGroups: [...document.querySelectorAll('#newCanvasPresets .property-group-label')].map((node) => node.textContent),
+			presetGroups: [...document.querySelectorAll('#newCanvasPresets .subsection-title-label')].map((node) => node.textContent),
 			maxWidth: Number(document.getElementById('newCanvasWidth').max),
 			maxHeight: Number(document.getElementById('newCanvasHeight').max),
 			panelsHidden: ['.layers-panel', '.design-panel']
