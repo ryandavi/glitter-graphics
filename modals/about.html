@@ -6,12 +6,17 @@
 
 <p><strong>Glitter Editor</strong> is a browser-based graphics editor for making and remixing glitter graphics, GIFs, pixel art, stickers, text, and other kinds of web graphics.</p>
 
-<p>It grew out of my interest in the visual culture of the old web: the graphics people made, the tools they used, and the ways all of it is being preserved and reinterpreted now. This page is about why I built it, what shaped it, and what I'm trying to do with it.</p>
+<p><strong class="context" data-tooltip="Also known as Sparkly GIFs or Blingees, after Blingee, the popular online editor and community built around creating decorated animated images">Glitter graphics</strong> are animated graphics characterized by looping sparkle and glitter effects applied to text, illustrations, or photographs. Popular online throughout the <time datetime="2000">2000s</time>, they served as a means of personalizing early social media profiles and personal websites.</p>
+
+<p>The editor lets you make them using assets sourced from <span class="entity entity-site context" data-entity="geocities" data-icon="geocities" data-tooltip="A web hosting service that let users create and publish websites free of charge until 2009" data-card>GeoCities</span>, <span class="entity entity-site context" data-entity="angelfire" data-icon="angelfire" data-tooltip="A web hosting service owned by Lycos; its remaining sites went offline in 2026" data-card>Angelfire</span>, and <span class="entity entity-site context" data-entity="tripod" data-icon="tripod" data-tooltip="A web hosting service owned by Lycos; its remaining sites went offline in 2026" data-card>Tripod</span> archives, or images you upload yourself. Inspired by editors like <span class="entity entity-site context" data-entity="blingee" data-icon="blingee" data-tooltip="A website, launched in 2006, for layering glitter and other animated stamps onto photos" data-card>Blingee</span> (<time datetime="2006">2006</time>–<time datetime="2024">2024</time>), it gives you more control over where and how glitter is applied, whether by selecting colors from an image, painting it by hand, or using it in text, shapes, borders, and shadows. Glitter fills, stickers, text, shapes, and filters remain editable as layers while you arrange, transform, and animate your work before exporting it as a GIF or MP4.</p>
+
+<p>It grew out of my interest in the visual culture of the old web: the graphics people made, the tools they used, and the ways all of it is being preserved and reinterpreted now. This page covers what you can make with it, why I built it, what shaped it, and what I'm trying to do with it.</p>
 <p><span class="wip-hidden">For the history of glitter graphics themselves, see <button type="button" class="doc-inline-link" data-open-modal="historyModal">History</button>. For the personal-web culture they grew out of, see <button type="button" class="doc-inline-link" data-open-modal="personalWebModal">Personal Web</button>. </span>For the broader preservation story and a chronology of the platforms that shaped the personal web, see <button type="button" class="doc-inline-link" data-open-modal="preservationModal">Preservation</button>.</p>
 
 <div class="toc" id="AboutTOC">
     <h3>Contents</h3>
     <ol>
+        <li><a href="#AboutWhatYouCanMake">What You Can Make</a></li>
         <li>
             <a href="#AboutThisWebsite">This Website</a>
             <ol>
@@ -24,6 +29,32 @@
     </ol>
 </div>
 
+<h3 id="AboutWhatYouCanMake">What You Can Make</h3>
+
+<ul>
+	<li><strong>Glitter fills.</strong> Apply animated glitter to selected image colors, or paint your own <span class="context" data-tooltip="Paint anywhere on the canvas to control exactly where a fill (or its effects) shows, without touching anything else">mask</span> by hand.</li>
+	<li><strong>Text and shapes.</strong> Editable type and vector shapes, each with its own glitter, solid, or gradient fill, plus border and shadow.</li>
+	<li><strong>Stickers.</strong> Layer in included graphics, or upload your own images and animated GIFs.</li>
+	<li><strong>Filters.</strong> Stack <span class="context" data-tooltip="Classic recreations like Nashville, Toaster, and X-Pro II, plus Basic, Tint, Vignette, Grain, and Blur">Instagram-style presets</span> and other adjustments; each filter layer reprocesses everything beneath it, so effects combine as you stack them. Pixelate, Posterize, and Dither filters give retro looks.</li>
+	<li><span class="feature-name"><strong>Auto Glitter.</strong><span class="feature-badge feature-badge-beta">Beta</span></span> Turn a photo's own colors into real animated glitter.</li>
+	<li><strong>Projects and exports.</strong> Save an editable project, or export the finished animation as a GIF or MP4.</li>
+</ul>
+
+<div class="figure-wrapper figure-gallery" aria-label="Example glitter graphics">
+	<figure>
+		<img src="images/modal/glitter-text.gif" alt="Animated glitter text example">
+		<figcaption><cite>Glitter text</cite></figcaption>
+	</figure>
+	<figure>
+		<img src="images/modal/glitter-graphic_happy-bunny_i-just-realized-i-dont-care_example.gif" alt="Layered glitter character example">
+		<figcaption><cite>Layered graphics</cite></figcaption>
+	</figure>
+	<figure>
+		<img src="images/modal/blingee_emo_example.gif" alt="Decorated photo example">
+		<figcaption><cite>Photo decoration</cite></figcaption>
+	</figure>
+</div>
+
 <h3 id="AboutThisWebsite">This Website</h3>
 
 <p>This website started as a personal project to collect and preserve glitter graphics, and to build a simple tool for making new ones. At first the editor was mostly just that: a way to put glitter on an image. But I kept building on it, and somewhere along the way it turned into a much more complete graphics editor.</p>
@@ -34,7 +65,7 @@
 
 <p>A lot of the thinking behind the project overlaps with the indie web and the renewed interest in making the internet personal, strange, and handmade again. Preservation is part of it, but I don't want to preserve these assets by putting them behind glass. I want to preserve them by keeping them useful. Personal websites were often built by taking a little from here, a little from there, and curating those pieces into something that reflected the person who made it. Some creators made graphics specifically for other people to use and pass around, usually with credit or a link back. Others circulated so widely that their original source has been lost. Most were made for the web as it existed at the time, with little reason to imagine that people would still be finding and using them twenty years later. I want this site to keep that material in circulation and give people the tools to do something new with it.</p>
 
-<p>All glitters and stickers are ethically sourced from <span class="entity entity-site context" data-entity="gifcities" data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive" data-card>GifCities</span><sup>[1]</sup> and the now-defunct <span class="entity entity-site context" data-entity="angelfire" data-icon="angelfire" data-tooltip="A web hosting service owned by Lycos; its remaining sites went offline in 2026" data-card>Angelfire</span> and <span class="entity entity-site context" data-entity="tripod" data-icon="tripod" data-tooltip="A web hosting service owned by Lycos; its remaining sites went offline in 2026" data-card>Tripod</span>. <span class="entity entity-site" data-entity="angelfire">Angelfire</span> and <span class="entity entity-site" data-entity="tripod">Tripod</span> finally shut down for good in <time datetime="2026">2026</time>, but I'd started pulling resources off them weeks before they went dark. Original file names are kept wherever possible.</p>
+<p>All glitters and stickers are ethically sourced from <span class="entity entity-site context" data-entity="gifcities" data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive" data-card>GifCities</span><sup>[1]</sup> and the now-defunct <span class="entity entity-site" data-entity="angelfire" data-icon="angelfire">Angelfire</span> and <span class="entity entity-site" data-entity="tripod" data-icon="tripod">Tripod</span>. <span class="entity entity-site" data-entity="angelfire">Angelfire</span> and <span class="entity entity-site" data-entity="tripod">Tripod</span> finally shut down for good in <time datetime="2026">2026</time>, but I'd started pulling resources off them weeks before they went dark. Original file names are kept wherever possible.</p>
 
 <p>Beyond these sources and the few personal hosting services still standing, plenty has been lost to time, and more disappears every year. Even where archived pages survive, the accompanying images often weren't preserved, leaving only fragments of these sacred artifacts to rediscover and reconstruct here.</p>
 

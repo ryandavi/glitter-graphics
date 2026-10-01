@@ -49,6 +49,10 @@ async function main() {
 			=== CONFIG.canvas.presets.filter((preset) => preset.quickStart).length),
 			'Start card quick presets do not match the configured quickStart presets');
 		await startupPage.click('#workspaceStartAbout');
+		await startupPage.waitForSelector('#aboutModal.visible', { timeout: 5000 });
+		await startupPage.waitForSelector('#aboutModal #AboutWhatYouCanMake', { timeout: 5000 });
+		await startupPage.click('#closeAboutModal');
+		await startupPage.evaluate(() => document.getElementById('openWelcomeModal').click());
 		await startupPage.waitForSelector('#welcomeModal.visible', { timeout: 1000 });
 		assert(await startupPage.isVisible('#welcomeModal .modal-loading'),
 			'Welcome modal waits for its external content before becoming visible');
@@ -69,7 +73,7 @@ async function main() {
 			startVisible: !document.getElementById('workspaceStart').hidden,
 			noLegacyImagePanel: !document.getElementById('imagePanelSection'),
 			presetCount: document.querySelectorAll('.new-canvas-preset-btn').length,
-			presetGroups: [...document.querySelectorAll('.new-canvas-preset-title')].map((node) => node.textContent),
+			presetGroups: [...document.querySelectorAll('#newCanvasPresets .property-group-label')].map((node) => node.textContent),
 			maxWidth: Number(document.getElementById('newCanvasWidth').max),
 			maxHeight: Number(document.getElementById('newCanvasHeight').max),
 			panelsHidden: ['.layers-panel', '.design-panel']
@@ -78,7 +82,7 @@ async function main() {
 		assert(startState.startVisible, 'Desktop start surface is not visible without a document');
 		assert(startState.noLegacyImagePanel, 'Legacy Image panel is still present');
 		assert(startState.presetCount === 10, `Expected 10 canvas presets, got ${startState.presetCount}`);
-		assert(startState.presetGroups.join('|') === 'Templates|Social Media|Web Classics|General', 'Canvas preset groups are missing or out of order');
+		assert(startState.presetGroups.join('|') === 'Web Classics|General|Social Media|Templates', 'Canvas preset groups are missing or out of order');
 		assert(startState.maxWidth === 1024 && startState.maxHeight === 1024, 'Custom canvas limits are not 1024px');
 		assert(startState.panelsHidden, 'Document panels are visible during the no-document state');
 

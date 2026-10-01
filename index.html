@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=943c8a09">
+	<link rel="stylesheet" href="css/style.css?v=734b16ba">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -371,33 +371,35 @@
 						<canvas id="originalCanvas" hidden></canvas>
 						<div class="workspace-start ui-ignore-gestures" id="workspaceStart">
 							<div class="workspace-start-card">
-								<div class="workspace-start-copy">
-									<h2>Create a glitter graphic</h2>
-									<p>Pick a canvas size, open an image, or continue a saved project.</p>
-								</div>
-								<!-- Quick-start tiles are rendered from CONFIG.canvas.presets (quickStart) ahead of More Presets. -->
-								<div class="workspace-start-presets" id="workspaceStartPresets">
-									<button class="workspace-start-preset" id="openNewCanvasBtn" type="button">
-										<span class="workspace-start-preset-preview">
-											<span class="icon-wrapper"><svg class="icon"><use href="#icon-new-canvas"></use></svg></span>
-										</span>
-										<strong>More Presets</strong>
-										<span>Custom size</span>
-									</button>
-								</div>
-								<div class="workspace-start-actions">
-									<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
-										<svg class="icon"><use href="#icon-open-image"></use></svg>
-										<span class="name">Open Image</span>
-									</button>
-									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
-										<svg class="icon"><use href="#icon-open-project"></use></svg>
-										<span class="name">Open Project</span>
-									</button>
-								</div>
-								<div class="workspace-start-drop">
-									<span>or drop an image or Glitter project here</span>
-									<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
+								<div class="workspace-start-main">
+									<div class="workspace-start-copy">
+										<h2>Create a glitter graphic</h2>
+										<p>Pick a canvas size, open an image, or continue a saved project.</p>
+									</div>
+									<!-- Quick-start tiles are rendered from CONFIG.canvas.presets (quickStart) ahead of More Presets. -->
+									<div class="workspace-start-presets" id="workspaceStartPresets">
+										<button class="action-card is-quiet workspace-start-preset" id="openNewCanvasBtn" type="button">
+											<span class="action-card-media workspace-start-preset-preview">
+												<span class="icon-wrapper"><svg class="icon"><use href="#icon-new-canvas"></use></svg></span>
+											</span>
+											<strong class="action-card-title">More Presets</strong>
+											<span class="action-card-detail">Custom size</span>
+										</button>
+									</div>
+									<div class="workspace-start-actions">
+										<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
+											<svg class="icon"><use href="#icon-open-image"></use></svg>
+											<span class="name">Open Image</span>
+										</button>
+										<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
+											<svg class="icon"><use href="#icon-open-project"></use></svg>
+											<span class="name">Open Project</span>
+										</button>
+									</div>
+									<div class="workspace-start-drop">
+										<span>or drop an image or Glitter project here</span>
+										<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
+									</div>
 								</div>
 								<div class="workspace-start-links">
 									<button class="workspace-start-link" id="workspaceStartTutorial" type="button">Tutorial</button>
@@ -576,101 +578,12 @@
 					<span class="name">Close</span>
 				</button>
 			</div>
-			<div class="modal-body">
-
-				<div class="settings-group">
-
-					<!-- Presets -->
-					<div class="settings-group-title">Presets</div>
-					<div class="settings-row">
-
-						<!-- Rendered from CONFIG.canvas.presets (renderNewCanvasPresets). -->
-						<div class="blank-image-grid" id="newCanvasPresets"></div>
-
-					</div>
-
-					<!-- Dimensions -->
-					<div class="settings-group-title">Dimensions</div>
-					<div class="settings-row">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Width</div>
-							<div class="settings-row-control">
-								<span class="input-unit"><input type="number" id="newCanvasWidth" min="100" max="1024" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
-							</div>
-						</div>
-
-					</div>
-					<div class="settings-row">
-
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Height</div>
-							<div class="settings-row-control">
-								<span class="input-unit"><input type="number" id="newCanvasHeight" min="100" max="1024" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
-							</div>
-						</div>
-
-					</div>
-					<div class="settings-row">
-
-						<!-- Orientation Toggle -->
-
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Orientation</div>
-							<div class="settings-row-control">
-								<div class="orientation-buttons">
-									<button class="btn-icon icon-wrapper" id="orientationPortrait" title="Portrait">
-										<svg class="icon">
-											<use href="#icon-portrait"></use>
-										</svg>
-									</button>
-									<button class="btn-icon icon-wrapper " id="orientationLandscape" title="Landscape">
-										<svg class="icon">
-											<use href="#icon-landscape"></use>
-										</svg>
-									</button>
-								</div>
-							</div>
-						</div>
-
-					</div>
-
-					<!-- Background Color -->
-					<div class="settings-group-title">Background</div>
-					<div class="settings-row">
-
-						<!-- Background Color -->
-
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Background</div>
-							<div class="settings-row-control">
-								<div class="radio-button-group">
-									<label class="radio-button-group-item">
-										<input type="radio" name="canvasBackground" value="color" checked>
-										<span>Color</span>
-									</label>
-									<label class="radio-button-group-item">
-										<input type="radio" name="canvasBackground" value="transparent">
-										<span>Transparent</span>
-									</label>
-								</div>
-							</div>
-						</div>
-
-					</div>
-
-					<!-- Color Picker (shown when "Color" is selected) -->
-
-					<div class="settings-row settings-row--dependent" id="canvasColorRow" data-inactive-reason="Choose the Color background to pick a color.">
-						<div class="settings-row-header">
-							<label class="settings-row-label-main" for="newCanvasColor">Color</label>
-							<div class="settings-row-control">
-								<input type="color" id="newCanvasColor" value="#ffffff">
-							</div>
-						</div>
-						<div class="settings-row-reason" data-inactive-reason-text></div>
-					</div>
-
-				</div>
+			<!-- A form modal is a property panel: `.modal-form.property-panel` on the
+			     body, and the form itself a schema section (PANEL_SCHEMAS.newCanvas). -->
+			<div class="modal-body modal-form property-panel">
+				<!-- Rendered from CONFIG.canvas.presets (renderNewCanvasPresets). -->
+				<div class="new-canvas-preset-groups" id="newCanvasPresets"></div>
+				<div class="section" id="newCanvasSettingsSection"></div>
 			</div>
 
 			<div class="modal-footer right">
@@ -916,8 +829,8 @@
 				</label>
 				<button type="button" class="btn-icon icon-wrapper" data-modal-filter-clear aria-label="Clear settings search" title="Clear search" hidden><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Clear search</span></button>
 			</div>
-			<div class="modal-body">
-				<div id="settingsGroups"></div>
+			<div class="modal-body modal-form property-panel">
+				<div class="section" id="settingsGroups"></div>
 				<div class="modal-filter-empty" id="settingsSearchEmpty" hidden>No settings match your search.</div>
 			</div>
 			<div class="modal-footer left-right"><button class="btn-text modal-action secondary reset-all-settings-btn">Reset Everything</button><button class="btn-simple modal-action modal-close" id="closeSettingsModalFooter">Close</button></div></div>
@@ -957,8 +870,8 @@
 				<button type="button" class="btn-icon icon-wrapper" data-modal-filter-clear aria-label="Clear export settings search" title="Clear search" hidden><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Clear search</span></button>
 			</div>
 
-			<div class="modal-body">
-				<div id="exportSettingsGroups"></div>
+			<div class="modal-body modal-form property-panel">
+				<div class="section" id="exportSettingsGroups"></div>
 				<div class="modal-filter-empty" id="exportSettingsSearchEmpty" hidden>No export settings match your search.</div>
 			</div>
 
@@ -975,39 +888,23 @@
 
 	<!-- Settings-modal widgets that are not plain rows. The modals themselves
 	     render from EXPORT_SETTINGS_LAYOUT / APP_SETTINGS_LAYOUT
-	     (js/ui/settings-store.js) through js/ui/settings-renderer.js. -->
-	<template id="tplExportTypeRow">
-		<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Export Type</div><div class="settings-row-control"><div class="segmented-control" id="exportModeControl" role="group" aria-label="Export type"><button type="button" class="segmented-option" data-export-mode="still" aria-pressed="false">Still Image</button><button type="button" class="segmented-option active" data-export-mode="animation" aria-pressed="true">Animation</button></div></div></div></div>
-	</template>
-	<template id="tplExportFormatRow">
-		<div class="settings-row">
-			<div class="settings-row-header">
-				<div class="settings-row-label-main">Format</div>
-				<div class="settings-row-control">
-					<div class="segmented-control" id="exportFormatControl" role="group" aria-label="Export format">
-						<button type="button" class="segmented-option" data-export-format="png" data-export-mode="still">PNG</button><button type="button" class="segmented-option" data-export-format="jpeg" data-export-mode="still">JPG</button><button type="button" class="segmented-option" data-export-format="gif" data-export-mode="still">GIF</button>
-						<button type="button" class="segmented-option active" data-export-format="gif" data-export-mode="animation">GIF</button><button type="button" class="segmented-option" data-export-format="mp4" data-export-mode="animation" hidden>MP4</button>
-					</div>
-				</div>
-			</div>
-			<div class="settings-row-label-desc" id="exportFormatDescription">Export an animated GIF.</div>
-		</div>
-	</template>
+	     (js/ui/settings-store.js) through js/ui/settings-renderer.js, in the
+	     property-panel vocabulary; these use the same classes. -->
 	<template id="tplExportWatermarkPreview">
-		<div class="watermark-preview" id="exportWatermarkPreview">
+		<div class="watermark-preview property-inset" id="exportWatermarkPreview">
 			<img src="images/watermark/2.png" alt="Rybaby Signature watermark preview" />
 		</div>
 	</template>
 	<template id="tplExportMp4EstimateRow">
-		<div class="settings-row" data-export-format-section="mp4" hidden>
-			<div class="settings-row-label-main">Estimated Video Length</div>
-			<div class="settings-row-label-desc" id="exportMp4Duration" aria-live="polite">Calculating...</div>
+		<div class="property-set settings-row" data-export-format-section="mp4" hidden>
+			<div class="property-row"><span class="property-label">Estimated Video Length</span></div>
+			<div class="property-note" id="exportMp4Duration" aria-live="polite">Calculating...</div>
 		</div>
 	</template>
 	<template id="tplExportGifLookPreview">
-		<canvas id="exportDitherPreview" class="export-dither-preview" width="240" height="72" aria-label="Live preview of the selected GIF look"></canvas>
-		<div class="settings-row-label-desc" id="exportDitherPreviewDescription" aria-live="polite"></div>
-		<div class="governed-summary">
+		<canvas id="exportDitherPreview" class="export-dither-preview property-inset" width="240" height="72" aria-label="Live preview of the selected GIF look"></canvas>
+		<div class="property-note" id="exportDitherPreviewDescription" aria-live="polite"></div>
+		<div class="governed-summary property-inset">
 			<span class="governed-summary-values" data-governed-summary></span>
 			<button type="button" class="btn-text small governed-toggle" data-governed-toggle aria-expanded="false" aria-controls="exportGifLookRail">
 				<span data-governed-toggle-label>Customize</span>
@@ -1016,42 +913,22 @@
 		</div>
 	</template>
 	<template id="tplExportFidelityHeader">
-		<div class="settings-row" data-filter-pin>
-			<div class="settings-row-header">
-				<label class="settings-row-label-main" for="exportFidelity">Export fidelity</label>
-				<output class="setting-value" id="exportFidelityValue" for="exportFidelity">Balanced</output>
+		<div class="property-set settings-row" data-filter-pin>
+			<div class="property-row is-stacked">
+				<label class="property-label" for="exportFidelity">Export fidelity</label>
+				<input id="exportFidelity" type="range" min="0" max="4" step="1" value="2" list="exportFidelityStops" aria-describedby="exportFidelityEstimate">
+				<output class="export-fidelity-value" id="exportFidelityValue" for="exportFidelity">Balanced</output>
 			</div>
-			<input id="exportFidelity" type="range" min="0" max="4" step="1" value="2" list="exportFidelityStops" aria-describedby="exportFidelityEstimate">
 			<datalist id="exportFidelityStops"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option></datalist>
-			<div class="export-fidelity-ticks" aria-hidden="true"><span>Exact</span><span>High</span><span>Balanced</span><span>Small</span><span>Smallest</span></div>
-			<div class="settings-row-label-desc export-fidelity-estimate" id="exportFidelityEstimate">Calculating animation estimate…</div>
-			<div class="governed-summary">
+			<div class="export-fidelity-ticks property-inset" aria-hidden="true"><span>Exact</span><span>High</span><span>Balanced</span><span>Small</span><span>Smallest</span></div>
+			<div class="property-note export-fidelity-estimate" id="exportFidelityEstimate">Calculating animation estimate…</div>
+			<div class="governed-summary property-inset">
 				<span class="governed-summary-values" data-export-fidelity-summary></span>
 				<button type="button" class="btn-text small governed-toggle" data-governed-toggle aria-expanded="false" aria-controls="exportFidelityRail">
 					<span data-governed-toggle-label>Customize</span>
 					<span class="governed-toggle-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
 				</button>
 			</div>
-		</div>
-	</template>
-	<template id="tplHtmlSceneSettingsGroup">
-		<div class="settings-group" id="htmlSceneSettingsGroup" hidden>
-			<div class="settings-group-title"><span class="settings-group-title-text">Experimental HTML Scene<span class="badge">Localhost</span></span></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Responsive Scene</div><div class="settings-row-control"><label class="switch" for="htmlSceneResponsive"><input type="checkbox" id="htmlSceneResponsive"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Keep the artboard aspect ratio while it grows and shrinks with its container.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Responsive Stickers</div><div class="settings-row-control"><select id="htmlSceneStickerSizing"><option value="scale">Scale with scene</option><option value="fixed">Keep pixel size</option></select></div></div><div class="settings-row-label-desc">Scale the whole composition, or keep sticker dimensions fixed while their center positions remain proportional.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Maximum Width</div><div class="settings-row-control"><span class="input-unit"><input type="number" id="htmlSceneMaxWidth" min="100" max="4096" step="10" inputmode="numeric"><span class="input-unit-suffix">px</span></span></div></div><div class="settings-row-label-desc">Limit how wide a responsive scene can grow in its destination.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Background</div><div class="settings-row-control"><select id="htmlSceneBackground"><option value="canvas">Match Canvas</option><option value="transparent">Transparent</option><option value="solid">Solid</option><option value="gradient">Gradient</option><option value="glitter">Glitter</option></select></div></div><div class="settings-row-label-desc">Match the current Canvas Background source or export one of its saved fill sources directly. The Base Image remains separate and optional.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Solid Color</div><div class="settings-row-control"><input type="color" id="htmlSceneCustomBackground"></div></div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Include Base Image</div><div class="settings-row-control"><label class="switch" for="htmlSceneIncludeBaseImage"><input type="checkbox" id="htmlSceneIncludeBaseImage"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Embed the original Base Image beneath the stickers. Canvas pixel effects are not baked into this image.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Scene Alignment</div><div class="settings-row-control"><select id="htmlSceneAlignment"><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></div></div><div class="settings-row-label-desc">Align the scene vertically inside a taller modal hero or cropped scene shell.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Minimum Height</div><div class="settings-row-control"><span class="input-unit"><input type="number" id="htmlSceneMinHeight" min="0" max="4096" step="10" inputmode="numeric"><span class="input-unit-suffix">px</span></span></div></div><div class="settings-row-label-desc">Add vertical room around a contained scene. In Cover mode, this becomes the cropped hero height.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Scene Fit</div><div class="settings-row-control"><select id="htmlSceneFit"><option value="contain">Contain</option><option value="cover">Cover and crop</option></select></div></div><div class="settings-row-label-desc">Keep the whole scene visible or enlarge it to cover the hero height and crop the overflow.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Glitter Repeat</div><div class="settings-row-control"><select id="htmlSceneBackgroundRepeat"><option value="repeat">Repeat</option><option value="no-repeat">No repeat</option><option value="repeat-x">Repeat horizontally</option><option value="repeat-y">Repeat vertically</option></select></div></div><div class="settings-row-label-desc">Control tiling when the HTML background source is glitter.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Outside Stickers</div><div class="settings-row-control"><select id="htmlSceneOverflow"><option value="hidden">Clip to scene</option><option value="visible">Allow overflow</option></select></div></div><div class="settings-row-label-desc">Choose whether stickers extending past the artboard remain visible.</div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Image Rendering</div><div class="settings-row-control"><select id="htmlSceneImageRendering"><option value="pixelated">Pixelated</option><option value="auto">Smooth</option></select></div></div><div class="settings-row-label-desc">Keep classic sticker pixels crisp or let the browser smooth scaled art.</div></div>
-			<div class="settings-row" data-search-aliases="asset path url portable standalone"><div class="settings-row-header"><div class="settings-row-label-main">Embed Assets</div><div class="settings-row-control"><label class="switch" for="htmlSceneEmbedAssets"><input type="checkbox" id="htmlSceneEmbedAssets"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Embed sticker and glitter files for portable output. Off uses their existing paths; uploaded session-only assets still embed automatically.</div></div>
-			<div class="settings-row" data-search-aliases="link url href alt text title tooltip class css"><div class="settings-row-label-main">Sticker HTML</div><div class="settings-row-label-desc">Optional links, alt text, titles, and CSS classes for each visible sticker.</div><div class="html-scene-sticker-list" id="htmlSceneStickerMetadata"></div></div>
-			<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Export Scene</div><div class="settings-row-control html-scene-export-actions"><button class="btn-simple" id="copyHtmlSceneSnippet" type="button">Copy Snippet</button><button class="btn-simple primary" id="exportHtmlScene" type="button">Export HTML</button></div></div><div class="settings-row-label-desc">Copy an embeddable scene with scoped CSS or download a complete standalone HTML page. This experimental sticker-only format ignores Filter layers.</div><div class="settings-row-label-desc" id="htmlSceneStatus" role="status" aria-live="polite"></div></div>
 		</div>
 	</template>
 
@@ -1784,10 +1661,10 @@
 	<template id="tpl-icon"><svg class="icon"><use></use></svg></template>
 	<template id="tpl-shape-card"><button class="choice-card" type="button"><span class="brush-shape-option-icon" aria-hidden="true"></span><span class="brush-shape-option-name"></span></button></template>
 	<template id="tpl-layer-type-option">
-		<button class="layer-type-option" type="button">
-			<span class="layer-type-icon icon-wrapper"><svg class="icon"><use></use></svg></span>
-			<span class="layer-type-name"></span>
-			<span class="layer-type-description"></span>
+		<button class="action-card layer-type-option" type="button">
+			<span class="action-card-media layer-type-icon icon-wrapper"><svg class="icon"><use></use></svg></span>
+			<span class="action-card-title layer-type-name"></span>
+			<span class="action-card-detail layer-type-description"></span>
 		</button>
 	</template>
 	<template id="tpl-category-card">
@@ -1805,11 +1682,11 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=8b996878"></script>
 	<script src="js/core/fields.js?v=fdadf471"></script>
-	<script src="js/core/config.js?v=17226a41"></script>
+	<script src="js/core/config.js?v=a3ddc098"></script>
 	<script src="js/core/tools.js?v=442b0974"></script>
 	<script src="js/core/layer-types.js?v=ca933e82"></script>
 	<script src="js/core/options.js?v=223ad907"></script>
-	<script src="js/ui/panel-schemas.js?v=b3206660"></script>
+	<script src="js/ui/panel-schemas.js?v=a478fcfa"></script>
 	<script src="js/paint/paint-slots.js?v=802a1a39"></script>
 	<script src="js/layers/types/base-image.js?v=271e2694"></script>
 	<script src="js/layers/types/filter.js?v=f5e44e55"></script>
@@ -1875,22 +1752,22 @@
 	<script src="js/ui/color-eyedropper.js?v=a1914b36"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=dc1bc2dc"></script>
-	<script src="js/ui/panel-renderer.js?v=8e370fa6"></script>
+	<script src="js/ui/panel-renderer.js?v=4373ea16"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=e395dff4"></script>
-	<script src="js/ui/settings-renderer.js?v=9f7b668d"></script>
-	<script src="js/ui/settings-store.js?v=409f2773"></script>
+	<script src="js/ui/settings-renderer.js?v=944afb5c"></script>
+	<script src="js/ui/settings-store.js?v=2f2625cf"></script>
 	<script src="js/ui/menu-popover.js?v=20e6b111"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=4c66d155"></script>
-	<script src="js/editor/settings.js?v=754a5bb1"></script>
+	<script src="js/editor/settings.js?v=6f48d669"></script>
 	<script src="js/editor/panels.js?v=2e87e5bb"></script>
 	<script src="js/editor/disclosures.js?v=51663fe5"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=3b804a8b"></script>
 	<script src="js/editor/transform-interaction.js?v=3d1b90fa"></script>
-	<script src="js/editor/document-start.js?v=39b172a5"></script>
-		<script src="js/editor/modals-wiring.js?v=54b77e2e"></script>
-	<script src="js/editor/layer-panel.js?v=5b295bc9"></script>
+	<script src="js/editor/document-start.js?v=47935f02"></script>
+		<script src="js/editor/modals-wiring.js?v=84d4720e"></script>
+	<script src="js/editor/layer-panel.js?v=49e9b9f2"></script>
 	<script src="js/editor/canvas-gestures.js?v=c88600e6"></script>
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>
 	<script src="js/editor/canvas-resize.js?v=ea25c5e4"></script>

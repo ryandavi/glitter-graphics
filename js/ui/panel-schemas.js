@@ -1004,6 +1004,41 @@ const PANEL_SCHEMAS = {
 		effectsReset: { id: 'resetShapeEffects', title: 'Disable all shape effects and clear their saved settings' },
 		motion: [createAnimationPanelSpec('shape')]
 	},
+	// The New Canvas modal's form. Its modal body carries `.property-panel`, so
+	// this headerless section renders the same groups, cards and rows as the
+	// sidebar. document-start.js owns every value: the numberPair matches the
+	// document-size W/H fields, and Background is the same Color / Transparent
+	// segment plus color row as the canvas extension fill.
+	newCanvas: {
+		prefix: 'newCanvas',
+		section: { id: 'newCanvasSettingsSection', bare: true },
+		groups: [
+			{ title: 'Dimensions', items: [
+				{ kind: 'card', items: [
+					{ kind: 'numberPair', label: 'Size', items: [
+						{ id: 'newCanvasWidth', mark: 'W', label: 'Width', min: CONFIG.canvas.limits.minSize, step: 1, inputMode: 'numeric' },
+						{ id: 'newCanvasHeight', mark: 'H', label: 'Height', min: CONFIG.canvas.limits.minSize, step: 1, inputMode: 'numeric' }
+					] },
+					{ kind: 'segmented', id: 'newCanvasOrientation', visibleLabel: 'Orientation', label: 'Canvas orientation',
+						stacked: false, options: [
+							{ id: 'orientationPortrait', icon: 'portrait', label: 'Portrait', showLabel: true, value: 'portrait' },
+							{ id: 'orientationLandscape', icon: 'landscape', label: 'Landscape', showLabel: true, value: 'landscape' }
+						] }
+				] }
+			] },
+			{ title: 'Background', items: [
+				{ kind: 'card', items: [
+					{ kind: 'segmented', id: 'newCanvasBackground', visibleLabel: 'Fill', label: 'Canvas background',
+						stacked: false, options: [
+							{ label: 'Color', value: 'color', active: true },
+							{ label: 'Transparent', value: 'transparent' }
+						] },
+					{ kind: 'field', id: 'newCanvasColor', rowId: 'canvasColorRow', label: 'Color',
+						type: 'color', value: CONFIG.canvas.defaults.blankDocument.color }
+				] }
+			] }
+		]
+	},
 	// The document-size form (Image Size / Canvas Size). ONE self-contained
 	// "Size" card, mounted into #noLayerCanvasSizeHost at boot; updateSidePanelUI
 	// and BaseBackgroundManager relocate this single node to #baseCanvasSizeHost

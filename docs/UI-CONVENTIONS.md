@@ -19,6 +19,14 @@ Visual and interaction conventions for the editor UI: sidebar panels, layout nam
 - **Add menu.** Layer cards come from each type's `addableViaModal` entry and declare a `group` (`basics`, `decorate`, or `effects`). Non-layer generators live in `ADD_MENU_COMMANDS`; overlay templates are appended to Generate from `data/templates.json`. Quick Add remains a filtered view of the same layer metadata.
 - **Color sampling.** Every `input[type="color"]` is decorated by `initializeColorEyedroppers`. Chromium uses the screen EyeDropper API; the fallback arms one canvas tap and samples a still from `SceneCompositor`. Do not add one-off eyedropper buttons in managers.
 
+## Form modals
+
+New Canvas, Settings and Export Settings are property panels in a wider column. The modal body carries `.modal-form.property-panel` and holds a `.section` host, so groups, cards, rows, switches, segmented controls and notes are the sidebar's, styled by `css/panels/_properties.scss`. `.modal-form` in `css/_modals.scss` sets only what the wider column changes.
+
+- **A fixed form** is a `PANEL_SCHEMAS` entry with `section: { id, bare: true }` (New Canvas is `PANEL_SCHEMAS.newCanvas`). Width and height are one `numberPair`, a two-way choice is a `segmented` row (`showLabel: true` keeps the word beside an option's icon), and a color is a `field` of `type: 'color'`, hidden while it does not apply.
+- **A settings list** is declared in `EXPORT_SETTINGS_LAYOUT` / `APP_SETTINGS_LAYOUT` and built by `js/ui/settings-renderer.js` from the same primitives: one card per group, one `.property-set` per setting, the description as a `.property-note`. `settings-group` and `settings-row` are hooks for the search filter and the settings code and carry no layout.
+- Never write row markup for these modals by hand. A widget that is not a plain row is a `<template>` using the property classes.
+
 ## Toolbar groups
 
 Every `TOOLS` entry declares `toolbarGroup: 'create' | 'arrange' | 'view'`. `renderToolButtons` inserts separators when that value changes, so group order stays in `TOOL_ORDER` and is never hand-authored in `index.html`.
@@ -54,6 +62,7 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
 ## Buttons
 
 - **`.btn-text-with-icon`** is the one text-button class: a label, an optional leading glyph (`+ icon-wrapper`), and `.primary` (full-strength gloss) or `.secondary`/default (dimmed gloss, via `gloss-button(true)`). All buttons are glossy; there is no flat variant. The box height is `--button-height` (36), owned by `_controls.scss`. Sidebar action rows render it through the panel-renderer `actionRow`. `.btn-icon` is the square icon-only variant.
+- **`.action-card`** is the one card-that-is-a-button: media (`.action-card-media`, an icon or preview), `.action-card-title`, `.action-card-detail`. `css/_components.scss` owns its surface, border, hover, focus, pressed and selected (`.active`) states and the text tiers; owners add only grid placement and media sizing. `.is-horizontal` puts the media beside the text (Add menu) and `.is-quiet` drops the surface and border until hover (start card tiles). Quick add and the New Canvas presets are the plain vertical form. A card that picks a value is a `.choice-card` instead.
 - **`.btn-simple` is legacy.** It is currently styled identically to `.btn-text-with-icon` and is still used at about 25 modal, gallery and settings call sites; a mass rename isn't worth it. Don't add new `.btn-simple`, and don't repurpose the name for a flat button. If a genuinely flat or quiet button is ever needed, add an explicit `.btn-flat` (or `.is-flat` modifier).
 
 ## SCSS

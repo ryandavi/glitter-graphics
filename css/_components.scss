@@ -205,6 +205,106 @@ textarea {
 	@include selectable-card;
 }
 
+// ===========================================================================
+// ACTION CARD
+// ---------------------------------------------------------------------------
+// A card that is a button: media (icon or preview), title, detail. This is the
+// single owner of the skin - surface, border, hover, focus, pressed, selected
+// and the text tiers. Owners (Add menu, Quick add, New Canvas presets, start
+// card tiles) add only grid placement and media sizing.
+//   .is-horizontal  media beside the text instead of above it
+//   .is-quiet       no surface or border until hover
+// A .choice-card picks a value and stays selected; an action card does something.
+// ===========================================================================
+.action-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	min-width: 0;
+	padding: var(--spacing-sm);
+	appearance: none;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-secondary);
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--font-size-xs);
+	text-align: center;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast),
+		box-shadow var(--transition-fast),
+		transform var(--transition-fast);
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--color-border-hover);
+		background: var(--color-bg-tertiary);
+	}
+
+	&:focus-visible { box-shadow: var(--control-focus-ring); }
+
+	&:active { transform: scale(0.98); }
+
+	&.active {
+		border-color: var(--color-accent);
+		background: var(--color-bg-tertiary);
+		box-shadow: 0 0 0 1px var(--color-accent);
+	}
+
+	&.is-quiet:not(:hover, :focus-visible, .active) {
+		border-color: transparent;
+		background: none;
+	}
+
+	&.is-horizontal {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-rows: auto auto;
+		column-gap: var(--spacing-sm);
+		row-gap: 1px;
+		padding: var(--spacing-sm) var(--spacing-base);
+		text-align: left;
+
+		> .action-card-media {
+			grid-column: 1;
+			grid-row: 1 / -1;
+		}
+
+		> .action-card-title {
+			grid-column: 2;
+			align-self: end;
+		}
+
+		> .action-card-detail {
+			grid-column: 2;
+			align-self: start;
+		}
+	}
+}
+
+.action-card-media {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-tertiary);
+}
+
+.action-card-title {
+	color: var(--color-text-primary);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.25;
+}
+
+.action-card-detail {
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-xs);
+	line-height: 1.2;
+}
+
 .advanced-disclosure {
 	display: flex;
 	flex-direction: column;

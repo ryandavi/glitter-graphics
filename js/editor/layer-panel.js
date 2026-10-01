@@ -28,6 +28,7 @@ setupLayerTypePickerListeners() {
 ,
 	createAddMenuButton(entry) {
 		const button = tplClone('tpl-layer-type-option');
+		button.classList.add('is-horizontal');
 		button.dataset.addKind = entry.kind;
 		button.dataset.addId = entry.id;
 		if (entry.type) button.dataset.layerType = entry.type;

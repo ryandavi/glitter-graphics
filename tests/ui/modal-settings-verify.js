@@ -2,7 +2,7 @@
 
 // Modal and settings system contract.
 //
-// These modals share one shell, one chrome bar and one settings-row component;
+// These modals share one shell, one chrome bar and the property-panel row vocabulary;
 // the checks below pin the parts that silently drifted before: control widths
 // decided by option text, a tab strip that resized the window, toggles that no
 // keyboard could reach, and "disabled" rows that Tab could still edit.
@@ -47,14 +47,18 @@ function check(name, cond, detail='') {
 
 	// ---- control widths are uniform --------------------------------------
 	const widths = await page.evaluate(() => {
-		const rows = [...document.querySelectorAll('#settingsGroups .settings-row-control')];
-		return rows.map(r => ({
-			kind: r.querySelector('select') ? 'select' : r.querySelector('.switch') ? 'switch' : r.querySelector('button') ? 'button' : 'other',
-			w: Math.round(r.getBoundingClientRect().width)
-		}));
+		// Selects, number fields and action buttons fill the same control column.
+		const controls = [...document.querySelectorAll('#settingsGroups .settings-row > .property-row > :is(select, .input-unit, button)')]
+			.filter(control => control.offsetParent !== null);
+		return controls.map(control => {
+			const rect = control.getBoundingClientRect();
+			return { w: Math.round(rect.width), right: Math.round(rect.right) };
+		});
 	});
-	const selectWidths = [...new Set(widths.filter(w => w.kind === 'select').map(w => w.w))];
-	check('value controls share one width', selectWidths.length === 1 && selectWidths[0] === 200, JSON.stringify(selectWidths));
+	const controlWidths = [...new Set(widths.map(w => w.w))];
+	const controlEdges = [...new Set(widths.map(w => w.right))];
+	check('value controls share one width and one right edge', widths.length > 0 && controlWidths.length === 1 && controlEdges.length === 1,
+		JSON.stringify({ controlWidths, controlEdges }));
 
 	// ---- new settings present --------------------------------------------
 	const newSettings = await page.evaluate(() => ['autoSelectLayers','snappingEnabled','panInertia','reduceMotion','resetToolbarPlacement']
@@ -160,7 +164,7 @@ function check(name, cond, detail='') {
 		return {
 			inRail: !!row.closest('.governed-rail'),
 			group: row.closest('.settings-group').querySelector('.settings-group-title-text').textContent,
-			label: row.querySelector('.settings-row-label-main').textContent
+			label: row.querySelector('.property-label').textContent
 		};
 	});
 	check('Encoder Precision sits in Optimization, not the GIF Look rail',

@@ -37,21 +37,35 @@ const EXPORT_SETTINGS_SCHEMA = Object.freeze({
 	// 'auto' defers to the Export fidelity stop's own sampling rate. Without it the
 	// stored number always won, which made the goal's fidelity setting inert.
 	maxSamplingFps: { label: 'Motion Detail', description: 'How often the animation is checked for visual changes. Higher settings preserve faster motion, but can take longer and create a larger file. Slower source animations keep their original timing.', control: { type: 'select', options: [{ value: 'auto', label: 'Match fidelity setting' }, { value: '15', label: 'Standard (15 samples/sec)' }, { value: '24', label: 'Smooth (24 samples/sec)' }, { value: '30', label: 'Finest (30 samples/sec)' }] }, storageKey: 'exportMaxSamplingFps', element: 'exportMaxSamplingFps', group: 'optimization', default: () => CONFIG.export.defaults.maxSamplingFps, parse: (value) => value === 'auto' ? 'auto' : parseInt(value), validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 1, CONFIG.export.timeline.maxSamplingFps, CONFIG.export.defaults.maxSamplingFps, true) },
-	visualErrorThreshold: { label: 'Max frame difference', description: 'Overrides the fidelity setting\'s visual difference limit. Set 0 for exact-pixel deduplication only.', control: { type: 'number', min: 0, max: 100, step: 0.1, placeholder: 'Auto', bareUnit: '%' }, storageKey: 'exportVisualErrorThreshold', element: 'exportVisualErrorThreshold', group: 'optimization', default: () => CONFIG.export.defaults.visualErrorThreshold, parse: (value) => value === '' ? 'auto' : parseFloat(value) / 100, format: (value) => value === 'auto' ? '' : value * 100, validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 0, 1, CONFIG.export.defaults.visualErrorThreshold) }
+	visualErrorThreshold: { label: 'Max frame difference', description: 'Overrides the fidelity setting\'s visual difference limit. Set 0 for exact-pixel deduplication only.', control: { type: 'number', min: 0, max: 100, step: 0.1, placeholder: 'Auto', unit: '%' }, storageKey: 'exportVisualErrorThreshold', element: 'exportVisualErrorThreshold', group: 'optimization', default: () => CONFIG.export.defaults.visualErrorThreshold, parse: (value) => value === '' ? 'auto' : parseFloat(value) / 100, format: (value) => value === 'auto' ? '' : value * 100, validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 0, 1, CONFIG.export.defaults.visualErrorThreshold) }
 });
 
 // Row order and row-level state for the Export Settings modal. Labels,
-// descriptions and controls come from EXPORT_SETTINGS_SCHEMA; custom widgets
-// are <template>s in index.html. Row visibility by format uses
+// descriptions and controls come from EXPORT_SETTINGS_SCHEMA; widgets that are
+// not a plain row are <template>s in index.html. Row visibility by format uses
 // data-export-format-section (formatSection) and hidden, as updateExportActionUI
 // expects.
 const EXPORT_SETTINGS_LAYOUT = (() => {
 	const field = (key, options = {}) => ({ field: EXPORT_SETTINGS_SCHEMA[key], ...options });
 	const needsDithering = 'Turn on Dithering to change this.';
+	// One button per format in each mode; updateExportFormatUI shows the
+	// current mode's and marks the active one.
+	const formatOption = (format, label, mode, extra = {}) => ({
+		label, ...extra, attrs: { 'data-export-format': format, 'data-export-mode': mode, ...extra.attrs }
+	});
 	return [
 		{ title: 'Output', section: 'output', rows: [
-			{ host: 'tplExportTypeRow' },
-			{ host: 'tplExportFormatRow' },
+			{ field: { label: 'Export Type', control: { type: 'segmented', id: 'exportModeControl', ariaLabel: 'Export type', options: [
+				{ label: 'Still Image', attrs: { 'data-export-mode': 'still' } },
+				{ label: 'Animation', active: true, attrs: { 'data-export-mode': 'animation' } }
+			] } } },
+			{ field: { label: 'Format', description: 'Export an animated GIF.', control: { type: 'segmented', id: 'exportFormatControl', ariaLabel: 'Export format', options: [
+				formatOption('png', 'PNG', 'still'),
+				formatOption('jpeg', 'JPG', 'still'),
+				formatOption('gif', 'GIF', 'still'),
+				formatOption('gif', 'GIF', 'animation', { active: true }),
+				formatOption('mp4', 'MP4', 'animation', { attrs: { hidden: '' } })
+			] } }, descId: 'exportFormatDescription' },
 			field('stillFrame', { rowId: 'exportStillFrameRow', hidden: true }),
 			field('transparency', { rowId: 'transparencySettingsRow', formatSection: 'gif' }),
 			field('matteColor', { rowId: 'matteColorRow', dependent: true, inactiveReason: 'Turn off Transparency to use a matte color.' }),
@@ -110,6 +124,8 @@ const EXPORT_SETTINGS_LAYOUT = (() => {
 const APP_SETTINGS_LAYOUT = (() => {
 	const toggle = (id, label, description, options = {}) => ({ field: { id, label, description, control: { type: 'switch' } }, ...options });
 	const action = (label, description, button, options = {}) => ({ field: { label, description, control: { type: 'button', ...button } }, ...options });
+	const choice = (id, label, description, options) => ({ field: { id, label, description, control: { type: 'select', options } } });
+	const pixels = (id, label, description, min) => ({ field: { id, label, description, control: { type: 'number', min, max: 4096, step: 10, inputMode: 'numeric', unit: 'px' } } });
 	return [
 		{ title: 'Interface', section: 'interface', rows: [
 			{ field: { id: 'interfaceTheme', label: 'Theme', description: 'Choose the editor interface appearance.', control: { type: 'select', options: 'interfaceTheme' } } },
@@ -132,8 +148,28 @@ const APP_SETTINGS_LAYOUT = (() => {
 			action('Panel Layout', 'Return collapsible property and tool cards to their default open or closed state.', { id: 'resetPanelLayout', label: 'Reset Panels' }),
 			action('Toolbar Position', 'Return the floating tool bar to its default position at the bottom of the canvas.', { id: 'resetToolbarPlacement', label: 'Reset Toolbar' }, { aliases: 'context bar position moved dragged floating' })
 		] },
-		// Localhost-only experiment with bespoke widgets; kept as markup.
-		{ host: 'tplHtmlSceneSettingsGroup' }
+		// Localhost-only experiment: HtmlSceneExporter reveals the group and
+		// binds every control by id.
+		{ title: 'Experimental HTML Scene', badge: 'Localhost', id: 'htmlSceneSettingsGroup', hidden: true, rows: [
+			toggle('htmlSceneResponsive', 'Responsive Scene', 'Keep the artboard aspect ratio while it grows and shrinks with its container.'),
+			choice('htmlSceneStickerSizing', 'Responsive Stickers', 'Scale the whole composition, or keep sticker dimensions fixed while their center positions remain proportional.', [{ value: 'scale', label: 'Scale with scene' }, { value: 'fixed', label: 'Keep pixel size' }]),
+			pixels('htmlSceneMaxWidth', 'Maximum Width', 'Limit how wide a responsive scene can grow in its destination.', 100),
+			choice('htmlSceneBackground', 'Background', 'Match the current Canvas Background source or export one of its saved fill sources directly. The Base Image remains separate and optional.', [{ value: 'canvas', label: 'Match Canvas' }, { value: 'transparent', label: 'Transparent' }, { value: 'solid', label: 'Solid' }, { value: 'gradient', label: 'Gradient' }, { value: 'glitter', label: 'Glitter' }]),
+			{ field: { id: 'htmlSceneCustomBackground', label: 'Solid Color', control: { type: 'color' } } },
+			toggle('htmlSceneIncludeBaseImage', 'Include Base Image', 'Embed the original Base Image beneath the stickers. Canvas pixel effects are not baked into this image.'),
+			choice('htmlSceneAlignment', 'Scene Alignment', 'Align the scene vertically inside a taller modal hero or cropped scene shell.', [{ value: 'center', label: 'Center' }, { value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' }]),
+			pixels('htmlSceneMinHeight', 'Minimum Height', 'Add vertical room around a contained scene. In Cover mode, this becomes the cropped hero height.', 0),
+			choice('htmlSceneFit', 'Scene Fit', 'Keep the whole scene visible or enlarge it to cover the hero height and crop the overflow.', [{ value: 'contain', label: 'Contain' }, { value: 'cover', label: 'Cover and crop' }]),
+			choice('htmlSceneBackgroundRepeat', 'Glitter Repeat', 'Control tiling when the HTML background source is glitter.', [{ value: 'repeat', label: 'Repeat' }, { value: 'no-repeat', label: 'No repeat' }, { value: 'repeat-x', label: 'Repeat horizontally' }, { value: 'repeat-y', label: 'Repeat vertically' }]),
+			choice('htmlSceneOverflow', 'Outside Stickers', 'Choose whether stickers extending past the artboard remain visible.', [{ value: 'hidden', label: 'Clip to scene' }, { value: 'visible', label: 'Allow overflow' }]),
+			choice('htmlSceneImageRendering', 'Image Rendering', 'Keep classic sticker pixels crisp or let the browser smooth scaled art.', [{ value: 'pixelated', label: 'Pixelated' }, { value: 'auto', label: 'Smooth' }]),
+			toggle('htmlSceneEmbedAssets', 'Embed Assets', 'Embed sticker and glitter files for portable output. Off uses their existing paths; uploaded session-only assets still embed automatically.', { aliases: 'asset path url portable standalone' }),
+			{ field: { label: 'Sticker HTML', description: 'Optional links, alt text, titles, and CSS classes for each visible sticker.', control: { type: 'host', id: 'htmlSceneStickerMetadata', className: 'html-scene-sticker-list' } }, aliases: 'link url href alt text title tooltip class css' },
+			{ field: { label: 'Export Scene', description: 'Copy an embeddable scene with scoped CSS or download a complete standalone HTML page. This experimental sticker-only format ignores Filter layers.', control: { type: 'actions', actions: [
+				{ id: 'copyHtmlSceneSnippet', label: 'Copy Snippet' },
+				{ id: 'exportHtmlScene', label: 'Export HTML', primary: true }
+			] } }, statusId: 'htmlSceneStatus' }
+		] }
 	];
 })();
 

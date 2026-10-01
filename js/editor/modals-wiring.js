@@ -14,25 +14,13 @@ updateOrientationButtons(width, height) {
 
 		if (!portraitBtn || !landscapeBtn) return;
 
-		// Check if square
+		// A square canvas has no orientation: both options go inert.
 		const isSquare = width === height;
-
-		// Disable buttons if square
-		portraitBtn.disabled = isSquare;
-		landscapeBtn.disabled = isSquare;
-
-		// Remove active from both
-		portraitBtn.classList.remove('active');
-		landscapeBtn.classList.remove('active');
-
-		// Only set active state if not square
-		if (!isSquare) {
-			if (height > width) {
-				portraitBtn.classList.add('active');
-			} else if (width > height) {
-				landscapeBtn.classList.add('active');
-			}
-		}
+		[[portraitBtn, height > width], [landscapeBtn, width > height]].forEach(([button, active]) => {
+			button.disabled = isSquare;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
 	}
 
 ,
@@ -164,7 +152,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=7be60248',
+				externalContentUrl: 'modals/about.html?v=6d2aba75',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -245,7 +233,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=77695aa4',
+			externalContentUrl: 'modals/welcome.html?v=b89feb72',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',

@@ -572,7 +572,8 @@ initializeExportSettings() {
 		});
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
 			if (group.hidden) return;
-			const hasVisibleRow = Array.from(group.children).some((child) => child !== group.firstElementChild && !child.hidden);
+			// The card body's children are the group's rows and governed sets.
+			const hasVisibleRow = Array.from(group.querySelectorAll('.subsection-card-body > *')).some((child) => !child.hidden);
 			group.hidden = !hasVisibleRow;
 		});
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';

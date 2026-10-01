@@ -352,10 +352,8 @@
 	--modal-width-reading: 880px;
 	--modal-browse-height: 720px;
 
-	/* ===== SETTINGS ROWS ===== */
-	/* One column width for every value control, so the right edge of a settings
-	   list is an alignment line rather than a by-product of option text. */
-	--settings-control-width: 200px;
+	/* ===== FORM MODALS ===== */
+	/* The longest line of helper text under a row in a form modal. */
 	--settings-desc-measure: 64ch;
 }
 

@@ -15,7 +15,7 @@ setupImageListeners() {
 		this.renderWorkspaceStartPresets();
 
 		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openGuideAt('getting-started'));
-		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('welcomeModal'));
+		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('aboutModal'));
 		document.getElementById('workspaceStartWhatsNew')?.addEventListener('click', (event) => {
 			try {
 				localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
@@ -131,18 +131,20 @@ setupImageListeners() {
 		const tiles = CONFIG.canvas.presets.filter((preset) => preset.quickStart).map((preset) => {
 			const button = document.createElement('button');
 			button.type = 'button';
-			button.className = 'workspace-start-preset';
+			button.className = 'action-card is-quiet workspace-start-preset';
 			button.dataset.presetId = preset.id;
 			button.setAttribute('aria-label', `New ${preset.label} canvas, ${preset.width} by ${preset.height} pixels`);
 			const preview = document.createElement('span');
-			preview.className = 'workspace-start-preset-preview';
+			preview.className = 'action-card-media workspace-start-preset-preview';
 			const shape = document.createElement('span');
 			shape.className = 'workspace-start-preset-shape';
 			shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
 			preview.appendChild(shape);
 			const label = document.createElement('strong');
+			label.className = 'action-card-title';
 			label.textContent = preset.label;
 			const dimensions = document.createElement('span');
+			dimensions.className = 'action-card-detail';
 			dimensions.textContent = `${preset.width} × ${preset.height} px`;
 			button.append(preview, label, dimensions);
 			button.addEventListener('click', () => this.loadBlankImage(preset.width, preset.height));
@@ -189,46 +191,46 @@ setupImageListeners() {
 		const host = document.getElementById('newCanvasPresets');
 		if (!host || host.dataset.rendered === 'true') return;
 		host.dataset.rendered = 'true';
-		host.className = 'new-canvas-preset-groups';
 		host.replaceChildren();
+		// Display order. Templates load asynchronously and always come last.
 		const groups = [
-			{ id: 'social', label: 'Social Media' },
 			{ id: 'classic', label: 'Web Classics' },
-			{ id: 'general', label: 'General' }
+			{ id: 'general', label: 'General' },
+			{ id: 'social', label: 'Social Media' }
 		];
 		groups.forEach((group) => {
 			const presets = CONFIG.canvas.presets.filter((preset) => preset.group === group.id);
 			if (!presets.length) return;
 			const section = document.createElement('section');
 			section.className = 'new-canvas-preset-group';
-			const title = document.createElement('h3');
-			title.className = 'new-canvas-preset-title';
+			const title = document.createElement('div');
+			title.className = 'property-group-label';
 			title.textContent = group.label;
 			const grid = document.createElement('div');
 			grid.className = 'blank-image-grid';
 			presets.forEach((preset) => {
 				const button = document.createElement('button');
 				button.type = 'button';
-				button.className = 'blank-image-option new-canvas-preset-btn';
+				button.className = 'action-card blank-image-option new-canvas-preset-btn';
 				button.dataset.presetId = preset.id;
 				button.dataset.width = preset.width;
 				button.dataset.height = preset.height;
 				button.setAttribute('aria-label', `${preset.label}, ${preset.width} by ${preset.height} pixels`);
 				const previewWrapper = document.createElement('span');
-				previewWrapper.className = 'blank-preview-wrapper';
+				previewWrapper.className = 'action-card-media blank-preview-wrapper';
 				const preview = document.createElement('span');
 				preview.className = 'blank-preview';
 				preview.style.aspectRatio = `${preset.width} / ${preset.height}`;
 				preview.classList.toggle('wide', preset.width > preset.height);
 				previewWrapper.appendChild(preview);
 				const label = document.createElement('strong');
-				label.className = 'blank-label';
+				label.className = 'action-card-title';
 				label.textContent = preset.label;
 				const dimensions = document.createElement('span');
-				dimensions.className = 'blank-dimensions';
+				dimensions.className = 'action-card-detail';
 				dimensions.textContent = `${preset.width} × ${preset.height}`;
 				const detail = document.createElement('span');
-				detail.className = 'blank-detail';
+				detail.className = 'action-card-detail blank-detail';
 				detail.textContent = preset.detail;
 				button.append(previewWrapper, label, dimensions, detail);
 				grid.appendChild(button);
@@ -241,37 +243,50 @@ setupImageListeners() {
 			const section = document.createElement('section');
 			section.className = 'new-canvas-preset-group';
 			section.dataset.templateGroup = '';
-			const title = document.createElement('h3');
-			title.className = 'new-canvas-preset-title';
+			const title = document.createElement('div');
+			title.className = 'property-group-label';
 			title.textContent = 'Templates';
 			const grid = document.createElement('div');
 			grid.className = 'blank-image-grid';
 			templates.forEach((template) => {
 				const button = document.createElement('button');
 				button.type = 'button';
-				button.className = 'blank-image-option new-canvas-template-btn';
+				button.className = 'action-card blank-image-option new-canvas-template-btn';
 				button.dataset.templateId = template.id;
 				button.setAttribute('aria-pressed', 'false');
 				button.setAttribute('aria-label', `${template.label} template`);
 				const previewWrapper = document.createElement('span');
-				previewWrapper.className = 'blank-preview-wrapper template-preview-wrapper';
+				previewWrapper.className = 'action-card-media blank-preview-wrapper template-preview-wrapper';
 				const preview = document.createElement('span');
 				preview.className = 'blank-preview template-preview';
 				preview.style.aspectRatio = template.aspectRatio || '1 / 1';
 				preview.style.background = template.preview || 'var(--color-bg-primary)';
 				previewWrapper.appendChild(preview);
 				const label = document.createElement('strong');
-				label.className = 'blank-label';
+				label.className = 'action-card-title';
 				label.textContent = template.label;
 				const detail = document.createElement('span');
-				detail.className = 'blank-detail';
+				detail.className = 'action-card-detail blank-detail';
 				detail.textContent = template.description;
 				button.append(previewWrapper, label, detail);
 				grid.appendChild(button);
 			});
 			section.append(title, grid);
-			host.prepend(section);
+			host.appendChild(section);
 		}).catch((error) => console.warn('Templates unavailable:', error));
+	}
+
+,
+	// Color / Transparent is one segment; the color row shows only for Color,
+	// the same contract as the canvas extension fill.
+	setNewCanvasBackground(value) {
+		document.querySelectorAll('#newCanvasBackground .segmented-option').forEach((option) => {
+			const active = option.dataset.value === value;
+			option.classList.toggle('active', active);
+			option.setAttribute('aria-pressed', String(active));
+		});
+		const colorRow = document.getElementById('canvasColorRow');
+		if (colorRow) colorRow.hidden = value !== 'color';
 	}
 
 ,
@@ -281,8 +296,6 @@ setupImageListeners() {
 		const heightInput = document.getElementById('newCanvasHeight');
 		const colorInput = document.getElementById('newCanvasColor');
 		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
-		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
-		const colorRow = document.getElementById('canvasColorRow');
 		const host = document.getElementById('newCanvasPresets');
 		delete host?.dataset.selectedTemplateId;
 		host?.querySelectorAll('.new-canvas-template-btn').forEach((button) => {
@@ -295,12 +308,7 @@ setupImageListeners() {
 		if (heightInput) heightInput.value = CONFIG.canvas.defaults.blankDocument.height;
 		if (colorInput) colorInput.value = CONFIG.canvas.defaults.blankDocument.color;
 
-		// Reset background to "Color" option
-		const colorRadio = document.querySelector('input[name="canvasBackground"][value="color"]');
-		if (colorRadio) colorRadio.checked = true;
-
-		// Enable color row since we default to color background
-		setSettingsRowInactive(colorRow, false);
+		this.setNewCanvasBackground('color');
 
 		// Find and activate matching preset
 		let matchingPreset = null;
@@ -332,11 +340,7 @@ setupImageListeners() {
 		const widthInput = document.getElementById('newCanvasWidth');
 		const heightInput = document.getElementById('newCanvasHeight');
 		const colorInput = document.getElementById('newCanvasColor');
-		const orientationPortrait = document.getElementById('orientationPortrait');
-		const orientationLandscape = document.getElementById('orientationLandscape');
 		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
-		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
-		const colorRow = document.getElementById('canvasColorRow');
 		const presetsHost = document.getElementById('newCanvasPresets');
 		if (widthInput) widthInput.max = CONFIG.canvas.limits.maxWidth;
 		if (heightInput) heightInput.max = CONFIG.canvas.limits.maxHeight;
@@ -387,41 +391,18 @@ setupImageListeners() {
 			});
 		});
 
-		// Orientation toggle - Portrait
-		if (orientationPortrait) {
-			orientationPortrait.addEventListener('click', () => {
-				const width = parseInt(widthInput.value);
-				const height = parseInt(heightInput.value);
-
-				if (width === height) return;
-
-				if (width > height) {
-					widthInput.value = height;
-					heightInput.value = width;
-				}
-
-				syncPresetHighlight();
-				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-			});
-		}
-
-		// Orientation toggle - Landscape
-		if (orientationLandscape) {
-			orientationLandscape.addEventListener('click', () => {
-				const width = parseInt(widthInput.value);
-				const height = parseInt(heightInput.value);
-
-				if (width === height) return;
-
-				if (height > width) {
-					widthInput.value = height;
-					heightInput.value = width;
-				}
-
-				syncPresetHighlight();
-				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-			});
-		}
+		// Orientation swaps the two dimensions; picking the current one does nothing.
+		document.getElementById('newCanvasOrientation')?.addEventListener('click', (event) => {
+			const option = event.target.closest('.segmented-option');
+			if (!option || option.disabled) return;
+			const width = parseInt(widthInput.value);
+			const height = parseInt(heightInput.value);
+			if (width === height || (option.dataset.value === 'portrait') === (height > width)) return;
+			widthInput.value = height;
+			heightInput.value = width;
+			syncPresetHighlight();
+			this.updateOrientationButtons(height, width);
+		});
 
 		// Dimension inputs
 		if (widthInput && heightInput) {
@@ -434,11 +415,9 @@ setupImageListeners() {
 			heightInput.addEventListener('input', updateOrientation);
 		}
 
-		// Background type toggle
-		backgroundRadios.forEach(radio => {
-			radio.addEventListener('change', (e) => {
-				setSettingsRowInactive(colorRow, radio.value !== 'color');
-			});
+		document.getElementById('newCanvasBackground')?.addEventListener('click', (event) => {
+			const option = event.target.closest('.segmented-option');
+			if (option) this.setNewCanvasBackground(option.dataset.value);
 		});
 
 		// Create button
@@ -452,14 +431,15 @@ setupImageListeners() {
 				}
 				const width = parseInt(widthInput.value);
 				const height = parseInt(heightInput.value);
+				const { minSize, maxWidth, maxHeight } = CONFIG.canvas.limits;
 				if (!Number.isInteger(width) || !Number.isInteger(height) ||
-					width < 100 || height < 100 ||
-					width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
-					this.showError(`Canvas dimensions must be between 100 and ${CONFIG.canvas.limits.maxWidth} pixels.`);
+					width < minSize || height < minSize ||
+					width > maxWidth || height > maxHeight) {
+					this.showError(`Canvas dimensions must be between ${minSize} and ${maxWidth} pixels.`);
 					return;
 				}
-				const backgroundType = document.querySelector('input[name="canvasBackground"]:checked').value;
-				const color = backgroundType === 'color' ? colorInput.value : 'transparent';
+				const backgroundType = document.querySelector('#newCanvasBackground .segmented-option.active')?.dataset.value;
+				const color = backgroundType === 'transparent' ? 'transparent' : colorInput.value;
 
 				await this.loadBlankImage(width, height, color);
 				this.modalManager.close('newCanvasModal');

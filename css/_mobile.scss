@@ -526,9 +526,12 @@
 	.workspace-start-card {
 		width: 100%;
 		max-width: 500px;
+		box-shadow: none;
+	}
+
+	.workspace-start-main {
 		gap: var(--spacing-md);
 		padding: var(--spacing-lg);
-		box-shadow: none;
 	}
 
 	.workspace-start-presets {

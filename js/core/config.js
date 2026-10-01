@@ -84,6 +84,8 @@ const CONFIG = deepFreeze({
 
 	canvas: {
 		limits: {
+			// Smallest side of a new blank canvas.
+			minSize: 100,
 			maxWidth: 1024,
 			maxHeight: 1024,
 			maxFileSizeMB: 10

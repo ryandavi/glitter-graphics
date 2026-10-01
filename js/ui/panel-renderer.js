@@ -622,7 +622,11 @@ function buildSegmented(entries, options = {}) {
 	entries.forEach((entry) => {
 		const button = tplClone('tpl-segmented-option');
 		if (entry.id) button.id = entry.id;
-		if (entry.icon) {
+		if (entry.icon && entry.showLabel) {
+			// Glyph beside its word (Portrait / Landscape): the label is visible,
+			// so it needs no title or aria-label.
+			button.append(createPanelGlyph(entry.icon), entry.label);
+		} else if (entry.icon) {
 			button.appendChild(createPanelGlyph(entry.icon));
 			button.title = entry.label;
 			button.setAttribute('aria-label', entry.label);
