@@ -137,7 +137,7 @@
 	align-items: center;
 	gap: var(--spacing-sm);
 	min-height: var(--control-height);
-	padding: var(--spacing-2xs) var(--property-gutter, 12px);
+	padding: var(--spacing-sm);
 	background: var(--color-bg-tertiary);
 
 	&[hidden] { display: none; }

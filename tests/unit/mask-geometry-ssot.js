@@ -81,7 +81,7 @@ const createCanvas = () => {
 	return canvas;
 };
 const geometrySource = fs.readFileSync(path.join(ROOT, 'js/paint/mask-geometry.js'), 'utf8');
-const geometry = vm.runInNewContext(`${geometrySource}; ({ createOutlineMaskCanvas, createDilatedMaskCanvas, createErodedMaskCanvas });`, {
+const geometry = vm.runInNewContext(`${geometrySource}; ({ createOutlineMaskCanvas, createDilatedMaskCanvas, createErodedMaskCanvas, fillEnclosedMaskAreas });`, {
 	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 }, maskAlphaThreshold: 128 } },
 	document: { createElement: createCanvas },
 	createAppCanvas: createCanvas,
@@ -128,6 +128,55 @@ const enclosed = geometry.createOutlineMaskCanvas(counters, 1, 'hard', false, tr
 assert.strictEqual(enclosed.pixels[4 * enclosed.width + 3], 255, 'Closed transparent counters must be filled');
 assert.strictEqual(enclosed.pixels[4 * enclosed.width + 13], 0, 'Open concave regions must remain transparent');
 process.stdout.write('PASS outline fills only enclosed transparent areas\n');
+
+// The source has a wide open chamber with a one-pixel doorway. The completed
+// outline closes that doorway, so enclosure detection must use the generated
+// silhouette rather than the source alpha alone.
+const postOutlineClosure = createCanvas();
+postOutlineClosure.width = 15;
+postOutlineClosure.height = 13;
+postOutlineClosure.getContext().clearRect();
+for (let y = 3; y <= 10; y++) {
+	postOutlineClosure.pixels[y * postOutlineClosure.width + 2] = 255;
+	postOutlineClosure.pixels[y * postOutlineClosure.width + 12] = 255;
+}
+for (let x = 2; x <= 12; x++) postOutlineClosure.pixels[10 * postOutlineClosure.width + x] = 255;
+for (let x = 2; x <= 6; x++) postOutlineClosure.pixels[3 * postOutlineClosure.width + x] = 255;
+for (let x = 8; x <= 12; x++) postOutlineClosure.pixels[3 * postOutlineClosure.width + x] = 255;
+const closedByOutline = geometry.createOutlineMaskCanvas(postOutlineClosure, 1, 'hard', false, true);
+assert.strictEqual(postOutlineClosure.pixels[3 * postOutlineClosure.width + 7], 0, 'Fixture doorway must be transparent in the source');
+assert.strictEqual(closedByOutline.pixels[6 * closedByOutline.width + 7], 255, 'Areas enclosed only by the completed outline must be filled');
+assert.strictEqual(closedByOutline.pixels[1 * closedByOutline.width + 7], 0, 'Exterior transparency must remain unfilled');
+assert.strictEqual(closedByOutline.pixels[10 * closedByOutline.width + 7], 0, 'Source artwork inside the silhouette must not become outline paint');
+process.stdout.write('PASS outline fills regions enclosed by post-stroke connections\n');
+
+const antialiasedSource = createCanvas();
+antialiasedSource.width = 5;
+antialiasedSource.height = 5;
+antialiasedSource.getContext().clearRect();
+const createAntialiasedRing = (doorwayAlpha) => {
+	const canvas = createCanvas();
+	canvas.width = 5;
+	canvas.height = 5;
+	canvas.getContext().clearRect();
+	for (let x = 1; x <= 3; x++) {
+		canvas.pixels[1 * canvas.width + x] = 255;
+		canvas.pixels[3 * canvas.width + x] = 255;
+	}
+	for (let y = 1; y <= 3; y++) {
+		canvas.pixels[y * canvas.width + 1] = 255;
+		canvas.pixels[y * canvas.width + 3] = 255;
+	}
+	canvas.pixels[1 * canvas.width + 2] = doorwayAlpha;
+	return canvas;
+};
+const closedAntialiasedRing = createAntialiasedRing(200);
+geometry.fillEnclosedMaskAreas(closedAntialiasedRing, antialiasedSource);
+assert.strictEqual(closedAntialiasedRing.pixels[2 * closedAntialiasedRing.width + 2], 255, 'Above-threshold antialiased outline pixels must close an enclosed area');
+const openAntialiasedRing = createAntialiasedRing(127);
+geometry.fillEnclosedMaskAreas(openAntialiasedRing, antialiasedSource);
+assert.strictEqual(openAntialiasedRing.pixels[2 * openAntialiasedRing.width + 2], 0, 'Below-threshold outline pixels must remain an exterior path');
+process.stdout.write('PASS enclosure detection thresholds antialiased outline pixels\n');
 
 const distanceGeometry = vm.runInNewContext(`${geometrySource}; ({ exactEuclideanDistanceTransform });`, {
 	CONFIG: { rendering: { borderSampling: { minSteps: 16, maxSteps: 64, stepsPerPixel: 4 }, maskAlphaThreshold: 128 } },

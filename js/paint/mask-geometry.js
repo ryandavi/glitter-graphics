@@ -98,21 +98,27 @@ function createBorderMaskCanvas(sourceCanvas, borderData) {
 }
 
 // Keep edge-connected transparency open while adding every closed counter to
-// an effect mask. Four-neighbor reachability matches the mask's pixel grid:
-// diagonal contact alone does not make an enclosed letter counter open.
+// an effect mask. Reachability is tested against the completed effect plus its
+// source silhouette, so a thick outline can close a region that was open in
+// the source without turning the source artwork itself into outline paint.
+// Four-neighbor reachability matches the mask's pixel grid: diagonal contact
+// alone does not make an enclosed letter counter open.
 function fillEnclosedMaskAreas(targetCanvas, sourceCanvas) {
 	const width = sourceCanvas.width;
 	const height = sourceCanvas.height;
 	if (!width || !height || targetCanvas.width !== width || targetCanvas.height !== height) return targetCanvas;
 	const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
 	const source = sourceCtx.getImageData(0, 0, width, height).data;
+	const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+	const target = targetCtx.getImageData(0, 0, width, height);
 	const threshold = CONFIG.rendering.maskAlphaThreshold ?? 128;
 	const outside = new Uint8Array(width * height);
 	const queue = new Int32Array(width * height);
 	let head = 0;
 	let tail = 0;
+	const isOccupied = (index) => source[index * 4 + 3] >= threshold || target.data[index * 4 + 3] >= threshold;
 	const addOutside = (index) => {
-		if (outside[index] || source[index * 4 + 3] >= threshold) return;
+		if (outside[index] || isOccupied(index)) return;
 		outside[index] = 1;
 		queue[tail++] = index;
 	};
@@ -132,10 +138,8 @@ function fillEnclosedMaskAreas(targetCanvas, sourceCanvas) {
 		if (index >= width) addOutside(index - width);
 		if (index + width < outside.length) addOutside(index + width);
 	}
-	const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
-	const target = targetCtx.getImageData(0, 0, width, height);
 	for (let index = 0; index < outside.length; index++) {
-		if (source[index * 4 + 3] < threshold && !outside[index]) target.data[index * 4 + 3] = 255;
+		if (!isOccupied(index) && !outside[index]) target.data[index * 4 + 3] = 255;
 	}
 	targetCtx.putImageData(target, 0, 0);
 	return targetCanvas;
