@@ -34,6 +34,8 @@
     "isVariableFramerate": 0,
     "fileSize": 10043,
     "sortOrder": 0,
+    "slice": null,
+    "sliced": false,
     "variantUrls": {
         "1024": {
             "url": "images/stickers/twitter/21434_1024.png",

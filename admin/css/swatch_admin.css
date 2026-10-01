@@ -3315,4 +3315,60 @@ input[type=checkbox] {
   .ingest-batch-toolbar {
     grid-template-columns: 1fr;
   }
+}
+.slice-editor .slice-insets, .slice-editor .slice-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.slice-editor .slice-insets input {
+  width: 80px;
+  display: block;
+}
+.slice-editor .slice-source {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  margin: 16px 0;
+}
+.slice-editor .slice-source img {
+  display: block;
+  max-width: 100%;
+}
+.slice-editor .slice-guide {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+}
+.slice-editor .slice-guide-top, .slice-editor .slice-guide-bottom {
+  left: 0;
+  width: 100%;
+  height: 8px;
+  border-top: 2px dashed #00bfff;
+  cursor: ns-resize;
+  transform: translateY(-50%);
+}
+.slice-editor .slice-guide-left, .slice-editor .slice-guide-right {
+  top: 0;
+  height: 100%;
+  width: 8px;
+  border-left: 2px dashed #00bfff;
+  cursor: ew-resize;
+  transform: translateX(-50%);
+}
+.slice-editor .slice-guide-right {
+  transform: translateX(50%);
+}
+.slice-editor .slice-guide-bottom {
+  transform: translateY(50%);
+}
+.slice-editor .slice-guide[hidden] {
+  display: none;
+}
+.slice-editor canvas {
+  max-width: 100%;
+  border: 1px solid var(--border-color);
 }/*# sourceMappingURL=swatch_admin.css.map */

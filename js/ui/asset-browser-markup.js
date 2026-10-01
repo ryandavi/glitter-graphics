@@ -68,6 +68,7 @@ const ASSET_BROWSERS = Object.freeze([
 		title: 'Stickers', layout: 'folders', placeholder: 'Search stickers...',
 		filters: [
 			{ kind: 'nameOnly' },
+			{ kind: 'chips', label: 'Stretch', filter: 'stretchable', options: [{ value: 'stretchable', label: 'Stretchable' }] },
 			{ kind: 'chips', label: 'Motion', filter: 'animated', attribute: 'animated', options: [{ value: 'true', label: 'Animated' }, { value: 'false', label: 'Static' }] },
 			{ kind: 'chips', label: 'Colors', filter: 'color', swatch: true, options: ASSET_BROWSER_COLOR_CHIPS },
 			{ kind: 'chips', label: 'Vibe', filter: 'vibe', options: [

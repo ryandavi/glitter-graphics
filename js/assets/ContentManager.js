@@ -249,6 +249,8 @@ class ContentManager {
 			// by measured width. Only ever populated via the lazy detail fetch
 			// (excluded from the slim index) — see StickerManager.pickVariantUrl.
 			// An empty list (the detail JSON's []) is stored as null: both mean no variants.
+			sliced: this.normalizeBooleanValue(raw.sliced, defaults.sliced ?? false),
+			slice: raw.slice ?? defaults.slice ?? null,
 			variantUrls: raw.variantUrls && typeof raw.variantUrls === 'object' && Object.keys(raw.variantUrls).length ? raw.variantUrls : (defaults.variantUrls ?? null),
 		};
 	}
@@ -817,7 +819,8 @@ class ContentManager {
 			category: 'categories',
 			tag: 'tags',
 			vibe: 'vibes',
-			animated: 'animated'
+			animated: 'animated',
+			stretchable: 'stretchable'
 		}[filterType] || null;
 	}
 
@@ -830,6 +833,7 @@ class ContentManager {
 	}
 
 	itemMatchesFacet(item, key, value) {
+		if (key === 'stretchable') return Boolean(item.sliced);
 		if (key === 'animated') return item.isAnimated === value;
 		if (key === 'categories') return item.category === value;
 		const tags = (item.tags || []).map((tag) => tag.toLowerCase());

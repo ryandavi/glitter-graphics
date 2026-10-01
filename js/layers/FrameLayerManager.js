@@ -45,6 +45,7 @@ class FrameLayerManager {
 			insetRow: id('frameInsetRow'),
 			shadeRow: id('frameShadeRow'),
 			imagePicker: id('frameImagePicker'),
+			imageInfo: id('frameImageInfo'),
 			fillCard: id('frameFillColor')?.closest('.paint-slot-card') || null,
 			transformGroup: id('frameTransformPanelHost')?.closest('[data-panel-group]') || null
 		};
@@ -91,6 +92,7 @@ class FrameLayerManager {
 		};
 		const bindOptions = (name, prefix, key) => getOptions(name).forEach(({ value }) => {
 			document.getElementById(`${prefix}${panelCap(value)}`)?.addEventListener('click', () => edit((layer) => {
+				if (key === 'fit' && value === 'slice' && !layer.frameData.image?.slice) return false;
 				if (layer.frameData[key] === value) return false;
 				layer.frameData[key] = value;
 				return true;
@@ -99,6 +101,12 @@ class FrameLayerManager {
 		bindOptions('frameKind', 'frameKind', 'kind');
 		bindOptions('frameStyle', 'frameStyle', 'style');
 		bindOptions('frameFit', 'frameFit', 'fit');
+		const revealImages = () => {
+			this.ui.imagePicker?.scrollIntoView({ block: 'nearest' });
+			this.ui.imagePicker?.querySelector('button')?.focus();
+		};
+		document.getElementById('frameImageChange')?.addEventListener('click', revealImages);
+		document.getElementById('frameImageThumbnail')?.addEventListener('click', revealImages);
 		this.ui.pinned?.addEventListener('change', () => edit((layer) => this.setPinned(layer, this.ui.pinned.checked), 'Pin frame'));
 	}
 
@@ -142,6 +150,7 @@ class FrameLayerManager {
 				style: defaults.style,
 				fit: defaults.fit,
 				inset: FIELDS.frameInset.value,
+				sliceScale: FIELDS.frameSliceScale.value,
 				widthPx: FIELDS.frameThickness.value,
 				radius: FIELDS.frameRadius.value,
 				shade: FIELDS.frameShade.value,
@@ -170,13 +179,15 @@ class FrameLayerManager {
 		if (!FRAME_KINDS[data.kind]) data.kind = defaults.kind;
 		if (!FRAME_STYLES[data.style]) data.style = defaults.style;
 		if (!isOptionValue('frameFit', data.fit)) data.fit = defaults.fit;
-		[['inset', 'frameInset'], ['widthPx', 'frameThickness'], ['radius', 'frameRadius'], ['shade', 'frameShade']].forEach(([key, spec]) => {
+		[['inset', 'frameInset'], ['widthPx', 'frameThickness'], ['radius', 'frameRadius'], ['shade', 'frameShade'], ['sliceScale', 'frameSliceScale']].forEach(([key, spec]) => {
 			const value = Number(data[key]);
 			data[key] = Number.isFinite(value) ? value : FIELDS[spec].value;
 		});
 		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(data.fill);
 		data.image ??= null;
+		if (data.image) data.image.slice = normalizeSlice(data.image.slice, data.image.width, data.image.height);
+		if (data.fit === 'slice' && !data.image?.slice) data.fit = defaults.fit;
 		data.sparkles = normalizeSparklesData(data.sparkles);
 		layer.transform ||= createDefaultTransform();
 		this.syncPinnedGeometry(layer);
@@ -268,10 +279,9 @@ class FrameLayerManager {
 				this.hitImages.set(url, image);
 			}
 			if (!image.complete || !image.naturalWidth) return null;
-			key = `image:${url}:${data.fit}:${width}x${height}`;
+			key = `image:${url}:${data.fit}:${data.sliceScale}:${JSON.stringify(data.image.slice)}:${width}x${height}`;
 			draw = (ctx) => {
-				const place = getFrameImagePlacement(data.fit, data.image.width, data.image.height, width, height);
-				ctx.drawImage(image, place.x, place.y, place.width, place.height);
+				drawFrameImage(ctx, image, data, width, height);
 			};
 		} else {
 			key = `style:${getFrameMaskKey(data, width, height)}`;
@@ -413,7 +423,7 @@ class FrameLayerManager {
 			const image = data.image;
 			if (!image?.url) return null;
 			return {
-				key: `frame-image:${image.url}:${data.fit}`,
+				key: `frame-image:${image.url}:${data.fit}:${data.sliceScale}:${JSON.stringify(image.slice)}`,
 				width,
 				height,
 				loadPixels: async () => {
@@ -424,8 +434,7 @@ class FrameLayerManager {
 						drawable.getContext('2d').putImageData(source instanceof ImageData ? source : new ImageData(source.data, source.width, source.height), 0, 0);
 					}
 					const canvas = createAppCanvas(width, height, 'layers/FrameLayerManager');
-					const place = getFrameImagePlacement(data.fit, image.width, image.height, width, height);
-					canvas.getContext('2d').drawImage(drawable, place.x, place.y, place.width, place.height);
+					drawFrameImage(canvas.getContext('2d'), drawable, data, width, height);
 					return canvas;
 				}
 			};
@@ -510,20 +519,28 @@ class FrameLayerManager {
 		let image = stack.querySelector(':scope > .frame-layer-image');
 		if (data.kind === 'image') {
 			reconcileSlotStack(stack, [], { spanClassName: 'frame-layer-content', width, height, layer, getMask: () => null });
-			if (!image) {
-				image = document.createElement('span');
-				image.className = 'frame-layer-image';
-				stack.prepend(image);
-			}
-			const place = getFrameImagePlacement(data.fit, data.image?.width, data.image?.height, width, height);
-			image.style.left = `${place.x}px`;
-			image.style.top = `${place.y}px`;
-			image.style.width = `${place.width}px`;
-			image.style.height = `${place.height}px`;
-			image.style.backgroundImage = data.image?.url ? `url(${data.image.url})` : 'none';
-			image.classList.toggle('pixelated', data.image?.isPixelated !== false);
+			const rects = getFrameSliceRects(data, data.image?.width, data.image?.height, width, height);
+			const spans = Array.from(stack.querySelectorAll(':scope > .frame-layer-image'));
+			const pieces = rects || [null];
+			pieces.forEach((rect, index) => {
+				image = spans[index];
+				if (!image) {
+					image = document.createElement('span');
+					image.className = 'frame-layer-image';
+					stack.insertBefore(image, stack.querySelector('.sparkle-layer'));
+				}
+				if (rect) Object.assign(image.style, sliceSpanStyle(rect, data.image.width, data.image.height));
+				else {
+					const place = getFrameImagePlacement(data.fit, data.image?.width, data.image?.height, width, height);
+					Object.assign(image.style, { left: `${place.x}px`, top: `${place.y}px`, width: `${place.width}px`, height: `${place.height}px`, backgroundSize: '100% 100%', backgroundPosition: '0 0' });
+				}
+				const background = data.image?.url ? `url("${data.image.url}")` : 'none';
+				if (image.style.backgroundImage !== background) image.style.backgroundImage = background;
+				image.classList.toggle('pixelated', data.image?.isPixelated !== false);
+			});
+			spans.slice(pieces.length).forEach((span) => span.remove());
 		} else {
-			image?.remove();
+			stack.querySelectorAll(':scope > .frame-layer-image').forEach((span) => span.remove());
 			reconcileSlotStack(stack, this.buildFrameStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)), {
 				spanClassName: 'frame-layer-content',
 				width,
@@ -579,12 +596,17 @@ class FrameLayerManager {
 		layer.frameData.image = {
 			stickerId: asset.id,
 			url: asset.url,
+			baseUrl: asset.url,
+			variantUrls: asset.variantUrls ? { ...asset.variantUrls } : null,
+			category: asset.category,
 			name: asset.name,
 			width: asset.width,
 			height: asset.height,
 			isAnimated: Boolean(asset.isAnimated),
-			isPixelated: asset.isPixelated !== false
+			isPixelated: asset.isPixelated !== false,
+			slice: normalizeSlice(asset.slice, asset.width, asset.height)
 		};
+		layer.frameData.fit = layer.frameData.image.slice ? 'slice' : CONFIG.tools.frames.defaults.fit;
 		layer.name = asset.name || 'Frame';
 		this.renderLayer(layer);
 		this.loadLayerSettings(layer);
@@ -605,6 +627,14 @@ class FrameLayerManager {
 			renderThumbnail(entry, element) {
 				const item = byId.get(entry.id);
 				element.classList.add('is-drawn');
+				element.classList.toggle('is-sliced', Boolean(item?.sliced || item?.slice));
+				if (item?.sliced || item?.slice) {
+					const mark = document.createElement('span');
+					mark.className = 'asset-slice-mark';
+					mark.title = 'Stretches without distorting its corners.';
+					mark.appendChild(createIcon('stretch'));
+					element.appendChild(mark);
+				}
 				element.classList.toggle('pixelated', item?.isPixelated !== false);
 				element.style.backgroundImage = item ? `url(${item.thumbnailUrl || item.url})` : '';
 			}
@@ -634,6 +664,10 @@ class FrameLayerManager {
 		syncOptions('frameKind', 'frameKind', data.kind);
 		syncOptions('frameStyle', 'frameStyle', data.style);
 		syncOptions('frameFit', 'frameFit', data.fit);
+		const sliceFit = document.getElementById('frameFitSlice');
+		if (sliceFit) sliceFit.hidden = !data.image?.slice;
+		const sliceScaleRow = document.getElementById('frameSliceScaleRow');
+		if (sliceScaleRow) sliceScaleRow.hidden = data.kind !== 'image' || data.fit !== 'slice';
 		document.querySelectorAll('#frameSettingsSection [data-frame-kind]').forEach((element) => {
 			element.hidden = element.dataset.frameKind !== data.kind;
 		});
@@ -672,6 +706,19 @@ class FrameLayerManager {
 			});
 		}
 		this.renderImagePicker(layer);
+		if (this.ui.imageInfo) {
+			this.ui.imageInfo.hidden = !data.image;
+			if (data.image) {
+				const thumbnail = document.getElementById('frameImageThumbnail');
+				if (thumbnail) {
+					thumbnail.style.backgroundImage = `url("${data.image.url}")`;
+					thumbnail.classList.toggle('pixelated', data.image.isPixelated !== false);
+				}
+				const name = document.getElementById('frameImageName');
+				if (name) name.textContent = data.image.name || 'Frame';
+				this.editor.renderAssetBadges(document.getElementById('frameImageBadges'), data.image, this.editor.stickerManager);
+			}
+		}
 		this.editor.loadTransformSettings?.(layer, 'frame');
 		syncFieldControls(this.fieldHost, layer);
 		syncPropertyReverts();
@@ -752,8 +799,10 @@ class FrameLayerManager {
 				const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
 				const placement = { offsetX: pad, offsetY: pad };
 				if (pad) compositor._drawLayerSparkles(compositeCtx, layer, 'behind', frame, placement);
-				const place = getFrameImagePlacement(data.fit, image.width, image.height, width, height);
-				compositeCtx.drawImage(scratch.source, pad + place.x, pad + place.y, place.width, place.height);
+				compositeCtx.save();
+				compositeCtx.translate(pad, pad);
+				drawFrameImage(compositeCtx, scratch.source, data, width, height);
+				compositeCtx.restore();
 				if (pad) compositor._drawLayerSparkles(compositeCtx, layer, 'front', frame, placement);
 				compositor._drawTransformedCanvas(ctx, scratch.composite, layer, width, height, { pad });
 			}

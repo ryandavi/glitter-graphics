@@ -514,6 +514,10 @@ isLayerContentLocked(layer) {
 			badgesEl.appendChild(badge);
 		}
 
+		if (asset.sliced || asset.slice) {
+			addBadge('badge-stretchable', 'Stretchable', 'Stretches without distorting its corners.');
+		}
+
 		if (asset.isAnimated) {
 			addBadge('badge-animated', 'Animated', 'This asset contains animation frames');
 		}

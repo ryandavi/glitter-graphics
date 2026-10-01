@@ -1,0 +1,38 @@
+{
+    "id": 257,
+    "name": "Container Banner",
+    "filename": "container_banner.png",
+    "url": "images/stickers/container/container_banner.png",
+    "thumbnailUrl": "images/stickers/container/container_banner.png",
+    "category": "container",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [],
+    "searchTerms": [],
+    "colorCodes": [
+        "#8ECDD6"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "paletteType": "single",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 300,
+    "height": 69,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 4856,
+    "sortOrder": 0,
+    "slice": {
+        "top": 0,
+        "right": 51,
+        "bottom": 0,
+        "left": 56,
+        "mode": "stretch"
+    },
+    "sliced": true,
+    "variantUrls": []
+}

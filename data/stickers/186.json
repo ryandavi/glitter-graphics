@@ -25,5 +25,7 @@
     "isVariableFramerate": 0,
     "fileSize": 2160,
     "sortOrder": 196,
+    "slice": null,
+    "sliced": false,
     "variantUrls": []
 }

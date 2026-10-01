@@ -949,8 +949,8 @@ createTransformHandles() {
 		handles,
 		titles: {
 			move: 'Move. Shift constrains movement; Alt-drag duplicates; Ctrl bypasses snapping.',
-			corner: 'Resize. Alt resizes from the center.',
-			edge: 'Resize one side. Alt resizes from the center.',
+			corner: 'Resize. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
+			edge: 'Resize one side. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
 			rotation: 'Rotate. Hold Shift to snap to 15 degree increments.'
 		}
 	});
@@ -1027,6 +1027,17 @@ createTransformHandles() {
 					'radius-tl': point(-1, -1), 'radius-tr': point(1, -1),
 					'radius-br': point(1, 1), 'radius-bl': point(-1, 1)
 				};
+			}
+		}
+		if (this.layer.type === LayerType.STICKER && this.isDraggingHandle && (active.startsWith('corner-') || active.startsWith('edge-'))) {
+			const data = this.layer.stickerData;
+			const width = Math.abs(metrics.displayWidth);
+			const height = Math.abs(metrics.displayHeight);
+			const rects = this.editor.stickerManager.getSliceRects(this.layer, data.width, data.height, width, height);
+			if (rects) {
+				const xs = [...new Set(rects.flatMap((rect) => [rect.dx, rect.dx + rect.dw]))].filter((x) => x > 0 && x < width);
+				const ys = [...new Set(rects.flatMap((rect) => [rect.dy, rect.dy + rect.dh]))].filter((y) => y > 0 && y < height);
+				model.sliceGuides = { xs: xs.map((x) => x / width), ys: ys.map((y) => y / height) };
 			}
 		}
 		return model;
@@ -1431,7 +1442,7 @@ removeTransformHandles() {
 	 * Handle dragging of corner handles (scale)
 	 */
 	handleCornerDrag(e) {
-		const canvasPos = this.getAnchoredHandlePoint(e);
+		let canvasPos = this.getAnchoredHandlePoint(e);
 		// Point and box text scale from their visible frame. Area text's edge
 		// handles resize/reflow its box without scaling the artwork.
 		const transform = this.getTransform();
@@ -1449,6 +1460,20 @@ removeTransformHandles() {
 		const centerX = start.transform.position.x + startOffsetX * worldCos - startOffsetY * worldSin;
 		const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
 
+		const proportional = this.layer.type === LayerType.TEXT_GLITTER || Boolean(transform.proportionalScale) !== Boolean(e.shiftKey);
+
+		// Snap the dragged corner to canvas/layer edges. A proportional drag
+		// slides along the corner's diagonal from the fixed point (the opposite
+		// corner, or the center with Alt).
+		const grabbed = start.handlePoint;
+		const diagonalOrigin = e.altKey || !grabbed
+			? { x: centerX, y: centerY }
+			: { x: 2 * centerX - grabbed.x, y: 2 * centerY - grabbed.y };
+		canvasPos = this.editor.snapScalePoint(this, canvasPos, {
+			ctrlKey: e.ctrlKey || e.metaKey,
+			line: proportional && grabbed ? { origin: diagonalOrigin, dir: { x: grabbed.x - diagonalOrigin.x, y: grabbed.y - diagonalOrigin.y } } : null
+		});
+
 		// Rotate mouse vector back to local space
 		const vectorX = canvasPos.x - centerX;
 		const vectorY = canvasPos.y - centerY;
@@ -1457,8 +1482,6 @@ removeTransformHandles() {
 		const sin = Math.sin(rotationRad);
 		const localX = vectorX * cos - vectorY * sin;
 		const localY = vectorX * sin + vectorY * cos;
-
-		const proportional = this.layer.type === LayerType.TEXT_GLITTER || Boolean(transform.proportionalScale) !== Boolean(e.shiftKey);
 		let newScaleX;
 		let newScaleY;
 		let nextPosition = null;
@@ -1566,13 +1589,21 @@ removeTransformHandles() {
 	// scaleY). Same local-space projection as handleCornerDrag.
 	handleOneAxisScale(e, edge) {
 		const transform = this.getTransform();
-		const canvasPos = this.getAnchoredHandlePoint(e);
 		const start = this.dragStartState;
 		const frame = start.handleFrame || { width: start.width, height: start.height, offsetX: 0, offsetY: 0 };
 
 		const worldRotationRad = (transform.rotation * Math.PI) / 180;
 		const worldCos = Math.cos(worldRotationRad);
 		const worldSin = Math.sin(worldRotationRad);
+		// The dragged edge snaps on the axis it moves. At 90/270 degrees that
+		// edge runs along the other world axis.
+		const quarterTurns = Math.round(transform.rotation / 90);
+		const horizontalEdge = edge === 'left' || edge === 'right';
+		const snapAxis = (horizontalEdge === (quarterTurns % 2 === 0)) ? 'x' : 'y';
+		const canvasPos = this.editor.snapScalePoint(this, this.getAnchoredHandlePoint(e), {
+			ctrlKey: e.ctrlKey || e.metaKey,
+			axes: snapAxis
+		});
 		const flipSignX = transform.flipX ? -1 : 1;
 		const flipSignY = transform.flipY ? -1 : 1;
 		const startOffsetX = flipSignX * (frame.offsetX || 0) * (start.transform.scale.x / 100);

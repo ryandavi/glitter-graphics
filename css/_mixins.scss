@@ -75,6 +75,31 @@ $mobile-breakpoint: 800px;
 	gap: var(--spacing-md);
 }
 
+@mixin action-card-horizontal {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-rows: auto auto;
+	column-gap: var(--spacing-sm);
+	row-gap: 1px;
+	padding: var(--spacing-sm) var(--spacing-base);
+	text-align: left;
+
+	> .action-card-media {
+		grid-column: 1;
+		grid-row: 1 / -1;
+	}
+
+	> .action-card-title {
+		grid-column: 2;
+		align-self: end;
+	}
+
+	> .action-card-detail {
+		grid-column: 2;
+		align-self: start;
+	}
+}
+
 // The shared "no value here" fill: a faint diagonal hatch. Used for a paint
 // slot whose source is None / disabled (`.property-module-swatch`) and for an
 // asset thumbnail with nothing to show (`.asset-info-thumbnail`), so "unset"

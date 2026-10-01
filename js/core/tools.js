@@ -228,6 +228,9 @@ function getToolHintInfo(editor, tool) {
 // (except Select) until updateContextToolbars applies each tool's availability.
 function renderToolButtons(container) {
 	if (!container) return;
+	const prerenderedButtons = container.querySelectorAll('button[data-tool]');
+	if (prerenderedButtons.length === TOOL_ORDER.length
+		&& TOOL_ORDER.every((tool) => container.querySelector(`#${getToolButtonId(tool)}`))) return;
 	let previousGroup = null;
 	const children = [];
 	TOOL_ORDER.forEach((tool) => {

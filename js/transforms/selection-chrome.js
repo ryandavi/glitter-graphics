@@ -124,6 +124,16 @@ class SelectionChrome {
 		});
 
 		overlay.placeFrame(this.box, frame, view);
+		this.box.querySelectorAll('.slice-resize-guide').forEach((guide) => guide.remove());
+		['xs', 'ys'].forEach((axis) => (model.sliceGuides?.[axis] || []).forEach((fraction) => {
+			const guide = document.createElement('span');
+			guide.className = `slice-resize-guide ui-ignore-gestures ${axis === 'xs' ? 'is-vertical' : 'is-horizontal'}`;
+			Object.assign(guide.style, axis === 'xs'
+				? { left: `${fraction * 100}%`, top: '0', height: '100%' }
+				: { top: `${fraction * 100}%`, left: '0', width: '100%' });
+			this.box.appendChild(guide);
+		}));
+
 
 		// Handles sit just outside the frame; the frame itself stays exact, so
 		// the outset can't change transform geometry.

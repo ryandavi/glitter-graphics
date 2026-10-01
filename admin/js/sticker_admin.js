@@ -11,6 +11,81 @@ class StickerEditor extends AssetEditor {
 		});
 	}
 
+	renderEditor() {
+		super.renderEditor();
+		const slice = this.currentAsset.slice || { top: 0, right: 0, bottom: 0, left: 0, mode: 'stretch' };
+		const section = document.createElement('details');
+		section.className = 'admin-section slice-editor';
+		section.open = true;
+		section.innerHTML = `<summary class="admin-section-title">Slice</summary>
+			<div class="property-list">
+				<label><input id="sliceEnabled" type="checkbox" ${this.currentAsset.slice ? 'checked' : ''}> Stretchable</label>
+				<div class="slice-insets">${['top', 'right', 'bottom', 'left'].map(side => `<label>${side}<input id="slice_${side}" type="number" min="0" step="1" value="${slice[side]}"></label>`).join('')}</div>
+				<label>Mode <select id="slice_mode"><option value="stretch">Stretch</option><option value="round">Round</option></select></label>
+				<div class="slice-source"><img alt="Slice guides" src="${CONFIG.image_base_path}${this.escapeHtml(this.currentAsset.url)}">${['top', 'right', 'bottom', 'left'].map(side => `<button type="button" class="slice-guide slice-guide-${side}" data-side="${side}" aria-label="Drag ${side} slice inset"></button>`).join('')}</div>
+				<p class="slice-validation" role="status"></p><div class="slice-samples"><canvas width="360" height="140"></canvas><canvas width="140" height="300"></canvas></div>
+			</div>`;
+		document.getElementById('editorContent').append(section);
+		section.querySelector('#slice_mode').value = slice.mode;
+		const refresh = () => { this.setDirty(true); this.refreshSlicePreview(section); };
+		section.querySelectorAll('input, select').forEach(input => input.addEventListener('input', refresh));
+		['width', 'height', 'is_pixelated'].forEach(id => document.getElementById(id).addEventListener('input', refresh));
+		const image = section.querySelector('img');
+		image.addEventListener('load', () => this.refreshSlicePreview(section));
+		section.querySelectorAll('.slice-guide').forEach(guide => {
+			guide.addEventListener('pointerdown', event => {
+				event.preventDefault();
+				guide.setPointerCapture(event.pointerId);
+			});
+			guide.addEventListener('pointermove', event => {
+				if (!guide.hasPointerCapture(event.pointerId)) return;
+				const bounds = image.getBoundingClientRect();
+				const side = guide.dataset.side;
+				const horizontal = side === 'left' || side === 'right';
+				const size = horizontal ? Number(this.currentAsset.width) : Number(this.currentAsset.height);
+				let fraction = horizontal ? (event.clientX - bounds.left) / bounds.width : (event.clientY - bounds.top) / bounds.height;
+				if (side === 'right' || side === 'bottom') fraction = 1 - fraction;
+				section.querySelector(`#slice_${side}`).value = Math.round(Math.max(0, Math.min(1, fraction)) * size);
+				refresh();
+			});
+		});
+		this.refreshSlicePreview(section);
+	}
+
+	readSliceForm() {
+		if (!document.getElementById('sliceEnabled').checked) return null;
+		return Object.fromEntries(['top', 'right', 'bottom', 'left'].map(side => [side, Number(document.getElementById(`slice_${side}`).value)]).concat([['mode', document.getElementById('slice_mode').value]]));
+	}
+
+	getAssetDataFromForm() {
+		return { ...super.getAssetDataFromForm(), slice: this.readSliceForm() };
+	}
+
+	refreshSlicePreview(section) {
+		const image = section.querySelector('img');
+		const width = Number(document.getElementById('width').value);
+		const height = Number(document.getElementById('height').value);
+		const raw = this.readSliceForm();
+		const slice = normalizeSlice(raw, width, height);
+		section.querySelector('.slice-validation').textContent = raw && !slice ? 'Use nonnegative integer insets that leave a nonempty center.' : '';
+		section.querySelectorAll('.slice-guide').forEach(guide => {
+			const side = guide.dataset.side;
+			guide.hidden = !raw;
+			guide.style[side] = `${100 * (raw?.[side] || 0) / (side === 'left' || side === 'right' ? width : height)}%`;
+		});
+		if (!image.complete || !image.naturalWidth) return;
+		section.querySelectorAll('canvas').forEach(canvas => {
+			const ctx = canvas.getContext('2d');
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const pixelated = document.getElementById('is_pixelated').checked;
+			ctx.imageSmoothingEnabled = !pixelated;
+			if (slice) {
+				const scale = getSliceScale(slice, { scaleX: canvas.width / width, scaleY: canvas.height / height, pixelated, boxWidth: canvas.width, boxHeight: canvas.height });
+				drawSlicedImage(ctx, image, getSliceRects(slice, width, height, canvas.width, canvas.height, scale, { pixelated }));
+			} else ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+		});
+	}
+
 	analyzeCurrentSticker() {
 		return this.analyzeCurrentAsset();
 	}

@@ -11,11 +11,35 @@ function failContract($message)
 	exit(1);
 }
 
+$slice = ['top' => 0, 'right' => 45, 'bottom' => 0, 'left' => 45, 'mode' => 'stretch'];
+if (StickerAPI::normalizeSlice($slice, 300, 69) !== $slice) failContract('horizontal slice failed');
+if (StickerAPI::normalizeSlice(null, 300, 69) !== null) failContract('slice clearing failed');
+foreach ([array_replace($slice, ['left' => -1]), array_replace($slice, ['top' => 0.5]), array_replace($slice, ['right' => 255]), array_replace($slice, ['mode' => 'repeat'])] as $badSlice) {
+	try {
+		StickerAPI::normalizeSlice($badSlice, 300, 69);
+		failContract('invalid slice was accepted');
+	} catch (InvalidArgumentException $error) {}
+}
+echo "PASS slice validation and clearing\n";
+
 $db = new Database($CONFIG);
 $apis = [
 	'glitter' => new GlitterAPI($db, $CONFIG),
 	'sticker' => new StickerAPI($db, $CONFIG),
 ];
+
+$db->query('START TRANSACTION');
+try {
+	$apis['sticker']->updateAsset(['id' => 78, 'slice' => null]);
+	if ($apis['sticker']->getAsset(78)['slice'] !== null) failContract('slice null was not persisted');
+	try {
+		$apis['sticker']->updateAsset(['id' => 78, 'slice' => array_replace($slice, ['left' => -1])]);
+		failContract('invalid slice update succeeded');
+	} catch (InvalidArgumentException $error) {}
+} finally {
+	$db->query('ROLLBACK');
+}
+echo "PASS slice database clearing and invalid update rejection\n";
 
 foreach ($apis as $type => $api) {
 	$assets = $api->exportAssets();
@@ -30,6 +54,7 @@ foreach ($apis as $type => $api) {
 		foreach ($asset['tags'] as $tag) {
 			if (!is_string($tag)) failContract("$type tag is not a string");
 		}
+		if ($type === 'sticker' && ($asset['sliced'] !== ($asset['slice'] !== null))) failContract('slice browse flag differs from detail');
 		if ($type === 'glitter') {
 			if (count($asset['colorCodes']) !== count($asset['colorWeights'])) failContract('glitter palette arrays differ');
 			foreach ($asset['colorWeights'] as $weight) {
@@ -45,7 +70,7 @@ foreach ($apis as $type => $api) {
 	$indexById = [];
 	foreach ($index as $record) {
 		$indexById[$record['id']] = $record;
-		if (array_key_exists('fileSize', $record) || array_key_exists('frameCount', $record)) {
+		if (array_key_exists('slice', $record) || array_key_exists('fileSize', $record) || array_key_exists('frameCount', $record)) {
 			failContract("$type browse index contains deferred detail fields");
 		}
 		if ($type === 'glitter' && (!array_key_exists('colorCodes', $record) || !array_key_exists('colorWeights', $record))) {

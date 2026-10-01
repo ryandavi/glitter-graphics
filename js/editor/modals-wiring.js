@@ -1,7 +1,7 @@
 const MODAL_METHODS = {
 async ensureHtmlSceneExporter() {
 		if (this.htmlSceneExporter) return this.htmlSceneExporter;
-		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=54171e07');
+		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=4e2eba6b');
 		this.htmlSceneExporter = new HtmlSceneExporter(this);
 		this.htmlSceneExporter.initialize();
 		return this.htmlSceneExporter;
@@ -187,7 +187,7 @@ updateOrientationButtons(width, height) {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=ce375c1d',
+				externalContentUrl: 'modals/guide.html?v=401eae01',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

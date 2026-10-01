@@ -181,3 +181,11 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 ## Workers
 
 `js/workers/` holds `auto-glitter.worker.js` (palette analysis) and `gif.worker.js` (GIF encoding). `js/effects/highlight-detect.js` is worker-safe but runs on the main thread today, on a copy of the host capped at `CONFIG.tools.sparkles.analysisMaxSide`. Workers load shared code with `importScripts`, so anything they import must be DOM-free. `tools/bump-cache.js` stamps both worker constructor URLs and their `importScripts` dependencies.
+
+## Stretchable assets
+
+Sticker assets may carry `slice: {top, right, bottom, left, mode}` in base-image pixels. The admin validates nonnegative integer insets and a nonempty center; modes are `stretch` and `round`. The browse index carries only `sliced`; the full detail and project layer copy carry the insets. Zero insets on one axis describe a three-slice banner.
+
+`js/paint/nine-slice.js` shares source/destination rectangles between reconciled DOM background spans and canvas rendering. Sticker layers copy the metadata and enable Smart Stretch by default; `sliceEnabled` disables it per layer. Protected corners use the smaller scale, or the unsliced axis scale for banners. Pixel-art scale snapping happens in base pixels before variant conversion. Round tiles are bounded by `CONFIG.tools.nineSlice.maxTiles`.
+
+Frame image layers copy slice and variant metadata, default to Smart Stretch when available, and use `frameData.sliceScale` (Border Scale) to size protected borders. Preview, hit alpha, effect masks and exports share sliced geometry. Sticker picking continues to use its existing image-box frame. The library mark/filter, selected asset badge and resize-only guides expose the feature. Source/licensing data for new assets still follows the ordinary sticker authoring workflow.

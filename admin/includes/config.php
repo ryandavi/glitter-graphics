@@ -8,6 +8,7 @@ $CONFIG = [
     'db_pass' => '',
     'db_name' => 'glitter',
     'image_base_path' => '../',
+	'tools' => ['nineSlice' => ['maxTiles' => 256]],
     'max_colors' => 10,
     'color_threshold' => 5,
     // Rainbow/multicolor assets spread coverage thinly; they keep a lower

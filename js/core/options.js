@@ -90,7 +90,8 @@ defineOptions('sparkleEmitter', [
 // How an image frame (js/paint/frames.js) fills the frame box.
 defineOptions('frameFit', [
 	{ value: 'stretch', label: 'Stretch' },
-	{ value: 'contain', label: 'Fit' }
+	{ value: 'contain', label: 'Fit' },
+	{ value: 'slice', label: 'Smart Stretch' }
 ]);
 // How the Highlights (Kira Kira) emitter turns highlight strength into glyphs.
 defineOptions('sparkleStyle', [

@@ -401,6 +401,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'frameShade', slider: 'frameShade', rowId: 'frameShadeRow', title: 'How much lighter and darker the bevel sides are' }
 					] },
 					{ kind: 'set', label: 'Frames', attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, items: [
+						{ kind: 'assetInfo', info: 'frameImageInfo', thumbnail: 'frameImageThumbnail', name: 'frameImageName', badges: 'frameImageBadges', change: 'frameImageChange', compact: true, hidden: true, title: 'Choose another frame image' },
 						{ kind: 'presetGrid', id: 'frameImagePicker', label: 'Frame images', classes: 'property-inset frame-images' }
 					] },
 					{ kind: 'set', attrs: { 'data-frame-kind': 'image', hidden: 'hidden' }, items: [
@@ -413,6 +414,7 @@ const PANEL_SCHEMAS = {
 							{ id: 'framePinned', label: 'Fit to Canvas', title: 'Follow the canvas edges. Turn off to move and resize the frame freely.' }
 						] },
 						{ kind: 'slider', id: 'frameInset', slider: 'frameInset', rowId: 'frameInsetRow' },
+						{ kind: 'slider', id: 'frameSliceScale', slider: 'frameSliceScale', rowId: 'frameSliceScaleRow' },
 						{ kind: 'slider', id: 'frameThickness', slider: 'frameThickness', rowId: 'frameThicknessRow' },
 						{ kind: 'slider', id: 'frameRadius', slider: 'frameRadius', rowId: 'frameRadiusRow' }
 					] }
@@ -666,6 +668,7 @@ const PANEL_SCHEMAS = {
 				{ kind: 'select', id: 'stickerLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS }
 			] },
 			{ title: 'Transform', items: [
+				{ kind: 'checkboxList', items: [{ id: 'stickerSliceEnabled', label: 'Smart Stretch', checked: true }] },
 				{ kind: 'transformHost' }
 			] }
 		],

@@ -69,18 +69,16 @@ async function main() {
 
 		const project = await openEditor(browser);
 		await project.page.click('#openNewCanvasBtn');
-		await project.page.waitForSelector('[data-template-id="blingee-nameplate"]');
+		await project.page.waitForSelector('[data-template-id="impact-meme-canvas"]');
 		assert(await project.page.locator('[data-template-id="impact-meme-canvas"]').count() === 1,
 			'Meme captions are not available as a New Canvas template');
-		await project.page.click('[data-template-id="blingee-nameplate"]');
-		await project.page.click('#createCanvasBtn');
-		await project.page.waitForFunction(() => window.editor.originalCanvas?.width === 800
-			&& window.editor.layers.some((layer) => layer.textData?.text === 'YOUR NAME'));
-		assert(await project.page.evaluate(() => window.editor.projectName === 'Glitter Nameplate'
-			&& window.editor.layers.some((layer) => layer.frameData?.fill?.glitterId === 106)
-			&& window.editor.layers.some((layer) => layer.textData?.fill?.glitterId === 89)
-			&& window.editor.layers.some((layer) => layer.type === LayerType.SPARKLES)),
-			'Project template did not load through the project path');
+		assert(await project.page.locator('[data-template-id="blingee-nameplate"]').count() === 0,
+			'Inactive Glitter Nameplate template is still visible');
+		assert(await project.page.evaluate(async () => {
+			const entries = await TemplateLibrary.loadManifest();
+			return entries.some((entry) => entry.id === 'blingee-nameplate' && entry.active === false)
+				&& await TemplateLibrary.get('blingee-nameplate') === null;
+		}), 'Inactive Glitter Nameplate template is not retained safely in the manifest');
 		assert(project.errors.length === 0, `Browser errors: ${project.errors.join('; ')}`);
 		await project.context.close();
 

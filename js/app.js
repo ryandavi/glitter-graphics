@@ -145,7 +145,7 @@ class GlitterEditor {
 		const storedTool = sessionStorage.getItem('glitter:lastTool');
 		const rememberedTool = storedTool === 'colorPicker' ? ToolType.GLITTER_FILL : storedTool;
 		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
-		this.setTool(this.mobileManager.isMobile && initialTool === ToolType.HAND ? ToolType.SELECT : initialTool);
+		this.setTool(this.mobileManager.isMobile && initialTool === ToolType.HAND ? ToolType.SELECT : initialTool, { announce: false });
 		this.setupEventListeners();
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
@@ -405,6 +405,7 @@ class GlitterEditor {
 		await this.shapeBrowserManager.init();
 		await this.fontBrowserManager.init();
 		this.updateSidePanelUI(null);
+		document.body.classList.remove('is-booting');
 	}
 
 	// ===== SETTINGS PERSISTENCE =====
@@ -981,7 +982,7 @@ class GlitterEditor {
 		// Update helpful message
 		this.updateHelpfulMessage();
 
-		this.updateStatus(`Active tool: ${tool}`);
+		if (options.announce !== false) this.updateStatus(`${definition.name} tool`);
 
 	}
 
@@ -1564,7 +1565,7 @@ class GlitterEditor {
 		this.updateActionButtons();
 
 		this.setTool(ToolType.SELECT);
-		this.updateStatus('Load an image to begin');
+		this.updateStatus(CONFIG.app.status.noDocument);
 		this.updateStatusBar();
 
 		// ======================

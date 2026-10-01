@@ -18,6 +18,7 @@ for (const file of [
 	'js/core/options.js',
 	'js/effects/color-adjust.js',
 	'js/ui/preset-library.js',
+	'js/paint/nine-slice.js',
 	'js/paint/frames.js'
 ]) {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
@@ -98,5 +99,23 @@ const stretch = run("getFrameImagePlacement('stretch', 100, 50, 200, 200)");
 const contain = run("getFrameImagePlacement('contain', 100, 50, 200, 200)");
 if (stretch.width !== 200 || stretch.height !== 200) fail('stretch placement');
 if (contain.width !== 200 || contain.height !== 100 || contain.y !== 50) fail(`contain placement ${JSON.stringify(contain)}`);
+
+// Border scale stays in base asset pixels when a decoded source is a variant.
+context.slicedFrame = {
+	fit: 'slice', sliceScale: 200,
+	image: { width: 100, height: 100, isPixelated: true, slice: { top: 10, right: 10, bottom: 10, left: 10, mode: 'stretch' } }
+};
+const nativeRects = run('getFrameSliceRects(slicedFrame, 100, 100, 300, 200)');
+const variantRects = run('getFrameSliceRects(slicedFrame, 200, 200, 300, 200)');
+if (nativeRects.length !== 9 || nativeRects[0].dw !== 20 || nativeRects[0].dh !== 20) fail('frame border scale');
+if (variantRects[0].sw !== 20 || variantRects[0].dw !== 20) fail('variant changes frame border size');
+if (JSON.stringify(nativeRects.map(({ dx, dy, dw, dh }) => [dx, dy, dw, dh])) !== JSON.stringify(variantRects.map(({ dx, dy, dw, dh }) => [dx, dy, dw, dh]))) fail('variant destination geometry differs');
+context.slicedFrame.sliceScale = 300;
+if (run('getFrameSliceRects(slicedFrame, 200, 200, 300, 200)')[0].dw !== 30) fail('variant re-snaps the base border scale');
+context.slicedFrame.fit = 'stretch';
+if (run('getFrameSliceRects(slicedFrame, 100, 100, 300, 200)') !== null) fail('plain stretch still slices');
+context.slicedFrame.fit = 'slice';
+context.slicedFrame.image.slice = null;
+if (run('getFrameSliceRects(slicedFrame, 100, 100, 300, 200)') !== null) fail('unsliced asset supplies rectangles');
 
 process.stdout.write(`Frames verification passed (${Object.keys(styles).length} styles, ${Object.keys(kinds).length} kinds, ${presets.entries.length} presets)\n`);

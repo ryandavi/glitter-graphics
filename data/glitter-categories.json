@@ -1,5 +1,60 @@
 [
     {
+        "id": "aylana-bring-on-the-glitter",
+        "name": "Aylana's Bring On The Glitter",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "designs by Aylana",
+        "count": 0,
+        "attribution": {
+            "author": "Aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        }
+    },
+    {
+        "id": "moon-flashites",
+        "name": "Moon's Flashites",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "",
+        "count": 0
+    },
+    {
+        "id": "stardrops-open-directory",
+        "name": "Stardrops' Open Directory",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "This is one of the very first glitter tiles",
+        "count": 0,
+        "attribution": {
+            "author": "Stardrops",
+            "authorUrl": "https://web.archive.org/web/20080115144844/http://stardropscloud.com/",
+            "source": "Stardrops' open directory",
+            "sourceUrl": "https://web.archive.org/web/20021222043255/http://wtv-zone.com/Stardrops/BAR/",
+            "license": "unknown",
+            "notes": "\"Aylana and Dan made their first glitter tiles from this animated tile and a couple of other colors Mica had put into a open sub-directory for us at her www.WTV-Zone.com account.\" - Moon/Scri8e"
+        }
+    },
+    {
+        "id": "dan-sparkelies",
+        "name": "Dan's Sparkelies",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "\"Just click on the ones you want !\"",
+        "count": 0,
+        "attribution": {
+            "author": "DAN-411",
+            "authorUrl": "https://osodeoro.tripod.com/",
+            "source": "Sparkelies",
+            "sourceUrl": "https://web.archive.org/web/20040702024614/http://members.tripod.com/%7Eosodeoro/Sparklies/Sparkelies.html",
+            "license": "unknown",
+            "notes": "Created by November 22, 2001"
+        }
+    },
+    {
         "id": "sparkle",
         "name": "Classic Sparkle",
         "icon": "images/glitter/sparkle/glitter_crimson.gif",

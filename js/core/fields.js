@@ -94,6 +94,7 @@ const FIELDS = Object.freeze({
 	sparkleSensitivity: { label: 'Sensitivity', unit: '%', min: 0, max: 100, step: 1, value: 55 },
 	sparkleSpacing: { label: 'Spacing', unit: 'px', min: 2, max: 200, step: 1, value: 20 },
 	frameThickness: { label: 'Thickness', unit: 'px', min: 1, max: 200, step: 1, value: 18 },
+	frameSliceScale: { label: 'Border Scale', unit: '%', min: 25, max: 400, step: 1, value: 100 },
 	frameInset: { label: 'Inset', unit: 'px', min: 0, max: 200, step: 1, value: 0 },
 	frameRadius: { label: 'Corners', unit: 'px', min: 0, max: 200, step: 1, value: 0 },
 	frameShade: { label: 'Bevel Depth', unit: '%', min: 0, max: 100, step: 1, value: 40 },

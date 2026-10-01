@@ -373,6 +373,19 @@ class SceneCompositor {
 		const tempCanvas = scratch?.sourceCanvas;
 		if (!tempCanvas) throw new Error(`Missing sticker scratch for layer ${layer.id}`);
 		this._renderPatternSourceInto(tempCanvas, imageData, layer.stickerData.colorAdjust);
+		if (layer.stickerData.slice && layer.stickerData.sliceEnabled !== false) {
+			const scale = getLayerTransform(layer).scale;
+			const sliced = scratch.unionFrameCanvas;
+			ensureCanvasSize(sliced, Math.max(1, Math.round(width * Math.abs(scale.x) / 100)), Math.max(1, Math.round(height * Math.abs(scale.y) / 100)));
+			const slicedCtx = sliced.getContext('2d', { alpha: true });
+			resetCanvasContext(slicedCtx, sliced.width, sliced.height);
+			slicedCtx.imageSmoothingEnabled = layer.stickerData.isPixelated === false;
+			this.editor.stickerManager.drawStickerImage(slicedCtx, tempCanvas, layer, sliced.width, sliced.height);
+			ensureCanvasSize(tempCanvas, sliced.width, sliced.height);
+			const sourceCtx = tempCanvas.getContext('2d');
+			resetCanvasContext(sourceCtx, tempCanvas.width, tempCanvas.height);
+			sourceCtx.drawImage(sliced, 0, 0);
+		}
 		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, sourceSelectionMap, resolvedFramesBySource, scratch, 'behind');
 
 		// Sparkles composite around the image at the image's own pixel density
@@ -432,7 +445,7 @@ class SceneCompositor {
 			// animated output, one frame for a still), not the whole GIF.
 			const frames = this.decodedSources.get(layer.stickerData.url)?.frames || [];
 			const union = scratch.unionSourceCanvas;
-			const unionKey = `${layer.stickerData.url}:${stickerCanvas.width}x${stickerCanvas.height}`;
+			const unionKey = `${layer.stickerData.url}:${stickerCanvas.width}x${stickerCanvas.height}:${JSON.stringify(layer.stickerData.slice)}:${layer.stickerData.sliceEnabled}`;
 			if (scratch.unionKey !== unionKey) {
 				ensureCanvasSize(union, stickerCanvas.width, stickerCanvas.height);
 				const unionCtx = union.getContext('2d', { alpha: true });
@@ -444,7 +457,7 @@ class SceneCompositor {
 					const frameCtx = scratch.unionFrameCanvas.getContext('2d', { alpha: true });
 					resetCanvasContext(frameCtx, imageData.width, imageData.height);
 					frameCtx.putImageData(imageData, 0, 0);
-					unionCtx.drawImage(scratch.unionFrameCanvas, 0, 0, union.width, union.height);
+					this.editor.stickerManager.drawStickerImage(unionCtx, scratch.unionFrameCanvas, layer, union.width, union.height);
 				});
 				scratch.unionKey = frames.length ? unionKey : null;
 			}
@@ -452,7 +465,9 @@ class SceneCompositor {
 		}
 		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
 			if ((phase === 'front') !== (item.role === 'bevel')) return;
-			const density = maskStickerCanvas.width / Math.max(1, layer.stickerData.width);
+			const densityX = maskStickerCanvas.width / Math.max(1, layer.stickerData.width);
+			const densityY = maskStickerCanvas.height / Math.max(1, layer.stickerData.height);
+			const density = Math.max(densityX, densityY);
 			const effectRadius = item.role === 'shadow' ? Number(item.data.spread) || 0 : item.role === 'border' ? Number(item.data.widthPx) || 0 : 0;
 			const pad = Math.ceil((item.role === 'shadow' ? getShadowCanvasPadding(item.data) : effectRadius + 2) * density);
 			const effectMask = scratch.shadowMaskCanvas;
@@ -475,8 +490,8 @@ class SceneCompositor {
 			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, layer.stickerData.width, layer.stickerData.height, {
 				smooth: layer.stickerData.isPixelated === false,
 				pad: pad / density,
-				padX: pad / density - (item.offsetX || 0),
-				padY: pad / density - (item.offsetY || 0)
+				padX: pad / densityX - (item.offsetX || 0),
+				padY: pad / densityY - (item.offsetY || 0)
 			});
 		});
 	}

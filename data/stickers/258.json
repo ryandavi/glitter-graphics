@@ -1,0 +1,40 @@
+{
+    "id": 258,
+    "name": "Container Sticky Note",
+    "filename": "container_sticky-note.png",
+    "url": "images/stickers/container/container_sticky-note.png",
+    "thumbnailUrl": "images/stickers/container/container_sticky-note.png",
+    "category": "container",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [],
+    "searchTerms": [],
+    "colorCodes": [
+        "#F5EA90",
+        "#020201"
+    ],
+    "colorWeights": [
+        0.86,
+        0.14
+    ],
+    "paletteType": "single",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 300,
+    "height": 274,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 23547,
+    "sortOrder": 0,
+    "slice": {
+        "top": 100,
+        "right": 125,
+        "bottom": 100,
+        "left": 125,
+        "mode": "stretch"
+    },
+    "sliced": true,
+    "variantUrls": []
+}

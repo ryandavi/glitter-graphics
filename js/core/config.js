@@ -22,6 +22,9 @@ const CONFIG = deepFreeze({
 	},
 	app: {
 		siteName: 'ryandavi.com glitter editor',
+		status: {
+			noDocument: 'Pick a canvas size or open an image to begin'
+		},
 		// Derived from the release list so they can never drift apart.
 		version: PUBLISHED_RELEASES[0].version,
 		currentRelease: PUBLISHED_RELEASES[0].id,
@@ -142,6 +145,7 @@ const CONFIG = deepFreeze({
 	},
 
 	tools: {
+		nineSlice: { maxTiles: 256 },
 		autoGlitter: {
 			defaults: { colorLayers: FIELDS.paletteColorCount.value, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, cleanEdges: true, detail: FIELDS.paletteDetail.value },
 			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },

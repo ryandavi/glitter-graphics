@@ -68,6 +68,7 @@ header('Pragma: no-cache');
 	<script src="js/category_manager.js?v=13"></script>
 	<script src="js/tag_manager.js?v=8"></script>
 	<script src="js/ingest_review.js?v=14"></script>
-	<script src="js/sticker_admin.js?v=11"></script>
+	<script src="../js/paint/nine-slice.js?v=e6df48e5"></script>
+	<script src="js/sticker_admin.js?v=cfe24a49"></script>
 </body>
 </html>

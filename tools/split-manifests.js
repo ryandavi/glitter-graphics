@@ -5,7 +5,7 @@ const root = path.resolve(__dirname, '..');
 const browseFields = new Set([
 	'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution',
 	'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
-	'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source'
+	'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source', 'sliced'
 ]);
 
 const typeBrowseFields = {

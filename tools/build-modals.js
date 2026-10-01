@@ -41,7 +41,7 @@ function getAppRegistries() {
 		'js/core/layer-types.js', 'js/core/options.js', 'js/core/key-labels.js', 'js/core/commands.js',
 		'js/ui/panel-schemas.js'
 	].forEach(file => vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file }));
-	vm.runInContext('globalThis.__registries = { TOOLS, COMMANDS, PANEL_SCHEMAS, getShortcutGroups };', context);
+	vm.runInContext('globalThis.__registries = { CONFIG, ToolType, TOOLS, TOOL_ORDER, COMMANDS, PANEL_SCHEMAS, getShortcutGroups };', context);
 	appRegistries = context.__registries;
 	return appRegistries;
 }
@@ -1229,6 +1229,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+	getAppRegistries,
+	escapeHtml,
 	compile,
 	renderSource,
 	formatIsoDate,

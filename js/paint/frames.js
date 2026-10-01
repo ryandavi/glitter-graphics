@@ -223,6 +223,32 @@ function getFrameImagePlacement(fit, imageWidth, imageHeight, width, height) {
 	return { x: (width - w) / 2, y: (height - h) / 2, width: w, height: h };
 }
 
+// Slice metadata is stored in base asset pixels; decoded variants use the
+// same border size after their source rectangles have been scaled.
+function getFrameSliceRects(data, sourceWidth, sourceHeight, width, height) {
+	const image = data.image;
+	if (data.fit !== 'slice' || !image) return null;
+	const baseSlice = normalizeSlice(image.slice, image.width, image.height);
+	if (!baseSlice) return null;
+	const slice = scaleSliceInsets(baseSlice, image.width, image.height, sourceWidth, sourceHeight);
+	const pixelated = image.isPixelated !== false;
+	const baseScale = getSliceScale(baseSlice, {
+		fixedScale: data.sliceScale / 100, pixelated, boxWidth: width, boxHeight: height
+	});
+	return getSliceRects(slice, sourceWidth, sourceHeight, width, height,
+		baseScale * image.width / sourceWidth);
+}
+
+function drawFrameImage(ctx, source, data, width, height) {
+	const rects = getFrameSliceRects(data, source.naturalWidth || source.width, source.naturalHeight || source.height, width, height);
+	ctx.imageSmoothingEnabled = data.image.isPixelated === false;
+	if (rects) drawSlicedImage(ctx, source, rects);
+	else {
+		const place = getFrameImagePlacement(data.fit, data.image.width, data.image.height, width, height);
+		ctx.drawImage(source, place.x, place.y, place.width, place.height);
+	}
+}
+
 // Presets set only the shape of the frame: style, thickness, corners and
 // bevel depth. Paint (glitter, color, gradient) is the fill slot's and never
 // changes, so presets are named for their shape, never a color.

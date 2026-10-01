@@ -3,6 +3,7 @@
 	"templates": [
 		{
 			"id": "blingee-nameplate",
+			"active": false,
 			"mode": "project",
 			"label": "Glitter Nameplate",
 			"description": "A Y2K profile graphic with animated glitter type, frame and sparkles",

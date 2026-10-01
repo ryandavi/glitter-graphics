@@ -48,3 +48,7 @@ Each export first writes a timestamped backup to `data/backup/`, which is git-ig
 ## Tests
 
 The PHP contract tests run through the shared runner: `node tests/run.js --tag admin`. They cover the color classifier, the export contract, the workflow, and the manifest library. `npm run lint` also lints `admin/js`.
+
+## Stretchable stickers
+
+The sticker editor's Slice section stores four independent insets in base-image pixels and a Stretch/Round mode. Number fields and draggable image guides stay synchronized; wide and tall sample boxes use the editor's shared `js/paint/nine-slice.js` geometry. Disable Stretchable to save `null`. Insets must be nonnegative integers and leave a nonempty center; at least one inset must be positive. Sibling variants keep the same base-pixel metadata. Exports put the full slice record in asset details and only the `sliced` boolean in the browse index.

@@ -1011,6 +1011,11 @@ html {
   box-sizing: border-box;
 }
 
+html,
+body {
+  overscroll-behavior: none;
+}
+
 *,
 *:before,
 *:after {
@@ -3587,10 +3592,11 @@ body.no-document .main-content > .design-panel {
   position: absolute;
   inset: 0;
   z-index: 20;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
   padding: clamp(var(--spacing-md), 4vw, var(--spacing-2xl));
   overflow: auto;
+  overscroll-behavior: contain;
   touch-action: pan-y;
 }
 .workspace-start[hidden] {
@@ -3606,11 +3612,18 @@ body.no-document .main-content > .design-panel {
   width: min(560px, 100%);
   display: flex;
   flex-direction: column;
+  margin-block: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--panel-bg);
   text-align: center;
   transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+body.is-booting .workspace-start button {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+  cursor: default;
 }
 
 .workspace-start-main {
@@ -7117,7 +7130,7 @@ body.tool-select .preview-canvas {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
-.asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-animated {
+.asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-stretchable, .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-animated {
   border-color: var(--color-accent-border);
   background: var(--color-accent-surface);
   color: var(--color-accent-light);
@@ -7126,6 +7139,41 @@ body.tool-select .preview-canvas {
   border-color: color-mix(in srgb, var(--color-info) 45%, var(--color-border));
   background: var(--color-info-surface);
   color: var(--color-info-text);
+}
+
+.asset-slice-mark {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+.asset-slice-mark .icon {
+  width: 14px;
+  height: 14px;
+  margin: 2px;
+}
+
+.sticker-slice {
+  position: absolute;
+  z-index: 2;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.slice-resize-guide {
+  position: absolute;
+  pointer-events: none;
+}
+.slice-resize-guide.is-vertical {
+  border-left: 1px dashed rgba(255, 255, 255, 0.6);
+}
+.slice-resize-guide.is-horizontal {
+  border-top: 1px dashed rgba(255, 255, 255, 0.6);
 }
 
 .subsection-content-group[data-collapsible-subsection] > .subsection-title {
@@ -12319,9 +12367,13 @@ body.modal-open {
   body.mobile-no-image .main-content > .preview-panel {
     display: flex;
     min-height: calc(100dvh - var(--mobile-header-height));
+    padding-bottom: 0;
   }
   .workspace-start {
-    padding: var(--spacing-lg);
+    padding-top: max(var(--spacing-lg), env(safe-area-inset-top));
+    padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
+    padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
+    padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
   }
   .workspace-start-card {
     width: 100%;
@@ -12332,22 +12384,76 @@ body.modal-open {
     gap: var(--spacing-md);
     padding: var(--spacing-lg);
   }
+  .workspace-start-copy p {
+    display: none;
+  }
   .workspace-start-presets {
+    order: 2;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .workspace-start-preset {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    -moz-column-gap: var(--spacing-sm);
+         column-gap: var(--spacing-sm);
+    row-gap: 1px;
+    padding: var(--spacing-sm) var(--spacing-base);
+    text-align: left;
+  }
+  .workspace-start-preset > .action-card-media {
+    grid-column: 1;
+    grid-row: 1/-1;
+  }
+  .workspace-start-preset > .action-card-title {
+    grid-column: 2;
+    align-self: end;
+  }
+  .workspace-start-preset > .action-card-detail {
+    grid-column: 2;
+    align-self: start;
+  }
+  .workspace-start-preset {
+    min-height: var(--touch-target-min);
+  }
+  .workspace-start-preset.action-card.is-quiet:not(:hover, :focus-visible, .active) {
+    border-color: var(--color-border);
+    background: var(--color-bg-secondary);
+  }
   .workspace-start-preset-preview {
-    height: 48px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+  }
+  .workspace-start-preset-preview > .icon-wrapper > svg.icon {
+    font-size: 28px;
+  }
+  .workspace-start-links {
+    flex-wrap: nowrap;
+    gap: var(--spacing-xs);
+    padding: 0 var(--spacing-sm);
   }
   .workspace-start-link {
-    min-height: 44px;
+    min-width: 0;
+    min-height: var(--touch-target-min);
+    padding: 0 var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
   }
   .workspace-start-actions {
+    order: 1;
     width: 100%;
+    flex-wrap: nowrap;
   }
   .workspace-start-actions > button {
-    flex: 1 1 100%;
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: center;
-    min-height: 44px;
+    min-height: var(--touch-target-min);
+    white-space: nowrap;
+  }
+  .workspace-start-drop {
+    order: 3;
   }
   .workspace-start-drop > span {
     display: none;

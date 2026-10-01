@@ -18,7 +18,8 @@ class StickerManager extends ContentManager {
 
 		// Add sticker-specific filters to base activeFilters
 		Object.assign(this.activeFilters, {
-			vibes: new Set()
+			vibes: new Set(),
+			stretchable: new Set()
 		});
 
 		this.useBrowser = true;
@@ -121,6 +122,14 @@ class StickerManager extends ContentManager {
 				this.fieldHost.ensureSlot(layer, 'border')[property] = event.target.checked;
 			}, { geometry: true });
 		}));
+		document.getElementById('stickerSliceEnabled')?.addEventListener('change', (event) => {
+			const layer = this.fieldHost.getLayer();
+			if (!layer?.stickerData.slice || !this.editor.canEditLayer(layer, { notify: true })) return;
+			layer.stickerData.sliceEnabled = event.target.checked;
+			this.renderLayer(layer);
+			this.editor.requestPreviewUpdate();
+			this.editor.saveState('Edit sticker');
+		});
 		this.ui.resetEffects?.addEventListener('click', () => {
 			const layer = this.fieldHost.getLayer();
 			if (!layer) return;
@@ -182,6 +191,7 @@ class StickerManager extends ContentManager {
 		const filter = buildCssColorFilter(layer?.stickerData?.colorAdjust);
 		const image = this.layerElements.get(layer?.id)?.querySelector('img.sticker-image');
 		if (image) image.style.filter = filter;
+		this.layerElements.get(layer?.id)?.querySelectorAll('.sticker-slice').forEach((span) => { span.style.filter = filter; });
 		if (this.ui.assetThumbnail && this.editor.layerManager.getActiveLayer()?.id === layer?.id) {
 			this.ui.assetThumbnail.style.filter = filter;
 		}
@@ -268,6 +278,11 @@ class StickerManager extends ContentManager {
 		if (layer?.type !== LayerType.STICKER) return;
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.closePicker();
 		syncFieldControls(this.fieldHost, layer);
+		const sliceToggle = document.getElementById('stickerSliceEnabled');
+		if (sliceToggle) {
+			sliceToggle.closest('label').hidden = !layer.stickerData.slice;
+			sliceToggle.checked = layer.stickerData.sliceEnabled !== false;
+		}
 		const unionFrames = document.getElementById('stickerBorderUnionFrames');
 		if (unionFrames) {
 			unionFrames.checked = layer.stickerData.border?.unionFrames ?? CONFIG.tools.stickers.outline.useAllFrames;
@@ -289,15 +304,15 @@ class StickerManager extends ContentManager {
 		const effectScale = Math.max(scaleX, scaleY);
 		const width = Math.max(1, Math.round(layer.stickerData.width * scaleX));
 		const height = Math.max(1, Math.round(layer.stickerData.height * scaleY));
-		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, getShadowReach(layer.stickerData.shadow)) * effectScale);
+		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, getShadowReach(layer.stickerData.shadow), layer.stickerData.bevel?.enabled ? 2 : 0) * effectScale);
 		const source = createAppCanvas(width + pad * 2, height + pad * 2, 'layers/StickerManager');
 		const sourceCtx = source.getContext('2d', { willReadFrequently: true, alpha: true });
 		const unionKey = `${layer.stickerData.baseUrl || layer.stickerData.url}:${width}x${height}`;
 		const union = layer.stickerData.border?.unionFrames ? this.effectMaskCache.get(unionKey) : null;
 		sourceCtx.imageSmoothingEnabled = layer.stickerData.isPixelated === false;
-		if (union) sourceCtx.drawImage(union, pad, pad, width, height);
+		if (union) this.drawStickerImage(sourceCtx, union, layer, width, height, pad);
 		else {
-			sourceCtx.drawImage(img, pad, pad, width, height);
+			this.drawStickerImage(sourceCtx, img, layer, width, height, pad);
 			if (layer.stickerData.border?.unionFrames) this.ensureStickerUnionMask(layer, unionKey);
 		}
 		if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(sourceCtx);
@@ -342,6 +357,8 @@ class StickerManager extends ContentManager {
 	// crisp result with the sticker during a live gesture. The settled render
 	// rebuilds them at the exact final size.
 	syncElementScale(layer, element) {
+		const img = element.querySelector('img.sticker-image');
+		if (img) this.reconcileSliceSpans(layer, element, img);
 		element.querySelectorAll('.sticker-effect-layer').forEach((span) => {
 			this.syncStickerEffectSpan(layer, span);
 		});
@@ -396,6 +413,7 @@ class StickerManager extends ContentManager {
 	}
 
 	matchesChildFilters(item) {
+		if (this.activeFilters.stretchable.size && !item.sliced) return false;
 		// Animated filter
 		if (this.activeFilters.animated !== null) {
 			if (item.isAnimated !== this.activeFilters.animated) {
@@ -418,6 +436,14 @@ class StickerManager extends ContentManager {
 	}
 
 	customizeItemElement(element, item) {
+		if (item.sliced || item.slice) {
+			element.classList.add('is-sliced');
+			const mark = document.createElement('span');
+			mark.className = 'asset-slice-mark';
+			mark.title = 'Stretches without distorting its corners.';
+			mark.appendChild(createIcon('stretch'));
+			element.appendChild(mark);
+		}
 		if (item.isAnimated) element.classList.add('animated');
 		if (item.hasTransparency) element.classList.add('has-transparency');
 		if (item.isPixelated !== false) element.classList.add('pixelated');
@@ -797,6 +823,8 @@ class StickerManager extends ContentManager {
 				isAnimated: sticker?.isAnimated || false,
 				isPixelated: sticker?.isPixelated !== false,
 				frameCount: sticker?.frameCount || 1,
+				slice: normalizeSlice(sticker?.slice, sticker?.width, sticker?.height),
+				sliceEnabled: Boolean(sticker?.slice),
 				width: sticker?.width || 100,
 				height: sticker?.height || 100,
 				colorAdjust: { ...COLOR_ADJUST_IDENTITY },
@@ -852,6 +880,8 @@ class StickerManager extends ContentManager {
 			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
 			activeLayer.stickerData.isPixelated = stickerInfo.isPixelated !== false;
 			activeLayer.stickerData.frameCount = stickerInfo.frameCount || 1;
+			activeLayer.stickerData.slice = normalizeSlice(stickerInfo.slice, stickerInfo.width, stickerInfo.height);
+			activeLayer.stickerData.sliceEnabled = Boolean(activeLayer.stickerData.slice);
 
 			// Pick the resolution that matches the layer's current (possibly
 			// scaled-up) size, not always the base — same rule commitResolutionSwap
@@ -917,6 +947,48 @@ class StickerManager extends ContentManager {
 		this.renderLayer(layer);
 	}
 
+	getSliceRects(layer, sourceWidth, sourceHeight, boxWidth, boxHeight) {
+		const data = layer.stickerData;
+		if (!data.slice || data.sliceEnabled === false) return null;
+		const slice = scaleSliceInsets(data.slice, data.width, data.height, sourceWidth, sourceHeight);
+		const scale = getSliceScale(data.slice, {
+			scaleX: boxWidth / data.width, scaleY: boxHeight / data.height,
+			boxWidth, boxHeight, pixelated: data.isPixelated !== false
+		});
+		return getSliceRects(slice, sourceWidth, sourceHeight, boxWidth, boxHeight, scale * data.width / sourceWidth);
+	}
+
+	drawStickerImage(ctx, image, layer, width, height, pad = 0) {
+		const rects = this.getSliceRects(layer, image.naturalWidth || image.width, image.naturalHeight || image.height, width, height);
+		if (!rects) { ctx.drawImage(image, pad, pad, width, height); return; }
+		ctx.save();
+		ctx.translate(pad, pad);
+		drawSlicedImage(ctx, image, rects);
+		ctx.restore();
+	}
+
+	reconcileSliceSpans(layer, element, img) {
+		const scale = getLayerTransform(layer).scale;
+		const width = Math.max(1, Math.round(layer.stickerData.width * Math.abs(scale.x) / 100));
+		const height = Math.max(1, Math.round(layer.stickerData.height * Math.abs(scale.y) / 100));
+		const rects = img.naturalWidth ? this.getSliceRects(layer, img.naturalWidth, img.naturalHeight, width, height) : null;
+		img.style.display = rects ? 'none' : '';
+		const existing = Array.from(element.querySelectorAll('.sticker-slice'));
+		(rects || []).forEach((rect, index) => {
+			let span = existing[index];
+			if (!span) {
+				span = document.createElement('span');
+				span.className = 'sticker-slice';
+				element.insertBefore(span, img);
+			}
+			Object.assign(span.style, sliceSpanStyle(rect, img.naturalWidth, img.naturalHeight));
+			const background = `url("${img.src}")`;
+			if (span.style.backgroundImage !== background) span.style.backgroundImage = background;
+			span.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
+		});
+		existing.slice(rects?.length || 0).forEach((span) => span.remove());
+	}
+
 	// ===== RENDERING =====
 
 	updateSelection() {
@@ -962,6 +1034,7 @@ class StickerManager extends ContentManager {
 		// The canvas stack declares image-rendering: pixelated and every child
 		// inherits it, so smooth art needs the class toggle to opt back out.
 		element.classList.toggle('pixelated', layer.stickerData.isPixelated !== false);
+		this.reconcileSliceSpans(layer, element, img);
 		this.reconcileStickerEffectSpans(layer, element, img);
 		// Behind-the-sticker sparkles sit between the shadow and the image, as
 		// the export composites them. The element is sized to the scaled box,
@@ -1165,6 +1238,7 @@ updateTransform(layerId, updates) {
 		// The library asset owns this flag, so a project saved before an admin
 		// change picks up the corrected rendering on reopen.
 		layerData.stickerData.isPixelated = sticker.isPixelated !== false;
+		layerData.stickerData.slice = normalizeSlice(layerData.stickerData.slice, layerData.stickerData.width, layerData.stickerData.height);
 		layerData.stickerData.colorAdjust = normalizeColorAdjust(layerData.stickerData.colorAdjust);
 		if (layerData.stickerData.border) layerData.stickerData.border = { ...this.getDefaultBorder(), ...layerData.stickerData.border };
 		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...this.getDefaultShadow(), ...layerData.stickerData.shadow };

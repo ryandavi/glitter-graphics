@@ -28,11 +28,11 @@ const TemplateLibrary = (() => {
 
 	async function list(mode = null) {
 		const entries = await loadManifest();
-		return entries.filter((entry) => !mode || entry.mode === mode);
+		return entries.filter((entry) => entry.active !== false && (!mode || entry.mode === mode));
 	}
 
 	async function get(id) {
-		return (await loadManifest()).find((entry) => entry.id === id) || null;
+		return (await loadManifest()).find((entry) => entry.id === id && entry.active !== false) || null;
 	}
 
 	async function loadProject(id) {

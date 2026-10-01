@@ -17,7 +17,8 @@
         "isAnimated": 1,
         "hasTransparency": 0,
         "isPixelated": 1,
-        "sortOrder": 108
+        "sortOrder": 108,
+        "sliced": false
     },
     {
         "id": 99,
@@ -40,7 +41,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 109
+        "sortOrder": 109,
+        "sliced": false
     },
     {
         "id": 100,
@@ -63,7 +65,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 110
+        "sortOrder": 110,
+        "sliced": false
     },
     {
         "id": 119,
@@ -83,7 +86,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 129
+        "sortOrder": 129,
+        "sliced": false
     },
     {
         "id": 120,
@@ -103,7 +107,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 130
+        "sortOrder": 130,
+        "sliced": false
     },
     {
         "id": 121,
@@ -125,7 +130,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 131
+        "sortOrder": 131,
+        "sliced": false
     },
     {
         "id": 223,
@@ -147,7 +153,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 6,
@@ -167,7 +174,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 6
+        "sortOrder": 6,
+        "sliced": false
     },
     {
         "id": 7,
@@ -188,7 +196,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 7
+        "sortOrder": 7,
+        "sliced": false
     },
     {
         "id": 8,
@@ -209,7 +218,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 8
+        "sortOrder": 8,
+        "sliced": false
     },
     {
         "id": 9,
@@ -230,7 +240,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 9
+        "sortOrder": 9,
+        "sliced": false
     },
     {
         "id": 10,
@@ -250,7 +261,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 10
+        "sortOrder": 10,
+        "sliced": false
     },
     {
         "id": 11,
@@ -270,7 +282,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 11
+        "sortOrder": 11,
+        "sliced": false
     },
     {
         "id": 12,
@@ -293,7 +306,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 12
+        "sortOrder": 12,
+        "sliced": false
     },
     {
         "id": 13,
@@ -315,7 +329,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 13
+        "sortOrder": 13,
+        "sliced": false
     },
     {
         "id": 14,
@@ -336,7 +351,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 14
+        "sortOrder": 14,
+        "sliced": false
     },
     {
         "id": 15,
@@ -357,7 +373,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 15
+        "sortOrder": 15,
+        "sliced": false
     },
     {
         "id": 16,
@@ -378,7 +395,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 16
+        "sortOrder": 16,
+        "sliced": false
     },
     {
         "id": 122,
@@ -401,7 +419,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 132
+        "sortOrder": 132,
+        "sliced": false
     },
     {
         "id": 123,
@@ -421,7 +440,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 133
+        "sortOrder": 133,
+        "sliced": false
     },
     {
         "id": 124,
@@ -442,7 +462,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 134
+        "sortOrder": 134,
+        "sliced": false
     },
     {
         "id": 125,
@@ -465,7 +486,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 135
+        "sortOrder": 135,
+        "sliced": false
     },
     {
         "id": 126,
@@ -488,7 +510,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 136
+        "sortOrder": 136,
+        "sliced": false
     },
     {
         "id": 127,
@@ -511,7 +534,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 137
+        "sortOrder": 137,
+        "sliced": false
     },
     {
         "id": 128,
@@ -534,7 +558,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 138
+        "sortOrder": 138,
+        "sliced": false
     },
     {
         "id": 129,
@@ -557,7 +582,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 139
+        "sortOrder": 139,
+        "sliced": false
     },
     {
         "id": 130,
@@ -581,7 +607,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 140
+        "sortOrder": 140,
+        "sliced": false
     },
     {
         "id": 131,
@@ -604,7 +631,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 141
+        "sortOrder": 141,
+        "sliced": false
     },
     {
         "id": 132,
@@ -625,7 +653,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 142
+        "sortOrder": 142,
+        "sliced": false
     },
     {
         "id": 78,
@@ -643,7 +672,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 87
+        "sortOrder": 87,
+        "sliced": true
     },
     {
         "id": 79,
@@ -661,7 +691,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 88
+        "sortOrder": 88,
+        "sliced": true
     },
     {
         "id": 80,
@@ -681,7 +712,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 89
+        "sortOrder": 89,
+        "sliced": false
     },
     {
         "id": 81,
@@ -702,7 +734,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 90
+        "sortOrder": 90,
+        "sliced": false
     },
     {
         "id": 82,
@@ -723,7 +756,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 91
+        "sortOrder": 91,
+        "sliced": false
     },
     {
         "id": 83,
@@ -743,7 +777,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 92
+        "sortOrder": 92,
+        "sliced": true
     },
     {
         "id": 84,
@@ -763,7 +798,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 93
+        "sortOrder": 93,
+        "sliced": false
     },
     {
         "id": 133,
@@ -781,7 +817,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 143
+        "sortOrder": 143,
+        "sliced": false
     },
     {
         "id": 134,
@@ -801,7 +838,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 144
+        "sortOrder": 144,
+        "sliced": false
     },
     {
         "id": 135,
@@ -822,7 +860,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 145
+        "sortOrder": 145,
+        "sliced": false
     },
     {
         "id": 136,
@@ -843,7 +882,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 146
+        "sortOrder": 146,
+        "sliced": false
     },
     {
         "id": 137,
@@ -865,7 +905,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 147
+        "sortOrder": 147,
+        "sliced": false
     },
     {
         "id": 138,
@@ -886,7 +927,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 148
+        "sortOrder": 148,
+        "sliced": false
     },
     {
         "id": 139,
@@ -907,7 +949,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 149
+        "sortOrder": 149,
+        "sliced": false
     },
     {
         "id": 140,
@@ -929,7 +972,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 150
+        "sortOrder": 150,
+        "sliced": false
     },
     {
         "id": 141,
@@ -950,7 +994,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 151
+        "sortOrder": 151,
+        "sliced": false
     },
     {
         "id": 142,
@@ -973,7 +1018,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 152
+        "sortOrder": 152,
+        "sliced": false
     },
     {
         "id": 143,
@@ -994,7 +1040,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 153
+        "sortOrder": 153,
+        "sliced": false
     },
     {
         "id": 144,
@@ -1015,7 +1062,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 154
+        "sortOrder": 154,
+        "sliced": false
     },
     {
         "id": 145,
@@ -1036,7 +1084,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 155
+        "sortOrder": 155,
+        "sliced": false
     },
     {
         "id": 146,
@@ -1057,7 +1106,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 156
+        "sortOrder": 156,
+        "sliced": false
     },
     {
         "id": 147,
@@ -1078,7 +1128,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 157
+        "sortOrder": 157,
+        "sliced": false
     },
     {
         "id": 148,
@@ -1099,7 +1150,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 158
+        "sortOrder": 158,
+        "sliced": false
     },
     {
         "id": 149,
@@ -1120,7 +1172,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 159
+        "sortOrder": 159,
+        "sliced": false
     },
     {
         "id": 150,
@@ -1141,7 +1194,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 160
+        "sortOrder": 160,
+        "sliced": false
     },
     {
         "id": 151,
@@ -1163,7 +1217,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 161
+        "sortOrder": 161,
+        "sliced": false
     },
     {
         "id": 152,
@@ -1183,7 +1238,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 162
+        "sortOrder": 162,
+        "sliced": false
     },
     {
         "id": 153,
@@ -1203,7 +1259,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 163
+        "sortOrder": 163,
+        "sliced": false
     },
     {
         "id": 154,
@@ -1225,7 +1282,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 164
+        "sortOrder": 164,
+        "sliced": false
     },
     {
         "id": 17,
@@ -1246,7 +1304,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 17
+        "sortOrder": 17,
+        "sliced": false
     },
     {
         "id": 76,
@@ -1265,7 +1324,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 85
+        "sortOrder": 85,
+        "sliced": false
     },
     {
         "id": 77,
@@ -1284,7 +1344,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 86
+        "sortOrder": 86,
+        "sliced": false
     },
     {
         "id": 22,
@@ -1304,7 +1365,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 18,
@@ -1325,7 +1387,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 18
+        "sortOrder": 18,
+        "sliced": false
     },
     {
         "id": 19,
@@ -1345,7 +1408,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 19
+        "sortOrder": 19,
+        "sliced": false
     },
     {
         "id": 20,
@@ -1365,7 +1429,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 20
+        "sortOrder": 20,
+        "sliced": false
     },
     {
         "id": 21,
@@ -1386,7 +1451,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 21
+        "sortOrder": 21,
+        "sliced": false
     },
     {
         "id": 155,
@@ -1405,7 +1471,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 165
+        "sortOrder": 165,
+        "sliced": false
     },
     {
         "id": 156,
@@ -1425,7 +1492,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 166
+        "sortOrder": 166,
+        "sliced": false
     },
     {
         "id": 157,
@@ -1445,7 +1513,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 167
+        "sortOrder": 167,
+        "sliced": false
     },
     {
         "id": 158,
@@ -1465,7 +1534,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 168
+        "sortOrder": 168,
+        "sliced": false
     },
     {
         "id": 159,
@@ -1485,7 +1555,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 169
+        "sortOrder": 169,
+        "sliced": false
     },
     {
         "id": 160,
@@ -1509,7 +1580,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 170
+        "sortOrder": 170,
+        "sliced": false
     },
     {
         "id": 161,
@@ -1531,7 +1603,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 171
+        "sortOrder": 171,
+        "sliced": false
     },
     {
         "id": 162,
@@ -1554,7 +1627,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 172
+        "sortOrder": 172,
+        "sliced": false
     },
     {
         "id": 23,
@@ -1574,7 +1648,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 23
+        "sortOrder": 23,
+        "sliced": false
     },
     {
         "id": 24,
@@ -1594,7 +1669,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 24
+        "sortOrder": 24,
+        "sliced": false
     },
     {
         "id": 25,
@@ -1615,7 +1691,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 25
+        "sortOrder": 25,
+        "sliced": false
     },
     {
         "id": 26,
@@ -1635,7 +1712,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 26
+        "sortOrder": 26,
+        "sliced": false
     },
     {
         "id": 27,
@@ -1655,7 +1733,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 27
+        "sortOrder": 27,
+        "sliced": false
     },
     {
         "id": 28,
@@ -1675,7 +1754,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 28
+        "sortOrder": 28,
+        "sliced": false
     },
     {
         "id": 29,
@@ -1695,7 +1775,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 29
+        "sortOrder": 29,
+        "sliced": false
     },
     {
         "id": 30,
@@ -1715,7 +1796,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 30
+        "sortOrder": 30,
+        "sliced": false
     },
     {
         "id": 31,
@@ -1736,7 +1818,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 31
+        "sortOrder": 31,
+        "sliced": false
     },
     {
         "id": 85,
@@ -1762,7 +1845,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 95
+        "sortOrder": 95,
+        "sliced": false
     },
     {
         "id": 163,
@@ -1783,7 +1867,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 173
+        "sortOrder": 173,
+        "sliced": false
     },
     {
         "id": 164,
@@ -1804,7 +1889,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 174
+        "sortOrder": 174,
+        "sliced": false
     },
     {
         "id": 165,
@@ -1824,7 +1910,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 175
+        "sortOrder": 175,
+        "sliced": false
     },
     {
         "id": 166,
@@ -1846,7 +1933,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 176
+        "sortOrder": 176,
+        "sliced": false
     },
     {
         "id": 167,
@@ -1868,7 +1956,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 177
+        "sortOrder": 177,
+        "sliced": false
     },
     {
         "id": 168,
@@ -1890,7 +1979,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 178
+        "sortOrder": 178,
+        "sliced": false
     },
     {
         "id": 169,
@@ -1911,7 +2001,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 179
+        "sortOrder": 179,
+        "sliced": false
     },
     {
         "id": 170,
@@ -1932,7 +2023,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 180
+        "sortOrder": 180,
+        "sliced": false
     },
     {
         "id": 171,
@@ -1953,7 +2045,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 181
+        "sortOrder": 181,
+        "sliced": false
     },
     {
         "id": 172,
@@ -1974,7 +2067,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 182
+        "sortOrder": 182,
+        "sliced": false
     },
     {
         "id": 173,
@@ -1996,7 +2090,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 183
+        "sortOrder": 183,
+        "sliced": false
     },
     {
         "id": 174,
@@ -2018,7 +2113,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 184
+        "sortOrder": 184,
+        "sliced": false
     },
     {
         "id": 175,
@@ -2039,7 +2135,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 185
+        "sortOrder": 185,
+        "sliced": false
     },
     {
         "id": 176,
@@ -2060,7 +2157,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 186
+        "sortOrder": 186,
+        "sliced": false
     },
     {
         "id": 177,
@@ -2081,7 +2179,8 @@
         "isAnimated": 1,
         "hasTransparency": 0,
         "isPixelated": 1,
-        "sortOrder": 187
+        "sortOrder": 187,
+        "sliced": false
     },
     {
         "id": 178,
@@ -2101,7 +2200,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 188
+        "sortOrder": 188,
+        "sliced": false
     },
     {
         "id": 179,
@@ -2120,7 +2220,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 189
+        "sortOrder": 189,
+        "sliced": false
     },
     {
         "id": 180,
@@ -2139,7 +2240,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 190
+        "sortOrder": 190,
+        "sliced": false
     },
     {
         "id": 181,
@@ -2158,7 +2260,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 191
+        "sortOrder": 191,
+        "sliced": false
     },
     {
         "id": 182,
@@ -2177,7 +2280,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 192
+        "sortOrder": 192,
+        "sliced": false
     },
     {
         "id": 183,
@@ -2196,7 +2300,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 193
+        "sortOrder": 193,
+        "sliced": false
     },
     {
         "id": 184,
@@ -2215,7 +2320,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 194
+        "sortOrder": 194,
+        "sliced": false
     },
     {
         "id": 185,
@@ -2234,7 +2340,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 195
+        "sortOrder": 195,
+        "sliced": false
     },
     {
         "id": 186,
@@ -2253,7 +2360,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 196
+        "sortOrder": 196,
+        "sliced": false
     },
     {
         "id": 187,
@@ -2272,7 +2380,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 197
+        "sortOrder": 197,
+        "sliced": false
     },
     {
         "id": 188,
@@ -2291,7 +2400,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 198
+        "sortOrder": 198,
+        "sliced": false
     },
     {
         "id": 189,
@@ -2310,7 +2420,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 199
+        "sortOrder": 199,
+        "sliced": false
     },
     {
         "id": 190,
@@ -2329,7 +2440,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 200
+        "sortOrder": 200,
+        "sliced": false
     },
     {
         "id": 191,
@@ -2348,7 +2460,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 201
+        "sortOrder": 201,
+        "sliced": false
     },
     {
         "id": 192,
@@ -2367,7 +2480,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 202
+        "sortOrder": 202,
+        "sliced": false
     },
     {
         "id": 193,
@@ -2386,7 +2500,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 203
+        "sortOrder": 203,
+        "sliced": false
     },
     {
         "id": 194,
@@ -2405,7 +2520,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 204
+        "sortOrder": 204,
+        "sliced": false
     },
     {
         "id": 195,
@@ -2424,7 +2540,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 205
+        "sortOrder": 205,
+        "sliced": false
     },
     {
         "id": 196,
@@ -2443,7 +2560,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 206
+        "sortOrder": 206,
+        "sliced": false
     },
     {
         "id": 197,
@@ -2462,7 +2580,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 207
+        "sortOrder": 207,
+        "sliced": false
     },
     {
         "id": 198,
@@ -2483,7 +2602,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 208
+        "sortOrder": 208,
+        "sliced": false
     },
     {
         "id": 199,
@@ -2503,7 +2623,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 210
+        "sortOrder": 210,
+        "sliced": false
     },
     {
         "id": 215,
@@ -2524,7 +2645,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 211,
@@ -2544,7 +2666,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 216,
@@ -2566,7 +2689,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 217,
@@ -2587,7 +2711,8 @@
         "isAnimated": 1,
         "hasTransparency": 0,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 218,
@@ -2609,7 +2734,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 219,
@@ -2631,7 +2757,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 67,
@@ -2651,7 +2778,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 75,
@@ -2671,7 +2799,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 32,
@@ -2691,7 +2820,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 40
+        "sortOrder": 40,
+        "sliced": false
     },
     {
         "id": 33,
@@ -2711,7 +2841,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 41
+        "sortOrder": 41,
+        "sliced": false
     },
     {
         "id": 34,
@@ -2731,7 +2862,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 42
+        "sortOrder": 42,
+        "sliced": false
     },
     {
         "id": 35,
@@ -2752,7 +2884,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 43
+        "sortOrder": 43,
+        "sliced": false
     },
     {
         "id": 36,
@@ -2772,7 +2905,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 44
+        "sortOrder": 44,
+        "sliced": false
     },
     {
         "id": 37,
@@ -2792,7 +2926,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 45
+        "sortOrder": 45,
+        "sliced": false
     },
     {
         "id": 38,
@@ -2812,7 +2947,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 46
+        "sortOrder": 46,
+        "sliced": false
     },
     {
         "id": 39,
@@ -2832,7 +2968,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 47
+        "sortOrder": 47,
+        "sliced": false
     },
     {
         "id": 40,
@@ -2852,7 +2989,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 48
+        "sortOrder": 48,
+        "sliced": false
     },
     {
         "id": 41,
@@ -2872,7 +3010,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 49
+        "sortOrder": 49,
+        "sliced": false
     },
     {
         "id": 42,
@@ -2892,7 +3031,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 50
+        "sortOrder": 50,
+        "sliced": false
     },
     {
         "id": 43,
@@ -2912,7 +3052,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 51
+        "sortOrder": 51,
+        "sliced": false
     },
     {
         "id": 44,
@@ -2933,7 +3074,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 53
+        "sortOrder": 53,
+        "sliced": false
     },
     {
         "id": 45,
@@ -2953,7 +3095,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 54
+        "sortOrder": 54,
+        "sliced": false
     },
     {
         "id": 46,
@@ -2971,7 +3114,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 55
+        "sortOrder": 55,
+        "sliced": false
     },
     {
         "id": 47,
@@ -2991,7 +3135,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 56
+        "sortOrder": 56,
+        "sliced": false
     },
     {
         "id": 48,
@@ -3011,7 +3156,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 57
+        "sortOrder": 57,
+        "sliced": false
     },
     {
         "id": 49,
@@ -3031,7 +3177,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 58
+        "sortOrder": 58,
+        "sliced": false
     },
     {
         "id": 50,
@@ -3052,7 +3199,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 59
+        "sortOrder": 59,
+        "sliced": false
     },
     {
         "id": 51,
@@ -3072,7 +3220,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 60
+        "sortOrder": 60,
+        "sliced": false
     },
     {
         "id": 52,
@@ -3092,7 +3241,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 61
+        "sortOrder": 61,
+        "sliced": false
     },
     {
         "id": 53,
@@ -3111,7 +3261,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 62
+        "sortOrder": 62,
+        "sliced": false
     },
     {
         "id": 54,
@@ -3131,7 +3282,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 63
+        "sortOrder": 63,
+        "sliced": false
     },
     {
         "id": 55,
@@ -3151,7 +3303,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 64
+        "sortOrder": 64,
+        "sliced": false
     },
     {
         "id": 56,
@@ -3171,7 +3324,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 65
+        "sortOrder": 65,
+        "sliced": false
     },
     {
         "id": 57,
@@ -3191,7 +3345,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 66
+        "sortOrder": 66,
+        "sliced": false
     },
     {
         "id": 58,
@@ -3212,7 +3367,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 67
+        "sortOrder": 67,
+        "sliced": false
     },
     {
         "id": 59,
@@ -3233,7 +3389,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 68
+        "sortOrder": 68,
+        "sliced": false
     },
     {
         "id": 60,
@@ -3253,7 +3410,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 69
+        "sortOrder": 69,
+        "sliced": false
     },
     {
         "id": 61,
@@ -3273,7 +3431,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 70
+        "sortOrder": 70,
+        "sliced": false
     },
     {
         "id": 62,
@@ -3293,7 +3452,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 71
+        "sortOrder": 71,
+        "sliced": false
     },
     {
         "id": 63,
@@ -3313,7 +3473,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 72
+        "sortOrder": 72,
+        "sliced": false
     },
     {
         "id": 64,
@@ -3333,7 +3494,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 73
+        "sortOrder": 73,
+        "sliced": false
     },
     {
         "id": 65,
@@ -3353,7 +3515,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 74
+        "sortOrder": 74,
+        "sliced": false
     },
     {
         "id": 66,
@@ -3373,7 +3536,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 75
+        "sortOrder": 75,
+        "sliced": false
     },
     {
         "id": 68,
@@ -3393,7 +3557,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 77
+        "sortOrder": 77,
+        "sliced": false
     },
     {
         "id": 69,
@@ -3413,7 +3578,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 78
+        "sortOrder": 78,
+        "sliced": false
     },
     {
         "id": 70,
@@ -3431,7 +3597,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 79
+        "sortOrder": 79,
+        "sliced": false
     },
     {
         "id": 71,
@@ -3451,7 +3618,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 80
+        "sortOrder": 80,
+        "sliced": false
     },
     {
         "id": 72,
@@ -3471,7 +3639,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 81
+        "sortOrder": 81,
+        "sliced": false
     },
     {
         "id": 73,
@@ -3491,7 +3660,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 82
+        "sortOrder": 82,
+        "sliced": false
     },
     {
         "id": 74,
@@ -3511,7 +3681,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 83
+        "sortOrder": 83,
+        "sliced": false
     },
     {
         "id": 86,
@@ -3532,7 +3703,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 96
+        "sortOrder": 96,
+        "sliced": false
     },
     {
         "id": 200,
@@ -3554,7 +3726,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 211
+        "sortOrder": 211,
+        "sliced": false
     },
     {
         "id": 201,
@@ -3575,7 +3748,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 212
+        "sortOrder": 212,
+        "sliced": false
     },
     {
         "id": 202,
@@ -3599,7 +3773,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 213
+        "sortOrder": 213,
+        "sliced": false
     },
     {
         "id": 203,
@@ -3623,7 +3798,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 214
+        "sortOrder": 214,
+        "sliced": false
     },
     {
         "id": 204,
@@ -3645,7 +3821,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 215
+        "sortOrder": 215,
+        "sliced": false
     },
     {
         "id": 205,
@@ -3668,7 +3845,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 216
+        "sortOrder": 216,
+        "sliced": false
     },
     {
         "id": 206,
@@ -3689,7 +3867,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 217
+        "sortOrder": 217,
+        "sliced": false
     },
     {
         "id": 207,
@@ -3710,7 +3889,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 218
+        "sortOrder": 218,
+        "sliced": false
     },
     {
         "id": 208,
@@ -3730,7 +3910,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 219
+        "sortOrder": 219,
+        "sliced": false
     },
     {
         "id": 209,
@@ -3753,7 +3934,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 220
+        "sortOrder": 220,
+        "sliced": false
     },
     {
         "id": 210,
@@ -3773,7 +3955,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 221
+        "sortOrder": 221,
+        "sliced": false
     },
     {
         "id": 212,
@@ -3794,7 +3977,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 223
+        "sortOrder": 223,
+        "sliced": false
     },
     {
         "id": 213,
@@ -3816,7 +4000,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 224
+        "sortOrder": 224,
+        "sliced": false
     },
     {
         "id": 214,
@@ -3838,7 +4023,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 225
+        "sortOrder": 225,
+        "sliced": false
     },
     {
         "id": 1,
@@ -3859,7 +4045,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 97,
@@ -3881,7 +4068,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 2,
@@ -3902,7 +4090,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 3,
@@ -3923,7 +4112,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 3
+        "sortOrder": 3,
+        "sliced": false
     },
     {
         "id": 87,
@@ -3943,7 +4133,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 97
+        "sortOrder": 97,
+        "sliced": false
     },
     {
         "id": 88,
@@ -3964,7 +4155,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 98
+        "sortOrder": 98,
+        "sliced": false
     },
     {
         "id": 89,
@@ -3983,7 +4175,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 99
+        "sortOrder": 99,
+        "sliced": false
     },
     {
         "id": 90,
@@ -4002,7 +4195,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 100
+        "sortOrder": 100,
+        "sliced": false
     },
     {
         "id": 91,
@@ -4021,7 +4215,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 101
+        "sortOrder": 101,
+        "sliced": false
     },
     {
         "id": 92,
@@ -4040,7 +4235,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 102
+        "sortOrder": 102,
+        "sliced": false
     },
     {
         "id": 93,
@@ -4060,7 +4256,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 103
+        "sortOrder": 103,
+        "sliced": false
     },
     {
         "id": 94,
@@ -4081,7 +4278,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 104
+        "sortOrder": 104,
+        "sliced": false
     },
     {
         "id": 95,
@@ -4101,7 +4299,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 105
+        "sortOrder": 105,
+        "sliced": false
     },
     {
         "id": 96,
@@ -4122,7 +4321,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 106
+        "sortOrder": 106,
+        "sliced": false
     },
     {
         "id": 221,
@@ -4142,7 +4342,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 220,
@@ -4158,7 +4359,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 4,
@@ -4178,7 +4380,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 4
+        "sortOrder": 4,
+        "sliced": false
     },
     {
         "id": 222,
@@ -4200,7 +4403,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 5,
@@ -4221,7 +4425,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 5
+        "sortOrder": 5,
+        "sliced": false
     },
     {
         "id": 101,
@@ -4243,7 +4448,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 111
+        "sortOrder": 111,
+        "sliced": false
     },
     {
         "id": 102,
@@ -4265,7 +4471,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 112
+        "sortOrder": 112,
+        "sliced": false
     },
     {
         "id": 103,
@@ -4286,7 +4493,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 113
+        "sortOrder": 113,
+        "sliced": false
     },
     {
         "id": 104,
@@ -4307,7 +4515,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 114
+        "sortOrder": 114,
+        "sliced": false
     },
     {
         "id": 105,
@@ -4328,7 +4537,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 115
+        "sortOrder": 115,
+        "sliced": false
     },
     {
         "id": 106,
@@ -4347,7 +4557,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 116
+        "sortOrder": 116,
+        "sliced": false
     },
     {
         "id": 107,
@@ -4368,7 +4579,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 117
+        "sortOrder": 117,
+        "sliced": false
     },
     {
         "id": 108,
@@ -4389,7 +4601,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 118
+        "sortOrder": 118,
+        "sliced": false
     },
     {
         "id": 109,
@@ -4410,7 +4623,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 119
+        "sortOrder": 119,
+        "sliced": false
     },
     {
         "id": 110,
@@ -4432,7 +4646,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 120
+        "sortOrder": 120,
+        "sliced": false
     },
     {
         "id": 111,
@@ -4455,7 +4670,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 121
+        "sortOrder": 121,
+        "sliced": false
     },
     {
         "id": 112,
@@ -4479,7 +4695,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 122
+        "sortOrder": 122,
+        "sliced": false
     },
     {
         "id": 113,
@@ -4502,7 +4719,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 123
+        "sortOrder": 123,
+        "sliced": false
     },
     {
         "id": 114,
@@ -4523,7 +4741,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 124
+        "sortOrder": 124,
+        "sliced": false
     },
     {
         "id": 115,
@@ -4544,7 +4763,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 125
+        "sortOrder": 125,
+        "sliced": false
     },
     {
         "id": 116,
@@ -4563,7 +4783,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 126
+        "sortOrder": 126,
+        "sliced": false
     },
     {
         "id": 117,
@@ -4584,7 +4805,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 127
+        "sortOrder": 127,
+        "sliced": false
     },
     {
         "id": 118,
@@ -4605,7 +4827,8 @@
         "isAnimated": 1,
         "hasTransparency": 1,
         "isPixelated": 1,
-        "sortOrder": 128
+        "sortOrder": 128,
+        "sliced": false
     },
     {
         "id": 225,
@@ -4624,7 +4847,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 226,
@@ -4644,7 +4868,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 227,
@@ -4664,7 +4889,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 228,
@@ -4683,7 +4909,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 229,
@@ -4704,7 +4931,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 230,
@@ -4723,7 +4951,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 231,
@@ -4743,7 +4972,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 232,
@@ -4764,7 +4994,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 233,
@@ -4784,7 +5015,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 234,
@@ -4805,7 +5037,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 235,
@@ -4825,7 +5058,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 245,
@@ -4845,7 +5079,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 243,
@@ -4865,7 +5100,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 255,
@@ -4885,7 +5121,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 244,
@@ -4905,7 +5142,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 254,
@@ -4925,7 +5163,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 246,
@@ -4945,7 +5184,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 248,
@@ -4965,7 +5205,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 242,
@@ -4985,7 +5226,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 250,
@@ -5004,7 +5246,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 247,
@@ -5025,7 +5268,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 237,
@@ -5043,7 +5287,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 256,
@@ -5063,7 +5308,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 239,
@@ -5083,7 +5329,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 253,
@@ -5103,7 +5350,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 252,
@@ -5122,7 +5370,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 251,
@@ -5141,7 +5390,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 236,
@@ -5162,7 +5412,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 241,
@@ -5182,7 +5433,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 238,
@@ -5201,7 +5453,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 249,
@@ -5222,7 +5475,8 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
     },
     {
         "id": 240,
@@ -5242,6 +5496,41 @@
         "isAnimated": 0,
         "hasTransparency": 1,
         "isPixelated": 0,
-        "sortOrder": 0
+        "sortOrder": 0,
+        "sliced": false
+    },
+    {
+        "id": 257,
+        "name": "Container Banner",
+        "filename": "container_banner.png",
+        "url": "images/stickers/container/container_banner.png",
+        "thumbnailUrl": "images/stickers/container/container_banner.png",
+        "category": "container",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [],
+        "searchTerms": [],
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 1,
+        "sortOrder": 0,
+        "sliced": true
+    },
+    {
+        "id": 258,
+        "name": "Container Sticky Note",
+        "filename": "container_sticky-note.png",
+        "url": "images/stickers/container/container_sticky-note.png",
+        "thumbnailUrl": "images/stickers/container/container_sticky-note.png",
+        "category": "container",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [],
+        "searchTerms": [],
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "isPixelated": 1,
+        "sortOrder": 0,
+        "sliced": true
     }
 ]

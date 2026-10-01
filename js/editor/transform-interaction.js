@@ -72,6 +72,78 @@ snapTransformPosition(transform, position, options = {}) {
 	}
 
 ,
+	// Snaps the point a scale handle is dragging to the canvas and layer edges.
+	// Only meaningful while the frame's edges are axis-aligned (rotation a
+	// multiple of 90), so rotated layers pass through. `axes` limits an edge
+	// handle to the axis it moves. `line` ({ origin, dir }) keeps a
+	// proportional drag on its diagonal: the snapped coordinate is solved on
+	// the line, so the other coordinate follows instead of breaking the aspect.
+	snapScalePoint(transform, point, options = {}) {
+		const config = CONFIG.snapping;
+		const rotation = Number(transform.getTransform().rotation) || 0;
+		const quarterTurn = ((rotation % 90) + 90) % 90;
+		const aligned = Math.min(quarterTurn, 90 - quarterTurn) < 0.01;
+		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey || !aligned) {
+			this.clearSmartGuides();
+			return point;
+		}
+		const axes = options.axes || 'xy';
+		const targetsX = [];
+		const targetsY = [];
+		if (config.snapToCanvas) {
+			targetsX.push(0, this.originalCanvas.width / 2, this.originalCanvas.width);
+			targetsY.push(0, this.originalCanvas.height / 2, this.originalCanvas.height);
+		}
+		if (config.snapToLayers) {
+			this.layerManager.layers.forEach((layer) => {
+				if (layer.id === transform.layer.id || layer.visible === false || layer.locked) return;
+				const other = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+				if (!other) return;
+				targetsX.push(other.minX, (other.minX + other.maxX) / 2, other.maxX);
+				targetsY.push(other.minY, (other.minY + other.maxY) / 2, other.maxY);
+			});
+		}
+		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
+		const nearest = (value, targets) => {
+			let result = null;
+			targets.forEach((target) => {
+				const delta = target - value;
+				if (Math.abs(delta) <= threshold && (!result || Math.abs(delta) < Math.abs(result.delta))) result = { delta, target };
+			});
+			return result;
+		};
+		const x = axes.includes('x') ? nearest(point.x, targetsX) : null;
+		const y = axes.includes('y') ? nearest(point.y, targetsY) : null;
+		let next = point;
+		let guideX = null;
+		let guideY = null;
+		const line = options.line;
+		if (line) {
+			const onLine = (axis, target) => {
+				const dir = line.dir[axis];
+				if (Math.abs(dir) < 1e-6) return null;
+				const along = (target - line.origin[axis]) / dir;
+				return { x: line.origin.x + line.dir.x * along, y: line.origin.y + line.dir.y * along };
+			};
+			const candidates = [];
+			if (x) candidates.push({ point: onLine('x', x.target), axis: 'x', target: x.target });
+			if (y) candidates.push({ point: onLine('y', y.target), axis: 'y', target: y.target });
+			const pick = candidates.filter((item) => item.point)
+				.sort((a, b) => Math.hypot(a.point.x - point.x, a.point.y - point.y) - Math.hypot(b.point.x - point.x, b.point.y - point.y))[0];
+			if (pick) {
+				next = pick.point;
+				if (pick.axis === 'x') guideX = pick.target; else guideY = pick.target;
+			}
+		} else {
+			next = { x: point.x + (x?.delta || 0), y: point.y + (y?.delta || 0) };
+			guideX = x?.target ?? null;
+			guideY = y?.target ?? null;
+		}
+		this.renderSmartGuides(guideX, guideY);
+		return next;
+	}
+
+,
 	renderSmartGuides(x, y) {
 		this.clearSmartGuides();
 		if (x == null && y == null) return;

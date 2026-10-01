@@ -24,8 +24,53 @@ class StickerAPI extends AssetAPI
             $detected = $this->variants->detectSiblingVariants($data['url'], $this->assetType);
             $data['variant_urls'] = $this->variants->encodeVariantUrls($detected);
         }
+		if (array_key_exists('slice', $data)) {
+			$analysis = $this->performAnalysis($data['url']);
+			$slice = self::normalizeSlice($data['slice'], (int)$analysis['width'], (int)$analysis['height']);
+			$data['slice'] = $slice === null ? null : json_encode($slice);
+		}
         return parent::addAsset($data);
     }
+
+	public static function normalizeSlice($value, $width, $height)
+	{
+		if ($value === null || $value === '') return null;
+		if (is_string($value)) $value = json_decode($value, true);
+		if (!is_array($value)) throw new InvalidArgumentException('Slice must be an object');
+		$result = [];
+		foreach (['top', 'right', 'bottom', 'left'] as $side) {
+			if (!isset($value[$side]) || !is_int($value[$side]) || $value[$side] < 0) {
+				throw new InvalidArgumentException('Slice insets must be nonnegative integers');
+			}
+			$result[$side] = $value[$side];
+		}
+		if ($result['left'] + $result['right'] >= $width || $result['top'] + $result['bottom'] >= $height) {
+			throw new InvalidArgumentException('Slice insets must leave a nonempty center within the asset dimensions');
+		}
+		if (!isset($value['mode']) || !in_array($value['mode'], ['stretch', 'round'], true)) {
+			throw new InvalidArgumentException('Slice mode must be Stretch or Round');
+		}
+		if (array_sum($result) === 0) throw new InvalidArgumentException('Set at least one slice inset, or turn Slice off');
+		$result['mode'] = $value['mode'];
+		return $result;
+	}
+
+	public function getAsset($id)
+	{
+		$asset = parent::getAsset($id);
+		$asset['slice'] = self::normalizeSlice($asset['slice'] ?? null, (int)$asset['width'], (int)$asset['height']);
+		return $asset;
+	}
+
+	public function updateAsset($data)
+	{
+		$asset = $this->getAsset((int)$data['id']);
+		$width = (int)($data['width'] ?? $asset['width']);
+		$height = (int)($data['height'] ?? $asset['height']);
+		$slice = self::normalizeSlice(array_key_exists('slice', $data) ? $data['slice'] : $asset['slice'], $width, $height);
+		$data['slice'] = $slice === null ? null : json_encode($slice);
+		return parent::updateAsset($data);
+	}
 
     public function attachDetectedVariants($id)
     {
@@ -82,6 +127,8 @@ class StickerAPI extends AssetAPI
             'sortOrder' => (int)($asset['sort_order'] ?? 0),
             // Not in formatAssetForBrowseIndex's allowlist, so this only
             // reaches the per-sticker detail file, not the slim index.
+            'slice' => self::normalizeSlice($asset['slice'] ?? null, (int)$asset['width'], (int)$asset['height']),
+			'sliced' => !empty($asset['slice']),
             'variantUrls' => $this->variants->decodeVariantUrls($asset['variant_urls'] ?? null),
         ];
     }
@@ -89,7 +136,7 @@ class StickerAPI extends AssetAPI
     protected function getAssetSpecificFields()
     {
         return [
-            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash', 'palette_type_override', 'variant_urls'],
+            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash', 'palette_type_override', 'variant_urls', 'slice'],
             'int' => ['sticker_category_id', 'width', 'height', 'frame_count', 'frame_rate', 'file_size', 'sort_order'],
             'float' => [],
             'bool' => ['is_animated', 'has_transparency', 'is_active', 'is_variable_framerate', 'is_pixelated'],
@@ -98,7 +145,7 @@ class StickerAPI extends AssetAPI
 
     protected function getNullableStringFields()
     {
-        return ['attribution', 'sticker_text', 'palette_type_override', 'variant_urls'];
+        return ['attribution', 'sticker_text', 'palette_type_override', 'variant_urls', 'slice'];
     }
 
     protected function getUpdateExtraAssignments($data)
@@ -121,6 +168,7 @@ class StickerAPI extends AssetAPI
             'is_pixelated' => ['type' => 'i', 'default' => 1],
             'is_active' => ['type' => 'i', 'default' => 1],
             'variant_urls' => ['type' => 's', 'default' => null],
+			'slice' => ['type' => 's', 'default' => null],
         ];
     }
 

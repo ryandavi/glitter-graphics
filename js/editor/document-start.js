@@ -128,29 +128,32 @@ setupImageListeners() {
 		const host = document.getElementById('workspaceStartPresets');
 		if (!host || host.dataset.rendered === 'true') return;
 		host.dataset.rendered = 'true';
-		const tiles = CONFIG.canvas.presets.filter((preset) => preset.quickStart).map((preset) => {
-			const button = document.createElement('button');
-			button.type = 'button';
-			button.className = 'action-card is-quiet workspace-start-preset';
-			button.dataset.presetId = preset.id;
-			button.setAttribute('aria-label', `New ${preset.label} canvas, ${preset.width} by ${preset.height} pixels`);
-			const preview = document.createElement('span');
-			preview.className = 'action-card-media workspace-start-preset-preview';
-			const shape = document.createElement('span');
-			shape.className = 'workspace-start-preset-shape';
-			shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
-			preview.appendChild(shape);
-			const label = document.createElement('strong');
-			label.className = 'action-card-title';
-			label.textContent = preset.label;
-			const dimensions = document.createElement('span');
-			dimensions.className = 'action-card-detail';
-			dimensions.textContent = `${preset.width} × ${preset.height} px`;
-			button.append(preview, label, dimensions);
+		const morePresets = document.getElementById('openNewCanvasBtn');
+		CONFIG.canvas.presets.filter((preset) => preset.quickStart).forEach((preset) => {
+			let button = host.querySelector(`[data-preset-id="${preset.id}"]`);
+			if (!button) {
+				button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'action-card is-quiet workspace-start-preset';
+				button.dataset.presetId = preset.id;
+				button.setAttribute('aria-label', `New ${preset.label} canvas, ${preset.width} by ${preset.height} pixels`);
+				const preview = document.createElement('span');
+				preview.className = 'action-card-media workspace-start-preset-preview';
+				const shape = document.createElement('span');
+				shape.className = 'workspace-start-preset-shape';
+				shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
+				preview.appendChild(shape);
+				const label = document.createElement('strong');
+				label.className = 'action-card-title';
+				label.textContent = preset.label;
+				const dimensions = document.createElement('span');
+				dimensions.className = 'action-card-detail';
+				dimensions.textContent = `${preset.width} × ${preset.height} px`;
+				button.append(preview, label, dimensions);
+				host.insertBefore(button, morePresets);
+			}
 			button.addEventListener('click', () => this.loadBlankImage(preset.width, preset.height));
-			return button;
 		});
-		host.prepend(...tiles);
 	}
 
 ,

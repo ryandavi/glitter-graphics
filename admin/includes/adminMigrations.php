@@ -72,6 +72,7 @@ class AdminMigrations
 				// Keyed by measured pixel width: {"512": {"url":..., "width":512, "height":512}}.
 				// See docs/STICKER-MULTI-RESOLUTION-PLAN.md.
 				'variant_urls' => 'TEXT NULL',
+				'slice' => 'JSON NULL',
 			],
 			// Optional JSON attribution block per category (js/core/attribution.js
 			// shape) — every asset in the category inherits it in the editor.
