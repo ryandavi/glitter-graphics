@@ -33,6 +33,10 @@ const CONFIG = deepFreeze({
 		},
 		startup: {
 			tool: 'select',
+			// Master gate for opening the Welcome modal on load. While false the
+			// start card is the first screen, and the per-user "show on startup"
+			// preference and its controls are hidden rather than consulted.
+			showWelcome: false,
 			layers: {
 				createDefaultGlitterFill: false,
 				createBaseImage: true
@@ -87,13 +91,15 @@ const CONFIG = deepFreeze({
 		defaults: {
 			blankDocument: { width: 400, height: 400, color: '#ffffff' }
 		},
+		// `quickStart` presets also appear on the start card, where one click
+		// creates a blank canvas at that size.
 		presets: [
-			{ id: 'instagram-square', group: 'social', label: 'Instagram Square', detail: '1:1', width: 1024, height: 1024 },
+			{ id: 'instagram-square', group: 'social', label: 'Instagram Square', detail: '1:1', width: 1024, height: 1024, quickStart: true },
 			{ id: 'instagram-portrait', group: 'social', label: 'Instagram Portrait', detail: '4:5', width: 800, height: 1000 },
 			{ id: 'instagram-grid', group: 'social', label: 'Instagram Grid', detail: '3:4', width: 768, height: 1024 },
-			{ id: 'story-reel', group: 'social', label: 'Story / Reel', detail: '9:16', width: 576, height: 1024 },
+			{ id: 'story-reel', group: 'social', label: 'Story / Reel', detail: '9:16', width: 576, height: 1024, quickStart: true },
 			{ id: 'landscape-video', group: 'social', label: 'Landscape', detail: '16:9', width: 1024, height: 576 },
-			{ id: 'classic-blingee', group: 'classic', label: 'Classic Blingee', detail: 'Square', width: 400, height: 400 },
+			{ id: 'classic-blingee', group: 'classic', label: 'Classic Blingee', detail: 'Square', width: 400, height: 400, quickStart: true },
 			{ id: 'classic-avatar', group: 'classic', label: 'Profile / Avatar', detail: 'Square', width: 300, height: 300 },
 			{ id: 'classic-signature', group: 'classic', label: 'Forum Signature', detail: '3:1', width: 600, height: 200 },
 			{ id: 'general-square', group: 'general', label: 'Medium Square', detail: '1:1', width: 512, height: 512 },

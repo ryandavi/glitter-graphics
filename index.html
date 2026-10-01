@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=1d3d24fe">
+	<link rel="stylesheet" href="css/style.css?v=943c8a09">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -373,16 +373,22 @@
 							<div class="workspace-start-card">
 								<div class="workspace-start-copy">
 									<h2>Create a glitter graphic</h2>
-									<p>Open an image, choose a canvas size, or continue a saved project.</p>
+									<p>Pick a canvas size, open an image, or continue a saved project.</p>
+								</div>
+								<!-- Quick-start tiles are rendered from CONFIG.canvas.presets (quickStart) ahead of More Presets. -->
+								<div class="workspace-start-presets" id="workspaceStartPresets">
+									<button class="workspace-start-preset" id="openNewCanvasBtn" type="button">
+										<span class="workspace-start-preset-preview">
+											<span class="icon-wrapper"><svg class="icon"><use href="#icon-new-canvas"></use></svg></span>
+										</span>
+										<strong>More Presets</strong>
+										<span>Custom size</span>
+									</button>
 								</div>
 								<div class="workspace-start-actions">
 									<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
 										<svg class="icon"><use href="#icon-open-image"></use></svg>
 										<span class="name">Open Image</span>
-									</button>
-									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openNewCanvasBtn" type="button">
-										<svg class="icon"><use href="#icon-new-canvas"></use></svg>
-										<span class="name">New Canvas</span>
 									</button>
 									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
 										<svg class="icon"><use href="#icon-open-project"></use></svg>
@@ -392,6 +398,11 @@
 								<div class="workspace-start-drop">
 									<span>or drop an image or Glitter project here</span>
 									<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
+								</div>
+								<div class="workspace-start-links">
+									<button class="workspace-start-link" id="workspaceStartTutorial" type="button">Tutorial</button>
+									<button class="workspace-start-link" id="workspaceStartWhatsNew" type="button">What's new</button>
+									<button class="workspace-start-link" id="workspaceStartAbout" type="button">What are glitter graphics?</button>
 								</div>
 							</div>
 						</div>
@@ -573,40 +584,8 @@
 					<div class="settings-group-title">Presets</div>
 					<div class="settings-row">
 
-						<div class="blank-image-grid" id="newCanvasPresets">
-							<div class="blank-image-option new-canvas-preset-btn" data-width="400" data-height="400" data-color="#ffffff">
-								<div class="blank-preview-wrapper">
-									<div class="blank-preview" style="background: #ffffff;"></div>
-								</div>
-								<div class="blank-dimensions">400<span class="setting-separator"> × </span>400<span class="setting-unit">px</span></div>
-								<div class="blank-label">Square</div>
-							</div>
-
-							<div class="blank-image-option new-canvas-preset-btn" data-width="800" data-height="800" data-color="#ffffff">
-								<div class="blank-preview-wrapper">
-									<div class="blank-preview" style="background: #ffffff;"></div>
-								</div>
-								<div class="blank-dimensions">800<span class="setting-separator"> × </span>800<span class="setting-unit">px</span></div>
-								<div class="blank-label">Square</div>
-							</div>
-
-							<div class="blank-image-option new-canvas-preset-btn" data-width="450" data-height="800" data-color="#ffffff">
-								<div class="blank-preview-wrapper">
-									<div class="blank-preview" style="background: #ffffff; aspect-ratio: 450/800;"></div>
-								</div>
-								<div class="blank-dimensions">450<span class="setting-separator"> × </span>800<span class="setting-unit">px</span></div>
-								<div class="blank-label">9:16</div>
-							</div>
-
-							<div class="blank-image-option new-canvas-preset-btn" data-width="800" data-height="450" data-color="#ffffff">
-								<div class="blank-preview-wrapper">
-									<div class="blank-preview wide" style="background: #ffffff; aspect-ratio: 800/450;"></div>
-								</div>
-								<div class="blank-dimensions">800<span class="setting-separator"> × </span>450<span class="setting-unit">px</span></div>
-								<div class="blank-label">16:9</div>
-							</div>
-
-						</div>
+						<!-- Rendered from CONFIG.canvas.presets (renderNewCanvasPresets). -->
+						<div class="blank-image-grid" id="newCanvasPresets"></div>
 
 					</div>
 
@@ -1826,7 +1805,7 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=8b996878"></script>
 	<script src="js/core/fields.js?v=fdadf471"></script>
-	<script src="js/core/config.js?v=6907204c"></script>
+	<script src="js/core/config.js?v=17226a41"></script>
 	<script src="js/core/tools.js?v=442b0974"></script>
 	<script src="js/core/layer-types.js?v=ca933e82"></script>
 	<script src="js/core/options.js?v=223ad907"></script>
@@ -1899,7 +1878,7 @@
 	<script src="js/ui/panel-renderer.js?v=8e370fa6"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=e395dff4"></script>
 	<script src="js/ui/settings-renderer.js?v=9f7b668d"></script>
-	<script src="js/ui/settings-store.js?v=d15b8712"></script>
+	<script src="js/ui/settings-store.js?v=409f2773"></script>
 	<script src="js/ui/menu-popover.js?v=20e6b111"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=4c66d155"></script>
@@ -1909,8 +1888,8 @@
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=3b804a8b"></script>
 	<script src="js/editor/transform-interaction.js?v=3d1b90fa"></script>
-	<script src="js/editor/document-start.js?v=291dde52"></script>
-		<script src="js/editor/modals-wiring.js?v=9ee2a366"></script>
+	<script src="js/editor/document-start.js?v=39b172a5"></script>
+		<script src="js/editor/modals-wiring.js?v=54b77e2e"></script>
 	<script src="js/editor/layer-panel.js?v=5b295bc9"></script>
 	<script src="js/editor/canvas-gestures.js?v=c88600e6"></script>
 	<script src="js/editor/canvas-size.js?v=121e9435"></script>

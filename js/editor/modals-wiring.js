@@ -196,7 +196,7 @@ updateOrientationButtons(width, height) {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=e979a7cd',
+				externalContentUrl: 'modals/guide.html?v=ce375c1d',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -240,7 +240,8 @@ updateOrientationButtons(width, height) {
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
-		// Welcome modal is shown automatically and remains available from the header.
+		// Welcome modal opens from the header menu and the start card, and
+		// automatically on load only while CONFIG.app.startup.showWelcome is on.
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
@@ -262,6 +263,7 @@ updateOrientationButtons(width, height) {
 				const checked = !this.showWelcomeOnStartup;
 				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
 					checkbox.checked = checked;
+					checkbox.closest('.welcome-checkbox').hidden = !CONFIG.app.startup.showWelcome;
 				});
 			},
 			onClose: () => {
@@ -524,7 +526,12 @@ async openDocumentAt(modalId, anchor) {
 ,
 async checkWelcomeModal() {
 	const storageKey = 'glitterEditor_welcomeModalSeen';
-	
+
+	if (!CONFIG.app.startup.showWelcome) {
+		this.syncWhatsNewMarker();
+		return;
+	}
+
 	try {
 		const isSuppressed = localStorage.getItem(storageKey) === 'true';
 		const lastSeenRelease = localStorage.getItem('glitterEditor_welcomeLastSeenRelease');

@@ -37,12 +37,30 @@ async function main() {
 		});
 		const startupPage = await startupContext.newPage();
 		await startupPage.goto(APP_URL, { waitUntil: 'domcontentloaded' });
+		assert(await startupPage.evaluate(() => document.documentElement.dataset.theme === 'bubblegum'),
+			'Saved theme was not applied by the head bootstrap before app initialization');
+		await startupPage.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
+		await startupPage.waitForSelector('.workspace-start-preset[data-preset-id]');
+		assert(await startupPage.evaluate(() => !CONFIG.app.startup.showWelcome
+			&& !document.querySelector('.modal-overlay.visible')
+			&& !document.getElementById('workspaceStart').hidden),
+			'Startup did not land on the start card with no modal open');
+		assert(await startupPage.evaluate(() => document.querySelectorAll('.workspace-start-preset[data-preset-id]').length
+			=== CONFIG.canvas.presets.filter((preset) => preset.quickStart).length),
+			'Start card quick presets do not match the configured quickStart presets');
+		await startupPage.click('#workspaceStartAbout');
 		await startupPage.waitForSelector('#welcomeModal.visible', { timeout: 1000 });
 		assert(await startupPage.isVisible('#welcomeModal .modal-loading'),
 			'Welcome modal waits for its external content before becoming visible');
-		assert(await startupPage.evaluate(() => document.documentElement.dataset.theme === 'bubblegum'),
-			'Saved theme was not applied by the head bootstrap before app initialization');
 		await startupPage.waitForFunction(() => !document.querySelector('#welcomeModal .modal-loading'), null, { timeout: 5000 });
+		assert(await startupPage.evaluate(() => [...document.querySelectorAll('#welcomeModal .welcome-checkbox')].every((node) => node.hidden)),
+			'Welcome still offers a startup option while startup Welcome is gated off');
+		await startupPage.click('#welcomeStartCreatingBtn');
+		await startupPage.click('.workspace-start-preset[data-preset-id="classic-blingee"]');
+		await startupPage.waitForFunction(() => window.editor.originalImage != null);
+		assert(await startupPage.evaluate(() => window.editor.previewCanvas.width === 400 && window.editor.previewCanvas.height === 400
+			&& document.getElementById('workspaceStart').hidden),
+			'A start card preset did not create its canvas in one click');
 		await startupContext.close();
 
 		const desktop = await openEditor(browser, { width: 1440, height: 900 });
@@ -90,14 +108,14 @@ async function main() {
 		assert(await desktop.page.isVisible('#newCanvasModal.visible'), 'New Canvas did not open from the start surface');
 		const landscapePreviewsFit = await desktop.page.evaluate(() => (
 			['landscape-video', 'classic-signature', 'general-landscape'].every((id) => {
-				const button = document.querySelector(`[data-preset-id="${id}"]`);
+				const button = document.querySelector(`#newCanvasModal [data-preset-id="${id}"]`);
 				const wrapper = button.querySelector('.blank-preview-wrapper').getBoundingClientRect();
 				const preview = button.querySelector('.blank-preview').getBoundingClientRect();
 				return preview.width <= wrapper.width * 0.82 && preview.height <= wrapper.height;
 			})
 		));
 		assert(landscapePreviewsFit, 'Landscape preset previews fill their entire preview frame');
-		await desktop.page.click('[data-preset-id="story-reel"]');
+		await desktop.page.click('#newCanvasModal [data-preset-id="story-reel"]');
 		const storySize = await desktop.page.evaluate(() => [
 			Number(document.getElementById('newCanvasWidth').value),
 			Number(document.getElementById('newCanvasHeight').value)

@@ -1515,6 +1515,10 @@ body.modal-open {
 		-webkit-user-select: none;
 		user-select: none;
 
+		// Hidden while startup Welcome is gated off; must beat the per-layout
+		// display rules for both the footer and mobile copies.
+		&[hidden] { display: none !important; }
+
 		>input[type="checkbox"] {
 			@include visually-hidden-control;
 

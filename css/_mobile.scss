@@ -531,6 +531,18 @@
 		box-shadow: none;
 	}
 
+	.workspace-start-presets {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.workspace-start-preset-preview {
+		height: 48px;
+	}
+
+	.workspace-start-link {
+		min-height: 44px;
+	}
+
 	.workspace-start-actions {
 		width: 100%;
 

@@ -39,7 +39,7 @@ Test behavior, not implementation. Before writing a new test, check whether an e
 
 ## Headless probe gotchas
 
-- Fresh sessions show the welcome modal over the app. Remove `.modal-overlay.visible` before screenshots or clicks.
+- Fresh sessions open on the start card. The welcome modal only opens on load while `CONFIG.app.startup.showWelcome` is on; if it is, remove `.modal-overlay.visible` before screenshots or clicks.
 - The visible canvas is `editor.previewCanvas`. `#originalCanvas` is hidden.
 - After `editor.loadBlankImage()` or an image upload, wait for `editor.originalImage != null` before adding layers. The load resolves before the async reset finishes.
 - Upload images with `setInputFiles('#imageUpload', …)`.

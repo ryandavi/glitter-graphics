@@ -10,10 +10,21 @@ setupImageListeners() {
 		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
 		openNewCanvasBtn?.addEventListener('click', (event) => {
 			event.stopPropagation();
-			const modal = document.getElementById('newCanvasModal');
-			if (!modal) return;
-			modal.classList.add('visible');
-			this.initializeNewCanvasModal();
+			this.modalManager.open('newCanvasModal');
+		});
+		this.renderWorkspaceStartPresets();
+
+		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openGuideAt('getting-started'));
+		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('welcomeModal'));
+		document.getElementById('workspaceStartWhatsNew')?.addEventListener('click', (event) => {
+			try {
+				localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
+			} catch (error) {
+				console.warn('Failed to save the last-seen release:', error);
+			}
+			event.currentTarget.classList.remove('has-update');
+			event.currentTarget.removeAttribute('aria-label');
+			this.openDocumentAt('aboutModal', 'AboutVersionHistory');
 		});
 
 		openImageBtn?.addEventListener('click', () => imageUpload?.click());
@@ -108,6 +119,55 @@ setupImageListeners() {
 			workspaceStart.setAttribute('aria-hidden', noDocument ? 'false' : 'true');
 		}
 		document.body.classList.toggle('no-document', noDocument);
+	}
+
+,
+	// One-click blank canvases on the start card. Each tile uses the default
+	// blank-document color; anything else goes through More Presets.
+	renderWorkspaceStartPresets() {
+		const host = document.getElementById('workspaceStartPresets');
+		if (!host || host.dataset.rendered === 'true') return;
+		host.dataset.rendered = 'true';
+		const tiles = CONFIG.canvas.presets.filter((preset) => preset.quickStart).map((preset) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'workspace-start-preset';
+			button.dataset.presetId = preset.id;
+			button.setAttribute('aria-label', `New ${preset.label} canvas, ${preset.width} by ${preset.height} pixels`);
+			const preview = document.createElement('span');
+			preview.className = 'workspace-start-preset-preview';
+			const shape = document.createElement('span');
+			shape.className = 'workspace-start-preset-shape';
+			shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
+			preview.appendChild(shape);
+			const label = document.createElement('strong');
+			label.textContent = preset.label;
+			const dimensions = document.createElement('span');
+			dimensions.textContent = `${preset.width} × ${preset.height} px`;
+			button.append(preview, label, dimensions);
+			button.addEventListener('click', () => this.loadBlankImage(preset.width, preset.height));
+			return button;
+		});
+		host.prepend(...tiles);
+	}
+
+,
+	// With the startup Welcome gated off, an unseen release marks the start
+	// card's "What's new" link instead of reopening the modal. A first visit
+	// has nothing to compare against, so it records the release silently.
+	syncWhatsNewMarker() {
+		const link = document.getElementById('workspaceStartWhatsNew');
+		if (!link) return;
+		try {
+			const storageKey = 'glitterEditor_welcomeLastSeenRelease';
+			const lastSeenRelease = localStorage.getItem(storageKey);
+			if (lastSeenRelease === null) localStorage.setItem(storageKey, CONFIG.app.currentRelease);
+			const hasUnseenRelease = lastSeenRelease !== null && lastSeenRelease !== CONFIG.app.currentRelease;
+			link.classList.toggle('has-update', hasUnseenRelease);
+			if (hasUnseenRelease) link.setAttribute('aria-label', "What's new: new release available");
+		} catch (error) {
+			console.warn('Failed to check the last-seen release:', error);
+		}
 	}
 
 ,

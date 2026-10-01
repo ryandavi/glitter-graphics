@@ -115,7 +115,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			{ field: { id: 'interfaceTheme', label: 'Theme', description: 'Choose the editor interface appearance.', control: { type: 'select', options: 'interfaceTheme' } } },
 			toggle('showAllControls', 'Show All Controls', 'Keep More and Advanced controls visible in property panels.'),
 			toggle('showHelpfulHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.'),
-			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.'),
+			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { hidden: !CONFIG.app.startup.showWelcome }),
 			toggle('confirmDestructiveActions', 'Confirm Destructive Actions', 'Ask before deleting layers or clearing the entire project.'),
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { aliases: 'animation accessibility motion transitions' })
 		] },
