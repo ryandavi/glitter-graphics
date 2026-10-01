@@ -23,6 +23,8 @@ class GlitterManager extends ContentManager {
 
 		this.useBrowser = true;
 		this.layerElements = new Map();
+		this.layerTransforms = new Map();
+		this.maskBoundsCache = new Map();
 		// Encoded mask PNG per fill layer: { key, url, pending, fullApplied }.
 		// Keyed by layer id and a content key, so an undo that restores the same
 		// layer keeps its URL, and an in-flight encode lands on whichever layer
@@ -230,6 +232,12 @@ async initBrowser() {
 			shadow: null,
 			sparkles: null
 		};
+		layer.transform = createDefaultTransform({
+			position: {
+				x: (this.editor.originalCanvas?.width || 0) / 2,
+				y: (this.editor.originalCanvas?.height || 0) / 2
+			}
+		});
 
 		return layer;
 	}
@@ -269,6 +277,7 @@ async initBrowser() {
 	// Runs where a fill layer enters the document (deserialize, project load).
 	normalizeLayer(layer) {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
+		layer.transform = cloneTransform(layer.transform || LAYER_UI_CONFIG[LayerType.GLITTER_FILL].defaultTransform(this.editor));
 		layer.fill = mergeSlotEffectDefaults(layer.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(layer.fill);
 		if (layer.border) layer.border = mergeSlotEffectDefaults(layer.border, this.getDefaultBorder());
@@ -276,6 +285,119 @@ async initBrowser() {
 		normalizeSlotTextureCoordinates(layer.border);
 		normalizeSlotTextureCoordinates(layer.shadow);
 		layer.sparkles = normalizeSparklesData(layer.sparkles);
+	}
+
+	getMaskDimensions() {
+		return {
+			width: this.editor.originalCanvas?.width || 1,
+			height: this.editor.originalCanvas?.height || 1
+		};
+	}
+
+	getMaskLocalPoint(layer, point) {
+		return canvasPointToLayerLocal(layer, point, this.getMaskDimensions());
+	}
+
+	_getMaskBounds(layer) {
+		if (!layer || !this.editor.originalCanvas) return null;
+		const key = this.editor.maskCompositor.getCacheKey(layer);
+		const cached = this.maskBoundsCache.get(layer.id);
+		if (cached?.key === key) return cached.bounds;
+
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const mask = this.editor.maskCompositor.getMaskData(layer);
+		let minX = width;
+		let minY = height;
+		let maxX = -1;
+		let maxY = -1;
+		for (let y = 0; y < height; y++) {
+			const row = y * width;
+			for (let x = 0; x < width; x++) {
+				if (!mask[row + x]) continue;
+				minX = Math.min(minX, x);
+				minY = Math.min(minY, y);
+				maxX = Math.max(maxX, x);
+				maxY = Math.max(maxY, y);
+			}
+		}
+		const bounds = maxX < minX ? null : {
+			x: minX,
+			y: minY,
+			width: maxX - minX + 1,
+			height: maxY - minY + 1
+		};
+		this.maskBoundsCache.set(layer.id, { key, bounds });
+		return bounds;
+	}
+
+	_expandRect(rect, left, top = left, right = left, bottom = top) {
+		if (!rect) return null;
+		return {
+			x: rect.x - left,
+			y: rect.y - top,
+			width: rect.width + left + right,
+			height: rect.height + top + bottom
+		};
+	}
+
+	getMaskFrame(layer) {
+		const bounds = this._getMaskBounds(layer);
+		if (!bounds) return null;
+		const border = getLayerPaintSlots(layer).find((entry) => entry.renders && entry.role === 'border');
+		const padding = border ? getBorderOutsidePadding(border.data) : 0;
+		return frameFromCanvasRect(
+			this._expandRect(bounds, padding),
+			this.editor.originalCanvas.width,
+			this.editor.originalCanvas.height
+		);
+	}
+
+	getMaskVisualFrame(layer) {
+		const bounds = this._getMaskBounds(layer);
+		if (!bounds) return null;
+		const body = this.getMaskFrame(layer);
+		let rect = body ? {
+			x: body.offsetX + this.editor.originalCanvas.width / 2 - body.width / 2,
+			y: body.offsetY + this.editor.originalCanvas.height / 2 - body.height / 2,
+			width: body.width,
+			height: body.height
+		} : bounds;
+		const shadow = getLayerPaintSlots(layer).find((entry) => entry.renders && entry.role === 'shadow');
+		if (shadow) {
+			const reach = getShadowReach(shadow.data);
+			const shadowRect = this._expandRect(bounds, reach);
+			shadowRect.x += Number(shadow.data.offsetX) || 0;
+			shadowRect.y += Number(shadow.data.offsetY) || 0;
+			rect = unionRects(rect, shadowRect);
+		}
+		return frameFromCanvasRect(rect, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+	}
+
+	hitTest(layer, x, y, tolerance = 0) {
+		if (!hasMaskContent(layer) || !this.editor.originalCanvas) return false;
+		if (layer.fill?.mode === 'none' || layer.opacity <= 0) return false;
+		const point = this.getMaskLocalPoint(layer, { x, y });
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const transform = getLayerTransform(layer);
+		const smallestScale = Math.max(0.01, Math.min(
+			Math.abs((transform.scale.x || 100) / 100),
+			Math.abs((transform.scale.y || 100) / 100)
+		));
+		const border = getLayerPaintSlots(layer).find((entry) => entry.renders && entry.role === 'border');
+		const radius = Math.ceil(tolerance / smallestScale + (border ? getBorderOutsidePadding(border.data) : 0));
+		const centerX = Math.floor(point.x);
+		const centerY = Math.floor(point.y);
+		const mask = this.editor.maskCompositor.getMaskData(layer);
+		for (let localY = centerY - radius; localY <= centerY + radius; localY++) {
+			if (localY < 0 || localY >= height) continue;
+			for (let localX = centerX - radius; localX <= centerX + radius; localX++) {
+				if (localX < 0 || localX >= width) continue;
+				if (mask[localY * width + localX]) return true;
+			}
+		}
+		return false;
 	}
 
 	// Sparkles read the layer's painted mask, in document px.
@@ -705,7 +827,7 @@ async initBrowser() {
 		return cached?.url || null;
 	}
 
-	renderLayer(layer, width, height, options = {}) {
+	renderLayer(layer, width = this.editor.originalCanvas?.width, height = this.editor.originalCanvas?.height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 		if (layer.fill.mode === 'glitter' && !this.getItemById(layer.fill.glitterId)) return;
 
@@ -718,11 +840,8 @@ async initBrowser() {
 			wrapper = document.createElement('div');
 			wrapper.className = 'glitter-element';
 			wrapper.dataset.layerId = layer.id;
+			wrapper.setAttribute('role', 'img');
 		}
-
-		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-		wrapper.style.mixBlendMode = GlitterBlendModes.forLayer(layer);
-		wrapper.style.opacity = String(layer.opacity / 100);
 
 		if (!stack) {
 			// Reconcile effects in place so changing a control never restarts an
@@ -760,10 +879,33 @@ async initBrowser() {
 
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
+		if (!this.layerTransforms.has(layer.id)) {
+			const transform = new LayerTransform(layer, this.editor);
+			transform.element = wrapper;
+			this.layerTransforms.set(layer.id, transform);
+		}
 		syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
 		// Sparkles sit beside the masked paint (inside the animation wrapper
 		// when there is one), behind ones before it.
 		reconcileSparkleLayers(stack, layer, { editor: this.editor, width, height, behindAnchor: inner });
+
+		const transform = this.layerTransforms.get(layer.id);
+		if (transform) {
+			transform.layer = layer;
+			transform.element = wrapper;
+			transform.applyTransform(wrapper, { width, height });
+			if (
+				layer.id === this.editor.layerManager.activeLayerId &&
+				this.editor.currentTool === ToolType.SELECT &&
+				!this.editor.layerManager.hasMultiSelection() &&
+				isLayerTransformable(layer) &&
+				!layer.locked
+			) {
+				if (!transform.isDraggingHandle) transform.createTransformHandles();
+			} else {
+				transform.removeTransformHandles();
+			}
+		}
 
 		// Update selection highlight for this layer if it's active
 		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
@@ -779,10 +921,67 @@ async initBrowser() {
 		this.revokeMaskImage(layer.id);
 		this.editor.paintMaskStore?.removePaintMask(layer.id);
 		this.editor.maskCompositor?.invalidate(layer.id);
+		this.maskBoundsCache.delete(layer.id);
 	}
 
 	removeLayerElement(layerId) {
+		const transform = this.layerTransforms.get(layerId);
+		if (transform) {
+			transform.destroy?.();
+			this.layerTransforms.delete(layerId);
+		}
 		removeManagedLayerElement(this.layerElements, layerId);
+	}
+
+	updateTransform(layerId, updates) {
+		const transform = this.layerTransforms.get(layerId);
+		const layer = this.editor.layerManager.getLayerById(layerId);
+		const element = this.layerElements.get(layerId);
+		if (!transform || !layer || !element) return;
+		transform.updateTransform(updates);
+		transform.applyTransform(element, this.getMaskDimensions());
+		if (transform.transformHandles) transform.updateHandlePositions();
+	}
+
+	centerHorizontal(layerId) {
+		movableCenterHorizontal(this, layerId, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
+	}
+
+	centerVertical(layerId) {
+		movableCenterVertical(this, layerId, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
+	}
+
+	alignToCanvas(layerId, mode) {
+		movableAlignToCanvas(this, layerId, mode, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
+	}
+
+	resetTransform(layerId) {
+		movableResetTransform(this, layerId, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
+	}
+
+	createTransformHandles(layerId) {
+		movableCreateTransformHandles(this, layerId);
+	}
+
+	removeTransformHandles() {
+		movableRemoveTransformHandles(this);
+	}
+
+	// LayerTransform calls this after every live transform edit. The stack stays
+	// in mask-local pixels and is scaled inside the already-sized wrapper so
+	// effect offsets and texture registration transform with the mask.
+	syncElementScale(layer, wrapper = this.layerElements.get(layer?.id)) {
+		const stack = wrapper?.querySelector('.glitter-fill-stack');
+		if (!stack || !layer || !this.editor.originalCanvas) return;
+		const transform = getLayerTransform(layer);
+		stack.style.width = `${this.editor.originalCanvas.width}px`;
+		stack.style.height = `${this.editor.originalCanvas.height}px`;
+		stack.style.transformOrigin = '0 0';
+		stack.style.transform = `scale(${(transform.scale.x || 100) / 100}, ${(transform.scale.y || 100) / 100})`;
+		const fillMask = this.editor.maskCompositor.getMaskCanvas(layer);
+		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => (
+			this.getSlotMask(layer, item, fillMask)?.canvas || fillMask
+		));
 	}
 
 	revokeMaskImage(layerId) {
@@ -1027,6 +1226,27 @@ async initBrowser() {
 				if (typeof selection.y === 'number') selection.y = Math.max(0, Math.min(newHeight - 1, Math.round(selection.y * scaleY)));
 			});
 			this.editor.maskCompositor?.invalidate(layer.id);
+		});
+	}
+
+	// Structural canvas resize shifts the authored mask inside a newly-sized
+	// local surface. Compensate the layer placement for that local re-anchor so
+	// a transformed mask follows the canvas content exactly once.
+	reanchorTransformsForCanvasResize(oldWidth, oldHeight, newWidth, newHeight, offsetX, offsetY, layers) {
+		(layers || []).forEach((layer) => {
+			if (layer.type !== LayerType.GLITTER_FILL || !layer.transform) return;
+			const transform = getLayerTransform(layer);
+			const localShiftX = oldWidth / 2 + offsetX - newWidth / 2;
+			const localShiftY = oldHeight / 2 + offsetY - newHeight / 2;
+			const scaleX = ((transform.scale.x || 100) / 100) * (transform.flipX ? -1 : 1);
+			const scaleY = ((transform.scale.y || 100) / 100) * (transform.flipY ? -1 : 1);
+			const rotation = (transform.rotation || 0) * Math.PI / 180;
+			const scaledX = localShiftX * scaleX;
+			const scaledY = localShiftY * scaleY;
+			const worldShiftX = scaledX * Math.cos(rotation) - scaledY * Math.sin(rotation);
+			const worldShiftY = scaledX * Math.sin(rotation) + scaledY * Math.cos(rotation);
+			transform.position.x += offsetX - worldShiftX;
+			transform.position.y += offsetY - worldShiftY;
 		});
 	}
 

@@ -78,6 +78,7 @@ togglePreview() {
 				!e.altKey &&
 				!e.target.closest(getTransformableLayerElementSelector()) &&
 				!e.target.closest('.group-transform-handles')) {
+				if (this.startCanvasPickedLayerDrag(e)) return;
 				this.startSelectionMarquee(e);
 				return;
 			}
@@ -140,6 +141,26 @@ togglePreview() {
 		window.addEventListener('pointermove', onMove);
 		window.addEventListener('pointerup', onUp);
 		window.addEventListener('pointercancel', onCancel);
+	}
+
+,
+	// A layer picked on the canvas (LAYER_UI_CONFIG pickedOnCanvas) has no
+	// element to press, so a press on its painted pixels selects it and hands
+	// the drag to its move handle: one press-and-drag, like a sticker.
+	startCanvasPickedLayerDrag(e) {
+		if (e.shiftKey || !PREFERENCES.get('autoSelect') || this.autoGlitterManager?.isSessionActive()) return false;
+		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
+		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
+		if (!layer || !LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas || !isLayerTransformable(layer)) return false;
+		if (this.layerManager.activeLayerId !== layer.id || this.layerManager.hasMultiSelection()) {
+			this.layerManager.selectLayerFromCanvas(layer.id);
+		}
+		const transform = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id);
+		if (!transform) return false;
+		if (!transform.chrome) transform.createTransformHandles();
+		if (!transform.chrome) return false;
+		transform.beginHandleDrag('move', e, transform.chrome.box);
+		return true;
 	}
 
 ,

@@ -26,6 +26,7 @@ Suites are grouped by responsibility: `unit/` for isolated logic, `parity/` for 
 - **Default:** run the smallest existing unit, UI or parity test that directly covers the changed behavior. After JS changes, run `npm run lint`; documentation-only changes need no browser suite.
 - **Touch smoke:** run `node tests/ui/touch-smoke.js` after changing touch/pointer routing, `GestureManager`, viewport gestures, selection/hit testing, shared interaction selectors/capabilities, mobile interaction, or transform gesture routing.
 - **Transform handles:** run `node tests/ui/touch-handle-verify.js` after changing `LayerTransform`, transform handles, resize/rotate math, selection chrome, or group transforms. Run it with touch smoke when a change spans both routing and handles.
+- **Fill-layer transforms:** run `node tests/ui/fill-transform-verify.js` after changing fill-layer placement, `GlitterManager` frame or hit-test code, brush coordinate mapping, canvas-picked dragging, or the frame math in `LayerTransform.getFrameMetrics`.
 - **Export parity:** run `node tests/parity/export-parity.js` after changing `SceneCompositor`, an exporter, authored/procedural frame handling, effect sources, animation sampling, or any preview/export twin. A manager edit by itself does not require export parity unless it changes rendered pixels or export-plan behavior.
 - **Shape-border parity:** run `node tests/parity/shape-border-verify.js` after changing shape geometry, shape masks, borders, image fills, or shared slot-stack geometry. Text-manager or generic manager edits do not require it by themselves.
 - **Export fragility routine** after touching `SceneCompositor`, an exporter, or frame handling: add an animated sticker, export, edit, undo, export again, and export twice in a row. The outputs must be byte-identical when nothing changed. `node tests/parity/roadmap-export-fragility.js` runs it over the newer effects (outline, bevel, glow, sparkles and Kira Kira, text warp, frames, the Sparkles layer, CSS and pixel filter looks); add a new effect to its scene.
@@ -148,6 +149,24 @@ While building this, touch dragging on these three handle types turned out not t
 Run it with `node tests/ui/document-start-verify.js`.
 
 It checks the shared desktop/mobile start surface, configured canvas presets and limits, mobile navigation state, image drops becoming new Sticker layers in an existing document, and explicit base-image replacement preserving the layer stack.
+
+### Fill-transform verification (`tests/ui/fill-transform-verify.js`)
+
+Run it with `node tests/ui/fill-transform-verify.js`.
+
+A fill layer's mask is a canvas-sized surface placed by `layer.transform`, so its frame, picking, preview, export, brush mapping and canvas resize all have to agree on that placement. The script paints one rect and checks:
+
+1. An empty fill has a transform but no handles.
+2. The frame is the painted pixels, and the element takes no pointer events.
+3. One press-and-drag on the painted pixels selects and moves an unselected fill.
+4. Picking follows the moved mask.
+5. After a move, rotation, non-uniform scale and flip, the frame, a screenshot of the preview and a composed export frame all bound the same pixels.
+6. Paint mapped through `getMaskLocalPoint` lands under the pointer.
+7. A structural canvas resize shifts a transformed fill with its content.
+8. Reset Transform returns the fill to where it was painted.
+9. A transform edit is its own undo step, survives serialization, and a layer saved without a transform loads at its home placement.
+10. On an odd-sized canvas, document scaling and a 1px nudge keep the surface on the pixel grid.
+11. An animated fill that keeps a scale and rotation is bounded by the same pixels in the preview and in the export at the same timestamp.
 
 ### Shape-border verification (`tests/parity/shape-border-verify.js`)
 

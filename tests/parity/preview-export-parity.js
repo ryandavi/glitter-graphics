@@ -7,8 +7,8 @@ const PREVIEW_EXPORT_TWINS = [
 	{
 		feature: 'slot stack order',
 		shared: 'buildSlotStack',
-		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack'],
-		export: ['SceneCompositor._renderSlotStackToCanvas', 'SceneCompositor._renderStickerEffects']
+		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack', 'GlitterManager.getSlotStack'],
+		export: ['SceneCompositor._renderSlotStackToCanvas', 'SceneCompositor._renderStickerEffects', 'SceneCompositor._buildGlitterFillExportPlan']
 	},
 	{
 		feature: 'paint source',

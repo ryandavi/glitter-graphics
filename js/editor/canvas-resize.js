@@ -32,7 +32,11 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		this.glitterManager?.scaleSelectionsForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
 		this.paintMaskStore.scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
-		scaleDocumentLayerStates(this.layers, scaleX, scaleY, uniformScale, options);
+		scaleDocumentLayerStates(this.layers, scaleX, scaleY, uniformScale, {
+			...options,
+			// Read after the canvas took its new size above.
+			elementBox: (layer) => LAYER_UI_CONFIG[layer.type]?.elementBox?.(this, layer)
+		});
 
 		this.layers.forEach((layer) => {
 			if (isTransformableLayerType(layer.type)) getLayerManagerForType(this, layer.type)?.renderLayer(layer);
@@ -63,9 +67,8 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 	// image is deliberately NOT included — it defines the canvas by
 	// construction (canvas dims = image dims on load) and is almost always
 	// opaque edge-to-edge, so folding it in would make this a no-op for the
-	// common case. Glitter-fill paint isn't included either: it has no bounds
-	// independent of the base image it sits on. Returns null if there's
-	// nothing to bound (no movable layers). Feeds cropCanvasToArtwork
+	// common case. Fill layers contribute their transformed visible-mask bounds.
+	// Returns null if there's nothing to bound (no movable layers). Feeds cropCanvasToArtwork
 	// (canvas-size.js).
 ,
 	getArtworkBounds() {
@@ -152,12 +155,25 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		this.previewWrapper.style.height = newHeight + 'px';
 
 		// 3. Glitter paint buffers, selection seeds, and mask caches.
+		this.glitterManager?.reanchorTransformsForCanvasResize(
+			oldWidth,
+			oldHeight,
+			newWidth,
+			newHeight,
+			offsetX,
+			offsetY,
+			this.layers
+		);
 		this.glitterManager?.reanchorSelectionsForCanvasResize(offsetX, offsetY, this.layers);
 		this.paintMaskStore.reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, this.layers);
 
 		// 4. Sticker / text positions shift with the content (canvas coords).
 		this.layers.forEach((layer) => {
 			if (!isTransformableLayerType(layer.type)) return;
+			if (layer.type === LayerType.GLITTER_FILL) {
+				this.glitterManager?.renderLayer(layer, newWidth, newHeight);
+				return;
+			}
 			const position = layer.transform.position;
 			if (layer.type === LayerType.STICKER) {
 				this.stickerManager?.updateTransform(layer.id, {

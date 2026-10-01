@@ -50,7 +50,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			// the scale because a sticker rounds by its new size.
 			const x = transform.position.x * scaleX;
 			const y = transform.position.y * scaleY;
-			const next = CONFIG.tools.stickers.transform.roundValues ? roundLayerPosition(layer, x, y) : { x, y };
+			const next = CONFIG.tools.stickers.transform.roundValues ? roundLayerPosition(layer, x, y, options.elementBox?.(layer)) : { x, y };
 			transform.position.x = next.x;
 			transform.position.y = next.y;
 		}

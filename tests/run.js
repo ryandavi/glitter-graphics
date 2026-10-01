@@ -54,6 +54,7 @@ const SUITES = [
 	{ file: 'ui/auto-glitter-reopen-verify.js', tags: ['document', 'effects'] },
 	{ file: 'ui/layer-reorder-transform-verify.js', tags: ['layers'] },
 	{ file: 'ui/layer-selection-reveal-verify.js', tags: ['layers'] },
+	{ file: 'ui/fill-transform-verify.js', tags: ['layers', 'mask'] },
 	{ file: 'ui/manifest-library-browser.js', tags: ['assets'] },
 	{ file: 'ui/lazy-manifest-browser.js', tags: ['assets'] },
 	{ file: 'ui/shape-touch-verify.js', tags: ['touch', 'shape'] },

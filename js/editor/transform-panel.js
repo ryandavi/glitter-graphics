@@ -72,7 +72,13 @@ renderTransformPanels() {
 		const transform = this.getLayerTransformData(layer);
 		const resetTransform = document.getElementById(ids.resetTransform);
 		if (resetTransform) {
-			const disabled = !this.hasResettableTransformAdjustments(transform);
+			// Reset also returns a type with a home placement to it.
+			const home = LAYER_UI_CONFIG[layer?.type]?.defaultTransform?.(this, layer);
+			const moved = Boolean(home) && (
+				Math.abs(transform.position.x - home.position.x) > 0.5
+				|| Math.abs(transform.position.y - home.position.y) > 0.5
+			);
+			const disabled = !moved && !this.hasResettableTransformAdjustments(transform);
 			resetTransform.disabled = disabled;
 			document.querySelector(`[data-transform-prefix="${prefix}"] [data-transform-revert-signal]`)?.toggleAttribute('disabled', disabled);
 		}

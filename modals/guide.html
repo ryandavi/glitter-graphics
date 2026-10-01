@@ -532,7 +532,7 @@
 						<li><strong>In the Layers panel</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><span class="shortcut-gesture">Click</span></span> selects the whole range; <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><span class="shortcut-gesture">Click</span></span> toggles any single layer, including locked, Base Image, and Glitter Fill layers.</li>
 						<li><span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">A</kbd></span> selects every movable layer; <kbd class="guide-kbd">Escape</kbd> clears the selection.</li>
 					</ul>
-					<p>A selection that includes a protected or non-transformable layer — locked, Base Image, or Glitter Fill — stays selectable but cannot move as a group.</p>
+					<p>A selection that includes a protected or non-transformable layer — locked, pinned, Base Image, or an empty Glitter Fill — stays selectable but cannot move as a group.</p>
 				</div>
 			</div>
 
@@ -1026,6 +1026,7 @@
         <div class="guide-subsection">
             <h4 id="mask-brush">Glitter Brush</h4>
             <p>Beyond color selections, use the <strong>Glitter Brush</strong> to manually paint or erase exactly where a Glitter Fill layer appears. Text and Shape layers use their own rendered outlines and cannot hold painted masks.</p>
+            <p>A painted or color-picked fill is an object like any other. With the Select tool, drag it to move it, or use its handles and the <strong>Transform</strong> card to resize, rotate and flip it. The fill, its outline, shadow and sparkles all move together, and later brush strokes still land under the pointer. The painted area itself stays the size of the canvas, so after a move part of the canvas lies outside the layer: paint there on a new Glitter Fill layer, or use <strong>Reset Transform</strong> to put the layer back where it was painted.</p>
 
             <div class="figure-wrapper guide-screenshot">
                 <figure>

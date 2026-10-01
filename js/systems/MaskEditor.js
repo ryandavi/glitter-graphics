@@ -33,6 +33,7 @@ class MaskEditor {
 		this.lastStrokeEndPoint = null;
 		this.scratchAddCanvas = null;
 		this.scratchSubCanvas = null;
+		this.overlaySourceCanvas = null;
 		this.livePreviewQueued = false;
 		this.liveOverlayQueued = false;
 		this.cursorVisible = false;
@@ -895,24 +896,32 @@ class MaskEditor {
 		});
 		const { fillColor, stripeColor } = this._getOverlayPalette(layer);
 
-		this.overlayCtx.clearRect(0, 0, width, height);
-		this.overlayCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.opacity;
-		this.overlayCtx.drawImage(maskCanvas, 0, 0);
-		this.overlayCtx.globalCompositeOperation = 'source-in';
-		this.overlayCtx.fillStyle = fillColor;
-		this.overlayCtx.fillRect(0, 0, width, height);
-		const stripePattern = this._getOverlayStripePattern(stripeColor);
+		this.overlaySourceCanvas ||= createAppCanvas(0, 0, 'systems/MaskEditor');
+		if (this.overlaySourceCanvas.width !== width || this.overlaySourceCanvas.height !== height) {
+			this.overlaySourceCanvas.width = width;
+			this.overlaySourceCanvas.height = height;
+		}
+		const sourceCtx = this.overlaySourceCanvas.getContext('2d', { willReadFrequently: true });
+		sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
+		sourceCtx.globalCompositeOperation = 'source-over';
+		sourceCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.opacity;
+		sourceCtx.clearRect(0, 0, width, height);
+		sourceCtx.drawImage(maskCanvas, 0, 0);
+		sourceCtx.globalCompositeOperation = 'source-in';
+		sourceCtx.fillStyle = fillColor;
+		sourceCtx.fillRect(0, 0, width, height);
+		const stripePattern = this._getOverlayStripePattern(stripeColor, sourceCtx);
 		if (stripePattern) {
-			this.overlayCtx.globalCompositeOperation = 'source-atop';
-			this.overlayCtx.globalAlpha = Math.min(
+			sourceCtx.globalCompositeOperation = 'source-atop';
+			sourceCtx.globalAlpha = Math.min(
 				1,
 				CONFIG.tools.maskBrush.overlay.opacity + (CONFIG.tools.maskBrush.overlay.stripeOpacityBoost || 0)
 			);
-			this.overlayCtx.fillStyle = stripePattern;
-			this.overlayCtx.fillRect(0, 0, width, height);
+			sourceCtx.fillStyle = stripePattern;
+			sourceCtx.fillRect(0, 0, width, height);
 		}
-		this.overlayCtx.globalCompositeOperation = 'source-over';
-		this.overlayCtx.globalAlpha = 1;
+		sourceCtx.globalCompositeOperation = 'source-over';
+		sourceCtx.globalAlpha = 1;
 
 		// Erase strokes get a second pass: the mask removed SO FAR this stroke is
 		// painted back in a solid contrasting slab, so you can see what you're
@@ -920,11 +929,23 @@ class MaskEditor {
 		if (this.getActiveMode() === 'sub') {
 			const bite = this._getEraseBiteCanvas(layer);
 			if (bite) {
-				this.overlayCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.eraseBiteOpacity ?? 0.6;
-				this.overlayCtx.drawImage(bite, 0, 0);
-				this.overlayCtx.globalAlpha = 1;
+				sourceCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.eraseBiteOpacity ?? 0.6;
+				sourceCtx.drawImage(bite, 0, 0);
+				sourceCtx.globalAlpha = 1;
 			}
 		}
+
+		const metrics = computeLayerTransform(getLayerTransform(layer), { width, height });
+		this.overlayCtx.setTransform(1, 0, 0, 1, 0, 0);
+		this.overlayCtx.globalCompositeOperation = 'source-over';
+		this.overlayCtx.globalAlpha = 1;
+		this.overlayCtx.clearRect(0, 0, width, height);
+		this.overlayCtx.save();
+		this.overlayCtx.translate(metrics.centerX, metrics.centerY);
+		this.overlayCtx.rotate(metrics.rotationRad);
+		this.overlayCtx.scale(metrics.signedScaleX, metrics.signedScaleY);
+		this.overlayCtx.drawImage(this.overlaySourceCanvas, -width / 2, -height / 2);
+		this.overlayCtx.restore();
 	}
 
 	// A pre-tinted canvas of the glitter removed so far by the current erase
@@ -1294,6 +1315,7 @@ class MaskEditor {
 	_startStrokeFromScreenPoint(screenX, screenY, options = {}) {
 		const point = this._getCanvasPointFromScreen(screenX, screenY);
 		if (!point) {
+			this._warnOutsideMaskSurface(screenX, screenY);
 			return false;
 		}
 
@@ -1357,6 +1379,18 @@ class MaskEditor {
 		}
 		this._lastNothingToEraseWarning = now;
 		this.editor.showError('Nothing to erase on this layer yet — switch to Paint to add glitter');
+	}
+
+	// A fill's mask is one canvas-sized surface placed by the layer transform,
+	// so a moved layer leaves part of the canvas outside it. Say why the stroke
+	// did not start there instead of failing silently.
+	_warnOutsideMaskSurface(screenX, screenY) {
+		const canvasPoint = this.editor.viewport.screenToCanvas(screenX, screenY);
+		if (!this.editor.viewport.isWithinCanvas(canvasPoint.x, canvasPoint.y)) return;
+		const now = Date.now();
+		if (now - (this._lastOutsideSurfaceWarning || 0) < 1500) return;
+		this._lastOutsideSurfaceWarning = now;
+		this.editor.showError('This spot is outside the layer since it was moved. Paint on a new Fill layer, or use Reset Transform first');
 	}
 
 	_ensurePaintableLayer() {
@@ -1700,10 +1734,17 @@ class MaskEditor {
 	}
 
 	_getCanvasPointFromScreen(screenX, screenY) {
-		const point = this.editor.viewport.screenToCanvas(screenX, screenY);
-		if (!this.editor.viewport.isWithinCanvas(point.x, point.y)) {
+		const canvasPoint = this.editor.viewport.screenToCanvas(screenX, screenY);
+		if (!this.editor.viewport.isWithinCanvas(canvasPoint.x, canvasPoint.y)) {
 			return null;
 		}
+		const layer = this.editor.layerManager.getActiveLayer();
+		const point = layer?.type === LayerType.GLITTER_FILL
+			? this.editor.glitterManager.getMaskLocalPoint(layer, canvasPoint)
+			: canvasPoint;
+		const width = this.editor.originalCanvas?.width || 0;
+		const height = this.editor.originalCanvas?.height || 0;
+		if (point.x < 0 || point.y < 0 || point.x >= width || point.y >= height) return null;
 
 		return {
 			x: point.x,
@@ -1733,19 +1774,15 @@ class MaskEditor {
 		}
 
 		const rect = this.editor.previewContainer.getBoundingClientRect();
-		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
-		if (!this.editor.viewport.isWithinCanvas(point.x, point.y)) {
+		const point = this._getCanvasPointFromScreen(event.clientX, event.clientY);
+		if (!point) {
 			this._hideCursor();
 			return;
 		}
 
 		const screenX = event.clientX - rect.left;
 		const screenY = event.clientY - rect.top;
-		const diameter = this.getBrushSize() * this.editor.viewport.currentZoom;
-		this.ui.cursor.style.width = `${diameter}px`;
-		this.ui.cursor.style.height = `${diameter}px`;
-		this.ui.cursor.style.left = `${screenX}px`;
-		this.ui.cursor.style.top = `${screenY}px`;
+		this._setCursorGeometry(screenX, screenY);
 		this.ui.cursor.classList.add('visible');
 		this._syncCursorAppearance();
 		this.cursorVisible = true;
@@ -1783,11 +1820,7 @@ class MaskEditor {
 
 		const screenOffsetX = screenX - rect.left;
 		const screenOffsetY = screenY - rect.top;
-		const diameter = this.getBrushSize() * this.editor.viewport.currentZoom;
-		this.ui.cursor.style.width = `${diameter}px`;
-		this.ui.cursor.style.height = `${diameter}px`;
-		this.ui.cursor.style.left = `${screenOffsetX}px`;
-		this.ui.cursor.style.top = `${screenOffsetY}px`;
+		this._setCursorGeometry(screenOffsetX, screenOffsetY);
 		this.ui.cursor.classList.add('visible', 'touch-preview');
 		this._syncCursorAppearance();
 		this.cursorVisible = true;
@@ -1804,9 +1837,27 @@ class MaskEditor {
 			return;
 		}
 
+		this._setCursorGeometry(
+			parseFloat(this.ui.cursor.style.left) || 0,
+			parseFloat(this.ui.cursor.style.top) || 0
+		);
+	}
+
+	_setCursorGeometry(screenX, screenY) {
+		if (!this.ui.cursor) return;
+		const layer = this.editor.layerManager.getActiveLayer();
+		const transform = layer?.type === LayerType.GLITTER_FILL ? getLayerTransform(layer) : null;
+		const scaleX = Math.abs((transform?.scale?.x || 100) / 100);
+		const scaleY = Math.abs((transform?.scale?.y || 100) / 100);
 		const diameter = this.getBrushSize() * this.editor.viewport.currentZoom;
-		this.ui.cursor.style.width = `${diameter}px`;
-		this.ui.cursor.style.height = `${diameter}px`;
+		this.ui.cursor.style.width = `${diameter * scaleX}px`;
+		this.ui.cursor.style.height = `${diameter * scaleY}px`;
+		this.ui.cursor.style.left = `${screenX}px`;
+		this.ui.cursor.style.top = `${screenY}px`;
+		const rotation = Number(transform?.rotation) || 0;
+		const flipX = transform?.flipX ? -1 : 1;
+		const flipY = transform?.flipY ? -1 : 1;
+		this.ui.cursor.style.transform = `translate(-50%, -50%) rotate(${rotation}deg) scale(${flipX}, ${flipY})`;
 	}
 
 	// Keep the on-canvas cursor honest about the current tool: an eraser look
@@ -1887,8 +1938,8 @@ class MaskEditor {
 		};
 	}
 
-	_getOverlayStripePattern(color) {
-		if (!this.overlayCtx) {
+	_getOverlayStripePattern(color, context = this.overlayCtx) {
+		if (!context) {
 			return null;
 		}
 
@@ -1914,7 +1965,7 @@ class MaskEditor {
 		patternCtx.lineTo(10, 2);
 		patternCtx.stroke();
 
-		const pattern = this.overlayCtx.createPattern(patternCanvas, 'repeat');
+		const pattern = context.createPattern(patternCanvas, 'repeat');
 		this.overlayPatternCache.set(color, pattern);
 		return pattern;
 	}

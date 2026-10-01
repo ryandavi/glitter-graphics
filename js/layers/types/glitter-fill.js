@@ -22,8 +22,8 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	sparkleHost: (editor, layer) => editor.glitterManager?.getSparkleHost(layer) || null,
 	hasVisibleContent: (layer) => hasMaskContent(layer),
 	animatable: true,
-	animate: (...args) => animateCanvasLayerPreview(...args),
-	animationBox: (_editor, _layer, canvas) => ({ x: 0, y: 0, width: canvas.width, height: canvas.height }),
+	animate: (...args) => animateTransformableLayerPreview(...args),
+	animationBox: (_editor, _layer, canvas) => ({ width: canvas.width, height: canvas.height }),
 	timelineSources: (layer, context) => [
 		...context.compositor._createLayerAnimationTimelineSources(layer, context),
 		...context.compositor._createSparkleTimelineSources(layer)
@@ -52,6 +52,34 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	elementClass: 'glitter-element',
 	managerKey: 'glitterManager',
 	blendable: true,
+	// An empty fill has nothing to grab; it gets handles once it has a mask.
+	transformable: (layer) => hasMaskContent(layer),
+	defaultTransform: (editor) => createDefaultTransform({
+		position: {
+			x: (editor.originalCanvas?.width || 0) / 2,
+			y: (editor.originalCanvas?.height || 0) / 2
+		}
+	}),
+	// The mask is a canvas-sized surface placed by the transform; its frame is
+	// the painted pixels inside it.
+	elementBox: (editor) => editor.glitterManager?.getMaskDimensions() || null,
+	pickedOnCanvas: true,
+	frame: (editor, layer) => editor.glitterManager?.getMaskFrame(layer) || null,
+	visualBounds: (editor, layer) => editor.glitterManager?.getMaskVisualFrame(layer) || null,
+	hitTest: (editor, layer, x, y, tolerance) => Boolean(editor.glitterManager?.hitTest(layer, x, y, tolerance)),
+	transformPrefix: 'glitter',
+	transformCapabilities: {
+		position: true,
+		size: true,
+		scaleReadout: true,
+		scaleReset: true,
+		lockAspect: true,
+		rotation: true,
+		opacity: true,
+		flip: true,
+		align: true,
+		reset: true
+	},
 	autoOpenDesignDrawerOnCreate: true,
 	onActivate: (editor, layer) => {
 		if (!layer.locked && !hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {

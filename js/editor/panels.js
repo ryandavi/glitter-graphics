@@ -295,7 +295,7 @@ isLayerContentLocked(layer) {
 			if (designTitle) designTitle.textContent = `${multiCount} layers selected`;
 			if (emptySubtext) emptySubtext.textContent = canTransform
 				? 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.'
-				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, Base Image, or Fill layer.';
+				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, pinned, empty, or Base Image layer.';
 			document.querySelectorAll('#multiSelectionAlignScope button, [data-multi-align]').forEach((button) => { button.disabled = !canTransform; });
 			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = !canTransform || multiCount < 3; });
 			const canChangeLayers = selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
@@ -585,6 +585,7 @@ isLayerContentLocked(layer) {
 		}
 
 		if (layer.type !== LayerType.GLITTER_FILL) return;
+		this.loadTransformSettings(layer, 'glitter');
 		const s = layer.settings;
 
 		const contiguous = document.getElementById('contiguous');

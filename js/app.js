@@ -1282,7 +1282,7 @@ class GlitterEditor {
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
 		if (hasMultiSelection && !this.layerManager.canTransformMultiSelection()) {
 			e.preventDefault();
-			this.showError('This selection cannot move because it includes a locked, Base Image, or Fill layer');
+			this.showError('This selection cannot move because it includes a locked, pinned, empty, or Base Image layer');
 			return true;
 		}
 		const layer = this.layerManager.getActiveLayer();
@@ -2136,6 +2136,9 @@ class GlitterEditor {
 			return;
 		}
 
+		// A color pick reads the base image under the pointer, so the seed stays
+		// in document px whatever the layer's transform. The selection it builds
+		// is then placed by that transform like the rest of the mask.
 		const pixelIndex = y * this.originalCanvas.width + x;
 		const alpha = this.originalAlphaChannel[pixelIndex];
 		const isTransparent = alpha < CONFIG.tools.selection.transparency.alphaThreshold;

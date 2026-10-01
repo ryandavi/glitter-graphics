@@ -184,13 +184,16 @@ class LayerManager {
 			return manager?.[spec.custom.deserialize]?.(layerData) || null;
 		}
 
+		const defaultTransform = !layerData.transform
+			? LAYER_UI_CONFIG[type]?.defaultTransform?.(this.editor, layerData)
+			: null;
 		const restored = {
 			id: layerData.id,
 			type,
 			visible: layerData.visible,
 			locked: spec.forceLocked ? true : layerData.locked,
 			opacity: layerData.opacity,
-			...(isTransformableLayerType(type) ? { transform: cloneTransform(layerData.transform) } : {}),
+			...(isTransformableLayerType(type) ? { transform: cloneTransform(layerData.transform || defaultTransform) } : {}),
 			...(LAYER_UI_CONFIG[type]?.blendable ? { blendMode: GlitterBlendModes.forLayer(layerData) } : {}),
 			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
@@ -718,8 +721,6 @@ class LayerManager {
 					&& hitTest(this.editor, layer, x, y, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
 			} else if (isLayerTransformable(layer)) {
 				isHit = this.isPointInLayer(layer, x, y);
-			} else if (layer.type === LayerType.GLITTER_FILL) {
-				isHit = this.isPixelInLayerSelection(layer, x, y);
 			} else if (includeBase && layer.type === LayerType.BASE_IMAGE && this.editor.originalImage) {
 				isHit = true;
 			}
@@ -772,8 +773,9 @@ class LayerManager {
 			return false;
 		}
 
-		const canvasX = Math.floor(x);
-		const canvasY = Math.floor(y);
+		const local = this.editor.glitterManager.getMaskLocalPoint(layer, { x, y });
+		const canvasX = Math.floor(local.x);
+		const canvasY = Math.floor(local.y);
 		if (canvasX < 0 || canvasY < 0 || canvasX >= this.editor.originalCanvas.width || canvasY >= this.editor.originalCanvas.height) {
 			return false;
 		}

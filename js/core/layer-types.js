@@ -108,7 +108,7 @@ function isAnimatableLayerType(type) {
 // CSS selector matching layer overlay elements. Pass a layerId to scope to one
 // layer's element (any type); omit it to match every layer element of the
 // matching kind (e.g. rebuilding DOM order). transformableOnly excludes types
-// that don't participate in the pointer-transform system (e.g. glitter fill).
+// that don't participate in the pointer-transform system (e.g. the base image).
 function getLayerElementSelector(layerId = null, { transformableOnly = false } = {}) {
 	return Object.values(LayerType)
 		.map((type) => LAYER_UI_CONFIG[type])

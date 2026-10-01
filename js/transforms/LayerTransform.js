@@ -117,8 +117,11 @@ applyTransform(element, dimensions) {
 	// Only allow interaction in SELECT tool
 	const isSelectTool = this.editor.currentTool === ToolType.SELECT;
 	// A layer that is not transformable right now (a pinned frame) lets clicks
-	// through to the layers under it.
-	const pointerEvents = (this.layer.visible && isSelectTool && isLayerTransformable(this.layer)) ? 'auto' : 'none';
+	// through to the layers under it, and so does a type picked on the canvas
+	// (its element is far larger than its artwork).
+	const interactive = this.layer.visible && isSelectTool && isLayerTransformable(this.layer)
+		&& !LAYER_UI_CONFIG[this.layer.type]?.pickedOnCanvas;
+	const pointerEvents = interactive ? 'auto' : 'none';
 
 	// Get z-index
 	const zIndex = this.editor.layerManager.getLayerZIndex(this.layer.id);
@@ -201,7 +204,7 @@ updateTransform(updates) {
 		const newX = updates.position.x ?? transform.position.x;
 		const newY = updates.position.y ?? transform.position.y;
 		const next = CONFIG.tools.stickers.transform.roundValues
-			? roundLayerPosition(this.layer, newX, newY)
+			? roundLayerPosition(this.layer, newX, newY, LAYER_UI_CONFIG[this.layer.type]?.elementBox?.(this.editor, this.layer))
 			: { x: newX, y: newY };
 		transform.position.x = next.x;
 		transform.position.y = next.y;
@@ -229,6 +232,9 @@ updateTransform(updates) {
 	 * Child classes can override this if dimensions are stored differently
 	 */
 	getDimensions() {
+		// A type whose element is not its artwork's own box declares it.
+		const elementBox = LAYER_UI_CONFIG[this.layer.type]?.elementBox?.(this.editor, this.layer);
+		if (elementBox) return { width: elementBox.width, height: elementBox.height };
 		// Default: assumes layer has stickerData with width/height
 		if (this.layer.stickerData) {
 			return {
@@ -283,8 +289,10 @@ updateTransform(updates) {
 		const rotationRad = (transform.rotation * Math.PI) / 180;
 		const cos = Math.cos(rotationRad);
 		const sin = Math.sin(rotationRad);
-		const frameOffsetX = frame.offsetX * scaleX;
-		const frameOffsetY = frame.offsetY * scaleY;
+		// A flip mirrors the element about its center, so an off-center frame
+		// lands on the other side of it.
+		const frameOffsetX = frame.offsetX * scaleX * (transform.flipX ? -1 : 1);
+		const frameOffsetY = frame.offsetY * scaleY * (transform.flipY ? -1 : 1);
 		const origin = this.getRenderedPosition(transform);
 		const centerX = origin.x + frameOffsetX * cos - frameOffsetY * sin;
 		const centerY = origin.y + frameOffsetX * sin + frameOffsetY * cos;
@@ -459,13 +467,18 @@ updateTransform(updates) {
 
 	resetTransform(options = {}) {
 		const transform = this.getTransform();
-		const next = createDefaultTransform({
+		// A type with a home placement (a fill's mask surface) goes back to it;
+		// every other layer stays where it is.
+		const home = LAYER_UI_CONFIG[this.layer.type]?.defaultTransform?.(this.editor, this.layer);
+		const next = home || createDefaultTransform({
 			position: {
 				x: transform.position.x,
 				y: transform.position.y
 			}
 		});
 
+		transform.position.x = next.position.x;
+		transform.position.y = next.position.y;
 		transform.rotation = next.rotation;
 		if (!options.preserveScale) {
 			transform.scale.x = next.scale.x;
@@ -575,7 +588,7 @@ const swallowFollowupClick = () => {
 		e.stopPropagation();
 		this.editor.layerManager.focusLayerInSelection(this.layer.id);
 		if (!this.editor.layerManager.canTransformMultiSelection()) {
-			this.editor.showError('This selection cannot move because it includes a locked, Base Image, or Fill layer');
+			this.editor.showError('This selection cannot move because it includes a locked, pinned, empty, or Base Image layer');
 		}
 		return;
 	}
@@ -700,9 +713,7 @@ const handleMouseMove = (e) => {
 	}
 
 	// Update settings UI if available
-	if (activeTransform.layer.type === LayerType.STICKER || activeTransform.layer.type === LayerType.TEXT_GLITTER || activeTransform.layer.type === LayerType.SHAPE) {
-		activeTransform.scheduleSettingsSync();
-	}
+	activeTransform.scheduleSettingsSync();
 };
 
 	const handleMouseUp = (e) => {
@@ -836,9 +847,7 @@ const handleMouseMove = (e) => {
 			this.updateHandlePositions();
 		}
 
-		if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER || this.layer.type === LayerType.SHAPE) {
-			this.scheduleSettingsSync();
-		}
+		this.scheduleSettingsSync();
 	}
 
 	// Settle a finished scale gesture the way each type stays crisp: shapes bake
@@ -1262,9 +1271,7 @@ removeTransformHandles() {
 			this.handleMoveDrag(e);
 		}
 
-		if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER || this.layer.type === LayerType.SHAPE) {
-			this.scheduleSettingsSync();
-		}
+		this.scheduleSettingsSync();
 	}
 
 	/**
@@ -1435,8 +1442,10 @@ removeTransformHandles() {
 		const worldRotationRad = (transform.rotation * Math.PI) / 180;
 		const worldCos = Math.cos(worldRotationRad);
 		const worldSin = Math.sin(worldRotationRad);
-		const startOffsetX = frame.offsetX * (start.transform.scale.x / 100);
-		const startOffsetY = frame.offsetY * (start.transform.scale.y / 100);
+		const flipSignX = transform.flipX ? -1 : 1;
+		const flipSignY = transform.flipY ? -1 : 1;
+		const startOffsetX = flipSignX * frame.offsetX * (start.transform.scale.x / 100);
+		const startOffsetY = flipSignY * frame.offsetY * (start.transform.scale.y / 100);
 		const centerX = start.transform.position.x + startOffsetX * worldCos - startOffsetY * worldSin;
 		const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
 
@@ -1493,8 +1502,8 @@ removeTransformHandles() {
 			const visibleCenterLocalY = (oppositeLocalY + draggedLocalY) / 2;
 			const visibleCenterWorldX = centerX + visibleCenterLocalX * worldCos - visibleCenterLocalY * worldSin;
 			const visibleCenterWorldY = centerY + visibleCenterLocalX * worldSin + visibleCenterLocalY * worldCos;
-			const scaledOffsetX = frame.offsetX * (newScaleX / 100);
-			const scaledOffsetY = frame.offsetY * (newScaleY / 100);
+			const scaledOffsetX = flipSignX * frame.offsetX * (newScaleX / 100);
+			const scaledOffsetY = flipSignY * frame.offsetY * (newScaleY / 100);
 			nextPosition = {
 				x: visibleCenterWorldX - (scaledOffsetX * worldCos - scaledOffsetY * worldSin),
 				y: visibleCenterWorldY - (scaledOffsetX * worldSin + scaledOffsetY * worldCos)
@@ -1564,8 +1573,10 @@ removeTransformHandles() {
 		const worldRotationRad = (transform.rotation * Math.PI) / 180;
 		const worldCos = Math.cos(worldRotationRad);
 		const worldSin = Math.sin(worldRotationRad);
-		const startOffsetX = (frame.offsetX || 0) * (start.transform.scale.x / 100);
-		const startOffsetY = (frame.offsetY || 0) * (start.transform.scale.y / 100);
+		const flipSignX = transform.flipX ? -1 : 1;
+		const flipSignY = transform.flipY ? -1 : 1;
+		const startOffsetX = flipSignX * (frame.offsetX || 0) * (start.transform.scale.x / 100);
+		const startOffsetY = flipSignY * (frame.offsetY || 0) * (start.transform.scale.y / 100);
 		const centerX = start.transform.position.x + startOffsetX * worldCos - startOffsetY * worldSin;
 		const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
 		const vectorX = canvasPos.x - centerX;
@@ -1629,8 +1640,8 @@ removeTransformHandles() {
 				: -axisSign * (frame.height / 2) * (start.transform.scale.y / 100) + axisSign * (frame.height / 2) * (scale.y / 100);
 			const visibleCenterWorldX = centerX + visibleCenterLocalX * worldCos - visibleCenterLocalY * worldSin;
 			const visibleCenterWorldY = centerY + visibleCenterLocalX * worldSin + visibleCenterLocalY * worldCos;
-			const scaledOffsetX = (frame.offsetX || 0) * (scale.x / 100);
-			const scaledOffsetY = (frame.offsetY || 0) * (scale.y / 100);
+			const scaledOffsetX = flipSignX * (frame.offsetX || 0) * (scale.x / 100);
+			const scaledOffsetY = flipSignY * (frame.offsetY || 0) * (scale.y / 100);
 			nextPosition = {
 				x: visibleCenterWorldX - (scaledOffsetX * worldCos - scaledOffsetY * worldSin),
 				y: visibleCenterWorldY - (scaledOffsetX * worldSin + scaledOffsetY * worldCos)

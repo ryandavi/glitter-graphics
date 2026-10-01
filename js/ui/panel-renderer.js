@@ -123,7 +123,10 @@ const TRANSFORM_ID_GRAMMAR = Object.freeze({
 const TRANSFORM_ID_EXCEPTIONS = Object.freeze({});
 
 function getPanelTransformIds(prefix) {
-	const normalizedPrefix = ['sticker', 'shape', 'text'].includes(prefix) ? prefix : 'text';
+	// Every type's transform card has its own ids; an unknown prefix reads the
+	// text card's.
+	const declared = Object.values(LayerType).some((type) => LAYER_UI_CONFIG[type]?.transformPrefix === prefix);
+	const normalizedPrefix = declared ? prefix : 'text';
 	const capitalized = panelCap(normalizedPrefix);
 	return Object.fromEntries(Object.entries(TRANSFORM_ID_GRAMMAR).map(([role, pattern]) => [
 		role,

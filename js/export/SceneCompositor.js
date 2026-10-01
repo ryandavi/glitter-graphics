@@ -711,7 +711,16 @@ class SceneCompositor {
 
 	_buildGlitterFillExportPlan(layer) {
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
-		const fillCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
+		const scratch = {
+			compositeCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			fillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			// The fill's only opacity is the whole-layer one (GlitterManager.getSlotStack).
+			buildStack: (resolveSource) => buildSlotStack(layer, (entry) => {
+				const source = resolveSource(entry);
+				return entry.key === 'fill' && source ? { ...source, opacity: 1 } : source;
+			})
+		};
+		scratch.compositeCtx = scratch.compositeCanvas.getContext('2d', { alpha: true });
 		return {
 			prepareMasks: async ({ maskDataMap, maskCanvases, slotMaskCanvases, canvasData, callbacks }) => {
 				const rawMask = callbacks.createMask(layer);
@@ -722,33 +731,18 @@ class SceneCompositor {
 			},
 			prepareStaticResources: async () => {},
 			getAuthoredSources,
-			render: ({ ctx, frameIndex, timestamp, rainbowHue, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases, helperCtx, width, height }) => {
+			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource, slotMaskCanvases }) => {
 				const slotMasks = slotMaskCanvases.get(layer.id);
-				if (!slotMasks?.fill) throw new Error(`Missing mask canvas for layer ${layer.id}`);
-				helperCtx.save();
-				helperCtx.clearRect(0, 0, width, height);
-				const frame = { frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource };
-				buildSlotStack(layer, (entry) => {
-					const source = this._getSlotSource(layer, entry);
-					return entry.key === 'fill' && source ? { ...source, opacity: 1 } : source;
-				}).forEach((item) => {
-					if (item.key === 'fill') this._drawLayerSparkles(helperCtx, layer, 'behind', frame, {});
-					const maskCanvas = slotMasks[item.key];
-					if (!maskCanvas) return;
-					this._renderFilledMaskInto(fillCanvas, maskCanvas, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
-					helperCtx.drawImage(fillCanvas, 0, 0);
-				});
-				this._drawLayerSparkles(helperCtx, layer, 'front', frame, {});
-				helperCtx.restore();
-				if (rainbowHue) {
-					const pixels = helperCtx.getImageData(0, 0, width, height);
-					applyColorAdjustToImageData(pixels, { hue: rainbowHue, saturation: 100, brightness: 100 });
-					helperCtx.putImageData(pixels, 0, 0);
-				}
-				ctx.save();
-				ctx.globalAlpha *= layer.opacity / 100;
-				ctx.drawImage(this.helperCanvas, 0, 0);
-				ctx.restore();
+				this._renderSlotStackToCanvas(
+					layer,
+					ctx,
+					frameIndex,
+					sourceSelectionMap,
+					resolvedFramesBySource,
+					slotMasks,
+					scratch,
+					timestamp
+				);
 			}
 		};
 	}
@@ -1402,7 +1396,6 @@ class SceneCompositor {
 				: [{ animData: null, anchorBox: null }];
 			for (const unit of animationUnits) {
 				renderCtx.save();
-				let rainbowHue = 0;
 				if (unit.animData) {
 					const origin = [unit.anchorBox.origin?.x ?? 0.5, unit.anchorBox.origin?.y ?? 0.5];
 					const samplingContext = {
@@ -1416,22 +1409,13 @@ class SceneCompositor {
 							|| GlitterAnimation.sampleAt(animation, timestamp, samplingContext)
 						);
 					const sample = GlitterAnimation.composeSamples(sampled, { origin });
-					rainbowHue = sample.hue || 0;
-					if (layer.type === LayerType.GLITTER_FILL) {
-						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);
-						GlitterAnimation.applyToContext(renderCtx, sample, unit.anchorBox.width, unit.anchorBox.height);
-						renderCtx.translate(-unit.anchorBox.x, -unit.anchorBox.y);
-						renderCtx.globalAlpha *= sample.opacity;
-					} else {
-						this._activeLayerAnimation = { layer, sample };
-					}
+					this._activeLayerAnimation = { layer, sample };
 				}
 				try {
 					const renderResult = plan.render({
 						ctx: renderCtx,
 						frameIndex,
 						timestamp,
-						rainbowHue,
 						sourceSelectionMap,
 						resolvedFramesBySource,
 						maskCanvases,

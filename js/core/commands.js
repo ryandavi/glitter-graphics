@@ -136,7 +136,7 @@ function getShortcutGroups(kind = 'keyboard') {
 function centerSelection(editor, method, groupAxis) {
 	if (editor.layerManager.hasMultiSelection()) {
 		if (!editor.layerManager.canTransformMultiSelection()) {
-			editor.showError('This selection cannot move because it includes a locked, Base Image, or Fill layer');
+			editor.showError('This selection cannot move because it includes a locked, pinned, empty, or Base Image layer');
 			return;
 		}
 		editor.groupTransformManager?.alignToCanvas(groupAxis);

@@ -101,10 +101,17 @@ class AnimationTicker {
 	}
 }
 
-function paintLayerAnimationPreview(layer, elapsed, wrapper, context, useLayerTransform) {
+function paintLayerAnimationPreview(layer, elapsed, wrapper, context) {
 	const boxW = Math.max(1, Number(wrapper.offsetWidth) || 1);
 	const boxH = Math.max(1, Number(wrapper.offsetHeight) || 1);
-	const origin = getLayerAnimationOrigin(context.editor, layer, { width: boxW, height: boxH });
+	// The origin is a fraction of the layer's own box, as export measures it
+	// (animationBox): the element is that box at the layer scale, so the frame
+	// offsets are compared against its unscaled size.
+	const transform = getLayerTransform(layer);
+	const origin = getLayerAnimationOrigin(context.editor, layer, {
+		width: boxW / Math.max(0.0001, (Number(transform.scale?.x) || 100) / 100),
+		height: boxH / Math.max(0.0001, (Number(transform.scale?.y) || 100) / 100)
+	});
 	const sample = GlitterAnimation.sampleAt(context.data, elapsed, {
 		canvasW: context.editor.originalCanvas?.width || context.editor.previewCanvas?.width || 1,
 		canvasH: context.editor.originalCanvas?.height || context.editor.previewCanvas?.height || 1,
@@ -114,18 +121,16 @@ function paintLayerAnimationPreview(layer, elapsed, wrapper, context, useLayerTr
 		seed: 0,
 		origin: [origin.x, origin.y]
 	});
-	const transform = useLayerTransform
-		? getLayerTransform(layer)
-		: { rotation: 0, scale: { x: 100, y: 100 }, flipX: false, flipY: false };
+	// The sample moves the layer in document px. The wrapper sits inside the
+	// element's rotation and flip but outside its scale (the element is sized,
+	// not CSS-scaled), so only those two are undone.
 	const radians = -(Number(transform.rotation) || 0) * Math.PI / 180;
-	const scaleX = Math.max(0.0001, (Number(transform.scale?.x) || 100) / 100) * (transform.flipX ? -1 : 1);
-	const scaleY = Math.max(0.0001, (Number(transform.scale?.y) || 100) / 100) * (transform.flipY ? -1 : 1);
 	const canvasTx = sample.tx;
 	const canvasTy = sample.ty;
 	const domSample = {
 		...sample,
-		tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) / scaleX,
-		ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) / scaleY
+		tx: (Math.cos(radians) * canvasTx - Math.sin(radians) * canvasTy) * (transform.flipX ? -1 : 1),
+		ty: (Math.sin(radians) * canvasTx + Math.cos(radians) * canvasTy) * (transform.flipY ? -1 : 1)
 	};
 	if (sample.matrix) domSample.matrix = { ...sample.matrix, e: domSample.tx, f: domSample.ty };
 	wrapper.style.transform = GlitterAnimation.domTransformString(domSample);
@@ -137,11 +142,7 @@ function paintLayerAnimationPreview(layer, elapsed, wrapper, context, useLayerTr
 }
 
 function animateTransformableLayerPreview(layer, elapsed, wrapper, context) {
-	paintLayerAnimationPreview(layer, elapsed, wrapper, context, true);
-}
-
-function animateCanvasLayerPreview(layer, elapsed, wrapper, context) {
-	paintLayerAnimationPreview(layer, elapsed, wrapper, context, false);
+	paintLayerAnimationPreview(layer, elapsed, wrapper, context);
 }
 
 function syncLayerAnimationPreview(element, layer, ticker) {

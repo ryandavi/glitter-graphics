@@ -79,6 +79,9 @@ const HINT_RULES = [
 			if (layer.type === LayerType.TEXT_GLITTER) return isMobile
 				? { hint: 'Drag to move, pinch to scale and rotate your glitter text', context: 'Use the Text section for copy, font, alignment, texture scale, and opacity.' }
 				: { hint: 'Drag to move your glitter text', context: 'Use the Text section to change the copy, font, size, spacing, alignment, and fill texture.' };
+			if (layer.type === LayerType.GLITTER_FILL && hasMaskContent(layer)) return isMobile
+				? { hint: 'Drag to move, pinch to scale and rotate this fill', context: 'Switch to Glitter Fill or the Glitter Brush to change where the glitter is.' }
+				: { hint: 'Drag to move this fill, or use its handles to resize and rotate', context: 'Switch to Glitter Fill or the Glitter Brush to change where the glitter is.' };
 			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.BASE_IMAGE) return { hint: 'Switch to Glitter Fill or the Glitter Brush to add or modify glitter, or add a sticker layer' };
 			return null;
 		}

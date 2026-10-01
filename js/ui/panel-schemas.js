@@ -552,6 +552,7 @@ const PANEL_SCHEMAS = {
 					advancedIds: { hue: 'glitterHue', saturation: 'glitterSaturation', brightness: 'glitterBrightness' }
 				}
 			] },
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] },
 			{ title: 'Mask', items: [
 				{ kind: 'card', classes: 'fill-mask-summary', items: [
 					{ kind: 'host', classes: 'property-note', text: 'Pick the colors glitter covers with the Glitter Fill tool, or paint the mask with the Glitter Brush and Eraser.' },

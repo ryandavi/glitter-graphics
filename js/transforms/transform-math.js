@@ -78,17 +78,22 @@ function snapScaleToWholePixels(scalePercent, nativeSize) {
 // its top-left corner (what snapLayerCenter renders) rather than its center:
 // rounding an odd-width sticker's x.5 center moved the edge a resize holds
 // still by a pixel every time the width changed parity. Other layers, and
-// stickers at a free rotation, round the center as before.
-function roundLayerPosition(layer, x, y) {
+// stickers at a free rotation, round the center as before. A type placed by
+// a larger element (`elementBox`, a fill's canvas-sized mask surface) rounds
+// that element's corner the same way: on an odd-sized canvas its center sits
+// on a half pixel, and rounding the center would shift the mask off the base
+// image by a pixel.
+function roundLayerPosition(layer, x, y, elementBox = null) {
 	const transform = layer?.transform;
-	if (layer?.type === LayerType.STICKER && transform) {
+	const box = layer?.type === LayerType.STICKER ? layer.stickerData : elementBox;
+	if (box && transform) {
 		const quarterTurns = (transform.rotation || 0) / 90;
 		if (Math.abs(quarterTurns - Math.round(quarterTurns)) <= 1e-9) {
 			return snapLayerCenter(
 				x,
 				y,
-				dropFloatResidue(layer.stickerData.width * transform.scale.x / 100),
-				dropFloatResidue(layer.stickerData.height * transform.scale.y / 100),
+				dropFloatResidue(box.width * transform.scale.x / 100),
+				dropFloatResidue(box.height * transform.scale.y / 100),
 				transform.rotation || 0
 			);
 		}
@@ -156,6 +161,21 @@ function computeLayerTransform(transform, dimensions = {}) {
 		rotationRad: resolved.rotation * Math.PI / 180,
 		flipX: Boolean(resolved.flipX),
 		flipY: Boolean(resolved.flipY)
+	};
+}
+
+// Convert a document/canvas point into the untransformed pixel space of a
+// layer surface. Painted Fill masks use a canvas-sized local surface, so mask
+// editing and hit testing must undo the same placement preview/export apply.
+function canvasPointToLayerLocal(layer, point, dimensions) {
+	const metrics = computeLayerTransform(getLayerTransform(layer), dimensions);
+	const dx = point.x - metrics.centerX;
+	const dy = point.y - metrics.centerY;
+	const rotatedX = dx * Math.cos(metrics.rotationRad) + dy * Math.sin(metrics.rotationRad);
+	const rotatedY = -dx * Math.sin(metrics.rotationRad) + dy * Math.cos(metrics.rotationRad);
+	return {
+		x: rotatedX / metrics.signedScaleX + metrics.width / 2,
+		y: rotatedY / metrics.signedScaleY + metrics.height / 2
 	};
 }
 
@@ -246,7 +266,7 @@ function withAnchorFixed(editor, layer, mutate) {
 }
 
 function getLayerAnimationOrigin(editor, layer, dimensions) {
-	if (!layer || layer.type === LayerType.GLITTER_FILL) return { x: 0.5, y: 0.5 };
+	if (!layer) return { x: 0.5, y: 0.5 };
 	const transform = getLayerTransform(layer);
 	if (!editor) return { ...transform.anchor };
 	const frame = getLayerFrame(editor, layer);
