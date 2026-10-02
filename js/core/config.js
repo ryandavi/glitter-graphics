@@ -486,6 +486,8 @@ const CONFIG = deepFreeze({
 			defaultVerticalAlign: 'top',
 			minBoxSize: 4,
 			maxTextLength: 200,
+			// New text starts with this copy selected, so typing replaces it.
+			placeholderText: 'Glitter ipsum',
 			decoration: { thickness: 0.06, underline: 0.1, strikethrough: -0.3 },
 			symbols: ['\u2605', '\u2606', '\u2665', '\u2661', '\u273f', '\u266a', '\u2022', '~', '\u2713', '\u221e', '\u2192', '\u00a9'],
 			// Font size, letter spacing, line height and the border width and

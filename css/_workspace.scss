@@ -5,6 +5,9 @@
 body.tool-text {
 	.preview-canvas,
 	.preview-wrapper { cursor: crosshair; }
+
+	// Over text, a press places the caret.
+	.text-glitter-element { cursor: text; }
 }
 
 .smart-guide {

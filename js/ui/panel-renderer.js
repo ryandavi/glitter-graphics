@@ -1183,6 +1183,19 @@ function buildPanelItem(item, schema) {
 				}
 				if (action.title) button.title = action.title;
 				if (action.disabled) button.disabled = true;
+				// `menu: true` → the button opens a choice menu its owner fills
+				// (setupMenuPopover). It is built inside its popover root, so
+				// opening the menu never re-parents the button.
+				if (action.menu) {
+					const menu = panelDiv('app-menu app-menu-popover');
+					const panel = panelDiv('app-menu-panel');
+					panel.hidden = true;
+					button.setAttribute('aria-haspopup', 'menu');
+					button.setAttribute('aria-expanded', 'false');
+					menu.append(button, panel);
+					row.appendChild(menu);
+					return;
+				}
 				row.appendChild(button);
 			});
 			return row;

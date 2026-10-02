@@ -7,7 +7,8 @@ const TEXT_ACTION_METHODS = {
 		bind('#textStrikethrough', 'textToggleStrikethrough');
 		bind('[data-text-align]', button => 'textAlign' + button.dataset.textAlign[0].toUpperCase() + button.dataset.textAlign.slice(1));
 		document.getElementById('textSplit')?.addEventListener('click', () => COMMANDS.splitText.run(this.editor));
-		document.getElementById('textSymbols')?.addEventListener('click', () => this.openTextMenu('textSymbols', CONFIG.tools.text.symbols.map(symbol => ({ label: symbol, run: () => this.insertTextSymbol(symbol) }))));
+		document.getElementById('textSymbols')?.replaceChildren(...CONFIG.tools.text.symbols.map(symbol => { const button = document.createElement('button'); button.className = 'btn-flat'; button.type = 'button'; button.textContent = symbol; button.title = `Insert ${symbol}`; button.addEventListener('click', () => this.insertTextSymbol(symbol)); return button; }));
+		document.getElementById('textSymbols')?.addEventListener('mousedown', event => event.preventDefault());
 		const emoji = document.getElementById('textColorEmoji');
 		emoji?.addEventListener('change', () => {
 			const layer = this.getActiveTextLayer();
@@ -16,13 +17,11 @@ const TEXT_ACTION_METHODS = {
 	},
 	openTextMenu(triggerId, entries) {
 		const trigger = document.getElementById(triggerId);
-		if (!trigger) return;
-		let root = trigger.closest('.app-menu-popover');
-		if (!root) { root = document.createElement('div'); root.className = 'app-menu app-menu-popover'; trigger.before(root); root.appendChild(trigger); }
-		let panel = root.querySelector('.app-menu-panel');
+		// The schema renders the popover root and panel (actionRow `menu: true`).
+		const root = trigger?.closest('.app-menu-popover');
+		const panel = root?.querySelector('.app-menu-panel');
+		if (!panel) return;
 		if (root._textMenu?.isOpen()) { root._textMenu.close(); return; }
-		if (!panel) { panel = document.createElement('div'); panel.className = 'app-menu-panel'; panel.hidden = true; root.appendChild(panel); }
-		panel.classList.toggle('text-symbol-grid', triggerId === 'textSymbols');
 		panel.replaceChildren(...entries.map(entry => { const button = document.createElement('button'); button.className = 'app-menu-item'; button.type = 'button'; button.textContent = entry.label; button.addEventListener('click', entry.run); return button; }));
 		if (!root._textMenu) root._textMenu = setupMenuPopover({ root, trigger, panel, bindTrigger: false });
 		root._textMenu.open();
@@ -35,6 +34,9 @@ const TEXT_ACTION_METHODS = {
 		const end = session?.selectionEnd ?? this.ui.textInput.selectionEnd;
 		const value = layer.textData.text.slice(0, start) + symbol + layer.textData.text.slice(end);
 		this.applyTextEdit(layer, value, { start: start + symbol.length, end: start + symbol.length });
+		// The symbol buttons never take focus, so typing carries on in whichever
+		// field had it.
+		if (document.activeElement === this.textProxy || document.activeElement === this.ui.textInput) return;
 		if (session) this.textProxy.focus({ preventScroll: true });
 		else this.ui.textInput.focus();
 	},
@@ -58,7 +60,7 @@ const TEXT_ACTION_METHODS = {
 		for (const [id, active] of [['textUnderline', data.decoration.underline], ['textStrikethrough', data.decoration.strikethrough]]) {
 			const button = document.getElementById(id); button?.classList.toggle('active', active); button?.setAttribute('aria-pressed', String(active));
 		}
-		const emoji = document.getElementById('textColorEmoji'); if (emoji) emoji.checked = data.colorEmoji;
+		const emoji = document.getElementById('textColorEmoji'); if (emoji) { emoji.checked = data.colorEmoji; syncFieldReverts(emoji.closest('.property-row')); }
 		const toolbar = document.getElementById('textEditControls');
 		toolbar?.querySelectorAll('[data-text-action]').forEach(button => {
 			const action = button.dataset.textAction;

@@ -5018,10 +5018,28 @@ body.mask-editing .sticker-element {
 .text-edit-overlay {
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
 }
 .text-edit-overlay > span {
   position: absolute;
+}
+
+.text-hover-baselines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  pointer-events: none;
+}
+body.tool-text .text-hover-baselines {
+  display: block;
+}
+.text-hover-baselines > span {
+  position: absolute;
+  height: calc(2px / var(--zoom, 1) / var(--layer-scale, 1));
+  background: var(--color-accent);
+  transform-origin: 0 0;
 }
 
 .text-edit-caret {
@@ -5050,22 +5068,11 @@ body.mask-editing .sticker-element {
 
 .text-symbol-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--spacing-xs);
 }
-.text-symbol-grid .app-menu-item {
-  justify-content: center;
-}
-
-.text-actions-group {
-  position: relative;
-}
-.text-actions-group .app-menu {
-  position: static;
-}
-.text-actions-group .app-menu-panel {
-  left: 0;
-  right: 0;
-  min-width: 0;
+.text-symbol-grid > .btn-flat {
+  padding: 0;
 }
 
 .filter-looks-picker {
@@ -5865,6 +5872,9 @@ body.mask-editing .sticker-element {
 body.tool-text .preview-canvas,
 body.tool-text .preview-wrapper {
   cursor: crosshair;
+}
+body.tool-text .text-glitter-element {
+  cursor: text;
 }
 
 .smart-guide {
@@ -6963,7 +6973,7 @@ body.tool-select .preview-canvas {
 .property-section {
   --property-gutter: var(--spacing-lg);
   --property-pad: var(--spacing-base);
-  --property-row-gap: 0;
+  --property-row-gap: var(--spacing-xs);
   --property-field-gap: var(--spacing-sm);
   --property-section-pad-bottom: var(--spacing-lg);
   --property-section-pad-top: var(--spacing-md);
@@ -7635,8 +7645,14 @@ body.tool-select .preview-canvas {
   gap: var(--spacing-sm);
   padding: 0 var(--property-gutter);
 }
-.property-panel .property-set.property-actions > button {
+.property-panel .property-set.property-actions > button,
+.property-panel .property-set.property-actions > .app-menu > button {
   width: 100%;
+}
+.property-panel .property-set.property-actions > .app-menu > .app-menu-panel {
+  left: 0;
+  min-width: 0;
+  max-width: none;
 }
 .property-panel .property-set.property-actions[hidden] {
   display: none;

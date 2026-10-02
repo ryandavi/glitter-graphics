@@ -255,7 +255,8 @@ function renderToolButtons(container) {
 
 function createTextAt(editor, options = {}) {
 	const position = options.position || { x: editor.originalCanvas.width / 2, y: editor.originalCanvas.height / 2 };
-	const layer = editor.layerManager.addLayer(LayerType.TEXT_GLITTER, { skipHistory: true, textLayer: { ...options, position, align: 'left' } });
+	const placeholder = options.text === undefined;
+	const layer = editor.layerManager.addLayer(LayerType.TEXT_GLITTER, { skipHistory: true, textLayer: { ...options, text: placeholder ? CONFIG.tools.text.placeholderText : options.text, position, align: 'left' } });
 	if (!layer) return null;
 	editor.finishLayerCreation(layer);
 	const manager = editor.textGlitterManager;
@@ -265,7 +266,7 @@ function createTextAt(editor, options = {}) {
 		else manager.setWorldPointFromLocal(layer.transform, { x: entry.layoutOffsetX - entry.width / 2, y: entry.layoutOffsetY - entry.height / 2 }, position);
 	};
 	placeText();
-	manager.beginTextEdit(layer, { created: true });
+	manager.beginTextEdit(layer, { created: true, selectAll: placeholder });
 	FontLibrary.ensureLoaded(layer.textData.fontId).then(() => {
 		if (!editor.layers.includes(layer)) return;
 		placeText();

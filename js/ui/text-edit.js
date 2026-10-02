@@ -19,7 +19,7 @@ const TEXT_EDIT_METHODS = {
 		for (const type of ['select', 'keyup', 'click']) this.textProxy.addEventListener(type, () => this.readTextSelection(this.textProxy));
 		this.textProxy.addEventListener('keydown', event => {
 			if (event.isComposing) return;
-			if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.endTextEdit(); }
+			if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.commitTextEdit(); }
 			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
 				event.preventDefault();
 				this.moveTextCaretVertically(event.key === 'ArrowUp' ? -1 : 1, event.shiftKey);
@@ -30,16 +30,27 @@ const TEXT_EDIT_METHODS = {
 			if (layer && !this.editSession) this.beginTextEdit(layer, { focus: false });
 		});
 		this.ui.textInput?.addEventListener('keydown', event => {
-			if (event.key === 'Escape' && !event.isComposing) { event.preventDefault(); event.stopPropagation(); this.endTextEdit(); }
+			if (event.key === 'Escape' && !event.isComposing) { event.preventDefault(); event.stopPropagation(); this.commitTextEdit(); }
 		});
-		this.ui.textInput?.addEventListener('select', () => this.readTextSelection(this.ui.textInput));
+		// The panel field and the canvas share one caret, so a symbol lands where
+		// the field's caret is.
+		for (const type of ['select', 'keyup', 'click']) this.ui.textInput?.addEventListener(type, () => this.readTextSelection(this.ui.textInput));
+		// Text tool hover: the baselines show which text a press would edit.
+		document.addEventListener('pointerover', event => {
+			const layer = event.pointerType !== 'touch' && this.editor.currentTool === ToolType.TEXT ? this.getTextLayerAt(event.target) : null;
+			this.setTextHover(layer?.id === this.editSession?.layerId ? null : layer);
+		});
+		// The Text tool owns the pointer on text: a press places the caret and a
+		// drag selects. Every other tool leaves the layer to its own drag.
 		document.addEventListener('pointerdown', event => {
-			if (!this.editSession) return;
-			const layer = this.editor.layerManager.getLayerById(this.editSession.layerId);
-			if (event.target.closest('.transform-handle-wrapper, .transform-handles') && !this.isTextEditTarget(layer, event.target)) return;
-			if (this.isTextEditTarget(layer, event.target) && event.button === 0) {
+			const textTool = this.editor.currentTool === ToolType.TEXT;
+			const layer = textTool && event.button === 0 ? this.getTextLayerAt(event.target) : null;
+			if (layer) {
 				event.preventDefault();
 				event.stopPropagation();
+				if (this.editor.layerManager.activeLayerId !== layer.id) this.editor.layerManager.selectLayerFromCanvas(layer.id);
+				if (this.editSession?.layerId !== layer.id) this.beginTextEdit(layer);
+				if (this.editSession?.layerId !== layer.id) return;
 				const start = this.hitTextBoundary(layer, event.clientX, event.clientY);
 				this.setTextSelection(start, start);
 				this.textProxy.focus({ preventScroll: true });
@@ -50,15 +61,38 @@ const TEXT_EDIT_METHODS = {
 				document.addEventListener('pointercancel', end, true);
 				return;
 			}
-			if (event.target === this.textProxy || event.target === this.ui.textInput || event.target.closest('#textSettingsSection, #textEditControls, .app-menu-popover')) return;
+			if (!this.editSession) return;
+			if (event.target === this.textProxy || event.target === this.ui.textInput || event.target.closest('#textSettingsSection, #textEditControls, .app-menu-popover, .transform-handle-wrapper, .transform-handles')) return;
+			// A press off the text commits it and hands back to Select, so the
+			// next drag moves the layer instead of starting another text.
+			if (textTool && this.editor.previewContainer.contains(event.target) && !event.target.closest('button, a, input, select, textarea')) {
+				event.preventDefault();
+				event.stopPropagation();
+				this.endTextEdit();
+				// The press's own click is swallowed, so it neither starts another
+				// text nor, once Select takes over, deselects the committed one.
+				const swallow = click => click.stopPropagation();
+				const finish = () => {
+					document.removeEventListener('pointerup', finish, true);
+					document.removeEventListener('pointercancel', finish, true);
+					document.addEventListener('click', swallow, true);
+					setTimeout(() => {
+						document.removeEventListener('click', swallow, true);
+						if (!this.editSession) this.commitTextEdit();
+					}, 0);
+				};
+				document.addEventListener('pointerup', finish, true);
+				document.addEventListener('pointercancel', finish, true);
+				return;
+			}
 			this.endTextEdit();
 		}, true);
 		document.addEventListener('dblclick', event => {
-			if (this.editor.currentTool !== ToolType.SELECT) return;
-			const layer = this.editor.layerManager.getActiveLayer();
-			if (layer?.type !== LayerType.TEXT_GLITTER || !this.isTextEditTarget(layer, event.target)) return;
-			this.beginTextEdit(layer);
-			if (!this.editSession) return;
+			if (this.editor.currentTool !== ToolType.SELECT && this.editor.currentTool !== ToolType.TEXT) return;
+			const layer = this.getTextLayerAt(event.target);
+			if (!layer) return;
+			if (this.editSession?.layerId !== layer.id) this.beginTextEdit(layer);
+			if (this.editSession?.layerId !== layer.id) return;
 			event.preventDefault(); event.stopPropagation();
 			const index = this.hitTextBoundary(layer, event.clientX, event.clientY);
 			const text = layer.textData.text;
@@ -70,11 +104,53 @@ const TEXT_EDIT_METHODS = {
 		window.visualViewport?.addEventListener('resize', () => this.syncTextKeyboardViewport());
 		window.visualViewport?.addEventListener('scroll', () => this.syncTextKeyboardViewport());
 	},
-	isTextEditTarget(layer, target) {
-		return Boolean(this.layerElements.get(layer?.id)?.contains(target) || (target.closest('[data-handle-type="move"]') && target.closest('.transform-handles')?.dataset.layerId === layer?.id));
+	// The text layer under a canvas target: its element, or its selection body.
+	getTextLayerAt(target) {
+		const id = target.closest?.('.text-glitter-element')?.dataset.layerId || (target.closest?.('[data-handle-type="move"]') && target.closest('.transform-handles')?.dataset.layerId);
+		const layer = id ? this.editor.layerManager.getLayerById(id) : null;
+		return layer?.type === LayerType.TEXT_GLITTER ? layer : null;
+	},
+	// One baseline per line, or per glyph on warped text, drawn in the stack so
+	// it follows the layer's transform.
+	setTextHover(layer) {
+		const id = layer?.id ?? null;
+		if (this.textHoverLayerId === id) return;
+		this.layerElements.get(this.textHoverLayerId)?.querySelector('.text-hover-baselines')?.remove();
+		this.textHoverLayerId = id;
+		const stack = this.layerElements.get(id)?.querySelector('.text-glitter-stack');
+		if (!stack) return;
+		const entry = this.getMeasurementEntry(layer);
+		const overlay = document.createElement('div');
+		overlay.className = 'text-hover-baselines';
+		const addLine = (x, y, width, rotation = 0) => {
+			const line = document.createElement('span');
+			Object.assign(line.style, { left: `${entry.layoutOffsetX + x}px`, top: `${entry.layoutOffsetY + y}px`, width: `${width}px`, transform: `rotate(${rotation}rad)` });
+			overlay.appendChild(line);
+		};
+		if (entry.warpedGlyphs) entry.layout.glyphs.forEach((glyph, index) => {
+			const placement = entry.warpedGlyphs[index]?.placement;
+			if (placement) addLine(placement.x - glyph.advance / 2 * Math.cos(placement.rotation), placement.y - glyph.advance / 2 * Math.sin(placement.rotation), glyph.advance, placement.rotation);
+		});
+		else entry.layout.visibleLines.forEach((_line, index) => {
+			const glyphs = entry.layout.glyphs.filter(glyph => glyph.line === index);
+			if (!glyphs.length) return;
+			const left = Math.min(...glyphs.map(glyph => glyph.x));
+			addLine(left, glyphs[0].baseline, Math.max(...glyphs.map(glyph => glyph.x + glyph.advance)) - left);
+		});
+		stack.appendChild(overlay);
+	},
+	// Escape and a press off the text: end the edit and return to Select with
+	// the layer selected, ready to move.
+	commitTextEdit() {
+		this.endTextEdit();
+		if (this.editor.currentTool === ToolType.TEXT) this.editor.setTool(ToolType.SELECT);
 	},
 	beginTextEdit(layer, { focus = true, selectAll = false, created = false } = {}) {
 		if (layer?.type !== LayerType.TEXT_GLITTER || !this.editor.canEditLayer(layer, { notify: true })) return;
+		// Typing on the canvas is the Text tool's job; setTool ends any edit, so
+		// switch before the session starts.
+		if (focus && CONFIG.tools.text.canvasEditing && this.editor.currentTool !== ToolType.TEXT) this.editor.setTool(ToolType.TEXT, { announce: false });
+		this.setTextHover(null);
 		if (this.editSession?.layerId !== layer.id) {
 			this.endTextEdit();
 			this.editSession = { layerId: layer.id, selectionStart: layer.textData.text.length, selectionEnd: layer.textData.text.length, initialText: layer.textData.text, created, dirty: false, coalesceKey: `textEdit:${layer.id}:${performance.now()}` };
@@ -211,11 +287,13 @@ const TEXT_EDIT_METHODS = {
 	renderTextSelection() {
 		const session = this.editSession;
 		const layer = this.editor.layerManager.getLayerById(session?.layerId);
-		const wrapper = this.layerElements.get(layer?.id);
-		if (!layer || !wrapper || !CONFIG.tools.text.canvasEditing) return;
+		// The overlay lives in the stack, so it takes the layer's scale with the
+		// glyphs it marks.
+		const stack = this.layerElements.get(layer?.id)?.querySelector('.text-glitter-stack');
+		if (!layer || !stack || !CONFIG.tools.text.canvasEditing) return;
 		const entry = this.getMeasurementEntry(layer);
-		let overlay = wrapper.querySelector('.text-edit-overlay');
-		if (!overlay) { overlay = document.createElement('div'); overlay.className = 'text-edit-overlay ui-ignore-gestures'; wrapper.appendChild(overlay); }
+		let overlay = stack.querySelector('.text-edit-overlay');
+		if (!overlay) { overlay = document.createElement('div'); overlay.className = 'text-edit-overlay ui-ignore-gestures'; stack.appendChild(overlay); }
 		overlay.replaceChildren();
 		const boundaries = this.getTextBoundaries(layer);
 		const caret = boundaries.find(boundary => boundary.index === (this.textProxy.selectionDirection === 'backward' ? session.selectionStart : session.selectionEnd)) || boundaries.at(-1);
@@ -236,6 +314,8 @@ const TEXT_EDIT_METHODS = {
 		});
 		const caretRect = overlay.lastElementChild?.getBoundingClientRect();
 		const containerRect = this.editor.previewContainer.getBoundingClientRect();
-		if (caretRect) { this.textProxy.style.left = `${caretRect.left - containerRect.left}px`; this.textProxy.style.top = `${caretRect.top - containerRect.top}px`; }
+		// Kept inside the container: a focused field outside it would scroll the
+		// workspace to reveal itself.
+		if (caretRect) { this.textProxy.style.left = `${Math.max(0, Math.min(containerRect.width - 1, caretRect.left - containerRect.left))}px`; this.textProxy.style.top = `${Math.max(0, Math.min(containerRect.height - 1, caretRect.top - containerRect.top))}px`; }
 	}
 };

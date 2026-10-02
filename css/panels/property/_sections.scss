@@ -168,7 +168,16 @@
 	gap: var(--spacing-sm);
 	padding: 0 var(--property-gutter);
 
-	> button { width: 100%; }
+	// A menu button (`menu: true`) lives in its popover root; the menu drops
+	// under it at the button's width.
+	> button,
+	> .app-menu > button { width: 100%; }
+
+	> .app-menu > .app-menu-panel {
+		left: 0;
+		min-width: 0;
+		max-width: none;
+	}
 
 	&[hidden] { display: none; }
 

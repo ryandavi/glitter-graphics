@@ -134,8 +134,28 @@
 .text-edit-overlay {
 	position: absolute;
 	inset: 0;
+	// Above the paint spans it shares the stack with.
+	z-index: 1;
 	pointer-events: none;
 	> span { position: absolute; }
+}
+// Text tool hover: each line's baseline, a constant screen thickness at any
+// zoom or layer scale. Hidden outside the Text tool, so a stale one never shows.
+.text-hover-baselines {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: none;
+	pointer-events: none;
+
+	body.tool-text & { display: block; }
+
+	> span {
+		position: absolute;
+		height: calc(2px / var(--zoom, 1) / var(--layer-scale, 1));
+		background: var(--color-accent);
+		transform-origin: 0 0;
+	}
 }
 .text-edit-caret {
 	background: #fff;
@@ -151,14 +171,12 @@
 	.context-letter-button { font-weight: var(--font-weight-semibold); }
 }
 
+// Symbols sit under the copy as one-click inserts, so several in a row need
+// no menu to reopen.
 .text-symbol-grid {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	.app-menu-item { justify-content: center; }
-}
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: var(--spacing-xs);
 
-.text-actions-group {
-	position: relative;
-	.app-menu { position: static; }
-	.app-menu-panel { left: 0; right: 0; min-width: 0; }
+	> .btn-flat { padding: 0; }
 }

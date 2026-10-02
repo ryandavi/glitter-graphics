@@ -34,7 +34,7 @@ const HINT_RULES = [
 	},
 	{ id: 'zoom', tool: true, when: (_editor, { tool }) => tool === ToolType.ZOOM, hint: (_editor, { isMobile }) => isMobile ? 'Pinch to zoom in and out' : 'Click to zoom • drag to zoom smoothly • Alt-click to zoom out' },
 	{ id: 'hand', tool: true, when: (_editor, { tool }) => tool === ToolType.HAND, hint: (_editor, { isMobile }) => isMobile ? 'Use one or two fingers to pan around the canvas' : 'Drag to pan • middle-drag works from any tool' },
-	{ id: 'text-tool', tool: true, when: (_editor, { tool }) => tool === ToolType.TEXT, hint: 'Click empty canvas space to create a point-text layer', context: 'The click becomes the text anchor. Existing layers stay put until you switch back to Select.' },
+	{ id: 'text-tool', tool: true, when: (_editor, { tool }) => tool === ToolType.TEXT, hint: 'Click empty canvas to add text, or click existing text to edit it', context: 'Drag across text to select it. Press Escape or click off the text to finish, then drag it with Select.' },
 	{ id: 'shape-tool', tool: true, when: (_editor, { tool }) => tool === ToolType.SHAPE, hint: 'Drag on the canvas to draw a shape at that size', context: 'Hold Shift to keep it square. A single click makes a default-size shape. Pick the shape and its fill/border/shadow in Shape Properties.' },
 	{
 		id: 'brush-tool',

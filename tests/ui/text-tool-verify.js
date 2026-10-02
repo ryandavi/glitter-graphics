@@ -168,7 +168,7 @@ async function main() {
 		await page.evaluate(() => { editor.setTool(ToolType.TEXT); });
 		const drag = await page.evaluate(() => {
 			const rect = editor.previewContainer.getBoundingClientRect();
-			const point = { x: 360, y: 230 };
+			const point = { x: 430, y: 300 };
 			return { x: rect.left + editor.viewport.panX + point.x * editor.viewport.currentZoom, y: rect.top + editor.viewport.panY + point.y * editor.viewport.currentZoom };
 		});
 		await page.mouse.move(drag.x, drag.y); await page.mouse.down(); await page.mouse.move(drag.x + 110, drag.y + 70, { steps: 8 }); await page.mouse.up();
@@ -176,7 +176,7 @@ async function main() {
 			const layer = editor.layerManager.getActiveLayer(), manager = editor.textGlitterManager, entry = manager.getMeasurementEntry(layer);
 			return { mode: layer.textData.boxMode, origin: manager.getWorldPointFromLocal(layer.transform, { x: entry.layoutOffsetX - entry.width / 2, y: entry.layoutOffsetY - entry.height / 2 }) };
 		});
-		assert.equal(box.mode, 'fixed'); assert(Math.abs(box.origin.x - 360) < 1 && Math.abs(box.origin.y - 230) < 1, 'Dragged box must keep the drawn top-left');
+		assert.equal(box.mode, 'fixed'); assert(Math.abs(box.origin.x - 430) < 1 && Math.abs(box.origin.y - 300) < 1, 'Dragged box must keep the drawn top-left');
 		await page.locator('#canvasTextInput').fill('Dragged');
 		if (process.env.GLITTER_TEST_REVIEW) { await page.waitForTimeout(250); await page.screenshot({ path: `${process.env.GLITTER_TEST_REVIEW}/desktop-edit.png` }); }
 		await page.keyboard.press('Escape');
