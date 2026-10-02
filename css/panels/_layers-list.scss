@@ -20,6 +20,8 @@
 }
 
 .layers-section {
+	--color-icon-muted: var(--color-text-primary);
+
 	flex: 1;
 	min-height: 0;
 	display: flex;
@@ -42,9 +44,10 @@
 		flex-direction: column;
 		gap: var(--spacing-2xs);
 		min-height: 0;
-		padding: var(--spacing-base);
 		overflow-y: auto;
 	}
+
+	&.collapsible-section > .section-content.layers-list { padding: 0; }
 
 	> .collapsible-section {
 		position: relative;
@@ -70,12 +73,13 @@
 	// Shown on touch layouts only, where rows reorder by handle.
 	> .layer-drag-handle { display: none; }
 
-	> .layer-visibility.hidden { color: var(--color-text-tertiary); }
+	> .layer-visibility.hidden { color: var(--color-text-secondary); }
 
 	.list-row-action {
+		color: var(--color-text-primary);
+
 		&.lock.active {
 			background: none;
-			color: var(--color-accent);
 		}
 
 		&.lock.permanent {

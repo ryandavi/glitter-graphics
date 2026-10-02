@@ -45,7 +45,6 @@
 			overflow-x: hidden;
 			overflow-y: auto;
 			overscroll-behavior: contain;
-			scrollbar-gutter: stable;
 
 			> * {
 				min-width: 0;
@@ -55,10 +54,8 @@
 	}
 }
 
-// Only the design-panel accordion has an open collapsible section that must
-// drop its scrollbar gutter (the mobile drawer never nests these).
+// The outer accordion stays flush around the independently scrolling middle.
 .design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
-	scrollbar-gutter: auto;
 	padding: 0;
 }
 

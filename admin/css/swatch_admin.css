@@ -258,6 +258,9 @@
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.7;
+  /* Scrollbars */
+  --scrollbar-width: 6px;
+  --scrollbar-min-thumb: 28px;
   /* Transitions */
   --transition-fast: 0.2s;
   --transition-base: 0.3s;

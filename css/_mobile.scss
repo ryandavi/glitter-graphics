@@ -348,7 +348,7 @@
 
 				&:not(.is-open) { display: none; }
 
-				> .section-content { border: 0; }
+				> .section-content { padding: 0; }
 			}
 
 			// The grabber row already names the panel; a group label above the

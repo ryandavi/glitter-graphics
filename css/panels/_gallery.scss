@@ -200,8 +200,7 @@
 		animation: filter-surface-enter var(--transition-fast) ease-out;
 	}
 
-	// The panel already scrolls; a 200px inner scroller inside it was a trap
-	// (two nested scroll regions competing for the same wheel gesture).
+	// Filter sections scroll independently of the search row and action band.
 	>.filters-container-inner {
 		display: flex;
 		flex-direction: column;
@@ -237,9 +236,9 @@
 
 	}
 
-	>.filter-actions {
+	>.filter-actions.property-set.property-actions {
 		flex-shrink: 0;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		border-top: 1px solid var(--color-border);
 		padding-block: var(--spacing-md);
 	}
 }
@@ -344,7 +343,8 @@
 
 .glitter-search {
 	overflow: hidden;
-	height: 100%;
+	flex: 1 1 auto;
+	min-height: 0;
 	border-bottom: 1px solid var(--color-border);
 
 	> .search-toggle-row {
@@ -362,6 +362,7 @@
 			min-height: 0;
 			max-height: none;
 			overflow-y: auto;
+			overscroll-behavior: contain;
 		}
 	}
 }

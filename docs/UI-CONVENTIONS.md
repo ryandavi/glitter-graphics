@@ -93,6 +93,10 @@ Before adding a class, check this table. A feature hook beside a primitive (`lay
 - **Add menu.** Layer cards come from each type's `addableViaModal` entry and declare a `group` (`basics`, `decorate`, or `effects`). Non-layer generators live in `ADD_MENU_COMMANDS`; overlay templates are appended to Generate from `data/templates.json`. Quick Add remains a filtered view of the same layer metadata.
 - **Color sampling.** Every `input[type="color"]` is decorated by `initializeColorEyedroppers`. Chromium uses the screen EyeDropper API; the fallback arms one canvas tap and samples a still from `SceneCompositor`. Do not add one-off eyedropper buttons in managers.
 
+### Scroll regions
+
+Vertical section bodies, layer lists, asset galleries and filters, preset pickers, mobile drawers, modal bodies, document menus and timeline lists opt into `.scroll-region` through the host list in `js/ui/scroll-regions.js`. They share `css/_scroll-regions.scss` and `js/ui/scroll-regions.js`. Native overflow, sizing, keyboard input and touch momentum stay on the original element. Horizontal rails, native inputs and the canvas viewport retain their own treatment. Lazy-loaded content receives the same opt-in. Native bars are hidden only after the helper initializes; one floating, draggable thumb appears on hover or scrolling without reserving width. The thumb does not participate in panel layout, and Auto Glitter keeps its separate fixed header/footer bands. Gallery filters likewise keep the search row and shared two-column action row outside `.filters-container-inner`, which alone scrolls. Width and minimum thumb size are tokens; the idle delay is `CONFIG.ui.scrollbar.hideDelayMs`.
+
 ## Layers panel and lists
 
 - A layer row is `.list-row` with layer hooks (`layer-item`, `layer-swatch`, `layer-name`). `LayerManager.renderLayersList` builds it by hand, because it is a sortable list and not a schema.

@@ -608,6 +608,7 @@ const CONFIG = deepFreeze({
 	},
 
 	ui: {
+		scrollbar: { hideDelayMs: 800 },
 		independentCollapsibleSections: ['layersPanel'],
 		// The Library's Recent strip, per asset kind.
 		library: {

@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=4e310f43">
+	<link rel="stylesheet" href="css/style.css?v=86f35821">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1525,7 +1525,7 @@
 			<div class="active-filter-summary" data-browser-role="summary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 			<div class="filters-container" data-browser-role="filters">
 				<div class="filters-container-inner" data-browser-role="filterSections"></div>
-				<div class="filter-actions property-actions"><button class="btn-flat" data-browser-role="clear" disabled>Clear all</button><button class="btn-flat primary" data-browser-role="close" type="button">Show results</button></div>
+				<div class="filter-actions property-set property-actions is-split"><button class="btn-flat" data-browser-role="clear" disabled>Clear all</button><button class="btn-flat primary" data-browser-role="close" type="button">Show results</button></div>
 			</div>
 		</div>
 	</template>
@@ -1628,8 +1628,8 @@
 					<div class="property-row"><span class="property-label">Flip</span><div class="segmented-control transform-flip-control"><label class="segmented-option" title="Flip horizontally" aria-label="Flip horizontally"><input type="checkbox" data-transform-role="flipX"><span><svg class="icon"><use href="#icon-flip-x"></use></svg></span></label><label class="segmented-option" title="Flip vertically" aria-label="Flip vertically"><input type="checkbox" data-transform-role="flipY"><span><svg class="icon"><use href="#icon-flip-y"></use></svg></span></label></div><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetFlip" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 					<div class="property-row is-pair" data-transform-align><span class="property-label" title="Align to the canvas">Align</span><div class="property-pair"><div class="segmented-control" role="group" aria-label="Align horizontally"><button class="segmented-option" type="button" title="Align left to canvas" aria-label="Align left to canvas" data-transform-role="alignLeft"><svg class="icon"><use href="#icon-align-left"></use></svg></button><button class="segmented-option" type="button" title="Center horizontally on canvas" aria-label="Center horizontally on canvas" data-transform-role="alignCenterX"><svg class="icon"><use href="#icon-align-center-x"></use></svg></button><button class="segmented-option" type="button" title="Align right to canvas" aria-label="Align right to canvas" data-transform-role="alignRight"><svg class="icon"><use href="#icon-align-right"></use></svg></button></div><div class="segmented-control" role="group" aria-label="Align vertically"><button class="segmented-option" type="button" title="Align top to canvas" aria-label="Align top to canvas" data-transform-role="alignTop"><svg class="icon"><use href="#icon-align-top"></use></svg></button><button class="segmented-option" type="button" title="Center vertically on canvas" aria-label="Center vertically on canvas" data-transform-role="alignCenterY"><svg class="icon"><use href="#icon-align-center-y"></use></svg></button><button class="segmented-option" type="button" title="Align bottom to canvas" aria-label="Align bottom to canvas" data-transform-role="alignBottom"><svg class="icon"><use href="#icon-align-bottom"></use></svg></button></div></div></div>
 				</div>
+				<div class="property-set property-actions is-split" data-transform-fit><button class="btn-flat" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-flat" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
 			</div>
-			<div class="property-actions is-split" data-transform-fit><button class="btn-flat" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-flat" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
 		</div>
 	</template>
 	<template id="tpl-icon"><svg class="icon"><use></use></svg></template>
@@ -1656,7 +1656,7 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=8b996878"></script>
 	<script src="js/core/fields.js?v=193ed04e"></script>
-	<script src="js/core/config.js?v=6bd88bd5"></script>
+	<script src="js/core/config.js?v=f7edc904"></script>
 	<script src="js/core/tools.js?v=c227988f"></script>
 	<script src="js/core/layer-types.js?v=ca933e82"></script>
 	<script src="js/core/options.js?v=9adc5663"></script>
@@ -1727,6 +1727,7 @@
 	<script src="js/ui/color-eyedropper.js?v=a1914b36"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=eca7d9de"></script>
+	<script src="js/ui/scroll-regions.js?v=7e6374b6"></script>
 	<script src="js/ui/panel-renderer.js?v=a99bc36b"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=40744a52"></script>
 	<script src="js/ui/settings-renderer.js?v=76c52280"></script>

@@ -53,7 +53,7 @@
 	// One gap between any two things stacked in a section: row to row, title
 	// to first row, set to set, rows to a disclosure or an action row. A
 	// second, larger gap between sets read as a mistake once the lines went.
-	--property-row-gap: var(--spacing-sm);
+	--property-row-gap: 0;
 	--property-field-gap: var(--spacing-sm);
 	// Under a section's last row, above its hairline. The title row starts
 	// right under the line, so this is the "room to breathe" number.

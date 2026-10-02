@@ -455,9 +455,9 @@ input[type="range"] {
 	gap: var(--spacing-sm);
 	flex: 0 0 auto;
 	min-height: var(--list-row-height);
-	padding: 0 var(--spacing-sm);
+	padding: var(--spacing-sm);
 	box-sizing: border-box;
-	border-radius: var(--radius-control);
+	// border-radius: var(--radius-control);
 	overflow: hidden;
 	transition: background-color var(--transition-fast), opacity var(--transition-fast);
 

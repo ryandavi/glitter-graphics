@@ -1,0 +1,29 @@
+// Native scrolling owns input and momentum; the shared thumb occupies no space.
+.has-overlay-scrollbars .scroll-region {
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar { display: none; }
+}
+
+.scroll-region-thumb {
+	position: fixed;
+	z-index: var(--modal-z-index);
+	width: var(--scrollbar-width);
+	border-radius: var(--radius-sm);
+	background: var(--color-border-hover);
+	opacity: 0;
+	pointer-events: none;
+	touch-action: none;
+	transition: opacity var(--transition-fast);
+
+	&.is-visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	&:hover, &.is-dragging { background: var(--color-text-tertiary); }
+}
+
+@media (pointer: coarse) {
+	.scroll-region-thumb.is-visible { pointer-events: none; }
+}

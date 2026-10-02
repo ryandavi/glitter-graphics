@@ -252,7 +252,7 @@
 				flex: 1 1 auto;
 			}
 
-			> .section-content {
+			> .section-content:not(.gallery-search-section) {
 				flex-shrink: 0;
 			}
 		}
@@ -308,7 +308,6 @@
 					min-height: 0;
 					overflow-y: auto;
 					overscroll-behavior: contain;
-					scrollbar-gutter: stable;
 				}
 			}
 		}
@@ -325,8 +324,8 @@
 				flex-direction: column;
 				background-color: var(--color-bg-primary);
 
-				// gallery-search-section
-				> .section-content {
+				// Search hosts own their folded and expanded flex sizing.
+				> .section-content:not(.gallery-search-section) {
 					flex-shrink: 0;
 				}
 			}
@@ -341,7 +340,6 @@
 
 		.asset-browser-content {
 			overflow-y: auto;
-			scrollbar-gutter: stable;
 		}
 	}
 }

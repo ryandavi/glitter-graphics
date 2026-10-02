@@ -541,7 +541,6 @@ body.modal-open {
 		border-radius: 0 0 var(--radius-md) var(--radius-md);
 		background: var(--color-bg-primary);
 		box-shadow: 0 12px 28px var(--color-shadow-strong);
-		scrollbar-gutter: stable;
 
 		&[hidden] { display: none; }
 	}
