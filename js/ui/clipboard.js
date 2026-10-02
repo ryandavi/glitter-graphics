@@ -102,10 +102,14 @@ function installClipboardHandlers(editor) {
 		let payload = null;
 		try {
 			payload = JSON.parse(text);
-		} catch {
+		} catch { /* Plain text has no layer payload. */ }
+		if (payload?.kind !== LAYER_CLIPBOARD_KIND) {
+			if (!text.trim()) return;
+			event.preventDefault();
+			if (!editor.originalImage) { editor.showError(CLIPBOARD_COPY.missingBase); return; }
+			createTextAt(editor, { text: clampTextLength(text, CONFIG.tools.text.maxTextLength) });
 			return;
 		}
-		if (payload?.kind !== LAYER_CLIPBOARD_KIND) return;
 		event.preventDefault();
 		await pasteLayerPayload(editor, payload);
 	});

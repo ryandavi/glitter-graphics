@@ -4,6 +4,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'ui/text-tool-verify.js', tags: ['layers', 'touch'] },
 	{ file: 'ui/touch-smoke.js', tags: ['quick', 'touch'] },
 	{ file: 'ui/touch-handle-verify.js', tags: ['quick', 'touch'] },
 	{ file: 'unit/export-timeline-unit.js', tags: ['unit', 'export'] },

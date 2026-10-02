@@ -1362,7 +1362,8 @@
 
         <div class="guide-subsection">
             <h4 id="text-typography">Typography &amp; Layout</h4>
-            <p>In the <strong>Text Properties</strong> panel, edit the copy, choose a non-destructive letter case, and control how it is laid out. Double-click or double-tap text to open and select its copy.</p>
+            <p>While editing, the context bar offers font size, Bold, Italic, Underline, Strikethrough and alignment. Justify spreads the gaps on wrapped lines in a box; final paragraph lines stay left aligned. Case includes alternating caps, which skips spaces and symbols. Pasting plain text outside a field creates a text layer at the canvas center.</p>
+            <p>In the <strong>Text Properties</strong> panel, edit the copy, choose a non-destructive letter case, and control how it is laid out. Double-click or double-tap text to type on the canvas. The panel text field shows the same copy. Click to place the caret, drag to select, or double-click a word. Enter starts a new line; Escape or clicking outside commits the edit. Empty text is removed when editing ends.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -1373,7 +1374,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Text</strong> – Type your copy directly into the text field.</p>
+                    <p><strong>Text</strong> – Type on the canvas or in the text field. Symbols inserts at the current caret. Color emoji keeps system emoji colors while retaining their outline and shadow.</p>
                 </div>
             </div>
 
@@ -1412,7 +1413,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Point / Box</strong> – Point text hugs the copy and scales with the corner handles. Box text wraps inside a frame you can resize with the edge handles.</p>
+                    <p><strong>Point / Auto Height / Fixed</strong> – Point text hugs the copy and scales with the corner handles. Auto Height wraps at a fixed width and grows with the text. Fixed wraps inside the width and height you draw. In Auto Height, side handles change width; top and bottom handles convert it to Fixed.</p>
                 </div>
             </div>
 
@@ -1425,7 +1426,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Line Height</strong> – Adjust the spacing between lines when text wraps inside a Box. Not shown for Point text, which is always a single line.</p>
+                    <p><strong>Line Height</strong> – Adjust the spacing between wrapped lines or explicit line breaks in any text mode.</p>
                 </div>
             </div>
 
@@ -1438,7 +1439,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Actions</strong> – Use <strong>Fit to Text</strong> to resize a Box text frame to its current content. It is only available while the layer is in <strong>Box</strong> mode.</p>
+                    <p><strong>Actions</strong> – Use <strong>Fit box to text</strong> to fit a Fixed frame to its content. <strong>Split text</strong> replaces the layer with Characters, Words or Lines at their current positions. Each piece keeps its style and its own background plate. Hidden overflow asks before being dropped, and a split that exceeds the 25-layer limit is refused. Undo restores the original layer.</p>
                 </div>
             </div>
 
@@ -2337,7 +2338,7 @@
                     <p><strong>Essentials</strong></p>
                     <ul>
                         <li><strong>Copy Selected Layer(s)</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">C</kbd></span></li>
-                        <li><strong>Paste Image or Layer(s)</strong> – Paste <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">V</kbd></span></li>
+                        <li><strong>Paste Image, Layer(s) or Text</strong> – Paste <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">V</kbd></span></li>
                         <li><strong>Save Project</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">S</kbd></span></li>
                         <li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Z</kbd></span></li>
                         <li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Y</kbd></span></li>
@@ -2461,6 +2462,24 @@
                         <li><strong>Move Focused Gradient Stop 1%</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
                         <li><strong>Move Focused Gradient Stop 5%</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
                         <li><strong>Delete Focused Gradient Stop</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-keyboard"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Text</strong></p>
+                    <ul>
+                        <li><strong>Toggle Bold</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">B</kbd></span></li>
+                        <li><strong>Toggle Italic</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">I</kbd></span></li>
+                        <li><strong>Toggle Underline</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">U</kbd></span></li>
                     </ul>
                 </div>
             </div>

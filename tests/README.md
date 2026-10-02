@@ -199,3 +199,7 @@ One scene with every newer effect: an animated sticker with outline, glow, bevel
 ### Pixel-filter verification (`tests/parity/pixel-filter-verify.js`)
 
 This focused browser check adds a Tier-3 filter above a real document, compares its cached preview pixels with `SceneCompositor` export pixels, verifies that JPEG Crunch performs the configured number of real browser JPEG round-trips, and locks the Off/Still/Animated setting plus removal of the legacy export-level `jpegGenerations` value.
+
+### Text tool verification
+
+`node tests/ui/text-tool-verify.js` covers desktop and phone edit sessions, mirroring, word and drag selection, multiline keyboard movement, composition, history, empty text, symbols and paste, wrapping, split placement in exported pixels, nested splits, background plates, the layer cap and color emoji masks. `GLITTER_TEST_CSS` may point to a scratch Sass compile while the committed CSS awaits Ryan's recompile. `text-warp-unit.js` also tests grapheme content, source ranges, case, wrapping, overflow and decoration layout. `touch-handle-verify.js` covers Auto Height width resizing and conversion to Fixed on vertical edges with touch and mouse. The effect fragility scene includes colored emoji and decorations on warped text.

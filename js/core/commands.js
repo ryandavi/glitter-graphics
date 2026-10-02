@@ -1,4 +1,14 @@
 const COMMANDS = {
+	textFontSize: { run: (editor, value) => editor.textGlitterManager.runTextCommand('size', value) },
+	textToggleBold: { label: 'Toggle Bold', group: 'Text', keys: ['mod+b'], displayKey: 'Ctrl/Cmd + B', allowWhileTyping: true, when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()), run: editor => editor.textGlitterManager.runTextCommand('bold') },
+	textToggleItalic: { label: 'Toggle Italic', group: 'Text', keys: ['mod+i'], displayKey: 'Ctrl/Cmd + I', allowWhileTyping: true, when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()), run: editor => editor.textGlitterManager.runTextCommand('italic') },
+	textToggleUnderline: { label: 'Toggle Underline', group: 'Text', keys: ['mod+u'], displayKey: 'Ctrl/Cmd + U', allowWhileTyping: true, when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()), run: editor => editor.textGlitterManager.runTextCommand('underline') },
+	textToggleStrikethrough: { label: 'Toggle Strikethrough', group: 'Text', allowWhileTyping: true, when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()), run: editor => editor.textGlitterManager.runTextCommand('strikethrough') },
+	textAlignLeft: { label: 'Align Text Left', group: 'Text', run: editor => editor.textGlitterManager.runTextCommand('align', 'left') },
+	textAlignCenter: { label: 'Align Text Center', group: 'Text', run: editor => editor.textGlitterManager.runTextCommand('align', 'center') },
+	textAlignRight: { label: 'Align Text Right', group: 'Text', run: editor => editor.textGlitterManager.runTextCommand('align', 'right') },
+	textAlignJustify: { label: 'Align Text Justify', group: 'Text', run: editor => editor.textGlitterManager.runTextCommand('align', 'justify') },
+	splitText: { label: 'Split Text', group: 'Text', run: editor => editor.textGlitterManager.openTextMenu('textSplit', ['characters', 'words', 'lines'].map(mode => ({ label: mode[0].toUpperCase() + mode.slice(1), run: () => editor.textGlitterManager.splitText(mode) }))) },
 	zoomIn: { label: 'Zoom In', group: 'View', keys: ['mod+=', 'mod+shift++'], displayKey: 'Ctrl/Cmd + +', run: (editor) => editor.viewport.zoomIn(null, null, { animate: true }) },
 	zoomOut: { label: 'Zoom Out', group: 'View', keys: ['mod+-'], displayKey: 'Ctrl/Cmd + -', run: (editor) => editor.viewport.zoomOut(null, null, { animate: true }) },
 	zoomReset: { label: 'Reset Zoom (100%)', group: 'View', keys: ['mod+1'], displayKey: 'Ctrl/Cmd + 1', run: (editor) => editor.viewport.resetZoom({ animate: true }) },
@@ -52,7 +62,7 @@ const COMMANDS = {
 		run: (editor) => copySelectedLayers(editor)
 	},
 	paste: {
-		label: 'Paste Image or Layer(s)', group: 'Clipboard', displayKey: 'Ctrl/Cmd + V',
+		label: 'Paste Image, Layer(s) or Text', group: 'Clipboard', displayKey: 'Ctrl/Cmd + V',
 		instruction: 'Paste'
 	},
 	librarySearch: { label: 'Search the Library', group: 'View', keys: ['/', 'shift+/'], displayKey: '/',

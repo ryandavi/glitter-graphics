@@ -43,7 +43,7 @@ function createStylePreviewLayer(manager, type, entry) {
 			lineHeight: 1,
 			align: 'center',
 			verticalAlign: 'top',
-			boxMode: 'auto',
+			boxMode: 'point',
 			width: 0,
 			height: 0,
 			border: null,

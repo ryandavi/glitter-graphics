@@ -243,7 +243,7 @@ snapTransformPosition(transform, position, options = {}) {
 			return Boolean(this.applyTransformEditWithAnchor(layer, manager, () => manager.setShapeSize?.(layer, nextWidth, nextHeight)));
 		}
 
-		if (prefix === 'text' && (layer.textData?.boxMode || 'auto') === 'fixed') {
+		if (prefix === 'text' && (layer.textData?.boxMode || 'point') === 'fixed') {
 			const transform = getLayerTransform(layer);
 			const scaleX = Math.max(0.01, (transform.scale.x || 100) / 100);
 			const scaleY = Math.max(0.01, (transform.scale.y || 100) / 100);
@@ -516,7 +516,7 @@ snapTransformPosition(transform, position, options = {}) {
 				if (!active) return;
 				if (
 					prefix === 'text'
-					&& (active.layer.textData?.boxMode || 'auto') === 'auto'
+					&& (active.layer.textData?.boxMode || 'point') === 'point'
 					&& active.manager.commitScaleToFontSize
 				) {
 					await active.manager.commitScaleToFontSize(active.layer);

@@ -539,6 +539,7 @@ const swallowFollowupClick = () => {
 };
 
 	const handleMouseDown = (e) => {
+	if (TOOLS[this.editor.currentTool]?.onCanvasDrag) return;
 	if (e.button !== 0) return; // Left click only
 	this.removeHoverOutline();
 	const pinnedTransform = this.editor.currentTool === ToolType.SELECT

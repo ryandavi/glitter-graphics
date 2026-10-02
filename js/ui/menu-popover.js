@@ -3,7 +3,7 @@
 // `liftHost` is a bar that forms its own stacking context: it carries
 // `.has-open-menu` while the panel is open so the menu can rise above its
 // neighbours.
-function setupMenuPopover({ root, trigger, panel, liftHost = null, itemSelector = '.app-menu-item:not([disabled])' }) {
+function setupMenuPopover({ root, trigger, panel, liftHost = null, itemSelector = '.app-menu-item:not([disabled])', bindTrigger = true }) {
 	if (!root || !trigger || !panel) return null;
 	const isOpen = () => !panel.hidden;
 	const close = ({ focusTrigger = false } = {}) => {
@@ -43,7 +43,7 @@ function setupMenuPopover({ root, trigger, panel, liftHost = null, itemSelector 
 		const step = event.key === 'ArrowDown' ? 1 : -1;
 		items[(current + step + items.length) % items.length].focus();
 	}
-	trigger.addEventListener('click', () => (isOpen() ? close() : open()));
+	if (bindTrigger) trigger.addEventListener('click', () => (isOpen() ? close() : open()));
 	panel.addEventListener('click', (event) => {
 		if (event.target.closest('.app-menu-item')) close();
 	});

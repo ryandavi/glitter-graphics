@@ -154,3 +154,37 @@ if (matchPreset({ type: 'wave', bend: 0 })?.id !== 'none') fail('a zero bend mus
 if (findPreset({ type: 'arc', bend: 40 }) !== null) fail('findWarpPresetId must only return exact matches');
 
 process.stdout.write(`Text warp unit passed (${Object.keys(types).length} types, ${presets.entries.length} presets)\n`);
+
+// Text content and flat layout are shared by warp, editing and split.
+for (const file of ['js/core/text-content.js', 'js/paint/text-layout.js']) vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
+{
+	const assert = require('assert');
+	const graphemes = run('splitGraphemes');
+	const cases = run('applyTextCase');
+	const clamp = run('clampTextLength');
+	for (const glyph of ['\uD83C\uDDFA\uD83C\uDDF8', '\uD83D\uDC4D\uD83C\uDFFD', 'e\u0301', '\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67']) assert.equal(graphemes(glyph).length, 1);
+	for (const [mode, expected] of [['none', 'hello WORLD'], ['upper', 'HELLO WORLD'], ['lower', 'hello world'], ['title', 'Hello WORLD'], ['alternating', 'hElLo WoRlD']]) assert.equal(cases('hello WORLD', mode), expected);
+	assert.equal(clamp('A\uD83D\uDC4D\uD83C\uDFFDB', 2), 'A\uD83D\uDC4D\uD83C\uDFFD');
+	const ctx = { measureText(text) { return { width: graphemes(text).length * 10, actualBoundingBoxLeft: 0, actualBoundingBoxRight: graphemes(text).length * 10, actualBoundingBoxAscent: 8, actualBoundingBoxDescent: 2 }; } };
+	const textLayout = run('TextLayout');
+	const data = { boxMode: 'autoHeight', boxWidth: 45, fontSize: 10, letterSpacing: 0, textCase: 'none', align: 'justify', verticalAlign: 'top', decoration: { underline: true }, warp: { type: 'none' } };
+	const metrics = { fontSize: 10, letterSpacing: 0, lineHeightPx: 12, ascent: 8, descent: 2, minBoxSize: 4 };
+	const measured = textLayout.layout(ctx, 'a b c d\nx', data, metrics);
+	assert.equal(measured.layoutHeight, 34);
+	assert.equal(measured.hasOverflow, false);
+	assert.equal(measured.visibleLines[0].wrapped, true);
+	assert.equal(measured.visibleLines[1].wrapped, false);
+	assert.equal(measured.glyphs.at(-1).sourceIndex, 8);
+	assert.equal(measured.decorations.length, 3);
+	const fixed = textLayout.layout(ctx, 'a b c d\nx', { ...data, boxMode: 'fixed', boxHeight: 10 }, metrics);
+	assert.equal(fixed.hasOverflow, true);
+	assert.equal(fixed.visibleLines.length, 1);
+	const expanded = textLayout.layout(ctx, '\u00dfA', { ...data, boxMode: 'point', textCase: 'upper' }, metrics);
+	assert.deepEqual(Array.from(expanded.glyphs, glyph => glyph.sourceIndex), [0, 0, 1]);
+	const emoji = textLayout.layout(ctx, 'A\uD83D\uDC4D\uD83C\uDFFDB', { ...data, boxMode: 'point' }, { ...metrics, letterSpacing: 3 });
+	assert.equal(emoji.glyphs.length, 3);
+	assert.equal(emoji.runs.length, 3);
+	assert.equal(emoji.glyphs[2].sourceIndex, 5);
+	assert.equal(textLayout.layout(ctx, 'abcdef', { ...data, boxWidth: 20 }, metrics).lines.length, 3);
+	process.stdout.write('Text content/layout verification passed\n');
+}

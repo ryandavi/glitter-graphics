@@ -296,16 +296,8 @@ class LayerManager {
 		}
 
 		this.renderLayersList();
-		this.editor.saveState('Edit layers');
+		if (!options.skipHistory) this.editor.saveState('Edit layers');
 		this.editor.updateActionButtons();
-
-		if (type === LayerType.TEXT_GLITTER) {
-			if (!this.editor.mobileManager?.isMobile) {
-				requestAnimationFrame(() => {
-					this.editor.textGlitterManager?.focusTextInput(true);
-				});
-			}
-		}
 
 		this.editor.updateStatus(cfg.addedStatusMessage || 'New layer added');
 		return layer;
@@ -476,6 +468,7 @@ class LayerManager {
 			return;
 		}
 
+		if (this.editor.textGlitterManager?.editSession?.layerId !== nextActiveId) this.editor.textGlitterManager?.endTextEdit();
 		this.activeLayerId = nextActiveId;
 		this.selectedLayerIds = new Set(normalized);
 		this.selectionCycleState = null;
@@ -1280,14 +1273,8 @@ class LayerManager {
 				disabled: cannotDelete,
 				onClick: async (e) => {
 					e.stopPropagation();
-					const confirmed = await this.editor.confirmAction({
-						title: 'Delete Layer',
-						message: 'This layer and everything on it will be permanently removed.',
-						confirmLabel: 'Delete'
-					});
-					if (confirmed) {
-						this.deleteLayer(layer.id);
-					}
+					this.setSelection([layer.id]);
+					await this.editor.deleteSelectedLayers();
 				}
 			});
 		actions.appendChild(delBtn);

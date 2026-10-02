@@ -122,8 +122,12 @@ const TOOLS = {
 		command: 'toolText',
 		toolbarGroup: 'create',
 		groups: ['creation', 'contentEditing'],
-		touchRoute: 'tapCreate',
+		touchRoute: 'creationDrag',
 		available: editingAvailable,
+		onCanvasDrag(editor, { box, isClick, start }) {
+			if (isClick) return this.onCanvasAction(editor, { x: start.x, y: start.y, hitCanvas: true });
+			return createTextAt(editor, { position: { x: box.left, y: box.top }, boxMode: 'fixed', boxWidth: Math.max(CONFIG.tools.text.minBoxSize, box.width), boxHeight: Math.max(FIELDS.textFontSize.value * FIELDS.textLineHeight.value / 100, box.height) });
+		},
 		onCanvasAction(editor, { x, y, hitCanvas }) {
 			if (!hitCanvas) return;
 			// Figma parity: clicking existing text with the text tool edits it;
@@ -131,22 +135,11 @@ const TOOLS = {
 			const hitLayer = editor.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
 			if (hitLayer?.type === LayerType.TEXT_GLITTER) {
 				editor.layerManager.selectLayerFromCanvas(hitLayer.id);
-				editor.textGlitterManager?.focusTextInput(true);
+				editor.textGlitterManager?.beginTextEdit(hitLayer);
 				return;
 			}
 
-			const layer = editor.layerManager.addLayer(LayerType.TEXT_GLITTER, {
-				textLayer: {
-					position: { x, y },
-					align: 'left',
-					anchorPosition: { x, y },
-					boxMode: 'auto'
-				}
-			});
-
-			editor.finishLayerCreation(layer, {
-				onDesktopReload: () => editor.textGlitterManager?.focusTextInput(true)
-			});
+			return createTextAt(editor, { position: { x, y }, boxMode: 'point' });
 		}
 	},
 	[ToolType.SHAPE]: {
@@ -159,8 +152,12 @@ const TOOLS = {
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'creationDrag',
 		available: editingAvailable,
-		// Tap-to-create parity with desktop's plain click (startShapeDrag's
-		// isClick path); drag-to-size stays desktop-only (mouse pointerdown).
+		// Clicks and touch taps use the same default-size creation path.
+		onCanvasDrag(editor, { box, isClick, start }) {
+			const layer = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: editor.shapeGlitterManager.getActiveShapeId(), position: isClick ? start : { x: box.centerX, y: box.centerY }, ...(isClick ? {} : { width: box.width, height: box.height }) } });
+			editor.finishLayerCreation(layer);
+			return layer;
+		},
 		onCanvasAction(editor, { x, y, hitCanvas }) {
 			if (!hitCanvas || !editor.originalImage) return;
 			const layer = editor.layerManager.addLayer(LayerType.SHAPE, {
@@ -254,4 +251,25 @@ function renderToolButtons(container) {
 		previousGroup = definition.toolbarGroup;
 	});
 	container.replaceChildren(...children);
+}
+
+function createTextAt(editor, options = {}) {
+	const position = options.position || { x: editor.originalCanvas.width / 2, y: editor.originalCanvas.height / 2 };
+	const layer = editor.layerManager.addLayer(LayerType.TEXT_GLITTER, { skipHistory: true, textLayer: { ...options, position, align: 'left' } });
+	if (!layer) return null;
+	editor.finishLayerCreation(layer);
+	const manager = editor.textGlitterManager;
+	const placeText = () => {
+		const entry = manager.getMeasurementEntry(layer);
+		if (layer.textData.boxMode === 'point') manager.setTextOriginWorldPosition(layer, position, entry);
+		else manager.setWorldPointFromLocal(layer.transform, { x: entry.layoutOffsetX - entry.width / 2, y: entry.layoutOffsetY - entry.height / 2 }, position);
+	};
+	placeText();
+	manager.beginTextEdit(layer, { created: true });
+	FontLibrary.ensureLoaded(layer.textData.fontId).then(() => {
+		if (!editor.layers.includes(layer)) return;
+		placeText();
+		manager.renderTextSelection();
+	}).catch(error => manager.reportFontLoadError(error));
+	return layer;
 }

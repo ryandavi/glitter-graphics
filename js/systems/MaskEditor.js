@@ -104,7 +104,8 @@ class MaskEditor {
 			const confirmed = await this.editor.confirmAction({
 				title: 'Clear Paint',
 				message: 'All painted strokes on this layer will be removed. Color selections will stay in place.',
-				confirmLabel: 'Clear Paint'
+				confirmLabel: 'Clear Paint',
+				destructive: true
 			});
 			if (!confirmed) {
 				return;

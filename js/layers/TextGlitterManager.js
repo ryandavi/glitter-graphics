@@ -42,6 +42,8 @@ class TextGlitterManager {
 		this.setupUI();
 		this.setupEventListeners();
 		this.setupPickerStripListeners();
+		this.setupTextEditing();
+		this.setupTextActions();
 	}
 
 	setupUI() {
@@ -100,7 +102,8 @@ class TextGlitterManager {
 				if (binding?.path === 'textData.warp.bend') this.syncWarpUI(layer, { live: true });
 			},
 			commit: () => {
-				this.editor.saveState('Edit text');
+				if (this.editSession) this.editSession.dirty = true;
+				else this.editor.saveState('Edit text');
 				this.editor.layerManager.renderLayersList();
 			},
 			armPicker: (key) => this.armPicker(key),
@@ -119,24 +122,14 @@ class TextGlitterManager {
 		bindFieldControls(this.fieldHost);
 
 		if (this.ui.textInput) {
-			this.ui.textInput.addEventListener('input', () => {
+			this.ui.textInput.addEventListener('input', (event) => {
+				if (event.isComposing) return;
 				const layer = this.getActiveTextLayer();
 				if (!layer) return;
 
-				const value = this.ui.textInput.value.slice(0, CONFIG.tools.text.maxTextLength);
-				if (value !== this.ui.textInput.value) {
-					this.ui.textInput.value = value;
-				}
-
-				this.preparePendingAnchorPreservation(layer);
-				layer.textData.text = value;
-				layer.name = this.getLayerName(value);
-				this.updateLiveTextContent(layer.id, value);
-				this.editor.layerManager.renderLayersList();
-				this.editor.updateActionButtons();
-				this.editor.updateHelpfulMessage();
-				this.scheduleTextCommit(layer);
+				this.applyTextEdit(layer, this.ui.textInput.value, { start: this.ui.textInput.selectionStart, end: this.ui.textInput.selectionEnd });
 			});
+			this.ui.textInput.addEventListener('compositionend', () => this.applyTextEdit(this.getActiveTextLayer(), this.ui.textInput.value, { start: this.ui.textInput.selectionStart, end: this.ui.textInput.selectionEnd }));
 		}
 
 		// The current-font row opens the Library's Fonts in picker mode.
@@ -144,17 +137,6 @@ class TextGlitterManager {
 			control.addEventListener('click', () => this.editor.fontBrowserManager?.openPicker());
 		});
 
-		const bindFontStyleToggle = (button, property, activeValue, inactiveValue) => {
-			button?.addEventListener('click', async () => {
-				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-				await this.runLayoutRefreshWithAnchor(layer, () => {
-					layer.textData[property] = layer.textData[property] === activeValue ? inactiveValue : activeValue;
-				}, { saveHistory: true });
-			});
-		};
-		bindFontStyleToggle(this.ui.fontBold, 'fontWeight', 700, 400);
-		bindFontStyleToggle(this.ui.fontItalic, 'fontStyle', 'italic', 'normal');
 		this.ui.textCaseSelect?.addEventListener('change', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
@@ -170,15 +152,6 @@ class TextGlitterManager {
 			}
 		};
 
-		this.ui.alignButtons.forEach((button) => {
-			button.addEventListener('click', () => {
-				const layer = this.getActiveTextLayer();
-				const align = button.dataset.textAlign;
-				if (!layer || !align || align === layer.textData.align) return;
-				editLayout(layer, () => { layer.textData.align = align; });
-			});
-		});
-
 		this.ui.verticalAlignButtons.forEach((button) => {
 			button.addEventListener('click', () => {
 				const layer = this.getActiveTextLayer();
@@ -193,12 +166,14 @@ class TextGlitterManager {
 				const layer = this.getActiveTextLayer();
 				if (!layer) return;
 				const nextMode = button.dataset.textBoxMode;
-				if (!nextMode || nextMode === (layer.textData.boxMode || 'auto')) return;
+				if (!nextMode || nextMode === (layer.textData.boxMode || 'point')) return;
 				editLayout(layer, () => {
-					if (nextMode === 'fixed') {
+					if (nextMode !== 'point') {
 						this.ensureFixedBox(layer);
+						layer.textData.boxMode = nextMode;
+						if (nextMode === 'autoHeight') delete layer.textData.boxHeight;
 					} else {
-						layer.textData.boxMode = 'auto';
+						layer.textData.boxMode = 'point';
 						delete layer.textData.boxWidth;
 						delete layer.textData.boxHeight;
 						// Text Box backgrounds need a box; fall back to text bounds.
@@ -264,14 +239,15 @@ class TextGlitterManager {
 
 	preparePendingAnchorPreservation(layer) {
 		if (!layer || layer._pendingPointAnchorSnapshot
-			|| (layer.textData?.boxMode || 'auto') !== 'auto') return;
+			|| (layer.textData?.boxMode || 'point') !== 'point') return;
 		layer._pendingPointAnchorSnapshot = this.getPointAnchorSnapshot(layer);
 	}
 
 	async runLayoutRefreshWithAnchor(layer, mutateFn, options = {}) {
-		const snapshot = ((layer.textData?.boxMode || 'auto') === 'auto' || options.preservePointAnchor)
+		const snapshot = ((layer.textData?.boxMode || 'point') === 'point' || options.preservePointAnchor)
 			? this.getPointAnchorSnapshot(layer)
 			: null;
+		if (this.editSession) this.editSession.dirty = true;
 		await mutateFn();
 		return this.refreshLayer(layer, {
 			...options,
@@ -293,8 +269,8 @@ class TextGlitterManager {
 	}
 
 	getWorldPointFromLocal(transform, localPoint) {
-		const scaleX = (transform.scale.x || 100) / 100;
-		const scaleY = (transform.scale.y || 100) / 100;
+		const scaleX = (transform.scale.x || 100) / 100 * (transform.flipX ? -1 : 1);
+		const scaleY = (transform.scale.y || 100) / 100 * (transform.flipY ? -1 : 1);
 		const rotationRad = (transform.rotation * Math.PI) / 180;
 		const cos = Math.cos(rotationRad);
 		const sin = Math.sin(rotationRad);
@@ -305,8 +281,8 @@ class TextGlitterManager {
 	}
 
 	setWorldPointFromLocal(transform, localPoint, worldPoint) {
-		const scaleX = (transform.scale.x || 100) / 100;
-		const scaleY = (transform.scale.y || 100) / 100;
+		const scaleX = (transform.scale.x || 100) / 100 * (transform.flipX ? -1 : 1);
+		const scaleY = (transform.scale.y || 100) / 100 * (transform.flipY ? -1 : 1);
 		const rotationRad = (transform.rotation * Math.PI) / 180;
 		const cos = Math.cos(rotationRad);
 		const sin = Math.sin(rotationRad);
@@ -468,12 +444,17 @@ class TextGlitterManager {
 		normalizeSlotTextureCoordinates(layer.textData.shadow);
 		normalizeSlotTextureCoordinates(layer.textData.bevel.highlight);
 		normalizeSlotTextureCoordinates(layer.textData.bevel.shade);
-		if (!layer.textData.boxMode) {
-			layer.textData.boxMode = CONFIG.tools.text.defaultBoxMode || 'auto';
+		if (!isOptionValue('textBoxMode', layer.textData.boxMode)) {
+			layer.textData.boxMode = CONFIG.tools.text.defaultBoxMode;
 		}
 		if (!layer.textData.verticalAlign) {
 			layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign || 'top';
 		}
+		if (layer.textData.boxMode === 'autoHeight') delete layer.textData.boxHeight;
+		if (!isOptionValue('textAlign', layer.textData.align)) layer.textData.align = 'left';
+		if (!isOptionValue('textVerticalAlign', layer.textData.verticalAlign)) layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign;
+		layer.textData.decoration = { underline: Boolean(layer.textData.decoration?.underline), strikethrough: Boolean(layer.textData.decoration?.strikethrough) };
+		layer.textData.colorEmoji = typeof layer.textData.colorEmoji === 'boolean' ? layer.textData.colorEmoji : CONFIG.tools.text.defaultColorEmoji;
 		this.normalizeTextBackground(layer);
 		if (!layer.textData.lineHeight) {
 			layer.textData.lineHeight = FIELDS.textLineHeight.value / 100;
@@ -484,7 +465,7 @@ class TextGlitterManager {
 		if (!layer.textData.fontStyle) {
 			layer.textData.fontStyle = CONFIG.tools.text.defaultFontStyle || 'normal';
 		}
-		if (!['none', 'upper', 'lower', 'title'].includes(layer.textData.textCase)) {
+		if (!isOptionValue('textCase', layer.textData.textCase)) {
 			layer.textData.textCase = CONFIG.tools.text.defaultTextCase;
 		}
 		layer.textData.warp = normalizeTextWarp(layer.textData.warp);
@@ -517,7 +498,7 @@ class TextGlitterManager {
 		normalizeSlotTextureCoordinates(tb.fill);
 		// Point text has no independent container — Text Box can only ever be
 		// reached from box text, and a box→point switch must not leave it stuck.
-		if (tb.mode === 'text-box' && (layer.textData.boxMode || 'auto') !== 'fixed') {
+		if (tb.mode === 'text-box' && (layer.textData.boxMode || 'point') === 'point') {
 			tb.mode = 'text-bounds';
 		}
 	}
@@ -551,7 +532,7 @@ class TextGlitterManager {
 
 		// Convert like Illustrator: the frame captures the current text block
 		// exactly (+1px so rounding can't re-wrap the widest line).
-		layer.textData.boxMode = 'auto';
+		layer.textData.boxMode = 'point';
 		const entry = this.getMeasurementEntry(layer);
 		layer.textData.boxMode = 'fixed';
 		const minBoxSize = this.getMinBoxSize();
@@ -571,7 +552,7 @@ class TextGlitterManager {
 	// mode just echo the current boxWidth/boxHeight and don't grow to fit
 	// overflowing content).
 	fitBoxToText(layer) {
-		if ((layer.textData.boxMode || 'auto') !== 'fixed') return;
+		if (layer.textData.boxMode !== 'fixed') return;
 
 		const entry = this.getMeasurementEntry(layer);
 		if (!entry.lines.length) return;
@@ -700,7 +681,7 @@ class TextGlitterManager {
 	createLayer(options = {}) {
 		if (!this.editor.layerManager.requireLayerCapacity()) return null;
 
-		const defaultText = options.text ?? CONFIG.tools.text.defaultText;
+		const defaultText = clampTextLength(options.text ?? '', CONFIG.tools.text.maxTextLength);
 		const initialPosition = options.position || {
 			x: this.editor.originalCanvas.width / 2,
 			y: this.editor.originalCanvas.height / 2
@@ -731,7 +712,11 @@ class TextGlitterManager {
 				lineHeight: FIELDS.textLineHeight.value / 100,
 				align: initialAlign,
 				verticalAlign: CONFIG.tools.text.defaultVerticalAlign || 'top',
-				boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode || 'auto',
+				boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode,
+				boxWidth: options.boxWidth,
+				boxHeight: options.boxHeight,
+				colorEmoji: CONFIG.tools.text.defaultColorEmoji,
+				decoration: { underline: false, strikethrough: false },
 				width: 0,
 				height: 0,
 				border: null,
@@ -765,6 +750,7 @@ class TextGlitterManager {
 		this.updateFontRow(layer.textData.fontId);
 		this.editor.fontBrowserManager?.updateSelection();
 		this.updateFontStyleSelection(layer.textData);
+		this.syncTextActionUI(layer);
 		this.updateAlignmentSelection(layer.textData.align);
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
 		this.updateBoxModeSelection(layer);
@@ -843,13 +829,6 @@ class TextGlitterManager {
 		if (this.ui.textCaseSelect) this.ui.textCaseSelect.value = textData.textCase;
 	}
 
-	applyTextCase(text, mode) {
-		const value = String(text || '');
-		if (mode === 'upper') return value.toLocaleUpperCase();
-		if (mode === 'lower') return value.toLocaleLowerCase();
-		if (mode === 'title') return value.replace(/(^|\s)(\S)/gu, (match, space, letter) => space + letter.toLocaleUpperCase());
-		return value;
-	}
 
 	updateAlignmentSelection(align) {
 		this.ui.alignButtons.forEach((button) => {
@@ -864,7 +843,7 @@ class TextGlitterManager {
 	}
 
 	updateBoxModeSelection(layer) {
-		const mode = layer?.textData?.boxMode || 'auto';
+		const mode = layer?.textData?.boxMode || 'point';
 		this.ui.boxModeButtons.forEach((button) => {
 			button.classList.toggle('active', button.dataset.textBoxMode === mode);
 		});
@@ -875,9 +854,7 @@ class TextGlitterManager {
 		}
 
 		if (this.ui.boxModeHint) {
-			this.ui.boxModeHint.textContent = mode === 'fixed'
-				? 'Box text wraps inside the frame. Side handles resize the box; corner handles scale the text and box together.'
-				: 'Point text hugs the glyphs. Corner handles scale it. Switch to Box for wrapping inside a resizable frame.';
+			this.ui.boxModeHint.textContent = getOptions('textBoxMode').find(option => option.value === mode).hint;
 		}
 
 		if (this.ui.fitBoxToContent) {
@@ -893,7 +870,7 @@ class TextGlitterManager {
 	// only apply to some modes.
 	syncTextBackgroundUI(layer) {
 		const tb = layer.textData.textBackground;
-		const isBoxText = (layer.textData.boxMode || 'auto') === 'fixed';
+		const isBoxText = layer.textData.boxMode !== 'point';
 		this.ui.bgModeBox?.toggleAttribute('disabled', !isBoxText);
 		if (this.ui.bgModeBox) this.ui.bgModeBox.hidden = !isBoxText;
 		[
@@ -1021,7 +998,7 @@ class TextGlitterManager {
 		this.textInputTimer = setTimeout(async () => {
 			try {
 				await this.refreshLayer(layer, {
-					saveHistory: true,
+					saveHistory: !this.editSession,
 					preservePointAnchorFrom: layer._pendingPointAnchorSnapshot || null
 				});
 			} catch (error) {
@@ -1050,9 +1027,11 @@ class TextGlitterManager {
 			textData.align,
 			isTextWarpActive(textData.warp) ? [textData.warp.type, textData.warp.bend] : null,
 			textData.verticalAlign || 'top',
-			textData.boxMode || 'auto',
+			textData.boxMode || 'point',
 			textData.boxWidth ?? null,
 			textData.boxHeight ?? null,
+			textData.decoration,
+			textData.colorEmoji,
 			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
@@ -1088,7 +1067,6 @@ class TextGlitterManager {
 
 		const font = FontLibrary.getFont(layer.textData.fontId);
 		const ctx = this.measureCtx;
-		const lines = this.applyTextCase(layer.textData.text, layer.textData.textCase).split('\n');
 		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;
@@ -1098,7 +1076,7 @@ class TextGlitterManager {
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
 		// A blurred shadow's fade reaches past its spread too.
 		const shadowSpread = getShadowReach(layer.textData.shadow);
-		const boxMode = layer.textData.boxMode || 'auto';
+		const boxMode = layer.textData.boxMode || 'point';
 
 		ctx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
 		ctx.textBaseline = 'alphabetic';
@@ -1107,67 +1085,16 @@ class TextGlitterManager {
 		const ascent = sampleMetrics.actualBoundingBoxAscent || fontSize * 0.8;
 		const descent = sampleMetrics.actualBoundingBoxDescent || fontSize * 0.2;
 
-		let measuredLines = [];
-		let layoutWidth = 0;
-		let layoutHeight = 0;
-		let visibleLineCount = 0;
-		let hasOverflow = false;
-		let contentOffsetY = 0;
-		const minBoxSize = this.getMinBoxSize();
-
-		if (boxMode === 'fixed') {
-			layoutWidth = Math.max(minBoxSize, Math.round(layer.textData.boxWidth || minBoxSize));
-			layoutHeight = Math.max(minBoxSize, Math.round(layer.textData.boxHeight || minBoxSize));
-			const wrapped = this.wrapTextLines(ctx, lines, layoutWidth, letterSpacing, fontSize);
-			measuredLines = wrapped.lines;
-
-			measuredLines.forEach((line, index) => {
-				const bottom = ascent + index * lineHeightPx + line.descent;
-				if (bottom <= layoutHeight) {
-					visibleLineCount++;
-				}
-			});
-			hasOverflow = visibleLineCount < measuredLines.length;
-		} else {
-			measuredLines = lines.map((line) => this.measureLine(ctx, line, letterSpacing, fontSize));
-			layoutWidth = measuredLines.reduce((max, line) => Math.max(max, line.width), 0);
-			layoutHeight = ascent + descent + lineHeightPx * Math.max(lines.length - 1, 0);
-			visibleLineCount = measuredLines.length;
-		}
-
-		const visibleLines = measuredLines.slice(0, visibleLineCount);
+		const layout = TextLayout.layout(ctx, layer.textData.text, layer.textData, { fontSize, letterSpacing, lineHeightPx, ascent, descent, minBoxSize: this.getMinBoxSize() });
+		const { lines: measuredLines, visibleLines, layoutWidth, layoutHeight, hasOverflow, contentOffsetY } = layout;
+		const visibleLineCount = visibleLines.length;
 		let textInkLeft = Infinity;
 		let textInkTop = Infinity;
 		let textInkRight = -Infinity;
 		let textInkBottom = -Infinity;
 		let hasInk = false;
 
-		if (boxMode === 'fixed') {
-			// Vertical alignment uses visible glyph ink. Overflow lines are omitted
-			// below, while glyph overhang and effects may extend past the area frame.
-			if (visibleLineCount > 0) {
-				visibleLines.forEach((line, index) => {
-					const baselineY = ascent + index * lineHeightPx;
-					textInkTop = Math.min(textInkTop, baselineY - line.ascent);
-					textInkBottom = Math.max(textInkBottom, baselineY + line.descent);
-				});
-				contentOffsetY = this.getVerticalAlignOffset(
-					layer.textData.verticalAlign || 'top',
-					layoutHeight,
-					textInkBottom - textInkTop
-				) - textInkTop;
-			}
-			// The first pass exists only to derive the vertical alignment offset.
-			// Rebuild the canonical bounds from the positioned lines below so the
-			// unaligned top/bottom cannot leak into Text Bounds geometry.
-			textInkLeft = Infinity;
-			textInkTop = Infinity;
-			textInkRight = -Infinity;
-			textInkBottom = -Infinity;
-		}
-
-		// Canonical per-line layout for Text Background (docs/DYNAMIC-TEXT-
-		// BACKGROUND-IMPLEMENTATION-PLAN.md "Expose canonical layout geometry"):
+		// Canonical per-line layout for Text Background:
 		// one positioned+aligned rect per visible line, in the same unshifted
 		// local space as textInk*/box* below. `blank` lines (no ink) carry no
 		// rect — Text Background treats them as hard separators, never their
@@ -1194,6 +1121,11 @@ class TextGlitterManager {
 			textInkBottom = Math.max(textInkBottom, bottom);
 		});
 
+		layout.decorations.forEach(rect => {
+			textInkLeft = Math.min(textInkLeft, rect.x); textInkRight = Math.max(textInkRight, rect.x + rect.width);
+			textInkTop = Math.min(textInkTop, rect.y); textInkBottom = Math.max(textInkBottom, rect.y + rect.height); hasInk = true;
+		});
+
 		if (!hasInk) {
 			textInkLeft = 0;
 			textInkTop = 0;
@@ -1206,6 +1138,7 @@ class TextGlitterManager {
 		// the warped glyphs. Unwarped text keeps the flat path.
 		const warpedGlyphs = hasInk && isTextWarpActive(layer.textData.warp)
 			? this.layoutWarpedTextGlyphs(ctx, visibleLines, {
+				glyphs: layout.glyphs,
 				warp: layer.textData.warp,
 				align: layer.textData.align,
 				layoutWidth,
@@ -1217,6 +1150,7 @@ class TextGlitterManager {
 				inkRect: { left: textInkLeft, top: textInkTop, right: textInkRight, bottom: textInkBottom }
 			})
 			: null;
+		if (warpedGlyphs) layout.decorations = TextLayout.warpDecorations(layout, warpedGlyphs, letterSpacing);
 		if (warpedGlyphs) {
 			textInkLeft = Infinity;
 			textInkTop = Infinity;
@@ -1224,7 +1158,7 @@ class TextGlitterManager {
 			textInkBottom = -Infinity;
 			positionedLines.forEach((line, index) => {
 				if (line.blank) return;
-				const bounds = warpedGlyphs.filter((glyph) => glyph.line === index && glyph.bounds).map((glyph) => glyph.bounds);
+				const bounds = [...warpedGlyphs.filter(glyph => glyph.line === index && glyph.bounds).map(glyph => glyph.bounds), ...layout.decorations.filter(rect => rect.line === index && rect.bounds).map(rect => rect.bounds)];
 				if (!bounds.length) {
 					positionedLines[index] = { blank: true };
 					return;
@@ -1254,7 +1188,7 @@ class TextGlitterManager {
 			textBackgroundGeometry = generateTextBackgroundGeometry({
 				lines: positionedLines,
 				textInkRect: hasInk ? { x: textInkLeft, y: textInkTop, width: textInkRight - textInkLeft, height: textInkBottom - textInkTop } : null,
-				boxRect: boxMode === 'fixed' ? { x: 0, y: 0, width: layoutWidth, height: layoutHeight } : null,
+				boxRect: boxMode !== 'point' ? { x: 0, y: 0, width: layoutWidth, height: layoutHeight } : null,
 				lineHeightPx,
 				ascent,
 				descent
@@ -1270,15 +1204,15 @@ class TextGlitterManager {
 		// the glyphs with their border, and the background plate. No shadow, and
 		// the layout box rather than ink, so the box holds still while typing.
 		// Warped point text has left its flat layout box, so it hugs the ink.
-		const hugInk = Boolean(warpedGlyphs) && boxMode !== 'fixed';
+		const hugInk = Boolean(warpedGlyphs) && boxMode === 'point';
 		const bodyLeft = Math.min(hugInk ? Infinity : 0, hasInk ? textInkLeft - borderWidth : 0, backgroundBounds ? backgroundBounds.x : Infinity);
 		const bodyRight = Math.max(hugInk ? -Infinity : layoutWidth, hasInk ? textInkRight + borderWidth : 0, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
 		const bodyTop = Math.min(hugInk ? Infinity : 0, hasInk ? textInkTop - borderWidth : 0, backgroundBounds ? backgroundBounds.y : Infinity);
 		const bodyBottom = Math.max(hugInk ? -Infinity : layoutHeight, hasInk ? textInkBottom + borderWidth : 0, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
-		const frameLeft = boxMode === 'fixed' ? Math.min(0, artLeft) : artLeft;
-		const frameRight = boxMode === 'fixed' ? Math.max(layoutWidth, artRight) : artRight;
-		const frameTop = boxMode === 'fixed' ? Math.min(0, artTop) : artTop;
-		const frameBottom = boxMode === 'fixed' ? Math.max(layoutHeight, artBottom) : artBottom;
+		const frameLeft = boxMode !== 'point' ? Math.min(0, artLeft) : artLeft;
+		const frameRight = boxMode !== 'point' ? Math.max(layoutWidth, artRight) : artRight;
+		const frameTop = boxMode !== 'point' ? Math.min(0, artTop) : artTop;
+		const frameBottom = boxMode !== 'point' ? Math.max(layoutHeight, artBottom) : artBottom;
 
 		const layoutX = padding - frameLeft;
 		const layoutY = padding - frameTop;
@@ -1307,17 +1241,40 @@ class TextGlitterManager {
 				maskCtx.restore();
 			});
 		} else {
-			visibleLines.forEach((line, index) => {
-				this.drawLine(maskCtx, line.text, {
-					startX: layoutX + this.getAlignOffset(layer.textData.align, layoutWidth, line.width),
-					baselineY: layoutY + contentOffsetY + ascent + index * lineHeightPx,
-					letterSpacing
-				});
-			});
+			layout.runs.forEach(run => maskCtx.fillText(run.text, layoutX + run.x, layoutY + run.baseline));
 		}
 
+		const drawDecorations = context => TextLayout.drawDecorations(context, layout.decorations, layoutX, layoutY);
+		drawDecorations(maskCtx);
+		let lettersCanvas = canvas;
+		let lettersCtx = maskCtx;
+		let emojiCanvas = null;
+		if (layer.textData.colorEmoji) {
+			if (!this.colorGlyphCtx) this.colorGlyphCtx = createAppCanvas(CONFIG.tools.text.colorGlyphProbe.size, CONFIG.tools.text.colorGlyphProbe.size, 'layers/TextGlitterManager').getContext('2d', { willReadFrequently: true });
+			const colorGlyphs = layout.glyphs.map((glyph, index) => ({ glyph, index })).filter(({ glyph }) => isColorTextGlyph(this.colorGlyphCtx, glyph.char, FontLibrary.getDeclaration(font, CONFIG.tools.text.colorGlyphProbe.fontSize, layer.textData.fontWeight, layer.textData.fontStyle)));
+			if (colorGlyphs.length) {
+				lettersCanvas = createAppCanvas(canvasWidth, canvasHeight, 'layers/TextGlitterManager');
+				lettersCanvas._textureOrigin = canvas._textureOrigin;
+				lettersCtx = lettersCanvas.getContext('2d', { willReadFrequently: true });
+				lettersCtx.drawImage(canvas, 0, 0);
+				emojiCanvas = createAppCanvas(canvasWidth, canvasHeight, 'layers/TextGlitterManager');
+				const emojiCtx = emojiCanvas.getContext('2d', { willReadFrequently: true });
+				emojiCtx.font = maskCtx.font; emojiCtx.textBaseline = 'alphabetic';
+				colorGlyphs.forEach(({ glyph, index }) => {
+					const placement = warpedGlyphs?.[index]?.placement;
+					emojiCtx.save();
+					if (placement) { emojiCtx.translate(layoutX + placement.x, layoutY + placement.y); emojiCtx.rotate(placement.rotation); emojiCtx.scale(1, placement.scaleY); emojiCtx.fillText(glyph.char, -glyph.advance / 2, 0); }
+					else emojiCtx.fillText(glyph.char, layoutX + glyph.x, layoutY + glyph.baseline);
+					emojiCtx.restore();
+				});
+				binarizeCanvasAlpha(emojiCtx, canvasWidth, canvasHeight);
+				lettersCtx.globalCompositeOperation = 'destination-out'; lettersCtx.drawImage(emojiCanvas, 0, 0); lettersCtx.globalCompositeOperation = 'source-over'; lettersCtx.fillStyle = '#fff'; drawDecorations(lettersCtx);
+			}
+		}
+		if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(lettersCtx, canvasWidth, canvasHeight);
+
 		if (shouldUseCrispMaskEdges()) {
-			// Hard pixel edges (editor aesthetic, MASK-FEATURE-PLAN decision 5).
+			// Hard pixel edges keep mask outlines crisp.
 			// Also load-bearing for export: fillText antialiasing leaves partial-alpha
 			// edge pixels that composite over the GIF transparency key (magenta) and
 			// fringe on transparent exports. A binary mask has nothing to blend.
@@ -1326,6 +1283,10 @@ class TextGlitterManager {
 
 		const entry = {
 			key,
+			layout,
+			lettersCanvas,
+			emojiCanvas,
+			warpedGlyphs,
 			canvas,
 			lines: measuredLines,
 			positionedLines,
@@ -1406,7 +1367,7 @@ class TextGlitterManager {
 	}
 
 	getFixedBoxFrame(layer, measurement = null) {
-		if (!layer?.textData || (layer.textData.boxMode || 'auto') !== 'fixed') {
+		if (!layer?.textData || (layer.textData.boxMode || 'point') === 'point') {
 			return null;
 		}
 		const entry = measurement || this.getMeasurementEntry(layer);
@@ -1435,193 +1396,20 @@ class TextGlitterManager {
 	}
 
 	getAlignOffset(align, maxWidth, lineWidth) {
-		if (align === 'center') return (maxWidth - lineWidth) / 2;
-		if (align === 'right') return maxWidth - lineWidth;
-		return 0;
+		return TextLayout.getAlignOffset(align, maxWidth, lineWidth);
 	}
 
-	getVerticalAlignOffset(verticalAlign, boxHeight, contentHeight) {
-		if (verticalAlign === 'middle') {
-			return Math.max(0, (boxHeight - contentHeight) / 2);
-		}
-		if (verticalAlign === 'bottom') {
-			return Math.max(0, boxHeight - contentHeight);
-		}
-		return 0;
-	}
 
-	measureLine(ctx, text, letterSpacing, fontSize) {
-		if (!text) {
-			return { text, width: 0, ascent: 0, descent: 0, inkLeft: 0, inkRight: 0 };
-		}
 
-		const lineMetrics = ctx.measureText(text);
-		const ascent = lineMetrics.actualBoundingBoxAscent ?? fontSize * 0.8;
-		const descent = lineMetrics.actualBoundingBoxDescent ?? fontSize * 0.2;
-
-		if (!letterSpacing) {
-			return {
-				text,
-				width: lineMetrics.width,
-				ascent,
-				descent,
-				inkLeft: lineMetrics.actualBoundingBoxLeft ?? 0,
-				inkRight: lineMetrics.actualBoundingBoxRight ?? lineMetrics.width
-			};
-		}
-
-		let advance = 0;
-		let minX = Infinity;
-		let maxX = -Infinity;
-		for (let index = 0; index < text.length; index++) {
-			const charMetrics = ctx.measureText(text[index]);
-			minX = Math.min(minX, advance - (charMetrics.actualBoundingBoxLeft ?? 0));
-			maxX = Math.max(maxX, advance + (charMetrics.actualBoundingBoxRight ?? charMetrics.width));
-			advance += charMetrics.width;
-			if (index < text.length - 1) {
-				advance += letterSpacing;
-			}
-		}
-
-		return { text, width: advance, ascent, descent, inkLeft: -minX, inkRight: maxX };
-	}
-
-	wrapTextLines(ctx, sourceLines, boxWidth, letterSpacing, fontSize) {
-		const wrappedLines = [];
-
-		sourceLines.forEach((sourceLine) => {
-			if (sourceLine === '') {
-				wrappedLines.push(this.measureLine(ctx, '', letterSpacing, fontSize));
-				return;
-			}
-
-			const tokens = sourceLine.split(/(\s+)/);
-			let current = '';
-
-			const pushMeasured = (value) => {
-				wrappedLines.push(this.measureLine(ctx, value, letterSpacing, fontSize));
-			};
-
-			for (const token of tokens) {
-				if (token === '') continue;
-
-				const candidate = current + token;
-				if (!current || this.measureLine(ctx, candidate, letterSpacing, fontSize).width <= boxWidth) {
-					current = candidate;
-					continue;
-				}
-
-				if (/^\s+$/.test(token)) {
-					pushMeasured(current.trimEnd());
-					current = '';
-					continue;
-				}
-
-				if (current.trim().length > 0) {
-					pushMeasured(current.trimEnd());
-					current = '';
-				}
-
-				let remaining = token;
-				while (remaining) {
-					let slice = '';
-					let consumed = 0;
-					for (let index = 0; index < remaining.length; index++) {
-						const next = slice + remaining[index];
-						const width = this.measureLine(ctx, next, letterSpacing, fontSize).width;
-						if (slice && width > boxWidth) {
-							break;
-						}
-						slice = next;
-						consumed = index + 1;
-						if (width > boxWidth) {
-							break;
-						}
-					}
-
-					if (!slice) {
-						slice = remaining[0];
-						consumed = 1;
-					}
-
-					const rest = remaining.slice(consumed);
-					if (rest) {
-						pushMeasured(slice);
-						remaining = rest;
-					} else {
-						current = slice;
-						remaining = '';
-					}
-				}
-			}
-
-			if (current || wrappedLines.length === 0) {
-				pushMeasured(current.trimEnd());
-			}
-		});
-
-		return { lines: wrappedLines };
-	}
 
 	// Glyph-by-glyph layout for warped text (js/paint/text-warp.js), in the
 	// same unshifted space as the flat layout. Each glyph keeps its flat advance
 	// (per-glyph drawing drops kerning, as letter spacing already does) and
 	// carries its warped placement and ink bounds; blank glyphs have no bounds.
 	layoutWarpedTextGlyphs(ctx, lines, options) {
-		const { warp, align, layoutWidth, contentOffsetY, ascent, lineHeightPx, letterSpacing, fontSize, inkRect } = options;
-		const glyphs = [];
-		lines.forEach((line, index) => {
-			const baselineY = contentOffsetY + ascent + index * lineHeightPx;
-			const chars = Array.from(line.text || '');
-			let cursor = this.getAlignOffset(align, layoutWidth, line.width);
-			chars.forEach((char, charIndex) => {
-				const metrics = ctx.measureText(char);
-				const advance = metrics.width;
-				const ink = {
-					left: -advance / 2 - (metrics.actualBoundingBoxLeft ?? 0),
-					right: -advance / 2 + (metrics.actualBoundingBoxRight ?? advance),
-					top: -(metrics.actualBoundingBoxAscent ?? fontSize * 0.8),
-					bottom: metrics.actualBoundingBoxDescent ?? fontSize * 0.2
-				};
-				const hasGlyphInk = !/^\s$/u.test(char) && ink.right > ink.left;
-				glyphs.push({ char, advance, line: index, x: cursor + advance / 2, y: baselineY, ink: hasGlyphInk ? ink : null });
-				cursor += advance + (charIndex < chars.length - 1 ? letterSpacing : 0);
-			});
-		});
-		const placements = layoutWarpedGlyphs(warp, glyphs, {
-			centerX: (inkRect.left + inkRect.right) / 2,
-			centerY: (inkRect.top + inkRect.bottom) / 2,
-			width: inkRect.right - inkRect.left,
-			fontSize,
-			ascent
-		});
-		return glyphs.map((glyph, index) => ({
-			char: glyph.char,
-			advance: glyph.advance,
-			line: glyph.line,
-			placement: placements[index],
-			bounds: glyph.ink ? getWarpedGlyphBounds(placements[index], glyph.ink) : null
-		}));
+		return TextLayout.layoutWarpedTextGlyphs(ctx, lines, options);
 	}
 
-	drawLine(ctx, text, options) {
-		const { startX, baselineY, letterSpacing } = options;
-
-		if (!letterSpacing) {
-			ctx.fillText(text, startX, baselineY);
-			return;
-		}
-
-		let x = startX;
-		for (let index = 0; index < text.length; index++) {
-			const char = text[index];
-			ctx.fillText(char, x, baselineY);
-			x += ctx.measureText(char).width;
-			if (index < text.length - 1) {
-				x += letterSpacing;
-			}
-		}
-	}
 
 	// Every slot mask for export, in text-local space: the canvases the
 	// preview masks with, with the shadow offset baked in (preview translates
@@ -1634,7 +1422,8 @@ class TextGlitterManager {
 		await FontLibrary.ensureLoaded(layer.textData.fontId);
 		const measurement = this.getMeasurementEntry(layer);
 		const masks = {
-			fill: measurement.canvas,
+			fill: measurement.lettersCanvas,
+			emoji: measurement.emojiCanvas,
 			renderWidth: layer.textData.width,
 			renderHeight: layer.textData.height
 		};
@@ -1664,7 +1453,7 @@ class TextGlitterManager {
 	renderLayer(layer) {
 		if (layer.type !== LayerType.TEXT_GLITTER) return;
 
-		if (!layer.textData.text.trim()) {
+		if (!layer.textData.text.trim() && this.editSession?.layerId !== layer.id) {
 			this.removeLayerElement(layer.id);
 			return;
 		}
@@ -1715,7 +1504,7 @@ class TextGlitterManager {
 				if (!this.layerElements.has(layer.id)) return;
 
 				const measurement = this.getMeasurementEntry(layer);
-				if (layer._pendingPointAnchorTarget && measurement.boxMode === 'auto') {
+				if (layer._pendingPointAnchorTarget && measurement.boxMode === 'point') {
 					this.setPointAnchorWorldPosition(layer, layer._pendingPointAnchorTarget, this.getTextFrame(layer, measurement));
 					delete layer._pendingPointAnchorTarget;
 				}
@@ -1747,6 +1536,7 @@ class TextGlitterManager {
 
 				wrapper.setAttribute('aria-label', layer.textData.text);
 				wrapper.style.visibility = '';
+				this.renderTextSelection();
 				this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
 			})
 			.catch((error) => {
@@ -1823,8 +1613,16 @@ class TextGlitterManager {
 		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(layer, measurement, item)?.canvas);
 	}
 
-	getSlotStack(layer) {
-		return buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry));
+	getSlotStack(layer, resolveSource = entry => resolvePaintSlotPreviewSource(this.editor, layer, entry)) {
+		const stack = buildSlotStack(layer, resolveSource);
+		const measurement = this.getMeasurementEntry(layer);
+		if (measurement.emojiCanvas) {
+			const canvas = measurement.emojiCanvas;
+			const source = { mode: 'image', image: canvas, url: this.getPreviewMaskDataUrl(layer, 'emoji', canvas, measurement.key), fit: 'stretch', imageScalePercent: 100, offsetXPercent: 0, offsetYPercent: 0, tile: false, opacity: 1 };
+			const fillIndex = stack.findIndex(item => item.key === 'fill');
+			stack.splice(fillIndex >= 0 ? fillIndex + 1 : stack.findIndex(item => item.role === 'bevel') >= 0 ? stack.findIndex(item => item.role === 'bevel') : stack.length, 0, { key: 'emoji', role: 'fill', data: {}, source, sourceKey: `${layer.id}:emoji`, offsetX: 0, offsetY: 0 });
+		}
+		return stack;
 	}
 
 	// The mask a slot paints through, in text-local space. The fill and shadow
@@ -1832,6 +1630,7 @@ class TextGlitterManager {
 	// background exists only once its geometry has shapes. bucket and cacheKey
 	// address the per-layer preview mask URL cache.
 	getSlotMask(layer, measurement, slot) {
+		if (slot.key === 'emoji') return { canvas: measurement.emojiCanvas, bucket: 'emojiMask', cacheKey: measurement.key };
 		if (slot.key === 'backgroundFill') {
 			const canvas = measurement.textBackgroundGeometry?.shapes?.length
 				? this.getTextBackgroundMaskCanvas(layer, measurement)
@@ -1850,10 +1649,10 @@ class TextGlitterManager {
 		if (slot.role === 'bevel') {
 			const bevel = layer.textData.bevel?.highlight;
 			const key = `${bevel?.profile}:${bevel?.size}:${bevel?.depth}:${bevel?.angle}:${bevel?.altitude}:${bevel?.soften}`;
-			if (measurement._bevelMaskCache?.key !== key) measurement._bevelMaskCache = { key, ...createBevelMaskCanvases(measurement.canvas, bevel) };
+			if (measurement._bevelMaskCache?.key !== key) measurement._bevelMaskCache = { key, ...createBevelMaskCanvases(measurement.lettersCanvas, bevel) };
 			return { canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, bucket: slot.key, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
 		}
-		return { canvas: measurement.canvas, bucket: 'fill', cacheKey: measurement.key };
+		return { canvas: slot.key === 'fill' ? measurement.lettersCanvas : measurement.canvas, bucket: slot.key === 'fill' ? 'fill' : 'glyphs', cacheKey: measurement.key };
 	}
 
 	// One continuous stroke, like a Photoshop stroke: the glyph mask grown,
@@ -1950,12 +1749,13 @@ class TextGlitterManager {
 		this.editor.updateHelpfulMessage();
 
 		if (saveHistory) {
-			this.editor.saveState('Edit text');
+			if (this.editSession) this.editSession.dirty = true;
+			else this.editor.saveState('Edit text');
 		}
 	}
 
-	canResizeBoxEdges(layer) {
-		return Boolean(layer?.type === LayerType.TEXT_GLITTER && layer.textData?.boxMode === 'fixed');
+	canResizeBoxEdges(layer, edge = null) {
+		return Boolean(layer?.type === LayerType.TEXT_GLITTER && layer.textData?.boxMode !== 'point' && (!edge || ['left', 'right', 'top', 'bottom', 'tl', 'tr', 'bl', 'br'].includes(edge)));
 	}
 
 	getBoxResizeMetrics(layer, dragState) {
@@ -1969,7 +1769,7 @@ class TextGlitterManager {
 		const scaleX = Math.max(0.01, (dragState.transform.scale.x || 100) / 100);
 		const scaleY = Math.max(0.01, (dragState.transform.scale.y || 100) / 100);
 		const boxWidth = Math.max(minBoxSize, Math.round(dragState.boxWidth || layer.textData.boxWidth || minBoxSize));
-		const boxHeight = Math.max(minBoxSize, Math.round(dragState.boxHeight || layer.textData.boxHeight || minBoxSize));
+		const boxHeight = Math.max(minBoxSize, Math.round(dragState.boxHeight || layer.textData.boxHeight || this.getMeasurementEntry(layer).layoutHeight));
 		const frame = dragState.textBoxFrame || this.getFixedBoxFrame(layer) || { offsetX: 0, offsetY: 0 };
 		const baseDisplayWidth = boxWidth * scaleX;
 		const baseDisplayHeight = boxHeight * scaleY;
@@ -2001,12 +1801,15 @@ class TextGlitterManager {
 		const nextBoxWidth = Math.max(metrics.minBoxSize, Math.round((rect.right - rect.left) / metrics.scaleX));
 		const nextBoxHeight = Math.max(metrics.minBoxSize, Math.round((rect.bottom - rect.top) / metrics.scaleY));
 		const newCenterLocalX = (rect.left + rect.right) / 2;
-		const newCenterLocalY = (rect.top + rect.bottom) / 2;
+		let newCenterLocalY = (rect.top + rect.bottom) / 2;
 
-		layer.textData.boxMode = 'fixed';
+		const keepAutoHeight = layer.textData.boxMode === 'autoHeight' && dragState.textResizeEdge && ['left', 'right'].includes(dragState.textResizeEdge);
+		layer.textData.boxMode = keepAutoHeight ? 'autoHeight' : 'fixed';
 		layer.textData.boxWidth = nextBoxWidth;
-		layer.textData.boxHeight = nextBoxHeight;
+		if (keepAutoHeight) delete layer.textData.boxHeight;
+		else layer.textData.boxHeight = nextBoxHeight;
 		const measurement = this.getMeasurementEntry(layer);
+		if (keepAutoHeight) newCenterLocalY = rect.top + measurement.layoutHeight * metrics.scaleY / 2;
 		const desiredFrameCenterX = metrics.originWorldX + newCenterLocalX * metrics.worldCos - newCenterLocalY * metrics.worldSin;
 		const desiredFrameCenterY = metrics.originWorldY + newCenterLocalX * metrics.worldSin + newCenterLocalY * metrics.worldCos;
 		const nextFrame = this.getFixedBoxFrame(layer, measurement) || { offsetX: 0, offsetY: 0 };
@@ -2039,6 +1842,7 @@ class TextGlitterManager {
 			return false;
 		}
 
+		dragState.textResizeEdge = edge;
 		const metrics = this.getBoxResizeMetrics(layer, dragState);
 		const vectorX = canvasPos.x - metrics.originWorldX;
 		const vectorY = canvasPos.y - metrics.originWorldY;
@@ -2147,9 +1951,9 @@ class TextGlitterManager {
 		// Whole pixels, as the panel fields step and document resize rounds
 		// (scaleDocumentLayerState); a raw product shows as 4.109589px.
 		layer.textData.letterSpacing = Math.round(layer.textData.letterSpacing * bakedFactor);
-		if ((layer.textData.boxMode || 'auto') === 'fixed') {
+		if (layer.textData.boxMode !== 'point') {
 			layer.textData.boxWidth = Math.round(layer.textData.boxWidth * bakedFactor);
-			layer.textData.boxHeight = Math.round(layer.textData.boxHeight * bakedFactor);
+			if (layer.textData.boxMode === 'fixed') layer.textData.boxHeight = Math.round(layer.textData.boxHeight * bakedFactor);
 		}
 		if (layer.textData.border && PREFERENCES.get('scaleEffects')) {
 			layer.textData.border.widthPx = Math.max(1, Math.round(layer.textData.border.widthPx * bakedFactor));
@@ -2294,3 +2098,5 @@ class TextGlitterManager {
 		return context.compositor._buildSlotStackExportPlan(layer, { ensureTextFont: true });
 	}
 }
+
+Object.assign(TextGlitterManager.prototype, TEXT_EDIT_METHODS, TEXT_ACTION_METHODS);

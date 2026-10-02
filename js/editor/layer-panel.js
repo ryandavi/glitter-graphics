@@ -83,7 +83,9 @@ setupLayerTypePickerListeners() {
 			return;
 		}
 
-		const layer = this.layerManager.addLayer(layerType, createOptions || {});
+		const layer = layerType === LayerType.TEXT_GLITTER
+			? createTextAt(this, createOptions?.textLayer || {})
+			: this.layerManager.addLayer(layerType, createOptions || {});
 		if (layer && createOptions?.shapeLayer?.openImagePicker) {
 			requestAnimationFrame(() => this.shapeGlitterManager?.chooseFillImage());
 		}

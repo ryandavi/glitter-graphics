@@ -138,7 +138,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('showAllControls', 'Show All Controls', 'Keep More and Advanced controls visible in property panels.', { default: preference('showAllControls') }),
 			toggle('showHelpfulHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.', { default: CONFIG.ui.hints.enabledByDefault }),
 			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { default: true, hidden: !CONFIG.app.startup.showWelcome }),
-			toggle('confirmDestructiveActions', 'Confirm Destructive Actions', 'Ask before deleting layers or clearing the entire project.', { default: true }),
+			toggle('confirmDestructiveActions', 'Confirm Destructive Actions', 'Ask before deleting layers or clearing paint.', { default: true }),
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { default: preference('reduceMotion'), aliases: 'animation accessibility motion transitions' })
 		] },
 		{ title: 'Tools & Workspace', section: 'tools', rows: [

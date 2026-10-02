@@ -26,14 +26,12 @@
 
 /* Point text has no frame to align within, so vertical alignment is only
    available for box text. Line height still controls explicit line breaks. */
-.text-settings-section[data-box-mode="auto"] .text-valign-row {
+.text-settings-section:not([data-box-mode="fixed"]) .text-valign-row {
 	display: none;
 }
 
 /* "Fit to Text" only makes sense once there's a box to fit */
-.text-settings-section[data-box-mode="auto"] .text-fit-box-group,
-.text-settings-section[data-box-mode="auto"] .text-fit-box-label,
-.text-settings-section[data-box-mode="auto"] .text-fit-box-section {
+.text-settings-section:not([data-box-mode="fixed"]) #textFitBoxToContent {
 	display: none;
 }
 
@@ -120,4 +118,47 @@
 		line-height: 1;
 		white-space: nowrap;
 	}
+}
+
+.text-input-proxy {
+	position: absolute;
+	pointer-events: none;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	font-size: 16px;
+	padding: 0;
+	border: 0;
+	resize: none;
+}
+.text-edit-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	> span { position: absolute; }
+}
+.text-edit-caret {
+	background: #fff;
+	box-shadow: 0 0 0 1px #000;
+	animation: text-caret-blink 1s steps(2, start) infinite;
+}
+.text-edit-selection { background: rgba(80, 140, 255, .4); }
+@keyframes text-caret-blink { to { visibility: hidden; } }
+
+#textEditControls {
+	width: max-content;
+	flex-wrap: wrap;
+	.context-letter-button { font-weight: var(--font-weight-semibold); }
+}
+
+.text-symbol-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	.app-menu-item { justify-content: center; }
+}
+
+.text-actions-group {
+	position: relative;
+	.app-menu { position: static; }
+	.app-menu-panel { left: 0; right: 0; min-width: 0; }
 }

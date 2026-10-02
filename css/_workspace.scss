@@ -131,7 +131,7 @@ body.tool-shape {
 	#canvasElementsContainer { cursor: crosshair; }
 }
 
-.shape-drag-preview {
+.creation-drag-preview {
 	position: absolute;
 	z-index: 200;
 	border: 2px dashed var(--color-accent);

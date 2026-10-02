@@ -193,3 +193,13 @@ Sticker assets may carry `slice: {top, right, bottom, left, mode}` in base-image
 Frame image layers copy slice and variant metadata, default to Smart Stretch when available, and use `frameData.sliceScale` (Border Scale) to size protected borders. Preview, hit alpha, effect masks and exports share sliced geometry. Sticker picking continues to use its existing image-box frame. The library mark/filter, selected asset badge and resize-only guides expose the feature. Source/licensing data for new assets still follows the ordinary sticker authoring workflow.
 
 Export progress uses `ExportProgressPresenter` for the floating card, with cached DOM references and cancellation state on the editor. `EXPORT_PROGRESS_PHASES` and `reportExportProgress` in `SceneCompositor.js` own labels, counts and format ranges for all encoders; `callbacks.progressFormat` selects GIF, MP4 or still ranges. Phase labels also feed the result timing summary.
+
+## Text layout and editing
+
+`js/core/text-content.js` owns graphemes, source-indexed case conversion, the grapheme limit and measured color-glyph classification. `js/paint/text-layout.js` takes a measuring context and returns lines, runs, source-indexed glyph boxes and decoration rectangles in unshifted text-local space. The text manager uses this layout for masks and warp; editing and Split use its same glyph positions. Whole-line and justified word runs retain font kerning, while letter spacing and warp use grapheme runs.
+
+Text modes are `point`, `autoHeight` and `fixed`; Auto Height stores width alone. Color emoji adds a generated canvas through the existing image-source stack immediately above Fill. Fill and Bevel use the letters mask; outline, shadow and backgrounds retain the full glyph silhouette. Preview and SceneCompositor read the same text stack and masks.
+
+`js/ui/text-edit.js` and `js/ui/text-actions.js` supply the text manager's editing and action methods. `editSession` is transient UI state. A transparent textarea receives native input, IME and phone keyboard events; the existing text spans remain visible. Both text fields write through `applyTextEdit`; caret and selection overlays read the layout. Committing an edit is one history step, including deletion of empty text. Creation uses `createTextAt` for tool clicks, drags, Add and paste.
+
+Canvas region creation uses `beginCreationGesture`, `updateCreationGesture`, `finishCreationGesture` and `cancelCreationGesture`. The active tool's `onCanvasDrag` receives the box, click classification and starting canvas point; mouse and touch share this path.

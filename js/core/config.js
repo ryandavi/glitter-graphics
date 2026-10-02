@@ -474,17 +474,20 @@ const CONFIG = deepFreeze({
 			defaultTextCase: 'none',
 			// WARP_TYPES id (js/paint/text-warp.js); 'none' draws text flat.
 			defaultWarpType: 'none',
-			// Stage Two in-canvas typing is intentionally paused; this is its future gate.
-			canvasEditing: false,
+			// Canvas input uses the same string and layout as the panel.
+			canvasEditing: true,
 			fontsManifest: 'data/fonts.json?v=5',
 			defaultFontId: 'luckiest-guy',
 			defaultFontWeight: 400,
 			defaultFontStyle: 'normal',
-			defaultText: 'glitter',
-			defaultBoxMode: 'auto',
+			defaultColorEmoji: true,
+			colorGlyphProbe: { size: 64, fontSize: 32, x: 8, baseline: 40 },
+			defaultBoxMode: 'point',
 			defaultVerticalAlign: 'top',
 			minBoxSize: 4,
 			maxTextLength: 200,
+			decoration: { thickness: 0.06, underline: 0.1, strikethrough: -0.3 },
+			symbols: ['\u2605', '\u2606', '\u2665', '\u2661', '\u273f', '\u266a', '\u2022', '~', '\u2713', '\u221e', '\u2192', '\u00a9'],
 			// Font size, letter spacing, line height and the border width and
 			// shadow offset defaults are field specs (js/core/fields.js).
 			border: {
@@ -629,6 +632,7 @@ const CONFIG = deepFreeze({
 			magneticThresholdPx: 5
 		},
 		gestures: {
+			creationDragThreshold: 6,
 			tapMaxMs: 300,
 			tapSlopPx: 10,
 			wheelZoomSensitivity: 0.002,
@@ -661,6 +665,17 @@ const CONFIG = deepFreeze({
 		// Bottom context bars. Keep eligibility here so adding a bar or extending
 		// one to another movable layer does not require another app.js branch.
 		contextToolbars: [
+			{ id: 'textEditControls', session: 'textEdit', controls: [
+				{ kind: 'slider', id: 'contextTextSize', valueId: 'contextTextSizeValue', slider: 'textFontSize', action: 'textFontSize' },
+				{ kind: 'button', id: 'contextTextBold', glyph: 'B', name: 'Bold', title: 'Bold', textAction: 'bold', action: 'textToggleBold' },
+				{ kind: 'button', id: 'contextTextItalic', glyph: 'I', name: 'Italic', title: 'Italic', textAction: 'italic', action: 'textToggleItalic' },
+				{ kind: 'button', id: 'contextTextUnderline', glyph: 'U', name: 'Underline', title: 'Underline', textAction: 'underline', action: 'textToggleUnderline' },
+				{ kind: 'button', id: 'contextTextStrikethrough', glyph: 'S', name: 'Strikethrough', title: 'Strikethrough', textAction: 'strikethrough', action: 'textToggleStrikethrough' },
+				{ kind: 'button', id: 'contextTextLeft', icon: 'text-align-left', name: 'Left', title: 'Align left', textAction: 'align:left', action: 'textAlignLeft' },
+				{ kind: 'button', id: 'contextTextCenter', icon: 'text-align-center', name: 'Center', title: 'Align center', textAction: 'align:center', action: 'textAlignCenter' },
+				{ kind: 'button', id: 'contextTextRight', icon: 'text-align-right', name: 'Right', title: 'Align right', textAction: 'align:right', action: 'textAlignRight' },
+				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-left', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify' }
+			] },
 			{ id: 'zoomControls', tool: 'zoom', controls: [
 				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },
 				{ kind: 'readout', id: 'zoomPercentage', title: 'Click to reset to 100%', value: '100%', action: 'zoomReset' },

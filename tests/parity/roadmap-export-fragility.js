@@ -58,9 +58,10 @@ async function buildComposition(page) {
 		editor.stickerManager.renderLayer(sticker);
 
 		// Warped text with a bevel style and scattered sparkles.
-		const text = insert(editor.textGlitterManager.createLayer({ text: 'Roadmap', position: { x: 170, y: 150 }, align: 'center' }));
+		const text = insert(editor.textGlitterManager.createLayer({ text: 'Roadmap \uD83D\uDE00', position: { x: 170, y: 150 }, align: 'center' }));
 		applyStyle(editor.textGlitterManager, text, 'chrome-bevel');
 		WARP_PRESETS.apply('arc', text.textData);
+		text.textData.decoration = { underline: true, strikethrough: true };
 		addSparkles(editor.textGlitterManager, text, 'blingee-sparkle');
 		await editor.textGlitterManager.refreshLayer(text, { saveHistory: false });
 

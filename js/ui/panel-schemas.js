@@ -726,13 +726,13 @@ const PANEL_SCHEMAS = {
 			// choose the face, set the metrics, then place it.
 			{ title: 'Content', items: [
 				{ kind: 'card', title: 'Text', items: [
-					{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: 200, placeholder: 'Type your glitter text' },
-					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', revert: true, options: [
-						{ label: 'Point', active: true, attrs: { 'data-text-box-mode': 'auto' } },
-						{ label: 'Box', attrs: { 'data-text-box-mode': 'fixed' } }
-					] },
+					{ kind: 'checkboxList', items: [{ id: 'textColorEmoji', label: 'Color emoji', checked: CONFIG.tools.text.defaultColorEmoji }] },
+					{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: CONFIG.tools.text.maxTextLength, placeholder: 'Type your glitter text' },
+					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
 					{ kind: 'host', id: 'textBoxModeHint', classes: 'property-note', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
-					{ kind: 'actionRow', classes: 'text-fit-box-group', actions: [
+					{ kind: 'actionRow', classes: 'text-actions-group', actions: [
+						{ id: 'textSplit', label: 'Split text', title: 'Split into characters, words or lines' },
+						{ id: 'textSymbols', label: 'Symbols', title: 'Insert a symbol at the caret' },
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
 				] },
@@ -746,12 +746,11 @@ const PANEL_SCHEMAS = {
 							title: 'Choose another font', compact: true },
 						{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', revert: true, options: [
 							{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
-							{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
+							{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' },
+							{ id: 'textUnderline', label: 'Underline' },
+							{ id: 'textStrikethrough', label: 'Strike' }
 						] },
-						{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', revert: true, options: [
-							{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
-							{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' }
-						] },
+						{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', revert: true, options: getOptions('textCase') },
 						{ kind: 'slider', id: 'textFontSize', slider: 'textFontSize', label: 'Size' }
 					] },
 					{ kind: 'set', label: 'Spacing', items: [
@@ -759,16 +758,8 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'textLineHeight', slider: 'textLineHeight', label: 'Line', classes: 'text-line-height-row' }
 					] },
 					{ kind: 'set', label: 'Alignment', items: [
-						{ kind: 'segmented', visibleLabel: 'Align', label: 'Horizontal text alignment', classes: 'text-align-group', options: [
-							{ label: 'Left', icon: 'text-align-left', active: true, attrs: { 'data-text-align': 'left' } },
-							{ label: 'Center', icon: 'text-align-center', attrs: { 'data-text-align': 'center' } },
-							{ label: 'Right', icon: 'text-align-right', attrs: { 'data-text-align': 'right' } }
-						] },
-						{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: [
-							{ label: 'Top', icon: 'text-align-top', active: true, attrs: { 'data-text-valign': 'top' } },
-							{ label: 'Middle', icon: 'text-align-middle', attrs: { 'data-text-valign': 'middle' } },
-							{ label: 'Bottom', icon: 'text-align-bottom', attrs: { 'data-text-valign': 'bottom' } }
-						] }
+						{ kind: 'segmented', visibleLabel: 'Align', label: 'Horizontal text alignment', classes: 'text-align-group', options: getOptions('textAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-align': option.value } })) },
+						{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: getOptions('textVerticalAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-valign': option.value } })) }
 					] }
 				] },
 				// Warp bends glyph placement (js/paint/text-warp.js): presets first,

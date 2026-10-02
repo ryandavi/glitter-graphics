@@ -229,6 +229,7 @@ class ContextToolbarRenderer {
 		if (matchMedia(`(max-width: ${CONFIG.ui.mobile.breakpoint}px)`).matches) {
 			host.style.removeProperty('left'); host.style.removeProperty('top');
 			host.style.removeProperty('right'); host.style.removeProperty('bottom'); host.style.removeProperty('transform');
+			if (host.id === 'textEditControls') this.editor.textGlitterManager?.syncTextKeyboardViewport();
 			return;
 		}
 		requestAnimationFrame(() => {
@@ -276,7 +277,10 @@ class ContextToolbarRenderer {
 		if (control.kind === 'button') {
 			const node = document.getElementById('tpl-context-button').content.firstElementChild.cloneNode(true);
 			node.id = control.id; node.title = control.title; node.dataset.action = control.action;
-			node.querySelector('use').setAttribute('href', `#icon-${control.icon}`);
+			if (control.textAction) node.dataset.textAction = control.textAction;
+			if (control.textAction) node.addEventListener('pointerdown', event => event.preventDefault());
+			if (control.glyph) { node.querySelector('svg').remove(); node.prepend(document.createTextNode(control.glyph)); node.classList.add('context-letter-button'); }
+			else node.querySelector('use').setAttribute('href', `#icon-${control.icon}`);
 			node.querySelector('.name').textContent = control.name;
 			node.addEventListener('click', () => COMMANDS[control.action]?.run(this.editor));
 			return node;
@@ -315,6 +319,10 @@ class ContextToolbarRenderer {
 			const input = node.querySelector('input'); input.id = control.id;
 			applySliderSpec(input, spec);   // handles data-scale (log) sliders; plain min/max otherwise
 			input.setAttribute('aria-label', control.label || spec.label);
+			if (control.action) {
+				input.addEventListener('input', () => COMMANDS[control.action]?.run(this.editor, Number(input.value)));
+				input.addEventListener('change', () => COMMANDS[control.action]?.run(this.editor, Number(input.value)));
+			}
 			const value = node.querySelector('.context-value'); value.id = control.valueId; value.textContent = `${spec.value}${control.unit || spec.unit || ''}`;
 			return node;
 		}

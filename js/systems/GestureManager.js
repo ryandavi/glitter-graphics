@@ -408,7 +408,7 @@ class GestureManager {
 			const transform = this.getLayerTransform(route.layerId);
 			transform?.beginGestureInteraction?.();
 		} else if (route.type === 'creationDrag' && pointer) {
-			this.editor.beginShapeCreationGesture?.(pointer.startX, pointer.startY, {
+			this.editor.beginCreationGesture?.(pointer.startX, pointer.startY, {
 				suppressNextClick: false
 			});
 		}
@@ -420,7 +420,7 @@ class GestureManager {
 		}
 
 		if (route.type === 'creationDrag') {
-			this.editor.cancelShapeCreationGesture?.();
+			this.editor.cancelCreationGesture?.();
 		}
 	}
 
@@ -439,7 +439,7 @@ class GestureManager {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.dragByScreenDelta?.(dx, dy);
 		} else if (this.route?.type === 'creationDrag') {
-			this.editor.updateShapeCreationGesture?.(pointer.x, pointer.y, false);
+			this.editor.updateCreationGesture?.(pointer.x, pointer.y, false);
 		} else {
 			this.viewport.panBy(dx, dy);
 			this.recordSinglePanVelocity(dx, dy);
@@ -666,6 +666,10 @@ class GestureManager {
 
 			this.editor.layerManager.selectLayerFromCanvas(layer.id);
 			if (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
+				if (layer.type === LayerType.TEXT_GLITTER && CONFIG.tools.text.canvasEditing) {
+					this.editor.textGlitterManager?.beginTextEdit(layer);
+					return;
+				}
 				if (this.editor.mobileManager?.isMobile) {
 					this.editor.mobileManager.prepareSettings?.(layer);
 					if (!this.editor.mobileManager.settingsOpen) {
@@ -674,13 +678,13 @@ class GestureManager {
 					this.editor.setCollapsibleSectionOpen?.('textSettings', true);
 					requestAnimationFrame(() => {
 						requestAnimationFrame(() => {
-							this.editor.textGlitterManager?.focusTextInput?.(true);
+							this.editor.textGlitterManager?.beginTextEdit(this.editor.layerManager.getActiveLayer());
 						});
 					});
 					return;
 				}
 
-				this.editor.textGlitterManager?.focusTextInput?.(true);
+				this.editor.textGlitterManager?.beginTextEdit(this.editor.layerManager.getActiveLayer());
 			}
 			return;
 		}
@@ -733,7 +737,7 @@ class GestureManager {
 			transform?.endGestureInteraction?.();
 		} else if (route.type === 'creationDrag') {
 			if (pointer) {
-				this.editor.finishShapeCreationGesture?.(pointer.x, pointer.y, {
+				this.editor.finishCreationGesture?.(pointer.x, pointer.y, {
 					suppressNextClick: false
 				});
 			}

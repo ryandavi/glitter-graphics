@@ -189,12 +189,7 @@ class GlitterEditor {
 		document.getElementById('zoomTool')?.addEventListener('dblclick', () => {
 			if (this.originalImage) this.viewport.resetZoom({ animate: true });
 		});
-		this.previewContainer?.addEventListener('dblclick', (event) => {
-			if (this.currentTool !== ToolType.SELECT || !event.target.closest(getTransformableLayerElementSelector())) return;
-			const layer = this.layerManager.getActiveLayer();
-			if (layer?.type !== LayerType.TEXT_GLITTER) return;
-			this.textGlitterManager?.focusTextInput?.(true);
-		});
+
 	}
 
 	setDuplicateDragFeedback(active, count = 1) {
@@ -703,20 +698,6 @@ class GlitterEditor {
 					return;
 				}
 
-				if (this.mobileManager?.isMobile) {
-					const confirmed = await this.confirmAction({
-						title: 'Invert Mask?',
-						message: invert.checked
-							? 'Invert this layer mask so glitter fills everything except the selected and painted areas?'
-							: 'Return this layer mask to its normal, non-inverted state?',
-						confirmLabel: 'Apply'
-					});
-					if (!confirmed) {
-						invert.checked = Boolean(layer.settings?.invert);
-						this.maskEditor?.loadLayer(layer);
-						return;
-					}
-				}
 
 				this.saveFillLayerControl('invert');
 				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.paintMaskStore.getPaintMask(layer.id))) {
@@ -905,6 +886,7 @@ class GlitterEditor {
 	}
 
 	setTool(tool, options = {}) {
+		if (tool !== this.currentTool) this.textGlitterManager?.endTextEdit();
 		if (tool === ToolType.BRUSH && !this.maskEditor?.canActivate()) return;
 
 		if (this.currentTool === tool) {
@@ -1005,8 +987,9 @@ class GlitterEditor {
 
 		const layer = this.layerManager.getActiveLayer();
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
-		const activeToolbar = toolbars.find(({ config, element }) => {
-			if (!element || config.tool !== this.currentTool) return false;
+		const activeToolbar = [...toolbars.filter(({ config }) => config.session), ...toolbars.filter(({ config }) => !config.session)].find(({ config, element }) => {
+			if (!element) return false;
+			if (config.session ? !(config.session === 'textEdit' && this.textGlitterManager?.editSession) : config.tool !== this.currentTool) return false;
 			if (hasMultiSelection && config.allowMultiSelection) return true;
 			if (config.layerTypes && (!layer || !config.layerTypes.includes(layer.type))) return false;
 			if (config.requiresStickerSource && layer?.type === LayerType.STICKER && !layer.stickerSourceId) return false;
@@ -1210,14 +1193,8 @@ class GlitterEditor {
 		// guard for normal caret navigation.
 		if (!this.autoGlitterManager?.isSessionActive() && this.tryArrowNudge(e)) return;
 
-		// Allow Escape to work in inputs (to blur/close things)
-		// Allow Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+S while typing.
-		const isDocumentShortcut = (e.ctrlKey || e.metaKey) &&
-			(e.key === 'z' || e.key === 'Z' || e.key === 'y' || e.key === 'Y' || e.key === 's' || e.key === 'S');
-		if (isTyping && e.key !== 'Escape' &&
-			!isDocumentShortcut) {
-			return;
-		}
+		// Typing shortcuts follow the command registry's policy.
+		if (isTyping && e.key !== 'Escape' && !matchShortcut(e)?.allowWhileTyping) return;
 
 		if (e.key === 'Alt' && this.currentTool === ToolType.ZOOM) {
 			this.previewContainer.classList.add('zoom-out-mode');
@@ -1346,10 +1323,12 @@ class GlitterEditor {
 		await this.historyManager.restoreState(state);
 	}
 	async undo() {
+		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.undo();
 	}
 
 	async redo() {
+		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.redo();
 	}
 
@@ -1458,8 +1437,7 @@ class GlitterEditor {
 		const confirmed = await this.confirmAction({
 			title: 'Clear All',
 			message: 'The image and all layers will be cleared.',
-			confirmLabel: 'Clear All',
-			destructive: true
+			confirmLabel: 'Clear All'
 		});
 		if (confirmed) {
 			this.clearImage();

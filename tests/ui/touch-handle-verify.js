@@ -341,7 +341,7 @@ async function createFixedBoxTextLayer(page, options = {}) {
 				text,
 				position: { x, y },
 				align: 'center',
-				boxMode: 'auto'
+				boxMode: 'point'
 			}
 		});
 		if (!layer) return null;
@@ -557,6 +557,29 @@ async function checkFixedTextEdgeResizeHandle(page, drag, label) {
 	);
 }
 
+async function checkAutoHeightEdges(page, drag, label) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const layerId = await createFixedBoxTextLayer(page, { text: 'One\nTwo\nThree\nFour\nFive', boxWidth: 100, boxHeight: 120 });
+	await page.evaluate(async id => {
+		const layer = editor.layerManager.getLayerById(id);
+		layer.textData.fontSize = 40;
+		layer.textData.boxMode = 'autoHeight'; delete layer.textData.boxHeight;
+		await editor.textGlitterManager.refreshLayer(layer, { saveHistory: true });
+	}, layerId);
+	await selectLayer(page, layerId);
+	await page.waitForTimeout(150);
+	const before = await getTextBoxWidth(page, layerId);
+	let handle = await getTransformHandleCenter(page, layerId, 'edge-right');
+	await drag(page, handle, { x: handle.x + 45, y: handle.y });
+	assert(await getTextBoxWidth(page, layerId) > before, `${label}: auto-height side did not resize width`);
+	assert(await page.evaluate(id => editor.layerManager.getLayerById(id).textData.boxMode === 'autoHeight' && !Object.hasOwn(editor.layerManager.getLayerById(id).textData, 'boxHeight'), layerId), `${label}: side resize lost auto-height`);
+	await page.waitForTimeout(200);
+	handle = await getTransformHandleCenter(page, layerId, 'edge-top');
+	await drag(page, handle, { x: handle.x, y: handle.y - 35 });
+	assert(await page.evaluate(id => editor.layerManager.getLayerById(id).textData.boxMode === 'fixed', layerId), `${label}: vertical resize did not convert to fixed`);
+}
+
 async function checkTextLayoutControls(page) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
@@ -589,7 +612,7 @@ async function checkTextLayoutControls(page) {
 		const measurement = manager.getMeasurementEntry(layer);
 		const originBeforeModeSwitch = manager.getTextOriginWorldPosition(layer, measurement);
 		await manager.runLayoutRefreshWithAnchor(layer, () => {
-			layer.textData.boxMode = 'auto';
+			layer.textData.boxMode = 'point';
 			delete layer.textData.boxWidth;
 			delete layer.textData.boxHeight;
 		}, { preservePointAnchor: true, refreshPreview: false });
@@ -800,6 +823,8 @@ async function main() {
 	try {
 		const checks = [
 			['Text alignment preserves the fixed box position', checkTextLayoutControls],
+			['Touch auto-height sides resize width; vertical edges convert to Fixed', page => checkAutoHeightEdges(page, oneFingerDrag, 'touch')],
+			['Mouse auto-height sides resize width; vertical edges convert to Fixed', page => checkAutoHeightEdges(page, mouseDrag, 'mouse')],
 			['Touch drag on rotation handle rotates the selected sticker', (page) => checkRotationHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on corner handle scales the selected sticker', (page) => checkCornerScaleHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on fixed-text edge handle resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, oneFingerDrag, 'touch')],

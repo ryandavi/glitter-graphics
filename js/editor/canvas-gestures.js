@@ -67,9 +67,6 @@ togglePreview() {
 			if (e.target.closest('.ui-ignore-gestures')) {
 				return;
 			}
-			if (this.currentTool === ToolType.TEXT) {
-				return;
-			}
 			if (this.currentTool === ToolType.ZOOM && this.originalImage && e.button === 0) {
 				this.startScrubbyZoom(e);
 				return;
@@ -84,8 +81,8 @@ togglePreview() {
 			}
 			// Shape tool: drag out the initial size (Photoshop-style); a plain click
 			// with no drag falls back to a default-size shape at the click point.
-			if (this.currentTool === ToolType.SHAPE && this.originalImage) {
-				this.startShapeDrag(e);
+			if (TOOLS[this.currentTool]?.onCanvasDrag && this.originalImage && e.button === 0) {
+				this.startCreationDrag(e);
 				return;
 			}
 			this.handlePreviewContainerClick(e);
@@ -220,19 +217,19 @@ togglePreview() {
 	// that size (Shift constrains to a square). A negligible drag = a plain click,
 	// which makes a default-size shape at the click point.
 ,
-	beginShapeCreationGesture(clientX, clientY, options = {}) {
+	beginCreationGesture(clientX, clientY, options = {}) {
 		if (!this.originalImage || !this.previewContainer) {
 			return false;
 		}
 
-		this.cancelShapeCreationGesture();
+		this.cancelCreationGesture();
 
 		const rect = this.previewContainer.getBoundingClientRect();
 		const preview = document.createElement('div');
-		preview.className = 'shape-drag-preview';
+		preview.className = 'creation-drag-preview';
 		this.previewContainer.appendChild(preview);
 
-		this.shapeCreationGesture = {
+		this.creationGesture = {
 			startCanvas: this.viewport.screenToCanvas(clientX, clientY),
 			startScreen: { x: clientX - rect.left, y: clientY - rect.top },
 			containerRect: rect,
@@ -244,8 +241,8 @@ togglePreview() {
 	}
 
 ,
-	getShapeCreationBox(clientX, clientY, useCanvas = false, shiftKey = false) {
-		const session = this.shapeCreationGesture;
+	getCreationBox(clientX, clientY, useCanvas = false, shiftKey = false) {
+		const session = this.creationGesture;
 		if (!session) {
 			return null;
 		}
@@ -278,13 +275,13 @@ togglePreview() {
 	}
 
 ,
-	updateShapeCreationGesture(clientX, clientY, shiftKey = false) {
-		const session = this.shapeCreationGesture;
+	updateCreationGesture(clientX, clientY, shiftKey = false) {
+		const session = this.creationGesture;
 		if (!session) {
 			return;
 		}
 
-		const box = this.getShapeCreationBox(clientX, clientY, false, shiftKey);
+		const box = this.getCreationBox(clientX, clientY, false, shiftKey);
 		if (!box) {
 			return;
 		}
@@ -296,68 +293,55 @@ togglePreview() {
 	}
 
 ,
-	cancelShapeCreationGesture() {
-		const session = this.shapeCreationGesture;
+	cancelCreationGesture() {
+		const session = this.creationGesture;
 		if (!session) {
 			return;
 		}
 
 		session.preview?.remove();
-		this.shapeCreationGesture = null;
+		this.creationGesture = null;
 	}
 
 ,
-	finishShapeCreationGesture(clientX, clientY, options = {}) {
-		const session = this.shapeCreationGesture;
+	finishCreationGesture(clientX, clientY, options = {}) {
+		const session = this.creationGesture;
 		if (!session) {
 			return null;
 		}
 
-		const box = this.getShapeCreationBox(clientX, clientY, true, Boolean(options.shiftKey));
+		const box = this.getCreationBox(clientX, clientY, true, Boolean(options.shiftKey));
 		const suppressNextClick = options.suppressNextClick ?? session.suppressNextClick;
 
-		this.cancelShapeCreationGesture();
+		this.cancelCreationGesture();
 
 		if (!box) {
 			return null;
 		}
 
-		const isClick = Math.max(box.width, box.height) < 6;
-		const shapeLayer = isClick
-			? {
-				shapeId: this.shapeGlitterManager.getActiveShapeId(),
-				position: { x: session.startCanvas.x, y: session.startCanvas.y }
-			}
-			: {
-				shapeId: this.shapeGlitterManager.getActiveShapeId(),
-				position: { x: box.centerX, y: box.centerY },
-				width: box.width,
-				height: box.height
-			};
-
-		const layer = this.layerManager.addLayer(LayerType.SHAPE, { shapeLayer });
+		const isClick = Math.max(box.width, box.height) < CONFIG.ui.gestures.creationDragThreshold;
+		const layer = TOOLS[this.currentTool]?.onCanvasDrag?.(this, { box, isClick, start: session.startCanvas });
 
 		if (suppressNextClick) {
 			this.ignoreNextClick = true;
 			setTimeout(() => { this.ignoreNextClick = false; }, 0);
 		}
 
-		this.finishLayerCreation(layer);
 		return layer;
 	}
 
 ,
-	startShapeDrag(e) {
-		if (this.beginShapeCreationGesture(e.clientX, e.clientY, { shiftKey: e.shiftKey, suppressNextClick: true })) {
+	startCreationDrag(e) {
+		if (this.beginCreationGesture(e.clientX, e.clientY, { shiftKey: e.shiftKey, suppressNextClick: true })) {
 			const onMove = (ev) => {
-				this.updateShapeCreationGesture(ev.clientX, ev.clientY, ev.shiftKey);
+				this.updateCreationGesture(ev.clientX, ev.clientY, ev.shiftKey);
 			};
 
 			const onUp = (ev) => {
 				window.removeEventListener('pointermove', onMove);
 				window.removeEventListener('pointerup', onUp);
 				window.removeEventListener('pointercancel', onCancel);
-				this.finishShapeCreationGesture(ev.clientX, ev.clientY, {
+				this.finishCreationGesture(ev.clientX, ev.clientY, {
 					shiftKey: ev.shiftKey,
 					suppressNextClick: true
 				});
@@ -367,7 +351,7 @@ togglePreview() {
 				window.removeEventListener('pointermove', onMove);
 				window.removeEventListener('pointerup', onUp);
 				window.removeEventListener('pointercancel', onCancel);
-				this.cancelShapeCreationGesture();
+				this.cancelCreationGesture();
 			};
 
 			window.addEventListener('pointermove', onMove);
@@ -376,63 +360,6 @@ togglePreview() {
 			return;
 		}
 
-		const container = this.previewContainer;
-		const rect = container.getBoundingClientRect();
-		const startCanvas = this.viewport.screenToCanvas(e.clientX, e.clientY);
-		const startScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-
-		const preview = document.createElement('div');
-		preview.className = 'shape-drag-preview';
-		container.appendChild(preview);
-
-		let lastShift = false;
-
-		const boxFromEvent = (ev, useCanvas) => {
-			const a = useCanvas ? startCanvas : startScreen;
-			const b = useCanvas
-				? this.viewport.screenToCanvas(ev.clientX, ev.clientY)
-				: { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-			let w = Math.abs(b.x - a.x);
-			let h = Math.abs(b.y - a.y);
-			if (ev.shiftKey) { w = h = Math.max(w, h); }
-			const left = b.x < a.x ? a.x - w : a.x;
-			const top = b.y < a.y ? a.y - h : a.y;
-			return { left, top, w, h, cx: left + w / 2, cy: top + h / 2 };
-		};
-
-		const onMove = (ev) => {
-			lastShift = ev.shiftKey;
-			const box = boxFromEvent(ev, false);
-			preview.style.left = `${box.left}px`;
-			preview.style.top = `${box.top}px`;
-			preview.style.width = `${box.w}px`;
-			preview.style.height = `${box.h}px`;
-		};
-
-		const onUp = (ev) => {
-			window.removeEventListener('pointermove', onMove);
-			window.removeEventListener('pointerup', onUp);
-			preview.remove();
-
-			const box = boxFromEvent(ev, true);
-			const isClick = Math.max(box.w, box.h) < 6;
-			// A click: no explicit box → createLayer derives an aspect-correct default
-			// size. A drag: pass the drawn box (may stretch, Photoshop-style).
-			const shapeLayer = isClick
-				? { shapeId: this.shapeGlitterManager.getActiveShapeId(), position: { x: startCanvas.x, y: startCanvas.y } }
-				: { shapeId: this.shapeGlitterManager.getActiveShapeId(), position: { x: box.cx, y: box.cy }, width: box.w, height: box.h };
-
-			const layer = this.layerManager.addLayer(LayerType.SHAPE, { shapeLayer });
-
-			// Swallow the click that follows this pointerup so it can't double-create.
-			this.ignoreNextClick = true;
-			setTimeout(() => { this.ignoreNextClick = false; }, 0);
-
-			this.finishLayerCreation(layer);
-		};
-
-		window.addEventListener('pointermove', onMove);
-		window.addEventListener('pointerup', onUp);
 	}
 
 	// ===== GLOBAL LISTENERS =====

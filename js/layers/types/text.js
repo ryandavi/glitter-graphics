@@ -107,7 +107,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		reset: true
 	},
 	createOptionsKey: 'textLayer',
-	autoOpenDesignDrawerOnCreate: true,
+	autoOpenDesignDrawerOnCreate: false,
 	// Reopening the side panel after every tap-created layer is desktop
 	// convenience, not a mobile ask - Editor.finishLayerCreation() reads this.
 	mobileCreateBehavior: { skipReload: true },

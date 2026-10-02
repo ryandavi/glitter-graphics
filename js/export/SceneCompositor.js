@@ -804,6 +804,7 @@ class SceneCompositor {
 	// list is not one item per slot (a frame's shade bands); its items name
 	// the slotMasks key they paint through.
 	_buildSlotStackExportPlan(layer, { ensureTextFont = false, buildStack = null } = {}) {
+		if (ensureTextFont && !buildStack) buildStack = resolveSource => this.editor.textGlitterManager.getSlotStack(layer, resolveSource);
 		const getAuthoredSources = (library) => this._getSlotAuthoredSources(layer, library);
 		const scratch = {
 			compositeCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),

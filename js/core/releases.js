@@ -23,6 +23,7 @@ const RELEASES = [
 		projectFormat: 6,
 		summary: 'Added layer animation, filter, frame, and Sparkles layers, richer layer styling, still-image export, and more faithful animation output.',
 		features: [
+			{ type: 'added', text: 'Added canvas text editing, drag-to-create text boxes, splitting text into characters, words or lines, color emoji, auto-height boxes, justified text, underline and strikethrough, symbols, alternating caps, and plain-text paste.', guide: 'text-typography' },
 			{ type: 'added', text: 'Added stackable Animation to Glitter Fill, Sticker, Text, and Shape layers, with presets for ambient movement, attention effects, motion, rainbow color, and one-time transitions.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added Filter layers that non-destructively process every layer beneath them, with adjustment, Instagram, Web & Film, and Pixel & Damage looks including light leaks, scanlines, dreamy glow, JPEG crunch, RGB split, and gradient maps.', guide: 'filters' },
 			{ type: 'changed', text: 'Moved the canvas Pixelate and Palette effects into Pixelate, Posterize, and Dither filter layers, which can now process any layers beneath them. Projects that used them open with an equivalent filter layer above the canvas.', guide: 'pixel-filters' },

@@ -217,7 +217,7 @@ async function main() {
 		console.log('PASS Scrubby zoom and tool double-click navigation');
 
 		const textId = await page.evaluate(() => window.editor.layerManager.addLayer(LayerType.TEXT_GLITTER, {
-			textLayer: { text: 'Edit me', position: { x: 120, y: 90 }, align: 'center', boxMode: 'auto' }
+			textLayer: { text: 'Edit me', position: { x: 120, y: 90 }, align: 'center', boxMode: 'point' }
 		})?.id);
 		await page.waitForSelector(`.text-glitter-element[data-layer-id="${textId}"]`);
 		await page.evaluate((id) => window.editor.layerManager.setActiveLayer(id), textId);

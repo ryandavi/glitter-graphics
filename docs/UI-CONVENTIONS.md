@@ -210,3 +210,9 @@ Both tools drive the real app through the states in `tools/ui-states.js` (every 
 - **A change meant to be invisible** (a refactor, a rename, a dead-rule sweep): `node tools/ui-ab.js <a.css> <b.css>` loads both stylesheets on the same DOM and reports every element whose computed style or box differs. It must report zero, or every difference must be listed with its reason in an `--allow` file.
 - **A change meant to be visible:** `node tools/ui-contact-sheet.js capture <dir> --css <compiled.css>` before and after, then `build <before> <after> <out.html>` for a page of real screenshots side by side at three widths and two themes. Review the page and the live app; tune by changing token values.
 - `node tools/gutter-check.js` checks the gutter rule, and `node tests/ui/panel-parity.js` the panel DOM against its baseline (`--capture` after an intended change).
+
+## Confirmation policy
+
+Always confirm when Undo cannot restore the discarded work: Clear All, opening over unsaved work, and discarding a preview. These confirmations are independent of Confirm Destructive Actions. Undoable removal of hand-made work (deleting layers, clearing paint, dropping hidden overflow during Split) passes `destructive: true` and follows that preference. Other edits that take one undo step use status feedback without a dialog; Invert Mask follows this rule on every device.
+
+Context toolbar entries may declare `session: 'textEdit'`. Active session bars take priority over tool bars. Their controls dispatch the same commands as the property panel; Bold, Italic and Underline explicitly allow their shortcuts while typing. The text font-size control reuses the `textFontSize` field spec.
