@@ -2542,6 +2542,7 @@ class GlitterEditor {
 			target,
 			timestamp: target.isStill && exportSettings.stillFrame === 'current' ? this.animationTicker.getCurrentTime() : 0,
 			callbacks: {
+				phaseTimer: createExportPhaseTimer(),
 				onStatus: (msg) => this.updateStatus(msg),
 				onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
 					if (this.exportCancelled) throw new Error('Export cancelled');
@@ -2551,6 +2552,7 @@ class GlitterEditor {
 					this.isSaved = true;
 					finishExport();
 				},
+
 				onError: (error) => {
 					// Fired by gif.js encoder events, outside our try/catch below
 					finishExport();

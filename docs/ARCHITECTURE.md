@@ -140,7 +140,9 @@ Preview is DOM, export is canvas. Every visual feature exists twice, and the two
 2. `SceneCompositor` prepares masks, fonts and sources, then asks each layer manager for its export plan through `LAYER_UI_CONFIG[type].managerKey`. Text, shape and fill-layer managers share the slot-stack compositing path: their `renderSlotMasks(layer)` builds every slot mask with the same functions the preview uses, and `_renderSlotStackToCanvas` composites `buildSlotStack` in order. Every slot, the glitter fill and the canvas background paint through `_paintSourceInto`, and authored sources come from the declared slots (`_getSlotAuthoredSources`). A prepared composition context can be reused by repeated still snapshots without reloading sources or rebuilding masks.
 3. `ExportTimeline` and `AuthoredFrameResolver` decide which frames to render and their timing.
 4. `SceneCompositor` renders every frame: `planAnimation` plans an animation (GIF pre-renders its kept frames, MP4 gets a schedule and an async renderer for its entries) and `composeFrameAt` composes one still. Filter plans may await pixel operations such as a real JPEG encode/decode round-trip. **All formats use it:** `GifExporter` encodes with `GifEncodingPipeline` and `GifPalette`; `Mp4Exporter` encodes with WebCodecs and the vendored `mp4-muxer`; `StillImageExporter` encodes PNG, JPEG or a still GIF. JPG Quality remains an encoder setting; authored recompression generations belong to the JPEG Crunch filter look, not export settings.
-5. `ExportResultPresenter` shows the result.
+5. `ExportResultPresenter` shows the result. Its Animation analysis list ends with an Export time row: wall-clock seconds per phase from `createExportPhaseTimer`, which the progress reporters feed.
+
+Long export loops give the main thread back with `yieldForExportProgress` (a message task). Never pace export work with `requestAnimationFrame`: it waits for a screen refresh per yield, runs at half rate in iOS Low Power Mode and stops in a hidden tab.
 
 Pixel-level math only: never `ctx.filter`, because iOS Safari doesn't support it. Masks are binarized (`CONFIG.rendering.crispMaskEdges`) so transparent GIF exports don't fringe.
 
@@ -180,7 +182,7 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 
 ## Workers
 
-`js/workers/` holds `auto-glitter.worker.js` (palette analysis) and `gif.worker.js` (GIF encoding). `js/effects/highlight-detect.js` is worker-safe but runs on the main thread today, on a copy of the host capped at `CONFIG.tools.sparkles.analysisMaxSide`. Workers load shared code with `importScripts`, so anything they import must be DOM-free. `tools/bump-cache.js` stamps both worker constructor URLs and their `importScripts` dependencies.
+`js/workers/` holds `auto-glitter.worker.js` (palette analysis) and `gif.worker.js` (GIF encoding: gif.js 0.2.0 with one local patch, a color cache in `indexPixels`, noted in its header; re-apply it if the file is ever replaced). `js/effects/highlight-detect.js` is worker-safe but runs on the main thread today, on a copy of the host capped at `CONFIG.tools.sparkles.analysisMaxSide`. Workers load shared code with `importScripts`, so anything they import must be DOM-free. `tools/bump-cache.js` stamps both worker constructor URLs and their `importScripts` dependencies.
 
 ## Stretchable assets
 

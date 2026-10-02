@@ -49,6 +49,7 @@ class GifExporter {
 	_handleFileSave(blob, callbacks, plan) {
 		dbg('_handleFileSave called with blob size:', blob.size);
 		reportExportProgress(callbacks, 'finalizing', 1, 'Export complete');
+		plan.phaseTimings = callbacks.phaseTimer?.finish();
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({
 			smartReduced: plan.reduction.framesRemoved > 0,

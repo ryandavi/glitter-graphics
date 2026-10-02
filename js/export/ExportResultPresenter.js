@@ -133,6 +133,21 @@ class ExportResultPresenter {
 			row.append(name, value);
 			assetAnalysisList.append(row);
 		}
+		// Phases that round to nothing are left out of the list, not the total.
+		const seconds = (ms) => `${(ms / 1000).toFixed(1)} s`;
+		const phaseTimings = (timelinePlan?.phaseTimings || []).filter((phase) => seconds(phase.ms) !== seconds(0));
+		if (phaseTimings.length) {
+			const row = document.createElement('div');
+			const name = document.createElement('dt');
+			const value = document.createElement('dd');
+			name.textContent = 'Export time';
+			value.textContent = [
+				seconds(timelinePlan.phaseTimings.reduce((sum, phase) => sum + phase.ms, 0)),
+				...phaseTimings.map((phase) => `${phase.label} ${seconds(phase.ms)}`)
+			].join(' · ');
+			row.append(name, value);
+			assetAnalysisList.append(row);
+		}
 		const title = document.getElementById('exportReductionTitle');
 		const summary = document.getElementById('exportReductionText');
 		const seam = document.getElementById('exportSeamStatus');

@@ -5,6 +5,9 @@
 // threshold (CONFIG.tools.selection.transparency.alphaThreshold, 254) or the
 // watermark preprocessing threshold (CONFIG.export.watermark.alphaThreshold).
 const GIF_TRANSPARENCY_ALPHA_THRESHOLD = 128;
+// Slots in the nearest-palette-color cache (2^bits). Fixed size, so a
+// color-rich animation cannot grow it without bound.
+const GIF_PALETTE_CACHE_BITS = 16;
 
 class GifEncodingPipeline {
 	constructor(config = {}) {
@@ -69,14 +72,22 @@ class GifEncodingPipeline {
 		return false;
 	}
 
+	// Direct-mapped (one color per slot, key stored +1 so an empty slot is 0)
+	// and only valid for one palette: share it across the frames of one encode.
+	_createPaletteCache() {
+		const size = 1 << GIF_PALETTE_CACHE_BITS;
+		return { keys: new Int32Array(size), colors: new Int32Array(size) };
+	}
+
 	// Mirrors GlitterPixelEffects' private dithering distance formula
 	// (dr²·0.3 + dg²·0.59 + db²·0.11) for consistency with the rest of the
 	// app's color matching. Kept local because that helper expects palette
 	// entries as [r,g,b] triples while GifPalette works in flat byte arrays.
+	// Returns the palette color packed as 0xRRGGBB.
 	_nearestPaletteRGB(r, g, b, palette, cache) {
-		const key = (r << 16) | (g << 8) | b;
-		const cached = cache.get(key);
-		if (cached) return cached;
+		const key = ((r << 16) | (g << 8) | b) + 1;
+		const slot = Math.imul(key, 0x9E3779B1) >>> (32 - GIF_PALETTE_CACHE_BITS);
+		if (cache.keys[slot] === key) return cache.colors[slot];
 		let bestOffset = 0;
 		let bestDistance = Infinity;
 		for (let offset = 0; offset < palette.length; offset += 3) {
@@ -86,9 +97,10 @@ class GifEncodingPipeline {
 			const distance = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
 			if (distance < bestDistance) { bestDistance = distance; bestOffset = offset; }
 		}
-		const result = [palette[bestOffset], palette[bestOffset + 1], palette[bestOffset + 2]];
-		cache.set(key, result);
-		return result;
+		const color = (palette[bestOffset] << 16) | (palette[bestOffset + 1] << 8) | palette[bestOffset + 2];
+		cache.keys[slot] = key;
+		cache.colors[slot] = color;
+		return color;
 	}
 
 	// Choose an RGB value absent from the small visible palette to reserve as
@@ -119,10 +131,9 @@ class GifEncodingPipeline {
 	// its own nearest-color lookup can never drift an opaque color onto the
 	// reserved transparency index. Every transparent pixel maps directly to
 	// the sentinel. Alpha itself never participates in the color decision.
-	_prepareTransparentFrame(frame, visiblePalette, sentinel, alphaThreshold) {
+	_prepareTransparentFrame(frame, visiblePalette, sentinel, alphaThreshold, cache = this._createPaletteCache()) {
 		const copy = new ImageData(new Uint8ClampedArray(frame.data), frame.width, frame.height);
 		const data = copy.data;
-		const cache = new Map();
 		let hasTransparentPixel = false;
 		for (let offset = 0; offset < data.length; offset += 4) {
 			if (data[offset + 3] < alphaThreshold) {
@@ -132,10 +143,10 @@ class GifEncodingPipeline {
 				data[offset + 3] = 255;
 				hasTransparentPixel = true;
 			} else if (visiblePalette.length) {
-				const [r, g, b] = this._nearestPaletteRGB(data[offset], data[offset + 1], data[offset + 2], visiblePalette, cache);
-				data[offset] = r;
-				data[offset + 1] = g;
-				data[offset + 2] = b;
+				const color = this._nearestPaletteRGB(data[offset], data[offset + 1], data[offset + 2], visiblePalette, cache);
+				data[offset] = color >> 16;
+				data[offset + 1] = (color >> 8) & 255;
+				data[offset + 2] = color & 255;
 				data[offset + 3] = 255;
 			} else {
 				// No visible color exists anywhere in the animation (item 25:
@@ -220,13 +231,14 @@ class GifEncodingPipeline {
 		if (hasGifTransparency) options.background = sentinel.hex;
 		const gif = new GIF(options);
 		const paletteMode = useNativePalette ? 'native' : 'shared';
+		const paletteCache = hasGifTransparency ? this._createPaletteCache() : null;
 		for (let index = 0; index < frameCount; index++) {
 			if (isCancelled?.()) throw new Error('Export cancelled');
 			const sourceFrame = frames[index];
 			let preparedFrame = sourceFrame;
 			let frameIsTransparent = false;
 			if (hasGifTransparency) {
-				const prepared = this._prepareTransparentFrame(sourceFrame, visiblePalette, sentinel, GIF_TRANSPARENCY_ALPHA_THRESHOLD);
+				const prepared = this._prepareTransparentFrame(sourceFrame, visiblePalette, sentinel, GIF_TRANSPARENCY_ALPHA_THRESHOLD, paletteCache);
 				preparedFrame = prepared.frame;
 				frameIsTransparent = prepared.hasTransparentPixel;
 				// A fully opaque frame inside an otherwise-transparent animation
@@ -240,7 +252,7 @@ class GifEncodingPipeline {
 			preparedFrame = null;
 			reportProgress?.('palette', 0.5 + ((index + 1) / frameCount * 0.5), `Preparing frame ${index + 1} / ${frameCount}`, index + 1, frameCount);
 			if (index + 1 < frameCount && (index + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
-				await new Promise((resolve) => requestAnimationFrame(resolve));
+				await yieldForExportProgress();
 			}
 		}
 		reportProgress?.('palette', 1, `Palette ready for ${frameCount} frames`, frameCount, frameCount);

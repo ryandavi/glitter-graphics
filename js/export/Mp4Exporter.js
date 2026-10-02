@@ -12,6 +12,7 @@ const MP4_EXPORT_PROGRESS_PHASES = Object.freeze({
 function reportMp4ExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phaseCurrent = 0, phaseTotal = 0) {
 	const phase = MP4_EXPORT_PROGRESS_PHASES[phaseKey];
 	const boundedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
+	callbacks.phaseTimer?.mark(phase.label);
 	callbacks.onProgress(phase.start + ((phase.end - phase.start) * boundedRatio), detail, phaseCurrent, phaseTotal, {
 		phase: phase.label,
 		detail,
@@ -189,6 +190,7 @@ class Mp4Exporter {
 		if (!blob.size) throw new Error('MP4 encoder produced an empty file.');
 
 		reportMp4ExportProgress(callbacks, 'finalizing', 1, 'Export complete');
+		plan.phaseTimings = callbacks.phaseTimer?.finish();
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({ smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan });
 		const file = new File([blob], this.fileName, { type: 'video/mp4', lastModified: Date.now() });

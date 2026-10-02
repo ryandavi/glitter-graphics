@@ -21,6 +21,7 @@ function reportExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phase
 	const phase = EXPORT_PROGRESS_PHASES[phaseKey];
 	const boundedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
 	const percent = phase.start + ((phase.end - phase.start) * boundedRatio);
+	callbacks.phaseTimer?.mark(phase.label);
 	callbacks.onProgress(percent, detail, phaseCurrent, phaseTotal, {
 		phase: phase.label,
 		detail,
@@ -28,6 +29,46 @@ function reportExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phase
 		phaseTotal,
 		indeterminate: options.indeterminate ?? phaseTotal <= 0
 	});
+}
+
+// Hands the main thread back so progress can paint and Cancel can land. A
+// message task, never requestAnimationFrame: a frame callback waits for the
+// next screen refresh (twice as long in iOS Low Power Mode) and does not fire
+// in a hidden tab, so an export paced by it idles most of its time or stalls.
+function yieldForExportProgress() {
+	return new Promise((resolve) => {
+		const { port1, port2 } = new MessageChannel();
+		port1.onmessage = () => {
+			port1.close();
+			resolve();
+		};
+		port2.postMessage(null);
+	});
+}
+
+// Wall-clock time per export phase, shown in the export result so a slow
+// export can be read on the device that ran it. mark() returns the phase it
+// replaced, so a caller can time a step inside a phase and then resume it.
+function createExportPhaseTimer() {
+	const totals = new Map();
+	let current = null;
+	let since = 0;
+	const mark = (label) => {
+		const previous = current;
+		if (label === current) return previous;
+		const now = performance.now();
+		if (current) totals.set(current, (totals.get(current) || 0) + now - since);
+		current = label;
+		since = now;
+		return previous;
+	};
+	return {
+		mark,
+		finish() {
+			mark(null);
+			return [...totals].map(([label, ms]) => ({ label, ms }));
+		}
+	};
 }
 
 function ensureCanvasSize(canvas, width, height) {
@@ -1262,7 +1303,7 @@ class SceneCompositor {
 					transparency: { enabled: preserveAlpha },
 					sourceSelectionMap: frameSelection,
 					resolvedFramesBySource
-				});
+				}, callbacks.phaseTimer);
 				if (renderedCandidateCount < candidateCount
 					&& renderedCandidateCount % CONFIG.export.progress.yieldEveryFrames === 0) {
 					await this._yieldForProgress();
@@ -1471,14 +1512,18 @@ class SceneCompositor {
 		return this.canvas;
 	}
 
-	async _renderFrame(options) {
+	// phaseTimer (optional) times the pixel readback apart from the drawing.
+	async _renderFrame(options, phaseTimer = null) {
 		await this._renderFrameToCanvas(options);
 		const { width, height } = options.context.canvasData;
-		return this.ctx.getImageData(0, 0, width, height);
+		const phase = phaseTimer?.mark('Reading pixels');
+		const imageData = this.ctx.getImageData(0, 0, width, height);
+		if (phase) phaseTimer.mark(phase);
+		return imageData;
 	}
 
 	_yieldForProgress() {
-		return new Promise((resolve) => requestAnimationFrame(resolve));
+		return yieldForExportProgress();
 	}
 
 	async estimateLoopDuration({
