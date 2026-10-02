@@ -268,16 +268,6 @@
 	color: var(--color-text-tertiary);
 }
 
-.property-module-content {
-	display: none;
-	flex-direction: column;
-	gap: var(--property-row-gap);
-
-	&.visible {
-		display: flex;
-	}
-}
-
 .effect-stack-row {
 	grid-template-columns: 1fr !important;
 }

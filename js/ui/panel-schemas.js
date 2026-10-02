@@ -139,7 +139,7 @@ function createRegistryOptionEntries(name, idPrefix) {
 function createAnimationPanelSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
 	return {
-		kind: 'card', title: 'Animation', badge: 'beta', classes: 'panel-module animation-module',
+		kind: 'card', title: 'Animation', badge: 'beta', classes: 'animation-module',
 		titleSummary: { id: id('Summary'), text: 'Off' },
 		toggle: { id: id('Enabled'), label: '', title: 'Enable Animation' },
 		// No `content` wrapper: items sit directly on the card, exactly like every
@@ -147,8 +147,7 @@ function createAnimationPanelSpec(prefix) {
 		// gets the animation card the same shared contract for free \u2014 the
 		// standard `is-collapsed` accordion (toggled by the generic effect-toggle
 		// listener, `syncPanelEffectToggle`) hides the whole body including the
-		// trailing `advanced` block, which renders as a sibling of
-		// `.property-card-body`, not nested inside it.
+		// trailing `advanced` block inside `.property-card-body`.
 		items: [
 			{ kind: 'set', items: [
 				{ kind: 'host', id: id('Stack'), classes: 'segmented-control animation-stack', attrs: { hidden: 'hidden' } },
@@ -500,7 +499,7 @@ const PANEL_SCHEMAS = {
 		},
 		groups: [
 			{ title: 'Content', items: [
-				{ kind: 'card', title: 'Tip', moduleSummary: 'asset', classes: 'panel-module', items: [
+				{ kind: 'card', title: 'Tip', moduleSummary: 'asset', items: [
 					{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
 						name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
 						title: 'Choose another brush tip', compact: true },
@@ -662,7 +661,7 @@ const PANEL_SCHEMAS = {
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 			groups: [
 				{ title: 'Content', items: [
-					{ kind: 'card', title: 'Asset', moduleSummary: 'asset', classes: 'panel-module sticker-asset-module', items: [
+					{ kind: 'card', title: 'Asset', moduleSummary: 'asset', classes: 'sticker-asset-module', items: [
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
 							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
@@ -739,7 +738,7 @@ const PANEL_SCHEMAS = {
 				] },
 				// Everything about how the letters are set, in one section: the
 				// face, its metrics, then how lines sit in the box.
-				{ kind: 'card', title: 'Type', flatBody: true, moduleSummary: 'asset', classes: 'panel-module text-font-module', items: [
+				{ kind: 'card', title: 'Type', flatBody: true, moduleSummary: 'asset', classes: 'text-font-module', items: [
 					{ kind: 'set', label: 'Font', items: [
 						// The current font; Change opens the Library's Fonts.
 						{ kind: 'assetInfo', info: 'textFontInfo', thumbnail: 'textFontThumbnail',
@@ -895,7 +894,7 @@ const PANEL_SCHEMAS = {
 		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
 		groups: [
 			{ title: 'Content', items: [
-				{ kind: 'card', title: 'Asset', moduleSummary: 'asset', classes: 'panel-module shape-asset-module', items: [
+				{ kind: 'card', title: 'Asset', moduleSummary: 'asset', classes: 'shape-asset-module', items: [
 					{ kind: 'assetInfo', info: 'shapeAssetInfo', thumbnail: 'shapeAssetThumbnail',
 						name: 'shapeAssetName', badges: 'shapeAssetBadges', change: 'shapeAssetChange',
 						title: 'Choose another shape', compact: true },

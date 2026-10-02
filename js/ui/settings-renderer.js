@@ -223,7 +223,7 @@ function buildSettingsGroup(group) {
 			return;
 		}
 		body.appendChild(buildGovernedHeader(row.governed));
-		card.appendChild(buildGovernedDisclosure(row.governed));
+		body.appendChild(buildGovernedDisclosure(row.governed));
 	});
 	card.classList.add('settings-group');
 	if (group.section) card.dataset.section = group.section;

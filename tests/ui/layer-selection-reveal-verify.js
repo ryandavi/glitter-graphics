@@ -51,6 +51,17 @@ async function main() {
 		}, ids);
 		await settle(page);
 		assert.deepStrictEqual(await page.evaluate(() => window.layerRevealCalls), [], 'ordinary selection does not move the Layers panel');
+		const pickerStates = await page.evaluate(({ baseId, shapeId }) => {
+			const editor = window.editor;
+			const strip = document.getElementById('galleryPickerStrip');
+			const singleVisible = !strip.hidden;
+			editor.layerManager.setSelection([baseId, shapeId], { activeLayerId: shapeId });
+			editor.shapeGlitterManager.updatePickerStrip();
+			const multiHidden = strip.hidden && !strip.classList.contains('is-hint') && !strip.classList.contains('is-armed');
+			editor.layerManager.setActiveLayer(shapeId);
+			return { singleVisible, multiHidden, restoredVisible: !strip.hidden };
+		}, ids);
+		assert.deepStrictEqual(pickerStates, { singleVisible: true, multiHidden: true, restoredVisible: true }, 'picker hints require a single selected layer');
 
 		await page.evaluate(({ baseId }) => {
 			window.layerRevealCalls = [];

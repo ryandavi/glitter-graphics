@@ -67,7 +67,11 @@ async function settle(page) {
 // ranges/defaults (catches FIELDS drift).
 async function captureStructure(page) {
 	return page.evaluate((sectionIds) => {
+		if (document.querySelector('.property-module-content')) throw new Error('Modules still use a separate content container');
+		const looseDisclosure = document.querySelector('.property-card > .advanced-disclosure');
+		if (looseDisclosure) throw new Error(`Card disclosure is outside the card body: ${looseDisclosure.parentElement.outerHTML.slice(0, 400)}`);
 		document.querySelectorAll('.paint-slot-card[data-slot]').forEach((slot) => {
+			if (!slot.querySelector(':scope > .property-card-body')) throw new Error(`Paint slot ${slot.dataset.slot} has no card body`);
 			const glitterMode = slot.querySelector('.segmented-option[data-mode="glitter"]');
 			if (!glitterMode) return;
 			if (!slot.querySelector('.asset-info')) throw new Error(`Paint slot ${slot.dataset.slot} has no asset-info block`);

@@ -18,6 +18,9 @@ function check(name, cond, detail='') {
 	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
 	const page = await context.newPage();
+	if (process.env.GLITTER_CSS) {
+		await page.route('**/css/style.css*', (route) => route.fulfill({ path: process.env.GLITTER_CSS, contentType: 'text/css' }));
+	}
 	const errors = [];
 	page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 	page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });

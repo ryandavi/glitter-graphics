@@ -1,0 +1,14 @@
+[
+	{
+		"name": "desk no-selection",
+		"file": "desk-no-selection.png"
+	},
+	{
+		"name": "desk no-selection (light)",
+		"file": "desk-no-selection-light.png"
+	},
+	{
+		"name": "laptop no-selection",
+		"file": "laptop-no-selection.png"
+	}
+]

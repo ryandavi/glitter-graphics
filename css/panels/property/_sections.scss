@@ -1,3 +1,5 @@
+@use '../../mixins' as *;
+
 // ===== Grouping: group > section > set =====================================
 //
 //   .settings-subsection           the panel's column of groups
@@ -27,10 +29,10 @@
 // A section without an accordion header (`section.bare`) is laid out like a
 // collapsible section's content.
 .property-panel .section.property-section:not(.collapsible-section) > .section-content {
+	padding: 0;
 	display: flex;
 	flex-direction: column;
 	gap: 0;
-	padding: 0;
 	min-width: 0;
 
 	// A preamble note opens the panel, so it brings its own top space.
@@ -49,12 +51,23 @@
 	border: 0;
 	background: transparent;
 
+	padding: calc(var(--property-gutter)/2) 0;
+
+	&:first-child { padding-top: 0; }
+
 	> .property-group-label { display: none; }
+
+	+ .property-group {
+		border-top: 1px solid var(--color-border);
+	}
+
+
 
 	&.has-group-label > .property-group-label {
 		display: block;
 		padding: var(--property-gutter);
-		border-bottom: 1px solid var(--color-border);
+		padding-bottom: calc(var(--property-gutter) / 2);
+		// border-bottom: 1px solid var(--color-border);
 	}
 }
 
@@ -81,7 +94,7 @@
 	flex-direction: column;
 	// gap: var(--property-row-gap);
 	// padding: 0 0 var(--property-section-pad-bottom);
-	border-bottom: 1px solid var(--color-border);
+	// border-bottom: 1px solid var(--color-border);
 
 	// Closed, a section is its title row and nothing else, so a run of them
 	// (Effects) reads as a list.
@@ -89,10 +102,8 @@
 		padding: 0;
 	}
 
-	&:not(.is-collapsed){
-		> .property-card-title + .property-card-body {
-			border-top: 1px solid var(--color-border);
-		}
+	&:not(.is-collapsed):not(:last-child){
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	> .property-card-title {
@@ -132,7 +143,6 @@
 	flex-direction: column;
 	gap: var(--property-row-gap);
 	min-width: 0;
-	padding: 0;
 }
 
 // ----- The set ----------------------------------------------------------------
@@ -152,7 +162,7 @@
 // ----- R6: actions ----------------------------------------------------------
 // One button per line: buttons carry words. `.is-split` opts into two columns
 // where two full labels fit (Open / Save Project).
-.property-actions {
+.property-panel .property-set.property-actions {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--spacing-sm);
@@ -168,9 +178,9 @@
 // A group-level row (`.section-actions`: panel-end Actions, Reset Effects)
 // belongs to no section, so it carries its own space and closes with the
 // same hairline a section does.
-.property-section .property-actions.section-actions {
+.property-panel .property-set.property-actions.section-actions {
 	padding-block: var(--property-section-pad-top);
-	border-bottom: 1px solid var(--color-border);
+	// border-bottom: 1px solid var(--color-border);
 }
 
 // ----- Collapsing -----------------------------------------------------------
@@ -189,7 +199,7 @@
 }
 
 .property-panel [data-collapsible-card] > .property-card-title:hover {
-	background: var(--color-bg-tertiary);
+	// background: var(--color-bg-tertiary);
 }
 
 // ----- Nothing renders an empty shell ----------------------------------------
@@ -197,3 +207,95 @@
 // heading and layout footprint. The renderer's vacancy observer stamps
 // `.is-vacant` (panel-renderer.js); like `[hidden]`, it always wins.
 .is-vacant { display: none !important; }
+
+
+.property-card-body {
+	// border-top: 1px solid var(--color-border);
+	padding: var(--property-gutter) 0;
+	padding-top: 0;
+
+}
+
+// ----- Optional card header controls and enabled state ----------------------
+.property-card-summary {
+	flex: 0 1 auto;
+	max-width: 55%;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: right;
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-normal);
+	letter-spacing: 0;
+	text-transform: none;
+	line-height: 16px;
+	color: var(--color-text-tertiary);
+	font-variant-numeric: tabular-nums;
+
+	&:empty { display: none; }
+}
+
+.property-card-swatch {
+	width: 14px;
+	height: 14px;
+	flex: 0 0 14px;
+	border: 1px solid var(--color-border-hover);
+	border-radius: var(--property-r-inner);
+	background: var(--color-bg-secondary);
+}
+
+// The enable switch sits at the right of the title row, where a row's value
+// would be.
+.property-header-switch {
+	display: inline-flex;
+	position: relative;
+	align-items: center;
+	flex: 0 0 auto;
+	height: var(--control-height);
+	box-sizing: border-box;
+	cursor: pointer;
+	user-select: none;
+
+	> input[type="checkbox"] {
+		@include visually-hidden-control;
+		cursor: pointer;
+	}
+
+	// The span carries the accessible word ("Enabled"); only the track shows.
+	> span {
+		color: transparent;
+		font-size: 0;
+		overflow: hidden;
+		@include switch-track(var(--switch-w), var(--switch-h), 3px);
+	}
+
+	> input:checked + span { @include switch-track-on(var(--switch-w), var(--switch-h)); }
+	> input:focus-visible + span { box-shadow: var(--control-focus-ring); }
+	&:hover > input:not(:checked) + span { border-color: var(--color-border-hover); }
+
+	> input:disabled + span {
+		opacity: var(--opacity-disabled);
+		cursor: not-allowed;
+	}
+}
+
+// ----- A switched-off module -------------------------------------------------
+// `.is-off` is stamped by syncPanelEffectToggle. Off, a module reads as one
+// quiet line; opened anyway, its body is an inert preview.
+.property-panel .property-card.is-off {
+	> .property-card-title > span:first-of-type { color: var(--color-text-tertiary); }
+
+	&:not(.is-collapsed) > :not(.property-card-title) {
+		opacity: var(--opacity-disabled);
+		pointer-events: none;
+	}
+}
+
+// "No value": a switched-off slot, a None source, or a source whose asset is
+// not chosen yet (syncModuleSummary stamps `.is-unset`). `!important` because
+// the last active source's background is still inline on the swatch.
+.property-card-swatch.is-unset {
+	@include swatch-unset-fill($important: true);
+	opacity: 0.55;
+}

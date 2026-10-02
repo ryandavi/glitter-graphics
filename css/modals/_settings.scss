@@ -74,8 +74,8 @@
 //
 // A preset that writes many values (GIF Look → its palette and texture rows)
 // keeps them in the panel's Advanced disclosure, labelled Customize: the
-// card's footer, styled by the panel as in any sidebar card. Its header row,
-// the last row of the card body, ends on a summary of what they currently are.
+// inside the card body, styled by the panel as in any sidebar card. Its header
+// row ends on a summary of what the governed values currently are.
 //
 // What the governed rows currently amount to, stated as the header's last note.
 .governed-summary {
@@ -89,7 +89,7 @@
 	// A live search has to be able to reveal a governed row, so filtering
 	// forces every disclosure open for as long as there is a query, and drops
 	// one whose rows are all filtered out.
-	.settings-group > .advanced-disclosure {
+	.settings-group > .property-card-body > .advanced-disclosure {
 		> .advanced-disclosure-content { display: flex; }
 		&.is-filtered-out { display: none; }
 	}

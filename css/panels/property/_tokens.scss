@@ -8,8 +8,7 @@
 //   _typography   the type levels
 //   _rows         the row types, the revert, the value readout
 //   _fields       controls inside a row: segmented, select, number, color
-//   _sections     groups, sections, sets, actions, the Advanced disclosure
-//   _modules      a section whose title enables or summarizes it
+//   _sections     groups, cards, sets, actions, header controls and enabled state
 //   _asset-summary, _transform, _widgets   the composed pieces
 //   _regions      sticky header / scroll / footer sections
 //   _responsive   container queries
@@ -18,7 +17,7 @@
 //   R2 .property-row.is-stacked   label+value, control full width
 //   R3 .property-row.is-pair      two properties reading as one value
 //   R4 .property-row.is-toggle    label | switch
-//   R5 .panel-module              one line collapsed, editor beneath
+//   R5 .property-card             title + body, optional summary and enable switch
 //   R6 .property-actions          buttons, at the end of their block
 //   R7 .property-note             helper text, status, empty state
 //

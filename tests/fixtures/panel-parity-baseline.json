@@ -69,7 +69,7 @@
 		{
 			"id": "projectNameSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "noLayerDefaultGroups"
 		},
 		{
@@ -106,13 +106,13 @@
 		{
 			"id": "documentSizeGroup",
 			"tag": "div",
-			"classes": "document-size-group panel-module property-card",
+			"classes": "document-size-group property-card",
 			"parent": "noLayerCanvasSizeHost"
 		},
 		{
 			"id": "noLayerSizeSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -314,7 +314,7 @@
 		{
 			"id": "canvasSizeActions",
 			"tag": "div",
-			"classes": "canvas-size-actions is-split property-actions",
+			"classes": "canvas-size-actions is-split property-actions property-set",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -332,7 +332,7 @@
 		{
 			"id": "scaleDesignActions",
 			"tag": "div",
-			"classes": "is-split property-actions scale-design-actions",
+			"classes": "is-split property-actions property-set scale-design-actions",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -350,7 +350,7 @@
 		{
 			"id": "artworkCropActions",
 			"tag": "div",
-			"classes": "artwork-crop-actions is-split property-actions",
+			"classes": "artwork-crop-actions is-split property-actions property-set",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -750,7 +750,7 @@
 		{
 			"id": "canvasSparklesControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "baseLayerSettingsContent"
 		},
 		{
@@ -1876,7 +1876,7 @@
 		{
 			"id": "glitterBorderControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "glitterSettingsControls"
 		},
 		{
@@ -2223,7 +2223,7 @@
 		{
 			"id": "glitterShadowControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "glitterSettingsControls"
 		},
 		{
@@ -2566,7 +2566,7 @@
 		{
 			"id": "glitterSparklesControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "glitterSettingsControls"
 		},
 		{
@@ -3133,7 +3133,7 @@
 		{
 			"id": "glitterAnimSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "glitterSettingsControls"
 		},
 		{
@@ -4022,7 +4022,7 @@
 		{
 			"id": "stickerStyleSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "stickerSettingsControls"
 		},
 		{
@@ -4334,7 +4334,7 @@
 		{
 			"id": "stickerBorderControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "stickerSettingsControls"
 		},
 		{
@@ -4677,7 +4677,7 @@
 		{
 			"id": "stickerShadowControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "stickerSettingsControls"
 		},
 		{
@@ -5020,7 +5020,7 @@
 		{
 			"id": "stickerBevelControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "stickerSettingsControls"
 		},
 		{
@@ -5254,7 +5254,7 @@
 		{
 			"id": "stickerBevelShadeCard",
 			"tag": "div",
-			"classes": "paint-slot-card panel-module property-card",
+			"classes": "paint-slot-card property-card",
 			"parent": "stickerBevelControls"
 		},
 		{
@@ -5708,7 +5708,7 @@
 		{
 			"id": "stickerSparklesControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "stickerSettingsControls"
 		},
 		{
@@ -6275,7 +6275,7 @@
 		{
 			"id": "stickerAnimSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "stickerSettingsControls"
 		},
 		{
@@ -6916,7 +6916,7 @@
 		{
 			"id": "textWarpSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -6959,7 +6959,7 @@
 		{
 			"id": "textStyleSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -7513,7 +7513,7 @@
 		{
 			"id": "textBackgroundControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -7899,7 +7899,7 @@
 		{
 			"id": "textBorderControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -8246,7 +8246,7 @@
 		{
 			"id": "textShadowControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -8589,7 +8589,7 @@
 		{
 			"id": "textBevelControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -8823,7 +8823,7 @@
 		{
 			"id": "textBevelShadeCard",
 			"tag": "div",
-			"classes": "paint-slot-card panel-module property-card",
+			"classes": "paint-slot-card property-card",
 			"parent": "textBevelControls"
 		},
 		{
@@ -9277,7 +9277,7 @@
 		{
 			"id": "textSparklesControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -9844,7 +9844,7 @@
 		{
 			"id": "textAnimSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -10405,7 +10405,7 @@
 		{
 			"id": "shapeStyleSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -11038,7 +11038,7 @@
 		{
 			"id": "shapeBorderControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -11428,7 +11428,7 @@
 		{
 			"id": "shapeShadowControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -11771,7 +11771,7 @@
 		{
 			"id": "shapeBevelControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -12005,7 +12005,7 @@
 		{
 			"id": "shapeBevelShadeCard",
 			"tag": "div",
-			"classes": "paint-slot-card panel-module property-card",
+			"classes": "paint-slot-card property-card",
 			"parent": "shapeBevelControls"
 		},
 		{
@@ -12459,7 +12459,7 @@
 		{
 			"id": "shapeSparklesControls",
 			"tag": "div",
-			"classes": "property-module-content",
+			"classes": "property-card-body",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -13026,7 +13026,7 @@
 		{
 			"id": "shapeAnimSummary",
 			"tag": "span",
-			"classes": "property-module-summary",
+			"classes": "property-card-summary",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -13623,7 +13623,7 @@
 		{
 			"id": "filterSnapshotActions",
 			"tag": "div",
-			"classes": "property-actions",
+			"classes": "property-actions property-set",
 			"parent": "filterCustomize"
 		},
 		{

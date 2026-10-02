@@ -43,7 +43,15 @@ const STYLE_PRESET_ENTRIES = (() => {
 	// spread + blur must beat the outline width (the unit test holds every
 	// look to it).
 	return [
-		{ id: 'plain', label: 'Plain', group: 'classic', targets: all, tags: ['none', 'reset'], value: { slots: {} } },
+		{
+			id: 'default', label: 'Default', group: 'classic', targets: ['text'], tags: ['reset'],
+			value: {
+				resetFill: true,
+				slots: { fill: buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text }) },
+				data: { 'textData.fontId': CONFIG.tools.text.defaultFontId, 'textData.textCase': CONFIG.tools.text.defaultTextCase }
+			}
+		},
+		{ id: 'plain', label: 'Plain', group: 'classic', targets: ['shape', 'sticker'], tags: ['none', 'reset'], value: { slots: {} } },
 		{
 			id: 'blingee-pink', label: 'Blingee Pink', group: 'classic', targets: all,
 			value: { slots: {
@@ -228,13 +236,14 @@ function applyStylePresetValue(layer, value, context) {
 		const partial = slots[definition.key] ? structuredClone(slots[definition.key]) : null;
 		if (definition.role === 'fill') {
 			if (!partial) return;
-			const fill = readFieldPath(layer, definition.pathKeys);
+			const fill = value.resetFill ? context.getSlotDefaults(definition.key) : readFieldPath(layer, definition.pathKeys);
 			Object.assign(fill, {
 				opacity: FIELDS.slotOpacity.value,
 				scale: FIELDS.textureScale.value,
 				colorAdjust: null
 			}, partial);
 			repairGlitter(definition, fill);
+			if (value.resetFill) writeFieldPath(layer, definition.pathKeys, fill);
 			return;
 		}
 		if (!partial && !enabledPaths.has(definition.enabledPath)) {

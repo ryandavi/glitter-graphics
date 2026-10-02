@@ -101,7 +101,7 @@ $mobile-breakpoint: 800px;
 }
 
 // The shared "no value here" fill: a faint diagonal hatch. Used for a paint
-// slot whose source is None / disabled (`.property-module-swatch`) and for an
+// slot whose source is None / disabled (`.property-card-swatch`) and for an
 // asset thumbnail with nothing to show (`.asset-info-thumbnail`), so "unset"
 // and "no thumbnail available" read the same wherever they appear. `$important`
 // is for the module swatch, which must out-rank an inline `style.background`.

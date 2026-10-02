@@ -84,7 +84,7 @@ function renderPickerStrip(state = {}) {
 	const detail = document.getElementById('galleryPickerStripDetail');
 	const done = document.getElementById('galleryPickerStripDone');
 	const section = document.getElementById('designGallerySection');
-	const visible = Boolean(state.visible);
+	const visible = Boolean(state.visible) && !window.editor?.layerManager?.hasMultiSelection();
 	const armed = visible && Boolean(state.armed);
 	const hint = visible && Boolean(state.hint);
 

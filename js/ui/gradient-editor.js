@@ -52,7 +52,7 @@ function installEffectGradientEditor(options) {
 	if (primarySet) primarySet.before(...gradientSets);
 	else paintMain.append(...gradientSets);
 	const moduleAdvanced = slotCard?.querySelector('.advanced-disclosure.glitter-source-glitter');
-	if (advanced) (moduleAdvanced ? moduleAdvanced.before(advanced) : slotCard?.appendChild(advanced));
+	if (advanced) (moduleAdvanced ? moduleAdvanced.before(advanced) : slotCard?.querySelector(':scope > .property-card-body')?.appendChild(advanced));
 	const defaults = CONFIG.rendering.gradient;
 	const update = (commit) => {
 		const data = options.getData();

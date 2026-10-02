@@ -6,7 +6,7 @@
 
 .preset-grid-group {
 	display: grid;
-	gap: var(--spacing-sm);
+	gap: var(--spacing-md);
 }
 
 .preset-grid-heading {
@@ -19,7 +19,7 @@
 .preset-grid-options {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: var(--spacing-sm);
+	gap: var(--spacing-md);
 }
 
 .preset-grid-option {
@@ -55,6 +55,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	font-size: var(--font-size-xs);
 }
 
 // Filter thumbnails paint every look over one shared CSS scene, so tiles

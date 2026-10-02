@@ -1232,10 +1232,6 @@ select {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-textarea::-moz-placeholder, input[type=email]::-moz-placeholder, input[type=password]::-moz-placeholder, input[type=url]::-moz-placeholder, input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder, input[type=search]::-moz-placeholder, select::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
-}
 textarea::placeholder,
 input[type=email]::placeholder,
 input[type=password]::placeholder,
@@ -1282,20 +1278,16 @@ select:disabled {
 }
 
 input[type=number] {
-  -webkit-appearance: textfield;
-     -moz-appearance: textfield;
-          appearance: textfield;
+  appearance: textfield;
 }
 input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-          appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 select {
   -webkit-appearance: none;
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   padding-right: calc(var(--control-padding-inline) + 20px);
   background-image: linear-gradient(45deg, transparent 50%, var(--color-text-tertiary) 50%), linear-gradient(135deg, var(--color-text-tertiary) 50%, transparent 50%);
   background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
@@ -1431,9 +1423,7 @@ textarea {
   gap: 2px;
   min-width: 0;
   padding: var(--spacing-sm);
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-secondary);
@@ -1467,8 +1457,7 @@ textarea {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: auto auto;
-  -moz-column-gap: var(--spacing-sm);
-       column-gap: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   row-gap: 1px;
   padding: var(--spacing-sm) var(--spacing-base);
   text-align: left;
@@ -1639,8 +1628,7 @@ input[type=range] {
   display: block;
   width: 100%;
   height: var(--control-height);
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
   background: transparent !important;
   border: 0;
@@ -1976,9 +1964,7 @@ input[type=range]:disabled {
 }
 
 .filter-chip {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2630,6 +2616,7 @@ input[type=range]:disabled {
   padding: var(--spacing-xs);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -2721,6 +2708,7 @@ input[type=range]:disabled {
 .toolbar {
   width: var(--toolbar-width);
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   display: flex;
   flex-direction: column;
@@ -2743,16 +2731,13 @@ input[type=range]:disabled {
   display: none;
 }
 .toolbar.has-overflow-top.has-overflow-bottom {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
-          mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
 }
 .toolbar.has-overflow-top:not(.has-overflow-bottom) {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
-          mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
 }
 .toolbar.has-overflow-bottom:not(.has-overflow-top) {
-  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
-          mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
+  mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
 }
 .toolbar > .toolbar-spacer {
   flex: 1;
@@ -2832,9 +2817,7 @@ input[type=range]:disabled {
 
 body.is-resizing-panel {
   cursor: col-resize !important;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 body.is-resizing-panel iframe,
 body.is-resizing-panel canvas {
@@ -2862,6 +2845,7 @@ body.is-resizing-panel canvas {
   flex-direction: column;
   overflow: hidden;
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .layers-section > .section-header {
@@ -3510,7 +3494,7 @@ body.is-booting .workspace-start button {
   color: var(--color-text-primary);
   font-size: clamp(22px, 4vw, 30px);
 }
-@supports ((-webkit-background-clip: text) or (background-clip: text)) or (-webkit-background-clip: text) {
+@supports (background-clip: text) or (-webkit-background-clip: text) {
   .workspace-start-copy h2 {
     background-image: var(--workspace-heading-glitter-image);
     background-repeat: repeat;
@@ -3639,6 +3623,7 @@ body.is-booting .workspace-start button {
   gap: var(--spacing-sm);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -3839,8 +3824,7 @@ body.is-booting .workspace-start button {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   opacity: 0.5;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
 }
@@ -3890,6 +3874,7 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -3920,9 +3905,7 @@ body.mask-editing .sticker-element {
 .color-picker-controls.is-dragging,
 .mask-brush-controls.is-dragging {
   transition: none;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
   box-shadow: 0 8px 24px var(--color-shadow-strong), 0 0 0 2px var(--color-accent);
 }
 .zoom-controls.is-dragging .context-toolbar-handle,
@@ -4002,9 +3985,7 @@ body.mask-editing .sticker-element {
   letter-spacing: 0.5px;
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   padding: 0 var(--spacing-xs);
   border: 0;
   border-radius: 0;
@@ -4142,6 +4123,7 @@ body.mask-editing .sticker-element {
   max-width: 300px;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4399,6 +4381,7 @@ body.mask-editing .sticker-element {
   cursor: pointer;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4416,8 +4399,7 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: var(--icon-size-xs) minmax(0, 1fr);
   align-items: center;
-  -moz-column-gap: var(--spacing-sm);
-       column-gap: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
@@ -4550,6 +4532,7 @@ body.mask-editing .sticker-element {
 
 .section {
   /* Section Headers */
+  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -4656,12 +4639,10 @@ body.mask-editing .sticker-element {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
-.section {
-  /* Collapsible Section */
-}
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   flex-shrink: 0;
 }
@@ -4970,7 +4951,7 @@ body.mask-editing .sticker-element {
 
 .preset-grid-group {
   display: grid;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .preset-grid-heading {
@@ -4983,7 +4964,7 @@ body.mask-editing .sticker-element {
 .preset-grid-options {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .preset-grid-option {
@@ -5018,7 +4999,6 @@ body.mask-editing .sticker-element {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-xs);
 }
 
 .filter-css-thumbnail {
@@ -5359,8 +5339,7 @@ body.mask-editing .sticker-element {
 .gradient-stop-set .effect-gradient-stop {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 56px 56px var(--property-revert-col);
-  -moz-column-gap: var(--spacing-xs);
-       column-gap: var(--spacing-xs);
+  column-gap: var(--spacing-xs);
   align-items: center;
 }
 .gradient-stop-set .gradient-stops-heading {
@@ -5668,8 +5647,7 @@ body.mask-editing .sticker-element {
 .auto-glitter-settings-section .auto-glitter-choice img {
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: pixelated;
 }
 
@@ -5692,6 +5670,7 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -6021,10 +6000,6 @@ body.tool-select .preview-canvas {
   min-width: unset;
   padding-inline: var(--spacing-sm);
 }
-.number-field-pair .input-group > input[type=number]:-moz-read-only {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 .number-field-pair .input-group > input[type=number]:read-only {
   opacity: 0.6;
   cursor: not-allowed;
@@ -6292,20 +6267,17 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: pixelated;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   -webkit-user-drag: none;
 }
 .asset-options[data-gallery-content=stickers] .asset-grid > .asset-option {
   background: var(--color-bg-tertiary);
 }
 .asset-options[data-gallery-content=stickers] .asset-grid > .asset-option > img {
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   padding: var(--spacing-xs);
   image-rendering: auto;
 }
@@ -6328,8 +6300,7 @@ body.tool-select .preview-canvas {
   background: var(--color-bg-tertiary);
 }
 .asset-options[data-gallery-content=brush-tips] .asset-grid > .asset-option > img {
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   padding: var(--spacing-sm);
 }
 .asset-options[data-gallery-content=brush-tips] .asset-grid > .asset-option.is-vector > img {
@@ -6535,8 +6506,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
 }
 #brushTipThumbnail.is-vector {
   color: var(--shape-asset-icon-color);
@@ -6634,8 +6604,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image.category-card-glitter-bg {
@@ -6736,8 +6705,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail:not(.pixelated) > img {
@@ -6749,8 +6717,7 @@ body.tool-select .preview-canvas {
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail.base-image-thumbnail > img {
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: auto;
 }
 .asset-info-header .asset-info-details {
@@ -6789,9 +6756,7 @@ body.tool-select .preview-canvas {
   font-weight: var(--font-weight-normal);
   line-height: 1.2;
   text-overflow: ellipsis;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
 }
 .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-variable-fps {
   border-color: var(--color-warning-border);
@@ -6951,8 +6916,7 @@ body.tool-select .preview-canvas {
   display: grid;
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
   align-items: center;
-  -moz-column-gap: var(--spacing-sm);
-       column-gap: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   min-height: var(--row-height);
   padding: 0 var(--property-gutter);
 }
@@ -7063,9 +7027,7 @@ body.tool-select .preview-canvas {
 .property-row.is-toggle {
   grid-template-columns: minmax(0, 1fr) auto;
   cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 .property-row.is-toggle > input[type=checkbox] {
   position: absolute;
@@ -7456,6 +7418,9 @@ body.tool-select .preview-canvas {
 .property-panel .property-group + .property-group {
   border-top: 1px solid var(--color-border);
 }
+.property-panel .property-group:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
 .property-panel .property-group.has-group-label > .property-group-label {
   display: block;
   padding: var(--property-gutter);
@@ -7484,9 +7449,6 @@ body.tool-select .preview-canvas {
 }
 .property-panel .property-card.is-collapsed {
   padding: 0;
-}
-.property-panel .property-card:not(.is-collapsed):not(:last-child) {
-  border-bottom: 1px solid var(--color-border);
 }
 .property-panel .property-card > .property-card-title {
   display: flex;
@@ -7606,9 +7568,7 @@ body.tool-select .preview-canvas {
   height: var(--control-height);
   box-sizing: border-box;
   cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 .property-header-switch > input[type=checkbox] {
   position: absolute;
@@ -7844,10 +7804,10 @@ body.tool-select .preview-canvas {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-base);
   box-sizing: border-box;
   height: var(--property-scrollbox-height);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--property-r-field);
   background: var(--color-bg-secondary);
@@ -8041,6 +8001,7 @@ body.modal-open {
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   opacity: 0;
   transition: opacity var(--transition-base);
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
   backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 .modal-overlay.visible {
@@ -8176,6 +8137,8 @@ body.modal-open {
   column-gap: 0.5em;
   align-items: start;
   padding: var(--spacing-2xs);
+  /* main content (link) */
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -8190,14 +8153,8 @@ body.modal-open {
   grid-column: 1;
   align-self: start;
 }
-.modal-overlay > .modal-content > .modal-body .toc > ol > li {
-  /* main content (link) */
-}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
-}
-.modal-overlay > .modal-content > .modal-body .toc > ol > li {
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -8213,6 +8170,7 @@ body.modal-open {
   column-gap: 0.5em;
   align-items: start;
   padding: var(--spacing-2xs);
+  /* third-level nested list (e.g. h5s under an h4) should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li::before {
   content: counter(item) "." counter(subitem);
@@ -8221,9 +8179,6 @@ body.modal-open {
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > :not(ol) {
   grid-column: 2;
-}
-.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li {
-  /* third-level nested list (e.g. h5s under an h4) should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > ol {
   grid-column: 2;
@@ -8319,9 +8274,7 @@ body.modal-open {
   font-weight: var(--font-weight-semibold);
   line-height: 1.4;
   overflow-wrap: anywhere;
-  -webkit-user-select: text;
-     -moz-user-select: text;
-          user-select: text;
+  user-select: text;
 }
 #confirmationModal .confirmation-facts {
   display: grid;
@@ -8711,8 +8664,7 @@ body.modal-open {
 }
 #exportPreviewModal .export-preview-image-container img,
 #exportPreviewModal .export-preview-image-container video {
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   border-radius: var(--radius-sm);
 }
 #exportPreviewModal .export-preview-image-container img {
@@ -8730,9 +8682,7 @@ body.modal-open {
 #exportPreviewModal.is-ios .export-preview-image-container img {
   pointer-events: none;
   -webkit-touch-callout: none;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 #exportPreviewModal .export-meta {
   margin: 0;
@@ -8889,8 +8839,7 @@ body.modal-open {
   font-size: var(--font-size-sm);
   cursor: pointer;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 #welcomeModal .welcome-checkbox[hidden] {
   display: none !important;
@@ -9141,8 +9090,7 @@ body.modal-open {
   width: 100%;
   height: 100%;
   max-height: 300px;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .modal-content .figure-gallery > figure > figcaption {
@@ -9230,8 +9178,7 @@ body.modal-open {
   width: 100%;
   height: 100%;
   max-height: 500px;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   margin-inline: auto;
 }
 
@@ -9327,8 +9274,7 @@ body.modal-open {
 }
 
 .entity[data-card]:not([data-tooltip]) {
-  -webkit-text-decoration: underline dotted transparent;
-          text-decoration: underline dotted transparent;
+  text-decoration: underline dotted transparent;
   text-underline-offset: 2px;
   transition: text-decoration-color var(--transition-fast);
 }
@@ -9388,8 +9334,7 @@ body.modal-open {
 }
 
 .draft-marker {
-  -webkit-text-decoration: underline wavy var(--color-warning);
-          text-decoration: underline wavy var(--color-warning);
+  text-decoration: underline wavy var(--color-warning);
   text-underline-offset: 3px;
 }
 
@@ -9398,11 +9343,16 @@ body.modal-open {
    "long-form document" shape; only the content differs. A modal opts in with
    the .document-modal class on its overlay (see index.html), so adding another
    document needs no change here. The Guide keeps its own #guideModal rules. */
+.modal-overlay.document-modal {
+  /* Chronological reference list in the Timeline section — a plain ul so
+     it inherits the h3/ul spacing rules above instead of needing its own.
+     Event classes set --tl-color once; list borders and filter dots share it. */
+  /* Highlight animation for references */
+}
 .modal-overlay.document-modal .modal-body,
 .modal-overlay.document-modal .modal-body * {
   -webkit-user-select: text;
-  -moz-user-select: text;
-       user-select: text;
+  user-select: text;
 }
 .modal-overlay.document-modal .doc-inline-link {
   padding: 0;
@@ -9434,8 +9384,7 @@ body.modal-open {
 }
 .modal-overlay.document-modal .dead-link::after {
   background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center/contain no-repeat;
-          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 .modal-overlay.document-modal .archive-link {
   font-style: italic;
@@ -9575,7 +9524,6 @@ body.modal-open {
   font-size: var(--font-size-sm);
 }
 .modal-overlay.document-modal .table-wrapper.fits-content {
-  width: -moz-fit-content;
   width: fit-content;
 }
 .modal-overlay.document-modal .file-table {
@@ -9639,11 +9587,6 @@ body.modal-open {
 .modal-overlay.document-modal h5 + ol {
   margin-top: var(--spacing-xs);
 }
-.modal-overlay.document-modal {
-  /* Chronological reference list in the Timeline section — a plain ul so
-     it inherits the h3/ul spacing rules above instead of needing its own.
-     Event classes set --tl-color once; list borders and filter dots share it. */
-}
 .modal-overlay.document-modal .timeline-all {
   --tl-color: var(--color-accent);
 }
@@ -9673,9 +9616,7 @@ body.modal-open {
   gap: var(--spacing-sm);
 }
 .modal-overlay.document-modal .timeline-legend-item {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -9766,8 +9707,7 @@ body.modal-open {
   font-weight: 600;
   color: var(--color-text-secondary);
   cursor: help;
-  -webkit-text-decoration: underline dotted;
-          text-decoration: underline dotted;
+  text-decoration: underline dotted;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
@@ -9808,10 +9748,6 @@ body.modal-open {
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-.modal-overlay.document-modal .timeline-filter select::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
 }
 .modal-overlay.document-modal .timeline-filter select::placeholder {
   color: var(--color-text-tertiary);
@@ -9861,10 +9797,6 @@ body.modal-open {
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-.modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
 }
 .modal-overlay.document-modal .timeline-filter-search .search-input-wrapper input::placeholder {
   color: var(--color-text-tertiary);
@@ -9967,9 +9899,6 @@ body.modal-open {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0;
-}
-.modal-overlay.document-modal {
-  /* Highlight animation for references */
 }
 .modal-overlay.document-modal .highlight {
   background: var(--theme-glitter-image) repeat;
@@ -10565,6 +10494,7 @@ body.modal-open {
     padding: var(--spacing-sm);
     background: var(--color-bg-translucent);
     border: 1px solid var(--color-border);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     backdrop-filter: blur(var(--glass-blur));
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
@@ -11053,8 +10983,7 @@ body.modal-open {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-rows: auto auto;
-    -moz-column-gap: var(--spacing-sm);
-         column-gap: var(--spacing-sm);
+    column-gap: var(--spacing-sm);
     row-gap: 1px;
     padding: var(--spacing-sm) var(--spacing-base);
     text-align: left;
@@ -11129,4 +11058,4 @@ body.modal-open {
   .mobile-only {
     display: block !important;
   }
-}/*# sourceMappingURL=style.css.map */
+}

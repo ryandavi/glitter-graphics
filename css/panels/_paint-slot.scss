@@ -171,3 +171,25 @@
 	mask-repeat: no-repeat;
 	-webkit-mask-repeat: no-repeat;
 }
+
+// A paint-slot card positions its own overlays.
+.property-section .paint-slot-card { position: relative; }
+
+// ----- The source stack ------------------------------------------------------
+// Roomier than the row gap: it mixes a select, a boxed asset summary and a
+// color row.
+.property-panel :is(.paint-slot-source, .glitter-source) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-row-gap);
+}
+
+// A source that is the set's direct child is already inset by the set, so its
+// control fills it.
+.property-panel .property-set > .glitter-source > .segmented-control {
+	margin: 0;
+	width: 100%;
+}
+
+// A stack of rows: each row insets itself.
+.property-panel .paint-slot-primary-row { padding: 0; }

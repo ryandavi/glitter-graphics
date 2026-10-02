@@ -929,52 +929,94 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	return advanced;
 }
 
-// One full paint-slot card: title (+ Enabled toggle and controls wrapper for
-// border/shadow), slot-specific `pre` items, source, primary row, `post`
-// items, Advanced. Order mirrors the pre-template static panels exactly.
+// Card chrome and collapse state are shared by ordinary and paint-slot cards.
+function buildPropertyCardToggle(options, title) {
+	const toggle = tplClone('tpl-checkbox');
+	toggle.classList.add('effect-switch');
+	toggle.title = options.title || `Enable ${title || ''}`.trim();
+	const input = toggle.querySelector('input');
+	if (options.id) input.id = options.id;
+	input.setAttribute('aria-label', toggle.title || options.label);
+	toggle.querySelector('span').textContent = options.label;
+	if (options.title) toggle.querySelector('span').title = options.title;
+	return toggle;
+}
+
+function buildPropertyCard(item, schema) {
+	const card = tplClone('tpl-card');
+	if (item.bare) card.classList.remove('property-card');
+	if (item.id) card.id = item.id;
+	if (item.hidden) card.hidden = true;
+	// Every titled section collapses (initializeAdvancedDisclosures), and
+	// its open state is remembered under this key. `collapsed` starts it
+	// closed. A section with an enable switch gets no key: the switch
+	// owns its expansion.
+	if (item.title && !item.toggle && !item.nested) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${item.title}`;
+	if (item.collapsed) {
+		card.classList.add('is-collapsed');
+		card.dataset.collapseDefault = 'closed';
+	}
+	if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
+	if (item.summaryFrom) {
+		card.dataset.summaryFrom = item.summaryFrom;
+		if (!item.moduleSummary) card.dataset.moduleSummaryType = 'control';
+	}
+	addPanelClasses(card, item.classes);
+	const title = card.querySelector('.property-card-title');
+	if (item.title) {
+		const titleText = title.querySelector(':scope > span');
+		titleText.classList.add('property-card-label', 'feature-name');
+		titleText.textContent = item.title;
+		if (item.badge) titleText.appendChild(buildFeatureBadge(item.badge));
+		// A manager-driven readout beside the title (the project name on the
+		// no-selection Project card). Uses the same `.property-card-summary`
+		// primitive as the effect modules; `data-title-summary` gives its
+		// row the same flush-right treatment.
+		if (item.titleSummary) {
+			card.dataset.titleSummary = '';
+			const summary = document.createElement('span');
+			summary.className = 'property-card-summary';
+			if (item.titleSummary.id) summary.id = item.titleSummary.id;
+			summary.textContent = item.titleSummary.text || '';
+			title.appendChild(summary);
+		}
+		if (item.reset) title.appendChild(buildPanelCardReset(card, item.title, item.reset));
+	}
+	else title.remove();
+	if (item.swatch) title.appendChild(panelDiv('property-card-swatch'));
+	if (item.toggle) {
+		card.dataset.effectCard = '';
+		card.classList.add('is-off');
+		const toggle = buildPropertyCardToggle(item.toggle, item.title);
+		const input = toggle.querySelector('input');
+		input.dataset.effectToggle = '';
+		card.querySelector('.property-card-title').appendChild(toggle);
+	}
+	card.appendChild(panelDiv('property-card-body'));
+	return card;
+}
+
+// Paint-slot contents retain their source-mode and gradient insertion hosts.
 function buildPaintSlotCard(slot, schema) {
-	const card = tplClone('tpl-paint-slot');
-	if (slot.id) card.id = slot.id;
-	if (!slot.toggle && !slot.nested) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${slot.title}`;
+	const card = buildPropertyCard({
+		id: slot.id, title: slot.title, nested: slot.nested,
+		classes: 'paint-slot-card', swatch: !slot.nested,
+		toggle: slot.toggle ? { id: `${slot.idPrefix}Enabled`, label: 'Enabled' } : null
+	}, schema);
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
 	if (slot.nested) card.dataset.nested = '';
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
 	const header = card.querySelector('.property-card-title');
-	const title = header.querySelector(':scope > span');
-	title.textContent = slot.title;
-	if (!slot.nested) {
-		// The swatch is a "current value" indicator, so it sits with the
-		// module summary at the right edge — not as a bullet before the name.
-		header.appendChild(panelDiv('property-module-swatch'));
-	}
-	let container = card;
+	const container = card.querySelector(':scope > .property-card-body');
 	if (slot.toggle) {
-		card.dataset.effectCard = '';
-		card.classList.add('is-off');
-		const toggle = tplClone('tpl-checkbox');
-		// R5: the enable control leads the module header as the shared compact
-		// header switch.
-		toggle.classList.add('effect-switch');
-		toggle.title = `Enable ${slot.title}`;
-		const input = toggle.querySelector('input');
-		input.id = `${slot.idPrefix}Enabled`;
-		input.dataset.effectToggle = '';
-		input.setAttribute('aria-label', `Enable ${slot.title}`);
-		toggle.querySelector('span').textContent = 'Enabled';
-		header.appendChild(toggle);
-		container = panelDiv('property-module-content');
 		container.id = `${slot.idPrefix}Controls`;
-		card.appendChild(container);
 	} else if (!slot.nested && slot.modes.includes('none')) {
-		const toggle = tplClone('tpl-checkbox');
-		toggle.classList.add('effect-switch', 'paint-slot-enable');
-		toggle.title = `Enable ${slot.title}`;
+		const toggle = buildPropertyCardToggle({ label: 'Enabled' }, slot.title);
+		toggle.classList.add('paint-slot-enable');
 		const input = toggle.querySelector('input');
 		input.checked = slot.activeMode !== 'none';
 		input.dataset.paintSlotToggle = '';
-		input.setAttribute('aria-label', `Enable ${slot.title}`);
-		toggle.querySelector('span').textContent = 'Enabled';
 		input.addEventListener('change', () => {
 			const mode = input.checked ? (card._lastPaintMode || 'glitter') : 'none';
 			card.querySelector(`.segmented-option[data-mode="${mode}"]`)?.click();
@@ -1048,62 +1090,9 @@ function splitAdvancedPanelItems(items = []) {
 function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
-			const card = tplClone('tpl-card');
-			if (item.bare) card.classList.remove('property-card');
-			if (item.id) card.id = item.id;
-			if (item.hidden) card.hidden = true;
-			// Every titled section collapses (initializeAdvancedDisclosures), and
-			// its open state is remembered under this key. `collapsed` starts it
-			// closed. A section with an enable switch gets no key: the switch
-			// owns its expansion.
-			if (item.title && !item.toggle) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${item.title}`;
-			if (item.collapsed) {
-				card.classList.add('is-collapsed');
-				card.dataset.collapseDefault = 'closed';
-			}
-			if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
-			if (item.summaryFrom) {
-				card.dataset.summaryFrom = item.summaryFrom;
-				if (!item.moduleSummary) card.dataset.moduleSummaryType = 'control';
-			}
-			addPanelClasses(card, item.classes);
-			const title = card.querySelector('.property-card-title');
-			if (item.title) {
-				const titleText = title.querySelector(':scope > span');
-				titleText.classList.add('property-card-label', 'feature-name');
-				titleText.textContent = item.title;
-				if (item.badge) titleText.appendChild(buildFeatureBadge(item.badge));
-				// A manager-driven readout beside the title (the project name on the
-				// no-selection Project card). Uses the same `.property-module-summary`
-				// primitive as the effect modules; `data-title-summary` gives its
-				// row the same flush-right treatment.
-				if (item.titleSummary) {
-					card.dataset.titleSummary = '';
-					const summary = document.createElement('span');
-					summary.className = 'property-module-summary';
-					if (item.titleSummary.id) summary.id = item.titleSummary.id;
-					summary.textContent = item.titleSummary.text || '';
-					title.appendChild(summary);
-				}
-				if (item.reset) title.appendChild(buildPanelCardReset(card, item.title, item.reset));
-			}
-			else title.remove();
-			if (item.toggle) {
-				card.dataset.effectCard = '';
-				card.classList.add('is-off');
-				const toggle = tplClone('tpl-checkbox');
-				toggle.classList.add('effect-switch');
-				toggle.title = item.toggle.title || `Enable ${item.title || ''}`.trim();
-				const input = toggle.querySelector('input');
-				input.id = item.toggle.id;
-				input.dataset.effectToggle = '';
-				input.setAttribute('aria-label', toggle.title || item.toggle.label);
-				toggle.querySelector('span').textContent = item.toggle.label;
-				if (item.toggle.title) toggle.querySelector('span').title = item.toggle.title;
-				card.querySelector('.property-card-title').appendChild(toggle);
-			}
-			const body = panelDiv('property-card-body');
-			const edgeChildren = [];
+			const card = buildPropertyCard(item, schema);
+			const body = card.querySelector(':scope > .property-card-body');
+			const trailingChildren = [];
 			const bodyChildren = [];
 			const splitItems = splitAdvancedPanelItems(item.items);
 			const renderedItems = splitItems.advanced.length
@@ -1111,11 +1100,8 @@ function buildPanelItem(item, schema) {
 				: splitItems.regular;
 			renderedItems.forEach((child) => {
 				const node = buildPanelItem(child, schema);
-				// Advanced and a trailing actions row are edge-to-edge card footers,
-				// not padded body content. Keeping that structural contract here means
-				// every future schema card gets the same spacing without a
-				// feature-specific selector.
-				if (node.classList?.contains('advanced-disclosure') || node.classList?.contains('property-actions')) edgeChildren.push(node);
+				// Disclosures and actions keep their own layout inside the body.
+				if (node.classList?.contains('advanced-disclosure') || node.classList?.contains('property-actions')) trailingChildren.push(node);
 				else bodyChildren.push(node);
 			});
 			// A card body carries its content in a .property-set so vertical padding
@@ -1132,8 +1118,9 @@ function buildPanelItem(item, schema) {
 					body.appendChild(wrapPropertySet(bodyChildren));
 				}
 			}
-			card.appendChild(body);
-			edgeChildren.forEach((node) => card.appendChild(node));
+			// Actions precede disclosures, matching the shared card's established order.
+			trailingChildren.sort((a, b) => Number(a.classList.contains('advanced-disclosure')) - Number(b.classList.contains('advanced-disclosure')));
+			body.append(...trailingChildren);
 			return card;
 		}
 		case 'content': {
@@ -1176,7 +1163,7 @@ function buildPanelItem(item, schema) {
 			return content;
 		}
 		case 'actionRow': {
-			const row = addPanelClasses(panelDiv('property-actions'), item.classes);
+			const row = addPanelClasses(panelDiv('property-set property-actions'), item.classes);
 			if (item.id) row.id = item.id;
 			if (item.hidden) row.hidden = true;
 			item.actions.forEach((action) => {
@@ -1546,16 +1533,16 @@ function buildSparkleControls(item) {
 // mirrors the card's own nodes through an observer rather than trying to hook
 // every manager's sync path.
 function buildModuleSummary(card) {
-	if (!card || card.querySelector(':scope > .property-card-title > .property-module-summary')) return null;
+	if (!card || card.querySelector(':scope > .property-card-title > .property-card-summary')) return null;
 	const title = card.querySelector(':scope > .property-card-title');
 	if (!title) return null;
 	const summary = document.createElement('span');
-	summary.className = 'property-module-summary';
+	summary.className = 'property-card-summary';
 	summary.setAttribute('aria-hidden', 'true');
 	// The summary sits before the swatch (when there is one) so the fixed-size
 	// swatch pins to the right edge next to the chevron — a stable anchor across
 	// modules — while the variable-width value text grows leftward.
-	const anchor = title.querySelector(':scope > .property-module-swatch')
+	const anchor = title.querySelector(':scope > .property-card-swatch')
 		|| title.querySelector('.property-card-chevron');
 	title.insertBefore(summary, anchor || null);
 	return summary;
@@ -1607,11 +1594,11 @@ function readModuleSummary(card) {
 }
 
 function syncModuleSummary(card) {
-	const summary = card.querySelector(':scope > .property-card-title > .property-module-summary');
+	const summary = card.querySelector(':scope > .property-card-title > .property-card-summary');
 	if (!summary) return;
 	const text = readModuleSummary(card);
 	if (summary.textContent !== text) summary.textContent = text;
-	const swatch = card.querySelector(':scope > .property-card-title > .property-module-swatch');
+	const swatch = card.querySelector(':scope > .property-card-title > .property-card-swatch');
 	if (swatch) {
 		const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
 		const chip = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail:not(.empty)');
@@ -1697,7 +1684,6 @@ function syncPanelEffectToggle(toggle, enabled) {
 	card.classList.toggle('is-off', !next);
 	if (previous == null || String(next) !== previous) card.classList.toggle('is-collapsed', !next);
 	card.querySelector(':scope > .property-card-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
-	card.querySelector(':scope > .property-module-content')?.classList.toggle('visible', next);
 	if (card.dataset.moduleSummary !== undefined) syncModuleSummary(card);
 }
 
@@ -1941,14 +1927,14 @@ function renderPanelFragment(schema) {
 		title: schema.fragmentCard?.title,
 		moduleSummary: schema.fragmentCard?.moduleSummary,
 		flatBody: true,
-		classes: `panel-module ${schema.fragmentClasses || ''}`.trim(),
+		classes: `${schema.fragmentClasses || ''}`.trim(),
 		items: schema.items || []
 	}, schema);
 	if (schema.fragmentCard?.summaryId) {
 		card.dataset.titleSummary = '';
 		const title = card.querySelector(':scope > .property-card-title');
 		const summary = document.createElement('span');
-		summary.className = 'property-module-summary';
+		summary.className = 'property-card-summary';
 		summary.id = schema.fragmentCard.summaryId;
 		summary.textContent = schema.fragmentCard.summaryText || '';
 		title.appendChild(summary);

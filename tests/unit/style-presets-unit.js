@@ -138,7 +138,7 @@ Object.entries(libraries).forEach(([type, library]) => {
 	// Switching looks: every effect the new look leaves out is switched off
 	// (parked as a draft), and a named bevel side resets the other one.
 	const fancy = library.entries.find((entry) => entry.value.slots.shadow && entry.value.slots.border);
-	const plain = library.get('plain');
+	const plain = library.get(type === LayerType.TEXT_GLITTER ? 'default' : 'plain');
 	const layer = makeLayer(type);
 	applyTo(layer, fancy);
 	const disabled = applyTo(layer, plain);
@@ -146,13 +146,28 @@ Object.entries(libraries).forEach(([type, library]) => {
 	if (layer[rootKey].border || layer[rootKey].shadow || layer[rootKey].bevel.enabled) fail(`${type}: Plain after ${fancy.id} left effects on`);
 	if (!layer[rootKey].effectDrafts?.border || !layer[rootKey].effectDrafts?.shadow) fail(`${type}: switched-off effects must be parked as drafts`);
 	if (!disabled.includes('border') || !disabled.includes('shadow')) fail(`${type}: disabled slots must be reported so an armed picker closes`);
-	if (run('findStylePresetId')(layer) !== 'plain') fail(`${type}: Plain is not recognized after apply`);
+	if (run('findStylePresetId')(layer) !== plain.id) fail(`${type}: ${plain.label} is not recognized after apply`);
 	applyTo(layer, fancy);
 	if (layer[rootKey].effectDrafts?.border) fail(`${type}: re-enabling a slot must drop its draft`);
 });
 
 // A missing glitter falls back to the slot's default instead of an empty slot.
 const textLibrary = libraries[LayerType.TEXT_GLITTER];
+// Default restores every value a text style owns while preserving content
+// and placement, even after a look changes the font and letter case.
+const defaultText = makeLayer(LayerType.TEXT_GLITTER);
+defaultText.textData.text = 'Keep my text';
+defaultText.transform = { position: { x: 45, y: 67 } };
+for (const entry of textLibrary.entries) {
+	applyTo(defaultText, entry);
+	applyTo(defaultText, textLibrary.get('default'));
+	const defaults = makeLayer(LayerType.TEXT_GLITTER).textData;
+	if (JSON.stringify(defaultText.textData.fill) !== JSON.stringify(defaults.fill)) fail(`Default after ${entry.id} did not restore the fill`);
+	if (defaultText.textData.fontId !== run('CONFIG.tools.text.defaultFontId') || defaultText.textData.textCase !== run('CONFIG.tools.text.defaultTextCase')) fail(`Default after ${entry.id} did not restore font and case`);
+	if (defaultText.textData.border || defaultText.textData.shadow || defaultText.textData.bevel.enabled) fail(`Default after ${entry.id} left effects on`);
+	if (defaultText.textData.text !== 'Keep my text' || defaultText.transform.position.x !== 45 || defaultText.transform.position.y !== 67) fail('Default changed content or placement');
+	if (run('findStylePresetId')(defaultText) !== 'default') fail('Default is not recognized after reset');
+}
 const blingee = textLibrary.get('blingee-pink');
 const layer = makeLayer(LayerType.TEXT_GLITTER);
 libraries[LayerType.TEXT_GLITTER].apply(blingee, {
