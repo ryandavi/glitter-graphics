@@ -171,11 +171,10 @@
 
 	.version-history-title {
 		color: var(--color-text-primary);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.version-history-header time {
-		// font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
 		white-space: nowrap;
 	}
@@ -257,7 +256,7 @@
 }
 
 .export-support-note {
-	margin-top: var(--spacing-md);
+	margin: 0;
 	padding-top: var(--spacing-md);
 	border-top: 1px solid var(--color-border);
 	font-size: var(--font-size-xs);
@@ -308,7 +307,7 @@
 
 				>cite {
 					font-style: normal;
-					font-weight: 600;
+					font-weight: var(--font-weight-semibold);
 					letter-spacing: 0.01em;
 				}
 
@@ -369,7 +368,7 @@
 
 				>cite {
 					font-style: normal;
-					font-weight: 600;
+					font-weight: var(--font-weight-semibold);
 					letter-spacing: 0.01em;
 				}
 

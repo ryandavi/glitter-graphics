@@ -13,7 +13,7 @@
 		var(--property-revert-col);
 	align-items: center;
 	column-gap: var(--spacing-sm);
-	min-height: var(--property-row-h);
+	min-height: var(--row-height);
 	padding: 0 var(--property-gutter);
 
 	&[hidden] { display: none; }
@@ -94,8 +94,8 @@
 	min-width: 0;
 
 	> .property-pair-mark {
-		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 10px;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
 		cursor: help;
 	}
@@ -159,8 +159,8 @@
 }
 
 // ===== The revert ==========================================================
-// Always in its column. Inert reverts stay subdued and become fully legible
-// when the value differs from its default.
+// Always in its column, and shown only while the value differs from its
+// default.
 
 .property-revert {
 	width: var(--property-revert-col);
@@ -183,17 +183,14 @@
 		opacity: 1;
 	}
 
-	&:not(:disabled):not(.is-placeholder):hover {
+	&:not(:disabled):hover {
 		background: var(--color-bg-tertiary);
 		color: var(--color-accent);
 	}
 
-	&:disabled,
-	&.is-placeholder {
-		background: none;
-		cursor: default;
-		opacity: 0.18;
-	}
+	// At its default a value has nothing to revert, so the icon is not drawn.
+	// The column stays, which is what keeps the right edge still.
+	&:disabled { visibility: hidden; }
 
 	&:focus-visible {
 		opacity: 1;
@@ -202,15 +199,11 @@
 	}
 }
 
-// A card reset is the same icon in the card's title, over the revert column of
-// the rows below. The title is padded by the card inset and the rows by the
-// card gutter, so the icon steps in by the difference. The negative block
-// margin keeps a title with a reset as tall as one without.
-.property-panel .property-card > .subsection-title > .property-card-reset {
+// A section reset is the same icon in the section's title, over the revert
+// column of the rows below.
+.property-card-title > .property-card-reset {
 	flex: 0 0 auto;
-	margin-block: -3px;
 	margin-left: auto;
-	margin-right: calc(var(--property-gutter) - var(--property-pad));
 }
 
 // ===== The value readout ===================================================
@@ -220,8 +213,8 @@
 	align-items: center;
 	justify-content: flex-end;
 	min-width: 46px;
-	height: var(--property-control-height);
-	padding: 0 6px;
+	height: var(--control-height);
+	padding: 0 var(--spacing-sm);
 	border: 1px solid var(--color-border);
 	border-radius: var(--property-r-field);
 	background: var(--color-bg-secondary);
@@ -236,7 +229,7 @@
 		}
 
 		.setting-unit {
-			margin-left: 3px;
+			margin-left: var(--spacing-2xs);
 			color: var(--color-text-tertiary);
 			pointer-events: none;
 		}

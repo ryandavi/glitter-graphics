@@ -83,6 +83,8 @@ select {
 }
 
 textarea {
+	// Block, so no inline descender gap sits under it.
+	display: block;
 	min-height: calc(var(--control-height) * 3);
 	line-height: 1.4;
 }
@@ -107,57 +109,56 @@ textarea {
 	color: var(--color-text-on-accent, #fff);
 	/* one step below the --font-size-xs micro-label; a badge is a marker, not a
 	   control, so it sits smaller than chrome text. */
-	font-size: 10px;
+	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-semibold);
 	letter-spacing: 0.06em;
 	line-height: 1.7;
 	text-transform: uppercase;
 }
 
-/* On a glossy-primary button the solid-accent badge is accent-on-accent;
+/* On a filled primary button the solid-accent badge is accent-on-accent;
    flip to a light chip. */
 .btn-text-with-icon.primary > .feature-badge {
-	background: var(--color-text-on-accent, #fff);
+	background: var(--color-text-on-accent);
 	color: var(--color-accent);
 }
 
 .search-toggle-row {
-	--search-control-height: var(--control-height);
 	display: flex;
 	align-items: stretch;
 	gap: var(--spacing-sm);
-	padding: var(--spacing-sm);
+	padding: var(--spacing-sm) var(--property-gutter, var(--spacing-md));
 
 	>.search-input-wrapper {
 		position: relative;
 		display: flex;
 		flex: 1 1 auto;
 		min-width: 0;
-		height: var(--search-control-height);
+		height: var(--control-height);
 
 		>.search-input-icon {
 			position: absolute;
 			top: 50%;
-			left: 0.5rem;
+			left: var(--spacing-sm);
 			z-index: 1;
-			width: 1.2rem;
-			height: 1.2rem;
+			width: 14px;
+			height: 14px;
 			transform: translateY(-50%);
 			color: var(--color-text-tertiary);
 			pointer-events: none;
 
-			>svg.icon { font-size: 1.2rem; }
+			>svg.icon { font-size: 14px; }
 		}
 
 		>input {
 			flex: 1 1 auto;
 			width: 100%;
 			min-width: 0;
-			height: var(--search-control-height);
-			padding: var(--spacing-sm) var(--spacing-md);
-			padding-left: 2rem;
+			height: var(--control-height);
+			min-height: 0;
+			padding: 0 var(--spacing-md) 0 var(--spacing-xl);
 			box-sizing: border-box;
-			font-size: var(--font-size-base);
+			font-size: var(--font-size-sm);
 
 			&::-webkit-search-decoration,
 			&::-webkit-search-results-button,
@@ -166,31 +167,6 @@ textarea {
 			}
 		}
 	}
-
-	>.btn-icon {
-		flex: 0 0 var(--search-control-height);
-		width: var(--search-control-height);
-		height: var(--search-control-height);
-		min-width: var(--search-control-height);
-		aspect-ratio: 1;
-	}
-}
-
-// Shared setting vocabulary. Schema panels and modal settings use the same
-// label, action-row, disclosure, and inset-surface primitives; owners add only
-// layout-specific deltas.
-// Legacy label names still emitted by the transform/canvas-size/effect markup
-// that WP7-WP8 migrate. One rule, so they already read as the property
-// The property panel's set/group label. ONE class - the aliases it used to sit
-// beside the older effect/control/filter label aliases are gone from the
-// markup entirely, so there is a single place to change this.
-.property-set-label {
-	font-size: 10.5px;
-	font-weight: var(--font-weight-semibold);
-	letter-spacing: 0.09em;
-	text-transform: uppercase;
-	color: var(--color-text-tertiary);
-	line-height: 1.2;
 }
 
 .asset-info,
@@ -284,58 +260,81 @@ textarea {
 	line-height: 1.2;
 }
 
+// ===========================================================================
+// DISCLOSURE
+// ---------------------------------------------------------------------------
+// The one collapse affordance: a chevron that points right when closed and
+// down when open, then the label. A section's Advanced / More rows, a
+// collapsible section title and the release notes all use it.
+// ===========================================================================
+.property-card-chevron,
+.advanced-disclosure-chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	min-width: 14px;
+	flex: 0 0 auto;
+	color: var(--color-text-tertiary);
+	transition: transform var(--transition-fast), color var(--transition-fast);
+
+	> svg.icon {
+		width: 11px;
+		height: 11px;
+		fill: currentColor;
+		opacity: 1;
+	}
+}
+
+.property-card-title:hover > .property-card-chevron,
+.advanced-disclosure-toggle:hover > .advanced-disclosure-chevron {
+	color: var(--color-text-secondary);
+}
+
 .advanced-disclosure {
 	display: flex;
 	flex-direction: column;
-	margin-top: 0;
-	border-top: 1px solid var(--color-border);
+	gap: var(--property-row-gap, var(--spacing-sm));
 
-	>.advanced-disclosure-toggle {
+	> .advanced-disclosure-toggle {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: flex-start;
 		gap: var(--spacing-sm);
 		width: 100%;
-		padding: var(--spacing-xs) var(--property-gutter, 10px);
-		background: none;
+		min-height: var(--row-height);
+		padding: 0 var(--property-gutter, 0px);
 		border: 0;
-		color: var(--color-text-secondary);
+		background: none;
+		color: var(--color-text-tertiary);
 		font: inherit;
-		// font-size: var(--font-size-sm);
+		text-align: left;
 		cursor: pointer;
 
 		&:hover { color: var(--color-text-primary); }
-	}
 
-	.advanced-disclosure-label {
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		font-size: var(--font-size-xs);
-		font-weight: 600;
-	}
-
-	.advanced-disclosure-chevron {
-		display: flex;
-		align-items: center;
-		transition: transform var(--transition-fast);
-
-		svg {
-			width: 14px;
-			height: 14px;
-			fill: currentColor;
+		> .advanced-disclosure-chevron {
+			order: -1;
+			transform: rotate(-90deg);
 		}
 	}
 
-	>.advanced-disclosure-content {
+	.advanced-disclosure-label {
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-normal);
+		line-height: 1.3;
+	}
+
+	> .advanced-disclosure-content {
 		display: none;
 		flex-direction: column;
-		gap: var(--property-row-gap, 2px);
-		padding: var(--spacing-2xs) 0 var(--spacing-sm);
+		gap: var(--property-row-gap, var(--spacing-sm));
 	}
 
 	&.is-open {
-		>.advanced-disclosure-content { display: flex; }
-		.advanced-disclosure-chevron { transform: rotate(180deg); }
+		> .advanced-disclosure-content { display: flex; }
+		> .advanced-disclosure-toggle > .advanced-disclosure-chevron { transform: none; }
 	}
 }
 
@@ -343,8 +342,6 @@ html[data-show-all-controls="true"] .advanced-disclosure {
 	> .advanced-disclosure-toggle { display: none; }
 	> .advanced-disclosure-content { display: flex; }
 }
-
-.subsection-card-body > .advanced-disclosure { margin: 0; }
 
 .input-unit {
 	position: relative;
@@ -359,7 +356,7 @@ html[data-show-all-controls="true"] .advanced-disclosure {
 	>.input-unit-suffix {
 		position: absolute;
 		right: var(--spacing-base);
-		font-size: 10px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-secondary);
 		pointer-events: none;
 	}
@@ -368,7 +365,7 @@ html[data-show-all-controls="true"] .advanced-disclosure {
 input[type="color"] {
 	width: 56px;
 	height: var(--control-height);
-	padding: 3px;
+	padding: var(--spacing-xs);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-control);
 	background-color: transparent;
@@ -439,45 +436,64 @@ input[type="range"] {
 	&:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 }
 
-.layer-list-row {
+// ===========================================================================
+// LIST ROW
+// ---------------------------------------------------------------------------
+// The one row for a list of things: reorder handle, media, a name over one
+// meta line, trailing actions. Layers and Auto Glitter color matches use it.
+//   .list-row-handle   reorder grip
+//   .list-row-media    thumbnail
+//   .list-row-text     name + meta column
+//   .list-row-actions  trailing icon buttons, shown while the row is hovered,
+//                      focused or selected (always, where there is no hover)
+// No row has a border: selection is a filled row.
+// ===========================================================================
+.list-row {
+	--list-row-media: 28px;
 	display: flex;
 	align-items: center;
 	gap: var(--spacing-sm);
-	padding: var(--spacing-base);
-	border: 2px solid transparent;
-	border-radius: var(--radius-card);
-	background: var(--color-bg-tertiary);
+	flex: 0 0 auto;
+	min-height: var(--list-row-height);
+	padding: 0 var(--spacing-sm);
+	box-sizing: border-box;
+	border-radius: var(--radius-control);
 	overflow: hidden;
-	transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+	transition: background-color var(--transition-fast), opacity var(--transition-fast);
 
-	&:hover {
-		background: var(--color-bg-card);
+	&:hover { background: var(--color-bg-tertiary); }
+
+	&:focus-visible {
+		outline: none;
+		box-shadow: inset var(--control-focus-ring);
 	}
+
+	&.selected { background: var(--color-accent-surface); }
+	&.active { background: var(--color-accent-surface-strong); }
 }
 
-.layer-list-drag-handle {
+.list-row-handle {
 	display: flex;
-	width: var(--icon-size-sm);
-	height: var(--icon-size-sm);
+	width: 16px;
+	height: var(--list-row-media);
 	align-items: center;
 	justify-content: center;
-	flex: 0 0 var(--icon-size-sm);
+	flex: 0 0 16px;
 	padding: 0;
 	border: 0;
+	border-radius: var(--radius-control);
 	background: transparent;
 	color: var(--color-text-secondary);
 	cursor: grab;
 	touch-action: none;
-	border-radius: var(--radius-control);
-	transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
 
 	&:active { cursor: grabbing; }
-	&:hover:not(:disabled) { background: var(--color-bg-secondary); color: var(--color-text-primary); }
+	&:hover:not(:disabled) { color: var(--color-text-primary); }
 	&:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
 	&:disabled { opacity: var(--opacity-disabled); cursor: default; }
 }
 
-// One reorder language across floating context bars and sortable panel rows.
+// One reorder language across floating context bars and sortable rows.
 .drag-handle-mark {
 	display: block;
 	width: 6px;
@@ -488,55 +504,94 @@ input[type="range"] {
 	pointer-events: none;
 }
 
-.layer-list-swatch {
+.list-row-media {
 	display: flex;
-	width: var(--icon-size-sm);
-	height: var(--icon-size-sm);
+	width: var(--list-row-media);
+	height: var(--list-row-media);
 	align-items: center;
 	justify-content: center;
-	flex: 0 0 var(--icon-size-sm);
+	flex: 0 0 var(--list-row-media);
 	border-radius: var(--radius-inner);
 	overflow: hidden;
 }
 
-.layer-list-info {
+.list-row-text {
 	display: flex;
 	min-width: 0;
 	flex: 1;
 	flex-direction: column;
+	gap: 1px;
 	overflow: hidden;
-
-	.layer-list-description {
-		overflow: hidden;
-		color: var(--color-text-secondary);
-		font-size: var(--font-size-sm);
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
 }
 
-.layer-list-info :is(.layer-list-name, .layer-name),
-.layers-section>.layers-list>.layer-item>.layer-info>.layer-name {
+.list-row-name {
 	overflow: hidden;
 	color: var(--color-text-primary);
-	font-size: var(--font-size-base);
+	font-size: var(--font-size-title);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.25;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.layer-action-btn {
+.list-row-meta {
 	display: flex;
-	width: var(--icon-size-sm);
-	height: var(--icon-size-sm);
+	align-items: center;
+	gap: var(--spacing-xs);
+	min-width: 0;
+	overflow: hidden;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-normal);
+	line-height: 1.25;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	> :first-child {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.list-row-action {
+	display: flex;
+	width: var(--control-height);
+	height: var(--control-height);
 	align-items: center;
 	justify-content: center;
-	flex: 0 0 var(--icon-size-sm);
+	flex: 0 0 var(--control-height);
+	color: var(--color-icon-strong);
+}
 
-	// Glyph size comes from the shared `.sm` icon-wrapper path (these buttons
-	// carry `btn-icon-simple icon-wrapper sm`). An explicit `.icon { width: .8em }`
-	// here resolved against the button's 30px font-size instead.
+.list-row-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2xs);
+	flex-shrink: 0;
 
-	&.visibility.hidden { color: var(--color-text-secondary); }
+	// A state that is on (a locked lock) stays in view; the rest wait for the
+	// row to be pointed at.
+	> .list-row-action:not(.active) {
+		opacity: 0;
+		transition: opacity var(--transition-fast);
+	}
+
+	> .list-row-action:disabled:not(.active) { opacity: 0; }
+}
+
+.list-row:is(:hover, :focus-within, .selected, .active) > .list-row-actions > .list-row-action {
+	opacity: 1;
+
+	&:disabled { opacity: var(--opacity-disabled); }
+}
+
+@media (hover: none) {
+	.list-row > .list-row-actions > .list-row-action {
+		opacity: 1;
+
+		&:disabled { opacity: var(--opacity-disabled); }
+	}
 }
 
 // Transform Handles (Figma-style)
@@ -656,7 +711,7 @@ input[type="range"] {
 .selection-badge {
 	position: absolute;
 	transform: translate(-50%, -50%) rotate(var(--badge-angle, 0deg));
-	padding: 3px 6px;
+	padding: var(--spacing-2xs) var(--spacing-sm);
 	border-radius: var(--radius-sm);
 	background: var(--color-accent);
 	color: var(--color-text-on-accent);

@@ -37,7 +37,7 @@ async function main() {
 		// beside the text filter, not inside the body it scrolls with.
 		assert(shortcutKeyboardState.inChrome,
 			`Commands scope control is not in the modal chrome: ${JSON.stringify(shortcutKeyboardState)}`);
-		assert(shortcutKeyboardState.tabIconSize === '14px',
+		assert(shortcutKeyboardState.tabIconSize === '16px',
 			`Commands panel tab icons are not constrained: ${JSON.stringify(shortcutKeyboardState)}`);
 		await page.click('#shortcutGesturesTab');
 		const shortcutGestureState = await page.evaluate(() => {
@@ -78,9 +78,9 @@ async function main() {
 					.filter((id) => !document.getElementById(id)?.closest('[data-advanced]')),
 				// Every group is a titled card that owns a reset.
 				exportSections: [...document.querySelectorAll('#exportSettingsModal .settings-group')].map((group) => ({
-					title: group.querySelector('.subsection-title-label')?.textContent,
+					title: group.querySelector('.property-card-label')?.textContent,
 					section: group.dataset.section,
-					reset: !!group.querySelector(':scope > .subsection-title > .property-card-reset')
+					reset: !!group.querySelector(':scope > .property-card-title > .property-card-reset')
 				})),
 				settingsRows: ['interfaceTheme', 'showHelpfulHints', 'showWelcomeOnStartup', 'confirmDestructiveActions']
 					.filter((id) => document.getElementById(id)).length

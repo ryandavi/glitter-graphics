@@ -76,7 +76,7 @@ body {
 	text-decoration: none;
 	white-space: nowrap;
 	cursor: pointer;
-	@include flat-control(var(--control-height-comfortable));
+	@include flat-control(var(--row-height));
 
 	&:disabled {
 		opacity: var(--opacity-disabled);
@@ -303,8 +303,8 @@ body {
 // shell put two borders around the same content.
 .admin-dashboard {
 	grid-column: 1 / -1;
-	width: min(1180px, calc(100% - (var(--spacing-2xl) * 2)));
-	margin: var(--spacing-2xl) auto;
+	width: min(1180px, calc(100% - (var(--spacing-xl) * 2)));
+	margin: var(--spacing-xl) auto;
 	padding: 0;
 }
 
@@ -1297,7 +1297,7 @@ textarea {
 select {
     appearance: none;
     -webkit-appearance: none;
-    padding-right: var(--spacing-2xl);
+    padding-right: var(--spacing-xl);
     background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
     background-position: right calc(var(--spacing-md) + 4px) center, right var(--spacing-md) center;
     background-size: 5px 5px, 5px 5px;

@@ -102,7 +102,7 @@ function initPreservationTimeline(modalBody) {
 
 	const clearBtn = document.createElement('button');
 	clearBtn.type = 'button';
-	clearBtn.className = 'btn-text-with-icon icon-wrapper secondary timeline-filter-clear';
+	clearBtn.className = 'btn-flat timeline-filter-clear';
 	clearBtn.appendChild(createIcon('x-mark'));
 	const clearLabel = document.createElement('span');
 	clearLabel.className = 'name';

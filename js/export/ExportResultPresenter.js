@@ -86,9 +86,9 @@ class ExportResultPresenter {
 		const assetAnalysisList = document.getElementById('exportAssetAnalysisList');
 		reductionSummary.hidden = !hasReduction && !hasPlanWarning && !hasAssetAnalysis;
 		optimizationDetails.hidden = !hasReduction;
-		optimizationDetails.open = false;
+		setAdvancedDisclosureOpen(optimizationDetails, false);
 		assetAnalysis.hidden = !hasAssetAnalysis;
-		assetAnalysis.open = false;
+		setAdvancedDisclosureOpen(assetAnalysis, false);
 		assetAnalysisList.replaceChildren();
 		if (reductionSummary.hidden) return;
 		const groupedAssets = new Map();

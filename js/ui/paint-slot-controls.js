@@ -1,5 +1,5 @@
 function syncPaintSlotSourceUI(sourceButton, mode) {
-	const slot = sourceButton?.closest('.paint-slot-card') || sourceButton?.closest('.subsection-content-group');
+	const slot = sourceButton?.closest('.paint-slot-card') || sourceButton?.closest('.property-card');
 	if (!slot) return;
 	const normalizedMode = isOptionValue('paintMode', mode) ? mode : 'solid';
 	const previousMode = slot.dataset.paintMode;
@@ -26,7 +26,7 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 
 	// The primary row holds opacity only. Glitter texture scale lives beside
 	// anchor and offset inside the glitter-only Advanced disclosure.
-	const slotToggle = slot.querySelector(':scope > .subsection-title input[data-paint-slot-toggle]');
+	const slotToggle = slot.querySelector(':scope > .property-card-title input[data-paint-slot-toggle]');
 	if (slotToggle) slotToggle.checked = normalizedMode !== 'none';
 	sourceButton.closest('.segmented-control')?.querySelectorAll('.segmented-option').forEach((button) => {
 		const buttonMode = button.dataset.mode;

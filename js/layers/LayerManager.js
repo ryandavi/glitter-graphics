@@ -1055,7 +1055,7 @@ class LayerManager {
 	}
 	createLayerElement(layer) {
 		const layerEl = document.createElement('div');
-		layerEl.className = 'layer-item layer-list-row';
+		layerEl.className = 'layer-item list-row';
 		layerEl.dataset.layerId = layer.id;
 		layerEl.setAttribute('role', 'option');
 		layerEl.setAttribute('aria-selected', String(this.isLayerSelected(layer.id)));
@@ -1078,7 +1078,7 @@ class LayerManager {
 		// 1. Reorder handle. The mark is shared with context bars and Auto Glitter.
 		const dragHandle = document.createElement('button');
 		dragHandle.type = 'button';
-		dragHandle.className = 'layer-drag-handle layer-list-drag-handle';
+		dragHandle.className = 'layer-drag-handle list-row-handle';
 		dragHandle.disabled = Boolean(layer.locked);
 		dragHandle.setAttribute('aria-label', layer.locked ? 'Layer is locked' : `Reorder ${layer.name || 'layer'}`);
 		const dragMark = document.createElement('span');
@@ -1088,7 +1088,7 @@ class LayerManager {
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
-		swatch.className = 'layer-swatch layer-list-swatch';
+		swatch.className = 'layer-swatch list-row-media';
 		this.renderLayerSwatch(swatch, layer);
 
 		// Double-click swatch behavior
@@ -1101,10 +1101,10 @@ class LayerManager {
 
 		// 3. Info (Name & Type)
 		const info = document.createElement('div');
-		info.className = 'layer-info layer-list-info';
+		info.className = 'list-row-text';
 
 		const nameText = document.createElement('div');
-		nameText.className = 'layer-name';
+		nameText.className = 'layer-name list-row-name';
 		nameText.title = 'Double-click to rename';
 		nameText.addEventListener('dblclick', (event) => {
 			event.stopPropagation();
@@ -1136,7 +1136,7 @@ class LayerManager {
 		});
 
 		const metaRow = document.createElement('div');
-		metaRow.className = 'layer-meta';
+		metaRow.className = 'list-row-meta';
 
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
@@ -1237,7 +1237,7 @@ class LayerManager {
 
 		// 4. Visibility belongs with layer identity, matching modern layer panels.
 		const visBtn = this.createIconButton({
-			className: 'layer-action-btn layer-visibility visibility' + (!layer.visible ? ' hidden' : ''),
+			className: 'list-row-action layer-visibility' + (!layer.visible ? ' hidden' : ''),
 			title: layer.visible ? 'Hide layer' : 'Show layer',
 			iconType: layer.visible ? 'eye' : 'eye-slash',
 			onClick: (e) => {
@@ -1248,11 +1248,11 @@ class LayerManager {
 
 		// 5. Right-side actions are reserved for state and secondary actions.
 		const actions = document.createElement('div');
-		actions.className = 'layer-actions';
+		actions.className = 'list-row-actions';
 
 		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
 		const lockBtn = this.createIconButton({
-			className: `layer-action-btn lock${layer.locked ? ' active' : ''}${isBaseLayer ? ' permanent' : ''}`,
+			className: `list-row-action lock${layer.locked ? ' active' : ''}${isBaseLayer ? ' permanent' : ''}`,
 			title: isBaseLayer ? 'Fixed background — editable, but cannot be moved, reordered, or deleted' : (layer.locked ? 'Unlock layer' : 'Lock layer'),
 			iconType: layer.locked ? 'lock' : 'unlock',
 			onClick: (e) => {
@@ -1266,7 +1266,7 @@ class LayerManager {
 		// Source navigation follows state controls and precedes destructive actions.
 		const sourceType = LAYER_UI_CONFIG[layer.type]?.goTo;
 		const arrowBtn = this.createIconButton({
-			className: `layer-action-btn goto-glitter${sourceType ? '' : ' unavailable'}`,
+			className: `list-row-action goto-glitter${sourceType ? '' : ' unavailable'}`,
 			title: sourceType ? (sourceType === 'sticker' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
 			iconType: 'locate',
 			disabled: !sourceType,
@@ -1279,7 +1279,7 @@ class LayerManager {
 
 		const cannotDelete = isBaseLayer || layer.locked;
 		const delBtn = this.createIconButton({
-				className: `layer-action-btn delete${cannotDelete ? ' unavailable' : ''}`,
+				className: `list-row-action delete${cannotDelete ? ' unavailable' : ''}`,
 				title: isBaseLayer ? 'Base layer cannot be deleted' : (layer.locked ? 'Unlock layer to delete it' : 'Delete layer'),
 				iconType: 'trash',
 				disabled: cannotDelete,

@@ -41,12 +41,6 @@
 	gap: var(--spacing-md);
 }
 
-.subsection-note {
-	font-size: var(--font-size-xs);
-	line-height: 1.4;
-	color: var(--color-text-tertiary);
-}
-
 // The Library's font cards: .asset-option conventions (outline selection
 // state, corner badge), sized by their sample instead of a square tile.
 .text-font-option {
@@ -55,7 +49,7 @@
 	background: var(--color-bg-tertiary);
 	color: var(--color-text-primary);
 	font: inherit;
-	padding: 6px 10px;
+	padding: var(--spacing-sm) var(--spacing-md);
 	text-transform: none;
 	display: flex;
 	flex-direction: column;
@@ -79,17 +73,17 @@
 .text-font-option-badge {
 	@include badge-base;
 	position: absolute;
-	top: 5px;
-	right: 5px;
+	top: var(--spacing-xs);
+	right: var(--spacing-xs);
 	height: 14px;
 	min-width: 0;
 	background: var(--color-bg-card);
 	color: var(--color-text-primary);
-	font-size: 9px;
-	font-weight: 600;
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-semibold);
 	letter-spacing: 0;
 	text-transform: none;
-	padding: 0 5px;
+	padding: 0 var(--spacing-xs);
 	box-shadow: 0 2px 4px var(--color-shadow-soft);
 	pointer-events: none;
 

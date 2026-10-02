@@ -139,7 +139,7 @@ async function captureMetrics(page) {
 			}).length;
 			// Deepest chain of actual interactive disclosures. L0's section accordion
 			// counts as one; rule E allows at most two more clicks below it.
-			const sel = '.collapsible-section, [data-collapsible-group], [data-collapsible-subsection], [data-advanced]';
+			const sel = '.collapsible-section, [data-collapsible-group], [data-collapsible-card], [data-advanced]';
 			let deepest = 0;
 			s.querySelectorAll(sel).forEach((n) => {
 				let d = 0; let p = n;
@@ -149,7 +149,7 @@ async function captureMetrics(page) {
 			// containers rendering with no visible meaningful content
 			let shells = 0;
 			const shellCandidates = [
-				'.subsection-content-group', '.subsection-card-body', '.paint-slot-main',
+				'.property-card', '.property-card-body', '.paint-slot-main',
 				'.property-set', '.property-toggle-list',
 				'.property-actions', '.advanced-disclosure-content'
 			].join(',');
@@ -164,7 +164,7 @@ async function captureMetrics(page) {
 			out[id] = {
 				scrollHeight: s.querySelector('.section-content')?.scrollHeight || 0,
 				boxes, deepestCollapsibleChain: deepest, shells,
-				collapsibleCards: s.querySelectorAll('[data-collapsible-subsection]').length,
+				collapsibleCards: s.querySelectorAll('[data-collapsible-card]').length,
 				sliders: s.querySelectorAll('input[type=range]').length
 			};
 		});

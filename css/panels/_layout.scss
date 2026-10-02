@@ -8,7 +8,7 @@
 	> .layers-section-bottom-bar { display: none; }
 }
 
-.subsection-section-group .property-group-label { min-width: 0; }
+.property-group .property-group-label { min-width: 0; }
 
 /* ===== APP STRUCTURE ===== */
 .app-container {
@@ -76,7 +76,7 @@
 			// Sits on the bar chrome, so it follows the bar's caption color.
 			color: var(--bar-title-color);
 			font-size: var(--app-header-mark-size);
-			font-weight: 600;
+			font-weight: var(--font-weight-semibold);
 			line-height: 1;
 			text-decoration: none;
 			white-space: nowrap;
@@ -161,7 +161,7 @@
 	padding: var(--spacing-xs) var(--spacing-sm);
 	color: var(--color-text-muted);
 	font-size: var(--font-size-xs);
-	font-weight: 600;
+	font-weight: var(--font-weight-semibold);
 	text-transform: uppercase;
 }
 
@@ -170,7 +170,7 @@
 
 .export-split-control {
 	> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
-	> #exportMenuBtn { width: 26px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+	> #exportMenuBtn { width: var(--spacing-xl); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 }
 
 .app-menu-item {
@@ -183,7 +183,7 @@
 	border-radius: var(--radius-sm);
 	background: transparent;
 	color: var(--color-text-primary);
-	font-size: var(--font-size-base);
+	font-size: var(--font-size-sm);
 	text-align: left;
 	cursor: pointer;
 
@@ -287,24 +287,22 @@
 
 		+.toolbar-group {
 			border-top: 2px solid var(--color-border);
-			padding-top: 8px;
-			margin-top: 3px;
+			padding-top: var(--spacing-base);
+			margin-top: var(--spacing-xs);
 		}
 
 		>.btn-icon {
 			width: 100%;
 			height: auto;
 			aspect-ratio: 1/1;
-
-			@include gloss-button(true);
 		}
 
 		>.toolbar-tool-separator {
 			display: block;
 			height: 2px;
-			margin: 3px 2px;
+			margin: var(--spacing-xs) var(--spacing-2xs);
 			background: var(--color-border);
-			border-radius: 999px;
+			border-radius: var(--radius-pill);
 		}
 	}
 

@@ -39,10 +39,6 @@
 	// is active. Folded, the active-filter chips still show, and the button
 	// carries an accent dot, so a narrowed grid is never unexplained.
 	>.design-gallery-section {
-		// The Library is not a property section: its rows and filter blocks sit
-		// on the Library's own inset.
-		--property-gutter: 12px;
-
 		&[data-library]>.section-header>.section-header-actions>.library-search-action {
 			position: relative;
 			visibility: visible;
@@ -67,7 +63,7 @@
 			>.recent-searches,
 			>.filters-container { display: none; }
 
-			>.active-filter-summary { padding-top: var(--property-gutter); }
+			>.active-filter-summary { padding-top: var(--spacing-md); }
 		}
 
 		// Folded with nothing active, the host has nothing left to show.
@@ -98,7 +94,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--spacing-xs);
-		padding: 0 var(--property-gutter) var(--property-gutter);
+		padding: 0 var(--property-gutter) var(--spacing-md);
 
 		&[hidden] { display: none; }
 	}
@@ -109,7 +105,7 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--spacing-xs);
-		padding: 0 var(--property-gutter) var(--property-gutter);
+		padding: 0 var(--property-gutter) var(--spacing-md);
 
 		&[hidden] { display: none; }
 
@@ -140,8 +136,8 @@
 	display: flex;
 	align-items: center;
 	gap: var(--spacing-sm);
-	min-height: var(--control-height);
-	padding: var(--spacing-sm);
+	min-height: var(--row-height);
+	padding: var(--spacing-xs) var(--property-gutter);
 	background: var(--color-bg-tertiary);
 
 	&[hidden] { display: none; }
@@ -153,14 +149,14 @@
 	gap: var(--spacing-xs);
 	flex: 1;
 	min-width: 0;
-	@include text-sm;
+	font-size: var(--font-size-sm);
 	white-space: nowrap;
 }
 
 .gallery-picker-strip-title {
 	flex-shrink: 0;
 	color: var(--color-text-primary);
-	font-weight: 600;
+	font-weight: var(--font-weight-semibold);
 }
 
 .gallery-picker-strip-detail {
@@ -174,13 +170,7 @@
 	&:empty { display: none; }
 }
 
-.gallery-picker-strip-done.btn-text-with-icon {
-	flex-shrink: 0;
-	min-height: var(--control-height-compact);
-	padding: 0 var(--spacing-md);
-
-	&[hidden] { display: none; }
-}
+.gallery-picker-strip-done[hidden] { display: none; }
 
 @include mobile {
 	// The drawer already belongs to the selected layer, so the target detail
@@ -192,10 +182,6 @@
 	}
 
 	.gallery-picker-strip-detail { display: none; }
-
-	// A full-height strip's Done is still a comfortable target without the
-	// 44px text-button floor, which alone doubled the row.
-	.gallery-picker-strip-done.btn-text-with-icon { min-height: var(--control-height); }
 }
 
 /* ===== FILTERS CONTAINER ===== */
@@ -208,7 +194,6 @@
 	display: none;
 	flex-direction: column;
 	gap: 0;
-	border-top: 1px solid var(--color-border);
 
 	&.visible {
 		display: flex;
@@ -222,19 +207,14 @@
 		flex-direction: column;
 	}
 
-	// Rule B: a filter group is a label plus its chips, separated by a hairline
-	// - not a card stack. Rule C: its label is the group-label level, the same
-	// one the property panels use, not a fourth uppercase variant.
+	// A filter group is a flat section, like any other in a panel: a title,
+	// then its chips or toggles, and one hairline under it.
 	.filter-section {
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-sm);
-		padding: var(--property-gutter);
-		margin: 0;
-		background: transparent;
-		border-radius: 0;
-
-		+ .filter-section { border-top: 1px solid var(--color-border); }
+		padding: var(--property-section-pad-top) var(--property-gutter) var(--property-section-pad-bottom);
+		border-bottom: 1px solid var(--color-border);
 
 		>.filter-chips {
 			display: flex;
@@ -259,8 +239,8 @@
 
 	>.filter-actions {
 		flex-shrink: 0;
-		border-top: 1px solid var(--color-border);
-		background: var(--color-bg-primary);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding-block: var(--spacing-md);
 	}
 }
 
@@ -272,15 +252,6 @@
 	justify-content: center;
 	position: relative;
 	aspect-ratio: 1/1;
-
-	/*
-	&.active::after {
-		content: "✓";
-		font-size: var(--font-size-md);
-		color: white;
-		text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-	}
-	*/
 
 	&[data-color="red"] {
 		background: linear-gradient(135deg, var(--color-danger-bright), #cc0000);

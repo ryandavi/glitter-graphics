@@ -128,23 +128,9 @@ class MobileManager {
 			this.openDrawer('edit');
 		});
 
-		document.querySelectorAll('.section-header').forEach((header) => {
-			header.addEventListener('click', (event) => {
-				if (!this.isMobile || header.closest('.mobile-settings-drawer .collapsible-section')) return;
-				if (event.target.closest('.section-header-action') && !event.target.closest('#designGalleryToggle')) return;
-				if (header.closest('.design-panel') && this.activeDrawer === 'design') this.closeAllDrawers();
-				if (header.closest('.layers-panel') && this.activeDrawer === 'layers') this.closeAllDrawers();
-			});
-		});
-		const editHeader = document.getElementById('mobileEditHeader');
-		const closeEdit = () => {
-			if (this.isMobile && this.activeDrawer === 'edit') this.closeAllDrawers();
-		};
-		editHeader?.addEventListener('click', closeEdit);
-		editHeader?.addEventListener('keydown', (event) => {
-			if (event.key !== 'Enter' && event.key !== ' ') return;
-			event.preventDefault();
-			closeEdit();
+		document.getElementById('mobileEditTitle')?.addEventListener('click', (event) => {
+			const tab = event.target.closest('[data-edit-section]');
+			if (tab) this.syncEditSections(tab.dataset.editSection);
 		});
 
 		window.addEventListener('viewportChanged', () => {
@@ -291,22 +277,57 @@ class MobileManager {
 			section.classList.add('visible');
 			hasSettings = true;
 		});
-		this.collapseAllSections();
 		document.body.classList.toggle('has-layer-settings', hasSettings);
 		document.getElementById('mobileSettingsBtn')?.toggleAttribute('disabled', !hasSettings);
 		this.syncBrushSettingsPlacement();
+		this.syncEditSections();
 		if (!options.preserveDrawer && CONFIG.ui.mobile.autoCloseDesignDrawer && this.activeDrawer === 'design') {
 			this.closeAllDrawers();
 		}
 		if (wasEditOpen) this.activeDrawer = 'edit';
 	}
 
-	collapseAllSections() {
-		Object.values(this.settingsRegistry).forEach((entry) => {
-			if (entry.collapsibleName && entry.element) {
-				this.editor.setCollapsibleSectionOpen?.(entry.collapsibleName, false);
-			}
+	// The Edit drawer has no bars: it shows one section, named in the grabber
+	// row. When it holds two (a fill layer beside its tool settings, a layer
+	// beside Mask Settings) the name becomes a two-way switch between them.
+	syncEditSections(preferredKey = null) {
+		const container = document.getElementById('mobileSettingsContainer');
+		const bar = document.getElementById('mobileEditTitle');
+		if (!container || !bar) return;
+		const present = Array.from(container.children)
+			.map((element) => Object.keys(this.settingsRegistry).find((key) => this.settingsRegistry[key].element === element))
+			.filter(Boolean);
+		// The tool being used leads; otherwise the last section the user chose.
+		const toolKey = this.editor.currentTool === ToolType.BRUSH ? 'brush' : present[0];
+		const activeKey = [preferredKey, this.activeEditSection, toolKey].find((key) => present.includes(key)) || present[0];
+		if (preferredKey) this.activeEditSection = preferredKey;
+		present.forEach((key) => {
+			const entry = this.settingsRegistry[key];
+			if (entry.collapsibleName) this.editor.setCollapsibleSectionOpen?.(entry.collapsibleName, key === activeKey);
 		});
+		const titleOf = (key) => this.settingsRegistry[key].element.querySelector('.section-header-title-text')?.textContent || '';
+		if (present.length < 2) {
+			const title = document.createElement('span');
+			title.className = 'mobile-sheet-title';
+			title.textContent = present.length ? titleOf(present[0]) : '';
+			bar.replaceChildren(title);
+			return;
+		}
+		const tabs = document.createElement('div');
+		tabs.className = 'segmented-control';
+		tabs.setAttribute('role', 'group');
+		tabs.setAttribute('aria-label', 'Edit section');
+		present.forEach((key) => {
+			const tab = document.createElement('button');
+			tab.type = 'button';
+			tab.className = 'segmented-option';
+			tab.dataset.editSection = key;
+			tab.textContent = titleOf(key);
+			tab.classList.toggle('active', key === activeKey);
+			tab.setAttribute('aria-pressed', String(key === activeKey));
+			tabs.appendChild(tab);
+		});
+		bar.replaceChildren(tabs);
 	}
 
 	returnSettingsSections() {
@@ -347,10 +368,12 @@ class MobileManager {
 			section.classList.add('visible');
 			document.body.classList.add('has-layer-settings');
 			document.getElementById('mobileSettingsBtn')?.removeAttribute('disabled');
+			this.syncEditSections();
 			return;
 		}
 		this.returnBrushSection();
 		this.syncEditAvailability();
+		this.syncEditSections();
 	}
 
 	syncEditAvailability() {

@@ -8,8 +8,8 @@
 //   _typography   the type levels
 //   _rows         the row types, the revert, the value readout
 //   _fields       controls inside a row: segmented, select, number, color
-//   _sections     groups, cards, sets, actions, the Advanced disclosure
-//   _modules      a card whose header enables or summarizes it
+//   _sections     groups, sections, sets, actions, the Advanced disclosure
+//   _modules      a section whose title enables or summarizes it
 //   _asset-summary, _transform, _widgets   the composed pieces
 //   _regions      sticky header / scroll / footer sections
 //   _responsive   container queries
@@ -26,8 +26,12 @@
 //   - Spacing between siblings is the parent's `gap`, or an explicit
 //     `a + b { margin-top }`. Never a bare margin on a child: it survives when
 //     the neighbour is hidden and leaves phantom space.
-//   - Horizontal inset is owned by rows and headers only. Bodies, sets and
-//     cards never add horizontal padding (`tools/gutter-check.js` enforces it).
+//   - Horizontal inset is owned by rows and titles only. Bodies, sets and
+//     sections never add horizontal padding (`tools/gutter-check.js` enforces
+//     it), so the left edge is one line down the panel.
+//   - A section is flat: no border, no background, no side margin. The only
+//     boxes are objects you can swap or pick from (asset chip, preset
+//     scrollbox, gradient editor). The only lines are section boundaries.
 //   - State is a class or attribute the renderer stamps (`.is-off`,
 //     `.is-vacant`, `.is-unset`), never a `:has()` that sniffs structure.
 //   - Uppercase is the group label's alone.
@@ -36,20 +40,28 @@
 
 // `.property-panel` is a whole surface (sidebar, drawer, form-modal body);
 // `.property-section` is one schema-rendered section inside it. Both carry the
-// tokens so a section also works on a surface that is not a panel.
+// tokens so a section also works on a surface that is not a panel. Heights
+// come from the app-wide density tokens (`--control-height`, `--row-height`).
 .property-panel,
 .property-section {
-	// ---- geometry --------------------------------------------------------
-	--property-row-h: 26px;
-	// Every interactive control in a row: segmented, select, number, text,
-	// color, the value readout. Switches keep their own geometry.
-	--property-control-height: 32px;
-	// The inset of every boxed container, and of a card from the panel wall.
-	--property-pad: 8px;
-	// The inset rows and headers apply. A card narrows it for its own rows.
-	--property-gutter: 16px;
-	--property-row-gap: 4px;
-	--property-field-gap: 5px;
+	// ---- insets ----------------------------------------------------------
+	// What rows, titles and notes apply.
+	--property-gutter: var(--spacing-lg);
+	// Inside a boxed object, from its own edge.
+	--property-pad: var(--spacing-base);
+
+	// ---- vertical rhythm -------------------------------------------------
+	// One gap between any two things stacked in a section: row to row, title
+	// to first row, set to set, rows to a disclosure or an action row. A
+	// second, larger gap between sets read as a mistake once the lines went.
+	--property-row-gap: var(--spacing-sm);
+	--property-field-gap: var(--spacing-sm);
+	// Under a section's last row, above its hairline. The title row starts
+	// right under the line, so this is the "room to breathe" number.
+	--property-section-pad-bottom: var(--spacing-lg);
+	// Around things that sit outside a section: a preamble note, a panel-end
+	// action row.
+	--property-section-pad-top: var(--spacing-md);
 
 	// ---- the row grid ----------------------------------------------------
 	--property-label-col: 76px;
@@ -57,7 +69,6 @@
 	--property-revert-col: 16px;
 
 	// ---- radii, concentric: each nested step is one smaller ---------------
-	--property-r-card: var(--radius-card);
 	--property-r-field: var(--radius-control);
 	--property-r-inner: var(--radius-inner);
 

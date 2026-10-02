@@ -105,6 +105,7 @@ registerLayerType(LayerType.STICKER, {
 		scaleReadout: true,
 		scaleReset: true,
 		lockAspect: true,
+		fitCanvas: true,
 		rotation: true,
 		opacity: true,
 		flip: true,

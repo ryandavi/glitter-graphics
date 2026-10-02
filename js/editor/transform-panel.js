@@ -7,7 +7,6 @@ renderTransformPanels() {
 
 			buildTransformPanel(this, host, prefix, LAYER_UI_CONFIG[type].transformCapabilities || {});
 		});
-		finalizePanelSchemaSections(this);
 	}
 
 ,
@@ -78,9 +77,7 @@ renderTransformPanels() {
 				Math.abs(transform.position.x - home.position.x) > 0.5
 				|| Math.abs(transform.position.y - home.position.y) > 0.5
 			);
-			const disabled = !moved && !this.hasResettableTransformAdjustments(transform);
-			resetTransform.disabled = disabled;
-			document.querySelector(`[data-transform-prefix="${prefix}"] [data-transform-revert-signal]`)?.toggleAttribute('disabled', disabled);
+			resetTransform.disabled = !moved && !this.hasResettableTransformAdjustments(transform);
 		}
 		// Per-row reverts: on only when their control is away from its default.
 		const resetFlip = document.getElementById(ids.resetFlip);

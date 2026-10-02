@@ -195,13 +195,14 @@ setupImageListeners() {
 		if (!host || host.dataset.rendered === 'true') return;
 		host.dataset.rendered = 'true';
 		host.replaceChildren();
-		// Each group is a titled panel card holding its tiles.
+		// Each group is a label over its tiles.
 		const addGroup = (label, grid) => {
-			const card = buildPanelItem({ kind: 'card', title: label, flatBody: true, items: [] });
-			card.querySelector('.subsection-card-body').appendChild(grid);
-			host.appendChild(card);
-			finishPanelMarkup(card);
-			return card;
+			const group = panelDiv('new-canvas-preset-group');
+			const heading = panelDiv('property-group-label');
+			heading.textContent = label;
+			group.append(heading, grid);
+			host.appendChild(group);
+			return group;
 		};
 		// Display order. Templates load asynchronously and always come last.
 		const groups = [

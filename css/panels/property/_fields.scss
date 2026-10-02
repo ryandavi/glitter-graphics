@@ -1,32 +1,24 @@
 @use '../../mixins' as *;
 
 // ===== Controls inside a row ===============================================
-// Every control is one height (`--property-control-height`) and one radius
+// Every control is one height (`--control-height`) and one radius
 // (`--property-r-field`).
 
-// ----- Slider -------------------------------------------------------------
-// The global range input is 32px tall for a 16px thumb, which parks dead space
-// above and below every track. Here the box matches the control's visual
-// weight; coarse pointers get the taller target back.
-.property-panel input[type="range"] { height: 20px; }
-
-@media (pointer: coarse) {
-	.property-panel input[type="range"] { height: 28px; }
-}
-
 // ----- Segmented ----------------------------------------------------------
-// One connected, non-wrapping row filling its slot.
-.property-panel .segmented-control {
+// The one segmented control: a connected, non-wrapping row of sentence-case
+// options filling its slot. Used for every either/or choice, in panels, form
+// modals and the gradient editor alike.
+.segmented-control {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: stretch;
 	width: 100%;
-	height: var(--property-control-height);
-	min-height: var(--property-control-height);
-	max-height: var(--property-control-height);
+	height: var(--control-height);
+	min-height: var(--control-height);
 	margin-inline: 0;
 	box-sizing: border-box;
-	border-radius: var(--property-r-field);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-control);
 	overflow: hidden;
 
 	> .segmented-option {
@@ -34,16 +26,50 @@
 		flex: 1 1 0;
 		align-items: center;
 		justify-content: center;
+		gap: 0.4em;
 		min-width: 0;
 		height: 100%;
 		min-height: 0;
-		padding-inline: var(--spacing-xs);
+		padding: 0 var(--spacing-xs);
 		box-sizing: border-box;
+		border: 0;
+		background: var(--color-bg-secondary);
+		color: var(--color-text-secondary);
 		overflow: hidden;
-		font-size: 11px;
+		font-family: inherit;
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-normal);
+		letter-spacing: 0;
 		line-height: 1;
 		text-overflow: ellipsis;
+		text-transform: none;
 		white-space: nowrap;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), color var(--transition-fast);
+
+		& + .segmented-option { border-left: 1px solid var(--color-border); }
+
+		&:focus-visible {
+			position: relative;
+			z-index: 1;
+			outline: none;
+			box-shadow: inset var(--control-focus-ring);
+		}
+
+		&:hover:not(.active):not(:disabled) {
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+		}
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: var(--opacity-disabled);
+		}
+
+		&.active {
+			background: var(--color-accent);
+			color: var(--color-text-on-accent);
+		}
 
 		> span {
 			display: flex;
@@ -53,15 +79,21 @@
 			height: 100%;
 		}
 
-		// The glyph sits on the filled segment.
-		&.active > svg.icon { color: var(--color-white, #fff); }
+		// Line-art glyphs come from the shared sprite and carry their own
+		// stroke; the option only sizes them.
+		> svg.icon,
+		> span > svg.icon {
+			width: 16px;
+			height: 16px;
+			fill: none;
+		}
 	}
 }
 
 // An option that wraps its own input (a radio group, the flip checkboxes):
 // the span after the input fills the option and carries the input's checked
 // and focus states, so no script has to mirror them onto the label.
-.property-panel .segmented-control > label.segmented-option {
+.segmented-control > label.segmented-option {
 	position: relative;
 	padding: 0;
 
@@ -76,32 +108,36 @@
 	}
 
 	> input:focus-visible + span { box-shadow: inset var(--control-focus-ring); }
+
+	// Checked reads exactly like an `.active` button option.
+	> input:checked + span {
+		background: var(--color-accent);
+		color: var(--color-text-on-accent);
+	}
 }
 
 // A larger set of choices is a grid of separate buttons, not a wrapped
 // segmented control. auto-fill keeps empty tracks, so an incomplete last row
 // does not stretch its final option.
-.property-panel .segmented-control.choice-grid {
+.segmented-control.choice-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(min(96px, 100%), 1fr));
 	gap: var(--spacing-xs);
 	height: auto;
-	max-height: none;
 	border: 0;
 	border-radius: 0;
 	overflow: visible;
 
 	> .segmented-option {
+		height: var(--control-height);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-
-		& + .segmented-option { border-left: 1px solid var(--color-border); }
+		border-radius: var(--radius-control);
 	}
 }
 
 // A segmented control sitting directly in a body or a set, not in a row,
 // takes the gutter itself because nothing else supplies it.
-.property-panel :is(.subsection-card-body, .paint-slot-main, .subsection-content, .property-set) > .segmented-control {
+.property-panel :is(.property-card-body, .paint-slot-main, .property-content, .property-set) > .segmented-control {
 	width: auto;
 	margin-inline: var(--property-gutter);
 }
@@ -109,25 +145,24 @@
 // ----- Select -------------------------------------------------------------
 .property-section {
 	:is(select, .property-select, .property-select-control, .input-group.horizontal) {
-		height: var(--property-control-height);
-		min-height: var(--property-control-height);
+		height: var(--control-height);
+		min-height: var(--control-height);
 		box-sizing: border-box;
 	}
 
 	select {
 		min-width: 0;
 		padding-block: 0;
-		line-height: 22px;
 	}
 
 	.property-select-control { min-width: 0; }
 
 	.property-select {
 		width: 100%;
-		max-height: var(--property-control-height);
+		max-height: var(--control-height);
 		padding: 0 28px 0 var(--property-pad);
 		border-radius: var(--property-r-field);
-		font-size: 12px;
+		font-size: var(--font-size-sm);
 		white-space: nowrap;
 		text-overflow: ellipsis;
 	}
@@ -138,6 +173,7 @@
 		position: absolute;
 		width: 1px;
 		height: 1px;
+		min-height: 0;
 		overflow: hidden;
 		clip-path: inset(50%);
 		opacity: 0;
@@ -158,8 +194,8 @@
 	> .input-unit > input,
 	> input[type="text"],
 	> input[type="number"] {
-		height: var(--property-control-height);
-		min-height: var(--property-control-height);
+		height: var(--control-height);
+		min-height: var(--control-height);
 		box-sizing: border-box;
 	}
 }
@@ -213,6 +249,6 @@
 		grid-column: 2 / -2;
 		justify-self: stretch;
 		width: 100%;
-		height: var(--property-control-height);
+		height: var(--control-height);
 	}
 }

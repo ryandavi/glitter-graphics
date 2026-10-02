@@ -197,7 +197,7 @@ function check(name, cond, detail='') {
 		const row = document.getElementById('exportQuality').closest('.settings-row');
 		return {
 			inRail: !!row.closest('[data-advanced-content]'),
-			group: row.closest('.settings-group').querySelector('.subsection-title-label').textContent,
+			group: row.closest('.settings-group').querySelector('.property-card-label').textContent,
 			label: row.querySelector('.property-label').textContent
 		};
 	});

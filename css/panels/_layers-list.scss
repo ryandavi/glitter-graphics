@@ -1,8 +1,11 @@
 @use '../mixins' as *;
 
-/* ===== LAYERS PANEL ===== */
+// ===== LAYERS PANEL ========================================================
+// The panel box, the scrolling list and its bottom bar. A layer row is the
+// shared `.list-row` (css/_components.scss); only what is specific to a layer
+// (its swatch kinds, hidden and locked states, the drop line) lives here.
+
 .layers-panel {
-	// width: var(--panel-width);
 	width: var(--layer-panel-width);
 	flex: 0 0 var(--layer-panel-width);
 	order: 0;
@@ -17,332 +20,195 @@
 }
 
 .layers-section {
-	// flex: 1 1 auto;
 	flex: 1;
 	min-height: 0;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-
 	background: var(--panel-bg);
 	-webkit-backdrop-filter: var(--panel-backdrop);
 	backdrop-filter: var(--panel-backdrop);
 
-	>.section-header {
+	> .section-header {
 		flex-shrink: 0;
 		z-index: 100;
-		// box-shadow: 0px 5px 3px 0px rgba(0, 0, 0, 0.13);
 	}
 
-	>.layers-list {
-		flex: 1 1 auto;
-		min-height: 0;
-		overflow-y: auto;
-
+	> .layers-list {
 		position: relative;
 		z-index: 0;
-
-		padding: var(--spacing-md);
-
-
-		>.layer-item {
-
-			+ .layer-item {
-				margin-top: var(--spacing-sm);
-			}
-			
-			cursor: pointer;
-			padding: var(--spacing-sm);
-			gap: var(--spacing-xs);
-
-			transform: translateZ(0); // ios fix for radius + hidden
-
-			&.active {
-				border-color: var(--color-accent);
-				background: var(--color-bg-accent-tint);
-
-
-			}
-
-			&.selected:not(.active) {
-				border-color: var(--color-border-hover);
-				background: var(--color-bg-accent-tint);
-			}
-
-			&.dragging {
-				opacity: 0.5;
-			}
-
-			// Keep the row and its actions fully interactive. Visibility affects the
-			// content preview; locking affects movement/edit affordances.
-			&.is-hidden {
-				>.layer-swatch { opacity: 0.35; }
-
-				>.layer-info {
-					>.layer-name,
-					>.layer-meta > .layer-type { color: var(--color-text-tertiary); }
-				}
-			}
-
-			&.is-locked > .layer-drag-handle { cursor: default; }
-
-			>.layer-swatch {
-				background-size: cover;
-
-				transition: opacity var(--transition-fast);
-
-				transform: translateZ(0); // ios fix for radius + hidden
-
-				margin-right: var(--spacing-xs);
-
-				&.sticker {
-					background-size: contain;
-					background-position: center;
-					background-repeat: no-repeat;
-				}
-
-				&.empty {
-					outline: 2px solid var(--swatch-empty-outline);
-					outline-offset: 2px;
-					background-color: var(--swatch-empty-bg);
-				}
-
-
-				&.baseImage {
-					background-size: cover;
-					background-position: center;
-					background-repeat: no-repeat;
-					cursor: default;
-
-					&:hover {
-						opacity: unset;
-					}
-				}
-
-				&:hover {
-					opacity: 0.8;
-				}
-
-				&.pixelated {
-					image-rendering: pixelated;
-				}
-
-				&.text-layer {
-					position: relative;
-					background-size: cover;
-
-					>.layer-swatch-text-overlay {
-						position: absolute;
-						right: 3px;
-						bottom: 2px;
-						display: inline-flex;
-						align-items: center;
-						justify-content: center;
-						min-width: 14px;
-						min-height: 14px;
-						padding: 0 3px;
-						border-radius: var(--radius-pill);
-						background: rgba(0, 0, 0, 0.65);
-						color: var(--color-text-on-accent);
-						font-size: 10px;
-						font-weight: 700;
-						line-height: 1;
-						letter-spacing: 0;
-						pointer-events: none;
-					}
-				}
-			}
-
-			>.layer-info {
-				white-space: nowrap;
-				text-overflow: ellipsis;
-
-				>.layer-type {
-					@include text-sm;
-					color: var(--color-text-secondary);
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					text-transform: none;
-				}
-
-				>.layer-color {
-					@include text-sm;
-					letter-spacing: 0;
-					color: var(--color-text-primary);
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
-				}
-
-				>.layer-meta {
-					display: flex;
-					align-items: center;
-					gap: var(--spacing-xs);
-					min-width: 0;
-
-					>.layer-type {
-						font-size: var(--font-size-sm);
-						letter-spacing: 0;
-						color: var(--color-text-secondary);
-						white-space: nowrap;
-						overflow: hidden;
-						text-overflow: ellipsis;
-						text-transform: none;
-						min-width: 0;
-						// flex: 1;
-					}
-				}
-
-				.layer-badge {
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-					width: 14px;
-					height: 14px;
-					border-radius: 3px;
-					padding: 0;
-					flex-shrink: 0;
-
-					background: var(--color-accent-light);
-					color: var(--color-accent);
-					border: 1px solid var(--color-accent-border);
-
-					>.icon {
-						width: 10px;
-						height: 10px;
-					}
-				}
-			}
-
-			>.layer-actions {
-				display: flex;
-				align-items: center;
-				gap: var(--spacing-2xs);
-				flex-shrink: 0;
-
-				>.layer-action-btn {
-
-					color: var(--color-icon-strong);
-					width: var(--icon-size-sm);
-					height: var(--icon-size-sm);
-
-					display: flex;
-					align-items: center;
-					justify-content: center;
-
-					transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-
-					// Glyph size comes from the shared `.sm` icon-wrapper path
-					// (button carries the `sm` class — see createIconButton). The old
-					// explicit `.icon { width/height: .8em }` here resolved against
-					// the button's 30px font-size, rendering a 24px glyph.
-
-
-
-					&.visibility.hidden {
-						color: var(--color-text-secondary);
-					}
-
-					&.lock.active {
-						color: var(--color-accent);
-						background: var(--color-bg-accent-tint);
-						border-color: var(--color-accent-border);
-					}
-
-					&.lock.permanent {
-						opacity: 0.65;
-						cursor: help;
-					}
-
-					&:disabled {
-						opacity: var(--opacity-disabled);
-						cursor: not-allowed;
-					}
-
-					&.goto-glitter {
-						display: none;
-					}
-
-					&.clone {
-						display: none;
-					}
-
-
-				}
-			}
-
-			>.layer-visibility {
-				flex: 0 0 var(--icon-size-sm);
-				color: var(--color-icon-strong);
-
-				&.hidden { color: var(--color-text-tertiary); }
-			}
-
-			>.layer-drag-handle {
-				display: none;
-				width: 18px;
-				height: var(--icon-size-sm);
-				flex-basis: 18px;
-			}
-
-
-		}
-
-		>.layer-insertion-line {
-			position: absolute;
-			left: 0;
-			right: 0;
-			height: 2px;
-			top: -10px;
-			background: var(--color-accent);
-			pointer-events: none;
-			opacity: 0;
-			transition: opacity 0.2s;
-			z-index: 100;
-
-			&.visible {
-				opacity: 1;
-			}
-		}
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+		gap: var(--spacing-2xs);
+		min-height: 0;
+		padding: var(--spacing-base);
+		overflow-y: auto;
 	}
 
-	>.collapsible-section {
+	> .collapsible-section {
 		position: relative;
 		z-index: 100;
-		// box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
 	}
 }
 
-.layers-section-bottom-bar {
-	// box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
-	padding: var(--spacing-xs);
+.layer-item {
+	cursor: pointer;
 
-	align-items: center;
-	justify-content: flex-end;
-	display: flex;
-	gap: var(--spacing-xs);
+	&.dragging { opacity: var(--opacity-dragging); }
 
-	background: var(--color-bg-secondary);
+	// Visibility dims the preview, never the row's controls.
+	&.is-hidden {
+		> .layer-swatch { opacity: 0.35; }
 
-	.icon-wrapper {
-		width: var(--icon-size-sm);
-		height: var(--icon-size-sm);
+		.list-row-name,
+		.list-row-meta { color: var(--color-text-tertiary); }
+	}
+
+	&.is-locked > .layer-drag-handle { cursor: default; }
+
+	// Shown on touch layouts only, where rows reorder by handle.
+	> .layer-drag-handle { display: none; }
+
+	> .layer-visibility.hidden { color: var(--color-text-tertiary); }
+
+	.list-row-action {
+		&.lock.active {
+			background: none;
+			color: var(--color-accent);
+		}
+
+		&.lock.permanent {
+			opacity: 0.65;
+			cursor: help;
+		}
+
+		// Source navigation is a touch-layout action; desktop uses the swatch.
+		&.goto-glitter { display: none; }
 	}
 }
 
-
-
+.layer-name-input {
+	width: 100%;
+	min-width: 0;
+	height: var(--chip-height);
+	min-height: 0;
+	padding: 0 var(--spacing-xs);
+	font-size: var(--font-size-title);
+}
 
 .layer-swatch {
+	background-size: cover;
+	transition: opacity var(--transition-fast);
+	// iOS: keeps the radius clipping an animated background.
+	transform: translateZ(0);
 
-	&[style*="contain"] {
-		background-color: var(--color-bg-tertiary);
+	&:hover { opacity: 0.8; }
+
+	&[style*="contain"] { background-color: var(--color-bg-tertiary); }
+
+	&.sticker {
+		background-size: contain;
+		background-position: center;
+		background-repeat: no-repeat;
 	}
+
+	&.empty {
+		outline: 2px solid var(--swatch-empty-outline);
+		outline-offset: 2px;
+		background-color: var(--swatch-empty-bg);
+	}
+
+	&.baseImage {
+		background-position: center;
+		background-repeat: no-repeat;
+		cursor: default;
+
+		&:hover { opacity: 1; }
+	}
+
+	&.pixelated { image-rendering: pixelated; }
 
 	&.filter .filter-css-thumbnail {
 		display: block;
 		width: 100%;
 		height: 100%;
+	}
+
+	&.text-layer {
+		position: relative;
+
+		> .layer-swatch-text-overlay {
+			position: absolute;
+			right: var(--spacing-2xs);
+			bottom: var(--spacing-2xs);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 12px;
+			min-height: 12px;
+			padding: 0 var(--spacing-2xs);
+			border-radius: var(--radius-pill);
+			background: var(--color-overlay);
+			color: var(--color-text-on-accent);
+			font-size: var(--font-size-xs);
+			font-weight: var(--font-weight-semibold);
+			line-height: 1;
+			pointer-events: none;
+		}
+	}
+}
+
+.layer-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	border: 1px solid var(--color-accent-border);
+	border-radius: var(--radius-xs);
+	background: var(--color-accent-light);
+	color: var(--color-accent);
+
+	> .icon {
+		width: 10px;
+		height: 10px;
+	}
+}
+
+.layer-insertion-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: -10px;
+	z-index: 100;
+	height: 2px;
+	background: var(--color-accent);
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity var(--transition-fast);
+
+	&.visible { opacity: 1; }
+}
+
+// Add actions on the left, edit actions on the right.
+.layers-section-bottom-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-base);
+	padding: var(--spacing-xs) var(--spacing-base);
+	border-top: 1px solid var(--color-border);
+
+	> .layers-bar-group {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+	}
+
+	.btn-icon-simple {
+		width: var(--control-height);
+		height: var(--control-height);
 	}
 }

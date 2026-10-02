@@ -20,33 +20,9 @@
 				height: 100%;
 			}
 
-			>.modal-header {
-				min-height: 48px;
-				padding: var(--spacing-2xs) var(--spacing-xs) var(--spacing-2xs) var(--spacing-md);
+			>.modal-header { padding-block: var(--spacing-2xs); }
 
-				>.modal-title {
-					gap: var(--spacing-base);
-					font-size: 16px;
-
-					>.modal-icon {
-						width: 18px;
-						height: 18px;
-
-						>svg.icon { font-size: 18px; }
-					}
-				}
-
-				>.modal-close {
-					width: var(--touch-target-min);
-					height: var(--touch-target-min);
-
-					>svg.icon { font-size: 18px; }
-				}
-			}
-
-			>.modal-body {
-				padding: var(--spacing-md);
-			}
+			>.modal-body { padding: var(--spacing-md); }
 		}
 	}
 
@@ -111,21 +87,5 @@
 			justify-content: center;
 			margin-top: var(--spacing-xl);
 		}
-	}
-}
-
-// ---- Touch targets ------------------------------------------------------
-// Keyed off the pointer rather than the viewport: a 30px switch is fine under
-// a mouse at any width, and too small for a finger at any width.
-@media (pointer: coarse) {
-	// Form modals grow through the panel knobs: every control takes the control
-	// height, and a switch row is tappable across its whole height.
-	.modal-form .property-section {
-		--property-control-height: var(--touch-target-min);
-		--property-row-h: var(--touch-target-min);
-	}
-
-	.modal-nav .segmented-option {
-		min-height: var(--touch-target-min);
 	}
 }

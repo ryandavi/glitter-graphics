@@ -392,60 +392,21 @@ $mobile-breakpoint: 800px;
 	// the workspace.
 }
 
+// The tooltip is the one surface that keeps its era skin in every theme: a
+// Windows 7 tip, so its colors are literal on purpose.
 @mixin windows7-tooltip {
-
-	/* Windows 7 CSS Variables */
-	--font: 9pt "Segoe UI", "SegoeUI", "Noto Sans", sans-serif;
-	/* --w7-font */
-	--surface: #f0f0f0;
-	/* --w7-surface */
-	--element-bg: #f2f2f2;
-	/* --w7-el-bg */
-	--element-bg-dark: #f4f4f4;
-	/* --w7-el-bg-d */
-	--element-bg-shade-1: #ebebeb;
-	/* --w7-el-bg-s-1 */
-	--element-bg-shade-2: #cfcfcf;
-	/* --w7-el-bg-s-2 */
-	--element-shadow: inset 0 0 0 1px #fffc;
-	/* --w7-el-sd */
-	--element-shadow-active: inset 1px 1px 0 #0003, inset -1px 1px 0 #0001;
-	/* --w7-el-sd-a */
-	--element-border: #8e8f8f;
-	/* --w7-el-bd */
-	--element-border-hover: #3c7fb1;
-	/* --w7-el-bd-h */
-	--element-border-active: #6d91ab;
-	/* --w7-el-bd-a */
-	--element-border-disabled: #adb2b5;
-	/* --w7-el-bd-d */
-	--element-border-radius: 3px;
-	/* --w7-el-bdr */
-	--element-color: #000;
-	/* --w7-el-c */
-	--element-color-disabled: #838383;
-	/* --w7-el-c-d */
-	--element-gradient: linear-gradient(var(--element-bg) 45%, var(--element-bg-shade-1) 45%, var(--element-bg-shade-2));
-	/* --w7-el-grad */
-	--element-gradient-hover: linear-gradient(#eaf6fd 45%, #bee6fd 0, #a7d9f5);
-	/* --w7-el-grad-h */
-	--element-gradient-active: linear-gradient(#e5f4fc, #c4e5f6 30% 50%, #98d1ef 50%, #68b3db);
-	/* --w7-el-grad-a */
-
-
-	background: linear-gradient(to bottom, #fff, var(--element-bg-shade-1));
-	border: 1px solid var(--element-border);
-	border-radius: var(--element-border-radius);
+	padding: var(--spacing-xs) var(--spacing-base);
+	border: 1px solid #8e8f8f;
+	border-radius: var(--radius-xs);
+	background: linear-gradient(to bottom, #fff, #ebebeb);
 	box-shadow: 2px 2px 4px var(--color-shadow-strong);
-	padding: 4px 8px;
-	font: var(--font);
-	color: var(--element-color);
-
+	color: #000;
+	font: 9pt "Segoe UI", "SegoeUI", "Noto Sans", sans-serif;
 	white-space: normal;
 	overflow-wrap: break-word;
 	word-break: break-word;
-	@include text-xs;
 	pointer-events: none;
+	@include text-xs;
 }
 
 @mixin secondary-button-filters {
@@ -487,7 +448,7 @@ $mobile-breakpoint: 800px;
 	border: 1px solid var(--btn-border-color);
 	outline: none;
 	cursor: pointer;
-	font-size: var(--font-size-base);
+	font-size: var(--font-size-sm);
 	border-radius: var(--radius-sm);
 
 	// Also creates the stacking context that keeps the z-index:-1 gradient

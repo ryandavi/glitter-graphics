@@ -319,7 +319,7 @@ async function verifyStickerColorAdjustControls(page) {
 		const image = layer.stickerData.element?.querySelector('img.sticker-image');
 		const hue = document.getElementById('stickerHue');
 		const advanced = hue?.closest('[data-advanced]');
-		const assetCard = document.getElementById('stickerAssetInfo')?.closest('.subsection-content-group');
+		const assetCard = document.getElementById('stickerAssetInfo')?.closest('.property-card');
 		hue.value = '65';
 		hue.dispatchEvent(new Event('input', { bubbles: true }));
 		const live = {

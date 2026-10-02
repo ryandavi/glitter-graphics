@@ -580,7 +580,7 @@ initializeExportSettings() {
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
 			if (group.hidden) return;
 			// The card body's children are the group's rows.
-			const hasVisibleRow = Array.from(group.querySelectorAll('.subsection-card-body > *')).some((child) => !child.hidden);
+			const hasVisibleRow = Array.from(group.querySelectorAll('.property-card-body > *')).some((child) => !child.hidden);
 			group.hidden = !hasVisibleRow;
 		});
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';

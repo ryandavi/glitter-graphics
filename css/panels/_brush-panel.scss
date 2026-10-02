@@ -31,8 +31,6 @@
 	label[hidden] { display: none; }
 }
 
-.brush-settings-section .checkbox-list-content .property-set-label { margin-bottom: var(--spacing-sm); }
-
 .brush-shape-option {
 	display: flex;
 	flex-direction: column;
@@ -69,7 +67,7 @@
 }
 
 .brush-shape-option-name {
-	font-size: 9px;
+	font-size: var(--font-size-xs);
 	line-height: 1.1;
 	text-align: center;
 	color: inherit;

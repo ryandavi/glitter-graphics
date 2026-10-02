@@ -2,17 +2,22 @@
 
 /* ===== NEW CANVAS MODAL ===== */
 #newCanvasModal {
-	.new-canvas-dialog {
-		width: min(760px, 94vw);
-		max-height: min(90dvh, 820px);
-	}
-
-	// The preset groups and the form are one run of titled cards.
-	.modal-body.modal-form,
+	// A group of presets is a label over its tiles, as in the Add menu: the
+	// tiles are the boxes, so the group draws none.
 	.new-canvas-preset-groups {
 		display: flex;
 		flex-direction: column;
-		gap: var(--property-pad);
+		gap: var(--spacing-lg);
+		padding: var(--spacing-lg) 0;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.new-canvas-preset-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		> .property-group-label { padding: 0 var(--property-gutter); }
 	}
 
 	.template-preview-wrapper {
@@ -29,7 +34,7 @@
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: var(--spacing-sm);
-		padding: var(--property-pad);
+		padding: 0 var(--property-gutter);
 
 		// The presets are `.action-card`s; only the preview box is sized here.
 		.blank-image-option {

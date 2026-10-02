@@ -1,10 +1,15 @@
-// ===== Grouping: group > card > set =========================================
+// ===== Grouping: group > section > set =====================================
 //
-//   .settings-subsection          the section's column of groups
-//   └ .subsection-section-group   L1 group: hairline above, one uppercase label
+//   .settings-subsection           the panel's column of groups
+//   └ .property-group              L1 group: a quiet label, only where it names
+//     │                            two or more sections
 //     └ .panel-group-content > .panel-group-blocks
-//       └ .property-card          L2 card: title + body, the only box
-//         └ .subsection-card-body > .property-set   hairline-divided runs of rows
+//       └ .property-card           L2 section: title row + body, flat
+//         └ .property-card-body > .property-set   runs of rows
+//
+// A section draws one hairline, under itself. Nothing else in a panel draws a
+// line, so a line always means "a new section starts here". Inside a section
+// everything stacks on one gap (`--property-row-gap`).
 
 // ----- The section column ---------------------------------------------------
 // MobileManager moves these exact sections into the drawer, so the same DOM
@@ -12,27 +17,31 @@
 .settings-subsection {
 	display: flex;
 	flex-direction: column;
-	gap: calc(var(--property-pad) * 1.5);
+	gap: 0;
 	container-type: inline-size;
 	container-name: propertypanel;
 }
 
 .property-section > .section-content > .settings-subsection { padding: 0; }
 
-// A section without an accordion header (`section.bare`) owns its opening
-// edge; otherwise it is laid out like a collapsible section's content.
+// A section without an accordion header (`section.bare`) is laid out like a
+// collapsible section's content.
 .property-panel .section.property-section:not(.collapsible-section) > .section-content {
 	display: flex;
 	flex-direction: column;
-	gap: var(--property-pad);
-	padding: var(--property-pad) 0 var(--spacing-sm);
+	gap: 0;
+	padding: 0;
 	min-width: 0;
+
+	// A preamble note opens the panel, so it brings its own top space.
+	> .property-note { padding-top: var(--property-section-pad-top); }
 }
 
 // ----- L1 group ------------------------------------------------------------
-// No box. A hairline above is the whole separation: the header's own padding
-// lifts it off the line.
-.property-panel .subsection-section-group {
+// No box and no line. Its label shows only where it names two or more
+// sections (`.has-group-label`, stamped by buildPanelGroup): over a single
+// section it would only repeat that section's title.
+.property-panel .property-group {
 	display: flex;
 	flex-direction: column;
 	gap: 0;
@@ -40,81 +49,85 @@
 	border: 0;
 	background: transparent;
 
-	> .subsection-title {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		min-height: 0;
-		padding: calc(var(--property-pad) * 1.5) var(--property-pad);
-	}
+	> .property-group-label { display: none; }
 
-	+ .subsection-section-group { border-top: 1px solid var(--color-border); }
+	&.has-group-label > .property-group-label {
+		display: block;
+		padding: var(--property-gutter);
+		border-bottom: 1px solid var(--color-border);
+	}
 }
 
 .property-panel .panel-group-content,
-.property-panel .panel-group-blocks {
+.property-panel .panel-group-blocks,
+.property-panel .transform-panel-host {
 	display: flex;
 	flex-direction: column;
-	gap: var(--property-pad);
+	gap: 0;
 }
 
-.property-panel .panel-group-blocks {
-	> .transform-panel-host {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-	}
+// Groups can be populated after their first render, so empty hosts stay in
+// the DOM and take no space.
+.property-panel .panel-group-blocks:empty { display: none; }
 
-	// Groups can be populated after their first render, so empty hosts stay in
-	// the DOM and take no space.
-	&:empty { display: none; }
+// A note living directly in a group (the line above a panel-end action).
+.property-section :is(.panel-group-blocks, .panel-group-content) > .property-note {
+	padding-top: var(--property-section-pad-top);
 }
 
-// A note living directly in a group aligns to the group label, not the rows.
-.property-section :is(.panel-group-blocks, .panel-group-content) > .property-note,
-.property-panel .section.property-section:not(.collapsible-section) > .section-content > .property-note {
-	padding-inline: var(--property-pad);
-}
-
-// ----- L2 card ---------------------------------------------------------------
+// ----- L2 section -----------------------------------------------------------
 .property-panel .property-card {
 	display: flex;
 	flex-direction: column;
-	margin-inline: var(--property-pad);
-	padding: 0;
-	border: 1px solid var(--color-border);
-	border-radius: var(--property-r-card);
-	background: var(--color-bg-card);
-	overflow: hidden;
-	// Rows inside a card use a smaller gutter, so content is not indented twice.
-	--property-gutter: var(--spacing-md);
+	// gap: var(--property-row-gap);
+	// padding: 0 0 var(--property-section-pad-bottom);
+	border-bottom: 1px solid var(--color-border);
 
-	> .subsection-title {
+	// Closed, a section is its title row and nothing else, so a run of them
+	// (Effects) reads as a list.
+	&.is-collapsed {
+		padding: 0;
+	}
+
+	&:not(.is-collapsed){
+		> .property-card-title + .property-card-body {
+			border-top: 1px solid var(--color-border);
+		}
+	}
+
+	> .property-card-title {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-sm);
-		padding: var(--property-pad);
+		height: var(--row-height);
+		min-height: var(--row-height);
+		padding: 0 var(--property-gutter);
+		box-sizing: border-box;
 
-		// The label takes the slack so a summary, swatch or chevron lands at the
-		// right edge.
+		// The label takes the slack so a summary, swatch, switch or chevron
+		// lands at the right edge.
 		> span:first-of-type {
 			flex: 1 1 auto;
 			min-width: 0;
 			text-align: left;
 		}
 	}
-}
 
-// Every title in a section, group or card, is one height.
-.property-section .subsection-title {
-	height: 34px;
-	min-height: 34px;
-	max-height: 34px;
-	box-sizing: border-box;
+	// A section nested in another (Bevel's Shade) is a labelled set, not a
+	// second section: no line, no padding, a quiet title.
+	.property-card {
+		padding: 0;
+		border: 0;
+
+		> .property-card-title > span:first-of-type {
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+	}
 }
 
 // ----- Bodies: never inset, see the gutter rule -----------------------------
-.property-panel :is(.subsection-card-body, .paint-slot-main, .subsection-content) {
+.property-panel :is(.property-card-body, .paint-slot-main, .property-content) {
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-row-gap);
@@ -122,40 +135,18 @@
 	padding: 0;
 }
 
-.property-section {
-	.subsection-card-body { background: var(--color-bg-primary); }
-
-	.subsection-title + .subsection-card-body { border-top: 1px solid var(--color-border); }
-
-	.paint-slot-main {
-		gap: 0;
-		border-top: 1px solid var(--color-border);
-		background: var(--color-bg-primary);
-	}
-}
-
-// ----- The set: the divider unit ------------------------------------------
-// It owns its vertical padding, and a hairline separates one from the next.
-// Hidden sets in between are skipped, so whether a line shows depends only on
-// what is showing.
+// ----- The set ----------------------------------------------------------------
+// A run of rows that belong together: the unit a manager shows or hides. It
+// draws nothing and adds no space of its own.
 .property-panel .property-set {
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-row-gap);
 	min-width: 0;
 	width: 100%;
-	padding: var(--property-pad) 0;
+	padding: 0;
 	border: 0;
 	background: transparent;
-
-	&:where(:not([hidden])) {
-		+ .property-set,
-		+ :where([hidden]) + .property-set,
-		+ :where([hidden]) + :where([hidden]) + .property-set { border-top: 1px solid var(--color-border); }
-	}
-
-	// Card titles carry the hierarchy, so a set's label never shows.
-	.property-set-label { display: none; }
 }
 
 // ----- R6: actions ----------------------------------------------------------
@@ -165,112 +156,44 @@
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--spacing-sm);
-	padding: var(--property-gutter);
+	padding: 0 var(--property-gutter);
 
 	> button { width: 100%; }
-	> .btn-text-with-icon { justify-content: center; }
 
 	&[hidden] { display: none; }
 
 	&.is-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-// In a section an action row is a card footer: edge to edge, hairline above.
-.property-section .property-actions {
-	padding: var(--property-pad);
-	border-top: 1px solid var(--color-border);
-	background: var(--color-bg-card);
-
-	// A group-level row (`.section-actions`: panel-end Actions, Reset Effects)
-	// is not attached to a card, so it carries no surface and no divider. Its
-	// inset matches the group label.
-	&.section-actions,
-	&.layer-effects-actions {
-		padding: 0 var(--property-pad);
-		border: 0;
-		background: none;
-	}
-}
-
-// ----- Advanced disclosure --------------------------------------------------
-// The card's footer: a full-bleed hairline, then the toggle.
-.property-panel .advanced-disclosure {
-	margin: 0;
-	border-top: 1px solid var(--color-border);
-
-	> .advanced-disclosure-toggle {
-		display: flex;
-		align-items: center;
-		justify-content: flex-start;
-		gap: 6px;
-		min-height: 32px;
-		padding: var(--property-pad);
-		text-align: left;
-
-		> .advanced-disclosure-label { order: 2; }
-
-		> .advanced-disclosure-chevron {
-			order: 1;
-			margin-left: 0;
-		}
-	}
-
-	> .advanced-disclosure-content {
-		gap: var(--property-row-gap);
-		padding: 0;
-		border-top: 1px solid var(--color-border);
-	}
-}
-
-// ----- One chevron ---------------------------------------------------------
-// Every collapse affordance is the same glyph at the same size; what
-// distinguishes them is where they sit.
-.property-panel {
-	.subsection-chevron,
-	.advanced-disclosure-chevron {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 14px;
-		height: 14px;
-		min-width: 14px;
-		flex: 0 0 auto;
-		margin-left: auto;
-		color: var(--color-text-tertiary);
-		transition: transform var(--transition-fast), color var(--transition-fast);
-
-		> svg.icon {
-			width: 11px;
-			height: 11px;
-			font-size: 11px;
-			fill: currentColor;
-			opacity: 1;
-		}
-	}
-
-	.subsection-title:hover > .subsection-chevron,
-	.advanced-disclosure-toggle:hover > .advanced-disclosure-chevron {
-		color: var(--color-text-secondary);
-	}
-
-	// Closed points right, open points down, at every level. (The shared
-	// disclosure outside a panel flips a down chevron instead.)
-	.advanced-disclosure:not(.is-open) > .advanced-disclosure-toggle > .advanced-disclosure-chevron { transform: rotate(-90deg); }
-	.advanced-disclosure.is-open > .advanced-disclosure-toggle > .advanced-disclosure-chevron { transform: rotate(0deg); }
+// A group-level row (`.section-actions`: panel-end Actions, Reset Effects)
+// belongs to no section, so it carries its own space and closes with the
+// same hairline a section does.
+.property-section .property-actions.section-actions {
+	padding-block: var(--property-section-pad-top);
+	border-bottom: 1px solid var(--color-border);
 }
 
 // ----- Collapsing -----------------------------------------------------------
-[data-collapsible-subsection] {
-	> .subsection-title { cursor: pointer; }
+// The title row is the click target. With no box around it, the hover tint is
+// what says so.
+[data-collapsible-card] {
+	> .property-card-title {
+		cursor: pointer;
+		transition: background-color var(--transition-fast);
+	}
 
 	&.is-collapsed {
-		> .subsection-title > .subsection-chevron { transform: rotate(-90deg); }
-		> :not(.subsection-title) { display: none; }
+		> .property-card-title > .property-card-chevron { transform: rotate(-90deg); }
+		> :not(.property-card-title) { display: none; }
 	}
 }
 
+.property-panel [data-collapsible-card] > .property-card-title:hover {
+	background: var(--color-bg-tertiary);
+}
+
 // ----- Nothing renders an empty shell ----------------------------------------
-// A container whose content is all hidden takes no space: border, padding,
+// A container whose content is all hidden takes no space: padding, line,
 // heading and layout footprint. The renderer's vacancy observer stamps
 // `.is-vacant` (panel-renderer.js); like `[hidden]`, it always wins.
 .is-vacant { display: none !important; }

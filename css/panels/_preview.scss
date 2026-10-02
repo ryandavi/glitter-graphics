@@ -38,7 +38,7 @@
 		background: color-mix(in srgb, var(--color-bg-primary) 88%, transparent);
 		color: var(--color-text-primary);
 		font-size: var(--font-size-lg);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 		pointer-events: none;
 	}
 
@@ -103,7 +103,7 @@ body.no-document .main-content {
 	z-index: 20;
 	display: flex;
 	justify-content: center;
-	padding: clamp(var(--spacing-md), 4vw, var(--spacing-2xl));
+	padding: clamp(var(--spacing-md), 4vw, var(--spacing-xl));
 	overflow: auto;
 	overscroll-behavior: contain;
 	touch-action: pan-y;
@@ -125,7 +125,6 @@ body.no-document .main-content {
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-lg);
 	background: var(--panel-bg);
-	// box-shadow: 0 12px 40px var(--color-shadow-soft);
 	text-align: center;
 	transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
@@ -204,7 +203,7 @@ body.is-booting .workspace-start button {
 	justify-content: center;
 	gap: var(--spacing-sm);
 
-	>button { min-height: var(--control-height-comfortable); }
+	>button { min-height: var(--row-height); }
 }
 
 .workspace-start-drop {
@@ -624,12 +623,6 @@ body.mask-editing {
 		@include floating-visible;
 	}
 
-	>.btn-icon {
-		width: var(--icon-size-sm);
-		height: var(--icon-size-sm);
-		// Prevent touch gestures from interfering with button clicks
-		touch-action: manipulation;
-	}
 }
 
 .context-toolbar-snap-guide {
@@ -688,7 +681,7 @@ body.mask-editing {
 		text-align: center;
 		color: var(--color-text-primary);
 		@include text-sm;
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
 		appearance: none;
 		padding: 0 var(--spacing-xs);
@@ -751,12 +744,7 @@ body.mask-editing {
 .setting-separator {
 	color: var(--color-text-secondary);
 	font-size: 1em;
-	font-weight: 400;
-}
-
-.checkbox-list-content {
-	flex-direction: column;
-	align-items: stretch;
+	font-weight: var(--font-weight-normal);
 }
 
 // A toggle chip: the label is the hit area, the face after the input is the
@@ -775,10 +763,10 @@ body.mask-editing {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--spacing-xs);
-		min-height: var(--icon-size-sm);
-		padding: var(--spacing-xs) var(--spacing-sm);
+		height: var(--control-height);
+		padding: 0 var(--spacing-md);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control);
 		background: var(--color-bg-secondary);
 		color: var(--color-text-secondary);
 		font-size: var(--font-size-sm);
@@ -850,7 +838,7 @@ body.mask-editing {
 	min-width: 100px;
 	max-width: 300px;
 	@include mini-modal();
-	@include text-sm;
+	font-size: var(--font-size-sm);
 	line-height: var(--line-height-tight);
 
 	&.visible { opacity: 1; pointer-events: auto; }
@@ -873,17 +861,17 @@ body.mask-editing {
 	.export-progress-announcement { @include visually-hidden; }
 	.export-progress-cancel { width: 100%; }
 	.export-progress-bar {
-		height: 10px;
+		height: var(--spacing-base);
 		background: var(--progress-track);
 		box-shadow: inset 0 0 0 1px var(--progress-track-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-pill);
 		overflow: hidden;
 	}
 	.export-progress-fill {
 		position: relative;
 		width: 100%;
 		height: 100%;
-		@include gloss-gradient;
+		background: var(--color-accent);
 		transform: translateX(var(--export-progress-offset, -100%));
 		transition: transform 0.3s ease;
 		&::after {
@@ -1060,7 +1048,7 @@ body.mask-editing {
 .helpful-message {
 	display: none;
 	position: absolute;
-	top: calc(var(--icon-size) + var(--spacing-sm) * 2 + var(--spacing-from-edge) * 2);
+	top: calc(var(--row-height) + var(--spacing-sm) * 2 + var(--spacing-from-edge) * 2);
 	left: 50%;
 	transform: translateX(-50%);
 	max-width: 400px;
@@ -1110,7 +1098,6 @@ body.mask-editing {
 		align-items: center;
 		gap: var(--spacing-sm);
 		min-width: 0;
-		// padding-bottom: var(--spacing-xs);
 
 
 		.helpful-message-tool-context {
@@ -1125,7 +1112,7 @@ body.mask-editing {
 			min-width: 0;
 			overflow: hidden;
 			font-size: var(--font-size-xs);
-			font-weight: 600;
+			font-weight: var(--font-weight-semibold);
 			color: var(--color-text-primary);
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
@@ -1204,7 +1191,7 @@ body.mask-editing {
 	}
 
 	@include mobile {
-		top: calc(var(--icon-size) + var(--spacing-sm) * 2 + var(--mobile-floating-inset) * 2);
+		top: calc(var(--row-height) + var(--spacing-sm) * 2 + var(--mobile-floating-inset) * 2);
 		max-width: min(320px, calc(100% - var(--mobile-toolbar-width) - var(--spacing-lg) * 2));
 		min-width: 200px;
 
@@ -1214,7 +1201,7 @@ body.mask-editing {
 			padding-top: var(--spacing-xs);
 		}
 		.helpful-message-text { font-size: var(--font-size-xs); }
-		.helpful-message-description { font-size: 0.6875rem; }
+		.helpful-message-description { font-size: var(--font-size-xs); }
 
 		.helpful-message-disable {
 			max-width: none;

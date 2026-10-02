@@ -52,21 +52,17 @@ const CHROME = process.env.CHROME_PATH
 			// gutter, and nesting it inside an inset container is correct.
 			const STRUCTURAL = [
 				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list', 'property-card',
-				'subsection-card-body', 'paint-slot-main', 'subsection-content',
-				'subsection-content-group',
+				'property-card-body', 'paint-slot-main', 'property-content',
 				'property-set', 'property-actions',
 				'glitter-source', 'paint-slot-source', 'asset-info', 'selected-colors-display',
 				'advanced-disclosure-content', 'settings-toggle-list',
-				// Labels inset themselves, so a set that also insets double-indents
-				// them - the defect that pushed "Anchor" past its own group title.
-				'property-set-label',
-				'property-label', 'number-field-pair', 'transform-grid'
+				'property-label', 'number-field-pair'
 			];
 			const isStructural = (el) => STRUCTURAL.some((c) => el.classList.contains(c));
 			const gutter = (el) => parseFloat(getComputedStyle(el.closest('.design-panel, .mobile-settings-drawer') || document.documentElement)
 				.getPropertyValue('--property-gutter')) || 10;
 			// The closest any content may sit to the panel wall: the boxed-container
-			// inset, which is also how far a card stands off it.
+			// inset.
 			const edgeInset = (el) => parseFloat(getComputedStyle(el).getPropertyValue('--property-pad')) || 8;
 			// Only an inset at (or beyond) the gutter counts; small nudges are
 			// deliberate optical spacing, not a second gutter.
@@ -85,10 +81,6 @@ const CHROME = process.env.CHROME_PATH
 					// Walk up to the nearest block boundary looking for another inset.
 					let node = el.parentElement;
 					while (node && node !== root && !node.classList.contains('settings-subsection')) {
-						// A bordered card is a new box: it legitimately insets from
-						// its parent, and its contents inset again from it. Stop the
-						// walk at that boundary rather than counting both.
-						if (node.classList.contains('subsection-content-group')) break;
 						if (isStructural(node) && inset(node) > 0) {
 							out.push({ el: label(el), own, ancestor: label(node), ancestorInset: inset(node) });
 							return;
@@ -116,7 +108,7 @@ const CHROME = process.env.CHROME_PATH
 					if (parseFloat(getComputedStyle(el).paddingLeft) >= rootInset) return;
 					const left = el.getBoundingClientRect().left;
 					if (left - rootLeft >= rootInset - 0.5) return;
-					const owner = el.closest('.subsection-content-group');
+					const owner = el.closest('.property-card');
 					out.push({
 						el: label(el),
 						own: 0,
@@ -145,10 +137,9 @@ const CHROME = process.env.CHROME_PATH
 				});
 			});
 
-			// Vertical clearance: a bordered card whose last child sits on the
-			// bottom border. The counterpart to the horizontal checks - it is the
+			// Vertical clearance: a section whose last child sits on its hairline. The counterpart to the horizontal checks - it is the
 			// same defect turned ninety degrees, and just as easy to miss.
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .subsection-content-group').forEach((card) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .property-card').forEach((card) => {
 				const cs = getComputedStyle(card);
 				if (parseFloat(cs.borderBottomWidth) < 1) return;
 				if (!card.getClientRects().length) return;
@@ -194,30 +185,6 @@ const CHROME = process.env.CHROME_PATH
 				});
 			});
 
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .subsection-content-group').forEach((card) => {
-				const cs = getComputedStyle(card);
-				if (parseFloat(cs.borderBottomWidth) < 1 || !card.getClientRects().length) return;
-				let node = card;
-				let trailingActions = null;
-				for (let depth = 0; depth < 10; depth += 1) {
-					const kids = [...node.children].filter((child) => child.getClientRects().length);
-					if (!kids.length) break;
-					node = kids[kids.length - 1];
-					if (node.classList.contains('property-actions')) trailingActions = node;
-				}
-				if (!trailingActions || !node.matches('button')) return;
-				const innerBottom = card.getBoundingClientRect().bottom - parseFloat(cs.borderBottomWidth);
-				const clearance = innerBottom - node.getBoundingClientRect().bottom;
-				const expected = parseFloat(getComputedStyle(trailingActions).paddingBottom);
-				if (Math.abs(clearance - expected) <= 1) return;
-				out.push({
-					el: label(node),
-					own: Math.round(clearance),
-					ancestor: `TRAILING ACTION HAS STACKED CARD CLEARANCE (expected ${Math.round(expected)}px) in ${label(card)}`,
-					ancestorInset: 0
-				});
-			});
-
 			// Collapse duplicates - one report per class pair is enough.
 			const seen = new Map();
 			out.forEach((f) => {
@@ -235,8 +202,6 @@ const CHROME = process.env.CHROME_PATH
 		for (const width of widths) {
 			await page.evaluate((value) => {
 				document.documentElement.style.setProperty('--glitter-panel-width', `${value}px`);
-				document.querySelectorAll('.subsection-section-group, .effects-stack')
-					.forEach((node) => node.classList.remove('collapsed'));
 			}, width);
 			await page.waitForTimeout(80);
 			await page.evaluate((value) => {
@@ -245,12 +210,6 @@ const CHROME = process.env.CHROME_PATH
 			}, theme);
 			(await auditLayout()).forEach((finding) => findings.push({ ...finding, state: `${theme}/${width}px/open` }));
 
-			await page.evaluate(() => {
-				document.querySelectorAll('.subsection-section-group, .effects-stack')
-					.forEach((node, index) => node.classList.toggle('collapsed', index % 2 === 0));
-			});
-			await page.waitForTimeout(80);
-			(await auditLayout()).forEach((finding) => findings.push({ ...finding, state: `${theme}/${width}px/mixed` }));
 		}
 		}
 

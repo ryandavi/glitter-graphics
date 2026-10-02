@@ -133,7 +133,7 @@ updateOrientationButtons(width, height) {
 			.register('preservationModal', {
 				openBtnId: 'preservationBtn',
 				closeBtnId: 'closePreservationModal',
-				externalContentUrl: 'modals/preservation.html?v=e4ca68f9',
+				externalContentUrl: 'modals/preservation.html?v=eb3aad1c',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

@@ -675,7 +675,7 @@ function buildSelectProxy(entries, options = {}) {
 		const card = hooks.closest('.paint-slot-card');
 		if (card && activeValue) {
 			if (activeValue !== 'none') card._lastPaintMode = activeValue;
-			const toggle = card.querySelector(':scope > .subsection-title input[data-paint-slot-toggle]');
+			const toggle = card.querySelector(':scope > .property-card-title input[data-paint-slot-toggle]');
 			if (toggle) toggle.checked = activeValue !== 'none';
 		}
 	};
@@ -879,11 +879,10 @@ function wrapPropertySet(nodes) {
 	return set;
 }
 
-function buildAdvancedControlGroup(title, className) {
+function buildAdvancedControlGroup(label, className) {
 	const group = panelDiv(`property-set ${className}`);
-	const heading = panelDiv('property-set-label');
-	heading.textContent = title;
-	group.appendChild(heading);
+	group.setAttribute('role', 'group');
+	group.setAttribute('aria-label', label);
 	return group;
 }
 
@@ -933,15 +932,15 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 // One full paint-slot card: title (+ Enabled toggle and controls wrapper for
 // border/shadow), slot-specific `pre` items, source, primary row, `post`
 // items, Advanced. Order mirrors the pre-template static panels exactly.
-function buildPaintSlotCard(slot) {
+function buildPaintSlotCard(slot, schema) {
 	const card = tplClone('tpl-paint-slot');
 	if (slot.id) card.id = slot.id;
-	card.classList.add('has-subsection-title');
+	if (!slot.toggle && !slot.nested) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${slot.title}`;
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
 	if (slot.nested) card.dataset.nested = '';
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
-	const header = card.querySelector('.subsection-title');
+	const header = card.querySelector('.property-card-title');
 	const title = header.querySelector(':scope > span');
 	title.textContent = slot.title;
 	if (!slot.nested) {
@@ -994,12 +993,6 @@ function buildPaintSlotCard(slot) {
 	// R5: Source is a property of the module, so it reads as a row - the old
 	// titled option group added a heading level for a single control.
 	source.classList.add('paint-slot-source');
-	if (slot.sourceLabel && !slot.sourceSelect) {
-		// The same component as every other set label, not a lookalike.
-		const label = panelDiv('property-set-label paint-slot-source-label');
-		label.textContent = slot.sourceLabel;
-		source.prepend(label);
-	}
 	main.appendChild(wrapPropertySet([source]));
 	(slot.afterSource || []).forEach((item) => addChunk(buildPanelItem(item)));
 	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.noSlotOpacity);
@@ -1056,21 +1049,17 @@ function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
 			const card = tplClone('tpl-card');
-			if (item.bare) card.classList.remove('subsection-content-group', 'property-card');
+			if (item.bare) card.classList.remove('property-card');
 			if (item.id) card.id = item.id;
 			if (item.hidden) card.hidden = true;
-			// Opt-in collapsibility (rule E): only a card whose header can say what
-			// is inside (asset name, title summary) collapses. Without this the
-			// block renders as a plain titled run of rows; editor-disclosures only
-			// stamps a chevron on blocks that ask for one or carry an effect toggle.
-			if (item.collapsible) {
-				card.dataset.collapsible = '';
-				// `collapsed`: a collapsible block that starts closed.
-				if (item.collapsed) {
-					card.classList.add('is-collapsed');
-					card.dataset.collapseDefault = 'closed';
-				}
-				if (item.title) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${item.title}`;
+			// Every titled section collapses (initializeAdvancedDisclosures), and
+			// its open state is remembered under this key. `collapsed` starts it
+			// closed. A section with an enable switch gets no key: the switch
+			// owns its expansion.
+			if (item.title && !item.toggle) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${item.title}`;
+			if (item.collapsed) {
+				card.classList.add('is-collapsed');
+				card.dataset.collapseDefault = 'closed';
 			}
 			if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
 			if (item.summaryFrom) {
@@ -1078,13 +1067,12 @@ function buildPanelItem(item, schema) {
 				if (!item.moduleSummary) card.dataset.moduleSummaryType = 'control';
 			}
 			addPanelClasses(card, item.classes);
-			const title = card.querySelector('.subsection-title');
+			const title = card.querySelector('.property-card-title');
 			if (item.title) {
 				const titleText = title.querySelector(':scope > span');
-				titleText.classList.add('subsection-title-label', 'feature-name');
+				titleText.classList.add('property-card-label', 'feature-name');
 				titleText.textContent = item.title;
 				if (item.badge) titleText.appendChild(buildFeatureBadge(item.badge));
-				card.classList.add('has-subsection-title');
 				// A manager-driven readout beside the title (the project name on the
 				// no-selection Project card). Uses the same `.property-module-summary`
 				// primitive as the effect modules; `data-title-summary` gives its
@@ -1112,10 +1100,9 @@ function buildPanelItem(item, schema) {
 				input.setAttribute('aria-label', toggle.title || item.toggle.label);
 				toggle.querySelector('span').textContent = item.toggle.label;
 				if (item.toggle.title) toggle.querySelector('span').title = item.toggle.title;
-				card.querySelector('.subsection-title').appendChild(toggle);
+				card.querySelector('.property-card-title').appendChild(toggle);
 			}
-			const body = panelDiv('subsection-card-body');
-			if (item.bare) body.classList.add('subsection-card-body-bare');
+			const body = panelDiv('property-card-body');
 			const edgeChildren = [];
 			const bodyChildren = [];
 			const splitItems = splitAdvancedPanelItems(item.items);
@@ -1150,7 +1137,7 @@ function buildPanelItem(item, schema) {
 			return card;
 		}
 		case 'content': {
-			const content = addPanelClasses(panelDiv('subsection-content'), item.classes);
+			const content = addPanelClasses(panelDiv('property-content'), item.classes);
 			if (item.id) content.id = item.id;
 			if (item.hidden) content.hidden = true;
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
@@ -1195,14 +1182,9 @@ function buildPanelItem(item, schema) {
 			item.actions.forEach((action) => {
 				const button = document.createElement('button');
 				button.type = 'button';
-				// Every sidebar action button is a `btn-text-with-icon` so a mixed
-				// row lines up (`icon-wrapper` only when there's a glyph). Same
-				// class -> same box everywhere (see AGENTS.md "Icons").
-				const cls = ['btn-text-with-icon'];
-				if (action.icon) cls.push('icon-wrapper');
-				if (action.primary) cls.push('primary');
-				if (action.secondary) cls.push('secondary');
-				button.className = cls.join(' ');
+				// A panel body is the content layer: its buttons are flat, and
+				// `primary` marks the one main action of a form.
+				button.className = action.primary ? 'btn-flat primary' : 'btn-flat';
 				button.id = action.id;
 				if (action.icon) button.appendChild(createIcon(action.icon));
 				const name = document.createElement('span');
@@ -1219,7 +1201,7 @@ function buildPanelItem(item, schema) {
 			return row;
 		}
 		case 'paintSlot':
-			return buildPaintSlotCard(item);
+			return buildPaintSlotCard(item, schema);
 		case 'assetInfo':
 			return buildAssetInfo(item);
 		case 'slider':
@@ -1233,18 +1215,17 @@ function buildPanelItem(item, schema) {
 			item.items.forEach((child) => row.appendChild(buildPanelItem(child, schema)));
 			return row;
 		}
-		// A labelled group of rows — the same .property-set + .property-set-label
-		// primitive the Transform panel and the Advanced disclosure use, so effect
-		// bodies (Border: Stroke / Placement) read consistently.
+		// A run of rows that belong together, spaced apart from the next run.
+		// `label` names the run for assistive tech; it is not drawn, because a
+		// section's title already carries the hierarchy.
 		case 'set': {
 			const set = addPanelClasses(panelDiv('property-set'), item.classes);
 			if (item.id) set.id = item.id;
 			if (item.hidden) set.hidden = true;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => set.setAttribute(name, value));
 			if (item.label) {
-				const heading = panelDiv('property-set-label');
-				heading.textContent = item.label;
-				set.appendChild(heading);
+				set.setAttribute('role', 'group');
+				set.setAttribute('aria-label', item.label);
 			}
 			(item.items || []).forEach((child) => set.appendChild(buildPanelItem(child, schema)));
 			return set;
@@ -1456,7 +1437,7 @@ function buildPanelItem(item, schema) {
 			if (item.text) node.textContent = item.text;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
 			if (!item.wrapInContent) return node;
-			const wrap = panelDiv('subsection-content');
+			const wrap = panelDiv('property-content');
 			wrap.appendChild(node);
 			return wrap;
 		}
@@ -1553,7 +1534,7 @@ function buildSparkleControls(item) {
 		{ kind: 'stackRow', groups: [{ label: 'Motion', control: 'select', options: optionEntries('sparkleBehavior', 'Behavior') }] },
 		{ kind: 'slider', id: `${p}Cycle`, slider: 'sparkleCycle', title: 'Length of one sparkle cycle; each sparkle blinks one to three times per cycle' },
 		{ kind: 'actionRow', actions: [
-			{ id: `${p}Shuffle`, label: 'Shuffle', secondary: true, title: 'Place the sparkles somewhere new' }
+			{ id: `${p}Shuffle`, label: 'Shuffle', title: 'Place the sparkles somewhere new' }
 		] }
 	] }));
 	return customize;
@@ -1565,8 +1546,8 @@ function buildSparkleControls(item) {
 // mirrors the card's own nodes through an observer rather than trying to hook
 // every manager's sync path.
 function buildModuleSummary(card) {
-	if (!card || card.querySelector(':scope > .subsection-title > .property-module-summary')) return null;
-	const title = card.querySelector(':scope > .subsection-title');
+	if (!card || card.querySelector(':scope > .property-card-title > .property-module-summary')) return null;
+	const title = card.querySelector(':scope > .property-card-title');
 	if (!title) return null;
 	const summary = document.createElement('span');
 	summary.className = 'property-module-summary';
@@ -1575,7 +1556,7 @@ function buildModuleSummary(card) {
 	// swatch pins to the right edge next to the chevron — a stable anchor across
 	// modules — while the variable-width value text grows leftward.
 	const anchor = title.querySelector(':scope > .property-module-swatch')
-		|| title.querySelector('.subsection-chevron');
+		|| title.querySelector('.property-card-chevron');
 	title.insertBefore(summary, anchor || null);
 	return summary;
 }
@@ -1588,7 +1569,7 @@ function readModuleSummary(card) {
 	// hatched "unset" swatch (`.is-unset`, stamped by syncModuleSummary) so a
 	// switched-off module still states its condition
 	// whether collapsed or open, the same way a None paint slot reads "None".
-	const toggle = card.querySelector(':scope > .subsection-title input[data-effect-toggle]');
+	const toggle = card.querySelector(':scope > .property-card-title input[data-effect-toggle]');
 	if (toggle && !toggle.checked) return 'Off';
 	// `data-summary-from`: mirror one named control's current label (a segmented
 	// control's active option, or a <select>'s chosen option) — the Palette
@@ -1626,11 +1607,11 @@ function readModuleSummary(card) {
 }
 
 function syncModuleSummary(card) {
-	const summary = card.querySelector(':scope > .subsection-title > .property-module-summary');
+	const summary = card.querySelector(':scope > .property-card-title > .property-module-summary');
 	if (!summary) return;
 	const text = readModuleSummary(card);
 	if (summary.textContent !== text) summary.textContent = text;
-	const swatch = card.querySelector(':scope > .subsection-title > .property-module-swatch');
+	const swatch = card.querySelector(':scope > .property-card-title > .property-module-swatch');
 	if (swatch) {
 		const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
 		const chip = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail:not(.empty)');
@@ -1652,7 +1633,7 @@ function syncModuleSummary(card) {
 		// still empty all read as "no value": `.is-unset` draws the hatch over
 		// whatever background the last active source left inline.
 		swatch.classList.toggle('is-unset', Boolean(
-			card.querySelector(':scope > .subsection-title input:not(:checked)')
+			card.querySelector(':scope > .property-card-title input:not(:checked)')
 			|| card.querySelector('.segmented-option[data-mode="none"].active')
 			|| card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty')
 		));
@@ -1701,50 +1682,6 @@ function initializeScrollBoundaryFades(root = document) {
 	});
 }
 
-// Rule A, applied mechanically instead of case by case: a block whose title
-// only repeats the label of its single control drops the title. The row's own
-// label already names it, so keeping both produced the "Opacity > Opacity 100%"
-// stutter. Blocks that carry an effect toggle or are collapsible keep their
-// title - it is the host for those controls.
-function dedupeBlockTitle(card) {
-	if (!card?.classList?.contains('subsection-content-group')) return card;
-	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
-	if (card.dataset.effectCard !== undefined || card.dataset.collapsible !== undefined) return card;
-	const title = card.querySelector(':scope > .subsection-title');
-	if (!title || title.querySelector('input, button, select')) return card;
-	const rows = card.querySelectorAll('.property-row, .property-pair-group > .property-row');
-	if (rows.length !== 1) return card;
-	const controls = card.querySelectorAll('input, select, textarea');
-	if (controls.length !== 1) return card;
-	const titleText = (title.querySelector(':scope > span') || title).textContent.trim().toLowerCase();
-	const rowLabel = rows[0].querySelector('.property-label')?.textContent.trim().toLowerCase();
-	if (!titleText || titleText !== rowLabel) return card;
-	title.remove();
-	card.classList.remove('has-subsection-title');
-	return card;
-}
-
-// Legacy/template cards predate the schema body's padding ownership. Normalize
-// them to the same structure without pulling edge-to-edge Advanced disclosures
-// into the padded body.
-function ensureSubsectionCardBody(card) {
-	if (!card?.classList?.contains('subsection-content-group')) return card;
-	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
-	if (card.querySelector(':scope > .subsection-card-body, :scope > .paint-slot-main, :scope > .property-module-content')) return card;
-	const isFooter = (child) => child.classList.contains('advanced-disclosure') || child.classList.contains('property-actions');
-	const children = Array.from(card.children);
-	const content = children.filter((child) =>
-		!child.classList.contains('subsection-title') && !isFooter(child)
-	);
-	if (!content.length) return card;
-	const body = panelDiv('subsection-card-body');
-	const footer = children.find(isFooter);
-	card.insertBefore(body, footer || null);
-	content.forEach((child) => body.appendChild(child));
-	if (card.querySelector(':scope > .subsection-title')) card.classList.add('has-subsection-title');
-	return card;
-}
-
 // One state contract for every schema-rendered effect card. Managers supply
 // only the enabled value; expansion, accessibility, and paint-slot body
 // visibility stay owned by the shared panel primitive.
@@ -1759,7 +1696,7 @@ function syncPanelEffectToggle(toggle, enabled) {
 	// `.is-off` is the one switched-off state the stylesheet reads.
 	card.classList.toggle('is-off', !next);
 	if (previous == null || String(next) !== previous) card.classList.toggle('is-collapsed', !next);
-	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
+	card.querySelector(':scope > .property-card-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
 	card.querySelector(':scope > .property-module-content')?.classList.toggle('visible', next);
 	if (card.dataset.moduleSummary !== undefined) syncModuleSummary(card);
 }
@@ -1774,7 +1711,7 @@ function readPanelCardState() {
 
 function setPanelCardCollapsed(card, collapsed) {
 	card.classList.toggle('is-collapsed', collapsed);
-	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+	card.querySelector(':scope > .property-card-title')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 }
 
 // The open state of a `[data-advanced]` disclosure, for every caller.
@@ -1808,15 +1745,14 @@ function resetPanelCardStates() {
 	});
 }
 
-// Groups are fixed headings: a collapsed group would hide whether anything
-// inside it is on.
-function initializePanelGroupNode(node, title) {
-	const header = node.querySelector('.subsection-title');
-	const label = document.createElement('span');
-	label.className = 'property-group-label';
-	label.textContent = title;
-	header.appendChild(label);
-	return header;
+// Schema item kinds that render as a section of their own.
+const PANEL_SECTION_KINDS = new Set(['card', 'paintSlot', 'transformHost', 'host']);
+
+// A group's label earns its line only where it names two or more sections;
+// over one it would repeat that section's title. Groups never collapse: a
+// collapsed group would hide whether anything inside it is on.
+function panelGroupHasLabel(group) {
+	return group.items.filter((item) => PANEL_SECTION_KINDS.has(item.kind) && !item.bare).length >= 2;
 }
 
 // Rule D, tier 2: a card-scoped reset at the right edge of the card's title.
@@ -1848,10 +1784,10 @@ function buildPanelCardReset(node, title, spec) {
 
 function buildPanelGroup(group, schema) {
 	const node = tplClone('tpl-group');
-	if (group.bare) node.classList.remove('subsection-content-group');
 	addPanelClasses(node, group.classes);
+	const label = node.querySelector('.property-group-label');
 	if (group.static) {
-		node.querySelector('.subsection-title')?.remove();
+		label.remove();
 		node.dataset.panelGroup = group.title;
 		group.items.forEach((item) => {
 			const child = buildPanelItem(item, schema);
@@ -1860,13 +1796,8 @@ function buildPanelGroup(group, schema) {
 		});
 		return node;
 	}
-	const header = initializePanelGroupNode(node, group.title);
-	if (group.toggle) {
-		const toggle = tplClone('tpl-checkbox');
-		toggle.querySelector('input').id = group.toggle.id;
-		toggle.querySelector('span').textContent = group.toggle.label;
-		header.appendChild(toggle);
-	}
+	label.textContent = group.title;
+	node.classList.toggle('has-group-label', panelGroupHasLabel(group));
 	node.dataset.panelGroup = group.title;
 	const content = panelDiv('panel-group-content');
 	const blocks = panelDiv('panel-group-blocks');
@@ -1900,12 +1831,12 @@ function finishPanelMarkup(root) {
 // by setting `hidden` and write values straight into the DOM, so one observer
 // keeps `.is-vacant` in step instead of every manager remembering to.
 const PANEL_VACANCY_CONTAINERS = [
-	'.property-card:not([data-effect-card])', '.subsection-card-body', '.paint-slot-main',
+	'.property-card:not([data-effect-card])', '.property-card-body', '.paint-slot-main',
 	'.property-pair-group', '.property-toggle-list', '.property-set', '.property-actions',
-	'.subsection-content', '.property-meta-cell'
+	'.property-content', '.property-meta-cell'
 ].join(', ');
 // A container's own heading does not count as content.
-const PANEL_VACANCY_CHROME = '.subsection-title, .property-group-label, .property-set-label';
+const PANEL_VACANCY_CHROME = '.property-card-title, .property-group-label';
 
 function syncPanelVacancy(container) {
 	let occupied;
@@ -2008,7 +1939,6 @@ function renderPanelFragment(schema) {
 		kind: 'card',
 		id: schema.fragmentId,
 		title: schema.fragmentCard?.title,
-		collapsible: schema.fragmentCard?.collapsible,
 		moduleSummary: schema.fragmentCard?.moduleSummary,
 		flatBody: true,
 		classes: `panel-module ${schema.fragmentClasses || ''}`.trim(),
@@ -2016,7 +1946,7 @@ function renderPanelFragment(schema) {
 	}, schema);
 	if (schema.fragmentCard?.summaryId) {
 		card.dataset.titleSummary = '';
-		const title = card.querySelector(':scope > .subsection-title');
+		const title = card.querySelector(':scope > .property-card-title');
 		const summary = document.createElement('span');
 		summary.className = 'property-module-summary';
 		summary.id = schema.fragmentCard.summaryId;
@@ -2085,7 +2015,7 @@ function renderPanelSection(schema) {
 		// than one effect to reset.
 		if (schema.effectsReset && schema.effects.length >= 2) {
 			items.push({ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
-				{ id: schema.effectsReset.id, label: 'Reset Effects', secondary: true, title: schema.effectsReset.title }
+				{ id: schema.effectsReset.id, label: 'Reset Effects', title: schema.effectsReset.title }
 			] });
 		}
 		const stack = buildPanelGroup({ title: 'Effects', items }, schema);

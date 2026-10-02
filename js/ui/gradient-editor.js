@@ -11,7 +11,7 @@ function installEffectGradientEditor(options) {
 	group.appendChild(button);
 	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
 	const source = group.parentElement; // .paint-slot-source
-	const slotCard = group.closest('.paint-slot-card') || group.closest('.subsection-content-group');
+	const slotCard = group.closest('.paint-slot-card') || group.closest('.property-card');
 	const paintMain = source.closest('.paint-slot-main') || slotCard;
 	const previewBar = fragment.querySelector('.gradient-preview');
 	const stopSet = fragment.querySelector('.gradient-stop-set');
@@ -31,10 +31,7 @@ function installEffectGradientEditor(options) {
 	presetGrid.setAttribute('aria-label', 'Gradient presets');
 	const presetSet = document.createElement('div');
 	presetSet.className = 'property-set gradient-preset-set';
-	const presetLabel = document.createElement('div');
-	presetLabel.className = 'property-set-label';
-	presetLabel.textContent = 'Presets';
-	presetSet.append(presetLabel, presetGrid);
+	presetSet.appendChild(presetGrid);
 	initializeScrollBoundaryFades(presetGrid);
 	[presetGroupSet, presetSet].forEach((set) => {
 		set.dataset.paintSourceMode = 'gradient';

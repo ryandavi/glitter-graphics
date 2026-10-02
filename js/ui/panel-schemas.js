@@ -59,6 +59,17 @@ const ANCHOR_SELECT_OPTIONS = Object.freeze([
 	{ value: 'custom', label: 'Custom', disabled: true }
 ]);
 
+// The Layer section of an Appearance group: the whole-layer rows (opacity,
+// and blend where the type has one). A section of their own, so no row floats
+// between two others.
+function createLayerCardSpec(opacityId, blendId) {
+	const items = [{ kind: 'slider', id: opacityId, slider: 'layerOpacity' }];
+	if (blendId) {
+		items.push({ kind: 'select', id: blendId, label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS });
+	}
+	return { kind: 'card', title: 'Layer', items };
+}
+
 // The Sparkles effect card (a `sparkles` paint slot). Every host shares it:
 // its controls render from the sparkles registries (buildSparkleControls).
 // overrides: the Sparkles layer's card has no on/off switch.
@@ -83,7 +94,7 @@ function createSparklesPanelSpec(idPrefix, overrides = {}) {
 function createStylePresetCardSpec(prefix) {
 	// Collapsed by default: the header names the applied look (or Custom), so
 	// a styled layer still reads at a glance.
-	return { kind: 'card', title: 'Style', flatBody: true, collapsible: true, collapsed: true,
+	return { kind: 'card', title: 'Style', flatBody: true, collapsed: true,
 		titleSummary: { id: `${prefix}StyleSummary` }, items: [
 		{ kind: 'set', items: [
 			{ kind: 'presetGrid', id: `${prefix}StylePresets`, label: 'Style presets', classes: 'property-inset style-presets' }
@@ -137,7 +148,7 @@ function createAnimationPanelSpec(prefix) {
 		// standard `is-collapsed` accordion (toggled by the generic effect-toggle
 		// listener, `syncPanelEffectToggle`) hides the whole body including the
 		// trailing `advanced` block, which renders as a sibling of
-		// `.subsection-card-body`, not nested inside it.
+		// `.property-card-body`, not nested inside it.
 		items: [
 			{ kind: 'set', items: [
 				{ kind: 'host', id: id('Stack'), classes: 'segmented-control animation-stack', attrs: { hidden: 'hidden' } },
@@ -225,7 +236,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'card', title: 'Quick add', items: [
 						{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }
 					] },
-					{ kind: 'card', title: 'Project', collapsible: true,
+					{ kind: 'card', title: 'Project',
 					titleSummary: { id: 'projectNameSummary', text: 'Untitled project' }, items: [
 						{ kind: 'field', id: 'projectNameInput', label: 'Name', type: 'text',
 							maxlength: 60, spellcheck: false, placeholder: 'Name...' },
@@ -241,31 +252,31 @@ const PANEL_SCHEMAS = {
 			] },
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [
 				{ title: 'Appearance', items: [
-					{ kind: 'card', items: [
+					{ kind: 'card', title: 'Layers', items: [
 						{ kind: 'slider', id: 'multiSelectionOpacity', slider: 'multiSelectionOpacity', label: 'Opacity' }
 					] }
 				] },
 				{ title: 'Align', items: [
-					{ kind: 'card', items: [
+					{ kind: 'card', title: 'Align', items: [
 						{ kind: 'segmented', id: 'multiSelectionAlignScope', visibleLabel: 'Align to',
 							label: 'Alignment reference', stacked: false, options: [
 								{ label: 'Selection', active: true, attrs: { 'data-scope': 'selection' } },
 								{ label: 'Canvas', attrs: { 'data-scope': 'canvas' } }
 							] },
 						{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Align horizontally',
-							classes: 'transform-segmented-control', stacked: false, options: [
+							stacked: false, options: [
 								{ icon: 'align-left', label: 'Align left', attrs: { 'data-multi-align': 'left' } },
 								{ icon: 'align-center-x', label: 'Align horizontal centers', attrs: { 'data-multi-align': 'centerX' } },
 								{ icon: 'align-right', label: 'Align right', attrs: { 'data-multi-align': 'right' } }
 							] },
 						{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Align vertically',
-							classes: 'transform-segmented-control', stacked: false, options: [
+							stacked: false, options: [
 								{ icon: 'align-top', label: 'Align top', attrs: { 'data-multi-align': 'top' } },
 								{ icon: 'align-center-y', label: 'Align vertical centers', attrs: { 'data-multi-align': 'centerY' } },
 								{ icon: 'align-bottom', label: 'Align bottom', attrs: { 'data-multi-align': 'bottom' } }
 							] },
 						{ kind: 'segmented', visibleLabel: 'Distribute', label: 'Distribute selected layers',
-							classes: 'transform-segmented-control', stacked: false, options: [
+							stacked: false, options: [
 								{ icon: 'distribute-x', label: 'Distribute horizontally', attrs: { 'data-multi-distribute': 'horizontal' } },
 								{ icon: 'distribute-y', label: 'Distribute vertically', attrs: { 'data-multi-distribute': 'vertical' } }
 							] }
@@ -288,7 +299,7 @@ const PANEL_SCHEMAS = {
 		mobileKey: 'autoGlitter',
 		section: { id: 'autoGlitterSettingsSection', icon: 'magic-wand', iconName: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
 		groups: [
-			{ title: 'Preview', region: 'header', static: true, bare: true, items: [
+			{ title: 'Preview', region: 'header', static: true, items: [
 				{ kind: 'card', classes: 'auto-glitter-preview-card', bare: true, items: [
 					{ kind: 'segmented', id: 'autoGlitterPreviewMode', label: 'Preview mode', options: [
 						{ label: 'Original', value: 'original' }, { label: 'Flat', value: 'flat' }, { label: 'Glitter', value: 'glitter', active: true }
@@ -304,7 +315,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Palette', region: 'scroll', items: [
-				{ kind: 'card', items: [
+				{ kind: 'card', title: 'Palette', items: [
 					...createPaletteControlItems('autoGlitter', {
 						styleDefault: CONFIG.tools.autoGlitter.defaults.paletteStyle,
 						styleClasses: 'auto-glitter-palette-style',
@@ -320,13 +331,13 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Color Matches', region: 'scroll', items: [
-				{ kind: 'card', classes: 'auto-glitter-review', items: [
+				{ kind: 'card', title: 'Color Matches', classes: 'auto-glitter-review', items: [
 					{ kind: 'host', id: 'autoGlitterStatus', classes: 'property-note', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
 					{ kind: 'host', id: 'autoGlitterResults', classes: 'property-inset property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
 				] }
 			] },
 			{ title: 'Advanced', region: 'scroll', items: [
-				{ kind: 'card', items: [
+				{ kind: 'card', title: 'Advanced', items: [
 					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels', advanced: true },
 					{ kind: 'checkboxList', items: [
 						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
@@ -334,9 +345,9 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Finish', region: 'footer', static: true, bare: true, items: [
+			{ title: 'Finish', region: 'footer', static: true, items: [
 				{ kind: 'actionRow', classes: 'auto-glitter-actions is-split', actions: [
-					{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
+					{ id: 'cancelAutoGlitterBtn', label: 'Cancel' },
 					{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
 				] }
 			] }
@@ -349,8 +360,7 @@ const PANEL_SCHEMAS = {
 		section: { id: 'filterSettingsSection', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
 		groups: [
 			{ title: 'Appearance', items: [
-				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'filterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				createLayerCardSpec('filterLayerOpacity', 'filterLayerBlendMode'),
 				{ kind: 'card', title: 'Looks', flatBody: true, items: [
 					{ kind: 'set', items: [
 						{ kind: 'select', id: 'filterLooksGroup', label: 'Filter look category', visibleLabel: 'Category', options: [] }
@@ -365,7 +375,7 @@ const PANEL_SCHEMAS = {
 					] },
 					{ kind: 'set', id: 'filterCustomize', items: [
 						{ kind: 'host', id: 'filterCustomizeTitle', classes: 'property-group-label property-inset' },
-						{ kind: 'host', id: 'filterCustomizeControls' },
+						{ kind: 'host', id: 'filterCustomizeControls', classes: 'property-set' },
 						{ kind: 'host', id: 'filterSnapshotStatus', classes: 'property-note', attrs: { hidden: 'hidden', role: 'status', 'aria-live': 'polite' } },
 						{ kind: 'actionRow', id: 'filterSnapshotActions', hidden: true, actions: [
 							{ id: 'filterRenderPreview', label: 'Preview animation' }
@@ -384,7 +394,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Content', items: [
 				// Both kinds share one shape: Kind, then a grid of choices, then
 				// that kind's options, each a divided set (like the Looks card).
-				{ kind: 'card', title: 'Frame', flatBody: true, collapsible: true,
+				{ kind: 'card', title: 'Frame', flatBody: true,
 					titleSummary: { id: 'frameContentSummary' }, items: [
 					{ kind: 'set', items: [
 						{ kind: 'stackRow', groups: [
@@ -421,8 +431,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Appearance', items: [
-				{ kind: 'slider', id: 'frameLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'frameLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				createLayerCardSpec('frameLayerOpacity', 'frameLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
@@ -440,8 +449,7 @@ const PANEL_SCHEMAS = {
 		section: { id: 'sparkleLayerSettingsSection', icon: 'sparkles', iconName: 'Sparkles', title: 'Sparkles Properties' },
 		groups: [
 			{ title: 'Appearance', items: [
-				{ kind: 'slider', id: 'sparkleLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'sparkleLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				createLayerCardSpec('sparkleLayerOpacity', 'sparkleLayerBlendMode'),
 				createSparklesPanelSpec('layerSparkles', { toggle: false })
 			] }
 		]
@@ -453,9 +461,9 @@ const PANEL_SCHEMAS = {
 		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties' },
 		groups: [
 			{ title: 'Appearance', items: [
-				// The canvas layer is a single paint; its only opacity IS the
-				// whole-layer opacity. Keeps legacy id `baseBackgroundOpacity`.
-				{ kind: 'slider', id: 'baseBackgroundOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
+				// The canvas layer is a single paint; its only opacity is the
+				// whole-layer opacity.
+				createLayerCardSpec('baseBackgroundOpacity'),
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true, noSlotOpacity: true,
@@ -492,7 +500,7 @@ const PANEL_SCHEMAS = {
 		},
 		groups: [
 			{ title: 'Content', items: [
-				{ kind: 'card', title: 'Tip', collapsible: true, moduleSummary: 'asset', classes: 'panel-module', items: [
+				{ kind: 'card', title: 'Tip', moduleSummary: 'asset', classes: 'panel-module', items: [
 					{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
 						name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
 						title: 'Choose another brush tip', compact: true },
@@ -536,10 +544,9 @@ const PANEL_SCHEMAS = {
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
 			{ title: 'Appearance', items: [
-				// A Fill layer is a single masked paint, so its only opacity IS the
-				// whole-layer opacity. Keeps legacy id `opacity` (panels.js binding).
-				{ kind: 'slider', id: 'opacity', valueId: 'opacityValue', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'glitterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				// A Fill layer is a single masked paint, so its only opacity is the
+				// whole-layer opacity.
+				createLayerCardSpec('opacity', 'glitterLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true, noSlotOpacity: true,
@@ -556,9 +563,9 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Transform', items: [{ kind: 'transformHost' }] },
 			{ title: 'Mask', items: [
-				{ kind: 'card', classes: 'fill-mask-summary', items: [
+				{ kind: 'card', title: 'Mask', classes: 'fill-mask-summary', items: [
 					{ kind: 'host', classes: 'property-note', text: 'Pick the colors glitter covers with the Glitter Fill tool, or paint the mask with the Glitter Brush and Eraser.' },
-					{ kind: 'actionRow', classes: 'card-foot', actions: [
+					{ kind: 'actionRow', classes: 'is-split', actions: [
 						{ id: 'fillMaskPickColors', label: 'Pick Colors', title: 'Switch to the Glitter Fill tool' },
 						{ id: 'fillMaskPaint', label: 'Paint Mask', title: 'Switch to the Glitter Brush' }
 					] }
@@ -655,22 +662,19 @@ const PANEL_SCHEMAS = {
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 			groups: [
 				{ title: 'Content', items: [
-					{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module sticker-asset-module', items: [
+					{ kind: 'card', title: 'Asset', moduleSummary: 'asset', classes: 'panel-module sticker-asset-module', items: [
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
 							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
+						{ kind: 'checkboxList', items: [{ id: 'stickerSliceEnabled', label: 'Smart Stretch', checked: true }] },
 						{ kind: 'colorAdjust', label: 'Adjust color' }
 					] }
 				] },
 			{ title: 'Appearance', items: [
 				createStylePresetCardSpec('sticker'),
-				{ kind: 'slider', id: 'stickerLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'stickerLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS }
+				createLayerCardSpec('stickerLayerOpacity', 'stickerLayerBlendMode')
 			] },
-			{ title: 'Transform', items: [
-				{ kind: 'checkboxList', items: [{ id: 'stickerSliceEnabled', label: 'Smart Stretch', checked: true }] },
-				{ kind: 'transformHost' }
-			] }
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'stickerBorder', title: 'Outline',
@@ -729,47 +733,49 @@ const PANEL_SCHEMAS = {
 						{ label: 'Box', attrs: { 'data-text-box-mode': 'fixed' } }
 					] },
 					{ kind: 'host', id: 'textBoxModeHint', classes: 'property-note', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
-					{ kind: 'actionRow', classes: 'text-fit-box-group card-foot', actions: [
+					{ kind: 'actionRow', classes: 'text-fit-box-group', actions: [
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
 				] },
-				{ kind: 'card', title: 'Font', collapsible: true, moduleSummary: 'asset', classes: 'panel-module text-font-module', items: [
-					// The current font; Change opens the Library's Fonts.
-					{ kind: 'assetInfo', info: 'textFontInfo', thumbnail: 'textFontThumbnail',
-						name: 'textFontName', badges: 'textFontBadges', change: 'textFontChange',
-						title: 'Choose another font', compact: true },
-					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', revert: true, options: [
-						{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
-						{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
+				// Everything about how the letters are set, in one section: the
+				// face, its metrics, then how lines sit in the box.
+				{ kind: 'card', title: 'Type', flatBody: true, moduleSummary: 'asset', classes: 'panel-module text-font-module', items: [
+					{ kind: 'set', label: 'Font', items: [
+						// The current font; Change opens the Library's Fonts.
+						{ kind: 'assetInfo', info: 'textFontInfo', thumbnail: 'textFontThumbnail',
+							name: 'textFontName', badges: 'textFontBadges', change: 'textFontChange',
+							title: 'Choose another font', compact: true },
+						{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', revert: true, options: [
+							{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
+							{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
+						] },
+						{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', revert: true, options: [
+							{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
+							{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' }
+						] },
+						{ kind: 'slider', id: 'textFontSize', slider: 'textFontSize', label: 'Size' }
 					] },
-					{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', revert: true, options: [
-						{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
-						{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' }
-					] },
-					{ kind: 'slider', id: 'textFontSize', slider: 'textFontSize', label: 'Size' }
-				] },
-				{ kind: 'card', title: 'Spacing', items: [
-					{ kind: 'twoColumn', items: [
+					{ kind: 'set', label: 'Spacing', items: [
 						{ kind: 'slider', id: 'textLetterSpacing', slider: 'textLetterSpacing', label: 'Letter' },
 						{ kind: 'slider', id: 'textLineHeight', slider: 'textLineHeight', label: 'Line', classes: 'text-line-height-row' }
-					] }
-				] },
-				{ kind: 'card', title: 'Alignment', items: [
-					{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Horizontal text alignment', classes: 'text-align-group', options: [
-						{ label: 'Left', icon: 'text-align-left', active: true, attrs: { 'data-text-align': 'left' } },
-						{ label: 'Center', icon: 'text-align-center', attrs: { 'data-text-align': 'center' } },
-						{ label: 'Right', icon: 'text-align-right', attrs: { 'data-text-align': 'right' } }
 					] },
-					{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: [
-						{ label: 'Top', icon: 'text-align-top', active: true, attrs: { 'data-text-valign': 'top' } },
-						{ label: 'Middle', icon: 'text-align-middle', attrs: { 'data-text-valign': 'middle' } },
-						{ label: 'Bottom', icon: 'text-align-bottom', attrs: { 'data-text-valign': 'bottom' } }
+					{ kind: 'set', label: 'Alignment', items: [
+						{ kind: 'segmented', visibleLabel: 'Align', label: 'Horizontal text alignment', classes: 'text-align-group', options: [
+							{ label: 'Left', icon: 'text-align-left', active: true, attrs: { 'data-text-align': 'left' } },
+							{ label: 'Center', icon: 'text-align-center', attrs: { 'data-text-align': 'center' } },
+							{ label: 'Right', icon: 'text-align-right', attrs: { 'data-text-align': 'right' } }
+						] },
+						{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: [
+							{ label: 'Top', icon: 'text-align-top', active: true, attrs: { 'data-text-valign': 'top' } },
+							{ label: 'Middle', icon: 'text-align-middle', attrs: { 'data-text-valign': 'middle' } },
+							{ label: 'Bottom', icon: 'text-align-bottom', attrs: { 'data-text-valign': 'bottom' } }
+						] }
 					] }
 				] },
 				// Warp bends glyph placement (js/paint/text-warp.js): presets first,
 				// Bend tunes the chosen one. Collapsed by default with the warp's
 				// name in the header.
-				{ kind: 'card', title: 'Warp', flatBody: true, collapsible: true, collapsed: true,
+				{ kind: 'card', title: 'Warp', flatBody: true, collapsed: true,
 					titleSummary: { id: 'textWarpSummary' }, items: [
 					{ kind: 'set', label: 'Presets', items: [
 						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' }
@@ -781,8 +787,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', items: [
 				createStylePresetCardSpec('text'),
-				{ kind: 'slider', id: 'textLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'textLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				createLayerCardSpec('textLayerOpacity', 'textLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
@@ -890,21 +895,16 @@ const PANEL_SCHEMAS = {
 		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
 		groups: [
 			{ title: 'Content', items: [
-				{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module shape-asset-module', items: [
+				{ kind: 'card', title: 'Asset', moduleSummary: 'asset', classes: 'panel-module shape-asset-module', items: [
 					{ kind: 'assetInfo', info: 'shapeAssetInfo', thumbnail: 'shapeAssetThumbnail',
 						name: 'shapeAssetName', badges: 'shapeAssetBadges', change: 'shapeAssetChange',
 						title: 'Choose another shape', compact: true },
 					{ kind: 'slider', id: 'shapeRadius', slider: 'shapeRadius', rowId: 'shapeRadiusRow', hidden: true }
 				] }
 			] },
-			// The shared transform panel emits its own Opacity card into the host;
-			// this group adopts it after renderTransformPanels runs
-			// (finalizePanelSchemaSections), mirroring the old shape branch of
-			// the pre-schema panel order.
 			{ title: 'Appearance', items: [
 				createStylePresetCardSpec('shape'),
-				{ kind: 'slider', id: 'shapeLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
-				{ kind: 'select', id: 'shapeLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
+				createLayerCardSpec('shapeLayerOpacity', 'shapeLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill',
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
@@ -1050,7 +1050,7 @@ const PANEL_SCHEMAS = {
 		fragmentId: 'documentSizeGroup',
 		fragmentHost: 'noLayerCanvasSizeHost',
 		fragmentClasses: 'document-size-group',
-		fragmentCard: { title: 'Size', collapsible: true, summaryId: 'noLayerSizeSummary', summaryText: 'Image' },
+		fragmentCard: { title: 'Size', summaryId: 'noLayerSizeSummary', summaryText: 'Image' },
 		items: [
 			// Operation and its mode-specific explanation form one property set;
 			// the selected mode panel begins the next divided set of controls.

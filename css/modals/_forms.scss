@@ -6,13 +6,11 @@
 // `.property-section` (a PANEL_SCHEMAS section, or the groups built by
 // js/ui/settings-renderer.js), and groups, cards, rows and notes all come from
 // css/panels/property/. Only what the wider column changes is set here.
-// Cards carry their own inset, so neither the body nor the section content
-// adds one at the sides. The body opens and closes with the card inset, so
-// the first and last cards clear its edges by what they clear the sides.
-// Written against the shell's own body selector so it also outranks the
-// narrow-viewport body padding.
+// Rows carry the gutter and sections their own vertical space, so the body
+// adds no padding of its own. Written against the shell's own body selector so
+// it also outranks the narrow-viewport body padding.
 .modal-overlay > .modal-content > .modal-body.modal-form {
-	padding: var(--property-pad) 0;
+	padding: 0;
 }
 
 .modal-form {

@@ -1,18 +1,9 @@
 @use '../../mixins' as *;
 
 // ===== R5: the module ======================================================
-// A card whose header does more than name it: an enable switch, a summary of
-// its current value, a swatch. Collapsed, a module is one line, and the
+// A section whose title does more than name it: a summary of its current
+// value, a swatch, an enable switch. Collapsed, a module is one line, and the
 // summary is what makes that line worth reading.
-
-.property-panel .property-card > .subsection-title {
-	// The label is the header's one strong element.
-	> span:first-of-type {
-		font-size: var(--font-size-sm);
-		font-weight: var(--font-weight-semibold);
-		color: var(--color-text-primary);
-	}
-}
 
 .property-module-summary {
 	flex: 0 1 auto;
@@ -23,7 +14,7 @@
 	text-overflow: ellipsis;
 	text-align: right;
 	font-size: var(--font-size-xs);
-	font-weight: 400;
+	font-weight: var(--font-weight-normal);
 	letter-spacing: 0;
 	text-transform: none;
 	line-height: 16px;
@@ -37,21 +28,19 @@
 	width: 14px;
 	height: 14px;
 	flex: 0 0 14px;
-	border: 1px solid rgba(255, 255, 255, 0.18);
+	border: 1px solid var(--color-border-hover);
 	border-radius: var(--property-r-inner);
 	background: var(--color-bg-secondary);
 }
 
-// The enable switch leads the header.
+// The enable switch sits at the right of the title row, where a row's value
+// would be.
 .property-header-switch {
 	display: inline-flex;
 	position: relative;
 	align-items: center;
-	order: -1;
 	flex: 0 0 auto;
-	height: var(--control-height-compact);
-	min-height: var(--control-height-compact);
-	margin-left: 0;
+	height: var(--control-height);
 	box-sizing: border-box;
 	cursor: pointer;
 	user-select: none;
@@ -66,7 +55,6 @@
 		color: transparent;
 		font-size: 0;
 		overflow: hidden;
-		text-indent: -9999px;
 		@include switch-track(var(--switch-w), var(--switch-h), 3px);
 	}
 
@@ -89,7 +77,7 @@
 .property-panel :is(.paint-slot-source, .glitter-source) {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-sm);
+	gap: var(--property-row-gap);
 }
 
 // A source that is the set's direct child is already inset by the set, so its
@@ -106,11 +94,11 @@
 // `.is-off` is stamped by syncPanelEffectToggle. Off, a module reads as one
 // quiet line; opened anyway, its body is an inert preview.
 .property-panel .property-card.is-off {
-	> .subsection-title > span:first-of-type { color: var(--color-text-tertiary); }
+	> .property-card-title > span:first-of-type { color: var(--color-text-tertiary); }
 
 	&:not(.is-collapsed) > .property-module-content { display: flex; }
 
-	&:not(.is-collapsed) > :not(.subsection-title) {
+	&:not(.is-collapsed) > :not(.property-card-title) {
 		opacity: var(--opacity-disabled);
 		pointer-events: none;
 	}

@@ -1,9 +1,10 @@
 // ===========================================================================
 // TRANSFORM PANEL RENDERER
 // ---------------------------------------------------------------------------
-// Builds the shared transform card (Position / Size / Scale / Rotation / Align
-// / Flip) into the sticker / text / shape / frame panels, arranges it into
-// labelled rows, and does the one-time post-render host normalisation.
+// Builds the shared Transform section (Position / Size / Scale / Rotation /
+// Flip / Align) into the sticker, text, shape, frame and fill panels from
+// `tpl-transform-panel`, stamping each type's ids and dropping the rows its
+// `transformCapabilities` do not declare.
 //
 // Plain global script — loads AFTER js/ui/panel-renderer.js (uses its builders
 // and PANEL_SCHEMAS) and BEFORE js/editor/transform-panel.js (its only caller).
@@ -21,119 +22,9 @@ function buildTransformRevertControl(role) {
 	return node;
 }
 
-function arrangeTransformFragment(fragment) {
-	const card = fragment.querySelector('[data-transform-card]');
-	const grid = card.querySelector('.transform-grid');
-	const header = card.querySelector('.transform-panel-title');
-	const actions = fragment.querySelector('[data-transform-actions]');
-	const [position, size, rotation, align, flip] = grid.querySelectorAll(':scope > .property-set');
-	const placeholder = () => {
-		const node = document.createElement('span');
-		node.className = 'property-revert is-placeholder';
-		node.setAttribute('aria-hidden', 'true');
-		node.appendChild(createIcon('reset'));
-		return node;
-	};
-	// A real per-row revert for the transform controls that have a meaningful
-	// default to return to (Flip, Lock aspect ratio). editor-transform.js wires
-	// the click and toggles `disabled` from the layer state; the id is stamped by
-	// buildTransformPanel's [data-transform-role] pass.
-	const rowLabel = (text) => {
-		const node = document.createElement('span');
-		node.className = 'property-label';
-		node.textContent = text;
-		return node;
-	};
-	const makePairRow = (set, label, { revert = true } = {}) => {
-		const pair = set.querySelector('.property-pair');
-		set.className = 'property-row row is-pair transform-pair-row';
-		set.replaceChildren(rowLabel(label), pair, ...(revert ? [placeholder()] : []));
-		return set;
-	};
-
-	card.classList.add('panel-module');
-	card.dataset.collapsible = '';
-	const lock = header.querySelector('[data-transform-lock]');
-	lock.className = 'property-row row is-toggle transform-lock-row';
-	const lockInput = lock.querySelector('input');
-	const lockSwitch = lock.querySelector('span');
-	lockSwitch.className = 'property-switch';
-	lockSwitch.textContent = '';
-	lockSwitch.setAttribute('aria-hidden', 'true');
-	lock.replaceChildren(rowLabel('Lock aspect ratio'), lockInput, lockSwitch, buildTransformRevertControl('resetProportional'));
-	header.querySelector('.transform-panel-title-actions').remove();
-	const signal = document.createElement('button');
-	signal.type = 'button';
-	signal.className = 'property-revert transform-revert-signal';
-	signal.title = 'Reset transform';
-	signal.setAttribute('aria-label', 'Reset transform');
-	signal.dataset.transformRevertSignal = '';
-	signal.appendChild(createIcon('reset'));
-	header.appendChild(signal);
-
-	makePairRow(position, 'Position', { revert: false });
-	const scaleRows = panelDiv('transform-scale-rows');
-	scaleRows.append(...size.querySelectorAll('[data-transform-scale-readout]'));
-	scaleRows.querySelector('.transform-scale-x > .property-label').textContent = 'Scale';
-	const sizeRow = makePairRow(size, 'Size');
-	sizeRow.dataset.transformRole = 'sizeGroup';
-	sizeRow.querySelector('.property-pair').removeAttribute('data-transform-role');
-
-	const rotationRow = rotation.querySelector('.property-row');
-	rotationRow.querySelector('.property-label').textContent = 'Rotation';
-
-	align.querySelector(':scope > .property-set-label').textContent = 'Align to canvas';
-	const transformGlyphs = {
-		alignLeft: 'align-left', alignCenterX: 'align-center-x', alignRight: 'align-right',
-		alignTop: 'align-top', alignCenterY: 'align-center-y', alignBottom: 'align-bottom'
-	};
-	align.querySelectorAll('.segmented-option[data-transform-role]').forEach((button) => {
-		const label = button.textContent;
-		button.replaceChildren(createPanelGlyph(transformGlyphs[button.dataset.transformRole]));
-		button.setAttribute('aria-label', label);
-	});
-
-	const flipControl = panelDiv('segmented-control transform-flip-control');
-	flip.querySelectorAll('.property-toggle-list > label').forEach((option, index) => {
-		const input = option.querySelector('input');
-		const visible = option.querySelector('.property-label');
-		option.className = 'segmented-option';
-		visible.className = '';
-		const label = index === 0 ? 'Horizontal' : 'Vertical';
-		visible.textContent = '';
-		visible.appendChild(createPanelGlyph(index === 0 ? 'flip-x' : 'flip-y'));
-		option.setAttribute('aria-label', label);
-		option.replaceChildren(input, visible);
-		flipControl.appendChild(option);
-	});
-	flip.className = 'property-row row';
-	flip.replaceChildren(rowLabel('Flip'), flipControl, buildTransformRevertControl('resetFlip'));
-
-	// Labelled groups, hairline-divided (.transform-grid > .property-set in
-	// panels/property/_sections.scss). Same three groups for sticker / text / shape.
-	// Layer Opacity is adopted into the Appearance group, so it isn't here.
-	const makeGroup = (label, nodes) => {
-		const set = panelDiv('property-set');
-		const heading = panelDiv('property-set-label');
-		heading.textContent = label;
-		set.append(heading, ...nodes);
-		return set;
-	};
-	grid.replaceChildren(
-		makeGroup('Position & size', [position, sizeRow, lock, scaleRows]),
-		makeGroup('Rotation & flip', [rotationRow, flip]),
-		align
-	);
-
-	card.appendChild(actions);
-}
-
 function buildTransformPanel(editor, container, prefix, capabilities) {
 	const ids = editor.getTransformIds(prefix);
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
-	fragment.querySelectorAll('.subsection-content-group').forEach((card) => {
-		card.classList.add('property-card');
-	});
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
 		pair.className = 'property-pair number-field-pair';
@@ -148,21 +39,18 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 		return pair;
 	};
 	fragment.querySelector('[data-transform-number-pair="position"]').replaceWith(buildNumberPair(['posX', 'posY'], ['X', 'Y']));
-	const sizePair = buildNumberPair(['sizeWidth', 'sizeHeight'], ['W', 'H'], 1);
-	fragment.querySelector('[data-transform-number-pair="size"]').replaceWith(sizePair);
-	arrangeTransformFragment(fragment);
-	const firstGroup = fragment.querySelector('.transform-grid > .property-set');
+	fragment.querySelector('[data-transform-number-pair="size"]').replaceWith(buildNumberPair(['sizeWidth', 'sizeHeight'], ['W', 'H'], 1));
+	// Anchor is the point Position measures to, so it sits right under it.
 	const anchorRow = buildPanelItem({
 		kind: 'select',
 		id: ids.anchorSelect,
 		visibleLabel: 'Anchor',
 		label: 'Anchor',
 		stacked: false,
-		rowClasses: 'transform-anchor-row',
 		options: ANCHOR_SELECT_OPTIONS
 	});
 	anchorRow.appendChild(buildTransformRevertControl('resetAnchor'));
-	firstGroup?.insertBefore(anchorRow, firstGroup.children[2] || null);
+	fragment.querySelector('[data-transform-role="sizeGroup"]').before(anchorRow);
 	const transformCard = fragment.querySelector('[data-transform-card]');
 	transformCard.dataset.transformPrefix = prefix;
 	transformCard.dataset.collapseKey = `${prefix}:Transform`;
@@ -173,8 +61,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	const transformSliderSpecs = {
 		scaleX: FIELDS.transformScale,
 		scaleY: FIELDS.transformScale,
-		rotation: FIELDS.transformRotation,
-		opacity: FIELDS.transformOpacity
+		rotation: FIELDS.transformRotation
 	};
 	Object.entries(transformSliderSpecs).forEach(([role, spec]) => {
 		const input = fragment.querySelector(`input[data-transform-role="${role}"]`);
@@ -187,45 +74,9 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	fragment.querySelectorAll('[data-prefix-id]').forEach((element) => {
 		element.id = prefix + element.dataset.prefixId;
 	});
-	fragment.querySelector('[data-transform-revert-signal]')?.addEventListener('click', () => {
-		document.getElementById(ids.resetTransform)?.click();
-	});
 	if (!capabilities.lockAspect) fragment.querySelector('[data-transform-lock]').remove();
 	if (!capabilities.scaleReadout) fragment.querySelectorAll('[data-transform-scale-readout]').forEach((element) => element.remove());
-	// v2 opacity model: whole-layer opacity is a standalone "Layer Opacity" row in
-	// each panel's Appearance group, not a card inside the Transform panel.
-	fragment.querySelector('[data-transform-opacity]')?.remove();
+	if (!capabilities.fitCanvas) fragment.querySelector('[data-transform-fit]').remove();
 	container.replaceChildren(fragment);
 	initializeEditablePropertyValues(container);
-}
-
-// Shared schema finalization: retitle the transform card and settle host card
-// order. (The transform actions live inside the card.) (v2 opacity model:
-// there is no transform-panel opacity card any more — whole-layer opacity is a
-// standalone "Layer Opacity" row in each panel's Appearance group.)
-function normalizeTransformPanelHost(editor, prefix) {
-	const host = document.getElementById(`${prefix}TransformPanelHost`);
-	if (!host) return null;
-	const geometry = host.querySelector(':scope > [data-transform-prefix]');
-
-	const title = geometry?.querySelector(':scope > .subsection-title');
-	if (title) {
-		const labelNode = title.querySelector(':scope > span');
-		if (labelNode) labelNode.textContent = 'Transform';
-		else title.textContent = 'Transform';
-	}
-
-	if (geometry) host.appendChild(geometry);
-	return host;
-}
-
-// Post-transform-render arrangement for schema-rendered panels. Runs once from
-// renderTransformPanels.
-function finalizePanelSchemaSections(editor) {
-	Object.values(PANEL_SCHEMAS).forEach((schema) => {
-		if (!schema.groups) return;
-		const content = document.getElementById(`${schema.prefix}SettingsContent`);
-		if (!content) return;
-		normalizeTransformPanelHost(editor, schema.prefix);
-	});
 }

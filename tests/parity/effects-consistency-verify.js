@@ -23,12 +23,12 @@ async function main() {
 
 		const canvasStructure = await page.evaluate(() => {
 			const group = document.querySelector('#baseLayerSettingsContent [data-panel-group="Effects"]');
-			const title = group.querySelector(':scope > .subsection-title');
+			const title = group.querySelector(':scope > .property-group-label');
 			return {
 				outerToggle: Boolean(title.querySelector('.checkbox-group')),
 				// Pixelate and Palette moved to filter layers.
 				pixelCards: Boolean(document.getElementById('pixelEffectsPixelateEnabled') || document.getElementById('pixelEffectsPaletteEnabled')),
-				sharedEffectCardCount: document.querySelectorAll('[data-effect-card] > .subsection-title input[data-effect-toggle]').length
+				sharedEffectCardCount: document.querySelectorAll('[data-effect-card] > .property-card-title input[data-effect-toggle]').length
 			};
 		});
 		assert.deepStrictEqual(canvasStructure, { outerToggle: false, pixelCards: false, sharedEffectCardCount: 20 });
@@ -163,7 +163,7 @@ async function main() {
 				input.dispatchEvent(new Event('input', { bubbles: true }));
 				input.dispatchEvent(new Event('change', { bubbles: true }));
 				const stored = entry.getEffects(layer).at(-1).offsetX;
-				const title = input.closest('[data-effect-card]').querySelector(':scope > .subsection-title');
+				const title = input.closest('[data-effect-card]').querySelector(':scope > .property-card-title');
 				title.click();
 				title.click();
 				entry.manager.loadLayerSettings(layer);

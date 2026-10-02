@@ -10,12 +10,6 @@
 	width: 100%;
 }
 
-.document-size-mode {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	// margin-bottom: var(--spacing-md);
-}
-
 // The document-size "Size" card (#documentSizeGroup) is rendered once and moved
 // between these two hosts. `display: contents` lets it sit as a direct child of
 // whichever peer-card list it lands in, so it gets the same card chrome in the
@@ -28,22 +22,9 @@
 // #canvasSizeLimitMessage is a `.property-note` like every other panel message;
 // canvas-size.js toggles `.is-error` on it (see `.property-note.is-error`).
 
-// The mode panel (`#canvasSizePanel` / `#scaleDesignPanel`) is a transparent
-// `.subsection-content` wrapper — NOT a property-set, so no set-inside-set. Its
-// `.property-set` groups are the dividable units: hairline-separated by the
-// shared `.property-set + .property-set`, plus one rule for the Operation → mode
-// boundary so that line survives switching modes (a hidden mode panel keeps the
-// DOM adjacency the `+` needs).
-.property-panel .property-section {
-	.document-size-panel {
-		gap: 0;
-		padding: 0;
-	}
-
-	.subsection-card-body > :is(.property-set, .document-size-panel) + .document-size-panel > .property-set:first-child {
-		border-top: 1px solid var(--color-border);
-	}
-}
+// A mode panel (`#canvasSizePanel` / `#scaleDesignPanel`) is a transparent
+// wrapper around its sets; canvas-size.js toggles `hidden` on it.
+.property-panel .document-size-panel { padding: 0; }
 
 .canvas-extension-mode {
 	min-width: 148px;
@@ -56,7 +37,6 @@
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(3, 1fr);
-	// gap: var(--spacing-2xs);
 	width: 66px;
 	height: 66px;
 	flex-shrink: 0;
@@ -70,10 +50,9 @@
 	background: var(--color-bg-tertiary);
 	border: none;
 	outline: 1px solid var(--color-border);
-	// border-radius: var(--radius-xs);
 	color: var(--color-text-secondary);
 	cursor: pointer;
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	line-height: 1;
 	transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 
@@ -104,19 +83,6 @@
 		0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
 	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
-
-.text-align-group,
-.text-valign-group {
-	width: 100%;
-}
-
-
-
-.property-set-label {
-	@include field-label(var(--font-size-sm));
-}
-
-.text-box-mode-group { width: 100%; }
 
 // Shape cards in the Library's Shapes grids.
 .asset-grid {
@@ -171,82 +137,6 @@
 		height: 100%;
 		fill: currentColor;
 	}
-}
-
-.text-valign-group > .segmented-option,
-.text-align-group > .segmented-option {
-	flex: 1;
-}
-
-// Segmented control: a connected two-state toggle (Glitter | Solid Color) that
-// reads as one control with two modes, not two loose buttons. Used for every
-// paint source, gradient type and gradient interpolation controls.
-.segmented-control {
-	display: flex;
-	min-height: var(--control-height);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-control);
-	overflow: hidden;
-	border: 1px solid var(--color-border);
-}
-
-.segmented-option {
-	// A centred row, so a glyph beside a label needs no special case.
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.4em;
-	flex: 1;
-	padding: var(--spacing-sm) var(--spacing-md);
-	border: none;
-	background: var(--color-bg-secondary);
-	color: var(--color-text-tertiary);
-	// Match the design system's label vocabulary (uppercase, like subsection
-	// titles) so the toggle reads as part of the panel, not a pair of buttons.
-	font-size: var(--font-size-xs);
-	font-weight: 600;
-	letter-spacing: 0.75px;
-	text-transform: uppercase;
-	cursor: pointer;
-	transition: background var(--transition-fast), color var(--transition-fast);
-
-	& + .segmented-option {
-		border-left: 1px solid var(--color-border);
-	}
-
-	&:focus-visible {
-		position: relative;
-		z-index: 1;
-		outline: none;
-		box-shadow: inset var(--control-focus-ring);
-	}
-
-	&:hover:not(.active):not(:disabled) {
-		color: var(--color-text-secondary);
-		background: var(--color-bg-tertiary);
-	}
-
-	&:disabled {
-		cursor: not-allowed;
-		opacity: 0.45;
-	}
-
-	&.active {
-		background: var(--color-accent);
-		color: var(--color-text-on-accent);
-	}
-}
-
-// Line-art glyphs in segmented options (text align, transform align / flip,
-// distribute, gradient type) come from the shared #icon-* sprite. The symbols
-// carry their own stroke, so the option just sizes the glyph and — when an icon
-// sits beside a text label — becomes a centred flex row.
-.segmented-option > svg.icon,
-.segmented-option > span > svg.icon {
-	width: 1em;
-	height: 1em;
-	font-size: 16px;
-	fill: none;
 }
 
 // Sparkles "Shapes" chips: one toggle per pickable glyph, drawn from the

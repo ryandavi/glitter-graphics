@@ -124,7 +124,7 @@ function buildSettingsControl(field) {
 				revertFor: control.revertFor });
 		case 'button':
 			return buildPanelItem({ kind: 'labeled', label: field.label, stacked: false, control: {
-				kind: 'host', tag: 'button', id: control.id, classes: 'btn-text-with-icon', text: control.label, attrs: { type: 'button' }
+				kind: 'host', tag: 'button', id: control.id, classes: 'btn-flat', text: control.label, attrs: { type: 'button' }
 			} });
 		// Block controls: the row is only the label (see buildSettingsBlock).
 		case 'actions':
@@ -216,7 +216,7 @@ function buildSettingsGroup(group) {
 		flatBody: true, items: [],
 		badge: group.badge ? { label: group.badge } : null,
 		reset: group.section ? { title: `Reset ${group.title} settings` } : null });
-	const body = card.querySelector('.subsection-card-body');
+	const body = card.querySelector('.property-card-body');
 	group.rows.forEach((row) => {
 		if (!row.governed) {
 			body.appendChild(buildSettingsRow(row));

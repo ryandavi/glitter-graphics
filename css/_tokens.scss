@@ -217,6 +217,8 @@
 	--color-info-surface: color-mix(in srgb, var(--color-info) 14%, transparent);
 	--color-info-text: color-mix(in srgb, var(--color-info) 82%, var(--color-text-primary));
 	--color-accent-surface: color-mix(in srgb, var(--color-accent) 14%, transparent);
+	/* a selected row among selected rows: the active one */
+	--color-accent-surface-strong: color-mix(in srgb, var(--color-accent) 28%, transparent);
 
 	--selected-outline-color: var(--color-accent-border);
 	--smart-guide-color: #ff2d8d;
@@ -225,16 +227,15 @@
 	--opacity-disabled: .4;
 	--opacity-dragging: .5;
 
-	/* Spacing */
+	/* Spacing: one scale. Every gap, inset and margin is a step of it. */
 	--spacing-2xs: 2px;
 	--spacing-xs: 4px;
 	--spacing-sm: 6px;
 	--spacing-base: 8px;
-	--spacing-md: 10px;
-	--spacing-lg: 15px;
-	--spacing-xl: 20px;
-	--spacing-2xl: 24px;
-	--spacing-3xl: 32px;
+	--spacing-md: 12px;
+	--spacing-lg: 16px;
+	--spacing-xl: 24px;
+	--spacing-2xl: 32px;
 
 	--spacing-from-edge: var(--spacing-md);
 
@@ -266,9 +267,17 @@
 		Consolas,
 		"Courier New",
 		monospace;
+	/* The UI's four sizes: panels, lists, bars and modal chrome use only
+	   these, at weights 400 and 600. */
 	--font-size-xs: 11px;
+	/* meta lines, notes */
 	--font-size-sm: 12px;
+	/* labels, values, body controls */
+	--font-size-title: 13px;
+	/* section titles, list names */
 	--font-size-base: 14px;
+	/* window bars, modal titles */
+	/* Reading sizes: long-form modal prose, and glyphs sized by font-size. */
 	--font-size-md: 16px;
 	--font-size-lg: 18px;
 	--font-size-xl: 20px;
@@ -285,31 +294,33 @@
 	--transition-fast: 0.2s;
 	--transition-base: 0.3s;
 
-	/* Sizes */
-	--control-height: 32px;
-	--control-height-compact: 24px;
-	--control-height-comfortable: 36px;
-	/* Buttons sit one notch taller than fields (36 vs 32) - the one button
-	   height everywhere: sidebar action rows, modal footers, workspace card. */
-	--button-height: var(--control-height-comfortable);
+	/* Sizes. Density is these four values and nothing else: the coarse-pointer
+	   block at the end of this file is the only place they change. */
+	--control-height: 28px;
+	/* every field, select, segmented control, readout and body button */
+	--row-height: 36px;
+	/* a property row, a section title, a tool button */
+	--list-row-height: 40px;
+	/* a row that leads with a thumbnail (layers, matches) */
+	--chip-height: calc(var(--control-height) - 4px);
+	/* tags and pills, a step under a control */
 	--control-padding-inline: var(--spacing-md);
 	--control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
 	--touch-target-min: 44px;
 	--header-height: 50px;
-	--toolbar-width: 50px;
+	/* the tool rail: one tool button, its padding and its border */
+	--toolbar-width: calc(var(--row-height) + 2 * var(--spacing-sm) + 2px);
 
 
 
-	--icon-size: 30px;
-	--icon-size-sm: 30px;
+	/* a glyph that stands alone on a surface (notices, banners) */
 	--icon-size-xs: 20px;
-	--icon-size-md: 35px;
 
 
 	/* PANELS */
 	--layer-panel-width: 400px;
 	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
-	--color-filter-chip-size: var(--icon-size-sm);
+	--color-filter-chip-size: var(--row-height);
 
 	/* MOBILE */
 	--mobile-menu-height: 60px;
@@ -346,15 +357,26 @@
 	--z-tooltip: 100000;
 
 	/* ===== MODALS ===== */
-	/* Two widths only. Settings-shaped modals read as a single column of rows;
-	   reading modals carry long-form prose. */
-	--modal-width-browse: 720px;
+	/* Three widths. A dialog asks one question, a form is a single column of
+	   rows, and a reading or export modal carries long-form content. */
+	--modal-width-dialog: 480px;
+	--modal-width-form: 720px;
 	--modal-width-reading: 880px;
-	--modal-browse-height: 720px;
+	--modal-form-height: 720px;
 
 	/* ===== FORM MODALS ===== */
 	/* The longest line of helper text under a row in a form modal. */
 	--settings-desc-measure: 64ch;
+}
+
+/* The one density switch. A finger needs a taller target than a cursor, so
+   every control and row grows together; nothing else restates these. */
+@media (pointer: coarse) {
+	:root {
+		--control-height: 40px;
+		--row-height: 44px;
+		--list-row-height: 52px;
+	}
 }
 
 @media (min-resolution: 2dppx) {

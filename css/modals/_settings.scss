@@ -6,7 +6,7 @@
 // card resets are the panel's own (rule D). `.settings-group` and
 // `.settings-row` are hooks for the search filter and the settings code. What
 // follows is only what a settings list adds to the panel vocabulary: custom
-// widgets, inactive rows, and the search's divider rule.
+// widgets and inactive rows.
 
 .export-fidelity-ticks {
 	display: flex;
@@ -28,7 +28,6 @@
 .export-fidelity-value {
 	color: var(--color-text-primary);
 	font-size: var(--font-size-sm);
-	font-weight: 500;
 	white-space: nowrap;
 }
 
@@ -39,7 +38,6 @@
 	padding: 2px var(--spacing-sm);
 	background: var(--color-bg-secondary);
 	color: var(--color-text-tertiary);
-	font-weight: 500;
 
 	&.is-accent {
 		border-color: var(--color-accent-border);
@@ -87,17 +85,7 @@
 	&:empty { display: none; }
 }
 
-// A search hides rows with `.is-filtered-out`, which the panel's divider rule
-// cannot see: it skips `[hidden]` siblings, and `hidden` here belongs to the
-// format gating. While a query is active a set is divided from the one above
-// only when an earlier set in the same run is showing.
 .is-filtering .modal-body.modal-form {
-	&.property-panel .property-section .property-set { border-top: 0; }
-
-	&.property-panel .property-section .property-set:not([hidden], .is-filtered-out) ~ .property-set {
-		border-top: 1px solid var(--color-border);
-	}
-
 	// A live search has to be able to reveal a governed row, so filtering
 	// forces every disclosure open for as long as there is a query, and drops
 	// one whose rows are all filtered out.

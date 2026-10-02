@@ -162,7 +162,7 @@ async function captureLayerState(page) {
 				button.click();
 				await raf2();
 				const slotRoot = button.closest('.paint-slot-card')
-					|| button.closest('.subsection-content-group')
+					|| button.closest('.property-card')
 					|| button.closest('.glitter-source');
 				sweep[groupKey][button.id] = slotRoot ? slotState(slotRoot) : null;
 			}

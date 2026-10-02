@@ -352,7 +352,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: var(--spacing-xs);
-		min-height: var(--control-height-compact);
+		min-height: var(--chip-height);
 		padding: var(--spacing-2xs) var(--spacing-sm);
 		border: 1px solid transparent;
 		border-radius: var(--radius-pill);
@@ -529,9 +529,11 @@
 				@include form-control($background: var(--color-bg-secondary), $min-width: 0);
 				// Override the mixin's own padding shorthand — must come after
 				// the include or the icon overlaps the text.
-				width: 100%;
-				box-sizing: border-box;
-				padding-left: calc(var(--spacing-sm) * 2 + 1rem);
+				& {
+					width: 100%;
+					box-sizing: border-box;
+					padding-left: calc(var(--spacing-sm) * 2 + 1rem);
+				}
 
 				&::-webkit-search-decoration,
 				&::-webkit-search-results-button,

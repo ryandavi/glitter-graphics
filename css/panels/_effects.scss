@@ -71,7 +71,7 @@
 	// they sit directly over the value, not the field edge.
 	.gradient-stops-heading {
 		padding: 0 var(--spacing-sm) 1px;
-		font-size: 9.5px;
+		font-size: var(--font-size-xs);
 		font-weight: var(--font-weight-semibold);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
@@ -115,14 +115,14 @@
 		// shrink-to-fit label, so it would collapse to 0.
 		> .color-input-with-eyedropper {
 			flex: 0 0 auto;
-			grid-template-columns: var(--property-control-height) var(--property-control-height);
+			grid-template-columns: var(--control-height) var(--control-height);
 		}
 
 		// Square swatch, the same height as the Pos / Alpha number fields.
 		input[type="color"] {
 			flex: 0 0 auto;
-			width: var(--property-control-height);
-			height: var(--property-control-height);
+			width: var(--control-height);
+			height: var(--control-height);
 			aspect-ratio: 1;
 			padding: 2px;
 			border-radius: var(--radius-inner);
@@ -145,7 +145,7 @@
 	// .property-value` (an `<input>` fills it; the `%` is the shared `.setting-unit`).
 	.gradient-stop-field {
 		min-width: 0;
-		height: var(--property-control-height);
+		height: var(--control-height);
 		padding: 0 6px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--property-r-field);
@@ -159,7 +159,7 @@
 			border: 0;
 			background: none;
 			font-size: var(--font-size-sm);
-			font-weight: 500;
+			font-weight: var(--font-weight-normal);
 			font-variant-numeric: tabular-nums;
 			color: var(--color-text-primary);
 			text-align: right;
@@ -271,31 +271,10 @@
 .property-module-content {
 	display: none;
 	flex-direction: column;
-	gap: 0;
-	padding-top: 0;
+	gap: var(--property-row-gap);
 
 	&.visible {
 		display: flex;
-	}
-}
-
-.paint-slot-card {
-	gap: 0;
-}
-
-.subsection-content-group.effects-stack,
-.subsection-content-group.subsection-section-group {
-	padding: 0;
-	border: 0;
-	background: transparent;
-
-	>.subsection-title,
-	>.subsection-note {
-		padding: 0 var(--spacing-xs);
-	}
-
-	> .panel-group-content {
-		margin-top: 0;
 	}
 }
 
@@ -313,14 +292,6 @@
 	box-shadow: 0 0 0 1px var(--color-accent-border);
 }
 
-.asset-info-change {
-	flex-shrink: 0;
-	align-self: center;
-	min-height: 28px;
-	padding: 0 var(--spacing-sm);
-	@include text-sm;
-}
-
 .property-color-row {
 	@include spread-row;
 
@@ -331,7 +302,7 @@
 
 .color-input-with-eyedropper {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) var(--property-control-height);
+	grid-template-columns: minmax(0, 1fr) var(--control-height);
 	gap: var(--spacing-xs);
 	min-width: 0;
 
@@ -339,8 +310,8 @@
 
 	// Chromeless glyph, like the layer-row icons (`.btn-icon-simple`).
 	> .color-eyedropper-button {
-		width: var(--property-control-height);
-		height: var(--property-control-height);
+		width: var(--control-height);
+		height: var(--control-height);
 		padding: 0;
 		display: flex;
 		align-items: center;
@@ -367,8 +338,8 @@
 	// control instead of a taller/shorter pair riding beside it.
 	> button {
 		flex: 0 0 auto;
-		width: var(--property-control-height);
-		height: var(--property-control-height);
+		width: var(--control-height);
+		height: var(--control-height);
 		padding: 0;
 	}
 }
@@ -408,12 +379,6 @@
 		&.has-warning .property-note { color: var(--color-warning); }
 	}
 
-	// A radio group: the chosen option fills like an active segment.
-	.auto-glitter-rerun-mode > .segmented-option > input:checked + span {
-		background: var(--color-accent);
-		color: var(--color-text-on-accent);
-	}
-
 	// #autoGlitterStatus is a plain `.property-note` now — no bespoke styling.
 
 	.auto-glitter-results {
@@ -426,6 +391,7 @@
 
 	.auto-glitter-match {
 		flex-wrap: wrap;
+		border: 1px solid transparent;
 		cursor: grab;
 
 		&.is-dragging {
@@ -440,7 +406,7 @@
 
 		&.is-merged {
 			margin-top: calc(var(--spacing-sm) * -1);
-			margin-left: calc(var(--icon-size-sm) + var(--spacing-sm));
+			margin-left: calc(var(--row-height) + var(--spacing-sm));
 			border-style: dashed;
 			background: var(--color-bg-secondary);
 		}
@@ -459,8 +425,6 @@
 			cursor: default;
 		}
 	}
-
-	.auto-glitter-source { align-items: flex-start; }
 
 	.auto-glitter-choice {
 		margin-left: auto;
@@ -524,7 +488,7 @@
 		justify-content: flex-start;
 		color: var(--color-text-tertiary);
 		font-size: var(--font-size-xs);
-		font-weight: 500;
+		font-weight: var(--font-weight-normal);
 
 		&.is-error { color: var(--color-warning); }
 	}

@@ -43,7 +43,7 @@
 
 
 			font-size: var(--font-size-base);
-			font-weight: 600;
+			font-weight: var(--font-weight-semibold);
 			text-transform: uppercase;
 			color: var(--color-text-secondary);
 
@@ -92,8 +92,8 @@
 				visibility: hidden;
 				pointer-events: none;
 
-				width: var(--icon-size-sm);
-				height: var(--icon-size-sm);
+				width: var(--row-height);
+				height: var(--row-height);
 				flex-shrink: 0;
 
 
@@ -126,7 +126,7 @@
 			background: var(--color-bg-tertiary);
 			color: var(--color-text-secondary);
 			font-size: var(--font-size-xs);
-			font-weight: 600;
+			font-weight: var(--font-weight-semibold);
 			line-height: 1;
 			text-transform: none;
 		}

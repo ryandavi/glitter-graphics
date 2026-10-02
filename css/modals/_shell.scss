@@ -37,7 +37,9 @@ body.modal-open {
 		background: var(--color-bg-primary);
 		border: 1px solid var(--color-window-border);
 		border-radius: var(--radius-panel);
-		width: var(--modal-width, 700px);
+		// Three widths: a dialog asks one question, a form is a column of rows
+		// (the default), a reading or export modal carries long-form content.
+		width: var(--modal-width, var(--modal-width-form));
 
 		/* Fallback for older browsers */
 		max-height: 90vh;
@@ -52,24 +54,23 @@ body.modal-open {
 		flex-direction: column;
 		box-shadow: 0 20px 60px var(--color-shadow-modal);
 
+		&.modal-dialog { --modal-width: var(--modal-width-dialog); }
+
 		// Browse modals are windows, not sheets that grow with their contents:
 		// switching a tab, changing export format, typing in the filter or
 		// expanding a disclosure must not resize the frame around the reader.
-		&.modal-browse {
-			--modal-width: var(--modal-width-browse);
-			height: min(var(--modal-browse-height), 90dvh);
-		}
+		&.modal-browse { height: min(var(--modal-form-height), 90dvh); }
 
 		&.modal-reading {
 			--modal-width: var(--modal-width-reading);
-			height: min(var(--modal-browse-height), 90dvh);
+			height: min(var(--modal-form-height), 90dvh);
 		}
 
 		>.modal-header {
 			flex-shrink: 0;
-			min-height: 52px;
+			min-height: calc(var(--row-height) + var(--spacing-md));
 			box-sizing: border-box;
-			padding: 5px 8px 5px 12px;
+			padding: var(--spacing-sm) var(--spacing-base) var(--spacing-sm) var(--spacing-md);
 			border-bottom: 1px solid var(--color-border);
 			display: flex;
 			justify-content: space-between;
@@ -80,8 +81,8 @@ body.modal-open {
 			border-top-right-radius: var(--radius-lg);
 
 			>.modal-title {
-				font-size: var(--font-size-xl);
-				font-weight: 600;
+				font-size: var(--font-size-base);
+				font-weight: var(--font-weight-semibold);
 				color: var(--bar-title-color);
 
 				display: flex;
@@ -89,24 +90,25 @@ body.modal-open {
 				justify-content: center;
 				gap: var(--spacing-base);
 
-				>.modal-title-text {
-					position: relative;
-					top: -.05em;
-				}
+				// The title takes focus when a modal opens, for screen readers. It
+				// is not a control, so it draws no ring.
+				>.modal-title-text:focus { outline: none; }
 
 				>.modal-icon {
+					width: 18px;
+					height: 18px;
 					color: var(--bar-icon-color);
+
+					>svg.icon { font-size: 18px; }
 				}
 
 			}
 
 			>.modal-close {
-				width: 40px;
-				height: 40px;
+				width: var(--row-height);
+				height: var(--row-height);
 
-				>svg.icon {
-					font-size: 20px;
-				}
+				>svg.icon { font-size: 16px; }
 			}
 
 		}
@@ -123,7 +125,7 @@ body.modal-open {
 			scroll-behavior: smooth;
 
 			>.modal-hero-image {
-				margin-bottom: 20px;
+				margin-bottom: var(--spacing-xl);
 				display: flex;
 				align-items: center;
 				justify-content: center;
@@ -279,39 +281,22 @@ body.modal-open {
 
 		}
 
+		// Actions sit at the right, primary last. A reset or destructive action
+		// is a plain `.btn-text` at the left.
 		>.modal-footer {
-			flex-shrink: 0;
-
-			padding: var(--spacing-lg);
-			border-top: 1px solid var(--color-border);
-
 			display: flex;
 			align-items: center;
-			justify-content: center;
+			justify-content: flex-end;
+			gap: var(--spacing-base);
+			flex-shrink: 0;
+			padding: var(--spacing-md) var(--spacing-lg);
+			border-top: 1px solid var(--color-border);
 
-			gap: var(--spacing-md);
-
-
-		&.left-right {
-			justify-content: space-between;
-			margin-top: 0;
-		}
-
-			&.right {
-				justify-content: flex-end;
-				align-items: stretch;
-
-				>button {
-					display: flex;
-					align-items: center;
-					aspect-ratio: unset;
-				}
-			}
-
+			>.btn-text { margin-right: auto; }
 		}
 
 		// modal-action / modal-action-hero no longer carry their own size -
-		// modal buttons are just buttons (--button-height, shared inline
+		// modal buttons are just buttons (--row-height, shared inline
 		// padding). Prominence for a hero CTA comes from `.primary`, not scale.
 		.modal-action-danger {
 			--btn-gradient: var(--danger-btn-gradient);
@@ -326,11 +311,6 @@ body.modal-open {
 
 }
 
-#layerTypePickerModal > .add-menu-modal {
-	--modal-width: 760px;
-
-	> .modal-body { overflow-y: auto; }
-}
 
 
 
@@ -341,17 +321,17 @@ body.modal-open {
 	padding: var(--spacing-xl);
 	text-align: center;
 	color: var(--color-text-secondary);
-	font-size: var(--font-size-lg);
+	font-size: var(--font-size-base);
 }
 
 .modal-error {
 	color: var(--color-danger);
 }
 
+// A dialog's body is one question, then optional slots: the subject it is
+// about, facts as a meta list, details as a list.
 #confirmationModal {
-	.modal-body {
-		font-size: var(--font-size-md);
-	}
+	.modal-body { font-size: var(--font-size-title); }
 
 	.confirmation-message {
 		display: flex;
@@ -366,33 +346,29 @@ body.modal-open {
 	.confirmation-message-copy,
 	.confirmation-message-outro { margin: 0; }
 
-	.confirmation-message-copy {
-		color: var(--color-text-secondary);
-	}
+	.confirmation-message-copy { color: var(--color-text-primary); }
 
+	// The one box: the object the question is about.
 	.confirmation-subject {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-xs);
+		gap: var(--spacing-2xs);
 		min-width: 0;
 		padding: var(--spacing-sm) var(--spacing-md);
-		border-radius: var(--radius-sm);
-		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-control);
+		background: var(--color-bg-secondary);
 	}
 
 	.confirmation-subject-label,
 	.confirmation-facts dt {
 		color: var(--color-text-tertiary);
 		font-size: var(--font-size-xs);
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
 	}
 
 	.confirmation-subject-value {
 		color: var(--color-text-primary);
-		font-size: var(--font-size-sm);
-		font-weight: 600;
+		font-size: var(--font-size-title);
+		font-weight: var(--font-weight-semibold);
 		line-height: 1.4;
 		overflow-wrap: anywhere;
 		user-select: text;
@@ -401,24 +377,20 @@ body.modal-open {
 	.confirmation-facts {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--spacing-sm);
+		gap: var(--spacing-sm) var(--spacing-lg);
 		margin: 0;
 
-		>div {
+		> div {
 			display: flex;
 			flex-direction: column;
-			gap: var(--spacing-xs);
 			min-width: 0;
-			padding: var(--spacing-sm) var(--spacing-md);
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-sm);
 		}
 
 		dd {
 			margin: 0;
 			color: var(--color-text-primary);
-			font-size: var(--font-size-md);
-			font-weight: 600;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
 			font-variant-numeric: tabular-nums;
 		}
 	}
@@ -428,11 +400,11 @@ body.modal-open {
 		flex-direction: column;
 		gap: var(--spacing-xs);
 		margin: 0;
-		padding-left: var(--spacing-xl);
-	}
+		padding-left: var(--spacing-lg);
+		font-size: var(--font-size-sm);
 
-	.confirmation-detail-list > li::marker { color: var(--color-warning); }
-	.confirmation-message-outro { color: var(--color-text-secondary); }
+		> li::marker { color: var(--color-warning); }
+	}
 }
 
 .modal-overlay > .content-dialog {
@@ -464,17 +436,9 @@ body.modal-open {
 
 	>.modal-nav-scope {
 		flex: 0 0 auto;
-		min-height: var(--search-control-height);
+		width: auto;
 
-		>.segmented-option {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			gap: var(--spacing-sm);
-			white-space: nowrap;
-
-			>svg.icon { font-size: 14px; }
-		}
+		>.segmented-option { padding-inline: var(--spacing-md); }
 	}
 
 	>.search-input-wrapper {
@@ -540,12 +504,6 @@ body.modal-open {
 	}
 
 	>.document-toc-toggle {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		height: var(--search-control-height);
-		min-height: var(--search-control-height);
-		white-space: nowrap;
 
 		>.icon-wrapper {
 			width: 14px;
@@ -566,14 +524,7 @@ body.modal-open {
 		@include visually-hidden;
 	}
 
-	>.document-back-to-top {
-		flex: 0 0 var(--search-control-height);
-		width: var(--search-control-height);
-		height: var(--search-control-height);
-
-		>svg.icon { font-size: 18px; }
-		&[hidden] { display: none; }
-	}
+	>.document-back-to-top[hidden] { display: none; }
 
 	>.document-toc-panel,
 	>.document-search-results {
@@ -584,7 +535,7 @@ body.modal-open {
 		z-index: 2;
 		max-height: min(60dvh, 520px);
 		overflow-y: auto;
-		padding: 4px;
+		padding: var(--spacing-xs);
 		border: 0;
 		border-bottom: 1px solid var(--color-window-border);
 		border-radius: 0 0 var(--radius-md) var(--radius-md);
@@ -702,7 +653,7 @@ body.modal-open {
 	.document-search-result-title {
 		color: var(--color-text-primary);
 		font-size: var(--font-size-sm);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.document-search-result-excerpt,
@@ -747,7 +698,7 @@ body.modal-open {
 	}
 
 	50% {
-		background-color: rgba(0, 102, 204, 0.2);
+		background-color: var(--color-accent-surface-strong);
 	}
 }
 

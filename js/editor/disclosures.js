@@ -129,33 +129,27 @@ initializeCollapsibleSections() {
 	initializeAdvancedDisclosures() {
 		const initializeSubsections = (root = document) => {
 			const cards = [];
-			if (root.matches?.('.subsection-content-group')) cards.push(root);
-			root.querySelectorAll?.('.subsection-content-group').forEach((card) => cards.push(card));
-			cards.forEach((card) => ensureSubsectionCardBody(card));
-			// Rule A: drop a block title that only repeats its single row's label.
-			cards.forEach((card) => dedupeBlockTitle(card));
+			if (root.matches?.('.property-card')) cards.push(root);
+			root.querySelectorAll?.('.property-card').forEach((card) => cards.push(card));
 			// R5: give every effect module its collapsed one-line summary.
 			initializeModuleSummaries(root.querySelectorAll ? root : document);
-			cards.map((card) => card.querySelector(':scope > .subsection-title')).filter(Boolean).forEach((title) => {
+			cards.map((card) => card.querySelector(':scope > .property-card-title')).filter(Boolean).forEach((title) => {
 				const subsection = title.parentElement;
-				if (!subsection || subsection.classList.contains('subsection-section-group')) return;
 				const enabled = title.querySelector('input[data-effect-toggle]');
-				// Collapsibility is OPT-IN (property-panel rule E, depth budget).
-				// Two things earn a chevron: an effect/module card, whose Enabled
-				// toggle already owns an expansion contract, and a block the schema
-				// explicitly marks `collapsible`. Every other titled block is a plain
-				// run of rows — spacing and typography carry the hierarchy, so a
-				// panel can no longer accumulate a collapsible level per card.
-				if (subsection.dataset.collapsible !== undefined || enabled) {
-					if (subsection.dataset.collapsibleSubsection === undefined) applyPanelCardState(subsection);
-					subsection.dataset.collapsibleSubsection = '';
-					title.dataset.subsectionToggle = '';
+				// Every titled section collapses, so the panel behaves one way. Two
+				// exceptions: a section nested in another is a labelled set, and a
+				// form modal's groups stay open so its search can always show a row.
+				const collapsible = !subsection.parentElement.closest('.property-card') && !subsection.closest('.modal-form');
+				if (collapsible) {
+					if (subsection.dataset.collapsibleCard === undefined) applyPanelCardState(subsection);
+					subsection.dataset.collapsibleCard = '';
+					title.dataset.cardToggle = '';
 					title.setAttribute('role', 'button');
 					title.setAttribute('tabindex', '0');
 					title.setAttribute('aria-expanded', subsection.classList.contains('is-collapsed') ? 'false' : 'true');
-					if (!title.querySelector('.subsection-chevron')) {
+					if (!title.querySelector('.property-card-chevron')) {
 						const chevron = document.createElement('span');
-						chevron.className = 'subsection-chevron icon-wrapper';
+						chevron.className = 'property-card-chevron icon-wrapper';
 						chevron.appendChild(createIcon('chevron-down'));
 						title.appendChild(chevron);
 					}
@@ -172,7 +166,7 @@ initializeCollapsibleSections() {
 		// Disabled effect cards stay collapsible and expose an inert preview when
 		// manually expanded.
 		const toggleSubsection = (toggle) => {
-			const subsection = toggle.closest('[data-collapsible-subsection]');
+			const subsection = toggle.closest('[data-collapsible-card]');
 			if (!subsection) return;
 			const isCollapsed = subsection.classList.toggle('is-collapsed');
 			toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
@@ -181,14 +175,14 @@ initializeCollapsibleSections() {
 		// Every schema effect toggle uses the same expansion/state contract.
 		document.addEventListener('change', (event) => {
 			const checkbox = event.target;
-			if (!checkbox.matches?.('.subsection-title input[data-effect-toggle]')) return;
+			if (!checkbox.matches?.('.property-card-title input[data-effect-toggle]')) return;
 			syncPanelEffectToggle(checkbox, checkbox.checked);
 		});
 		// Interactive controls living in the title (Enabled/Global checkboxes,
 		// reset chips) must not also collapse the subsection when clicked.
 		const isTitleControl = (target) => Boolean(target.closest?.('.property-header-switch, button, input, select'));
 		document.addEventListener('click', (event) => {
-			const subsectionToggle = event.target.closest('[data-subsection-toggle]');
+			const subsectionToggle = event.target.closest('[data-card-toggle]');
 			if (subsectionToggle) {
 				if (isTitleControl(event.target)) return;
 				toggleSubsection(subsectionToggle);
@@ -201,7 +195,7 @@ initializeCollapsibleSections() {
 			setAdvancedDisclosureOpen(disclosure, !disclosure.classList.contains('is-open'));
 		});
 		document.addEventListener('keydown', (event) => {
-			const toggle = event.target.closest?.('[data-subsection-toggle]');
+			const toggle = event.target.closest?.('[data-card-toggle]');
 			if (!toggle || (event.key !== 'Enter' && event.key !== ' ')) return;
 			if (isTitleControl(event.target)) return;
 			event.preventDefault();
@@ -445,7 +439,7 @@ initializeCollapsibleSections() {
 			emptySelector: '#shortcutSearchEmpty',
 			itemSelector: '.shortcut-item',
 			groupSelector: '.shortcut-group',
-			groupTitleSelector: '.subsection-title',
+			groupTitleSelector: '.property-card-title',
 			singularLabel: 'shortcut',
 			pluralLabel: 'shortcuts'
 		});
@@ -457,7 +451,7 @@ initializeCollapsibleSections() {
 			emptySelector: '#exportSettingsSearchEmpty',
 			itemSelector: '.settings-row',
 			groupSelector: '.settings-group',
-			groupTitleSelector: '.subsection-title',
+			groupTitleSelector: '.property-card-title',
 			singularLabel: 'setting',
 			pluralLabel: 'settings'
 		});
@@ -469,7 +463,7 @@ initializeCollapsibleSections() {
 			emptySelector: '#settingsSearchEmpty',
 			itemSelector: '.settings-row',
 			groupSelector: '.settings-group',
-			groupTitleSelector: '.subsection-title',
+			groupTitleSelector: '.property-card-title',
 			singularLabel: 'setting',
 			pluralLabel: 'settings'
 		});

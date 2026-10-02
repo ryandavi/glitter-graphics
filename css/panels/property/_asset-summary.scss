@@ -1,16 +1,17 @@
 @use '../../mixins' as *;
 
 // ===== Asset summary =======================================================
-// One row inside a card: thumbnail, name, one muted meta line, Change. The
-// only inset surface in a card, so a box means "an object you can swap".
+// One row inside a section: thumbnail, name, one muted meta line, Change. One
+// of the few boxes left in a panel, so a box means "an object you can swap".
 
 .property-panel .asset-info {
 	--asset-summary-thumbnail-size: 34px;
 	gap: var(--property-pad);
 	// Horizontal margin insets it; vertical separation is the source stack's gap.
 	margin: 0 var(--property-gutter);
-	padding: 7px var(--property-pad);
-	border-radius: var(--property-r-inner);
+	padding: var(--spacing-sm) var(--property-pad);
+	border: 0;
+	border-radius: var(--property-r-field);
 	background: var(--color-bg-secondary);
 }
 
@@ -31,7 +32,7 @@
 	grid-template-columns: minmax(0, auto) minmax(0, 1fr);
 	align-content: center;
 	justify-content: center;
-	gap: 3px 6px;
+	gap: var(--spacing-2xs) var(--spacing-sm);
 	min-width: 0;
 	min-height: var(--asset-summary-thumbnail-size);
 }
@@ -40,7 +41,7 @@
 	display: block;
 	max-width: 100%;
 	overflow: hidden;
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -48,12 +49,6 @@
 
 // Badges are hidden until the attribution pass decides what they say.
 .property-panel .asset-info .asset-info-badges { display: none; }
-
-.property-panel .asset-info-change {
-	min-height: 22px;
-	padding: 0 var(--spacing-sm);
-	font-size: var(--font-size-xs);
-}
 
 // The meta line: values only, dot-separated.
 .property-panel .asset-info-meta {
@@ -64,7 +59,7 @@
 	gap: 0;
 	padding: 0;
 	color: var(--color-text-tertiary);
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	white-space: nowrap;
 
 	> .property-meta-cell {
@@ -75,12 +70,12 @@
 		> .property-value {
 			color: inherit;
 			font-size: inherit;
-			font-weight: 400;
+			font-weight: var(--font-weight-normal);
 		}
 
 		+ .property-meta-cell > .property-value::before {
 			content: '\00b7';
-			padding-inline: 5px;
+			padding-inline: var(--spacing-xs);
 		}
 	}
 }

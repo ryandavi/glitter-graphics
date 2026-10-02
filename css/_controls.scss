@@ -5,14 +5,7 @@
 	max-width: 240px;
 	width: -moz-max-content;
 	width: max-content;
-	padding: var(--spacing-sm) var(--spacing-md);
-	border: 1px solid var(--color-border-hover);
-	border-radius: var(--radius-control);
-	background: rgba(0, 0, 0, 0.95);
-	color: var(--color-text-primary);
 	z-index: var(--z-tooltip);
-	text-transform: uppercase;
-	pointer-events: none;
 	@include windows7-tooltip;
 }
 
@@ -24,7 +17,7 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: var(--control-height-compact);
+	min-height: var(--chip-height);
 	padding: var(--spacing-2xs) var(--spacing-md);
 	border: 0;
 	border-radius: var(--radius-pill);
@@ -118,17 +111,23 @@
 	}
 }
 
-// `.btn-text-with-icon` is THE text button (label + optional leading glyph):
-// one control height, symmetric inline padding, centred content, one gap, so
-// any action row or modal footer lines up. The leading glyph tracks the label
-// size (1.15em), NOT the 30px icon-BUTTON token (--icon-size-sm, for square
-// icon-only buttons).
+// Two layers of look, kept apart:
+//   chrome   the app header, window bars, tool buttons, a modal's footer.
+//            Themed and glossy: `.btn-text-with-icon`, `.btn-icon`.
+//   content  everything inside a panel, list or modal body. Flat and quiet,
+//            the same in every theme: `.btn-flat`.
+// Gloss never appears inside a body.
+
+// `.btn-text-with-icon` is the chrome text button (label + optional leading
+// glyph): one height, symmetric inline padding, centred content, one gap, so a
+// modal footer lines up. The leading glyph tracks the label size (1.15em),
+// not the icon-button token (--icon-size, for square icon-only buttons).
 .btn-text-with-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: var(--spacing-xs);
-	min-height: var(--button-height);
+	min-height: var(--row-height);
 	padding: 0 var(--spacing-md);
 	line-height: 1.2;
 	aspect-ratio: unset;
@@ -145,13 +144,6 @@
 	> .name { display: block; }
 }
 
-// Comfortable tap targets for every text button on touch (was modal-only).
-@include mobile {
-	.btn-text-with-icon {
-		min-height: var(--touch-target-min);
-	}
-}
-
 .btn-text-with-icon {
 	@include gloss-button(true);
 
@@ -163,16 +155,104 @@
 
 // `.primary` / `.secondary` prominence is the default `gloss-button(true)`
 // behaviour: primary = full-strength gloss, everything else dimmed by
-// `secondary-button-filters`. No flat accent fill - `.btn-flat` is reserved
-// for that if it is ever needed (AGENTS.md).
+// `secondary-button-filters`.
 
+// `.btn-flat` is the content-layer button: a panel's action rows, an asset's
+// Change, a body button in a modal. A field-shaped box at the control height;
+// `.primary` fills with the accent for the one main action of a form.
+.btn-flat {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-xs);
+	flex: 0 0 auto;
+	min-width: 0;
+	height: var(--control-height);
+	padding: 0 var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-control);
+	background: var(--color-bg-secondary);
+	color: var(--color-text-primary);
+	font-family: inherit;
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast),
+		color var(--transition-fast);
+
+	> svg.icon {
+		width: 1.15em;
+		height: 1.15em;
+		flex: 0 0 auto;
+		opacity: var(--btn-icon-opacity);
+	}
+
+	> .name {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&:hover:not(:disabled) {
+		border-color: var(--color-border-hover);
+		background: var(--color-bg-tertiary);
+	}
+
+	&:focus-visible {
+		outline: none;
+		border-color: var(--color-accent);
+		box-shadow: var(--control-focus-ring);
+	}
+
+	&:disabled {
+		opacity: var(--opacity-disabled);
+		cursor: not-allowed;
+	}
+
+	&.active {
+		border-color: var(--color-accent);
+		background: var(--color-accent-surface);
+	}
+
+	// A square, glyph-only button beside a field (filter toggle, clear search).
+	&.is-icon {
+		width: var(--control-height);
+		padding: 0;
+
+		> .name { display: none; }
+	}
+
+	&.primary {
+		border-color: var(--color-accent-border);
+		background: var(--color-accent);
+		color: var(--color-text-on-accent);
+
+		&:hover:not(:disabled) {
+			border-color: var(--color-accent-hover);
+			background: var(--color-accent-hover);
+		}
+
+		> .feature-badge {
+			background: var(--color-text-on-accent);
+			color: var(--color-accent);
+		}
+	}
+}
+
+// The chrome icon button: tools, bar actions, a modal's close. A square at the
+// row height.
 .btn-icon {
-	width: var(--icon-size);
-	height: var(--icon-size);
+	width: var(--row-height);
+	height: var(--row-height);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: var(--font-size-xl);
 	padding: 0;
 
 	// Improve touch responsiveness
@@ -207,7 +287,7 @@
 		>svg.icon {
 			width: 1em;
 			height: 1em;
-			font-size: var(--icon-size-sm);
+			font-size: var(--row-height);
 		}
 
 		&.sm > svg.icon { font-size: var(--font-size-md); }
@@ -264,94 +344,9 @@
 
 }
 
-.switch {
-	--switch-width: calc(1.75 * var(--icon-size));
-	--switch-height: var(--icon-size);
-	--switch-padding: 4px;
-	--slider-bg: var(--color-slider-track);
-	--slider-checked-bg: var(--color-accent);
-	--knob-size: calc(var(--switch-height) - 2 * var(--switch-padding));
-	--slider-speed: 0.2s;
-
-	display: inline-block;
-	height: var(--switch-height);
-	width: var(--switch-width);
-	position: relative;
-
-	// The input stays in the tab order and the accessibility tree — it is the
-	// control. `display: none` would remove both, leaving a switch that only a
-	// mouse can reach. Same contract as the compact header switch.
-	>input[type="checkbox"] {
-		@include visually-hidden-control;
-
-		&:checked+.slider {
-			background-color: var(--slider-checked-bg);
-
-			&:before {
-				transform: translateX(calc(var(--switch-width) - var(--switch-height)));
-			}
-		}
-
-		&:focus-visible+.slider {
-			box-shadow: var(--control-focus-ring);
-		}
-
-		&:disabled+.slider {
-			cursor: not-allowed;
-		}
-	}
-
-	>.slider {
-		background-color: var(--slider-bg);
-		// Recessed track under a raised knob — reads as a physical control on
-		// both themes (percentages, not colors, so it tints with the track).
-		position: absolute;
-		top: 0;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		cursor: pointer;
-		transition: var(--slider-speed);
-
-		&.round {
-			border-radius: var(--switch-height);
-
-			&:before {
-				border-radius: var(--radius-full);
-			}
-		}
-
-		&:before {
-			content: "";
-			position: absolute;
-			left: var(--switch-padding);
-			bottom: var(--switch-padding);
-			width: var(--knob-size);
-			height: var(--knob-size);
-			background-color: var(--switch-knob-color);
-			transition: var(--slider-speed);
-		}
-	}
-}
-
-
 // ===== Tool-panel control groups ==========================================
 // Generic groups used across the tool panels (a full-width button stack, the
 // non-redesign color-selection list).
-
-.tool-options-group {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	gap: var(--spacing-sm);
-	letter-spacing: 0.5px;
-	font-size: var(--font-size-base);
-
-	>.btn-text-with-icon {
-		flex: 1 1 100%;
-		width: 100%;
-	}
-}
 
 .color-selection {
 	.color-selection-empty-note { display: none; }
@@ -371,7 +366,7 @@
 			display: flex;
 			align-items: center;
 			gap: var(--spacing-sm);
-			min-height: var(--control-height-compact);
+			min-height: var(--chip-height);
 			padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-sm);
 			background: var(--color-bg-secondary);
 			border: 1px solid var(--color-border);
