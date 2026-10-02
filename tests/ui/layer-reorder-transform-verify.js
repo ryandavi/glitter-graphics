@@ -105,6 +105,63 @@ async function createStickerLayer(page, label) {
 	});
 	assert(handlesAfterReorder === 1, `Expected transform handles to survive reordering, found ${handlesAfterReorder}`);
 
+	await loadBlankCanvas(page);
+	for (const label of ['Bottom', 'Middle', 'Upper', 'Top']) {
+		await createStickerLayer(page, label);
+	}
+	await page.evaluate(() => {
+		const manager = window.editor.layerManager;
+		const container = manager.layersListContainer;
+		const rows = [...container.querySelectorAll('.layer-item')];
+		const line = container.querySelector('.layer-insertion-line');
+		const dragged = rows[3];
+		const dataTransfer = new DataTransfer();
+		const check = (condition, message) => {
+			if (!condition) throw new Error(message);
+		};
+		const over = (element, clientY) => {
+			element.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, clientY, dataTransfer }));
+			return parseFloat(line.style.top);
+		};
+		dragged.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer }));
+		const upperRect = rows[0].getBoundingClientRect();
+		const lowerRect = rows[1].getBoundingClientRect();
+		const belowUpper = over(rows[0], upperRect.bottom - 1);
+		const aboveLower = over(rows[1], lowerRect.top + 1);
+		check(line.classList.contains('visible'), 'Expected a line between two target rows');
+		check(Math.abs(belowUpper - aboveLower) < 0.01, 'The same gap has two insertion line positions');
+		const gapPosition = over(container, (upperRect.bottom + lowerRect.top) / 2);
+		check(Math.abs(gapPosition - aboveLower) < 0.01, 'Dragging over the gap must preserve its insertion position');
+		over(rows[0], upperRect.top + 1);
+		check(line.classList.contains('visible'), 'Expected a line above the top layer');
+		check(line.getBoundingClientRect().top >= container.getBoundingClientRect().top, 'Top insertion line is clipped');
+		over(container, upperRect.top);
+		check(line.classList.contains('visible') && manager.dropInsertAbove, 'Container top edge must allow dropping above the top layer');
+		over(dragged, dragged.getBoundingClientRect().top + 1);
+		check(!line.classList.contains('visible') && !manager.dropTargetId, 'Dragging over itself must clear the previous drop');
+		over(rows[0], upperRect.bottom - 1);
+		over(rows[2], rows[2].getBoundingClientRect().bottom - 1);
+		check(!line.classList.contains('visible') && !manager.dropTargetId, 'A no-op drop must clear the previous drop');
+		const base = rows[4];
+		check(manager.getLayerById(base.dataset.layerId).locked, 'Expected the bottom layer to be locked');
+		over(base, base.getBoundingClientRect().bottom - 1);
+		check(!line.classList.contains('visible') && !manager.dropTargetId, 'Dropping below a locked bottom layer must be invalid');
+
+		container.style.flex = 'none';
+		container.style.height = '100px';
+		container.scrollTop = 25;
+		const scrolledUpper = rows[0].getBoundingClientRect();
+		const scrolledLower = rows[1].getBoundingClientRect();
+		const scrolledPosition = over(rows[0], scrolledUpper.bottom - 1);
+		check(Math.abs(scrolledPosition - belowUpper) < 0.01, 'Scrolling must preserve the insertion position in list coordinates');
+		check(Math.abs(over(rows[1], scrolledLower.top + 1) - scrolledPosition) < 0.01, 'Scrolled gap has two insertion line positions');
+		container.scrollTop = 0;
+		over(rows[0], rows[0].getBoundingClientRect().top + 1);
+		rows[0].dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer }));
+		check(manager.layers[manager.layers.length - 1].id === dragged.dataset.layerId, 'Drop above the top layer must move the layer to the top');
+		dragged.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer }));
+	});
+
 	await browser.close();
 	console.log('layer-reorder-transform-verify: passed');
 })();

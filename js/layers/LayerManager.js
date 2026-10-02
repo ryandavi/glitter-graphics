@@ -4,11 +4,6 @@
 // Handles all layer CRUD operations, selection, reordering, and rendering
 // ============================================
 
-// Insertion-line geometry for layer drag & drop.
-// LAYER_MARGIN_BOTTOM must match the .layer-item margin-bottom in style.css.
-const LAYER_MARGIN_BOTTOM = 6;
-const INSERTION_LINE_HEIGHT = 2;
-
 class LayerManager {
 	constructor(editor) {
 		// Reference to main editor for callbacks
@@ -55,7 +50,7 @@ class LayerManager {
 		// Allow dropping on empty space in the container (drop handler below)
 		this.layersListContainer.addEventListener('dragover', (e) => {
 			if (this.draggedLayerId && e.target === this.layersListContainer) {
-				e.preventDefault();
+				this.handleLayerDragOver(e, null);
 			}
 		});
 
@@ -1455,6 +1450,8 @@ class LayerManager {
 			return;
 		}
 
+		this.dropTargetId = null;
+		this.dropInsertAbove = false;
 		this.draggedLayerId = layerId;
 		event.target.classList.add('dragging');
 		event.dataTransfer.effectAllowed = 'move';
@@ -1469,10 +1466,21 @@ class LayerManager {
 		// Call existing scroll handler
 		this.handleLayerDragScroll(event);
 
-		const targetElement = event.currentTarget;
-		const rect = targetElement.getBoundingClientRect();
-		const containerRect = this.layersListContainer.getBoundingClientRect();
 		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		this.dropTargetId = null;
+		insertionLine.classList.remove('visible');
+
+		let targetElement = event.currentTarget;
+		if (!targetLayerId) {
+			const rows = [...this.layersListContainer.querySelectorAll('.layer-item')];
+			targetElement = rows.find((row) => {
+				const rect = row.getBoundingClientRect();
+				return event.clientY < rect.top + rect.height / 2;
+			}) || rows[rows.length - 1];
+			if (!targetElement) return;
+			targetLayerId = targetElement.dataset.layerId;
+		}
+		const rect = targetElement.getBoundingClientRect();
 
 		// Calculate drop position
 		const midpoint = rect.top + rect.height / 2;
@@ -1513,21 +1521,28 @@ class LayerManager {
 		// Calculate Line Position
 		event.dataTransfer.dropEffect = 'move';
 
-		let lineY;
-		const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-		const scrollTop = this.layersListContainer.scrollTop;
-
-		if (insertAbove) {
-			lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
-		} else {
-			lineY = rect.bottom - containerRect.top + scrollTop + offset;
-		}
-
-		insertionLine.style.top = lineY + 'px';
-		insertionLine.classList.add('visible');
+		this.showLayerInsertionLine(targetElement, insertAbove);
 
 		this.dropInsertAbove = insertAbove;
 		this.dropTargetId = targetLayerId;
+	}
+
+	showLayerInsertionLine(targetElement, insertAbove) {
+		const container = this.layersListContainer;
+		const insertionLine = container.querySelector('.layer-insertion-line');
+		const rect = targetElement.getBoundingClientRect();
+		const neighbor = insertAbove ? targetElement.previousElementSibling : targetElement.nextElementSibling;
+		let boundary = insertAbove ? rect.top : rect.bottom;
+
+		// Both sides of a gap must resolve to the same insertion boundary.
+		if (neighbor?.classList.contains('layer-item')) {
+			const neighborRect = neighbor.getBoundingClientRect();
+			boundary = (boundary + (insertAbove ? neighborRect.bottom : neighborRect.top)) / 2;
+		}
+		const lineHeight = insertionLine.getBoundingClientRect().height;
+		const contentY = boundary - container.getBoundingClientRect().top - container.clientTop + container.scrollTop;
+		insertionLine.style.top = Math.max(0, Math.min(container.scrollHeight - lineHeight, contentY - lineHeight / 2)) + 'px';
+		insertionLine.classList.add('visible');
 	}
 
 	handleLayerDragLeave(event) {
@@ -1642,6 +1657,8 @@ class LayerManager {
 			return;
 		}
 
+		this.dropTargetId = null;
+		this.dropInsertAbove = false;
 		this.draggedLayerId = layerId;
 		this.touchDragPointerId = event.pointerId;
 		this.touchDragPointerElement = event.currentTarget;
@@ -1689,21 +1706,7 @@ class LayerManager {
 			}
 			// ============================================================
 
-			// Show insertion line
-			const containerRect = this.layersListContainer.getBoundingClientRect();
-
-			let lineY;
-			const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-			const scrollTop = this.layersListContainer.scrollTop;
-
-			if (insertAbove) {
-				lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
-			} else {
-				lineY = rect.bottom - containerRect.top + scrollTop + offset;
-			}
-
-			insertionLine.style.top = lineY + 'px';
-			insertionLine.classList.add('visible');
+			this.showLayerInsertionLine(validTargetLayer, insertAbove);
 
 			this.dropTargetId = targetLayerId;
 			this.dropInsertAbove = insertAbove;
