@@ -385,6 +385,7 @@ class GlitterEditor {
 		initTooltips();
 		installClipboardHandlers(this);
 		this.exportResultPresenter = new ExportResultPresenter();
+		this.exportProgressPresenter = new ExportProgressPresenter(this);
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
 		this.sceneCompositor = new SceneCompositor({
@@ -524,6 +525,7 @@ class GlitterEditor {
 		document.getElementById('fillMaskPaint')?.addEventListener('click', () => this.setTool(ToolType.BRUSH));
 
 		const actions = [
+			{ id: 'exportProgressCancel', handler: () => this.exportProgressPresenter.cancel() },
 			{ id: 'undoTool', handler: () => this.undo() },
 			{ id: 'redoTool', handler: () => this.redo() },
 			{ id: 'clearAllTool', handler: () => this.resetAll() }
@@ -2386,76 +2388,10 @@ class GlitterEditor {
 	}
 
 	// ===== EXPORT PROGRESS =====
-	showExportProgress() {
-		const progress = document.getElementById('exportProgress');
-		const bar = progress.querySelector('.export-progress-bar');
-		const fill = document.getElementById('exportProgressFill');
-		const text = document.getElementById('exportProgressText');
-		const detail = document.getElementById('exportProgressDetail');
-		const time = document.getElementById('exportProgressTime');
-		progress.classList.add('visible');
-		fill.style.width = '0%';
-		bar.setAttribute('aria-valuenow', '0');
-		text.textContent = 'Preparing export';
-		detail.textContent = '';
-		time.textContent = '';
-		this.exportStartTime = Date.now();
-		this.exportProgressPercent = 0;
-		this.exportProgressIsIndeterminate = true;
-		clearInterval(this.exportProgressTimer);
-		this.exportProgressTimer = window.setInterval(
-			() => this._updateExportProgressTime(),
-			CONFIG.export.progress.timerRefreshMs
-		);
-		this.exportCancelled = false;
-	}
-
-	updateExportProgress(percent, message, currentFrame = 0, totalFrames = 0, progressInfo = {}) {
-		const progress = document.getElementById('exportProgress');
-		const bar = progress.querySelector('.export-progress-bar');
-		const fill = document.getElementById('exportProgressFill');
-		const text = document.getElementById('exportProgressText');
-		const detail = document.getElementById('exportProgressDetail');
-		const monotonicPercent = Math.max(this.exportProgressPercent || 0, Math.max(0, Math.min(100, percent)));
-		this.exportProgressPercent = monotonicPercent;
-		this.exportProgressIsIndeterminate = Boolean(progressInfo.indeterminate);
-		progress.classList.toggle('is-indeterminate', this.exportProgressIsIndeterminate);
-		if (this.exportProgressIsIndeterminate) bar.removeAttribute('aria-valuenow');
-		else bar.setAttribute('aria-valuenow', String(Math.round(monotonicPercent)));
-		fill.style.width = `${monotonicPercent}%`;
-		text.textContent = progressInfo.phase || 'Preparing export';
-		detail.textContent = progressInfo.detail || message || '';
-		this._updateExportProgressTime();
-	}
-
-	_updateExportProgressTime() {
-		const time = document.getElementById('exportProgressTime');
-		if (!time || !this.exportStartTime) return;
-		const elapsed = Date.now() - this.exportStartTime;
-		const elapsedSeconds = Math.max(1, Math.floor(elapsed / 1000));
-		if (this.exportProgressIsIndeterminate || this.exportProgressPercent <= 0) {
-			time.textContent = elapsed >= CONFIG.export.progress.slowPhaseNoticeMs
-				? `${elapsedSeconds}s elapsed · Still working…`
-				: '';
-			return;
-		}
-		if (this.exportProgressPercent >= 100) {
-			time.textContent = '';
-			return;
-		}
-		const estimatedTotal = (elapsed / this.exportProgressPercent) * 100;
-		const remaining = estimatedTotal - elapsed;
-		time.textContent = remaining > 1000
-			? `About ${Math.ceil(remaining / 1000)}s remaining`
-			: elapsed >= CONFIG.export.progress.slowPhaseNoticeMs ? `${elapsedSeconds}s elapsed` : '';
-	}
-
-	hideExportProgress() {
-		clearInterval(this.exportProgressTimer);
-		this.exportProgressTimer = null;
-		const progress = document.getElementById('exportProgress');
-		progress.classList.remove('visible', 'is-indeterminate');
-	}
+	showExportProgress(target) { this.exportProgressPresenter.show(target); }
+	updateExportProgress(...args) { this.exportProgressPresenter.update(...args); }
+	_updateExportProgressTime() { this.exportProgressPresenter.updateTime(); }
+	hideExportProgress() { this.exportProgressPresenter.hide(); }
 
 	validateExportSettings() {
 		this.settingsStore.validate(this.exportSettings);
@@ -2514,7 +2450,7 @@ class GlitterEditor {
 
 		this.exportInProgress = true;
 		this.updateExportActionUI();
-		this.showExportProgress();
+		this.showExportProgress(target);
 
 		// Exporters receive this immutable snapshot; UI changes cannot alter a running job.
 		dbg('Export settings:', exportSettings);
@@ -2542,6 +2478,7 @@ class GlitterEditor {
 			target,
 			timestamp: target.isStill && exportSettings.stillFrame === 'current' ? this.animationTicker.getCurrentTime() : 0,
 			callbacks: {
+				progressFormat: target.isStill ? 'still' : target.format,
 				phaseTimer: createExportPhaseTimer(),
 				onStatus: (msg) => this.updateStatus(msg),
 				onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
@@ -2556,6 +2493,7 @@ class GlitterEditor {
 				onError: (error) => {
 					// Fired by gif.js encoder events, outside our try/catch below
 					finishExport();
+					if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
 					if (error.message !== 'Export cancelled') {
 						this.showError('Export failed: ' + error.message);
 					}
@@ -2573,6 +2511,7 @@ class GlitterEditor {
 			} catch (error) {
 				dbg('Export error:', error);
 				finishExport();
+				if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
 				if (error.message !== 'Export cancelled') {
 					this.showError('Export failed: ' + error.message);
 				}

@@ -822,100 +822,88 @@ body.mask-editing {
 	bottom: 80px;
 	left: 50%;
 	transform: translateX(-50%);
-
-	padding: var(--spacing-lg);
+	padding: var(--spacing-md);
+	display: grid;
+	gap: var(--spacing-md);
 	opacity: 0;
 	pointer-events: none;
 	width: 100%;
 	min-width: 100px;
 	max-width: 300px;
-
 	@include mini-modal();
+	@include text-sm;
+	line-height: var(--line-height-tight);
 
-
-	&.visible {
-		opacity: 1;
-		pointer-events: auto;
+	&.visible { opacity: 1; pointer-events: auto; }
+	.export-progress-heading, .export-progress-status {
+		@include spread-row;
+		white-space: nowrap;
 	}
-
-	&.is-indeterminate > .export-progress-bar > .export-progress-fill {
-		width: 35% !important;
-		transition: none;
-		animation: export-progress-indeterminate 1.2s ease-in-out infinite;
+	.export-progress-heading { font-weight: var(--font-weight-semibold); }
+	.export-progress-status {
+		min-height: calc(var(--font-size-sm) * var(--line-height-tight) + 2 * var(--spacing-xs));
+		color: var(--color-text-secondary);
 	}
-
-	>.export-progress-bar {
-		width: 100%;
+	#exportProgressDetail {
+		min-width: 0;
+		padding-block: var(--spacing-xs);
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	#exportProgressTime, #exportProgressPercent { flex: 0 0 auto; }
+	.export-progress-announcement { @include visually-hidden; }
+	.export-progress-cancel { width: 100%; }
+	.export-progress-bar {
 		height: 10px;
 		background: var(--progress-track);
 		box-shadow: inset 0 0 0 1px var(--progress-track-border);
 		border-radius: var(--radius-sm);
 		overflow: hidden;
-		margin-bottom: var(--spacing-md);
-
-		>.export-progress-fill {
-			height: 100%;
-			background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
-			border-radius: var(--radius-sm);
-			width: 0%;
-			transition: width 0.3s ease;
-		}
 	}
-
-	>.export-progress-text {
-		text-align: center;
-		@include text-sm;
-		color: var(--color-text-primary);
-		font-weight: 600;
-	}
-
-	>.export-progress-detail {
-		height: 2.8em;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		text-align: center;
-		@include text-sm;
-		color: var(--color-text-secondary);
-		margin-top: var(--spacing-xs);
-	}
-
-	>.export-progress-time {
-		height: 1.5em;
-		line-height: 1.5;
-		overflow: hidden;
-		white-space: nowrap;
-		text-align: center;
-		@include text-xs;
-		color: var(--color-text-secondary);
-		margin-top: var(--spacing-xs);
-	}
-
-	>.export-progress-cancel {
-		margin-top: var(--spacing-md);
+	.export-progress-fill {
+		position: relative;
 		width: 100%;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-primary);
-
-		&:hover {
-			background: var(--color-danger);
-			color: var(--color-text-on-accent);
+		height: 100%;
+		@include gloss-gradient;
+		transform: translateX(var(--export-progress-offset, -100%));
+		transition: transform 0.3s ease;
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+			animation: export-progress-sheen 3s linear infinite;
 		}
+	}
+	&.is-indeterminate .export-progress-fill {
+		transform-origin: left;
+		transition: none;
+		animation: export-progress-indeterminate 2s ease-in-out infinite;
+		opacity: 0.45;
 	}
 }
 
 @keyframes export-progress-indeterminate {
-	from { transform: translateX(-120%); }
-	to { transform: translateX(310%); }
+	from { transform: translateX(-35%) scaleX(0.35); }
+	to { transform: translateX(100%) scaleX(0.35); }
+}
+
+@keyframes export-progress-sheen {
+	from { transform: translateX(-100%); }
+	to { transform: translateX(100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.export-progress.is-indeterminate > .export-progress-bar > .export-progress-fill {
-		width: 100% !important;
-		opacity: 0.45;
-		animation: none;
-	}
+	.export-progress-fill { transition: none; }
+	.export-progress.is-indeterminate .export-progress-fill { animation: none; transform: scaleX(0.35); }
+	.export-progress-fill::after { animation: none; display: none; }
+}
+:root[data-reduce-motion="true"] .export-progress-fill::after { animation: none; display: none; }
+
+
+:root[data-reduce-motion="true"] .export-progress.is-indeterminate .export-progress-fill {
+	animation: none;
+	transform: scaleX(0.35);
 }
 
 /* ===== ERROR TOAST ===== */

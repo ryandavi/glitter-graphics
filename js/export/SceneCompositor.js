@@ -7,26 +7,23 @@
 // animations, composeFrameAt for stills).
 // ============================================
 const EXPORT_PROGRESS_PHASES = Object.freeze({
-	loading: { label: 'Loading sources', start: 0, end: 8 },
-	masks: { label: 'Preparing masks', start: 8, end: 12 },
-	planning: { label: 'Planning timing', start: 12, end: 15 },
-	composing: { label: 'Composing frames', start: 15, end: 65 },
-	reducing: { label: 'Reducing frames', start: 65, end: 70 },
-	palette: { label: 'Building palette', start: 70, end: 78 },
-	encoding: { label: 'Encoding', start: 78, end: 99 },
-	finalizing: { label: 'Finalizing', start: 99, end: 100 }
+	loading: { label: 'Loading artwork', countLabel: 'Loading', noun: 'layer', ranges: { gif: [0, 8], mp4: [0, 8], still: [0, 8] } },
+	masks: { label: 'Preparing layers', countLabel: 'Preparing', noun: 'layer', ranges: { gif: [8, 12], mp4: [8, 12], still: [8, 12] } },
+	planning: { label: 'Working out timing', ranges: { gif: [12, 15], mp4: [12, 15], still: [12, 15] } },
+	composing: { label: 'Drawing frames', countLabel: 'Drawing', noun: 'frame', ranges: { gif: [15, 65], mp4: [15, 65], still: [15, 45] } },
+	reducing: { label: 'Removing duplicate frames', ranges: { gif: [65, 70], mp4: [65, 70], still: [45, 65] } },
+	palette: { label: 'Choosing colors', ranges: { gif: [70, 78], mp4: [70, 78], still: [65, 78] } },
+	encoding: { label: 'Encoding', ranges: { gif: [78, 99], mp4: [15, 99], still: [75, 99] } },
+	finalizing: { label: 'Finishing up', ranges: { gif: [99, 100], mp4: [99, 100], still: [99, 100] } }
 });
 
 function reportExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phaseCurrent = 0, phaseTotal = 0, options = {}) {
 	const phase = EXPORT_PROGRESS_PHASES[phaseKey];
+	const [start, end] = phase.ranges[callbacks.progressFormat || 'gif'];
 	const boundedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
-	const percent = phase.start + ((phase.end - phase.start) * boundedRatio);
 	callbacks.phaseTimer?.mark(phase.label);
-	callbacks.onProgress(percent, detail, phaseCurrent, phaseTotal, {
-		phase: phase.label,
-		detail,
-		phaseCurrent,
-		phaseTotal,
+	callbacks.onProgress(start + ((end - start) * boundedRatio), detail, phaseCurrent, phaseTotal, {
+		phase: phase.label, phaseKey, detail, phaseCurrent, phaseTotal,
 		indeterminate: options.indeterminate ?? phaseTotal <= 0
 	});
 }
@@ -1220,7 +1217,7 @@ class SceneCompositor {
 		this.filterGrainTileCache.clear();
 
 		// Common preparation owns source loading, masks, and immutable settings.
-		reportExportProgress(callbacks, 'loading', 0, 'Loading animation sources…', 0, visibleLayers.length);
+		reportExportProgress(callbacks, 'loading', 0, '', 0, visibleLayers.length);
 		let loadingSourceCount = 0;
 		const loadingCallbacks = {
 			...callbacks,
@@ -1232,25 +1229,25 @@ class SceneCompositor {
 			},
 			onLayerLoaded: (current, total) => {
 				const layerShare = exportSettings.watermarkEnabled ? 0.45 : 0.9;
-				reportExportProgress(callbacks, 'loading', layerShare * (current / total), `Loaded layer sources ${current} / ${total}`, current, total);
+				reportExportProgress(callbacks, 'loading', layerShare * (current / total), '', current, total);
 			},
 			onSourceProgress: (detail, current, total) => {
 				const hasTotal = Number.isFinite(total) && total > 0;
 				const progress = hasTotal ? Math.min(1, current / total) : 0;
 				const isDecode = detail.startsWith('Decoding');
 				const ratio = isDecode ? 0.65 + (progress * 0.3) : 0.45 + (progress * 0.2);
-				reportExportProgress(callbacks, 'loading', ratio, detail, current, total, { indeterminate: !hasTotal });
+				reportExportProgress(callbacks, 'loading', ratio, '', 0, 0, { indeterminate: !hasTotal });
 			}
 		};
 		const context = await this._prepareExportContext({ ...params, visibleLayers, glitterGifs, canvasData, exportSettings, callbacks: loadingCallbacks });
 		const { proceduralSources } = context;
-		reportExportProgress(callbacks, 'loading', 1, 'Animation sources ready', visibleLayers.length, visibleLayers.length);
+		reportExportProgress(callbacks, 'loading', 1, '', visibleLayers.length, visibleLayers.length);
 
-		reportExportProgress(callbacks, 'masks', 0, 'Preparing layer masks…', 0, visibleLayers.length);
-		reportExportProgress(callbacks, 'masks', 1, 'Layer masks ready', visibleLayers.length, visibleLayers.length);
+		reportExportProgress(callbacks, 'masks', 0, '', 0, visibleLayers.length);
+		reportExportProgress(callbacks, 'masks', 1, '', visibleLayers.length, visibleLayers.length);
 
 		// Animation materializes authored frames on demand; still composition resolves one selected frame.
-		reportExportProgress(callbacks, 'planning', 0, 'Indexing animation frames…');
+		reportExportProgress(callbacks, 'planning', 0, '');
 		await this._yieldForProgress();
 		const resolutionSession = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
 		const { resolvedFramesBySource, authoredTimelines } = this._prepareAuthoredResolution(context, resolutionSession, exportSettings.frameDelay);
@@ -1267,7 +1264,7 @@ class SceneCompositor {
 		const sourceTimelines = [...authoredTimelines, ...this._createProceduralTimelines(proceduralSources)];
 
 		callbacks.onStatus('Planning animation timing...');
-		reportExportProgress(callbacks, 'planning', 0.5, 'Resolving source timing…');
+		reportExportProgress(callbacks, 'planning', 0.5, '');
 		ensureCanvasSize(this.helperCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.layerBlendCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.canvas, canvasData.width, canvasData.height);
@@ -1291,11 +1288,11 @@ class SceneCompositor {
 			hardFrameLimit: timelineConfig.hardFrameLimit,
 			onStatus: (detail) => {
 				callbacks.onStatus(detail);
-				reportExportProgress(callbacks, 'planning', 1, detail);
+				reportExportProgress(callbacks, 'planning', 1);
 			},
 			renderFrame: async (timestamp, frameSelection, candidateCount) => {
 				renderedCandidateCount++;
-				reportExportProgress(callbacks, 'composing', renderedCandidateCount / candidateCount, `Composing frame ${renderedCandidateCount} / ${candidateCount}`, renderedCandidateCount, candidateCount);
+				reportExportProgress(callbacks, 'composing', renderedCandidateCount / candidateCount, '', renderedCandidateCount, candidateCount);
 				const frame = await this._renderFrame({
 					outputFrameIndex: 0,
 					timestamp,
@@ -1332,11 +1329,10 @@ class SceneCompositor {
 			framesBeforeReduction: plan.renderClock.framesBeforeReduction,
 			framesAfterReduction: plan.renderClock.framesAfterReduction
 		});
-		if (!schedule) reportExportProgress(callbacks, 'reducing', 1, `Removed ${plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged} duplicate or near-duplicate frames`, plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
+		if (!schedule) reportExportProgress(callbacks, 'reducing', 1, '', plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
 		if (plan.reduction.budgetCompromiseRequired) {
 			const detail = 'The hard frame limit requires a quality compromise; no frames were silently truncated.';
 			callbacks.onStatus(detail);
-			reportExportProgress(callbacks, 'reducing', 1, detail);
 		}
 
 		return {
@@ -1360,14 +1356,14 @@ class SceneCompositor {
 		this.filterGrainTileCache.clear();
 		const context = params.preparedContext || await this.prepareContext(params);
 		const { visibleLayers, canvasData, exportSettings } = context;
-		callbacks.onProgress(0, 'Loading sources…', 0, visibleLayers.length, { phase: 'Preparing' });
+		reportExportProgress(callbacks, 'loading', 1, '', visibleLayers.length, visibleLayers.length);
 		const session = this.authoredFrameResolver.createSession({ isCancelled: callbacks.isCancelled });
 		const { resolvedFramesBySource, sourceSelectionMap } = this._resolveSelectedAuthored(context, session, timestamp, exportSettings.frameDelay);
 		const preserveAlpha = this._resolvePreserveAlpha(params.target?.supportsTransparency ?? true, exportSettings);
 		ensureCanvasSize(this.helperCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.layerBlendCanvas, canvasData.width, canvasData.height);
 		ensureCanvasSize(this.canvas, canvasData.width, canvasData.height);
-		callbacks.onProgress(45, 'Composing still frame…', 1, 1, { phase: 'Composing' });
+		reportExportProgress(callbacks, 'composing', 1, '', 1, 1);
 		const imageData = await this._renderFrame({
 			outputFrameIndex: 0,
 			timestamp,

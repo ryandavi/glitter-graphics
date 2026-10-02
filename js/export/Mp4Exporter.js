@@ -1,26 +1,6 @@
 // ============================================
 // MP4 EXPORT MANAGER CLASS
 // ============================================
-const MP4_EXPORT_PROGRESS_PHASES = Object.freeze({
-	loading: { label: 'Loading sources', start: 0, end: 8 },
-	masks: { label: 'Preparing masks', start: 8, end: 12 },
-	planning: { label: 'Planning timing', start: 12, end: 15 },
-	encoding: { label: 'Rendering / encoding', start: 15, end: 99 },
-	finalizing: { label: 'Finalizing', start: 99, end: 100 }
-});
-
-function reportMp4ExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phaseCurrent = 0, phaseTotal = 0) {
-	const phase = MP4_EXPORT_PROGRESS_PHASES[phaseKey];
-	const boundedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
-	callbacks.phaseTimer?.mark(phase.label);
-	callbacks.onProgress(phase.start + ((phase.end - phase.start) * boundedRatio), detail, phaseCurrent, phaseTotal, {
-		phase: phase.label,
-		detail,
-		phaseCurrent,
-		phaseTotal
-	});
-}
-
 class Mp4Exporter {
 	constructor(frameComposer, resultPresenter = (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null)) {
 		this.frameComposer = frameComposer;
@@ -64,6 +44,7 @@ class Mp4Exporter {
 	}
 
 	async process(params) {
+		params = { ...params, callbacks: { ...params.callbacks, progressFormat: 'mp4' } };
 		const { exportSettings, callbacks } = params;
 		const opaqueSettings = { ...exportSettings, transparency: false };
 		const { plan, renderScheduleEntry } = await this.frameComposer.planAnimation({
@@ -175,10 +156,10 @@ class Mp4Exporter {
 				outputIndex++;
 				timestampMs += outputFrame.duration;
 				if (encoder.encodeQueueSize > CONFIG.export.mp4.maxEncodeQueueSize) await encoder.flush();
-				reportMp4ExportProgress(callbacks, 'encoding', outputIndex / totalFrames, `Rendering / encoding MP4 frame ${outputIndex} / ${totalFrames}`, outputIndex, totalFrames);
+				reportExportProgress(callbacks, 'encoding', outputIndex / totalFrames, '', outputIndex, totalFrames);
 			}
 
-			reportMp4ExportProgress(callbacks, 'finalizing', 0, 'Finalizing MP4…');
+			reportExportProgress(callbacks, 'finalizing', 0);
 			await encoder.flush();
 			if (encoderError) throw encoderError;
 		} finally {
@@ -189,7 +170,7 @@ class Mp4Exporter {
 		const blob = new Blob(muxedChunks, { type: 'video/mp4' });
 		if (!blob.size) throw new Error('MP4 encoder produced an empty file.');
 
-		reportMp4ExportProgress(callbacks, 'finalizing', 1, 'Export complete');
+		reportExportProgress(callbacks, 'finalizing', 1, '');
 		plan.phaseTimings = callbacks.phaseTimer?.finish();
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({ smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan });

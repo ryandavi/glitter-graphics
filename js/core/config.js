@@ -763,7 +763,13 @@ const CONFIG = deepFreeze({
 		progress: {
 			yieldEveryFrames: 2,
 			slowPhaseNoticeMs: 2000,
-			timerRefreshMs: 500
+			timerRefreshMs: 500,
+			estimateAfterMs: 3000,
+			estimateAfterPercent: 10,
+			estimateIncreaseFactor: 2,
+			estimateIncreaseMarginMs: 15000,
+			almostDoneMs: 5000,
+			estimateRoundSeconds: 5
 		},
 		timeline: {
 			maxSamplingFps: 30,

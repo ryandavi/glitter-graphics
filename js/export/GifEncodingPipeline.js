@@ -184,7 +184,7 @@ class GifEncodingPipeline {
 		if (transparency?.enabled && transparency.ditherSoftEdges) {
 			frames = frames.map((frame) => this._ditherSoftEdges(frame, GIF_TRANSPARENCY_ALPHA_THRESHOLD));
 		}
-		reportProgress?.('palette', 0, 'Analyzing export colors');
+		reportProgress?.('palette', 0, '');
 		const frameCount = frames.length;
 		const width = frames[0].width;
 		const height = frames[0].height;
@@ -195,7 +195,7 @@ class GifEncodingPipeline {
 		const analysis = this._analyzeColors(frames, hasGifTransparency ? GIF_TRANSPARENCY_ALPHA_THRESHOLD : 1);
 		const colorCount = GifPalette.resolveColorCount(settings.colorCount, analysis);
 		const useNativePalette = !hasGifTransparency && settings.colorCount === 'auto' && !settings.ditherEnabled;
-		reportProgress?.('palette', 0.25, useNativePalette ? 'Preparing per-frame colors' : hasGifTransparency ? 'Building a transparent palette' : 'Choosing a shared palette');
+		reportProgress?.('palette', 0.25, '');
 
 		const sampleBudget = { maxSamples: settings.quality <= 1 ? 524288 : (settings.quality <= 10 ? 262144 : 131072) };
 		let globalPalette = null;
@@ -213,7 +213,7 @@ class GifEncodingPipeline {
 			globalPalette = GifPalette.build(frames, colorCount, { style: settings.paletteStyle, ...sampleBudget });
 		}
 
-		reportProgress?.('palette', 0.5, settings.ditherEnabled ? 'Applying the export palette…' : 'Palette ready');
+		reportProgress?.('palette', 0.5, '');
 		const frameSettings = {
 			...settings,
 			ditherTemporalMode: mode === 'still' ? 'stable' : settings.ditherTemporalMode,
@@ -250,26 +250,34 @@ class GifEncodingPipeline {
 			gif.addFrame(preparedFrame, { delay: delays[index], copy: true });
 			frames[index] = null;
 			preparedFrame = null;
-			reportProgress?.('palette', 0.5 + ((index + 1) / frameCount * 0.5), `Preparing frame ${index + 1} / ${frameCount}`, index + 1, frameCount);
+			reportProgress?.('palette', 0.5 + ((index + 1) / frameCount * 0.5), '', index + 1, frameCount);
 			if (index + 1 < frameCount && (index + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
 				await yieldForExportProgress();
 			}
 		}
-		reportProgress?.('palette', 1, `Palette ready for ${frameCount} frames`, frameCount, frameCount);
+		reportProgress?.('palette', 1, '', frameCount, frameCount);
 		return new Promise((resolve, reject) => {
-			gif.on('error', (error) => reject(new Error(`GIF encoding failed: ${error.message}`)));
-			gif.on('abort', () => reject(new Error('Export cancelled')));
+			const cancelTimer = window.setInterval(() => {
+				if (isCancelled?.()) gif.abort();
+			}, CONFIG.export.progress.timerRefreshMs);
+			const stop = () => clearInterval(cancelTimer);
+			gif.on('error', (error) => { stop(); reject(new Error(`GIF encoding failed: ${error.message}`)); });
+			gif.on('abort', () => { stop(); reject(new Error('Export cancelled')); });
 			gif.on('progress', (progress) => {
 				if (isCancelled?.()) { gif.abort(); return; }
 				try {
-					reportProgress?.('encoding', progress, `Encoding… ${Math.round(progress * 100)}%`, Math.round(progress * frameCount), frameCount);
+					reportProgress?.('encoding', progress, '', Math.round(progress * frameCount), frameCount);
 				} catch (error) {
 					gif.abort();
 					reject(error);
 				}
 			});
-			gif.on('finished', (blob) => resolve({ blob, analysis, paletteSize: colorCount, paletteMode, transparencyUsed: hasGifTransparency }));
-			gif.render();
+			gif.on('finished', (blob) => {
+				stop();
+				if (isCancelled?.()) reject(new Error('Export cancelled'));
+				else resolve({ blob, analysis, paletteSize: colorCount, paletteMode, transparencyUsed: hasGifTransparency });
+			});
+			try { gif.render(); } catch (error) { stop(); reject(error); }
 		});
 	}
 }

@@ -463,6 +463,15 @@ $mobile-breakpoint: 800px;
 	}
 }
 
+@mixin gloss-gradient {
+	background-image: var(--btn-gradient, linear-gradient(to bottom,
+				var(--btn-gradient-start) 0%,
+				var(--btn-gradient-mid) 40%,
+				var(--btn-gradient-dark) 50%,
+				var(--btn-gradient-dark) 70%,
+				var(--btn-gradient-end) 100%));
+}
+
 // The app's default button chrome: a gloss gradient painted by :before, with
 // every color and state effect routed through :root tokens (--btn-gradient-*,
 // --btn-*-filter, --btn-text-color, --btn-icon-opacity) so themes restyle
@@ -497,12 +506,7 @@ $mobile-breakpoint: 800px;
 		transition: filter var(--transition-base);
 		// --btn-gradient overrides the whole image (era themes with their own
 		// gloss geometry); the four stop tokens drive the default shape.
-		background-image: var(--btn-gradient, linear-gradient(to bottom,
-				var(--btn-gradient-start) 0%,
-				var(--btn-gradient-mid) 40%,
-				var(--btn-gradient-dark) 50%,
-				var(--btn-gradient-dark) 70%,
-				var(--btn-gradient-end) 100%));
+		@include gloss-gradient;
 	}
 
 	// Before :hover so hovering a toggled button still gives hover feedback.

@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=8d022aa5">
+	<link rel="stylesheet" href="css/style.css?v=36fc66fb">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -598,14 +598,14 @@
 	</div>
 
 	<!-- Export Progress -->
-	<div class="export-progress" id="exportProgress">
-		<div class="export-progress-bar" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+	<div class="export-progress ui-ignore-gestures" id="exportProgress">
+		<div class="export-progress-heading"><span id="exportProgressText"></span><span id="exportProgressPercent"></span></div>
+		<div class="export-progress-bar" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100">
 			<div class="export-progress-fill" id="exportProgressFill"></div>
 		</div>
-		<div class="export-progress-text" id="exportProgressText" aria-live="polite">Preparing...</div>
-		<div class="export-progress-detail" id="exportProgressDetail"></div>
-		<div class="export-progress-time" id="exportProgressTime"></div>
-		<button class="btn export-progress-cancel" id="exportProgressCancel">Cancel</button>
+		<div class="export-progress-status"><span id="exportProgressDetail"></span><span id="exportProgressTime"></span></div>
+		<span class="export-progress-announcement" id="exportProgressAnnouncement" aria-live="polite" aria-atomic="true"></span>
+		<button class="btn-text-with-icon export-progress-cancel" id="exportProgressCancel">Cancel</button>
 	</div>
 
 	<!-- Error Toast -->
@@ -1723,7 +1723,7 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=8b996878"></script>
 	<script src="js/core/fields.js?v=193ed04e"></script>
-	<script src="js/core/config.js?v=72a6fe19"></script>
+	<script src="js/core/config.js?v=6bd88bd5"></script>
 	<script src="js/core/tools.js?v=c227988f"></script>
 	<script src="js/core/layer-types.js?v=ca933e82"></script>
 	<script src="js/core/options.js?v=9adc5663"></script>
@@ -1826,14 +1826,15 @@
 	<script src="js/export/ExportTimeline.js?v=ca9a59d7"></script>
 	<script src="js/export/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/export/AuthoredFrameResolver.js?v=3139d2c3"></script>
-	<script src="js/export/GifEncodingPipeline.js?v=8e4c8aeb"></script>
+	<script src="js/export/GifEncodingPipeline.js?v=2630fa47"></script>
 	<script src="js/systems/AnimationTicker.js?v=1d5c50aa"></script>
 	<script src="js/systems/AnimationPanelController.js?v=9f26a93a"></script>
+	<script src="js/export/ExportProgressPresenter.js?v=ee86d95b"></script>
 	<script src="js/export/ExportResultPresenter.js?v=b8b4805d"></script>
-	<script src="js/export/SceneCompositor.js?v=9330f09c"></script>
+	<script src="js/export/SceneCompositor.js?v=b263cc27"></script>
 	<script src="js/export/GifExporter.js?v=a8b353be"></script>
-	<script src="js/export/StillImageExporter.js?v=f8bbe2d7"></script>
-	<script src="js/export/Mp4Exporter.js?v=6ec22c38"></script>
+	<script src="js/export/StillImageExporter.js?v=db91e046"></script>
+	<script src="js/export/Mp4Exporter.js?v=fad94586"></script>
 	<script src="js/systems/PixelGridOverlay.js?v=f8614a9b"></script>
 	<script src="js/transforms/selection-overlay.js?v=73c30c00"></script>
 	<script src="js/transforms/transform-gestures.js?v=5b9f9908"></script>
@@ -1874,7 +1875,7 @@
 		<script src="js/systems/MobileManager.js?v=2031c7b5"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=5bafbb7a"></script>
+	<script src="js/app.js?v=5201f4ca"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.
