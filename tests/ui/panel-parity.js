@@ -204,7 +204,7 @@ const LAYER_SETUPS = {
 			if (allLookOptions[0]?.dataset.presetId !== 'basic' || allLookOptions.at(-1)?.dataset.presetId !== 'instagram:hefe' || allLookOptions.some((option) => option.dataset.presetId === 'instagram')) throw new Error('Flattened Filter look order is incorrect');
 			if (!document.getElementById('filterLooksPicker').closest('.property-card')) throw new Error('Looks grid is not grouped inside the Looks card');
 			if (!document.getElementById('filterLooksPicker').classList.contains('property-scrollbox')) throw new Error('Looks grid is missing the shared preset scrollbox');
-			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Opacity') throw new Error('Filter opacity does not use the shared label');
+			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Layer Opacity') throw new Error('Filter opacity does not use the shared label');
 			if (!document.getElementById('filterStrengthValue')?.textContent.endsWith('%')) throw new Error('Instagram strength unit is missing');
 			editor.filterLayerManager.chooseLook(GlitterFilters.looksLibrary.get('tint'));
 			const filterUnits = ['filterTintAmountValue'].map((id) => document.getElementById(id)?.textContent);

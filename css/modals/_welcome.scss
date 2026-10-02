@@ -1,0 +1,399 @@
+@use '../mixins' as *;
+
+/* ===== WELCOME MODAL ===== */
+#welcomeModal {
+	.modal-hero-image {
+		background: url("../images/glitter/sparkle/glitter_rainbow.gif") repeat;
+	}
+
+	.center {
+		display: block;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.figure-wrapper+h3,
+	p+h3,
+	ol+h3,
+	ul+h3 { margin-top: var(--spacing-xl); }
+
+	p+p { margin-top: var(--spacing-md); }
+
+	h3+p,
+	h3+ol,
+	h3+ul,
+	ol+p,
+	ul+p,
+	p+ol,
+	p+ul { margin-top: var(--spacing-md); }
+
+	.welcome-actions {
+		display: flex;
+		flex-flow: row wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-md);
+		margin-left: auto;
+	}
+
+	.modal-footer {
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+
+	.welcome-checkbox {
+		display: inline-flex;
+		align-items: center;
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		-webkit-user-select: none;
+		user-select: none;
+
+		// Hidden while startup Welcome is gated off; must beat the per-layout
+		// display rules for both the footer and mobile copies.
+		&[hidden] { display: none !important; }
+
+		>input[type="checkbox"] {
+			@include visually-hidden-control;
+
+			&:checked+span {
+				color: var(--color-text-primary);
+				outline-color: var(--color-accent);
+				background: var(--color-bg-accent-tint);
+			}
+
+			&:focus-visible+span { box-shadow: var(--control-focus-ring); }
+		}
+
+		>span {
+			display: inline-flex;
+			align-items: center;
+			min-height: var(--control-height);
+			padding: 0 var(--spacing-md);
+			border-radius: var(--radius-sm);
+			outline: 1px solid transparent;
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-secondary);
+			transition: color var(--transition-fast), background-color var(--transition-fast), outline-color var(--transition-fast);
+
+			&:hover {
+				color: var(--color-text-primary);
+				outline-color: var(--color-border-hover);
+			}
+		}
+	}
+
+	.welcome-checkbox-mobile {
+		display: none;
+	}
+
+	@include mobile {
+		.modal-footer {
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.welcome-actions {
+			order: 1;
+			width: 100%;
+			margin-left: 0;
+
+			>button {
+				flex: 1 0 0;
+				justify-content: center;
+				min-width: 0;
+				min-height: var(--touch-target-min);
+			}
+		}
+
+		.welcome-checkbox {
+			order: 2;
+			align-self: center;
+		}
+	}
+
+	@media (max-width: 420px) {
+		.welcome-actions {
+			flex-direction: column;
+			>button { width: 100%; }
+		}
+	}
+}
+
+#confirmationModal {
+	@include mobile {
+		.modal-content { width: min(420px, calc(100vw - 24px)); }
+
+		.modal-footer {
+			flex-direction: column-reverse;
+			align-items: stretch;
+
+			>button {
+				width: 100%;
+				min-height: 48px;
+			}
+		}
+	}
+}
+
+// Release notes use the same document hierarchy in Welcome and About. Each
+// entry is the app's shared "Advanced disclosure" primitive (see
+// .advanced-disclosure in _components.scss and disclosures.js) rather than a
+// bespoke accordion, so it collapses/expands, chevron included, for free.
+#welcomeModal,
+#aboutModal {
+	.version-history {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.version-history-entry {
+		margin-top: 0;
+
+		&:first-child { border-top: 0; }
+	}
+
+	.version-history-toggle {
+		padding: var(--spacing-md) 0;
+		align-items: baseline;
+		text-align: left;
+	}
+
+	.version-history-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--spacing-md);
+		flex: 1 1 auto;
+		min-width: 0;
+		flex-wrap: wrap;
+	}
+
+	.version-history-title {
+		color: var(--color-text-primary);
+		font-weight: 600;
+	}
+
+	.version-history-header time {
+		// font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
+	}
+
+	.version-history-content {
+		padding-bottom: var(--spacing-md);
+
+		>ul {
+			margin-top: var(--spacing-sm);
+		}
+	}
+
+	.version-history-current {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.version-history-image {
+		margin-top: var(--spacing-md);
+
+		>img {
+			display: block;
+			max-width: 100%;
+			height: auto;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+		}
+	}
+
+	.version-history-feature + .version-history-feature {
+		margin-top: var(--spacing-xs);
+	}
+
+	// Change-type badge. Built on the shared `.badge` primitive; only the
+	// status color varies, and it comes from the shared status tokens so the
+	// three types stay legible across every interface theme.
+	.version-history-badge {
+		margin-right: var(--spacing-xs);
+		vertical-align: baseline;
+
+		&.is-added { border-color: var(--color-success); color: var(--color-success); }
+		&.is-changed { border-color: var(--color-accent-border); color: var(--color-accent); }
+		&.is-fixed { border-color: var(--color-warning-border); color: var(--color-warning); }
+	}
+
+	.version-history-guide-link {
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		font-size: var(--font-size-xs);
+		color: var(--color-accent);
+		text-decoration: underline;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover,
+		&:focus-visible { color: var(--color-text-primary); }
+	}
+
+	.version-history-format-note {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+	}
+
+	.version-history-more-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-lg);
+		margin-top: var(--spacing-md);
+	}
+}
+
+// Optional support link. Deliberately quiet: it sits at the end of content the
+// reader already chose to open, and never competes with a primary action.
+.support-note {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.export-support-note {
+	margin-top: var(--spacing-md);
+	padding-top: var(--spacing-md);
+	border-top: 1px solid var(--color-border);
+	font-size: var(--font-size-xs);
+	text-align: center;
+}
+
+.modal-content {
+	h2 { font-size: var(--font-size-2xl); }
+	h3 { font-size: var(--font-size-xl); }
+	h4 { font-size: var(--font-size-lg); }
+	h5 { font-size: var(--font-size-md); }
+	h6 { font-size: var(--font-size-base); }
+
+	.figure-gallery {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+		grid-auto-rows: 1fr;
+		gap: var(--spacing-md);
+		margin: var(--spacing-lg) 0;
+
+		>figure {
+			display: flex;
+			flex-direction: column;
+			width: 100%;
+			height: 100%;
+			min-width: 0;
+			padding: var(--spacing-md);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background: var(--color-bg-tertiary);
+
+			>img {
+				display: block;
+				width: 100%;
+				height: 100%;
+				max-height: 300px;
+				object-fit: contain;
+				image-rendering: pixelated;
+			}
+
+			>figcaption {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-xs);
+				margin-top: var(--spacing-md);
+				font-size: var(--font-size-sm);
+				line-height: 1.4;
+
+				>cite {
+					font-style: normal;
+					font-weight: 600;
+					letter-spacing: 0.01em;
+				}
+
+				>.figure-description { color: var(--color-text-secondary); }
+
+				>.figure-credit {
+					margin-top: var(--spacing-xs);
+					color: var(--color-text-tertiary);
+					font-size: var(--font-size-xs);
+					opacity: 0.85;
+				}
+			}
+		}
+
+		@include mobile {
+			grid-template-columns: 1fr;
+
+			>figure { padding: var(--spacing-sm); }
+		}
+	}
+
+	.figure-gallery-userbars { grid-template-columns: 1fr; }
+
+	.figure-wrapper:not(.figure-gallery) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		max-width: 100%;
+		margin: var(--spacing-lg) 0;
+
+		>figure {
+			display: inline-block;
+			box-sizing: border-box;
+			min-width: 0;
+			max-width: 80%;
+			padding: var(--spacing-md);
+			overflow: hidden;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background-color: var(--color-bg-tertiary);
+
+			>img {
+				display: block;
+				width: 100%;
+				max-width: 100%;
+				height: auto;
+				image-rendering: pixelated;
+			}
+
+			>figcaption {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-xs);
+				margin-top: var(--spacing-md);
+				font-size: var(--font-size-sm);
+				line-height: 1.4;
+
+				>cite {
+					font-style: normal;
+					font-weight: 600;
+					letter-spacing: 0.01em;
+				}
+
+				>.figure-description {
+					color: var(--color-text-secondary);
+				}
+
+				>.figure-credit {
+					margin-top: var(--spacing-xs);
+					color: var(--color-text-tertiary);
+					font-size: var(--font-size-xs);
+					opacity: 0.85;
+				}
+			}
+		}
+
+		// Unusually tall figures: cap the height and let the width follow the
+		// intrinsic aspect ratio instead of the default width: 100% stretch.
+		&.figure-wrapper-contained>figure>img {
+			width: 100%;
+			height: 100%;
+			max-height: 500px;
+			object-fit: contain;
+			margin-inline: auto;
+		}
+	}
+}

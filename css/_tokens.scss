@@ -224,7 +224,6 @@
 
 	--opacity-disabled: .4;
 	--opacity-dragging: .5;
-	--disabled-opacity: var(--opacity-disabled);
 
 	/* Spacing */
 	--spacing-2xs: 2px;
@@ -294,7 +293,6 @@
 	   height everywhere: sidebar action rows, modal footers, workspace card. */
 	--button-height: var(--control-height-comfortable);
 	--control-padding-inline: var(--spacing-md);
-	--control-radius: var(--radius-sm);
 	--control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
 	--touch-target-min: 44px;
 	--header-height: 50px;

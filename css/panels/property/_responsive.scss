@@ -1,0 +1,63 @@
+// ===== Responsive: container queries, never media queries ==================
+// The `propertypanel` container is `.settings-subsection` (_sections.scss).
+// The sidebar is resizable and the same DOM renders in the mobile drawer, so
+// the panel's own width decides the layout.
+
+// The label column earns more room as the panel widens, so "Combine Similar"
+// or "Layer Opacity" stop truncating on a resized-wide panel. Set on the row
+// so it outranks the section's default.
+@container propertypanel (min-width: 320px) {
+	.property-panel :is(.property-row, .property-pair-cell) { --property-label-col: 92px; }
+}
+
+@container propertypanel (min-width: 400px) {
+	.property-panel :is(.property-row, .property-pair-cell) { --property-label-col: 118px; }
+}
+
+@container propertypanel (min-width: 480px) {
+	.property-panel :is(.property-row, .property-pair-cell) { --property-label-col: 144px; }
+}
+
+// Pairs stack (label over inputs) only when the panel is too narrow for a
+// label column plus two fields, well below the default width.
+@container propertypanel (max-width: 240px) {
+	.property-panel .property-row.is-pair {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--spacing-2xs);
+		padding-top: var(--spacing-2xs);
+		padding-bottom: var(--spacing-2xs);
+
+		> .property-label,
+		> .property-pair { grid-column: 1 / -1; }
+
+		> .property-revert {
+			grid-column: 1 / -1;
+			justify-self: end;
+		}
+
+		> .property-revert.is-placeholder { display: none; }
+	}
+
+	.property-panel .property-pair,
+	.property-panel .transform-pair-row > .number-field-pair {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	// Once a slider pair stacks, each cell becomes a normal row so its track
+	// and readout line up with every other R1 property.
+	.property-pair-cell {
+		grid-template-columns:
+			var(--property-label-col)
+			minmax(0, 1fr)
+			var(--property-value-col)
+			var(--property-revert-col);
+		gap: var(--spacing-sm);
+
+		> .property-pair-mark {
+			font-family: inherit;
+			font-size: var(--font-size-sm);
+		}
+
+		> .property-value { font-size: var(--font-size-sm); }
+	}
+}

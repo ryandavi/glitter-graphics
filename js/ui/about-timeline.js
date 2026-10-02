@@ -113,7 +113,7 @@ function initPreservationTimeline(modalBody) {
 
 	// The panel has a fixed height, so every row of filter chrome comes out of
 	// the list. Start collapsed where the controls stack (the same 600px
-	// breakpoint as the stacked grid in _modals.scss); on wider screens they
+	// breakpoint as the stacked grid in css/modals/_documents.scss); on wider screens they
 	// fit on one row and stay open. The toggle carries the active-filter count
 	// so a collapsed toolbar never hides that filters are applied.
 	filtersToggle.appendChild(createIcon('magnifying-glass'));

@@ -1,0 +1,43 @@
+@use '../mixins' as *;
+
+/* ===== STICKER UPLOAD MODAL ===== */
+#stickerUploadModal {
+	.upload-dropzone {
+		border: 2px dashed var(--color-border-hover);
+		border-radius: var(--radius-lg);
+		padding: var(--spacing-xl);
+		text-align: center;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), border-color var(--transition-fast);
+		background: var(--color-bg-secondary);
+
+		&:hover {
+			border-color: var(--color-accent);
+			background: var(--color-bg-tertiary);
+		}
+
+		&.drag-over {
+			border-color: var(--color-accent);
+			background: var(--color-bg-accent-tint);
+			border-style: solid;
+		}
+
+		.dropzone-content {
+			@include centered-column;
+		}
+
+		.dropzone-icon {
+			opacity: 0.5;
+		}
+
+		.dropzone-text {
+			font-size: var(--font-size-md);
+			color: var(--color-text-secondary);
+		}
+
+		.dropzone-subtext {
+			@include text-sm;
+			color: var(--color-text-tertiary);
+		}
+	}
+}

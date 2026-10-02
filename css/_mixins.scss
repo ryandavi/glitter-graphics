@@ -268,7 +268,7 @@ $mobile-breakpoint: 800px;
 	min-height: var(--control-height);
 	padding: $padding;
 	border: 1px solid var(--color-border);
-	border-radius: var(--control-radius);
+	border-radius: var(--radius-control);
 	background: $background;
 	color: var(--color-text-primary);
 	font-size: $font-size;
@@ -301,7 +301,7 @@ $mobile-breakpoint: 800px;
 @mixin flat-control($min-height: var(--control-height)) {
 	min-height: $min-height;
 	border: 1px solid var(--color-border);
-	border-radius: var(--control-radius);
+	border-radius: var(--radius-control);
 	background: var(--color-bg-secondary);
 	box-shadow: none;
 	filter: none;
@@ -523,7 +523,7 @@ $mobile-breakpoint: 800px;
 	}
 
 	&:disabled {
-		opacity: var(--disabled-opacity);
+		opacity: var(--opacity-disabled);
 		cursor: not-allowed;
 	}
 

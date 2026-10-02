@@ -336,6 +336,8 @@ function expandHelper(remaining, offset, ctx, flags) {
 		// archive-service is a bare service link (oocities.org), not an archive-link capture.
 		const classes = [kind === 'external' ? 'external' : kind === 'archive-service' ? 'external archive-service' : `external archive-link ${kind}`];
 		if (preservation) classes.push('preservation-copy');
+		// A site logo inside the link text replaces the external-link arrow.
+		if (/class="entity[^"]*"[^>]*data-icon=/u.test(expanded)) classes.push('has-entity-icon');
 		const attributes = [];
 		if (slug) {
 			if (!ctx.entities[slug]) {
@@ -423,6 +425,7 @@ function expandHelper(remaining, offset, ctx, flags) {
 		if (hoisted) ({ slug, body } = hoisted);
 		const expanded = expandText(body, offset + openLength, ctx, { ...flags, noGloss: true, noCard: true });
 		const classes = ['external', 'dead-link', state];
+		if (/class="entity[^"]*"[^>]*data-icon=/u.test(expanded)) classes.push('has-entity-icon');
 		const attributes = [];
 		if (host) {
 			if (!ctx.entities[host]) reportMissing(ctx, offset, 'slug-unknown', `Unknown host "${host}".`);

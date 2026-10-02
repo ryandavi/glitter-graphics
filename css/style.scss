@@ -21,10 +21,29 @@
 @use 'panels/layer-picker';
 @use 'processing-status';
 @use 'assets';
-// LAST of the panel sheets on purpose: this file is the single owner of the
-// property vocabulary, so it has to win the cascade against the feature sheets
-// (assets, effects) that still carry legacy declarations. The redesign
-// grouping vocabulary now lives at the top of THIS file.
-@use 'panels/properties';
-@use 'modals';
+// LAST of the panel sheets on purpose: the property vocabulary has to win the
+// cascade against the feature sheets above it.
+@use 'panels/property/tokens' as property-tokens;
+@use 'panels/property/typography';
+@use 'panels/property/rows';
+@use 'panels/property/fields';
+@use 'panels/property/sections';
+@use 'panels/property/modules';
+@use 'panels/property/asset-summary';
+@use 'panels/property/transform';
+@use 'panels/property/widgets';
+@use 'panels/property/regions';
+@use 'panels/property/responsive';
+@use 'modals/shell' as modal-shell;
+@use 'modals/forms' as modal-forms;
+@use 'modals/new-canvas';
+@use 'modals/export-ready';
+@use 'modals/welcome' as modal-welcome;
+@use 'modals/entities';
+@use 'modals/documents' as modal-documents;
+@use 'modals/shortcuts' as modal-shortcuts;
+@use 'modals/guide' as modal-guide;
+@use 'modals/settings' as modal-settings;
+@use 'modals/sticker-upload';
+@use 'modals/responsive' as modal-responsive;
 @use 'mobile';

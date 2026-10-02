@@ -159,7 +159,7 @@
 
 		.context-toolbar-handle { display: none; }
 		.context-slider { width: clamp(64px, 24vw, 88px); }
-		.context-checkbox-group { padding-inline: var(--spacing-xs); }
+		.context-toggle-face { padding-inline: var(--spacing-xs); }
 		.context-label { font-size: var(--font-size-xs); }
 	}
 
@@ -220,7 +220,7 @@
 				@include gloss-button(true);
 
 				&:disabled {
-					opacity: var(--disabled-opacity);
+					opacity: var(--opacity-disabled);
 					cursor: not-allowed;
 				}
 

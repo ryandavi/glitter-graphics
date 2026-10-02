@@ -31,8 +31,6 @@
 	label[hidden] { display: none; }
 }
 
-.brush-dynamic-pair:has(> [hidden]) > :not([hidden]) { grid-column: 1 / -1; }
-
 .brush-settings-section .checkbox-list-content .property-set-label { margin-bottom: var(--spacing-sm); }
 
 .brush-shape-option {

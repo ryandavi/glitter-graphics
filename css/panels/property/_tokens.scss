@@ -1,0 +1,67 @@
+// ===========================================================================
+// PROPERTY PANEL SYSTEM
+// ---------------------------------------------------------------------------
+// The property vocabulary: the design sidebar, the mobile drawer and the form
+// modals all render it. One partial per concern, all in this folder:
+//
+//   _tokens       the panel's geometry, declared once (this file)
+//   _typography   the type levels
+//   _rows         the row types, the revert, the value readout
+//   _fields       controls inside a row: segmented, select, number, color
+//   _sections     groups, cards, sets, actions, the Advanced disclosure
+//   _modules      a card whose header enables or summarizes it
+//   _asset-summary, _transform, _widgets   the composed pieces
+//   _regions      sticky header / scroll / footer sections
+//   _responsive   container queries
+//
+//   R1 .property-row              label | control | value | revert   (default)
+//   R2 .property-row.is-stacked   label+value, control full width
+//   R3 .property-row.is-pair      two properties reading as one value
+//   R4 .property-row.is-toggle    label | switch
+//   R5 .panel-module              one line collapsed, editor beneath
+//   R6 .property-actions          buttons, at the end of their block
+//   R7 .property-note             helper text, status, empty state
+//
+// Rules the partials hold to:
+//   - Spacing between siblings is the parent's `gap`, or an explicit
+//     `a + b { margin-top }`. Never a bare margin on a child: it survives when
+//     the neighbour is hidden and leaves phantom space.
+//   - Horizontal inset is owned by rows and headers only. Bodies, sets and
+//     cards never add horizontal padding (`tools/gutter-check.js` enforces it).
+//   - State is a class or attribute the renderer stamps (`.is-off`,
+//     `.is-vacant`, `.is-unset`), never a `:has()` that sniffs structure.
+//   - Uppercase is the group label's alone.
+//   - A revert sits at the right edge of what it reverts, never its own row.
+// ===========================================================================
+
+// `.property-panel` is a whole surface (sidebar, drawer, form-modal body);
+// `.property-section` is one schema-rendered section inside it. Both carry the
+// tokens so a section also works on a surface that is not a panel.
+.property-panel,
+.property-section {
+	// ---- geometry --------------------------------------------------------
+	--property-row-h: 26px;
+	// Every interactive control in a row: segmented, select, number, text,
+	// color, the value readout. Switches keep their own geometry.
+	--property-control-height: 32px;
+	// The inset of every boxed container, and of a card from the panel wall.
+	--property-pad: 8px;
+	// The inset rows and headers apply. A card narrows it for its own rows.
+	--property-gutter: 16px;
+	--property-row-gap: 4px;
+	--property-field-gap: 5px;
+
+	// ---- the row grid ----------------------------------------------------
+	--property-label-col: 76px;
+	--property-value-col: auto;
+	--property-revert-col: 16px;
+
+	// ---- radii, concentric: each nested step is one smaller ---------------
+	--property-r-card: var(--radius-card);
+	--property-r-field: var(--radius-control);
+	--property-r-inner: var(--radius-inner);
+
+	// ---- switch ----------------------------------------------------------
+	--switch-w: 30px;
+	--switch-h: 16px;
+}

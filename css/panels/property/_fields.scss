@@ -1,0 +1,218 @@
+@use '../../mixins' as *;
+
+// ===== Controls inside a row ===============================================
+// Every control is one height (`--property-control-height`) and one radius
+// (`--property-r-field`).
+
+// ----- Slider -------------------------------------------------------------
+// The global range input is 32px tall for a 16px thumb, which parks dead space
+// above and below every track. Here the box matches the control's visual
+// weight; coarse pointers get the taller target back.
+.property-panel input[type="range"] { height: 20px; }
+
+@media (pointer: coarse) {
+	.property-panel input[type="range"] { height: 28px; }
+}
+
+// ----- Segmented ----------------------------------------------------------
+// One connected, non-wrapping row filling its slot.
+.property-panel .segmented-control {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	width: 100%;
+	height: var(--property-control-height);
+	min-height: var(--property-control-height);
+	max-height: var(--property-control-height);
+	margin-inline: 0;
+	box-sizing: border-box;
+	border-radius: var(--property-r-field);
+	overflow: hidden;
+
+	> .segmented-option {
+		display: flex;
+		flex: 1 1 0;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		height: 100%;
+		min-height: 0;
+		padding-inline: var(--spacing-xs);
+		box-sizing: border-box;
+		overflow: hidden;
+		font-size: 11px;
+		line-height: 1;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		> span {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+		}
+
+		// The glyph sits on the filled segment.
+		&.active > svg.icon { color: var(--color-white, #fff); }
+	}
+}
+
+// An option that wraps its own input (a radio group, the flip checkboxes):
+// the span after the input fills the option and carries the input's checked
+// and focus states, so no script has to mirror them onto the label.
+.property-panel .segmented-control > label.segmented-option {
+	position: relative;
+	padding: 0;
+
+	> input {
+		@include visually-hidden-control;
+		pointer-events: none;
+	}
+
+	> span {
+		padding-inline: var(--spacing-xs);
+		box-sizing: border-box;
+	}
+
+	> input:focus-visible + span { box-shadow: inset var(--control-focus-ring); }
+}
+
+// A larger set of choices is a grid of separate buttons, not a wrapped
+// segmented control. auto-fill keeps empty tracks, so an incomplete last row
+// does not stretch its final option.
+.property-panel .segmented-control.choice-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(96px, 100%), 1fr));
+	gap: var(--spacing-xs);
+	height: auto;
+	max-height: none;
+	border: 0;
+	border-radius: 0;
+	overflow: visible;
+
+	> .segmented-option {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+
+		& + .segmented-option { border-left: 1px solid var(--color-border); }
+	}
+}
+
+// A segmented control sitting directly in a body or a set, not in a row,
+// takes the gutter itself because nothing else supplies it.
+.property-panel :is(.subsection-card-body, .paint-slot-main, .subsection-content, .property-set) > .segmented-control {
+	width: auto;
+	margin-inline: var(--property-gutter);
+}
+
+// ----- Select -------------------------------------------------------------
+.property-section {
+	:is(select, .property-select, .property-select-control, .input-group.horizontal) {
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
+		box-sizing: border-box;
+	}
+
+	select {
+		min-width: 0;
+		padding-block: 0;
+		line-height: 22px;
+	}
+
+	.property-select-control { min-width: 0; }
+
+	.property-select {
+		width: 100%;
+		max-height: var(--property-control-height);
+		padding: 0 28px 0 var(--property-pad);
+		border-radius: var(--property-r-field);
+		font-size: 12px;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	// The segmented options a select proxies stay in the DOM as the managers'
+	// click targets, out of sight.
+	.property-select-hooks {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		opacity: 0;
+		pointer-events: none;
+
+		> .segmented-option {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			border: 0;
+		}
+	}
+}
+
+// ----- Text and number fields ----------------------------------------------
+.property-section .property-row {
+	> .input-unit > input,
+	> input[type="text"],
+	> input[type="number"] {
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
+		box-sizing: border-box;
+	}
+}
+
+// Number pairs (X/Y, W/H) must be able to shrink: a flex item's intrinsic
+// width plus its unit suffix otherwise pushes the second field off the panel.
+.property-panel .number-field-pair {
+	gap: var(--spacing-sm);
+	min-width: 0;
+
+	> .input-group {
+		min-width: 0;
+
+		> .input-unit { min-width: 0; }
+
+		> .input-unit > input[type="number"],
+		> input[type="number"] {
+			min-width: 0;
+			width: 100%;
+		}
+	}
+}
+
+.property-section {
+	.input-group.horizontal {
+		> .input-unit,
+		input[type="number"] {
+			height: 100%;
+			min-height: 0;
+			box-sizing: border-box;
+		}
+	}
+
+	// A one-field pair (document Scale) aligns under the first column.
+	.number-field-pair.is-single { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.number-field-pair.is-single > .input-group { grid-column: 1; }
+}
+
+// ----- Color ---------------------------------------------------------------
+.property-section .property-color-row {
+	display: grid;
+	grid-template-columns:
+		var(--property-label-col)
+		minmax(0, 1fr)
+		var(--property-value-col)
+		var(--property-revert-col);
+	gap: var(--property-field-gap);
+
+	> input[type="color"],
+	> .color-input-with-eyedropper {
+		grid-column: 2 / -2;
+		justify-self: stretch;
+		width: 100%;
+		height: var(--property-control-height);
+	}
+}

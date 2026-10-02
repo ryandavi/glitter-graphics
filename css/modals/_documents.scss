@@ -1,0 +1,698 @@
+@use '../mixins' as *;
+
+/* ===== DOCUMENT MODALS (About, History, Personal Web, Preservation) =====
+   These share one prose/timeline/reference stylesheet since all use the same
+   "long-form document" shape; only the content differs. A modal opts in with
+   the .document-modal class on its overlay (see index.html), so adding another
+   document needs no change here. The Guide keeps its own #guideModal rules. */
+.modal-overlay.document-modal {
+
+	// The app-wide `* { user-select: none }` only re-enables p and span, which
+	// leaves dates, links, bold text, list items and table cells unselectable.
+	// A document is for reading and quoting, so all of its text selects.
+	.modal-body,
+	.modal-body * {
+		-webkit-user-select: text;
+		user-select: text;
+	}
+
+	// An inline, button-based "text link" for jumping to another document
+	// modal from prose (see js/ui/doc-modal.js initModalCrossLinks). Unlike
+	// .version-history-guide-link above, this sits inside normal paragraph
+	// text, so it inherits size instead of running small.
+	.doc-inline-link {
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		color: var(--color-accent);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible { color: var(--color-text-primary); }
+	}
+
+	// A logo belongs to a name: only a link whose text is a site (or the
+	// platform) carries one, never a link that merely points at that domain.
+	// Where the logo shows (see .entity[data-icon]) it replaces the
+	// external-link arrow, so a link has one mark.
+	li:not(.toc li) > a.external:is([data-icon], .has-entity-icon) {
+		padding-right: 0;
+
+		&::after { content: none; }
+	}
+
+	// no whitespace in reference
+
+	ol,ul {
+		a.external {
+			white-space: unset!important;
+		}
+	}
+	
+
+	// A page that's gone (tools/build-modals.js {dead}). It still links, to its
+	// Wayback capture or the list of captures, so it reads as a quieter link
+	// with a rewind-clock mark in place of the external arrow. Striking it
+	// through would say "don't click". The state (host-closed, page-offline...)
+	// and data-host stay on the element as hooks; the tooltip says why.
+	.dead-link {
+		color: var(--color-text-tertiary);
+		text-decoration-color: color-mix(in srgb, var(--color-text-tertiary) 60%, transparent);
+
+		&:visited { color: var(--color-text-tertiary); }
+
+		&::after {
+			background: currentColor;
+			mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8a5.5 5.5 0 1 0 1.6-3.9'/%3E%3Cpath d='M2.3 2.4v2.4h2.4'/%3E%3Cpath d='M8 5v3l2 1.3'/%3E%3C/svg%3E") center / contain no-repeat;
+		}
+	}
+
+	// A working preservation copy (Wayback, Oocities, a known mirror) paired
+	// with a .dead-link original right beside it. Not for ordinary in-prose
+	// citations that happen to point at an archive.org capture; those stay
+	// plain .external. Hook only: still a normal link, just distinguishable
+	// from the dead original it's paired with. Modifiers describe what kind
+	// of preservation link this is; .archive-service marks a link to the
+	// preservation service itself (Oocities, GeoCities.ws) rather than to an
+	// archived page, and isn't paired with a .dead-link.
+	.archive-link { font-style: italic; }
+	.archive-link.archive-wayback { }
+	.archive-link.archive-mirror { }
+	.archive-link.archive-index { }
+	.archive-link.historical-snapshot { }
+	.archive-link.preservation-copy { }
+	.archive-service { font-style: italic; }
+
+	// Names you would type: files, folders, pages and newsgroups. They look the
+	// same whether or not they're a link ({link:…}{file:FB12.gif}{/link}):
+	// the mono face at the prose's own size, no glyph. The token's font stack
+	// avoids the bare "monospace" keyword, which shrinks text to 13px.
+	.file-name,
+	.usenet-address {
+		font-family: var(--font-mono);
+		font-size: 0.92em;
+	}
+
+	.file-name { white-space: nowrap; }
+
+	// Newsgroup names are long and have no spaces, so they may break anywhere.
+	.usenet-address { overflow-wrap: anywhere; }
+
+	.modal-hero-image {
+		//tiled background
+		background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
+
+		>h2 {
+			display: none;
+		}
+	}
+
+	.center {
+		display: block;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+
+	// A term with a gloss keeps the weight of the text around it; the dotted
+	// underline alone says there is more on hover.
+	.context {
+		font-weight: inherit;
+		cursor: help;
+		color: inherit;
+		display: inline;
+
+		-webkit-text-decoration: underline dotted;
+		text-decoration: underline dotted;
+		text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 2px;
+		-webkit-text-decoration-skip: ink;
+		text-decoration-skip-ink: auto;
+
+		&:hover {
+			color: var(--color-text-primary);
+		}
+	}
+
+	// Extended verbatim quotes sit outside the paragraph flow: running them
+	// inline forces competing quotation marks into prose that already quotes.
+	blockquote {
+		margin: var(--spacing-lg) 0;
+		padding: var(--spacing-sm) 0 var(--spacing-sm) var(--spacing-lg);
+		border-left: 2px solid var(--color-border);
+		color: var(--color-text-secondary);
+
+		>p {
+			margin: 0;
+
+			+p { margin-top: var(--spacing-sm); }
+		}
+
+		>cite {
+			display: block;
+			margin-top: var(--spacing-sm);
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-sm);
+			font-style: normal;
+		}
+
+		@include mobile {
+			padding-left: var(--spacing-md);
+		}
+	}
+
+	// Document tables share the inset-card vocabulary and scroll within their
+	// own frame so a wide dataset never widens the reading modal.
+	.table-wrapper {
+		max-width: 100%;
+		margin: var(--spacing-lg) 0;
+		overflow-x: auto;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-card);
+		-webkit-overflow-scrolling: touch;
+	}
+
+	table {
+		width: 100%;
+		min-width: 32rem;
+		border-collapse: separate;
+		border-spacing: 0;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-base);
+		line-height: var(--line-height-normal);
+
+		th,
+		td {
+			padding: var(--spacing-md) var(--spacing-lg);
+			border-bottom: 1px solid var(--color-border);
+			text-align: left;
+			vertical-align: top;
+		}
+
+		th {
+			@include bar-base;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+			letter-spacing: 0.03em;
+		}
+
+		th + th,
+		td + td { border-left: 1px solid var(--color-border); }
+
+		tbody {
+			>tr:nth-child(even) { background: var(--color-bg-tertiary); }
+			>tr:hover { background: var(--color-bg-accent-tint); }
+			>tr:last-child>td { border-bottom: 0; }
+		}
+	}
+
+	.dimensions-table {
+		min-width: 48rem;
+		table-layout: fixed;
+
+		th:first-child { width: 24%; }
+		th:nth-child(2) { width: 25%; }
+
+		td:first-child {
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-medium);
+		}
+
+		th:nth-child(2),
+		td:nth-child(2) {
+			font-variant-numeric: tabular-nums;
+		}
+
+		td:nth-child(2) {
+			color: var(--color-text-primary);
+			font-family: var(--font-mono);
+			font-size: var(--font-size-sm);
+		}
+	}
+
+	// A short list of files and their dates, set as a table so the dates line
+	// up instead of running through a sentence. It sizes to its content.
+	.table-wrapper.fits-content { width: fit-content; }
+
+	.file-table {
+		width: auto;
+		min-width: 0;
+
+		td:last-child {
+			font-variant-numeric: tabular-nums;
+			white-space: nowrap;
+		}
+	}
+
+	// Archival chronology: a narrow date column that keeps its digits aligned,
+	// so the reader can scan the dates without reading the rows.
+	.chronology-table {
+		min-width: 40rem;
+
+		th:first-child { width: 18%; }
+		th:nth-child(2) { width: 30%; }
+
+		td:first-child {
+			color: var(--color-text-primary);
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+
+
+
+	.figure-wrapper+h3,
+
+	p+h2,
+	ol+h2,
+	ul+h2,
+
+	p+h3,
+	ol+h3,
+	ul+h3 {
+		margin-top: var(--spacing-xl);
+
+	}
+
+	p+p,
+	p+h4,
+	ol+h4,
+	ul+h4 {
+		margin-top: var(--spacing-md);
+	}
+
+
+	h2+p,
+	h2+ol,
+	h2+ul,
+
+	h3+p,
+	h3+ol,
+	h3+ul,
+
+	ol+p,
+	ul+p,
+
+	p+ol,
+	p+ul,
+
+	ol+ol,
+	ul+ul,
+
+
+
+	p+h5,
+	ol+h5,
+	ul+h5,
+
+	ol+ul,
+	ul+ol {
+		margin-top: var(--spacing-sm);
+	}
+
+
+	h4+ul,
+	h4+ol,
+
+	h5+ul,
+	h5+ol {
+		margin-top: var(--spacing-xs);
+	}
+
+	/* Chronological reference list in the Timeline section — a plain ul so
+	   it inherits the h3/ul spacing rules above instead of needing its own.
+	   Event classes set --tl-color once; list borders and filter dots share it. */
+	.timeline-all { --tl-color: var(--color-accent); }
+	.timeline-start { --tl-color: var(--color-success); }
+	.timeline-acquisition { --tl-color: var(--color-info); }
+	.timeline-closure { --tl-color: var(--color-danger); }
+	.timeline-milestone { --tl-color: var(--color-text-tertiary); }
+
+	.timeline-legend {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-md);
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		padding: var(--spacing-md);
+	}
+
+	.timeline-type-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+	}
+
+	.timeline-legend-item {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		min-height: var(--control-height-compact);
+		padding: var(--spacing-2xs) var(--spacing-sm);
+		border: 1px solid transparent;
+		border-radius: var(--radius-pill);
+		outline: 2px solid transparent;
+		outline-offset: 2px;
+		background: transparent;
+		color: var(--color-text-secondary);
+		font: inherit;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
+
+		&:hover {
+			border-color: var(--color-border-hover);
+			background: var(--color-bg-secondary);
+		}
+
+		&[aria-pressed='true'] {
+			border-color: var(--tl-color);
+			background: var(--color-bg-secondary);
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		&[aria-pressed='false'] .timeline-dot {
+			background: transparent;
+			box-shadow: inset 0 0 0 1.5px var(--tl-color);
+		}
+
+		&:focus-visible { outline-color: var(--color-accent); }
+	}
+
+	.timeline-updated {
+		margin-inline-start: auto;
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
+	}
+
+	.timeline-dot {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--tl-color, var(--color-text-tertiary));
+		flex: 0 0 auto;
+	}
+
+	// One contained card holding the legend, filters, summary, and list, so the
+	// whole section reads as a single unit instead of loose paragraphs — the
+	// same bordered/tinted-surface language as .figure-wrapper > figure above.
+	.timeline-panel {
+		@include inset-surface;
+		display: flex;
+		flex-direction: column;
+
+		margin: var(--spacing-lg) 0;
+		background: var(--color-bg-tertiary);
+		padding: 0;
+		margin-bottom: 0;
+
+		> * + * {
+			border-top: 1px solid var(--color-border);
+		}
+	}
+
+	// Filtering replaces the rendered events. Keep the panel's outer height
+	// stable so the document does not jump as the result count changes.
+	.preservation-dialog .timeline-panel {
+		height: clamp(32rem, 78dvh, 46rem);
+
+		.timeline-list {
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow-y: auto;
+			overflow-anchor: none;
+			-webkit-overflow-scrolling: touch;
+		}
+	}
+
+	.timeline-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+
+		li {
+			display: flex;
+			gap: var(--spacing-md);
+			padding: var(--spacing-md);
+			border-bottom: 1px solid var(--color-border);
+			border-left: 3px solid var(--tl-color, var(--color-border));
+
+			&:last-child {
+				border-bottom: none;
+			}
+		}
+
+		.timeline-date {
+			flex: 0 0 auto;
+			width: 6.5rem;
+			font-weight: 600;
+			color: var(--color-text-secondary);
+
+			// Every rendered item carries a data-tooltip (topics + country, see
+			// js/ui/about-timeline.js) — the same "term with a hover definition"
+			// cue as .context above, scoped to just the date so item text stays
+			// plain and readable.
+			cursor: help;
+			text-decoration: underline dotted;
+			text-decoration-thickness: 1px;
+			text-underline-offset: 3px;
+		}
+
+		@media (max-width: 480px) {
+			li {
+				flex-direction: column;
+				gap: var(--spacing-xs);
+			}
+
+			.timeline-date {
+				width: auto;
+			}
+		}
+	}
+
+	// Filter toolbar above the timeline list (js/ui/about-timeline.js renders
+	// the controls into this container). Selects/inputs use the same
+	// form-control mixin as the rest of the app instead of one-off box styles.
+	.timeline-filters {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--spacing-sm) var(--spacing-md);
+		padding: var(--spacing-md);
+	}
+
+	.timeline-filter {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+
+		label {
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		select {
+			max-width: 100%;
+			@include form-control($background: var(--color-bg-secondary), $min-width: 0);
+		}
+	}
+
+	.timeline-filter-search {
+		flex: 1 1 220px;
+
+		.search-input-wrapper {
+			position: relative;
+			display: flex;
+			min-width: 0;
+
+			.search-input-icon {
+				position: absolute;
+				top: 50%;
+				left: var(--spacing-sm);
+				z-index: 1;
+				width: 1rem;
+				height: 1rem;
+				transform: translateY(-50%);
+				color: var(--color-text-tertiary);
+				pointer-events: none;
+
+				> svg.icon { font-size: 1rem; }
+			}
+
+			input {
+				@include form-control($background: var(--color-bg-secondary), $min-width: 0);
+				// Override the mixin's own padding shorthand — must come after
+				// the include or the icon overlaps the text.
+				width: 100%;
+				box-sizing: border-box;
+				padding-left: calc(var(--spacing-sm) * 2 + 1rem);
+
+				&::-webkit-search-decoration,
+				&::-webkit-search-results-button,
+				&::-webkit-search-results-decoration {
+					display: none;
+				}
+			}
+		}
+	}
+
+	.timeline-filter-clear {
+		align-self: flex-end;
+		min-height: var(--control-height);
+	}
+
+	// Summary line doubles as the header for the collapsible filter toolbar:
+	// the toggle sits on the same row as the count instead of adding one.
+	.timeline-summary-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-sm) var(--spacing-md);
+		padding: var(--spacing-sm) var(--spacing-md);
+	}
+
+	.timeline-filters-toggle {
+		flex: 0 0 auto;
+		min-height: var(--control-height);
+
+		.timeline-filters-toggle-chevron {
+			transition: transform var(--transition-fast);
+		}
+
+		&[aria-expanded='true'] .timeline-filters-toggle-chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.timeline-legend {
+			flex-wrap: wrap;
+			gap: var(--spacing-xs);
+			padding: var(--spacing-sm) var(--spacing-md);
+		}
+
+		// One swipeable row instead of three wrapped rows of pills. The row
+		// bleeds to the panel edges so a cut-off pill reads as "scroll for
+		// more"; block padding keeps the focus outline from being clipped.
+		.timeline-type-filters {
+			flex-basis: 100%;
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scrollbar-width: none;
+			margin-inline: calc(-1 * var(--spacing-md));
+			padding: var(--spacing-2xs) var(--spacing-md);
+
+			&::-webkit-scrollbar { display: none; }
+		}
+
+		.timeline-legend-item { flex: 0 0 auto; white-space: nowrap; }
+
+		.timeline-updated {
+			flex-basis: 100%;
+			margin-inline-start: 0;
+		}
+
+		.timeline-filters {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			align-items: end;
+
+			.timeline-filter {
+				width: 100%;
+
+				&:first-child,
+				&.timeline-filter-search {
+					grid-column: 1 / -1;
+				}
+
+				select { width: 100%; }
+			}
+
+			.timeline-filter-clear {
+				grid-column: 1 / -1;
+				width: 100%;
+			}
+		}
+	}
+
+	// Legend pills keep their desktop height on touch:
+	// at 44px the pills row alone ate a third of the fixed-height panel.
+	@media (pointer: coarse) {
+		.timeline-filter select,
+		.timeline-filter-search input,
+		.timeline-filter-clear {
+			min-height: var(--touch-target-min);
+		}
+	}
+
+	.timeline-summary {
+		min-width: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		margin: 0;
+	}
+
+
+	/* Highlight animation for references */
+	.highlight {
+		background: var(--theme-glitter-image) repeat;
+		color: var(--color-accent);
+		transition: background-color 0.3s ease;
+		border-radius: 2px;
+	}
+
+	sup {
+		margin-left: 2px;
+
+		font-size: 0.7em;
+		line-height: 1;
+		vertical-align: baseline;
+		position: relative;
+		top: -0.5em;
+
+		.ref-num {
+			transition: color var(--transition-fast);
+
+			&:hover {
+				color: var(--color-accent-hover);
+				text-decoration: underline;
+			}
+		}
+	}
+
+	>.modal-content>.modal-body ol li {
+		transition: background-color 0.2s ease;
+
+		&:hover {
+			background-color: rgba(0, 102, 204, 0.05);
+		}
+	}
+
+}
+
+/* Same "term with a hover definition" treatment as #aboutModal .context,
+   reused where the Welcome modal names a feature that benefits from a
+   one-line explanation without sending someone off to the Guide. */
+#welcomeModal .context {
+	font-weight: bold;
+	cursor: help;
+	color: inherit;
+	display: inline;
+
+	-webkit-text-decoration: underline dotted;
+	text-decoration: underline dotted;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 2px;
+	-webkit-text-decoration-skip: ink;
+	text-decoration-skip-ink: auto;
+
+	&:hover {
+		color: var(--color-text-primary);
+	}
+}

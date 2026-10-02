@@ -1,0 +1,254 @@
+@use '../../mixins' as *;
+
+// ===== R1: the property row ================================================
+// label | control | value | revert. The revert column is always reserved, so
+// a value crossing its default can never reflow the row.
+
+.property-row {
+	display: grid;
+	grid-template-columns:
+		var(--property-label-col)
+		minmax(0, 1fr)
+		var(--property-value-col)
+		var(--property-revert-col);
+	align-items: center;
+	column-gap: var(--spacing-sm);
+	min-height: var(--property-row-h);
+	padding: 0 var(--property-gutter);
+
+	&[hidden] { display: none; }
+
+	// The row applies the gutter; its label must not apply it a second time.
+	> .property-label { padding-inline: 0; }
+
+	> input[type="range"] { width: 100%; margin: 0; }
+
+	// A control with no separate readout takes the value column too.
+	> input[type="color"],
+	> input[type="text"],
+	> .input-unit,
+	> textarea,
+	> .animation-select-stepper { grid-column: 2 / -1; }
+
+	> input[type="color"] { justify-self: end; }
+}
+
+// A choice control stops short of the revert column, as does a field that a
+// revert follows.
+.property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {
+	grid-column: 2 / -2;
+	margin-inline: 0;
+}
+
+.property-section .property-row > :is(.input-unit, input[type="text"], input[type="number"]):not(:last-child) {
+	grid-column: 2 / -2;
+}
+
+// R2: the control needs the full width. Placement is explicit because the
+// control sits between label and value in the DOM, and auto-placement would
+// drop the value below the track.
+.property-row.is-stacked {
+	grid-template-columns: minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
+	grid-template-rows: auto auto;
+	row-gap: var(--property-field-gap);
+
+	> .property-label { grid-area: 1 / 1 / 2 / 2; }
+	> .property-value { grid-area: 1 / 2 / 2 / 3; }
+	> .property-revert { grid-area: 1 / 3 / 2 / 4; }
+
+	> input[type="range"],
+	> .segmented-control,
+	> select,
+	> .glitter-source,
+	> textarea,
+	> .animation-select-stepper {
+		grid-area: 2 / 1 / 3 / 4;
+		margin-inline: 0;
+	}
+}
+
+// R3: one row holding two properties that read as a single value.
+.property-row.is-pair {
+	grid-template-columns:
+		var(--property-label-col)
+		minmax(0, 1fr)
+		var(--property-revert-col);
+
+	> .property-pair { grid-column: 2; }
+	> .property-revert { grid-column: 3; }
+}
+
+.property-pair {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+	min-width: 0;
+}
+
+// A slider pair: each cell is a mark, a track and its readout.
+.property-pair-cell {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto var(--property-revert-col);
+	align-items: center;
+	gap: var(--spacing-2xs);
+	min-width: 0;
+
+	> .property-pair-mark {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 10px;
+		color: var(--color-text-tertiary);
+		cursor: help;
+	}
+
+	> input[type="range"] { min-width: 0; }
+	> .property-value { font-size: var(--font-size-xs); }
+}
+
+// Two unrelated properties stack as ordinary rows.
+.property-pair-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-row-gap);
+	width: 100%;
+
+	&[hidden] { display: none; }
+
+	> * { min-width: 0; }
+}
+
+// R4: a boolean. The switch sits where a value would.
+.property-row.is-toggle {
+	grid-template-columns: minmax(0, 1fr) auto;
+	cursor: pointer;
+	user-select: none;
+
+	> input[type="checkbox"] { @include visually-hidden-control; }
+
+	> .property-switch {
+		grid-column: 2;
+		justify-self: end;
+		@include switch-track(var(--switch-w), var(--switch-h), 3px);
+	}
+
+	> input:checked + .property-switch { @include switch-track-on(var(--switch-w), var(--switch-h)); }
+	> input:focus-visible + .property-switch { box-shadow: var(--control-focus-ring); }
+
+	> input:disabled + .property-switch {
+		opacity: var(--opacity-disabled);
+		cursor: not-allowed;
+	}
+
+	&:hover > input:not(:disabled) + .property-switch { border-color: var(--color-border-hover); }
+}
+
+// In a section every row reserves the revert column, a toggle included.
+.property-section .property-row.is-toggle {
+	grid-template-columns: minmax(0, 1fr) auto var(--property-revert-col);
+
+	> .property-revert { grid-column: 3; }
+}
+
+.property-toggle-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-row-gap);
+
+	> .property-group-label { padding: var(--spacing-xs) var(--property-gutter) 0; }
+
+	&[hidden] { display: none; }
+}
+
+// ===== The revert ==========================================================
+// Always in its column. Inert reverts stay subdued and become fully legible
+// when the value differs from its default.
+
+.property-revert {
+	width: var(--property-revert-col);
+	height: var(--property-revert-col);
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+	opacity: 1;
+	transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+
+	> .icon {
+		width: 12px;
+		height: 12px;
+		fill: currentColor;
+		opacity: 1;
+	}
+
+	&:not(:disabled):not(.is-placeholder):hover {
+		background: var(--color-bg-tertiary);
+		color: var(--color-accent);
+	}
+
+	&:disabled,
+	&.is-placeholder {
+		background: none;
+		cursor: default;
+		opacity: 0.18;
+	}
+
+	&:focus-visible {
+		opacity: 1;
+		outline: none;
+		box-shadow: var(--control-focus-ring);
+	}
+}
+
+// A card reset is the same icon in the card's title, over the revert column of
+// the rows below. The title is padded by the card inset and the rows by the
+// card gutter, so the icon steps in by the difference. The negative block
+// margin keeps a title with a reset as tall as one without.
+.property-panel .property-card > .subsection-title > .property-card-reset {
+	flex: 0 0 auto;
+	margin-block: -3px;
+	margin-left: auto;
+	margin-right: calc(var(--property-gutter) - var(--property-pad));
+}
+
+// ===== The value readout ===================================================
+
+.property-row > .property-value {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	min-width: 46px;
+	height: var(--property-control-height);
+	padding: 0 6px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--property-r-field);
+	background: var(--color-bg-secondary);
+
+	&[data-editable-value] {
+		cursor: text;
+
+		&:focus {
+			outline: none;
+			border-color: var(--color-accent);
+			box-shadow: var(--control-focus-ring);
+		}
+
+		.setting-unit {
+			margin-left: 3px;
+			color: var(--color-text-tertiary);
+			pointer-events: none;
+		}
+	}
+}
+
+// ===== A control that is not a row =========================================
+// It still joins the horizontal rhythm. Apply this role in markup instead of
+// making a container guess from tag names.
+.property-inset {
+	min-width: 0;
+	width: auto;
+	max-width: calc(100% - var(--property-gutter) * 2);
+	margin-inline: var(--property-gutter);
+}

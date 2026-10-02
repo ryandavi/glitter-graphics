@@ -85,7 +85,7 @@ updateOrientationButtons(width, height) {
 			.register('historyModal', {
 				openBtnId: 'historyBtn',
 				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=d2b088d8',
+				externalContentUrl: 'modals/history.html?v=ed2fce0c',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -301,7 +301,8 @@ updateOrientationButtons(width, height) {
 		this.exportMenuPopover = setupMenuPopover({
 			root: document.getElementById('exportMenu'),
 			trigger: document.getElementById('exportMenuBtn'),
-			panel: document.getElementById('exportMenuPanel')
+			panel: document.getElementById('exportMenuPanel'),
+			liftHost: document.getElementById('exportMenu')?.closest('.preview-controls')
 		});
 
 

@@ -1,0 +1,85 @@
+// ===== The Transform module ================================================
+// One component on every layer type: Position, Size, Scale, Rotation, Flip,
+// Align. Its groups are `.property-set`s, hairline-divided like any card body.
+
+.property-section {
+	.property-card > .transform-panel-title { gap: var(--property-pad); }
+	.transform-panel-title > .transform-revert-signal { flex: 0 0 var(--property-revert-col); }
+
+	.transform-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		padding: 0;
+		background: var(--color-bg-primary);
+	}
+
+	.transform-scale-rows { display: contents; }
+
+	// Aspect ratio locked: the X slider drives both axes and reads "Scale", so
+	// the separate Y row is redundant.
+	.is-aspect-locked .transform-scale-y { display: none; }
+
+	.transform-scale-x > .property-value {
+		grid-column: 3;
+		justify-self: end;
+	}
+
+	.transform-scale-x > .property-revert { grid-column: 4; }
+
+	// X/Y and W/H: each field is one boxed control holding its mark and input.
+	.transform-pair-row > .property-pair { gap: var(--spacing-xs); }
+
+	.transform-pair-row > .number-field-pair {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-column: 2;
+
+		> .input-group.horizontal {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			gap: 6px;
+			height: var(--property-control-height);
+			padding: 0 var(--property-pad);
+			border: 1px solid var(--color-border);
+			border-radius: var(--property-r-field);
+			background: var(--color-bg-secondary);
+
+			> label {
+				width: auto;
+				min-width: 0;
+				font-size: 10.5px;
+				font-weight: 400;
+				color: var(--color-text-tertiary);
+			}
+
+			.input-unit {
+				height: 100%;
+				min-height: 100%;
+				align-self: stretch;
+				border: 0;
+				background: transparent;
+			}
+
+			input[type="number"] {
+				height: 100%;
+				min-height: 100%;
+				align-self: stretch;
+				padding: 0;
+				border: 0;
+				background: transparent;
+				font-size: 11px;
+			}
+
+			.input-unit-suffix { display: none; }
+		}
+	}
+
+	// Flip is a pair of independent checkboxes dressed as a segmented control.
+	.transform-flip-control > .segmented-option > input:checked + span {
+		background: var(--color-accent-surface);
+		color: var(--color-text-primary);
+
+		svg.icon { color: var(--color-white, #fff); }
+	}
+}

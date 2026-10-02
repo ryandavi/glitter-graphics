@@ -479,7 +479,6 @@ function buildSliderRow(options) {
 function buildPairRow(item) {
 	const row = tplClone('tpl-slider-row');
 	row.className = 'property-row is-pair';
-	if (item.fields) row.classList.add('has-num-fields');
 	row.replaceChildren();
 	if (item.rowId) row.id = item.rowId;
 	const label = document.createElement('span');
@@ -492,7 +491,6 @@ function buildPairRow(item) {
 	item.items.forEach((entry) => {
 		const spec = FIELDS[entry.slider];
 		const cell = panelDiv('property-pair-cell');
-		if (item.fields) cell.classList.add('numf');
 		const mark = document.createElement('span');
 		mark.className = 'property-pair-mark';
 		mark.textContent = entry.mark;
@@ -527,12 +525,6 @@ function buildPairRow(item) {
 		pair.appendChild(cell);
 	});
 	row.appendChild(pair);
-	if (item.fields) {
-		const placeholder = panelDiv('property-revert is-placeholder');
-		placeholder.setAttribute('aria-hidden', 'true');
-		placeholder.appendChild(createIcon('reset'));
-		row.appendChild(placeholder);
-	}
 	return row;
 }
 
@@ -708,10 +700,12 @@ function buildOptionGroup(label, children, rowClasses = '', hint) {
 	labelNode.textContent = label;
 	if (hint) labelNode.title = hint;
 	children.forEach((child) => group.appendChild(child));
-	// A label plus one control is a property row (R1/R2), never a set.
-	const options = children[0]?.querySelectorAll?.('.segmented-option')?.length || 0;
-	const isWide = options === 0 || options > 2 || children.length > 1;
-	if (isWide) group.classList.add('is-stacked');
+	// A label plus one control is a property row (R1/R2), never a set. A choice
+	// control is compact and shares the label's line; anything else, or more
+	// than one control, takes the full width under it.
+	const compact = children.some((child) => child.matches?.('.segmented-control, select'))
+		|| (children.length === 1 && children[0].matches?.('.property-select-control'));
+	if (!compact) group.classList.add('is-stacked');
 	return group;
 }
 
@@ -767,6 +761,12 @@ function buildAssetInfo(options) {
 	chip.id = options.thumbnail;
 	chip.dataset.role = 'asset-thumbnail';
 	chip.title = options.title || '';
+	// "No thumbnail": the chip holds neither a glitter background nor an image.
+	// Managers fill it in place, so the chip keeps its own `.is-unset` in step.
+	const syncChip = () => chip.classList.toggle('is-unset',
+		!chip.classList.contains('glitter-bg') && !chip.querySelector(':scope > img, :scope > svg'));
+	syncChip();
+	new MutationObserver(syncChip).observe(chip, { childList: true, attributes: true, attributeFilter: ['class'] });
 	const name = info.querySelector('.asset-info-name');
 	name.id = options.name;
 	name.dataset.role = 'asset-name';
@@ -952,6 +952,7 @@ function buildPaintSlotCard(slot) {
 	let container = card;
 	if (slot.toggle) {
 		card.dataset.effectCard = '';
+		card.classList.add('is-off');
 		const toggle = tplClone('tpl-checkbox');
 		// R5: the enable control leads the module header as the shared compact
 		// header switch.
@@ -1101,6 +1102,7 @@ function buildPanelItem(item, schema) {
 			else title.remove();
 			if (item.toggle) {
 				card.dataset.effectCard = '';
+				card.classList.add('is-off');
 				const toggle = tplClone('tpl-checkbox');
 				toggle.classList.add('effect-switch');
 				toggle.title = item.toggle.title || `Enable ${item.title || ''}`.trim();
@@ -1583,8 +1585,8 @@ function readModuleSummary(card) {
 		return card.querySelector('.asset-info-name')?.textContent?.trim() || '';
 	}
 	// A disabled effect module reads "Off" beside its title — it pairs with the
-	// hatched "unset" swatch (see the paint-slot-card `:has()` rule in
-	// _properties.scss) so a switched-off module still states its condition
+	// hatched "unset" swatch (`.is-unset`, stamped by syncModuleSummary) so a
+	// switched-off module still states its condition
 	// whether collapsed or open, the same way a None paint slot reads "None".
 	const toggle = card.querySelector(':scope > .subsection-title input[data-effect-toggle]');
 	if (toggle && !toggle.checked) return 'Off';
@@ -1640,14 +1642,20 @@ function syncModuleSummary(card) {
 		// ACTIVE mode — the editor stays in the DOM (hidden) in every other mode
 		// with its last gradient still inline, which would otherwise leak in.
 		const gradient = mode === 'gradient' ? card.querySelector('.gradient-preview-bar') : null;
-		// Empty (`.empty` chip, None, image-with-no-image) → clear the inline
-		// background so the `_properties.scss` "unset" hatch shows through.
 		swatch.style.background = solid?.value
 			|| chip?.style.background
 			|| chip?.style.backgroundImage
 			|| (chipImg ? `center / cover no-repeat url("${chipImg}")` : '')
 			|| gradient?.style.backgroundImage
 			|| '';
+		// A switched-off slot, a None source, or a source whose asset chip is
+		// still empty all read as "no value": `.is-unset` draws the hatch over
+		// whatever background the last active source left inline.
+		swatch.classList.toggle('is-unset', Boolean(
+			card.querySelector(':scope > .subsection-title input:not(:checked)')
+			|| card.querySelector('.segmented-option[data-mode="none"].active')
+			|| card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty')
+		));
 	}
 }
 
@@ -1748,9 +1756,12 @@ function syncPanelEffectToggle(toggle, enabled) {
 	toggle.checked = next;
 	if (!card) return;
 	card.dataset.effectEnabled = String(next);
+	// `.is-off` is the one switched-off state the stylesheet reads.
+	card.classList.toggle('is-off', !next);
 	if (previous == null || String(next) !== previous) card.classList.toggle('is-collapsed', !next);
 	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
 	card.querySelector(':scope > .property-module-content')?.classList.toggle('visible', next);
+	if (card.dataset.moduleSummary !== undefined) syncModuleSummary(card);
 }
 
 // Remembered open/closed state for collapsible cards, keyed `prefix:title`
@@ -1880,26 +1891,65 @@ function buildPanelGroup(group, schema) {
 }
 
 // The finishing pass every rendered schema root gets (full section, bare
-// section, fragment): the L2-block class and the editable value readouts.
+// section, fragment): the editable value readouts.
 function finishPanelMarkup(root) {
-	// `querySelectorAll` never matches `root` itself, so include it in each pass.
-	// `renderPanelFragment` hands us the lone card node directly — without this it
-	// would never pick up `.property-block`, and its
-	// `.subsection-title` would stay `display:block` (module summary not flush).
-	const withRoot = (selector) => {
-		const matches = Array.from(root.querySelectorAll(selector));
-		if (root.matches?.(selector)) matches.unshift(root);
-		return matches;
-	};
-	// The L2 block: a `.subsection-content-group` that is neither an L1
-	// section-group nor the effects stack. A positive class lets the SCSS nest
-	// the DOM directly instead of `:where(:not(.subsection-section-group)…)`.
-	withRoot('.subsection-content-group').forEach((group) => {
-		const structural = group.classList.contains('subsection-section-group')
-			|| group.classList.contains('effects-stack');
-		group.classList.toggle('property-block', !structural);
-	});
 	initializeEditablePropertyValues(root);
+}
+
+// A container whose content is all hidden takes no space. Managers hide rows
+// by setting `hidden` and write values straight into the DOM, so one observer
+// keeps `.is-vacant` in step instead of every manager remembering to.
+const PANEL_VACANCY_CONTAINERS = [
+	'.property-card:not([data-effect-card])', '.subsection-card-body', '.paint-slot-main',
+	'.property-pair-group', '.property-toggle-list', '.property-set', '.property-actions',
+	'.subsection-content', '.property-meta-cell'
+].join(', ');
+// A container's own heading does not count as content.
+const PANEL_VACANCY_CHROME = '.subsection-title, .property-group-label, .property-set-label';
+
+function syncPanelVacancy(container) {
+	let occupied;
+	if (container.matches('.property-meta-cell')) {
+		occupied = Boolean(container.querySelector(':scope > .property-value:not(:empty)'));
+	} else {
+		occupied = Array.from(container.children).some((child) => !child.hidden && !child.matches(PANEL_VACANCY_CHROME));
+		// A meta row is only as full as its values.
+		if (occupied && container.matches('.asset-info-meta')) {
+			occupied = Boolean(container.querySelector(':scope > .property-meta-cell > .property-value:not(:empty)'));
+		}
+	}
+	container.classList.toggle('is-vacant', !occupied);
+}
+
+function initializePanelVacancy() {
+	if (initializePanelVacancy.started) return;
+	initializePanelVacancy.started = true;
+	const sync = (node) => {
+		if (node?.matches?.(PANEL_VACANCY_CONTAINERS)) syncPanelVacancy(node);
+	};
+	const syncTree = (root) => {
+		sync(root);
+		root.querySelectorAll(PANEL_VACANCY_CONTAINERS).forEach(syncPanelVacancy);
+	};
+	syncTree(document.body);
+	new MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+			if (mutation.type === 'attributes') {
+				sync(mutation.target.parentElement);
+				return;
+			}
+			const target = mutation.target;
+			sync(target);
+			// A value's text decides its meta cell, and the cell its meta row.
+			if (target.matches?.('.property-value')) {
+				sync(target.parentElement);
+				sync(target.parentElement?.parentElement);
+			}
+			mutation.addedNodes.forEach((node) => {
+				if (node.nodeType === Node.ELEMENT_NODE) syncTree(node);
+			});
+		});
+	}).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden'] });
 }
 
 // Render one or more `.settings-subsection` blocks from a schema. `subsections`
@@ -1982,7 +2032,7 @@ function renderPanelSection(schema) {
 	const host = document.getElementById(schema.section.id);
 	if (!host) return;
 	// Every schema-rendered section carries `.property-section`, the scope for
-	// the panel vocabulary in panels/_properties.scss.
+	// the panel vocabulary in css/panels/property/.
 	host.classList.add('property-section');
 	addPanelClasses(host, schema.section.classes);
 	host.replaceChildren();
@@ -2005,7 +2055,7 @@ function renderPanelSection(schema) {
 	const subsection = fragment.querySelector('.settings-subsection');
 	// Sticky-region layout: a group's `region` puts it in a fixed `header` /
 	// `footer` band or the single scrolling middle. The structural CSS is generic
-	// (`.section.has-scroll-region` in _properties.scss); declare
+	// (`.section.has-scroll-region` in panels/property/_regions.scss); declare
 	// header/footer groups first/last so DOM order matches. First user: Auto Glitter.
 	let scrollRegion = null;
 	let hasStickyRegions = false;
@@ -2074,4 +2124,5 @@ function renderPanelSections(editor) {
 		else renderPanelSection(schema);
 		(schema.auxiliarySections || []).forEach((section) => renderPanelSection(section));
 	});
+	initializePanelVacancy();
 }

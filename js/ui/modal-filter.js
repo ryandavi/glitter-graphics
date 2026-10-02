@@ -67,14 +67,20 @@ function createModalFilter(options) {
 			if (terms.length && isMatch) matchCount++;
 		});
 
+		const isVisible = (record) => !record.item.classList.contains('is-filtered-out');
 		groups.forEach((group) => {
 			const groupRecords = records.filter((record) => record.group === group);
-			const isVisible = (record) => !record.item.classList.contains('is-filtered-out');
 			const hasGovernedMatch = groupRecords.some((record) => !record.isPinned && isVisible(record));
 			groupRecords.forEach((record) => {
 				if (record.isPinned && hasGovernedMatch) record.item.classList.remove('is-filtered-out');
 			});
 			group.classList.toggle('is-filtered-out', terms.length > 0 && !groupRecords.some(isVisible));
+		});
+
+		// A disclosure whose rows are all filtered out goes with them.
+		root.querySelectorAll('.advanced-disclosure').forEach((disclosure) => {
+			const hasVisibleRow = records.some((record) => disclosure.contains(record.item) && isVisible(record));
+			disclosure.classList.toggle('is-filtered-out', terms.length > 0 && !hasVisibleRow);
 		});
 
 		// Collapsed disclosures inside the body have to open while a query is

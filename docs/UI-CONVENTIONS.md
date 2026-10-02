@@ -21,13 +21,13 @@ Visual and interaction conventions for the editor UI: sidebar panels, layout nam
 
 ## Form modals
 
-New Canvas, Settings, Export Settings and Commands & Shortcuts are property panels in a wider column. The modal body carries `.modal-form.property-panel` and holds a `.section` host, so groups, cards, rows, switches, segmented controls and notes are the sidebar's, styled by `css/panels/_properties.scss`. `.modal-form` in `css/_modals.scss` sets only what the wider column changes.
+New Canvas, Settings, Export Settings and Commands & Shortcuts are property panels in a wider column. The modal body carries `.modal-form.property-panel` and holds a `.section` host, so groups, cards, rows, switches, segmented controls and notes are the sidebar's, styled by `css/panels/property/`. `.modal-form` in `css/modals/_forms.scss` sets only what the wider column changes.
 
 - **A fixed form** is a `PANEL_SCHEMAS` entry with `section: { id, bare: true }` (New Canvas is `PANEL_SCHEMAS.newCanvas`). Width and height are one `numberPair`, a two-way choice is a `segmented` row (`showLabel: true` keeps the word beside an option's icon), and a color is a `field` of `type: 'color'`, hidden while it does not apply.
 - **A settings list** is declared in `EXPORT_SETTINGS_LAYOUT` / `APP_SETTINGS_LAYOUT` and built by `js/ui/settings-renderer.js` from the same primitives: one titled card per group, one `.property-set` per setting, the description as a `.property-note`. `settings-group` (with the group's `data-section`) and `settings-row` are hooks for the search filter and the settings code and carry no layout.
 - Never write row markup for these modals by hand. A widget that is not a plain row is a `<template>` using the property classes.
 - **Rows a setting governs** (`governed` in a layout: GIF Look, Export fidelity) sit in the panel's Advanced disclosure, labelled Customize. It is the card's footer, as in a sidebar card, so the governing row is the last row of its card and ends on a `.governed-summary` note that states the governed values. The shared `[data-advanced]` handler toggles it and Show All Controls opens it; open it from code with `setAdvancedDisclosureOpen`.
-- **Search hides with `.is-filtered-out`, never `hidden`.** `hidden` on a row means it does not apply to the current format, and the filter reads it to decide what is searchable. Rules that skip hidden siblings (the set divider) need a `.is-filtering` counterpart in `css/_modals.scss`.
+- **Search hides with `.is-filtered-out`, never `hidden`.** `hidden` on a row means it does not apply to the current format, and the filter reads it to decide what is searchable. Rules that skip hidden siblings (the set divider) need a `.is-filtering` counterpart in `css/modals/_settings.scss`.
 - **Resets are the panel's.** A setting that declares a `default` gets the row's `.property-revert`, inert at the default, and reverting fires the control's own change event. A group with a `section` gets the same icon in its card title (the card's `reset` option, `.property-card-reset`); it replays the lit reverts of the rows showing in the card and holds no defaults of its own. Neither asks for confirmation. Rows written by a preset (`rowReverts: false`, the GIF Look rail) have no revert: the preset row's restores them together. The footer button is the only reset that confirms, because it also clears state no row shows (Brush and Eraser defaults, panel layout, toolbar position). New Canvas is a one-shot form and has no resets.
 
 ## Toolbar groups
@@ -66,10 +66,33 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
 
 - **`.btn-text-with-icon`** is the one text-button class: a label, an optional leading glyph (`+ icon-wrapper`), and `.primary` (full-strength gloss) or `.secondary`/default (dimmed gloss, via `gloss-button(true)`). All buttons are glossy; there is no flat variant. The box height is `--button-height` (36), owned by `_controls.scss`. Sidebar action rows render it through the panel-renderer `actionRow`. `.btn-icon` is the square icon-only variant.
 - **`.action-card`** is the one card-that-is-a-button: media (`.action-card-media`, an icon or preview), `.action-card-title`, `.action-card-detail`. `css/_components.scss` owns its surface, border, hover, focus, pressed and selected (`.active`) states and the text tiers; owners add only grid placement and media sizing. `.is-horizontal` puts the media beside the text (Add menu) and `.is-quiet` drops the surface and border until hover (start card tiles). Quick add and the New Canvas presets are the plain vertical form. A card that picks a value is a `.choice-card` instead.
-- **`.btn-simple` is legacy.** It is currently styled identically to `.btn-text-with-icon` and is still used at about 25 modal, gallery and settings call sites; a mass rename isn't worth it. Don't add new `.btn-simple`, and don't repurpose the name for a flat button. If a genuinely flat or quiet button is ever needed, add an explicit `.btn-flat` (or `.is-flat` modifier).
+- **There is no other text-button class.** `.btn-simple` was removed; don't bring the name back. If a genuinely flat or quiet button is ever needed, add an explicit `.btn-flat` (or `.is-flat` modifier).
 
 ## SCSS
 
 - Nested SCSS with mixins and CSS-variable tokens (`:root` ramps, then semantic variables).
 - Tokenize a value when it repeats three or more times, or when it is an app-layer z-index. Stacking inside a component stays literal.
-- `css/style.scss` is an import-only entrypoint with no loose selectors. Styles go in the responsibility-based partials under `css/` and `css/panels/`.
+- `css/style.scss` is an import-only entrypoint with no loose selectors. Styles go in the responsibility-based partials:
+
+  | Folder | Holds |
+  |---|---|
+  | `css/` | Foundation shared with the admin (`_tokens`, `_themes`, `_mixins`, `_base`), app-wide components and controls, `_mobile` |
+  | `css/panels/` | One partial per panel surface or feature (layout, Library, layers list, preview bars, effects, paint slots) |
+  | `css/panels/property/` | The property vocabulary, one partial per concern; `_tokens.scss` opens with the map. Loaded last of the panel sheets so it wins the cascade |
+  | `css/modals/` | `_shell`, `_forms`, then one partial per modal; `_responsive` is last |
+
+- **Each property rule is declared once.** `.property-panel` (a whole surface) and `.property-section` (one schema-rendered section) share one token set. A panel-wide class takes no scope; a rule that restyles a global control (segmented, select, input) is scoped to `.property-panel` or `.property-section`. Never add a second, more specific copy of a rule to override the first: change the first.
+- **No `:has()`.** State the stylesheet reads is a class the code stamps where that state already changes:
+
+  | Class | Means | Stamped by |
+  |---|---|---|
+  | `.is-off` | a module's enable switch is off | `syncPanelEffectToggle` |
+  | `.is-vacant` | every child of a container is `hidden` | the vacancy observer in `panel-renderer.js` |
+  | `.is-unset` | a swatch or asset thumbnail has no value to show | `syncModuleSummary`, `buildAssetInfo` |
+  | `.is-filtered-out` | a row, group or disclosure has no match for the modal search | `createModalFilter` |
+  | `.has-open-menu` | a bar holds an open popover menu | `setupMenuPopover` (`liftHost`) |
+  | `.has-active-query`, `.has-filter-summary` | the folded Library search still has something applied | `syncLibrarySearchState` |
+  | `.is-edge-hover` | an edge handle is hovered | `SelectionChrome` |
+
+  A control that wraps its own input (flip checkboxes, a radio group, the context-bar toggle) puts its look on the element after the input and styles it with `input:checked + …`, so nothing has to mirror `checked` onto the label.
+- A row built by `buildOptionGroup` stacks its control under the label only when the control is not a segmented control or a select. Don't fix a row's layout from CSS.

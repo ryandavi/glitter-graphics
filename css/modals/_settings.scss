@@ -1,0 +1,194 @@
+@use '../mixins' as *;
+
+/* ===== SETTINGS MODALS ===== */
+// Settings and Export Settings are form modals (see FORM MODALS above): each
+// group is a titled card, each setting a `.property-set` in it, and row and
+// card resets are the panel's own (rule D). `.settings-group` and
+// `.settings-row` are hooks for the search filter and the settings code. What
+// follows is only what a settings list adds to the panel vocabulary: custom
+// widgets, inactive rows, and the search's divider rule.
+
+.export-fidelity-ticks {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--spacing-xs);
+	margin-top: var(--spacing-2xs);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+
+	>span { text-align: center; }
+}
+
+.export-fidelity-estimate {
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+}
+
+// The chosen stop's name, at the right of the slider's label.
+.export-fidelity-value {
+	color: var(--color-text-primary);
+	font-size: var(--font-size-sm);
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+// The design system's badge: `badge-base` corners, no case transform. Status
+// color is a modifier, never a new class.
+.badge {
+	@include badge-base;
+	padding: 2px var(--spacing-sm);
+	background: var(--color-bg-secondary);
+	color: var(--color-text-tertiary);
+	font-weight: 500;
+
+	&.is-accent {
+		border-color: var(--color-accent-border);
+		background: var(--color-accent-surface);
+		color: var(--color-accent-light);
+	}
+
+	&.is-warning {
+		border-color: var(--color-warning-border);
+		background: var(--color-warning-surface);
+		color: var(--color-warning-emphasis);
+	}
+}
+
+// A setting that exists and matters but is currently held off by another
+// visible control. Its own controls carry the real `disabled` property —
+// this class only carries the look, and the reason note says what to turn
+// on. Never `pointer-events: none`: that stops the mouse and not the Tab
+// key, which leaves a "disabled" control a keyboard user can still change.
+// The row's revert stays live, so the dimming is applied around it.
+.settings-row.is-inactive {
+	> :not([data-inactive-reason-text]):not(.property-row),
+	> .property-row > :not(.property-revert) { opacity: var(--opacity-disabled); }
+	.property-label,
+	.property-row.is-toggle { cursor: not-allowed; }
+}
+
+.settings-row > [data-inactive-reason-text] { font-style: italic; }
+
+// ---- Subordination ------------------------------------------------------
+// A row governed by the single row above it (Watermark → Watermark Style)
+// sits flush with its parent; its inactive state and reason note say what
+// controls it.
+//
+// A preset that writes many values (GIF Look → its palette and texture rows)
+// keeps them in the panel's Advanced disclosure, labelled Customize: the
+// card's footer, styled by the panel as in any sidebar card. Its header row,
+// the last row of the card body, ends on a summary of what they currently are.
+//
+// What the governed rows currently amount to, stated as the header's last note.
+.governed-summary {
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+
+	&:empty { display: none; }
+}
+
+// A search hides rows with `.is-filtered-out`, which the panel's divider rule
+// cannot see: it skips `[hidden]` siblings, and `hidden` here belongs to the
+// format gating. While a query is active a set is divided from the one above
+// only when an earlier set in the same run is showing.
+.is-filtering .modal-body.modal-form {
+	&.property-panel .property-section .property-set { border-top: 0; }
+
+	&.property-panel .property-section .property-set:not([hidden], .is-filtered-out) ~ .property-set {
+		border-top: 1px solid var(--color-border);
+	}
+
+	// A live search has to be able to reveal a governed row, so filtering
+	// forces every disclosure open for as long as there is a query, and drops
+	// one whose rows are all filtered out.
+	.settings-group > .advanced-disclosure {
+		> .advanced-disclosure-content { display: flex; }
+		&.is-filtered-out { display: none; }
+	}
+}
+
+// The GIF Look's illustration: what the current palette and texture settings
+// actually do, drawn from the live values rather than described in prose.
+.export-dither-preview {
+	display: block;
+	width: min(100%, 240px);
+	height: auto;
+	aspect-ratio: 10 / 3;
+	border-radius: var(--radius-sm);
+	image-rendering: pixelated;
+}
+
+.watermark-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: var(--spacing-sm);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background:
+		linear-gradient(45deg, var(--color-bg-secondary) 25%, transparent 25%, transparent 75%, var(--color-bg-secondary) 75%),
+		linear-gradient(45deg, var(--color-bg-secondary) 25%, var(--color-bg-tertiary) 25%, var(--color-bg-tertiary) 75%, var(--color-bg-secondary) 75%);
+	background-position: 0 0, 5px 5px;
+	background-size: 10px 10px;
+
+	>img {
+		display: block;
+		max-width: 100%;
+		max-height: 36px;
+		image-rendering: pixelated;
+	}
+}
+
+#settingsModal {
+	// A `.property-inset` box, so the panel gutter sets its width.
+	.html-scene-sticker-list {
+		display: grid;
+		gap: var(--spacing-sm);
+	}
+
+	.html-scene-sticker-card {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--spacing-sm) var(--spacing-md);
+		margin: 0;
+		padding: var(--spacing-md);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+
+		>legend {
+			padding: 0 var(--spacing-xs);
+			color: var(--color-text-primary);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		>label {
+			display: grid;
+			gap: var(--spacing-xs);
+			min-width: 0;
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+
+			>input {
+				width: 100%;
+			}
+		}
+	}
+
+	.html-scene-sticker-empty {
+		padding: var(--spacing-md);
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		text-align: center;
+	}
+
+	@include mobile {
+		.html-scene-sticker-card {
+			grid-template-columns: 1fr;
+		}
+	}
+}

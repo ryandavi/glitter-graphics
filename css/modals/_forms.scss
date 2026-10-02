@@ -1,0 +1,39 @@
+@use '../mixins' as *;
+
+/* ===== FORM MODALS ===== */
+// New Canvas, Settings and Export Settings are property panels in a wider
+// column. The body carries `.property-panel`, the form inside it is a
+// `.property-section` (a PANEL_SCHEMAS section, or the groups built by
+// js/ui/settings-renderer.js), and groups, cards, rows and notes all come from
+// css/panels/property/. Only what the wider column changes is set here.
+// Cards carry their own inset, so neither the body nor the section content
+// adds one at the sides. The body opens and closes with the card inset, so
+// the first and last cards clear its edges by what they clear the sides.
+// Written against the shell's own body selector so it also outranks the
+// narrow-viewport body padding.
+.modal-overlay > .modal-content > .modal-body.modal-form {
+	padding: var(--property-pad) 0;
+}
+
+.modal-form {
+	&.property-panel .section.property-section > .section-content { padding: 0; }
+
+	// A modal is several sidebars wide: the label takes two thirds of a row and
+	// the control the rest, so the controls share one right-hand column.
+	&.property-panel .property-row { --property-label-col: minmax(0, 2fr); }
+
+	// Every control ends on the same edge as a select or segmented control,
+	// short of the revert column.
+	.property-row > :is(.input-unit, button:not(.property-revert)) { grid-column: 2 / -2; }
+
+	// Helper text keeps a readable measure in the wide column.
+	.property-note {
+		box-sizing: border-box;
+		max-width: min(100%, var(--settings-desc-measure));
+	}
+}
+
+// Below a sidebar and a half the label and its control split the row evenly.
+@container propertypanel (max-width: 480px) {
+	.modal-form.property-panel .property-row { --property-label-col: minmax(0, 1fr); }
+}

@@ -83,9 +83,6 @@ function arrangeTransformFragment(fragment) {
 	rotationRow.querySelector('.property-label').textContent = 'Rotation';
 
 	align.querySelector(':scope > .property-set-label').textContent = 'Align to canvas';
-	align.querySelectorAll(':scope > .property-row').forEach((row) => {
-		row.classList.remove('is-stacked');
-	});
 	const transformGlyphs = {
 		alignLeft: 'align-left', alignCenterX: 'align-center-x', alignRight: 'align-right',
 		alignTop: 'align-top', alignCenterY: 'align-center-y', alignBottom: 'align-bottom'
@@ -113,7 +110,7 @@ function arrangeTransformFragment(fragment) {
 	flip.replaceChildren(rowLabel('Flip'), flipControl, buildTransformRevertControl('resetFlip'));
 
 	// Labelled groups, hairline-divided (.transform-grid > .property-set in
-	// panels/_properties.scss). Same three groups for sticker / text / shape.
+	// panels/property/_sections.scss). Same three groups for sticker / text / shape.
 	// Layer Opacity is adopted into the Appearance group, so it isn't here.
 	const makeGroup = (label, nodes) => {
 		const set = panelDiv('property-set');
@@ -134,13 +131,8 @@ function arrangeTransformFragment(fragment) {
 function buildTransformPanel(editor, container, prefix, capabilities) {
 	const ids = editor.getTransformIds(prefix);
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
-	// The transform card is injected after its section's finishPanelMarkup
-	// pass, so stamp the L2-block class here too.
 	fragment.querySelectorAll('.subsection-content-group').forEach((card) => {
 		card.classList.add('property-card');
-		if (!card.classList.contains('subsection-section-group') && !card.classList.contains('effects-stack')) {
-			card.classList.add('property-block');
-		}
 	});
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');

@@ -1,12 +1,16 @@
 'use strict';
 
-function setupMenuPopover({ root, trigger, panel, itemSelector = '.app-menu-item:not([disabled])' }) {
+// `liftHost` is a bar that forms its own stacking context: it carries
+// `.has-open-menu` while the panel is open so the menu can rise above its
+// neighbours.
+function setupMenuPopover({ root, trigger, panel, liftHost = null, itemSelector = '.app-menu-item:not([disabled])' }) {
 	if (!root || !trigger || !panel) return null;
 	const isOpen = () => !panel.hidden;
 	const close = ({ focusTrigger = false } = {}) => {
 		if (!isOpen()) return;
 		panel.hidden = true;
 		root.classList.remove('is-open');
+		liftHost?.classList.remove('has-open-menu');
 		trigger.setAttribute('aria-expanded', 'false');
 		document.removeEventListener('keydown', onKeydown, true);
 		document.removeEventListener('pointerdown', onPointerDown, true);
@@ -16,6 +20,7 @@ function setupMenuPopover({ root, trigger, panel, itemSelector = '.app-menu-item
 		if (isOpen()) return;
 		panel.hidden = false;
 		root.classList.add('is-open');
+		liftHost?.classList.add('has-open-menu');
 		trigger.setAttribute('aria-expanded', 'true');
 		document.addEventListener('keydown', onKeydown, true);
 		document.addEventListener('pointerdown', onPointerDown, true);

@@ -1,0 +1,96 @@
+// ===== Typography ==========================================================
+// Group label, card title, property label, value, note. Everything below the
+// group label is sentence case.
+
+// The one uppercase level: L1 group titles separate from the sentence-case
+// card titles beneath them without needing a box.
+.property-group-label,
+.subsection-section-group > .subsection-title {
+	font-size: 10.5px;
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	line-height: 1.2;
+}
+
+.property-block-title,
+.property-card > .subsection-title {
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-primary);
+	line-height: 1.2;
+}
+
+// A block title outside a card (a Library sub-heading) is text, not a padded
+// header: its parent supplies the inset.
+.property-block-title {
+	padding: 0;
+	color: var(--color-text-secondary);
+
+	+ * { margin-top: var(--spacing-sm); }
+}
+
+.property-label {
+	font-size: var(--font-size-sm);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-secondary);
+	line-height: 1.3;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+
+	&[title] { cursor: help; }
+}
+
+.property-value {
+	font-size: var(--font-size-sm);
+	font-weight: 500;
+	color: var(--color-text-primary);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	white-space: nowrap;
+	line-height: 1.3;
+}
+
+// R7: helper text, status, inline empty state.
+.property-note {
+	font-size: 11px;
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-tertiary);
+	line-height: 1.45;
+	margin: 0;
+	padding: 0 var(--property-gutter);
+
+	&:empty,
+	&[hidden] { display: none; }
+
+	&.is-error { color: var(--color-danger-bright, var(--color-danger-text, var(--color-accent))); }
+	&.is-warning { color: var(--color-warning); }
+}
+
+// Option text inside the panel is sentence case at the label size, whatever
+// the control's own sheet says.
+.property-panel :is(.segmented-option, .filter-chip) {
+	letter-spacing: 0;
+	text-transform: none;
+	font-size: var(--font-size-sm);
+	font-weight: 500;
+}
+
+.property-panel .advanced-disclosure-label {
+	font-size: var(--font-size-sm);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-tertiary);
+	line-height: 1.3;
+	padding: 0;
+}

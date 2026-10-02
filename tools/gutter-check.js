@@ -1,5 +1,5 @@
 'use strict';
-// Enforces THE GUTTER RULE (css/panels/_properties.scss): horizontal inset is
+// Enforces THE GUTTER RULE (css/panels/property/_tokens.scss): horizontal inset is
 // applied exactly once on any path from a panel body down to a control. Any
 // element that insets while an ancestor inside the same block already did is a
 // double-padding bug - the class of defect that made the sidebar's spacing look
@@ -51,7 +51,7 @@ const CHROME = process.env.CHROME_PATH
 			// (a button, an input, a segmented option) is its chrome, not a
 			// gutter, and nesting it inside an inset container is correct.
 			const STRUCTURAL = [
-				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list', 'property-block',
+				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list', 'property-card',
 				'subsection-card-body', 'paint-slot-main', 'subsection-content',
 				'subsection-content-group',
 				'property-set', 'property-actions',
@@ -65,6 +65,9 @@ const CHROME = process.env.CHROME_PATH
 			const isStructural = (el) => STRUCTURAL.some((c) => el.classList.contains(c));
 			const gutter = (el) => parseFloat(getComputedStyle(el.closest('.design-panel, .mobile-settings-drawer') || document.documentElement)
 				.getPropertyValue('--property-gutter')) || 10;
+			// The closest any content may sit to the panel wall: the boxed-container
+			// inset, which is also how far a card stands off it.
+			const edgeInset = (el) => parseFloat(getComputedStyle(el).getPropertyValue('--property-pad')) || 8;
 			// Only an inset at (or beyond) the gutter counts; small nudges are
 			// deliberate optical spacing, not a second gutter.
 			const inset = (el) => {
@@ -100,7 +103,7 @@ const CHROME = process.env.CHROME_PATH
 			// up against the edge. Zeroing a shared rule causes exactly this.
 			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
 				const rootLeft = root.getBoundingClientRect().left;
-				const rootGutter = gutter(root);
+				const rootInset = edgeInset(root);
 				root.querySelectorAll('input, select, textarea, button, .property-label, .property-value, .segmented-control, .asset-info').forEach((el) => {
 					if (!el.getClientRects().length) return;
 					if (el.type === 'checkbox' || el.type === 'radio') return; // visually hidden
@@ -110,9 +113,9 @@ const CHROME = process.env.CHROME_PATH
 					if (el.matches('.quick-add > .layer-type-option')) return;
 					// An element that insets its own contents (a full-width click
 					// strip, a padded label) is legitimately flush as a box.
-					if (parseFloat(getComputedStyle(el).paddingLeft) >= rootGutter - 2) return;
+					if (parseFloat(getComputedStyle(el).paddingLeft) >= rootInset) return;
 					const left = el.getBoundingClientRect().left;
-					if (left - rootLeft >= rootGutter - 2) return;
+					if (left - rootLeft >= rootInset - 0.5) return;
 					const owner = el.closest('.subsection-content-group');
 					out.push({
 						el: label(el),

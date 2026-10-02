@@ -792,6 +792,8 @@ class ContentManager {
 		searchSection?.classList.toggle('has-active-filters', filterCount > 0);
 		this.renderActiveFilterSummary();
 		this.updateFilterResultsCount();
+		// The Library header mirrors this state; the admin has no Library.
+		window.syncLibrarySearchState?.();
 
 		if (this.ui.filterToggle) {
 			const isOpen = this.ui.filtersContainer?.classList.contains('visible');

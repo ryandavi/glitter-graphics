@@ -47,7 +47,25 @@ function syncLibraryView() {
 	});
 	const title = document.getElementById('designGalleryTitleText');
 	if (schema && title) title.textContent = schema.title;
+	syncLibrarySearchState();
 	return schema?.prefix || null;
+}
+
+// What the folded search row still has to say, as classes the stylesheet
+// reads: `has-filter-summary` on a search host with chips to show, and
+// `has-active-query` on the header search button while the showing kind is
+// searched or filtered.
+function syncLibrarySearchState() {
+	const section = document.getElementById('designGallerySection');
+	if (!section) return;
+	let active = false;
+	section.querySelectorAll('.gallery-search-section').forEach((host) => {
+		const search = host.querySelector(':scope > .glitter-search');
+		const summary = search?.querySelector(':scope > .active-filter-summary');
+		host.classList.toggle('has-filter-summary', Boolean(summary && !summary.hidden));
+		if (host.classList.contains('visible') && search?.matches('.has-active-search, .has-active-filters')) active = true;
+	});
+	document.getElementById('librarySearchToggle')?.classList.toggle('has-active-query', active);
 }
 
 // Single source for ShapeLibrary cards used by the shape tool picker and the

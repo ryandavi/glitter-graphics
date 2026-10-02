@@ -276,7 +276,7 @@ body.is-booting .workspace-start button {
 	// This bar is its own stacking context, so an open menu inside it (Export)
 	// is only as high as the bar. Lift the bar while a menu is open, or the
 	// canvas hint (a mini-modal on the popover layer) paints over the menu.
-	&:has(.app-menu.is-open) {
+	&.has-open-menu {
 		z-index: var(--z-header-menu-top);
 	}
 
@@ -759,28 +759,34 @@ body.mask-editing {
 	align-items: stretch;
 }
 
+// A toggle chip: the label is the hit area, the face after the input is the
+// chip, so the input's own state styles it.
 .context-checkbox-group {
 	display: inline-flex;
 	position: relative;
-	align-items: center;
-	gap: var(--spacing-xs);
-	min-height: var(--icon-size-sm);
-	padding: var(--spacing-xs) var(--spacing-sm);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
-	background: var(--color-bg-secondary);
-	color: var(--color-text-secondary);
 	cursor: pointer;
-	font-size: var(--font-size-sm);
-	white-space: nowrap;
-	transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 
 	input[type="checkbox"] {
 		@include visually-hidden-control;
 		pointer-events: none;
 	}
 
-	&:has(input:checked) {
+	> .context-toggle-face {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		min-height: var(--icon-size-sm);
+		padding: var(--spacing-xs) var(--spacing-sm);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		white-space: nowrap;
+		transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+	}
+
+	> input:checked + .context-toggle-face {
 		border-color: var(--color-accent);
 		background: var(--color-accent);
 		color: var(--color-text-on-accent);
@@ -788,7 +794,7 @@ body.mask-editing {
 		.context-count { color: inherit; }
 	}
 
-	&:has(input:focus-visible) { box-shadow: var(--control-focus-ring); }
+	> input:focus-visible + .context-toggle-face { box-shadow: var(--control-focus-ring); }
 
 	.context-count {
 		font-size: var(--font-size-xs);

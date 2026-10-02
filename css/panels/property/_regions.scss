@@ -1,0 +1,77 @@
+// ===== Sticky-region sections ==============================================
+// A section with a fixed header and/or footer and one scrolling middle. Opt in
+// per schema group with `region: 'header' | 'scroll' | 'footer'`: the renderer
+// wraps the scroll groups in `.panel-scroll-region`, tags header and footer
+// groups `.panel-sticky-header` / `.panel-sticky-footer`, and stamps
+// `.has-scroll-region` on the section. First user: Auto Glitter.
+.section.has-scroll-region {
+	> .section-content { padding: 0; }
+	&.is-open > .section-content.visible { overflow: hidden; }
+
+	> .section-content .settings-subsection {
+		display: flex;
+		height: 100%;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+		overflow: hidden;
+
+		> .panel-sticky-header,
+		> .panel-sticky-footer { flex: 0 0 auto; }
+
+		> .panel-sticky-header {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-sm);
+			padding: var(--spacing-md);
+			border-bottom: 1px solid var(--color-border);
+		}
+
+		> .panel-sticky-footer {
+			border-top: 1px solid var(--color-border);
+			padding: var(--property-pad) 0;
+		}
+
+		> .panel-scroll-region {
+			display: flex;
+			width: 100%;
+			min-width: 0;
+			max-width: 100%;
+			min-height: 0;
+			flex: 1 1 auto;
+			flex-direction: column;
+			// The scroll-region groups keep the inter-group rhythm of a plain
+			// `.settings-subsection`.
+			gap: calc(var(--property-pad) * 1.5);
+			padding: 0 0 var(--property-pad);
+			overflow-x: hidden;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			scrollbar-gutter: stable;
+
+			> * {
+				min-width: 0;
+				max-width: 100%;
+			}
+		}
+	}
+}
+
+// Only the design-panel accordion has an open collapsible section that must
+// drop its scrollbar gutter (the mobile drawer never nests these).
+.design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
+	scrollbar-gutter: auto;
+	padding: 0;
+}
+
+// ----- Auto Glitter ----------------------------------------------------------
+// The scroll-region internals, the color-match list and drag states live in
+// panels/_effects.scss.
+.property-section.auto-glitter-settings-section {
+	// The preview-mode toggle spans the panel: a mode switch, not a property
+	// control inset by the gutter.
+	.auto-glitter-preview-card .segmented-control {
+		width: 100%;
+		margin-inline: 0;
+	}
+}

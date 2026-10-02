@@ -4,8 +4,8 @@
 // TRANSFORM PANEL
 // ---------------------------------------------------------------------------
 // The shared transform card (Position / Size / Scale / Rotation / Align /
-// Flip) used by the sticker, text and shape panels. The redesign-scoped
-// overrides live in panels/_properties.scss; this is the base layout plus the
+// Flip) used by the sticker, text and shape panels. Its look inside a property
+// section lives in panels/property/_transform.scss; this is the base layout plus the
 // `.number-field-pair` primitive the transform and canvas-size number inputs
 // both use.
 // ===========================================================================

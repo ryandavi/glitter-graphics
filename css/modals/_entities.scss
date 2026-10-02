@@ -1,0 +1,97 @@
+@use '../mixins' as *;
+@use '../generated/entity-icons';
+
+/* ===== ENTITIES =====
+   Every {@slug} in content/src renders as .entity.entity-<kind> with
+   data-entity; the styling follows the kind, never the slug. Icons mark
+   places: the build puts data-icon on a site's first mention per section, and
+   css/generated/_entity-icons.scss maps each icon name to its file (a .svg is
+   a currentColor mask, a .color.svg is drawn as is). Global rather than
+   document-modal scoped because the welcome screen uses entities too. */
+@mixin entity-icon-glyph {
+	content: "";
+	display: inline-block;
+	width: .9em;
+	height: .9em;
+	margin-right: 0.3em;
+	margin-top: -0.3em;
+	vertical-align: middle;
+	background-color: var(--entity-icon-tint, transparent);
+	background-image: var(--entity-icon-image, none);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	mask-image: var(--entity-icon-mask, none);
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-image: var(--entity-icon-mask, none);
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+}
+
+// Logos mark places in lists (references, resources, the timeline) and on
+// hover cards. In running text and headings a logo competes with the words
+// around it, so there the name stands alone. nowrap keeps an icon glued to
+// its name instead of stranding on its own line.
+.entity[data-icon]:where(li *):not(.toc *) {
+	white-space: nowrap;
+
+	&::before { @include entity-icon-glyph; }
+}
+
+// Sites, software and organizations read as plain words; titles of works
+// are italic by convention.
+.entity-work { font-style: italic; }
+
+// A mention with a hover card (handles, hosted sites) but no gloss: a faint
+// underline on hover says there is more to see.
+.entity[data-card]:not([data-tooltip]) {
+	text-decoration: underline dotted transparent;
+	text-underline-offset: 2px;
+	transition: text-decoration-color var(--transition-fast);
+
+	&:hover { text-decoration-color: currentColor; }
+}
+
+// A tooltip raised from article prose (js/ui/tooltip.js adds the class) keeps
+// the app's tooltip voice, small and uppercase at one size, with room for a
+// sentence-long gloss.
+.tooltip.tooltip-prose {
+	max-width: 280px;
+	line-height: 1.45;
+}
+
+// Hover card (js/ui/tooltip.js): name and kind, then one line per fact, then
+// any gloss. Every line is the same size; the bold name is the only emphasis,
+// and a little space, not a rule, sets the gloss apart.
+.tooltip-entity-header {
+	display: flex;
+	align-items: baseline;
+	gap: var(--spacing-xs);
+}
+
+.tooltip-entity-icon {
+	@include entity-icon-glyph;
+	flex: none;
+	margin: 0;
+	align-self: center;
+}
+
+.tooltip-entity-kind {
+	margin-left: auto;
+	padding-left: var(--spacing-sm);
+	opacity: 0.65;
+}
+
+.tooltip-entity-meta { opacity: 0.8; }
+
+.tooltip-entity-gloss { margin-top: var(--spacing-xs); }
+
+// Written under --watch only: an unknown slug or source, so a draft can be
+// previewed. --check refuses to pass while one is left.
+.draft-marker {
+	text-decoration: underline wavy var(--color-warning);
+	text-underline-offset: 3px;
+}

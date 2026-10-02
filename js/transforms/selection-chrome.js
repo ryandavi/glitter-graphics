@@ -74,6 +74,12 @@ class SelectionChrome {
 			const handle = document.createElement('div');
 			const suffix = kind === 'rotation' ? '' : ` ${handleType}`;
 			handle.className = `transform-handle transform-handle-${kind}${suffix}`;
+			if (kind === 'edge') {
+				// The box is an earlier sibling, so the stylesheet cannot reach it
+				// from a hovered edge; the container carries the state instead.
+				handle.addEventListener('pointerenter', () => container.classList.add('is-edge-hover'));
+				handle.addEventListener('pointerleave', () => container.classList.remove('is-edge-hover'));
+			}
 			wrapper.appendChild(handle);
 			this.wrappers.set(handleType, wrapper);
 		});

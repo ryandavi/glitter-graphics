@@ -76,7 +76,6 @@
 // Shared properties for all buttons.
 .btn,
 .btn-icon,
-.btn-simple,
 .btn-text-with-icon,
 .btn-text {
 	cursor: pointer;
@@ -100,7 +99,7 @@
 	}
 
 	&:disabled {
-		opacity: var(--disabled-opacity);
+		opacity: var(--opacity-disabled);
 		cursor: not-allowed;
 	}
 }
@@ -114,20 +113,16 @@
 .admin-tool {
 	.btn,
 	.btn-icon,
-	.btn-simple,
 	.btn-text-with-icon {
 		@include flat-control;
 	}
 }
 
-// `.btn-text-with-icon` is THE text button (label + optional leading glyph).
-// `.btn-simple` is a legacy alias kept only for the ~25 modal/gallery/settings
-// call sites still on it - identical style, do not add new ones (AGENTS.md).
-// Both share ONE box so a mixed action row (sidebar Open Project + Reset, a
-// modal footer) lines up: one control height, symmetric inline padding,
-// centred content, one gap. The leading glyph tracks the label size (1.15em),
-// NOT the 30px icon-BUTTON token (--icon-size-sm, for square icon-only buttons).
-.btn-simple,
+// `.btn-text-with-icon` is THE text button (label + optional leading glyph):
+// one control height, symmetric inline padding, centred content, one gap, so
+// any action row or modal footer lines up. The leading glyph tracks the label
+// size (1.15em), NOT the 30px icon-BUTTON token (--icon-size-sm, for square
+// icon-only buttons).
 .btn-text-with-icon {
 	display: inline-flex;
 	align-items: center;
@@ -152,7 +147,6 @@
 
 // Comfortable tap targets for every text button on touch (was modal-only).
 @include mobile {
-	.btn-simple,
 	.btn-text-with-icon {
 		min-height: var(--touch-target-min);
 	}
@@ -223,7 +217,7 @@
 
 
 	&:disabled {
-		opacity: var(--disabled-opacity);
+		opacity: var(--opacity-disabled);
 		cursor: not-allowed;
 	}
 
@@ -257,10 +251,6 @@
 			color: var(--bar-btn-hover-color);
 		}
 	}
-}
-
-.btn-simple {
-	@include gloss-button(true);
 }
 
 .btn-text {
@@ -357,7 +347,7 @@
 	letter-spacing: 0.5px;
 	font-size: var(--font-size-base);
 
-	>.btn-simple {
+	>.btn-text-with-icon {
 		flex: 1 1 100%;
 		width: 100%;
 	}

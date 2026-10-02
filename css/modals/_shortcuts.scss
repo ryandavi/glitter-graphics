@@ -1,0 +1,121 @@
+@use '../mixins' as *;
+
+/* ===== SHORTCUTS MODAL ===== */
+// A form modal (see FORM MODALS above): each command group is a titled card
+// and each command a property row. Keyboard vs Canvas Gestures is a scope
+// filter, not a set of pages, so it lives in the chrome bar as the shared
+// `.segmented-control`. Only the row's control differs from a setting: it is
+// a run of key or gesture chips, as wide as it needs, ending on the row edge.
+#shortcutsModal .property-row.shortcut-item {
+	grid-template-columns: minmax(0, 1fr) auto;
+
+	// A command name is read, not scanned beside a control: on a narrow
+	// modal it wraps instead of truncating.
+	> .property-label { white-space: normal; }
+
+	> .shortcut-keys {
+		grid-column: 2;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: var(--spacing-xs);
+	}
+}
+
+.modal-filter-empty {
+	padding: var(--spacing-xl) var(--spacing-md);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-sm);
+	text-align: center;
+}
+
+.modal-body .is-filtered-out {
+	display: none !important;
+}
+
+// Shared shortcut language for the Keyboard Shortcuts and Guide modals.
+// Keep aliases for the guide's semantic <kbd> markup; both resolve to the
+// same component so size, alignment, and input-type treatment cannot drift.
+#shortcutsModal,
+#guideModal {
+	.shortcut-sequence,
+	.guide-shortcut {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2em;
+		vertical-align: baseline;
+		white-space: nowrap;
+	}
+
+	.shortcut-input-token,
+	.shortcut-gesture,
+	.kbd,
+	.guide-kbd {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		min-width: 20px;
+		height: 18px;
+		padding: 0 0.35em;
+		vertical-align: 0.08em;
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: 3px;
+		box-shadow: 0 1px 0 var(--color-border);
+		color: var(--color-text-primary);
+		font-family: 'Courier New', monospace;
+		font-size: 0.82em;
+		font-weight: 600;
+		line-height: 1;
+		text-align: center;
+		white-space: nowrap;
+	}
+
+	.shortcut-sequence>.kbd,
+	.guide-shortcut>.guide-kbd {
+		vertical-align: baseline;
+	}
+
+	// A key named inline in a sentence rather than shown as a chip. It carries no
+	// treatment of its own on purpose — the surrounding prose reads as prose — and
+	// exists so localizeKeyLabels() can find and rewrite it.
+	.guide-key-label {
+		white-space: nowrap;
+	}
+
+	.shortcut-gesture {
+		gap: 6px;
+		min-width: 0;
+		background: var(--color-bg-secondary);
+		color: var(--color-text-secondary);
+		font-family: inherit;
+		font-size: 0.82em;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+.shortcut-device-icon {
+	font-size: 11px;
+	color: var(--color-text-tertiary);
+}
+
+	.shortcut-binding {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+	}
+
+	.shortcut-alternative {
+		padding: 0 2px;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+	}
+
+	.shortcut-instruction {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+	}
+}

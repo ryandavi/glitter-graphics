@@ -1,0 +1,756 @@
+@use '../mixins' as *;
+
+/* ===== MODAL ===== */
+body.modal-open {
+	overflow: hidden;
+}
+
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: var(--color-overlay);
+	z-index: var(--modal-z-index);
+	display: none;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	padding:
+		max(12px, env(safe-area-inset-top))
+		max(12px, env(safe-area-inset-right))
+		max(12px, env(safe-area-inset-bottom))
+		max(12px, env(safe-area-inset-left));
+	opacity: 0;
+	transition: opacity var(--transition-base);
+	-webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+	backdrop-filter: blur(var(--modal-backdrop-blur));
+
+	&.visible {
+		display: flex;
+		opacity: 1;
+	}
+
+	>.modal-content {
+		box-sizing: border-box;
+		background: var(--color-bg-primary);
+		border: 1px solid var(--color-window-border);
+		border-radius: var(--radius-panel);
+		width: var(--modal-width, 700px);
+
+		/* Fallback for older browsers */
+		max-height: 90vh;
+		/* Modern browsers with dynamic viewport */
+		max-height: 90dvh;
+
+		max-width: calc(100vw - 32px);
+		max-width: calc(100dvw - 32px);
+
+
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 20px 60px var(--color-shadow-modal);
+
+		// Browse modals are windows, not sheets that grow with their contents:
+		// switching a tab, changing export format, typing in the filter or
+		// expanding a disclosure must not resize the frame around the reader.
+		&.modal-browse {
+			--modal-width: var(--modal-width-browse);
+			height: min(var(--modal-browse-height), 90dvh);
+		}
+
+		&.modal-reading {
+			--modal-width: var(--modal-width-reading);
+			height: min(var(--modal-browse-height), 90dvh);
+		}
+
+		>.modal-header {
+			flex-shrink: 0;
+			min-height: 52px;
+			box-sizing: border-box;
+			padding: 5px 8px 5px 12px;
+			border-bottom: 1px solid var(--color-border);
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			// Same bar chrome as panel section headers — modals are windows too.
+			@include bar-base;
+			border-top-left-radius: var(--radius-lg);
+			border-top-right-radius: var(--radius-lg);
+
+			>.modal-title {
+				font-size: var(--font-size-xl);
+				font-weight: 600;
+				color: var(--bar-title-color);
+
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: var(--spacing-base);
+
+				>.modal-title-text {
+					position: relative;
+					top: -.05em;
+				}
+
+				>.modal-icon {
+					color: var(--bar-icon-color);
+				}
+
+			}
+
+			>.modal-close {
+				width: 40px;
+				height: 40px;
+
+				>svg.icon {
+					font-size: 20px;
+				}
+			}
+
+		}
+
+		>.modal-body {
+			flex: 1 1 auto;
+			min-height: 0;
+			padding: var(--spacing-lg);
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			-webkit-overflow-scrolling: touch;
+			color: var(--color-text-secondary);
+			line-height: 1.55;
+			scroll-behavior: smooth;
+
+			>.modal-hero-image {
+				margin-bottom: 20px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 30dvh;
+				padding: var(--spacing-xl);
+
+				// ios fix for radius + hidden
+				border-radius: var(--radius-md);
+				overflow: hidden;
+				transform: translateZ(0);
+
+			}
+
+
+			a {
+				&:hover {
+					background: var(--theme-glitter-image) repeat;
+					-webkit-background-clip: text;
+					-webkit-text-fill-color: transparent;
+				}
+			}
+
+			// The global reset zeroes list padding, so prose lists need their
+			// own gutter or the markers hang past the body's edge. Classed
+			// lists (TOC, timeline) lay themselves out.
+			ol {
+				margin-left: 2.5em;
+			}
+
+			ul:not([class]),
+			ul.general-references-list {
+				margin-left: 1.5em;
+			}
+
+
+
+			.toc {
+				background: var(--color-bg-secondary);
+				border: 1px solid var(--color-border);
+				padding: var(--spacing-lg);
+				margin: var(--spacing-xl) 0;
+				border-radius: var(--radius-sm);
+				display: inline-flex;
+				flex-direction: column;
+
+
+				>h3 {
+					margin: 0 0 var(--spacing-md) 0;
+					font-size: var(--font-size-md);
+				}
+
+
+				>ol {
+					list-style: none;
+					margin: 0;
+					padding-left: 0;
+					counter-reset: item;
+
+					>li {
+						counter-increment: item;
+						display: grid;
+						grid-template-columns: auto 1fr;
+						-moz-column-gap: 0.5em;
+						column-gap: 0.5em;
+						align-items: start;
+						padding: var(--spacing-2xs);
+
+						a {
+							color: var(--color-text-secondary);
+							text-decoration: none;
+
+							&:hover {
+								color: var(--color-accent);
+								text-decoration: underline;
+							}
+						}
+
+						&::before {
+							content: counter(item) ".";
+							grid-column: 1;
+							align-self: start;
+						}
+
+						/* main content (link) */
+						> :not(ol) {
+							grid-column: 2;
+						}
+
+						/* nested list should also align under content */
+						>ol {
+							grid-column: 2;
+							margin-top: 0.25em;
+							margin-left: 0;
+							counter-reset: subitem;
+
+							>li {
+								counter-increment: subitem;
+								display: grid;
+								grid-template-columns: auto 1fr;
+								-moz-column-gap: 0.5em;
+								column-gap: 0.5em;
+								align-items: start;
+								padding: var(--spacing-2xs);
+
+								&::before {
+									content: counter(item) "." counter(subitem);
+									grid-column: 1;
+									align-self: start;
+								}
+
+								> :not(ol) {
+									grid-column: 2;
+								}
+
+								/* third-level nested list (e.g. h5s under an h4) should also align under content */
+								>ol {
+									grid-column: 2;
+									margin-top: 0.25em;
+									margin-left: 0;
+									counter-reset: subsubitem;
+
+									>li {
+										counter-increment: subsubitem;
+										display: grid;
+										grid-template-columns: auto 1fr;
+										-moz-column-gap: 0.5em;
+										column-gap: 0.5em;
+										align-items: start;
+										padding: var(--spacing-2xs);
+
+										&::before {
+											content: counter(item) "." counter(subitem) "." counter(subsubitem);
+											grid-column: 1;
+											align-self: start;
+										}
+
+										> :not(ol) {
+											grid-column: 2;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			}
+
+
+
+
+
+
+		}
+
+		>.modal-footer {
+			flex-shrink: 0;
+
+			padding: var(--spacing-lg);
+			border-top: 1px solid var(--color-border);
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			gap: var(--spacing-md);
+
+
+		&.left-right {
+			justify-content: space-between;
+			margin-top: 0;
+		}
+
+			&.right {
+				justify-content: flex-end;
+				align-items: stretch;
+
+				>button {
+					display: flex;
+					align-items: center;
+					aspect-ratio: unset;
+				}
+			}
+
+		}
+
+		// modal-action / modal-action-hero no longer carry their own size -
+		// modal buttons are just buttons (--button-height, shared inline
+		// padding). Prominence for a hero CTA comes from `.primary`, not scale.
+		.modal-action-danger {
+			--btn-gradient: var(--danger-btn-gradient);
+			--btn-border-color: var(--danger-btn-border-color);
+			--btn-text-color: var(--danger-btn-text-color);
+			--btn-hover-filter: var(--danger-btn-hover-filter);
+			--btn-active-filter: var(--danger-btn-active-filter);
+		}
+
+	}
+
+
+}
+
+#layerTypePickerModal > .add-menu-modal {
+	--modal-width: 760px;
+
+	> .modal-body { overflow-y: auto; }
+}
+
+
+
+
+// Modal loading states
+.modal-loading,
+.modal-error {
+	padding: var(--spacing-xl);
+	text-align: center;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-lg);
+}
+
+.modal-error {
+	color: var(--color-danger);
+}
+
+#confirmationModal {
+	.modal-body {
+		font-size: var(--font-size-md);
+	}
+
+	.confirmation-message {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		max-height: min(50vh, 420px);
+		overflow-y: auto;
+		color: var(--color-text-secondary);
+		line-height: 1.5;
+	}
+
+	.confirmation-message-copy,
+	.confirmation-message-outro { margin: 0; }
+
+	.confirmation-message-copy {
+		color: var(--color-text-secondary);
+	}
+
+	.confirmation-subject {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		min-width: 0;
+		padding: var(--spacing-sm) var(--spacing-md);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-tertiary);
+	}
+
+	.confirmation-subject-label,
+	.confirmation-facts dt {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.confirmation-subject-value {
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+		user-select: text;
+	}
+
+	.confirmation-facts {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--spacing-sm);
+		margin: 0;
+
+		>div {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-xs);
+			min-width: 0;
+			padding: var(--spacing-sm) var(--spacing-md);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+		}
+
+		dd {
+			margin: 0;
+			color: var(--color-text-primary);
+			font-size: var(--font-size-md);
+			font-weight: 600;
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	.confirmation-detail-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		margin: 0;
+		padding-left: var(--spacing-xl);
+	}
+
+	.confirmation-detail-list > li::marker { color: var(--color-warning); }
+	.confirmation-message-outro { color: var(--color-text-secondary); }
+}
+
+.modal-overlay > .content-dialog {
+	// Welcome, Guide and About are the app's long-form introductions. Keep
+	// their desktop frame identical so switching between them does not resize it.
+	&.onboarding-dialog,
+	&.document-dialog {
+		--modal-width: var(--modal-width-reading);
+		height: 88vh;
+		height: 88dvh;
+		max-height: 88vh;
+		max-height: 88dvh;
+	}
+}
+
+// The single chrome strip that sits between a modal's header and its body.
+// Every browse modal uses it, so the bar's height, ground and rhythm cannot
+// drift between Settings, Export Settings, Shortcuts, Guide and About. It
+// carries up to three slots: Contents (jumps), Search (filters text), and
+// Scope (filters by kind).
+.modal-nav {
+	position: relative;
+	z-index: 3;
+	flex: 0 0 auto;
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-bg-tertiary);
+
+	&[hidden] { display: none; }
+
+	>.modal-nav-scope {
+		flex: 0 0 auto;
+		min-height: var(--search-control-height);
+
+		>.segmented-option {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--spacing-sm);
+			white-space: nowrap;
+
+			>svg.icon { font-size: 14px; }
+		}
+	}
+
+	>.search-input-wrapper {
+
+		>input {
+			padding-right: 7.5rem;
+
+			&::-webkit-search-cancel-button {
+				display: none;
+			}
+		}
+
+		>.modal-filter-status {
+			position: absolute;
+			top: 50%;
+			right: var(--spacing-sm);
+			max-width: 6.5rem;
+			overflow: hidden;
+			padding: var(--spacing-2xs) var(--spacing-sm);
+			transform: translateY(-50%);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-pill);
+			background: var(--color-bg-secondary);
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+			font-variant-numeric: tabular-nums;
+			line-height: 1;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+
+			&:empty {
+				display: none;
+			}
+		}
+	}
+}
+
+// Narrow bars stack their slots rather than starving the search field: a
+// scope control and a search input side by side at phone width leaves the
+// placeholder truncated to two characters.
+@media (max-width: 600px) {
+	.modal-nav.search-toggle-row {
+		flex-wrap: wrap;
+
+		>.modal-nav-scope {
+			order: -1;
+			width: 100%;
+		}
+
+		>.search-input-wrapper { flex: 1 1 60%; }
+	}
+
+	.modal-nav.search-toggle-row.document-nav {
+		flex-wrap: nowrap;
+
+		>.search-input-wrapper { flex: 1 1 auto; }
+	}
+}
+
+.document-nav {
+	>.search-input-wrapper>.document-search-input {
+		padding-right: var(--spacing-md);
+	}
+
+	>.document-toc-toggle {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		height: var(--search-control-height);
+		min-height: var(--search-control-height);
+		white-space: nowrap;
+
+		>.icon-wrapper {
+			width: 14px;
+			height: 14px;
+
+			>svg.icon {
+				font-size: 14px;
+				transition: transform var(--transition-fast);
+			}
+		}
+
+		&[aria-expanded="true"]>.icon-wrapper>svg.icon {
+			transform: rotate(180deg);
+		}
+	}
+
+	>.document-search-status {
+		@include visually-hidden;
+	}
+
+	>.document-back-to-top {
+		flex: 0 0 var(--search-control-height);
+		width: var(--search-control-height);
+		height: var(--search-control-height);
+
+		>svg.icon { font-size: 18px; }
+		&[hidden] { display: none; }
+	}
+
+	>.document-toc-panel,
+	>.document-search-results {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 2;
+		max-height: min(60dvh, 520px);
+		overflow-y: auto;
+		padding: 4px;
+		border: 0;
+		border-bottom: 1px solid var(--color-window-border);
+		border-radius: 0 0 var(--radius-md) var(--radius-md);
+		background: var(--color-bg-primary);
+		box-shadow: 0 12px 28px var(--color-shadow-strong);
+		scrollbar-gutter: stable;
+
+		&[hidden] { display: none; }
+	}
+
+	.document-toc-menu {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		box-sizing: border-box;
+		margin: 0;
+		padding: var(--spacing-sm);
+
+		>h3 {
+			margin: 0 0 var(--spacing-md);
+			font-size: var(--font-size-md);
+		}
+
+		ol {
+			margin: 0;
+			padding-left: 0;
+			list-style: none;
+		}
+
+		>ol {
+			counter-reset: item;
+
+			>li {
+				counter-increment: item;
+
+				&::before { content: counter(item) "."; }
+
+				>ol {
+					grid-column: 2;
+					margin-top: var(--spacing-xs);
+					counter-reset: subitem;
+
+					>li {
+						counter-increment: subitem;
+
+						&::before { content: counter(item) "." counter(subitem); }
+
+						>ol {
+							grid-column: 2;
+							margin-top: var(--spacing-xs);
+							counter-reset: subsubitem;
+
+							>li {
+								counter-increment: subsubitem;
+
+								&::before { content: counter(item) "." counter(subitem) "." counter(subsubitem); }
+							}
+						}
+					}
+				}
+			}
+		}
+
+		li {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			gap: 0 var(--spacing-sm);
+			padding: var(--spacing-2xs);
+
+			&::before {
+				grid-column: 1;
+				align-self: start;
+			}
+
+			>a {
+				grid-column: 2;
+				color: var(--color-text-secondary);
+				text-decoration: none;
+
+				&:hover,
+				&:focus-visible {
+					color: var(--color-accent);
+					text-decoration: underline;
+				}
+			}
+		}
+	}
+
+	>.document-search-results {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+	}
+
+	.document-search-result {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2xs);
+		width: 100%;
+		padding: var(--spacing-sm) var(--spacing-md);
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		background: transparent;
+		color: var(--color-text-secondary);
+		text-align: left;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--color-border-hover);
+			background: var(--color-bg-tertiary);
+		}
+	}
+
+	.document-search-result-title {
+		color: var(--color-text-primary);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+	}
+
+	.document-search-result-excerpt,
+	.document-search-overflow {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+		line-height: 1.4;
+	}
+
+	.document-search-result-title,
+	.document-search-result-excerpt {
+		display: block;
+		width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.document-search-empty {
+		padding: var(--spacing-xl) var(--spacing-md);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		text-align: center;
+	}
+
+	.document-search-overflow {
+		padding: var(--spacing-sm) var(--spacing-md);
+	}
+}
+
+.document-search-hit {
+	border-radius: var(--radius-sm);
+	box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+// Highlight animation (for reference scrolling)
+@keyframes highlight {
+
+	0%,
+	100% {
+		background-color: transparent;
+	}
+
+	50% {
+		background-color: rgba(0, 102, 204, 0.2);
+	}
+}
+
+.highlight {
+	animation: highlight 2s ease;
+}

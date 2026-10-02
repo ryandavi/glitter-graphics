@@ -175,11 +175,6 @@
 		}
 	}
 
-	.gradient-stop-remove[disabled] {
-		opacity: 0.28;
-		cursor: default;
-	}
-
 	// Add stop / Reverse: a plain 2-up of the shared icon+label button.
 	.gradient-actions {
 		display: grid;
@@ -278,7 +273,6 @@
 	flex-direction: column;
 	gap: 0;
 	padding-top: 0;
-	border-top: 1px solid var(--color-border);
 
 	&.visible {
 		display: flex;
@@ -394,7 +388,7 @@
 
 .auto-glitter-settings-section {
 	// Sticky-header / scroll-region / sticky-footer layout is the generic
-	// `.section.has-scroll-region` block in panels/_properties.scss. Only the
+	// `.section.has-scroll-region` block in panels/property/_regions.scss. Only the
 	// section-specific bits stay here.
 
 	.auto-glitter-preview-card .segmented-control,
@@ -414,29 +408,10 @@
 		&.has-warning .property-note { color: var(--color-warning); }
 	}
 
-	.auto-glitter-rerun-mode > label {
-		display: flex;
-		position: relative;
-		align-items: center;
-		justify-content: center;
-
-		> input {
-			@include visually-hidden-control;
-			pointer-events: none;
-		}
-
-		&:has(input:checked) {
-			background: var(--color-accent);
-			color: var(--color-text-on-accent);
-		}
-
-		&:has(input:focus-visible) { box-shadow: inset var(--control-focus-ring); }
-	}
-
-	.auto-glitter-rerun-mode > .segmented-option {
-		min-width: 0;
-		padding-right: var(--spacing-xs);
-		padding-left: var(--spacing-xs);
+	// A radio group: the chosen option fills like an active segment.
+	.auto-glitter-rerun-mode > .segmented-option > input:checked + span {
+		background: var(--color-accent);
+		color: var(--color-text-on-accent);
 	}
 
 	// #autoGlitterStatus is a plain `.property-note` now — no bespoke styling.
@@ -471,7 +446,7 @@
 		}
 
 		&.is-skipped {
-			opacity: var(--disabled-opacity);
+			opacity: var(--opacity-disabled);
 			background: var(--color-bg-secondary);
 		}
 	}
@@ -480,7 +455,7 @@
 		display: none;
 
 		&:disabled {
-			opacity: var(--disabled-opacity);
+			opacity: var(--opacity-disabled);
 			cursor: default;
 		}
 	}
@@ -578,4 +553,3 @@
 	.auto-glitter-settings-section .auto-glitter-drag-handle { display: flex; }
 }
 
-.layer-effects-actions > .btn-simple { width: 100%; }

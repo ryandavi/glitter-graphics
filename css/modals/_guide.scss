@@ -1,0 +1,136 @@
+@use '../mixins' as *;
+
+/* ===== GUIDE MODAL ===== */
+
+#guideModal {
+	.modal-hero-image {
+		//tiled background
+		background: var(--theme-glitter-image) repeat;
+
+		>h2 {
+			display: none;
+		}
+	}
+
+
+	.guide-content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xl);
+
+		.guide-screenshot {
+			margin: var(--spacing-md) 0;
+
+			>figure {
+				width: 100%;
+				max-width: 100%;
+				padding: var(--spacing-sm);
+				overflow: hidden;
+
+				>img {
+					image-rendering: auto;
+					border-radius: var(--radius-xs);
+				}
+			}
+
+			&.guide-screenshot-modal {
+				>figure {
+					max-width: 720px;
+				}
+			}
+		}
+
+		>.guide-section {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-md);
+
+			>h3 {
+				display: flex;
+				align-items: center;
+				gap: var(--spacing-sm);
+			}
+
+			>.guide-subsection {
+				padding: var(--spacing-lg);
+				background-color: var(--color-bg-card);
+				border-radius: var(--spacing-md);
+				display: flex;
+				flex-direction: column;
+
+
+				>h4 {
+					font-size: 1.1em;
+				}
+
+
+
+				.guide-item {
+					display: grid;
+					grid-template-columns: 24px 1fr;
+					gap: var(--spacing-sm);
+					align-items: start;
+
+					.guide-item-icon {
+						width: 24px;
+						height: 24px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						flex-shrink: 0;
+
+						&:not(.empty) {
+							background-color: var(--color-bg-tertiary);
+							border-radius: var(--radius-md);
+						}
+
+						&.empty {
+							color: var(--color-text-tertiary);
+						}
+
+						.icon-wrapper {
+							width: 20px;
+							height: 20px;
+						}
+					}
+
+					.guide-item-content {
+						min-width: 0; // Prevent grid blowout
+
+
+					}
+
+					+.guide-item {
+						margin-top: var(--spacing-base);
+					}
+
+					+h4 {
+						margin-top: var(--spacing-md);
+					}
+				}
+
+
+
+
+
+
+
+				p+.guide-item {
+					margin-top: var(--spacing-md);
+				}
+
+
+				h4+.guide-item,
+				ul+p,
+				p+p {
+					margin-top: var(--spacing-sm);
+				}
+
+				h4+p,
+				p+ul {
+					margin-top: var(--spacing-xs);
+				}
+			}
+		}
+	}
+}
