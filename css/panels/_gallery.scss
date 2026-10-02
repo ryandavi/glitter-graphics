@@ -104,7 +104,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--spacing-xs);
+		gap: var(--spacing-md);
 		padding: 0 var(--property-gutter) var(--spacing-md);
 
 		&[hidden] { display: none; }
@@ -393,6 +393,12 @@
 		&.filters-open {
 			flex: 1 1 auto;
 			min-height: 0;
+
+			>.glitter-search {
+				border: 0;
+			}
+
+
 		}
 	}
 

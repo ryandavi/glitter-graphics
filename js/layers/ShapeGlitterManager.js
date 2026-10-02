@@ -445,15 +445,16 @@ class ShapeGlitterManager {
 		// text manager (both are called from app.updateSidePanelUI).
 		if (!layer) return;
 
-		const stripText = assetArmed
+		const stripText = !armed
 			? formatAssetPickerStripText('shape', layer.name)
-			: formatPickerStripText(armed ? s.slot : 'fill', layer.name, 'shape');
+			: formatPickerStripText(s.slot, layer.name, 'shape');
 		renderPickerStrip({
 			ownsStrip: true,
 			visible: true,
 			armed: armed || assetArmed,
 			hint: !armed && !assetArmed,
 			pickerMode: armed,
+			library: armed ? 'glitter' : 'shape',
 			...stripText
 		});
 	}

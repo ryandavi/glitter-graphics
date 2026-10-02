@@ -25,11 +25,15 @@
 			gap: var(--spacing-sm);
 			padding: var(--spacing-md) 0;
 			border-bottom: 1px solid var(--color-border);
+
+			.property-card-body {
+				padding: 0 var(--property-gutter);
+			}
 		}
 
 		> .panel-sticky-footer {
 			border-top: 1px solid var(--color-border);
-			padding: var(--spacing-md) 0;
+			padding: 0;
 		}
 
 		> .panel-scroll-region {

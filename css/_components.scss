@@ -127,7 +127,7 @@ textarea {
 	display: flex;
 	align-items: stretch;
 	gap: var(--spacing-sm);
-	padding: var(--spacing-sm) var(--property-gutter, var(--spacing-md));
+	padding: var(--property-gutter);
 
 	>.search-input-wrapper {
 		position: relative;

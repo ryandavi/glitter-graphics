@@ -48,7 +48,7 @@ const COMMANDS = {
 	},
 	copySelection: {
 		label: 'Copy Selected Layer(s)', group: 'Clipboard', keys: ['mod+c'], displayKey: 'Ctrl/Cmd + C',
-		when: (editor) => editor.getSelectedActionableLayers().length > 0,
+		when: (editor) => !window.getSelection()?.toString() && editor.getSelectedActionableLayers().length > 0,
 		run: (editor) => copySelectedLayers(editor)
 	},
 	paste: {
