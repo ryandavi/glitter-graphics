@@ -5566,6 +5566,9 @@ body.tool-text .text-hover-baselines {
   flex-direction: column;
   gap: var(--property-row-gap);
 }
+.property-panel :is(.paint-slot-source, .glitter-source) > .paint-slot-opacity {
+  margin-top: calc(var(--property-set-gap) - var(--property-row-gap));
+}
 
 .glitter-source {
   display: flex;
@@ -7868,6 +7871,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   border: 0;
   border-radius: var(--property-r-field);
   background: var(--color-bg-secondary);
+}
+.property-panel .asset-info:not([hidden]) + .property-row {
+  margin-top: calc(var(--property-set-gap) - var(--property-row-gap));
 }
 
 .property-panel .asset-info-header {

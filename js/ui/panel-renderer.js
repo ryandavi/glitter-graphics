@@ -786,11 +786,9 @@ function buildAssetInfo(options) {
 	if (options.compact) {
 		info.querySelector('.asset-info-meta')?.remove();
 	} else {
-		if (!options.nested) {
-			const details = info.querySelector('.asset-info-details');
-			const metaRow = info.querySelector('.asset-info-meta');
-			if (details && metaRow) details.appendChild(metaRow);
-		}
+		const details = info.querySelector('.asset-info-details');
+		const metaRow = info.querySelector('.asset-info-meta');
+		if (details && metaRow) details.appendChild(metaRow);
 		meta[0].id = options.size;
 		meta[1].id = options.frames;
 		meta[0].dataset.role = 'asset-size';
@@ -821,7 +819,6 @@ function buildPaintSource(slot) {
 		change: slot.assetIds?.change || `${assetPrefix}Change`,
 		size: slot.assetIds?.size || `${assetPrefix}Size`,
 		frames: slot.assetIds?.frames || `${assetPrefix}Frames`,
-		nested: slot.nested,
 		title: slot.chipTitle,
 		hidden: slot.activeMode !== 'glitter',
 		glitterSource: true
@@ -1013,7 +1010,7 @@ function buildPanelSection(spec, schema) {
 // holding its own Source row and opacity. It is a paint slot of its own for
 // the binder, so it carries the slot hooks a section does.
 function buildNestedPaintSet(slot) {
-	const set = buildPaintSource({ ...slot, nested: true });
+	const set = buildPaintSource(slot);
 	set.id = slot.id;
 	set.classList.add('paint-slot-card');
 	set.dataset.slot = slot.slot;

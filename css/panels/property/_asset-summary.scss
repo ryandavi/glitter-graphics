@@ -13,6 +13,10 @@
 	border: 0;
 	border-radius: var(--property-r-field);
 	background: var(--color-bg-secondary);
+
+	// The chip is the section's identity, so the row after it stands off by the
+	// set gap whether or not the schema put that row in the same set.
+	&:not([hidden]) + .property-row { margin-top: calc(var(--property-set-gap) - var(--property-row-gap)); }
 }
 
 .property-panel .asset-info-header {

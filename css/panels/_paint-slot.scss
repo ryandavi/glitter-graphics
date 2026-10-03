@@ -178,5 +178,9 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-row-gap);
+
+	// A second paint (Bevel's Shade) keeps its Opacity in the Source set. It
+	// stands off the source by the set gap, as a section's Opacity set does.
+	> .paint-slot-opacity { margin-top: calc(var(--property-set-gap) - var(--property-row-gap)); }
 }
 

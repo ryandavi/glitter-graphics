@@ -878,7 +878,7 @@ const PANEL_SCHEMAS = {
 							{ id: 'textBackgroundModeBounds', label: 'Text bounds', value: 'text-bounds' },
 							{ id: 'textBackgroundModeBox', label: 'Text box', value: 'text-box' }
 						] },
-						{ kind: 'segmented', label: 'Line connection', revert: true, hint: 'Separate: each line\'s own shape. Merge: nearby lines combine into a stepped shape. Connected: a more permissive merge.', options: [
+						{ kind: 'segmented', label: 'Line connection', stacked: true, revert: true, hint: 'Separate: each line\'s own shape. Merge: nearby lines combine into a stepped shape. Connected: a more permissive merge.', options: [
 							{ id: 'textBackgroundConnectionSeparate', label: 'Separate', active: true, value: 'separate' },
 							{ id: 'textBackgroundConnectionMerge', label: 'Merge', value: 'merge-adjacent' },
 							{ id: 'textBackgroundConnectionConnected', label: 'Connected', value: 'connected' }
