@@ -41,29 +41,33 @@ class GifEncodingPipeline {
 		return { significant: false, observedColorCount, paletteSize: settings.paletteSize };
 	}
 
-	_applyDitherFrame(frame, paletteBytes, settings, mode, frameIndex) {
-		const palette = [];
-		for (let index = 0; index < paletteBytes.length; index += 3) palette.push(paletteBytes.slice(index, index + 3));
+	// The dither itself runs in the encoder workers (gif-encode.worker.js),
+	// against the shared palette and each frame's own index; this is the
+	// GlitterPixelEffects.applyPixelEffects() input they are handed.
+	_buildDitherTask(settings, mode) {
 		const type = String(settings.ditherType || '').toLowerCase();
 		const algorithm = type.includes('atkinson') ? 'atkinson' : type.includes('falsefloyd') ? 'falsefloyd'
 			: type.includes('stucki') ? 'stucki' : type.includes('bayer') ? 'bayer' : type.includes('halftone') ? 'halftone' : 'floyd';
-		return new ImageData(GlitterPixelEffects.applyPixelEffects(frame.data, frame.width, frame.height, {
-			pixelateEnabled: false,
-			paletteEnabled: true,
-			pixelSize: 1,
-			paletteMode: 'dither',
-			dither: {
-				algorithm,
-				angle: 45,
-				strength: settings.ditherAmount,
-				scale: settings.ditherScale,
-				edgeProtection: settings.ditherEdgeProtection,
-				serpentine: type.includes('serpentine'),
-				shimmer: mode === 'animation' && settings.ditherTemporalMode === 'animated',
-				palette: 'auto',
-				duotone: ['#000000', '#ffffff']
-			}
-		}, { pixelEffects: CONFIG.tools.pixelEffects, autoGlitter: CONFIG.tools.autoGlitter }, frameIndex, palette), frame.width, frame.height);
+		return {
+			settings: {
+				pixelateEnabled: false,
+				paletteEnabled: true,
+				pixelSize: 1,
+				paletteMode: 'dither',
+				dither: {
+					algorithm,
+					angle: 45,
+					strength: settings.ditherAmount,
+					scale: settings.ditherScale,
+					edgeProtection: settings.ditherEdgeProtection,
+					serpentine: type.includes('serpentine'),
+					shimmer: mode === 'animation' && settings.ditherTemporalMode === 'animated',
+					palette: 'auto',
+					duotone: ['#000000', '#ffffff']
+				}
+			},
+			config: { pixelEffects: { animation: CONFIG.tools.pixelEffects.animation } }
+		};
 	}
 
 	_frameHasTransparency(frame, alphaThreshold) {
@@ -211,7 +215,11 @@ class GifEncodingPipeline {
 		lap('transparencyScanMs');
 		const analysis = this._analyzeColors(frames, hasGifTransparency ? GIF_TRANSPARENCY_ALPHA_THRESHOLD : 1);
 		const colorCount = GifPalette.resolveColorCount(settings.colorCount, analysis);
-		const useNativePalette = !hasGifTransparency && settings.colorCount === 'auto' && !settings.ditherEnabled;
+		// Per-frame palettes only earn their cost on color-rich frames. Artwork
+		// with few colors fits one shared palette, which skips the encoder's
+		// palette learning on every frame and keeps colors steady across them.
+		const useNativePalette = !hasGifTransparency && settings.colorCount === 'auto' && !settings.ditherEnabled
+			&& analysis?.significant !== false;
 		lap('colorAnalysisMs');
 		reportProgress?.('palette', 0.25, '');
 
@@ -233,18 +241,14 @@ class GifEncodingPipeline {
 		lap('paletteBuildMs');
 
 		reportProgress?.('palette', 0.5, '');
-		const frameSettings = {
-			...settings,
-			ditherTemporalMode: mode === 'still' ? 'stable' : settings.ditherTemporalMode,
-			hasTransparency: hasGifTransparency
-		};
+		const ditherInWorkers = !hasGifTransparency && !useNativePalette && Boolean(settings.ditherEnabled);
 		const options = {
 			workers: this.config.workers,
 			quality: settings.quality,
 			width,
 			height,
 			workerScript: this.config.workerScript,
-			dither: false
+			dither: ditherInWorkers ? this._buildDitherTask(settings, mode) : false
 		};
 		if (globalPalette) options.globalPalette = globalPalette;
 		if (hasGifTransparency) options.background = sentinel.hex;
@@ -264,8 +268,6 @@ class GifEncodingPipeline {
 				// A fully opaque frame inside an otherwise-transparent animation
 				// must not designate one of its own visible colors as transparent.
 				gif.setOption('transparent', frameIsTransparent ? sentinel.hex : null);
-			} else if (!useNativePalette && frameSettings.ditherEnabled) {
-				preparedFrame = this._applyDitherFrame(sourceFrame, globalPalette, frameSettings, mode, index);
 			}
 			lap('framePrepareMs');
 			gif.addFrame(preparedFrame, { delay: delays[index], copy: true });

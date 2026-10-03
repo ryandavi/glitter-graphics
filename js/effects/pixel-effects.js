@@ -335,7 +335,7 @@
 		const first = new Int32Array(65536);
 		const second = new Int32Array(65536);
 		const ratios = new Float64Array(65536);
-		return { first, second, ratios, slotFor(r, g, b) {
+		return { flat, first, second, ratios, slotFor(r, g, b) {
 			const key = ((r << 16) | (g << 8) | b) + 1;
 			const slot = Math.imul(key, 0x9E3779B1) >>> 16;
 			if (keys[slot] === key) return slot;
@@ -376,6 +376,7 @@
 		const cos = Math.cos(angle);
 		const sin = Math.sin(angle);
 		const lookup = createNearestTwoLookup(palette);
+		const flat = lookup.flat;
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
 			if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
@@ -387,7 +388,9 @@
 				const threshold = (BAYER_8[((ry + shimmer) & 7) * 8 + ((rx + shimmer) & 7)] + 0.5) / 64;
 				if (lookup.ratios[slot] * strength > threshold) chosen = lookup.second[slot];
 			}
-			output.set(palette[chosen], offset);
+			output[offset] = flat[chosen * 3];
+			output[offset + 1] = flat[chosen * 3 + 1];
+			output[offset + 2] = flat[chosen * 3 + 2];
 			output[offset + 3] = source[offset + 3];
 		}
 		return output;
@@ -455,6 +458,7 @@
 		const cos = Math.cos(radians);
 		const sin = Math.sin(radians);
 		const lookup = createNearestTwoLookup(palette);
+		const flat = lookup.flat;
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
 			if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
@@ -468,7 +472,9 @@
 				const radial = Math.min(1, Math.hypot(cx, cy) / (cell * 0.7));
 				if (lookup.ratios[slot] * strength > radial) chosen = lookup.second[slot];
 			}
-			output.set(palette[chosen], offset);
+			output[offset] = flat[chosen * 3];
+			output[offset + 1] = flat[chosen * 3 + 1];
+			output[offset + 2] = flat[chosen * 3 + 2];
 			output[offset + 3] = source[offset + 3];
 		}
 		return output;

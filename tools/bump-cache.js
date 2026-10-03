@@ -28,13 +28,12 @@ function walk(directory) {
 	});
 }
 
-const runtimePattern = /((?:new\s+Worker|loadScriptOnce)\(\s*['"])([^'"?#]+)(?:\?v=[^'"]*)?(['"])/gu;
+const runtimePattern = /((?:(?:new\s+Worker|loadScriptOnce)\(\s*|\bworkerScript:\s*)['"])([^'"?#]+)(?:\?v=[^'"]*)?(['"])/gu;
 const importPattern = /(['"])([^'"?#]+\.js)(?:\?v=[^'"]*)?(['"])/gu;
 walk(path.join(root, 'js')).filter((file) => file.endsWith('.js')).forEach((file) => {
 	const original = fs.readFileSync(file, 'utf8');
 	let next = original.replace(runtimePattern, (match, prefix, assetPath, suffix) => {
-		const sourceDir = prefix.startsWith('new Worker') || prefix.startsWith('loadScriptOnce') ? root : path.dirname(file);
-		return stamp(match, prefix, assetPath, suffix, sourceDir);
+		return stamp(match, prefix, assetPath, suffix);
 	});
 	next = next.replace(/importScripts\(([^)]*)\)/gu, (call, args) => {
 		const stampedArgs = args.replace(importPattern, (match, quote, assetPath, closingQuote) => (
