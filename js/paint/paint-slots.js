@@ -189,6 +189,13 @@ function layerHasBorderEffect(layer) {
 	return layerHasPaintSlotRole(layer, 'border');
 }
 
+// An outside outline runs under the antialiased edge of what it surrounds
+// (createOutlineCutoutCanvas). A layer whose fill is None has nothing there to
+// meet, so its outline keeps its exact width.
+function layerOutlineUnderlapsFill(layer) {
+	return getLayerFillSlot(layer)?.mode !== 'none';
+}
+
 function layerHasShadowEffect(layer) {
 	return layerHasPaintSlotRole(layer, 'shadow');
 }

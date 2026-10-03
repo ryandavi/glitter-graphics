@@ -191,6 +191,7 @@ class GroupTransformManager {
 		this.ensureHistoryBaseline();
 		this.gestureInteractionActive = true;
 		this.gestureInteractionChanged = false;
+		this.gestureStartScales = new Map(this.getLayerEntries().map(({ layer, transform }) => [layer.id, { ...transform.getTransform().scale }]));
 		this.resetGestureDragState();
 	}
 
@@ -273,7 +274,9 @@ class GroupTransformManager {
 		this.resetGestureDragState();
 	}
 
-	async commitScaledLayers() {
+	// startScales maps layer id to the transform scale the gesture began from;
+	// a sticker keeps its scale, so its effects scale by the change.
+	async commitScaledLayers(startScales = null) {
 		for (const layer of this.getSelectedLayers()) {
 			if (layer.type === LayerType.TEXT_GLITTER) {
 				await this.editor.textGlitterManager?.commitScaleToFontSize?.(layer);
@@ -282,6 +285,10 @@ class GroupTransformManager {
 
 			if (layer.type === LayerType.SHAPE) {
 				this.editor.shapeGlitterManager?.commitScale(layer);
+			} else if (layer.type === LayerType.STICKER) {
+				const start = startScales?.get(layer.id);
+				const scale = getLayerTransform(layer).scale;
+				if (start && (start.x !== scale.x || start.y !== scale.y)) await this.editor.stickerManager?.commitScale(layer, start);
 			}
 		}
 	}
@@ -292,11 +299,12 @@ class GroupTransformManager {
 		}
 
 		if (this.gestureInteractionChanged) {
-			await this.commitScaledLayers();
+			await this.commitScaledLayers(this.gestureStartScales);
 			this.editor.saveState('Transform layers');
 			this.editor.syncTransformHandlesForActiveLayer?.();
 		}
 
+		this.gestureStartScales = null;
 		this.gestureInteractionActive = false;
 		this.gestureInteractionChanged = false;
 		this.gestureDragState = null;
@@ -614,7 +622,7 @@ class GroupTransformManager {
 			this.isDraggingHandle = false;
 			if (!shouldSingleSelect && this.dragStartState?.didMove) {
 				if (this.activeHandleType?.startsWith('corner-')) {
-					await this.commitScaledLayers();
+					await this.commitScaledLayers(new Map(completedDrag.layerStates.map(({ layer, scale }) => [layer.id, scale])));
 				}
 				if (completedDrag.cloneIds?.length) {
 					this.editor.layerManager.setSelection(completedDrag.cloneIds, {
@@ -715,11 +723,11 @@ class GroupTransformManager {
 		const dragged = anchoredHandlePoint(start.handlePoint, { x: start.canvasX, y: start.canvasY }, point);
 		const origin = event.altKey ? { x: bounds.centerX, y: bounds.centerY } : { x: oppositeX, y: oppositeY };
 		const dir = { x: signX * (event.altKey ? halfWidth : bounds.width), y: signY * (event.altKey ? halfHeight : bounds.height) };
-		const proportional = resolveAspectLock({ proportionalScale: true }, event);
+		// A group always scales by one factor, so the corner stays on its diagonal.
 		const snapped = this.editor.snapScalePoint(null, dragged, {
 			ctrlKey: event.ctrlKey || event.metaKey,
 			excludedIds: start.layerStates.map(entry => entry.layer.id),
-			line: proportional ? { origin, dir } : null
+			line: { origin, dir }
 		});
 		const projected = ((snapped.x - origin.x) * dir.x + (snapped.y - origin.y) * dir.y) / (dir.x * dir.x + dir.y * dir.y);
 		const scaleFactor = Math.max(0.1, Math.min(5, projected));

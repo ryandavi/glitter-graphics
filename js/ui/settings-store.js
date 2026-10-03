@@ -148,7 +148,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('panInertia', 'Pan Momentum', 'Let the canvas keep gliding after a flick with the Hand tool. Turn off for panning that stops the moment you let go.', { default: preference('panInertia'), aliases: 'momentum pan flick scroll' }),
 			toggle('pixelGrid', 'Pixel Grid', 'Show a one-screen-pixel grid at 600% zoom and above.', { default: preference('pixelGrid'), aliases: 'pixels zoom grid photoshop' }),
 			toggle('antialiasMaskEdges', 'Antialias Edges', 'Smooth rendered edges on text and shapes, plus edges of future Fill layer mask strokes. Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge.', { default: !preference('crispMaskEdges') }),
-			toggle('scaleEffectsOnTransform', 'Scale Outlines & Effects', 'Scale outline widths, dotted spacing, and shadow offsets when text or shapes are resized.', { default: preference('scaleEffects') }),
+			toggle('scaleEffectsOnTransform', 'Scale Outlines & Effects', 'Scale outline widths, dotted spacing, and shadow offsets when stickers, text or shapes are resized.', { default: preference('scaleEffects') }),
 			toggle('scaleTexturesOnTransform', 'Transform Textures', 'Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.', { default: preference('scaleTextures') }),
 			action('Brush & Eraser Defaults', 'Restore saved Brush and Eraser tip, stroke, and pressure settings.', { id: 'resetToolSettings', label: 'Reset Tools' }),
 			action('Panel Layout', 'Return collapsible property and tool cards to their default open or closed state.', { id: 'resetPanelLayout', label: 'Reset Panels' }),

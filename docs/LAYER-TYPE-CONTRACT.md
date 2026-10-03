@@ -64,7 +64,7 @@ Common optional fields:
 - `blendable`: whether the layer has a blend mode.
 - `animatable`: whether the layer can carry `animation`.
 - `rasterizesScale`: vector slot stacks bake committed transform scale into their paint masks. `getSlotMask` and `renderSlotMasks` expose `rasterScale: { x, y }` in scale factors; logical frames stay unscaled. Preview and export divide transform scale by that density. During gestures, reuse the committed raster with temporary CSS scaling and keep canvas-anchored texture origins registered. Text and shape opt into this contract.
-- `contentScalesWithTransform`: the type's slots scale with its transform (stickers), so document scaling compensates them instead of rescaling them.
+- `contentScalesWithTransform`: the type's content scales with its transform instead of being baked (stickers), so document scaling multiplies the transform scale. Outline, shadow and bevel sizes are still canvas pixels and rescale like any other type's; only sparkles, placed in the content's own pixels, are compensated instead.
 - `createOptionsKey`: the option payload key passed through `LayerManager.addLayer(...)`.
 - `lockScope: 'position'`: the layer's lock pins only its transform; editing, deleting, duplicating and reordering stay available (`isLayerFullyLocked`, `js/core/layer-types.js`). Without it a lock blocks all of those. `lockedOnCreate`: a new layer of this type starts locked.
 - `showDesignGallery`, `autoOpenDesignDrawerOnCreate`, `mobileCreateBehavior`, `mobileCreateDrawer`: gallery and mobile-drawer behavior on create.

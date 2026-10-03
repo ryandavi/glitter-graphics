@@ -775,8 +775,8 @@ async initBrowser() {
 		if (item.role === 'border') {
 			const data = item.data;
 			return {
-				canvas: createBorderMaskCanvas(fillMask, data),
-				cacheKey: `${baseKey}|border:${data.widthPx}:${getBorderPlacement(data)}:${getBorderEdgeStyle(data)}:${Boolean(data.fillEnclosed)}`
+				canvas: createBorderMaskCanvas(fillMask, data, { underlap: layerOutlineUnderlapsFill(layer) }),
+				cacheKey: `${baseKey}|border:${data.widthPx}:${getBorderPlacement(data)}:${getBorderEdgeStyle(data)}:${Boolean(data.fillEnclosed)}:${layerOutlineUnderlapsFill(layer)}`
 			};
 		}
 		if (item.role === 'shadow') {

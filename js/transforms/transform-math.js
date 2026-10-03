@@ -1,6 +1,18 @@
-function resolveAspectLock(transform, event = {}, handleKind = 'corner') {
-	const locked = Boolean(transform.proportionalScale);
-	return handleKind === 'edge' ? locked !== Boolean(event.shiftKey) : locked || Boolean(event.shiftKey);
+// Whether a scale drag keeps the layer's current proportions. The aspect lock
+// is the stored link between X and Y; Shift flips it for the one drag, on
+// corners and edges alike.
+function resolveAspectLock(transform, event = {}) {
+	return Boolean(transform.proportionalScale) !== Boolean(event.shiftKey);
+}
+
+// A Shift drag that left a locked layer with different proportions has broken
+// the link, so the lock turns off with it. Shift making an unlocked layer scale
+// proportionally changes nothing stored.
+function scaleDragBreaksAspectLock(transform, startScale, wasFree) {
+	if (!transform.proportionalScale || !wasFree || !startScale) return false;
+	const before = startScale.x / Math.max(0.01, startScale.y);
+	const after = transform.scale.x / Math.max(0.01, transform.scale.y);
+	return Math.abs(after - before) > 1e-3 * Math.max(before, after);
 }
 
 function cloneTransform(transform = null, overrides = {}) {
@@ -318,7 +330,7 @@ function unionRects(a, b) {
 	};
 }
 
-function padFrame(frame, padding) {
-	if (!frame || !(padding > 0)) return frame;
-	return { ...frame, width: frame.width + padding * 2, height: frame.height + padding * 2 };
+function padFrame(frame, paddingX, paddingY = paddingX) {
+	if (!frame || !(paddingX > 0 || paddingY > 0)) return frame;
+	return { ...frame, width: frame.width + Math.max(0, paddingX) * 2, height: frame.height + Math.max(0, paddingY) * 2 };
 }

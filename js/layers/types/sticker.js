@@ -2,8 +2,9 @@
 
 registerLayerType(LayerType.STICKER, {
 	displayName: 'Sticker',
-	// The sticker image itself is not a paint slot. Its shadow scales with the
-	// sticker transform, so document scaling compensates rather than rescales.
+	// The sticker image itself is not a paint slot. Outline, shadow and bevel
+	// sizes are canvas pixels, whatever the sticker's scale; sparkles are placed
+	// in the sticker's own pixels and scale with it.
 	paintSlots: [
 		{
 			key: 'shadow', role: 'shadow', path: 'stickerData.shadow', draftPath: 'stickerData.effectDrafts.shadow',
@@ -96,7 +97,21 @@ registerLayerType(LayerType.STICKER, {
 	frame: (editor, layer) => (layer.stickerData && !layer.stickerData.isEmpty && layer.stickerData.url
 		? { width: layer.stickerData.width, height: layer.stickerData.height, offsetX: 0, offsetY: 0 }
 		: null),
-	visualBounds: (editor, layer) => padFrame(getLayerFrame(editor, layer), getLayerSlotFramePadding(layer)),
+	// The frame is in the sticker's own pixels, so canvas-pixel effect padding
+	// is divided by the sticker scale.
+	visualBounds: (editor, layer) => {
+		const scale = getLayerTransform(layer).scale;
+		let padX = 0;
+		let padY = 0;
+		getLayerPaintSlots(layer).forEach((entry) => {
+			if (!entry.renders || !entry.definition.framePadding) return;
+			const padding = entry.definition.framePadding(entry.data);
+			const local = entry.role === 'sparkles';
+			padX = Math.max(padX, local ? padding : padding / Math.max(0.01, Math.abs(scale.x) / 100));
+			padY = Math.max(padY, local ? padding : padding / Math.max(0.01, Math.abs(scale.y) / 100));
+		});
+		return padFrame(getLayerFrame(editor, layer), padX, padY);
+	},
 	transformPrefix: 'sticker',
 	transformCapabilities: {
 		edgeResize: true,

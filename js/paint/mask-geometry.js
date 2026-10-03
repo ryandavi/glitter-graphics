@@ -72,13 +72,43 @@ function createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
 	return canvas;
 }
 
-function createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle = 'round', fillInterior = false, fillEnclosed = false) {
+// What an outside outline is cut away from. Cutting an antialiased outline
+// along the exact silhouette leaves their shared edge pixels see-through (50%
+// outline under 50% artwork covers only 75%), so the cutout is pulled in one
+// pixel and the outline runs under the artwork's soft edge. The pull is a
+// 3x3 alpha minimum: it removes an edge ramp but leaves an evenly translucent
+// interior as it was. Crisp masks have no partial pixels and are cut exactly,
+// and so is an outline with nothing drawn inside it (`underlap` false).
+function createOutlineCutoutCanvas(sourceCanvas, underlap = true) {
+	if (!underlap || shouldUseCrispMaskEdges()) return sourceCanvas;
+	const { width, height } = sourceCanvas;
+	if (!width || !height) return sourceCanvas;
+	const source = sourceCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height).data;
+	const canvas = createMaskCanvasLike(sourceCanvas);
+	const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+	const image = ctx.createImageData(width, height);
+	for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+		let alpha = 255;
+		// Only pixels on the canvas count: a mask that runs off its canvas has
+		// no edge there.
+		for (let ny = Math.max(0, y - 1); ny <= Math.min(height - 1, y + 1) && alpha; ny++) {
+			for (let nx = Math.max(0, x - 1); nx <= Math.min(width - 1, x + 1); nx++) {
+				alpha = Math.min(alpha, source[(ny * width + nx) * 4 + 3]);
+			}
+		}
+		image.data[(y * width + x) * 4 + 3] = alpha;
+	}
+	ctx.putImageData(image, 0, 0);
+	return canvas;
+}
+
+function createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle = 'round', fillInterior = false, fillEnclosed = false, underlap = true) {
 	const expanded = createDilatedMaskCanvas(sourceCanvas, widthPx, edgeStyle);
-	const outline = fillInterior ? expanded : createMaskDifferenceCanvas(expanded, sourceCanvas);
+	const outline = fillInterior ? expanded : createMaskDifferenceCanvas(expanded, createOutlineCutoutCanvas(sourceCanvas, underlap));
 	return fillEnclosed ? fillEnclosedMaskAreas(outline, sourceCanvas) : outline;
 }
 
-function createBorderMaskCanvas(sourceCanvas, borderData) {
+function createBorderMaskCanvas(sourceCanvas, borderData, { underlap = true } = {}) {
 	const widthPx = Math.max(0, borderData?.widthPx || 0);
 	if (!widthPx) return null;
 	const placement = getBorderPlacement(borderData);
@@ -92,7 +122,7 @@ function createBorderMaskCanvas(sourceCanvas, borderData) {
 			createErodedMaskCanvas(sourceCanvas, Math.floor(widthPx / 2), edgeStyle)
 		);
 	} else {
-		canvas = createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle);
+		canvas = createOutlineMaskCanvas(sourceCanvas, widthPx, edgeStyle, false, false, underlap);
 	}
 	if (borderData?.fillEnclosed) fillEnclosedMaskAreas(canvas, sourceCanvas);
 	return canvas;

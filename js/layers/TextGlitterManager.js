@@ -1700,7 +1700,8 @@ class TextGlitterManager {
 		const placement = getBorderPlacement(borderData);
 		const edgeStyle = getBorderEdgeStyle(borderData);
 		const fillEnclosed = Boolean(borderData?.fillEnclosed);
-		const cacheKey = `border:${widthPx}:${placement}:${edgeStyle}:${fillEnclosed}`;
+		const underlap = layerOutlineUnderlapsFill(layer);
+		const cacheKey = `border:${widthPx}:${placement}:${edgeStyle}:${fillEnclosed}:${underlap}`;
 
 		if (measurement._borderMaskCache?.key === cacheKey) {
 			return { canvas: measurement._borderMaskCache.canvas, cacheKey: `${measurement.key}|${cacheKey}` };
@@ -1721,12 +1722,12 @@ class TextGlitterManager {
 			} else measurement.drawMask(ctx, 'strokeText');
 			if (placement !== 'center') {
 				ctx.globalCompositeOperation = placement === 'inside' ? 'destination-in' : 'destination-out';
-				ctx.drawImage(fillMask, 0, 0);
+				ctx.drawImage(placement === 'inside' ? fillMask : createOutlineCutoutCanvas(fillMask, underlap), 0, 0);
 				ctx.globalCompositeOperation = 'source-over';
 			}
 			if (fillEnclosed) fillEnclosedMaskAreas(canvas, fillMask);
 			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(ctx);
-		} else canvas = createBorderMaskCanvas(fillMask, borderData);
+		} else canvas = createBorderMaskCanvas(fillMask, borderData, { underlap });
 
 		if (canvas) {
 			copyMaskTextureOrigin(canvas, fillMask);

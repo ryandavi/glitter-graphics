@@ -812,10 +812,10 @@ const handleMouseMove = (e) => {
 		const centroidCanvas = this.editor.viewport.screenToCanvas(gestureDelta.centroidX, gestureDelta.centroidY);
 		const currentScaleX = transform.scale.x || 100;
 		const currentScaleY = transform.scale.y || 100;
+		// A pinch scales both axes by one factor, so it keeps the layer's
+		// current proportions whether or not the aspect lock is on.
 		const nextScaleX = clampLayerScale(currentScaleX * gestureDelta.scale);
-		const nextScaleY = transform.proportionalScale
-			? nextScaleX
-			: clampLayerScale(currentScaleY * gestureDelta.scale);
+		const nextScaleY = clampLayerScale(currentScaleY * gestureDelta.scale);
 		const scaleFactor = currentScaleX !== 0 ? nextScaleX / currentScaleX : 1;
 		const rotationDeltaRad = (gestureDelta.rotateDeg * Math.PI) / 180;
 		const relativeX = transform.position.x - previousCentroidCanvas.x;
@@ -855,15 +855,17 @@ const handleMouseMove = (e) => {
 
 	// Settle a finished scale gesture the way each type stays crisp: shapes bake
 	// the scale into pixel size, text into font size, stickers pick a matching
-	// resolution. The rerender can shift the frame, so the anchor is put back
-	// where the gesture left it.
+	// resolution. Each carries its outline and effect sizes along when Scale
+	// Outlines & Effects is on; a sticker keeps its scale, so it needs the scale
+	// the gesture began from (options.startScale). The rerender can shift the
+	// frame, so the anchor is put back where the gesture left it.
 	async commitScaleChange(anchorBefore, options = {}) {
 		if (this.layer.type === LayerType.TEXT_GLITTER) {
 			if (options.text !== false) await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
 		} else if (this.layer.type === LayerType.SHAPE) {
 			this.editor.shapeGlitterManager?.commitScale(this.layer);
 		} else if (this.layer.type === LayerType.STICKER) {
-			await this.editor.stickerManager?.commitResolutionSwap(this.layer);
+			await this.editor.stickerManager?.commitScale(this.layer, options.startScale);
 		} else {
 			getLayerManagerForType(this.editor, this.layer.type)?.commitScale?.(this.layer);
 		}
@@ -894,7 +896,7 @@ const handleMouseMove = (e) => {
 			const scale = this.getTransform().scale;
 			const scaled = scale.x !== startScale?.x || scale.y !== startScale?.y;
 			const anchor = scaled ? getLayerAnchorPoint(this.editor, this.layer) : null;
-			if (anchor) await this.commitScaleChange(anchor);
+			if (anchor) await this.commitScaleChange(anchor, { startScale });
 			this.editor.saveState('Transform layer');
 		}
 	}
@@ -1318,8 +1320,14 @@ removeTransformHandles() {
 			// handle-refresh guard doesn't skip rebuilding the (now differently-sized) box.
 			this.isDraggingHandle = false;
 			if (anchorBeforeCommit) {
+				const startScale = completedDrag?.transform?.scale;
+				// Before the commit: baking a shape or text scale resets it to 100%.
+				if (completedDrag?.didMove && scaleDragBreaksAspectLock(this.getTransform(), startScale, completedDrag.scaledFree)) {
+					this.getTransform().proportionalScale = false;
+					this.scheduleSettingsSync();
+				}
 				// Text edge handles resize the box; only its corners scale the type.
-				await this.commitScaleChange(anchorBeforeCommit, { text: ht.startsWith('corner-') });
+				await this.commitScaleChange(anchorBeforeCommit, { text: ht.startsWith('corner-'), startScale });
 			}
 			if (completedDrag?.didMove) {
 				if (completedDrag.targetLayerId) {
@@ -1466,6 +1474,7 @@ removeTransformHandles() {
 		const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
 
 		const proportional = resolveAspectLock(transform, e);
+		start.scaledFree = !proportional;
 
 		// Snap the dragged corner to canvas/layer edges. A proportional drag
 		// slides along the corner's diagonal from the fixed point (the opposite
@@ -1627,7 +1636,8 @@ removeTransformHandles() {
 			x: start.transform.scale.x,
 			y: start.transform.scale.y
 		};
-		const lockAspect = resolveAspectLock(transform, e, 'edge');
+		const lockAspect = resolveAspectLock(transform, e);
+		start.scaledFree = !lockAspect;
 		const axisSign = edge === 'left' || edge === 'top' ? -1 : 1;
 		let nextPosition = null;
 		if (e.altKey) {

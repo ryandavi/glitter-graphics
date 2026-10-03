@@ -294,17 +294,22 @@ class StickerManager extends ContentManager {
 		this.updatePickerStrip();
 	}
 
-	// Effects rasterize at the displayed sticker size, so a large transform
-	// never magnifies a small native outline into a lumpy edge.
+	// Canvas pixels the effect masks extend past the displayed sticker on each
+	// side. Slot textures register against it, in the preview and in export.
+	getEffectPadding(layer) {
+		return Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, getShadowReach(layer.stickerData.shadow), layer.stickerData.bevel?.enabled ? 2 : 0));
+	}
+
+	// Effects rasterize at the displayed sticker size, and their sizes are
+	// canvas pixels: a 1px outline is one canvas pixel at any sticker scale.
 	reconcileStickerEffectSpans(layer, element, img) {
 		if (!img.complete || !img.naturalWidth) return;
 		const transform = getLayerTransform(layer);
 		const scaleX = Math.max(0.01, Math.abs(transform.scale.x) / 100);
 		const scaleY = Math.max(0.01, Math.abs(transform.scale.y) / 100);
-		const effectScale = Math.max(scaleX, scaleY);
 		const width = Math.max(1, Math.round(layer.stickerData.width * scaleX));
 		const height = Math.max(1, Math.round(layer.stickerData.height * scaleY));
-		const pad = Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, getShadowReach(layer.stickerData.shadow), layer.stickerData.bevel?.enabled ? 2 : 0) * effectScale);
+		const pad = this.getEffectPadding(layer);
 		const source = createAppCanvas(width + pad * 2, height + pad * 2, 'layers/StickerManager');
 		const sourceCtx = source.getContext('2d', { willReadFrequently: true, alpha: true });
 		const unionKey = `${layer.stickerData.baseUrl || layer.stickerData.url}:${width}x${height}`;
@@ -321,14 +326,10 @@ class StickerManager extends ContentManager {
 		let bevelMasks = null;
 		buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)).forEach((item) => {
 			let mask = source;
-			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(source, (item.data.spread || 0) * effectScale, (item.data.blur || 0) * effectScale);
-			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx * effectScale, getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
+			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(source, item.data.spread || 0, item.data.blur || 0);
+			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx, getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
 			if (item.role === 'bevel') {
-				bevelMasks ||= createBevelMaskCanvases(source, {
-					...layer.stickerData.bevel.highlight,
-					size: layer.stickerData.bevel.highlight.size * effectScale,
-					soften: layer.stickerData.bevel.highlight.soften * effectScale
-				});
+				bevelMasks ||= createBevelMaskCanvases(source, layer.stickerData.bevel.highlight);
 				mask = item.key === 'bevelShade' ? bevelMasks.shade : bevelMasks.highlight;
 			}
 			let span = existing.get(item.key);
@@ -354,8 +355,9 @@ class StickerManager extends ContentManager {
 	}
 
 	// Effect masks are expensive distance-field rasters, so resize their last
-	// crisp result with the sticker during a live gesture. The settled render
-	// rebuilds them at the exact final size.
+	// crisp result with the sticker during a live gesture (the shadow offset
+	// stretches with it). The settled render rebuilds them at the exact final
+	// size, with effect sizes back in canvas pixels.
 	syncElementScale(layer, element) {
 		const img = element.querySelector('img.sticker-image');
 		if (img) this.reconcileSliceSpans(layer, element, img);
@@ -372,10 +374,10 @@ class StickerManager extends ContentManager {
 		const rasterScaleY = Number(span.dataset.effectScaleY) || scaleY;
 		const centerShiftX = layer.stickerData.width * (scaleX - rasterScaleX) / 2;
 		const centerShiftY = layer.stickerData.height * (scaleY - rasterScaleY) / 2;
-		const offsetX = centerShiftX + ((Number(span.dataset.effectOffsetX) || 0) * scaleX);
-		const offsetY = centerShiftY + ((Number(span.dataset.effectOffsetY) || 0) * scaleY);
 		const ratioX = scaleX / rasterScaleX;
 		const ratioY = scaleY / rasterScaleY;
+		const offsetX = centerShiftX + ((Number(span.dataset.effectOffsetX) || 0) * ratioX);
+		const offsetY = centerShiftY + ((Number(span.dataset.effectOffsetY) || 0) * ratioY);
 		span.style.transformOrigin = 'center';
 		span.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${ratioX}, ${ratioY})`;
 	}
@@ -914,9 +916,34 @@ class StickerManager extends ContentManager {
 		}
 	}
 
+	// ===== RESIZE COMMIT =====
+
+	// Settle a finished resize (LayerTransform.commitScaleChange). With Scale
+	// Outlines & Effects on, the outline, shadow and bevel sizes grow with the
+	// sticker here, the way a text or shape resize bakes into theirs; off, they
+	// stay as set. Either way the panel shows the size that is drawn.
+	// startScale is the transform scale the resize began from.
+	async commitScale(layer, startScale = null) {
+		if (layer?.type !== LayerType.STICKER || layer.stickerData.isEmpty) return;
+		const scale = getLayerTransform(layer).scale;
+		const factor = startScale
+			? Math.max(Math.abs(scale.x), Math.abs(scale.y)) / Math.max(0.01, Math.abs(startScale.x), Math.abs(startScale.y))
+			: 1;
+		if (Math.abs(factor - 1) >= 1e-3) {
+			scaleLayerSlotFields(layer, {
+				effect: PREFERENCES.get('scaleEffects') ? factor : 1,
+				texture: PREFERENCES.get('scaleTextures') ? factor : 1
+			});
+		}
+		await this.commitResolutionSwap(layer);
+		if (this.editor.layerManager.getActiveLayer() === layer) this.loadLayerSettings(layer);
+		// Scaled values are no longer the defaults those sliders shipped with.
+		syncPropertyReverts();
+	}
+
 	// ===== RESOLUTION SWAP =====
 
-	// Called once a resize gesture ends (LayerTransform.handleHandlePointerUp).
+	// Called once a resize gesture ends (commitScale).
 	// While actively dragging it's fine to look blurry at the sticker's
 	// current resolution, matching Twitter's own behavior; this picks the
 	// best-fitting variant for the settled size and swaps in, or does nothing

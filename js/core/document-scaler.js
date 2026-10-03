@@ -6,36 +6,54 @@
 // `documentScale` class, on the layer type (`fields`) and on its paint slots
 // (including the parked drafts of switched-off effects). 'geometry' always
 // follows the document; 'effect' and 'texture' follow the matching option.
+
+// Rescale one declared field in place. Pixel fields land on whole pixels at or
+// above the field's minimum; texture scales keep their configured precision.
+function scaleFieldBinding(root, binding, factor) {
+	if (!factor || factor === 1) return;
+	const value = readFieldPath(root, binding.keys);
+	if (value == null || !Number.isFinite(Number(value)) || (binding.when && !binding.when(Number(value), root))) return;
+	writeFieldPath(root, binding.keys, binding.documentScale === 'texture'
+		? Math.max(1, roundSlotTextureScale(Number(value) * factor))
+		: Math.max(getFieldDocumentMinimum(binding), Math.round(Number(value) * factor)));
+}
+
+// Sparkles on content that scales with its layer transform (stickers) are
+// placed in that content's own pixels, so they already follow the transform.
+// Every other slot field is in canvas pixels.
+function slotFieldsFollowTransform(layer, definition) {
+	return Boolean(LAYER_UI_CONFIG[layer.type]?.contentScalesWithTransform) && definition.role === 'sparkles';
+}
+
+// Rescale the canvas-pixel fields of a layer's switched-on paint slots by the
+// factor for each field's `documentScale` class ({ effect, texture }). A
+// finished sticker resize uses it to carry outline, shadow and bevel sizes
+// along with the sticker.
+function scaleLayerSlotFields(layer, factors) {
+	getLayerPaintSlots(layer).forEach(({ definition, data, present }) => {
+		if (!present || slotFieldsFollowTransform(layer, definition)) return;
+		definition.fields.forEach((binding) => scaleFieldBinding(data, binding, factors[binding.documentScale]));
+	});
+}
+
 function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = {}) {
 	if (!layer) return;
 	const config = LAYER_UI_CONFIG[layer.type];
 	const shouldScaleTextures = options.scaleTextures !== false;
 	const shouldScaleEffects = options.scaleEffects !== false;
 
-	const scalePixel = (value, factor, minimum) => Math.max(minimum, Math.round(Number(value) * factor));
-	const scaleTexture = (value, factor) => Math.max(1, roundSlotTextureScale(Number(value) * factor));
-	// Content that scales with its layer transform (stickers) already follows
-	// the document through that transform, so its fields are compensated only
-	// for the options that are off.
 	const scalesWithTransform = Boolean(config?.contentScalesWithTransform);
-	const optionFactor = (enabled) => {
-		if (scalesWithTransform) return enabled ? 1 : 1 / uniformScale;
+	// A field that already follows the document through the layer transform is
+	// compensated only for the options that are off.
+	const optionFactor = (enabled, followsTransform) => {
+		if (followsTransform) return enabled ? 1 : 1 / uniformScale;
 		return enabled ? uniformScale : 1;
 	};
-	const factors = {
+	const factorsFor = (followsTransform) => ({
 		geometry: uniformScale,
-		effect: optionFactor(shouldScaleEffects),
-		texture: optionFactor(shouldScaleTextures)
-	};
-	const scaleBinding = (root, binding) => {
-		const factor = factors[binding.documentScale];
-		if (!factor || factor === 1) return;
-		const value = readFieldPath(root, binding.keys);
-		if (value == null || !Number.isFinite(Number(value)) ||(binding.when && !binding.when(Number(value), root))) return;
-		writeFieldPath(root, binding.keys, binding.documentScale === 'texture'
-			? scaleTexture(value, factor)
-			: scalePixel(value, factor, getFieldDocumentMinimum(binding)));
-	};
+		effect: optionFactor(shouldScaleEffects, followsTransform),
+		texture: optionFactor(shouldScaleTextures, followsTransform)
+	});
 
 	if (isTransformableLayerType(layer.type)) {
 		const transform = getLayerTransform(layer);
@@ -55,9 +73,11 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 			transform.position.y = next.y;
 		}
 	}
-	(config?.fields || []).forEach((binding) => scaleBinding(layer, binding));
+	const layerFactors = factorsFor(scalesWithTransform);
+	(config?.fields || []).forEach((binding) => scaleFieldBinding(layer, binding, layerFactors[binding.documentScale]));
 	getLayerPaintSlots(layer, { includeDrafts: true }).forEach(({ definition, data }) => {
-		definition.fields.forEach((binding) => scaleBinding(data, binding));
+		const factors = factorsFor(slotFieldsFollowTransform(layer, definition));
+		definition.fields.forEach((binding) => scaleFieldBinding(data, binding, factors[binding.documentScale]));
 	});
 }
 

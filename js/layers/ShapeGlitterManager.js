@@ -871,7 +871,7 @@ class ShapeGlitterManager {
 	// The stroke is 2×widthPx (centered on the edge), then the shape silhouette is
 	// punched out so only the outer widthPx ring remains: this reads as an outline
 	// on a no-fill shape and sits cleanly around the fill otherwise.
-	getBorderMaskCanvas(measurement, borderData) {
+	getBorderMaskCanvas(measurement, borderData, underlap = true) {
 		const widthPx = Math.max(0, borderData?.widthPx || 0);
 		if (widthPx <= 0) {
 			return null;
@@ -929,7 +929,7 @@ class ShapeGlitterManager {
 
 		if (effectivePlacement === 'outside') {
 			ctx.globalCompositeOperation = 'destination-out';
-			ctx.drawImage(measurement.canvas, 0, 0);
+			ctx.drawImage(createOutlineCutoutCanvas(measurement.canvas, underlap), 0, 0);
 			ctx.globalCompositeOperation = 'source-over';
 		}
 		if (borderData?.fillEnclosed) fillEnclosedMaskAreas(canvas, measurement.canvas);
@@ -1078,10 +1078,11 @@ class ShapeGlitterManager {
 		if (layer) measurement = getRasterMeasurement(layer, measurement);
 		if (slot.key === 'border') {
 			const border = slot.data;
+			const underlap = layerOutlineUnderlapsFill(layer);
 			return {
 				rasterScale: measurement.rasterScale,
-				canvas: this.getBorderMaskCanvas(measurement, border),
-				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}`
+				canvas: this.getBorderMaskCanvas(measurement, border, underlap),
+				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}:${underlap}`
 			};
 		}
 		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {

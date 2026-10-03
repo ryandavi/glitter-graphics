@@ -535,35 +535,44 @@ class SceneCompositor {
 			}
 			if (frames.length) maskStickerCanvas = union;
 		}
+		// Effect masks are built at the sticker's displayed size, as the preview
+		// builds them (StickerManager.reconcileStickerEffectSpans), so outline,
+		// shadow and bevel sizes are canvas pixels at any sticker scale.
+		const scale = getLayerTransform(layer).scale;
+		const maskWidth = Math.max(1, Math.round(layer.stickerData.width * Math.max(0.01, Math.abs(scale.x) / 100)));
+		const maskHeight = Math.max(1, Math.round(layer.stickerData.height * Math.max(0.01, Math.abs(scale.y) / 100)));
+		const densityX = maskWidth / Math.max(1, layer.stickerData.width);
+		const densityY = maskHeight / Math.max(1, layer.stickerData.height);
+		const previewPad = this.editor.stickerManager.getEffectPadding(layer);
 		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
 			if ((phase === 'front') !== (item.role === 'bevel')) return;
-			const densityX = maskStickerCanvas.width / Math.max(1, layer.stickerData.width);
-			const densityY = maskStickerCanvas.height / Math.max(1, layer.stickerData.height);
-			const density = Math.max(densityX, densityY);
 			const effectRadius = item.role === 'shadow' ? Number(item.data.spread) || 0 : item.role === 'border' ? Number(item.data.widthPx) || 0 : 0;
-			const pad = Math.ceil((item.role === 'shadow' ? getShadowCanvasPadding(item.data) : effectRadius + 2) * density);
+			const pad = Math.ceil(item.role === 'shadow' ? getShadowCanvasPadding(item.data) : effectRadius + 2);
 			const effectMask = scratch.shadowMaskCanvas;
-			ensureCanvasSize(effectMask, maskStickerCanvas.width + pad * 2, maskStickerCanvas.height + pad * 2);
+			ensureCanvasSize(effectMask, maskWidth + pad * 2, maskHeight + pad * 2);
 			const effectMaskCtx = scratch.shadowMaskCtx;
 			resetCanvasContext(effectMaskCtx, effectMask.width, effectMask.height);
 			effectMaskCtx.imageSmoothingEnabled = layer.stickerData.isPixelated === false;
-			effectMaskCtx.drawImage(maskStickerCanvas, pad, pad);
+			effectMaskCtx.drawImage(maskStickerCanvas, pad, pad, maskWidth, maskHeight);
 			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(effectMaskCtx);
 			let mask = effectMask;
-			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(effectMask, Math.round(effectRadius * density), Math.round((Number(item.data.blur) || 0) * density));
-			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, Math.round(effectRadius * density), getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
+			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(effectMask, effectRadius, Number(item.data.blur) || 0);
+			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, effectRadius, getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
 			if (item.role === 'bevel') {
-				const pair = createBevelMaskCanvases(effectMask, { ...layer.stickerData.bevel.highlight, size: layer.stickerData.bevel.highlight.size * density, soften: layer.stickerData.bevel.highlight.soften * density });
+				const pair = createBevelMaskCanvases(effectMask, layer.stickerData.bevel.highlight);
 				mask = item.key === 'bevelShade' ? pair.shade : pair.highlight;
 			}
-			mask._textureOrigin = { x: item.offsetX * density, y: item.offsetY * density };
-			this._renderFilledMaskInto(scratch.shadowFillCanvas, effectMask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
-			if (mask !== effectMask) this._renderFilledMaskInto(scratch.shadowFillCanvas, mask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
+			// Where the preview's effect spans register their texture, in this
+			// mask's pixels.
+			mask._textureOrigin = { x: pad - previewPad * 2, y: pad - previewPad * 2 };
+			// A shadow's offset is baked into its mask (the padding covers it); the
+			// texture origin moves with it.
+			if (item.offsetX || item.offsetY) mask = createOffsetMaskCanvas(mask, Math.round(item.offsetX), Math.round(item.offsetY));
+			this._renderFilledMaskInto(scratch.shadowFillCanvas, mask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
 			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, layer.stickerData.width, layer.stickerData.height, {
 				smooth: layer.stickerData.isPixelated === false,
-				pad: pad / density,
-				padX: pad / densityX - (item.offsetX || 0),
-				padY: pad / densityY - (item.offsetY || 0)
+				padX: pad / densityX,
+				padY: pad / densityY
 			});
 		});
 	}

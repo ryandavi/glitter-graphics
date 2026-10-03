@@ -7,7 +7,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..', '..');
 const SHARED_GEOMETRY = [
-	'createMaskDifferenceCanvas', 'createOutlineMaskCanvas', 'createBorderMaskCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
+	'createMaskDifferenceCanvas', 'createOutlineCutoutCanvas', 'createOutlineMaskCanvas', 'createBorderMaskCanvas', 'createDilatedMaskCanvas', 'createErodedMaskCanvas', 'createOffsetMaskCanvas',
 	'fillEnclosedMaskAreas', 'getMorphOffsets', 'getBorderPlacement', 'getBorderEdgeStyle', 'getBorderDrawOrder'
 ];
 
@@ -87,6 +87,7 @@ const geometry = vm.runInNewContext(`${geometrySource}; ({ createOutlineMaskCanv
 	document: { createElement: createCanvas },
 	createAppCanvas: createCanvas,
 	getOptionValues: () => ['inside', 'center', 'outside'],
+	shouldUseCrispMaskEdges: () => true,
 	Math,
 	Set
 });
@@ -218,7 +219,7 @@ for (let trial = 0; trial < 40; trial++) {
 process.stdout.write('PASS exact Euclidean distance transform\n');
 
 let crisp = true;
-const coverageGeometry = vm.runInNewContext(`${geometrySource}; ({ createDilatedMaskCanvas, createErodedMaskCanvas });`, {
+const coverageGeometry = vm.runInNewContext(`${geometrySource}; ({ createDilatedMaskCanvas, createErodedMaskCanvas, createOutlineCutoutCanvas });`, {
 	CONFIG: { rendering: { maskAlphaThreshold: 128 } }, createAppCanvas: createCanvas,
 	getOptionValues: () => ['inside', 'center', 'outside'], shouldUseCrispMaskEdges: () => crisp
 });
@@ -231,3 +232,19 @@ const smooth = coverageGeometry.createDilatedMaskCanvas(coverageSource, 1);
 assert([...smooth.pixels].some(alpha => alpha > 0 && alpha < 255), 'Antialiased outline must contain fractional coverage');
 assert(smooth.pixels[3 * 8 + 1] < 255, 'Dilation must propagate the subpixel source boundary');
 process.stdout.write('PASS outline antialiasing and subpixel coverage\n');
+
+// An antialiased outline runs under the soft edge it surrounds: cut along the
+// exact silhouette, a 190-alpha edge pixel would sit over a 65-alpha outline
+// and show the background through both.
+const cutout = coverageGeometry.createOutlineCutoutCanvas(coverageSource);
+assert.strictEqual(cutout.pixels[3 * 8 + 2], 0, 'The soft edge pixel must stay under the outline');
+assert.strictEqual(cutout.pixels[3 * 8 + 3], 190, 'The cutout must pull in one pixel from the silhouette edge');
+assert.strictEqual(cutout.pixels[3 * 8 + 4], 255, 'The cutout must keep the silhouette interior');
+assert.strictEqual(coverageGeometry.createOutlineCutoutCanvas(coverageSource, false), coverageSource, 'An outline with no fill inside it must be cut along the exact silhouette');
+crisp = true;
+assert.strictEqual(coverageGeometry.createOutlineCutoutCanvas(coverageSource), coverageSource, 'Crisp outlines must be cut along the exact silhouette');
+// A mask that runs off its canvas has no edge there to run under.
+const fullCanvas = createCanvas(); fullCanvas.width = 4; fullCanvas.height = 4; fullCanvas.getContext().clearRect(); fullCanvas.pixels.fill(255);
+crisp = false;
+assert(coverageGeometry.createOutlineCutoutCanvas(fullCanvas).pixels.every(alpha => alpha === 255), 'A canvas-filling mask must not be cut back at the canvas edge');
+process.stdout.write('PASS antialiased outlines run under the soft edge they surround\n');

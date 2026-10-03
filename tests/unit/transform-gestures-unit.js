@@ -21,10 +21,16 @@ vm.runInContext('globalThis.__SelectionChrome = SelectionChrome;', context);
 const near = (actual, expected, message) => assert(Math.abs(actual - expected) < 1e-9, `${message}: ${actual} != ${expected}`);
 for (const locked of [true, false]) for (const shiftKey of [true, false]) {
 	const transform = { proportionalScale: locked };
-	assert.strictEqual(context.resolveAspectLock(transform, { shiftKey }), locked || shiftKey);
-	assert.strictEqual(context.resolveAspectLock(transform, { shiftKey }, 'edge'), locked !== shiftKey);
+	// Shift flips the lock for the one drag, on corners and edges alike.
+	assert.strictEqual(context.resolveAspectLock(transform, { shiftKey }), locked !== shiftKey);
 	assert.strictEqual(transform.proportionalScale, locked, 'Shift changed the stored lock');
 }
+// Only a free drag that left a locked layer with new proportions unlinks it.
+const stretched = { proportionalScale: true, scale: { x: 150, y: 100 } };
+assert.strictEqual(context.scaleDragBreaksAspectLock(stretched, { x: 100, y: 100 }, true), true, 'A Shift drag that stretched a locked layer kept the lock');
+assert.strictEqual(context.scaleDragBreaksAspectLock(stretched, { x: 300, y: 200 }, true), false, 'A Shift drag that ended on the same proportions broke the lock');
+assert.strictEqual(context.scaleDragBreaksAspectLock(stretched, { x: 100, y: 100 }, false), false, 'A proportional drag broke the lock');
+assert.strictEqual(context.scaleDragBreaksAspectLock({ ...stretched, proportionalScale: false }, { x: 100, y: 100 }, true), false, 'An unlocked layer has no lock to break');
 const pivot = { x: 0, y: 0 };
 
 // Rotation is relative: no pointer movement means no change, wherever the grab was.

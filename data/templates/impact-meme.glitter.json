@@ -26,7 +26,7 @@
 			"locked": false,
 			"opacity": 100,
 			"transform": { "position": { "x": 400, "y": 64 }, "anchor": { "x": 0.5, "y": 0 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
-			"textData": { "text": "TOP TEXT", "fontId": "impact", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 120, "letterSpacing": 0, "lineHeight": 0.95, "align": "center", "verticalAlign": "top", "boxMode": "autoHeight", "boxWidth": 800, "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
+			"textData": { "text": "TOP TEXT", "fontId": "impact", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 120, "letterSpacing": 0, "lineHeight": 1.03, "align": "center", "verticalAlign": "top", "boxMode": "autoHeight", "boxWidth": 800, "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
 		},
 		{
 			"id": "meme-bottom",
@@ -36,7 +36,7 @@
 			"locked": false,
 			"opacity": 100,
 			"transform": { "position": { "x": 400, "y": 736 }, "anchor": { "x": 0.5, "y": 1 }, "rotation": 0, "scale": { "x": 100, "y": 100 }, "proportionalScale": true, "flipX": false, "flipY": false },
-			"textData": { "text": "BOTTOM TEXT", "fontId": "impact", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 120, "letterSpacing": 0, "lineHeight": 0.95, "align": "center", "verticalAlign": "bottom", "boxMode": "autoHeight", "boxWidth": 800, "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
+			"textData": { "text": "BOTTOM TEXT", "fontId": "impact", "fontWeight": 400, "fontStyle": "normal", "textCase": "upper", "fontSize": 120, "letterSpacing": 0, "lineHeight": 1.03, "align": "center", "verticalAlign": "bottom", "boxMode": "autoHeight", "boxWidth": 800, "width": 0, "height": 0, "fill": { "mode": "solid", "color": "#ffffff", "opacity": 100, "scale": 100 }, "border": { "mode": "solid", "color": "#000000", "opacity": 100, "widthPx": 9, "placement": "outside", "edgeStyle": "round", "drawOrder": "behind", "scale": 100 }, "shadow": null }
 		}
 	],
 	"activeLayerId": "meme-bottom",

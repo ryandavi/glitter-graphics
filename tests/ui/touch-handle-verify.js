@@ -519,8 +519,10 @@ async function checkStickerEdgeAspectOverride(page) {
 		if (locked !== shift) {
 			assert(Math.abs(factorX - factorY) < 0.02, `Edge resize lost current proportions (X ${factorX}, Y ${factorY})`);
 		} else assert(Math.abs(untouched - 1) < 0.001, 'Free edge resize changed the other axis');
-		assert(await page.evaluate(id => window.editor.layerManager.getLayerById(id).transform.proportionalScale, sticker.layerId) === locked,
-			'Shift edge resize changed the stored aspect lock');
+		// A Shift drag that stretches a locked sticker unlinks it; Shift making
+		// an unlocked sticker scale proportionally stores nothing.
+		assert(await page.evaluate(id => window.editor.layerManager.getLayerById(id).transform.proportionalScale, sticker.layerId) === (locked && !shift),
+			`Aspect lock is wrong after an edge resize (lock ${locked}, Shift ${shift})`);
 	}
 }
 

@@ -197,17 +197,19 @@ snapTransformPosition(transform, position, options = {}) {
 		if (prefix === 'sticker') {
 			const nativeWidth = Math.max(1, layer.stickerData.width);
 			const nativeHeight = Math.max(1, layer.stickerData.height);
+			const current = getLayerTransform(layer).scale;
 			let nextScaleX = axis === 'width'
 				? (value / nativeWidth) * 100
-				: getLayerTransform(layer).scale.x;
+				: current.x;
 			let nextScaleY = axis === 'height'
 				? (value / nativeHeight) * 100
-				: getLayerTransform(layer).scale.y;
+				: current.y;
 
+			// The lock keeps the sticker's current proportions, as it does for
+			// shapes and text below and for the handles, not its native ones.
 			if (lockAspect) {
-				const uniform = axis === 'width' ? nextScaleX : nextScaleY;
-				nextScaleX = uniform;
-				nextScaleY = uniform;
+				if (axis === 'width') nextScaleY = current.y * nextScaleX / Math.max(0.01, current.x);
+				else nextScaleX = current.x * nextScaleY / Math.max(0.01, current.y);
 			}
 
 			this.applyTransformEditWithAnchor(layer, manager, () => manager.updateTransform(layer.id, {
@@ -276,12 +278,13 @@ snapTransformPosition(transform, position, options = {}) {
 					this.originalCanvas.height / Math.max(1, metrics.displayHeight)
 				);
 				const current = getLayerTransform(active.layer);
+				const startScale = { ...current.scale };
 				active.manager.updateTransform(active.layer.id, {
 					position: { x: this.originalCanvas.width / 2, y: this.originalCanvas.height / 2 },
 					scale: { x: clampLayerScale(current.scale.x * factor), y: clampLayerScale(current.scale.y * factor) }
 				});
 				if (prefix === 'text') await active.manager.commitScaleToFontSize?.(active.layer);
-				else active.manager.commitScale?.(active.layer);
+				else await active.manager.commitScale?.(active.layer, startScale);
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -421,11 +424,9 @@ snapTransformPosition(transform, position, options = {}) {
 			proportionalScale.addEventListener('change', (event) => {
 				const active = activeManager();
 				if (!active) return;
-				const current = getLayerTransform(active.layer);
-				active.manager.updateTransform(active.layer.id, {
-					proportionalScale: event.target.checked,
-					...(event.target.checked ? { scale: { x: current.scale.x, y: current.scale.x } } : {})
-				});
+				// Linking X and Y keeps the layer's current proportions; Reset
+				// Scale is what returns them to 100%.
+				active.manager.updateTransform(active.layer.id, { proportionalScale: event.target.checked });
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -572,11 +573,7 @@ snapTransformPosition(transform, position, options = {}) {
 				if (!active) return;
 				const checkbox = document.getElementById(ids.proportional);
 				if (checkbox) checkbox.checked = true;
-				const current = getLayerTransform(active.layer);
-				active.manager.updateTransform(active.layer.id, {
-					proportionalScale: true,
-					scale: { x: current.scale.x, y: current.scale.x }
-				});
+				active.manager.updateTransform(active.layer.id, { proportionalScale: true });
 				this.loadTransformSettings(active.layer, prefix);
 				this.syncResetTransformState(prefix, active.layer);
 				this.saveState('Transform layer');
