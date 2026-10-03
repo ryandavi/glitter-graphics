@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.TEXT_GLITTER, {
+	rasterizesScale: true,
 	displayName: 'Text',
 	paintSlots: [
 		{
@@ -13,7 +14,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			glitterDefault: 'shadowGlitterId', panelPrefix: 'textShadow', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', path: 'textData.border', draftPath: 'textData.effectDrafts.border',
+			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'textData.border', draftPath: 'textData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId', panelPrefix: 'textBorder', modes: ['glitter', 'solid'],
 			fields: { widthPx: 'textBorderWidth' }
 		},

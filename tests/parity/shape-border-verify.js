@@ -269,7 +269,7 @@ async function check6(page) {
 		};
 		layer.shapeData.border.edgeStyle = 'round';
 		const round = read();
-		layer.shapeData.border.edgeStyle = 'hard';
+		layer.shapeData.border.edgeStyle = 'miter';
 		const hard = read();
 		return { round, hard };
 	}, layerId);
@@ -563,7 +563,7 @@ async function main() {
 		await runCheck(browser, '3. Dotted shape border toggles spacing UI and produces a mask', check3);
 		await runCheck(browser, '4. Undo restoring a removed shape border keeps the transform box aligned', check4);
 		await runCheck(browser, '5. Rounded rectangle radius updates geometry and conditional UI', check5);
-		await runCheck(browser, '6. Hard-edge border keeps the transform box tight to the shape', check6);
+		await runCheck(browser, '6. Sharp border keeps the transform box tight to the shape', check6);
 		await runCheck(browser, '7. Image fill preview/export, fit, persistence, and history stay aligned', check7);
 		await runCheck(browser, '8. Bevel profiles and shadow spread share preview/export masks', check8);
 		console.log('\nShape border verification finished with all checks passing.');

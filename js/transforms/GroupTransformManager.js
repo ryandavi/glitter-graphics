@@ -713,9 +713,16 @@ class GroupTransformManager {
 		// movement) from the fixed opposite corner.
 		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
 		const dragged = anchoredHandlePoint(start.handlePoint, { x: start.canvasX, y: start.canvasY }, point);
-		const scaleX = Math.abs(dragged.x - oppositeX) / Math.max(1, bounds.width);
-		const scaleY = Math.abs(dragged.y - oppositeY) / Math.max(1, bounds.height);
-		const scaleFactor = Math.max(0.1, Math.min(5, Math.max(scaleX, scaleY)));
+		const origin = event.altKey ? { x: bounds.centerX, y: bounds.centerY } : { x: oppositeX, y: oppositeY };
+		const dir = { x: signX * (event.altKey ? halfWidth : bounds.width), y: signY * (event.altKey ? halfHeight : bounds.height) };
+		const proportional = resolveAspectLock({ proportionalScale: true }, event);
+		const snapped = this.editor.snapScalePoint(null, dragged, {
+			ctrlKey: event.ctrlKey || event.metaKey,
+			excludedIds: start.layerStates.map(entry => entry.layer.id),
+			line: proportional ? { origin, dir } : null
+		});
+		const projected = ((snapped.x - origin.x) * dir.x + (snapped.y - origin.y) * dir.y) / (dir.x * dir.x + dir.y * dir.y);
+		const scaleFactor = Math.max(0.1, Math.min(5, projected));
 
 		start.didMove = true;
 		const translateX = event.altKey ? 0 : signX * halfWidth * (scaleFactor - 1);

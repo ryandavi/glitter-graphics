@@ -341,9 +341,9 @@ class SceneCompositor {
 	// padY per axis) says the source extends that far past the width x height
 	// box on each side (sparkles); the box, not the padding, anchors transform
 	// and animation.
-	_drawTransformedCanvas(ctx, sourceCanvas, layer, width, height, { smooth = false, pad = 0, padX = pad, padY = pad } = {}) {
+	_drawTransformedCanvas(ctx, sourceCanvas, layer, width, height, { smooth = false, pad = 0, padX = pad, padY = pad, rasterScale = null } = {}) {
 		const transform = getLayerTransform(layer);
-		const metrics = computeLayerTransform(transform, { width, height });
+		const metrics = computeLayerTransform(transform, { width: width / (rasterScale?.x || 1), height: height / (rasterScale?.y || 1) });
 		const animation = this._activeLayerAnimation?.layer === layer
 			? this._activeLayerAnimation.sample
 			: null;
@@ -361,7 +361,7 @@ class SceneCompositor {
 			ctx.rotate(metrics.rotationRad);
 		}
 
-		ctx.scale(metrics.signedScaleX, metrics.signedScaleY);
+		ctx.scale(metrics.signedScaleX / (rasterScale?.x || 1), metrics.signedScaleY / (rasterScale?.y || 1));
 		if (animation) {
 			ctx.translate(-width / 2, -height / 2);
 			const localAnimation = animation.matrix
@@ -600,7 +600,7 @@ class SceneCompositor {
 			compositeCtx.drawImage(fillCanvas, pad, pad, width, height);
 		});
 		if (pad) this._drawLayerSparkles(compositeCtx, layer, 'front', frame, placement);
-		this._drawTransformedCanvas(ctx, compositeCanvas, layer, width, height, { pad });
+		this._drawTransformedCanvas(ctx, compositeCanvas, layer, width, height, { pad, rasterScale: slotMasks.rasterScale });
 	}
 
 	// The preview resolves the same slot with resolvePaintSlotSource, adding

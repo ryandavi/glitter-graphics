@@ -214,13 +214,16 @@ function createOutlineSectionSpec(idPrefix, stroke, placement) {
 	};
 }
 
+function createBorderEdgeOptions(idPrefix) {
+	const slot = Object.values(LAYER_UI_CONFIG).flatMap(type => type.paintSlots || []).find(slot => slot.panelPrefix === idPrefix);
+	return getOptions('borderEdgeStyle').filter(option => !slot?.edgeStyles || slot.edgeStyles.includes(option.value))
+		.map(({ value, label, suffix }) => ({ id: `${idPrefix}${suffix}`, value, label, active: value === 'round' }));
+}
+
 // The Edges / Placement / Layering choices a vector outline has.
 function createOutlinePlacementRows(idPrefix) {
 	return [
-		{ kind: 'segmented', label: 'Edges', revert: true, options: [
-			{ id: `${idPrefix}EdgeRounded`, label: 'Smooth', active: true, value: 'round' },
-			{ id: `${idPrefix}EdgeHard`, label: 'Pixel', value: 'hard' }
-		] },
+		{ kind: 'segmented', label: 'Edges', revert: true, get options() { return createBorderEdgeOptions(idPrefix); } },
 		{ kind: 'segmented', label: 'Placement', display: 'select', revert: true, options: [
 			{ id: `${idPrefix}PositionOutside`, label: 'Outside', active: true, value: 'outside' },
 			{ id: `${idPrefix}PositionCenter`, label: 'On edge', value: 'center' },
@@ -763,10 +766,7 @@ const PANEL_SCHEMAS = {
 			createOutlineSectionSpec('stickerBorder',
 				[{ kind: 'slider', id: 'stickerBorderWidth', slider: 'stickerOutlineWidth' }],
 				[
-					{ kind: 'segmented', label: 'Edges', revert: true, options: [
-						{ id: 'stickerBorderEdgeRounded', label: 'Smooth', active: true, value: 'round' },
-						{ id: 'stickerBorderEdgeHard', label: 'Pixel', value: 'hard' }
-					] },
+					{ kind: 'segmented', label: 'Edges', revert: true, get options() { return createBorderEdgeOptions('stickerBorder'); } },
 					{ kind: 'toggle', id: 'stickerBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas that are completely enclosed by the sticker silhouette' },
 					{ kind: 'toggle', id: 'stickerBorderFillInterior', label: 'Backing plate', checked: true, title: 'Extend the outline paint behind the full sticker as a solid backing' },
 					{ kind: 'toggle', id: 'stickerBorderUnionFrames', label: 'Use all animation frames', checked: true, title: 'Build one stable outline from the union of every GIF frame' }

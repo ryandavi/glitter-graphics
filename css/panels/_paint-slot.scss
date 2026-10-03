@@ -141,7 +141,7 @@
 	display: grid;
 	grid-template-columns: repeat(6, minmax(0, 1fr));
 	gap: var(--spacing-xs);
-	padding: var(--property-gutter);
+	padding: 0 var(--property-gutter);
 }
 
 .sparkle-glyph-chip {

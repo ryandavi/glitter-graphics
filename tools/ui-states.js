@@ -105,11 +105,22 @@ const openConfirm = async (page) => {
 
 // `set` narrows the run: 'all' is every state the A/B comparison needs,
 // 'sheet' is the subset worth a screenshot.
+async function activityStates(page, visit, tag) {
+	await page.evaluate(() => window.editor.notifications.setMode({ label: 'Auto Glitter', icon: 'sparkles', badge: 'Beta', exitLabel: 'Exit', onExit: () => {} }));
+	await visit(`${tag} activity mode idle`, { shot: '#previewControls' });
+	await page.evaluate(() => { window.editor.beginActivity('sheet', 'Rendering preview'); window.editor.notifications.activityShown = true; window.editor.notifications.renderActivity(); });
+	await visit(`${tag} activity mode busy`, { shot: '#previewControls' });
+	await page.evaluate(() => window.editor.notifications.setMode(null));
+	await visit(`${tag} activity preview`, { shot: '#previewControls' });
+	await page.evaluate(() => { window.editor.endActivity('sheet'); window.editor.notifications.activityShown = false; window.editor.notifications.renderActivity(); });
+}
+
 async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {}) {
 	const full = set === 'all';
 	const tag = viewport;
 	await visit(`${tag} start-card`);
 	const ids = await addLayers(page);
+	await activityStates(page, visit, tag);
 	await wait(page, 600);
 	for (const [name, id] of Object.entries(ids)) {
 		if (name.endsWith('_error') || id == null) { console.log(`(skip ${name}: ${id})`); continue; }
@@ -225,6 +236,7 @@ async function phoneStates(page, visit, { set = 'all' } = {}) {
 	};
 	await visit('phone start-card');
 	const ids = await addLayers(page);
+	await activityStates(page, visit, 'phone');
 	await page.evaluate((i) => window.editor.layerManager.setActiveLayer(i.text), ids);
 	await wait(page, 600);
 	await visit('phone text');

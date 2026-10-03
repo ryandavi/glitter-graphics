@@ -13,12 +13,18 @@ const context = {
 	CONFIG: { ui: { stickerHandles: { dragThresholdPx: 3 } } }
 };
 vm.createContext(context);
-['selection-overlay.js', 'transform-gestures.js', 'selection-chrome.js'].forEach((file) => {
+['transform-math.js', 'selection-overlay.js', 'transform-gestures.js', 'selection-chrome.js'].forEach((file) => {
 	vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js/transforms', file), 'utf8'), context);
 });
 vm.runInContext('globalThis.__SelectionChrome = SelectionChrome;', context);
 
 const near = (actual, expected, message) => assert(Math.abs(actual - expected) < 1e-9, `${message}: ${actual} != ${expected}`);
+for (const locked of [true, false]) for (const shiftKey of [true, false]) {
+	const transform = { proportionalScale: locked };
+	assert.strictEqual(context.resolveAspectLock(transform, { shiftKey }), locked || shiftKey);
+	assert.strictEqual(context.resolveAspectLock(transform, { shiftKey }, 'edge'), locked !== shiftKey);
+	assert.strictEqual(transform.proportionalScale, locked, 'Shift changed the stored lock');
+}
 const pivot = { x: 0, y: 0 };
 
 // Rotation is relative: no pointer movement means no change, wherever the grab was.

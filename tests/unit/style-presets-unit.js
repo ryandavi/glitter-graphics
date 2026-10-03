@@ -64,7 +64,7 @@ function makeLayer(type) {
 	const root = { [LayerType.TEXT_GLITTER]: 'textData', [LayerType.SHAPE]: 'shapeData', [LayerType.STICKER]: 'stickerData' }[type];
 	const data = { border: null, shadow: null, bevel: run('buildDefaultBevel()'), sparkles: null };
 	if (type !== LayerType.STICKER) data.fill = run(`testSlotDefaults(${JSON.stringify(type)}, 'fill')`);
-	if (type === LayerType.TEXT_GLITTER) Object.assign(data, { fontId: 'luckiest-guy', textCase: 'none' });
+	if (type === LayerType.TEXT_GLITTER) Object.assign(data, { fontId: run('CONFIG.tools.text.defaultFontId'), textCase: 'none' });
 	return { id: 'layer-1', type, [root]: data };
 }
 
@@ -116,7 +116,7 @@ Object.entries(libraries).forEach(([type, library]) => {
 				if (value < binding.spec.min || value > binding.spec.max) fail(`${where} ${key}.${binding.path} = ${value} is outside ${binding.spec.min}..${binding.spec.max}`);
 			});
 			if (definition.role === 'bevel' && partial.profile && !run(`isOptionValue('bevelProfile', ${JSON.stringify(partial.profile)})`)) fail(`${where} bevel profile ${partial.profile}`);
-			if (partial.edgeStyle && !['round', 'hard'].includes(partial.edgeStyle)) fail(`${where} edge style ${partial.edgeStyle}`);
+			if (partial.edgeStyle && !run('getOptionValues')('borderEdgeStyle').includes(partial.edgeStyle)) fail(`${where} edge style ${partial.edgeStyle}`);
 		});
 		Object.entries(entry.value.data || {}).forEach(([dataPath, value]) => {
 			if (!(dataPaths[type] || []).includes(dataPath)) fail(`${where} writes ${dataPath}, which styles do not own`);
@@ -192,3 +192,29 @@ entries.forEach((entry) => {
 });
 
 process.stdout.write(`Style presets unit passed (${entries.length} presets across ${Object.keys(libraries).length} layer types)\n`);
+
+const textSource = fs.readFileSync(path.join(root, 'js/layers/TextGlitterManager.js'), 'utf8');
+const ast = require('espree').parse(textSource, { ecmaVersion: 'latest' });
+const allowedTextKeys = new Set();
+function visit(node) {
+	if (!node || typeof node !== 'object') return;
+	if (node.type === 'Property' && node.key?.name === 'textData' && node.value.type === 'ObjectExpression') node.value.properties.forEach(property => allowedTextKeys.add(property.key.name));
+	if (node.type === 'MemberExpression' && !node.computed && node.object?.type === 'MemberExpression' && node.object.object?.name === 'layer' && node.object.property?.name === 'textData') allowedTextKeys.add(node.property.name);
+	Object.values(node).forEach(value => Array.isArray(value) ? value.forEach(visit) : visit(value));
+}
+visit(ast);
+vm.runInContext(fs.readFileSync(path.join(root, 'js/transforms/transform-math.js'), 'utf8'), context);
+const allowedTransformKeys = new Set(Object.keys(run('createDefaultTransform')()));
+const textOptions = { boxMode: 'textBoxMode', align: 'textAlign', verticalAlign: 'textVerticalAlign', textCase: 'textCase' };
+const slotOptions = { mode: 'paintMode', edgeStyle: 'borderEdgeStyle', placement: 'borderPlacement', drawOrder: 'borderDrawOrder', style: 'borderStyle' };
+for (const file of fs.readdirSync(path.join(root, 'data/templates')).filter(file => file.endsWith('.glitter.json'))) {
+	const template = JSON.parse(fs.readFileSync(path.join(root, 'data/templates', file), 'utf8'));
+	for (const layer of template.layers) {
+		for (const key of Object.keys(layer.transform || {})) if (!allowedTransformKeys.has(key)) fail(`${file}: unknown transform key ${key}`);
+		if (!layer.textData) continue;
+		for (const key of Object.keys(layer.textData)) if (!allowedTextKeys.has(key)) fail(`${file}: unknown text key ${key}`);
+		for (const [key, registry] of Object.entries(textOptions)) if (key in layer.textData && !run('isOptionValue')(registry, layer.textData[key])) fail(`${file}: invalid ${key}`);
+		for (const slot of [layer.textData.fill, layer.textData.border, layer.textData.shadow].filter(Boolean)) for (const [key, registry] of Object.entries(slotOptions)) if (key in slot && !run('isOptionValue')(registry, slot[key])) fail(`${file}: invalid slot ${key}`);
+	}
+}
+process.stdout.write('PASS template keys and option values match canonical text data and registries\n');

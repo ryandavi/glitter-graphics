@@ -28,10 +28,11 @@ async function main() {
 			tabs: document.querySelectorAll('#shortcutsModal [data-shortcut-view]').length,
 			selected: document.querySelector('#shortcutsModal [data-shortcut-view].active')?.dataset.shortcutView,
 			groups: document.querySelectorAll('#shortcutList .shortcut-group[data-shortcut-kind="keyboard"]:not([hidden])').length,
+			expectedGroups: getShortcutGroups('keyboard').length,
 			inChrome: !!document.querySelector('#shortcutsModal > .modal-content > .modal-nav [data-shortcut-view]'),
 			tabIconSize: getComputedStyle(document.querySelector('#shortcutsModal .modal-nav-scope svg.icon')).width
 		}));
-		assert(shortcutKeyboardState.tabs === 2 && shortcutKeyboardState.selected === 'keyboard' && shortcutKeyboardState.groups === 7,
+		assert(shortcutKeyboardState.tabs === 2 && shortcutKeyboardState.selected === 'keyboard' && shortcutKeyboardState.groups === shortcutKeyboardState.expectedGroups,
 			`Commands panel keyboard organization is incomplete: ${JSON.stringify(shortcutKeyboardState)}`);
 		// The scope control filters the list; it belongs in the modal's chrome bar
 		// beside the text filter, not inside the body it scrolls with.
@@ -129,6 +130,17 @@ async function main() {
 			await window.editor.loadBlankImage(240, 180, '#ffffff');
 			window.editor.setTool(ToolType.SELECT);
 		});
+		const scaleSnap = await page.evaluate(() => {
+			const e = window.editor;
+			PREFERENCES.set('snappingEnabled', true);
+			const points = [];
+			for (let along = 40; along <= 130; along++) points.push(e.snapScalePoint(null, { x: along * 2 + 80, y: along - 160 }, { line: { origin: { x: 0, y: 0 }, dir: { x: 2, y: 1 } }, excludedIds: [] }));
+			return { points, scaleTargets: e.collectSnapTargets('scale'), moveTargets: e.collectSnapTargets('move') };
+		});
+		assert(scaleSnap.points.every((point, index) => !index || point.x >= scaleSnap.points[index - 1].x), 'Off-diagonal scale snapping reversed as the cursor advanced');
+		assert(scaleSnap.scaleTargets.x.join(',') === '0,240' && scaleSnap.scaleTargets.y.join(',') === '0,180', 'Scaling must snap only to canvas edges');
+		assert(scaleSnap.moveTargets.x.includes(120) && scaleSnap.moveTargets.y.includes(90), 'Moving lost canvas center snapping');
+		console.log('PASS Off-diagonal scale projection and per-gesture snap targets');
 		assert(await page.$eval('#previewContainer', (node) => getComputedStyle(node).overflow === 'hidden'),
 			'Canvas viewport does not clip panned artwork at the workspace boundary');
 		console.log('PASS Canvas artwork is clipped to the central workspace');
@@ -169,6 +181,7 @@ async function main() {
 		await page.evaluate(({ x, y }) => document.elementFromPoint(x, y).dispatchEvent(new WheelEvent('wheel', {
 			bubbles: true, cancelable: true, clientX: x, clientY: y, deltaX: 24, deltaY: 18
 		})), canvasCenter);
+		await page.evaluate(() => new Promise(requestAnimationFrame));
 		const wheelPan = await page.evaluate(() => ({ panX: editor.viewport.panX, panY: editor.viewport.panY }));
 		assert(wheelPan.panX < wheelStart.panX && wheelPan.panY < wheelStart.panY,
 			`Two-axis wheel pan was not preserved: ${JSON.stringify({ wheelStart, wheelPan })}`);
@@ -177,6 +190,7 @@ async function main() {
 		await page.evaluate(({ x, y }) => document.elementFromPoint(x, y).dispatchEvent(new WheelEvent('wheel', {
 			bubbles: true, cancelable: true, clientX: x, clientY: y, deltaY: -40, ctrlKey: true
 		})), canvasCenter);
+		await page.evaluate(() => new Promise(requestAnimationFrame));
 		const pinchResult = await page.evaluate(({ x, y }) => ({
 			zoom: editor.viewport.currentZoom,
 			anchor: editor.viewport.screenToCanvas(x, y)
@@ -237,11 +251,12 @@ async function main() {
 		console.log('PASS Zoom to selection shortcut');
 		await page.dblclick(`.text-glitter-element[data-layer-id="${textId}"]`, { force: true });
 		await page.waitForTimeout(80);
-		assert(await page.evaluate(() => document.activeElement === window.editor.textGlitterManager.ui.textInput),
+		assert(await page.evaluate(() => document.activeElement === (CONFIG.tools.text.canvasEditing ? window.editor.textGlitterManager.textProxy : window.editor.textGlitterManager.ui.textInput)),
 			'Double-clicking text did not focus the text input');
 		console.log('PASS Desktop text double-click editing');
 
 		await page.evaluate(() => {
+			window.editor.textGlitterManager.commitTextEdit();
 			document.activeElement?.blur();
 			window.editor.setTool(ToolType.SELECT);
 		});
@@ -250,9 +265,9 @@ async function main() {
 		await page.keyboard.down('Alt');
 		assert(await page.$eval('#previewContainer', (node) => node.classList.contains('alt-duplicate-armed')),
 			'Alt did not arm the duplicate cursor state');
-		await page.mouse.move(textBox.x + textBox.width / 2, textBox.y + textBox.height / 2);
+		await page.mouse.move(textBox.x + textBox.width * 0.3, textBox.y + textBox.height * 0.7);
 		await page.mouse.down();
-		await page.mouse.move(textBox.x + textBox.width / 2 + 30, textBox.y + textBox.height / 2 + 20, { steps: 4 });
+		await page.mouse.move(textBox.x + textBox.width * 0.3 + 30, textBox.y + textBox.height * 0.7 + 20, { steps: 4 });
 		await page.waitForTimeout(100);
 		const liveDuplicate = await page.evaluate(() => ({
 			status: document.getElementById('statusText').textContent,

@@ -2195,6 +2195,7 @@ class GlitterEditor {
 	// rather than trusting this event's own layerId/isPending, so switching the
 	// active layer mid-encode can't leave the busy cursor stuck.
 	onMaskPendingChange(layerId, isPending) {
+		this.maskEditor?.onMaskPendingChange(layerId, isPending);
 		const activeLayer = this.layerManager.getActiveLayer();
 		const activeIsPending = Boolean(activeLayer && this.glitterManager.isMaskPending(activeLayer.id));
 		// The brush encodes on every stroke and has its own cursor UI.

@@ -1050,7 +1050,7 @@ async initBrowser() {
 		// with the full-resolution encode when that lands. Skipped when the
 		// mask is already small enough that downscaling wouldn't help.
 		const longestSide = Math.max(maskCanvas.width, maskCanvas.height);
-		if (!draftMask && longestSide > 512) {
+		if (!draftMask && !currentCache?.url && longestSide > 512) {
 			this._encodeDraftMask(layer, maskCanvas, cacheKey);
 		}
 

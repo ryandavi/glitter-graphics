@@ -179,6 +179,7 @@ finally { done(); }
 - Wire it unconditionally. Work faster than `CONFIG.ui.activity.showDelayMs` shows nothing, and once shown the pill stays `minVisibleMs`, so call sites never decide whether something is slow enough.
 - Labels are a short present participle with no ellipsis: "Opening image", "Applying glitter".
 - A session mode (Auto Glitter) takes the same slot with `editor.notifications.setMode({ label, icon, badge, onExit })` and `setMode(null)`. Do not build a separate mode banner.
+- In a session mode, the mode icon becomes the shared spinner and the fixed-width mode label shows the activity text while busy, then restores both. There is no empty status slot. Keep `#canvasActivityStatus` as a visually hidden live region; narrow layouts retain the icon and Exit. Inline status labels use the shared tight line-height token so descenders remain visible.
 - Blocking work with a percentage and Cancel uses the export card, which takes over the slot (`suspendActivity`) and hides the hint while it is open.
 - Do not dim or cover the canvas to show work. Previews update live under the pill.
 
@@ -249,3 +250,5 @@ Both tools drive the real app through the states in `tools/ui-states.js` (every 
 Always confirm when Undo cannot restore the discarded work: Clear All, opening over unsaved work, and discarding a preview. These confirmations are independent of Confirm Destructive Actions. Undoable removal of hand-made work (deleting layers, clearing paint, dropping hidden overflow during Split) passes `destructive: true` and follows that preference. Other edits that take one undo step use status feedback without a dialog; Invert Mask follows this rule on every device.
 
 Context toolbar entries may declare `session: 'textEdit'`. Active session bars take priority over tool bars. Their controls dispatch the same commands as the property panel; Bold, Italic and Underline explicitly allow their shortcuts while typing. The text font-size control reuses the `textFontSize` field spec.
+
+Border edge controls derive from `borderEdgeStyle` in `js/core/options.js` and each border slot's `edgeStyles`: Smooth (`round`), Sharp (`miter`) and Pixel (`hard`). Shapes offer Smooth and Sharp.

@@ -66,6 +66,7 @@ const createCanvas = () => {
 				}
 			}
 		},
+		createImageData: (width, height) => ({ data: new Uint8ClampedArray(width * height * 4), width, height }),
 		getImageData: () => {
 			ensurePixels();
 			const data = new Uint8ClampedArray(canvas.pixels.length * 4);
@@ -94,6 +95,9 @@ sourceCanvas.width = 16;
 sourceCanvas.height = 16;
 sourceCanvas.getContext().clearRect();
 sourceCanvas.pixels[8 * sourceCanvas.width + 8] = 255;
+const sharpDilation = geometry.createDilatedMaskCanvas(sourceCanvas, 2, 'miter');
+assert.strictEqual(sharpDilation.pixels[10 * 16 + 10], 255, 'Sharp dilation must retain square corners');
+assert.strictEqual(sharpDilation.pixels.filter(Boolean).length, 25, 'Sharp dilation must fill a square');
 const hardDilation = geometry.createDilatedMaskCanvas(sourceCanvas, 2, 'hard');
 const filled = (x, y) => hardDilation.pixels[y * hardDilation.width + x] === 255;
 assert(filled(10, 8), 'Hard border must expand two pixels along cardinal directions');
@@ -212,3 +216,18 @@ for (let trial = 0; trial < 40; trial++) {
 	}
 }
 process.stdout.write('PASS exact Euclidean distance transform\n');
+
+let crisp = true;
+const coverageGeometry = vm.runInNewContext(`${geometrySource}; ({ createDilatedMaskCanvas, createErodedMaskCanvas });`, {
+	CONFIG: { rendering: { maskAlphaThreshold: 128 } }, createAppCanvas: createCanvas,
+	getOptionValues: () => ['inside', 'center', 'outside'], shouldUseCrispMaskEdges: () => crisp
+});
+const coverageSource = createCanvas(); coverageSource.width = 8; coverageSource.height = 8; coverageSource.getContext().clearRect();
+for (let y = 2; y < 6; y++) for (let x = 2; x < 6; x++) coverageSource.pixels[y * 8 + x] = x === 2 ? 190 : 255;
+const binary = coverageGeometry.createDilatedMaskCanvas(coverageSource, 1);
+assert([...binary.pixels].every(alpha => alpha === 0 || alpha === 255), 'Crisp outlines must stay binary');
+crisp = false;
+const smooth = coverageGeometry.createDilatedMaskCanvas(coverageSource, 1);
+assert([...smooth.pixels].some(alpha => alpha > 0 && alpha < 255), 'Antialiased outline must contain fractional coverage');
+assert(smooth.pixels[3 * 8 + 1] < 255, 'Dilation must propagate the subpixel source boundary');
+process.stdout.write('PASS outline antialiasing and subpixel coverage\n');

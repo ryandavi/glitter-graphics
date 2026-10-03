@@ -287,7 +287,7 @@ renderTransformPanels() {
 			&& activeLayer
 			&& !activeLayer.locked
 			&& !this.layerManager.hasMultiSelection()
-			&& isLayerTransformable(activeLayer)
+			&& isLayerSelectableOnCanvas(activeLayer)
 			? getLayerManagerForType(this, activeLayer.type)
 			: null;
 		managers.forEach((manager) => {

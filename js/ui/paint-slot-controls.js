@@ -224,7 +224,7 @@ function optionControlSuffixes(name, prefix) {
 const SLOT_OPTION_CONTROLS = Object.freeze({
 	border: Object.freeze([
 		{ key: 'style', geometry: true, read: getBorderStyle, options: optionControlSuffixes('borderStyle', 'Style') },
-		{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: { round: 'EdgeRounded', hard: 'EdgeHard' } },
+		{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: Object.fromEntries(getOptions('borderEdgeStyle').map(({ value, suffix }) => [value, suffix])) },
 		{ key: 'placement', geometry: true, read: getBorderPlacement, options: { outside: 'PositionOutside', center: 'PositionCenter', inside: 'PositionInside' } },
 		{ key: 'drawOrder', read: getBorderDrawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }
 	]),

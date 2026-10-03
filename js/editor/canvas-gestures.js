@@ -158,7 +158,7 @@ togglePreview() {
 		if (e.shiftKey || !PREFERENCES.get('autoSelect') || this.autoGlitterManager?.isSessionActive()) return null;
 		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
 		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
-		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerTransformable(layer) && !layer.locked ? layer : null;
+		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerSelectableOnCanvas(layer) ? layer : null;
 	}
 
 ,
@@ -171,6 +171,7 @@ togglePreview() {
 		if (this.layerManager.activeLayerId !== layer.id || this.layerManager.hasMultiSelection()) {
 			this.layerManager.selectLayerFromCanvas(layer.id);
 		}
+		if (!isLayerTransformable(layer)) return true;
 		const transform = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id);
 		if (!transform) return false;
 		if (!transform.chrome) transform.createTransformHandles();

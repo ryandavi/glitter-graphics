@@ -940,20 +940,22 @@ createTransformHandles() {
 		this.element.classList.add('has-transform-handles');
 	}
 
-	const handles = ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
-	if (this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
-	handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
-	if (LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer)) {
+	const readOnly = !isLayerTransformable(this.layer);
+	const handles = readOnly ? [] : ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
+	if (!readOnly && this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
+	if (!readOnly) handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
+	if (!readOnly && LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer)) {
 		handles.push('radius-tl', 'radius-tr', 'radius-br', 'radius-bl');
 	}
 	// Selection chrome lives in the screen-space overlay, outside the zoom.
 	this.chrome = new SelectionChrome(this.editor.viewport.selectionOverlay, {
 		layerId: this.layer.id,
+		readOnly,
 		handles,
 		titles: {
 			move: 'Move. Shift constrains movement; Alt-drag duplicates; Ctrl bypasses snapping.',
-			corner: 'Resize. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
-			edge: 'Resize one side. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
+			corner: 'Resize. Lock aspect wins; Shift constrains when unlocked. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
+			edge: 'Resize one side. Shift temporarily toggles aspect lock, preserving the current proportions when constrained. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
 			rotation: 'Rotate. Hold Shift to snap to 15 degree increments.'
 		}
 	});
@@ -964,7 +966,7 @@ createTransformHandles() {
 	this.updateHandlePositions();
 
 	// Attach event listeners
-	this.attachHandleListeners();
+	if (!readOnly) this.attachHandleListeners();
 }
 
 	// The chrome's description (see SelectionChrome): the frame, and for area
@@ -1463,7 +1465,7 @@ removeTransformHandles() {
 		const centerX = start.transform.position.x + startOffsetX * worldCos - startOffsetY * worldSin;
 		const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
 
-		const proportional = this.layer.type === LayerType.TEXT_GLITTER || Boolean(transform.proportionalScale) !== Boolean(e.shiftKey);
+		const proportional = resolveAspectLock(transform, e);
 
 		// Snap the dragged corner to canvas/layer edges. A proportional drag
 		// slides along the corner's diagonal from the fixed point (the opposite
@@ -1625,7 +1627,7 @@ removeTransformHandles() {
 			x: start.transform.scale.x,
 			y: start.transform.scale.y
 		};
-		const lockAspect = Boolean(transform.proportionalScale) !== Boolean(e.shiftKey);
+		const lockAspect = resolveAspectLock(transform, e, 'edge');
 		const axisSign = edge === 'left' || edge === 'top' ? -1 : 1;
 		let nextPosition = null;
 		if (e.altKey) {
@@ -1737,7 +1739,7 @@ removeTransformHandles() {
 			const snapY = grid.find((value) => Math.abs((y - value) * target.height) <= threshold);
 			const canvas = this.editor.originalCanvas;
 			const canvasCenter = canvas ? { x: canvas.width / 2, y: canvas.height / 2 } : null;
-			if (snapX === undefined && snapY === undefined && canvasCenter && CONFIG.snapping.snapToCanvas
+			if (snapX === undefined && snapY === undefined && canvasCenter && CONFIG.snapping.targets.move.canvasCenter
 				&& Math.hypot(point.x - canvasCenter.x, point.y - canvasCenter.y) <= threshold) {
 				({ x, y } = getLayerAnchorFromPoint(this.editor, this.layer, canvasCenter));
 			} else {

@@ -101,6 +101,11 @@ function isLayerTransformable(layer) {
 	return typeof transformable === 'function' ? Boolean(transformable(layer)) : Boolean(transformable);
 }
 
+function isLayerSelectableOnCanvas(layer) {
+	return Boolean(layer && layer.visible !== false && !layer.locked &&
+		(isLayerTransformable(layer) || LAYER_UI_CONFIG[layer.type]?.hitTest));
+}
+
 // A layer's lock blocks editing, deleting, and reordering it as well as moving
 // it, unless its type declares `lockScope: 'position'`: then the lock only
 // pins the transform and everything else stays available.

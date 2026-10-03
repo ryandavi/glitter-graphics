@@ -308,6 +308,9 @@ class GestureManager {
 			const topLayer = editor.layerManager.getTopVisibleLayerAtPoint(canvasPoint.x, canvasPoint.y, {
 				includeBase: false
 			});
+			if (isLayerSelectableOnCanvas(topLayer) && !isLayerTransformable(topLayer)) {
+				return { type: 'layerSelect', layerId: topLayer.id };
+			}
 			if (this.isTransformableLayer(topLayer)) {
 				return {
 					type: 'layerDrag',
@@ -597,7 +600,7 @@ class GestureManager {
 				tool: this.editor.currentTool,
 				source: 'touch'
 			});
-		} else if (route?.type === 'layerDrag') {
+		} else if (route?.type === 'layerDrag' || route?.type === 'layerSelect') {
 			const layer = this.getLayerById(route.layerId);
 			if (layer && this.editor.layerManager.activeLayerId !== layer.id) {
 				this.editor.layerManager.selectLayerFromCanvas(layer.id);

@@ -14,7 +14,7 @@ function getBorderPlacement(borderData) {
 }
 
 function getBorderEdgeStyle(borderData) {
-	return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+	return isOptionValue('borderEdgeStyle', borderData?.edgeStyle) ? borderData.edgeStyle : 'round';
 }
 
 function getBorderDrawOrder(borderData) {
@@ -23,7 +23,7 @@ function getBorderDrawOrder(borderData) {
 
 function getBorderOutsidePadding(borderData, { miterLimit = 1 } = {}) {
 	const widthPx = Math.max(0, borderData?.widthPx || 0);
-	const multiplier = getBorderEdgeStyle(borderData) === 'hard' ? Math.max(1, miterLimit) : 1;
+	const multiplier = getBorderEdgeStyle(borderData) === 'miter' ? Math.max(1, miterLimit) : 1;
 	switch (getBorderPlacement(borderData)) {
 		case 'inside':
 			return 0;
@@ -37,6 +37,7 @@ function getBorderOutsidePadding(borderData, { miterLimit = 1 } = {}) {
 function copyMaskTextureOrigin(targetCanvas, sourceCanvas) {
 	const sourceOrigin = sourceCanvas?._textureOrigin || { x: 0, y: 0 };
 	targetCanvas._textureOrigin = { ...sourceOrigin };
+	targetCanvas._rasterScale = sourceCanvas?._rasterScale;
 }
 
 function createMaskCanvasLike(sourceCanvas) {
@@ -97,6 +98,68 @@ function createBorderMaskCanvas(sourceCanvas, borderData) {
 	return canvas;
 }
 
+// Canvas transforms scale strokeText's width as well as its glyphs. A contour
+// of the settled vector raster lets its outline be stroked in physical pixels.
+function createMaskContourPath(canvas) {
+	const { width, height } = canvas;
+	const pixels = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height).data;
+	const edges = new Map();
+	const stride = width + 1;
+	const occupied = (x, y) => x >= 0 && x < width && y >= 0 && y < height && pixels[(y * width + x) * 4 + 3] >= CONFIG.rendering.maskAlphaThreshold;
+	const add = (x, y, nx, ny) => {
+		const key = y * stride + x;
+		if (!edges.has(key)) edges.set(key, []);
+		edges.get(key).push(ny * stride + nx);
+	};
+	for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+		if (!occupied(x, y)) continue;
+		if (!occupied(x, y - 1)) add(x, y, x + 1, y);
+		if (!occupied(x + 1, y)) add(x + 1, y, x + 1, y + 1);
+		if (!occupied(x, y + 1)) add(x + 1, y + 1, x, y + 1);
+		if (!occupied(x - 1, y)) add(x, y + 1, x, y);
+	}
+	const simplify = points => {
+		const keep = new Set([0, points.length - 1]);
+		const pending = [[0, points.length - 1]];
+		const toleranceSquared = CONFIG.rendering.maskContourTolerancePx ** 2;
+		while (pending.length) {
+			const [first, last] = pending.pop();
+			const a = points[first], b = points[last];
+			const dx = b.x - a.x, dy = b.y - a.y;
+			const length = dx * dx + dy * dy;
+			let maximum = toleranceSquared, winner = -1;
+			for (let index = first + 1; index < last; index++) {
+				const point = points[index];
+				const t = length ? Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / length)) : 0;
+				const distance = (point.x - a.x - t * dx) ** 2 + (point.y - a.y - t * dy) ** 2;
+				if (distance > maximum) { maximum = distance; winner = index; }
+			}
+			if (winner >= 0) { keep.add(winner); pending.push([first, winner], [winner, last]); }
+		}
+		return points.filter((point, index) => keep.has(index));
+	};
+	const path = new Path2D();
+	while (edges.size) {
+		const start = edges.keys().next().value;
+		let current = start;
+		const points = [];
+		do {
+			points.push({ x: current % stride, y: Math.floor(current / stride) });
+			const outgoing = edges.get(current);
+			if (!outgoing?.length) break;
+			current = outgoing.pop();
+			if (!outgoing.length) edges.delete(points.at(-1).y * stride + points.at(-1).x);
+		} while (current !== start);
+		if (points.length < 3) continue;
+		points.push(points[0]);
+		const contour = simplify(points);
+		path.moveTo(contour[0].x, contour[0].y);
+		contour.slice(1).forEach(point => path.lineTo(point.x, point.y));
+		path.closePath();
+	}
+	return path;
+}
+
 // Keep edge-connected transparency open while adding every closed counter to
 // an effect mask. Reachability is tested against the completed effect plus its
 // source silhouette, so a thick outline can close a region that was open in
@@ -149,8 +212,8 @@ function createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	const nextRadius = Math.max(0, Math.round(radius));
 	if (nextRadius <= 0) return sourceCanvas;
 
-	if (edgeStyle === 'hard') {
-		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'dilate');
+	if (edgeStyle === 'hard' || edgeStyle === 'miter') {
+		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'dilate', edgeStyle === 'miter');
 	}
 
 	return createDistanceThresholdMaskCanvas(sourceCanvas, -nextRadius);
@@ -194,8 +257,8 @@ function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	const nextRadius = Math.max(0, Math.round(radius));
 	if (nextRadius <= 0) return sourceCanvas;
 
-	if (edgeStyle === 'hard') {
-		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'erode');
+	if (edgeStyle === 'hard' || edgeStyle === 'miter') {
+		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'erode', edgeStyle === 'miter');
 	}
 
 	return createDistanceThresholdMaskCanvas(sourceCanvas, nextRadius, true);
@@ -205,7 +268,7 @@ function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 // The returned field is positive inside the thresholded silhouette and
 // negative outside. Soft effect masks (bevel/gloss) deliberately consume the
 // unbinarized values they derive from this field; silhouette masks do not.
-function createSignedDistanceField(sourceCanvas, alphaThreshold = null) {
+function createSignedDistanceField(sourceCanvas, alphaThreshold = null, antialias = false) {
 	const width = sourceCanvas.width;
 	const height = sourceCanvas.height;
 	const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
@@ -213,45 +276,62 @@ function createSignedDistanceField(sourceCanvas, alphaThreshold = null) {
 	const inside = new Uint8Array(width * height);
 	const threshold = Number.isFinite(alphaThreshold) ? alphaThreshold : (CONFIG.rendering.maskAlphaThreshold ?? 128);
 	for (let index = 0; index < inside.length; index++) inside[index] = rgba[index * 4 + 3] >= threshold ? 1 : 0;
-	const toInside = exactEuclideanDistanceTransform(inside, width, height, 1);
-	const toOutside = exactEuclideanDistanceTransform(inside, width, height, 0);
+	const nearestInside = antialias ? new Int32Array(inside.length) : null;
+	const nearestOutside = antialias ? new Int32Array(inside.length) : null;
+	const toInside = exactEuclideanDistanceTransform(inside, width, height, 1, nearestInside);
+	const toOutside = exactEuclideanDistanceTransform(inside, width, height, 0, nearestOutside);
 	const distance = new Float32Array(width * height);
 	for (let index = 0; index < distance.length; index++) {
 		distance[index] = inside[index] ? Math.sqrt(toOutside[index]) : -Math.sqrt(toInside[index]);
+		if (antialias) {
+			const alpha = rgba[index * 4 + 3] / 255;
+			const nearest = inside[index] ? nearestOutside[index] : nearestInside[index];
+			const boundaryAlpha = nearest >= 0 ? rgba[nearest * 4 + 3] / 255 : (inside[index] ? 0 : 1);
+			distance[index] = alpha > 0 && alpha < 1 ? alpha - 0.5 : distance[index] + boundaryAlpha - 0.5;
+		}
 	}
 	return Object.freeze({ width, height, distance, inside });
 }
 
-function exactEuclideanDistanceTransform(binary, width, height, targetValue) {
+function exactEuclideanDistanceTransform(binary, width, height, targetValue, nearest = null) {
 	const infinity = Infinity;
 	let targetCount = 0;
 	for (let index = 0; index < binary.length; index++) targetCount += binary[index] === targetValue ? 1 : 0;
-	if (!targetCount) return new Float64Array(width * height).fill(infinity);
+	if (!targetCount) { nearest?.fill(-1); return new Float64Array(width * height).fill(infinity); }
 	const scratch = new Float64Array(width * height);
+	const sites = nearest ? new Int32Array(width * height) : null;
+	const indices = nearest ? new Int32Array(Math.max(width, height)) : null;
 	const output = new Float64Array(width * height);
 	const maxLength = Math.max(width, height);
 	const f = new Float64Array(maxLength);
 	const d = new Float64Array(maxLength);
 	for (let x = 0; x < width; x++) {
 		for (let y = 0; y < height; y++) f[y] = binary[y * width + x] === targetValue ? 0 : infinity;
-		distanceTransform1D(f, d, height);
-		for (let y = 0; y < height; y++) scratch[y * width + x] = d[y];
+		distanceTransform1D(f, d, height, indices);
+		for (let y = 0; y < height; y++) {
+			scratch[y * width + x] = d[y];
+			if (sites) sites[y * width + x] = indices[y] * width + x;
+		}
 	}
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) f[x] = scratch[y * width + x];
-		distanceTransform1D(f, d, width);
-		for (let x = 0; x < width; x++) output[y * width + x] = d[x];
+		distanceTransform1D(f, d, width, indices);
+		for (let x = 0; x < width; x++) {
+			output[y * width + x] = d[x];
+			if (nearest) nearest[y * width + x] = sites[y * width + indices[x]];
+		}
 	}
 	return output;
 }
 
-function distanceTransform1D(f, d, length) {
+function distanceTransform1D(f, d, length, indices = null) {
 	const v = new Int32Array(length);
 	const z = new Float64Array(length + 1);
 	let first = 0;
 	while (first < length && !Number.isFinite(f[first])) first++;
 	if (first === length) {
 		d.fill(Infinity, 0, length);
+		indices?.fill(-1, 0, length);
 		return;
 	}
 	let k = 0;
@@ -277,23 +357,25 @@ function distanceTransform1D(f, d, length) {
 		while (z[k + 1] < q) k++;
 		const delta = q - v[k];
 		d[q] = delta * delta + f[v[k]];
+		if (indices) indices[q] = v[k];
 	}
 }
 
 function createDistanceThresholdMaskCanvas(sourceCanvas, threshold, erode = false) {
-	const field = createSignedDistanceField(sourceCanvas);
+	const crisp = shouldUseCrispMaskEdges();
+	const field = createSignedDistanceField(sourceCanvas, null, !crisp);
 	const canvas = createMaskCanvasLike(sourceCanvas);
 	const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 	const image = ctx.createImageData(canvas.width, canvas.height);
 	for (let index = 0; index < field.distance.length; index++) {
 		const filled = erode ? field.distance[index] > threshold : field.distance[index] >= threshold;
-		image.data[index * 4 + 3] = filled ? 255 : 0;
+		image.data[index * 4 + 3] = crisp ? (filled ? 255 : 0) : Math.round(255 * Math.max(0, Math.min(1, 0.5 + field.distance[index] - threshold)));
 	}
 	ctx.putImageData(image, 0, 0);
 	return canvas;
 }
 
-function createCrossMorphCanvas(sourceCanvas, radius, operation) {
+function createCrossMorphCanvas(sourceCanvas, radius, operation, square = false) {
 	const buffers = [createMaskCanvasLike(sourceCanvas), createMaskCanvasLike(sourceCanvas)];
 	let current = sourceCanvas;
 	for (let step = 0; step < radius; step++) {
@@ -306,6 +388,10 @@ function createCrossMorphCanvas(sourceCanvas, radius, operation) {
 		ctx.drawImage(current, 1, 0);
 		ctx.drawImage(current, 0, -1);
 		ctx.drawImage(current, 0, 1);
+		if (square) {
+			ctx.drawImage(current, -1, -1); ctx.drawImage(current, 1, -1);
+			ctx.drawImage(current, -1, 1); ctx.drawImage(current, 1, 1);
+		}
 		ctx.globalCompositeOperation = 'source-over';
 		current = canvas;
 	}

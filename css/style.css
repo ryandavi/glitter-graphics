@@ -3821,20 +3821,27 @@ body.is-booting .workspace-start button {
   min-width: 12px;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  line-height: var(--line-height-tight);
 }
 .canvas-activity > .btn-text {
   flex: 0 0 auto;
 }
-@container canvastop (min-width: 640.02px) {
-  .canvas-activity.has-mode > .inline-processing-status {
-    flex: 0 1 11em;
-    width: 11em;
-  }
+.canvas-activity.has-mode > .inline-processing-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.canvas-activity.is-busy > .canvas-activity-mode > .icon-wrapper > .icon {
+  visibility: hidden;
 }
 @container canvastop (max-width: 640px) {
   .canvas-activity > .canvas-activity-mode > strong,
-  .canvas-activity > .canvas-activity-mode > .feature-badge, .canvas-activity.has-mode .inline-processing-label {
+  .canvas-activity > .canvas-activity-mode > .feature-badge {
     display: none;
   }
 }
@@ -5530,7 +5537,7 @@ body.tool-text .text-hover-baselines {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--spacing-xs);
-  padding: var(--property-gutter);
+  padding: 0 var(--property-gutter);
 }
 
 .sparkle-glyph-chip {
@@ -6372,7 +6379,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-normal);
   letter-spacing: normal;
-  line-height: 1;
+  line-height: var(--line-height-tight);
   text-transform: none;
   visibility: hidden;
   opacity: 0;

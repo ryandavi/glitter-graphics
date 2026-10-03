@@ -81,6 +81,36 @@ async function main() {
 	try {
 		await openEditor(page);
 
+		await page.evaluate(async () => {
+			const editor = window.editor;
+			const layer = editor.glitterManager.createLayer();
+			editor.layerManager.insertLayer(layer);
+			editor.layerManager.setActiveLayer(layer.id);
+			editor.setTool(ToolType.BRUSH);
+			const brush = editor.maskEditor;
+			const nativeToBlob = HTMLCanvasElement.prototype.toBlob;
+			window.maskBlobReleases = [];
+			HTMLCanvasElement.prototype.toBlob = function (callback, ...args) {
+				nativeToBlob.call(this, blob => window.maskBlobReleases.push(() => callback(blob)), ...args);
+			};
+			window.restoreMaskToBlob = () => { HTMLCanvasElement.prototype.toBlob = nativeToBlob; };
+			const overlay = editor.viewport.selectionOverlay;
+			const point = overlay.toScreen({ x: 100, y: 100 });
+			const rect = overlay.element.getBoundingClientRect();
+			if (!brush._startStrokeFromScreenPoint(rect.left + point.x, rect.top + point.y)) throw new Error('Mask stroke did not start');
+			brush._finishStroke();
+		});
+		await page.waitForFunction(() => window.maskBlobReleases.length > 0);
+		const heldOverlay = await page.evaluate(() => {
+			const brush = window.editor.maskEditor;
+			return !brush.strokeActive && Boolean(brush.pendingCommitLayerId) && brush.overlayCtx.getImageData(100, 100, 1, 1).data[3] > 0;
+		});
+		assert(heldOverlay, 'Pointer-up cleared the stroke overlay before its decoded full mask was ready');
+		await page.evaluate(() => { window.restoreMaskToBlob(); window.maskBlobReleases.splice(0).forEach(release => release()); });
+		await page.waitForFunction(() => window.editor.maskEditor.pendingCommitLayerId === null);
+		assert(await page.evaluate(() => window.editor.maskEditor.overlayCtx.getImageData(100, 100, 1, 1).data[3] === 0), 'Settled mask left a stale stroke overlay');
+		console.log('PASS Stroke overlay persists until the decoded full mask replaces it');
+
 		const crisp = await getBrushAlphaProfile(page, { crisp: true, softness: 0 });
 		assert(crisp.stampAlpha.every((alpha) => alpha === 0 || alpha === 255), `Crisp stamp retained partial alpha: ${crisp.stampAlpha}`);
 
@@ -152,7 +182,8 @@ async function main() {
 				input.checked = false;
 				input.dispatchEvent(new Event('change', { bubbles: true }));
 			}
-			CONFIG.rendering.crispMaskEdges = true;
+			window.restoreMaskToBlob?.();
+			PREFERENCES.set('crispMaskEdges', true);
 		}).catch(() => {});
 		await page.close();
 		await browser.close();

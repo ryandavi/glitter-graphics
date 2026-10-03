@@ -45,9 +45,10 @@ function handleKind(handleType) {
 }
 
 class SelectionChrome {
-	constructor(overlay, { layerId, className = 'transform-handles', handles, titles = {} }) {
+	constructor(overlay, { layerId, className = 'transform-handles', handles, titles = {}, readOnly = false }) {
 		this.overlay = overlay;
 		this.handles = handles;
+		this.readOnly = readOnly;
 		this.screen = null;
 		this.badgeEdge = null;
 
@@ -55,6 +56,7 @@ class SelectionChrome {
 		container.className = className;
 		container.dataset.layerId = layerId;
 		this.element = container;
+		if (readOnly) container.style.pointerEvents = 'none';
 
 		const box = document.createElement('div');
 		box.className = 'transform-bounding-box';
@@ -62,6 +64,7 @@ class SelectionChrome {
 		if (titles.move) box.title = titles.move;
 		container.appendChild(box);
 		this.box = box;
+		if (readOnly) box.style.pointerEvents = 'none';
 
 		this.wrappers = new Map();
 		handles.forEach((handleType) => {
@@ -311,7 +314,7 @@ class SelectionChrome {
 	// always moves, so handles never swallow a drag on a small layer.
 	hitTest(clientX, clientY, pointerType) {
 		const screen = this.screen;
-		if (!screen) return null;
+		if (this.readOnly || !screen) return null;
 		const origin = this.overlay.element.getBoundingClientRect();
 		const x = clientX - origin.left;
 		const y = clientY - origin.top;

@@ -11,7 +11,7 @@ registerLayerType(LayerType.STICKER, {
 			panelPrefix: 'stickerShadow', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', path: 'stickerData.border', draftPath: 'stickerData.effectDrafts.border',
+			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'stickerData.border', draftPath: 'stickerData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId', framePadding: (data) => Math.max(0, data?.widthPx || 0),
 			panelPrefix: 'stickerBorder', modes: ['glitter', 'solid'], fields: { widthPx: 'stickerOutlineWidth' }
 		},

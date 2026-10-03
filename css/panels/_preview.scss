@@ -427,27 +427,18 @@ body.is-booting .workspace-start button {
 		min-width: 12px;
 		color: var(--color-text-secondary);
 		font-size: var(--font-size-sm);
-		// The label clips for its ellipsis; a line box of 1 would cut descenders.
-		line-height: var(--line-height-tight);
 	}
 
 	>.btn-text { flex: 0 0 auto; }
 
-	// In a mode the pill stays up between runs, so the status keeps one width
-	// whether or not it is spinning and the pill never changes size.
-	@container canvastop (min-width: 640.02px) {
-		&.has-mode >.inline-processing-status {
-			flex: 0 1 11em;
-			width: 11em;
-		}
-	}
+	&.has-mode >.inline-processing-status { @include visually-hidden; }
+	&.is-busy >.canvas-activity-mode >.icon-wrapper >.icon { visibility: hidden; }
 
 	// A narrow workspace (a phone, or a laptop with both panels open): the mode
-	// keeps its icon and Exit, the status keeps its spinner.
+	// keeps the mode icon and Exit, or the standalone status spinner.
 	@container canvastop (max-width: 640px) {
 		>.canvas-activity-mode >strong,
-		>.canvas-activity-mode >.feature-badge,
-		&.has-mode .inline-processing-label { display: none; }
+		>.canvas-activity-mode >.feature-badge { display: none; }
 	}
 }
 

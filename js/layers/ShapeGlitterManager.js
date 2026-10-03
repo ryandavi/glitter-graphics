@@ -723,6 +723,7 @@ class ShapeGlitterManager {
 		const d = layer.shapeData;
 		return JSON.stringify([
 			d.shapeId,
+			getCommittedRasterScale(this.editor, layer).x, getCommittedRasterScale(this.editor, layer).y,
 			d.width,
 			d.height,
 			LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer) ? d.cornerRadiusPx : null,
@@ -748,13 +749,19 @@ class ShapeGlitterManager {
 		}
 
 		const d = layer.shapeData;
+		const shapeId = d.shapeId;
+		const cornerRadiusPx = d.cornerRadiusPx;
 		const w = d.width;
 		const h = d.height;
+		const shapePath = ShapeLibrary.buildTransformedPath(shapeId, w / 2, h / 2, { fit: 'fill', cornerRadiusPx });
 		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
 		// Canvas allocation reserves the worst-case hard-miter spike (miterLimit ×
 		// width) so a star point never clips; the user-facing frame uses only the
 		// nominal outward border extent so the transform box hugs the shape instead
 		// of the reservation. For round edges the two are equal.
+		const paintScale = { ...getCommittedRasterScale(this.editor, layer) };
+		const sx = paintScale.x / 100;
+		const sy = paintScale.y / 100;
 		const borderReserve = this.getBorderOutsidePadding(d.border);
 		const borderExtent = getBorderOutsidePadding(d.border);
 		const shX = d.shadow?.offsetX || 0;
@@ -762,15 +769,15 @@ class ShapeGlitterManager {
 		// A blurred shadow's fade reaches past its spread too.
 		const shSpread = getShadowReach(d.shadow);
 
-		const inkLeft = Math.min(-borderReserve, shX - shSpread);
-		const inkRight = Math.max(w + borderReserve, w + shX + shSpread);
-		const inkTop = Math.min(-borderReserve, shY - shSpread);
-		const inkBottom = Math.max(h + borderReserve, h + shY + shSpread);
+		const inkLeft = Math.min(-borderReserve / sx, shX / sx - shSpread / sx);
+		const inkRight = Math.max(w + borderReserve / sx, w + shX / sx + shSpread / sx);
+		const inkTop = Math.min(-borderReserve / sy, shY / sy - shSpread / sy);
+		const inkBottom = Math.max(h + borderReserve / sy, h + shY / sy + shSpread / sy);
 
-		const frameLeft = Math.min(-borderExtent, shX - shSpread);
-		const frameRight = Math.max(w + borderExtent, w + shX + shSpread);
-		const frameTop = Math.min(-borderExtent, shY - shSpread);
-		const frameBottom = Math.max(h + borderExtent, h + shY + shSpread);
+		const frameLeft = Math.min(-borderExtent / sx, shX / sx - shSpread / sx);
+		const frameRight = Math.max(w + borderExtent / sx, w + shX / sx + shSpread / sx);
+		const frameTop = Math.min(-borderExtent / sy, shY / sy - shSpread / sy);
+		const frameBottom = Math.max(h + borderExtent / sy, h + shY / sy + shSpread / sy);
 
 		const layoutX = padding - inkLeft;
 		const layoutY = padding - inkTop;
@@ -786,9 +793,8 @@ class ShapeGlitterManager {
 		ctx.fillStyle = '#ffffff';
 		ctx.save();
 		ctx.translate(layoutX + w / 2, layoutY + h / 2);
-		// trace() fills the shape at the current origin (ShapeLibrary is the single
-		// geometry source shared with the brush + the picker thumbnails).
-		ShapeLibrary.trace(d.shapeId, ctx, w / 2, h / 2, { fit: 'fill', cornerRadiusPx: d.cornerRadiusPx });
+		// ShapeLibrary supplies the same path for fill, outline and scaled raster.
+		ctx.fill(shapePath);
 		ctx.restore();
 
 		if (shouldUseCrispMaskEdges()) {
@@ -796,6 +802,12 @@ class ShapeGlitterManager {
 		}
 
 		const entry = {
+			paintScale,
+			shapePath,
+			drawMask: (context) => {
+				context.save(); context.fillStyle = '#fff'; context.translate(layoutX + w / 2, layoutY + h / 2);
+				context.fill(shapePath); context.restore();
+			},
 			key,
 			canvas,
 			width: canvasWidth,
@@ -810,10 +822,10 @@ class ShapeGlitterManager {
 			// The layer's frame: the shape plus its nominal outward border, no
 			// shadow (handles, hit-testing, alignment; see getShapeBodyFrame).
 			bodyRect: {
-				x: layoutX - borderExtent,
-				y: layoutY - borderExtent,
-				width: w + borderExtent * 2,
-				height: h + borderExtent * 2
+				x: layoutX - borderExtent / sx,
+				y: layoutY - borderExtent / sy,
+				width: w + borderExtent / sx * 2,
+				height: h + borderExtent / sy * 2
 			},
 			shapeRect: { x: layoutX, y: layoutY, width: w, height: h },
 			// Kept so the border can be re-derived as a vector STROKE of the path
@@ -876,17 +888,14 @@ class ShapeGlitterManager {
 		const canvas = createAppCanvas(0, 0, 'layers/ShapeGlitterManager');
 		canvas.width = measurement.canvas.width;
 		canvas.height = measurement.canvas.height;
-		canvas._textureOrigin = { ...measurement.canvas._textureOrigin };
+		copyMaskTextureOrigin(canvas, measurement.canvas);
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-		const path = ShapeLibrary.buildTransformedPath(measurement.shapeId, measurement.shapeW / 2, measurement.shapeH / 2, {
-			fit: 'fill',
-			cornerRadiusPx: measurement.cornerRadiusPx
-		});
+		const path = measurement.shapePath;
 		ctx.save();
 		ctx.translate(measurement.layoutX + measurement.shapeW / 2, measurement.layoutY + measurement.shapeH / 2);
 		ctx.strokeStyle = '#ffffff';
-		if (edgeStyle === 'hard') {
+		if (edgeStyle === 'miter') {
 			ctx.lineJoin = 'miter';
 			// 'inside' clips a double-width centered stroke to the shape path rather
 			// than offsetting it, so at a reflex/concave vertex (a heart's inner
@@ -936,11 +945,12 @@ class ShapeGlitterManager {
 	// build masks through the same functions, so they never diverge. Export
 	// bakes the shadow offset into its mask; preview translates the span.
 	renderSlotMasks(layer) {
-		const measurement = this.getMeasurementEntry(layer);
+		const measurement = getRasterMeasurement(layer, this.getMeasurementEntry(layer));
 		const masks = {
 			fill: measurement.canvas,
 			renderWidth: measurement.width,
 			renderHeight: measurement.height,
+			rasterScale: measurement.rasterScale,
 			measurement
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
@@ -1029,6 +1039,7 @@ class ShapeGlitterManager {
 	}
 
 	reconcileSpans(stack, layer, measurement) {
+		measurement = getRasterMeasurement(layer, measurement);
 		this.syncStackGeometry(stack, layer, measurement);
 		reconcileSlotStack(stack, this.getSlotStack(layer), {
 			spanClassName: 'shape-glitter-content',
@@ -1047,7 +1058,7 @@ class ShapeGlitterManager {
 	// Sparkles read the shape mask painted with its fill, in mask-canvas space
 	// (the same box the export composites the slot stack in).
 	getSparkleHost(layer) {
-		const measurement = this.getMeasurementEntry(layer);
+		const measurement = getRasterMeasurement(layer, this.getMeasurementEntry(layer));
 		const fill = layer.shapeData.fill;
 		return {
 			key: `shape:${measurement.key}|${getSparkleMaskHostKey(fill)}`,
@@ -1064,9 +1075,11 @@ class ShapeGlitterManager {
 	// The mask a slot paints through: the vector-stroked border mask, or the
 	// shape silhouette for the fill and (offset by the caller) the shadow.
 	getSlotMask(measurement, slot, layer = null) {
+		if (layer) measurement = getRasterMeasurement(layer, measurement);
 		if (slot.key === 'border') {
 			const border = slot.data;
 			return {
+				rasterScale: measurement.rasterScale,
 				canvas: this.getBorderMaskCanvas(measurement, border),
 				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}`
 			};
@@ -1074,15 +1087,15 @@ class ShapeGlitterManager {
 		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {
 			const spread = Math.round(slot.data.spread || 0);
 			const blur = Math.round(slot.data.blur || 0);
-			return { canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
+			return { rasterScale: measurement.rasterScale, canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
 		}
 		if (slot.role === 'bevel') {
 			const bevel = layer?.shapeData?.bevel?.highlight || slot.data;
 			const key = `${bevel?.profile}:${bevel?.size}:${bevel?.depth}:${bevel?.angle}:${bevel?.altitude}:${bevel?.soften}`;
 			if (measurement._bevelMaskCache?.key !== key) measurement._bevelMaskCache = { key, ...createBevelMaskCanvases(measurement.canvas, bevel) };
-			return { canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
+			return { rasterScale: measurement.rasterScale, canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
 		}
-		return { canvas: measurement.canvas, cacheKey: `${measurement.key}|fill` };
+		return { rasterScale: measurement.rasterScale, canvas: measurement.canvas, cacheKey: `${measurement.key}|fill` };
 	}
 
 	getPreviewMaskDataUrl(canvas, cacheKey) {
@@ -1099,13 +1112,18 @@ class ShapeGlitterManager {
 
 	syncStackGeometry(stack, layer, measurement = null) {
 		if (!stack || !layer?.shapeData) return;
-		const entry = measurement || this.getMeasurementEntry(layer);
+		const entry = getRasterMeasurement(layer, measurement || this.getMeasurementEntry(layer));
 		const scaleX = (layer.transform.scale.x || 100) / 100;
 		const scaleY = (layer.transform.scale.y || 100) / 100;
 		stack.style.position = 'relative';
+		stack.dataset.rasterScaleX = entry.rasterScale?.x || 1;
+		stack.dataset.rasterScaleY = entry.rasterScale?.y || 1;
 		stack.style.width = `${entry.width}px`;
 		stack.style.height = `${entry.height}px`;
-		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
+		const logical = this.getMeasurementEntry(layer);
+		stack.style.left = `${(logical.width * scaleX - entry.width) / 2}px`;
+		stack.style.top = `${(logical.height * scaleY - entry.height) / 2}px`;
+		stack.style.transform = `scale(${scaleX / (entry.rasterScale?.x || 1)}, ${scaleY / (entry.rasterScale?.y || 1)})`;
 	}
 
 	// Called by LayerTransform.applyTransform during handle drags. Canvas-
@@ -1113,9 +1131,14 @@ class ShapeGlitterManager {
 	syncElementScale(layer, wrapper = this.layerElements.get(layer?.id)) {
 		const stack = wrapper?.querySelector('.shape-glitter-stack');
 		if (!stack) return;
+		const scale = layer.transform.scale;
+		const ratioX = scale.x / 100 / Number(stack.dataset.rasterScaleX || 1);
+		const ratioY = scale.y / 100 / Number(stack.dataset.rasterScaleY || 1);
 		const measurement = this.getMeasurementEntry(layer);
-		this.syncStackGeometry(stack, layer, measurement);
-		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(measurement, item, layer).canvas);
+		stack.style.transform = `scale(${ratioX}, ${ratioY})`;
+		stack.style.left = `${(measurement.width * scale.x / 100 - Number(stack.style.width.replace("px", "")) * ratioX) / 2}px`;
+		stack.style.top = `${(measurement.height * scale.y / 100 - Number(stack.style.height.replace("px", "")) * ratioY) / 2}px`;
+		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, slot => this.getSlotMask(measurement, slot, layer)?.canvas);
 	}
 
 	// ===== TRANSFORM COMMIT (re-rasterize on scale) =====

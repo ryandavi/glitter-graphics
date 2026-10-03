@@ -8,7 +8,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			glitterDefault: 'shadowGlitterId', panelPrefix: 'glitterShadow', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', path: 'border', draftPath: 'effectDrafts.border',
+			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'border', draftPath: 'effectDrafts.border',
 			glitterDefault: 'borderGlitterId', panelPrefix: 'glitterBorder', modes: ['glitter', 'solid'],
 			fields: { widthPx: 'borderWidth' }
 		},

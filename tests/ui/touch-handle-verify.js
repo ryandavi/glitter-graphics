@@ -492,24 +492,36 @@ async function checkAltCornerScaleFromCenter(page) {
 		`Alt corner drag moved the center (before ${JSON.stringify(before.position)}, after ${JSON.stringify(after.position)})`);
 }
 
-async function checkLockedStickerEdgeScale(page) {
+async function checkStickerEdgeAspectOverride(page) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
-	const sticker = await createTestSticker(page, { position: { x: 130, y: 100 }, label: 'Locked Edge Scale' });
-	await selectLayer(page, sticker.layerId);
-	await page.evaluate((layerId) => {
-		const layer = window.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		layer.transform.proportionalScale = true;
-		window.editor.loadTransformSettings(layer, 'sticker');
-	}, sticker.layerId);
-	const before = await getStickerState(page, sticker.layerId);
-	const handle = await getTransformHandleCenter(page, sticker.layerId, 'edge-right');
-	await mouseDrag(page, handle, { x: handle.x + 60, y: handle.y });
-	const after = await getStickerState(page, sticker.layerId);
-	const factorX = after.scale.x / before.scale.x;
-	const factorY = after.scale.y / before.scale.y;
-	assert(factorX > 1.05, `Locked edge handle did not increase scale X (${before.scale.x} -> ${after.scale.x})`);
-	assert(Math.abs(factorX - factorY) < 0.02, `Locked edge handle changed aspect ratio (X factor ${factorX}, Y factor ${factorY})`);
+	const sticker = await createTestSticker(page, { position: { x: 130, y: 100 } });
+	for (const edge of ['right', 'bottom']) for (const locked of [true, false]) for (const shift of [false, true]) {
+		await page.evaluate(({ id, locked }) => {
+			const editor = window.editor;
+			const layer = editor.layerManager.getLayerById(id);
+			layer.transform.proportionalScale = locked;
+			editor.stickerManager.updateTransform(id, { position: { x: 130, y: 100 }, scale: { x: 180, y: 90 } });
+			editor.stickerManager.renderLayer(layer);
+		}, { id: sticker.layerId, locked });
+		await selectLayer(page, sticker.layerId);
+		const before = await getStickerState(page, sticker.layerId);
+		const handle = await getTransformHandleCenter(page, sticker.layerId, `edge-${edge}`);
+		if (shift) await page.keyboard.down('Shift');
+		await mouseDrag(page, handle, { x: handle.x + (edge === 'right' ? 60 : 0), y: handle.y + (edge === 'bottom' ? 60 : 0) });
+		if (shift) await page.keyboard.up('Shift');
+		const after = await getStickerState(page, sticker.layerId);
+		const factorX = after.scale.x / before.scale.x;
+		const factorY = after.scale.y / before.scale.y;
+		const active = edge === 'right' ? factorX : factorY;
+		const untouched = edge === 'right' ? factorY : factorX;
+		assert(active > 1.05, `${edge} edge did not increase its axis (lock ${locked}, Shift ${shift})`);
+		if (locked !== shift) {
+			assert(Math.abs(factorX - factorY) < 0.02, `Edge resize lost current proportions (X ${factorX}, Y ${factorY})`);
+		} else assert(Math.abs(untouched - 1) < 0.001, 'Free edge resize changed the other axis');
+		assert(await page.evaluate(id => window.editor.layerManager.getLayerById(id).transform.proportionalScale, sticker.layerId) === locked,
+			'Shift edge resize changed the stored aspect lock');
+	}
 }
 
 async function checkEscapeCancelsCornerScale(page) {
@@ -836,7 +848,7 @@ async function main() {
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
 			['Sticker outline follows a live corner scale', checkStickerOutlineTracksLiveScale],
-			['Locked sticker edge handle preserves aspect ratio', checkLockedStickerEdgeScale],
+			['Shift edge resize toggles the lock temporarily and preserves current proportions', checkStickerEdgeAspectOverride],
 			['Sidebar scale and Reset Transform resize the sticker transform box', checkSidebarScaleAndResetHandles],
 			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],
 			['Escape cancels a mouse corner transform without history', checkEscapeCancelsCornerScale],

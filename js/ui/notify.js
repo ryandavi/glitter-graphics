@@ -81,7 +81,13 @@ class NotificationCenter {
 		if (pillExit) pillExit.hidden = !this.mode?.onExit;
 		if (this.mode) {
 			pillModeIcon?.setAttribute('href', `#icon-${this.mode.icon}`);
-			if (pillModeLabel) pillModeLabel.textContent = this.mode.label;
+			if (pillModeLabel) {
+				pillModeLabel.style.width = '';
+				pillModeLabel.textContent = this.mode.label;
+				this.modeLabelMeasureCtx ||= createAppCanvas(1, 1, 'ui/notify').getContext('2d');
+				this.modeLabelMeasureCtx.font = getComputedStyle(pillModeLabel).font;
+				pillModeLabel.style.width = `${Math.ceil(this.modeLabelMeasureCtx.measureText(this.mode.label).width)}px`;
+			}
 			if (pillModeBadge) {
 				pillModeBadge.hidden = !this.mode.badge;
 				pillModeBadge.textContent = this.mode.badge || '';
@@ -144,6 +150,12 @@ class NotificationCenter {
 			});
 		}
 		pill.classList.toggle('has-mode', Boolean(this.mode));
+		pill.classList.toggle('is-busy', Boolean(this.mode && this.activityShown));
+		this.pill.pillModeIcon?.parentElement?.parentElement?.classList.toggle('inline-processing-spinner', Boolean(this.mode && this.activityShown));
+		const label = this.pill.pillModeLabel;
+		if (label && this.mode) {
+			label.textContent = this.activityShown ? pillStatus?.querySelector('.inline-processing-label')?.textContent || this.mode.label : this.mode.label;
+		}
 		pill.hidden = this.activitySuspended || !(this.mode || this.activityShown);
 	}
 

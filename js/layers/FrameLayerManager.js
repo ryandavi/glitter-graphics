@@ -501,7 +501,7 @@ class FrameLayerManager {
 			layer.id === this.editor.layerManager.activeLayerId
 			&& this.editor.currentTool === ToolType.SELECT
 			&& !this.editor.layerManager.hasMultiSelection()
-			&& isLayerTransformable(layer)
+			&& isLayerSelectableOnCanvas(layer)
 			&& !layer.locked
 		) {
 			if (!transform.isDraggingHandle) transform.createTransformHandles();

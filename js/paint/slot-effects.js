@@ -216,8 +216,9 @@ function getSlotTexturePatternOrigin(maskCanvas, source, layer, options = {}) {
 	const dy = offsetY - (Number(transform.position?.y) || 0);
 	const rotatedX = dx * cos - dy * sin;
 	const rotatedY = dx * sin + dy * cos;
-	const scaleX = Math.max(0.01, Math.abs((Number(transform.scale?.x) || 100) / 100)) * (transform.flipX ? -1 : 1);
-	const scaleY = Math.max(0.01, Math.abs((Number(transform.scale?.y) || 100) / 100)) * (transform.flipY ? -1 : 1);
+	const rasterScale = maskCanvas?._rasterScale;
+	const scaleX = Math.max(0.01, Math.abs((Number(transform.scale?.x) || 100) / 100)) * (transform.flipX ? -1 : 1) / (rasterScale?.x || 1);
+	const scaleY = Math.max(0.01, Math.abs((Number(transform.scale?.y) || 100) / 100)) * (transform.flipY ? -1 : 1) / (rasterScale?.y || 1);
 
 	return {
 		x: rotatedX / scaleX + (maskCanvas?.width || 0) / 2 - (Number(options.localOffsetX) || 0),

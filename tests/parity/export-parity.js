@@ -26,7 +26,8 @@ async function buildComposition(page) {
 		const editor = window.editor;
 		const animatedGlitters = editor.glitterManager.content.filter((item) => item.isAnimated);
 		const animatedSticker = editor.stickerManager.content.find((item) => item.isAnimated);
-		const staticSticker = editor.stickerManager.content.find((item) => !item.isAnimated);
+		// Keep the black-pixel fixture stable when the library gains new assets.
+		const staticSticker = editor.stickerManager.content.find((item) => item.id === 225);
 
 		if (animatedGlitters.length < 2) {
 			throw new Error('Need at least two animated glitter swatches for export parity coverage');
@@ -97,6 +98,7 @@ async function buildComposition(page) {
 			position: { x: 160, y: 154 },
 			align: 'center'
 		});
+		textLayer.textData.fontId = 'luckiest-guy';
 		editor.layerManager.insertLayer(textLayer);
 		textLayer.blendMode = 'overlay';
 		textLayer.textData.fill = editor.textGlitterManager.getDefaultFill();

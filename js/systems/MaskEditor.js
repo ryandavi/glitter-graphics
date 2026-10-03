@@ -20,6 +20,7 @@ class MaskEditor {
 		this.activePointerId = null;
 		this.currentLayerId = null;
 		this.strokeActive = false;
+		this.pendingCommitLayerId = null;
 		this.strokeChanged = false;
 		this.strokeModeOverride = null;
 		this.lastPoint = null;
@@ -887,7 +888,7 @@ class MaskEditor {
 		this.ui.overlayCanvas.width = width;
 		this.ui.overlayCanvas.height = height;
 
-		if (!this.isEditing || !this.strokeActive || !this.showOverlay || !layer || layer.type !== LayerType.GLITTER_FILL) {
+		if (!this.isEditing || (!this.strokeActive && this.pendingCommitLayerId !== layer?.id) || !this.showOverlay || !layer || layer.type !== LayerType.GLITTER_FILL) {
 			this._clearOverlay();
 			return;
 		}
@@ -1217,6 +1218,16 @@ class MaskEditor {
 		}
 	}
 
+	onMaskPendingChange(layerId, isPending) {
+		const layer = this.editor.layerManager.getLayerById(layerId);
+		const cache = this.editor.glitterManager.maskImages.get(layerId);
+		const key = layer && this.editor.maskCompositor.getCacheKey(layer, { draft: false });
+		if (!isPending && cache?.fullApplied && cache.key.startsWith(`${key}|`) && this.pendingCommitLayerId === layerId) {
+			this.pendingCommitLayerId = null;
+			this.renderOverlay();
+		}
+	}
+
 	_finishStroke() {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (!layer || layer.id !== this.currentLayerId) {
@@ -1237,6 +1248,7 @@ class MaskEditor {
 		}
 
 		if (this.strokeChanged) {
+			this.pendingCommitLayerId = layer.id;
 			this.editor.paintMaskStore.commitPaintState(layer);
 			this.editor.requestPreviewUpdate();
 			this.editor.layerManager.renderLayersList();

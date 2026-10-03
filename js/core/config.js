@@ -477,7 +477,7 @@ const CONFIG = deepFreeze({
 			// Canvas input uses the same string and layout as the panel.
 			canvasEditing: true,
 			fontsManifest: 'data/fonts.json?v=5',
-			defaultFontId: 'luckiest-guy',
+			defaultFontId: 'comic-sans',
 			defaultFontWeight: 400,
 			defaultFontStyle: 'normal',
 			defaultColorEmoji: true,
@@ -591,6 +591,8 @@ const CONFIG = deepFreeze({
 				{ offset: 1, color: '#6554ff', alpha: 1 }
 			]
 		},
+		borderMiterLimit: 4,
+		maskContourTolerancePx: 0.5,
 		borderSampling: {
 			minSteps: 16,
 			maxSteps: 64,
@@ -608,8 +610,11 @@ const CONFIG = deepFreeze({
 	snapping: {
 			enabled: true,
 			threshold: 6,
-			snapToCanvas: true,
-			snapToLayers: true
+			targets: {
+				move: { canvasEdges: true, canvasCenter: true, layerEdges: true, layerCenters: true },
+				scale: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false },
+				textBox: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false, ownInk: true }
+			}
 	},
 
 	ui: {

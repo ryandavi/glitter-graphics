@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.SHAPE, {
+	rasterizesScale: true,
 	displayName: 'Shape',
 	paintSlots: [
 		{
@@ -8,7 +9,7 @@ registerLayerType(LayerType.SHAPE, {
 			glitterDefault: 'shadowGlitterId', panelPrefix: 'shapeShadow', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', path: 'shapeData.border', draftPath: 'shapeData.effectDrafts.border',
+			key: 'border', role: 'border', edgeStyles: ['round', 'miter'], path: 'shapeData.border', draftPath: 'shapeData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId', panelPrefix: 'shapeBorder', modes: ['glitter', 'solid'],
 			fields: { widthPx: 'borderWidth', dotSpacingPx: 'borderDotSpacing' }
 		},

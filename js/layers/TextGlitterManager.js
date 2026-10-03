@@ -233,18 +233,19 @@ class TextGlitterManager {
 		if (!layer?.textData) return null;
 
 		return {
-			world: this.getTextOriginWorldPosition(layer)
+			world: layer.textData.boxMode === 'autoHeight' ? getLayerAnchorPoint(this.editor, layer) : this.getTextOriginWorldPosition(layer),
+			transformAnchor: layer.textData.boxMode === 'autoHeight'
 		};
 	}
 
 	preparePendingAnchorPreservation(layer) {
 		if (!layer || layer._pendingPointAnchorSnapshot
-			|| (layer.textData?.boxMode || 'point') !== 'point') return;
+			|| !['point', 'autoHeight'].includes(layer.textData?.boxMode)) return;
 		layer._pendingPointAnchorSnapshot = this.getPointAnchorSnapshot(layer);
 	}
 
 	async runLayoutRefreshWithAnchor(layer, mutateFn, options = {}) {
-		const snapshot = ((layer.textData?.boxMode || 'point') === 'point' || options.preservePointAnchor)
+		const snapshot = (['point', 'autoHeight'].includes(layer.textData?.boxMode) || options.preservePointAnchor)
 			? this.getPointAnchorSnapshot(layer)
 			: null;
 		if (this.editSession) this.editSession.dirty = true;
@@ -328,7 +329,11 @@ class TextGlitterManager {
 
 	applyPointAnchorSnapshot(layer, snapshot, measurement = null) {
 		if (!snapshot || !layer?.textData) return;
-		this.setTextOriginWorldPosition(layer, snapshot.world, measurement);
+		if (snapshot.transformAnchor) {
+			const after = getLayerAnchorPoint(this.editor, layer);
+			layer.transform.position.x += snapshot.world.x - after.x;
+			layer.transform.position.y += snapshot.world.y - after.y;
+		} else this.setTextOriginWorldPosition(layer, snapshot.world, measurement);
 	}
 
 	getTextOriginLocalPoint(layer, measurement = null) {
@@ -1015,6 +1020,7 @@ class TextGlitterManager {
 		const textData = layer.textData;
 		return JSON.stringify([
 			textData.text,
+			getCommittedRasterScale(this.editor, layer).x, getCommittedRasterScale(this.editor, layer).y,
 			textData.textCase,
 			textData.fontId,
 			textData.fontWeight,
@@ -1036,7 +1042,7 @@ class TextGlitterManager {
 			textData.boxHeight ?? null,
 			textData.decoration,
 			textData.colorEmoji,
-			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border)] : null,
+			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border), getBorderEdgeStyle(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
 			textData.shadow ? textData.shadow.spread : null,
@@ -1075,7 +1081,11 @@ class TextGlitterManager {
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;
 		const lineHeightPx = fontSize * layer.textData.lineHeight;
+		const paintScale = { ...getCommittedRasterScale(this.editor, layer) };
+		const sx = paintScale.x / 100;
+		const sy = paintScale.y / 100;
 		const borderWidth = getBorderOutsidePadding(layer.textData.border);
+		const borderReserve = getBorderOutsidePadding(layer.textData.border, { miterLimit: CONFIG.rendering.borderMiterLimit });
 		const shadowOffsetX = layer.textData.shadow?.offsetX || 0;
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
 		// A blurred shadow's fade reaches past its spread too.
@@ -1200,19 +1210,19 @@ class TextGlitterManager {
 		}
 		const backgroundBounds = textBackgroundGeometry?.bounds;
 
-		const artLeft = Math.min(textInkLeft - borderWidth, textInkLeft + shadowOffsetX - shadowSpread, backgroundBounds ? backgroundBounds.x : Infinity);
-		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX + shadowSpread, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
-		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY - shadowSpread, backgroundBounds ? backgroundBounds.y : Infinity);
-		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY + shadowSpread, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
+		const artLeft = Math.min(textInkLeft - borderReserve / sx, textInkLeft + shadowOffsetX / sx - shadowSpread / sx, backgroundBounds ? backgroundBounds.x : Infinity);
+		const artRight = Math.max(textInkRight + borderReserve / sx, textInkRight + shadowOffsetX / sx + shadowSpread / sx, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const artTop = Math.min(textInkTop - borderReserve / sy, textInkTop + shadowOffsetY / sy - shadowSpread / sy, backgroundBounds ? backgroundBounds.y : Infinity);
+		const artBottom = Math.max(textInkBottom + borderReserve / sy, textInkBottom + shadowOffsetY / sy + shadowSpread / sy, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		// Body (the layer's frame for handles and hit-testing): the layout box,
 		// the glyphs with their border, and the background plate. No shadow, and
 		// the layout box rather than ink, so the box holds still while typing.
 		// Warped point text has left its flat layout box, so it hugs the ink.
 		const hugInk = Boolean(warpedGlyphs) && boxMode === 'point';
-		const bodyLeft = Math.min(hugInk ? Infinity : 0, hasInk ? textInkLeft - borderWidth : 0, backgroundBounds ? backgroundBounds.x : Infinity);
-		const bodyRight = Math.max(hugInk ? -Infinity : layoutWidth, hasInk ? textInkRight + borderWidth : 0, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
-		const bodyTop = Math.min(hugInk ? Infinity : 0, hasInk ? textInkTop - borderWidth : 0, backgroundBounds ? backgroundBounds.y : Infinity);
-		const bodyBottom = Math.max(hugInk ? -Infinity : layoutHeight, hasInk ? textInkBottom + borderWidth : 0, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
+		const bodyLeft = Math.min(hugInk ? Infinity : 0, hasInk ? textInkLeft - borderWidth / sx : 0, backgroundBounds ? backgroundBounds.x : Infinity);
+		const bodyRight = Math.max(hugInk ? -Infinity : layoutWidth, hasInk ? textInkRight + borderWidth / sx : 0, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const bodyTop = Math.min(hugInk ? Infinity : 0, hasInk ? textInkTop - borderWidth / sy : 0, backgroundBounds ? backgroundBounds.y : Infinity);
+		const bodyBottom = Math.max(hugInk ? -Infinity : layoutHeight, hasInk ? textInkBottom + borderWidth / sy : 0, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		const frameLeft = boxMode !== 'point' ? Math.min(0, artLeft) : artLeft;
 		const frameRight = boxMode !== 'point' ? Math.max(layoutWidth, artRight) : artRight;
 		const frameTop = boxMode !== 'point' ? Math.min(0, artTop) : artTop;
@@ -1234,22 +1244,30 @@ class TextGlitterManager {
 		maskCtx.textBaseline = 'alphabetic';
 		maskCtx.textAlign = 'left';
 
-		if (warpedGlyphs) {
-			warpedGlyphs.forEach((glyph) => {
-				if (!glyph.bounds) return;
-				maskCtx.save();
-				maskCtx.translate(layoutX + glyph.placement.x, layoutY + glyph.placement.y);
-				maskCtx.rotate(glyph.placement.rotation);
-				maskCtx.scale(1, glyph.placement.scaleY);
-				maskCtx.fillText(glyph.char, -glyph.advance / 2, 0);
-				maskCtx.restore();
-			});
-		} else {
-			layout.runs.forEach(run => maskCtx.fillText(run.text, layoutX + run.x, layoutY + run.baseline));
-		}
+		const fontDeclaration = maskCtx.font;
+		const drawMask = (context, method = 'fillText') => {
+			context.font = fontDeclaration;
+			context.textBaseline = 'alphabetic';
+			context.fillStyle = '#fff';
+			if (warpedGlyphs) {
+				warpedGlyphs.forEach((glyph) => {
+					if (!glyph.bounds) return;
+					context.save();
+					context.translate(layoutX + glyph.placement.x, layoutY + glyph.placement.y);
+					context.rotate(glyph.placement.rotation);
+					context.scale(1, glyph.placement.scaleY);
+					context[method](glyph.char, -glyph.advance / 2, 0);
+					context.restore();
+				});
+			} else {
+				layout.runs.forEach(run => context[method](run.text, layoutX + run.x, layoutY + run.baseline));
+			}
 
+			TextLayout.drawDecorations(context, layout.decorations, layoutX, layoutY);
+		};
 		const drawDecorations = context => TextLayout.drawDecorations(context, layout.decorations, layoutX, layoutY);
-		drawDecorations(maskCtx);
+		drawMask(maskCtx);
+
 		let lettersCanvas = canvas;
 		let lettersCtx = maskCtx;
 		let emojiCanvas = null;
@@ -1286,7 +1304,9 @@ class TextGlitterManager {
 		}
 
 		const entry = {
+			paintScale,
 			key,
+			drawMask,
 			layout,
 			lettersCanvas,
 			emojiCanvas,
@@ -1424,12 +1444,13 @@ class TextGlitterManager {
 		}
 
 		await FontLibrary.ensureLoaded(layer.textData.fontId);
-		const measurement = this.getMeasurementEntry(layer);
+		const measurement = getRasterMeasurement(layer, this.getMeasurementEntry(layer));
 		const masks = {
 			fill: measurement.lettersCanvas,
 			emoji: measurement.emojiCanvas,
-			renderWidth: layer.textData.width,
-			renderHeight: layer.textData.height
+			renderWidth: measurement.width,
+			renderHeight: measurement.height,
+			rasterScale: measurement.rasterScale
 		};
 		getLayerPaintSlots(layer).forEach((entry) => {
 			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
@@ -1550,6 +1571,7 @@ class TextGlitterManager {
 	}
 
 	reconcileTextSpans(stack, layer, measurement) {
+		measurement = getRasterMeasurement(layer, measurement);
 		this.syncStackGeometry(stack, layer, measurement);
 		reconcileSlotStack(stack, this.getSlotStack(layer), {
 			spanClassName: 'text-glitter-content',
@@ -1571,7 +1593,7 @@ class TextGlitterManager {
 	// Sparkles read the text mask painted with its fill, in mask-canvas space
 	// (the same box the export composites the slot stack in).
 	getSparkleHost(layer) {
-		const measurement = this.getMeasurementEntry(layer);
+		const measurement = getRasterMeasurement(layer, this.getMeasurementEntry(layer));
 		const fill = layer.textData.fill;
 		return {
 			key: `text:${this.getCacheKeyForLayer(layer)}|${getSparkleMaskHostKey(fill)}`,
@@ -1586,13 +1608,18 @@ class TextGlitterManager {
 	syncStackGeometry(stack, layer, measurement = null) {
 		if (!stack || !layer?.textData) return;
 
-		const entry = measurement || this.getMeasurementEntry(layer);
+		const entry = getRasterMeasurement(layer, measurement || this.getMeasurementEntry(layer));
 		const scaleX = (layer.transform.scale.x || 100) / 100;
 		const scaleY = (layer.transform.scale.y || 100) / 100;
 
+		stack.dataset.rasterScaleX = entry.rasterScale?.x || 1;
+		stack.dataset.rasterScaleY = entry.rasterScale?.y || 1;
 		stack.style.width = `${entry.width}px`;
 		stack.style.height = `${entry.height}px`;
-		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
+		const logical = this.getMeasurementEntry(layer);
+		stack.style.left = `${(logical.width * scaleX - entry.width) / 2}px`;
+		stack.style.top = `${(logical.height * scaleY - entry.height) / 2}px`;
+		stack.style.transform = `scale(${scaleX / (entry.rasterScale?.x || 1)}, ${scaleY / (entry.rasterScale?.y || 1)})`;
 		stack.style.setProperty('--layer-scale', String(Math.max(scaleX, scaleY) || 1));
 
 		// The overflow marker follows the layer's frame.
@@ -1612,14 +1639,19 @@ class TextGlitterManager {
 		// System fonts are resolved by the browser and deliberately have no
 		// FontFace cache entry. Their existing stack can still scale live.
 		if (!stack) return;
+		const scale = layer.transform.scale;
+		const ratioX = scale.x / 100 / Number(stack.dataset.rasterScaleX || 1);
+		const ratioY = scale.y / 100 / Number(stack.dataset.rasterScaleY || 1);
 		const measurement = this.getMeasurementEntry(layer);
-		this.syncStackGeometry(stack, layer, measurement);
-		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, (item) => this.getSlotMask(layer, measurement, item)?.canvas);
+		stack.style.transform = `scale(${ratioX}, ${ratioY})`;
+		stack.style.left = `${(measurement.width * scale.x / 100 - Number(stack.style.width.replace("px", "")) * ratioX) / 2}px`;
+		stack.style.top = `${(measurement.height * scale.y / 100 - Number(stack.style.height.replace("px", "")) * ratioY) / 2}px`;
+		syncSlotStackTextureOrigins(stack, this.getSlotStack(layer), layer, slot => this.getSlotMask(layer, measurement, slot)?.canvas);
 	}
 
 	getSlotStack(layer, resolveSource = entry => resolvePaintSlotPreviewSource(this.editor, layer, entry)) {
 		const stack = buildSlotStack(layer, resolveSource);
-		const measurement = this.getMeasurementEntry(layer);
+		const measurement = getRasterMeasurement(layer, this.getMeasurementEntry(layer));
 		if (measurement.emojiCanvas) {
 			const canvas = measurement.emojiCanvas;
 			const source = { mode: 'image', image: canvas, url: this.getPreviewMaskDataUrl(layer, 'emoji', canvas, measurement.key), fit: 'fill', imageScalePercent: 100, offsetXPercent: 0, offsetYPercent: 0, tile: false, opacity: 1 };
@@ -1634,29 +1666,30 @@ class TextGlitterManager {
 	// background exists only once its geometry has shapes. bucket and cacheKey
 	// address the per-layer preview mask URL cache.
 	getSlotMask(layer, measurement, slot) {
-		if (slot.key === 'emoji') return { canvas: measurement.emojiCanvas, bucket: 'emojiMask', cacheKey: measurement.key };
+		measurement = getRasterMeasurement(layer, measurement);
+		if (slot.key === 'emoji') return { rasterScale: measurement.rasterScale, canvas: measurement.emojiCanvas, bucket: 'emojiMask', cacheKey: measurement.key };
 		if (slot.key === 'backgroundFill') {
 			const canvas = measurement.textBackgroundGeometry?.shapes?.length
 				? this.getTextBackgroundMaskCanvas(layer, measurement)
 				: null;
-			return canvas ? { canvas, bucket: 'background', cacheKey: measurement.key } : null;
+			return canvas ? { rasterScale: measurement.rasterScale, canvas, bucket: 'background', cacheKey: measurement.key } : null;
 		}
 		if (slot.key === 'border') {
 			const { canvas, cacheKey } = this.getBorderMaskCanvas(layer, measurement, slot.data);
-			return { canvas, bucket: 'border', cacheKey };
+			return { rasterScale: measurement.rasterScale, canvas, bucket: 'border', cacheKey };
 		}
 		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {
 			const spread = Math.round(slot.data.spread || 0);
 			const blur = Math.round(slot.data.blur || 0);
-			return { canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
+			return { rasterScale: measurement.rasterScale, canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
 		}
 		if (slot.role === 'bevel') {
 			const bevel = layer.textData.bevel?.highlight;
 			const key = `${bevel?.profile}:${bevel?.size}:${bevel?.depth}:${bevel?.angle}:${bevel?.altitude}:${bevel?.soften}`;
 			if (measurement._bevelMaskCache?.key !== key) measurement._bevelMaskCache = { key, ...createBevelMaskCanvases(measurement.lettersCanvas, bevel) };
-			return { canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, bucket: slot.key, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
+			return { rasterScale: measurement.rasterScale, canvas: slot.key === 'bevelShade' ? measurement._bevelMaskCache.shade : measurement._bevelMaskCache.highlight, bucket: slot.key, cacheKey: `${measurement.key}|bevel:${key}:${slot.key}` };
 		}
-		return { canvas: slot.key === 'fill' ? measurement.lettersCanvas : measurement.canvas, bucket: slot.key === 'fill' ? 'fill' : 'glyphs', cacheKey: measurement.key };
+		return { rasterScale: measurement.rasterScale, canvas: slot.key === 'fill' ? measurement.lettersCanvas : measurement.canvas, bucket: slot.key === 'fill' ? 'fill' : 'glyphs', cacheKey: measurement.key };
 	}
 
 	// One continuous stroke, like a Photoshop stroke: the glyph mask grown,
@@ -1674,10 +1707,29 @@ class TextGlitterManager {
 		}
 
 		const fillMask = measurement.canvas;
-		const canvas = createBorderMaskCanvas(fillMask, borderData);
+		let canvas;
+		if (edgeStyle === 'miter') {
+			canvas = createMaskCanvasLike(fillMask);
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			ctx.strokeStyle = '#fff';
+			ctx.lineJoin = 'miter';
+			ctx.miterLimit = CONFIG.rendering.borderMiterLimit;
+			ctx.lineWidth = placement === 'center' ? widthPx : widthPx * 2;
+			if (measurement.rasterScale || measurement.emojiCanvas || Object.values(layer.textData.decoration || {}).some(Boolean)) {
+				measurement._outlinePath ||= createMaskContourPath(fillMask);
+				ctx.stroke(measurement._outlinePath);
+			} else measurement.drawMask(ctx, 'strokeText');
+			if (placement !== 'center') {
+				ctx.globalCompositeOperation = placement === 'inside' ? 'destination-in' : 'destination-out';
+				ctx.drawImage(fillMask, 0, 0);
+				ctx.globalCompositeOperation = 'source-over';
+			}
+			if (fillEnclosed) fillEnclosedMaskAreas(canvas, fillMask);
+			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(ctx);
+		} else canvas = createBorderMaskCanvas(fillMask, borderData);
 
 		if (canvas) {
-			canvas._textureOrigin = { ...fillMask._textureOrigin };
+			copyMaskTextureOrigin(canvas, fillMask);
 		}
 		measurement._borderMaskCache = { key: cacheKey, canvas };
 		return { canvas, cacheKey: `${measurement.key}|${cacheKey}` };
@@ -1698,10 +1750,11 @@ class TextGlitterManager {
 		const canvas = createAppCanvas(0, 0, 'layers/TextGlitterManager');
 		canvas.width = measurement.width;
 		canvas.height = measurement.height;
-		canvas._textureOrigin = { ...measurement.canvas._textureOrigin };
+		copyMaskTextureOrigin(canvas, measurement.canvas);
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 		ctx.fillStyle = '#ffffff';
-		renderTextBackgroundGeometry(ctx, geometry);
+		if (measurement.drawBackground) measurement.drawBackground(ctx);
+		else renderTextBackgroundGeometry(ctx, geometry);
 
 		if (shouldUseCrispMaskEdges()) {
 			binarizeCanvasAlpha(ctx, canvas.width, canvas.height);
@@ -1848,47 +1901,33 @@ class TextGlitterManager {
 
 		dragState.textResizeEdge = edge;
 		const metrics = this.getBoxResizeMetrics(layer, dragState);
+		const measurement = this.getMeasurementEntry(layer);
+		const ink = measurement.textInkRect;
+		const axes = ['left', 'right'].includes(edge) ? 'x' : ['top', 'bottom'].includes(edge) ? 'y' : 'xy';
+		const ownInk = CONFIG.snapping.targets.textBox.ownInk && ink ? {
+			x: [ink.x, ink.x + ink.width].map(x => this.getWorldPointFromLocal(layer.transform, { x: x - measurement.width / 2, y: 0 }).x),
+			y: [ink.y, ink.y + ink.height].map(y => this.getWorldPointFromLocal(layer.transform, { x: 0, y: y - measurement.height / 2 }).y)
+		} : { x: [], y: [] };
+		canvasPos = this.editor.snapScalePoint(this.layerTransforms.get(layer.id), canvasPos, { ...options, kind: 'textBox', axes, targets: ownInk });
 		const vectorX = canvasPos.x - metrics.originWorldX;
 		const vectorY = canvasPos.y - metrics.originWorldY;
 		const localX = vectorX * metrics.cos - vectorY * metrics.sin;
 		const localY = vectorX * metrics.sin + vectorY * metrics.cos;
-
 		const rect = {
 			left: -metrics.baseDisplayWidth / 2,
 			right: metrics.baseDisplayWidth / 2,
 			top: -metrics.baseDisplayHeight / 2,
 			bottom: metrics.baseDisplayHeight / 2
 		};
-		if (!dragState.textBoxSnapEdges) {
-			const measurement = this.getMeasurementEntry(layer);
-			const ink = measurement.textInkRect;
-			const box = measurement.boxRect;
-			dragState.textBoxSnapEdges = ink && box ? {
-				left: (ink.x - box.x - box.width / 2) * metrics.scaleX,
-				right: (ink.x + ink.width - box.x - box.width / 2) * metrics.scaleX,
-				top: (ink.y - box.y - box.height / 2) * metrics.scaleY,
-				bottom: (ink.y + ink.height - box.y - box.height / 2) * metrics.scaleY
-			} : {};
-		}
-		const threshold = CONFIG.snapping.threshold / Math.max(0.01, this.editor.viewport.currentZoom);
-		const snap = (value, target) => (
-			PREFERENCES.get('snappingEnabled') &&
-			!options.ctrlKey &&
-			Number.isFinite(target) &&
-			Math.abs(value - target) <= threshold
-				? target
-				: value
-		);
-		const inkEdges = dragState.textBoxSnapEdges;
 
 		if (edge === 'right') {
-			rect.right = Math.max(snap(localX, inkEdges?.right), rect.left + metrics.minDisplayWidth);
+			rect.right = Math.max(localX, rect.left + metrics.minDisplayWidth);
 		} else if (edge === 'left') {
-			rect.left = Math.min(snap(localX, inkEdges?.left), rect.right - metrics.minDisplayWidth);
+			rect.left = Math.min(localX, rect.right - metrics.minDisplayWidth);
 		} else if (edge === 'bottom') {
-			rect.bottom = Math.max(snap(localY, inkEdges?.bottom), rect.top + metrics.minDisplayHeight);
+			rect.bottom = Math.max(localY, rect.top + metrics.minDisplayHeight);
 		} else if (edge === 'top') {
-			rect.top = Math.min(snap(localY, inkEdges?.top), rect.bottom - metrics.minDisplayHeight);
+			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
 		} else if (edge === 'tl') {
 			rect.left = Math.min(localX, rect.right - metrics.minDisplayWidth);
 			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
@@ -1937,10 +1976,9 @@ class TextGlitterManager {
 		const scaleX = Math.max(0.01, (transform.scale.x || 100) / 100);
 		const scaleY = Math.max(0.01, (transform.scale.y || 100) / 100);
 		const scaleFactor = Math.min(scaleX, scaleY);
-		if (Math.abs(scaleFactor - 1) < 1e-3 && Math.abs(scaleY - 1) < 1e-3) {
+		if (Math.abs(scaleX - 1) < 1e-3 && Math.abs(scaleY - 1) < 1e-3) {
 			transform.scale.x = 100;
 			transform.scale.y = 100;
-			transform.proportionalScale = true;
 			return;
 		}
 
@@ -1987,7 +2025,6 @@ class TextGlitterManager {
 		}
 		transform.scale.x = (scaleX / bakedFactor) * 100;
 		transform.scale.y = (scaleY / bakedFactor) * 100;
-		transform.proportionalScale = true;
 
 		const measurement = this.getMeasurementEntry(layer);
 		const nextFrame = this.getTextFrame(layer, measurement);

@@ -92,6 +92,20 @@ async function main() {
 			&& window.editor.layers.filter((layer) => layer.type === LayerType.TEXT_GLITTER)
 				.every((layer) => layer.textData.fontId === 'impact' && layer.textData.fontSize === 120)),
 			'New Canvas meme template did not load its full-size Impact captions');
+		const growth = await memeProject.page.evaluate(async () => {
+			const e = window.editor;
+			const manager = e.textGlitterManager;
+			const results = [];
+			for (const layer of e.layers.filter(layer => layer.type === LayerType.TEXT_GLITTER)) {
+				await manager.refreshLayer(layer);
+				const before = getLayerAnchorPoint(e, layer);
+				manager.applyTextEdit(layer, 'FIRST LINE\nSECOND LINE\nTHIRD LINE');
+				const after = getLayerAnchorPoint(e, layer);
+				results.push({ mode: layer.textData.boxMode, width: layer.textData.boxWidth, dy: after.y - before.y });
+			}
+			return results;
+		});
+		assert(growth.every(item => item.mode === 'autoHeight' && item.width === 800 && Math.abs(item.dy) < 0.01), `Caption anchor drift: ${JSON.stringify(growth)}`);
 		assert(memeProject.errors.length === 0, `Browser errors: ${memeProject.errors.join('; ')}`);
 		await memeProject.context.close();
 

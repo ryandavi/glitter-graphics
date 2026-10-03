@@ -1,4 +1,19 @@
 const TRANSFORM_INTERACTION_METHODS = {
+	collectSnapTargets(kind, excludedIds = []) {
+		const policy = CONFIG.snapping.targets[kind];
+		const x = [];
+		const y = [];
+		if (policy.canvasEdges) { x.push(0, this.originalCanvas.width); y.push(0, this.originalCanvas.height); }
+		if (policy.canvasCenter) { x.push(this.originalCanvas.width / 2); y.push(this.originalCanvas.height / 2); }
+		if (policy.layerEdges || policy.layerCenters) this.layerManager.layers.forEach((layer) => {
+			if (excludedIds.includes(layer.id) || layer.visible === false || layer.locked) return;
+			const frame = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+			if (!frame) return;
+			if (policy.layerEdges) { x.push(frame.minX, frame.maxX); y.push(frame.minY, frame.maxY); }
+			if (policy.layerCenters) { x.push((frame.minX + frame.maxX) / 2); y.push((frame.minY + frame.maxY) / 2); }
+		});
+		return { x, y };
+	},
 applyTransformEditWithAnchor(layer, manager, mutate) {
 		const before = getLayerAnchorPoint(this, layer);
 		const result = mutate();
@@ -41,21 +56,7 @@ snapTransformPosition(transform, position, options = {}) {
 		const dy = position.y - current.y;
 		const movingX = [metrics.minX + dx, (metrics.minX + metrics.maxX) / 2 + dx, metrics.maxX + dx];
 		const movingY = [metrics.minY + dy, (metrics.minY + metrics.maxY) / 2 + dy, metrics.maxY + dy];
-		const targetsX = [];
-		const targetsY = [];
-		if (config.snapToCanvas) {
-			targetsX.push(0, this.originalCanvas.width / 2, this.originalCanvas.width);
-			targetsY.push(0, this.originalCanvas.height / 2, this.originalCanvas.height);
-		}
-		if (config.snapToLayers) {
-			this.layerManager.layers.forEach((layer) => {
-				if (layer.id === transform.layer.id || layer.visible === false || layer.locked) return;
-				const other = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
-				if (!other) return;
-				targetsX.push(other.minX, (other.minX + other.maxX) / 2, other.maxX);
-				targetsY.push(other.minY, (other.minY + other.maxY) / 2, other.maxY);
-			});
-		}
+		const { x: targetsX, y: targetsY } = this.collectSnapTargets('move', [transform.layer.id]);
 		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
 		const best = (moving, targets) => {
 			let result = null;
@@ -80,7 +81,7 @@ snapTransformPosition(transform, position, options = {}) {
 	// the line, so the other coordinate follows instead of breaking the aspect.
 	snapScalePoint(transform, point, options = {}) {
 		const config = CONFIG.snapping;
-		const rotation = Number(transform.getTransform().rotation) || 0;
+		const rotation = Number(transform?.getTransform().rotation) || 0;
 		const quarterTurn = ((rotation % 90) + 90) % 90;
 		const aligned = Math.min(quarterTurn, 90 - quarterTurn) < 0.01;
 		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey || !aligned) {
@@ -88,20 +89,15 @@ snapTransformPosition(transform, position, options = {}) {
 			return point;
 		}
 		const axes = options.axes || 'xy';
-		const targetsX = [];
-		const targetsY = [];
-		if (config.snapToCanvas) {
-			targetsX.push(0, this.originalCanvas.width / 2, this.originalCanvas.width);
-			targetsY.push(0, this.originalCanvas.height / 2, this.originalCanvas.height);
-		}
-		if (config.snapToLayers) {
-			this.layerManager.layers.forEach((layer) => {
-				if (layer.id === transform.layer.id || layer.visible === false || layer.locked) return;
-				const other = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
-				if (!other) return;
-				targetsX.push(other.minX, (other.minX + other.maxX) / 2, other.maxX);
-				targetsY.push(other.minY, (other.minY + other.maxY) / 2, other.maxY);
-			});
+		const { x: targetsX, y: targetsY } = this.collectSnapTargets(options.kind || 'scale', options.excludedIds || [transform.layer.id]);
+		if (options.targets) { targetsX.push(...options.targets.x); targetsY.push(...options.targets.y); }
+		if (options.line) {
+			const { origin, dir } = options.line;
+			const lengthSquared = dir.x * dir.x + dir.y * dir.y;
+			if (lengthSquared > 0) {
+				const along = ((point.x - origin.x) * dir.x + (point.y - origin.y) * dir.y) / lengthSquared;
+				point = { x: origin.x + dir.x * along, y: origin.y + dir.y * along };
+			}
 		}
 		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
 		const nearest = (value, targets) => {
@@ -175,15 +171,7 @@ snapTransformPosition(transform, position, options = {}) {
 	snapGroupDelta(bounds, delta, excludedIds, options = {}) {
 		const config = CONFIG.snapping;
 		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey || !bounds) { this.clearSmartGuides(); return delta; }
-		const targetsX = config.snapToCanvas ? [0, this.originalCanvas.width / 2, this.originalCanvas.width] : [];
-		const targetsY = config.snapToCanvas ? [0, this.originalCanvas.height / 2, this.originalCanvas.height] : [];
-		if (config.snapToLayers) this.layerManager.layers.forEach((layer) => {
-			if (excludedIds.includes(layer.id) || layer.visible === false || layer.locked) return;
-			const metrics = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
-			if (!metrics) return;
-			targetsX.push(metrics.minX, (metrics.minX + metrics.maxX) / 2, metrics.maxX);
-			targetsY.push(metrics.minY, (metrics.minY + metrics.maxY) / 2, metrics.maxY);
-		});
+		const { x: targetsX, y: targetsY } = this.collectSnapTargets('move', excludedIds);
 		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
 		const nearest = (moving, targets) => {
 			let result = null;
@@ -204,8 +192,7 @@ snapTransformPosition(transform, position, options = {}) {
 ,
 	applyTransformSizeFromPanel(prefix, layer, manager, axis, rawValue) {
 		const value = Math.max(1, Math.round(rawValue));
-		const ids = this.getTransformIds(prefix);
-		const lockAspect = Boolean(document.getElementById(ids.proportional)?.checked);
+		const lockAspect = resolveAspectLock(getLayerTransform(layer));
 
 		if (prefix === 'sticker') {
 			const nativeWidth = Math.max(1, layer.stickerData.width);

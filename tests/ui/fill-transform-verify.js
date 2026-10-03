@@ -44,6 +44,7 @@ async function createPaintedFill(page) {
 		const editor = window.editor;
 		const layer = editor.glitterManager.createLayer();
 		editor.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
+		layer.locked = false;
 		layer.fill = { ...layer.fill, mode: 'solid', color };
 		const paint = editor.paintMaskStore.ensurePaintMask(layer.id);
 		const ctx = paint.add.getContext('2d', { willReadFrequently: true });
@@ -392,6 +393,25 @@ async function setTransform(page, layerId, updates) {
 		assert(Math.abs(animatedExport.minX - stillExport.minX) > 10, 'The animation moves the fill in the export');
 		assertBounds(animatedPreview, animatedExport, 2, 'animated fill: preview vs export');
 
+		const framePick = await page.evaluate(() => {
+			const e = window.editor;
+			const frame = e.layerManager.addLayer(LayerType.FRAME);
+			frame.frameData.pinned = true;
+			e.frameLayerManager.renderLayer(frame);
+			e.layerManager.setActiveLayer(null);
+			e.setTool(ToolType.SELECT);
+			const overlay = e.viewport.selectionOverlay;
+			const local = overlay.toScreen({ x: 5, y: e.originalCanvas.height / 2 });
+			const rect = overlay.element.getBoundingClientRect();
+			return { id: frame.id, point: { x: local.x + rect.left, y: local.y + rect.top } };
+		});
+		await page.mouse.click(framePick.point.x, framePick.point.y);
+		assert(await page.evaluate(id => window.editor.activeLayerId === id && window.editor.frameLayerManager.layerTransforms.get(id).chrome?.readOnly, framePick.id), 'Pinned frame must select with an outline and no handles');
+		await page.evaluate(() => window.editor.layerManager.setActiveLayer(null));
+		const cdp = await page.context().newCDPSession(page);
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: framePick.point.x, y: framePick.point.y }] });
+		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+		assert(await page.evaluate(id => window.editor.activeLayerId === id, framePick.id), 'Pinned frame must select by touch');
 		assert(pageErrors.length === 0, `Page errors: ${pageErrors.join(' | ')}`);
 		console.log('fill-transform-verify: all checks passed');
 	} finally {

@@ -1,3 +1,8 @@
+function resolveAspectLock(transform, event = {}, handleKind = 'corner') {
+	const locked = Boolean(transform.proportionalScale);
+	return handleKind === 'edge' ? locked !== Boolean(event.shiftKey) : locked || Boolean(event.shiftKey);
+}
+
 function cloneTransform(transform = null, overrides = {}) {
 	const source = transform || CONFIG.tools.stickers.defaults.transform || {};
 	return {

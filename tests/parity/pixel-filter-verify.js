@@ -17,6 +17,28 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 	await page.evaluate(() => window.editor.loadBlankImage(24, 16, '#7b3fd1'));
 	await page.waitForFunction(() => window.editor.originalImage != null);
 
+	await page.evaluate(async () => {
+		const e = window.editor;
+		const m = e.filterLayerManager;
+		const layer = e.layerManager.addLayer(LayerType.FILTER);
+		layer.filterData = GlitterFilter.normalizeFilterData({ type: 'rgb-split', offset: 3 });
+		const frame = createAppCanvas(24, 16, 'test');
+		const ctx = frame.getContext('2d');
+		ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; ctx.fillRect(0, 0, 24, 16);
+		const frames = [frame, frame];
+		const inputSignature = m.getInputSignature(layer, m.getSnapshotLayers(layer));
+		const filterSignature = m.getFilterSignature(layer);
+		m.snapshotOutputs.set(layer.id, { frames, inputSignature, filterSignature, signature: `${inputSignature}|${filterSignature}|${m.isAnimatedPreview(layer)}`, startedAt: performance.now(), frameDuration: 100 });
+		const element = m.renderLayer(layer);
+		m.paintSnapshotElement(layer, element); m.paintSnapshotElement(layer, element);
+		if (element.querySelector('canvas').getContext('2d').getImageData(0, 0, 1, 1).data[3] !== 128) throw new Error('Snapshot alpha accumulated');
+		if (m.snapshotPlaybackFrame) cancelAnimationFrame(m.snapshotPlaybackFrame);
+		m.snapshotPlaybackFrame = null;
+		layer.visible = false; m.renderContent([]);
+		layer.visible = true; m.renderContent([layer]);
+		if (!m.snapshotPlaybackFrame) throw new Error('Showing cached animation did not restart playback');
+		e.layerManager.deleteLayer(layer.id, { skipHistory: true });
+	});
 	const result = await page.evaluate(async () => {
 		const editor = window.editor;
 		const layer = editor.layerManager.addLayer(LayerType.FILTER);

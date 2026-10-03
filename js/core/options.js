@@ -21,6 +21,12 @@ function isOptionValue(name, value) {
 	return getOptions(name).some((option) => option.value === value);
 }
 
+defineOptions('borderEdgeStyle', [
+	{ value: 'round', label: 'Smooth', suffix: 'EdgeRounded' },
+	{ value: 'miter', label: 'Sharp', suffix: 'EdgeSharp' },
+	{ value: 'hard', label: 'Pixel', suffix: 'EdgeHard' }
+]);
+
 defineOptions('paintMode', [
 	{ value: 'none', label: 'None' },
 	{ value: 'solid', label: 'Color' },
@@ -70,7 +76,6 @@ defineOptions('borderPlacement', [
 	{ value: 'center', label: 'Center' },
 	{ value: 'outside', label: 'Outside' }
 ]);
-defineOptions('borderEdgeStyle', [{ value: 'round', label: 'Rounded' }, { value: 'hard', label: 'Hard' }]);
 defineOptions('borderDrawOrder', [{ value: 'behind', label: 'Behind' }, { value: 'front', label: 'In Front' }]);
 defineOptions('borderStyle', [{ value: 'solid', label: 'Solid' }, { value: 'dotted', label: 'Dotted' }]);
 defineOptions('stickerOutlineStyle', [{ value: 'smooth', label: 'Smooth' }, { value: 'pixel', label: 'Pixel' }]);

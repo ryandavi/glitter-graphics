@@ -20,7 +20,7 @@
 	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-normal);
 	letter-spacing: normal;
-	line-height: 1;
+	line-height: var(--line-height-tight);
 	text-transform: none;
 	visibility: hidden;
 	opacity: 0;

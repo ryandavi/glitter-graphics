@@ -932,7 +932,8 @@ async function check12(page) {
 	const mid = await getViewportMetrics(page);
 	assert(Math.abs(mid.panX - before.panX) > 10 || Math.abs(mid.panY - before.panY) > 10, 'Initial off-edge drag did not pan viewport');
 
-	await oneFingerDrag(page, start, { x: start.x + 60, y: start.y + 20 });
+	// The off-edge drag can reach the pan limit; reusability must move back inward.
+	await oneFingerDrag(page, start, { x: start.x - 60, y: start.y - 20 });
 	const after = await getViewportMetrics(page);
 	assert(Math.abs(after.panX - mid.panX) > 10 || Math.abs(after.panY - mid.panY) > 10, 'Viewport handler was not reusable after off-edge touch end');
 }
