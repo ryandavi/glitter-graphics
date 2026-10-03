@@ -65,6 +65,7 @@ Common optional fields:
 - `animatable`: whether the layer can carry `animation`.
 - `contentScalesWithTransform`: the type's slots scale with its transform (stickers), so document scaling compensates them instead of rescaling them.
 - `createOptionsKey`: the option payload key passed through `LayerManager.addLayer(...)`.
+- `lockScope: 'position'`: the layer's lock pins only its transform; editing, deleting, duplicating and reordering stay available (`isLayerFullyLocked`, `js/core/layer-types.js`). Without it a lock blocks all of those. `lockedOnCreate`: a new layer of this type starts locked.
 - `showDesignGallery`, `autoOpenDesignDrawerOnCreate`, `mobileCreateBehavior`, `mobileCreateDrawer`: gallery and mobile-drawer behavior on create.
 
 ## Checklist

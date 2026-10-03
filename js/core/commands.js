@@ -153,7 +153,7 @@ function centerSelection(editor, method, groupAxis) {
 		return;
 	}
 	const layer = editor.layerManager.getActiveLayer();
-	if (!editor.canEditLayer(layer, { notify: true })) return;
+	if (!editor.canTransformLayer(layer, { notify: true })) return;
 	const context = editor.getMovableLayerContext(layer);
 	context?.manager?.[method]?.(layer.id);
 }
@@ -161,7 +161,7 @@ function centerSelection(editor, method, groupAxis) {
 function flipActiveLayer(editor, property) {
 	const layer = editor.layerManager.getActiveLayer();
 	const context = editor.getMovableLayerContext(layer);
-	if (!context || !editor.canEditLayer(layer, { notify: true })) return;
+	if (!context || !editor.canTransformLayer(layer, { notify: true })) return;
 	const transform = getLayerTransform(layer);
 	editor.applyTransformEditWithAnchor(layer, context.manager, () => context.manager.updateTransform(layer.id, {
 		[property]: !transform[property]

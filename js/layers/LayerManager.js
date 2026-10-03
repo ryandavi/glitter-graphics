@@ -331,7 +331,7 @@ class LayerManager {
 		const layer = this.getLayerById(layerId);
 		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
 		layer.locked = !layer.locked;
-		if (layer.locked && this.activeLayerId === layer.id) {
+		if (isLayerFullyLocked(layer) && this.activeLayerId === layer.id) {
 			this.editor.textGlitterManager?.closePickerSession();
 			this.editor.shapeGlitterManager?.closePickerSession();
 			this.editor.glitterManager?.closePickerSession?.();
@@ -697,7 +697,7 @@ class LayerManager {
 		for (let i = this.layers.length - 1; i >= 0; i--) {
 			const layer = this.layers[i];
 			if (!layer.visible) continue;
-			if (excludeLocked && layer.locked && layer.type !== LayerType.BASE_IMAGE) continue;
+			if (excludeLocked && isLayerFullyLocked(layer) && layer.type !== LayerType.BASE_IMAGE) continue;
 			if (movableOnly && !this.isLayerMovable(layer)) continue;
 
 			let isHit = false;
@@ -865,7 +865,7 @@ class LayerManager {
 		const selectedLayers = this.getSelectedLayers();
 		const canAddLayers = this.canAddLayers().ok;
 		const canInteractWithSelected = selectedLayers.length > 0
-			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
+			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !isLayerFullyLocked(layer));
 		const hasSingleSelection = selectedLayers.length === 1;
 		const canGoToSelected = hasSingleSelection
 			&& Boolean(LAYER_UI_CONFIG[selectedLayers[0].type]?.goTo);
@@ -926,7 +926,7 @@ class LayerManager {
 	buildClonedLayer(sourceLayer, options = {}) {
 		const positionOffset = options.positionOffset || { x: 20, y: 20 };
 		if (!sourceLayer) return null;
-		if (sourceLayer.locked) {
+		if (isLayerFullyLocked(sourceLayer)) {
 			this.editor.showError('Cannot clone locked layer');
 			return null;
 		}
@@ -1005,7 +1005,7 @@ class LayerManager {
 			.map((layerId) => this.getLayerById(layerId))
 			.filter(Boolean);
 
-		if (removableLayers.some((layer) => layer.locked)) {
+		if (removableLayers.some((layer) => isLayerFullyLocked(layer))) {
 			this.editor.showError('Cannot delete locked layer');
 			return false;
 		}
@@ -1052,7 +1052,7 @@ class LayerManager {
 		layerEl.classList.toggle('is-locked', Boolean(layer.locked));
 
 		// Only allow dragging if not locked
-		if (!layer.locked) {
+		if (!isLayerFullyLocked(layer)) {
 			layerEl.draggable = true;
 		}
 
@@ -1067,8 +1067,8 @@ class LayerManager {
 		const dragHandle = document.createElement('button');
 		dragHandle.type = 'button';
 		dragHandle.className = 'layer-drag-handle list-row-handle';
-		dragHandle.disabled = Boolean(layer.locked);
-		dragHandle.setAttribute('aria-label', layer.locked ? 'Layer is locked' : `Reorder ${layer.name || 'layer'}`);
+		dragHandle.disabled = isLayerFullyLocked(layer);
+		dragHandle.setAttribute('aria-label', isLayerFullyLocked(layer) ? 'Layer is locked' : `Reorder ${layer.name || 'layer'}`);
 		const dragMark = document.createElement('span');
 		dragMark.className = 'drag-handle-mark';
 		dragMark.setAttribute('aria-hidden', 'true');
@@ -1096,7 +1096,7 @@ class LayerManager {
 		nameText.title = 'Double-click to rename';
 		nameText.addEventListener('dblclick', (event) => {
 			event.stopPropagation();
-			if (layer.type === LayerType.BASE_IMAGE || layer.locked) return;
+			if (layer.type === LayerType.BASE_IMAGE || isLayerFullyLocked(layer)) return;
 			const input = document.createElement('input');
 			input.className = 'layer-name-input';
 			input.type = 'text';
@@ -1265,10 +1265,10 @@ class LayerManager {
 		});
 		actions.appendChild(arrowBtn);
 
-		const cannotDelete = isBaseLayer || layer.locked;
+		const cannotDelete = isBaseLayer || isLayerFullyLocked(layer);
 		const delBtn = this.createIconButton({
 				className: `list-row-action delete${cannotDelete ? ' unavailable' : ''}`,
-				title: isBaseLayer ? 'Base layer cannot be deleted' : (layer.locked ? 'Unlock layer to delete it' : 'Delete layer'),
+				title: isBaseLayer ? 'Base layer cannot be deleted' : (cannotDelete ? 'Unlock layer to delete it' : 'Delete layer'),
 				iconType: 'trash',
 				disabled: cannotDelete,
 				onClick: async (e) => {
@@ -1307,7 +1307,7 @@ class LayerManager {
 		layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
 
 		// Only attach drag START and touch/pointer reorder events if not locked
-		if (!layer.locked) {
+		if (!isLayerFullyLocked(layer)) {
 			layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
 
 			layerEl.addEventListener('pointerdown', (e) => this.handleLayerTouchStart(e, layer.id));
@@ -1432,7 +1432,7 @@ class LayerManager {
 	handleLayerDragStart(event, layerId) {
 		// Check if layer is locked
 		const layer = this.getLayerById(layerId);
-		if (layer && layer.locked) {
+		if (isLayerFullyLocked(layer)) {
 			event.preventDefault();
 			return;
 		}
@@ -1640,7 +1640,7 @@ class LayerManager {
 
 		// Check if layer is locked
 		const layer = this.getLayerById(layerId);
-		if (layer && layer.locked) {
+		if (isLayerFullyLocked(layer)) {
 			return;
 		}
 

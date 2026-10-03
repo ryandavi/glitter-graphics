@@ -64,6 +64,10 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	// the painted pixels inside it.
 	elementBox: (editor) => editor.glitterManager?.getMaskDimensions() || null,
 	pickedOnCanvas: true,
+	// Moving the surface leaves part of the canvas unpaintable, so a new Fill
+	// layer starts pinned in place. The lock never blocks painting the mask.
+	lockScope: 'position',
+	lockedOnCreate: true,
 	frame: (editor, layer) => editor.glitterManager?.getMaskFrame(layer) || null,
 	visualBounds: (editor, layer) => editor.glitterManager?.getMaskVisualFrame(layer) || null,
 	hitTest: (editor, layer, x, y, tolerance) => Boolean(editor.glitterManager?.hitTest(layer, x, y, tolerance)),
@@ -82,7 +86,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	},
 	autoOpenDesignDrawerOnCreate: true,
 	onActivate: (editor, layer) => {
-		if (!layer.locked && !hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
+		if (!hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
 			editor.setTool(ToolType.GLITTER_FILL);
 		}
 		editor.updateGlitterSelection();

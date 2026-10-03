@@ -79,6 +79,12 @@
 	gap: 0;
 }
 
+// The layer's lock pins only its transform (lockScope: 'position').
+.property-panel .transform-panel-host.is-position-locked {
+	opacity: var(--opacity-disabled);
+	cursor: not-allowed;
+}
+
 // Groups can be populated after their first render, so empty hosts stay in
 // the DOM and take no space.
 .property-panel .panel-group-blocks:empty { display: none; }

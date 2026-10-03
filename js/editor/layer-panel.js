@@ -217,7 +217,7 @@ setupLayerTypePickerListeners() {
 		if (!input || !value || !reset) return;
 		const opacities = layers.map((layer) => this.getMultiSelectionLayerOpacity(layer)).filter(Number.isFinite);
 		const editable = opacities.length === layers.length
-			&& layers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
+			&& layers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !isLayerFullyLocked(layer));
 		const mixed = opacities.some((opacity) => opacity !== opacities[0]);
 		input.value = mixed ? 100 : (opacities[0] ?? 100);
 		value.textContent = mixed ? 'Mixed' : `${input.value}%`;

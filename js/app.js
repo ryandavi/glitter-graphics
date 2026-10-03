@@ -564,7 +564,7 @@ class GlitterEditor {
 
 	cloneSelectedLayers() {
 		const allSelectedLayers = this.layerManager.getSelectedLayers();
-		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || layer.locked)) {
+		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || isLayerFullyLocked(layer))) {
 			this.showError('Unlock protected layers or remove them from the selection before duplicating');
 			return null;
 		}
@@ -580,7 +580,7 @@ class GlitterEditor {
 
 	async deleteSelectedLayers() {
 		const allSelectedLayers = this.layerManager.getSelectedLayers();
-		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || layer.locked)) {
+		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || isLayerFullyLocked(layer))) {
 			this.showError('Unlock protected layers or remove them from the selection before deleting');
 			return false;
 		}
@@ -1268,7 +1268,7 @@ class GlitterEditor {
 		const layer = this.layerManager.getActiveLayer();
 		const ctx = this.getMovableLayerContext(layer);
 		const transform = this.getLayerTransformData(layer);
-		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform || this.isLayerContentLocked(layer))) return false;
+		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform || !this.canTransformLayer(layer))) return false;
 
 		// Only override input focus for the text layer's own content field —
 		// leave unrelated inputs (search boxes, numeric fields) to their carets.

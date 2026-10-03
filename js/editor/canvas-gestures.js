@@ -158,7 +158,7 @@ togglePreview() {
 		if (e.shiftKey || !PREFERENCES.get('autoSelect') || this.autoGlitterManager?.isSessionActive()) return null;
 		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
 		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
-		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerTransformable(layer) ? layer : null;
+		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerTransformable(layer) && !layer.locked ? layer : null;
 	}
 
 ,

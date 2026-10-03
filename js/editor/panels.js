@@ -26,7 +26,7 @@ syncLayerBlendModeControl(layer) {
 
 ,
 isLayerContentLocked(layer) {
-		return Boolean(layer?.locked && layer.type !== LayerType.BASE_IMAGE);
+		return Boolean(isLayerFullyLocked(layer) && layer.type !== LayerType.BASE_IMAGE);
 	}
 
 ,
@@ -36,6 +36,17 @@ isLayerContentLocked(layer) {
 			this.showError('Unlock this layer to edit it');
 		}
 		return editable;
+	}
+
+,
+	// Every lock pins the transform, including a position-only one that
+	// canEditLayer lets through.
+	canTransformLayer(layer, options = {}) {
+		const free = Boolean(layer) && (!layer.locked || layer.type === LayerType.BASE_IMAGE);
+		if (!free && options.notify) {
+			this.showError('Unlock this layer to move or transform it');
+		}
+		return free;
 	}
 
 ,
@@ -65,6 +76,15 @@ isLayerContentLocked(layer) {
 			} else if (!sectionLocked) {
 				badge?.remove();
 			}
+		});
+
+		// A position-only lock (see isLayerFullyLocked) leaves the panel editable
+		// apart from its Transform controls.
+		const positionLocked = Boolean(layer?.locked) && !locked && !this.layerManager.hasMultiSelection();
+		document.querySelectorAll('.transform-panel-host').forEach((host) => {
+			host.inert = positionLocked;
+			host.classList.toggle('is-position-locked', positionLocked);
+			host.title = positionLocked ? 'Unlock this layer to move or resize it' : '';
 		});
 
 		['centerLayerHorizontal', 'centerLayerVertical', 'duplicateLayerSelection'].forEach((id) => {
@@ -298,7 +318,7 @@ isLayerContentLocked(layer) {
 				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, pinned, empty, or Base Image layer.';
 			document.querySelectorAll('#multiSelectionAlignScope button, [data-multi-align]').forEach((button) => { button.disabled = !canTransform; });
 			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = !canTransform || multiCount < 3; });
-			const canChangeLayers = selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
+			const canChangeLayers = selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !isLayerFullyLocked(layer));
 			const duplicate = document.getElementById('multiSelectionDuplicateBtn');
 			const remove = document.getElementById('multiSelectionDeleteBtn');
 			if (duplicate) {

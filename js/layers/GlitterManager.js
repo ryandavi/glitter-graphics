@@ -215,7 +215,7 @@ async initBrowser() {
 			id: this.editor.layerManager.generateLayerId(),
 			type: this.getLayerType(),
 			visible: true,
-			locked: false,
+			locked: Boolean(LAYER_UI_CONFIG[this.getLayerType()]?.lockedOnCreate),
 			opacity: FIELDS.layerOpacity.value,
 			maskVersion: 0,
 			maskHasContent: false,

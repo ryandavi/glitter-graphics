@@ -1004,7 +1004,7 @@ class AutoGlitterManager {
 			delete layer._autoGlitterSourceVisible;
 			delete layer._autoGlitterSourceLocked;
 			layer.visible = wasEditingPrevious && sourceVisible != null ? sourceVisible : true;
-			layer.locked = wasEditingPrevious && sourceLocked != null ? sourceLocked : false;
+			layer.locked = wasEditingPrevious && sourceLocked != null ? sourceLocked : Boolean(LAYER_UI_CONFIG[layer.type]?.lockedOnCreate);
 			layer.fill.mode = 'glitter';
 			this.editor.paintMaskStore.commitPaintState(layer);
 		});

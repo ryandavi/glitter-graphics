@@ -101,6 +101,13 @@ function isLayerTransformable(layer) {
 	return typeof transformable === 'function' ? Boolean(transformable(layer)) : Boolean(transformable);
 }
 
+// A layer's lock blocks editing, deleting, and reordering it as well as moving
+// it, unless its type declares `lockScope: 'position'`: then the lock only
+// pins the transform and everything else stays available.
+function isLayerFullyLocked(layer) {
+	return Boolean(layer?.locked) && LAYER_UI_CONFIG[layer.type]?.lockScope !== 'position';
+}
+
 function isAnimatableLayerType(type) {
 	return Boolean(LAYER_UI_CONFIG[type]?.animatable);
 }
