@@ -1,7 +1,7 @@
 const MODAL_METHODS = {
 async ensureHtmlSceneExporter() {
 		if (this.htmlSceneExporter) return this.htmlSceneExporter;
-		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=4e2eba6b');
+		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=ff0f67d6');
 		this.htmlSceneExporter = new HtmlSceneExporter(this);
 		this.htmlSceneExporter.initialize();
 		return this.htmlSceneExporter;
@@ -304,10 +304,43 @@ updateOrientationButtons(width, height) {
 			panel: document.getElementById('exportMenuPanel'),
 			liftHost: document.getElementById('exportMenu')?.closest('.preview-controls')
 		});
-
+		this.setupViewMenu();
 
 		// Any activated item runs its own handler (modal open, resetAll, …) — we
 		// just dismiss the panel afterwards.
+	}
+
+,
+	// The view toggles are one set of buttons with two presentations: an inline
+	// row at desktop width, and a dropdown under one trigger when narrow. The
+	// buttons keep their ids and listeners; this only owns the panel.
+	setupViewMenu() {
+		const root = document.getElementById('viewMenu');
+		const trigger = document.getElementById('viewMenuBtn');
+		const panel = document.getElementById('viewMenuPanel');
+		const popover = setupMenuPopover({
+			root, trigger, panel,
+			liftHost: root?.closest('.preview-controls'),
+			itemSelector: 'button:not([disabled])'
+		});
+		if (!popover) return;
+
+		const narrow = matchMedia(`(max-width: ${CONFIG.ui.mobile.breakpoint}px)`);
+		const syncPresentation = () => {
+			popover.close();
+			panel.hidden = narrow.matches;
+		};
+		narrow.addEventListener('change', syncPresentation);
+		syncPresentation();
+
+		// The closed menu hides every toggle's state, so the trigger carries a
+		// marker whenever one differs from how the editor starts.
+		const toggles = Array.from(panel.querySelectorAll('button'));
+		const defaults = new Map(toggles.map((button) => [button, button.classList.contains('active')]));
+		const syncMarker = () => trigger.classList.toggle('has-changes',
+			toggles.some((button) => button.classList.contains('active') !== defaults.get(button)));
+		new MutationObserver(syncMarker).observe(panel, { subtree: true, attributes: true, attributeFilter: ['class'] });
+		syncMarker();
 	}
 
 ,

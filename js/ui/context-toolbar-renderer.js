@@ -126,8 +126,9 @@ class ContextToolbarRenderer {
 		const parent = host.offsetParent;
 		const inset = 12;
 		const parentRect = parent?.getBoundingClientRect();
-		const topChromeBottom = [...document.querySelectorAll('#previewControls.visible > *, #helpfulMessage.visible')]
-			.reduce((bottom, node) => Math.max(bottom, node.getBoundingClientRect().bottom - (parentRect?.top || 0)), 0);
+		// The top zone is one container; its height is whatever it currently shows.
+		const topChrome = document.getElementById('previewControls')?.getBoundingClientRect();
+		const topChromeBottom = topChrome?.height ? topChrome.bottom - (parentRect?.top || 0) : 0;
 		const safeTop = Math.min(Math.max(inset, topChromeBottom + inset), Math.max(inset, (parent?.clientHeight || 0) / 2));
 		const maxX = Math.max(0, (parent?.clientWidth || 0) - host.offsetWidth);
 		const maxY = Math.max(0, (parent?.clientHeight || 0) - host.offsetHeight);

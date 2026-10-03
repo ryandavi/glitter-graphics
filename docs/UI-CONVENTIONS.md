@@ -148,6 +148,36 @@ Don't reintroduce positional names.
 
 Anything drawn over the canvas needs `.ui-ignore-gestures`. Touch input routes through `GestureManager` (pointer events), and capture-phase handlers must exclude `.transform-handle-wrapper` and `.transform-handles`.
 
+### Zones
+
+Floating UI over the canvas has two homes. Put a new element in one of them; never position it with an offset computed from a sibling's size.
+
+| Zone | Element | Holds |
+|---|---|---|
+| Top | `#previewControls` (`.preview-controls`), one grid | Row 1: view toggles (`.preview-controls-view`), the activity pill (`.preview-controls-status`), export (`.preview-controls-export`). Row 2 (`.preview-controls-stack`): the hint, or the export progress card |
+| Bottom | The context bars (`CONFIG.ui.contextToolbars`) | One bar at a time, draggable on desktop |
+
+- The top zone is a size container (`canvastop`). Size its contents to the workspace with `@container canvastop`, not the viewport: a laptop with both panels open is as narrow as a phone.
+- The view toggles are one set of buttons: inline at desktop width, a dropdown under `#viewMenuBtn` when narrow (`setupViewMenu`). Add a toggle as a button inside `#viewMenuPanel` and it gets both.
+- Layers inside the preview column use `--z-canvas-chrome` (context bars) and `--z-canvas-chrome-raised` (top zone). The top zone is a stacking context, so a surface inside it takes `mini-modal($layer: null)` and stacks in DOM order.
+
+### Activity: the one "working" signal
+
+Anything that takes time before it shows on the canvas reports through the activity pill. It is the only busy signal on phones, where the status bar is hidden.
+
+```js
+const done = editor.beginActivity('filter-preview', 'Updating filter preview');
+try { … editor.updateActivity('filter-preview', { label: 'Rendering preview', current: 3, total: 24 }); … }
+finally { done(); }
+```
+
+- Keys are stable per kind of work. Beginning a running key replaces it; an older run's `done` cannot end a newer one. Use `editor.endActivity(key)` where there is no single call to wrap (a pending flag that settles elsewhere).
+- Wire it unconditionally. Work faster than `CONFIG.ui.activity.showDelayMs` shows nothing, and once shown the pill stays `minVisibleMs`, so call sites never decide whether something is slow enough.
+- Labels are a short present participle with no ellipsis: "Opening image", "Applying glitter".
+- A session mode (Auto Glitter) takes the same slot with `editor.notifications.setMode({ label, icon, badge, onExit })` and `setMode(null)`. Do not build a separate mode banner.
+- Blocking work with a percentage and Cancel uses the export card, which takes over the slot (`suspendActivity`) and hides the hint while it is open.
+- Do not dim or cover the canvas to show work. Previews update live under the pill.
+
 ## Icons
 
 All icons are `<use href="#icon-NAME">` against the one SVG sprite in `index.html`. The `modals/*.html` files share it and carry no sprite of their own. Build icons with `createIcon('name')` or `tpl-icon`, or with a schema `icon: 'name'` key (context toolbars, panel section headers, `actionRow` actions, layer type modal config).

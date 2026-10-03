@@ -26,6 +26,7 @@ class ExportProgressPresenter {
 		this.bar.removeAttribute('aria-valuenow');
 		this.bar.setAttribute('aria-valuetext', this.detail.textContent);
 		this.card.classList.add('visible', 'is-indeterminate');
+		this.claimSlot(true);
 		clearInterval(this.timer);
 		this.timer = window.setInterval(() => this.updateTime(), CONFIG.export.progress.timerRefreshMs);
 	}
@@ -95,5 +96,13 @@ class ExportProgressPresenter {
 		clearInterval(this.timer);
 		this.timer = null;
 		this.card.classList.remove('visible', 'is-indeterminate');
+		this.claimSlot(false);
+	}
+
+	// The card shares the top-center zone with the activity pill and the hint;
+	// while an export runs it is the only one of the three on screen.
+	claimSlot(claimed) {
+		this.editor.notifications.suspendActivity(claimed);
+		this.editor.updateHelpfulMessage();
 	}
 }

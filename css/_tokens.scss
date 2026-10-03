@@ -342,6 +342,10 @@
 	   layer in the global stack; local intra-component stacking (-1, 0, 1, 2,
 	   10, 20, 30, 100...) inside a single element's own children is NOT part
 	   of this scale and stays literal at its use site. */
+	--z-canvas-chrome: 10;
+	/* floating UI over the canvas, inside the preview column: context bars */
+	--z-canvas-chrome-raised: 21;
+	/* the top zone (view toggles, activity pill, export, hint) — above context bars */
 	--z-panel: 200;
 	/* preview/canvas column */
 	--z-panel-elevated: 210;

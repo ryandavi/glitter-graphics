@@ -133,16 +133,6 @@
 		// can never sit on top of it whatever the pill's height does.
 		left: calc(var(--mobile-toolbar-width) + var(--mobile-floating-inset) * 2);
 		right: var(--mobile-floating-inset);
-		justify-content: flex-start;
-
-		// Center both control pills as one composition. If they cannot share a
-		// row, flex wrapping keeps each complete pill centered on its own line.
-		>.preview-controls-center { margin: 0 auto; }
-		>.preview-controls-right {
-			margin-left: 0;
-			flex-direction: column;
-		}
-
 	}
 
 	.zoom-controls,
@@ -622,11 +612,6 @@
 		.blank-image-option .blank-preview-wrapper {
 			height: 60px;
 		}
-	}
-
-	.export-progress {
-		max-width: 90vw;
-		max-width: 90dvw;
 	}
 
 	.desktop-only {

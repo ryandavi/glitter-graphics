@@ -40,16 +40,9 @@ class AutoGlitterManager {
 			tuneHue: document.getElementById('autoGlitterTuneHue'),
 			previewModes: [...document.querySelectorAll('#autoGlitterPreviewMode [data-value]')]
 		};
-		this.canvasUI = {
-			banner: document.getElementById('autoGlitterPreviewBanner'),
-			status: document.getElementById('autoGlitterCanvasStatus'),
-			exit: document.getElementById('autoGlitterPreviewExit')
-		};
-		initializeInlineProcessingStatus(this.canvasUI.status);
 
 		this.ui.open?.addEventListener('click', () => this.open());
 		this.ui.cancel?.addEventListener('click', () => this.requestDiscardSession());
-		this.canvasUI.exit?.addEventListener('click', () => this.requestDiscardSession());
 		this.ui.create?.addEventListener('click', () => this.createLayers());
 		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => {
 			if (this.hasActivePickerSession()) this.closePickerSession(true);
@@ -193,7 +186,7 @@ class AutoGlitterManager {
 		// analyze() coalesces any timer that catches an in-flight worker request.
 		this.analysisRunId = (this.analysisRunId || 0) + 1;
 		this.ui.create.disabled = true;
-		this.setCanvasPreviewState(true, 'Updating preview…');
+		this.setCanvasPreviewState(true, 'Updating preview');
 		clearTimeout(this.reduceTimer);
 		this.reduceTimer = setTimeout(() => {
 			this.reduceTimer = null;
@@ -300,8 +293,7 @@ class AutoGlitterManager {
 		this.workerRequests.forEach(({ reject }) => reject(new Error('Analysis cancelled')));
 		this.workerRequests.clear();
 		this.closePickerSession(false);
-		this.canvasUI.banner.hidden = true;
-		this.canvasUI.banner.classList.remove('visible');
+		this.editor.notifications.setMode(null);
 		this.setCanvasPreviewState(false);
 		if (options.cancel !== false) this.cancelSession();
 		if (previousShowAllLayers === false && this.editor.showAllLayers) this.editor.togglePreview();
@@ -416,7 +408,7 @@ class AutoGlitterManager {
 		this.updateControlReadout(this.ui.count);
 		const analysisId = (this.analysisRunId || 0) + 1;
 		this.analysisRunId = analysisId;
-		this.setCanvasPreviewState(true, this.segmentDirty ? 'Analyzing image…' : 'Updating preview…');
+		this.setCanvasPreviewState(true, this.segmentDirty ? 'Analyzing image' : 'Updating preview');
 		this.ui.status.textContent = this.segmentDirty ? 'Finding distinct colors…' : 'Updating color matches…';
 		const swatches = this.editor.glitterLibrary.getAllContent()
 			.filter(glitter => glitter.isActive !== false
@@ -442,7 +434,8 @@ class AutoGlitterManager {
 		} catch (error) {
 			if (analysisId !== this.analysisRunId) return;
 			this.ui.status.textContent = error.message;
-			this.setCanvasPreviewState(false, error.message);
+			this.setCanvasPreviewState(false);
+			this.editor.showError(error.message);
 		} finally {
 			if (analysisId === this.analysisRunId) {
 				this.applyCapacity();
@@ -456,15 +449,9 @@ class AutoGlitterManager {
 		}
 	}
 
-	setCanvasPreviewState(processing, message = null) {
-		if (!this.canvasUI?.banner) return;
-		this.canvasUI.banner.classList.toggle('is-processing', processing);
-		this.canvasUI.banner.setAttribute('aria-busy', processing ? 'true' : 'false');
-		setInlineProcessingStatus(this.canvasUI.status, {
-			active: processing,
-			error: !processing && Boolean(message),
-			label: message
-		});
+	setCanvasPreviewState(processing, label = null) {
+		if (processing) this.editor.beginActivity('auto-glitter', label);
+		else this.editor.endActivity('auto-glitter');
 	}
 
 	getWorkerOptions() {
@@ -805,9 +792,13 @@ class AutoGlitterManager {
 		this.editor.updateSidePanelUI(baseLayer);
 		this.editor.updateContextToolbars();
 		this.editor.setCollapsibleSectionOpen?.('autoGlitterSettings', true, true);
-		this.canvasUI.banner.hidden = false;
-		this.canvasUI.banner.classList.add('visible');
-		this.setCanvasPreviewState(true, 'Analyzing image…');
+		this.editor.notifications.setMode({
+			label: 'Auto Glitter Mode',
+			icon: 'magic-wand',
+			badge: 'Beta',
+			onExit: () => this.requestDiscardSession()
+		});
+		this.setCanvasPreviewState(true, 'Analyzing image');
 		if (this.editor.mobileManager?.isMobile) {
 			this.editor.mobileManager.prepareSettings(baseLayer, { keys: LAYER_UI_CONFIG.AUTO_GLITTER.mobileSettingsSections, preserveDrawer: true });
 			this.editor.mobileManager.openDrawer('edit');

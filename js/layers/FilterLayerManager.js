@@ -470,6 +470,7 @@ class FilterLayerManager {
 		const filterSignature = this.getFilterSignature(layer);
 		const showingLive = !this.snapshotOutputs.get(layer.id);
 		if (showingLive && !animated) this.editor.updateStatus('Updating pixel filter preview…');
+		const done = this.editor.beginActivity('filter-preview', 'Updating filter preview');
 		let input = this.snapshotInputs.get(layer.id);
 		try {
 			if (!input || input.signature !== inputSignature) {
@@ -511,7 +512,10 @@ class FilterLayerManager {
 					blendMode: GlitterBlendModes.forLayer(layer)
 				});
 				frames.push(canvas);
-				if (animated) this.editor.updateStatus(`Rendering preview ${index + 1}/${frameCount}`);
+				if (animated) {
+					this.editor.updateStatus(`Rendering preview ${index + 1}/${frameCount}`);
+					this.editor.updateActivity('filter-preview', { label: 'Rendering preview', current: index + 1, total: frameCount });
+				}
 			}
 			this.lastOutputMs.set(layer.id, (performance.now() - started) / frameCount);
 			this.snapshotOutputs.set(layer.id, {
@@ -528,6 +532,8 @@ class FilterLayerManager {
 			if (!superseded()) this.snapshotPending.delete(layer.id);
 			console.error('Pixel filter preview failed:', error);
 			this.editor.updateStatus('Pixel filter preview unavailable; it will still apply on export.');
+		} finally {
+			done();
 		}
 	}
 

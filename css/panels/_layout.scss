@@ -131,24 +131,7 @@
 }
 
 .app-menu-panel {
-	position: absolute;
-	top: calc(100% + var(--spacing-xs));
-	right: 0;
-	display: flex;
-	flex-direction: column;
-	min-width: 220px;
-	max-width: min(280px, calc(100vw - var(--spacing-md) * 2));
-	// vh fallback first for engines without dvh; dvh wins where supported.
-	max-height: calc(100vh - var(--header-height) - var(--spacing-lg));
-	max-height: calc(100dvh - var(--header-height) - var(--spacing-lg));
-	overflow-y: auto;
-	padding: var(--spacing-xs);
-
-	@include mini-modal();
-
-	// The header bar paints a text-shadow onto its subtree; the menu is a plain
-	// panel surface and should not inherit it.
-	text-shadow: none;
+	@include menu-panel;
 }
 
 .app-menu-separator {

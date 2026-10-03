@@ -376,7 +376,7 @@ get CANVAS_ANCHORS() {
 		if (!this.originalImage) return;
 		const target = this.getArtworkCropTarget();
 		if (!target) {
-			this.updateStatus('Nothing to crop to — canvas has no artwork.');
+			this.showError('Nothing to crop to — canvas has no artwork.');
 			return;
 		}
 		const { minX, minY, width, height } = target;

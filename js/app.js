@@ -1696,6 +1696,7 @@ class GlitterEditor {
 		} = options;
 
 		const objectUrl = URL.createObjectURL(blob);
+		const decoded = this.beginActivity('open-image', 'Opening image');
 		const img = await new Promise((resolve, reject) => {
 			const image = new Image();
 			image.onerror = () => {
@@ -1707,7 +1708,7 @@ class GlitterEditor {
 		}).catch((error) => {
 			this.showError(error.message);
 			return null;
-		});
+		}).finally(decoded);
 
 		if (!img) {
 			return false;
@@ -1825,6 +1826,7 @@ class GlitterEditor {
 			return;
 		}
 
+		const done = this.beginActivity('save-project', 'Saving project');
 		try {
 			const blob = await this.projectSerializer.serializeToBlob();
 			downloadBlob(blob, this.getProjectDownloadName());
@@ -1833,17 +1835,22 @@ class GlitterEditor {
 		} catch (error) {
 			console.error('Project save failed:', error);
 			this.showError(error.message || 'Failed to save project.');
+		} finally {
+			done();
 		}
 	}
 
 	async openProjectFile(file) {
 		if (!file) return false;
+		const done = this.beginActivity('open-project', 'Opening project');
 		try {
 			return await this.projectSerializer.loadFile(file);
 		} catch (error) {
 			console.error('Project load failed:', error);
 			this.showError(error.message || 'Failed to open project.');
 			return false;
+		} finally {
+			done();
 		}
 	}
 
@@ -2188,11 +2195,15 @@ class GlitterEditor {
 	// rather than trusting this event's own layerId/isPending, so switching the
 	// active layer mid-encode can't leave the busy cursor stuck.
 	onMaskPendingChange(layerId, isPending) {
-		if (this.currentTool === ToolType.BRUSH) return; // brush has its own cursor UI
-
-		const previewContainer = document.getElementById('previewContainer');
 		const activeLayer = this.layerManager.getActiveLayer();
 		const activeIsPending = Boolean(activeLayer && this.glitterManager.isMaskPending(activeLayer.id));
+		// The brush encodes on every stroke and has its own cursor UI.
+		const brushing = this.currentTool === ToolType.BRUSH;
+		if (activeIsPending && !brushing) this.beginActivity('glitter-mask', 'Applying glitter');
+		else this.endActivity('glitter-mask');
+		if (brushing) return;
+
+		const previewContainer = document.getElementById('previewContainer');
 
 		if (previewContainer) {
 			previewContainer.style.cursor = activeIsPending ? 'progress' : '';
@@ -2506,6 +2517,20 @@ class GlitterEditor {
 
 	updateStatus(message) {
 		this.notifications.notify('status', message);
+	}
+
+	// Work that takes time before it shows on the canvas. Call the returned
+	// `done` from a `finally`.
+	beginActivity(key, label) {
+		return this.notifications.beginActivity(key, label);
+	}
+
+	updateActivity(key, changes) {
+		this.notifications.updateActivity(key, changes);
+	}
+
+	endActivity(key) {
+		this.notifications.endActivity(key);
 	}
 }
 

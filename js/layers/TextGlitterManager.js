@@ -648,6 +648,8 @@ class TextGlitterManager {
 	async setLayerFont(layer, fontId) {
 		if (!layer || !fontId || fontId === layer.textData.fontId) return;
 		if (!this.editor.canEditLayer(layer, { notify: true })) return;
+		// The first use of a font fetches its file before the text can redraw.
+		const done = this.editor.beginActivity('text-font', 'Loading font');
 		try {
 			await this.runLayoutRefreshWithAnchor(layer, async () => {
 				layer.textData.fontId = fontId;
@@ -655,6 +657,8 @@ class TextGlitterManager {
 			}, { saveHistory: true });
 		} catch (error) {
 			this.reportFontLoadError(error);
+		} finally {
+			done();
 		}
 	}
 

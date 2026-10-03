@@ -115,10 +115,12 @@ $mobile-breakpoint: 800px;
 	}
 }
 
-@mixin mini-modal($hover: false) {
+// $layer: the popover layer by default; null for a surface that stacks inside
+// its own container (the canvas top zone).
+@mixin mini-modal($hover: false, $layer: var(--z-header-menu-elevated)) {
 	@include glass-surface;
 	border-radius: var(--radius-lg);
-	z-index: var(--z-header-menu-elevated);
+	z-index: $layer;
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
 	transition: border-color var(--transition-base), box-shadow var(--transition-base);
 
@@ -381,6 +383,29 @@ $mobile-breakpoint: 800px;
 
 		}
 	}
+}
+
+// The dropdown surface of an `.app-menu`: anchored under its trigger, growing
+// from the right edge.
+@mixin menu-panel {
+	position: absolute;
+	top: calc(100% + var(--spacing-xs));
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 220px;
+	max-width: min(280px, calc(100vw - var(--spacing-md) * 2));
+	// vh fallback first for engines without dvh; dvh wins where supported.
+	max-height: calc(100vh - var(--header-height) - var(--spacing-lg));
+	max-height: calc(100dvh - var(--header-height) - var(--spacing-lg));
+	overflow-y: auto;
+	padding: var(--spacing-xs);
+
+	@include mini-modal();
+
+	// The header bar paints a text-shadow onto its subtree; the menu is a plain
+	// panel surface and should not inherit it.
+	text-shadow: none;
 }
 
 @mixin floating-ui {

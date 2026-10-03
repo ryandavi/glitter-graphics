@@ -99,6 +99,7 @@ function initializeColorEyedroppers(editor) {
 		const point = editor.viewport.screenToCanvas(event.clientX, event.clientY);
 		if (!editor.viewport.isWithinCanvas(point.x, point.y)) return;
 		editor.updateStatus('Sampling color…');
+		const done = editor.beginActivity('sample-color', 'Sampling color');
 		try {
 			applyColor(input, await sampleCanvas(Math.floor(point.x), Math.floor(point.y)));
 			editor.updateStatus('Color sampled');
@@ -106,6 +107,7 @@ function initializeColorEyedroppers(editor) {
 			console.error('Canvas color sampling failed:', error);
 			editor.showError('Could not sample the canvas color');
 		} finally {
+			done();
 			editor.sceneCompositor.releaseDecodedSources();
 		}
 	}, true);

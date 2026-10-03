@@ -664,6 +664,13 @@ const CONFIG = deepFreeze({
 		hints: {
 			enabledByDefault: true
 		},
+		// The canvas activity pill. Work faster than showDelayMs shows nothing;
+		// once shown it stays minVisibleMs so it cannot flash.
+		activity: {
+			showDelayMs: 250,
+			minVisibleMs: 400,
+			staleWarningMs: 30000
+		},
 		// Bottom context bars. Keep eligibility here so adding a bar or extending
 		// one to another movable layer does not require another app.js branch.
 		contextToolbars: [

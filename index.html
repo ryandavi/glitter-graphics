@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=4f70e1d0">
+	<link rel="stylesheet" href="css/style.css?v=c1d1f1b6">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -476,13 +476,6 @@
 							<canvas class="preview-canvas" id="previewCanvas" tabindex="0" aria-label="Editor canvas"></canvas>
 							<canvas class="mask-overlay-canvas" id="maskOverlayCanvas"></canvas>
 						</div>
-						<div class="auto-glitter-preview-banner ui-ignore-gestures" id="autoGlitterPreviewBanner" aria-label="Auto Glitter Mode" hidden>
-							<span class="icon-wrapper"><svg class="icon"><use href="#icon-magic-wand"></use></svg></span>
-							<strong>Auto Glitter Mode</strong>
-							<span class="feature-badge feature-badge-beta">Beta</span>
-							<span id="autoGlitterCanvasStatus" role="status" aria-live="polite" hidden></span>
-							<button class="btn-text" id="autoGlitterPreviewExit" type="button">Exit</button>
-						</div>
 						<div class="mask-brush-cursor" id="maskBrushCursor">
 							<span class="mask-brush-cursor-shape" id="maskBrushCursorShape" aria-hidden="true"></span>
 							<span class="mask-brush-cursor-dot"></span>
@@ -490,47 +483,61 @@
 
 						<!-- Preview Controls -->
 						<div class="preview-controls ui-ignore-gestures" id="previewControls">
-							<div class="preview-controls-center">
-								<button class="btn-icon icon-wrapper" id="pauseMotionTool" type="button" title="Pause motion" aria-label="Pause motion" aria-pressed="false">
-									<svg class="icon"><use href="#icon-motion-pause"></use></svg>
-									<span class="name">Pause motion</span>
+							<div class="preview-controls-view app-menu" id="viewMenu">
+								<button class="btn-icon app-menu-trigger view-menu-trigger icon-wrapper" id="viewMenuBtn" type="button" title="View options" aria-label="View options" aria-haspopup="true" aria-expanded="false" aria-controls="viewMenuPanel">
+									<svg class="icon"><use href="#icon-sliders"></use></svg>
+									<span class="name">View options</span>
 								</button>
-								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
-									title="Show only selected layer" aria-pressed="false" disabled>
-									<svg class="icon">
-										<use href="#icon-eye"></use>
-									</svg>
-									<span class="name">Show Only Selected Layer</span>
-								</button>
-								<button class="transparency-toggle btn-icon icon-wrapper" id="transparencyToggle"
-									title="Toggle Transparency" disabled>
-									<svg class="icon">
-										<use href="#icon-checkerboard"></use>
-									</svg>
-									<span class="name">Transparency</span>
-								</button>
-
-								<button class="bounds-toggle btn-icon icon-wrapper" id="boundsToggle"
-									title="Toggle Bounds" disabled>
-									<svg class="icon">
-										<use href="#icon-bounding-box"></use>
-									</svg>
-									<span class="name">Bounds</span>
-								</button>
-								<button class="btn-icon icon-wrapper active" id="snappingToggle" title="Toggle snapping">
-									<svg class="icon"><use href="#icon-magnet"></use></svg><span class="name">Snapping</span>
-								</button>
-
-								<button class="mask-overlay-toggle btn-icon icon-wrapper active" id="maskOverlayToggle"
-									title="Toggle Mask Overlay" disabled>
-									<svg class="icon">
-										<use href="#icon-brush"></use>
-									</svg>
-									<span class="name">Mask Overlay</span>
-								</button>
-
+								<div class="view-menu-panel" id="viewMenuPanel" role="group" aria-label="View options">
+									<button class="btn-icon icon-wrapper" id="pauseMotionTool" type="button" title="Pause motion" aria-label="Pause motion" aria-pressed="false">
+										<svg class="icon"><use href="#icon-motion-pause"></use></svg>
+										<span class="name">Pause motion</span>
+									</button>
+									<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
+										title="Show only selected layer" aria-pressed="false" disabled>
+										<svg class="icon">
+											<use href="#icon-eye"></use>
+										</svg>
+										<span class="name">Show Only Selected Layer</span>
+									</button>
+									<button class="transparency-toggle btn-icon icon-wrapper" id="transparencyToggle"
+										title="Toggle Transparency" disabled>
+										<svg class="icon">
+											<use href="#icon-checkerboard"></use>
+										</svg>
+										<span class="name">Transparency</span>
+									</button>
+									<button class="bounds-toggle btn-icon icon-wrapper" id="boundsToggle"
+										title="Toggle Bounds" disabled>
+										<svg class="icon">
+											<use href="#icon-bounding-box"></use>
+										</svg>
+										<span class="name">Bounds</span>
+									</button>
+									<button class="btn-icon icon-wrapper active" id="snappingToggle" title="Toggle snapping">
+										<svg class="icon"><use href="#icon-magnet"></use></svg><span class="name">Snapping</span>
+									</button>
+									<button class="mask-overlay-toggle btn-icon icon-wrapper active" id="maskOverlayToggle"
+										title="Toggle Mask Overlay" disabled>
+										<svg class="icon">
+											<use href="#icon-brush"></use>
+										</svg>
+										<span class="name">Mask Overlay</span>
+									</button>
+								</div>
 							</div>
-							<div class="preview-controls-right">
+							<div class="preview-controls-status">
+								<div class="canvas-activity" id="canvasActivity" hidden>
+									<span class="canvas-activity-mode" id="canvasActivityMode" hidden>
+										<span class="icon-wrapper"><svg class="icon"><use id="canvasActivityModeIcon" href="#icon-circle-info"></use></svg></span>
+										<strong id="canvasActivityModeLabel"></strong>
+										<span class="feature-badge feature-badge-beta" id="canvasActivityModeBadge" hidden></span>
+									</span>
+									<span id="canvasActivityStatus" aria-live="polite"></span>
+									<button class="btn-text" id="canvasActivityExit" type="button" hidden>Exit</button>
+								</div>
+							</div>
+							<div class="preview-controls-export">
 								<div class="app-menu export-split-control" id="exportMenu">
 									<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export GIF" aria-label="Export GIF"><svg class="icon"><use href="#icon-export"></use></svg><span class="name">Export GIF</span></button>
 									<button class="btn-icon export-action-btn app-menu-trigger icon-wrapper" id="exportMenuBtn" type="button" title="Export menu" aria-label="Export menu" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenuPanel"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Export menu</span></button>
@@ -545,6 +552,39 @@
 										<div class="app-menu-separator" role="separator"></div>
 										<button class="app-menu-item" id="exportSettingsMenuItem" type="button" role="menuitem"><span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span><span class="app-menu-item-label">Export Settings…</span></button>
 									</div>
+								</div>
+							</div>
+							<div class="preview-controls-stack">
+								<div class="helpful-message ui-ignore-gestures" id="helpfulMessage">
+									<div class="helpful-message-header">
+										<span class="helpful-message-icon icon-wrapper">
+											<svg class="icon">
+												<use href="#icon-circle-info" id="helpfulMessageIcon"></use>
+											</svg>
+										</span>
+										<div class="helpful-message-tool" id="helpfulMessageTool">
+											<div class="helpful-message-tool-context" id="helpfulMessageToolContext">
+												<span class="helpful-message-tool-name" id="helpfulMessageToolName">Select Tool</span>
+											</div>
+											<div class="helpful-message-actions">
+												<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
+											</div>
+										</div>
+									</div>
+									<div class="helpful-message-body">
+										<div class="helpful-message-text" id="helpfulMessageText"></div>
+										<div class="helpful-message-description" id="helpfulMessageDescription"></div>
+										<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
+									</div>
+								</div>
+								<div class="export-progress ui-ignore-gestures" id="exportProgress">
+									<div class="export-progress-heading"><span id="exportProgressText"></span><span id="exportProgressPercent"></span></div>
+									<div class="export-progress-bar" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100">
+										<div class="export-progress-fill" id="exportProgressFill"></div>
+									</div>
+									<div class="export-progress-status"><span id="exportProgressDetail"></span><span id="exportProgressTime"></span></div>
+									<span class="export-progress-announcement" id="exportProgressAnnouncement" aria-live="polite" aria-atomic="true"></span>
+									<button class="btn-flat export-progress-cancel" id="exportProgressCancel">Cancel</button>
 								</div>
 							</div>
 						</div>
@@ -567,29 +607,6 @@
 						<div class="layer-center-controls ui-ignore-gestures" id="textEditControls"></div>
 						<div class="layer-center-controls ui-ignore-gestures" id="layerCenterControls"></div>
 
-						<!-- Helpful Message -->
-						<div class="helpful-message ui-ignore-gestures" id="helpfulMessage">
-							<div class="helpful-message-header">
-								<span class="helpful-message-icon icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-circle-info" id="helpfulMessageIcon"></use>
-									</svg>
-								</span>
-								<div class="helpful-message-tool" id="helpfulMessageTool">
-									<div class="helpful-message-tool-context" id="helpfulMessageToolContext">
-										<span class="helpful-message-tool-name" id="helpfulMessageToolName">Select Tool</span>
-									</div>
-									<div class="helpful-message-actions">
-										<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
-									</div>
-								</div>
-							</div>
-							<div class="helpful-message-body">
-								<div class="helpful-message-text" id="helpfulMessageText"></div>
-								<div class="helpful-message-description" id="helpfulMessageDescription"></div>
-								<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
-							</div>
-						</div>
 
 					</div>
 				</div>
@@ -601,17 +618,6 @@
 			<span class="status-bar-field status-dimensions" id="statusDimensions"></span>
 			<span class="status-bar-field status-zoom" id="statusZoom" title="Double-click to reset zoom to 100%"></span>
 		</div>
-	</div>
-
-	<!-- Export Progress -->
-	<div class="export-progress ui-ignore-gestures" id="exportProgress">
-		<div class="export-progress-heading"><span id="exportProgressText"></span><span id="exportProgressPercent"></span></div>
-		<div class="export-progress-bar" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100">
-			<div class="export-progress-fill" id="exportProgressFill"></div>
-		</div>
-		<div class="export-progress-status"><span id="exportProgressDetail"></span><span id="exportProgressTime"></span></div>
-		<span class="export-progress-announcement" id="exportProgressAnnouncement" aria-live="polite" aria-atomic="true"></span>
-		<button class="btn-flat export-progress-cancel" id="exportProgressCancel">Cancel</button>
 	</div>
 
 	<!-- Error Toast -->
@@ -1657,13 +1663,13 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=a175b857"></script>
 	<script src="js/core/fields.js?v=193ed04e"></script>
-	<script src="js/core/config.js?v=99510046"></script>
+	<script src="js/core/config.js?v=70302338"></script>
 	<script src="js/core/tools.js?v=c6495ef0"></script>
 	<script src="js/core/layer-types.js?v=ca933e82"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=3d0287f7"></script>
 	<script src="js/ui/panel-schemas.js?v=da952e58"></script>
-	<script src="js/paint/paint-slots.js?v=802a1a39"></script>
+	<script src="js/paint/paint-slots.js?v=0c7c536b"></script>
 	<script src="js/layers/types/base-image.js?v=271e2694"></script>
 	<script src="js/layers/types/filter.js?v=f5e44e55"></script>
 	<script src="js/layers/types/glitter-fill.js?v=cbd5498e"></script>
@@ -1727,7 +1733,7 @@
 	<script src="js/ui/paint-slot-controls.js?v=35aa6ec2"></script>
 	<script src="js/ui/style-preset-thumbnails.js?v=6746ebb5"></script>
 	<script src="js/ui/gradient-editor.js?v=635f74a1"></script>
-	<script src="js/ui/color-eyedropper.js?v=a1914b36"></script>
+	<script src="js/ui/color-eyedropper.js?v=f997c28b"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=eca7d9de"></script>
 	<script src="js/ui/scroll-regions.js?v=7e6374b6"></script>
@@ -1745,16 +1751,16 @@
 	<script src="js/editor/transform-panel.js?v=a58a4185"></script>
 	<script src="js/editor/transform-interaction.js?v=ff2cf264"></script>
 	<script src="js/editor/document-start.js?v=28535700"></script>
-		<script src="js/editor/modals-wiring.js?v=5256d741"></script>
+		<script src="js/editor/modals-wiring.js?v=21ae2dc5"></script>
 	<script src="js/editor/layer-panel.js?v=5e9b6ab4"></script>
 	<script src="js/editor/canvas-gestures.js?v=441dc918"></script>
-	<script src="js/editor/canvas-size.js?v=121e9435"></script>
+	<script src="js/editor/canvas-size.js?v=69c7456a"></script>
 	<script src="js/editor/canvas-resize.js?v=ea25c5e4"></script>
-		<script src="js/ui/hints.js?v=1b39a7cb"></script>
+		<script src="js/ui/hints.js?v=9e8cf034"></script>
 	<script src="js/ui/picker-session.js?v=8c904df6"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=f374fe34"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=ca81b78b"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
-	<script src="js/ui/notify.js?v=b117c567"></script>
+	<script src="js/ui/notify.js?v=f868a1fb"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
@@ -1766,7 +1772,7 @@
 	<script src="js/export/GifEncodingPipeline.js?v=2630fa47"></script>
 	<script src="js/systems/AnimationTicker.js?v=1d5c50aa"></script>
 	<script src="js/systems/AnimationPanelController.js?v=9f26a93a"></script>
-	<script src="js/export/ExportProgressPresenter.js?v=ee86d95b"></script>
+	<script src="js/export/ExportProgressPresenter.js?v=4754a2c1"></script>
 	<script src="js/export/ExportResultPresenter.js?v=e9f1b08c"></script>
 	<script src="js/export/SceneCompositor.js?v=f27b8232"></script>
 	<script src="js/export/GifExporter.js?v=a8b353be"></script>
@@ -1799,22 +1805,22 @@
 	<script src="js/layers/GlitterManager.js?v=c5ef0999"></script>
 	<script src="js/layers/BaseBackgroundManager.js?v=cbefcf71"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=40f61f41"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=dd239e25"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=ad0685cf"></script>
 	<script src="js/ui/text-edit.js?v=989a9459"></script>
-	<script src="js/layers/TextGlitterManager.js?v=fc33ef66"></script>
+	<script src="js/layers/TextGlitterManager.js?v=d32059b0"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=6ba0fbd8"></script>
-	<script src="js/layers/StickerManager.js?v=7f12815c"></script>
-	<script src="js/layers/FilterLayerManager.js?v=b0834b44"></script>
-	<script src="js/layers/FrameLayerManager.js?v=fac1905d"></script>
+	<script src="js/layers/StickerManager.js?v=1a213269"></script>
+	<script src="js/layers/FilterLayerManager.js?v=8c6956c2"></script>
+	<script src="js/layers/FrameLayerManager.js?v=fa74b92b"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=e4a1ef5f"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2b7c0f1e"></script>
 
 		<script src="js/systems/MobileManager.js?v=2016bb2c"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=c58fd54b"></script>
+	<script src="js/app.js?v=ae297eb3"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.
