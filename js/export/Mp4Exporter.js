@@ -47,13 +47,15 @@ class Mp4Exporter {
 		params = { ...params, callbacks: { ...params.callbacks, progressFormat: 'mp4' } };
 		const { exportSettings, callbacks } = params;
 		const opaqueSettings = { ...exportSettings, transparency: false };
-		const { plan, renderScheduleEntry } = await this.frameComposer.planAnimation({
+		const { plan, context, renderScheduleEntry } = await this.frameComposer.planAnimation({
 			...params,
 			exportSettings: opaqueSettings,
 			outputFormat: 'mp4',
 			schedule: true
 		});
-		return this._encode({ schedulePlan: plan, renderScheduleEntry }, opaqueSettings, callbacks);
+		const blob = await this._encode({ schedulePlan: plan, renderScheduleEntry }, opaqueSettings, callbacks);
+		logExportTimings('mp4', { plan: { ...plan, frameCount: plan.outputFrameCount }, context, exportSettings: opaqueSettings, blob, details: { mp4Quality: opaqueSettings.mp4Quality } });
+		return blob;
 	}
 
 	_buildOutputSchedule(frameDurations, planDuration, exportSettings) {
@@ -172,6 +174,7 @@ class Mp4Exporter {
 
 		reportExportProgress(callbacks, 'finalizing', 1, '');
 		plan.phaseTimings = callbacks.phaseTimer?.finish();
+		plan.outputFrameCount = totalFrames;
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({ smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan });
 		const file = new File([blob], this.fileName, { type: 'video/mp4', lastModified: Date.now() });

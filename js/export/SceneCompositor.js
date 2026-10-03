@@ -68,6 +68,40 @@ function createExportPhaseTimer() {
 	};
 }
 
+// Debug-only (CONFIG.debug.enabled, or ?debug in the URL): one row per export
+// with the settings that drive cost beside every timing, kept for the session
+// in window.exportTimingHistory so runs under different settings line up in
+// one table. `details` carries the exporter's own columns.
+function logExportTimings(format, { plan, context, exportSettings, blob, details = {} }) {
+	if (typeof CONFIG === 'undefined' || !CONFIG.debug?.enabled) return;
+	const phases = plan.phaseTimings || [];
+	const record = {
+		format,
+		size: `${plan.width}x${plan.height}`,
+		layers: context?.visibleLayers?.length ?? 0,
+		drawn: plan.reduction?.renderedFrameCount || plan.frameCount,
+		frames: plan.frameCount,
+		look: exportSettings.ditherPreset,
+		colors: exportSettings.colorCount,
+		fidelity: exportSettings.exportFidelity,
+		quality: exportSettings.quality,
+		outputKB: Math.round(blob.size / 1024),
+		totalMs: Math.round(phases.reduce((sum, phase) => sum + phase.ms, 0)),
+		...Object.fromEntries(phases.map((phase) => [phase.label, Math.round(phase.ms)])),
+		...details
+	};
+	window.exportTimingHistory = [...(window.exportTimingHistory || []), record];
+	console.log('[Export timings] this session (copy(JSON.stringify(exportTimingHistory)) to share):');
+	console.table(window.exportTimingHistory);
+	const layerTimes = [...(context?.layerRenderMs || [])].map(([layer, ms]) => ({
+		layer: layer.name || layer.id, type: layer.type, totalMs: Math.round(ms), perFrameMs: Number((ms / Math.max(1, record.drawn)).toFixed(1))
+	}));
+	if (layerTimes.length) {
+		console.log('[Export timings] layer draw time for the last export:');
+		console.table(layerTimes);
+	}
+}
+
 function ensureCanvasSize(canvas, width, height) {
 	if (canvas.width !== width) canvas.width = width;
 	if (canvas.height !== height) canvas.height = height;
@@ -1464,6 +1498,7 @@ class SceneCompositor {
 					const sample = GlitterAnimation.composeSamples(sampled, { origin });
 					this._activeLayerAnimation = { layer, sample };
 				}
+				const layerStart = performance.now();
 				try {
 					const renderResult = plan.render({
 						ctx: renderCtx,
@@ -1484,6 +1519,9 @@ class SceneCompositor {
 				} finally {
 					this._activeLayerAnimation = null;
 					renderCtx.restore();
+					// Read by logExportTimings().
+					context.layerRenderMs ||= new Map();
+					context.layerRenderMs.set(layer, (context.layerRenderMs.get(layer) || 0) + performance.now() - layerStart);
 				}
 			}
 			if (usesLayerGroupBlend && renderCtx === this.layerBlendCtx) {

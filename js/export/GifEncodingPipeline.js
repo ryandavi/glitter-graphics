@@ -5,9 +5,11 @@
 // threshold (CONFIG.tools.selection.transparency.alphaThreshold, 254) or the
 // watermark preprocessing threshold (CONFIG.export.watermark.alphaThreshold).
 const GIF_TRANSPARENCY_ALPHA_THRESHOLD = 128;
-// Slots in the nearest-palette-color cache (2^bits). Fixed size, so a
-// color-rich animation cannot grow it without bound.
-const GIF_PALETTE_CACHE_BITS = 16;
+// Bits kept per channel when looking up the nearest palette color. The table
+// holds every possible cell (2^(3·bits) entries), so a color-rich animation
+// searches the palette at most once per cell for the whole export instead of
+// once per pixel. GifPalette itself bins at 5 bits, so 6 loses nothing visible.
+const GIF_PALETTE_LOOKUP_BITS = 6;
 
 class GifEncodingPipeline {
 	constructor(config = {}) {
@@ -72,34 +74,39 @@ class GifEncodingPipeline {
 		return false;
 	}
 
-	// Direct-mapped (one color per slot, key stored +1 so an empty slot is 0)
-	// and only valid for one palette: share it across the frames of one encode.
+	// One slot per color cell, filled on first use (-1 = not searched yet), and
+	// only valid for one palette: share it across the frames of one encode.
 	_createPaletteCache() {
-		const size = 1 << GIF_PALETTE_CACHE_BITS;
-		return { keys: new Int32Array(size), colors: new Int32Array(size) };
+		return new Int32Array(1 << (GIF_PALETTE_LOOKUP_BITS * 3)).fill(-1);
 	}
 
 	// Mirrors GlitterPixelEffects' private dithering distance formula
 	// (dr²·0.3 + dg²·0.59 + db²·0.11) for consistency with the rest of the
 	// app's color matching. Kept local because that helper expects palette
 	// entries as [r,g,b] triples while GifPalette works in flat byte arrays.
+	// Every color in a cell resolves to the palette color nearest the cell's
+	// center, so the answer never depends on which pixel reached it first.
 	// Returns the palette color packed as 0xRRGGBB.
 	_nearestPaletteRGB(r, g, b, palette, cache) {
-		const key = ((r << 16) | (g << 8) | b) + 1;
-		const slot = Math.imul(key, 0x9E3779B1) >>> (32 - GIF_PALETTE_CACHE_BITS);
-		if (cache.keys[slot] === key) return cache.colors[slot];
+		const shift = 8 - GIF_PALETTE_LOOKUP_BITS;
+		const slot = ((r >> shift) << (GIF_PALETTE_LOOKUP_BITS * 2)) | ((g >> shift) << GIF_PALETTE_LOOKUP_BITS) | (b >> shift);
+		const cached = cache[slot];
+		if (cached >= 0) return cached;
+		const half = 1 << (shift - 1);
+		const centerR = ((r >> shift) << shift) | half;
+		const centerG = ((g >> shift) << shift) | half;
+		const centerB = ((b >> shift) << shift) | half;
 		let bestOffset = 0;
 		let bestDistance = Infinity;
 		for (let offset = 0; offset < palette.length; offset += 3) {
-			const dr = r - palette[offset];
-			const dg = g - palette[offset + 1];
-			const db = b - palette[offset + 2];
+			const dr = centerR - palette[offset];
+			const dg = centerG - palette[offset + 1];
+			const db = centerB - palette[offset + 2];
 			const distance = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
 			if (distance < bestDistance) { bestDistance = distance; bestOffset = offset; }
 		}
 		const color = (palette[bestOffset] << 16) | (palette[bestOffset + 1] << 8) | palette[bestOffset + 2];
-		cache.keys[slot] = key;
-		cache.colors[slot] = color;
+		cache[slot] = color;
 		return color;
 	}
 
@@ -181,9 +188,18 @@ class GifEncodingPipeline {
 
 	async encode({ frames, delays = [], settings, transparency, mode = 'animation', reportProgress, isCancelled }) {
 		if (isCancelled?.()) throw new Error('Export cancelled');
+		// Step timings for logExportTimings(); only read when debug is on.
+		const timings = {};
+		let stepStart = performance.now();
+		const lap = (label) => {
+			const now = performance.now();
+			timings[label] = Math.round((timings[label] || 0) + now - stepStart);
+			stepStart = now;
+		};
 		if (transparency?.enabled && transparency.ditherSoftEdges) {
 			frames = frames.map((frame) => this._ditherSoftEdges(frame, GIF_TRANSPARENCY_ALPHA_THRESHOLD));
 		}
+		lap('softEdgeDitherMs');
 		reportProgress?.('palette', 0, '');
 		const frameCount = frames.length;
 		const width = frames[0].width;
@@ -192,9 +208,11 @@ class GifEncodingPipeline {
 		// does not mean any frame actually ended up with a transparent pixel.
 		const hasGifTransparency = Boolean(transparency?.enabled)
 			&& frames.some((frame) => this._frameHasTransparency(frame, GIF_TRANSPARENCY_ALPHA_THRESHOLD));
+		lap('transparencyScanMs');
 		const analysis = this._analyzeColors(frames, hasGifTransparency ? GIF_TRANSPARENCY_ALPHA_THRESHOLD : 1);
 		const colorCount = GifPalette.resolveColorCount(settings.colorCount, analysis);
 		const useNativePalette = !hasGifTransparency && settings.colorCount === 'auto' && !settings.ditherEnabled;
+		lap('colorAnalysisMs');
 		reportProgress?.('palette', 0.25, '');
 
 		const sampleBudget = { maxSamples: settings.quality <= 1 ? 524288 : (settings.quality <= 10 ? 262144 : 131072) };
@@ -212,6 +230,7 @@ class GifEncodingPipeline {
 		} else if (!useNativePalette) {
 			globalPalette = GifPalette.build(frames, colorCount, { style: settings.paletteStyle, ...sampleBudget });
 		}
+		lap('paletteBuildMs');
 
 		reportProgress?.('palette', 0.5, '');
 		const frameSettings = {
@@ -237,6 +256,7 @@ class GifEncodingPipeline {
 			const sourceFrame = frames[index];
 			let preparedFrame = sourceFrame;
 			let frameIsTransparent = false;
+			stepStart = performance.now();
 			if (hasGifTransparency) {
 				const prepared = this._prepareTransparentFrame(sourceFrame, visiblePalette, sentinel, GIF_TRANSPARENCY_ALPHA_THRESHOLD, paletteCache);
 				preparedFrame = prepared.frame;
@@ -247,7 +267,9 @@ class GifEncodingPipeline {
 			} else if (!useNativePalette && frameSettings.ditherEnabled) {
 				preparedFrame = this._applyDitherFrame(sourceFrame, globalPalette, frameSettings, mode, index);
 			}
+			lap('framePrepareMs');
 			gif.addFrame(preparedFrame, { delay: delays[index], copy: true });
+			lap('frameQueueMs');
 			frames[index] = null;
 			preparedFrame = null;
 			reportProgress?.('palette', 0.5 + ((index + 1) / frameCount * 0.5), '', index + 1, frameCount);
@@ -256,6 +278,7 @@ class GifEncodingPipeline {
 			}
 		}
 		reportProgress?.('palette', 1, '', frameCount, frameCount);
+		stepStart = performance.now();
 		return new Promise((resolve, reject) => {
 			const cancelTimer = window.setInterval(() => {
 				if (isCancelled?.()) gif.abort();
@@ -274,8 +297,9 @@ class GifEncodingPipeline {
 			});
 			gif.on('finished', (blob) => {
 				stop();
+				lap('workerEncodeMs');
 				if (isCancelled?.()) reject(new Error('Export cancelled'));
-				else resolve({ blob, analysis, paletteSize: colorCount, paletteMode, transparencyUsed: hasGifTransparency });
+				else resolve({ blob, analysis, paletteSize: colorCount, paletteMode, transparencyUsed: hasGifTransparency, workers: this.config.workers, timings });
 			});
 			try { gif.render(); } catch (error) { stop(); reject(error); }
 		});

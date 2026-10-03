@@ -949,7 +949,8 @@ const CONFIG = deepFreeze({
 
 	debug: {
 		forceIOSExportPreview: false,
-		enabled: false
+		// Add ?debug to the URL to turn this on for one page load.
+		enabled: typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug')
 	},
 });
 

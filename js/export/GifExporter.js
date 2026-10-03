@@ -19,7 +19,7 @@ class GifExporter {
 
 	async process(params) {
 		const { visibleLayers, callbacks } = params;
-		const { plan, exportSettings, preserveAlpha } = await this.compositor.planAnimation({ ...params, outputFormat: 'gif' });
+		const { plan, context, exportSettings, preserveAlpha } = await this.compositor.planAnimation({ ...params, outputFormat: 'gif' });
 		const frames = plan.frames;
 		plan.frameCount = frames.length;
 		delete plan.frames;
@@ -43,6 +43,16 @@ class GifExporter {
 				&& layer.filterData?.type === 'dither' && GlitterFilter.isActive(layer.filterData, layer.opacity));
 		}
 		this._handleFileSave(encoded.blob, callbacks, plan);
+		logExportTimings('gif', {
+			plan, context, exportSettings, blob: encoded.blob,
+			details: {
+				transparent: encoded.transparencyUsed,
+				palette: `${encoded.paletteMode} ${encoded.paletteSize}`,
+				dither: exportSettings.ditherEnabled && !encoded.transparencyUsed ? exportSettings.ditherType : 'off',
+				workers: encoded.workers,
+				...encoded.timings
+			}
+		});
 		return encoded.blob;
 	}
 

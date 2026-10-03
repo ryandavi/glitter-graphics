@@ -269,9 +269,98 @@
 		};
 	}
 
-	function nearestTwo(color, palette) {
-		return palette.map((entry, index) => ({ index, distance: colorDistance(color, entry) }))
-			.sort((left, right) => left.distance - right.distance).slice(0, 2);
+	// Dithering visits every pixel of every exported frame against palettes of
+	// up to 256 colors, so the per-pixel search runs over one flat typed array
+	// and allocates nothing. Same distance formula as colorDistance().
+	function flattenPalette(palette) {
+		const flat = new Float64Array(palette.length * 3);
+		for (let index = 0; index < palette.length; index++) {
+			flat[index * 3] = palette[index][0];
+			flat[index * 3 + 1] = palette[index][1];
+			flat[index * 3 + 2] = palette[index][2];
+		}
+		return flat;
+	}
+
+	// Exact nearest palette color for values that are not cacheable (diffusion
+	// feeds accumulated error back in, so nearly every lookup is a new color).
+	// Entries are walked outward from the closest green, the heaviest channel,
+	// and each direction stops once green alone is already farther than the
+	// best match. Ties keep the lower palette index, as nearestColorIndex does.
+	// Returns the entry's offset into `flat`.
+	function createNearestSearch(palette) {
+		const flat = flattenPalette(palette);
+		const order = palette.map((_, index) => index).sort((left, right) => flat[left * 3 + 1] - flat[right * 3 + 1] || left - right);
+		const greens = Float64Array.from(order, (index) => flat[index * 3 + 1]);
+		const offsets = Int32Array.from(order, (index) => index * 3);
+		const count = order.length;
+		return { flat, nearest(r, g, b) {
+			let low = 0;
+			let high = count;
+			while (low < high) {
+				const middle = (low + high) >> 1;
+				if (greens[middle] < g) low = middle + 1;
+				else high = middle;
+			}
+			let best = 0;
+			let bestDistance = Infinity;
+			for (let position = low; position < count; position++) {
+				const dg = g - greens[position];
+				if (dg * dg * 0.59 > bestDistance) break;
+				const entry = offsets[position];
+				const dr = r - flat[entry];
+				const db = b - flat[entry + 2];
+				const distance = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
+				if (distance < bestDistance || (distance === bestDistance && entry < best)) { bestDistance = distance; best = entry; }
+			}
+			for (let position = low - 1; position >= 0; position--) {
+				const dg = g - greens[position];
+				if (dg * dg * 0.59 > bestDistance) break;
+				const entry = offsets[position];
+				const dr = r - flat[entry];
+				const db = b - flat[entry + 2];
+				const distance = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
+				if (distance < bestDistance || (distance === bestDistance && entry < best)) { bestDistance = distance; best = entry; }
+			}
+			return best;
+		} };
+	}
+
+	// The two nearest palette colors for each distinct source color (ties keep
+	// the lower palette index). Direct-mapped by exact color (key stored +1 so
+	// an empty slot is 0), so flat art is searched once per color, not per pixel.
+	function createNearestTwoLookup(palette) {
+		const flat = flattenPalette(palette);
+		const keys = new Int32Array(65536);
+		const first = new Int32Array(65536);
+		const second = new Int32Array(65536);
+		const ratios = new Float64Array(65536);
+		return { first, second, ratios, slotFor(r, g, b) {
+			const key = ((r << 16) | (g << 8) | b) + 1;
+			const slot = Math.imul(key, 0x9E3779B1) >>> 16;
+			if (keys[slot] === key) return slot;
+			let bestIndex = 0;
+			let nextIndex = -1;
+			let bestDistance = Infinity;
+			let nextDistance = Infinity;
+			for (let index = 0, offset = 0; offset < flat.length; index++, offset += 3) {
+				const dr = r - flat[offset];
+				const dg = g - flat[offset + 1];
+				const db = b - flat[offset + 2];
+				const distance = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
+				if (distance < bestDistance) {
+					nextDistance = bestDistance; nextIndex = bestIndex;
+					bestDistance = distance; bestIndex = index;
+				} else if (distance < nextDistance) {
+					nextDistance = distance; nextIndex = index;
+				}
+			}
+			keys[slot] = key;
+			first[slot] = bestIndex;
+			second[slot] = flat.length > 3 ? nextIndex : -1;
+			ratios[slot] = bestDistance / Math.max(1, bestDistance + nextDistance);
+			return slot;
+		} };
 	}
 
 	function getShimmerAnimation(algorithm, config) {
@@ -284,18 +373,19 @@
 		const shimmer = settings.dither.shimmer && animation ? frameIndex * animation.offsetPerFrame : 0;
 		const angle = settings.dither.angle * Math.PI / 180;
 		const scale = settings.dither.scale || 1;
+		const cos = Math.cos(angle);
+		const sin = Math.sin(angle);
+		const lookup = createNearestTwoLookup(palette);
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
 			if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
-			const color = [source[offset], source[offset + 1], source[offset + 2]];
-			const pair = nearestTwo(color, palette);
-			let chosen = pair[0].index;
-			if (pair.length > 1 && strength > 0) {
-				const rx = Math.round((x * Math.cos(angle) - y * Math.sin(angle)) / scale);
-				const ry = Math.round((x * Math.sin(angle) + y * Math.cos(angle)) / scale);
+			const slot = lookup.slotFor(source[offset], source[offset + 1], source[offset + 2]);
+			let chosen = lookup.first[slot];
+			if (lookup.second[slot] >= 0 && strength > 0) {
+				const rx = Math.round((x * cos - y * sin) / scale);
+				const ry = Math.round((x * sin + y * cos) / scale);
 				const threshold = (BAYER_8[((ry + shimmer) & 7) * 8 + ((rx + shimmer) & 7)] + 0.5) / 64;
-				const ratio = pair[0].distance / Math.max(1, pair[0].distance + pair[1].distance);
-				if (ratio * strength > threshold) chosen = pair[1].index;
+				if (lookup.ratios[slot] * strength > threshold) chosen = lookup.second[slot];
 			}
 			output.set(palette[chosen], offset);
 			output[offset + 3] = source[offset + 3];
@@ -315,26 +405,41 @@
 				: algorithm === 'stucki'
 					? [[1, 0, 8 / 42], [2, 0, 4 / 42], [-2, 1, 2 / 42], [-1, 1, 4 / 42], [0, 1, 8 / 42], [1, 1, 4 / 42], [2, 1, 2 / 42], [-2, 2, 1 / 42], [-1, 2, 2 / 42], [0, 2, 4 / 42], [1, 2, 2 / 42], [2, 2, 1 / 42]]
 					: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]];
+		const search = createNearestSearch(palette);
+		const flat = search.flat;
+		const edgeProtection = settings.dither.edgeProtection;
 		for (let y = 0; y < height; y++) {
 			const reverse = settings.dither.serpentine && y % 2 === 1;
 			for (let step = 0; step < width; step++) {
 				const x = reverse ? width - 1 - step : step;
 				const offset = (y * width + x) * 4;
 				if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
-				const current = [work[offset], work[offset + 1], work[offset + 2]];
-				const chosen = palette[nearestColorIndex(current, palette)];
-				output.set(chosen, offset);
+				const red = work[offset];
+				const green = work[offset + 1];
+				const blue = work[offset + 2];
+				const best = search.nearest(red, green, blue);
+				const errorRed = red - flat[best];
+				const errorGreen = green - flat[best + 1];
+				const errorBlue = blue - flat[best + 2];
+				output[offset] = flat[best];
+				output[offset + 1] = flat[best + 1];
+				output[offset + 2] = flat[best + 2];
 				output[offset + 3] = source[offset + 3];
-				for (const [dx, dy, weight] of kernels) {
-					const nx = x + (reverse ? -dx : dx);
-					const ny = y + dy;
+				for (let kernel = 0; kernel < kernels.length; kernel++) {
+					const nx = x + (reverse ? -kernels[kernel][0] : kernels[kernel][0]);
+					const ny = y + kernels[kernel][1];
 					if (nx < 0 || nx >= width || ny >= height) continue;
 					const next = (ny * width + nx) * 4;
-					if (settings.dither.edgeProtection && colorDistance(
-						[source[offset], source[offset + 1], source[offset + 2]],
-						[source[next], source[next + 1], source[next + 2]]
-					) > 32 * 32) continue;
-					for (let channel = 0; channel < 3; channel++) work[next + channel] += (current[channel] - chosen[channel]) * weight * strength;
+					if (edgeProtection) {
+						const dr = source[offset] - source[next];
+						const dg = source[offset + 1] - source[next + 1];
+						const db = source[offset + 2] - source[next + 2];
+						if (dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11 > 32 * 32) continue;
+					}
+					const weight = kernels[kernel][2];
+					work[next] += errorRed * weight * strength;
+					work[next + 1] += errorGreen * weight * strength;
+					work[next + 2] += errorBlue * weight * strength;
 				}
 			}
 		}
@@ -347,20 +452,21 @@
 		const radians = settings.dither.angle * Math.PI / 180;
 		const shimmer = settings.dither.shimmer && animation ? frameIndex * animation.offsetPerFrame : 0;
 		const cell = 8 * (settings.dither.scale || 1);
+		const cos = Math.cos(radians);
+		const sin = Math.sin(radians);
+		const lookup = createNearestTwoLookup(palette);
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
 			if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
-			const color = [source[offset], source[offset + 1], source[offset + 2]];
-			const pair = nearestTwo(color, palette);
-			let chosen = pair[0].index;
-			if (pair.length > 1 && strength > 0) {
-				const rx = x * Math.cos(radians) - y * Math.sin(radians) + shimmer;
-				const ry = x * Math.sin(radians) + y * Math.cos(radians) + shimmer;
+			const slot = lookup.slotFor(source[offset], source[offset + 1], source[offset + 2]);
+			let chosen = lookup.first[slot];
+			if (lookup.second[slot] >= 0 && strength > 0) {
+				const rx = x * cos - y * sin + shimmer;
+				const ry = x * sin + y * cos + shimmer;
 				const cx = ((rx % cell) + cell) % cell - cell / 2;
 				const cy = ((ry % cell) + cell) % cell - cell / 2;
 				const radial = Math.min(1, Math.hypot(cx, cy) / (cell * 0.7));
-				const ratio = pair[0].distance / Math.max(1, pair[0].distance + pair[1].distance);
-				if (ratio * strength > radial) chosen = pair[1].index;
+				if (lookup.ratios[slot] * strength > radial) chosen = lookup.second[slot];
 			}
 			output.set(palette[chosen], offset);
 			output[offset + 3] = source[offset + 3];
