@@ -8,8 +8,8 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 
 	// Fill slot, on an actual mode change: for Gradient the fill's Opacity row
 	// joins the Type/Blend/Angle `.property-set` (no lone Scale to keep it
-	// company); for every other mode it lives back in `.paint-slot-primary-row`
-	// beside Scale. Kept off the drag hot path via the mode-change guard.
+	// company); for every other mode it lives back in its own set
+	// (`.paint-slot-primary-row`). Kept off the drag hot path via the mode-change guard.
 	if (slot.dataset.slot === 'fill' && previousMode !== normalizedMode) {
 		const opacityRow = slot.querySelector('.paint-slot-opacity');
 		const optionSet = slot.querySelector('.effect-gradient-editor');
@@ -32,30 +32,33 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 		const buttonMode = button.dataset.mode;
 		if (buttonMode) button.classList.toggle('active', buttonMode === normalizedMode);
 	});
-	slot.querySelectorAll('.glitter-source-glitter').forEach((element) => { element.hidden = normalizedMode !== 'glitter'; });
-	slot.querySelectorAll('.glitter-source-solid').forEach((element) => { element.hidden = normalizedMode !== 'solid'; });
-	slot.querySelectorAll('[data-paint-source-mode]').forEach((element) => {
+	// A slot's parts are the ones inside it that belong to no slot nested in
+	// it, plus the Advanced sets that name it as their owner (a second source
+	// such as Bevel's Shade keeps its sets in its section's one Advanced).
+	const parts = (selector) => [
+		...Array.from(slot.querySelectorAll(selector)).filter((element) => !element.dataset.paintSlotOwner && element.closest('.paint-slot-card') === slot),
+		...(slot.id ? document.querySelectorAll(`${selector}[data-paint-slot-owner="${slot.id}"]`) : [])
+	];
+	parts('.glitter-source-glitter').forEach((element) => { element.hidden = normalizedMode !== 'glitter'; });
+	parts('.glitter-source-solid').forEach((element) => { element.hidden = normalizedMode !== 'solid'; });
+	parts('[data-paint-source-mode]').forEach((element) => {
 		element.hidden = element.dataset.paintSourceMode !== normalizedMode;
 	});
 	const primaryRow = slot.querySelector('.paint-slot-primary-row');
 	const opacity = primaryRow?.querySelector('.paint-slot-opacity');
 	const hidePrimaryModes = new Set((slot.dataset.hidePrimaryModes || '').split(/\s+/).filter(Boolean));
 	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || hidePrimaryModes.has(normalizedMode) || !opacity;
-	// Two module-level Advanced disclosures share the slot: the glitter source's
-	// own (color adjust / texture position) is glitter-only; the gradient
-	// editor's `.gradient-advanced` (Smoothing) is gradient-only — and the
-	// editor's render() narrows it further to the Smooth blend.
-	const advanced = slot.querySelector('.advanced-disclosure.glitter-source-glitter');
-	if (advanced) advanced.hidden = normalizedMode !== 'glitter';
-	const gradientAdvanced = slot.querySelector('.gradient-advanced');
+	// The section's one Advanced holds a set per source: the glitter sets are
+	// handled above, and the gradient editor's `.gradient-advanced` (Smoothing)
+	// is gradient-only — its render() narrows it further to the Smooth blend.
+	// The disclosure itself goes while every set in it is hidden.
+	const gradientAdvanced = parts('.gradient-advanced')[0];
 	if (gradientAdvanced && normalizedMode !== 'gradient') gradientAdvanced.hidden = true;
-	const flatAdvanced = slot.querySelector('.paint-slot-advanced-flat');
-	if (flatAdvanced) flatAdvanced.hidden = normalizedMode !== 'glitter';
 	// The gradient editor is two `.property-set` chunks — the stop table and the
 	// Type/Blend/Angle options — plus the preview in the Source set (that one is
 	// handled by the `[data-paint-source-mode]` loop above).
-	const gradientStops = slot.querySelector('.gradient-stop-set');
-	const gradient = slot.querySelector('.effect-gradient-editor');
+	const gradientStops = parts('.gradient-stop-set')[0];
+	const gradient = parts('.effect-gradient-editor')[0];
 	if (gradientStops) gradientStops.hidden = normalizedMode !== 'gradient';
 	if (gradient) {
 		gradient.hidden = normalizedMode !== 'gradient';

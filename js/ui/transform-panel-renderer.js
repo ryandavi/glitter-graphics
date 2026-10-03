@@ -44,9 +44,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	const anchorRow = buildPanelItem({
 		kind: 'select',
 		id: ids.anchorSelect,
-		visibleLabel: 'Anchor',
 		label: 'Anchor',
-		stacked: false,
 		options: ANCHOR_SELECT_OPTIONS
 	});
 	anchorRow.appendChild(buildTransformRevertControl('resetAnchor'));

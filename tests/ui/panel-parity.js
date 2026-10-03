@@ -71,7 +71,8 @@ async function captureStructure(page) {
 		const looseDisclosure = document.querySelector('.property-card > .advanced-disclosure');
 		if (looseDisclosure) throw new Error(`Card disclosure is outside the card body: ${looseDisclosure.parentElement.outerHTML.slice(0, 400)}`);
 		document.querySelectorAll('.paint-slot-card[data-slot]').forEach((slot) => {
-			if (!slot.querySelector(':scope > .property-card-body')) throw new Error(`Paint slot ${slot.dataset.slot} has no card body`);
+			// A second source inside a section (Bevel's Shade) is a set, not a section.
+			if (!slot.matches('[data-nested]') && !slot.querySelector(':scope > .property-card-body')) throw new Error(`Paint slot ${slot.dataset.slot} has no card body`);
 			const glitterMode = slot.querySelector('.segmented-option[data-mode="glitter"]');
 			if (!glitterMode) return;
 			if (!slot.querySelector('.asset-info')) throw new Error(`Paint slot ${slot.dataset.slot} has no asset-info block`);
@@ -201,19 +202,19 @@ const LAYER_SETUPS = {
 			if (document.getElementById('filterLooksPicker').contains(lookGroups) || document.getElementById('filterLooksPicker').closest('.property-set') === lookGroups.closest('.property-set')) throw new Error('Filter look group dropdown is nested inside the preset grid property set');
 			if ([...lookGroups.options].map((option) => option.textContent).join(',') !== 'All,Adjust,Stylize,Web & Film,Pixel & Damage,Instagram') throw new Error('Filter look groups are incorrect');
 			if (document.getElementById('filterCurrentLookName')?.textContent !== 'Clarendon') throw new Error('Current Look summary is not synced to Clarendon');
-			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Clarendon Settings') throw new Error('Filter settings heading does not identify Clarendon');
+			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Clarendon settings') throw new Error('Filter settings heading does not identify Clarendon');
 			lookGroups.value = '';
 			lookGroups.dispatchEvent(new Event('change'));
 			const allLookOptions = [...document.querySelectorAll('#filterLooksPicker .preset-grid-option')];
 			if (allLookOptions[0]?.dataset.presetId !== 'basic' || allLookOptions.at(-1)?.dataset.presetId !== 'instagram:hefe' || allLookOptions.some((option) => option.dataset.presetId === 'instagram')) throw new Error('Flattened Filter look order is incorrect');
 			if (!document.getElementById('filterLooksPicker').closest('.property-card')) throw new Error('Looks grid is not grouped inside the Looks card');
 			if (!document.getElementById('filterLooksPicker').classList.contains('property-scrollbox')) throw new Error('Looks grid is missing the shared preset scrollbox');
-			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Layer Opacity') throw new Error('Filter opacity does not use the shared label');
+			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Opacity') throw new Error('Filter opacity does not use the shared label');
 			if (!document.getElementById('filterStrengthValue')?.textContent.endsWith('%')) throw new Error('Instagram strength unit is missing');
 			editor.filterLayerManager.chooseLook(GlitterFilters.looksLibrary.get('tint'));
 			const filterUnits = ['filterTintAmountValue'].map((id) => document.getElementById(id)?.textContent);
 			if (!filterUnits[0]?.endsWith('%')) throw new Error(`Filter control units are missing: ${filterUnits.join(', ')}`);
-			if (document.querySelector('#filterCustomizeControls .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
+			if (document.querySelector('#filterCustomize .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
 			if (document.getElementById('filterTintMode')) throw new Error('Tint still exposes a separate blend mode');
 			const expectedBlendModes = CONFIG.layers.blendModes.join(',');
 			['glitterLayerBlendMode', 'stickerLayerBlendMode', 'textLayerBlendMode', 'shapeLayerBlendMode'].forEach((id) => {
@@ -233,7 +234,7 @@ const LAYER_SETUPS = {
 			const firstPreset = document.querySelector('#filterLooksPicker [data-preset-id^="instagram:"]');
 			if (firstPreset?.dataset.presetId !== 'instagram:rio') throw new Error('Rio de Janeiro is not the first Instagram look');
 			if (!firstPreset.querySelector('.filter-css-thumbnail') || firstPreset.querySelector('canvas')) throw new Error('Instagram look thumbnail is not CSS-only');
-			if (document.querySelector('#filterCustomizeControls .preset-grid-option')) throw new Error('Instagram Settings still render a nested preset grid');
+			if (document.querySelector('#filterCustomize .preset-grid-option')) throw new Error('Instagram Settings still render a nested preset grid');
 			if (!document.querySelector('.layer-swatch.filter .filter-css-thumbnail') || document.querySelector('.layer-swatch.filter canvas')) throw new Error('Filter layer thumbnail is not CSS-only');
 			const filterType = document.querySelector(`[data-layer-id="${layer.id}"] .layer-type`)?.textContent;
 			if (filterType !== 'Filter · Clarendon') throw new Error(`Filter layer summary is incorrect: ${filterType}`);

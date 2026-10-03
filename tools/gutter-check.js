@@ -12,8 +12,8 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 const PORT = process.env.GLITTER_PORT || 8977;
-const CHROME = process.env.CHROME_PATH
-	|| '/Users/amberellis/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+// Playwright's own Chromium unless CHROME_PATH names another build.
+const CHROME = process.env.CHROME_PATH || undefined;
 
 (async () => {
 	const srv = spawn(process.platform === 'win32' ? 'python' : 'python3', ['-m', 'http.server', String(PORT)], {
@@ -52,7 +52,7 @@ const CHROME = process.env.CHROME_PATH
 			// gutter, and nesting it inside an inset container is correct.
 			const STRUCTURAL = [
 				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list', 'property-card',
-				'property-card-body', 'paint-slot-main', 'property-content',
+				'property-card-body',
 				'property-set', 'property-actions',
 				'glitter-source', 'paint-slot-source', 'asset-info', 'selected-colors-display',
 				'advanced-disclosure-content', 'settings-toggle-list',

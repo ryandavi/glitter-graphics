@@ -31,7 +31,7 @@ async function main() {
 				sharedEffectCardCount: document.querySelectorAll('[data-effect-card] > .property-card-title input[data-effect-toggle]').length
 			};
 		});
-		assert.deepStrictEqual(canvasStructure, { outerToggle: false, pixelCards: false, sharedEffectCardCount: 20 });
+		assert.deepStrictEqual(canvasStructure, { outerToggle: false, pixelCards: false, sharedEffectCardCount: 22 });
 
 		const shape = await page.evaluate(() => {
 			const editor = window.editor;
@@ -109,7 +109,7 @@ async function main() {
 				return {
 					slot,
 					mode: layer.shapeData[slot].mode,
-					defaulted: layer.shapeData[slot].glitterId === CONFIG.tools.glitter.defaults[defaultKey],
+					defaulted: layer.shapeData[slot].glitterId === CONFIG.tools.glitter.defaults[defaultKey].shape,
 					active: document.getElementById(buttonId).classList.contains('active')
 				};
 			});

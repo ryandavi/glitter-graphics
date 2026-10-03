@@ -41,7 +41,7 @@
 // { type: 'range', min, max, step, value, outputId, outputText, describedBy };
 // { type: 'segmented', id, ariaLabel, options } with panel segmented options;
 // { type: 'button', id, label }; { type: 'actions', actions } with panel
-// actionRow actions; { type: 'host', id, className } for a manager-filled box.
+// action-set actions; { type: 'host', id, className } for a manager-filled box.
 
 function resolveSettingsOptions(options) {
 	if (typeof options === 'function') return options();
@@ -102,12 +102,12 @@ function buildSettingsControl(field) {
 	const id = field.id || field.element;
 	switch (control.type) {
 		case 'select':
-			return buildPanelItem({ kind: 'select', id, visibleLabel: field.label, stacked: false,
+			return buildPanelItem({ kind: 'select', id, label: field.label,
 				options: resolveSettingsOptions(control.options) });
 		case 'switch': {
-			const list = buildPanelItem({ kind: 'checkboxList', items: [{ id, label: field.label }] });
-			if (control.ariaControls) list.querySelector('input').setAttribute('aria-controls', control.ariaControls);
-			return list;
+			const row = buildPanelItem({ kind: 'toggle', id, label: field.label });
+			if (control.ariaControls) row.querySelector('input').setAttribute('aria-controls', control.ariaControls);
+			return row;
 		}
 		case 'color':
 			return buildPanelItem({ kind: 'field', type: 'color', id, label: field.label, value: control.value });
@@ -119,9 +119,9 @@ function buildSettingsControl(field) {
 		case 'range':
 			return buildSettingsRangeRow(id, field);
 		case 'segmented':
-			return buildPanelItem({ kind: 'segmented', id: control.id, visibleLabel: field.label,
-				label: control.ariaLabel || field.label, stacked: false, options: control.options,
-				revertFor: control.revertFor });
+			return buildPanelItem({ kind: 'segmented', id: control.id, label: field.label,
+				ariaLabel: control.ariaLabel, options: control.options,
+				revert: control.revertFor });
 		case 'button':
 			return buildPanelItem({ kind: 'labeled', label: field.label, stacked: false, control: {
 				kind: 'host', tag: 'button', id: control.id, classes: 'btn-flat', text: control.label, attrs: { type: 'button' }
@@ -138,7 +138,7 @@ function buildSettingsControl(field) {
 // A control too wide for a row sits under the setting's description.
 function buildSettingsBlock(control) {
 	if (control.type === 'actions') {
-		return buildPanelItem({ kind: 'actionRow', classes: 'is-split section-actions', actions: control.actions });
+		return buildPanelSet({ classes: 'is-split section-actions', actions: control.actions });
 	}
 	if (control.type === 'host') {
 		return buildPanelItem({ kind: 'host', id: control.id, classes: `property-inset ${control.className || ''}`.trim() });
@@ -200,7 +200,7 @@ function buildGovernedHeader(governed) {
 }
 
 function buildGovernedDisclosure(governed) {
-	const disclosure = buildPanelItem({ kind: 'advanced', id: governed.id, label: 'Customize', items: [] });
+	const disclosure = buildAdvancedDisclosure({ id: governed.id });
 	if (governed.formatSection) disclosure.dataset.exportFormatSection = governed.formatSection;
 	const content = disclosure.querySelector('[data-advanced-content]');
 	content.id = governed.railId;
@@ -212,8 +212,8 @@ function buildGovernedDisclosure(governed) {
 }
 
 function buildSettingsGroup(group) {
-	const card = buildPanelItem({ kind: 'card', title: group.title, id: group.id, hidden: group.hidden,
-		flatBody: true, items: [],
+	const card = buildPanelItem({ kind: 'section', title: group.title, id: group.id, hidden: group.hidden,
+		sets: [],
 		badge: group.badge ? { label: group.badge } : null,
 		reset: group.section ? { title: `Reset ${group.title} settings` } : null });
 	const body = card.querySelector('.property-card-body');

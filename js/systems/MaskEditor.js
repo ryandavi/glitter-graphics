@@ -385,13 +385,13 @@ class MaskEditor {
 		const titleIcon = document.getElementById('brushSettingsTitleIcon');
 		if (titleIcon) titleIcon.setAttribute('href', isEraser ? '#icon-eraser' : '#icon-brush');
 		if (this.ui.copySettingsButton) {
-			this.ui.copySettingsButton.textContent = isEraser ? 'Copy Brush Settings' : 'Copy Eraser Settings';
+			this.ui.copySettingsButton.textContent = isEraser ? 'Copy brush settings' : 'Copy eraser settings';
 			this.ui.copySettingsButton.title = isEraser
 				? 'Copy the current brush settings into the eraser'
 				: 'Copy the current eraser settings into the brush';
 		}
 		if (this.ui.resetSettingsButton) {
-			this.ui.resetSettingsButton.textContent = isEraser ? 'Reset Eraser' : 'Reset Brush';
+			this.ui.resetSettingsButton.textContent = isEraser ? 'Reset eraser' : 'Reset brush';
 			this.ui.resetSettingsButton.title = `Restore ${isEraser ? 'eraser' : 'brush'} settings to their defaults`;
 		}
 	}

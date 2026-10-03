@@ -96,7 +96,7 @@ async function main() {
 			if (document.getElementById('filterCurrentLookName')?.textContent !== 'Basic') throw new Error('Current Look summary is not synced to Basic');
 			if (document.querySelector('#filterCurrentLookBadges .badge-category')?.textContent !== 'Adjust') throw new Error('Current Look summary is missing its category');
 			if (!document.getElementById('filterCurrentLookShow')?.hidden) throw new Error('Show action is visible while All includes the current look');
-			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Basic Settings') throw new Error('Settings heading does not identify the current look');
+			if (document.getElementById('filterCustomizeTitle')?.textContent !== 'Basic settings') throw new Error('Settings heading does not identify the current look');
 			if (looksGrid.querySelectorAll('.preset-grid-heading').length !== 5) throw new Error('All Looks view is missing category headings');
 			groupSelect.value = '';
 			groupSelect.dispatchEvent(new Event('change'));
@@ -145,7 +145,7 @@ async function main() {
 			groupSelect.value = 'instagram';
 			groupSelect.dispatchEvent(new Event('change'));
 			if (looksGrid.querySelector('[data-preset-id="basic"]')) throw new Error('Category filtering did not hide the Basic card');
-			if (document.getElementById('filterCurrentLookName').textContent !== 'Basic' || document.getElementById('filterCustomizeTitle').textContent !== 'Basic Settings') throw new Error('Browsing another category obscured the current look context');
+			if (document.getElementById('filterCurrentLookName').textContent !== 'Basic' || document.getElementById('filterCustomizeTitle').textContent !== 'Basic settings') throw new Error('Browsing another category obscured the current look context');
 			const showCurrent = document.getElementById('filterCurrentLookShow');
 			if (showCurrent.hidden) throw new Error('Show action is hidden while the current look is outside the browsed category');
 			showCurrent.click();
@@ -158,9 +158,9 @@ async function main() {
 			clarendon.click();
 			if (layer.filterData.type !== 'instagram' || layer.filterData.presetId !== 'clarendon') throw new Error('Instagram look was not applied in one click');
 			if (groupSelect.value !== 'instagram') throw new Error('Choosing an Instagram look changed the browsing category');
-			if (document.getElementById('filterCurrentLookName').textContent !== 'Clarendon' || document.getElementById('filterCustomizeTitle').textContent !== 'Clarendon Settings') throw new Error('Current Look context did not update to Clarendon');
+			if (document.getElementById('filterCurrentLookName').textContent !== 'Clarendon' || document.getElementById('filterCustomizeTitle').textContent !== 'Clarendon settings') throw new Error('Current Look context did not update to Clarendon');
 			if (!looksGrid.querySelector('[data-preset-id="instagram:clarendon"].active')) throw new Error('Instagram look is not active');
-			if (document.querySelector('#filterCustomizeControls .preset-grid')) throw new Error('Instagram Settings still render a nested preset grid');
+			if (document.querySelector('#filterCustomize .preset-grid')) throw new Error('Instagram Settings still render a nested preset grid');
 			if (!document.getElementById('filterStrength') || !document.getElementById('filterShowName')) throw new Error('Instagram Settings lost strength or name controls');
 			layer.filterData = GlitterFilter.normalizeFilterData({ type: 'instagram', presetId: 'juno' });
 			editor.filterLayerManager.loadLayerSettings(layer);

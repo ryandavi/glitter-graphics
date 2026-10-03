@@ -22,10 +22,6 @@
 // #canvasSizeLimitMessage is a `.property-note` like every other panel message;
 // canvas-size.js toggles `.is-error` on it (see `.property-note.is-error`).
 
-// A mode panel (`#canvasSizePanel` / `#scaleDesignPanel`) is a transparent
-// wrapper around its sets; canvas-size.js toggles `hidden` on it.
-.property-panel .document-size-panel { padding: 0; }
-
 .canvas-extension-mode {
 	min-width: 148px;
 }
@@ -177,20 +173,10 @@
 .property-section .paint-slot-card { position: relative; }
 
 // ----- The source stack ------------------------------------------------------
-// Roomier than the row gap: it mixes a select, a boxed asset summary and a
-// color row.
+// The Source set: the Source row, then what the chosen source needs.
 .property-panel :is(.paint-slot-source, .glitter-source) {
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-row-gap);
 }
 
-// A source that is the set's direct child is already inset by the set, so its
-// control fills it.
-.property-panel .property-set > .glitter-source > .segmented-control {
-	margin: 0;
-	width: 100%;
-}
-
-// A stack of rows: each row insets itself.
-.property-panel .paint-slot-primary-row { padding: 0; }

@@ -149,7 +149,7 @@ async function captureMetrics(page) {
 			// containers rendering with no visible meaningful content
 			let shells = 0;
 			const shellCandidates = [
-				'.property-card', '.property-card-body', '.paint-slot-main',
+				'.property-card', '.property-card-body',
 				'.property-set', '.property-toggle-list',
 				'.property-actions', '.advanced-disclosure-content'
 			].join(',');

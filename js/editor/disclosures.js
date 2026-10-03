@@ -371,10 +371,10 @@ initializeCollapsibleSections() {
 		['keyboard', 'gesture'].forEach((kind) => getShortcutGroups(kind).forEach(({ title: groupTitle, items }) => {
 			// `shortcut-group` / `shortcut-item` are hooks for the scope switch
 			// and the search filter.
-			const group = buildPanelItem({ kind: 'card', title: groupTitle, items: items.map((command) => ({
+			const group = buildPanelItem({ kind: 'section', title: groupTitle, sets: [{ rows: items.map((command) => ({
 				kind: 'labeled', label: command.label, stacked: false, rowClasses: 'shortcut-item',
 				control: { kind: 'host', classes: 'shortcut-keys shortcut-sequence' }
-			})) });
+			})) }] });
 			group.classList.add('shortcut-group');
 			group.dataset.shortcutKind = kind;
 			group.hidden = kind !== 'keyboard';

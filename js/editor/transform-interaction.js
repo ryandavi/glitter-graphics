@@ -402,7 +402,7 @@ snapTransformPosition(transform, position, options = {}) {
 			});
 		}
 
-		// The standalone "Layer Opacity" row in the panel's Appearance group.
+		// The Layer section's Opacity row in the panel's Appearance group.
 		// Writes layer.opacity through updateTransform, which re-applies the element.
 		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
 		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);

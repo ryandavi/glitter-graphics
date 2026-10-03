@@ -30,7 +30,7 @@
 //     it), so the left edge is one line down the panel.
 //   - A section is flat: no border, no background, no side margin. The only
 //     boxes are objects you can swap or pick from (asset chip, preset
-//     scrollbox, gradient editor). The only lines are section boundaries.
+//     scrollbox, gradient editor). The only lines are group boundaries.
 //   - State is a class or attribute the renderer stamps (`.is-off`,
 //     `.is-vacant`, `.is-unset`), never a `:has()` that sniffs structure.
 //   - Uppercase is the group label's alone.
@@ -40,7 +40,7 @@
 // `.property-panel` is a whole surface (sidebar, drawer, form-modal body);
 // `.property-section` is one schema-rendered section inside it. Both carry the
 // tokens so a section also works on a surface that is not a panel. Heights
-// come from the app-wide density tokens (`--control-height`, `--row-height`).
+// derive from the app-wide density token `--control-height`.
 .property-panel,
 .property-section {
 	// ---- insets ----------------------------------------------------------
@@ -50,14 +50,19 @@
 	--property-pad: var(--spacing-base);
 
 	// ---- vertical rhythm -------------------------------------------------
-	// One gap between any two things stacked in a section: row to row, title
-	// to first row, set to set, rows to a disclosure or an action row. A
-	// second, larger gap between sets read as a mistake once the lines went.
+	// A row is its control and nothing more, so the pitch is control + row gap.
+	// Both heights follow `--control-height`, which is what grows for touch.
+	--property-row-height: var(--control-height);
+	--property-title-height: calc(var(--control-height) + var(--spacing-xs));
+	// Rows inside a set sit on the small gap; sets sit on the larger one. The
+	// difference is what groups rows, since a set draws nothing.
 	--property-row-gap: var(--spacing-xs);
+	--property-set-gap: var(--spacing-md);
 	--property-field-gap: var(--spacing-sm);
-	// Under a section's last row, above its hairline. The title row starts
-	// right under the line, so this is the "room to breathe" number.
-	--property-section-pad-bottom: var(--spacing-lg);
+	// Under an open section's last row, before the next section's title.
+	--property-section-pad-bottom: var(--spacing-base);
+	// Above and below a group's line, so the two are always equal.
+	--property-group-pad: var(--spacing-md);
 	// Around things that sit outside a section: a preamble note, a panel-end
 	// action row.
 	--property-section-pad-top: var(--spacing-md);

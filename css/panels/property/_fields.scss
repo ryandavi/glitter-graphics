@@ -137,7 +137,7 @@
 
 // A segmented control sitting directly in a body or a set, not in a row,
 // takes the gutter itself because nothing else supplies it.
-.property-panel :is(.property-card-body, .paint-slot-main, .property-content, .property-set) > .segmented-control {
+.property-panel .property-set > .segmented-control {
 	width: auto;
 	margin-inline: var(--property-gutter);
 }

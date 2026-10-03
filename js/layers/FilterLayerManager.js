@@ -61,7 +61,7 @@ class FilterLayerManager {
 			opacity: get('filterLayerOpacity'), lookGroup: get('filterLooksGroup'), looks: get('filterLooksPicker'),
 			currentInfo: get('filterCurrentLookInfo'), currentThumbnail: get('filterCurrentLookThumbnail'),
 			currentName: get('filterCurrentLookName'), currentBadges: get('filterCurrentLookBadges'), currentShow: get('filterCurrentLookShow'),
-			customize: get('filterCustomize'), customizeTitle: get('filterCustomizeTitle'), customizeControls: get('filterCustomizeControls'),
+			customize: get('filterCustomize'), customizeTitle: get('filterCustomizeTitle'),
 			snapshotStatus: get('filterSnapshotStatus'), snapshotActions: get('filterSnapshotActions'), renderPreview: get('filterRenderPreview')
 		};
 	}
@@ -225,7 +225,7 @@ class FilterLayerManager {
 		const visibleCategory = this.ui.lookGroup?.value || null;
 		this.ui.currentShow.hidden = visibleCategory == null || visibleCategory === entry.group;
 		this.ui.currentShow.title = `Show ${entry.label} in ${group?.label || 'the library'}`;
-		if (this.ui.customizeTitle) this.ui.customizeTitle.textContent = `${entry.label} Settings`;
+		if (this.ui.customizeTitle) this.ui.customizeTitle.textContent = `${entry.label} settings`;
 	}
 
 	showActiveLookInLibrary() {
@@ -245,16 +245,17 @@ class FilterLayerManager {
 		// stay out; select changes re-render, so they appear when relevant.
 		const fields = Object.entries(filter.fields).filter(([, field]) => !field.when || field.when(layer.filterData));
 		this.ui.customize.hidden = !fields.length;
-		this.ui.customizeControls.replaceChildren();
+		// The set keeps its title; only the rows are rebuilt.
+		this.ui.customize.querySelectorAll(':scope > :not(.property-set-title)').forEach((row) => row.remove());
 		fields.forEach(([key, field]) => {
 			let item;
 			if (field.kind === 'number') item = { kind: 'slider', id: field.controlId, slider: field.specId, revert: true, ...(field.valueScale ? { valueScale: field.valueScale } : {}) };
-			else if (field.kind === 'boolean') item = { kind: 'checkboxList', items: [{ id: field.controlId, label: field.label, checked: field.default }] };
+			else if (field.kind === 'boolean') item = { kind: 'toggle', id: field.controlId, label: field.label, checked: field.default };
 			else if (field.kind === 'color') item = { kind: 'field', id: field.controlId, label: field.label, type: 'color', value: field.default, revert: true };
-			else if (field.kind === 'select') item = { kind: 'select', id: field.controlId, label: field.label, visibleLabel: field.label, options: GlitterFilters.fieldOptions(field) };
+			else if (field.kind === 'select') item = { kind: 'select', id: field.controlId, label: field.label, options: GlitterFilters.fieldOptions(field) };
 			if (!item) return;
 			const node = buildPanelItem(item);
-			this.ui.customizeControls.appendChild(node);
+			this.ui.customize.appendChild(node);
 			const control = document.getElementById(field.controlId);
 			if (field.kind === 'number') {
 				writeSliderValue(control, layer.filterData[key]);
@@ -281,7 +282,7 @@ class FilterLayerManager {
 				control.addEventListener('change', () => apply(true));
 			}
 		});
-		syncPropertyReverts(this.ui.customizeControls);
+		syncPropertyReverts(this.ui.customize);
 	}
 
 	renderContent(layersToShow) {

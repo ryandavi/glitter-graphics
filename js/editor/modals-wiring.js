@@ -187,7 +187,7 @@ updateOrientationButtons(width, height) {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=b7d1199d',
+				externalContentUrl: 'modals/guide.html?v=49000196',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,

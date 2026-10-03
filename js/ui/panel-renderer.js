@@ -531,7 +531,8 @@ function buildPairRow(item) {
 // A labelled X/Y (or W/H) row of real number inputs - the exact structure the
 // transform panel's Position/Size use (tpl-number-pair + .number-field-pair
 // inside a .transform-pair-row), so any offset pair reads and behaves the same.
-// `reset` adds one shared revert at the row's right edge, outside the fields.
+// `revert` (the ids its manager restores) or `resetId` (a button its manager
+// binds) adds one shared revert at the row's right edge, outside the fields.
 // A revert affordance for a plain (non-slider) field row: the same `.property-revert`
 // icon button every panel uses, carrying `data-revert-for` so one delegated
 // handler in the owning manager can restore the target(s) to their live default
@@ -593,15 +594,15 @@ function buildNumberFieldPair(options) {
 	});
 	row.appendChild(pair);
 
-	if (options.reset) {
+	if (options.revert || options.resetId) {
 		const reset = document.createElement('button');
 		reset.type = 'button';
 		reset.className = 'property-revert';
-		if (options.reset.id) reset.id = options.reset.id;
-		if (options.reset.revertFor) reset.dataset.revertFor = options.reset.revertFor;
+		if (options.resetId) reset.id = options.resetId;
+		if (options.revert) reset.dataset.revertFor = options.revert;
 		reset.disabled = true;
-		reset.title = options.reset.title || 'Reset to default';
-		reset.setAttribute('aria-label', options.reset.title || `Reset ${options.label}`);
+		reset.title = options.resetTitle || `Reset ${options.label.toLowerCase()}`;
+		reset.setAttribute('aria-label', reset.title);
 		reset.appendChild(createIcon('reset'));
 		row.appendChild(reset);
 	}
@@ -626,9 +627,15 @@ function buildSegmented(entries, options = {}) {
 			button.title = entry.label;
 			button.setAttribute('aria-label', entry.label);
 		} else if (entry.contentTag) {
+			// `text` is a short stand-in for the label (B for Bold), shown in
+			// the tag that styles it.
 			const content = document.createElement(entry.contentTag);
-			content.textContent = entry.label;
+			content.textContent = entry.text || entry.label;
 			button.appendChild(content);
+			if (entry.text) {
+				button.title = entry.label;
+				button.setAttribute('aria-label', entry.label);
+			}
 		} else {
 			button.textContent = entry.label;
 		}
@@ -747,9 +754,7 @@ function setInlineProcessingStatus(status, options = {}) {
 	status.setAttribute('aria-busy', active ? 'true' : 'false');
 }
 
-// The paint-source core: source segmented control + glitter asset-info +
-// solid color row. The Gradient option and its editor stay runtime-injected
-// by installEffectGradientEditor (it finds this segmented control by id).
+// The asset chip: thumbnail, name, badges and a Change button.
 function buildAssetInfo(options) {
 	const info = tplClone('tpl-asset-info');
 	info.id = options.info;
@@ -794,10 +799,15 @@ function buildAssetInfo(options) {
 	return info;
 }
 
+// The paint source of a section: the Source row, then whatever the chosen
+// source needs (asset chip, image chip, solid color). It is the section's
+// Source set. The Gradient option and its editor stay runtime-injected by
+// installEffectGradientEditor (it finds the source's option buttons by id).
 function buildPaintSource(slot) {
 	const prefix = slot.idPrefix;
 	const assetPrefix = slot.assetIdPrefix || `${prefix}Glitter`;
 	const source = tplClone('tpl-paint-source');
+	source.classList.add('property-set', 'paint-slot-source');
 	if (slot.imageAsset) {
 		const imageInfo = buildAssetInfo({ ...slot.imageAsset, sourceMode: 'image' });
 		imageInfo.classList.remove('glitter-source-glitter');
@@ -817,29 +827,23 @@ function buildPaintSource(slot) {
 		glitterSource: true
 	});
 	source.querySelector('.property-color-row').before(assetInfo);
+	const sourceLabel = slot.sourceLabel || 'Source';
 	const sourceEntries = slot.modes.map((mode) => ({
 		id: panelRoleId(prefix, `source${panelCap(mode)}`),
 		label: slot.modeLabels?.[mode] || panelCap(mode),
 		active: mode === slot.activeMode,
 		mode
 	}));
-	const sourceChoices = slot.sourceSelect
-		? buildSelectProxy(sourceEntries, { label: `${slot.title} source` })
-		: buildSegmented(sourceEntries);
-	if (!slot.sourceSelect) sourceChoices.classList.add('choice-grid');
-	if (slot.sourceSelect) {
-		const sourceRow = buildOptionGroup(slot.sourceLabel || 'Source', [sourceChoices]);
-		sourceRow.classList.remove('is-stacked');
-		if (slot.sourceRevert) attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: slot.sourceLabel || 'Source' });
-		const hooks = sourceRow.querySelector('.property-select-hooks');
-		if (hooks) {
-			hooks.remove();
-			source.prepend(hooks);
-		}
-		source.prepend(sourceRow);
-	} else {
-		source.prepend(sourceChoices);
+	const sourceChoices = buildSelectProxy(sourceEntries, { label: `${slot.title || sourceLabel} source` });
+	const sourceRow = buildOptionGroup(sourceLabel, [sourceChoices]);
+	attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: sourceLabel });
+	// The option buttons managers bind sit beside the row, not inside it.
+	const hooks = sourceRow.querySelector('.property-select-hooks');
+	if (hooks) {
+		hooks.remove();
+		source.prepend(hooks);
 	}
+	source.prepend(sourceRow);
 	const colorRow = source.querySelector('.property-color-row');
 	colorRow.id = `${prefix}ColorRow`;
 	colorRow.dataset.role = 'solid-color-row';
@@ -848,88 +852,91 @@ function buildPaintSource(slot) {
 	colorInput.id = `${prefix}Color`;
 	colorInput.dataset.role = 'solid-color';
 	colorInput.setAttribute('value', slot.color);
-	if (slot.colorRevert) attachOptionRevert(colorRow, colorInput, { roleId: `${prefix}Color`, label: 'Solid color', defaultValue: slot.color });
+	attachOptionRevert(colorRow, colorInput, { roleId: `${prefix}Color`, label: 'Solid color', defaultValue: slot.color });
 	return source;
 }
 
 // Canonical paint opacity row. Glitter scale lives with its texture anchor and
-// offset controls in Advanced, so every paint slot keeps texture geometry in
-// one place.
-function buildPrimaryRow(prefix, ids = {}, noSlotOpacity = false) {
-	const row = tplClone('tpl-two-column');
-	row.classList.add('paint-slot-primary-row');
-	// v2 opacity model: single-paint layer types (Fill layer, canvas background)
-	// carry only a whole-layer opacity, so the slot's own opacity column is
-	// suppressed. syncPaintSlotSourceUI tolerates the missing `.paint-slot-opacity`.
-	if (!noSlotOpacity) {
-		row.appendChild(buildSliderRow({ id: ids.opacity || `${prefix}Opacity`, rowId: ids.opacityRow, slider: 'slotOpacity', extraClass: 'paint-slot-opacity', role: 'slot-opacity' }));
-	}
-	return row;
+// offset controls in Advanced, so every paint section keeps texture geometry
+// in one place.
+function buildPaintOpacityRow(slot) {
+	return buildSliderRow({
+		id: slot.ids?.opacity || `${slot.idPrefix}Opacity`, rowId: slot.ids?.opacityRow,
+		slider: 'slotOpacity', extraClass: 'paint-slot-opacity', role: 'slot-opacity'
+	});
 }
 
-// The shared "chunk" primitive: a run of built nodes wrapped in a .property-set
-// so padding and the hairline divider between chunks come from one rule
-// (.property-set { padding } / .property-set + .property-set { border-top })
-// instead of a per-container special case. A lone node that is already a
-// .property-set passes straight through.
-function wrapPropertySet(nodes) {
-	if (nodes.length === 1 && nodes[0].classList?.contains('property-set')) return nodes[0];
-	const set = panelDiv('property-set');
+// A run of built nodes in a `.property-set`. For the renderer's own sets;
+// schema sets go through buildPanelSet.
+function wrapPropertySet(nodes, classes = '') {
+	const set = addPanelClasses(panelDiv('property-set'), classes);
 	nodes.forEach((node) => set.appendChild(node));
 	return set;
 }
 
-function buildAdvancedControlGroup(label, className) {
-	const group = panelDiv(`property-set ${className}`);
-	group.setAttribute('role', 'group');
-	group.setAttribute('aria-label', label);
-	return group;
+// The glitter-only sets of a paint section's Advanced: color adjust, then
+// texture coordinates. `.glitter-source-glitter` is what
+// syncPaintSlotSourceUI hides for every other source. `owner` names a second
+// paint source (Bevel's Shade) whose sets sit in its section's Advanced.
+function buildGlitterAdvancedSets(slot, options = {}) {
+	const prefix = slot.idPrefix;
+	const ids = slot.ids || {};
+	const named = (label) => (options.owner ? `${slot.sourceLabel} ${label.toLowerCase()}` : label);
+	const buildSet = (label, className) => {
+		const set = panelDiv(`property-set glitter-source-glitter ${className}`);
+		set.setAttribute('role', 'group');
+		set.setAttribute('aria-label', named(label));
+		set.hidden = slot.activeMode !== 'glitter';
+		if (options.owner) set.dataset.paintSlotOwner = options.owner;
+		return set;
+	};
+	const colorSet = buildSet('Color adjust', 'advanced-color-adjust-group');
+	['hue', 'saturation', 'brightness'].forEach((role) => {
+		colorSet.appendChild(buildSliderRow({ id: ids[role] || `${prefix}${panelCap(role)}`, slider: role, label: options.owner ? named(FIELDS[role].label) : undefined }));
+	});
+	if (!slot.texturePosition) return [colorSet];
+
+	const textureSet = buildSet('Texture', 'advanced-texture-position-group');
+	textureSet.appendChild(buildSliderRow({
+		id: ids.scale || `${prefix}Scale`,
+		rowId: ids.scaleRow,
+		slider: 'textureScale',
+		label: named('Scale'),
+		extraClass: 'paint-slot-scale',
+		role: 'texture-scale'
+	}));
+	const anchor = buildSegmented([
+		{ id: `${prefix}TextureAnchorArtwork`, label: 'Artwork', active: true },
+		{ id: `${prefix}TextureAnchorCanvas`, label: 'Canvas' }
+	], { label: 'Texture anchor' });
+	const anchorRow = buildOptionGroup(named('Anchor'), [anchor]);
+	attachOptionRevert(anchorRow, anchor, { options: [{ active: true }, {}], roleId: `${prefix}TextureAnchor`, label: 'Texture anchor' });
+	textureSet.appendChild(anchorRow);
+	const offsetItems = [
+		{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
+		{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
+	];
+	// A section's own source uses the transform-panel number fields, with one
+	// shared revert (slot-effects.js `${prefix}ResetTexturePosition`). A second
+	// source keeps the slider pair.
+	textureSet.appendChild(options.owner
+		? buildPairRow({ label: named('Offset'), items: offsetItems })
+		: buildNumberFieldPair({ label: 'Offset', resetId: `${prefix}ResetTexturePosition`, resetTitle: 'Reset texture offset', items: offsetItems }));
+	return [colorSet, textureSet];
 }
 
-// Advanced = grouped color adjustment, then optional texture coordinates.
-function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
+// The one disclosure a section may end with, always labelled "Advanced". It
+// holds sets, as the body does. The vacancy observer hides it while every
+// set in it is hidden.
+function buildAdvancedDisclosure(spec = {}, schema) {
 	const advanced = tplClone('tpl-advanced');
-	if (options.label) advanced.querySelector('.advanced-disclosure-label').textContent = options.label;
+	if (spec.id) advanced.id = spec.id;
 	const content = advanced.querySelector('[data-advanced-content]');
-	const colorGroup = buildAdvancedControlGroup('Color adjust', 'advanced-color-adjust-group');
-	colorGroup.appendChild(buildSliderRow({ id: ids.hue || `${prefix}Hue`, slider: 'hue' }));
-	colorGroup.appendChild(buildSliderRow({ id: ids.saturation || `${prefix}Saturation`, slider: 'saturation' }));
-	colorGroup.appendChild(buildSliderRow({ id: ids.brightness || `${prefix}Brightness`, slider: 'brightness' }));
-	content.appendChild(colorGroup);
-
-	if (options.texturePosition) {
-		const textureGroup = buildAdvancedControlGroup('Texture', 'advanced-texture-position-group');
-		textureGroup.appendChild(buildSliderRow({
-			id: ids.scale || `${prefix}Scale`,
-			rowId: ids.scaleRow,
-			slider: 'textureScale',
-			label: 'Scale',
-			extraClass: 'paint-slot-scale',
-			role: 'texture-scale'
-		}));
-		const anchor = buildSegmented([
-			{ id: `${prefix}TextureAnchorArtwork`, label: 'Artwork', active: true },
-			{ id: `${prefix}TextureAnchorCanvas`, label: 'Canvas' }
-		], { label: 'Texture anchor' });
-		const anchorRow = buildOptionGroup('Anchor', [anchor]);
-		attachOptionRevert(anchorRow, anchor, { options: [{ active: true }, {}], roleId: `${prefix}TextureAnchor`, label: 'Texture anchor' });
-		textureGroup.appendChild(anchorRow);
-		const offsetItems = [
-			{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
-			{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
-		];
-		// Top-level slots use the transform-panel number fields; nested slots
-		// (Bevel Shade) keep the slider pair. Offset X+Y read as one value and share a single revert
-		// at the row's right edge (slot-effects.js `${prefix}ResetTexturePosition`).
-		textureGroup.appendChild(options.coordinateFields
-			? buildNumberFieldPair({ label: 'Offset', reset: { id: `${prefix}ResetTexturePosition`, title: 'Reset texture offset' }, items: offsetItems })
-			: buildPairRow({ label: 'Offset', items: offsetItems }));
-		content.appendChild(textureGroup);
-	}
+	(spec.sets || []).forEach((set) => content.appendChild(set instanceof Node ? set : buildPanelSet(set, schema)));
 	return advanced;
 }
 
-// Card chrome and collapse state are shared by ordinary and paint-slot cards.
+// Section chrome and collapse state are shared by ordinary and paint sections.
 function buildPropertyCardToggle(options, title) {
 	const toggle = tplClone('tpl-checkbox');
 	toggle.classList.add('effect-switch');
@@ -942,76 +949,97 @@ function buildPropertyCardToggle(options, title) {
 	return toggle;
 }
 
-function buildPropertyCard(item, schema) {
+// A section's title row and empty body.
+function buildSectionShell(spec, schema) {
 	const card = tplClone('tpl-card');
-	if (item.bare) card.classList.remove('property-card');
-	if (item.id) card.id = item.id;
-	if (item.hidden) card.hidden = true;
+	if (spec.id) card.id = spec.id;
+	if (spec.hidden) card.hidden = true;
+	Object.entries(spec.attrs || {}).forEach(([name, value]) => card.setAttribute(name, value));
 	// Every titled section collapses (initializeAdvancedDisclosures), and
 	// its open state is remembered under this key. `collapsed` starts it
 	// closed. A section with an enable switch gets no key: the switch
 	// owns its expansion.
-	if (item.title && !item.toggle && !item.nested) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${item.title}`;
-	if (item.collapsed) {
+	if (spec.title && !spec.toggle) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${spec.title}`;
+	if (spec.collapsed) {
 		card.classList.add('is-collapsed');
 		card.dataset.collapseDefault = 'closed';
 	}
-	if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
-	if (item.summaryFrom) {
-		card.dataset.summaryFrom = item.summaryFrom;
-		if (!item.moduleSummary) card.dataset.moduleSummaryType = 'control';
-	}
-	addPanelClasses(card, item.classes);
+	// `summary: 'asset'` mirrors the section's asset name into its title row.
+	if (spec.summary === 'asset') card.dataset.moduleSummaryType = 'asset';
+	addPanelClasses(card, spec.classes);
 	const title = card.querySelector('.property-card-title');
-	if (item.title) {
+	if (spec.title) {
 		const titleText = title.querySelector(':scope > span');
 		titleText.classList.add('property-card-label', 'feature-name');
-		titleText.textContent = item.title;
-		if (item.badge) titleText.appendChild(buildFeatureBadge(item.badge));
-		// A manager-driven readout beside the title (the project name on the
-		// no-selection Project card). Uses the same `.property-card-summary`
-		// primitive as the effect modules; `data-title-summary` gives its
-		// row the same flush-right treatment.
-		if (item.titleSummary) {
+		titleText.textContent = spec.title;
+		if (spec.badge) titleText.appendChild(buildFeatureBadge(spec.badge));
+		// `summary: { id, text }` is a readout its manager writes (the project
+		// name, the applied style).
+		if (spec.summary && spec.summary !== 'asset') {
 			card.dataset.titleSummary = '';
 			const summary = document.createElement('span');
 			summary.className = 'property-card-summary';
-			if (item.titleSummary.id) summary.id = item.titleSummary.id;
-			summary.textContent = item.titleSummary.text || '';
+			if (spec.summary.id) summary.id = spec.summary.id;
+			summary.textContent = spec.summary.text || '';
 			title.appendChild(summary);
 		}
-		if (item.reset) title.appendChild(buildPanelCardReset(card, item.title, item.reset));
+		if (spec.reset) title.appendChild(buildPanelCardReset(card, spec.title, spec.reset));
 	}
 	else title.remove();
-	if (item.swatch) title.appendChild(panelDiv('property-card-swatch'));
-	if (item.toggle) {
+	if (spec.swatch) title.appendChild(panelDiv('property-card-swatch'));
+	if (spec.toggle) {
 		card.dataset.effectCard = '';
 		card.classList.add('is-off');
-		const toggle = buildPropertyCardToggle(item.toggle, item.title);
+		const toggle = buildPropertyCardToggle(spec.toggle, spec.title);
 		const input = toggle.querySelector('input');
 		input.dataset.effectToggle = '';
-		card.querySelector('.property-card-title').appendChild(toggle);
+		title.appendChild(toggle);
 	}
 	card.appendChild(panelDiv('property-card-body'));
 	return card;
 }
 
-// Paint-slot contents retain their source-mode and gradient insertion hosts.
-function buildPaintSlotCard(slot, schema) {
-	const card = buildPropertyCard({
-		id: slot.id, title: slot.title, nested: slot.nested,
-		classes: 'paint-slot-card', swatch: !slot.nested,
+// `{ kind: 'section' }`: a title row, then its sets, then at most one
+// Advanced. The body holds exactly what the schema lists, in that order.
+function buildPanelSection(spec, schema) {
+	const card = buildSectionShell(spec, schema);
+	const body = card.querySelector(':scope > .property-card-body');
+	(spec.sets || []).forEach((set) => body.appendChild(buildPanelSet(set, schema)));
+	if (spec.advanced?.length) body.appendChild(buildAdvancedDisclosure({ id: spec.advancedId, sets: spec.advanced }, schema));
+	return card;
+}
+
+// A second paint source inside a paint section (Bevel's Shade): one set
+// holding its own Source row and opacity. It is a paint slot of its own for
+// the binder, so it carries the slot hooks a section does.
+function buildNestedPaintSet(slot) {
+	const set = buildPaintSource({ ...slot, nested: true });
+	set.id = slot.id;
+	set.classList.add('paint-slot-card');
+	set.dataset.slot = slot.slot;
+	set.dataset.role = 'paint-slot';
+	set.dataset.nested = '';
+	if (!slot.noSlotOpacity) set.appendChild(buildPaintOpacityRow(slot));
+	return set;
+}
+
+// `{ kind: 'paintSlot' }`: a section whose body is one order for every paint:
+// `before` sets (presets), Source, Opacity directly under it (paint first,
+// then shape), the section's own `sets`, then Advanced.
+function buildPaintSlotSection(slot, schema) {
+	const card = buildSectionShell({
+		id: slot.id, title: slot.title, attrs: slot.attrs,
+		classes: 'paint-slot-card', swatch: true,
 		toggle: slot.toggle ? { id: `${slot.idPrefix}Enabled`, label: 'Enabled' } : null
 	}, schema);
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
-	if (slot.nested) card.dataset.nested = '';
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
 	const header = card.querySelector('.property-card-title');
-	const container = card.querySelector(':scope > .property-card-body');
+	const body = card.querySelector(':scope > .property-card-body');
 	if (slot.toggle) {
-		container.id = `${slot.idPrefix}Controls`;
-	} else if (!slot.nested && slot.modes.includes('none')) {
+		body.id = `${slot.idPrefix}Controls`;
+	} else if (slot.modes.includes('none')) {
 		const toggle = buildPropertyCardToggle({ label: 'Enabled' }, slot.title);
 		toggle.classList.add('paint-slot-enable');
 		const input = toggle.querySelector('input');
@@ -1023,185 +1051,149 @@ function buildPaintSlotCard(slot, schema) {
 		});
 		header.appendChild(toggle);
 	}
-	const main = panelDiv('paint-slot-main');
-	container.appendChild(main);
-	// Every chunk of the module body is its own .property-set: Source, then the
-	// Scale/Opacity row, then any pre/afterSource/post groups — hairline-divided
-	// by the shared rule, same as Transform and the card bodies.
-	const addChunk = (node) => main.appendChild(node.classList?.contains('property-set') ? node : wrapPropertySet([node]));
-
-	(slot.pre || []).forEach((item) => addChunk(buildPanelItem(item)));
-	const source = buildPaintSource(slot);
-	// R5: Source is a property of the module, so it reads as a row - the old
-	// titled option group added a heading level for a single control.
-	source.classList.add('paint-slot-source');
-	main.appendChild(wrapPropertySet([source]));
-	(slot.afterSource || []).forEach((item) => addChunk(buildPanelItem(item)));
-	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.noSlotOpacity);
-	if (slot.primaryToggle) {
-		const toggle = tplClone('tpl-checkbox');
-		toggle.querySelector('input').id = slot.primaryToggle.id;
-		toggle.querySelector('span').textContent = slot.primaryToggle.label;
-		if (slot.primaryToggle.title) toggle.querySelector('span').title = slot.primaryToggle.title;
-		main.appendChild(wrapPropertySet([buildOptionGroup('Scale & Opacity', [toggle, primaryRow])]));
-	} else if (primaryRow.children.length) {
-		main.appendChild(wrapPropertySet([primaryRow]));
-	}
-	(slot.post || []).forEach((item) => addChunk(buildPanelItem(item)));
-	const advanced = buildAdvancedDisclosure(slot.idPrefix, { ...slot.advancedIds, ...slot.primaryIds }, {
-		texturePosition: slot.texturePosition,
-		coordinateFields: slot.coordinateFields ?? !slot.nested
+	(slot.before || []).forEach((set) => body.appendChild(buildPanelSet(set, schema)));
+	body.appendChild(buildPaintSource(slot));
+	if (!slot.noSlotOpacity) body.appendChild(wrapPropertySet([buildPaintOpacityRow(slot)], 'paint-slot-primary-row'));
+	const advanced = (slot.advanced || []).map((set) => buildPanelSet(set, schema));
+	advanced.push(...buildGlitterAdvancedSets(slot));
+	(slot.sets || []).forEach((set) => {
+		if (!set.paint) {
+			body.appendChild(buildPanelSet(set, schema));
+			return;
+		}
+		body.appendChild(buildNestedPaintSet(set.paint));
+		advanced.push(...buildGlitterAdvancedSets(set.paint, { owner: set.paint.id }));
 	});
-	if (slot.advancedStyle === 'flat') {
-		const flat = panelDiv('paint-slot-advanced-flat glitter-source-glitter');
-		flat.append(...advanced.querySelector('[data-advanced-content]').children);
-		container.appendChild(flat);
-	} else {
-		container.appendChild(advanced);
-	}
-	const sourceAdvancedAnchor = advanced.parentNode === container ? advanced : null;
-	(slot.sourceAdvanced || []).forEach((item) => container.insertBefore(buildPanelItem(item), sourceAdvancedAnchor));
+	body.appendChild(buildAdvancedDisclosure({ sets: advanced }, schema));
 	return card;
 }
 
-function panelItemIsAdvanced(item) {
-	return item?.advanced ?? Boolean(item?.slider && FIELDS[item.slider]?.advanced);
-}
-
-function splitAdvancedPanelItems(items = []) {
-	const regular = [];
-	const advanced = [];
-	items.forEach((item) => {
-		if (item.kind === 'advanced' || panelItemIsAdvanced(item)) {
-			(item.kind === 'advanced' ? regular : advanced).push(item);
+// A set of buttons: `{ actions: [...] }` in a section's `sets` or a group's
+// `actions`.
+function buildActionSet(set) {
+	const row = addPanelClasses(panelDiv('property-set property-actions'), set.classes);
+	if (set.id) row.id = set.id;
+	if (set.hidden) row.hidden = true;
+	set.actions.forEach((action) => {
+		const button = document.createElement('button');
+		button.type = 'button';
+		// A panel body is the content layer: its buttons are flat, and
+		// `primary` marks the one main action of a form.
+		button.className = action.primary ? 'btn-flat primary' : 'btn-flat';
+		button.id = action.id;
+		if (action.icon) button.appendChild(createIcon(action.icon));
+		const name = document.createElement('span');
+		name.className = 'name';
+		name.textContent = action.label;
+		button.appendChild(name);
+		if (action.badge) {
+			button.appendChild(buildFeatureBadge(action.badge));
+		}
+		if (action.title) button.title = action.title;
+		if (action.disabled) button.disabled = true;
+		// `menu: true` → the button opens a choice menu its owner fills
+		// (setupMenuPopover). It is built inside its popover root, so
+		// opening the menu never re-parents the button.
+		if (action.menu) {
+			const menu = panelDiv('app-menu app-menu-popover');
+			const panel = panelDiv('app-menu-panel');
+			panel.hidden = true;
+			button.setAttribute('aria-haspopup', 'menu');
+			button.setAttribute('aria-expanded', 'false');
+			menu.append(button, panel);
+			row.appendChild(menu);
 			return;
 		}
-		if (item.kind === 'set' && item.items?.length) {
-			const split = splitAdvancedPanelItems(item.items);
-			if (split.regular.length) regular.push({ ...item, items: split.regular });
-			if (split.advanced.length) advanced.push({ ...item, items: split.advanced });
-			return;
-		}
-		regular.push(item);
+		row.appendChild(button);
 	});
-	return { regular, advanced };
+	return row;
 }
 
+// A set: rows that belong together, spaced apart from the next set. It is
+// `{ rows }`, or `{ actions }` for a set of buttons. `label` names the run for
+// assistive tech and is not drawn; `title` (or a manager-written `titleId`)
+// draws a quiet heading, for a set that needs one inside its section.
+function buildPanelSet(set, schema) {
+	if (set.actions) return buildActionSet(set);
+	const node = addPanelClasses(panelDiv('property-set'), set.classes);
+	if (set.id) node.id = set.id;
+	if (set.hidden) node.hidden = true;
+	Object.entries(set.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
+	if (set.title || set.label) {
+		node.setAttribute('role', 'group');
+		node.setAttribute('aria-label', set.title || set.label);
+	}
+	if (set.title || set.titleId) {
+		const title = panelDiv('property-set-title');
+		if (set.titleId) title.id = set.titleId;
+		title.textContent = set.title || '';
+		node.appendChild(title);
+	}
+	(set.rows || []).forEach((row) => node.appendChild(buildPanelItem(row, schema)));
+	return node;
+}
+
+// Lays a built choice control out as a row. `revert: true` restores the
+// schema's default option; a string is the id of a manager-owned revert.
+function finishChoiceRow(item, control, revertTarget) {
+	const row = buildOptionGroup(item.label, [control], item.rowClasses, item.hint);
+	if (item.rowId) row.id = item.rowId;
+	if (item.hidden) row.hidden = true;
+	if (item.stacked) row.classList.add('is-stacked');
+	if (item.revert === true) attachOptionRevert(row, revertTarget, { options: item.options, roleId: item.id || item.options?.[0]?.id || item.label, label: item.label });
+	else if (item.revert) row.appendChild(buildFieldRevert(item.revert));
+	return row;
+}
+
+// One schema item: a section kind, or a row kind inside a set. On every row,
+// `label` is the visible text and `ariaLabel` the accessible name where the
+// two must differ; a choice control with no `label` fills its set's width.
 function buildPanelItem(item, schema) {
 	switch (item.kind) {
-		case 'card': {
-			const card = buildPropertyCard(item, schema);
-			const body = card.querySelector(':scope > .property-card-body');
-			const trailingChildren = [];
-			const bodyChildren = [];
-			const splitItems = splitAdvancedPanelItems(item.items);
-			const renderedItems = splitItems.advanced.length
-				? [...splitItems.regular, { kind: 'advanced', label: 'More', classes: 'schema-more-disclosure', items: splitItems.advanced }]
-				: splitItems.regular;
-			renderedItems.forEach((child) => {
-				const node = buildPanelItem(child, schema);
-				// Disclosures and actions keep their own layout inside the body.
-				if (node.classList?.contains('advanced-disclosure') || node.classList?.contains('property-actions')) trailingChildren.push(node);
-				else bodyChildren.push(node);
-			});
-			// A card body carries its content in a .property-set so vertical padding
-			// and inter-set dividers come from the shared primitive, not a
-			// per-container special case. Bare cards stay edge-to-edge; a body that
-			// is already all sets (kind:'set') is left as-is.
-			if (bodyChildren.length) {
-				// `flatBody`: the body is a hairline-divided run of mixed blocks
-				// (the document-size card: an Operation set + two mode `content`
-				// wrappers), like the Transform grid — do not wrap it in one set.
-				if (item.flatBody || item.bare || bodyChildren.every((node) => node.classList.contains('property-set'))) {
-					bodyChildren.forEach((node) => body.appendChild(node));
-				} else {
-					body.appendChild(wrapPropertySet(bodyChildren));
-				}
-			}
-			// Actions precede disclosures, matching the shared card's established order.
-			trailingChildren.sort((a, b) => Number(a.classList.contains('advanced-disclosure')) - Number(b.classList.contains('advanced-disclosure')));
-			body.append(...trailingChildren);
-			return card;
+		case 'section':
+			return buildPanelSection(item, schema);
+		case 'paintSlot':
+			return buildPaintSlotSection(item, schema);
+		// The shared transform panel (renderTransformPanels fills it).
+		case 'transform': {
+			const host = panelDiv('transform-panel-host');
+			host.id = `${schema.prefix}TransformPanelHost`;
+			return host;
 		}
-		case 'content': {
-			const content = addPanelClasses(panelDiv('property-content'), item.classes);
-			if (item.id) content.id = item.id;
-			if (item.hidden) content.hidden = true;
-			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
-			return content;
+		// Where another schema's section mounts (the document-size form).
+		case 'mount': {
+			const mount = document.createElement('div');
+			mount.id = item.id;
+			return mount;
 		}
-		// A nested L1 group (title + `.panel-group-content > .panel-group-blocks`),
-		// the same primitive `renderPanelSection` uses at the top level — so cards
-		// inside it get the ordinary `.property-card` treatment.
-		case 'group':
-			return buildPanelGroup(item, schema);
-		// R4. A boolean reads as a labelled switch on its own row, not as a
-		// full-width uppercase pill - the pill made every toggle shout louder
-		// than the properties around it.
-		case 'checkboxList': {
-			const content = panelDiv('property-toggle-list');
-			if (item.label) {
-				const label = panelDiv('property-group-label');
-				label.textContent = item.label;
-				content.appendChild(label);
-			}
-			item.items.forEach((entry) => {
-				const row = tplClone('tpl-toggle-row');
-				const input = row.querySelector('input');
-				input.id = entry.id;
-				input.checked = Boolean(entry.checked);
-				const label = row.querySelector('.property-label');
-				label.textContent = entry.label;
-				if (entry.title) label.title = entry.title;
-				// The redesign toggle grid reserves a revert column. `revert: true`
-				// → a static-default revert the shared handler owns (default = the
-				// item's initial `checked`); a string → a manager-owned target id.
-				if (entry.revert === true) row.appendChild(buildFieldRevert(entry.id, Boolean(entry.checked)));
-				else if (entry.revert) row.appendChild(buildFieldRevert(entry.revert));
-				content.appendChild(row);
-			});
-			return content;
-		}
-		case 'actionRow': {
-			const row = addPanelClasses(panelDiv('property-set property-actions'), item.classes);
-			if (item.id) row.id = item.id;
+		// R4. A boolean reads as a labelled switch on its own row.
+		case 'toggle': {
+			const row = tplClone('tpl-toggle-row');
+			if (item.rowId) row.id = item.rowId;
 			if (item.hidden) row.hidden = true;
-			item.actions.forEach((action) => {
-				const button = document.createElement('button');
-				button.type = 'button';
-				// A panel body is the content layer: its buttons are flat, and
-				// `primary` marks the one main action of a form.
-				button.className = action.primary ? 'btn-flat primary' : 'btn-flat';
-				button.id = action.id;
-				if (action.icon) button.appendChild(createIcon(action.icon));
-				const name = document.createElement('span');
-				name.className = 'name';
-				name.textContent = action.label;
-				button.appendChild(name);
-				if (action.badge) {
-					button.appendChild(buildFeatureBadge(action.badge));
-				}
-				if (action.title) button.title = action.title;
-				if (action.disabled) button.disabled = true;
-				// `menu: true` → the button opens a choice menu its owner fills
-				// (setupMenuPopover). It is built inside its popover root, so
-				// opening the menu never re-parents the button.
-				if (action.menu) {
-					const menu = panelDiv('app-menu app-menu-popover');
-					const panel = panelDiv('app-menu-panel');
-					panel.hidden = true;
-					button.setAttribute('aria-haspopup', 'menu');
-					button.setAttribute('aria-expanded', 'false');
-					menu.append(button, panel);
-					row.appendChild(menu);
-					return;
-				}
-				row.appendChild(button);
-			});
+			const input = row.querySelector('input');
+			input.id = item.id;
+			input.checked = Boolean(item.checked);
+			const label = row.querySelector('.property-label');
+			label.textContent = item.label;
+			if (item.title) label.title = item.title;
+			// `revert: true` → a static-default revert the shared handler owns
+			// (default = the item's initial `checked`); a string → a
+			// manager-owned target id.
+			if (item.revert === true) row.appendChild(buildFieldRevert(item.id, Boolean(item.checked)));
+			else if (item.revert) row.appendChild(buildFieldRevert(item.revert));
 			return row;
 		}
-		case 'paintSlot':
-			return buildPaintSlotCard(item, schema);
+		// R7. Helper text, a status line or an empty state. It sits in the set
+		// of the row it explains.
+		case 'note': {
+			const note = addPanelClasses(panelDiv('property-note'), item.classes);
+			if (item.id) note.id = item.id;
+			if (item.hidden) note.hidden = true;
+			if (item.text) note.textContent = item.text;
+			Object.entries(item.attrs || {}).forEach(([name, value]) => note.setAttribute(name, value));
+			return note;
+		}
 		case 'assetInfo':
 			return buildAssetInfo(item);
 		case 'slider':
@@ -1210,26 +1202,6 @@ function buildPanelItem(item, schema) {
 			return buildPairRow(item);
 		case 'numberPair':
 			return buildNumberFieldPair(item);
-		case 'twoColumn': {
-			const row = tplClone('tpl-two-column');
-			item.items.forEach((child) => row.appendChild(buildPanelItem(child, schema)));
-			return row;
-		}
-		// A run of rows that belong together, spaced apart from the next run.
-		// `label` names the run for assistive tech; it is not drawn, because a
-		// section's title already carries the hierarchy.
-		case 'set': {
-			const set = addPanelClasses(panelDiv('property-set'), item.classes);
-			if (item.id) set.id = item.id;
-			if (item.hidden) set.hidden = true;
-			Object.entries(item.attrs || {}).forEach(([name, value]) => set.setAttribute(name, value));
-			if (item.label) {
-				set.setAttribute('role', 'group');
-				set.setAttribute('aria-label', item.label);
-			}
-			(item.items || []).forEach((child) => set.appendChild(buildPanelItem(child, schema)));
-			return set;
-		}
 		// A single labelled input row: label | control [| unit]. `type` picks the
 		// input (text/number/color/…); `unit` wraps it in `.input-unit` with a
 		// suffix. Ids/ranges are still driven imperatively by the owning manager
@@ -1284,7 +1256,8 @@ function buildPanelItem(item, schema) {
 			} else {
 				row.appendChild(input);
 			}
-			if (item.revert) row.appendChild(buildFieldRevert(item.revert));
+			if (item.revert === true) row.appendChild(buildFieldRevert(item.id, item.value ?? ''));
+			else if (item.revert) row.appendChild(buildFieldRevert(item.revert));
 			return row;
 		}
 		// A label paired with one arbitrary built control, using the same
@@ -1298,30 +1271,19 @@ function buildPanelItem(item, schema) {
 			if (item.revert) row.appendChild(buildFieldRevert(item.revert));
 			return row;
 		}
-		case 'optionGroup': {
-			const segmented = buildSegmented(item.options);
-			let child = segmented;
-			if (item.glitterSource) {
-				child = panelDiv('glitter-source');
-				child.appendChild(segmented);
-			}
-			return buildOptionGroup(item.label, [child], item.rowClasses);
-		}
+		// A choice among a few options. `display: 'select'` shows the same
+		// option buttons as a dropdown (managers still bind the buttons).
 		case 'segmented': {
-			const group = buildSegmented(item.options, item);
-			if (!item.visibleLabel) return group;
-			const row = buildOptionGroup(item.visibleLabel, [group], item.rowClasses);
-			if (item.stacked === false) row.classList.remove('is-stacked');
-			else if (item.stacked === true) row.classList.add('is-stacked');
-			if (item.revert) attachOptionRevert(row, group, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
-			if (item.revertFor) row.appendChild(buildFieldRevert(item.revertFor));
-			return row;
+			const control = item.display === 'select'
+				? buildSelectProxy(item.options, { label: item.ariaLabel || item.label })
+				: buildSegmented(item.options, { id: item.id, classes: item.classes, label: item.ariaLabel || item.label });
+			return item.label ? finishChoiceRow(item, control, control) : control;
 		}
 		case 'select': {
 			const select = document.createElement('select');
 			select.id = item.id;
 			addPanelClasses(select, item.classes);
-			select.setAttribute('aria-label', item.label || item.visibleLabel);
+			select.setAttribute('aria-label', item.ariaLabel || item.label);
 			const optgroups = new Map();
 			item.options.forEach((entry) => {
 				const option = document.createElement('option');
@@ -1341,7 +1303,7 @@ function buildPanelItem(item, schema) {
 				}
 				parent.appendChild(option);
 			});
-			if (!item.visibleLabel) return select;
+			if (!item.label) return select;
 			// `stepper`: compact icon-only prev/next buttons flanking the select
 			// (prev on the left, next on the right) so cycling this field's options
 			// reads as one control, not a separate action row below it.
@@ -1361,12 +1323,12 @@ function buildPanelItem(item, schema) {
 				if (item.stepper.prev) control.appendChild(buildStepButton(item.stepper.prev));
 				control.appendChild(select);
 				if (item.stepper.next) control.appendChild(buildStepButton(item.stepper.next));
+				const row = finishChoiceRow(item, control, select);
+				// A stepper is wider than a choice control, but shares the label's line.
+				if (!item.stacked) row.classList.remove('is-stacked');
+				return row;
 			}
-			const row = buildOptionGroup(item.visibleLabel, [control], item.rowClasses, item.hint);
-			if (item.stacked === false) row.classList.remove('is-stacked');
-			else if (item.stacked === true) row.classList.add('is-stacked');
-			if (item.revert) attachOptionRevert(row, select, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
-			return row;
+			return finishChoiceRow(item, control, select);
 		}
 		case 'textarea': {
 			const textarea = document.createElement('textarea');
@@ -1385,7 +1347,7 @@ function buildPanelItem(item, schema) {
 			group.id = item.id;
 			addPanelClasses(group, item.classes);
 			group.setAttribute('role', 'radiogroup');
-			group.setAttribute('aria-label', item.label);
+			group.setAttribute('aria-label', item.ariaLabel || item.label);
 			item.options.forEach((entry) => {
 				const label = document.createElement('label');
 				label.className = 'segmented-option';
@@ -1399,50 +1361,20 @@ function buildPanelItem(item, schema) {
 				label.append(input, text);
 				group.appendChild(label);
 			});
-			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [group]) : group;
+			return item.label ? buildOptionGroup(item.label, [group]) : group;
 		}
-		case 'advanced': {
-			const advanced = tplClone('tpl-advanced');
-			advanced.classList.remove('glitter-source-glitter');
-			if (item.id) advanced.id = item.id;
-			if (item.hidden) advanced.hidden = true;
-			Object.entries(item.attrs || {}).forEach(([name, value]) => advanced.setAttribute(name, value));
-			addPanelClasses(advanced, item.classes);
-			advanced.querySelector('.advanced-disclosure-label').textContent = item.label || 'Advanced';
-			const content = advanced.querySelector('[data-advanced-content]');
-			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
-			return advanced;
-		}
-		case 'colorAdjust':
-			return buildAdvancedDisclosure(item.prefix || schema.prefix, item.ids, { label: item.label });
-		case 'stackRow': {
-			const row = tplClone('tpl-two-column');
-			row.classList.add('effect-stack-row');
-			item.groups.forEach((group) => {
-				const control = group.control === 'select'
-					? buildSelectProxy(group.options, { label: group.label })
-					: buildSegmented(group.options);
-				const optionRow = buildOptionGroup(group.label, [control], '', group.hint);
-				optionRow.dataset.stackGroup = group.label;
-				if (group.control === 'select') optionRow.classList.remove('is-stacked');
-				if (item.revert || group.revert) attachOptionRevert(optionRow, control, { options: group.options, roleId: group.options[0]?.id || group.label, label: group.label });
-				row.appendChild(optionRow);
-			});
-			return row;
-		}
+		// A control its manager fills (a preset grid host, the symbol grid, the
+		// brush dynamics). A row-level item: it never carries structure classes.
 		case 'host': {
 			const node = document.createElement(item.tag || 'div');
 			if (item.id) node.id = item.id;
 			if (item.classes) node.className = item.classes;
 			if (item.text) node.textContent = item.text;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
-			if (!item.wrapInContent) return node;
-			const wrap = panelDiv('property-content');
-			wrap.appendChild(node);
-			return wrap;
+			return node;
 		}
-		case 'sparkleControls':
-			return buildSparkleControls(item);
+		case 'sparkleGlyphs':
+			return buildSparkleGlyphChips(item);
 		case 'presetGrid': {
 			const grid = tplClone('tpl-preset-grid');
 			if (item.id) grid.id = item.id;
@@ -1452,51 +1384,15 @@ function buildPanelItem(item, schema) {
 		}
 		case 'processingStatus':
 			return buildProcessingStatus(item);
-		case 'transformHost': {
-			const host = panelDiv('transform-panel-host');
-			host.id = `${schema.prefix}TransformPanelHost`;
-			return host;
-		}
 		default:
 			throw new Error(`panel-renderer: unknown item kind "${item.kind}"`);
 	}
 }
 
-// The Sparkles card body, generated from the sparkles registries at render
-// time (glyphs, emitter/style/behavior options, FIELDS specs). part
-// 'presets' is the preset grid that leads the card; part 'customize' holds
-// every other control (presets first, controls second). Control ids are the
-// slot's panelPrefix + the suffixes the binder reads
-// (ui/paint-slot-controls.js). Sets marked data-sparkle-emitter show only for
-// the emitters it lists.
-function buildSparkleControls(item) {
-	const p = item.idPrefix;
-	if (item.part === 'presets') {
-		return buildPanelItem({ kind: 'set', label: 'Presets', items: [
-			{ kind: 'presetGrid', id: `${p}Presets`, label: 'Sparkle presets', classes: 'property-inset sparkle-presets' }
-		] });
-	}
-	const optionEntries = (name, suffix) => getOptions(name).map((option) => ({
-		id: `${p}${suffix}${panelCap(option.value)}`, label: option.label, value: option.value
-	}));
-	const customize = tplClone('tpl-advanced');
-	// Customize applies to every paint source, not just glitter.
-	customize.classList.remove('glitter-source-glitter');
-	customize.classList.add('sparkle-customize');
-	customize.dataset.sparkleControls = p;
-	customize.querySelector('.advanced-disclosure-label').textContent = 'Customize';
-	const content = customize.querySelector('[data-advanced-content]');
-	content.appendChild(buildPanelItem({ kind: 'set', label: 'Placement', items: [
-		{ kind: 'stackRow', groups: [
-			{ label: 'Place', options: optionEntries('sparkleEmitter', 'Emitter'), hint: 'Scatter over the layer, trace its edges, or put stars on its bright highlights (Kira Kira)' },
-			{ label: 'Layering', options: [
-				{ id: `${p}OrderBehind`, label: 'Behind', value: 'behind' },
-				{ id: `${p}OrderFront`, label: 'In front', value: 'front' }
-			] }
-		] }
-	] }));
-
-	const shapes = buildPanelItem({ kind: 'set', label: 'Shapes', classes: 'sparkle-glyph-set', attrs: { 'data-sparkle-emitter': 'inside edges' } });
+// The pickable sparkle shapes, from the sparkles registry at render time.
+// Chip ids are the slot's panelPrefix + the suffix the binder reads
+// (ui/paint-slot-controls.js).
+function buildSparkleGlyphChips(item) {
 	const chips = panelDiv('sparkle-glyph-chips');
 	chips.setAttribute('role', 'group');
 	chips.setAttribute('aria-label', 'Sparkle shapes');
@@ -1504,7 +1400,7 @@ function buildSparkleControls(item) {
 		const chip = document.createElement('button');
 		chip.type = 'button';
 		chip.className = 'choice-card sparkle-glyph-chip';
-		chip.id = `${p}Glyph${panelCap(glyph.id)}`;
+		chip.id = `${item.idPrefix}Glyph${panelCap(glyph.id)}`;
 		chip.title = glyph.label;
 		chip.setAttribute('aria-label', glyph.label);
 		chip.setAttribute('aria-pressed', 'false');
@@ -1516,28 +1412,7 @@ function buildSparkleControls(item) {
 		chip.appendChild(icon);
 		chips.appendChild(chip);
 	});
-	shapes.appendChild(chips);
-	content.appendChild(shapes);
-
-	content.appendChild(buildPanelItem({ kind: 'set', label: 'Highlights', attrs: { 'data-sparkle-emitter': 'highlights' }, items: [
-		{ kind: 'slider', id: `${p}Sensitivity`, slider: 'sparkleSensitivity', title: 'Higher finds more, dimmer highlights. It never brightens the image.' },
-		{ kind: 'slider', id: `${p}Spacing`, slider: 'sparkleSpacing', title: 'Minimum distance between stars' },
-		{ kind: 'stackRow', groups: [{ label: 'Style', options: optionEntries('sparkleStyle', 'Style') }] },
-		{ kind: 'checkboxList', items: [{ id: `${p}Halo`, label: 'Halo', title: 'A soft glow under the strongest stars' }] }
-	] }));
-	content.appendChild(buildPanelItem({ kind: 'set', label: 'Particles', items: [
-		{ kind: 'slider', id: `${p}Count`, slider: 'sparkleCount' },
-		{ kind: 'slider', id: `${p}SizeMin`, slider: 'sparkleSizeMin' },
-		{ kind: 'slider', id: `${p}SizeMax`, slider: 'sparkleSizeMax' }
-	] }));
-	content.appendChild(buildPanelItem({ kind: 'set', label: 'Motion', items: [
-		{ kind: 'stackRow', groups: [{ label: 'Motion', control: 'select', options: optionEntries('sparkleBehavior', 'Behavior') }] },
-		{ kind: 'slider', id: `${p}Cycle`, slider: 'sparkleCycle', title: 'Length of one sparkle cycle; each sparkle blinks one to three times per cycle' },
-		{ kind: 'actionRow', actions: [
-			{ id: `${p}Shuffle`, label: 'Shuffle', title: 'Place the sparkles somewhere new' }
-		] }
-	] }));
-	return customize;
+	return chips;
 }
 
 // R5: a module row states what it is currently set to, so a collapsed effect
@@ -1571,17 +1446,6 @@ function readModuleSummary(card) {
 	// whether collapsed or open, the same way a None paint slot reads "None".
 	const toggle = card.querySelector(':scope > .property-card-title input[data-effect-toggle]');
 	if (toggle && !toggle.checked) return 'Off';
-	// `data-summary-from`: mirror one named control's current label (a segmented
-	// control's active option, or a <select>'s chosen option) — the Palette
-	// card's Posterize/Dither mode, etc.
-	if (card.dataset.summaryFrom) {
-		const src = document.getElementById(card.dataset.summaryFrom);
-		if (!src) return '';
-		const active = src.querySelector?.('.segmented-option.active');
-		if (active) return active.textContent.trim();
-		if (src.tagName === 'SELECT') return src.options[src.selectedIndex]?.text || '';
-		return '';
-	}
 	const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
 	const parts = [];
 	if (mode === 'none') return 'None';
@@ -1744,16 +1608,6 @@ function resetPanelCardStates() {
 	});
 }
 
-// Schema item kinds that render as a section of their own.
-const PANEL_SECTION_KINDS = new Set(['card', 'paintSlot', 'transformHost', 'host']);
-
-// A group's label earns its line only where it names two or more sections;
-// over one it would repeat that section's title. Groups never collapse: a
-// collapsed group would hide whether anything inside it is on.
-function panelGroupHasLabel(group) {
-	return group.items.filter((item) => PANEL_SECTION_KINDS.has(item.kind) && !item.bare).length >= 2;
-}
-
 // Rule D, tier 2: a card-scoped reset at the right edge of the card's title.
 // It holds no defaults of its own: it replays every lit revert on the rows
 // showing in its card, so it is inert exactly when all of them are.
@@ -1781,42 +1635,27 @@ function buildPanelCardReset(node, title, spec) {
 	return button;
 }
 
+// A group: a label, its sections, then an optional note and the buttons it
+// ends with. Its children sit directly in it, so a row has one wrapper chain
+// in every panel.
 function buildPanelGroup(group, schema) {
 	const node = tplClone('tpl-group');
 	addPanelClasses(node, group.classes);
-	const label = node.querySelector('.property-group-label');
-	if (group.static) {
-		label.remove();
-		node.dataset.panelGroup = group.title;
-		group.items.forEach((item) => {
-			const child = buildPanelItem(item, schema);
-			if (child.classList?.contains('property-actions')) child.classList.add('section-actions');
-			node.appendChild(child);
-		});
-		return node;
-	}
-	label.textContent = group.title;
-	node.classList.toggle('has-group-label', panelGroupHasLabel(group));
 	node.dataset.panelGroup = group.title;
-	const content = panelDiv('panel-group-content');
-	const blocks = panelDiv('panel-group-blocks');
-	const actions = [];
-	group.items.forEach((item) => {
-		const child = buildPanelItem(item, schema);
-		if (child.classList?.contains('property-actions')) {
-			// A group-level action row is a panel-end action set — no card, no
-			// surface, no divider above it. Card footers (an actionRow inside a
-			// card's items) never reach here.
-			child.classList.add('section-actions');
-			actions.push(child);
-		} else blocks.appendChild(child);
+	const label = node.querySelector('.property-group-label');
+	// A sticky band is chrome around the scrolling groups, not a category of
+	// sections, so it carries no label. Every other group is labelled, and
+	// none collapses: a collapsed group would hide whether anything inside it
+	// is on.
+	if (group.region === 'header' || group.region === 'footer') label.remove();
+	else label.textContent = group.title;
+	(group.sections || []).forEach((section) => node.appendChild(buildPanelItem(section, schema)));
+	if (group.note) node.appendChild(buildPanelItem({ kind: 'note', ...(typeof group.note === 'string' ? { text: group.note } : group.note) }, schema));
+	(group.actions || []).forEach((set) => {
+		const actions = buildActionSet(set);
+		actions.classList.add('section-actions');
+		node.appendChild(actions);
 	});
-	// Keep the block host even when the schema starts empty. Some groups (for
-	// example Appearance) adopt controls after the transform panel is rendered.
-	// A stable host lets that composition work without special-case placement.
-	content.appendChild(blocks);
-	actions.forEach((action) => content.appendChild(action));
-	node.appendChild(content);
 	return node;
 }
 
@@ -1830,12 +1669,11 @@ function finishPanelMarkup(root) {
 // by setting `hidden` and write values straight into the DOM, so one observer
 // keeps `.is-vacant` in step instead of every manager remembering to.
 const PANEL_VACANCY_CONTAINERS = [
-	'.property-card:not([data-effect-card])', '.property-card-body', '.paint-slot-main',
-	'.property-pair-group', '.property-toggle-list', '.property-set', '.property-actions',
-	'.property-content', '.property-meta-cell'
+	'.property-card:not([data-effect-card])', '.property-card-body', '.advanced-disclosure-content',
+	'.property-pair-group', '.property-set', '.property-actions', '.property-meta-cell'
 ].join(', ');
 // A container's own heading does not count as content.
-const PANEL_VACANCY_CHROME = '.property-card-title, .property-group-label';
+const PANEL_VACANCY_CHROME = '.property-card-title, .property-group-label, .property-set-title';
 
 function syncPanelVacancy(container) {
 	let occupied;
@@ -1848,7 +1686,8 @@ function syncPanelVacancy(container) {
 			occupied = Boolean(container.querySelector(':scope > .property-meta-cell > .property-value:not(:empty)'));
 		}
 	}
-	container.classList.toggle('is-vacant', !occupied);
+	// A disclosure with nothing to disclose goes with its content.
+	(container.matches('.advanced-disclosure-content') ? container.parentElement : container).classList.toggle('is-vacant', !occupied);
 }
 
 function initializePanelVacancy() {
@@ -1882,19 +1721,20 @@ function initializePanelVacancy() {
 	}).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden'] });
 }
 
-// Render one or more `.settings-subsection` blocks from a schema. `subsections`
-// lets a panel carry several keyed blocks (the no-selection panel toggles
-// #noLayerDefaultGroups vs #multiLayerSelectionGroup) whose entries are either
-// `groups` (buildPanelGroup) or bare `items` (buildPanelItem).
+// Render one or more `.settings-subsection` blocks from a schema.
+// `subsections` lets a panel carry several keyed blocks of groups (the
+// no-selection panel toggles #noLayerDefaultGroups vs
+// #multiLayerSelectionGroup). A form (the New Canvas modal) lists `sections`
+// with no group: a modal body is one column of sections.
 function renderPanelSubsections(schema, parent) {
-	const defs = schema.subsections || [{ groups: schema.groups }];
+	const defs = schema.subsections || [{ groups: schema.groups, sections: schema.sections }];
 	defs.forEach((def) => {
 		const block = panelDiv('settings-subsection');
 		if (def.id) block.id = def.id;
 		addPanelClasses(block, def.classes);
 		if (def.hidden) block.hidden = true;
 		(def.groups || []).forEach((group) => block.appendChild(buildPanelGroup(group, schema)));
-		(def.items || []).forEach((item) => block.appendChild(buildPanelItem(item, schema)));
+		(def.sections || []).forEach((section) => block.appendChild(buildPanelItem(section, schema)));
 		parent.appendChild(block);
 	});
 }
@@ -1922,36 +1762,15 @@ function renderBarePanelSection(schema) {
 	finishPanelMarkup(host);
 }
 
-// A schema fragment with no section of its own: builds one self-contained
-// `.property-card` (id = fragmentId) and mounts it into fragmentHost. The
-// document-size form uses this so ONE card definition serves both the
-// no-selection Size slot and Canvas Properties (managers relocate the single
-// node between the two hosts at runtime; it is never rendered twice).
+// A schema that is one section mounted into another schema's `mount` host
+// (`mountInto`). The document-size form uses this so ONE section serves both
+// the no-selection Size slot and Canvas Properties (managers relocate the
+// single node between the two hosts at runtime; it is never rendered twice).
 function renderPanelFragment(schema) {
-	if (document.getElementById(schema.fragmentId)) return;
-	const mount = document.getElementById(schema.fragmentHost);
+	if (document.getElementById(schema.content.id)) return;
+	const mount = document.getElementById(schema.mountInto);
 	if (!mount) return;
-	// Built through the SAME `buildPanelItem('card')` path as every schema card,
-	// so trailing action rows become edge-to-edge card footers, the body wraps
-	// its property-sets exactly as elsewhere, etc. — no bespoke card assembly.
-	const card = buildPanelItem({
-		kind: 'card',
-		id: schema.fragmentId,
-		title: schema.fragmentCard?.title,
-		moduleSummary: schema.fragmentCard?.moduleSummary,
-		flatBody: true,
-		classes: `${schema.fragmentClasses || ''}`.trim(),
-		items: schema.items || []
-	}, schema);
-	if (schema.fragmentCard?.summaryId) {
-		card.dataset.titleSummary = '';
-		const title = card.querySelector(':scope > .property-card-title');
-		const summary = document.createElement('span');
-		summary.className = 'property-card-summary';
-		summary.id = schema.fragmentCard.summaryId;
-		summary.textContent = schema.fragmentCard.summaryText || '';
-		title.appendChild(summary);
-	}
+	const card = buildPanelItem(schema.content, schema);
 	mount.appendChild(card);
 	finishPanelMarkup(card);
 }
@@ -2009,20 +1828,20 @@ function renderPanelSection(schema) {
 	const isActions = (group) => group.title === 'Actions';
 	schema.groups.filter((group) => !isActions(group)).forEach((group) => placeGroup(group, buildPanelGroup(group, schema)));
 	if (schema.effects?.length) {
-		const items = [...schema.effects];
+		const effects = { title: 'Effects', sections: schema.effects };
 		// Reset Effects ends the Effects group, and only when there is more
 		// than one effect to reset.
 		if (schema.effectsReset && schema.effects.length >= 2) {
-			items.push({ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
-				{ id: schema.effectsReset.id, label: 'Reset Effects', title: schema.effectsReset.title }
-			] });
+			effects.actions = [{ classes: 'layer-effects-actions', actions: [
+				{ id: schema.effectsReset.id, label: 'Reset effects', title: schema.effectsReset.title }
+			] }];
 		}
-		const stack = buildPanelGroup({ title: 'Effects', items }, schema);
+		const stack = buildPanelGroup(effects, schema);
 		stack.classList.add('effects-stack');
 		subsection.appendChild(stack);
 	}
 	if (schema.motion?.length) {
-		subsection.appendChild(buildPanelGroup({ title: 'Motion', items: schema.motion }, schema));
+		subsection.appendChild(buildPanelGroup({ title: 'Motion', sections: schema.motion }, schema));
 	}
 	schema.groups.filter(isActions).forEach((group) => placeGroup(group, buildPanelGroup(group, schema)));
 	if (hasStickyRegions) {
@@ -2049,7 +1868,7 @@ function renderPanelSection(schema) {
 // earlier section schema — already exist.
 function renderPanelSections(editor) {
 	Object.values(PANEL_SCHEMAS).forEach((schema) => {
-		if (schema.fragment) renderPanelFragment(schema);
+		if (schema.mountInto) renderPanelFragment(schema);
 		else renderPanelSection(schema);
 		(schema.auxiliarySections || []).forEach((section) => renderPanelSection(section));
 	});

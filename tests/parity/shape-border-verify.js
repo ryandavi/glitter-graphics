@@ -342,7 +342,7 @@ async function check7(page) {
 		const tiledContext = tiledOutput.getContext('2d');
 		const sample = (x) => Array.from(tiledContext.getImageData(Math.floor(measurement.shapeRect.x + x), Math.floor(measurement.shapeRect.y + 5), 1, 1).data);
 		const tiledPixels = [sample(5), sample(15), sample(25)];
-		const advanced = document.getElementById('shapeFillImageAdvanced');
+		const advanced = document.getElementById('shapeFillImageControls');
 		syncPaintSlotSourceUI(document.getElementById('shapeFillSolid'), 'solid');
 		const advancedHiddenInSolid = advanced.hidden;
 		syncPaintSlotSourceUI(document.getElementById('shapeFillImage'), 'image');
@@ -378,7 +378,8 @@ async function check7(page) {
 			undoRef,
 			redoRef,
 			advancedParentIsPropertySet: advanced.parentElement.classList.contains('property-set'),
-			advancedHasContract: advanced.hasAttribute('data-advanced'),
+			// The image source's sets sit in the section's one Advanced.
+			advancedHasContract: advanced.parentElement.hasAttribute('data-advanced-content'),
 			advancedHiddenInSolid,
 			imageControlsHidden: document.getElementById('shapeFillImageControls').hidden,
 			imageAdvancedHidden: advanced.hidden,
@@ -404,7 +405,7 @@ async function check7(page) {
 	assert(result.snapshotContainsPixels === false, 'History snapshot cloned image pixel data');
 	assert(result.undoRef === 'image-a' && result.redoRef === 'image-b', 'Image-fill ref did not survive undo/redo');
 	assert(result.imageControlsHidden === false && result.imageAdvancedHidden === false, 'Image-fill controls were hidden in image mode');
-	assert(result.advancedParentIsPropertySet === false && result.advancedHasContract && result.advancedHiddenInSolid, 'Image Advanced disclosure does not match the module-level disclosure contract');
+	assert(result.advancedParentIsPropertySet === false && result.advancedHasContract && result.advancedHiddenInSolid, 'Image Advanced sets are not in the section Advanced, or show for another source');
 }
 
 async function check8(page) {

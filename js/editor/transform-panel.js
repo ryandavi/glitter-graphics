@@ -259,7 +259,7 @@ renderTransformPanels() {
 		if (flipX) flipX.checked = transform.flipX;
 		if (flipY) flipY.checked = transform.flipY;
 
-		// v2 opacity model: standalone "Layer Opacity" row in the Appearance group.
+		// v2 opacity model: the Layer section's Opacity row in the Appearance group.
 		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
 		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);
 		if (layerOpacity && layerOpacityValue) {

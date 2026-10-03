@@ -260,7 +260,7 @@ async function verifyGradientStopLiveEditing(page) {
 		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.TEXT_GLITTER);
 		editor.layerManager.setActiveLayer(layer.id);
 		editor.textGlitterManager.loadLayerSettings(layer);
-		// The gradient editor is spread across `.paint-slot-main` chunks of the Fill
+		// The gradient editor is spread across the sets of the Fill
 		// card (the stop table, the Type/Blend/Angle options, the preview in the
 		// source, the Smoothing disclosure at module level).
 		const fillCard = document.querySelector('#textFillGradient')?.closest('.paint-slot-card');

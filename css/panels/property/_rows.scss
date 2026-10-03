@@ -13,7 +13,7 @@
 		var(--property-revert-col);
 	align-items: center;
 	column-gap: var(--spacing-sm);
-	min-height: var(--row-height);
+	min-height: var(--property-row-height);
 	padding: 0 var(--property-gutter);
 
 	&[hidden] { display: none; }

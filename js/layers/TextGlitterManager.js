@@ -891,7 +891,7 @@ class TextGlitterManager {
 		// Line Connection only matters in Lines mode; Merge Distance/Spacing
 		// Sensitivity only matter once lines can actually merge (plan: "expose
 		// only controls relevant to the active mode").
-		const connectionRow = this.ui.bgConnSeparate?.closest('[data-stack-group="Line Connection"]');
+		const connectionRow = this.ui.bgConnSeparate?.closest('.property-row');
 		if (connectionRow) connectionRow.hidden = tb.mode !== 'lines';
 		const mergeSet = this.ui.bgMergeDistance?.closest('.property-set');
 		if (mergeSet) mergeSet.hidden = tb.mode !== 'lines' || tb.lineConnection === 'separate';

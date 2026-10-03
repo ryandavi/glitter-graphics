@@ -45,27 +45,30 @@
 .property-scrollbox {
 	--property-scrollbox-height: 232px;
 	--property-scrollbox-fade-size: 30px;
+	--property-scrollbox-pad: var(--spacing-lg);
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-lg);
+	gap: var(--property-scrollbox-pad);
 	box-sizing: border-box;
 	height: var(--property-scrollbox-height);
-	padding: var(--spacing-lg);
+	padding: var(--property-scrollbox-pad);
 	border: 1px solid var(--color-border);
 	border-radius: var(--property-r-field);
 	background: var(--color-bg-secondary);
 	overflow: auto;
 	overscroll-behavior: contain;
 
+	// Sticky insets measure from the content box, so the fade steps out by the
+	// padding to sit flush on the frame; the margin cancels its own height and gap.
 	&::after {
 		content: '';
 		position: sticky;
 		left: 0;
 		right: 0;
-		bottom: calc(-1 * var(--spacing-base));
+		bottom: calc(-1 * var(--property-scrollbox-pad));
 		flex: 0 0 var(--property-scrollbox-fade-size);
-		margin-top: calc(0px - var(--property-scrollbox-fade-size) - var(--spacing-base));
+		margin-top: calc(0px - var(--property-scrollbox-fade-size) - var(--property-scrollbox-pad));
 		background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
 		opacity: 0;
 		pointer-events: none;

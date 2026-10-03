@@ -12,7 +12,11 @@ function installEffectGradientEditor(options) {
 	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
 	const source = group.parentElement; // .paint-slot-source
 	const slotCard = group.closest('.paint-slot-card') || group.closest('.property-card');
-	const paintMain = source.closest('.paint-slot-main') || slotCard;
+	// A second source in a section (Bevel's Shade) is one set in that section's
+	// body: its gradient sets follow it there, marked as its own.
+	const nestedSource = Boolean(slotCard?.matches('[data-nested]'));
+	const slotBody = nestedSource ? slotCard.parentElement : slotCard?.querySelector(':scope > .property-card-body');
+	const slotAdvanced = slotBody?.querySelector(':scope > .advanced-disclosure');
 	const previewBar = fragment.querySelector('.gradient-preview');
 	const stopSet = fragment.querySelector('.gradient-stop-set');
 	const panel = fragment.querySelector('.effect-gradient-editor');
@@ -42,17 +46,17 @@ function installEffectGradientEditor(options) {
 	//   - the preview bar joins the Source `.property-set` as a mode-toggled
 	//     display block (like `.asset-info`);
 	//   - the stop table and the Type/Blend/Angle(/Opacity) options are two
-	//     sibling `.property-set` chunks of `.paint-slot-main`, hairline-divided
-	//     by the shared `.property-set + .property-set` rule (no manual divider);
-	//   - the Smoothing disclosure sits at module level next to the glitter
-	//     Advanced.
+	//     sibling `.property-set`s of the section body, before its Opacity set;
+	//   - the Smoothing set joins the section's one Advanced.
 	source.appendChild(previewBar);
 	const primarySet = slotCard?.querySelector('.paint-slot-primary-row')?.closest('.property-set');
 	const gradientSets = [presetGroupSet, presetSet, stopSet, panel];
-	if (primarySet) primarySet.before(...gradientSets);
-	else paintMain.append(...gradientSets);
-	const moduleAdvanced = slotCard?.querySelector('.advanced-disclosure.glitter-source-glitter');
-	if (advanced) (moduleAdvanced ? moduleAdvanced.before(advanced) : slotCard?.querySelector(':scope > .property-card-body')?.appendChild(advanced));
+	if (nestedSource) [...gradientSets, advanced].forEach((set) => { if (set) set.dataset.paintSlotOwner = slotCard.id; });
+	if (nestedSource) slotCard.after(...gradientSets);
+	else if (primarySet) primarySet.before(...gradientSets);
+	else if (slotAdvanced) slotAdvanced.before(...gradientSets);
+	else (slotBody || slotCard).append(...gradientSets);
+	if (advanced) (slotAdvanced?.querySelector(':scope > [data-advanced-content]') || panel).appendChild(advanced);
 	const defaults = CONFIG.rendering.gradient;
 	const update = (commit) => {
 		const data = options.getData();
@@ -134,7 +138,7 @@ function installEffectGradientEditor(options) {
 		angleReset.disabled = gradient.angle === defaults.angle;
 
 		// Smoothing only feeds the 'smooth' blend's subdivided approximation, so
-		// the whole Advanced disclosure appears only in that mode.
+		// its Advanced set appears only in that mode.
 		advanced.hidden = gradient.interpolation !== 'smooth';
 		smoothingInput.value = gradient.smoothSubdivisions;
 		smoothingValue.innerHTML = formatUnit(gradient.smoothSubdivisions, '×');

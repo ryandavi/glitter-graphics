@@ -313,7 +313,7 @@ class AutoGlitterManager {
 		this.ui.results.replaceChildren();
 		this.ui.results.hidden = true;
 		this.ui.create.disabled = true;
-		this.ui.create.textContent = 'Create Layers';
+		this.ui.create.textContent = 'Create layers';
 		this.ui.status.textContent = 'Finding the image\'s distinct colors…';
 	}
 
@@ -571,8 +571,8 @@ class AutoGlitterManager {
 		const actual = activeIndices.filter((index) => !this.result.palette[index].skipped).length;
 		this.ui.create.disabled = !actual;
 		this.ui.create.textContent = this.isEditingPrevious()
-			? 'Apply Changes'
-			: `Create ${actual} ${actual === 1 ? 'Layer' : 'Layers'}`;
+			? 'Apply changes'
+			: `Create ${actual} ${actual === 1 ? 'layer' : 'layers'}`;
 		const hasManualMerges = this.result.palette.some((color) => color.manualMergeTarget != null);
 		if (this.isEditingPrevious()) {
 			this.ui.status.textContent = `${actual} ${actual === 1 ? 'layer remains' : 'layers remain'} in the current set. Review the matches, then apply your changes.`;

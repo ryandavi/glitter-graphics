@@ -20,7 +20,8 @@ const slug = (name) => name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').t
 
 // The second theme is a light one: literal colors that ignore themes show there.
 const THEMES = [null, 'light'];
-const TALL = 3200;
+// UI_TALL raises it for a panel taller than this with everything open.
+const TALL = Number(process.env.UI_TALL) || 3200;
 
 async function capture(dir) {
 	fs.mkdirSync(dir, { recursive: true });

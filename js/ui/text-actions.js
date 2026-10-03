@@ -17,7 +17,7 @@ const TEXT_ACTION_METHODS = {
 	},
 	openTextMenu(triggerId, entries) {
 		const trigger = document.getElementById(triggerId);
-		// The schema renders the popover root and panel (actionRow `menu: true`).
+		// The schema renders the popover root and panel (an action with `menu: true`).
 		const root = trigger?.closest('.app-menu-popover');
 		const panel = root?.querySelector('.app-menu-panel');
 		if (!panel) return;

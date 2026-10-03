@@ -23,21 +23,8 @@
 	display: none;
 }
 
-.paint-slot-primary-row {
-	&[hidden] { display: none; }
-
-	>.property-row[hidden] { display: none; }
-
-	>.property-row:only-child,
-	>.property-row[hidden]+.property-row {
-		grid-column: 1 / -1;
-	}
-}
-
-// The gradient editor is laid out exactly like the glitter source: `.paint-slot-main`
-// holds a flat run of `.property-set` chunks, hairline-divided by the shared
-// `.property-set + .property-set` rule (never a manual divider, never a set inside
-// a set). effect-source.js splits the template into:
+// The gradient editor is laid out exactly like the glitter source: the section
+// body holds a flat run of `.property-set`s (never a set inside a set). effect-source.js splits the template into:
 //   - `.gradient-preview` → the Source `.property-set` (a `[data-paint-source-mode]`
 //     display block, where `.asset-info` sits) — styled in the block below;
 //   - `.gradient-stop-set` → a `.property-set` chunk: the stop table + actions + hint;
@@ -266,14 +253,6 @@
 .gradient-advanced .property-value .setting-unit {
 	margin-left: 2px;
 	color: var(--color-text-tertiary);
-}
-
-.effect-stack-row {
-	grid-template-columns: 1fr !important;
-}
-
-.effect-stack-row > .property-row > .segmented-control {
-	width: 100%;
 }
 
 .asset-info-change.target-active,
