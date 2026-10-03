@@ -5876,6 +5876,9 @@ body.tool-text .preview-wrapper {
 body.tool-text .text-glitter-element {
   cursor: text;
 }
+body.tool-text .text-glitter-element.is-locked {
+  cursor: default;
+}
 
 .smart-guide {
   position: absolute;
@@ -5935,6 +5938,16 @@ body.tool-text .text-glitter-element {
   pointer-events: none;
 }
 
+.frame-layer-images {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+}
+.frame-layer-images > * {
+  mix-blend-mode: plus-lighter;
+}
+
 .frame-layer-image {
   position: absolute;
   display: block;
@@ -5991,13 +6004,11 @@ body.tool-shape #canvasElementsContainer {
   pointer-events: none;
 }
 
-body.tool-select .sticker-element,
-body.tool-select .text-glitter-element,
-body.tool-select .shape-glitter-element {
+body.tool-select :is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element):not(.is-locked) {
   cursor: move;
 }
-body.tool-select .preview-canvas {
-  cursor: pointer;
+body.tool-select .preview-container.is-over-picked-layer {
+  cursor: move;
 }
 
 .transform-hover-outline {
@@ -6951,11 +6962,20 @@ body.tool-select .preview-canvas {
   margin: 2px;
 }
 
+.sticker-slices {
+  z-index: 2;
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+}
+.sticker-slices > * {
+  mix-blend-mode: plus-lighter;
+}
+
 .sticker-slice {
   position: absolute;
-  z-index: 2;
   background-repeat: no-repeat;
-  pointer-events: none;
 }
 
 .slice-resize-guide {

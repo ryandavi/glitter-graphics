@@ -500,3 +500,16 @@ $mobile-breakpoint: 800px;
 		@include secondary-button-filters;
 	}
 }
+
+// A 9-slice preview's spans (StickerManager, FrameLayerManager). Adjacent
+// slices meet at fractional device pixels (zoom, centering, rotation) and
+// each antialiases its own edge, which leaves a faint seam. Adding the two
+// partial coverages (plus-lighter) inside an isolated group sums them back
+// to the full pixel, for opaque and translucent art alike.
+@mixin slice-group {
+	position: absolute;
+	inset: 0;
+	isolation: isolate;
+	pointer-events: none;
+	> * { mix-blend-mode: plus-lighter; }
+}

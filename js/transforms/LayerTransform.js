@@ -148,6 +148,8 @@ applyTransform(element, dimensions) {
 	});
 
 	element.style.cssText = styleString;
+	// The canvas cursor rules read this: a locked layer promises no action.
+	element.classList.toggle('is-locked', Boolean(this.layer.locked));
 
 	// Text previews render in local space and scale via a CSS transform on the
 	// inner stack — keep it in sync (drags call applyTransform without renderLayer).

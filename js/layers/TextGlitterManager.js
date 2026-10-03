@@ -1618,7 +1618,7 @@ class TextGlitterManager {
 		const measurement = this.getMeasurementEntry(layer);
 		if (measurement.emojiCanvas) {
 			const canvas = measurement.emojiCanvas;
-			const source = { mode: 'image', image: canvas, url: this.getPreviewMaskDataUrl(layer, 'emoji', canvas, measurement.key), fit: 'stretch', imageScalePercent: 100, offsetXPercent: 0, offsetYPercent: 0, tile: false, opacity: 1 };
+			const source = { mode: 'image', image: canvas, url: this.getPreviewMaskDataUrl(layer, 'emoji', canvas, measurement.key), fit: 'fill', imageScalePercent: 100, offsetXPercent: 0, offsetYPercent: 0, tile: false, opacity: 1 };
 			const fillIndex = stack.findIndex(item => item.key === 'fill');
 			stack.splice(fillIndex >= 0 ? fillIndex + 1 : stack.findIndex(item => item.role === 'bevel') >= 0 ? stack.findIndex(item => item.role === 'bevel') : stack.length, 0, { key: 'emoji', role: 'fill', data: {}, source, sourceKey: `${layer.id}:emoji`, offsetX: 0, offsetY: 0 });
 		}

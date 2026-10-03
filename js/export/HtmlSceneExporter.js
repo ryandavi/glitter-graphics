@@ -477,10 +477,12 @@ ${this.getSceneMarkup(scene)}
 			if (item.slice) {
 				const sliceScale = getSliceScale(item.slice, { scaleX: item.width / item.nativeWidth, scaleY: item.height / item.nativeHeight, boxWidth: item.width, boxHeight: item.height, pixelated: item.imageRendering === 'pixelated' });
 				const rects = getSliceRects(item.slice, item.nativeWidth, item.nativeHeight, item.width, item.height, sliceScale, { pixelated: item.imageRendering === 'pixelated' });
-				image = `<span role="img" aria-label="${this.escapeHtml(item.alt)}" style="position:absolute;inset:0;image-rendering:${item.imageRendering}">` + rects.map((rect) => {
+				image = `<span role="img" aria-label="${this.escapeHtml(item.alt)}" style="position:absolute;inset:0;isolation:isolate;image-rendering:${item.imageRendering}">` + rects.map((rect) => {
 					const scaleX = item.width / 100;
 					const scaleY = item.height / 100;
-					return `<span style="position:absolute;left:${rect.dx / scaleX}%;top:${rect.dy / scaleY}%;width:${rect.dw / scaleX}%;height:${rect.dh / scaleY}%;background-image:url('${this.escapeHtml(item.src)}');background-repeat:no-repeat;background-size:${item.nativeWidth / rect.sw * 100}% ${item.nativeHeight / rect.sh * 100}%;background-position:${rect.sx / Math.max(1, item.nativeWidth - rect.sw) * 100}% ${rect.sy / Math.max(1, item.nativeHeight - rect.sh) * 100}%"></span>`;
+					// plus-lighter in the isolated group closes the antialiasing
+					// seams between slices (see the slice-group SCSS mixin).
+					return `<span style="position:absolute;mix-blend-mode:plus-lighter;left:${rect.dx / scaleX}%;top:${rect.dy / scaleY}%;width:${rect.dw / scaleX}%;height:${rect.dh / scaleY}%;background-image:url('${this.escapeHtml(item.src)}');background-repeat:no-repeat;background-size:${item.nativeWidth / rect.sw * 100}% ${item.nativeHeight / rect.sh * 100}%;background-position:${rect.sx / Math.max(1, item.nativeWidth - rect.sw) * 100}% ${rect.sy / Math.max(1, item.nativeHeight - rect.sh) * 100}%"></span>`;
 				}).join('') + '</span>';
 			}
 			return item.href

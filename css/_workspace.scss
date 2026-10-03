@@ -7,7 +7,12 @@ body.tool-text {
 	.preview-wrapper { cursor: crosshair; }
 
 	// Over text, a press places the caret.
-	.text-glitter-element { cursor: text; }
+	.text-glitter-element {
+		cursor: text;
+
+		// A press on locked text neither edits it nor starts a new text.
+		&.is-locked { cursor: default; }
+	}
 }
 
 .smart-guide {
@@ -87,6 +92,8 @@ body.tool-text {
 
 // An image frame (FrameLayerManager): the frame sticker placed in the box,
 // stretched or fitted exactly as the export places it.
+.frame-layer-images { @include slice-group; }
+
 .frame-layer-image {
 	position: absolute;
 	display: block;
@@ -146,12 +153,14 @@ body.tool-shape {
 	pointer-events: none;
 }
 
+// The cursor says what a press would do: move over a layer a drag would move,
+// the arrow over empty canvas and over a locked layer.
 body.tool-select {
-	.sticker-element,
-	.text-glitter-element,
-	.shape-glitter-element { cursor: move; }
+	:is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element):not(.is-locked) { cursor: move; }
 
-	.preview-canvas { cursor: pointer; }
+	// A layer picked on the canvas (a fill) has no element of its own, so the
+	// container carries the cursor while the pointer is over its paint.
+	.preview-container.is-over-picked-layer { cursor: move; }
 }
 
 .transform-hover-outline {

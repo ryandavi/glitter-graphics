@@ -599,11 +599,14 @@
 	.icon { width: 14px; height: 14px; margin: 2px; }
 }
 
+.sticker-slices {
+	z-index: 2;
+	@include slice-group;
+}
+
 .sticker-slice {
 	position: absolute;
-	z-index: 2;
 	background-repeat: no-repeat;
-	pointer-events: none;
 }
 
 .slice-resize-guide {

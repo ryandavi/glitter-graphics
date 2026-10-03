@@ -316,7 +316,9 @@ function applyPaintSourceToElement(element, source, options = {}) {
 	style.opacity = String(source.opacity ?? 1);
 
 	if (source.mode === 'image') {
-		const placement = getImageFillPlacement(source, maskCanvas?._paintBox);
+		// Same fallback as SceneCompositor._paintSourceInto: a mask without its
+		// own paint box is filled across its whole surface.
+		const placement = getImageFillPlacement(source, maskCanvas?._paintBox || (maskCanvas ? { x: 0, y: 0, width: maskCanvas.width, height: maskCanvas.height } : null));
 		style.backgroundImage = `url(${source.url})`;
 		style.backgroundColor = 'transparent';
 		style.backgroundSize = `${placement.dw}px ${placement.dh}px`;

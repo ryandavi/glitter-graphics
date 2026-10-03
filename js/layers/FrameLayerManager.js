@@ -516,18 +516,23 @@ class FrameLayerManager {
 		const width = Math.round(data.width);
 		const height = Math.round(data.height);
 		this.syncElementScale(layer, stack.parentNode, stack);
-		let image = stack.querySelector(':scope > .frame-layer-image');
+		let group = stack.querySelector(':scope > .frame-layer-images');
 		if (data.kind === 'image') {
 			reconcileSlotStack(stack, [], { spanClassName: 'frame-layer-content', width, height, layer, getMask: () => null });
 			const rects = getFrameSliceRects(data, data.image?.width, data.image?.height, width, height);
-			const spans = Array.from(stack.querySelectorAll(':scope > .frame-layer-image'));
+			if (!group) {
+				group = document.createElement('span');
+				group.className = 'frame-layer-images';
+				stack.insertBefore(group, stack.querySelector('.sparkle-layer'));
+			}
+			const spans = Array.from(group.children);
 			const pieces = rects || [null];
 			pieces.forEach((rect, index) => {
-				image = spans[index];
+				let image = spans[index];
 				if (!image) {
 					image = document.createElement('span');
 					image.className = 'frame-layer-image';
-					stack.insertBefore(image, stack.querySelector('.sparkle-layer'));
+					group.appendChild(image);
 				}
 				if (rect) Object.assign(image.style, sliceSpanStyle(rect, data.image.width, data.image.height));
 				else {
@@ -540,7 +545,7 @@ class FrameLayerManager {
 			});
 			spans.slice(pieces.length).forEach((span) => span.remove());
 		} else {
-			stack.querySelectorAll(':scope > .frame-layer-image').forEach((span) => span.remove());
+			group?.remove();
 			reconcileSlotStack(stack, this.buildFrameStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)), {
 				spanClassName: 'frame-layer-content',
 				width,

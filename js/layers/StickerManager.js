@@ -191,7 +191,7 @@ class StickerManager extends ContentManager {
 		const filter = buildCssColorFilter(layer?.stickerData?.colorAdjust);
 		const image = this.layerElements.get(layer?.id)?.querySelector('img.sticker-image');
 		if (image) image.style.filter = filter;
-		this.layerElements.get(layer?.id)?.querySelectorAll('.sticker-slice').forEach((span) => { span.style.filter = filter; });
+		this.layerElements.get(layer?.id)?.querySelectorAll('.sticker-slices').forEach((group) => { group.style.filter = filter; });
 		if (this.ui.assetThumbnail && this.editor.layerManager.getActiveLayer()?.id === layer?.id) {
 			this.ui.assetThumbnail.style.filter = filter;
 		}
@@ -973,20 +973,28 @@ class StickerManager extends ContentManager {
 		const height = Math.max(1, Math.round(layer.stickerData.height * Math.abs(scale.y) / 100));
 		const rects = img.naturalWidth ? this.getSliceRects(layer, img.naturalWidth, img.naturalHeight, width, height) : null;
 		img.style.display = rects ? 'none' : '';
-		const existing = Array.from(element.querySelectorAll('.sticker-slice'));
-		(rects || []).forEach((rect, index) => {
+		let group = element.querySelector('.sticker-slices');
+		if (!rects) { group?.remove(); return; }
+		if (!group) {
+			group = document.createElement('span');
+			group.className = 'sticker-slices';
+			// The parent, not the element: animation nests the img in a wrapper.
+			img.parentElement.insertBefore(group, img);
+		}
+		group.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
+		const existing = Array.from(group.children);
+		rects.forEach((rect, index) => {
 			let span = existing[index];
 			if (!span) {
 				span = document.createElement('span');
 				span.className = 'sticker-slice';
-				element.insertBefore(span, img);
+				group.appendChild(span);
 			}
 			Object.assign(span.style, sliceSpanStyle(rect, img.naturalWidth, img.naturalHeight));
 			const background = `url("${img.src}")`;
 			if (span.style.backgroundImage !== background) span.style.backgroundImage = background;
-			span.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
 		});
-		existing.slice(rects?.length || 0).forEach((span) => span.remove());
+		existing.slice(rects.length).forEach((span) => span.remove());
 	}
 
 	// ===== RENDERING =====

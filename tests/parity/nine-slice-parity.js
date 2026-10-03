@@ -57,7 +57,8 @@ async function main() {
 					if (color === '#ff3355') {
 						element.id = `nine-slice-dom-${mode}`;
 						Object.assign(element.style, { position: 'fixed', left: '0px', top: '0px', width: '36px', height: '20px', background: '#fff', zIndex: '999999', imageRendering: 'pixelated', isolation: 'isolate' });
-						element.querySelectorAll('.sticker-slice').forEach((span) => Object.assign(span.style, { position: 'absolute', zIndex: '2', backgroundRepeat: 'no-repeat' }));
+						element.querySelectorAll('.sticker-slices').forEach((group) => Object.assign(group.style, { position: 'absolute', inset: '0', zIndex: '2', isolation: 'isolate' }));
+						element.querySelectorAll('.sticker-slice').forEach((span) => Object.assign(span.style, { position: 'absolute', backgroundRepeat: 'no-repeat', mixBlendMode: 'plus-lighter' }));
 						document.body.appendChild(element);
 						const expected = document.createElement('canvas'); expected.width = 36; expected.height = 20;
 						expected.getContext('2d').fillStyle = '#fff'; expected.getContext('2d').fillRect(0,0,36,20);

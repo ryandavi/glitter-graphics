@@ -92,6 +92,17 @@ togglePreview() {
 			this.handlePreviewContainerClick(e);
 		});
 
+		// The move cursor for a canvas-picked layer follows the same test as the
+		// press that would drag it.
+		this.previewContainer.addEventListener('pointermove', (e) => {
+			if (e.pointerType !== 'mouse' || e.buttons) return;
+			const picked = this.currentTool === ToolType.SELECT && this.originalImage
+				&& !e.target.closest(`.ui-ignore-gestures, .group-transform-handles, ${getTransformableLayerElementSelector()}`)
+				&& this.getCanvasPickedLayerAt(e);
+			this.previewContainer.classList.toggle('is-over-picked-layer', Boolean(picked));
+		});
+		this.previewContainer.addEventListener('pointerleave', () => this.previewContainer.classList.remove('is-over-picked-layer'));
+
 		// Prevent right-click context menu on preview area
 		this.previewContainer.addEventListener('contextmenu', (e) => {
 			// Always prevent on canvas
@@ -141,14 +152,22 @@ togglePreview() {
 	}
 
 ,
+	// The canvas-picked layer a press at this pointer would drag, if any. The
+	// press and the hover cursor share this test.
+	getCanvasPickedLayerAt(e) {
+		if (e.shiftKey || !PREFERENCES.get('autoSelect') || this.autoGlitterManager?.isSessionActive()) return null;
+		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
+		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
+		return layer && LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas && isLayerTransformable(layer) ? layer : null;
+	}
+
+,
 	// A layer picked on the canvas (LAYER_UI_CONFIG pickedOnCanvas) has no
 	// element to press, so a press on its painted pixels selects it and hands
 	// the drag to its move handle: one press-and-drag, like a sticker.
 	startCanvasPickedLayerDrag(e) {
-		if (e.shiftKey || !PREFERENCES.get('autoSelect') || this.autoGlitterManager?.isSessionActive()) return false;
-		const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
-		const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
-		if (!layer || !LAYER_UI_CONFIG[layer.type]?.pickedOnCanvas || !isLayerTransformable(layer)) return false;
+		const layer = this.getCanvasPickedLayerAt(e);
+		if (!layer) return false;
 		if (this.layerManager.activeLayerId !== layer.id || this.layerManager.hasMultiSelection()) {
 			this.layerManager.selectLayerFromCanvas(layer.id);
 		}

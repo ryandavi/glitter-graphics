@@ -38,7 +38,7 @@ const TEXT_EDIT_METHODS = {
 		// Text tool hover: the baselines show which text a press would edit.
 		document.addEventListener('pointerover', event => {
 			const layer = event.pointerType !== 'touch' && this.editor.currentTool === ToolType.TEXT ? this.getTextLayerAt(event.target) : null;
-			this.setTextHover(layer?.id === this.editSession?.layerId ? null : layer);
+			this.setTextHover(!layer || layer.locked || layer.id === this.editSession?.layerId ? null : layer);
 		});
 		// The Text tool owns the pointer on text: a press places the caret and a
 		// drag selects. Every other tool leaves the layer to its own drag.
