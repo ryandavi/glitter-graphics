@@ -330,10 +330,12 @@
 	--mobile-menu-height: 60px;
 	--mobile-header-height: 50px;
 	--mobile-top-nav-height: 50px;
-	--mobile-bottom-nav-height: 60px;
+	--mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+	--mobile-bottom-nav-height: calc(60px + var(--mobile-safe-area-bottom));
 	--mobile-drawer-height: 50vh;
 	/* Fallback for older browsers */
 	--mobile-drawer-height: 50dvh;
+	--mobile-drawer-reserved-height: var(--mobile-drawer-height);
 	/* Modern browsers override */
 	--mobile-toolbar-width: 50px;
 	--mobile-settings-handle-height: 18px;

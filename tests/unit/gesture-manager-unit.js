@@ -21,7 +21,7 @@ function touch(pointerId, x, y) {
 	return {
 		pointerType: 'touch', pointerId, clientX: x, clientY: y,
 		target: { closest: () => null },
-		preventDefault() {}, stopPropagation() {}
+		preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}
 	};
 }
 
@@ -31,7 +31,7 @@ async function main() {
 		CONFIG: { ui: { gestures: {
 			tapMaxMs: 300, tapSlopPx: 10, secondFingerGraceMs: 40,
 			secondFingerCommitSlopPx: 24, doubleTapMs: 300, doubleTapSlopPx: 30,
-			palmRejectionContactPx: 60
+			palmRejectionContactPx: 60, layerGesturePaddingPx: 20
 		} } },
 		window: { addEventListener() {}, removeEventListener() {}, editor: null },
 		document: {
@@ -116,6 +116,63 @@ async function main() {
 	manager.handlePointerUp(palm);
 	manager.handlePointerUp(touch(30, 140, 100));
 	assert.strictEqual(manager.state, 'idle', 'Gesture state did not reset after the palm scenario');
+
+	context.ToolType.SELECT = 'select';
+	context.isLayerTransformable = layer => Boolean(layer);
+	context.isLayerSelectableOnCanvas = layer => Boolean(layer);
+	const layer = { id: 'target', type: 'sticker' };
+	const other = { id: 'other', type: 'sticker' };
+	const transform = { beginGestureInteraction() {}, endGestureInteraction() {}, isDraggingHandle: false };
+	context.getLayerManagerForType = () => ({ layerTransforms: new Map([[layer.id, transform]]) });
+	viewport.screenToCanvas = (x, y) => ({ x, y });
+	viewport.editor = {
+		currentTool: 'select',
+		layerManager: {
+			layers: [layer, other], activeLayerId: layer.id,
+			getActiveLayer() { return this.layers.find(entry => entry.id === this.activeLayerId); },
+			hasMultiSelection: () => false,
+			getTopVisibleLayerAtPoint: (x, y) => x >= 100 && x <= 160 && y >= 100 && y <= 160 ? layer : null,
+			isPointInLayer: (target, x, y, padding = 0) => target === layer && x >= 100 - padding && x <= 160 + padding && y >= 100 - padding && y <= 160 + padding,
+			selectLayerFromCanvas(id) { this.activeLayerId = id; }
+		}
+	};
+	manager.handlePointerDown(touch(40, 130, 130));
+	manager.handlePointerDown(touch(41, 180, 130));
+	assert.strictEqual(manager.route.type, 'layerGesture', 'One finger outside a small layer lost the pinch');
+	manager.cancelActiveGesture(true);
+	viewport.editor.layerManager.activeLayerId = other.id;
+	manager.handlePointerDown(touch(42, 130, 130));
+	manager.handlePointerDown(touch(43, 180, 130));
+	assert.strictEqual(manager.route.type, 'layerGesture', 'Pending unselected layer lost the pinch');
+	assert.strictEqual(viewport.editor.layerManager.activeLayerId, layer.id, 'Pinch did not select its target');
+	manager.cancelActiveGesture(true);
+	manager.handlePointerDown(touch(44, 300, 300));
+	manager.handlePointerDown(touch(45, 350, 300));
+	assert.strictEqual(manager.route.type, 'viewportTwoFinger', 'Empty canvas lost viewport routing');
+	manager.cancelActiveGesture(true);
+	manager.handlePointerDown(Object.assign(touch(46, 130, 130), { width: 5, height: 5 }));
+	manager.handlePointerDown(Object.assign(touch(47, 180, 130), { width: 30, height: 30 }));
+	assert.strictEqual(manager.pointers.size, 2, 'A thumb below the absolute threshold was rejected');
+	manager.cancelActiveGesture(true);
+	transform.isDraggingHandle = true;
+	manager.handlePointerDown(touch(48, 130, 130));
+	assert(manager.ignoredPointerIds.has(48), 'Second touch during handle drag was not ignored');
+	assert.strictEqual(manager.pointers.size, 0, 'Handle drag and gesture ran together');
+	manager.handlePointerUp(touch(48, 130, 130));
+	transform.isDraggingHandle = false;
+	manager.handlePointerDown(touch(49, 130, 130));
+	const corner = touch(50, 160, 160);
+	corner.target.closest = selector => selector === '.transform-handles' ? {} : null;
+	manager.handlePointerDown(corner);
+	assert.strictEqual(manager.route.type, 'layerGesture', 'Second touch on chrome started a handle drag');
+	manager.cancelActiveGesture(true);
+	vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js/transforms/selection-chrome.js'), 'utf8') + '\nglobalThis.__SelectionChrome = SelectionChrome;', context);
+	const chrome = Object.create(context.__SelectionChrome.prototype);
+	chrome.overlay = { element: { getBoundingClientRect: () => ({ left: 0, top: 0 }) } };
+	chrome.screen = { center: { x: 100, y: 100 }, hw: 30, hh: 30, cos: 1, sin: 0,
+		handles: [{ handleType: 'corner-tl', kind: 'corner', x: 90, y: 90, half: 22 }] };
+	assert.strictEqual(chrome.hitTest(100, 100, 'touch'), 'move', 'Touch inner move zone lost to a handle');
+	assert.strictEqual(chrome.hitTest(100, 100, 'mouse'), 'corner-tl', 'Fine pointer hit testing changed');
 
 	manager.destroy();
 	process.stdout.write('PASS deterministic gesture routing and finger-count transitions\n');

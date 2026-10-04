@@ -210,6 +210,16 @@ class SelectionChrome {
 				wrapper.style.pointerEvents = 'none';
 				return;
 			}
+			const hitPoint = { ...point };
+			if (isTouch && (handleType.startsWith('corner-') || handleType.startsWith('edge-'))) {
+				const dx = point.x - resize.center.x;
+				const dy = point.y - resize.center.y;
+				const offset = CONFIG.ui.stickerHandles.handleHitOffsetCoarse;
+				const ox = handleType === 'edge-top' || handleType === 'edge-bottom' ? 0 : Math.sign(dx * cos + dy * sin) * offset;
+				const oy = handleType === 'edge-left' || handleType === 'edge-right' ? 0 : Math.sign(-dx * sin + dy * cos) * offset;
+				hitPoint.x += ox * cos - oy * sin;
+				hitPoint.y += ox * sin + oy * cos;
+			}
 			const size = this.getHitSize(handleType);
 			const enabled = isEnabled(handleType);
 			// The rotation handle and anchor arrive already pixel-centered (the
@@ -219,7 +229,7 @@ class SelectionChrome {
 				wrapper.style.left = `${point.x}px`;
 				wrapper.style.top = `${point.y}px`;
 			} else {
-				overlay.placePoint(wrapper, point);
+				overlay.placePoint(wrapper, hitPoint);
 			}
 			let width = size;
 			let height = size;
@@ -228,11 +238,17 @@ class SelectionChrome {
 			wrapper.style.width = `${width}px`;
 			wrapper.style.height = `${height}px`;
 			wrapper.style.transform = `translate(-50%, -50%) rotate(${handleType.startsWith('edge-') ? rotation : 0}deg)`;
+			const visual = wrapper.firstElementChild;
+			const vx = point.x - hitPoint.x;
+			const vy = point.y - hitPoint.y;
+			visual.style.transform = handleType.startsWith('edge-')
+				? `translate(${vx * cos + vy * sin}px, ${-vx * sin + vy * cos}px)`
+				: `translate(${vx}px, ${vy}px)`;
 			wrapper.style.cursor = getHandleCursor(handleType, rotation);
 			wrapper.style.pointerEvents = enabled ? 'auto' : 'none';
 			wrapper.hidden = !enabled;
 			if (handleType === 'anchor') wrapper.classList.toggle('is-subtle', Boolean(model.anchorSubtle));
-			if (enabled) placed.push({ handleType, kind: handleKind(handleType), x: point.x, y: point.y, halfX: width / 2, halfY: height / 2 });
+			if (enabled) placed.push({ handleType, kind: handleKind(handleType), x: hitPoint.x, y: hitPoint.y, halfX: width / 2, halfY: height / 2 });
 		});
 
 		const stalkVisible = Boolean(this.stalk) && !compactHeight
@@ -323,6 +339,8 @@ class SelectionChrome {
 		const localX = dx * screen.cos + dy * screen.sin;
 		const localY = -dx * screen.sin + dy * screen.cos;
 
+		if (pointerType === 'touch' && Math.abs(localX) <= screen.hw / 2 && Math.abs(localY) <= screen.hh / 2) return 'move';
+
 		let best = null;
 		// Same order as the handles paint (later handles sit on top), so what
 		// is drawn on top is what gets grabbed. The anchor's hit square is
@@ -337,7 +355,6 @@ class SelectionChrome {
 			if (!best || priority < best.priority || (priority === best.priority && distance < best.distance)) best = { handleType: handle.handleType, priority, distance };
 		});
 		if (best) return best.handleType;
-		if (pointerType === 'touch' && Math.abs(localX) <= screen.hw / 2 && Math.abs(localY) <= screen.hh / 2) return 'move';
 		return Math.abs(localX) <= screen.hw && Math.abs(localY) <= screen.hh ? 'move' : null;
 	}
 

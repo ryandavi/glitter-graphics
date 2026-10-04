@@ -741,14 +741,14 @@ class LayerManager {
 
 	// A transformable layer is hit inside its frame (see getLayerFrame), plus a
 	// few screen pixels of tolerance. Empty layers have nothing to hit.
-	isPointInLayer(layer, clickX, clickY) {
+	isPointInLayer(layer, clickX, clickY, tolerancePx = CONFIG.ui.stickerHandles.frameHitTolerance) {
 		if (!isLayerTransformable(layer)) return false;
 		if (LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) === false) return false;
 		if (!getLayerFrame(this.editor, layer)) return false;
 		const transform = this.editor.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)
 			|| new LayerTransform(layer, this.editor);
 		const zoom = Math.max(0.01, this.editor.viewport?.currentZoom || 1);
-		return transform.containsPoint({ x: clickX, y: clickY }, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
+		return transform.containsPoint({ x: clickX, y: clickY }, tolerancePx / zoom);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {

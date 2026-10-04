@@ -644,11 +644,12 @@ const CONFIG = deepFreeze({
 			tapSlopPx: 10,
 			wheelZoomSensitivity: 0.002,
 			secondFingerGraceMs: 150,
+			layerGesturePaddingPx: 20,
 			secondFingerCommitSlopPx: 24,
 			doubleTapMs: 300,
 			doubleTapSlopPx: 30,
 			// A second touch whose measured contact box exceeds this (CSS px on its
-			// longer side, or ~3x the first contact's area) is treated as a palm and
+			// longer side) is treated as a palm and
 			// kept out of the pinch pair. Set well clear of a thumb tip; devices that
 			// don't measure contact geometry report 0/1 and are never affected.
 			palmRejectionContactPx: 60,
@@ -662,7 +663,15 @@ const CONFIG = deepFreeze({
 		},
 		mobile: {
 			breakpoint: 800,
-			stickerHitAreaPadding: 20,
+			sheetDetents: {
+				peek: 28,
+				half: 50,
+				full: 85,
+				minDragHeight: 12,
+				dismissBelow: 20,
+				flingVelocityPxMs: 0.6,
+				velocityWindowMs: 90
+			},
 			autoCloseDesignDrawer: false,
 			openDrawOnLayerAdd: true
 		},
@@ -752,6 +761,8 @@ const CONFIG = deepFreeze({
 			// Coarse pointers get at least the 44px touch-target minimum.
 			handleHitSize: { corner: 16, edge: 8, rotate: 20, rotation: 40, anchor: 12, radius: 16 },
 			handleHitSizeCoarse: { corner: 44, edge: 44, rotate: 48, rotation: 48, anchor: 44, radius: 44 },
+			// Shift resize targets outward; only a quarter of the 44px square overlaps the frame.
+			handleHitOffsetCoarse: 11,
 			// Screen pixels a pointer must travel before a handle drag starts, so a
 			// click never nudges, scales or rotates a layer.
 			dragThresholdPx: 3,

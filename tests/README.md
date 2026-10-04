@@ -49,7 +49,7 @@ Test behavior, not implementation. Before writing a new test, check whether an e
 
 ## Touch smoke harness
 
-`tests/ui/touch-smoke.js` is the touch regression harness that now covers the TOUCH-2 unified pointer pipeline and the shipped TOUCH-3 touch affordances.
+`tests/ui/touch-smoke.js` covers the unified pointer pipeline, touch affordances and mobile drawer detents/handoff. `GLITTER_TEST_CSS` may point to a scratch Sass compile while the committed CSS awaits Ryan's recompile.
 
 ### Run it
 
@@ -98,7 +98,7 @@ CDP is used for multi-touch because `page.touchscreen` cannot express pinch/rota
    Locks the current document-level orphan touch cleanup behavior.
 13. Touch drag and pinch on a selected text layer move and scale it.
    TOUCH-2 extends the unified selected-layer gesture route to text layers, with mobile drawers closed so the preview remains hittable.
-14. Pinch over an unselected sticker zooms the viewport and leaves the sticker untouched.
+14. Pinch over an unselected sticker selects and scales it without viewport zoom.
    TOUCH-2 D1 check: pinch no longer auto-selects or scales an unselected sticker.
 15. Two-finger gesture on a selected sticker translates, scales, and rotates it in one move.
    TOUCH-2 composite-transform check for the selected-layer route.
@@ -115,6 +115,11 @@ CDP is used for multi-touch because `page.touchscreen` cannot express pinch/rota
 21. Double-tap on text opens mobile settings and focuses the text input.
    TOUCH-3 mobile text-edit affordance.
 22. Mobile layer reorder uses touch pointer events to move a layer in the list.
+23. Two-finger pinch inside the group bounds scales the group without viewport zoom.
+24. A second finger on a corner joins a proportional pinch with one undo step.
+25. Fast downward Edit-header flicks close sheets at half and peek.
+26. Slow sheet release settles to a detent, leaves canvas geometry fixed while dragging, refits once, grabber arrows step detents, app/OS Reduce Motion suppresses transitions, and a simulated safe-area inset clears the nav buttons while preserving the full detent.
+27. Top content hands downward pulls to the sheet; upward/scrolled content stays scrolling, sliders drag horizontally and header tabs remain tappable.
    TOUCH-3 pointer-event migration for mobile layer-list reordering.
 
 ### Notes
@@ -133,7 +138,7 @@ This is a documented headless gap rather than an app-code change.
 
 ### Transform-handle verification (`tests/ui/touch-handle-verify.js`)
 
-Check 18 above only exercises the move/bounding-box handle. Rotation, corner-scale, and fixed-text edge-resize handles get their own small deterministic script rather than more numbered checks in the main suite, so `touch-smoke.js` stays anchored at checks 1-22.
+Check 18 above only exercises the move/bounding-box handle. Rotation, corner-scale, and fixed-text edge-resize handles get their own small deterministic script rather than more numbered checks in the main suite, while `touch-smoke.js` covers canvas routes and phone drawers.
 
 Run it the same way: `node tests/ui/touch-handle-verify.js`.
 

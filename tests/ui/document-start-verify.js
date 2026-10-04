@@ -1,6 +1,7 @@
 'use strict';
 
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mNk+M/wn4GBgYGJAQoAHgQCAftBAX8AAAAASUVORK5CYII=';
@@ -13,6 +14,7 @@ async function openEditor(browser, viewport) {
 	const context = await browser.newContext({ viewport });
 	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
 	const page = await context.newPage();
+	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
 	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 	await page.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
 	await page.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((modal) => modal.classList.remove('visible')));

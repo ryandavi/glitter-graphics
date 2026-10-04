@@ -589,7 +589,9 @@ async function checkAutoHeightEdges(page, drag, label) {
 	assert(await getTextBoxWidth(page, layerId) > before, `${label}: auto-height side did not resize width`);
 	assert(await page.evaluate(id => editor.layerManager.getLayerById(id).textData.boxMode === 'autoHeight' && !Object.hasOwn(editor.layerManager.getLayerById(id).textData, 'boxHeight'), layerId), `${label}: side resize lost auto-height`);
 	await page.waitForTimeout(200);
-	handle = await getTransformHandleCenter(page, layerId, 'edge-top');
+	// The outward coarse edge target overlaps the rotation stalk at its center.
+	handle = await getElementCenter(page, `.transform-handles[data-layer-id="${layerId}"] [data-handle-type="edge-top"]`);
+	handle.x += 35;
 	await drag(page, handle, { x: handle.x, y: handle.y - 35 });
 	assert(await page.evaluate(id => editor.layerManager.getLayerById(id).textData.boxMode === 'fixed', layerId), `${label}: vertical resize did not convert to fixed`);
 }

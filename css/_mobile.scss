@@ -190,7 +190,7 @@
 		background: var(--color-bg-secondary);
 		border-top: 1px solid var(--color-border);
 		gap: var(--spacing-sm);
-		padding: var(--spacing-sm);
+		padding: var(--spacing-sm) var(--spacing-sm) calc(var(--spacing-sm) + var(--mobile-safe-area-bottom));
 		z-index: var(--z-header-menu-top);
 
 		&.visible {
@@ -304,7 +304,6 @@
 		right: var(--mobile-sheet-inset);
 		display: flex;
 		height: var(--mobile-drawer-height);
-		max-height: 85dvh;
 		background: var(--panel-bg);
 		backdrop-filter: var(--panel-backdrop);
 		border: 1px solid var(--color-border);
@@ -315,7 +314,7 @@
 		opacity: 1;
 		visibility: hidden;
 		pointer-events: none;
-		transition: transform var(--transition-base), visibility 0s var(--transition-base);
+		transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
 		flex-direction: column;
 		overflow: hidden;
 
@@ -352,7 +351,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: var(--spacing-lg);
+		min-height: var(--touch-target-min);
 		cursor: ns-resize;
 		touch-action: none;
 		flex: 0 0 auto;
@@ -379,7 +378,8 @@
 		align-items: center;
 		gap: var(--spacing-sm);
 		flex: 0 0 auto;
-		min-height: var(--row-height);
+		min-height: var(--touch-target-min);
+		touch-action: none;
 		padding: 0 var(--spacing-base) var(--spacing-xs) var(--spacing-lg);
 		border: 0;
 		background: none;
@@ -423,10 +423,18 @@
 	}
 
 	body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
-		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height) + var(--mobile-sheet-inset));
+		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
 	}
 
-	body.mobile-sheet-dragging {
+	// At the top, vertical movement is arbitrated by the sheet. Horizontal
+	// controls keep their own pointer handling; scrolled lists stay native.
+	.mobile-sheet-scroll-top {
+		touch-action: pan-x;
+		overscroll-behavior-y: contain;
+	}
+
+	body.mobile-sheet-dragging,
+	body.mobile-sheet-reduced-motion {
 		.mobile-settings-drawer,
 		.main-content > .design-panel,
 		.main-content > .layers-panel,
@@ -452,7 +460,6 @@
 		right: var(--mobile-sheet-inset);
 		width: auto;
 		height: var(--mobile-drawer-height);
-		max-height: var(--mobile-drawer-height);
 		background: var(--panel-bg);
 		backdrop-filter: var(--panel-backdrop);
 		padding-top: var(--spacing-lg);
@@ -468,7 +475,7 @@
 		opacity: 1;
 		visibility: hidden;
 		pointer-events: none;
-		transition: transform var(--transition-base), visibility 0s var(--transition-base);
+		transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
 	}
 
 	body.editOpen .mobile-settings-drawer,

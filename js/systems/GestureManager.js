@@ -64,8 +64,16 @@ class GestureManager {
 		if (event.target.closest('.ui-ignore-gestures')) {
 			return;
 		}
+		const activeLayer = this.editor?.layerManager.getActiveLayer();
+		const activeTransform = activeLayer && this.getLayerTransform(activeLayer.id);
+		if (activeTransform?.isDraggingHandle || this.editor?.groupTransformManager?.isDraggingHandle) {
+			this.ignoredPointerIds.add(event.pointerId);
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			return;
+		}
 		const transformHandles = event.target.closest('.transform-handles');
-		if (transformHandles) {
+		if (transformHandles && this.pointers.size === 0) {
 			if (!event.target.closest('.transform-bounding-box')) return;
 			const activeLayer = this.editor.layerManager.getActiveLayer();
 			const context = this.editor.getMovableLayerContext?.(activeLayer);
@@ -83,6 +91,7 @@ class GestureManager {
 		this.previewContainer.setPointerCapture?.(event.pointerId);
 			event.preventDefault();
 			event.stopPropagation();
+		event.stopImmediatePropagation();
 
 		if (this.pointers.size >= 2) {
 			this.ignoredPointerIds.add(event.pointerId);
@@ -107,7 +116,6 @@ class GestureManager {
 			this.lastDistance = 0;
 			this.lastAngle = 0;
 			this.touchGestureActive = false;
-			this.startRouteIfNeeded(this.route);
 			this.schedulePendingSingleStart();
 			return;
 		}
@@ -261,13 +269,7 @@ class GestureManager {
 			return false;
 		}
 
-		if (Math.max(width, height) >= maxPx) return true;
-
-		const primary = this.getPrimaryPointer();
-		if (primary && primary.width > 1 && primary.height > 1) {
-			return width * height >= primary.width * primary.height * 3;
-		}
-		return false;
+		return Math.max(width, height) >= maxPx;
 	}
 
 	schedulePendingSingleStart() {
@@ -337,36 +339,24 @@ class GestureManager {
 			return { type: 'brushViewport' };
 		}
 
-		const activeLayer = editor.layerManager.getActiveLayer();
 		const pointers = Array.from(this.pointers.values());
-		if (
-			editor.currentTool === ToolType.SELECT &&
-			editor.layerManager.hasMultiSelection() &&
-			pointers.length >= 2 &&
-			editor.groupTransformManager?.containsScreenPoint(pointers[0].x, pointers[0].y) &&
-			editor.groupTransformManager?.containsScreenPoint(pointers[1].x, pointers[1].y)
-		) {
+		if (editor.currentTool !== ToolType.SELECT || pointers.length < 2) return { type: 'viewportTwoFinger' };
+		const midpoint = { x: (pointers[0].x + pointers[1].x) / 2, y: (pointers[0].y + pointers[1].y) / 2 };
+		const padding = CONFIG.ui.gestures.layerGesturePaddingPx;
+		const group = editor.groupTransformManager;
+		if (editor.layerManager.hasMultiSelection() && group &&
+			(group.containsScreenPoint(midpoint.x, midpoint.y) ||
+				pointers.some(pointer => group.containsScreenPoint(pointer.x, pointer.y, padding)))) {
 			return { type: 'groupGesture' };
 		}
-
-		if (
-			editor.currentTool === ToolType.SELECT &&
-			this.isTransformableLayer(activeLayer) &&
-			pointers.length >= 2 &&
-			this.isPointInLayer(activeLayer, pointers[0].x, pointers[0].y) &&
-			this.isPointInLayer(activeLayer, pointers[1].x, pointers[1].y)
-		) {
-			return {
-				type: 'layerGesture',
-				layerId: activeLayer.id
-			};
+		const target = this.route?.type === 'layerDrag'
+			? this.getLayerById(this.route.layerId) : editor.layerManager.getActiveLayer();
+		if (this.isTransformableLayer(target) &&
+			(this.isPointInLayer(target, midpoint.x, midpoint.y, 0) ||
+				pointers.some(pointer => this.isPointInLayer(target, pointer.x, pointer.y, padding)))) {
+			return { type: 'layerGesture', layerId: target.id };
 		}
-
 		return { type: 'viewportTwoFinger' };
-	}
-
-	startRouteIfNeeded(route) {
-		return route;
 	}
 
 	maybeStartSingleFingerGesture(pointer, graceElapsed = false) {
@@ -806,9 +796,9 @@ class GestureManager {
 		return Boolean(layer && !layer.locked && isLayerTransformable(layer));
 	}
 
-	isPointInLayer(layer, screenX, screenY) {
+	isPointInLayer(layer, screenX, screenY, tolerancePx) {
 		const point = this.viewport.screenToCanvas(screenX, screenY);
-		return this.editor.layerManager.isPointInLayer(layer, point.x, point.y);
+		return this.editor.layerManager.isPointInLayer(layer, point.x, point.y, tolerancePx);
 	}
 
 	getLayerById(layerId) {

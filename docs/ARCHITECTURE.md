@@ -34,7 +34,7 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Filter layers | `FilterLayerManager` | |
 | Undo and redo | `HistoryManager` | |
 | Zoom and pan | `ViewportManager` (`editor.viewport`) | |
-| Touch and pointer input | `GestureManager` | |
+| Touch and pointer input | `GestureManager` | Touch only. Mouse and pen use the per-element handlers. See [Touch and canvas input](#touch-and-canvas-input). |
 | Transform handles | `LayerTransform` (one per layer), `GroupTransformManager` (multi-select) | Both describe corners, full-edge strips, rotation zones, anchor/radius controls and the feedback badge to `SelectionChrome`, which draws them in the screen-space `SelectionOverlay` (`editor.viewport.selectionOverlay`) and hit-tests them. Drag math is shared in `transform-gestures.js`. |
 | Brush and eraser mask painting | `MaskEditor`, composed by `MaskCompositor` | |
 | Auto Glitter | `AutoGlitterManager` | A session tool that emits glitter-fill layers. |
@@ -123,6 +123,53 @@ The Posterize and Dither filter looks and Auto Glitter share the `paletteColorCo
 **Memory.** `getMemoryBudget()` (`js/systems/MemoryLedger.js`) returns this device's byte budgets from `CONFIG.memory` (a smaller set on iOS and devices reporting 4 GB or less). Undo history trims its oldest steps past the history budget, keeping `minHistorySteps`; paint history evicts past its own budget; rebuildable preview caches are `ByteBudgetCache`s that share one LRU budget; an animated GIF export asks first when its estimated peak memory exceeds the export budget.
 
 **Handle gestures.** Handle drags are relative to the grab point: nothing changes until the pointer travels `dragThresholdPx` screen pixels, scale handles follow the pointer's movement from the true frame corner, and rotation adds the pointer's change in angle around the frame center (Shift snaps to 15°). Selection chrome is sized in screen pixels, outside the zoomed canvas.
+
+## Touch and canvas input
+
+Canvas input has two pipelines, split by `pointerType`.
+
+- **Touch** goes through `GestureManager` (`js/systems/GestureManager.js`, owned by `ViewportManager` as `editor.viewport.gestureManager`). It listens on the preview container in the capture phase, sets `touch-action: none`, captures each pointer, and stops the event, so no element handler below ever sees a touch it took.
+- **Mouse and pen** return early from `GestureManager` and use the element handlers: `LayerTransform.setupMouseDrag` on each layer element, the preview-container `pointerdown` in `js/editor/canvas-gestures.js` (marquee, canvas-picked layers, creation drag, scrubby zoom), and `wheel` plus Safari `gesture*` events for trackpad zoom and pan (`VIEWPORT_INPUT.normalizeWheel`).
+
+Both pipelines end in the same places: `LayerTransform` / `GroupTransformManager` for layers, `ViewportManager` for the view, `MaskEditor` for the brush, and the `beginCreationGesture` family for tools that drag out a box.
+
+**What `GestureManager` leaves alone.** A touch on `.ui-ignore-gestures` is ignored. A first touch on the selection chrome (`.transform-handles`) is handed to the chrome: a handle element takes it through its own `pointerdown`, and a touch on the bounding box is run through `SelectionChrome.hitTest`, which starts `beginHandleDrag` when it lands in a handle's hit square. Handle drags run on document-level pointer listeners keyed to one `pointerId`, outside the gesture state machine. A second touch joins an existing canvas gesture even on a handle; during a handle drag, additional canvas touches are ignored. Anything new drawn over the canvas needs `.ui-ignore-gestures` or it will be treated as canvas.
+
+**State machine.** `idle → pending → dragging`, or `→ twoFinger` when a second touch lands. At most two pointers are tracked; a third is ignored, and so is a second contact that `isLikelyPalmContact` judges to be a palm (contact box at least `palmRejectionContactPx` on its long side; devices that report no contact geometry are never judged).
+
+- `pending` becomes `dragging` once the finger passes `tapSlopPx`, held back until `secondFingerGraceMs` has passed or the finger has travelled `secondFingerCommitSlopPx`, so a pinch whose fingers land a moment apart does not start as a drag.
+- A release inside `tapSlopPx` and `tapMaxMs` is a tap. Two taps within `doubleTapMs` and `doubleTapSlopPx` are a double tap: text edit on a text layer, zoom in (or fit, from 4x and up) on empty canvas.
+- Lifting one finger of a two-finger gesture continues as a one-finger drag of the same target.
+- `pointercancel`, lost capture, window blur and tab hide all end the gesture through `cancelActiveGesture`.
+
+All thresholds are in `CONFIG.ui.gestures`.
+
+**Routes.** The route is resolved once per phase and decides who receives the movement.
+
+| Fingers | Route | Chosen when | Goes to |
+|---|---|---|---|
+| 1 | `brush` | Brush tool | `MaskEditor.handleTouchPan` / `handleTouchTap` |
+| 1 | `groupDrag` | Select tool, multi-selection, touch inside the group bounds | `GroupTransformManager.dragByScreenDelta` |
+| 1 | `layerDrag` | Select tool, top layer under the finger is transformable and unlocked | selects it when the drag starts, then `LayerTransform.dragByScreenDelta` (snapping applies) |
+| 1 | `layerSelect` | Select tool, top layer is selectable but not transformable (a pinned frame) | tap selects; a drag pans |
+| 1 | `creationDrag` / `tapCreate` | the tool's `touchRoute` in `TOOLS` | `beginCreationGesture` family, or `handleWorkspaceAction` on tap |
+| 1 | `viewport` | everything else | `ViewportManager.panBy`, then inertia on release |
+| 2 | `brushViewport` | Brush tool | cancels the stroke, then pans and zooms the view |
+| 2 | `groupGesture` | Select tool, multi-selection, the midpoint inside the group bounds or one finger inside bounds grown by `layerGesturePaddingPx` | `GroupTransformManager.applyGestureDelta` |
+| 2 | `layerGesture` | Select tool, the midpoint inside the target frame or one finger inside its padded frame; target is the first finger's `layerDrag` layer or the active layer | selects the target before `LayerTransform.applyGestureDelta` |
+| 2 | `viewportTwoFinger` | fingers away from the target | `ViewportManager.transformByGesture` |
+
+A one-finger drag that upgrades to the matching two-finger route (`layerDrag → layerGesture`, `groupDrag → groupGesture`) keeps one interaction and one history step. Any other upgrade commits the first route before the second begins.
+
+**Two-finger math.** Each move sends an incremental composite `{ scale, rotateDeg, centroid, previousCentroid }`. For layers, the layer position is scaled and rotated about the previous centroid and re-placed at the new one, so the point under the fingers stays under them. For the view, the canvas point under the previous centroid lands under the new one. A pinch scales both axes by one factor whatever the aspect lock says. There is no snapping, rotation detent or badge on this path.
+
+**Committing.** `beginGestureInteraction` records the start scale; `endGestureInteraction` bakes a changed scale the same way a corner handle does (`commitScaleChange`) and calls `saveState` once. `editor.touchGestureActive` is true while a gesture runs, and `LayerManager.handleLayerPick` refuses to pick during it. A click that follows a handled tap is swallowed for 400 ms.
+
+**Touch selection chrome.** On coarse pointers handle hit squares grow to `handleHitSizeCoarse` (44 to 48 px), resize hit squares shift outward by `handleHitOffsetCoarse` while the visible handles stay put, the inner move zone is tested first, the corner rotate zones are dropped in favor of the rotation stalk, and handles that span a side shorter than `touchMinHandleSpan` are hidden so a small layer can still be grabbed by its body.
+
+**Mobile shell.** `MobileManager` turns on at `CONFIG.ui.mobile.breakpoint` (viewport width, not pointer type). The Layers and Library panels and the Edit drawer are bottom sheets with peek/half/full detents (28/50/85 dvh) in `CONFIG.ui.mobile.sheetDetents`; they open at half. The grabber and title/action header drag after vertical tap slop, leaving header buttons tappable. Content at its scroll origin hands downward pulls to the sheet; upward pulls stay scrolling for that contact, and scrolled lists use native scrolling. Range inputs, gradient controls, reorder handles and horizontal scrollers keep their own input. `--mobile-drawer-height` follows the finger while `--mobile-drawer-reserved-height` holds the preview space until release, when the sheet settles and the canvas refits once with animation. Release velocity uses the last 90 ms: a downward flick from half or peek dismisses, other flings step in their direction, and slow releases choose the nearest detent (below 20 dvh dismisses). Grabber arrows step detents and Escape closes. Reduced Motion disables sheet animation; the close delay reads `--transition-base`. The bottom-nav height and sheet offsets include `--mobile-safe-area-bottom`. The Edit drawer has no markup of its own: `prepareSettings` moves the active layer's sidebar sections (`mobileSettingsSections` on the layer type) into `#mobileSettingsContainer` and moves them back afterwards. Opening a sheet shrinks the preview panel and refits the canvas; closing restores the view the user had, keeping any pan or zoom they made while it was open. The Hand tool is hidden on phones, where a one-finger drag on empty canvas pans.
+
+**Tests.** `tests/ui/touch-smoke.js` drives real multi-touch through CDP and `tests/ui/touch-handle-verify.js` covers handle drags; `tests/unit/gesture-manager-unit.js` unit-tests `GestureManager` without a browser. See [tests/README.md](../tests/README.md).
 
 ## Render path (live preview)
 

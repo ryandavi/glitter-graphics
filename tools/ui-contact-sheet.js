@@ -4,7 +4,7 @@
 // Library, layers, modals, phone drawer; desktop, laptop and phone; two
 // themes), then lays a "before" capture beside an "after" capture in one page.
 //
-//   node tools/ui-contact-sheet.js capture <dir> [--css compiled.css] [--only name] [--viewport desk|laptop|phone [--theme light]]
+//   node tools/ui-contact-sheet.js capture <dir> [--css compiled.css] [--only name] [--viewport desk|laptop|phone [--theme light]] [--drawers]
 //   node tools/ui-contact-sheet.js build <beforeDir> <afterDir> <out.html>
 //
 // Capture "before" from the commit you are leaving and "after" from the working
@@ -79,7 +79,7 @@ async function capture(dir) {
 		await boot(page, css);
 		if (theme) await page.evaluate((name) => { document.documentElement.dataset.theme = name; }, theme);
 		const visit = shooter(page, viewport, theme);
-		if (phone) await phoneStates(page, visit, { set: 'sheet' });
+		if (phone) await phoneStates(page, visit, { set: args.includes('--drawers') ? 'drawers' : 'sheet' });
 		else await desktopStates(page, visit, { set: 'sheet', viewport: viewportName });
 		await ctx.close();
 	};

@@ -12,7 +12,7 @@ class MobileManager {
 		this.resizeObserver = null;
 		this.eventsBound = false;
 		this.sheetDrag = null;
-		this.sheetHeight = 50;
+		this.sheetHeight = CONFIG.ui.mobile.sheetDetents.half;
 		this.drawerViewportState = null;
 		this.drawerViewportUserState = null;
 		this.drawerViewportUserZoomed = false;
@@ -240,6 +240,7 @@ class MobileManager {
 
 		const openingFirstDrawer = !this.activeDrawer;
 		if (openingFirstDrawer) {
+			this.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half, { resize: false });
 			this.drawerViewportState = this.editor.viewport?.captureViewState?.() || null;
 			this.drawerViewportUserState = null;
 			this.drawerViewportUserZoomed = false;
@@ -416,13 +417,15 @@ class MobileManager {
 					? document.getElementById('layersPanel')
 					: null;
 		this.activeDrawer = null;
+		this.sheetDrag = null;
+		document.body.classList.remove('mobile-sheet-dragging');
 		document.body.classList.remove('designOpen', 'layersOpen', 'editOpen', 'mobile-sheet-expanded');
 		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
 			button.classList.remove('active');
 			button.setAttribute('aria-expanded', 'false');
 		});
 		if (options.immediate || !closingElement) {
-			this.setSheetHeight(50, { resize: false });
+			this.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half, { resize: false });
 		} else {
 			this.deferSheetHeightReset(closingElement);
 		}
@@ -436,13 +439,13 @@ class MobileManager {
 		const finish = () => {
 			if (this.drawerCloseElement !== closingElement) return;
 			this.cancelDrawerCloseFinalization();
-			this.setSheetHeight(50, { resize: false });
+			this.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half, { resize: false });
 		};
 		this.drawerCloseElement = closingElement;
 		// Keep the dragged height stable for the entire exit animation. Listening
 		// for transitionend is unreliable when an opening transition is reversed;
 		// browsers may deliver that earlier transition's completion to the same node.
-		this.drawerCloseTimer = setTimeout(finish, 350);
+		this.drawerCloseTimer = setTimeout(finish, this.sheetTransitionMs());
 	}
 
 	cancelDrawerCloseFinalization() {
@@ -456,53 +459,145 @@ class MobileManager {
 		document.body.classList.remove('mobile-drawer-closing');
 	}
 
+	sheetTransitionMs() {
+		const reduced = PREFERENCES.get('reduceMotion') || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		document.body.classList.toggle('mobile-sheet-reduced-motion', reduced);
+		if (reduced) return 0;
+		const duration = getComputedStyle(document.documentElement).getPropertyValue('--transition-base').trim();
+		return parseFloat(duration) * (duration.endsWith('ms') ? 1 : 1000);
+	}
+
 	setupSheetDrag() {
+		this.setSheetHeight(this.sheetHeight, { resize: false });
 		document.querySelectorAll('[data-mobile-drawer-handle]').forEach((handle) => {
 			if (handle.dataset.bound === 'true') return;
 			handle.dataset.bound = 'true';
-			handle.addEventListener('pointerdown', (event) => {
-				if (!this.isMobile || this.activeDrawer !== handle.dataset.mobileDrawerHandle) return;
-				handle.setPointerCapture(event.pointerId);
-				this.finishViewportAnimation();
-				this.sheetDrag = { pointerId: event.pointerId, startY: event.clientY, startHeight: this.sheetHeight };
-				document.body.classList.add('mobile-sheet-dragging');
-				event.preventDefault();
+			const sheet = handle.parentElement;
+			const name = handle.dataset.mobileDrawerHandle;
+			const headers = name === 'edit' ? '.mobile-sheet-bar' : ':scope > .section > .section-header';
+			sheet.querySelectorAll(headers).forEach(header => header.classList.add('mobile-sheet-drag-header', 'ui-ignore-gestures'));
+			// Each sheet owns different nested scroll regions. Bind the stable sheet,
+			// not the property sections that move between the sidebar and Edit.
+			const scrollSelector = '.mobile-settings-content, .layers-list, .panel-scroll-region, .section-content, .filters-container-inner, .asset-browser-content, .property-scrollbox';
+			const syncScroll = () => sheet.querySelectorAll(scrollSelector).forEach(region => {
+				const scrollable = /^(auto|scroll)$/.test(getComputedStyle(region).overflowY);
+				region.classList.toggle('mobile-sheet-scroll-top', scrollable && region.scrollTop <= 0 &&
+					!Array.from(region.querySelectorAll(scrollSelector)).some(child => child.scrollTop > 0));
 			});
-			handle.addEventListener('pointermove', (event) => {
-				if (!this.sheetDrag || event.pointerId !== this.sheetDrag.pointerId) return;
-				const delta = ((this.sheetDrag.startY - event.clientY) / window.innerHeight) * 100;
-				this.setSheetHeight(Math.max(12, Math.min(85, this.sheetDrag.startHeight + delta)));
+			sheet.addEventListener('scroll', syncScroll, { capture: true, passive: true });
+			new MutationObserver(syncScroll).observe(sheet, { childList: true, subtree: true });
+			syncScroll();
+			let suppressClick = false;
+			sheet.addEventListener('click', event => {
+				if (!suppressClick) return;
+				suppressClick = false;
 				event.preventDefault();
+				event.stopImmediatePropagation();
+			}, true);
+			sheet.addEventListener('pointerdown', event => {
+				if (!this.isMobile || this.activeDrawer !== name || this.sheetDrag || event.button !== 0) return;
+				suppressClick = false;
+				const header = event.target.closest('[data-mobile-drawer-handle], .mobile-sheet-drag-header');
+				let region = null;
+				if (!header) {
+					if (event.pointerType !== 'touch' || event.target.closest('input, select, textarea, .gradient-preview, .layer-drag-handle, .scroll-region-thumb, [data-pointer-drag]')) return;
+					for (let node = event.target; node && node !== sheet; node = node.parentElement) {
+						const style = getComputedStyle(node);
+						if (style.touchAction === 'none' || (node.scrollWidth > node.clientWidth && /^(auto|scroll)$/.test(style.overflowX))) return;
+						if (!region && /^(auto|scroll)$/.test(style.overflowY)) region = node;
+					}
+					if (!region || region.scrollTop > 0) return;
+				}
+				this.sheetDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
+					startHeight: this.sheetHeight, region, mode: 'pending', lastY: event.clientY,
+					samples: [{ y: event.clientY, time: event.timeStamp }] };
+			}, true);
+			sheet.addEventListener('pointermove', event => {
+				const drag = this.sheetDrag;
+				if (!drag || event.pointerId !== drag.pointerId) return;
+				const dy = event.clientY - drag.startY;
+				if (drag.mode === 'pending') {
+					if (Math.abs(dy) <= CONFIG.ui.gestures.tapSlopPx) return;
+					if (Math.abs(event.clientX - drag.startX) > Math.abs(dy)) { this.sheetDrag = null; return; }
+					drag.mode = drag.region && dy < 0 ? 'scroll' : 'drag';
+					sheet.setPointerCapture(event.pointerId);
+					suppressClick = true;
+					if (drag.mode === 'drag') {
+						this.cancelDrawerViewportUpdate();
+						cancelAnimationFrame(this.sheetResizeFrame);
+						document.body.classList.add('mobile-sheet-dragging');
+					}
+				}
+				if (drag.mode === 'scroll') {
+					drag.region.scrollTop += drag.lastY - event.clientY;
+				} else {
+					const detents = CONFIG.ui.mobile.sheetDetents;
+					const height = drag.startHeight - dy / window.innerHeight * 100;
+					this.setSheetHeight(Math.max(detents.minDragHeight, Math.min(detents.full, height)), { live: true, resize: false });
+					const now = event.timeStamp;
+					drag.samples.push({ y: event.clientY, time: now });
+					while (drag.samples.length > 2 && drag.samples[1].time < now - detents.velocityWindowMs) drag.samples.shift();
+				}
+				drag.lastY = event.clientY;
+				event.preventDefault();
+				event.stopPropagation();
 			});
-			const finish = (event) => {
-				if (!this.sheetDrag || event.pointerId !== this.sheetDrag.pointerId) return;
+			const finish = event => {
+				if (event.type === 'lostpointercapture' && event.target !== sheet) return;
+				const drag = this.sheetDrag;
+				if (!drag || event.pointerId !== drag.pointerId) return;
 				this.sheetDrag = null;
+				if (sheet.hasPointerCapture(event.pointerId)) sheet.releasePointerCapture(event.pointerId);
 				document.body.classList.remove('mobile-sheet-dragging');
-				// Keep the exact released height. Only a clearly collapsed sheet
-				// dismisses, so small adjustments never snap back or expand themselves.
-				if (this.sheetHeight <= 20) {
-					this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
+				if (drag.mode === 'drag') {
+					const now = event.timeStamp;
+					const recent = drag.samples.filter(sample => sample.time >= now - CONFIG.ui.mobile.sheetDetents.velocityWindowMs);
+					const first = recent[0];
+					const velocity = event.type === 'pointercancel' || !first
+						? 0 : (event.clientY - first.y) / Math.max(1, now - first.time);
+					this.settleSheet(velocity, drag.startHeight);
 				}
+				syncScroll();
 			};
-			handle.addEventListener('pointerup', finish);
-			handle.addEventListener('pointercancel', finish);
-			handle.addEventListener('keydown', (event) => {
-				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
-				if (event.key === 'ArrowDown') {
-					const nextHeight = this.sheetHeight - 10;
-					if (nextHeight <= 20) this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
-					else this.setSheetHeight(nextHeight);
-				}
-				if (event.key === 'ArrowUp') this.setSheetHeight(Math.min(85, this.sheetHeight + 10));
+			sheet.addEventListener('pointerup', finish);
+			sheet.addEventListener('pointercancel', finish);
+			sheet.addEventListener('lostpointercapture', finish);
+			handle.addEventListener('keydown', event => {
+				if (!this.isMobile || this.activeDrawer !== name) return;
+				if (!['Escape', 'ArrowDown', 'ArrowUp'].includes(event.key)) return;
+				event.preventDefault();
+				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: name === 'edit' });
+				else this.settleSheet(event.key === 'ArrowDown' ? CONFIG.ui.mobile.sheetDetents.flingVelocityPxMs : -CONFIG.ui.mobile.sheetDetents.flingVelocityPxMs, this.sheetHeight, true);
 			});
 		});
+	}
+
+	settleSheet(velocity = 0, startHeight = this.sheetHeight, keyboard = false) {
+		const config = CONFIG.ui.mobile.sheetDetents;
+		const heights = [config.peek, config.half, config.full];
+		const down = velocity >= config.flingVelocityPxMs;
+		const up = velocity <= -config.flingVelocityPxMs;
+		if (this.sheetHeight < config.dismissBelow || (down && startHeight <= (keyboard ? config.peek : config.half))) {
+			this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
+			return;
+		}
+		let height = heights.reduce((best, value) => Math.abs(value - this.sheetHeight) < Math.abs(best - this.sheetHeight) ? value : best);
+		if (down) height = heights.filter(value => value < startHeight).pop() || config.peek;
+		if (up) height = heights.find(value => value > startHeight) || config.full;
+		this.setSheetHeight(height);
 	}
 
 	setSheetHeight(height, options = {}) {
 		this.sheetHeight = height;
 		document.documentElement.style.setProperty('--mobile-drawer-height', `${height}dvh`);
-		document.body.classList.toggle('mobile-sheet-expanded', height >= 65);
-		document.querySelectorAll('[data-mobile-drawer-handle]').forEach((handle) => {
+		if (!options.live) {
+			this.sheetTransitionMs();
+			document.documentElement.style.setProperty('--mobile-drawer-reserved-height', `${height}dvh`);
+		}
+		document.body.classList.toggle('mobile-sheet-expanded', height >= CONFIG.ui.mobile.sheetDetents.full);
+		document.querySelectorAll('[data-mobile-drawer-handle]').forEach(handle => {
+			handle.setAttribute('aria-valuemin', String(CONFIG.ui.mobile.sheetDetents.minDragHeight));
+			handle.setAttribute('aria-valuemax', String(CONFIG.ui.mobile.sheetDetents.full));
 			handle.setAttribute('aria-valuenow', String(Math.round(height)));
 		});
 		if (options.resize !== false) this.requestViewportResize();
@@ -512,7 +607,7 @@ class MobileManager {
 		cancelAnimationFrame(this.sheetResizeFrame);
 		this.sheetResizeFrame = requestAnimationFrame(() => {
 			this.drawerViewportSyncing = true;
-			this.editor.viewport?.performResizeUpdate();
+			this.editor.viewport?.performResizeUpdate({ animate: true });
 			this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
 			this.drawerViewportSyncing = false;
 		});
@@ -560,6 +655,8 @@ class MobileManager {
 		document.querySelector('.mobile-bottom-nav')?.classList.remove('visible');
 		document.body.classList.remove('mobile-no-image', 'has-layer-settings', 'mobile-sheet-dragging');
 		document.documentElement.style.removeProperty('--mobile-drawer-height');
+		document.documentElement.style.removeProperty('--mobile-drawer-reserved-height');
+		this.sheetDrag = null;
 
 		const activeLayer = this.editor.layerManager.getActiveLayer();
 		if (activeLayer) {

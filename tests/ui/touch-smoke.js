@@ -1,6 +1,7 @@
 'use strict';
 
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 390, height: 844 };
@@ -59,11 +60,12 @@ function toTouchPoint(point, id) {
 	};
 }
 
-async function dispatchTouch(page, type, points) {
+async function dispatchTouch(page, type, points, timestamp) {
 	const session = await getTouchSession(page);
 	await session.send('Input.dispatchTouchEvent', {
 		type,
 		touchPoints: points.map((point, index) => toTouchPoint(point, index + 1)),
+		...(timestamp ? { timestamp } : {}),
 		modifiers: 0
 	});
 }
@@ -99,8 +101,9 @@ async function oneFingerDrag(page, from, to, steps = GESTURE_STEPS) {
 	await page.waitForTimeout(80);
 }
 
-async function oneFingerFlick(page, from, to, steps = 3, settleMs = 0) {
-	await dispatchTouch(page, 'touchStart', [from]);
+async function oneFingerFlick(page, from, to, steps = 3, settleMs = 0, timestamped = false) {
+	const startTime = timestamped ? Date.now() / 1000 : null;
+	await dispatchTouch(page, 'touchStart', [from], startTime);
 
 	for (let index = 1; index <= steps; index += 1) {
 		const progress = index / steps;
@@ -108,11 +111,11 @@ async function oneFingerFlick(page, from, to, steps = 3, settleMs = 0) {
 		await dispatchTouch(page, 'touchMove', [{
 			x: lerp(from.x, to.x, progress),
 			y: lerp(from.y, to.y, progress)
-		}]);
+		}], startTime ? startTime + index * FRAME_DELAY_MS / 1000 : null);
 	}
 
 	await page.waitForTimeout(FRAME_DELAY_MS);
-	await dispatchTouch(page, 'touchEnd', []);
+	await dispatchTouch(page, 'touchEnd', [], startTime ? startTime + (steps + 1) * FRAME_DELAY_MS / 1000 : null);
 	if (settleMs > 0) {
 		await page.waitForTimeout(settleMs);
 	}
@@ -206,6 +209,7 @@ async function createHarnessPage(browser) {
 		pageErrors.push(error.message || String(error));
 	});
 
+	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
 	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 	await page.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
 	await dismissVisibleModals(page);
@@ -990,6 +994,7 @@ async function check14(page) {
 	await page.waitForTimeout(60);
 
 	const firstBefore = await getStickerState(page, firstSticker.layerId);
+	const historyBefore = await getHistoryIndex(page);
 	const viewportBefore = await getViewportMetrics(page);
 	const center = await getElementCenter(page, `.sticker-element[data-layer-id="${firstSticker.layerId}"]`);
 
@@ -1005,14 +1010,10 @@ async function check14(page) {
 	const viewportAfter = await getViewportMetrics(page);
 	const activeLayerId = await getActiveLayerId(page);
 
-	assert(
-		viewportAfter.zoom > viewportBefore.zoom,
-		`Pinch over an unselected sticker did not zoom the viewport (${viewportBefore.zoom} -> ${viewportAfter.zoom})`
-	);
-	assert(activeLayerId === secondSticker.layerId, 'Pinch over an unselected sticker changed the active layer');
-	approxEqual(firstAfter.position.x, firstBefore.position.x, POSITION_TOLERANCE_PX, 'Unselected sticker X changed during viewport pinch');
-	approxEqual(firstAfter.position.y, firstBefore.position.y, POSITION_TOLERANCE_PX, 'Unselected sticker Y changed during viewport pinch');
-	approxEqual(firstAfter.scale.x, firstBefore.scale.x, SCALE_TOLERANCE * 100, 'Unselected sticker scale changed during viewport pinch');
+	approxEqual(viewportAfter.zoom, viewportBefore.zoom, 0.001, 'Unselected sticker pinch zoomed the viewport');
+	assert(activeLayerId === firstSticker.layerId, 'Pinch did not select the unselected sticker');
+	assert(firstAfter.scale.x > firstBefore.scale.x * 1.1, 'Pinch did not scale the newly selected sticker');
+	assert(await getHistoryIndex(page) === historyBefore + 1, 'Unselected pinch did not create one undo step');
 }
 
 async function check15(page) {
@@ -1283,6 +1284,167 @@ async function check24(page) {
 	approxEqual(viewportAfter.zoom, viewportBefore.zoom, 0.001, 'Group pinch unexpectedly zoomed the viewport');
 }
 
+async function checkCornerPinch(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const sticker = await createTestSticker(page, { position: { x: 110, y: 100 } });
+	const before = await getStickerState(page, sticker.layerId);
+	const viewportBefore = await getViewportMetrics(page);
+	const center = await getElementCenter(page, `.sticker-element[data-layer-id="${sticker.layerId}"]`);
+	const corner = await getElementCenter(page, '.transform-handle-corner.corner-br');
+	const historyBefore = await getHistoryIndex(page);
+	await dispatchTouch(page, 'touchStart', [center]);
+	await dispatchTouch(page, 'touchStart', [center, corner]);
+	assert(await page.evaluate(() => window.editor.viewport.gestureManager.route?.type === 'layerGesture'), 'Corner contact did not join the pinch');
+	assert(await page.evaluate(() => !window.editor.stickerManager.layerTransforms.get(window.editor.layerManager.activeLayerId).isDraggingHandle), 'Corner contact also started resize');
+	await dispatchTouch(page, 'touchMove', [center, { x: center.x + (corner.x - center.x) * 1.4, y: center.y + (corner.y - center.y) * 1.4 }]);
+	await dispatchTouch(page, 'touchEnd', []);
+	await page.waitForTimeout(100);
+	const after = await getStickerState(page, sticker.layerId);
+	assert(after.scale.x > before.scale.x * 1.1, 'Corner pinch did not scale');
+	approxEqual(after.scale.x / before.scale.x, after.scale.y / before.scale.y, 0.01, 'Corner pinch scaled unequally');
+	approxEqual((await getViewportMetrics(page)).zoom, viewportBefore.zoom, 0.001, 'Corner pinch zoomed viewport');
+	assert(await getHistoryIndex(page) === historyBefore + 1, 'Corner pinch did not create one history step');
+}
+
+async function openEditSheet(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	await createTestSticker(page, { position: { x: 110, y: 100 } });
+	await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
+	await page.waitForTimeout(450);
+}
+
+async function checkSheetFlick(page) {
+	await openEditSheet(page);
+	await page.evaluate(() => {
+		const mobile = window.editor.mobileManager;
+		const settle = mobile.settleSheet.bind(mobile);
+		mobile.settleSheet = (...args) => { window.__sheetRelease = args; settle(...args); };
+	});
+	const header = await getElementCenter(page, '#mobileEditTitle');
+	await oneFingerFlick(page, header, { x: header.x, y: header.y + 120 }, 2, 0, true);
+	await page.waitForTimeout(450);
+	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === null), `Fast downward header flick did not close Edit from half: ${JSON.stringify(await page.evaluate(() => window.__sheetRelease))}`);
+	await page.evaluate(() => {
+		const mobile = window.editor.mobileManager;
+		mobile.openDrawer('edit');
+		mobile.setSheetHeight(CONFIG.ui.mobile.sheetDetents.peek);
+	});
+	await page.waitForTimeout(450);
+	const peek = await getElementCenter(page, '#mobileEditTitle');
+	await oneFingerFlick(page, peek, { x: peek.x, y: peek.y + 80 }, 2, 0, true);
+	await page.waitForTimeout(450);
+	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === null), 'Downward flick did not close peek');
+}
+
+async function checkSheetSettle(page) {
+	await openEditSheet(page);
+	await page.evaluate(() => {
+		const viewport = window.editor.viewport;
+		const resize = viewport.performResizeUpdate.bind(viewport);
+		window.__sheetResizeCalls = 0;
+		viewport.performResizeUpdate = options => { window.__sheetResizeCalls++; resize(options); };
+	});
+	const before = await getViewportMetrics(page);
+	const header = await getElementCenter(page, '#mobileEditTitle');
+	await dispatchTouch(page, 'touchStart', [header]);
+	for (let step = 1; step <= 8; step++) {
+		await page.waitForTimeout(45);
+		await dispatchTouch(page, 'touchMove', [{ x: header.x, y: header.y + step * 10 }]);
+	}
+	const during = await getViewportMetrics(page);
+	approxEqual(during.zoom, before.zoom, 0.001, 'Canvas zoom changed during sheet drag');
+	approxEqual(during.panY, before.panY, 0.001, 'Canvas pan changed during sheet drag');
+	approxEqual(during.rect.height, before.rect.height, 0.001, 'Preview space changed during sheet drag');
+	assert(await page.evaluate(() => window.__sheetResizeCalls === 0), 'Canvas refit during sheet drag');
+	await page.waitForTimeout(120);
+	await dispatchTouch(page, 'touchEnd', []);
+	await page.waitForTimeout(450);
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Slow release between detents did not settle to half');
+	assert(await page.evaluate(() => window.__sheetResizeCalls === 1), 'Sheet settle did not refit exactly once');
+	await page.locator('#mobileSettingsSheetHandle').focus();
+	await page.keyboard.press('ArrowDown');
+	await page.waitForTimeout(350);
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.peek), 'Keyboard did not step to peek');
+	await page.keyboard.press('ArrowUp');
+	await page.waitForTimeout(350);
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Keyboard did not step to half');
+	await page.evaluate(() => {
+		PREFERENCES.set('reduceMotion', true);
+		window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.full);
+	});
+	assert(await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('mobileSettingsDrawer')).transitionDuration) === 0), 'App Reduce Motion did not disable sheet transitions');
+	await page.evaluate(() => PREFERENCES.set('reduceMotion', false));
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await page.evaluate(() => window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half));
+	assert(await page.evaluate(() => getComputedStyle(document.getElementById('mobileSettingsDrawer')).transitionDuration === '0s'), 'OS Reduce Motion did not disable sheet transitions');
+	await page.evaluate(() => {
+		document.documentElement.style.setProperty('--mobile-safe-area-bottom', '34px');
+		window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.full);
+	});
+	const safe = await page.evaluate(() => ({
+		height: document.getElementById('mobileSettingsDrawer').getBoundingClientRect().height,
+		expected: window.innerHeight * CONFIG.ui.mobile.sheetDetents.full / 100,
+		buttonBottom: document.getElementById('mobileSettingsBtn').getBoundingClientRect().bottom
+	}));
+	approxEqual(safe.height, safe.expected, 1, 'Safe-area inset changed the full detent height');
+	assert(safe.buttonBottom <= VIEWPORT.height - 34, 'Bottom nav button did not clear the simulated home indicator');
+}
+
+async function checkSheetContent(page) {
+	await openEditSheet(page);
+	await page.evaluate(() => {
+		const mobile = window.editor.mobileManager;
+		for (let i = 0; i < 12; i++) window.editor.layerManager.addLayer(LayerType.TEXT_GLITTER, { textLayer: { text: `Row ${i}` } });
+		mobile.openDrawer('layers');
+	});
+	await page.waitForTimeout(450);
+	const content = await page.locator('#layersList').boundingBox();
+	const start = { x: content.x + content.width / 2, y: content.y + 60 };
+	await dispatchTouch(page, 'touchStart', [start]);
+	await dispatchTouch(page, 'touchMove', [{ x: start.x, y: start.y + 50 }]);
+	await page.waitForTimeout(50);
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetDrag?.mode === 'drag'), 'Pulling down top content did not drag the sheet');
+	await page.waitForTimeout(120);
+	await dispatchTouch(page, 'touchEnd', []);
+	await page.waitForTimeout(400);
+	await page.evaluate(() => window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half));
+	await page.waitForTimeout(400);
+	const scroll = await page.locator('#layersList').boundingBox();
+	const at = { x: scroll.x + scroll.width / 2, y: scroll.y + 100 };
+	await oneFingerDrag(page, at, { x: at.x, y: at.y - 75 });
+	assert(await page.evaluate(() => document.getElementById('layersList').scrollTop > 0), 'Upward movement from top did not scroll Layers');
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Content scroll changed the detent');
+	await oneFingerDrag(page, at, { x: at.x, y: at.y + 30 });
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Scrolled list handed off before the touch ended');
+	await page.evaluate(() => window.editor.mobileManager.openDrawer('design'));
+	await page.waitForTimeout(450);
+	const library = await page.locator('#designPanel .asset-browser-content:visible').first().boundingBox();
+	const pull = { x: library.x + library.width / 2, y: library.y + 70 };
+	await dispatchTouch(page, 'touchStart', [pull]);
+	await dispatchTouch(page, 'touchMove', [{ x: pull.x, y: pull.y + 35 }]);
+	await page.waitForTimeout(50);
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetDrag?.mode === 'drag'), 'Library content did not hand off its downward pull');
+	await page.waitForTimeout(120);
+	await dispatchTouch(page, 'touchEnd', []);
+	await page.waitForTimeout(350);
+	await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
+	await page.waitForTimeout(450);
+	const slider = page.locator('#mobileSettingsContainer input[type="range"]:visible').first();
+	await slider.scrollIntoViewIfNeeded();
+	const range = await slider.boundingBox();
+	const value = await slider.inputValue();
+	await oneFingerDrag(page, { x: range.x + range.width * 0.3, y: range.y + range.height / 2 }, { x: range.x + range.width * 0.7, y: range.y + range.height / 2 });
+	assert(await slider.inputValue() !== value, 'Edit slider stopped accepting horizontal drag');
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Slider drag moved the sheet');
+	await page.evaluate(() => window.editor.setTool(ToolType.BRUSH));
+	await page.waitForTimeout(100);
+	const tab = page.locator('#mobileEditTitle [data-edit-section]').first();
+	await tab.tap();
+	assert(await tab.getAttribute('aria-pressed') === 'true', 'Sheet header segmented control stopped responding to taps');
+}
+
 async function runSuite(browser, runNumber) {
 	console.log(`\nRun ${runNumber}: ${APP_URL}`);
 
@@ -1300,7 +1462,7 @@ async function runSuite(browser, runNumber) {
 		['Pan does not trigger a post-gesture selection change after a real viewport move', check11],
 		['Touch end outside viewport keeps the handler reusable', check12],
 		['Touch drag and pinch on a selected text layer move and scale it', check13],
-		['Pinch over an unselected sticker zooms the viewport and leaves the sticker untouched', check14],
+		['Pinch over an unselected sticker selects and scales it without viewport zoom', check14],
 		['Two-finger gesture on a selected sticker translates, scales, and rotates it in one move', check15],
 		['Double-tap on empty canvas zooms in anchored at the tap point', check16],
 		['Double-tap at 4x returns the viewport to fit zoom', check17],
@@ -1309,7 +1471,11 @@ async function runSuite(browser, runNumber) {
 		['Viewport inertia glides after release, settles, and halts on pointerdown', check20],
 		['Double-tap on text focuses canvas input without opening the drawer', check21],
 		['Mobile layer reorder uses touch pointer events to move a layer in the list', check22],
-		['Two-finger pinch inside the shared group box scales the group without zooming the viewport', check24]
+		['Two-finger pinch inside the shared group box scales the group without zooming the viewport', check24],
+		['Second finger on a corner joins a proportional pinch with one undo step', checkCornerPinch],
+		['Fast downward Edit header flick closes half and peek', checkSheetFlick],
+		['Slow sheet drag settles at a detent and refits once; arrows step detents', checkSheetSettle],
+		['Top content pulls the sheet; upward and scrolled content stay scrolling', checkSheetContent]
 	];
 	let failed = 0;
 	const requestedCheck = Number(process.env.TOUCH_CHECK || 0);

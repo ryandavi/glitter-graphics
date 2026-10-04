@@ -979,10 +979,12 @@
   --mobile-menu-height: 60px;
   --mobile-header-height: 50px;
   --mobile-top-nav-height: 50px;
-  --mobile-bottom-nav-height: 60px;
+  --mobile-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-bottom-nav-height: calc(60px + var(--mobile-safe-area-bottom));
   --mobile-drawer-height: 50vh;
   /* Fallback for older browsers */
   --mobile-drawer-height: 50dvh;
+  --mobile-drawer-reserved-height: var(--mobile-drawer-height);
   /* Modern browsers override */
   --mobile-toolbar-width: 50px;
   --mobile-settings-handle-height: 18px;
@@ -10875,7 +10877,7 @@ body.modal-open {
     background: var(--color-bg-secondary);
     border-top: 1px solid var(--color-border);
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-sm) calc(var(--spacing-sm) + var(--mobile-safe-area-bottom));
     z-index: var(--z-header-menu-top);
   }
   .mobile-bottom-nav.visible {
@@ -11023,7 +11025,6 @@ body.modal-open {
     right: var(--mobile-sheet-inset);
     display: flex;
     height: var(--mobile-drawer-height);
-    max-height: 85dvh;
     background: var(--panel-bg);
     backdrop-filter: var(--panel-backdrop);
     border: 1px solid var(--color-border);
@@ -11034,7 +11035,7 @@ body.modal-open {
     opacity: 1;
     visibility: hidden;
     pointer-events: none;
-    transition: transform var(--transition-base), visibility 0s var(--transition-base);
+    transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
     flex-direction: column;
     overflow: hidden;
   }
@@ -11067,7 +11068,7 @@ body.modal-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: var(--spacing-lg);
+    min-height: var(--touch-target-min);
     cursor: ns-resize;
     touch-action: none;
     flex: 0 0 auto;
@@ -11088,7 +11089,8 @@ body.modal-open {
     align-items: center;
     gap: var(--spacing-sm);
     flex: 0 0 auto;
-    min-height: var(--row-height);
+    min-height: var(--touch-target-min);
+    touch-action: none;
     padding: 0 var(--spacing-base) var(--spacing-xs) var(--spacing-lg);
     border: 0;
     background: none;
@@ -11133,12 +11135,20 @@ body.modal-open {
     box-shadow: none;
   }
   body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
-    padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height) + var(--mobile-sheet-inset));
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
+  }
+  .mobile-sheet-scroll-top {
+    touch-action: pan-x;
+    overscroll-behavior-y: contain;
   }
   body.mobile-sheet-dragging .mobile-settings-drawer,
   body.mobile-sheet-dragging .main-content > .design-panel,
   body.mobile-sheet-dragging .main-content > .layers-panel,
-  body.mobile-sheet-dragging .main-content > .preview-panel {
+  body.mobile-sheet-dragging .main-content > .preview-panel,
+  body.mobile-sheet-reduced-motion .mobile-settings-drawer,
+  body.mobile-sheet-reduced-motion .main-content > .design-panel,
+  body.mobile-sheet-reduced-motion .main-content > .layers-panel,
+  body.mobile-sheet-reduced-motion .main-content > .preview-panel {
     transition: none;
   }
   body.mobile-document-opening .main-content > .design-panel,
@@ -11155,7 +11165,6 @@ body.modal-open {
     right: var(--mobile-sheet-inset);
     width: auto;
     height: var(--mobile-drawer-height);
-    max-height: var(--mobile-drawer-height);
     background: var(--panel-bg);
     backdrop-filter: var(--panel-backdrop);
     padding-top: var(--spacing-lg);
@@ -11171,7 +11180,7 @@ body.modal-open {
     opacity: 1;
     visibility: hidden;
     pointer-events: none;
-    transition: transform var(--transition-base), visibility 0s var(--transition-base);
+    transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
   }
   body.editOpen .mobile-settings-drawer,
   body.designOpen .main-content > .design-panel,

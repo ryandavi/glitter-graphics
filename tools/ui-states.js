@@ -230,6 +230,21 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 
 async function phoneStates(page, visit, { set = 'all' } = {}) {
 	const full = set === 'all';
+	if (set === 'drawers') {
+		const ids = await addLayers(page);
+		await page.evaluate(i => window.editor.layerManager.setActiveLayer(i.text), ids);
+		for (const drawer of ['layers', 'design', 'edit']) {
+			await page.evaluate(name => window.editor.mobileManager.openDrawer(name), drawer);
+			for (const height of [28, 50, 85]) {
+				await page.evaluate(h => window.editor.mobileManager.setSheetHeight(h), height);
+				await wait(page, 700);
+				await visit(`phone drawer ${drawer} ${height}`);
+			}
+			await page.evaluate(() => window.editor.mobileManager.closeAllDrawers({ immediate: true }));
+			await wait(page, 400);
+		}
+		return;
+	}
 	const tab = async (label) => {
 		try { await page.locator('button').filter({ hasText: new RegExp(`^\\s*${label}`) }).first().tap({ timeout: 3000 }); } catch (e) { console.log(`(phone tab ${label}: not tappable)`); }
 		await wait(page, 600);

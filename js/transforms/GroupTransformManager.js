@@ -112,15 +112,15 @@ class GroupTransformManager {
 		};
 	}
 
-	containsCanvasPoint(x, y) {
+	containsCanvasPoint(x, y, tolerance = 0) {
 		const bounds = this.getBounds();
 		if (!bounds) return false;
-		return x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom;
+		return x >= bounds.left - tolerance && x <= bounds.right + tolerance && y >= bounds.top - tolerance && y <= bounds.bottom + tolerance;
 	}
 
-	containsScreenPoint(screenX, screenY) {
+	containsScreenPoint(screenX, screenY, tolerancePx = 0) {
 		const point = this.editor.viewport.screenToCanvas(screenX, screenY);
-		return this.containsCanvasPoint(point.x, point.y);
+		return this.containsCanvasPoint(point.x, point.y, tolerancePx / this.editor.viewport.currentZoom);
 	}
 
 	handleMoveSelectionIntent(event) {
