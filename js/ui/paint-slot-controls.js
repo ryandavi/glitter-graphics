@@ -114,15 +114,6 @@ function bindSlotTextureCoordinateControls(options) {
 			};
 			input.addEventListener('input', () => write(false));
 			input.addEventListener('change', () => write(true));
-			input.addEventListener('keydown', (event) => {
-				if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-				event.preventDefault();
-				const step = event.shiftKey ? 10 : 1;
-				const current = parseFloat(input.value || '0') || 0;
-				input.value = String(clampOffset(current + (event.key === 'ArrowUp' ? step : -step)));
-				input.dispatchEvent(new Event('input'));
-				input.dispatchEvent(new Event('change'));
-			});
 		} else {
 			// Other panels: the slider pair (buildPairRow), with per-axis revert.
 			bindSlider(input, document.getElementById(`${prefix}TextureOffset${axis}Value`), {
@@ -201,7 +192,10 @@ function syncSlotTextureCoordinateControls(prefix, data) {
 //                                promise. change.live: mid-gesture, no history.
 //                                Otherwise the host records history and
 //                                resyncs the panel. change.geometry: the edit
-//                                changes the painted footprint.
+//                                changes the painted footprint. change.ticket:
+//                                a live edit's latest-wins ticket (slider.js);
+//                                an async apply stops drawing once
+//                                ticket.isCurrent() is false.
 //   render(layer)                re-render only (gradient and texture drags)
 //   commit(layer)                record history after a live gesture ends
 //   armPicker(key)               point the glitter gallery at a slot
@@ -321,7 +315,7 @@ function readFieldControlValue(root, binding) {
 }
 
 // A number input bound to one field: typing previews, a committed value
-// (Enter, blur, a step) records history. Arrow keys step by 1, Shift by 10.
+// (Enter, blur, a key step) records history.
 function bindFieldNumberInput(input, spec, handlers) {
 	const clamp = (n) => Math.max(spec?.min ?? -Infinity, Math.min(spec?.max ?? Infinity, Math.round(n)));
 	const write = (commit) => {
@@ -332,15 +326,6 @@ function bindFieldNumberInput(input, spec, handlers) {
 	};
 	input.addEventListener('input', () => write(false));
 	input.addEventListener('change', () => write(true));
-	input.addEventListener('keydown', (event) => {
-		if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		const step = event.shiftKey ? 10 : 1;
-		input.value = String(clamp((parseFloat(input.value || '0') || 0) + (event.key === 'ArrowUp' ? step : -step)));
-		input.dispatchEvent(new Event('input'));
-		input.dispatchEvent(new Event('change'));
-	});
 }
 
 function bindFieldControl(control, binding, handlers) {
@@ -351,7 +336,8 @@ function bindFieldControl(control, binding, handlers) {
 	bindSlider(control, document.getElementById(`${control.id}Value`), {
 		resetValue: binding.spec?.value,
 		resetButton: document.getElementById(`reset${fieldControlCap(control.id)}`),
-		apply: (value) => handlers.apply(value),
+		cost: binding.spec?.cost,
+		apply: (value, slider, event, ticket) => handlers.apply(value, ticket),
 		onCommit: () => handlers.commit()
 	});
 }
@@ -389,10 +375,10 @@ function bindLayerFieldControls(host) {
 		const control = binding.id && document.getElementById(binding.id);
 		if (!control) return;
 		bindFieldControl(control, binding, {
-			apply: (value) => {
+			apply: (value, ticket) => {
 				const layer = host.getLayer();
 				if (!layer) return undefined;
-				const result = host.apply(layer, () => writeFieldValue(layer, binding, value), { live: true, geometry: binding.geometry });
+				const result = host.apply(layer, () => writeFieldValue(layer, binding, value), { live: true, geometry: binding.geometry, ticket });
 				host.afterFieldChange?.(layer, null, binding);
 				return result;
 			},
@@ -445,18 +431,28 @@ function bindPaintSlotControls(host) {
 			byId(id)?.addEventListener('click', () => withLayer(() => host.armPicker(key)));
 		});
 
+		// A color drag repaints once per frame; closing the picker applies the
+		// final color before it commits.
 		const color = byId(`${prefix}Color`);
-		color?.addEventListener('input', () => withLayer((layer) => host.apply(layer, () => {
-			host.ensureSlot(layer, key).color = color.value;
-		}, { live: true })));
-		color?.addEventListener('change', () => withLayer((layer) => host.commit(layer)));
+		color?.addEventListener('input', () => {
+			const value = color.value;
+			scheduleLiveApply(color.id, 'style', (ticket) => withLayer((layer) => host.apply(layer, () => {
+				host.ensureSlot(layer, key).color = value;
+			}, { live: true, ticket })));
+		});
+		color?.addEventListener('change', () => {
+			const commit = () => withLayer((layer) => host.commit(layer));
+			const settled = flushLiveApply(color.id);
+			if (settled) settled.then(commit, commit);
+			else commit();
+		});
 
 		definition.fields.forEach((binding) => {
 			const control = byId(`${prefix}${binding.suffix}`);
 			if (!control) return;
 			bindFieldControl(control, binding, {
-				apply: (value) => withLayer((layer) => {
-					const result = host.apply(layer, () => writeFieldValue(host.ensureSlot(layer, key), binding, value), { live: true, geometry: binding.geometry });
+				apply: (value, ticket) => withLayer((layer) => {
+					const result = host.apply(layer, () => writeFieldValue(host.ensureSlot(layer, key), binding, value), { live: true, geometry: binding.geometry, ticket });
 					refreshSlotFieldSwatch(host, layer, definition, binding);
 					host.afterFieldChange?.(layer, key, binding);
 					return result;

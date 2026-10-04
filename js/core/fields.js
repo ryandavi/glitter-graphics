@@ -9,6 +9,12 @@
 //
 // `scale: 'log'` maps the DOM track geometrically onto [min, max] (slider.js);
 // `value` is always the real value. Loads before config.js.
+//
+// `cost` is what one live update of the field costs, which picks how often the
+// canvas follows a drag (the scheduler in js/ui/slider.js):
+//   style    (default) a CSS property or filter on existing elements
+//   raster   re-rasterizes a mask or canvas on the main thread
+//   compute  a whole-document recompute or a scene rebuild
 const FIELDS = Object.freeze({
 	animSpeed: { label: 'Speed', unit: 'ms', min: 120, max: 20000, step: 10, value: 1400 },
 	animAmount: { label: 'Intensity', unit: '', min: 0, max: 200, step: 1, value: 10 },
@@ -69,48 +75,48 @@ const FIELDS = Object.freeze({
 	hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
 	saturation: { label: 'Saturation', unit: '%', min: 0, max: 200, value: 100 },
 	brightness: { label: 'Brightness', unit: '%', min: 25, max: 200, value: 100 },
-	borderWidth: { label: 'Width', unit: 'px', min: 1, max: 100, value: 6 },
-	textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4 },
-	stickerOutlineWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 3 },
-	borderDotSpacing: { label: 'Dot spacing', unit: 'px', min: 1, max: 60, value: 10 },
-	shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 0 },
+	borderWidth: { label: 'Width', unit: 'px', min: 1, max: 100, value: 6, cost: 'raster' },
+	textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4, cost: 'raster' },
+	stickerOutlineWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 3, cost: 'raster' },
+	borderDotSpacing: { label: 'Dot spacing', unit: 'px', min: 1, max: 60, value: 10, cost: 'raster' },
+	shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 0, cost: 'raster' },
 	shapeImageOffsetX: { label: 'Horizontal offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	shapeImageOffsetY: { label: 'Vertical offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	shapeImageScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 	shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 	shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
-	shadowSpread: { label: 'Spread', unit: 'px', min: 0, max: 100, value: 0 },
+	shadowSpread: { label: 'Spread', unit: 'px', min: 0, max: 100, value: 0, cost: 'raster' },
 	// 0 is a hard-edged shadow; above it the edge fades out over that many px (a glow).
-	shadowBlur: { label: 'Blur', unit: 'px', min: 0, max: 60, value: 0 },
-	bevelSize: { label: 'Size', unit: 'px', min: 1, max: 64, value: 6 },
-	bevelDepth: { label: 'Depth', unit: '%', min: 0, max: 100, value: 60 },
-	bevelAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 135 },
-	bevelAltitude: { label: 'Altitude', unit: '\u00b0', min: 0, max: 90, step: 1, value: 35 },
-	bevelSoften: { label: 'Soften', unit: 'px', min: 0, max: 20, step: 1, value: 1 },
-	sparkleCount: { label: 'Amount', unit: '', min: 1, max: 80, step: 1, value: 14 },
-	sparkleSizeMin: { label: 'Smallest', unit: 'px', min: 2, max: 120, step: 1, value: 8 },
-	sparkleSizeMax: { label: 'Largest', unit: 'px', min: 2, max: 120, step: 1, value: 22 },
+	shadowBlur: { label: 'Blur', unit: 'px', min: 0, max: 60, value: 0, cost: 'raster' },
+	bevelSize: { label: 'Size', unit: 'px', min: 1, max: 64, value: 6, cost: 'raster' },
+	bevelDepth: { label: 'Depth', unit: '%', min: 0, max: 100, value: 60, cost: 'raster' },
+	bevelAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 135, cost: 'raster' },
+	bevelAltitude: { label: 'Altitude', unit: '\u00b0', min: 0, max: 90, step: 1, value: 35, cost: 'raster' },
+	bevelSoften: { label: 'Soften', unit: 'px', min: 0, max: 20, step: 1, value: 1, cost: 'raster' },
+	sparkleCount: { label: 'Amount', unit: '', min: 1, max: 80, step: 1, value: 14, cost: 'compute' },
+	sparkleSizeMin: { label: 'Smallest', unit: 'px', min: 2, max: 120, step: 1, value: 8, cost: 'compute' },
+	sparkleSizeMax: { label: 'Largest', unit: 'px', min: 2, max: 120, step: 1, value: 22, cost: 'compute' },
 	sparkleCycle: { label: 'Speed', unit: 'ms', min: 400, max: 8000, step: 50, value: 2400 },
-	sparkleSensitivity: { label: 'Sensitivity', unit: '%', min: 0, max: 100, step: 1, value: 55 },
-	sparkleSpacing: { label: 'Spacing', unit: 'px', min: 2, max: 200, step: 1, value: 20 },
-	frameThickness: { label: 'Thickness', unit: 'px', min: 1, max: 200, step: 1, value: 18 },
-	frameSliceScale: { label: 'Border scale', unit: '%', min: 25, max: 400, step: 1, value: 100 },
-	frameInset: { label: 'Inset', unit: 'px', min: 0, max: 200, step: 1, value: 0 },
-	frameRadius: { label: 'Corners', unit: 'px', min: 0, max: 200, step: 1, value: 0 },
-	frameShade: { label: 'Bevel depth', unit: '%', min: 0, max: 100, step: 1, value: 40 },
+	sparkleSensitivity: { label: 'Sensitivity', unit: '%', min: 0, max: 100, step: 1, value: 55, cost: 'compute' },
+	sparkleSpacing: { label: 'Spacing', unit: 'px', min: 2, max: 200, step: 1, value: 20, cost: 'compute' },
+	frameThickness: { label: 'Thickness', unit: 'px', min: 1, max: 200, step: 1, value: 18, cost: 'raster' },
+	frameSliceScale: { label: 'Border scale', unit: '%', min: 25, max: 400, step: 1, value: 100, cost: 'raster' },
+	frameInset: { label: 'Inset', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
+	frameRadius: { label: 'Corners', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
+	frameShade: { label: 'Bevel depth', unit: '%', min: 0, max: 100, step: 1, value: 40, cost: 'raster' },
 	// A new text background uses the Instagram preset, whose geometry is these
 	// defaults (TEXT_BACKGROUND_PRESETS in config.js), so the reverts return there.
-	textBackgroundPaddingH: { label: 'Horizontal padding', unit: 'px', min: 0, max: 200, value: 20 },
-	textBackgroundPaddingV: { label: 'Vertical padding', unit: 'px', min: 0, max: 200, value: 10 },
-	textBackgroundRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 16 },
-	textBackgroundMergeDistance: { label: 'Merge distance', unit: 'px', min: 0, max: 120, value: 20 },
-	textBackgroundSpacing: { label: 'Spacing sensitivity', unit: '%', min: 0, max: 100, value: 60 },
-	threshold: { label: 'Color tolerance', unit: '', min: 0, max: 255, value: 50 },
-	feather: { label: 'Edge feather', unit: 'px', min: 0, max: 50, value: 0 },
-	textFontSize: { label: 'Font size', unit: 'px', min: 12, max: 256, value: 64 },
-	textLetterSpacing: { label: 'Letter spacing', unit: 'px', min: -20, max: 40, value: 0 },
-	textLineHeight: { label: 'Line height', unit: '%', min: 50, max: 250, value: 100 },
-	textWarpBend: { label: 'Bend', unit: '%', min: -100, max: 100, step: 1, value: 50 },
+	textBackgroundPaddingH: { label: 'Horizontal padding', unit: 'px', min: 0, max: 200, value: 20, cost: 'raster' },
+	textBackgroundPaddingV: { label: 'Vertical padding', unit: 'px', min: 0, max: 200, value: 10, cost: 'raster' },
+	textBackgroundRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 16, cost: 'raster' },
+	textBackgroundMergeDistance: { label: 'Merge distance', unit: 'px', min: 0, max: 120, value: 20, cost: 'raster' },
+	textBackgroundSpacing: { label: 'Spacing sensitivity', unit: '%', min: 0, max: 100, value: 60, cost: 'raster' },
+	threshold: { label: 'Color tolerance', unit: '', min: 0, max: 255, value: 50, cost: 'compute' },
+	feather: { label: 'Edge feather', unit: 'px', min: 0, max: 50, value: 0, cost: 'compute' },
+	textFontSize: { label: 'Font size', unit: 'px', min: 12, max: 256, value: 64, cost: 'raster' },
+	textLetterSpacing: { label: 'Letter spacing', unit: 'px', min: -20, max: 40, value: 0, cost: 'raster' },
+	textLineHeight: { label: 'Line height', unit: '%', min: 50, max: 250, value: 100, cost: 'raster' },
+	textWarpBend: { label: 'Bend', unit: '%', min: -100, max: 100, step: 1, value: 50, cost: 'raster' },
 	transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, value: 100 },
 	transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
 	transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
@@ -119,7 +125,10 @@ const FIELDS = Object.freeze({
 });
 
 if (typeof module !== 'undefined' && module.exports) module.exports = FIELDS;
-Object.values(FIELDS).forEach(Object.freeze);
+Object.values(FIELDS).forEach((spec) => {
+	spec.cost ||= 'style';
+	Object.freeze(spec);
+});
 
 // ===== FIELD BINDINGS =====
 // A binding says which data path one spec edits:

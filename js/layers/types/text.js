@@ -5,7 +5,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	displayName: 'Text',
 	paintSlots: [
 		{
-			key: 'backgroundFill', role: 'background', path: 'textData.textBackground.fill', enabledPath: 'textData.textBackground.enabled',
+			key: 'backgroundFill', role: 'background', label: 'background', path: 'textData.textBackground.fill', enabledPath: 'textData.textBackground.enabled',
 			sourceLabel: 'backgroundFill', glitterDefault: 'backgroundGlitterId',
 			panelPrefix: 'textBackground', modes: ['glitter', 'solid']
 		},
@@ -20,11 +20,11 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		},
 		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId', panelPrefix: 'textFill', modes: ['none', 'glitter', 'solid'] },
 		{
-			key: 'bevelHighlight', role: 'bevel', path: 'textData.bevel.highlight', enabledPath: 'textData.bevel.enabled',
+			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'textData.bevel.highlight', enabledPath: 'textData.bevel.enabled',
 			glitterDefault: 'fillGlitterId', panelPrefix: 'textBevel', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', path: 'textData.bevel.shade', enabledPath: 'textData.bevel.enabled',
+			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'textData.bevel.shade', enabledPath: 'textData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId', panelPrefix: 'textBevelShade', modes: ['glitter', 'solid']
 		},
 		{

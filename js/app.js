@@ -453,7 +453,9 @@ class GlitterEditor {
 
 
 	// ===== HELPER: Attach slider with live update and reset =====
-	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue) {
+	// field: the FIELDS spec whose `cost` sets how often the canvas follows.
+	// updateCallback mirrors the value elsewhere and runs on every tick.
+	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue, field = null) {
 		const slider = document.getElementById(sliderId);
 		const valueDisplay = document.getElementById(valueId);
 		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
@@ -466,17 +468,20 @@ class GlitterEditor {
 			suffix,
 			resetValue,
 			resetButton: resetBtn,
-			apply: (value, sliderEl, event) => {
-				if (typeof updateCallback === 'function') {
-					updateCallback(event || { target: sliderEl });
-				}
-				if (usesDocumentBinding) {
-					this.saveFillLayerControl(sliderId);
-					this.debouncedSliderUpdate();
-				}
-			},
+			cost: field?.cost,
+			onInput: typeof updateCallback === 'function'
+				? (value, sliderEl, event) => updateCallback(event || { target: sliderEl })
+				: null,
+			apply: usesDocumentBinding ? () => this.applyFillLayerControl(sliderId) : null,
 			onCommit: usesDocumentBinding ? () => this.saveState('Edit document') : null
 		});
+	}
+
+	// One live update of a fill layer control. The live-apply scheduler
+	// (slider.js) has already picked the frame, so the preview redraws here.
+	applyFillLayerControl(controlId) {
+		this.saveFillLayerControl(controlId);
+		this.updatePreview();
 	}
 
 	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
@@ -613,29 +618,20 @@ class GlitterEditor {
 		const contextMultiSelect = document.getElementById('contextMultiSelect');
 		const contextContiguous = document.getElementById('contextContiguous');
 
-		// Threshold slider
-		if (contextThreshold && contextThresholdValue) {
-			contextThreshold.addEventListener('input', (e) => {
-				const value = e.target.value;
-				contextThresholdValue.textContent = value;
-
-				// Sync with design panel
+		// Threshold slider: a second handle on the design panel's Threshold.
+		bindSlider(contextThreshold, contextThresholdValue, {
+			formatValue: (value) => String(value),
+			cost: FIELDS.threshold.cost,
+			onInput: (value) => {
 				const threshold = document.getElementById('threshold');
 				const thresholdValue = document.getElementById('thresholdValue');
 				if (threshold) threshold.value = value;
 				if (thresholdValue) thresholdValue.textContent = value;
-
 				this.updateResetButton('threshold');
-
-				// Save and debounce preview update
-				this.saveFillLayerControl('threshold');
-				this.debouncedSliderUpdate();
-			});
-
-			contextThreshold.addEventListener('change', () => {
-				this.saveState('Edit document');
-			});
-		}
+			},
+			apply: () => this.applyFillLayerControl('threshold'),
+			onCommit: () => this.saveState('Edit document')
+		});
 
 		// Multi-select is handled by bidirectional sync
 		if (contextMultiSelect) {
@@ -734,11 +730,11 @@ class GlitterEditor {
 			const contextThresholdValue = document.getElementById('contextThresholdValue');
 			if (contextThreshold) contextThreshold.value = e.target.value;
 			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
-		}, FIELDS.threshold.value);
+		}, FIELDS.threshold.value, FIELDS.threshold);
 
-		this.setupSlider('feather', 'featherValue', '', null, FIELDS.feather.value);
-		this.setupSlider('scale', 'scaleValue', '%', null, FIELDS.textureScale.value);
-		this.setupSlider('opacity', 'opacityValue', '%', null, FIELDS.layerOpacity.value);
+		this.setupSlider('feather', 'featherValue', '', null, FIELDS.feather.value, FIELDS.feather);
+		this.setupSlider('scale', 'scaleValue', '%', null, FIELDS.textureScale.value, FIELDS.textureScale);
+		this.setupSlider('opacity', 'opacityValue', '%', null, FIELDS.layerOpacity.value, FIELDS.layerOpacity);
 	}
 
 	setupMaskEditorListeners() {
@@ -1170,12 +1166,7 @@ class GlitterEditor {
 		this.shiftHeld = e.shiftKey;
 
 		// Don't trigger shortcuts when typing in input fields
-		const activeElement = document.activeElement;
-		const isTyping = activeElement && (
-			activeElement.tagName === 'INPUT' ||
-			activeElement.tagName === 'TEXTAREA' ||
-			activeElement.isContentEditable
-		);
+		const isTyping = focusKeyClaim().typing;
 
 		if (e.code === 'Space' && !isTyping && !e.repeat && this.originalImage && !this.temporaryHandToolActive) {
 			e.preventDefault();
@@ -1189,8 +1180,8 @@ class GlitterEditor {
 		// the typing guard runs: a selected layer treats arrows as "move me", the
 		// sticker behavior. If focus is parked in the text layer's own content field
 		// (post-create / post-edit), blur it so moving takes over — the same as
-		// clicking off the field. Arrows in any OTHER input still fall through to the
-		// guard for normal caret navigation.
+		// clicking off the field. A focused control that uses the arrows itself
+		// keeps them.
 		if (!this.autoGlitterManager?.isSessionActive() && this.tryArrowNudge(e)) return;
 
 		// Typing shortcuts follow the command registry's policy.
@@ -1253,11 +1244,15 @@ class GlitterEditor {
 	// Returns true when it handled the key. Runs ahead of the typing guard so a
 	// selected text/shape layer moves like a sticker; the text content field is
 	// blurred on the first nudge so continued typing needs a deliberate refocus.
-	// Any other focused input keeps its arrows (returns false, falls through).
+	// Arrows belong to the focused control when it uses them (a field, select,
+	// slider, list or grid: focusKeyClaim) and to the layer otherwise.
 	tryArrowNudge(e) {
 		if (this.currentTool !== ToolType.SELECT) return false;
 		if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' &&
 			e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return false;
+		const active = document.activeElement;
+		const focusOwnsKey = focusClaimsArrowKey(e.key, active);
+		if (focusOwnsKey && active !== this.textGlitterManager?.ui?.textInput) return false;
 
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
 		if (hasMultiSelection && !this.layerManager.canTransformMultiSelection()) {
@@ -1270,15 +1265,8 @@ class GlitterEditor {
 		const transform = this.getLayerTransformData(layer);
 		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform || !this.canTransformLayer(layer))) return false;
 
-		// Only override input focus for the text layer's own content field —
-		// leave unrelated inputs (search boxes, numeric fields) to their carets.
-		const active = document.activeElement;
-		const isField = active && (active.tagName === 'INPUT' ||
-			active.tagName === 'TEXTAREA' || active.isContentEditable);
-		if (isField) {
-			if (active !== this.textGlitterManager?.ui?.textInput) return false;
-			active.blur();
-		}
+		// The text layer's own content field gives up focus so moving takes over.
+		if (focusOwnsKey) active.blur();
 
 		e.preventDefault();
 		const step = e.shiftKey ? 10 : 1;
@@ -1308,14 +1296,16 @@ class GlitterEditor {
 		const layerIds = this.layerManager.getSelectedLayers().map((layer) => layer.id).join(',');
 		this._nudgeSaveTimer = setTimeout(
 			() => this.saveState('Move layer', { coalesceKey: `nudge:${layerIds}` }),
-			CONFIG.tools.selection.timing.sliderDebounceMs
+			CONFIG.ui.history.coalesceMs
 		);
 	}
 
 	// ===== HISTORY =====
 
+	// A save made while a numeric key step runs shares that step's key, so a
+	// held arrow is one undo.
 	saveState(label = null, options = {}) {
-		this.historyManager.saveState(label, options);
+		this.historyManager.saveState(label, { coalesceKey: currentStepCoalesceKey(), ...options });
 		this.filterLayerManager?.noteSceneEdited();
 	}
 
@@ -1552,14 +1542,6 @@ class GlitterEditor {
 		// Global event
 		// ======================
 		window.dispatchEvent(new Event('imageRemoved'));
-	}
-
-
-	debouncedSliderUpdate() {
-		clearTimeout(this.sliderTimeout);
-		this.sliderTimeout = setTimeout(() => {
-			this.requestPreviewUpdate();
-		}, CONFIG.tools.selection.timing.sliderDebounceMs);
 	}
 
 

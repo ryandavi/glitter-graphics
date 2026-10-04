@@ -362,73 +362,10 @@ function initializeEditablePropertyValues(root = document) {
 		value.setAttribute('role', 'spinbutton');
 		value.setAttribute('aria-label', input.getAttribute('aria-label') || owner.querySelector('.property-label, .property-pair-mark')?.textContent || 'Value');
 		const asPercent = value.dataset.valueScale === 'percent';
-		const rangeMin = () => Number(input.dataset.scaleMin ?? input.min);
-		const rangeMax = () => Number(input.dataset.scaleMax ?? input.max);
 		value.setAttribute('aria-valuemin', asPercent ? '0' : (input.dataset.scaleMin || input.min));
 		value.setAttribute('aria-valuemax', asPercent ? '100' : (input.dataset.scaleMax || input.max));
-		value.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter') {
-				event.preventDefault();
-				value.blur();
-			} else if (event.key === 'Escape') {
-				event.preventDefault();
-				value.dataset.cancelEdit = '';
-				value.blur();
-			} else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-				// No native stepping exists on a contenteditable span - step the
-				// underlying range input directly (same raw domain a real
-				// <input type="range"> would step in, so log-scale sliders like
-				// Brush Size step correctly too) and let its own 'input' listener
-				// (slider.js bindSlider) redraw this readout. Shift = a x10 fast
-				// step, the same modifier the plain-number fields get below.
-				event.preventDefault();
-				const dir = event.key === 'ArrowUp' ? 1 : -1;
-				const mult = event.shiftKey ? 10 : 1;
-				const rawStep = Number(input.step) || 1;
-				const rawMin = Number(input.min);
-				const rawMax = Number(input.max);
-				const nextRaw = Math.min(rawMax, Math.max(rawMin, Number(input.value) + rawStep * mult * dir));
-				input.value = String(nextRaw);
-				input.dispatchEvent(new Event('input', { bubbles: true }));
-				input.dispatchEvent(new Event('change', { bubbles: true }));
-			}
-		});
-		value.addEventListener('blur', () => {
-			const typed = Number.parseFloat(value.textContent);
-			const next = asPercent && Number.isFinite(typed)
-				? rangePercentToValue(typed, rangeMin(), rangeMax())
-				: typed;
-			if (value.dataset.cancelEdit === undefined && Number.isFinite(next)) {
-				writeSliderValue(input, next);
-				input.dispatchEvent(new Event('input', { bubbles: true }));
-				input.dispatchEvent(new Event('change', { bubbles: true }));
-			} else {
-				delete value.dataset.cancelEdit;
-				input.dispatchEvent(new Event('input', { bubbles: true }));
-			}
-		});
-	});
-	// Real <input type="number"> fields (Transform, gradient stops, Canvas
-	// Size) already get native Arrow-key stepping for free from the browser -
-	// this only layers the same Shift = x10 fast step on top, so both value
-	// flavors behave identically. A plain arrow press is left untouched:
-	// native stepping and every manager's own input/change listener stay
-	// exactly as they were.
-	root.querySelectorAll('input[type="number"]').forEach((input) => {
-		if (input.dataset.fastStep !== undefined) return;
-		input.dataset.fastStep = '';
-		input.addEventListener('keydown', (event) => {
-			if (!event.shiftKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
-			event.preventDefault();
-			const dir = event.key === 'ArrowUp' ? 1 : -1;
-			const step = Number(input.step) || 1;
-			const min = input.min !== '' ? Number(input.min) : -Infinity;
-			const max = input.max !== '' ? Number(input.max) : Infinity;
-			const next = Math.min(max, Math.max(min, (Number(input.value) || 0) + step * 10 * dir));
-			input.value = String(next);
-			input.dispatchEvent(new Event('input', { bubbles: true }));
-			input.dispatchEvent(new Event('change', { bubbles: true }));
-		});
+		// Keys (step, Enter, Escape) are the shared numeric listener's (slider.js).
+		value.addEventListener('blur', () => commitEditableReadout(value));
 	});
 }
 

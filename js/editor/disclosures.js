@@ -272,12 +272,12 @@ initializeCollapsibleSections() {
 ,
 	setupColorAdjustListeners() {
 		const specs = [
-			['glitterHue', '°'],
-			['glitterSaturation', '%'],
-			['glitterBrightness', '%']
+			['glitterHue', '°', 'hue'],
+			['glitterSaturation', '%', 'saturation'],
+			['glitterBrightness', '%', 'brightness']
 		];
 
-		specs.forEach(([id, suffix]) => {
+		specs.forEach(([id, suffix, field]) => {
 			const slider = document.getElementById(id);
 			const display = document.getElementById(id + 'Value');
 			if (!slider) return;
@@ -288,10 +288,10 @@ initializeCollapsibleSections() {
 				suffix,
 				resetValue: this.getResetValueForSlider(id),
 				resetButton: resetBtn,
+				cost: FIELDS[field].cost,
 				apply: () => {
-					this.saveFillLayerControl('colorAdjust');
 					this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
-					this.debouncedSliderUpdate();
+					this.applyFillLayerControl('colorAdjust');
 				},
 				onCommit: () => this.saveState('Edit appearance')
 			});

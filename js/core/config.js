@@ -224,9 +224,6 @@ const CONFIG = deepFreeze({
 			transparency: {
 				alphaThreshold: 254,
 				allowTransparentSelection: true
-			},
-			timing: {
-				sliderDebounceMs: 150
 			}
 		},
 		maskBrush: {
@@ -618,6 +615,17 @@ const CONFIG = deepFreeze({
 	},
 
 	ui: {
+		// Live canvas updates while a control changes (js/ui/slider.js). A field's
+		// FIELDS `cost` picks its tier; these are the tiers' budgets.
+		live: {
+			// Wait this long for a value to stop changing before a slow update
+			// runs; also the budget a `compute` update has before it counts as slow.
+			settleMs: 150,
+			// A `raster` update slower than this stops tracking the pointer.
+			rasterBudgetMs: 32
+		},
+		// Arrow-key layer nudges within this window share one history entry.
+		history: { coalesceMs: 150 },
 		scrollbar: { hideDelayMs: 800 },
 		independentCollapsibleSections: ['layersPanel'],
 		// The Library's Recent strip, per asset kind.

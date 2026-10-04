@@ -17,11 +17,11 @@ registerLayerType(LayerType.STICKER, {
 			panelPrefix: 'stickerBorder', modes: ['glitter', 'solid'], fields: { widthPx: 'stickerOutlineWidth' }
 		},
 		{
-			key: 'bevelHighlight', role: 'bevel', path: 'stickerData.bevel.highlight', enabledPath: 'stickerData.bevel.enabled',
+			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'stickerData.bevel.highlight', enabledPath: 'stickerData.bevel.enabled',
 			glitterDefault: 'fillGlitterId', panelPrefix: 'stickerBevel', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', path: 'stickerData.bevel.shade', enabledPath: 'stickerData.bevel.enabled',
+			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'stickerData.bevel.shade', enabledPath: 'stickerData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId', panelPrefix: 'stickerBevelShade', modes: ['glitter', 'solid']
 		},
 		{

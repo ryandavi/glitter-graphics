@@ -114,6 +114,29 @@ function installEffectGradientEditor(options) {
 			marker.setAttribute('aria-valuetext', `${Math.round(stop.offset * 100)}%`);
 		});
 	};
+	// Row values written in place. A committed stop edit that leaves the stop
+	// order alone uses this instead of render(), so the field being edited is
+	// never rebuilt and keeps its focus.
+	const syncStopRows = (gradient) => {
+		Array.from(list.children).forEach((row, index) => {
+			const stop = gradient.stops[index];
+			if (!stop) return;
+			const [colorInput, offsetInput, alphaInput] = row.querySelectorAll('input');
+			const write = (input, value) => {
+				if (input !== document.activeElement || Number(input.value) !== value) input.value = value;
+			};
+			colorInput.value = stop.color;
+			row.querySelector('.gradient-stop-hex').textContent = stop.color.toUpperCase();
+			write(offsetInput, Math.round(stop.offset * 100));
+			write(alphaInput, Math.round(stop.alpha * 100));
+		});
+		syncPreview(gradient);
+		GlitterPresetLibrary.setPresetGridActive(presetGrid, GRADIENT_PRESETS, {
+			activeId: findGradientPresetId(gradient),
+			contextId: options.prefix
+		});
+		applySelection();
+	};
 	const render = () => {
 		const data = options.getData();
 		if (!data) return;
@@ -171,14 +194,42 @@ function installEffectGradientEditor(options) {
 			alphaInput.value = Math.round(stop.alpha * 100);
 			removeButton.disabled = gradient.stops.length <= 2;
 			const select = () => { panel._selectedStop = index; applySelection(); };
-			colorInput.addEventListener('input', () => { stop.color = colorInput.value; hex.textContent = colorInput.value.toUpperCase(); select(); syncPreview(gradient); update(false); });
-			offsetInput.addEventListener('input', () => { stop.offset = Math.max(0, Math.min(1, Number(offsetInput.value) / 100)); select(); syncPreview(gradient); update(false); });
-			alphaInput.addEventListener('input', () => { stop.alpha = Math.max(0, Math.min(1, Number(alphaInput.value) / 100)); select(); syncPreview(gradient); update(false); });
-			inputs.forEach((input) => input.addEventListener('change', () => { update(true); render(); }));
+			// A commit replaces the gradient object, and rows outlive commits, so a
+			// row reads its stop by index every time.
+			const edit = (write) => {
+				const live = options.getData()?.gradient;
+				if (!live?.stops[index]) return;
+				write(live.stops[index]);
+				select();
+				syncPreview(live);
+				update(false);
+			};
+			colorInput.addEventListener('input', () => edit((target) => { target.color = colorInput.value; hex.textContent = colorInput.value.toUpperCase(); }));
+			offsetInput.addEventListener('input', () => edit((target) => { target.offset = Math.max(0, Math.min(1, Number(offsetInput.value) / 100)); }));
+			alphaInput.addEventListener('input', () => edit((target) => { target.alpha = Math.max(0, Math.min(1, Number(alphaInput.value) / 100)); }));
+			inputs.forEach((input, field) => input.addEventListener('change', () => {
+				const live = options.getData()?.gradient;
+				if (!live) return;
+				// Committing sorts the stops. Only a stop that changed places needs
+				// the rows rebuilt; focus then follows it to its new row.
+				const sortedIndex = getSortedStopIndex(live.stops, index);
+				update(true);
+				const committed = options.getData()?.gradient;
+				if (!committed) return;
+				if (sortedIndex === index && list.children.length === committed.stops.length) {
+					syncStopRows(committed);
+					return;
+				}
+				const hadFocus = document.activeElement === input;
+				panel._selectedStop = sortedIndex;
+				render();
+				if (hadFocus) list.children[sortedIndex]?.querySelectorAll('input')[field]?.focus({ preventScroll: true });
+			}));
 			inputs.forEach((input) => input.addEventListener('focus', select));
 			removeButton.addEventListener('click', () => {
-				if (gradient.stops.length <= 2) return;
-				gradient.stops.splice(index, 1);
+				const live = options.getData()?.gradient;
+				if (!live || live.stops.length <= 2) return;
+				live.stops.splice(index, 1);
 				if (panel._selectedStop > index) panel._selectedStop -= 1;
 				update(true);
 				render();
@@ -190,7 +241,9 @@ function installEffectGradientEditor(options) {
 			contextId: options.prefix,
 			groupFilter: presetGroup,
 			onChoose: (entry) => {
-				GRADIENT_PRESETS.apply(entry, gradient);
+				const live = options.getData()?.gradient;
+				if (!live) return;
+				GRADIENT_PRESETS.apply(entry, live);
 				update(true);
 				render();
 			}

@@ -19,6 +19,7 @@
 //   countsAsEffect false keeps the slot's color adjust out of the Effects badge
 //   framePadding   (data) => px the slot paints outside the layer frame
 //   panelPrefix    id prefix of the slot's panel controls (PANEL_SCHEMAS idPrefix)
+//   label          lowercase words naming the slot in status copy (defaults to key)
 //   modes          paint modes its source control offers
 //   fields         { path: 'specKey' } adds or re-specs role fields (below)
 
@@ -91,6 +92,7 @@ function normalizePaintSlotDefinition(definition, type) {
 	}
 	return Object.freeze({
 		...definition,
+		label: definition.label || definition.key,
 		pathKeys: splitFieldPath(definition.path),
 		enabledKeys: splitFieldPath(definition.enabledPath),
 		draftKeys: splitFieldPath(definition.draftPath),
@@ -100,6 +102,17 @@ function normalizePaintSlotDefinition(definition, type) {
 
 function getPaintSlotDefinition(type, key) {
 	return LAYER_UI_CONFIG[type]?.paintSlots?.find((entry) => entry.key === key) || null;
+}
+
+// The words status copy uses for a slot ("Choosing bevel highlight glitter").
+function getPaintSlotLabel(type, key) {
+	return getPaintSlotDefinition(type, key)?.label || key;
+}
+
+// The slot's glitter chip in its panel: where an explicit picker exit returns.
+function getPaintSlotChipId(type, key) {
+	const prefix = getPaintSlotDefinition(type, key)?.panelPrefix;
+	return prefix ? `${prefix}GlitterChip` : null;
 }
 
 // The glitter a slot falls back to when it has none (a fresh glitter source,

@@ -266,7 +266,6 @@ snapTransformPosition(transform, position, options = {}) {
 			const manager = getManager();
 			return (layer && layer.type === layerType && manager) ? { layer, manager } : null;
 		};
-		const showUnit = (el, num, unit) => { if (el) el.innerHTML = formatUnit(Math.round(num), unit); };
 		['Fit', 'Fill'].forEach((mode) => {
 			document.getElementById(`${prefix}${mode}Canvas`)?.addEventListener('click', async () => {
 				const active = activeManager();
@@ -307,18 +306,6 @@ snapTransformPosition(transform, position, options = {}) {
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
-
-			input.addEventListener('keydown', (event) => {
-				if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-				event.preventDefault();
-				const step = event.shiftKey ? 10 : 1;
-				const current = parseFloat(input.value || '0');
-				const delta = event.key === 'ArrowUp' ? step : -step;
-				const min = input.min !== '' ? parseFloat(input.min) : Number.NEGATIVE_INFINITY;
-				input.value = String(Math.max(min, Math.round(current + delta)));
-				input.dispatchEvent(new Event('input'));
-				input.dispatchEvent(new Event('change'));
-			});
 		};
 
 		bindNumberInput(ids.posX, (value, active) => {
@@ -353,71 +340,48 @@ snapTransformPosition(transform, position, options = {}) {
 			this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, 'height', value);
 		});
 
-		// Rotation
+		// Rotation, layer opacity and scale are sliders like any other: the shared
+		// binder owns their readout, revert, frame cadence and commit.
+		const commitTransform = () => {
+			if (activeManager()) this.saveState('Transform layer');
+		};
 		const rotation = document.getElementById(ids.rotation);
-		const rotationValue = document.getElementById(ids.rotationValue);
-		const resetRotation = document.getElementById(ids.resetRotation);
-
-		if (rotation && rotationValue) {
-			rotation.addEventListener('input', (e) => {
-				// Shift-drag snaps to 15° increments, mirroring the rotation handle.
-				let value = parseFloat(e.target.value);
-				if (this.shiftHeld) {
-					value = Math.round(value / 15) * 15;
-					e.target.value = value;
-				}
-				showUnit(rotationValue, value, '°');
-
+		bindSlider(rotation, document.getElementById(ids.rotationValue), {
+			suffix: '°',
+			cost: FIELDS.transformRotation.cost,
+			// Shift-drag snaps to 15° increments, mirroring the rotation handle.
+			parseValue: (raw) => {
+				const value = parseFloat(raw);
+				if (!this.shiftHeld) return value;
+				const snapped = Math.round(value / 15) * 15;
+				rotation.value = snapped;
+				return snapped;
+			},
+			resetValue: CONFIG.tools.stickers.defaults.transform.rotation,
+			resetButton: document.getElementById(ids.resetRotation),
+			apply: (value) => {
 				const active = activeManager();
-				if (active) {
-					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { rotation: value }));
-					this.syncResetTransformState(prefix, active.layer);
-				}
-			});
-
-			rotation.addEventListener('change', () => this.saveState('Transform layer'));
-		}
-
-		if (resetRotation) {
-			resetRotation.addEventListener('click', () => {
-				if (rotation) rotation.value = CONFIG.tools.stickers.defaults.transform.rotation;
-				showUnit(rotationValue, CONFIG.tools.stickers.defaults.transform.rotation, '°');
-
-				const active = activeManager();
-				if (active) {
-					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { rotation: CONFIG.tools.stickers.defaults.transform.rotation }));
-					this.syncResetTransformState(prefix, active.layer);
-					this.saveState('Transform layer');
-				}
-			});
-		}
+				if (!active) return;
+				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { rotation: value }));
+				this.syncResetTransformState(prefix, active.layer);
+			},
+			onCommit: commitTransform
+		});
 
 		// The Layer section's Opacity row in the panel's Appearance group.
 		// Writes layer.opacity through updateTransform, which re-applies the element.
-		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
-		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);
-		const resetLayerOpacity = document.getElementById(`reset${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}LayerOpacity`);
-		if (layerOpacity && layerOpacityValue) {
-			layerOpacity.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				showUnit(layerOpacityValue, value, '%');
+		bindSlider(document.getElementById(`${prefix}LayerOpacity`), document.getElementById(`${prefix}LayerOpacityValue`), {
+			suffix: '%',
+			cost: FIELDS.layerOpacity.cost,
+			parseValue: parseFloat,
+			resetValue: FIELDS.layerOpacity.value,
+			resetButton: document.getElementById(`reset${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}LayerOpacity`),
+			apply: (value) => {
 				const active = activeManager();
 				if (active) active.manager.updateTransform(active.layer.id, { opacity: value });
-			});
-			layerOpacity.addEventListener('change', () => this.saveState('Transform layer'));
-		}
-		if (resetLayerOpacity) {
-			resetLayerOpacity.addEventListener('click', () => {
-				const fallback = FIELDS.layerOpacity.value;
-				if (layerOpacity) layerOpacity.value = fallback;
-				showUnit(layerOpacityValue, fallback, '%');
-				const active = activeManager();
-				if (active) {
-					active.manager.updateTransform(active.layer.id, { opacity: fallback });
-					this.saveState('Transform layer');
-				}
-			});
-		}
+			},
+			onCommit: commitTransform
+		});
 
 		const proportionalScale = document.getElementById(ids.proportional);
 		if (proportionalScale) {
@@ -432,43 +396,45 @@ snapTransformPosition(transform, position, options = {}) {
 			});
 		}
 
+		const scaleSliderOptions = {
+			suffix: '%',
+			cost: FIELDS.transformScale.cost,
+			parseValue: (raw) => clampLayerScale(parseFloat(raw) || 100),
+			formatValue: (value) => formatUnit(Math.round(value), '%')
+		};
 		const bindAxisScale = (axis, inputId, valueId, resetId) => {
 			const input = document.getElementById(inputId);
-			const display = document.getElementById(valueId);
 			const reset = document.getElementById(resetId);
 			if (!input) return;
 
-			// Keys on the slider or its editable readout. On a small sticker a 1%
-			// step is under a pixel, so the whole-pixel snap would land it back on
-			// the same size and the arrow keys would do nothing; step a pixel instead.
-			let keyStep = false;
-			input.closest('.property-row, .property-pair-cell')?.addEventListener('keydown', (event) => {
-				keyStep = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(event.key);
+			bindSlider(input, document.getElementById(valueId), {
+				...scaleSliderOptions,
+				apply: (value) => {
+					const active = activeManager();
+					if (!active) return;
+					const current = getLayerTransform(active.layer);
+					const before = current.scale[axis];
+					const scale = { ...current.scale, [axis]: value };
+					if (document.getElementById(ids.proportional)?.checked) {
+						const otherAxis = axis === 'x' ? 'y' : 'x';
+						const previous = Math.max(0.01, current.scale[axis]);
+						scale[otherAxis] = clampLayerScale(current.scale[otherAxis] * value / previous);
+					}
+					this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { scale }));
+					// A key step on the slider or its editable readout. On a small sticker
+					// a 1% step is under a pixel, so the whole-pixel snap would land it back
+					// on the same size and the arrow keys would do nothing; step a pixel
+					// instead.
+					const stepped = Boolean(currentStepCoalesceKey());
+					if (stepped && getLayerTransform(active.layer).scale[axis] === before && Math.round(value) !== Math.round(before)) {
+						const dimension = axis === 'x' ? 'width' : 'height';
+						const size = this.getTransformSizeState(active.layer, prefix);
+						if (size?.visible) this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, dimension, size[dimension] + Math.sign(value - before));
+					}
+					this.loadTransformSettings(active.layer, prefix);
+				},
+				onCommit: commitTransform
 			});
-
-			input.addEventListener('input', (event) => {
-				const stepped = keyStep;
-				keyStep = false;
-				const active = activeManager();
-				if (!active) return;
-				const value = clampLayerScale(parseFloat(event.target.value) || 100);
-				const current = getLayerTransform(active.layer);
-				const before = current.scale[axis];
-				const scale = { ...current.scale, [axis]: value };
-				if (document.getElementById(ids.proportional)?.checked) {
-					const otherAxis = axis === 'x' ? 'y' : 'x';
-					const previous = Math.max(0.01, current.scale[axis]);
-					scale[otherAxis] = clampLayerScale(current.scale[otherAxis] * value / previous);
-				}
-				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, { scale }));
-				if (stepped && getLayerTransform(active.layer).scale[axis] === before && Math.round(value) !== Math.round(before)) {
-					const dimension = axis === 'x' ? 'width' : 'height';
-					const size = this.getTransformSizeState(active.layer, prefix);
-					if (size?.visible) this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, dimension, size[dimension] + Math.sign(value - before));
-				}
-				this.loadTransformSettings(active.layer, prefix);
-			});
-			input.addEventListener('change', () => this.saveState('Transform layer'));
 			reset?.addEventListener('click', () => {
 				const active = activeManager();
 				if (!active) return;
@@ -483,25 +449,21 @@ snapTransformPosition(transform, position, options = {}) {
 		bindAxisScale('x', ids.scaleX, ids.scaleXValue, ids.resetScaleX);
 		bindAxisScale('y', ids.scaleY, ids.scaleYValue, ids.resetScaleY);
 
-		const scaleSlider = document.getElementById(ids.scaleSlider);
-		const scaleSummary = document.getElementById(ids.scaleSummary);
-		if (scaleSlider) {
-			scaleSlider.addEventListener('input', (event) => {
+		bindSlider(document.getElementById(ids.scaleSlider), null, {
+			...scaleSliderOptions,
+			apply: (value) => {
 				const active = activeManager();
 				if (!active) return;
-				const value = clampLayerScale(parseFloat(event.target.value) || 100);
 				this.applyTransformEditWithAnchor(active.layer, active.manager, () => active.manager.updateTransform(active.layer.id, {
 					scale: { x: value, y: value }
 				}));
-				if (scaleSummary) {
-					scaleSummary.innerHTML = this.formatScaleSummary(this.getLayerTransformData(active.layer));
-				}
 				this.loadTransformSettings(active.layer, prefix);
-			});
-
-			scaleSlider.addEventListener('change', async () => {
+			},
+			onCommit: async () => {
 				const active = activeManager();
 				if (!active) return;
+				// The history key of a key step has to outlive the await.
+				const coalesceKey = currentStepCoalesceKey();
 				if (
 					prefix === 'text'
 					&& (active.layer.textData?.boxMode || 'point') === 'point'
@@ -510,9 +472,9 @@ snapTransformPosition(transform, position, options = {}) {
 					await active.manager.commitScaleToFontSize(active.layer);
 					this.loadTransformSettings(active.layer, prefix);
 				}
-				this.saveState('Transform layer');
-			});
-		}
+				this.saveState('Transform layer', { coalesceKey });
+			}
+		});
 
 		const resetScale = document.getElementById(ids.resetScale);
 		if (resetScale) {

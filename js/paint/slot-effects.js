@@ -159,11 +159,6 @@ function toggleSlotEffect(layer, definition, enabled, buildDefault) {
 	}
 }
 
-function getSlotEffectData(root, slot) {
-	if (!root) return null;
-	return root[slot] || null;
-}
-
 function mergeSlotEffectDefaults(target, defaults) {
 	if (!target) return { ...defaults };
 	return Object.assign(target, { ...defaults, ...target });

@@ -93,7 +93,7 @@ class TextGlitterManager {
 			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getEffectDefaults(key)),
 			getSlotDefaults: (key) => this.getEffectDefaults(key),
 			apply: (layer, mutate, change) => this.runLayoutRefreshWithAnchor(layer, mutate, change.live
-				? { saveHistory: false, refreshLayerList: false, refreshPreview: Boolean(change.geometry) }
+				? { saveHistory: false, refreshLayerList: false, refreshPreview: Boolean(change.geometry), isCurrent: change.ticket?.isCurrent }
 				: { saveHistory: true, refreshPreview: false }
 			).catch((error) => this.reportFontLoadError(error)),
 			render: (layer) => this.renderLayer(layer),
@@ -571,40 +571,19 @@ class TextGlitterManager {
 		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(fullHeight) + 1);
 	}
 
-	// 'backgroundFill' is Text Background's nested `textBackground.fill` slot —
-	// routed to a different root so it reuses every generic paint-slot binder
-	// (toggle excepted: the whole effect's enable/disable is
-	// `textBackground.enabled`, not fill nullability) without a parallel
-	// implementation.
+	// Slots resolve through their declared path, so a nested slot (Text
+	// Background's fill, the two bevel paints) reads like any other.
 	ensureEffectData(layer, effectName) {
 		if (!layer?.textData) return null;
-		if (effectName === 'backgroundFill') {
-			return ensureSlotEffectData(layer.textData.textBackground, 'fill', {
-				builders: { fill: () => this.getDefaultBackgroundFill() }
-			});
-		}
-		return ensureSlotEffectData(layer.textData, effectName, {
-			builders: {
-				fill: () => this.getDefaultFill(),
-				border: () => this.getDefaultBorder(),
-				shadow: () => this.getDefaultShadow(),
-				sparkles: () => buildDefaultSparkles()
-			}
-		});
+		return ensureLayerPaintSlot(layer, effectName, () => this.getEffectDefaults(effectName));
 	}
 
 	getEffectData(layer, effectName) {
-		if (effectName === 'backgroundFill') {
-			return getSlotEffectData(layer?.textData?.textBackground, 'fill');
-		}
-		return getSlotEffectData(layer?.textData, effectName);
+		return getLayerPaintSlot(layer, effectName);
 	}
 
 	getGlitterSelectionTarget(layer = this.getActiveTextLayer()) {
-		return pickerSelectionTarget(this, layer, {
-			fallback: 'fill',
-			isValid: (session) => session.slot === 'fill' || Boolean(this.getEffectData(layer, session.slot))
-		});
+		return pickerArmedSlot(this, layer) || 'fill';
 	}
 
 	// Thin back-compat wrapper: arming a slot opens a picker session on the
@@ -939,14 +918,7 @@ class TextGlitterManager {
 	// the automatic clears (layer switch, effect disable, history restore)
 	// already move the user elsewhere and must not yank the view back.
 	returnToTextProperties(slot = 'fill') {
-		const chipId = slot === 'border'
-			? 'textBorderGlitterChip'
-			: slot === 'shadow'
-				? 'textShadowGlitterChip'
-				: slot === 'backgroundFill'
-					? 'textBackgroundGlitterChip'
-					: 'textFillGlitterChip';
-		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: chipId });
+		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: getPaintSlotChipId(LayerType.TEXT_GLITTER, slot) });
 	}
 
 	// D-1c: the gallery status strip. Same copy/look whether armed or not —
@@ -965,9 +937,7 @@ class TextGlitterManager {
 			renderPickerStrip({ ownsStrip: true, visible: false });
 			return;
 		}
-		const armedSlot = pickerSelectionTarget(this, layer, {
-			isValid: (session) => session.slot === 'fill' || Boolean(this.getEffectData(layer, session.slot))
-		});
+		const armedSlot = pickerArmedSlot(this, layer);
 		const fillData = this.getEffectData(layer, 'fill');
 		const fillIsSolid = fillData?.mode === 'solid';
 		if (armedSlot) {
@@ -976,14 +946,14 @@ class TextGlitterManager {
 				const color = (fillData.color || '#000000').toUpperCase();
 				stripText = { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${color}).` };
 			} else {
-				stripText = formatPickerStripText(this.getEffectTitle(armedSlot), layer.name, 'text');
+				stripText = formatPickerStripText(layer, armedSlot, 'text');
 			}
 			renderPickerStrip({ ownsStrip: true, visible: true, armed: true, ...stripText });
 			return;
 		}
 		const stripText = fillIsSolid
 			? { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${(fillData.color || '#000000').toUpperCase()}).` }
-			: formatPickerStripText('fill', layer.name, 'text');
+			: formatPickerStripText(layer, 'fill', 'text');
 		renderPickerStrip({ ownsStrip: true, visible: true, hint: true, ...stripText });
 	}
 
@@ -999,7 +969,7 @@ class TextGlitterManager {
 	}
 
 	getEffectTitle(effectName) {
-		return effectName === 'backgroundFill' ? 'background' : effectName;
+		return getPaintSlotLabel(LayerType.TEXT_GLITTER, effectName);
 	}
 
 	scheduleTextCommit(layer) {
@@ -1013,7 +983,7 @@ class TextGlitterManager {
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
-		}, CONFIG.tools.selection.timing.sliderDebounceMs);
+		}, CONFIG.ui.live.settleMs);
 	}
 
 	getCacheKeyForLayer(layer) {
@@ -1782,10 +1752,14 @@ class TextGlitterManager {
 			saveHistory = false,
 			refreshLayerList = true,
 			refreshPreview = true,
-			preservePointAnchorFrom = null
+			preservePointAnchorFrom = null,
+			isCurrent = null
 		} = options;
 
 		await FontLibrary.ensureLoaded(layer.textData.fontId);
+		// A live edit that a newer one has overtaken: the newer run measures and
+		// draws the layer, and this one's anchor snapshot is out of date.
+		if (isCurrent && !isCurrent()) return;
 		const measurement = this.getMeasurementEntry(layer);
 		if (preservePointAnchorFrom) {
 			this.applyPointAnchorSnapshot(layer, preservePointAnchorFrom, measurement);

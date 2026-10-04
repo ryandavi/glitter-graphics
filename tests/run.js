@@ -22,6 +22,8 @@ const SUITES = [
 	{ file: 'unit/text-warp-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/style-presets-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/panel-schema-grammar.js', tags: ['unit', 'panels', 'quick'] },
+	{ file: 'unit/paint-slot-picker-unit.js', tags: ['unit', 'panels', 'quick'] },
+	{ file: 'unit/numeric-controls-unit.js', tags: ['unit', 'panels', 'quick'] },
 	{ file: 'parity/animation-parity.js', tags: ['unit', 'export'] },
 	{ file: 'parity/export-compositor-fast-path.js', tags: ['export'] },
 	{ file: 'parity/export-transparency-correctness.js', tags: ['export'] },

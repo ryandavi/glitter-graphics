@@ -19,11 +19,11 @@ registerLayerType(LayerType.SHAPE, {
 			fields: { imageScalePercent: 'shapeImageScale', offsetXPercent: 'shapeImageOffsetX', offsetYPercent: 'shapeImageOffsetY' }
 		},
 		{
-			key: 'bevelHighlight', role: 'bevel', path: 'shapeData.bevel.highlight', enabledPath: 'shapeData.bevel.enabled',
+			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'shapeData.bevel.highlight', enabledPath: 'shapeData.bevel.enabled',
 			glitterDefault: 'fillGlitterId', panelPrefix: 'shapeBevel', modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', path: 'shapeData.bevel.shade', enabledPath: 'shapeData.bevel.enabled',
+			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'shapeData.bevel.shade', enabledPath: 'shapeData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId', panelPrefix: 'shapeBevelShade', modes: ['glitter', 'solid']
 		},
 		{

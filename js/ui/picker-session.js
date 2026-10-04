@@ -62,6 +62,15 @@ function pickerSelectionTarget(manager, layer, options = {}) {
 	return manager.pickerSession.slot ?? fallback;
 }
 
+// The paint slot an armed session targets, or null. A slot counts only while
+// its data exists at its declared path (js/paint/paint-slots.js), never by
+// reading the data root with the slot key: nested slots (bevel) are not there.
+function pickerArmedSlot(manager, layer, isValid = null) {
+	return pickerSelectionTarget(manager, layer, {
+		isValid: (session) => (!isValid || isValid(session)) && Boolean(getLayerPaintSlot(layer, session.slot))
+	});
+}
+
 function returnFromPickerToProperties(editor, options = {}) {
 	const { section, focusId } = options;
 	if (editor.mobileManager?.isMobile) {
@@ -173,15 +182,14 @@ class SlotGlitterPicker {
 			visible: true,
 			armed,
 			hint: !armed,
-			...formatPickerStripText(this.getTarget(layer), layer.name, this.typeWord)
+			...formatPickerStripText(layer, this.getTarget(layer), this.typeWord)
 		});
 	}
 
 	handlePickerDone() {
 		const slot = this.pickerSession?.slot || this.defaultSlot;
-		const prefix = getPaintSlotDefinition(this.type, slot)?.panelPrefix;
 		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: this.section, focusId: prefix ? `${prefix}GlitterChip` : null });
+		returnFromPickerToProperties(this.editor, { section: this.section, focusId: getPaintSlotChipId(this.type, slot) });
 	}
 
 	closePickerSession() {

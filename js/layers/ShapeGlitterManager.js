@@ -420,16 +420,15 @@ class ShapeGlitterManager {
 	}
 
 	// Which shape slot the next gallery pick targets ('fill' when not armed).
-	getGlitterSelectionTarget() {
-		const layer = this.getActiveShapeLayer();
-		return pickerSelectionTarget(this, layer, { fallback: 'fill' });
+	getGlitterSelectionTarget(layer = this.getActiveShapeLayer()) {
+		return pickerArmedSlot(this, layer) || 'fill';
 	}
 
 	// The glitter id the gallery should highlight for this layer — the armed
 	// slot's glitter (so choosing a border glitter highlights the border's swatch).
 	resolveSelectedGlitterId(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return null;
-		return this.getSlotGlitterId(layer, this.getGlitterSelectionTarget());
+		return getLayerPaintSlot(layer, this.getGlitterSelectionTarget(layer))?.glitterId ?? null;
 	}
 
 	updatePickerStrip() {
@@ -437,9 +436,8 @@ class ShapeGlitterManager {
 		if (!strip) return;
 		const layer = this.getActiveShapeLayer();
 		const assetArmed = Boolean(layer && this.shapeChangeLayerId === layer.id);
-		const s = this.pickerSession;
-		const slotExists = s && (s.slot === 'fill' || Boolean(this.getEffectData(layer, s.slot)));
-		const armed = Boolean(layer && s && s.layerId === layer.id && slotExists);
+		const armedSlot = pickerArmedSlot(this, layer);
+		const armed = Boolean(armedSlot);
 
 		// Only drive the strip while a shape is active; otherwise leave it to the
 		// text manager (both are called from app.updateSidePanelUI).
@@ -447,7 +445,7 @@ class ShapeGlitterManager {
 
 		const stripText = !armed
 			? formatAssetPickerStripText('shape', layer.name)
-			: formatPickerStripText(s.slot, layer.name, 'shape');
+			: formatPickerStripText(layer, armedSlot, 'shape');
 		renderPickerStrip({
 			ownsStrip: true,
 			visible: true,
@@ -473,12 +471,8 @@ class ShapeGlitterManager {
 	}
 
 	returnToShapeProperties(slot = 'fill') {
-		const chipId = slot === 'asset'
-			? 'shapeAssetChange'
-			: slot === 'border'
-				? 'shapeBorderGlitterChip'
-				: slot === 'shadow' ? 'shapeShadowGlitterChip' : 'shapeFillGlitterChip';
-		returnFromPickerToProperties(this.editor, { section: 'shapeSettings', focusId: chipId });
+		const focusId = slot === 'asset' ? 'shapeAssetChange' : getPaintSlotChipId(LayerType.SHAPE, slot);
+		returnFromPickerToProperties(this.editor, { section: 'shapeSettings', focusId });
 	}
 
 	loadLayerSettings(layer) {
@@ -686,30 +680,17 @@ class ShapeGlitterManager {
 		return null;
 	}
 
-	getEffectData(layer, slot) {
-		return getSlotEffectData(layer?.shapeData, slot);
-	}
-
+	// Slots resolve through their declared path, so a nested slot (the two
+	// bevel paints) reads like any other.
 	ensureEffectData(layer, slot) {
 		if (!layer?.shapeData) return null;
-		return ensureSlotEffectData(layer.shapeData, slot, {
-			builders: {
-				fill: () => this.getDefaultFill(),
-				border: () => this.getDefaultBorder(),
-				shadow: () => this.getDefaultShadow(),
-				sparkles: () => buildDefaultSparkles()
-			}
-		});
+		return ensureLayerPaintSlot(layer, slot, () => this.getSlotDefaults(slot));
 	}
 
 	getBorderOutsidePadding(borderData) {
 		return getBorderOutsidePadding(borderData, {
 			miterLimit: CONFIG.tools.shapes.border.hardEdgeMiterLimit
 		});
-	}
-
-	getSlotGlitterId(layer, slot) {
-		return this.getEffectData(layer, slot)?.glitterId;
 	}
 
 	getEffectPaintSource(layer, key) {

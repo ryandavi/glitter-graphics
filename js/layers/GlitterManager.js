@@ -124,14 +124,14 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this, (slot ? layer[slot] : layer.fill)?.glitterId)
+			reveal: () => revealAssetBrowser(this.editor, this, getLayerPaintSlot(layer, slot || 'fill')?.glitterId)
 		});
 	}
 
 	// The slot data the next gallery pick writes to.
 	getGlitterSelectionSlot(layer) {
 		const slot = this.hasActivePickerSession() ? this.pickerSession.slot : null;
-		return slot && layer[slot] ? layer[slot] : layer.fill;
+		return (slot && getLayerPaintSlot(layer, slot)) || layer.fill;
 	}
 
 	hasActivePickerSession() {
@@ -144,13 +144,12 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) pickerCloseSession(this);
 		const armed = this.hasActivePickerSession();
-		const copy = formatPickerStripText((armed && this.pickerSession.slot) || 'fill', layer.name, 'fill layer');
+		const copy = formatPickerStripText(layer, (armed && this.pickerSession.slot) || 'fill', 'fill layer');
 		renderPickerStrip({ ownsStrip: true, visible: true, armed, hint: !armed, ...copy });
 	}
 
 	handlePickerDone() {
-		const focusIds = { border: 'glitterBorderGlitterChip', shadow: 'glitterShadowGlitterChip', sparkles: 'glitterSparklesGlitterChip' };
-		const focusId = focusIds[this.pickerSession?.slot] || 'glitterAssetThumbnail';
+		const focusId = getPaintSlotChipId(LayerType.GLITTER_FILL, this.pickerSession?.slot) || 'glitterAssetThumbnail';
 		this.closePickerSession();
 		returnFromPickerToProperties(this.editor, { section: 'glitterSettings', focusId });
 	}
@@ -580,6 +579,11 @@ async initBrowser() {
 			this.editor.updateStatus(`Selected ${glitter.name}`);
 			return;
 		}
+		const slotHost = {
+			[LayerType.TEXT_GLITTER]: this.editor.textGlitterManager,
+			[LayerType.SHAPE]: this.editor.shapeGlitterManager,
+			[LayerType.STICKER]: this.editor.stickerManager
+		}[layer.type];
 		const previousGlitter = layer.type === LayerType.GLITTER_FILL
 			? this.getItemById(layer.fill.glitterId)
 			: null;
@@ -608,37 +612,18 @@ async initBrowser() {
 				layer.background.mode = 'glitter';
 				layer.background.colorAdjust = normalizeColorAdjust(null);
 			}
-		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
-			// Picking a new swatch is a clean slate — drop that slot's hue/sat/bright.
-			// Intent capture: picking a glitter for a solid-mode slot IS the
-			// statement "I want glitter here", so flip the slot to glitter.
-			// Otherwise the gallery click writes the glitter id, highlights
-			// the swatch, and saves history with zero visible change.
-			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer) || 'fill';
-			const slotData = this.editor.textGlitterManager.ensureEffectData(layer, target);
-			if (slotData) {
-				slotData.glitterId = id;
-				slotData.mode = 'glitter';
-				slotData.colorAdjust = null;
-			}
-		} else if (layer.type === LayerType.SHAPE) {
-			// Each slot (fill, border, shadow) stores its own glitterId.
-			const sgm = this.editor.shapeGlitterManager;
-			const target = sgm?.getGlitterSelectionTarget?.() || 'fill';
-			if (sgm) {
-				const slotData = sgm.ensureEffectData(layer, target);
-				slotData.mode = 'glitter';
-				slotData.glitterId = id;
-				// Fresh swatch → reset that slot's hue/sat/bright.
-				slotData.colorAdjust = null;
-			}
-		} else if (layer.type === LayerType.STICKER) {
-			const target = this.editor.stickerManager?.getGlitterSelectionTarget(layer);
-			const effect = target ? layer.stickerData?.[target] : null;
-			if (!effect) return;
-			effect.glitterId = id;
-			effect.mode = 'glitter';
-			effect.colorAdjust = null;
+		} else if (slotHost) {
+			// Text, shape and sticker: the pick goes to the armed slot (text and
+			// shape fall back to their fill), resolved through its declared path.
+			// Picking a glitter for a solid slot is the statement "I want glitter
+			// here", so the slot flips to glitter, and a new swatch starts with no
+			// hue/sat/bright shift.
+			const target = slotHost.getGlitterSelectionTarget(layer);
+			const slotData = target ? slotHost.fieldHost.ensureSlot(layer, target) : null;
+			if (!slotData) return;
+			slotData.glitterId = id;
+			slotData.mode = 'glitter';
+			slotData.colorAdjust = null;
 		} else if (layer.type === LayerType.GLITTER_FILL) {
 			// Auto Glitter layers use their swatch as the initial name. Keep that
 			// generated name live, while preserving names the user entered.
@@ -689,12 +674,7 @@ async initBrowser() {
 		this.editor.saveState('Edit glitter');
 		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
 			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
-			if (target === 'border' || target === 'shadow' || target === 'backgroundFill') {
-				const targetName = target === 'backgroundFill' ? 'background' : target;
-				this.editor.updateStatus(`Selected ${glitter.name} for the text ${targetName}`);
-			} else {
-				this.editor.updateStatus(`Selected ${glitter.name} for the text fill`);
-			}
+			this.editor.updateStatus(`Selected ${glitter.name} for the text ${getPaintSlotLabel(layer.type, target)}`);
 		} else {
 			this.editor.updateStatus(`Selected ${glitter.name}`);
 		}

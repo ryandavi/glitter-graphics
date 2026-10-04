@@ -1326,8 +1326,10 @@ removeTransformHandles() {
 					this.getTransform().proportionalScale = false;
 					this.scheduleSettingsSync();
 				}
-				// Text edge handles resize the box; only its corners scale the type.
-				await this.commitScaleChange(anchorBeforeCommit, { text: ht.startsWith('corner-'), startScale });
+				// Area text's edge handles resize its box, which bakes nothing. Point
+				// text has no box, so its edges scale the type like a corner does.
+				const resizesTextBox = ht.startsWith('edge-') && this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer);
+				await this.commitScaleChange(anchorBeforeCommit, { text: !resizesTextBox, startScale });
 			}
 			if (completedDrag?.didMove) {
 				if (completedDrag.targetLayerId) {

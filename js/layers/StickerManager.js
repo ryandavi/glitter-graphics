@@ -221,7 +221,7 @@ class StickerManager extends ContentManager {
 
 	armPicker(slot) {
 		const layer = this.editor.layerManager.getActiveLayer();
-		if (layer?.type !== LayerType.STICKER || !layer.stickerData[slot]) return;
+		if (layer?.type !== LayerType.STICKER || !getLayerPaintSlot(layer, slot)) return;
 		pickerOpenSession(this, { kind: 'glitter', layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager)
@@ -239,7 +239,7 @@ class StickerManager extends ContentManager {
 
 	closePicker() {
 		const focusId = this.pickerSession?.kind === 'glitter'
-			? `sticker${this.pickerSession.slot[0].toUpperCase()}${this.pickerSession.slot.slice(1)}GlitterChip`
+			? getPaintSlotChipId(LayerType.STICKER, this.pickerSession.slot)
 			: 'stickerAssetThumbnail';
 		this.closePickerSession();
 		returnFromPickerToProperties(this.editor, { section: 'stickerSettings', focusId });
@@ -260,18 +260,23 @@ class StickerManager extends ContentManager {
 		if (!this.ui.pickerStrip || this.editor.layerManager.getActiveLayer()?.type !== LayerType.STICKER) return;
 		const layer = this.editor.layerManager.getActiveLayer();
 		const assetArmed = this.pickerSession?.kind === 'asset' && this.pickerSession.layerId === layer.id;
-		const glitterArmed = this.pickerSession?.kind !== 'asset' && this.pickerSession?.layerId === layer.id && layer.stickerData?.[this.pickerSession.slot];
-		const armed = Boolean(assetArmed || glitterArmed);
+		const armedSlot = this.getGlitterSelectionTarget(layer);
+		const glitterArmed = Boolean(armedSlot);
+		const armed = assetArmed || glitterArmed;
 		const stripText = glitterArmed
-			? formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker')
+			? formatPickerStripText(layer, armedSlot, 'sticker')
 			: formatAssetPickerStripText('sticker', layer.name);
 		renderPickerStrip({ ownsStrip: true, visible: true, armed, hint: !armed, pickerMode: glitterArmed, ...stripText });
 	}
 
+	// The slot the next gallery pick targets, or null when none is armed (a
+	// sticker has no fill slot to fall back to).
 	getGlitterSelectionTarget(layer = this.editor.layerManager.getActiveLayer()) {
-		return pickerSelectionTarget(this, layer, {
-			isValid: (session) => layer?.type === LayerType.STICKER && session.kind !== 'asset'
-		});
+		return pickerArmedSlot(this, layer, (session) => session.kind !== 'asset');
+	}
+
+	resolveSelectedGlitterId(layer) {
+		return getLayerPaintSlot(layer, this.getGlitterSelectionTarget(layer))?.glitterId ?? null;
 	}
 
 	loadLayerSettings(layer) {

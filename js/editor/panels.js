@@ -703,7 +703,7 @@ isLayerContentLocked(layer) {
 			: layer?.type === LayerType.SHAPE
 				? this.shapeGlitterManager?.resolveSelectedGlitterId(layer)
 				: layer?.type === LayerType.STICKER
-					? layer.stickerData?.[this.stickerManager.getGlitterSelectionTarget(layer)]?.glitterId
+					? this.stickerManager?.resolveSelectedGlitterId(layer)
 				: getLayerFillGlitterId(layer);
 
 		// Only the glitter browser: other kinds reuse numeric ids.

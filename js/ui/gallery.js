@@ -109,10 +109,10 @@ function formatPickerTarget(layerName, typeWord) {
 	return `Current ${label}${/\blayer\b/i.test(typeWord) ? '' : ' Layer'}`;
 }
 
-function formatPickerStripText(slot, layerName, typeWord) {
+function formatPickerStripText(layer, slot, typeWord) {
 	return {
-		title: `Choosing ${slot} glitter`,
-		detail: formatPickerTarget(layerName, typeWord)
+		title: `Choosing ${getPaintSlotLabel(layer.type, slot)} glitter`,
+		detail: formatPickerTarget(layer.name, typeWord)
 	};
 }
 
