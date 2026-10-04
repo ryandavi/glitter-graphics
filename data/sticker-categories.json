@@ -143,7 +143,7 @@
     {
         "id": "container",
         "name": "Container",
-        "icon": "",
+        "icon": "images/stickers/container/container_sticky-note.png",
         "color": "#ff69b4",
         "description": "",
         "count": 2

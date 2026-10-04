@@ -12,7 +12,8 @@
 //   section  { kind: 'section' | 'paintSlot' | 'transform' | 'mount', title,
 //              sets, advanced? }. `advanced` is a list of sets under the
 //              section's one "Advanced" disclosure.
-//   set      { label?, rows }, or { actions } for a set of buttons
+//   set      { label?, rows }, or { actions } for a set of buttons. `collapse:
+//            'open' | 'closed'` makes a labelled set's name a toggle.
 //   row      { kind: 'slider' | 'select' | 'segmented' | 'toggle' | 'field' |
 //              'numberPair' | 'note' | 'assetInfo' | 'presetGrid' | 'host' … }
 //
@@ -149,7 +150,7 @@ function createSparklesSectionSpec(idPrefix, overrides = {}) {
 		texturePosition: true,
 		toggle: true, modes: ['glitter', 'solid'], activeMode: 'solid',
 		color: '#ffffff', chipTitle: 'Choose sparkle glitter',
-		before: [{ label: 'Presets', rows: [
+		before: [{ label: 'Presets', collapse: 'open', rows: [
 			{ kind: 'presetGrid', id: `${idPrefix}Presets`, label: 'Sparkle presets', classes: 'property-inset sparkle-presets' }
 		] }],
 		get advanced() { return createSparkleAdvancedSets(idPrefix); },
@@ -476,7 +477,7 @@ const PANEL_SCHEMAS = {
 					{ rows: [
 						{ kind: 'select', id: 'filterLooksGroup', label: 'Category', ariaLabel: 'Filter look category', options: [] }
 					] },
-					{ label: 'Look', rows: [
+					{ rows: [
 						{ kind: 'presetGrid', id: 'filterLooksPicker', label: 'Filter looks', classes: 'property-inset filter-looks-picker' }
 					] },
 					{ rows: [
@@ -513,7 +514,7 @@ const PANEL_SCHEMAS = {
 					{ rows: [
 						{ kind: 'segmented', label: 'Kind', get options() { return createRegistryOptionEntries('frameKind', 'frameKind'); } }
 					] },
-					{ label: 'Presets', attrs: { 'data-frame-kind': 'style' }, rows: [
+					{ label: 'Presets', collapse: 'open', attrs: { 'data-frame-kind': 'style' }, rows: [
 						{ kind: 'presetGrid', id: 'framePresets', label: 'Frame presets', classes: 'property-inset frame-presets' }
 					] },
 					{ label: 'Customize', attrs: { 'data-frame-kind': 'style' }, rows: [
@@ -835,7 +836,7 @@ const PANEL_SCHEMAS = {
 				// name in the header.
 				{ kind: 'section', title: 'Warp', collapsed: true,
 					summary: { id: 'textWarpSummary' }, sets: [
-					{ label: 'Presets', rows: [
+					{ label: 'Presets', collapse: 'open', rows: [
 						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' }
 					] },
 					{ rows: [
@@ -963,7 +964,7 @@ const PANEL_SCHEMAS = {
 			createOutlineSectionSpec('shapeBorder',
 				[
 					{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
-					{ kind: 'segmented', label: 'Style', stacked: true, options: getOptions('borderStyle').map((option) => ({
+					{ kind: 'segmented', label: 'Style', options: getOptions('borderStyle').map((option) => ({
 						...option,
 						id: `shapeBorderStyle${option.value.charAt(0).toUpperCase()}${option.value.slice(1)}`,
 						active: option.value === 'solid'

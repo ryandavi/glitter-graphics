@@ -168,6 +168,44 @@ async function check3(page) {
 	assert(dotted.dottedActive, 'Dotted border button did not become active');
 	assert(dotted.spacingRowHidden === false, 'Dot spacing control stayed hidden in dotted mode');
 	assert(dotted.maskPresent, 'Dotted border mode did not produce a border mask');
+	const ordering = await page.evaluate((id) => {
+		const layer = editor.layers.find((entry) => entry.id === id);
+		const manager = editor.shapeGlitterManager;
+		const results = [];
+		for (const edgeStyle of ['round', 'miter']) {
+			for (const placement of ['outside', 'center', 'inside']) {
+				Object.assign(layer.shapeData.border, { edgeStyle, placement });
+				const masks = {};
+				const stacks = {};
+				for (const drawOrder of ['behind', 'front']) {
+					layer.shapeData.border.drawOrder = drawOrder;
+					const slot = getLayerPaintSlots(layer).find((entry) => entry.key === 'border');
+					const preview = manager.getSlotMask(manager.getMeasurementEntry(layer), slot, layer).canvas;
+					const exported = manager.renderSlotMasks(layer).border;
+					masks[drawOrder] = preview.toDataURL();
+					stacks[drawOrder] = manager.getSlotStack(layer).map((entry) => entry.key);
+					results.push({ label: `${edgeStyle}/${placement}/${drawOrder} parity`, passes: masks[drawOrder] === exported.toDataURL() });
+					if (placement === 'outside') {
+						const fill = manager.renderSlotMasks(layer).fill;
+						const inner = createErodedMaskCanvas(fill, 2);
+						const body = inner.getContext('2d').getImageData(0, 0, inner.width, inner.height).data;
+						const dots = preview.getContext('2d').getImageData(0, 0, preview.width, preview.height).data;
+						let overlapsInterior = false;
+						for (let i = 3; i < dots.length; i += 4) {
+							if (dots[i] && body[i]) { overlapsInterior = true; break; }
+						}
+						results.push({ label: `${edgeStyle}/${drawOrder} full dots straddle the edge`, passes: overlapsInterior });
+					}
+				}
+				results.push({ label: `${edgeStyle}/${placement} geometry`, passes: masks.behind === masks.front });
+				results.push({ label: `${edgeStyle}/${placement} order`, passes:
+					stacks.behind.indexOf('border') < stacks.behind.indexOf('fill') &&
+					stacks.front.indexOf('border') > stacks.front.indexOf('fill') });
+			}
+		}
+		return results;
+	}, layerId);
+	ordering.forEach(({ label, passes }) => assert(passes, `Dotted outline ${label} changed incorrectly`));
 
 	await page.click('#shapeBorderStyleSolid');
 	const solid = await page.evaluate((id) => {

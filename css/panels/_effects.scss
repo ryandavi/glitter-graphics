@@ -25,9 +25,9 @@
 
 // The gradient editor is laid out exactly like the glitter source: the section
 // body holds a flat run of `.property-set`s (never a set inside a set). effect-source.js splits the template into:
-//   - `.gradient-preview` → the Source `.property-set` (a `[data-paint-source-mode]`
-//     display block, where `.asset-info` sits) — styled in the block below;
-//   - `.gradient-stop-set` → a `.property-set` chunk: the stop table + actions + hint;
+//   - a collapsible Presets `.property-set`, directly under Source;
+//   - `.gradient-stop-set` → a `.property-set` chunk: the `.gradient-preview`
+//     bar, the stop table, actions and hint;
 //   - `.effect-gradient-editor` → a `.property-set` chunk: Type / Blend / Angle
 //     `.property-row`s, plus the fill's Opacity row for the Gradient source;
 //   - the Smoothing `.advanced-disclosure` → module level, beside the glitter Advanced.
@@ -40,10 +40,20 @@
 
 // Stop-table chunk.
 .gradient-stop-set {
-	// Table / actions / hint take the gutter like `.asset-info`.
-	.gradient-stops-heading,
-	.gradient-stops,
-	.gradient-actions { margin-inline: var(--property-gutter); }
+	// The stop table sits in the `.asset-info` surface (`.gradient-stops-box`,
+	// _components.scss); it and the actions take the gutter as that does.
+	.gradient-stops-box,
+	.gradient-actions {
+		margin-inline: var(--property-gutter);
+	}
+
+	.gradient-stops-box {
+		padding: 0;
+		gap: 0;
+		margin-top: var(--spacing-sm);
+	}
+
+
 
 	.gradient-stops-heading,
 	.effect-gradient-stop {
@@ -57,12 +67,16 @@
 	// Pos / Alpha labels also clear the number field's border + inner padding so
 	// they sit directly over the value, not the field edge.
 	.gradient-stops-heading {
-		padding: 0 var(--spacing-sm) 1px;
+		// padding: 0 var(--spacing-sm) 1px;
 		font-size: var(--font-size-xs);
 		font-weight: var(--font-weight-semibold);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--color-text-tertiary);
+
+		padding: var(--spacing-sm);
+
+
 
 		> span:nth-child(2),
 		> span:nth-child(3) {
@@ -82,11 +96,12 @@
 	.effect-gradient-stop {
 		min-height: 28px;
 		padding: var(--spacing-sm);
-		border-radius: var(--radius-control);
+		// border-radius: var(--radius-control);
 
 		&.is-selected {
 			background: var(--color-accent-surface);
-			box-shadow: inset 0 0 0 1px var(--color-accent);
+			//box-shadow: inset 0 0 0 1px var(--color-accent);
+
 		}
 	}
 
@@ -174,12 +189,12 @@
 	.gradient-hint { line-height: 1.4; }
 }
 
-// The preview bar, moved into the Source `.property-set` by effect-source.js —
-// gutter-inset like `.asset-info`, mode-toggled via `[data-paint-source-mode]`.
+// The preview bar leads the stop set, over the table of its stops, and takes
+// the gutter like `.asset-info`.
 // Circular stop handles SIT ON a bar centred in a taller track so they overflow
 // it; the checkerboard is a ::before under the JS-set gradient (same paint order
 // as the old markup, so stop alpha reads through).
-.paint-slot-source > .gradient-preview {
+.gradient-stop-set > .gradient-preview {
 	position: relative;
 	height: 32px;
 	margin-inline: var(--property-gutter);

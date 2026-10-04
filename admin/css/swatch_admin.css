@@ -42,6 +42,10 @@
   /* blue-tinted active/drag-over background */
   --color-checkerboard: #33373d;
   /* transparent-bg checkerboard pattern */
+  --color-preview-dark: #241a33;
+  --color-preview-light: #ece6f3;
+  /* backdrops for preset thumbnails drawn in fixed paint: the paint does
+     not follow the theme, so neither do these unless a theme sets them */
   --color-bg-translucent: rgb(24 27 31 / 95%);
   /* Shadow tiers — every UI-chrome shadow (panels, modals, drawers, popovers)
      uses one of these so themes can soften them in one place. Shadows painted

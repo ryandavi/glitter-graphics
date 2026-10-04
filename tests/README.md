@@ -142,7 +142,9 @@ Check 18 above only exercises the move/bounding-box handle. Rotation, corner-sca
 
 Run it the same way: `node tests/ui/touch-handle-verify.js`.
 
-It drives each handle once via touch and once via mouse (six checks total), confirming the shared pointer-event handle path in `LayerTransform.attachHandleListeners` behaves the same for both input types:
+It also checks that a sharp shape outline's transparent render padding cannot start a mouse drag, with Auto-select both on and off, while dragging inside the shape still works.
+
+It drives each handle once via touch and once via mouse, confirming the shared pointer-event handle path in `LayerTransform.attachHandleListeners` behaves the same for both input types:
 
 1. Touch/mouse drag on the rotation handle rotates the selected sticker.
 2. Touch/mouse drag on a corner handle scales the selected sticker.

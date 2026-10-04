@@ -188,6 +188,13 @@ initializeCollapsibleSections() {
 				toggleSubsection(subsectionToggle);
 				return;
 			}
+			const setToggle = event.target.closest('[data-set-toggle]');
+			if (setToggle) {
+				const set = setToggle.parentElement;
+				setPanelCardCollapsed(set, !set.classList.contains('is-collapsed'));
+				rememberPanelCardState(set);
+				return;
+			}
 			const toggle = event.target.closest('[data-advanced-toggle]');
 			if (!toggle) return;
 			const disclosure = toggle.closest('[data-advanced]');

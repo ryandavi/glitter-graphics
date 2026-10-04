@@ -859,12 +859,8 @@ class ShapeGlitterManager {
 		}
 
 		const borderStyle = getBorderStyle(borderData);
-		const drawOrder = getBorderDrawOrder(borderData);
 		const placement = getBorderPlacement(borderData);
 		const edgeStyle = getBorderEdgeStyle(borderData);
-		const effectivePlacement = borderStyle === 'dotted' && placement === 'outside' && drawOrder === 'front'
-			? 'center'
-			: placement;
 		const dotSpacingPx = Math.max(1, borderData?.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx);
 		const canvas = createAppCanvas(0, 0, 'layers/ShapeGlitterManager');
 		canvas.width = measurement.canvas.width;
@@ -884,7 +880,7 @@ class ShapeGlitterManager {
 			// clip and splits the fill into disconnected slivers. outside/center
 			// don't clip, so they're free to use the full configured limit to keep
 			// convex points (star, sparkle) from bevelling off.
-			ctx.miterLimit = effectivePlacement === 'inside'
+			ctx.miterLimit = placement === 'inside'
 				? CONFIG.tools.shapes.border?.hardEdgeInsideMiterLimit ?? 2
 				: Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2);
 			ctx.lineCap = borderStyle === 'dotted' ? 'square' : 'butt';
@@ -892,23 +888,24 @@ class ShapeGlitterManager {
 			ctx.lineJoin = 'round';
 			ctx.lineCap = 'round';
 		}
-		if (effectivePlacement === 'inside') {
+		if (placement === 'inside') {
 			ctx.save();
 			ctx.clip(path);
 		}
 		if (borderStyle === 'dotted') {
-			ctx.lineWidth = effectivePlacement === 'center' ? widthPx : widthPx * 2;
+			ctx.lineWidth = placement === 'center' ? widthPx : widthPx * 2;
 			ctx.setLineDash([0, widthPx + dotSpacingPx]);
 		} else {
-			ctx.lineWidth = effectivePlacement === 'center' ? widthPx : widthPx * 2;
+			ctx.lineWidth = placement === 'center' ? widthPx : widthPx * 2;
 		}
 		ctx.stroke(path);
-		if (effectivePlacement === 'inside') {
+		if (placement === 'inside') {
 			ctx.restore();
 		}
 		ctx.restore();
 
-		if (effectivePlacement === 'outside') {
+		// Dots straddle the path; the fill covers their inner halves only behind it.
+		if (placement === 'outside' && borderStyle !== 'dotted') {
 			ctx.globalCompositeOperation = 'destination-out';
 			ctx.drawImage(createOutlineCutoutCanvas(measurement.canvas, underlap), 0, 0);
 			ctx.globalCompositeOperation = 'source-over';

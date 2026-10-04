@@ -815,6 +815,45 @@ async function checkSidebarScaleAndResetHandles(page) {
 	assert(Math.abs(reset.width - before.width) < 2, 'Reset Transform did not restore the transform box size');
 }
 
+async function checkSharpOutlineDragBounds(page) {
+	await page.setViewportSize({ width: 1280, height: 900 });
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const id = await page.evaluate(() => {
+		const editor = window.editor;
+		const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 120, y: 90 } });
+		layer.shapeData.border = { ...editor.shapeGlitterManager.getDefaultBorder(), mode: 'solid', widthPx: 10, edgeStyle: 'miter', placement: 'outside' };
+		editor.layerManager.insertLayer(layer);
+		editor.layerManager.setActiveLayer(layer.id);
+		editor.requestPreviewUpdate();
+		return layer.id;
+	});
+	await closeMobileChrome(page);
+	await page.waitForTimeout(200);
+	const metrics = await getViewportMetrics(page);
+	const outside = canvasToScreen(metrics, { x: 40, y: 90 });
+	for (const autoSelect of [true, false]) {
+		await page.evaluate(({ id, autoSelect }) => {
+			PREFERENCES.set('autoSelect', autoSelect);
+			editor.layerManager.setActiveLayer(id);
+		}, { id, autoSelect });
+		const before = await page.evaluate((id) => {
+			const layer = editor.layers.find((entry) => entry.id === id);
+			return { ...layer.transform.position };
+		}, id);
+		const target = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('.shape-glitter-element')?.dataset.layerId, outside);
+		assert(target === id, 'Sharp outline regression point must hit the transparent render padding');
+		await mouseDrag(page, outside, { x: outside.x + 20, y: outside.y + 10 });
+		const after = await page.evaluate((id) => ({ ...editor.layers.find((entry) => entry.id === id).transform.position }), id);
+		assert(after.x === before.x && after.y === before.y, `Sharp outline padding moved the shape with autoSelect=${autoSelect}`);
+	}
+	await page.evaluate((id) => editor.layerManager.setActiveLayer(id), id);
+	const inside = canvasToScreen(metrics, { x: 120, y: 90 });
+	await mouseDrag(page, inside, { x: inside.x + 30, y: inside.y });
+	const moved = await page.evaluate((id) => editor.layers.find((entry) => entry.id === id).transform.position.x, id);
+	assert(moved > 125, 'Dragging inside the sharp-outlined shape must still move it');
+}
+
 async function runCheck(browser, name, fn) {
 	const tracker = await createHarnessPage(browser);
 
@@ -838,6 +877,7 @@ async function main() {
 
 	try {
 		const checks = [
+			['Sharp outline render padding cannot start a mouse drag', checkSharpOutlineDragBounds],
 			['Text alignment preserves the fixed box position', checkTextLayoutControls],
 			['Touch auto-height sides resize width; vertical edges convert to Fixed', page => checkAutoHeightEdges(page, oneFingerDrag, 'touch')],
 			['Mouse auto-height sides resize width; vertical edges convert to Fixed', page => checkAutoHeightEdges(page, mouseDrag, 'mouse')],

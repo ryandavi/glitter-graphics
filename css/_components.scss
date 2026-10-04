@@ -265,9 +265,11 @@ textarea {
 // ---------------------------------------------------------------------------
 // The one collapse affordance: a chevron that points right when closed and
 // down when open, then the label. A section's Advanced / More rows, a
-// collapsible section title and the release notes all use it.
+// collapsible section title, a collapsible set's name and the release notes
+// all use it.
 // ===========================================================================
 .property-card-chevron,
+.property-set-chevron,
 .advanced-disclosure-chevron {
 	display: inline-flex;
 	align-items: center;
@@ -288,6 +290,7 @@ textarea {
 }
 
 .property-card-title:hover > .property-card-chevron,
+.property-set-label:hover > .property-set-chevron,
 .advanced-disclosure-toggle:hover > .advanced-disclosure-chevron {
 	color: var(--color-text-secondary);
 }

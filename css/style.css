@@ -731,6 +731,10 @@
   /* blue-tinted active/drag-over background */
   --color-checkerboard: #33373d;
   /* transparent-bg checkerboard pattern */
+  --color-preview-dark: #241a33;
+  --color-preview-light: #ece6f3;
+  /* backdrops for preset thumbnails drawn in fixed paint: the paint does
+     not follow the theme, so neither do these unless a theme sets them */
   --color-bg-translucent: rgb(24 27 31 / 95%);
   /* Shadow tiers — every UI-chrome shadow (panels, modals, drawers, popovers)
      uses one of these so themes can soften them in one place. Shadows painted
@@ -1547,6 +1551,7 @@ textarea {
 }
 
 .property-card-chevron,
+.property-set-chevron,
 .advanced-disclosure-chevron {
   display: inline-flex;
   align-items: center;
@@ -1559,6 +1564,7 @@ textarea {
   transition: transform var(--transition-fast), color var(--transition-fast);
 }
 .property-card-chevron > svg.icon,
+.property-set-chevron > svg.icon,
 .advanced-disclosure-chevron > svg.icon {
   width: 11px;
   height: 11px;
@@ -1567,6 +1573,7 @@ textarea {
 }
 
 .property-card-title:hover > .property-card-chevron,
+.property-set-label:hover > .property-set-chevron,
 .advanced-disclosure-toggle:hover > .advanced-disclosure-chevron {
   color: var(--color-text-secondary);
 }
@@ -5329,12 +5336,12 @@ body.tool-text .text-hover-baselines {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.preset-grid-thumbnail.is-drawn {
-  background-color: #241a33;
+.preset-grid-thumbnail:is(.is-drawn, .style-preset-thumbnail) {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
 }
+
 .preset-grid-thumbnail.is-drawn.pixelated {
   image-rendering: pixelated;
 }
@@ -5342,13 +5349,11 @@ body.tool-text .text-hover-baselines {
 .preset-grid-thumbnail.style-preset-thumbnail {
   display: grid;
   place-items: center;
-  background-color: #ece6f3;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
+  background-color: var(--color-preview-light);
 }
-.preset-grid-thumbnail.style-preset-thumbnail.is-dark {
-  background-color: #241a33;
+
+.preset-grid-thumbnail:is(.is-drawn, .is-dark) {
+  background-color: var(--color-preview-dark);
 }
 
 .style-preset-sample {
@@ -5598,10 +5603,14 @@ body.tool-text .text-hover-baselines {
   grid-column: 2/-2;
 }
 
-.gradient-stop-set .gradient-stops-heading,
-.gradient-stop-set .gradient-stops,
+.gradient-stop-set .gradient-stops-box,
 .gradient-stop-set .gradient-actions {
   margin-inline: var(--property-gutter);
+}
+.gradient-stop-set .gradient-stops-box {
+  padding: 0;
+  gap: 0;
+  margin-top: var(--spacing-sm);
 }
 .gradient-stop-set .gradient-stops-heading,
 .gradient-stop-set .effect-gradient-stop {
@@ -5612,12 +5621,12 @@ body.tool-text .text-hover-baselines {
   align-items: center;
 }
 .gradient-stop-set .gradient-stops-heading {
-  padding: 0 var(--spacing-sm) 1px;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
+  padding: var(--spacing-sm);
 }
 .gradient-stop-set .gradient-stops-heading > span:nth-child(2),
 .gradient-stop-set .gradient-stops-heading > span:nth-child(3) {
@@ -5635,11 +5644,9 @@ body.tool-text .text-hover-baselines {
 .gradient-stop-set .effect-gradient-stop {
   min-height: 28px;
   padding: var(--spacing-sm);
-  border-radius: var(--radius-control);
 }
 .gradient-stop-set .effect-gradient-stop.is-selected {
   background: var(--color-accent-surface);
-  box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 .gradient-stop-set .gradient-stop-color {
   display: flex;
@@ -5710,14 +5717,14 @@ body.tool-text .text-hover-baselines {
   line-height: 1.4;
 }
 
-.paint-slot-source > .gradient-preview {
+.gradient-stop-set > .gradient-preview {
   position: relative;
   height: 32px;
   margin-inline: var(--property-gutter);
   touch-action: none;
   cursor: copy;
 }
-.paint-slot-source > .gradient-preview::before {
+.gradient-stop-set > .gradient-preview::before {
   content: "";
   position: absolute;
   inset-inline: 0;
@@ -5727,7 +5734,7 @@ body.tool-text .text-hover-baselines {
   border-radius: var(--radius-control);
   background: repeating-conic-gradient(rgba(0, 0, 0, 0) 0 25%, rgba(255, 255, 255, 0.09) 0 50%) 0 0/10px 10px;
 }
-.paint-slot-source > .gradient-preview > .gradient-preview-bar {
+.gradient-stop-set > .gradient-preview > .gradient-preview-bar {
   position: absolute;
   inset-inline: 0;
   top: 50%;
@@ -5736,12 +5743,12 @@ body.tool-text .text-hover-baselines {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
 }
-.paint-slot-source > .gradient-preview > .gradient-preview-markers {
+.gradient-stop-set > .gradient-preview > .gradient-preview-markers {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.paint-slot-source > .gradient-preview .gradient-preview-stop {
+.gradient-stop-set > .gradient-preview .gradient-preview-stop {
   position: absolute;
   top: 50%;
   box-sizing: border-box;
@@ -5755,16 +5762,16 @@ body.tool-text .text-hover-baselines {
   pointer-events: auto;
   cursor: grab;
 }
-.paint-slot-source > .gradient-preview .gradient-preview-stop::before {
+.gradient-stop-set > .gradient-preview .gradient-preview-stop::before {
   content: "";
   position: absolute;
   inset: -14px -5px;
 }
-.paint-slot-source > .gradient-preview .gradient-preview-stop.is-selected {
+.gradient-stop-set > .gradient-preview .gradient-preview-stop.is-selected {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 2px var(--color-accent-surface), 0 0 3px rgba(0, 0, 0, 0.55);
 }
-.paint-slot-source > .gradient-preview .gradient-preview-stop:focus-visible {
+.gradient-stop-set > .gradient-preview .gradient-preview-stop:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
@@ -7713,6 +7720,12 @@ body.tool-select .preview-container.is-over-picked-layer {
   border: 0;
   background: transparent;
 }
+.property-panel .property-set.is-collapsed > .property-set-label > .property-set-chevron {
+  transform: rotate(-90deg);
+}
+.property-panel .property-set.is-collapsed > :not(.property-set-label) {
+  display: none;
+}
 
 .property-panel .property-set-label {
   padding: 0 var(--property-gutter);
@@ -7721,6 +7734,17 @@ body.tool-select .preview-container.is-over-picked-layer {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   line-height: var(--line-height-tight);
+}
+.property-panel .property-set-label[data-set-toggle] {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  padding-bottom: 0;
 }
 .property-panel .property-set-label:empty {
   display: none;

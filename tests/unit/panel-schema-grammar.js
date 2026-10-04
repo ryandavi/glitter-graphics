@@ -32,7 +32,7 @@ const ROW_KINDS = new Set([
 	'note', 'assetInfo', 'presetGrid', 'textarea', 'host', 'sparkleGlyphs', 'processingStatus'
 ]);
 const GROUP_KEYS = new Set(['title', 'sections', 'note', 'actions', 'region', 'classes']);
-const SET_KEYS = new Set(['id', 'label', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint']);
+const SET_KEYS = new Set(['id', 'label', 'collapse', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint']);
 // Spellings the grammar replaced. None may come back on any object.
 const RETIRED_KEYS = [
 	'items', 'visibleLabel', 'revertFor', 'reset', 'moduleSummary', 'titleSummary', 'summaryFrom', 'flatBody',
@@ -80,6 +80,8 @@ function checkRow(row, where) {
 function checkSet(set, where) {
 	Object.keys(set).forEach((key) => assert(SET_KEYS.has(key), `${where}: unknown set key "${key}"`));
 	if (set.label != null) assert(typeof set.label === 'string' || (Object.keys(set.label).join() === 'id' && typeof set.label.id === 'string'), `${where}: label is text or a dynamic label id`);
+	// A collapsible set's name is its toggle, so it has static text and rows.
+	if (set.collapse != null) assert(['open', 'closed'].includes(set.collapse) && typeof set.label === 'string' && set.rows, `${where}: collapse is "open" or "closed", on a set with a text label and rows`);
 	const forms = ['rows', 'actions', 'paint'].filter((key) => set[key]);
 	assert.strictEqual(forms.length, 1, `${where}: a set is exactly one of rows, actions or paint`);
 	if (set.rows) set.rows.forEach((row, index) => checkRow(row, `${where} row ${index}`));

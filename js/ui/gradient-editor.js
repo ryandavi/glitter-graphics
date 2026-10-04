@@ -10,7 +10,6 @@ function installEffectGradientEditor(options) {
 	button.textContent = 'Gradient';
 	group.appendChild(button);
 	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
-	const source = group.parentElement; // .paint-slot-source
 	const slotCard = group.closest('.paint-slot-card') || group.closest('.property-card');
 	// A second source in a section (Bevel's Shade) is one set in that section's
 	// body: its gradient sets follow it there, marked as its own.
@@ -21,36 +20,27 @@ function installEffectGradientEditor(options) {
 	const stopSet = fragment.querySelector('.gradient-stop-set');
 	const panel = fragment.querySelector('.effect-gradient-editor');
 	const advanced = fragment.querySelector('.gradient-advanced');
-	// Presets mirror the filter Looks card: a Category row in its own set, then
-	// a labelled set holding the grid. Both are gradient-only, toggled by the
-	// shared `[data-paint-source-mode]` sync so they never show for other modes.
-	const presetGroup = document.createElement('select');
-	presetGroup.className = 'gradient-preset-group';
-	presetGroup.setAttribute('aria-label', 'Gradient preset category');
-	const presetGroupSet = document.createElement('div');
-	presetGroupSet.className = 'property-set gradient-preset-group-set';
-	presetGroupSet.appendChild(buildOptionGroup('Category', [presetGroup]));
-	const presetGrid = document.getElementById('tpl-preset-grid').content.firstElementChild.cloneNode(true);
-	presetGrid.classList.add('property-inset', 'gradient-preset-grid');
-	presetGrid.setAttribute('aria-label', 'Gradient presets');
-	const presetSet = document.createElement('div');
-	presetSet.className = 'property-set gradient-preset-set';
-	presetSet.appendChild(presetGrid);
+	// Presets are a shortcut beside the editor: one set, closed until asked
+	// for, holding the Category row and the grid. One remembered state serves
+	// every slot's editor. Gradient-only, toggled by the shared
+	// `[data-paint-source-mode]` sync so it never shows for other modes.
+	const presetSet = buildPanelSet({ label: 'Presets', collapse: 'closed', rows: [
+		{ kind: 'select', label: 'Category', ariaLabel: 'Gradient preset category', options: [] },
+		{ kind: 'presetGrid', label: 'Gradient presets', classes: 'property-inset' }
+	] }, { prefix: 'gradient' });
+	const presetGroup = presetSet.querySelector('select');
+	const presetGrid = presetSet.querySelector('.preset-grid');
 	initializeScrollBoundaryFades(presetGrid);
-	[presetGroupSet, presetSet].forEach((set) => {
-		set.dataset.paintSourceMode = 'gradient';
-		set.hidden = true;
-	});
+	presetSet.dataset.paintSourceMode = 'gradient';
+	presetSet.hidden = true;
 
 	// Lay the editor out the way the glitter source is: NO set inside a set.
-	//   - the preview bar joins the Source `.property-set` as a mode-toggled
-	//     display block (like `.asset-info`);
-	//   - the stop table and the Type/Blend/Angle(/Opacity) options are two
-	//     sibling `.property-set`s of the section body, before its Opacity set;
+	//   - Presets, then the stops (the preview bar over its stop table), then
+	//     the Type/Blend/Angle(/Opacity) options are sibling `.property-set`s
+	//     of the section body, before its Opacity set;
 	//   - the Smoothing set joins the section's one Advanced.
-	source.appendChild(previewBar);
 	const primarySet = slotCard?.querySelector('.paint-slot-primary-row')?.closest('.property-set');
-	const gradientSets = [presetGroupSet, presetSet, stopSet, panel];
+	const gradientSets = [presetSet, stopSet, panel];
 	if (nestedSource) [...gradientSets, advanced].forEach((set) => { if (set) set.dataset.paintSlotOwner = slotCard.id; });
 	if (nestedSource) slotCard.after(...gradientSets);
 	else if (primarySet) primarySet.before(...gradientSets);
@@ -145,7 +135,6 @@ function installEffectGradientEditor(options) {
 		const isGradient = data.mode === 'gradient';
 		panel.hidden = !isGradient;
 		stopSet.hidden = !isGradient;
-		presetGroupSet.hidden = !isGradient;
 		presetSet.hidden = !isGradient;
 		panel._selectedStop = Math.max(0, Math.min(gradient.stops.length - 1, panel._selectedStop));
 

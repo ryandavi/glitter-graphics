@@ -1044,8 +1044,31 @@ function buildActionSet(set) {
 	return row;
 }
 
+// A collapsible set's name is its toggle (disclosures.js binds
+// `[data-set-toggle]`). Its open state is remembered the way a section's is,
+// under `prefix:first row id` (or the label where the rows carry no id).
+function buildSetToggle(node, set, schema) {
+	const toggle = document.createElement('button');
+	toggle.type = 'button';
+	toggle.className = 'property-set-label';
+	toggle.dataset.setToggle = '';
+	const chevron = document.createElement('span');
+	chevron.className = 'property-set-chevron icon-wrapper';
+	chevron.appendChild(createIcon('chevron-down'));
+	const name = document.createElement('span');
+	name.textContent = set.label;
+	toggle.append(chevron, name);
+	node.appendChild(toggle);
+	node.dataset.collapseKey = `${schema?.prefix || 'panel'}:${set.rows?.[0]?.id || set.label}`;
+	if (set.collapse === 'closed') node.dataset.collapseDefault = 'closed';
+	setPanelCardCollapsed(node, set.collapse === 'closed');
+	applyPanelCardState(node);
+}
+
 // A set names related rows through `label`; the finishing pass draws the
-// name only in sections with more than one labelled set.
+// name only in sections with more than one labelled set. `collapse: 'open' |
+// 'closed'` makes the name a toggle that folds the rows away: presets that
+// are a shortcut beside the controls they fill.
 function buildPanelSet(set, schema) {
 	if (set.actions) return buildActionSet(set);
 	const node = addPanelClasses(panelDiv('property-set'), set.classes);
@@ -1060,6 +1083,7 @@ function buildPanelSet(set, schema) {
 			node.setAttribute('aria-labelledby', set.label.id);
 		}
 	}
+	if (set.collapse) buildSetToggle(node, set, schema);
 	(set.rows || []).forEach((row) => node.appendChild(buildPanelItem(row, schema)));
 	return node;
 }
@@ -1212,7 +1236,7 @@ function buildPanelItem(item, schema) {
 		}
 		case 'select': {
 			const select = document.createElement('select');
-			select.id = item.id;
+			if (item.id) select.id = item.id;
 			addPanelClasses(select, item.classes);
 			select.setAttribute('aria-label', item.ariaLabel || item.label);
 			const optgroups = new Map();
@@ -1503,9 +1527,10 @@ function readPanelCardState() {
 	try { return JSON.parse(localStorage.getItem(PANEL_CARD_STATE_KEY) || '{}') || {}; } catch (error) { return {}; }
 }
 
+// A section or a collapsible set: the toggle is its title row or its name.
 function setPanelCardCollapsed(card, collapsed) {
 	card.classList.toggle('is-collapsed', collapsed);
-	card.querySelector(':scope > .property-card-title')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+	card.querySelector(':scope > :is(.property-card-title, [data-set-toggle])')?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 }
 
 // The open state of a `[data-advanced]` disclosure, for every caller.
@@ -1595,9 +1620,11 @@ function buildPanelGroup(group, schema) {
 function finishPanelMarkup(root) {
 	root.querySelectorAll('.property-card-body').forEach((body) => {
 		const sets = Array.from(body.querySelectorAll('.property-set[aria-label], .property-set[data-set-label-id]')).filter((set) => set.closest('.property-card-body') === body);
-		if (sets.length < 2) return;
 		sets.forEach((set) => {
 			if (set.querySelector(':scope > .property-set-label')) return;
+			// A lone static name repeats its section's title; a name its manager
+			// writes (the chosen look's settings) is always drawn.
+			if (sets.length < 2 && !set.dataset.setLabelId) return;
 			const label = panelDiv('property-set-label');
 			label.textContent = set.getAttribute('aria-label') || '';
 			if (set.dataset.setLabelId) label.id = set.dataset.setLabelId;

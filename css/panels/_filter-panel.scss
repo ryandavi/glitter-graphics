@@ -114,18 +114,17 @@
 	.preset-grid-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-// Thumbnails drawn as one image (frame and sparkle presets): shown whole and
-// centered on a dark backdrop, so light paint reads and the image never tiles
-// across the chip.
-.preset-grid-thumbnail.is-drawn {
-	background-color: #241a33;
+// Thumbnails that are one image (frame, sparkle and warp presets as
+// `.is-drawn`, rendered style presets): shown whole and centered, so the
+// image never tiles across the chip.
+.preset-grid-thumbnail:is(.is-drawn, .style-preset-thumbnail) {
 	background-position: center;
 	background-repeat: no-repeat;
 	background-size: contain;
-
-	// Pixel-art images (frame stickers) stay crisp, as on the canvas.
-	&.pixelated { image-rendering: pixelated; }
 }
+
+// Pixel-art images (frame stickers) stay crisp, as on the canvas.
+.preset-grid-thumbnail.is-drawn.pixelated { image-rendering: pixelated; }
 
 // Style preset thumbnails (js/paint/style-presets.js). Text and shape tiles
 // become the real render (`.is-rendered`, an inline background image from
@@ -135,14 +134,12 @@
 .preset-grid-thumbnail.style-preset-thumbnail {
 	display: grid;
 	place-items: center;
-	background-color: #ece6f3;
-	background-position: center;
-	background-repeat: no-repeat;
-	background-size: contain;
-
-	// Glow looks (the preset's `backdrop: 'dark'`).
-	&.is-dark { background-color: #241a33; }
+	background-color: var(--color-preview-light);
 }
+
+// Light paint reads on the dark backdrop: every drawn preset, and the glow
+// looks (a style preset's `backdrop: 'dark'`).
+.preset-grid-thumbnail:is(.is-drawn, .is-dark) { background-color: var(--color-preview-dark); }
 
 .style-preset-sample {
 	display: block;

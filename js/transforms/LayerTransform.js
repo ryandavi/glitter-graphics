@@ -543,6 +543,10 @@ const swallowFollowupClick = () => {
 	const handleMouseDown = (e) => {
 	if (TOOLS[this.editor.currentTool]?.onCanvasDrag) return;
 	if (e.button !== 0) return; // Left click only
+	const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+	const zoom = this.editor.viewport.currentZoom || 1;
+	// Effect padding belongs to the render surface, not the drag target.
+	if (!this.containsPoint(canvasPos, CONFIG.ui.stickerHandles.frameHitTolerance / zoom)) return;
 	this.removeHoverOutline();
 	const pinnedTransform = this.editor.currentTool === ToolType.SELECT
 		&& !PREFERENCES.get('autoSelect')
@@ -596,7 +600,6 @@ const swallowFollowupClick = () => {
 		return;
 	}
 
-	const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
 	if (!pinnedTransform && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPos, {
 		toggleSelection: e.shiftKey,
 		cycleDeep: e.altKey

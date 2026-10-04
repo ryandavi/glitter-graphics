@@ -128,6 +128,12 @@
 	padding: 0;
 	border: 0;
 	background: transparent;
+
+	// A collapsible set (`collapse` in the schema) folds down to its name.
+	&.is-collapsed {
+		> .property-set-label > .property-set-chevron { transform: rotate(-90deg); }
+		> :not(.property-set-label) { display: none; }
+	}
 }
 
 // Set headings sit below a section title and above its normal-weight rows.
@@ -139,6 +145,19 @@
 	font-weight: var(--font-weight-semibold);
 	color: var(--color-text-primary);
 	line-height: var(--line-height-tight);
+
+	// A collapsible set's name is a button: the chevron, then the name.
+	&[data-set-toggle] {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		width: 100%;
+		border: 0;
+		background: none;
+		text-align: left;
+		cursor: pointer;
+		padding-bottom: 0;
+	}
 
 	&:empty { display: none; }
 	&:not(:empty) + * { margin-top: calc(var(--spacing-2xs) - var(--property-row-gap)); }
