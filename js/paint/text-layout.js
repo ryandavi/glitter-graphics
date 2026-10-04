@@ -135,20 +135,32 @@ const TextLayout = {
 			const ink = { left: -glyph.advance / 2 - (metric.actualBoundingBoxLeft ?? 0), right: -glyph.advance / 2 + (metric.actualBoundingBoxRight ?? glyph.advance), top: -(metric.actualBoundingBoxAscent ?? fontSize * 0.8), bottom: metric.actualBoundingBoxDescent ?? fontSize * 0.2 };
 			return { ...glyph, x: glyph.x + glyph.advance / 2, y: glyph.baseline, ink: /^\s+$/u.test(glyph.char) ? null : ink };
 		});
-		const placements = layoutWarpedGlyphs(warp, glyphs, {
-			centerX: (inkRect.left + inkRect.right) / 2,
-			centerY: (inkRect.top + inkRect.bottom) / 2,
-			width: inkRect.right - inkRect.left,
-			fontSize,
-			ascent
-		});
+		const metrics = this.getWarpMetrics(inkRect, fontSize, ascent);
+		const placements = layoutWarpedGlyphs(warp, glyphs, metrics);
+		// An envelope bends a glyph's own edges, so its box comes from the
+		// envelope, not from the per-letter placement.
+		const envelope = hasWarpEnvelope(warp);
+		const getBounds = (glyph, index) => (envelope
+			? getEnvelopeWarpBounds(warp, { left: glyph.x + glyph.ink.left, top: glyph.y + glyph.ink.top, right: glyph.x + glyph.ink.right, bottom: glyph.y + glyph.ink.bottom }, metrics)
+			: getWarpedGlyphBounds(placements[index], glyph.ink));
 		return glyphs.map((glyph, index) => ({
 			char: glyph.char,
 			advance: glyph.advance,
 			line: glyph.line,
 			placement: placements[index],
-			bounds: glyph.ink ? getWarpedGlyphBounds(placements[index], glyph.ink) : null
+			bounds: glyph.ink ? getBounds(glyph, index) : null
 		}));
+	},
+	// The flat ink block a warp bends (js/paint/text-warp.js).
+	getWarpMetrics(inkRect, fontSize, ascent) {
+		return {
+			centerX: (inkRect.left + inkRect.right) / 2,
+			centerY: (inkRect.top + inkRect.bottom) / 2,
+			width: inkRect.right - inkRect.left,
+			height: inkRect.bottom - inkRect.top,
+			fontSize,
+			ascent
+		};
 	}
 };
 

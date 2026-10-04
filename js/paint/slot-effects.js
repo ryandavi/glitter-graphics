@@ -68,6 +68,10 @@ function buildDefaultShadow(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;
 	const shadow = {
+		kind: 'drop',
+		castAnchor: options.castAnchor ?? 'bottom',
+		castLength: FIELDS.shadowCastLength.value,
+		castLean: FIELDS.shadowCastLean.value,
 		offsetX: FIELDS.shadowOffsetX.value,
 		offsetY: FIELDS.shadowOffsetY.value,
 		spread: FIELDS.shadowSpread.value,
@@ -85,6 +89,17 @@ function buildDefaultShadow(options = {}) {
 		shadow.colorAdjust = null;
 	}
 	return shadow;
+}
+
+function normalizeRelativeCastShadow(data, fontSize, scale) {
+	if (!data) return;
+	const basisX = fontSize * Math.max(0.01, Math.abs(scale.x) / 100);
+	const basisY = fontSize * Math.max(0.01, Math.abs(scale.y) / 100);
+	data.castLengthRatio ??= (data.castLength ?? FIELDS.shadowCastLength.value) / basisY;
+	data.castLeanRatio ??= (data.castLean ?? FIELDS.shadowCastLean.value) / basisX;
+	data.castBlurRatio ??= (data.blur ?? FIELDS.shadowBlur.value) / Math.sqrt(basisX * basisY);
+	delete data.castLength;
+	delete data.castLean;
 }
 
 function buildDefaultBevelPaint(color, options = {}) {

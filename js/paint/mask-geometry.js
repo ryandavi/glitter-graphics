@@ -254,6 +254,105 @@ function getShadowReach(shadow) {
 	return Math.max(0, Number(shadow?.spread) || 0) + Math.max(0, Number(shadow?.blur) || 0);
 }
 
+function getShadowKind(data) {
+	return isOptionValue('shadowKind', data?.kind) ? data.kind : 'drop';
+}
+
+function getShadowSlotOffset(data) {
+	return getShadowKind(data) !== 'drop' ? { x: 0, y: 0 } : { x: Number(data?.offsetX) || 0, y: Number(data?.offsetY) || 0 };
+}
+
+function getShadowMaskKey(data) {
+	return [getShadowKind(data), data.offsetX, data.offsetY, data.spread, data.blur, data.castLength, data.castLean, data.castLengthRatio, data.castLeanRatio, data.castBlurRatio, getCastShadowAnchor(data)].join(':');
+}
+
+function getCastShadowAnchor(data) {
+	return isOptionValue('shadowCastAnchor', data?.castAnchor) ? data.castAnchor : 'bottom';
+}
+
+function getCastShadowGeometry(box, data) {
+	const { length, lean } = getCastShadowProjection(data, box);
+	const baseline = getCastShadowAnchor(data) === 'baseline' && Number.isFinite(box.baseline) ? box.baseline : box.y + box.height;
+	const height = Math.max(1, baseline - box.y);
+	return { baseline, shear: lean / height, scaleY: length / height };
+}
+
+// Cast projects a copy onto the floor behind the artwork. The chosen anchor
+// stays fixed; its top projects by Lean and up by Length, in physical pixels.
+function getCastShadowProjection(data, box) {
+	if (box?.castSize && data.castLengthRatio != null) {
+		return { length: Math.max(0, data.castLengthRatio) * box.castSize.y, lean: data.castLeanRatio * box.castSize.x };
+	}
+	const length = Math.max(FIELDS.shadowCastLength.min, Math.min(FIELDS.shadowCastLength.max, Number(data?.castLength ?? FIELDS.shadowCastLength.value)));
+	const lean = Math.max(FIELDS.shadowCastLean.min, Math.min(FIELDS.shadowCastLean.max, Number(data?.castLean ?? FIELDS.shadowCastLean.value)));
+	return { lean, length };
+}
+
+function getCastShadowBlur(box, data) {
+	return box?.castSize && data.castBlurRatio != null
+		? Math.max(0, data.castBlurRatio) * Math.sqrt(box.castSize.x * box.castSize.y)
+		: Math.max(0, Number(data?.blur) || 0);
+}
+
+function getShadowSlotBounds(box, data) {
+	const kind = getShadowKind(data);
+	if (kind === 'cast') {
+		const { length } = getCastShadowProjection(data, box);
+		if (!length || !box.height) return { x: box.x, y: box.y, width: 0, height: 0 };
+		const { baseline, shear, scaleY } = getCastShadowGeometry(box, data);
+		const topShift = shear * (baseline - box.y);
+		const bottomShift = shear * (baseline - box.y - box.height);
+		const blur = getCastShadowBlur(box, data);
+		return {
+			x: box.x + Math.min(topShift, bottomShift) - blur,
+			y: baseline + scaleY * (box.y - baseline) - blur,
+			width: box.width + Math.abs(topShift - bottomShift) + blur * 2,
+			height: box.height * scaleY + blur * 2
+		};
+	}
+	const vector = { x: Number(data?.offsetX) || 0, y: Number(data?.offsetY) || 0 };
+	const swept = kind === 'extrude';
+	const reach = getShadowReach(data);
+	return {
+		x: box.x + (swept ? Math.min(0, vector.x) : vector.x) - reach,
+		y: box.y + (swept ? Math.min(0, vector.y) : vector.y) - reach,
+		width: box.width + (swept ? Math.abs(vector.x) : 0) + reach * 2,
+		height: box.height + (swept ? Math.abs(vector.y) : 0) + reach * 2
+	};
+}
+
+function createExtrudedMaskCanvas(source, offsetX, offsetY) {
+	const canvas = createMaskCanvasLike(source);
+	const ctx = canvas.getContext('2d', { willReadFrequently: true });
+	const steps = Math.ceil(Math.max(Math.abs(offsetX), Math.abs(offsetY)));
+	for (let step = 0; step <= steps; step++) {
+		const fraction = steps ? step / steps : 0;
+		ctx.drawImage(source, Math.round(offsetX * fraction), Math.round(offsetY * fraction));
+	}
+	return canvas;
+}
+
+function createShadowSlotMaskCanvas(source, data) {
+	const kind = getShadowKind(data);
+	if (kind === 'cast') {
+		const canvas = createMaskCanvasLike(source);
+		const box = source._shadowBounds;
+		const { length } = getCastShadowProjection(data, box);
+		if (!length || !box?.height) return canvas;
+		const { baseline, shear, scaleY } = getCastShadowGeometry(box, data);
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.setTransform(1, 0, -shear, scaleY, shear * baseline, baseline * (1 - scaleY));
+		ctx.drawImage(source, 0, 0);
+		ctx.resetTransform();
+		if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(ctx);
+		return createShadowMaskCanvas(canvas, 0, getCastShadowBlur(box, data));
+	}
+	const mask = createShadowMaskCanvas(source, Number(data?.spread) || 0, Number(data?.blur) || 0);
+	return kind === 'extrude'
+		? createExtrudedMaskCanvas(mask, Number(data?.offsetX) || 0, Number(data?.offsetY) || 0)
+		: mask;
+}
+
 // A shadow's silhouette: the mask grown by `spread`, then, with `blur`, faded
 // out over the next `blur` px, so offset 0 plus blur is a soft glow. The fade
 // reads the signed distance field (exact, one pass, no canvas filter, so it

@@ -85,6 +85,11 @@ const FIELDS = Object.freeze({
 	shapeImageScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
 	shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, step: 1, value: 6 },
 	shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, step: 1, value: 6 },
+	textCastLength: { label: 'Length', unit: '%', min: 0, max: 300, step: 1, value: 25, cost: 'raster' },
+	textCastLean: { label: 'Lean', unit: '%', min: -300, max: 300, step: 1, value: -70, cost: 'raster' },
+	textCastBlur: { label: 'Blur', unit: '%', min: 0, max: 100, step: 1, value: 0, cost: 'raster' },
+	shadowCastLength: { label: 'Length', unit: 'px', min: 0, max: 200, step: 1, value: 16, cost: 'raster' },
+	shadowCastLean: { label: 'Lean', unit: 'px', min: -200, max: 200, step: 1, value: -45, cost: 'raster' },
 	shadowSpread: { label: 'Spread', unit: 'px', min: 0, max: 100, step: 1, value: 0, cost: 'raster' },
 	// 0 is a hard-edged shadow; above it the edge fades out over that many px (a glow).
 	shadowBlur: { label: 'Blur', unit: 'px', min: 0, max: 60, step: 1, value: 0, cost: 'raster' },

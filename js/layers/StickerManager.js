@@ -302,7 +302,11 @@ class StickerManager extends ContentManager {
 	// Canvas pixels the effect masks extend past the displayed sticker on each
 	// side. Slot textures register against it, in the preview and in export.
 	getEffectPadding(layer) {
-		return Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, getShadowReach(layer.stickerData.shadow), layer.stickerData.bevel?.enabled ? 2 : 0));
+		const scale = getLayerTransform(layer).scale;
+		const box = { x: 0, y: 0, width: Math.max(1, Math.round(layer.stickerData.width * Math.max(0.01, Math.abs(scale.x) / 100))), height: Math.max(1, Math.round(layer.stickerData.height * Math.max(0.01, Math.abs(scale.y) / 100))) };
+		const shadow = layer.stickerData.shadow;
+		const shadowPad = getShadowKind(shadow) === 'drop' ? getShadowReach(shadow) : getShadowCanvasPadding(shadow, box);
+		return Math.ceil(Math.max(layer.stickerData.border?.widthPx || 0, shadowPad, layer.stickerData.bevel?.enabled ? 2 : 0));
 	}
 
 	// Effects rasterize at the displayed sticker size, and their sizes are
@@ -327,11 +331,12 @@ class StickerManager extends ContentManager {
 		}
 		if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(sourceCtx);
 		source._textureOrigin = { x: -pad, y: -pad };
+		source._shadowBounds = { x: pad, y: pad, width, height };
 		const existing = new Map(Array.from(element.querySelectorAll('.sticker-effect-layer')).map((span) => [span.dataset.spanKey, span]));
 		let bevelMasks = null;
 		buildSlotStack(layer, (entry) => resolvePaintSlotPreviewSource(this.editor, layer, entry)).forEach((item) => {
 			let mask = source;
-			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(source, item.data.spread || 0, item.data.blur || 0);
+			if (item.role === 'shadow') mask = createShadowSlotMaskCanvas(source, item.data);
 			if (item.role === 'border') mask = createOutlineMaskCanvas(source, item.data.widthPx, getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
 			if (item.role === 'bevel') {
 				bevelMasks ||= createBevelMaskCanvases(source, layer.stickerData.bevel.highlight);

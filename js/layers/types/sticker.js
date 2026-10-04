@@ -105,7 +105,9 @@ registerLayerType(LayerType.STICKER, {
 		let padY = 0;
 		getLayerPaintSlots(layer).forEach((entry) => {
 			if (!entry.renders || !entry.definition.framePadding) return;
-			const padding = entry.definition.framePadding(entry.data);
+			const padding = entry.role === 'shadow'
+				? getShadowCanvasPadding(entry.data, { x: 0, y: 0, width: layer.stickerData.width * Math.max(0.01, Math.abs(scale.x) / 100), height: layer.stickerData.height * Math.max(0.01, Math.abs(scale.y) / 100) })
+				: entry.definition.framePadding(entry.data);
 			const local = entry.role === 'sparkles';
 			padX = Math.max(padX, local ? padding : padding / Math.max(0.01, Math.abs(scale.x) / 100));
 			padY = Math.max(padY, local ? padding : padding / Math.max(0.01, Math.abs(scale.y) / 100));

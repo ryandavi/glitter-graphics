@@ -381,10 +381,14 @@ class TextGlitterManager {
 	}
 
 	getDefaultShadow() {
-		return buildDefaultShadow({
+		const shadow = buildDefaultShadow({
 			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.text
+			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.text,
+			castAnchor: 'baseline'
 		});
+		delete shadow.castLength;
+		delete shadow.castLean;
+		return { ...shadow, castLengthRatio: FIELDS.textCastLength.value / 100, castLeanRatio: FIELDS.textCastLean.value / 100, castBlurRatio: FIELDS.textCastBlur.value / 100 };
 	}
 
 	getDefaultBevel() {
@@ -435,6 +439,7 @@ class TextGlitterManager {
 		if (layer.textData.shadow === undefined) {
 			layer.textData.shadow = null;
 		}
+		[layer.textData.shadow, layer.textData.effectDrafts?.shadow].forEach(data => normalizeRelativeCastShadow(data, layer.textData.fontSize, layer.transform.scale));
 		if (layer.textData.shadow) {
 			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, this.getDefaultShadow());
 		}
@@ -1013,7 +1018,7 @@ class TextGlitterManager {
 			textData.decoration,
 			textData.colorEmoji,
 			textData.border ? [textData.border.widthPx, getBorderPlacement(textData.border), getBorderEdgeStyle(textData.border)] : null,
-			textData.shadow ? textData.shadow.offsetX : null,
+			textData.shadow ? getShadowMaskKey(textData.shadow) : null,
 			textData.shadow ? textData.shadow.offsetY : null,
 			textData.shadow ? textData.shadow.spread : null,
 			textData.shadow ? textData.shadow.blur || 0 : null,
@@ -1056,10 +1061,6 @@ class TextGlitterManager {
 		const sy = paintScale.y / 100;
 		const borderWidth = getBorderOutsidePadding(layer.textData.border);
 		const borderReserve = getBorderOutsidePadding(layer.textData.border, { miterLimit: CONFIG.rendering.borderMiterLimit });
-		const shadowOffsetX = layer.textData.shadow?.offsetX || 0;
-		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
-		// A blurred shadow's fade reaches past its spread too.
-		const shadowSpread = getShadowReach(layer.textData.shadow);
 		const boxMode = layer.textData.boxMode || 'point';
 
 		ctx.font = FontLibrary.getDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
@@ -1120,6 +1121,11 @@ class TextGlitterManager {
 		// A warp re-places every glyph around the flat block's center, so the
 		// ink, the per-line rects (Text Background) and the frame all come from
 		// the warped glyphs. Unwarped text keeps the flat path.
+		// An envelope warp draws the flat artwork through its envelope, so it
+		// keeps the flat ink box and decorations the warped ones replace below.
+		const flatInkRect = { left: textInkLeft, top: textInkTop, right: textInkRight, bottom: textInkBottom };
+		const flatDecorations = layout.decorations;
+		const warpEnvelope = hasInk && hasWarpEnvelope(layer.textData.warp);
 		const warpedGlyphs = hasInk && isTextWarpActive(layer.textData.warp)
 			? this.layoutWarpedTextGlyphs(ctx, visibleLines, {
 				glyphs: layout.glyphs,
@@ -1131,7 +1137,7 @@ class TextGlitterManager {
 				lineHeightPx,
 				letterSpacing,
 				fontSize,
-				inkRect: { left: textInkLeft, top: textInkTop, right: textInkRight, bottom: textInkBottom }
+				inkRect: flatInkRect
 			})
 			: null;
 		if (warpedGlyphs) layout.decorations = TextLayout.warpDecorations(layout, warpedGlyphs, letterSpacing);
@@ -1180,10 +1186,16 @@ class TextGlitterManager {
 		}
 		const backgroundBounds = textBackgroundGeometry?.bounds;
 
-		const artLeft = Math.min(textInkLeft - borderReserve / sx, textInkLeft + shadowOffsetX / sx - shadowSpread / sx, backgroundBounds ? backgroundBounds.x : Infinity);
-		const artRight = Math.max(textInkRight + borderReserve / sx, textInkRight + shadowOffsetX / sx + shadowSpread / sx, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
-		const artTop = Math.min(textInkTop - borderReserve / sy, textInkTop + shadowOffsetY / sy - shadowSpread / sy, backgroundBounds ? backgroundBounds.y : Infinity);
-		const artBottom = Math.max(textInkBottom + borderReserve / sy, textInkBottom + shadowOffsetY / sy + shadowSpread / sy, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
+		// A trailing blank line has no floor; multiline text uses its last ink line.
+		const lastInkLine = positionedLines.findLastIndex(line => !line.blank);
+		const shadowBaseline = warpedGlyphs
+			? Math.max(...warpedGlyphs.filter(glyph => glyph.line === lastInkLine && glyph.bounds).map(glyph => glyph.placement.y))
+			: contentOffsetY + ascent + Math.max(0, lastInkLine) * lineHeightPx;
+		const shadowBounds = getShadowSlotBounds({ x: textInkLeft * sx, y: textInkTop * sy, width: (textInkRight - textInkLeft) * sx, height: (textInkBottom - textInkTop) * sy, baseline: shadowBaseline * sy, castSize: { x: fontSize * sx, y: fontSize * sy } }, layer.textData.shadow);
+		const artLeft = Math.min(textInkLeft - borderReserve / sx, shadowBounds.x / sx, backgroundBounds ? backgroundBounds.x : Infinity);
+		const artRight = Math.max(textInkRight + borderReserve / sx, (shadowBounds.x + shadowBounds.width) / sx, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);
+		const artTop = Math.min(textInkTop - borderReserve / sy, shadowBounds.y / sy, backgroundBounds ? backgroundBounds.y : Infinity);
+		const artBottom = Math.max(textInkBottom + borderReserve / sy, (shadowBounds.y + shadowBounds.height) / sy, backgroundBounds ? backgroundBounds.y + backgroundBounds.height : -Infinity);
 		// Body (the layer's frame for handles and hit-testing): the layout box,
 		// the glyphs with their border, and the background plate. No shadow, and
 		// the layout box rather than ink, so the box holds still while typing.
@@ -1206,6 +1218,7 @@ class TextGlitterManager {
 		canvas.width = canvasWidth;
 		canvas.height = canvasHeight;
 		canvas._textureOrigin = { x: layoutX, y: layoutY };
+		canvas._shadowBounds = { x: layoutX + textInkLeft, y: layoutY + textInkTop, width: textInkRight - textInkLeft, height: textInkBottom - textInkTop, baseline: layoutY + shadowBaseline, castSize: { x: fontSize, y: fontSize } };
 
 		const maskCtx = canvas.getContext('2d', { willReadFrequently: true });
 		maskCtx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -1215,10 +1228,28 @@ class TextGlitterManager {
 		maskCtx.textAlign = 'left';
 
 		const fontDeclaration = maskCtx.font;
+		const warpMetrics = warpEnvelope ? TextLayout.getWarpMetrics(flatInkRect, fontSize, ascent) : null;
+		// drawFlat(flat, x, y) paints unwarped artwork offset by (x, y).
+		const drawThroughEnvelope = (context, drawFlat) => drawThroughWarpEnvelope(context, layer.textData.warp, warpMetrics, flatInkRect, layoutX, layoutY, (flat, x, y) => {
+			flat.font = fontDeclaration;
+			flat.textBaseline = 'alphabetic';
+			flat.fillStyle = '#fff';
+			drawFlat(flat, x, y);
+		});
+		const drawDecorations = context => (warpEnvelope
+			? drawThroughEnvelope(context, (flat, x, y) => TextLayout.drawDecorations(flat, flatDecorations, x, y))
+			: TextLayout.drawDecorations(context, layout.decorations, layoutX, layoutY));
 		const drawMask = (context, method = 'fillText') => {
 			context.font = fontDeclaration;
 			context.textBaseline = 'alphabetic';
 			context.fillStyle = '#fff';
+			if (warpEnvelope) {
+				drawThroughEnvelope(context, (flat, x, y) => {
+					layout.runs.forEach(run => flat[method](run.text, x + run.x, y + run.baseline));
+					TextLayout.drawDecorations(flat, flatDecorations, x, y);
+				});
+				return;
+			}
 			if (warpedGlyphs) {
 				warpedGlyphs.forEach((glyph) => {
 					if (!glyph.bounds) return;
@@ -1235,7 +1266,6 @@ class TextGlitterManager {
 
 			TextLayout.drawDecorations(context, layout.decorations, layoutX, layoutY);
 		};
-		const drawDecorations = context => TextLayout.drawDecorations(context, layout.decorations, layoutX, layoutY);
 		drawMask(maskCtx);
 
 		let lettersCanvas = canvas;
@@ -1252,7 +1282,8 @@ class TextGlitterManager {
 				emojiCanvas = createAppCanvas(canvasWidth, canvasHeight, 'layers/TextGlitterManager');
 				const emojiCtx = emojiCanvas.getContext('2d', { willReadFrequently: true });
 				emojiCtx.font = maskCtx.font; emojiCtx.textBaseline = 'alphabetic';
-				colorGlyphs.forEach(({ glyph, index }) => {
+				if (warpEnvelope) drawThroughEnvelope(emojiCtx, (flat, x, y) => colorGlyphs.forEach(({ glyph }) => flat.fillText(glyph.char, x + glyph.x, y + glyph.baseline)));
+				else colorGlyphs.forEach(({ glyph, index }) => {
 					const placement = warpedGlyphs?.[index]?.placement;
 					emojiCtx.save();
 					if (placement) { emojiCtx.translate(layoutX + placement.x, layoutY + placement.y); emojiCtx.rotate(placement.rotation); emojiCtx.scale(1, placement.scaleY); emojiCtx.fillText(glyph.char, -glyph.advance / 2, 0); }
@@ -1281,6 +1312,7 @@ class TextGlitterManager {
 			lettersCanvas,
 			emojiCanvas,
 			warpedGlyphs,
+			warpEnvelope,
 			canvas,
 			lines: measuredLines,
 			positionedLines,
@@ -1426,7 +1458,7 @@ class TextGlitterManager {
 			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
 			const slotMask = this.getSlotMask(layer, measurement, entry)?.canvas || null;
 			masks[entry.key] = entry.role === 'shadow' && slotMask
-				? createOffsetMaskCanvas(slotMask, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				? createOffsetMaskCanvas(slotMask, getShadowSlotOffset(entry.data).x, getShadowSlotOffset(entry.data).y)
 				: slotMask;
 		});
 		return masks;
@@ -1648,10 +1680,8 @@ class TextGlitterManager {
 			const { canvas, cacheKey } = this.getBorderMaskCanvas(layer, measurement, slot.data);
 			return { rasterScale: measurement.rasterScale, canvas, bucket: 'border', cacheKey };
 		}
-		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {
-			const spread = Math.round(slot.data.spread || 0);
-			const blur = Math.round(slot.data.blur || 0);
-			return { rasterScale: measurement.rasterScale, canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
+		if (slot.role === 'shadow') {
+			return { rasterScale: measurement.rasterScale, canvas: createShadowSlotMaskCanvas(measurement.canvas, slot.data), bucket: 'shadow', cacheKey: `${measurement.key}|shadow:${getShadowMaskKey(slot.data)}` };
 		}
 		if (slot.role === 'bevel') {
 			const bevel = layer.textData.bevel?.highlight;
@@ -1686,7 +1716,8 @@ class TextGlitterManager {
 			ctx.lineJoin = 'miter';
 			ctx.miterLimit = CONFIG.rendering.borderMiterLimit;
 			ctx.lineWidth = placement === 'center' ? widthPx : widthPx * 2;
-			if (measurement.rasterScale || measurement.emojiCanvas || Object.values(layer.textData.decoration || {}).some(Boolean)) {
+			// An envelope would stretch a stroked glyph's line width with it.
+			if (measurement.rasterScale || measurement.warpEnvelope || measurement.emojiCanvas || Object.values(layer.textData.decoration || {}).some(Boolean)) {
 				measurement._outlinePath ||= createMaskContourPath(fillMask);
 				ctx.stroke(measurement._outlinePath);
 			} else measurement.drawMask(ctx, 'strokeText');

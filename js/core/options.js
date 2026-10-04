@@ -21,6 +21,17 @@ function isOptionValue(name, value) {
 	return getOptions(name).some((option) => option.value === value);
 }
 
+defineOptions('shadowCastAnchor', [
+	{ value: 'baseline', label: 'Baseline' },
+	{ value: 'bottom', label: 'Bottom edge' }
+]);
+
+defineOptions('shadowKind', [
+	{ value: 'drop', label: 'Drop', suffix: 'KindDrop' },
+	{ value: 'extrude', label: 'Extrude', suffix: 'KindExtrude' },
+	{ value: 'cast', label: 'Cast', suffix: 'KindCast' }
+]);
+
 defineOptions('borderEdgeStyle', [
 	{ value: 'round', label: 'Smooth', suffix: 'EdgeRounded' },
 	{ value: 'miter', label: 'Sharp', suffix: 'EdgeSharp' },

@@ -199,6 +199,10 @@ It builds one real mixed composition and then checks the exporter’s byte stabi
 
 The composition intentionally includes a painted glitter-fill layer with outline and shadow, an animated sticker layer, a text layer with glitter fill + solid border + glitter shadow + non-identity color adjust, and a shape layer with the same slot spread, then runs that scene through both matte and transparent export modes.
 
+### Shadow verification (`tests/parity/shadow-verify.js`)
+
+Run with `node tests/parity/shadow-verify.js`. It checks whole-pixel extrusion in both offset directions, baseline-anchored floor projection, unchanged source artwork, distinction from Extrude, zero Length and projected letter counters, all four shadow Type controls and conditional Cast rows, text Anchor controls/defaults, descender-stable and multiline baselines, post-projection blur, relative text casts across font sizes and uniform/nonuniform scales, bake-to-font and document resize with Scale Effects on/off, legacy pixel conversion, persistence, scaled preview/export masks, extreme cast distances and exclusion of offset/spread, and sticker padding. A mixed scene with extrusion, cast shadows and an animated sticker must export byte-identically twice and after editing a shadow then undoing, in matte and transparent modes.
+
 ### Effect fragility (`tests/parity/roadmap-export-fragility.js`)
 
 One scene with every newer effect: an animated sticker with outline, glow, bevel and Kira Kira; warped text with a bevel style and sparkles; a shape with a glow spread; a pinned frame; the Sparkles layer; Scanlines, JPEG Crunch and RGB Split filters. It checks back-to-back matte and transparent exports, then edit -> undo -> export for four edits (sticker outline, text warp, frame style, filter look). It shares `tests/parity/export-harness.js` with export parity and caps exports at 8 frames to keep its twelve exports quick.

@@ -10,8 +10,9 @@
 //   glyphs   [{ x, y, line }]: x = the center of the glyph's advance, y = its
 //            baseline, both in the layout's unshifted local space
 //   bend     -1..1 (the stored percent / 100); the sign flips the direction
-//   metrics  { centerX, centerY, width, fontSize, ascent }: the flat block's
-//            center, its widest line and the font's size and ascent
+//   metrics  { centerX, centerY, width, height, fontSize, ascent }: the flat
+//            block's center, its ink width and height and the font's size
+//            and ascent
 // The result is where the glyph's advance center lands on its baseline,
 // its rotation in radians (clockwise) and a vertical scale about the
 // baseline. A later `path` warp (text on a drawn path) fits this contract.
@@ -89,10 +90,57 @@ function waveWarp(glyphs, bend, metrics) {
 	});
 }
 
-// Vertical scale that peaks mid-line and returns to 1 at the widest line's ends.
-function centerSwell(glyph, bend, metrics, strength) {
-	const t = (glyph.x - metrics.centerX) / Math.max(1, metrics.width / 2);
-	return Math.max(0.1, 1 + bend * strength * (1 - Math.min(1, t * t)));
+// Envelope warps reshape the whole block between a top and a bottom curve, so
+// the letter outlines themselves bend (a glyph placement can only move, turn
+// and stretch a letter). envelope(u, bend) -> { top, bottom }: how far the
+// block's top and bottom edges move at u (0 at the ink's left edge, 1 at its
+// right), in block heights, positive downward. bottom - top must stay above
+// -1 so the block never folds. The mask is drawn flat and pushed through the
+// envelope column by column (drawThroughWarpEnvelope); layoutGlyphs gives the
+// same warp one letter at a time, for carets, Split and line boxes.
+function getEnvelopeU(x, metrics) {
+	const width = Math.max(1, metrics.width);
+	return Math.max(0, Math.min(1, (x - (metrics.centerX - width / 2)) / width));
+}
+
+function mapEnvelopeY(edges, y, metrics) {
+	const height = Math.max(1, metrics.height);
+	const v = (y - (metrics.centerY - height / 2)) / height;
+	return y + height * (edges.top * (1 - v) + edges.bottom * v);
+}
+
+function envelopeWarp(id, label, envelope) {
+	return Object.freeze({
+		id,
+		label,
+		envelope,
+		layoutGlyphs: (glyphs, bend, metrics) => glyphs.map((glyph) => {
+			const edges = envelope(getEnvelopeU(glyph.x, metrics), bend);
+			return {
+				x: glyph.x,
+				y: mapEnvelopeY(edges, glyph.y, metrics),
+				rotation: 0,
+				scaleY: 1 + edges.bottom - edges.top
+			};
+		})
+	});
+}
+
+// 1 mid-block, 0 at both ends.
+function centerSwell(u) {
+	const t = 2 * u - 1;
+	return 1 - t * t;
+}
+
+// The same, with straight sides: a point instead of a dome.
+function centerPoint(u) {
+	return 1 - Math.abs(2 * u - 1);
+}
+
+// Both edges move together: the block keeps its height and letters stay
+// upright, sheared along the line.
+function shiftBoth(amount) {
+	return { top: amount, bottom: amount };
 }
 
 const WARP_TYPES = Object.freeze({
@@ -102,17 +150,32 @@ const WARP_TYPES = Object.freeze({
 		label: 'Arc',
 		layoutGlyphs: (glyphs, bend, metrics) => arcWarp(glyphs, bend, metrics)
 	}),
-	// The baseline stays flat and letter tops rise toward the middle.
-	arch: Object.freeze({
-		id: 'arch',
-		label: 'Arch',
-		layoutGlyphs: (glyphs, bend, metrics) => glyphs.map((glyph) => ({
-			x: glyph.x,
-			y: glyph.y,
-			rotation: 0,
-			scaleY: centerSwell(glyph, bend, metrics, 0.8)
-		}))
+	// The bottom edge stays flat and the top rises toward the middle.
+	arch: envelopeWarp('arch', 'Arch', (u, bend) => ({ top: -0.8 * bend * centerSwell(u), bottom: 0 })),
+	// Arch upside down: the top stays flat and the bottom drops toward the middle.
+	sag: envelopeWarp('sag', 'Sag', (u, bend) => ({ top: 0, bottom: 0.8 * bend * centerSwell(u) })),
+	// The line bows up in the middle with its letters upright (Arc turns them).
+	bow: envelopeWarp('bow', 'Bow', (u, bend) => shiftBoth(-0.6 * bend * centerSwell(u))),
+	// Bow with straight sides.
+	chevron: envelopeWarp('chevron', 'Chevron', (u, bend) => shiftBoth(-0.6 * bend * centerPoint(u))),
+	// Arch with straight sides: the top comes to a point.
+	peak: envelopeWarp('peak', 'Peak', (u, bend) => ({ top: -0.8 * bend * centerPoint(u), bottom: 0 })),
+	// The whole block climbs to the right (falls, below 0): two block heights
+	// end to end at 100%.
+	rise: envelopeWarp('rise', 'Rise', (u, bend) => shiftBoth(bend * (1 - 2 * u))),
+	// Letters shrink toward the right (toward the left, below 0).
+	taper: envelopeWarp('taper', 'Taper', (u, bend) => {
+		const amount = 0.4 * Math.abs(bend) * (bend > 0 ? u : 1 - u);
+		return { top: amount, bottom: -amount };
 	}),
+	// Letters climb and grow toward the right (toward the left, below 0): the
+	// top edge rises faster than the bottom.
+	climb: envelopeWarp('climb', 'Climb', (u, bend) => {
+		const amount = Math.abs(bend) * (bend > 0 ? u : 1 - u);
+		return { top: -amount, bottom: -0.3 * amount };
+	}),
+	// One slow wave, letters upright (Wave turns them along the curve).
+	ripple: envelopeWarp('ripple', 'Ripple', (u, bend) => shiftBoth(-0.5 * bend * Math.sin(2 * Math.PI * u))),
 	wave: Object.freeze({
 		id: 'wave',
 		label: 'Wave',
@@ -133,19 +196,10 @@ const WARP_TYPES = Object.freeze({
 			}));
 		}
 	}),
-	// Letters grow (or pinch, below 0) about their middle, not the baseline.
-	bulge: Object.freeze({
-		id: 'bulge',
-		label: 'Bulge',
-		layoutGlyphs: (glyphs, bend, metrics) => glyphs.map((glyph) => {
-			const scaleY = centerSwell(glyph, bend, metrics, 0.7);
-			return {
-				x: glyph.x,
-				y: glyph.y + (metrics.ascent / 2) * (scaleY - 1),
-				rotation: 0,
-				scaleY
-			};
-		})
+	// The block swells (or pinches, below 0) about its middle.
+	bulge: envelopeWarp('bulge', 'Bulge', (u, bend) => {
+		const amount = 0.35 * bend * centerSwell(u);
+		return { top: -amount, bottom: amount };
 	})
 });
 
@@ -201,13 +255,70 @@ function getWarpedGlyphBounds(placement, ink) {
 	return { left: minX, top: minY, right: maxX, bottom: maxY };
 }
 
+function hasWarpEnvelope(warp) {
+	return isTextWarpActive(warp) && Boolean(WARP_TYPES[warp.type].envelope);
+}
+
+// Where a flat box { left, top, right, bottom } lands under an envelope warp.
+// Its edges curve, so the ends and the middle are all sampled.
+function getEnvelopeWarpBounds(warp, box, metrics) {
+	const envelope = WARP_TYPES[warp.type].envelope;
+	let top = Infinity;
+	let bottom = -Infinity;
+	[box.left, (box.left + box.right) / 2, box.right].forEach((x) => {
+		const edges = envelope(getEnvelopeU(x, metrics), warp.bend / 100);
+		const a = mapEnvelopeY(edges, box.top, metrics);
+		const b = mapEnvelopeY(edges, box.bottom, metrics);
+		top = Math.min(top, a, b);
+		bottom = Math.max(bottom, a, b);
+	});
+	return { left: box.left, top, right: box.right, bottom };
+}
+
+// Paints flat artwork through an envelope warp. drawFlat(ctx, offsetX,
+// offsetY) draws the unwarped artwork with the offset added to its text-local
+// coordinates; rect is its flat ink box in that space, and (originX, originY)
+// is where text-local 0,0 sits on `context`. Columns are one device pixel
+// wide and land on whole device pixels, so a scaled context (rasterized layer
+// scale) warps at its own resolution and neighbors never blend into seams.
+function drawThroughWarpEnvelope(context, warp, metrics, rect, originX, originY, drawFlat) {
+	const envelope = WARP_TYPES[warp.type].envelope;
+	const bend = warp.bend / 100;
+	const base = context.getTransform();
+	const scaleX = Math.abs(base.a) || 1;
+	const scaleY = Math.abs(base.d) || 1;
+	const margin = 2;
+	const deviceLeft = Math.floor((originX + rect.left - margin) * scaleX + base.e);
+	const deviceRight = Math.ceil((originX + rect.right + margin) * scaleX + base.e);
+	const localLeft = (deviceLeft - base.e) / scaleX - originX;
+	const localTop = rect.top - margin;
+	const width = Math.max(1, deviceRight - deviceLeft);
+	const height = Math.max(1, Math.ceil((rect.bottom - rect.top + margin * 2) * scaleY));
+	const localBottom = localTop + height / scaleY;
+	const scratch = createAppCanvas(width, height, 'paint/text-warp');
+	const scratchCtx = scratch.getContext('2d');
+	scratchCtx.scale(scaleX, scaleY);
+	drawFlat(scratchCtx, -localLeft, -localTop);
+	context.save();
+	context.setTransform(1, 0, 0, 1, 0, 0);
+	for (let column = 0; column < width; column += 1) {
+		const edges = envelope(getEnvelopeU(localLeft + (column + 0.5) / scaleX, metrics), bend);
+		const top = (originY + mapEnvelopeY(edges, localTop, metrics)) * scaleY + base.f;
+		const bottom = (originY + mapEnvelopeY(edges, localBottom, metrics)) * scaleY + base.f;
+		context.drawImage(scratch, column, 0, 1, height, deviceLeft + column, top, 1, bottom - top);
+	}
+	context.restore();
+	scratch.width = scratch.height = 0;
+}
+
 // Grid choices. Each writes a type and a bend (copied, never referenced), and
 // the Bend slider tunes it afterwards.
 const WARP_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 	id: 'text-warps',
 	groups: [
 		{ id: 'curves', label: 'Curves' },
-		{ id: 'waves', label: 'Waves' }
+		{ id: 'waves', label: 'Waves' },
+		{ id: 'slants', label: 'Slants' }
 	],
 	entries: [
 		{ id: 'none', label: 'None', group: 'curves', value: { type: 'none', bend: FIELDS.textWarpBend.value } },
@@ -217,8 +328,20 @@ const WARP_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 		{ id: 'circle', label: 'Circle', group: 'curves', value: { type: 'arc', bend: 100 } },
 		{ id: 'bulge', label: 'Bulge', group: 'curves', value: { type: 'bulge', bend: 50 } },
 		{ id: 'pinch', label: 'Pinch', group: 'curves', value: { type: 'bulge', bend: -40 } },
+		{ id: 'sag', label: 'Sag', group: 'curves', value: { type: 'sag', bend: 50 } },
+		{ id: 'bow', label: 'Bow', group: 'curves', value: { type: 'bow', bend: 50 } },
+		{ id: 'bow-down', label: 'Bow Down', group: 'curves', value: { type: 'bow', bend: -50 } },
 		{ id: 'wave', label: 'Wave', group: 'waves', value: { type: 'wave', bend: 50 } },
-		{ id: 'flag', label: 'Flag', group: 'waves', value: { type: 'flag', bend: 50 } }
+		{ id: 'flag', label: 'Flag', group: 'waves', value: { type: 'flag', bend: 50 } },
+		{ id: 'ripple', label: 'Ripple', group: 'waves', value: { type: 'ripple', bend: 50 } },
+		{ id: 'rise', label: 'Rise', group: 'slants', value: { type: 'rise', bend: 50 } },
+		{ id: 'fall', label: 'Fall', group: 'slants', value: { type: 'rise', bend: -50 } },
+		{ id: 'taper', label: 'Taper', group: 'slants', value: { type: 'taper', bend: 60 } },
+		{ id: 'grow', label: 'Grow', group: 'slants', value: { type: 'taper', bend: -60 } },
+		{ id: 'climb', label: 'Climb', group: 'slants', value: { type: 'climb', bend: 50 } },
+		{ id: 'chevron', label: 'Chevron', group: 'slants', value: { type: 'chevron', bend: 50 } },
+		{ id: 'chevron-down', label: 'Chevron Down', group: 'slants', value: { type: 'chevron', bend: -50 } },
+		{ id: 'peak', label: 'Peak', group: 'slants', value: { type: 'peak', bend: 50 } }
 	],
 	renderThumbnail(entry, element) {
 		element.classList.add('is-drawn');
@@ -238,8 +361,10 @@ const WARP_PRESETS = GlitterPresetLibrary.createPresetLibrary({
 function matchWarpPreset(warp) {
 	const current = normalizeTextWarp(warp);
 	if (!isTextWarpActive(current)) return { id: 'none', modified: false };
-	const candidates = WARP_PRESETS.entries.filter((entry) => entry.value.type === current.type
-		&& Math.sign(entry.value.bend) === Math.sign(current.bend));
+	// A type with one tile (Sag, Ripple) keeps it when bent the other way.
+	const ofType = WARP_PRESETS.entries.filter((entry) => entry.value.type === current.type);
+	const sameWay = ofType.filter((entry) => Math.sign(entry.value.bend) === Math.sign(current.bend));
+	const candidates = sameWay.length ? sameWay : ofType;
 	if (!candidates.length) return null;
 	const nearest = candidates.reduce((best, entry) => (
 		Math.abs(entry.value.bend - current.bend) < Math.abs(best.value.bend - current.bend) ? entry : best
@@ -279,15 +404,25 @@ function getWarpPresetThumbnail(entry) {
 		cursor += advances[index];
 		return glyph;
 	});
-	const metrics = { centerX: width / 2, centerY: height / 2, width: total, fontSize, ascent };
-	layoutWarpedGlyphs(entry.value, glyphs, metrics).forEach((placement, index) => {
-		ctx.save();
-		ctx.translate(placement.x, placement.y);
-		ctx.rotate(placement.rotation);
-		ctx.scale(1, placement.scaleY);
-		ctx.fillText(chars[index], -advances[index] / 2, 0);
-		ctx.restore();
-	});
+	const metrics = { centerX: width / 2, centerY: height / 2, width: total, height: ascent, fontSize, ascent };
+	if (hasWarpEnvelope(entry.value)) {
+		const rect = { left: (width - total) / 2, top: (height - ascent) / 2, right: (width + total) / 2, bottom: (height + ascent) / 2 };
+		drawThroughWarpEnvelope(ctx, entry.value, metrics, rect, 0, 0, (flat, offsetX, offsetY) => {
+			flat.font = ctx.font;
+			flat.textBaseline = 'alphabetic';
+			flat.fillStyle = ctx.fillStyle;
+			chars.forEach((char, index) => flat.fillText(char, offsetX + glyphs[index].x - advances[index] / 2, offsetY + glyphs[index].y));
+		});
+	} else {
+		layoutWarpedGlyphs(entry.value, glyphs, metrics).forEach((placement, index) => {
+			ctx.save();
+			ctx.translate(placement.x, placement.y);
+			ctx.rotate(placement.rotation);
+			ctx.scale(1, placement.scaleY);
+			ctx.fillText(chars[index], -advances[index] / 2, 0);
+			ctx.restore();
+		});
+	}
 	const url = canvas.toDataURL('image/png');
 	canvas.width = canvas.height = 0;
 	WARP_THUMBNAIL_CACHE.set(entry.id, url);
@@ -295,5 +430,5 @@ function getWarpPresetThumbnail(entry) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-	module.exports = { WARP_TYPES, WARP_PRESETS, normalizeTextWarp, isTextWarpActive, layoutWarpedGlyphs, getWarpedGlyphBounds, findWarpPresetId, matchWarpPreset };
+	module.exports = { WARP_TYPES, WARP_PRESETS, normalizeTextWarp, isTextWarpActive, layoutWarpedGlyphs, getWarpedGlyphBounds, hasWarpEnvelope, getEnvelopeWarpBounds, findWarpPresetId, matchWarpPreset };
 }

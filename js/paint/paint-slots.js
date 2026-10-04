@@ -46,6 +46,11 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 		dotSpacingPx: { suffix: 'DotSpacing', geometry: true, documentScale: 'effect' }
 	},
 	shadow: {
+		castLengthRatio: { suffix: 'CastLength', factor: 100, geometry: true },
+		castLeanRatio: { suffix: 'CastLean', factor: 100, geometry: true },
+		castBlurRatio: { suffix: 'CastBlur', factor: 100, geometry: true },
+		castLength: { field: 'shadowCastLength', suffix: 'CastLength', geometry: true, documentScale: 'effect' },
+		castLean: { field: 'shadowCastLean', suffix: 'CastLean', geometry: true, documentScale: 'effect' },
 		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', control: 'number', geometry: true, documentScale: 'effect' },
 		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' },
 		spread: { field: 'shadowSpread', suffix: 'Spread', geometry: true, documentScale: 'effect' },
@@ -267,7 +272,7 @@ function buildSlotStack(layer, resolveSource) {
 		if (!entry.renders || entry.role === 'sparkles') return;
 		const source = resolveSource(entry);
 		if (!source) return;
-		const isShadow = entry.role === 'shadow';
+		const offset = entry.role === 'shadow' ? getShadowSlotOffset(entry.data) : { x: 0, y: 0 };
 		const item = {
 			key: entry.key,
 			role: entry.role,
@@ -275,8 +280,8 @@ function buildSlotStack(layer, resolveSource) {
 			data: entry.data,
 			source,
 			sourceKey: getPaintSlotSourceKey(layer, entry),
-			offsetX: isShadow ? (entry.data.offsetX || 0) : 0,
-			offsetY: isShadow ? (entry.data.offsetY || 0) : 0
+			offsetX: offset.x,
+			offsetY: offset.y
 		};
 		(entry.role === 'border' && getBorderDrawOrder(entry.data) === 'front' ? front : stack).push(item);
 	});
@@ -295,13 +300,14 @@ function getLayerSlotFramePadding(layer) {
 // A blurred shadow paints partial alpha (a glow), which a transparent GIF
 // can only keep by dithering it (see GifEncodingPipeline).
 function layerHasSoftShadow(layer) {
-	return getLayerPaintSlots(layer).some((entry) => entry.renders && entry.role === 'shadow' && Number(entry.data?.blur) > 0);
+	return getLayerPaintSlots(layer).some((entry) => entry.renders && entry.role === 'shadow' && (getShadowKind(entry.data) === 'cast' && entry.data?.castBlurRatio != null ? Number(entry.data.castBlurRatio) > 0 : Number(entry.data?.blur) > 0));
 }
 
 // A sticker shadow is drawn on a canvas padded by its offset (plus a
 // two-pixel margin) so the shifted silhouette is never clipped.
-function getShadowCanvasPadding(shadow) {
-	return Math.ceil(Math.max(Math.abs(shadow?.offsetX || 0), Math.abs(shadow?.offsetY || 0)) + getShadowReach(shadow)) + 2;
+function getShadowCanvasPadding(shadow, box = { x: 0, y: 0, width: 0, height: 0 }) {
+	const bounds = getShadowSlotBounds(box, shadow);
+	return Math.ceil(Math.max(0, box.x - bounds.x, box.y - bounds.y, bounds.x + bounds.width - box.x - box.width, bounds.y + bounds.height - box.y - box.height)) + 2;
 }
 
 // Displayed tile width of a glitter at 100% scale. The manifest width is

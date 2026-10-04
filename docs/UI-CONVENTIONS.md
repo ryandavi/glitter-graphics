@@ -243,6 +243,8 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
   A control that wraps its own input (flip checkboxes, a radio group, the context-bar toggle) puts its look on the element after the input and styles it with `input:checked + …`, so nothing has to mirror `checked` onto the label.
 - A row built by `buildOptionGroup` stacks its control under the label only when the control is not a segmented control or a select. Don't fix a row's layout from CSS.
 
+Shadow sections share a Type row from `shadowKind`: Drop, Extrude and Cast. Cast shows Length (floor depth in px, projected upward from the anchor) and Lean (signed horizontal reach in px). On text, Length, Lean and the Cast Blur row are percentages of font size and scale with the text; Drop/Extrude retain their pixel Blur row. Text also offers an Anchor row (Baseline by default, or Bottom edge), visible only for Cast. Other artwork uses Bottom edge. Blur is available for every shadow type and defaults to zero; Cast applies it after projection. Offset and Spread appear only for Drop and Extrude. These controls are slot fields and options, so desktop panels and phone drawers use the same bindings and undo path.
+
 ## Checking a styling change
 
 Both tools drive the real app through the states in `tools/ui-states.js` (every layer panel, every tool, the Library, each modal, the phone drawer). Compile a candidate to a scratch file first: `npx sass css/style.scss <scratch>/b.css --no-source-map`.

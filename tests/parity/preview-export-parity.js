@@ -29,6 +29,12 @@ const PREVIEW_EXPORT_TWINS = [
 		export: ['ShapeGlitterManager.renderSlotMasks']
 	},
 	{
+		feature: 'sticker shadow mask',
+		shared: 'createShadowSlotMaskCanvas',
+		preview: ['StickerManager.reconcileStickerEffectSpans'],
+		export: ['SceneCompositor._renderStickerEffects']
+	},
+	{
 		feature: 'sticker outline mask',
 		shared: 'createOutlineMaskCanvas',
 		preview: ['StickerManager.reconcileStickerEffectSpans'],

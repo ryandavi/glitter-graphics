@@ -709,7 +709,7 @@ class ShapeGlitterManager {
 			d.height,
 			LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer) ? d.cornerRadiusPx : null,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
-			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY, d.shadow.spread, d.shadow.blur || 0] : null,
+			d.shadow ? getShadowMaskKey(d.shadow) : null,
 			shouldUseCrispMaskEdges(),
 			CONFIG.rendering.maskAlphaThreshold
 		]);
@@ -745,20 +745,16 @@ class ShapeGlitterManager {
 		const sy = paintScale.y / 100;
 		const borderReserve = this.getBorderOutsidePadding(d.border);
 		const borderExtent = getBorderOutsidePadding(d.border);
-		const shX = d.shadow?.offsetX || 0;
-		const shY = d.shadow?.offsetY || 0;
-		// A blurred shadow's fade reaches past its spread too.
-		const shSpread = getShadowReach(d.shadow);
+		const shadowBounds = getShadowSlotBounds({ x: 0, y: 0, width: w * sx, height: h * sy }, d.shadow);
+		const inkLeft = Math.min(-borderReserve / sx, shadowBounds.x / sx);
+		const inkRight = Math.max(w + borderReserve / sx, (shadowBounds.x + shadowBounds.width) / sx);
+		const inkTop = Math.min(-borderReserve / sy, shadowBounds.y / sy);
+		const inkBottom = Math.max(h + borderReserve / sy, (shadowBounds.y + shadowBounds.height) / sy);
 
-		const inkLeft = Math.min(-borderReserve / sx, shX / sx - shSpread / sx);
-		const inkRight = Math.max(w + borderReserve / sx, w + shX / sx + shSpread / sx);
-		const inkTop = Math.min(-borderReserve / sy, shY / sy - shSpread / sy);
-		const inkBottom = Math.max(h + borderReserve / sy, h + shY / sy + shSpread / sy);
-
-		const frameLeft = Math.min(-borderExtent / sx, shX / sx - shSpread / sx);
-		const frameRight = Math.max(w + borderExtent / sx, w + shX / sx + shSpread / sx);
-		const frameTop = Math.min(-borderExtent / sy, shY / sy - shSpread / sy);
-		const frameBottom = Math.max(h + borderExtent / sy, h + shY / sy + shSpread / sy);
+		const frameLeft = Math.min(-borderExtent / sx, shadowBounds.x / sx);
+		const frameRight = Math.max(w + borderExtent / sx, (shadowBounds.x + shadowBounds.width) / sx);
+		const frameTop = Math.min(-borderExtent / sy, shadowBounds.y / sy);
+		const frameBottom = Math.max(h + borderExtent / sy, (shadowBounds.y + shadowBounds.height) / sy);
 
 		const layoutX = padding - inkLeft;
 		const layoutY = padding - inkTop;
@@ -819,6 +815,7 @@ class ShapeGlitterManager {
 			layoutY
 		};
 		canvas._paintBox = entry.shapeRect;
+		canvas._shadowBounds = entry.shapeRect;
 
 		this.measurementCache.set(key, entry);
 		while (this.measurementCache.size > this.maxMeasurementCacheEntries) {
@@ -935,7 +932,7 @@ class ShapeGlitterManager {
 			if (!entry.renders || entry.key === 'fill' || entry.role === 'sparkles') return;
 			const slotMask = this.getSlotMask(measurement, entry, layer)?.canvas || null;
 			masks[entry.key] = entry.role === 'shadow' && slotMask
-				? createOffsetMaskCanvas(slotMask, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				? createOffsetMaskCanvas(slotMask, getShadowSlotOffset(entry.data).x, getShadowSlotOffset(entry.data).y)
 				: slotMask;
 		});
 		return masks;
@@ -1063,10 +1060,8 @@ class ShapeGlitterManager {
 				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}:${underlap}`
 			};
 		}
-		if (slot.role === 'shadow' && getShadowReach(slot.data) > 0) {
-			const spread = Math.round(slot.data.spread || 0);
-			const blur = Math.round(slot.data.blur || 0);
-			return { rasterScale: measurement.rasterScale, canvas: createShadowMaskCanvas(measurement.canvas, spread, blur), cacheKey: `${measurement.key}|shadow:${spread}:${blur}` };
+		if (slot.role === 'shadow') {
+			return { rasterScale: measurement.rasterScale, canvas: createShadowSlotMaskCanvas(measurement.canvas, slot.data), cacheKey: `${measurement.key}|shadow:${getShadowMaskKey(slot.data)}` };
 		}
 		if (slot.role === 'bevel') {
 			const bevel = layer?.shapeData?.bevel?.highlight || slot.data;
@@ -1141,6 +1136,8 @@ class ShapeGlitterManager {
 			layer.shapeData.border.dotSpacingPx = Math.max(1, Math.round(layer.shapeData.border.dotSpacingPx * effectScale));
 		}
 		if (layer.shapeData.shadow && PREFERENCES.get('scaleEffects')) {
+			layer.shapeData.shadow.castLean = Math.round(layer.shapeData.shadow.castLean * sx);
+			layer.shapeData.shadow.castLength = Math.round(layer.shapeData.shadow.castLength * sy);
 			layer.shapeData.shadow.offsetX = Math.round(layer.shapeData.shadow.offsetX * sx);
 			layer.shapeData.shadow.offsetY = Math.round(layer.shapeData.shadow.offsetY * sy);
 			layer.shapeData.shadow.spread = Math.round(layer.shapeData.shadow.spread * effectScale);

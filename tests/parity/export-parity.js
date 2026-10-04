@@ -312,7 +312,7 @@ async function verifyGradientStopLiveEditing(page) {
 }
 
 async function verifyStickerColorAdjustControls(page) {
-	const result = await page.evaluate(() => {
+	const result = await page.evaluate(async () => {
 		const editor = window.editor;
 		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.STICKER);
 		editor.layerManager.setActiveLayer(layer.id);
@@ -324,6 +324,7 @@ async function verifyStickerColorAdjustControls(page) {
 		const assetCard = document.getElementById('stickerAssetInfo')?.closest('.property-card');
 		hue.value = '65';
 		hue.dispatchEvent(new Event('input', { bubbles: true }));
+		await flushLiveApply(hue.id);
 		const live = {
 			hue: layer.stickerData.colorAdjust?.hue,
 			filter: image?.style.filter || '',
@@ -333,6 +334,7 @@ async function verifyStickerColorAdjustControls(page) {
 		};
 		hue.value = '55';
 		hue.dispatchEvent(new Event('input', { bubbles: true }));
+		await flushLiveApply(hue.id);
 		return live;
 	});
 	assert(result.hue === 65, 'Sticker Hue slider did not update sticker colorAdjust');

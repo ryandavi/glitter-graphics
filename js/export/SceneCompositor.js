@@ -547,7 +547,7 @@ class SceneCompositor {
 		buildSlotStack(layer, (entry) => this._getSlotSource(layer, entry)).forEach((item) => {
 			if ((phase === 'front') !== (item.role === 'bevel')) return;
 			const effectRadius = item.role === 'shadow' ? Number(item.data.spread) || 0 : item.role === 'border' ? Number(item.data.widthPx) || 0 : 0;
-			const pad = Math.ceil(item.role === 'shadow' ? getShadowCanvasPadding(item.data) : effectRadius + 2);
+			const pad = Math.ceil(item.role === 'shadow' ? getShadowCanvasPadding(item.data, { x: 0, y: 0, width: maskWidth, height: maskHeight }) : effectRadius + 2);
 			const effectMask = scratch.shadowMaskCanvas;
 			ensureCanvasSize(effectMask, maskWidth + pad * 2, maskHeight + pad * 2);
 			const effectMaskCtx = scratch.shadowMaskCtx;
@@ -555,8 +555,9 @@ class SceneCompositor {
 			effectMaskCtx.imageSmoothingEnabled = layer.stickerData.isPixelated === false;
 			effectMaskCtx.drawImage(maskStickerCanvas, pad, pad, maskWidth, maskHeight);
 			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(effectMaskCtx);
+			effectMask._shadowBounds = { x: pad, y: pad, width: maskWidth, height: maskHeight };
 			let mask = effectMask;
-			if (item.role === 'shadow' && getShadowReach(item.data) > 0) mask = createShadowMaskCanvas(effectMask, effectRadius, Number(item.data.blur) || 0);
+			if (item.role === 'shadow') mask = createShadowSlotMaskCanvas(effectMask, item.data);
 			if (item.role === 'border') mask = createOutlineMaskCanvas(effectMask, effectRadius, getBorderEdgeStyle(item.data), item.data.fillInterior, item.data.fillEnclosed);
 			if (item.role === 'bevel') {
 				const pair = createBevelMaskCanvases(effectMask, layer.stickerData.bevel.highlight);

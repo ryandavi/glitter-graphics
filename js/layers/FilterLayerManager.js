@@ -246,7 +246,7 @@ class FilterLayerManager {
 		const fields = Object.entries(filter.fields).filter(([, field]) => !field.when || field.when(layer.filterData));
 		this.ui.customize.hidden = !fields.length;
 		// The set keeps its title; only the rows are rebuilt.
-		this.ui.customize.querySelectorAll(':scope > :not(.property-set-title)').forEach((row) => row.remove());
+		this.ui.customize.querySelectorAll(':scope > :not(.property-set-label)').forEach((row) => row.remove());
 		fields.forEach(([key, field]) => {
 			let item;
 			if (field.kind === 'number') item = { kind: 'slider', id: field.controlId, slider: field.specId, revert: true, ...(field.valueScale ? { valueScale: field.valueScale } : {}) };

@@ -261,12 +261,13 @@ async function check5(page) {
 		borderWidth: 8
 	});
 
-	const rounded = await page.evaluate((id) => {
+	const rounded = await page.evaluate(async (id) => {
 		const editor = window.editor;
 		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
 		const input = document.getElementById('shapeRadius');
 		input.value = '30';
 		input.dispatchEvent(new Event('input', { bubbles: true }));
+		await flushLiveApply(input.id);
 		const measurement = editor.shapeGlitterManager.getMeasurementEntry(layer);
 		const { x, y } = measurement.shapeRect;
 		return {

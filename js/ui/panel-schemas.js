@@ -234,13 +234,20 @@ function createOutlinePlacementRows(idPrefix) {
 	];
 }
 
-function createShadowSectionSpec(idPrefix) {
+function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
 	return { kind: 'paintSlot', slot: 'shadow', idPrefix, title: 'Shadow',
 		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose shadow glitter',
 		sets: [
+			{ rows: [{ kind: 'segmented', label: 'Type', revert: true, options: getOptions('shadowKind').map(({ value, label, suffix }) => ({ id: `${idPrefix}${suffix}`, value, label, active: value === 'drop' })) }] },
+			{ rows: [
+				...(baseline ? [{ kind: 'segmented', label: 'Anchor', rowId: `${idPrefix}CastAnchorRow`, hidden: true, revert: true, options: getOptions('shadowCastAnchor').map(({ value, label }) => ({ id: `${idPrefix}CastAnchor${sentenceCaseOption(value)}`, value, label, active: value === 'baseline' })) }] : []),
+				{ kind: 'slider', id: `${idPrefix}CastLength`, slider: baseline ? 'textCastLength' : 'shadowCastLength', hidden: true },
+				{ kind: 'slider', id: `${idPrefix}CastLean`, slider: baseline ? 'textCastLean' : 'shadowCastLean', hidden: true },
+				...(baseline ? [{ kind: 'slider', id: `${idPrefix}CastBlur`, slider: 'textCastBlur', hidden: true }] : [])
+			] },
 			{ label: 'Offset', rows: [
-				{ kind: 'numberPair', label: 'Offset', items: [
+				{ kind: 'numberPair', label: 'Offset', rowId: `${idPrefix}OffsetRow`, items: [
 					{ id: `${idPrefix}OffsetX`, slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: `${idPrefix}OffsetY`, slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }
@@ -836,10 +843,8 @@ const PANEL_SCHEMAS = {
 				// name in the header.
 				{ kind: 'section', title: 'Warp', collapsed: true,
 					summary: { id: 'textWarpSummary' }, sets: [
-					{ label: 'Presets', collapse: 'open', rows: [
-						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' }
-					] },
 					{ rows: [
+						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' },
 						{ kind: 'slider', id: 'textWarpBend', slider: 'textWarpBend', rowId: 'textWarpBendRow', title: 'How strongly the text bends. Negative values bend the other way.' }
 					] }
 				] }
@@ -896,7 +901,7 @@ const PANEL_SCHEMAS = {
 					...createOutlinePlacementRows('textBorder'),
 					{ kind: 'toggle', id: 'textBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas that are completely enclosed by the text silhouette' }
 				]),
-			createShadowSectionSpec('textShadow'),
+			createShadowSectionSpec('textShadow', { baseline: true }),
 			...createBevelSectionSpecs('textBevel'),
 			createSparklesSectionSpec('textSparkles')
 		],

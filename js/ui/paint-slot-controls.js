@@ -216,6 +216,10 @@ function optionControlSuffixes(name, prefix) {
 // slot's panelPrefix + suffix. Sparkles options are read lazily: the behavior
 // list comes from the motion library, which loads after this file.
 const SLOT_OPTION_CONTROLS = Object.freeze({
+	shadow: Object.freeze([
+		{ key: 'kind', geometry: true, read: getShadowKind, options: optionControlSuffixes('shadowKind', 'Kind') },
+		{ key: 'castAnchor', geometry: true, read: getCastShadowAnchor, options: optionControlSuffixes('shadowCastAnchor', 'CastAnchor') }
+	]),
 	border: Object.freeze([
 		{ key: 'style', geometry: true, read: getBorderStyle, options: optionControlSuffixes('borderStyle', 'Style') },
 		{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: Object.fromEntries(getOptions('borderEdgeStyle').map(({ value, suffix }) => [value, suffix])) },
@@ -564,6 +568,20 @@ function syncPaintSlotControls(host, layer) {
 		});
 
 		syncSlotOptionButtons(prefix, definition.role, shown);
+		if (definition.role === 'shadow') {
+			const cast = getShadowKind(shown) === 'cast';
+			['CastLength', 'CastLean', 'CastBlur', 'CastAnchorRow'].forEach(suffix => {
+				const row = byId(`${prefix}${suffix}`)?.closest('.property-row');
+				if (row) row.hidden = !cast;
+			});
+			const blurRow = byId(`${prefix}Blur`)?.closest('.property-row');
+			if (blurRow) blurRow.hidden = cast && Boolean(byId(`${prefix}CastBlur`));
+			['OffsetRow', 'Spread'].forEach(suffix => {
+				const element = byId(`${prefix}${suffix}`);
+				const row = element?.closest('.property-row');
+				if (row) row.hidden = cast;
+			});
+		}
 		if (definition.role === 'bevel') {
 			const profile = byId(`${prefix}Profile`);
 			if (profile) profile.value = getBevelProfile(shown.profile).id;

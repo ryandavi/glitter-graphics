@@ -47,6 +47,7 @@ const SUITES = [
 	{ file: 'ui/keyboard-shortcuts-verify.js', tags: ['panels'] },
 	{ file: 'parity/export-parity.js', tags: ['export'] },
 	{ file: 'parity/roadmap-export-fragility.js', tags: ['export', 'effects'] },
+	{ file: 'parity/shadow-verify.js', tags: ['export', 'effects'] },
 	{ file: 'parity/raster-scale-verify.js', tags: ['export', 'shape'] },
 	{ file: 'parity/shape-border-verify.js', tags: ['export', 'shape'] },
 	{ file: 'parity/mask-edge-verify.js', tags: ['export', 'mask'] },

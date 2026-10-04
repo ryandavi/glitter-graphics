@@ -11,7 +11,8 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		},
 		{
 			key: 'shadow', role: 'shadow', path: 'textData.shadow', draftPath: 'textData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'textShadow', modes: ['glitter', 'solid']
+			glitterDefault: 'shadowGlitterId', panelPrefix: 'textShadow', modes: ['glitter', 'solid'],
+			fields: { castLength: false, castLean: false, castLengthRatio: 'textCastLength', castLeanRatio: 'textCastLean', castBlurRatio: 'textCastBlur' }
 		},
 		{
 			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'textData.border', draftPath: 'textData.effectDrafts.border',

@@ -23,6 +23,10 @@ function getRasterMeasurement(layer, measurement) {
 		const canvas = createAppCanvas(width, height, 'paint/mask-raster');
 		canvas._rasterScale = { x: sx, y: sy };
 		canvas._textureOrigin = { x: (source._textureOrigin?.x || 0) * sx + dx, y: (source._textureOrigin?.y || 0) * sy + dy };
+		if (source._shadowBounds) {
+			const box = source._shadowBounds;
+			canvas._shadowBounds = { x: box.x * sx + dx, y: box.y * sy + dy, width: box.width * sx, height: box.height * sy, baseline: Number.isFinite(box.baseline) ? box.baseline * sy + dy : undefined, castSize: box.castSize ? { x: box.castSize.x * sx, y: box.castSize.y * sy } : undefined };
+		}
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 		ctx.translate(dx, dy);
 		ctx.scale(sx, sy);

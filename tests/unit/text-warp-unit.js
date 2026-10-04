@@ -54,7 +54,8 @@ if (isActive({ type: 'arc', bend: 0 }) || isActive({ type: 'none', bend: 50 })) 
 
 // A seven-glyph line, 20px per glyph, baseline at 40, centered on x = 70.
 const glyphs = Array.from({ length: 7 }, (_, index) => ({ x: 10 + index * 20, y: 40, line: 0 }));
-const metrics = { centerX: 70, centerY: 30, width: 140, fontSize: 32, ascent: 24 };
+// The ink block is 20px tall and ends on the baseline.
+const metrics = { centerX: 70, centerY: 30, width: 140, height: 20, fontSize: 32, ascent: 24 };
 const middle = 3;
 const near = (a, b, tolerance = 1e-6) => Math.abs(a - b) <= tolerance;
 
@@ -101,6 +102,47 @@ if (arch.some((placement, index) => placement.y !== glyphs[index].y)) fail('arch
 if (!(arch[middle].scaleY > arch[0].scaleY)) fail('arch must grow toward the middle');
 const bulge = layout({ type: 'bulge', bend: 60 }, glyphs, metrics);
 if (!(bulge[middle].y > 40)) fail('bulge must scale about the glyph middle, moving the baseline down');
+// Envelopes never fold the block, at any bend or position.
+Object.values(types).filter((type) => type.envelope).forEach((type) => {
+	for (let bend = -1; bend <= 1; bend += 0.25) {
+		for (let u = 0; u <= 1; u += 0.125) {
+			const edges = type.envelope(u, bend);
+			if (!(1 + edges.bottom - edges.top > 0.1)) fail(`${type.id} folds the block at bend ${bend}, u ${u}`);
+		}
+	}
+});
+// Rise climbs to the right and pivots on the middle; Taper shrinks to the right.
+const rise = layout({ type: 'rise', bend: 50 }, glyphs, metrics);
+if (!(rise[0].y > 40 && rise[6].y < 40) || !near(rise[middle].y, 40, 1e-6)) fail('rise must climb to the right about the middle');
+if (!near(rise[0].y - 40, 40 - rise[6].y, 1e-6)) fail('rise must be odd about the center');
+const taper = layout({ type: 'taper', bend: 60 }, glyphs, metrics);
+if (!(taper[0].scaleY > taper[6].scaleY)) fail('taper must shrink toward the right');
+if (!(layout({ type: 'taper', bend: -60 }, glyphs, metrics)[0].scaleY < 1)) fail('a negative taper must shrink toward the left');
+// Bow, Chevron and Ripple move both edges together (letters keep their
+// height); Bow and Chevron lift the middle, Ripple is odd about the center.
+['bow', 'chevron', 'ripple', 'rise'].forEach((id) => {
+	if (layout({ type: id, bend: 70 }, glyphs, metrics).some((placement) => !near(placement.scaleY, 1, 1e-9))) fail(`${id} must keep the letter height`);
+});
+['bow', 'chevron'].forEach((id) => {
+	const placed = layout({ type: id, bend: 50 }, glyphs, metrics);
+	if (!(placed[middle].y < placed[0].y) || !near(placed[0].y, placed[6].y, 1e-6)) fail(`${id} must lift the middle evenly`);
+});
+const ripple = layout({ type: 'ripple', bend: 50 }, glyphs, metrics);
+if (!near(ripple[middle].y, 40, 1e-6) || !near(ripple[1].y - 40, 40 - ripple[5].y, 1e-6) || near(ripple[1].y, 40, 1e-3)) fail('ripple must be odd about the center');
+// Sag and Peak each hold one edge: Sag the top, Peak the bottom (the baseline here).
+const peak = layout({ type: 'peak', bend: 50 }, glyphs, metrics);
+if (peak.some((placement) => placement.y !== 40) || !(peak[middle].scaleY > peak[1].scaleY && peak[1].scaleY > peak[0].scaleY)) fail('peak must hold the bottom and point the top');
+const sag = layout({ type: 'sag', bend: 50 }, glyphs, metrics);
+if (!(sag[middle].y > 40) || !(sag[middle].scaleY > 1)) fail('sag must drop the bottom in the middle');
+// Climb rises and grows toward the right.
+const climb = layout({ type: 'climb', bend: 50 }, glyphs, metrics);
+if (!(climb[6].y < climb[0].y) || !(climb[6].scaleY > climb[0].scaleY)) fail('climb must rise and grow to the right');
+// A type with one tile keeps it when bent the other way.
+if (matchPreset({ type: 'ripple', bend: -30 })?.id !== 'ripple' || !matchPreset({ type: 'ripple', bend: -30 }).modified) fail('a negative ripple must still match Ripple');
+// An envelope box covers the edge's ends, not just the glyph center.
+const sloped = run('getEnvelopeWarpBounds')({ type: 'rise', bend: 50 }, { left: 0, top: 20, right: 20, bottom: 40 }, metrics);
+if (!(sloped.bottom > rise[0].y) || sloped.left !== 0 || sloped.right !== 20) fail('envelope bounds must cover the sloped edge');
+if (!run('hasWarpEnvelope')({ type: 'arch', bend: 50 }) || run('hasWarpEnvelope')({ type: 'arc', bend: 50 }) || run('hasWarpEnvelope')({ type: 'arch', bend: 0 })) fail('hasWarpEnvelope');
 // Waves: odd about the center. Flag keeps the middle glyph on its baseline;
 // Wave leans it about its mid-height, so that point stays put instead.
 const flag = layout({ type: 'flag', bend: 60 }, glyphs, metrics);

@@ -364,10 +364,7 @@ async initBrowser() {
 		} : bounds;
 		const shadow = getLayerPaintSlots(layer).find((entry) => entry.renders && entry.role === 'shadow');
 		if (shadow) {
-			const reach = getShadowReach(shadow.data);
-			const shadowRect = this._expandRect(bounds, reach);
-			shadowRect.x += Number(shadow.data.offsetX) || 0;
-			shadowRect.y += Number(shadow.data.offsetY) || 0;
+			const shadowRect = getShadowSlotBounds(bounds, shadow.data);
 			rect = unionRects(rect, shadowRect);
 		}
 		return frameFromCanvasRect(rect, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
@@ -760,11 +757,10 @@ async initBrowser() {
 			};
 		}
 		if (item.role === 'shadow') {
-			const spread = Math.round(item.data.spread || 0);
-			const blur = Math.round(item.data.blur || 0);
+			fillMask._shadowBounds = this._getMaskBounds(layer);
 			return {
-				canvas: createShadowMaskCanvas(fillMask, spread, blur),
-				cacheKey: `${baseKey}|shadow:${spread}:${blur}`
+				canvas: createShadowSlotMaskCanvas(fillMask, item.data),
+				cacheKey: `${baseKey}|shadow:${getShadowMaskKey(item.data)}`
 			};
 		}
 		return null;
@@ -778,7 +774,7 @@ async initBrowser() {
 			const item = { key: entry.key, role: entry.role, data: entry.data };
 			const slotMask = this.getSlotMask(layer, item, mask)?.canvas || null;
 			masks[entry.key] = entry.role === 'shadow' && slotMask
-				? createOffsetMaskCanvas(slotMask, entry.data.offsetX || 0, entry.data.offsetY || 0)
+				? createOffsetMaskCanvas(slotMask, getShadowSlotOffset(entry.data).x, getShadowSlotOffset(entry.data).y)
 				: slotMask;
 		});
 		return masks;
