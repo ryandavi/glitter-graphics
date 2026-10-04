@@ -33,7 +33,7 @@
 
 		> .panel-sticky-footer {
 			border-top: 1px solid var(--color-border);
-			padding: 0;
+			padding: var(--spacing-md) 0;
 		}
 
 		> .panel-scroll-region {

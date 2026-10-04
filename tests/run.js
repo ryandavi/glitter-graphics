@@ -9,6 +9,7 @@ const SUITES = [
 	{ file: 'ui/touch-handle-verify.js', tags: ['quick', 'touch'] },
 	{ file: 'unit/export-timeline-unit.js', tags: ['unit', 'export'] },
 	{ file: 'unit/gif-palette-unit.js', tags: ['unit', 'export'] },
+	{ file: 'unit/export-report-unit.js', tags: ['unit', 'export', 'quick'] },
 	{ file: 'unit/text-background-geometry-unit.js', tags: ['unit', 'effects'] },
 	{ file: 'parity/filter-parity.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'parity/pixel-filter-verify.js', tags: ['export', 'effects', 'quick'] },

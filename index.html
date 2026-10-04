@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=e23a875a">
+	<link rel="stylesheet" href="css/style.css?v=3cbc331a">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -672,9 +672,9 @@
 		</div>
 	</div>
 
-	<!-- Export Preview Modal (iOS) -->
+	<!-- Export Ready Modal: shown after every export, on every platform -->
 	<div class="modal-overlay" id="exportPreviewModal">
-		<div class="modal-content">
+		<div class="modal-content modal-reading">
 			<div class="modal-header">
 				<div class="modal-title">
 					<span class="modal-icon icon-wrapper">
@@ -692,25 +692,61 @@
 					<span class="name">Close</span>
 				</button>
 			</div>
+			<!-- Hidden while the export has no details to show (every still). -->
+			<div class="modal-nav search-toggle-row" id="exportResultNav" hidden>
+				<div class="segmented-control modal-nav-scope" role="group" aria-label="Export view">
+					<button type="button" class="segmented-option active" data-export-view="result" aria-pressed="true" aria-controls="exportResultView">Result</button>
+					<button type="button" class="segmented-option" data-export-view="details" aria-pressed="false" aria-controls="exportDetailsView">Details</button>
+				</div>
+			</div>
 			<div class="modal-body">
-				<div class="export-preview-image-container">
-					<img id="exportPreviewImage" alt="Exported GIF">
-					<video id="exportPreviewVideo" controls loop playsinline hidden></video>
+				<!-- Three regions: the stage, the pinned facts, and the side column,
+				     whose notes are the only part that scrolls. -->
+				<div class="export-result" id="exportResultView">
+					<div class="export-stage">
+						<img id="exportPreviewImage" alt="Exported GIF">
+						<video id="exportPreviewVideo" controls loop playsinline hidden></video>
+					</div>
+					<div class="export-facts" id="exportStats" aria-label="Export details">
+						<strong class="export-fact-size" id="exportStatSize">0 KB</strong>
+						<span class="export-fact-line"><span id="exportStatFormat">GIF</span><span id="exportStatDimensions">0 × 0 px</span></span>
+						<span class="export-fact-line" id="exportStatMotion"><span id="exportStatFrames">0 frames</span><span id="exportStatDuration">0 s</span></span>
+						<span class="export-fact-name" id="exportStatFileName"></span>
+					</div>
+					<div class="export-side">
+						<div class="export-change">
+							<div class="app-menu" id="exportResultMenu">
+								<button class="btn-flat app-menu-trigger" id="exportResultMenuBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="exportResultMenuPanel">Export as…</button>
+								<div class="app-menu-panel" id="exportResultMenuPanel" role="menu" aria-labelledby="exportResultMenuBtn" hidden>
+									<div class="app-menu-group-label">Still Image</div>
+									<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+									<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:jpeg"><span class="app-menu-item-label">JPG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+									<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:gif"><span class="app-menu-item-label">Still GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+									<div class="app-menu-separator" role="separator"></div><div class="app-menu-group-label">Animation</div>
+									<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:gif"><span class="app-menu-item-label">GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+									<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:mp4"><span class="app-menu-item-label">MP4</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+								</div>
+							</div>
+							<button class="btn-flat" id="exportResultSettings" type="button">Export Settings…</button>
+						</div>
+						<div class="export-scroll">
+							<div class="export-save-guide" id="exportSaveGuide" role="note" aria-live="polite" hidden></div>
+							<div class="export-limits" id="exportSizeWarnings" role="status" hidden>
+								<div class="property-group-label">Too large for</div>
+								<ul class="export-limit-list" id="exportSizeWarningList"></ul>
+							</div>
+							<div class="export-notices" id="exportNotices" hidden></div>
+						</div>
+					</div>
 				</div>
-				<p class="export-meta" id="exportStats" aria-label="Export details"><span id="exportStatSize">0 KB</span><span id="exportStatFramesRow"><span id="exportStatFrames">0</span> frames</span><span id="exportStatDurationRow"><span id="exportStatDuration">0s</span></span><span id="exportStatDimensions">0 × 0px</span><span id="exportStatFormat">GIF</span></p>
-				<div class="export-notes" id="exportSizeWarnings" role="status" aria-label="File size warnings" hidden></div>
-				<p class="property-note" id="exportFormatNotices" role="note" hidden><span id="exportColorNoticeText"></span></p>
-				<div class="export-summary" id="exportReductionSummary" hidden>
-					<strong class="export-summary-title" id="exportReductionTitle">About this animation</strong>
-					<p class="property-note" id="exportReductionText"></p>
-					<p class="property-note" id="exportSeamStatus" hidden></p>
-					<div class="advanced-disclosure" data-advanced id="exportOptimizationDetails" hidden><button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false"><span class="advanced-disclosure-label">Optimization details</span><span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span></button><div class="advanced-disclosure-content" data-advanced-content><dl class="export-detail-list"><div><dt>Frames</dt><dd id="exportDetailFrames"></dd></div><div id="exportDetailExactRow"><dt>Repeated frames removed</dt><dd id="exportDetailExact"></dd></div><div id="exportDetailNearRow"><dt>Similar frames removed</dt><dd id="exportDetailNear"></dd></div><div><dt>Playback speed</dt><dd id="exportDetailTiming"></dd></div><div><dt>Loop ending</dt><dd id="exportDetailLoop"></dd></div><div id="exportDetailErrorRow"><dt>Maximum visual difference</dt><dd id="exportDetailError"></dd></div></dl></div></div>
-					<div class="advanced-disclosure" data-advanced id="exportAssetAnalysis" hidden><button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false"><span class="advanced-disclosure-label">Animation analysis</span><span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span></button><div class="advanced-disclosure-content" data-advanced-content><dl class="export-detail-list is-single-column" id="exportAssetAnalysisList"></dl></div></div>
+				<div class="export-details" id="exportDetailsView" hidden>
+					<p class="export-detail-facts" id="exportDetailFacts"></p>
+					<div class="export-detail-tables" id="exportDetailTables"></div>
 				</div>
-				<div class="export-preview-instructions" role="note" aria-live="polite"></div>
-				<p class="support-note export-support-note">Like what you made? You can <a href="https://ko-fi.com/ryandavi" class="external" target="_blank" rel="noopener noreferrer">buy me a coffee on Ko-fi</a>.</p>
 			</div>
 			<div class="modal-footer">
+				<a class="btn-text export-support-link" href="https://ko-fi.com/ryandavi" target="_blank" rel="noopener noreferrer"><svg class="icon"><use href="#icon-heart"></use></svg>Support on Ko-fi</a>
+
 				<button class="btn-text-with-icon icon-wrapper modal-action secondary" id="exportPreviewShare">
 					<svg class="icon">
 						<use href="#icon-share"></use>
@@ -736,8 +772,8 @@
 		</div>
 	</div>
 
-	<template id="tpl-export-size-warning">
-		<p class="property-note is-warning"><strong></strong> <span></span></p>
+	<template id="tpl-export-limit">
+		<li class="export-limit"><span class="export-limit-service"></span><span class="export-limit-note"></span><span class="export-limit-value"></span></li>
 	</template>
 	<template id="tpl-export-instructions-ios-gif">
 		<div class="export-instruction-heading">
@@ -901,7 +937,8 @@
 
 			<div class="modal-footer">
 				<button class="btn-text reset-export-settings-btn" type="button">Reset Export Settings</button>
-				<button class="btn-text-with-icon modal-action modal-close" id="closeExportSettingsModalFooter">Close</button>
+				<button class="btn-text-with-icon modal-action modal-close secondary" id="closeExportSettingsModalFooter">Close</button>
+				<button class="btn-text-with-icon icon-wrapper modal-action primary" id="exportSettingsExport" type="button"><svg class="icon"><use href="#icon-export"></use></svg><span class="name">Export GIF</span></button>
 			</div>
 
 		</div>
@@ -1652,7 +1689,7 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=a175b857"></script>
 	<script src="js/core/fields.js?v=a823003f"></script>
-	<script src="js/core/config.js?v=f759c495"></script>
+	<script src="js/core/config.js?v=a52ec541"></script>
 	<script src="js/core/tools.js?v=c6495ef0"></script>
 	<script src="js/core/layer-types.js?v=8bd48d62"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
@@ -1681,7 +1718,7 @@
 	<script src="js/transforms/movable-layer.js?v=98aa9235"></script>
 
 	<!-- Utils -->
-	<script src="js/core/format.js?v=d840106e"></script>
+	<script src="js/core/format.js?v=b94f96b9"></script>
 	<script src="js/core/attribution.js?v=de324fe8"></script>
 	<script src="js/core/sticker-variants.js?v=ec43b61f"></script>
 	<script src="js/core/layer-elements.js?v=32584e3b"></script>
@@ -1725,7 +1762,7 @@
 	<script src="js/ui/color-eyedropper.js?v=f997c28b"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=eca7d9de"></script>
-	<script src="js/ui/scroll-regions.js?v=7e6374b6"></script>
+	<script src="js/ui/scroll-regions.js?v=f92b12e5"></script>
 	<script src="js/ui/panel-renderer.js?v=42621287"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
@@ -1733,14 +1770,14 @@
 	<script src="js/ui/menu-popover.js?v=a3940d89"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=5b94bd2a"></script>
-	<script src="js/editor/settings.js?v=0c9ff748"></script>
+	<script src="js/editor/settings.js?v=82462c0b"></script>
 	<script src="js/editor/panels.js?v=0ae19829"></script>
 	<script src="js/editor/disclosures.js?v=36270399"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=71bafb86"></script>
 	<script src="js/editor/document-start.js?v=28535700"></script>
-		<script src="js/editor/modals-wiring.js?v=3de2baa4"></script>
+		<script src="js/editor/modals-wiring.js?v=a8c61360"></script>
 	<script src="js/editor/layer-panel.js?v=0ac8826f"></script>
 	<script src="js/editor/canvas-gestures.js?v=cafdf9d1"></script>
 	<script src="js/editor/canvas-size.js?v=69c7456a"></script>
@@ -1762,10 +1799,11 @@
 	<script src="js/systems/AnimationTicker.js?v=1d5c50aa"></script>
 	<script src="js/systems/AnimationPanelController.js?v=9f26a93a"></script>
 	<script src="js/export/ExportProgressPresenter.js?v=4754a2c1"></script>
-	<script src="js/export/ExportResultPresenter.js?v=e9f1b08c"></script>
+	<script src="js/export/export-report.js?v=6cea2352"></script>
+	<script src="js/export/ExportResultPresenter.js?v=d147da3d"></script>
 	<script src="js/export/SceneCompositor.js?v=b844be5a"></script>
 	<script src="js/export/GifExporter.js?v=8b89baa2"></script>
-	<script src="js/export/StillImageExporter.js?v=db91e046"></script>
+	<script src="js/export/StillImageExporter.js?v=ec58b58a"></script>
 	<script src="js/export/Mp4Exporter.js?v=ca0864d0"></script>
 	<script src="js/systems/PixelGridOverlay.js?v=f8614a9b"></script>
 	<script src="js/transforms/selection-overlay.js?v=73c30c00"></script>
@@ -1809,7 +1847,7 @@
 		<script src="js/systems/MobileManager.js?v=7eb759a0"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=f0632978"></script>
+	<script src="js/app.js?v=45d4dea9"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

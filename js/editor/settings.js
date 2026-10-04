@@ -905,12 +905,20 @@ async resetAllSettings() {
 		}
 		document.querySelectorAll('[data-export-target]').forEach((item) => item.addEventListener('click', () => {
 			if (item.disabled || this.exportInProgress) return;
+			// "Export as" in the result closes it; the new result opens as usual.
+			this.modalManager.close('exportPreviewModal');
 			setActiveExportTarget(this.exportSettings, item.dataset.exportTarget);
 			this.saveSettingsToStorage();
 			this.syncExportSettingsToUI();
 			this.exportCurrentTarget();
 		}));
-		document.getElementById('exportSettingsMenuItem')?.addEventListener('click', () => this.modalManager.open('exportSettingsModal'));
+		document.querySelectorAll('#exportSettingsMenuItem, #exportResultSettings').forEach((button) => {
+			button.addEventListener('click', () => this.modalManager.open('exportSettingsModal'));
+		});
+		document.getElementById('exportSettingsExport')?.addEventListener('click', () => {
+			this.modalManager.close('exportSettingsModal');
+			this.exportCurrentTarget();
+		});
 
 		const saveProject = document.getElementById('saveProject');
 		if (saveProject) {
@@ -930,6 +938,11 @@ async resetAllSettings() {
 			main.setAttribute('aria-label', target.exportLabel);
 			main.querySelector('.name').textContent = target.exportLabel;
 		}
+		const settingsExport = document.getElementById('exportSettingsExport');
+		if (settingsExport) {
+			settingsExport.disabled = !hasContent || this.exportInProgress;
+			settingsExport.querySelector('.name').textContent = target.exportLabel;
+		}
 		document.querySelectorAll('[data-export-target]').forEach((item) => {
 			const isMp4 = item.dataset.exportTarget === 'animation:mp4';
 			item.hidden = isMp4 && this.mp4ExportSupported === false;
@@ -938,7 +951,8 @@ async resetAllSettings() {
 			item.classList.toggle('app-menu-item-current-target', current);
 			if (current) item.setAttribute('aria-current', 'true'); else item.removeAttribute('aria-current');
 		});
-		const settingsItem = document.getElementById('exportSettingsMenuItem');
-		if (settingsItem) settingsItem.disabled = this.exportInProgress;
+		document.querySelectorAll('#exportSettingsMenuItem, #exportResultSettings, #exportResultMenuBtn').forEach((button) => {
+			button.disabled = this.exportInProgress;
+		});
 	}
 };

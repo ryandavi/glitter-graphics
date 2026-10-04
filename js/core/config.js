@@ -933,13 +933,16 @@ const CONFIG = deepFreeze({
 				maxFrames: 12,
 				maxPixelsPerFrame: 65536
 			},
+			// Upload limits, one entry per tier of a service. Export Ready shows one
+			// row per service: the smallest limit the file is over, with the `note`
+			// of the smallest tier it still fits.
 			sizeWarnings: [
-				{ label: 'Too large for X mobile', detail: '5 MB max', limitMB: 5 },
-				{ label: 'Tumblr may compress or flatten it', detail: 'Keep under 5 MB', limitMB: 5 },
-				{ label: 'Too large for Discord without Nitro', detail: '10 MB max', limitMB: 10 },
-				{ label: 'Too large for X on the web', detail: '15 MB max', limitMB: 15 },
-				{ label: 'Too large for Discord Nitro Basic', detail: '50 MB max', limitMB: 50 },
-				{ label: 'Too large for Discord Nitro', detail: '500 MB max', limitMB: 500 }
+				{ service: 'X', limitMB: 5 },
+				{ service: 'X', limitMB: 15, note: 'fits on the web' },
+				{ service: 'Tumblr', limitMB: 5 },
+				{ service: 'Discord', limitMB: 10 },
+				{ service: 'Discord', limitMB: 50, note: 'fits with Nitro Basic' },
+				{ service: 'Discord', limitMB: 500, note: 'fits with Nitro' }
 			]
 		},
 		watermark: {

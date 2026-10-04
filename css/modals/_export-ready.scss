@@ -1,29 +1,43 @@
 @use '../mixins' as *;
 
 // ===== EXPORT READY ========================================================
-// Preview on top, then one meta line, notes, and disclosures for the detail.
-// Notes are `.property-note`s and details are the shared `.advanced-disclosure`;
-// only the preview box and the iOS save steps are styled here.
+// A fixed frame (`.modal-reading`) whose body never scrolls as a whole. The
+// Result view has three regions: the preview stage, the facts pinned at the
+// top of the side column, and under them the only scrolling part (save guide,
+// upload limits, notices). Details is a second, full-width view of the same
+// body. Notes are `.property-note`s, headings `.property-group-label`s and
+// body buttons `.btn-flat`; only the regions, the facts, the limit rows, the
+// save steps and the detail table are styled here.
 #exportPreviewModal {
-	> .modal-content {
-		--modal-width: var(--modal-width-reading);
-		max-height: 94dvh;
-	}
+	--export-side-width: 300px;
 
 	.modal-body {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-md);
+		overflow: hidden;
 	}
 
-	.export-preview-image-container {
+	.export-result {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) var(--export-side-width);
+		grid-template-rows: auto minmax(0, 1fr);
+		grid-template-areas:
+			'stage facts'
+			'stage side';
+		gap: var(--spacing-md) var(--spacing-lg);
+		flex: 1 1 auto;
+		min-height: 0;
+
+		&[hidden] { display: none; }
+	}
+
+	.export-stage {
+		grid-area: stage;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		flex: 0 0 auto;
-		height: min(56dvh, 640px);
-		min-height: 260px;
 		min-width: 0;
+		min-height: 0;
 		padding: var(--spacing-md);
 		border-radius: var(--radius-md);
 		background: var(--color-bg-tertiary);
@@ -51,33 +65,86 @@
 	}
 
 	// Holding down on the preview would save a still, so it takes no touches.
-	&.is-ios .export-preview-image-container img {
+	&.is-ios .export-stage img {
 		pointer-events: none;
 		-webkit-touch-callout: none;
 		user-select: none;
 	}
 
-	// 1.2 MB · 24 frames · 2.00s · 500 × 400px · GIF
-	.export-meta {
-		margin: 0;
+	// The size is the headline: it decides whether the file can be posted, and
+	// it takes the warning color when the file is over an upload limit.
+	.export-facts {
+		grid-area: facts;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2xs);
+		min-width: 0;
 		color: var(--color-text-secondary);
 		font-size: var(--font-size-sm);
 		font-variant-numeric: tabular-nums;
-		text-align: center;
+		line-height: 1.4;
+	}
 
+	.export-fact-size {
+		color: var(--color-text-primary);
+		font-size: var(--font-size-lg);
+		font-weight: var(--font-weight-semibold);
+
+		&.is-warning { color: var(--color-warning); }
+	}
+
+	.export-fact-line {
+		&[hidden],
 		> span[hidden] { display: none; }
 
-		> span:not([hidden]) ~ span:not([hidden])::before {
+		> span + span::before {
 			content: '\00b7';
 			padding-inline: var(--spacing-sm);
 			color: var(--color-text-tertiary);
 		}
-
-		> span:first-child { color: var(--color-text-primary); font-weight: var(--font-weight-semibold); }
 	}
 
-	.export-notes,
-	.export-summary {
+	.export-fact-name {
+		overflow: hidden;
+		color: var(--color-text-tertiary);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.export-side {
+		grid-area: side;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		min-width: 0;
+		min-height: 0;
+	}
+
+	.export-change {
+		display: flex;
+		flex: 0 0 auto;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+
+		// The trigger sits at the pane's left edge, so the menu grows rightward.
+		.app-menu-panel {
+			left: 0;
+			right: auto;
+		}
+	}
+
+	.export-scroll {
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.export-limits,
+	.export-notices {
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-xs);
@@ -85,42 +152,42 @@
 		&[hidden] { display: none; }
 	}
 
-	.export-summary-title {
-		color: var(--color-text-primary);
-		font-size: var(--font-size-title);
-	}
-
-	.export-detail-list {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--spacing-sm) var(--spacing-xl);
+	// X · fits on the web                                                 5 MB
+	.export-limit-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2xs);
 		margin: 0;
+		padding: 0;
+		list-style: none;
 		font-size: var(--font-size-sm);
-
-		> div {
-			display: flex;
-			align-items: baseline;
-			justify-content: space-between;
-			gap: var(--spacing-md);
-			min-width: 0;
-
-			&[hidden] { display: none; }
-		}
-
-		dt { color: var(--color-text-tertiary); }
-
-		dd {
-			margin: 0;
-			color: var(--color-text-primary);
-			text-align: right;
-		}
-
-		&.is-single-column { grid-template-columns: 1fr; }
 	}
 
-	.export-preview-instructions {
-		padding-top: var(--spacing-md);
-		border-top: 1px solid var(--color-border);
+	.export-limit {
+		display: flex;
+		align-items: baseline;
+		gap: var(--spacing-sm);
+		min-width: 0;
+	}
+
+	.export-limit-service { color: var(--color-text-primary); }
+
+	.export-limit-note {
+		flex: 1 1 auto;
+		min-width: 0;
+		overflow: hidden;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.export-limit-value {
+		color: var(--color-warning);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.export-save-guide {
 		color: var(--color-text-secondary);
 		font-size: var(--font-size-sm);
 
@@ -163,6 +230,128 @@
 		.export-instruction-tip { color: var(--color-text-tertiary); }
 	}
 
+	// ----- Details ----------------------------------------------------------
+	.export-details {
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+		gap: var(--spacing-lg);
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+
+		&[hidden] { display: none; }
+	}
+
+	.export-detail-facts {
+		margin: 0;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.export-detail-tables {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xl);
+	}
+
+	.export-detail-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	// Every value has its own column and numbers line up on the right. The
+	// first column takes the spare width and is the one that truncates.
+	.export-detail-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: var(--font-size-sm);
+		font-variant-numeric: tabular-nums;
+
+		th,
+		td {
+			padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-xs) 0;
+			font-weight: var(--font-weight-normal);
+			text-align: left;
+			white-space: nowrap;
+
+			&:last-child { padding-right: 0; }
+
+			&.is-numeric { text-align: right; }
+		}
+
+		thead th {
+			border-bottom: 1px solid var(--color-border);
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+		}
+
+		tbody th {
+			width: 100%;
+			max-width: 0;
+			overflow: hidden;
+			color: var(--color-text-secondary);
+			text-overflow: ellipsis;
+		}
+
+		tbody td { color: var(--color-text-primary); }
+
+		.is-total > * {
+			border-top: 1px solid var(--color-border);
+			color: var(--color-text-primary);
+			font-weight: var(--font-weight-semibold);
+		}
+	}
+
+	// ----- Footer -----------------------------------------------------------
+	.export-support-link {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		text-decoration: none;
+	}
+
 	// An action that cannot run here (Share without the Web Share API) is left out.
 	.modal-footer > button:disabled { display: none; }
+
+	// ----- Phone ------------------------------------------------------------
+	// One column. The facts become one meta line under the preview, and the
+	// whole side column scrolls so the change row can follow the notes.
+	@media (max-width: 600px) {
+		.export-result {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: 40dvh auto minmax(0, 1fr);
+			grid-template-areas:
+				'stage'
+				'facts'
+				'side';
+		}
+
+		.export-facts { display: block; }
+
+		.export-fact-size { font-size: inherit; }
+
+		.export-fact-line:not([hidden]) {
+			display: inline;
+
+			&::before {
+				content: '\00b7';
+				padding-inline: var(--spacing-sm);
+				color: var(--color-text-tertiary);
+			}
+		}
+
+		.export-fact-name { display: block; }
+
+		.export-side { overflow-y: auto; }
+
+		.export-scroll {
+			flex: 0 0 auto;
+			overflow-y: visible;
+		}
+
+		.export-change { order: 1; }
+	}
 }

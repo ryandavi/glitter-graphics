@@ -1,9 +1,11 @@
 'use strict';
 
+// Renders one buildExportReport() into the Export Ready modal and wires its
+// footer actions. What is shown, and when, is decided in export-report.js.
 class ExportResultPresenter {
-	constructor() { this.previewBlobUrl = null; }
+	constructor({ onStatus = () => {} } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; }
 	clear() { if (this.previewBlobUrl) URL.revokeObjectURL(this.previewBlobUrl); this.previewBlobUrl = null; }
-	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null }) {
+	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null }) {
 		this.clear();
 		const blobUrl = URL.createObjectURL(blob);
 		this.previewBlobUrl = blobUrl;
@@ -13,179 +15,148 @@ class ExportResultPresenter {
 		img.hidden = target.isVideo; video.hidden = !target.isVideo; img.alt = `Exported ${target.label}`;
 		if (target.isVideo) { img.removeAttribute('src'); video.src = blobUrl; video.play().catch(() => {}); }
 		else { video.pause(); video.removeAttribute('src'); img.src = blobUrl; }
-		document.getElementById('exportStatSize').textContent = formatBytes(blob.size);
-		document.getElementById('exportStatDimensions').textContent = `${width} × ${height}px`;
-		document.getElementById('exportStatFormat').textContent = target.label;
-		document.getElementById('exportStatFramesRow').hidden = target.isStill;
-		if (!target.isStill) document.getElementById('exportStatFrames').textContent = String(frameCount ?? 0);
-		const durationRow = document.getElementById('exportStatDurationRow');
-		durationRow.hidden = target.isStill || !Number.isFinite(duration);
-		if (!durationRow.hidden) document.getElementById('exportStatDuration').textContent = `${duration.toFixed(2)}s`;
-		document.getElementById('exportFormatNotices').hidden = !target.isGif;
-		if (target.isGif) document.getElementById('exportColorNoticeText').textContent = target.isStill ? 'This still GIF uses a palette of up to 256 colors.' : 'This animated GIF uses a palette of up to 256 colors per frame.';
-		const warnings = (CONFIG.export.limits.sizeWarnings || []).filter((warning) => blob.size > warning.limitMB * 1024 * 1024);
-		const warningRoot = document.getElementById('exportSizeWarnings');
-		warningRoot.replaceChildren(...warnings.map((warning) => {
-			const row = document.getElementById('tpl-export-size-warning').content.firstElementChild.cloneNode(true);
-			row.querySelector('strong').textContent = warning.label;
-			row.querySelector('span').textContent = warning.detail;
-			return row;
-		}));
-		warningRoot.hidden = warnings.length === 0;
-		this._renderReductionSummary(target.isAnimation ? timelinePlan : null);
-		const open = document.getElementById('exportPreviewOpen');
-		const save = document.getElementById('exportPreviewSave');
-		open.querySelector('.name').textContent = `Open ${target.label}`;
-		save.querySelector('.name').textContent = `Save ${target.label}`;
+
 		let canShare = false;
 		try { canShare = Boolean(navigator.canShare?.({ files: [file] })); } catch (error) { canShare = false; }
-		const share = document.getElementById('exportPreviewShare'); share.disabled = !canShare;
-		const isIOS = CONFIG.debug.forceIOSExportPreview || isIOSDevice();
-		// Direct downloads of animated GIF/video on iOS Safari have historically
-		// dropped the animation, so those formats route through the Share sheet
-		// instead. Stills don't have that problem — they save normally, like desktop.
-		const needsShareWorkaround = isIOS && target.isAnimation;
-		modal.classList.toggle('is-ios', needsShareWorkaround);
-		const instructions = modal.querySelector('.export-preview-instructions');
-		instructions.replaceChildren();
-		if (needsShareWorkaround) {
-			const templateId = !canShare ? 'tpl-export-instructions-ios-unsupported' : target.isVideo ? 'tpl-export-instructions-ios-video' : 'tpl-export-instructions-ios-gif';
-			const template = document.getElementById(templateId);
-			if (template) instructions.append(template.content.cloneNode(true));
-			instructions.hidden = false;
-			open.disabled = true; save.disabled = true;
-		} else {
-			instructions.hidden = true; open.disabled = false; save.disabled = false;
-		}
-		share.onclick = async () => { if (canShare) await navigator.share({ files: [file], title: `Glitter ${target.label}`, text: `Created with ${CONFIG.app.siteName}` }); };
-		open.onclick = () => window.open(blobUrl, '_blank'); save.onclick = () => downloadBlob(file, file.name);
+		const report = buildExportReport({
+			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis,
+			platform: { isIOS: CONFIG.debug.forceIOSExportPreview || isIOSDevice(), canShare }
+		});
+
+		this._renderFacts(report.facts);
+		this._renderSaveGuide(modal, report.saveGuide);
+		this._renderUploadLimits(report.uploadLimits);
+		this._renderNotices(report.notices);
+		this._renderDetails(report.details);
+		this._showView('result');
+
+		const actions = {
+			share: document.getElementById('exportPreviewShare'),
+			open: document.getElementById('exportPreviewOpen'),
+			save: document.getElementById('exportPreviewSave')
+		};
+		actions.share.querySelector('.name').textContent = `Share ${target.label}`;
+		actions.open.querySelector('.name').textContent = `Open ${target.label}`;
+		actions.save.querySelector('.name').textContent = `Save ${target.label}`;
+		Object.entries(actions).forEach(([name, button]) => {
+			button.disabled = !report.actions[name];
+			button.classList.toggle('primary', report.primaryAction === name);
+			button.classList.toggle('secondary', report.primaryAction !== name);
+		});
+		actions.share.onclick = async () => { if (canShare) await navigator.share({ files: [file], title: `Glitter ${target.label}`, text: `Created with ${CONFIG.app.siteName}` }); };
+		actions.open.onclick = () => window.open(blobUrl, '_blank');
+		// An anchor download gives no confirmation, so the status names the file.
+		actions.save.onclick = async () => { if (await saveBlobAs(file, file.name) === 'downloaded') this.onStatus(`Downloading ${file.name}`); };
+
+		document.querySelectorAll('#exportResultNav [data-export-view]').forEach((option) => { option.onclick = () => this._showView(option.dataset.exportView); });
 		const cleanup = () => { modal.classList.remove('visible'); video.pause(); this.clear(); };
 		document.getElementById('closeExportPreviewModal').onclick = cleanup;
 		modal.onclick = (event) => { if (event.target === modal) cleanup(); };
 		modal.classList.add('visible');
+		// The frame is reused, so a new result starts at the top of each scroller.
+		modal.querySelectorAll('.export-side, .export-scroll, .export-details').forEach((region) => { region.scrollTop = 0; });
 	}
 
-	_renderReductionSummary(timelinePlan) {
-		const reductionSummary = document.getElementById('exportReductionSummary');
-		const reduction = timelinePlan?.reduction;
-		const sourceAnalysis = timelinePlan?.sourceAnalysis || [];
-		const hasAssetAnalysis = sourceAnalysis.length > 0;
-		const pixelRemovedFrames = reduction ? reduction.framesRemoved : 0;
-		const preRenderRemovedFrames = reduction ? reduction.selectionDuplicatesMerged + reduction.preRenderFramesSkipped : 0;
-		const hasReduction = Boolean(reduction?.smartReductionEnabled && (pixelRemovedFrames > 0 || preRenderRemovedFrames > 0));
-		const proceduralFits = timelinePlan?.timingResolution?.proceduralPeriodFits || [];
-		const hasPlanWarning = Boolean(timelinePlan && (
-			!timelinePlan.loopSeam.exact
-				|| proceduralFits.some((fit) => Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01)
-				|| !reduction.preferredBudgetMet
-				|| reduction.budgetCompromiseRequired
-				|| !reduction.durationPreserved
-		));
-		const optimizationDetails = document.getElementById('exportOptimizationDetails');
-		const assetAnalysis = document.getElementById('exportAssetAnalysis');
-		const assetAnalysisList = document.getElementById('exportAssetAnalysisList');
-		reductionSummary.hidden = !hasReduction && !hasPlanWarning && !hasAssetAnalysis;
-		optimizationDetails.hidden = !hasReduction;
-		setAdvancedDisclosureOpen(optimizationDetails, false);
-		assetAnalysis.hidden = !hasAssetAnalysis;
-		setAdvancedDisclosureOpen(assetAnalysis, false);
-		assetAnalysisList.replaceChildren();
-		if (reductionSummary.hidden) return;
-		const groupedAssets = new Map();
-		sourceAnalysis.forEach((asset) => {
-			const groupKey = asset.kind === 'procedural'
-				? [asset.kind, asset.label, asset.requestedPeriod, asset.resolvedPeriod, asset.cycleCount].join(':')
-				: [asset.kind, asset.label, asset.frameCount, asset.nativeFps.toFixed(3), asset.nativeCycleDuration].join(':');
-			const group = groupedAssets.get(groupKey);
-			if (group) group.uses++;
-			else groupedAssets.set(groupKey, { ...asset, uses: 1 });
+	_renderFacts(facts) {
+		const size = document.getElementById('exportStatSize');
+		size.textContent = facts.size;
+		// The size carries the upload-limit warning, so it shows on every layout.
+		size.classList.toggle('is-warning', facts.sizeWarning);
+		document.getElementById('exportStatFormat').textContent = facts.format;
+		document.getElementById('exportStatDimensions').textContent = facts.dimensions;
+		document.getElementById('exportStatMotion').hidden = !facts.frames;
+		document.getElementById('exportStatFrames').textContent = facts.frames;
+		const duration = document.getElementById('exportStatDuration');
+		duration.hidden = !facts.duration;
+		duration.textContent = facts.duration;
+		const fileName = document.getElementById('exportStatFileName');
+		fileName.textContent = facts.fileName;
+		fileName.title = facts.fileName;
+	}
+
+	_renderSaveGuide(modal, saveGuide) {
+		// Holding down on the preview would save a still, so `is-ios` takes its touches.
+		modal.classList.toggle('is-ios', Boolean(saveGuide));
+		const guide = document.getElementById('exportSaveGuide');
+		const template = saveGuide ? document.getElementById(`tpl-export-instructions-${saveGuide}`) : null;
+		guide.replaceChildren(...(template ? [template.content.cloneNode(true)] : []));
+		guide.hidden = !template;
+	}
+
+	_renderUploadLimits(uploadLimits) {
+		document.getElementById('exportSizeWarnings').hidden = uploadLimits.length === 0;
+		document.getElementById('exportSizeWarningList').replaceChildren(...uploadLimits.map((limit) => {
+			const row = document.getElementById('tpl-export-limit').content.firstElementChild.cloneNode(true);
+			row.querySelector('.export-limit-service').textContent = limit.service;
+			row.querySelector('.export-limit-note').textContent = limit.note;
+			row.querySelector('.export-limit-value').textContent = limit.limit;
+			return row;
+		}));
+	}
+
+	_renderNotices(notices) {
+		const root = document.getElementById('exportNotices');
+		root.replaceChildren(...notices.map((notice) => {
+			const note = document.createElement('p');
+			note.className = 'property-note';
+			note.classList.toggle('is-warning', notice.level === 'warning');
+			note.textContent = notice.text;
+			return note;
+		}));
+		root.hidden = notices.length === 0;
+	}
+
+	_renderDetails(details) {
+		document.getElementById('exportResultNav').hidden = !details;
+		document.getElementById('exportDetailFacts').textContent = details?.facts || '';
+		document.getElementById('exportDetailTables').replaceChildren(...(details?.tables || []).map((table) => {
+			const group = document.createElement('section');
+			group.className = 'export-detail-group';
+			const title = document.createElement('div');
+			title.className = 'property-group-label';
+			title.textContent = table.title;
+			group.append(title, ...(table.lines || []).map((line) => {
+				const note = document.createElement('p');
+				note.className = 'property-note';
+				note.textContent = line;
+				return note;
+			}));
+			if (!table.rows.length) return group;
+			const element = document.createElement('table');
+			element.className = 'export-detail-table';
+			const head = element.createTHead().insertRow();
+			table.columns.forEach((column) => {
+				const cell = document.createElement('th');
+				cell.scope = 'col';
+				cell.textContent = column.label;
+				cell.classList.toggle('is-numeric', Boolean(column.numeric));
+				head.append(cell);
+			});
+			const body = element.createTBody();
+			table.rows.forEach((row) => {
+				const line = body.insertRow();
+				line.classList.toggle('is-total', Boolean(row.strong));
+				row.cells.forEach((text, index) => {
+					const cell = index === 0 ? document.createElement('th') : document.createElement('td');
+					if (index === 0) cell.scope = 'row';
+					cell.textContent = text;
+					cell.classList.toggle('is-numeric', Boolean(table.columns[index].numeric));
+					line.append(cell);
+				});
+			});
+			group.append(element);
+			return group;
+		}));
+	}
+
+	// Details replaces the whole body, so the frame, header and footer stay put.
+	_showView(view) {
+		document.getElementById('exportResultView').hidden = view !== 'result';
+		document.getElementById('exportDetailsView').hidden = view !== 'details';
+		document.querySelectorAll('#exportResultNav [data-export-view]').forEach((option) => {
+			const active = option.dataset.exportView === view;
+			option.classList.toggle('active', active);
+			option.setAttribute('aria-pressed', String(active));
 		});
-		groupedAssets.forEach((asset) => {
-			const row = document.createElement('div');
-			const name = document.createElement('dt');
-			const value = document.createElement('dd');
-			name.textContent = `${asset.uses > 1 ? `${asset.label} ×${asset.uses}` : asset.label} (${asset.kind})`;
-			if (asset.kind === 'procedural') {
-				const requestedPeriod = `${Math.round(asset.requestedPeriod)} ms`;
-				const resolvedPeriod = `${Math.round(asset.resolvedPeriod)} ms`;
-				const period = asset.periodChanged ? `${requestedPeriod} → ${resolvedPeriod}` : resolvedPeriod;
-				const cycles = Number.isInteger(asset.cycleCount) ? asset.cycleCount : Number(asset.cycleCount.toFixed(2));
-				value.textContent = `${period} period · ${cycles} ${cycles === 1 ? 'cycle' : 'cycles'}`;
-			} else {
-				const nativeRate = `${asset.nativeFps.toFixed(1)} fps${asset.variableTiming ? ' average' : ''}`;
-				value.textContent = `${asset.frameCount} frames · ${nativeRate} · ${(asset.nativeCycleDuration / 1000).toFixed(2)} s loop`;
-			}
-			row.append(name, value);
-			assetAnalysisList.append(row);
-		});
-		if (timelinePlan) {
-			const row = document.createElement('div');
-			const name = document.createElement('dt');
-			const value = document.createElement('dd');
-			const outputFps = timelinePlan.totalDuration > 0
-				? timelinePlan.reduction.outputFrameCount * 1000 / timelinePlan.totalDuration
-				: 0;
-			// A variable-delay output can average near its target while still holding
-			// a visibly long step, so never present the average as a fixed cadence.
-			const variableCadence = (timelinePlan.renderClock?.delaySpread || 0) > 0;
-			name.textContent = 'Composite export';
-			value.textContent = `${(timelinePlan.totalDuration / 1000).toFixed(2)} s · ${timelinePlan.reduction.outputFrameCount} rendered frames · ${variableCadence ? '~' : ''}${outputFps.toFixed(1)} fps${variableCadence ? ' average' : ''}`;
-			row.append(name, value);
-			assetAnalysisList.append(row);
-		}
-		// Phases that round to nothing are left out of the list, not the total.
-		const seconds = (ms) => `${(ms / 1000).toFixed(1)} s`;
-		const phaseTimings = (timelinePlan?.phaseTimings || []).filter((phase) => seconds(phase.ms) !== seconds(0));
-		if (phaseTimings.length) {
-			const row = document.createElement('div');
-			const name = document.createElement('dt');
-			const value = document.createElement('dd');
-			name.textContent = 'Export time';
-			value.textContent = [
-				seconds(timelinePlan.phaseTimings.reduce((sum, phase) => sum + phase.ms, 0)),
-				...phaseTimings.map((phase) => `${phase.label} ${seconds(phase.ms)}`)
-			].join(' · ');
-			row.append(name, value);
-			assetAnalysisList.append(row);
-		}
-		const title = document.getElementById('exportReductionTitle');
-		const summary = document.getElementById('exportReductionText');
-		const seam = document.getElementById('exportSeamStatus');
-		title.textContent = hasPlanWarning ? 'About this animation' : 'File size optimized';
-		if (hasReduction) {
-			if (preRenderRemovedFrames > 0) {
-				summary.textContent = `Resolved ${reduction.originalFrameCount} timing changes into ${reduction.renderedFrameCount} composed frames, then exported ${reduction.outputFrameCount}.`;
-			} else {
-				const frameLabel = pixelRemovedFrames === 1 ? 'frame' : 'frames';
-				const kind = reduction.nearDuplicatesMerged > 0
-					? (reduction.exactDuplicatesMerged > 0 ? 'repeated or nearly identical' : 'nearly identical')
-					: 'repeated';
-				summary.textContent = `Removed ${pixelRemovedFrames} ${kind} ${frameLabel} without changing the speed.`;
-			}
-			document.getElementById('exportDetailFrames').textContent = `${reduction.originalFrameCount} → ${reduction.outputFrameCount}`;
-			document.getElementById('exportDetailExact').textContent = String(reduction.exactDuplicatesMerged);
-			document.getElementById('exportDetailExactRow').hidden = reduction.exactDuplicatesMerged === 0;
-			document.getElementById('exportDetailNear').textContent = String(reduction.nearDuplicatesMerged);
-			document.getElementById('exportDetailNearRow').hidden = reduction.nearDuplicatesMerged === 0;
-			document.getElementById('exportDetailTiming').textContent = reduction.durationPreserved ? 'Unchanged' : 'May differ';
-			document.getElementById('exportDetailLoop').textContent = timelinePlan.loopSeam.exact ? 'Exact match' : 'Best available match';
-			document.getElementById('exportDetailError').textContent = `${(reduction.maximumVisualError * 100).toFixed(2)}%`;
-			document.getElementById('exportDetailErrorRow').hidden = reduction.nearDuplicatesMerged === 0;
-		} else {
-			summary.textContent = hasAssetAnalysis
-				? `${sourceAnalysis.length} animated ${sourceAnalysis.length === 1 ? 'source' : 'sources'} contributed to this export.`
-				: '';
-		}
-		const planMessages = [];
-		const periodChanges = proceduralFits
-			.filter((fit) => fit.fitted && Math.abs(fit.requestedPeriod - fit.resolvedPeriod) >= 0.01)
-			.map((fit) => `${fit.label}: ${Math.round(fit.requestedPeriod)} → ${Math.round(fit.resolvedPeriod)} ms`);
-		if (periodChanges.length) planMessages.push(`Fit generated animation periods to the composite loop: ${periodChanges.join('; ')}.`);
-		if (!timelinePlan.loopSeam.exact) planMessages.push('The animations repeat at different times, so the beginning and ending may not match perfectly.');
-		if (!reduction.preferredBudgetMet) planMessages.push(`Kept ${reduction.outputFrameCount} frames to keep the motion smooth.`);
-		if (reduction.budgetCompromiseRequired) planMessages.push('This animation is longer than the export limit allows, so some motion detail may be reduced.');
-		if (!reduction.durationPreserved) planMessages.push('The exported animation may play at a different speed than the preview.');
-		seam.hidden = planMessages.length === 0;
-		seam.textContent = planMessages.join(' ');
 	}
 }

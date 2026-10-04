@@ -48,6 +48,28 @@ function downloadBlob(blob, fileName) {
 	setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
+// Desktop Chromium can open a real Save As dialog. Everywhere else the file
+// goes through the anchor download, where the browser picks the folder and
+// reports nothing back. Resolves to 'saved', 'cancelled' or 'downloaded'.
+async function saveBlobAs(blob, fileName) {
+	if (typeof window.showSaveFilePicker === 'function') {
+		try {
+			const options = { suggestedName: fileName };
+			if (blob.type) options.types = [{ accept: { [blob.type]: [fileName.slice(fileName.lastIndexOf('.'))] } }];
+			const handle = await window.showSaveFilePicker(options);
+			const writable = await handle.createWritable();
+			await writable.write(blob);
+			await writable.close();
+			return 'saved';
+		} catch (error) {
+			if (error.name === 'AbortError') return 'cancelled';
+			dbg('Save As failed; falling back to a download.', error);
+		}
+	}
+	downloadBlob(blob, fileName);
+	return 'downloaded';
+}
+
 function sanitizeFileName(name) {
 	if (typeof name !== 'string') return null;
 	const sanitized = name

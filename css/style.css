@@ -8154,7 +8154,7 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 .section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-footer {
   border-top: 1px solid var(--color-border);
-  padding: 0;
+  padding: var(--spacing-md) 0;
 }
 .section.has-scroll-region > .section-content .settings-subsection > .panel-scroll-region {
   display: flex;
@@ -8895,134 +8895,183 @@ body.modal-open {
   color: var(--color-text-tertiary);
 }
 
-#exportPreviewModal > .modal-content {
-  --modal-width: var(--modal-width-reading);
-  max-height: 94dvh;
+#exportPreviewModal {
+  --export-side-width: 300px;
 }
 #exportPreviewModal .modal-body {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  overflow: hidden;
 }
-#exportPreviewModal .export-preview-image-container {
+#exportPreviewModal .export-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--export-side-width);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "stage facts" "stage side";
+  gap: var(--spacing-md) var(--spacing-lg);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#exportPreviewModal .export-result[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-stage {
+  grid-area: stage;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  height: min(56dvh, 640px);
-  min-height: 260px;
   min-width: 0;
+  min-height: 0;
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
   background: var(--color-bg-tertiary);
   overflow: hidden;
 }
-#exportPreviewModal .export-preview-image-container img,
-#exportPreviewModal .export-preview-image-container video {
+#exportPreviewModal .export-stage img,
+#exportPreviewModal .export-stage video {
   -o-object-fit: contain;
      object-fit: contain;
   border-radius: var(--radius-sm);
 }
-#exportPreviewModal .export-preview-image-container img {
+#exportPreviewModal .export-stage img {
   width: auto;
   height: auto;
   max-width: 100%;
   max-height: 100%;
 }
-#exportPreviewModal .export-preview-image-container video {
+#exportPreviewModal .export-stage video {
   display: block;
   width: 100%;
   height: 100%;
   overflow: clip;
 }
-#exportPreviewModal.is-ios .export-preview-image-container img {
+#exportPreviewModal.is-ios .export-stage img {
   pointer-events: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
 }
-#exportPreviewModal .export-meta {
-  margin: 0;
+#exportPreviewModal .export-facts {
+  grid-area: facts;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xs);
+  min-width: 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
-  text-align: center;
+  line-height: 1.4;
 }
-#exportPreviewModal .export-meta > span[hidden] {
+#exportPreviewModal .export-fact-size {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+#exportPreviewModal .export-fact-size.is-warning {
+  color: var(--color-warning);
+}
+#exportPreviewModal .export-fact-line[hidden],
+#exportPreviewModal .export-fact-line > span[hidden] {
   display: none;
 }
-#exportPreviewModal .export-meta > span:not([hidden]) ~ span:not([hidden])::before {
+#exportPreviewModal .export-fact-line > span + span::before {
   content: "·";
   padding-inline: var(--spacing-sm);
   color: var(--color-text-tertiary);
 }
-#exportPreviewModal .export-meta > span:first-child {
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
+#exportPreviewModal .export-fact-name {
+  overflow: hidden;
+  color: var(--color-text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-#exportPreviewModal .export-notes,
-#exportPreviewModal .export-summary {
+#exportPreviewModal .export-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 0;
+  min-height: 0;
+}
+#exportPreviewModal .export-change {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+#exportPreviewModal .export-change .app-menu-panel {
+  left: 0;
+  right: auto;
+}
+#exportPreviewModal .export-scroll {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#exportPreviewModal .export-limits,
+#exportPreviewModal .export-notices {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
 }
-#exportPreviewModal .export-notes[hidden],
-#exportPreviewModal .export-summary[hidden] {
+#exportPreviewModal .export-limits[hidden],
+#exportPreviewModal .export-notices[hidden] {
   display: none;
 }
-#exportPreviewModal .export-summary-title {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-title);
-}
-#exportPreviewModal .export-detail-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-sm) var(--spacing-xl);
+#exportPreviewModal .export-limit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xs);
   margin: 0;
+  padding: 0;
+  list-style: none;
   font-size: var(--font-size-sm);
 }
-#exportPreviewModal .export-detail-list > div {
+#exportPreviewModal .export-limit {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   min-width: 0;
 }
-#exportPreviewModal .export-detail-list > div[hidden] {
-  display: none;
-}
-#exportPreviewModal .export-detail-list dt {
-  color: var(--color-text-tertiary);
-}
-#exportPreviewModal .export-detail-list dd {
-  margin: 0;
+#exportPreviewModal .export-limit-service {
   color: var(--color-text-primary);
-  text-align: right;
 }
-#exportPreviewModal .export-detail-list.is-single-column {
-  grid-template-columns: 1fr;
+#exportPreviewModal .export-limit-note {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-#exportPreviewModal .export-preview-instructions {
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
+#exportPreviewModal .export-limit-value {
+  color: var(--color-warning);
+  font-variant-numeric: tabular-nums;
+}
+#exportPreviewModal .export-save-guide {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 }
-#exportPreviewModal .export-preview-instructions[hidden] {
+#exportPreviewModal .export-save-guide[hidden] {
   display: none;
 }
-#exportPreviewModal .export-preview-instructions .export-instruction-heading {
+#exportPreviewModal .export-save-guide .export-instruction-heading {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   color: var(--color-text-primary);
   font-size: var(--font-size-title);
 }
-#exportPreviewModal .export-preview-instructions .export-instruction-icon {
+#exportPreviewModal .export-save-guide .export-instruction-icon {
   color: var(--color-text-tertiary);
 }
-#exportPreviewModal .export-preview-instructions .export-save-steps {
+#exportPreviewModal .export-save-guide .export-save-steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-md);
@@ -9030,26 +9079,135 @@ body.modal-open {
   padding: 0;
   list-style: none;
 }
-#exportPreviewModal .export-preview-instructions .export-save-steps > li {
+#exportPreviewModal .export-save-guide .export-save-steps > li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--spacing-sm);
 }
-#exportPreviewModal .export-preview-instructions .export-step-number {
+#exportPreviewModal .export-save-guide .export-step-number {
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-semibold);
 }
-#exportPreviewModal .export-preview-instructions strong {
+#exportPreviewModal .export-save-guide strong {
   color: var(--color-text-primary);
 }
-#exportPreviewModal .export-preview-instructions p {
+#exportPreviewModal .export-save-guide p {
   margin: var(--spacing-sm) 0 0;
 }
-#exportPreviewModal .export-preview-instructions .export-instruction-tip {
+#exportPreviewModal .export-save-guide .export-instruction-tip {
   color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-details {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#exportPreviewModal .export-details[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-detail-facts {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+#exportPreviewModal .export-detail-tables {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+#exportPreviewModal .export-detail-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+#exportPreviewModal .export-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+#exportPreviewModal .export-detail-table th,
+#exportPreviewModal .export-detail-table td {
+  padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-xs) 0;
+  font-weight: var(--font-weight-normal);
+  text-align: left;
+  white-space: nowrap;
+}
+#exportPreviewModal .export-detail-table th:last-child,
+#exportPreviewModal .export-detail-table td:last-child {
+  padding-right: 0;
+}
+#exportPreviewModal .export-detail-table th.is-numeric,
+#exportPreviewModal .export-detail-table td.is-numeric {
+  text-align: right;
+}
+#exportPreviewModal .export-detail-table thead th {
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+#exportPreviewModal .export-detail-table tbody th {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+}
+#exportPreviewModal .export-detail-table tbody td {
+  color: var(--color-text-primary);
+}
+#exportPreviewModal .export-detail-table .is-total > * {
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+#exportPreviewModal .export-support-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  text-decoration: none;
 }
 #exportPreviewModal .modal-footer > button:disabled {
   display: none;
+}
+@media (max-width: 600px) {
+  #exportPreviewModal .export-result {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 40dvh auto minmax(0, 1fr);
+    grid-template-areas: "stage" "facts" "side";
+  }
+  #exportPreviewModal .export-facts {
+    display: block;
+  }
+  #exportPreviewModal .export-fact-size {
+    font-size: inherit;
+  }
+  #exportPreviewModal .export-fact-line:not([hidden]) {
+    display: inline;
+  }
+  #exportPreviewModal .export-fact-line:not([hidden])::before {
+    content: "·";
+    padding-inline: var(--spacing-sm);
+    color: var(--color-text-tertiary);
+  }
+  #exportPreviewModal .export-fact-name {
+    display: block;
+  }
+  #exportPreviewModal .export-side {
+    overflow-y: auto;
+  }
+  #exportPreviewModal .export-scroll {
+    flex: 0 0 auto;
+    overflow-y: visible;
+  }
+  #exportPreviewModal .export-change {
+    order: 1;
+  }
 }
 
 /* ===== WELCOME MODAL ===== */
@@ -9296,19 +9454,6 @@ body.modal-open {
   flex-wrap: wrap;
   gap: var(--spacing-lg);
   margin-top: var(--spacing-md);
-}
-
-.support-note {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.export-support-note {
-  margin: 0;
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  font-size: var(--font-size-xs);
-  text-align: center;
 }
 
 .modal-content h2 {

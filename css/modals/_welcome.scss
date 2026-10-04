@@ -248,21 +248,6 @@
 	}
 }
 
-// Optional support link. Deliberately quiet: it sits at the end of content the
-// reader already chose to open, and never competes with a primary action.
-.support-note {
-	font-size: var(--font-size-sm);
-	color: var(--color-text-secondary);
-}
-
-.export-support-note {
-	margin: 0;
-	padding-top: var(--spacing-md);
-	border-top: 1px solid var(--color-border);
-	font-size: var(--font-size-xs);
-	text-align: center;
-}
-
 .modal-content {
 	h2 { font-size: var(--font-size-2xl); }
 	h3 { font-size: var(--font-size-xl); }

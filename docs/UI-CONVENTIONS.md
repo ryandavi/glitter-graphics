@@ -46,7 +46,7 @@ Literal colors are allowed only where the color must not follow the theme: selec
 | Switch | `.property-switch` / `.property-header-switch` | 30 × 16 track |
 | Body button | `.btn-flat`, `.btn-flat.primary`, `.btn-flat.is-icon` | |
 | Chrome button | `.btn-text-with-icon`, `.btn-icon` | Gloss; `.primary` or `.secondary` |
-| Plain text button | `.btn-text` | A reset or destructive action at the left of a modal footer |
+| Plain text button | `.btn-text` | A secondary link, reset or destructive action at the left of a modal footer |
 | List row | `.list-row` | Handle, media, name over one meta line, trailing actions. Layers and Auto Glitter matches. |
 | Tile | `.action-card` (does something), `.choice-card` (picks a value) | |
 | Empty state | `.property-empty` | |
@@ -115,11 +115,11 @@ Vertical section bodies, layer lists, asset galleries and filters, preset picker
 ## Modals
 
 - **Three widths.** A `.modal-content` is form width by default. `.modal-dialog` is the 480px dialog (confirm, alert, sticker upload). `.modal-reading` is the 880px reading frame; Export Ready uses the same width. `.modal-browse` fixes the height so a filter or tab never resizes the frame.
-- **Footer.** Actions sit at the right, primary last. A reset or destructive action is a `.btn-text` at the left. The footer is chrome, so its buttons are `.btn-text-with-icon`.
+- **Footer.** Actions sit at the right, primary last. A secondary link, reset or destructive action is a `.btn-text` at the left. The footer is chrome, so its buttons are `.btn-text-with-icon`.
 - **Body buttons are `.btn-flat`**: a search's clear button, a table of contents toggle, Cancel on the export progress.
 - **A heading over a group of tiles is a `.property-group-label`**, with no box around the group (Add menu, New Canvas presets).
 - **The confirmation dialog** takes its content through `editor.confirmAction()` slots (`subject`, `facts`, `details`, `outro`). The subject is the one box.
-- **Export Ready** is the preview, one meta line, notes as `.property-note`, and details in `.advanced-disclosure`.
+- **Export Ready** is a fixed frame that never resizes. Its Result view has three regions: the preview stage, the facts pinned beside it (size first, tinted with the warning color when the file is over an upload limit), and one scrolling column under them holding the save guide, the upload limits and the notices, in that order. A notice is a `.property-note` and appears only when it changes what the user should do or expect; a clean export shows none. Technical detail is the Details view, switched from a `.modal-nav` segmented control that is hidden when there is nothing to show: full-width tables (`.export-detail-table`) under `.property-group-label`s, one value per column. Every platform has exactly one primary footer button (Share where saving has to go through the share sheet). What is shown is decided by `buildExportReport` (`js/export/export-report.js`), which is DOM-free and covered by `tests/unit/export-report-unit.js`; add a rule there, not in the presenter.
 - **Reading modals** (About, History, Guide and the article pages) share the shell: header, nav row and frame. Their prose, timelines and references are content and have their own rules in `content/AUTHORING.md`.
 
 ### Form modals
@@ -207,7 +207,7 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
 
 - **`.btn-flat`** is the content-layer button: sidebar actions, an asset's Change, any button in a modal body. A field-shaped box at `--control-height`. `.primary` fills it with the accent for the one main action of a form; `.is-icon` is the square glyph-only form beside a field.
 - **`.btn-text-with-icon`** is the chrome text button: a modal footer, the start card. Gloss, at `--row-height`; `.primary` is full strength and `.secondary` or default is dimmed. `.btn-icon` is the square chrome icon button (tools, bar actions, a modal's close).
-- **`.btn-text`** is a plain text button, for the reset or destructive action at the left of a footer.
+- **`.btn-text`** is a plain text button, for the secondary link, reset or destructive action at the left of a footer.
 - **`.btn-icon-simple`** is a chromeless glyph on a panel surface: list row actions, the layers bottom bar, a stepper.
 - **`.action-card`** is the one card-that-is-a-button: media (`.action-card-media`, an icon or preview), `.action-card-title`, `.action-card-detail`. `css/_components.scss` owns its surface, border, hover, focus, pressed and selected (`.active`) states and the text tiers; owners add only grid placement and media sizing. `.is-horizontal` puts the media beside the text (Add menu) and `.is-quiet` drops the surface and border until hover (start card tiles). A card that picks a value is a `.choice-card` instead.
 - There is no other button class. Don't add one.

@@ -16,13 +16,18 @@ class StillImageExporter {
 		if (!target.supportsTransparency || !exportSettings.transparency) { ctx.fillStyle = exportSettings.matteColor; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 		ctx.putImageData(composed.imageData, 0, 0);
 		let blob;
+		let colorAnalysis = null;
 		if (target.format === 'png') { reportExportProgress(callbacks, 'encoding', 0, '', 1, 1); blob = await encodeCanvasToBlob(canvas, target.mimeType); }
 		else if (target.format === 'jpeg') blob = await this._encodeJpeg(canvas, exportSettings, callbacks);
-		else blob = await this._encodeGif(composed, exportSettings, callbacks);
+		else {
+			const encoded = await this._encodeGif(composed, exportSettings, callbacks);
+			blob = encoded.blob;
+			if (encoded.analysis) colorAnalysis = { ...encoded.analysis, paletteSize: encoded.paletteSize, paletteMode: encoded.paletteMode };
+		}
 		if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
 		reportExportProgress(callbacks, 'finalizing', 1); callbacks.onStatus('Export complete!');
 		const file = new File([blob], this.fileName, { type: target.mimeType, lastModified: Date.now() });
-		callbacks.onComplete({ still: true }); this.resultPresenter.show({ blob, file, target, width: composed.width, height: composed.height }); return blob;
+		callbacks.onComplete({ still: true }); this.resultPresenter.show({ blob, file, target, width: composed.width, height: composed.height, colorAnalysis }); return blob;
 	}
 	async _encodeJpeg(canvas, settings, callbacks) {
 		reportExportProgress(callbacks, 'encoding', 0.95, '', 1, 1);
@@ -30,7 +35,7 @@ class StillImageExporter {
 	}
 	async _encodeGif(composed, settings, callbacks) {
 		reportExportProgress(callbacks, 'palette', 0);
-		const encoded = await this.gifEncodingPipeline.encode({
+		return this.gifEncodingPipeline.encode({
 			frames: [composed.imageData],
 			settings,
 			transparency: composed.transparency,
@@ -38,6 +43,5 @@ class StillImageExporter {
 			reportProgress: (phase, ratio, detail, current, total) => reportExportProgress(callbacks, phase, ratio, detail, current, total),
 			isCancelled: callbacks.isCancelled
 		});
-		return encoded.blob;
 	}
 }

@@ -60,7 +60,8 @@ updateOrientationButtons(width, height) {
 			})
 			.register('exportPreviewModal', {
 				closeBtnId: 'closeExportPreviewModal',
-				resetScrollOnOpen: false
+				resetScrollOnOpen: false,
+				onClose: () => document.getElementById('exportPreviewVideo')?.pause()
 			})
 			.register('confirmationModal', {
 				closeBtnId: ['confirmationModalClose', 'confirmationCancelBtn'],
@@ -303,6 +304,11 @@ updateOrientationButtons(width, height) {
 			trigger: document.getElementById('exportMenuBtn'),
 			panel: document.getElementById('exportMenuPanel'),
 			liftHost: document.getElementById('exportMenu')?.closest('.preview-controls')
+		});
+		setupMenuPopover({
+			root: document.getElementById('exportResultMenu'),
+			trigger: document.getElementById('exportResultMenuBtn'),
+			panel: document.getElementById('exportResultMenuPanel')
 		});
 		this.setupViewMenu();
 
