@@ -1445,6 +1445,79 @@ async function checkSheetContent(page) {
 	assert(await tab.getAttribute('aria-pressed') === 'true', 'Sheet header segmented control stopped responding to taps');
 }
 
+async function checkNumericScrub(page) {
+	await openEditSheet(page);
+	await page.evaluate(() => {
+		window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.full);
+		document.querySelectorAll('#stickerSettingsSection .property-card').forEach((card) => card.classList.remove('is-collapsed'));
+	});
+	await page.waitForTimeout(350);
+	const input = page.locator('#stickerPosX');
+	const mark = page.locator('label[for="stickerPosX"]');
+	await mark.scrollIntoViewIfNeeded();
+	const before = await input.inputValue();
+	const history = await getHistoryIndex(page);
+	const box = await mark.boundingBox();
+	const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	await oneFingerDrag(page, start, { x: start.x + 45, y: start.y });
+	assert(await input.inputValue() === before, 'Touch scrub changed the field');
+	assert(await getHistoryIndex(page) === history, 'Touch scrub recorded history');
+	const inert = await page.evaluate(() => {
+		let count = 0;
+		for (const mark of document.querySelectorAll('.numeric-scrub-mark')) {
+			const input = mark.control;
+			const before = input.value;
+			for (const [type, x] of [['pointerdown', 100], ['pointermove', 140], ['pointerup', 140]]) {
+				const event = new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 71, pointerType: 'touch', button: 0, clientX: x });
+				mark.dispatchEvent(event);
+				if (event.defaultPrevented || mark.hasPointerCapture(71) || input.value !== before) return false;
+			}
+			count += 1;
+		}
+		return count > 10;
+	});
+	assert(inert, 'A number-pair mark claimed or changed touch input');
+	await mark.scrollIntoViewIfNeeded();
+	let rect = await mark.boundingBox();
+	let point = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+	await page.mouse.move(point.x, point.y);
+	await page.mouse.down();
+	await page.mouse.move(point.x + 2, point.y);
+	assert(await input.inputValue() === before, 'A sub-threshold click scrubbed');
+	await page.mouse.up();
+	assert(await input.evaluate((node) => document.activeElement === node), 'Clicking the mark did not focus its field');
+	assert(await getHistoryIndex(page) === history, 'Clicking a mark recorded history');
+	rect = await mark.boundingBox();
+	point = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+	await page.mouse.move(point.x, point.y);
+	await page.mouse.down();
+	await page.mouse.move(point.x + 20, point.y, { steps: 5 });
+	await page.waitForTimeout(70);
+	approxEqual(Number(await input.inputValue()), Number(before) + 20, 0.01, 'Mouse scrub delta');
+	assert(await getHistoryIndex(page) === history, 'Drag committed before release');
+	assert(await mark.evaluate((node) => node.hasPointerCapture(1)), 'Mouse scrub did not capture pointer');
+	await page.mouse.up();
+	await page.waitForTimeout(70);
+	assert(await getHistoryIndex(page) === history + 1, 'Drag did not create exactly one undo');
+	await page.mouse.move(point.x, point.y);
+	await page.mouse.down();
+	await page.mouse.move(point.x + 15, point.y, { steps: 3 });
+	await page.keyboard.press('Escape');
+	await page.mouse.up();
+	await page.waitForTimeout(70);
+	approxEqual(Number(await input.inputValue()), Number(before) + 20, 0.01, 'Escape did not restore drag start');
+	assert(await getHistoryIndex(page) === history + 1, 'Cancelled drag recorded history');
+	await input.fill(String(Number(before) + 40));
+	await page.mouse.move(point.x, point.y);
+	await page.mouse.down();
+	await page.mouse.move(point.x + 5, point.y);
+	await page.mouse.up();
+	await page.waitForTimeout(70);
+	assert(await getHistoryIndex(page) === history + 3, 'Typing then scrubbing did not preserve two separate edits');
+	await input.evaluate((node) => node.blur());
+	assert(await getHistoryIndex(page) === history + 3, 'Blur after typing and scrubbing committed twice');
+}
+
 async function runSuite(browser, runNumber) {
 	console.log(`\nRun ${runNumber}: ${APP_URL}`);
 
@@ -1475,7 +1548,8 @@ async function runSuite(browser, runNumber) {
 		['Second finger on a corner joins a proportional pinch with one undo step', checkCornerPinch],
 		['Fast downward Edit header flick closes half and peek', checkSheetFlick],
 		['Slow sheet drag settles at a detent and refits once; arrows step detents', checkSheetSettle],
-		['Top content pulls the sheet; upward and scrolled content stay scrolling', checkSheetContent]
+		['Top content pulls the sheet; upward and scrolled content stay scrolling', checkSheetContent],
+		['Number-pair scrubs ignore touch; mouse threshold, capture, history and Escape work', checkNumericScrub]
 	];
 	let failed = 0;
 	const requestedCheck = Number(process.env.TOUCH_CHECK || 0);

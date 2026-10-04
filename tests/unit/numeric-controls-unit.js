@@ -63,6 +63,32 @@ function step(input, direction, modifiers) {
 	return { changed, value: Number(input.value), events: input.events };
 }
 
+// ===== scrub drag math =====
+const scrubDelta = run('numericScrubDelta');
+assert.strictEqual(scrubDelta(5), 5);
+assert.strictEqual(scrubDelta(-5, { shift: true }), -50);
+assert.strictEqual(scrubDelta(5, { alt: true }), 0.5);
+assert.strictEqual(scrubDelta(5, { shift: true, alt: true }), 50);
+const scrubField = makeInput('number', { id: 'scrubX', dataset: {}, step: '1', min: '-10', max: '20', value: '5' });
+assert.strictEqual(run('CONFIG.ui.numericScrub.thresholdPx'), 3);
+stepNumericControlScrub(5, 4);
+assert.strictEqual(scrubField.value, '9', 'one unit per pixel');
+assert.deepStrictEqual(scrubField.events, [], 'preview waits on the shared scheduler; no history during drag');
+runFrame();
+assert.deepStrictEqual(scrubField.events, ['input'], 'one coalesced preview, no change');
+stepNumericControlScrub(5, 0.4);
+assert.strictEqual(scrubField.value, '5', 'fractional motion stays on grid');
+stepNumericControlScrub(5, 0.6);
+assert.strictEqual(scrubField.value, '6', 'fine motion accumulates from the drag origin');
+stepNumericControlScrub(5, 100);
+assert.strictEqual(scrubField.value, '20', 'clamps max');
+stepNumericControlScrub(5, -100);
+assert.strictEqual(scrubField.value, '-10', 'clamps min');
+runFrame();
+function stepNumericControlScrub(from, distance) {
+	run('stepNumericControl')(scrubField, distance, { scrub: true, from, commit: false });
+}
+
 // Plain, Shift and clamping on a number field.
 let field = makeInput('number', { id: 'posX', min: '0', max: '100', step: '1', value: '10' });
 assert.deepStrictEqual(step(field, 1), { changed: true, value: 11, events: ['input', 'change'] }, 'a step fires input then change, bubbling');

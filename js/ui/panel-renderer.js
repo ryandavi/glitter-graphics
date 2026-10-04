@@ -394,12 +394,10 @@ function buildSliderRow(options) {
 	const value = row.querySelector('.property-value');
 	value.id = `${options.id}Value`;
 	value.dataset.role = `${options.role || options.slider}-value`;
-	value.textContent = options.valueScale === 'percent'
-		? `${Math.round((spec.value - spec.min) / (spec.max - spec.min) * 100)}%`
-		: `${spec.value}${spec.unit}`;
 	const input = row.querySelector('input');
 	input.id = options.id;
 	applySliderSpec(input, spec);
+	value.innerHTML = formatSliderReadout(input, value, spec.value);
 	input.dataset.role = options.role || options.slider;
 	const reset = row.querySelector('button');
 	reset.id = `reset${panelCap(options.id)}`;
@@ -517,13 +515,16 @@ function buildNumberFieldPair(options) {
 		const suffix = group.querySelector('.input-unit-suffix');
 		mark.textContent = entry.mark;
 		mark.htmlFor = entry.id;
+		mark.classList.add('numeric-scrub-mark');
 		input.id = entry.id;
 		input.dataset.role = entry.role || entry.slider || 'value';
 		if (entry.title) mark.title = entry.title;
 		if (entry.min != null) input.min = String(entry.min);
 		else if (spec.min != null) input.min = String(spec.min);
-		if (spec.max != null) input.max = String(spec.max);
+		if (entry.max != null) input.max = String(entry.max);
+		else if (spec.max != null) input.max = String(spec.max);
 		input.step = String(entry.step ?? spec.step ?? 1);
+		input.dataset.numericCost = spec.cost || 'style';
 		if (entry.inputMode) input.inputMode = entry.inputMode;
 		input.setAttribute('aria-label', entry.label || spec.label || entry.mark);
 		if (suffix) suffix.textContent = entry.unit ?? spec.unit ?? '';
@@ -1043,25 +1044,21 @@ function buildActionSet(set) {
 	return row;
 }
 
-// A set: rows that belong together, spaced apart from the next set. It is
-// `{ rows }`, or `{ actions }` for a set of buttons. `label` names the run for
-// assistive tech and is not drawn; `title` (or a manager-written `titleId`)
-// draws a quiet heading, for a set that needs one inside its section.
+// A set names related rows through `label`; the finishing pass draws the
+// name only in sections with more than one labelled set.
 function buildPanelSet(set, schema) {
 	if (set.actions) return buildActionSet(set);
 	const node = addPanelClasses(panelDiv('property-set'), set.classes);
 	if (set.id) node.id = set.id;
 	if (set.hidden) node.hidden = true;
 	Object.entries(set.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
-	if (set.title || set.label) {
+	if (set.label) {
 		node.setAttribute('role', 'group');
-		node.setAttribute('aria-label', set.title || set.label);
-	}
-	if (set.title || set.titleId) {
-		const title = panelDiv('property-set-title');
-		if (set.titleId) title.id = set.titleId;
-		title.textContent = set.title || '';
-		node.appendChild(title);
+		if (typeof set.label === 'string') node.setAttribute('aria-label', set.label);
+		else {
+			node.dataset.setLabelId = set.label.id;
+			node.setAttribute('aria-labelledby', set.label.id);
+		}
 	}
 	(set.rows || []).forEach((row) => node.appendChild(buildPanelItem(row, schema)));
 	return node;
@@ -1594,8 +1591,20 @@ function buildPanelGroup(group, schema) {
 }
 
 // The finishing pass every rendered schema root gets (full section, bare
-// section, fragment): the editable value readouts.
+// section, fragment): set labels and editable value readouts.
 function finishPanelMarkup(root) {
+	root.querySelectorAll('.property-card-body').forEach((body) => {
+		const sets = Array.from(body.querySelectorAll('.property-set[aria-label], .property-set[data-set-label-id]')).filter((set) => set.closest('.property-card-body') === body);
+		if (sets.length < 2) return;
+		sets.forEach((set) => {
+			if (set.querySelector(':scope > .property-set-label')) return;
+			const label = panelDiv('property-set-label');
+			label.textContent = set.getAttribute('aria-label') || '';
+			if (set.dataset.setLabelId) label.id = set.dataset.setLabelId;
+			label.setAttribute('aria-hidden', 'true');
+			set.prepend(label);
+		});
+	});
 	initializeEditablePropertyValues(root);
 }
 
@@ -1607,7 +1616,7 @@ const PANEL_VACANCY_CONTAINERS = [
 	'.property-pair-group', '.property-set', '.property-actions', '.property-meta-cell'
 ].join(', ');
 // A container's own heading does not count as content.
-const PANEL_VACANCY_CHROME = '.property-card-title, .property-group-label, .property-set-title';
+const PANEL_VACANCY_CHROME = '.property-card-title, .property-group-label, .property-set-label';
 
 function syncPanelVacancy(container) {
 	let occupied;

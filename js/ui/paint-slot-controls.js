@@ -87,8 +87,8 @@ function bindSlotTextureCoordinateControls(options) {
 	document.getElementById(`${prefix}TextureAnchorArtwork`)?.addEventListener('click', () => setAnchor('artwork'));
 	document.getElementById(`${prefix}TextureAnchorCanvas`)?.addEventListener('click', () => setAnchor('canvas'));
 
-	const offsetSpec = FIELDS.textureOffsetX || {};
-	const clampOffset = (n) => Math.max(offsetSpec.min ?? -500, Math.min(offsetSpec.max ?? 500, Math.round(n)));
+	const offsetSpec = FIELDS.textureOffsetX;
+	const clampOffset = (n) => Math.max(offsetSpec.min, Math.min(offsetSpec.max, Math.round(n)));
 	const syncOffsetReset = (data) => {
 		const button = document.getElementById(`${prefix}ResetTexturePosition`);
 		if (button) {

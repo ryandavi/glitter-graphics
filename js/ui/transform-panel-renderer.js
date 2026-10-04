@@ -27,6 +27,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
+		pair.querySelectorAll('label').forEach((mark) => mark.classList.add('numeric-scrub-mark'));
 		pair.className = 'property-pair number-field-pair';
 		pair.querySelectorAll('.input-group').forEach((group, index) => {
 			const label = group.querySelector('label');

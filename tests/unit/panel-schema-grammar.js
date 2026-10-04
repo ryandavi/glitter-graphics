@@ -11,9 +11,9 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
-const context = { console, navigator: { hardwareConcurrency: 4 } };
+const context = { console, navigator: { hardwareConcurrency: 4 }, localStorage: { getItem: () => null } };
 vm.createContext(context);
-['js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js', 'js/core/layer-types.js', 'js/core/options.js'].forEach((file) => {
+['js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js', 'js/core/layer-types.js', 'js/core/options.js', 'js/core/preferences.js', 'js/ui/settings-store.js'].forEach((file) => {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 });
 // Registries that load after the schemas in the app (frames, sparkles) are
@@ -32,7 +32,7 @@ const ROW_KINDS = new Set([
 	'note', 'assetInfo', 'presetGrid', 'textarea', 'host', 'sparkleGlyphs', 'processingStatus'
 ]);
 const GROUP_KEYS = new Set(['title', 'sections', 'note', 'actions', 'region', 'classes']);
-const SET_KEYS = new Set(['id', 'label', 'title', 'titleId', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint']);
+const SET_KEYS = new Set(['id', 'label', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint']);
 // Spellings the grammar replaced. None may come back on any object.
 const RETIRED_KEYS = [
 	'items', 'visibleLabel', 'revertFor', 'reset', 'moduleSummary', 'titleSummary', 'summaryFrom', 'flatBody',
@@ -52,9 +52,26 @@ function checkRetired(node, where) {
 	});
 }
 
+let numericControls = 0;
+const fields = vm.runInContext('FIELDS', context);
+function checkNumeric(spec, where, bounded = false) {
+	numericControls += 1;
+	assert(spec && (spec.step === 'any' || Number(spec.step) > 0), `${where}: numeric control needs step`);
+	if (bounded) ['min', 'max'].forEach((key) => assert(Number.isFinite(spec[key]), `${where}: bounded control needs ${key}`));
+	['min', 'max'].forEach((key) => {
+		if (spec[key] != null) assert(Number.isFinite(spec[key]), `${where}: invalid ${key}`);
+	});
+	if (spec.min != null && spec.max != null) assert(spec.min <= spec.max, `${where}: reversed bounds`);
+}
+
 function checkRow(row, where) {
 	assert(row && ROW_KINDS.has(row.kind), `${where}: "${row?.kind}" is not a row kind`);
 	checkRetired(row, where);
+	if (row.kind === 'slider') checkNumeric(fields[row.slider], `${where} ${row.id}`, true);
+	if (row.kind === 'pair' || row.kind === 'numberPair') row.items.forEach((entry) => {
+		checkNumeric({ ...(fields[entry.slider] || {}), ...entry }, `${where} ${entry.id}`, Boolean(entry.slider) || /^(newCanvas|canvasSize|scaleDesign)/.test(entry.id));
+	});
+	if (row.kind === 'field' && row.type === 'number') checkNumeric(row, `${where} ${row.id}`, row.id !== 'artworkCropPadding');
 	if (row.kind === 'host') assert(!STRUCTURE_CLASSES.test(row.classes || ''), `${where}: host carries a structure class (${row.classes})`);
 	if (row.kind === 'labeled') checkRow(row.control, `${where} control`);
 	if (row.revert != null) assert(row.revert === true || typeof row.revert === 'string', `${where}: revert is true or an id`);
@@ -62,6 +79,7 @@ function checkRow(row, where) {
 
 function checkSet(set, where) {
 	Object.keys(set).forEach((key) => assert(SET_KEYS.has(key), `${where}: unknown set key "${key}"`));
+	if (set.label != null) assert(typeof set.label === 'string' || (Object.keys(set.label).join() === 'id' && typeof set.label.id === 'string'), `${where}: label is text or a dynamic label id`);
 	const forms = ['rows', 'actions', 'paint'].filter((key) => set[key]);
 	assert.strictEqual(forms.length, 1, `${where}: a set is exactly one of rows, actions or paint`);
 	if (set.rows) set.rows.forEach((row, index) => checkRow(row, `${where} row ${index}`));
@@ -146,6 +164,18 @@ function checkPanel(schema, key) {
 	(schema.auxiliarySections || []).forEach((aux) => checkPanel(aux, `${key} > ${aux.prefix}`));
 }
 
+Object.entries(fields).forEach(([key, spec]) => checkNumeric(spec, `FIELDS.${key}`, true));
 Reflect.ownKeys(schemas).forEach((key) => checkPanel(schemas[key], String(key)));
 
-console.log('PASS panel schemas follow the property panel grammar');
+function checkSettings(nodes, where) {
+	nodes.forEach((node, index) => {
+		const name = `${where}[${index}]`;
+		const control = node.field?.control;
+		if (control?.type === 'range' || control?.type === 'number') checkNumeric(control, `${name} ${node.field.id || node.field.element}`, true);
+		if (node.rows) checkSettings(node.rows, name);
+		if (node.governed) checkSettings([node.governed.header, ...(node.governed.rows || [])].filter(Boolean), name);
+	});
+}
+checkSettings(vm.runInContext('EXPORT_SETTINGS_LAYOUT', context), 'export settings');
+checkSettings(vm.runInContext('APP_SETTINGS_LAYOUT', context), 'app settings');
+console.log(`PASS panel schemas follow the folded label grammar; ${numericControls} numeric declarations have steps and bounds`);

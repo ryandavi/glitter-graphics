@@ -49,7 +49,7 @@ Test behavior, not implementation. Before writing a new test, check whether an e
 
 ## Touch smoke harness
 
-`tests/ui/touch-smoke.js` covers the unified pointer pipeline, touch affordances and mobile drawer detents/handoff. `GLITTER_TEST_CSS` may point to a scratch Sass compile while the committed CSS awaits Ryan's recompile.
+`tests/ui/touch-smoke.js` covers the unified pointer pipeline, touch affordances and mobile drawer detents/handoff. Check 28 verifies that every number-pair mark ignores touch and that mouse scrubbing preserves click focus, starts after 3 px, captures the pointer, commits once and restores the start on Escape. It also checks that typing before a scrub remains a separate edit and that later blur adds no duplicate commit. `tests/unit/numeric-controls-unit.js` covers scrub distance, modifiers, grid alignment, clamping and shared preview scheduling; `tests/unit/panel-schema-grammar.js` checks the folded set-label grammar and numeric steps/bounds in FIELDS, PANEL_SCHEMAS and both settings layouts. `GLITTER_TEST_CSS` may point to a scratch Sass compile while the committed CSS awaits Ryan's recompile.
 
 ### Run it
 

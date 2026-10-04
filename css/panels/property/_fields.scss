@@ -252,3 +252,7 @@
 		height: var(--control-height);
 	}
 }
+
+@media (any-hover: hover) {
+	.numeric-scrub-mark { cursor: ew-resize; }
+}

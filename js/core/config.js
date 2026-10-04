@@ -617,6 +617,7 @@ const CONFIG = deepFreeze({
 	ui: {
 		// Live canvas updates while a control changes (js/ui/slider.js). A field's
 		// FIELDS `cost` picks its tier; these are the tiers' budgets.
+		numericScrub: { thresholdPx: 3 },
 		live: {
 			// Wait this long for a value to stop changing before a slow update
 			// runs; also the budget a `compute` update has before it counts as slow.

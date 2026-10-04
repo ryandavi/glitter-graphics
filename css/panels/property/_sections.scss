@@ -117,8 +117,8 @@
 }
 
 // ----- The set ----------------------------------------------------------------
-// A run of rows that belong together: the unit a manager shows or hides. It
-// draws nothing; its parent's gap is what sets it apart from the next run.
+// A run of rows that belong together: the unit a manager shows or hides.
+// Its parent's gap separates it from the next run.
 .property-panel .property-set {
 	display: flex;
 	flex-direction: column;
@@ -130,14 +130,18 @@
 	background: transparent;
 }
 
-// A set that needs a heading inside its section (a look's own settings). It
-// is quiet and in sentence case: uppercase is the group label's alone.
-.property-panel .property-set-title {
+// Set headings sit below a section title and above its normal-weight rows.
+// The set gap separates groups; the smaller heading gap ties a name to its rows.
+.property-panel .property-set-label {
 	padding: 0 var(--property-gutter);
+	padding-bottom: calc(var(--property-gutter) / 3);
 	font-size: var(--font-size-sm);
-	color: var(--color-text-secondary);
+	font-weight: var(--font-weight-semibold);
+	color: var(--color-text-primary);
+	line-height: var(--line-height-tight);
 
 	&:empty { display: none; }
+	&:not(:empty) + * { margin-top: calc(var(--spacing-2xs) - var(--property-row-gap)); }
 }
 
 // ----- R6: actions ----------------------------------------------------------

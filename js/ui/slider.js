@@ -337,20 +337,22 @@ function stepDecimals(step) {
 // has no step grid (`step="any"`); elsewhere Alt does nothing, so a value
 // never lands off its grid. A slider steps in its raw track domain, so a log
 // slider steps geometrically. Writes the value and fires `input` then
-// `change`, as a native step does. Returns whether the value changed.
-function stepNumericControl(control, direction, { shift = false, alt = false } = {}) {
+// `change`, as a native step does. A scrub uses value units from its start,
+// schedules input through live apply, and defers change until release.
+// Returns whether the value changed.
+function stepNumericControl(control, direction, { shift = false, alt = false, scrub = false, from, commit = true } = {}) {
 	const target = numericStepTarget(control);
 	if (!target || target.disabled || target.readOnly) return false;
 	const isRange = target.type === 'range';
 	const gridless = !isRange && target.step === 'any';
-	if (alt && !shift && !gridless) return false;
+	if (alt && !shift && !gridless && !scrub) return false;
 	const grid = Number(target.step) > 0 ? Number(target.step) : 1;
-	const step = grid * (shift ? 10 : alt ? 0.1 : 1);
+	const step = (scrub ? 1 : grid) * (shift ? 10 : alt ? 0.1 : 1);
 	const hasBound = (bound) => bound !== '' && bound != null;
 	const min = hasBound(target.min) ? Number(target.min) : (isRange ? 0 : -Infinity);
 	const max = hasBound(target.max) ? Number(target.max) : (isRange ? 100 : Infinity);
 	const current = Number(target.value) || 0;
-	let next = current + direction * step;
+	let next = (from ?? current) + direction * step;
 	let decimals = Math.max(stepDecimals(current), stepDecimals(step));
 	if (!gridless) {
 		// Land on the step grid (counted from min, as the browser does), so a
@@ -362,10 +364,11 @@ function stepNumericControl(control, direction, { shift = false, alt = false } =
 	next = Number(Math.min(max, Math.max(min, next)).toFixed(decimals));
 	if (next === current) return false;
 	target.value = String(next);
-	withStepCoalesceKey(numericStepCoalesceKey(target), () => {
-		target.dispatchEvent(new Event('input', { bubbles: true }));
-		target.dispatchEvent(new Event('change', { bubbles: true }));
-	});
+	const preview = () => target.dispatchEvent(new Event('input', { bubbles: true }));
+	if (scrub) scheduleLiveApply(target, target.dataset.numericCost || 'style', preview);
+	else withStepCoalesceKey(numericStepCoalesceKey(target), preview);
+	if (commit) withStepCoalesceKey(numericStepCoalesceKey(target), () => target.dispatchEvent(new Event('change', { bubbles: true })));
+
 	return true;
 }
 
@@ -446,14 +449,48 @@ function scrollPastNumberField(event) {
 	scroller?.scrollBy(0, event.deltaY * unit);
 }
 
+// Pointer distance is in value units, independent of a field's step grid.
+// Fractional motion accumulates before stepNumericControl lands on that grid.
+function numericScrubDelta(distance, { shift = false, alt = false } = {}) {
+	return distance * (shift ? 10 : alt ? 0.1 : 1);
+}
+
 function installNumericControlKeys() {
 	// A number field's value at focus or at its last commit: what Escape restores.
 	const committedValues = new WeakMap();
+	let scrub = null;
+	let scrubbedMark = null;
+	const finishScrub = (cancel) => {
+		const drag = scrub;
+		if (!drag) return;
+		scrub = null;
+		if (drag.started) {
+			scrubbedMark = drag.mark;
+			if (cancel) {
+				drag.input.value = drag.startText;
+				scheduleLiveApply(drag.input, drag.input.dataset.numericCost || 'style', () => drag.input.dispatchEvent(new Event('input', { bubbles: true })));
+			}
+			const settled = flushLiveApply(drag.input);
+			const commit = () => {
+				if (!cancel && drag.input.value !== drag.startText) drag.input.dispatchEvent(new Event('change', { bubbles: true }));
+			};
+			if (settled) settled.then(commit, commit);
+			else commit();
+		}
+		if (drag.mark.hasPointerCapture(drag.pointerId)) drag.mark.releasePointerCapture(drag.pointerId);
+		drag.input.focus({ preventScroll: true });
+	};
 	let pointerFocusCandidate = null;
 	let pendingPointerSelect = null;
 	const controlOf = (target) => (target?.matches?.(NUMERIC_CONTROL_SELECTOR) ? target : null);
 
 	document.addEventListener('keydown', (event) => {
+		if (scrub && event.key === 'Escape') {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			finishScrub(true);
+			return;
+		}
 		const control = controlOf(event.target);
 		if (!control || event.ctrlKey || event.metaKey || event.isComposing) return;
 		const isRange = control.type === 'range';
@@ -525,7 +562,51 @@ function installNumericControlKeys() {
 	// Select-all on focus, so typing replaces the value. The click that gave
 	// focus would otherwise drop a caret into the selection on mouseup.
 	document.addEventListener('pointerdown', (event) => {
+		scrubbedMark = null;
+		const mark = event.target.closest?.('.numeric-scrub-mark');
+		const input = mark?.control;
+		if (mark && (event.pointerType === 'mouse' || event.pointerType === 'pen') && event.button === 0 && input && !input.disabled && !input.readOnly && !scrub) {
+			// Deferring label focus until release avoids blur commits mid-drag.
+			event.preventDefault();
+			scrub = { mark, input, pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, startText: input.value, start: Number(input.value) || 0, distance: 0, started: false };
+			mark.setPointerCapture(event.pointerId);
+		}
 		pointerFocusCandidate = controlOf(event.target);
+	}, true);
+	document.addEventListener('pointermove', (event) => {
+		if (!scrub || scrub.pointerId !== event.pointerId) return;
+		if (!scrub.started && Math.abs(event.clientX - scrub.startX) < CONFIG.ui.numericScrub.thresholdPx) return;
+		if (!scrub.started) {
+			// Native typed changes commit on blur. Finish that edit before the
+			// drag so a later blur cannot record the same scrub a second time.
+			if (document.activeElement === scrub.input && committedValues.get(scrub.input) !== scrub.input.value) {
+				scrub.input.blur();
+				scrub.startText = scrub.input.value;
+				scrub.start = Number(scrub.input.value) || 0;
+			}
+			scrub.input.focus({ preventScroll: true });
+		}
+		scrub.started = true;
+		event.preventDefault();
+		scrub.distance += numericScrubDelta(event.clientX - scrub.lastX, { shift: event.shiftKey, alt: event.altKey });
+		scrub.lastX = event.clientX;
+		stepNumericControl(scrub.input, scrub.distance, { scrub: true, from: scrub.start, commit: false });
+	}, true);
+	document.addEventListener('pointerup', (event) => {
+		if (scrub?.pointerId === event.pointerId) finishScrub(false);
+	}, true);
+	document.addEventListener('pointercancel', (event) => {
+		if (scrub?.pointerId === event.pointerId) finishScrub(true);
+	}, true);
+	document.addEventListener('lostpointercapture', (event) => {
+		if (scrub?.pointerId === event.pointerId) finishScrub(true);
+	}, true);
+	document.addEventListener('click', (event) => {
+		if (event.target === scrubbedMark) {
+			event.preventDefault();
+			event.stopPropagation();
+			scrubbedMark = null;
+		}
 	}, true);
 	document.addEventListener('focusin', (event) => {
 		const control = controlOf(event.target);

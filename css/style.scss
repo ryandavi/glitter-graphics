@@ -22,6 +22,7 @@
 @use 'panels/layer-picker';
 @use 'processing-status';
 @use 'assets';
+
 // LAST of the panel sheets on purpose: the property vocabulary has to win the
 // cascade against the feature sheets above it.
 @use 'panels/property/tokens' as property-tokens;

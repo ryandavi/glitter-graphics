@@ -181,20 +181,16 @@ function createBevelSectionSpecs(idPrefix) {
 			sets: [
 				{ paint: { id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, sourceLabel: 'Shade',
 					texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' } },
-				{ label: 'Surface', rows: [
+				{ label: 'Shape', rows: [
 					{ kind: 'select', id: `${idPrefix}Profile`, label: 'Profile', ariaLabel: 'Bevel profile', revert: true,
 						options: getOptions('bevelProfile').map((option) => ({ ...option, selected: option.value === 'smooth' })) },
 					{ kind: 'slider', id: `${idPrefix}Size`, slider: 'bevelSize', rowId: `${idPrefix}SizeRow` },
-					{ kind: 'slider', id: `${idPrefix}Depth`, slider: 'bevelDepth' }
+					{ kind: 'slider', id: `${idPrefix}Depth`, slider: 'bevelDepth' },
+					{ kind: 'slider', id: `${idPrefix}Soften`, slider: 'bevelSoften' }
 				] },
 				{ label: 'Light', rows: [
 					{ kind: 'slider', id: `${idPrefix}Angle`, slider: 'bevelAngle', rowId: `${idPrefix}AngleRow` },
 					{ kind: 'slider', id: `${idPrefix}Altitude`, slider: 'bevelAltitude', rowId: `${idPrefix}AltitudeRow` }
-				] }
-			],
-			advanced: [
-				{ label: 'Surface', rows: [
-					{ kind: 'slider', id: `${idPrefix}Soften`, slider: 'bevelSoften' }
 				] }
 			]
 		}
@@ -204,12 +200,13 @@ function createBevelSectionSpecs(idPrefix) {
 // Outline is the same section on every layer type: Stroke, then Placement.
 // `stroke` and `placement` are that type's rows.
 function createOutlineSectionSpec(idPrefix, stroke, placement) {
+	const edges = placement.filter((row) => row.label === 'Edges');
 	return { kind: 'paintSlot', slot: 'border', idPrefix, title: 'Outline',
 		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose outline glitter',
 		sets: [
-			{ label: 'Stroke', rows: stroke },
-			{ label: 'Placement', rows: placement }
+			{ label: 'Stroke', rows: [...stroke, ...edges] },
+			{ label: 'Placement', rows: placement.filter((row) => row.label !== 'Edges') }
 		]
 	};
 }
@@ -241,13 +238,15 @@ function createShadowSectionSpec(idPrefix) {
 		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose shadow glitter',
 		sets: [
-			{ label: 'Shadow', rows: [
-				{ kind: 'slider', id: `${idPrefix}Spread`, slider: 'shadowSpread' },
-				{ kind: 'slider', id: `${idPrefix}Blur`, slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' },
+			{ label: 'Offset', rows: [
 				{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: `${idPrefix}OffsetX`, slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: `${idPrefix}OffsetY`, slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }
+			] },
+			{ label: 'Softness', rows: [
+				{ kind: 'slider', id: `${idPrefix}Spread`, slider: 'shadowSpread' },
+				{ kind: 'slider', id: `${idPrefix}Blur`, slider: 'shadowBlur', title: 'Softens the edge. With no offset, a soft glow.' }
 			] }
 		]
 	};
@@ -486,8 +485,8 @@ const PANEL_SCHEMAS = {
 							changeLabel: 'Show', title: 'Show the current look in the library', compact: true, hidden: true }
 					] },
 					// The chosen look's own settings: FilterLayerManager writes the
-					// title and fills the rows.
-					{ id: 'filterCustomize', titleId: 'filterCustomizeTitle', rows: [] },
+					// label and fills the rows.
+					{ id: 'filterCustomize', label: { id: 'filterCustomizeTitle' }, rows: [] },
 					{ rows: [
 						{ kind: 'note', id: 'filterSnapshotStatus', hidden: true, attrs: { role: 'status', 'aria-live': 'polite' } }
 					] },
@@ -762,7 +761,7 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			// Stickers have no Placement or Layering choice, so the Placement set
-			// holds Edges and the fill switches.
+			// holds the fill switches.
 			createOutlineSectionSpec('stickerBorder',
 				[{ kind: 'slider', id: 'stickerBorderWidth', slider: 'stickerOutlineWidth' }],
 				[
@@ -996,8 +995,8 @@ const PANEL_SCHEMAS = {
 			{ kind: 'section', title: 'Dimensions', sets: [
 				{ rows: [
 					{ kind: 'numberPair', label: 'Size', items: [
-						{ id: 'newCanvasWidth', mark: 'W', label: 'Width', min: CONFIG.canvas.limits.minSize, step: 1, inputMode: 'numeric' },
-						{ id: 'newCanvasHeight', mark: 'H', label: 'Height', min: CONFIG.canvas.limits.minSize, step: 1, inputMode: 'numeric' }
+						{ id: 'newCanvasWidth', mark: 'W', label: 'Width', min: CONFIG.canvas.limits.minSize, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
+						{ id: 'newCanvasHeight', mark: 'H', label: 'Height', min: CONFIG.canvas.limits.minSize, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
 					{ kind: 'segmented', id: 'newCanvasOrientation', label: 'Orientation', ariaLabel: 'Canvas orientation', options: [
 						{ id: 'orientationPortrait', icon: 'portrait', label: 'Portrait', showLabel: true, value: 'portrait' },
@@ -1044,8 +1043,8 @@ const PANEL_SCHEMAS = {
 				] },
 				{ id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, rows: [
 					{ kind: 'numberPair', label: 'Size', revert: 'canvasSizeWidth canvasSizeHeight', items: [
-						{ id: 'canvasSizeWidth', mark: 'W', label: 'Width', step: 1, inputMode: 'numeric' },
-						{ id: 'canvasSizeHeight', mark: 'H', label: 'Height', step: 1, inputMode: 'numeric' }
+						{ id: 'canvasSizeWidth', mark: 'W', label: 'Width', min: 1, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
+						{ id: 'canvasSizeHeight', mark: 'H', label: 'Height', min: 1, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
 					{ kind: 'note', id: 'canvasSizeLimitMessage', classes: 'canvas-size-limit-message', attrs: { role: 'status' } },
 					{ kind: 'labeled', label: 'Anchor', stacked: true, revert: 'canvasSizeAnchor', control: { kind: 'host', id: 'canvasSizeAnchor',
@@ -1054,8 +1053,8 @@ const PANEL_SCHEMAS = {
 				] },
 				{ id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', rows: [
 					{ kind: 'numberPair', label: 'Size', revert: 'scaleDesignWidth scaleDesignHeight', items: [
-						{ id: 'scaleDesignWidth', mark: 'W', label: 'Width', step: 1, inputMode: 'numeric' },
-						{ id: 'scaleDesignHeight', mark: 'H', label: 'Height', step: 1, inputMode: 'numeric' }
+						{ id: 'scaleDesignWidth', mark: 'W', label: 'Width', min: 1, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
+						{ id: 'scaleDesignHeight', mark: 'H', label: 'Height', min: 1, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
 					{ kind: 'slider', id: 'scaleDesignPercent', slider: 'documentScale', label: 'Scale' }
 				] },
