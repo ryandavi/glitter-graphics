@@ -1,34 +1,35 @@
 @use '../mixins' as *;
 
 // ===== EXPORT READY ========================================================
-// A fixed frame (`.modal-reading`) whose body never scrolls as a whole. The
-// Result view has three regions: the preview stage, the facts pinned at the
-// top of the side column, and under them the only scrolling part (save guide,
-// upload limits, notices). Details is a second, full-width view of the same
-// body. Notes are `.property-note`s, headings `.property-group-label`s and
-// body buttons `.btn-flat`; only the regions, the facts, the limit rows, the
-// save steps and the detail table are styled here.
+// A fixed frame (`.modal-reading`) whose body never scrolls. Three regions,
+// each with its own padding: the preview stage, the facts pinned at the top of
+// the side column, and under them the side itself, the only scroller. The side
+// shows the result notes (change row, save guide, upload limits, notices) or,
+// switched, the detail tables, so the preview stays in view either way. Notes
+// are `.property-note`s, headings `.property-group-label`s, body buttons
+// `.btn-flat` and sizes `.badge`s; only the regions, the facts, the limit
+// rows, the save steps and the detail table are styled here.
 #exportPreviewModal {
-	--export-side-width: 300px;
+	--export-side-width: 340px;
+	--export-pad: var(--spacing-lg);
 
 	.modal-body {
 		display: flex;
 		flex-direction: column;
+		padding: 0;
 		overflow: hidden;
 	}
 
 	.export-result {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) var(--export-side-width);
-		grid-template-rows: auto minmax(0, 1fr);
+		grid-template-rows: auto auto minmax(0, 1fr);
 		grid-template-areas:
 			'stage facts'
+			'stage controls'
 			'stage side';
-		gap: var(--spacing-md) var(--spacing-lg);
 		flex: 1 1 auto;
 		min-height: 0;
-
-		&[hidden] { display: none; }
 	}
 
 	.export-stage {
@@ -38,8 +39,7 @@
 		justify-content: center;
 		min-width: 0;
 		min-height: 0;
-		padding: var(--spacing-md);
-		border-radius: var(--radius-md);
+		padding: var(--export-pad);
 		background: var(--color-bg-tertiary);
 		overflow: hidden;
 
@@ -79,6 +79,7 @@
 		flex-direction: column;
 		gap: var(--spacing-2xs);
 		min-width: 0;
+		padding: var(--export-pad) var(--export-pad) var(--spacing-md);
 		color: var(--color-text-secondary);
 		font-size: var(--font-size-sm);
 		font-variant-numeric: tabular-nums;
@@ -118,32 +119,37 @@
 		gap: var(--spacing-md);
 		min-width: 0;
 		min-height: 0;
-	}
-
-	.export-change {
-		display: flex;
-		flex: 0 0 auto;
-		flex-wrap: wrap;
-		gap: var(--spacing-sm);
-
-		// The trigger sits at the pane's left edge, so the menu grows rightward.
-		.app-menu-panel {
-			left: 0;
-			right: auto;
-		}
-	}
-
-	.export-scroll {
-		display: flex;
-		flex: 1 1 auto;
-		flex-direction: column;
-		gap: var(--spacing-md);
-		min-height: 0;
+		padding: 0 var(--export-pad) var(--export-pad);
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}
 
-	.export-limits,
+	// Pinned between the facts and the scroller: the view switch fills the row
+	// and the export menu closes it. A still has only the menu.
+	.export-controls {
+		grid-area: controls;
+		display: flex;
+		gap: var(--spacing-sm);
+		min-width: 0;
+		padding: 0 var(--export-pad) var(--spacing-md);
+	}
+
+	.export-view-switch {
+		flex: 1 1 auto;
+		width: auto;
+
+		&[hidden] { display: none; }
+	}
+
+	.export-pane {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		gap: var(--spacing-md);
+
+		&[hidden] { display: none; }
+	}
+
 	.export-notices {
 		display: flex;
 		flex-direction: column;
@@ -152,39 +158,52 @@
 		&[hidden] { display: none; }
 	}
 
-	// X · fits on the web                                                 5 MB
-	.export-limit-list {
+	// The warning is the one box in the notes. Its rows are a table: service,
+	// limit, note, each in its own column so the badges line up.
+	.export-limits {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-2xs);
+		gap: var(--spacing-sm);
+		padding: var(--spacing-md);
+		border-radius: var(--radius-md);
+		background: var(--color-warning-surface);
+
+		&[hidden] { display: none; }
+	}
+
+	.export-limits-title {
+		color: var(--color-warning);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-semibold);
+		line-height: 1.2;
+	}
+
+	.export-limit-list {
+		display: grid;
+		grid-template-columns: max-content max-content minmax(0, 1fr);
+		align-items: center;
+		gap: var(--spacing-xs) var(--spacing-md);
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		color: var(--color-text-primary);
 		font-size: var(--font-size-sm);
 	}
 
-	.export-limit {
-		display: flex;
-		align-items: baseline;
-		gap: var(--spacing-sm);
-		min-width: 0;
+	.export-limit { display: contents; }
+
+	.export-limit-value {
+		justify-content: flex-end;
+		font-variant-numeric: tabular-nums;
 	}
 
-	.export-limit-service { color: var(--color-text-primary); }
-
 	.export-limit-note {
-		flex: 1 1 auto;
 		min-width: 0;
 		overflow: hidden;
 		color: var(--color-text-tertiary);
 		font-size: var(--font-size-xs);
 		text-overflow: ellipsis;
 		white-space: nowrap;
-	}
-
-	.export-limit-value {
-		color: var(--color-warning);
-		font-variant-numeric: tabular-nums;
 	}
 
 	.export-save-guide {
@@ -231,30 +250,7 @@
 	}
 
 	// ----- Details ----------------------------------------------------------
-	.export-details {
-		display: flex;
-		flex: 1 1 auto;
-		flex-direction: column;
-		gap: var(--spacing-lg);
-		min-height: 0;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-
-		&[hidden] { display: none; }
-	}
-
-	.export-detail-facts {
-		margin: 0;
-		color: var(--color-text-secondary);
-		font-size: var(--font-size-sm);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.export-detail-tables {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-xl);
-	}
+	#exportDetailsView { gap: var(--spacing-lg); }
 
 	.export-detail-group {
 		display: flex;
@@ -272,7 +268,7 @@
 
 		th,
 		td {
-			padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-xs) 0;
+			padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) 0;
 			font-weight: var(--font-weight-normal);
 			text-align: left;
 			white-space: nowrap;
@@ -306,27 +302,37 @@
 	}
 
 	// ----- Footer -----------------------------------------------------------
+	// Inline, not flex: the external-link mark every `target="_blank"` link
+	// gets is placed after the label by the text flow.
 	.export-support-link {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--spacing-xs);
 		text-decoration: none;
+
+		> svg.icon { margin-right: var(--spacing-xs); }
 	}
 
 	// An action that cannot run here (Share without the Web Share API) is left out.
 	.modal-footer > button:disabled { display: none; }
 
 	// ----- Phone ------------------------------------------------------------
-	// One column. The facts become one meta line under the preview, and the
-	// whole side column scrolls so the change row can follow the notes.
+	// One column. The facts become one meta line under the preview and the
+	// Ko-fi link takes its own footer line.
 	@media (max-width: 600px) {
+		--export-pad: var(--spacing-md);
+
 		.export-result {
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: 40dvh auto minmax(0, 1fr);
+			grid-template-rows: 40dvh auto auto minmax(0, 1fr);
 			grid-template-areas:
 				'stage'
 				'facts'
+				'controls'
 				'side';
+		}
+
+		// Little room is left under the controls, so the menu opens over the preview.
+		.export-controls .app-menu-panel {
+			top: auto;
+			bottom: calc(100% + var(--spacing-xs));
 		}
 
 		.export-facts { display: block; }
@@ -344,14 +350,5 @@
 		}
 
 		.export-fact-name { display: block; }
-
-		.export-side { overflow-y: auto; }
-
-		.export-scroll {
-			flex: 0 0 auto;
-			overflow-y: visible;
-		}
-
-		.export-change { order: 1; }
 	}
 }

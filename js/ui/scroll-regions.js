@@ -9,8 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		'.property-scrollbox', '.mobile-settings-content',
 		'.welcome-section', '.no-layer-settings-section', '.base-layer-settings-section',
 		'.modal-body', '.confirmation-message', '.timeline-list',
-		'.document-toc-panel', '.document-search-results', '.app-menu-panel',
-		'.export-side', '.export-scroll', '.export-details'
+		'.document-toc-panel', '.document-search-results', '.app-menu-panel', '.export-side'
 	].join(', ');
 	const markRegions = (root) => {
 		if (!(root instanceof Element)) return;

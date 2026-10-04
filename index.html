@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=3cbc331a">
+	<link rel="stylesheet" href="css/style.css?v=121a5a89">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -692,17 +692,11 @@
 					<span class="name">Close</span>
 				</button>
 			</div>
-			<!-- Hidden while the export has no details to show (every still). -->
-			<div class="modal-nav search-toggle-row" id="exportResultNav" hidden>
-				<div class="segmented-control modal-nav-scope" role="group" aria-label="Export view">
-					<button type="button" class="segmented-option active" data-export-view="result" aria-pressed="true" aria-controls="exportResultView">Result</button>
-					<button type="button" class="segmented-option" data-export-view="details" aria-pressed="false" aria-controls="exportDetailsView">Details</button>
-				</div>
-			</div>
 			<div class="modal-body">
-				<!-- Three regions: the stage, the pinned facts, and the side column,
-				     whose notes are the only part that scrolls. -->
-				<div class="export-result" id="exportResultView">
+				<!-- Three regions, each with its own padding: the stage, the pinned
+				     facts, and the side column, which is the only part that scrolls.
+				     The side shows the result notes or, switched, the details. -->
+				<div class="export-result">
 					<div class="export-stage">
 						<img id="exportPreviewImage" alt="Exported GIF">
 						<video id="exportPreviewVideo" controls loop playsinline hidden></video>
@@ -713,35 +707,41 @@
 						<span class="export-fact-line" id="exportStatMotion"><span id="exportStatFrames">0 frames</span><span id="exportStatDuration">0 s</span></span>
 						<span class="export-fact-name" id="exportStatFileName"></span>
 					</div>
-					<div class="export-side">
-						<div class="export-change">
-							<div class="app-menu" id="exportResultMenu">
-								<button class="btn-flat app-menu-trigger" id="exportResultMenuBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="exportResultMenuPanel">Export as…</button>
-								<div class="app-menu-panel" id="exportResultMenuPanel" role="menu" aria-labelledby="exportResultMenuBtn" hidden>
-									<div class="app-menu-group-label">Still Image</div>
-									<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-									<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:jpeg"><span class="app-menu-item-label">JPG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-									<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:gif"><span class="app-menu-item-label">Still GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-									<div class="app-menu-separator" role="separator"></div><div class="app-menu-group-label">Animation</div>
-									<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:gif"><span class="app-menu-item-label">GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-									<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:mp4"><span class="app-menu-item-label">MP4</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-								</div>
-							</div>
-							<button class="btn-flat" id="exportResultSettings" type="button">Export Settings…</button>
+					<!-- Pinned with the facts: the view switch (hidden while the export
+					     has no details, which is every still) and the same menu as
+					     the canvas export button, for exporting again. -->
+					<div class="export-controls">
+						<div class="segmented-control export-view-switch" id="exportResultNav" role="group" aria-label="Export view" hidden>
+							<button type="button" class="segmented-option active" data-export-view="result" aria-pressed="true" aria-controls="exportResultView">Result</button>
+							<button type="button" class="segmented-option" data-export-view="details" aria-pressed="false" aria-controls="exportDetailsView">Details</button>
 						</div>
-						<div class="export-scroll">
+						<div class="app-menu" id="exportResultMenu">
+							<button class="btn-flat app-menu-trigger" id="exportResultMenuBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="exportResultMenuPanel">Export again<svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg></button>
+							<div class="app-menu-panel" id="exportResultMenuPanel" role="menu" aria-labelledby="exportResultMenuBtn" hidden>
+								<div class="app-menu-group-label">Still Image</div>
+								<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">Export PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+								<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:jpeg"><span class="app-menu-item-label">Export JPG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+								<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:gif"><span class="app-menu-item-label">Export Still GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+								<div class="app-menu-separator" role="separator"></div><div class="app-menu-group-label">Animation</div>
+								<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:gif"><span class="app-menu-item-label">Export GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+								<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:mp4"><span class="app-menu-item-label">Export MP4</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+								<div class="app-menu-separator" role="separator"></div>
+								<button class="app-menu-item" id="exportResultSettings" type="button" role="menuitem"><span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span><span class="app-menu-item-label">Export Settings…</span></button>
+							</div>
+						</div>
+					</div>
+					<div class="export-side">
+						<div class="export-pane" id="exportResultView">
 							<div class="export-save-guide" id="exportSaveGuide" role="note" aria-live="polite" hidden></div>
+							<!-- The one box in the notes: a warning with its own table. -->
 							<div class="export-limits" id="exportSizeWarnings" role="status" hidden>
-								<div class="property-group-label">Too large for</div>
+								<strong class="export-limits-title">Too large to post on</strong>
 								<ul class="export-limit-list" id="exportSizeWarningList"></ul>
 							</div>
 							<div class="export-notices" id="exportNotices" hidden></div>
 						</div>
+						<div class="export-pane" id="exportDetailsView" hidden></div>
 					</div>
-				</div>
-				<div class="export-details" id="exportDetailsView" hidden>
-					<p class="export-detail-facts" id="exportDetailFacts"></p>
-					<div class="export-detail-tables" id="exportDetailTables"></div>
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -773,7 +773,7 @@
 	</div>
 
 	<template id="tpl-export-limit">
-		<li class="export-limit"><span class="export-limit-service"></span><span class="export-limit-note"></span><span class="export-limit-value"></span></li>
+		<li class="export-limit"><span class="export-limit-service"></span><span class="badge is-warning export-limit-value"></span><span class="export-limit-note"></span></li>
 	</template>
 	<template id="tpl-export-instructions-ios-gif">
 		<div class="export-instruction-heading">
@@ -1762,7 +1762,7 @@
 	<script src="js/ui/color-eyedropper.js?v=f997c28b"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=eca7d9de"></script>
-	<script src="js/ui/scroll-regions.js?v=f92b12e5"></script>
+	<script src="js/ui/scroll-regions.js?v=6a69b215"></script>
 	<script src="js/ui/panel-renderer.js?v=42621287"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
@@ -1799,8 +1799,8 @@
 	<script src="js/systems/AnimationTicker.js?v=1d5c50aa"></script>
 	<script src="js/systems/AnimationPanelController.js?v=9f26a93a"></script>
 	<script src="js/export/ExportProgressPresenter.js?v=4754a2c1"></script>
-	<script src="js/export/export-report.js?v=6cea2352"></script>
-	<script src="js/export/ExportResultPresenter.js?v=d147da3d"></script>
+	<script src="js/export/export-report.js?v=39c1bb28"></script>
+	<script src="js/export/ExportResultPresenter.js?v=a70f6228"></script>
 	<script src="js/export/SceneCompositor.js?v=b844be5a"></script>
 	<script src="js/export/GifExporter.js?v=8b89baa2"></script>
 	<script src="js/export/StillImageExporter.js?v=ec58b58a"></script>

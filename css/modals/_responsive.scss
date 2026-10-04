@@ -23,6 +23,31 @@
 			>.modal-header { padding-block: var(--spacing-2xs); }
 
 			>.modal-body { padding: var(--spacing-md); }
+
+			// Footer actions share one row, and a label that does not fit
+			// truncates. The left-side text item (a reset or a link) takes its
+			// own line under them.
+			>.modal-footer {
+				flex-wrap: wrap;
+
+				>.btn-text-with-icon {
+					flex: 1 1 0;
+					min-width: 0;
+
+					>.name {
+						min-width: 0;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+				}
+
+				>.btn-text {
+					order: 1;
+					flex: 1 0 100%;
+					margin-right: 0;
+					text-align: center;
+				}
+			}
 		}
 	}
 

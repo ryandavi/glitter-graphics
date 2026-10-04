@@ -53,8 +53,8 @@ class ExportResultPresenter {
 		document.getElementById('closeExportPreviewModal').onclick = cleanup;
 		modal.onclick = (event) => { if (event.target === modal) cleanup(); };
 		modal.classList.add('visible');
-		// The frame is reused, so a new result starts at the top of each scroller.
-		modal.querySelectorAll('.export-side, .export-scroll, .export-details').forEach((region) => { region.scrollTop = 0; });
+		// The frame is reused, so a new result starts at the top of the side column.
+		modal.querySelector('.export-side').scrollTop = 0;
 	}
 
 	_renderFacts(facts) {
@@ -108,8 +108,7 @@ class ExportResultPresenter {
 
 	_renderDetails(details) {
 		document.getElementById('exportResultNav').hidden = !details;
-		document.getElementById('exportDetailFacts').textContent = details?.facts || '';
-		document.getElementById('exportDetailTables').replaceChildren(...(details?.tables || []).map((table) => {
+		document.getElementById('exportDetailsView').replaceChildren(...(details?.tables || []).map((table) => {
 			const group = document.createElement('section');
 			group.className = 'export-detail-group';
 			const title = document.createElement('div');
@@ -149,7 +148,7 @@ class ExportResultPresenter {
 		}));
 	}
 
-	// Details replaces the whole body, so the frame, header and footer stay put.
+	// The views swap inside the side column, so the preview and facts stay put.
 	_showView(view) {
 		document.getElementById('exportResultView').hidden = view !== 'result';
 		document.getElementById('exportDetailsView').hidden = view !== 'details';

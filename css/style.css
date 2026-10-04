@@ -8896,24 +8896,22 @@ body.modal-open {
 }
 
 #exportPreviewModal {
-  --export-side-width: 300px;
+  --export-side-width: 340px;
+  --export-pad: var(--spacing-lg);
 }
 #exportPreviewModal .modal-body {
   display: flex;
   flex-direction: column;
+  padding: 0;
   overflow: hidden;
 }
 #exportPreviewModal .export-result {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--export-side-width);
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas: "stage facts" "stage side";
-  gap: var(--spacing-md) var(--spacing-lg);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "stage facts" "stage controls" "stage side";
   flex: 1 1 auto;
   min-height: 0;
-}
-#exportPreviewModal .export-result[hidden] {
-  display: none;
 }
 #exportPreviewModal .export-stage {
   grid-area: stage;
@@ -8922,8 +8920,7 @@ body.modal-open {
   justify-content: center;
   min-width: 0;
   min-height: 0;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
+  padding: var(--export-pad);
   background: var(--color-bg-tertiary);
   overflow: hidden;
 }
@@ -8958,6 +8955,7 @@ body.modal-open {
   flex-direction: column;
   gap: var(--spacing-2xs);
   min-width: 0;
+  padding: var(--export-pad) var(--export-pad) var(--spacing-md);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
@@ -8993,66 +8991,83 @@ body.modal-open {
   gap: var(--spacing-md);
   min-width: 0;
   min-height: 0;
-}
-#exportPreviewModal .export-change {
-  display: flex;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-}
-#exportPreviewModal .export-change .app-menu-panel {
-  left: 0;
-  right: auto;
-}
-#exportPreviewModal .export-scroll {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  min-height: 0;
+  padding: 0 var(--export-pad) var(--export-pad);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-#exportPreviewModal .export-limits,
+#exportPreviewModal .export-controls {
+  grid-area: controls;
+  display: flex;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  padding: 0 var(--export-pad) var(--spacing-md);
+}
+#exportPreviewModal .export-view-switch {
+  flex: 1 1 auto;
+  width: auto;
+}
+#exportPreviewModal .export-view-switch[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-pane {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+#exportPreviewModal .export-pane[hidden] {
+  display: none;
+}
 #exportPreviewModal .export-notices {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
 }
-#exportPreviewModal .export-limits[hidden],
 #exportPreviewModal .export-notices[hidden] {
   display: none;
 }
-#exportPreviewModal .export-limit-list {
+#exportPreviewModal .export-limits {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2xs);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-surface);
+}
+#exportPreviewModal .export-limits[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-limits-title {
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+#exportPreviewModal .export-limit-list {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-xs) var(--spacing-md);
   margin: 0;
   padding: 0;
   list-style: none;
+  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
 }
 #exportPreviewModal .export-limit {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-sm);
-  min-width: 0;
+  display: contents;
 }
-#exportPreviewModal .export-limit-service {
-  color: var(--color-text-primary);
+#exportPreviewModal .export-limit-value {
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
 }
 #exportPreviewModal .export-limit-note {
-  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-#exportPreviewModal .export-limit-value {
-  color: var(--color-warning);
-  font-variant-numeric: tabular-nums;
 }
 #exportPreviewModal .export-save-guide {
   color: var(--color-text-secondary);
@@ -9097,28 +9112,8 @@ body.modal-open {
 #exportPreviewModal .export-save-guide .export-instruction-tip {
   color: var(--color-text-tertiary);
 }
-#exportPreviewModal .export-details {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
+#exportPreviewModal #exportDetailsView {
   gap: var(--spacing-lg);
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-#exportPreviewModal .export-details[hidden] {
-  display: none;
-}
-#exportPreviewModal .export-detail-facts {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-}
-#exportPreviewModal .export-detail-tables {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
 }
 #exportPreviewModal .export-detail-group {
   display: flex;
@@ -9133,7 +9128,7 @@ body.modal-open {
 }
 #exportPreviewModal .export-detail-table th,
 #exportPreviewModal .export-detail-table td {
-  padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-xs) 0;
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) 0;
   font-weight: var(--font-weight-normal);
   text-align: left;
   white-space: nowrap;
@@ -9167,19 +9162,26 @@ body.modal-open {
   font-weight: var(--font-weight-semibold);
 }
 #exportPreviewModal .export-support-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
   text-decoration: none;
+}
+#exportPreviewModal .export-support-link > svg.icon {
+  margin-right: var(--spacing-xs);
 }
 #exportPreviewModal .modal-footer > button:disabled {
   display: none;
 }
 @media (max-width: 600px) {
+  #exportPreviewModal {
+    --export-pad: var(--spacing-md);
+  }
   #exportPreviewModal .export-result {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 40dvh auto minmax(0, 1fr);
-    grid-template-areas: "stage" "facts" "side";
+    grid-template-rows: 40dvh auto auto minmax(0, 1fr);
+    grid-template-areas: "stage" "facts" "controls" "side";
+  }
+  #exportPreviewModal .export-controls .app-menu-panel {
+    top: auto;
+    bottom: calc(100% + var(--spacing-xs));
   }
   #exportPreviewModal .export-facts {
     display: block;
@@ -9197,16 +9199,6 @@ body.modal-open {
   }
   #exportPreviewModal .export-fact-name {
     display: block;
-  }
-  #exportPreviewModal .export-side {
-    overflow-y: auto;
-  }
-  #exportPreviewModal .export-scroll {
-    flex: 0 0 auto;
-    overflow-y: visible;
-  }
-  #exportPreviewModal .export-change {
-    order: 1;
   }
 }
 
@@ -10778,6 +10770,24 @@ body.modal-open {
   }
   .modal-overlay > .modal-content > .modal-body {
     padding: var(--spacing-md);
+  }
+  .modal-overlay > .modal-content > .modal-footer {
+    flex-wrap: wrap;
+  }
+  .modal-overlay > .modal-content > .modal-footer > .btn-text-with-icon {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .modal-overlay > .modal-content > .modal-footer > .btn-text-with-icon > .name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .modal-overlay > .modal-content > .modal-footer > .btn-text {
+    order: 1;
+    flex: 1 0 100%;
+    margin-right: 0;
+    text-align: center;
   }
   .modal-overlay > .content-dialog .modal-hero-image {
     min-height: 24dvh;

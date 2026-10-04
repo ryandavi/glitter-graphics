@@ -24,7 +24,7 @@ function resolveUploadLimits(size, sizeWarnings) {
 	return rows.sort((a, b) => a.limitMB - b.limitMB);
 }
 
-function buildExportDetails({ target, timelinePlan, colorAnalysis, facts }) {
+function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 	const reduction = timelinePlan.reduction;
 	const seconds = (ms, digits = 2) => `${(ms / 1000).toFixed(digits)} s`;
 	const uses = (count) => (count > 1 ? `×${count}` : '');
@@ -122,11 +122,7 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis, facts }) {
 		});
 	}
 
-	if (!tables.length) return null;
-	return {
-		facts: [facts.size, facts.format, facts.dimensions, facts.frames, facts.duration].filter(Boolean).join(' · '),
-		tables
-	};
+	return tables.length ? { tables } : null;
 }
 
 function buildExportReport({ blob, fileName, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, platform = {} }) {
@@ -171,6 +167,6 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 		primaryAction,
 		uploadLimits,
 		notices,
-		details: plan ? buildExportDetails({ target, timelinePlan: plan, colorAnalysis: analysis, facts }) : null
+		details: plan ? buildExportDetails({ target, timelinePlan: plan, colorAnalysis: analysis }) : null
 	};
 }
