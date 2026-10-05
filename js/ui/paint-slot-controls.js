@@ -87,60 +87,21 @@ function bindSlotTextureCoordinateControls(options) {
 	document.getElementById(`${prefix}TextureAnchorArtwork`)?.addEventListener('click', () => setAnchor('artwork'));
 	document.getElementById(`${prefix}TextureAnchorCanvas`)?.addEventListener('click', () => setAnchor('canvas'));
 
-	const offsetSpec = FIELDS.textureOffsetX;
-	const clampOffset = (n) => Math.max(offsetSpec.min, Math.min(offsetSpec.max, Math.round(n)));
-	const syncOffsetReset = (data) => {
-		const button = document.getElementById(`${prefix}ResetTexturePosition`);
-		if (button) {
-			button.disabled = (data.textureOffsetX || 0) === defaults.defaultOffsetX
-				&& (data.textureOffsetY || 0) === defaults.defaultOffsetY;
-		}
-	};
-
 	[['X', 'textureOffsetX'], ['Y', 'textureOffsetY']].forEach(([axis, key]) => {
 		const input = document.getElementById(`${prefix}TextureOffset${axis}`);
 		if (!input) return;
-		if (input.type === 'number') {
-			// Redesigned panels: real number field (buildNumberFieldPair).
-			const write = (commit) => {
+		bindSlider(input, document.getElementById(`${prefix}TextureOffset${axis}Value`), {
+			suffix: 'px',
+			resetValue: axis === 'X' ? defaults.defaultOffsetX : defaults.defaultOffsetY,
+			resetButton: document.getElementById(`reset${prefix.charAt(0).toUpperCase() + prefix.slice(1)}TextureOffset${axis}`),
+			apply: (next) => {
 				const active = getActive();
 				if (!active) return;
-				const raw = parseFloat(input.value);
-				if (Number.isNaN(raw)) return;
-				active.data[key] = clampOffset(raw);
+				active.data[key] = next;
 				render(active.layer);
-				syncOffsetReset(active.data);
-				if (commit) save();
-			};
-			input.addEventListener('input', () => write(false));
-			input.addEventListener('change', () => write(true));
-		} else {
-			// Other panels: the slider pair (buildPairRow), with per-axis revert.
-			bindSlider(input, document.getElementById(`${prefix}TextureOffset${axis}Value`), {
-				suffix: 'px',
-				resetValue: axis === 'X' ? defaults.defaultOffsetX : defaults.defaultOffsetY,
-				resetButton: document.getElementById(`reset${prefix.charAt(0).toUpperCase() + prefix.slice(1)}TextureOffset${axis}`),
-				apply: (next) => {
-					const active = getActive();
-					if (!active) return;
-					active.data[key] = next;
-					render(active.layer);
-				},
-				onCommit: save
-			});
-		}
-	});
-
-	// One revert for the Offset pair (Anchor keeps its own). Resets X and Y only.
-	// Nested slots (Bevel Shade) do not render this button.
-	document.getElementById(`${prefix}ResetTexturePosition`)?.addEventListener('click', () => {
-		const active = getActive();
-		if (!active) return;
-		active.data.textureOffsetX = defaults.defaultOffsetX;
-		active.data.textureOffsetY = defaults.defaultOffsetY;
-		syncSlotTextureCoordinateControls(prefix, active.data);
-		render(active.layer);
-		save();
+			},
+			onCommit: save
+		});
 	});
 }
 
@@ -154,21 +115,8 @@ function syncSlotTextureCoordinateControls(prefix, data) {
 		button?.setAttribute('aria-pressed', String(active));
 	});
 	[['X', normalized.textureOffsetX], ['Y', normalized.textureOffsetY]].forEach(([axis, value]) => {
-		const input = document.getElementById(`${prefix}TextureOffset${axis}`);
-		if (!input) return;
-		if (input.type === 'number') {
-			// Don't yank the field out from under someone mid-edit.
-			if (document.activeElement !== input) input.value = Math.round(value);
-		} else {
-			syncSlider(input, value, { unit: 'px' });
-		}
+		syncSlider(document.getElementById(`${prefix}TextureOffset${axis}`), value, { unit: 'px' });
 	});
-	const defaults = CONFIG.rendering.textureCoordinates;
-	const resetOffset = document.getElementById(`${prefix}ResetTexturePosition`);
-	if (resetOffset) {
-		resetOffset.disabled = normalized.textureOffsetX === defaults.defaultOffsetX
-			&& normalized.textureOffsetY === defaults.defaultOffsetY;
-	}
 }
 
 
@@ -576,7 +524,7 @@ function syncPaintSlotControls(host, layer) {
 			});
 			const blurRow = byId(`${prefix}Blur`)?.closest('.property-row');
 			if (blurRow) blurRow.hidden = cast && Boolean(byId(`${prefix}CastBlur`));
-			['OffsetRow', 'Spread'].forEach(suffix => {
+			['OffsetX', 'OffsetY', 'Spread'].forEach(suffix => {
 				const element = byId(`${prefix}${suffix}`);
 				const row = element?.closest('.property-row');
 				if (row) row.hidden = cast;

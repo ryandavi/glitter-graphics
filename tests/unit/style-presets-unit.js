@@ -28,6 +28,7 @@ for (const file of [
 	'js/paint/effect-source.js',
 	'js/paint/gradient-presets.js',
 	'js/paint/slot-effects.js',
+	'js/paint/text-warp.js',
 	'js/paint/style-presets.js'
 ]) {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
@@ -46,7 +47,7 @@ const glitterIds = new Set(require(path.join(root, 'data/glitter.json')).map((it
 const fontsManifest = require(path.join(root, 'data/fonts.json'));
 const fontIds = new Set((Array.isArray(fontsManifest) ? fontsManifest : fontsManifest.fonts).map((font) => font.id));
 const paintModes = run("getOptionValues('paintMode')");
-const dataPaths = { [LayerType.TEXT_GLITTER]: ['textData.fontId', 'textData.textCase'] };
+const dataPaths = { [LayerType.TEXT_GLITTER]: run('STYLE_PRESET_TEXT_PATHS') };
 
 // Slot defaults the way the managers build them (text, shape and sticker all
 // start from the shared slot-effects builders).
@@ -54,7 +55,7 @@ run(`globalThis.testSlotDefaults = (type, key) => {
 	const slot = getPaintSlotDefinition(type, key);
 	if (key === 'fill') return buildDefaultFill({ defaultGlitterId: getPaintSlotDefaultGlitterId(type, slot) });
 	if (key === 'border') return buildDefaultBorder({ slot, defaultGlitterId: getPaintSlotDefaultGlitterId(type, slot), includeColorAdjust: true });
-	if (key === 'shadow') return buildDefaultShadow({ defaultGlitterId: getPaintSlotDefaultGlitterId(type, slot), includeColorAdjust: true });
+	if (key === 'shadow') return { ...buildDefaultShadow({ defaultGlitterId: getPaintSlotDefaultGlitterId(type, slot), includeColorAdjust: true }), ...(type === LayerType.TEXT_GLITTER ? { castAnchor: 'baseline', castLengthRatio: FIELDS.textCastLength.value / 100, castLeanRatio: FIELDS.textCastLean.value / 100, castBlurRatio: FIELDS.textCastBlur.value / 100 } : {}) };
 	if (key === 'bevelHighlight') return buildDefaultBevel().highlight;
 	if (key === 'bevelShade') return buildDefaultBevel().shade;
 	throw new Error('no defaults for ' + key);
@@ -64,7 +65,7 @@ function makeLayer(type) {
 	const root = { [LayerType.TEXT_GLITTER]: 'textData', [LayerType.SHAPE]: 'shapeData', [LayerType.STICKER]: 'stickerData' }[type];
 	const data = { border: null, shadow: null, bevel: run('buildDefaultBevel()'), sparkles: null };
 	if (type !== LayerType.STICKER) data.fill = run(`testSlotDefaults(${JSON.stringify(type)}, 'fill')`);
-	if (type === LayerType.TEXT_GLITTER) Object.assign(data, { fontId: run('CONFIG.tools.text.defaultFontId'), textCase: 'none' });
+	if (type === LayerType.TEXT_GLITTER) Object.assign(data, { fontId: run('CONFIG.tools.text.defaultFontId'), fontWeight: run('CONFIG.tools.text.defaultFontWeight'), fontStyle: 'normal', textCase: 'none', letterSpacing: 0, warp: run('normalizeTextWarp()'), decoration: { underline: false, strikethrough: false } });
 	return { id: 'layer-1', type, [root]: data };
 }
 
@@ -121,6 +122,11 @@ Object.entries(libraries).forEach(([type, library]) => {
 		Object.entries(entry.value.data || {}).forEach(([dataPath, value]) => {
 			if (!(dataPaths[type] || []).includes(dataPath)) fail(`${where} writes ${dataPath}, which styles do not own`);
 			if (dataPath === 'textData.fontId' && !fontIds.has(value)) fail(`${where} font ${value} is not in the font manifest`);
+			if (dataPath === 'textData.warp.type' && !run('WARP_TYPES')[value]) fail(`${where} invalid warp ${value}`);
+			if (dataPath === 'textData.fontStyle' && !['normal', 'italic'].includes(value)) fail(`${where} invalid font style`);
+			if (dataPath === 'textData.textCase' && !run('isOptionValue')('textCase', value)) fail(`${where} invalid case`);
+			const spec = dataPath === 'textData.warp.bend' ? run('FIELDS.textWarpBend') : dataPath === 'textData.letterSpacing' ? run('FIELDS.textLetterSpacing') : null;
+			if (spec && (!Number.isFinite(value) || value < spec.min || value > spec.max)) fail(`${where} ${dataPath} outside field range`);
 		});
 
 		// Round trip: applied, recognized, and one step (values copied, not shared).
@@ -144,7 +150,9 @@ Object.entries(libraries).forEach(([type, library]) => {
 	const disabled = applyTo(layer, plain);
 	const rootKey = Object.keys(layer).find((key) => key.endsWith('Data'));
 	if (layer[rootKey].border || layer[rootKey].shadow || layer[rootKey].bevel.enabled) fail(`${type}: Plain after ${fancy.id} left effects on`);
-	if (!layer[rootKey].effectDrafts?.border || !layer[rootKey].effectDrafts?.shadow) fail(`${type}: switched-off effects must be parked as drafts`);
+	if (type === LayerType.TEXT_GLITTER) {
+		if (layer[rootKey].effectDrafts) fail('text styles must discard parked effects');
+	} else if (!layer[rootKey].effectDrafts?.border || !layer[rootKey].effectDrafts?.shadow) fail(`${type}: switched-off effects must be parked as drafts`);
 	if (!disabled.includes('border') || !disabled.includes('shadow')) fail(`${type}: disabled slots must be reported so an armed picker closes`);
 	if (run('findStylePresetId')(layer) !== plain.id) fail(`${type}: ${plain.label} is not recognized after apply`);
 	applyTo(layer, fancy);
@@ -153,6 +161,51 @@ Object.entries(libraries).forEach(([type, library]) => {
 
 // A missing glitter falls back to the slot's default instead of an empty slot.
 const textLibrary = libraries[LayerType.TEXT_GLITTER];
+if (entries.filter(entry => entry.group === 'wordart').length !== 23 || entries.some(entry => entry.group === 'wordart' && JSON.stringify(entry.targets) !== '["text"]')) fail('WordArt must contain the 23 available text-only looks');
+const warped = makeLayer(LayerType.TEXT_GLITTER);
+warped.textData.warp = { type: 'taper', bend: -37 };
+applyTo(warped, textLibrary.get('slate'));
+if (JSON.stringify(warped.textData.warp) !== JSON.stringify(run('normalizeTextWarp()'))) fail('a look without a warp must reset geometry');
+// Switching from any style must produce the same values as a fresh apply.
+for (const previous of textLibrary.entries) {
+	for (const next of textLibrary.entries) {
+		const switched = makeLayer(LayerType.TEXT_GLITTER);
+		applyTo(switched, previous);
+		switched.textData.fill.textureOffsetX = 23;
+		switched.textData.fill.textureOffsetY = -19;
+		switched.textData.fontWeight = 700;
+		switched.textData.decoration = { underline: true, strikethrough: true };
+		switched.textData.lineHeight = 2;
+		switched.textData.textBackground = { enabled: true, horizontalPadding: 40 };
+		switched.textData.sparkles = { mode: 'solid', color: '#ffffff' };
+		switched.opacity = 30;
+		switched.blendMode = 'multiply';
+		switched.animations = [{ preset: 'bounce' }];
+		switched.textData.effectDrafts = { shadow: { kind: 'cast' } };
+		applyTo(switched, next);
+		const fresh = makeLayer(LayerType.TEXT_GLITTER);
+		applyTo(fresh, next);
+		for (const dataPath of dataPaths[LayerType.TEXT_GLITTER]) {
+			if (JSON.stringify(run('readFieldPath')(switched, dataPath.split('.'))) !== JSON.stringify(run('readFieldPath')(fresh, dataPath.split('.')))) fail(`${previous.id} -> ${next.id} leaked ${dataPath}`);
+		}
+		if (JSON.stringify(switched.textData.fill) !== JSON.stringify(fresh.textData.fill)) fail(`${previous.id} -> ${next.id} leaked fill settings`);
+		if (JSON.stringify(switched.textData.textBackground) !== JSON.stringify(fresh.textData.textBackground) || switched.textData.sparkles || switched.textData.effectDrafts || switched.animations.length || switched.opacity !== fresh.opacity || switched.blendMode !== fresh.blendMode) fail(`${previous.id} -> ${next.id} leaked effects, motion or layer paint`);
+	}
+}
+for (const entry of textLibrary.entries) {
+	const original = makeLayer(LayerType.TEXT_GLITTER);
+	applyTo(original, entry);
+	const copied = run('createStylePresetEntryFromLayer')(original, key => run('testSlotDefaults')(LayerType.TEXT_GLITTER, key));
+	const restored = makeLayer(LayerType.TEXT_GLITTER);
+	applyTo(restored, copied);
+	for (const definition of run('getStylePresetSlotDefinitions')(LayerType.TEXT_GLITTER)) {
+		const before = run('readFieldPath')(original, definition.pathKeys);
+		const after = run('readFieldPath')(restored, definition.pathKeys);
+		if (definition.enabledKeys && !run('readFieldPath')(original, definition.enabledKeys)) continue;
+		if (JSON.stringify(before) !== JSON.stringify(after)) fail(`${entry.id}: copied ${definition.key} did not round-trip`);
+	}
+	if (JSON.stringify(original.textData.warp) !== JSON.stringify(restored.textData.warp)) fail('copy lost warp');
+}
 // Default restores every value a text style owns while preserving content
 // and placement, even after a look changes the font and letter case.
 const defaultText = makeLayer(LayerType.TEXT_GLITTER);
@@ -164,6 +217,7 @@ for (const entry of textLibrary.entries) {
 	const defaults = makeLayer(LayerType.TEXT_GLITTER).textData;
 	if (JSON.stringify(defaultText.textData.fill) !== JSON.stringify(defaults.fill)) fail(`Default after ${entry.id} did not restore the fill`);
 	if (defaultText.textData.fontId !== run('CONFIG.tools.text.defaultFontId') || defaultText.textData.textCase !== run('CONFIG.tools.text.defaultTextCase')) fail(`Default after ${entry.id} did not restore font and case`);
+	if (defaultText.textData.fontStyle !== defaults.fontStyle || defaultText.textData.letterSpacing !== defaults.letterSpacing || JSON.stringify(defaultText.textData.warp) !== JSON.stringify(defaults.warp)) fail(`Default after ${entry.id} did not restore style, spacing and warp`);
 	if (defaultText.textData.border || defaultText.textData.shadow || defaultText.textData.bevel.enabled) fail(`Default after ${entry.id} left effects on`);
 	if (defaultText.textData.text !== 'Keep my text' || defaultText.transform.position.x !== 45 || defaultText.transform.position.y !== 67) fail('Default changed content or placement');
 	if (run('findStylePresetId')(defaultText) !== 'default') fail('Default is not recognized after reset');

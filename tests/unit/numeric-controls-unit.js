@@ -50,7 +50,7 @@ const currentStepCoalesceKey = run('currentStepCoalesceKey');
 
 function makeInput(type, attrs) {
 	const input = {
-		tagName: 'INPUT', type, id: attrs.id || '', min: '', max: '', step: '', value: '0', disabled: false, readOnly: false,
+		tagName: 'INPUT', type, id: attrs.id || '', min: '', max: '', step: '', value: '0', disabled: false, readOnly: false, dataset: {},
 		events: [], keys: [],
 		dispatchEvent(event) { this.events.push(`${event.type}${event.bubbles ? '' : ':nobubble'}`); this.keys.push(currentStepCoalesceKey()); },
 		...attrs
@@ -142,6 +142,17 @@ slider = makeInput('range', { id: 'size', min: '1', max: '64', value: '6' });
 const readout = { tagName: 'SPAN', closest: () => ({ querySelector: () => slider }) };
 assert.strictEqual(stepNumericControl(readout, 1), true);
 assert.strictEqual(slider.value, '7', 'a readout steps its slider');
+
+// A slider with a typed range: its readout steps past the track, the track
+// itself stops at its end and takes the value back.
+const readSliderValue = run('readSliderValue');
+slider = makeInput('range', { id: 'offsetX', min: '-60', max: '60', step: '1', value: '60', dataset: { typeMin: '-1000', typeMax: '1000' } });
+assert.strictEqual(stepNumericControl(readout, 1), true);
+assert.strictEqual(readSliderValue(slider), 61, 'a readout steps past the track');
+run('writeSliderValue')(slider, 5000);
+assert.strictEqual(readSliderValue(slider), 1000, 'a typed value stops at typeMax');
+assert.strictEqual(step(slider, -1).value, 60, 'the track steps back onto itself');
+assert.strictEqual(readSliderValue(slider), 60, 'stepping the track drops the typed value');
 
 // History: every save a step triggers shares one key, and only while it runs.
 field = makeInput('number', { id: 'posY', value: '4' });

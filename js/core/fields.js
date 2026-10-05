@@ -10,6 +10,9 @@
 // `scale: 'log'` maps the DOM track geometrically onto [min, max] (slider.js);
 // `value` is always the real value. Loads before config.js.
 //
+// `typeMin` / `typeMax` let a typed value run past the track: the slider
+// covers min..max, and its readout accepts typeMin..typeMax (slider.js).
+//
 // `cost` is what one live update of the field costs, which picks how often the
 // canvas follows a drag (the scheduler in js/ui/slider.js):
 //   style    (default) a CSS property or filter on existing elements
@@ -67,8 +70,8 @@ const FIELDS = Object.freeze({
 	maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, step: 1, value: 1 },
 	maskBrushSmoothing: { label: 'Smoothing', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 	textureScale: { label: 'Texture scale', unit: '%', min: 25, max: 300, step: 1, value: 100 },
-	textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
-	textureOffsetY: { label: 'Offset Y', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
+	textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, typeMin: -5000, typeMax: 5000, step: 1, value: 0 },
+	textureOffsetY: { label: 'Offset Y', unit: 'px', min: -500, max: 500, typeMin: -5000, typeMax: 5000, step: 1, value: 0 },
 	slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 	layerOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 	gradientSmoothing: { label: 'Smoothing', unit: '×', min: 3, max: 16, step: 1, value: 8 },
@@ -83,8 +86,8 @@ const FIELDS = Object.freeze({
 	shapeImageOffsetX: { label: 'Horizontal offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	shapeImageOffsetY: { label: 'Vertical offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	shapeImageScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 },
-	shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, step: 1, value: 6 },
-	shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, step: 1, value: 6 },
+	shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, typeMin: -1000, typeMax: 1000, step: 1, value: 6 },
+	shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, typeMin: -1000, typeMax: 1000, step: 1, value: 6 },
 	textCastLength: { label: 'Length', unit: '%', min: 0, max: 300, step: 1, value: 25, cost: 'raster' },
 	textCastLean: { label: 'Lean', unit: '%', min: -300, max: 300, step: 1, value: -70, cost: 'raster' },
 	textCastBlur: { label: 'Blur', unit: '%', min: 0, max: 100, step: 1, value: 0, cost: 'raster' },

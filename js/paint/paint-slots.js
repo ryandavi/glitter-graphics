@@ -51,8 +51,8 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 		castBlurRatio: { suffix: 'CastBlur', factor: 100, geometry: true },
 		castLength: { field: 'shadowCastLength', suffix: 'CastLength', geometry: true, documentScale: 'effect' },
 		castLean: { field: 'shadowCastLean', suffix: 'CastLean', geometry: true, documentScale: 'effect' },
-		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', control: 'number', geometry: true, documentScale: 'effect' },
-		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', control: 'number', geometry: true, documentScale: 'effect' },
+		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', geometry: true, documentScale: 'effect' },
+		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', geometry: true, documentScale: 'effect' },
 		spread: { field: 'shadowSpread', suffix: 'Spread', geometry: true, documentScale: 'effect' },
 		blur: { field: 'shadowBlur', suffix: 'Blur', geometry: true, documentScale: 'effect' }
 	},

@@ -3113,8 +3113,10 @@ body.is-resizing-panel canvas {
   visibility: visible;
   pointer-events: auto;
 }
-.design-panel[data-gallery-visible=false] > .design-gallery-section {
-  display: none;
+@media (min-width: 801px) {
+  .design-panel[data-gallery-visible=false] > .section.design-gallery-section {
+    display: none;
+  }
 }
 .design-panel > .design-gallery-section[data-library] > .section-header > .section-header-actions > .library-search-action {
   position: relative;
@@ -11242,14 +11244,23 @@ body.modal-open {
     margin: 0;
     padding: 0;
   }
-  .mobile-settings-drawer .mobile-settings-content > .section > .section-header {
-    display: none;
-  }
-  .mobile-settings-drawer .mobile-settings-content > .section:not(.is-open) {
-    display: none;
-  }
   .mobile-settings-drawer .mobile-settings-content > .section > .section-content {
     padding: 0;
+  }
+  .mobile-settings-drawer .mobile-settings-content > .section > .section-content:not(.visible) {
+    display: none;
+  }
+  .mobile-settings-drawer .mobile-settings-content:not(.has-section-stack) > .section > .section-header {
+    display: none;
+  }
+  .mobile-settings-drawer .mobile-settings-content.has-section-stack > .section > .section-header {
+    min-height: var(--touch-target-min);
+    padding: 0 var(--spacing-base) 0 var(--spacing-lg);
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    background: none;
+    text-shadow: none;
+    filter: none;
   }
   .mobile-settings-drawer .mobile-settings-content .property-group > .property-group-label {
     display: none;
@@ -11288,6 +11299,7 @@ body.modal-open {
     filter: none;
   }
   .mobile-sheet-title,
+  .mobile-settings-content > .section > .section-header > .section-header-title,
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header > .section-header-title {
     color: var(--color-text-primary);
     font-size: var(--font-size-title);
@@ -11295,24 +11307,26 @@ body.modal-open {
     text-transform: none;
   }
   .mobile-sheet-title > .section-header-title-icon,
+  .mobile-settings-content > .section > .section-header > .section-header-title > .section-header-title-icon,
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header > .section-header-title > .section-header-title-icon {
     display: none;
   }
   .mobile-sheet-title > .section-header-title-count,
+  .mobile-settings-content > .section > .section-header > .section-header-title > .section-header-title-count,
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header > .section-header-title > .section-header-title-count {
     color: var(--color-text-tertiary);
   }
-  .mobile-sheet-bar > .segmented-control {
-    margin-right: var(--spacing-base);
-  }
+  .mobile-settings-content > .section > .section-header .section-header-action,
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header .section-header-action {
     border: 0;
     background: none;
     color: var(--color-icon-muted);
   }
+  .mobile-settings-content > .section > .section-header .section-header-action::before,
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header .section-header-action::before {
     display: none;
   }
+  .mobile-settings-content > .section > .section-header .section-header-action.active,
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header .section-header-action.active {
     color: var(--color-accent);
   }
@@ -11326,10 +11340,6 @@ body.modal-open {
   }
   body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
     padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
-  }
-  .mobile-sheet-scroll-top {
-    touch-action: pan-x;
-    overscroll-behavior-y: contain;
   }
   body.mobile-sheet-dragging .mobile-settings-drawer,
   body.mobile-sheet-dragging .main-content > .design-panel,

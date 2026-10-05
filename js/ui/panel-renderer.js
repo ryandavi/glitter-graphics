@@ -163,6 +163,8 @@ function applySliderSpec(input, spec) {
 	}
 	input.dataset.default = String(spec.value);
 	input.dataset.unit = spec.unit ?? '';
+	if (spec.typeMin != null) input.dataset.typeMin = String(spec.typeMin);
+	if (spec.typeMax != null) input.dataset.typeMax = String(spec.typeMax);
 }
 
 // The revert target for a slider: normally its registered default, but the mask
@@ -362,8 +364,8 @@ function initializeEditablePropertyValues(root = document) {
 		value.setAttribute('role', 'spinbutton');
 		value.setAttribute('aria-label', input.getAttribute('aria-label') || owner.querySelector('.property-label, .property-pair-mark')?.textContent || 'Value');
 		const asPercent = value.dataset.valueScale === 'percent';
-		value.setAttribute('aria-valuemin', asPercent ? '0' : (input.dataset.scaleMin || input.min));
-		value.setAttribute('aria-valuemax', asPercent ? '100' : (input.dataset.scaleMax || input.max));
+		value.setAttribute('aria-valuemin', asPercent ? '0' : (input.dataset.typeMin || input.dataset.scaleMin || input.min));
+		value.setAttribute('aria-valuemax', asPercent ? '100' : (input.dataset.typeMax || input.dataset.scaleMax || input.max));
 		// Keys (step, Enter, Escape) are the shared numeric listener's (slider.js).
 		value.addEventListener('blur', () => commitEditableReadout(value));
 	});
@@ -847,16 +849,9 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 	const anchorRow = buildOptionGroup(named('Anchor'), [anchor]);
 	attachOptionRevert(anchorRow, anchor, { options: [{ active: true }, {}], roleId: `${prefix}TextureAnchor`, label: 'Texture anchor' });
 	textureSet.appendChild(anchorRow);
-	const offsetItems = [
-		{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
-		{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
-	];
-	// A section's own source uses the transform-panel number fields, with one
-	// shared revert (slot-effects.js `${prefix}ResetTexturePosition`). A second
-	// source keeps the slider pair.
-	textureSet.appendChild(options.owner
-		? buildPairRow({ label: named('Offset'), items: offsetItems })
-		: buildNumberFieldPair({ label: 'Offset', resetId: `${prefix}ResetTexturePosition`, resetTitle: 'Reset texture offset', items: offsetItems }));
+	['X', 'Y'].forEach((axis) => {
+		textureSet.appendChild(buildSliderRow({ id: `${prefix}TextureOffset${axis}`, slider: `textureOffset${axis}`, label: named(`Offset ${axis}`) }));
+	});
 	return [colorSet, textureSet];
 }
 

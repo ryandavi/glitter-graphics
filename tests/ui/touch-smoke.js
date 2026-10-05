@@ -1431,6 +1431,11 @@ async function checkSheetContent(page) {
 	await page.waitForTimeout(350);
 	await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
 	await page.waitForTimeout(450);
+	const edit = await page.locator('#mobileSettingsContainer').boundingBox();
+	const swipe = { x: edit.x + 24, y: edit.y + edit.height - 30 };
+	await oneFingerDrag(page, swipe, { x: swipe.x, y: swipe.y - 120 });
+	assert(await page.evaluate(() => Array.from(document.querySelectorAll('#mobileSettingsContainer, #mobileSettingsContainer .section-content')).some(node => node.scrollTop > 0)), 'Upward movement from top did not scroll Edit');
+	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Edit content scroll changed the detent');
 	const slider = page.locator('#mobileSettingsContainer input[type="range"]:visible').first();
 	await slider.scrollIntoViewIfNeeded();
 	const range = await slider.boundingBox();
@@ -1440,9 +1445,14 @@ async function checkSheetContent(page) {
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Slider drag moved the sheet');
 	await page.evaluate(() => window.editor.setTool(ToolType.BRUSH));
 	await page.waitForTimeout(100);
-	const tab = page.locator('#mobileEditTitle [data-edit-section]').first();
-	await tab.tap();
-	assert(await tab.getAttribute('aria-pressed') === 'true', 'Sheet header segmented control stopped responding to taps');
+	const closed = page.locator('#mobileSettingsContainer > .section:not(.is-open)');
+	assert(await closed.count() === 1, 'Edit did not stack the layer panel beside Mask Settings with one open');
+	const stackedId = await closed.getAttribute('id');
+	await closed.locator('> .section-header').tap();
+	assert(await page.evaluate((id) => {
+		const sections = Array.from(document.querySelectorAll('#mobileSettingsContainer > .section'));
+		return sections.filter(section => section.classList.contains('is-open')).map(section => section.id).join() === id;
+	}, stackedId), 'Tapping a stacked Edit bar did not open that panel alone');
 }
 
 async function checkNumericScrub(page) {

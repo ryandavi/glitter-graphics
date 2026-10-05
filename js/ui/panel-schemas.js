@@ -247,10 +247,8 @@ function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
 				...(baseline ? [{ kind: 'slider', id: `${idPrefix}CastBlur`, slider: 'textCastBlur', hidden: true }] : [])
 			] },
 			{ label: 'Offset', rows: [
-				{ kind: 'numberPair', label: 'Offset', rowId: `${idPrefix}OffsetRow`, items: [
-					{ id: `${idPrefix}OffsetX`, slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
-					{ id: `${idPrefix}OffsetY`, slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
-				] }
+				{ kind: 'slider', id: `${idPrefix}OffsetX`, slider: 'shadowOffsetX' },
+				{ kind: 'slider', id: `${idPrefix}OffsetY`, slider: 'shadowOffsetY' }
 			] },
 			{ label: 'Softness', rows: [
 				{ kind: 'slider', id: `${idPrefix}Spread`, slider: 'shadowSpread' },
@@ -806,6 +804,7 @@ const PANEL_SCHEMAS = {
 					] },
 					{ classes: 'text-actions-group', actions: [
 						{ id: 'textSplit', label: 'Split text', title: 'Split into characters, words or lines', menu: true },
+						...(CONFIG.debug.enabled ? [{ id: 'textCopyStyleAsPreset', label: 'Copy style as preset', title: 'Copy the current style for the preset registry' }] : []),
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
 				] },

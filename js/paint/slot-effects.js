@@ -31,6 +31,14 @@ function buildDefaultFill(options = {}) {
 	return fill;
 }
 
+function buildDefaultTextBackground() {
+	return {
+		enabled: false,
+		...TEXT_BACKGROUND_PRESETS.instagram,
+		fill: buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.backgroundGlitterId })
+	};
+}
+
 // `mode` is UI intent (which display + segmented state); the actual
 // paint/export still derive from glitterId truthiness, so it is additive and
 // parity-safe. Legacy data without `mode` falls back to glitterId (see

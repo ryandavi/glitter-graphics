@@ -1,4 +1,20 @@
 const COMMANDS = {
+	copyStyleAsPreset: {
+		label: 'Copy style as preset', group: 'Text',
+		when: editor => CONFIG.debug.enabled && Boolean(editor.textGlitterManager?.getActiveTextLayer()),
+		async run(editor) {
+			const manager = editor.textGlitterManager;
+			const layer = manager?.getActiveTextLayer();
+			if (!CONFIG.debug.enabled || !layer) return;
+			try {
+				const entry = createStylePresetEntryFromLayer(layer, key => manager.getEffectDefaults(key));
+				await navigator.clipboard.writeText(JSON.stringify(entry, null, '\t') + ',');
+				editor.updateStatus('Style preset copied');
+			} catch (error) {
+				editor.showError('Could not copy style preset: ' + error.message);
+			}
+		}
+	},
 	textFontSize: { run: (editor, value) => editor.textGlitterManager.runTextCommand('size', value) },
 	textToggleBold: { label: 'Toggle Bold', group: 'Text', keys: ['mod+b'], displayKey: 'Ctrl/Cmd + B', allowWhileTyping: true, when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()), run: editor => editor.textGlitterManager.runTextCommand('bold') },
 	textToggleItalic: { label: 'Toggle Italic', group: 'Text', keys: ['mod+i'], displayKey: 'Ctrl/Cmd + I', allowWhileTyping: true, when: editor => Boolean(editor.textGlitterManager?.getActiveTextLayer()), run: editor => editor.textGlitterManager.runTextCommand('italic') },

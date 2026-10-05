@@ -17,14 +17,28 @@ function sliderScaleFor(el) {
 	};
 }
 
+// A slider whose spec has typeMin / typeMax accepts a typed value past its
+// track. The thumb rests at the end and the value itself is kept in
+// data-typed-value until the track is dragged or stepped again.
+function sliderTypedValue(el) {
+	const typed = el?.dataset?.typedValue;
+	return typed === undefined ? null : Number(typed);
+}
+
 // The logical value of a slider (px, %, …): its DOM position through the scale.
 function readSliderValue(el) {
-	return sliderScaleFor(el).toValue(Number(el.value));
+	return sliderTypedValue(el) ?? sliderScaleFor(el).toValue(Number(el.value));
 }
 
 // Put a logical value onto a slider, converting to a raw position first.
 function writeSliderValue(el, value) {
 	el.value = String(sliderScaleFor(el).toPosition(value));
+	const next = Number(value);
+	if (el.dataset.typeMax !== undefined && Number.isFinite(next) && (next < Number(el.min) || next > Number(el.max))) {
+		el.dataset.typedValue = String(Math.min(Number(el.dataset.typeMax), Math.max(Number(el.dataset.typeMin), next)));
+	} else {
+		delete el.dataset.typedValue;
+	}
 }
 
 // The readout text for a slider value: a percent of the slider's range when the
@@ -202,7 +216,7 @@ function bindSlider(slider, valueEl, options = {}) {
 		console.error(error);
 	};
 
-	const readValue = () => sliderScaleFor(slider).toValue(parseValue(slider.value));
+	const readValue = () => sliderTypedValue(slider) ?? sliderScaleFor(slider).toValue(parseValue(slider.value));
 	const updateDisplay = (value) => {
 		if (valueEl) valueEl.innerHTML = formatValue(value);
 	};
@@ -351,7 +365,11 @@ function stepNumericControl(control, direction, { shift = false, alt = false, sc
 	const hasBound = (bound) => bound !== '' && bound != null;
 	const min = hasBound(target.min) ? Number(target.min) : (isRange ? 0 : -Infinity);
 	const max = hasBound(target.max) ? Number(target.max) : (isRange ? 100 : Infinity);
-	const current = Number(target.value) || 0;
+	// A readout steps as far as it can be typed; the track stops at its ends.
+	const pastTrack = isRange && control !== target && target.dataset.typeMax !== undefined;
+	const low = pastTrack ? Number(target.dataset.typeMin) : min;
+	const high = pastTrack ? Number(target.dataset.typeMax) : max;
+	const current = (isRange ? sliderTypedValue(target) : null) ?? (Number(target.value) || 0);
 	let next = (from ?? current) + direction * step;
 	let decimals = Math.max(stepDecimals(current), stepDecimals(step));
 	if (!gridless) {
@@ -361,9 +379,13 @@ function stepNumericControl(control, direction, { shift = false, alt = false, sc
 		next = origin + Math.round((next - origin) / grid) * grid;
 		decimals = stepDecimals(grid);
 	}
-	next = Number(Math.min(max, Math.max(min, next)).toFixed(decimals));
+	next = Number(Math.min(high, Math.max(low, next)).toFixed(decimals));
 	if (next === current) return false;
-	target.value = String(next);
+	if (pastTrack) writeSliderValue(target, next);
+	else {
+		target.value = String(next);
+		if (isRange) delete target.dataset.typedValue;
+	}
 	const preview = () => target.dispatchEvent(new Event('input', { bubbles: true }));
 	if (scrub) scheduleLiveApply(target, target.dataset.numericCost || 'style', preview);
 	else withStepCoalesceKey(numericStepCoalesceKey(target), preview);
@@ -423,11 +445,11 @@ function commitEditableReadout(readout) {
 	const next = readout.dataset.valueScale === 'percent' && Number.isFinite(typed)
 		? rangePercentToValue(typed, Number(input.dataset.scaleMin ?? input.min), Number(input.dataset.scaleMax ?? input.max))
 		: typed;
-	const before = input.value;
+	const before = readSliderValue(input);
 	if (Number.isFinite(next)) writeSliderValue(input, next);
 	// `input` redraws the readout from the slider either way.
 	input.dispatchEvent(new Event('input', { bubbles: true }));
-	if (input.value !== before) input.dispatchEvent(new Event('change', { bubbles: true }));
+	if (readSliderValue(input) !== before) input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function cancelEditableReadout(readout) {
@@ -436,17 +458,25 @@ function cancelEditableReadout(readout) {
 	numericStepTarget(readout)?.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-// A focused number field must not change value when the panel under it is
-// scrolled with the wheel; the panel scrolls instead.
-function scrollPastNumberField(event) {
+// The wheel over a focused number field or readout steps it as the arrow keys
+// do: up raises, Shift is x10, and one run of steps is one undo. A control
+// that is not focused leaves the wheel to the panel. One mouse notch is one
+// step; a trackpad's small deltas add up to CONFIG.ui.numericWheel.stepPx.
+let numericWheelTravel = 0;
+
+function stepNumericControlByWheel(event) {
+	if (event.ctrlKey || event.metaKey) return;
+	// Shift turns a vertical wheel into a horizontal one on some platforms.
+	const delta = event.deltaY || event.deltaX;
+	if (!delta) return;
 	event.preventDefault();
-	let scroller = event.currentTarget.parentElement;
-	while (scroller && scroller !== document.body) {
-		if (scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY)) break;
-		scroller = scroller.parentElement;
-	}
-	const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? (scroller?.clientHeight || 400) : 1;
-	scroller?.scrollBy(0, event.deltaY * unit);
+	const control = event.currentTarget;
+	numericWheelTravel = Math.sign(delta) === Math.sign(numericWheelTravel) ? numericWheelTravel + delta : delta;
+	if (event.deltaMode === 0 && Math.abs(numericWheelTravel) < CONFIG.ui.numericWheel.stepPx) return;
+	numericWheelTravel = 0;
+	if (control.tagName !== 'INPUT') editedReadouts.delete(control);
+	stepNumericControl(control, delta < 0 ? 1 : -1, { shift: event.shiftKey, alt: event.altKey });
+	if (document.activeElement === control) selectNumericControlText(control);
 }
 
 // Pointer distance is in value units, independent of a field's step grid.
@@ -553,6 +583,8 @@ function installNumericControlKeys() {
 
 	document.addEventListener('input', (event) => {
 		if (event.target?.matches?.('[role="spinbutton"][data-editable-value]')) editedReadouts.add(event.target);
+		// Dragging the track takes the value back onto it.
+		if (event.isTrusted && event.target?.type === 'range') delete event.target.dataset.typedValue;
 	}, true);
 
 	document.addEventListener('change', (event) => {
@@ -613,15 +645,14 @@ function installNumericControlKeys() {
 		if (!control) return;
 		numericFocusSession += 1;
 		if (control.type === 'range') return;
-		if (control.type === 'number') {
-			committedValues.set(control, control.value);
-			control.addEventListener('wheel', scrollPastNumberField, { passive: false });
-		}
+		if (control.type === 'number') committedValues.set(control, control.value);
+		numericWheelTravel = 0;
+		control.addEventListener('wheel', stepNumericControlByWheel, { passive: false });
 		selectNumericControlText(control);
 		pendingPointerSelect = pointerFocusCandidate === control ? control : null;
 	});
 	document.addEventListener('focusout', (event) => {
-		if (event.target?.matches?.('input[type="number"]')) event.target.removeEventListener('wheel', scrollPastNumberField);
+		event.target?.removeEventListener?.('wheel', stepNumericControlByWheel);
 	});
 	document.addEventListener('mouseup', (event) => {
 		const control = pendingPointerSelect;

@@ -119,7 +119,7 @@ CDP is used for multi-touch because `page.touchscreen` cannot express pinch/rota
 24. A second finger on a corner joins a proportional pinch with one undo step.
 25. Fast downward Edit-header flicks close sheets at half and peek.
 26. Slow sheet release settles to a detent, leaves canvas geometry fixed while dragging, refits once, grabber arrows step detents, app/OS Reduce Motion suppresses transitions, and a simulated safe-area inset clears the nav buttons while preserving the full detent.
-27. Top content hands downward pulls to the sheet; upward/scrolled content stays scrolling, sliders drag horizontally and header tabs remain tappable.
+27. Top content hands downward pulls to the sheet; upward/scrolled content stays scrolling, sliders drag horizontally, Edit content scrolls, and stacked Edit bars open their panel on tap.
    TOUCH-3 pointer-event migration for mobile layer-list reordering.
 
 ### Notes
@@ -216,3 +216,5 @@ This focused browser check adds a Tier-3 filter above a real document, compares 
 `node tests/ui/text-tool-verify.js` covers desktop and phone edit sessions, mirroring, word and drag selection, multiline keyboard movement, composition, history, empty text, symbols and paste, wrapping, split placement in exported pixels, nested splits, background plates, the layer cap and color emoji masks. `GLITTER_TEST_CSS` may point to a scratch Sass compile while the committed CSS awaits Ryan's recompile. `text-warp-unit.js` also tests grapheme content, source ranges, case, wrapping, overflow and decoration layout. `touch-handle-verify.js` covers Auto Height width resizing and conversion to Fixed on vertical edges with touch and mouse. The effect fragility scene includes colored emoji and decorations on warped text.
 
 `tests/parity/raster-scale-verify.js` covers unequal text/shape scales, physical outline widths, unstretched texture stacks and preview/export geometry. `mask-edge-verify.js` holds PNG encoding callbacks to verify the stroke-overlay handoff. `style-presets-unit.js` lints all authored templates against the live text/transform vocabulary and option registries. Pinned-frame mouse and touch selection is covered by `fill-transform-verify.js`.
+
+`node tools/wordart-contact-sheet.js` renders the 23 available WordArt looks at 64px in original gallery order beside `docs/local/WORDART-EXAMPLES.png`. It writes `comparison.html` and `comparison.png` under `docs/local/wordart-preview/` (or a supplied output directory), reserving cells for stacked text and lit 3D. It reuses the real text slot masks and paint helpers without adding layers to the document. The style preset unit test covers copied recipes, Default resets, cleared unnamed warps and all-pairs style switching without leaked appearance or motion and text-only WordArt targets.

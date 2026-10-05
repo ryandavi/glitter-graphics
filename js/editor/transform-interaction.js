@@ -190,6 +190,14 @@ snapTransformPosition(transform, position, options = {}) {
 	}
 
 ,
+	// A panel scale edit stretches the raster the layer already has. A type
+	// that rasterizes its scale is redrawn at the new one when the edit settles,
+	// as a handle drag does on release.
+	redrawSettledScale(layer, manager) {
+		if (LAYER_UI_CONFIG[layer.type]?.rasterizesScale) manager.renderLayer(layer);
+	}
+
+,
 	applyTransformSizeFromPanel(prefix, layer, manager, axis, rawValue) {
 		const value = Math.max(1, Math.round(rawValue));
 		const lockAspect = resolveAspectLock(getLayerTransform(layer));
@@ -288,7 +296,7 @@ snapTransformPosition(transform, position, options = {}) {
 				this.saveState('Transform layer');
 			});
 		});
-		const bindNumberInput = (id, applyValue) => {
+		const bindNumberInput = (id, applyValue, { scales = false } = {}) => {
 			const input = document.getElementById(id);
 			if (!input) return;
 
@@ -303,6 +311,7 @@ snapTransformPosition(transform, position, options = {}) {
 			input.addEventListener('change', () => {
 				const active = activeManager();
 				if (!active) return;
+				if (scales) this.redrawSettledScale(active.layer, active.manager);
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -335,10 +344,10 @@ snapTransformPosition(transform, position, options = {}) {
 		});
 		bindNumberInput(ids.sizeWidth, (value, active) => {
 			this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, 'width', value);
-		});
+		}, { scales: true });
 		bindNumberInput(ids.sizeHeight, (value, active) => {
 			this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, 'height', value);
-		});
+		}, { scales: true });
 
 		// Rotation, layer opacity and scale are sliders like any other: the shared
 		// binder owns their readout, revert, frame cadence and commit.
@@ -433,7 +442,12 @@ snapTransformPosition(transform, position, options = {}) {
 					}
 					this.loadTransformSettings(active.layer, prefix);
 				},
-				onCommit: commitTransform
+				onCommit: () => {
+					const active = activeManager();
+					if (!active) return;
+					this.redrawSettledScale(active.layer, active.manager);
+					this.saveState('Transform layer');
+				}
 			});
 			reset?.addEventListener('click', () => {
 				const active = activeManager();
@@ -442,6 +456,7 @@ snapTransformPosition(transform, position, options = {}) {
 				const scale = { ...current.scale, [axis]: 100 };
 				if (document.getElementById(ids.proportional)?.checked) scale[axis === 'x' ? 'y' : 'x'] = 100;
 				active.manager.updateTransform(active.layer.id, { scale });
+				this.redrawSettledScale(active.layer, active.manager);
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -487,6 +502,7 @@ snapTransformPosition(transform, position, options = {}) {
 						y: CONFIG.tools.stickers.defaults.transform.scale.y
 					}
 					}));
+				this.redrawSettledScale(active.layer, active.manager);
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -566,6 +582,7 @@ snapTransformPosition(transform, position, options = {}) {
 				const active = activeManager();
 				if (!active?.manager?.resetTransform) return;
 				active.manager.resetTransform(active.layer.id);
+				this.redrawSettledScale(active.layer, active.manager);
 				this.loadTransformSettings(active.layer, prefix);
 			});
 		}

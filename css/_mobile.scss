@@ -318,8 +318,8 @@
 		flex-direction: column;
 		overflow: hidden;
 
-		// The drawer is the panel: its sections sit directly on its surface,
-		// one at a time, with no bars of their own.
+		// The drawer is the panel: a lone section sits directly on its surface
+		// with no bar of its own. Two stack under flat bars, one open at a time.
 		.mobile-settings-content {
 			display: flex;
 			flex: 1;
@@ -333,11 +333,23 @@
 				margin: 0;
 				padding: 0;
 
-				> .section-header { display: none; }
+				> .section-content {
+					padding: 0;
 
-				&:not(.is-open) { display: none; }
+					&:not(.visible) { display: none; }
+				}
+			}
 
-				> .section-content { padding: 0; }
+			&:not(.has-section-stack) > .section > .section-header { display: none; }
+
+			&.has-section-stack > .section > .section-header {
+				min-height: var(--touch-target-min);
+				padding: 0 var(--spacing-base) 0 var(--spacing-lg);
+				border: 0;
+				border-top: 1px solid var(--color-border);
+				background: none;
+				text-shadow: none;
+				filter: none;
 			}
 
 			// The grabber row already names the panel; a group label above the
@@ -388,6 +400,7 @@
 	}
 
 	.mobile-sheet-title,
+	.mobile-settings-content > .section > .section-header > .section-header-title,
 	.main-content > :is(.layers-panel, .design-panel) > .section > .section-header > .section-header-title {
 		color: var(--color-text-primary);
 		font-size: var(--font-size-title);
@@ -398,10 +411,9 @@
 		> .section-header-title-count { color: var(--color-text-tertiary); }
 	}
 
-	.mobile-sheet-bar > .segmented-control { margin-right: var(--spacing-base); }
-
 	// A bar action here is a flat glyph: the gloss belongs to chrome, and this
 	// row is the top of a body.
+	.mobile-settings-content > .section > .section-header .section-header-action,
 	.main-content > :is(.layers-panel, .design-panel) > .section > .section-header .section-header-action {
 		border: 0;
 		background: none;
@@ -424,13 +436,6 @@
 
 	body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
 		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
-	}
-
-	// At the top, vertical movement is arbitrated by the sheet. Horizontal
-	// controls keep their own pointer handling; scrolled lists stay native.
-	.mobile-sheet-scroll-top {
-		touch-action: pan-x;
-		overscroll-behavior-y: contain;
 	}
 
 	body.mobile-sheet-dragging,

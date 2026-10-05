@@ -128,11 +128,6 @@ class MobileManager {
 			this.openDrawer('edit');
 		});
 
-		document.getElementById('mobileEditTitle')?.addEventListener('click', (event) => {
-			const tab = event.target.closest('[data-edit-section]');
-			if (tab) this.syncEditSections(tab.dataset.editSection);
-		});
-
 		window.addEventListener('viewportChanged', () => {
 			if (!this.isMobile || !this.activeDrawer || this.drawerViewportSyncing) return;
 			const state = this.editor.viewport?.captureViewState?.();
@@ -288,47 +283,34 @@ class MobileManager {
 		if (wasEditOpen) this.activeDrawer = 'edit';
 	}
 
-	// The Edit drawer has no bars: it shows one section, named in the grabber
-	// row. When it holds two (a fill layer beside its tool settings, a layer
-	// beside Mask Settings) the name becomes a two-way switch between them.
-	syncEditSections(preferredKey = null) {
+	// A lone section sits bare on the drawer, named in the grabber row. Two (a
+	// fill layer beside its tool settings, a layer beside Mask Settings) stack
+	// under their own bars and collapse as the sidebar accordion does.
+	syncEditSections() {
 		const container = document.getElementById('mobileSettingsContainer');
 		const bar = document.getElementById('mobileEditTitle');
 		if (!container || !bar) return;
 		const present = Array.from(container.children)
 			.map((element) => Object.keys(this.settingsRegistry).find((key) => this.settingsRegistry[key].element === element))
 			.filter(Boolean);
-		// The tool being used leads; otherwise the last section the user chose.
-		const toolKey = this.editor.currentTool === ToolType.BRUSH ? 'brush' : present[0];
-		const activeKey = [preferredKey, this.activeEditSection, toolKey].find((key) => present.includes(key)) || present[0];
-		if (preferredKey) this.activeEditSection = preferredKey;
+		const stacked = present.length > 1;
+		container.classList.toggle('has-section-stack', stacked);
+		// A new pairing opens on the tool being used; after that the bars the
+		// user opened and closed stand.
+		const pairing = present.join();
+		const open = present.filter((key) => this.settingsRegistry[key].element.classList.contains('is-open'));
+		const toolKey = this.editor.currentTool === ToolType.BRUSH && present.includes('brush') ? 'brush' : present[0];
+		const activeKey = stacked && pairing === this.editSectionPairing && open.length === 1 ? open[0] : toolKey;
+		this.editSectionPairing = pairing;
 		present.forEach((key) => {
 			const entry = this.settingsRegistry[key];
 			if (entry.collapsibleName) this.editor.setCollapsibleSectionOpen?.(entry.collapsibleName, key === activeKey);
 		});
-		const titleOf = (key) => this.settingsRegistry[key].element.querySelector('.section-header-title-text')?.textContent || '';
-		if (present.length < 2) {
-			const title = document.createElement('span');
-			title.className = 'mobile-sheet-title';
-			title.textContent = present.length ? titleOf(present[0]) : '';
-			bar.replaceChildren(title);
-			return;
-		}
-		const tabs = document.createElement('div');
-		tabs.className = 'segmented-control';
-		tabs.setAttribute('role', 'group');
-		tabs.setAttribute('aria-label', 'Edit section');
-		present.forEach((key) => {
-			const tab = document.createElement('button');
-			tab.type = 'button';
-			tab.className = 'segmented-option';
-			tab.dataset.editSection = key;
-			tab.textContent = titleOf(key);
-			tab.classList.toggle('active', key === activeKey);
-			tab.setAttribute('aria-pressed', String(key === activeKey));
-			tabs.appendChild(tab);
-		});
-		bar.replaceChildren(tabs);
+		const title = document.createElement('span');
+		title.className = 'mobile-sheet-title';
+		title.textContent = stacked ? 'Edit'
+			: (present.length ? this.settingsRegistry[present[0]].element.querySelector('.section-header-title-text')?.textContent || '' : '');
+		bar.replaceChildren(title);
 	}
 
 	returnSettingsSections() {
@@ -476,17 +458,6 @@ class MobileManager {
 			const name = handle.dataset.mobileDrawerHandle;
 			const headers = name === 'edit' ? '.mobile-sheet-bar' : ':scope > .section > .section-header';
 			sheet.querySelectorAll(headers).forEach(header => header.classList.add('mobile-sheet-drag-header', 'ui-ignore-gestures'));
-			// Each sheet owns different nested scroll regions. Bind the stable sheet,
-			// not the property sections that move between the sidebar and Edit.
-			const scrollSelector = '.mobile-settings-content, .layers-list, .panel-scroll-region, .section-content, .filters-container-inner, .asset-browser-content, .property-scrollbox';
-			const syncScroll = () => sheet.querySelectorAll(scrollSelector).forEach(region => {
-				const scrollable = /^(auto|scroll)$/.test(getComputedStyle(region).overflowY);
-				region.classList.toggle('mobile-sheet-scroll-top', scrollable && region.scrollTop <= 0 &&
-					!Array.from(region.querySelectorAll(scrollSelector)).some(child => child.scrollTop > 0));
-			});
-			sheet.addEventListener('scroll', syncScroll, { capture: true, passive: true });
-			new MutationObserver(syncScroll).observe(sheet, { childList: true, subtree: true });
-			syncScroll();
 			let suppressClick = false;
 			sheet.addEventListener('click', event => {
 				if (!suppressClick) return;
@@ -498,18 +469,21 @@ class MobileManager {
 				if (!this.isMobile || this.activeDrawer !== name || this.sheetDrag || event.button !== 0) return;
 				suppressClick = false;
 				const header = event.target.closest('[data-mobile-drawer-handle], .mobile-sheet-drag-header');
-				let region = null;
+				let content = false;
 				if (!header) {
 					if (event.pointerType !== 'touch' || event.target.closest('input, select, textarea, .gradient-preview, .layer-drag-handle, .scroll-region-thumb, [data-pointer-drag]')) return;
 					for (let node = event.target; node && node !== sheet; node = node.parentElement) {
 						const style = getComputedStyle(node);
 						if (style.touchAction === 'none' || (node.scrollWidth > node.clientWidth && /^(auto|scroll)$/.test(style.overflowX))) return;
-						if (!region && /^(auto|scroll)$/.test(style.overflowY)) region = node;
+						if (!/^(auto|scroll)$/.test(style.overflowY)) continue;
+						// Content scrolled anywhere up the chain scrolls back first.
+						if (node.scrollTop > 0) return;
+						content = true;
 					}
-					if (!region || region.scrollTop > 0) return;
+					if (!content) return;
 				}
 				this.sheetDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
-					startHeight: this.sheetHeight, region, mode: 'pending', lastY: event.clientY,
+					startHeight: this.sheetHeight, content, mode: 'pending',
 					samples: [{ y: event.clientY, time: event.timeStamp }] };
 			}, true);
 			sheet.addEventListener('pointermove', event => {
@@ -519,29 +493,34 @@ class MobileManager {
 				if (drag.mode === 'pending') {
 					if (Math.abs(dy) <= CONFIG.ui.gestures.tapSlopPx) return;
 					if (Math.abs(event.clientX - drag.startX) > Math.abs(dy)) { this.sheetDrag = null; return; }
-					drag.mode = drag.region && dy < 0 ? 'scroll' : 'drag';
+					// Upward movement over content is the browser's own scroll.
+					if (drag.content && dy < 0) { this.sheetDrag = null; return; }
+					drag.mode = 'drag';
 					sheet.setPointerCapture(event.pointerId);
 					suppressClick = true;
-					if (drag.mode === 'drag') {
-						this.cancelDrawerViewportUpdate();
-						cancelAnimationFrame(this.sheetResizeFrame);
-						document.body.classList.add('mobile-sheet-dragging');
-					}
+					this.cancelDrawerViewportUpdate();
+					cancelAnimationFrame(this.sheetResizeFrame);
+					document.body.classList.add('mobile-sheet-dragging');
 				}
-				if (drag.mode === 'scroll') {
-					drag.region.scrollTop += drag.lastY - event.clientY;
-				} else {
-					const detents = CONFIG.ui.mobile.sheetDetents;
-					const height = drag.startHeight - dy / window.innerHeight * 100;
-					this.setSheetHeight(Math.max(detents.minDragHeight, Math.min(detents.full, height)), { live: true, resize: false });
-					const now = event.timeStamp;
-					drag.samples.push({ y: event.clientY, time: now });
-					while (drag.samples.length > 2 && drag.samples[1].time < now - detents.velocityWindowMs) drag.samples.shift();
-				}
-				drag.lastY = event.clientY;
+				const detents = CONFIG.ui.mobile.sheetDetents;
+				const height = drag.startHeight - dy / window.innerHeight * 100;
+				this.setSheetHeight(Math.max(detents.minDragHeight, Math.min(detents.full, height)), { live: true, resize: false });
+				const now = event.timeStamp;
+				drag.samples.push({ y: event.clientY, time: now });
+				while (drag.samples.length > 2 && drag.samples[1].time < now - detents.velocityWindowMs) drag.samples.shift();
 				event.preventDefault();
 				event.stopPropagation();
 			});
+			// Content scrolls natively, so it keeps momentum. A pull down from content
+			// resting at its top belongs to the sheet, and only a cancelled touchmove
+			// stops the browser from claiming that touch as a scroll.
+			sheet.addEventListener('touchmove', event => {
+				const drag = this.sheetDrag;
+				if (!drag?.content || !event.cancelable || event.touches.length !== 1) return;
+				const dx = event.touches[0].clientX - drag.startX;
+				const dy = event.touches[0].clientY - drag.startY;
+				if (drag.mode === 'drag' || (dy > 0 && dy >= Math.abs(dx))) event.preventDefault();
+			}, { passive: false });
 			const finish = event => {
 				if (event.type === 'lostpointercapture' && event.target !== sheet) return;
 				const drag = this.sheetDrag;
@@ -557,7 +536,6 @@ class MobileManager {
 						? 0 : (event.clientY - first.y) / Math.max(1, now - first.time);
 					this.settleSheet(velocity, drag.startHeight);
 				}
-				syncScroll();
 			};
 			sheet.addEventListener('pointerup', finish);
 			sheet.addEventListener('pointercancel', finish);

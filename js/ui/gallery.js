@@ -27,7 +27,8 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 // The Library shows one asset kind at a time: an armed picker's kind (a
 // glitter slot picker unless the strip names another library), else the
 // panel's home kind (LAYER_UI_CONFIG `library`). The section header names it;
-// with no kind (nothing selected) syncNoLayerPanelState owns the title.
+// with no kind (nothing selected, or a layer type with no library)
+// syncNoLayerPanelState owns the title.
 function syncLibraryView() {
 	const section = document.getElementById('designGallerySection');
 	if (!section) return null;

@@ -414,11 +414,7 @@ class TextGlitterManager {
 	// raw slider defaults, so a freshly enabled background already looks like a
 	// deliberate choice instead of the placeholder-preset "Choose a preset…" state.
 	getDefaultTextBackground() {
-		return {
-			enabled: false,
-			...TEXT_BACKGROUND_PRESETS.instagram,
-			fill: this.getDefaultBackgroundFill()
-		};
+		return buildDefaultTextBackground();
 	}
 
 	getMinBoxSize() {

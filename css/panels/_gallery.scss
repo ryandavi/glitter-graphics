@@ -30,8 +30,14 @@
 		pointer-events: auto;
 	}
 
-	&[data-gallery-visible="false"] > .design-gallery-section {
-		display: none;
+	// A layer type with no library (showDesignGallery: false) drops the Library
+	// from the sidebar. `.section` keeps this ahead of the panel shell's
+	// `> .section.main-section` display. The phone's Library drawer keeps its
+	// title row.
+	@media (min-width: ($mobile-breakpoint + 1px)) {
+		&[data-gallery-visible="false"] > .section.design-gallery-section {
+			display: none;
+		}
 	}
 
 	// The Library's search row folds behind the header search button

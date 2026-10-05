@@ -7,6 +7,7 @@ const TEXT_ACTION_METHODS = {
 		bind('#textStrikethrough', 'textToggleStrikethrough');
 		bind('[data-text-align]', button => 'textAlign' + button.dataset.textAlign[0].toUpperCase() + button.dataset.textAlign.slice(1));
 		document.getElementById('textSplit')?.addEventListener('click', () => COMMANDS.splitText.run(this.editor));
+		bind('#textCopyStyleAsPreset', 'copyStyleAsPreset');
 		document.getElementById('textSymbols')?.replaceChildren(...CONFIG.tools.text.symbols.map(symbol => { const button = document.createElement('button'); button.className = 'btn-flat'; button.type = 'button'; button.textContent = symbol; button.title = `Insert ${symbol}`; button.addEventListener('click', () => this.insertTextSymbol(symbol)); return button; }));
 		document.getElementById('textSymbols')?.addEventListener('mousedown', event => event.preventDefault());
 		const emoji = document.getElementById('textColorEmoji');

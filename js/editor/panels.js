@@ -334,7 +334,8 @@ isLayerContentLocked(layer) {
 		if (defaultGroups) defaultGroups.hidden = false;
 		if (multiGroup) multiGroup.hidden = true;
 		if (emptyText) emptyText.textContent = 'Nothing selected';
-		if (designTitle) designTitle.textContent = 'Nothing selected';
+		// A selected layer with no library kind (a filter) is still a selection.
+		if (designTitle) designTitle.textContent = this.layerManager?.getActiveLayer?.() ? 'Library' : 'Nothing selected';
 		if (emptySubtext) emptySubtext.textContent = 'Pick a layer to edit it, or add content below.';
 	}
 

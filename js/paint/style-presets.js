@@ -10,9 +10,10 @@
 //   - a slot the preset names is switched on and reset to its defaults plus
 //     the preset's values, so nothing from the previous look leaks through;
 //   - an effect slot the preset leaves out is switched off (its settings are
-//     parked like the panel toggle parks them);
+//     text styles also discard parked effects;
 //   - the fill, when left out, is kept.
-// Sparkles and the text background are never touched.
+// Text style fields reset before applying a look; omitted fields use defaults.
+// Text styles clear background, sparkles and motion, and reset layer paint.
 //
 // Glitter slots also name a `color`: it's the thumbnail's stand-in for the
 // glitter, and the look if the user later switches the slot to Color. A
@@ -28,8 +29,23 @@ const STYLE_PRESET_TARGETS = Object.freeze({
 
 const STYLE_PRESET_GROUPS = Object.freeze([
 	Object.freeze({ id: 'classic', label: 'Classic' }),
-	Object.freeze({ id: 'shiny', label: 'Shiny' })
+	Object.freeze({ id: 'shiny', label: 'Shiny' }),
+	Object.freeze({ id: 'wordart', label: 'WordArt' })
 ]);
+
+const STYLE_PRESET_TEXT_DEFAULTS = Object.freeze({
+	'textData.fontId': CONFIG.tools.text.defaultFontId,
+	'textData.fontWeight': CONFIG.tools.text.defaultFontWeight,
+	'textData.fontStyle': CONFIG.tools.text.defaultFontStyle,
+	'textData.textCase': CONFIG.tools.text.defaultTextCase,
+	'textData.letterSpacing': FIELDS.textLetterSpacing.value,
+	'textData.lineHeight': FIELDS.textLineHeight.value / 100,
+	'textData.warp.type': CONFIG.tools.text.defaultWarpType,
+	'textData.warp.bend': FIELDS.textWarpBend.value,
+	'textData.decoration.underline': false,
+	'textData.decoration.strikethrough': false
+});
+const STYLE_PRESET_TEXT_PATHS = Object.freeze(Object.keys(STYLE_PRESET_TEXT_DEFAULTS));
 
 const STYLE_PRESET_ENTRIES = (() => {
 	const glitter = (glitterId, color, extra = {}) => ({ mode: 'glitter', glitterId, color, ...extra });
@@ -39,6 +55,18 @@ const STYLE_PRESET_ENTRIES = (() => {
 		gradient: normalizeEffectGradient({ ...CONFIG.rendering.gradient, ...GRADIENT_PRESETS.get(presetId).value, ...extra })
 	});
 	const all = ['text', 'shape', 'sticker'];
+	const inlineGradient = (colors, extra = {}) => ({ mode: 'gradient', gradient: normalizeEffectGradient({
+		...CONFIG.rendering.gradient, angle: 180,
+		stops: colors.map((stop, index) => ({ offset: Array.isArray(stop) ? stop[0] : index / (colors.length - 1), color: Array.isArray(stop) ? stop[1] : stop, alpha: 1 })), ...extra
+	}) });
+	const wordart = (id, label, slots, data = {}) => ({ id, label, group: 'wordart', targets: ['text'], value: {
+		slots, data: { 'textData.textCase': 'upper', 'textData.fontStyle': 'normal', 'textData.letterSpacing': 0, ...data }
+	} });
+	const impact = { 'textData.fontId': 'impact' };
+	const warp = (type, bend) => ({ 'textData.warp.type': type, 'textData.warp.bend': bend });
+	const hardShadow = (color, offsetX, offsetY, extra = {}) => solid(color, { offsetX, offsetY, spread: 0, blur: 0, ...extra });
+	const extrude = (color, x, y) => hardShadow(color, x, y, { kind: 'extrude' });
+	const cast = color => solid(color, { kind: 'cast', castAnchor: 'baseline', castLengthRatio: 0.25, castLeanRatio: -0.7, castBlurRatio: 0 });
 	// A shadow shows only where it reaches past the outline: |offset| +
 	// spread + blur must beat the outline width (the unit test holds every
 	// look to it).
@@ -46,14 +74,14 @@ const STYLE_PRESET_ENTRIES = (() => {
 		{
 			id: 'default', label: 'Default', group: 'classic', targets: ['text'], tags: ['reset'],
 			value: {
-				resetFill: true,
 				slots: { fill: buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text }) },
-				data: { 'textData.fontId': CONFIG.tools.text.defaultFontId, 'textData.textCase': CONFIG.tools.text.defaultTextCase }
+				data: { 'textData.fontId': CONFIG.tools.text.defaultFontId, 'textData.fontStyle': CONFIG.tools.text.defaultFontStyle, 'textData.textCase': CONFIG.tools.text.defaultTextCase,
+					'textData.letterSpacing': FIELDS.textLetterSpacing.value, 'textData.warp.type': CONFIG.tools.text.defaultWarpType, 'textData.warp.bend': FIELDS.textWarpBend.value }
 			}
 		},
 		{ id: 'plain', label: 'Plain', group: 'classic', targets: ['shape', 'sticker'], tags: ['none', 'reset'], value: { slots: {} } },
 		{
-			id: 'blingee-pink', label: 'Blingee Pink', group: 'classic', targets: all,
+			id: 'blingee-pink', label: 'Bling', group: 'classic', targets: all,
 			value: { slots: {
 				fill: glitter(89, '#ff4fa3'),
 				border: glitter(20, '#ffffff', { widthPx: 4 }),
@@ -64,13 +92,6 @@ const STYLE_PRESET_ENTRIES = (() => {
 			id: 'glitter-outline', label: 'Glitter Outline', group: 'classic', targets: ['sticker'], backdrop: 'dark',
 			value: { slots: {
 				border: glitter(20, '#ffffff', { widthPx: 6, edgeStyle: 'round' })
-			} }
-		},
-		{
-			id: 'wordart-rainbow', label: 'WordArt Rainbow', group: 'classic', targets: ['text', 'shape'],
-			value: { slots: {
-				fill: gradient('spectrum', { angle: 90 }),
-				shadow: solid('#7f7f7f', { offsetX: 6, offsetY: 6, spread: 0 })
 			} }
 		},
 		{
@@ -111,6 +132,32 @@ const STYLE_PRESET_ENTRIES = (() => {
 				border: solid('#000000', { widthPx: 2, edgeStyle: 'hard' })
 			} }
 		},
+
+		// Serif and Arial Black looks use the default font until those faces
+		// are available. Unnamed warps draw flat.
+		wordart('outline', 'Outline', { fill: solid('#ffffff'), border: solid('#000000', { widthPx: 1 }) }, impact),
+		wordart('up', 'Up', { fill: solid('#000000') }, { ...impact, ...warp('rise', 35) }),
+		wordart('arc', 'Arc', { fill: solid('#000000') }, { ...warp('arc', 25), 'textData.letterSpacing': 6 }),
+		wordart('squeeze', 'Squeeze', { fill: solid('#000000') }, { ...impact, ...warp('bulge', -60) }),
+		wordart('inverted-arc', 'Inverted Arc', { fill: solid('#000000') }, warp('arc', -25)),
+		wordart('italic-outline', 'Italic Outline', { fill: solid('#ffffff'), border: solid('#000000', { widthPx: 1 }), shadow: hardShadow('#999999', 3, 2) }, { 'textData.fontStyle': 'italic' }),
+		wordart('slate', 'Slate', { fill: solid('#336699'), shadow: hardShadow('#c1c1c1', 3, 2) }),
+		wordart('mauve', 'Mauve', { fill: solid('#a6a7dc'), border: solid('#6e6dc4', { widthPx: 2 }), shadow: hardShadow('#9392e4', 4, 4) }, impact),
+		wordart('graydient', 'Graydient', { fill: inlineGradient(['#adadad', '#ffffff']), shadow: hardShadow('#7f7f7f', 4, 3) }, { 'textData.letterSpacing': 12 }),
+		wordart('red-blue', 'Red Blue', { fill: solid('#0363ca'), border: solid('#bad1f5', { widthPx: 2 }), shadow: hardShadow('#732d40', 4, 4) }, impact),
+		wordart('radial', 'Radial', { fill: inlineGradient(['#fdef50', '#f29f42'], { type: 'radial' }), shadow: hardShadow('#c9c9c9', 3, 3) }, impact),
+		wordart('purple', 'Purple', { fill: inlineGradient(['#773fc9', '#bf47cc']), shadow: hardShadow('#bea5f8', 4, 4) }, { ...impact, ...warp('rise', 15) }),
+		wordart('green-marble', 'Green Marble', { fill: solid('#106229'), shadow: hardShadow('#d9e8e0', 0, -18) }),
+		wordart('rainbow', 'Rainbow', { fill: inlineGradient([[0.18, '#d31573'], [0.31, '#e74b2e'], [0.44, '#f7a51d'], [0.57, '#fbec3d'], [0.7, '#3aa33f'], [0.83, '#2941b5'], [1, '#6f0bc3']], { angle: 90 }), shadow: cast('#c8c8c8') }, impact),
+		wordart('aqua', 'Aqua', { fill: inlineGradient(['#a6aedd', '#729ebb', '#4f9aa0']), shadow: hardShadow('#c9d2da', 3, 3) }, warp('ripple', 50)),
+		wordart('paper-bag', 'Paper Bag', { fill: solid('#95795b'), shadow: extrude('#221103', 5, 5) }, impact),
+		wordart('sunset', 'Sunset', { fill: inlineGradient(['#f4f4eb', '#ebb0ae']), shadow: extrude('#084d92', -4, -8) }, warp('arch', 40)),
+		wordart('tilt', 'Tilt', { fill: inlineGradient(['#623608', '#debc41']), shadow: cast('#705522') }, { ...impact, 'textData.fontStyle': 'italic' }),
+		wordart('blues', 'Blues', { fill: solid('#54ccfa'), border: solid('#2969b6', { widthPx: 2 }), shadow: extrude('#0b3198', 8, -8) }, { ...impact, ...warp('ripple', 50) }),
+		wordart('yellow-dash', 'Yellow Dash', { fill: solid('#f4f621'), border: solid('#434308', { widthPx: 2 }), shadow: hardShadow('#abab74', 3, 3) }, { ...impact, ...warp('climb', 40) }),
+		wordart('chrome', 'Chrome', { fill: inlineGradient(['#484848', '#dadada', '#5f5f5f', '#aaaaaa', '#f4f4f4']), shadow: extrude('#393939', 4, 3) }),
+		wordart('superhero', 'Superhero', { fill: inlineGradient(['#fdd213', '#f97306']), shadow: extrude('#8b3802', -6, 10) }, { ...impact, ...warp('rise', 35) }),
+		wordart('horizon', 'Horizon', { fill: inlineGradient([[0, '#7f95ac'], [0.5, '#dfe3e7'], [0.51, '#98514e'], [1, '#b89695']]), shadow: extrude('#110e0e', -5, 5) }, impact),
 
 		// Shiny: each leans on a different effect so they read apart at a
 		// glance: chisel metal, pillow candy, gloss gel, glow, offset retro.
@@ -222,8 +269,35 @@ function getStylePresetEnabledPaths(definitions, slots) {
 	return new Set(definitions.filter((definition) => slots[definition.key] && definition.enabledPath).map((definition) => definition.enabledPath));
 }
 
+function createStylePresetEntryFromLayer(layer, getSlotDefaults) {
+	const slots = {};
+	getStylePresetSlotDefinitions(layer.type).forEach((definition) => {
+		const data = readFieldPath(layer, definition.pathKeys);
+		if (!data || (definition.enabledKeys && !readFieldPath(layer, definition.enabledKeys))) return;
+		const defaults = getSlotDefaults(definition.key);
+		slots[definition.key] = Object.fromEntries(Object.entries(data).filter(([key, value]) =>
+			key === 'mode' || (data.mode === 'glitter' && ['color', 'glitterId'].includes(key)) || (!key.startsWith('_') && JSON.stringify(value) !== JSON.stringify(defaults[key]))));
+	});
+	const paths = layer.textData?.orientation == null ? STYLE_PRESET_TEXT_PATHS : [...STYLE_PRESET_TEXT_PATHS, 'textData.orientation'];
+	const data = Object.fromEntries(paths.map(path => [path, readFieldPath(layer, splitFieldPath(path))]).filter(([, value]) => value !== undefined));
+	return structuredClone({ id: 'custom-style', label: 'Custom style', group: 'wordart', targets: ['text'], value: { slots, data } });
+}
+
 // context: { getSlotDefaults(key), glitterAvailable(id), onSlotDisabled?(key) }
 function applyStylePresetValue(layer, value, context) {
+	if (layer.type === LayerType.TEXT_GLITTER) {
+		layer.opacity = FIELDS.layerOpacity.value;
+		layer.blendMode = CONFIG.layers.defaultBlendMode;
+		layer.animations = [];
+		delete layer.animation;
+		layer.textData.textBackground = buildDefaultTextBackground();
+		layer.textData.sparkles = null;
+		layer.textData.border = null;
+		layer.textData.shadow = null;
+		layer.textData.bevel = buildDefaultBevel();
+		delete layer.textData.effectDrafts;
+		(LAYER_UI_CONFIG[layer.type].paintSlots || []).filter(slot => slot.role !== 'fill').forEach(slot => context.onSlotDisabled?.(slot.key));
+	}
 	const slots = value.slots || {};
 	const definitions = getStylePresetSlotDefinitions(layer.type);
 	const enabledPaths = getStylePresetEnabledPaths(definitions, slots);
@@ -235,15 +309,10 @@ function applyStylePresetValue(layer, value, context) {
 	definitions.forEach((definition) => {
 		const partial = slots[definition.key] ? structuredClone(slots[definition.key]) : null;
 		if (definition.role === 'fill') {
-			if (!partial) return;
-			const fill = value.resetFill ? context.getSlotDefaults(definition.key) : readFieldPath(layer, definition.pathKeys);
-			Object.assign(fill, {
-				opacity: FIELDS.slotOpacity.value,
-				scale: FIELDS.textureScale.value,
-				colorAdjust: null
-			}, partial);
+			if (!partial && layer.type !== LayerType.TEXT_GLITTER) return;
+			const fill = { ...context.getSlotDefaults(definition.key), ...(partial || {}) };
 			repairGlitter(definition, fill);
-			if (value.resetFill) writeFieldPath(layer, definition.pathKeys, fill);
+			writeFieldPath(layer, definition.pathKeys, fill);
 			return;
 		}
 		if (!partial && !enabledPaths.has(definition.enabledPath)) {
@@ -258,7 +327,8 @@ function applyStylePresetValue(layer, value, context) {
 		const draftHost = definition.draftKeys ? readFieldPath(layer, definition.draftKeys.slice(0, -1)) : null;
 		if (draftHost) delete draftHost[definition.draftKeys.at(-1)];
 	});
-	Object.entries(value.data || {}).forEach(([path, fieldValue]) => {
+	if (layer.type === LayerType.TEXT_GLITTER) delete layer.textData.effectDrafts;
+	Object.entries({ ...(layer.type === LayerType.TEXT_GLITTER ? STYLE_PRESET_TEXT_DEFAULTS : {}), ...value.data }).forEach(([path, fieldValue]) => {
 		writeFieldPath(layer, splitFieldPath(path), structuredClone(fieldValue));
 	});
 }
@@ -268,6 +338,7 @@ function applyStylePresetValue(layer, value, context) {
 function findStylePresetId(layer) {
 	const library = STYLE_PRESETS[layer?.type];
 	if (!library) return null;
+	if (layer.type === LayerType.TEXT_GLITTER && (layer.textData.textBackground?.enabled || layer.textData.sparkles || layer.animations?.length || layer.animation || layer.opacity !== FIELDS.layerOpacity.value || layer.blendMode !== CONFIG.layers.defaultBlendMode)) return null;
 	const definitions = getStylePresetSlotDefinitions(layer.type);
 	const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 	return library.entries.find((entry) => {
@@ -384,7 +455,7 @@ function fitStylePresetEntry(entry, type) {
 	const { targets, ...rest } = entry;
 	const declared = new Set(getStylePresetSlotDefinitions(type).map((definition) => definition.key));
 	const slots = Object.fromEntries(Object.entries(entry.value.slots || {}).filter(([key]) => declared.has(key)));
-	return { ...rest, value: { ...entry.value, slots } };
+	return { ...rest, value: { ...entry.value, slots, data: { ...(type === LayerType.TEXT_GLITTER ? STYLE_PRESET_TEXT_DEFAULTS : {}), ...entry.value.data } } };
 }
 
 // One library per target type (the grid shows only what fits that layer).

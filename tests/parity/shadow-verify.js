@@ -115,7 +115,7 @@ const { exportBytes, hashBytes, assertByteIdentity } = require('./export-harness
 					check(data.shadow.kind === kind, prefix + ' Type binding');
 					check(document.getElementById(prefix + 'CastLength').closest('.property-row').hidden === (kind !== 'cast'), prefix + ' cast controls visibility');
 					check(document.getElementById(prefix + 'Blur').closest('.property-row').hidden === (kind === 'cast' && layer === text), prefix + ' blur units must match shadow kind');
-					for (const suffix of ['OffsetRow', 'Spread']) check(document.getElementById(prefix + suffix).closest('.property-row').hidden === (kind === 'cast'), prefix + ' must expose only cast distances');
+					for (const suffix of ['OffsetX', 'OffsetY', 'Spread']) check(document.getElementById(prefix + suffix).closest('.property-row').hidden === (kind === 'cast'), prefix + ' must expose only cast distances');
 					if (kind === 'cast') {
 						if (layer === text) {
 							check(!document.getElementById(prefix + 'CastAnchorRow').hidden, 'Cast Anchor must be visible on text');
