@@ -36,6 +36,14 @@
 				{
 					"id": "sans-serif",
 					"label": "Sans Serif"
+				},
+				{
+					"id": "serif",
+					"label": "Serif"
+				},
+				{
+					"id": "monospace",
+					"label": "Monospace"
 				}
 			]
 		},
@@ -343,6 +351,139 @@
 				"bold",
 				"condensed",
 				"headline"
+			]
+		},
+		{
+			"id": "arial",
+			"name": "Arial",
+			"system": true,
+			"family": "Arial, \"Helvetica Neue\", Helvetica, \"Liberation Sans\", sans-serif",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"sans-serif",
+				"body"
+			]
+		},
+		{
+			"id": "arial-black",
+			"name": "Arial Black",
+			"system": true,
+			"family": "\"Arial Black\", \"Arial Bold\", Gadget, sans-serif",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"sans-serif",
+				"bold",
+				"headline"
+			]
+		},
+		{
+			"id": "verdana",
+			"name": "Verdana",
+			"system": true,
+			"family": "Verdana, Geneva, \"DejaVu Sans\", sans-serif",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"sans-serif",
+				"body"
+			]
+		},
+		{
+			"id": "tahoma",
+			"name": "Tahoma",
+			"system": true,
+			"family": "Tahoma, Geneva, Verdana, sans-serif",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"sans-serif",
+				"body"
+			]
+		},
+		{
+			"id": "trebuchet-ms",
+			"name": "Trebuchet MS",
+			"system": true,
+			"family": "\"Trebuchet MS\", \"Lucida Grande\", \"Lucida Sans Unicode\", sans-serif",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"sans-serif",
+				"rounded",
+				"body"
+			]
+		},
+		{
+			"id": "times-new-roman",
+			"name": "Times New Roman",
+			"system": true,
+			"family": "\"Times New Roman\", Times, \"Liberation Serif\", serif",
+			"weight": 400,
+			"fallback": "serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"serif",
+				"elegant",
+				"body"
+			]
+		},
+		{
+			"id": "georgia",
+			"name": "Georgia",
+			"system": true,
+			"family": "Georgia, \"Times New Roman\", Times, serif",
+			"weight": 400,
+			"fallback": "serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"serif",
+				"elegant",
+				"body"
+			]
+		},
+		{
+			"id": "courier-new",
+			"name": "Courier New",
+			"system": true,
+			"family": "\"Courier New\", Courier, \"Liberation Mono\", monospace",
+			"weight": 400,
+			"fallback": "monospace",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"monospace",
+				"retro",
+				"body"
 			]
 		},
 		{

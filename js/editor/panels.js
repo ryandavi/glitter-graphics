@@ -623,10 +623,7 @@ isLayerContentLocked(layer) {
 			els.name.textContent = placeholder;
 			els.name.title = '';
 		}
-		if (els.badges) {
-			els.badges.innerHTML = '';
-			if (els.badges.nextElementSibling?.classList.contains('asset-provenance')) els.badges.nextElementSibling.remove();
-		}
+		if (els.badges) els.badges.innerHTML = '';
 		if (els.size) els.size.textContent = '';
 		if (els.frames) els.frames.textContent = '';
 	}
@@ -650,10 +647,6 @@ isLayerContentLocked(layer) {
 		};
 
 		badgesEl.replaceChildren();
-		const oldProvenance = badgesEl.nextElementSibling;
-		if (oldProvenance?.classList.contains('asset-provenance')) oldProvenance.remove();
-		const provenance = manager?.createAssetProvenance?.(asset);
-		if (provenance) badgesEl.after(provenance);
 
 		// Category badge reveals the asset in its gallery/category.
 		if (asset.category) {

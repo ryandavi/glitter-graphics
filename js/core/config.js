@@ -473,7 +473,7 @@ const CONFIG = deepFreeze({
 			defaultWarpType: 'none',
 			// Canvas input uses the same string and layout as the panel.
 			canvasEditing: true,
-			fontsManifest: 'data/fonts.json?v=5',
+			fontsManifest: 'data/fonts.json?v=6',
 			defaultFontId: 'comic-sans',
 			defaultFontWeight: 400,
 			defaultFontStyle: 'normal',
