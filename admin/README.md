@@ -66,3 +66,5 @@ Exports include category `parent` as a slug or null, while `count` remains the c
 Local CLI ingest uses `AssetIngestService::receiveLocalFile`; it shares upload format, size, analysis and thumbnail checks, but copies a local file into the incoming queue. HTTP uploads continue to require `is_uploaded_file`.
 
 An alternate mapping may list `deferredFiles` as exact paths relative to the glitter root. These files are reported as deferred and left untouched, including when they match another source. Use this for an asset awaiting repair; remove the deferral when it is ready.
+
+GIF analysis and thumbnails tolerate historical files whose logical-screen header is smaller than their frames. The analyzer reads GIF block boundaries for the true dimensions and supplies corrected header bytes to GD in memory; imported source files and their byte hashes remain unchanged.

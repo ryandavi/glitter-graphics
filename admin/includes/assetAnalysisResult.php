@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/colorUtils.php');
 require_once(__DIR__ . '/colorClassifier.php');
+require_once(__DIR__ . '/gifAnalyzer.php');
 
 class AssetAnalysisResult
 {
@@ -45,7 +46,7 @@ class AssetAnalysisResult
 			];
 		}
 		$classification = self::classificationFrom($analysis, $palette, $config);
-		$info = @getimagesize($filePath);
+		$info = GifAnalyzer::imageInfo($filePath);
 		$mime = $info['mime'] ?? (new finfo(FILEINFO_MIME_TYPE))->file($filePath);
 		$frameCount = (int)($analysis['frame_count'] ?? 1);
 		$frameRate = (int)($analysis['frame_rate'] ?? 0);

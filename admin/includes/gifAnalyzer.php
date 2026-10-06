@@ -5,6 +5,60 @@ require_once(__DIR__ . '/colorClassifier.php');
 
 class GifAnalyzer
 {
+	// Some historical GIFs declare a 1x1 logical screen around larger frames.
+	// Read block boundaries, rather than searching compressed data for markers.
+	public static function imageInfo($path)
+	{
+		$info = @getimagesize($path);
+		if (!$info || $info[2] !== IMAGETYPE_GIF) return $info;
+		$data = file_get_contents($path);
+		$length = strlen($data);
+		if ($length < 13) return $info;
+		$packed = ord($data[10]);
+		$offset = 13 + (($packed & 128) ? 3 * (1 << (($packed & 7) + 1)) : 0);
+		$width = $info[0];
+		$height = $info[1];
+		while ($offset < $length) {
+			$block = ord($data[$offset++]);
+			if ($block === 0x3b) break;
+			if ($block === 0x21) {
+				$offset++;
+			} elseif ($block === 0x2c) {
+				if ($offset + 9 > $length) return $info;
+				$frame = unpack('vleft/vtop/vwidth/vheight/Cpacked', substr($data, $offset, 9));
+				$width = max($width, $frame['left'] + $frame['width']);
+				$height = max($height, $frame['top'] + $frame['height']);
+				$offset += 9 + (($frame['packed'] & 128) ? 3 * (1 << (($frame['packed'] & 7) + 1)) : 0) + 1;
+			} else {
+				return $info;
+			}
+			while ($offset < $length) {
+				$size = ord($data[$offset++]);
+				if (!$size) break;
+				$offset += $size;
+			}
+			if ($offset > $length) return $info;
+		}
+		if ($width <= 65535 && $height <= 65535) {
+			$info[0] = $width;
+			$info[1] = $height;
+		}
+		return $info;
+	}
+
+	public static function loadGdImage($path)
+	{
+		$info = @getimagesize($path);
+		$loaders = [IMAGETYPE_GIF => 'imagecreatefromgif', IMAGETYPE_PNG => 'imagecreatefrompng', IMAGETYPE_JPEG => 'imagecreatefromjpeg'];
+		if (!$info || !isset($loaders[$info[2]])) return false;
+		$image = @$loaders[$info[2]]($path);
+		if ($image || $info[2] !== IMAGETYPE_GIF) return $image;
+		$bounds = self::imageInfo($path);
+		if ($bounds[0] === $info[0] && $bounds[1] === $info[1]) return false;
+		$data = file_get_contents($path);
+		return @imagecreatefromstring(substr_replace($data, pack('vv', $bounds[0], $bounds[1]), 6, 4));
+	}
+
 	private $imagePath;
 	private $config;
 
@@ -625,7 +679,7 @@ class GifAnalyzer
 		if (!isset($loaders[$info[2]])) {
 			throw new Exception('Unsupported image type. Only GIF, PNG, and JPG are supported.');
 		}
-		$image = @$loaders[$info[2]]($this->imagePath);
+		$image = self::loadGdImage($this->imagePath);
 		if (!$image) {
 			throw new Exception('Could not create image from file');
 		}

@@ -416,7 +416,7 @@ abstract class AssetAPI
         $analyzer = new GifAnalyzer($filePath, $this->analysisConfig());
         $analysis = $analyzer->analyze();
         $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
-        $imageInfo = @getimagesize($filePath);
+        $imageInfo = GifAnalyzer::imageInfo($filePath);
         $width = $imageInfo ? $imageInfo[0] : 0;
         $height = $imageInfo ? $imageInfo[1] : 0;
 

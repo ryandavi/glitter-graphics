@@ -205,14 +205,9 @@ class AssetIngestService
 
 	private function generateThumbnail($sourcePath)
 	{
-		$info = @getimagesize($sourcePath);
-		if (!$info) return null;
-		$loaders = [
-			IMAGETYPE_GIF => 'imagecreatefromgif',
-			IMAGETYPE_PNG => 'imagecreatefrompng',
-			IMAGETYPE_JPEG => 'imagecreatefromjpeg',
-		];
-		if (!isset($loaders[$info[2]]) || !($source = @$loaders[$info[2]]($sourcePath))) return null;
+		require_once(__DIR__ . '/gifAnalyzer.php');
+		$source = GifAnalyzer::loadGdImage($sourcePath);
+		if (!$source) return null;
 		$max = (int)$this->config['thumbnail_max_size'];
 		$scale = min(1, $max / max(imagesx($source), imagesy($source)));
 		$width = max(1, (int)round(imagesx($source) * $scale));

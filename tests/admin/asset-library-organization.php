@@ -38,6 +38,7 @@ try {
 		'bring-on-the-glitter/red/red-02.gif' => 'sparkelies/ruby.gif',
 		'bring-on-the-glitter/red/gray-01.gif' => 'stardrops/Sparkbutton-gray.gif',
 		'bring-on-the-glitter/red/crimson-001.gif' => 'bring-on-the-glitter/red/crimson-001.gif',
+		'bring-on-the-glitter/red/satinhearts-010.gif' => 'bring-on-the-glitter/bring-on-the-hearts/satinhearts-010.gif',
 		'sparkle/library-ruby.gif' => 'sparkelies/ruby.gif',
 		'sparkle/duplicate-ruby.gif' => 'sparkelies/ruby.gif',
 	];
@@ -75,13 +76,17 @@ try {
 	$map['deferredFiles'] = ['deferred.gif'];
 	$import = new GlitterSourceImport($db, $testConfig, $map);
 	$plan = $import->plan();
-	checkLibrary(count($plan) === 4, 'Wrong distinct-image count');
+	checkLibrary(count($plan) === 5, 'Wrong distinct-image count');
 	checkLibrary((int)$db->query('SELECT COUNT(*) FROM glitter')->fetch_row()[0] === 2, 'Dry run changed records');
 	checkLibrary(is_file("$root/$directory/images/sparkle/duplicate-ruby.gif"), 'Dry run removed a file');
 	$import->apply($plan);
 	checkLibrary(md5_file("$root/$directory/images/deferred.gif") === md5_file("$root/images/glitter/sparkelies/platinum.gif"), 'Deferred file changed');
 	$assets = $api->exportAssets();
-	checkLibrary(count($assets) === 3, 'Import did not collapse duplicates');
+	checkLibrary(count($assets) === 4, 'Import did not collapse duplicates');
+	$heartsPath = "$root/$directory/images/bring-on-the-glitter/satinhearts-010.gif";
+	checkLibrary(md5_file($heartsPath) === md5_file("$root/images/glitter/bring-on-the-glitter/bring-on-the-hearts/satinhearts-010.gif"), 'GIF decoder changed source bytes');
+	$heartsAnalysis = $api->analyzeLocal($heartsPath)['normalized'];
+	checkLibrary($heartsAnalysis['dimensions'] === ['width' => 50, 'height' => 50], 'Undersized GIF screen hid the real frame dimensions');
 	$ruby = array_values(array_filter($assets, function ($asset) { return $asset['name'] === 'Ruby'; }))[0];
 	checkLibrary($ruby['id'] === $first && $ruby['name'] === 'Ruby' && $ruby['originalName'] === 'ruby', 'Original naming or retained record failed');
 	checkLibrary(in_array('Jewel', $ruby['tags'], true), 'Merged tag lost');
@@ -96,7 +101,7 @@ try {
 	$category = array_values(array_filter($categories, function ($entry) { return $entry['id'] === 'sparkelies'; }))[0];
 	checkLibrary($category['parent'] === 'sparkle' && $category['attribution']['authorId'] === 'dan', 'Parent/creator export failed');
 	$import->apply($import->plan());
-	checkLibrary(count($api->exportAssets()) === 3 && count($api->ingestList('ready')) === 1, 'Rerun created duplicate records');
+	checkLibrary(count($api->exportAssets()) === 4 && count($api->ingestList('ready')) === 1, 'Rerun created duplicate records');
 	echo "PASS isolated import: precedence, names, tags, aliases, lineage, queue, hierarchy, exports and rerun\n";
 } finally {
 	$connection->query("DROP DATABASE `$name`");
