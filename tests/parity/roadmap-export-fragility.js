@@ -46,7 +46,7 @@ async function buildComposition(page) {
 			SPARKLE_PRESETS.apply(presetId, manager.fieldHost.ensureSlot(layer, 'sparkles'));
 		};
 
-		const animatedSticker = editor.stickerManager.content.find((item) => item.isAnimated);
+		const animatedSticker = editor.stickerLibrary.content.find((item) => item.isAnimated);
 		if (!animatedSticker) throw new Error('Need an animated sticker for fragility coverage');
 
 		// Animated sticker: outline + glow (Neon Glow), bevel, Kira Kira.

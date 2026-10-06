@@ -93,7 +93,7 @@ async function main() {
 			const revealCalls = [];
 			window.revealAssetBrowser = (_editor, manager, assetId) => {
 				revealCalls.push({
-					manager: manager === editor.stickerManager ? 'sticker' : 'glitter',
+					manager: manager === editor.stickerLibrary ? 'sticker' : 'glitter',
 					assetId
 				});
 			};
@@ -132,7 +132,7 @@ async function main() {
 		);
 
 		const filteredReveal = await page.evaluate(async () => {
-			const manager = window.editor.glitterManager;
+			const manager = window.editor.glitterLibrary;
 			const asset = manager.content[0];
 			manager.activeFilters.search = 'source-that-cannot-match';
 			manager.activeFilters.categories.add('missing-category');

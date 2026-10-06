@@ -47,6 +47,7 @@ const ASSET_BROWSERS = Object.freeze([
 	{
 		prefix: 'glitter', searchHost: 'glitterSearchSection', browserHost: 'glitterOptions',
 		title: 'Glitter', layout: 'folders', placeholder: 'Search by name or tag...',
+		creatorView: true, tileCategoryIcon: true,
 		filters: [
 			{ kind: 'nameOnly' },
 			{ kind: 'chips', label: 'Colors', filter: 'color', swatch: true, options: [
@@ -66,6 +67,7 @@ const ASSET_BROWSERS = Object.freeze([
 	{
 		prefix: 'sticker', searchHost: 'stickersSearchSection', browserHost: 'stickersOptions',
 		title: 'Stickers', layout: 'folders', placeholder: 'Search stickers...',
+		creatorView: true,
 		filters: [
 			{ kind: 'nameOnly' },
 			{ kind: 'chips', label: 'Stretch', filter: 'stretchable', options: [{ value: 'stretchable', label: 'Stretchable' }] },

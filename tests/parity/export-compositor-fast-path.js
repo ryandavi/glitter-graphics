@@ -358,7 +358,7 @@ function assert(condition, message) {
 		CompositeFrameReducer.prototype.reduce = () => { throw new Error('Still path invoked frame reduction'); };
 		try {
 			await compositor.composeFrameAt({
-				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				visibleLayers, glitterGifs: window.editor.glitterLibrary.content, canvasData,
 				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
 			});
 			check(planBuilds === visibleLayers.length, 'Still export rebuilt a layer plan after common preparation');
@@ -373,7 +373,7 @@ function assert(condition, message) {
 		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
 		try {
 			const preparedContext = await compositor.prepareContext({
-				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				visibleLayers, glitterGifs: window.editor.glitterLibrary.content, canvasData,
 				exportSettings: structuredClone(window.editor.exportSettings), callbacks
 			});
 			check(planBuilds === visibleLayers.length, 'Prepared context did not build exactly one plan per layer');
@@ -386,7 +386,7 @@ function assert(condition, message) {
 		compositor._buildLayerExportPlan = (...args) => { planBuilds++; return originalBuild(...args); };
 		try {
 			await exporter.process({
-				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				visibleLayers, glitterGifs: window.editor.glitterLibrary.content, canvasData,
 				exportSettings: structuredClone(window.editor.exportSettings), target: EXPORT_TARGETS['animation:gif'], callbacks,
 				outputFormat: 'mp4',
 				scheduleSink: ({ schedulePlan, renderScheduleEntry }) => {
@@ -402,14 +402,14 @@ function assert(condition, message) {
 		window.editor.exportResultPresenter.show = () => {};
 		try {
 			const stillBlob = await window.editor.stillImageExporter.process({
-				visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+				visibleLayers, glitterGifs: window.editor.glitterLibrary.content, canvasData,
 				exportSettings: stillSettings, target: EXPORT_TARGETS['still:gif'], callbacks, timestamp: 0
 			});
 			check(stillBlob.type === 'image/gif' && stillBlob.size > 0, 'Shared GIF pipeline did not produce a still GIF');
 			for (const targetId of ['still:png', 'still:jpeg']) {
 				const target = EXPORT_TARGETS[targetId];
 				const blob = await window.editor.stillImageExporter.process({
-					visibleLayers, glitterGifs: window.editor.glitterManager.content, canvasData,
+					visibleLayers, glitterGifs: window.editor.glitterLibrary.content, canvasData,
 					exportSettings: stillSettings, target, callbacks, timestamp: 0
 				});
 				check(blob.type === target.mimeType && blob.size > 0, `${targetId} did not encode through shared still composition`);

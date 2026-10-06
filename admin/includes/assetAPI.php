@@ -456,7 +456,7 @@ abstract class AssetAPI
         if (!is_array($value)) {
             return null;
         }
-        $fields = ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'];
+        $fields = ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes'];
         $licenses = ['unknown', 'personal-use', 'commercial', 'public-domain', 'CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0', 'OFL-1.1', 'system'];
         $out = [];
         foreach ($fields as $field) {
@@ -554,9 +554,10 @@ abstract class AssetAPI
         $slug = $this->paths->validateSlug($data['slug'] ?? '');
         if ($name === '') throw new InvalidArgumentException('Category name is required');
         $this->assertCategorySlugAvailable($slug);
+        $parentId = $this->validateCategoryParent($data['parent_id'] ?? null);
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            'sssssis',
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, parent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            'sssssisi',
             [
                 $name,
                 $slug,
@@ -565,6 +566,7 @@ abstract class AssetAPI
                 (string)($data['color'] ?? '#ff69b4'),
                 (int)($data['sort_order'] ?? 999),
                 $this->normalizeAttributionJson($data['attribution'] ?? null),
+                $parentId,
             ]
         );
         $stmt->close();
@@ -584,6 +586,12 @@ abstract class AssetAPI
         $assetTable = $this->tables['table'];
         $categoriesTable = $this->tables['categories_table'];
         $categoryIdField = $this->getCategoryIdField();
+        $childStmt = $this->db->prepare("SELECT COUNT(*) AS count FROM $categoriesTable WHERE parent_id = ?", 'i', [$categoryId]);
+        $children = $this->fetchOneAssoc($childStmt->get_result());
+        $childStmt->close();
+        if ((int)$children['count'] > 0) {
+            return ['success' => false, 'error' => 'Cannot delete a category that has child sets'];
+        }
 
         $countStmt = $this->db->prepare(
             "SELECT COUNT(*) AS count FROM $assetTable WHERE $categoryIdField = ?",
@@ -623,7 +631,7 @@ abstract class AssetAPI
                 GROUP BY c.id
                 ORDER BY
                     CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
-                    item_count DESC,
+                    c.sort_order,
                     c.name
             ";
         } else {
@@ -639,6 +647,7 @@ abstract class AssetAPI
         $result = $this->db->query($sql);
         $rows = $this->fetchAllAssoc($result);
         $categories = [];
+        $slugs = array_column($rows, 'slug', 'id');
 
         // Attribution is not (yet) a column on the category tables. Carry any
         // hand-authored `attribution` block forward from the existing JSON so an
@@ -660,6 +669,7 @@ abstract class AssetAPI
         foreach ($rows as $row) {
             $category = [
                 'id' => $row['slug'],
+                'parent' => $slugs[$row['parent_id'] ?? 0] ?? null,
                 'name' => $row['name'],
                 'icon' => isset($row['icon']) ? $row['icon'] : '',
                 'color' => isset($row['color']) ? $row['color'] : '#ff69b4',
@@ -740,6 +750,12 @@ abstract class AssetAPI
             $params[] = (int)$data['sort_order'];
         }
 
+        if (array_key_exists('parent_id', $data)) {
+            $fields[] = 'parent_id = ?';
+            $types .= 'i';
+            $params[] = $this->validateCategoryParent($data['parent_id'], $id);
+        }
+
         if (array_key_exists('attribution', $data)) {
             $fields[] = "attribution = ?";
             $types .= 's';
@@ -812,6 +828,29 @@ abstract class AssetAPI
 
     // A category slug owns both a database prefix and a physical folder.
     // Case-only changes need a temporary hop on case-insensitive filesystems.
+    protected function validateCategoryParent($parentId, $categoryId = null)
+    {
+        if ($parentId === null || $parentId === '') return null;
+        if (!ctype_digit((string)$parentId) || (int)$parentId < 1) {
+            throw new InvalidArgumentException('Parent must be a root category');
+        }
+        $parentId = (int)$parentId;
+        if ($parentId === $categoryId) throw new InvalidArgumentException('A category cannot parent itself');
+        $stmt = $this->db->prepare("SELECT id, parent_id FROM {$this->tables['categories_table']} WHERE id = ?", 'i', [$parentId]);
+        $parent = $this->fetchOneAssoc($stmt->get_result());
+        $stmt->close();
+        if (!$parent || $parent['parent_id'] !== null) {
+            throw new InvalidArgumentException('Parent must be a root category; only two levels are supported');
+        }
+        if ($categoryId !== null) {
+            $stmt = $this->db->prepare("SELECT COUNT(*) AS count FROM {$this->tables['categories_table']} WHERE parent_id = ?", 'i', [$categoryId]);
+            $children = $this->fetchOneAssoc($stmt->get_result());
+            $stmt->close();
+            if ((int)$children['count'] > 0) throw new InvalidArgumentException('A category with children cannot have a parent');
+        }
+        return $parentId;
+    }
+
     private function renameCategoryDirectory($source, $destination, $categoryId)
     {
         if ($source === $destination || !is_dir($source)) {
@@ -1579,7 +1618,14 @@ abstract class AssetAPI
         foreach ($assets as $asset) {
             $tagNames = $asset['tag_names'] ? explode('||', $asset['tag_names']) : [];
             $searchTerms = !empty($asset['alias_names']) ? explode('||', $asset['alias_names']) : [];
-            $formatted[] = $this->formatAssetForExport($asset, $tagNames, $searchTerms);
+            $searchTerms = array_values(array_unique(array_merge($searchTerms, json_decode($asset['search_terms'] ?? '[]', true) ?: [])));
+            $entry = $this->formatAssetForExport($asset, $tagNames, $searchTerms);
+            if (!empty($asset['original_name'])) $entry['originalName'] = $asset['original_name'];
+            if (!empty($asset['appearances'])) {
+                $appearances = json_decode($asset['appearances'], true);
+                if (is_array($appearances) && $appearances) $entry['appearances'] = $appearances;
+            }
+            $formatted[] = $entry;
         }
 
         return $formatted;
@@ -1642,7 +1688,7 @@ abstract class AssetAPI
     protected function formatAssetForBrowseIndex($asset)
     {
         $fields = [
-            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution',
+            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution', 'originalName', 'appearances',
             'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
             'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source', 'sliced',
         ];

@@ -66,6 +66,8 @@ const SUITES = [
 	{ file: 'ui/fill-transform-verify.js', tags: ['layers', 'mask'] },
 	{ file: 'ui/manifest-library-browser.js', tags: ['assets'] },
 	{ file: 'ui/lazy-manifest-browser.js', tags: ['assets'] },
+	{ file: 'ui/asset-library-organization.js', tags: ['assets'] },
+	{ file: 'admin/asset-library-organization.php', tags: ['admin', 'assets'], command: 'php' },
 	{ file: 'ui/shape-touch-verify.js', tags: ['touch', 'shape'] },
 	{ file: 'admin/admin-color-classifier.php', tags: ['admin'], command: 'php' },
 	{ file: 'admin/admin-export-contract.php', tags: ['admin'], command: 'php' },

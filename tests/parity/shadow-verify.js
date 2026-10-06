@@ -93,7 +93,7 @@ const { exportBytes, hashBytes, assertByteIdentity } = require('./export-harness
 			paint.add.getContext('2d').fillRect(110, 190, 60, 40);
 			paint.hasContent = true; paint.liveRevision++; glitter.maskHasContent = true;
 			e.paintMaskStore.commitPaintState(glitter);
-			const asset = e.stickerManager.content.find(item => item.isAnimated);
+			const asset = e.stickerLibrary.content.find(item => item.isAnimated);
 			check(asset, 'Animated sticker fixture missing');
 			const sticker = e.stickerManager.createLayer(asset.id);
 			sticker.transform.position = { x: 325, y: 215 };

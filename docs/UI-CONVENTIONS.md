@@ -109,6 +109,8 @@ Vertical section bodies, layer lists, asset galleries and filters, preset picker
 
 ## Layers panel and lists
 
+The glitter and sticker Library supports Style and Creator views, declared by `ASSET_BROWSERS.creatorView`. The segmented control appears with at least two identified creators. Style shows roots, then child set cards followed by the root's own tiles; set titles and search headings show `Root › Set`. Creator cards derive from home-category/item attribution ids. Unknown lists only assets with no creator id, grouped by style root. Set cards show a creator byline, counts include owned assets only, and filtered root counts sum their child sets. Set pages show imported historical appearances in a separate “Carried over from earlier sets” row; those tiles retain one home and one search result. Back from a set preserves its Style or Creator origin. Asset information displays the original name and publication lineage beside its credit.
+
 - A layer row is `.list-row` with layer hooks (`layer-item`, `layer-swatch`, `layer-name`). `LayerManager.renderLayersList` builds it by hand, because it is a sortable list and not a schema.
 - No row has a border. Selection is a filled row (`.selected`), and the active layer a stronger fill (`.active`).
 - Trailing actions (`.list-row-actions`) show while the row is hovered, focused or selected, and always where there is no hover. A state that is on, such as a locked lock, stays in view.

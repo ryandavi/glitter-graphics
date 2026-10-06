@@ -24,10 +24,10 @@ async function openEditor(page) {
 async function buildComposition(page) {
 	return page.evaluate(async () => {
 		const editor = window.editor;
-		const animatedGlitters = editor.glitterManager.content.filter((item) => item.isAnimated);
-		const animatedSticker = editor.stickerManager.content.find((item) => item.isAnimated);
+		const animatedGlitters = editor.glitterLibrary.content.filter((item) => item.isAnimated);
+		const animatedSticker = editor.stickerLibrary.content.find((item) => item.isAnimated);
 		// Keep the black-pixel fixture stable when the library gains new assets.
-		const staticSticker = editor.stickerManager.content.find((item) => item.id === 225);
+		const staticSticker = editor.stickerLibrary.content.find((item) => item.id === 225);
 
 		if (animatedGlitters.length < 2) {
 			throw new Error('Need at least two animated glitter swatches for export parity coverage');

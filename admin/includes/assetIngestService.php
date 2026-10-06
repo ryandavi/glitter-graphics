@@ -18,7 +18,18 @@ class AssetIngestService
 
 	public function receive($assetType, $file, $analyze, $batchId = null)
 	{
-		$inspection = $this->paths->inspectUpload($file);
+		return $this->receiveFile($assetType, $file, $analyze, $batchId, false);
+	}
+
+	public function receiveLocalFile($assetType, $path, $analyze, $batchId = null)
+	{
+		if (PHP_SAPI !== 'cli') throw new RuntimeException('Local ingest is CLI-only');
+		return $this->receiveFile($assetType, ['name' => basename($path), 'tmp_name' => $path, 'size' => filesize($path)], $analyze, $batchId, true);
+	}
+
+	private function receiveFile($assetType, $file, $analyze, $batchId, $local)
+	{
+		$inspection = $this->paths->inspectUpload($file, $local);
 		$hash = md5_file($file['tmp_name']);
 		$duplicate = $this->findDuplicate($assetType, $hash);
 		if ($duplicate) {
@@ -32,7 +43,7 @@ class AssetIngestService
 		$base = $this->paths->sanitizeFilename($file['name'], $assetType);
 		$filename = $this->paths->collisionSafeFilename($directory, $base, $inspection['extension']);
 		$destination = $directory . DIRECTORY_SEPARATOR . $filename;
-		if (!move_uploaded_file($file['tmp_name'], $destination)) {
+		if (!($local ? copy($file['tmp_name'], $destination) : move_uploaded_file($file['tmp_name'], $destination))) {
 			throw new RuntimeException('Could not store incoming file');
 		}
 		// Named from what the uploader called the file, not from the slug, so

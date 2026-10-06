@@ -11,9 +11,9 @@ async function main() {
 			const editor = window.editor;
 			await editor.loadBlankImage(80, 60, '#ffffff');
 			const manager = editor.stickerManager;
-			const indexedSlice = manager.content.find((asset) => asset.sliced);
+			const indexedSlice = editor.stickerLibrary.content.find((asset) => asset.sliced);
 			if (!indexedSlice) throw new Error('Stretchable metadata missing from the loaded browse index');
-			await manager.ensureAssetDetails(indexedSlice.id);
+			await editor.stickerLibrary.ensureAssetDetails(indexedSlice.id);
 			const pickedSlice = manager.createLayer(indexedSlice.id);
 			if (!pickedSlice.stickerData.slice || pickedSlice.stickerData.sliceEnabled !== true) throw new Error('Lazy asset details must copy slices and enable Smart Stretch');
 
@@ -143,9 +143,9 @@ async function main() {
 		await page.evaluate(async () => {
 			const editor = window.editor;
 			document.querySelectorAll('[id^="nine-slice-dom-"]').forEach((node) => node.remove());
-			const item = editor.stickerManager.content.find((entry) => entry.isAnimated);
+			const item = editor.stickerLibrary.content.find((entry) => entry.isAnimated);
 			if (!item) throw new Error('An animated library sticker is required');
-			await editor.stickerManager.ensureAssetDetails(item.id);
+			await editor.stickerLibrary.ensureAssetDetails(item.id);
 			const layer = editor.stickerManager.createLayer(item.id);
 			const data = layer.stickerData;
 			data.slice = normalizeSlice({ top: Math.max(1,Math.floor(data.height/4)), right: Math.max(1,Math.floor(data.width/4)), bottom: Math.max(1,Math.floor(data.height/4)), left: Math.max(1,Math.floor(data.width/4)), mode: 'stretch' }, data.width, data.height);

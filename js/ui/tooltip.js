@@ -76,7 +76,7 @@ class TooltipManager {
 		const targets = container.querySelectorAll(TOOLTIP_TARGETS);
 		targets.forEach(el => this.attachTo(el));
 		if (typeof ENTITY_DATA === 'undefined' && [...targets].some(el => 'card' in el.dataset)) {
-			loadScriptOnce('js/generated/entities-data.js?v=edc746df').catch((error) => dbg('Entity data failed to load:', error));
+			loadScriptOnce('js/generated/entities-data.js?v=b8b7d1f7').catch((error) => dbg('Entity data failed to load:', error));
 		}
 	}
 

@@ -68,7 +68,7 @@ const toggleEffects = (page, on) => page.evaluate((want) => {
 async function addLayers(page) {
 	await page.evaluate(async () => { await window.editor.loadBlankImage(500, 400, '#ffffff'); });
 	await page.waitForFunction(() => Boolean(window.editor?.originalImage));
-	await page.waitForFunction(() => window.editor?.stickerManager?.content?.length > 0 && window.editor?.glitterManager?.content?.length > 0);
+	await page.waitForFunction(() => window.editor?.stickerLibrary?.content?.length > 0 && window.editor?.glitterLibrary?.content?.length > 0);
 	return page.evaluate(async () => {
 		const e = window.editor;
 		const ids = {};
@@ -80,12 +80,12 @@ async function addLayers(page) {
 		const shape = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 120, height: 90, position: { x: 250, y: 200 } });
 		e.layerManager.insertLayer(shape);
 		ids.shape = shape.id;
-		const sticker = e.stickerManager.createLayer(e.stickerManager.content[0].id);
+		const sticker = e.stickerManager.createLayer(e.stickerLibrary.content[0].id);
 		e.layerManager.insertLayer(sticker);
 		ids.sticker = sticker.id;
 		const fill = e.glitterManager.createLayer();
 		e.layerManager.insertLayer(fill);
-		fill.fill.glitterId = e.glitterManager.content[0].id;
+		fill.fill.glitterId = e.glitterLibrary.content[0].id;
 		ids.fill = fill.id;
 		for (const type of ['FILTER', 'FRAME', 'SPARKLES']) {
 			try {
@@ -179,12 +179,12 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 		g?.classList.add('is-open', 'visible');
 		g?.querySelector(':scope > .section-content')?.classList.add('visible');
 		document.querySelector('.library-search-action')?.click();
-		try { window.editor.glitterManager.toggleFiltersUI(true); } catch (e) { /* no filter drawer */ }
+		try { window.editor.glitterLibrary.toggleFiltersUI(true); } catch (e) { /* no filter drawer */ }
 	});
 	await wait(page, 500);
 	await visit(`${tag} library search+filters`, { shot: '#designPanel' });
 	await page.evaluate(() => {
-		try { window.editor.glitterManager.toggleFiltersUI(false); } catch (e) { /* no filter drawer */ }
+		try { window.editor.glitterLibrary.toggleFiltersUI(false); } catch (e) { /* no filter drawer */ }
 		const input = document.querySelector('#glitterSearchSection [data-browser-role="search"]');
 		if (input) { input.value = 'pink'; input.dispatchEvent(new Event('input', { bubbles: true })); }
 	});

@@ -62,7 +62,7 @@ function assert(condition, message) {
 			shapeLayer.shapeData.fill = { mode: 'solid', color: '#ff0000', opacity: 100 };
 			const visibleLayers = [shapeLayer];
 			const composed = await compositor.composeFrameAt({
-				visibleLayers, glitterGifs: editor.glitterManager.content, canvasData: baseCanvasData(),
+				visibleLayers, glitterGifs: editor.glitterLibrary.content, canvasData: baseCanvasData(),
 				exportSettings: { ...structuredClone(editor.exportSettings), baseImage: false, transparency: true },
 				target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
 			});
@@ -80,7 +80,7 @@ function assert(condition, message) {
 			editor.exportResultPresenter.show = () => {};
 			try {
 				const blob = await editor.stillImageExporter.process({
-					visibleLayers, glitterGifs: editor.glitterManager.content, canvasData: baseCanvasData(),
+					visibleLayers, glitterGifs: editor.glitterLibrary.content, canvasData: baseCanvasData(),
 					exportSettings: { ...structuredClone(editor.exportSettings), baseImage: false, transparency: true },
 					target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
 				});
@@ -100,7 +100,7 @@ function assert(condition, message) {
 			const shapeLayer = editor.shapeGlitterManager.createLayer({ shapeId: 'circle', width: 8, height: 8 });
 			shapeLayer.shapeData.fill = { mode: 'solid', color: '#0000ff', opacity: 100 };
 			const composed = await compositor.composeFrameAt({
-				visibleLayers: [shapeLayer], glitterGifs: editor.glitterManager.content, canvasData: baseCanvasData(),
+				visibleLayers: [shapeLayer], glitterGifs: editor.glitterLibrary.content, canvasData: baseCanvasData(),
 				exportSettings: { ...structuredClone(editor.exportSettings), baseImage: false, transparency: false, matteColor: '#00ff00' },
 				target: EXPORT_TARGETS['still:png'], callbacks, timestamp: 0
 			});

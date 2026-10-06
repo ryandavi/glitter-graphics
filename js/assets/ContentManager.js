@@ -217,6 +217,8 @@ class ContentManager {
 			...defaults,
 			id: raw.id ?? defaults.id ?? null,
 			name: raw.name ?? defaults.name ?? 'Unnamed',
+			originalName: typeof raw.originalName === 'string' ? raw.originalName : null,
+			appearances: this.normalizeArrayValue(raw.appearances).filter(entry => entry && typeof entry.set === 'string' && typeof entry.originalName === 'string'),
 			filename: raw.filename ?? defaults.filename ?? null,
 			url: raw.url ?? defaults.url ?? null,
 			thumbnailUrl: raw.thumbnailUrl ?? raw.url ?? defaults.thumbnailUrl ?? null,
@@ -312,7 +314,31 @@ class ContentManager {
 	}
 
 	getCategoryLabel(category) {
-		return category.charAt(0).toUpperCase() + category.slice(1);
+		return this.browser?.getCategoryPath(category) || category.charAt(0).toUpperCase() + category.slice(1);
+	}
+
+	createAssetProvenance(item) {
+		const category = this.browser?.getCategoryById(item.category);
+		const attr = Attribution.resolve(category?.attribution, item.attribution);
+		if (!item.originalName && !attr && !item.appearances?.length) return null;
+		const block = document.createElement('div');
+		block.className = 'asset-provenance property-note';
+		if (item.originalName) {
+			const original = document.createElement('div');
+			original.textContent = `Original name: ${item.originalName}`;
+			block.appendChild(original);
+		}
+		const credit = document.createElement('div');
+		if (item.appearances?.length) {
+			const first = `First published by ${attr?.author || 'Unknown'} in ${category?.name || item.category}${item.originalName ? ' as ' + item.originalName : ''}.`;
+			const later = item.appearances.map(entry => {
+				const set = this.browser?.getCategoryById(entry.set);
+				return `Also in ${set?.attribution?.author ? set.attribution.author + "'s " : ''}${set?.name || entry.set} as ${entry.originalName}.`;
+			});
+			credit.textContent = [first, ...later].join(' ');
+		} else credit.textContent = Attribution.creditLine(attr);
+		if (credit.textContent) block.appendChild(credit);
+		return block;
 	}
 
 	populateCategoryChips() {
@@ -424,11 +450,13 @@ class ContentManager {
 	}
 
 	getSearchText(item) {
-		const name = this.normalizeSearchText(item.name);
+		const name = this.normalizeSearchText([item.name, item.originalName, ...(item.appearances || []).map(entry => entry.originalName)].filter(Boolean).join(' '));
 		if (this.activeFilters.nameOnly) return { name, document: name };
 
 		const document = [
 			item.name,
+			item.originalName,
+			...(item.appearances || []).map(entry => entry.originalName),
 			item.generatedName,
 			item.stickerText,
 			...(item.tags || []),
@@ -961,7 +989,6 @@ class ContentManager {
 
 		// Re-render and update button state
 		if (options.refreshBrowser !== false) {
-			this.browser.handleSearch('');
 			this.browser.setState('CATEGORY_LIST');
 		}
 

@@ -29,7 +29,7 @@ async function main() {
 
 		const result = await page.evaluate(async (sweep) => {
 			const editor = window.editor;
-			const glitterId = editor.glitterManager.content[0]?.id;
+			const glitterId = editor.glitterLibrary.content[0]?.id;
 			if (!glitterId) throw new Error('Combinatorial parity requires one glitter asset');
 			const imageCanvas = document.createElement('canvas');
 			imageCanvas.width = 12;

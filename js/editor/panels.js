@@ -485,11 +485,11 @@ isLayerContentLocked(layer) {
 			const frames = document.getElementById(`${prefix}Frames`);
 			const change = document.getElementById(`${prefix}Change`);
 			const revealAsset = () => {
-				if (type === 'glitter' && manager?.armAssetPicker) {
-					manager.armAssetPicker();
+				if (type === 'glitter' && this.glitterManager?.armAssetPicker) {
+					this.glitterManager.armAssetPicker();
 					return;
 				}
-				if (type === 'sticker' && manager?.armAssetPicker) {
+				if (type === 'sticker' && this.stickerManager?.armAssetPicker) {
 					manager.armAssetPicker();
 					return;
 				}
@@ -587,7 +587,7 @@ isLayerContentLocked(layer) {
 			els.name.title = glitter.name;
 		}
 		if (els.badges) {
-			this.renderAssetBadges(els.badges, glitter, this.glitterManager, () => []);
+			this.renderAssetBadges(els.badges, glitter, this.glitterLibrary, () => []);
 		}
 		if (els.size) els.size.innerHTML = this.formatAssetSize(glitter);
 		if (els.frames) els.frames.innerHTML = this.formatAssetFrames(glitter);
@@ -599,7 +599,7 @@ isLayerContentLocked(layer) {
 		if (!glitter._detailLoaded && this.glitterLibrary?.ensureAssetDetails) {
 			this.glitterLibrary.ensureAssetDetails(glitter).then((detailedGlitter) => {
 				if (!detailedGlitter || displayNodes.some((node) => node.dataset.assetId !== assetId)) return;
-				if (els.badges) this.renderAssetBadges(els.badges, detailedGlitter, this.glitterManager, () => []);
+				if (els.badges) this.renderAssetBadges(els.badges, detailedGlitter, this.glitterLibrary, () => []);
 				if (els.size) els.size.innerHTML = this.formatAssetSize(detailedGlitter);
 				if (els.frames) els.frames.innerHTML = this.formatAssetFrames(detailedGlitter);
 			}).catch((error) => console.warn('Could not load glitter details:', error));
@@ -623,7 +623,10 @@ isLayerContentLocked(layer) {
 			els.name.textContent = placeholder;
 			els.name.title = '';
 		}
-		if (els.badges) els.badges.innerHTML = '';
+		if (els.badges) {
+			els.badges.innerHTML = '';
+			if (els.badges.nextElementSibling?.classList.contains('asset-provenance')) els.badges.nextElementSibling.remove();
+		}
 		if (els.size) els.size.textContent = '';
 		if (els.frames) els.frames.textContent = '';
 	}
@@ -647,10 +650,14 @@ isLayerContentLocked(layer) {
 		};
 
 		badgesEl.replaceChildren();
+		const oldProvenance = badgesEl.nextElementSibling;
+		if (oldProvenance?.classList.contains('asset-provenance')) oldProvenance.remove();
+		const provenance = manager?.createAssetProvenance?.(asset);
+		if (provenance) badgesEl.after(provenance);
 
 		// Category badge reveals the asset in its gallery/category.
 		if (asset.category) {
-			const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
+			const categoryName = manager?.browser?.getCategoryPath(asset.category) || asset.category;
 			const badge = document.createElement('button');
 			badge.type = 'button';
 			badge.className = 'asset-info-badge badge-category';

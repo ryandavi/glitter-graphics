@@ -1495,6 +1495,10 @@ const ENTITY_DATA = {
 		"name": "Ryan Ford",
 		"kind": "person"
 	},
+	"ryan-davi": {
+		"name": "Ryan Davi",
+		"kind": "person"
+	},
 	"ryandavi": {
 		"name": "ryandavi.com",
 		"kind": "site"
@@ -1759,6 +1763,10 @@ const ENTITY_DATA = {
 	"twitter": {
 		"name": "Twitter",
 		"kind": "site"
+	},
+	"the-iconfactory": {
+		"name": "The Iconfactory",
+		"kind": "org"
 	},
 	"ulrich-leive": {
 		"name": "Ulrich Leive",

@@ -590,13 +590,13 @@ class FrameLayerManager {
 
 	getFrameImageAssets() {
 		const category = CONFIG.tools.frames.imageCategory;
-		return (this.editor.stickerManager?.content || []).filter((item) => item.category === category);
+		return (this.editor.stickerLibrary?.content || []).filter((item) => item.category === category);
 	}
 
 	async chooseFrameImage(item) {
 		const layer = this.getActiveLayer();
 		if (!layer || !this.editor.canEditLayer(layer, { notify: true })) return;
-		const asset = await this.editor.stickerManager.ensureAssetDetails(item.id);
+		const asset = await this.editor.stickerLibrary.ensureAssetDetails(item.id);
 		if (!asset || this.getActiveLayer()?.id !== layer.id) return;
 		layer.frameData.kind = 'image';
 		layer.frameData.image = {

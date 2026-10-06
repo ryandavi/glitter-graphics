@@ -32,6 +32,8 @@ Each layer manager exposes these members, so shared code can route through `mana
 
 Cross-manager logic belongs in the responsibility folders (`js/core`, `js/effects`, `js/transforms`, `js/ui`), with thin delegating methods on the manager. Never use inheritance between layer managers.
 
+Layer controllers do not extend `ContentManager`. Asset lookup, filtering, uploads and browse state belong to separate browser managers. Glitter and sticker assets are available through `editor.glitterLibrary` and `editor.stickerLibrary`; armed picker sessions stay on the layer controller, and browser picks dispatch to them.
+
 ## `registerLayerType` fields
 
 Required for an addable type:

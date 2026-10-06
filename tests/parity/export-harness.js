@@ -80,7 +80,7 @@ async function exportBytes(page, exportOverrides = {}, { minLayers = 4 } = {}) {
 
 			exporter.process({
 				visibleLayers,
-				glitterGifs: editor.glitterManager.content,
+				glitterGifs: editor.glitterLibrary.content,
 				canvasData: {
 					width: editor.originalCanvas.width,
 					height: editor.originalCanvas.height,

@@ -596,7 +596,7 @@ class AutoGlitterManager {
 		this.ui.results.querySelector(`[data-palette-index="${index}"] .auto-glitter-choice`)?.setAttribute('aria-expanded', 'true');
 		pickerOpenSession(this, { paletteIndex: index }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, color.selectedGlitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId)
 		});
 	}
 

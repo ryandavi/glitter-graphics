@@ -120,9 +120,10 @@ class AssetPathService
 			DIRECTORY_SEPARATOR . $assetType . DIRECTORY_SEPARATOR . $batchId;
 	}
 
-	public function inspectUpload($file)
+	public function inspectUpload($file, $local = false)
 	{
-		if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+		if ($local && PHP_SAPI !== 'cli') throw new InvalidArgumentException('Local ingest is CLI-only');
+		if (!isset($file['tmp_name']) || !($local ? is_file($file['tmp_name']) : is_uploaded_file($file['tmp_name']))) {
 			throw new InvalidArgumentException('No valid upload received');
 		}
 		if ((int)($file['size'] ?? 0) <= 0 || (int)$file['size'] > $this->config['upload_max_bytes']) {

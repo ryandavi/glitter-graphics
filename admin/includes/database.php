@@ -6,7 +6,7 @@ class Database
 {
     private $conn;
 
-    public function __construct($config)
+    public function __construct($config, $migrate = true)
     {
         $this->conn = new mysqli(
             $config['db_host'],
@@ -20,7 +20,7 @@ class Database
         }
 
         require_once(__DIR__ . '/adminMigrations.php');
-        AdminMigrations::run($this->conn, $config);
+        if ($migrate) AdminMigrations::run($this->conn, $config);
     }
 
     public function query($sql)

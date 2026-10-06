@@ -1007,7 +1007,7 @@ const TEXT_BACKGROUND_PRESETS = {
 const ASSET_TYPE_CONFIG = {
 	glitter: {
 		prefix: 'glitterAsset',
-		managerKey: 'glitterManager',
+		managerKey: 'glitterLibrary',
 		renderThumbnail: (thumbnail, asset) => {
 			thumbnail.className = 'asset-info-thumbnail glitter-bg';
 			thumbnail.style.backgroundImage = `url(${asset.url})`;
@@ -1019,7 +1019,7 @@ const ASSET_TYPE_CONFIG = {
 	},
 	sticker: {
 		prefix: 'stickerAsset',
-		managerKey: 'stickerManager',
+		managerKey: 'stickerLibrary',
 		renderThumbnail: (thumbnail, asset) => {
 			thumbnail.className = asset.isPixelated === false
 				? 'asset-info-thumbnail'

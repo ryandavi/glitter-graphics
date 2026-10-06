@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const browseFields = new Set([
-	'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution',
+	'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution', 'originalName', 'appearances',
 	'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
 	'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source', 'sliced'
 ]);

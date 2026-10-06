@@ -17,7 +17,7 @@
 // via Attribution.resolve(...layers) — later layers win per field.
 
 const Attribution = {
-	FIELDS: Object.freeze(['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes']),
+	FIELDS: Object.freeze(['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes']),
 
 	// id -> display label, in admin dropdown order.
 	LICENSES: Object.freeze([

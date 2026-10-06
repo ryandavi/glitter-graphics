@@ -2513,6 +2513,14 @@
 		"body": "{@ryan-ford}",
 		"description": "Ryan Ford (person)"
 	},
+	"@ryan-davi": {
+		"scope": "html",
+		"prefix": [
+			"@ryan-davi"
+		],
+		"body": "{@ryan-davi}",
+		"description": "Ryan Davi (person)"
+	},
 	"@ryandavi": {
 		"scope": "html",
 		"prefix": [
@@ -2953,6 +2961,14 @@
 		],
 		"body": "{@twitter}",
 		"description": "Twitter (site)"
+	},
+	"@the-iconfactory": {
+		"scope": "html",
+		"prefix": [
+			"@the-iconfactory"
+		],
+		"body": "{@the-iconfactory}",
+		"description": "The Iconfactory (org)"
 	},
 	"@ulrich-leive": {
 		"scope": "html",

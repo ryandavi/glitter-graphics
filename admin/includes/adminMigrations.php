@@ -39,6 +39,9 @@ class AdminMigrations
 	{
 		$columns = [
 			'glitter' => [
+				'original_name' => 'VARCHAR(255) NULL',
+				'search_terms' => 'TEXT NULL',
+				'appearances' => 'TEXT NULL',
 				'color_weights' => 'VARCHAR(255) NULL AFTER color_codes',
 				'file_hash' => 'CHAR(32) NULL',
 				'analysis_json' => 'LONGTEXT NULL',
@@ -54,6 +57,9 @@ class AdminMigrations
 				'updated_at' => 'DATETIME NULL',
 			],
 			'stickers' => [
+				'search_terms' => 'TEXT NULL',
+				'original_name' => 'VARCHAR(255) NULL',
+				'appearances' => 'TEXT NULL',
 				// Defaults to 1 so the whole existing library keeps the crisp
 				// upscaling it has always rendered with; smooth art is opt-in.
 				'is_pixelated' => 'TINYINT(1) NOT NULL DEFAULT 1',
@@ -77,9 +83,11 @@ class AdminMigrations
 			// Optional JSON attribution block per category (js/core/attribution.js
 			// shape) — every asset in the category inherits it in the editor.
 			'sticker_categories' => [
+				'parent_id' => 'INT UNSIGNED NULL AFTER id',
 				'attribution' => 'TEXT NULL',
 			],
 			'glitter_categories' => [
+				'parent_id' => 'INT UNSIGNED NULL AFTER id',
 				'attribution' => 'TEXT NULL',
 			],
 		];
@@ -91,6 +99,13 @@ class AdminMigrations
 					if (!$connection->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition")) {
 						throw new Exception('Migration failed: ' . $connection->error);
 					}
+				}
+			}
+		}
+		foreach (['glitter_categories', 'sticker_categories'] as $table) {
+			if (!self::indexExists($connection, $config, $table, 'parent_id')) {
+				if (!$connection->query("ALTER TABLE `$table` ADD KEY parent_id (parent_id)")) {
+					throw new Exception('Migration failed: ' . $connection->error);
 				}
 			}
 		}

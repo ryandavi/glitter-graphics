@@ -369,7 +369,7 @@ class BaseBackgroundManager {
 		const glitterId = slot === 'sparkles' ? layer.background.sparkles?.glitterId : layer.background.glitterId;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, glitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, glitterId)
 		});
 	}
 

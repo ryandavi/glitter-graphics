@@ -46,6 +46,9 @@ Test behavior, not implementation. Before writing a new test, check whether an e
 - Upload images with `setInputFiles('#imageUpload', …)`.
 - Panels auto-open the active layer's settings section. Don't assert that sections are closed.
 - `window.editor` is the live `GlitterEditor` instance.
+- Glitter and sticker assets live on `editor.glitterLibrary` and `editor.stickerLibrary`. Their layer controllers no longer expose content/filter state; test doubles for asset loading belong on the libraries.
+
+`tests/ui/asset-library-organization.js` exercises a routed hierarchical fixture: Style/Creator navigation, filtered root counts, home and appearance-name search, lineage, carried-over rows, browser/layer separation and fill-picker routing. It also verifies extracted color-selection and feather math. `--screenshots` writes before/after Library views in `.tmp/asset-library/`; use `GLITTER_TEST_CSS` for a scratch Sass compile, then `tools/ui-contact-sheet.js build` to create the comparison page. `tests/admin/asset-library-organization.php` creates and removes an isolated database and image tree to exercise the real import apply path, duplicates, retained tags/names/ids, original filename casing, review queue, two-level validation and rerunning the import.
 
 ## Touch smoke harness
 

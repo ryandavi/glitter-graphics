@@ -313,21 +313,21 @@ const LAYER_SETUPS = {
 		});
 	},
 	STICKER: async (page) => {
-		await page.waitForFunction(() => window.editor?.stickerManager?.content?.length > 0);
+		await page.waitForFunction(() => window.editor?.stickerLibrary?.content?.length > 0);
 		await page.evaluate(() => {
 			const editor = window.editor;
-			const layer = editor.stickerManager.createLayer(editor.stickerManager.content[0].id);
+			const layer = editor.stickerManager.createLayer(editor.stickerLibrary.content[0].id);
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
 		});
 	},
 	GLITTER_FILL: async (page) => {
-		await page.waitForFunction(() => window.editor?.glitterManager?.content?.length > 0);
+		await page.waitForFunction(() => window.editor?.glitterLibrary?.content?.length > 0);
 		await page.evaluate(() => {
 			const editor = window.editor;
 			const layer = editor.glitterManager.createLayer();
 			editor.layerManager.insertLayer(layer);
-			layer.fill.glitterId = editor.glitterManager.content[0].id;
+			layer.fill.glitterId = editor.glitterLibrary.content[0].id;
 			editor.layerManager.setActiveLayer(layer.id);
 		});
 	}
@@ -353,14 +353,14 @@ async function capture(browser) {
 			});
 			snapshot.structure = await captureStructure(page);
 			await page.evaluate(() => {
-				const glitter = window.editor.glitterManager?.getAllContent?.()[0];
+				const glitter = window.editor.glitterLibrary?.getAllContent?.()[0];
 				if (!glitter) throw new Error('No glitter asset available for Change-button verification');
 				window.editor.updateGlitterAssetInfo(glitter);
 				document.getElementById('glitterFillGlitterChange')?.click();
 				if (!document.getElementById('designGallerySection')?.classList.contains('is-open')) {
 					throw new Error('Glitter Fill Change button did not open the Design Gallery');
 				}
-				const sticker = window.editor.stickerManager?.getAllContent?.()[0];
+				const sticker = window.editor.stickerLibrary?.getAllContent?.()[0];
 				if (!sticker) throw new Error('No sticker asset available for Change-button verification');
 				window.editor.updateStickerAssetInfo(sticker);
 				const stickerChange = document.getElementById('stickerAssetChange');

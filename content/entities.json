@@ -1656,6 +1656,11 @@
 		"kind": "person",
 		"name": "Ryan Ford"
 	},
+	"ryan-davi": {
+		"kind": "person",
+		"name": "Ryan Davi",
+		"status": "draft"
+	},
 	"ryandavi": {
 		"kind": "site",
 		"name": "ryandavi.com",
@@ -1955,6 +1960,11 @@
 	"twitter": {
 		"kind": "site",
 		"name": "Twitter"
+	},
+	"the-iconfactory": {
+		"kind": "org",
+		"name": "The Iconfactory",
+		"status": "draft"
 	},
 	"ulrich-leive": {
 		"kind": "person",

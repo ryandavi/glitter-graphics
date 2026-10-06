@@ -14,13 +14,13 @@ async function main() {
 		const page = await browser.newPage({ viewport: { width: 1000, height: 760 } });
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
 		await page.waitForFunction(() => (
-			window.editor?.glitterManager.content.length > 0
-			&& window.editor?.stickerManager.content.length > 0
+			window.editor?.glitterLibrary.content.length > 0
+			&& window.editor?.stickerLibrary.content.length > 0
 		));
 
 		const result = await page.evaluate(async () => {
-			const glitter = window.editor.glitterManager.content.find((asset) => asset._detailLoaded === false);
-			const sticker = window.editor.stickerManager.content.find((asset) => asset._detailLoaded === false);
+			const glitter = window.editor.glitterLibrary.content.find((asset) => asset._detailLoaded === false);
+			const sticker = window.editor.stickerLibrary.content.find((asset) => asset._detailLoaded === false);
 			if (!glitter || !sticker) throw new Error('Expected indexed assets with deferred details');
 			const initialResources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
 			const initial = {
@@ -30,8 +30,8 @@ async function main() {
 				stickerFileSize: sticker.fileSize
 			};
 			await Promise.all([
-				window.editor.glitterManager.ensureAssetDetails(glitter),
-				window.editor.stickerManager.ensureAssetDetails(sticker)
+				window.editor.glitterLibrary.ensureAssetDetails(glitter),
+				window.editor.stickerLibrary.ensureAssetDetails(sticker)
 			]);
 			const finalResources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
 
@@ -62,11 +62,11 @@ async function main() {
 			window.editor.layerManager.setActiveLayer(layer.id);
 			manager.renderLayer(layer);
 
-			const originalEnsureAssetDetails = manager.ensureAssetDetails;
+			const originalEnsureAssetDetails = window.editor.stickerLibrary.ensureAssetDetails;
 			const originalCacheGet = AssetImageCache.get;
 			let releasePreload;
 			const preload = new Promise((resolve) => { releasePreload = resolve; });
-			manager.ensureAssetDetails = async () => ({
+			window.editor.stickerLibrary.ensureAssetDetails = async () => ({
 				id: 'replacement-next', name: 'Next sticker', url: nextUrl, source: 'test',
 				width: 80, height: 20, isAnimated: false, isPixelated: false, frameCount: 1
 			});
@@ -86,7 +86,7 @@ async function main() {
 				width: layer.stickerData.width,
 				height: layer.stickerData.height
 			};
-			manager.ensureAssetDetails = originalEnsureAssetDetails;
+			window.editor.stickerLibrary.ensureAssetDetails = originalEnsureAssetDetails;
 			AssetImageCache.get = originalCacheGet;
 			return {
 				initial,

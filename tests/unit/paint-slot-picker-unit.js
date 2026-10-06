@@ -79,7 +79,7 @@ assert(nested > 0, 'expected at least one nested-path slot (bevel) to be covered
 // The stale lookup itself must not come back: no picker path may index a
 // layer's data root with a computed slot key.
 const ROOT_LOOKUP = /\b(?:shape|text|sticker|frame)Data\??\.?\[(?!['"])/;
-['js/layers/ShapeGlitterManager.js', 'js/layers/TextGlitterManager.js', 'js/layers/StickerManager.js', 'js/layers/GlitterManager.js', 'js/editor/panels.js', 'js/ui/picker-session.js'].forEach((file) => {
+['js/layers/ShapeGlitterManager.js', 'js/layers/TextGlitterManager.js', 'js/layers/StickerManager.js', 'js/layers/GlitterManager.js', 'js/assets/GlitterBrowserManager.js', 'js/editor/panels.js', 'js/ui/picker-session.js'].forEach((file) => {
 	fs.readFileSync(path.join(root, file), 'utf8').split('\n').forEach((line, index) => {
 		assert(!ROOT_LOOKUP.test(line), `${file}:${index + 1} reads a slot from the data root by key; use getLayerPaintSlot`);
 	});

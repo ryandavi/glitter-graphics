@@ -17,6 +17,10 @@ class AssetBrowser {
 		this.prefix = prefix;
 		this.displayName = schema.title;
 		this.layout = schema.layout || 'folders';
+		this.schema = schema;
+		this.browseView = 'style';
+		this.currentCreatorId = null;
+		this.setOrigin = null;
 		this.state = 'CATEGORY_LIST';
 		this.currentCategoryId = null;
 		this.currentOffset = 0;
@@ -24,7 +28,6 @@ class AssetBrowser {
 		this.searchDebounceTimer = null;
 
 		this.categories = [];
-		this.categoriesRendered = false;
 
 		// HTML element references
 		this.elements = {
@@ -62,6 +65,25 @@ class AssetBrowser {
 		this.indexLead.className = 'asset-browser-index-lead';
 		this.indexLead.hidden = true;
 		this.elements.categoryGrid.before(this.indexLead);
+
+		this.carriedLead = document.createElement('div');
+		this.carriedLead.className = 'asset-browser-carried';
+		this.carriedLead.hidden = true;
+		this.elements.itemGrid.after(this.carriedLead);
+		this.viewControl = document.createElement('div');
+		this.viewControl.className = 'segmented-control asset-browser-views';
+		this.viewControl.setAttribute('aria-label', 'Browse library by');
+		this.viewControl.hidden = true;
+		for (const [view, label] of [['style', 'Style'], ['creator', 'Creator']]) {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'segmented-option';
+			button.textContent = label;
+			button.dataset.view = view;
+			button.addEventListener('click', () => { this.browseView = view; this.setOrigin = null; this.setState('CATEGORY_LIST'); });
+			this.viewControl.appendChild(button);
+		}
+		this.elements.content.before(this.viewControl);
 
 		// Store parent containers
 		this.assetOptions = this.elements.browser.closest('.asset-options');
@@ -127,7 +149,14 @@ class AssetBrowser {
 				this.contentManager.updateClearFiltersButton();
 			}
 
-			this.setState('CATEGORY_LIST');
+			const category = this.getCategoryById(this.currentCategoryId);
+			if (this.state === 'CATEGORY_DETAIL' && this.setOrigin) {
+				this.currentCreatorId = this.setOrigin;
+				this.setOrigin = null;
+				this.setState('CREATOR_DETAIL');
+			} else if (this.state === 'CATEGORY_DETAIL' && category?.parent) {
+				this.setState('CATEGORY_DETAIL', category.parent);
+			} else this.setState('CATEGORY_LIST');
 
 			// Scroll to top when changing states
 			if (this.scrollContainer) {
@@ -140,6 +169,7 @@ class AssetBrowser {
 
 	navigateToCategory(categoryId) {
 		if (!categoryId || !this.categories.some((category) => category.id === categoryId)) return false;
+		this.setOrigin = null;
 		const searchInput = this.contentManager.ui.searchInput;
 		if (searchInput) searchInput.value = '';
 		this.contentManager.activeFilters.search = '';
@@ -153,7 +183,7 @@ class AssetBrowser {
 	// Search results, and a grouped kind's category list, are one listing of
 	// items under category headings.
 	isListingState() {
-		return this.state === 'SEARCH_RESULTS' || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
+		return this.state === 'SEARCH_RESULTS' || (this.state === 'CREATOR_DETAIL' && this.currentCreatorId === '__unknown') || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
 	}
 
 	isPagedState() {
@@ -161,6 +191,8 @@ class AssetBrowser {
 	}
 
 	setState(newState, categoryId = null) {
+		clearTimeout(this.searchDebounceTimer);
+		if (newState === 'CATEGORY_LIST') this.setOrigin = null;
 		this.state = newState;
 		this.currentCategoryId = categoryId;
 		this.currentOffset = 0;
@@ -185,6 +217,9 @@ class AssetBrowser {
 		this.elements.searchResults.classList.remove('visible');
 		this.elements.itemGrid.classList.remove('visible');
 		this.collectionInfo.hidden = true;
+		this.carriedLead.hidden = true;
+		this.projectLead.hidden = true;
+		this.updateViewControl();
 		this.indexLead.hidden = true;
 		this.recentLead.hidden = true;
 
@@ -192,6 +227,8 @@ class AssetBrowser {
 			this.renderCategoryList();
 		} else if (this.state === 'CATEGORY_DETAIL') {
 			this.renderCategoryDetail();
+		} else if (this.state === 'CREATOR_DETAIL') {
+			this.renderCreatorDetail();
 		} else if (this.state === 'SEARCH_RESULTS') {
 			this.renderSearchResults();
 		}
@@ -202,12 +239,7 @@ class AssetBrowser {
 		this.elements.itemGrid.innerHTML = '';
 		this.elements.searchResults.innerHTML = '';
 
-		// If on category list, just update counts instead of recreating
-		if (this.state === 'CATEGORY_LIST' && this.layout === 'folders' && this.categoriesRendered) {
-			this.updateCategoryCounts();
-		} else {
-			this.render();
-		}
+		this.render();
 	}
 
 	// A favorite was added or removed: the category list shows the Favorites
@@ -221,6 +253,7 @@ class AssetBrowser {
 	}
 
 	async navigateToItem(itemId) {
+		this.setOrigin = null;
 		// Find which category contains this item
 		const allItems = this.contentManager.getAllContent();
 		const item = allItems.find(i => i.id === itemId);
@@ -323,13 +356,7 @@ class AssetBrowser {
 		// Show category grid
 		this.elements.categoryGrid.classList.add('visible');
 
-		// Only render categories once, then just update counts
-		if (!this.categoriesRendered) {
-			this.populateCategoryCards();
-			this.categoriesRendered = true;
-		} else {
-			this.updateCategoryCounts();
-		}
+		this.populateCategoryCards();
 	}
 
 	// The last picks, newest first. Rebuilt only when the list is drawn, so a
@@ -398,88 +425,26 @@ class AssetBrowser {
 	}
 
 	populateCategoryCards() {
-		// Clear grid
-		this.elements.categoryGrid.innerHTML = '';
-
-		const filteredItems = this.getFilteredItems();
-		const categoryCounts = this.getCategoryCounts(filteredItems);
-
-		let hasCategories = false;
-		const favorites = this.getFavoritesCategory(filteredItems);
-		if (favorites) {
-			hasCategories = true;
-			this.elements.categoryGrid.appendChild(this.createCategoryCard(favorites, favorites.count));
+		this.elements.categoryGrid.replaceChildren();
+		const items = this.getFilteredItems();
+		const counts = this.getCategoryCounts(items);
+		const favorites = this.getFavoritesCategory(items);
+		if (favorites) this.elements.categoryGrid.appendChild(this.createCategoryCard(favorites, favorites.count));
+		if (this.browseView === 'creator') {
+			this.getCreators(items).forEach(creator => this.elements.categoryGrid.appendChild(this.createCreatorCard(creator)));
+		} else {
+			this.categories.filter(category => !category.parent).forEach(category => {
+				const count = this.getRootCount(category, counts);
+				if (count) this.elements.categoryGrid.appendChild(this.createCategoryCard(category, count));
+			});
 		}
-		this.categories.forEach(category => {
-			const count = categoryCounts[category.id] || 0;
-			if (count === 0) return;
-
-			hasCategories = true;
-			const card = this.createCategoryCard(category, count);
-			this.elements.categoryGrid.appendChild(card);
-		});
-
-		// Show empty state if no categories
-		if (!hasCategories) {
+		if (!this.elements.categoryGrid.children.length) {
 			this.elements.categoryGrid.classList.remove('visible');
 			if (!this.hasLeadItems()) this.showEmptyState('No items found');
 		}
 	}
 
-	updateCategoryCounts() {
-		this._renderRecentLead();
-		this._renderIndexLead();
-		// Make sure we're showing the right container
-		this.elements.emptyState.classList.remove('visible');
-		this.elements.searchResults.classList.remove('visible');
-		this.elements.itemGrid.classList.remove('visible');
-		this.elements.categoryGrid.classList.add('visible');
-
-		const filteredItems = this.getFilteredItems();
-		const categoryCounts = this.getCategoryCounts(filteredItems);
-
-		// Favorites changes its cover and count as hearts change: rebuild it.
-		this.elements.categoryGrid.querySelector(`.category-card[data-category-id="${LIBRARY_FAVORITES_ID}"]`)?.remove();
-		const favorites = this.getFavoritesCategory(filteredItems);
-		let hasVisibleCategories = Boolean(favorites);
-		if (favorites) this.elements.categoryGrid.prepend(this.createCategoryCard(favorites, favorites.count));
-
-		// Update existing cards and track which categories are already rendered
-		const renderedCategories = new Set();
-		this.elements.categoryGrid.querySelectorAll('.category-card').forEach(card => {
-			const categoryId = card.dataset.categoryId;
-			if (categoryId === LIBRARY_FAVORITES_ID) return;
-			renderedCategories.add(categoryId);
-			const count = categoryCounts[categoryId] || 0;
-			const countEl = card.querySelector('.category-card-count');
-
-			if (count === 0) {
-				card.style.display = 'none';
-			} else {
-				card.style.display = '';
-				countEl.textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
-				hasVisibleCategories = true;
-			}
-		});
-
-		// Add cards for new categories that now have items
-		this.categories.forEach(category => {
-			const count = categoryCounts[category.id] || 0;
-
-			// If this category has items but no card yet, create one
-			if (count > 0 && !renderedCategories.has(category.id)) {
-				const card = this.createCategoryCard(category, count);
-				this.elements.categoryGrid.appendChild(card);
-				hasVisibleCategories = true;
-			}
-		});
-
-		// Show empty state if no visible categories
-		if (!hasVisibleCategories) {
-			this.elements.categoryGrid.classList.remove('visible');
-			if (!this.hasLeadItems()) this.showEmptyState('No items found');
-		}
-	}
+	updateCategoryCounts() { this.render(); }
 
 	createCategoryCard(category, count) {
 		const card = tplClone('tpl-category-card');
@@ -490,7 +455,7 @@ class AssetBrowser {
 		// Glitter categories tile their icon as a repeating background; every
 		// other library shows it as a contained thumbnail.
 		const image = card.querySelector('.category-card-image');
-		if (this.prefix === 'glitter') {
+		if (this.schema.tileCategoryIcon) {
 			image.classList.add('category-card-glitter-bg');
 			image.style.backgroundImage = `url('${category.icon}')`;
 		} else if (category.icon) {
@@ -502,6 +467,12 @@ class AssetBrowser {
 		}
 
 		card.querySelector('.category-card-name').textContent = category.name;
+		if (category.attribution?.author) {
+			const byline = document.createElement('div');
+			byline.className = 'category-card-byline';
+			byline.textContent = 'by ' + category.attribution.author;
+			card.querySelector('.category-card-count').before(byline);
+		}
 		card.querySelector('.category-card-count').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
 		if (category.id !== LIBRARY_FAVORITES_ID) this.contentManager.customizeCollectionCard?.(card, category);
 
@@ -542,7 +513,7 @@ class AssetBrowser {
 
 		// Update header
 		this.elements.backBtn.disabled = false;
-		this.elements.title.textContent = category.name;
+		this.elements.title.textContent = this.getCategoryPath(category.id);
 		this.collectionInfo.replaceChildren();
 		if (category.description) {
 			const description = document.createElement('p');
@@ -553,6 +524,19 @@ class AssetBrowser {
 		const info = category.id === LIBRARY_FAVORITES_ID ? null : this.contentManager.createCollectionInfo?.(category);
 		if (info) this.collectionInfo.appendChild(info);
 		this.collectionInfo.hidden = !this.collectionInfo.childElementCount;
+
+		const children = this.categories.filter(child => child.parent === category.id);
+		this.elements.categoryGrid.replaceChildren();
+		const counts = this.getCategoryCounts(this.getFilteredItems());
+		children.forEach(child => {
+			if (counts[child.id]) this.elements.categoryGrid.appendChild(this.createCategoryCard(child, counts[child.id]));
+		});
+		if (this.elements.categoryGrid.children.length) this.elements.categoryGrid.classList.add('visible');
+		if (children.length && this.getCategoryItems(category.id).length) {
+			this.collectionInfo.appendChild(this.createHeading('More ' + category.name));
+			this.collectionInfo.hidden = false;
+		}
+		this.renderCarriedItems(category);
 
 		// Show item grid
 		this.elements.itemGrid.classList.add('visible');
@@ -619,7 +603,7 @@ class AssetBrowser {
 
 		if (batch.length === 0 && this.currentOffset === 0) {
 			this.elements.itemGrid.classList.remove('visible');
-			this.showEmptyState('No items in this category');
+			if (!this.elements.categoryGrid.children.length && this.carriedLead.hidden) this.showEmptyState('No items in this category');
 			return;
 		}
 
@@ -669,7 +653,8 @@ class AssetBrowser {
 			byCategory.get(item.category).push(item);
 		});
 
-		const group = (id, groupItems) => ({ id, name: this.getCategoryById(id)?.name || id, items: groupItems });
+		const group = (id, groupItems) => ({ id, name: this.getCategoryPath(id), items: groupItems });
+		if (this.state === 'CREATOR_DETAIL') return this.getUnknownGroups(items);
 		if (this.state === 'SEARCH_RESULTS') {
 			return [...byCategory.entries()].map(([id, groupItems]) => group(id, groupItems));
 		}
@@ -755,6 +740,120 @@ class AssetBrowser {
 			this.elements.emptyClearFilters.hidden = this.state === 'CATEGORY_DETAIL' || !this.contentManager.hasActiveFilters();
 		}
 		this.elements.emptyState.classList.add('visible');
+	}
+
+	getCategoryPath(id) {
+		const category = this.getCategoryById(id);
+		const parent = category?.parent && this.getCategoryById(category.parent);
+		return parent ? parent.name + ' › ' + category.name : (category?.name || id);
+	}
+
+	getRootCount(category, counts) {
+		return (counts[category.id] || 0) + this.categories.filter(child => child.parent === category.id)
+			.reduce((sum, child) => sum + (counts[child.id] || 0), 0);
+	}
+
+	getAssetAttribution(item) {
+		return Attribution.resolve(this.getCategoryById(item.category)?.attribution, item.attribution);
+	}
+
+	getCreators(items = this.getFilteredItems()) {
+		const creators = new Map();
+		items.forEach(item => {
+			const attr = this.getAssetAttribution(item);
+			const id = attr?.authorId || '__unknown';
+			if (!creators.has(id)) creators.set(id, { id, name: id === '__unknown' ? 'Unknown' : (attr.author || id), items: [] });
+			creators.get(id).items.push(item);
+		});
+		return [...creators.values()];
+	}
+
+	updateViewControl() {
+		this.viewControl.hidden = !this.schema.creatorView || this.state !== 'CATEGORY_LIST' || this.getCreators(this.contentManager.getAllContent()).filter(creator => creator.id !== '__unknown').length < 2;
+		this.viewControl.querySelectorAll('button').forEach(button => {
+			const active = button.dataset.view === this.browseView;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+	}
+
+	createHeading(text) {
+		const heading = document.createElement('h3');
+		heading.className = 'asset-browser-section-title property-block-title';
+		heading.textContent = text;
+		return heading;
+	}
+
+	createCreatorCard(creator) {
+		const card = this.createCategoryCard({ id: creator.id, name: creator.name, icon: creator.items[0]?.thumbnailUrl || creator.items[0]?.url }, creator.items.length);
+		const replacement = card.cloneNode(true);
+		replacement.addEventListener('click', () => { this.currentCreatorId = creator.id; this.setState('CREATOR_DETAIL'); });
+		return replacement;
+	}
+
+	renderCreatorDetail() {
+		const creator = this.getCreators(this.contentManager.getAllContent()).find(entry => entry.id === this.currentCreatorId);
+		this.elements.backBtn.disabled = false;
+		this.elements.title.textContent = creator?.name || 'Unknown';
+		if (this.currentCreatorId === '__unknown') {
+			this.elements.searchResults.classList.add('visible');
+			this.elements.searchResults.replaceChildren();
+			this.loadListingItems();
+			return;
+		}
+		this.elements.categoryGrid.replaceChildren();
+		const items = this.getFilteredItems().filter(item => this.getAssetAttribution(item)?.authorId === this.currentCreatorId);
+		const counts = this.getCategoryCounts(items);
+		const categories = this.categories.filter(category => counts[category.id]);
+		const sources = new Set(categories.map(category => category.attribution?.sourceId || ''));
+		const ordered = [...sources].flatMap(source => categories.filter(category => (category.attribution?.sourceId || '') === source));
+		let lastSource = null;
+		ordered.forEach(category => {
+			const source = category.attribution?.sourceId || '';
+			if (sources.size > 1 && source !== lastSource) this.elements.categoryGrid.appendChild(this.createHeading(category.attribution?.source || source || 'Other sets'));
+			lastSource = source;
+			const card = this.createCategoryCard(category, counts[category.id]);
+			card.addEventListener('click', () => { this.setOrigin = this.currentCreatorId; });
+			this.elements.categoryGrid.appendChild(card);
+		});
+		if (categories.length) this.elements.categoryGrid.classList.add('visible');
+		else this.showEmptyState('No items found');
+	}
+
+	getUnknownGroups(items) {
+		const groups = new Map();
+		items.filter(item => !this.getAssetAttribution(item)?.authorId).forEach(item => {
+			const category = this.getCategoryById(item.category);
+			const root = category?.parent ? this.getCategoryById(category.parent) : category;
+			const id = root?.id || item.category;
+			if (!groups.has(id)) groups.set(id, { id, name: root?.name || id, items: [] });
+			groups.get(id).items.push(item);
+		});
+		return [...groups.values()];
+	}
+
+	renderCarriedItems(category) {
+		const items = this.getFilteredItems().filter(item => (item.appearances || []).some(entry => entry.set === category.id));
+		this.carriedLead.replaceChildren();
+		this.carriedLead.hidden = !items.length;
+		if (!items.length) return;
+		this.carriedLead.appendChild(this.createHeading('Carried over from earlier sets'));
+		const grid = document.createElement('div');
+		grid.className = 'asset-grid visible';
+		items.forEach(item => {
+			const card = this.createItemElement(item);
+			const entry = document.createElement('div');
+			entry.className = 'asset-browser-carried-item';
+			const tile = document.createElement('div');
+			tile.className = 'asset-grid visible';
+			tile.appendChild(card);
+			const label = document.createElement('div');
+			label.className = 'category-card-byline';
+			label.textContent = 'From ' + (this.getCategoryById(item.category)?.name || item.category);
+			entry.append(tile, label);
+			grid.appendChild(entry);
+		});
+		this.carriedLead.appendChild(grid);
 	}
 
 	// ===== INTEGRATION CALLBACKS =====

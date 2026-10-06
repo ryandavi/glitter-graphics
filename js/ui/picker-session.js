@@ -142,7 +142,7 @@ class SlotGlitterPicker {
 		if (!layer) return;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, getLayerPaintSlot(layer, slot)?.glitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
 

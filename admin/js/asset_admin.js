@@ -376,6 +376,9 @@ class AssetEditor {
         const inputType = field.input === 'number' ? 'number' : 'text';
         const input = `<input type="${inputType}" id="${field.key}" value="${this.escapeHtml(value ?? '')}" ${field.step ? `step="${field.step}"` : ''}>`;
         const row = this.propertyRow(field.label, input, { htmlFor: field.key });
+        if (field.key === 'name' && this.currentAsset.original_name) {
+            return row + this.propertyRow('Original name', `<span>${this.escapeHtml(this.currentAsset.original_name)}</span>`);
+        }
         // The URL field keeps its input inline like every other row; the
         // preview follows as a continuation row under the same control column.
         if (field.key === 'url' && value) {
@@ -505,6 +508,10 @@ class AssetEditor {
             else if (field.input === 'attribution') {
                 const get = (subKey) => (document.getElementById(`attr_${subKey}`)?.value || '').trim();
                 const attribution = {};
+                const existing = this.parseAttribution(this.currentAsset[field.key]);
+                for (const id of ['authorId', 'sourceId']) {
+                    if (existing[id]) attribution[id] = existing[id];
+                }
                 ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'].forEach((subKey) => {
                     const entry = get(subKey);
                     if (entry) attribution[subKey] = entry;

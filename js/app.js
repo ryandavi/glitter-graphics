@@ -97,10 +97,8 @@ class GlitterEditor {
 		this.stickerManager = new StickerManager(this);
 		this.paintMaskStore = new PaintMaskStore(this);
 		this.glitterManager = new GlitterManager(this);
-		// The glitter asset library (lookup, detail and image loading). Code that
-		// only needs a glitter asset reads it here, not through the fill-layer
-		// controller that currently implements it.
-		this.glitterLibrary = this.glitterManager;
+		this.glitterLibrary = new GlitterBrowserManager(this);
+		this.stickerLibrary = new StickerBrowserManager(this);
 		this.brushTipManager = new BrushTipManager(this);
 		this.baseBackgroundManager = new BaseBackgroundManager(this);
 		this.autoGlitterManager = new AutoGlitterManager(this);
@@ -387,7 +385,9 @@ class GlitterEditor {
 		this.mp4Exporter = new Mp4Exporter(this.sceneCompositor, this.exportResultPresenter);
 		this.stillImageExporter = new StillImageExporter(this.sceneCompositor, this.exportResultPresenter, this.gifEncodingPipeline);
 		await this.stickerManager.init();
-		await this.glitterManager.init(); // NEW
+		await this.stickerLibrary.init();
+		await this.glitterManager.init();
+		await this.glitterLibrary.init();
 		await this.brushTipManager.init();
 		await this.textGlitterManager.init();
 		await this.shapeBrowserManager.init();
@@ -1206,7 +1206,7 @@ class GlitterEditor {
 		// ======================
 		// Managers & viewport
 		// ======================
-		this.glitterManager.clearFilters();
+		this.glitterLibrary.clearFilters();
 		this.viewport.resetViewport();
 		this.updateZoomUI();
 		this.setProjectName('', { markDirty: false });

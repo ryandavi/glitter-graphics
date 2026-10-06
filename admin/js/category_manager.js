@@ -30,6 +30,7 @@ class CategoryManager {
 					<div class="manager-dialog-content">
 						<div class="property-list">
 							<div class="property-row"><label class="property-label" for="category-name">Name</label><div class="property-control"><input type="text" id="category-name" name="name" required></div></div>
+							<div class="property-row"><label class="property-label" for="category-parent">Parent</label><div class="property-control"><select id="category-parent" name="parent_id"></select></div></div>
 							<div class="property-row"><label class="property-label" for="category-slug">Slug</label><div class="property-control"><input type="text" id="category-slug" name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*"></div></div>
 							<div class="property-row property-row-continued"><span class="property-label">Slug</span><div class="property-value"><code data-path-preview></code><span class="field-error" data-slug-error></span></div></div>
 							<div class="property-row property-row-tall"><label class="property-label" for="category-description">Description</label><div class="property-control"><textarea id="category-description" name="description" rows="3"></textarea></div></div>
@@ -39,6 +40,8 @@ class CategoryManager {
 						</div>
 						<details class="property-list category-attribution">
 							<summary>Attribution</summary>
+							<div class="property-row"><label class="property-label" for="category-creator">Creator</label><div class="property-control"><input id="category-creator" name="attr_authorId" list="category-creators"><datalist id="category-creators"></datalist></div></div>
+							<div class="property-row"><label class="property-label" for="category-source-id">Source identity</label><div class="property-control"><input id="category-source-id" name="attr_sourceId" list="category-sources"><datalist id="category-sources"></datalist></div></div>
 							<div class="property-row"><label class="property-label" for="category-attr-author">Author</label><div class="property-control"><input type="text" id="category-attr-author" name="attr_author"></div></div>
 							<div class="property-row"><label class="property-label" for="category-attr-author-url">Author URL</label><div class="property-control"><input type="text" id="category-attr-author-url" name="attr_authorUrl"></div></div>
 							<div class="property-row"><label class="property-label" for="category-attr-source">Source</label><div class="property-control"><input type="text" id="category-attr-source" name="attr_source"></div></div>
@@ -79,6 +82,12 @@ class CategoryManager {
 		this.form.addEventListener('change', () => {
 			this.formDirty = true;
 		});
+		for (const [idField, textField] of [['authorId', 'author'], ['sourceId', 'source']]) {
+			this.form.elements[`attr_${idField}`].addEventListener('change', event => {
+				const entity = this.entities?.[event.target.value];
+				if (entity && !this.form.elements[`attr_${textField}`].value) this.form.elements[`attr_${textField}`].value = entity.name;
+			});
+		}
 		this.dialog.addEventListener('cancel', event => {
 			event.preventDefault();
 			this.requestCloseForm();
@@ -107,11 +116,25 @@ class CategoryManager {
 
 	async load() {
 		this.rows = await AdminAPI.json(`includes/api.php?action=categories&type=${this.editor.config.assetType}`);
+		if (!this.entities) {
+			this.entities = await AdminAPI.json('../content/entities.json');
+			for (const [selector, kinds] of [['#category-creators', ['person', 'org']], ['#category-sources', ['site', 'handle']]]) {
+				const list = this.form.querySelector(selector);
+				for (const [id, entity] of Object.entries(this.entities)) {
+					if (!kinds.includes(entity.kind)) continue;
+					const option = document.createElement('option');
+					option.value = id;
+					option.label = entity.name;
+					list.appendChild(option);
+				}
+			}
+		}
 		this.render();
 	}
 
 	render() {
-		const rows = this.rows.filter(row => !this.query || [row.name, row.slug, row.folder_url].some(value => String(value || '').toLowerCase().includes(this.query)));
+		const ordered = this.rows.filter(row => !row.parent_id).flatMap(root => [root, ...this.rows.filter(row => Number(row.parent_id) === Number(root.id) && row.parent_id)]);
+		const rows = ordered.filter(row => !this.query || [row.name, row.slug, row.folder_url].some(value => String(value || '').toLowerCase().includes(this.query)));
 		if (!rows.length) {
 			this.table.innerHTML = '<div class="empty-row">No categories match this search.</div>';
 			return;
@@ -125,7 +148,7 @@ class CategoryManager {
 						<span class="category-color-dot ${row.icon ? 'has-thumbnail' : ''}" style="--category-color:${this.escape(row.color || 'transparent')}" ${row.icon ? `title="${this.escape(row.icon)}"` : ''}>
 							${row.icon ? `<img src="${CONFIG.image_base_path}${this.escape(row.icon)}" alt="" loading="lazy">` : ''}
 						</span>
-						<span><strong>${this.escape(row.name)}</strong><small>${this.escape(row.slug)}</small></span>
+						<span><strong>${row.parent_id ? '↳ ' : ''}${this.escape(row.name)}</strong><small>${this.escape(row.slug)}</small></span>
 					</div>
 					<code>${this.escape(row.folder_url)}</code>
 					<span>${row.active_count} active · ${row.pending_count} pending</span>
@@ -191,6 +214,12 @@ class CategoryManager {
 	openForm(row = null) {
 		this.editing = row?.id ? row : null;
 		this.form.reset();
+		const parent = this.form.elements.parent_id;
+		parent.replaceChildren(new Option('None (style root)', ''));
+		this.rows.filter(item => item.id && !item.parent_id && Number(item.id) !== Number(row?.id))
+			.forEach(item => parent.add(new Option(item.name, item.id)));
+		parent.value = row?.parent_id || '';
+		parent.disabled = this.rows.some(item => item.parent_id && Number(item.parent_id) === Number(row?.id));
 		delete this.form.elements.slug.dataset.manual;
 		this.form.querySelector('[data-slug-error]').textContent = '';
 		this.form.querySelector('[data-form-title]').textContent = this.editing ? 'Edit category' : 'New category';
@@ -198,7 +227,7 @@ class CategoryManager {
 			if (row?.[field] != null) this.form.elements[field].value = row[field];
 		}
 		const attribution = row?.attribution || {};
-		for (const key of ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes']) {
+		for (const key of ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes']) {
 			this.form.elements[`attr_${key}`].value = attribution[key] || '';
 		}
 		this.form.querySelector('.category-attribution').open = Object.keys(attribution).length > 0;
@@ -214,7 +243,7 @@ class CategoryManager {
 		const values = Object.fromEntries(new FormData(this.form));
 		values.sort_order = Number(values.sort_order || 0);
 		const attribution = {};
-		for (const key of ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes']) {
+		for (const key of ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes']) {
 			const entry = String(values[`attr_${key}`] || '').trim();
 			if (entry) attribution[key] = entry;
 			delete values[`attr_${key}`];

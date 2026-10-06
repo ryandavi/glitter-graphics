@@ -399,7 +399,7 @@ class ShapeGlitterManager {
 		this.shapeChangeLayerId = null;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary)
 		});
 	}
 

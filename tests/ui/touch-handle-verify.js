@@ -245,7 +245,7 @@ async function createTestSticker(page, options = {}) {
 
 		const layer = editor.stickerManager.createLayer();
 		layer.name = label;
-		layer.stickerSourceId = editor.stickerManager.content[0]?.id || 'touch-handle-verify-generated';
+		layer.stickerSourceId = editor.stickerLibrary.content[0]?.id || 'touch-handle-verify-generated';
 		layer.stickerData.isEmpty = false;
 		layer.stickerData.url = canvas.toDataURL('image/png');
 		layer.stickerData.name = label;

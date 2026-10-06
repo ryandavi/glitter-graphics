@@ -222,6 +222,18 @@
 .asset-browser-section-title {
 	margin: 0 0 var(--spacing-sm);
 }
+.category-grid > .asset-browser-section-title { grid-column: 1 / -1; }
+.category-card-byline {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-secondary);
+}
+.asset-browser-views:not([hidden]) { margin-bottom: var(--spacing-sm); }
+.asset-browser-carried:not([hidden]) { margin-top: var(--spacing-md); }
+.asset-browser-carried-item {
+	display: grid;
+	align-content: start;
+	gap: var(--spacing-xs);
+}
 .brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
 
 .asset-browser-collection-description {

@@ -1,27 +1,12 @@
 // ============================================
 // GLITTER MANAGER CLASS
-// Handles glitter library, filtering, rendering, and logic
+// Glitter-fill layer settings, masks and rendering
 // ============================================
-class GlitterManager extends ContentManager {
-	// Every glitter a visible paint slot of any layer draws with (fills,
-	// outlines, shadows, sparkles, the canvas background).
-	getProjectAssetIds(layers) {
-		return layers.flatMap((layer) => getLayerPaintSlots(layer)
-			.map(({ data, renders }) => (renders && data.mode === 'glitter' ? data.glitterId : null)));
-	}
+class GlitterManager {
 
 	constructor(editor) {
-		super(editor);
+		this.editor = editor;
 
-		// Add glitter-specific filters to base activeFilters
-		Object.assign(this.activeFilters, {
-			tones: new Set(),
-			intensities: new Set(),
-			temperatures: new Set(),
-			special: new Set()
-		});
-
-		this.useBrowser = true;
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
 		this.maskBoundsCache = new Map();
@@ -69,19 +54,12 @@ class GlitterManager extends ContentManager {
 		}
 	}
 
-async initBrowser() {
-	this.browser = new AssetBrowser(this, 'glitter');
-	
-	await this.browser.init('data/glitter-categories.json');
-}
-
 	getLayerType() {
 		return LayerType.GLITTER_FILL;
 	}
 
 	setupUI() {
 		this.ui = {
-			...getAssetBrowserUi('glitter'),
 			gallerySection: document.getElementById('designGallerySection'),
 			pickerStrip: document.getElementById('galleryPickerStrip'),
 			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),
@@ -93,11 +71,7 @@ async initBrowser() {
 	}
 
 	setupEventListeners() {
-		// Call parent to setup base listeners
-		super.setupEventListeners();
 
-		// Setup filter chips
-		this.setupFilterChips();
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
 		this.ui.resetEffects?.addEventListener('click', () => {
@@ -123,7 +97,7 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this, getLayerPaintSlot(layer, slot || 'fill')?.glitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot || 'fill')?.glitterId)
 		});
 	}
 
@@ -163,12 +137,6 @@ async initBrowser() {
 			updateSelection: () => this.editor.updateGlitterSelection()
 		});
 	}
-
-	setupFilterChips() {
-		// Static facet chips are wired by ContentManager; dynamic category
-		// chips bind when populateCategoryChips creates them.
-	}
-
 
 	createLayer(options = {}) {
 		// skipLimitCheck: Auto Glitter session layers may transiently overlap
@@ -388,7 +356,7 @@ async initBrowser() {
 			getSlotDefaults: (key) => this.getSlotDefaults(key),
 			apply: (layer, mutate, change) => {
 				mutate();
-				const glitter = this.getItemById(layer.fill.glitterId);
+				const glitter = this.editor.glitterLibrary.getItemById(layer.fill.glitterId);
 				if (layer.fill.mode !== 'glitter' && layer.name === glitter?.name) layer.name = null;
 				this.editor.requestPreviewUpdate();
 				if (change.live) return;
@@ -421,273 +389,13 @@ async initBrowser() {
 		this.editor.maskEditor?.loadLayer(layer);
 	}
 
-	customizeItemElement(element, item) {
-		if (item.isPixelated) {
-			element.classList.add('pixelated');
-		}
-	}
-
 	// ===== FILTERING =====
-
-
-	matchesChildFilters(item) {
-		if (!item.tags) return false;
-
-		const tags = item.tags.map(t => t.toLowerCase());
-
-		// Tone filter
-		if (this.activeFilters.tones.size > 0) {
-			const hasTone = [...this.activeFilters.tones].some(tone =>
-				tags.includes(tone.toLowerCase())
-			);
-			if (!hasTone) return false;
-		}
-
-		if (this.activeFilters.intensities.size > 0) {
-			const hasIntensity = [...this.activeFilters.intensities].some((intensity) =>
-				tags.includes(intensity.toLowerCase())
-			);
-			if (!hasIntensity) return false;
-		}
-
-		if (this.activeFilters.temperatures.size > 0) {
-			const hasTemperature = [...this.activeFilters.temperatures].some((temperature) =>
-				tags.includes(temperature.toLowerCase())
-			);
-			if (!hasTemperature) return false;
-		}
-
-		// Special filter
-		if (this.activeFilters.special.size > 0) {
-			const hasSpecial = [...this.activeFilters.special].some(special =>
-				tags.includes(special.toLowerCase())
-			);
-			if (!hasSpecial) return false;
-		}
-
-		return true;
-	}
-
-
-	handleItemClick(item) {
-		this.selectGlitter(item.id);
-	}
-
-
 
 	// ===== LOADING & PARSING =====
 
-	async loadContent() {
-		this.content = [];
-		try {
-			await this.loadIndexedManifest({
-				indexPath: 'data/glitter.index.json',
-				fallbackPath: 'data/glitter.json',
-				detailBasePath: 'data/glitter',
-				defaults: {
-					brightness: null,
-					sortOrder: 0,
-					hue: null,
-					colorCodes: [],
-					colorWeights: null,
-					frameCount: 0,
-					frameRate: 10,
-					isVariableFramerate: false,
-					isAnimated: false,
-					hasTransparency: false,
-					width: 0,
-					height: 0,
-					fileSize: 0,
-					category: 'Uncategorized',
-					isPixelated: false,
-					tags: [],
-					source: 'preset'
-				}
-			});
-
-			dbg(`Loaded ${this.content.length} swatches`);
-
-			// Populate category chips after loading
-			this.populateCategoryChips();
-
-		} catch (error) {
-			console.error('Failed to load swatches:', error);
-			this.editor.showError('Failed to load glitter library');
-		}
-	}
-
 	// ===== SELECTION LOGIC =====
 
-	async selectGlitter(id) {
-		if (!this.editor.originalImage) {
-			this.editor.showError('Please load an image first');
-			return;
-		}
-		if (this.editor.autoGlitterManager?.hasActivePickerSession()) {
-			this.editor.autoGlitterManager.selectPickerGlitter(id);
-			return;
-		}
-		if (this.editor.autoGlitterManager?.isSessionActive()) {
-			this.editor.updateStatus('Choose a Color Match swatch before selecting glitter');
-			return;
-		}
-
-		const layer = this.editor.layerManager.getActiveLayer();
-		if (!layer) {
-			this.editor.showError('Please select a glitter or text layer');
-			return;
-		}
-		if (!this.editor.canEditLayer(layer, { notify: true })) return;
-
-		// Types whose paints are all declared slots route picks through their
-		// SlotGlitterPicker (js/ui/picker-session.js).
-		const slotPicker = getLayerManagerForType(this.editor, layer.type)?.slotPicker || null;
-		if (!slotPicker && layer.type !== LayerType.BASE_IMAGE && layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
-			this.editor.showError('You can only add glitter to a background or supported layer effect');
-			return;
-		}
-		if (slotPicker) {
-			const glitter = await this.ensureAssetDetails(id);
-			if (!glitter) {
-				this.editor.showError('Failed to load selected glitter #' + id);
-				return;
-			}
-			await this.ensureAssetImageReady(glitter);
-			if (!slotPicker.applyPick(layer, id)) return;
-			this.editor.updateGlitterSelection();
-			this.editor.layerManager.renderLayersList();
-			this.editor.saveState('Edit glitter');
-			this.editor.updateStatus(`Selected ${glitter.name}`);
-			return;
-		}
-		const slotHost = {
-			[LayerType.TEXT_GLITTER]: this.editor.textGlitterManager,
-			[LayerType.SHAPE]: this.editor.shapeGlitterManager,
-			[LayerType.STICKER]: this.editor.stickerManager
-		}[layer.type];
-		const previousGlitter = layer.type === LayerType.GLITTER_FILL
-			? this.getItemById(layer.fill.glitterId)
-			: null;
-		const glitter = await this.ensureAssetDetails(id);
-
-		if (!glitter) {
-			this.editor.showError('Failed to load selected glitter #' + id);
-			return;
-		}
-
-		// Keep the current fill painted until the browser has decoded the first
-		// frame of its replacement. Preview shows the GIF file itself; its tile
-		// size comes from the manifest, so no frames are decoded here.
-		await this.ensureAssetImageReady(glitter);
-
-		if (layer.type === LayerType.BASE_IMAGE) {
-			const sparkles = this.editor.baseBackgroundManager?.getGlitterSelectionTarget() === 'sparkles'
-				? layer.background.sparkles
-				: null;
-			if (sparkles) {
-				sparkles.glitterId = id;
-				sparkles.mode = 'glitter';
-				sparkles.colorAdjust = null;
-			} else {
-				layer.background.glitterId = id;
-				layer.background.mode = 'glitter';
-				layer.background.colorAdjust = normalizeColorAdjust(null);
-			}
-		} else if (slotHost) {
-			// Text, shape and sticker: the pick goes to the armed slot (text and
-			// shape fall back to their fill), resolved through its declared path.
-			// Picking a glitter for a solid slot is the statement "I want glitter
-			// here", so the slot flips to glitter, and a new swatch starts with no
-			// hue/sat/bright shift.
-			const target = slotHost.getGlitterSelectionTarget(layer);
-			const slotData = target ? slotHost.fieldHost.ensureSlot(layer, target) : null;
-			if (!slotData) return;
-			slotData.glitterId = id;
-			slotData.mode = 'glitter';
-			slotData.colorAdjust = null;
-		} else if (layer.type === LayerType.GLITTER_FILL) {
-			// Auto Glitter layers use their swatch as the initial name. Keep that
-			// generated name live, while preserving names the user entered.
-			const slot = this.getGlitterSelectionSlot(layer);
-			if (slot === layer.fill) {
-				if (layer.name === previousGlitter?.name) layer.name = glitter.name;
-				layer.fill.glitterId = id;
-				layer.fill.mode = 'glitter';
-				// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
-				// the new glitter shows its true colors, and sync the HSB sliders to match.
-				layer.fill.colorAdjust = normalizeColorAdjust(null);
-				syncFieldControls(this.fieldHost, layer);
-			} else {
-				slot.glitterId = id;
-				slot.mode = 'glitter';
-				slot.colorAdjust = null;
-				this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
-				syncFieldControls(this.fieldHost, layer);
-			}
-		}
-
-		this.editor.updateGlitterSelection();
-		this.editor.layerManager.renderLayersList();
-		if (layer.type === LayerType.GLITTER_FILL) this.updatePickerStrip();
-
-		if (layer.type === LayerType.BASE_IMAGE) {
-			this.editor.requestPreviewUpdate();
-			this.editor.baseBackgroundManager?.loadLayerSettings(layer);
-			this.editor.baseBackgroundManager?.updatePickerStrip();
-		} else if (layer.type === LayerType.TEXT_GLITTER) {
-			await this.editor.textGlitterManager?.refreshLayer(layer, {
-				saveHistory: false,
-				refreshLayerList: false,
-				refreshPreview: false
-			});
-		} else if (layer.type === LayerType.SHAPE) {
-			this.editor.shapeGlitterManager?.renderLayer(layer);
-			this.editor.shapeGlitterManager?.loadLayerSettings(layer);
-			this.editor.shapeGlitterManager?.updatePickerStrip();
-		} else if (layer.type === LayerType.STICKER) {
-			this.editor.stickerManager?.renderLayer(layer);
-			this.editor.stickerManager?.loadLayerSettings(layer);
-		} else if (hasMaskContent(layer)) {
-			this.editor.requestPreviewUpdate();
-		}
-
-		this.editor.updateActionButtons();
-		this.editor.saveState('Edit glitter');
-		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
-			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
-			this.editor.updateStatus(`Selected ${glitter.name} for the text ${getPaintSlotLabel(layer.type, target)}`);
-		} else {
-			this.editor.updateStatus(`Selected ${glitter.name}`);
-		}
-		window.dispatchEvent(new CustomEvent('layerChanged'));
-
-
-		if (glitter) {
-			this.editor.updateGlitterAssetInfo(glitter);
-		}
-
-		// Keep the asset-info thumbnail + swatches in sync with the layer's hue
-		// (identity after a fresh pick above, so this clears any prior tint).
-		this.editor.refreshGlitterSwatchVisuals(layer);
-
-		// Update helpful message
-		this.editor.updateHelpfulMessage();
-
-	}
-
 	// ===== RENDERING (CANVAS/DOM) =====
-
-	updateSelection() {
-		const autoGlitterId = this.editor.autoGlitterManager?.getPickerGlitterId();
-		if (autoGlitterId != null) {
-			document.querySelectorAll('#glitterItemGrid .asset-option, #glitterSearchResults .asset-option').forEach((option) => {
-				option.classList.toggle('selected', String(option.dataset.id) === String(autoGlitterId));
-			});
-			return;
-		}
-		// Delegate to main editor's update method
-		this.editor.updateGlitterSelection();
-	}
 
 	renderContent(layersToShow) {
 		// Reconcile instead of ContentManager's clear-and-rebuild: recreating a
@@ -789,7 +497,7 @@ async initBrowser() {
 
 	renderLayer(layer, width = this.editor.originalCanvas?.width, height = this.editor.originalCanvas?.height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
-		if (layer.fill.mode === 'glitter' && !this.getItemById(layer.fill.glitterId)) return;
+		if (layer.fill.mode === 'glitter' && !this.editor.glitterLibrary.getItemById(layer.fill.glitterId)) return;
 
 		let wrapper = this.layerElements.get(layer.id);
 		let stack = wrapper?.querySelector('.glitter-fill-stack');
@@ -961,8 +669,8 @@ async initBrowser() {
 			.flatMap((layer) => getLayerSlotGlitterIds(layer)));
 
 		await Promise.all([...glitterIds].map((id) => {
-			const glitter = this.getItemById(id);
-			return glitter ? this.ensureAssetImageReady(glitter) : null;
+			const glitter = this.editor.glitterLibrary.getItemById(id);
+			return glitter ? this.editor.glitterLibrary.ensureAssetImageReady(glitter) : null;
 		}));
 	}
 
@@ -1117,52 +825,7 @@ async initBrowser() {
 	}
 
 	// Pure: MaskCompositor caches the result per layer id.
-	buildSelectionMask(layer) {
-		const buildStart = performance.now();
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-		const len = width * height;
-		const mask = new Uint8Array(len);
-		const thresholdSq = layer.settings.threshold * layer.settings.threshold;
-		const data = this.editor.originalImageData.data;
-		const alphaChannel = this.editor.originalAlphaChannel;
-
-		layer.selections.forEach(sel => {
-			if (layer.settings.contiguous) {
-				const floodStart = performance.now();
-				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
-				dbg(`[G-1] floodFill: ${(performance.now() - floodStart).toFixed(1)}ms`);
-				return;
-			}
-
-			const scanStart = performance.now();
-			for (let i = 0; i < len; i++) {
-				if (mask[i] === 255) continue;
-
-				if (sel.isTransparent) {
-					if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) {
-						mask[i] = 255;
-					}
-					continue;
-				}
-
-				if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) continue;
-
-				const idx = i * 4;
-				const r = data[idx];
-				const g = data[idx + 1];
-				const b = data[idx + 2];
-
-				if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
-					mask[i] = 255;
-				}
-			}
-			dbg(`[G-1] non-contiguous scan: ${(performance.now() - scanStart).toFixed(1)}ms`);
-		});
-
-		dbg(`[G-1] buildSelectionMask total: ${(performance.now() - buildStart).toFixed(1)}ms`);
-		return mask;
-	}
+	buildSelectionMask(layer) { return buildColorSelectionMask(this.editor, layer); }
 
 	// Canvas resize: color-selection seeds live in canvas space, so they move
 	// with the content. The painted part of the mask moves in PaintMaskStore.
@@ -1210,113 +873,17 @@ async initBrowser() {
 		});
 	}
 
-	floodFill(mask, startX, startY, targetColor, thresholdSq) {
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-		const totalPixels = width * height;
-		const data = this.editor.originalImageData.data;
-		const alphaChannel = this.editor.originalAlphaChannel;
+	floodFill(mask, startX, startY, targetColor, thresholdSq) { return floodColorSelection(this.editor, mask, startX, startY, targetColor, thresholdSq); }
 
-		// The stack contains the 1D index of the pixel
-		const stack = [startY * width + startX];
+	applyFeatherToMask(mask, radius) { return featherColorSelection(this.editor, mask, radius); }
 
-		while (stack.length > 0) {
-			const idx = stack.pop();
-
-			// 1. Skip if this pixel is already marked in the mask
-			if (mask[idx] === 255) continue;
-
-			const r = data[idx * 4];
-			const g = data[idx * 4 + 1];
-			const b = data[idx * 4 + 2];
-			const alpha = alphaChannel[idx];
-
-			let isMatch = false;
-
-			// 2. DECISION LOGIC: 
-			// If we are looking for transparency vs looking for a specific color
-			if (targetColor.isTransparent) {
-				// Match only if the current pixel is also transparent
-				isMatch = (alpha < CONFIG.tools.selection.transparency.alphaThreshold);
-			} else {
-				// Match only if the current pixel is OPAQUE and the color is within the threshold
-				isMatch = (alpha >= CONFIG.tools.selection.transparency.alphaThreshold &&
-					this.colorDistanceSq(r, g, b, targetColor.r, targetColor.g, targetColor.b) <= thresholdSq);
-			}
-
-			if (isMatch) {
-				// Mark the pixel as part of the mask
-				mask[idx] = 255;
-
-				// 3. ADD NEIGHBORS (Right, Left, Down, Up)
-				// Check bounds to prevent wrapping around the edges of the image
-
-				// Right
-				if ((idx + 1) % width !== 0 && mask[idx + 1] === 0) {
-					stack.push(idx + 1);
-				}
-				// Left
-				if (idx % width !== 0 && mask[idx - 1] === 0) {
-					stack.push(idx - 1);
-				}
-				// Down
-				if (idx + width < totalPixels && mask[idx + width] === 0) {
-					stack.push(idx + width);
-				}
-				// Up
-				if (idx - width >= 0 && mask[idx - width] === 0) {
-					stack.push(idx - width);
-				}
-			}
-		}
-	}
-
-	applyFeatherToMask(mask, radius) {
-		if (radius <= 0) return;
-
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-		const horizontal = new Float32Array(mask.length);
-
-		for (let y = 0; y < height; y++) {
-			const rowOffset = y * width;
-			const prefix = new Uint32Array(width + 1);
-
-			for (let x = 0; x < width; x++) {
-				prefix[x + 1] = prefix[x] + mask[rowOffset + x];
-			}
-
-			for (let x = 0; x < width; x++) {
-				const left = Math.max(0, x - radius);
-				const right = Math.min(width - 1, x + radius);
-				const count = right - left + 1;
-				const sum = prefix[right + 1] - prefix[left];
-				horizontal[rowOffset + x] = sum / count;
-			}
-		}
-
-		for (let x = 0; x < width; x++) {
-			const prefix = new Float32Array(height + 1);
-
-			for (let y = 0; y < height; y++) {
-				prefix[y + 1] = prefix[y] + horizontal[y * width + x];
-			}
-
-			for (let y = 0; y < height; y++) {
-				const top = Math.max(0, y - radius);
-				const bottom = Math.min(height - 1, y + radius);
-				const count = bottom - top + 1;
-				const sum = prefix[bottom + 1] - prefix[top];
-				mask[y * width + x] = Math.round(sum / count);
-			}
-		}
-	}
-
-	colorDistanceSq(r1, g1, b1, r2, g2, b2) {
-		return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
-	}
+	colorDistanceSq(r1, g1, b1, r2, g2, b2) { return selectionColorDistanceSq(r1, g1, b1, r2, g2, b2); }
 
 	buildExportPlan(layer, context) {
 		return context.compositor._buildGlitterFillExportPlan(layer);
 	}
+	selectGlitter(...args) { return this.editor.glitterLibrary.selectGlitter(...args); }
+	updateSelection(...args) { return this.editor.glitterLibrary.updateSelection(...args); }
+	getItemById(id) { return this.editor.glitterLibrary.getItemById(id); }
+	async init() { this.setupUI(); this.setupEventListeners(); }
 }

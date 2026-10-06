@@ -25,9 +25,11 @@ The `GlitterEditor` instance (`editor`) holds every subsystem. Two kinds of `*Ma
 | Concern | Owner | Notes |
 |---|---|---|
 | Layer list, selection, ordering, serialization | `LayerManager` (`editor.layerManager`) | `editor.layers` and `editor.activeLayerId` are getters over it. |
-| Glitter-fill layers, and the glitter asset library | `GlitterManager` | Code that only needs a glitter asset reads `editor.glitterLibrary` (today the same object). |
+| Glitter-fill layers | `GlitterManager` | Settings, masks and layer rendering. Color-selection math lives in `js/paint/color-selection.js`. |
+| Glitter assets | `GlitterBrowserManager` (`editor.glitterLibrary`) | A `ContentManager` subclass: asset lookup, detail/image loading, filtering, browsing and picker dispatch. |
 | Painted masks and their version history | `PaintMaskStore` (`editor.paintMaskStore`) | Live add/sub canvases per glitter-fill layer plus the versioned snapshots that undo states name through `maskVersion`. |
-| Sticker layers and sticker assets | `StickerManager` | |
+| Sticker layers | `StickerManager` | Settings, transforms and layer rendering. |
+| Sticker assets | `StickerBrowserManager` (`editor.stickerLibrary`) | A `ContentManager` subclass: lookup, browsing, upload analysis and embedded project assets. Layer creation remains on `StickerManager`. |
 | Text layers | `TextGlitterManager` | Fonts (manifest and FontFace loading) come from `FontLibrary`; the Text panel shows the current font and the Library's Fonts (`FontBrowserManager`) picks one. |
 | Shape layers and shape image fills | `ShapeGlitterManager` | Shape definitions come from `ShapeLibrary`. |
 | Canvas background (image, solid, gradient, glitter) | `BaseBackgroundManager` | The base-image layer, including its glitter-mode preview element. |
@@ -227,6 +229,7 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 - `data/rendering-rules.json` holds analyzer weights shared by the admin upload path and the analyzer.
 - Don't hand-edit generated manifests. Re-export from the admin, or run `node tools/split-manifests.js` to regenerate the index and detail files from a full manifest.
 - Attribution (author, source, license) follows one schema across brushes, stickers and fonts: `js/core/attribution.js`.
+- Glitter and sticker category exports have a `parent` slug or null, capped at a root and one set level. Assets retain one home category; original names, old library-name search terms and imported historical `appearances` remain metadata. Creator browsing derives from attribution `authorId`, with `sourceId` for source groups. Neither style roots nor historical appearances add extra asset records.
 
 ## Content modals
 

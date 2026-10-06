@@ -142,7 +142,7 @@ updateOrientationButtons(width, height) {
 					initPixelScalerInContainer(modalBody);
 
 					// Render before indexing so document search includes every event.
-					await loadScriptOnce('js/generated/entities-data.js?v=edc746df');
+					await loadScriptOnce('js/generated/entities-data.js?v=b8b7d1f7');
 					await loadScriptOnce('js/ui/about-timeline-data.js?v=c875b6a5');
 					initPreservationTimeline(modalBody);
 					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
