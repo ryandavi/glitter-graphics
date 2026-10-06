@@ -5,3 +5,9 @@ data/backup/*
 
 # macOS
 .DS_Store
+
+# Local scratch and reference material
+/.tmp/
+/tmp/
+/artifacts/
+/research/

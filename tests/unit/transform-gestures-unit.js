@@ -77,30 +77,30 @@ chrome.screen = {
 	cos: 1,
 	sin: 0,
 	handles: [
-		{ handleType: 'corner-tl', x: 46, y: 66, half: 16 },
-		{ handleType: 'corner-tr', x: 154, y: 66, half: 16 },
-		{ handleType: 'edge-top', x: 100, y: 66, half: 18 },
-		{ handleType: 'rotation', x: 100, y: 40, half: 20 }
+		{ kind: 'corner', handleType: 'corner-tl', x: 46, y: 66, half: 16 },
+		{ kind: 'corner', handleType: 'corner-tr', x: 154, y: 66, half: 16 },
+		{ kind: 'edge', handleType: 'edge-top', x: 100, y: 66, half: 18 },
+		{ kind: 'rotation', handleType: 'rotation', x: 100, y: 40, half: 20 }
 	]
 };
 assert.strictEqual(chrome.hitTest(48, 64, 'mouse'), 'corner-tl', 'Corner handle not hit');
 assert.strictEqual(chrome.hitTest(100, 100, 'mouse'), 'move', 'Frame interior not a move');
 assert.strictEqual(chrome.hitTest(300, 300, 'mouse'), null, 'Empty space hit something');
-// Top edge (48..84) and rotation (20..60) squares overlap: nearest center wins.
-assert.strictEqual(chrome.hitTest(100, 52, 'mouse'), 'rotation', 'Overlap did not prefer the nearer rotation handle');
-assert.strictEqual(chrome.hitTest(100, 58, 'mouse'), 'edge-top', 'Overlap did not prefer the nearer edge handle');
+// Edge handles take priority over rotation in overlapping hit zones.
+assert.strictEqual(chrome.hitTest(100, 52, 'mouse'), 'edge-top', 'Overlap did not prefer the edge handle');
+assert.strictEqual(chrome.hitTest(100, 58, 'mouse'), 'edge-top', 'Overlap did not prefer the edge handle');
 
-// Explicit handle zones win over the body on every pointer type. Compact-frame
-// filtering removes unsuitable handles before hit testing.
+// Touch reserves the inner half for moving even under a handle hit zone.
 chrome.screen = {
 	center: { x: 100, y: 100 },
 	hw: 20,
 	hh: 10,
 	cos: 1,
 	sin: 0,
-	handles: [{ handleType: 'edge-top', x: 100, y: 86, half: 22 }]
+	handles: [{ kind: 'edge', handleType: 'edge-top', x: 100, y: 86, half: 22 }]
 };
-assert.strictEqual(chrome.hitTest(100, 100, 'touch'), 'edge-top', 'Touch edge zone lost priority to the body');
+assert.strictEqual(chrome.hitTest(100, 100, 'touch'), 'move', 'Touch inner move zone lost priority');
+assert.strictEqual(chrome.hitTest(100, 92, 'touch'), 'edge-top', 'Touch outside the inner zone missed the edge');
 assert.strictEqual(chrome.hitTest(100, 100, 'mouse'), 'edge-top', 'Mouse under a handle square did not grab it');
 
 console.log('PASS transform gesture math and selection chrome hit testing');

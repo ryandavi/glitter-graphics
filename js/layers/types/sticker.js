@@ -1,6 +1,14 @@
 'use strict';
 
 registerLayerType(LayerType.STICKER, {
+	describe: (layer, editor) => {
+		const sticker = editor.stickerManager.getItemById(layer.stickerSourceId);
+		return { name: layer.name || 'Sticker', detail: sticker?.category ? `Sticker · ${sticker.category}` : 'Sticker' };
+	},
+	defaultCreateOptions: (editor) => {
+		const id = CONFIG.tools.stickers.defaultStickerId;
+		return id != null && editor.stickerManager.getItemById(id) ? id : null;
+	},
 	displayName: 'Sticker',
 	// The sticker image itself is not a paint slot. Outline, shadow and bevel
 	// sizes are canvas pixels, whatever the sticker's scale; sparkles are placed
@@ -136,7 +144,7 @@ registerLayerType(LayerType.STICKER, {
 		const stickerContent = document.getElementById('stickerSettingsContent');
 		if (layer.stickerSourceId) {
 			editor.setSettingsEmptyState('stickerSettings', false);
-			editor.loadStickerSettings(layer);
+			editor.stickerManager.loadLayerSettings(layer);
 		} else {
 			if (stickerContent) stickerContent.classList.remove('visible');
 			editor.setSettingsEmptyState('stickerSettings', true);

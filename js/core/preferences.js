@@ -1,6 +1,11 @@
 'use strict';
 
 const PREFERENCE_SCHEMA = Object.freeze({
+	showHints: { default: () => CONFIG.ui.hints.enabledByDefault },
+	confirmDestructiveActions: { default: () => true },
+	showWelcomeOnStartup: { default: () => true },
+	welcomeLastSeenRelease: { default: () => null },
+	scaleCorners: { default: () => CONFIG.rendering.transformBehavior.scaleCorners },
 	crispMaskEdges: { default: () => CONFIG.rendering.crispMaskEdges },
 	autoSelect: { default: () => CONFIG.app.behavior.autoSelect },
 	snappingEnabled: { default: () => CONFIG.snapping.enabled },
@@ -44,16 +49,6 @@ class Preferences {
 		this.values[key] = value;
 		this.persist();
 		this.listeners.get(key)?.forEach((listener) => listener(value));
-	}
-
-	migrate(values) {
-		let changed = false;
-		Object.entries(values).forEach(([key, value]) => {
-			if (!this.schema[key] || Object.prototype.hasOwnProperty.call(this.values, key) || value === undefined) return;
-			this.values[key] = value;
-			changed = true;
-		});
-		if (changed) this.persist();
 	}
 
 	reset(key) {

@@ -1,6 +1,6 @@
 # Layer Type Contract
 
-How to add a layer type, and the interface every layer manager shares. Referenced from `AGENTS.md`. See `docs/ARCHITECTURE.md` for how layers fit into the render and export paths.
+How to add a layer type, and the interface every layer manager shares. Referenced from `CONTRIBUTING.md`. See `docs/ARCHITECTURE.md` for how layers fit into the render and export paths.
 
 ## The target
 
@@ -9,7 +9,7 @@ Adding a new layer type should need four things:
 1. A manager class that implements the manager interface below.
 2. One `LayerType` constant in `js/core/layer-types.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow, bevel or background the type paints with.
 3. A `buildExportPlan(layer, context)` method on the manager (canvas export for every format).
-4. One `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`, with its title mirrored in `modals/guide.html`.
+4. One `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`, with guide titles generated from the schema by `node tools/build-modals.js`.
 
 If a new type needs a branch anywhere else, treat that as an architecture bug: fix the dispatch site so it reads `LAYER_UI_CONFIG`, instead of adding one more `if (layer.type === …)`.
 
@@ -18,11 +18,13 @@ If a new type needs a branch anywhere else, treat that as an architecture bug: f
 Each layer manager exposes these members, so shared code can route through `managerKey` instead of hardcoding types:
 
 - `createLayer(options)`: returns the new layer, or `null` when creation is rejected (for example by `LayerManager.canAddLayers()`).
-- `renderContent(layers)`: reconciles its preview DOM for the visible layers. Never clear-and-rebuild (see the no-flicker rules in `AGENTS.md`).
+- `renderContent(layers)`: reconciles its preview DOM for the visible layers. Never clear-and-rebuild (see the no-flicker rules in `CONTRIBUTING.md`).
 - `removeLayerElement(id)`
 - `releaseLayerResources(layer)`: safe during deletion. Removes DOM, transforms and any cached resources the layer owns.
 - `loadLayerSettings(layer)`: syncs the sidebar controls from the layer.
-- `normalizeLayer(layer)`: fills in defaults so a created, restored, history-loaded or project-loaded layer has the canonical runtime shape. Call it only where a layer enters the document (`createLayer` and the `serialization.normalize` hook), never from getters or render paths. Renames and moved fields belong in `ProjectSerializer.migrateLayerState` instead.
+- `commitScale(layer, startScale)` on resizable types: bakes a completed resize. Single-layer, group and sidebar callers share this dispatch; use `scaleLayerFields` and `scaleLayerSlotFields` for declared dimensions, including parked drafts.
+- `resolveSelectedGlitterId(layer)` or `slotPicker.resolveSelectedGlitterId(layer)`: identifies the Library selection for types with glitter paints.
+- `normalizeLayer(layer)`: fills in defaults so a created, restored, history-loaded or project-loaded layer has the canonical runtime shape. Call it only where a layer enters the document (`createLayer` and the `serialization.normalize` hook), never from getters or render paths. After launch, renames and moved fields belong in the project migration table instead.
 - `buildExportPlan(layer, context)`: returns the compositor plan for this layer. Text and shape delegate to the shared slot-stack plan builder.
 - `layerElements`: a `Map` of live preview DOM. It is the source of truth for visibility toggles and selection highlighting.
 - `layerTransforms`: a `Map` of `LayerTransform` instances for types with selection geometry; pinned layers may use read-only selection chrome.
@@ -43,14 +45,16 @@ Required for an addable type:
 - `onActivate(editor, layer)`: runs when the layer becomes active.
 - `hasVisibleContent(layer)`: whether the layer has anything to draw (read by `layerHasVisibleContent`).
 - `paintSlots`: the type's paint slots, back to front. Each is `{ key, role, path }` plus optional `enabledPath`, `draftPath`, `glitterDefault`, `wholeLayer`, `sourceLabel`, `countsAsEffect`, `framePadding`, `panelPrefix`, `modes`, `edgeStyles` and `fields`. Border slots declare their supported `borderEdgeStyle` values in `edgeStyles`; panel options and labels derive from that list and the options registry. Every slot of a role carries that role's editable fields (`PAINT_SLOT_ROLE_FIELDS`); `fields: { path: 'specKey' }` adds or re-specs one (`false` omits a role field, as Text replaces pixel cast distances with relative fields), such as a type-specific border width. The meanings are documented at the top of `js/paint/paint-slots.js`.
-- `fields`: bindings of the type's other editable properties onto layer data, `{ path, field, id, factor, geometry, documentScale, minimum }` (see `js/core/fields.js`). A slot or type field's spec, in `FIELDS`, gives its range, unit and default.
+- `fields`: bindings of the type's other editable properties onto layer data, `{ path, field, id, factor, geometry, documentScale, minimum }` (see `js/core/fields.js`). A slot or type field's spec, in `FIELDS`, gives its range, unit and default. `documentScale` classes are `geometry`, `effect`, `texture` and `corner`. Handle resizing honours the effect, texture and corner preferences; document resizing scales all four. Text plate dimensions are geometry, while shape/frame radius is corner.
 
 Common optional fields:
 
+- `describe(layer, editor)`: returns `{ name, detail }` for the layers list and selection status; omission uses the type display name.
+- `defaultCreateOptions(editor)`: supplies per-type defaults before creating a layer.
 - `addedStatusMessage`: status text after creation.
 - `addableViaModal`: `{ label, icon, description }` for the Add Layer modal card. Omit it if users shouldn't add the type there.
 - `goTo`: `'glitter'`, `'sticker'` or `null`, for the layers-list "go to source" action.
-- `transformable`, `transformPrefix`, `transformCapabilities`: participation in transform handles and the transform panel's control-id prefix. `transformable` may be a per-layer predicate (a pinned frame has no handles but remains selectable through its painted-pixel hit test); `transformCapabilities.edgeResize` declares edge handles. `transformPrefix` is all the transform panel needs: its host is `${prefix}TransformPanelHost` (a `transformHost` schema item), its listeners and handles route through `getMovableLayerContext`, and a manager with `commitScale(layer)` and `syncElementScale(layer, element)` gets them called after a resize gesture and during drags.
+- `transformable`, `transformPrefix`, `transformCapabilities`: participation in transform handles and the transform panel's control-id prefix. `transformable` may be a per-layer predicate (a pinned frame has no handles but remains selectable through its painted-pixel hit test); `transformCapabilities.edgeResize` declares edge handles. `transformPrefix` is all the transform panel needs: its host is `${prefix}TransformPanelHost` (a `transformHost` schema item), its listeners and handles route through `getMovableLayerContext`, and a manager with `commitScale(layer, startScale)` and `syncElementScale(layer, element)` gets them called after a resize gesture and during drags.
 - `frame(editor, layer)` and `visualBounds(editor, layer)`: required for transformable types. Each returns a layer-local box `{ width, height, offsetX, offsetY }` in unscaled layer units, offset from the element center (`frameFromCanvasRect` converts a rect in a padded mask canvas). `frame` is the object's body (content, border and background plate, no shadow); handles, hit-testing, alignment, snapping and group bounds use it. `visualBounds` covers every painted pixel, shadow included, for export culling and crop-to-artwork; it defaults to `frame`. Return `null` from `frame` when the layer has nothing to click. Read them through `getLayerFrame` / `getLayerVisualBounds` (`js/transforms/transform-math.js`).
 - `hitTest(editor, layer, x, y, tolerance)`: optional canvas picking in document px, used instead of the frame box (and for layers that are not transformable). Frames and fill layers are picked on their painted pixels so a click inside them reaches the layers under them.
 - `elementBox(editor, layer)`: `{ width, height }` of the preview element, for a type whose element is not its artwork's own box. A fill layer's element is its canvas-sized mask surface and its `frame` is the painted pixels inside it; `LayerTransform.getDimensions` reads this first, so drags, gestures and group transforms size the element the same way `renderLayer` does.
@@ -73,8 +77,8 @@ Common optional fields:
 
 1. Create the manager and construct it in the `GlitterEditor` constructor in `js/app.js`. Add its `<script>` tag to `index.html` after its dependencies, then run `node tools/bump-cache.js`.
 2. Add the `LayerType` constant and the `js/layers/types/<type>.js` definition, with its script tag after `js/paint/paint-slots.js` in `index.html`.
-3. Add the preview implementation (manager `renderContent`) and its export twin (`manager.buildExportPlan`). The two must match; see "Preview is DOM, export is canvas" in `AGENTS.md`.
-4. Add the panel schema and mirror its title in `modals/guide.html`.
-5. Run `node tests/run.js --tag quick` and `--tag export`, plus the export fragility routine from `AGENTS.md`.
+3. Add the preview implementation (manager `renderContent`) and its export twin (`manager.buildExportPlan`). The two must match; see "Preview is DOM, export is canvas" in `CONTRIBUTING.md`.
+4. Add the panel schema and run `node tools/build-modals.js` to regenerate the guide.
+5. Run `node tests/run.js --tag quick` and `--tag export`, plus the export fragility routine from `CONTRIBUTING.md`.
 
 That should be enough for create, delete, visibility, selection, go-to-source, mobile settings routing, undo, clipboard, project save and load, and the Add Layer modal.

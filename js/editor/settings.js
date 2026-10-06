@@ -53,22 +53,10 @@ function describeGifLook(settings) {
 
 const EDITOR_SETTINGS_METHODS = {
 saveSettingsToStorage() {
-		const settings = {
-			...this.settingsStore.serialize(this.exportSettings),
-			exportDitherPipelineVersion: 2,
-			showHelpfulHints: this.showHints,
-			showWelcomeOnStartup: this.showWelcomeOnStartup,
-			confirmDestructiveActions: this.confirmDestructiveActions,
-			antialiasEdges: this.antialiasEdges,
-			scaleEffectsOnTransform: this.scaleEffectsOnTransform,
-			scaleTexturesOnTransform: this.scaleTexturesOnTransform,
-			interfaceTheme: this.interfaceTheme,
-			autoSelect: PREFERENCES.get('autoSelect')
-		};
+		const settings = this.settingsStore.serialize(this.exportSettings);
 
 		try {
 			localStorage.setItem('glitterEditorSettings', JSON.stringify(settings));
-			localStorage.setItem('glitterEditorTheme', this.interfaceTheme || 'dark');
 		} catch (e) {
 			console.warn('Failed to save settings to localStorage:', e);
 		}
@@ -92,44 +80,10 @@ saveSettingsToStorage() {
 
 ,
 initializeExportSettings() {
-	let savedSettings = this.loadSettingsFromStorage();
-	if (savedSettings?.exportColorCount != null && savedSettings.exportDitherPipelineVersion !== 2) {
-		// The first palette-pipeline rollout made a strongly stylized 128-color
-		// look the default. Migrate that temporary default back to a clean export;
-		// users can opt into the aesthetic presets explicitly.
-		savedSettings = {
-			...savedSettings,
-			exportColorCount: 'auto',
-			exportPaletteStyle: 'balanced',
-			exportDitherEnabled: false,
-			exportDitherPreset: 'clean',
-			exportDitherPipelineVersion: 2
-		};
-	}
-	let welcomeWasSuppressed = false;
-	try {
-		welcomeWasSuppressed = localStorage.getItem('glitterEditor_welcomeModalSeen') === 'true';
-	} catch (error) {
-		console.warn('Failed to read welcome-screen preference:', error);
-	}
-
+	const savedSettings = this.loadSettingsFromStorage();
 	this.settingsStore = new SettingsStore(EXPORT_SETTINGS_SCHEMA);
 	this.exportSettings = this.settingsStore.load(savedSettings || {});
-
-	// Update this.showHints
-	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.ui.hints.enabledByDefault;
-	this.showWelcomeOnStartup = savedSettings?.showWelcomeOnStartup ?? !welcomeWasSuppressed;
-	this.confirmDestructiveActions = savedSettings?.confirmDestructiveActions ?? true;
-	PREFERENCES.migrate({
-		crispMaskEdges: savedSettings?.antialiasEdges == null ? undefined : !savedSettings.antialiasEdges,
-		autoSelect: savedSettings?.autoSelect,
-		scaleEffects: savedSettings?.scaleEffectsOnTransform,
-		scaleTextures: savedSettings?.scaleTexturesOnTransform
-	});
-	this.antialiasEdges = !PREFERENCES.get('crispMaskEdges');
-	this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
-	this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
-	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
+	this.interfaceTheme = document.documentElement.dataset.theme;
 	this.applyInterfaceTheme();
 	this.applyReduceMotion();
 	this.applyShowAllControls();
@@ -146,12 +100,13 @@ initializeExportSettings() {
 	syncExportSettingsToUI() {
 		this.settingsStore.syncToUI(this.exportSettings);
 		const uiElements = {
-			showHelpfulHints: { checked: this.showHints },
-			showWelcomeOnStartup: { checked: this.showWelcomeOnStartup },
-			confirmDestructiveActions: { checked: this.confirmDestructiveActions },
-			antialiasMaskEdges: { checked: this.antialiasEdges },
-			scaleEffectsOnTransform: { checked: this.scaleEffectsOnTransform },
-			scaleTexturesOnTransform: { checked: this.scaleTexturesOnTransform },
+			showHelpfulHints: { checked: PREFERENCES.get('showHints') },
+			showWelcomeOnStartup: { checked: PREFERENCES.get('showWelcomeOnStartup') },
+			confirmDestructiveActions: { checked: PREFERENCES.get('confirmDestructiveActions') },
+			antialiasMaskEdges: { checked: !PREFERENCES.get('crispMaskEdges') },
+			scaleEffectsOnTransform: { checked: PREFERENCES.get('scaleEffects') },
+			scaleTexturesOnTransform: { checked: PREFERENCES.get('scaleTextures') },
+			scaleCorners: { checked: PREFERENCES.get('scaleCorners') },
 			autoSelectLayers: { checked: PREFERENCES.get('autoSelect') },
 			snappingEnabled: { checked: PREFERENCES.get('snappingEnabled') },
 			panInertia: { checked: PREFERENCES.get('panInertia') },
@@ -401,51 +356,16 @@ initializeExportSettings() {
 			this.updateExportFormatUI();
 		});
 
-		// Helpful hints setting
-		const showHintsInput = document.getElementById('showHelpfulHints');
-		if (showHintsInput) {
-			showHintsInput.addEventListener('change', (e) => {
-				this.showHints = e.target.checked;
-				this.updateHelpfulMessage();
-				this.saveSettingsToStorage();
-			});
-		}
-
-		const welcomeInput = document.getElementById('showWelcomeOnStartup');
-		welcomeInput?.addEventListener('change', (e) => {
-			this.showWelcomeOnStartup = e.target.checked;
-			if (this.showWelcomeOnStartup) localStorage.removeItem('glitterEditor_welcomeModalSeen');
-			else localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
-			this.saveSettingsToStorage();
-		});
-
-		const confirmInput = document.getElementById('confirmDestructiveActions');
-		confirmInput?.addEventListener('change', (e) => {
-			this.confirmDestructiveActions = e.target.checked;
-			this.saveSettingsToStorage();
-		});
-
-		const antialiasInput = document.getElementById('antialiasMaskEdges');
-		antialiasInput?.addEventListener('change', (e) => {
-			this.antialiasEdges = e.target.checked;
-			PREFERENCES.set('crispMaskEdges', !this.antialiasEdges);
+		this.bindPreferenceToggle('showHelpfulHints', 'showHints', () => this.updateHelpfulMessage());
+		this.bindPreferenceToggle('showWelcomeOnStartup', 'showWelcomeOnStartup');
+		this.bindPreferenceToggle('confirmDestructiveActions', 'confirmDestructiveActions');
+		this.bindPreferenceToggle('scaleEffectsOnTransform', 'scaleEffects');
+		this.bindPreferenceToggle('scaleCorners', 'scaleCorners');
+		this.bindPreferenceToggle('scaleTexturesOnTransform', 'scaleTextures');
+		document.getElementById('antialiasMaskEdges')?.addEventListener('change', (e) => {
+			PREFERENCES.set('crispMaskEdges', !e.target.checked);
 			this.refreshMaskEdgeRendering();
-			this.saveSettingsToStorage();
-			this.updateStatus(this.antialiasEdges ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
-		});
-
-		const scaleEffectsInput = document.getElementById('scaleEffectsOnTransform');
-		scaleEffectsInput?.addEventListener('change', (e) => {
-			this.scaleEffectsOnTransform = e.target.checked;
-			PREFERENCES.set('scaleEffects', this.scaleEffectsOnTransform);
-			this.saveSettingsToStorage();
-		});
-
-		const scaleTexturesInput = document.getElementById('scaleTexturesOnTransform');
-		scaleTexturesInput?.addEventListener('change', (e) => {
-			this.scaleTexturesOnTransform = e.target.checked;
-			PREFERENCES.set('scaleTextures', this.scaleTexturesOnTransform);
-			this.saveSettingsToStorage();
+			this.updateStatus(e.target.checked ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
 		});
 
 		const themeInput = document.getElementById('interfaceTheme');
@@ -759,7 +679,12 @@ initializeExportSettings() {
 
 ,
 	applyInterfaceTheme() {
-		document.documentElement.dataset.theme = this.interfaceTheme || 'dark';
+		document.documentElement.dataset.theme = this.interfaceTheme;
+		try {
+			localStorage.setItem('glitterEditorTheme', this.interfaceTheme);
+		} catch (error) {
+			console.warn('Failed to save interface theme:', error);
+		}
 	}
 
 ,
@@ -857,14 +782,7 @@ async resetAllSettings() {
 
 	this.settingsStore.reset(this.exportSettings);
 
-	// Reset UI preferences
-	this.showHints = CONFIG.ui.hints.enabledByDefault;
-	this.showWelcomeOnStartup = true;
-	this.confirmDestructiveActions = true;
 	PREFERENCES.resetAll();
-	this.antialiasEdges = !PREFERENCES.get('crispMaskEdges');
-	this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
-	this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
 	this.refreshMaskEdgeRendering();
 	this.applyReduceMotion();
 	this.applyShowAllControls();
@@ -874,8 +792,6 @@ async resetAllSettings() {
 	this.contextToolbarRenderer?.resetPlacement?.();
 	this.interfaceTheme = 'dark';
 	this.applyInterfaceTheme();
-	localStorage.removeItem('glitterEditor_welcomeModalSeen');
-	localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
 	this.maskEditor?.resetToolSettingsToDefaults();
 	this.applyDefaultPanelLayout();
 

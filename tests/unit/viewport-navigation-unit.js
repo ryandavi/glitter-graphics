@@ -94,8 +94,8 @@ const fittedCenter = canvasAt(500, 400);
 assert(Math.abs(fittedCenter.x - 200) < 1e-9, 'Zoom to bounds did not center X');
 assert(Math.abs(fittedCenter.y - 150) < 1e-9, 'Zoom to bounds did not center Y');
 
-viewport.pinchZoomAt(2, anchor.x, anchor.y);
-assert.strictEqual(viewport.currentZoom, 9, 'Touch compatibility path did not use continuous zoom');
+viewport.zoomByFactor(2, anchor.x, anchor.y);
+assert.strictEqual(viewport.currentZoom, 9, 'Continuous zoom did not use continuous zoom');
 
 viewport.setZoom(1);
 const gestureCanvasPoint = canvasAt(450, 350);

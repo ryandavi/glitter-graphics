@@ -360,9 +360,7 @@ const PANEL_SCHEMAS = {
 							{ id: 'saveProject', label: 'Save project', icon: 'save', primary: true, disabled: true }
 						] }
 					] },
-					// The document-size section mounts here at boot and is
-					// relocated to #baseCanvasSizeHost when Canvas Properties is shown.
-					{ kind: 'mount', id: 'noLayerCanvasSizeHost' }
+					// Document sizing belongs to Canvas Properties.
 				] }
 			] },
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [
@@ -677,13 +675,8 @@ const PANEL_SCHEMAS = {
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
 					texturePosition: true, noSlotOpacity: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
-					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
-					assetIds: {
-						thumbnail: 'glitterAssetThumbnail', name: 'glitterAssetName',
-						badges: 'glitterAssetBadges', change: 'glitterAssetChange',
-						size: 'glitterAssetSize', frames: 'glitterAssetFrames'
-					},
-					ids: { scale: 'scale', hue: 'glitterHue', saturation: 'glitterSaturation', brightness: 'glitterBrightness' }
+					chipTitle: 'Choose fill glitter',
+
 				}
 			] },
 			{ title: 'Layout', sections: [{ kind: 'transform' }] }
@@ -1030,7 +1023,7 @@ const PANEL_SCHEMAS = {
 	// set by id, anything else by `data-size-mode-note`.
 	documentSize: {
 		prefix: 'documentSize',
-		mountInto: 'noLayerCanvasSizeHost',
+		mountInto: 'baseCanvasSizeHost',
 		content: {
 			kind: 'section', id: 'documentSizeGroup', title: 'Size', classes: 'document-size-group',
 			summary: { id: 'noLayerSizeSummary', text: 'Image' },

@@ -91,12 +91,34 @@ function check(name, cond, detail='') {
 		JSON.stringify(resetGroup));
 
 	// ---- a confirmed reset returns to the modal that asked -----------------
-	await page.click('#resetToolSettings');
+	const preferenceEdits = await page.evaluate(() => {
+		const pairs = [['showHelpfulHints', 'showHints'], ['showWelcomeOnStartup', 'showWelcomeOnStartup'],
+			['confirmDestructiveActions', 'confirmDestructiveActions'], ['scaleEffectsOnTransform', 'scaleEffects'],
+			['scaleTexturesOnTransform', 'scaleTextures'], ['scaleCorners', 'scaleCorners']];
+		for (const [id, key] of pairs) {
+			const input = document.getElementById(id);
+			input.checked = !PREFERENCE_SCHEMA[key].default();
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+		PREFERENCES.set('welcomeLastSeenRelease', 'test-release');
+		window.editor.saveSettingsToStorage();
+		const stored = JSON.parse(localStorage.getItem('glitterEditorPreferences'));
+		const exported = JSON.parse(localStorage.getItem('glitterEditorSettings'));
+		return pairs.every(([, key]) => stored[key] === !PREFERENCE_SCHEMA[key].default())
+			&& Object.keys(exported).every(key => Object.values(EXPORT_SETTINGS_SCHEMA).some(spec => spec.storageKey === key))
+			&& ['showHints', 'showWelcomeOnStartup', 'confirmDestructiveActions', 'antialiasEdges', 'scaleEffectsOnTransform', 'scaleTexturesOnTransform']
+				.every(key => !Object.hasOwn(window.editor, key));
+	});
+	check('app settings persist only through preferences and export settings contain only export keys', preferenceEdits);
+	await page.click('#settingsModal .reset-all-settings-btn');
 	await page.waitForTimeout(300);
 	await page.click('#confirmationConfirmBtn');
 	await page.waitForTimeout(600);
 	const afterConfirm = await page.evaluate(() => [...document.querySelectorAll('.modal-overlay.visible')].map((modal) => modal.id));
 	check('settings reopens after a confirmed reset', afterConfirm.length === 1 && afterConfirm[0] === 'settingsModal', JSON.stringify(afterConfirm));
+	check('Reset Everything restores every preference and clears the seen release', await page.evaluate(() =>
+		['showHints', 'showWelcomeOnStartup', 'confirmDestructiveActions', 'scaleEffects', 'scaleTextures', 'scaleCorners', 'welcomeLastSeenRelease']
+			.every(key => PREFERENCES.get(key) === PREFERENCE_SCHEMA[key].default())));
 
 	// ---- new settings present --------------------------------------------
 	const newSettings = await page.evaluate(() => ['autoSelectLayers','snappingEnabled','panInertia','reduceMotion','resetToolbarPlacement']
@@ -293,6 +315,17 @@ function check(name, cond, detail='') {
 	check('export settings does not scroll sideways at 360px',
 		overflow.scrollW <= overflow.clientW + 1, JSON.stringify(overflow));
 
+	await page.evaluate(() => {
+		const editor = window.editor;
+		editor.interfaceTheme = 'light';
+		editor.applyInterfaceTheme();
+		editor.saveSettingsToStorage();
+	});
+	await page.reload({ waitUntil: 'networkidle' });
+	check('theme survives reload through its early-paint key', await page.evaluate(() =>
+		document.documentElement.dataset.theme === 'light' && window.editor.interfaceTheme === 'light'
+			&& localStorage.getItem('glitterEditorTheme') === 'light'
+			&& !Object.hasOwn(JSON.parse(localStorage.getItem('glitterEditorSettings')), 'interfaceTheme')));
 	await browser.close();
 
 	let failed = 0;

@@ -1,6 +1,6 @@
 # UI conventions
 
-Visual and interaction conventions for the editor UI: the design system, sidebar panels, modals, lists, icons and buttons. Referenced from `AGENTS.md`. Read this before adding or changing any panel, toolbar, modal, button or icon.
+Visual and interaction conventions for the editor UI: the design system, sidebar panels, modals, lists, icons and buttons. Referenced from `CONTRIBUTING.md`. Read this before adding or changing any panel, toolbar, modal, button or icon.
 
 The definition of done for UI work: **adding a setting is one schema line and no new CSS.** "Add Blur to the sticker Shadow" is one item in `PANEL_SCHEMAS`; "add Loop count to Export Settings" is one entry in `EXPORT_SETTINGS_LAYOUT`. If either needs a new rule, the system has a gap; fix the system.
 

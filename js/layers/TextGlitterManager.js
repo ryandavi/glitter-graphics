@@ -435,7 +435,6 @@ class TextGlitterManager {
 		if (layer.textData.shadow === undefined) {
 			layer.textData.shadow = null;
 		}
-		[layer.textData.shadow, layer.textData.effectDrafts?.shadow].forEach(data => normalizeRelativeCastShadow(data, layer.textData.fontSize, layer.transform.scale));
 		if (layer.textData.shadow) {
 			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, this.getDefaultShadow());
 		}
@@ -587,13 +586,6 @@ class TextGlitterManager {
 		return pickerArmedSlot(this, layer) || 'fill';
 	}
 
-	// Thin back-compat wrapper: arming a slot opens a picker session on the
-	// active layer. Callers that used to reset to 'fill' now open a fill
-	// session, which browse mode / getGlitterSelectionTarget treats identically.
-	setGlitterSelectionTarget(target = 'fill', layer = this.getActiveTextLayer()) {
-		this.openPickerSession(layer, target);
-	}
-
 	openPickerSession(layer = this.getActiveTextLayer(), slot = 'fill') {
 		if (!layer) return;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
@@ -622,7 +614,7 @@ class TextGlitterManager {
 		// the strip and the Library view; a slot pick supersedes it.
 		this.editor.fontBrowserManager?.closePickerSession();
 		this.ensureEffectData(layer, key);
-		this.setGlitterSelectionTarget(key, layer);
+		this.openPickerSession(layer, key);
 		const selectedGlitterId = this.resolveSelectedGlitterId(layer);
 		if (selectedGlitterId) this.editor.glitterManager?.scrollToContent(selectedGlitterId);
 		revealAssetBrowser(this.editor, this.editor.glitterManager);
@@ -1068,7 +1060,6 @@ class TextGlitterManager {
 
 		const layout = TextLayout.layout(ctx, layer.textData.text, layer.textData, { fontSize, letterSpacing, lineHeightPx, ascent, descent, minBoxSize: this.getMinBoxSize() });
 		const { lines: measuredLines, visibleLines, layoutWidth, layoutHeight, hasOverflow, contentOffsetY } = layout;
-		const visibleLineCount = visibleLines.length;
 		let textInkLeft = Infinity;
 		let textInkTop = Infinity;
 		let textInkRight = -Infinity;
@@ -1762,18 +1753,6 @@ class TextGlitterManager {
 		return canvas;
 	}
 
-	getEffectPaintSource(layer, key) {
-		const entry = getLayerPaintSlots(layer).find((slot) => slot.key === key);
-		return entry ? resolvePaintSlotPreviewSource(this.editor, layer, entry) : null;
-	}
-
-	updateLiveTextContent(layerId, text) {
-		const wrapper = this.layerElements.get(layerId);
-		if (!wrapper) return;
-
-		wrapper.setAttribute('aria-label', text);
-	}
-
 	async refreshLayer(layer, options = {}) {
 		const {
 			saveHistory = false,
@@ -1971,7 +1950,7 @@ class TextGlitterManager {
 		return true;
 	}
 
-	async commitScaleToFontSize(layer) {
+	async commitScale(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return;
 
 		const transform = getLayerTransform(layer);
@@ -1992,39 +1971,17 @@ class TextGlitterManager {
 		);
 		const bakedFactor = nextFontSize / Math.max(1, previousFontSize);
 		layer.textData.fontSize = nextFontSize;
-		// Whole pixels, as the panel fields step and document resize rounds
-		// (scaleDocumentLayerState); a raw product shows as 4.109589px.
-		layer.textData.letterSpacing = Math.round(layer.textData.letterSpacing * bakedFactor);
 		if (layer.textData.boxMode !== 'point') {
 			layer.textData.boxWidth = Math.round(layer.textData.boxWidth * bakedFactor);
 			if (layer.textData.boxMode === 'fixed') layer.textData.boxHeight = Math.round(layer.textData.boxHeight * bakedFactor);
 		}
-		if (layer.textData.border && PREFERENCES.get('scaleEffects')) {
-			layer.textData.border.widthPx = Math.max(1, Math.round(layer.textData.border.widthPx * bakedFactor));
-		}
-		if (layer.textData.shadow && PREFERENCES.get('scaleEffects')) {
-			layer.textData.shadow.offsetX = Math.round(layer.textData.shadow.offsetX * bakedFactor);
-			layer.textData.shadow.offsetY = Math.round(layer.textData.shadow.offsetY * bakedFactor);
-			layer.textData.shadow.spread = Math.round(layer.textData.shadow.spread * bakedFactor);
-			layer.textData.shadow.blur = Math.round((layer.textData.shadow.blur || 0) * bakedFactor);
-		}
-		if (layer.textData.bevel?.enabled && PREFERENCES.get('scaleEffects')) {
-			layer.textData.bevel.highlight.size = Math.max(1, Math.round(layer.textData.bevel.highlight.size * bakedFactor));
-			layer.textData.bevel.highlight.soften = Math.round(layer.textData.bevel.highlight.soften * bakedFactor);
-		}
-		if (PREFERENCES.get('scaleTextures')) {
-			layer.textData.fill.scale = roundSlotTextureScale(layer.textData.fill.scale * bakedFactor);
-			if (layer.textData.border) {
-				layer.textData.border.scale = roundSlotTextureScale((layer.textData.border.scale ?? 100) * bakedFactor);
-			}
-			if (layer.textData.shadow) {
-				layer.textData.shadow.scale = roundSlotTextureScale((layer.textData.shadow.scale ?? 100) * bakedFactor);
-			}
-			if (layer.textData.bevel?.enabled) {
-				layer.textData.bevel.highlight.scale = roundSlotTextureScale((layer.textData.bevel.highlight.scale ?? 100) * bakedFactor);
-				layer.textData.bevel.shade.scale = roundSlotTextureScale((layer.textData.bevel.shade.scale ?? 100) * bakedFactor);
-			}
-		}
+		const factors = {
+			geometry: bakedFactor,
+			effect: PREFERENCES.get('scaleEffects') ? bakedFactor : 1,
+			texture: PREFERENCES.get('scaleTextures') ? bakedFactor : 1
+		};
+		scaleLayerSlotFields(layer, factors);
+		scaleLayerFields(layer, factors, binding => !['textData.fontSize', 'textData.boxWidth', 'textData.boxHeight'].includes(binding.path));
 		transform.scale.x = (scaleX / bakedFactor) * 100;
 		transform.scale.y = (scaleY / bakedFactor) * 100;
 

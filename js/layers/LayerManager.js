@@ -170,8 +170,6 @@ class LayerManager {
 
 	async deserializeLayer(layerData) {
 		if (!layerData) return null;
-		// Clipboard payloads can come from an older editor build.
-		ProjectSerializer.migrateLayerState(layerData);
 		const type = layerData.type || LayerType.GLITTER_FILL;
 		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
 		if (spec.custom) {
@@ -277,10 +275,7 @@ class LayerManager {
 		}
 
 		let createOptions = cfg.createOptionsKey ? (options[cfg.createOptionsKey] || {}) : undefined;
-		if (type === LayerType.STICKER && createOptions == null) {
-			const configured = CONFIG.tools.stickers.defaultStickerId;
-			createOptions = configured != null && manager.getItemById(configured) ? configured : null;
-		}
+		createOptions ??= cfg.defaultCreateOptions?.(this.editor);
 		const layer = manager.createLayer(createOptions);
 
 		if (!layer) return;  // Factory returns null if max reached
@@ -524,12 +519,8 @@ class LayerManager {
 
 		if (selectedCount > 1) {
 			this.editor.updateStatus(`${selectedCount} layers selected`);
-		} else if (activeLayer?.type === LayerType.STICKER) {
-			this.editor.updateStatus(`Selected sticker: ${activeLayer.name || 'Sticker'}`);
-		} else if (activeLayer?.type === LayerType.TEXT_GLITTER) {
-			this.editor.updateStatus(`Selected text: ${activeLayer.name || 'Text'}`);
-		} else if (activeLayer?.type === LayerType.SHAPE) {
-			this.editor.updateStatus(`Selected shape: ${activeLayer.name || 'Shape'}`);
+		} else if (activeLayer) {
+			this.editor.updateStatus(`Selected: ${describeLayer(activeLayer, this.editor).name}`);
 		}
 
 		this.editor.currentHintDismissed = false;
@@ -658,20 +649,6 @@ class LayerManager {
 
 			this.selectLayerFromCanvas(layer.id);
 
-			let name = 'Layer';
-			if (layer.type === LayerType.STICKER) name = layer.name;
-			else if (layer.type === LayerType.TEXT_GLITTER) name = layer.name || 'Text';
-			else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
-			else if (layer.type === LayerType.SHAPE) name = layer.name || 'Shape';
-			else if (layer.type === LayerType.GLITTER_FILL) {
-				const fillMode = layer.fill.mode;
-				const glitter = fillMode === 'glitter'
-					? this.editor.glitterLibrary.getItemById(layer.fill.glitterId)
-					: null;
-				name = layer.name || glitter?.name || `${panelCap(fillMode)} Fill`;
-			}
-
-			this.editor.updateStatus(`Selected: ${name}`);
 
 			const flash = document.createElement('div');
 			flash.className = 'layer-pick-flash';
@@ -1128,72 +1105,9 @@ class LayerManager {
 
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
-		const getFillDisplay = (paint, imageAsset = null) => {
-			const mode = paint?.mode || 'glitter';
-			const modeLabel = mode === 'none' ? 'No' : panelCap(mode);
-			const glitter = mode === 'glitter'
-				? this.editor.glitterLibrary.getItemById(paint?.glitterId)
-				: null;
-			const formatColor = (color) => /^#[0-9a-f]{6}$/i.test(color || '') ? color.toUpperCase() : null;
-			let name = null;
-			if (mode === 'solid') {
-				name = formatColor(paint?.color) || 'Solid Fill';
-			} else if (mode === 'gradient') {
-				const stops = normalizeEffectGradient(paint?.gradient).stops;
-				const first = formatColor(stops[0]?.color);
-				const last = formatColor(stops.at(-1)?.color);
-				name = first && last ? `${first} → ${last}` : 'Gradient Fill';
-			} else if (mode === 'image') {
-				name = imageAsset?.name || 'Image Fill';
-			} else if (mode === 'none') {
-				name = 'Transparent';
-			}
-			return { mode, modeLabel, glitter, name };
-		};
-
-		switch (layer.type) {
-			case LayerType.STICKER: {
-				const sticker = this.editor.stickerManager.getItemById(layer.stickerSourceId); // Changed this line
-				nameText.textContent = layer.name || 'Sticker';
-				typeText.textContent = sticker?.category ? `Sticker · ${sticker.category}` : 'Sticker';
-				break;
-			}
-			case LayerType.GLITTER_FILL: {
-				const fill = getFillDisplay(getLayerFillSlot(layer));
-				nameText.textContent = layer.name
-					|| fill.glitter?.name
-					|| fill.name
-					|| `${fill.modeLabel} Fill`;
-				typeText.textContent = `Fill · ${fill.mode === 'none' ? 'None' : fill.modeLabel}`;
-				break;
-			}
-			case LayerType.TEXT_GLITTER: {
-				const fill = getFillDisplay(getLayerFillSlot(layer));
-				nameText.textContent = layer.name || 'Text';
-				typeText.textContent = `Text · ${fill.modeLabel}`;
-				break;
-			}
-			case LayerType.SHAPE: {
-				const fillSlot = getLayerFillSlot(layer);
-				const fill = getFillDisplay(fillSlot, this.editor.shapeGlitterManager?.getImageFillAsset(fillSlot?.imageRef));
-				nameText.textContent = layer.name || 'Shape';
-				typeText.textContent = `Shape · ${fill.modeLabel}`;
-				break;
-			}
-			case LayerType.BASE_IMAGE:
-				nameText.textContent = 'Base Image';
-				typeText.textContent = `Background · ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
-				break;
-			case LayerType.FILTER:
-				nameText.textContent = layer.name || 'Filter';
-				typeText.textContent = `Filter · ${GlitterFilter.summaryText(layer.filterData)}`;
-				break;
-			default: {
-				const displayName = LAYER_UI_CONFIG[layer.type]?.displayName;
-				nameText.textContent = layer.name || displayName || 'Unknown Layer';
-				typeText.textContent = displayName || 'Unknown';
-			}
-		}
+		const description = describeLayer(layer, this.editor);
+		nameText.textContent = description.name;
+		typeText.textContent = description.detail;
 
 		typeText.title = typeText.textContent;
 		metaRow.appendChild(typeText);

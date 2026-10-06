@@ -83,6 +83,6 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 	assert(result.hasPreviewControl, 'Pixel filter preview preference is missing');
 	assert.strictEqual(result.hasLegacyExportSetting, false, 'jpegGenerations must be removed from export settings');
 	assert.strictEqual(errors.length, 0, `Browser errors: ${errors.join('; ')}`);
-	console.log('PASS pixel-filter registry, still/animated preview, export parity, JPEG generations, preview setting, and export-setting migration');
+	console.log('PASS pixel-filter registry, still/animated preview, export parity, JPEG generations, preview setting, and export-setting persistence');
 	await browser.close();
 })().catch((error) => { console.error('FAIL', error.stack || error.message); process.exit(1); });

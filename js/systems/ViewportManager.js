@@ -538,10 +538,6 @@ class ViewportManager {
 		this.previewContainer.classList.remove('panning');
 	}
 
-	pinchZoomAt(scale, clientX, clientY) {
-		this.zoomByFactor(scale, clientX, clientY);
-	}
-
 	/**
 	 * Apply a two-finger scale and translation as one transform. The canvas point
 	 * below the previous centroid lands below the new centroid without an

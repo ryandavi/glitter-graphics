@@ -16,7 +16,7 @@ registerLayerType(LayerType.FRAME, {
 	fields: [
 		{ path: 'frameData.widthPx', field: 'frameThickness', id: 'frameThickness', geometry: true, documentScale: 'geometry' },
 		{ path: 'frameData.inset', field: 'frameInset', id: 'frameInset', geometry: true, documentScale: 'geometry' },
-		{ path: 'frameData.radius', field: 'frameRadius', id: 'frameRadius', geometry: true, documentScale: 'geometry' },
+		{ path: 'frameData.radius', field: 'frameRadius', id: 'frameRadius', geometry: true, documentScale: 'corner' },
 		{ path: 'frameData.sliceScale', field: 'frameSliceScale', id: 'frameSliceScale', geometry: true, documentScale: 'geometry' },
 		{ path: 'frameData.shade', field: 'frameShade', id: 'frameShade' },
 		{ path: 'frameData.width', documentScale: 'geometry', minimum: 1 },

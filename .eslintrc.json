@@ -6,7 +6,8 @@
 	},
 	"parserOptions": {
 		"ecmaVersion": 2022,
-		"sourceType": "script"
+		"sourceType": "script",
+		"ecmaFeatures": { "globalReturn": false }
 	},
 	"rules": {
 		"no-unreachable": "error",
@@ -14,7 +15,7 @@
 			"warn",
 			{
 				"args": "none",
-				"varsIgnorePattern": "^(CONFIG|DEBUG_CONFIG|LayerType|ToolType|LAYER_UI_CONFIG|COMMANDS)$"
+				"vars": "local"
 			}
 		],
 		"no-dupe-class-members": "error",
@@ -23,6 +24,7 @@
 	},
 	"ignorePatterns": [
 		"js/vendor/**",
+		"js/workers/gif.worker.js",
 		"js/generated/**",
 		"node_modules/**"
 	]

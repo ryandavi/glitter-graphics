@@ -38,7 +38,7 @@ class LayerTransform {
 	/**
 	 * Sync the settings panel to this layer, throttled to one update per
 	 * animation frame. Drag handlers fire per pointer event — running the
-	 * full loadStickerSettings (a dozen+ DOM reads/writes) that often is
+	 * full loadLayerSettings (a dozen+ DOM reads/writes) that often is
 	 * wasted work the screen can't show.
 	 */
 	scheduleSettingsSync() {
@@ -863,14 +863,8 @@ const handleMouseMove = (e) => {
 	// the gesture began from (options.startScale). The rerender can shift the
 	// frame, so the anchor is put back where the gesture left it.
 	async commitScaleChange(anchorBefore, options = {}) {
-		if (this.layer.type === LayerType.TEXT_GLITTER) {
-			if (options.text !== false) await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
-		} else if (this.layer.type === LayerType.SHAPE) {
-			this.editor.shapeGlitterManager?.commitScale(this.layer);
-		} else if (this.layer.type === LayerType.STICKER) {
-			await this.editor.stickerManager?.commitScale(this.layer, options.startScale);
-		} else {
-			getLayerManagerForType(this.editor, this.layer.type)?.commitScale?.(this.layer);
+		if (options.text !== false || !this.layer.textData) {
+			await getLayerManagerForType(this.editor, this.layer.type)?.commitScale?.(this.layer, options.startScale);
 		}
 		const anchorAfter = getLayerAnchorPoint(this.editor, this.layer);
 		const transform = this.getTransform();

@@ -351,7 +351,7 @@ async function check7(page) {
 		editor.shapeGlitterManager.loadLayerSettings(layer);
 
 		const measurement = editor.shapeGlitterManager.getMeasurementEntry(layer);
-		const source = editor.shapeGlitterManager.getEffectPaintSource(layer, 'fill');
+		const source = resolvePaintSlotPreviewSource(editor, layer, getLayerPaintSlots(layer).find(slot => slot.key === 'fill'));
 		const span = editor.shapeGlitterManager.layerElements.get(layer.id).querySelector('[data-span-key="fill"]');
 		const output = document.createElement('canvas');
 		editor.sceneCompositor._renderFilledMaskInto(output, measurement.canvas, source, layer, 0, `${layer.id}:fill`, new Map(), new Map());
@@ -375,7 +375,7 @@ async function check7(page) {
 		});
 		editor.shapeGlitterManager.renderLayer(layer);
 		editor.shapeGlitterManager.loadLayerSettings(layer);
-		const tiledSource = editor.shapeGlitterManager.getEffectPaintSource(layer, 'fill');
+		const tiledSource = resolvePaintSlotPreviewSource(editor, layer, getLayerPaintSlots(layer).find(slot => slot.key === 'fill'));
 		const tiledOutput = document.createElement('canvas');
 		editor.sceneCompositor._renderFilledMaskInto(tiledOutput, measurement.canvas, tiledSource, layer, 0, `${layer.id}:fill`, new Map(), new Map());
 		const tiledContext = tiledOutput.getContext('2d');

@@ -116,11 +116,10 @@ async function main() {
 								drawOrder,
 								style: 'solid'
 							};
-							const textLayer = {
-								id: `text-${textCases}`,
-								type: LayerType.TEXT_GLITTER,
-								textData: { fill: { scale: 100, opacity: 100, colorAdjust: { hue: 0, saturation: 100, brightness: 100 }, ...makeFill(fillMode), glitterId }, border }
-							};
+							const textLayer = editor.textGlitterManager.createLayer({ text: 'Parity' });
+							textLayer.id = `text-${textCases}`;
+							textLayer.textData.fill = { ...textLayer.textData.fill, ...makeFill(fillMode), glitterId };
+							textLayer.textData.border = border;
 							assertStackParity(editor.textGlitterManager, textLayer, drawOrder, `text ${placement}/${edgeStyle}/${drawOrder}/${fillMode}`);
 							textCases += 1;
 

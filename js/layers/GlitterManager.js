@@ -98,7 +98,6 @@ async initBrowser() {
 
 		// Setup filter chips
 		this.setupFilterChips();
-		this.setupFillSourceControls();
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
 		this.ui.resetEffects?.addEventListener('click', () => {
@@ -129,6 +128,10 @@ async initBrowser() {
 	}
 
 	// The slot data the next gallery pick writes to.
+	resolveSelectedGlitterId(layer) {
+		return this.getGlitterSelectionSlot(layer)?.glitterId ?? null;
+	}
+
 	getGlitterSelectionSlot(layer) {
 		const slot = this.hasActivePickerSession() ? this.pickerSession.slot : null;
 		return (slot && getLayerPaintSlot(layer, slot)) || layer.fill;
@@ -149,7 +152,7 @@ async initBrowser() {
 	}
 
 	handlePickerDone() {
-		const focusId = getPaintSlotChipId(LayerType.GLITTER_FILL, this.pickerSession?.slot) || 'glitterAssetThumbnail';
+		const focusId = getPaintSlotChipId(LayerType.GLITTER_FILL, this.pickerSession?.slot) || 'glitterFillGlitterChip';
 		this.closePickerSession();
 		returnFromPickerToProperties(this.editor, { section: 'glitterSettings', focusId });
 	}
@@ -158,44 +161,6 @@ async initBrowser() {
 		pickerCloseSession(this, {
 			refresh: () => this.updatePickerStrip(),
 			updateSelection: () => this.editor.updateGlitterSelection()
-		});
-	}
-
-	setupFillSourceControls() {
-		if (!document.getElementById('glitterFillSolid')) return;
-		const active = () => {
-			const layer = this.editor.layerManager.getActiveLayer();
-			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
-		};
-		const refreshLayerPresentation = (layer) => {
-			const selectedGlitter = this.getItemById(layer.fill.glitterId);
-			if (layer.fill.mode !== 'glitter' && layer.name === selectedGlitter?.name) layer.name = null;
-			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
-			this.editor.layerManager.renderLayersList();
-			this.updatePickerStrip();
-		};
-		['glitter', 'solid'].forEach((mode) => document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`).addEventListener('click', () => {
-			const layer = active();
-			if (!layer) return;
-			layer.fill.mode = mode;
-			syncPaintSlotSourceUI(document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
-			refreshLayerPresentation(layer);
-			this.editor.saveState('Edit glitter');
-		}));
-		const color = document.getElementById('glitterFillColor');
-		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill.mode = 'solid'; layer.fill.color = color.value; refreshLayerPresentation(layer); });
-		color.addEventListener('change', () => this.editor.saveState('Edit glitter'));
-		installEffectGradientEditor({
-			prefix: 'glitterFill',
-			getData: () => active()?.fill || null,
-			onUpdate: (commit) => { const layer = active(); if (!layer) return; refreshLayerPresentation(layer); if (commit) this.editor.saveState('Edit glitter'); }
-		});
-		bindSlotTextureCoordinateControls({
-			prefix: 'glitterFill',
-			getLayer: active,
-			getData: (layer) => layer.fill,
-			render: refreshLayerPresentation,
-			save: () => this.editor.saveState('Edit glitter')
 		});
 	}
 
@@ -408,8 +373,7 @@ async initBrowser() {
 		};
 	}
 
-	// How the declared field binder edits a fill layer's effect slots. The fill
-	// itself keeps its legacy bindings (editor-panels.js).
+	// The declared field host owns fill paint and selection edits.
 	createFieldHost() {
 		const active = () => {
 			const layer = this.editor.layerManager.getActiveLayer();
@@ -424,17 +388,37 @@ async initBrowser() {
 			getSlotDefaults: (key) => this.getSlotDefaults(key),
 			apply: (layer, mutate, change) => {
 				mutate();
-				render(layer);
+				const glitter = this.getItemById(layer.fill.glitterId);
+				if (layer.fill.mode !== 'glitter' && layer.name === glitter?.name) layer.name = null;
+				this.editor.requestPreviewUpdate();
 				if (change.live) return;
 				syncFieldControls(this.fieldHost, layer);
 				this.editor.layerManager.renderLayersList();
 				this.editor.saveState('Edit fill effect');
 			},
 			render,
-			commit: () => this.editor.saveState('Edit fill effect'),
+			commit: () => this.editor.saveState('Edit fill layer'),
+			afterFieldChange: (layer, _slot, binding) => {
+				if (binding.id === 'multiSelect') this.editor.handleMultiSelectChange(layer.settings.multiSelect);
+				if (binding.id === 'invert') {
+					if (layer.maskVersion || this.editor.paintMaskStore.getPaintMask(layer.id)) this.editor.paintMaskStore.commitPaintState(layer);
+					this.editor.maskEditor?.loadLayer(layer);
+				}
+				this.editor.updateColorPickerControls();
+				this.editor.updateHelpfulMessage();
+			},
 			armPicker: (key) => this.armAssetPicker(key),
 			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot || null : null)
 		};
+	}
+
+	loadLayerSettings(layer) {
+		if (layer?.type !== LayerType.GLITTER_FILL) return;
+		syncFieldControls(this.fieldHost, layer);
+		this.editor.loadTransformSettings(layer, 'glitter');
+		this.editor.updateSelectedColorsDisplay();
+		this.editor.updateColorPickerControls();
+		this.editor.maskEditor?.loadLayer(layer);
 	}
 
 	customizeItemElement(element, item) {
@@ -632,7 +616,7 @@ async initBrowser() {
 				// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
 				// the new glitter shows its true colors, and sync the HSB sliders to match.
 				layer.fill.colorAdjust = normalizeColorAdjust(null);
-				this.editor.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
+				syncFieldControls(this.fieldHost, layer);
 			} else {
 				slot.glitterId = id;
 				slot.mode = 'glitter';

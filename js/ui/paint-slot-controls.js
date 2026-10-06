@@ -281,6 +281,13 @@ function bindFieldNumberInput(input, spec, handlers) {
 }
 
 function bindFieldControl(control, binding, handlers) {
+	if (control.type === 'checkbox') {
+		control.addEventListener('change', () => {
+			handlers.apply(control.checked);
+			handlers.commit();
+		});
+		return;
+	}
 	if (control.type === 'number') {
 		bindFieldNumberInput(control, binding.spec, handlers);
 		return;
@@ -296,6 +303,10 @@ function bindFieldControl(control, binding, handlers) {
 
 function syncFieldControl(control, value) {
 	if (value == null) return;
+	if (control.type === 'checkbox') {
+		control.checked = Boolean(value);
+		return;
+	}
 	if (control.type === 'number') {
 		// Don't yank the field out from under someone mid-edit.
 		if (document.activeElement !== control) control.value = Math.round(value);

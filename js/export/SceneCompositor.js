@@ -1030,10 +1030,10 @@ class SceneCompositor {
 	}
 
 	// Build the repeating-pattern source canvas for a glitter frame, applying the
-	// WP4 color-adjust matrix when the layer/slot has a non-identity adjustment.
+	// color-adjust matrix when the layer/slot has a non-identity adjustment.
 	// The resolved frame is a shared cached ImageData, so a non-identity adjust
 	// works on a COPY — never mutate the cache. Identity adjust puts the original
-	// bytes straight through, keeping export byte-identical to pre-WP4 content.
+	// bytes straight through, keeping unadjusted exports byte-identical.
 	_renderPatternSourceInto(patternSource, frameImageData, colorAdjust) {
 		const normalizedFrame = this._getFrameImageData(frameImageData);
 		if (!normalizedFrame) throw new Error('Invalid image frame data');
@@ -1055,7 +1055,7 @@ class SceneCompositor {
 		return patternSource;
 	}
 
-	// Reused across frames/calls (see EXPORT-PERFORMANCE-PLAN.md Part 2a): the
+	// Reused across frames/calls: the
 	// copy is consumed synchronously within this call via putImageData and never
 	// stored past it, so pooling is safe. Must track the CURRENT glitter frame's
 	// dimensions, not the export canvas's — different glitter/sticker sources

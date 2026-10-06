@@ -356,7 +356,7 @@ async function capture(browser) {
 				const glitter = window.editor.glitterManager?.getAllContent?.()[0];
 				if (!glitter) throw new Error('No glitter asset available for Change-button verification');
 				window.editor.updateGlitterAssetInfo(glitter);
-				document.getElementById('glitterAssetChange')?.click();
+				document.getElementById('glitterFillGlitterChange')?.click();
 				if (!document.getElementById('designGallerySection')?.classList.contains('is-open')) {
 					throw new Error('Glitter Fill Change button did not open the Design Gallery');
 				}

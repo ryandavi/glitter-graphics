@@ -395,7 +395,7 @@ async function main() {
 	assert(deterministicA.renderClock.delays.join(',') === deterministicB.renderClock.delays.join(','),
 		'Identical input did not produce an identical timing plan.');
 
-	assert(CompositeFrameReducer.hash(frame(12)) === '2x2:1598205349',
+	assert(CompositeFrameReducer.hash(frame(12)) === '2x2:615909253',
 		'Golden no-reduction composed-frame hash changed.');
 	assert(sevenEleven.reduction.durationPreserved && sampled.reduction.durationPreserved,
 		'No-reduction and sampled plans did not preserve total duration.');

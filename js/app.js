@@ -48,7 +48,6 @@ class GlitterEditor {
 		// DISPLAY SETTINGS
 		// ============================================================================
 		this.showAllLayers = true;
-		this.showHints = CONFIG.ui.hints.enabledByDefault;
 		this.currentHintDismissed = false;
 
 		// ============================================================================
@@ -349,13 +348,6 @@ class GlitterEditor {
 		return `${baseName}${suffix}.${CONFIG.project.extension}`;
 	}
 
-	// Common Fill layer control update pattern
-	updateLayerAndSave(controlId) {
-		this.saveFillLayerControl(controlId);
-		this.requestPreviewUpdate();
-		this.saveState('Edit document');
-	}
-
 	// ===== GETTERS & SETTERS =====
 	get layers() {
 		return this.layerManager.layers;
@@ -404,12 +396,6 @@ class GlitterEditor {
 		document.body.classList.remove('is-booting');
 	}
 
-	// ===== SETTINGS PERSISTENCE =====
-
-
-
-	// ===== INITIALIZATION =====
-
 	// ===== EVENT LISTENERS =====
 
 	setupEventListeners() {
@@ -417,8 +403,6 @@ class GlitterEditor {
 		this.setupAutoSelectListener();
 		this.setupColorPickerContextListeners();
 		this.setupLayerSettingsListeners();
-		this.setupSliderListeners();
-		this.setupColorAdjustListeners();
 		this.setupMaskEditorListeners();
 		Object.values(LayerType).forEach((type) => {
 			const prefix = LAYER_UI_CONFIG[type]?.transformPrefix;
@@ -450,67 +434,6 @@ class GlitterEditor {
 		});
 	}
 
-
-
-	// ===== HELPER: Attach slider with live update and reset =====
-	// field: the FIELDS spec whose `cost` sets how often the canvas follows.
-	// updateCallback mirrors the value elsewhere and runs on every tick.
-	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue, field = null) {
-		const slider = document.getElementById(sliderId);
-		const valueDisplay = document.getElementById(valueId);
-		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
-
-		if (!slider || !valueDisplay) return;
-
-		const usesDocumentBinding = ['threshold', 'feather', 'scale', 'opacity'].includes(sliderId);
-
-		bindSlider(slider, valueDisplay, {
-			suffix,
-			resetValue,
-			resetButton: resetBtn,
-			cost: field?.cost,
-			onInput: typeof updateCallback === 'function'
-				? (value, sliderEl, event) => updateCallback(event || { target: sliderEl })
-				: null,
-			apply: usesDocumentBinding ? () => this.applyFillLayerControl(sliderId) : null,
-			onCommit: usesDocumentBinding ? () => this.saveState('Edit document') : null
-		});
-	}
-
-	// One live update of a fill layer control. The live-apply scheduler
-	// (slider.js) has already picked the frame, so the preview redraws here.
-	applyFillLayerControl(controlId) {
-		this.saveFillLayerControl(controlId);
-		this.updatePreview();
-	}
-
-	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
-	syncCheckboxes(id1, id2, bidirectional = true) {
-		const elem1 = document.getElementById(id1);
-		const elem2 = document.getElementById(id2);
-
-		if (!elem1 || !elem2) return;
-
-		let syncing = false;
-
-		elem1.addEventListener('change', (e) => {
-			if (syncing) return;
-			syncing = true;
-			elem2.checked = e.target.checked;
-			elem2.dispatchEvent(new Event('change'));
-			syncing = false;
-		});
-
-		if (bidirectional) {
-			elem2.addEventListener('change', (e) => {
-				if (syncing) return;
-				syncing = true;
-				elem1.checked = e.target.checked;
-				elem1.dispatchEvent(new Event('change'));
-				syncing = false;
-			});
-		}
-	}
 
 
 	// ===== TOOLBAR LISTENERS =====
@@ -612,201 +535,7 @@ class GlitterEditor {
 		return this.layerManager.deleteLayer(selectedLayers[0].id);
 	}
 
-	setupColorPickerContextListeners() {
-		const contextThreshold = document.getElementById('contextThreshold');
-		const contextThresholdValue = document.getElementById('contextThresholdValue');
-		const contextMultiSelect = document.getElementById('contextMultiSelect');
-		const contextContiguous = document.getElementById('contextContiguous');
 
-		// Threshold slider: a second handle on the design panel's Threshold.
-		bindSlider(contextThreshold, contextThresholdValue, {
-			formatValue: (value) => String(value),
-			cost: FIELDS.threshold.cost,
-			onInput: (value) => {
-				const threshold = document.getElementById('threshold');
-				const thresholdValue = document.getElementById('thresholdValue');
-				if (threshold) threshold.value = value;
-				if (thresholdValue) thresholdValue.textContent = value;
-				this.updateResetButton('threshold');
-			},
-			apply: () => this.applyFillLayerControl('threshold'),
-			onCommit: () => this.saveState('Edit document')
-		});
-
-		// Multi-select is handled by bidirectional sync
-		if (contextMultiSelect) {
-			contextMultiSelect.addEventListener('change', (e) => {
-				this.handleMultiSelectChange(e.target.checked);
-			});
-		}
-
-		// Contiguous is handled by bidirectional sync
-		if (contextContiguous) {
-			contextContiguous.addEventListener('change', () => {
-				this.updateLayerAndSave('contiguous');
-			});
-		}
-	}
-
-	handleMultiSelectChange(checked) {
-		const layer = this.layerManager.getActiveLayer();
-		if (!layer) return;
-
-		// Update layer directly
-		layer.settings.multiSelect = checked;
-
-		// If turning off multi-select and we have multiple selections, keep only first
-		if (!checked && layer.selections && layer.selections.length > 1) {
-			layer.selections = [layer.selections[0]];
-		}
-
-		// Update the count
-		const contextSelectionCount = document.getElementById('contextSelectionCount');
-		if (contextSelectionCount) {
-			const count = layer.selections ? layer.selections.length : 0;
-			contextSelectionCount.textContent = count > 1 ? count : '';
-		}
-
-		this.requestPreviewUpdate();
-		this.updateSelectedColorsDisplay();
-		this.saveState('Edit document');
-	}
-
-
-	setupLayerSettingsListeners() {
-		const contiguous = document.getElementById('contiguous');
-		const invert = document.getElementById('invert');
-		const multiSelect = document.getElementById('multiSelect');
-
-		// Sync contiguous checkboxes bidirectionally
-		this.syncCheckboxes('contiguous', 'contextContiguous');
-
-		if (contiguous) {
-			contiguous.addEventListener('change', () => {
-				this.updateLayerAndSave('contiguous');
-			});
-		}
-
-		if (invert) {
-			invert.addEventListener('change', async () => {
-				const layer = this.layerManager.getActiveLayer();
-				if (!layer) {
-					return;
-				}
-
-
-				this.saveFillLayerControl('invert');
-				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.paintMaskStore.getPaintMask(layer.id))) {
-					this.paintMaskStore.commitPaintState(layer);
-				}
-				this.requestPreviewUpdate();
-				this.layerManager.renderLayersList();
-				this.updateActionButtons();
-				this.maskEditor?.loadLayer(layer);
-				this.saveState('Edit document');
-			});
-		}
-
-		// Sync multi-select checkboxes bidirectionally
-		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
-
-		if (multiSelect) {
-			multiSelect.addEventListener('change', (e) => {
-				this.handleMultiSelectChange(e.target.checked);
-			});
-		}
-
-		// Multi-select checkbox
-		document.getElementById('multiSelect')?.addEventListener('change', () => {
-			this.updateHelpfulMessage();
-		});
-	}
-
-	setupSliderListeners() {
-		// Threshold
-		this.setupSlider('threshold', 'thresholdValue', '', (e) => {
-			// Sync with context toolbar
-			const contextThreshold = document.getElementById('contextThreshold');
-			const contextThresholdValue = document.getElementById('contextThresholdValue');
-			if (contextThreshold) contextThreshold.value = e.target.value;
-			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
-		}, FIELDS.threshold.value, FIELDS.threshold);
-
-		this.setupSlider('feather', 'featherValue', '', null, FIELDS.feather.value, FIELDS.feather);
-		this.setupSlider('scale', 'scaleValue', '%', null, FIELDS.textureScale.value, FIELDS.textureScale);
-		this.setupSlider('opacity', 'opacityValue', '%', null, FIELDS.layerOpacity.value, FIELDS.layerOpacity);
-	}
-
-	setupMaskEditorListeners() {
-		// Size / Spacing revert to the ACTIVE raster tip's manifest value (its
-		// authored diameter / spacing), falling back to the global default for
-		// vector tips. Passed as a thunk so bindSlider resolves it per click.
-		this.setupSlider('maskBrushSize', 'maskBrushSizeValue', 'px', () => {
-			this.maskEditor?._updateBrushCursorSize();
-		}, () => this.maskEditor?.rasterSliderDefault('maskBrushSize') ?? FIELDS.maskBrushSize.value);
-
-		this.setupSlider('maskBrushSoftness', 'maskBrushSoftnessValue', '%', () => {
-			this.maskEditor?.renderOverlay();
-		}, FIELDS.maskBrushSoftness.value);
-
-		this.setupSlider('maskBrushFlow', 'maskBrushFlowValue', '%', () => {
-			this.maskEditor?.renderOverlay();
-		}, FIELDS.maskBrushFlow.value);
-
-		// Spacing is a percentage of brush size; it only affects future stamps
-		// (the resulting stroke is baked into the mask), so no live re-render.
-		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
-			() => this.maskEditor?.rasterSliderDefault('maskBrushSpacing')
-				?? FIELDS.maskBrushSpacing.value);
-
-		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
-		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
-			FIELDS.maskBrushSmoothing.value);
-
-		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
-
-		this.maskEditor?.setupUIListeners();
-	}
-
-	// Mirrors a canonical slider's value onto a compact duplicate (the floating
-	// quick-access brush size, mirroring the sidebar's canonical Size slider).
-	syncQuickSlider(canonicalId, quickId, quickValueId, suffix) {
-		const canonical = document.getElementById(canonicalId);
-		const quick = document.getElementById(quickId);
-		const quickValue = document.getElementById(quickValueId);
-		if (!canonical || !quick) return;
-
-		quick.min = canonical.min;
-		quick.max = canonical.max;
-		// Mirror any non-linear scale so the quick slider's raw position maps the
-		// same way the canonical one does (positions are copied verbatim below).
-		if (canonical.dataset.scale) {
-			quick.dataset.scale = canonical.dataset.scale;
-			quick.dataset.scaleMin = canonical.dataset.scaleMin;
-			quick.dataset.scaleMax = canonical.dataset.scaleMax;
-			quick.step = canonical.step;
-		}
-		quick.value = canonical.value;
-		if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(canonical), suffix);
-
-		let syncing = false;
-		canonical.addEventListener('input', () => {
-			if (syncing) return;
-			syncing = true;
-			quick.value = canonical.value;
-			if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(canonical), suffix);
-			syncing = false;
-		});
-
-		quick.addEventListener('input', () => {
-			if (syncing) return;
-			syncing = true;
-			canonical.value = quick.value;
-			if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(quick), suffix);
-			canonical.dispatchEvent(new Event('input'));
-			syncing = false;
-		});
-	}
 
 
 
@@ -815,30 +544,16 @@ class GlitterEditor {
 
 
 
-	getResetValueForSlider(sliderId) {
-		const resetValues = {
-			threshold: FIELDS.threshold.value,
-			feather: FIELDS.feather.value,
-			scale: FIELDS.textureScale.value,
-			opacity: FIELDS.layerOpacity.value,
-			glitterHue: FIELDS.hue.value,
-			glitterSaturation: FIELDS.saturation.value,
-			glitterBrightness: FIELDS.brightness.value
-		};
-		// Explicit overrides first, then the default the renderer stamped on the
-		// slider from its FIELDS spec. Every slider gets
-		// default-aware revert state, not just the seven listed above.
-		return resetValues[sliderId] !== undefined ? resetValues[sliderId] : panelSliderDefault(sliderId);
-	}
+	// Mirrors a canonical slider's value onto a compact duplicate (the floating
+	// quick-access brush size, mirroring the sidebar's canonical Size slider).
 
-	updateResetButton(sliderId) {
-		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
-		const slider = document.getElementById(sliderId);
-		const defaultValue = this.getResetValueForSlider(sliderId);
-		if (resetBtn && slider && defaultValue !== undefined) {
-			resetBtn.disabled = parseInt(slider.value) === defaultValue;
-		}
-	}
+
+
+
+
+
+
+
 
 	async loadBlankImage(width, height, color = CONFIG.canvas.defaults.blankDocument.color, options = {}) {
 		const canvas = createAppCanvas(0, 0, 'app');
@@ -1011,7 +726,7 @@ class GlitterEditor {
 		if (this.currentTool === ToolType.SELECT && layer?.type === LayerType.STICKER && !hasMultiSelection) {
 			if (layer.stickerSourceId) {
 				this.setSettingsEmptyState('stickerSettings', false);
-				this.loadStickerSettings(layer);
+				this.stickerManager.loadLayerSettings(layer);
 			} else {
 				this.setSettingsEmptyState('stickerSettings', true);
 			}
@@ -1090,7 +805,7 @@ class GlitterEditor {
 				e.stopPropagation(); // Prevent the parent click handler
 
 				// Disable hints
-				this.showHints = false;
+				PREFERENCES.set('showHints', false);
 
 				// Update checkbox in settings
 				const showHintsInput = document.getElementById('showHelpfulHints');
@@ -1107,37 +822,7 @@ class GlitterEditor {
 		}
 	}
 
-	updateColorPickerControls() {
-		dbg(`Updating color picker controls`);
-		const layer = this.layerManager.getActiveLayer();
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
 
-		dbg(`Updating color picker controls for layer ${layer.id}`);
-
-		const contextThreshold = document.getElementById('contextThreshold');
-		const contextThresholdValue = document.getElementById('contextThresholdValue');
-		const contextMultiSelect = document.getElementById('contextMultiSelect');
-		const contextContiguous = document.getElementById('contextContiguous');
-		const contextSelectionCount = document.getElementById('contextSelectionCount');
-
-		if (contextThreshold && contextThresholdValue) {
-			contextThreshold.value = layer.settings.threshold;
-			contextThresholdValue.textContent = layer.settings.threshold;
-		}
-
-		if (contextMultiSelect) {
-			contextMultiSelect.checked = layer.settings.multiSelect;
-		}
-
-		if (contextContiguous) {
-			contextContiguous.checked = layer.settings.contiguous;
-		}
-
-		if (contextSelectionCount) {
-			const count = layer.selections ? layer.selections.length : 0;
-			contextSelectionCount.textContent = count > 1 ? count : '';
-		}
-	}
 
 	handleKeyUp(e) {
 		this.shiftHeld = e.shiftKey;
@@ -1962,99 +1647,7 @@ class GlitterEditor {
 			zoomOut: e.altKey || e.button === 2
 		});
 	}
-	handleColorPickAction(x, y, event = null) {
-		if (this.currentTool !== ToolType.GLITTER_FILL) return;
 
-		let layer = this.layerManager.getActiveLayer();
-
-		// If no layer selected, try to select a layer at this location
-		if (!layer) {
-			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-				const testLayer = this.layerManager.layers[i];
-				if (!testLayer.visible) continue;
-
-				let isHit = false;
-
-				if (testLayer.type === LayerType.GLITTER_FILL) {
-					if (hasMaskContent(testLayer)) {
-						isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-					}
-				} else if (testLayer.type === LayerType.BASE_IMAGE) {
-					if (this.originalImage) {
-						isHit = true;
-					}
-				}
-
-				if (isHit) {
-					this.layerManager.selectLayerFromCanvas(testLayer.id);
-					layer = testLayer;
-					break;
-				}
-			}
-
-			if (!layer) {
-				this.showError('Please select the Base Image or a Glitter Layer.');
-				return;
-			}
-		}
-
-		// Handle based on selected layer type
-		if (layer.type === LayerType.GLITTER_FILL) {
-			if (!this.canEditLayer(layer, { notify: true })) return;
-
-			// fill normally
-			this.glitterFillSelector(x, y, event);
-
-		} else if (layer.type === LayerType.BASE_IMAGE) {
-
-			if (CONFIG.app.behavior.autoCreateGlitterLayer) {
-				const newLayer = this.glitterManager.createLayer();
-				this.layerManager.insertLayer(newLayer);
-				this.glitterFillSelector(x, y, event);
-			} else {
-				this.showError('Please create a glitter layer first');
-			}
-
-		} else if (layer.type === LayerType.STICKER) {
-			const hitSticker = this.layerManager.isPointInLayer(layer, x, y);
-
-			if (hitSticker) {
-
-				if (CONFIG.app.behavior.autoCreateGlitterLayer) {
-					const newLayer = this.glitterManager.createLayer();
-					this.layerManager.insertLayer(newLayer);
-					this.glitterFillSelector(x, y, event);
-				} else {
-					this.updateStatus('Glitter Fill is unavailable on Sticker layers.');
-				}
-				return;
-			}
-
-			let glitterLayer = null;
-
-			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-				const testLayer = this.layerManager.layers[i];
-				if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
-
-				if (hasMaskContent(testLayer)) {
-					const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-					if (isHit) {
-						glitterLayer = testLayer;
-						break;
-					}
-				}
-			}
-
-			if (glitterLayer) {
-				this.layerManager.selectLayerFromCanvas(glitterLayer.id);
-			} else {
-				const newLayer = this.glitterManager.createLayer();
-				this.layerManager.insertLayer(newLayer);
-			}
-
-			this.glitterFillSelector(x, y, event);
-		}
-	}
 
 	handleLayerSelectAction(x, y, options = {}) {
 		if (this.currentTool !== ToolType.SELECT) return;
@@ -2081,96 +1674,7 @@ class GlitterEditor {
 
 
 
-	glitterFillSelector(x, y, event) {
-		let layer = this.layerManager.getActiveLayer();
 
-		if (!layer) {
-			this.showError('Please select the Base Image or a Glitter Layer.');
-			return;
-		}
-
-		// Case 1: Base Image is Selected -> Create NEW Glitter Layer
-		if (layer.type === LayerType.BASE_IMAGE) {
-			const newLayer = this.glitterManager.createLayer();
-			this.layerManager.insertLayer(newLayer);  // Use the new method
-			layer = newLayer; // Switch target to the new layer
-			this.updateStatus('Created new layer from Base Image');
-		}
-		// Case 2: Glitter Fill Layer is Selected -> Use it
-		else if (layer.type === LayerType.GLITTER_FILL) {
-			// Continue using this layer
-		}
-		// Case 3: Sticker (or other) -> Block
-		else {
-			this.updateStatus('Glitter Fill is unavailable on Sticker layers.');
-			return;
-		}
-
-		// A color pick reads the base image under the pointer, so the seed stays
-		// in document px whatever the layer's transform. The selection it builds
-		// is then placed by that transform like the rest of the mask.
-		const pixelIndex = y * this.originalCanvas.width + x;
-		const alpha = this.originalAlphaChannel[pixelIndex];
-		const isTransparent = alpha < CONFIG.tools.selection.transparency.alphaThreshold;
-
-		// 1. Config Check: Block if transparent and selection isn't allowed
-		if (isTransparent && !CONFIG.tools.selection.transparency.allowTransparentSelection) {
-			this.showError('Cannot select transparent pixels');
-			return;
-		}
-
-		const i = pixelIndex * 4;
-
-		// 2. Data Extraction
-		// If it's transparent, we force RGB to 0 to be clean, 
-		// because the 'isTransparent' flag will do the heavy lifting in the mask logic.
-		const r = isTransparent ? 0 : this.originalImageData.data[i];
-		const g = isTransparent ? 0 : this.originalImageData.data[i + 1];
-		const b = isTransparent ? 0 : this.originalImageData.data[i + 2];
-
-		// 3. Multi-Select Logic with Shift Key Support
-		const shiftPressed = event && event.shiftKey;
-
-		// If Shift is pressed, enable multi-select
-		if (shiftPressed && !layer.settings.multiSelect) {
-			layer.settings.multiSelect = true;
-
-			// Update UI checkboxes
-			const multiSelect = document.getElementById('multiSelect');
-			const contextMultiSelect = document.getElementById('contextMultiSelect');
-			if (multiSelect) multiSelect.checked = true;
-			if (contextMultiSelect) contextMultiSelect.checked = true;
-
-			this.updateStatus('Multi-select enabled');
-		}
-
-		// If multi-select is off (and shift wasn't pressed), clear previous selections
-		const multiSelect = layer.settings.multiSelect;
-		if (!multiSelect) layer.selections = [];
-
-		// 4. Save the Selection
-		layer.selections.push({
-			r, g, b, x, y,
-			isTransparent: isTransparent
-		});
-
-		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
-		this.saveState('Edit document'); // For Undo/Redo
-
-		// G-1b: paint the chip/status/toolbar feedback on this frame, *before*
-		// kicking off the (potentially slow) mask pipeline, so the click never
-		// looks like dead air. updatePreview is deferred a frame so the browser
-		// actually gets to paint the above first.
-		this.updateActionButtons();
-		this.updateSelectedColorsDisplay(); // To show "Transparent" or the RGB values in the sidebar
-		this.updateContextToolbars();
-		this.updateHelpfulMessage();
-		this.updateStatus('Applying glitter…');
-
-		this.glitterManager.markMaskRequestStart(layer.id);
-		this.requestPreviewUpdate();
-
-	}
 
 	// G-1b: fires whenever a mask encode starts/settles for any glitter layer.
 	// Recomputed from ground truth (isMaskPending for the CURRENTLY active layer)
@@ -2197,70 +1701,9 @@ class GlitterEditor {
 		}
 	}
 
-	updateSelectedColorsDisplay() {
-		const container = document.getElementById('selectedColorsDisplay');
-		if (!container) return;
 
-		const layer = this.layerManager.getActiveLayer();
-		const card = container.closest('.color-selection');
 
-		// Only show for glitter layers with selections; otherwise the card shows just
-		// its "Pick a color on the canvas to add it." note.
-		if (!layer || layer.type !== LayerType.GLITTER_FILL || !layer.selections || layer.selections.length === 0) {
-			card?.classList.add('is-empty');
-			container.innerHTML = '';
-			return;
-		}
 
-		card?.classList.remove('is-empty');
-		container.innerHTML = '';
-
-		layer.selections.forEach((sel, index) => {
-			const chip = document.createElement('div');
-			chip.className = 'selected-color-chip';
-
-			const swatch = document.createElement('div');
-			swatch.className = 'selected-color-swatch';
-			swatch.style.backgroundColor = `rgb(${sel.r}, ${sel.g}, ${sel.b})`;
-
-			const text = document.createElement('span');
-			text.textContent = `${sel.r},${sel.g},${sel.b}`;
-
-			const removeBtn = document.createElement('button');
-			removeBtn.className = 'selected-color-remove';
-			removeBtn.type = 'button';
-			removeBtn.textContent = '×';
-			removeBtn.title = 'Remove this color selection';
-			removeBtn.setAttribute('aria-label', `Remove color ${sel.r}, ${sel.g}, ${sel.b}`);
-			removeBtn.onclick = () => this.removeColorSelection(index);
-
-			chip.append(swatch, text, removeBtn);
-			container.appendChild(chip);
-		});
-	}
-
-	removeColorSelection(index) {
-		const layer = this.layerManager.getActiveLayer();
-
-		// Only works on glitter layers
-		if (!layer || layer.type !== LayerType.GLITTER_FILL || !layer.selections) {
-			return;
-		}
-
-		layer.selections.splice(index, 1);
-		this.saveState('Edit document');
-
-		if (hasMaskContent(layer)) {
-			this.requestPreviewUpdate();
-		} else {
-			this.clearPreview();
-		}
-
-		this.updateActionButtons();
-		this.updateSelectedColorsDisplay();
-		this.updateContextToolbars();
-		this.updateHelpfulMessage();
-	}
 
 	clearPreview() {
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
@@ -2521,6 +1964,7 @@ Object.assign(
 	GlitterEditor.prototype,
 	EDITOR_SETTINGS_METHODS,
 	EDITOR_PANEL_METHODS,
+	EDITOR_FILL_TOOL_METHODS,
 	EDITOR_DISCLOSURE_METHODS,
 	TRANSFORM_PANEL_METHODS,
 	TRANSFORM_INTERACTION_METHODS,

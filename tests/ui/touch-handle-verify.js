@@ -119,7 +119,7 @@ async function dismissVisibleModals(page) {
 
 async function closeMobileChrome(page) {
 	await page.evaluate(() => {
-		window.editor.mobileManager?.closeSettings?.();
+		window.editor.mobileManager?.closeAllDrawers?.();
 		window.editor.mobileManager?.closeAllDrawers?.();
 	});
 	await page.waitForTimeout(80);

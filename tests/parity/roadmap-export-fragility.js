@@ -1,6 +1,6 @@
 'use strict';
 
-// The export fragility routine (AGENTS.md) over the effects the feature
+// The export fragility routine (CONTRIBUTING.md) over the effects the feature
 // roadmap added: sticker outline, bevel, glow spread, Sparkles and Kira Kira
 // slots, text warp, a pinned frame, the whole-picture Sparkles layer, and CSS
 // and pixel filter looks. Back-to-back exports and edit -> undo -> export must

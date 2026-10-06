@@ -2,6 +2,7 @@
 
 registerLayerType(LayerType.SHAPE, {
 	rasterizesScale: true,
+	describe: (layer, editor) => ({ name: layer.name || 'Shape', detail: `Shape · ${describeLayerPaint(editor, getLayerFillSlot(layer)).modeLabel}` }),
 	displayName: 'Shape',
 	paintSlots: [
 		{
@@ -34,7 +35,7 @@ registerLayerType(LayerType.SHAPE, {
 	],
 	sparkleHost: (editor, layer) => editor.shapeGlitterManager?.getSparkleHost(layer) || null,
 	fields: [
-		{ path: 'shapeData.cornerRadiusPx', field: 'shapeRadius', id: 'shapeRadius', geometry: true, documentScale: 'geometry' },
+		{ path: 'shapeData.cornerRadiusPx', field: 'shapeRadius', id: 'shapeRadius', geometry: true, documentScale: 'corner' },
 		{ path: 'shapeData.width', documentScale: 'geometry', minimum: 1 },
 		{ path: 'shapeData.height', documentScale: 'geometry', minimum: 1 }
 	],

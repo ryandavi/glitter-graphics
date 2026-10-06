@@ -185,10 +185,6 @@ function getAddMenuEntries() {
 		});
 }
 
-function getQuickAddLayerTypes() {
-	return [...new Set(getQuickAddLayerEntries().map((entry) => entry.type))];
-}
-
 function getQuickAddLayerEntries() {
 	return getAddableLayerTypes().flatMap((type) => {
 		const config = LAYER_UI_CONFIG[type].addableViaModal;
@@ -268,4 +264,35 @@ function getAllLayerElementSelector() {
 function getTransformableLayerElementSelector() {
 	transformableLayerElementSelector ||= getLayerElementSelector(null, { transformableOnly: true });
 	return transformableLayerElementSelector;
+}
+
+function describeLayerPaint(editor, paint, imageAsset = null) {
+	const mode = paint?.mode || 'glitter';
+	const modeLabel = mode === 'none' ? 'No' : panelCap(mode);
+	const glitter = mode === 'glitter'
+		? editor.glitterLibrary.getItemById(paint?.glitterId)
+		: null;
+	const formatColor = (color) => /^#[0-9a-f]{6}$/i.test(color || '') ? color.toUpperCase() : null;
+	let name = null;
+	if (mode === 'solid') {
+		name = formatColor(paint?.color) || 'Solid Fill';
+	} else if (mode === 'gradient') {
+		const stops = normalizeEffectGradient(paint?.gradient).stops;
+		const first = formatColor(stops[0]?.color);
+		const last = formatColor(stops.at(-1)?.color);
+		name = first && last ? `${first} → ${last}` : 'Gradient Fill';
+	} else if (mode === 'image') {
+		name = imageAsset?.name || 'Image Fill';
+	} else if (mode === 'none') {
+		name = 'Transparent';
+	}
+	return { mode, modeLabel, glitter, name };
+}
+
+function describeLayer(layer, editor) {
+	const config = LAYER_UI_CONFIG[layer?.type];
+	return config?.describe?.(layer, editor) || {
+		name: layer?.name || config?.displayName || 'Unknown Layer',
+		detail: config?.displayName || 'Unknown'
+	};
 }

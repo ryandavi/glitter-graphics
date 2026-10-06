@@ -26,7 +26,7 @@ class MaskEditor {
 		this.lastPoint = null;
 		this.stampCarry = 0;
 		this.smoothedPoint = null;
-		// WP2 straight lines: strokeOrigin anchors axis-lock; axisLockDir is the
+		// straight lines: strokeOrigin anchors axis-lock; axisLockDir is the
 		// unit direction once the shift-drag has moved far enough to pick one;
 		// lastStrokeEndPoint (with its layerId) is where a shift-click connects from.
 		this.strokeOrigin = null;
@@ -41,7 +41,7 @@ class MaskEditor {
 		this.touchRingTimeout = null;
 		this.stampCacheKey = '';
 		this.stampCanvas = null;
-		// WP1: Brush and Eraser keep independent setting sets. This store is the
+		// Brush and Eraser keep independent setting sets. This store is the
 		// source of truth (the DOM panel is a view that setMode writes into); all
 		// getBrush*() getters read the ACTIVE mode's entry (getActiveMode(), so a
 		// pen-eraser override uses eraser settings). Seeded from CONFIG, then
@@ -149,7 +149,7 @@ class MaskEditor {
 		this.loadLayer(this.editor.layerManager.getActiveLayer());
 	}
 
-	// ===== PER-MODE SETTINGS STORE (WP1) =====
+	// ===== PER-MODE SETTINGS STORE =====
 
 	_defaultToolSettings() {
 		const mb = CONFIG.tools.maskBrush;
@@ -1374,7 +1374,7 @@ class MaskEditor {
 		this._strokeRng = maskMulberry32((Date.now() ^ (point.x * 73856093) ^ (point.y * 19349663)) >>> 0);
 		this._lastDirX = 1;
 		this._lastDirY = 0;
-		// WP2: this point anchors axis-lock for a Shift-drag that follows. Shift
+		// this point anchors axis-lock for a Shift-drag that follows. Shift
 		// constrains ONLY the current stroke (from this point) — it deliberately
 		// does NOT connect a line from a previous stroke, which surprised users.
 		this.strokeOrigin = { x: point.x, y: point.y };
@@ -1726,7 +1726,7 @@ class MaskEditor {
 	}
 
 	// Non-round tips (square, calligraphy, star, heart). Softness feathers the
-	// edge with a canvas blur; the shape is inset by the blur radius so the
+	// edge with a distance-field falloff; the shape is inset by the blur radius so the
 	// feathered edge stays inside the size×size stamp (mirroring how the round
 	// tip's gradient reaches, but never exceeds, the brush radius).
 	_drawShapeStamp(ctx, shape, size, softness) {
@@ -1736,14 +1736,21 @@ class MaskEditor {
 
 		ctx.save();
 		ctx.translate(radius, radius);
-		if (blurPx > 0.01) {
-			ctx.filter = `blur(${blurPx}px)`;
-		}
 		ctx.fillStyle = 'rgba(255, 255, 255, 1)';
 		// Geometry lives in ShapeLibrary (shared with the Shape tool). trace() fills
 		// the shape itself. Brush stamps are uniform → same half-extent for W and H.
 		ShapeLibrary.trace(shape, ctx, shapeRadius, shapeRadius);
 		ctx.restore();
+		if (blurPx > 0.01) {
+			const feathered = createShadowMaskCanvas(ctx.canvas, 0, blurPx);
+			ctx.clearRect(0, 0, size, size);
+			ctx.drawImage(feathered, 0, 0);
+			ctx.save();
+			ctx.globalCompositeOperation = 'source-in';
+			ctx.fillStyle = '#ffffff';
+			ctx.fillRect(0, 0, size, size);
+			ctx.restore();
+		}
 	}
 
 	_getCanvasPointFromScreen(screenX, screenY) {
@@ -2080,7 +2087,7 @@ class MaskEditor {
 	}
 }
 
-// localStorage key for the per-mode brush/eraser settings store (WP1). Bump the
+// localStorage key for the per-mode brush/eraser settings store. Bump the
 // version suffix if the stored shape ever changes incompatibly.
 MaskEditor.SETTINGS_STORAGE_KEY = 'glitter.toolSettings.v1';
 
@@ -2088,12 +2095,12 @@ MaskEditor.SETTINGS_STORAGE_KEY = 'glitter.toolSettings.v1';
 // per-mode settings above.
 MaskEditor.DYNAMICS_STORAGE_KEY = 'glitter.brushDynamics.v1';
 
-// Minimum canvas-space travel (WP2) before a Shift-drag commits to an axis-lock
+// Minimum canvas-space travel before a Shift-drag commits to an axis-lock
 // direction — avoids a jittery direction pick on the first pixel of movement.
 MaskEditor.AXIS_LOCK_MIN_DISTANCE = 4;
 
 // Brush tip catalog: the vector tips live in ShapeLibrary (shared with the Shape
-// tool, WP5a); raster packs live in BrushLibrary. This static alias keeps
+// tool); raster packs live in BrushLibrary. This static alias keeps
 // existing MaskEditor.BRUSH_SHAPES references working for the vector set.
 MaskEditor.BRUSH_SHAPES = ShapeLibrary.BRUSH_SHAPES;
 

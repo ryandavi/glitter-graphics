@@ -290,8 +290,7 @@ snapTransformPosition(transform, position, options = {}) {
 					position: { x: this.originalCanvas.width / 2, y: this.originalCanvas.height / 2 },
 					scale: { x: clampLayerScale(current.scale.x * factor), y: clampLayerScale(current.scale.y * factor) }
 				});
-				if (prefix === 'text') await active.manager.commitScaleToFontSize?.(active.layer);
-				else await active.manager.commitScale?.(active.layer, startScale);
+				await getLayerManagerForType(this, active.layer.type)?.commitScale?.(active.layer, startScale);
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState('Transform layer');
 			});
@@ -482,9 +481,9 @@ snapTransformPosition(transform, position, options = {}) {
 				if (
 					prefix === 'text'
 					&& (active.layer.textData?.boxMode || 'point') === 'point'
-					&& active.manager.commitScaleToFontSize
+					&& active.manager.commitScale
 				) {
-					await active.manager.commitScaleToFontSize(active.layer);
+					await active.manager.commitScale(active.layer);
 					this.loadTransformSettings(active.layer, prefix);
 				}
 				this.saveState('Transform layer', { coalesceKey });

@@ -147,7 +147,7 @@ Object.values(FIELDS).forEach((spec) => {
 //   factor         stored value = control value / factor (line height is a
 //                  ratio shown as a percent)
 //   geometry       changes the layer's painted footprint
-//   documentScale  'geometry' always rescales with the document; 'effect' and
+//   documentScale  'geometry' and 'corner' rescale with the document; 'effect' and
 //                  'texture' follow the scaler's effects / textures options
 //   minimum        floor after document scaling (defaults to the spec's lower
 //                  bound, or unbounded for signed specs)

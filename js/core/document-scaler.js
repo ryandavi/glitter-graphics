@@ -5,7 +5,7 @@
 // What rescales is declared, not listed here: every field binding with a
 // `documentScale` class, on the layer type (`fields`) and on its paint slots
 // (including the parked drafts of switched-off effects). 'geometry' always
-// follows the document; 'effect' and 'texture' follow the matching option.
+// follows the document; 'corner', 'effect' and 'texture' follow the matching option.
 
 // Rescale one declared field in place. Pixel fields land on whole pixels at or
 // above the field's minimum; texture scales keep their configured precision.
@@ -25,14 +25,18 @@ function slotFieldsFollowTransform(layer, definition) {
 	return Boolean(LAYER_UI_CONFIG[layer.type]?.contentScalesWithTransform) && definition.role === 'sparkles';
 }
 
-// Rescale the canvas-pixel fields of a layer's switched-on paint slots by the
-// factor for each field's `documentScale` class ({ effect, texture }). A
-// finished sticker resize uses it to carry outline, shadow and bevel sizes
-// along with the sticker.
+// Rescale canvas-pixel slot fields, including parked drafts, by the factor
+// for each declared class. Sticker sparkles already follow their transform.
 function scaleLayerSlotFields(layer, factors) {
-	getLayerPaintSlots(layer).forEach(({ definition, data, present }) => {
-		if (!present || slotFieldsFollowTransform(layer, definition)) return;
+	getLayerPaintSlots(layer, { includeDrafts: true }).forEach(({ definition, data }) => {
+		if (slotFieldsFollowTransform(layer, definition)) return;
 		definition.fields.forEach((binding) => scaleFieldBinding(data, binding, factors[binding.documentScale]));
+	});
+}
+
+function scaleLayerFields(layer, factors, include = () => true) {
+	(LAYER_UI_CONFIG[layer.type]?.fields || []).forEach((binding) => {
+		if (include(binding)) scaleFieldBinding(layer, binding, factors[binding.documentScale]);
 	});
 }
 
@@ -51,6 +55,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 	};
 	const factorsFor = (followsTransform) => ({
 		geometry: uniformScale,
+		corner: uniformScale,
 		effect: optionFactor(shouldScaleEffects, followsTransform),
 		texture: optionFactor(shouldScaleTextures, followsTransform)
 	});

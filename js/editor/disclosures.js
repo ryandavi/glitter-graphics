@@ -121,7 +121,7 @@ initializeCollapsibleSections() {
 		});
 	}
 
-	// Reusable "Advanced" disclosure (WP4). One delegated click handler drives
+	// Reusable "Advanced" disclosure. One delegated click handler drives
 	// every `[data-advanced]` block (Glitter Properties, text/shape effect cards),
 	// so all instances behave identically. Collapsed by default; open state is
 	// intentionally NOT persisted — it resets each session/relayout.
@@ -210,33 +210,6 @@ initializeCollapsibleSections() {
 		});
 	}
 
-	// Reads the three HSB sliders for a given prefix ('glitter', or a text slot)
-	// into a colorAdjust object. Missing sliders fall back to identity.
-,
-	readColorAdjust(prefix) {
-		const num = (id, fallback) => {
-			const el = document.getElementById(id);
-			const value = el ? parseInt(el.value, 10) : NaN;
-			return Number.isFinite(value) ? value : fallback;
-		};
-		const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-		return {
-			hue: num(prefix + 'Hue', 0),
-			saturation: num(prefix + 'Saturation', 100),
-			brightness: num(prefix + 'Brightness', 100)
-		};
-	}
-
-	// Push a colorAdjust object out to the three HSB sliders + value displays for
-	// a prefix. Absent adjust reads as identity.
-,
-	applyColorAdjustToSliders(prefix, adjust) {
-		const a = normalizeColorAdjust(adjust);
-		syncSlider(document.getElementById(`${prefix}Hue`), a.hue);
-		syncSlider(document.getElementById(`${prefix}Saturation`), a.saturation);
-		syncSlider(document.getElementById(`${prefix}Brightness`), a.brightness);
-	}
-
 	// The colorAdjust that tints a layer's layers-list swatch — the FILL slot's,
 	// since that's the glitter the swatch shows. A sticker's swatch is its image.
 ,
@@ -268,46 +241,14 @@ initializeCollapsibleSections() {
 ,
 	refreshGlitterSwatchVisuals(layer) {
 		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
-		const thumb = document.getElementById('glitterAssetThumbnail');
+		const thumb = document.getElementById('glitterFillGlitterChip');
 		if (thumb) thumb.style.filter = buildCssColorFilter(layer.fill.colorAdjust);
 		this.refreshLayerSwatchFilter(layer);
 	}
 
-	// Wire the Glitter Properties HSB sliders (fill layers). Each live-updates its
-	// display, saves the layer settings (which now carry colorAdjust), refreshes
-	// the preview, and records one history entry on release.
-,
-	setupColorAdjustListeners() {
-		const specs = [
-			['glitterHue', '°', 'hue'],
-			['glitterSaturation', '%', 'saturation'],
-			['glitterBrightness', '%', 'brightness']
-		];
-
-		specs.forEach(([id, suffix, field]) => {
-			const slider = document.getElementById(id);
-			const display = document.getElementById(id + 'Value');
-			if (!slider) return;
-
-			const resetBtn = document.getElementById('reset' + id.charAt(0).toUpperCase() + id.slice(1));
-
-			bindSlider(slider, display, {
-				suffix,
-				resetValue: this.getResetValueForSlider(id),
-				resetButton: resetBtn,
-				cost: FIELDS[field].cost,
-				apply: () => {
-					this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
-					this.applyFillLayerControl('colorAdjust');
-				},
-				onCommit: () => this.saveState('Edit appearance')
-			});
-		});
-	}
-
-,
 	// A form modal: a property section holding a note and one titled card per
 	// command group, each command a property row whose control is its chips.
+,
 	initializeShortcutsModal() {
 		const section = document.getElementById('shortcutSection');
 		if (!section) return;

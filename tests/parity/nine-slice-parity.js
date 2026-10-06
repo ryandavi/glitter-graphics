@@ -79,7 +79,8 @@ async function main() {
 						const originalDraw = compositor._drawTransformedCanvas;
 						for (const effect of ['border', 'shadow', 'bevel']) {
 							layer.stickerData.border = effect === 'border' ? { ...manager.getDefaultBorder(), mode: 'solid', color: '#ffffff', widthPx: 2 } : null;
-							layer.stickerData.shadow = effect === 'shadow' ? { ...manager.getDefaultShadow(), mode: 'solid', color: '#ffffff', spread: 1, blur: 1 } : null;
+							// Compare local masks: preview places offsets in CSS, export bakes them into the mask.
+							layer.stickerData.shadow = effect === 'shadow' ? { ...manager.getDefaultShadow(), mode: 'solid', color: '#ffffff', offsetX: 0, offsetY: 0, spread: 1, blur: 1 } : null;
 							layer.stickerData.bevel = manager.getDefaultBevel();
 							if (effect === 'bevel') { layer.stickerData.bevel.enabled = true; layer.stickerData.bevel.highlight.mode = 'solid'; layer.stickerData.bevel.shade.mode = 'solid'; }
 							manager.reconcileStickerEffectSpans(layer, element, img);
@@ -97,7 +98,7 @@ async function main() {
 							const spans = Array.from(element.querySelectorAll('.sticker-effect-layer'));
 							for (let index = 0; index < spans.length; index++) {
 								const maskImg = new Image(); maskImg.src = spans[index].style.maskImage.slice(4, -1).replace(/^"|"$/g, ''); await maskImg.decode();
-								const expected = exported[index * 2 + 1] || exported[index];
+								const expected = exported[index];
 								const actual = document.createElement('canvas'); actual.width = expected.width; actual.height = expected.height;
 								actual.getContext('2d').drawImage(maskImg, (expected.width - maskImg.width) / 2, (expected.height - maskImg.height) / 2);
 								const aa = actual.getContext('2d').getImageData(0,0,actual.width,actual.height).data;

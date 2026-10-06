@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.FILTER, {
+	describe: (layer) => ({ name: layer.name || 'Filter', detail: `Filter · ${GlitterFilter.summaryText(layer.filterData)}` }),
 	displayName: 'Filter',
 	hasVisibleContent: (layer) => GlitterFilter.isActive(layer.filterData, layer.opacity),
 	serialization: {

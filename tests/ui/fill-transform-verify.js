@@ -412,6 +412,48 @@ async function setTransform(page, layerId, updates) {
 		await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: framePick.point.x, y: framePick.point.y }] });
 		await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 		assert(await page.evaluate(id => window.editor.activeLayerId === id, framePick.id), 'Pinned frame must select by touch');
+		await page.evaluate(() => window.editor.loadBlankImage(128, 128, '#ffffff'));
+		await page.waitForFunction(() => window.editor.originalImage && window.editor.originalCanvas.width === 128);
+		await page.evaluate(() => {
+			const e = window.editor;
+			e.setTool(ToolType.GLITTER_FILL);
+			e.handleColorPickAction(20, 20);
+		});
+		const fillEdit = await page.evaluate(() => {
+			const e = window.editor;
+			const layer = e.layerManager.getActiveLayer();
+			return { id: layer.id, type: layer.type, threshold: layer.settings.threshold, history: e.historyManager.history.length };
+		});
+		assert(fillEdit.type === 'glitter-fill', 'Fill tool must create a fill when none is active or hit');
+		await page.$eval('#threshold', input => { input.value = '90'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+		await page.waitForTimeout(60);
+		await page.$eval('#threshold', input => input.dispatchEvent(new Event('change', { bubbles: true })));
+		await page.waitForTimeout(60);
+		assert(await page.evaluate(start => {
+			const e = window.editor;
+			return e.layerManager.getActiveLayer().settings.threshold === 90 && Number(document.getElementById('contextThreshold').value) === 90
+				&& e.historyManager.history.length === start.history + 1;
+		}, fillEdit), 'A threshold drag must update the layer and context mirror with one history entry');
+		await page.evaluate(() => window.editor.undo());
+		assert(await page.evaluate(start => window.editor.layerManager.getLayerById(start.id).settings.threshold === start.threshold
+			&& Number(document.getElementById('threshold').value) === start.threshold, fillEdit), 'Undo must restore threshold and its field control');
+		await page.$eval('#contextContiguous', input => { input.checked = !input.checked; input.dispatchEvent(new Event('change', { bubbles: true })); });
+		assert(await page.evaluate(() => document.getElementById('contiguous').checked === document.getElementById('contextContiguous').checked
+			&& document.getElementById('contiguous').checked === window.editor.layerManager.getActiveLayer().settings.contiguous), 'Context checkboxes must edit and mirror their declared fields');
+		const sourceHistory = await page.evaluate(() => window.editor.historyManager.history.length);
+		await page.evaluate(() => {
+			const e = window.editor;
+			e.setTool(ToolType.SELECT);
+			e.syncCollapsibleSections('glitterSettings');
+		});
+		await page.$eval('#glitterFillSolid', button => button.click());
+		assert(await page.evaluate(count => window.editor.layerManager.getActiveLayer().fill.mode === 'solid'
+			&& window.editor.historyManager.history.length === count + 1, sourceHistory), 'Fill source buttons must commit once through the binder');
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.waitForFunction(() => window.editor.mobileManager.isMobile);
+		await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
+		await page.waitForTimeout(400);
+		assert(await page.locator('#glitterFillSolid').isVisible(), 'Fill properties must remain usable in the phone Edit drawer');
 		assert(pageErrors.length === 0, `Page errors: ${pageErrors.join(' | ')}`);
 		console.log('fill-transform-verify: all checks passed');
 	} finally {

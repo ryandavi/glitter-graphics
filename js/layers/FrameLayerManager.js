@@ -321,6 +321,7 @@ class FrameLayerManager {
 		const minSize = CONFIG.tools.frames.minSize;
 		layer.frameData.width = Math.max(minSize, Math.round(layer.frameData.width * sx));
 		layer.frameData.height = Math.max(minSize, Math.round(layer.frameData.height * sy));
+		scaleLayerFields(layer, { corner: PREFERENCES.get('scaleCorners') ? Math.max(sx, sy) : 1 });
 		transform.scale.x = 100;
 		transform.scale.y = 100;
 		this.renderLayer(layer);

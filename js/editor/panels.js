@@ -1,4 +1,129 @@
 const EDITOR_PANEL_METHODS = {
+	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue, field = null) {
+		const slider = document.getElementById(sliderId);
+		const valueDisplay = document.getElementById(valueId);
+		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
+
+		if (!slider || !valueDisplay) return;
+
+
+		bindSlider(slider, valueDisplay, {
+			suffix,
+			resetValue,
+			resetButton: resetBtn,
+			cost: field?.cost,
+			onInput: typeof updateCallback === 'function'
+				? (value, sliderEl, event) => updateCallback(event || { target: sliderEl })
+				: null,
+		});
+	}
+
+,
+	syncQuickSlider(canonicalId, quickId, quickValueId, suffix) {
+		const canonical = document.getElementById(canonicalId);
+		const quick = document.getElementById(quickId);
+		const quickValue = document.getElementById(quickValueId);
+		if (!canonical || !quick) return;
+
+		quick.min = canonical.min;
+		quick.max = canonical.max;
+		// Mirror any non-linear scale so the quick slider's raw position maps the
+		// same way the canonical one does (positions are copied verbatim below).
+		if (canonical.dataset.scale) {
+			quick.dataset.scale = canonical.dataset.scale;
+			quick.dataset.scaleMin = canonical.dataset.scaleMin;
+			quick.dataset.scaleMax = canonical.dataset.scaleMax;
+			quick.step = canonical.step;
+		}
+		quick.value = canonical.value;
+		if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(canonical), suffix);
+
+		let syncing = false;
+		canonical.addEventListener('input', () => {
+			if (syncing) return;
+			syncing = true;
+			quick.value = canonical.value;
+			if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(canonical), suffix);
+			syncing = false;
+		});
+
+		quick.addEventListener('input', () => {
+			if (syncing) return;
+			syncing = true;
+			canonical.value = quick.value;
+			if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(quick), suffix);
+			canonical.dispatchEvent(new Event('input'));
+			syncing = false;
+		});
+	}
+
+,
+	setupMaskEditorListeners() {
+		// Size / Spacing revert to the ACTIVE raster tip's manifest value (its
+		// authored diameter / spacing), falling back to the global default for
+		// vector tips. Passed as a thunk so bindSlider resolves it per click.
+		this.setupSlider('maskBrushSize', 'maskBrushSizeValue', 'px', () => {
+			this.maskEditor?._updateBrushCursorSize();
+		}, () => this.maskEditor?.rasterSliderDefault('maskBrushSize') ?? FIELDS.maskBrushSize.value);
+
+		this.setupSlider('maskBrushSoftness', 'maskBrushSoftnessValue', '%', () => {
+			this.maskEditor?.renderOverlay();
+		}, FIELDS.maskBrushSoftness.value);
+
+		this.setupSlider('maskBrushFlow', 'maskBrushFlowValue', '%', () => {
+			this.maskEditor?.renderOverlay();
+		}, FIELDS.maskBrushFlow.value);
+
+		// Spacing is a percentage of brush size; it only affects future stamps
+		// (the resulting stroke is baked into the mask), so no live re-render.
+		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
+			() => this.maskEditor?.rasterSliderDefault('maskBrushSpacing')
+				?? FIELDS.maskBrushSpacing.value);
+
+		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
+		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
+			FIELDS.maskBrushSmoothing.value);
+
+		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
+
+		this.maskEditor?.setupUIListeners();
+	}
+
+,
+	syncCheckboxes(id1, id2, bidirectional = true) {
+		const elem1 = document.getElementById(id1);
+		const elem2 = document.getElementById(id2);
+
+		if (!elem1 || !elem2) return;
+
+		let syncing = false;
+
+		elem1.addEventListener('change', (e) => {
+			if (syncing) return;
+			syncing = true;
+			elem2.checked = e.target.checked;
+			elem2.dispatchEvent(new Event('change'));
+			syncing = false;
+		});
+
+		if (bidirectional) {
+			elem2.addEventListener('change', (e) => {
+				if (syncing) return;
+				syncing = true;
+				elem1.checked = e.target.checked;
+				elem1.dispatchEvent(new Event('change'));
+				syncing = false;
+			});
+		}
+	}
+
+,
+	setupLayerSettingsListeners() {
+		this.syncCheckboxes('contiguous', 'contextContiguous');
+		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
+	}
+
+,
 
 setupLayerBlendModeListeners() {
 	if (this._layerBlendModeListenersBound) return;
@@ -588,130 +713,23 @@ isLayerContentLocked(layer) {
 		if (!layer) return;
 		this.animationPanel?.load(layer);
 
-		// Every branch below writes slider values directly, which fires no events;
-		// the reverts are swept once the panel has been repopulated.
+		getLayerManagerForType(this, layer.type)?.loadLayerSettings(layer);
 		queueMicrotask(() => syncPropertyReverts());
-
-		// Handle different layer types
-		if (layer.type === LayerType.STICKER) {
-			// Load sticker settings
-			this.loadStickerSettings(layer);
-			return;
-		}
-
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			this.textGlitterManager.loadLayerSettings(layer);
-			return;
-		}
-
-		if (layer.type === LayerType.BASE_IMAGE) {
-			this.baseBackgroundManager?.loadLayerSettings(layer);
-			return;
-		}
-
-		if (layer.type !== LayerType.GLITTER_FILL) return;
-		this.loadTransformSettings(layer, 'glitter');
-		const s = layer.settings;
-
-		const contiguous = document.getElementById('contiguous');
-		const invert = document.getElementById('invert');
-		const multiSelect = document.getElementById('multiSelect');
-
-		if (contiguous) contiguous.checked = s.contiguous;
-		if (invert) invert.checked = s.invert;
-		if (multiSelect) multiSelect.checked = s.multiSelect;
-
-		// Threshold and feather readouts are plain numbers, like their bindings.
-		syncSlider(document.getElementById('threshold'), s.threshold, { unit: '' });
-		syncSlider(document.getElementById('feather'), s.feather, { unit: '' });
-		syncSlider(document.getElementById('scale'), layer.fill.scale);
-		// A Fill layer is a single masked paint, so the whole-layer opacity is
-		// its only opacity control.
-		syncSlider(document.getElementById('opacity'), layer.opacity);
-
-		// Color adjust (WP4): populate the Advanced HSB sliders from this layer.
-		this.applyColorAdjustToSliders('glitter', layer.fill.colorAdjust);
-		syncSlotTextureCoordinateControls('glitterFill', layer.fill);
-
-		const glitter = this.glitterLibrary.getItemById(layer.fill.glitterId);
-		if (glitter) {
-			this.updateGlitterAssetInfo(glitter);
-		}
-		syncPaintSlotSourceUI(document.getElementById('glitterFillGlitter'), layer.fill.mode);
-
-		// Tint the asset-info thumbnail (and list/mobile swatches) to match the hue.
-		this.refreshGlitterSwatchVisuals(layer);
-
-		if (this.glitterManager.fieldHost) syncFieldControls(this.glitterManager.fieldHost, layer);
-		this.updateSelectedColorsDisplay();
-		this.maskEditor?.loadLayer(layer);
-	}
-
-,
-	loadStickerSettings(layer) {
-		if (!layer || layer.type !== LayerType.STICKER) return;
-
-		this.loadTransformSettings(layer, 'sticker');
-		this.stickerManager.loadLayerSettings(layer);
-
-		// Update sticker asset info
-		if (layer.stickerSourceId) {
-			const sticker = this.stickerManager.getItemById(layer.stickerSourceId);
-			if (sticker) {
-				this.updateStickerAssetInfo(sticker);
-			}
-		}
-	}
-
-,
-	// Each Fill layer control writes the one field it edits. The mask cache is
-	// keyed by the selection fields, so no invalidation is needed here.
-	saveFillLayerControl(controlId) {
-		const layer = this.layerManager.getActiveLayer();
-		if (layer?.type !== LayerType.GLITTER_FILL) return;
-		const read = (id) => parseInt(document.getElementById(id).value, 10);
-		const checked = (id) => document.getElementById(id).checked;
-		switch (controlId) {
-			case 'threshold':
-			case 'feather':
-				layer.settings[controlId] = read(controlId);
-				break;
-			case 'contiguous':
-			case 'invert':
-			case 'multiSelect':
-				layer.settings[controlId] = checked(controlId);
-				break;
-			case 'scale':
-				layer.fill.scale = read('scale');
-				break;
-			case 'opacity':
-				layer.opacity = read('opacity');
-				break;
-			case 'colorAdjust':
-				layer.fill.colorAdjust = this.readColorAdjust('glitter');
-				break;
-		}
 	}
 
 ,
 	updateGlitterSelection() {
 		const layer = this.layerManager.getActiveLayer();
-		const slotPicker = getLayerManagerForType(this, layer?.type)?.slotPicker;
-		const selectedGlitterId = slotPicker
-			? slotPicker.resolveSelectedGlitterId(layer)
-			: layer?.type === LayerType.TEXT_GLITTER
-			? this.textGlitterManager?.resolveSelectedGlitterId(layer)
-			: layer?.type === LayerType.SHAPE
-				? this.shapeGlitterManager?.resolveSelectedGlitterId(layer)
-				: layer?.type === LayerType.STICKER
-					? this.stickerManager?.resolveSelectedGlitterId(layer)
-				: getLayerFillGlitterId(layer);
+		const manager = getLayerManagerForType(this, layer?.type);
+		const selectedGlitterId = manager?.resolveSelectedGlitterId?.(layer)
+			?? manager?.slotPicker?.resolveSelectedGlitterId(layer)
+			?? getLayerFillGlitterId(layer);
 
 		// Only the glitter browser: other kinds reuse numeric ids.
 		const glitterOptions = document.querySelectorAll(`#${getAssetBrowserSchema('glitter').browserHost} .asset-option`);
 
 		glitterOptions.forEach(opt => {
-			const isSelected = layer && (slotPicker || layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE || layer.type === LayerType.STICKER) &&
+			const isSelected = layer && selectedGlitterId != null &&
 				parseInt(opt.dataset.id, 10) === selectedGlitterId;
 			opt.classList.toggle('selected', isSelected);
 		});

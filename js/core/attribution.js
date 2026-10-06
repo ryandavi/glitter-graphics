@@ -62,12 +62,7 @@ const Attribution = {
 		return Object.keys(out).length ? out : null;
 	},
 
-	// Accept a legacy free-text string or a structured object.
 	coerce(raw, ownerId = 'attribution') {
-		if (typeof raw === 'string') {
-			const notes = raw.trim();
-			return notes ? { notes } : null;
-		}
 		return this.sanitize(raw, ownerId);
 	},
 

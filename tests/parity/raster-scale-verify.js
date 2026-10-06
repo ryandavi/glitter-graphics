@@ -60,7 +60,7 @@ const { chromium } = require('playwright');
 				}
 				if (layer.textData) {
 					layer.transform.scale = { x: 200, y: 100 };
-					await manager.commitScaleToFontSize(layer);
+					await manager.commitScale(layer);
 					if (layer.transform.scale.x !== 200 || layer.transform.scale.y !== 100 || layer.transform.proportionalScale) throw new Error('Nonuniform scale or lock changed at commit');
 					const settled = new DOMMatrix(getComputedStyle(manager.layerElements.get(layer.id).querySelector('.text-glitter-stack')).transform);
 					if (settled.a !== 1 || settled.d !== 1) throw new Error('Committed text keeps stretching its texture through CSS');
@@ -113,6 +113,45 @@ const { chromium } = require('playwright');
 			return { preview: await bounds(`data:image/png;base64,${preview}`), exported: await bounds(exported) };
 		}, { preview, exported });
 		assert(parity.preview.every((value, index) => Number.isFinite(value) && Math.abs(value - parity.exported[index]) <= 1), `Scaled glitter text preview/export placement differs: ${JSON.stringify(parity)}`);
+		await page.evaluate(async () => {
+			const e = window.editor;
+			const check = (condition, message) => { if (!condition) throw new Error(message); };
+			for (const enabled of [false, true]) {
+				PREFERENCES.set('scaleCorners', enabled);
+				PREFERENCES.set('scaleEffects', enabled);
+				const shape = e.shapeGlitterManager.createLayer({ shapeId: 'square', width: 80, height: 60, cornerRadiusPx: 12 });
+				const text = e.textGlitterManager.createLayer({ text: 'Plate', fontSize: 64 });
+				const frame = e.frameLayerManager.createLayer();
+				for (const layer of [shape, text, frame]) e.layerManager.insertLayer(layer);
+				frame.frameData.pinned = false;
+				frame.locked = false;
+				frame.frameData.width = 120; frame.frameData.height = 80; frame.frameData.radius = 10;
+				const thickness = frame.frameData.widthPx;
+				shape.shapeData.cornerRadiusPx = 12;
+				shape.shapeData.effectDrafts = { border: { ...e.shapeGlitterManager.getDefaultBorder(), widthPx: 8 } };
+				shape.shapeData.sparkles = { ...buildDefaultSparkles(), sizeMin: 10, sizeMax: 16, spacing: 20 };
+				text.textData.textBackground.enabled = true;
+				Object.assign(text.textData.textBackground, { horizontalPadding: 10, verticalPadding: 6, cornerRadius: 8, mergeDistance: 4 });
+				text.transform.scale = { x: 200, y: 200 };
+				await e.textGlitterManager.commitScale(text);
+				check(text.textData.fontSize === 128 && text.textData.textBackground.horizontalPadding === 20
+					&& text.textData.textBackground.verticalPadding === 12 && text.textData.textBackground.cornerRadius === 16
+					&& text.textData.textBackground.mergeDistance === 8, 'Text plate geometry must follow font size with effects on or off');
+				shape.transform.scale = { x: 200, y: 200 };
+				frame.transform.scale = { x: 200, y: 150 };
+				e.layerManager.setSelection([shape.id, frame.id], { activeLayerId: shape.id });
+				await e.groupTransformManager.commitScaledLayers(new Map([[shape.id, { x: 100, y: 100 }], [frame.id, { x: 100, y: 100 }]]));
+				check(shape.shapeData.cornerRadiusPx === (enabled ? 24 : 12), 'Shape corners must follow Scale Corners');
+				check(shape.shapeData.effectDrafts.border.widthPx === (enabled ? 16 : 8), 'Parked outlines must follow Scale Effects');
+				check(shape.shapeData.sparkles.sizeMin === (enabled ? 20 : 10) && shape.shapeData.sparkles.sizeMax === (enabled ? 32 : 16)
+					&& shape.shapeData.sparkles.spacing === (enabled ? 40 : 20), 'Sparkles must follow Scale Effects');
+				check(frame.frameData.width === 240 && frame.frameData.height === 120 && frame.transform.scale.x === 100 && frame.transform.scale.y === 100,
+					'Group resize must bake an unpinned frame');
+				check(frame.frameData.widthPx === thickness && frame.frameData.radius === (enabled ? 20 : 10), 'Frame thickness stays in pixels and corners follow Scale Corners');
+				scaleDocumentLayerState(shape, 2, 2, 2);
+				check(shape.shapeData.cornerRadiusPx === (enabled ? 48 : 24), 'Document resize must always scale corners');
+			}
+		});
 		assert.deepStrictEqual(errors, []);
 		console.log('PASS scaled text and shape rasters preserve physical outlines, texture proportions, preview/export sizes, and unlocked text scale');
 	} finally {

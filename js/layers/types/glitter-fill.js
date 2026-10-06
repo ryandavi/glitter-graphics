@@ -1,6 +1,10 @@
 'use strict';
 
 registerLayerType(LayerType.GLITTER_FILL, {
+	describe: (layer, editor) => {
+		const fill = describeLayerPaint(editor, getLayerFillSlot(layer));
+		return { name: layer.name || fill.glitter?.name || fill.name || `${fill.modeLabel} Fill`, detail: `Fill · ${fill.mode === 'none' ? 'None' : fill.modeLabel}` };
+	},
 	displayName: 'Fill Layer',
 	paintSlots: [
 		{
@@ -12,11 +16,19 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			glitterDefault: 'borderGlitterId', panelPrefix: 'glitterBorder', modes: ['glitter', 'solid'],
 			fields: { widthPx: 'borderWidth' }
 		},
-		{ key: 'fill', role: 'fill', path: 'fill', wholeLayer: true, sourceLabel: null, glitterDefault: 'fillGlitterId' },
+		{ key: 'fill', role: 'fill', path: 'fill', wholeLayer: true, sourceLabel: null, glitterDefault: 'fillGlitterId', panelPrefix: 'glitterFill', modes: ['glitter', 'solid'], fields: { opacity: false } },
 		{
 			key: 'sparkles', role: 'sparkles', path: 'sparkles', draftPath: 'effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId', panelPrefix: 'glitterSparkles', modes: ['glitter', 'solid']
 		}
+	],
+	fields: [
+		{ path: 'settings.threshold', field: 'threshold', id: 'threshold' },
+		{ path: 'settings.feather', field: 'feather', id: 'feather' },
+		{ path: 'settings.contiguous', id: 'contiguous' },
+		{ path: 'settings.invert', id: 'invert' },
+		{ path: 'settings.multiSelect', id: 'multiSelect' },
+		{ path: 'opacity', field: 'layerOpacity', id: 'opacity' }
 	],
 	// Sparkles scatter inside the painted mask.
 	sparkleHost: (editor, layer) => editor.glitterManager?.getSparkleHost(layer) || null,

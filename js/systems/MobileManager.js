@@ -370,13 +370,6 @@ class MobileManager {
 		this.toggleDrawer('edit');
 	}
 
-	closeSettings(options = {}) {
-		if (options.releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
-			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
-		}
-		if (this.activeDrawer === 'edit') this.closeAllDrawers();
-	}
-
 	closeAllDrawers(options = {}) {
 		if (options.releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
 			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });

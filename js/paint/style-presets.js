@@ -452,7 +452,8 @@ function renderStylePresetThumbnail(kind, entry, element) {
 // A shared look keeps only the slots the target type declares (a sticker
 // has no fill, so Neon Glow on a sticker is its outline and glow).
 function fitStylePresetEntry(entry, type) {
-	const { targets, ...rest } = entry;
+	const rest = { ...entry };
+	delete rest.targets;
 	const declared = new Set(getStylePresetSlotDefinitions(type).map((definition) => definition.key));
 	const slots = Object.fromEntries(Object.entries(entry.value.slots || {}).filter(([key]) => declared.has(key)));
 	return { ...rest, value: { ...entry.value, slots, data: { ...(type === LayerType.TEXT_GLITTER ? STYLE_PRESET_TEXT_DEFAULTS : {}), ...entry.value.data } } };

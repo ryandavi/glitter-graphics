@@ -195,18 +195,6 @@ class BaseBackgroundManager {
 			gallerySection: id('designGallerySection'), pickerStrip: id('galleryPickerStrip'),
 			pickerTitle: id('galleryPickerStripTitle'), pickerDetail: id('galleryPickerStripDetail'), pickerDone: id('galleryPickerStripDone')
 		};
-		// The legacy host lives in Design's source markup. Once schema rendering
-		// has populated it, promote it to a sibling accordion section.
-		const designGallery = id('designGallerySection');
-		if (this.ui.section && designGallery?.parentElement && this.ui.section.parentElement !== designGallery.parentElement) {
-			designGallery.after(this.ui.section);
-		}
-		// Document sizing is a canvas/background property. The schema renders the
-		// self-contained #documentSizeGroup "Size" card once (into the no-selection
-		// host); move that single node here so its ids/listeners stay authoritative.
-		const documentSize = id('documentSizeGroup');
-		const canvasHost = id('baseCanvasSizeHost');
-		if (documentSize && canvasHost) canvasHost.appendChild(documentSize);
 		installEffectGradientEditor({
 			prefix: 'baseBackground',
 			getData: () => this.getActiveLayer()?.background || null,
@@ -339,7 +327,8 @@ class BaseBackgroundManager {
 		if (this.ui.color) this.ui.color.value = layer.background.color;
 		syncSlider(document.getElementById('baseBackgroundScale'), layer.background.scale);
 		syncSlider(document.getElementById('baseBackgroundOpacity'), layer.opacity);
-		this.editor.applyColorAdjustToSliders('baseBackground', layer.background.colorAdjust);
+		const adjust = normalizeColorAdjust(layer.background.colorAdjust);
+		['hue', 'saturation', 'brightness'].forEach(key => syncSlider(document.getElementById(`baseBackground${fieldControlCap(key)}`), adjust[key]));
 		syncSlotTextureCoordinateControls('baseBackground', layer.background);
 		const hasImage = this.hasBaseImage();
 		if (this.ui.imageName) this.ui.imageName.textContent = hasImage

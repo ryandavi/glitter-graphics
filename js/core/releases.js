@@ -1,7 +1,7 @@
 // Release history, newest first.
 //
 // `id` is the permanent identity of a release: it is written to localStorage as
-// `glitterEditor_welcomeLastSeenRelease` and compared against `CONFIG.app.currentRelease`
+// `PREFERENCES.welcomeLastSeenRelease` and compared against `CONFIG.app.currentRelease`
 // to decide whether returning visitors see the welcome modal again. Never edit the `id`
 // of a release that has shipped — every visitor would be shown the modal a second time.
 // Dates may be edited freely because nothing keys off them.

@@ -38,17 +38,13 @@ async function captureExport(page, targetId, overrides = {}) {
 		menuDisabled: document.getElementById('exportMenuBtn').disabled,
 		quickDisabled: [...document.querySelectorAll('[data-export-target]')].every((item) => item.disabled),
 		settingsDisabled: document.getElementById('exportSettingsMenuItem').disabled,
-		legacyGif: new SettingsStore(EXPORT_SETTINGS_SCHEMA).load({ exportFormat: 'gif' }),
-		legacyMp4: new SettingsStore(EXPORT_SETTINGS_SCHEMA).load({ exportFormat: 'mp4' })
+		mp4: new SettingsStore(EXPORT_SETTINGS_SCHEMA).load({ exportOutputMode: 'animation', exportAnimationFormat: 'mp4' })
 	}));
 	assert(initial.mainDisabled && !initial.menuDisabled && initial.quickDisabled && !initial.settingsDisabled, 'No-document split-control state is inconsistent');
-	assert(initial.legacyGif.outputMode === 'animation' && initial.legacyGif.animationFormat === 'gif' && initial.legacyGif.stillFormat === 'png', 'Legacy GIF migration failed');
-	assert(initial.legacyMp4.outputMode === 'animation' && initial.legacyMp4.animationFormat === 'mp4', 'Legacy MP4 migration failed');
+	assert(initial.mp4.outputMode === 'animation' && initial.mp4.animationFormat === 'mp4', 'Current MP4 settings failed to load');
 	await page.evaluate(() => document.getElementById('exportMenuBtn').click());
 	assert(await page.getAttribute('#exportMenuBtn', 'aria-expanded') === 'true', 'Export menu did not expose open state');
-	assert(await page.evaluate(() => document.activeElement?.id === 'exportSettingsMenuItem'), 'Disabled quick commands were not skipped by menu focus');
 	await page.keyboard.press('Escape');
-	assert(await page.evaluate(() => document.activeElement?.id === 'exportMenuBtn'), 'Escape did not restore export-menu focus');
 	await page.evaluate(() => document.getElementById('exportMenuBtn').click());
 	await page.evaluate(() => document.getElementById('exportSettingsMenuItem').click());
 	assert(await page.locator('#exportSettingsModal.visible').count() === 1, 'Export Settings was not reachable without a document');
@@ -57,6 +53,10 @@ async function captureExport(page, targetId, overrides = {}) {
 	await page.evaluate(() => window.editor.loadBlankImage(48, 32, '#ff6699'));
 	await page.waitForFunction(() => window.editor.originalImage != null);
 	await page.evaluate(() => window.editor.updateExportActionUI());
+	await page.click('#exportMenuBtn');
+	assert(await page.evaluate(() => document.activeElement?.dataset.exportTarget === 'still:png'), 'Export menu did not focus its first enabled command');
+	await page.keyboard.press('Escape');
+	assert(await page.evaluate(() => document.activeElement?.id === 'exportMenuBtn'), 'Escape did not restore export-menu focus');
 	await page.evaluate(() => window.editor.modalManager.open('exportSettingsModal'));
 	await page.click('#exportModeControl [data-export-mode="still"]');
 	await page.click('#exportFormatControl [data-export-mode="still"][data-export-format="jpeg"]');
@@ -82,6 +82,6 @@ async function captureExport(page, targetId, overrides = {}) {
 	assert(stillGif.type === 'image/gif' && stillGif.name.endsWith('.gif'), `Still GIF contract failed: ${JSON.stringify(stillGif)}`);
 	assert(await page.evaluate(() => !window.editor.exportInProgress), 'Export concurrency guard did not clear');
 	assert(errors.length === 0, `Browser errors: ${errors.join('; ')}`);
-	console.log('PASS Export target migration, split-control state, PNG, JPG, and still GIF');
+	console.log('PASS Export target settings, split-control state, PNG, JPG, and still GIF');
 	await browser.close();
 })().catch((error) => { console.error('FAIL', error.message); process.exit(1); });

@@ -693,11 +693,6 @@ class ShapeGlitterManager {
 		});
 	}
 
-	getEffectPaintSource(layer, key) {
-		const entry = getLayerPaintSlots(layer).find((slot) => slot.key === key);
-		return entry ? resolvePaintSlotPreviewSource(this.editor, layer, entry) : null;
-	}
-
 	// ===== MASK / MEASUREMENT =====
 
 	getMeasurementCacheKey(layer) {
@@ -1131,35 +1126,14 @@ class ShapeGlitterManager {
 		layer.shapeData.width = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.width * sx));
 		layer.shapeData.height = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.height * sy));
 		const effectScale = Math.max(sx, sy);
-		if (layer.shapeData.border && PREFERENCES.get('scaleEffects')) {
-			layer.shapeData.border.widthPx = Math.max(1, Math.round(layer.shapeData.border.widthPx * effectScale));
-			layer.shapeData.border.dotSpacingPx = Math.max(1, Math.round(layer.shapeData.border.dotSpacingPx * effectScale));
-		}
-		if (layer.shapeData.shadow && PREFERENCES.get('scaleEffects')) {
-			layer.shapeData.shadow.castLean = Math.round(layer.shapeData.shadow.castLean * sx);
-			layer.shapeData.shadow.castLength = Math.round(layer.shapeData.shadow.castLength * sy);
-			layer.shapeData.shadow.offsetX = Math.round(layer.shapeData.shadow.offsetX * sx);
-			layer.shapeData.shadow.offsetY = Math.round(layer.shapeData.shadow.offsetY * sy);
-			layer.shapeData.shadow.spread = Math.round(layer.shapeData.shadow.spread * effectScale);
-			layer.shapeData.shadow.blur = Math.round((layer.shapeData.shadow.blur || 0) * effectScale);
-		}
-		if (layer.shapeData.bevel?.enabled && PREFERENCES.get('scaleEffects')) {
-			layer.shapeData.bevel.highlight.size = Math.max(1, Math.round(layer.shapeData.bevel.highlight.size * effectScale));
-			layer.shapeData.bevel.highlight.soften = Math.round(layer.shapeData.bevel.highlight.soften * effectScale);
-		}
-		if (PREFERENCES.get('scaleTextures')) {
-			layer.shapeData.fill.scale = roundSlotTextureScale((layer.shapeData.fill.scale ?? 100) * effectScale);
-			if (layer.shapeData.border) {
-				layer.shapeData.border.scale = roundSlotTextureScale((layer.shapeData.border.scale ?? 100) * effectScale);
-			}
-			if (layer.shapeData.shadow) {
-				layer.shapeData.shadow.scale = roundSlotTextureScale((layer.shapeData.shadow.scale ?? 100) * effectScale);
-			}
-			if (layer.shapeData.bevel?.enabled) {
-				layer.shapeData.bevel.highlight.scale = roundSlotTextureScale((layer.shapeData.bevel.highlight.scale ?? 100) * effectScale);
-				layer.shapeData.bevel.shade.scale = roundSlotTextureScale((layer.shapeData.bevel.shade.scale ?? 100) * effectScale);
-			}
-		}
+		const factors = {
+			geometry: effectScale,
+			effect: PREFERENCES.get('scaleEffects') ? effectScale : 1,
+			texture: PREFERENCES.get('scaleTextures') ? effectScale : 1,
+			corner: PREFERENCES.get('scaleCorners') ? effectScale : 1
+		};
+		scaleLayerSlotFields(layer, factors);
+		scaleLayerFields(layer, factors, binding => !['shapeData.width', 'shapeData.height'].includes(binding.path));
 		t.scale.x = 100;
 		t.scale.y = 100;
 		this.invalidateMeasurement(layer);

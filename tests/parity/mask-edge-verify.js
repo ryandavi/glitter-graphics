@@ -147,16 +147,31 @@ async function main() {
 			const initialChecked = input.checked;
 			input.checked = true;
 			input.dispatchEvent(new Event('change', { bubbles: true }));
-			const saved = JSON.parse(localStorage.getItem('glitterEditorSettings'));
+			const saved = JSON.parse(localStorage.getItem('glitterEditorPreferences'));
 			return {
 				initialChecked,
 				crispMaskEdges: PREFERENCES.get('crispMaskEdges'),
-				savedAntialiasEdges: saved.antialiasEdges
+				savedCrispMaskEdges: saved.crispMaskEdges
 			};
 		});
 		assert(!settingsState.initialChecked, 'Antialias Edges was not off by default');
 		assert(!settingsState.crispMaskEdges, 'Enabling Antialias Edges did not disable crisp mask rendering');
-		assert(settingsState.savedAntialiasEdges, 'Antialias Edges was not persisted');
+		assert(settingsState.savedCrispMaskEdges === false, 'Antialias Edges was not persisted in preferences');
+
+		const softTips = await page.evaluate(() => ['square', 'star', 'heart', 'calligraphy'].map(shape => {
+			const canvas = document.createElement('canvas');
+			canvas.width = canvas.height = 96;
+			const ctx = canvas.getContext('2d');
+			window.editor.maskEditor._drawShapeStamp(ctx, shape, 96, 0.6);
+			const pixels = ctx.getImageData(0, 0, 96, 96).data;
+			let partial = 0;
+			for (let i = 3; i < pixels.length; i += 4) {
+				if (pixels[i] > 0 && pixels[i] < 255) partial++;
+				if (pixels[i] && (pixels[i - 3] !== 255 || pixels[i - 2] !== 255 || pixels[i - 1] !== 255)) throw new Error(`${shape} stamp lost its white mask color`);
+			}
+			return { shape, partial };
+		}));
+		softTips.forEach(({ shape, partial }) => assert(partial > 500, `${shape} tip has no soft edge falloff`));
 
 		await page.reload({ waitUntil: 'networkidle' });
 		const persistedState = await page.evaluate(() => ({

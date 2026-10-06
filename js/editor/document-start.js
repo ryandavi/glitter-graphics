@@ -18,7 +18,7 @@ setupImageListeners() {
 		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('aboutModal'));
 		document.getElementById('workspaceStartWhatsNew')?.addEventListener('click', (event) => {
 			try {
-				localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
+				PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);
 			} catch (error) {
 				console.warn('Failed to save the last-seen release:', error);
 			}
@@ -164,9 +164,8 @@ setupImageListeners() {
 		const link = document.getElementById('workspaceStartWhatsNew');
 		if (!link) return;
 		try {
-			const storageKey = 'glitterEditor_welcomeLastSeenRelease';
-			const lastSeenRelease = localStorage.getItem(storageKey);
-			if (lastSeenRelease === null) localStorage.setItem(storageKey, CONFIG.app.currentRelease);
+			const lastSeenRelease = PREFERENCES.get('welcomeLastSeenRelease');
+			if (lastSeenRelease === null) PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);
 			const hasUnseenRelease = lastSeenRelease !== null && lastSeenRelease !== CONFIG.app.currentRelease;
 			link.classList.toggle('has-update', hasUnseenRelease);
 			if (hasUnseenRelease) link.setAttribute('aria-label', "What's new: new release available");

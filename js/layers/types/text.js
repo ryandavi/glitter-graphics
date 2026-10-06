@@ -2,6 +2,7 @@
 
 registerLayerType(LayerType.TEXT_GLITTER, {
 	rasterizesScale: true,
+	describe: (layer, editor) => ({ name: layer.name || 'Text', detail: `Text · ${describeLayerPaint(editor, getLayerFillSlot(layer)).modeLabel}` }),
 	displayName: 'Text',
 	paintSlots: [
 		{
@@ -42,10 +43,10 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		{ path: 'textData.warp.bend', field: 'textWarpBend', id: 'textWarpBend', geometry: true },
 		{ path: 'textData.boxWidth', documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.boxHeight', documentScale: 'geometry', minimum: 1 },
-		{ path: 'textData.textBackground.horizontalPadding', field: 'textBackgroundPaddingH', id: 'textBackgroundPaddingH', geometry: true, documentScale: 'effect' },
-		{ path: 'textData.textBackground.verticalPadding', field: 'textBackgroundPaddingV', id: 'textBackgroundPaddingV', geometry: true, documentScale: 'effect' },
-		{ path: 'textData.textBackground.cornerRadius', field: 'textBackgroundRadius', id: 'textBackgroundRadius', geometry: true, documentScale: 'effect' },
-		{ path: 'textData.textBackground.mergeDistance', field: 'textBackgroundMergeDistance', id: 'textBackgroundMergeDistance', geometry: true, documentScale: 'effect' },
+		{ path: 'textData.textBackground.horizontalPadding', field: 'textBackgroundPaddingH', id: 'textBackgroundPaddingH', geometry: true, documentScale: 'geometry' },
+		{ path: 'textData.textBackground.verticalPadding', field: 'textBackgroundPaddingV', id: 'textBackgroundPaddingV', geometry: true, documentScale: 'geometry' },
+		{ path: 'textData.textBackground.cornerRadius', field: 'textBackgroundRadius', id: 'textBackgroundRadius', geometry: true, documentScale: 'geometry' },
+		{ path: 'textData.textBackground.mergeDistance', field: 'textBackgroundMergeDistance', id: 'textBackgroundMergeDistance', geometry: true, documentScale: 'geometry' },
 		{ path: 'textData.textBackground.lineSpacingSensitivity', field: 'textBackgroundSpacing', id: 'textBackgroundSpacing', geometry: true }
 	],
 	hasVisibleContent: (layer) => Boolean(layer.textData?.text?.trim()),

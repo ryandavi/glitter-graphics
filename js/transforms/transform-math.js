@@ -272,16 +272,6 @@ function getLayerAnchorFromPoint(editor, layer, point) {
 	};
 }
 
-function withAnchorFixed(editor, layer, mutate) {
-	const before = getLayerAnchorPoint(editor, layer);
-	mutate(getLayerTransform(layer));
-	const after = getLayerAnchorPoint(editor, layer);
-	if (!before || !after) return;
-	const transform = getLayerTransform(layer);
-	transform.position.x += before.x - after.x;
-	transform.position.y += before.y - after.y;
-}
-
 function getLayerAnimationOrigin(editor, layer, dimensions) {
 	if (!layer) return { x: 0.5, y: 0.5 };
 	const transform = getLayerTransform(layer);

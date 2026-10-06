@@ -205,12 +205,8 @@ const WARP_TYPES = Object.freeze({
 
 defineOptions('textWarp', Object.values(WARP_TYPES).map(({ id, label }) => ({ value: id, label })));
 
-// Circle was its own type before Arc grew to a full ring; its bend already
-// means the same thing on the merged Arc.
-const LEGACY_WARP_TYPES = Object.freeze({ circle: 'arc' });
-
 function normalizeTextWarp(warp) {
-	const named = LEGACY_WARP_TYPES[warp?.type] || warp?.type;
+	const named = warp?.type;
 	const type = WARP_TYPES[named] ? named : CONFIG.tools.text.defaultWarpType;
 	const spec = FIELDS.textWarpBend;
 	const bend = Number(warp?.bend);

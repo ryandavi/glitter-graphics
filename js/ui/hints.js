@@ -108,7 +108,7 @@ function getHintToolInfo(editor, tool) {
 function updateHelpfulMessageFromRules(editor) {
 	const message = el('helpfulMessage');
 	if (!message) return;
-	if (!editor.showHints || !editor.originalImage || editor.exportInProgress) {
+	if (!PREFERENCES.get('showHints') || !editor.originalImage || editor.exportInProgress) {
 		message.classList.remove('visible');
 		return;
 	}

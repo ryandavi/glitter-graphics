@@ -281,6 +281,9 @@ class StickerManager extends ContentManager {
 
 	loadLayerSettings(layer) {
 		if (layer?.type !== LayerType.STICKER) return;
+		this.editor.loadTransformSettings(layer, 'sticker');
+		const asset = this.getItemById(layer.stickerSourceId);
+		if (asset) this.editor.updateStickerAssetInfo(asset);
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.closePicker();
 		syncFieldControls(this.fieldHost, layer);
 		const sliceToggle = document.getElementById('stickerSliceEnabled');
@@ -506,27 +509,6 @@ class StickerManager extends ContentManager {
 			console.error('Failed to load preset stickers:', error);
 			this.editor.showError('Failed to load sticker library');
 		}
-	}
-
-	populateCategoryChips() {
-		if (!this.ui.categoryChips) return;
-
-		// Get unique categories from content
-		const categories = [...new Set(this.content.map(item => item.category))].sort();
-
-
-		// Categories come from asset data, so the name goes in as textContent and
-		// the raw value through dataset - never interpolated into markup.
-		this.ui.categoryChips.replaceChildren();
-		categories.forEach(cat => {
-			const chip = document.createElement('div');
-			chip.className = 'filter-chip';
-			chip.dataset.filter = 'category';
-			chip.dataset.value = cat;
-			chip.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-			chip.addEventListener('click', () => this.toggleFilterChip(chip));
-			this.ui.categoryChips.appendChild(chip);
-		});
 	}
 
 	// ===== UPLOAD HANDLING =====
@@ -916,7 +898,7 @@ class StickerManager extends ContentManager {
 
 			// Hide empty state and load settings
 			this.editor.setSettingsEmptyState('stickerSettings', false);
-			this.editor.loadStickerSettings(activeLayer);
+			this.loadLayerSettings(activeLayer);
 
 		} else {
 			// Create NEW layer
@@ -1155,11 +1137,11 @@ updateTransform(layerId, updates) {
 	// ===== CENTERING METHODS (Delegation to LayerTransform) =====
 
 	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.editor.loadStickerSettings(layer));
+		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.editor.loadStickerSettings(layer));
+		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	alignToCanvas(layerId, mode) {
@@ -1237,7 +1219,6 @@ updateTransform(layerId, updates) {
 		// live layer must not alias it.
 		const layerData = structuredClone(serialized);
 		layerData.blendMode = GlitterBlendModes.forLayer(layerData);
-		ProjectSerializer.migrateLayerState(layerData);
 		if (layerData.animations?.length) layerData.animations = GlitterAnimation.normalizeAnimations(layerData.animations);
 		if (layerData.stickerData) {
 			delete layerData.stickerData.blendMode;

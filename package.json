@@ -8,7 +8,7 @@
 		"build:modals": "node tools/build-modals.js",
 		"check:modals": "node tools/build-modals.js --check",
 		"test:modals": "node tests/unit/modal-lint-unit.js && node tests/unit/modal-build-unit.js",
-		"lint": "eslint js admin/js",
+		"lint": "eslint js admin/js --max-warnings 0",
 		"test": "node tests/run.js",
 		"test:quick": "node tests/run.js --tag quick",
 		"test:export": "node tests/run.js --tag export",

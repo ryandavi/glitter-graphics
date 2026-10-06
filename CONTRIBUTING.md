@@ -1,4 +1,4 @@
-# AGENTS.md — glitter editor
+# Contributing: glitter editor
 
 Vanilla-JS glitter GIF editor (`index.html` + `js/`) with a PHP/MySQL admin (`admin/`), developed against local XAMPP at `http://localhost/glitter/`. No framework, no bundler, no build step for JS. The dev machine is Windows; shells are Git Bash and PowerShell.
 
@@ -28,7 +28,7 @@ Vanilla-JS glitter GIF editor (`index.html` + `js/`) with a PHP/MySQL admin (`ad
 ## Architecture invariants (violating these causes real, shipped bugs)
 
 - **Preview is DOM, export is canvas: every visual feature is implemented twice and must match.** Preview is an animated GIF as `background-image` plus a CSS `mask-image` blob (GlitterManager), or per-slot masked spans (the text and shape span stacks). Export is `SceneCompositor` (`editor.sceneCompositor`), which flattens GIF frames to ImageData and composites on canvas for every format. When you change one side, find and change its twin. `tests/parity/preview-export-parity.js` lists the known twins.
-- **Never use `ctx.filter`.** It's unsupported on Safari/iOS, and iOS export is a supported path. Use pixel-level math instead (see `js/effects/color-adjust.js`). Two existing uses (`MaskCompositor`, `MaskEditor`) are known violations scheduled for removal; don't add more.
+- **Never use `ctx.filter`.** It's unsupported on Safari/iOS, and iOS export is a supported path. Use pixel-level math instead (see `js/effects/color-adjust.js`). There are no exceptions; don't add more.
 - **No-flicker rules:** never clear-and-rebuild glitter DOM elements in render paths; reconcile instead (recreating an element restarts its GIF and drops its mask for a frame). Always decode a new mask image (`Image` preload) *before* swapping `mask-image`, and revoke the old object URL after.
 - **Masks are binarized** (`CONFIG.rendering.crispMaskEdges`, default true). Partial-alpha mask edges fringe against the GIF transparency key on transparent exports, so any new mask source must go through the same threshold step.
 - **History is not self-contained JSON.** Layer snapshots deep-clone through `LayerManager.serializeLayer`, but painted masks live as versioned binaries in `PaintMaskStore.paintHistory` (`editor.paintMaskStore`); snapshots hold `maskVersion` pointers. Anything that serializes state must account for this. The base-image buffers are replace-only, because snapshots share them by reference.
@@ -60,8 +60,7 @@ The current layout:
 
 ## Docs
 
-- Reference docs (this file, `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/LAYER-TYPE-CONTRACT.md`, `docs/UI-CONVENTIONS.md`, `tests/README.md`, `admin/README.md`) are tracked in git. Keep them current when behaviour they describe changes.
+- Reference docs (this file, `docs/ARCHITECTURE.md`, `docs/LAYER-TYPE-CONTRACT.md`, `docs/UI-CONVENTIONS.md`, `tests/README.md`, `admin/README.md`) are tracked in git. Keep them current when behaviour they describe changes.
 - `docs/` has four parts. The root holds the tracked reference docs above. `docs/local/` holds private reference material, `docs/plans/` holds active plans and their delegation prompts, and `docs/!old/` is the archive of finished plans. The last three and `docs/README.md` are local-only, via `.git/info/exclude`, as are some private content pages.
 - **Plan lifecycle:** new plans go in `docs/plans/` with a `Status:` line under the title. When a plan is done, fold what is still true into the reference docs, then move it and its delegation prompts to `docs/!old/`. Run `node tools/docs-index.js` after any add or move; it regenerates the index in `docs/README.md`.
 - **Code comments must not cite plan files.** Plans are local-only and move when they finish. State the constraint in the comment, or point at a tracked reference doc.
-- `CLAUDE.md` is only a pointer to this file. This file is canonical.

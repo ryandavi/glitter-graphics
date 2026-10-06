@@ -99,7 +99,6 @@ class HistoryManager {
 
 	async restoreState(state) {
 		this.editor.maskEditor?.handleStateRestore();
-		const previousLayers = this.editor.layers;
 
 		// Restore canvas dimensions + base image FIRST, before paint/layers: the
 		// paint snapshots referenced below were captured at their own canvas size,

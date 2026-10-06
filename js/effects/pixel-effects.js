@@ -235,19 +235,15 @@
 	function normalizeSettings(value, config) {
 		const defaults = config.defaults;
 		const source = value || {};
-		const legacy = source.paletteMode == null && source.enabled != null ? source : null;
 		const dither = { ...defaults.dither, ...(source.dither || {}) };
 		const duotone = Array.isArray(dither.duotone) && dither.duotone.length === 2 ? dither.duotone : defaults.dither.duotone;
 		const pixelSize = clamp(Math.round(finiteNumber(source.pixelSize, defaults.pixelSize)), config.limits.minPixelSize, config.limits.maxPixelSize);
-		const globalEnabled = source.enabled !== false;
 		const paletteMode = ['posterize', 'dither'].includes(source.paletteMode)
 			? source.paletteMode
-			: (legacy?.enabled ? 'posterize' : defaults.paletteMode);
+			: defaults.paletteMode;
 		return {
-			pixelateEnabled: source.pixelateEnabled == null ? globalEnabled && pixelSize > 1 : Boolean(source.pixelateEnabled),
-			paletteEnabled: source.paletteEnabled == null
-				? globalEnabled && (Boolean(legacy?.enabled) || ['posterize', 'dither'].includes(source.paletteMode))
-				: Boolean(source.paletteEnabled),
+			pixelateEnabled: source.pixelateEnabled == null ? defaults.pixelateEnabled : Boolean(source.pixelateEnabled),
+			paletteEnabled: source.paletteEnabled == null ? defaults.paletteEnabled : Boolean(source.paletteEnabled),
 			pixelSize,
 			paletteMode,
 			colorCount: clamp(Math.round(finiteNumber(source.colorCount, defaults.colorCount)), config.limits.minColors, config.limits.maxColors),

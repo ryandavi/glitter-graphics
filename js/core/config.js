@@ -233,7 +233,7 @@ const CONFIG = deepFreeze({
 			// affects painting; the stamped result is baked into the mask, so export
 			// needs no shape info.
 			defaultShape: 'round',
-			// Per-mode overrides (WP1): Brush and Eraser keep independent setting
+			// Per-mode overrides: Brush and Eraser keep independent setting
 			// sets (MaskEditor.toolSettings). Only the keys listed here differ from
 			// the shared FIELDS defaults; everything else is inherited. Eraser starts
 			// a bit larger since erasing is usually a coarser correction pass.
@@ -516,8 +516,7 @@ const CONFIG = deepFreeze({
 					{ value: 'scale-down', label: 'Scale Down' }
 				],
 				// UI-only: "Tile" is sugar over fit:'none' + tile:true (the only
-				// combination where tiling is visually distinct — see
-				// docs/ANIMATED-IMAGE-FILL-PLAN.md Part A). Not a real fit value.
+				// combination where tiling is visually distinct). Not a real fit value.
 				fitUIOptions: [
 					{ value: 'cover', label: 'Cover' },
 					{ value: 'contain', label: 'Contain' },
@@ -567,6 +566,7 @@ const CONFIG = deepFreeze({
 		},
 		transformBehavior: {
 			scaleEffects: true,
+			scaleCorners: true,
 			// Off: resizing text or a shape keeps the glitter repeat size, so
 			// the sparkle grain stays consistent across layers.
 			scaleTextures: false
@@ -805,7 +805,7 @@ const CONFIG = deepFreeze({
 			// phone - more GIF-encoding workers than cores adds context-switch
 			// overhead instead of speed.
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
-			workerScript: 'js/workers/gif-encode.worker.js?v=9cbcf01b',
+			workerScript: 'js/workers/gif-encode.worker.js?v=3897e51f',
 			quality: 1,
 			timing: {
 				forceDelay: 100,
@@ -984,8 +984,7 @@ const CONFIG = deepFreeze({
 	},
 });
 
-// Text Background presets (DYNAMIC-TEXT-BACKGROUND-IMPLEMENTATION-PLAN.md,
-// "Presets"): the one table both the UI select and
+// Text Background presets: the one table both the UI select and
 // TextGlitterManager.applyTextBackgroundPreset read from. A preset writes
 // plain values into textData.textBackground and is not itself persisted —
 // selecting one is indistinguishable from a user manually matching the same

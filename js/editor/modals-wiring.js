@@ -156,7 +156,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=6d2aba75',
+				externalContentUrl: 'modals/about.html?v=90f4cbb4',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -252,7 +252,7 @@ updateOrientationButtons(width, height) {
 				initTooltipsInContainer(modalBody);
 			},
 			onOpen: () => {
-				const checked = !this.showWelcomeOnStartup;
+				const checked = !PREFERENCES.get('showWelcomeOnStartup');
 				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
 					checkbox.checked = checked;
 					checkbox.closest('.welcome-checkbox').hidden = !CONFIG.app.startup.showWelcome;
@@ -261,15 +261,8 @@ updateOrientationButtons(width, height) {
 			onClose: () => {
 				const checkbox = document.querySelector('#welcomeDontShowAgain, #welcomeDontShowAgainMobile');
 				try {
-					localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
-					if (checkbox?.checked) {
-						localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
-						this.showWelcomeOnStartup = false;
-					} else {
-						localStorage.removeItem('glitterEditor_welcomeModalSeen');
-						this.showWelcomeOnStartup = true;
-					}
-					this.saveSettingsToStorage();
+					PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);
+					PREFERENCES.set('showWelcomeOnStartup', !checkbox?.checked);
 				} catch (e) {
 					console.warn('Failed to save welcome modal preference:', e);
 				}
@@ -543,7 +536,6 @@ async openDocumentAt(modalId, anchor) {
 
 ,
 async checkWelcomeModal() {
-	const storageKey = 'glitterEditor_welcomeModalSeen';
 
 	if (!CONFIG.app.startup.showWelcome) {
 		this.syncWhatsNewMarker();
@@ -551,9 +543,8 @@ async checkWelcomeModal() {
 	}
 
 	try {
-		const isSuppressed = localStorage.getItem(storageKey) === 'true';
-		const lastSeenRelease = localStorage.getItem('glitterEditor_welcomeLastSeenRelease');
-		const showOnStartup = this.showWelcomeOnStartup ?? !isSuppressed;
+		const lastSeenRelease = PREFERENCES.get('welcomeLastSeenRelease');
+		const showOnStartup = PREFERENCES.get('showWelcomeOnStartup');
 		const hasUnseenRelease = lastSeenRelease !== CONFIG.app.currentRelease;
 		
 		if (showOnStartup || hasUnseenRelease) {
@@ -573,7 +564,6 @@ async checkWelcomeModal() {
 
 ,
 setupWelcomeModalListeners() {
-	const storageKey = 'glitterEditor_welcomeModalSeen';
 	
 	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
 	const startCreatingBtn = document.getElementById('welcomeStartCreatingBtn');
@@ -594,8 +584,7 @@ setupWelcomeModalListeners() {
 	const markAsSeenIfChecked = () => {
 		if (dontShowCheckbox?.checked || dontShowMobileCheckbox?.checked) {
 			try {
-				localStorage.setItem(storageKey, 'true');
-				this.showWelcomeOnStartup = false;
+				PREFERENCES.set('showWelcomeOnStartup', false);
 				this.saveSettingsToStorage();
 			} catch (e) {
 				console.warn('Failed to save welcome modal preference:', e);
@@ -656,7 +645,7 @@ setupWelcomeModalListeners() {
 			outro = ''
 		} = options;
 
-		if (destructive && this.confirmDestructiveActions === false) {
+		if (destructive && PREFERENCES.get('confirmDestructiveActions') === false) {
 			return Promise.resolve(true);
 		}
 

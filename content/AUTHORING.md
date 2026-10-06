@@ -43,7 +43,7 @@ Missing something? A name you can't find becomes `{?Name}` or a draft entity; a 
 
 ## Rules
 
-These keep people and AI agents from inventing structure.
+These keep authors from inventing structure.
 
 1. **The token list is closed.** Only the tokens above exist. Never invent a token, option or kind.
 2. **Never guess a slug.** Before writing `{@…}`, run `node tools/entities.js find "<text>"` and use the slug it returns.

@@ -199,7 +199,7 @@ const { exportBytes, hashBytes, assertByteIdentity } = require('./export-harness
 					for (const enabled of [false, true]) {
 						PREFERENCES.set('scaleEffects', enabled);
 						data.fontSize = 64; layer.transform.scale = { x: 200, y: 200 };
-						await manager.commitScaleToFontSize(layer);
+						await manager.commitScale(layer);
 						check(data.fontSize === 128 && ratios() === stored, 'Bake to font size must preserve cast proportions regardless of Scale Effects');
 						const serialized = e.layerManager.serializeLayer(layer);
 						const resized = await e.layerManager.deserializeLayer(serialized);
@@ -207,14 +207,6 @@ const { exportBytes, hashBytes, assertByteIdentity } = require('./export-harness
 						check(resized.textData.fontSize === 64 && resized.textData.shadow.castLengthRatio === 0.25 && resized.textData.shadow.castBlurRatio === 0.0625, 'Document scaling must not double-scale cast ratios');
 					}
 					PREFERENCES.set('scaleEffects', scaleEffects);
-					const legacy = e.layerManager.serializeLayer(layer);
-					legacy.textData.fontSize = 64; legacy.transform.scale = { x: 200, y: 100 };
-					delete legacy.textData.shadow.castLengthRatio; delete legacy.textData.shadow.castLeanRatio; delete legacy.textData.shadow.castBlurRatio;
-					Object.assign(legacy.textData.shadow, { castLength: 16, castLean: -45, blur: 4 });
-					const restored = await e.layerManager.deserializeLayer(legacy);
-					check(restored.textData.shadow.castLengthRatio === 0.25 && restored.textData.shadow.castLeanRatio === -45 / 128 && restored.textData.shadow.castBlurRatio === 4 / Math.sqrt(64 * 128), 'Legacy pixel casts must keep their current appearance on load');
-					data.fontSize = originalFontSize; data.warp = originalWarp;
-					layer.transform.scale = { x: 160, y: 75 };
 				}
 				data.shadow.kind = layer === sticker || layer === shape || layer === text ? 'cast' : 'extrude';
 				data.shadow.castLength = 70; data.shadow.castLean = -30;

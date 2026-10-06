@@ -3,10 +3,9 @@
 class AnimationPanelController {
 	constructor(editor) {
 		this.editor = editor;
-		this.prefixByType = new Map([
-			[LayerType.GLITTER_FILL, 'glitter'], [LayerType.STICKER, 'sticker'],
-			[LayerType.TEXT_GLITTER, 'text'], [LayerType.SHAPE, 'shape']
-		]);
+		this.prefixByType = new Map(Object.entries(LAYER_UI_CONFIG)
+			.filter(([, config]) => config.animatable && config.transformPrefix)
+			.map(([type, config]) => [type, config.transformPrefix]));
 		this.fields = {
 			PeriodMs: 'periodMs', Amount: 'amount', Angle: 'angle', Distance: 'distance', Radius: 'radius',
 			Turns: 'turns', Duty: 'duty', OpacityFloor: 'opacityFloor',

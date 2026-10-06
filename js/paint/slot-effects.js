@@ -99,17 +99,6 @@ function buildDefaultShadow(options = {}) {
 	return shadow;
 }
 
-function normalizeRelativeCastShadow(data, fontSize, scale) {
-	if (!data) return;
-	const basisX = fontSize * Math.max(0.01, Math.abs(scale.x) / 100);
-	const basisY = fontSize * Math.max(0.01, Math.abs(scale.y) / 100);
-	data.castLengthRatio ??= (data.castLength ?? FIELDS.shadowCastLength.value) / basisY;
-	data.castLeanRatio ??= (data.castLean ?? FIELDS.shadowCastLean.value) / basisX;
-	data.castBlurRatio ??= (data.blur ?? FIELDS.shadowBlur.value) / Math.sqrt(basisX * basisY);
-	delete data.castLength;
-	delete data.castLean;
-}
-
 function buildDefaultBevelPaint(color, options = {}) {
 	const coordinates = CONFIG.rendering.textureCoordinates;
 	return {
@@ -151,7 +140,7 @@ function ensureSlotColorAdjust(target) {
 
 // root is layer.textData or layer.shapeData. options.builders maps slot ->
 // default factory for a slot that is switched on. Existing slots are already
-// canonical: legacy keys are backfilled where the layer enters the document.
+// canonical: defaults are filled where the layer enters the document.
 function ensureSlotEffectData(root, slot, options = {}) {
 	const { builders } = options;
 	if (!root) return null;

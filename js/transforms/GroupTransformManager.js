@@ -278,18 +278,7 @@ class GroupTransformManager {
 	// a sticker keeps its scale, so its effects scale by the change.
 	async commitScaledLayers(startScales = null) {
 		for (const layer of this.getSelectedLayers()) {
-			if (layer.type === LayerType.TEXT_GLITTER) {
-				await this.editor.textGlitterManager?.commitScaleToFontSize?.(layer);
-				continue;
-			}
-
-			if (layer.type === LayerType.SHAPE) {
-				this.editor.shapeGlitterManager?.commitScale(layer);
-			} else if (layer.type === LayerType.STICKER) {
-				const start = startScales?.get(layer.id);
-				const scale = getLayerTransform(layer).scale;
-				if (start && (start.x !== scale.x || start.y !== scale.y)) await this.editor.stickerManager?.commitScale(layer, start);
-			}
+			await getLayerManagerForType(this.editor, layer.type)?.commitScale?.(layer, startScales?.get(layer.id));
 		}
 	}
 

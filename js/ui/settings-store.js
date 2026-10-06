@@ -136,9 +136,9 @@ const APP_SETTINGS_LAYOUT = (() => {
 		{ title: 'Interface', section: 'interface', rows: [
 			{ field: { id: 'interfaceTheme', label: 'Theme', description: 'Choose the editor interface appearance.', control: { type: 'select', options: 'interfaceTheme' }, default: 'dark' } },
 			toggle('showAllControls', 'Show All Controls', 'Keep More and Advanced controls visible in property panels.', { default: preference('showAllControls') }),
-			toggle('showHelpfulHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.', { default: CONFIG.ui.hints.enabledByDefault }),
-			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { default: true, hidden: !CONFIG.app.startup.showWelcome }),
-			toggle('confirmDestructiveActions', 'Confirm Destructive Actions', 'Ask before deleting layers or clearing paint.', { default: true }),
+			toggle('showHelpfulHints', 'Helpful Hints', 'Show contextual hints based on active tool and selected layer.', { default: preference('showHints') }),
+			toggle('showWelcomeOnStartup', 'Welcome on Startup', 'Show the Welcome screen when Glitter Editor starts.', { default: preference('showWelcomeOnStartup'), hidden: !CONFIG.app.startup.showWelcome }),
+			toggle('confirmDestructiveActions', 'Confirm Destructive Actions', 'Ask before deleting layers or clearing paint.', { default: preference('confirmDestructiveActions') }),
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { default: preference('reduceMotion'), aliases: 'animation accessibility motion transitions' })
 		] },
 		{ title: 'Tools & Workspace', section: 'tools', rows: [
@@ -149,6 +149,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('pixelGrid', 'Pixel Grid', 'Show a one-screen-pixel grid at 600% zoom and above.', { default: preference('pixelGrid'), aliases: 'pixels zoom grid photoshop' }),
 			toggle('antialiasMaskEdges', 'Antialias Edges', 'Smooth rendered edges on text and shapes, plus edges of future Fill layer mask strokes. Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge.', { default: !preference('crispMaskEdges') }),
 			toggle('scaleEffectsOnTransform', 'Scale Outlines & Effects', 'Scale outline widths, dotted spacing, and shadow offsets when stickers, text or shapes are resized.', { default: preference('scaleEffects') }),
+			toggle('scaleCorners', 'Scale Corners', 'Scale shape and frame corner radii when resizing layers.', { default: preference('scaleCorners') }),
 			toggle('scaleTexturesOnTransform', 'Transform Textures', 'Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.', { default: preference('scaleTextures') }),
 			action('Brush & Eraser Defaults', 'Restore saved Brush and Eraser tip, stroke, and pressure settings.', { id: 'resetToolSettings', label: 'Reset Tools' }),
 			action('Panel Layout', 'Return collapsible property and tool cards to their default open or closed state.', { id: 'resetPanelLayout', label: 'Reset Panels' }),
@@ -199,21 +200,9 @@ class SettingsStore {
 	}
 
 	load(source = {}) {
-		const migratedSource = { ...source };
-		if (!Object.prototype.hasOwnProperty.call(migratedSource, 'exportOutputMode')) {
-			migratedSource.exportOutputMode = 'animation';
-			migratedSource.exportAnimationFormat = getExportFormats('animation').includes(migratedSource.exportFormat)
-				? migratedSource.exportFormat
-				: CONFIG.export.defaults.animationFormat;
-		}
-		if (!Object.prototype.hasOwnProperty.call(migratedSource, 'exportFidelity')) {
-			const legacyPreset = migratedSource.exportOptimizationPreset ?? migratedSource.optimizationPreset;
-			const legacyStops = { highFidelity: 1, balanced: 2, smallFile: 3 };
-			if (Object.prototype.hasOwnProperty.call(legacyStops, legacyPreset)) migratedSource.exportFidelity = legacyStops[legacyPreset];
-		}
 		return Object.fromEntries(Object.entries(this.schema).map(([key, spec]) => {
-			const value = Object.prototype.hasOwnProperty.call(migratedSource, spec.storageKey)
-				? migratedSource[spec.storageKey]
+			const value = Object.prototype.hasOwnProperty.call(source, spec.storageKey)
+				? source[spec.storageKey]
 				: spec.default();
 			return [key, spec.validate(value)];
 		}));

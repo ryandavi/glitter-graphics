@@ -108,18 +108,18 @@ async function main() {
 		const themeState = await page.evaluate(() => ({
 			theme: document.documentElement.dataset.theme,
 			background: getComputedStyle(document.documentElement).getPropertyValue('--color-bg-primary').trim(),
-			saved: JSON.parse(localStorage.getItem('glitterEditorSettings')).interfaceTheme
+			saved: localStorage.getItem('glitterEditorTheme')
 		}));
 		assert(themeState.theme === 'light' && themeState.saved === 'light', 'Light theme was not applied and persisted');
 		assert(themeState.background === '#eef3f9', `Unexpected light theme background token: ${themeState.background}`);
 		console.log('PASS Light theme application and persistence');
 
 		await page.$eval('#showWelcomeOnStartup', (input) => { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); });
-		assert(await page.evaluate(() => localStorage.getItem('glitterEditor_welcomeModalSeen') === null),
-			'Enabling the welcome screen did not clear suppression state');
+		assert(await page.evaluate(() => PREFERENCES.get('showWelcomeOnStartup') === true),
+			'Enabling the welcome screen did not set its preference');
 		await page.$eval('#showWelcomeOnStartup', (input) => { input.checked = false; input.dispatchEvent(new Event('change', { bubbles: true })); });
-		assert(await page.evaluate(() => localStorage.getItem('glitterEditor_welcomeModalSeen') === 'true'),
-			'Disabling the welcome screen did not set suppression state');
+		assert(await page.evaluate(() => PREFERENCES.get('showWelcomeOnStartup') === false),
+			'Disabling the welcome screen did not set its preference');
 		await page.$eval('#confirmDestructiveActions', (input) => { input.checked = false; input.dispatchEvent(new Event('change', { bubbles: true })); });
 		assert(await page.evaluate(() => window.editor.confirmAction({ destructive: true })),
 			'Disabled destructive confirmations did not bypass the modal');

@@ -94,8 +94,6 @@ if (!near(arcUp[middle].y, 40, 1e-6)) fail('arc must keep the middle baseline in
 const circle = layout({ type: 'arc', bend: 100 }, glyphs, metrics);
 if (Math.hypot(circle[0].x - circle[6].x, circle[0].y - circle[6].y) > 40) fail('arc at 100% must nearly close');
 // The old Circle type loads as the merged Arc with its bend unchanged.
-const legacy = normalize({ type: 'circle', bend: 80 });
-if (legacy.type !== 'arc' || legacy.bend !== 80) fail('a saved circle warp must load as arc');
 // Arch keeps the baseline and grows the middle; bulge grows about the middle.
 const arch = layout({ type: 'arch', bend: 60 }, glyphs, metrics);
 if (arch.some((placement, index) => placement.y !== glyphs[index].y)) fail('arch must keep the baseline flat');

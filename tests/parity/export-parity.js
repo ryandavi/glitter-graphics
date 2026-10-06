@@ -317,7 +317,7 @@ async function verifyStickerColorAdjustControls(page) {
 		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.STICKER);
 		editor.layerManager.setActiveLayer(layer.id);
 		editor.stickerManager.renderLayer(layer);
-		editor.loadStickerSettings(layer);
+		editor.stickerManager.loadLayerSettings(layer);
 		const image = layer.stickerData.element?.querySelector('img.sticker-image');
 		const hue = document.getElementById('stickerHue');
 		const advanced = hue?.closest('[data-advanced]');

@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.BASE_IMAGE, {
+	describe: (layer) => ({ name: 'Base Image', detail: `Background · ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}` }),
 	displayName: 'Base Image',
 	// The canvas background is one whole-layer paint. Image and gradient modes
 	// draw into the base canvas instead of the slot paint path; its color
