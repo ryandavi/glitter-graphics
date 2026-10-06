@@ -99,16 +99,13 @@ const Attribution = {
 		return parts.join(' · ');
 	},
 
-	// A collection's credit for the asset browser (AssetSetHeader): one line,
+	// A collection's credit as one line for the asset browser (AssetSetHeader):
 	// "By Mica · via Stardrops' open directory · License unknown", the names
-	// linked where a URL is known, then any note. Returns null when there is
-	// nothing to credit. DOM only; styling is .asset-collection-credit.
-	buildCreditElement(attr) {
+	// linked where a URL is known. Returns null when there is nobody and nowhere
+	// to credit. DOM only; styling is .asset-collection-credit.
+	buildCreditLine(attr) {
 		const a = this.resolve(attr);
 		if (!a) return null;
-
-		const info = document.createElement('div');
-		info.className = 'asset-collection-credit';
 
 		const named = (text, href) => {
 			if (!href) return document.createTextNode(text);
@@ -124,19 +121,11 @@ const Attribution = {
 		if (a.source) parts.push(['via ', named(a.source, a.sourceUrl)]);
 		else if (a.sourceUrl) parts.push([named('Source', a.sourceUrl)]);
 		if (a.license) parts.push([this.licenseLabel(a.license)]);
-		if (parts.length) {
-			const line = document.createElement('div');
-			parts.forEach((part, index) => line.append(...(index ? [' \u00b7 '] : []), ...part));
-			info.appendChild(line);
-		}
+		if (!parts.length) return null;
 
-		if (a.notes) {
-			const notes = document.createElement('p');
-			notes.className = 'asset-collection-credit-notes';
-			notes.textContent = a.notes;
-			info.appendChild(notes);
-		}
-
-		return info;
+		const line = document.createElement('div');
+		line.className = 'asset-collection-credit';
+		parts.forEach((part, index) => line.append(...(index ? [' · '] : []), ...part));
+		return line;
 	}
 };

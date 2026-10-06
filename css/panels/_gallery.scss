@@ -567,24 +567,30 @@
 	--asset-tile-gap: 2px;
 }
 
-// What the grid below is (AssetSetHeader): the set's name and size, what it
-// is, then who made it. One hairline closes it off from the tiles.
+// What the grid below is (AssetSetHeader): the set's name over one quiet line
+// of who made it and how big it is, then what it is and any note. Two text
+// styles: the title, and small secondary prose.
 .asset-set-header {
 	display: grid;
 	gap: var(--spacing-sm);
 	margin-bottom: var(--spacing-md);
-	padding-bottom: var(--spacing-md);
-	border-bottom: 1px solid var(--color-border);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	line-height: 1.4;
 
 	&[hidden] { display: none; }
 
 	p { margin: 0; }
 }
 
+.asset-set-header-heading {
+	display: grid;
+	gap: var(--spacing-2xs);
+}
+
 .asset-set-header-line {
 	display: flex;
 	align-items: baseline;
-	justify-content: space-between;
 	gap: var(--spacing-sm);
 
 	// The Original order toggle (AssetSetHeader) is shelved: sets stay in
@@ -600,17 +606,16 @@
 	line-height: 1.3;
 }
 
-.asset-set-header-count {
-	flex-shrink: 0;
+.asset-set-header-meta {
 	color: var(--color-text-tertiary);
 	font-size: var(--font-size-xs);
-	white-space: nowrap;
 }
 
-.asset-set-header-description {
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-sm);
-	line-height: 1.4;
+// A note is an aside, often a quote: ruled off from the description.
+.asset-set-header-note {
+	padding-left: var(--spacing-sm);
+	border-left: 2px solid var(--color-border);
+	color: var(--color-text-tertiary);
 }
 
 .asset-options .asset-browser-wall .asset-grid>.asset-option {

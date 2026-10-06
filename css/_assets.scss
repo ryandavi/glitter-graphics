@@ -231,26 +231,12 @@
 .brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
 
 
-// A set's credit under its name (Attribution.buildCreditElement): who, where
-// from and the license on one line, then any note. Flat helper text.
-.asset-collection-credit {
-	display: grid;
-	gap: var(--spacing-xs);
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-xs);
-	line-height: 1.4;
+// A collection's credit line (Attribution.buildCreditLine): its names link out.
+.asset-collection-credit a {
+	color: inherit;
+	text-decoration: underline;
 
-	a {
-		color: var(--color-accent);
-		text-decoration: underline;
-	}
-}
-
-// A note is an aside, often a quote: ruled off from the credit line.
-.asset-collection-credit-notes {
-	padding-left: var(--spacing-sm);
-	border-left: 2px solid var(--color-border);
-	color: var(--color-text-tertiary);
+	&:hover { color: var(--color-accent); }
 }
 
 #brushTipThumbnail {
