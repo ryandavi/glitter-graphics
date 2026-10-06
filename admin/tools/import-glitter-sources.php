@@ -272,7 +272,8 @@ class GlitterSourceImport
 				$url = $this->paths->categoryUrl('glitter', $entry['slug']) . basename($destination);
 				$asset = $api->getAsset($record['id']);
 				$name = $entry['name'] ?: ($asset['generated_name'] ?: $asset['name']);
-				$sort = $entry['set'] ? $winner['sort'] : (int)($asset['sort_order'] ?? 0);
+				$alreadyHome = $entry['record'] && $entry['record']['category_slug'] === $entry['slug'] && $entry['record']['url'] === $url;
+				$sort = $entry['set'] && !$alreadyHome ? $winner['sort'] : (int)($asset['sort_order'] ?? 0);
 				$active = $entry['set'] ? 1 : (int)$asset['is_active'];
 				$this->db->prepare('UPDATE glitter SET glitter_category_id = ?, url = ?, name = ?, original_name = ?, appearances = ?, search_terms = ?, file_hash = ?, sort_order = ?, is_active = ?, updated_at = NOW() WHERE id = ?', 'issssssiii', [
 					$ids[$entry['slug']], $url, $name, $entry['original'], json_encode($entry['appearances'], JSON_UNESCAPED_SLASHES), json_encode($entry['terms']), $entry['hash'], $sort, $active, (int)$record['id'],

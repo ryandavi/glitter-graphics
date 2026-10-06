@@ -115,7 +115,9 @@ try {
 	$categories = $api->exportCategories();
 	$category = array_values(array_filter($categories, function ($entry) { return $entry['id'] === 'sparkelies'; }))[0];
 	checkLibrary($category['parent'] === 'sparkle' && $category['attribution']['authorId'] === 'dan', 'Parent/creator export failed');
+	$sorts = array_column($api->exportAssets(), 'sortOrder', 'id');
 	$import->apply($import->plan());
+	checkLibrary(array_column($api->exportAssets(), 'sortOrder', 'id') === $sorts, 'Rerun changed source section order');
 	checkLibrary(count($api->exportAssets()) === 4 && count($api->ingestList('ready')) === 1, 'Rerun created duplicate records');
 	echo "PASS isolated import: precedence, names, tags, aliases, lineage, queue, hierarchy, exports and rerun\n";
 } finally {
