@@ -3488,6 +3488,9 @@ body.is-resizing-panel canvas {
 
 @supports ((-webkit-appearance: base-select) or (-moz-appearance: base-select) or (appearance: base-select)) {
   @media (min-width: 801px) {
+    .asset-browser-rail > select {
+      --asset-rail-icon-size: 20px;
+    }
     .asset-browser-rail > select, .asset-browser-rail > select::picker(select) {
       -webkit-appearance: base-select;
          -moz-appearance: base-select;
@@ -3538,14 +3541,14 @@ body.is-resizing-panel canvas {
     }
     .asset-browser-rail > select .asset-browser-rail-child {
       flex: 0 0 auto;
-      width: 12px;
-      height: 12px;
+      width: var(--asset-rail-icon-size);
+      height: var(--asset-rail-icon-size);
       color: var(--color-text-tertiary);
     }
     .asset-browser-rail-icon {
       flex: 0 0 auto;
-      width: 20px;
-      height: 20px;
+      width: var(--asset-rail-icon-size);
+      height: var(--asset-rail-icon-size);
       border-radius: var(--radius-xs);
       -o-object-fit: cover;
          object-fit: cover;

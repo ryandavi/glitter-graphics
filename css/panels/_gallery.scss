@@ -495,6 +495,8 @@
 @supports (appearance: base-select) {
 	@media (min-width: ($mobile-breakpoint + 1px)) {
 		.asset-browser-rail > select {
+			--asset-rail-icon-size: 20px;
+
 			&,
 			&::picker(select) { appearance: base-select; }
 
@@ -550,18 +552,19 @@
 			}
 		}
 
-		// Marks a set as sitting under the "All" row above it.
+		// Marks a set as sitting under the "All" row above it; the thumbnail's
+		// size, so the two read as one pair.
 		.asset-browser-rail > select .asset-browser-rail-child {
 			flex: 0 0 auto;
-			width: 12px;
-			height: 12px;
+			width: var(--asset-rail-icon-size);
+			height: var(--asset-rail-icon-size);
 			color: var(--color-text-tertiary);
 		}
 
 		.asset-browser-rail-icon {
 			flex: 0 0 auto;
-			width: 20px;
-			height: 20px;
+			width: var(--asset-rail-icon-size);
+			height: var(--asset-rail-icon-size);
 			border-radius: var(--radius-xs);
 			object-fit: cover;
 			image-rendering: pixelated;

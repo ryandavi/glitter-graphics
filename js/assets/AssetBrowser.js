@@ -497,11 +497,12 @@ class AssetBrowser {
 	}
 
 	// Project assets first, then recents. Updates reuse tiles and leave the
-	// paged wall intact. The wall shows them on its home only: a style, a
-	// set, a creator and Favorites are each a narrower look at one thing.
+	// paged wall intact. They belong to a kind's home only: the wall's "All
+	// styles", a folder kind's Style list. A style, a set, a creator and
+	// Favorites are each a narrower look at one thing.
 	_renderShortcuts() {
 		const filtered = new Set(this.getFilteredItems());
-		const top = !this.rail || (this.browseView === 'style' && this.rail.selection.root === LIBRARY_ALL_ID);
+		const top = this.browseView === 'style' && (!this.rail || this.rail.selection.root === LIBRARY_ALL_ID);
 		const items = top ? [...new Set([...this.contentManager.getProjectItems(), ...this.contentManager.getRecentItems()])]
 			.filter((item) => filtered.has(item)) : [];
 		const grid = this.shortcutGrid;
