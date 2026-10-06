@@ -83,7 +83,7 @@ async function screenshots(page, directory, before) {
 		const b = window.editor.glitterLibrary.browser;
 		b.browseView = 'creator'; b.setState('CATEGORY_LIST');
 		if (!before) {
-			const select = b.rail.rows[0].querySelector('select');
+			const select = b.rail.field;
 			select.value = 'aylana';
 			select.dispatchEvent(new Event('change', { bubbles: true }));
 		}
@@ -138,13 +138,20 @@ async function main() {
 			expect(library instanceof ContentManager && !(e.glitterManager instanceof ContentManager), 'Glitter owners were not split');
 			expect(e.stickerLibrary instanceof ContentManager && !(e.stickerManager instanceof ContentManager), 'Sticker owners were not split');
 			expect(!b.viewControl.hidden, 'Creator view control is hidden');
-			const choose = (row, id) => { const select = b.rail.rows[row].querySelector('select'); select.value = id; select.dispatchEvent(new Event('change', { bubbles: true })); };
+			// Row 0 picks a root's first entry; row 1 picks a set (or '' for all) under the current root.
+			const choose = (row, id) => {
+				const select = b.rail.field;
+				const root = row ? b.rail.selection.root : id;
+				const option = [...select.options].find(entry => entry.dataset.root === root && (!row || (entry.dataset.set || '') === id));
+				select.value = option.value;
+				select.dispatchEvent(new Event('change', { bubbles: true }));
+			};
 			expect(b.rail.selection.root === '__all' && b.rail.selection.set === null, 'Must open on All styles');
 			expect(b.wallGroups && b.elements.searchResults.querySelectorAll('.category-section').length === b.wallGroups.length, 'All styles must group by style');
 			expect(b.elements.categoryGrid.querySelectorAll('.category-card').length === 0, 'Glitter still has cards');
 			choose(0, 'sparkle');
 			expect(b.wallItems.length === 4 && !b.wallGroups, 'Root wall must include its sets');
-			expect(b.rail.rows[0].querySelector('option[value="sparkle"]').textContent.includes('4'), 'Root count is wrong');
+			expect(b.rail.field.querySelector('option[value="sparkle"]').textContent.includes('4'), 'Root count is wrong');
 			const clickSet = id => choose(1, id);
 			clickSet('bring-on-the-glitter');
 			expect(b.setHeader.element.textContent.includes('By Aylana'), 'Missing set header');
@@ -163,15 +170,15 @@ async function main() {
 			expect(b.rail.selection.set === null && !b.setHeader.originalOrder && b.wallItems.length === 4, 'All sets must reset set and order');
 			clickSet('sparkelies');
 			choose(0, 'transparent');
-			expect(b.rail.selection.set === null && b.wallItems.length === 1, 'Root switch must reset set');
+			expect(b.rail.selection.root === 'transparent' && b.rail.selection.set === 'clear' && b.wallItems.length === 1, 'A root that is one set must open that set');
 			library.activeFilters.colors.add('pink');
 			b.refresh();
-			expect(b.rail.rows[0].querySelector('select').options.length === 2 && b.rail.selection.root === 'transparent', 'Color-filtered roots/counts are wrong');
+			expect(b.rail.field.options.length === 2 && b.rail.selection.root === 'transparent', 'Color-filtered roots/counts are wrong');
 			expect(!library.activeFilters.categories.size, 'Rail must not write category filters');
 			library.activeFilters.colors.clear();
 			library.activeFilters.special.add('multicolor');
 			b.refresh();
-			expect(!b.rail.rows[0].querySelector('select').options.length && b.elements.emptyState.classList.contains('visible'), 'Zero-count chips must hide');
+			expect(!b.rail.field.options.length && b.elements.emptyState.classList.contains('visible'), 'Zero-count chips must hide');
 			library.clearFilters();
 			library.activeFilters.search = 'blue-08';
 			b.setState('SEARCH_RESULTS');
@@ -186,7 +193,8 @@ async function main() {
 			b.setState('CATEGORY_LIST');
 			expect(!b.rail.element.hidden, 'Clearing search did not restore rails');
 			b.browseView = 'creator'; b.setState('CATEGORY_LIST');
-			expect(b.rail.rows[0].querySelector('select').options.length === 4, 'Expected three creators and Unknown');
+			expect(new Set([...b.rail.field.options].map(option => option.dataset.root)).size === 4, 'Expected three creators and Unknown');
+			expect(b.rail.field.querySelectorAll('optgroup').length === 1, 'Only a creator with several sets is a group');
 			choose(0, 'aylana');
 			expect(b.wallItems.length === 2, 'Creator All must cross styles');
 			clickSet('bring-on-the-glitter');
@@ -262,7 +270,7 @@ async function main() {
 			library.toggleFavorite(9002);
 			if (!b.elements.itemGrid.querySelector('[data-id="9002"]') || b.elements.emptyState.classList.contains('visible')) throw new Error('Adding a favorite did not update the empty Favorites wall');
 		});
-		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('transparent');
+		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('transparent/clear');
 		await page.reload({ waitUntil: 'networkidle' });
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser?.rail);
 		assert.strictEqual(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root), '__all', 'Library must reopen on All styles');

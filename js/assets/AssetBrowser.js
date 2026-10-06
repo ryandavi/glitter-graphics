@@ -74,7 +74,7 @@ class AssetBrowser {
 		this.addViewOption('style', 'Style');
 		this.addViewOption('creator', 'Creator');
 		// The browser's navigation sits above the scrolling content: browse-by,
-		// then (the wall) the root and set pickers.
+		// then (the wall) the style or creator picker.
 		this.toolbar = document.createElement('div');
 		this.toolbar.className = 'asset-browser-toolbar';
 		this.toolbar.hidden = true;
@@ -279,7 +279,7 @@ class AssetBrowser {
 		} else {
 			const selection = this.rail.render(items, this.browseView);
 			this.currentCategoryId = selection.set || selection.root;
-			category = selection.set ? this.catalog.getCategoryById(selection.set) : null;
+			category = this.getHeaderCategory(selection);
 			// A style is one color-ordered wall. Home's styles, and a creator's
 			// sets, are unrelated to each other, so each keeps its own heading
 			// and color order.
@@ -307,6 +307,14 @@ class AssetBrowser {
 		}
 		this.elements.itemGrid.classList.add('visible');
 		this.loadRailItems();
+	}
+
+	// What the set header introduces: the picked set, or a style that has
+	// something to say for itself (a style can be one creator's set).
+	getHeaderCategory(selection) {
+		if (selection.set) return this.catalog.getCategoryById(selection.set);
+		const root = this.browseView === 'style' ? this.catalog.getCategoryById(selection.root) : null;
+		return root && (root.description || root.attribution) ? root : null;
 	}
 
 	// `items` under one heading per style. Null when one style holds them all.

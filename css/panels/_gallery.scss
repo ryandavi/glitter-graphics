@@ -471,21 +471,92 @@
 	&[hidden] { display: none; }
 }
 
-// Side by side while both pickers fit, stacked in a narrow panel.
-.asset-browser-rails {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
-	gap: var(--spacing-sm);
-
-	&[hidden] { display: none; }
-}
-
+// The wall's picker (AssetBrowserRail): one select holding the whole tree.
 .asset-browser-rail {
 	min-width: 0;
 
 	&[hidden] { display: none; }
 
 	> select { width: 100%; min-width: 0; }
+}
+
+// Where the browser has the customizable select, each row is thumbnail, name
+// and count, and sets sit under their style's heading. Elsewhere, and on
+// phones (the system picker is better there), it is the native select with
+// the same rows as text.
+@supports (appearance: base-select) {
+	@media (min-width: ($mobile-breakpoint + 1px)) {
+		.asset-browser-rail > select {
+			&,
+			&::picker(select) { appearance: base-select; }
+
+			// The shared select style already draws the arrow.
+			&::picker-icon { display: none; }
+
+			&::picker(select) {
+				margin-top: var(--spacing-xs);
+				padding: var(--spacing-xs);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-sm);
+				background: var(--color-bg-secondary);
+				box-shadow: 0 2px 5px var(--color-shadow-strong);
+			}
+
+			optgroup {
+				padding-top: var(--spacing-sm);
+				color: var(--color-text-tertiary);
+				font-size: var(--font-size-xs);
+				font-weight: var(--font-weight-semibold);
+			}
+
+			option {
+				display: flex;
+				align-items: center;
+				gap: var(--spacing-sm);
+				padding: var(--spacing-xs) var(--spacing-sm);
+				border-radius: var(--radius-xs);
+				color: var(--color-text-primary);
+				font-size: var(--font-size-sm);
+				font-weight: var(--font-weight-normal);
+
+				&::checkmark { display: none; }
+
+				&:hover,
+				&:focus-visible {
+					background: var(--color-bg-tertiary);
+					outline: none;
+				}
+
+				&:checked {
+					background: var(--color-bg-accent-tint);
+					color: var(--color-accent);
+				}
+			}
+		}
+
+		.asset-browser-rail-icon {
+			flex: 0 0 auto;
+			width: 20px;
+			height: 20px;
+			border-radius: var(--radius-xs);
+			object-fit: cover;
+			image-rendering: pixelated;
+		}
+
+		.asset-browser-rail-name {
+			flex: 1 1 auto;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.asset-browser-rail-count {
+			flex: 0 0 auto;
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+		}
+	}
 }
 
 // The glitter wall: small tiles, packed edge to edge.
