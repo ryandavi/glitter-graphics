@@ -4,7 +4,7 @@
     "name": "Spark Button",
     "generatedName": "Muted Blue",
     "brightness": "0.870",
-    "sortOrder": 1005,
+    "sortOrder": 33,
     "hue": 0.708,
     "colorCodes": [
         "#C9C9C9",
@@ -28,6 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1005,
     "originalName": "Sparkbutton-gray",
     "appearances": [
         {

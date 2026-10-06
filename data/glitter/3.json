@@ -4,7 +4,7 @@
     "name": "Ruby",
     "generatedName": "Jewel Tone Pink",
     "brightness": "0.000",
-    "sortOrder": 1011,
+    "sortOrder": 45,
     "hue": 0.215,
     "colorCodes": [
         "#78002D"
@@ -33,6 +33,7 @@
     "searchTerms": [
         "glitter_ruby"
     ],
+    "originalOrder": 1011,
     "originalName": "ruby",
     "appearances": [
         {

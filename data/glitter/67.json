@@ -4,7 +4,7 @@
     "name": "Bright Orange",
     "generatedName": "Vivid Pink",
     "brightness": "1.000",
-    "sortOrder": 6002,
+    "sortOrder": 101,
     "hue": 0.23,
     "colorCodes": [
         "#FF2D69"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_bright-orange"
     ],
+    "originalOrder": 6002,
     "originalName": "orange-003"
 }

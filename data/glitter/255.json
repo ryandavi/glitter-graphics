@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Purple",
     "brightness": "0.580",
-    "sortOrder": 15,
+    "sortOrder": 172,
     "hue": 0.89,
     "colorCodes": [
         "#B25EAB",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 15,
     "originalName": "twinkle-014"
 }

@@ -4,7 +4,7 @@
     "name": "Black 3",
     "generatedName": "Black",
     "brightness": "0.000",
-    "sortOrder": 1002,
+    "sortOrder": 59,
     "hue": 1.1,
     "colorCodes": [
         "#2D2D2D"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 2564,
-    "category": "bring-on-the-glitter",
+    "category": "noise-2",
     "isPixelated": 1,
     "tags": [
         "Black",
@@ -31,5 +31,15 @@
     "searchTerms": [
         "etc_black-3"
     ],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 1002,
     "originalName": "black-003"
 }

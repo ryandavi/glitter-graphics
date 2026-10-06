@@ -4,7 +4,7 @@
     "name": "Vivid Red",
     "generatedName": "Vivid Red",
     "brightness": "0.330",
-    "sortOrder": 9009,
+    "sortOrder": 129,
     "hue": 0.04,
     "colorCodes": [
         "#F90104",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 9009,
     "originalName": "red-04"
 }

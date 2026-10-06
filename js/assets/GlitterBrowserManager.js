@@ -96,6 +96,8 @@ class GlitterBrowserManager extends ContentManager {
 				}
 			});
 
+			this.content.forEach(item => { item._glitterColorOrder = glitterColorOrder(item); });
+
 			dbg(`Loaded ${this.content.length} swatches`);
 
 			// Populate category chips after loading
@@ -267,7 +269,7 @@ class GlitterBrowserManager extends ContentManager {
 	updateSelection() {
 		const autoGlitterId = this.editor.autoGlitterManager?.getPickerGlitterId();
 		if (autoGlitterId != null) {
-			document.querySelectorAll('#glitterItemGrid .asset-option, #glitterSearchResults .asset-option').forEach((option) => {
+			document.querySelectorAll('#glitterBrowser .asset-option').forEach((option) => {
 				option.classList.toggle('selected', String(option.dataset.id) === String(autoGlitterId));
 			});
 			return;

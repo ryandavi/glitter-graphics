@@ -12,7 +12,7 @@
 		},
 		{
 			"slug": "ember",
-			"name": "Embers",
+			"name": "VelvetEmbers",
 			"sort_order": 10
 		},
 		{
@@ -141,7 +141,7 @@
 			"from": "bring-on-the-glitter/star-dust/",
 			"slug": "star-dust",
 			"name": "Star Dust",
-			"parent": "sparkle",
+			"parent": null,
 			"names": "generated",
 			"source": "bring-on-the-glitter",
 			"attribution": {
@@ -212,7 +212,7 @@
 		{
 			"from": "bring-on-the-glitter/velvet-embers/",
 			"slug": "velvet-embers",
-			"name": "Velvet Embers",
+			"name": "Aylana's Bring On The Glitter",
 			"parent": "ember",
 			"names": "generated",
 			"source": "bring-on-the-glitter",

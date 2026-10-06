@@ -26,7 +26,7 @@
 	--color-accent-light: #6fa1e0;
 	--color-accent-border: #3577cf;
 	--color-accent-active: #2b68bd;
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_dusty-dark-blue.gif");
+	--theme-glitter-image: url("../images/glitter/bring-on-the-glitter/blue-09.gif");
 	--workspace-heading-glitter-image: var(--theme-glitter-image);
 
 	/* Canvas floor: clearly darker than a white canvas (Figma-style grey,
@@ -113,7 +113,7 @@
 	--color-accent-light: #ef86bf;
 	--color-accent-border: #e0559f;
 	--color-accent-active: #cd4590;
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_hot-pink.gif");
+	--theme-glitter-image: url("../images/glitter/bring-on-the-glitter/pink-02.gif");
 	--workspace-heading-glitter-image: var(--theme-glitter-image);
 
 	/* Canvas floor: dusty rose so a white canvas pops */
@@ -191,7 +191,7 @@
 	--color-accent-light: #5b8dd6;
 	--color-accent-border: #316ac5;
 	--color-accent-active: #2a5bb0;
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_blue-topaz.gif");
+	--theme-glitter-image: url("../images/glitter/sparkelies/blueTopaz.gif");
 	--workspace-heading-glitter-image: var(--theme-glitter-image);
 
 	/* Desktop-blue workspace, flat */
@@ -283,8 +283,8 @@
 	--color-accent-border: #0d9fd8;
 	--color-accent-active: #0b8dc0;
 	--color-text-on-accent: var(--gray-100);
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_aquamarine.gif");
-	--workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_dark-green.gif");
+	--theme-glitter-image: url("../images/glitter/sparkelies/aquamarine.gif");
+	--workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/sea-05.gif");
 
 	/* Sky-into-grass workspace */
 	--color-bg-workspace: linear-gradient(to bottom, #bfe9fc 0%, #e3f7fb 55%, #cdedc2 100%);
@@ -362,7 +362,7 @@
 	--color-accent-light: #76aff0;
 	--color-accent-border: #2d7fdc;
 	--color-accent-active: #1d67c2;
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
+	--theme-glitter-image: url("../images/glitter/sparkelies/sapphire.gif");
 	--workspace-heading-glitter-image: var(--theme-glitter-image);
 
 	--color-bg-workspace: linear-gradient(to bottom, #aebdca 0%, #dce3e9 100%);
@@ -443,8 +443,8 @@
 	--color-accent-border: #72ad22;
 	--color-accent-active: #598e16;
 	--color-text-on-accent: var(--gray-100);
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_lime-green.gif");
-	--workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_dark-green.gif");
+	--theme-glitter-image: url("../images/glitter/bring-on-the-glitter/green-010.gif");
+	--workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/sea-05.gif");
 
 	/* Flat brushed-plastic floor, not a decorative web-page background. */
 	--color-bg-workspace: linear-gradient(to bottom, #6d786f 0%, #aeb7af 100%);
@@ -528,7 +528,7 @@
 
 	/* A literal repeating image tile, like the background picker on a
 	   personal homepage: yellow star plus cyan, white, and pink pixels. */
-	--color-bg-workspace: url("../images/glitter/etc/etc_space_stars.gif");
+	--color-bg-workspace: url("../images/etc/workspace-space-stars.gif");
 	
 	// #000033 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath fill='%23ffff00' d='M12 5l1.4 4.2h4.4l-3.6 2.6 1.4 4.2-3.6-2.6L8.4 16l1.4-4.2-3.6-2.6h4.4z'/%3E%3Ccircle cx='44' cy='18' r='1.5' fill='%2300ffff'/%3E%3Ccircle cx='31' cy='47' r='1' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='54' r='1.2' fill='%23ff66ff'/%3E%3C/svg%3E") repeat;
 
@@ -606,8 +606,8 @@
 	--color-accent-border: #69a928;
 	--color-accent-active: #568f1d;
 	--color-text-on-accent: var(--gray-100);
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
-	--workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_dark-green.gif");
+	--theme-glitter-image: url("../images/glitter/bring-on-the-glitter/green-04.gif");
+	--workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/sea-05.gif");
 
 	--color-bg-workspace: linear-gradient(to bottom, #91c7e9 0%, #d8edf8 54%, #ffffff 100%);
 
@@ -686,7 +686,7 @@
 	--color-accent-border: #20d9ff;
 	--color-accent-active: #00b9e6;
 	--color-text-on-accent: var(--gray-800);
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_magenta-blue.gif");
+	--theme-glitter-image: url("../images/glitter/bring-on-the-glitter/purple-002.gif");
 	--workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_light-purple.gif");
 
 	--color-bg-workspace: radial-gradient(circle at 50% 0%, #32174f 0%, #11152b 46%, #070914 100%);
@@ -763,8 +763,8 @@
 	--color-accent-border: #2fd049;
 	--color-accent-active: #27b83f;
 	--color-text-on-accent: var(--gray-800);
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_green.gif");
-	--workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
+	--theme-glitter-image: url("../images/glitter/sparkelies/emerald.gif");
+	--workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/green-04.gif");
 
 	/* Titlebar: brushed-steel gradient with gold WINAMP lettering. */
 	--bar-gradient-top: #4d564f;

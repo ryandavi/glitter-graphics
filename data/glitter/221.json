@@ -4,7 +4,7 @@
     "name": "Red",
     "generatedName": "Red",
     "brightness": "0.560",
-    "sortOrder": 6001,
+    "sortOrder": 100,
     "hue": 0.017,
     "colorCodes": [
         "#FF4B66",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 6001,
     "originalName": "orange-002"
 }

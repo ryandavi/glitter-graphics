@@ -4,7 +4,7 @@
     "name": "Bright Seafoam",
     "generatedName": "Blue and Green",
     "brightness": "1.000",
-    "sortOrder": 1,
+    "sortOrder": 53,
     "hue": 1.2,
     "colorCodes": [
         "#87D2F0",
@@ -35,5 +35,6 @@
     "searchTerms": [
         "glitter_bright-seafoam"
     ],
+    "originalOrder": 1,
     "originalName": "sea-02"
 }

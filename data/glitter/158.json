@@ -4,7 +4,7 @@
     "name": "Off-White",
     "generatedName": "Off-White",
     "brightness": "0.930",
-    "sortOrder": 4,
+    "sortOrder": 259,
     "hue": 0.427,
     "colorCodes": [
         "#E5DDE6",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 4,
     "originalName": "whiteclear-03"
 }

@@ -4,7 +4,7 @@
     "name": "Dusty Pink",
     "generatedName": "Very Light Desaturated Red",
     "brightness": "0.690",
-    "sortOrder": 7007,
+    "sortOrder": 111,
     "hue": 0.047,
     "colorCodes": [
         "#EF9C99",
@@ -39,5 +39,6 @@
     "searchTerms": [
         "glitter_dusty-pink"
     ],
+    "originalOrder": 7007,
     "originalName": "pink-05"
 }

@@ -4,7 +4,7 @@
     "name": "Red and Purple",
     "generatedName": "Red and Purple",
     "brightness": "0.540",
-    "sortOrder": 18,
+    "sortOrder": 175,
     "hue": 0.008,
     "colorCodes": [
         "#B96879",
@@ -32,5 +32,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 18,
     "originalName": "twinkle-017"
 }

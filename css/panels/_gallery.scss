@@ -434,3 +434,86 @@
 
 	&.visible { display: block; }
 }
+
+.asset-browser-rails {
+	display: grid;
+	gap: var(--spacing-sm);
+	margin-bottom: var(--spacing-md);
+	&[hidden] { display: none; }
+}
+.asset-browser-rail {
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr);
+	align-items: center;
+	gap: var(--spacing-base);
+	font-size: var(--font-size-sm);
+	color: var(--color-text-secondary);
+	&[hidden] { display: none; }
+	select { width: 100%; min-width: 0; }
+}
+.asset-browser-wall {
+	.asset-browser-views:not([hidden]) { margin-bottom: var(--spacing-md); }
+	.asset-browser-recent>.asset-grid.asset-browser-recent-grid {
+		grid-template-columns: repeat(auto-fill, 40px);
+		gap: var(--spacing-2xs);
+	}
+}
+.asset-browser-shortcuts {
+	margin-bottom: var(--spacing-md);
+	&[hidden] { display: none; }
+	>summary {
+		display: list-item;
+		cursor: pointer;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		line-height: 1.4;
+		margin-bottom: var(--spacing-base);
+	}
+	.asset-browser-section-title {
+		font-size: var(--font-size-xs);
+		margin-bottom: var(--spacing-xs);
+	}
+}
+.asset-browser-shortcuts-empty {
+	grid-column: 1 / -1;
+	min-height: 40px;
+	font-size: var(--font-size-xs);
+	color: var(--color-text-tertiary);
+}
+.asset-set-header {
+	margin-bottom: var(--spacing-md);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-xs);
+	&[hidden] { display: none; }
+	p { margin: var(--spacing-xs) 0; }
+	summary { cursor: pointer; }
+}
+.asset-set-header-line {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-xs);
+	color: var(--color-text-primary);
+	button { flex-shrink: 0; }
+	button[aria-pressed="true"] { color: var(--color-accent); }
+}
+.asset-collection-credit-unframed {
+	margin-top: var(--spacing-xs);
+	font-size: var(--font-size-xs);
+	line-height: 1.4;
+}
+.asset-options .asset-grid.asset-glitter-wall {
+	--wall-tile-floor: 48px;
+	--wall-gap: 2px;
+	grid-template-columns: repeat(auto-fill, minmax(var(--wall-tile-floor), 1fr));
+	gap: var(--wall-gap);
+}
+.asset-options .asset-browser-wall .asset-grid>.asset-option {
+	border-radius: 0;
+	outline-width: 2px;
+	outline-offset: -2px;
+	&:hover { outline-color: var(--color-text-primary); }
+	&.selected,
+	&:focus-visible { outline-color: var(--color-accent); }
+}
+.asset-browser-header[hidden] { display: none; }

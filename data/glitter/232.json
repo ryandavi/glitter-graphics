@@ -4,7 +4,7 @@
     "name": "Dark Ruby Red",
     "generatedName": "Dark Ruby Red",
     "brightness": "0.130",
-    "sortOrder": 9003,
+    "sortOrder": 125,
     "hue": 0.036,
     "colorCodes": [
         "#630003",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 9003,
     "originalName": "crimson-004"
 }

@@ -4,7 +4,7 @@
     "name": "Garnet",
     "generatedName": "Dark Ruby Red",
     "brightness": "0.140",
-    "sortOrder": 1004,
+    "sortOrder": 39,
     "hue": 0.043,
     "colorCodes": [
         "#670200",
@@ -28,6 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1004,
     "originalName": "garnet",
     "appearances": [
         {

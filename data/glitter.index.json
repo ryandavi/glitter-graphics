@@ -29,11 +29,130 @@
         "searchTerms": []
     },
     {
+        "id": 150,
+        "url": "images/glitter/christmas/christmas-01.gif",
+        "name": "Red and Green",
+        "generatedName": "Red and Green",
+        "sortOrder": 1,
+        "colorCodes": [
+            "#00FF00",
+            "#CC0000",
+            "#B52649",
+            "#D9D9D9"
+        ],
+        "colorWeights": [
+            0.33,
+            0.29,
+            0.25,
+            0.13
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "sparkle",
+        "isPixelated": 1,
+        "tags": [
+            "Christmas",
+            "Multicolor"
+        ],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 0,
+        "originalName": "christmas-01"
+    },
+    {
+        "id": 151,
+        "url": "images/glitter/christmas/christmas-02.gif",
+        "name": "Red, Green, and Yellow",
+        "generatedName": "Red, Green, and Yellow",
+        "sortOrder": 2,
+        "colorCodes": [
+            "#DD0016",
+            "#00CC00",
+            "#FFFF00"
+        ],
+        "colorWeights": [
+            0.54,
+            0.33,
+            0.13
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "sparkle",
+        "isPixelated": 1,
+        "tags": [
+            "Christmas",
+            "Multicolor"
+        ],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1,
+        "originalName": "christmas-02"
+    },
+    {
+        "id": 152,
+        "url": "images/glitter/christmas/christmas-03.gif",
+        "name": "Green, Red, and Yellow",
+        "generatedName": "Green, Red, and Yellow",
+        "sortOrder": 3,
+        "colorCodes": [
+            "#16CC00",
+            "#EC0000",
+            "#FFFF66"
+        ],
+        "colorWeights": [
+            0.58,
+            0.29,
+            0.13
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "sparkle",
+        "isPixelated": 1,
+        "tags": [
+            "Christmas",
+            "Multicolor"
+        ],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 2,
+        "originalName": "christmas-03"
+    },
+    {
         "id": 89,
         "url": "images/glitter/sparkle/glitter_hot-pink-2.gif",
         "name": "Hot Pink 2",
         "generatedName": "Vivid Pink",
-        "sortOrder": 2,
+        "sortOrder": 4,
         "colorCodes": [
             "#FF3C96"
         ],
@@ -54,11 +173,94 @@
         "searchTerms": []
     },
     {
+        "id": 19,
+        "url": "images/glitter/christmas/christmas-04.gif",
+        "name": "Christmas",
+        "generatedName": "Green and Red",
+        "sortOrder": 5,
+        "colorCodes": [
+            "#00D200",
+            "#F00000"
+        ],
+        "colorWeights": [
+            0,
+            0.5
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "sparkle",
+        "isPixelated": 1,
+        "tags": [
+            "Christmas",
+            "Contrast",
+            "Green",
+            "Light",
+            "Multicolor",
+            "Red",
+            "Vivid"
+        ],
+        "searchTerms": [
+            "glitter_christmas"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 3,
+        "originalName": "christmas-04"
+    },
+    {
+        "id": 153,
+        "url": "images/glitter/christmas/christmas-05.gif",
+        "name": "Green and Blue",
+        "generatedName": "Green and Blue",
+        "sortOrder": 6,
+        "colorCodes": [
+            "#16CC00",
+            "#006600",
+            "#99CCFF"
+        ],
+        "colorWeights": [
+            0.58,
+            0.29,
+            0.13
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "sparkle",
+        "isPixelated": 1,
+        "tags": [
+            "Christmas",
+            "Multicolor"
+        ],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 4,
+        "originalName": "christmas-05"
+    },
+    {
         "id": 101,
         "url": "images/glitter/sparkle/glitter_pink-magenta.gif",
         "name": "Pink Magenta",
         "generatedName": "Muted Pink",
-        "sortOrder": 4,
+        "sortOrder": 7,
         "colorCodes": [
             "#D269C3"
         ],
@@ -83,7 +285,7 @@
         "url": "images/glitter/sparkle/glitter_light-orange.gif",
         "name": "Light Orange",
         "generatedName": "Vivid Orange",
-        "sortOrder": 14,
+        "sortOrder": 8,
         "colorCodes": [
             "#FF782D"
         ],
@@ -108,7 +310,7 @@
         "url": "images/glitter/sparkle/glitter_sky-blue.gif",
         "name": "Sky Blue",
         "generatedName": "Very Light Desaturated Cyan-Blue",
-        "sortOrder": 31,
+        "sortOrder": 9,
         "colorCodes": [
             "#9CD6FB",
             "#2FADFB",
@@ -142,7 +344,7 @@
         "url": "images/glitter/sparkle/glitter_navy.gif",
         "name": "Navy",
         "generatedName": "Muted Blue",
-        "sortOrder": 36,
+        "sortOrder": 10,
         "colorCodes": [
             "#0F0F1E"
         ],
@@ -168,7 +370,7 @@
         "url": "images/glitter/sparkle/glitter_lavender.gif",
         "name": "Lavender",
         "generatedName": "Muted Purple",
-        "sortOrder": 39,
+        "sortOrder": 11,
         "colorCodes": [
             "#E196FF"
         ],
@@ -193,7 +395,7 @@
         "url": "images/glitter/sparkle/glitter_light-purple.gif",
         "name": "Light Purple",
         "generatedName": "Muted Purple",
-        "sortOrder": 40,
+        "sortOrder": 12,
         "colorCodes": [
             "#D296FF"
         ],
@@ -218,7 +420,7 @@
         "url": "images/glitter/sparkle/glitter_pink-dark-purple.gif",
         "name": "Pink Dark Purple",
         "generatedName": "Red and Purple",
-        "sortOrder": 42,
+        "sortOrder": 13,
         "colorCodes": [
             "#F09696",
             "#6900C3",
@@ -250,7 +452,7 @@
         "url": "images/glitter/sparkle/glitter_purple.gif",
         "name": "Purple",
         "generatedName": "Muted Purple",
-        "sortOrder": 44,
+        "sortOrder": 14,
         "colorCodes": [
             "#A569D2"
         ],
@@ -275,7 +477,7 @@
         "url": "images/glitter/sparkle/glitter_dark-purple.gif",
         "name": "Dark Purple",
         "generatedName": "Jewel Tone Purple",
-        "sortOrder": 46,
+        "sortOrder": 15,
         "colorCodes": [
             "#3C0078",
             "#000000",
@@ -306,7 +508,7 @@
         "url": "images/glitter/sparkle/glitter_cream.gif",
         "name": "Cream",
         "generatedName": "Pastel Orange",
-        "sortOrder": 48,
+        "sortOrder": 16,
         "colorCodes": [
             "#F0D2B4"
         ],
@@ -334,7 +536,7 @@
         "url": "images/glitter/sparkle/glitter_tan.gif",
         "name": "Tan",
         "generatedName": "Muted Orange",
-        "sortOrder": 51,
+        "sortOrder": 17,
         "colorCodes": [
             "#967869"
         ],
@@ -360,7 +562,7 @@
         "url": "images/glitter/sparkle/glitter_brown.gif",
         "name": "Brown",
         "generatedName": "Muted Orange",
-        "sortOrder": 52,
+        "sortOrder": 18,
         "colorCodes": [
             "#4B3C2D"
         ],
@@ -385,7 +587,7 @@
         "url": "images/glitter/sparkle/glitter_dark-brown.gif",
         "name": "Dark Brown",
         "generatedName": "Muted Yellow",
-        "sortOrder": 56,
+        "sortOrder": 19,
         "colorCodes": [
             "#1E1E0F"
         ],
@@ -411,7 +613,7 @@
         "url": "images/glitter/sparkle/glitter_silver.gif",
         "name": "Silver",
         "generatedName": "Gray",
-        "sortOrder": 59,
+        "sortOrder": 20,
         "colorCodes": [
             "#787878"
         ],
@@ -437,7 +639,7 @@
         "url": "images/glitter/sparkle/glitter_dark-gray.gif",
         "name": "Dark Gray",
         "generatedName": "Black",
-        "sortOrder": 60,
+        "sortOrder": 21,
         "colorCodes": [
             "#2D2D2D"
         ],
@@ -462,7 +664,7 @@
         "url": "images/glitter/sparkle/glitter_black-2.gif",
         "name": "Black 2",
         "generatedName": "Black",
-        "sortOrder": 61,
+        "sortOrder": 22,
         "colorCodes": [
             "#0F0F0F"
         ],
@@ -488,7 +690,7 @@
         "url": "images/glitter/sparkle/glitter_black.gif",
         "name": "Black",
         "generatedName": "Black",
-        "sortOrder": 62,
+        "sortOrder": 23,
         "colorCodes": [
             "#000000"
         ],
@@ -514,7 +716,7 @@
         "url": "images/glitter/sparkle/glitter_rainbow.gif",
         "name": "Rainbow",
         "generatedName": "Rainbow",
-        "sortOrder": 64,
+        "sortOrder": 24,
         "colorCodes": [
             "#0BD2FA",
             "#FBFBFA",
@@ -562,7 +764,7 @@
         "url": "images/glitter/sparkle/glitter_rainbow-2.gif",
         "name": "Rainbow 2",
         "generatedName": "Rainbow",
-        "sortOrder": 65,
+        "sortOrder": 25,
         "colorCodes": [
             "#2F0181",
             "#FFFFFF",
@@ -610,7 +812,7 @@
         "url": "images/glitter/sparkle/glitter_christmas-2.gif",
         "name": "Christmas 2",
         "generatedName": "Green and Red",
-        "sortOrder": 67,
+        "sortOrder": 26,
         "colorCodes": [
             "#00D200",
             "#F00000",
@@ -628,6 +830,7 @@
         "category": "sparkle",
         "isPixelated": 1,
         "tags": [
+            "Christmas",
             "Contrast",
             "Green",
             "Multicolor",
@@ -635,14 +838,23 @@
             "Vivid",
             "Yellow"
         ],
-        "searchTerms": []
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        }
     },
     {
         "id": 121,
         "url": "images/glitter/sparkle/glitter_red-white-blue-patriotic.gif",
         "name": "Red, White & Blue",
         "generatedName": "Red, White, and Blue",
-        "sortOrder": 68,
+        "sortOrder": 27,
         "colorCodes": [
             "#F2F2F2",
             "#280182",
@@ -679,7 +891,7 @@
         "url": "images/glitter/stardrops/orangeGlit.gif",
         "name": "Orange Glit",
         "generatedName": "Tan",
-        "sortOrder": 1000,
+        "sortOrder": 28,
         "colorCodes": [
             "#BD8570",
             "#EBD9D3",
@@ -698,6 +910,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1000,
         "originalName": "orangeGlit"
     },
     {
@@ -705,7 +918,7 @@
         "url": "images/glitter/stardrops/Sparkbutton-apinkish.gif",
         "name": "Spark Button",
         "generatedName": "Magenta",
-        "sortOrder": 1001,
+        "sortOrder": 29,
         "colorCodes": [
             "#E63D99",
             "#F1F1F1",
@@ -726,6 +939,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1001,
         "originalName": "Sparkbutton-apinkish"
     },
     {
@@ -733,7 +947,7 @@
         "url": "images/glitter/stardrops/Sparkbutton-blue.gif",
         "name": "Spark Button",
         "generatedName": "Indigo",
-        "sortOrder": 1002,
+        "sortOrder": 30,
         "colorCodes": [
             "#1B0081",
             "#0033FF",
@@ -754,6 +968,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1002,
         "originalName": "Sparkbutton-blue"
     },
     {
@@ -761,7 +976,7 @@
         "url": "images/glitter/stardrops/Sparkbutton-DkGrey.gif",
         "name": "Spark Button",
         "generatedName": "Dark Gray",
-        "sortOrder": 1003,
+        "sortOrder": 31,
         "colorCodes": [
             "#525252",
             "#C9C9C9",
@@ -780,6 +995,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1003,
         "originalName": "Sparkbutton-DkGrey"
     },
     {
@@ -787,7 +1003,7 @@
         "url": "images/glitter/stardrops/Sparkbutton-goldish.gif",
         "name": "Spark Button",
         "generatedName": "Orange, Purple, and Yellow",
-        "sortOrder": 1004,
+        "sortOrder": 32,
         "colorCodes": [
             "#B67F5E",
             "#E9DCD2",
@@ -812,6 +1028,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1004,
         "originalName": "Sparkbutton-goldish",
         "appearances": [
             {
@@ -825,7 +1042,7 @@
         "url": "images/glitter/stardrops/Sparkbutton-gray.gif",
         "name": "Spark Button",
         "generatedName": "Muted Blue",
-        "sortOrder": 1005,
+        "sortOrder": 33,
         "colorCodes": [
             "#C9C9C9",
             "#CCCCFF",
@@ -844,6 +1061,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1005,
         "originalName": "Sparkbutton-gray",
         "appearances": [
             {
@@ -857,7 +1075,7 @@
         "url": "images/glitter/stardrops/SparkButton.gif",
         "name": "Spark Button",
         "generatedName": "Blue-Green",
-        "sortOrder": 1006,
+        "sortOrder": 34,
         "colorCodes": [
             "#69B7AA",
             "#E2F0F2"
@@ -874,38 +1092,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1006,
         "originalName": "SparkButton"
-    },
-    {
-        "id": 299,
-        "url": "images/glitter/stardrops/sparkSquare.gif",
-        "name": "Spark Square",
-        "generatedName": "Blue-Green",
-        "sortOrder": 1007,
-        "colorCodes": [
-            "#78BEB6",
-            "#CCE4E4"
-        ],
-        "colorWeights": [
-            0.87,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 45,
-        "height": 53,
-        "category": "stardrops",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "sparkSquare"
     },
     {
         "id": 15,
         "url": "images/glitter/sparkelies/amethyst.gif",
         "name": "Amethyst",
         "generatedName": "Vivid Purple",
-        "sortOrder": 1000,
+        "sortOrder": 35,
         "colorCodes": [
             "#7800B4"
         ],
@@ -926,6 +1121,7 @@
         "searchTerms": [
             "glitter_amethyst"
         ],
+        "originalOrder": 1000,
         "originalName": "amethyst",
         "appearances": [
             {
@@ -939,7 +1135,7 @@
         "url": "images/glitter/sparkelies/aquamarine.gif",
         "name": "Aquamarine",
         "generatedName": "Neon Blue",
-        "sortOrder": 1001,
+        "sortOrder": 36,
         "colorCodes": [
             "#00D2FF"
         ],
@@ -963,6 +1159,7 @@
         "searchTerms": [
             "glitter_aquamarine"
         ],
+        "originalOrder": 1001,
         "originalName": "aquamarine",
         "appearances": [
             {
@@ -980,7 +1177,7 @@
         "url": "images/glitter/sparkelies/blueTopaz.gif",
         "name": "Blue Topaz",
         "generatedName": "Jewel Tone Blue",
-        "sortOrder": 1002,
+        "sortOrder": 37,
         "colorCodes": [
             "#004B96"
         ],
@@ -1002,6 +1199,7 @@
         "searchTerms": [
             "glitter_blue-topaz"
         ],
+        "originalOrder": 1002,
         "originalName": "blueTopaz"
     },
     {
@@ -1009,7 +1207,7 @@
         "url": "images/glitter/sparkelies/emerald.gif",
         "name": "Emerald",
         "generatedName": "Jewel Tone Green",
-        "sortOrder": 1003,
+        "sortOrder": 38,
         "colorCodes": [
             "#0F8700"
         ],
@@ -1031,6 +1229,7 @@
             "Green",
             "glitter_green"
         ],
+        "originalOrder": 1003,
         "originalName": "emerald"
     },
     {
@@ -1038,7 +1237,7 @@
         "url": "images/glitter/sparkelies/garnet.gif",
         "name": "Garnet",
         "generatedName": "Dark Ruby Red",
-        "sortOrder": 1004,
+        "sortOrder": 39,
         "colorCodes": [
             "#670200",
             "#E50A18",
@@ -1057,6 +1256,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1004,
         "originalName": "garnet",
         "appearances": [
             {
@@ -1070,7 +1270,7 @@
         "url": "images/glitter/sparkelies/gold-1.gif",
         "name": "Gold 1",
         "generatedName": "Vivid Gold",
-        "sortOrder": 1005,
+        "sortOrder": 40,
         "colorCodes": [
             "#B48700"
         ],
@@ -1092,6 +1292,7 @@
             "Dark Gold",
             "glitter_dark-gold"
         ],
+        "originalOrder": 1005,
         "originalName": "gold-1"
     },
     {
@@ -1099,7 +1300,7 @@
         "url": "images/glitter/sparkelies/gold-2.gif",
         "name": "Gold 2",
         "generatedName": "Yellow",
-        "sortOrder": 1006,
+        "sortOrder": 41,
         "colorCodes": [
             "#B2AA00",
             "#7F7500",
@@ -1120,6 +1321,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1006,
         "originalName": "gold-2"
     },
     {
@@ -1127,7 +1329,7 @@
         "url": "images/glitter/sparkelies/lime-peridot.gif",
         "name": "Lime Peridot",
         "generatedName": "Yellow-Green",
-        "sortOrder": 1007,
+        "sortOrder": 42,
         "colorCodes": [
             "#5F9900",
             "#436600",
@@ -1148,40 +1350,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1007,
         "originalName": "lime-peridot"
-    },
-    {
-        "id": 292,
-        "url": "images/glitter/sparkelies/opal.gif",
-        "name": "Opal",
-        "generatedName": "Muted Magenta",
-        "sortOrder": 1008,
-        "colorCodes": [
-            "#E2DEE6",
-            "#C7E3BB",
-            "#DDA5BD"
-        ],
-        "colorWeights": [
-            0.48,
-            0.26,
-            0.23
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 120,
-        "height": 60,
-        "category": "sparkelies",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "opal"
     },
     {
         "id": 107,
         "url": "images/glitter/sparkelies/rhodolite.gif",
         "name": "Rhodolite",
         "generatedName": "Jewel Tone Pink",
-        "sortOrder": 1010,
+        "sortOrder": 44,
         "colorCodes": [
             "#870078"
         ],
@@ -1203,6 +1380,7 @@
         "searchTerms": [
             "glitter_rhodolite"
         ],
+        "originalOrder": 1010,
         "originalName": "rhodolite"
     },
     {
@@ -1210,7 +1388,7 @@
         "url": "images/glitter/sparkelies/ruby.gif",
         "name": "Ruby",
         "generatedName": "Jewel Tone Pink",
-        "sortOrder": 1011,
+        "sortOrder": 45,
         "colorCodes": [
             "#78002D"
         ],
@@ -1234,6 +1412,7 @@
         "searchTerms": [
             "glitter_ruby"
         ],
+        "originalOrder": 1011,
         "originalName": "ruby",
         "appearances": [
             {
@@ -1247,7 +1426,7 @@
         "url": "images/glitter/sparkelies/sapphire.gif",
         "name": "Sapphire",
         "generatedName": "Jewel Tone Blue",
-        "sortOrder": 1012,
+        "sortOrder": 46,
         "colorCodes": [
             "#002D96"
         ],
@@ -1270,6 +1449,7 @@
         "searchTerms": [
             "glitter_sapphire"
         ],
+        "originalOrder": 1012,
         "originalName": "sapphire",
         "appearances": [
             {
@@ -1283,7 +1463,7 @@
         "url": "images/glitter/sparkelies/silver.gif",
         "name": "Silver",
         "generatedName": "Dark Gray",
-        "sortOrder": 1013,
+        "sortOrder": 47,
         "colorCodes": [
             "#6B6B6B",
             "#E1E1E1"
@@ -1300,6 +1480,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1013,
         "originalName": "silver",
         "appearances": [
             {
@@ -1313,7 +1494,7 @@
         "url": "images/glitter/sparkelies/tanzanite.gif",
         "name": "Tanzanite",
         "generatedName": "Jewel Tone Purple",
-        "sortOrder": 1014,
+        "sortOrder": 48,
         "colorCodes": [
             "#2D0096"
         ],
@@ -1335,6 +1516,7 @@
         "searchTerms": [
             "glitter_tanzanite"
         ],
+        "originalOrder": 1014,
         "originalName": "tanzanite",
         "appearances": [
             {
@@ -1348,7 +1530,7 @@
         "url": "images/glitter/sparkelies/tealTourmaline.gif",
         "name": "Teal Tourmaline",
         "generatedName": "Jewel Tone Blue",
-        "sortOrder": 1015,
+        "sortOrder": 49,
         "colorCodes": [
             "#009687"
         ],
@@ -1372,6 +1554,7 @@
             "Turquoise 2",
             "glitter_turquoise_2"
         ],
+        "originalOrder": 1015,
         "originalName": "tealTourmaline"
     },
     {
@@ -1379,7 +1562,7 @@
         "url": "images/glitter/sparkelies/topaz.gif",
         "name": "Topaz",
         "generatedName": "Bronze",
-        "sortOrder": 1016,
+        "sortOrder": 50,
         "colorCodes": [
             "#8A531C",
             "#FF770B",
@@ -1398,6 +1581,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1016,
         "originalName": "topaz"
     },
     {
@@ -1405,7 +1589,7 @@
         "url": "images/glitter/sparkelies/turquoise.gif",
         "name": "Turquoise",
         "generatedName": "Jewel Tone Blue",
-        "sortOrder": 1017,
+        "sortOrder": 51,
         "colorCodes": [
             "#008796"
         ],
@@ -1428,6 +1612,7 @@
         "searchTerms": [
             "glitter_turquoise"
         ],
+        "originalOrder": 1017,
         "originalName": "turquoise"
     },
     {
@@ -1435,7 +1620,7 @@
         "url": "images/glitter/bring-on-the-glitter/sea-01.gif",
         "name": "Seafoam",
         "generatedName": "Blue and Green",
-        "sortOrder": 0,
+        "sortOrder": 52,
         "colorCodes": [
             "#87D2F0",
             "#87C369"
@@ -1462,6 +1647,7 @@
         "searchTerms": [
             "glitter_seafoam"
         ],
+        "originalOrder": 0,
         "originalName": "sea-01"
     },
     {
@@ -1469,7 +1655,7 @@
         "url": "images/glitter/bring-on-the-glitter/sea-02.gif",
         "name": "Bright Seafoam",
         "generatedName": "Blue and Green",
-        "sortOrder": 1,
+        "sortOrder": 53,
         "colorCodes": [
             "#87D2F0",
             "#00FF00"
@@ -1495,6 +1681,7 @@
         "searchTerms": [
             "glitter_bright-seafoam"
         ],
+        "originalOrder": 1,
         "originalName": "sea-02"
     },
     {
@@ -1502,7 +1689,7 @@
         "url": "images/glitter/bring-on-the-glitter/sea-03.gif",
         "name": "Green",
         "generatedName": "Green",
-        "sortOrder": 2,
+        "sortOrder": 54,
         "colorCodes": [
             "#006890",
             "#4DA619",
@@ -1523,6 +1710,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 2,
         "originalName": "sea-03"
     },
     {
@@ -1530,7 +1718,7 @@
         "url": "images/glitter/bring-on-the-glitter/sea-04.gif",
         "name": "Dark Blue-Green",
         "generatedName": "Dark Blue-Green",
-        "sortOrder": 3,
+        "sortOrder": 55,
         "colorCodes": [
             "#005D60",
             "#00582A",
@@ -1551,6 +1739,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3,
         "originalName": "sea-04"
     },
     {
@@ -1558,7 +1747,7 @@
         "url": "images/glitter/bring-on-the-glitter/sea-05.gif",
         "name": "Dark Green",
         "generatedName": "Blue and Yellow",
-        "sortOrder": 4,
+        "sortOrder": 56,
         "colorCodes": [
             "#003C4B",
             "#4B5A00"
@@ -1581,374 +1770,15 @@
         "searchTerms": [
             "glitter_dark-green"
         ],
+        "originalOrder": 4,
         "originalName": "sea-05"
-    },
-    {
-        "id": 130,
-        "url": "images/glitter/bring-on-the-glitter/black-001.gif",
-        "name": "Green and Blue",
-        "generatedName": "Green and Blue",
-        "sortOrder": 1000,
-        "colorCodes": [
-            "#282828",
-            "#003A27",
-            "#0000FF"
-        ],
-        "colorWeights": [
-            0.82,
-            0.12,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-001"
-    },
-    {
-        "id": 131,
-        "url": "images/glitter/bring-on-the-glitter/black-002.gif",
-        "name": "Charcoal",
-        "generatedName": "Charcoal",
-        "sortOrder": 1001,
-        "colorCodes": [
-            "#232626",
-            "#000066"
-        ],
-        "colorWeights": [
-            0.94,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-002"
-    },
-    {
-        "id": 49,
-        "url": "images/glitter/bring-on-the-glitter/black-003.gif",
-        "name": "Black 3",
-        "generatedName": "Black",
-        "sortOrder": 1002,
-        "colorCodes": [
-            "#2D2D2D"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Black",
-            "Dark",
-            "Grayscale",
-            "Neutral"
-        ],
-        "searchTerms": [
-            "etc_black-3"
-        ],
-        "originalName": "black-003"
-    },
-    {
-        "id": 46,
-        "url": "images/glitter/bring-on-the-glitter/black-004.gif",
-        "name": "Black",
-        "generatedName": "Black",
-        "sortOrder": 1003,
-        "colorCodes": [
-            "#1E1E1E"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 61,
-        "height": 31,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Black",
-            "Dark",
-            "Grayscale",
-            "Neutral"
-        ],
-        "searchTerms": [
-            "glitter_black"
-        ],
-        "originalName": "black-004"
-    },
-    {
-        "id": 48,
-        "url": "images/glitter/bring-on-the-glitter/black-005.gif",
-        "name": "Black 2",
-        "generatedName": "Black",
-        "sortOrder": 1004,
-        "colorCodes": [
-            "#1E1E1E"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Black",
-            "Dark",
-            "Grayscale",
-            "Neutral"
-        ],
-        "searchTerms": [
-            "etc_black-2"
-        ],
-        "originalName": "black-005"
-    },
-    {
-        "id": 132,
-        "url": "images/glitter/bring-on-the-glitter/black-01.gif",
-        "name": "Charcoal",
-        "generatedName": "Charcoal",
-        "sortOrder": 1005,
-        "colorCodes": [
-            "#3A3A3A",
-            "#DBDBDB",
-            "#0000FF"
-        ],
-        "colorWeights": [
-            0.82,
-            0.07,
-            0.06
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-01"
-    },
-    {
-        "id": 133,
-        "url": "images/glitter/bring-on-the-glitter/black-02.gif",
-        "name": "Green, Blue, and Purple",
-        "generatedName": "Green, Blue, and Purple",
-        "sortOrder": 1006,
-        "colorCodes": [
-            "#3A3A3A",
-            "#003F1E",
-            "#0000FF",
-            "#A35B92"
-        ],
-        "colorWeights": [
-            0.82,
-            0.07,
-            0.06,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-02"
-    },
-    {
-        "id": 134,
-        "url": "images/glitter/bring-on-the-glitter/black-03.gif",
-        "name": "Rainbow",
-        "generatedName": "Rainbow",
-        "sortOrder": 1007,
-        "colorCodes": [
-            "#1A1A1A",
-            "#2E0000",
-            "#603900",
-            "#003F1E",
-            "#0000FF"
-        ],
-        "colorWeights": [
-            0.62,
-            0.13,
-            0.12,
-            0.07,
-            0.06
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-03"
-    },
-    {
-        "id": 135,
-        "url": "images/glitter/bring-on-the-glitter/black-04.gif",
-        "name": "Green, Blue, and Purple",
-        "generatedName": "Green, Blue, and Purple",
-        "sortOrder": 1008,
-        "colorCodes": [
-            "#494949",
-            "#003F1E",
-            "#0000FF",
-            "#A35B92"
-        ],
-        "colorWeights": [
-            0.82,
-            0.07,
-            0.06,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-04"
-    },
-    {
-        "id": 136,
-        "url": "images/glitter/bring-on-the-glitter/black-05.gif",
-        "name": "Orange, Green, and Blue",
-        "generatedName": "Orange, Green, and Blue",
-        "sortOrder": 1009,
-        "colorCodes": [
-            "#1D1D1D",
-            "#56350D",
-            "#003F1E",
-            "#0000FF",
-            "#A35B92"
-        ],
-        "colorWeights": [
-            0.75,
-            0.07,
-            0.07,
-            0.06,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "black-05"
-    },
-    {
-        "id": 137,
-        "url": "images/glitter/bring-on-the-glitter/blue-01.gif",
-        "name": "Off-White",
-        "generatedName": "Off-White",
-        "sortOrder": 2000,
-        "colorCodes": [
-            "#C3E7D3"
-        ],
-        "colorWeights": [
-            1
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "blue-01"
-    },
-    {
-        "id": 99,
-        "url": "images/glitter/bring-on-the-glitter/blue-02.gif",
-        "name": "Pastel Blue",
-        "generatedName": "Pastel Silver",
-        "sortOrder": 2001,
-        "colorCodes": [
-            "#B4D2E1"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Blue",
-            "Cool",
-            "Light",
-            "Pastel",
-            "Silver"
-        ],
-        "searchTerms": [
-            "glitter_pastel-blue"
-        ],
-        "originalName": "blue-02"
-    },
-    {
-        "id": 59,
-        "url": "images/glitter/bring-on-the-glitter/blue-03.gif",
-        "name": "Lavender",
-        "generatedName": "Pastel Silver",
-        "sortOrder": 2002,
-        "colorCodes": [
-            "#B4B4E1"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Blue",
-            "Cool",
-            "Light",
-            "Pastel"
-        ],
-        "searchTerms": [
-            "etc_lavender"
-        ],
-        "originalName": "blue-03"
     },
     {
         "id": 85,
         "url": "images/glitter/bring-on-the-glitter/blue-09.gif",
         "name": "Dusty Dark Blue",
         "generatedName": "Muted Blue",
-        "sortOrder": 2008,
+        "sortOrder": 70,
         "colorCodes": [
             "#5A87C3"
         ],
@@ -1970,6 +1800,7 @@
         "searchTerms": [
             "glitter_dusty-dark-blue"
         ],
+        "originalOrder": 2008,
         "originalName": "blue-09"
     },
     {
@@ -1977,7 +1808,7 @@
         "url": "images/glitter/bring-on-the-glitter/gold-01.gif",
         "name": "Yellow",
         "generatedName": "Yellow",
-        "sortOrder": 3000,
+        "sortOrder": 71,
         "colorCodes": [
             "#B2AA00",
             "#7F7500",
@@ -1998,6 +1829,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3000,
         "originalName": "gold-01"
     },
     {
@@ -2005,7 +1837,7 @@
         "url": "images/glitter/bring-on-the-glitter/gold-010.gif",
         "name": "Gold",
         "generatedName": "Muted Orange",
-        "sortOrder": 3001,
+        "sortOrder": 72,
         "colorCodes": [
             "#FFD269"
         ],
@@ -2028,6 +1860,7 @@
         "searchTerms": [
             "glitter_gold"
         ],
+        "originalOrder": 3001,
         "originalName": "gold-010"
     },
     {
@@ -2035,7 +1868,7 @@
         "url": "images/glitter/bring-on-the-glitter/gold-02.gif",
         "name": "Gold 2",
         "generatedName": "Muted Yellow",
-        "sortOrder": 3002,
+        "sortOrder": 73,
         "colorCodes": [
             "#FFFF69"
         ],
@@ -2058,6 +1891,7 @@
         "searchTerms": [
             "glitter_gold-2"
         ],
+        "originalOrder": 3002,
         "originalName": "gold-02"
     },
     {
@@ -2065,7 +1899,7 @@
         "url": "images/glitter/bring-on-the-glitter/gold-03.gif",
         "name": "Yellow",
         "generatedName": "Vivid Gold",
-        "sortOrder": 3003,
+        "sortOrder": 74,
         "colorCodes": [
             "#FFF000"
         ],
@@ -2087,46 +1921,15 @@
         "searchTerms": [
             "glitter_yellow"
         ],
+        "originalOrder": 3003,
         "originalName": "gold-03"
-    },
-    {
-        "id": 51,
-        "url": "images/glitter/bring-on-the-glitter/gold-04.gif",
-        "name": "Bronze 2",
-        "generatedName": "Muted Orange",
-        "sortOrder": 3004,
-        "colorCodes": [
-            "#B49678"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Beige",
-            "Bronze",
-            "Muted",
-            "Warm"
-        ],
-        "searchTerms": [
-            "Bronze",
-            "etc_bronze-2",
-            "etc_bronze",
-            "nude-04"
-        ],
-        "originalName": "gold-04"
     },
     {
         "id": 180,
         "url": "images/glitter/bring-on-the-glitter/gold-05.gif",
         "name": "Golden Orange",
         "generatedName": "Golden Orange",
-        "sortOrder": 3005,
+        "sortOrder": 76,
         "colorCodes": [
             "#B28D00",
             "#7F6000",
@@ -2150,69 +1953,15 @@
             "etc_gold-3",
             "glitter_bronze"
         ],
+        "originalOrder": 3005,
         "originalName": "gold-05"
-    },
-    {
-        "id": 56,
-        "url": "images/glitter/bring-on-the-glitter/gold-06.gif",
-        "name": "Gold",
-        "generatedName": "Vivid Orange",
-        "sortOrder": 3006,
-        "colorCodes": [
-            "#FFD24B"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Light",
-            "Orange",
-            "Vivid",
-            "Warm"
-        ],
-        "searchTerms": [
-            "etc_gold"
-        ],
-        "originalName": "gold-06"
-    },
-    {
-        "id": 181,
-        "url": "images/glitter/bring-on-the-glitter/gold-07.gif",
-        "name": "Yellow, Pink, and Orange",
-        "generatedName": "Yellow, Pink, and Orange",
-        "sortOrder": 3007,
-        "colorCodes": [
-            "#FFD85A",
-            "#F19CB2",
-            "#EE914C"
-        ],
-        "colorWeights": [
-            0.57,
-            0.29,
-            0.14
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "gold-07"
     },
     {
         "id": 182,
         "url": "images/glitter/bring-on-the-glitter/gold-08.gif",
         "name": "Light Yellow",
         "generatedName": "Light Yellow",
-        "sortOrder": 3008,
+        "sortOrder": 79,
         "colorCodes": [
             "#EEE65F",
             "#FFFFFF"
@@ -2229,6 +1978,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3008,
         "originalName": "gold-08"
     },
     {
@@ -2236,7 +1986,7 @@
         "url": "images/glitter/bring-on-the-glitter/gold-09.gif",
         "name": "Yellow",
         "generatedName": "Yellow",
-        "sortOrder": 3009,
+        "sortOrder": 80,
         "colorCodes": [
             "#FFFC7B",
             "#CC9900",
@@ -2255,42 +2005,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3009,
         "originalName": "gold-09"
-    },
-    {
-        "id": 61,
-        "url": "images/glitter/bring-on-the-glitter/green-01.gif",
-        "name": "Seafoam",
-        "generatedName": "Pastel Silver",
-        "sortOrder": 4000,
-        "colorCodes": [
-            "#C3E1B4"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Green",
-            "Light",
-            "Pastel"
-        ],
-        "searchTerms": [
-            "etc_seafoam"
-        ],
-        "originalName": "green-01"
     },
     {
         "id": 8,
         "url": "images/glitter/bring-on-the-glitter/green-010.gif",
         "name": "Lime Green",
         "generatedName": "Vivid Green",
-        "sortOrder": 4001,
+        "sortOrder": 82,
         "colorCodes": [
             "#96FF00"
         ],
@@ -2313,6 +2036,7 @@
         "searchTerms": [
             "glitter_lime-green"
         ],
+        "originalOrder": 4001,
         "originalName": "green-010"
     },
     {
@@ -2320,7 +2044,7 @@
         "url": "images/glitter/bring-on-the-glitter/green-02.gif",
         "name": "Grass Green",
         "generatedName": "Jewel Tone Green",
-        "sortOrder": 4002,
+        "sortOrder": 83,
         "colorCodes": [
             "#5A9600"
         ],
@@ -2341,6 +2065,7 @@
         "searchTerms": [
             "glitter_grass-green"
         ],
+        "originalOrder": 4002,
         "originalName": "green-02"
     },
     {
@@ -2348,7 +2073,7 @@
         "url": "images/glitter/bring-on-the-glitter/green-03.gif",
         "name": "Green",
         "generatedName": "Green",
-        "sortOrder": 4003,
+        "sortOrder": 84,
         "colorCodes": [
             "#009920",
             "#006612",
@@ -2369,6 +2094,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 4003,
         "originalName": "green-03"
     },
     {
@@ -2376,7 +2102,7 @@
         "url": "images/glitter/bring-on-the-glitter/green-04.gif",
         "name": "Light Green",
         "generatedName": "Muted Green",
-        "sortOrder": 4004,
+        "sortOrder": 85,
         "colorCodes": [
             "#B4D269"
         ],
@@ -2397,6 +2123,7 @@
         "searchTerms": [
             "glitter_light-green"
         ],
+        "originalOrder": 4004,
         "originalName": "green-04"
     },
     {
@@ -2404,7 +2131,7 @@
         "url": "images/glitter/bring-on-the-glitter/green-05.gif",
         "name": "Muted Green",
         "generatedName": "Neon Yellow",
-        "sortOrder": 4005,
+        "sortOrder": 86,
         "colorCodes": [
             "#96B400"
         ],
@@ -2427,6 +2154,7 @@
         "searchTerms": [
             "glitter_muted-green"
         ],
+        "originalOrder": 4005,
         "originalName": "green-05"
     },
     {
@@ -2434,7 +2162,7 @@
         "url": "images/glitter/bring-on-the-glitter/green-06.gif",
         "name": "Green",
         "generatedName": "Green",
-        "sortOrder": 4006,
+        "sortOrder": 87,
         "colorCodes": [
             "#0B8C00",
             "#095900",
@@ -2455,144 +2183,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 4006,
         "originalName": "green-06"
-    },
-    {
-        "id": 186,
-        "url": "images/glitter/bring-on-the-glitter/green-07.gif",
-        "name": "Muted Yellow-Green",
-        "generatedName": "Muted Yellow-Green",
-        "sortOrder": 4007,
-        "colorCodes": [
-            "#BDDBA8",
-            "#00FF00",
-            "#FCFFFC"
-        ],
-        "colorWeights": [
-            0.78,
-            0.11,
-            0.11
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "green-07"
-    },
-    {
-        "id": 187,
-        "url": "images/glitter/bring-on-the-glitter/green-08.gif",
-        "name": "Yellow-Green",
-        "generatedName": "Yellow-Green",
-        "sortOrder": 4008,
-        "colorCodes": [
-            "#4DA619",
-            "#CEF0CA",
-            "#00FF3F",
-            "#FCFFFC"
-        ],
-        "colorWeights": [
-            0.56,
-            0.22,
-            0.11,
-            0.11
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "green-08"
-    },
-    {
-        "id": 188,
-        "url": "images/glitter/bring-on-the-glitter/green-09.gif",
-        "name": "Yellow-Green",
-        "generatedName": "Yellow-Green",
-        "sortOrder": 4009,
-        "colorCodes": [
-            "#4DA619",
-            "#E5F9E3",
-            "#00FF3F",
-            "#FFF09E"
-        ],
-        "colorWeights": [
-            0.56,
-            0.26,
-            0.11,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "green-09"
-    },
-    {
-        "id": 217,
-        "url": "images/glitter/bring-on-the-glitter/brown-01.gif",
-        "name": "Bronze",
-        "generatedName": "Bronze",
-        "sortOrder": 5000,
-        "colorCodes": [
-            "#905C34",
-            "#CC7C50"
-        ],
-        "colorWeights": [
-            0.79,
-            0.21
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "brown-01"
-    },
-    {
-        "id": 218,
-        "url": "images/glitter/bring-on-the-glitter/brown-02.gif",
-        "name": "Brown",
-        "generatedName": "Brown",
-        "sortOrder": 5001,
-        "colorCodes": [
-            "#7D5446",
-            "#737269"
-        ],
-        "colorWeights": [
-            0.78,
-            0.22
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "brown-02"
     },
     {
         "id": 69,
         "url": "images/glitter/bring-on-the-glitter/brown-03.gif",
         "name": "Brown 2",
         "generatedName": "Muted Orange",
-        "sortOrder": 5002,
+        "sortOrder": 93,
         "colorCodes": [
             "#3C2D1E"
         ],
@@ -2613,6 +2212,7 @@
         "searchTerms": [
             "glitter_brown-2"
         ],
+        "originalOrder": 5002,
         "originalName": "brown-03"
     },
     {
@@ -2620,7 +2220,7 @@
         "url": "images/glitter/bring-on-the-glitter/brown-04.gif",
         "name": "Brown_3",
         "generatedName": "Muted Orange",
-        "sortOrder": 5003,
+        "sortOrder": 94,
         "colorCodes": [
             "#3C2D1E"
         ],
@@ -2643,6 +2243,7 @@
         "searchTerms": [
             "glitter_brown_3"
         ],
+        "originalOrder": 5003,
         "originalName": "brown-04"
     },
     {
@@ -2650,7 +2251,7 @@
         "url": "images/glitter/bring-on-the-glitter/brown-05.gif",
         "name": "Brown 4",
         "generatedName": "Muted Orange",
-        "sortOrder": 5004,
+        "sortOrder": 95,
         "colorCodes": [
             "#3C2D1E"
         ],
@@ -2671,106 +2272,15 @@
         "searchTerms": [
             "glitter_brown-4"
         ],
+        "originalOrder": 5004,
         "originalName": "brown-05"
-    },
-    {
-        "id": 219,
-        "url": "images/glitter/bring-on-the-glitter/brown-06.gif",
-        "name": "Red, Orange, and Yellow",
-        "generatedName": "Red, Orange, and Yellow",
-        "sortOrder": 5005,
-        "colorCodes": [
-            "#7D3D3D",
-            "#707070",
-            "#763D0A",
-            "#AC7676",
-            "#393906",
-            "#A8723F",
-            "#B8B883"
-        ],
-        "colorWeights": [
-            0.29,
-            0.16,
-            0.16,
-            0.14,
-            0.1,
-            0.09,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "brown-06"
-    },
-    {
-        "id": 53,
-        "url": "images/glitter/bring-on-the-glitter/nude-01.gif",
-        "name": "Champagne",
-        "generatedName": "Pastel Silver",
-        "sortOrder": 5006,
-        "colorCodes": [
-            "#E1D2B4"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Beige",
-            "Light",
-            "Pastel",
-            "Warm"
-        ],
-        "searchTerms": [
-            "etc_champagne"
-        ],
-        "originalName": "nude-01"
-    },
-    {
-        "id": 73,
-        "url": "images/glitter/bring-on-the-glitter/nude-03.gif",
-        "name": "Burn Sienna",
-        "generatedName": "Muted Orange",
-        "sortOrder": 5008,
-        "colorCodes": [
-            "#B48778"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Beige",
-            "Brown",
-            "Muted",
-            "Warm"
-        ],
-        "searchTerms": [
-            "glitter_burn-sienna"
-        ],
-        "originalName": "nude-03"
     },
     {
         "id": 4,
         "url": "images/glitter/bring-on-the-glitter/orange-001.gif",
         "name": "Coral",
         "generatedName": "Muted Pink",
-        "sortOrder": 6000,
+        "sortOrder": 99,
         "colorCodes": [
             "#E16996"
         ],
@@ -2795,6 +2305,7 @@
         "searchTerms": [
             "glitter_coral"
         ],
+        "originalOrder": 6000,
         "originalName": "orange-001"
     },
     {
@@ -2802,7 +2313,7 @@
         "url": "images/glitter/bring-on-the-glitter/orange-002.gif",
         "name": "Red",
         "generatedName": "Red",
-        "sortOrder": 6001,
+        "sortOrder": 100,
         "colorCodes": [
             "#FF4B66",
             "#F36627",
@@ -2821,6 +2332,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 6001,
         "originalName": "orange-002"
     },
     {
@@ -2828,7 +2340,7 @@
         "url": "images/glitter/bring-on-the-glitter/orange-003.gif",
         "name": "Bright Orange",
         "generatedName": "Vivid Pink",
-        "sortOrder": 6002,
+        "sortOrder": 101,
         "colorCodes": [
             "#FF2D69"
         ],
@@ -2850,6 +2362,7 @@
         "searchTerms": [
             "glitter_bright-orange"
         ],
+        "originalOrder": 6002,
         "originalName": "orange-003"
     },
     {
@@ -2857,7 +2370,7 @@
         "url": "images/glitter/bring-on-the-glitter/orange-004.gif",
         "name": "Orange",
         "generatedName": "Vivid Orange",
-        "sortOrder": 6003,
+        "sortOrder": 102,
         "colorCodes": [
             "#FF6900"
         ],
@@ -2878,6 +2391,7 @@
         "searchTerms": [
             "glitter_orange"
         ],
+        "originalOrder": 6003,
         "originalName": "orange-004"
     },
     {
@@ -2885,7 +2399,7 @@
         "url": "images/glitter/bring-on-the-glitter/orange-005.gif",
         "name": "Orange Dark",
         "generatedName": "Vivid Orange",
-        "sortOrder": 6004,
+        "sortOrder": 103,
         "colorCodes": [
             "#D29600"
         ],
@@ -2906,112 +2420,15 @@
         "searchTerms": [
             "glitter_orange-dark"
         ],
+        "originalOrder": 6004,
         "originalName": "orange-005"
-    },
-    {
-        "id": 55,
-        "url": "images/glitter/bring-on-the-glitter/pink-001.gif",
-        "name": "Dusty Pink",
-        "generatedName": "Muted Pink",
-        "sortOrder": 7000,
-        "colorCodes": [
-            "#FF96FF"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Light",
-            "Muted",
-            "Pink"
-        ],
-        "searchTerms": [
-            "etc_dusty-pink"
-        ],
-        "originalName": "pink-001"
-    },
-    {
-        "id": 222,
-        "url": "images/glitter/bring-on-the-glitter/pink-002.gif",
-        "name": "Light Purple",
-        "generatedName": "Light Purple",
-        "sortOrder": 7001,
-        "colorCodes": [
-            "#FD66FD",
-            "#F2D1D7"
-        ],
-        "colorWeights": [
-            0.55,
-            0.46
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "pink-002"
-    },
-    {
-        "id": 223,
-        "url": "images/glitter/bring-on-the-glitter/pink-003.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 7002,
-        "colorCodes": [
-            "#FD35FD",
-            "#F2D1D7"
-        ],
-        "colorWeights": [
-            0.55,
-            0.46
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "pink-003"
-    },
-    {
-        "id": 224,
-        "url": "images/glitter/bring-on-the-glitter/pink-01.gif",
-        "name": "Off-White",
-        "generatedName": "Off-White",
-        "sortOrder": 7003,
-        "colorCodes": [
-            "#E7C3C9"
-        ],
-        "colorWeights": [
-            1
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "pink-01"
     },
     {
         "id": 17,
         "url": "images/glitter/bring-on-the-glitter/pink-02.gif",
         "name": "Muted Hot Pink",
         "generatedName": "Multicolor",
-        "sortOrder": 7004,
+        "sortOrder": 108,
         "colorCodes": [
             "#D26BA7",
             "#FF007F"
@@ -3034,6 +2451,7 @@
         "searchTerms": [
             "glitter_hot-pink"
         ],
+        "originalOrder": 7004,
         "originalName": "pink-02"
     },
     {
@@ -3041,7 +2459,7 @@
         "url": "images/glitter/bring-on-the-glitter/pink-03.gif",
         "name": "Purple",
         "generatedName": "Purple",
-        "sortOrder": 7005,
+        "sortOrder": 109,
         "colorCodes": [
             "#D92BC2",
             "#FFFFFF"
@@ -3058,6 +2476,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 7005,
         "originalName": "pink-03"
     },
     {
@@ -3065,7 +2484,7 @@
         "url": "images/glitter/bring-on-the-glitter/pink-04.gif",
         "name": "Magenta",
         "generatedName": "Neon Pink",
-        "sortOrder": 7006,
+        "sortOrder": 110,
         "colorCodes": [
             "#B400A5"
         ],
@@ -3087,6 +2506,7 @@
         "searchTerms": [
             "glitter_magenta"
         ],
+        "originalOrder": 7006,
         "originalName": "pink-04"
     },
     {
@@ -3094,7 +2514,7 @@
         "url": "images/glitter/bring-on-the-glitter/pink-05.gif",
         "name": "Dusty Pink",
         "generatedName": "Very Light Desaturated Red",
-        "sortOrder": 7007,
+        "sortOrder": 111,
         "colorCodes": [
             "#EF9C99",
             "#E16871",
@@ -3124,6 +2544,7 @@
         "searchTerms": [
             "glitter_dusty-pink"
         ],
+        "originalOrder": 7007,
         "originalName": "pink-05"
     },
     {
@@ -3131,7 +2552,7 @@
         "url": "images/glitter/bring-on-the-glitter/violet-01.gif",
         "name": "Purple and Red",
         "generatedName": "Purple and Red",
-        "sortOrder": 7008,
+        "sortOrder": 112,
         "colorCodes": [
             "#8A05DD",
             "#EF9C99",
@@ -3150,6 +2571,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 7008,
         "originalName": "violet-01"
     },
     {
@@ -3157,7 +2579,7 @@
         "url": "images/glitter/bring-on-the-glitter/violet-02.gif",
         "name": "Pink Purple",
         "generatedName": "Muted Pink",
-        "sortOrder": 7009,
+        "sortOrder": 113,
         "colorCodes": [
             "#E16996"
         ],
@@ -3179,38 +2601,15 @@
         "searchTerms": [
             "glitter_pink-purple"
         ],
+        "originalOrder": 7009,
         "originalName": "violet-02"
-    },
-    {
-        "id": 227,
-        "url": "images/glitter/bring-on-the-glitter/purple-001.gif",
-        "name": "Off-White",
-        "generatedName": "Off-White",
-        "sortOrder": 8000,
-        "colorCodes": [
-            "#E4C0E5",
-            "#FFF7FD"
-        ],
-        "colorWeights": [
-            0.95,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "purple-001"
     },
     {
         "id": 18,
         "url": "images/glitter/bring-on-the-glitter/purple-002.gif",
         "name": "Magenta Blue",
         "generatedName": "Pink and Blue",
-        "sortOrder": 8001,
+        "sortOrder": 115,
         "colorCodes": [
             "#FF00FF",
             "#87D2F0",
@@ -3240,6 +2639,7 @@
         "searchTerms": [
             "glitter_magenta-blue"
         ],
+        "originalOrder": 8001,
         "originalName": "purple-002"
     },
     {
@@ -3247,7 +2647,7 @@
         "url": "images/glitter/bring-on-the-glitter/purple-003.gif",
         "name": "Vivid Purple",
         "generatedName": "Vivid Purple",
-        "sortOrder": 8002,
+        "sortOrder": 116,
         "colorCodes": [
             "#8A05DD",
             "#A76BD2",
@@ -3266,6 +2666,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 8002,
         "originalName": "purple-003"
     },
     {
@@ -3273,7 +2674,7 @@
         "url": "images/glitter/bring-on-the-glitter/purple-004.gif",
         "name": "Vivid Indigo",
         "generatedName": "Vivid Indigo",
-        "sortOrder": 8003,
+        "sortOrder": 117,
         "colorCodes": [
             "#8D16EC",
             "#FFFFFF"
@@ -3290,6 +2691,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 8003,
         "originalName": "purple-004"
     },
     {
@@ -3297,7 +2699,7 @@
         "url": "images/glitter/bring-on-the-glitter/purple-006.gif",
         "name": "Ugly Purple",
         "generatedName": "Muted Pink",
-        "sortOrder": 8005,
+        "sortOrder": 118,
         "colorCodes": [
             "#A55A96"
         ],
@@ -3319,6 +2721,7 @@
         "searchTerms": [
             "glitter_ugly-purple"
         ],
+        "originalOrder": 8005,
         "originalName": "purple-006"
     },
     {
@@ -3326,7 +2729,7 @@
         "url": "images/glitter/bring-on-the-glitter/purple-007.gif",
         "name": "Deep Purple",
         "generatedName": "Jewel Tone Purple",
-        "sortOrder": 8006,
+        "sortOrder": 119,
         "colorCodes": [
             "#3C0078",
             "#000000",
@@ -3354,6 +2757,7 @@
         "searchTerms": [
             "glitter_deep-purple"
         ],
+        "originalOrder": 8006,
         "originalName": "purple-007"
     },
     {
@@ -3361,7 +2765,7 @@
         "url": "images/glitter/bring-on-the-glitter/purple-008.gif",
         "name": "Indigo",
         "generatedName": "Indigo",
-        "sortOrder": 8007,
+        "sortOrder": 120,
         "colorCodes": [
             "#5100BE",
             "#FFFFFF",
@@ -3380,6 +2784,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 8007,
         "originalName": "purple-008"
     },
     {
@@ -3387,7 +2792,7 @@
         "url": "images/glitter/bring-on-the-glitter/purple-009.gif",
         "name": "Dark Vivid Purple",
         "generatedName": "Vivid Purple",
-        "sortOrder": 8008,
+        "sortOrder": 121,
         "colorCodes": [
             "#6900FF"
         ],
@@ -3409,6 +2814,7 @@
         "searchTerms": [
             "glitter_dark-vivid-purple"
         ],
+        "originalOrder": 8008,
         "originalName": "purple-009"
     },
     {
@@ -3416,7 +2822,7 @@
         "url": "images/glitter/bring-on-the-glitter/crimson-001.gif",
         "name": "Red",
         "generatedName": "Vivid Red",
-        "sortOrder": 9000,
+        "sortOrder": 122,
         "colorCodes": [
             "#FF0000",
             "#CC0066",
@@ -3445,6 +2851,7 @@
         "searchTerms": [
             "gliter_red"
         ],
+        "originalOrder": 9000,
         "originalName": "crimson-001"
     },
     {
@@ -3452,7 +2859,7 @@
         "url": "images/glitter/bring-on-the-glitter/crimson-002.gif",
         "name": "Crimson",
         "generatedName": "Vivid Red",
-        "sortOrder": 9001,
+        "sortOrder": 123,
         "colorCodes": [
             "#C3000F"
         ],
@@ -3474,6 +2881,7 @@
         "searchTerms": [
             "glitter_crimson"
         ],
+        "originalOrder": 9001,
         "originalName": "crimson-002"
     },
     {
@@ -3481,7 +2889,7 @@
         "url": "images/glitter/bring-on-the-glitter/crimson-003.gif",
         "name": "Red and Purple",
         "generatedName": "Red and Purple",
-        "sortOrder": 9002,
+        "sortOrder": 124,
         "colorCodes": [
             "#7A0005",
             "#660066",
@@ -3500,6 +2908,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9002,
         "originalName": "crimson-003"
     },
     {
@@ -3507,7 +2916,7 @@
         "url": "images/glitter/bring-on-the-glitter/crimson-004.gif",
         "name": "Dark Ruby Red",
         "generatedName": "Dark Ruby Red",
-        "sortOrder": 9003,
+        "sortOrder": 125,
         "colorCodes": [
             "#630003",
             "#FFFFFF"
@@ -3524,6 +2933,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9003,
         "originalName": "crimson-004"
     },
     {
@@ -3531,7 +2941,7 @@
         "url": "images/glitter/bring-on-the-glitter/crimson-005.gif",
         "name": "Dark Ruby Red",
         "generatedName": "Dark Ruby Red",
-        "sortOrder": 9004,
+        "sortOrder": 126,
         "colorCodes": [
             "#540000",
             "#FFFFFF",
@@ -3550,6 +2960,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9004,
         "originalName": "crimson-005"
     },
     {
@@ -3557,7 +2968,7 @@
         "url": "images/glitter/bring-on-the-glitter/crimson-03.gif",
         "name": "Pink Red",
         "generatedName": "Vivid Red",
-        "sortOrder": 9005,
+        "sortOrder": 127,
         "colorCodes": [
             "#FF33FF",
             "#C00012",
@@ -3585,6 +2996,7 @@
         "searchTerms": [
             "glitter_pink-red"
         ],
+        "originalOrder": 9005,
         "originalName": "crimson-03"
     },
     {
@@ -3592,7 +3004,7 @@
         "url": "images/glitter/bring-on-the-glitter/red-01.gif",
         "name": "Vivid Red",
         "generatedName": "Vivid Red",
-        "sortOrder": 9006,
+        "sortOrder": 128,
         "colorCodes": [
             "#DD0710",
             "#D26B73",
@@ -3611,6 +3023,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9006,
         "originalName": "red-01"
     },
     {
@@ -3618,7 +3031,7 @@
         "url": "images/glitter/bring-on-the-glitter/red-04.gif",
         "name": "Vivid Red",
         "generatedName": "Vivid Red",
-        "sortOrder": 9009,
+        "sortOrder": 129,
         "colorCodes": [
             "#F90104",
             "#5C0023",
@@ -3637,74 +3050,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9009,
         "originalName": "red-04"
-    },
-    {
-        "id": 62,
-        "url": "images/glitter/bring-on-the-glitter/silver-01.gif",
-        "name": "Snow",
-        "generatedName": "Light Gray",
-        "sortOrder": 10000,
-        "colorCodes": [
-            "#C3C3C3"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Grayscale",
-            "Light",
-            "Neutral",
-            "Silver"
-        ],
-        "searchTerms": [
-            "etc_snow"
-        ],
-        "originalName": "silver-01"
-    },
-    {
-        "id": 74,
-        "url": "images/glitter/bring-on-the-glitter/silver-03.gif",
-        "name": "Camo Pattern",
-        "generatedName": "Gray",
-        "sortOrder": 10002,
-        "colorCodes": [
-            "#696969"
-        ],
-        "colorWeights": [
-            0
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-glitter",
-        "isPixelated": 1,
-        "tags": [
-            "Beige",
-            "Brown",
-            "Contrast",
-            "Multicolor",
-            "Neutral",
-            "Pattern"
-        ],
-        "searchTerms": [
-            "glitter_camo-pattern"
-        ],
-        "originalName": "silver-03"
     },
     {
         "id": 22,
         "url": "images/glitter/bring-on-the-glitter/silver-04.gif",
         "name": "Silver 2",
         "generatedName": "Light Gray",
-        "sortOrder": 10003,
+        "sortOrder": 132,
         "colorCodes": [
             "#D2D2D2"
         ],
@@ -3727,6 +3081,7 @@
         "searchTerms": [
             "glitter_silver-2"
         ],
+        "originalOrder": 10003,
         "originalName": "silver-04"
     },
     {
@@ -3734,7 +3089,7 @@
         "url": "images/glitter/bring-on-the-glitter/silver-05.gif",
         "name": "White",
         "generatedName": "Light Gray",
-        "sortOrder": 10004,
+        "sortOrder": 133,
         "colorCodes": [
             "#D2D2D2"
         ],
@@ -3757,6 +3112,7 @@
         "searchTerms": [
             "glitter_white"
         ],
+        "originalOrder": 10004,
         "originalName": "silver-05"
     },
     {
@@ -3764,7 +3120,7 @@
         "url": "images/glitter/bring-on-the-glitter/silver-06.gif",
         "name": "Opalite",
         "generatedName": "Light Gray",
-        "sortOrder": 10005,
+        "sortOrder": 134,
         "colorCodes": [
             "#CCCCCC",
             "#CCFFFF",
@@ -3792,6 +3148,7 @@
         "searchTerms": [
             "glitter_opalite"
         ],
+        "originalOrder": 10005,
         "originalName": "silver-06",
         "appearances": [
             {
@@ -3805,7 +3162,7 @@
         "url": "images/glitter/bring-on-the-glitter/silver-07.gif",
         "name": "Off-White",
         "generatedName": "Off-White",
-        "sortOrder": 10006,
+        "sortOrder": 135,
         "colorCodes": [
             "#EDEDED",
             "#333333"
@@ -3822,6 +3179,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 10006,
         "originalName": "silver-07"
     },
     {
@@ -3829,7 +3187,7 @@
         "url": "images/glitter/bring-on-the-glitter/silver-08.gif",
         "name": "White",
         "generatedName": "White",
-        "sortOrder": 10007,
+        "sortOrder": 136,
         "colorCodes": [
             "#FFFFFF",
             "#525252"
@@ -3846,514 +3204,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 10007,
         "originalName": "silver-08"
-    },
-    {
-        "id": 159,
-        "url": "images/glitter/crystal-shards/crystal-01.gif",
-        "name": "Dark Green",
-        "generatedName": "Dark Green",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#1B5B17",
-            "#30B42B",
-            "#6EF554"
-        ],
-        "colorWeights": [
-            0.52,
-            0.25,
-            0.23
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-01"
-    },
-    {
-        "id": 160,
-        "url": "images/glitter/crystal-shards/crystal-010.gif",
-        "name": "Dark Indigo",
-        "generatedName": "Dark Indigo",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#361862",
-            "#7D42DF"
-        ],
-        "colorWeights": [
-            0.59,
-            0.41
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-010"
-    },
-    {
-        "id": 161,
-        "url": "images/glitter/crystal-shards/crystal-011.gif",
-        "name": "Dark Purple",
-        "generatedName": "Dark Purple",
-        "sortOrder": 2,
-        "colorCodes": [
-            "#43175B",
-            "#9B3DD3"
-        ],
-        "colorWeights": [
-            0.52,
-            0.48
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-011"
-    },
-    {
-        "id": 162,
-        "url": "images/glitter/crystal-shards/crystal-012.gif",
-        "name": "Dark Purple",
-        "generatedName": "Dark Purple",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#53185E",
-            "#BE40DA"
-        ],
-        "colorWeights": [
-            0.56,
-            0.44
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-012"
-    },
-    {
-        "id": 163,
-        "url": "images/glitter/crystal-shards/crystal-013.gif",
-        "name": "Dark Purple",
-        "generatedName": "Dark Purple",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#5E1858",
-            "#D740CF"
-        ],
-        "colorWeights": [
-            0.56,
-            0.44
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-013"
-    },
-    {
-        "id": 164,
-        "url": "images/glitter/crystal-shards/crystal-014.gif",
-        "name": "Dark Magenta",
-        "generatedName": "Dark Magenta",
-        "sortOrder": 5,
-        "colorCodes": [
-            "#5E1840",
-            "#BF2D79",
-            "#F754C4"
-        ],
-        "colorWeights": [
-            0.56,
-            0.22,
-            0.22
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-014"
-    },
-    {
-        "id": 165,
-        "url": "images/glitter/crystal-shards/crystal-015.gif",
-        "name": "Dark Ruby Red",
-        "generatedName": "Dark Ruby Red",
-        "sortOrder": 6,
-        "colorCodes": [
-            "#5D1830",
-            "#BA2A59",
-            "#F754A3"
-        ],
-        "colorWeights": [
-            0.54,
-            0.24,
-            0.22
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-015"
-    },
-    {
-        "id": 166,
-        "url": "images/glitter/crystal-shards/crystal-016.gif",
-        "name": "Dark Blue-Green",
-        "generatedName": "Dark Blue-Green",
-        "sortOrder": 7,
-        "colorCodes": [
-            "#17593F",
-            "#44E29B",
-            "#239467"
-        ],
-        "colorWeights": [
-            0.5,
-            0.39,
-            0.12
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-016"
-    },
-    {
-        "id": 167,
-        "url": "images/glitter/crystal-shards/crystal-017.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 8,
-        "colorCodes": [
-            "#518270",
-            "#A7F7E6"
-        ],
-        "colorWeights": [
-            0.51,
-            0.49
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-017"
-    },
-    {
-        "id": 168,
-        "url": "images/glitter/crystal-shards/crystal-018.gif",
-        "name": "Dark Yellow-Green",
-        "generatedName": "Dark Yellow-Green",
-        "sortOrder": 9,
-        "colorCodes": [
-            "#305B17",
-            "#5AB42A",
-            "#A1F553"
-        ],
-        "colorWeights": [
-            0.52,
-            0.25,
-            0.23
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-018"
-    },
-    {
-        "id": 169,
-        "url": "images/glitter/crystal-shards/crystal-019.gif",
-        "name": "Yellow-Green",
-        "generatedName": "Yellow-Green",
-        "sortOrder": 10,
-        "colorCodes": [
-            "#485B17",
-            "#8DB52A",
-            "#DDF653"
-        ],
-        "colorWeights": [
-            0.52,
-            0.26,
-            0.22
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-019"
-    },
-    {
-        "id": 170,
-        "url": "images/glitter/crystal-shards/crystal-02.gif",
-        "name": "Blue",
-        "generatedName": "Blue",
-        "sortOrder": 11,
-        "colorCodes": [
-            "#20247F",
-            "#5B7DF8"
-        ],
-        "colorWeights": [
-            0.82,
-            0.18
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-02"
-    },
-    {
-        "id": 171,
-        "url": "images/glitter/crystal-shards/crystal-020.gif",
-        "name": "Dark Green",
-        "generatedName": "Dark Green",
-        "sortOrder": 12,
-        "colorCodes": [
-            "#175B2C",
-            "#42DF6B",
-            "#259649"
-        ],
-        "colorWeights": [
-            0.52,
-            0.41,
-            0.08
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-020"
-    },
-    {
-        "id": 172,
-        "url": "images/glitter/crystal-shards/crystal-03.gif",
-        "name": "Dark Ruby Red",
-        "generatedName": "Dark Ruby Red",
-        "sortOrder": 13,
-        "colorCodes": [
-            "#5C181C",
-            "#BD2C31",
-            "#F85777"
-        ],
-        "colorWeights": [
-            0.54,
-            0.25,
-            0.2
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-03"
-    },
-    {
-        "id": 173,
-        "url": "images/glitter/crystal-shards/crystal-04.gif",
-        "name": "Dark Gray",
-        "generatedName": "Dark Gray",
-        "sortOrder": 14,
-        "colorCodes": [
-            "#5E5E5E",
-            "#DBDBDB"
-        ],
-        "colorWeights": [
-            0.56,
-            0.44
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-04"
-    },
-    {
-        "id": 174,
-        "url": "images/glitter/crystal-shards/crystal-05.gif",
-        "name": "Dark Ruby Red",
-        "generatedName": "Dark Ruby Red",
-        "sortOrder": 15,
-        "colorCodes": [
-            "#5E2018",
-            "#DA4D43"
-        ],
-        "colorWeights": [
-            0.56,
-            0.43
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-05"
-    },
-    {
-        "id": 175,
-        "url": "images/glitter/crystal-shards/crystal-06.gif",
-        "name": "Burnt Orange",
-        "generatedName": "Burnt Orange",
-        "sortOrder": 16,
-        "colorCodes": [
-            "#5E2B18",
-            "#DB6440"
-        ],
-        "colorWeights": [
-            0.56,
-            0.43
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-06"
-    },
-    {
-        "id": 176,
-        "url": "images/glitter/crystal-shards/crystal-07.gif",
-        "name": "Dark Bronze",
-        "generatedName": "Dark Bronze",
-        "sortOrder": 17,
-        "colorCodes": [
-            "#5D3817",
-            "#E18742",
-            "#9F6027"
-        ],
-        "colorWeights": [
-            0.54,
-            0.37,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-07"
-    },
-    {
-        "id": 177,
-        "url": "images/glitter/crystal-shards/crystal-08.gif",
-        "name": "Dark Brown",
-        "generatedName": "Dark Brown",
-        "sortOrder": 18,
-        "colorCodes": [
-            "#594217",
-            "#E1A642",
-            "#926E22"
-        ],
-        "colorWeights": [
-            0.49,
-            0.37,
-            0.12
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-08"
-    },
-    {
-        "id": 178,
-        "url": "images/glitter/crystal-shards/crystal-09.gif",
-        "name": "Dark Indigo",
-        "generatedName": "Dark Indigo",
-        "sortOrder": 19,
-        "colorCodes": [
-            "#2C1A6D",
-            "#6449E8"
-        ],
-        "colorWeights": [
-            0.68,
-            0.32
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "crystal-shards",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "crystal-09"
     },
     {
         "id": 240,
         "url": "images/glitter/star-dust/twinkle-001.gif",
         "name": "Orange, Red, and Yellow",
         "generatedName": "Orange, Red, and Yellow",
-        "sortOrder": 0,
+        "sortOrder": 157,
         "colorCodes": [
             "#B78B60",
             "#BD8894",
@@ -4376,6 +3235,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 0,
         "originalName": "twinkle-001"
     },
     {
@@ -4383,7 +3243,7 @@
         "url": "images/glitter/star-dust/twinkle-0010.gif",
         "name": "Blue-Green",
         "generatedName": "Blue-Green",
-        "sortOrder": 1,
+        "sortOrder": 158,
         "colorCodes": [
             "#73B9AF",
             "#4596B9",
@@ -4402,6 +3262,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1,
         "originalName": "twinkle-0010"
     },
     {
@@ -4409,7 +3270,7 @@
         "url": "images/glitter/star-dust/twinkle-002.gif",
         "name": "Yellow and Red",
         "generatedName": "Yellow and Red",
-        "sortOrder": 2,
+        "sortOrder": 159,
         "colorCodes": [
             "#BBA962",
             "#BE8F89",
@@ -4428,6 +3289,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 2,
         "originalName": "twinkle-002"
     },
     {
@@ -4435,7 +3297,7 @@
         "url": "images/glitter/star-dust/twinkle-003.gif",
         "name": "Tan",
         "generatedName": "Tan",
-        "sortOrder": 3,
+        "sortOrder": 160,
         "colorCodes": [
             "#B2B661",
             "#BE9882",
@@ -4456,6 +3318,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3,
         "originalName": "twinkle-003"
     },
     {
@@ -4463,7 +3326,7 @@
         "url": "images/glitter/star-dust/twinkle-004.gif",
         "name": "Green and Orange",
         "generatedName": "Green and Orange",
-        "sortOrder": 4,
+        "sortOrder": 161,
         "colorCodes": [
             "#A2BA64",
             "#C2A986",
@@ -4482,6 +3345,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 4,
         "originalName": "twinkle-004"
     },
     {
@@ -4489,7 +3353,7 @@
         "url": "images/glitter/star-dust/twinkle-005.gif",
         "name": "Yellow-Green",
         "generatedName": "Yellow-Green",
-        "sortOrder": 5,
+        "sortOrder": 162,
         "colorCodes": [
             "#90BC67",
             "#EAF2EA",
@@ -4508,6 +3372,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 5,
         "originalName": "twinkle-005"
     },
     {
@@ -4515,7 +3380,7 @@
         "url": "images/glitter/star-dust/twinkle-006.gif",
         "name": "Green",
         "generatedName": "Green",
-        "sortOrder": 6,
+        "sortOrder": 163,
         "colorCodes": [
             "#7EBC6C",
             "#E9EFE9"
@@ -4532,6 +3397,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 6,
         "originalName": "twinkle-006"
     },
     {
@@ -4539,7 +3405,7 @@
         "url": "images/glitter/star-dust/twinkle-007.gif",
         "name": "Green",
         "generatedName": "Green",
-        "sortOrder": 7,
+        "sortOrder": 164,
         "colorCodes": [
             "#6EBA74",
             "#DFF0E6"
@@ -4556,6 +3422,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 7,
         "originalName": "twinkle-007"
     },
     {
@@ -4563,7 +3430,7 @@
         "url": "images/glitter/star-dust/twinkle-008.gif",
         "name": "Green",
         "generatedName": "Green",
-        "sortOrder": 8,
+        "sortOrder": 165,
         "colorCodes": [
             "#6BBB88",
             "#E4F0EC"
@@ -4580,6 +3447,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 8,
         "originalName": "twinkle-008"
     },
     {
@@ -4587,7 +3455,7 @@
         "url": "images/glitter/star-dust/twinkle-009.gif",
         "name": "Blue-Green",
         "generatedName": "Blue-Green",
-        "sortOrder": 9,
+        "sortOrder": 166,
         "colorCodes": [
             "#6BBBA0",
             "#EAF2F1"
@@ -4604,6 +3472,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9,
         "originalName": "twinkle-009"
     },
     {
@@ -4611,7 +3480,7 @@
         "url": "images/glitter/star-dust/twinkle-01.gif",
         "name": "Blue-Green",
         "generatedName": "Blue-Green",
-        "sortOrder": 10,
+        "sortOrder": 167,
         "colorCodes": [
             "#6AB7AB",
             "#EBF4F3"
@@ -4628,6 +3497,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 10,
         "originalName": "twinkle-01"
     },
     {
@@ -4635,7 +3505,7 @@
         "url": "images/glitter/star-dust/twinkle-010.gif",
         "name": "Blue",
         "generatedName": "Blue",
-        "sortOrder": 11,
+        "sortOrder": 168,
         "colorCodes": [
             "#7758B6",
             "#8C8FC4",
@@ -4656,6 +3526,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 11,
         "originalName": "twinkle-010"
     },
     {
@@ -4663,7 +3534,7 @@
         "url": "images/glitter/star-dust/twinkle-011.gif",
         "name": "Indigo",
         "generatedName": "Indigo",
-        "sortOrder": 12,
+        "sortOrder": 169,
         "colorCodes": [
             "#895DB7",
             "#A39CCD",
@@ -4684,6 +3555,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 12,
         "originalName": "twinkle-011"
     },
     {
@@ -4691,7 +3563,7 @@
         "url": "images/glitter/star-dust/twinkle-012.gif",
         "name": "Purple",
         "generatedName": "Purple",
-        "sortOrder": 13,
+        "sortOrder": 170,
         "colorCodes": [
             "#9A5EB8",
             "#AC9ACB",
@@ -4710,6 +3582,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 13,
         "originalName": "twinkle-012"
     },
     {
@@ -4717,7 +3590,7 @@
         "url": "images/glitter/star-dust/twinkle-013.gif",
         "name": "Purple",
         "generatedName": "Purple",
-        "sortOrder": 14,
+        "sortOrder": 171,
         "colorCodes": [
             "#A85EB4",
             "#B298C9",
@@ -4736,6 +3609,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 14,
         "originalName": "twinkle-013"
     },
     {
@@ -4743,7 +3617,7 @@
         "url": "images/glitter/star-dust/twinkle-014.gif",
         "name": "Purple",
         "generatedName": "Purple",
-        "sortOrder": 15,
+        "sortOrder": 172,
         "colorCodes": [
             "#B25EAB",
             "#B899C6",
@@ -4762,6 +3636,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 15,
         "originalName": "twinkle-014"
     },
     {
@@ -4769,7 +3644,7 @@
         "url": "images/glitter/star-dust/twinkle-015.gif",
         "name": "Magenta",
         "generatedName": "Magenta",
-        "sortOrder": 16,
+        "sortOrder": 173,
         "colorCodes": [
             "#B970A9",
             "#EDDBE5",
@@ -4790,6 +3665,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 16,
         "originalName": "twinkle-015"
     },
     {
@@ -4797,7 +3673,7 @@
         "url": "images/glitter/star-dust/twinkle-016.gif",
         "name": "Magenta",
         "generatedName": "Magenta",
-        "sortOrder": 17,
+        "sortOrder": 174,
         "colorCodes": [
             "#BC719B",
             "#EEDEE1",
@@ -4818,6 +3694,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 17,
         "originalName": "twinkle-016"
     },
     {
@@ -4825,7 +3702,7 @@
         "url": "images/glitter/star-dust/twinkle-017.gif",
         "name": "Red and Purple",
         "generatedName": "Red and Purple",
-        "sortOrder": 18,
+        "sortOrder": 175,
         "colorCodes": [
             "#B96879",
             "#C090BA",
@@ -4848,6 +3725,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 18,
         "originalName": "twinkle-017"
     },
     {
@@ -4855,7 +3733,7 @@
         "url": "images/glitter/star-dust/twinkle-04.gif",
         "name": "Teal",
         "generatedName": "Teal",
-        "sortOrder": 19,
+        "sortOrder": 176,
         "colorCodes": [
             "#72B7B0",
             "#458FB9",
@@ -4874,6 +3752,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 19,
         "originalName": "twinkle-04"
     },
     {
@@ -4881,7 +3760,7 @@
         "url": "images/glitter/star-dust/twinkle-05.gif",
         "name": "Teal, Blue, and Green",
         "generatedName": "Teal, Blue, and Green",
-        "sortOrder": 20,
+        "sortOrder": 177,
         "colorCodes": [
             "#6CA7BB",
             "#4777B6",
@@ -4902,6 +3781,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 20,
         "originalName": "twinkle-05"
     },
     {
@@ -4909,7 +3789,7 @@
         "url": "images/glitter/star-dust/twinkle-06.gif",
         "name": "Blue",
         "generatedName": "Blue",
-        "sortOrder": 21,
+        "sortOrder": 178,
         "colorCodes": [
             "#698BBE",
             "#80B7B2",
@@ -4930,6 +3810,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 21,
         "originalName": "twinkle-06"
     },
     {
@@ -4937,7 +3818,7 @@
         "url": "images/glitter/star-dust/twinkle-07.gif",
         "name": "Blue",
         "generatedName": "Blue",
-        "sortOrder": 22,
+        "sortOrder": 179,
         "colorCodes": [
             "#698CBE",
             "#80B7B2",
@@ -4958,6 +3839,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 22,
         "originalName": "twinkle-07"
     },
     {
@@ -4965,7 +3847,7 @@
         "url": "images/glitter/star-dust/twinkle-08.gif",
         "name": "Blue",
         "generatedName": "Blue",
-        "sortOrder": 23,
+        "sortOrder": 180,
         "colorCodes": [
             "#6370B9",
             "#8EA6C6",
@@ -4988,6 +3870,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 23,
         "originalName": "twinkle-08"
     },
     {
@@ -4995,7 +3878,7 @@
         "url": "images/glitter/star-dust/twinkle-09.gif",
         "name": "Blue",
         "generatedName": "Blue",
-        "sortOrder": 24,
+        "sortOrder": 181,
         "colorCodes": [
             "#655AB6",
             "#8698C3",
@@ -5016,1038 +3899,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 24,
         "originalName": "twinkle-09"
-    },
-    {
-        "id": 275,
-        "url": "images/glitter/swirly-cues/swirl-01.gif",
-        "name": "Dark Yellow",
-        "generatedName": "Dark Yellow",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#6B661C",
-            "#A9A684",
-            "#E0DED7"
-        ],
-        "colorWeights": [
-            0.53,
-            0.27,
-            0.2
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-01"
-    },
-    {
-        "id": 276,
-        "url": "images/glitter/swirly-cues/swirl-02.gif",
-        "name": "Burnt Orange",
-        "generatedName": "Burnt Orange",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#6B2A1C",
-            "#D8CECC",
-            "#A27F78"
-        ],
-        "colorWeights": [
-            0.53,
-            0.26,
-            0.21
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-02"
-    },
-    {
-        "id": 277,
-        "url": "images/glitter/swirly-cues/swirl-03.gif",
-        "name": "Dark Yellow-Green",
-        "generatedName": "Dark Yellow-Green",
-        "sortOrder": 2,
-        "colorCodes": [
-            "#5B6B1C",
-            "#D6CDCA",
-            "#98A175"
-        ],
-        "colorWeights": [
-            0.53,
-            0.27,
-            0.2
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-03"
-    },
-    {
-        "id": 278,
-        "url": "images/glitter/swirly-cues/swirl-04.gif",
-        "name": "Dark Bronze",
-        "generatedName": "Dark Bronze",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#6B431B",
-            "#A68F7E",
-            "#D2DAD3"
-        ],
-        "colorWeights": [
-            0.53,
-            0.24,
-            0.23
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-04"
-    },
-    {
-        "id": 279,
-        "url": "images/glitter/swirly-cues/swirl-05.gif",
-        "name": "Dark Green",
-        "generatedName": "Dark Green",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#1B6B43",
-            "#80A791",
-            "#D4D2DB"
-        ],
-        "colorWeights": [
-            0.53,
-            0.25,
-            0.22
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-05"
-    },
-    {
-        "id": 280,
-        "url": "images/glitter/swirly-cues/swirl-06.gif",
-        "name": "Dark Gray",
-        "generatedName": "Dark Gray",
-        "sortOrder": 5,
-        "colorCodes": [
-            "#6C6C6C",
-            "#C2C2C2"
-        ],
-        "colorWeights": [
-            0.55,
-            0.45
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-06"
-    },
-    {
-        "id": 281,
-        "url": "images/glitter/swirly-cues/swirl-07.gif",
-        "name": "Purple and Red",
-        "generatedName": "Purple and Red",
-        "sortOrder": 6,
-        "colorCodes": [
-            "#A8A8A8",
-            "#E202D4",
-            "#FF91FD",
-            "#660000"
-        ],
-        "colorWeights": [
-            0.64,
-            0.18,
-            0.15,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-07"
-    },
-    {
-        "id": 282,
-        "url": "images/glitter/swirly-cues/swirl-08.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 7,
-        "colorCodes": [
-            "#001E17",
-            "#799D9A",
-            "#165E58",
-            "#D3DEDC"
-        ],
-        "colorWeights": [
-            0.48,
-            0.19,
-            0.18,
-            0.15
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-08"
-    },
-    {
-        "id": 283,
-        "url": "images/glitter/swirly-cues/swirl-09.gif",
-        "name": "Dark Purple",
-        "generatedName": "Dark Purple",
-        "sortOrder": 8,
-        "colorCodes": [
-            "#16001D",
-            "#501056",
-            "#DDD5E0",
-            "#A991AB",
-            "#855589"
-        ],
-        "colorWeights": [
-            0.45,
-            0.2,
-            0.14,
-            0.12,
-            0.09
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-09"
-    },
-    {
-        "id": 284,
-        "url": "images/glitter/swirly-cues/swirl-10.gif",
-        "name": "Bronze",
-        "generatedName": "Bronze",
-        "sortOrder": 9,
-        "colorCodes": [
-            "#D8D8D0",
-            "#34301A",
-            "#ABAB82",
-            "#FF9900",
-            "#73703C"
-        ],
-        "colorWeights": [
-            0.31,
-            0.31,
-            0.15,
-            0.15,
-            0.08
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "swirly-cues",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "swirl-10"
-    },
-    {
-        "id": 265,
-        "url": "images/glitter/star-spangled/free-01.gif",
-        "name": "Yellow and Pink",
-        "generatedName": "Yellow and Pink",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#FFFFCC",
-            "#999900",
-            "#CA99B4",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-01"
-    },
-    {
-        "id": 266,
-        "url": "images/glitter/star-spangled/free-02.gif",
-        "name": "White",
-        "generatedName": "White",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#FFFFFF",
-            "#999999",
-            "#000000"
-        ],
-        "colorWeights": [
-            0.45,
-            0.42,
-            0.14
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-02"
-    },
-    {
-        "id": 267,
-        "url": "images/glitter/star-spangled/free-03.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 2,
-        "colorCodes": [
-            "#D3FFFF",
-            "#009999",
-            "#B4CA99"
-        ],
-        "colorWeights": [
-            0.49,
-            0.37,
-            0.14
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-03"
-    },
-    {
-        "id": 268,
-        "url": "images/glitter/star-spangled/free-04.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#FFCCFF",
-            "#990099",
-            "#99B4CA",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-04"
-    },
-    {
-        "id": 269,
-        "url": "images/glitter/star-spangled/free-05.gif",
-        "name": "Green and Blue",
-        "generatedName": "Green and Blue",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#99FF00",
-            "#006600",
-            "#99B4CA",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-05"
-    },
-    {
-        "id": 270,
-        "url": "images/glitter/star-spangled/free-06.gif",
-        "name": "Blue and Pink",
-        "generatedName": "Blue and Pink",
-        "sortOrder": 5,
-        "colorCodes": [
-            "#0099FF",
-            "#000066",
-            "#CA99B4",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-06"
-    },
-    {
-        "id": 271,
-        "url": "images/glitter/star-spangled/free-07.gif",
-        "name": "Pink, Red, and Green",
-        "generatedName": "Pink, Red, and Green",
-        "sortOrder": 6,
-        "colorCodes": [
-            "#FF0099",
-            "#660000",
-            "#B4CA99",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-07"
-    },
-    {
-        "id": 272,
-        "url": "images/glitter/star-spangled/free-08.gif",
-        "name": "Gray",
-        "generatedName": "Gray",
-        "sortOrder": 7,
-        "colorCodes": [
-            "#999999",
-            "#333333",
-            "#CA99B4",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-08"
-    },
-    {
-        "id": 273,
-        "url": "images/glitter/star-spangled/free-09.gif",
-        "name": "Light Red",
-        "generatedName": "Light Red",
-        "sortOrder": 8,
-        "colorCodes": [
-            "#F299A0",
-            "#FF3300",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.56,
-            0.37,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-09"
-    },
-    {
-        "id": 274,
-        "url": "images/glitter/star-spangled/free-10.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 9,
-        "colorCodes": [
-            "#CC99FF",
-            "#6600CC",
-            "#CA99B4",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.42,
-            0.37,
-            0.14,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "star-spangled",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "free-10"
-    },
-    {
-        "id": 189,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-002.gif",
-        "name": "Dark Bronze",
-        "generatedName": "Dark Bronze",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#6D6A01",
-            "#653000",
-            "#AE6E05",
-            "#2B0C00"
-        ],
-        "colorWeights": [
-            0.54,
-            0.22,
-            0.18,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-002"
-    },
-    {
-        "id": 190,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-004.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#016C6A",
-            "#016C37",
-            "#04AF6F",
-            "#003513"
-        ],
-        "colorWeights": [
-            0.52,
-            0.21,
-            0.18,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-004"
-    },
-    {
-        "id": 191,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-006.gif",
-        "name": "Dark Purple",
-        "generatedName": "Dark Purple",
-        "sortOrder": 2,
-        "colorCodes": [
-            "#5A0275"
-        ],
-        "colorWeights": [
-            0.99
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-006"
-    },
-    {
-        "id": 192,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-01.gif",
-        "name": "Tan",
-        "generatedName": "Tan",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#D4C15E"
-        ],
-        "colorWeights": [
-            1
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-01"
-    },
-    {
-        "id": 193,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-02.gif",
-        "name": "Bronze",
-        "generatedName": "Bronze",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#9F9C03",
-            "#954500",
-            "#F49D07",
-            "#3F1200"
-        ],
-        "colorWeights": [
-            0.53,
-            0.21,
-            0.21,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-02"
-    },
-    {
-        "id": 194,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-03.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 5,
-        "colorCodes": [
-            "#5ED4C1"
-        ],
-        "colorWeights": [
-            1
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-03"
-    },
-    {
-        "id": 195,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-04.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 6,
-        "colorCodes": [
-            "#029F9C",
-            "#09F49E",
-            "#009A49",
-            "#00511E"
-        ],
-        "colorWeights": [
-            0.53,
-            0.22,
-            0.18,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-04"
-    },
-    {
-        "id": 196,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-05.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 7,
-        "colorCodes": [
-            "#C663D8",
-            "#9531B2"
-        ],
-        "colorWeights": [
-            0.9,
-            0.1
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-05"
-    },
-    {
-        "id": 197,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-06.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 8,
-        "colorCodes": [
-            "#9D04B7",
-            "#3D0086"
-        ],
-        "colorWeights": [
-            0.74,
-            0.26
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-06"
-    },
-    {
-        "id": 198,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-1.gif",
-        "name": "Purple and Orange",
-        "generatedName": "Purple and Orange",
-        "sortOrder": 9,
-        "colorCodes": [
-            "#FFA5FF",
-            "#CEB057"
-        ],
-        "colorWeights": [
-            0.59,
-            0.4
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-1"
-    },
-    {
-        "id": 199,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-1a.gif",
-        "name": "Purple, Orange, and Yellow",
-        "generatedName": "Purple, Orange, and Yellow",
-        "sortOrder": 10,
-        "colorCodes": [
-            "#FF4BFF",
-            "#923900",
-            "#AC8C0B",
-            "#401300",
-            "#FCA023"
-        ],
-        "colorWeights": [
-            0.59,
-            0.16,
-            0.16,
-            0.04,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-1a"
-    },
-    {
-        "id": 200,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-1b.gif",
-        "name": "Purple and Orange",
-        "generatedName": "Purple and Orange",
-        "sortOrder": 11,
-        "colorCodes": [
-            "#B034B0",
-            "#7F6109",
-            "#622700"
-        ],
-        "colorWeights": [
-            0.59,
-            0.19,
-            0.17
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-1b"
-    },
-    {
-        "id": 201,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-2.gif",
-        "name": "Yellow-Green",
-        "generatedName": "Yellow-Green",
-        "sortOrder": 12,
-        "colorCodes": [
-            "#99FF00",
-            "#57CEB0",
-            "#FFFFCC"
-        ],
-        "colorWeights": [
-            0.46,
-            0.4,
-            0.13
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-2"
-    },
-    {
-        "id": 202,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-2a.gif",
-        "name": "Vivid Green",
-        "generatedName": "Vivid Green",
-        "sortOrder": 13,
-        "colorCodes": [
-            "#34FF00",
-            "#009A49",
-            "#FFFF99",
-            "#18E7A4",
-            "#00521E",
-            "#10A29B"
-        ],
-        "colorWeights": [
-            0.46,
-            0.18,
-            0.14,
-            0.08,
-            0.07,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-2a"
-    },
-    {
-        "id": 203,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-2b.gif",
-        "name": "Green",
-        "generatedName": "Green",
-        "sortOrder": 14,
-        "colorCodes": [
-            "#23AF00",
-            "#006B35",
-            "#B3B36B",
-            "#003513",
-            "#14A474",
-            "#0A6B66"
-        ],
-        "colorWeights": [
-            0.46,
-            0.2,
-            0.14,
-            0.07,
-            0.07,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-2b"
-    },
-    {
-        "id": 204,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-3.gif",
-        "name": "Blue, Purple, and Teal",
-        "generatedName": "Blue, Purple, and Teal",
-        "sortOrder": 15,
-        "colorCodes": [
-            "#99CCFF",
-            "#A748C7",
-            "#CDFFFF",
-            "#D18FE9"
-        ],
-        "colorWeights": [
-            0.46,
-            0.32,
-            0.14,
-            0.09
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-3"
-    },
-    {
-        "id": 205,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-3a.gif",
-        "name": "Blue, Purple, and Teal",
-        "generatedName": "Blue, Purple, and Teal",
-        "sortOrder": 16,
-        "colorCodes": [
-            "#349AFF",
-            "#520091",
-            "#9AFFFF",
-            "#A729DD"
-        ],
-        "colorWeights": [
-            0.46,
-            0.33,
-            0.13,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-3a"
-    },
-    {
-        "id": 206,
-        "url": "images/glitter/just-a-bit-of-glitz/glitz-3b.gif",
-        "name": "Blue, Purple, and Teal",
-        "generatedName": "Blue, Purple, and Teal",
-        "sortOrder": 17,
-        "colorCodes": [
-            "#2369AF",
-            "#3E0468",
-            "#6CB3B3",
-            "#8B1AAF"
-        ],
-        "colorWeights": [
-            0.46,
-            0.38,
-            0.13,
-            0.02
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "just-a-bit-of-glitz",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "glitz-3b"
     },
     {
         "id": 47,
         "url": "images/glitter/velvet-embers/ember-01.gif",
         "name": "Burnt Orange",
         "generatedName": "Very Dark Vivid Red",
-        "sortOrder": 0,
+        "sortOrder": 220,
         "colorCodes": [
             "#330000",
             "#782A06",
@@ -6074,6 +3934,7 @@
         "searchTerms": [
             "ember_burnt-orange"
         ],
+        "originalOrder": 0,
         "originalName": "ember-01"
     },
     {
@@ -6081,7 +3942,7 @@
         "url": "images/glitter/velvet-embers/ember-010.gif",
         "name": "Yellow",
         "generatedName": "Yellow",
-        "sortOrder": 1,
+        "sortOrder": 221,
         "colorCodes": [
             "#332A00",
             "#677806",
@@ -6100,6 +3961,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1,
         "originalName": "ember-010"
     },
     {
@@ -6107,7 +3969,7 @@
         "url": "images/glitter/velvet-embers/ember-02.gif",
         "name": "Ruby",
         "generatedName": "Very Dark Vivid Pink",
-        "sortOrder": 2,
+        "sortOrder": 222,
         "colorCodes": [
             "#330019",
             "#78061B",
@@ -6132,6 +3994,7 @@
         "searchTerms": [
             "ember_red-2"
         ],
+        "originalOrder": 2,
         "originalName": "ember-02"
     },
     {
@@ -6139,7 +4002,7 @@
         "url": "images/glitter/velvet-embers/ember-03.gif",
         "name": "Red and Purple",
         "generatedName": "Red and Purple",
-        "sortOrder": 3,
+        "sortOrder": 223,
         "colorCodes": [
             "#330000",
             "#FF99FF",
@@ -6158,6 +4021,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3,
         "originalName": "ember-03"
     },
     {
@@ -6165,7 +4029,7 @@
         "url": "images/glitter/velvet-embers/ember-04.gif",
         "name": "Purple",
         "generatedName": "Purple",
-        "sortOrder": 4,
+        "sortOrder": 224,
         "colorCodes": [
             "#330066",
             "#FF99FF",
@@ -6184,6 +4048,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 4,
         "originalName": "ember-04"
     },
     {
@@ -6191,7 +4056,7 @@
         "url": "images/glitter/velvet-embers/ember-05.gif",
         "name": "Blue and Red",
         "generatedName": "Blue and Red",
-        "sortOrder": 5,
+        "sortOrder": 225,
         "colorCodes": [
             "#000066",
             "#0099FF",
@@ -6210,6 +4075,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 5,
         "originalName": "ember-05"
     },
     {
@@ -6217,7 +4083,7 @@
         "url": "images/glitter/velvet-embers/ember-06.gif",
         "name": "Red",
         "generatedName": "Very Dark Vivid Magenta",
-        "sortOrder": 6,
+        "sortOrder": 226,
         "colorCodes": [
             "#330033",
             "#780654",
@@ -6243,6 +4109,7 @@
         "searchTerms": [
             "ember_red"
         ],
+        "originalOrder": 6,
         "originalName": "ember-06"
     },
     {
@@ -6250,7 +4117,7 @@
         "url": "images/glitter/velvet-embers/ember-07.gif",
         "name": "Purple",
         "generatedName": "Very Dark Vivid Blue",
-        "sortOrder": 7,
+        "sortOrder": 227,
         "colorCodes": [
             "#080033",
             "#3C0678",
@@ -6277,6 +4144,7 @@
         "searchTerms": [
             "ember_purple"
         ],
+        "originalOrder": 7,
         "originalName": "ember-07"
     },
     {
@@ -6284,7 +4152,7 @@
         "url": "images/glitter/velvet-embers/ember-08.gif",
         "name": "Turquoise",
         "generatedName": "Very Dark Vivid Green",
-        "sortOrder": 8,
+        "sortOrder": 228,
         "colorCodes": [
             "#003319",
             "#067863",
@@ -6310,6 +4178,7 @@
         "searchTerms": [
             "ember_turquoise"
         ],
+        "originalOrder": 8,
         "originalName": "ember-08"
     },
     {
@@ -6317,7 +4186,7 @@
         "url": "images/glitter/velvet-embers/ember-09.gif",
         "name": "Deep Yellow-Green",
         "generatedName": "Deep Yellow-Green",
-        "sortOrder": 9,
+        "sortOrder": 229,
         "colorCodes": [
             "#103300",
             "#087806",
@@ -6336,588 +4205,15 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 9,
         "originalName": "ember-09"
-    },
-    {
-        "id": 207,
-        "url": "images/glitter/molten-lava/flash-01.gif",
-        "name": "Golden Orange",
-        "generatedName": "Golden Orange",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#DBA833",
-            "#996603",
-            "#999939",
-            "#F5F533"
-        ],
-        "colorWeights": [
-            0.61,
-            0.2,
-            0.11,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-01"
-    },
-    {
-        "id": 208,
-        "url": "images/glitter/molten-lava/flash-010.gif",
-        "name": "Light Gray",
-        "generatedName": "Light Gray",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#C0C0C0"
-        ],
-        "colorWeights": [
-            1
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-010"
-    },
-    {
-        "id": 209,
-        "url": "images/glitter/molten-lava/flash-02.gif",
-        "name": "Blue-Green",
-        "generatedName": "Blue-Green",
-        "sortOrder": 2,
-        "colorCodes": [
-            "#27CA97",
-            "#399999",
-            "#33F5F5"
-        ],
-        "colorWeights": [
-            0.81,
-            0.11,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-02"
-    },
-    {
-        "id": 210,
-        "url": "images/glitter/molten-lava/flash-03.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#8B26B7",
-            "#D833FC"
-        ],
-        "colorWeights": [
-            0.73,
-            0.24
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-03"
-    },
-    {
-        "id": 211,
-        "url": "images/glitter/molten-lava/flash-04.gif",
-        "name": "Purple",
-        "generatedName": "Purple",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#C829A3"
-        ],
-        "colorWeights": [
-            0.97
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-04"
-    },
-    {
-        "id": 212,
-        "url": "images/glitter/molten-lava/flash-05.gif",
-        "name": "Pink",
-        "generatedName": "Pink",
-        "sortOrder": 5,
-        "colorCodes": [
-            "#C4295B",
-            "#F53232"
-        ],
-        "colorWeights": [
-            0.91,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-05"
-    },
-    {
-        "id": 213,
-        "url": "images/glitter/molten-lava/flash-06.gif",
-        "name": "Red, Orange, and Pink",
-        "generatedName": "Red, Orange, and Pink",
-        "sortOrder": 6,
-        "colorCodes": [
-            "#BC4023",
-            "#FF6730",
-            "#942F61",
-            "#F59531"
-        ],
-        "colorWeights": [
-            0.62,
-            0.17,
-            0.12,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-06"
-    },
-    {
-        "id": 214,
-        "url": "images/glitter/molten-lava/flash-07.gif",
-        "name": "Yellow",
-        "generatedName": "Yellow",
-        "sortOrder": 7,
-        "colorCodes": [
-            "#C2CE27",
-            "#94522F"
-        ],
-        "colorWeights": [
-            0.86,
-            0.12
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-07"
-    },
-    {
-        "id": 215,
-        "url": "images/glitter/molten-lava/flash-08.gif",
-        "name": "Yellow-Green",
-        "generatedName": "Yellow-Green",
-        "sortOrder": 8,
-        "colorCodes": [
-            "#6ECE27",
-            "#9A8A34"
-        ],
-        "colorWeights": [
-            0.86,
-            0.11
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-08"
-    },
-    {
-        "id": 216,
-        "url": "images/glitter/molten-lava/flash-09.gif",
-        "name": "Green",
-        "generatedName": "Green",
-        "sortOrder": 9,
-        "colorCodes": [
-            "#30C838"
-        ],
-        "colorWeights": [
-            0.97
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 1,
-        "width": 60,
-        "height": 30,
-        "category": "molten-lava",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "flash-09"
-    },
-    {
-        "id": 139,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-01.gif",
-        "name": "Golden Orange",
-        "generatedName": "Golden Orange",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#E0D8CB",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E"
-        ],
-        "colorWeights": [
-            0.76,
-            0.09,
-            0.08,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-01"
-    },
-    {
-        "id": 140,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-010.gif",
-        "name": "Golden Orange",
-        "generatedName": "Golden Orange",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#161616",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.72,
-            0.09,
-            0.08,
-            0.07,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-010"
-    },
-    {
-        "id": 141,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-012.gif",
-        "name": "Light Gray",
-        "generatedName": "Light Gray",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#C6C3C9",
-            "#C79F6D"
-        ],
-        "colorWeights": [
-            0.86,
-            0.14
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-012"
-    },
-    {
-        "id": 142,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-02.gif",
-        "name": "Red, Yellow, and Purple",
-        "generatedName": "Red, Yellow, and Purple",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#BEBEB9",
-            "#E4B1B1",
-            "#7E6003",
-            "#B28D01",
-            "#D7A6D9",
-            "#9A6666",
-            "#FFBC10",
-            "#A26699"
-        ],
-        "colorWeights": [
-            0.37,
-            0.15,
-            0.09,
-            0.09,
-            0.08,
-            0.07,
-            0.07,
-            0.05
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-02"
-    },
-    {
-        "id": 143,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-03.gif",
-        "name": "Red and Yellow",
-        "generatedName": "Red and Yellow",
-        "sortOrder": 5,
-        "colorCodes": [
-            "#B37271",
-            "#782E2D",
-            "#E2AFAE",
-            "#B28D00",
-            "#7F6000"
-        ],
-        "colorWeights": [
-            0.25,
-            0.24,
-            0.22,
-            0.09,
-            0.08
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-03"
-    },
-    {
-        "id": 144,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-04.gif",
-        "name": "Red and Yellow",
-        "generatedName": "Red and Yellow",
-        "sortOrder": 6,
-        "colorCodes": [
-            "#FC587E",
-            "#FDBAC9",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E"
-        ],
-        "colorWeights": [
-            0.49,
-            0.23,
-            0.09,
-            0.08,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-04"
-    },
-    {
-        "id": 145,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-05.gif",
-        "name": "Red and Yellow",
-        "generatedName": "Red and Yellow",
-        "sortOrder": 7,
-        "colorCodes": [
-            "#650014",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E"
-        ],
-        "colorWeights": [
-            0.72,
-            0.09,
-            0.08,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-05"
-    },
-    {
-        "id": 146,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-06.gif",
-        "name": "Purple and Yellow",
-        "generatedName": "Purple and Yellow",
-        "sortOrder": 8,
-        "colorCodes": [
-            "#460136",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E"
-        ],
-        "colorWeights": [
-            0.7,
-            0.09,
-            0.08,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-06"
-    },
-    {
-        "id": 147,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-07 (1).gif",
-        "name": "Blue and Yellow",
-        "generatedName": "Blue and Yellow",
-        "sortOrder": 9,
-        "colorCodes": [
-            "#183A9B",
-            "#090F37",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E"
-        ],
-        "colorWeights": [
-            0.47,
-            0.25,
-            0.09,
-            0.08,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [
-            "satinhearts-07"
-        ],
-        "originalName": "satinhearts-07 (1)"
-    },
-    {
-        "id": 148,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-08 (1).gif",
-        "name": "Dark Yellow-Green",
-        "generatedName": "Dark Yellow-Green",
-        "sortOrder": 11,
-        "colorCodes": [
-            "#044C1A",
-            "#021F0C",
-            "#B28D00",
-            "#7F6000",
-            "#0B8733",
-            "#FFBC0E",
-            "#FFFFFF"
-        ],
-        "colorWeights": [
-            0.53,
-            0.12,
-            0.09,
-            0.08,
-            0.08,
-            0.07,
-            0.04
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [
-            "satinhearts-08"
-        ],
-        "originalName": "satinhearts-08 (1)"
-    },
-    {
-        "id": 149,
-        "url": "images/glitter/bring-on-the-hearts/satinhearts-09.gif",
-        "name": "Red and Yellow",
-        "generatedName": "Red and Yellow",
-        "sortOrder": 13,
-        "colorCodes": [
-            "#270C11",
-            "#B28D00",
-            "#7F6000",
-            "#FFBC0E"
-        ],
-        "colorWeights": [
-            0.72,
-            0.09,
-            0.08,
-            0.07
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 50,
-        "height": 50,
-        "category": "bring-on-the-hearts",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-09"
     },
     {
         "id": 123,
         "url": "images/glitter/ember/ember_magenta.gif",
         "name": "Magenta",
         "generatedName": "Very Dark Vivid Red",
-        "sortOrder": 69,
+        "sortOrder": 251,
         "colorCodes": [
             "#330000",
             "#FF99FF",
@@ -6946,7 +4242,7 @@
         "url": "images/glitter/ember/ember_gold.gif",
         "name": "Gold",
         "generatedName": "Vivid Deep Red-Orange",
-        "sortOrder": 73,
+        "sortOrder": 252,
         "colorCodes": [
             "#513100",
             "#AD7C05",
@@ -6976,7 +4272,7 @@
         "url": "images/glitter/ember/ember_emerald.gif",
         "name": "Emerald",
         "generatedName": "Very Dark Vivid Green",
-        "sortOrder": 74,
+        "sortOrder": 253,
         "colorCodes": [
             "#03320B",
             "#097814",
@@ -7005,7 +4301,7 @@
         "url": "images/glitter/ember/ember_sapphire.gif",
         "name": "Sapphire",
         "generatedName": "Dark Vivid Teal",
-        "sortOrder": 76,
+        "sortOrder": 254,
         "colorCodes": [
             "#001843",
             "#022D9B",
@@ -7029,150 +4325,11 @@
         "searchTerms": []
     },
     {
-        "id": 150,
-        "url": "images/glitter/christmas/christmas-01.gif",
-        "name": "Red and Green",
-        "generatedName": "Red and Green",
-        "sortOrder": 0,
-        "colorCodes": [
-            "#00FF00",
-            "#CC0000",
-            "#B52649",
-            "#D9D9D9"
-        ],
-        "colorWeights": [
-            0.33,
-            0.29,
-            0.25,
-            0.13
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "christmas",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "christmas-01"
-    },
-    {
-        "id": 151,
-        "url": "images/glitter/christmas/christmas-02.gif",
-        "name": "Red, Green, and Yellow",
-        "generatedName": "Red, Green, and Yellow",
-        "sortOrder": 1,
-        "colorCodes": [
-            "#DD0016",
-            "#00CC00",
-            "#FFFF00"
-        ],
-        "colorWeights": [
-            0.54,
-            0.33,
-            0.13
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "christmas",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "christmas-02"
-    },
-    {
-        "id": 152,
-        "url": "images/glitter/christmas/christmas-03.gif",
-        "name": "Green, Red, and Yellow",
-        "generatedName": "Green, Red, and Yellow",
-        "sortOrder": 2,
-        "colorCodes": [
-            "#16CC00",
-            "#EC0000",
-            "#FFFF66"
-        ],
-        "colorWeights": [
-            0.58,
-            0.29,
-            0.13
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "christmas",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "christmas-03"
-    },
-    {
-        "id": 19,
-        "url": "images/glitter/christmas/christmas-04.gif",
-        "name": "Christmas",
-        "generatedName": "Green and Red",
-        "sortOrder": 3,
-        "colorCodes": [
-            "#00D200",
-            "#F00000"
-        ],
-        "colorWeights": [
-            0,
-            0.5
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "christmas",
-        "isPixelated": 1,
-        "tags": [
-            "Contrast",
-            "Green",
-            "Light",
-            "Multicolor",
-            "Red",
-            "Vivid"
-        ],
-        "searchTerms": [
-            "glitter_christmas"
-        ],
-        "originalName": "christmas-04"
-    },
-    {
-        "id": 153,
-        "url": "images/glitter/christmas/christmas-05.gif",
-        "name": "Green and Blue",
-        "generatedName": "Green and Blue",
-        "sortOrder": 4,
-        "colorCodes": [
-            "#16CC00",
-            "#006600",
-            "#99CCFF"
-        ],
-        "colorWeights": [
-            0.58,
-            0.29,
-            0.13
-        ],
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "category": "christmas",
-        "isPixelated": 1,
-        "tags": [],
-        "searchTerms": [],
-        "originalName": "christmas-05"
-    },
-    {
         "id": 154,
         "url": "images/glitter/clear/blueclear-04.gif",
         "name": "Blue",
         "generatedName": "Blue",
-        "sortOrder": 0,
+        "sortOrder": 255,
         "colorCodes": [
             "#002C85",
             "#0464FF",
@@ -7191,6 +4348,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 0,
         "originalName": "blueclear-04"
     },
     {
@@ -7198,7 +4356,7 @@
         "url": "images/glitter/clear/goldclear-02.gif",
         "name": "Vivid Golden Orange",
         "generatedName": "Vivid Golden Orange",
-        "sortOrder": 1,
+        "sortOrder": 256,
         "colorCodes": [
             "#FFBB04",
             "#B28D00",
@@ -7219,6 +4377,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 1,
         "originalName": "goldclear-02"
     },
     {
@@ -7226,7 +4385,7 @@
         "url": "images/glitter/clear/pinkclear-05.gif",
         "name": "Magenta",
         "generatedName": "Magenta",
-        "sortOrder": 2,
+        "sortOrder": 257,
         "colorCodes": [
             "#E02B8D",
             "#FFFFFF"
@@ -7243,6 +4402,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 2,
         "originalName": "pinkclear-05"
     },
     {
@@ -7250,7 +4410,7 @@
         "url": "images/glitter/clear/silverclear-01.gif",
         "name": "Dark Gray",
         "generatedName": "Dark Gray",
-        "sortOrder": 3,
+        "sortOrder": 258,
         "colorCodes": [
             "#6B6B6B",
             "#D9D9D9"
@@ -7267,6 +4427,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 3,
         "originalName": "silverclear-01"
     },
     {
@@ -7274,7 +4435,7 @@
         "url": "images/glitter/clear/whiteclear-03.gif",
         "name": "Off-White",
         "generatedName": "Off-White",
-        "sortOrder": 4,
+        "sortOrder": 259,
         "colorCodes": [
             "#E5DDE6",
             "#E1FBE9"
@@ -7291,6 +4452,7 @@
         "isPixelated": 1,
         "tags": [],
         "searchTerms": [],
+        "originalOrder": 4,
         "originalName": "whiteclear-03"
     },
     {
@@ -7298,7 +4460,7 @@
         "url": "images/glitter/transparent/transparent_pink-sparkle.gif",
         "name": "Pink Sparkle",
         "generatedName": "Very Light Magenta",
-        "sortOrder": 107,
+        "sortOrder": 260,
         "colorCodes": [
             "#FF49FF",
             "#9200AA",
@@ -7331,7 +4493,7 @@
         "url": "images/glitter/transparent/transparent_bubbles.gif",
         "name": "Bubbles",
         "generatedName": "Neon Blue",
-        "sortOrder": 108,
+        "sortOrder": 261,
         "colorCodes": [
             "#00D2FF"
         ],
@@ -7359,7 +4521,7 @@
         "url": "images/glitter/transparent/transparent_pastel-sparkle.gif",
         "name": "Pastel Sparkle",
         "generatedName": "Light Gray",
-        "sortOrder": 109,
+        "sortOrder": 262,
         "colorCodes": [
             "#F3B1DE",
             "#05D3FF",
@@ -7397,7 +4559,7 @@
         "url": "images/glitter/transparent/transparent_rainbow-sparkle.gif",
         "name": "Rainbow Sparkle",
         "generatedName": "White",
-        "sortOrder": 110,
+        "sortOrder": 263,
         "colorCodes": [
             "#FFFFFF",
             "#FF0000",
@@ -7435,7 +4597,7 @@
         "url": "images/glitter/noise/noise_magenta.gif",
         "name": "Magenta",
         "generatedName": "Jewel Tone Pink",
-        "sortOrder": 78,
+        "sortOrder": 264,
         "colorCodes": [
             "#960069"
         ],
@@ -7462,7 +4624,7 @@
         "url": "images/glitter/noise/noise_red.gif",
         "name": "Red",
         "generatedName": "Vivid Red",
-        "sortOrder": 79,
+        "sortOrder": 265,
         "colorCodes": [
             "#D20000"
         ],
@@ -7488,7 +4650,7 @@
         "url": "images/glitter/noise/noise_orange.gif",
         "name": "Orange",
         "generatedName": "Jewel Tone Bronze",
-        "sortOrder": 80,
+        "sortOrder": 266,
         "colorCodes": [
             "#966900"
         ],
@@ -7515,7 +4677,7 @@
         "url": "images/glitter/noise/noise_yellow.gif",
         "name": "Yellow",
         "generatedName": "Jewel Tone Yellow",
-        "sortOrder": 81,
+        "sortOrder": 267,
         "colorCodes": [
             "#969600"
         ],
@@ -7541,7 +4703,7 @@
         "url": "images/glitter/noise/noise_lime.gif",
         "name": "Lime",
         "generatedName": "Jewel Tone Green",
-        "sortOrder": 82,
+        "sortOrder": 268,
         "colorCodes": [
             "#699600"
         ],
@@ -7568,7 +4730,7 @@
         "url": "images/glitter/noise/noise_white.gif",
         "name": "White",
         "generatedName": "Light Gray",
-        "sortOrder": 83,
+        "sortOrder": 269,
         "colorCodes": [
             "#D2D2D2"
         ],
@@ -7595,7 +4757,7 @@
         "url": "images/glitter/noise/noise_gray.gif",
         "name": "Gray",
         "generatedName": "Gray",
-        "sortOrder": 84,
+        "sortOrder": 270,
         "colorCodes": [
             "#696969"
         ],
@@ -7620,7 +4782,7 @@
         "url": "images/glitter/noise/noise_black.gif",
         "name": "Black",
         "generatedName": "Black",
-        "sortOrder": 85,
+        "sortOrder": 271,
         "colorCodes": [
             "#000000"
         ],
@@ -7642,11 +4804,1247 @@
         "searchTerms": []
     },
     {
+        "id": 130,
+        "url": "images/glitter/bring-on-the-glitter/black-001.gif",
+        "name": "Green and Blue",
+        "generatedName": "Green and Blue",
+        "sortOrder": 57,
+        "colorCodes": [
+            "#282828",
+            "#003A27",
+            "#0000FF"
+        ],
+        "colorWeights": [
+            0.82,
+            0.12,
+            0.05
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1000,
+        "originalName": "black-001"
+    },
+    {
+        "id": 131,
+        "url": "images/glitter/bring-on-the-glitter/black-002.gif",
+        "name": "Charcoal",
+        "generatedName": "Charcoal",
+        "sortOrder": 58,
+        "colorCodes": [
+            "#232626",
+            "#000066"
+        ],
+        "colorWeights": [
+            0.94,
+            0.05
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1001,
+        "originalName": "black-002"
+    },
+    {
+        "id": 49,
+        "url": "images/glitter/bring-on-the-glitter/black-003.gif",
+        "name": "Black 3",
+        "generatedName": "Black",
+        "sortOrder": 59,
+        "colorCodes": [
+            "#2D2D2D"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Black",
+            "Dark",
+            "Grayscale",
+            "Neutral"
+        ],
+        "searchTerms": [
+            "etc_black-3"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1002,
+        "originalName": "black-003"
+    },
+    {
+        "id": 46,
+        "url": "images/glitter/bring-on-the-glitter/black-004.gif",
+        "name": "Black",
+        "generatedName": "Black",
+        "sortOrder": 60,
+        "colorCodes": [
+            "#1E1E1E"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 61,
+        "height": 31,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Black",
+            "Dark",
+            "Grayscale",
+            "Neutral"
+        ],
+        "searchTerms": [
+            "glitter_black"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1003,
+        "originalName": "black-004"
+    },
+    {
+        "id": 48,
+        "url": "images/glitter/bring-on-the-glitter/black-005.gif",
+        "name": "Black 2",
+        "generatedName": "Black",
+        "sortOrder": 61,
+        "colorCodes": [
+            "#1E1E1E"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Black",
+            "Dark",
+            "Grayscale",
+            "Neutral"
+        ],
+        "searchTerms": [
+            "etc_black-2"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1004,
+        "originalName": "black-005"
+    },
+    {
+        "id": 132,
+        "url": "images/glitter/bring-on-the-glitter/black-01.gif",
+        "name": "Charcoal",
+        "generatedName": "Charcoal",
+        "sortOrder": 62,
+        "colorCodes": [
+            "#3A3A3A",
+            "#DBDBDB",
+            "#0000FF"
+        ],
+        "colorWeights": [
+            0.82,
+            0.07,
+            0.06
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1005,
+        "originalName": "black-01"
+    },
+    {
+        "id": 133,
+        "url": "images/glitter/bring-on-the-glitter/black-02.gif",
+        "name": "Green, Blue, and Purple",
+        "generatedName": "Green, Blue, and Purple",
+        "sortOrder": 63,
+        "colorCodes": [
+            "#3A3A3A",
+            "#003F1E",
+            "#0000FF",
+            "#A35B92"
+        ],
+        "colorWeights": [
+            0.82,
+            0.07,
+            0.06,
+            0.05
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1006,
+        "originalName": "black-02"
+    },
+    {
+        "id": 134,
+        "url": "images/glitter/bring-on-the-glitter/black-03.gif",
+        "name": "Rainbow",
+        "generatedName": "Rainbow",
+        "sortOrder": 64,
+        "colorCodes": [
+            "#1A1A1A",
+            "#2E0000",
+            "#603900",
+            "#003F1E",
+            "#0000FF"
+        ],
+        "colorWeights": [
+            0.62,
+            0.13,
+            0.12,
+            0.07,
+            0.06
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1007,
+        "originalName": "black-03"
+    },
+    {
+        "id": 135,
+        "url": "images/glitter/bring-on-the-glitter/black-04.gif",
+        "name": "Green, Blue, and Purple",
+        "generatedName": "Green, Blue, and Purple",
+        "sortOrder": 65,
+        "colorCodes": [
+            "#494949",
+            "#003F1E",
+            "#0000FF",
+            "#A35B92"
+        ],
+        "colorWeights": [
+            0.82,
+            0.07,
+            0.06,
+            0.05
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1008,
+        "originalName": "black-04"
+    },
+    {
+        "id": 136,
+        "url": "images/glitter/bring-on-the-glitter/black-05.gif",
+        "name": "Orange, Green, and Blue",
+        "generatedName": "Orange, Green, and Blue",
+        "sortOrder": 66,
+        "colorCodes": [
+            "#1D1D1D",
+            "#56350D",
+            "#003F1E",
+            "#0000FF",
+            "#A35B92"
+        ],
+        "colorWeights": [
+            0.75,
+            0.07,
+            0.07,
+            0.06,
+            0.05
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 1009,
+        "originalName": "black-05"
+    },
+    {
+        "id": 137,
+        "url": "images/glitter/bring-on-the-glitter/blue-01.gif",
+        "name": "Off-White",
+        "generatedName": "Off-White",
+        "sortOrder": 67,
+        "colorCodes": [
+            "#C3E7D3"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 2000,
+        "originalName": "blue-01"
+    },
+    {
+        "id": 99,
+        "url": "images/glitter/bring-on-the-glitter/blue-02.gif",
+        "name": "Pastel Blue",
+        "generatedName": "Pastel Silver",
+        "sortOrder": 68,
+        "colorCodes": [
+            "#B4D2E1"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Blue",
+            "Cool",
+            "Light",
+            "Pastel",
+            "Silver"
+        ],
+        "searchTerms": [
+            "glitter_pastel-blue"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 2001,
+        "originalName": "blue-02"
+    },
+    {
+        "id": 59,
+        "url": "images/glitter/bring-on-the-glitter/blue-03.gif",
+        "name": "Lavender",
+        "generatedName": "Pastel Silver",
+        "sortOrder": 69,
+        "colorCodes": [
+            "#B4B4E1"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Blue",
+            "Cool",
+            "Light",
+            "Pastel"
+        ],
+        "searchTerms": [
+            "etc_lavender"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 2002,
+        "originalName": "blue-03"
+    },
+    {
+        "id": 51,
+        "url": "images/glitter/bring-on-the-glitter/gold-04.gif",
+        "name": "Bronze 2",
+        "generatedName": "Muted Orange",
+        "sortOrder": 75,
+        "colorCodes": [
+            "#B49678"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Beige",
+            "Bronze",
+            "Muted",
+            "Warm"
+        ],
+        "searchTerms": [
+            "Bronze",
+            "etc_bronze-2",
+            "etc_bronze",
+            "nude-04"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 3004,
+        "originalName": "gold-04"
+    },
+    {
+        "id": 56,
+        "url": "images/glitter/bring-on-the-glitter/gold-06.gif",
+        "name": "Gold",
+        "generatedName": "Vivid Orange",
+        "sortOrder": 77,
+        "colorCodes": [
+            "#FFD24B"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Light",
+            "Orange",
+            "Vivid",
+            "Warm"
+        ],
+        "searchTerms": [
+            "etc_gold"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 3006,
+        "originalName": "gold-06"
+    },
+    {
+        "id": 181,
+        "url": "images/glitter/bring-on-the-glitter/gold-07.gif",
+        "name": "Yellow, Pink, and Orange",
+        "generatedName": "Yellow, Pink, and Orange",
+        "sortOrder": 78,
+        "colorCodes": [
+            "#FFD85A",
+            "#F19CB2",
+            "#EE914C"
+        ],
+        "colorWeights": [
+            0.57,
+            0.29,
+            0.14
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 3007,
+        "originalName": "gold-07"
+    },
+    {
+        "id": 61,
+        "url": "images/glitter/bring-on-the-glitter/green-01.gif",
+        "name": "Seafoam",
+        "generatedName": "Pastel Silver",
+        "sortOrder": 81,
+        "colorCodes": [
+            "#C3E1B4"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Green",
+            "Light",
+            "Pastel"
+        ],
+        "searchTerms": [
+            "etc_seafoam"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 4000,
+        "originalName": "green-01"
+    },
+    {
+        "id": 186,
+        "url": "images/glitter/bring-on-the-glitter/green-07.gif",
+        "name": "Muted Yellow-Green",
+        "generatedName": "Muted Yellow-Green",
+        "sortOrder": 88,
+        "colorCodes": [
+            "#BDDBA8",
+            "#00FF00",
+            "#FCFFFC"
+        ],
+        "colorWeights": [
+            0.78,
+            0.11,
+            0.11
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 4007,
+        "originalName": "green-07"
+    },
+    {
+        "id": 187,
+        "url": "images/glitter/bring-on-the-glitter/green-08.gif",
+        "name": "Yellow-Green",
+        "generatedName": "Yellow-Green",
+        "sortOrder": 89,
+        "colorCodes": [
+            "#4DA619",
+            "#CEF0CA",
+            "#00FF3F",
+            "#FCFFFC"
+        ],
+        "colorWeights": [
+            0.56,
+            0.22,
+            0.11,
+            0.11
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 4008,
+        "originalName": "green-08"
+    },
+    {
+        "id": 188,
+        "url": "images/glitter/bring-on-the-glitter/green-09.gif",
+        "name": "Yellow-Green",
+        "generatedName": "Yellow-Green",
+        "sortOrder": 90,
+        "colorCodes": [
+            "#4DA619",
+            "#E5F9E3",
+            "#00FF3F",
+            "#FFF09E"
+        ],
+        "colorWeights": [
+            0.56,
+            0.26,
+            0.11,
+            0.07
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 4009,
+        "originalName": "green-09"
+    },
+    {
+        "id": 53,
+        "url": "images/glitter/bring-on-the-glitter/nude-01.gif",
+        "name": "Champagne",
+        "generatedName": "Pastel Silver",
+        "sortOrder": 97,
+        "colorCodes": [
+            "#E1D2B4"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Beige",
+            "Light",
+            "Pastel",
+            "Warm"
+        ],
+        "searchTerms": [
+            "etc_champagne"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 5006,
+        "originalName": "nude-01"
+    },
+    {
+        "id": 55,
+        "url": "images/glitter/bring-on-the-glitter/pink-001.gif",
+        "name": "Dusty Pink",
+        "generatedName": "Muted Pink",
+        "sortOrder": 104,
+        "colorCodes": [
+            "#FF96FF"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [
+            "Light",
+            "Muted",
+            "Pink"
+        ],
+        "searchTerms": [
+            "etc_dusty-pink"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 7000,
+        "originalName": "pink-001"
+    },
+    {
+        "id": 222,
+        "url": "images/glitter/bring-on-the-glitter/pink-002.gif",
+        "name": "Light Purple",
+        "generatedName": "Light Purple",
+        "sortOrder": 105,
+        "colorCodes": [
+            "#FD66FD",
+            "#F2D1D7"
+        ],
+        "colorWeights": [
+            0.55,
+            0.46
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 7001,
+        "originalName": "pink-002"
+    },
+    {
+        "id": 223,
+        "url": "images/glitter/bring-on-the-glitter/pink-003.gif",
+        "name": "Purple",
+        "generatedName": "Purple",
+        "sortOrder": 106,
+        "colorCodes": [
+            "#FD35FD",
+            "#F2D1D7"
+        ],
+        "colorWeights": [
+            0.55,
+            0.46
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 7002,
+        "originalName": "pink-003"
+    },
+    {
+        "id": 224,
+        "url": "images/glitter/bring-on-the-glitter/pink-01.gif",
+        "name": "Off-White",
+        "generatedName": "Off-White",
+        "sortOrder": 107,
+        "colorCodes": [
+            "#E7C3C9"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 7003,
+        "originalName": "pink-01"
+    },
+    {
+        "id": 227,
+        "url": "images/glitter/bring-on-the-glitter/purple-001.gif",
+        "name": "Off-White",
+        "generatedName": "Off-White",
+        "sortOrder": 114,
+        "colorCodes": [
+            "#E4C0E5",
+            "#FFF7FD"
+        ],
+        "colorWeights": [
+            0.95,
+            0.05
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "noise-2",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 8000,
+        "originalName": "purple-001"
+    },
+    {
+        "id": 292,
+        "url": "images/glitter/sparkelies/opal.gif",
+        "name": "Opal",
+        "generatedName": "Muted Magenta",
+        "sortOrder": 43,
+        "colorCodes": [
+            "#E2DEE6",
+            "#C7E3BB",
+            "#DDA5BD"
+        ],
+        "colorWeights": [
+            0.48,
+            0.26,
+            0.23
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 120,
+        "height": 60,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "DAN-411",
+            "authorId": "dan",
+            "authorUrl": "https://osodeoro.tripod.com/",
+            "source": "Sparkelies",
+            "sourceId": "sparkelies",
+            "sourceUrl": "https://web.archive.org/web/20040702024614/http://members.tripod.com/%7Eosodeoro/Sparklies/Sparkelies.html",
+            "license": "unknown",
+            "notes": "Created by November 22, 2001"
+        },
+        "originalOrder": 1008,
+        "originalName": "opal"
+    },
+    {
+        "id": 217,
+        "url": "images/glitter/bring-on-the-glitter/brown-01.gif",
+        "name": "Bronze",
+        "generatedName": "Bronze",
+        "sortOrder": 91,
+        "colorCodes": [
+            "#905C34",
+            "#CC7C50"
+        ],
+        "colorWeights": [
+            0.79,
+            0.21
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 5000,
+        "originalName": "brown-01"
+    },
+    {
+        "id": 218,
+        "url": "images/glitter/bring-on-the-glitter/brown-02.gif",
+        "name": "Brown",
+        "generatedName": "Brown",
+        "sortOrder": 92,
+        "colorCodes": [
+            "#7D5446",
+            "#737269"
+        ],
+        "colorWeights": [
+            0.78,
+            0.22
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 5001,
+        "originalName": "brown-02"
+    },
+    {
+        "id": 219,
+        "url": "images/glitter/bring-on-the-glitter/brown-06.gif",
+        "name": "Red, Orange, and Yellow",
+        "generatedName": "Red, Orange, and Yellow",
+        "sortOrder": 96,
+        "colorCodes": [
+            "#7D3D3D",
+            "#707070",
+            "#763D0A",
+            "#AC7676",
+            "#393906",
+            "#A8723F",
+            "#B8B883"
+        ],
+        "colorWeights": [
+            0.29,
+            0.16,
+            0.16,
+            0.14,
+            0.1,
+            0.09,
+            0.04
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 5005,
+        "originalName": "brown-06"
+    },
+    {
+        "id": 73,
+        "url": "images/glitter/bring-on-the-glitter/nude-03.gif",
+        "name": "Burn Sienna",
+        "generatedName": "Muted Orange",
+        "sortOrder": 98,
+        "colorCodes": [
+            "#B48778"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [
+            "Beige",
+            "Brown",
+            "Muted",
+            "Warm"
+        ],
+        "searchTerms": [
+            "glitter_burn-sienna"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 5008,
+        "originalName": "nude-03"
+    },
+    {
+        "id": 62,
+        "url": "images/glitter/bring-on-the-glitter/silver-01.gif",
+        "name": "Snow",
+        "generatedName": "Light Gray",
+        "sortOrder": 130,
+        "colorCodes": [
+            "#C3C3C3"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [
+            "Grayscale",
+            "Light",
+            "Neutral",
+            "Silver"
+        ],
+        "searchTerms": [
+            "etc_snow"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 10000,
+        "originalName": "silver-01"
+    },
+    {
+        "id": 74,
+        "url": "images/glitter/bring-on-the-glitter/silver-03.gif",
+        "name": "Camo Pattern",
+        "generatedName": "Gray",
+        "sortOrder": 131,
+        "colorCodes": [
+            "#696969"
+        ],
+        "colorWeights": [
+            0
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "category": "etc",
+        "isPixelated": 1,
+        "tags": [
+            "Beige",
+            "Brown",
+            "Contrast",
+            "Multicolor",
+            "Neutral",
+            "Pattern"
+        ],
+        "searchTerms": [
+            "glitter_camo-pattern"
+        ],
+        "attribution": {
+            "author": "Aylana",
+            "authorId": "aylana",
+            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+            "source": "designbyAylana ~ Bring On The Glitter",
+            "sourceId": "bring-on-the-glitter",
+            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+            "license": "unknown"
+        },
+        "originalOrder": 10002,
+        "originalName": "silver-03"
+    },
+    {
         "id": 115,
         "url": "images/glitter/sparkle-2/sparkle_pink-hearts.gif",
         "name": "Pink Hearts",
         "generatedName": "Vivid Pink",
-        "sortOrder": 86,
+        "sortOrder": 272,
         "colorCodes": [
             "#F02DF0"
         ],
@@ -7657,7 +6055,7 @@
         "hasTransparency": 0,
         "width": 78,
         "height": 110,
-        "category": "sparkle-2",
+        "category": "etc",
         "isPixelated": 1,
         "tags": [
             "Pattern",
@@ -7671,7 +6069,7 @@
         "url": "images/glitter/sparkle-2/sparkle_green.gif",
         "name": "Green",
         "generatedName": "Vivid Green",
-        "sortOrder": 87,
+        "sortOrder": 273,
         "colorCodes": [
             "#006900"
         ],
@@ -7682,7 +6080,7 @@
         "hasTransparency": 0,
         "width": 100,
         "height": 100,
-        "category": "sparkle-2",
+        "category": "etc",
         "isPixelated": 1,
         "tags": [
             "Green",
@@ -7695,7 +6093,7 @@
         "url": "images/glitter/sparkle-2/sparkle_blue.gif",
         "name": "Blue",
         "generatedName": "Vivid Blue",
-        "sortOrder": 88,
+        "sortOrder": 274,
         "colorCodes": [
             "#3C69FF"
         ],
@@ -7706,7 +6104,7 @@
         "hasTransparency": 0,
         "width": 55,
         "height": 55,
-        "category": "sparkle-2",
+        "category": "etc",
         "isPixelated": 1,
         "tags": [
             "Blue",
@@ -7719,7 +6117,7 @@
         "url": "images/glitter/sparkle-2/sparkle_periwinkle.gif",
         "name": "Periwinkle",
         "generatedName": "Muted Blue",
-        "sortOrder": 89,
+        "sortOrder": 275,
         "colorCodes": [
             "#8796FF"
         ],
@@ -7730,7 +6128,7 @@
         "hasTransparency": 0,
         "width": 100,
         "height": 100,
-        "category": "sparkle-2",
+        "category": "etc",
         "isPixelated": 1,
         "tags": [
             "Blue",
@@ -7746,7 +6144,7 @@
         "url": "images/glitter/etc/etc_hot-pink.gif",
         "name": "Hot Pink",
         "generatedName": "Muted Pink",
-        "sortOrder": 92,
+        "sortOrder": 276,
         "colorCodes": [
             "#FE3EAB"
         ],
@@ -7769,7 +6167,7 @@
         "url": "images/glitter/etc/etc_dark-green.gif",
         "name": "Dark Green",
         "generatedName": "Muted Green",
-        "sortOrder": 95,
+        "sortOrder": 277,
         "colorCodes": [
             "#2D4B2D"
         ],
@@ -7794,7 +6192,7 @@
         "url": "images/glitter/etc/etc_green.gif",
         "name": "Green",
         "generatedName": "Muted Blue",
-        "sortOrder": 96,
+        "sortOrder": 278,
         "colorCodes": [
             "#1E4B3C"
         ],
@@ -7819,7 +6217,7 @@
         "url": "images/glitter/etc/glitter_light-blue.gif",
         "name": "Light Blue",
         "generatedName": "Muted Blue",
-        "sortOrder": 98,
+        "sortOrder": 279,
         "colorCodes": [
             "#69C3F0"
         ],
@@ -7846,7 +6244,7 @@
         "url": "images/glitter/etc/etc_blue-green.gif",
         "name": "Blue Green",
         "generatedName": "Jewel Tone Blue",
-        "sortOrder": 99,
+        "sortOrder": 280,
         "colorCodes": [
             "#006987"
         ],

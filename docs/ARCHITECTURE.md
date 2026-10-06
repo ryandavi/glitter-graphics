@@ -60,7 +60,7 @@ Transformable layers keep `transform.position` as the element center and store `
 | Editable property specs | `FIELDS` in `js/core/fields.js` | Label, unit, range and default per property. Panel rows stamp them; slot and layer defaults read them. |
 | Preset libraries | `createPresetLibrary` in `js/ui/preset-library.js` | Frozen, searchable entries from one or more sources. Applying an entry copies its plain value; `presetGrid` renders the shared grouped keyboard-navigable picker. |
 | Filter operations and looks | `FILTER_OPS` in `js/effects/filter-ops.js`; `FILTERS` in `js/effects/filters.js` | Operations own CSS and pixel painters. A look owns fields and a recipe; its render tier derives from its operations. The Looks grid and selected-look settings render from these entries. |
-| Library kinds | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | One entry per pickable asset kind (glitter, stickers, brush tips, shapes, fonts): search, filters, browser `layout` (`folders` or `grouped`), rendered from two templates. Each kind is a `ContentManager` subclass with an `AssetBrowser`; recents and favorites come with the base class and live in `PREFERENCES` (`libraryRecents`, `libraryFavorites`). |
+| Library kinds | `ASSET_BROWSERS` in `js/ui/asset-browser-markup.js` | One entry per pickable asset kind (glitter, stickers, brush tips, shapes, fonts): search, filters, browser `layout` (`rail`, `folders` or `grouped`), rendered from two templates. Each kind is a `ContentManager` subclass with an `AssetBrowser`; recents and favorites come with the base class and live in `PREFERENCES` (`libraryRecents`, `libraryFavorites`, `libraryRoots`). |
 | Tools | `TOOLS` in `js/core/tools.js` | One entry per tool: button, icon, shortcut command, availability, canvas cursor and `onCanvasAction`. `ToolType`, `TOOL_GROUPS` and `TOOL_TOUCH_ROUTES` derive from it. |
 | Commands and shortcuts | `COMMANDS` in `js/core/commands.js` | Dispatched by `js/ui/keyboard.js`. |
 | Runtime user preferences | `PREFERENCES` in `js/core/preferences.js` | `PREFERENCES.get(key)` / `set(key, value)`, persisted to `localStorage`. |
@@ -230,6 +230,9 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 - Don't hand-edit generated manifests. Re-export from the admin, or run `node tools/split-manifests.js` to regenerate the index and detail files from a full manifest.
 - Attribution (author, source, license) follows one schema across brushes, stickers and fonts: `js/core/attribution.js`.
 - Glitter and sticker category exports have a `parent` slug or null, capped at a root and one set level. Assets retain one home category; original names, old library-name search terms and imported historical `appearances` remain metadata. Creator browsing derives from attribution `authorId`, with `sourceId` for source groups. Neither style roots nor historical appearances add extra asset records.
+- Glitter uses `LibraryCatalog` for the category tree, filtered counts and creator membership, `AssetBrowserRail` for root/set selection and `AssetSetHeader` for description, credit and optional original ordering. The first style root opens as one wall of its own and child-set assets; roots never mix in Style view. Creator All can cross roots. `AssetBrowserFolders` retains the folder libraries' creator navigation until their rail conversion.
+- `glitterColorOrder` and `sortByGlitterColor` in `js/paint/color-selection.js` supply stable color bands. Keys are cached at glitter manifest load. Multicolor/Pattern assets form the end band, with Christmas-tagged assets grouped at its end. Search retains score ordering. Original order is a temporary set view option; the last style root is a per-library preference.
+
 
 ## Content modals
 

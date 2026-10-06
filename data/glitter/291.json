@@ -4,7 +4,7 @@
     "name": "Lime Peridot",
     "generatedName": "Yellow-Green",
     "brightness": "0.320",
-    "sortOrder": 1007,
+    "sortOrder": 42,
     "hue": 0.272,
     "colorCodes": [
         "#5F9900",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1007,
     "originalName": "lime-peridot"
 }

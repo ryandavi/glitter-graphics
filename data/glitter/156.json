@@ -4,7 +4,7 @@
     "name": "Magenta",
     "generatedName": "Magenta",
     "brightness": "0.530",
-    "sortOrder": 2,
+    "sortOrder": 257,
     "hue": 0.951,
     "colorCodes": [
         "#E02B8D",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 2,
     "originalName": "pinkclear-05"
 }

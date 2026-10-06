@@ -4,7 +4,7 @@
     "name": "Purple and Red",
     "generatedName": "Purple and Red",
     "brightness": "0.480",
-    "sortOrder": 7008,
+    "sortOrder": 112,
     "hue": 0.811,
     "colorCodes": [
         "#8A05DD",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 7008,
     "originalName": "violet-01"
 }

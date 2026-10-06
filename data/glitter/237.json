@@ -4,7 +4,7 @@
     "name": "Silver",
     "generatedName": "Dark Gray",
     "brightness": "0.420",
-    "sortOrder": 1013,
+    "sortOrder": 47,
     "hue": 1.1,
     "colorCodes": [
         "#6B6B6B",
@@ -26,6 +26,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1013,
     "originalName": "silver",
     "appearances": [
         {

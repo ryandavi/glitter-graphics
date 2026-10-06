@@ -4,7 +4,7 @@
     "name": "Teal",
     "generatedName": "Teal",
     "brightness": "0.620",
-    "sortOrder": 19,
+    "sortOrder": 176,
     "hue": 0.525,
     "colorCodes": [
         "#72B7B0",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 19,
     "originalName": "twinkle-04"
 }

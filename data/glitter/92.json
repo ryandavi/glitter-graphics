@@ -4,7 +4,7 @@
     "name": "Light Green",
     "generatedName": "Muted Green",
     "brightness": "1.000",
-    "sortOrder": 4004,
+    "sortOrder": 85,
     "hue": 0.256,
     "colorCodes": [
         "#B4D269"
@@ -30,5 +30,6 @@
     "searchTerms": [
         "glitter_light-green"
     ],
+    "originalOrder": 4004,
     "originalName": "green-04"
 }

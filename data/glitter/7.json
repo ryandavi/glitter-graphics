@@ -4,7 +4,7 @@
     "name": "Gold",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 3001,
+    "sortOrder": 72,
     "hue": 0.158,
     "colorCodes": [
         "#FFD269"
@@ -32,5 +32,6 @@
     "searchTerms": [
         "glitter_gold"
     ],
+    "originalOrder": 3001,
     "originalName": "gold-010"
 }

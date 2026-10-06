@@ -4,7 +4,7 @@
     "name": "Dark Green",
     "generatedName": "Blue and Yellow",
     "brightness": "0.000",
-    "sortOrder": 4,
+    "sortOrder": 56,
     "hue": 1.2,
     "colorCodes": [
         "#003C4B",
@@ -32,5 +32,6 @@
     "searchTerms": [
         "glitter_dark-green"
     ],
+    "originalOrder": 4,
     "originalName": "sea-05"
 }

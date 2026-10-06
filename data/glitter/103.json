@@ -4,7 +4,7 @@
     "name": "Pink Red",
     "generatedName": "Vivid Red",
     "brightness": "1.000",
-    "sortOrder": 9005,
+    "sortOrder": 127,
     "hue": 0.042,
     "colorCodes": [
         "#FF33FF",
@@ -37,5 +37,6 @@
     "searchTerms": [
         "glitter_pink-red"
     ],
+    "originalOrder": 9005,
     "originalName": "crimson-03"
 }

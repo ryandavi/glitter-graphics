@@ -4,7 +4,7 @@
     "name": "Magenta",
     "generatedName": "Neon Pink",
     "brightness": "1.000",
-    "sortOrder": 7006,
+    "sortOrder": 110,
     "hue": 0.125,
     "colorCodes": [
         "#B400A5"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_magenta"
     ],
+    "originalOrder": 7006,
     "originalName": "pink-04"
 }

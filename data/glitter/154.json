@@ -4,7 +4,7 @@
     "name": "Blue",
     "generatedName": "Blue",
     "brightness": "0.230",
-    "sortOrder": 0,
+    "sortOrder": 255,
     "hue": 0.654,
     "colorCodes": [
         "#002C85",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 0,
     "originalName": "blueclear-04"
 }

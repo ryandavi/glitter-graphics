@@ -4,7 +4,7 @@
     "name": "Burn Sienna",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 5008,
+    "sortOrder": 98,
     "hue": 0.083,
     "colorCodes": [
         "#B48778"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 5675,
-    "category": "bring-on-the-glitter",
+    "category": "etc",
     "isPixelated": 1,
     "tags": [
         "Beige",
@@ -31,5 +31,15 @@
     "searchTerms": [
         "glitter_burn-sienna"
     ],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 5008,
     "originalName": "nude-03"
 }

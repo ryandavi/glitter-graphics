@@ -4,7 +4,7 @@
     "name": "Red",
     "generatedName": "Vivid Red",
     "brightness": "0.400",
-    "sortOrder": 9000,
+    "sortOrder": 122,
     "hue": 0.958,
     "colorCodes": [
         "#FF0000",
@@ -38,5 +38,6 @@
     "searchTerms": [
         "gliter_red"
     ],
+    "originalOrder": 9000,
     "originalName": "crimson-001"
 }

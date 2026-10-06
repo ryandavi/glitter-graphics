@@ -4,7 +4,7 @@
     "name": "Light Yellow",
     "generatedName": "Light Yellow",
     "brightness": "0.740",
-    "sortOrder": 3008,
+    "sortOrder": 79,
     "hue": 0.199,
     "colorCodes": [
         "#EEE65F",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 3008,
     "originalName": "gold-08"
 }

@@ -4,7 +4,7 @@
     "name": "Turquoise",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 1017,
+    "sortOrder": 51,
     "hue": 0.558,
     "colorCodes": [
         "#008796"
@@ -32,5 +32,6 @@
     "searchTerms": [
         "glitter_turquoise"
     ],
+    "originalOrder": 1017,
     "originalName": "turquoise"
 }

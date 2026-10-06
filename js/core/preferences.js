@@ -17,6 +17,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	showAllControls: { default: () => false },
 	filterPreviewLevel: { default: () => 'still' },
 	// The Library's per-kind asset id lists: { glitter: [id, ...], font: [...] }.
+	libraryRoots: { default: () => ({}), keepOnReset: true },
 	libraryRecents: { default: () => ({}), keepOnReset: true },
 	libraryFavorites: { default: () => ({}), keepOnReset: true },
 	// The Library's per-kind recent search queries: { glitter: ['pink', ...] }.

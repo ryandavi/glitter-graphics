@@ -46,7 +46,7 @@ const ASSET_BROWSER_COLOR_CHIPS = ['red', 'orange', 'yellow', 'green', 'blue', '
 const ASSET_BROWSERS = Object.freeze([
 	{
 		prefix: 'glitter', searchHost: 'glitterSearchSection', browserHost: 'glitterOptions',
-		title: 'Glitter', layout: 'folders', placeholder: 'Search by name or tag...',
+		title: 'Glitter', layout: 'rail', placeholder: 'Search by name or tag...',
 		creatorView: true, tileCategoryIcon: true,
 		filters: [
 			{ kind: 'nameOnly' },
@@ -60,7 +60,6 @@ const ASSET_BROWSERS = Object.freeze([
 			] },
 			{ kind: 'chips', label: 'Intensity', filter: 'intensity', options: [{ value: 'vivid', label: 'Vivid' }, { value: 'muted', label: 'Muted' }] },
 			{ kind: 'chips', label: 'Temperature', filter: 'temperature', options: [{ value: 'warm', label: 'Warm' }, { value: 'cool', label: 'Cool' }] },
-			{ kind: 'categories', label: 'Category' },
 			{ kind: 'chips', label: 'Vibe', filter: 'special', options: [{ value: 'pattern', label: 'Pattern' }, { value: 'multicolor', label: 'Multicolor' }] }
 		]
 	},

@@ -4,7 +4,7 @@
     "name": "Dark Blue-Green",
     "generatedName": "Dark Blue-Green",
     "brightness": "0.250",
-    "sortOrder": 3,
+    "sortOrder": 55,
     "hue": 0.547,
     "colorCodes": [
         "#005D60",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 3,
     "originalName": "sea-04"
 }

@@ -4,7 +4,7 @@
     "name": "Golden Orange",
     "generatedName": "Golden Orange",
     "brightness": "0.420",
-    "sortOrder": 3005,
+    "sortOrder": 76,
     "hue": 0.174,
     "colorCodes": [
         "#B28D00",
@@ -33,5 +33,6 @@
         "etc_gold-3",
         "glitter_bronze"
     ],
+    "originalOrder": 3005,
     "originalName": "gold-05"
 }

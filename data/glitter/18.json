@@ -4,7 +4,7 @@
     "name": "Magenta Blue",
     "generatedName": "Pink and Blue",
     "brightness": "1.000",
-    "sortOrder": 8001,
+    "sortOrder": 115,
     "hue": 1.2,
     "colorCodes": [
         "#FF00FF",
@@ -39,5 +39,6 @@
     "searchTerms": [
         "glitter_magenta-blue"
     ],
+    "originalOrder": 8001,
     "originalName": "purple-002"
 }

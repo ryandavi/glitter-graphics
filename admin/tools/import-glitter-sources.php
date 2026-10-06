@@ -40,7 +40,7 @@ class GlitterSourceImport
 		}
 		$roots = array_column($map['roots'], 'slug');
 		foreach ($map['sets'] as $set) {
-			if (!in_array($set['parent'], $roots, true)) throw new RuntimeException('Sets must have a mapped style root');
+			if (isset($set['parent']) && !in_array($set['parent'], $roots, true)) throw new RuntimeException('Set parents must be mapped style roots');
 			if (!in_array($set['names'], ['original', 'generated'], true)) throw new RuntimeException('Unknown naming policy');
 			if (!in_array($set['source'] ?? $set['slug'], $map['precedence'], true)) throw new RuntimeException('Source missing from precedence');
 		}
@@ -274,9 +274,9 @@ class GlitterSourceImport
 				$name = $entry['name'] ?: ($asset['generated_name'] ?: $asset['name']);
 				$alreadyHome = $entry['record'] && $entry['record']['category_slug'] === $entry['slug'] && $entry['record']['url'] === $url;
 				$sort = $entry['set'] && !$alreadyHome ? $winner['sort'] : (int)($asset['sort_order'] ?? 0);
-				$active = $entry['set'] ? 1 : (int)$asset['is_active'];
-				$this->db->prepare('UPDATE glitter SET glitter_category_id = ?, url = ?, name = ?, original_name = ?, appearances = ?, search_terms = ?, file_hash = ?, sort_order = ?, is_active = ?, updated_at = NOW() WHERE id = ?', 'issssssiii', [
-					$ids[$entry['slug']], $url, $name, $entry['original'], json_encode($entry['appearances'], JSON_UNESCAPED_SLASHES), json_encode($entry['terms']), $entry['hash'], $sort, $active, (int)$record['id'],
+				$active = $entry['set'] && !$alreadyHome ? 1 : (int)$asset['is_active'];
+				$this->db->prepare('UPDATE glitter SET glitter_category_id = ?, url = ?, name = ?, original_name = ?, appearances = ?, search_terms = ?, file_hash = ?, sort_order = ?, original_order = COALESCE(original_order, ?), is_active = ?, updated_at = NOW() WHERE id = ?', 'issssssiiii', [
+					$ids[$entry['slug']], $url, $name, $entry['original'], json_encode($entry['appearances'], JSON_UNESCAPED_SLASHES), json_encode($entry['terms']), $entry['hash'], $sort, $entry['set'] ? $winner['sort'] : null, $active, (int)$record['id'],
 				])->close();
 				foreach ($entry['records'] as $old) {
 					if ((int)$old['id'] === (int)$record['id']) continue;

@@ -4,7 +4,7 @@
     "name": "Magenta",
     "generatedName": "Magenta",
     "brightness": "0.610",
-    "sortOrder": 16,
+    "sortOrder": 173,
     "hue": 0.913,
     "colorCodes": [
         "#B970A9",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 16,
     "originalName": "twinkle-015"
 }

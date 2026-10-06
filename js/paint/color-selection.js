@@ -152,3 +152,49 @@ function buildColorSelectionMask(editor, layer) {
 	return mask;
 }
 
+
+const GLITTER_COLOR_ORDER_THRESHOLDS = Object.freeze({
+	neutralSaturation: 0.16,
+	mutedEarthSaturation: 0.55,
+	paleCreamLightness: 0.78,
+	lightNeutral: 0.65,
+	darkNeutral: 0.12,
+	lightEarth: 0.75,
+	darkEarth: 0.4
+});
+
+// Keys are [band, end-band group, negative lightness]; equal keys preserve manifest order.
+function glitterColorOrder(item) {
+	const endBand = (item.tags || []).some(tag => /^(multicolor|pattern)$/i.test(tag));
+	const endGroup = (item.tags || []).some(tag => /^christmas$/i.test(tag)) ? 1 : 0;
+	const hex = item.colorCodes?.[0];
+	if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return endBand ? [15, endGroup, 0] : [10, 0, 0];
+	const [r, g, b] = [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16) / 255);
+	const max = Math.max(r, g, b), min = Math.min(r, g, b);
+	const delta = max - min, lightness = (max + min) / 2;
+	const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+	let hue = delta === 0 ? 0 : max === r ? ((g - b) / delta) % 6 : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+	hue = (hue * 60 + 360) % 360;
+	if (endBand) return [15, endGroup, -lightness];
+	let band;
+	// Low saturation stays neutral; warm muted colors and pale creams are earth tones.
+	if (saturation < GLITTER_COLOR_ORDER_THRESHOLDS.neutralSaturation) band = lightness > GLITTER_COLOR_ORDER_THRESHOLDS.lightNeutral ? 8 : lightness > GLITTER_COLOR_ORDER_THRESHOLDS.darkNeutral ? 9 : 10;
+	else if (hue >= 15 && hue <= 65 && (saturation < GLITTER_COLOR_ORDER_THRESHOLDS.mutedEarthSaturation || lightness > GLITTER_COLOR_ORDER_THRESHOLDS.paleCreamLightness)) band = lightness > GLITTER_COLOR_ORDER_THRESHOLDS.lightEarth ? 11 : lightness > GLITTER_COLOR_ORDER_THRESHOLDS.darkEarth ? 12 : hue < 45 ? 13 : 14;
+	else if ((hue >= 300 && hue < 345) || (hue >= 345 && lightness > 0.65)) band = 0;
+	else if (hue < 15 || hue >= 345) band = 1;
+	else if (hue < 45) band = 2;
+	else if (hue < 70) band = 3;
+	else if (hue < 165) band = 4;
+	else if (hue < 195) band = 5;
+	else if (hue < 255) band = 6;
+	else band = 7;
+	return [band, 0, -lightness];
+}
+
+function sortByGlitterColor(items) {
+	return [...items].sort((a, b) => {
+		const left = a._glitterColorOrder || glitterColorOrder(a);
+		const right = b._glitterColorOrder || glitterColorOrder(b);
+		return left[0] - right[0] || left[1] - right[1] || left[2] - right[2];
+	});
+}

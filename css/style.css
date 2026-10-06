@@ -21,7 +21,7 @@
   --color-accent-light: #6fa1e0;
   --color-accent-border: #3577cf;
   --color-accent-active: #2b68bd;
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_dusty-dark-blue.gif");
+  --theme-glitter-image: url("../images/glitter/bring-on-the-glitter/blue-09.gif");
   --workspace-heading-glitter-image: var(--theme-glitter-image);
   /* Canvas floor: clearly darker than a white canvas (Figma-style grey,
      tinted into the family) */
@@ -93,7 +93,7 @@
   --color-accent-light: #ef86bf;
   --color-accent-border: #e0559f;
   --color-accent-active: #cd4590;
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_hot-pink.gif");
+  --theme-glitter-image: url("../images/glitter/bring-on-the-glitter/pink-02.gif");
   --workspace-heading-glitter-image: var(--theme-glitter-image);
   /* Canvas floor: dusty rose so a white canvas pops */
   --color-bg-workspace: #f0d9e6;
@@ -156,7 +156,7 @@
   --color-accent-light: #5b8dd6;
   --color-accent-border: #316ac5;
   --color-accent-active: #2a5bb0;
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_blue-topaz.gif");
+  --theme-glitter-image: url("../images/glitter/sparkelies/blueTopaz.gif");
   --workspace-heading-glitter-image: var(--theme-glitter-image);
   /* Desktop-blue workspace, flat */
   --color-bg-workspace: #82abdd;
@@ -234,8 +234,8 @@
   --color-accent-border: #0d9fd8;
   --color-accent-active: #0b8dc0;
   --color-text-on-accent: var(--gray-100);
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_aquamarine.gif");
-  --workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_dark-green.gif");
+  --theme-glitter-image: url("../images/glitter/sparkelies/aquamarine.gif");
+  --workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/sea-05.gif");
   /* Sky-into-grass workspace */
   --color-bg-workspace: linear-gradient(to bottom, #bfe9fc 0%, #e3f7fb 55%, #cdedc2 100%);
   /* Deep-water shadows */
@@ -300,7 +300,7 @@
   --color-accent-light: #76aff0;
   --color-accent-border: #2d7fdc;
   --color-accent-active: #1d67c2;
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
+  --theme-glitter-image: url("../images/glitter/sparkelies/sapphire.gif");
   --workspace-heading-glitter-image: var(--theme-glitter-image);
   --color-bg-workspace: linear-gradient(to bottom, #aebdca 0%, #dce3e9 100%);
   /* Cool graphite shadows */
@@ -368,8 +368,8 @@
   --color-accent-border: #72ad22;
   --color-accent-active: #598e16;
   --color-text-on-accent: var(--gray-100);
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_lime-green.gif");
-  --workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_dark-green.gif");
+  --theme-glitter-image: url("../images/glitter/bring-on-the-glitter/green-010.gif");
+  --workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/sea-05.gif");
   /* Flat brushed-plastic floor, not a decorative web-page background. */
   --color-bg-workspace: linear-gradient(to bottom, #6d786f 0%, #aeb7af 100%);
   --color-shadow: rgb(24 32 24 / 12%);
@@ -439,7 +439,7 @@
   --color-accent-visited: #551a8b;
   /* A literal repeating image tile, like the background picker on a
      personal homepage: yellow star plus cyan, white, and pink pixels. */
-  --color-bg-workspace: url("../images/glitter/etc/etc_space_stars.gif");
+  --color-bg-workspace: url("../images/etc/workspace-space-stars.gif");
   --color-shadow: rgb(35 0 70 / 13%);
   --color-shadow-soft: rgb(35 0 70 / 19%);
   --color-shadow-strong: rgb(35 0 70 / 29%);
@@ -503,8 +503,8 @@
   --color-accent-border: #69a928;
   --color-accent-active: #568f1d;
   --color-text-on-accent: var(--gray-100);
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
-  --workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_dark-green.gif");
+  --theme-glitter-image: url("../images/glitter/bring-on-the-glitter/green-04.gif");
+  --workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/sea-05.gif");
   --color-bg-workspace: linear-gradient(to bottom, #91c7e9 0%, #d8edf8 54%, #ffffff 100%);
   --color-shadow: rgb(17 67 102 / 10%);
   --color-shadow-soft: rgb(17 67 102 / 15%);
@@ -570,7 +570,7 @@
   --color-accent-border: #20d9ff;
   --color-accent-active: #00b9e6;
   --color-text-on-accent: var(--gray-800);
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_magenta-blue.gif");
+  --theme-glitter-image: url("../images/glitter/bring-on-the-glitter/purple-002.gif");
   --workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_light-purple.gif");
   --color-bg-workspace: radial-gradient(circle at 50% 0%, #32174f 0%, #11152b 46%, #070914 100%);
   --color-shadow: rgb(0 0 0 / 28%);
@@ -634,8 +634,8 @@
   --color-accent-border: #2fd049;
   --color-accent-active: #27b83f;
   --color-text-on-accent: var(--gray-800);
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_green.gif");
-  --workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
+  --theme-glitter-image: url("../images/glitter/sparkelies/emerald.gif");
+  --workspace-heading-glitter-image: url("../images/glitter/bring-on-the-glitter/green-04.gif");
   /* Titlebar: brushed-steel gradient with gold WINAMP lettering. */
   --bar-gradient-top: #4d564f;
   --bar-gradient-bottom: #232823;
@@ -866,9 +866,9 @@
   /* Animated accent used by modal link hovers, reference highlights, and the
      Guide hero. Theme overrides choose an asset by sampled average color,
      then by the theme's accent/personality rather than filename alone. */
-  --theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
+  --theme-glitter-image: url("../images/glitter/sparkelies/sapphire.gif");
   /* Text fills need a lighter swatch against dark panel surfaces. */
-  --workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_light-blue.gif");
+  --workspace-heading-glitter-image: url("../images/glitter/etc/glitter_light-blue.gif");
   --color-danger: var(--red-100);
   --color-danger-bright: #ff4444;
   --color-success: var(--green-100);
@@ -3441,6 +3441,123 @@ body.is-resizing-panel canvas {
 }
 .section > .gallery-search-section.visible {
   display: block;
+}
+
+.asset-browser-rails {
+  display: grid;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+.asset-browser-rails[hidden] {
+  display: none;
+}
+
+.asset-browser-rail {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-base);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.asset-browser-rail[hidden] {
+  display: none;
+}
+.asset-browser-rail select {
+  width: 100%;
+  min-width: 0;
+}
+
+.asset-browser-wall .asset-browser-views:not([hidden]) {
+  margin-bottom: var(--spacing-md);
+}
+.asset-browser-wall .asset-browser-recent > .asset-grid.asset-browser-recent-grid {
+  grid-template-columns: repeat(auto-fill, 40px);
+  gap: var(--spacing-2xs);
+}
+
+.asset-browser-shortcuts {
+  margin-bottom: var(--spacing-md);
+}
+.asset-browser-shortcuts[hidden] {
+  display: none;
+}
+.asset-browser-shortcuts > summary {
+  display: list-item;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-bottom: var(--spacing-base);
+}
+.asset-browser-shortcuts .asset-browser-section-title {
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-xs);
+}
+
+.asset-browser-shortcuts-empty {
+  grid-column: 1/-1;
+  min-height: 40px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.asset-set-header {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+.asset-set-header[hidden] {
+  display: none;
+}
+.asset-set-header p {
+  margin: var(--spacing-xs) 0;
+}
+.asset-set-header summary {
+  cursor: pointer;
+}
+
+.asset-set-header-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  color: var(--color-text-primary);
+}
+.asset-set-header-line button {
+  flex-shrink: 0;
+}
+.asset-set-header-line button[aria-pressed=true] {
+  color: var(--color-accent);
+}
+
+.asset-collection-credit-unframed {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
+.asset-options .asset-grid.asset-glitter-wall {
+  --wall-tile-floor: 48px;
+  --wall-gap: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--wall-tile-floor), 1fr));
+  gap: var(--wall-gap);
+}
+
+.asset-options .asset-browser-wall .asset-grid > .asset-option {
+  border-radius: 0;
+  outline-width: 2px;
+  outline-offset: -2px;
+}
+.asset-options .asset-browser-wall .asset-grid > .asset-option:hover {
+  outline-color: var(--color-text-primary);
+}
+.asset-options .asset-browser-wall .asset-grid > .asset-option.selected, .asset-options .asset-browser-wall .asset-grid > .asset-option:focus-visible {
+  outline-color: var(--color-accent);
+}
+
+.asset-browser-header[hidden] {
+  display: none;
 }
 
 /* ===== PREVIEW PANEL (canvas workspace column) ===== */
@@ -6460,30 +6577,37 @@ body.tool-select .preview-container.is-over-picked-layer {
   grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr));
   gap: var(--spacing-sm);
 }
-.asset-options .asset-grid > .asset-option {
+.asset-options .asset-grid > .asset-option,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option {
   aspect-ratio: 1;
   overflow: hidden;
   transform: translateZ(0);
 }
-.asset-options .asset-grid > .asset-option.highlight {
+.asset-options .asset-grid > .asset-option.highlight,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option.highlight {
   outline-color: var(--color-accent);
   animation: elementPulse 0.5s ease-in-out 2;
 }
-.asset-options .asset-grid > .asset-option:hover {
+.asset-options .asset-grid > .asset-option:hover,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option:hover {
   outline-color: var(--color-border-hover);
 }
-.asset-options .asset-grid > .asset-option.selected {
+.asset-options .asset-grid > .asset-option.selected,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option.selected {
   outline-color: var(--color-accent);
 }
-.asset-options .asset-grid > .asset-option.disabled {
+.asset-options .asset-grid > .asset-option.disabled,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option.disabled {
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
 }
-.asset-options .asset-grid > .asset-option.disabled:hover {
+.asset-options .asset-grid > .asset-option.disabled:hover,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option.disabled:hover {
   outline-color: transparent;
 }
-.asset-options .asset-grid > .asset-option > img {
+.asset-options .asset-grid > .asset-option > img,
+.asset-options .asset-grid > .asset-browser-carried-item > .asset-option > img {
   display: block;
   width: 100%;
   height: 100%;
@@ -6613,7 +6737,7 @@ body.tool-select .preview-container.is-over-picked-layer {
 .asset-browser-recent:not([hidden]) ~ .asset-browser-recent:not([hidden]) {
   margin-top: var(--spacing-md);
 }
-.asset-browser-recent:not([hidden]) + .asset-browser-index-lead, .asset-browser-recent:not([hidden]) ~ .category-grid.visible, .asset-browser-recent:not([hidden]) ~ .search-results-container.visible, .asset-browser-recent:not([hidden]) ~ .asset-browser-collection-info:not([hidden]), .asset-browser-recent:not([hidden]) ~ .asset-grid.visible {
+.asset-browser-recent:not([hidden]) + .asset-browser-index-lead, .asset-browser-recent:not([hidden]) ~ .category-grid.visible, .asset-browser-recent:not([hidden]) ~ .search-results-container.visible, .asset-browser-recent:not([hidden]) ~ .asset-set-header:not([hidden]), .asset-browser-recent:not([hidden]) ~ .asset-grid.visible {
   margin-top: var(--spacing-md);
 }
 .asset-browser-recent > .asset-grid.asset-browser-recent-grid {
@@ -6633,14 +6757,6 @@ body.tool-select .preview-container.is-over-picked-layer {
 
 :root[data-theme=light] [data-gallery-content=brush-tips] .category-card.is-raster .category-card-image > img {
   filter: invert(1);
-}
-
-.asset-browser-collection-info:not([hidden]) {
-  display: block;
-}
-
-.asset-browser-collection-info:not([hidden]) + .asset-grid.visible {
-  margin-top: var(--spacing-md);
 }
 
 .asset-browser-index-lead + .category-grid.visible {
@@ -6677,13 +6793,6 @@ body.tool-select .preview-container.is-over-picked-layer {
 .brush-library-index .raster-sets-title {
   margin-top: var(--spacing-lg);
   margin-bottom: 0;
-}
-
-.asset-browser-collection-description {
-  margin: 0 0 var(--spacing-md);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
 }
 
 .asset-collection-credit {
@@ -9910,7 +10019,7 @@ body.modal-open {
   overflow-wrap: anywhere;
 }
 .modal-overlay.document-modal .modal-hero-image {
-  background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
+  background: url("../images/glitter/bring-on-the-glitter/green-010.gif") repeat;
 }
 .modal-overlay.document-modal .modal-hero-image > h2 {
   display: none;

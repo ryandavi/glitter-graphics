@@ -4,7 +4,7 @@
     "name": "Aquamarine",
     "generatedName": "Neon Blue",
     "brightness": "1.000",
-    "sortOrder": 1001,
+    "sortOrder": 36,
     "hue": 0.569,
     "colorCodes": [
         "#00D2FF"
@@ -33,6 +33,7 @@
     "searchTerms": [
         "glitter_aquamarine"
     ],
+    "originalOrder": 1001,
     "originalName": "aquamarine",
     "appearances": [
         {

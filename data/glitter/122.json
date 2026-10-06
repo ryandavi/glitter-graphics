@@ -4,7 +4,7 @@
     "name": "Ruby",
     "generatedName": "Very Dark Vivid Pink",
     "brightness": "0.150",
-    "sortOrder": 2,
+    "sortOrder": 222,
     "hue": 0.96,
     "colorCodes": [
         "#330019",
@@ -34,5 +34,6 @@
     "searchTerms": [
         "ember_red-2"
     ],
+    "originalOrder": 2,
     "originalName": "ember-02"
 }

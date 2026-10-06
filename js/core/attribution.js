@@ -103,17 +103,17 @@ const Attribution = {
 	// (BrushTipManager packs, ContentManager sticker categories). Returns null
 	// when there is nothing to credit. DOM only — styling is .asset-collection-credit
 	// in css/_assets.scss.
-	buildCreditElement(attr, { heading = 'Source & usage', bylineVerb = 'Created by' } = {}) {
+	buildCreditElement(attr, { heading = 'Source & usage', bylineVerb = 'Created by', unframed = false } = {}) {
 		const a = this.resolve(attr);
 		if (!a) return null;
 
 		const info = document.createElement('div');
-		info.className = 'asset-collection-credit';
+		info.className = unframed ? 'asset-collection-credit-unframed' : 'asset-collection-credit';
 
 		const headingEl = document.createElement('div');
 		headingEl.className = 'asset-collection-credit-heading property-group-label';
 		headingEl.textContent = heading;
-		info.appendChild(headingEl);
+		if (!unframed) info.appendChild(headingEl);
 
 		const link = (text, href) => {
 			const el = document.createElement('a');

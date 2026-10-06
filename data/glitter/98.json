@@ -4,7 +4,7 @@
     "name": "Orange Dark",
     "generatedName": "Vivid Orange",
     "brightness": "1.000",
-    "sortOrder": 6004,
+    "sortOrder": 103,
     "hue": 0.158,
     "colorCodes": [
         "#D29600"
@@ -30,5 +30,6 @@
     "searchTerms": [
         "glitter_orange-dark"
     ],
+    "originalOrder": 6004,
     "originalName": "orange-005"
 }

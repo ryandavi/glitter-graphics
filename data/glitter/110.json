@@ -4,7 +4,7 @@
     "name": "Ugly Purple",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 8005,
+    "sortOrder": 118,
     "hue": 0.144,
     "colorCodes": [
         "#A55A96"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_ugly-purple"
     ],
+    "originalOrder": 8005,
     "originalName": "purple-006"
 }

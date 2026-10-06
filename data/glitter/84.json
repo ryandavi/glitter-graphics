@@ -4,7 +4,7 @@
     "name": "Deep Purple",
     "generatedName": "Jewel Tone Purple",
     "brightness": "0.000",
-    "sortOrder": 8006,
+    "sortOrder": 119,
     "hue": 1.2,
     "colorCodes": [
         "#3C0078",
@@ -37,5 +37,6 @@
     "searchTerms": [
         "glitter_deep-purple"
     ],
+    "originalOrder": 8006,
     "originalName": "purple-007"
 }

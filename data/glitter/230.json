@@ -4,7 +4,7 @@
     "name": "Indigo",
     "generatedName": "Indigo",
     "brightness": "0.350",
-    "sortOrder": 8007,
+    "sortOrder": 120,
     "hue": 0.78,
     "colorCodes": [
         "#5100BE",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 8007,
     "originalName": "purple-008"
 }

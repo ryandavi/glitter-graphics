@@ -231,6 +231,7 @@ class ContentManager {
 			generatedName: raw.generatedName ?? defaults.generatedName ?? null,
 			brightness: raw.brightness ?? defaults.brightness ?? null,
 			sortOrder: this.normalizeNumberValue(raw.sortOrder, defaults.sortOrder ?? 0),
+			originalOrder: raw.originalOrder == null ? null : this.normalizeNumberValue(raw.originalOrder, null),
 			hue: raw.hue ?? defaults.hue ?? null,
 			colorCodes,
 			colorWeights: Array.isArray(raw.colorWeights) ? raw.colorWeights : (defaults.colorWeights ?? null),
@@ -309,8 +310,10 @@ class ContentManager {
 	// Per-collection credit block for the asset browser. A category carries an
 	// optional `attribution` in its *-categories.json entry; every asset in it
 	// inherits it (item-level attribution, when surfaced, resolves over this).
+	getCollectionAttribution(category) { return category?.attribution; }
+
 	createCollectionInfo(category) {
-		return Attribution.buildCreditElement(category && category.attribution, { bylineVerb: 'Created by' });
+		return Attribution.buildCreditElement(this.getCollectionAttribution(category), { bylineVerb: 'Created by' });
 	}
 
 	getCategoryLabel(category) {
@@ -696,6 +699,7 @@ class ContentManager {
 		if (!this.libraryKind || !this.getItemById(id)) return;
 		const ids = this.getLibraryIds('libraryRecents').filter((entry) => String(entry) !== String(id));
 		this.setLibraryIds('libraryRecents', [id, ...ids].slice(0, CONFIG.ui.library.recentCount));
+		this.browser?.updateShortcuts();
 	}
 
 	isFavorite(id) {

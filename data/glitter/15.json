@@ -4,7 +4,7 @@
     "name": "Amethyst",
     "generatedName": "Vivid Purple",
     "brightness": "1.000",
-    "sortOrder": 1000,
+    "sortOrder": 35,
     "hue": 0.819,
     "colorCodes": [
         "#7800B4"
@@ -30,6 +30,7 @@
     "searchTerms": [
         "glitter_amethyst"
     ],
+    "originalOrder": 1000,
     "originalName": "amethyst",
     "appearances": [
         {

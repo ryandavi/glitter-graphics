@@ -4,7 +4,7 @@
     "name": "Red and Green",
     "generatedName": "Red and Green",
     "brightness": "0.330",
-    "sortOrder": 0,
+    "sortOrder": 1,
     "hue": 0.375,
     "colorCodes": [
         "#00FF00",
@@ -26,9 +26,22 @@
     "width": 60,
     "height": 30,
     "fileSize": 1502,
-    "category": "christmas",
+    "category": "sparkle",
     "isPixelated": 1,
-    "tags": [],
+    "tags": [
+        "Christmas",
+        "Multicolor"
+    ],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 0,
     "originalName": "christmas-01"
 }

@@ -39,7 +39,9 @@ class AdminMigrations
 	{
 		$columns = [
 			'glitter' => [
+				'attribution' => 'TEXT NULL',
 				'original_name' => 'VARCHAR(255) NULL',
+				'original_order' => 'INT NULL',
 				'search_terms' => 'TEXT NULL',
 				'appearances' => 'TEXT NULL',
 				'color_weights' => 'VARCHAR(255) NULL AFTER color_codes',
@@ -57,8 +59,10 @@ class AdminMigrations
 				'updated_at' => 'DATETIME NULL',
 			],
 			'stickers' => [
+				'attribution' => 'TEXT NULL',
 				'search_terms' => 'TEXT NULL',
 				'original_name' => 'VARCHAR(255) NULL',
+				'original_order' => 'INT NULL',
 				'appearances' => 'TEXT NULL',
 				// Defaults to 1 so the whole existing library keeps the crisp
 				// upscaling it has always rendered with; smooth art is opt-in.
@@ -84,10 +88,12 @@ class AdminMigrations
 			// shape) — every asset in the category inherits it in the editor.
 			'sticker_categories' => [
 				'parent_id' => 'INT UNSIGNED NULL AFTER id',
+				'is_active' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'attribution' => 'TEXT NULL',
 			],
 			'glitter_categories' => [
 				'parent_id' => 'INT UNSIGNED NULL AFTER id',
+				'is_active' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'attribution' => 'TEXT NULL',
 			],
 		];
@@ -98,6 +104,9 @@ class AdminMigrations
 					// parameters cannot represent identifiers or column definitions.
 					if (!$connection->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition")) {
 						throw new Exception('Migration failed: ' . $connection->error);
+					}
+					if ($column === 'original_order') {
+						$connection->query("UPDATE `$table` SET original_order = sort_order WHERE original_name IS NOT NULL AND original_name <> ''");
 					}
 				}
 			}

@@ -4,7 +4,7 @@
     "name": "Light Purple",
     "generatedName": "Light Purple",
     "brightness": "0.790",
-    "sortOrder": 7001,
+    "sortOrder": 105,
     "hue": 0.875,
     "colorCodes": [
         "#FD66FD",
@@ -22,9 +22,19 @@
     "width": 60,
     "height": 30,
     "fileSize": 5695,
-    "category": "bring-on-the-glitter",
+    "category": "noise-2",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 7001,
     "originalName": "pink-002"
 }

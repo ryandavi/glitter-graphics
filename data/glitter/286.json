@@ -4,7 +4,7 @@
     "name": "Red and Purple",
     "generatedName": "Red and Purple",
     "brightness": "0.070",
-    "sortOrder": 3,
+    "sortOrder": 223,
     "hue": 0.042,
     "colorCodes": [
         "#330000",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 3,
     "originalName": "ember-03"
 }

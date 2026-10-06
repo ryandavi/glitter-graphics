@@ -120,6 +120,7 @@ abstract class AssetAPI
     protected function buildAssetUpdatePayload($data, $extraAssignments = [])
     {
         $fieldTypes = $this->getAssetSpecificFields();
+        $fieldTypes['string'][] = 'attribution';
         $nullableStringFields = array_flip($this->getNullableStringFields());
         $assignments = [];
         $types = '';
@@ -556,8 +557,8 @@ abstract class AssetAPI
         $this->assertCategorySlugAvailable($slug);
         $parentId = $this->validateCategoryParent($data['parent_id'] ?? null);
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, parent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            'sssssisi',
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, parent_id, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            'sssssisii',
             [
                 $name,
                 $slug,
@@ -567,6 +568,7 @@ abstract class AssetAPI
                 (int)($data['sort_order'] ?? 999),
                 $this->normalizeAttributionJson($data['attribution'] ?? null),
                 $parentId,
+                (int)($data['is_active'] ?? 1),
             ]
         );
         $stmt->close();
@@ -628,6 +630,8 @@ abstract class AssetAPI
                 SELECT c.*, COUNT(a.id) AS item_count
                 FROM $table c
                 LEFT JOIN $assetTable a ON c.id = a.$categoryIdField AND a.is_active = 1
+                LEFT JOIN $table parent ON parent.id = c.parent_id
+                WHERE c.is_active = 1 AND (c.parent_id IS NULL OR parent.is_active = 1)
                 GROUP BY c.id
                 ORDER BY
                     CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
@@ -639,6 +643,8 @@ abstract class AssetAPI
                 SELECT c.*, COUNT(a.id) AS item_count
                 FROM $table c
                 LEFT JOIN $assetTable a ON c.id = a.$categoryIdField AND a.is_active = 1
+                LEFT JOIN $table parent ON parent.id = c.parent_id
+                WHERE c.is_active = 1 AND (c.parent_id IS NULL OR parent.is_active = 1)
                 GROUP BY c.id
                 ORDER BY c.sort_order
             ";
@@ -742,6 +748,12 @@ abstract class AssetAPI
             $fields[] = "$field = ?";
             $types .= 's';
             $params[] = (string)$data[$field];
+        }
+
+        if (array_key_exists('is_active', $data)) {
+            $fields[] = 'is_active = ?';
+            $types .= 'i';
+            $params[] = (int)(bool)$data['is_active'];
         }
 
         if (array_key_exists('sort_order', $data)) {
@@ -1609,7 +1621,8 @@ abstract class AssetAPI
                 JOIN $tagAliasesTable ta ON ta.$tagIdField = tm.$tagIdField
                 GROUP BY tm.$assetIdField
             ) ats ON ats.asset_id = a.id
-            WHERE a.is_active = 1
+            WHERE a.is_active = 1 AND c.is_active = 1
+                AND (c.parent_id IS NULL OR EXISTS (SELECT 1 FROM $categoriesTable parent WHERE parent.id = c.parent_id AND parent.is_active = 1))
             ORDER BY $orderBy
         ");
         $assets = $this->fetchAllAssoc($result);
@@ -1620,6 +1633,11 @@ abstract class AssetAPI
             $searchTerms = !empty($asset['alias_names']) ? explode('||', $asset['alias_names']) : [];
             $searchTerms = array_values(array_unique(array_merge($searchTerms, json_decode($asset['search_terms'] ?? '[]', true) ?: [])));
             $entry = $this->formatAssetForExport($asset, $tagNames, $searchTerms);
+            if (!empty($asset['attribution'])) {
+                $attribution = json_decode($asset['attribution'], true);
+                if (is_array($attribution) && $attribution) $entry['attribution'] = $attribution;
+            }
+            if (isset($asset['original_order'])) $entry['originalOrder'] = (int)$asset['original_order'];
             if (!empty($asset['original_name'])) $entry['originalName'] = $asset['original_name'];
             if (!empty($asset['appearances'])) {
                 $appearances = json_decode($asset['appearances'], true);
@@ -1696,7 +1714,7 @@ abstract class AssetAPI
     protected function formatAssetForBrowseIndex($asset)
     {
         $fields = [
-            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution', 'originalName', 'appearances',
+            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution', 'originalName', 'originalOrder', 'appearances',
             'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
             'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source', 'sliced',
         ];

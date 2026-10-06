@@ -4,7 +4,7 @@
     "name": "Turquoise",
     "generatedName": "Very Dark Vivid Green",
     "brightness": "0.000",
-    "sortOrder": 8,
+    "sortOrder": 228,
     "hue": 0.457,
     "colorCodes": [
         "#003319",
@@ -35,5 +35,6 @@
     "searchTerms": [
         "ember_turquoise"
     ],
+    "originalOrder": 8,
     "originalName": "ember-08"
 }

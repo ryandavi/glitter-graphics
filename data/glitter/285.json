@@ -4,7 +4,7 @@
     "name": "Yellow",
     "generatedName": "Yellow",
     "brightness": "0.120",
-    "sortOrder": 1,
+    "sortOrder": 221,
     "hue": 0.179,
     "colorCodes": [
         "#332A00",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1,
     "originalName": "ember-010"
 }

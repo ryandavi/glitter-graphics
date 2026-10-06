@@ -1420,8 +1420,18 @@ async function checkSheetContent(page) {
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Scrolled list handed off before the touch ended');
 	await page.evaluate(() => window.editor.mobileManager.openDrawer('design'));
 	await page.waitForTimeout(450);
-	const library = await page.locator('#designPanel .asset-browser-content:visible').first().boundingBox();
-	const pull = { x: library.x + library.width / 2, y: library.y + 70 };
+	const rail = page.locator('#designPanel .asset-browser-rail:visible select').first();
+	if (await rail.count()) {
+		const box = await rail.boundingBox();
+		const railPull = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+		await dispatchTouch(page, 'touchStart', [railPull]);
+		await dispatchTouch(page, 'touchMove', [{ x: railPull.x, y: railPull.y + 35 }]);
+		assert(await page.evaluate(() => !window.editor.mobileManager.sheetDrag), 'Native category select must not drag the sheet');
+		await dispatchTouch(page, 'touchEnd', []);
+		await page.waitForTimeout(150);
+	}
+	const library = await page.locator('#designPanel .asset-browser-content:visible .asset-grid.visible').first().boundingBox();
+	const pull = { x: library.x + library.width / 2, y: library.y + 25 };
 	await dispatchTouch(page, 'touchStart', [pull]);
 	await dispatchTouch(page, 'touchMove', [{ x: pull.x, y: pull.y + 35 }]);
 	await page.waitForTimeout(50);

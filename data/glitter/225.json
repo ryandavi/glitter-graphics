@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Purple",
     "brightness": "0.590",
-    "sortOrder": 7005,
+    "sortOrder": 109,
     "hue": 0.897,
     "colorCodes": [
         "#D92BC2",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 7005,
     "originalName": "pink-03"
 }

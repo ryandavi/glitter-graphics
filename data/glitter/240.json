@@ -4,7 +4,7 @@
     "name": "Orange, Red, and Yellow",
     "generatedName": "Orange, Red, and Yellow",
     "brightness": "0.550",
-    "sortOrder": 0,
+    "sortOrder": 157,
     "hue": 0.125,
     "colorCodes": [
         "#B78B60",
@@ -32,5 +32,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 0,
     "originalName": "twinkle-001"
 }

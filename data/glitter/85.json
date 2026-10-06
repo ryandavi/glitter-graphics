@@ -4,7 +4,7 @@
     "name": "Dusty Dark Blue",
     "generatedName": "Muted Blue",
     "brightness": "1.000",
-    "sortOrder": 2008,
+    "sortOrder": 70,
     "hue": 0.636,
     "colorCodes": [
         "#5A87C3"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_dusty-dark-blue"
     ],
+    "originalOrder": 2008,
     "originalName": "blue-09"
 }

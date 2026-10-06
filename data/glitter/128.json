@@ -4,7 +4,7 @@
     "name": "Green",
     "generatedName": "Green",
     "brightness": "0.320",
-    "sortOrder": 2,
+    "sortOrder": 54,
     "hue": 0.588,
     "colorCodes": [
         "#006890",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 2,
     "originalName": "sea-03"
 }

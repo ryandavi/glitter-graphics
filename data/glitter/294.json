@@ -4,7 +4,7 @@
     "name": "Orange Glit",
     "generatedName": "Tan",
     "brightness": "0.570",
-    "sortOrder": 1000,
+    "sortOrder": 28,
     "hue": 0.087,
     "colorCodes": [
         "#BD8570",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1000,
     "originalName": "orangeGlit"
 }

@@ -4,7 +4,7 @@
     "name": "Off-White",
     "generatedName": "Off-White",
     "brightness": "0.820",
-    "sortOrder": 7003,
+    "sortOrder": 107,
     "hue": 0.012,
     "colorCodes": [
         "#E7C3C9"
@@ -20,9 +20,19 @@
     "width": 60,
     "height": 30,
     "fileSize": 7520,
-    "category": "bring-on-the-glitter",
+    "category": "noise-2",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 7003,
     "originalName": "pink-01"
 }

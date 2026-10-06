@@ -4,7 +4,7 @@
     "name": "Rhodolite",
     "generatedName": "Jewel Tone Pink",
     "brightness": "1.000",
-    "sortOrder": 1010,
+    "sortOrder": 44,
     "hue": 0.13,
     "colorCodes": [
         "#870078"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_rhodolite"
     ],
+    "originalOrder": 1010,
     "originalName": "rhodolite"
 }

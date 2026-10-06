@@ -4,7 +4,7 @@
     "name": "Sapphire",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 1012,
+    "sortOrder": 46,
     "hue": 0.658,
     "colorCodes": [
         "#002D96"
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_sapphire"
     ],
+    "originalOrder": 1012,
     "originalName": "sapphire",
     "appearances": [
         {

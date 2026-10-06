@@ -31,6 +31,7 @@ class CategoryManager {
 						<div class="property-list">
 							<div class="property-row"><label class="property-label" for="category-name">Name</label><div class="property-control"><input type="text" id="category-name" name="name" required></div></div>
 							<div class="property-row"><label class="property-label" for="category-parent">Parent</label><div class="property-control"><select id="category-parent" name="parent_id"></select></div></div>
+							<div class="property-row"><label class="property-label" for="category-published">Published</label><div class="property-control"><input type="checkbox" class="field-switch" id="category-published" name="is_active" checked></div></div>
 							<div class="property-row"><label class="property-label" for="category-slug">Slug</label><div class="property-control"><input type="text" id="category-slug" name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*"></div></div>
 							<div class="property-row property-row-continued"><span class="property-label">Slug</span><div class="property-value"><code data-path-preview></code><span class="field-error" data-slug-error></span></div></div>
 							<div class="property-row property-row-tall"><label class="property-label" for="category-description">Description</label><div class="property-control"><textarea id="category-description" name="description" rows="3"></textarea></div></div>
@@ -148,7 +149,7 @@ class CategoryManager {
 						<span class="category-color-dot ${row.icon ? 'has-thumbnail' : ''}" style="--category-color:${this.escape(row.color || 'transparent')}" ${row.icon ? `title="${this.escape(row.icon)}"` : ''}>
 							${row.icon ? `<img src="${CONFIG.image_base_path}${this.escape(row.icon)}" alt="" loading="lazy">` : ''}
 						</span>
-						<span><strong>${row.parent_id ? '↳ ' : ''}${this.escape(row.name)}</strong><small>${this.escape(row.slug)}</small></span>
+						<span><strong>${row.parent_id ? '↳ ' : ''}${this.escape(row.name)}</strong><small>${this.escape(row.slug)}${Number(row.is_active) === 0 ? ' · Unpublished' : ''}</small></span>
 					</div>
 					<code>${this.escape(row.folder_url)}</code>
 					<span>${row.active_count} active · ${row.pending_count} pending</span>
@@ -214,6 +215,7 @@ class CategoryManager {
 	openForm(row = null) {
 		this.editing = row?.id ? row : null;
 		this.form.reset();
+		this.form.elements.is_active.checked = !row || Number(row.is_active) !== 0;
 		const parent = this.form.elements.parent_id;
 		parent.replaceChildren(new Option('None (style root)', ''));
 		this.rows.filter(item => item.id && !item.parent_id && Number(item.id) !== Number(row?.id))
@@ -241,6 +243,7 @@ class CategoryManager {
 
 	async save() {
 		const values = Object.fromEntries(new FormData(this.form));
+		values.is_active = Number(this.form.elements.is_active.checked);
 		values.sort_order = Number(values.sort_order || 0);
 		const attribution = {};
 		for (const key of ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes']) {

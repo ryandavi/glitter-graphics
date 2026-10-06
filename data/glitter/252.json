@@ -4,7 +4,7 @@
     "name": "Indigo",
     "generatedName": "Indigo",
     "brightness": "0.540",
-    "sortOrder": 12,
+    "sortOrder": 169,
     "hue": 0.79,
     "colorCodes": [
         "#895DB7",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 12,
     "originalName": "twinkle-011"
 }

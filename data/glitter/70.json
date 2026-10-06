@@ -4,7 +4,7 @@
     "name": "Brown 4",
     "generatedName": "Muted Orange",
     "brightness": "0.000",
-    "sortOrder": 5004,
+    "sortOrder": 95,
     "hue": 0.125,
     "colorCodes": [
         "#3C2D1E"
@@ -30,5 +30,6 @@
     "searchTerms": [
         "glitter_brown-4"
     ],
+    "originalOrder": 5004,
     "originalName": "brown-05"
 }

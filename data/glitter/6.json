@@ -4,7 +4,7 @@
     "name": "Yellow",
     "generatedName": "Vivid Gold",
     "brightness": "1.000",
-    "sortOrder": 3003,
+    "sortOrder": 74,
     "hue": 0.197,
     "colorCodes": [
         "#FFF000"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_yellow"
     ],
+    "originalOrder": 3003,
     "originalName": "gold-03"
 }

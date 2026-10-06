@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Purple",
     "brightness": "0.200",
-    "sortOrder": 4,
+    "sortOrder": 224,
     "hue": 0.792,
     "colorCodes": [
         "#330066",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 4,
     "originalName": "ember-04"
 }

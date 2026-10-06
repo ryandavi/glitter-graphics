@@ -4,7 +4,7 @@
     "name": "Topaz",
     "generatedName": "Bronze",
     "brightness": "0.330",
-    "sortOrder": 1016,
+    "sortOrder": 50,
     "hue": 0.126,
     "colorCodes": [
         "#8A531C",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1016,
     "originalName": "topaz"
 }

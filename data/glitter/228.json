@@ -4,7 +4,7 @@
     "name": "Vivid Purple",
     "generatedName": "Vivid Purple",
     "brightness": "0.480",
-    "sortOrder": 8002,
+    "sortOrder": 116,
     "hue": 0.811,
     "colorCodes": [
         "#8A05DD",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 8002,
     "originalName": "purple-003"
 }

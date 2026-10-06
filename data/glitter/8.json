@@ -4,7 +4,7 @@
     "name": "Lime Green",
     "generatedName": "Vivid Green",
     "brightness": "1.000",
-    "sortOrder": 4001,
+    "sortOrder": 82,
     "hue": 0.275,
     "colorCodes": [
         "#96FF00"
@@ -32,5 +32,6 @@
     "searchTerms": [
         "glitter_lime-green"
     ],
+    "originalOrder": 4001,
     "originalName": "green-010"
 }

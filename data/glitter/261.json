@@ -4,7 +4,7 @@
     "name": "Blue",
     "generatedName": "Blue",
     "brightness": "0.570",
-    "sortOrder": 21,
+    "sortOrder": 178,
     "hue": 0.642,
     "colorCodes": [
         "#698BBE",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 21,
     "originalName": "twinkle-06"
 }

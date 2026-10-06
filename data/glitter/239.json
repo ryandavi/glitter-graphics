@@ -4,7 +4,7 @@
     "name": "White",
     "generatedName": "White",
     "brightness": "0.320",
-    "sortOrder": 10007,
+    "sortOrder": 136,
     "hue": 1.1,
     "colorCodes": [
         "#FFFFFF",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 10007,
     "originalName": "silver-08"
 }

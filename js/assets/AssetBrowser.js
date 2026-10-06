@@ -19,8 +19,7 @@ class AssetBrowser {
 		this.layout = schema.layout || 'folders';
 		this.schema = schema;
 		this.browseView = 'style';
-		this.currentCreatorId = null;
-		this.setOrigin = null;
+		this.folderView = this.layout === 'folders' ? new AssetBrowserFolders(this) : null;
 		this.state = 'CATEGORY_LIST';
 		this.currentCategoryId = null;
 		this.currentOffset = 0;
@@ -43,10 +42,8 @@ class AssetBrowser {
 			emptyText: document.getElementById(elementIds.emptyText),
 			emptyClearFilters: document.getElementById(elementIds.emptyState)?.querySelector('.property-empty-action')
 		};
-		this.collectionInfo = document.createElement('div');
-		this.collectionInfo.className = 'asset-browser-collection-info';
-		this.collectionInfo.hidden = true;
-		this.elements.itemGrid.before(this.collectionInfo);
+		this.setHeader = new AssetSetHeader(() => this.refresh());
+		this.elements.categoryGrid.before(this.setHeader.element);
 		this.recentLead = document.createElement('div');
 		this.recentLead.className = 'asset-browser-recent';
 		this.recentLead.hidden = true;
@@ -80,7 +77,7 @@ class AssetBrowser {
 			button.className = 'segmented-option';
 			button.textContent = label;
 			button.dataset.view = view;
-			button.addEventListener('click', () => { this.browseView = view; this.setOrigin = null; this.setState('CATEGORY_LIST'); });
+			button.addEventListener('click', () => { this.browseView = view; this.folderView?.resetOrigin(); this.setState('CATEGORY_LIST'); });
 			this.viewControl.appendChild(button);
 		}
 		this.elements.content.before(this.viewControl);
@@ -97,6 +94,30 @@ class AssetBrowser {
 	async init(categories) {
 		if (Array.isArray(categories)) this.categories = categories;
 		else await this.loadCategories(categories);
+		this.catalog = new LibraryCatalog(this.categories, (category, item) => Attribution.resolve(category, item));
+		if (this.layout === 'rail') {
+			this.elements.browser.classList.add('asset-browser-wall');
+			this.shortcutDisclosure = document.createElement('details');
+			this.shortcutDisclosure.className = 'asset-browser-shortcuts';
+			const summary = document.createElement('summary');
+			summary.textContent = 'Quick picks';
+			this.recentLead.before(this.shortcutDisclosure);
+			this.shortcutDisclosure.append(summary, this.recentLead, this.projectLead);
+			const mobile = window.matchMedia(`(max-width: ${CONFIG.ui.mobile.breakpoint}px)`);
+			this.shortcutDisclosure.open = !mobile.matches;
+			mobile.addEventListener('change', () => { this.shortcutDisclosure.open = !mobile.matches; });
+			this.shortcutDisclosure.addEventListener('toggle', () => this._fitLeadRows());
+			for (const event of ['layerChanged', 'imageLoaded', 'imageRemoved']) {
+				window.addEventListener(event, () => this.updateShortcuts());
+			}
+			this.rail = new AssetBrowserRail(this.catalog, selection => {
+				this.rememberRoot(selection.root);
+				this.setState('CATEGORY_LIST');
+			});
+			this.rail.selection.root = PREFERENCES.get('libraryRoots')[this.prefix] || this.catalog.getRoots()[0]?.id;
+			this.elements.categoryGrid.before(this.viewControl, this.rail.element, this.setHeader.element);
+			this.elements.itemGrid.classList.add('asset-glitter-wall');
+		}
 		this.setupIntersectionObserver();
 		this.setupEventListeners();
 		this.setState('CATEGORY_LIST');
@@ -149,14 +170,8 @@ class AssetBrowser {
 				this.contentManager.updateClearFiltersButton();
 			}
 
-			const category = this.getCategoryById(this.currentCategoryId);
-			if (this.state === 'CATEGORY_DETAIL' && this.setOrigin) {
-				this.currentCreatorId = this.setOrigin;
-				this.setOrigin = null;
-				this.setState('CREATOR_DETAIL');
-			} else if (this.state === 'CATEGORY_DETAIL' && category?.parent) {
-				this.setState('CATEGORY_DETAIL', category.parent);
-			} else this.setState('CATEGORY_LIST');
+			if (this.folderView) this.folderView.back();
+			else this.setState('CATEGORY_LIST');
 
 			// Scroll to top when changing states
 			if (this.scrollContainer) {
@@ -169,7 +184,7 @@ class AssetBrowser {
 
 	navigateToCategory(categoryId) {
 		if (!categoryId || !this.categories.some((category) => category.id === categoryId)) return false;
-		this.setOrigin = null;
+		this.folderView?.resetOrigin();
 		const searchInput = this.contentManager.ui.searchInput;
 		if (searchInput) searchInput.value = '';
 		this.contentManager.activeFilters.search = '';
@@ -183,17 +198,25 @@ class AssetBrowser {
 	// Search results, and a grouped kind's category list, are one listing of
 	// items under category headings.
 	isListingState() {
-		return this.state === 'SEARCH_RESULTS' || (this.state === 'CREATOR_DETAIL' && this.currentCreatorId === '__unknown') || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
+		return this.state === 'SEARCH_RESULTS' || this.folderView?.isUnknownListing() || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
 	}
 
 	isPagedState() {
-		return this.state === 'CATEGORY_DETAIL' || this.isListingState();
+		return Boolean(this.rail && this.state !== 'SEARCH_RESULTS') || this.state === 'CATEGORY_DETAIL' || this.isListingState();
 	}
 
 	setState(newState, categoryId = null) {
 		clearTimeout(this.searchDebounceTimer);
-		if (newState === 'CATEGORY_LIST') this.setOrigin = null;
+		if (newState === 'CATEGORY_LIST') this.folderView?.resetOrigin();
 		this.state = newState;
+		if (this.rail && newState === 'CATEGORY_DETAIL' && categoryId) {
+			this.browseView = 'style';
+			this.rail.mode = 'style';
+			const root = this.catalog.getRootOf(categoryId);
+			this.rail.selection = { root: root?.id, set: root?.id === categoryId ? null : categoryId };
+			this.rememberRoot(root?.id);
+			this.state = 'CATEGORY_LIST';
+		}
 		this.currentCategoryId = categoryId;
 		this.currentOffset = 0;
 
@@ -216,22 +239,70 @@ class AssetBrowser {
 		this.elements.categoryGrid.classList.remove('visible');
 		this.elements.searchResults.classList.remove('visible');
 		this.elements.itemGrid.classList.remove('visible');
-		this.collectionInfo.hidden = true;
+		this.setHeader.element.hidden = true;
 		this.carriedLead.hidden = true;
 		this.projectLead.hidden = true;
 		this.updateViewControl();
 		this.indexLead.hidden = true;
 		this.recentLead.hidden = true;
+		if (this.shortcutDisclosure) this.shortcutDisclosure.hidden = true;
 
+		if (this.rail) {
+			const search = this.state === 'SEARCH_RESULTS';
+			this.elements.browser.querySelector('.asset-browser-header').hidden = !search;
+			this.rail.element.hidden = search;
+			if (search) { this.setHeader.render(null, []); this.renderSearchResults(); }
+			else this.renderRail();
+			return;
+		}
+		if (this.state !== 'CATEGORY_DETAIL') this.setHeader.render(null, []);
 		if (this.state === 'CATEGORY_LIST') {
 			this.renderCategoryList();
 		} else if (this.state === 'CATEGORY_DETAIL') {
 			this.renderCategoryDetail();
-		} else if (this.state === 'CREATOR_DETAIL') {
-			this.renderCreatorDetail();
+		} else if (this.folderView?.isCreatorDetail()) {
+			this.folderView.renderCreatorDetail();
 		} else if (this.state === 'SEARCH_RESULTS') {
 			this.renderSearchResults();
 		}
+	}
+
+	rememberRoot(root) {
+		if (!root || this.browseView !== 'style' || root === LIBRARY_FAVORITES_ID) return;
+		const roots = PREFERENCES.get('libraryRoots');
+		if (roots[this.prefix] !== root) PREFERENCES.set('libraryRoots', { ...roots, [this.prefix]: root });
+	}
+
+	renderRail() {
+		this._renderRecentLead();
+		this._renderProjectLead();
+		this.shortcutDisclosure.hidden = false;
+		const items = this.getFilteredItems();
+		const selection = this.rail.render(items, this.getFavoritesCategory(items), this.browseView);
+		this.currentCategoryId = selection.set || selection.root;
+		const category = selection.set ? this.catalog.getCategoryById(selection.set) : null;
+		let wall;
+		if (selection.root === LIBRARY_FAVORITES_ID) wall = this.contentManager.getFavoriteItems(items);
+		else {
+			wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
+			if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
+		}
+		this.setHeader.render(category, wall);
+		this.wallItems = this.setHeader.sort(wall);
+		this.elements.itemGrid.replaceChildren();
+		this.elements.itemGrid.classList.add('visible');
+		this.currentOffset = 0;
+		if (category) this.renderCarriedItems(category);
+		this.loadRailItems();
+	}
+
+	loadRailItems() {
+		const batch = this.wallItems.slice(this.currentOffset, this.currentOffset + this.batchSize);
+		if (!this.wallItems.length) { this.showEmptyState('No items found'); return; }
+		batch.forEach(item => this.elements.itemGrid.appendChild(this.createItemElement(item)));
+		this.currentOffset += batch.length;
+		this.contentManager.updateSelection?.();
+		this.checkAndLoadMore();
 	}
 
 	refresh() {
@@ -247,13 +318,37 @@ class AssetBrowser {
 	// until it is reopened, so un-hearting doesn't pull a card from under the
 	// pointer.
 	handleFavoritesChanged() {
+		if (this.state === 'SEARCH_RESULTS') return;
+		if (this.rail) {
+			this.preserveScrollPosition(() => {
+				const items = this.getFilteredItems();
+				const showingFavorites = this.rail.selection.root === LIBRARY_FAVORITES_ID;
+				const favorites = this.getFavoritesCategory(items) || (showingFavorites ? { id: LIBRARY_FAVORITES_ID, name: 'Favorites', count: 0 } : null);
+				this.rail.render(items, favorites, this.browseView);
+				if (!showingFavorites) return;
+				this.wallItems = this.setHeader.sort(this.contentManager.getFavoriteItems(items));
+				const existing = new Map([...this.elements.itemGrid.children].map(tile => [String(tile.dataset.id), tile]));
+				const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.batchSize));
+				const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
+				for (const child of [...this.elements.itemGrid.children]) if (!tiles.includes(child)) child.remove();
+				tiles.forEach((tile, index) => {
+					if (this.elements.itemGrid.children[index] !== tile) this.elements.itemGrid.insertBefore(tile, this.elements.itemGrid.children[index] || null);
+				});
+				this.currentOffset = tiles.length;
+				this.elements.emptyState.classList.remove('visible');
+				if (!this.wallItems.length) this.showEmptyState('No favorites yet');
+				else this.checkAndLoadMore();
+				this.contentManager.updateSelection?.();
+			});
+			return;
+		}
 		if (this.state !== 'CATEGORY_LIST') return;
 		if (this.layout === 'grouped') this.render();
 		else this.updateCategoryCounts();
 	}
 
 	async navigateToItem(itemId) {
-		this.setOrigin = null;
+		this.folderView?.resetOrigin();
 		// Find which category contains this item
 		const allItems = this.contentManager.getAllContent();
 		const item = allItems.find(i => i.id === itemId);
@@ -359,8 +454,7 @@ class AssetBrowser {
 		this.populateCategoryCards();
 	}
 
-	// The last picks, newest first. Rebuilt only when the list is drawn, so a
-	// pick never reshuffles the strip under the pointer.
+	// Shortcut updates reuse tiles and leave the paged wall intact.
 	_renderRecentLead() {
 		this._renderLeadRow(this.recentLead, 'Recent', this.contentManager.getRecentItems());
 	}
@@ -372,6 +466,32 @@ class AssetBrowser {
 	_renderLeadRow(lead, title, items) {
 		const filtered = new Set(this.getFilteredItems());
 		const shown = items.filter((item) => filtered.has(item));
+		if (this.rail) {
+			let grid = lead.querySelector('.asset-grid');
+			if (!grid) {
+				const heading = document.createElement('h3');
+				heading.className = 'asset-browser-section-title property-block-title';
+				heading.textContent = title;
+				grid = document.createElement('div');
+				grid.className = 'asset-grid visible asset-browser-recent-grid';
+				lead.append(heading, grid);
+			}
+			const existing = new Map([...grid.querySelectorAll('.asset-option')].map(tile => [String(tile.dataset.id), tile]));
+			const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
+			for (const child of [...grid.children]) if (!tiles.includes(child)) child.remove();
+			tiles.forEach((tile, index) => {
+				if (grid.children[index] !== tile) grid.insertBefore(tile, grid.children[index] || null);
+			});
+			if (!shown.length) {
+				const empty = document.createElement('span');
+				empty.className = 'asset-browser-shortcuts-empty';
+				empty.textContent = 'None yet';
+				grid.appendChild(empty);
+			}
+			lead.hidden = false;
+			this._fitLeadRows();
+			return;
+		}
 		lead.replaceChildren();
 		if (!shown.length) { lead.hidden = true; return; }
 		const heading = document.createElement('h3');
@@ -384,6 +504,29 @@ class AssetBrowser {
 		lead.hidden = false;
 		this._fitLeadRows();
 		this.contentManager.updateSelection?.();
+	}
+
+	updateShortcuts() {
+		if (!this.rail || this.state === 'SEARCH_RESULTS') return;
+		this.preserveScrollPosition(() => {
+			this._renderRecentLead();
+			this._renderProjectLead();
+		});
+		this.contentManager.updateSelection?.();
+	}
+
+	preserveScrollPosition(update) {
+		const host = this.scrollContainer;
+		const scrollTop = host.scrollTop;
+		const top = host.getBoundingClientRect().top;
+		const anchors = scrollTop > 0 ? [...host.querySelectorAll('.asset-option')].map(tile => ({ tile, rect: tile.getBoundingClientRect() }))
+			.filter(({ rect }) => rect.height && rect.bottom > top) : [];
+		const overflowAnchor = host.style.overflowAnchor;
+		host.style.overflowAnchor = 'none';
+		update();
+		const anchor = anchors.find(({ tile }) => tile.isConnected);
+		host.scrollTop = anchor ? scrollTop + anchor.tile.getBoundingClientRect().top - anchor.rect.top : scrollTop;
+		host.style.overflowAnchor = overflowAnchor;
 	}
 
 	// The grid's resolved auto-fill tracks are the count that fits one row;
@@ -431,9 +574,9 @@ class AssetBrowser {
 		const favorites = this.getFavoritesCategory(items);
 		if (favorites) this.elements.categoryGrid.appendChild(this.createCategoryCard(favorites, favorites.count));
 		if (this.browseView === 'creator') {
-			this.getCreators(items).forEach(creator => this.elements.categoryGrid.appendChild(this.createCreatorCard(creator)));
+			this.getCreators(items).forEach(creator => this.elements.categoryGrid.appendChild(this.folderView.createCreatorCard(creator)));
 		} else {
-			this.categories.filter(category => !category.parent).forEach(category => {
+			this.catalog.getRoots().forEach(category => {
 				const count = this.getRootCount(category, counts);
 				if (count) this.elements.categoryGrid.appendChild(this.createCategoryCard(category, count));
 			});
@@ -446,7 +589,7 @@ class AssetBrowser {
 
 	updateCategoryCounts() { this.render(); }
 
-	createCategoryCard(category, count) {
+	createCategoryCard(category, count, onClick = () => this.setState('CATEGORY_DETAIL', category.id)) {
 		const card = tplClone('tpl-category-card');
 		card.dataset.categoryId = category.id;
 		if (category.color) card.style.setProperty('--category-color', category.color);
@@ -476,30 +619,23 @@ class AssetBrowser {
 		card.querySelector('.category-card-count').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
 		if (category.id !== LIBRARY_FAVORITES_ID) this.contentManager.customizeCollectionCard?.(card, category);
 
-		card.addEventListener('click', () => {
-			this.setState('CATEGORY_DETAIL', category.id);
-		});
+		card.addEventListener('click', onClick);
 
 		return card;
 	}
 
 	getCategoryCounts(items) {
-		const counts = {};
-		items.forEach(item => {
-			const catId = item.category;
-			counts[catId] = (counts[catId] || 0) + 1;
-		});
-		return counts;
+		return this.catalog.getCategoryCounts(items);
 	}
 
 	getCategoryItems(categoryId, items = this.getFilteredItems()) {
 		if (categoryId === LIBRARY_FAVORITES_ID) return this.contentManager.getFavoriteItems(items);
-		return items.filter((item) => item.category === categoryId);
+		return this.catalog.getCategoryItems(categoryId, items);
 	}
 
 	getCategoryById(categoryId) {
 		if (categoryId === LIBRARY_FAVORITES_ID) return { id: LIBRARY_FAVORITES_ID, name: 'Favorites' };
-		return this.categories.find((category) => category.id === categoryId) || null;
+		return this.catalog.getCategoryById(categoryId);
 	}
 
 	// ===== CATEGORY DETAIL VIEW =====
@@ -514,28 +650,15 @@ class AssetBrowser {
 		// Update header
 		this.elements.backBtn.disabled = false;
 		this.elements.title.textContent = this.getCategoryPath(category.id);
-		this.collectionInfo.replaceChildren();
-		if (category.description) {
-			const description = document.createElement('p');
-			description.className = 'asset-browser-collection-description';
-			description.textContent = category.description;
-			this.collectionInfo.appendChild(description);
-		}
-		const info = category.id === LIBRARY_FAVORITES_ID ? null : this.contentManager.createCollectionInfo?.(category);
-		if (info) this.collectionInfo.appendChild(info);
-		this.collectionInfo.hidden = !this.collectionInfo.childElementCount;
+		this.setHeader.render(category.id === LIBRARY_FAVORITES_ID ? null : { ...category, attribution: this.contentManager.getCollectionAttribution?.(category) }, this.getCategoryItems(category.id));
 
-		const children = this.categories.filter(child => child.parent === category.id);
+		const children = this.catalog.getSets(category.id);
 		this.elements.categoryGrid.replaceChildren();
 		const counts = this.getCategoryCounts(this.getFilteredItems());
 		children.forEach(child => {
 			if (counts[child.id]) this.elements.categoryGrid.appendChild(this.createCategoryCard(child, counts[child.id]));
 		});
 		if (this.elements.categoryGrid.children.length) this.elements.categoryGrid.classList.add('visible');
-		if (children.length && this.getCategoryItems(category.id).length) {
-			this.collectionInfo.appendChild(this.createHeading('More ' + category.name));
-			this.collectionInfo.hidden = false;
-		}
 		this.renderCarriedItems(category);
 
 		// Show item grid
@@ -583,13 +706,15 @@ class AssetBrowser {
 	// ===== LAZY LOADING =====
 
 	getPagedItemCount() {
+		if (this.rail && this.state !== 'SEARCH_RESULTS') return this.wallItems.length;
 		if (this.state === 'CATEGORY_DETAIL') return this.getCategoryItems(this.currentCategoryId).length;
 		if (this.isListingState()) return this.getListingItems().length;
 		return 0;
 	}
 
 	loadNextBatch() {
-		if (this.state === 'CATEGORY_DETAIL') this.loadCategoryItems();
+		if (this.rail && this.state !== 'SEARCH_RESULTS') this.loadRailItems();
+		else if (this.state === 'CATEGORY_DETAIL') this.loadCategoryItems();
 		else if (this.isListingState()) this.loadListingItems();
 	}
 
@@ -619,7 +744,7 @@ class AssetBrowser {
 		this.currentOffset += batch.length;
 
 		// Update selection state for newly rendered items
-		this.contentManager.updateSelection();
+		this.contentManager.updateSelection?.();
 
 		// Check if we need to load more to fill viewport
 		this.checkAndLoadMore();
@@ -654,7 +779,7 @@ class AssetBrowser {
 		});
 
 		const group = (id, groupItems) => ({ id, name: this.getCategoryPath(id), items: groupItems });
-		if (this.state === 'CREATOR_DETAIL') return this.getUnknownGroups(items);
+		if (this.folderView?.isCreatorDetail()) return this.getUnknownGroups(items);
 		if (this.state === 'SEARCH_RESULTS') {
 			return [...byCategory.entries()].map(([id, groupItems]) => group(id, groupItems));
 		}
@@ -728,7 +853,7 @@ class AssetBrowser {
 		this.currentOffset += batch.length;
 
 		// Update selection state for newly rendered items
-		this.contentManager.updateSelection();
+		this.contentManager.updateSelection?.();
 
 		// Check if we need to load more
 		this.checkAndLoadMore();
@@ -743,29 +868,19 @@ class AssetBrowser {
 	}
 
 	getCategoryPath(id) {
-		const category = this.getCategoryById(id);
-		const parent = category?.parent && this.getCategoryById(category.parent);
-		return parent ? parent.name + ' › ' + category.name : (category?.name || id);
+		return id === LIBRARY_FAVORITES_ID ? 'Favorites' : this.catalog.getCategoryPath(id);
 	}
 
 	getRootCount(category, counts) {
-		return (counts[category.id] || 0) + this.categories.filter(child => child.parent === category.id)
-			.reduce((sum, child) => sum + (counts[child.id] || 0), 0);
+		return this.catalog.getRootCount(category, counts);
 	}
 
 	getAssetAttribution(item) {
-		return Attribution.resolve(this.getCategoryById(item.category)?.attribution, item.attribution);
+		return this.catalog.getAssetAttribution(item);
 	}
 
 	getCreators(items = this.getFilteredItems()) {
-		const creators = new Map();
-		items.forEach(item => {
-			const attr = this.getAssetAttribution(item);
-			const id = attr?.authorId || '__unknown';
-			if (!creators.has(id)) creators.set(id, { id, name: id === '__unknown' ? 'Unknown' : (attr.author || id), items: [] });
-			creators.get(id).items.push(item);
-		});
-		return [...creators.values()];
+		return this.catalog.getCreators(items);
 	}
 
 	updateViewControl() {
@@ -784,52 +899,8 @@ class AssetBrowser {
 		return heading;
 	}
 
-	createCreatorCard(creator) {
-		const card = this.createCategoryCard({ id: creator.id, name: creator.name, icon: creator.items[0]?.thumbnailUrl || creator.items[0]?.url }, creator.items.length);
-		const replacement = card.cloneNode(true);
-		replacement.addEventListener('click', () => { this.currentCreatorId = creator.id; this.setState('CREATOR_DETAIL'); });
-		return replacement;
-	}
-
-	renderCreatorDetail() {
-		const creator = this.getCreators(this.contentManager.getAllContent()).find(entry => entry.id === this.currentCreatorId);
-		this.elements.backBtn.disabled = false;
-		this.elements.title.textContent = creator?.name || 'Unknown';
-		if (this.currentCreatorId === '__unknown') {
-			this.elements.searchResults.classList.add('visible');
-			this.elements.searchResults.replaceChildren();
-			this.loadListingItems();
-			return;
-		}
-		this.elements.categoryGrid.replaceChildren();
-		const items = this.getFilteredItems().filter(item => this.getAssetAttribution(item)?.authorId === this.currentCreatorId);
-		const counts = this.getCategoryCounts(items);
-		const categories = this.categories.filter(category => counts[category.id]);
-		const sources = new Set(categories.map(category => category.attribution?.sourceId || ''));
-		const ordered = [...sources].flatMap(source => categories.filter(category => (category.attribution?.sourceId || '') === source));
-		let lastSource = null;
-		ordered.forEach(category => {
-			const source = category.attribution?.sourceId || '';
-			if (sources.size > 1 && source !== lastSource) this.elements.categoryGrid.appendChild(this.createHeading(category.attribution?.source || source || 'Other sets'));
-			lastSource = source;
-			const card = this.createCategoryCard(category, counts[category.id]);
-			card.addEventListener('click', () => { this.setOrigin = this.currentCreatorId; });
-			this.elements.categoryGrid.appendChild(card);
-		});
-		if (categories.length) this.elements.categoryGrid.classList.add('visible');
-		else this.showEmptyState('No items found');
-	}
-
 	getUnknownGroups(items) {
-		const groups = new Map();
-		items.filter(item => !this.getAssetAttribution(item)?.authorId).forEach(item => {
-			const category = this.getCategoryById(item.category);
-			const root = category?.parent ? this.getCategoryById(category.parent) : category;
-			const id = root?.id || item.category;
-			if (!groups.has(id)) groups.set(id, { id, name: root?.name || id, items: [] });
-			groups.get(id).items.push(item);
-		});
-		return [...groups.values()];
+		return this.catalog.getUnknownGroups(items);
 	}
 
 	renderCarriedItems(category) {
@@ -844,13 +915,10 @@ class AssetBrowser {
 			const card = this.createItemElement(item);
 			const entry = document.createElement('div');
 			entry.className = 'asset-browser-carried-item';
-			const tile = document.createElement('div');
-			tile.className = 'asset-grid visible';
-			tile.appendChild(card);
 			const label = document.createElement('div');
 			label.className = 'category-card-byline';
 			label.textContent = 'From ' + (this.getCategoryById(item.category)?.name || item.category);
-			entry.append(tile, label);
+			entry.append(card, label);
 			grid.appendChild(entry);
 		});
 		this.carriedLead.appendChild(grid);

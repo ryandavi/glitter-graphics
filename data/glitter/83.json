@@ -4,7 +4,7 @@
     "name": "Dark Vivid Purple",
     "generatedName": "Vivid Purple",
     "brightness": "1.000",
-    "sortOrder": 8008,
+    "sortOrder": 121,
     "hue": 0.775,
     "colorCodes": [
         "#6900FF"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_dark-vivid-purple"
     ],
+    "originalOrder": 8008,
     "originalName": "purple-009"
 }

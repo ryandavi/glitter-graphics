@@ -26,7 +26,7 @@ The pages call one JSON endpoint, `includes/api.php`, which dispatches on an `ac
 | File | Responsibility |
 |---|---|
 | `assetAPI.php` | Asset CRUD, analysis, ingest approval, and the JSON export |
-| `assetIngestService.php`, `ingestPreview.php` | The upload and approval pipeline. Only active assets (`is_active`) are exported. |
+| `assetIngestService.php`, `ingestPreview.php` | The upload and approval pipeline. Only active assets in published categories (`is_active`) are exported; an unpublished root also hides its sets. |
 | `gifAnalyzer.php`, `colorClassifier.php`, `colorUtils.php`, `assetAnalysisResult.php` | GIF palette analysis, color naming and color tags. Weights come from `data/rendering-rules.json`. |
 | `tagTaxonomyService.php` | Tags, aliases and merges |
 | `assetHealthService.php`, `assetVariantService.php`, `assetPathService.php`, `assetNaming.php` | Health scans, multi-resolution sticker variants, file paths, generated names |
@@ -55,11 +55,15 @@ The sticker editor's Slice section stores four independent insets in base-image 
 
 ## Asset sets and provenance
 
-Glitter and sticker categories support two levels. A style root has no `parent_id`; its child categories are sets. Roots can also own assets directly. The API rejects self-parenting, parents that already have a parent, and giving a parent to a category with children. Categories with children cannot be deleted. Parent changes do not move assets: each asset's home category slug remains its flat folder.
+Glitter and sticker categories support two levels. Their Published switch controls category `is_active`; unpublishing preserves asset rows, files, tags and attribution. Category exports omit inactive categories and children of inactive roots; full manifests, browse indexes and detail files omit their assets. The normal export cleanup removes stale omitted detail files. Health scans still inspect unpublished assets for file and analysis issues; they do not require an export entry. A style root has no `parent_id`; its child categories are sets. Roots can also own assets directly. The API rejects self-parenting, parents that already have a parent, and giving a parent to a category with children. Categories with children cannot be deleted. Parent changes do not move assets: each asset's home category slug remains its flat folder.
 
 Category attribution accepts `authorId` and `sourceId` from `content/entities.json` alongside the existing display text. The category manager offers identity datalists and root-only parent choices. Attribution inherits from an asset's home category to that asset; it never inherits from a style root to a child set.
 
-Exports include category `parent` as a slug or null, while `count` remains the category's own active assets. Asset `original_name` and `appearances` export as `originalName` and an ordered list of `{set, originalName}`. Original names are read-only in the editor; appearances are import facts. Both are in the browse index for search and lineage. `search_terms` stores per-asset old library names retained by source imports, merged with tag aliases on export.
+Exports include category `parent` as a slug or null, while `count` remains the category's own active assets. Asset `original_order` exports as `originalOrder` in the full manifest, browse index and detail record, and appears read-only beside Original name in admin. Its migration backfills sourced assets from `sort_order` once when adding the column; later sorting and import reruns preserve it. New sourced imports write the source order. Asset `original_name` and `appearances` export as `originalName` and an ordered list of `{set, originalName}`. Original names are read-only in the editor; appearances are import facts. Both are in the browse index for search and lineage. `search_terms` stores per-asset old library names retained by source imports, merged with tag aliases on export.
+
+Source sets can be standalone style roots by using a null `parent` in the import map. Import reruns preserve the inactive status of tiles already in their mapped home, so an unpublished sourced tile stays unpublished.
+
+Assets also support an optional JSON `attribution` override, exported in the full manifest, browse index and detail record. Item attribution wins over category attribution in the editor. The six Christmas tiles belong directly to Classic Sparkle and carry Aylana's credit individually; Christmas is not a separate published set.
 
 Appearances name other sets where the image was published. Alternate filenames within the asset's own set become search aliases, so a set never lists its own tile again in the carried-over row.
 

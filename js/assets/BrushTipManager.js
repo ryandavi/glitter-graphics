@@ -83,10 +83,8 @@ class BrushTipManager extends ContentManager {
 		});
 	}
 
-	createCollectionInfo(collection) {
-		const pack = BrushLibrary.packById(collection.id);
-		if (!pack) return null;
-		return Attribution.buildCreditElement(pack.attribution, { bylineVerb: 'Created by' });
+	getCollectionAttribution(collection) {
+		return BrushLibrary.packById(collection.id)?.attribution;
 	}
 
 	updateSelection() {

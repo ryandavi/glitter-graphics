@@ -4,7 +4,7 @@
     "name": "Orange, Green, and Blue",
     "generatedName": "Orange, Green, and Blue",
     "brightness": "0.110",
-    "sortOrder": 1009,
+    "sortOrder": 66,
     "hue": 1.1,
     "colorCodes": [
         "#1D1D1D",
@@ -28,9 +28,19 @@
     "width": 60,
     "height": 30,
     "fileSize": 7997,
-    "category": "bring-on-the-glitter",
+    "category": "noise-2",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 1009,
     "originalName": "black-05"
 }

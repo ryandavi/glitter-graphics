@@ -4,7 +4,7 @@
     "name": "Vivid Indigo",
     "generatedName": "Vivid Indigo",
     "brightness": "0.520",
-    "sortOrder": 8003,
+    "sortOrder": 117,
     "hue": 0.801,
     "colorCodes": [
         "#8D16EC",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 8003,
     "originalName": "purple-004"
 }

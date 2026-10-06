@@ -4,7 +4,7 @@
     "name": "Gold 1",
     "generatedName": "Vivid Gold",
     "brightness": "1.000",
-    "sortOrder": 1005,
+    "sortOrder": 40,
     "hue": 0.167,
     "colorCodes": [
         "#B48700"
@@ -31,5 +31,6 @@
         "Dark Gold",
         "glitter_dark-gold"
     ],
+    "originalOrder": 1005,
     "originalName": "gold-1"
 }

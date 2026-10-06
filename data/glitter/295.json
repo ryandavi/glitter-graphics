@@ -4,7 +4,7 @@
     "name": "Spark Button",
     "generatedName": "Magenta",
     "brightness": "0.580",
-    "sortOrder": 1001,
+    "sortOrder": 29,
     "hue": 0.951,
     "colorCodes": [
         "#E63D99",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1001,
     "originalName": "Sparkbutton-apinkish"
 }

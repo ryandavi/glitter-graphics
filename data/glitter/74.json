@@ -4,7 +4,7 @@
     "name": "Camo Pattern",
     "generatedName": "Gray",
     "brightness": "0.000",
-    "sortOrder": 10002,
+    "sortOrder": 131,
     "hue": 1.1,
     "colorCodes": [
         "#696969"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 2920,
-    "category": "bring-on-the-glitter",
+    "category": "etc",
     "isPixelated": 1,
     "tags": [
         "Beige",
@@ -33,5 +33,15 @@
     "searchTerms": [
         "glitter_camo-pattern"
     ],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 10002,
     "originalName": "silver-03"
 }

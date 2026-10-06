@@ -4,7 +4,7 @@
     "name": "Red and Purple",
     "generatedName": "Red and Purple",
     "brightness": "0.170",
-    "sortOrder": 9002,
+    "sortOrder": 124,
     "hue": 0.035,
     "colorCodes": [
         "#7A0005",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 9002,
     "originalName": "crimson-003"
 }

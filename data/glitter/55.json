@@ -4,7 +4,7 @@
     "name": "Dusty Pink",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 7000,
+    "sortOrder": 104,
     "hue": 0.111,
     "colorCodes": [
         "#FF96FF"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 5816,
-    "category": "bring-on-the-glitter",
+    "category": "noise-2",
     "isPixelated": 1,
     "tags": [
         "Light",
@@ -30,5 +30,15 @@
     "searchTerms": [
         "etc_dusty-pink"
     ],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 7000,
     "originalName": "pink-001"
 }

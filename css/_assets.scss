@@ -34,7 +34,8 @@
 		grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr));
 		gap: var(--spacing-sm);
 
-		>.asset-option {
+		>.asset-option,
+		>.asset-browser-carried-item>.asset-option {
 			aspect-ratio: 1;
 			overflow: hidden;
 			transform: translateZ(0);
@@ -197,7 +198,7 @@
 	&:not([hidden]) + .asset-browser-index-lead,
 	&:not([hidden]) ~ .category-grid.visible,
 	&:not([hidden]) ~ .search-results-container.visible,
-	&:not([hidden]) ~ .asset-browser-collection-info:not([hidden]),
+	&:not([hidden]) ~ .asset-set-header:not([hidden]),
 	&:not([hidden]) ~ .asset-grid.visible { margin-top: var(--spacing-md); }
 
 	// One row, no scroller: AssetBrowser._fitRecentRow hides the recents past
@@ -215,8 +216,6 @@
 }
 :root[data-theme='light'] [data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image>img { filter: invert(1); }
 
-.asset-browser-collection-info:not([hidden]) { display: block; }
-.asset-browser-collection-info:not([hidden]) + .asset-grid.visible { margin-top: var(--spacing-md); }
 
 .asset-browser-index-lead + .category-grid.visible { margin-top: var(--spacing-sm); }
 .asset-browser-section-title {
@@ -236,12 +235,6 @@
 }
 .brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
 
-.asset-browser-collection-description {
-	margin: 0 0 var(--spacing-md);
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-sm);
-	line-height: 1.5;
-}
 
 .asset-collection-credit {
 	padding: var(--spacing-md);

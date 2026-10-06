@@ -4,7 +4,7 @@
     "name": "Emerald",
     "generatedName": "Jewel Tone Green",
     "brightness": "1.000",
-    "sortOrder": 1003,
+    "sortOrder": 38,
     "hue": 0.356,
     "colorCodes": [
         "#0F8700"
@@ -31,5 +31,6 @@
         "Green",
         "glitter_green"
     ],
+    "originalOrder": 1003,
     "originalName": "emerald"
 }

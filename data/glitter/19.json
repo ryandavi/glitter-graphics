@@ -4,7 +4,7 @@
     "name": "Christmas",
     "generatedName": "Green and Red",
     "brightness": "1.000",
-    "sortOrder": 3,
+    "sortOrder": 5,
     "hue": 1.2,
     "colorCodes": [
         "#00D200",
@@ -22,9 +22,10 @@
     "width": 60,
     "height": 30,
     "fileSize": 1502,
-    "category": "christmas",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
+        "Christmas",
         "Contrast",
         "Green",
         "Light",
@@ -35,5 +36,15 @@
     "searchTerms": [
         "glitter_christmas"
     ],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 3,
     "originalName": "christmas-04"
 }

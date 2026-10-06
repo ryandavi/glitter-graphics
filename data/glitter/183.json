@@ -4,7 +4,7 @@
     "name": "Yellow",
     "generatedName": "Yellow",
     "brightness": "0.820",
-    "sortOrder": 3009,
+    "sortOrder": 80,
     "hue": 0.205,
     "colorCodes": [
         "#FFFC7B",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 3009,
     "originalName": "gold-09"
 }

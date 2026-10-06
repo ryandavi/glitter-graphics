@@ -200,9 +200,9 @@
 	/* Animated accent used by modal link hovers, reference highlights, and the
 	   Guide hero. Theme overrides choose an asset by sampled average color,
 	   then by the theme's accent/personality rather than filename alone. */
-	--theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
+	--theme-glitter-image: url("../images/glitter/sparkelies/sapphire.gif");
 	/* Text fills need a lighter swatch against dark panel surfaces. */
-	--workspace-heading-glitter-image: url("../images/glitter/sparkle/glitter_light-blue.gif");
+	--workspace-heading-glitter-image: url("../images/glitter/etc/glitter_light-blue.gif");
 
 
 	--color-danger: var(--red-100);

@@ -4,7 +4,7 @@
     "name": "Green and Blue",
     "generatedName": "Green and Blue",
     "brightness": "0.300",
-    "sortOrder": 4,
+    "sortOrder": 6,
     "hue": 0.357,
     "colorCodes": [
         "#16CC00",
@@ -24,9 +24,22 @@
     "width": 60,
     "height": 30,
     "fileSize": 1502,
-    "category": "christmas",
+    "category": "sparkle",
     "isPixelated": 1,
-    "tags": [],
+    "tags": [
+        "Christmas",
+        "Multicolor"
+    ],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 4,
     "originalName": "christmas-05"
 }

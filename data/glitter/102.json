@@ -4,7 +4,7 @@
     "name": "Pink Purple",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 7009,
+    "sortOrder": 113,
     "hue": 0.215,
     "colorCodes": [
         "#E16996"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_pink-purple"
     ],
+    "originalOrder": 7009,
     "originalName": "violet-02"
 }

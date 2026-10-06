@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Very Dark Vivid Blue",
     "brightness": "0.160",
-    "sortOrder": 7,
+    "sortOrder": 227,
     "hue": 0.734,
     "colorCodes": [
         "#080033",
@@ -36,5 +36,6 @@
     "searchTerms": [
         "ember_purple"
     ],
+    "originalOrder": 7,
     "originalName": "ember-07"
 }

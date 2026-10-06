@@ -4,7 +4,7 @@
     "name": "Teal, Blue, and Green",
     "generatedName": "Teal, Blue, and Green",
     "brightness": "0.600",
-    "sortOrder": 20,
+    "sortOrder": 177,
     "hue": 0.584,
     "colorCodes": [
         "#6CA7BB",
@@ -30,5 +30,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 20,
     "originalName": "twinkle-05"
 }

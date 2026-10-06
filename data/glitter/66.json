@@ -4,7 +4,7 @@
     "name": "Blue Topaz",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 1002,
+    "sortOrder": 37,
     "hue": 0.625,
     "colorCodes": [
         "#004B96"
@@ -31,5 +31,6 @@
     "searchTerms": [
         "glitter_blue-topaz"
     ],
+    "originalOrder": 1002,
     "originalName": "blueTopaz"
 }

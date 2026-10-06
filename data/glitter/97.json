@@ -4,7 +4,7 @@
     "name": "Opalite",
     "generatedName": "Light Gray",
     "brightness": "1.000",
-    "sortOrder": 10005,
+    "sortOrder": 134,
     "hue": 1.1,
     "colorCodes": [
         "#CCCCCC",
@@ -37,6 +37,7 @@
     "searchTerms": [
         "glitter_opalite"
     ],
+    "originalOrder": 10005,
     "originalName": "silver-06",
     "appearances": [
         {

@@ -377,7 +377,8 @@ class AssetEditor {
         const input = `<input type="${inputType}" id="${field.key}" value="${this.escapeHtml(value ?? '')}" ${field.step ? `step="${field.step}"` : ''}>`;
         const row = this.propertyRow(field.label, input, { htmlFor: field.key });
         if (field.key === 'name' && this.currentAsset.original_name) {
-            return row + this.propertyRow('Original name', `<span>${this.escapeHtml(this.currentAsset.original_name)}</span>`);
+            return row + this.propertyRow('Original name', `<span>${this.escapeHtml(this.currentAsset.original_name)}</span>`)
+                + (this.currentAsset.original_order != null ? this.propertyRow('Original order', `<span>${this.currentAsset.original_order}</span>`) : '');
         }
         // The URL field keeps its input inline like every other row; the
         // preview follows as a continuation row under the same control column.

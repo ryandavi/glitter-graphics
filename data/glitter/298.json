@@ -4,7 +4,7 @@
     "name": "Spark Button",
     "generatedName": "Blue-Green",
     "brightness": "0.600",
-    "sortOrder": 1006,
+    "sortOrder": 34,
     "hue": 0.515,
     "colorCodes": [
         "#69B7AA",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1006,
     "originalName": "SparkButton"
 }

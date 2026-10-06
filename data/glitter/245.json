@@ -4,7 +4,7 @@
     "name": "Yellow-Green",
     "generatedName": "Yellow-Green",
     "brightness": "0.570",
-    "sortOrder": 5,
+    "sortOrder": 162,
     "hue": 0.294,
     "colorCodes": [
         "#90BC67",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 5,
     "originalName": "twinkle-005"
 }

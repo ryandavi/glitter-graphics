@@ -4,7 +4,7 @@
     "name": "Off-White",
     "generatedName": "Off-White",
     "brightness": "0.200",
-    "sortOrder": 10006,
+    "sortOrder": 135,
     "hue": 1.1,
     "colorCodes": [
         "#EDEDED",
@@ -26,5 +26,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 10006,
     "originalName": "silver-07"
 }

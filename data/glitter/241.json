@@ -4,7 +4,7 @@
     "name": "Blue-Green",
     "generatedName": "Blue-Green",
     "brightness": "0.620",
-    "sortOrder": 1,
+    "sortOrder": 158,
     "hue": 0.517,
     "colorCodes": [
         "#73B9AF",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 1,
     "originalName": "twinkle-0010"
 }

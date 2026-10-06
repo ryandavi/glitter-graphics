@@ -4,7 +4,7 @@
     "name": "Green, Blue, and Purple",
     "generatedName": "Green, Blue, and Purple",
     "brightness": "0.290",
-    "sortOrder": 1008,
+    "sortOrder": 65,
     "hue": 1.1,
     "colorCodes": [
         "#494949",
@@ -26,9 +26,19 @@
     "width": 60,
     "height": 30,
     "fileSize": 7997,
-    "category": "bring-on-the-glitter",
+    "category": "noise-2",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 1008,
     "originalName": "black-04"
 }

@@ -4,7 +4,7 @@
     "name": "Blue and Red",
     "generatedName": "Blue and Red",
     "brightness": "0.130",
-    "sortOrder": 5,
+    "sortOrder": 225,
     "hue": 0.708,
     "colorCodes": [
         "#000066",
@@ -28,5 +28,6 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "originalOrder": 5,
     "originalName": "ember-05"
 }

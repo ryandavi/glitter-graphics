@@ -4,7 +4,7 @@
     "name": "Red",
     "generatedName": "Very Dark Vivid Magenta",
     "brightness": "0.190",
-    "sortOrder": 6,
+    "sortOrder": 226,
     "hue": 0.875,
     "colorCodes": [
         "#330033",
@@ -35,5 +35,6 @@
     "searchTerms": [
         "ember_red"
     ],
+    "originalOrder": 6,
     "originalName": "ember-06"
 }

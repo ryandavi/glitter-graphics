@@ -4,7 +4,7 @@
     "name": "Burnt Orange",
     "generatedName": "Very Dark Vivid Red",
     "brightness": "0.140",
-    "sortOrder": 0,
+    "sortOrder": 220,
     "hue": 0.042,
     "colorCodes": [
         "#330000",
@@ -36,5 +36,6 @@
     "searchTerms": [
         "ember_burnt-orange"
     ],
+    "originalOrder": 0,
     "originalName": "ember-01"
 }

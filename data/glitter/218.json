@@ -4,7 +4,7 @@
     "name": "Brown",
     "generatedName": "Brown",
     "brightness": "0.360",
-    "sortOrder": 5001,
+    "sortOrder": 92,
     "hue": 0.085,
     "colorCodes": [
         "#7D5446",
@@ -22,9 +22,19 @@
     "width": 60,
     "height": 30,
     "fileSize": 4424,
-    "category": "bring-on-the-glitter",
+    "category": "etc",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "attribution": {
+        "author": "Aylana",
+        "authorId": "aylana",
+        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+        "source": "designbyAylana ~ Bring On The Glitter",
+        "sourceId": "bring-on-the-glitter",
+        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+        "license": "unknown"
+    },
+    "originalOrder": 5001,
     "originalName": "brown-02"
 }
