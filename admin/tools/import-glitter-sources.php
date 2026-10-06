@@ -329,8 +329,10 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
 		$plan = $import->plan();
 		$import->report($plan);
 		if (!$apply) { echo "DRY RUN: no database or file changes. Review before --apply.\n"; exit(0); }
-		$git = shell_exec('git -C ' . escapeshellarg(realpath(__DIR__ . '/../..')) . ' status --porcelain');
-		if ($git === null || trim($git) !== '') throw new RuntimeException('--apply requires a clean git tree; commit code changes separately first');
+		$gitOutput = [];
+		$gitStatus = 0;
+		exec('git -C ' . escapeshellarg(realpath(__DIR__ . '/../..')) . ' status --porcelain', $gitOutput, $gitStatus);
+		if ($gitStatus !== 0 || trim(implode("\n", $gitOutput)) !== '') throw new RuntimeException('--apply requires a clean git tree; commit code changes separately first');
 		$backup = __DIR__ . '/../../data/backup/glitter-source-import-' . date('Ymd-His');
 		$import->backup($backup);
 		echo 'Backup: ', $backup, "\n";
