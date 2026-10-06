@@ -246,7 +246,12 @@
 	}
 }
 
-.asset-collection-credit-notes { color: var(--color-text-tertiary); }
+// A note is an aside, often a quote: ruled off from the credit line.
+.asset-collection-credit-notes {
+	padding-left: var(--spacing-sm);
+	border-left: 2px solid var(--color-border);
+	color: var(--color-text-tertiary);
+}
 
 #brushTipThumbnail {
 	padding: var(--spacing-sm);

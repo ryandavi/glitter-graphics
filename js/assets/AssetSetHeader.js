@@ -17,9 +17,13 @@ class AssetSetHeader {
 		const line = document.createElement('div');
 		line.className = 'asset-set-header-line';
 		const title = document.createElement('span');
+		title.className = 'asset-set-header-title';
 		const attr = Attribution.resolve(category.attribution);
 		title.textContent = category.name;
-		line.appendChild(title);
+		const count = document.createElement('span');
+		count.className = 'asset-set-header-count';
+		count.textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
+		line.append(title, count);
 		if (items.some(item => item.originalOrder != null)) {
 			const toggle = document.createElement('button');
 			toggle.type = 'button';
@@ -35,6 +39,7 @@ class AssetSetHeader {
 		this.element.appendChild(line);
 		if (category.description) {
 			const description = document.createElement('p');
+			description.className = 'asset-set-header-description';
 			description.textContent = category.description;
 			this.element.appendChild(description);
 		}

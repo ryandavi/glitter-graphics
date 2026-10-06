@@ -556,6 +556,8 @@
 			color: var(--color-text-tertiary);
 			font-size: var(--font-size-xs);
 		}
+
+		.asset-browser-rail-paren { display: none; }
 	}
 }
 
@@ -565,25 +567,52 @@
 	--asset-tile-gap: 2px;
 }
 
+// What the grid below is (AssetSetHeader): the set's name and size, what it
+// is, then who made it. One hairline closes it off from the tiles.
 .asset-set-header {
 	display: grid;
 	gap: var(--spacing-sm);
 	margin-bottom: var(--spacing-md);
-	color: var(--color-text-secondary);
-	font-size: var(--font-size-xs);
+	padding-bottom: var(--spacing-md);
+	border-bottom: 1px solid var(--color-border);
+
 	&[hidden] { display: none; }
+
 	p { margin: 0; }
 }
+
 .asset-set-header-line {
 	display: flex;
-	align-items: center;
+	align-items: baseline;
 	justify-content: space-between;
-	gap: var(--spacing-xs);
-	color: var(--color-text-primary);
+	gap: var(--spacing-sm);
+
 	// The Original order toggle (AssetSetHeader) is shelved: sets stay in
 	// color order.
 	button { display: none; }
 }
+
+.asset-set-header-title {
+	min-width: 0;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-base);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.3;
+}
+
+.asset-set-header-count {
+	flex-shrink: 0;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	white-space: nowrap;
+}
+
+.asset-set-header-description {
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	line-height: 1.4;
+}
+
 .asset-options .asset-browser-wall .asset-grid>.asset-option {
 	border-radius: 0;
 	outline-width: 2px;

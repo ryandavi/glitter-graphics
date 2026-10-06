@@ -75,7 +75,8 @@ class AssetBrowserRail {
 	}
 
 	// Thumbnail, name, count. A browser without the customizable select shows
-	// the row's text alone: "Name (count)".
+	// the row's text alone, "Name (count)"; the styled row sets the count
+	// apart itself and drops the parentheses.
 	createOption(entry) {
 		const option = document.createElement('option');
 		option.value = entry.set ? `${entry.root}/${entry.set}` : entry.root;
@@ -94,7 +95,13 @@ class AssetBrowserRail {
 		name.textContent = entry.name;
 		const count = document.createElement('span');
 		count.className = 'asset-browser-rail-count';
-		count.textContent = ` (${entry.count})`;
+		const paren = (text) => {
+			const mark = document.createElement('span');
+			mark.className = 'asset-browser-rail-paren';
+			mark.textContent = text;
+			return mark;
+		};
+		count.append(paren(' ('), String(entry.count), paren(')'));
 		option.append(name, count);
 		return option;
 	}
