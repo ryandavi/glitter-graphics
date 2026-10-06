@@ -519,19 +519,24 @@ setupMouseDrag(element) {
 	let dragSourceTransform = this;
 	let altCloneId = null;
 	// Hover follows the same frame test as clicking, so the padding around
-	// text and shapes (shadow, effects) doesn't outline a layer a click there
-	// wouldn't select.
+	// text and shapes (shadow, effects) neither outlines a layer nor shows the
+	// move cursor where a click wouldn't select it.
 	element.addEventListener('pointermove', (event) => {
 		if (event.pointerType !== 'mouse' || event.buttons) return;
 		const zoom = this.editor.viewport.currentZoom || 1;
 		const point = this.getCanvasPointFromClient(event.clientX, event.clientY);
-		if (this.containsPoint(point, CONFIG.ui.stickerHandles.frameHitTolerance / zoom)) {
+		const inFrame = this.containsPoint(point, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
+		element.classList.toggle('is-frame-hover', inFrame);
+		if (inFrame) {
 			if (!this.hoverOutline) this.showHoverOutline();
 		} else {
 			this.removeHoverOutline();
 		}
 	});
-	element.addEventListener('mouseleave', () => this.removeHoverOutline());
+	element.addEventListener('mouseleave', () => {
+		element.classList.remove('is-frame-hover');
+		this.removeHoverOutline();
+	});
 
 const swallowFollowupClick = () => {
 	this.editor.ignoreNextClick = true;

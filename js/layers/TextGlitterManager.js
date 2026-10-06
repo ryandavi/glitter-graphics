@@ -1703,16 +1703,28 @@ class TextGlitterManager {
 			ctx.lineJoin = 'miter';
 			ctx.miterLimit = CONFIG.rendering.borderMiterLimit;
 			ctx.lineWidth = placement === 'center' ? widthPx : widthPx * 2;
-			// An envelope would stretch a stroked glyph's line width with it.
-			if (measurement.rasterScale || measurement.warpEnvelope || measurement.emojiCanvas || Object.values(layer.textData.decoration || {}).some(Boolean)) {
+			// An envelope or an uneven scale would stretch a stroked glyph's line
+			// width with it. An even scale is undone in the line width instead,
+			// which keeps the glyph's own curves.
+			const scale = measurement.rasterScale;
+			if ((scale && scale.x !== scale.y) || measurement.warpEnvelope || measurement.emojiCanvas || Object.values(layer.textData.decoration || {}).some(Boolean)) {
 				measurement._outlinePath ||= createMaskContourPath(fillMask);
 				ctx.stroke(measurement._outlinePath);
-			} else measurement.drawMask(ctx, 'strokeText');
+			} else {
+				ctx.lineWidth /= scale?.x || 1;
+				measurement.drawMask(ctx, 'strokeText');
+			}
 			if (placement !== 'center') {
 				ctx.globalCompositeOperation = placement === 'inside' ? 'destination-in' : 'destination-out';
 				ctx.drawImage(placement === 'inside' ? fillMask : createOutlineCutoutCanvas(fillMask, underlap), 0, 0);
 				ctx.globalCompositeOperation = 'source-over';
 			}
+			// A stroke wider than a curve is round (the dot of an i) comes out of
+			// the browser with a hollow in it. The Smooth outline has no hollows
+			// and lies inside the Sharp one, so it fills them, and it rounds off
+			// a corner too pointed for the miter limit instead of leaving it cut.
+			const smooth = createBorderMaskCanvas(fillMask, { ...borderData, edgeStyle: 'round', fillEnclosed: false }, { underlap });
+			if (smooth) ctx.drawImage(smooth, 0, 0);
 			if (fillEnclosed) fillEnclosedMaskAreas(canvas, fillMask);
 			if (shouldUseCrispMaskEdges()) binarizeCanvasAlpha(ctx);
 		} else canvas = createBorderMaskCanvas(fillMask, borderData, { underlap });

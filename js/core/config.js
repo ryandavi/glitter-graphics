@@ -588,7 +588,11 @@ const CONFIG = deepFreeze({
 				{ offset: 1, color: '#6554ff', alpha: 1 }
 			]
 		},
-		borderMiterLimit: 4,
+		// A text outline's Sharp corners come to a point down to a 60 degree
+		// corner (limit 2); anything more pointed is rounded off, so the apex of
+		// an A or a stray point in a font's outline can't throw a long spike.
+		// Also the Sharp canvas padding multiplier (getBorderOutsidePadding).
+		borderMiterLimit: 2,
 		maskContourTolerancePx: 0.5,
 		borderSampling: {
 			minSteps: 16,

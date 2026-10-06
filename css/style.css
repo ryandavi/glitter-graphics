@@ -6075,7 +6075,7 @@ body.tool-shape #canvasElementsContainer {
   pointer-events: none;
 }
 
-body.tool-select :is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element):not(.is-locked) {
+body.tool-select :is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element).is-frame-hover:not(.is-locked) {
   cursor: move;
 }
 body.tool-select .preview-container.is-over-picked-layer {

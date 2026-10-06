@@ -154,9 +154,11 @@ body.tool-shape {
 }
 
 // The cursor says what a press would do: move over a layer a drag would move,
-// the arrow over empty canvas and over a locked layer.
+// the arrow over empty canvas and over a locked layer. A layer's element is
+// larger than its frame (shadow and outline padding), so LayerTransform stamps
+// .is-frame-hover while the pointer is where a press would take hold.
 body.tool-select {
-	:is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element):not(.is-locked) { cursor: move; }
+	:is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element).is-frame-hover:not(.is-locked) { cursor: move; }
 
 	// A layer picked on the canvas (a fill) has no element of its own, so the
 	// container carries the cursor while the pointer is over its paint.
