@@ -132,7 +132,13 @@ class GlitterSourceImport
 				else $terms[] = pathinfo($loser['file'], PATHINFO_FILENAME);
 			}
 			$unique = [];
-			foreach ($appearances as $appearance) $unique[$appearance['set'] . ':' . $appearance['originalName']] = $appearance;
+			foreach ($appearances as $appearance) {
+				if ($appearance['set'] === $slug) {
+					$terms[] = $appearance['originalName'];
+					continue;
+				}
+				$unique[$appearance['set'] . ':' . $appearance['originalName']] = $appearance;
+			}
 			$plan[] = compact('hash', 'files', 'winner', 'record', 'records', 'set', 'slug', 'original', 'destination', 'name') + [
 				'appearances' => array_values($unique), 'terms' => array_values(array_unique($terms)),
 				'action' => !$set && !$record ? 'queue' : ($record ? (!$set && $record['category_slug'] === $slug && str_replace('\\', '/', $winner['file']) === str_replace('\\', '/', $destination) ? 'keep' : 'rehome') : 'new'),

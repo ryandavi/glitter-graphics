@@ -35,6 +35,7 @@ try {
 	$files = [
 		'stardrops/Sparkbutton-gray.gif' => 'stardrops/Sparkbutton-gray.gif',
 		'sparkelies/ruby.gif' => 'sparkelies/ruby.gif',
+		'sparkelies/z-ruby-copy.gif' => 'sparkelies/ruby.gif',
 		'bring-on-the-glitter/red/red-02.gif' => 'sparkelies/ruby.gif',
 		'bring-on-the-glitter/red/gray-01.gif' => 'stardrops/Sparkbutton-gray.gif',
 		'bring-on-the-glitter/red/crimson-001.gif' => 'bring-on-the-glitter/red/crimson-001.gif',
@@ -105,6 +106,7 @@ try {
 	checkLibrary(in_array('Jewel', $ruby['tags'], true), 'Merged tag lost');
 	checkLibrary(in_array('Library Ruby', $ruby['searchTerms'], true) && in_array('Ruby Copy', $ruby['searchTerms'], true), 'Old display names lost');
 	checkLibrary($ruby['appearances'] === [['set' => 'bring-on-the-glitter', 'originalName' => 'red-02']], 'Later appearance lost');
+	checkLibrary(in_array('z-ruby-copy', $ruby['searchTerms'], true), 'Same-set duplicate name lost');
 	checkLibrary(is_file("$root/$directory/images/stardrops/Sparkbutton-gray.gif"), 'Original filename casing lost');
 	$generated = array_values(array_filter($assets, function ($asset) { return $asset['category'] === 'bring-on-the-glitter'; }))[0];
 	checkLibrary($generated['name'] === $generated['generatedName'], 'New numbered tile lacks its generated display name');
