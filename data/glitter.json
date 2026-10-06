@@ -2548,15 +2548,10 @@
         "searchTerms": [
             "Bronze",
             "etc_bronze-2",
-            "etc_bronze"
+            "etc_bronze",
+            "nude-04"
         ],
-        "originalName": "gold-04",
-        "appearances": [
-            {
-                "set": "bring-on-the-glitter",
-                "originalName": "nude-04"
-            }
-        ]
+        "originalName": "gold-04"
     },
     {
         "id": 180,
@@ -8318,14 +8313,10 @@
         "category": "bring-on-the-hearts",
         "isPixelated": 1,
         "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-07 (1)",
-        "appearances": [
-            {
-                "set": "bring-on-the-hearts",
-                "originalName": "satinhearts-07"
-            }
-        ]
+        "searchTerms": [
+            "satinhearts-07"
+        ],
+        "originalName": "satinhearts-07 (1)"
     },
     {
         "id": 148,
@@ -8364,14 +8355,10 @@
         "category": "bring-on-the-hearts",
         "isPixelated": 1,
         "tags": [],
-        "searchTerms": [],
-        "originalName": "satinhearts-08 (1)",
-        "appearances": [
-            {
-                "set": "bring-on-the-hearts",
-                "originalName": "satinhearts-08"
-            }
-        ]
+        "searchTerms": [
+            "satinhearts-08"
+        ],
+        "originalName": "satinhearts-08 (1)"
     },
     {
         "id": 149,

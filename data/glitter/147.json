@@ -31,12 +31,8 @@
     "category": "bring-on-the-hearts",
     "isPixelated": 1,
     "tags": [],
-    "searchTerms": [],
-    "originalName": "satinhearts-07 (1)",
-    "appearances": [
-        {
-            "set": "bring-on-the-hearts",
-            "originalName": "satinhearts-07"
-        }
-    ]
+    "searchTerms": [
+        "satinhearts-07"
+    ],
+    "originalName": "satinhearts-07 (1)"
 }
