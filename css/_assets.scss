@@ -231,45 +231,22 @@
 .brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
 
 
+// A set's credit under its name (Attribution.buildCreditElement): who, where
+// from and the license on one line, then any note. Flat helper text.
 .asset-collection-credit {
-	padding: var(--spacing-md);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
-	background: var(--color-bg-secondary);
+	display: grid;
+	gap: var(--spacing-xs);
 	color: var(--color-text-secondary);
 	font-size: var(--font-size-xs);
 	line-height: 1.4;
+
+	a {
+		color: var(--color-accent);
+		text-decoration: underline;
+	}
 }
 
-.asset-collection-credit-byline {
-	margin-top: var(--spacing-2xs);
-	color: var(--color-text-secondary);
-
-	a { color: var(--color-text-primary); font-weight: var(--font-weight-semibold); }
-}
-.asset-collection-credit-meta {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--spacing-xs);
-	margin-top: var(--spacing-sm);
-
-	>span { @include badge-base; padding: 2px var(--spacing-sm); }
-}
-.asset-collection-credit-notes {
-	// The card already insets the toggle.
-	--property-gutter: 0px;
-	margin-top: var(--spacing-sm);
-
-	>.advanced-disclosure-content { color: var(--color-text-tertiary); }
-}
-.asset-collection-credit-links {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--spacing-sm);
-	margin-top: var(--spacing-sm);
-
-	a { color: var(--color-accent); text-decoration: underline; }
-}
+.asset-collection-credit-notes { color: var(--color-text-tertiary); }
 
 #brushTipThumbnail {
 	padding: var(--spacing-sm);

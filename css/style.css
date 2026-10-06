@@ -3513,10 +3513,7 @@ body.is-resizing-panel canvas {
   color: var(--color-text-primary);
 }
 .asset-set-header-line button {
-  flex-shrink: 0;
-}
-.asset-set-header-line button[aria-pressed=true] {
-  color: var(--color-accent);
+  display: none;
 }
 
 .asset-options .asset-browser-wall .asset-grid > .asset-option {

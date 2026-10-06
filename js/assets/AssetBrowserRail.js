@@ -33,11 +33,14 @@ class AssetBrowserRail {
 		const counts = this.catalog.getCategoryCounts(items);
 		const roots = mode === 'creator' ? this.catalog.getCreators(items).map(creator => ({ ...creator, count: creator.items.length }))
 			: this.catalog.getRoots().map(root => ({ ...root, count: this.catalog.getRootCount(root, counts) })).filter(root => root.count);
+		// Home leads the styles, and is where the wall opens.
+		if (mode === 'style' && roots.length) roots.unshift({ id: LIBRARY_ALL_ID, name: 'All styles', count: items.length });
 		if (!roots.some(root => root.id === this.selection.root)) this.selection = { root: roots[0]?.id || null, set: null };
 		const root = this.selection.root;
-		const selectedItems = mode === 'creator' ? this.catalog.getCreatorItems(root, items) : this.catalog.getRootItems(root, items);
+		const all = root === LIBRARY_ALL_ID;
+		const selectedItems = all ? items : mode === 'creator' ? this.catalog.getCreatorItems(root, items) : this.catalog.getRootItems(root, items);
 		const selectedCounts = this.catalog.getCategoryCounts(selectedItems);
-		const sets = mode === 'creator' ? this.catalog.getSetsByCreator(root, items) : this.catalog.getSets(root).filter(set => counts[set.id]);
+		const sets = all ? [] : mode === 'creator' ? this.catalog.getSetsByCreator(root, items) : this.catalog.getSets(root).filter(set => counts[set.id]);
 		if (!sets.some(set => set.id === this.selection.set)) this.selection.set = null;
 		this.rows[0].querySelector('select').setAttribute('aria-label', mode === 'creator' ? 'Creator' : 'Style');
 		this.updateSelect(this.rows[0], roots, root);

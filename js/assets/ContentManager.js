@@ -312,10 +312,6 @@ class ContentManager {
 	// inherits it (item-level attribution, when surfaced, resolves over this).
 	getCollectionAttribution(category) { return category?.attribution; }
 
-	createCollectionInfo(category) {
-		return Attribution.buildCreditElement(this.getCollectionAttribution(category), { bylineVerb: 'Created by' });
-	}
-
 	getCategoryLabel(category) {
 		return this.browser?.getCategoryPath(category) || category.charAt(0).toUpperCase() + category.slice(1);
 	}

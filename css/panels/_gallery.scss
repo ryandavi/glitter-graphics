@@ -60,15 +60,19 @@
 			z-index: var(--z-panel);
 		}
 
-		// The view menu (setupLibraryViewMenu): its trigger fills the action
-		// slot and reads like the search button beside it.
+		// The view menu (setupLibraryViewMenu). Its slot holds the trigger and
+		// the dropdown; the trigger is the header action, so it reads like the
+		// search button beside it on every screen.
 		&[data-library]>.section-header>.section-header-actions>.library-view-action {
 			visibility: visible;
 			pointer-events: auto;
 
-			>.app-menu-trigger {
+			>.section-header-action {
 				width: 100%;
 				height: 100%;
+
+				&,
+				&:hover { background-color: unset; }
 			}
 		}
 
@@ -505,8 +509,9 @@
 	justify-content: space-between;
 	gap: var(--spacing-xs);
 	color: var(--color-text-primary);
-	button { flex-shrink: 0; }
-	button[aria-pressed="true"] { color: var(--color-accent); }
+	// The Original order toggle (AssetSetHeader) is shelved: sets stay in
+	// color order.
+	button { display: none; }
 }
 .asset-options .asset-browser-wall .asset-grid>.asset-option {
 	border-radius: 0;

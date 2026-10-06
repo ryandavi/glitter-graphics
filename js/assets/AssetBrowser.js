@@ -8,6 +8,9 @@
 // Favorites is a pseudo-category: never a real category id, never saved in
 // projects (favorites live in PREFERENCES).
 const LIBRARY_FAVORITES_ID = '__favorites';
+// The wall's home: every style under its own heading (the Style picker's
+// first entry). Never a real category id.
+const LIBRARY_ALL_ID = '__all';
 
 class AssetBrowser {
 	constructor(contentManager, prefix) {
@@ -96,11 +99,7 @@ class AssetBrowser {
 			for (const event of ['layerChanged', 'imageLoaded', 'imageRemoved']) {
 				window.addEventListener(event, () => this.updateShortcuts());
 			}
-			this.rail = new AssetBrowserRail(this.catalog, selection => {
-				this.rememberRoot(selection.root);
-				this.setState('CATEGORY_LIST');
-			});
-			this.rail.selection.root = PREFERENCES.get('libraryRoots')[this.prefix] || this.catalog.getRoots()[0]?.id;
+			this.rail = new AssetBrowserRail(this.catalog, () => this.setState('CATEGORY_LIST'));
 			// Favorites is a view of its own on the wall, not a root.
 			this.addViewOption('favorites', 'Favorites');
 			this.toolbar.appendChild(this.rail.element);
@@ -217,7 +216,6 @@ class AssetBrowser {
 			this.rail.mode = 'style';
 			const root = this.catalog.getRootOf(categoryId);
 			this.rail.selection = { root: root?.id, set: root?.id === categoryId ? null : categoryId };
-			this.rememberRoot(root?.id);
 			this.state = 'CATEGORY_LIST';
 		}
 		this.currentCategoryId = categoryId;
@@ -270,18 +268,11 @@ class AssetBrowser {
 		}
 	}
 
-	rememberRoot(root) {
-		if (!root || this.browseView !== 'style') return;
-		const roots = PREFERENCES.get('libraryRoots');
-		if (roots[this.prefix] !== root) PREFERENCES.set('libraryRoots', { ...roots, [this.prefix]: root });
-	}
-
 	renderRail() {
-		this._renderShortcuts();
 		const items = this.getFilteredItems();
 		let wall;
 		let category = null;
-		let grouped = false;
+		let groups = null;
 		if (this.browseView === 'favorites') {
 			this.currentCategoryId = LIBRARY_FAVORITES_ID;
 			wall = this.contentManager.getFavoriteItems(items);
@@ -289,15 +280,22 @@ class AssetBrowser {
 			const selection = this.rail.render(items, this.browseView);
 			this.currentCategoryId = selection.set || selection.root;
 			category = selection.set ? this.catalog.getCategoryById(selection.set) : null;
-			wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
-			if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
-			// A style is one color-ordered wall. A creator's sets are unrelated
-			// to each other, so each keeps its own heading and color order.
-			else grouped = this.browseView === 'creator';
+			// A style is one color-ordered wall. Home's styles, and a creator's
+			// sets, are unrelated to each other, so each keeps its own heading
+			// and color order.
+			if (selection.root === LIBRARY_ALL_ID) {
+				wall = items;
+				groups = () => this.getStyleGroups(wall);
+			} else {
+				wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
+				if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
+				else if (this.browseView === 'creator') groups = () => this.getSetGroups(wall);
+			}
 		}
+		this._renderShortcuts();
 		this.setHeader.render(category, wall);
 		this.wallItems = this.setHeader.sort(wall);
-		this.wallGroups = grouped ? this.getSetGroups(wall) : null;
+		this.wallGroups = groups ? groups() : null;
 		this.elements.itemGrid.replaceChildren();
 		this.elements.searchResults.replaceChildren();
 		this.currentOffset = 0;
@@ -309,6 +307,14 @@ class AssetBrowser {
 		}
 		this.elements.itemGrid.classList.add('visible');
 		this.loadRailItems();
+	}
+
+	// `items` under one heading per style. Null when one style holds them all.
+	getStyleGroups(items) {
+		const groups = this.catalog.getRoots()
+			.map(root => ({ id: root.id, name: root.name, items: this.setHeader.sort(this.catalog.getRootItems(root.id, items)) }))
+			.filter(group => group.items.length);
+		return groups.length > 1 ? groups : null;
 	}
 
 	// `items` under one heading per set, in category order. Null when they
@@ -483,11 +489,13 @@ class AssetBrowser {
 	}
 
 	// Project assets first, then recents. Updates reuse tiles and leave the
-	// paged wall intact.
+	// paged wall intact. The wall shows them on its home only: a style, a
+	// set, a creator and Favorites are each a narrower look at one thing.
 	_renderShortcuts() {
 		const filtered = new Set(this.getFilteredItems());
-		const items = [...new Set([...this.contentManager.getProjectItems(), ...this.contentManager.getRecentItems()])]
-			.filter((item) => filtered.has(item));
+		const top = !this.rail || (this.browseView === 'style' && this.rail.selection.root === LIBRARY_ALL_ID);
+		const items = top ? [...new Set([...this.contentManager.getProjectItems(), ...this.contentManager.getRecentItems()])]
+			.filter((item) => filtered.has(item)) : [];
 		const grid = this.shortcutGrid;
 		const existing = new Map([...grid.children].map(tile => [String(tile.dataset.id), tile]));
 		const tiles = items.map(item => existing.get(String(item.id)) || this.createItemElement(item));

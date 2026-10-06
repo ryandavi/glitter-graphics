@@ -138,15 +138,17 @@ async function main() {
 			expect(library instanceof ContentManager && !(e.glitterManager instanceof ContentManager), 'Glitter owners were not split');
 			expect(e.stickerLibrary instanceof ContentManager && !(e.stickerManager instanceof ContentManager), 'Sticker owners were not split');
 			expect(!b.viewControl.hidden, 'Creator view control is hidden');
-			expect(b.rail.selection.root === 'sparkle' && b.rail.selection.set === null, 'Must open on first root All');
-			expect(b.elements.categoryGrid.querySelectorAll('.category-card').length === 0, 'Glitter still has cards');
-			expect(b.wallItems.length === 4, 'Root wall must include its sets');
-			expect(b.rail.rows[0].querySelector('option[value="sparkle"]').textContent.includes('4'), 'Root count is wrong');
 			const choose = (row, id) => { const select = b.rail.rows[row].querySelector('select'); select.value = id; select.dispatchEvent(new Event('change', { bubbles: true })); };
+			expect(b.rail.selection.root === '__all' && b.rail.selection.set === null, 'Must open on All styles');
+			expect(b.wallGroups && b.elements.searchResults.querySelectorAll('.category-section').length === b.wallGroups.length, 'All styles must group by style');
+			expect(b.elements.categoryGrid.querySelectorAll('.category-card').length === 0, 'Glitter still has cards');
+			choose(0, 'sparkle');
+			expect(b.wallItems.length === 4 && !b.wallGroups, 'Root wall must include its sets');
+			expect(b.rail.rows[0].querySelector('option[value="sparkle"]').textContent.includes('4'), 'Root count is wrong');
 			const clickSet = id => choose(1, id);
 			clickSet('bring-on-the-glitter');
-			expect(b.setHeader.element.textContent.includes('by Aylana'), 'Missing set header');
-			expect(b.setHeader.element.querySelector('.asset-collection-credit') && !b.setHeader.element.querySelector('details'), 'Credit must be one always-visible card');
+			expect(b.setHeader.element.textContent.includes('By Aylana'), 'Missing set header');
+			expect(b.setHeader.element.querySelector('.asset-collection-credit') && !b.setHeader.element.querySelector('details'), 'Credit must be always visible');
 			expect(b.carriedLead.querySelectorAll('.asset-option').length === 2, 'Missing carried-over tiles');
 			expect(!b.carriedLead.querySelector('.asset-grid .asset-grid'), 'Carried grid is nested');
 			expect(b.wallItems.length === 1, 'Set wall includes borrowed tiles');
@@ -164,7 +166,7 @@ async function main() {
 			expect(b.rail.selection.set === null && b.wallItems.length === 1, 'Root switch must reset set');
 			library.activeFilters.colors.add('pink');
 			b.refresh();
-			expect(b.rail.rows[0].querySelector('select').options.length === 1 && b.rail.selection.root === 'transparent', 'Color-filtered roots/counts are wrong');
+			expect(b.rail.rows[0].querySelector('select').options.length === 2 && b.rail.selection.root === 'transparent', 'Color-filtered roots/counts are wrong');
 			expect(!library.activeFilters.categories.size, 'Rail must not write category filters');
 			library.activeFilters.colors.clear();
 			library.activeFilters.special.add('multicolor');
@@ -263,7 +265,7 @@ async function main() {
 		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('transparent');
 		await page.reload({ waitUntil: 'networkidle' });
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser?.rail);
-		assert.strictEqual(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root), 'transparent', 'Remembered root was lost');
+		assert.strictEqual(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root), '__all', 'Library must reopen on All styles');
 		await page.evaluate(async () => {
 			const e = window.editor;
 			await e.loadBlankImage(240, 180, '#ffffff');

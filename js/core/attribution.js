@@ -99,23 +99,19 @@ const Attribution = {
 		return parts.join(' · ');
 	},
 
-	// Shared "Source & usage" block for the asset browser's per-collection credit
-	// (BrushTipManager packs, ContentManager sticker categories). Returns null
-	// when there is nothing to credit. DOM only — styling is .asset-collection-credit
-	// in css/_assets.scss.
-	buildCreditElement(attr, { heading = 'Source & usage', bylineVerb = 'Created by' } = {}) {
+	// A collection's credit for the asset browser (AssetSetHeader): one line,
+	// "By Mica · via Stardrops' open directory · License unknown", the names
+	// linked where a URL is known, then any note. Returns null when there is
+	// nothing to credit. DOM only; styling is .asset-collection-credit.
+	buildCreditElement(attr) {
 		const a = this.resolve(attr);
 		if (!a) return null;
 
 		const info = document.createElement('div');
 		info.className = 'asset-collection-credit';
 
-		const headingEl = document.createElement('div');
-		headingEl.className = 'asset-collection-credit-heading property-group-label';
-		headingEl.textContent = heading;
-		info.appendChild(headingEl);
-
-		const link = (text, href) => {
+		const named = (text, href) => {
+			if (!href) return document.createTextNode(text);
 			const el = document.createElement('a');
 			el.href = href;
 			el.target = '_blank';
@@ -123,42 +119,23 @@ const Attribution = {
 			el.textContent = text;
 			return el;
 		};
-
-		if (a.author) {
-			const byline = document.createElement('div');
-			byline.className = 'asset-collection-credit-byline';
-			byline.append(`${bylineVerb} `);
-			byline.appendChild(a.authorUrl ? link(a.author, a.authorUrl) : document.createTextNode(a.author));
-			info.appendChild(byline);
+		const parts = [];
+		if (a.author) parts.push(['By ', named(a.author, a.authorUrl)]);
+		if (a.source) parts.push(['via ', named(a.source, a.sourceUrl)]);
+		else if (a.sourceUrl) parts.push([named('Source', a.sourceUrl)]);
+		if (a.license) parts.push([this.licenseLabel(a.license)]);
+		if (parts.length) {
+			const line = document.createElement('div');
+			parts.forEach((part, index) => line.append(...(index ? [' \u00b7 '] : []), ...part));
+			info.appendChild(line);
 		}
-
-		const meta = document.createElement('div');
-		meta.className = 'asset-collection-credit-meta';
-		if (a.license) {
-			const license = document.createElement('span');
-			license.textContent = this.licenseLabel(a.license);
-			meta.appendChild(license);
-		}
-		if (a.source) {
-			const via = document.createElement('span');
-			via.textContent = `Via ${a.source}`;
-			meta.appendChild(via);
-		}
-		if (meta.childElementCount) info.appendChild(meta);
 
 		if (a.notes) {
-			// The shared chevron disclosure (disclosures.js toggles it).
-			const notes = tplClone('tpl-advanced');
-			notes.classList.add('asset-collection-credit-notes');
-			notes.querySelector('.advanced-disclosure-label').textContent = 'Note';
-			notes.querySelector('[data-advanced-content]').textContent = a.notes;
+			const notes = document.createElement('p');
+			notes.className = 'asset-collection-credit-notes';
+			notes.textContent = a.notes;
 			info.appendChild(notes);
 		}
-
-		const links = document.createElement('div');
-		links.className = 'asset-collection-credit-links';
-		if (a.sourceUrl) links.appendChild(link('View source', a.sourceUrl));
-		if (links.childElementCount) info.appendChild(links);
 
 		return info;
 	}
