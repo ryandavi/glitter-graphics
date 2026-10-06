@@ -42,7 +42,14 @@ try {
 		'sparkle/library-ruby.gif' => 'sparkelies/ruby.gif',
 		'sparkle/duplicate-ruby.gif' => 'sparkelies/ruby.gif',
 	];
-	foreach ($files as $to => $from) checkLibrary(copy("$root/images/glitter/$from", "$root/$directory/images/$to"), "Missing fixture $from");
+	foreach ($files as $to => $from) {
+		$source = "$root/images/glitter/$from";
+		if (!is_file($source)) {
+			$set = strpos($from, '/bring-on-the-hearts/') !== false ? 'bring-on-the-hearts' : dirname(dirname($from));
+			$source = "$root/images/glitter/$set/" . basename($from);
+		}
+		checkLibrary(copy($source, "$root/$directory/images/$to"), "Missing fixture $from");
+	}
 	$image = imagecreatetruecolor(3, 3);
 	imagefill($image, 0, 0, imagecolorallocate($image, 21, 42, 84));
 	imagepng($image, "$root/$directory/images/unknown.png");
@@ -56,6 +63,9 @@ try {
 	checkLibrary(!$api->deleteCategory($style)['success'], 'Root with children deleted');
 	$first = $api->addAsset(['name' => 'Library Ruby', 'url' => "$directory/images/sparkle/library-ruby.gif", 'category_id' => $style])['id'];
 	$duplicate = $api->addAsset(['name' => 'Ruby Copy', 'url' => "$directory/images/sparkle/duplicate-ruby.gif", 'category_id' => $style])['id'];
+	$exportCwd = getcwd();
+	chdir(__DIR__ . '/../../admin/includes');
+	try { $api->saveExport(); } finally { chdir($exportCwd); }
 	// A real tag on the removed record must survive the merge.
 	$db->query("INSERT INTO glitter_tag_categories (name, slug) VALUES ('Test', 'test')");
 	$tagCategory = $db->lastInsertId();
@@ -80,11 +90,14 @@ try {
 	checkLibrary((int)$db->query('SELECT COUNT(*) FROM glitter')->fetch_row()[0] === 2, 'Dry run changed records');
 	checkLibrary(is_file("$root/$directory/images/sparkle/duplicate-ruby.gif"), 'Dry run removed a file');
 	$import->apply($plan);
+	checkLibrary(!is_file("$root/$directory/data/glitter/$duplicate.json"), 'Removed duplicate retained a stale detail export');
 	checkLibrary(md5_file("$root/$directory/images/deferred.gif") === md5_file("$root/images/glitter/sparkelies/platinum.gif"), 'Deferred file changed');
 	$assets = $api->exportAssets();
 	checkLibrary(count($assets) === 4, 'Import did not collapse duplicates');
 	$heartsPath = "$root/$directory/images/bring-on-the-glitter/satinhearts-010.gif";
-	checkLibrary(md5_file($heartsPath) === md5_file("$root/images/glitter/bring-on-the-glitter/bring-on-the-hearts/satinhearts-010.gif"), 'GIF decoder changed source bytes');
+	$heartsSource = "$root/images/glitter/bring-on-the-hearts/satinhearts-010.gif";
+	if (!is_file($heartsSource)) $heartsSource = "$root/images/glitter/bring-on-the-glitter/bring-on-the-hearts/satinhearts-010.gif";
+	checkLibrary(md5_file($heartsPath) === md5_file($heartsSource), 'GIF decoder changed source bytes');
 	$heartsAnalysis = $api->analyzeLocal($heartsPath)['normalized'];
 	checkLibrary($heartsAnalysis['dimensions'] === ['width' => 50, 'height' => 50], 'Undersized GIF screen hid the real frame dimensions');
 	$ruby = array_values(array_filter($assets, function ($asset) { return $asset['name'] === 'Ruby'; }))[0];

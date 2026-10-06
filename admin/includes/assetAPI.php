@@ -1655,16 +1655,24 @@ abstract class AssetAPI
             throw new Exception('Failed to create asset detail export directory');
         }
         $detailBytes = 0;
+        $detailNames = [];
         foreach ($assets as $asset) {
+            $detailName = rawurlencode((string)$asset['id']) . '.json';
+            $detailNames[$detailName] = true;
             $detailJson = json_encode($asset, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
             $detailResult = file_put_contents(
-                $detailDirectory . '/' . rawurlencode((string)$asset['id']) . '.json',
+                $detailDirectory . '/' . $detailName,
                 $detailJson
             );
             if ($detailResult === false) {
                 throw new Exception('Failed to write an asset detail record');
             }
             $detailBytes += $detailResult;
+        }
+        foreach (glob($detailDirectory . '/*.json') ?: [] as $detailPath) {
+            if (!isset($detailNames[basename($detailPath)]) && !unlink($detailPath)) {
+                throw new Exception('Failed to remove a stale asset detail record');
+            }
         }
         if ($result === false || $indexResult === false || $categoriesResult === false) {
             throw new Exception('Failed to write a consistent asset/category export');
