@@ -103,17 +103,17 @@ const Attribution = {
 	// (BrushTipManager packs, ContentManager sticker categories). Returns null
 	// when there is nothing to credit. DOM only — styling is .asset-collection-credit
 	// in css/_assets.scss.
-	buildCreditElement(attr, { heading = 'Source & usage', bylineVerb = 'Created by', unframed = false } = {}) {
+	buildCreditElement(attr, { heading = 'Source & usage', bylineVerb = 'Created by' } = {}) {
 		const a = this.resolve(attr);
 		if (!a) return null;
 
 		const info = document.createElement('div');
-		info.className = unframed ? 'asset-collection-credit-unframed' : 'asset-collection-credit';
+		info.className = 'asset-collection-credit';
 
 		const headingEl = document.createElement('div');
 		headingEl.className = 'asset-collection-credit-heading property-group-label';
 		headingEl.textContent = heading;
-		if (!unframed) info.appendChild(headingEl);
+		info.appendChild(headingEl);
 
 		const link = (text, href) => {
 			const el = document.createElement('a');
@@ -147,13 +147,11 @@ const Attribution = {
 		if (meta.childElementCount) info.appendChild(meta);
 
 		if (a.notes) {
-			const notes = document.createElement('details');
-			notes.className = 'asset-collection-credit-notes';
-			const summary = document.createElement('summary');
-			summary.textContent = 'Note';
-			const copy = document.createElement('div');
-			copy.textContent = a.notes;
-			notes.append(summary, copy);
+			// The shared chevron disclosure (disclosures.js toggles it).
+			const notes = tplClone('tpl-advanced');
+			notes.classList.add('asset-collection-credit-notes');
+			notes.querySelector('.advanced-disclosure-label').textContent = 'Note';
+			notes.querySelector('[data-advanced-content]').textContent = a.notes;
 			info.appendChild(notes);
 		}
 

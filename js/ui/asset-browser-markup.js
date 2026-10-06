@@ -273,7 +273,7 @@ function setupLibraryViewMenu() {
 	const panel = document.getElementById('libraryViewMenuPanel');
 	const section = document.getElementById('designGallerySection');
 	if (!root || !panel || !section) return;
-	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel });
+	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel, liftHost: document.getElementById('designGalleryHeader') });
 	const sync = () => {
 		const size = PREFERENCES.get('libraryTileSize');
 		const quickPicks = PREFERENCES.get('libraryQuickPicks');

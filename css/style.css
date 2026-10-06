@@ -3126,6 +3126,10 @@ body.is-resizing-panel canvas {
 .design-panel > .design-gallery-section[data-library] > .section-header > .section-header-actions > .library-search-action.active {
   color: var(--color-accent);
 }
+.design-panel > .design-gallery-section > .section-header.has-open-menu {
+  position: relative;
+  z-index: var(--z-panel);
+}
 .design-panel > .design-gallery-section[data-library] > .section-header > .section-header-actions > .library-view-action {
   visibility: visible;
   pointer-events: auto;
@@ -3452,15 +3456,11 @@ body.is-resizing-panel canvas {
 }
 
 .asset-browser-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: grid;
+  flex-shrink: 0;
   gap: var(--spacing-sm);
-  margin: 0 calc(-1 * var(--spacing-md)) var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
 }
 .asset-browser-toolbar[hidden] {
   display: none;
@@ -3492,6 +3492,8 @@ body.is-resizing-panel canvas {
 }
 
 .asset-set-header {
+  display: grid;
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
@@ -3500,10 +3502,7 @@ body.is-resizing-panel canvas {
   display: none;
 }
 .asset-set-header p {
-  margin: var(--spacing-xs) 0;
-}
-.asset-set-header summary {
-  cursor: pointer;
+  margin: 0;
 }
 
 .asset-set-header-line {
@@ -3518,12 +3517,6 @@ body.is-resizing-panel canvas {
 }
 .asset-set-header-line button[aria-pressed=true] {
   color: var(--color-accent);
-}
-
-.asset-collection-credit-unframed {
-  margin-top: var(--spacing-xs);
-  font-size: var(--font-size-xs);
-  line-height: 1.4;
 }
 
 .asset-options .asset-browser-wall .asset-grid > .asset-option {
@@ -6752,10 +6745,6 @@ body.tool-select .preview-container.is-over-picked-layer {
   color: var(--color-text-secondary);
 }
 
-.asset-browser > .asset-browser-views:not([hidden]) {
-  margin-bottom: var(--spacing-sm);
-}
-
 .asset-browser-views > .segmented-option[hidden] {
   display: none;
 }
@@ -6806,15 +6795,10 @@ body.tool-select .preview-container.is-over-picked-layer {
 }
 
 .asset-collection-credit-notes {
+  --property-gutter: 0px;
   margin-top: var(--spacing-sm);
 }
-.asset-collection-credit-notes summary {
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-weight: var(--font-weight-semibold);
-}
-.asset-collection-credit-notes > div {
-  margin-top: var(--spacing-xs);
+.asset-collection-credit-notes > .advanced-disclosure-content {
   color: var(--color-text-tertiary);
 }
 

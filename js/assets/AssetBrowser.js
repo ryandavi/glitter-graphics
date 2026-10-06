@@ -70,7 +70,13 @@ class AssetBrowser {
 		this.viewControl.hidden = true;
 		this.addViewOption('style', 'Style');
 		this.addViewOption('creator', 'Creator');
-		this.elements.content.before(this.viewControl);
+		// The browser's navigation sits above the scrolling content: browse-by,
+		// then (the wall) the root and set pickers.
+		this.toolbar = document.createElement('div');
+		this.toolbar.className = 'asset-browser-toolbar';
+		this.toolbar.hidden = true;
+		this.toolbar.appendChild(this.viewControl);
+		this.elements.content.before(this.toolbar);
 
 		// Store parent containers
 		this.assetOptions = this.elements.browser.closest('.asset-options');
@@ -95,13 +101,10 @@ class AssetBrowser {
 				this.setState('CATEGORY_LIST');
 			});
 			this.rail.selection.root = PREFERENCES.get('libraryRoots')[this.prefix] || this.catalog.getRoots()[0]?.id;
-			// The wall's navigation is one pinned toolbar: browse-by, then the
-			// root and set pickers. Favorites is a view of its own, not a root.
+			// Favorites is a view of its own on the wall, not a root.
 			this.addViewOption('favorites', 'Favorites');
-			this.toolbar = document.createElement('div');
-			this.toolbar.className = 'asset-browser-toolbar';
-			this.toolbar.append(this.viewControl, this.rail.element);
-			this.elements.categoryGrid.before(this.toolbar, this.setHeader.element);
+			this.toolbar.appendChild(this.rail.element);
+			this.elements.categoryGrid.before(this.setHeader.element);
 		}
 		this.setupIntersectionObserver();
 		this.setupEventListeners();
@@ -245,11 +248,11 @@ class AssetBrowser {
 		this.indexLead.hidden = true;
 		this.shortcuts.hidden = true;
 		this.wallGroups = null;
+		this.toolbar.hidden = this.rail ? this.state === 'SEARCH_RESULTS' : this.viewControl.hidden;
 
 		if (this.rail) {
 			const search = this.state === 'SEARCH_RESULTS';
 			this.elements.browser.querySelector('.asset-browser-header').hidden = !search;
-			this.toolbar.hidden = search;
 			this.rail.element.hidden = search || this.browseView === 'favorites';
 			if (search) { this.setHeader.render(null, []); this.renderSearchResults(); }
 			else this.renderRail();

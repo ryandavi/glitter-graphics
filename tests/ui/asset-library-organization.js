@@ -77,7 +77,6 @@ async function screenshots(page, directory, before) {
 	await page.evaluate(before => {
 		const b = window.editor.glitterLibrary.browser;
 		b.setState('CATEGORY_DETAIL', 'sparkelies');
-		if (!before) b.setHeader.element.querySelector('details').open = true;
 	}, before);
 	await shot('Set credit');
 	await page.evaluate(before => {
@@ -147,7 +146,7 @@ async function main() {
 			const clickSet = id => choose(1, id);
 			clickSet('bring-on-the-glitter');
 			expect(b.setHeader.element.textContent.includes('by Aylana'), 'Missing set header');
-			expect(!b.setHeader.element.querySelector('details').open, 'Credit must start closed');
+			expect(b.setHeader.element.querySelector('.asset-collection-credit') && !b.setHeader.element.querySelector('details'), 'Credit must be one always-visible card');
 			expect(b.carriedLead.querySelectorAll('.asset-option').length === 2, 'Missing carried-over tiles');
 			expect(!b.carriedLead.querySelector('.asset-grid .asset-grid'), 'Carried grid is nested');
 			expect(b.wallItems.length === 1, 'Set wall includes borrowed tiles');

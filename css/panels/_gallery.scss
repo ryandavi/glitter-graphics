@@ -53,6 +53,13 @@
 			&.active { color: var(--color-accent); }
 		}
 
+		// The open view menu drops over the search row, which stacks above the
+		// header on its own.
+		>.section-header.has-open-menu {
+			position: relative;
+			z-index: var(--z-panel);
+		}
+
 		// The view menu (setupLibraryViewMenu): its trigger fills the action
 		// slot and reads like the search button beside it.
 		&[data-library]>.section-header>.section-header-actions>.library-view-action {
@@ -447,19 +454,15 @@
 	&.visible { display: block; }
 }
 
-// The wall's navigation (AssetBrowser.toolbar): browse-by, then the root and
-// set pickers. Pinned to the top of the scroller, edge to edge, so the grid
-// under it is never unexplained.
+// A browser's navigation (AssetBrowser.toolbar): browse-by, then the wall's
+// root and set pickers. It sits above the scrolling content like the search
+// row, on the same surface, with the content's own inset on every side.
 .asset-browser-toolbar {
-	position: sticky;
-	top: 0;
-	z-index: 2;
 	display: grid;
+	flex-shrink: 0;
 	gap: var(--spacing-sm);
-	margin: 0 calc(-1 * var(--spacing-md)) var(--spacing-md);
-	padding: var(--spacing-sm) var(--spacing-md);
+	padding: var(--spacing-md);
 	border-bottom: 1px solid var(--color-border);
-	background: var(--color-bg-secondary);
 
 	&[hidden] { display: none; }
 }
@@ -488,12 +491,13 @@
 }
 
 .asset-set-header {
+	display: grid;
+	gap: var(--spacing-sm);
 	margin-bottom: var(--spacing-md);
 	color: var(--color-text-secondary);
 	font-size: var(--font-size-xs);
 	&[hidden] { display: none; }
-	p { margin: var(--spacing-xs) 0; }
-	summary { cursor: pointer; }
+	p { margin: 0; }
 }
 .asset-set-header-line {
 	display: flex;
@@ -503,11 +507,6 @@
 	color: var(--color-text-primary);
 	button { flex-shrink: 0; }
 	button[aria-pressed="true"] { color: var(--color-accent); }
-}
-.asset-collection-credit-unframed {
-	margin-top: var(--spacing-xs);
-	font-size: var(--font-size-xs);
-	line-height: 1.4;
 }
 .asset-options .asset-browser-wall .asset-grid>.asset-option {
 	border-radius: 0;

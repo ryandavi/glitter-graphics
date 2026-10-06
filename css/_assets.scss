@@ -226,9 +226,6 @@
 	font-size: var(--font-size-xs);
 	color: var(--color-text-secondary);
 }
-// A folder kind's Style / Creator control sits above its content; the wall's
-// is inside .asset-browser-toolbar.
-.asset-browser > .asset-browser-views:not([hidden]) { margin-bottom: var(--spacing-sm); }
 .asset-browser-views > .segmented-option[hidden] { display: none; }
 .asset-browser-carried:not([hidden]) { margin-top: var(--spacing-md); }
 .brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
@@ -259,10 +256,11 @@
 	>span { @include badge-base; padding: 2px var(--spacing-sm); }
 }
 .asset-collection-credit-notes {
+	// The card already insets the toggle.
+	--property-gutter: 0px;
 	margin-top: var(--spacing-sm);
 
-	summary { color: var(--color-text-secondary); cursor: pointer; font-weight: var(--font-weight-semibold); }
-	>div { margin-top: var(--spacing-xs); color: var(--color-text-tertiary); }
+	>.advanced-disclosure-content { color: var(--color-text-tertiary); }
 }
 .asset-collection-credit-links {
 	display: flex;

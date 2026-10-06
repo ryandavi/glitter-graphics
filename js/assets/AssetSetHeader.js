@@ -10,7 +10,6 @@ class AssetSetHeader {
 
 	render(category, items) {
 		if (this.categoryId !== category?.id) this.originalOrder = false;
-		const wasOpen = this.categoryId === category?.id && this.element.querySelector('details')?.open;
 		this.categoryId = category?.id || null;
 		this.element.replaceChildren();
 		this.element.hidden = !category;
@@ -19,7 +18,7 @@ class AssetSetHeader {
 		line.className = 'asset-set-header-line';
 		const title = document.createElement('span');
 		const attr = Attribution.resolve(category.attribution);
-		title.textContent = category.name + (attr?.author ? ' · by ' + attr.author : '');
+		title.textContent = category.name;
 		line.appendChild(title);
 		if (items.some(item => item.originalOrder != null)) {
 			const toggle = document.createElement('button');
@@ -39,15 +38,8 @@ class AssetSetHeader {
 			description.textContent = category.description;
 			this.element.appendChild(description);
 		}
-		const credit = Attribution.buildCreditElement(attr, { unframed: true });
-		if (credit) {
-			const disclosure = document.createElement('details');
-			disclosure.open = Boolean(wasOpen);
-			const summary = document.createElement('summary');
-			summary.textContent = 'Credit';
-			disclosure.append(summary, credit);
-			this.element.appendChild(disclosure);
-		}
+		const credit = Attribution.buildCreditElement(attr);
+		if (credit) this.element.appendChild(credit);
 	}
 
 	sort(items) {
