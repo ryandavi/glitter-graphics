@@ -1,0 +1,36 @@
+{
+    "id": 136,
+    "url": "images/glitter/bring-on-the-glitter/black-05.gif",
+    "name": "Orange, Green, and Blue",
+    "generatedName": "Orange, Green, and Blue",
+    "brightness": "0.110",
+    "sortOrder": 1009,
+    "hue": 1.1,
+    "colorCodes": [
+        "#1D1D1D",
+        "#56350D",
+        "#003F1E",
+        "#0000FF",
+        "#A35B92"
+    ],
+    "colorWeights": [
+        0.75,
+        0.07,
+        0.07,
+        0.06,
+        0.05
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 7997,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "black-05"
+}

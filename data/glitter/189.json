@@ -1,0 +1,34 @@
+{
+    "id": 189,
+    "url": "images/glitter/just-a-bit-of-glitz/glitz-002.gif",
+    "name": "Dark Bronze",
+    "generatedName": "Dark Bronze",
+    "brightness": "0.280",
+    "sortOrder": 0,
+    "hue": 0.204,
+    "colorCodes": [
+        "#6D6A01",
+        "#653000",
+        "#AE6E05",
+        "#2B0C00"
+    ],
+    "colorWeights": [
+        0.54,
+        0.22,
+        0.18,
+        0.04
+    ],
+    "frameCount": 2,
+    "frameRate": 40,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 2603,
+    "category": "just-a-bit-of-glitz",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "glitz-002"
+}

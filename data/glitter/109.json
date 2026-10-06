@@ -1,10 +1,10 @@
 {
     "id": 109,
-    "url": "images/glitter/sparkle/glitter_tanzanite.gif",
+    "url": "images/glitter/sparkelies/tanzanite.gif",
     "name": "Tanzanite",
     "generatedName": "Jewel Tone Purple",
     "brightness": "1.000",
-    "sortOrder": 37,
+    "sortOrder": 1014,
     "hue": 0.758,
     "colorCodes": [
         "#2D0096"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Cool",
@@ -28,5 +28,14 @@
         "Purple",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_tanzanite"
+    ],
+    "originalName": "tanzanite",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "blue-05"
+        }
+    ]
 }

@@ -1,0 +1,36 @@
+{
+    "id": 143,
+    "url": "images/glitter/bring-on-the-hearts/satinhearts-03.gif",
+    "name": "Red and Yellow",
+    "generatedName": "Red and Yellow",
+    "brightness": "0.530",
+    "sortOrder": 5,
+    "hue": 0.044,
+    "colorCodes": [
+        "#B37271",
+        "#782E2D",
+        "#E2AFAE",
+        "#B28D00",
+        "#7F6000"
+    ],
+    "colorWeights": [
+        0.25,
+        0.24,
+        0.22,
+        0.09,
+        0.08
+    ],
+    "frameCount": 3,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 50,
+    "height": 50,
+    "fileSize": 10625,
+    "category": "bring-on-the-hearts",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "satinhearts-03"
+}

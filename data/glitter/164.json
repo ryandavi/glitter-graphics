@@ -1,0 +1,32 @@
+{
+    "id": 164,
+    "url": "images/glitter/crystal-shards/crystal-014.gif",
+    "name": "Dark Magenta",
+    "generatedName": "Dark Magenta",
+    "brightness": "0.240",
+    "sortOrder": 5,
+    "hue": 0.948,
+    "colorCodes": [
+        "#5E1840",
+        "#BF2D79",
+        "#F754C4"
+    ],
+    "colorWeights": [
+        0.56,
+        0.22,
+        0.22
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10638,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-014"
+}

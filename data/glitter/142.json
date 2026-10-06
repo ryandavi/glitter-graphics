@@ -1,0 +1,42 @@
+{
+    "id": 142,
+    "url": "images/glitter/bring-on-the-hearts/satinhearts-02.gif",
+    "name": "Red, Yellow, and Purple",
+    "generatedName": "Red, Yellow, and Purple",
+    "brightness": "0.760",
+    "sortOrder": 4,
+    "hue": 0.042,
+    "colorCodes": [
+        "#BEBEB9",
+        "#E4B1B1",
+        "#7E6003",
+        "#B28D01",
+        "#D7A6D9",
+        "#9A6666",
+        "#FFBC10",
+        "#A26699"
+    ],
+    "colorWeights": [
+        0.37,
+        0.15,
+        0.09,
+        0.09,
+        0.08,
+        0.07,
+        0.07,
+        0.05
+    ],
+    "frameCount": 3,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 50,
+    "height": 50,
+    "fileSize": 5287,
+    "category": "bring-on-the-hearts",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "satinhearts-02"
+}

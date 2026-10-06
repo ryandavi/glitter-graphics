@@ -1,0 +1,30 @@
+{
+    "id": 280,
+    "url": "images/glitter/swirly-cues/swirl-06.gif",
+    "name": "Dark Gray",
+    "generatedName": "Dark Gray",
+    "brightness": "0.430",
+    "sortOrder": 5,
+    "hue": 1.1,
+    "colorCodes": [
+        "#6C6C6C",
+        "#C2C2C2"
+    ],
+    "colorWeights": [
+        0.55,
+        0.45
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 4639,
+    "category": "swirly-cues",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "swirl-06"
+}

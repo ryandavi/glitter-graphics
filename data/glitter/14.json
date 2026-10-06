@@ -1,10 +1,10 @@
 {
     "id": 14,
-    "url": "images/glitter/sparkle/glitter_sapphire.gif",
+    "url": "images/glitter/sparkelies/sapphire.gif",
     "name": "Sapphire",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 35,
+    "sortOrder": 1012,
     "hue": 0.658,
     "colorCodes": [
         "#002D96"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -29,5 +29,14 @@
         "Jewel",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_sapphire"
+    ],
+    "originalName": "sapphire",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "blue-04"
+        }
+    ]
 }

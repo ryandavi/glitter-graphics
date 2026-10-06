@@ -1,0 +1,30 @@
+{
+    "id": 299,
+    "url": "images/glitter/stardrops/sparkSquare.gif",
+    "name": "Spark Square",
+    "generatedName": "Blue-Green",
+    "brightness": "0.640",
+    "sortOrder": 1007,
+    "hue": 0.522,
+    "colorCodes": [
+        "#78BEB6",
+        "#CCE4E4"
+    ],
+    "colorWeights": [
+        0.87,
+        0.07
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 45,
+    "height": 53,
+    "fileSize": 10002,
+    "category": "stardrops",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "sparkSquare"
+}

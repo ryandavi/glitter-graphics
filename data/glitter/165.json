@@ -1,0 +1,32 @@
+{
+    "id": 165,
+    "url": "images/glitter/crystal-shards/crystal-015.gif",
+    "name": "Dark Ruby Red",
+    "generatedName": "Dark Ruby Red",
+    "brightness": "0.220",
+    "sortOrder": 6,
+    "hue": 0.982,
+    "colorCodes": [
+        "#5D1830",
+        "#BA2A59",
+        "#F754A3"
+    ],
+    "colorWeights": [
+        0.54,
+        0.24,
+        0.22
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10638,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-015"
+}

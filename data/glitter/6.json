@@ -1,10 +1,10 @@
 {
     "id": 6,
-    "url": "images/glitter/sparkle/glitter_yellow.gif",
+    "url": "images/glitter/bring-on-the-glitter/gold-03.gif",
     "name": "Yellow",
     "generatedName": "Vivid Gold",
     "brightness": "1.000",
-    "sortOrder": 20,
+    "sortOrder": 3003,
     "hue": 0.197,
     "colorCodes": [
         "#FFF000"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1882,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Light",
@@ -28,5 +28,8 @@
         "Warm",
         "Yellow"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_yellow"
+    ],
+    "originalName": "gold-03"
 }

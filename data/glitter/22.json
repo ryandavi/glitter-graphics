@@ -1,10 +1,10 @@
 {
     "id": 22,
-    "url": "images/glitter/sparkle/glitter_silver-2.gif",
+    "url": "images/glitter/bring-on-the-glitter/silver-04.gif",
     "name": "Silver 2",
     "generatedName": "Light Gray",
     "brightness": "1.000",
-    "sortOrder": 58,
+    "sortOrder": 10003,
     "hue": 1.1,
     "colorCodes": [
         "#D2D2D2"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1524,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Grayscale",
@@ -29,5 +29,8 @@
         "Silver",
         "White"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_silver-2"
+    ],
+    "originalName": "silver-04"
 }

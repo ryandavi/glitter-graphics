@@ -1,0 +1,36 @@
+{
+    "id": 140,
+    "url": "images/glitter/bring-on-the-hearts/satinhearts-010.gif",
+    "name": "Golden Orange",
+    "generatedName": "Golden Orange",
+    "brightness": "0.090",
+    "sortOrder": 1,
+    "hue": 1.1,
+    "colorCodes": [
+        "#161616",
+        "#B28D00",
+        "#7F6000",
+        "#FFBC0E",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.72,
+        0.09,
+        0.08,
+        0.07,
+        0.04
+    ],
+    "frameCount": 3,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 50,
+    "height": 50,
+    "fileSize": 3202,
+    "category": "bring-on-the-hearts",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "satinhearts-010"
+}

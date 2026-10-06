@@ -1,10 +1,10 @@
 {
     "id": 84,
-    "url": "images/glitter/sparkle/glitter_deep-purple.gif",
+    "url": "images/glitter/bring-on-the-glitter/purple-007.gif",
     "name": "Deep Purple",
     "generatedName": "Jewel Tone Purple",
     "brightness": "0.000",
-    "sortOrder": 47,
+    "sortOrder": 8006,
     "hue": 1.2,
     "colorCodes": [
         "#3C0078",
@@ -24,7 +24,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1598,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Contrast",
@@ -34,5 +34,8 @@
         "Purple",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_deep-purple"
+    ],
+    "originalName": "purple-007"
 }

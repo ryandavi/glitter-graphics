@@ -1,0 +1,42 @@
+{
+    "id": 147,
+    "url": "images/glitter/bring-on-the-hearts/satinhearts-07 (1).gif",
+    "name": "Blue and Yellow",
+    "generatedName": "Blue and Yellow",
+    "brightness": "0.310",
+    "sortOrder": 9,
+    "hue": 0.666,
+    "colorCodes": [
+        "#183A9B",
+        "#090F37",
+        "#B28D00",
+        "#7F6000",
+        "#FFBC0E"
+    ],
+    "colorWeights": [
+        0.47,
+        0.25,
+        0.09,
+        0.08,
+        0.07
+    ],
+    "frameCount": 3,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 50,
+    "height": 50,
+    "fileSize": 10174,
+    "category": "bring-on-the-hearts",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "satinhearts-07 (1)",
+    "appearances": [
+        {
+            "set": "bring-on-the-hearts",
+            "originalName": "satinhearts-07"
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+    "id": 287,
+    "url": "images/glitter/velvet-embers/ember-04.gif",
+    "name": "Purple",
+    "generatedName": "Purple",
+    "brightness": "0.200",
+    "sortOrder": 4,
+    "hue": 0.792,
+    "colorCodes": [
+        "#330066",
+        "#FF99FF",
+        "#660033"
+    ],
+    "colorWeights": [
+        0.73,
+        0.13,
+        0.13
+    ],
+    "frameCount": 4,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1502,
+    "category": "velvet-embers",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "ember-04"
+}

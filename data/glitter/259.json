@@ -1,0 +1,32 @@
+{
+    "id": 259,
+    "url": "images/glitter/star-dust/twinkle-04.gif",
+    "name": "Teal",
+    "generatedName": "Teal",
+    "brightness": "0.620",
+    "sortOrder": 19,
+    "hue": 0.525,
+    "colorCodes": [
+        "#72B7B0",
+        "#458FB9",
+        "#E6EEF2"
+    ],
+    "colorWeights": [
+        0.67,
+        0.16,
+        0.14
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5608,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-04"
+}

@@ -1,10 +1,10 @@
 {
     "id": 13,
-    "url": "images/glitter/sparkle/glitter_turquoise_2.gif",
-    "name": "Turquoise 2",
+    "url": "images/glitter/sparkelies/tealTourmaline.gif",
+    "name": "Teal Tourmaline",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 27,
+    "sortOrder": 1015,
     "hue": 0.525,
     "colorCodes": [
         "#009687"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -29,5 +29,9 @@
         "Jewel",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "Turquoise 2",
+        "glitter_turquoise_2"
+    ],
+    "originalName": "tealTourmaline"
 }

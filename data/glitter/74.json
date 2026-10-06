@@ -1,10 +1,10 @@
 {
     "id": 74,
-    "url": "images/glitter/sparkle/glitter_camo-pattern.gif",
+    "url": "images/glitter/bring-on-the-glitter/silver-03.gif",
     "name": "Camo Pattern",
     "generatedName": "Gray",
     "brightness": "0.000",
-    "sortOrder": 49,
+    "sortOrder": 10002,
     "hue": 1.1,
     "colorCodes": [
         "#696969"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 2920,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Beige",
@@ -30,5 +30,8 @@
         "Neutral",
         "Pattern"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_camo-pattern"
+    ],
+    "originalName": "silver-03"
 }

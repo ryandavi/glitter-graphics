@@ -1,0 +1,32 @@
+{
+    "id": 292,
+    "url": "images/glitter/sparkelies/opal.gif",
+    "name": "Opal",
+    "generatedName": "Muted Magenta",
+    "brightness": "0.800",
+    "sortOrder": 1008,
+    "hue": 0.324,
+    "colorCodes": [
+        "#E2DEE6",
+        "#C7E3BB",
+        "#DDA5BD"
+    ],
+    "colorWeights": [
+        0.48,
+        0.26,
+        0.23
+    ],
+    "frameCount": 3,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 120,
+    "height": 60,
+    "fileSize": 13445,
+    "category": "sparkelies",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "opal"
+}

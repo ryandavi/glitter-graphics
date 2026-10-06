@@ -1,10 +1,10 @@
 {
     "id": 67,
-    "url": "images/glitter/sparkle/glitter_bright-orange.gif",
+    "url": "images/glitter/bring-on-the-glitter/orange-003.gif",
     "name": "Bright Orange",
     "generatedName": "Vivid Pink",
     "brightness": "1.000",
-    "sortOrder": 12,
+    "sortOrder": 6002,
     "hue": 0.23,
     "colorCodes": [
         "#FF2D69"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Orange",
@@ -28,5 +28,8 @@
         "Vivid",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_bright-orange"
+    ],
+    "originalName": "orange-003"
 }

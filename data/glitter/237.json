@@ -1,0 +1,36 @@
+{
+    "id": 237,
+    "url": "images/glitter/sparkelies/silver.gif",
+    "name": "Silver",
+    "generatedName": "Dark Gray",
+    "brightness": "0.420",
+    "sortOrder": 1013,
+    "hue": 1.1,
+    "colorCodes": [
+        "#6B6B6B",
+        "#E1E1E1"
+    ],
+    "colorWeights": [
+        0.62,
+        0.38
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 61,
+    "height": 29,
+    "fileSize": 1620,
+    "category": "sparkelies",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "silver",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "silver-02"
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "id": 141,
+    "url": "images/glitter/bring-on-the-hearts/satinhearts-012.gif",
+    "name": "Light Gray",
+    "generatedName": "Light Gray",
+    "brightness": "0.780",
+    "sortOrder": 3,
+    "hue": 1.1,
+    "colorCodes": [
+        "#C6C3C9",
+        "#C79F6D"
+    ],
+    "colorWeights": [
+        0.86,
+        0.14
+    ],
+    "frameCount": 16,
+    "frameRate": 12,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 11885,
+    "category": "bring-on-the-hearts",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "satinhearts-012"
+}

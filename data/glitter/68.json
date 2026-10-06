@@ -1,10 +1,10 @@
 {
     "id": 68,
-    "url": "images/glitter/sparkle/glitter_bright-seafoam.gif",
+    "url": "images/glitter/bring-on-the-glitter/sea-02.gif",
     "name": "Bright Seafoam",
     "generatedName": "Blue and Green",
     "brightness": "1.000",
-    "sortOrder": 29,
+    "sortOrder": 1,
     "hue": 1.2,
     "colorCodes": [
         "#87D2F0",
@@ -22,7 +22,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1950,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -32,5 +32,8 @@
         "Multicolor",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_bright-seafoam"
+    ],
+    "originalName": "sea-02"
 }

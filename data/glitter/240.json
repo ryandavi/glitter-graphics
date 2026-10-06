@@ -1,0 +1,36 @@
+{
+    "id": 240,
+    "url": "images/glitter/star-dust/twinkle-001.gif",
+    "name": "Orange, Red, and Yellow",
+    "generatedName": "Orange, Red, and Yellow",
+    "brightness": "0.550",
+    "sortOrder": 0,
+    "hue": 0.125,
+    "colorCodes": [
+        "#B78B60",
+        "#BD8894",
+        "#EDEDE5",
+        "#CEB96C",
+        "#A5565C"
+    ],
+    "colorWeights": [
+        0.49,
+        0.19,
+        0.14,
+        0.14,
+        0.03
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5690,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-001"
+}

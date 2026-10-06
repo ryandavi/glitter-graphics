@@ -1,0 +1,28 @@
+{
+    "id": 191,
+    "url": "images/glitter/just-a-bit-of-glitz/glitz-006.gif",
+    "name": "Dark Purple",
+    "generatedName": "Dark Purple",
+    "brightness": "0.270",
+    "sortOrder": 2,
+    "hue": 0.836,
+    "colorCodes": [
+        "#5A0275"
+    ],
+    "colorWeights": [
+        0.99
+    ],
+    "frameCount": 2,
+    "frameRate": 40,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 2603,
+    "category": "just-a-bit-of-glitz",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "glitz-006"
+}

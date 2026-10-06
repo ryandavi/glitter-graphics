@@ -1,10 +1,10 @@
 {
     "id": 25,
-    "url": "images/glitter/ember/ember_turquoise.gif",
+    "url": "images/glitter/velvet-embers/ember-08.gif",
     "name": "Turquoise",
     "generatedName": "Very Dark Vivid Green",
     "brightness": "0.000",
-    "sortOrder": 75,
+    "sortOrder": 8,
     "hue": 0.457,
     "colorCodes": [
         "#003319",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "ember",
+    "category": "velvet-embers",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -32,5 +32,8 @@
         "Dark",
         "Green"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "ember_turquoise"
+    ],
+    "originalName": "ember-08"
 }

@@ -1,10 +1,10 @@
 {
     "id": 17,
-    "url": "images/glitter/sparkle/glitter_hot-pink.gif",
+    "url": "images/glitter/bring-on-the-glitter/pink-02.gif",
     "name": "Muted Hot Pink",
     "generatedName": "Multicolor",
     "brightness": "1.000",
-    "sortOrder": 3,
+    "sortOrder": 7004,
     "hue": 0.945,
     "colorCodes": [
         "#D26BA7",
@@ -22,12 +22,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Muted",
         "Neon",
         "Pink"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_hot-pink"
+    ],
+    "originalName": "pink-02"
 }

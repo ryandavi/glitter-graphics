@@ -1,0 +1,32 @@
+{
+    "id": 183,
+    "url": "images/glitter/bring-on-the-glitter/gold-09.gif",
+    "name": "Yellow",
+    "generatedName": "Yellow",
+    "brightness": "0.820",
+    "sortOrder": 3009,
+    "hue": 0.205,
+    "colorCodes": [
+        "#FFFC7B",
+        "#CC9900",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.68,
+        0.2,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1512,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "gold-09"
+}

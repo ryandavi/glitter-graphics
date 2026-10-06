@@ -1,0 +1,32 @@
+{
+    "id": 176,
+    "url": "images/glitter/crystal-shards/crystal-07.gif",
+    "name": "Dark Bronze",
+    "generatedName": "Dark Bronze",
+    "brightness": "0.220",
+    "sortOrder": 17,
+    "hue": 0.12,
+    "colorCodes": [
+        "#5D3817",
+        "#E18742",
+        "#9F6027"
+    ],
+    "colorWeights": [
+        0.54,
+        0.37,
+        0.07
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10638,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-07"
+}

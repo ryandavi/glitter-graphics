@@ -1,0 +1,34 @@
+{
+    "id": 129,
+    "url": "images/glitter/bring-on-the-glitter/sea-04.gif",
+    "name": "Dark Blue-Green",
+    "generatedName": "Dark Blue-Green",
+    "brightness": "0.250",
+    "sortOrder": 3,
+    "hue": 0.547,
+    "colorCodes": [
+        "#005D60",
+        "#00582A",
+        "#FFFFFF",
+        "#B3D39B"
+    ],
+    "colorWeights": [
+        0.5,
+        0.32,
+        0.12,
+        0.06
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1950,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "sea-04"
+}

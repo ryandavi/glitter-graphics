@@ -1,0 +1,32 @@
+{
+    "id": 277,
+    "url": "images/glitter/swirly-cues/swirl-03.gif",
+    "name": "Dark Yellow-Green",
+    "generatedName": "Dark Yellow-Green",
+    "brightness": "0.290",
+    "sortOrder": 2,
+    "hue": 0.243,
+    "colorCodes": [
+        "#5B6B1C",
+        "#D6CDCA",
+        "#98A175"
+    ],
+    "colorWeights": [
+        0.53,
+        0.27,
+        0.2
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5803,
+    "category": "swirly-cues",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "swirl-03"
+}

@@ -1,10 +1,10 @@
 {
     "id": 53,
-    "url": "images/glitter/etc/etc_champagne.gif",
+    "url": "images/glitter/bring-on-the-glitter/nude-01.gif",
     "name": "Champagne",
     "generatedName": "Pastel Silver",
     "brightness": "1.000",
-    "sortOrder": 102,
+    "sortOrder": 5006,
     "hue": 1.1,
     "colorCodes": [
         "#E1D2B4"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 7520,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Beige",
@@ -28,5 +28,8 @@
         "Pastel",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "etc_champagne"
+    ],
+    "originalName": "nude-01"
 }

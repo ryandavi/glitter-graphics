@@ -1,0 +1,30 @@
+{
+    "id": 175,
+    "url": "images/glitter/crystal-shards/crystal-06.gif",
+    "name": "Burnt Orange",
+    "generatedName": "Burnt Orange",
+    "brightness": "0.210",
+    "sortOrder": 16,
+    "hue": 0.088,
+    "colorCodes": [
+        "#5E2B18",
+        "#DB6440"
+    ],
+    "colorWeights": [
+        0.56,
+        0.43
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10638,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-06"
+}

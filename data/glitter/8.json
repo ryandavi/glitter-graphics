@@ -1,10 +1,10 @@
 {
     "id": 8,
-    "url": "images/glitter/sparkle/glitter_lime-green.gif",
+    "url": "images/glitter/bring-on-the-glitter/green-010.gif",
     "name": "Lime Green",
     "generatedName": "Vivid Green",
     "brightness": "1.000",
-    "sortOrder": 23,
+    "sortOrder": 4001,
     "hue": 0.275,
     "colorCodes": [
         "#96FF00"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1619,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -29,5 +29,8 @@
         "Vivid",
         "Yellow"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_lime-green"
+    ],
+    "originalName": "green-010"
 }

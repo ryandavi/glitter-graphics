@@ -1,10 +1,10 @@
 {
     "id": 80,
-    "url": "images/glitter/sparkle/glitter_dark-green.gif",
+    "url": "images/glitter/bring-on-the-glitter/sea-05.gif",
     "name": "Dark Green",
     "generatedName": "Blue and Yellow",
     "brightness": "0.000",
-    "sortOrder": 26,
+    "sortOrder": 4,
     "hue": 1.2,
     "colorCodes": [
         "#003C4B",
@@ -22,12 +22,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 1950,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Cool",
         "Green",
         "Muted"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_dark-green"
+    ],
+    "originalName": "sea-05"
 }

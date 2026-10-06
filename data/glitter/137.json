@@ -1,0 +1,28 @@
+{
+    "id": 137,
+    "url": "images/glitter/bring-on-the-glitter/blue-01.gif",
+    "name": "Off-White",
+    "generatedName": "Off-White",
+    "brightness": "0.830",
+    "sortOrder": 2000,
+    "hue": 0.452,
+    "colorCodes": [
+        "#C3E7D3"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 7520,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "blue-01"
+}

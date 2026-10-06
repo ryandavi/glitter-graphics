@@ -1,10 +1,10 @@
 {
     "id": 95,
-    "url": "images/glitter/sparkle/glitter_muted-green.gif",
+    "url": "images/glitter/bring-on-the-glitter/green-05.gif",
     "name": "Muted Green",
     "generatedName": "Neon Yellow",
     "brightness": "1.000",
-    "sortOrder": 21,
+    "sortOrder": 4005,
     "hue": 0.236,
     "colorCodes": [
         "#96B400"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1882,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -29,5 +29,8 @@
         "Vivid",
         "Yellow"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_muted-green"
+    ],
+    "originalName": "green-05"
 }

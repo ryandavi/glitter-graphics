@@ -1,0 +1,32 @@
+{
+    "id": 276,
+    "url": "images/glitter/swirly-cues/swirl-02.gif",
+    "name": "Burnt Orange",
+    "generatedName": "Burnt Orange",
+    "brightness": "0.230",
+    "sortOrder": 1,
+    "hue": 0.072,
+    "colorCodes": [
+        "#6B2A1C",
+        "#D8CECC",
+        "#A27F78"
+    ],
+    "colorWeights": [
+        0.53,
+        0.26,
+        0.21
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5858,
+    "category": "swirly-cues",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "swirl-02"
+}

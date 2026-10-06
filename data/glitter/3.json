@@ -1,10 +1,10 @@
 {
     "id": 3,
-    "url": "images/glitter/sparkle/glitter_ruby.gif",
+    "url": "images/glitter/sparkelies/ruby.gif",
     "name": "Ruby",
     "generatedName": "Jewel Tone Pink",
     "brightness": "0.000",
-    "sortOrder": 11,
+    "sortOrder": 1011,
     "hue": 0.215,
     "colorCodes": [
         "#78002D"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -30,5 +30,14 @@
         "Vivid",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_ruby"
+    ],
+    "originalName": "ruby",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "red-02"
+        }
+    ]
 }

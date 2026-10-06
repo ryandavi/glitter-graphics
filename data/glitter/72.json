@@ -1,10 +1,10 @@
 {
     "id": 72,
-    "url": "images/glitter/sparkle/glitter_brown_3.gif",
+    "url": "images/glitter/bring-on-the-glitter/brown-04.gif",
     "name": "Brown_3",
     "generatedName": "Muted Orange",
     "brightness": "0.000",
-    "sortOrder": 53,
+    "sortOrder": 5003,
     "hue": 0.125,
     "colorCodes": [
         "#3C2D1E"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 859,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Brown",
@@ -29,5 +29,8 @@
         "Muted",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_brown_3"
+    ],
+    "originalName": "brown-04"
 }

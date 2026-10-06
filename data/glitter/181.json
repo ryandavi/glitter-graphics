@@ -1,0 +1,32 @@
+{
+    "id": 181,
+    "url": "images/glitter/bring-on-the-glitter/gold-07.gif",
+    "name": "Yellow, Pink, and Orange",
+    "generatedName": "Yellow, Pink, and Orange",
+    "brightness": "0.730",
+    "sortOrder": 3007,
+    "hue": 0.169,
+    "colorCodes": [
+        "#FFD85A",
+        "#F19CB2",
+        "#EE914C"
+    ],
+    "colorWeights": [
+        0.57,
+        0.29,
+        0.14
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 8193,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "gold-07"
+}

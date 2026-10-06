@@ -1,0 +1,32 @@
+{
+    "id": 228,
+    "url": "images/glitter/bring-on-the-glitter/purple-003.gif",
+    "name": "Vivid Purple",
+    "generatedName": "Vivid Purple",
+    "brightness": "0.480",
+    "sortOrder": 8002,
+    "hue": 0.811,
+    "colorCodes": [
+        "#8A05DD",
+        "#A76BD2",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.55,
+        0.32,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1957,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "purple-003"
+}

@@ -1,0 +1,40 @@
+{
+    "id": 219,
+    "url": "images/glitter/bring-on-the-glitter/brown-06.gif",
+    "name": "Red, Orange, and Yellow",
+    "generatedName": "Red, Orange, and Yellow",
+    "brightness": "0.320",
+    "sortOrder": 5005,
+    "hue": 0.042,
+    "colorCodes": [
+        "#7D3D3D",
+        "#707070",
+        "#763D0A",
+        "#AC7676",
+        "#393906",
+        "#A8723F",
+        "#B8B883"
+    ],
+    "colorWeights": [
+        0.29,
+        0.16,
+        0.16,
+        0.14,
+        0.1,
+        0.09,
+        0.04
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 4340,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "brown-06"
+}

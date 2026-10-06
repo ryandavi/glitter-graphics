@@ -1,0 +1,30 @@
+{
+    "id": 170,
+    "url": "images/glitter/crystal-shards/crystal-02.gif",
+    "name": "Blue",
+    "generatedName": "Blue",
+    "brightness": "0.250",
+    "sortOrder": 11,
+    "hue": 0.701,
+    "colorCodes": [
+        "#20247F",
+        "#5B7DF8"
+    ],
+    "colorWeights": [
+        0.82,
+        0.18
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 6837,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-02"
+}

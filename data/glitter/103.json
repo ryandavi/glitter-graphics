@@ -1,10 +1,10 @@
 {
     "id": 103,
-    "url": "images/glitter/sparkle/glitter_pink-red.gif",
+    "url": "images/glitter/bring-on-the-glitter/crimson-03.gif",
     "name": "Pink Red",
     "generatedName": "Vivid Red",
     "brightness": "1.000",
-    "sortOrder": 8,
+    "sortOrder": 9005,
     "hue": 0.042,
     "colorCodes": [
         "#FF33FF",
@@ -26,7 +26,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1600,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Pink",
@@ -34,5 +34,8 @@
         "Vivid",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_pink-red"
+    ],
+    "originalName": "crimson-03"
 }

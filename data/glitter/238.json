@@ -1,0 +1,30 @@
+{
+    "id": 238,
+    "url": "images/glitter/bring-on-the-glitter/silver-07.gif",
+    "name": "Off-White",
+    "generatedName": "Off-White",
+    "brightness": "0.200",
+    "sortOrder": 10006,
+    "hue": 1.1,
+    "colorCodes": [
+        "#EDEDED",
+        "#333333"
+    ],
+    "colorWeights": [
+        0.81,
+        0.19
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1250,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "silver-07"
+}

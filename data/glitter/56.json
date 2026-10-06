@@ -1,10 +1,10 @@
 {
     "id": 56,
-    "url": "images/glitter/etc/etc_gold.gif",
+    "url": "images/glitter/bring-on-the-glitter/gold-06.gif",
     "name": "Gold",
     "generatedName": "Vivid Orange",
     "brightness": "1.000",
-    "sortOrder": 93,
+    "sortOrder": 3006,
     "hue": 0.164,
     "colorCodes": [
         "#FFD24B"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 6450,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Light",
@@ -28,5 +28,8 @@
         "Vivid",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "etc_gold"
+    ],
+    "originalName": "gold-06"
 }

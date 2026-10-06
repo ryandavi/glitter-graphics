@@ -1,0 +1,32 @@
+{
+    "id": 233,
+    "url": "images/glitter/bring-on-the-glitter/crimson-005.gif",
+    "name": "Dark Ruby Red",
+    "generatedName": "Dark Ruby Red",
+    "brightness": "0.110",
+    "sortOrder": 9004,
+    "hue": 0.042,
+    "colorCodes": [
+        "#540000",
+        "#FFFFFF",
+        "#000033"
+    ],
+    "colorWeights": [
+        0.83,
+        0.12,
+        0.06
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1290,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crimson-005"
+}

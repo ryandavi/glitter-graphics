@@ -1,0 +1,32 @@
+{
+    "id": 294,
+    "url": "images/glitter/stardrops/orangeGlit.gif",
+    "name": "Orange Glit",
+    "generatedName": "Tan",
+    "brightness": "0.570",
+    "sortOrder": 1000,
+    "hue": 0.087,
+    "colorCodes": [
+        "#BD8570",
+        "#EBD9D3",
+        "#AD5332"
+    ],
+    "colorWeights": [
+        0.8,
+        0.15,
+        0.05
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 94,
+    "height": 33,
+    "fileSize": 8570,
+    "category": "stardrops",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "orangeGlit"
+}

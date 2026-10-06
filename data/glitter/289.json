@@ -1,0 +1,32 @@
+{
+    "id": 289,
+    "url": "images/glitter/velvet-embers/ember-09.gif",
+    "name": "Deep Yellow-Green",
+    "generatedName": "Deep Yellow-Green",
+    "brightness": "0.090",
+    "sortOrder": 9,
+    "hue": 0.323,
+    "colorCodes": [
+        "#103300",
+        "#087806",
+        "#11D53A"
+    ],
+    "colorWeights": [
+        0.72,
+        0.14,
+        0.13
+    ],
+    "frameCount": 4,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1541,
+    "category": "velvet-embers",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "ember-09"
+}

@@ -1,0 +1,36 @@
+{
+    "id": 134,
+    "url": "images/glitter/bring-on-the-glitter/black-03.gif",
+    "name": "Rainbow",
+    "generatedName": "Rainbow",
+    "brightness": "0.100",
+    "sortOrder": 1007,
+    "hue": 1.1,
+    "colorCodes": [
+        "#1A1A1A",
+        "#2E0000",
+        "#603900",
+        "#003F1E",
+        "#0000FF"
+    ],
+    "colorWeights": [
+        0.62,
+        0.13,
+        0.12,
+        0.07,
+        0.06
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 7997,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "black-03"
+}

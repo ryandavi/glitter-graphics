@@ -1,10 +1,10 @@
 {
     "id": 66,
-    "url": "images/glitter/sparkle/glitter_blue-topaz.gif",
+    "url": "images/glitter/sparkelies/blueTopaz.gif",
     "name": "Blue Topaz",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 34,
+    "sortOrder": 1002,
     "hue": 0.625,
     "colorCodes": [
         "#004B96"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -28,5 +28,8 @@
         "Jewel",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_blue-topaz"
+    ],
+    "originalName": "blueTopaz"
 }

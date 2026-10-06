@@ -1,0 +1,30 @@
+{
+    "id": 210,
+    "url": "images/glitter/molten-lava/flash-03.gif",
+    "name": "Purple",
+    "generatedName": "Purple",
+    "brightness": "0.470",
+    "sortOrder": 3,
+    "hue": 0.824,
+    "colorCodes": [
+        "#8B26B7",
+        "#D833FC"
+    ],
+    "colorWeights": [
+        0.73,
+        0.24
+    ],
+    "frameCount": 7,
+    "frameRate": 15,
+    "isVariableFramerate": 1,
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "width": 60,
+    "height": 30,
+    "fileSize": 4169,
+    "category": "molten-lava",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "flash-03"
+}

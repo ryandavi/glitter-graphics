@@ -1,0 +1,32 @@
+{
+    "id": 293,
+    "url": "images/glitter/sparkelies/topaz.gif",
+    "name": "Topaz",
+    "generatedName": "Bronze",
+    "brightness": "0.330",
+    "sortOrder": 1016,
+    "hue": 0.126,
+    "colorCodes": [
+        "#8A531C",
+        "#FF770B",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.62,
+        0.26,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 61,
+    "height": 29,
+    "fileSize": 1931,
+    "category": "sparkelies",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "topaz"
+}

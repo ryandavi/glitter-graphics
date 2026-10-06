@@ -1,0 +1,32 @@
+{
+    "id": 168,
+    "url": "images/glitter/crystal-shards/crystal-018.gif",
+    "name": "Dark Yellow-Green",
+    "generatedName": "Dark Yellow-Green",
+    "brightness": "0.210",
+    "sortOrder": 9,
+    "hue": 0.313,
+    "colorCodes": [
+        "#305B17",
+        "#5AB42A",
+        "#A1F553"
+    ],
+    "colorWeights": [
+        0.52,
+        0.25,
+        0.23
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10269,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-018"
+}

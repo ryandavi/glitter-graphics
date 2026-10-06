@@ -1,10 +1,10 @@
 {
     "id": 61,
-    "url": "images/glitter/etc/etc_seafoam.gif",
+    "url": "images/glitter/bring-on-the-glitter/green-01.gif",
     "name": "Seafoam",
     "generatedName": "Pastel Silver",
     "brightness": "1.000",
-    "sortOrder": 94,
+    "sortOrder": 4000,
     "hue": 1.1,
     "colorCodes": [
         "#C3E1B4"
@@ -20,12 +20,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 7520,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Green",
         "Light",
         "Pastel"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "etc_seafoam"
+    ],
+    "originalName": "green-01"
 }

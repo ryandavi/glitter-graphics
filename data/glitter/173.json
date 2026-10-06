@@ -1,0 +1,30 @@
+{
+    "id": 173,
+    "url": "images/glitter/crystal-shards/crystal-04.gif",
+    "name": "Dark Gray",
+    "generatedName": "Dark Gray",
+    "brightness": "0.370",
+    "sortOrder": 14,
+    "hue": 1.1,
+    "colorCodes": [
+        "#5E5E5E",
+        "#DBDBDB"
+    ],
+    "colorWeights": [
+        0.56,
+        0.44
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5750,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-04"
+}

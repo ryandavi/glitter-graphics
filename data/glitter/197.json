@@ -1,0 +1,30 @@
+{
+    "id": 197,
+    "url": "images/glitter/just-a-bit-of-glitz/glitz-06.gif",
+    "name": "Purple",
+    "generatedName": "Purple",
+    "brightness": "0.450",
+    "sortOrder": 8,
+    "hue": 0.85,
+    "colorCodes": [
+        "#9D04B7",
+        "#3D0086"
+    ],
+    "colorWeights": [
+        0.74,
+        0.26
+    ],
+    "frameCount": 2,
+    "frameRate": 40,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1437,
+    "category": "just-a-bit-of-glitz",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "glitz-06"
+}

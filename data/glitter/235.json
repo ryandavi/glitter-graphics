@@ -1,0 +1,38 @@
+{
+    "id": 235,
+    "url": "images/glitter/sparkelies/garnet.gif",
+    "name": "Garnet",
+    "generatedName": "Dark Ruby Red",
+    "brightness": "0.140",
+    "sortOrder": 1004,
+    "hue": 0.043,
+    "colorCodes": [
+        "#670200",
+        "#E50A18",
+        "#E5E5E5"
+    ],
+    "colorWeights": [
+        0.62,
+        0.26,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 61,
+    "height": 29,
+    "fileSize": 1931,
+    "category": "sparkelies",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "garnet",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "red-03"
+        }
+    ]
+}

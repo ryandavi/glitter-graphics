@@ -1,0 +1,34 @@
+{
+    "id": 184,
+    "url": "images/glitter/bring-on-the-glitter/green-03.gif",
+    "name": "Green",
+    "generatedName": "Green",
+    "brightness": "0.240",
+    "sortOrder": 4003,
+    "hue": 0.41,
+    "colorCodes": [
+        "#009920",
+        "#006612",
+        "#0BFF2D",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.32,
+        0.3,
+        0.25,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1957,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "green-03"
+}

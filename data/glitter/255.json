@@ -1,0 +1,32 @@
+{
+    "id": 255,
+    "url": "images/glitter/star-dust/twinkle-014.gif",
+    "name": "Purple",
+    "generatedName": "Purple",
+    "brightness": "0.580",
+    "sortOrder": 15,
+    "hue": 0.89,
+    "colorCodes": [
+        "#B25EAB",
+        "#B899C6",
+        "#F0E8ED"
+    ],
+    "colorWeights": [
+        0.66,
+        0.17,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5690,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-014"
+}

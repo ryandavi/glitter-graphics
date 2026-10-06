@@ -1,10 +1,10 @@
 {
     "id": 19,
-    "url": "images/glitter/sparkle/glitter_christmas.gif",
+    "url": "images/glitter/christmas/christmas-04.gif",
     "name": "Christmas",
     "generatedName": "Green and Red",
     "brightness": "1.000",
-    "sortOrder": 66,
+    "sortOrder": 3,
     "hue": 1.2,
     "colorCodes": [
         "#00D200",
@@ -22,7 +22,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1502,
-    "category": "sparkle",
+    "category": "christmas",
     "isPixelated": 1,
     "tags": [
         "Contrast",
@@ -32,5 +32,8 @@
         "Red",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_christmas"
+    ],
+    "originalName": "christmas-04"
 }

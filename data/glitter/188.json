@@ -1,0 +1,34 @@
+{
+    "id": 188,
+    "url": "images/glitter/bring-on-the-glitter/green-09.gif",
+    "name": "Yellow-Green",
+    "generatedName": "Yellow-Green",
+    "brightness": "0.350",
+    "sortOrder": 4009,
+    "hue": 0.314,
+    "colorCodes": [
+        "#4DA619",
+        "#E5F9E3",
+        "#00FF3F",
+        "#FFF09E"
+    ],
+    "colorWeights": [
+        0.56,
+        0.26,
+        0.11,
+        0.07
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 7354,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "green-09"
+}

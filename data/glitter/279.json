@@ -1,0 +1,32 @@
+{
+    "id": 279,
+    "url": "images/glitter/swirly-cues/swirl-05.gif",
+    "name": "Dark Green",
+    "generatedName": "Dark Green",
+    "brightness": "0.260",
+    "sortOrder": 4,
+    "hue": 0.457,
+    "colorCodes": [
+        "#1B6B43",
+        "#80A791",
+        "#D4D2DB"
+    ],
+    "colorWeights": [
+        0.53,
+        0.25,
+        0.22
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5802,
+    "category": "swirly-cues",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "swirl-05"
+}

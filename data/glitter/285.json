@@ -1,0 +1,32 @@
+{
+    "id": 285,
+    "url": "images/glitter/velvet-embers/ember-010.gif",
+    "name": "Yellow",
+    "generatedName": "Yellow",
+    "brightness": "0.120",
+    "sortOrder": 1,
+    "hue": 0.179,
+    "colorCodes": [
+        "#332A00",
+        "#677806",
+        "#8AD511"
+    ],
+    "colorWeights": [
+        0.72,
+        0.14,
+        0.13
+    ],
+    "frameCount": 4,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1541,
+    "category": "velvet-embers",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "ember-010"
+}

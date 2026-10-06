@@ -1,10 +1,10 @@
 {
     "id": 2,
-    "url": "images/glitter/sparkle/glitter_crimson.gif",
+    "url": "images/glitter/bring-on-the-glitter/crimson-002.gif",
     "name": "Crimson",
     "generatedName": "Vivid Red",
     "brightness": "1.000",
-    "sortOrder": 10,
+    "sortOrder": 9001,
     "hue": 0.028,
     "colorCodes": [
         "#C3000F"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1569,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -28,5 +28,8 @@
         "Vivid",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_crimson"
+    ],
+    "originalName": "crimson-002"
 }

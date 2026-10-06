@@ -1,0 +1,36 @@
+{
+    "id": 258,
+    "url": "images/glitter/star-dust/twinkle-017.gif",
+    "name": "Red and Purple",
+    "generatedName": "Red and Purple",
+    "brightness": "0.540",
+    "sortOrder": 18,
+    "hue": 0.008,
+    "colorCodes": [
+        "#B96879",
+        "#C090BA",
+        "#F1E9E9",
+        "#A93731",
+        "#CF9486"
+    ],
+    "colorWeights": [
+        0.49,
+        0.16,
+        0.13,
+        0.11,
+        0.09
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5690,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-017"
+}

@@ -1,0 +1,30 @@
+{
+    "id": 298,
+    "url": "images/glitter/stardrops/SparkButton.gif",
+    "name": "Spark Button",
+    "generatedName": "Blue-Green",
+    "brightness": "0.600",
+    "sortOrder": 1006,
+    "hue": 0.515,
+    "colorCodes": [
+        "#69B7AA",
+        "#E2F0F2"
+    ],
+    "colorWeights": [
+        0.8,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 61,
+    "height": 29,
+    "fileSize": 4054,
+    "category": "stardrops",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "SparkButton"
+}

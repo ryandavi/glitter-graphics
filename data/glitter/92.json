@@ -1,10 +1,10 @@
 {
     "id": 92,
-    "url": "images/glitter/sparkle/glitter_light-green.gif",
+    "url": "images/glitter/bring-on-the-glitter/green-04.gif",
     "name": "Light Green",
     "generatedName": "Muted Green",
     "brightness": "1.000",
-    "sortOrder": 22,
+    "sortOrder": 4004,
     "hue": 0.256,
     "colorCodes": [
         "#B4D269"
@@ -20,12 +20,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Green",
         "Light",
         "Muted"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_light-green"
+    ],
+    "originalName": "green-04"
 }

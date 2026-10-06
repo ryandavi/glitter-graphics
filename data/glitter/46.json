@@ -1,10 +1,10 @@
 {
     "id": 46,
-    "url": "images/glitter/etc/glitter_black.gif",
+    "url": "images/glitter/bring-on-the-glitter/black-004.gif",
     "name": "Black",
     "generatedName": "Black",
     "brightness": "0.000",
-    "sortOrder": 90,
+    "sortOrder": 1003,
     "hue": 1.1,
     "colorCodes": [
         "#1E1E1E"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 31,
     "fileSize": 5987,
-    "category": "sparkle-2",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Black",
@@ -28,5 +28,8 @@
         "Grayscale",
         "Neutral"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_black"
+    ],
+    "originalName": "black-004"
 }

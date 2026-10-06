@@ -1,10 +1,10 @@
 {
     "id": 16,
-    "url": "images/glitter/sparkle/glitter_magenta.gif",
+    "url": "images/glitter/bring-on-the-glitter/pink-04.gif",
     "name": "Magenta",
     "generatedName": "Neon Pink",
     "brightness": "1.000",
-    "sortOrder": 6,
+    "sortOrder": 7006,
     "hue": 0.125,
     "colorCodes": [
         "#B400A5"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Neon",
@@ -28,5 +28,8 @@
         "Purple",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_magenta"
+    ],
+    "originalName": "pink-04"
 }

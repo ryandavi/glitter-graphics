@@ -1,10 +1,10 @@
 {
     "id": 86,
-    "url": "images/glitter/sparkle/glitter_dusty-pink.gif",
+    "url": "images/glitter/bring-on-the-glitter/pink-05.gif",
     "name": "Dusty Pink",
     "generatedName": "Very Light Desaturated Red",
     "brightness": "0.690",
-    "sortOrder": 1,
+    "sortOrder": 7007,
     "hue": 0.047,
     "colorCodes": [
         "#EF9C99",
@@ -26,7 +26,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Light",
@@ -36,5 +36,8 @@
         "Red",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_dusty-pink"
+    ],
+    "originalName": "pink-05"
 }

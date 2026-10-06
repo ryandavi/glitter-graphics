@@ -1,0 +1,34 @@
+{
+    "id": 128,
+    "url": "images/glitter/bring-on-the-glitter/sea-03.gif",
+    "name": "Green",
+    "generatedName": "Green",
+    "brightness": "0.320",
+    "sortOrder": 2,
+    "hue": 0.588,
+    "colorCodes": [
+        "#006890",
+        "#4DA619",
+        "#FFFFFF",
+        "#B3D39B"
+    ],
+    "colorWeights": [
+        0.5,
+        0.32,
+        0.12,
+        0.06
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1950,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "sea-03"
+}

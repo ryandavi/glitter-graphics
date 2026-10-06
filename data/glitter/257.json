@@ -1,0 +1,34 @@
+{
+    "id": 257,
+    "url": "images/glitter/star-dust/twinkle-016.gif",
+    "name": "Magenta",
+    "generatedName": "Magenta",
+    "brightness": "0.600",
+    "sortOrder": 17,
+    "hue": 0.949,
+    "colorCodes": [
+        "#BC719B",
+        "#EEDEE1",
+        "#AA3451",
+        "#8580AF"
+    ],
+    "colorWeights": [
+        0.68,
+        0.16,
+        0.12,
+        0.02
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5690,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-016"
+}

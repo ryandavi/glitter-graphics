@@ -1,10 +1,10 @@
 {
     "id": 55,
-    "url": "images/glitter/etc/etc_dusty-pink.gif",
+    "url": "images/glitter/bring-on-the-glitter/pink-001.gif",
     "name": "Dusty Pink",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 91,
+    "sortOrder": 7000,
     "hue": 0.111,
     "colorCodes": [
         "#FF96FF"
@@ -20,12 +20,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 5816,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Light",
         "Muted",
         "Pink"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "etc_dusty-pink"
+    ],
+    "originalName": "pink-001"
 }

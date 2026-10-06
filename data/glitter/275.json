@@ -1,0 +1,32 @@
+{
+    "id": 275,
+    "url": "images/glitter/swirly-cues/swirl-01.gif",
+    "name": "Dark Yellow",
+    "generatedName": "Dark Yellow",
+    "brightness": "0.310",
+    "sortOrder": 0,
+    "hue": 0.198,
+    "colorCodes": [
+        "#6B661C",
+        "#A9A684",
+        "#E0DED7"
+    ],
+    "colorWeights": [
+        0.53,
+        0.27,
+        0.2
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5878,
+    "category": "swirly-cues",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "swirl-01"
+}

@@ -1,0 +1,34 @@
+{
+    "id": 243,
+    "url": "images/glitter/star-dust/twinkle-003.gif",
+    "name": "Tan",
+    "generatedName": "Tan",
+    "brightness": "0.600",
+    "sortOrder": 3,
+    "hue": 0.215,
+    "colorCodes": [
+        "#B2B661",
+        "#BE9882",
+        "#EDF0E4",
+        "#BA90A7"
+    ],
+    "colorWeights": [
+        0.62,
+        0.18,
+        0.15,
+        0.03
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5690,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-003"
+}

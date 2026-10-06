@@ -1,10 +1,10 @@
 {
     "id": 12,
-    "url": "images/glitter/sparkle/glitter_turquoise.gif",
+    "url": "images/glitter/sparkelies/turquoise.gif",
     "name": "Turquoise",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 28,
+    "sortOrder": 1017,
     "hue": 0.558,
     "colorCodes": [
         "#008796"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -29,5 +29,8 @@
         "Jewel",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_turquoise"
+    ],
+    "originalName": "turquoise"
 }

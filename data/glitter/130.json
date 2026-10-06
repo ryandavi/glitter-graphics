@@ -1,0 +1,32 @@
+{
+    "id": 130,
+    "url": "images/glitter/bring-on-the-glitter/black-001.gif",
+    "name": "Green and Blue",
+    "generatedName": "Green and Blue",
+    "brightness": "0.160",
+    "sortOrder": 1000,
+    "hue": 1.1,
+    "colorCodes": [
+        "#282828",
+        "#003A27",
+        "#0000FF"
+    ],
+    "colorWeights": [
+        0.82,
+        0.12,
+        0.05
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 3431,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "black-001"
+}

@@ -1,0 +1,32 @@
+{
+    "id": 231,
+    "url": "images/glitter/bring-on-the-glitter/crimson-003.gif",
+    "name": "Red and Purple",
+    "generatedName": "Red and Purple",
+    "brightness": "0.170",
+    "sortOrder": 9002,
+    "hue": 0.035,
+    "colorCodes": [
+        "#7A0005",
+        "#660066",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.6,
+        0.28,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1549,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crimson-003"
+}

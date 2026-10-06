@@ -1,0 +1,32 @@
+{
+    "id": 186,
+    "url": "images/glitter/bring-on-the-glitter/green-07.gif",
+    "name": "Muted Yellow-Green",
+    "generatedName": "Muted Yellow-Green",
+    "brightness": "0.750",
+    "sortOrder": 4007,
+    "hue": 0.306,
+    "colorCodes": [
+        "#BDDBA8",
+        "#00FF00",
+        "#FCFFFC"
+    ],
+    "colorWeights": [
+        0.78,
+        0.11,
+        0.11
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 7354,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "green-07"
+}

@@ -1,10 +1,10 @@
 {
     "id": 88,
-    "url": "images/glitter/sparkle/glitter_grass-green.gif",
+    "url": "images/glitter/bring-on-the-glitter/green-02.gif",
     "name": "Grass Green",
     "generatedName": "Jewel Tone Green",
     "brightness": "1.000",
-    "sortOrder": 24,
+    "sortOrder": 4002,
     "hue": 0.275,
     "colorCodes": [
         "#5A9600"
@@ -20,12 +20,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Green",
         "Jewel",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_grass-green"
+    ],
+    "originalName": "green-02"
 }

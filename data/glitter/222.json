@@ -1,0 +1,30 @@
+{
+    "id": 222,
+    "url": "images/glitter/bring-on-the-glitter/pink-002.gif",
+    "name": "Light Purple",
+    "generatedName": "Light Purple",
+    "brightness": "0.790",
+    "sortOrder": 7001,
+    "hue": 0.875,
+    "colorCodes": [
+        "#FD66FD",
+        "#F2D1D7"
+    ],
+    "colorWeights": [
+        0.55,
+        0.46
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5695,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "pink-002"
+}

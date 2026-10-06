@@ -1,0 +1,32 @@
+{
+    "id": 151,
+    "url": "images/glitter/christmas/christmas-02.gif",
+    "name": "Red, Green, and Yellow",
+    "generatedName": "Red, Green, and Yellow",
+    "brightness": "0.320",
+    "sortOrder": 1,
+    "hue": 0.025,
+    "colorCodes": [
+        "#DD0016",
+        "#00CC00",
+        "#FFFF00"
+    ],
+    "colorWeights": [
+        0.54,
+        0.33,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1502,
+    "category": "christmas",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "christmas-02"
+}

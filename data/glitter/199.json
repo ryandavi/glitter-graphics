@@ -1,0 +1,36 @@
+{
+    "id": 199,
+    "url": "images/glitter/just-a-bit-of-glitz/glitz-1a.gif",
+    "name": "Purple, Orange, and Yellow",
+    "generatedName": "Purple, Orange, and Yellow",
+    "brightness": "0.760",
+    "sortOrder": 10,
+    "hue": 0.875,
+    "colorCodes": [
+        "#FF4BFF",
+        "#923900",
+        "#AC8C0B",
+        "#401300",
+        "#FCA023"
+    ],
+    "colorWeights": [
+        0.59,
+        0.16,
+        0.16,
+        0.04,
+        0.04
+    ],
+    "frameCount": 2,
+    "frameRate": 40,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1443,
+    "category": "just-a-bit-of-glitz",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "glitz-1a"
+}

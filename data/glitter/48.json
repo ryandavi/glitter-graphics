@@ -1,10 +1,10 @@
 {
     "id": 48,
-    "url": "images/glitter/etc/etc_black-2.gif",
+    "url": "images/glitter/bring-on-the-glitter/black-005.gif",
     "name": "Black 2",
     "generatedName": "Black",
     "brightness": "0.000",
-    "sortOrder": 106,
+    "sortOrder": 1004,
     "hue": 1.1,
     "colorCodes": [
         "#1E1E1E"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 5366,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Black",
@@ -28,5 +28,8 @@
         "Grayscale",
         "Neutral"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "etc_black-2"
+    ],
+    "originalName": "black-005"
 }

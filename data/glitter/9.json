@@ -1,10 +1,10 @@
 {
     "id": 9,
-    "url": "images/glitter/sparkle/glitter_green.gif",
-    "name": "Green",
+    "url": "images/glitter/sparkelies/emerald.gif",
+    "name": "Emerald",
     "generatedName": "Jewel Tone Green",
     "brightness": "1.000",
-    "sortOrder": 25,
+    "sortOrder": 1003,
     "hue": 0.356,
     "colorCodes": [
         "#0F8700"
@@ -20,12 +20,16 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Green",
         "Jewel",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "Green",
+        "glitter_green"
+    ],
+    "originalName": "emerald"
 }

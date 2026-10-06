@@ -1,0 +1,32 @@
+{
+    "id": 236,
+    "url": "images/glitter/bring-on-the-glitter/red-04.gif",
+    "name": "Vivid Red",
+    "generatedName": "Vivid Red",
+    "brightness": "0.330",
+    "sortOrder": 9009,
+    "hue": 0.04,
+    "colorCodes": [
+        "#F90104",
+        "#5C0023",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.57,
+        0.3,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1953,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "red-04"
+}

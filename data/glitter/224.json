@@ -1,0 +1,28 @@
+{
+    "id": 224,
+    "url": "images/glitter/bring-on-the-glitter/pink-01.gif",
+    "name": "Off-White",
+    "generatedName": "Off-White",
+    "brightness": "0.820",
+    "sortOrder": 7003,
+    "hue": 0.012,
+    "colorCodes": [
+        "#E7C3C9"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 5,
+    "frameRate": 2,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 7520,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "pink-01"
+}

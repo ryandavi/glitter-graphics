@@ -1,0 +1,30 @@
+{
+    "id": 229,
+    "url": "images/glitter/bring-on-the-glitter/purple-004.gif",
+    "name": "Vivid Indigo",
+    "generatedName": "Vivid Indigo",
+    "brightness": "0.520",
+    "sortOrder": 8003,
+    "hue": 0.801,
+    "colorCodes": [
+        "#8D16EC",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1610,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "purple-004"
+}

@@ -1,10 +1,10 @@
 {
     "id": 102,
-    "url": "images/glitter/sparkle/glitter_pink-purple.gif",
+    "url": "images/glitter/bring-on-the-glitter/violet-02.gif",
     "name": "Pink Purple",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 5,
+    "sortOrder": 7009,
     "hue": 0.215,
     "colorCodes": [
         "#E16996"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Muted",
@@ -28,5 +28,8 @@
         "Purple",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_pink-purple"
+    ],
+    "originalName": "violet-02"
 }

@@ -1,0 +1,32 @@
+{
+    "id": 221,
+    "url": "images/glitter/bring-on-the-glitter/orange-002.gif",
+    "name": "Red",
+    "generatedName": "Red",
+    "brightness": "0.560",
+    "sortOrder": 6001,
+    "hue": 0.017,
+    "colorCodes": [
+        "#FF4B66",
+        "#F36627",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.63,
+        0.25,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1610,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "orange-002"
+}

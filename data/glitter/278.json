@@ -1,0 +1,32 @@
+{
+    "id": 278,
+    "url": "images/glitter/swirly-cues/swirl-04.gif",
+    "name": "Dark Bronze",
+    "generatedName": "Dark Bronze",
+    "brightness": "0.260",
+    "sortOrder": 3,
+    "hue": 0.124,
+    "colorCodes": [
+        "#6B431B",
+        "#A68F7E",
+        "#D2DAD3"
+    ],
+    "colorWeights": [
+        0.53,
+        0.24,
+        0.23
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5809,
+    "category": "swirly-cues",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "swirl-04"
+}

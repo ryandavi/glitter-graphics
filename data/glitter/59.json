@@ -1,10 +1,10 @@
 {
     "id": 59,
-    "url": "images/glitter/etc/etc_lavender.gif",
+    "url": "images/glitter/bring-on-the-glitter/blue-03.gif",
     "name": "Lavender",
     "generatedName": "Pastel Silver",
     "brightness": "1.000",
-    "sortOrder": 100,
+    "sortOrder": 2002,
     "hue": 1.1,
     "colorCodes": [
         "#B4B4E1"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 7520,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -28,5 +28,8 @@
         "Light",
         "Pastel"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "etc_lavender"
+    ],
+    "originalName": "blue-03"
 }

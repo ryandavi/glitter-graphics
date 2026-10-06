@@ -1,0 +1,32 @@
+{
+    "id": 266,
+    "url": "images/glitter/star-spangled/free-02.gif",
+    "name": "White",
+    "generatedName": "White",
+    "brightness": "0.600",
+    "sortOrder": 1,
+    "hue": 1.1,
+    "colorCodes": [
+        "#FFFFFF",
+        "#999999",
+        "#000000"
+    ],
+    "colorWeights": [
+        0.45,
+        0.42,
+        0.14
+    ],
+    "frameCount": 11,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 3961,
+    "category": "star-spangled",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "free-02"
+}

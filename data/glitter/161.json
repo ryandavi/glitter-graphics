@@ -1,0 +1,30 @@
+{
+    "id": 161,
+    "url": "images/glitter/crystal-shards/crystal-011.gif",
+    "name": "Dark Purple",
+    "generatedName": "Dark Purple",
+    "brightness": "0.240",
+    "sortOrder": 2,
+    "hue": 0.817,
+    "colorCodes": [
+        "#43175B",
+        "#9B3DD3"
+    ],
+    "colorWeights": [
+        0.52,
+        0.48
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10638,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-011"
+}

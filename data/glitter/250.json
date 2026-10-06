@@ -1,0 +1,30 @@
+{
+    "id": 250,
+    "url": "images/glitter/star-dust/twinkle-01.gif",
+    "name": "Blue-Green",
+    "generatedName": "Blue-Green",
+    "brightness": "0.600",
+    "sortOrder": 10,
+    "hue": 0.515,
+    "colorCodes": [
+        "#6AB7AB",
+        "#EBF4F3"
+    ],
+    "colorWeights": [
+        0.83,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 4799,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-01"
+}

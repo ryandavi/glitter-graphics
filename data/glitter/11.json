@@ -1,10 +1,10 @@
 {
     "id": 11,
-    "url": "images/glitter/sparkle/glitter_aquamarine.gif",
+    "url": "images/glitter/sparkelies/aquamarine.gif",
     "name": "Aquamarine",
     "generatedName": "Neon Blue",
     "brightness": "1.000",
-    "sortOrder": 32,
+    "sortOrder": 1001,
     "hue": 0.569,
     "colorCodes": [
         "#00D2FF"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -30,5 +30,18 @@
         "Neon",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_aquamarine"
+    ],
+    "originalName": "aquamarine",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "blue-06"
+        },
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "blue-07"
+        }
+    ]
 }

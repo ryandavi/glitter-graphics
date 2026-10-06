@@ -1,10 +1,10 @@
 {
     "id": 7,
-    "url": "images/glitter/sparkle/glitter_gold.gif",
+    "url": "images/glitter/bring-on-the-glitter/gold-010.gif",
     "name": "Gold",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 19,
+    "sortOrder": 3001,
     "hue": 0.158,
     "colorCodes": [
         "#FFD269"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1512,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Gold",
@@ -29,5 +29,8 @@
         "Warm",
         "Yellow"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_gold"
+    ],
+    "originalName": "gold-010"
 }

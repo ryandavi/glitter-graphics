@@ -1,10 +1,10 @@
 {
     "id": 122,
-    "url": "images/glitter/ember/ember_red-2.gif",
+    "url": "images/glitter/velvet-embers/ember-02.gif",
     "name": "Ruby",
     "generatedName": "Very Dark Vivid Pink",
     "brightness": "0.150",
-    "sortOrder": 71,
+    "sortOrder": 2,
     "hue": 0.96,
     "colorCodes": [
         "#330019",
@@ -24,12 +24,15 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "ember",
+    "category": "velvet-embers",
     "isPixelated": 1,
     "tags": [
         "Dark",
         "Pink",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "ember_red-2"
+    ],
+    "originalName": "ember-02"
 }

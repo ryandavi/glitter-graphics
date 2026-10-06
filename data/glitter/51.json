@@ -1,10 +1,10 @@
 {
     "id": 51,
-    "url": "images/glitter/etc/etc_bronze-2.gif",
+    "url": "images/glitter/bring-on-the-glitter/gold-04.gif",
     "name": "Bronze 2",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 104,
+    "sortOrder": 3004,
     "hue": 0.125,
     "colorCodes": [
         "#B49678"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 5841,
-    "category": "etc",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Beige",
@@ -28,5 +28,16 @@
         "Muted",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "Bronze",
+        "etc_bronze-2",
+        "etc_bronze"
+    ],
+    "originalName": "gold-04",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "nude-04"
+        }
+    ]
 }

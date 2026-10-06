@@ -1,0 +1,34 @@
+{
+    "id": 295,
+    "url": "images/glitter/stardrops/Sparkbutton-apinkish.gif",
+    "name": "Spark Button",
+    "generatedName": "Magenta",
+    "brightness": "0.580",
+    "sortOrder": 1001,
+    "hue": 0.951,
+    "colorCodes": [
+        "#E63D99",
+        "#F1F1F1",
+        "#11FFFF",
+        "#940029"
+    ],
+    "colorWeights": [
+        0.66,
+        0.14,
+        0.07,
+        0.05
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 61,
+    "height": 29,
+    "fileSize": 2548,
+    "category": "stardrops",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "Sparkbutton-apinkish"
+}

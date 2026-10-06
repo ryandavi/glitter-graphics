@@ -1,0 +1,30 @@
+{
+    "id": 218,
+    "url": "images/glitter/bring-on-the-glitter/brown-02.gif",
+    "name": "Brown",
+    "generatedName": "Brown",
+    "brightness": "0.360",
+    "sortOrder": 5001,
+    "hue": 0.085,
+    "colorCodes": [
+        "#7D5446",
+        "#737269"
+    ],
+    "colorWeights": [
+        0.78,
+        0.22
+    ],
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 4424,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "brown-02"
+}

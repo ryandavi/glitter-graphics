@@ -1,0 +1,30 @@
+{
+    "id": 158,
+    "url": "images/glitter/clear/whiteclear-03.gif",
+    "name": "Off-White",
+    "generatedName": "Off-White",
+    "brightness": "0.930",
+    "sortOrder": 4,
+    "hue": 0.427,
+    "colorCodes": [
+        "#E5DDE6",
+        "#E1FBE9"
+    ],
+    "colorWeights": [
+        0.63,
+        0.34
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "width": 60,
+    "height": 30,
+    "fileSize": 535,
+    "category": "clear",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "whiteclear-03"
+}

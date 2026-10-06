@@ -1,0 +1,32 @@
+{
+    "id": 169,
+    "url": "images/glitter/crystal-shards/crystal-019.gif",
+    "name": "Yellow-Green",
+    "generatedName": "Yellow-Green",
+    "brightness": "0.240",
+    "sortOrder": 10,
+    "hue": 0.254,
+    "colorCodes": [
+        "#485B17",
+        "#8DB52A",
+        "#DDF653"
+    ],
+    "colorWeights": [
+        0.52,
+        0.26,
+        0.22
+    ],
+    "frameCount": 10,
+    "frameRate": 5,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 10638,
+    "category": "crystal-shards",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "crystal-019"
+}

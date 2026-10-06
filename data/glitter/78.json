@@ -1,10 +1,10 @@
 {
     "id": 78,
-    "url": "images/glitter/sparkle/glitter_dark-gold.gif",
-    "name": "Dark Gold",
+    "url": "images/glitter/sparkelies/gold-1.gif",
+    "name": "Gold 1",
     "generatedName": "Vivid Gold",
     "brightness": "1.000",
-    "sortOrder": 17,
+    "sortOrder": 1005,
     "hue": 0.167,
     "colorCodes": [
         "#B48700"
@@ -20,12 +20,16 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkle",
+    "category": "sparkelies",
     "isPixelated": 1,
     "tags": [
         "Gold",
         "Vivid",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "Dark Gold",
+        "glitter_dark-gold"
+    ],
+    "originalName": "gold-1"
 }

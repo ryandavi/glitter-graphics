@@ -1,0 +1,30 @@
+{
+    "id": 239,
+    "url": "images/glitter/bring-on-the-glitter/silver-08.gif",
+    "name": "White",
+    "generatedName": "White",
+    "brightness": "0.320",
+    "sortOrder": 10007,
+    "hue": 1.1,
+    "colorCodes": [
+        "#FFFFFF",
+        "#525252"
+    ],
+    "colorWeights": [
+        0.52,
+        0.48
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1250,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "silver-08"
+}

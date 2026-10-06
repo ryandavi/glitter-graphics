@@ -1,0 +1,32 @@
+{
+    "id": 226,
+    "url": "images/glitter/bring-on-the-glitter/violet-01.gif",
+    "name": "Purple and Red",
+    "generatedName": "Purple and Red",
+    "brightness": "0.480",
+    "sortOrder": 7008,
+    "hue": 0.811,
+    "colorCodes": [
+        "#8A05DD",
+        "#EF9C99",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.55,
+        0.32,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 1957,
+    "category": "bring-on-the-glitter",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "violet-01"
+}

@@ -1,10 +1,10 @@
 {
     "id": 24,
-    "url": "images/glitter/ember/ember_red.gif",
+    "url": "images/glitter/velvet-embers/ember-06.gif",
     "name": "Red",
     "generatedName": "Very Dark Vivid Magenta",
     "brightness": "0.190",
-    "sortOrder": 70,
+    "sortOrder": 6,
     "hue": 0.875,
     "colorCodes": [
         "#330033",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "ember",
+    "category": "velvet-embers",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -32,5 +32,8 @@
         "Red",
         "Vivid"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "ember_red"
+    ],
+    "originalName": "ember-06"
 }

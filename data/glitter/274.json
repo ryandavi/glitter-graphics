@@ -1,0 +1,34 @@
+{
+    "id": 274,
+    "url": "images/glitter/star-spangled/free-10.gif",
+    "name": "Purple",
+    "generatedName": "Purple",
+    "brightness": "0.800",
+    "sortOrder": 9,
+    "hue": 0.792,
+    "colorCodes": [
+        "#CC99FF",
+        "#6600CC",
+        "#CA99B4",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.42,
+        0.37,
+        0.14,
+        0.07
+    ],
+    "frameCount": 11,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 4636,
+    "category": "star-spangled",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "free-10"
+}

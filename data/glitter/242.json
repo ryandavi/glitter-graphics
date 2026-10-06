@@ -1,0 +1,32 @@
+{
+    "id": 242,
+    "url": "images/glitter/star-dust/twinkle-002.gif",
+    "name": "Yellow and Red",
+    "generatedName": "Yellow and Red",
+    "brightness": "0.590",
+    "sortOrder": 2,
+    "hue": 0.176,
+    "colorCodes": [
+        "#BBA962",
+        "#BE8F89",
+        "#F3F0E8"
+    ],
+    "colorWeights": [
+        0.63,
+        0.19,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 5690,
+    "category": "star-dust",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "twinkle-002"
+}

@@ -1,0 +1,44 @@
+{
+    "id": 220,
+    "url": "images/glitter/stardrops/Sparkbutton-goldish.gif",
+    "name": "Spark Button",
+    "generatedName": "Orange, Purple, and Yellow",
+    "brightness": "0.530",
+    "sortOrder": 1004,
+    "hue": 0.105,
+    "colorCodes": [
+        "#B67F5E",
+        "#E9DCD2",
+        "#B47FB1",
+        "#CCC275",
+        "#97BCC2",
+        "#973727"
+    ],
+    "colorWeights": [
+        0.45,
+        0.18,
+        0.15,
+        0.13,
+        0.04,
+        0.03
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 61,
+    "height": 29,
+    "fileSize": 4049,
+    "category": "stardrops",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": [],
+    "originalName": "Sparkbutton-goldish",
+    "appearances": [
+        {
+            "set": "bring-on-the-glitter",
+            "originalName": "nude-02"
+        }
+    ]
+}

@@ -1,10 +1,10 @@
 {
     "id": 73,
-    "url": "images/glitter/sparkle/glitter_burn-sienna.gif",
+    "url": "images/glitter/bring-on-the-glitter/nude-03.gif",
     "name": "Burn Sienna",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 50,
+    "sortOrder": 5008,
     "hue": 0.083,
     "colorCodes": [
         "#B48778"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 5675,
-    "category": "sparkle",
+    "category": "bring-on-the-glitter",
     "isPixelated": 1,
     "tags": [
         "Beige",
@@ -28,5 +28,8 @@
         "Muted",
         "Warm"
     ],
-    "searchTerms": []
+    "searchTerms": [
+        "glitter_burn-sienna"
+    ],
+    "originalName": "nude-03"
 }
