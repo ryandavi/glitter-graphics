@@ -559,10 +559,11 @@ isLayerContentLocked(layer) {
 		if (asset.frameCount <= 1 && !asset.isAnimated) {
 			return 'Static';
 		}
+		const frames = `${asset.frameCount} ${asset.frameCount === 1 ? 'frame' : 'frames'}`;
 		const rate = asset.isVariableFramerate
-			? 'Variable'
-			: asset.frameRate || 'Unknown';
-		return `${asset.frameCount}<span class="setting-separator"> @ </span>${rate}<span class="setting-unit">FPS</span>`;
+			? 'variable'
+			: asset.frameRate ? `${asset.frameRate} fps` : '';
+		return rate ? `${frames}<span class="setting-separator"> · </span>${rate}` : frames;
 	}
 
 	// Populate a glitter asset-info block (thumbnail + name + badges + size +

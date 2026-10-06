@@ -511,7 +511,7 @@ class ShapeGlitterManager {
 			this.ui.fillImageThumbnail.classList.toggle('empty', !asset);
 		}
 		if (this.ui.fillImageName) this.ui.fillImageName.textContent = asset?.name || 'No image selected';
-		if (this.ui.fillImageChange) this.ui.fillImageChange.textContent = asset ? 'Change' : 'Choose Image';
+		setAssetChangeLabel(this.ui.fillImageChange, asset ? 'Change' : 'Choose Image');
 		if (this.ui.fillImageFit) {
 			const normalizedFit = normalizeImageFit(fill?.fit);
 			this.ui.fillImageFit.value = (normalizedFit === 'none' && fill?.tile) ? 'tile' : normalizedFit;

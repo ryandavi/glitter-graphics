@@ -7934,20 +7934,75 @@ body.tool-select .preview-container.is-over-picked-layer {
 
 .property-panel .asset-info {
   --asset-summary-thumbnail-size: 34px;
+  --asset-summary-chevron-size: var(--font-size-md);
+  position: relative;
   gap: var(--property-pad);
   margin: 0 var(--property-gutter);
   padding: var(--spacing-sm) var(--property-pad);
   border: 0;
   border-radius: var(--property-r-field);
-  background: var(--color-bg-secondary);
+  background: none;
 }
 .property-panel .asset-info:not([hidden]) + .property-row {
   margin-top: calc(var(--property-set-gap) - var(--property-row-gap));
 }
 
 .property-panel .asset-info-header {
+  position: relative;
+  z-index: 1;
   gap: var(--spacing-sm);
   align-items: center;
+  padding-right: calc(var(--asset-summary-chevron-size) + var(--spacing-sm));
+  pointer-events: none;
+}
+
+.property-panel .asset-info-change {
+  min-height: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-secondary);
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.property-panel .asset-info-change:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.property-panel .asset-info-change:hover:not(:disabled) {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-tertiary);
+  filter: none;
+}
+.property-panel .asset-info-change {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 0 var(--property-pad);
+  border-radius: inherit;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+.property-panel .asset-info-change > .name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.property-panel .asset-info-change > svg.icon {
+  font-size: var(--asset-summary-chevron-size);
+}
+.property-panel .asset-info-change:hover, .property-panel .asset-info-change.target-active {
+  color: var(--color-text-primary);
 }
 
 .property-panel .asset-info-thumbnail {
@@ -7987,7 +8042,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   flex-wrap: nowrap;
   grid-column: 1/-1;
   gap: 0;
+  min-width: 0;
   padding: 0;
+  overflow: hidden;
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   white-space: nowrap;
@@ -8002,6 +8059,10 @@ body.tool-select .preview-container.is-over-picked-layer {
   color: inherit;
   font-size: inherit;
   font-weight: var(--font-weight-normal);
+}
+.property-panel .asset-info-meta > .property-meta-cell > .property-value > .setting-unit,
+.property-panel .asset-info-meta > .property-meta-cell > .property-value > .setting-separator {
+  color: inherit;
 }
 .property-panel .asset-info-meta > .property-meta-cell + .property-meta-cell > .property-value::before {
   content: "·";

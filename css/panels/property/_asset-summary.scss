@@ -1,27 +1,57 @@
 @use '../../mixins' as *;
 
 // ===== Asset summary =======================================================
-// One row inside a section: thumbnail, name, one muted meta line, Change. One
-// of the few boxes left in a panel, so a box means "an object you can swap".
+// One row inside a section: thumbnail, name, one muted meta line. The row is a
+// picker field: its Change button is stretched over it and paints the field
+// (border, hover, focus), with a trailing chevron. One of the few boxes left
+// in a panel, so a box means "an object you can swap". It is one height always.
 
 .property-panel .asset-info {
 	--asset-summary-thumbnail-size: 34px;
+	--asset-summary-chevron-size: var(--font-size-md);
+	position: relative;
 	gap: var(--property-pad);
 	// Horizontal margin insets it; vertical separation is the source stack's gap.
 	margin: 0 var(--property-gutter);
 	padding: var(--spacing-sm) var(--property-pad);
 	border: 0;
 	border-radius: var(--property-r-field);
-	background: var(--color-bg-secondary);
+	background: none;
 
 	// The chip is the section's identity, so the row after it stands off by the
 	// set gap whether or not the schema put that row in the same set.
 	&:not([hidden]) + .property-row { margin-top: calc(var(--property-set-gap) - var(--property-row-gap)); }
 }
 
+// The content rides above the button and lets every pointer event through.
 .property-panel .asset-info-header {
+	position: relative;
+	z-index: 1;
 	gap: var(--spacing-sm);
 	align-items: center;
+	padding-right: calc(var(--asset-summary-chevron-size) + var(--spacing-sm));
+	pointer-events: none;
+}
+
+.property-panel .asset-info-change {
+	@include flat-control(0);
+	display: flex;
+	position: absolute;
+	inset: 0;
+	align-items: center;
+	justify-content: flex-end;
+	width: 100%;
+	padding: 0 var(--property-pad);
+	border-radius: inherit;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+
+	> .name { @include visually-hidden; }
+
+	> svg.icon { font-size: var(--asset-summary-chevron-size); }
+
+	&:hover,
+	&.target-active { color: var(--color-text-primary); }
 }
 
 .property-panel .asset-info-thumbnail {
@@ -61,7 +91,9 @@
 	flex-wrap: nowrap;
 	grid-column: 1 / -1;
 	gap: 0;
+	min-width: 0;
 	padding: 0;
+	overflow: hidden;
 	color: var(--color-text-tertiary);
 	font-size: var(--font-size-xs);
 	white-space: nowrap;
@@ -75,6 +107,10 @@
 			color: inherit;
 			font-size: inherit;
 			font-weight: var(--font-weight-normal);
+
+			// One muted line: units and separators do not stand out in it.
+			> .setting-unit,
+			> .setting-separator { color: inherit; }
 		}
 
 		+ .property-meta-cell > .property-value::before {

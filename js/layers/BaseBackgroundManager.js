@@ -345,7 +345,7 @@ class BaseBackgroundManager {
 			}
 			this.ui.imageThumbnail.classList.toggle('empty', !hasImage);
 		}
-		if (this.ui.imageChange) this.ui.imageChange.textContent = hasImage ? 'Replace' : 'Choose Image';
+		setAssetChangeLabel(this.ui.imageChange, hasImage ? 'Replace' : 'Choose Image');
 		this.updateGlitterInfo(layer);
 		if (this.sparkleFieldHost) syncFieldControls(this.sparkleFieldHost, layer);
 	}

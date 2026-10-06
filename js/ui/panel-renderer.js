@@ -694,7 +694,15 @@ function setInlineProcessingStatus(status, options = {}) {
 	status.setAttribute('aria-busy', active ? 'true' : 'false');
 }
 
-// The asset chip: thumbnail, name, badges and a Change button.
+// The asset row's button holds a chevron beside its label, so the label is set
+// through here rather than with textContent.
+function setAssetChangeLabel(button, label) {
+	const name = button?.querySelector('.name');
+	if (name) name.textContent = label;
+}
+
+// The asset row: thumbnail, name and one meta line. The whole row is the
+// Change button (it is stretched over the row), so the row never grows.
 function buildAssetInfo(options) {
 	const info = tplClone('tpl-asset-info');
 	info.id = options.info;
@@ -718,10 +726,11 @@ function buildAssetInfo(options) {
 	const badges = info.querySelector('.asset-info-badges');
 	badges.id = options.badges;
 	badges.dataset.role = 'asset-badges';
-	const change = info.querySelector('button');
+	const change = info.querySelector('.asset-info-change');
 	change.id = options.change;
 	change.dataset.role = 'asset-change';
-	change.textContent = options.changeLabel || 'Change';
+	change.title = options.title || '';
+	setAssetChangeLabel(change, options.changeLabel || 'Change');
 	const meta = info.querySelectorAll('.asset-info-meta .property-value');
 	if (options.compact) {
 		info.querySelector('.asset-info-meta')?.remove();
