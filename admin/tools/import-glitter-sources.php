@@ -29,6 +29,9 @@ class GlitterSourceImport
 		$this->paths = new AssetPathService($config);
 		$this->root = $this->paths->managedRoot('glitter');
 		$this->map = $map;
+		foreach ($map['deferredFiles'] ?? [] as $file) {
+			if (!preg_match('#^[a-zA-Z0-9_/-]+\.(gif|png|jpe?g)$#i', $file) || $file[0] === '/') throw new RuntimeException('Unsafe deferred file path');
+		}
 		$slugs = [];
 		foreach (array_merge($map['roots'], $map['sets']) as $set) {
 			$this->paths->validateSlug($set['slug']);
@@ -82,6 +85,7 @@ class GlitterSourceImport
 		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->root, FilesystemIterator::SKIP_DOTS));
 		foreach ($iterator as $file) {
 			$relative = str_replace('\\', '/', substr($file->getPathname(), strlen($this->root) + 1));
+			if (in_array($relative, $this->map['deferredFiles'] ?? [], true)) continue;
 			if (!$file->isFile() || strpos($relative, 'ms-office-texture/') === 0 || strpos($relative, '.thumbs/') !== false || !preg_match('/\.(gif|png|jpe?g)$/i', $relative)) continue;
 			$key = strtolower(str_replace('\\', '/', $file->getRealPath()));
 			$source = $sources[$key] ?? null;
@@ -139,6 +143,7 @@ class GlitterSourceImport
 
 	public function report($plan)
 	{
+		foreach ($this->map['deferredFiles'] ?? [] as $file) echo 'DEFER ', $file, " (left untouched)\n";
 		echo "Planned categories (counts remain owned tiles only):\n";
 		foreach (array_merge($this->map['roots'], $this->map['sets']) as $set) {
 			echo '  ', $set['slug'], ' — ', $set['name'], ' (parent: ', $set['parent'] ?? 'none', ')', isset($set['renameFrom']) ? ' rename from ' . $set['renameFrom'] : '', "\n";

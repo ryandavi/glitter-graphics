@@ -71,11 +71,15 @@ try {
 		],
 	];
 	$import = new GlitterSourceImport($db, $testConfig, $map);
+	copy("$root/images/glitter/sparkelies/platinum.gif", "$root/$directory/images/deferred.gif");
+	$map['deferredFiles'] = ['deferred.gif'];
+	$import = new GlitterSourceImport($db, $testConfig, $map);
 	$plan = $import->plan();
 	checkLibrary(count($plan) === 4, 'Wrong distinct-image count');
 	checkLibrary((int)$db->query('SELECT COUNT(*) FROM glitter')->fetch_row()[0] === 2, 'Dry run changed records');
 	checkLibrary(is_file("$root/$directory/images/sparkle/duplicate-ruby.gif"), 'Dry run removed a file');
 	$import->apply($plan);
+	checkLibrary(md5_file("$root/$directory/images/deferred.gif") === md5_file("$root/images/glitter/sparkelies/platinum.gif"), 'Deferred file changed');
 	$assets = $api->exportAssets();
 	checkLibrary(count($assets) === 3, 'Import did not collapse duplicates');
 	$ruby = array_values(array_filter($assets, function ($asset) { return $asset['name'] === 'Ruby'; }))[0];
