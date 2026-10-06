@@ -7,17 +7,17 @@ class AssetBrowserRail {
 		this.selection = { root: null, set: null };
 		this.element = document.createElement('div');
 		this.element.className = 'asset-browser-rails';
+		// The browser's Style / Creator control names the first picker.
 		this.rows = ['Style', 'Set'].map(text => {
-			const row = document.createElement('label');
+			const row = document.createElement('div');
 			row.className = 'asset-browser-rail';
-			const label = document.createElement('span');
-			label.textContent = text;
 			const select = document.createElement('select');
+			select.setAttribute('aria-label', text);
 			select.addEventListener('change', () => {
 				if (row === this.rows[0]) this.select(select.value);
 				else this.select(this.selection.root, select.value || null);
 			});
-			row.append(label, select);
+			row.appendChild(select);
 			this.element.appendChild(row);
 			return row;
 		});
@@ -28,19 +28,18 @@ class AssetBrowserRail {
 		this.onChange(this.selection);
 	}
 
-	render(items, favorites, mode) {
+	render(items, mode) {
 		if (mode !== this.mode) { this.mode = mode; this.selection = { root: null, set: null }; }
 		const counts = this.catalog.getCategoryCounts(items);
 		const roots = mode === 'creator' ? this.catalog.getCreators(items).map(creator => ({ ...creator, count: creator.items.length }))
 			: this.catalog.getRoots().map(root => ({ ...root, count: this.catalog.getRootCount(root, counts) })).filter(root => root.count);
-		if (favorites) roots.push(favorites);
 		if (!roots.some(root => root.id === this.selection.root)) this.selection = { root: roots[0]?.id || null, set: null };
 		const root = this.selection.root;
-		const selectedItems = root === LIBRARY_FAVORITES_ID ? [] : mode === 'creator' ? this.catalog.getCreatorItems(root, items) : this.catalog.getRootItems(root, items);
+		const selectedItems = mode === 'creator' ? this.catalog.getCreatorItems(root, items) : this.catalog.getRootItems(root, items);
 		const selectedCounts = this.catalog.getCategoryCounts(selectedItems);
-		const sets = root === LIBRARY_FAVORITES_ID ? [] : mode === 'creator' ? this.catalog.getSetsByCreator(root, items) : this.catalog.getSets(root).filter(set => counts[set.id]);
+		const sets = mode === 'creator' ? this.catalog.getSetsByCreator(root, items) : this.catalog.getSets(root).filter(set => counts[set.id]);
 		if (!sets.some(set => set.id === this.selection.set)) this.selection.set = null;
-		this.rows[0].firstElementChild.textContent = mode === 'creator' ? 'Creator' : 'Style';
+		this.rows[0].querySelector('select').setAttribute('aria-label', mode === 'creator' ? 'Creator' : 'Style');
 		this.updateSelect(this.rows[0], roots, root);
 		this.rows[1].hidden = !sets.length;
 		this.updateSelect(this.rows[1], [{ id: '', name: 'All sets', count: selectedItems.length }, ...sets.map(set => ({ ...set, count: selectedCounts[set.id] }))], this.selection.set || '');

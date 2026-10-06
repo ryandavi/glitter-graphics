@@ -16,6 +16,10 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	reduceMotion: { default: () => false },
 	showAllControls: { default: () => false },
 	filterPreviewLevel: { default: () => 'still' },
+	// The Library view menu: tile size ('s' | 'm' | 'l') for every kind's grid,
+	// and whether the Quick picks row shows.
+	libraryTileSize: { default: () => 'm' },
+	libraryQuickPicks: { default: () => true },
 	// The Library's per-kind asset id lists: { glitter: [id, ...], font: [...] }.
 	libraryRoots: { default: () => ({}), keepOnReset: true },
 	libraryRecents: { default: () => ({}), keepOnReset: true },

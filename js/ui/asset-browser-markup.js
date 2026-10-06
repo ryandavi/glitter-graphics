@@ -264,3 +264,33 @@ function setupLibrarySearchToggle(editor) {
 		}
 	});
 }
+
+// Library header view menu: the tile size of every kind's grid, and the Quick
+// picks row. Both live in PREFERENCES; the section carries them for the
+// stylesheet (`data-tile-size`, `.quick-picks-off`).
+function setupLibraryViewMenu() {
+	const root = document.getElementById('libraryViewMenu');
+	const panel = document.getElementById('libraryViewMenuPanel');
+	const section = document.getElementById('designGallerySection');
+	if (!root || !panel || !section) return;
+	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel });
+	const sync = () => {
+		const size = PREFERENCES.get('libraryTileSize');
+		const quickPicks = PREFERENCES.get('libraryQuickPicks');
+		section.dataset.tileSize = size;
+		section.classList.toggle('quick-picks-off', !quickPicks);
+		panel.querySelectorAll('[data-tile-size]').forEach((item) => {
+			item.setAttribute('aria-current', String(item.dataset.tileSize === size));
+		});
+		panel.querySelector('[data-quick-picks]')?.setAttribute('aria-current', String(quickPicks));
+	};
+	panel.addEventListener('click', (event) => {
+		const item = event.target.closest('.app-menu-item');
+		if (!item) return;
+		if (item.dataset.tileSize) PREFERENCES.set('libraryTileSize', item.dataset.tileSize);
+		else PREFERENCES.set('libraryQuickPicks', !PREFERENCES.get('libraryQuickPicks'));
+	});
+	PREFERENCES.onChange('libraryTileSize', sync);
+	PREFERENCES.onChange('libraryQuickPicks', sync);
+	sync();
+}

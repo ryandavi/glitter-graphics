@@ -44,20 +44,17 @@ class AssetBrowser {
 		};
 		this.setHeader = new AssetSetHeader(() => this.refresh());
 		this.elements.categoryGrid.before(this.setHeader.element);
-		this.recentLead = document.createElement('div');
-		this.recentLead.className = 'asset-browser-recent';
-		this.recentLead.hidden = true;
-		this.elements.categoryGrid.before(this.recentLead);
-		// Assets the open project already uses, for "match the other one".
-		// Same one-row strip as Recent.
-		this.projectLead = document.createElement('div');
-		this.projectLead.className = 'asset-browser-recent asset-browser-project';
-		this.projectLead.hidden = true;
-		this.elements.categoryGrid.before(this.projectLead);
-		// Each strip is one row: as many items as the panel width fits.
-		const fitRows = () => this._fitLeadRows();
-		new ResizeObserver(fitRows).observe(this.recentLead);
-		new ResizeObserver(fitRows).observe(this.projectLead);
+		// Quick picks: what the open project already uses (for "match the other
+		// one"), then recents. One row, as many tiles as the panel width fits.
+		// The Library view menu shows or hides it (libraryQuickPicks).
+		this.shortcuts = document.createElement('div');
+		this.shortcuts.className = 'asset-browser-shortcuts';
+		this.shortcuts.hidden = true;
+		this.shortcutGrid = document.createElement('div');
+		this.shortcutGrid.className = 'asset-grid visible';
+		this.shortcuts.append(this.createHeading('Quick picks'), this.shortcutGrid);
+		this.elements.categoryGrid.before(this.shortcuts);
+		new ResizeObserver(() => this._fitShortcutRow()).observe(this.shortcuts);
 		this.indexLead = document.createElement('div');
 		this.indexLead.className = 'asset-browser-index-lead';
 		this.indexLead.hidden = true;
@@ -71,15 +68,8 @@ class AssetBrowser {
 		this.viewControl.className = 'segmented-control asset-browser-views';
 		this.viewControl.setAttribute('aria-label', 'Browse library by');
 		this.viewControl.hidden = true;
-		for (const [view, label] of [['style', 'Style'], ['creator', 'Creator']]) {
-			const button = document.createElement('button');
-			button.type = 'button';
-			button.className = 'segmented-option';
-			button.textContent = label;
-			button.dataset.view = view;
-			button.addEventListener('click', () => { this.browseView = view; this.folderView?.resetOrigin(); this.setState('CATEGORY_LIST'); });
-			this.viewControl.appendChild(button);
-		}
+		this.addViewOption('style', 'Style');
+		this.addViewOption('creator', 'Creator');
 		this.elements.content.before(this.viewControl);
 
 		// Store parent containers
@@ -97,16 +87,6 @@ class AssetBrowser {
 		this.catalog = new LibraryCatalog(this.categories, (category, item) => Attribution.resolve(category, item));
 		if (this.layout === 'rail') {
 			this.elements.browser.classList.add('asset-browser-wall');
-			this.shortcutDisclosure = document.createElement('details');
-			this.shortcutDisclosure.className = 'asset-browser-shortcuts';
-			const summary = document.createElement('summary');
-			summary.textContent = 'Quick picks';
-			this.recentLead.before(this.shortcutDisclosure);
-			this.shortcutDisclosure.append(summary, this.recentLead, this.projectLead);
-			const mobile = window.matchMedia(`(max-width: ${CONFIG.ui.mobile.breakpoint}px)`);
-			this.shortcutDisclosure.open = !mobile.matches;
-			mobile.addEventListener('change', () => { this.shortcutDisclosure.open = !mobile.matches; });
-			this.shortcutDisclosure.addEventListener('toggle', () => this._fitLeadRows());
 			for (const event of ['layerChanged', 'imageLoaded', 'imageRemoved']) {
 				window.addEventListener(event, () => this.updateShortcuts());
 			}
@@ -115,8 +95,13 @@ class AssetBrowser {
 				this.setState('CATEGORY_LIST');
 			});
 			this.rail.selection.root = PREFERENCES.get('libraryRoots')[this.prefix] || this.catalog.getRoots()[0]?.id;
-			this.elements.categoryGrid.before(this.viewControl, this.rail.element, this.setHeader.element);
-			this.elements.itemGrid.classList.add('asset-glitter-wall');
+			// The wall's navigation is one pinned toolbar: browse-by, then the
+			// root and set pickers. Favorites is a view of its own, not a root.
+			this.addViewOption('favorites', 'Favorites');
+			this.toolbar = document.createElement('div');
+			this.toolbar.className = 'asset-browser-toolbar';
+			this.toolbar.append(this.viewControl, this.rail.element);
+			this.elements.categoryGrid.before(this.toolbar, this.setHeader.element);
 		}
 		this.setupIntersectionObserver();
 		this.setupEventListeners();
@@ -124,6 +109,16 @@ class AssetBrowser {
 
 		// Show browser
 		this.elements.browser.classList.add('visible');
+	}
+
+	addViewOption(view, label) {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'segmented-option';
+		button.textContent = label;
+		button.dataset.view = view;
+		button.addEventListener('click', () => { this.browseView = view; this.folderView?.resetOrigin(); this.setState('CATEGORY_LIST'); });
+		this.viewControl.appendChild(button);
 	}
 
 	async loadCategories(path) {
@@ -198,7 +193,12 @@ class AssetBrowser {
 	// Search results, and a grouped kind's category list, are one listing of
 	// items under category headings.
 	isListingState() {
-		return this.state === 'SEARCH_RESULTS' || this.folderView?.isUnknownListing() || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
+		return this.state === 'SEARCH_RESULTS' || Boolean(this.wallGroups) || this.folderView?.isUnknownListing() || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
+	}
+
+	// The wall as one flat grid (a grouped wall is a listing).
+	isWallState() {
+		return Boolean(this.rail) && this.state !== 'SEARCH_RESULTS' && !this.wallGroups;
 	}
 
 	isPagedState() {
@@ -241,16 +241,16 @@ class AssetBrowser {
 		this.elements.itemGrid.classList.remove('visible');
 		this.setHeader.element.hidden = true;
 		this.carriedLead.hidden = true;
-		this.projectLead.hidden = true;
 		this.updateViewControl();
 		this.indexLead.hidden = true;
-		this.recentLead.hidden = true;
-		if (this.shortcutDisclosure) this.shortcutDisclosure.hidden = true;
+		this.shortcuts.hidden = true;
+		this.wallGroups = null;
 
 		if (this.rail) {
 			const search = this.state === 'SEARCH_RESULTS';
 			this.elements.browser.querySelector('.asset-browser-header').hidden = !search;
-			this.rail.element.hidden = search;
+			this.toolbar.hidden = search;
+			this.rail.element.hidden = search || this.browseView === 'favorites';
 			if (search) { this.setHeader.render(null, []); this.renderSearchResults(); }
 			else this.renderRail();
 			return;
@@ -268,37 +268,66 @@ class AssetBrowser {
 	}
 
 	rememberRoot(root) {
-		if (!root || this.browseView !== 'style' || root === LIBRARY_FAVORITES_ID) return;
+		if (!root || this.browseView !== 'style') return;
 		const roots = PREFERENCES.get('libraryRoots');
 		if (roots[this.prefix] !== root) PREFERENCES.set('libraryRoots', { ...roots, [this.prefix]: root });
 	}
 
 	renderRail() {
-		this._renderRecentLead();
-		this._renderProjectLead();
-		this.shortcutDisclosure.hidden = false;
+		this._renderShortcuts();
 		const items = this.getFilteredItems();
-		const selection = this.rail.render(items, this.getFavoritesCategory(items), this.browseView);
-		this.currentCategoryId = selection.set || selection.root;
-		const category = selection.set ? this.catalog.getCategoryById(selection.set) : null;
 		let wall;
-		if (selection.root === LIBRARY_FAVORITES_ID) wall = this.contentManager.getFavoriteItems(items);
-		else {
+		let category = null;
+		let grouped = false;
+		if (this.browseView === 'favorites') {
+			this.currentCategoryId = LIBRARY_FAVORITES_ID;
+			wall = this.contentManager.getFavoriteItems(items);
+		} else {
+			const selection = this.rail.render(items, this.browseView);
+			this.currentCategoryId = selection.set || selection.root;
+			category = selection.set ? this.catalog.getCategoryById(selection.set) : null;
 			wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
 			if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
+			// A style is one color-ordered wall. A creator's sets are unrelated
+			// to each other, so each keeps its own heading and color order.
+			else grouped = this.browseView === 'creator';
 		}
 		this.setHeader.render(category, wall);
 		this.wallItems = this.setHeader.sort(wall);
+		this.wallGroups = grouped ? this.getSetGroups(wall) : null;
 		this.elements.itemGrid.replaceChildren();
-		this.elements.itemGrid.classList.add('visible');
+		this.elements.searchResults.replaceChildren();
 		this.currentOffset = 0;
 		if (category) this.renderCarriedItems(category);
+		if (this.wallGroups) {
+			this.elements.searchResults.classList.add('visible');
+			this.loadListingItems();
+			return;
+		}
+		this.elements.itemGrid.classList.add('visible');
 		this.loadRailItems();
+	}
+
+	// `items` under one heading per set, in category order. Null when they
+	// are all one set.
+	getSetGroups(items) {
+		const bySet = new Map();
+		items.forEach(item => {
+			if (!bySet.has(item.category)) bySet.set(item.category, []);
+			bySet.get(item.category).push(item);
+		});
+		if (bySet.size < 2) return null;
+		const order = id => {
+			const index = this.categories.findIndex(category => category.id === id);
+			return index < 0 ? Infinity : index;
+		};
+		return [...bySet.entries()].sort((a, b) => order(a[0]) - order(b[0]))
+			.map(([id, setItems]) => ({ id, name: this.getCategoryPath(id), items: this.setHeader.sort(setItems) }));
 	}
 
 	loadRailItems() {
 		const batch = this.wallItems.slice(this.currentOffset, this.currentOffset + this.batchSize);
-		if (!this.wallItems.length) { this.showEmptyState('No items found'); return; }
+		if (!this.wallItems.length) { this.showEmptyState(this.browseView === 'favorites' ? 'No favorites yet' : 'No items found'); return; }
 		batch.forEach(item => this.elements.itemGrid.appendChild(this.createItemElement(item)));
 		this.currentOffset += batch.length;
 		this.contentManager.updateSelection?.();
@@ -320,13 +349,9 @@ class AssetBrowser {
 	handleFavoritesChanged() {
 		if (this.state === 'SEARCH_RESULTS') return;
 		if (this.rail) {
+			if (this.browseView !== 'favorites') return;
 			this.preserveScrollPosition(() => {
-				const items = this.getFilteredItems();
-				const showingFavorites = this.rail.selection.root === LIBRARY_FAVORITES_ID;
-				const favorites = this.getFavoritesCategory(items) || (showingFavorites ? { id: LIBRARY_FAVORITES_ID, name: 'Favorites', count: 0 } : null);
-				this.rail.render(items, favorites, this.browseView);
-				if (!showingFavorites) return;
-				this.wallItems = this.setHeader.sort(this.contentManager.getFavoriteItems(items));
+				this.wallItems = this.setHeader.sort(this.contentManager.getFavoriteItems(this.getFilteredItems()));
 				const existing = new Map([...this.elements.itemGrid.children].map(tile => [String(tile.dataset.id), tile]));
 				const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.batchSize));
 				const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
@@ -436,8 +461,8 @@ class AssetBrowser {
 		// Update header
 		this.elements.backBtn.disabled = true;
 		this.elements.title.textContent = this.displayName;
-		this._renderRecentLead();
-		this._renderProjectLead();
+		this._renderShortcuts();
+		if (!this.shortcuts.hidden) this.contentManager.updateSelection?.();
 		this._renderIndexLead();
 
 		if (this.layout === 'grouped') {
@@ -454,64 +479,26 @@ class AssetBrowser {
 		this.populateCategoryCards();
 	}
 
-	// Shortcut updates reuse tiles and leave the paged wall intact.
-	_renderRecentLead() {
-		this._renderLeadRow(this.recentLead, 'Recent', this.contentManager.getRecentItems());
-	}
-
-	_renderProjectLead() {
-		this._renderLeadRow(this.projectLead, 'In this project', this.contentManager.getProjectItems());
-	}
-
-	_renderLeadRow(lead, title, items) {
+	// Project assets first, then recents. Updates reuse tiles and leave the
+	// paged wall intact.
+	_renderShortcuts() {
 		const filtered = new Set(this.getFilteredItems());
-		const shown = items.filter((item) => filtered.has(item));
-		if (this.rail) {
-			let grid = lead.querySelector('.asset-grid');
-			if (!grid) {
-				const heading = document.createElement('h3');
-				heading.className = 'asset-browser-section-title property-block-title';
-				heading.textContent = title;
-				grid = document.createElement('div');
-				grid.className = 'asset-grid visible asset-browser-recent-grid';
-				lead.append(heading, grid);
-			}
-			const existing = new Map([...grid.querySelectorAll('.asset-option')].map(tile => [String(tile.dataset.id), tile]));
-			const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
-			for (const child of [...grid.children]) if (!tiles.includes(child)) child.remove();
-			tiles.forEach((tile, index) => {
-				if (grid.children[index] !== tile) grid.insertBefore(tile, grid.children[index] || null);
-			});
-			if (!shown.length) {
-				const empty = document.createElement('span');
-				empty.className = 'asset-browser-shortcuts-empty';
-				empty.textContent = 'None yet';
-				grid.appendChild(empty);
-			}
-			lead.hidden = false;
-			this._fitLeadRows();
-			return;
-		}
-		lead.replaceChildren();
-		if (!shown.length) { lead.hidden = true; return; }
-		const heading = document.createElement('h3');
-		heading.className = 'asset-browser-section-title property-block-title';
-		heading.textContent = title;
-		const grid = document.createElement('div');
-		grid.className = 'asset-grid visible asset-browser-recent-grid';
-		shown.forEach((item) => grid.appendChild(this.createItemElement(item)));
-		lead.append(heading, grid);
-		lead.hidden = false;
-		this._fitLeadRows();
-		this.contentManager.updateSelection?.();
+		const items = [...new Set([...this.contentManager.getProjectItems(), ...this.contentManager.getRecentItems()])]
+			.filter((item) => filtered.has(item));
+		const grid = this.shortcutGrid;
+		const existing = new Map([...grid.children].map(tile => [String(tile.dataset.id), tile]));
+		const tiles = items.map(item => existing.get(String(item.id)) || this.createItemElement(item));
+		for (const child of [...grid.children]) if (!tiles.includes(child)) child.remove();
+		tiles.forEach((tile, index) => {
+			if (grid.children[index] !== tile) grid.insertBefore(tile, grid.children[index] || null);
+		});
+		this.shortcuts.hidden = !items.length;
+		this._fitShortcutRow();
 	}
 
 	updateShortcuts() {
 		if (!this.rail || this.state === 'SEARCH_RESULTS') return;
-		this.preserveScrollPosition(() => {
-			this._renderRecentLead();
-			this._renderProjectLead();
-		});
+		this.preserveScrollPosition(() => this._renderShortcuts());
 		this.contentManager.updateSelection?.();
 	}
 
@@ -531,15 +518,12 @@ class AssetBrowser {
 
 	// The grid's resolved auto-fill tracks are the count that fits one row;
 	// later items hide rather than wrap or scroll.
-	_fitLeadRows() {
-		[this.recentLead, this.projectLead].forEach((lead) => {
-			const grid = lead?.querySelector('.asset-browser-recent-grid');
-			const tracks = grid ? getComputedStyle(grid).gridTemplateColumns : 'none';
-			if (!tracks || tracks === 'none') return;
-			const fits = tracks.trim().split(/\s+/).length;
-			Array.from(grid.children).forEach((item, index) => {
-				item.style.display = index < fits ? '' : 'none';
-			});
+	_fitShortcutRow() {
+		const grid = this.shortcutGrid;
+		if (!grid.clientWidth) return;
+		const fits = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length;
+		Array.from(grid.children).forEach((item, index) => {
+			item.style.display = index < fits ? '' : 'none';
 		});
 	}
 
@@ -553,7 +537,7 @@ class AssetBrowser {
 	}
 
 	hasLeadItems() {
-		return [this.indexLead, this.recentLead, this.projectLead].some((lead) => lead.querySelector('.asset-option'));
+		return [this.indexLead, this.shortcuts].some((lead) => lead.querySelector('.asset-option'));
 	}
 
 	getFavoritesCategory(items = this.getFilteredItems()) {
@@ -706,14 +690,14 @@ class AssetBrowser {
 	// ===== LAZY LOADING =====
 
 	getPagedItemCount() {
-		if (this.rail && this.state !== 'SEARCH_RESULTS') return this.wallItems.length;
+		if (this.isWallState()) return this.wallItems.length;
 		if (this.state === 'CATEGORY_DETAIL') return this.getCategoryItems(this.currentCategoryId).length;
 		if (this.isListingState()) return this.getListingItems().length;
 		return 0;
 	}
 
 	loadNextBatch() {
-		if (this.rail && this.state !== 'SEARCH_RESULTS') this.loadRailItems();
+		if (this.isWallState()) this.loadRailItems();
 		else if (this.state === 'CATEGORY_DETAIL') this.loadCategoryItems();
 		else if (this.isListingState()) this.loadListingItems();
 	}
@@ -778,6 +762,7 @@ class AssetBrowser {
 			byCategory.get(item.category).push(item);
 		});
 
+		if (this.wallGroups) return this.wallGroups;
 		const group = (id, groupItems) => ({ id, name: this.getCategoryPath(id), items: groupItems });
 		if (this.folderView?.isCreatorDetail()) return this.getUnknownGroups(items);
 		if (this.state === 'SEARCH_RESULTS') {
@@ -813,7 +798,7 @@ class AssetBrowser {
 		}
 
 		// A grouped kind is a small collection: its category list renders whole.
-		const size = this.state === 'CATEGORY_LIST' ? entries.length : this.batchSize;
+		const size = this.state === 'CATEGORY_LIST' && !this.rail ? entries.length : this.batchSize;
 		const batch = entries.slice(this.currentOffset, this.currentOffset + size);
 
 		if (batch.length === 0) {
@@ -884,9 +869,12 @@ class AssetBrowser {
 	}
 
 	updateViewControl() {
-		this.viewControl.hidden = !this.schema.creatorView || this.state !== 'CATEGORY_LIST' || this.getCreators(this.contentManager.getAllContent()).filter(creator => creator.id !== '__unknown').length < 2;
+		const creators = Boolean(this.schema.creatorView) && this.getCreators(this.contentManager.getAllContent()).filter(creator => creator.id !== '__unknown').length >= 2;
+		// The wall always offers Favorites; a folder kind only switches Style / Creator.
+		this.viewControl.hidden = this.state !== 'CATEGORY_LIST' || !(creators || this.rail);
 		this.viewControl.querySelectorAll('button').forEach(button => {
 			const active = button.dataset.view === this.browseView;
+			if (button.dataset.view === 'creator') button.hidden = !creators;
 			button.classList.toggle('active', active);
 			button.setAttribute('aria-pressed', String(active));
 		});
@@ -913,13 +901,8 @@ class AssetBrowser {
 		grid.className = 'asset-grid visible';
 		items.forEach(item => {
 			const card = this.createItemElement(item);
-			const entry = document.createElement('div');
-			entry.className = 'asset-browser-carried-item';
-			const label = document.createElement('div');
-			label.className = 'category-card-byline';
-			label.textContent = 'From ' + (this.getCategoryById(item.category)?.name || item.category);
-			entry.append(card, label);
-			grid.appendChild(entry);
+			card.title = `${item.name} · from ${this.getCategoryById(item.category)?.name || item.category}`;
+			grid.appendChild(card);
 		});
 		this.carriedLead.appendChild(grid);
 	}

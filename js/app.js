@@ -80,6 +80,7 @@ class GlitterEditor {
 		renderPanelSections(this);
 		renderAssetBrowsers();
 		setupLibrarySearchToggle(this);
+		setupLibraryViewMenu();
 		this.renderTransformPanels();
 		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
 		this.contextToolbarRenderer.render();

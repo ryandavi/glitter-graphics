@@ -30,12 +30,14 @@
 		display: grid;
 		// Let the gallery's own inline size choose the count. An 84px floor keeps
 		// thumbnails recognizable while naturally yielding roughly 2 / 3 / 4
-		// columns in 280 / 320-360 / 400-450px sidebars.
-		grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr));
-		gap: var(--spacing-sm);
+		// columns in 280 / 320-360 / 400-450px sidebars. A kind sets its own
+		// floor and gap (--asset-tile-floor, --asset-tile-gap); the Library view
+		// menu scales every floor (--asset-tile-scale). Every grid of a kind,
+		// Quick picks included, is this one grid.
+		grid-template-columns: repeat(auto-fill, minmax(min(calc(var(--asset-tile-floor, 84px) * var(--asset-tile-scale, 1)), 100%), 1fr));
+		gap: var(--asset-tile-gap, var(--spacing-sm));
 
-		>.asset-option,
-		>.asset-browser-carried-item>.asset-option {
+		>.asset-option {
 			aspect-ratio: 1;
 			overflow: hidden;
 			transform: translateZ(0);
@@ -123,8 +125,9 @@
 
 	// Font cards are sample + name, not square tiles: two across in a normal
 	// sidebar.
+	&[data-gallery-content="fonts"] { --asset-tile-floor: 130px; }
+
 	&[data-gallery-content="fonts"] .asset-grid {
-		grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr));
 
 		>.asset-option {
 			aspect-ratio: auto;
@@ -189,26 +192,23 @@
 	@media (hover: none) { opacity: 0.85; }
 }
 
-// Recent: one row that scrolls sideways, above the categories.
-.asset-browser-recent {
+// Quick picks: one row above the browser, in the kind's own tile grid. No
+// scroller: AssetBrowser._fitShortcutRow hides the tiles past the auto-fill
+// track count, so a wider panel shows more of them. The Library view menu
+// turns the row off (setupLibraryViewMenu).
+.asset-browser-shortcuts {
+	margin-bottom: var(--spacing-md);
+
 	&[hidden] { display: none; }
-	&:not([hidden]) ~ .asset-browser-recent:not([hidden]) { margin-top: var(--spacing-md); }
-
-	// Whichever view follows the strips: hidden siblings sit between them.
-	&:not([hidden]) + .asset-browser-index-lead,
-	&:not([hidden]) ~ .category-grid.visible,
-	&:not([hidden]) ~ .search-results-container.visible,
-	&:not([hidden]) ~ .asset-set-header:not([hidden]),
-	&:not([hidden]) ~ .asset-grid.visible { margin-top: var(--spacing-md); }
-
-	// One row, no scroller: AssetBrowser._fitRecentRow hides the recents past
-	// the auto-fill track count, so a wider panel shows more of them.
-	>.asset-grid.asset-browser-recent-grid {
-		grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-	}
 }
 
-.asset-options[data-gallery-content="fonts"] .asset-browser-recent > .asset-grid.asset-browser-recent-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+.design-gallery-section.quick-picks-off .asset-browser-shortcuts { display: none; }
+
+// Library view menu tile sizes; medium is each kind's own floor.
+.design-gallery-section {
+	&[data-tile-size="s"] { --asset-tile-scale: 0.75; }
+	&[data-tile-size="l"] { --asset-tile-scale: 1.5; }
+}
 
 :root[data-theme='light'] [data-gallery-content="brush-tips"] .asset-option {
 	&.is-vector>img { filter: none; }
@@ -226,13 +226,11 @@
 	font-size: var(--font-size-xs);
 	color: var(--color-text-secondary);
 }
-.asset-browser-views:not([hidden]) { margin-bottom: var(--spacing-sm); }
+// A folder kind's Style / Creator control sits above its content; the wall's
+// is inside .asset-browser-toolbar.
+.asset-browser > .asset-browser-views:not([hidden]) { margin-bottom: var(--spacing-sm); }
+.asset-browser-views > .segmented-option[hidden] { display: none; }
 .asset-browser-carried:not([hidden]) { margin-top: var(--spacing-md); }
-.asset-browser-carried-item {
-	display: grid;
-	align-content: start;
-	gap: var(--spacing-xs);
-}
 .brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
 
 
