@@ -1,6 +1,7 @@
 // The wall's picker: one select holding the whole tree. Home, then each style
-// (or creator) with its sets grouped under it. The navigation owns selection;
-// filters and item rendering belong to the browser.
+// (or creator) with its sets grouped under it. An Up button beside it steps
+// one level toward home. The navigation owns selection; filters and item
+// rendering belong to the browser.
 class AssetBrowserRail {
 	constructor(catalog, onChange) {
 		this.catalog = catalog;
@@ -14,7 +15,15 @@ class AssetBrowserRail {
 			const option = this.field.selectedOptions[0];
 			if (option) this.select(option.dataset.root, option.dataset.set || null);
 		});
-		this.element.appendChild(this.field);
+		// Up, not Back: the tree has a parent for every level and no history.
+		this.upButton = document.createElement('button');
+		this.upButton.type = 'button';
+		this.upButton.className = 'btn-flat is-icon asset-browser-rail-up';
+		this.upButton.appendChild(createIcon('arrow-up'));
+		this.upButton.addEventListener('click', () => {
+			if (this.parent) this.select(this.parent.root, this.parent.set);
+		});
+		this.element.append(this.upButton, this.field);
 	}
 
 	select(root, set = null) {
@@ -22,8 +31,9 @@ class AssetBrowserRail {
 		this.onChange(this.selection);
 	}
 
-	// The tree as picker entries: a root with sets is a group that opens with
-	// its own "All" entry; a root that is nothing but one set is that set.
+	// The tree as picker entries, every row under a heading: a root with sets
+	// is a group that opens with its own "All" entry; the roots without sets
+	// (a root that is nothing but one set is that set) share a closing group.
 	getEntries(items, mode) {
 		const creator = mode === 'creator';
 		const counts = this.catalog.getCategoryCounts(items);
@@ -31,18 +41,23 @@ class AssetBrowserRail {
 			? this.catalog.getCreators(items).map(entry => ({ id: entry.id, name: entry.name, count: entry.items.length, icon: entry.items[0]?.thumbnailUrl || entry.items[0]?.url, items: entry.items }))
 			: this.catalog.getRoots().map(root => ({ ...root, count: this.catalog.getRootCount(root, counts) })).filter(root => root.count);
 		const entries = [];
+		const single = [];
 		if (!creator && roots.length) entries.push({ root: LIBRARY_ALL_ID, set: null, name: 'All styles', count: items.length });
 		roots.forEach(root => {
 			const setCounts = creator ? this.catalog.getCategoryCounts(root.items) : counts;
 			const sets = (creator ? this.catalog.getSetsByCreator(root.id, items) : this.catalog.getSets(root.id)).filter(set => setCounts[set.id]);
 			const entry = { root: root.id, set: null, name: root.name, count: root.count, icon: root.icon };
-			if (!sets.length) entries.push(entry);
-			else if (sets.length === 1 && setCounts[sets[0].id] === root.count) entries.push({ ...entry, set: sets[0].id });
+			if (!sets.length) single.push(entry);
+			else if (sets.length === 1 && setCounts[sets[0].id] === root.count) single.push({ ...entry, set: sets[0].id });
 			else {
 				entries.push({ ...entry, name: 'All ' + root.name, group: root.name });
-				sets.forEach(set => entries.push({ root: root.id, set: set.id, name: set.name, count: setCounts[set.id], icon: set.icon, group: root.name }));
+				sets.forEach(set => entries.push({ root: root.id, set: set.id, name: set.name, count: setCounts[set.id], icon: set.icon, group: root.name, child: true }));
 			}
 		});
+		// With nothing grouped above them, the single roots need no heading.
+		const grouped = entries.some(entry => entry.group);
+		const heading = creator ? 'More creators' : 'More styles';
+		single.forEach(entry => entries.push(grouped ? { ...entry, group: heading } : entry));
 		return entries;
 	}
 
@@ -61,8 +76,10 @@ class AssetBrowserRail {
 		entries.forEach(entry => {
 			const option = this.createOption(entry);
 			option.selected = entry === current;
-			if (!entry.group) { group = null; nodes.push(option); return; }
+			if (!entry.group) { nodes.push(option); return; }
 			if (group?.label !== entry.group) {
+				// One rule sets home apart from the groups under it.
+				if (!group && nodes.length) nodes.push(document.createElement('hr'));
 				group = document.createElement('optgroup');
 				group.label = entry.group;
 				nodes.push(group);
@@ -71,17 +88,33 @@ class AssetBrowserRail {
 		});
 		this.field.replaceChildren(...nodes);
 		this.field.disabled = !entries.length;
+
+		// A set's parent is its style or creator; theirs is home, where there is one.
+		this.parent = (current?.set && entries.find(entry => entry.root === current.root && !entry.set))
+			|| (current && current.root !== LIBRARY_ALL_ID && entries.find(entry => entry.root === LIBRARY_ALL_ID))
+			|| null;
+		const label = this.parent ? `Up to ${this.parent.name}` : 'Up';
+		this.upButton.disabled = !this.parent;
+		this.upButton.title = label;
+		this.upButton.setAttribute('aria-label', label);
 		return this.selection;
 	}
 
-	// Thumbnail, name, count. A browser without the customizable select shows
-	// the row's text alone, "Name (count)"; the styled row sets the count
-	// apart itself and drops the parentheses.
+	// Thumbnail, name, count; a set under its style's "All" row leads with the
+	// subdirectory arrow. A browser without the customizable select shows the
+	// row's text alone, "Name (count)"; the styled row sets the count apart
+	// itself and drops the parentheses.
 	createOption(entry) {
 		const option = document.createElement('option');
 		option.value = entry.set ? `${entry.root}/${entry.set}` : entry.root;
 		option.dataset.root = entry.root;
 		if (entry.set) option.dataset.set = entry.set;
+		if (entry.child) {
+			const arrow = createIcon('subdirectory');
+			arrow.classList.add('asset-browser-rail-child');
+			arrow.setAttribute('aria-hidden', 'true');
+			option.appendChild(arrow);
+		}
 		if (entry.icon) {
 			const icon = document.createElement('img');
 			icon.className = 'asset-browser-rail-icon';

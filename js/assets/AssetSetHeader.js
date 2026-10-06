@@ -8,8 +8,8 @@ class AssetSetHeader {
 		this.element.hidden = true;
 	}
 
-	// Name, then one quiet line of who made it and how big it is, then what it
-	// is and any note.
+	// Name and size, then one quiet line of who made it, then what it is and
+	// any note.
 	render(category, items) {
 		if (this.categoryId !== category?.id) this.originalOrder = false;
 		this.categoryId = category?.id || null;
@@ -22,7 +22,10 @@ class AssetSetHeader {
 		const title = document.createElement('span');
 		title.className = 'asset-set-header-title';
 		title.textContent = category.name;
-		line.appendChild(title);
+		const count = document.createElement('span');
+		count.className = 'asset-set-header-count';
+		count.textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
+		line.append(title, count);
 		if (items.some(item => item.originalOrder != null)) {
 			const toggle = document.createElement('button');
 			toggle.type = 'button';
@@ -35,13 +38,14 @@ class AssetSetHeader {
 			});
 			line.appendChild(toggle);
 		}
-		const meta = Attribution.buildCreditLine(attr) || document.createElement('div');
-		meta.classList.add('asset-set-header-meta');
-		const count = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
-		meta.append(meta.childNodes.length ? ` · ${count}` : count);
 		const heading = document.createElement('div');
 		heading.className = 'asset-set-header-heading';
-		heading.append(line, meta);
+		heading.appendChild(line);
+		const credit = Attribution.buildCreditLine(attr);
+		if (credit) {
+			credit.classList.add('asset-set-header-meta');
+			heading.appendChild(credit);
+		}
 		this.element.appendChild(heading);
 		const paragraph = (className, text) => {
 			const node = document.createElement('p');

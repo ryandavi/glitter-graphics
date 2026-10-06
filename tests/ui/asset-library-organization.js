@@ -194,7 +194,7 @@ async function main() {
 			expect(!b.rail.element.hidden, 'Clearing search did not restore rails');
 			b.browseView = 'creator'; b.setState('CATEGORY_LIST');
 			expect(new Set([...b.rail.field.options].map(option => option.dataset.root)).size === 4, 'Expected three creators and Unknown');
-			expect(b.rail.field.querySelectorAll('optgroup').length === 1, 'Only a creator with several sets is a group');
+			expect(b.rail.field.querySelectorAll('optgroup').length === 2 && !b.rail.field.querySelector(':scope > option'), 'Every creator must sit under a heading');
 			choose(0, 'aylana');
 			expect(b.wallItems.length === 2, 'Creator All must cross styles');
 			clickSet('bring-on-the-glitter');

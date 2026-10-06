@@ -85,7 +85,7 @@
     {
         "id": "velvet-embers",
         "parent": "ember",
-        "name": "Aylana's Bring On The Glitter",
+        "name": "Velvet Embers",
         "icon": "images/glitter/velvet-embers/ember-01.gif",
         "color": "#ff69b4",
         "description": "VelvetEmbers from Aylana's Bring On The Glitter.",
@@ -163,7 +163,7 @@
     },
     {
         "id": "noise-2",
-        "parent": null,
+        "parent": "noise",
         "name": "Chunky Noise",
         "icon": "images/glitter/bring-on-the-glitter/black-001.gif",
         "color": "#ff69b4",
