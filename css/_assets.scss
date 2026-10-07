@@ -14,18 +14,6 @@
 	flex: 1;
 	overflow-y: auto;
 
-	&[data-browser-state="category-list"] .asset-browser-header { display: none; }
-
-	&[data-browser-state="search-results"] .asset-browser-header {
-		background: var(--color-bg-accent-tint);
-		border-color: var(--color-accent-border);
-
-		>.asset-browser-title {
-			color: var(--color-accent);
-			text-transform: none;
-		}
-	}
-
 	.asset-grid {
 		display: grid;
 		// Let the gallery's own inline size choose the count. An 84px floor keeps
@@ -261,45 +249,6 @@
 	&:not(.visible) {
 		display: none;
 	}
-
-	>.asset-browser-header {
-		display: flex;
-		position: sticky;
-		top: 0;
-		z-index: 2;
-		align-items: center;
-		gap: var(--spacing-sm);
-		// One compact line (the picker strip's height): back, then the title.
-		min-height: var(--control-height);
-		padding: var(--spacing-sm);
-		border-bottom: 1px solid var(--color-border);
-		background: var(--color-bg-secondary);
-
-		&[hidden] { display: none; }
-
-		>button {
-			width: var(--control-height);
-			height: var(--control-height);
-			flex-shrink: 0;
-
-			&:disabled {
-				cursor: not-allowed;
-				opacity: 0.5;
-			}
-		}
-
-		>.asset-browser-title {
-			font-weight: var(--font-weight-semibold);
-			font-size: var(--font-size-sm);
-			color: var(--color-text-secondary);
-			text-transform: none;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-	}
-
-
 
 	>.asset-browser-content {
 		flex: 1;

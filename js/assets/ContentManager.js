@@ -116,11 +116,21 @@ class ContentManager {
 			});
 			this.ui.searchInput.addEventListener('keydown', (event) => {
 				if (event.key === 'Enter') this.recordSearch();
+				if (event.key === 'Escape') {
+					event.preventDefault();
+					event.stopPropagation();
+					this.clearSearch();
+				}
 			});
 			// `change` fires when the field loses focus with a new value.
 			this.ui.searchInput.addEventListener('change', () => this.recordSearch());
 			this.ui.searchInput.addEventListener('focus', () => this.renderRecentSearches());
 		}
+
+		this.ui.searchClear?.addEventListener('click', () => {
+			this.clearSearch();
+			this.ui.searchInput?.focus();
+		});
 
 		// Filter toggle button
 		if (this.ui.filterToggle) {
@@ -575,7 +585,7 @@ class ContentManager {
 		const host = this.ui.recentSearches;
 		if (!host) return;
 		const list = this.getRecentSearches();
-		const show = list.length > 0 && !this.ui.searchInput?.value.trim();
+		const show = list.length > 0 && !this.ui.searchInput?.value.trim() && this.ui.activeFilterSummary?.hidden !== false;
 		host.hidden = !show;
 		if (!show) return;
 		const label = document.createElement('span');
@@ -585,7 +595,9 @@ class ContentManager {
 			const chip = document.createElement('button');
 			chip.type = 'button';
 			chip.className = 'filter-chip text-filter-chip';
-			chip.textContent = entry;
+			const text = document.createElement('span');
+			text.textContent = entry;
+			chip.appendChild(text);
 			chip.title = `Search for “${entry}”`;
 			chip.addEventListener('click', () => {
 				if (!this.ui.searchInput) return;
@@ -754,9 +766,16 @@ class ContentManager {
 		return [...this.content, ...this.userContent];
 	}
 
+	clearSearch() {
+		if (this.ui.searchInput) this.ui.searchInput.value = '';
+		this.activeFilters.search = '';
+		this.browser.setState('CATEGORY_LIST');
+		this.updateClearFiltersButton();
+	}
+
 	handleSearch(query) {
 		this.activeFilters.search = query.toLowerCase().trim();
-		this.browser.handleSearch(query);
+		this.browser.handleSearch();
 		this.updateClearFiltersButton();
 		this.renderRecentSearches();
 	}
@@ -821,7 +840,9 @@ class ContentManager {
 		const searchSection = this.ui.searchInput?.closest('.glitter-search');
 		searchSection?.classList.toggle('has-active-search', Boolean(this.activeFilters.search));
 		searchSection?.classList.toggle('has-active-filters', filterCount > 0);
+		if (this.ui.searchClear) this.ui.searchClear.hidden = !this.ui.searchInput?.value;
 		this.renderActiveFilterSummary();
+		this.renderRecentSearches();
 		this.updateFilterResultsCount();
 		// The Library header mirrors this state; the admin has no Library.
 		window.syncLibrarySearchState?.();
@@ -918,7 +939,7 @@ class ContentManager {
 
 		if (key === 'search') {
 			if (this.ui.searchInput) this.ui.searchInput.value = '';
-			this.browser.handleSearch('');
+			this.browser.handleSearch();
 		}
 		this.syncFilterControls();
 		if (!this.activeFilters.search && this.browser.state === 'SEARCH_RESULTS') this.browser.setState('CATEGORY_LIST');
@@ -948,6 +969,8 @@ class ContentManager {
 			const chip = document.createElement('button');
 			chip.type = 'button';
 			chip.className = 'filter-chip is-removable';
+			chip.classList.toggle('is-search-term', filter.key === 'search');
+			chip.title = filter.label;
 			chip.setAttribute('aria-label', `Remove ${filter.label} filter`);
 			const label = document.createElement('span');
 			label.textContent = filter.label;

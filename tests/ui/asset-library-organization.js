@@ -255,16 +255,16 @@ async function main() {
 			expect(b.setHeader.element.textContent.includes('Transparent') && b.setHeader.element.textContent.includes('By Aylana'), 'A one-set style must carry the set credit');
 			library.activeFilters.colors.add('pink');
 			b.refresh();
-			expect(b.rail.field.options.length === 2 && b.rail.selection.root === 'transparent', 'Color-filtered roots/counts are wrong');
+			expect(b.state === 'SEARCH_RESULTS' && b.rail.element.hidden && b.getListingItems().length === 1, 'Color filters must show matching items across styles');
 			expect(!library.activeFilters.categories.size, 'Rail must not write category filters');
 			library.activeFilters.colors.clear();
 			library.activeFilters.special.add('multicolor');
 			b.refresh();
-			expect(!b.rail.field.options.length && b.elements.emptyState.classList.contains('visible'), 'Zero-count chips must hide');
+			expect(b.rail.element.hidden && b.elements.emptyState.classList.contains('visible') && b.setHeader.element.textContent === '0 results', 'Empty filtered results must hide browsing and show their count');
 			library.clearFilters();
 			library.activeFilters.search = 'blue-08';
 			b.setState('SEARCH_RESULTS');
-			expect(b.rail.element.hidden && b.setHeader.element.hidden, 'Search must hide rails');
+			expect(b.rail.element.hidden && !b.setHeader.element.hidden, 'Search must hide rails and show its result count');
 			expect(library.applyFilters().length === 1, 'Search should match later original name once');
 			expect(b.elements.searchResults.textContent.includes('Classic Sparkle'), 'Search group lacks its style');
 			library.activeFilters.search = 'sparkelies';
@@ -324,6 +324,30 @@ async function main() {
 						expect(browser.getPagedItemCount() === manager.applyFilters().length, `${browser.prefix}: Everything cut off assets`);
 					}
 				}
+				const filteredItem = browser.prefix === 'brushTip' ? manager.getAllContent().find(item => item.kind === 'raster') : first;
+				for (const view of ['categories', 'everything']) {
+					PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), [browser.prefix]: view });
+					browser.rail.select(LIBRARY_ALL_ID);
+					manager.activeFilters.categories.add(filteredItem.category);
+					browser.refresh();
+					const matches = manager.applyFilters();
+					expect(matches.length && browser.state === 'SEARCH_RESULTS' && browser.toolbar.hidden && !browser.homeCategories, `${browser.prefix}: filter-only results must replace covers`);
+					expect(browser.shortcuts.hidden && browser.indexLead.hidden && !browser.elements.categoryGrid.classList.contains('visible'), `${browser.prefix}: narrowed results must hide leads and covers`);
+					expect(browser.setHeader.element.textContent === `${matches.length} result${matches.length === 1 ? '' : 's'}`, `${browser.prefix}: filter-only result title`);
+					while (browser.currentOffset < browser.getPagedItemCount()) browser.loadNextBatch();
+					expect(browser.elements.searchResults.querySelectorAll('.asset-option').length === matches.length, `${browser.prefix}: filtered listing must page all matching assets`);
+					for (const group of browser.getListingGroups()) {
+						const section = browser.elements.searchResults.querySelector(`.category-section[data-category-id="${CSS.escape(String(group.id))}"]`);
+						expect(section?.querySelector('.asset-set-header-count').textContent === `${group.items.length} ${group.items.length === 1 ? 'item' : 'items'}`, `${browser.prefix}: filtered category count`);
+					}
+					manager.ui.searchInput.value = filteredItem.name;
+					manager.handleSearch(filteredItem.name);
+					browser.refresh();
+					manager.clearSearch();
+					expect(browser.state === 'SEARCH_RESULTS' && browser.toolbar.hidden, `${browser.prefix}: clearing query must retain filtered listing`);
+					manager.clearFilters();
+					expect(browser.state === 'CATEGORY_LIST' && browser.homeCategories === (view === 'categories' || browser.prefix === 'brushTip'), `${browser.prefix}: clearing narrowing must restore home`);
+				}
 				await browser.navigateToItem(first.id);
 				expect(browser.findItemElement(first) && browser.shortcuts.hidden, `${browser.prefix}: go-to-asset`);
 				while (!browser.rail.upButton.disabled) browser.rail.upButton.click();
@@ -332,11 +356,21 @@ async function main() {
 				browser.viewControl.querySelector('[data-view="favorites"]').click();
 				expect(browser.wallItems.length === 1 && browser.rail.element.hidden && browser.shortcuts.hidden, `${browser.prefix}: Favorites`);
 				browser.viewControl.querySelector('[data-view="style"]').click();
-				manager.activeFilters.search = first.name;
+				manager.ui.searchInput.value = first.name;
+				manager.handleSearch(first.name);
 				browser.setState('SEARCH_RESULTS');
 				expect(browser.toolbar.hidden && browser.shortcuts.hidden && browser.elements.searchResults.classList.contains('visible'), `${browser.prefix}: search`);
-				browser.elements.backBtn.click();
+				manager.ui.searchClear.click();
 				expect(browser.state === 'CATEGORY_LIST' && !browser.toolbar.hidden, `${browser.prefix}: search return`);
+				manager.ui.searchInput.value = first.name;
+				manager.handleSearch(first.name);
+				browser.setState('SEARCH_RESULTS');
+				await browser.navigateToItem(first.id);
+				expect(!manager.ui.searchInput.value && !manager.activeFilters.search && manager.ui.searchClear.hidden, `${browser.prefix}: source navigation must clear a matching query`);
+				manager.ui.searchInput.value = first.name;
+				manager.handleSearch(first.name);
+				manager.ui.searchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+				expect(!manager.ui.searchInput.value && browser.state === 'CATEGORY_LIST', `${browser.prefix}: Escape must clear search`);
 			}
 			const fonts = e.fontBrowserManager;
 			const system = fonts.ui.filtersContainer.querySelector('[data-filter="font-source"][data-value="system"]');

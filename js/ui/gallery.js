@@ -69,7 +69,7 @@ function syncLibrarySearchState() {
 	let active = false;
 	section.querySelectorAll('.gallery-search-section').forEach((host) => {
 		const search = host.querySelector(':scope > .glitter-search');
-		const summary = search?.querySelector(':scope > .active-filter-summary');
+		const summary = search?.querySelector('.active-filter-summary');
 		host.classList.toggle('has-filter-summary', Boolean(summary && !summary.hidden));
 		if (host.classList.contains('visible') && search?.matches('.has-active-search, .has-active-filters')) active = true;
 	});

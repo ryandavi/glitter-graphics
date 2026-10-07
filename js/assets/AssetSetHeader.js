@@ -8,7 +8,8 @@ class AssetSetHeader {
 		const count = document.createElement('span');
 		count.className = 'asset-set-header-count';
 		count.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`;
-		line.append(title, count);
+		line.appendChild(title);
+		if (itemCount != null) line.appendChild(count);
 		return line;
 	}
 

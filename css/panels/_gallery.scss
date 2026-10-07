@@ -53,13 +53,6 @@
 			&.active { color: var(--color-accent); }
 		}
 
-		// The open view menu drops over the search row, which stacks above the
-		// header on its own.
-		>.section-header.has-open-menu {
-			position: relative;
-			z-index: var(--z-panel);
-		}
-
 		// The view menu (setupLibraryViewMenu). Its slot holds the trigger and
 		// the dropdown; the trigger is the header action, so it reads like the
 		// search button beside it on every screen.
@@ -88,11 +81,10 @@
 		}
 
 		&:not(.library-search-open)>.design-gallery-content>.gallery-search-section>.glitter-search {
-			>.search-toggle-row,
-			>.recent-searches,
+			> .search-controls > .search-toggle-row,
+			> .search-controls > .search-chip-slot > .recent-searches,
 			>.filters-container { display: none; }
 
-			>.active-filter-summary { padding-top: var(--spacing-md); }
 		}
 
 		// Folded with nothing active, the host has nothing left to show.
@@ -103,42 +95,91 @@
 }
 
 .glitter-search {
+	--search-clear-size: 20px;
 	display: flex;
 	flex-direction: column;
 	position: relative;
 	z-index: 100;
 
-	>.search-toggle-row>.has-active-filters {
+	> .search-controls {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		padding: var(--spacing-md);
+		gap: var(--spacing-sm);
+	}
+
+	> .search-controls > .search-toggle-row>.has-active-filters {
 		color: var(--color-accent);
 		border-color: var(--color-accent-border);
 	}
 
-	&.has-active-search > .search-toggle-row > .search-input-wrapper > input,
-	&.has-active-filters > .search-toggle-row > .search-input-wrapper > input {
+	&.has-active-search > .search-controls > .search-toggle-row > .search-input-wrapper > input,
+	&.has-active-filters > .search-controls > .search-toggle-row > .search-input-wrapper > input {
 		border-color: var(--color-accent-border);
-		background: var(--color-bg-accent-tint);
 	}
 
-	>.active-filter-summary {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-xs);
-		padding: 0 var(--property-gutter) var(--spacing-md);
-
-		&[hidden] { display: none; }
+	> .search-controls > .search-toggle-row {
+		> .search-input-wrapper { height: var(--row-height); }
+		> [data-browser-role="filterToggle"] {
+			width: var(--row-height);
+			height: var(--row-height);
+		}
+		> .search-input-wrapper {
+			> input { 
+				height: 100%; padding-right: calc(var(--search-clear-size) + var(--spacing-xs) * 2); 
+			}
+			> .search-clear {
+				position: absolute;
+				right: var(--spacing-xs);
+				top: 50%;
+				transform: translateY(-50%);
+				display: grid;
+				place-items: center;
+				width: var(--search-clear-size);
+				height: var(--search-clear-size);
+				padding: 0;
+				border: 0;
+				border-radius: var(--radius-xs);
+				background: none;
+				color: var(--color-text-tertiary);
+				cursor: pointer;
+				> .icon { width: 14px; height: 14px; }
+				&:hover { color: var(--color-text-primary); }
+				&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
+				&[hidden] { display: none; }
+			}
+		}
 	}
 
-	// Recent search chips under an empty search field (renderRecentSearches).
-	>.recent-searches {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--spacing-md);
-		padding: 0 var(--property-gutter) var(--spacing-md);
+	> .search-controls > .search-chip-slot {
+		flex-shrink: 0;
+		// height: calc(var(--chip-height) + var(--spacing-md));
+		box-sizing: border-box;
 
-		&[hidden] { display: none; }
-
-		>.recent-searches-label {
+		> :is(.recent-searches, .active-filter-summary) {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-xs);
+			// The chip outline extends 4px beyond its border on every side.
+			// height: calc(var(--chip-height) + var(--spacing-xs) * 2);
+			box-sizing: border-box;
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			overscroll-behavior-x: contain;
+			scrollbar-width: none;
+			&[hidden] { display: none; }
+			> * { flex-shrink: 0; }
+		}
+		> .recent-searches > .filter-chip > span,
+		> .active-filter-summary > .is-search-term > span {
+			max-width: 16ch;
+			min-width: 0;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+		.recent-searches-label {
 			font-size: var(--font-size-xs);
 			color: var(--color-text-tertiary);
 		}
@@ -235,34 +276,20 @@
 		flex-direction: column;
 	}
 
-	// A filter group is a flat section, like any other in a panel: a title,
-	// then its chips or toggles, and one hairline under it.
-	.filter-section {
+	.filter-chips {
+		grid-column: 1 / -1;
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
 		gap: var(--spacing-sm);
-		padding: var(--property-section-pad-top) var(--property-gutter) var(--spacing-lg);
-		border-bottom: 1px solid var(--color-border);
+	}
 
-		>.filter-chips {
-			display: flex;
-			flex-wrap: wrap;
-			gap: var(--spacing-sm);
-		}
-
-		// The section owns the inset, so its shared toggle row must not add the
-		// property-row gutter a second time.
-		> .property-toggle-list > .property-row { padding-inline: 0; }
-
-		>.color-filter-chips {
-			display: grid;
-
-			grid-template-columns: repeat(auto-fit, minmax(var(--color-filter-chip-size), 1fr));
-			align-items: start;
-			grid-auto-rows: auto;
-			gap: var(--spacing-sm);
-		}
-
+	.color-filter-chips {
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(var(--color-filter-chip-size), 1fr));
+		align-items: start;
+		grid-auto-rows: auto;
+		gap: var(--spacing-sm);
 	}
 
 	>.filter-actions.property-set.property-actions {
@@ -376,7 +403,7 @@
 	min-height: 0;
 	border-bottom: 1px solid var(--color-border);
 
-	> .search-toggle-row {
+	> .search-controls {
 		flex-shrink: 0;
 	}
 
@@ -385,6 +412,7 @@
 		min-height: 0;
 		flex-direction: column;
 		gap: 0;
+		border-top: 1px solid var(--color-border);
 
 		> .filters-container-inner {
 			flex: 1;
@@ -680,4 +708,3 @@
 	&.selected,
 	&:focus-visible { outline-color: var(--color-accent); }
 }
-.asset-browser-header[hidden] { display: none; }

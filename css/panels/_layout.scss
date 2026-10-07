@@ -132,6 +132,11 @@
 
 .app-menu-panel {
 	@include menu-panel;
+
+	&.is-fixed-menu {
+		position: fixed;
+		right: auto;
+	}
 }
 
 .app-menu-separator {

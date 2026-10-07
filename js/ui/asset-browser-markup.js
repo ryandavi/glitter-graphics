@@ -12,6 +12,7 @@
 
 const ASSET_BROWSER_ID_GRAMMAR = Object.freeze({
 	search: '{p}Search',
+	searchClear: '{p}SearchClear',
 	filterToggle: '{p}FilterToggleBtn',
 	summary: '{p}ActiveFilterSummary',
 	recentSearches: '{p}RecentSearches',
@@ -21,8 +22,6 @@ const ASSET_BROWSER_ID_GRAMMAR = Object.freeze({
 	clear: 'clear{P}FiltersBtn',
 	close: 'close{P}FiltersBtn',
 	browser: '{p}Browser',
-	back: '{p}BrowserBack',
-	title: '{p}BrowserTitle',
 	content: '{p}BrowserContent',
 	empty: '{p}BrowserEmpty',
 	emptyText: '{p}BrowserEmptyText',
@@ -127,6 +126,7 @@ function getAssetBrowserUi(prefix) {
 	return {
 		panel: byId(getAssetBrowserSchema(prefix)?.browserHost),
 		searchInput: byId(ids.search),
+		searchClear: byId(ids.searchClear),
 		filterToggle: byId(ids.filterToggle),
 		filtersContainer: byId(ids.filters),
 		clearFiltersBtn: byId(ids.clear),
@@ -143,8 +143,6 @@ function getAssetBrowserElementIds(prefix) {
 	const ids = getAssetBrowserIds(prefix);
 	return {
 		browser: ids.browser,
-		backBtn: ids.back,
-		title: ids.title,
 		content: ids.content,
 		categoryGrid: ids.categoryGrid,
 		searchResults: ids.searchResults,
@@ -156,13 +154,17 @@ function getAssetBrowserElementIds(prefix) {
 }
 
 function buildAssetBrowserFilterSection(section, ids) {
-	const node = panelDiv('filter-section');
-	const label = panelDiv('property-group-label');
+	const node = tplClone('tpl-group');
+	const label = node.querySelector('.property-group-label');
 	label.textContent = section.kind === 'nameOnly' ? 'Filter' : section.label;
-	node.appendChild(label);
+	const card = panelDiv('property-card');
+	const body = panelDiv('property-card-body');
+	const set = panelDiv('property-set');
+	node.appendChild(card);
+	card.appendChild(body);
+	body.appendChild(set);
 
 	if (section.kind === 'nameOnly') {
-		const list = panelDiv('property-toggle-list');
 		const row = document.createElement('label');
 		row.className = 'property-row is-toggle';
 		const text = document.createElement('span');
@@ -175,8 +177,7 @@ function buildAssetBrowserFilterSection(section, ids) {
 		toggle.className = 'property-switch';
 		toggle.setAttribute('aria-hidden', 'true');
 		row.append(text, input, toggle);
-		list.appendChild(row);
-		node.appendChild(list);
+		set.appendChild(row);
 		return node;
 	}
 
@@ -193,7 +194,9 @@ function buildAssetBrowserFilterSection(section, ids) {
 			chips.appendChild(chip);
 		});
 	}
-	node.appendChild(chips);
+	const row = panelDiv('property-row is-stacked');
+	row.appendChild(chips);
+	set.appendChild(row);
 	return node;
 }
 
@@ -207,6 +210,7 @@ function renderAssetBrowsers() {
 			const search = tplClone('tpl-asset-search');
 			const input = role(search, 'search');
 			input.id = ids.search;
+			role(search, 'searchClear').id = ids.searchClear;
 			input.placeholder = schema.placeholder;
 			const toggle = role(search, 'filterToggle');
 			toggle.id = ids.filterToggle;
@@ -224,9 +228,8 @@ function renderAssetBrowsers() {
 		const browserHost = document.getElementById(schema.browserHost);
 		if (browserHost && !browserHost.children.length) {
 			const browser = tplClone('tpl-asset-browser');
-			['browser', 'back', 'title', 'content', 'empty', 'emptyText', 'categoryGrid', 'searchResults', 'itemGrid', 'sentinel']
+			['browser', 'content', 'empty', 'emptyText', 'categoryGrid', 'searchResults', 'itemGrid', 'sentinel']
 				.forEach((name) => { role(browser, name).id = ids[name]; });
-			role(browser, 'title').textContent = schema.title;
 			browserHost.appendChild(browser);
 		}
 	});
@@ -276,12 +279,12 @@ function setupLibrarySearchToggle(editor) {
 // Library header view menu: per-kind home view, shared tile size and Quick
 // picks. They live in PREFERENCES; the section carries grid settings for the
 // stylesheet (`data-tile-size`, `.quick-picks-off`).
-function setupLibraryViewMenu() {
+function setupLibraryViewMenu(editor) {
 	const root = document.getElementById('libraryViewMenu');
 	const panel = document.getElementById('libraryViewMenuPanel');
 	const section = document.getElementById('designGallerySection');
 	if (!root || !panel || !section) return;
-	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel, liftHost: document.getElementById('designGalleryHeader') });
+	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel, fixed: true, beforeOpen: () => editor?.setCollapsibleSectionOpen?.('designGallery', true, true) });
 	const sync = () => {
 		const size = PREFERENCES.get('libraryTileSize');
 		const quickPicks = PREFERENCES.get('libraryQuickPicks');

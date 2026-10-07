@@ -29,8 +29,6 @@ class AssetBrowser {
 		// HTML element references
 		this.elements = {
 			browser: document.getElementById(elementIds.browser),
-			backBtn: document.getElementById(elementIds.backBtn),
-			title: document.getElementById(elementIds.title),
 			content: document.getElementById(elementIds.content),
 			categoryGrid: document.getElementById(elementIds.categoryGrid),
 			searchResults: document.getElementById(elementIds.searchResults),
@@ -41,7 +39,7 @@ class AssetBrowser {
 			emptyClearFilters: document.getElementById(elementIds.emptyState)?.querySelector('.property-empty-action')
 		};
 		this.setHeader = new AssetSetHeader(() => this.refresh());
-		this.elements.categoryGrid.before(this.setHeader.element);
+		this.elements.content.prepend(this.setHeader.element);
 		// Quick picks: what the open project already uses (for "match the other
 		// one"), then recents. One row, as many tiles as the panel width fits.
 		// The Library view menu shows or hides it (libraryQuickPicks).
@@ -160,26 +158,6 @@ class AssetBrowser {
 		// Arrow keys move between cards; Enter or Space picks (createItemElement).
 		GlitterPresetLibrary.bindPickerNavigation(this.elements.browser, '.asset-option');
 		this.elements.emptyClearFilters?.addEventListener('click', () => this.contentManager.clearFilters());
-		this.elements.backBtn.addEventListener('click', () => {
-			// If in search, clear the search input which will trigger return to category list
-			if (this.state === 'SEARCH_RESULTS') {
-				const searchInput = this.contentManager.ui.searchInput;
-				if (searchInput) {
-					searchInput.value = '';
-					this.contentManager.activeFilters.search = '';
-				}
-				this.contentManager.updateClearFiltersButton();
-			}
-
-			this.setState('CATEGORY_LIST');
-
-			// Scroll to top when changing states
-			if (this.scrollContainer) {
-				this.scrollContainer.scrollTop = 0;
-			}
-
-
-		});
 	}
 
 	navigateToCategory(categoryId) {
@@ -224,11 +202,6 @@ class AssetBrowser {
 		this.currentCategoryId = categoryId;
 		this.currentOffset = 0;
 
-		// Update data attribute on parent
-		if (this.assetOptions) {
-			this.assetOptions.dataset.browserState = this.state.toLowerCase().replace('_', '-');
-		}
-
 		// Scroll to top when changing states
 		if (this.scrollContainer) {
 			this.scrollContainer.scrollTop = 0;
@@ -238,6 +211,11 @@ class AssetBrowser {
 	}
 
 	render() {
+		// Narrowing is cross-library, regardless of the saved home or rail view.
+		this.state = this.contentManager.hasActiveFilters() ? 'SEARCH_RESULTS' : 'CATEGORY_LIST';
+		if (this.assetOptions) {
+			this.assetOptions.dataset.browserState = this.state.toLowerCase().replace('_', '-');
+		}
 		// Hide all content containers first
 		this.elements.emptyState.classList.remove('visible');
 		this.elements.categoryGrid.classList.remove('visible');
@@ -253,7 +231,6 @@ class AssetBrowser {
 		this.homeCategories = false;
 		const search = this.state === 'SEARCH_RESULTS';
 		this.toolbar.hidden = search;
-		this.elements.browser.querySelector('.asset-browser-header').hidden = !search;
 		this.rail.element.hidden = search || this.browseView === 'favorites';
 		if (search) { this.setHeader.render(null, []); this.renderSearchResults(); }
 		else this.renderRail();
@@ -441,6 +418,10 @@ class AssetBrowser {
 			this.contentManager.clearFilters({ refreshBrowser: false });
 		}
 
+		const input = this.contentManager.ui.searchInput;
+		if (input) input.value = '';
+		this.contentManager.activeFilters.search = '';
+		this.contentManager.updateClearFiltersButton();
 		this.setState('CATEGORY_DETAIL', item.category);
 
 		// Wait for initial render
@@ -622,11 +603,12 @@ class AssetBrowser {
 
 	renderSearchResults() {
 		// Update header
-		this.elements.backBtn.disabled = false;
 		const query = this.contentManager.activeFilters.search;
 		const resultCount = this.getFilteredItems().length;
-		this.elements.title.textContent = `${resultCount} result${resultCount === 1 ? '' : 's'} for “${query}”`;
-		this.elements.title.setAttribute('aria-live', 'polite');
+		const line = AssetSetHeader.createTitleLine(`${resultCount} result${resultCount === 1 ? '' : 's'}${query ? ` for “${query}”` : ''}`);
+		this.setHeader.element.replaceChildren(line);
+		this.setHeader.element.setAttribute('aria-live', 'polite');
+		this.setHeader.element.hidden = false;
 
 		// Show search results container
 		this.elements.searchResults.classList.add('visible');
@@ -637,15 +619,11 @@ class AssetBrowser {
 		this.loadListingItems();
 	}
 
-	handleSearch(query) {
+	handleSearch() {
 		clearTimeout(this.searchDebounceTimer);
 
 		this.searchDebounceTimer = setTimeout(() => {
-			if (query && query.trim() !== '') {
-				this.setState('SEARCH_RESULTS');
-			} else {
-				this.setState('CATEGORY_LIST');
-			}
+			this.setState('CATEGORY_LIST');
 		}, 300);
 	}
 

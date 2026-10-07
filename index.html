@@ -43,7 +43,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=cdc075ab">
+	<link rel="stylesheet" href="css/style.css?v=358d1e49">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1609,15 +1609,20 @@
 	</template>
 	<template id="tpl-asset-search">
 		<div class="glitter-search">
-			<div class="search-toggle-row">
-				<div class="search-input-wrapper">
-					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
-					<input type="text" data-browser-role="search">
+			<div class="search-controls">
+				<div class="search-toggle-row">
+					<div class="search-input-wrapper">
+						<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+						<input type="text" data-browser-role="search">
+						<button class="search-clear" data-browser-role="searchClear" type="button" aria-label="Clear search" title="Clear search" hidden><svg class="icon" aria-hidden="true"><use href="#icon-x-mark"></use></svg></button>
+					</div>
+					<button class="btn-flat is-icon" data-browser-role="filterToggle" title="Open filters" aria-expanded="false"><svg class="icon"><use href="#icon-filter"></use></svg><span class="name">Filter</span></button>
 				</div>
-				<button class="btn-flat is-icon" data-browser-role="filterToggle" title="Open filters" aria-expanded="false"><svg class="icon"><use href="#icon-filter"></use></svg><span class="name">Filter</span></button>
+				<div class="search-chip-slot">
+					<div class="recent-searches" data-browser-role="recentSearches" role="group" aria-label="Recent searches" hidden></div>
+					<div class="active-filter-summary" data-browser-role="summary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
+				</div>
 			</div>
-			<div class="recent-searches" data-browser-role="recentSearches" role="group" aria-label="Recent searches" hidden></div>
-			<div class="active-filter-summary" data-browser-role="summary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 			<div class="filters-container" data-browser-role="filters">
 				<div class="filters-container-inner" data-browser-role="filterSections"></div>
 				<div class="filter-actions property-set property-actions is-split"><button class="btn-flat" data-browser-role="clear" disabled>Clear all</button><button class="btn-flat primary" data-browser-role="close" type="button">Show results</button></div>
@@ -1626,12 +1631,8 @@
 	</template>
 	<template id="tpl-asset-browser">
 		<div class="asset-browser" data-browser-role="browser">
-			<div class="asset-browser-header">
-				<button class="btn-icon-simple icon-wrapper sm" data-browser-role="back" disabled><svg class="icon"><use href="#icon-chevron-left"></use></svg><span class="name">Back</span></button>
-				<div class="asset-browser-title" data-browser-role="title"></div>
-			</div>
 			<div class="asset-browser-content" data-browser-role="content">
-				<div class="property-empty" data-browser-role="empty"><div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></div><div class="property-empty-title" data-browser-role="emptyText">No items found</div><button class="btn-text-with-icon property-empty-action" type="button" hidden>Clear search and filters</button></div>
+				<div class="property-empty" data-browser-role="empty"><div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></div><div class="property-empty-title" data-browser-role="emptyText">No items found</div><button class="btn-flat property-empty-action" type="button" hidden>Clear search and filters</button></div>
 				<div class="category-grid" data-browser-role="categoryGrid"></div>
 				<div class="search-results-container" data-browser-role="searchResults"></div>
 				<div class="asset-grid" data-browser-role="itemGrid"></div>
@@ -1782,7 +1783,7 @@
 	<script src="js/ui/tooltip.js?v=69670448"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=c01b60dc"></script>
-	<script src="js/ui/gallery.js?v=cffda189"></script>
+	<script src="js/ui/gallery.js?v=d3631fff"></script>
 	<script src="js/ui/preset-library.js?v=fcd22542"></script>
 	<script src="js/ui/template-library.js?v=f05db242"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -1818,13 +1819,13 @@
 	<script src="js/ui/gradient-editor.js?v=1f691cff"></script>
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
-	<script src="js/ui/asset-browser-markup.js?v=1c9959d9"></script>
+	<script src="js/ui/asset-browser-markup.js?v=436d3ac6"></script>
 	<script src="js/ui/scroll-regions.js?v=6a69b215"></script>
 	<script src="js/ui/panel-renderer.js?v=3e898ae6"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=77f5f8d5"></script>
-	<script src="js/ui/menu-popover.js?v=a3940d89"></script>
+	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=5b94bd2a"></script>
 	<script src="js/editor/settings.js?v=d1b9fc00"></script>
@@ -1885,12 +1886,12 @@
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
 	<script src="js/assets/LibraryCatalog.js?v=8578e98c"></script>
 	<script src="js/assets/AssetBrowserRail.js?v=d77f73d7"></script>
-	<script src="js/assets/AssetSetHeader.js?v=5a9f2d4a"></script>
-	<script src="js/assets/AssetBrowser.js?v=a4052512"></script>
-	<script src="js/assets/ContentManager.js?v=1c2a5705"></script>
+	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
+	<script src="js/assets/AssetBrowser.js?v=bcffd714"></script>
+	<script src="js/assets/ContentManager.js?v=d3b5c61b"></script>
 	<script src="js/assets/GlitterBrowserManager.js?v=dfd277f2"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=04a85e03"></script>
-	<script src="js/assets/BrushTipManager.js?v=3ff954ac"></script>
+	<script src="js/assets/BrushTipManager.js?v=079f443e"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
 	<script src="js/assets/FontBrowserManager.js?v=6002c785"></script>
@@ -1902,9 +1903,9 @@
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=72bc1db0"></script>
 	<script src="js/ui/text-edit.js?v=989a9459"></script>
-	<script src="js/layers/TextGlitterManager.js?v=0b5c2c33"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=f2636f98"></script>
-	<script src="js/layers/StickerManager.js?v=cf61b3dc"></script>
+	<script src="js/layers/TextGlitterManager.js?v=a5e2206d"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=962aa8a0"></script>
+	<script src="js/layers/StickerManager.js?v=e0444d22"></script>
 	<script src="js/layers/FilterLayerManager.js?v=951304e7"></script>
 	<script src="js/layers/FrameLayerManager.js?v=e14c3806"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=6e4484f9"></script>
@@ -1913,7 +1914,7 @@
 		<script src="js/systems/MobileManager.js?v=58e62a80"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=7d23e2d3"></script>
+	<script src="js/app.js?v=f0131c8c"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

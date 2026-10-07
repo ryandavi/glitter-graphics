@@ -112,7 +112,7 @@ class BrushTipManager extends ContentManager {
 			refresh: () => this.updatePickerStrip(),
 			reveal: () => {
 				this.editor.updateSidePanelUI(layer);
-				revealAssetBrowser(this.editor, this);
+				revealAssetBrowser(this.editor, this, this.editor.maskEditor.getBrushShape());
 			}
 		});
 		this.updateSelection();

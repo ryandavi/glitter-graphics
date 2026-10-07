@@ -198,7 +198,7 @@ class StickerManager {
 		if (layer?.type !== LayerType.STICKER || !getLayerPaintSlot(layer, slot)) return;
 		pickerOpenSession(this, { kind: 'glitter', layerId: layer.id, slot }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
 
@@ -207,7 +207,7 @@ class StickerManager {
 		if (layer?.type !== LayerType.STICKER) return;
 		pickerOpenSession(this, { kind: 'asset', layerId: layer.id }, {
 			refresh: () => this.updatePickerStrip(),
-			reveal: () => revealAssetBrowser(this.editor, this)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.stickerLibrary, layer.stickerSourceId)
 		});
 	}
 

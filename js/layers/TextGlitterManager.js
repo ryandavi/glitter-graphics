@@ -616,8 +616,7 @@ class TextGlitterManager {
 		this.ensureEffectData(layer, key);
 		this.openPickerSession(layer, key);
 		const selectedGlitterId = this.resolveSelectedGlitterId(layer);
-		if (selectedGlitterId) this.editor.glitterLibrary?.scrollToContent(selectedGlitterId);
-		revealAssetBrowser(this.editor, this.editor.glitterLibrary);
+		revealAssetBrowser(this.editor, this.editor.glitterLibrary, selectedGlitterId);
 		this.editor.updateStatus(`Choose ${this.getEffectTitle(key)} glitter, then press Esc or Done.`);
 	}
 
