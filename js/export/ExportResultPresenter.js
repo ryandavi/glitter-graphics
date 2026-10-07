@@ -3,7 +3,7 @@
 // Renders one buildExportReport() into the Export Ready modal and wires its
 // footer actions. What is shown, and when, is decided in export-report.js.
 class ExportResultPresenter {
-	constructor({ onStatus = () => {} } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; }
+	constructor({ onStatus = () => {}, onShow = () => {} } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; }
 	clear() { if (this.previewBlobUrl) URL.revokeObjectURL(this.previewBlobUrl); this.previewBlobUrl = null; }
 	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null }) {
 		this.clear();
@@ -49,10 +49,7 @@ class ExportResultPresenter {
 		actions.save.onclick = async () => { if (await saveBlobAs(file, file.name) === 'downloaded') this.onStatus(`Downloading ${file.name}`); };
 
 		document.querySelectorAll('#exportResultNav [data-export-view]').forEach((option) => { option.onclick = () => this._showView(option.dataset.exportView); });
-		const cleanup = () => { modal.classList.remove('visible'); video.pause(); this.clear(); };
-		document.getElementById('closeExportPreviewModal').onclick = cleanup;
-		modal.onclick = (event) => { if (event.target === modal) cleanup(); };
-		modal.classList.add('visible');
+		this.onShow();
 		// The frame is reused, so a new result starts at the top of the side column.
 		modal.querySelector('.export-side').scrollTop = 0;
 	}

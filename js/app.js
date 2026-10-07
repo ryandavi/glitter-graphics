@@ -370,7 +370,7 @@ class GlitterEditor {
 		initPixelScaler();
 		initTooltips();
 		installClipboardHandlers(this);
-		this.exportResultPresenter = new ExportResultPresenter({ onStatus: (message) => this.updateStatus(message) });
+		this.exportResultPresenter = new ExportResultPresenter({ onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal') });
 		this.exportProgressPresenter = new ExportProgressPresenter(this);
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
@@ -523,7 +523,7 @@ class GlitterEditor {
 				? 'These layers and everything on them will be permanently removed.'
 				: 'This layer and everything on it will be permanently removed.',
 			confirmLabel: 'Delete',
-			destructive: true
+			tone: 'danger', skippable: true
 		});
 		if (!confirmed) {
 			return false;
@@ -1112,6 +1112,8 @@ class GlitterEditor {
 
 		const confirmed = await this.confirmAction({
 			title: 'Clear All',
+			tone: 'danger',
+			skippable: false,
 			message: 'The image and all layers will be cleared.',
 			confirmLabel: 'Clear All'
 		});

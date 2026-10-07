@@ -7289,21 +7289,22 @@ body.tool-select .preview-container.is-over-picked-layer {
   bottom: var(--spacing-xs);
   left: var(--spacing-xs);
   z-index: 2;
-  width: 18px;
-  height: 18px;
+  display: grid;
+  place-items: center;
+  width: var(--asset-mark-size, 18px);
+  height: var(--asset-mark-size, 18px);
   border-radius: var(--radius-xs);
   background: var(--color-overlay);
   color: var(--color-text-on-accent);
 }
-.asset-slice-mark .icon, .asset-origin-mark .icon {
-  width: 14px;
-  height: 14px;
-  margin: 2px;
+.asset-slice-mark > .icon, .asset-origin-mark > .icon {
+  display: block;
+  width: calc(var(--asset-mark-size, 18px) - 4px);
+  height: calc(var(--asset-mark-size, 18px) - 4px);
 }
 
 .asset-origin-mark {
-  top: var(--spacing-xs);
-  bottom: auto;
+  --asset-mark-size: 14px;
   pointer-events: none;
 }
 
@@ -8610,12 +8611,21 @@ body.modal-open {
   box-sizing: border-box;
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   opacity: 0;
-  transition: opacity var(--transition-base);
+  transition: opacity var(--transition-base), display var(--transition-base) allow-discrete;
   backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 .modal-overlay.visible {
   display: flex;
   opacity: 1;
+}
+@starting-style {
+  .modal-overlay.visible {
+    opacity: 0;
+  }
+}
+.modal-overlay.is-stacked {
+  z-index: calc(var(--modal-z-index) + 1);
+  backdrop-filter: none;
 }
 .modal-overlay > .modal-content {
   box-sizing: border-box;
@@ -8848,79 +8858,6 @@ body.modal-open {
 
 .modal-error {
   color: var(--color-danger);
-}
-
-#confirmationModal .modal-body {
-  font-size: var(--font-size-title);
-}
-#confirmationModal .confirmation-message {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  max-height: min(50vh, 420px);
-  overflow-y: auto;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-}
-#confirmationModal .confirmation-message-copy,
-#confirmationModal .confirmation-message-outro {
-  margin: 0;
-}
-#confirmationModal .confirmation-message-copy {
-  color: var(--color-text-primary);
-}
-#confirmationModal .confirmation-subject {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2xs);
-  min-width: 0;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-control);
-  background: var(--color-bg-secondary);
-}
-#confirmationModal .confirmation-subject-label,
-#confirmationModal .confirmation-facts dt {
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-}
-#confirmationModal .confirmation-subject-value {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-  -webkit-user-select: text;
-     -moz-user-select: text;
-          user-select: text;
-}
-#confirmationModal .confirmation-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-sm) var(--spacing-lg);
-  margin: 0;
-}
-#confirmationModal .confirmation-facts > div {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-#confirmationModal .confirmation-facts dd {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  font-variant-numeric: tabular-nums;
-}
-#confirmationModal .confirmation-detail-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  margin: 0;
-  padding-left: var(--spacing-lg);
-  font-size: var(--font-size-sm);
-}
-#confirmationModal .confirmation-detail-list > li::marker {
-  color: var(--color-warning);
 }
 
 .modal-overlay > .content-dialog.onboarding-dialog, .modal-overlay > .content-dialog.document-dialog {
@@ -9178,6 +9115,11 @@ body.modal-open {
   animation: highlight 2s ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay {
+    transition: none;
+  }
+}
 /* ===== FORM MODALS ===== */
 .modal-overlay > .modal-content > .modal-body.modal-form {
   padding: 0;
@@ -9831,20 +9773,6 @@ body.modal-open {
   }
   #welcomeModal .welcome-actions > button {
     width: 100%;
-  }
-}
-
-@media (max-width: 800px) {
-  #confirmationModal .modal-content {
-    width: min(420px, 100vw - 24px);
-  }
-  #confirmationModal .modal-footer {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-  #confirmationModal .modal-footer > button {
-    width: 100%;
-    min-height: 48px;
   }
 }
 
@@ -11352,6 +11280,96 @@ body.modal-open {
     margin-top: var(--spacing-xl);
   }
 }
+.confirmation-dialog .modal-body {
+  font-size: var(--font-size-title);
+}
+.confirmation-dialog .confirmation-message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-height: min(50vh, 420px);
+  overflow-y: auto;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.confirmation-dialog .confirmation-message-copy,
+.confirmation-dialog .confirmation-message-outro {
+  margin: 0;
+}
+.confirmation-dialog .confirmation-message-copy {
+  color: var(--color-text-primary);
+}
+.confirmation-dialog .confirmation-subject {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xs);
+  min-width: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-secondary);
+}
+.confirmation-dialog .confirmation-subject-label,
+.confirmation-dialog .confirmation-facts dt {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+.confirmation-dialog .confirmation-subject-value {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+     -moz-user-select: text;
+          user-select: text;
+}
+.confirmation-dialog .confirmation-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm) var(--spacing-lg);
+  margin: 0;
+}
+.confirmation-dialog .confirmation-facts > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.confirmation-dialog .confirmation-facts dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.confirmation-dialog .confirmation-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding-left: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+.confirmation-dialog .confirmation-detail-list > li::marker {
+  color: var(--color-warning);
+}
+
+@media (max-width: 800px) {
+  .modal-overlay > .confirmation-dialog {
+    width: min(420px, 100vw - 24px);
+  }
+  .modal-overlay > .confirmation-dialog .modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .modal-overlay > .confirmation-dialog .modal-footer > .btn-text {
+    order: 0;
+  }
+  .modal-overlay > .confirmation-dialog .modal-footer > button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+
 .mobile-bottom-nav,
 .mobile-settings-drawer,
 .mobile-sheet-handle {

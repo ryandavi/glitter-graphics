@@ -395,17 +395,8 @@ class GlitterRecolorController {
 	}
 	async confirm(options) {
 		this.confirming = true;
-		const manager = this.editor.modalManager;
-		// Keep the recipe alive while the standard dialog owns focus and inert
-		// background state. Reopening also restores the modal's Back entry.
-		this.modal.classList.remove('visible');
-		manager.restoreBackground(manager.modals.get('glitterRecolorModal'));
-		try { return await this.editor.confirmAction(options); }
-		finally {
-			if (manager.pendingHistoryBack) await manager.pendingHistoryBack;
-			await manager.open('glitterRecolorModal');
-			this.confirming = false;
-		}
+		try { return await this.editor.confirmAction({ ...options, tone: 'danger', skippable: false }); }
+		finally { this.confirming = false; }
 	}
 	async save(replace) {
 		if (!this.session || this.saving) return;

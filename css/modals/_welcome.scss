@@ -120,22 +120,6 @@
 	}
 }
 
-#confirmationModal {
-	@include mobile {
-		.modal-content { width: min(420px, calc(100vw - 24px)); }
-
-		.modal-footer {
-			flex-direction: column-reverse;
-			align-items: stretch;
-
-			>button {
-				width: 100%;
-				min-height: 48px;
-			}
-		}
-	}
-}
-
 // Release notes use the same document hierarchy in Welcome and About. Each
 // entry is the app's shared "Advanced disclosure" primitive (see
 // .advanced-disclosure in _components.scss and disclosures.js) rather than a

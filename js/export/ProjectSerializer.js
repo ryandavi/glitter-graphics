@@ -82,13 +82,20 @@ class ProjectSerializer {
 		}
 
 		if ((this.editor.originalImage || this.editor.historyManager.canUndo()) && !this.editor.isSaved) {
-			const confirmed = await this.editor.confirmAction({
+			const action = await this.editor.chooseAction({
 				title: 'Replace Current Project',
-				message: 'Your current project has unsaved changes. Open this project instead?',
-				confirmLabel: 'Open Project'
+				message: 'Save your current project before opening this project?',
+				tone: 'danger',
+				actions: [
+					{ id: 'discard', label: "Don't Save", tone: 'danger' },
+					{ id: 'cancel', label: 'Cancel' },
+					{ id: 'save', label: 'Save', primary: true }
+				]
 			});
-			if (!confirmed) {
-				return false;
+			if (!action || action === 'cancel') return false;
+			if (action === 'save') {
+				await this.editor.saveProjectFile();
+				if (!this.editor.isSaved) return false;
 			}
 		}
 		this.editor.textGlitterManager.closePickerSession();

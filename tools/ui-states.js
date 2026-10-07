@@ -40,13 +40,13 @@ async function boot(page, css = {}) {
 	});
 	await page.goto(URL, { waitUntil: 'networkidle' });
 	await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important;caret-color:transparent!important}' });
-	await page.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((n) => n.classList.remove('visible')));
+	await page.evaluate(() => window.editor.modalManager.closeAll({ force: true }));
 }
 
 const closeModals = async (page) => {
 	await page.evaluate(() => {
 		try { window.editor.modalManager.closeAll?.(); } catch (e) { /* none open */ }
-		document.querySelectorAll('.modal-overlay.visible').forEach((n) => n.classList.remove('visible'));
+		window.editor.modalManager.closeAll({ force: true });
 	});
 	await wait(page, 250);
 };

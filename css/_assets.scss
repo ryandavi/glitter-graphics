@@ -477,15 +477,17 @@
 	bottom: var(--spacing-xs);
 	left: var(--spacing-xs);
 	z-index: 2;
-	width: 18px;
-	height: 18px;
+	display: grid;
+	place-items: center;
+	width: var(--asset-mark-size, 18px);
+	height: var(--asset-mark-size, 18px);
 	border-radius: var(--radius-xs);
 	background: var(--color-overlay);
 	color: var(--color-text-on-accent);
-	.icon { width: 14px; height: 14px; margin: 2px; }
+	>.icon { display: block; width: calc(var(--asset-mark-size, 18px) - 4px); height: calc(var(--asset-mark-size, 18px) - 4px); }
 }
 
-.asset-origin-mark { top: var(--spacing-xs); bottom: auto; pointer-events: none; }
+.asset-origin-mark { --asset-mark-size: 14px; pointer-events: none; }
 
 .sticker-slices {
 	z-index: 2;

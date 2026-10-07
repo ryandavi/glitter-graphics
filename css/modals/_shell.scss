@@ -23,13 +23,23 @@ body.modal-open {
 		max(12px, env(safe-area-inset-bottom))
 		max(12px, env(safe-area-inset-left));
 	opacity: 0;
-	transition: opacity var(--transition-base);
+	transition: opacity var(--transition-base), display var(--transition-base) allow-discrete;
 	-webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
 	backdrop-filter: blur(var(--modal-backdrop-blur));
 
 	&.visible {
 		display: flex;
 		opacity: 1;
+	}
+
+	@starting-style {
+		&.visible { opacity: 0; }
+	}
+
+	&.is-stacked {
+		z-index: calc(var(--modal-z-index) + 1);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
 	}
 
 	>.modal-content {
@@ -326,85 +336,6 @@ body.modal-open {
 
 .modal-error {
 	color: var(--color-danger);
-}
-
-// A dialog's body is one question, then optional slots: the subject it is
-// about, facts as a meta list, details as a list.
-#confirmationModal {
-	.modal-body { font-size: var(--font-size-title); }
-
-	.confirmation-message {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-md);
-		max-height: min(50vh, 420px);
-		overflow-y: auto;
-		color: var(--color-text-secondary);
-		line-height: 1.5;
-	}
-
-	.confirmation-message-copy,
-	.confirmation-message-outro { margin: 0; }
-
-	.confirmation-message-copy { color: var(--color-text-primary); }
-
-	// The one box: the object the question is about.
-	.confirmation-subject {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-2xs);
-		min-width: 0;
-		padding: var(--spacing-sm) var(--spacing-md);
-		border-radius: var(--radius-control);
-		background: var(--color-bg-secondary);
-	}
-
-	.confirmation-subject-label,
-	.confirmation-facts dt {
-		color: var(--color-text-tertiary);
-		font-size: var(--font-size-xs);
-	}
-
-	.confirmation-subject-value {
-		color: var(--color-text-primary);
-		font-size: var(--font-size-title);
-		font-weight: var(--font-weight-semibold);
-		line-height: 1.4;
-		overflow-wrap: anywhere;
-		user-select: text;
-	}
-
-	.confirmation-facts {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--spacing-sm) var(--spacing-lg);
-		margin: 0;
-
-		> div {
-			display: flex;
-			flex-direction: column;
-			min-width: 0;
-		}
-
-		dd {
-			margin: 0;
-			color: var(--color-text-primary);
-			font-size: var(--font-size-sm);
-			font-weight: var(--font-weight-semibold);
-			font-variant-numeric: tabular-nums;
-		}
-	}
-
-	.confirmation-detail-list {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-xs);
-		margin: 0;
-		padding-left: var(--spacing-lg);
-		font-size: var(--font-size-sm);
-
-		> li::marker { color: var(--color-warning); }
-	}
 }
 
 .modal-overlay > .content-dialog {
@@ -704,4 +635,8 @@ body.modal-open {
 
 .highlight {
 	animation: highlight 2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.modal-overlay { transition: none; }
 }

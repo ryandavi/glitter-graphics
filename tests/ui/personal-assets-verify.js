@@ -57,6 +57,18 @@ async function main() {
 			if (PREFERENCES.get('customGlitter').some(recipe => !recipe?.colors)) throw new Error('Uploads polluted recolor preferences');
 			return { png: png.id, gif: gif.id };
 		});
+		const originTile = page.locator(`#glitterBrowser .asset-option[data-id="${ids.png}"]`).last();
+		const badgeGeometry = async () => originTile.evaluate(tile => {
+			const badge = tile.querySelector('.asset-origin-mark').getBoundingClientRect();
+			const icon = tile.querySelector('.asset-origin-mark > .icon').getBoundingClientRect();
+			return { width: badge.width, height: badge.height, iconWidth: icon.width, iconHeight: icon.height,
+				dx: (icon.left + icon.right - badge.left - badge.right) / 2,
+				dy: (icon.top + icon.bottom - badge.top - badge.bottom) / 2 };
+		});
+		const restingBadge = await badgeGeometry();
+		assert(restingBadge.iconWidth > 0 && Math.abs(restingBadge.dx) < 0.5 && Math.abs(restingBadge.dy) < 0.5, 'Origin icon is not centered');
+		await originTile.hover();
+		assert.deepStrictEqual(await badgeGeometry(), restingBadge, 'Origin icon changes size or alignment on hover');
 		// A static JPEG uses the same pipeline and keeps photographic rendering smooth.
 		ids.jpg = await page.evaluate(async () => {
 			const blob = await fetch('images/glitter/ms-office-texture/wood-oak.jpg').then(response => response.blob());

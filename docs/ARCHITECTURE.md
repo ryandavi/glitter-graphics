@@ -246,6 +246,8 @@ Projects embed each referenced recipe and its recolored GIF in `customGlitter`, 
 
 ## Content modals
 
+`ModalManager` owns an ordered stack and a single inert snapshot. Normal modal registrations replace; `layer: 'dialog'` stacks over the current modal. Browser history stores an array of modal ids; Back dismisses one layer and Forward restores only a base modal, never a resolved dialog. Programmatic Back navigations are chained. Async close guards restore a popped entry before asking so cancellation keeps history aligned with the screen. `editor.chooseAction` owns the shared action dialog, with `confirmAction` as its boolean wrapper. Document modals register through `registerDocumentModal`, which runs shared navigation, references, image scaling and tooltip setup after per-document content initialization.
+
 `modals/*.html` are loaded into the modals at runtime. Every one (guide, welcome, about, preservation, history, personal-web, and any local-only pages) is generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. How to write a page is in [content/AUTHORING.md](../content/AUTHORING.md).
 
 - **Registries.** `content/entities.json` holds every named site, program, organization, work, person and handle, each with a `kind`; `content/sources.json` holds every citation, shared across pages. `tools/content-registry.js` loads and validates both.

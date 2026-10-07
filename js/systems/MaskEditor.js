@@ -106,7 +106,7 @@ class MaskEditor {
 				title: 'Clear Paint',
 				message: 'All painted strokes on this layer will be removed. Color selections will stay in place.',
 				confirmLabel: 'Clear Paint',
-				destructive: true
+				tone: 'danger', skippable: true
 			});
 			if (!confirmed) {
 				return;

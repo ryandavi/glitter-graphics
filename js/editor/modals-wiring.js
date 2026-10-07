@@ -62,14 +62,16 @@ updateOrientationButtons(width, height) {
 			.register('exportPreviewModal', {
 				closeBtnId: 'closeExportPreviewModal',
 				resetScrollOnOpen: false,
-				onClose: () => document.getElementById('exportPreviewVideo')?.pause()
+				onClose: () => {
+					document.getElementById('exportPreviewVideo')?.pause();
+					this.exportResultPresenter?.clear();
+				}
 			})
 			.register('confirmationModal', {
-				closeBtnId: ['confirmationModalClose', 'confirmationCancelBtn'],
+				layer: 'dialog',
+				closeBtnId: 'confirmationModalClose',
 				resetScrollOnOpen: false,
 				initialFocusSelector: '#confirmationConfirmBtn',
-				confirmOnEnter: true,
-				enterActionSelector: '#confirmationConfirmBtn',
 				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
@@ -82,133 +84,21 @@ updateOrientationButtons(width, height) {
 			document.getElementById('settingsBtn')?.click();
 		});
 
-		// External content modals use the shared document-modal helpers.
-		this.modalManager
-			.register('historyModal', {
-				openBtnId: 'historyBtn',
-				closeBtnId: 'closeHistoryModal',
-				externalContentUrl: 'modals/history.html?v=ed2fce0c',
-				cacheContent: true,
-				resetScrollOnOpen: false,
-				rememberScroll: true,
-				onContentLoaded: (modalBody) => {
-					// Initialize pixel-scaled images
-					initPixelScalerInContainer(modalBody);
-
-					// Initialize references (sup ↔ reference list interaction)
-					initModalReferences(modalBody, {
-						referenceListSelector: 'ol#HistoryReferencesList'
-					});
-					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
-
-					const modal = document.getElementById('historyModal');
-					initDocumentModalNavigation(modal);
-					initModalSmoothScroll(modal);
-
-					// Initialize tooltips for dynamically loaded content
-					initTooltipsInContainer(modalBody);
-				}
-			})
-			.register('personalWebModal', {
-				openBtnId: 'personalWebBtn',
-				closeBtnId: 'closePersonalWebModal',
-				externalContentUrl: 'modals/personal-web.html?v=aaae4024',
-				cacheContent: true,
-				resetScrollOnOpen: false,
-				rememberScroll: true,
-				onContentLoaded: (modalBody) => {
-					initPixelScalerInContainer(modalBody);
-
-					// Initialize references (sup ↔ reference list interaction)
-					initModalReferences(modalBody, {
-						referenceListSelector: 'ol#PersonalWebReferencesList'
-					});
-					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
-
-					const modal = document.getElementById('personalWebModal');
-					initDocumentModalNavigation(modal);
-					initModalSmoothScroll(modal);
-
-					initTooltipsInContainer(modalBody);
-				}
-			})
-			.register('preservationModal', {
-				openBtnId: 'preservationBtn',
-				closeBtnId: 'closePreservationModal',
-				externalContentUrl: 'modals/preservation.html?v=eb3aad1c',
-				cacheContent: true,
-				resetScrollOnOpen: false,
-				rememberScroll: true,
-				onContentLoaded: async (modalBody) => {
-					initPixelScalerInContainer(modalBody);
-
-					// Render before indexing so document search includes every event.
-					await loadScriptOnce('js/generated/entities-data.js?v=b8b7d1f7');
-					await loadScriptOnce('js/ui/about-timeline-data.js?v=c875b6a5');
-					initPreservationTimeline(modalBody);
-					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
-
-					const modal = document.getElementById('preservationModal');
-					initDocumentModalNavigation(modal);
-					initModalSmoothScroll(modal);
-					initTooltipsInContainer(modalBody);
-				}
-			})
-			.register('aboutModal', {
-				openBtnId: 'aboutBtn',
-				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=90f4cbb4',
-				cacheContent: true,
-				resetScrollOnOpen: false,
-				rememberScroll: true,
-				onContentLoaded: (modalBody) => {
-					// Every entry starts collapsed to keep the About page from turning
-					// into an endless scroll of past release notes.
-					this.renderVersionHistory(modalBody);
-					// Initialize pixel-scaled images
-					initPixelScalerInContainer(modalBody);
-
-					// Initialize references (sup ↔ reference list interaction)
-					initModalReferences(modalBody, {
-						referenceListSelector: 'ol#AboutReferencesList'
-					});
-
-					// Jump to the related long-form documents from the intro prose.
-					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
-
-					const modal = document.getElementById('aboutModal');
-					initDocumentModalNavigation(modal);
-					initModalSmoothScroll(modal);
-
-					// Initialize tooltips for dynamically loaded content
-					initTooltipsInContainer(modalBody);
-
-
-				}
-			})
-			.register('guideModal', {
-				openBtnId: 'guideBtn',
-				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=336b1f50',
-				cacheContent: true,
-				resetScrollOnOpen: false,
-				rememberScroll: true,
-				onContentLoaded: (modalBody) => {
-					// Initialize pixel-scaled images (for screenshots)
-					initPixelScalerInContainer(modalBody);
-
-					// The guide's key names are authored generically ('Ctrl/Cmd');
-					// resolve them to this platform's labels, as the shortcuts modal does.
-					localizeKeyLabels(modalBody);
-
-					const modal = document.getElementById('guideModal');
-					initDocumentModalNavigation(modal);
-					initModalSmoothScroll(modal);
-				}
-			});
-
-
-
+		this.registerDocumentModal('historyModal', { url: 'modals/history.html', references: 'ol#HistoryReferencesList' });
+		this.registerDocumentModal('personalWebModal', { url: 'modals/personal-web.html', references: 'ol#PersonalWebReferencesList' });
+		this.registerDocumentModal('preservationModal', {
+			url: 'modals/preservation.html',
+			onLoaded: async (body) => {
+				await loadScriptOnce('js/generated/entities-data.js?v=b8b7d1f7');
+				await loadScriptOnce('js/ui/about-timeline-data.js?v=c875b6a5');
+				initPreservationTimeline(body);
+			}
+		});
+		this.registerDocumentModal('aboutModal', {
+			url: 'modals/about.html', references: 'ol#AboutReferencesList',
+			onLoaded: (body) => this.renderVersionHistory(body)
+		});
+		this.registerDocumentModal('guideModal', { url: 'modals/guide.html', onLoaded: (body) => localizeKeyLabels(body) });
 
 		// Layer type picker modal (no open button - opened programmatically)
 		this.modalManager.register('layerTypePickerModal', {
@@ -625,58 +515,76 @@ setupWelcomeModalListeners() {
 
 ,
 	setupConfirmationModalListeners() {
-		const confirmBtn = document.getElementById('confirmationConfirmBtn');
-		if (confirmBtn) {
-			confirmBtn.addEventListener('click', () => {
-				this.pendingConfirmationValue = true;
-				this.modalManager.close('confirmationModal');
-			});
-		}
+		document.querySelector('#confirmationModal .modal-footer').addEventListener('click', (event) => {
+			const button = event.target.closest('[data-dialog-action]');
+			if (!button) return;
+			this.pendingConfirmationValue = button.dataset.dialogAction;
+			this.modalManager.close('confirmationModal');
+		});
 	}
 
 ,
 	resolvePendingConfirmation(value) {
-		if (!this.pendingConfirmationResolve) {
-			this.pendingConfirmationValue = false;
-			return;
-		}
-
 		const resolve = this.pendingConfirmationResolve;
 		this.pendingConfirmationResolve = null;
-		this.pendingConfirmationValue = false;
-		resolve(Boolean(value));
+		this.pendingConfirmationValue = null;
+		resolve?.(value ?? null);
 	}
 
 ,
 	confirmAction(options = {}) {
+		if (options.skippable && PREFERENCES.get('confirmDestructiveActions') === false) return Promise.resolve(true);
+		return this.chooseAction({
+			...options,
+			actions: [
+				{ id: 'cancel', label: options.cancelLabel || 'Cancel' },
+				{ id: 'confirm', label: options.confirmLabel || 'Confirm', tone: options.tone, primary: true }
+			]
+		}).then(value => value === 'confirm');
+	}
+
+,
+	chooseAction(options = {}) {
 		const {
 			title = 'Confirm',
 			message = 'Are you sure?',
 			subject = null,
 			facts = [],
-			confirmLabel = 'Confirm',
-			cancelLabel = 'Cancel',
-			destructive = false,
+			tone = 'default',
+			skippable = false,
+			actions,
 			details = [],
 			outro = ''
 		} = options;
 
-		if (destructive && PREFERENCES.get('confirmDestructiveActions') === false) {
-			return Promise.resolve(true);
-		}
-
-		if (!this.modalManager || !document.getElementById('confirmationModal')) {
-			return Promise.resolve(confirm(message));
-		}
-
 		if (this.pendingConfirmationResolve) {
-			this.resolvePendingConfirmation(false);
+			this.resolvePendingConfirmation(null);
 		}
 
 		const titleNode = document.getElementById('confirmationModalTitle');
 		const messageNode = document.getElementById('confirmationModalMessage');
-		const confirmBtn = document.getElementById('confirmationConfirmBtn');
-		const cancelBtn = document.getElementById('confirmationCancelBtn');
+		const modal = document.getElementById('confirmationModal');
+		const footer = modal.querySelector('.modal-footer');
+		const buttons = actions.map((action, index) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.dataset.dialogAction = action.id;
+			button.id = action.id === 'confirm' ? 'confirmationConfirmBtn' : action.id === 'cancel' ? 'confirmationCancelBtn' : `confirmationAction${index}`;
+			button.textContent = action.label;
+			button.className = actions.length > 2 && !action.primary && action.id !== 'cancel'
+				? 'btn-text' : `btn-text-with-icon modal-action ${action.primary ? 'primary' : 'secondary'}`;
+			button.classList.toggle('modal-action-danger', action.tone === 'danger');
+			return button;
+		});
+		footer.replaceChildren(...buttons.filter(button => button.classList.contains('btn-text')),
+			...buttons.filter(button => !button.classList.contains('btn-text') && !button.classList.contains('primary')),
+			...buttons.filter(button => button.classList.contains('primary')));
+		modal.querySelector('.modal-icon use').setAttribute('href', tone === 'danger' ? '#icon-triangle-exclamation' : '#icon-circle-info');
+		const config = this.modalManager.modals.get('confirmationModal');
+		const safeFocus = tone === 'danger' && !skippable;
+		const initial = safeFocus ? buttons.find(button => button.dataset.dialogAction === 'cancel') : buttons.find(button => button.classList.contains('primary'));
+		config.initialFocusSelector = `#${(initial || buttons[0]).id}`;
+		config.dialogEnterSelector = safeFocus ? null : config.initialFocusSelector;
 
 		if (titleNode) titleNode.textContent = title;
 		if (messageNode) {
@@ -728,16 +636,34 @@ setupWelcomeModalListeners() {
 				messageNode.appendChild(footerCopy);
 			}
 		}
-		if (confirmBtn) confirmBtn.textContent = confirmLabel;
-		confirmBtn?.classList.toggle('modal-action-danger', destructive);
-		if (cancelBtn) cancelBtn.textContent = cancelLabel;
-
-		this.pendingConfirmationValue = false;
+		this.pendingConfirmationValue = null;
 
 		return new Promise((resolve) => {
 			this.pendingConfirmationResolve = resolve;
-			this.modalManager.open('confirmationModal');
+			if (this.modalManager.getTopOpenModalConfig() === config) this.modalManager.focusInitialElement(config);
+			else this.modalManager.open('confirmationModal');
 		});
 	}
 
+,
+	registerDocumentModal(id, { url, references, onLoaded }) {
+		const name = id.slice(0, -5);
+		this.modalManager.register(id, {
+			openBtnId: `${name}Btn`,
+			closeBtnId: `close${id[0].toUpperCase()}${id.slice(1)}`,
+			externalContentUrl: url,
+			resetScrollOnOpen: false,
+			rememberScroll: true,
+			onContentLoaded: async (body) => {
+				if (onLoaded) await onLoaded(body);
+				initPixelScalerInContainer(body);
+				if (references) initModalReferences(body, { referenceListSelector: references });
+				initModalCrossLinks(body, (modalId, anchor) => this.openDocumentAt(modalId, anchor));
+				const modal = document.getElementById(id);
+				initDocumentModalNavigation(modal);
+				initModalSmoothScroll(modal);
+				initTooltipsInContainer(body);
+			}
+		});
+	}
 };

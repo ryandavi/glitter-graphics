@@ -5,6 +5,8 @@
 class ModalManager {
 	constructor() {
 		this.modals = new Map();
+		this.stack = [];
+		this.backgroundState = [];
 		this.historyStateKey = 'glitterModal';
 		this.setupGlobalListeners();
 	}
@@ -26,6 +28,13 @@ class ModalManager {
  * @param {boolean} options.resetScrollOnClose - Reset scroll to top on close (default: false)
  * @param {boolean} options.rememberScroll - Restore the previous body position when reopened
  * @param {Function} options.onContentLoaded - Callback after external content loads
+ * @param {string} options.layer - 'dialog' stacks; 'modal' replaces (default)
+ * @param {Function} options.beforeClose - Async guard; false keeps the modal open
+ * @param {boolean} options.showWhileLoading - Show the shell before content loads
+ * @param {string} options.loadingLabel - Loading status text
+ * @param {string} options.initialFocusSelector - Initial focus target inside the modal
+ * @param {boolean} options.confirmOnEnter - Enter activates the configured form action
+ * @param {string} options.enterActionSelector - Form action selector for Enter
  * @returns {ModalManager} - For chaining
  */
 	register(id, options = {}) {
@@ -44,6 +53,7 @@ class ModalManager {
 
 		const config = {
 			id,
+			layer: options.layer || 'modal',
 			modal,
 			content: modal.querySelector(':scope > .modal-content'),
 			openButtons: openBtnIds.map(buttonId => document.getElementById(buttonId)).filter(Boolean),
@@ -56,7 +66,7 @@ class ModalManager {
 			externalContentUrl: options.externalContentUrl || null,
 			cacheContent: options.cacheContent !== false,
 			showWhileLoading: options.showWhileLoading === true,
-			loadingLabel: options.loadingLabel || 'Loadingâ€¦',
+			loadingLabel: options.loadingLabel || 'Loading\u2026',
 			contentLoaded: false,
 			cachedContent: null,
 			resetScrollOnOpen: options.resetScrollOnOpen !== false,
@@ -67,14 +77,12 @@ class ModalManager {
 			initialFocusSelector: options.initialFocusSelector || null,
 			confirmOnEnter: options.confirmOnEnter || false,
 			enterActionSelector: options.enterActionSelector || null,
-			previouslyFocused: null,
-			backgroundState: []
+			previouslyFocused: null
 		};
 
 		this.modals.set(id, config);
 		this.setupAccessibility(config);
 		this.setupModalListeners(config);
-		this.observeVisibility(config);
 
 		return this;
 	}
@@ -116,23 +124,6 @@ class ModalManager {
 		}
 	}
 
-	observeVisibility(config) {
-		const observer = new MutationObserver(() => {
-			const isVisible = config.modal.classList.contains('visible');
-			config.modal.setAttribute('aria-hidden', String(!isVisible));
-
-			if (!isVisible && config.backgroundState.length) {
-				this.restoreBackground(config);
-				if (!this.isAnyOpen()) document.body.classList.remove('modal-open');
-			}
-		});
-
-		observer.observe(config.modal, {
-			attributes: true,
-			attributeFilter: ['class']
-		});
-	}
-
 	setupGlobalListeners() {
 		document.addEventListener('keydown', (event) => {
 			const config = this.getTopOpenModalConfig();
@@ -153,16 +144,21 @@ class ModalManager {
 			if (event.key === 'Enter') this.handleEnterKey(event);
 		});
 
-		window.addEventListener('popstate', (event) => {
-			const requestedId = event.state?.[this.historyStateKey] || null;
-			const openConfig = this.getTopOpenModalConfig();
-
-			if (openConfig && requestedId !== openConfig.id) {
-				this.close(openConfig.id, { fromHistory: true });
+		window.addEventListener('popstate', async (event) => {
+			if (this.navigatingBack) return;
+			const requested = event.state?.[this.historyStateKey] || [];
+			while (this.stack.length && !this.stack.every((config, index) => requested[index] === config.id)) {
+				if (!this.close(this.getTopOpenModalConfig().id, { fromHistory: true })) return;
 			}
-
-			if (requestedId && this.modals.has(requestedId) && !this.modals.get(requestedId).modal.classList.contains('visible')) {
-				this.open(requestedId, { fromHistory: true });
+			const base = this.modals.get(requested[0]);
+			if (!this.stack.length && base?.layer === 'modal') await this.open(base.id, { fromHistory: true });
+			// Forward can revisit a dismissed dialog whose promise no longer exists.
+			const ids = this.stack.map(config => config.id);
+			if (requested.length > ids.length) {
+				const state = { ...history.state };
+				if (ids.length) state[this.historyStateKey] = ids;
+				else delete state[this.historyStateKey];
+				history.replaceState(state, '', location.href);
 			}
 		});
 	}
@@ -178,13 +174,20 @@ class ModalManager {
 		// that popstate lands would have it close this modal instead.
 		if (this.pendingHistoryBack) await this.pendingHistoryBack;
 
+		if (this.stack.includes(config)) return;
 		const activeModal = document.activeElement?.closest?.('.modal-overlay');
 		const activeConfig = activeModal ? this.modals.get(activeModal.id) : null;
 		config.previouslyFocused = options.restoreFocusTarget
-			|| activeConfig?.previouslyFocused
+			|| (config.layer === 'modal' ? activeConfig?.previouslyFocused : null)
 			|| (document.activeElement instanceof HTMLElement ? document.activeElement : null);
 
-		this.closeAll({ preserveHistory: true, restoreFocus: false });
+		if (config.layer === 'modal') {
+			while (this.stack.length > 1) {
+				if (!this.close(this.getTopOpenModalConfig().id, { restoreFocus: false })) return;
+			}
+			if (this.pendingHistoryBack) await this.pendingHistoryBack;
+			if (!this.closeAll({ preserveHistory: true, restoreFocus: false })) return;
+		}
 
 		if (config.externalContentUrl) {
 			if (config.showWhileLoading) this.showModal(config);
@@ -201,17 +204,20 @@ class ModalManager {
 			this.restoreScroll(config);
 		}
 
-		if (!options.fromHistory) this.pushModalHistory(id);
+		if (!options.fromHistory) this.pushModalHistory();
 
 		if (config.onOpen) await config.onOpen();
 		this.focusInitialElement(config);
 	}
 
 	showModal(config) {
+		if (this.stack.includes(config)) return;
+		config.modal.classList.toggle('is-stacked', this.stack.length > 0);
+		this.stack.push(config);
 		config.modal.classList.add('visible');
 		config.modal.setAttribute('aria-hidden', 'false');
 		document.body.classList.add('modal-open');
-		this.setBackgroundInert(config);
+		this.syncInert();
 	}
 
 	close(id, options = {}) {
@@ -220,10 +226,21 @@ class ModalManager {
 			console.warn(`Cannot close unregistered modal: ${id}`);
 			return false;
 		}
-		if (!config.modal.classList.contains('visible')) return false;
+		const index = this.stack.indexOf(config);
+		if (index < 0) return false;
+		for (const above of this.stack.slice(index + 1).reverse()) {
+			if (!this.close(above.id, options)) return false;
+		}
 		if (config.beforeClose && !options.force) {
-			if (config.closing) return false;
+			if (config.closing) {
+				if (options.fromHistory) this.pushModalHistory();
+				return false;
+			}
 			config.closing = true;
+			if (options.fromHistory) {
+				this.pushModalHistory();
+				options = { ...options, fromHistory: false };
+			}
 			Promise.resolve(config.beforeClose()).then((allowed) => {
 				if (allowed) this.close(id, { ...options, force: true });
 			}).finally(() => { config.closing = false; });
@@ -237,9 +254,10 @@ class ModalManager {
 			if (config.rememberScroll) config.savedScrollTop = currentScrollTop;
 		}
 
-		config.modal.classList.remove('visible');
+		config.modal.classList.remove('visible', 'is-stacked');
+		this.stack.splice(index, 1);
 		config.modal.setAttribute('aria-hidden', 'true');
-		this.restoreBackground(config);
+		this.syncInert();
 
 		if (config.resetScrollOnClose) this.resetScroll(config);
 		if (config.onClose) config.onClose();
@@ -317,18 +335,26 @@ class ModalManager {
 	}
 
 	closeAll(options = {}) {
-		for (const config of this.modals.values()) {
-			if (config.modal.classList.contains('visible')) {
-				this.close(config.id, {
-					preserveHistory: options.preserveHistory === true,
-					restoreFocus: options.restoreFocus !== false
-				});
-			}
+		for (const config of [...this.stack].reverse()) {
+			if (!this.close(config.id, options)) return false;
 		}
+		return true;
 	}
 
 	handleEnterKey(event) {
 		const config = this.getTopOpenModalConfig();
+		if (config?.layer === 'dialog') {
+			if (config.dialogEnterSelector) {
+				event.preventDefault();
+				config.modal.querySelector(config.dialogEnterSelector)?.click();
+				return;
+			}
+			if (event.target instanceof HTMLElement && event.target.matches('button') && config.content.contains(event.target)) {
+				event.preventDefault();
+				event.target.click();
+			}
+			return;
+		}
 		if (!config?.confirmOnEnter) return;
 
 		const target = event.target;
@@ -349,6 +375,7 @@ class ModalManager {
 
 	focusInitialElement(config) {
 		requestAnimationFrame(() => {
+			if (this.getTopOpenModalConfig() !== config) return;
 			const selector = config.initialFocusSelector || '.modal-title-text';
 			const focusTarget = config.modal.querySelector(selector);
 			if (!(focusTarget instanceof HTMLElement) || focusTarget.hasAttribute('disabled')) return;
@@ -364,7 +391,9 @@ class ModalManager {
 		requestAnimationFrame(() => {
 			const focusTarget = config.previouslyFocused;
 			if (!(focusTarget instanceof HTMLElement) || !focusTarget.isConnected) return;
-			if (focusTarget.closest('.modal-overlay')) return;
+			const overlay = focusTarget.closest('.modal-overlay');
+			if (overlay && this.getTopOpenModalConfig()?.modal !== overlay) return;
+			if (!overlay && this.stack.length) return;
 			focusTarget.focus({ preventScroll: true });
 		});
 	}
@@ -415,38 +444,32 @@ class ModalManager {
 		});
 	}
 
-	setBackgroundInert(config) {
-		if (config.backgroundState.length) return;
-
-		config.backgroundState = Array.from(document.body.children)
-			.filter(element => element !== config.modal)
-			.map(element => ({
-				element,
-				inert: element.hasAttribute('inert'),
-				ariaHidden: element.getAttribute('aria-hidden')
-			}));
-
-		config.backgroundState.forEach(({ element }) => {
-			element.setAttribute('inert', '');
-			element.setAttribute('aria-hidden', 'true');
-		});
+	syncInert() {
+		if (!this.stack.length) {
+			this.backgroundState.forEach(({ element, inert, ariaHidden }) => {
+				element.toggleAttribute('inert', inert);
+				if (ariaHidden === null) element.removeAttribute('aria-hidden');
+				else element.setAttribute('aria-hidden', ariaHidden);
+			});
+			this.backgroundState = [];
+			for (const config of this.modals.values()) config.modal.setAttribute('aria-hidden', 'true');
+			return;
+		}
+		const top = this.getTopOpenModalConfig().modal;
+		for (const element of document.body.children) {
+			if (!this.backgroundState.some(entry => entry.element === element)) {
+				this.backgroundState.push({ element, inert: element.hasAttribute('inert'), ariaHidden: element.getAttribute('aria-hidden') });
+			}
+			element.toggleAttribute('inert', element !== top);
+			element.setAttribute('aria-hidden', String(element !== top));
+		}
 	}
 
-	restoreBackground(config) {
-		config.backgroundState.forEach(({ element, inert, ariaHidden }) => {
-			if (inert) element.setAttribute('inert', '');
-			else element.removeAttribute('inert');
-			if (ariaHidden === null) element.removeAttribute('aria-hidden');
-			else element.setAttribute('aria-hidden', ariaHidden);
-		});
-		config.backgroundState = [];
-	}
-
-	pushModalHistory(id) {
+	pushModalHistory() {
 		const currentState = history.state && typeof history.state === 'object' ? history.state : {};
-		const nextState = { ...currentState, [this.historyStateKey]: id };
-
-		if (currentState[this.historyStateKey]) {
+		const ids = this.stack.map(config => config.id);
+		const nextState = { ...currentState, [this.historyStateKey]: ids };
+		if (currentState[this.historyStateKey]?.length === ids.length) {
 			history.replaceState(nextState, '', location.href);
 		} else {
 			history.pushState(nextState, '', location.href);
@@ -454,28 +477,29 @@ class ModalManager {
 	}
 
 	popModalHistory(id) {
-		if (history.state?.[this.historyStateKey] !== id) return;
-		const landed = new Promise((resolve) => window.addEventListener('popstate', resolve, { once: true }));
-		this.pendingHistoryBack = landed;
-		landed.then(() => {
-			if (this.pendingHistoryBack === landed) this.pendingHistoryBack = null;
+		const previous = this.pendingHistoryBack;
+		const tail = (async () => {
+			if (previous) await previous;
+			if (history.state?.[this.historyStateKey]?.at(-1) !== id) return;
+			this.navigatingBack = true;
+			await new Promise(resolve => {
+				window.addEventListener('popstate', resolve, { once: true });
+				history.back();
+			});
+			this.navigatingBack = false;
+		})();
+		this.pendingHistoryBack = tail;
+		tail.finally(() => {
+			if (this.pendingHistoryBack === tail) this.pendingHistoryBack = null;
 		});
-		history.back();
 	}
 
 	getTopOpenModalConfig() {
-		let openConfig = null;
-		for (const config of this.modals.values()) {
-			if (config.modal.classList.contains('visible')) openConfig = config;
-		}
-		return openConfig;
+		return this.stack.at(-1) || null;
 	}
 
 	isAnyOpen() {
-		for (const config of this.modals.values()) {
-			if (config.modal.classList.contains('visible')) return true;
-		}
-		return false;
+		return this.stack.length > 0;
 	}
 
 }

@@ -1,0 +1,99 @@
+@use '../mixins' as *;
+
+// A dialog's body is one question, then optional slots: the subject it is
+// about, facts as a meta list, details as a list.
+.confirmation-dialog {
+	.modal-body { font-size: var(--font-size-title); }
+
+	.confirmation-message {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		max-height: min(50vh, 420px);
+		overflow-y: auto;
+		color: var(--color-text-secondary);
+		line-height: 1.5;
+	}
+
+	.confirmation-message-copy,
+	.confirmation-message-outro { margin: 0; }
+
+	.confirmation-message-copy { color: var(--color-text-primary); }
+
+	// The one box: the object the question is about.
+	.confirmation-subject {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2xs);
+		min-width: 0;
+		padding: var(--spacing-sm) var(--spacing-md);
+		border-radius: var(--radius-control);
+		background: var(--color-bg-secondary);
+	}
+
+	.confirmation-subject-label,
+	.confirmation-facts dt {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+	}
+
+	.confirmation-subject-value {
+		color: var(--color-text-primary);
+		font-size: var(--font-size-title);
+		font-weight: var(--font-weight-semibold);
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+		user-select: text;
+	}
+
+	.confirmation-facts {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--spacing-sm) var(--spacing-lg);
+		margin: 0;
+
+		> div {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+		}
+
+		dd {
+			margin: 0;
+			color: var(--color-text-primary);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	.confirmation-detail-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		margin: 0;
+		padding-left: var(--spacing-lg);
+		font-size: var(--font-size-sm);
+
+		> li::marker { color: var(--color-warning); }
+	}
+}
+
+.modal-overlay > .confirmation-dialog {
+	@include mobile {
+		width: min(420px, calc(100vw - 24px));
+
+		.modal-footer {
+			flex-direction: column-reverse;
+			align-items: stretch;
+
+			>.btn-text { order: 0; }
+
+			>button {
+				width: 100%;
+				min-height: 48px;
+			}
+		}
+	}
+}
+

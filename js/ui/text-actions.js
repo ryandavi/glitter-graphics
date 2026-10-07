@@ -92,7 +92,7 @@ const TEXT_ACTION_METHODS = {
 		const manager = this.editor.layerManager;
 		const gate = manager.canAddLayers(pieces.length - 1);
 		if (!gate.ok) { this.editor.updateStatus(`Splitting into ${pieces.length} ${mode} needs ${pieces.length - 1} more layers; ${gate.remaining} are available. Try Words or Lines.`); return; }
-		if (entry.hasOverflow && !await this.editor.confirmAction({ title: 'Split visible text?', message: 'Hidden overflow lines will be dropped. Undo restores the original text.', confirmLabel: 'Split', destructive: true })) return;
+		if (entry.hasOverflow && !await this.editor.confirmAction({ title: 'Split visible text?', message: 'Hidden overflow lines will be dropped. Undo restores the original text.', confirmLabel: 'Split', tone: 'danger', skippable: true })) return;
 		this.endTextEdit();
 		const clones = pieces.map(piece => {
 			const clone = manager.buildClonedLayer(layer, { positionOffset: { x: 0, y: 0 } });

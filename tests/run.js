@@ -63,6 +63,7 @@ const SUITES = [
 	{ file: 'ui/filter-looks-verify.js', tags: ['panels', 'effects'] },
 	{ file: 'ui/ux-polish-verify.js', tags: ['panels'] },
 	{ file: 'ui/modal-settings-verify.js', tags: ['panels'] },
+	{ file: 'ui/modal-stack-verify.js', tags: ['panels'] },
 	{ file: 'ui/document-start-verify.js', tags: ['document'] },
 	{ file: 'ui/add-menu-templates-verify.js', tags: ['document', 'panels'] },
 	{ file: 'ui/auto-glitter-reopen-verify.js', tags: ['document', 'effects'] },

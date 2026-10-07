@@ -267,6 +267,8 @@ class AutoGlitterManager {
 		const activeSession = this.session;
 		const editingPrevious = this.isEditingPrevious();
 		this.discardRequest = this.editor.confirmAction({
+			tone: 'danger',
+			skippable: false,
 			title: editingPrevious ? 'Discard Auto Glitter Changes?' : 'Discard Auto Glitter Preview?',
 			message: editingPrevious
 				? 'Leaving Auto Glitter will discard these changes and keep the current set as it was.'

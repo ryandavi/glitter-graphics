@@ -110,12 +110,15 @@ function check(name, cond, detail='') {
 				.every(key => !Object.hasOwn(window.editor, key));
 	});
 	check('app settings persist only through preferences and export settings contain only export keys', preferenceEdits);
+	const scrollTop = await page.evaluate(() => { const body = document.querySelector('#settingsModal .modal-body'); editor.modalManager.setScrollPosition(body, 120); return body.scrollTop; });
 	await page.click('#settingsModal .reset-all-settings-btn');
 	await page.waitForTimeout(300);
+	check('settings stays visible and inert behind confirmation', await page.evaluate(() => document.getElementById('settingsModal').classList.contains('visible') && document.getElementById('settingsModal').inert));
 	await page.click('#confirmationConfirmBtn');
 	await page.waitForTimeout(600);
 	const afterConfirm = await page.evaluate(() => [...document.querySelectorAll('.modal-overlay.visible')].map((modal) => modal.id));
-	check('settings reopens after a confirmed reset', afterConfirm.length === 1 && afterConfirm[0] === 'settingsModal', JSON.stringify(afterConfirm));
+	check('settings remains open after a confirmed reset', afterConfirm.length === 1 && afterConfirm[0] === 'settingsModal', JSON.stringify(afterConfirm));
+	check('settings scroll survives confirmation', await page.evaluate(() => document.querySelector('#settingsModal .modal-body').scrollTop) === scrollTop);
 	check('Reset Everything restores every preference and clears the seen release', await page.evaluate(() =>
 		['showHints', 'showWelcomeOnStartup', 'confirmDestructiveActions', 'scaleEffects', 'scaleTextures', 'scaleCorners', 'welcomeLastSeenRelease']
 			.every(key => PREFERENCES.get(key) === PREFERENCE_SCHEMA[key].default())));

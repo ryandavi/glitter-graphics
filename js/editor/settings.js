@@ -432,7 +432,9 @@ initializeExportSettings() {
 
 ,
 	async resetToolbarPlacement() {
-		const confirmed = await this.confirmSettingsAction({
+		const confirmed = await this.confirmAction({
+			tone: 'danger',
+			skippable: false,
 			title: 'Reset Toolbar Position',
 			message: 'The floating tool bar returns to its default position at the bottom of the canvas.',
 			confirmLabel: 'Reset Toolbar'
@@ -721,7 +723,9 @@ setupSettingsResetListeners() {
 
 ,
 async resetToolSettings() {
-	const confirmed = await this.confirmSettingsAction({
+	const confirmed = await this.confirmAction({
+		tone: 'danger',
+		skippable: false,
 		title: 'Reset Brush & Eraser',
 		message: 'Saved Brush and Eraser settings will be restored to their defaults.',
 		confirmLabel: 'Reset Tools'
@@ -733,7 +737,9 @@ async resetToolSettings() {
 
 ,
 async resetPanelLayout() {
-	const confirmed = await this.confirmSettingsAction({
+	const confirmed = await this.confirmAction({
+		tone: 'danger',
+		skippable: false,
 		title: 'Reset Panel Layout',
 		message: 'Collapsible property and tool cards will return to their default open or closed state.',
 		confirmLabel: 'Reset Panels'
@@ -749,18 +755,6 @@ applyDefaultPanelLayout() {
 }
 
 ,
-// The confirmation replaces the modal that asked, so the modal comes back
-// afterwards, where it was scrolled to.
-async confirmSettingsAction(options, modalId = 'settingsModal') {
-	const body = document.querySelector(`#${modalId} .modal-body`);
-	const scrollTop = body ? body.scrollTop : 0;
-	const confirmed = await this.confirmAction(options);
-	await this.modalManager?.open(modalId, { resetScroll: false });
-	if (body) this.modalManager.setScrollPosition(body, scrollTop);
-	return confirmed;
-}
-
-,
 // Preferences shown in both Settings and a canvas control have to agree after
 // a reset, whichever surface triggered it.
 syncCanvasPreferenceControls() {
@@ -771,7 +765,9 @@ syncCanvasPreferenceControls() {
 
 ,
 async resetAllSettings() {
-	const confirmed = await this.confirmSettingsAction({
+	const confirmed = await this.confirmAction({
+		tone: 'danger',
+		skippable: false,
 		title: 'Reset Everything',
 		message: 'Every setting in this window and in Export Settings, plus your panel layout and toolbar position, will be restored to its default.',
 		confirmLabel: 'Reset Everything'
@@ -801,11 +797,13 @@ async resetAllSettings() {
 
 ,
 	async resetExportSettings() {
-		const confirmed = await this.confirmSettingsAction({
+		const confirmed = await this.confirmAction({
+			tone: 'danger',
+			skippable: false,
 			title: 'Reset Export Settings',
 			message: 'Every setting in this window — Output, Playback, Quality, and Optimization — will be restored to its default.',
 			confirmLabel: 'Reset'
-		}, 'exportSettingsModal');
+		});
 		if (!confirmed) return;
 
 		this.settingsStore.reset(this.exportSettings);

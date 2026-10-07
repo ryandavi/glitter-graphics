@@ -125,11 +125,13 @@ Kind-specific cards remain on the shared grid: glitter has a 48px floor, 2px gap
 
 ## Modals
 
+- **Stacking.** `ModalManager` owns the ordered open stack, focus and one background inert snapshot. A registration with `layer: 'dialog'` stacks; every other modal replaces. Only the confirmation dialog stacks today. The parent remains visible and inert. `.is-stacked` raises the dialog and draws a scrim without another backdrop blur. Escape, outside click, the X and Back dismiss the top layer; a dismissed dialog never reopens from Forward.
+
 - **Three widths.** A `.modal-content` is form width by default. `.modal-dialog` is the 480px dialog (confirm, alert, sticker upload). `.modal-reading` is the 880px reading frame; Export Ready uses the same width. `.modal-browse` fixes the height so a filter or tab never resizes the frame.
-- **Footer.** Actions sit at the right, primary last. A secondary link, reset or destructive action is a `.btn-text` at the left. The footer is chrome, so its buttons are `.btn-text-with-icon`. At phone width every footer does the same thing (`css/modals/_responsive.scss`): the action buttons share one row equally and a label that does not fit truncates, and the left-side `.btn-text` takes its own centered line under them. The confirmation dialog stacks its two buttons instead.
+- **Footer.** Actions sit at the right, primary last. A secondary link, reset or destructive action is a `.btn-text` at the left. The footer is chrome, so its buttons are `.btn-text-with-icon`. At phone width every footer does the same thing (`css/modals/_responsive.scss`): the action buttons share one row equally and a label that does not fit truncates, and the left-side `.btn-text` takes its own centered line under them. The confirmation dialog stacks its action buttons instead.
 - **Body buttons are `.btn-flat`**: a search's clear button, a table of contents toggle, Cancel on the export progress.
 - **A heading over a group of tiles is a `.property-group-label`**, with no box around the group (Add menu, New Canvas presets).
-- **The confirmation dialog** takes its content through `editor.confirmAction()` slots (`subject`, `facts`, `details`, `outro`). The subject is the one box.
+- **The confirmation dialog** takes its content through `editor.confirmAction()` slots (`subject`, `facts`, `details`, `outro`). The subject is the one box. `tone: 'danger'` selects the warning icon and danger button treatment; `skippable: true` permits the global confirmation preference to bypass an undoable action. Danger dialogs that cannot be skipped focus Cancel and Enter activates the focused button. Other confirmations focus Confirm and keep Enter-to-confirm. `editor.chooseAction({ actions: [{ id, label, tone, primary }] })` returns an action id or `null` on dismissal; `confirmAction` is its boolean two-action wrapper. Project replacement offers Save, Don't Save and Cancel, and proceeds after Save only when saving succeeds.
 - **Export Ready** is a fixed frame that never resizes, and its body never scrolls. It has three regions, each with its own padding: the preview stage, the facts pinned beside it (size first, tinted with the warning color when the file is over an upload limit), and the side column under the facts, which is the only scroller. Between the facts and the scroller sits one pinned control row: the Result / Details segmented control (hidden when there is nothing to show) and Export again, the same menu as the canvas export button. The side shows the result notes (the save guide, the upload limits, the notices, in that order) or the Details tables (`.export-detail-table` under `.property-group-label`s, one value per column), so the preview stays in view either way. A notice is a `.property-note` and appears only when it changes what the user should do or expect; a clean export shows none. The upload limits are the one box in the notes: a warning surface holding a small table, one row per service, with each limit as a `.badge.is-warning` in its own column. Every platform has exactly one primary footer button (Share where saving has to go through the share sheet). What is shown is decided by `buildExportReport` (`js/export/export-report.js`), which is DOM-free and covered by `tests/unit/export-report-unit.js`; add a rule there, not in the presenter.
 - **Reading modals** (About, History, Guide and the article pages) share the shell: header, nav row and frame. Their prose, timelines and references are content and have their own rules in `content/AUTHORING.md`.
 
@@ -234,13 +236,14 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
   | `css/` | Foundation shared with the admin (`_tokens`, `_themes`, `_mixins`, `_base`), app-wide components and controls, `_mobile` |
   | `css/panels/` | One partial per panel surface or feature (layout, Library, layers list, preview bars, effects, paint slots) |
   | `css/panels/property/` | The property vocabulary, one partial per concern; `_tokens.scss` opens with the map. Loaded last of the panel sheets so it wins the cascade |
-  | `css/modals/` | `_shell`, `_forms`, then one partial per modal; `_responsive` is last |
+  | `css/modals/` | `_shell`, `_forms`, then one partial per modal; `_responsive` supplies the common phone layout, followed by `_confirmation` for its stacked action buttons |
 
 - **Each rule is declared once.** `.property-panel` (a whole surface) and `.property-section` (one schema-rendered section) share one token set. A panel-wide class takes no scope; a rule that restyles a global control (select, input) is scoped to `.property-panel` or `.property-section`. Never add a second, more specific copy of a rule to override the first: change the first. **When a change supersedes styling, remove what it supersedes in the same change.**
 - **No `:has()`.** State the stylesheet reads is a class the code stamps where that state already changes:
 
   | Class | Means | Stamped by |
   |---|---|---|
+  | `.is-stacked` | a dialog has a parent on the modal stack | `ModalManager` |
   | `.is-off` | a module's enable switch is off | `syncPanelEffectToggle` |
   | `.is-vacant` | every child of a container is `hidden` | the vacancy observer in `panel-renderer.js` |
   | `.is-unset` | a swatch or asset thumbnail has no value to show | `syncModuleSummary`, `buildAssetInfo` |
@@ -274,7 +277,7 @@ Toggling the Library's recolor picker updates availability on existing tiles wit
 
 ## Confirmation policy
 
-Always confirm when Undo cannot restore the discarded work: Clear All, opening over unsaved work, and discarding a preview. These confirmations are independent of Confirm Destructive Actions. Undoable removal of hand-made work (deleting layers, clearing paint, dropping hidden overflow during Split) passes `destructive: true` and follows that preference. Other edits that take one undo step use status feedback without a dialog; Invert Mask follows this rule on every device.
+Always confirm when Undo cannot restore the discarded work: Clear All, opening over unsaved work, and discarding a preview. These confirmations are independent of Confirm Destructive Actions. Undoable removal of hand-made work (deleting layers, clearing paint, dropping hidden overflow during Split) passes `tone: 'danger', skippable: true` and follows that preference. Other edits that take one undo step use status feedback without a dialog; Invert Mask follows this rule on every device.
 
 Context toolbar entries may declare `session: 'textEdit'`. Active session bars take priority over tool bars. Their controls dispatch the same commands as the property panel; Bold, Italic and Underline explicitly allow their shortcuts while typing. The text font-size control reuses the `textFontSize` field spec.
 

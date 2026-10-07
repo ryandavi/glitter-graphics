@@ -184,7 +184,9 @@ async function main() {
 		assert.strictEqual(await page.locator('#recolorLightness').inputValue(), '0');
 		await page.locator('#recolorCancel').click();
 		await page.waitForSelector('#confirmationModal.visible');
+		assert(await page.evaluate(() => document.getElementById('glitterRecolorModal').classList.contains('visible') && document.getElementById('glitterRecolorModal').inert));
 		await page.locator('#confirmationCancelBtn').click();
+		await page.waitForFunction(() => document.getElementById('glitterRecolorModal').contains(document.activeElement));
 		await page.waitForSelector('#glitterRecolorModal.visible');
 		assert(await page.evaluate(() => Boolean(editor.glitterRecolor.session)));
 		await page.locator('#recolorName').fill('Teal test');
@@ -207,6 +209,8 @@ async function main() {
 		await page.evaluate(id => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(id)), copyId);
 		await page.locator('#recolorDelete').click(); await page.waitForSelector('#confirmationModal.visible');
 		await page.locator('#confirmationConfirmBtn').click(); await page.waitForFunction(() => !editor.glitterRecolor.session);
+		await page.evaluate(async () => { await editor.modalManager.pendingHistoryBack; });
+		assert(await page.evaluate(() => !history.state?.glitterModal));
 		assert.strictEqual(await page.evaluate(() => editor.glitterLibrary.userContent.length), 1);
 		assert(await page.evaluate(id => Boolean(editor.glitterLibrary.getItemById(id)), copyId));
 		await page.evaluate(id => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(id)), copyId);
