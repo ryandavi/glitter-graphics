@@ -156,16 +156,24 @@ const detailed = report({
 	})
 });
 const tables = Object.fromEntries(detailed.details.tables.map((table) => [table.id, table]));
-const cells = (table) => table.rows.map((row) => row.cells.join('|'));
+// A cell as the reader sees it: text, a badge label, or a measure with its unit.
+const cellText = (cell) => {
+	if (typeof cell === 'string') return cell;
+	if (cell.badge) return `[${cell.badge}]`;
+	const value = cell.from === null ? cell.value : `${cell.from} → ${cell.value}`;
+	return ['', '×', '%'].includes(cell.unit) ? `${value}${cell.unit}` : `${value} ${cell.unit}`;
+};
+const cells = (table) => table.rows.map((row) => row.cells.map(cellText).join('|'));
 assert(detailed.details.tables.map((table) => table.id).join(',') === 'sources,generated,optimization,timing', 'Details tables are missing or out of order');
-assert(cells(tables.sources).join('\n') === ['Pink sparkle|×3|27|10.0 fps|2.70 s', 'Star sticker||12|~8.3 fps|1.44 s', 'Export||55|16.7 fps|3.30 s'].join('\n'), `Sources table: ${cells(tables.sources).join(' / ')}`);
+assert(cells(tables.sources).join('\n') === ['Pink sparkle|3×|27|10.0 fps|2.70 s', 'Star sticker|1×|12|~8.3 fps|1.44 s', 'Export||55|16.7 fps|3.30 s'].join('\n'), `Sources table: ${cells(tables.sources).join(' / ')}`);
 assert(tables.sources.rows.at(-1).strong, 'The Export row is not the emphasized last row');
-assert(cells(tables.generated)[0] === 'Shimmer||800 → 825 ms|4', `Generated table: ${cells(tables.generated)[0]}`);
+assert(tables.optimization.keyValue && !tables.sources.keyValue, 'Only the Optimization table is a label and value list');
+assert(cells(tables.generated)[0] === 'Shimmer|1×|800 → 825 ms|4', `Generated table: ${cells(tables.generated)[0]}`);
 assert(tables.optimization.lines.join(' ') === 'Removed 5 repeated frames without changing the speed. Kept 55 frames to keep the motion smooth.', `Optimization lines: ${tables.optimization.lines.join(' ')}`);
-assert(cells(tables.optimization).join('\n') === ['Frames|60 → 55', 'Repeated frames removed|5', 'Playback speed|Unchanged', 'Loop ending|Exact match', 'Palette|128 colors, shared', 'Dithering|On'].join('\n'), `Optimization rows: ${cells(tables.optimization).join(' / ')}`);
-assert(cells(tables.timing).join('\n') === ['Loading artwork|0.1 s|3%', 'Drawing frames|2.2 s|67%', 'Encoding|1.0 s|30%', 'Total|3.3 s|'].join('\n'), `Timing table: ${cells(tables.timing).join(' / ')}`);
+assert(cells(tables.optimization).join('\n') === ['Frames|60 → 55', 'Repeated frames removed|5', 'Playback speed|Unchanged', 'Loop ending|Exact match', 'Palette|Shared', 'Colors|128', 'Dithering|[On]'].join('\n'), `Optimization rows: ${cells(tables.optimization).join(' / ')}`);
+assert(cells(tables.timing).join('\n') === ['Loading artwork|0.1 s|3%', 'Drawing frames|2.2 s|67%', 'Encoding|1.0 s|30%', 'Total|3.3 s|100%'].join('\n'), `Timing table: ${cells(tables.timing).join(' / ')}`);
 tables.sources.rows.concat(tables.generated.rows, tables.optimization.rows, tables.timing.rows).forEach((row) => {
-	assert(row.cells.every((cell) => typeof cell === 'string'), 'A table cell is not a string');
+	assert(row.cells.every((cell) => typeof cell === 'string' || typeof cell.badge === 'string' || typeof cell.value === 'string'), 'A table cell is not text, a badge or a measure');
 });
 
 process.stdout.write('Export report verification passed\n');

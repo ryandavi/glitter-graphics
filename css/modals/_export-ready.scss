@@ -258,22 +258,35 @@
 		gap: var(--spacing-sm);
 	}
 
-	// Every value has its own column and numbers line up on the right. The
-	// first column takes the spare width and is the one that truncates.
+	// Column rules: text starts on the left, anything measured or counted ends
+	// on the right so digits line up, and a heading sits over its own column.
+	// The first column takes the spare width and is the one that truncates.
+	// One type size throughout; color and weight carry the roles. A data table
+	// is all primary under tertiary headings. A label and value list
+	// (`.is-key-value`) has no headings and reads like a property row.
+	// The table is outset by its inset so the text still lines up with the
+	// group label while the result row's fill reaches past it.
 	.export-detail-table {
-		width: 100%;
-		border-collapse: collapse;
+		--detail-inset: var(--spacing-sm);
+		width: calc(100% + var(--detail-inset) * 2);
+		margin-inline: calc(var(--detail-inset) * -1);
+		border-collapse: separate;
+		border-spacing: 0;
 		font-size: var(--font-size-sm);
 		font-variant-numeric: tabular-nums;
+		line-height: 1.3;
 
 		th,
 		td {
 			padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) 0;
+			color: var(--color-text-primary);
 			font-weight: var(--font-weight-normal);
 			text-align: left;
 			white-space: nowrap;
 
-			&:last-child { padding-right: 0; }
+			&:first-child { padding-left: var(--detail-inset); }
+
+			&:last-child { padding-right: var(--detail-inset); }
 
 			&.is-numeric { text-align: right; }
 		}
@@ -281,24 +294,35 @@
 		thead th {
 			border-bottom: 1px solid var(--color-border);
 			color: var(--color-text-tertiary);
-			font-size: var(--font-size-xs);
 		}
 
 		tbody th {
 			width: 100%;
 			max-width: 0;
 			overflow: hidden;
-			color: var(--color-text-secondary);
 			text-overflow: ellipsis;
 		}
 
-		tbody td { color: var(--color-text-primary); }
+		&.is-key-value tbody th { color: var(--color-text-secondary); }
 
+		// The result of the rows above it (the export, the total): a filled row,
+		// as a selected list row is, not one more line.
 		.is-total > * {
-			border-top: 1px solid var(--color-border);
-			color: var(--color-text-primary);
+			padding-block: var(--spacing-sm);
+			background: var(--color-bg-tertiary);
 			font-weight: var(--font-weight-semibold);
+
+			&:first-child { border-radius: var(--radius-control) 0 0 var(--radius-control); }
+
+			&:last-child { border-radius: 0 var(--radius-control) var(--radius-control) 0; }
 		}
+
+		.setting-unit {
+			margin-left: var(--spacing-2xs);
+			color: var(--color-text-tertiary);
+		}
+
+		.setting-separator { color: var(--color-text-tertiary); }
 	}
 
 	// ----- Footer -----------------------------------------------------------

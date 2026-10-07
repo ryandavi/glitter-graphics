@@ -6862,7 +6862,8 @@ body.tool-select .preview-container.is-over-picked-layer {
   filter: invert(1);
 }
 
-.asset-browser-index-lead + .category-grid.visible {
+.asset-browser-index-lead + .category-grid.visible,
+.asset-browser-index-lead:not([hidden]) + .asset-browser-category-heading {
   margin-top: var(--spacing-sm);
 }
 
@@ -9341,21 +9342,30 @@ body.modal-open {
   gap: var(--spacing-sm);
 }
 #exportPreviewModal .export-detail-table {
-  width: 100%;
-  border-collapse: collapse;
+  --detail-inset: var(--spacing-sm);
+  width: calc(100% + var(--detail-inset) * 2);
+  margin-inline: calc(var(--detail-inset) * -1);
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
+  line-height: 1.3;
 }
 #exportPreviewModal .export-detail-table th,
 #exportPreviewModal .export-detail-table td {
   padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) 0;
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-normal);
   text-align: left;
   white-space: nowrap;
 }
+#exportPreviewModal .export-detail-table th:first-child,
+#exportPreviewModal .export-detail-table td:first-child {
+  padding-left: var(--detail-inset);
+}
 #exportPreviewModal .export-detail-table th:last-child,
 #exportPreviewModal .export-detail-table td:last-child {
-  padding-right: 0;
+  padding-right: var(--detail-inset);
 }
 #exportPreviewModal .export-detail-table th.is-numeric,
 #exportPreviewModal .export-detail-table td.is-numeric {
@@ -9364,22 +9374,33 @@ body.modal-open {
 #exportPreviewModal .export-detail-table thead th {
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
 }
 #exportPreviewModal .export-detail-table tbody th {
   width: 100%;
   max-width: 0;
   overflow: hidden;
-  color: var(--color-text-secondary);
   text-overflow: ellipsis;
 }
-#exportPreviewModal .export-detail-table tbody td {
-  color: var(--color-text-primary);
+#exportPreviewModal .export-detail-table.is-key-value tbody th {
+  color: var(--color-text-secondary);
 }
 #exportPreviewModal .export-detail-table .is-total > * {
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-primary);
+  padding-block: var(--spacing-sm);
+  background: var(--color-bg-tertiary);
   font-weight: var(--font-weight-semibold);
+}
+#exportPreviewModal .export-detail-table .is-total > *:first-child {
+  border-radius: var(--radius-control) 0 0 var(--radius-control);
+}
+#exportPreviewModal .export-detail-table .is-total > *:last-child {
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+#exportPreviewModal .export-detail-table .setting-unit {
+  margin-left: var(--spacing-2xs);
+  color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-detail-table .setting-separator {
+  color: var(--color-text-tertiary);
 }
 #exportPreviewModal .export-support-link {
   text-decoration: none;

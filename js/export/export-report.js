@@ -26,8 +26,12 @@ function resolveUploadLimits(size, sizeWarnings) {
 
 function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 	const reduction = timelinePlan.reduction;
-	const seconds = (ms, digits = 2) => `${(ms / 1000).toFixed(digits)} s`;
-	const uses = (count) => (count > 1 ? `×${count}` : '');
+	// A cell is plain text, a measure ({ value, unit, from }) the presenter
+	// formats with formatUnit, or a state badge ({ badge, on }).
+	const measure = (value, unit, from = null) => ({ value: String(value), unit, from: from === null ? null : String(from) });
+	const seconds = (ms, digits = 2) => measure((ms / 1000).toFixed(digits), 's');
+	const uses = (count) => measure(count, '×');
+	const state = (label, on) => ({ badge: label, on });
 	const tables = [];
 
 	const grouped = new Map();
@@ -47,7 +51,7 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 		// A variable-delay output can average near its target while still holding
 		// a visibly long step, so its rate is marked as an average like a source's.
 		const variableCadence = (timelinePlan.renderClock?.delaySpread || 0) > 0;
-		const rate = (fps, average) => `${average ? '~' : ''}${fps.toFixed(1)} fps`;
+		const rate = (fps, average) => measure(`${average ? '~' : ''}${fps.toFixed(1)}`, 'fps');
 		tables.push({
 			id: 'sources',
 			title: 'Sources',
@@ -67,9 +71,7 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 			columns: [{ label: 'Animation' }, { label: 'Uses', numeric: true }, { label: 'Period', numeric: true }, { label: 'Cycles', numeric: true }],
 			rows: generated.map((asset) => {
 				// The arrow shows a period that was fitted to the loop.
-				const period = asset.periodChanged
-					? `${Math.round(asset.requestedPeriod)} → ${Math.round(asset.resolvedPeriod)} ms`
-					: `${Math.round(asset.resolvedPeriod)} ms`;
+				const period = measure(Math.round(asset.resolvedPeriod), 'ms', asset.periodChanged ? Math.round(asset.requestedPeriod) : null);
 				const cycles = Number.isInteger(asset.cycleCount) ? asset.cycleCount : Number(asset.cycleCount.toFixed(2));
 				return { cells: [asset.label, uses(asset.uses), period, String(cycles)] };
 			})
@@ -79,7 +81,8 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 	const pixelRemoved = reduction.framesRemoved;
 	const preRenderRemoved = reduction.selectionDuplicatesMerged + reduction.preRenderFramesSkipped;
 	const hasReduction = Boolean(reduction.smartReductionEnabled && (pixelRemoved > 0 || preRenderRemoved > 0));
-	const optimization = { id: 'optimization', title: 'Optimization', lines: [], columns: [{ label: 'Setting' }, { label: 'Value', numeric: true }], rows: [] };
+	// Label and value pairs, so this one has no column headings.
+	const optimization = { id: 'optimization', title: 'Optimization', keyValue: true, lines: [], columns: [{ label: 'Setting' }, { label: 'Value', numeric: true }], rows: [] };
 	if (hasReduction) {
 		if (preRenderRemoved > 0) {
 			optimization.lines.push(`Resolved ${reduction.originalFrameCount} timing changes into ${reduction.renderedFrameCount} composed frames, then exported ${reduction.outputFrameCount}.`);
@@ -89,26 +92,28 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 				: 'repeated';
 			optimization.lines.push(`Removed ${pixelRemoved} ${kind} ${pixelRemoved === 1 ? 'frame' : 'frames'} without changing the speed.`);
 		}
-		optimization.rows.push({ cells: ['Frames', `${reduction.originalFrameCount} → ${reduction.outputFrameCount}`] });
+		optimization.rows.push({ cells: ['Frames', measure(reduction.outputFrameCount, '', reduction.originalFrameCount)] });
 		if (reduction.exactDuplicatesMerged > 0) optimization.rows.push({ cells: ['Repeated frames removed', String(reduction.exactDuplicatesMerged)] });
 		if (reduction.nearDuplicatesMerged > 0) {
 			optimization.rows.push({ cells: ['Similar frames removed', String(reduction.nearDuplicatesMerged)] });
-			optimization.rows.push({ cells: ['Maximum visual difference', `${(reduction.maximumVisualError * 100).toFixed(2)}%`] });
+			optimization.rows.push({ cells: ['Maximum visual difference', measure((reduction.maximumVisualError * 100).toFixed(2), '%')] });
 		}
 		optimization.rows.push({ cells: ['Playback speed', reduction.durationPreserved ? 'Unchanged' : 'May differ'] });
 		optimization.rows.push({ cells: ['Loop ending', timelinePlan.loopSeam.exact ? 'Exact match' : 'Best available match'] });
 	}
 	if (!reduction.preferredBudgetMet) optimization.lines.push(`Kept ${reduction.outputFrameCount} frames to keep the motion smooth.`);
 	if (target.isGif && colorAnalysis) {
-		const mode = colorAnalysis.paletteMode === 'native' ? 'per frame' : 'shared';
-		if (colorAnalysis.paletteMode) optimization.rows.push({ cells: ['Palette', `${colorAnalysis.paletteSize} colors, ${mode}`] });
-		optimization.rows.push({ cells: ['Dithering', colorAnalysis.ditherEnabled ? 'On' : colorAnalysis.authoredDither ? 'From a Dither filter' : 'Off'] });
+		if (colorAnalysis.paletteMode) {
+			optimization.rows.push({ cells: ['Palette', colorAnalysis.paletteMode === 'native' ? 'Per frame' : 'Shared'] });
+			optimization.rows.push({ cells: ['Colors', String(colorAnalysis.paletteSize)] });
+		}
+		optimization.rows.push({ cells: ['Dithering', colorAnalysis.ditherEnabled ? state('On', true) : colorAnalysis.authoredDither ? state('Dither filter', true) : state('Off', false)] });
 	}
 	if (optimization.lines.length || optimization.rows.length) tables.push(optimization);
 
 	// Phases that round to nothing are left out of the rows, not the total.
 	const phases = timelinePlan.phaseTimings || [];
-	const shown = phases.filter((phase) => seconds(phase.ms, 1) !== seconds(0, 1));
+	const shown = phases.filter((phase) => seconds(phase.ms, 1).value !== seconds(0, 1).value);
 	if (shown.length) {
 		const total = phases.reduce((sum, phase) => sum + phase.ms, 0);
 		tables.push({
@@ -116,8 +121,8 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 			title: 'Export time',
 			columns: [{ label: 'Phase' }, { label: 'Time', numeric: true }, { label: 'Share', numeric: true }],
 			rows: [
-				...shown.map((phase) => ({ cells: [phase.label, seconds(phase.ms, 1), `${Math.round(phase.ms / total * 100)}%`] })),
-				{ strong: true, cells: ['Total', seconds(total, 1), ''] }
+				...shown.map((phase) => ({ cells: [phase.label, seconds(phase.ms, 1), measure(Math.round(phase.ms / total * 100), '%')] })),
+				{ strong: true, cells: ['Total', seconds(total, 1), measure(100, '%')] }
 			]
 		});
 	}

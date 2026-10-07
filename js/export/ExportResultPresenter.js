@@ -123,22 +123,25 @@ class ExportResultPresenter {
 			if (!table.rows.length) return group;
 			const element = document.createElement('table');
 			element.className = 'export-detail-table';
-			const head = element.createTHead().insertRow();
-			table.columns.forEach((column) => {
-				const cell = document.createElement('th');
-				cell.scope = 'col';
-				cell.textContent = column.label;
-				cell.classList.toggle('is-numeric', Boolean(column.numeric));
-				head.append(cell);
-			});
+			element.classList.toggle('is-key-value', Boolean(table.keyValue));
+			if (!table.keyValue) {
+				const head = element.createTHead().insertRow();
+				table.columns.forEach((column) => {
+					const cell = document.createElement('th');
+					cell.scope = 'col';
+					cell.textContent = column.label;
+					cell.classList.toggle('is-numeric', Boolean(column.numeric));
+					head.append(cell);
+				});
+			}
 			const body = element.createTBody();
 			table.rows.forEach((row) => {
 				const line = body.insertRow();
 				line.classList.toggle('is-total', Boolean(row.strong));
-				row.cells.forEach((text, index) => {
+				row.cells.forEach((content, index) => {
 					const cell = index === 0 ? document.createElement('th') : document.createElement('td');
 					if (index === 0) cell.scope = 'row';
-					cell.textContent = text;
+					this._fillDetailCell(cell, content);
 					cell.classList.toggle('is-numeric', Boolean(table.columns[index].numeric));
 					line.append(cell);
 				});
@@ -146,6 +149,23 @@ class ExportResultPresenter {
 			group.append(element);
 			return group;
 		}));
+	}
+
+	// Text is set as text. A measure holds only numbers the report formatted,
+	// so it goes through formatUnit like every other readout.
+	_fillDetailCell(cell, content) {
+		if (typeof content === 'string') {
+			cell.textContent = content;
+		} else if (content.badge) {
+			const badge = document.createElement('span');
+			badge.className = 'badge';
+			badge.classList.toggle('is-accent', content.on);
+			badge.textContent = content.badge;
+			cell.append(badge);
+		} else {
+			const from = content.from === null ? '' : `${content.from}<span class="setting-separator"> → </span>`;
+			cell.innerHTML = from + formatUnit(content.value, content.unit);
+		}
 	}
 
 	// The views swap inside the side column, so the preview and facts stay put.
