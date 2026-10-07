@@ -3602,6 +3602,8 @@ body.is-resizing-panel canvas {
       display: none;
     }
     .asset-browser-rail > select::picker(select) {
+      max-height: min(320px, 60vh);
+      overflow-y: auto;
       margin-top: var(--spacing-xs);
       padding: var(--spacing-xs);
       border: 1px solid var(--color-border);
@@ -4766,13 +4768,13 @@ body.mask-editing .sticker-element {
   min-height: calc(var(--font-size-sm) * var(--line-height-tight) + 2 * var(--spacing-xs));
   color: var(--color-text-secondary);
 }
-.export-progress #exportProgressDetail {
+.export-progress .export-progress-detail {
   min-width: 0;
   padding-block: var(--spacing-xs);
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.export-progress #exportProgressTime, .export-progress #exportProgressPercent {
+.export-progress .export-progress-time, .export-progress .export-progress-percent {
   flex: 0 0 auto;
 }
 .export-progress .export-progress-announcement {
@@ -6930,10 +6932,9 @@ body.tool-select .preview-container.is-over-picked-layer {
   white-space: nowrap;
 }
 
-.asset-favorite-toggle {
+.asset-favorite-toggle, .asset-delete-button {
   position: absolute;
   top: var(--spacing-xs);
-  left: var(--spacing-xs);
   z-index: 1;
   display: grid;
   place-items: center;
@@ -6949,30 +6950,38 @@ body.tool-select .preview-container.is-over-picked-layer {
   opacity: 0;
   transition: opacity var(--transition-fast), color var(--transition-fast);
 }
-.asset-favorite-toggle > .icon {
+.asset-favorite-toggle > .icon, .asset-delete-button > .icon {
   width: 12px;
   height: 12px;
 }
-.asset-favorite-toggle:hover {
+.asset-favorite-toggle:hover, .asset-delete-button:hover {
   color: var(--color-accent);
 }
-.asset-favorite-toggle:focus-visible {
+.asset-favorite-toggle:focus-visible, .asset-delete-button:focus-visible {
   opacity: 1;
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
-.asset-favorite-toggle.active {
+.asset-favorite-toggle.active, .asset-delete-button.active {
   --icon-heart-fill: currentColor;
   opacity: 1;
   color: var(--color-accent);
 }
-.asset-option:is(:hover, :focus-visible, :focus-within) > .asset-favorite-toggle {
+.asset-option:is(:hover, :focus-visible, :focus-within) > .asset-favorite-toggle, .asset-option:is(:hover, :focus-visible, :focus-within) > .asset-delete-button {
   opacity: 1;
 }
 @media (hover: none) {
-  .asset-favorite-toggle {
+  .asset-favorite-toggle, .asset-delete-button {
     opacity: 0.85;
   }
+}
+
+.asset-favorite-toggle {
+  left: var(--spacing-xs);
+}
+
+.asset-delete-button {
+  right: var(--spacing-xs);
 }
 
 .asset-browser-shortcuts {
@@ -9660,6 +9669,31 @@ body.modal-open {
 
 #glitterBrowser .asset-option.recolor-unavailable {
   opacity: 0.3;
+}
+
+#backgroundRemovalModal .background-removal-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+#backgroundRemovalModal figure {
+  margin: 0;
+  min-width: 0;
+}
+#backgroundRemovalModal figcaption {
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+}
+#backgroundRemovalModal img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 40vh;
+  -o-object-fit: contain;
+     object-fit: contain;
+  background-color: var(--color-bg-secondary);
+  background-image: conic-gradient(var(--color-checkerboard) 25%, transparent 0 50%, var(--color-checkerboard) 0 75%, transparent 0);
+  background-size: 16px 16px;
 }
 
 /* ===== WELCOME MODAL ===== */

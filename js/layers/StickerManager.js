@@ -81,6 +81,7 @@ class StickerManager {
 	}
 
 	setupEventListeners() {
+		document.getElementById('stickerRemoveBackground')?.addEventListener('click', () => COMMANDS.removeBackground.run(this.editor));
 
 		this.ui.fitCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fit'));
 		this.ui.fillCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fill'));
@@ -255,6 +256,12 @@ class StickerManager {
 
 	loadLayerSettings(layer) {
 		if (layer?.type !== LayerType.STICKER) return;
+		const removeButton = document.getElementById('stickerRemoveBackground');
+		if (removeButton) removeButton.hidden = !this.canRemoveBackground(layer);
+		if (this.editor.layerManager.getActiveLayer() === layer) {
+			const contextButton = document.getElementById('contextRemoveBackground');
+			if (contextButton) contextButton.hidden = !this.canRemoveBackground(layer);
+		}
 		this.editor.loadTransformSettings(layer, 'sticker');
 		const asset = this.editor.stickerLibrary.getItemById(layer.stickerSourceId);
 		if (asset) this.editor.updateStickerAssetInfo(asset);
@@ -489,6 +496,48 @@ class StickerManager {
 		};
 
 		return layer;
+	}
+
+	canRemoveBackground(layer = this.editor.layerManager.getActiveLayer()) {
+		const item = this.editor.stickerLibrary.getItemById(layer?.stickerSourceId);
+		return CONFIG.tools.backgroundRemoval.enabled && layer?.type === LayerType.STICKER
+			&& !this.editor.layerManager.hasMultiSelection() && !this.editor.isLayerContentLocked(layer)
+			&& item?.source === 'user-upload' && !item.backgroundRemoved && !item.isAnimated && ['image/png', 'image/jpeg'].includes(item.mimeType);
+	}
+
+	async removeBackground() {
+		if (this.backgroundRemovalLoading || !this.canRemoveBackground()) return;
+		const layer = this.editor.layerManager.getActiveLayer();
+		const item = this.editor.stickerLibrary.getItemById(layer.stickerSourceId);
+		if (item.width * item.height > CONFIG.tools.backgroundRemoval.maxInputPixels) {
+			this.editor.showError('This image is too large to remove its background. Try a smaller image.');
+			return;
+		}
+		this.backgroundRemovalLoading = true;
+		try {
+			await loadScriptOnce('js/systems/BackgroundRemover.js?v=d2ed8cbf');
+			this.backgroundRemover ||= new BackgroundRemover(this.editor);
+			await this.backgroundRemover.run(layer, item);
+		} catch (error) { this.editor.showError(error.message); }
+		finally { this.backgroundRemovalLoading = false; }
+	}
+
+	async replaceWithCutout(layer, originalId, item) {
+		await AssetImageCache.get(item.url);
+		if (!this.editor.layerManager.layers.includes(layer) || layer.stickerSourceId !== originalId || !this.editor.canEditLayer(layer)) throw new Error('The sticker changed. Run Remove background again.');
+		layer.stickerSourceId = item.id;
+		Object.assign(layer.stickerData, {
+			baseUrl: item.url, url: item.url, variantUrls: null, name: item.name, source: item.source,
+			width: item.width, height: item.height, isAnimated: false, frameCount: 1,
+			staticImageData: null, slice: null, sliceEnabled: false
+		});
+		this.renderLayer(layer);
+		this.editor.layerManager.renderLayersList();
+		this.editor.requestPreviewUpdate();
+		this.editor.updateStickerSelection();
+		if (this.editor.layerManager.getActiveLayer() === layer) this.loadLayerSettings(layer);
+		this.editor.saveState('Remove background');
+		this.editor.updateStatus('Background removed');
 	}
 
 	async addStickerToCanvas(stickerId) {

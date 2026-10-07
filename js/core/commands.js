@@ -1,4 +1,5 @@
 const COMMANDS = {
+	removeBackground: { label: 'Remove background', group: 'Sticker', when: editor => editor.stickerManager.canRemoveBackground(), run: editor => editor.stickerManager.removeBackground() },
 	recolorGlitter: { label: 'Recolor a glitter', group: 'Library', run: (editor, target) => editor.glitterRecolor.command(target) },
 	copyStyleAsPreset: {
 		label: 'Copy style as preset', group: 'Text',

@@ -50,7 +50,7 @@ const CONFIG = deepFreeze({
 			autoCreateGlitterLayer: true
 		},
 		assets: {
-			manifestVersion: '2026-07-28'
+			manifestVersion: '2026-10-07'
 		}
 	},
 
@@ -262,7 +262,7 @@ const CONFIG = deepFreeze({
 			// tools/abr-import.js). BrushLibrary loads this at boot alongside the
 			// vector tips in ShapeLibrary.
 			rasterBrushes: {
-				manifest: 'data/brushes.json?v=3'
+				manifest: 'data/brushes.json'
 			},
 			// Per-brush "Scatter & Jitter" panel: slider ranges + the neutral
 			// defaults a brush falls back to. Stored overrides live per brush id in
@@ -437,6 +437,20 @@ const CONFIG = deepFreeze({
 				color: '#ffd84a'
 			}
 		},
+		backgroundRemoval: {
+			enabled: true,
+			inputSize: 1024,
+			maxInputPixels: 16777216,
+			idleReleaseMs: 120000,
+			runtimePath: 'js/vendor/background-removal/',
+			runtimeModule: 'js/vendor/background-removal/ort-wasm-simd-threaded.jsep.js?v=4bd4f586',
+			cacheName: 'glitter-background-removal-isnet-cda7d26',
+			modelUrls: [
+				'https://huggingface.co/chenjindu/isnet-web/resolve/cda7d26ab33047a109639812bee5fe6a3c2f8a0d/isnet-w8.part00',
+				'https://huggingface.co/chenjindu/isnet-web/resolve/cda7d26ab33047a109639812bee5fe6a3c2f8a0d/isnet-w8.part01',
+				'https://huggingface.co/chenjindu/isnet-web/resolve/cda7d26ab33047a109639812bee5fe6a3c2f8a0d/isnet-w8.part02'
+			]
+		},
 		stickers: {
 			// null preserves an empty new sticker layer.
 			defaultStickerId: 1,
@@ -477,7 +491,7 @@ const CONFIG = deepFreeze({
 			defaultWarpType: 'none',
 			// Canvas input uses the same string and layout as the panel.
 			canvasEditing: true,
-			fontsManifest: 'data/fonts.json?v=6',
+			fontsManifest: 'data/fonts.json',
 			defaultFontId: 'comic-sans',
 			defaultFontWeight: 400,
 			defaultFontStyle: 'normal',
@@ -501,7 +515,7 @@ const CONFIG = deepFreeze({
 			}
 		},
 		shapes: {
-			manifest: 'data/shapes.json?v=2',
+			manifest: 'data/shapes.json',
 			defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
 			defaultSize: 160,           // intrinsic px for a click (no-drag) create
 			minSize: 8,
@@ -697,8 +711,19 @@ const CONFIG = deepFreeze({
 		hints: {
 			enabledByDefault: true
 		},
-		// The canvas activity pill. Work faster than showDelayMs shows nothing;
-		// once shown it stays minVisibleMs so it cannot flash.
+		// Shared timing and estimates for cancellable canvas task cards.
+		taskProgress: {
+			slowPhaseNoticeMs: 2000,
+			timerRefreshMs: 500,
+			estimateAfterMs: 3000,
+			estimateAfterPercent: 10,
+			estimateIncreaseFactor: 2,
+			estimateIncreaseMarginMs: 15000,
+			almostDoneMs: 5000,
+			estimateRoundSeconds: 5
+		},
+		// Work faster than showDelayMs shows nothing; once shown it stays
+		// minVisibleMs so the canvas activity pill cannot flash.
 		activity: {
 			showDelayMs: 250,
 			minVisibleMs: 400,
@@ -737,6 +762,7 @@ const CONFIG = deepFreeze({
 				allowMultiSelection: true,
 				controls: [
 					{ kind: 'toggle', id: 'contextAutoSelect', label: 'Auto-Select' },
+					{ kind: 'button', id: 'contextRemoveBackground', icon: 'eraser', name: 'Remove background', title: 'Remove background from this uploaded sticker', action: 'removeBackground' },
 					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
 					{ kind: 'button', id: 'centerLayerVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
@@ -822,17 +848,7 @@ const CONFIG = deepFreeze({
 				maxFrames: 60
 			}
 		},
-		progress: {
-			yieldEveryFrames: 2,
-			slowPhaseNoticeMs: 2000,
-			timerRefreshMs: 500,
-			estimateAfterMs: 3000,
-			estimateAfterPercent: 10,
-			estimateIncreaseFactor: 2,
-			estimateIncreaseMarginMs: 15000,
-			almostDoneMs: 5000,
-			estimateRoundSeconds: 5
-		},
+		progress: { yieldEveryFrames: 2 },
 		timeline: {
 			maxSamplingFps: 30,
 			proceduralPeriodTolerance: 0.10,

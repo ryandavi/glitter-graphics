@@ -12,17 +12,39 @@ async function main() {
 	const browser = await chromium.launch({ headless: true });
 	try {
 		const page = await browser.newPage({ viewport: { width: 1000, height: 760 } });
+		const manifestRequests = [];
+		// Source boot exceeds the browser's default Resource Timing buffer.
+		const resourceRequests = [];
+		page.on('request', (request) => {
+			resourceRequests.push(new URL(request.url()).pathname);
+			if (/\/data\/(?:shapes|brushes|fonts|glitter\.index|stickers\.index)\.json\?/u.test(request.url())) manifestRequests.push(request.url());
+		});
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
 		await page.waitForFunction(() => (
 			window.editor?.glitterLibrary.content.length > 0
 			&& window.editor?.stickerLibrary.content.length > 0
 		));
+		for (const file of ['shapes', 'brushes', 'fonts', 'glitter.index', 'stickers.index']) {
+			assert(manifestRequests.filter((url) => new URL(url).pathname.endsWith(`/data/${file}.json`)).length === 1,
+				`${file} manifest preload was not reused by the loader`);
+		}
+		const boot = await page.evaluate(() => ({
+			fonts: FontLibrary.fonts.length,
+			rasterBrushes: Object.keys(BrushLibrary.BRUSHES).length,
+			brushes: window.editor.brushTipManager.content.length,
+			vectors: ShapeLibrary.BRUSH_SHAPES.length,
+			preloads: [...document.querySelectorAll('link[as="fetch"]')].map((link) => link.href)
+		}));
+		assert(boot.fonts === require('../../data/fonts.json').fonts.length, 'Font boot manifest is incomplete');
+		assert(boot.rasterBrushes === require('../../data/brushes.json').brushes.length, 'Raster brush boot manifest is incomplete');
+		assert(boot.brushes === boot.rasterBrushes + boot.vectors, 'Concurrent boot lost brush definitions');
+		assert(boot.preloads.every((url) => manifestRequests.includes(url)), 'Preload and loader manifest URLs differ');
 
+		const initialResources = [...resourceRequests];
 		const result = await page.evaluate(async () => {
 			const glitter = window.editor.glitterLibrary.content.find((asset) => asset._detailLoaded === false);
 			const sticker = window.editor.stickerLibrary.content.find((asset) => asset._detailLoaded === false);
 			if (!glitter || !sticker) throw new Error('Expected indexed assets with deferred details');
-			const initialResources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
 			const initial = {
 				glitterId: glitter.id,
 				stickerId: sticker.id,
@@ -33,7 +55,6 @@ async function main() {
 				window.editor.glitterLibrary.ensureAssetDetails(glitter),
 				window.editor.stickerLibrary.ensureAssetDetails(sticker)
 			]);
-			const finalResources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
 
 			await window.editor.loadBlankImage(240, 180, '#ffffff');
 			const manager = window.editor.stickerManager;
@@ -94,11 +115,11 @@ async function main() {
 				stickerLoaded: sticker._detailLoaded,
 				glitterFillBrightness: glitter.brightness,
 				stickerFileSize: sticker.fileSize,
-				initialResources,
-				finalResources,
 				replacement: { beforePreload, afterPreload, oldUrl, nextUrl }
 			};
 		});
+		result.initialResources = initialResources;
+		result.finalResources = [...resourceRequests];
 
 		assert(result.initialResources.some((path) => path.endsWith('/data/glitter.index.json')), 'Glitter browse index was not loaded');
 		assert(result.initialResources.some((path) => path.endsWith('/data/stickers.index.json')), 'Sticker browse index was not loaded');

@@ -284,7 +284,7 @@ class GifEncodingPipeline {
 		return new Promise((resolve, reject) => {
 			const cancelTimer = window.setInterval(() => {
 				if (isCancelled?.()) gif.abort();
-			}, CONFIG.export.progress.timerRefreshMs);
+			}, CONFIG.ui.taskProgress.timerRefreshMs);
 			const stop = () => clearInterval(cancelTimer);
 			gif.on('error', (error) => { stop(); reject(new Error(`GIF encoding failed: ${error.message}`)); });
 			gif.on('abort', () => { stop(); reject(new Error('Export cancelled')); });

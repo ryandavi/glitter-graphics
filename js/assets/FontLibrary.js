@@ -21,7 +21,7 @@ const FontLibrary = {
 		if (this.manifestPromise) return this.manifestPromise;
 
 		this.manifestPromise = (async () => {
-			const response = await fetch(CONFIG.tools.text.fontsManifest, { cache: 'no-store' });
+			const response = await fetch(`${CONFIG.tools.text.fontsManifest}?v=${CONFIG.app.assets.manifestVersion}`);
 			if (!response.ok) {
 				throw new Error(`Failed to load fonts manifest (${response.status})`);
 			}

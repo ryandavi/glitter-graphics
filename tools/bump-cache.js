@@ -17,7 +17,11 @@ function stamp(match, prefix, assetPath, suffix, sourceDir = root) {
 }
 
 const source = fs.readFileSync(indexPath, 'utf8');
-const updated = source.replace(assetPattern, (match, attribute, assetPath) => stamp(match, `${attribute}="`, assetPath, '"'));
+const updated = source.replace(assetPattern, (match, attribute, assetPath) => {
+	// Fetch preloads share CONFIG's manifest version with the runtime request.
+	if (/\bas="fetch"/u.test(attribute)) return match;
+	return stamp(match, `${attribute}="`, assetPath, '"');
+});
 
 fs.writeFileSync(indexPath, updated, 'utf8');
 
@@ -28,7 +32,7 @@ function walk(directory) {
 	});
 }
 
-const runtimePattern = /((?:(?:new\s+Worker|loadScriptOnce)\(\s*|\bworkerScript:\s*)['"])([^'"?#]+)(?:\?v=[^'"]*)?(['"])/gu;
+const runtimePattern = /((?:(?:new\s+Worker|loadScriptOnce)\(\s*|\b(?:workerScript|runtimeModule):\s*)['"])([^'"?#]+)(?:\?v=[^'"]*)?(['"])/gu;
 const importPattern = /(['"])([^'"?#]+\.js)(?:\?v=[^'"]*)?(['"])/gu;
 walk(path.join(root, 'js')).filter((file) => file.endsWith('.js')).forEach((file) => {
 	const original = fs.readFileSync(file, 'utf8');

@@ -137,10 +137,9 @@
 
 // The heart on every Library card. Shows on hover or focus; stays once hearted.
 // Touch screens have no hover, so it always shows there.
-.asset-favorite-toggle {
+.asset-favorite-toggle, .asset-delete-button {
 	position: absolute;
 	top: var(--spacing-xs);
-	left: var(--spacing-xs);
 	z-index: 1;
 	display: grid;
 	place-items: center;
@@ -179,6 +178,9 @@
 
 	@media (hover: none) { opacity: 0.85; }
 }
+
+.asset-favorite-toggle { left: var(--spacing-xs); }
+.asset-delete-button { right: var(--spacing-xs); }
 
 // Quick picks: one row above the browser, in the kind's own tile grid. No
 // scroller: AssetBrowser._fitShortcutRow hides the tiles past the auto-fill

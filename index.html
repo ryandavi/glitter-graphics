@@ -43,7 +43,12 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=0f335ac4">
+	<link rel="stylesheet" href="css/style.css?v=2d2074f3">
+	<!-- shell:manifests:start -->
+	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-07">
+	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-07">
+	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/fonts.json?v=2026-10-07">
+	<!-- shell:manifests:end -->
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1747,12 +1752,12 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=d00936bc"></script>
 	<script src="js/core/fields.js?v=2552e4f7"></script>
-	<script src="js/core/config.js?v=74b2f264"></script>
+	<script src="js/core/config.js?v=e57d7eb9"></script>
 	<script src="js/core/tools.js?v=c6495ef0"></script>
 	<script src="js/core/layer-types.js?v=79d7dbe5"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=66b70db4"></script>
-	<script src="js/ui/panel-schemas.js?v=1aa06e9e"></script>
+	<script src="js/ui/panel-schemas.js?v=52636122"></script>
 	<script src="js/paint/paint-slots.js?v=b7072032"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
 	<script src="js/layers/types/filter.js?v=bbe63a02"></script>
@@ -1767,9 +1772,9 @@
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
 	<script src="js/core/export-target.js?v=368d3fa5"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=eb946adb"></script>
+	<script src="js/core/preferences.js?v=e51eb62e"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=8891928f"></script>
+	<script src="js/core/commands.js?v=e77f118e"></script>
 	<script src="js/core/dom.js?v=b728eda1"></script>
 	<script src="js/core/document-scaler.js?v=a90647ed"></script>
 	<script src="js/transforms/transform-math.js?v=80f99bc9"></script>
@@ -1830,20 +1835,20 @@
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=5b94bd2a"></script>
 	<script src="js/editor/settings.js?v=217c18c9"></script>
-	<script src="js/editor/panels.js?v=37e9c5a8"></script>
+	<script src="js/editor/panels.js?v=bbbe53cd"></script>
 	<script src="js/editor/fill-tool.js?v=6c2b0197"></script>
 	<script src="js/editor/disclosures.js?v=86ab4f66"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=af2511c8"></script>
 	<script src="js/editor/document-start.js?v=ca44fe0b"></script>
-		<script src="js/ui/glitter-recolor.js?v=59eaec03"></script>
+		<script src="js/ui/glitter-recolor.js?v=b04415ed"></script>
 		<script src="js/editor/modals-wiring.js?v=36c09e53"></script>
 	<script src="js/editor/layer-panel.js?v=79b69f89"></script>
 	<script src="js/editor/canvas-gestures.js?v=cafdf9d1"></script>
 	<script src="js/editor/canvas-size.js?v=69c7456a"></script>
 	<script src="js/editor/canvas-resize.js?v=ea25c5e4"></script>
-		<script src="js/ui/hints.js?v=fe0df968"></script>
+		<script src="js/ui/hints.js?v=52871daa"></script>
 	<script src="js/ui/picker-session.js?v=8d635a67"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=93b572cf"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
@@ -1856,10 +1861,11 @@
 	<script src="js/export/ExportTimeline.js?v=ca9a59d7"></script>
 	<script src="js/export/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/export/AuthoredFrameResolver.js?v=3139d2c3"></script>
-	<script src="js/export/GifEncodingPipeline.js?v=15ea66a0"></script>
+	<script src="js/export/GifEncodingPipeline.js?v=c2c19474"></script>
 	<script src="js/systems/AnimationTicker.js?v=1d5c50aa"></script>
 	<script src="js/systems/AnimationPanelController.js?v=b5c84fa0"></script>
-	<script src="js/export/ExportProgressPresenter.js?v=4754a2c1"></script>
+	<script src="js/ui/task-progress-presenter.js?v=c31306fb"></script>
+	<script src="js/export/ExportProgressPresenter.js?v=88bcac01"></script>
 	<script src="js/export/export-report.js?v=3ee6ae81"></script>
 	<script src="js/export/ExportResultPresenter.js?v=cf3b502a"></script>
 	<script src="js/export/SceneCompositor.js?v=bec4d49c"></script>
@@ -1872,12 +1878,12 @@
 	<script src="js/transforms/selection-chrome.js?v=5ad5a8d7"></script>
 	<script src="js/systems/ViewportManager.js?v=0d72e3f2"></script>
 	<script src="js/systems/HistoryManager.js?v=290ea8db"></script>
-	<script src="js/export/ProjectSerializer.js?v=b1775018"></script>
+	<script src="js/export/ProjectSerializer.js?v=ac8f4ca3"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
-	<script src="js/assets/ShapeLibrary.js?v=75fed2ea"></script>
-	<script src="js/assets/BrushLibrary.js?v=8a18d0a5"></script>
-	<script src="js/assets/FontLibrary.js?v=d18c8fd9"></script>
+	<script src="js/assets/ShapeLibrary.js?v=9c18e9e4"></script>
+	<script src="js/assets/BrushLibrary.js?v=c610c9a7"></script>
+	<script src="js/assets/FontLibrary.js?v=0a049983"></script>
 	<script src="js/systems/MaskEditor.js?v=c3c3a5f3"></script>
 
 	<!-- Layers-->
@@ -1889,9 +1895,9 @@
 	<script src="js/assets/AssetBrowserRail.js?v=d77f73d7"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
-	<script src="js/assets/ContentManager.js?v=1f4291eb"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=5e34e3d2"></script>
-	<script src="js/assets/StickerBrowserManager.js?v=fc1f34c1"></script>
+	<script src="js/assets/ContentManager.js?v=fd3b2c99"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=3fb1b2f8"></script>
+	<script src="js/assets/StickerBrowserManager.js?v=c1230583"></script>
 	<script src="js/assets/BrushTipManager.js?v=43771a20"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
@@ -1906,7 +1912,7 @@
 	<script src="js/ui/text-edit.js?v=989a9459"></script>
 	<script src="js/layers/TextGlitterManager.js?v=a5e2206d"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=962aa8a0"></script>
-	<script src="js/layers/StickerManager.js?v=e0444d22"></script>
+	<script src="js/layers/StickerManager.js?v=b5ec705e"></script>
 	<script src="js/layers/FilterLayerManager.js?v=951304e7"></script>
 	<script src="js/layers/FrameLayerManager.js?v=e14c3806"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=6e4484f9"></script>
@@ -1915,7 +1921,7 @@
 		<script src="js/systems/MobileManager.js?v=58e62a80"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=be48cf4f"></script>
+	<script src="js/app.js?v=7640fb4c"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

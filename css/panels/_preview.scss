@@ -1023,13 +1023,13 @@ body.mask-editing {
 		min-height: calc(var(--font-size-sm) * var(--line-height-tight) + 2 * var(--spacing-xs));
 		color: var(--color-text-secondary);
 	}
-	#exportProgressDetail {
+	.export-progress-detail {
 		min-width: 0;
 		padding-block: var(--spacing-xs);
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	#exportProgressTime, #exportProgressPercent { flex: 0 0 auto; }
+	.export-progress-time, .export-progress-percent { flex: 0 0 auto; }
 	.export-progress-announcement { @include visually-hidden; }
 	.export-progress-cancel { width: 100%; }
 	.export-progress-bar {

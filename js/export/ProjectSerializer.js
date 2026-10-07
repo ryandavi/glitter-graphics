@@ -323,6 +323,7 @@ class ProjectSerializer {
 				name: sticker.name || 'Sticker',
 				fileName: sticker.filename || `${sticker.name || stickerId}.png`,
 				mimeType: sticker.mimeType || blob.type || 'image/png',
+				backgroundRemoved: sticker.backgroundRemoved === true,
 				data: await this.blobToDataUrl(blob)
 			};
 		}

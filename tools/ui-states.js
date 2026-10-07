@@ -299,4 +299,29 @@ async function recolorStates(page, visit, viewport) {
 	await visit(`${viewport} recolor pending adjustment`);
 }
 
-module.exports = { chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates };
+async function backgroundRemovalStates(page, visit, viewport) {
+	await page.evaluate(async () => {
+		await editor.loadBlankImage(320, 240, '#ffffff');
+		await loadScriptOnce('js/systems/BackgroundRemover.js');
+		editor.stickerManager.backgroundRemover ||= new BackgroundRemover(editor);
+		editor.stickerManager.backgroundRemover.progress.show({ title: 'Removing background', detail: 'Downloading background remover (1/3)' });
+	});
+	await visit(`${viewport} background removal processing`);
+	await page.evaluate(() => {
+		const progress = editor.stickerManager.backgroundRemover.progress;
+		progress.started -= CONFIG.ui.taskProgress.slowPhaseNoticeMs;
+		progress.update(0, 'Removing background…', 0, 0, { indeterminate: true });
+	});
+	await visit(`${viewport} background removal still working`);
+	await page.evaluate(async () => {
+		const remover = editor.stickerManager.backgroundRemover;
+		remover.progress.hide();
+		remover.node('Before').src = 'images/stickers/character/cunty-coffee-cup.png';
+		remover.node('After').src = remover.node('Before').src;
+		await Promise.all([remover.node('Before').decode(), remover.node('After').decode()]);
+		await editor.modalManager.open('backgroundRemovalModal');
+	});
+	await visit(`${viewport} background removal preview`);
+}
+
+module.exports = { chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates };

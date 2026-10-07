@@ -385,14 +385,16 @@ class GlitterEditor {
 		});
 		this.mp4Exporter = new Mp4Exporter(this.sceneCompositor, this.exportResultPresenter);
 		this.stillImageExporter = new StillImageExporter(this.sceneCompositor, this.exportResultPresenter, this.gifEncodingPipeline);
-		await this.stickerManager.init();
-		await this.stickerLibrary.init();
-		await this.glitterManager.init();
-		await this.glitterLibrary.init();
-		await this.brushTipManager.init();
-		await this.textGlitterManager.init();
-		await this.shapeBrowserManager.init();
-		await this.fontBrowserManager.init();
+		await Promise.all([
+			this.stickerManager.init(),
+			this.stickerLibrary.init(),
+			this.glitterManager.init(),
+			this.glitterLibrary.init(),
+			this.brushTipManager.init(),
+			this.textGlitterManager.init(),
+			this.shapeBrowserManager.init(),
+			this.fontBrowserManager.init()
+		]);
 		this.updateSidePanelUI(null);
 		document.body.classList.remove('is-booting');
 	}
@@ -449,7 +451,6 @@ class GlitterEditor {
 		document.getElementById('fillMaskPaint')?.addEventListener('click', () => this.setTool(ToolType.BRUSH));
 
 		const actions = [
-			{ id: 'exportProgressCancel', handler: () => this.exportProgressPresenter.cancel() },
 			{ id: 'undoTool', handler: () => this.undo() },
 			{ id: 'redoTool', handler: () => this.redo() },
 			{ id: 'clearAllTool', handler: () => this.resetAll() }
@@ -684,6 +685,8 @@ class GlitterEditor {
 
 
 	updateContextToolbars() {
+		const removeBackgroundButton = document.getElementById('contextRemoveBackground');
+		if (removeBackgroundButton) removeBackgroundButton.hidden = !this.stickerManager.canRemoveBackground();
 		const brushSettingsSection = document.getElementById('brushSettingsSection');
 		const toolbarConfigs = CONFIG.ui.contextToolbars || [];
 		const toolbars = toolbarConfigs.map((config) => ({
@@ -1982,16 +1985,20 @@ GlitterEditor.CANVAS_ANCHORS = CANVAS_SIZE_CONTROL_METHODS.CANVAS_ANCHORS;
 
 // everything inside IIFE
 (async () => {
-	await ShapeLibrary.loadManifest();
+	performance.mark('glitter:scripts-parsed');
 	// Raster brush packs sit on top of the vector tips; a failure here must not
 	// block the editor (the Basic vector tips still work).
-	try {
-		await BrushLibrary.loadManifest();
-	} catch (error) {
-		console.warn('Raster brush packs unavailable:', error);
-	}
+	await Promise.all([
+		ShapeLibrary.loadManifest(),
+		BrushLibrary.loadManifest().catch((error) => {
+			console.warn('Raster brush packs unavailable:', error);
+		})
+	]);
+	performance.mark('glitter:manifests-loaded');
 	const editor = new GlitterEditor();
+	performance.mark('glitter:constructor-done');
 	await editor.init();
+	performance.mark('glitter:init-done');
 
 	// Load debug configuration if enabled
 	if (DEBUG_CONFIG.enabled) {
@@ -2000,4 +2007,5 @@ GlitterEditor.CANVAS_ANCHORS = CANVAS_SIZE_CONTROL_METHODS.CANVAS_ANCHORS;
 
 	// Make editor globally accessible (optional, useful for debugging)
 	window.editor = editor;
+	performance.mark('glitter:editor-ready');
 })();

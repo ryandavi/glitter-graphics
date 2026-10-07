@@ -24,6 +24,17 @@ const HINT_RULES = [
 	},
 	{ id: 'layer-locked', when: (editor, { layer }) => editor.isLayerContentLocked(layer), hint: 'This layer is locked', context: 'Its settings are available to inspect. Unlock it in the Layers panel to make changes.' },
 	{ id: 'sticker-empty', when: (_editor, { layer }) => layer?.type === LayerType.STICKER && !layer.stickerSourceId, hint: 'No sticker chosen—select a sticker from the gallery to place on your canvas' },
+	{
+		id: 'sticker-background-removal',
+		when: (editor, { layer }) => editor.stickerManager.canRemoveBackground(layer)
+			&& !editor.stickerLibrary.getItemById(layer.stickerSourceId).hasTransparency
+			&& (!PREFERENCES.get('backgroundRemovalHintSeen') || editor.backgroundRemovalHintLayerId === layer.id),
+		resolve(editor, { layer }) {
+			editor.backgroundRemovalHintLayerId = layer.id;
+			PREFERENCES.set('backgroundRemovalHintSeen', true);
+			return { hint: 'Want a cutout? Try Remove background in Sticker Properties or the Select bar.', context: 'Preview the result, then Keep or Discard it. The original stays in My Stickers.' };
+		}
+	},
 	{ id: 'text-empty', when: (_editor, { layer }) => layer?.type === LayerType.TEXT_GLITTER && !layer.textData.text.trim(), hint: 'This text layer is empty - type something in the Text section to reveal the glitter fill', context: 'Choose a font, adjust spacing and alignment, and pick a glitter in the browser for the fill.' },
 	{ id: 'glitter-missing-source', when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && !layer.fill.glitterId, hint: 'No glitter selected—choose a glitter style from the gallery to apply it' },
 	{
@@ -108,7 +119,7 @@ function getHintToolInfo(editor, tool) {
 function updateHelpfulMessageFromRules(editor) {
 	const message = el('helpfulMessage');
 	if (!message) return;
-	if (!PREFERENCES.get('showHints') || !editor.originalImage || editor.exportInProgress) {
+	if (!PREFERENCES.get('showHints') || !editor.originalImage || editor.exportInProgress || editor.activeProgressCards?.size) {
 		message.classList.remove('visible');
 		return;
 	}

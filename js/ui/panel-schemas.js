@@ -757,7 +757,8 @@ const PANEL_SCHEMAS = {
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
 							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
 						{ kind: 'toggle', id: 'stickerSliceEnabled', label: 'Smart stretch', checked: true }
-					] }
+					] },
+					{ actions: [{ id: 'stickerRemoveBackground', label: 'Remove background', icon: 'eraser' }] }
 				], advanced: [
 					{ label: 'Color adjust', classes: 'advanced-color-adjust-group', rows: [
 						{ kind: 'slider', id: 'stickerHue', slider: 'hue' },

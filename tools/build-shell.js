@@ -52,6 +52,13 @@ function buildShell(source) {
 	const registries = getAppRegistries();
 	let output = replaceRegion(source, 'tools', (indent) => renderToolButtons(indent, registries));
 	output = replaceRegion(output, 'presets', (indent) => renderStartPresets(indent, registries));
+	output = replaceRegion(output, 'manifests', (indent) => {
+		const { CONFIG } = registries;
+		// Large browse indexes start in parallel during init, preserving CSS bandwidth.
+		const manifests = [CONFIG.tools.shapes.manifest, CONFIG.tools.maskBrush.rasterBrushes.manifest,
+			CONFIG.tools.text.fontsManifest];
+		return manifests.map((file) => `${indent}<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="${escapeHtml(file)}?v=${escapeHtml(CONFIG.app.assets.manifestVersion)}">`).join('\n');
+	});
 	return output;
 }
 

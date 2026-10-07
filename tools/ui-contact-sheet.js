@@ -12,7 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates } = require('./ui-states');
+const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates } = require('./ui-states');
 
 const args = process.argv.slice(2);
 const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
@@ -80,6 +80,7 @@ async function capture(dir) {
 		if (theme) await page.evaluate((name) => { document.documentElement.dataset.theme = name; }, theme);
 		const visit = shooter(page, viewport, theme);
 		if (only === 'recolor') await recolorStates(page, visit, viewportName);
+		else if (only === 'background removal') await backgroundRemovalStates(page, visit, viewportName);
 		else if (phone) await phoneStates(page, visit, { set: args.includes('--drawers') ? 'drawers' : 'sheet' });
 		else await desktopStates(page, visit, { set: 'sheet', viewport: viewportName });
 		await ctx.close();

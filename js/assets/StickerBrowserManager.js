@@ -129,6 +129,18 @@ class StickerBrowserManager extends ContentManager {
 		} finally { done(); }
 	}
 
+	async registerCutout(blob, original) {
+		const file = new File([blob], `${original.name} (cutout).png`, { type: 'image/png' });
+		const item = await this.createUploadedAsset(file, { category: 'user-uploads' });
+		if (!item) throw new Error('Could not keep the cutout. Try a smaller image.');
+		item.isPixelated = original.isPixelated;
+		item.backgroundRemoved = true;
+		this.userContent.unshift(item);
+		this.updateFacetAvailability();
+		this.browser.refresh();
+		return item;
+	}
+
 	async registerEmbeddedSticker(stickerData) {
 		if (!stickerData?.id || !stickerData?.data) return null;
 		const existing = this.getItemById(stickerData.id);
@@ -137,6 +149,7 @@ class StickerBrowserManager extends ContentManager {
 		const file = new File([blob], stickerData.fileName || `${stickerData.id}.png`, { type: stickerData.mimeType || blob.type });
 		const item = await this.createUploadedAsset(file, { id: stickerData.id, category: 'user-uploads', name: stickerData.name });
 		if (!item) throw new Error('Invalid embedded sticker');
+		item.backgroundRemoved = stickerData.backgroundRemoved === true;
 		this.userContent.unshift(item);
 		this.updateFacetAvailability();
 		this.browser.refresh();
@@ -144,10 +157,11 @@ class StickerBrowserManager extends ContentManager {
 	}
 
 	destroy() {
-		this.userContent.forEach(sticker => {
+		this.getRenderContent().filter(sticker => sticker.source === 'user-upload').forEach(sticker => {
 			if (sticker.url.startsWith('blob:')) URL.revokeObjectURL(sticker.url);
 		});
 		this.userContent = [];
+		this.retiredCustom.clear();
 	}
 
 }

@@ -40,6 +40,12 @@ Test behavior, not implementation. Before writing a new test, check whether an e
 
 ## Headless probe gotchas
 
+`node tests/ui/background-removal-browser.js` checks the lazy action, static-upload eligibility, Cancel/Discard/Keep, phone viewport fit, retained transforms/effects, one-step undo/redo, embedded project reload, repeated PNG exports and transparent GIF export. It substitutes a deterministic worker so the lifecycle check does not depend on model downloads. Real model inference is verified separately with the seven background-removal spike fixtures.
+
+`node tools/load-report.js --url http://localhost/glitter/ --output .tmp/loading/report.json` records cold/warm loads in fresh Chromium contexts, unthrottled and at 1.6 Mbps download / 750 Kbps upload / 150 ms latency with 4× CPU slowdown. It reports CDP transferred bytes (including response headers), request/cache counts, first paint, boot marks and longest observed main-thread task. Local XAMPP transfer sizes are not GitHub Pages gzip transfer sizes. Run reports without concurrent browser tests for meaningful comparisons. `tests/ui/lazy-manifest-browser.js` also checks that each boot manifest is requested once, preloads share the runtime URLs and the font/brush catalogs are complete after concurrent initialization. Shapes, brushes and fonts preload after CSS; large browse indexes start during init.
+
+The lazy-manifest check records Playwright request events: the separate-script source app exceeds the browser's default Resource Timing buffer, which would hide later detail requests from `performance.getEntriesByType('resource')`.
+
 - Fresh sessions open on the start card. The welcome modal only opens on load while `CONFIG.app.startup.showWelcome` is on; if it is, remove `.modal-overlay.visible` before screenshots or clicks.
 - The visible canvas is `editor.previewCanvas`. `#originalCanvas` is hidden.
 - After `editor.loadBlankImage()` or an image upload, wait for `editor.originalImage != null` before adding layers. The load resolves before the async reset finishes.
@@ -143,6 +149,8 @@ This is a documented headless gap rather than an app-code change.
 ## Suite notes
 
 `tests/ui/personal-assets-verify.js` covers personal covers/dropdown thumbnails, collection names and origin marks, batched fill PNG/GIF uploads, smooth JPEG uploads, sticker upload routing, repeated exports and edit/undo, and a project round-trip in a fresh page with original image bytes. It also checks that upload records do not enter recolor recipe preferences.
+
+`node tests/ui/upload-delete-browser.js` checks desktop and touch deletion of uploaded stickers and fills, confirmation cancellation, Favorites/Recents/Quick picks cleanup, retained asset bytes, project embedding, undo/redo and identical PNG exports. Preset cards must have no delete action. Use `GLITTER_TEST_CSS` for scratch Sass; comparison captures are saved under `.tmp/upload-delete/`.
 
 `tests/unit/glitter-recolor-unit.js` checks palette-only rewrites against all published GIFs, including global/local tables and an index that is transparent in one frame and opaque in another. It checks exact mapped pixels, unchanged non-palette bytes and OKLCH helpers. `tests/ui/glitter-recolor-verify.js` covers picking, exact hex editing, local undo, Apply/Cancel, discard confirmation, Save as new/Delete, recipe persistence, replacement across multiple layers and undo, stable exports with an animated sticker, slot-targeted saving, and portable project restore/editing without the library source. `GLITTER_TEST_CSS` uses a scratch stylesheet and enables phone layout checks. `tools/ui-contact-sheet.js capture <dir> --only recolor --css <scratch.css>` captures original, recolored and pending-adjustment views at three widths and two themes.
 

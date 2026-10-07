@@ -28,7 +28,7 @@ const ShapeLibrary = {
 		if (this.manifestPromise) return this.manifestPromise;
 
 		this.manifestPromise = (async () => {
-			const response = await fetch(CONFIG.tools.shapes.manifest, { cache: 'no-store' });
+			const response = await fetch(`${CONFIG.tools.shapes.manifest}?v=${CONFIG.app.assets.manifestVersion}`);
 			if (!response.ok) {
 				throw new Error(`Failed to load shapes manifest (${response.status})`);
 			}

@@ -41,6 +41,8 @@ class ContentManager {
 		// Content arrays
 		this.content = [];
 		this.userContent = [];
+		// Assets removed from the Library may still be needed by layers or undo.
+		this.retiredCustom = new Map();
 		this.assetDetailPromises = new Map();
 		this.assetImageReadyPromises = new Map();
 		this.assetDetailBasePath = null;
@@ -667,6 +669,19 @@ class ContentManager {
 		}
 		if (this.activeFilters.search) this.highlightSearchMatch(option);
 		if (this.libraryKind) option.appendChild(this.createFavoriteToggle(item));
+		if (this.userContent.includes(item)) {
+			const remove = document.createElement('button');
+			remove.type = 'button';
+			remove.className = 'asset-delete-button';
+			remove.title = 'Delete from Library';
+			remove.setAttribute('aria-label', `Delete ${item.name} from Library`);
+			remove.appendChild(createIcon('trash'));
+			remove.addEventListener('click', event => {
+				event.stopPropagation();
+				this.deleteUserAsset(item.id);
+			});
+			option.appendChild(remove);
+		}
 
 		const select = async () => {
 			await (onSelect ? onSelect(item) : this.handleItemClick(item));
@@ -674,7 +689,7 @@ class ContentManager {
 			if (this.activeFilters.search) this.recordSearch();
 		};
 		option.addEventListener('click', (event) => {
-			if (event.target.closest('.asset-favorite-toggle')) return;
+			if (event.target.closest('.asset-favorite-toggle, .asset-delete-button')) return;
 			select();
 		});
 		option.addEventListener('keydown', (event) => {
@@ -860,7 +875,7 @@ class ContentManager {
 	}
 
 	resolveLibraryIds(ids) {
-		return ids.map((id) => this.getItemById(id)).filter(Boolean);
+		return ids.filter(id => !this.retiredCustom.has(id)).map((id) => this.getItemById(id)).filter(Boolean);
 	}
 
 	getRecentItems() {
@@ -876,7 +891,7 @@ class ContentManager {
 	getProjectItems() {
 		const layers = [...(this.editor.layerManager?.layers || [])].reverse();
 		const ids = [...new Set(this.getProjectAssetIds(layers).filter((id) => id != null))];
-		return ids.map((id) => this.getItemById(id)).filter(Boolean);
+		return this.resolveLibraryIds(ids);
 	}
 
 	recordRecent(id) {
@@ -1195,9 +1210,38 @@ class ContentManager {
 	}
 	// ===== UTILITY METHODS =====
 
+	async deleteUserAsset(id) {
+		const item = this.userContent.find(asset => asset.id === id);
+		if (!item) return false;
+		const confirmed = await this.editor.confirmAction({
+			title: 'Delete from Library?', tone: 'danger', confirmLabel: 'Delete',
+			subject: { label: 'Asset', value: item.name },
+			message: 'Layers using this asset will keep working. Undo cannot restore it to the Library.'
+		});
+		if (!confirmed || !this.userContent.includes(item)) return false;
+		this.retireUserAsset(id);
+		this.editor.updateStatus('Asset deleted from Library');
+		return true;
+	}
+
+	retireUserAsset(id) {
+		const item = this.userContent.find(asset => asset.id === id);
+		if (!item) return;
+		this.retiredCustom.set(id, item);
+		this.userContent = this.userContent.filter(asset => asset.id !== id);
+		for (const preference of ['libraryFavorites', 'libraryRecents']) {
+			this.setLibraryIds(preference, this.getLibraryIds(preference).filter(assetId => assetId !== id));
+		}
+		this.updateFacetAvailability();
+		this.refreshUserAssets();
+	}
+
+	refreshUserAssets() { this.browser?.refresh(); }
+	getRenderContent() { return [...this.getAllContent(), ...this.retiredCustom.values()]; }
+
 	getItemById(id) {
 		return this.content.find(item => item.id === id) ||
-			this.userContent.find(item => item.id === id);
+			this.userContent.find(item => item.id === id) || this.retiredCustom.get(id);
 	}
 
 

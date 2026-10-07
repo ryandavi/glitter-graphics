@@ -4,7 +4,6 @@ class GlitterBrowserManager extends ContentManager {
 		super(editor);
 		this.useBrowser = true;
 		this.recolorSources = new Map();
-		this.retiredCustom = new Map();
 		Object.assign(this.activeFilters, { tones: new Set(), intensities: new Set(), temperatures: new Set(), special: new Set() });
 	}
 
@@ -57,8 +56,6 @@ class GlitterBrowserManager extends ContentManager {
 		return item;
 	}
 
-	getItemById(id) { return super.getItemById(id) || this.retiredCustom.get(id); }
-	getRenderContent() { return [...this.getAllContent(), ...this.retiredCustom.values()]; }
 
 	async getRecolorSource(item) {
 		const sourceId = item.recipe?.sourceId ?? item.id;
@@ -153,11 +150,10 @@ class GlitterBrowserManager extends ContentManager {
 	}
 
 	retireCustomGlitter(id) {
-		const item = this.userContent.find(item => item.id === id);
-		if (!item) return;
-		this.retiredCustom.set(id, item);
-		this.userContent = this.userContent.filter(item => item.id !== id);
-		// Retired URLs remain valid for the document, parked slots and undo.
+		this.retireUserAsset(id);
+	}
+
+	refreshUserAssets() {
 		this.persistCustomGlitter();
 		this.refreshCustomCategory();
 	}

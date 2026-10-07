@@ -44,9 +44,11 @@ const BrushLibrary = {
 
 		this.manifestPromise = (async () => {
 			const url = CONFIG.tools.maskBrush.rasterBrushes.manifest;
-			const response = await fetch(url, { cache: 'no-store' });
+			const response = await fetch(`${url}?v=${CONFIG.app.assets.manifestVersion}`);
 			if (!response.ok) throw new Error(`Failed to load brushes manifest (${response.status})`);
 			const manifest = await response.json();
+			// Validation checks raster ids against the vector brush definitions.
+			await ShapeLibrary.loadManifest();
 			this.applyManifest(manifest);
 			await this._preloadTips();
 			return manifest;

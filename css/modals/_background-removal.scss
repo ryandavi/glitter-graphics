@@ -1,0 +1,15 @@
+#backgroundRemovalModal {
+	.background-removal-images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); }
+	figure { margin: 0; min-width: 0; }
+	figcaption { margin-bottom: var(--spacing-sm); font-weight: var(--font-weight-semibold); }
+	img {
+		display: block;
+		width: 100%;
+		height: auto;
+		max-height: 40vh;
+		object-fit: contain;
+		background-color: var(--color-bg-secondary);
+		background-image: conic-gradient(var(--color-checkerboard) 25%, transparent 0 50%, var(--color-checkerboard) 0 75%, transparent 0);
+		background-size: 16px 16px;
+	}
+}

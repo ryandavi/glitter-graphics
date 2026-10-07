@@ -3,6 +3,7 @@
 const PREFERENCE_SCHEMA = Object.freeze({
 	customGlitter: { default: () => [], keepOnReset: true },
 	showHints: { default: () => CONFIG.ui.hints.enabledByDefault },
+	backgroundRemovalHintSeen: { default: () => false, keepOnReset: true },
 	confirmDestructiveActions: { default: () => true },
 	showWelcomeOnStartup: { default: () => true },
 	welcomeLastSeenRelease: { default: () => null },

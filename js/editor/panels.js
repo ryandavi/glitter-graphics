@@ -490,7 +490,7 @@ isLayerContentLocked(layer) {
 					return;
 				}
 				if (type === 'sticker' && this.stickerManager?.armAssetPicker) {
-					manager.armAssetPicker();
+					this.stickerManager.armAssetPicker();
 					return;
 				}
 				revealAssetBrowser(this, manager, asset.id);

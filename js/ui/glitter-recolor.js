@@ -411,10 +411,11 @@ class GlitterRecolorController {
 		finally { this.saving = false; done(); }
 	}
 	async delete() {
-		if (!this.session || this.saving) return;
-		const confirmed = await this.confirm({ title: 'Delete glitter?', message: 'Remove this tile from My Glitter? Layers using it will keep working. Undo cannot restore it to the Library.', confirmLabel: 'Delete' });
-		if (!confirmed) return;
-		this.library.retireCustomGlitter(this.session.item.id); this.editor.modalManager.close('glitterRecolorModal', { force: true });
+		if (!this.session || this.saving || this.confirming) return;
+		this.confirming = true;
+		try {
+			if (await this.library.deleteUserAsset(this.session.item.id)) this.editor.modalManager.close('glitterRecolorModal', { force: true });
+		} finally { this.confirming = false; }
 	}
 	finish() { clearTimeout(this.timer); this.resizeObserver?.disconnect(); this.session = null; this.frames = null; }
 }

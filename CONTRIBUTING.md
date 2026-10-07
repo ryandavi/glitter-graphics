@@ -1,6 +1,6 @@
 # Contributing: glitter editor
 
-Vanilla-JS glitter GIF editor (`index.html` + `js/`) with a PHP/MySQL admin (`admin/`), developed against local XAMPP at `http://localhost/glitter/`. No framework, no bundler, no build step for JS. The dev machine is Windows; shells are Git Bash and PowerShell.
+Vanilla-JS glitter GIF editor (`index.html` + `js/`) with a PHP/MySQL admin (`admin/`), developed against local XAMPP at `http://localhost/glitter/`. Prioritize quick, playful Blingee-style collages. No framework, no bundler, no build step for JS. Bundling is deferred for future work. The dev machine is Windows; shells are Git Bash and PowerShell.
 
 ## Read this when…
 
@@ -18,7 +18,7 @@ Vanilla-JS glitter GIF editor (`index.html` + `js/`) with a PHP/MySQL admin (`ad
 ## Hard rules
 
 - **Never hand-edit `css/style.css` or `css/style.css.map`.** Styling changes go in the SCSS partials under `css/`; `css/style.scss` is import-only. Ryan compiles it himself. If asked to compile, use `npx sass css/style.scss css/style.css --no-source-map` directly. To check your own work, compile to a scratch file (`npx sass css/style.scss <scratch>/out.css --no-source-map`) and view it through `tools/ui-contact-sheet.js --css`. CI recompiles and fails if the committed `style.css` doesn't match, so tell Ryan whenever an SCSS change needs a recompile.
-- **No JS build system.** New JS files are plain scripts (globals, `class Foo {}`) loaded by `<script>` tags in `index.html`. Add the tag yourself, after every script it depends on, run `node tools/build-shell.js` when generated shell markup may have changed, then run `node tools/bump-cache.js` after JS or SCSS output changes so every local asset gets a content hash.
+- **No JS build system.** New JS files are plain scripts (globals, `class Foo {}`) loaded by `<script>` tags in `index.html`. Add the tag yourself, after every script it depends on, run `node tools/build-shell.js` when generated shell markup may have changed, then run `node tools/bump-cache.js` after JS or SCSS output changes so every local asset gets a content hash. Boot manifest preloads are generated from CONFIG by `build-shell.js`; bump `CONFIG.app.assets.manifestVersion` after manifest edits and rebuild the shell so preloads and runtime requests share the same URLs.
 - **LF line endings only** (`.gitattributes` enforces it). Tabs for indentation. Match the existing comment style: comments state constraints, not narration.
 - **Make the smallest change that fully solves the problem.** Don't refactor unrelated code or introduce new architecture unless asked. For styling, the smallest change includes removing what it supersedes: never add a second rule to override the first, change the first.
 - **Reuse before creating.** Before adding a helper, utility, class, file, config entry or test, search for an existing one that can be extended.
