@@ -180,13 +180,22 @@ class GlitterBrowserManager extends ContentManager {
 
 	customizeItemElement(element, item) {
 		const controller = this.editor.glitterRecolor;
-		if (controller?.pickerSession && controller.eligible.get(item.id) !== true) {
-			element.classList.add('recolor-unavailable');
+		const unavailable = Boolean(controller?.pickerSession && controller.eligible.get(item.id) !== true);
+		element.classList.toggle('recolor-unavailable', unavailable);
+		if (unavailable) {
 			element.setAttribute('aria-disabled', 'true');
-		}
+		} else element.removeAttribute('aria-disabled');
 		if (item.isPixelated) {
 			element.classList.add('pixelated');
 		}
+	}
+
+	updateRecolorAvailability() {
+		const items = new Map(this.getAllContent().map(item => [String(item.id), item]));
+		this.browser.elements.browser.querySelectorAll('.asset-option[data-id]').forEach(element => {
+			const item = items.get(element.dataset.id);
+			if (item) this.customizeItemElement(element, item);
+		});
 	}
 
 	matchesChildFilters(item) {

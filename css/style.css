@@ -4448,6 +4448,13 @@ body.mask-editing .sticker-element {
 .mask-brush-controls > * {
   flex: 0 0 auto;
 }
+.zoom-controls > .segmented-control,
+.layer-center-controls > .segmented-control,
+.pan-controls > .segmented-control,
+.color-picker-controls > .segmented-control,
+.mask-brush-controls > .segmented-control {
+  width: auto;
+}
 .zoom-controls .btn-icon,
 .layer-center-controls .btn-icon,
 .pan-controls .btn-icon,

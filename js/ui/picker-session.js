@@ -31,7 +31,7 @@ class PickerRegistry {
 	}
 
 	closeAll() {
-		this.managers.forEach((manager) => manager.closePickerSession?.());
+		this.managers.forEach((manager) => manager.closePickerSession?.({ restorePicker: false }));
 	}
 }
 

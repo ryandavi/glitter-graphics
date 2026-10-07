@@ -17,7 +17,28 @@ async function main() {
 		await page.evaluate(() => editor.modalManager.closeAll());
 		await page.evaluate(() => editor.loadBlankImage(100, 80, '#ffffff'));
 		await page.waitForFunction(() => Boolean(editor.originalImage));
+		await page.evaluate(() => {
+			const layer = editor.glitterManager.createLayer();
+			editor.layerManager.insertLayer(layer);
+			editor.glitterManager.armAssetPicker();
+			editor.glitterLibrary.browser.setState('CATEGORY_DETAIL', 'star-dust');
+		});
+		await page.waitForTimeout(500);
+		await page.evaluate(() => {
+			const browser = editor.glitterLibrary.browser;
+			browser.scrollContainer.scrollTop = 120;
+			window.recolorBrowseBefore = {
+				tiles: [...browser.elements.itemGrid.children], scroll: browser.scrollContainer.scrollTop,
+				title: document.getElementById('galleryPickerStripTitle').textContent,
+				session: editor.glitterManager.pickerSession
+			};
+		});
 		await page.evaluate(() => COMMANDS.recolorGlitter.run(editor));
+		assert(await page.evaluate(() => {
+			const browser = editor.glitterLibrary.browser, before = window.recolorBrowseBefore;
+			return before.tiles.length > 0 && before.tiles.every((tile, index) => browser.elements.itemGrid.children[index] === tile)
+				&& browser.scrollContainer.scrollTop === before.scroll;
+		}));
 		assert(await page.evaluate(() => Boolean(editor.glitterRecolor.pickerSession)));
 		assert(await page.locator('#designGalleryHeader #recolorGlitterBtn').evaluate(button => button.classList.contains('active') && button.getAttribute('aria-pressed') === 'true'));
 		assert(await page.locator('#recolorGlitterBtn').isVisible());
@@ -25,6 +46,13 @@ async function main() {
 		assert.strictEqual(await page.locator('#uploadStickerBtn').evaluate(button => button.getBoundingClientRect().width), 0);
 		await page.locator('#recolorGlitterBtn').click();
 		assert(await page.evaluate(() => !editor.glitterRecolor.pickerSession));
+		assert(await page.evaluate(() => {
+			const before = window.recolorBrowseBefore, strip = document.getElementById('galleryPickerStrip');
+			return !strip.hidden && strip.classList.contains('is-armed')
+				&& document.getElementById('galleryPickerStripTitle').textContent === before.title
+				&& editor.glitterManager.pickerSession.layerId === before.session.layerId
+				&& before.tiles.every(tile => tile.isConnected && !tile.classList.contains('recolor-unavailable') && !tile.hasAttribute('aria-disabled'));
+		}));
 		await page.evaluate(() => COMMANDS.recolorGlitter.run(editor));
 		await page.evaluate(() => editor.glitterLibrary.browser.setState('CATEGORY_DETAIL', 'star-dust'));
 		assert(await page.locator('#glitterBrowser .recolor-unavailable').count() > 0);

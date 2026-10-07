@@ -5,7 +5,7 @@
         "icon": "images/glitter/sparkle/purpe_light-pink.gif",
         "color": "#E8C547",
         "description": "Classic sparkle glitter effects",
-        "count": 102
+        "count": 103
     },
     {
         "id": "sparkle-flat",
@@ -96,7 +96,7 @@
         "icon": "images/glitter/sparkelies/amethyst.gif",
         "color": "#ff69b4",
         "description": "\"Just click on the ones you want !\"",
-        "count": 17,
+        "count": 18,
         "attribution": {
             "author": "DAN-411",
             "authorId": "dan",

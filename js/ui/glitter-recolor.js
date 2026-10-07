@@ -145,29 +145,39 @@ class GlitterRecolorController {
 			} else if (target?.itemId) await this.open(this.library.getItemById(target.itemId));
 			else if (this.pickerSession) this.closePickerSession();
 			else {
+				const previous = this.editor.pickers.active;
+				const previousPicker = previous ? { manager: previous, session: previous.pickerSession, layerId: this.editor.activeLayerId } : null;
 				this.editor.pickers.closeAll();
+				this.previousPicker = previousPicker;
 				pickerOpenSession(this, { slot: 'recolor' });
 				renderPickerStrip(this.getPickerStripState());
 				this.libraryButton.setAttribute('aria-pressed', 'true');
 				this.libraryButton.classList.add('active');
-				await revealAssetBrowser(this.editor, this.library);
+				if (this.editor.mobileManager?.isMobile) this.editor.mobileManager.openDrawer('design');
+				else this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
+				this.library.updateRecolorAvailability();
 				const session = this.pickerSession;
 				const done = this.editor.beginActivity('glitter-recolor-gate', 'Checking glitter colors');
 				try {
 					await Promise.all(this.library.getAllContent().map(async item => { this.eligible.set(item.id, await this.library.canRecolor(item)); }));
-					if (session === this.pickerSession) this.library.browser.refresh();
+					if (session === this.pickerSession) this.library.updateRecolorAvailability();
 				} finally { done(); }
 			}
 		} catch (error) { this.editor.showError(error.message); }
 	}
 
-	closePickerSession() {
+	closePickerSession({ restorePicker = true } = {}) {
 		if (!this.pickerSession) return;
 		pickerCloseSession(this);
+		const previous = this.previousPicker;
+		this.previousPicker = null;
+		if (restorePicker && previous && previous.layerId === this.editor.activeLayerId) pickerOpenSession(previous.manager, previous.session);
 		this.libraryButton.setAttribute('aria-pressed', 'false');
 		this.libraryButton.classList.remove('active');
 		renderPickerStrip({ ownsStrip: true, visible: false });
-		this.library.browser.refresh();
+		this.editor.pickers.managers.forEach(manager => manager.updatePickerStrip?.());
+		this.editor.updateGlitterSelection();
+		this.library.updateRecolorAvailability();
 	}
 	getPickerStripState() { return { ownsStrip: true, visible: true, armed: true, library: 'glitter', title: 'Pick a glitter to recolor', showDone: false }; }
 

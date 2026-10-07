@@ -769,6 +769,8 @@ body.mask-editing {
 
 	> * { flex: 0 0 auto; }
 
+	> .segmented-control { width: auto; }
+
 	// Every control in a bar is one height, so buttons sit level with the
 	// sliders, chips and segmented controls beside them.
 	.btn-icon {

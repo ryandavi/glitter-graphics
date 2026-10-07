@@ -2327,6 +2327,32 @@
         ]
     },
     {
+        "id": 410,
+        "url": "images/glitter/sparkelies/platinum.gif",
+        "name": "Platinum",
+        "generatedName": "Off-White",
+        "sortOrder": 77,
+        "colorCodes": [
+            "#D9D9D9",
+            "#6E6E6E"
+        ],
+        "colorWeights": [
+            0.71,
+            0.29
+        ],
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 61,
+        "height": 29,
+        "category": "sparkle",
+        "isPixelated": 1,
+        "tags": [],
+        "searchTerms": [],
+        "set": "sparkelies",
+        "originalOrder": 1009,
+        "originalName": "platinum"
+    },
+    {
         "id": 297,
         "url": "images/glitter/stardrops/Sparkbutton-DkGrey.gif",
         "name": "Spark Button",
