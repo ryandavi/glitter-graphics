@@ -24,8 +24,8 @@
 	}
 
 	// The Library shows one asset kind at a time (syncLibraryView hides the
-	// other kinds' hosts); the sticker upload action belongs to Stickers.
-	>.design-gallery-section[data-library="sticker"]>.section-header.section-header-with-action .upload-sticker-action {
+	// other kinds' hosts); stickers and fills share the upload action.
+	>.design-gallery-section:is([data-library="sticker"], [data-library="glitter"])>.section-header.section-header-with-action .library-upload-action {
 		visibility: visible;
 		pointer-events: auto;
 	}

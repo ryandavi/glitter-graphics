@@ -368,6 +368,11 @@ class ProjectSerializer {
 		const ids = new Set(layers.flatMap(layer => getLayerPaintSlots(layer, { includeDrafts: true }).map(({ data }) => data?.glitterId)));
 		for (const id of ids) {
 			const item = this.editor.glitterLibrary.getItemById(id);
+			if (item?.source === 'user-upload') {
+				const blob = await fetch(item.url).then(response => response.blob());
+				embedded[id] = { upload: { name: item.name, fileName: item.filename, mimeType: item.mimeType }, data: await this.blobToDataUrl(blob) };
+				continue;
+			}
 			if (!item?.recipe) continue;
 			embedded[id] = {
 				recipe: item.recipe,
@@ -379,7 +384,8 @@ class ProjectSerializer {
 	}
 
 	async registerCustomGlitter(embedded) {
-		for (const payload of Object.values(embedded)) {
+		for (const [id, payload] of Object.entries(embedded)) {
+			if (payload.upload) { await this.editor.glitterLibrary.registerEmbeddedGlitter(id, payload); continue; }
 			await this.editor.glitterLibrary.registerCustomGlitter(payload.recipe, { data: payload.data, sourceData: payload.sourceData });
 		}
 	}

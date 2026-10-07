@@ -1,0 +1,30 @@
+{
+    "id": 426,
+    "url": "images/glitter/ms-office-texture/paper-tissue-pink.jpg",
+    "name": "Paper Tissue Pink",
+    "generatedName": "Off-White",
+    "brightness": "0.800",
+    "sortOrder": 15,
+    "hue": 0.039,
+    "colorCodes": [
+        "#E6BDBE"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 2623,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 15,
+    "originalName": "paper-tissue-pink"
+}

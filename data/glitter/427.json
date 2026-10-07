@@ -1,0 +1,32 @@
+{
+    "id": 427,
+    "url": "images/glitter/ms-office-texture/stone-granite.jpg",
+    "name": "Stone Granite",
+    "generatedName": "Light Gray",
+    "brightness": "0.700",
+    "sortOrder": 16,
+    "hue": 1.1,
+    "colorCodes": [
+        "#B1B0B5",
+        "#646468"
+    ],
+    "colorWeights": [
+        0.9,
+        0.1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 6444,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 16,
+    "originalName": "stone-granite"
+}

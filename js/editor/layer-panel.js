@@ -146,13 +146,13 @@ setupLayerTypePickerListeners() {
 			if (!this.mobileManager?.isMobile) this.setCollapsibleSectionOpen?.('designGallery', true, true);
 		});
 
-		// An upload is kept in User Uploads (handleUserUpload shows it there)
-		// and then used exactly like a Library click: it replaces the selected
-		// sticker layer's sticker, or adds a new sticker layer.
-		const uploadAndUse = async (file) => {
-			const sticker = await this.stickerManager.handleUserUpload(file);
+		const uploadAndUse = async (files) => {
+			const library = this.assetUploadLibrary || this.stickerLibrary;
+			for (const file of files) {
+				const item = await library.handleUserUpload(file);
+				if (item && !item.error && this.originalImage) await library.handleItemClick(item);
+			}
 			this.modalManager.close('stickerUploadModal');
-			if (sticker && !sticker.error && this.originalImage) await this.stickerManager.handleItemClick(sticker);
 		};
 
 		// Dropzone click
@@ -165,11 +165,9 @@ setupLayerTypePickerListeners() {
 		// File selection
 		if (input) {
 			input.addEventListener('change', async (e) => {
-				const file = e.target.files[0];
-				if (file) {
-					input.value = '';
-					await uploadAndUse(file);
-				}
+				const files = [...e.target.files];
+				input.value = '';
+				if (files.length) await uploadAndUse(files);
 			});
 		}
 
@@ -188,10 +186,8 @@ setupLayerTypePickerListeners() {
 				e.preventDefault();
 				dropzone.classList.remove('drag-over');
 
-				const file = e.dataTransfer.files[0];
-				if (file) {
-					await uploadAndUse(file);
-				}
+				const files = [...e.dataTransfer.files];
+				if (files.length) await uploadAndUse(files);
 			});
 		}
 	}

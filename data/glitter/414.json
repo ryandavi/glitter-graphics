@@ -1,0 +1,34 @@
+{
+    "id": 414,
+    "url": "images/glitter/ms-office-texture/fabric-denim.jpg",
+    "name": "Fabric Denim",
+    "generatedName": "Blue",
+    "brightness": "0.570",
+    "sortOrder": 3,
+    "hue": 0.65,
+    "colorCodes": [
+        "#6B88BF",
+        "#A2C0F3",
+        "#325087"
+    ],
+    "colorWeights": [
+        0.51,
+        0.26,
+        0.23
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 64,
+    "height": 64,
+    "fileSize": 1917,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 3,
+    "originalName": "fabric-denim"
+}

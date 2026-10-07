@@ -8503,5 +8503,623 @@
         "set": "bring-on-the-glitter",
         "originalOrder": 10002,
         "originalName": "silver-03"
+    },
+    {
+        "id": 411,
+        "url": "images/glitter/ms-office-texture/cork.jpg",
+        "name": "Cork",
+        "generatedName": "Tan",
+        "sortOrder": 0,
+        "colorCodes": [
+            "#C18C60",
+            "#8F5B2F"
+        ],
+        "colorWeights": [
+            0.95,
+            0.05
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 0,
+        "originalName": "cork"
+    },
+    {
+        "id": 412,
+        "url": "images/glitter/ms-office-texture/fabric-canvas-dark.jpg",
+        "name": "Fabric Canvas Dark",
+        "generatedName": "Tan",
+        "sortOrder": 1,
+        "colorCodes": [
+            "#AC9773"
+        ],
+        "colorWeights": [
+            0.98
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 1,
+        "originalName": "fabric-canvas-dark"
+    },
+    {
+        "id": 413,
+        "url": "images/glitter/ms-office-texture/fabric-canvas.jpg",
+        "name": "Fabric Canvas",
+        "generatedName": "Off-White",
+        "sortOrder": 2,
+        "colorCodes": [
+            "#DCD0BA"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 2,
+        "originalName": "fabric-canvas"
+    },
+    {
+        "id": 414,
+        "url": "images/glitter/ms-office-texture/fabric-denim.jpg",
+        "name": "Fabric Denim",
+        "generatedName": "Blue",
+        "sortOrder": 3,
+        "colorCodes": [
+            "#6B88BF",
+            "#A2C0F3",
+            "#325087"
+        ],
+        "colorWeights": [
+            0.51,
+            0.26,
+            0.23
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 64,
+        "height": 64,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 3,
+        "originalName": "fabric-denim"
+    },
+    {
+        "id": 415,
+        "url": "images/glitter/ms-office-texture/fabric-purple-mesh.jpg",
+        "name": "Fabric Purple Mesh",
+        "generatedName": "Dark Purple",
+        "sortOrder": 4,
+        "colorCodes": [
+            "#400B64"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 4,
+        "originalName": "fabric-purple-mesh"
+    },
+    {
+        "id": 416,
+        "url": "images/glitter/ms-office-texture/fabric-woven-mat.jpg",
+        "name": "Fabric Woven Mat",
+        "generatedName": "Tan",
+        "sortOrder": 5,
+        "colorCodes": [
+            "#D6BA88",
+            "#846633"
+        ],
+        "colorWeights": [
+            0.72,
+            0.25
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 5,
+        "originalName": "fabric-woven-mat"
+    },
+    {
+        "id": 417,
+        "url": "images/glitter/ms-office-texture/paper-bag.jpg",
+        "name": "Paper Bag",
+        "generatedName": "Tan",
+        "sortOrder": 6,
+        "colorCodes": [
+            "#B5926C",
+            "#74512C"
+        ],
+        "colorWeights": [
+            0.72,
+            0.24
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 6,
+        "originalName": "paper-bag"
+    },
+    {
+        "id": 418,
+        "url": "images/glitter/ms-office-texture/paper-bouquet.jpg",
+        "name": "Paper Bouquet",
+        "generatedName": "Muted Blue",
+        "sortOrder": 7,
+        "colorCodes": [
+            "#CBDCF9"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 7,
+        "originalName": "paper-bouquet"
+    },
+    {
+        "id": 419,
+        "url": "images/glitter/ms-office-texture/paper-fish-fossil.jpg",
+        "name": "Paper Fish Fossil",
+        "generatedName": "Tan",
+        "sortOrder": 8,
+        "colorCodes": [
+            "#E1C19B"
+        ],
+        "colorWeights": [
+            0.96
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 8,
+        "originalName": "paper-fish-fossil"
+    },
+    {
+        "id": 420,
+        "url": "images/glitter/ms-office-texture/paper-newsprint.jpg",
+        "name": "Paper Newsprint",
+        "generatedName": "Off-White",
+        "sortOrder": 9,
+        "colorCodes": [
+            "#EBEBE9"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 9,
+        "originalName": "paper-newsprint"
+    },
+    {
+        "id": 421,
+        "url": "images/glitter/ms-office-texture/paper-papyrus.jpg",
+        "name": "Paper Papyrus",
+        "generatedName": "Tan",
+        "sortOrder": 10,
+        "colorCodes": [
+            "#E9CD95"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 10,
+        "originalName": "paper-papyrus"
+    },
+    {
+        "id": 422,
+        "url": "images/glitter/ms-office-texture/paper-parchment.jpg",
+        "name": "Paper Parchment",
+        "generatedName": "Tan",
+        "sortOrder": 11,
+        "colorCodes": [
+            "#EEDBB7"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 11,
+        "originalName": "paper-parchment"
+    },
+    {
+        "id": 423,
+        "url": "images/glitter/ms-office-texture/paper-recycled.jpg",
+        "name": "Paper Recycled",
+        "generatedName": "Off-White",
+        "sortOrder": 12,
+        "colorCodes": [
+            "#E3DACB"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 12,
+        "originalName": "paper-recycled"
+    },
+    {
+        "id": 424,
+        "url": "images/glitter/ms-office-texture/paper-stationery.jpg",
+        "name": "Paper Stationery",
+        "generatedName": "White",
+        "sortOrder": 13,
+        "colorCodes": [
+            "#FEF2DB"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 13,
+        "originalName": "paper-stationery"
+    },
+    {
+        "id": 425,
+        "url": "images/glitter/ms-office-texture/paper-tissue-blue.jpg",
+        "name": "Paper Tissue Blue",
+        "generatedName": "White",
+        "sortOrder": 14,
+        "colorCodes": [
+            "#DBEAFA"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 14,
+        "originalName": "paper-tissue-blue"
+    },
+    {
+        "id": 426,
+        "url": "images/glitter/ms-office-texture/paper-tissue-pink.jpg",
+        "name": "Paper Tissue Pink",
+        "generatedName": "Off-White",
+        "sortOrder": 15,
+        "colorCodes": [
+            "#E6BDBE"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 15,
+        "originalName": "paper-tissue-pink"
+    },
+    {
+        "id": 427,
+        "url": "images/glitter/ms-office-texture/stone-granite.jpg",
+        "name": "Stone Granite",
+        "generatedName": "Light Gray",
+        "sortOrder": 16,
+        "colorCodes": [
+            "#B1B0B5",
+            "#646468"
+        ],
+        "colorWeights": [
+            0.9,
+            0.1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 16,
+        "originalName": "stone-granite"
+    },
+    {
+        "id": 428,
+        "url": "images/glitter/ms-office-texture/stone-marble-brown.jpg",
+        "name": "Stone Marble Brown",
+        "generatedName": "Burnt Orange",
+        "sortOrder": 17,
+        "colorCodes": [
+            "#4F3320",
+            "#886C55"
+        ],
+        "colorWeights": [
+            0.95,
+            0.05
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 17,
+        "originalName": "stone-marble-brown"
+    },
+    {
+        "id": 429,
+        "url": "images/glitter/ms-office-texture/stone-marble-green.jpg",
+        "name": "Stone Marble Green",
+        "generatedName": "Dark Green",
+        "sortOrder": 18,
+        "colorCodes": [
+            "#1D4E2B",
+            "#508662"
+        ],
+        "colorWeights": [
+            0.94,
+            0.06
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 18,
+        "originalName": "stone-marble-green"
+    },
+    {
+        "id": 430,
+        "url": "images/glitter/ms-office-texture/stone-marble-white.jpg",
+        "name": "Stone Marble White",
+        "generatedName": "Off-White",
+        "sortOrder": 19,
+        "colorCodes": [
+            "#DCDDDF"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 19,
+        "originalName": "stone-marble-white"
+    },
+    {
+        "id": 431,
+        "url": "images/glitter/ms-office-texture/stone-sand.jpg",
+        "name": "Stone Sand",
+        "generatedName": "Brown",
+        "sortOrder": 20,
+        "colorCodes": [
+            "#B1A095",
+            "#716055"
+        ],
+        "colorWeights": [
+            0.79,
+            0.2
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 20,
+        "originalName": "stone-sand"
+    },
+    {
+        "id": 432,
+        "url": "images/glitter/ms-office-texture/water-droplets.jpg",
+        "name": "Water Droplets",
+        "generatedName": "Muted Teal",
+        "sortOrder": 21,
+        "colorCodes": [
+            "#AEE1EA"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 21,
+        "originalName": "water-droplets"
+    },
+    {
+        "id": 433,
+        "url": "images/glitter/ms-office-texture/wood-medium.jpg",
+        "name": "Wood Medium",
+        "generatedName": "Bronze",
+        "sortOrder": 22,
+        "colorCodes": [
+            "#845730"
+        ],
+        "colorWeights": [
+            0.96
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 22,
+        "originalName": "wood-medium"
+    },
+    {
+        "id": 434,
+        "url": "images/glitter/ms-office-texture/wood-oak.jpg",
+        "name": "Wood Oak",
+        "generatedName": "Tan",
+        "sortOrder": 23,
+        "colorCodes": [
+            "#C89060"
+        ],
+        "colorWeights": [
+            0.96
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 23,
+        "originalName": "wood-oak"
+    },
+    {
+        "id": 435,
+        "url": "images/glitter/ms-office-texture/wood-walnut.jpg",
+        "name": "Wood Walnut",
+        "generatedName": "Dark Brown",
+        "sortOrder": 24,
+        "colorCodes": [
+            "#422F20"
+        ],
+        "colorWeights": [
+            1
+        ],
+        "isAnimated": 0,
+        "hasTransparency": 0,
+        "width": 128,
+        "height": 128,
+        "category": "textures",
+        "isPixelated": 0,
+        "tags": [],
+        "searchTerms": [],
+        "set": "ms-office-textures",
+        "originalOrder": 24,
+        "originalName": "wood-walnut"
     }
 ]

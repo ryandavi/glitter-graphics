@@ -74,6 +74,18 @@ try {
 	new Database($testConfig);
 	checkLibrary($api->getAsset($first)['original_order'] === null, 'Backfill repeated on a later connection');
 	$db->query("UPDATE glitter SET original_name = NULL, sort_order = 0 WHERE id = $first");
+	$api->updateCategory(['id' => $style, 'previews' => [$first, $duplicate]]);
+	checkLibrary(array_column($api->exportCategories(), null, 'id')['sparkle']['previews'] === [(int)$first, (int)$duplicate], 'Ordered preview ids did not export');
+	foreach ([[$first, $first], [999999], [$first, $duplicate, 1, 2, 3], 'bad'] as $invalid) {
+		try { $api->updateCategory(['id' => $style, 'previews' => $invalid]); throw new RuntimeException('Invalid previews accepted'); }
+		catch (InvalidArgumentException $expected) {}
+	}
+	$api->updateAsset(['id' => $duplicate, 'is_active' => 0]);
+	checkLibrary(array_column($api->exportCategories(), null, 'id')['sparkle']['previews'] === [(int)$first], 'Unpublished preview leaked');
+	$api->updateAsset(['id' => $duplicate, 'is_active' => 1]);
+	$api->updateCategory(['id' => $style, 'previews' => [], 'icon' => 'custom/cover.png']);
+	checkLibrary(array_column($api->exportCategories(), null, 'id')['sparkle']['icon'] === 'custom/cover.png', 'Custom cover lost');
+	$api->updateCategory(['id' => $style, 'icon' => '']);
 	$exportCwd = getcwd();
 	chdir(__DIR__ . '/../../admin/includes');
 	try { $api->saveExport(); } finally { chdir($exportCwd); }

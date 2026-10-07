@@ -1,0 +1,30 @@
+{
+    "id": 421,
+    "url": "images/glitter/ms-office-texture/paper-papyrus.jpg",
+    "name": "Paper Papyrus",
+    "generatedName": "Tan",
+    "brightness": "0.770",
+    "sortOrder": 10,
+    "hue": 0.153,
+    "colorCodes": [
+        "#E9CD95"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 2905,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 10,
+    "originalName": "paper-papyrus"
+}

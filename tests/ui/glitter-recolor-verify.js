@@ -42,8 +42,9 @@ async function main() {
 		assert(await page.evaluate(() => Boolean(editor.glitterRecolor.pickerSession)));
 		assert(await page.locator('#designGalleryHeader #recolorGlitterBtn').evaluate(button => button.classList.contains('active') && button.getAttribute('aria-pressed') === 'true'));
 		assert(await page.locator('#recolorGlitterBtn').isVisible());
-		assert(!(await page.locator('#uploadStickerBtn').isVisible()));
-		assert.strictEqual(await page.locator('#uploadStickerBtn').evaluate(button => button.getBoundingClientRect().width), 0);
+		assert(await page.locator('#uploadStickerBtn').isVisible());
+		assert.strictEqual(await page.locator('#uploadStickerBtn').getAttribute('aria-label'), 'Upload fill tile');
+		assert(await page.locator('#uploadStickerBtn').evaluate(button => button.getBoundingClientRect().width > 0));
 		await page.locator('#recolorGlitterBtn').click();
 		assert(await page.evaluate(() => !editor.glitterRecolor.pickerSession));
 		assert(await page.evaluate(() => {

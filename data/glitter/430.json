@@ -1,0 +1,30 @@
+{
+    "id": 430,
+    "url": "images/glitter/ms-office-texture/stone-marble-white.jpg",
+    "name": "Stone Marble White",
+    "generatedName": "Off-White",
+    "brightness": "0.870",
+    "sortOrder": 19,
+    "hue": 1.1,
+    "colorCodes": [
+        "#DCDDDF"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 3260,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 19,
+    "originalName": "stone-marble-white"
+}

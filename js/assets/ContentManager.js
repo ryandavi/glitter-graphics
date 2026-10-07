@@ -329,6 +329,12 @@ class ContentManager {
 	}
 
 	createAssetProvenance(item) {
+		if (item.source === 'user-upload') {
+			const block = document.createElement('div');
+			block.className = 'asset-provenance property-note';
+			block.textContent = `Uploaded by you${item.filename ? ' ? ' + item.filename : ''}`;
+			return block;
+		}
 		const category = this.browser?.getCategoryById(item.set || item.category);
 		const attr = this.browser ? this.browser.getAssetAttribution(item) : Attribution.resolve(item.attribution);
 		if (!item.originalName && !attr && !item.appearances?.length) return null;
@@ -647,6 +653,18 @@ class ContentManager {
 
 		// Allow children to add custom classes/attributes
 		this.customizeItemElement(option, item);
+		const origin = item.source === 'user-upload' ? { icon: 'upload', label: 'Uploaded by you' }
+			: item.recipe ? { icon: 'recolor', label: 'Recolored by you' } : null;
+		if (origin) {
+			const mark = document.createElement('span');
+			mark.className = 'asset-origin-mark';
+			mark.title = origin.label;
+			mark.setAttribute('role', 'img');
+			mark.setAttribute('aria-label', origin.label);
+			mark.appendChild(createIcon(origin.icon));
+			option.appendChild(mark);
+			option.title += ` · ${origin.label}`;
+		}
 		if (this.activeFilters.search) this.highlightSearchMatch(option);
 		if (this.libraryKind) option.appendChild(this.createFavoriteToggle(item));
 
@@ -666,6 +684,161 @@ class ContentManager {
 		});
 
 		return option;
+	}
+
+	createCollectionPreview(category) {
+		if (!category) return null;
+		const item = this.browser.getCategoryPreviewItems(category)[0];
+		const url = category.icon || item?.thumbnailUrl || item?.url;
+		if (!url) return null;
+		const image = document.createElement('img');
+		image.src = url;
+		image.alt = '';
+		image.className = 'asset-browser-rail-icon';
+		image.style.imageRendering = item?.isPixelated ? 'pixelated' : 'auto';
+		return image;
+	}
+
+	async createUploadedAsset(file, { id = `user-upload-${crypto.randomUUID()}`, category, name = null } = {}) {
+		if (!this.validateUpload(file)) return null;
+		const item = {
+			id, name: name || file.name.replace(/\.[^/.]+$/, ''), url: URL.createObjectURL(file),
+			source: 'user-upload', category, filename: file.name, fileSize: file.size,
+			mimeType: file.type, uploadedAt: Date.now(), isAnimated: false, hasTransparency: false,
+			isPixelated: true, width: 0, height: 0, frameCount: 1, frameRate: 0,
+			tags: [], searchTerms: [], isLoading: true, error: null, _detailLoaded: true
+		};
+		try {
+			await this.processUploadedImage(item, file);
+			return item;
+		} catch (error) {
+			URL.revokeObjectURL(item.url);
+			throw error;
+		}
+	}
+
+	validateUpload(file) {
+		if (!CONFIG.tools.assetUpload.allowedTypes.includes(file.type)) {
+			this.editor.showError('Please upload a PNG, JPG, or GIF image');
+			return false;
+		}
+
+		if (file.size > CONFIG.tools.assetUpload.maxUploadSize) {
+			const maxMB = Math.round(CONFIG.tools.assetUpload.maxUploadSize / 1024 / 1024);
+			this.editor.showError(`File is too large. Maximum size is ${maxMB}MB.`);
+			return false;
+		}
+
+		return true;
+	}
+
+	async processUploadedImage(item, file) {
+		const img = new Image();
+
+		await new Promise((resolve, reject) => {
+			img.onload = resolve;
+			img.onerror = () => reject(new Error('Failed to load image'));
+			img.src = item.url;
+		});
+
+		// Store dimensions
+		item.width = img.naturalWidth;
+		item.height = img.naturalHeight;
+
+		// Detect if animated GIF
+		if (file.type === 'image/gif') {
+			try {
+				const timing = readGifTiming(await fetchGifBytes(item.url));
+				item.isAnimated = timing.frameCount > 1;
+				item.frameCount = timing.frameCount;
+				item.frameRate = timing.frameRate;
+				item.isVariableFramerate = timing.isVariableFramerate;
+			} catch (error) {
+				console.warn('Failed to parse GIF frames:', error);
+			}
+		}
+
+		// Detect transparency
+		const canvas = createAppCanvas(0, 0, 'assets/ContentManager');
+		canvas.width = img.naturalWidth;
+		canvas.height = img.naturalHeight;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.drawImage(img, 0, 0);
+
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		item.hasTransparency = this.detectActualTransparency(imageData);
+		item.isPixelated = await this.classifyRendering(imageData, file.type, item.hasTransparency);
+
+		// Mark as loaded
+		item.isLoading = false;
+	}
+
+	loadRenderingRules() {
+		if (!this.renderingRulesPromise) {
+			this.renderingRulesPromise = fetch(
+				`${CONFIG.tools.assetUpload.renderingRulesPath}?v=${CONFIG.app.assets.manifestVersion}`
+			)
+				.then((response) => {
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+					return response.json();
+				})
+				.catch((error) => {
+					console.warn('Rendering rules unavailable; upload keeps the pixelated default:', error);
+					return null;
+				});
+		}
+
+		return this.renderingRulesPromise;
+	}
+
+	async classifyRendering(imageData, mimeType, hasTransparency) {
+		const rules = await this.loadRenderingRules();
+		if (!rules) return true;
+
+		const data = imageData.data;
+		const alphaLevels = new Set();
+		const colorBuckets = new Set();
+		let visiblePixels = 0;
+		let softPixels = 0;
+		for (let index = 0; index < data.length; index += 4) {
+			const alpha = data[index + 3];
+			if (alpha === 0) continue;
+			visiblePixels++;
+			// Same 12-bit packing the analyzer buckets colors with.
+			colorBuckets.add(((data[index] >> 4) << 8) | ((data[index + 1] >> 4) << 4) | (data[index + 2] >> 4));
+			if (alpha < 255) {
+				softPixels++;
+				alphaLevels.add(alpha);
+			}
+		}
+
+		const coverage = visiblePixels > 0 ? softPixels / visiblePixels : 0;
+		const weights = rules.weights;
+		const evidence = [];
+		if (alphaLevels.size >= rules.softEdge.minAlphaLevels && coverage >= rules.softEdge.minCoverage) {
+			evidence.push(weights.soft_edge_ramp);
+		} else if (hasTransparency) {
+			evidence.push(weights.hard_alpha_cutout);
+		} else {
+			evidence.push(weights.no_alpha_channel);
+		}
+		if (rules.smoothMimeTypes.includes(mimeType)) evidence.push(weights.lossy_photographic_format);
+		if (mimeType === 'image/gif') evidence.push(weights.indexed_gif);
+		evidence.push(colorBuckets.size >= rules.richPaletteBuckets ? weights.rich_palette : weights.limited_palette);
+
+		// Ties stay pixelated, matching the analyzer.
+		return evidence.reduce((total, weight) => total + weight, 0) <= 0;
+	}
+
+	detectActualTransparency(imageData) {
+		// Scan actual pixel alpha values (not just palette)
+		const data = imageData.data;
+		for (let i = 3; i < data.length; i += 4) {
+			if (data[i] < 255) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// ===== RECENTS + FAVORITES =====

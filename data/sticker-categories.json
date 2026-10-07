@@ -2,7 +2,8 @@
     {
         "id": "user-uploads",
         "name": "User Uploads",
-        "icon": "images/stickers/decorative/heart_pink-glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#9575cd",
         "description": "",
         "count": 0
@@ -10,7 +11,8 @@
     {
         "id": "background",
         "name": "Background",
-        "icon": "images/stickers/background/checkerboard_emo_rainbow.gif",
+        "icon": "",
+        "previews": [],
         "color": "#5b8def",
         "description": "",
         "count": 1
@@ -18,7 +20,8 @@
     {
         "id": "clothing",
         "name": "Clothing",
-        "icon": "images/stickers/clothing/crown_gold-glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#9b59b6",
         "description": "",
         "count": 2
@@ -26,7 +29,8 @@
     {
         "id": "emoji",
         "name": "Emoji",
-        "icon": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ffc93c",
         "description": "",
         "count": 3
@@ -34,7 +38,8 @@
     {
         "id": "flower",
         "name": "Flower",
-        "icon": "images/stickers/flower/rose_red-green-glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff6fa5",
         "description": "",
         "count": 23
@@ -42,7 +47,8 @@
     {
         "id": "frame",
         "name": "Frame",
-        "icon": "images/stickers/frame/rose-heart_frame_red.gif",
+        "icon": "",
+        "previews": [],
         "color": "#8d6e63",
         "description": "",
         "count": 12
@@ -50,7 +56,8 @@
     {
         "id": "jewelry",
         "name": "Jewelry",
-        "icon": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
+        "icon": "",
+        "previews": [],
         "color": "#4fc3d9",
         "description": "",
         "count": 18
@@ -58,7 +65,8 @@
     {
         "id": "logo",
         "name": "Logo",
-        "icon": "images/stickers/logo/playboy_silver-glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#607d8b",
         "description": "",
         "count": 3
@@ -66,7 +74,8 @@
     {
         "id": "object",
         "name": "Object",
-        "icon": "images/stickers/object/money_wave_green.gif",
+        "icon": "",
+        "previews": [],
         "color": "#78909c",
         "description": "",
         "count": 13
@@ -74,7 +83,8 @@
     {
         "id": "people",
         "name": "People",
-        "icon": "images/stickers/people/lips_red-glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff8a65",
         "description": "",
         "count": 11
@@ -82,7 +92,8 @@
     {
         "id": "sparkle",
         "name": "Sparkle",
-        "icon": "images/stickers/sparkle/fireworks_yellow-pink.gif",
+        "icon": "",
+        "previews": [],
         "color": "#e8c547",
         "description": "",
         "count": 36
@@ -90,7 +101,8 @@
     {
         "id": "text",
         "name": "Text",
-        "icon": "images/stickers/text/sexy_arrow_purple.gif",
+        "icon": "",
+        "previews": [],
         "color": "#66bb6a",
         "description": "",
         "count": 65
@@ -98,7 +110,8 @@
     {
         "id": "animal",
         "name": "Animal",
-        "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#a0703b",
         "description": "",
         "count": 14
@@ -106,7 +119,8 @@
     {
         "id": "character",
         "name": "Character",
-        "icon": "images/stickers/character/star_dance.gif",
+        "icon": "",
+        "previews": [],
         "color": "#e0559f",
         "description": "",
         "count": 3
@@ -114,7 +128,8 @@
     {
         "id": "decorative",
         "name": "Decorative",
-        "icon": "images/stickers/decorative/rainbow_glitter.gif",
+        "icon": "",
+        "previews": [],
         "color": "#f2a65a",
         "description": "",
         "count": 20
@@ -122,7 +137,8 @@
     {
         "id": "ryandavi",
         "name": "ryandavi",
-        "icon": "images/stickers/ryandavi/ryandavi_wow.png",
+        "icon": "",
+        "previews": [],
         "color": "#1100ff",
         "description": "Original stickers by Ryan Davi, designed in 2016.",
         "count": 11,
@@ -137,7 +153,8 @@
     {
         "id": "twitter",
         "name": "Twitter",
-        "icon": "images/stickers/twitter/21416.png",
+        "icon": "",
+        "previews": [],
         "color": "#1da1f2",
         "description": "Twitter\u2019s official sticker collection, introduced on June 27, 2016 for decorating photos before posting. Stickers could be resized, rotated, and placed anywhere on an image, and public posts using them could be discovered through the sticker itself. The feature was discontinued in April 2026 when X replaced its previous image-editing interface with a new Photo Editor.",
         "count": 21,
@@ -155,7 +172,8 @@
     {
         "id": "container",
         "name": "Container",
-        "icon": "images/stickers/container/container_sticky-note.png",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "",
         "count": 2

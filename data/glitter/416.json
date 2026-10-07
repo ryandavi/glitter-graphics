@@ -1,0 +1,32 @@
+{
+    "id": 416,
+    "url": "images/glitter/ms-office-texture/fabric-woven-mat.jpg",
+    "name": "Fabric Woven Mat",
+    "generatedName": "Tan",
+    "brightness": "0.700",
+    "sortOrder": 5,
+    "hue": 0.149,
+    "colorCodes": [
+        "#D6BA88",
+        "#846633"
+    ],
+    "colorWeights": [
+        0.72,
+        0.25
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 7263,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 5,
+    "originalName": "fabric-woven-mat"
+}

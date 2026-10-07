@@ -66,6 +66,10 @@ A style's Published switch controls `is_active`; unpublishing preserves asset ro
 
 A file's folder is where it was first filed and says nothing about its style: health does not compare them, and the category manager lists a folder as unregistered only when none of its files has a record. Renaming a category's slug renames its folder and repoints every record whose file is in it.
 
+**Category covers.** Pick one to four asset previews in the category manager. The ordered `previews` list stores asset ids, so covers follow file renames. With no selected previews, cards use the first four ordered members; unavailable previews are skipped. A Custom image path (`icon`) overrides the asset grid with one contained image. Export excludes inactive assets and assets in unpublished styles from preview ids. Raster brush covers derive from `packs[]` and its ordered brushes in `brushes.json`; there is no separate brush category manifest.
+
+**Textures.** The Textures style contains 25 static, smoothly scaled Office JPG tiles, credited through the Microsoft Office Textures set. They use the existing glitter fill pipeline, including scale, offset and anchor. Their license remains unknown; the category credit records that redistribution rights have not been established.
+
 **Order.** `sort_order` inside a style is the order the editor shows, as exported. Arrange, on each category heading in the asset list, opens that category as a tile grid: drag a tile, or focus one and hold Alt with the arrow keys, then Save order. Show set dims the other sets without removing them. For glitter, Sort by color proposes a rainbow order (multicolor and pattern tiles last) from `admin/js/glitter_color_order.js`; nothing is written until Save. Saving one category leaves every other category's order alone.
 
 **Credit.** Attribution accepts `authorId` and `sourceId` from `content/entities.json` alongside the display text. An asset's credit is its own override, else its set's, else its style's. Glitter styles carry none; sticker categories that are one creator's work (`ryandavi`, `twitter`) still do.

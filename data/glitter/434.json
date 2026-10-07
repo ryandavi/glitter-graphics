@@ -1,0 +1,30 @@
+{
+    "id": 434,
+    "url": "images/glitter/ms-office-texture/wood-oak.jpg",
+    "name": "Wood Oak",
+    "generatedName": "Tan",
+    "brightness": "0.580",
+    "sortOrder": 23,
+    "hue": 0.119,
+    "colorCodes": [
+        "#C89060"
+    ],
+    "colorWeights": [
+        0.96
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 3516,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 23,
+    "originalName": "wood-oak"
+}

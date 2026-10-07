@@ -106,10 +106,10 @@
 		>.asset-option>img { padding: var(--spacing-sm); }
 	}
 
-	&[data-gallery-content="brush-tips"] .category-card-image>img {
+	&[data-gallery-content="brush-tips"] .category-card-image img {
 		padding: var(--spacing-sm);
 	}
-	&[data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image>img { image-rendering: pixelated; }
+	&[data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image img { image-rendering: pixelated; }
 
 	// Font cards are sample + name, not square tiles: two across in a normal
 	// sidebar.
@@ -204,7 +204,7 @@
 	&.is-vector>img { filter: none; }
 	&.is-raster>img { filter: invert(1); }
 }
-:root[data-theme='light'] [data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image>img { filter: invert(1); }
+:root[data-theme='light'] [data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image img { filter: invert(1); }
 
 
 .asset-browser-index-lead + .category-grid.visible,
@@ -292,10 +292,21 @@
 					object-fit: contain;
 				}
 
-				&.category-card-glitter-bg {
-					background-repeat: repeat;
-					background-size: auto;
-					image-rendering: pixelated;
+				&.category-card-previews {
+					display: grid;
+					align-items: stretch;
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					grid-template-rows: repeat(2, minmax(0, 1fr));
+					gap: var(--spacing-2xs);
+					&[data-preview-count="1"] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+					&[data-preview-count="2"] { grid-template-rows: 1fr; }
+					&[data-preview-count="3"] >:first-child { grid-row: span 2; }
+					>.category-card-preview {
+						min-width: 0;
+						min-height: 0;
+						background-repeat: repeat;
+						>img { width: 100%; height: 100%; object-fit: contain; }
+					}
 				}
 			}
 		}
@@ -461,7 +472,7 @@
 	}
 }
 
-.asset-slice-mark {
+.asset-slice-mark, .asset-origin-mark {
 	position: absolute;
 	bottom: var(--spacing-xs);
 	left: var(--spacing-xs);
@@ -473,6 +484,8 @@
 	color: var(--color-text-on-accent);
 	.icon { width: 14px; height: 14px; margin: 2px; }
 }
+
+.asset-origin-mark { top: var(--spacing-xs); bottom: auto; pointer-events: none; }
 
 .sticker-slices {
 	z-index: 2;

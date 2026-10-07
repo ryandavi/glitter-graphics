@@ -35,7 +35,9 @@ class CategoryManager {
 							<div class="property-row"><label class="property-label" for="category-slug">Slug</label><div class="property-control"><input type="text" id="category-slug" name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*"></div></div>
 							<div class="property-row property-row-continued"><span class="property-label">Slug</span><div class="property-value"><code data-path-preview></code><span class="field-error" data-slug-error></span></div></div>
 							<div class="property-row property-row-tall"><label class="property-label" for="category-description">Description</label><div class="property-control"><textarea id="category-description" name="description" rows="3"></textarea></div></div>
-							<div class="property-row"><label class="property-label" for="category-icon">Icon path</label><div class="property-control"><input type="text" id="category-icon" name="icon"></div></div>
+							${[1, 2, 3, 4].map(slot => `<div class="property-row"><label class="property-label" for="category-preview-${slot}">Preview ${slot}</label><div class="property-control"><span class="category-color-dot" data-preview-image hidden><img alt=""></span><select id="category-preview-${slot}" data-preview-slot><option value="">Automatic / none</option></select></div></div>`).join('')}
+							<div class="property-row"><span class="property-label"></span><div class="property-value">Leave previews empty to use the first four assets. A custom image path shows one image instead.</div></div>
+							<div class="property-row"><label class="property-label" for="category-icon">Custom image path</label><div class="property-control"><input type="text" id="category-icon" name="icon"></div></div>
 							<div class="property-row"><label class="property-label" for="category-color">Color</label><div class="property-control"><input type="color" id="category-color" name="color" value="#ff69b4"></div></div>
 							<div class="property-row"><label class="property-label" for="category-sort-order">Sort order</label><div class="property-control"><input type="number" id="category-sort-order" name="sort_order" min="0" value="0"></div></div>
 						</div>
@@ -145,8 +147,8 @@ class CategoryManager {
 				<div class="category-table-row ${row.folder_status === 'unregistered' ? 'row-muted' : ''}" data-category-id="${row.id || ''}" ${row.id && !this.query ? 'draggable="true"' : ''}>
 					<span class="drag-handle" title="Drag to reorder">${row.id && !this.query ? '⋮⋮' : ''}</span>
 					<div class="category-cell-name">
-						<span class="category-color-dot ${row.icon ? 'has-thumbnail' : ''}" style="--category-color:${this.escape(row.color || 'transparent')}" ${row.icon ? `title="${this.escape(row.icon)}"` : ''}>
-							${row.icon ? `<img src="${CONFIG.image_base_path}${this.escape(row.icon)}" alt="" loading="lazy">` : ''}
+						<span class="category-color-dot ${this.categoryImage(row) ? 'has-thumbnail' : ''}" style="--category-color:${this.escape(row.color || 'transparent')}" ${this.categoryImage(row) ? `title="${this.escape(this.categoryImage(row))}"` : ''}>
+							${this.categoryImage(row) ? `<img src="${CONFIG.image_base_path}${this.escape(this.categoryImage(row))}" alt="" loading="lazy">` : ''}
 						</span>
 						<span><strong>${this.escape(row.name)}</strong><small>${this.escape(row.slug)}${Number(row.is_set) ? ' · Set' : ''}${Number(row.is_active) === 0 ? ' · Unpublished' : ''}</small></span>
 					</div>
@@ -225,6 +227,21 @@ class CategoryManager {
 		for (const field of ['name', 'slug', 'description', 'icon', 'color', 'sort_order']) {
 			if (row?.[field] != null) this.form.elements[field].value = row[field];
 		}
+		const assets = this.editor.assets || [];
+		const previews = row?.previews || [];
+		this.form.querySelectorAll('[data-preview-slot]').forEach((select, index) => {
+			select.replaceChildren(new Option('Automatic / none', ''));
+			for (const asset of assets) select.add(new Option(`${asset.name} (${asset.id})`, asset.id));
+			select.value = previews[index] || '';
+			const update = () => {
+				const asset = assets.find(item => Number(item.id) === Number(select.value));
+				const preview = select.parentElement.querySelector('[data-preview-image]');
+				preview.hidden = !asset;
+				if (asset) preview.querySelector('img').src = CONFIG.image_base_path + asset.url;
+			};
+			select.onchange = update;
+			update();
+		});
 		const attribution = row?.attribution || {};
 		for (const key of ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes']) {
 			this.form.elements[`attr_${key}`].value = attribution[key] || '';
@@ -240,6 +257,7 @@ class CategoryManager {
 
 	async save() {
 		const values = Object.fromEntries(new FormData(this.form));
+		values.previews = [...this.form.querySelectorAll('[data-preview-slot]')].map(select => Number(select.value)).filter(Boolean);
 		values.is_active = Number(this.form.elements.is_active.checked);
 		values.is_set = Number(this.form.elements.is_set.value);
 		values.sort_order = Number(values.sort_order || 0);
@@ -298,6 +316,14 @@ class CategoryManager {
 		const row = this.rows.find(item => item.folder_url && item.slug === slug);
 		const root = row?.folder_url?.replace(`${row.slug}/`, '') || `images/${this.editor.config.assetType}/`;
 		this.form.querySelector('[data-path-preview]').textContent = `${root}${slug}/`;
+	}
+
+	categoryImage(row) {
+		if (row.icon) return row.icon;
+		const assets = this.editor.assets || [];
+		const asset = assets.find(item => Number(item.id) === Number(row.previews?.[0]))
+			|| assets.find(item => Number(item.is_active) && Number(item[Number(row.is_set) ? 'set_id' : `${this.editor.config.assetType}_category_id`]) === Number(row.id));
+		return asset?.url || '';
 	}
 
 	slugify(value) {

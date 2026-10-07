@@ -1,0 +1,30 @@
+{
+    "id": 419,
+    "url": "images/glitter/ms-office-texture/paper-fish-fossil.jpg",
+    "name": "Paper Fish Fossil",
+    "generatedName": "Tan",
+    "brightness": "0.750",
+    "sortOrder": 8,
+    "hue": 0.133,
+    "colorCodes": [
+        "#E1C19B"
+    ],
+    "colorWeights": [
+        0.96
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 3214,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 8,
+    "originalName": "paper-fish-fossil"
+}

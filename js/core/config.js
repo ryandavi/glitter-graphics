@@ -264,9 +264,6 @@ const CONFIG = deepFreeze({
 			rasterBrushes: {
 				manifest: 'data/brushes.json?v=3'
 			},
-			brushTips: {
-				categories: 'data/brush-categories.json'
-			},
 			// Per-brush "Scatter & Jitter" panel: slider ranges + the neutral
 			// defaults a brush falls back to. Stored overrides live per brush id in
 			// MaskEditor's brushDynamics store; Reset drops back to the brush's
@@ -289,6 +286,11 @@ const CONFIG = deepFreeze({
 					countMax: 16
 				}
 			}
+		},
+		assetUpload: {
+			maxUploadSize: 10 * 1024 * 1024,
+			allowedTypes: ['image/png', 'image/jpeg', 'image/gif'],
+			renderingRulesPath: 'data/rendering-rules.json'
 		},
 		glitter: {
 			recolor: {
@@ -439,12 +441,6 @@ const CONFIG = deepFreeze({
 			// null preserves an empty new sticker layer.
 			defaultStickerId: 1,
 			maxCount: 50,
-			maxUploadSize: 10 * 1024 * 1024,
-			allowedTypes: ['image/png', 'image/jpeg', 'image/gif'],
-			// How an upload's image-rendering is decided lives in
-			// data/rendering-rules.json, shared verbatim with the admin
-			// analyzer. Deliberately not duplicated here.
-			renderingRulesPath: 'data/rendering-rules.json',
 			defaults: {
 				transform: {
 					position: { x: 0, y: 0 },

@@ -510,6 +510,7 @@ abstract class AssetAPI
         }
         $pendingStmt->close();
         foreach ($categories as &$category) {
+            $category['previews'] = json_decode((string)($category['previews'] ?? ''), true) ?: [];
             $category['active_count'] = (int)$category['active_count'];
             $category['pending_count'] = $pending[(int)$category['id']] ?? 0;
             if (array_key_exists('attribution', $category)) {
@@ -556,6 +557,25 @@ abstract class AssetAPI
         return $categories;
     }
 
+    private function normalizeCategoryPreviews($previews)
+    {
+        if (!is_array($previews) || !array_is_list($previews) || count($previews) > 4) {
+            throw new InvalidArgumentException('Choose up to four preview assets');
+        }
+        $ids = [];
+        foreach ($previews as $id) {
+            if (!is_int($id) || $id < 1 || in_array($id, $ids, true)) {
+                throw new InvalidArgumentException('Preview assets must be distinct asset ids');
+            }
+            $stmt = $this->db->prepare("SELECT id FROM {$this->tables['table']} WHERE id = ?", 'i', [$id]);
+            $exists = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if (!$exists) throw new InvalidArgumentException('Preview asset not found');
+            $ids[] = $id;
+        }
+        return json_encode($ids);
+    }
+
     public function addCategory($data)
     {
         $name = trim((string)($data['name'] ?? ''));
@@ -563,8 +583,8 @@ abstract class AssetAPI
         if ($name === '') throw new InvalidArgumentException('Category name is required');
         $this->assertCategorySlugAvailable($slug);
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, is_set, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            'sssssisii',
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, is_set, is_active, previews) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            'sssssisiis',
             [
                 $name,
                 $slug,
@@ -575,6 +595,7 @@ abstract class AssetAPI
                 $this->normalizeAttributionJson($data['attribution'] ?? null),
                 (int)(bool)($data['is_set'] ?? 0),
                 (int)($data['is_active'] ?? 1),
+                $this->normalizeCategoryPreviews($data['previews'] ?? []),
             ]
         );
         $stmt->close();
@@ -642,12 +663,16 @@ abstract class AssetAPI
         $result = $this->db->query($sql);
         $rows = $this->fetchAllAssoc($result);
         $categories = [];
+        $published = $this->fetchAllAssoc($this->db->query("SELECT a.id FROM $assetTable a
+            JOIN $table c ON c.id = a.$categoryIdField WHERE a.is_active = 1 AND c.is_active = 1"));
+        $publishedIds = array_fill_keys(array_column($published, 'id'), true);
 
         foreach ($rows as $row) {
             $category = [
                 'id' => $row['slug'],
                 'name' => $row['name'],
                 'icon' => isset($row['icon']) ? $row['icon'] : '',
+                'previews' => array_values(array_filter(json_decode((string)($row['previews'] ?? ''), true) ?: [], function ($id) use ($publishedIds) { return isset($publishedIds[(int)$id]); })),
                 'color' => isset($row['color']) ? $row['color'] : '#ff69b4',
                 'description' => isset($row['description']) ? $row['description'] : '',
                 'count' => isset($row['item_count']) ? (int)$row['item_count'] : 0,
@@ -716,6 +741,12 @@ abstract class AssetAPI
             $fields[] = "$field = ?";
             $types .= 's';
             $params[] = (string)$data[$field];
+        }
+
+        if (array_key_exists('previews', $data)) {
+            $fields[] = 'previews = ?';
+            $types .= 's';
+            $params[] = $this->normalizeCategoryPreviews($data['previews']);
         }
 
         if (array_key_exists('is_active', $data)) {

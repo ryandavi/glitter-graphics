@@ -142,6 +142,8 @@ This is a documented headless gap rather than an app-code change.
 
 ## Suite notes
 
+`tests/ui/personal-assets-verify.js` covers personal covers/dropdown thumbnails, collection names and origin marks, batched fill PNG/GIF uploads, smooth JPEG uploads, sticker upload routing, repeated exports and edit/undo, and a project round-trip in a fresh page with original image bytes. It also checks that upload records do not enter recolor recipe preferences.
+
 `tests/unit/glitter-recolor-unit.js` checks palette-only rewrites against all published GIFs, including global/local tables and an index that is transparent in one frame and opaque in another. It checks exact mapped pixels, unchanged non-palette bytes and OKLCH helpers. `tests/ui/glitter-recolor-verify.js` covers picking, exact hex editing, local undo, Apply/Cancel, discard confirmation, Save as new/Delete, recipe persistence, replacement across multiple layers and undo, stable exports with an animated sticker, slot-targeted saving, and portable project restore/editing without the library source. `GLITTER_TEST_CSS` uses a scratch stylesheet and enables phone layout checks. `tools/ui-contact-sheet.js capture <dir> --only recolor --css <scratch.css>` captures original, recolored and pending-adjustment views at three widths and two themes.
 
 ### Transform-handle verification (`tests/ui/touch-handle-verify.js`)

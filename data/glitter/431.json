@@ -1,0 +1,32 @@
+{
+    "id": 431,
+    "url": "images/glitter/ms-office-texture/stone-sand.jpg",
+    "name": "Stone Sand",
+    "generatedName": "Brown",
+    "brightness": "0.640",
+    "sortOrder": 20,
+    "hue": 0.11,
+    "colorCodes": [
+        "#B1A095",
+        "#716055"
+    ],
+    "colorWeights": [
+        0.79,
+        0.2
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 6779,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 20,
+    "originalName": "stone-sand"
+}

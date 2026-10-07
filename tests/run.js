@@ -5,6 +5,7 @@ const path = require('path');
 
 const SUITES = [
 	{ file: 'unit/glitter-recolor-unit.js', tags: ['unit', 'assets', 'effects'] },
+	{ file: 'ui/personal-assets-verify.js', tags: ['assets', 'document', 'export'] },
 	{ file: 'ui/glitter-recolor-verify.js', tags: ['assets', 'document', 'export', 'panels'] },
 	{ file: 'unit/library-catalog-unit.js', tags: ['unit', 'assets'] },
 	{ file: 'unit/glitter-color-order-unit.js', tags: ['unit', 'assets'] },

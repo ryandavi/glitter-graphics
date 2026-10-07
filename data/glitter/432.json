@@ -1,0 +1,30 @@
+{
+    "id": 432,
+    "url": "images/glitter/ms-office-texture/water-droplets.jpg",
+    "name": "Water Droplets",
+    "generatedName": "Muted Teal",
+    "brightness": "0.830",
+    "sortOrder": 21,
+    "hue": 0.568,
+    "colorCodes": [
+        "#AEE1EA"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 4204,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 21,
+    "originalName": "water-droplets"
+}

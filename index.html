@@ -43,7 +43,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=358d1e49">
+	<link rel="stylesheet" href="css/style.css?v=59b3ec53">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -289,14 +289,14 @@
 							</h3>
 							<div class="section-header-actions">
 								<button type="button" class="section-header-action btn-icon icon-wrapper" id="recolorGlitterBtn" data-no-accordion-toggle="true" title="Recolor a glitter" aria-label="Recolor a glitter" aria-pressed="false" hidden><svg class="icon"><use href="#icon-recolor"></use></svg><span class="name">Recolor a glitter</span></button>
-								<div class="section-header-action btn-icon upload-sticker-action" id="uploadStickerBtn" data-no-accordion-toggle="true">
+								<button type="button" class="section-header-action btn-icon library-upload-action" id="uploadStickerBtn" data-no-accordion-toggle="true" title="Upload sticker" aria-label="Upload sticker">
 									<span class="icon-wrapper">
 										<svg class="icon">
 											<use href="#icon-upload"></use>
 										</svg>
-										<span class="name">Add Custom Sticker</span>
+										<span class="name">Upload sticker</span>
 									</span>
-								</div>
+								</button>
 								<!-- Home view, tile size and the Quick picks row.
 								     setupLibraryViewMenu. -->
 								<div class="section-header-action app-menu library-view-action" id="libraryViewMenu" data-no-accordion-toggle="true">
@@ -1327,10 +1327,10 @@
 							</span>
 						</div>
 						<div class="dropzone-text">Drop sticker here or click to browse</div>
-						<div class="dropzone-subtext">PNG, JPG, GIF, or WebP • Max 5MB</div>
+						<div class="dropzone-subtext">PNG, JPG, or GIF • Max 10MB</div>
 					</div>
 				</div>
-				<input type="file" id="stickerUploadInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display: none;">
+				<input type="file" id="stickerUploadInput" accept="image/png,image/jpeg,image/gif" multiple style="display: none;">
 			</div>
 		</div>
 	</div>
@@ -1746,7 +1746,7 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=d00936bc"></script>
 	<script src="js/core/fields.js?v=2552e4f7"></script>
-	<script src="js/core/config.js?v=2a001c38"></script>
+	<script src="js/core/config.js?v=74b2f264"></script>
 	<script src="js/core/tools.js?v=c6495ef0"></script>
 	<script src="js/core/layer-types.js?v=79d7dbe5"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
@@ -1783,7 +1783,7 @@
 	<script src="js/ui/tooltip.js?v=69670448"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=c01b60dc"></script>
-	<script src="js/ui/gallery.js?v=d3631fff"></script>
+	<script src="js/ui/gallery.js?v=49f948d5"></script>
 	<script src="js/ui/preset-library.js?v=fcd22542"></script>
 	<script src="js/ui/template-library.js?v=f05db242"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -1836,9 +1836,9 @@
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=af2511c8"></script>
 	<script src="js/editor/document-start.js?v=ca44fe0b"></script>
-		<script src="js/ui/glitter-recolor.js?v=b246435f"></script>
-		<script src="js/editor/modals-wiring.js?v=c1609951"></script>
-	<script src="js/editor/layer-panel.js?v=0ac8826f"></script>
+		<script src="js/ui/glitter-recolor.js?v=d12dcb59"></script>
+		<script src="js/editor/modals-wiring.js?v=d590fcc4"></script>
+	<script src="js/editor/layer-panel.js?v=79b69f89"></script>
 	<script src="js/editor/canvas-gestures.js?v=cafdf9d1"></script>
 	<script src="js/editor/canvas-size.js?v=69c7456a"></script>
 	<script src="js/editor/canvas-resize.js?v=ea25c5e4"></script>
@@ -1861,7 +1861,7 @@
 	<script src="js/export/ExportProgressPresenter.js?v=4754a2c1"></script>
 	<script src="js/export/export-report.js?v=3ee6ae81"></script>
 	<script src="js/export/ExportResultPresenter.js?v=09620bd9"></script>
-	<script src="js/export/SceneCompositor.js?v=d9aac9f1"></script>
+	<script src="js/export/SceneCompositor.js?v=bec4d49c"></script>
 	<script src="js/export/GifExporter.js?v=8b89baa2"></script>
 	<script src="js/export/StillImageExporter.js?v=ec58b58a"></script>
 	<script src="js/export/Mp4Exporter.js?v=ca0864d0"></script>
@@ -1871,11 +1871,11 @@
 	<script src="js/transforms/selection-chrome.js?v=5ad5a8d7"></script>
 	<script src="js/systems/ViewportManager.js?v=0d72e3f2"></script>
 	<script src="js/systems/HistoryManager.js?v=290ea8db"></script>
-	<script src="js/export/ProjectSerializer.js?v=3d28044b"></script>
+	<script src="js/export/ProjectSerializer.js?v=b9eedded"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
 	<script src="js/assets/ShapeLibrary.js?v=75fed2ea"></script>
-	<script src="js/assets/BrushLibrary.js?v=3e2ce526"></script>
+	<script src="js/assets/BrushLibrary.js?v=8a18d0a5"></script>
 	<script src="js/assets/FontLibrary.js?v=d18c8fd9"></script>
 	<script src="js/systems/MaskEditor.js?v=a27cad1b"></script>
 
@@ -1887,11 +1887,11 @@
 	<script src="js/assets/LibraryCatalog.js?v=8578e98c"></script>
 	<script src="js/assets/AssetBrowserRail.js?v=d77f73d7"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
-	<script src="js/assets/AssetBrowser.js?v=bcffd714"></script>
-	<script src="js/assets/ContentManager.js?v=d3b5c61b"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=dfd277f2"></script>
-	<script src="js/assets/StickerBrowserManager.js?v=04a85e03"></script>
-	<script src="js/assets/BrushTipManager.js?v=079f443e"></script>
+	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
+	<script src="js/assets/ContentManager.js?v=1f4291eb"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=5e34e3d2"></script>
+	<script src="js/assets/StickerBrowserManager.js?v=fc1f34c1"></script>
+	<script src="js/assets/BrushTipManager.js?v=43771a20"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
 	<script src="js/assets/FontBrowserManager.js?v=6002c785"></script>

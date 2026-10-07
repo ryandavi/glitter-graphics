@@ -168,6 +168,16 @@ const BrushLibrary = {
 	get(id) { return this.BRUSHES[id] || null; },
 	packById(id) { return this.PACKS.find((pack) => pack.id === id) || null; },
 
+	collections() {
+		return this.PACKS.map(pack => ({
+			id: pack.id,
+			name: pack.label,
+			previews: pack.brushIds.slice(0, 4),
+			count: pack.brushIds.length,
+			attribution: pack.attribution
+		}));
+	},
+
 	assets() {
 		const vector = (ShapeLibrary.BRUSH_SHAPES || []).map(({ id, label }) => ({
 			id,

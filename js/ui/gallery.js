@@ -54,7 +54,13 @@ function syncLibraryView() {
 		recolor.classList.toggle('visible', !recolor.hidden);
 	}
 	const upload = document.getElementById('uploadStickerBtn');
-	if (upload) upload.hidden = schema?.prefix !== 'sticker';
+	if (upload) {
+		upload.hidden = !['sticker', 'glitter'].includes(schema?.prefix);
+		const label = schema?.prefix === 'glitter' ? 'Upload fill tile' : 'Upload sticker';
+		upload.title = label;
+		upload.setAttribute('aria-label', label);
+		upload.querySelector('.name').textContent = label;
+	}
 	syncLibrarySearchState();
 	return schema?.prefix || null;
 }

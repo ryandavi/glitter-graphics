@@ -1,0 +1,30 @@
+{
+    "id": 413,
+    "url": "images/glitter/ms-office-texture/fabric-canvas.jpg",
+    "name": "Fabric Canvas",
+    "generatedName": "Off-White",
+    "brightness": "0.800",
+    "sortOrder": 2,
+    "hue": 0.149,
+    "colorCodes": [
+        "#DCD0BA"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 3515,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 2,
+    "originalName": "fabric-canvas"
+}

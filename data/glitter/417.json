@@ -1,0 +1,32 @@
+{
+    "id": 417,
+    "url": "images/glitter/ms-office-texture/paper-bag.jpg",
+    "name": "Paper Bag",
+    "generatedName": "Tan",
+    "brightness": "0.570",
+    "sortOrder": 6,
+    "hue": 0.128,
+    "colorCodes": [
+        "#B5926C",
+        "#74512C"
+    ],
+    "colorWeights": [
+        0.72,
+        0.24
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 5927,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 6,
+    "originalName": "paper-bag"
+}

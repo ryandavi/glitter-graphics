@@ -2,7 +2,8 @@
     {
         "id": "sparkle",
         "name": "Classic Sparkle",
-        "icon": "images/glitter/sparkle/purpe_light-pink.gif",
+        "icon": "",
+        "previews": [],
         "color": "#E8C547",
         "description": "Classic sparkle glitter effects",
         "count": 103
@@ -10,7 +11,8 @@
     {
         "id": "sparkle-flat",
         "name": "Flat Sparkle",
-        "icon": "images/glitter/sparkle-flat/flat_ff52ad.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "Classic sparkle over a single flat color.",
         "count": 108
@@ -18,7 +20,8 @@
     {
         "id": "star-dust",
         "name": "Star Dust",
-        "icon": "images/glitter/star-dust/twinkle-001.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "",
         "count": 25
@@ -26,7 +29,8 @@
     {
         "id": "ember",
         "name": "VelvetEmbers",
-        "icon": "images/glitter/ember/ember_magenta.gif",
+        "icon": "",
+        "previews": [],
         "color": "#FF6B35",
         "description": "VelvetEmbers glitter; includes found tiles and the Bring On The Glitter set.",
         "count": 14
@@ -34,7 +38,8 @@
     {
         "id": "transparent",
         "name": "Transparent",
-        "icon": "images/glitter/transparent/transparent_pink-sparkle.gif",
+        "icon": "",
+        "previews": [],
         "color": "#4FC3D9",
         "description": "Transparent Glitter effects",
         "count": 9
@@ -42,7 +47,8 @@
     {
         "id": "noise",
         "name": "Noise",
-        "icon": "images/glitter/noise/noise_magenta.gif",
+        "icon": "",
+        "previews": [],
         "color": "#7A8B99",
         "description": "Noise-based glitter effects",
         "count": 8
@@ -50,7 +56,8 @@
     {
         "id": "noise-2",
         "name": "Chunky Noise",
-        "icon": "images/glitter/bring-on-the-glitter/black-001.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "Noise tiles from Aylana's Bring On The Glitter.",
         "count": 26
@@ -58,15 +65,26 @@
     {
         "id": "etc",
         "name": "Other",
-        "icon": "images/glitter/etc/etc_hot-pink.gif",
+        "icon": "",
+        "previews": [],
         "color": "#6C757D",
         "description": "Tiles from different styles that do not fit another group.",
         "count": 16
     },
     {
+        "id": "textures",
+        "name": "Textures",
+        "icon": "",
+        "previews": [],
+        "color": "#ff69b4",
+        "description": "",
+        "count": 25
+    },
+    {
         "id": "unsorted",
         "name": "Unsorted",
         "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "",
         "count": 0
@@ -74,7 +92,8 @@
     {
         "id": "stardrops",
         "name": "Stardrops' Open Directory",
-        "icon": "images/glitter/stardrops/orangeGlit.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "This is one of the very first glitter tiles",
         "count": 7,
@@ -93,7 +112,8 @@
     {
         "id": "sparkelies",
         "name": "Sparkelies",
-        "icon": "images/glitter/sparkelies/amethyst.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "\"Just click on the ones you want !\"",
         "count": 18,
@@ -112,7 +132,8 @@
     {
         "id": "bring-on-the-glitter",
         "name": "Bring On The Glitter",
-        "icon": "images/glitter/bring-on-the-glitter/sea-01.gif",
+        "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "designs by Aylana",
         "count": 131,
@@ -128,9 +149,27 @@
         "kind": "set"
     },
     {
+        "id": "ms-office-textures",
+        "name": "Microsoft Office Textures",
+        "icon": "",
+        "previews": [],
+        "color": "#ff69b4",
+        "description": "",
+        "count": 25,
+        "attribution": {
+            "author": "Microsoft",
+            "authorId": "microsoft",
+            "source": "Microsoft Office",
+            "license": "unknown",
+            "notes": "Original Office fill textures. Redistribution rights for these files have not been established. Microsoft licensing guidance: https://www.microsoft.com/legal/intellectualproperty/copyright/permissions"
+        },
+        "kind": "set"
+    },
+    {
         "id": "flashites",
         "name": "Flashites",
         "icon": "",
+        "previews": [],
         "color": "#ff69b4",
         "description": "",
         "count": 0,

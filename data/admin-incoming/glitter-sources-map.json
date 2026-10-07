@@ -2,7 +2,8 @@
 	"precedence": [
 		"stardrops",
 		"sparkelies",
-		"bring-on-the-glitter"
+		"bring-on-the-glitter",
+		"ms-office-textures"
 	],
 	"styles": [
 		{
@@ -74,6 +75,11 @@
 			"slug": "bring-on-the-hearts",
 			"name": "Bring On The Hearts",
 			"sort_order": 900
+		},
+		{
+			"slug": "textures",
+			"name": "Textures",
+			"sort_order": 75
 		}
 	],
 	"sources": [
@@ -131,6 +137,18 @@
 				"source": "Flashites",
 				"sourceId": "flashites",
 				"license": "unknown"
+			}
+		},
+		{
+			"slug": "ms-office-textures",
+			"name": "Microsoft Office Textures",
+			"sort_order": 10,
+			"attribution": {
+				"author": "Microsoft",
+				"source": "Microsoft Office",
+				"license": "unknown",
+				"notes": "Original Office fill textures. Redistribution rights for these files have not been established. Microsoft licensing guidance: https://www.microsoft.com/legal/intellectualproperty/copyright/permissions",
+				"authorId": "microsoft"
 			}
 		}
 	],
@@ -225,6 +243,13 @@
 			"source": "bring-on-the-glitter",
 			"style": "transparent",
 			"names": "generated"
+		},
+		{
+			"from": "ms-office-texture/",
+			"slug": "ms-office-texture",
+			"source": "ms-office-textures",
+			"style": "textures",
+			"names": "original"
 		}
 	],
 	"stickerCategories": [

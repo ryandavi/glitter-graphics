@@ -561,18 +561,32 @@ class AssetBrowser {
 		card.dataset.categoryId = category.id;
 		if (category.color) card.style.setProperty('--category-color', category.color);
 
-		// Glitter categories tile their icon as a repeating background; every
-		// other library shows it as a contained thumbnail.
 		const image = card.querySelector('.category-card-image');
-		if (this.schema.tileCategoryIcon) {
-			image.classList.add('category-card-glitter-bg');
-			image.style.backgroundImage = `url('${category.icon}')`;
-		} else if (category.icon) {
+		if (category.icon) {
 			const img = document.createElement('img');
 			img.src = category.icon;
 			img.draggable = false;
-			img.alt = category.name;
+			img.alt = '';
 			image.appendChild(img);
+		} else {
+			const samples = this.getCategoryPreviewItems(category);
+			image.classList.add('category-card-previews');
+			image.dataset.previewCount = samples.length;
+			for (const item of samples) {
+				const cell = document.createElement('span');
+				cell.className = 'category-card-preview';
+				if (this.schema.tileCategoryIcon) {
+					cell.style.backgroundImage = `url("${item.url}")`;
+					cell.style.imageRendering = item.isPixelated ? 'pixelated' : 'auto';
+				} else {
+					const img = document.createElement('img');
+					img.src = item.thumbnailUrl || item.url;
+					img.draggable = false;
+					img.alt = '';
+					cell.appendChild(img);
+				}
+				image.appendChild(cell);
+			}
 		}
 
 		card.querySelector('.category-card-name').textContent = category.name;
@@ -583,6 +597,14 @@ class AssetBrowser {
 		card.addEventListener('click', onClick);
 
 		return card;
+	}
+
+	getCategoryPreviewItems(category) {
+		const items = this.contentManager.getAllContent().filter(item => !item.isLoading && !item.error);
+		const previews = (category.previews || []).map(id => items.find(item => String(item.id) === String(id))).filter(Boolean);
+		const members = category.parent || this.catalog.isSet(category)
+			? this.getCategoryItems(category.id, items) : this.catalog.getRootItems(category.id, items);
+		return (previews.length ? previews : members).slice(0, 4);
 	}
 
 	getCategoryCounts(items) {

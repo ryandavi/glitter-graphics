@@ -1,0 +1,30 @@
+{
+    "id": 412,
+    "url": "images/glitter/ms-office-texture/fabric-canvas-dark.jpg",
+    "name": "Fabric Canvas Dark",
+    "generatedName": "Tan",
+    "brightness": "0.570",
+    "sortOrder": 1,
+    "hue": 0.146,
+    "colorCodes": [
+        "#AC9773"
+    ],
+    "colorWeights": [
+        0.98
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 4538,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 1,
+    "originalName": "fabric-canvas-dark"
+}

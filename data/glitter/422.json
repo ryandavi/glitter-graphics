@@ -1,0 +1,30 @@
+{
+    "id": 422,
+    "url": "images/glitter/ms-office-texture/paper-parchment.jpg",
+    "name": "Paper Parchment",
+    "generatedName": "Tan",
+    "brightness": "0.840",
+    "sortOrder": 11,
+    "hue": 0.15,
+    "colorCodes": [
+        "#EEDBB7"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 2729,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 11,
+    "originalName": "paper-parchment"
+}

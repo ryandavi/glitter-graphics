@@ -196,6 +196,18 @@ async function main() {
 			return;
 		}
 		const { page, errors } = await openPage(browser);
+		await page.evaluate(() => {
+			const b = window.editor.glitterLibrary.browser;
+			const ids = b.contentManager.content.slice(0, 4).map(item => item.id);
+			for (let count = 1; count <= 4; count++) {
+				const card = b.createCategoryCard({ id: 'sparkle', name: 'Preview', previews: ids.slice(0, count) }, count);
+				if (card.querySelectorAll('.category-card-preview').length !== count) throw new Error(`Preview count ${count} failed`);
+			}
+			const custom = b.createCategoryCard({ id: 'sparkle', name: 'Custom', icon: b.contentManager.content[0].url, previews: ids }, 4);
+			if (custom.querySelectorAll('.category-card-image > img').length !== 1 || custom.querySelector('.category-card-preview')) throw new Error('Custom path did not override previews');
+			const fallback = b.createCategoryCard({ id: 'sparkle', name: 'Automatic', previews: [99999999] }, 4);
+			if (fallback.querySelectorAll('.category-card-preview').length !== 4) throw new Error('Missing preview did not fall back to category assets');
+		});
 		const result = await page.evaluate(async () => {
 			const e = window.editor, library = e.glitterLibrary, b = library.browser;
 			const expect = (condition, message) => { if (!condition) throw new Error(message); };

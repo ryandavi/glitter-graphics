@@ -1,0 +1,32 @@
+{
+    "id": 428,
+    "url": "images/glitter/ms-office-texture/stone-marble-brown.jpg",
+    "name": "Stone Marble Brown",
+    "generatedName": "Burnt Orange",
+    "brightness": "0.210",
+    "sortOrder": 17,
+    "hue": 0.111,
+    "colorCodes": [
+        "#4F3320",
+        "#886C55"
+    ],
+    "colorWeights": [
+        0.95,
+        0.05
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 3953,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 17,
+    "originalName": "stone-marble-brown"
+}

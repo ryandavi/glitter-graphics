@@ -128,7 +128,7 @@ class GlitterRecolorController {
 			if (category?.id !== 'custom') return;
 			const edit = document.createElement('button');
 			edit.type = 'button'; edit.className = 'btn-flat'; edit.textContent = 'Edit colors';
-			edit.disabled = !items.some(item => item.id === this.selectedId);
+			edit.disabled = !items.some(item => item.id === this.selectedId && item.recipe);
 			edit.addEventListener('click', () => COMMANDS.recolorGlitter.run(this.editor, { itemId: this.selectedId }));
 			header.element.querySelector('.asset-set-header-line').appendChild(edit);
 		};

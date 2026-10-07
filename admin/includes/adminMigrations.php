@@ -91,11 +91,13 @@ class AdminMigrations
 			// through set_id whichever style they are in. Both carry an optional
 			// JSON attribution block (js/core/attribution.js shape).
 			'sticker_categories' => [
+				'previews' => 'TEXT NULL',
 				'is_set' => 'TINYINT(1) NOT NULL DEFAULT 0',
 				'is_active' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'attribution' => 'TEXT NULL',
 			],
 			'glitter_categories' => [
+				'previews' => 'TEXT NULL',
 				'is_set' => 'TINYINT(1) NOT NULL DEFAULT 0',
 				'is_active' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'attribution' => 'TEXT NULL',

@@ -216,11 +216,26 @@ updateOrientationButtons(width, height) {
 			resetScrollOnOpen: false
 		});
 
-		// Sticker upload modal - ONLY uploadStickerBtn opens this
+		// Stickers and fills share the image upload dialog.
 		this.modalManager.register('stickerUploadModal', {
 			openBtnId: 'uploadStickerBtn',
 			closeBtnId: 'closeStickerUploadModal',
-			resetScrollOnOpen: false
+			resetScrollOnOpen: false,
+			onOpen: () => {
+				this.assetUploadLibrary = syncLibraryView() === 'glitter' ? this.glitterLibrary : this.stickerLibrary;
+				const fill = this.assetUploadLibrary === this.glitterLibrary;
+				if (fill && this.glitterRecolor.pickerSession) this.glitterRecolor.closePickerSession();
+				const modal = document.getElementById('stickerUploadModal');
+				const title = fill ? 'Upload fill tile' : 'Upload sticker';
+				modal.querySelector('.modal-title-text').textContent = title;
+				modal.querySelector('.modal-title .name').textContent = title;
+				modal.querySelector('.modal-title use').setAttribute('href', '#icon-upload');
+				modal.querySelector('.dropzone-icon use').setAttribute('href', '#icon-upload');
+				modal.querySelector('.dropzone-icon .name').textContent = title;
+				modal.querySelector('.dropzone-text').textContent = fill ? 'Drop fill tiles here or click to browse' : 'Drop stickers here or click to browse';
+				const maxMB = CONFIG.tools.assetUpload.maxUploadSize / 1024 / 1024;
+				modal.querySelector('.dropzone-subtext').textContent = `PNG, JPG, or GIF · Max ${maxMB}MB each${fill ? ' · Images repeat as fill tiles' : ''}`;
+			}
 		});
 
 		// New canvas modal

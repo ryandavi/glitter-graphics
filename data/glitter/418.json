@@ -1,0 +1,30 @@
+{
+    "id": 418,
+    "url": "images/glitter/ms-office-texture/paper-bouquet.jpg",
+    "name": "Paper Bouquet",
+    "generatedName": "Muted Blue",
+    "brightness": "0.880",
+    "sortOrder": 7,
+    "hue": 0.648,
+    "colorCodes": [
+        "#CBDCF9"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "isAnimated": 0,
+    "hasTransparency": 0,
+    "width": 128,
+    "height": 128,
+    "fileSize": 3135,
+    "category": "textures",
+    "isPixelated": 0,
+    "tags": [],
+    "searchTerms": [],
+    "set": "ms-office-textures",
+    "originalOrder": 7,
+    "originalName": "paper-bouquet"
+}

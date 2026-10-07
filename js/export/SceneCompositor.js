@@ -659,6 +659,18 @@ class SceneCompositor {
 			sourceIdentity: glitter,
 			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
 				if (!glitter) throw new Error(`Missing glitter ${glitterId}`);
+				if (!glitter.isAnimated) {
+					if (this.decodedSources.has(glitter.url) || (timingOnly && this.sourceTimings.has(glitter.url))) return;
+					const duration = CONFIG.export.defaults.frameDelay;
+					const timing = { width: glitter.width, height: glitter.height, frameCount: 1, frameDelay: duration, frameDelays: [duration] };
+					if (timingOnly) this.sourceTimings.set(glitter.url, timing);
+					else {
+						const imageData = await this._loadStaticImage(glitter.url);
+						this.decodedSources.set(glitter.url, { ...timing, width: imageData.width, height: imageData.height,
+							frames: [{ imageData, x: 0, y: 0, width: imageData.width, height: imageData.height, disposal: 1 }] });
+					}
+					return;
+				}
 				await this._loadAnimatedSource(glitter.url, {
 					timingOnly,
 					onStatus: () => callbacks.onStatus(`Loading ${glitter.name}...`),

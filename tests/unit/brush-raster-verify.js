@@ -54,7 +54,7 @@ const BrushLibrary = brushCtx.BrushLibrary;
 
 const manifest = JSON.parse(load('data/brushes.json'));
 BrushLibrary.applyManifest(manifest);
-const collectionIds = JSON.parse(load('data/brush-categories.json')).map((entry) => entry.id);
+const collectionIds = Array.from(BrushLibrary.collections(), (entry) => entry.id);
 assert.deepStrictEqual(collectionIds, manifest.packs.map((pack) => pack.id), 'raster gallery collections mirror the source packs');
 
 const assets = BrushLibrary.assets();

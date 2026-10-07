@@ -28,6 +28,35 @@ class GlitterBrowserManager extends ContentManager {
 		this.editor.glitterRecolor.installLibraryActions();
 	}
 
+	async handleUserUpload(file) {
+		const done = this.editor.beginActivity('asset-upload', 'Opening fill tile');
+		try {
+			const item = await this.createUploadedAsset(file, { category: 'custom' });
+			if (!item) return null;
+			this.userContent.unshift(item);
+			this.updateFacetAvailability();
+			this.refreshCustomCategory();
+			await revealAssetBrowser(this.editor, this, item.id);
+			return item;
+		} catch (error) {
+			this.editor.showError(error.message);
+			return null;
+		} finally { done(); }
+	}
+
+	async registerEmbeddedGlitter(id, payload) {
+		const existing = this.getItemById(id);
+		if (existing) return existing;
+		const blob = await fetch(payload.data).then(response => response.blob());
+		const file = new File([blob], payload.upload.fileName || `${id}.png`, { type: payload.upload.mimeType || blob.type });
+		const item = await this.createUploadedAsset(file, { id, category: 'custom', name: payload.upload.name });
+		if (!item) throw new Error('Invalid embedded fill tile');
+		this.userContent.unshift(item);
+		this.updateFacetAvailability();
+		this.refreshCustomCategory();
+		return item;
+	}
+
 	getItemById(id) { return super.getItemById(id) || this.retiredCustom.get(id); }
 	getRenderContent() { return [...this.getAllContent(), ...this.retiredCustom.values()]; }
 
@@ -108,7 +137,7 @@ class GlitterBrowserManager extends ContentManager {
 	}
 
 	persistCustomGlitter() {
-		const saved = this.userContent.map(item => item.recipe);
+		const saved = this.userContent.filter(item => item.recipe).map(item => item.recipe);
 		// Recipes restored from projects may outlive their library source.
 		const unavailable = PREFERENCES.get('customGlitter').filter(recipe => !this.getItemById(recipe.id));
 		PREFERENCES.set('customGlitter', [...saved, ...unavailable]);
@@ -119,7 +148,7 @@ class GlitterBrowserManager extends ContentManager {
 		const categories = this.browser.categories;
 		const index = categories.findIndex(category => category.id === 'custom');
 		if (index >= 0) categories.splice(index, 1);
-		if (this.userContent.length) categories.unshift({ id: 'custom', name: 'My Glitter', description: 'Your saved recolors. Select a tile to edit its colors.' });
+		if (this.userContent.length) categories.unshift({ id: 'custom', name: 'My Glitter', description: 'Your recolored and uploaded fill tiles. Used tiles are included in saved projects.' });
 		this.browser.refresh();
 	}
 

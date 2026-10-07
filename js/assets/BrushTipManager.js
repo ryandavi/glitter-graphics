@@ -19,11 +19,11 @@ class BrushTipManager extends ContentManager {
 
 	async initBrowser() {
 		this.browser = new AssetBrowser(this, 'brushTip');
-		await this.browser.loadCategories(CONFIG.tools.maskBrush.brushTips.categories);
+		const categories = BrushLibrary.collections();
 		await this.browser.init([
 			{ id: 'basic', name: 'Basic brushes', browseFirst: true },
-			{ id: 'raster', name: 'Raster brush sets', icon: this.browser.categories[0]?.icon },
-			...this.browser.categories.map(category => ({ ...category, parent: 'raster' }))
+			{ id: 'raster', name: 'Raster brush sets', previews: categories[0]?.previews },
+			...categories.map(category => ({ ...category, parent: 'raster' }))
 		]);
 	}
 

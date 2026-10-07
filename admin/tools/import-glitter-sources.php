@@ -91,7 +91,7 @@ class GlitterSourceImport
 		foreach ($iterator as $file) {
 			$relative = str_replace('\\', '/', substr($file->getPathname(), strlen($this->root) + 1));
 			if (in_array($relative, $this->map['deferredFiles'] ?? [], true)) continue;
-			if (!$file->isFile() || strpos($relative, 'ms-office-texture/') === 0 || strpos($relative, '.thumbs/') !== false || !preg_match('/\.(gif|png|jpe?g)$/i', $relative)) continue;
+			if (!$file->isFile() || (strpos($relative, 'ms-office-texture/') === 0 && !isset($sources[strtolower(str_replace('\\', '/', realpath($file->getPathname())))])) || strpos($relative, '.thumbs/') !== false || !preg_match('/\.(gif|png|jpe?g)$/i', $relative)) continue;
 			$key = strtolower(str_replace('\\', '/', $file->getRealPath()));
 			$source = $sources[$key] ?? null;
 			$groups[md5_file($file->getPathname())][] = [
@@ -183,7 +183,7 @@ class GlitterSourceImport
 		}
 		echo "\nPer-folder totals (owned images; carried-over tiles excluded):\n";
 		foreach ($counts as $slug => $count) echo $slug, ': ', json_encode($count), "\n";
-		echo count($plan), " distinct in-scope images. Microsoft textures are excluded.\n";
+		echo count($plan), " distinct in-scope images.\n";
 		return $counts;
 	}
 
@@ -295,15 +295,7 @@ class GlitterSourceImport
 				if (is_file($file['file']) && !unlink($file['file'])) throw new RuntimeException('Could not drop duplicate/source ' . $file['file']);
 			}
 		}
-		// Repair covers that are unset or referred to a copy removed by the import.
-		$assets = $api->exportAssets();
-		foreach ($api->getCategories() as $category) {
-			if (!$category['id']) continue;
-			if ($category['icon'] && is_file($this->paths->urlToFile($category['icon'], 'glitter', true))) continue;
-			$key = (int)$category['is_set'] ? 'set' : 'category';
-			$own = array_values(array_filter($assets, function ($asset) use ($category, $key) { return ($asset[$key] ?? null) === $category['slug']; }));
-			if ($own) $api->updateCategory(['id' => $category['id'], 'icon' => $own[0]['url']]);
-		}
+		// Unset covers derive from ordered assets; custom paths stay untouched.
 		$directories = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->root, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
 		foreach ($directories as $directory) {
 			if ($directory->isDir() && count(scandir($directory->getPathname())) === 2) rmdir($directory->getPathname());
