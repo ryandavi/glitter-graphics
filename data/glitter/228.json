@@ -4,7 +4,7 @@
     "name": "Vivid Purple",
     "generatedName": "Vivid Purple",
     "brightness": "0.480",
-    "sortOrder": 116,
+    "sortOrder": 64,
     "hue": 0.811,
     "colorCodes": [
         "#8A05DD",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8002,
     "originalName": "purple-003"
 }

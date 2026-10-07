@@ -1,0 +1,29 @@
+{
+    "id": 373,
+    "url": "images/glitter/sparkle-flat/flat_ce00ff.gif",
+    "name": "Vivid Purple",
+    "generatedName": "Vivid Purple",
+    "brightness": "0.600",
+    "sortOrder": 73,
+    "hue": 0.843,
+    "colorCodes": [
+        "#CE00FF",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

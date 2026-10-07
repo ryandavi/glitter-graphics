@@ -4,7 +4,7 @@
     "name": "Ruby",
     "generatedName": "Very Dark Vivid Pink",
     "brightness": "0.150",
-    "sortOrder": 222,
+    "sortOrder": 0,
     "hue": 0.96,
     "colorCodes": [
         "#330019",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -34,6 +34,7 @@
     "searchTerms": [
         "ember_red-2"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 2,
     "originalName": "ember-02"
 }

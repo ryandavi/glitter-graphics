@@ -1,0 +1,29 @@
+{
+    "id": 325,
+    "url": "images/glitter/sparkle-flat/flat_adff29.gif",
+    "name": "Vivid Yellow-Green",
+    "generatedName": "Vivid Yellow-Green",
+    "brightness": "0.610",
+    "sortOrder": 27,
+    "hue": 0.272,
+    "colorCodes": [
+        "#ADFF29",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 555,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

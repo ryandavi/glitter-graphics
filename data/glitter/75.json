@@ -4,7 +4,7 @@
     "name": "Christmas 2",
     "generatedName": "Green and Red",
     "brightness": "1.000",
-    "sortOrder": 26,
+    "sortOrder": 101,
     "hue": 1.2,
     "colorCodes": [
         "#00D200",
@@ -36,13 +36,5 @@
         "Yellow"
     ],
     "searchTerms": [],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    }
+    "set": "bring-on-the-glitter"
 }

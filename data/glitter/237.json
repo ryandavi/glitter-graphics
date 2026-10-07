@@ -4,7 +4,7 @@
     "name": "Silver",
     "generatedName": "Dark Gray",
     "brightness": "0.420",
-    "sortOrder": 47,
+    "sortOrder": 76,
     "hue": 1.1,
     "colorCodes": [
         "#6B6B6B",
@@ -22,10 +22,11 @@
     "width": 61,
     "height": 29,
     "fileSize": 1620,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "sparkelies",
     "originalOrder": 1013,
     "originalName": "silver",
     "appearances": [

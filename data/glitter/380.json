@@ -1,0 +1,29 @@
+{
+    "id": 380,
+    "url": "images/glitter/sparkle-flat/flat_de9cde.gif",
+    "name": "Muted Purple",
+    "generatedName": "Muted Purple",
+    "brightness": "0.780",
+    "sortOrder": 80,
+    "hue": 0.875,
+    "colorCodes": [
+        "#DE9CDE",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 611,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

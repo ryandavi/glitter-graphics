@@ -4,7 +4,7 @@
     "name": "Vivid Golden Orange",
     "generatedName": "Vivid Golden Orange",
     "brightness": "0.580",
-    "sortOrder": 256,
+    "sortOrder": 2,
     "hue": 0.163,
     "colorCodes": [
         "#FFBB04",
@@ -26,10 +26,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 420,
-    "category": "clear",
+    "category": "transparent",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 1,
     "originalName": "goldclear-02"
 }

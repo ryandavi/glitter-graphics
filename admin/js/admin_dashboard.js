@@ -42,7 +42,6 @@ class AdminDashboard {
 			analysis_missing: ['Analysis missing', 'No stored analysis exists for this file.'],
 			analysis_stale: ['Analysis stale', 'The file changed after its stored analysis was created.'],
 			thumbnail_missing: ['Thumbnail missing', 'The stored thumbnail is unavailable.'],
-			category_path_mismatch: ['Category path mismatch', 'The URL folder does not match the assigned category slug.'],
 			unsafe_file_type: ['Unsupported file', 'The file type is outside the configured safe formats.'],
 			unreadable_file: ['Unreadable file', 'The file is empty or cannot be read.'],
 			orphaned_variant: ['Orphaned variant', 'This file looks like a size variant, but its base file is missing — it will not be attached to anything.'],
@@ -314,11 +313,10 @@ class AdminDashboard {
 		return `${added} added, ${failures.length} not added`;
 	}
 
-	// An existing file registers where it sits, so its folder is what picks its
-	// category — pointing the record at any other category only produces a path
-	// mismatch on the next health check. A folder with no category record is
-	// therefore a category that has not been registered yet, which is the one
-	// decision this batch cannot make on its own.
+	// An existing file registers where it sits, so its folder picks the
+	// category it starts in; it can be moved to another afterwards. A folder
+	// with no category record is the one decision this batch cannot make on
+	// its own.
 	async resolveRegisterCategories(items) {
 		const targets = [];
 		const unregistered = new Map();
@@ -487,7 +485,7 @@ class AdminDashboard {
 	issueTone(issue) {
 		if (['missing', 'duplicate', 'unsafe_file_type', 'unreadable_file'].includes(issue)) return 'critical';
 		if (['orphan', 'thumbnail_missing', 'variant_available'].includes(issue)) return 'info';
-		if (['pending', 'analysis_missing', 'analysis_stale', 'category_path_mismatch', 'orphaned_variant'].includes(issue)) return 'warning';
+		if (['pending', 'analysis_missing', 'analysis_stale', 'orphaned_variant'].includes(issue)) return 'warning';
 		return 'info';
 	}
 

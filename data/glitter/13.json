@@ -4,7 +4,7 @@
     "name": "Teal Tourmaline",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 49,
+    "sortOrder": 47,
     "hue": 0.525,
     "colorCodes": [
         "#009687"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -33,6 +33,7 @@
         "Turquoise 2",
         "glitter_turquoise_2"
     ],
+    "set": "sparkelies",
     "originalOrder": 1015,
     "originalName": "tealTourmaline"
 }

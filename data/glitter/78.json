@@ -4,7 +4,7 @@
     "name": "Gold 1",
     "generatedName": "Vivid Gold",
     "brightness": "1.000",
-    "sortOrder": 40,
+    "sortOrder": 33,
     "hue": 0.167,
     "colorCodes": [
         "#B48700"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Gold",
@@ -31,6 +31,7 @@
         "Dark Gold",
         "glitter_dark-gold"
     ],
+    "set": "sparkelies",
     "originalOrder": 1005,
     "originalName": "gold-1"
 }

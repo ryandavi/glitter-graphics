@@ -4,7 +4,7 @@
     "name": "Brown 2",
     "generatedName": "Muted Orange",
     "brightness": "0.000",
-    "sortOrder": 93,
+    "sortOrder": 86,
     "hue": 0.125,
     "colorCodes": [
         "#3C2D1E"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 859,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Brown",
@@ -30,6 +30,7 @@
     "searchTerms": [
         "glitter_brown-2"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 5002,
     "originalName": "brown-03"
 }

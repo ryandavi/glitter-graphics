@@ -42,6 +42,7 @@ class AdminMigrations
 				'attribution' => 'TEXT NULL',
 				'original_name' => 'VARCHAR(255) NULL',
 				'original_order' => 'INT NULL',
+				'set_id' => 'INT UNSIGNED NULL',
 				'search_terms' => 'TEXT NULL',
 				'appearances' => 'TEXT NULL',
 				'color_weights' => 'VARCHAR(255) NULL AFTER color_codes',
@@ -63,6 +64,7 @@ class AdminMigrations
 				'search_terms' => 'TEXT NULL',
 				'original_name' => 'VARCHAR(255) NULL',
 				'original_order' => 'INT NULL',
+				'set_id' => 'INT UNSIGNED NULL',
 				'appearances' => 'TEXT NULL',
 				// Defaults to 1 so the whole existing library keeps the crisp
 				// upscaling it has always rendered with; smooth art is opt-in.
@@ -84,15 +86,17 @@ class AdminMigrations
 				'variant_urls' => 'TEXT NULL',
 				'slice' => 'JSON NULL',
 			],
-			// Optional JSON attribution block per category (js/core/attribution.js
-			// shape) — every asset in the category inherits it in the editor.
+			// A category row is a style (assets live in it, in hand order) or,
+			// with is_set, a set: a creator's collection that assets point at
+			// through set_id whichever style they are in. Both carry an optional
+			// JSON attribution block (js/core/attribution.js shape).
 			'sticker_categories' => [
-				'parent_id' => 'INT UNSIGNED NULL AFTER id',
+				'is_set' => 'TINYINT(1) NOT NULL DEFAULT 0',
 				'is_active' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'attribution' => 'TEXT NULL',
 			],
 			'glitter_categories' => [
-				'parent_id' => 'INT UNSIGNED NULL AFTER id',
+				'is_set' => 'TINYINT(1) NOT NULL DEFAULT 0',
 				'is_active' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'attribution' => 'TEXT NULL',
 			],
@@ -111,9 +115,9 @@ class AdminMigrations
 				}
 			}
 		}
-		foreach (['glitter_categories', 'sticker_categories'] as $table) {
-			if (!self::indexExists($connection, $config, $table, 'parent_id')) {
-				if (!$connection->query("ALTER TABLE `$table` ADD KEY parent_id (parent_id)")) {
+		foreach (['glitter', 'stickers'] as $table) {
+			if (!self::indexExists($connection, $config, $table, 'set_id')) {
+				if (!$connection->query("ALTER TABLE `$table` ADD KEY set_id (set_id)")) {
 					throw new Exception('Migration failed: ' . $connection->error);
 				}
 			}

@@ -4,7 +4,7 @@
     "name": "Dusty Pink",
     "generatedName": "Very Light Desaturated Red",
     "brightness": "0.690",
-    "sortOrder": 111,
+    "sortOrder": 14,
     "hue": 0.047,
     "colorCodes": [
         "#EF9C99",
@@ -26,7 +26,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Light",
@@ -39,6 +39,7 @@
     "searchTerms": [
         "glitter_dusty-pink"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7007,
     "originalName": "pink-05"
 }

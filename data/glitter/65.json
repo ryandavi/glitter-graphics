@@ -4,7 +4,7 @@
     "name": "Black",
     "generatedName": "Black",
     "brightness": "0.000",
-    "sortOrder": 23,
+    "sortOrder": 100,
     "hue": 1.1,
     "colorCodes": [
         "#000000"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 640,
-    "category": "sparkle",
+    "category": "sparkle-flat",
     "isPixelated": 1,
     "tags": [
         "Black",

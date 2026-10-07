@@ -4,7 +4,7 @@
     "name": "Blue Topaz",
     "generatedName": "Jewel Tone Blue",
     "brightness": "1.000",
-    "sortOrder": 37,
+    "sortOrder": 53,
     "hue": 0.625,
     "colorCodes": [
         "#004B96"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_blue-topaz"
     ],
+    "set": "sparkelies",
     "originalOrder": 1002,
     "originalName": "blueTopaz"
 }

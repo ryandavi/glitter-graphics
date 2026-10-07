@@ -32,17 +32,22 @@ class GlitterSourceImport
 		foreach ($map['deferredFiles'] ?? [] as $file) {
 			if (!preg_match('#^[a-zA-Z0-9_/-]+\.(gif|png|jpe?g)$#i', $file) || $file[0] === '/') throw new RuntimeException('Unsafe deferred file path');
 		}
+		// styles: categories tiles are filed in. sources: sets, the creators'
+		// collections. sections: source folders on disk, each naming its set
+		// and the style its new tiles start in.
 		$slugs = [];
-		foreach (array_merge($map['roots'], $map['sets']) as $set) {
-			$this->paths->validateSlug($set['slug']);
-			if (isset($slugs[$set['slug']])) throw new RuntimeException('Duplicate set slug: ' . $set['slug']);
-			$slugs[$set['slug']] = true;
+		foreach (array_merge($map['styles'], $map['sources']) as $row) {
+			$this->paths->validateSlug($row['slug']);
+			if (isset($slugs[$row['slug']])) throw new RuntimeException('Duplicate slug: ' . $row['slug']);
+			$slugs[$row['slug']] = true;
 		}
-		$roots = array_column($map['roots'], 'slug');
-		foreach ($map['sets'] as $set) {
-			if (isset($set['parent']) && !in_array($set['parent'], $roots, true)) throw new RuntimeException('Set parents must be mapped style roots');
-			if (!in_array($set['names'], ['original', 'generated'], true)) throw new RuntimeException('Unknown naming policy');
-			if (!in_array($set['source'] ?? $set['slug'], $map['precedence'], true)) throw new RuntimeException('Source missing from precedence');
+		$styles = array_column($map['styles'], 'slug');
+		$sources = array_column($map['sources'], 'slug');
+		foreach ($map['sections'] as $section) {
+			$this->paths->validateSlug($section['slug']);
+			if (!in_array($section['style'], $styles, true)) throw new RuntimeException('Section style must be a mapped style');
+			if (!in_array($section['names'], ['original', 'generated'], true)) throw new RuntimeException('Unknown naming policy');
+			if (!in_array($section['source'], $sources, true) || !in_array($section['source'], $map['precedence'], true)) throw new RuntimeException('Section source must be a mapped source with a precedence');
 		}
 	}
 
@@ -61,14 +66,14 @@ class GlitterSourceImport
 
 	public function plan()
 	{
-		$rows = $this->db->query('SELECT g.*, c.slug AS category_slug FROM glitter g JOIN glitter_categories c ON c.id = g.glitter_category_id ORDER BY g.id')->fetch_all(MYSQLI_ASSOC);
+		$rows = $this->db->query('SELECT g.*, c.slug AS category_slug, s.slug AS set_slug FROM glitter g JOIN glitter_categories c ON c.id = g.glitter_category_id LEFT JOIN glitter_categories s ON s.id = g.set_id ORDER BY g.id')->fetch_all(MYSQLI_ASSOC);
 		$byPath = [];
 		foreach ($rows as $row) {
 			$path = $this->paths->urlToFile($row['url'], 'glitter', true);
 			$byPath[strtolower(str_replace('\\', '/', $path))][] = $row;
 		}
 		$sources = [];
-		foreach ($this->map['sets'] as $order => $set) {
+		foreach ($this->map['sections'] as $order => $set) {
 			$directories = $this->expandDirectories($set['from']);
 			$directories[] = $this->paths->categoryDirectory('glitter', $set['slug']);
 			foreach (array_unique($directories) as $sectionOrder => $directory) {
@@ -77,7 +82,7 @@ class GlitterSourceImport
 				foreach ($files as $fileOrder => $file) {
 					if (!is_file($file) || !preg_match('/\.(gif|png|jpe?g)$/i', $file)) continue;
 					$key = strtolower(str_replace('\\', '/', realpath($file)));
-					$sources[$key] = ['set' => $set, 'rank' => array_search($set['source'] ?? $set['slug'], $this->map['precedence'], true), 'order' => $order, 'sort' => $sectionOrder * 1000 + $fileOrder];
+					$sources[$key] = ['set' => $set, 'rank' => array_search($set['source'], $this->map['precedence'], true), 'order' => $order, 'sort' => $sectionOrder * 1000 + $fileOrder];
 				}
 			}
 		}
@@ -108,9 +113,13 @@ class GlitterSourceImport
 			ksort($records);
 			$record = $records ? reset($records) : null;
 			$set = $winner['source']['set'] ?? null;
+			// A sourced file lives in its section's folder. Any other registered
+			// file stays where it is: its folder says nothing about its category.
 			$slug = $set['slug'] ?? ($record['category_slug'] ?? 'unsorted');
+			$style = $record['category_slug'] ?? ($set['style'] ?? 'unsorted');
+			$source = $set['source'] ?? null;
 			$original = $set ? pathinfo($winner['file'], PATHINFO_FILENAME) : ($record['original_name'] ?? null);
-			$destination = $this->paths->categoryDirectory('glitter', $slug) . '/' . basename($winner['file']);
+			$destination = $set || !$record ? $this->paths->categoryDirectory('glitter', $slug) . '/' . basename($winner['file']) : $winner['file'];
 			$key = strtolower(str_replace('\\', '/', $destination));
 			if (isset($destinations[$key]) && $destinations[$key] !== $hash) throw new RuntimeException('Two distinct images map to ' . $destination);
 			if (is_file($destination) && md5_file($destination) !== $hash) throw new RuntimeException('Destination contains another image: ' . $destination);
@@ -128,20 +137,23 @@ class GlitterSourceImport
 				if ($row['name'] !== $name) $terms[] = $row['name'];
 			}
 			foreach (array_slice($files, 1) as $loser) {
-				if ($loser['source']) $appearances[] = ['set' => $loser['source']['set']['slug'], 'originalName' => pathinfo($loser['file'], PATHINFO_FILENAME)];
+				if ($loser['source']) $appearances[] = ['set' => $loser['source']['set']['source'], 'originalName' => pathinfo($loser['file'], PATHINFO_FILENAME)];
 				else $terms[] = pathinfo($loser['file'], PATHINFO_FILENAME);
 			}
 			$unique = [];
 			foreach ($appearances as $appearance) {
-				if ($appearance['set'] === $slug) {
+				if ($appearance['set'] === $source) {
 					$terms[] = $appearance['originalName'];
 					continue;
 				}
 				$unique[$appearance['set'] . ':' . $appearance['originalName']] = $appearance;
 			}
-			$plan[] = compact('hash', 'files', 'winner', 'record', 'records', 'set', 'slug', 'original', 'destination', 'name') + [
+			$home = $record && count($files) === 1 && count($records) === 1
+				&& str_replace('\\', '/', $winner['file']) === str_replace('\\', '/', $destination)
+				&& (!$set || ($record['set_slug'] ?? null) === $source);
+			$plan[] = compact('hash', 'files', 'winner', 'record', 'records', 'set', 'slug', 'style', 'source', 'original', 'destination', 'name') + [
 				'appearances' => array_values($unique), 'terms' => array_values(array_unique($terms)),
-				'action' => !$set && !$record ? 'queue' : ($record ? (!$set && $record['category_slug'] === $slug && str_replace('\\', '/', $winner['file']) === str_replace('\\', '/', $destination) ? 'keep' : 'rehome') : 'new'),
+				'action' => !$set && !$record ? 'queue' : ($record ? ($home ? 'keep' : 'rehome') : 'new'),
 			];
 		}
 		return $plan;
@@ -150,10 +162,9 @@ class GlitterSourceImport
 	public function report($plan)
 	{
 		foreach ($this->map['deferredFiles'] ?? [] as $file) echo 'DEFER ', $file, " (left untouched)\n";
-		echo "Planned categories (counts remain owned tiles only):\n";
-		foreach (array_merge($this->map['roots'], $this->map['sets']) as $set) {
-			echo '  ', $set['slug'], ' — ', $set['name'], ' (parent: ', $set['parent'] ?? 'none', ')', isset($set['renameFrom']) ? ' rename from ' . $set['renameFrom'] : '', "\n";
-		}
+		echo "Styles and sets (created when missing; existing rows are left as they are):\n";
+		foreach ($this->map['styles'] as $row) echo '  style ', $row['slug'], ' — ', $row['name'], "\n";
+		foreach ($this->map['sources'] as $row) echo '  set   ', $row['slug'], ' — ', $row['name'], "\n";
 		foreach ($this->map['stickerCategories'] ?? [] as $category) {
 			echo '  Sticker creator/source ids: ', $category['slug'], ' -> ', $category['attribution']['authorId'], ' / ', $category['attribution']['sourceId'], "\n";
 		}
@@ -166,14 +177,11 @@ class GlitterSourceImport
 			echo strtoupper($entry['action']), ' ', $entry['winner']['relative'], ' -> ', $entry['action'] === 'queue' ? 'ingest queue (Unsorted)' : 'images/glitter/' . $slug . '/' . basename($entry['destination']), "\n";
 			foreach ($entry['files'] as $index => $file) {
 				if (!$file['rows']) echo '  NO RECORD ', $file['relative'], "\n";
-				foreach ($file['rows'] as $row) {
-					if (dirname($file['relative']) !== $row['category_slug']) echo '  WRONG FOLDER #', $row['id'], ' ', $file['relative'], ' (category ', $row['category_slug'], ")\n";
-				}
 				if ($index) echo '  DROP ', $file['relative'], "\n";
 			}
 			foreach ($entry['appearances'] as $appearance) echo '  ALSO ', $appearance['set'], ' as ', $appearance['originalName'], "\n";
 		}
-		echo "\nPer-set totals (owned images; carried-over tiles excluded):\n";
+		echo "\nPer-folder totals (owned images; carried-over tiles excluded):\n";
 		foreach ($counts as $slug => $count) echo $slug, ': ', json_encode($count), "\n";
 		echo count($plan), " distinct in-scope images. Microsoft textures are excluded.\n";
 		return $counts;
@@ -211,26 +219,21 @@ class GlitterSourceImport
 		}
 	}
 
+	// Missing styles and sets are created. Existing rows keep whatever name,
+	// order and credit they have been given since.
 	private function upsertCategories($api)
 	{
 		$ids = [];
-		foreach (array_merge($this->map['roots'], $this->map['sets']) as $set) {
-			$stmt = $this->db->prepare('SELECT * FROM glitter_categories WHERE slug = ? OR slug = ? ORDER BY slug = ? DESC LIMIT 1', 'sss', [$set['slug'], $set['renameFrom'] ?? $set['slug'], $set['slug']]);
-			$row = $stmt->get_result()->fetch_assoc();
-			$stmt->close();
-			$data = ['name' => $set['name'], 'slug' => $set['slug'], 'sort_order' => $set['sort_order'], 'parent_id' => isset($set['parent']) ? $ids[$set['parent']] : null];
-			if (isset($set['attribution'])) $data['attribution'] = $set['attribution'];
-			if ($row) {
-				if ($row['slug'] !== $set['slug']) {
-					$used = $this->db->prepare('SELECT COUNT(*) AS count FROM glitter WHERE glitter_category_id = ?', 'i', [(int)$row['id']]);
-					if ((int)$used->get_result()->fetch_assoc()['count']) throw new RuntimeException('Only empty source placeholders may be renamed');
-					$used->close();
-					$this->db->prepare('UPDATE glitter_categories SET slug = ? WHERE id = ?', 'si', [$set['slug'], (int)$row['id']])->close();
-				}
-				unset($data['slug']);
-				$api->updateCategory($data + ['id' => (int)$row['id']]);
-				$ids[$set['slug']] = (int)$row['id'];
-			} else $ids[$set['slug']] = $api->addCategory($data)['id'];
+		foreach (['styles' => 0, 'sources' => 1] as $key => $isSet) {
+			foreach ($this->map[$key] as $row) {
+				$stmt = $this->db->prepare('SELECT id FROM glitter_categories WHERE slug = ?', 's', [$row['slug']]);
+				$existing = $stmt->get_result()->fetch_assoc();
+				$stmt->close();
+				$ids[$row['slug']] = $existing ? (int)$existing['id'] : $api->addCategory([
+					'name' => $row['name'], 'slug' => $row['slug'], 'sort_order' => $row['sort_order'] ?? 999,
+					'is_set' => $isSet, 'attribution' => $row['attribution'] ?? null,
+				])['id'];
+			}
 		}
 		return $ids;
 	}
@@ -251,10 +254,10 @@ class GlitterSourceImport
 				}
 				$item = !empty($received['duplicate']) ? $ingest->get($received['existing']['id']) : $received['item'];
 				if ($item['status'] !== 'ready') throw new RuntimeException('Analysis failed for ' . $winner['file'] . ': ' . ($item['error'] ?? 'unknown error'));
-				$ingest->update($item['id'], ['suggested_category_id' => $ids[$entry['slug']]]);
+				$ingest->update($item['id'], ['suggested_category_id' => $ids[$entry['style']]]);
 				if ($entry['action'] !== 'queue') {
 					$name = $entry['name'];
-					$approved = $api->ingestApprove(['id' => $item['id'], 'category_id' => $ids[$entry['slug']], 'name' => $name ?: $item['suggested_name'], 'tags' => array_column($item['suggested_tags'], 'tag_id')]);
+					$approved = $api->ingestApprove(['id' => $item['id'], 'category_id' => $ids[$entry['style']], 'name' => $name ?: $item['suggested_name'], 'tags' => array_column($item['suggested_tags'], 'tag_id')]);
 					$record = ['id' => $approved['id']];
 					$approvedPath = $this->paths->urlToFile($approved['url'], 'glitter', true);
 					if (strtolower(str_replace('\\', '/', $approvedPath)) !== strtolower(str_replace('\\', '/', $destination))) {
@@ -269,14 +272,17 @@ class GlitterSourceImport
 				if (!is_file($destination)) {
 					if (!copy($winner['file'], $destination)) throw new RuntimeException('Move failed');
 				} elseif (md5_file($destination) !== $entry['hash']) throw new RuntimeException('Destination conflict');
-				$url = $this->paths->categoryUrl('glitter', $entry['slug']) . basename($destination);
+				$url = $entry['set'] || !$entry['record'] ? $this->paths->categoryUrl('glitter', $entry['slug']) . basename($destination) : $entry['record']['url'];
 				$asset = $api->getAsset($record['id']);
 				$name = $entry['name'] ?: ($asset['generated_name'] ?: $asset['name']);
-				$alreadyHome = $entry['record'] && $entry['record']['category_slug'] === $entry['slug'] && $entry['record']['url'] === $url;
+				// A tile already imported keeps its order and published state;
+				// only a tile arriving from a source takes the section's.
+				$alreadyHome = $entry['record'] && ($entry['record']['set_slug'] ?? null) === $entry['source'] && $entry['record']['url'] === $url;
 				$sort = $entry['set'] && !$alreadyHome ? $winner['sort'] : (int)($asset['sort_order'] ?? 0);
 				$active = $entry['set'] && !$alreadyHome ? 1 : (int)$asset['is_active'];
-				$this->db->prepare('UPDATE glitter SET glitter_category_id = ?, url = ?, name = ?, original_name = ?, appearances = ?, search_terms = ?, file_hash = ?, sort_order = ?, original_order = COALESCE(original_order, ?), is_active = ?, updated_at = NOW() WHERE id = ?', 'issssssiiii', [
-					$ids[$entry['slug']], $url, $name, $entry['original'], json_encode($entry['appearances'], JSON_UNESCAPED_SLASHES), json_encode($entry['terms']), $entry['hash'], $sort, $entry['set'] ? $winner['sort'] : null, $active, (int)$record['id'],
+				$setId = $entry['source'] ? $ids[$entry['source']] : ($asset['set_id'] ?? null);
+				$this->db->prepare('UPDATE glitter SET glitter_category_id = ?, set_id = ?, url = ?, name = ?, original_name = ?, appearances = ?, search_terms = ?, file_hash = ?, sort_order = ?, original_order = COALESCE(original_order, ?), is_active = ?, updated_at = NOW() WHERE id = ?', 'iissssssiiii', [
+					(int)$asset['glitter_category_id'], $setId, $url, $name, $entry['original'], json_encode($entry['appearances'], JSON_UNESCAPED_SLASHES), json_encode($entry['terms']), $entry['hash'], $sort, $entry['set'] ? $winner['sort'] : null, $active, (int)$record['id'],
 				])->close();
 				foreach ($entry['records'] as $old) {
 					if ((int)$old['id'] === (int)$record['id']) continue;
@@ -289,16 +295,14 @@ class GlitterSourceImport
 				if (is_file($file['file']) && !unlink($file['file'])) throw new RuntimeException('Could not drop duplicate/source ' . $file['file']);
 			}
 		}
-		// Repair covers that referred to a copy removed by the import.
-		$categories = $api->getCategories();
+		// Repair covers that are unset or referred to a copy removed by the import.
 		$assets = $api->exportAssets();
-		foreach ($categories as $category) {
+		foreach ($api->getCategories() as $category) {
 			if (!$category['id']) continue;
-			$own = array_values(array_filter($assets, function ($asset) use ($category) { return $asset['category'] === $category['slug']; }));
-			$children = array_column(array_filter($categories, function ($child) use ($category) { return (int)($child['parent_id'] ?? 0) === (int)$category['id']; }), 'slug');
-			$descendants = array_values(array_filter($assets, function ($asset) use ($children) { return in_array($asset['category'], $children, true); }));
-			$cover = $own[0]['url'] ?? $descendants[0]['url'] ?? '';
-			$api->updateCategory(['id' => $category['id'], 'icon' => $cover]);
+			if ($category['icon'] && is_file($this->paths->urlToFile($category['icon'], 'glitter', true))) continue;
+			$key = (int)$category['is_set'] ? 'set' : 'category';
+			$own = array_values(array_filter($assets, function ($asset) use ($category, $key) { return ($asset[$key] ?? null) === $category['slug']; }));
+			if ($own) $api->updateCategory(['id' => $category['id'], 'icon' => $own[0]['url']]);
 		}
 		$directories = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->root, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
 		foreach ($directories as $directory) {

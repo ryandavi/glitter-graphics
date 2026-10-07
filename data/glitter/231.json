@@ -4,7 +4,7 @@
     "name": "Red and Purple",
     "generatedName": "Red and Purple",
     "brightness": "0.170",
-    "sortOrder": 124,
+    "sortOrder": 20,
     "hue": 0.035,
     "colorCodes": [
         "#7A0005",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1549,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 9002,
     "originalName": "crimson-003"
 }

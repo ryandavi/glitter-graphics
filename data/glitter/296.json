@@ -4,7 +4,7 @@
     "name": "Spark Button",
     "generatedName": "Indigo",
     "brightness": "0.200",
-    "sortOrder": 30,
+    "sortOrder": 56,
     "hue": 0.743,
     "colorCodes": [
         "#1B0081",
@@ -26,10 +26,11 @@
     "width": 61,
     "height": 29,
     "fileSize": 1598,
-    "category": "stardrops",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "stardrops",
     "originalOrder": 1002,
     "originalName": "Sparkbutton-blue"
 }

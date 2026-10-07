@@ -4,7 +4,7 @@
     "name": "Orange",
     "generatedName": "Vivid Orange",
     "brightness": "1.000",
-    "sortOrder": 102,
+    "sortOrder": 26,
     "hue": 0.108,
     "colorCodes": [
         "#FF6900"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Orange",
@@ -30,6 +30,7 @@
     "searchTerms": [
         "glitter_orange"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 6003,
     "originalName": "orange-004"
 }

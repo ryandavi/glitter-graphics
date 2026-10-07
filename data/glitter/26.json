@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Very Dark Vivid Blue",
     "brightness": "0.160",
-    "sortOrder": 227,
+    "sortOrder": 12,
     "hue": 0.734,
     "colorCodes": [
         "#080033",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -36,6 +36,7 @@
     "searchTerms": [
         "ember_purple"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7,
     "originalName": "ember-07"
 }

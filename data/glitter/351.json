@@ -1,0 +1,29 @@
+{
+    "id": 351,
+    "url": "images/glitter/sparkle-flat/flat_84ceef.gif",
+    "name": "Light Teal",
+    "generatedName": "Light Teal",
+    "brightness": "0.750",
+    "sortOrder": 52,
+    "hue": 0.593,
+    "colorCodes": [
+        "#84CEEF",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 545,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

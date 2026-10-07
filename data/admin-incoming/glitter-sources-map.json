@@ -4,11 +4,16 @@
 		"sparkelies",
 		"bring-on-the-glitter"
 	],
-	"roots": [
+	"styles": [
 		{
 			"slug": "sparkle",
 			"name": "Classic Sparkle",
 			"sort_order": 0
+		},
+		{
+			"slug": "star-dust",
+			"name": "Star Dust",
+			"sort_order": 5
 		},
 		{
 			"slug": "ember",
@@ -16,27 +21,9 @@
 			"sort_order": 10
 		},
 		{
-			"slug": "patterns",
-			"name": "Patterns",
-			"sort_order": 20
-		},
-		{
 			"slug": "transparent",
 			"name": "Transparent",
 			"sort_order": 30
-		},
-		{
-			"slug": "flashites",
-			"name": "Flashites",
-			"sort_order": 40,
-			"renameFrom": "moon-flashites",
-			"attribution": {
-				"author": "Moon",
-				"authorId": "moon",
-				"source": "Flashites",
-				"sourceId": "flashites",
-				"license": "unknown"
-			}
 		},
 		{
 			"slug": "noise",
@@ -44,30 +31,56 @@
 			"sort_order": 50
 		},
 		{
-			"slug": "sparkle-2",
-			"name": "Other Sparkle",
-			"sort_order": 60
+			"slug": "noise-2",
+			"name": "Chunky Noise",
+			"sort_order": 55
 		},
 		{
 			"slug": "etc",
-			"name": "Etc",
+			"name": "Other",
 			"sort_order": 70
 		},
 		{
 			"slug": "unsorted",
 			"name": "Unsorted",
 			"sort_order": 80
+		},
+		{
+			"slug": "crystal-shards",
+			"name": "Crystal Shards",
+			"sort_order": 900
+		},
+		{
+			"slug": "swirly-cues",
+			"name": "Swirly Cues",
+			"sort_order": 900
+		},
+		{
+			"slug": "star-spangled",
+			"name": "Star Spangled",
+			"sort_order": 900
+		},
+		{
+			"slug": "just-a-bit-of-glitz",
+			"name": "Just a Bit of Glitz",
+			"sort_order": 900
+		},
+		{
+			"slug": "molten-lava",
+			"name": "Molten Lava",
+			"sort_order": 900
+		},
+		{
+			"slug": "bring-on-the-hearts",
+			"name": "Bring On The Hearts",
+			"sort_order": 900
 		}
 	],
-	"sets": [
+	"sources": [
 		{
-			"from": "stardrops/",
 			"slug": "stardrops",
-			"renameFrom": "stardrops-open-directory",
 			"name": "Stardrops' Open Directory",
-			"parent": "sparkle",
-			"names": "original",
-			"source": "stardrops",
+			"sort_order": 0,
 			"attribution": {
 				"author": "Mica",
 				"authorUrl": "https://web.archive.org/web/20080115144844/http://stardropscloud.com/",
@@ -77,17 +90,12 @@
 				"notes": "\"Aylana and Dan made their first glitter tiles from this animated tile and a couple of other colors Mica had put into a open sub-directory for us at her www.WTV-Zone.com account.\" - Moon/Scri8e",
 				"authorId": "mica",
 				"sourceId": "stardrops"
-			},
-			"sort_order": 0
+			}
 		},
 		{
-			"from": "sparkelies/",
 			"slug": "sparkelies",
-			"renameFrom": "dan-sparkelies",
 			"name": "Sparkelies",
-			"parent": "sparkle",
-			"names": "original",
-			"source": "sparkelies",
+			"sort_order": 1,
 			"attribution": {
 				"author": "DAN-411",
 				"authorUrl": "https://osodeoro.tripod.com/",
@@ -97,207 +105,126 @@
 				"notes": "Created by November 22, 2001",
 				"authorId": "dan",
 				"sourceId": "sparkelies"
-			},
-			"sort_order": 1
+			}
+		},
+		{
+			"slug": "bring-on-the-glitter",
+			"name": "Bring On The Glitter",
+			"sort_order": 2,
+			"attribution": {
+				"author": "Aylana",
+				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
+				"source": "designbyAylana ~ Bring On The Glitter",
+				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
+				"license": "unknown",
+				"authorId": "aylana",
+				"sourceId": "bring-on-the-glitter"
+			}
+		},
+		{
+			"slug": "flashites",
+			"name": "Flashites",
+			"sort_order": 3,
+			"attribution": {
+				"author": "Moon",
+				"authorId": "moon",
+				"source": "Flashites",
+				"sourceId": "flashites",
+				"license": "unknown"
+			}
+		}
+	],
+	"sections": [
+		{
+			"from": "stardrops/",
+			"slug": "stardrops",
+			"source": "stardrops",
+			"style": "sparkle",
+			"names": "original"
+		},
+		{
+			"from": "sparkelies/",
+			"slug": "sparkelies",
+			"source": "sparkelies",
+			"style": "sparkle",
+			"names": "original"
 		},
 		{
 			"from": "bring-on-the-glitter/{aqua-seafoam,black,blue,gold,green,neutral-beige,orange,pink,purple,red,silver}/",
 			"slug": "bring-on-the-glitter",
-			"renameFrom": "aylana-bring-on-the-glitter",
-			"name": "Bring On The Glitter",
-			"parent": "sparkle",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 2
+			"style": "sparkle",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/crystal-shards/",
 			"slug": "crystal-shards",
-			"name": "Crystal Shards",
-			"parent": "sparkle",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 3
+			"style": "crystal-shards",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/star-dust/",
 			"slug": "star-dust",
-			"name": "Star Dust",
-			"parent": null,
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 4
+			"style": "star-dust",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/swirly-cues/",
 			"slug": "swirly-cues",
-			"name": "Swirly Cues",
-			"parent": "sparkle",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 5
+			"style": "swirly-cues",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/star-spangled/",
 			"slug": "star-spangled",
-			"name": "Star Spangled",
-			"parent": "sparkle",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 6
+			"style": "star-spangled",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/just-a-bit-of-glitz/",
 			"slug": "just-a-bit-of-glitz",
-			"name": "Just a Bit of Glitz",
-			"parent": "sparkle",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 7
+			"style": "just-a-bit-of-glitz",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/velvet-embers/",
 			"slug": "velvet-embers",
-			"name": "Velvet Embers",
-			"parent": "ember",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 8
+			"style": "ember",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/molten-lava/",
 			"slug": "molten-lava",
-			"name": "Molten Lava",
-			"parent": "ember",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 9
+			"style": "molten-lava",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/bring-on-the-hearts/",
 			"slug": "bring-on-the-hearts",
-			"name": "Bring On The Hearts",
-			"parent": "patterns",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 10
+			"style": "bring-on-the-hearts",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/christmas/",
 			"slug": "christmas",
-			"name": "Christmas",
-			"parent": "patterns",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 11
+			"style": "sparkle",
+			"names": "generated"
 		},
 		{
 			"from": "bring-on-the-glitter/clear/",
 			"slug": "clear",
-			"name": "Clear",
-			"parent": "transparent",
-			"names": "generated",
 			"source": "bring-on-the-glitter",
-			"attribution": {
-				"author": "Aylana",
-				"authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-				"source": "designbyAylana ~ Bring On The Glitter",
-				"sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-				"license": "unknown",
-				"authorId": "aylana",
-				"sourceId": "bring-on-the-glitter"
-			},
-			"sort_order": 12
+			"style": "transparent",
+			"names": "generated"
 		}
 	],
 	"stickerCategories": [

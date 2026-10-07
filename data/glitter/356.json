@@ -1,0 +1,29 @@
+{
+    "id": 356,
+    "url": "images/glitter/sparkle-flat/flat_b5c6de.gif",
+    "name": "Muted Blue",
+    "generatedName": "Muted Blue",
+    "brightness": "0.790",
+    "sortOrder": 57,
+    "hue": 0.639,
+    "colorCodes": [
+        "#B5C6DE",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 543,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

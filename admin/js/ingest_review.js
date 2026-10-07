@@ -90,7 +90,7 @@ class IngestReview {
 			this.updateChrome(active);
 			return;
 		}
-		const categoryOptions = this.editor.categories.filter(category => category.id).map(category => `<option value="${category.id}">${this.editor.escapeHtml(category.name)}</option>`).join('');
+		const categoryOptions = this.editor.categories.filter(category => category.id && !Number(category.is_set)).map(category => `<option value="${category.id}">${this.editor.escapeHtml(category.name)}</option>`).join('');
 		const tagOptions = this.editor.tags.map(tag => `<option value="${tag.id}">${this.editor.escapeHtml(tag.category_name)} · ${this.editor.escapeHtml(tag.name)}</option>`).join('');
 		// Batch tools are a shortcut for repetitive batches, not part of the
 		// core flow — they stay hidden until something is actually selected.
@@ -102,7 +102,7 @@ class IngestReview {
 		</div>` : '';
 		this.queue.innerHTML = batchBar + active.map(item => {
 			const palette = item.analysis?.palette;
-			const categories = this.editor.categories.filter(category => category.id).map(category => `<option value="${category.id}" ${Number(category.id) === Number(item.suggested_category_id) ? 'selected' : ''}>${this.editor.escapeHtml(category.name)}</option>`).join('');
+			const categories = this.editor.categories.filter(category => category.id && !Number(category.is_set)).map(category => `<option value="${category.id}" ${Number(category.id) === Number(item.suggested_category_id) ? 'selected' : ''}>${this.editor.escapeHtml(category.name)}</option>`).join('');
 			const row = (label, control, options) => this.editor.propertyRow(label, control, options);
 			return `
 				<article class="ingest-item" data-ingest-id="${item.id}">

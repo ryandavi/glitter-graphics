@@ -1,0 +1,29 @@
+{
+    "id": 315,
+    "url": "images/glitter/sparkle-flat/flat_ffce9c.gif",
+    "name": "Tan",
+    "generatedName": "Tan",
+    "brightness": "0.810",
+    "sortOrder": 17,
+    "hue": 0.126,
+    "colorCodes": [
+        "#FFCE9C",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

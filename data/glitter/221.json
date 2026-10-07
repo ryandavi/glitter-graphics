@@ -4,7 +4,7 @@
     "name": "Red",
     "generatedName": "Red",
     "brightness": "0.560",
-    "sortOrder": 100,
+    "sortOrder": 15,
     "hue": 0.017,
     "colorCodes": [
         "#FF4B66",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 6001,
     "originalName": "orange-002"
 }

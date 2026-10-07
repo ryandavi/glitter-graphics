@@ -4,7 +4,7 @@
     "name": "Red",
     "generatedName": "Very Dark Vivid Magenta",
     "brightness": "0.190",
-    "sortOrder": 226,
+    "sortOrder": 1,
     "hue": 0.875,
     "colorCodes": [
         "#330033",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -35,6 +35,7 @@
     "searchTerms": [
         "ember_red"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 6,
     "originalName": "ember-06"
 }

@@ -4,7 +4,7 @@
     "name": "Off-White",
     "generatedName": "Off-White",
     "brightness": "0.930",
-    "sortOrder": 259,
+    "sortOrder": 4,
     "hue": 0.427,
     "colorCodes": [
         "#E5DDE6",
@@ -22,10 +22,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 535,
-    "category": "clear",
+    "category": "transparent",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4,
     "originalName": "whiteclear-03"
 }

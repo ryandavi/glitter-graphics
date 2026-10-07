@@ -4,7 +4,7 @@
     "name": "Seafoam",
     "generatedName": "Blue and Green",
     "brightness": "1.000",
-    "sortOrder": 52,
+    "sortOrder": 93,
     "hue": 1.2,
     "colorCodes": [
         "#87D2F0",
@@ -22,7 +22,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1950,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -36,6 +36,7 @@
     "searchTerms": [
         "glitter_seafoam"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 0,
     "originalName": "sea-01"
 }

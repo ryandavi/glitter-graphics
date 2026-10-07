@@ -4,7 +4,7 @@
     "name": "Spark Button",
     "generatedName": "Blue-Green",
     "brightness": "0.600",
-    "sortOrder": 34,
+    "sortOrder": 45,
     "hue": 0.515,
     "colorCodes": [
         "#69B7AA",
@@ -22,10 +22,11 @@
     "width": 61,
     "height": 29,
     "fileSize": 4054,
-    "category": "stardrops",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "stardrops",
     "originalOrder": 1006,
     "originalName": "SparkButton"
 }

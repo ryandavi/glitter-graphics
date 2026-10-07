@@ -4,7 +4,7 @@
     "name": "Off-White",
     "generatedName": "Off-White",
     "brightness": "0.200",
-    "sortOrder": 135,
+    "sortOrder": 71,
     "hue": 1.1,
     "colorCodes": [
         "#EDEDED",
@@ -22,10 +22,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1250,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 10006,
     "originalName": "silver-07"
 }

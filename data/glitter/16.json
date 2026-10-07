@@ -4,7 +4,7 @@
     "name": "Magenta",
     "generatedName": "Neon Pink",
     "brightness": "1.000",
-    "sortOrder": 110,
+    "sortOrder": 11,
     "hue": 0.125,
     "colorCodes": [
         "#B400A5"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Neon",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_magenta"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7006,
     "originalName": "pink-04"
 }

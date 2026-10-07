@@ -62,8 +62,10 @@ class AssetSetHeader {
 		if (attr?.notes) paragraph('asset-set-header-note', attr.notes);
 	}
 
+	// Items arrive in library order, which is the order to show. The toggle
+	// puts the artist's own order first for the tiles that record one.
 	sort(items) {
-		const ordered = sortByGlitterColor(items);
+		const ordered = [...items];
 		return this.originalOrder ? ordered.sort((a, b) => (a.originalOrder ?? Infinity) - (b.originalOrder ?? Infinity)) : ordered;
 	}
 }

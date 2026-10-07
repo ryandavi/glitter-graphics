@@ -1,0 +1,27 @@
+{
+    "id": 390,
+    "url": "images/glitter/sparkle-flat/flat_fff7e7_e7ce9c.gif",
+    "name": "White",
+    "generatedName": "White",
+    "brightness": "0.930",
+    "sortOrder": 90,
+    "hue": 0.153,
+    "colorCodes": [
+        "#FCF2DD"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 554,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

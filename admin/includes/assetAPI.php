@@ -491,9 +491,9 @@ abstract class AssetAPI
         $result = $this->db->query("
             SELECT c.*, SUM(CASE WHEN a.is_active = 1 THEN 1 ELSE 0 END) AS active_count
             FROM {$this->tables['categories_table']} c
-            LEFT JOIN {$this->tables['table']} a ON a.$categoryIdField = c.id
+            LEFT JOIN {$this->tables['table']} a ON (c.is_set = 0 AND a.$categoryIdField = c.id) OR (c.is_set = 1 AND a.set_id = c.id)
             GROUP BY c.id
-            ORDER BY c.sort_order, c.name
+            ORDER BY c.is_set, c.sort_order, c.name
         ");
         $categories = $this->fetchAllAssoc($result);
         $pending = [];
@@ -531,6 +531,13 @@ abstract class AssetAPI
         $root = $this->paths->managedRoot($this->assetType);
         if (is_dir($root)) {
             $known = array_flip(array_column($categories, 'slug'));
+            // A file's folder is where it was first filed, not its category: a
+            // folder whose files are registered needs no category of its own.
+            $prefix = $this->paths->categoryUrl($this->assetType, 'x');
+            $prefix = substr($prefix, 0, -2);
+            foreach ($this->fetchAllAssoc($this->db->query("SELECT url FROM {$this->tables['table']}")) as $row) {
+                if (strpos($row['url'], $prefix) === 0) $known[strtok(substr($row['url'], strlen($prefix)), '/')] = true;
+            }
             foreach (new DirectoryIterator($root) as $directory) {
                 $slug = $directory->getFilename();
                 if (!$directory->isDir() || $directory->isDot() || $slug[0] === '.' || isset($known[$slug])) continue;
@@ -555,9 +562,8 @@ abstract class AssetAPI
         $slug = $this->paths->validateSlug($data['slug'] ?? '');
         if ($name === '') throw new InvalidArgumentException('Category name is required');
         $this->assertCategorySlugAvailable($slug);
-        $parentId = $this->validateCategoryParent($data['parent_id'] ?? null);
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, parent_id, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution, is_set, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             'sssssisii',
             [
                 $name,
@@ -567,7 +573,7 @@ abstract class AssetAPI
                 (string)($data['color'] ?? '#ff69b4'),
                 (int)($data['sort_order'] ?? 999),
                 $this->normalizeAttributionJson($data['attribution'] ?? null),
-                $parentId,
+                (int)(bool)($data['is_set'] ?? 0),
                 (int)($data['is_active'] ?? 1),
             ]
         );
@@ -588,17 +594,10 @@ abstract class AssetAPI
         $assetTable = $this->tables['table'];
         $categoriesTable = $this->tables['categories_table'];
         $categoryIdField = $this->getCategoryIdField();
-        $childStmt = $this->db->prepare("SELECT COUNT(*) AS count FROM $categoriesTable WHERE parent_id = ?", 'i', [$categoryId]);
-        $children = $this->fetchOneAssoc($childStmt->get_result());
-        $childStmt->close();
-        if ((int)$children['count'] > 0) {
-            return ['success' => false, 'error' => 'Cannot delete a category that has child sets'];
-        }
-
         $countStmt = $this->db->prepare(
-            "SELECT COUNT(*) AS count FROM $assetTable WHERE $categoryIdField = ?",
-            'i',
-            [$categoryId]
+            "SELECT COUNT(*) AS count FROM $assetTable WHERE $categoryIdField = ? OR set_id = ?",
+            'ii',
+            [$categoryId, $categoryId]
         );
         $countResult = $countStmt->get_result();
         $row = $this->fetchOneAssoc($countResult);
@@ -625,57 +624,28 @@ abstract class AssetAPI
         $assetTable = $this->tables['table'];
         $categoryIdField = $this->getCategoryIdField();
 
-        if ($this->assetType === 'sticker') {
-            $sql = "
-                SELECT c.*, COUNT(a.id) AS item_count
-                FROM $table c
-                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField AND a.is_active = 1
-                LEFT JOIN $table parent ON parent.id = c.parent_id
-                WHERE c.is_active = 1 AND (c.parent_id IS NULL OR parent.is_active = 1)
-                GROUP BY c.id
-                ORDER BY
-                    CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
-                    c.sort_order,
-                    c.name
-            ";
-        } else {
-            $sql = "
-                SELECT c.*, COUNT(a.id) AS item_count
-                FROM $table c
-                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField AND a.is_active = 1
-                LEFT JOIN $table parent ON parent.id = c.parent_id
-                WHERE c.is_active = 1 AND (c.parent_id IS NULL OR parent.is_active = 1)
-                GROUP BY c.id
-                ORDER BY c.sort_order
-            ";
-        }
+        // Styles first, then sets. A set counts the published assets that
+        // point at it, whichever style they are in.
+        $uploadsFirst = $this->assetType === 'sticker' ? "CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END," : '';
+        $sql = "
+            SELECT c.*, COUNT(a.id) AS item_count
+            FROM $table c
+            LEFT JOIN $assetTable a ON a.is_active = 1 AND (
+                (c.is_set = 0 AND a.$categoryIdField = c.id)
+                OR (c.is_set = 1 AND a.set_id = c.id AND EXISTS (SELECT 1 FROM $table style WHERE style.id = a.$categoryIdField AND style.is_active = 1))
+            )
+            WHERE c.is_active = 1 OR c.is_set = 1
+            GROUP BY c.id
+            ORDER BY c.is_set, $uploadsFirst c.sort_order, c.name
+        ";
 
         $result = $this->db->query($sql);
         $rows = $this->fetchAllAssoc($result);
         $categories = [];
-        $slugs = array_column($rows, 'slug', 'id');
-
-        // Attribution is not (yet) a column on the category tables. Carry any
-        // hand-authored `attribution` block forward from the existing JSON so an
-        // export never drops it. A DB `attribution` column, if one is added
-        // later, wins over the file.
-        $existingAttribution = [];
-        $existingPath = "../../" . $this->tables['categories_json_file'];
-        if (is_file($existingPath)) {
-            $existing = json_decode((string)file_get_contents($existingPath), true);
-            if (is_array($existing)) {
-                foreach ($existing as $entry) {
-                    if (isset($entry['id'], $entry['attribution']) && is_array($entry['attribution']) && $entry['attribution']) {
-                        $existingAttribution[$entry['id']] = $entry['attribution'];
-                    }
-                }
-            }
-        }
 
         foreach ($rows as $row) {
             $category = [
                 'id' => $row['slug'],
-                'parent' => $slugs[$row['parent_id'] ?? 0] ?? null,
                 'name' => $row['name'],
                 'icon' => isset($row['icon']) ? $row['icon'] : '',
                 'color' => isset($row['color']) ? $row['color'] : '#ff69b4',
@@ -687,10 +657,8 @@ abstract class AssetAPI
                 $decoded = json_decode((string)$row['attribution'], true);
                 if (is_array($decoded) && $decoded) $attribution = $decoded;
             }
-            if ($attribution === null && isset($existingAttribution[$row['slug']])) {
-                $attribution = $existingAttribution[$row['slug']];
-            }
             if ($attribution !== null) $category['attribution'] = $attribution;
+            if ((int)$row['is_set']) $category['kind'] = 'set';
             $categories[] = $category;
         }
 
@@ -718,7 +686,7 @@ abstract class AssetAPI
         $currentStmt = $this->db->prepare(
             "SELECT c.*, COUNT(a.id) AS asset_count
              FROM {$this->tables['categories_table']} c
-             LEFT JOIN {$this->tables['table']} a ON a.{$this->getCategoryIdField()} = c.id
+             LEFT JOIN {$this->tables['table']} a ON a.{$this->getCategoryIdField()} = c.id OR a.set_id = c.id
              WHERE c.id = ? GROUP BY c.id",
             'i',
             [$id]
@@ -762,10 +730,14 @@ abstract class AssetAPI
             $params[] = (int)$data['sort_order'];
         }
 
-        if (array_key_exists('parent_id', $data)) {
-            $fields[] = 'parent_id = ?';
+        if (array_key_exists('is_set', $data)) {
+            $isSet = (int)(bool)$data['is_set'];
+            if ($isSet !== (int)$current['is_set'] && (int)$current['asset_count'] > 0) {
+                throw new InvalidArgumentException('Move its assets out before changing a category between style and set');
+            }
+            $fields[] = 'is_set = ?';
             $types .= 'i';
-            $params[] = $this->validateCategoryParent($data['parent_id'], $id);
+            $params[] = $isSet;
         }
 
         if (array_key_exists('attribution', $data)) {
@@ -787,31 +759,20 @@ abstract class AssetAPI
         $this->db->beginTransaction();
         try {
             if ($slugChanged) {
-                $invalidStmt = $this->db->prepare(
-                    "SELECT COUNT(*) AS count FROM {$this->tables['table']}
-                     WHERE {$this->getCategoryIdField()} = ?
-                       AND LEFT(url, ?) <> ?
-                       AND LEFT(url, ?) <> ?",
-                    'iisis',
-                    [$id, strlen($oldPrefix), $oldPrefix, strlen($newPrefix), $newPrefix]
-                );
-                $invalid = $this->fetchOneAssoc($invalidStmt->get_result());
-                $invalidStmt->close();
-                if ((int)$invalid['count'] > 0) {
-                    throw new RuntimeException('Category contains asset URLs outside its canonical folder');
-                }
                 if (!preg_match('/^[a-zA-Z0-9_-]+$/', (string)$current['slug'])) {
                     throw new RuntimeException('Current category slug is not a safe path segment');
                 }
                 $sourceDirectory = $this->paths->managedRoot($this->assetType) . DIRECTORY_SEPARATOR . $current['slug'];
                 $destinationDirectory = $this->paths->categoryDirectory($this->assetType, $data['slug']);
                 $directoryMoved = $this->renameCategoryDirectory($sourceDirectory, $destinationDirectory, $id);
+                // Every file in the folder moved with it, whichever category
+                // or set its record belongs to.
                 $urlStmt = $this->db->prepare(
                     "UPDATE {$this->tables['table']}
                      SET url = CONCAT(?, SUBSTRING(url, ?))
-                     WHERE {$this->getCategoryIdField()} = ? AND LEFT(url, ?) = ?",
-                    'siiis',
-                    [$newPrefix, strlen($oldPrefix) + 1, $id, strlen($oldPrefix), $oldPrefix]
+                     WHERE LEFT(url, ?) = ?",
+                    'siis',
+                    [$newPrefix, strlen($oldPrefix) + 1, strlen($oldPrefix), $oldPrefix]
                 );
                 $urlStmt->close();
             }
@@ -838,31 +799,8 @@ abstract class AssetAPI
         return ['success' => true];
     }
 
-    // A category slug owns both a database prefix and a physical folder.
+    // A category slug names a physical folder: where its new files are put.
     // Case-only changes need a temporary hop on case-insensitive filesystems.
-    protected function validateCategoryParent($parentId, $categoryId = null)
-    {
-        if ($parentId === null || $parentId === '') return null;
-        if (!ctype_digit((string)$parentId) || (int)$parentId < 1) {
-            throw new InvalidArgumentException('Parent must be a root category');
-        }
-        $parentId = (int)$parentId;
-        if ($parentId === $categoryId) throw new InvalidArgumentException('A category cannot parent itself');
-        $stmt = $this->db->prepare("SELECT id, parent_id FROM {$this->tables['categories_table']} WHERE id = ?", 'i', [$parentId]);
-        $parent = $this->fetchOneAssoc($stmt->get_result());
-        $stmt->close();
-        if (!$parent || $parent['parent_id'] !== null) {
-            throw new InvalidArgumentException('Parent must be a root category; only two levels are supported');
-        }
-        if ($categoryId !== null) {
-            $stmt = $this->db->prepare("SELECT COUNT(*) AS count FROM {$this->tables['categories_table']} WHERE parent_id = ?", 'i', [$categoryId]);
-            $children = $this->fetchOneAssoc($stmt->get_result());
-            $stmt->close();
-            if ((int)$children['count'] > 0) throw new InvalidArgumentException('A category with children cannot have a parent');
-        }
-        return $parentId;
-    }
-
     private function renameCategoryDirectory($source, $destination, $categoryId)
     {
         if ($source === $destination || !is_dir($source)) {
@@ -1088,9 +1026,11 @@ abstract class AssetAPI
         $tagIdField = $this->getTagIdField();
         $sql = "
             SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                s.name AS set_name, s.slug AS set_slug,
                 ts.tag_names, ats.alias_names
             FROM $assetTable a
             JOIN $categoriesTable c ON a.$categoryIdField = c.id
+            LEFT JOIN $categoriesTable s ON s.id = a.set_id
             LEFT JOIN (
                 SELECT tm.$assetIdField AS asset_id, GROUP_CONCAT(DISTINCT t.name SEPARATOR ' ') AS tag_names
                 FROM $tagsMapTable tm
@@ -1601,9 +1541,11 @@ abstract class AssetAPI
         $orderBy = $this->getAssetOrderBy();
         $result = $this->db->query("
             SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                s.name AS set_name, s.slug AS set_slug,
                 ts.tag_names, ats.alias_names
             FROM $assetTable a
             JOIN $categoriesTable c ON a.$categoryIdField = c.id
+            LEFT JOIN $categoriesTable s ON s.id = a.set_id
             LEFT JOIN (
                 SELECT tm.$assetIdField AS asset_id,
                     GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR '||') AS tag_names
@@ -1622,7 +1564,6 @@ abstract class AssetAPI
                 GROUP BY tm.$assetIdField
             ) ats ON ats.asset_id = a.id
             WHERE a.is_active = 1 AND c.is_active = 1
-                AND (c.parent_id IS NULL OR EXISTS (SELECT 1 FROM $categoriesTable parent WHERE parent.id = c.parent_id AND parent.is_active = 1))
             ORDER BY $orderBy
         ");
         $assets = $this->fetchAllAssoc($result);
@@ -1637,6 +1578,7 @@ abstract class AssetAPI
                 $attribution = json_decode($asset['attribution'], true);
                 if (is_array($attribution) && $attribution) $entry['attribution'] = $attribution;
             }
+            if (!empty($asset['set_slug'])) $entry['set'] = $asset['set_slug'];
             if (isset($asset['original_order'])) $entry['originalOrder'] = (int)$asset['original_order'];
             if (!empty($asset['original_name'])) $entry['originalName'] = $asset['original_name'];
             if (!empty($asset['appearances'])) {
@@ -1714,7 +1656,7 @@ abstract class AssetAPI
     protected function formatAssetForBrowseIndex($asset)
     {
         $fields = [
-            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution', 'originalName', 'originalOrder', 'appearances',
+            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'set', 'attribution', 'originalName', 'originalOrder', 'appearances',
             'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
             'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source', 'sliced',
         ];

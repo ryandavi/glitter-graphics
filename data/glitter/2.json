@@ -4,7 +4,7 @@
     "name": "Crimson",
     "generatedName": "Vivid Red",
     "brightness": "1.000",
-    "sortOrder": 123,
+    "sortOrder": 19,
     "hue": 0.028,
     "colorCodes": [
         "#C3000F"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1569,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_crimson"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 9001,
     "originalName": "crimson-002"
 }

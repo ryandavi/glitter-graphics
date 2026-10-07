@@ -96,8 +96,6 @@ class GlitterBrowserManager extends ContentManager {
 				}
 			});
 
-			this.content.forEach(item => { item._glitterColorOrder = glitterColorOrder(item); });
-
 			dbg(`Loaded ${this.content.length} swatches`);
 
 			// Populate category chips after loading

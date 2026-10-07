@@ -100,6 +100,7 @@ StickerEditor.FIELDS = [
 	{ key: 'attribution', label: 'Attribution', input: 'attribution', section: 'attribution', nullable: true },
 	{ key: 'sticker_text', label: 'Sticker Text', input: 'text', section: 'basic', nullable: true },
 	{ key: 'sticker_category_id', label: 'Category', input: 'select', section: 'organization' },
+	{ key: 'set_id', label: 'Set', input: 'select', section: 'organization', hint: 'The creator\'s collection this came from. It supplies the credit and is a filter inside the category.' },
 	{ key: 'is_active', label: 'Active', input: 'checkbox', section: 'publishing' },
 	// Colors are machine data (masks, matching, future features); tags stay
 	// the gallery's filter surface. Editing here writes a palette override.

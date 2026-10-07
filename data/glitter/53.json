@@ -4,7 +4,7 @@
     "name": "Champagne",
     "generatedName": "Pastel Silver",
     "brightness": "1.000",
-    "sortOrder": 97,
+    "sortOrder": 24,
     "hue": 1.1,
     "colorCodes": [
         "#E1D2B4"
@@ -31,15 +31,7 @@
     "searchTerms": [
         "etc_champagne"
     ],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 5006,
     "originalName": "nude-01"
 }

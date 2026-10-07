@@ -4,7 +4,7 @@
     "name": "Turquoise",
     "generatedName": "Very Dark Vivid Green",
     "brightness": "0.000",
-    "sortOrder": 228,
+    "sortOrder": 8,
     "hue": 0.457,
     "colorCodes": [
         "#003319",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -35,6 +35,7 @@
     "searchTerms": [
         "ember_turquoise"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8,
     "originalName": "ember-08"
 }

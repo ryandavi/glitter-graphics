@@ -1,0 +1,29 @@
+{
+    "id": 309,
+    "url": "images/glitter/sparkle-flat/flat_ff0000.gif",
+    "name": "Vivid Red",
+    "generatedName": "Vivid Red",
+    "brightness": "0.330",
+    "sortOrder": 9,
+    "hue": 0.042,
+    "colorCodes": [
+        "#FF0000",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

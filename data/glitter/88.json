@@ -4,7 +4,7 @@
     "name": "Grass Green",
     "generatedName": "Jewel Tone Green",
     "brightness": "1.000",
-    "sortOrder": 83,
+    "sortOrder": 42,
     "hue": 0.275,
     "colorCodes": [
         "#5A9600"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -30,6 +30,7 @@
     "searchTerms": [
         "glitter_grass-green"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4002,
     "originalName": "green-02"
 }

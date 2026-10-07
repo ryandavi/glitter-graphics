@@ -4,7 +4,7 @@
     "name": "Emerald",
     "generatedName": "Jewel Tone Green",
     "brightness": "1.000",
-    "sortOrder": 38,
+    "sortOrder": 44,
     "hue": 0.356,
     "colorCodes": [
         "#0F8700"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -31,6 +31,7 @@
         "Green",
         "glitter_green"
     ],
+    "set": "sparkelies",
     "originalOrder": 1003,
     "originalName": "emerald"
 }

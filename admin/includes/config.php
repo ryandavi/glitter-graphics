@@ -143,7 +143,6 @@ $CONFIG = [
         'analysis_missing' => 'warning',
         'analysis_stale' => 'warning',
         'thumbnail_missing' => 'info',
-        'category_path_mismatch' => 'warning',
         'unsafe_file_type' => 'critical',
         'unreadable_file' => 'critical',
         'orphaned_variant' => 'warning',

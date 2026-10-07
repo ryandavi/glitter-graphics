@@ -78,6 +78,7 @@ class AssetEditor {
 		const assets = this.assets.filter(asset => !query || [
 			asset.name,
 			asset.category_name,
+			asset.set_name,
 			asset.tag_names
 		].join(' ').toLowerCase().includes(query));
 		const renderItem = (asset, recent = false) => {
@@ -126,11 +127,18 @@ class AssetEditor {
 			const key = `${this.config.assetType}:${group[0].category_slug || category}`;
 			const isOpen = localStorage.getItem(`adminCategory:${key}`) !== 'closed';
 			html += `<details class="category-group" data-state-key="${this.escapeHtml(key)}" ${isOpen ? 'open' : ''}>
-				<summary class="category-label">${this.escapeHtml(category)} (${group.length})</summary>
+				<summary class="category-label">${this.escapeHtml(category)} (${group.length})
+					${this.config.enableSorting && !query ? `<button type="button" class="btn btn-quiet btn-sm category-arrange" data-arrange="${group[0][this.config.categoryIdField]}" title="Arrange this category as a grid, in the order the editor shows it">Arrange</button>` : ''}</summary>
 				<div class="category-items">${group.map(asset => renderItem(asset)).join('')}</div>
 			</details>`;
 		}
 		container.innerHTML = html || '<p class="empty-list">No matching assets</p>';
+		container.querySelectorAll('[data-arrange]').forEach(button => button.addEventListener('click', event => {
+			// The button sits in the summary; opening it must not fold the group.
+			event.preventDefault();
+			if (!this.arrangeView) this.arrangeView = new ArrangeView(this, document.getElementById('arrangeModal'));
+			this.arrangeView.open(Number(button.dataset.arrange));
+		}));
 		container.querySelectorAll('details[data-state-key]').forEach(details => {
 			details.addEventListener('toggle', () => localStorage.setItem(`adminCategory:${details.dataset.stateKey}`, details.open ? 'open' : 'closed'));
 		});
@@ -319,9 +327,10 @@ class AssetEditor {
             return this.propertyRow(field.label, `<input type="checkbox" class="field-switch" id="${field.key}" ${Number(value) ? 'checked' : ''}>`, { htmlFor: field.key });
         }
         if (field.input === 'select') {
-            const options = this.categories.filter(category => category.id)
+            const sets = field.key === 'set_id';
+            const options = this.categories.filter(category => category.id && Boolean(Number(category.is_set)) === sets)
                 .map(category => `<option value="${category.id}" ${Number(category.id) === Number(value) ? 'selected' : ''}>${this.escapeHtml(category.name)}</option>`).join('');
-            return this.propertyRow(field.label, `<select id="${field.key}">${options}</select>`, { htmlFor: field.key });
+            return this.propertyRow(field.label, `<select id="${field.key}">${sets ? '<option value="">None</option>' : ''}${options}</select>`, { htmlFor: field.key });
         }
         if (field.input === 'textarea') {
             return this.propertyRow(field.label, `<textarea id="${field.key}" rows="3">${this.escapeHtml(value ?? '')}</textarea>`, { htmlFor: field.key, tall: true });

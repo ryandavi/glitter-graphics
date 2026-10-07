@@ -223,6 +223,7 @@ class ContentManager {
 			url: raw.url ?? defaults.url ?? null,
 			thumbnailUrl: raw.thumbnailUrl ?? raw.url ?? defaults.thumbnailUrl ?? null,
 			category: raw.category ?? defaults.category ?? 'Uncategorized',
+			set: raw.set ?? defaults.set ?? null,
 			attribution: Attribution.coerce(raw.attribution ?? defaults.attribution, `asset ${raw.id ?? ''}`),
 			stickerText: raw.stickerText ?? defaults.stickerText ?? null,
 			tags: this.normalizeArrayValue(raw.tags, defaults.tags || []),
@@ -307,9 +308,10 @@ class ContentManager {
 		return this.assetDetailPromises.get(asset.id);
 	}
 
-	// Per-collection credit block for the asset browser. A category carries an
-	// optional `attribution` in its *-categories.json entry; every asset in it
-	// inherits it (item-level attribution, when surfaced, resolves over this).
+	// Per-collection credit block for the asset browser. A category or set
+	// carries an optional `attribution` in its *-categories.json entry; every
+	// asset in it inherits it (a set's resolves over a category's, and
+	// item-level attribution over both).
 	getCollectionAttribution(category) { return category?.attribution; }
 
 	getCategoryLabel(category) {
@@ -317,8 +319,8 @@ class ContentManager {
 	}
 
 	createAssetProvenance(item) {
-		const category = this.browser?.getCategoryById(item.category);
-		const attr = Attribution.resolve(category?.attribution, item.attribution);
+		const category = this.browser?.getCategoryById(item.set || item.category);
+		const attr = this.browser ? this.browser.getAssetAttribution(item) : Attribution.resolve(item.attribution);
 		if (!item.originalName && !attr && !item.appearances?.length) return null;
 		const block = document.createElement('div');
 		block.className = 'asset-provenance property-note';
@@ -458,6 +460,7 @@ class ContentManager {
 			...(item.appearances || []).map(entry => entry.originalName),
 			item.generatedName,
 			item.stickerText,
+			item.set && this.browser?.getCategoryById(item.set)?.name,
 			...(item.tags || []),
 			...(item.searchTerms || [])
 		].map((value) => this.normalizeSearchText(value)).filter(Boolean).join(' ');

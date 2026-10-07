@@ -4,7 +4,7 @@
     "name": "Bronze 2",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 75,
+    "sortOrder": 25,
     "hue": 0.125,
     "colorCodes": [
         "#B49678"
@@ -34,15 +34,7 @@
         "etc_bronze",
         "nude-04"
     ],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 3004,
     "originalName": "gold-04"
 }

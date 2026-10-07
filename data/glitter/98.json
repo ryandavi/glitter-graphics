@@ -4,7 +4,7 @@
     "name": "Orange Dark",
     "generatedName": "Vivid Orange",
     "brightness": "1.000",
-    "sortOrder": 103,
+    "sortOrder": 27,
     "hue": 0.158,
     "colorCodes": [
         "#D29600"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1471,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -30,6 +30,7 @@
     "searchTerms": [
         "glitter_orange-dark"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 6004,
     "originalName": "orange-005"
 }

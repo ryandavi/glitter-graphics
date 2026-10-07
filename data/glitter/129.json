@@ -4,7 +4,7 @@
     "name": "Dark Blue-Green",
     "generatedName": "Dark Blue-Green",
     "brightness": "0.250",
-    "sortOrder": 55,
+    "sortOrder": 49,
     "hue": 0.547,
     "colorCodes": [
         "#005D60",
@@ -26,10 +26,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1950,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3,
     "originalName": "sea-04"
 }

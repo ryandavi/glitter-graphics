@@ -4,7 +4,7 @@
     "name": "Orange Glit",
     "generatedName": "Tan",
     "brightness": "0.570",
-    "sortOrder": 28,
+    "sortOrder": 82,
     "hue": 0.087,
     "colorCodes": [
         "#BD8570",
@@ -24,10 +24,11 @@
     "width": 94,
     "height": 33,
     "fileSize": 8570,
-    "category": "stardrops",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "stardrops",
     "originalOrder": 1000,
     "originalName": "orangeGlit"
 }

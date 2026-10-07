@@ -4,7 +4,7 @@
     "name": "Green",
     "generatedName": "Green",
     "brightness": "0.540",
-    "sortOrder": 164,
+    "sortOrder": 5,
     "hue": 0.388,
     "colorCodes": [
         "#6EBA74",
@@ -26,6 +26,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7,
     "originalName": "twinkle-007"
 }

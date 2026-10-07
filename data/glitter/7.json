@@ -4,7 +4,7 @@
     "name": "Gold",
     "generatedName": "Muted Orange",
     "brightness": "1.000",
-    "sortOrder": 72,
+    "sortOrder": 24,
     "hue": 0.158,
     "colorCodes": [
         "#FFD269"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1512,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Gold",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_gold"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3001,
     "originalName": "gold-010"
 }

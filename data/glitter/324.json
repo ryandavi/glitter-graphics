@@ -1,0 +1,29 @@
+{
+    "id": 324,
+    "url": "images/glitter/sparkle-flat/flat_ffce00_ffcf00.gif",
+    "name": "Vivid Golden Orange",
+    "generatedName": "Vivid Golden Orange",
+    "brightness": "0.600",
+    "sortOrder": 26,
+    "hue": 0.176,
+    "colorCodes": [
+        "#FFCE00",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 651,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

@@ -4,7 +4,7 @@
     "name": "Charcoal",
     "generatedName": "Charcoal",
     "brightness": "0.230",
-    "sortOrder": 62,
+    "sortOrder": 15,
     "hue": 1.1,
     "colorCodes": [
         "#3A3A3A",
@@ -28,15 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 1005,
     "originalName": "black-01"
 }

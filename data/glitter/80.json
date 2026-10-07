@@ -4,7 +4,7 @@
     "name": "Dark Green",
     "generatedName": "Blue and Yellow",
     "brightness": "0.000",
-    "sortOrder": 56,
+    "sortOrder": 50,
     "hue": 1.2,
     "colorCodes": [
         "#003C4B",
@@ -22,7 +22,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1950,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Cool",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_dark-green"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4,
     "originalName": "sea-05"
 }

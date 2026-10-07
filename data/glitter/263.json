@@ -4,7 +4,7 @@
     "name": "Blue",
     "generatedName": "Blue",
     "brightness": "0.520",
-    "sortOrder": 180,
+    "sortOrder": 16,
     "hue": 0.682,
     "colorCodes": [
         "#6370B9",
@@ -32,6 +32,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 23,
     "originalName": "twinkle-08"
 }

@@ -4,7 +4,7 @@
     "name": "Light Yellow",
     "generatedName": "Light Yellow",
     "brightness": "0.740",
-    "sortOrder": 79,
+    "sortOrder": 31,
     "hue": 0.199,
     "colorCodes": [
         "#EEE65F",
@@ -22,10 +22,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1512,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3008,
     "originalName": "gold-08"
 }

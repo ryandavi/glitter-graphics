@@ -4,7 +4,7 @@
     "name": "Gold 2",
     "generatedName": "Yellow",
     "brightness": "0.450",
-    "sortOrder": 41,
+    "sortOrder": 34,
     "hue": 0.201,
     "colorCodes": [
         "#B2AA00",
@@ -26,10 +26,11 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "sparkelies",
     "originalOrder": 1006,
     "originalName": "gold-2"
 }

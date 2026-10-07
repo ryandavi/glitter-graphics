@@ -8,20 +8,20 @@ const { execFileSync } = require('child_process');
 const root = path.resolve(__dirname, '../..');
 const source = JSON.parse(fs.readFileSync(path.join(root, 'data/glitter.index.json'), 'utf8'))[0];
 const categories = [
-	{ id: 'sparkle', name: 'Classic Sparkle', parent: null },
-	{ id: 'stardrops', name: "Stardrops' Open Directory", parent: 'sparkle', attribution: { author: 'Mica', authorId: 'mica', source: 'Stardrops', sourceId: 'stardrops' } },
-	{ id: 'sparkelies', name: 'Sparkelies', parent: 'sparkle', attribution: { author: 'DAN-411', authorId: 'dan', source: 'Sparkelies', sourceId: 'sparkelies' } },
-	{ id: 'bring-on-the-glitter', name: 'Bring On The Glitter', parent: 'sparkle', attribution: { author: 'Aylana', authorId: 'aylana', source: 'Bring On The Glitter', sourceId: 'bring-on-the-glitter' } },
-	{ id: 'clear', name: 'Clear', parent: 'transparent', attribution: { author: 'Aylana', authorId: 'aylana', source: 'Second source', sourceId: 'other-source' } },
-	{ id: 'transparent', name: 'Transparent', parent: null },
-	{ id: 'empty', name: 'Empty', parent: null },
+	{ id: 'sparkle', name: 'Classic Sparkle' },
+	{ id: 'transparent', name: 'Transparent' },
+	{ id: 'empty', name: 'Empty' },
+	{ id: 'stardrops', kind: 'set', name: "Stardrops' Open Directory", attribution: { author: 'Mica', authorId: 'mica', source: 'Stardrops', sourceId: 'stardrops' } },
+	{ id: 'sparkelies', kind: 'set', name: 'Sparkelies', attribution: { author: 'DAN-411', authorId: 'dan', source: 'Sparkelies', sourceId: 'sparkelies' } },
+	{ id: 'bring-on-the-glitter', kind: 'set', name: 'Bring On The Glitter', attribution: { author: 'Aylana', authorId: 'aylana', source: 'Bring On The Glitter', sourceId: 'bring-on-the-glitter' } },
+	{ id: 'second-source', kind: 'set', name: 'Second source', attribution: { author: 'Aylana', authorId: 'aylana', source: 'Second source', sourceId: 'other-source' } },
 ].map(category => ({ icon: source.url, ...category }));
 const items = [
 	{ id: 9001, name: 'Unknown glitter', category: 'sparkle' },
-	{ originalOrder: 20, id: 9002, name: 'Spark Button', category: 'stardrops', originalName: 'Sparkbutton-gray', appearances: [{ set: 'bring-on-the-glitter', originalName: 'blue-08' }] },
-	{ originalOrder: 30, id: 9003, name: 'Ruby', category: 'sparkelies', originalName: 'ruby', appearances: [{ set: 'bring-on-the-glitter', originalName: 'red-02' }] },
-	{ originalOrder: 10, id: 9004, name: 'Muted Pink', category: 'bring-on-the-glitter', originalName: 'pink-001' },
-	{ tags: ['Pink'], id: 9005, name: 'Clear Pink', category: 'clear', originalName: 'clear-01' },
+	{ originalOrder: 20, id: 9002, name: 'Spark Button', category: 'sparkle', set: 'stardrops', originalName: 'Sparkbutton-gray', appearances: [{ set: 'bring-on-the-glitter', originalName: 'blue-08' }] },
+	{ originalOrder: 30, id: 9003, name: 'Ruby', category: 'sparkle', set: 'sparkelies', originalName: 'ruby', appearances: [{ set: 'bring-on-the-glitter', originalName: 'red-02' }] },
+	{ originalOrder: 10, id: 9004, name: 'Muted Pink', category: 'sparkle', set: 'bring-on-the-glitter', originalName: 'pink-001' },
+	{ tags: ['Pink'], id: 9005, name: 'Clear Pink', category: 'transparent', set: 'second-source', originalName: 'clear-01' },
 ].map(item => ({ ...source, tags: [], searchTerms: [], ...item }));
 
 async function openPage(browser, before = false, real = false) {
@@ -85,7 +85,7 @@ async function screenshots(page, directory, before) {
 	await shot('Root All');
 	await page.evaluate(before => {
 		const b = window.editor.glitterLibrary.browser;
-		b.setState('CATEGORY_DETAIL', 'sparkelies');
+		b.navigateToCategory('sparkelies');
 	}, before);
 	await shot('Set credit');
 	await page.evaluate(before => {
@@ -229,7 +229,8 @@ async function main() {
 				expect(!heading.querySelector('button') && getComputedStyle(heading).textTransform === 'none', 'Grouped headings must be sentence case without order controls');
 			}
 			choose(0, 'sparkle');
-			expect(b.wallItems.length === 4 && !b.wallGroups, 'Root wall must include its sets');
+			expect(b.wallItems.length === 4 && !b.wallGroups, 'Style wall must hold every set\'s tiles');
+			expect(b.wallItems.map(item => item.id).join() === '9001,9002,9003,9004', 'Wall must keep library order');
 			expect(b.rail.field.querySelector('option[value="sparkle"]').textContent.includes('4'), 'Root count is wrong');
 			const clickSet = id => choose(1, id);
 			clickSet('bring-on-the-glitter');
@@ -238,9 +239,10 @@ async function main() {
 			expect(b.carriedLead.querySelectorAll('.asset-option').length === 2, 'Missing carried-over tiles');
 			expect(!b.carriedLead.querySelector('.asset-grid .asset-grid'), 'Carried grid is nested');
 			expect(b.wallItems.length === 1, 'Set wall includes borrowed tiles');
-			library.content.push({ ...library.getItemById(9004), id: 9901, originalOrder: 1, colorCodes: ['#000000'], _glitterColorOrder: null });
-			library.content.push({ ...library.getItemById(9004), id: 9902, originalOrder: null, colorCodes: ['#ffffff'], _glitterColorOrder: null });
+			library.content.push({ ...library.getItemById(9004), id: 9902, originalOrder: null });
+			library.content.push({ ...library.getItemById(9004), id: 9901, originalOrder: 1 });
 			b.refresh();
+			expect(b.wallItems.map(item => item.id).join() === '9004,9902,9901', 'Set wall must keep library order');
 			b.setHeader.element.querySelector('button').click();
 			expect(b.wallItems.map(item => item.id).join() === '9901,9004,9902', 'Original order must sort recorded values before missing values');
 			library.content = library.content.filter(item => item.id < 9900);
@@ -249,7 +251,8 @@ async function main() {
 			expect(b.rail.selection.set === null && !b.setHeader.originalOrder && b.wallItems.length === 4, 'All sets must reset set and order');
 			clickSet('sparkelies');
 			choose(0, 'transparent');
-			expect(b.rail.selection.root === 'transparent' && b.rail.selection.set === 'clear' && b.wallItems.length === 1, 'A root that is one set must open that set');
+			expect(b.rail.selection.root === 'transparent' && b.rail.selection.set === null && b.wallItems.length === 1, 'A style that is all one set stands alone');
+			expect(b.setHeader.element.textContent.includes('Transparent') && b.setHeader.element.textContent.includes('By Aylana'), 'A one-set style must carry the set credit');
 			library.activeFilters.colors.add('pink');
 			b.refresh();
 			expect(b.rail.field.options.length === 2 && b.rail.selection.root === 'transparent', 'Color-filtered roots/counts are wrong');
@@ -263,7 +266,10 @@ async function main() {
 			b.setState('SEARCH_RESULTS');
 			expect(b.rail.element.hidden && b.setHeader.element.hidden, 'Search must hide rails');
 			expect(library.applyFilters().length === 1, 'Search should match later original name once');
-			expect(b.elements.searchResults.textContent.includes("Classic Sparkle › Stardrops' Open Directory"), 'Search group lacks path');
+			expect(b.elements.searchResults.textContent.includes('Classic Sparkle'), 'Search group lacks its style');
+			library.activeFilters.search = 'sparkelies';
+			expect(library.applyFilters().length === 1 && library.applyFilters()[0].id === 9003, 'Search must match a set name');
+			library.activeFilters.search = 'blue-08';
 			library.activeFilters.nameOnly = true;
 			expect(library.applyFilters().length === 1, 'Name-only search lost original names');
 			library.activeFilters.search = 'pink-001';
@@ -276,8 +282,8 @@ async function main() {
 			expect(b.rail.field.querySelectorAll('optgroup').length === 2 && b.rail.field.querySelector(':scope > option').value === '__all', 'Creator home must precede grouped creators');
 			choose(0, 'aylana');
 			expect(b.wallItems.length === 2, 'Creator All must cross styles');
-			clickSet('bring-on-the-glitter');
-			expect(b.wallItems.length === 1 && b.setHeader.element.textContent.includes('Aylana'), 'Creator set must use same header');
+			clickSet('sparkle');
+			expect(b.wallItems.length === 1 && b.setHeader.element.textContent.includes('Aylana'), 'Creator style must carry the set credit');
 			choose(0, '__unknown');
 			expect(b.wallItems.length === 1 && b.wallItems[0].id === 9001, 'Unknown leaked attributed tiles');
 			b.browseView = 'style'; b.setState('CATEGORY_LIST');
@@ -285,7 +291,7 @@ async function main() {
 			b.browseView = 'favorites'; b.setState('CATEGORY_LIST');
 			expect(b.rail.element.hidden && b.wallItems.length === 1 && b.wallItems[0].id === 9003, 'Favorites view failed');
 			await b.navigateToItem(9002);
-			expect(b.rail.selection.root === 'sparkle' && b.rail.selection.set === 'stardrops', 'Go-to-asset did not light chips');
+			expect(b.rail.selection.root === 'sparkle' && b.rail.selection.set === null, 'Go-to-asset did not open the style');
 			expect(b.elements.itemGrid.querySelector('[data-id="9002"]'), 'Go-to-asset did not render tile');
 			const browsers = [b, e.stickerLibrary.browser, e.brushTipManager.browser, e.shapeBrowserManager.browser, e.fontBrowserManager.browser];
 			for (const browser of browsers) {
@@ -464,7 +470,7 @@ async function main() {
 			if (!b.elements.itemGrid.querySelector('[data-id="9002"]') || b.elements.emptyState.classList.contains('visible')) throw new Error('Adding a favorite did not update the empty Favorites wall');
 		});
 		await page.evaluate(() => window.editor.glitterLibrary.browser.viewControl.querySelector('[data-view="style"]').click());
-		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('transparent/clear');
+		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('sparkle/sparkelies');
 		await page.reload({ waitUntil: 'networkidle' });
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser?.rail);
 		assert.strictEqual(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root), '__all', 'Library must reopen on All styles');

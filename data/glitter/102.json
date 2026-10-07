@@ -4,7 +4,7 @@
     "name": "Pink Purple",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 113,
+    "sortOrder": 2,
     "hue": 0.215,
     "colorCodes": [
         "#E16996"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Muted",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_pink-purple"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7009,
     "originalName": "violet-02"
 }

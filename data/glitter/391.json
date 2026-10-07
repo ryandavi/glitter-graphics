@@ -1,0 +1,27 @@
+{
+    "id": 391,
+    "url": "images/glitter/sparkle-flat/flat_efefef.gif",
+    "name": "Off-White",
+    "generatedName": "Off-White",
+    "brightness": "0.940",
+    "sortOrder": 91,
+    "hue": 1.1,
+    "colorCodes": [
+        "#F0F0F0"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 470,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

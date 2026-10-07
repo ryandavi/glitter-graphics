@@ -1,0 +1,29 @@
+{
+    "id": 304,
+    "url": "images/glitter/sparkle-flat/flat_ff52ad.gif",
+    "name": "Magenta",
+    "generatedName": "Magenta",
+    "brightness": "0.670",
+    "sortOrder": 4,
+    "hue": 0.954,
+    "colorCodes": [
+        "#FF52AD",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 556,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

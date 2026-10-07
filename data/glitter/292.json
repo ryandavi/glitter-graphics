@@ -4,7 +4,7 @@
     "name": "Opal",
     "generatedName": "Muted Magenta",
     "brightness": "0.800",
-    "sortOrder": 43,
+    "sortOrder": 9,
     "hue": 0.324,
     "colorCodes": [
         "#E2DEE6",
@@ -28,16 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
-    "attribution": {
-        "author": "DAN-411",
-        "authorId": "dan",
-        "authorUrl": "https://osodeoro.tripod.com/",
-        "source": "Sparkelies",
-        "sourceId": "sparkelies",
-        "sourceUrl": "https://web.archive.org/web/20040702024614/http://members.tripod.com/%7Eosodeoro/Sparklies/Sparkelies.html",
-        "license": "unknown",
-        "notes": "Created by November 22, 2001"
-    },
+    "set": "sparkelies",
     "originalOrder": 1008,
     "originalName": "opal"
 }

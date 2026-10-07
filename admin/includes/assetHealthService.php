@@ -112,10 +112,6 @@ class AssetHealthService
 				'current_version' => (int)$this->config['analysis_version'],
 			], ['reanalyze']);
 		}
-		$expectedPrefix = $this->paths->categoryUrl($this->assetType, $row['category_slug']);
-		if (strpos($row['url'], $expectedPrefix) !== 0) {
-			$issues[] = $this->item('category_path_mismatch', $row, ['expected_prefix' => $expectedPrefix], ['open_record']);
-		}
 	}
 
 	// A file is only a "variant" of another (and never listed as its own

@@ -4,7 +4,7 @@
     "name": "Muted Green",
     "generatedName": "Neon Yellow",
     "brightness": "1.000",
-    "sortOrder": 86,
+    "sortOrder": 39,
     "hue": 0.236,
     "colorCodes": [
         "#96B400"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1882,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_muted-green"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4005,
     "originalName": "green-05"
 }

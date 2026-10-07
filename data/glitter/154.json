@@ -4,7 +4,7 @@
     "name": "Blue",
     "generatedName": "Blue",
     "brightness": "0.230",
-    "sortOrder": 255,
+    "sortOrder": 3,
     "hue": 0.654,
     "colorCodes": [
         "#002C85",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 420,
-    "category": "clear",
+    "category": "transparent",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 0,
     "originalName": "blueclear-04"
 }

@@ -4,7 +4,7 @@
     "name": "Red, Green, and Yellow",
     "generatedName": "Red, Green, and Yellow",
     "brightness": "0.320",
-    "sortOrder": 2,
+    "sortOrder": 99,
     "hue": 0.025,
     "colorCodes": [
         "#DD0016",
@@ -31,15 +31,7 @@
         "Multicolor"
     ],
     "searchTerms": [],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 1,
     "originalName": "christmas-02"
 }

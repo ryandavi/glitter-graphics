@@ -4,7 +4,7 @@
     "name": "Yellow, Pink, and Orange",
     "generatedName": "Yellow, Pink, and Orange",
     "brightness": "0.730",
-    "sortOrder": 78,
+    "sortOrder": 4,
     "hue": 0.169,
     "colorCodes": [
         "#FFD85A",
@@ -28,15 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 3007,
     "originalName": "gold-07"
 }

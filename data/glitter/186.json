@@ -4,7 +4,7 @@
     "name": "Muted Yellow-Green",
     "generatedName": "Muted Yellow-Green",
     "brightness": "0.750",
-    "sortOrder": 88,
+    "sortOrder": 8,
     "hue": 0.306,
     "colorCodes": [
         "#BDDBA8",
@@ -28,15 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 4007,
     "originalName": "green-07"
 }

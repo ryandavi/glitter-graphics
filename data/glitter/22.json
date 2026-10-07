@@ -4,7 +4,7 @@
     "name": "Silver 2",
     "generatedName": "Light Gray",
     "brightness": "1.000",
-    "sortOrder": 132,
+    "sortOrder": 72,
     "hue": 1.1,
     "colorCodes": [
         "#D2D2D2"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1524,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Grayscale",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_silver-2"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 10003,
     "originalName": "silver-04"
 }

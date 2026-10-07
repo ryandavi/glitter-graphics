@@ -4,7 +4,7 @@
     "name": "Green and Orange",
     "generatedName": "Green and Orange",
     "brightness": "0.590",
-    "sortOrder": 161,
+    "sortOrder": 9,
     "hue": 0.256,
     "colorCodes": [
         "#A2BA64",
@@ -28,6 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4,
     "originalName": "twinkle-004"
 }

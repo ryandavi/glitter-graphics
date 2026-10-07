@@ -4,7 +4,7 @@
     "name": "Bright Orange",
     "generatedName": "Vivid Pink",
     "brightness": "1.000",
-    "sortOrder": 101,
+    "sortOrder": 7,
     "hue": 0.23,
     "colorCodes": [
         "#FF2D69"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Orange",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_bright-orange"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 6002,
     "originalName": "orange-003"
 }

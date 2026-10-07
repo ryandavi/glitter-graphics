@@ -4,7 +4,7 @@
     "name": "Vivid Indigo",
     "generatedName": "Vivid Indigo",
     "brightness": "0.520",
-    "sortOrder": 117,
+    "sortOrder": 61,
     "hue": 0.801,
     "colorCodes": [
         "#8D16EC",
@@ -22,10 +22,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8003,
     "originalName": "purple-004"
 }

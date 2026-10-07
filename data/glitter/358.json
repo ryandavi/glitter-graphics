@@ -1,0 +1,29 @@
+{
+    "id": 358,
+    "url": "images/glitter/sparkle-flat/flat_1894ff.gif",
+    "name": "Vivid Blue",
+    "generatedName": "Vivid Blue",
+    "brightness": "0.560",
+    "sortOrder": 59,
+    "hue": 0.619,
+    "colorCodes": [
+        "#1894FF",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 543,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

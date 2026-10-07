@@ -4,7 +4,7 @@
     "name": "Blue-Green",
     "generatedName": "Blue-Green",
     "brightness": "0.620",
-    "sortOrder": 158,
+    "sortOrder": 10,
     "hue": 0.517,
     "colorCodes": [
         "#73B9AF",
@@ -28,6 +28,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 1,
     "originalName": "twinkle-0010"
 }

@@ -4,7 +4,7 @@
     "name": "Light Green",
     "generatedName": "Muted Green",
     "brightness": "1.000",
-    "sortOrder": 85,
+    "sortOrder": 37,
     "hue": 0.256,
     "colorCodes": [
         "#B4D269"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -30,6 +30,7 @@
     "searchTerms": [
         "glitter_light-green"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4004,
     "originalName": "green-04"
 }

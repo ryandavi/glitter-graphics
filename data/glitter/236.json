@@ -4,7 +4,7 @@
     "name": "Vivid Red",
     "generatedName": "Vivid Red",
     "brightness": "0.330",
-    "sortOrder": 129,
+    "sortOrder": 17,
     "hue": 0.04,
     "colorCodes": [
         "#F90104",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1953,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 9009,
     "originalName": "red-04"
 }

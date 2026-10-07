@@ -1,5 +1,5 @@
 // The wall's picker: one select holding the whole tree. Home, then each style
-// (or creator) with its sets grouped under it. An Up button beside it steps
+// with the sets found in it (or each creator with their styles) grouped under it. An Up button beside it steps
 // one level toward home. The navigation owns selection; filters and item
 // rendering belong to the browser.
 class AssetBrowserRail {
@@ -46,12 +46,15 @@ class AssetBrowserRail {
 		const single = [];
 		if (roots.length) entries.push({ root: LIBRARY_ALL_ID, set: null, name: creator ? 'All creators' : this.schema.browseLabel === 'Style' ? 'All styles' : 'All categories', count: items.length });
 		roots.forEach(root => {
-			const setCounts = creator ? this.catalog.getCategoryCounts(root.items) : counts;
-			const sets = (creator ? this.catalog.getSetsByCreator(root.id, items) : this.catalog.getSets(root.id)).filter(set => setCounts[set.id]);
+			const setCounts = creator ? this.catalog.getCategoryCounts(root.items) : this.catalog.getSetCounts(root.id, items);
+			const sets = (creator ? this.catalog.getStylesByCreator(root.id, items) : this.catalog.getSets(root.id)).filter(set => setCounts[set.id]);
 			const entry = { root: root.id, set: null, name: root.name, count: root.count, icon: root.icon };
+			// One narrowing that holds everything is no choice: the entry stands
+			// alone. A style keeps its own name; a nested collection is the entry.
+			const whole = sets.length === 1 && setCounts[sets[0].id] === root.count;
 			if (root.browseFirst) entries.push(entry);
 			else if (!sets.length) single.push(entry);
-			else if (sets.length === 1 && setCounts[sets[0].id] === root.count) single.push({ ...entry, set: sets[0].id });
+			else if (whole) single.push(creator || this.catalog.isSet(sets[0]) ? entry : { ...entry, set: sets[0].id });
 			else {
 				entries.push({ ...entry, name: 'All ' + root.name, group: root.name });
 				sets.forEach(set => entries.push({ root: root.id, set: set.id, name: set.name, count: setCounts[set.id], icon: set.icon, group: root.name, child: true }));

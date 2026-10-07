@@ -4,7 +4,7 @@
     "name": "Ruby",
     "generatedName": "Jewel Tone Pink",
     "brightness": "0.000",
-    "sortOrder": 45,
+    "sortOrder": 13,
     "hue": 0.215,
     "colorCodes": [
         "#78002D"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -33,6 +33,7 @@
     "searchTerms": [
         "glitter_ruby"
     ],
+    "set": "sparkelies",
     "originalOrder": 1011,
     "originalName": "ruby",
     "appearances": [

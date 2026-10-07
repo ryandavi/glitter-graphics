@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Purple",
     "brightness": "0.200",
-    "sortOrder": 224,
+    "sortOrder": 13,
     "hue": 0.792,
     "colorCodes": [
         "#330066",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1502,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4,
     "originalName": "ember-04"
 }

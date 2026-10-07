@@ -4,7 +4,7 @@
     "name": "Garnet",
     "generatedName": "Dark Ruby Red",
     "brightness": "0.140",
-    "sortOrder": 39,
+    "sortOrder": 21,
     "hue": 0.043,
     "colorCodes": [
         "#670200",
@@ -24,10 +24,11 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "sparkelies",
     "originalOrder": 1004,
     "originalName": "garnet",
     "appearances": [

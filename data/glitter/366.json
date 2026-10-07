@@ -1,0 +1,29 @@
+{
+    "id": 366,
+    "url": "images/glitter/sparkle-flat/flat_9c9cff.gif",
+    "name": "Light Blue",
+    "generatedName": "Light Blue",
+    "brightness": "0.740",
+    "sortOrder": 66,
+    "hue": 0.708,
+    "colorCodes": [
+        "#9C9CFF",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

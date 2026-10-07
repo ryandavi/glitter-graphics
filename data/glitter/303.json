@@ -1,0 +1,29 @@
+{
+    "id": 303,
+    "url": "images/glitter/sparkle-flat/flat_ff94a5.gif",
+    "name": "Light Red",
+    "generatedName": "Light Red",
+    "brightness": "0.740",
+    "sortOrder": 3,
+    "hue": 0.015,
+    "colorCodes": [
+        "#FF94A5",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 559,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

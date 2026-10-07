@@ -4,7 +4,7 @@
     "name": "Tan",
     "generatedName": "Tan",
     "brightness": "0.600",
-    "sortOrder": 160,
+    "sortOrder": 24,
     "hue": 0.215,
     "colorCodes": [
         "#B2B661",
@@ -30,6 +30,7 @@
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3,
     "originalName": "twinkle-003"
 }

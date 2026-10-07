@@ -4,7 +4,7 @@
     "name": "Magenta Blue",
     "generatedName": "Pink and Blue",
     "brightness": "1.000",
-    "sortOrder": 115,
+    "sortOrder": 96,
     "hue": 1.2,
     "colorCodes": [
         "#FF00FF",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1619,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -39,6 +39,7 @@
     "searchTerms": [
         "glitter_magenta-blue"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8001,
     "originalName": "purple-002"
 }

@@ -51,7 +51,7 @@ class GlitterAPI extends AssetAPI
     {
         return [
             'string' => ['name', 'url', 'generated_name', 'color_codes', 'color_weights', 'file_hash', 'palette_type_override'],
-            'int' => ['glitter_category_id', 'frame_count', 'frame_rate', 'sort_order', 'width', 'height', 'file_size'],
+            'int' => ['glitter_category_id', 'set_id', 'frame_count', 'frame_rate', 'sort_order', 'width', 'height', 'file_size'],
             'float' => ['hue', 'color_value'],
             'bool' => ['is_pixelated', 'is_active', 'is_variable_framerate', 'is_animated', 'has_transparency'],
         ];

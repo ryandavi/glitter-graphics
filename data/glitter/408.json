@@ -1,0 +1,29 @@
+{
+    "id": 408,
+    "url": "images/glitter/sparkle-flat/flat_9c6300.gif",
+    "name": "Bronze",
+    "generatedName": "Bronze",
+    "brightness": "0.330",
+    "sortOrder": 23,
+    "hue": 0.147,
+    "colorCodes": [
+        "#9C6300",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

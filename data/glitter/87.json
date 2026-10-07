@@ -4,7 +4,7 @@
     "name": "Gold 2",
     "generatedName": "Muted Yellow",
     "brightness": "1.000",
-    "sortOrder": 73,
+    "sortOrder": 30,
     "hue": 0.208,
     "colorCodes": [
         "#FFFF69"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1512,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Brown",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_gold-2"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3002,
     "originalName": "gold-02"
 }

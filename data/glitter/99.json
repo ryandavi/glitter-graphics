@@ -4,7 +4,7 @@
     "name": "Pastel Blue",
     "generatedName": "Pastel Silver",
     "brightness": "1.000",
-    "sortOrder": 68,
+    "sortOrder": 11,
     "hue": 1.1,
     "colorCodes": [
         "#B4D2E1"
@@ -32,15 +32,7 @@
     "searchTerms": [
         "glitter_pastel-blue"
     ],
-    "attribution": {
-        "author": "Aylana",
-        "authorId": "aylana",
-        "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-        "source": "designbyAylana ~ Bring On The Glitter",
-        "sourceId": "bring-on-the-glitter",
-        "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-        "license": "unknown"
-    },
+    "set": "bring-on-the-glitter",
     "originalOrder": 2001,
     "originalName": "blue-02"
 }

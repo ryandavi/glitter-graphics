@@ -4,7 +4,7 @@
     "name": "Green",
     "generatedName": "Green",
     "brightness": "0.240",
-    "sortOrder": 84,
+    "sortOrder": 41,
     "hue": 0.41,
     "colorCodes": [
         "#009920",
@@ -26,10 +26,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4003,
     "originalName": "green-03"
 }

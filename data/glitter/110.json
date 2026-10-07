@@ -4,7 +4,7 @@
     "name": "Ugly Purple",
     "generatedName": "Muted Pink",
     "brightness": "1.000",
-    "sortOrder": 118,
+    "sortOrder": 10,
     "hue": 0.144,
     "colorCodes": [
         "#A55A96"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Contrast",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_ugly-purple"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8005,
     "originalName": "purple-006"
 }

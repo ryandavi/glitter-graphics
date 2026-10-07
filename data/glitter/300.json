@@ -1,0 +1,29 @@
+{
+    "id": 300,
+    "url": "images/glitter/sparkle-flat/flat_ffcede.gif",
+    "name": "Muted Pink",
+    "generatedName": "Muted Pink",
+    "brightness": "0.890",
+    "sortOrder": 0,
+    "hue": 0.987,
+    "colorCodes": [
+        "#FFCEDE",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 568,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

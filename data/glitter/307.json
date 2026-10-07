@@ -1,0 +1,29 @@
+{
+    "id": 307,
+    "url": "images/glitter/sparkle-flat/flat_ce0063.gif",
+    "name": "Vivid Magenta",
+    "generatedName": "Vivid Magenta",
+    "brightness": "0.400",
+    "sortOrder": 7,
+    "hue": 0.962,
+    "colorCodes": [
+        "#CE0063",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

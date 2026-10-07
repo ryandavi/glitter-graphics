@@ -4,7 +4,7 @@
     "name": "Lime Peridot",
     "generatedName": "Yellow-Green",
     "brightness": "0.320",
-    "sortOrder": 42,
+    "sortOrder": 40,
     "hue": 0.272,
     "colorCodes": [
         "#5F9900",
@@ -26,10 +26,11 @@
     "width": 61,
     "height": 29,
     "fileSize": 1849,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "sparkelies",
     "originalOrder": 1007,
     "originalName": "lime-peridot"
 }

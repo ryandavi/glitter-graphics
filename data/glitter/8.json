@@ -4,7 +4,7 @@
     "name": "Lime Green",
     "generatedName": "Vivid Green",
     "brightness": "1.000",
-    "sortOrder": 82,
+    "sortOrder": 38,
     "hue": 0.275,
     "colorCodes": [
         "#96FF00"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1619,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Green",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_lime-green"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 4001,
     "originalName": "green-010"
 }

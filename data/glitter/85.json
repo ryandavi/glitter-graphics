@@ -4,7 +4,7 @@
     "name": "Dusty Dark Blue",
     "generatedName": "Muted Blue",
     "brightness": "1.000",
-    "sortOrder": 70,
+    "sortOrder": 52,
     "hue": 0.636,
     "colorCodes": [
         "#5A87C3"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1948,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_dusty-dark-blue"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 2008,
     "originalName": "blue-09"
 }

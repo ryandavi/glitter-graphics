@@ -1,0 +1,27 @@
+{
+    "id": 396,
+    "url": "images/glitter/sparkle-flat/flat_bdbdbd.gif",
+    "name": "Light Gray",
+    "generatedName": "Light Gray",
+    "brightness": "0.770",
+    "sortOrder": 97,
+    "hue": 1.1,
+    "colorCodes": [
+        "#C5C5C5"
+    ],
+    "colorWeights": [
+        1
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 611,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

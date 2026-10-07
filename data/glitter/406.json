@@ -1,0 +1,29 @@
+{
+    "id": 406,
+    "url": "images/glitter/sparkle-flat/flat_debd9c.gif",
+    "name": "Tan",
+    "generatedName": "Tan",
+    "brightness": "0.740",
+    "sortOrder": 107,
+    "hue": 0.125,
+    "colorCodes": [
+        "#DEBD9C",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 611,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

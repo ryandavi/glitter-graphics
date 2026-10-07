@@ -1,0 +1,29 @@
+{
+    "id": 370,
+    "url": "images/glitter/sparkle-flat/flat_6b5ace.gif",
+    "name": "Blue",
+    "generatedName": "Blue",
+    "brightness": "0.530",
+    "sortOrder": 69,
+    "hue": 0.733,
+    "colorCodes": [
+        "#6B5ACE",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 543,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

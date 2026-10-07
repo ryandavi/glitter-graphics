@@ -4,7 +4,7 @@
     "name": "Purple and Red",
     "generatedName": "Purple and Red",
     "brightness": "0.480",
-    "sortOrder": 112,
+    "sortOrder": 63,
     "hue": 0.811,
     "colorCodes": [
         "#8A05DD",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7008,
     "originalName": "violet-01"
 }

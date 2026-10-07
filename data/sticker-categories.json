@@ -1,7 +1,6 @@
 [
     {
         "id": "user-uploads",
-        "parent": null,
         "name": "User Uploads",
         "icon": "images/stickers/decorative/heart_pink-glitter.gif",
         "color": "#9575cd",
@@ -10,7 +9,6 @@
     },
     {
         "id": "background",
-        "parent": null,
         "name": "Background",
         "icon": "images/stickers/background/checkerboard_emo_rainbow.gif",
         "color": "#5b8def",
@@ -19,7 +17,6 @@
     },
     {
         "id": "clothing",
-        "parent": null,
         "name": "Clothing",
         "icon": "images/stickers/clothing/crown_gold-glitter.gif",
         "color": "#9b59b6",
@@ -28,7 +25,6 @@
     },
     {
         "id": "emoji",
-        "parent": null,
         "name": "Emoji",
         "icon": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
         "color": "#ffc93c",
@@ -37,7 +33,6 @@
     },
     {
         "id": "flower",
-        "parent": null,
         "name": "Flower",
         "icon": "images/stickers/flower/rose_red-green-glitter.gif",
         "color": "#ff6fa5",
@@ -46,7 +41,6 @@
     },
     {
         "id": "frame",
-        "parent": null,
         "name": "Frame",
         "icon": "images/stickers/frame/rose-heart_frame_red.gif",
         "color": "#8d6e63",
@@ -55,7 +49,6 @@
     },
     {
         "id": "jewelry",
-        "parent": null,
         "name": "Jewelry",
         "icon": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
         "color": "#4fc3d9",
@@ -64,7 +57,6 @@
     },
     {
         "id": "logo",
-        "parent": null,
         "name": "Logo",
         "icon": "images/stickers/logo/playboy_silver-glitter.gif",
         "color": "#607d8b",
@@ -73,7 +65,6 @@
     },
     {
         "id": "object",
-        "parent": null,
         "name": "Object",
         "icon": "images/stickers/object/money_wave_green.gif",
         "color": "#78909c",
@@ -82,7 +73,6 @@
     },
     {
         "id": "people",
-        "parent": null,
         "name": "People",
         "icon": "images/stickers/people/lips_red-glitter.gif",
         "color": "#ff8a65",
@@ -91,7 +81,6 @@
     },
     {
         "id": "sparkle",
-        "parent": null,
         "name": "Sparkle",
         "icon": "images/stickers/sparkle/fireworks_yellow-pink.gif",
         "color": "#e8c547",
@@ -100,7 +89,6 @@
     },
     {
         "id": "text",
-        "parent": null,
         "name": "Text",
         "icon": "images/stickers/text/sexy_arrow_purple.gif",
         "color": "#66bb6a",
@@ -109,7 +97,6 @@
     },
     {
         "id": "animal",
-        "parent": null,
         "name": "Animal",
         "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
         "color": "#a0703b",
@@ -118,7 +105,6 @@
     },
     {
         "id": "character",
-        "parent": null,
         "name": "Character",
         "icon": "images/stickers/character/star_dance.gif",
         "color": "#e0559f",
@@ -127,7 +113,6 @@
     },
     {
         "id": "decorative",
-        "parent": null,
         "name": "Decorative",
         "icon": "images/stickers/decorative/rainbow_glitter.gif",
         "color": "#f2a65a",
@@ -136,7 +121,6 @@
     },
     {
         "id": "ryandavi",
-        "parent": null,
         "name": "ryandavi",
         "icon": "images/stickers/ryandavi/ryandavi_wow.png",
         "color": "#1100ff",
@@ -152,7 +136,6 @@
     },
     {
         "id": "twitter",
-        "parent": null,
         "name": "Twitter",
         "icon": "images/stickers/twitter/21416.png",
         "color": "#1da1f2",
@@ -171,7 +154,6 @@
     },
     {
         "id": "container",
-        "parent": null,
         "name": "Container",
         "icon": "images/stickers/container/container_sticky-note.png",
         "color": "#ff69b4",

@@ -1,0 +1,29 @@
+{
+    "id": 343,
+    "url": "images/glitter/sparkle-flat/flat_b5e7e7.gif",
+    "name": "Muted Teal",
+    "generatedName": "Muted Teal",
+    "brightness": "0.840",
+    "sortOrder": 44,
+    "hue": 0.542,
+    "colorCodes": [
+        "#B5E7E7",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 543,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

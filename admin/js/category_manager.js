@@ -30,7 +30,7 @@ class CategoryManager {
 					<div class="manager-dialog-content">
 						<div class="property-list">
 							<div class="property-row"><label class="property-label" for="category-name">Name</label><div class="property-control"><input type="text" id="category-name" name="name" required></div></div>
-							<div class="property-row"><label class="property-label" for="category-parent">Parent</label><div class="property-control"><select id="category-parent" name="parent_id"></select></div></div>
+							<div class="property-row"><label class="property-label" for="category-kind">Kind</label><div class="property-control"><select id="category-kind" name="is_set"><option value="0">Style: holds assets, in order</option><option value="1">Set: a creator's collection</option></select></div></div>
 							<div class="property-row"><label class="property-label" for="category-published">Published</label><div class="property-control"><input type="checkbox" class="field-switch" id="category-published" name="is_active" checked></div></div>
 							<div class="property-row"><label class="property-label" for="category-slug">Slug</label><div class="property-control"><input type="text" id="category-slug" name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*"></div></div>
 							<div class="property-row property-row-continued"><span class="property-label">Slug</span><div class="property-value"><code data-path-preview></code><span class="field-error" data-slug-error></span></div></div>
@@ -134,8 +134,7 @@ class CategoryManager {
 	}
 
 	render() {
-		const ordered = this.rows.filter(row => !row.parent_id).flatMap(root => [root, ...this.rows.filter(row => Number(row.parent_id) === Number(root.id) && row.parent_id)]);
-		const rows = ordered.filter(row => !this.query || [row.name, row.slug, row.folder_url].some(value => String(value || '').toLowerCase().includes(this.query)));
+		const rows = this.rows.filter(row => !this.query || [row.name, row.slug, row.folder_url].some(value => String(value || '').toLowerCase().includes(this.query)));
 		if (!rows.length) {
 			this.table.innerHTML = '<div class="empty-row">No categories match this search.</div>';
 			return;
@@ -149,7 +148,7 @@ class CategoryManager {
 						<span class="category-color-dot ${row.icon ? 'has-thumbnail' : ''}" style="--category-color:${this.escape(row.color || 'transparent')}" ${row.icon ? `title="${this.escape(row.icon)}"` : ''}>
 							${row.icon ? `<img src="${CONFIG.image_base_path}${this.escape(row.icon)}" alt="" loading="lazy">` : ''}
 						</span>
-						<span><strong>${row.parent_id ? '↳ ' : ''}${this.escape(row.name)}</strong><small>${this.escape(row.slug)}${Number(row.is_active) === 0 ? ' · Unpublished' : ''}</small></span>
+						<span><strong>${this.escape(row.name)}</strong><small>${this.escape(row.slug)}${Number(row.is_set) ? ' · Set' : ''}${Number(row.is_active) === 0 ? ' · Unpublished' : ''}</small></span>
 					</div>
 					<code>${this.escape(row.folder_url)}</code>
 					<span>${row.active_count} active · ${row.pending_count} pending</span>
@@ -216,12 +215,10 @@ class CategoryManager {
 		this.editing = row?.id ? row : null;
 		this.form.reset();
 		this.form.elements.is_active.checked = !row || Number(row.is_active) !== 0;
-		const parent = this.form.elements.parent_id;
-		parent.replaceChildren(new Option('None (style root)', ''));
-		this.rows.filter(item => item.id && !item.parent_id && Number(item.id) !== Number(row?.id))
-			.forEach(item => parent.add(new Option(item.name, item.id)));
-		parent.value = row?.parent_id || '';
-		parent.disabled = this.rows.some(item => item.parent_id && Number(item.parent_id) === Number(row?.id));
+		// Assets point at a style and a set through different fields, so a
+		// category in use cannot change kind.
+		this.form.elements.is_set.value = Number(row?.is_set) ? '1' : '0';
+		this.form.elements.is_set.disabled = Number(row?.active_count) > 0;
 		delete this.form.elements.slug.dataset.manual;
 		this.form.querySelector('[data-slug-error]').textContent = '';
 		this.form.querySelector('[data-form-title]').textContent = this.editing ? 'Edit category' : 'New category';
@@ -244,6 +241,7 @@ class CategoryManager {
 	async save() {
 		const values = Object.fromEntries(new FormData(this.form));
 		values.is_active = Number(this.form.elements.is_active.checked);
+		values.is_set = Number(this.form.elements.is_set.value);
 		values.sort_order = Number(values.sort_order || 0);
 		const attribution = {};
 		for (const key of ['author', 'authorId', 'authorUrl', 'source', 'sourceId', 'sourceUrl', 'license', 'notes']) {

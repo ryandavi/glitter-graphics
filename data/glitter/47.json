@@ -4,7 +4,7 @@
     "name": "Burnt Orange",
     "generatedName": "Very Dark Vivid Red",
     "brightness": "0.140",
-    "sortOrder": 220,
+    "sortOrder": 3,
     "hue": 0.042,
     "colorCodes": [
         "#330000",
@@ -24,7 +24,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1518,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [
         "Dark",
@@ -36,6 +36,7 @@
     "searchTerms": [
         "ember_burnt-orange"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 0,
     "originalName": "ember-01"
 }

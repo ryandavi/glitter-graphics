@@ -4,7 +4,7 @@
     "name": "Blue and Red",
     "generatedName": "Blue and Red",
     "brightness": "0.130",
-    "sortOrder": 225,
+    "sortOrder": 10,
     "hue": 0.708,
     "colorCodes": [
         "#000066",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1502,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 5,
     "originalName": "ember-05"
 }

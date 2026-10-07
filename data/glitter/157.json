@@ -4,7 +4,7 @@
     "name": "Dark Gray",
     "generatedName": "Dark Gray",
     "brightness": "0.420",
-    "sortOrder": 258,
+    "sortOrder": 5,
     "hue": 1.1,
     "colorCodes": [
         "#6B6B6B",
@@ -22,10 +22,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 399,
-    "category": "clear",
+    "category": "transparent",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3,
     "originalName": "silverclear-01"
 }

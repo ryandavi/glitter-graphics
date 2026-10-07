@@ -1,0 +1,29 @@
+{
+    "id": 317,
+    "url": "images/glitter/sparkle-flat/flat_ff9c63.gif",
+    "name": "Light Orange",
+    "generatedName": "Light Orange",
+    "brightness": "0.670",
+    "sortOrder": 19,
+    "hue": 0.103,
+    "colorCodes": [
+        "#FF9C63",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

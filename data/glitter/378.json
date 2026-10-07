@@ -1,0 +1,29 @@
+{
+    "id": 378,
+    "url": "images/glitter/sparkle-flat/flat_ffade7.gif",
+    "name": "Light Magenta",
+    "generatedName": "Light Magenta",
+    "brightness": "0.860",
+    "sortOrder": 78,
+    "hue": 0.924,
+    "colorCodes": [
+        "#FFADE7",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 559,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

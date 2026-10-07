@@ -1,0 +1,29 @@
+{
+    "id": 323,
+    "url": "images/glitter/sparkle-flat/flat_ffd66b.gif",
+    "name": "Light Golden Orange",
+    "generatedName": "Light Golden Orange",
+    "brightness": "0.750",
+    "sortOrder": 25,
+    "hue": 0.162,
+    "colorCodes": [
+        "#FFD66B",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.92,
+        0.08
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 463,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

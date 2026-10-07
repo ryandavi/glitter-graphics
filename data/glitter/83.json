@@ -4,7 +4,7 @@
     "name": "Dark Vivid Purple",
     "generatedName": "Vivid Purple",
     "brightness": "1.000",
-    "sortOrder": 121,
+    "sortOrder": 62,
     "hue": 0.775,
     "colorCodes": [
         "#6900FF"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Cool",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_dark-vivid-purple"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8008,
     "originalName": "purple-009"
 }

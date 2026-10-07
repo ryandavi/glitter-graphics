@@ -1,16 +1,78 @@
 [
     {
         "id": "sparkle",
-        "parent": null,
         "name": "Classic Sparkle",
         "icon": "images/glitter/sparkle/purpe_light-pink.gif",
         "color": "#E8C547",
         "description": "Classic sparkle glitter effects",
-        "count": 28
+        "count": 102
+    },
+    {
+        "id": "sparkle-flat",
+        "name": "Flat Sparkle",
+        "icon": "images/glitter/sparkle-flat/flat_ff52ad.gif",
+        "color": "#ff69b4",
+        "description": "Classic sparkle over a single flat color.",
+        "count": 108
+    },
+    {
+        "id": "star-dust",
+        "name": "Star Dust",
+        "icon": "images/glitter/star-dust/twinkle-001.gif",
+        "color": "#ff69b4",
+        "description": "",
+        "count": 25
+    },
+    {
+        "id": "ember",
+        "name": "VelvetEmbers",
+        "icon": "images/glitter/ember/ember_magenta.gif",
+        "color": "#FF6B35",
+        "description": "VelvetEmbers glitter; includes found tiles and the Bring On The Glitter set.",
+        "count": 14
+    },
+    {
+        "id": "transparent",
+        "name": "Transparent",
+        "icon": "images/glitter/transparent/transparent_pink-sparkle.gif",
+        "color": "#4FC3D9",
+        "description": "Transparent Glitter effects",
+        "count": 9
+    },
+    {
+        "id": "noise",
+        "name": "Noise",
+        "icon": "images/glitter/noise/noise_magenta.gif",
+        "color": "#7A8B99",
+        "description": "Noise-based glitter effects",
+        "count": 8
+    },
+    {
+        "id": "noise-2",
+        "name": "Chunky Noise",
+        "icon": "images/glitter/bring-on-the-glitter/black-001.gif",
+        "color": "#ff69b4",
+        "description": "Noise tiles from Aylana's Bring On The Glitter.",
+        "count": 26
+    },
+    {
+        "id": "etc",
+        "name": "Other",
+        "icon": "images/glitter/etc/etc_hot-pink.gif",
+        "color": "#6C757D",
+        "description": "Tiles from different styles that do not fit another group.",
+        "count": 16
+    },
+    {
+        "id": "unsorted",
+        "name": "Unsorted",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "",
+        "count": 0
     },
     {
         "id": "stardrops",
-        "parent": "sparkle",
         "name": "Stardrops' Open Directory",
         "icon": "images/glitter/stardrops/orangeGlit.gif",
         "color": "#ff69b4",
@@ -25,16 +87,16 @@
             "sourceUrl": "https://web.archive.org/web/20021222043255/http://wtv-zone.com/Stardrops/BAR/",
             "license": "unknown",
             "notes": "\"Aylana and Dan made their first glitter tiles from this animated tile and a couple of other colors Mica had put into a open sub-directory for us at her www.WTV-Zone.com account.\" - Moon/Scri8e"
-        }
+        },
+        "kind": "set"
     },
     {
         "id": "sparkelies",
-        "parent": "sparkle",
         "name": "Sparkelies",
         "icon": "images/glitter/sparkelies/amethyst.gif",
         "color": "#ff69b4",
         "description": "\"Just click on the ones you want !\"",
-        "count": 16,
+        "count": 17,
         "attribution": {
             "author": "DAN-411",
             "authorId": "dan",
@@ -44,16 +106,16 @@
             "sourceUrl": "https://web.archive.org/web/20040702024614/http://members.tripod.com/%7Eosodeoro/Sparklies/Sparkelies.html",
             "license": "unknown",
             "notes": "Created by November 22, 2001"
-        }
+        },
+        "kind": "set"
     },
     {
         "id": "bring-on-the-glitter",
-        "parent": "sparkle",
         "name": "Bring On The Glitter",
         "icon": "images/glitter/bring-on-the-glitter/sea-01.gif",
         "color": "#ff69b4",
         "description": "designs by Aylana",
-        "count": 53,
+        "count": 131,
         "attribution": {
             "author": "Aylana",
             "authorId": "aylana",
@@ -62,83 +124,11 @@
             "sourceId": "bring-on-the-glitter",
             "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
             "license": "unknown"
-        }
-    },
-    {
-        "id": "star-dust",
-        "parent": null,
-        "name": "Star Dust",
-        "icon": "images/glitter/star-dust/twinkle-001.gif",
-        "color": "#ff69b4",
-        "description": "",
-        "count": 25,
-        "attribution": {
-            "author": "Aylana",
-            "authorId": "aylana",
-            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-            "source": "designbyAylana ~ Bring On The Glitter",
-            "sourceId": "bring-on-the-glitter",
-            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-            "license": "unknown"
-        }
-    },
-    {
-        "id": "velvet-embers",
-        "parent": "ember",
-        "name": "Velvet Embers",
-        "icon": "images/glitter/velvet-embers/ember-01.gif",
-        "color": "#ff69b4",
-        "description": "VelvetEmbers from Aylana's Bring On The Glitter.",
-        "count": 10,
-        "attribution": {
-            "author": "Aylana",
-            "authorId": "aylana",
-            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-            "source": "designbyAylana ~ Bring On The Glitter",
-            "sourceId": "bring-on-the-glitter",
-            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-            "license": "unknown"
-        }
-    },
-    {
-        "id": "ember",
-        "parent": null,
-        "name": "VelvetEmbers",
-        "icon": "images/glitter/ember/ember_magenta.gif",
-        "color": "#FF6B35",
-        "description": "VelvetEmbers glitter; includes found tiles and the Bring On The Glitter set.",
-        "count": 4
-    },
-    {
-        "id": "clear",
-        "parent": "transparent",
-        "name": "Clear",
-        "icon": "images/glitter/clear/blueclear-04.gif",
-        "color": "#ff69b4",
-        "description": "",
-        "count": 5,
-        "attribution": {
-            "author": "Aylana",
-            "authorId": "aylana",
-            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-            "source": "designbyAylana ~ Bring On The Glitter",
-            "sourceId": "bring-on-the-glitter",
-            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-            "license": "unknown"
-        }
-    },
-    {
-        "id": "transparent",
-        "parent": null,
-        "name": "Transparent",
-        "icon": "images/glitter/transparent/transparent_pink-sparkle.gif",
-        "color": "#4FC3D9",
-        "description": "Transparent Glitter effects",
-        "count": 4
+        },
+        "kind": "set"
     },
     {
         "id": "flashites",
-        "parent": null,
         "name": "Flashites",
         "icon": "",
         "color": "#ff69b4",
@@ -150,51 +140,7 @@
             "source": "Flashites",
             "sourceId": "flashites",
             "license": "unknown"
-        }
-    },
-    {
-        "id": "noise",
-        "parent": null,
-        "name": "Noise",
-        "icon": "images/glitter/noise/noise_magenta.gif",
-        "color": "#7A8B99",
-        "description": "Noise-based glitter effects",
-        "count": 8
-    },
-    {
-        "id": "noise-2",
-        "parent": "noise",
-        "name": "Chunky Noise",
-        "icon": "images/glitter/bring-on-the-glitter/black-001.gif",
-        "color": "#ff69b4",
-        "description": "Noise tiles from Aylana's Bring On The Glitter.",
-        "count": 26,
-        "attribution": {
-            "author": "Aylana",
-            "authorId": "aylana",
-            "authorUrl": "https://web.archive.org/web/20010226024957/http://aylana.tripod.com/",
-            "source": "designbyAylana ~ Bring On The Glitter",
-            "sourceId": "bring-on-the-glitter",
-            "sourceUrl": "https://web.archive.org/web/20021209174955/http://www.wtv-zone.com/aylana/bringontheglitter/bringontheglitter-1.html",
-            "license": "unknown"
-        }
-    },
-    {
-        "id": "etc",
-        "parent": null,
-        "name": "Other",
-        "icon": "images/glitter/etc/etc_hot-pink.gif",
-        "color": "#6C757D",
-        "description": "Tiles from different styles that do not fit another group.",
-        "count": 16
-    },
-    {
-        "id": "unsorted",
-        "parent": null,
-        "name": "Unsorted",
-        "icon": "",
-        "color": "#ff69b4",
-        "description": "",
-        "count": 0
+        },
+        "kind": "set"
     }
 ]

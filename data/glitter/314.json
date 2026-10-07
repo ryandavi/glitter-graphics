@@ -1,0 +1,29 @@
+{
+    "id": 314,
+    "url": "images/glitter/sparkle-flat/flat_9c3100.gif",
+    "name": "Burnt Orange",
+    "generatedName": "Burnt Orange",
+    "brightness": "0.270",
+    "sortOrder": 16,
+    "hue": 0.094,
+    "colorCodes": [
+        "#9C3100",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

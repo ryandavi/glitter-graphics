@@ -4,7 +4,7 @@
     "name": "Dark Ruby Red",
     "generatedName": "Dark Ruby Red",
     "brightness": "0.110",
-    "sortOrder": 126,
+    "sortOrder": 23,
     "hue": 0.042,
     "colorCodes": [
         "#540000",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1290,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 9004,
     "originalName": "crimson-005"
 }

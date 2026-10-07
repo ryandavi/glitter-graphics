@@ -1,0 +1,29 @@
+{
+    "id": 333,
+    "url": "images/glitter/sparkle-flat/flat_00ff9c.gif",
+    "name": "Vivid Blue-Green",
+    "generatedName": "Vivid Blue-Green",
+    "brightness": "0.540",
+    "sortOrder": 34,
+    "hue": 0.477,
+    "colorCodes": [
+        "#00FF9C",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 651,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

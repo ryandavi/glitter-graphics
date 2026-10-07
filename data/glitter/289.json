@@ -4,7 +4,7 @@
     "name": "Deep Yellow-Green",
     "generatedName": "Deep Yellow-Green",
     "brightness": "0.090",
-    "sortOrder": 229,
+    "sortOrder": 9,
     "hue": 0.323,
     "colorCodes": [
         "#103300",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1541,
-    "category": "velvet-embers",
+    "category": "ember",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 9,
     "originalName": "ember-09"
 }

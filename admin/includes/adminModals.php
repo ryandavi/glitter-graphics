@@ -47,6 +47,21 @@ function renderAdminManagementModals($assetLabel)
 		</div>
 	</div>
 
+	<div class="modal" id="arrangeModal" data-confirm-discard>
+		<div class="modal-content modal-width-xl manager-modal">
+			<div class="modal-header">
+				<h3>Arrange</h3>
+				<button type="button" class="close-btn" data-arrange-close aria-label="Close">×</button>
+			</div>
+			<div class="modal-body manager-scroll-body"></div>
+			<div class="modal-footer">
+				<p class="modal-footer-note">This is the order the editor shows. It reaches the editor on the next Export JSON.</p>
+				<button type="button" class="btn btn-secondary" data-arrange-close>Cancel</button>
+				<button type="button" class="btn btn-primary" data-arrange-save>Save order</button>
+			</div>
+		</div>
+	</div>
+
 	<div class="modal" id="categoryModal">
 		<div class="modal-content modal-width-xl">
 			<div class="modal-header">

@@ -1,0 +1,29 @@
+{
+    "id": 383,
+    "url": "images/glitter/sparkle-flat/flat_9c319c.gif",
+    "name": "Purple",
+    "generatedName": "Purple",
+    "brightness": "0.470",
+    "sortOrder": 83,
+    "hue": 0.875,
+    "colorCodes": [
+        "#9C319C",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

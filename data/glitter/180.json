@@ -4,7 +4,7 @@
     "name": "Golden Orange",
     "generatedName": "Golden Orange",
     "brightness": "0.420",
-    "sortOrder": 76,
+    "sortOrder": 36,
     "hue": 0.174,
     "colorCodes": [
         "#B28D00",
@@ -26,13 +26,14 @@
     "width": 60,
     "height": 30,
     "fileSize": 1618,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [
         "etc_gold-3",
         "glitter_bronze"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3005,
     "originalName": "gold-05"
 }

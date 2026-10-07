@@ -4,7 +4,7 @@
     "name": "Yellow",
     "generatedName": "Vivid Gold",
     "brightness": "1.000",
-    "sortOrder": 74,
+    "sortOrder": 32,
     "hue": 0.197,
     "colorCodes": [
         "#FFF000"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1882,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Light",
@@ -31,6 +31,7 @@
     "searchTerms": [
         "glitter_yellow"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3003,
     "originalName": "gold-03"
 }

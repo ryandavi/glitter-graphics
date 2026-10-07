@@ -137,7 +137,7 @@ class StickerAPI extends AssetAPI
     {
         return [
             'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash', 'palette_type_override', 'variant_urls', 'slice'],
-            'int' => ['sticker_category_id', 'width', 'height', 'frame_count', 'frame_rate', 'file_size', 'sort_order'],
+            'int' => ['sticker_category_id', 'set_id', 'width', 'height', 'frame_count', 'frame_rate', 'file_size', 'sort_order'],
             'float' => [],
             'bool' => ['is_animated', 'has_transparency', 'is_active', 'is_variable_framerate', 'is_pixelated'],
         ];

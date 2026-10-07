@@ -4,7 +4,7 @@
     "name": "Yellow",
     "generatedName": "Yellow",
     "brightness": "0.450",
-    "sortOrder": 71,
+    "sortOrder": 35,
     "hue": 0.201,
     "colorCodes": [
         "#B2AA00",
@@ -26,10 +26,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1618,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 3000,
     "originalName": "gold-01"
 }

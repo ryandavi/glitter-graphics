@@ -94,7 +94,7 @@ class AssetBrowser {
 	async init(categories) {
 		if (Array.isArray(categories)) this.categories = categories;
 		else await this.loadCategories(categories);
-		this.catalog = new LibraryCatalog(this.categories, (category, item) => Attribution.resolve(category, item));
+		this.catalog = new LibraryCatalog(this.categories, (...layers) => Attribution.resolve(...layers));
 		if (this.prefix === 'glitter') this.elements.browser.classList.add('asset-browser-wall');
 		for (const event of ['layerChanged', 'imageLoaded', 'imageRemoved']) {
 			window.addEventListener(event, () => this.updateShortcuts());
@@ -214,7 +214,10 @@ class AssetBrowser {
 		if (newState === 'CATEGORY_DETAIL' && categoryId) {
 			this.browseView = 'style';
 			this.rail.mode = 'style';
-			const root = this.catalog.getRootOf(categoryId);
+			// A set is reached through the first style that holds its items.
+			const root = this.catalog.isSet(this.catalog.getCategoryById(categoryId))
+				? this.catalog.getRoots().find(style => this.catalog.getSetCounts(style.id, this.getFilteredItems())[categoryId])
+				: this.catalog.getRootOf(categoryId);
 			this.rail.selection = { root: root?.id, set: root?.id === categoryId ? null : categoryId };
 			this.state = 'CATEGORY_LIST';
 		}
@@ -267,7 +270,6 @@ class AssetBrowser {
 		} else {
 			const selection = this.rail.render(items, this.browseView);
 			this.currentCategoryId = selection.set || selection.root;
-			category = this.getHeaderCategory(selection);
 			// A style is one color-ordered wall. Home's styles, and a creator's
 			// sets, are unrelated to each other, so each keeps its own heading
 			// and color order.
@@ -278,6 +280,7 @@ class AssetBrowser {
 				wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
 				if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
 				else if (this.browseView === 'creator') groups = () => this.getSetGroups(wall);
+				category = this.getHeaderCategory(selection, wall);
 			}
 		}
 		this.elements.itemGrid.classList.toggle('brush-basic-grid', this.prefix === 'brushTip' && this.currentCategoryId === 'basic');
@@ -309,12 +312,14 @@ class AssetBrowser {
 	}
 
 	// What the set header introduces: the picked set, or a style that has
-	// something to say for itself (a style can be one creator's set).
-	getHeaderCategory(selection) {
+	// something to say for itself. A style whose shown tiles all come from one
+	// set carries that set's credit.
+	getHeaderCategory(selection, wall) {
 		const category = selection.set ? this.catalog.getCategoryById(selection.set)
 			: this.browseView === 'style' ? this.catalog.getCategoryById(selection.root) : null;
 		if (!category) return null;
-		const attribution = this.contentManager.getCollectionAttribution?.(category) || category.attribution;
+		const attribution = this.contentManager.getCollectionAttribution?.(category) || category.attribution
+			|| this.catalog.getSharedSet(wall)?.attribution;
 		return selection.set || category.description || attribution ? { ...category, attribution } : null;
 	}
 
@@ -353,9 +358,8 @@ class AssetBrowser {
 		return this.getCreators(items).map(creator => ({ id: creator.id, name: creator.name, items: this.sortItems(creator.items) }));
 	}
 
-	// Only glitter has a color wall; other kinds retain the manager's order.
 	sortItems(items) {
-		return this.prefix === 'glitter' ? this.setHeader.sort(items) : [...items];
+		return this.setHeader.sort(items);
 	}
 
 	// `items` under one heading per style. Null when one style holds them all.
@@ -366,8 +370,8 @@ class AssetBrowser {
 		return groups.length > 1 ? groups : null;
 	}
 
-	// `items` under one heading per set, in category order. Null when they
-	// are all one set.
+	// `items` under one heading per style, in category order. Null when they
+	// are all one style.
 	getSetGroups(items) {
 		const bySet = new Map();
 		items.forEach(item => {
@@ -802,7 +806,7 @@ class AssetBrowser {
 		grid.className = 'asset-grid visible';
 		items.forEach(item => {
 			const card = this.createItemElement(item);
-			card.title = `${item.name} · from ${this.getCategoryById(item.category)?.name || item.category}`;
+			card.title = `${item.name} · from ${this.getCategoryById(item.set || item.category)?.name || item.category}`;
 			grid.appendChild(card);
 		});
 		this.carriedLead.appendChild(grid);

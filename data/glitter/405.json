@@ -1,0 +1,29 @@
+{
+    "id": 405,
+    "url": "images/glitter/sparkle-flat/flat_ffdead.gif",
+    "name": "Tan",
+    "generatedName": "Tan",
+    "brightness": "0.850",
+    "sortOrder": 106,
+    "hue": 0.141,
+    "colorCodes": [
+        "#FFDEAD",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 555,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

@@ -4,7 +4,7 @@
     "name": "Light Purple",
     "generatedName": "Muted Purple",
     "brightness": "1.000",
-    "sortOrder": 12,
+    "sortOrder": 72,
     "hue": 0.803,
     "colorCodes": [
         "#D296FF"
@@ -20,7 +20,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 609,
-    "category": "sparkle",
+    "category": "sparkle-flat",
     "isPixelated": 1,
     "tags": [
         "Light",

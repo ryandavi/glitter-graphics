@@ -1,0 +1,29 @@
+{
+    "id": 339,
+    "url": "images/glitter/sparkle-flat/flat_005a39.gif",
+    "name": "Dark Blue-Green",
+    "generatedName": "Dark Blue-Green",
+    "brightness": "0.190",
+    "sortOrder": 40,
+    "hue": 0.481,
+    "colorCodes": [
+        "#005A39",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 555,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

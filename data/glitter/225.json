@@ -4,7 +4,7 @@
     "name": "Purple",
     "generatedName": "Purple",
     "brightness": "0.590",
-    "sortOrder": 109,
+    "sortOrder": 9,
     "hue": 0.897,
     "colorCodes": [
         "#D92BC2",
@@ -22,10 +22,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7005,
     "originalName": "pink-03"
 }

@@ -1,0 +1,29 @@
+{
+    "id": 407,
+    "url": "images/glitter/sparkle-flat/flat_9c6363.gif",
+    "name": "Red",
+    "generatedName": "Red",
+    "brightness": "0.460",
+    "sortOrder": 11,
+    "hue": 0.042,
+    "colorCodes": [
+        "#9C6363",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.87,
+        0.13
+    ],
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 609,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

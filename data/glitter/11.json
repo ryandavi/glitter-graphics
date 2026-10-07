@@ -4,7 +4,7 @@
     "name": "Aquamarine",
     "generatedName": "Neon Blue",
     "brightness": "1.000",
-    "sortOrder": 36,
+    "sortOrder": 46,
     "hue": 0.569,
     "colorCodes": [
         "#00D2FF"
@@ -20,7 +20,7 @@
     "width": 61,
     "height": 29,
     "fileSize": 1931,
-    "category": "sparkelies",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Blue",
@@ -33,6 +33,7 @@
     "searchTerms": [
         "glitter_aquamarine"
     ],
+    "set": "sparkelies",
     "originalOrder": 1001,
     "originalName": "aquamarine",
     "appearances": [

@@ -1,0 +1,29 @@
+{
+    "id": 335,
+    "url": "images/glitter/sparkle-flat/flat_42e7d6.gif",
+    "name": "Blue-Green",
+    "generatedName": "Blue-Green",
+    "brightness": "0.670",
+    "sortOrder": 36,
+    "hue": 0.524,
+    "colorCodes": [
+        "#42E7D6",
+        "#FFFFFF"
+    ],
+    "colorWeights": [
+        0.88,
+        0.12
+    ],
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "isAnimated": 1,
+    "hasTransparency": 0,
+    "width": 60,
+    "height": 30,
+    "fileSize": 538,
+    "category": "sparkle-flat",
+    "isPixelated": 1,
+    "tags": [],
+    "searchTerms": []
+}

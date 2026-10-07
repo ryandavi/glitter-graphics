@@ -4,7 +4,7 @@
     "name": "Indigo",
     "generatedName": "Indigo",
     "brightness": "0.350",
-    "sortOrder": 120,
+    "sortOrder": 65,
     "hue": 0.78,
     "colorCodes": [
         "#5100BE",
@@ -24,10 +24,11 @@
     "width": 60,
     "height": 30,
     "fileSize": 1610,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [],
     "searchTerms": [],
+    "set": "bring-on-the-glitter",
     "originalOrder": 8007,
     "originalName": "purple-008"
 }

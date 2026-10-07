@@ -4,7 +4,7 @@
     "name": "Muted Hot Pink",
     "generatedName": "Multicolor",
     "brightness": "1.000",
-    "sortOrder": 108,
+    "sortOrder": 3,
     "hue": 0.945,
     "colorCodes": [
         "#D26BA7",
@@ -22,7 +22,7 @@
     "width": 60,
     "height": 30,
     "fileSize": 1957,
-    "category": "bring-on-the-glitter",
+    "category": "sparkle",
     "isPixelated": 1,
     "tags": [
         "Muted",
@@ -32,6 +32,7 @@
     "searchTerms": [
         "glitter_hot-pink"
     ],
+    "set": "bring-on-the-glitter",
     "originalOrder": 7004,
     "originalName": "pink-02"
 }
