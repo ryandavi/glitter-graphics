@@ -43,7 +43,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=0357921a">
+	<link rel="stylesheet" href="css/style.css?v=b46dc7ac">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1276,9 +1276,10 @@
 				</div>
 				<div class="modal-body recolor-layout">
 					<div class="recolor-stage property-panel">
+						<div class="segmented-control" id="recolorComparison" role="group" aria-label="Preview colors"><button type="button" class="segmented-option" data-original="true" aria-pressed="false">Original</button><button type="button" class="segmented-option active" data-original="false" aria-pressed="true">Recolored</button></div>
 						<div class="recolor-stage-host" id="recolorStageHost"><canvas id="recolorStage" tabindex="0" aria-label="Glitter preview. Click a pixel to edit its color. Left and right arrows step frames."></canvas></div>
-						<canvas id="recolorRepeat" aria-label="Pattern at actual size"></canvas>
-						<div class="property-note">Click a pixel to edit its color.</div>
+						<div class="recolor-repeat-host" id="recolorRepeatHost"><canvas id="recolorRepeat" aria-label="Pattern at actual size"></canvas></div>
+						<div class="property-note recolor-hint">Click a pixel to edit its color.</div>
 						<div class="recolor-transport"><button type="button" class="btn-flat is-icon icon-wrapper sm" id="recolorPlay" title="Pause" aria-label="Pause"><svg class="icon"><use href="#icon-motion-pause"></use></svg></button><div class="segmented-control" id="recolorFrames" role="group" aria-label="Frame"></div></div>
 						<div class="property-row" id="recolorBackdropRow"><label class="property-label" for="recolorBackdrop">Backdrop</label><select id="recolorBackdrop"><option value="checker">Checker</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
 					</div>
@@ -1744,7 +1745,7 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=d00936bc"></script>
 	<script src="js/core/fields.js?v=2552e4f7"></script>
-	<script src="js/core/config.js?v=62139789"></script>
+	<script src="js/core/config.js?v=2a001c38"></script>
 	<script src="js/core/tools.js?v=c6495ef0"></script>
 	<script src="js/core/layer-types.js?v=79d7dbe5"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
@@ -1834,7 +1835,7 @@
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=af2511c8"></script>
 	<script src="js/editor/document-start.js?v=ca44fe0b"></script>
-		<script src="js/ui/glitter-recolor.js?v=b0fcee5f"></script>
+		<script src="js/ui/glitter-recolor.js?v=e443eb7e"></script>
 		<script src="js/editor/modals-wiring.js?v=c1609951"></script>
 	<script src="js/editor/layer-panel.js?v=0ac8826f"></script>
 	<script src="js/editor/canvas-gestures.js?v=cafdf9d1"></script>

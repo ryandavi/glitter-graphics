@@ -9564,16 +9564,41 @@ body.modal-open {
   min-height: 0;
   padding: var(--spacing-lg);
   background: var(--color-bg-tertiary);
+  position: relative;
   flex-direction: column;
   gap: var(--spacing-md);
+}
+#glitterRecolorModal .recolor-stage .property-note {
+  padding: 0;
+}
+#glitterRecolorModal #recolorComparison {
+  position: absolute;
+  top: var(--spacing-md);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+#glitterRecolorModal #recolorComparison > .segmented-option {
+  flex: 0 0 auto;
+  padding-inline: var(--spacing-md);
+}
+#glitterRecolorModal .recolor-repeat-host {
+  flex: 0 0 22%;
+  min-height: 0;
+  overflow: hidden;
+}
+#glitterRecolorModal #recolorRepeat {
+  display: block;
 }
 #glitterRecolorModal .recolor-stage-host {
   display: flex;
   flex: 1 1 auto;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 #glitterRecolorModal canvas {
   max-width: 100%;
@@ -9583,6 +9608,11 @@ body.modal-open {
   background-size: 16px 16px;
 }
 #glitterRecolorModal #recolorStage {
+  display: block;
+  width: 100%;
+  height: auto;
+  flex-shrink: 0;
+  margin-block: auto;
   cursor: crosshair;
 }
 #glitterRecolorModal[data-backdrop=light] canvas {
@@ -9641,17 +9671,14 @@ body.modal-open {
 @media (max-width: 600px) {
   #glitterRecolorModal .modal-body.recolor-layout {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(180px, 34%) minmax(0, 1fr);
+    grid-template-rows: minmax(180px, 50%) minmax(0, 1fr);
   }
   #glitterRecolorModal .recolor-stage {
     gap: var(--spacing-xs);
     padding: var(--spacing-md);
   }
-  #glitterRecolorModal .recolor-stage .property-note {
+  #glitterRecolorModal .recolor-hint {
     display: none;
-  }
-  #glitterRecolorModal #recolorRepeat {
-    max-height: 40px;
   }
 }
 

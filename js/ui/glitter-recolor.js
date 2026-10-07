@@ -83,6 +83,11 @@ class GlitterRecolorController {
 		this.byId('recolorApplyAdjust').addEventListener('click', () => this.applyAdjustment());
 		this.byId('recolorCancelAdjust').addEventListener('click', () => { this.resetAdjustments(); this.sync(); });
 		this.byId('recolorPlay').addEventListener('click', () => { this.playing = !this.playing; this.transport(); });
+		this.byId('recolorComparison').addEventListener('click', event => {
+			const button = event.target.closest('[data-original]');
+			if (!button) return;
+			this.showOriginal = button.dataset.original === 'true'; this.draw();
+		});
 		this.byId('recolorBackdrop').addEventListener('change', event => { this.modal.dataset.backdrop = event.target.value; });
 		const stage = this.byId('recolorStage');
 		stage.addEventListener('click', event => {
@@ -190,7 +195,7 @@ class GlitterRecolorController {
 			this.byId('recolorSave').querySelector('.name').textContent = this.session.canReplace ? 'Replace' : 'Save to My Glitter';
 			this.byId('recolorCopy').hidden = this.byId('recolorDelete').hidden = !this.library.userContent.includes(item);
 			this.byId('recolorBackdropRow').hidden = !this.frames.some(frame => frame.map.includes(-1));
-			this.frame = 0; this.selected = -1;
+			this.frame = 0; this.selected = -1; this.showOriginal = false;
 			this.resetAdjustments(); this.buildSwatches(); this.buildFrames();
 			this.history = [this.snapshot()]; this.historyIndex = 0; this.initial = JSON.stringify(this.snapshot());
 			this.playing = !PREFERENCES.get('reduceMotion');
@@ -198,6 +203,7 @@ class GlitterRecolorController {
 			this.sync(); this.transport();
 			this.resizeObserver = new ResizeObserver(() => this.draw());
 			this.resizeObserver.observe(this.byId('recolorStageHost'));
+			this.resizeObserver.observe(this.byId('recolorRepeatHost'));
 		} catch (error) { this.finish(); this.editor.showError(error.message); }
 		finally { this.opening = false; done(); }
 	}
@@ -257,6 +263,7 @@ class GlitterRecolorController {
 				if (this.selected === index) this.clearSelection(); else this.selectSwatch(index);
 			});
 			select.setAttribute('aria-label', `Select color ${index + 1}`);
+			select.title = `${Math.round(swatch.share * 100)}% of the original opaque pixels across all frames`;
 			host.appendChild(row); this.rows.push(entry);
 		});
 	}
@@ -343,19 +350,23 @@ class GlitterRecolorController {
 	draw() {
 		if (!this.session) return;
 		const { width, height, swatches } = this.session.analysis;
-		const colors = this.previewColors(), image = new ImageData(width, height);
+		const colors = this.showOriginal ? Object.fromEntries(swatches.map(swatch => [swatch.key, swatch.key])) : this.previewColors();
+		const image = new ImageData(width, height);
 		this.frames[this.frame].map.forEach((index, pixel) => {
 			if (index < 0) return;
 			image.data.set(GlitterRecolor.rgb(colors[swatches[index].key] || swatches[index].key), pixel * 4);
 			image.data[pixel * 4 + 3] = 255;
 		});
 		const tile = document.createElement('canvas'); tile.width = width; tile.height = height; tile.getContext('2d').putImageData(image, 0, 0);
-		const stage = this.byId('recolorStage'), host = this.byId('recolorStageHost');
-		const zoom = Math.max(1, Math.min(CONFIG.tools.glitter.recolor.stageZoom, Math.floor(host.clientWidth / width), Math.floor(host.clientHeight / height)));
-		stage.width = width * zoom; stage.height = height * zoom;
-		const ctx = stage.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(tile, 0, 0, stage.width, stage.height);
-		const repeat = this.byId('recolorRepeat'); repeat.width = host.clientWidth || width * 4; repeat.height = height * 2;
+		const stage = this.byId('recolorStage'); stage.width = width; stage.height = height;
+		stage.getContext('2d').putImageData(image, 0, 0);
+		const repeat = this.byId('recolorRepeat'), repeatHost = this.byId('recolorRepeatHost');
+		repeat.width = Math.max(1, repeatHost.clientWidth); repeat.height = Math.max(1, repeatHost.clientHeight);
 		const repeatCtx = repeat.getContext('2d'); repeatCtx.fillStyle = repeatCtx.createPattern(tile, 'repeat'); repeatCtx.fillRect(0, 0, repeat.width, repeat.height);
+		this.byId('recolorComparison').querySelectorAll('button').forEach(button => {
+			const active = (button.dataset.original === 'true') === this.showOriginal;
+			button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+		});
 		this.byId('recolorFrames').querySelectorAll('button').forEach((button, index) => { button.classList.toggle('active', index === this.frame); button.setAttribute('aria-pressed', String(index === this.frame)); });
 		const slider = this.byId('recolorFrames').querySelector('input'); if (slider) slider.value = this.frame;
 	}

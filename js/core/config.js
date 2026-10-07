@@ -295,7 +295,6 @@ const CONFIG = deepFreeze({
 				styles: ['sparkle', 'sparkle-flat', 'ember'],
 				maxSwatches: 8,
 				mergeDistance: 0.045,
-				stageZoom: 8,
 				maxSavedTiles: 200,
 				colorTagMinShare: 0.1,
 				neutralSaturation: 0.12

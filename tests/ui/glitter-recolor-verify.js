@@ -113,6 +113,23 @@ async function main() {
 		await page.locator('#recolorSwatches input[type=text]').first().press('Tab');
 		const changed = await page.evaluate(() => Object.values(editor.glitterRecolor.session.colors));
 		assert(changed.includes('18b7c9'));
+		const recoloredPreview = await page.locator('#recolorStage').evaluate(canvas => canvas.toDataURL());
+		const comparisonState = await page.evaluate(() => JSON.stringify(editor.glitterRecolor.snapshot()));
+		await page.locator('#recolorComparison [data-original="true"]').click();
+		assert.notStrictEqual(await page.locator('#recolorStage').evaluate(canvas => canvas.toDataURL()), recoloredPreview);
+		assert.strictEqual(await page.evaluate(() => JSON.stringify(editor.glitterRecolor.snapshot())), comparisonState);
+		await page.locator('#recolorComparison [data-original="false"]').click();
+		assert.strictEqual(await page.locator('#recolorStage').evaluate(canvas => canvas.toDataURL()), recoloredPreview);
+		assert.strictEqual(await page.locator('#recolorInfo, #recolorZoom').count(), 0);
+		assert(await page.locator('#recolorComparison').evaluate(control => control.getBoundingClientRect().width < control.parentElement.getBoundingClientRect().width / 2));
+		assert(await page.evaluate(() => {
+			const canvas = document.getElementById('recolorStage'), host = document.getElementById('recolorStageHost');
+			const bounds = canvas.getBoundingClientRect(), control = document.getElementById('recolorComparison'), outer = control.parentElement.getBoundingClientRect(), toggle = control.getBoundingClientRect();
+			return Math.abs(bounds.width - host.clientWidth) < 1 && Math.abs(bounds.width / bounds.height - canvas.width / canvas.height) < 0.001
+				&& getComputedStyle(control).position === 'absolute' && Math.abs(toggle.left + toggle.width / 2 - outer.left - outer.width / 2) < 1;
+		}));
+		assert(await page.locator('#recolorRepeat').evaluate(canvas => canvas.height > 58 && canvas.getBoundingClientRect().width === canvas.width));
+		assert.strictEqual(await page.locator('.recolor-hint').evaluate(note => getComputedStyle(note).paddingInlineStart), '0px');
 		await page.keyboard.press('Control+z');
 		assert(!(await page.evaluate(() => Object.values(editor.glitterRecolor.session.colors))).includes('18b7c9'));
 		await page.keyboard.press('Control+Shift+z');
@@ -235,6 +252,10 @@ async function main() {
 		await phone.evaluate(() => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(111)));
 		await phone.locator('#recolorFrames button').nth(2).tap();
 		assert.strictEqual(await phone.evaluate(() => editor.glitterRecolor.frame), 2);
+		await phone.locator('#recolorComparison [data-original="true"]').tap();
+		assert(await phone.evaluate(() => editor.glitterRecolor.showOriginal));
+		await phone.locator('#recolorComparison [data-original="false"]').tap();
+		assert(!(await phone.evaluate(() => editor.glitterRecolor.showOriginal)));
 		await phone.locator('#recolorSwatches .color-list-select').nth(0).tap();
 		assert.strictEqual(await phone.locator('#recolorSwatches .color-list-select').nth(0).getAttribute('aria-pressed'), 'true');
 		await phone.locator('#recolorSwatches .color-list-select').nth(1).tap();
