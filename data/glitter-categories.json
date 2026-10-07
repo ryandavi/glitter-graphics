@@ -3,8 +3,13 @@
         "id": "sparkle",
         "name": "Classic Sparkle",
         "icon": "",
-        "previews": [],
-        "color": "#E8C547",
+        "previews": [
+            111,
+            67,
+            8,
+            14
+        ],
+        "color": "#e8c547",
         "description": "Classic sparkle glitter effects",
         "count": 103
     },
