@@ -3,8 +3,10 @@
 // one level toward home. The navigation owns selection; filters and item
 // rendering belong to the browser.
 class AssetBrowserRail {
-	constructor(catalog, onChange) {
+	constructor(catalog, onChange, schema, createPreview) {
 		this.catalog = catalog;
+		this.schema = schema;
+		this.createPreview = createPreview;
 		this.onChange = onChange;
 		this.mode = 'style';
 		this.selection = { root: null, set: null };
@@ -42,12 +44,13 @@ class AssetBrowserRail {
 			: this.catalog.getRoots().map(root => ({ ...root, count: this.catalog.getRootCount(root, counts) })).filter(root => root.count);
 		const entries = [];
 		const single = [];
-		if (!creator && roots.length) entries.push({ root: LIBRARY_ALL_ID, set: null, name: 'All styles', count: items.length });
+		if (roots.length) entries.push({ root: LIBRARY_ALL_ID, set: null, name: creator ? 'All creators' : this.schema.browseLabel === 'Style' ? 'All styles' : 'All categories', count: items.length });
 		roots.forEach(root => {
 			const setCounts = creator ? this.catalog.getCategoryCounts(root.items) : counts;
 			const sets = (creator ? this.catalog.getSetsByCreator(root.id, items) : this.catalog.getSets(root.id)).filter(set => setCounts[set.id]);
 			const entry = { root: root.id, set: null, name: root.name, count: root.count, icon: root.icon };
-			if (!sets.length) single.push(entry);
+			if (root.browseFirst) entries.push(entry);
+			else if (!sets.length) single.push(entry);
 			else if (sets.length === 1 && setCounts[sets[0].id] === root.count) single.push({ ...entry, set: sets[0].id });
 			else {
 				entries.push({ ...entry, name: 'All ' + root.name, group: root.name });
@@ -56,7 +59,7 @@ class AssetBrowserRail {
 		});
 		// With nothing grouped above them, the single roots need no heading.
 		const grouped = entries.some(entry => entry.group);
-		const heading = creator ? 'More creators' : 'More styles';
+		const heading = creator ? 'More creators' : this.schema.browseLabel === 'Style' ? 'More styles' : 'More categories';
 		single.forEach(entry => entries.push(grouped ? { ...entry, group: heading } : entry));
 		return entries;
 	}
@@ -70,7 +73,7 @@ class AssetBrowserRail {
 			|| entries[0];
 		this.selection = { root: current?.root || null, set: current?.set || null };
 
-		this.field.setAttribute('aria-label', mode === 'creator' ? 'Creator' : 'Style');
+		this.field.setAttribute('aria-label', mode === 'creator' ? 'Creator' : this.schema.browseLabel);
 		const nodes = [];
 		let group = null;
 		entries.forEach(entry => {
@@ -115,7 +118,12 @@ class AssetBrowserRail {
 			arrow.setAttribute('aria-hidden', 'true');
 			option.appendChild(arrow);
 		}
-		if (entry.icon) {
+		const preview = this.createPreview?.(this.catalog.getCategoryById(entry.set || entry.root));
+		if (preview) {
+			preview.classList.add('asset-browser-rail-preview');
+			preview.setAttribute('aria-hidden', 'true');
+			option.appendChild(preview);
+		} else if (entry.icon) {
 			const icon = document.createElement('img');
 			icon.className = 'asset-browser-rail-icon';
 			icon.src = entry.icon;

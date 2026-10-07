@@ -10,6 +10,7 @@
 const FONT_CATEGORY_TAG_GROUP = 'style';
 const FONT_CJK_CATEGORY = Object.freeze({ id: 'japanese-korean-chinese', name: 'Japanese, Korean & Chinese', scripts: ['ja', 'ko', 'zh'] });
 const FONT_OTHER_CATEGORY = Object.freeze({ id: 'other', name: 'Other' });
+const FONT_SOURCE_LABELS = Object.freeze({ system: 'System', bundled: 'Bundled' });
 const FONT_SCRIPT_LABELS = Object.freeze({ latin: 'Latin', ja: 'Japanese', ko: 'Korean', zh: 'Chinese' });
 const FONT_SAMPLE_TEXT = Object.freeze({
 	long: { latin: 'Glitter', ja: 'グリッター', ko: '글리터', zh: '闪粉' },
@@ -29,6 +30,7 @@ class FontBrowserManager extends ContentManager {
 		this.pickerSession = null;
 		this.categories = [];
 		this.activeFilters.scripts = new Set();
+		this.activeFilters.sources = new Set();
 	}
 
 	setupUI() {
@@ -92,21 +94,25 @@ class FontBrowserManager extends ContentManager {
 
 	getFilterValueLabel(key, value) {
 		if (key === 'scripts') return FONT_SCRIPT_LABELS[value] || value;
+		if (key === 'sources') return FONT_SOURCE_LABELS[value] || value;
 		if (key === 'categories') return this.getCategoryLabel(value);
 		return super.getFilterValueLabel(key, value);
 	}
 
 	getFilterKey(filterType) {
-		return filterType === 'script' ? 'scripts' : super.getFilterKey(filterType);
+		if (filterType === 'script') return 'scripts';
+		if (filterType === 'font-source') return 'sources';
+		return super.getFilterKey(filterType);
 	}
 
 	matchesChildFilters(item) {
-		return this.activeFilters.scripts.size === 0
-			|| item.scripts.some((script) => this.activeFilters.scripts.has(script));
+		return (this.activeFilters.scripts.size === 0 || item.scripts.some((script) => this.activeFilters.scripts.has(script)))
+			&& (this.activeFilters.sources.size === 0 || this.activeFilters.sources.has(item.font.system ? 'system' : 'bundled'));
 	}
 
 	itemMatchesFacet(item, key, value) {
 		if (key === 'scripts') return item.scripts.includes(value);
+		if (key === 'sources') return (item.font.system ? 'system' : 'bundled') === value;
 		return super.itemMatchesFacet(item, key, value);
 	}
 
@@ -150,6 +156,32 @@ class FontBrowserManager extends ContentManager {
 			card.appendChild(badge);
 		}
 		return card;
+	}
+
+	createCollectionPreview(category, compact = false) {
+		const item = this.content.find(entry => entry.category === category?.id);
+		if (!item) return null;
+		const outline = compact && FONT_PREVIEW_ICONS[item.id];
+		if (outline) {
+			const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			svg.setAttribute('viewBox', outline.viewBox);
+			svg.setAttribute('fill', 'currentColor');
+			const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			path.setAttribute('d', outline.path);
+			svg.appendChild(path);
+			return svg;
+		}
+		const sample = this.createItemCard(item).querySelector('.text-font-option-sample');
+		if (compact) {
+			sample.textContent = '';
+			sample.dataset.sample = getFontSampleText(item.font, 'short');
+		}
+		return sample;
+	}
+
+	customizeCollectionCard(card, category) {
+		const sample = this.createCollectionPreview(category);
+		if (sample) card.querySelector('.category-card-image').replaceChildren(sample);
 	}
 
 	getTargetLayer() {

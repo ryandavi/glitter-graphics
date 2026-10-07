@@ -458,8 +458,8 @@
 	&.visible { display: block; }
 }
 
-// A browser's navigation (AssetBrowser.toolbar): browse-by, then the wall's
-// root and set pickers. It sits above the scrolling content like the search
+// A browser's navigation (AssetBrowser.toolbar): browse-by, then one tree
+// picker with Up. It sits above the scrolling content like the search
 // row, on the same surface, with the content's own inset on every side.
 .asset-browser-toolbar {
 	display: grid;
@@ -568,6 +568,26 @@
 			border-radius: var(--radius-xs);
 			object-fit: cover;
 			image-rendering: pixelated;
+		}
+
+		.asset-browser-rail > select .asset-browser-rail-preview {
+			flex: 0 0 auto;
+			width: var(--asset-rail-icon-size);
+			height: var(--asset-rail-icon-size);
+			margin: 0;
+			display: grid;
+			place-items: center;
+			color: inherit;
+			font-size: var(--font-size-base);
+			line-height: 1;
+
+			&:is(svg, [data-sample]) { width: calc(var(--asset-rail-icon-size) * 1.5); }
+
+			// Native option text remains name/count; only styled rows draw samples.
+			&[data-sample] {
+				font-size: var(--font-size-sm);
+				&::before { content: attr(data-sample); }
+			}
 		}
 
 		.asset-browser-rail-name {

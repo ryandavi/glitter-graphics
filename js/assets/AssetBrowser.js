@@ -1,15 +1,13 @@
 // ============================================
 // ASSET BROWSER CLASS
-// One Library kind's browser (ASSET_BROWSERS entry): category folders or a
-// grouped listing, search results, the Recent strip and the Favorites
-// pseudo-category. Items come from its ContentManager.
+// One Library kind's browser: shared tree navigation, home covers or grouped
+// tiles, search, Quick picks and Favorites. Items come from its ContentManager.
 // ============================================
 
 // Favorites is a pseudo-category: never a real category id, never saved in
 // projects (favorites live in PREFERENCES).
 const LIBRARY_FAVORITES_ID = '__favorites';
-// The wall's home: every style under its own heading (the Style picker's
-// first entry). Never a real category id.
+// The picker's home, shown as covers or grouped tiles. Never a category id.
 const LIBRARY_ALL_ID = '__all';
 
 class AssetBrowser {
@@ -18,11 +16,8 @@ class AssetBrowser {
 		const elementIds = getAssetBrowserElementIds(prefix);
 		this.contentManager = contentManager;
 		this.prefix = prefix;
-		this.displayName = schema.title;
-		this.layout = schema.layout || 'folders';
 		this.schema = schema;
 		this.browseView = 'style';
-		this.folderView = this.layout === 'folders' ? new AssetBrowserFolders(this) : null;
 		this.state = 'CATEGORY_LIST';
 		this.currentCategoryId = null;
 		this.currentOffset = 0;
@@ -62,6 +57,12 @@ class AssetBrowser {
 		this.indexLead.className = 'asset-browser-index-lead';
 		this.indexLead.hidden = true;
 		this.elements.categoryGrid.before(this.indexLead);
+		if (schema.categoryHeading) {
+			this.categoryHeading = this.createHeading(schema.categoryHeading);
+			this.categoryHeading.classList.add('asset-browser-category-heading');
+			this.categoryHeading.hidden = true;
+			this.elements.categoryGrid.before(this.categoryHeading);
+		}
 
 		this.carriedLead = document.createElement('div');
 		this.carriedLead.className = 'asset-browser-carried';
@@ -71,10 +72,10 @@ class AssetBrowser {
 		this.viewControl.className = 'segmented-control asset-browser-views';
 		this.viewControl.setAttribute('aria-label', 'Browse library by');
 		this.viewControl.hidden = true;
-		this.addViewOption('style', 'Style');
+		this.addViewOption('style', schema.browseLabel);
 		this.addViewOption('creator', 'Creator');
 		// The browser's navigation sits above the scrolling content: browse-by,
-		// then (the wall) the style or creator picker.
+		// then the style or creator picker.
 		this.toolbar = document.createElement('div');
 		this.toolbar.className = 'asset-browser-toolbar';
 		this.toolbar.hidden = true;
@@ -94,17 +95,20 @@ class AssetBrowser {
 		if (Array.isArray(categories)) this.categories = categories;
 		else await this.loadCategories(categories);
 		this.catalog = new LibraryCatalog(this.categories, (category, item) => Attribution.resolve(category, item));
-		if (this.layout === 'rail') {
-			this.elements.browser.classList.add('asset-browser-wall');
-			for (const event of ['layerChanged', 'imageLoaded', 'imageRemoved']) {
-				window.addEventListener(event, () => this.updateShortcuts());
-			}
-			this.rail = new AssetBrowserRail(this.catalog, () => this.setState('CATEGORY_LIST'));
-			// Favorites is a view of its own on the wall, not a root.
-			this.addViewOption('favorites', 'Favorites');
-			this.toolbar.appendChild(this.rail.element);
-			this.elements.categoryGrid.before(this.setHeader.element);
+		if (this.prefix === 'glitter') this.elements.browser.classList.add('asset-browser-wall');
+		for (const event of ['layerChanged', 'imageLoaded', 'imageRemoved']) {
+			window.addEventListener(event, () => this.updateShortcuts());
 		}
+		this.rail = new AssetBrowserRail(this.catalog, () => this.setState('CATEGORY_LIST'), this.schema, category => this.contentManager.createCollectionPreview?.(category, true));
+		this.addViewOption('favorites', 'Favorites');
+		this.toolbar.appendChild(this.rail.element);
+		let homeView = this.getHomeView();
+		PREFERENCES.onChange('libraryHome', () => {
+			const next = this.getHomeView();
+			if (next === homeView) return;
+			homeView = next;
+			if (this.state === 'CATEGORY_LIST' && this.browseView !== 'favorites' && this.rail.selection.root === LIBRARY_ALL_ID) this.refresh();
+		});
 		this.setupIntersectionObserver();
 		this.setupEventListeners();
 		this.setState('CATEGORY_LIST');
@@ -119,7 +123,7 @@ class AssetBrowser {
 		button.className = 'segmented-option';
 		button.textContent = label;
 		button.dataset.view = view;
-		button.addEventListener('click', () => { this.browseView = view; this.folderView?.resetOrigin(); this.setState('CATEGORY_LIST'); });
+		button.addEventListener('click', () => { this.browseView = view; this.setState('CATEGORY_LIST'); });
 		this.viewControl.appendChild(button);
 	}
 
@@ -167,8 +171,7 @@ class AssetBrowser {
 				this.contentManager.updateClearFiltersButton();
 			}
 
-			if (this.folderView) this.folderView.back();
-			else this.setState('CATEGORY_LIST');
+			this.setState('CATEGORY_LIST');
 
 			// Scroll to top when changing states
 			if (this.scrollContainer) {
@@ -181,7 +184,6 @@ class AssetBrowser {
 
 	navigateToCategory(categoryId) {
 		if (!categoryId || !this.categories.some((category) => category.id === categoryId)) return false;
-		this.folderView?.resetOrigin();
 		const searchInput = this.contentManager.ui.searchInput;
 		if (searchInput) searchInput.value = '';
 		this.contentManager.activeFilters.search = '';
@@ -192,26 +194,24 @@ class AssetBrowser {
 
 	// ===== STATE MANAGEMENT =====
 
-	// Search results, and a grouped kind's category list, are one listing of
-	// items under category headings.
+	// Search results and Everything home list tiles under category headings.
 	isListingState() {
-		return this.state === 'SEARCH_RESULTS' || Boolean(this.wallGroups) || this.folderView?.isUnknownListing() || (this.state === 'CATEGORY_LIST' && this.layout === 'grouped');
+		return this.state === 'SEARCH_RESULTS' || Boolean(this.wallGroups);
 	}
 
 	// The wall as one flat grid (a grouped wall is a listing).
 	isWallState() {
-		return Boolean(this.rail) && this.state !== 'SEARCH_RESULTS' && !this.wallGroups;
+		return this.state === 'CATEGORY_LIST' && !this.homeCategories && !this.wallGroups;
 	}
 
 	isPagedState() {
-		return Boolean(this.rail && this.state !== 'SEARCH_RESULTS') || this.state === 'CATEGORY_DETAIL' || this.isListingState();
+		return this.isWallState() || this.isListingState();
 	}
 
 	setState(newState, categoryId = null) {
 		clearTimeout(this.searchDebounceTimer);
-		if (newState === 'CATEGORY_LIST') this.folderView?.resetOrigin();
 		this.state = newState;
-		if (this.rail && newState === 'CATEGORY_DETAIL' && categoryId) {
+		if (newState === 'CATEGORY_DETAIL' && categoryId) {
 			this.browseView = 'style';
 			this.rail.mode = 'style';
 			const root = this.catalog.getRootOf(categoryId);
@@ -223,7 +223,7 @@ class AssetBrowser {
 
 		// Update data attribute on parent
 		if (this.assetOptions) {
-			this.assetOptions.dataset.browserState = newState.toLowerCase().replace('_', '-');
+			this.assetOptions.dataset.browserState = this.state.toLowerCase().replace('_', '-');
 		}
 
 		// Scroll to top when changing states
@@ -244,28 +244,16 @@ class AssetBrowser {
 		this.carriedLead.hidden = true;
 		this.updateViewControl();
 		this.indexLead.hidden = true;
+		if (this.categoryHeading) this.categoryHeading.hidden = true;
 		this.shortcuts.hidden = true;
 		this.wallGroups = null;
-		this.toolbar.hidden = this.rail ? this.state === 'SEARCH_RESULTS' : this.viewControl.hidden;
-
-		if (this.rail) {
-			const search = this.state === 'SEARCH_RESULTS';
-			this.elements.browser.querySelector('.asset-browser-header').hidden = !search;
-			this.rail.element.hidden = search || this.browseView === 'favorites';
-			if (search) { this.setHeader.render(null, []); this.renderSearchResults(); }
-			else this.renderRail();
-			return;
-		}
-		if (this.state !== 'CATEGORY_DETAIL') this.setHeader.render(null, []);
-		if (this.state === 'CATEGORY_LIST') {
-			this.renderCategoryList();
-		} else if (this.state === 'CATEGORY_DETAIL') {
-			this.renderCategoryDetail();
-		} else if (this.folderView?.isCreatorDetail()) {
-			this.folderView.renderCreatorDetail();
-		} else if (this.state === 'SEARCH_RESULTS') {
-			this.renderSearchResults();
-		}
+		this.homeCategories = false;
+		const search = this.state === 'SEARCH_RESULTS';
+		this.toolbar.hidden = search;
+		this.elements.browser.querySelector('.asset-browser-header').hidden = !search;
+		this.rail.element.hidden = search || this.browseView === 'favorites';
+		if (search) { this.setHeader.render(null, []); this.renderSearchResults(); }
+		else this.renderRail();
 	}
 
 	renderRail() {
@@ -285,16 +273,27 @@ class AssetBrowser {
 			// and color order.
 			if (selection.root === LIBRARY_ALL_ID) {
 				wall = items;
-				groups = () => this.getStyleGroups(wall);
+				groups = () => this.browseView === 'creator' ? this.getCreatorGroups(wall) : this.getStyleGroups(wall);
 			} else {
 				wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
 				if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
 				else if (this.browseView === 'creator') groups = () => this.getSetGroups(wall);
 			}
 		}
-		this._renderShortcuts();
+		this.elements.itemGrid.classList.toggle('brush-basic-grid', this.prefix === 'brushTip' && this.currentCategoryId === 'basic');
+		this._renderShortcuts(true);
+		const browseCategories = this.browseView === 'style'
+			? this.contentManager.getBrowseCategories?.(this.rail.selection, this.catalog) : null;
+		if (browseCategories) {
+			this.renderHomeCategories(items, browseCategories);
+			return;
+		}
+		if (this.browseView !== 'favorites' && this.rail.selection.root === LIBRARY_ALL_ID && this.getHomeView() === 'categories') {
+			this.renderHomeCategories(items);
+			return;
+		}
 		this.setHeader.render(category, wall);
-		this.wallItems = this.setHeader.sort(wall);
+		this.wallItems = this.sortItems(wall);
 		this.wallGroups = groups ? groups() : null;
 		this.elements.itemGrid.replaceChildren();
 		this.elements.searchResults.replaceChildren();
@@ -312,15 +311,57 @@ class AssetBrowser {
 	// What the set header introduces: the picked set, or a style that has
 	// something to say for itself (a style can be one creator's set).
 	getHeaderCategory(selection) {
-		if (selection.set) return this.catalog.getCategoryById(selection.set);
-		const root = this.browseView === 'style' ? this.catalog.getCategoryById(selection.root) : null;
-		return root && (root.description || root.attribution) ? root : null;
+		const category = selection.set ? this.catalog.getCategoryById(selection.set)
+			: this.browseView === 'style' ? this.catalog.getCategoryById(selection.root) : null;
+		if (!category) return null;
+		const attribution = this.contentManager.getCollectionAttribution?.(category) || category.attribution;
+		return selection.set || category.description || attribution ? { ...category, attribution } : null;
+	}
+
+	getHomeView() {
+		return getLibraryHomeView(this.prefix);
+	}
+
+	renderHomeCategories(items, categories = null) {
+		this.homeCategories = true;
+		this.wallItems = [];
+		this.setHeader.render(null, []);
+		this.elements.categoryGrid.replaceChildren();
+		this.elements.itemGrid.replaceChildren();
+		this.elements.searchResults.replaceChildren();
+		if (this.browseView === 'style' && this.rail.selection.root === LIBRARY_ALL_ID) this._renderIndexLead();
+		const creators = this.browseView === 'creator';
+		const counts = this.getCategoryCounts(items);
+		const roots = creators ? this.getCreators(items).map(creator => ({
+			id: creator.id, name: creator.name, count: creator.items.length,
+			icon: creator.items[0]?.thumbnailUrl || creator.items[0]?.url
+		})) : (categories || this.catalog.getRoots()).map(root => ({ ...root, count: this.getRootCount(root, counts) }));
+		roots.filter(root => root.count && (this.indexLead.hidden || root.id !== this.indexLead.firstElementChild?.dataset.categoryId)).forEach(root => {
+			this.elements.categoryGrid.appendChild(this.createCategoryCard(root, root.count, () => {
+				if (creators) this.rail.select(root.id);
+				else this.navigateToCategory(root.id);
+			}));
+		});
+		if (this.elements.categoryGrid.children.length) {
+			this.elements.categoryGrid.classList.add('visible');
+			if (this.categoryHeading) this.categoryHeading.hidden = false;
+		}
+		else if (!this.hasLeadItems()) this.showEmptyState('No items found');
+	}
+
+	getCreatorGroups(items) {
+		return this.getCreators(items).map(creator => ({ id: creator.id, name: creator.name, items: this.sortItems(creator.items) }));
+	}
+
+	// Only glitter has a color wall; other kinds retain the manager's order.
+	sortItems(items) {
+		return this.prefix === 'glitter' ? this.setHeader.sort(items) : [...items];
 	}
 
 	// `items` under one heading per style. Null when one style holds them all.
 	getStyleGroups(items) {
 		const groups = this.catalog.getRoots()
-			.map(root => ({ id: root.id, name: root.name, items: this.setHeader.sort(this.catalog.getRootItems(root.id, items)) }))
+			.map(root => ({ id: root.id, name: root.name, items: this.sortItems(this.catalog.getRootItems(root.id, items)) }))
 			.filter(group => group.items.length);
 		return groups.length > 1 ? groups : null;
 	}
@@ -339,7 +380,7 @@ class AssetBrowser {
 			return index < 0 ? Infinity : index;
 		};
 		return [...bySet.entries()].sort((a, b) => order(a[0]) - order(b[0]))
-			.map(([id, setItems]) => ({ id, name: this.getCategoryPath(id), items: this.setHeader.sort(setItems) }));
+			.map(([id, setItems]) => ({ id, name: this.getCategoryPath(id), items: this.sortItems(setItems) }));
 	}
 
 	loadRailItems() {
@@ -359,38 +400,28 @@ class AssetBrowser {
 		this.render();
 	}
 
-	// A favorite was added or removed: the category list shows the Favorites
-	// folder or group, so redraw it. An open Favorites folder keeps its items
-	// until it is reopened, so un-hearting doesn't pull a card from under the
-	// pointer.
+	// Reconcile Favorites without rebuilding the remaining tiles or other walls.
 	handleFavoritesChanged() {
 		if (this.state === 'SEARCH_RESULTS') return;
-		if (this.rail) {
-			if (this.browseView !== 'favorites') return;
-			this.preserveScrollPosition(() => {
-				this.wallItems = this.setHeader.sort(this.contentManager.getFavoriteItems(this.getFilteredItems()));
-				const existing = new Map([...this.elements.itemGrid.children].map(tile => [String(tile.dataset.id), tile]));
-				const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.batchSize));
-				const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
-				for (const child of [...this.elements.itemGrid.children]) if (!tiles.includes(child)) child.remove();
-				tiles.forEach((tile, index) => {
-					if (this.elements.itemGrid.children[index] !== tile) this.elements.itemGrid.insertBefore(tile, this.elements.itemGrid.children[index] || null);
-				});
-				this.currentOffset = tiles.length;
-				this.elements.emptyState.classList.remove('visible');
-				if (!this.wallItems.length) this.showEmptyState('No favorites yet');
-				else this.checkAndLoadMore();
-				this.contentManager.updateSelection?.();
+		if (this.browseView !== 'favorites') return;
+		this.preserveScrollPosition(() => {
+			this.wallItems = this.sortItems(this.contentManager.getFavoriteItems(this.getFilteredItems()));
+			const existing = new Map([...this.elements.itemGrid.children].map(tile => [String(tile.dataset.id), tile]));
+			const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.batchSize));
+			const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
+			for (const child of [...this.elements.itemGrid.children]) if (!tiles.includes(child)) child.remove();
+			tiles.forEach((tile, index) => {
+				if (this.elements.itemGrid.children[index] !== tile) this.elements.itemGrid.insertBefore(tile, this.elements.itemGrid.children[index] || null);
 			});
-			return;
-		}
-		if (this.state !== 'CATEGORY_LIST') return;
-		if (this.layout === 'grouped') this.render();
-		else this.updateCategoryCounts();
+			this.currentOffset = tiles.length;
+			this.elements.emptyState.classList.remove('visible');
+			if (!this.wallItems.length) this.showEmptyState('No favorites yet');
+			else this.checkAndLoadMore();
+			this.contentManager.updateSelection?.();
+		});
 	}
 
 	async navigateToItem(itemId) {
-		this.folderView?.resetOrigin();
 		// Find which category contains this item
 		const allItems = this.contentManager.getAllContent();
 		const item = allItems.find(i => i.id === itemId);
@@ -406,9 +437,7 @@ class AssetBrowser {
 			this.contentManager.clearFilters({ refreshBrowser: false });
 		}
 
-		// A grouped kind lists everything; a folder kind opens the item's folder.
-		if (this.layout === 'grouped') this.setState('CATEGORY_LIST');
-		else this.setState('CATEGORY_DETAIL', item.category);
+		this.setState('CATEGORY_DETAIL', item.category);
 
 		// Wait for initial render
 		await new Promise(resolve => setTimeout(resolve, 50));
@@ -420,8 +449,7 @@ class AssetBrowser {
 		this.scrollToItem(item);
 	}
 
-	// The item's card in its home category (a grouped listing can also show it
-	// under Favorites).
+	// Find the requested card in its grid or grouped search listing.
 	findItemElement(item) {
 		const selector = `[data-id="${CSS.escape(String(item.id))}"]`;
 		if (!this.isListingState()) return this.elements.itemGrid.querySelector(selector);
@@ -472,40 +500,23 @@ class AssetBrowser {
 		}, 1000);
 	}
 
-	// ===== CATEGORY LIST VIEW =====
-
-	renderCategoryList() {
-		// Update header
-		this.elements.backBtn.disabled = true;
-		this.elements.title.textContent = this.displayName;
-		this._renderShortcuts();
-		if (!this.shortcuts.hidden) this.contentManager.updateSelection?.();
-		this._renderIndexLead();
-
-		if (this.layout === 'grouped') {
-			this.elements.searchResults.classList.add('visible');
-			this.elements.searchResults.innerHTML = '';
-			this.currentOffset = 0;
-			this.loadListingItems();
-			return;
-		}
-
-		// Show category grid
-		this.elements.categoryGrid.classList.add('visible');
-
-		this.populateCategoryCards();
-	}
-
 	// Project assets first, then recents. Updates reuse tiles and leave the
-	// paged wall intact. They belong to a kind's home only: the wall's "All
-	// styles", a folder kind's Style list. A style, a set, a creator and
-	// Favorites are each a narrower look at one thing.
-	_renderShortcuts() {
+	// paged wall intact. They belong to the Style home only; narrower views
+	// keep their tiles together.
+	_renderShortcuts(resetOrder = false) {
 		const filtered = new Set(this.getFilteredItems());
-		const top = this.browseView === 'style' && (!this.rail || this.rail.selection.root === LIBRARY_ALL_ID);
-		const items = top ? [...new Set([...this.contentManager.getProjectItems(), ...this.contentManager.getRecentItems()])]
+		const top = this.state === 'CATEGORY_LIST' && this.browseView === 'style' && this.rail.selection.root === LIBRARY_ALL_ID;
+		let items = top ? [...new Set([...this.contentManager.getProjectItems(), ...this.contentManager.getRecentItems()])]
 			.filter((item) => filtered.has(item)) : [];
 		const grid = this.shortcutGrid;
+		// Picking updates recency and project membership, but must not move a
+		// shortcut under the pointer. Reapply priority when home is opened.
+		if (!resetOrder) {
+			const byId = new Map([...filtered].map(item => [String(item.id), item]));
+			const retained = top ? [...grid.children].map(tile => byId.get(tile.dataset.id)).filter(Boolean) : [];
+			const retainedIds = new Set(retained.map(item => String(item.id)));
+			items = [...retained, ...items.filter(item => !retainedIds.has(String(item.id)))];
+		}
 		const existing = new Map([...grid.children].map(tile => [String(tile.dataset.id), tile]));
 		const tiles = items.map(item => existing.get(String(item.id)) || this.createItemElement(item));
 		for (const child of [...grid.children]) if (!tiles.includes(child)) child.remove();
@@ -517,7 +528,7 @@ class AssetBrowser {
 	}
 
 	updateShortcuts() {
-		if (!this.rail || this.state === 'SEARCH_RESULTS') return;
+		if (this.state === 'SEARCH_RESULTS') return;
 		this.preserveScrollPosition(() => this._renderShortcuts());
 		this.contentManager.updateSelection?.();
 	}
@@ -560,44 +571,10 @@ class AssetBrowser {
 		return [this.indexLead, this.shortcuts].some((lead) => lead.querySelector('.asset-option'));
 	}
 
-	getFavoritesCategory(items = this.getFilteredItems()) {
-		const favorites = this.getCategoryItems(LIBRARY_FAVORITES_ID, items);
-		if (!favorites.length) return null;
-		return {
-			id: LIBRARY_FAVORITES_ID,
-			name: 'Favorites',
-			icon: favorites[0].thumbnailUrl || favorites[0].url,
-			count: favorites.length
-		};
-	}
-
-	populateCategoryCards() {
-		this.elements.categoryGrid.replaceChildren();
-		const items = this.getFilteredItems();
-		const counts = this.getCategoryCounts(items);
-		const favorites = this.getFavoritesCategory(items);
-		if (favorites) this.elements.categoryGrid.appendChild(this.createCategoryCard(favorites, favorites.count));
-		if (this.browseView === 'creator') {
-			this.getCreators(items).forEach(creator => this.elements.categoryGrid.appendChild(this.folderView.createCreatorCard(creator)));
-		} else {
-			this.catalog.getRoots().forEach(category => {
-				const count = this.getRootCount(category, counts);
-				if (count) this.elements.categoryGrid.appendChild(this.createCategoryCard(category, count));
-			});
-		}
-		if (!this.elements.categoryGrid.children.length) {
-			this.elements.categoryGrid.classList.remove('visible');
-			if (!this.hasLeadItems()) this.showEmptyState('No items found');
-		}
-	}
-
-	updateCategoryCounts() { this.render(); }
-
 	createCategoryCard(category, count, onClick = () => this.setState('CATEGORY_DETAIL', category.id)) {
 		const card = tplClone('tpl-category-card');
 		card.dataset.categoryId = category.id;
 		if (category.color) card.style.setProperty('--category-color', category.color);
-		card.classList.toggle('is-favorites', category.id === LIBRARY_FAVORITES_ID);
 
 		// Glitter categories tile their icon as a repeating background; every
 		// other library shows it as a contained thumbnail.
@@ -614,14 +591,9 @@ class AssetBrowser {
 		}
 
 		card.querySelector('.category-card-name').textContent = category.name;
-		if (category.attribution?.author) {
-			const byline = document.createElement('div');
-			byline.className = 'category-card-byline';
-			byline.textContent = 'by ' + category.attribution.author;
-			card.querySelector('.category-card-count').before(byline);
-		}
 		card.querySelector('.category-card-count').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
-		if (category.id !== LIBRARY_FAVORITES_ID) this.contentManager.customizeCollectionCard?.(card, category);
+		card.title = `${category.name} (${count})`;
+		this.contentManager.customizeCollectionCard?.(card, category);
 
 		card.addEventListener('click', onClick);
 
@@ -640,40 +612,6 @@ class AssetBrowser {
 	getCategoryById(categoryId) {
 		if (categoryId === LIBRARY_FAVORITES_ID) return { id: LIBRARY_FAVORITES_ID, name: 'Favorites' };
 		return this.catalog.getCategoryById(categoryId);
-	}
-
-	// ===== CATEGORY DETAIL VIEW =====
-
-	renderCategoryDetail() {
-		const category = this.getCategoryById(this.currentCategoryId);
-		if (!category) {
-			this.setState('CATEGORY_LIST');
-			return;
-		}
-
-		// Update header
-		this.elements.backBtn.disabled = false;
-		this.elements.title.textContent = this.getCategoryPath(category.id);
-		this.setHeader.render(category.id === LIBRARY_FAVORITES_ID ? null : { ...category, attribution: this.contentManager.getCollectionAttribution?.(category) }, this.getCategoryItems(category.id));
-
-		const children = this.catalog.getSets(category.id);
-		this.elements.categoryGrid.replaceChildren();
-		const counts = this.getCategoryCounts(this.getFilteredItems());
-		children.forEach(child => {
-			if (counts[child.id]) this.elements.categoryGrid.appendChild(this.createCategoryCard(child, counts[child.id]));
-		});
-		if (this.elements.categoryGrid.children.length) this.elements.categoryGrid.classList.add('visible');
-		this.renderCarriedItems(category);
-
-		// Show item grid
-		this.elements.itemGrid.classList.add('visible');
-
-		// Clear and load
-		this.elements.itemGrid.innerHTML = '';
-		this.currentOffset = 0;
-
-		// Initial load with viewport check
-		this.loadCategoryItems();
 	}
 
 	// ===== SEARCH RESULTS VIEW =====
@@ -711,47 +649,17 @@ class AssetBrowser {
 
 	getPagedItemCount() {
 		if (this.isWallState()) return this.wallItems.length;
-		if (this.state === 'CATEGORY_DETAIL') return this.getCategoryItems(this.currentCategoryId).length;
 		if (this.isListingState()) return this.getListingItems().length;
 		return 0;
 	}
 
 	loadNextBatch() {
 		if (this.isWallState()) this.loadRailItems();
-		else if (this.state === 'CATEGORY_DETAIL') this.loadCategoryItems();
 		else if (this.isListingState()) this.loadListingItems();
 	}
 
 	loadMoreItems() {
 		if (this.currentOffset < this.getPagedItemCount()) this.loadNextBatch();
-	}
-
-	loadCategoryItems() {
-		const categoryItems = this.getCategoryItems(this.currentCategoryId);
-		const batch = categoryItems.slice(this.currentOffset, this.currentOffset + this.batchSize);
-
-		if (batch.length === 0 && this.currentOffset === 0) {
-			this.elements.itemGrid.classList.remove('visible');
-			if (!this.elements.categoryGrid.children.length && this.carriedLead.hidden) this.showEmptyState('No items in this category');
-			return;
-		}
-
-		if (batch.length === 0) {
-			return; // No more items to load
-		}
-
-		batch.forEach(item => {
-			const element = this.createItemElement(item);
-			this.elements.itemGrid.appendChild(element);
-		});
-
-		this.currentOffset += batch.length;
-
-		// Update selection state for newly rendered items
-		this.contentManager.updateSelection?.();
-
-		// Check if we need to load more to fill viewport
-		this.checkAndLoadMore();
 	}
 
 	checkAndLoadMore() {
@@ -771,34 +679,15 @@ class AssetBrowser {
 		});
 	}
 
-	// Listing groups in display order. Search keeps result-score order (groups
-	// in first-appearance order); a grouped category list follows the category
-	// order, with Favorites first.
+	// Search preserves score order and groups by the asset's home category.
 	getListingGroups() {
-		const items = this.getFilteredItems();
+		if (this.wallGroups) return this.wallGroups;
 		const byCategory = new Map();
-		items.forEach((item) => {
+		this.getFilteredItems().forEach(item => {
 			if (!byCategory.has(item.category)) byCategory.set(item.category, []);
 			byCategory.get(item.category).push(item);
 		});
-
-		if (this.wallGroups) return this.wallGroups;
-		const group = (id, groupItems) => ({ id, name: this.getCategoryPath(id), items: groupItems });
-		if (this.folderView?.isCreatorDetail()) return this.getUnknownGroups(items);
-		if (this.state === 'SEARCH_RESULTS') {
-			return [...byCategory.entries()].map(([id, groupItems]) => group(id, groupItems));
-		}
-
-		const groups = [];
-		const favorites = this.getCategoryItems(LIBRARY_FAVORITES_ID, items);
-		if (favorites.length) groups.push(group(LIBRARY_FAVORITES_ID, favorites));
-		this.categories.forEach((category) => {
-			if (byCategory.has(category.id)) groups.push(group(category.id, byCategory.get(category.id)));
-		});
-		byCategory.forEach((groupItems, id) => {
-			if (!this.categories.some((category) => category.id === id)) groups.push(group(id, groupItems));
-		});
-		return groups;
+		return [...byCategory.entries()].map(([id, items]) => ({ id, name: this.getCategoryPath(id), items }));
 	}
 
 	getListingItems(groups = this.getListingGroups()) {
@@ -817,9 +706,7 @@ class AssetBrowser {
 			return;
 		}
 
-		// A grouped kind is a small collection: its category list renders whole.
-		const size = this.state === 'CATEGORY_LIST' && !this.rail ? entries.length : this.batchSize;
-		const batch = entries.slice(this.currentOffset, this.currentOffset + size);
+		const batch = entries.slice(this.currentOffset, this.currentOffset + this.batchSize);
 
 		if (batch.length === 0) {
 			return; // No more items
@@ -838,9 +725,8 @@ class AssetBrowser {
 					section.className = 'category-section';
 					section.dataset.categoryId = group.id;
 
-					const header = document.createElement('div');
-					header.className = 'category-section-header';
-					header.textContent = `${group.name} (${group.items.length})`;
+					const header = AssetSetHeader.createTitleLine(group.name, group.items.length);
+					header.classList.add('category-section-header');
 					section.appendChild(header);
 
 					const grid = document.createElement('div');
@@ -867,7 +753,7 @@ class AssetBrowser {
 	showEmptyState(message) {
 		this.elements.emptyText.textContent = message;
 		if (this.elements.emptyClearFilters) {
-			this.elements.emptyClearFilters.hidden = this.state === 'CATEGORY_DETAIL' || !this.contentManager.hasActiveFilters();
+			this.elements.emptyClearFilters.hidden = !this.contentManager.hasActiveFilters();
 		}
 		this.elements.emptyState.classList.add('visible');
 	}
@@ -890,8 +776,7 @@ class AssetBrowser {
 
 	updateViewControl() {
 		const creators = Boolean(this.schema.creatorView) && this.getCreators(this.contentManager.getAllContent()).filter(creator => creator.id !== '__unknown').length >= 2;
-		// The wall always offers Favorites; a folder kind only switches Style / Creator.
-		this.viewControl.hidden = this.state !== 'CATEGORY_LIST' || !(creators || this.rail);
+		this.viewControl.hidden = this.state === 'SEARCH_RESULTS';
 		this.viewControl.querySelectorAll('button').forEach(button => {
 			const active = button.dataset.view === this.browseView;
 			if (button.dataset.view === 'creator') button.hidden = !creators;
@@ -905,10 +790,6 @@ class AssetBrowser {
 		heading.className = 'asset-browser-section-title property-block-title';
 		heading.textContent = text;
 		return heading;
-	}
-
-	getUnknownGroups(items) {
-		return this.catalog.getUnknownGroups(items);
 	}
 
 	renderCarriedItems(category) {

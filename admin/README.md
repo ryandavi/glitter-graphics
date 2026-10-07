@@ -74,3 +74,10 @@ Local CLI ingest uses `AssetIngestService::receiveLocalFile`; it shares upload f
 An alternate mapping may list `deferredFiles` as exact paths relative to the glitter root. These files are reported as deferred and left untouched, including when they match another source. Use this for an asset awaiting repair; remove the deferral when it is ready.
 
 GIF analysis and thumbnails tolerate historical files whose logical-screen header is smaller than their frames. The analyzer reads GIF block boundaries for the true dimensions and supplies corrected header bytes to GD in memory; imported source files and their byte hashes remain unchanged.
+
+
+## Font category preview icons
+
+Font source is the existing System font checkbox (`system` boolean), separate from style tags. Editor Source filters read that field. Category representatives come from the first ordered/featured member; no separate category-icon setting is needed.
+
+After adding or replacing fonts, regenerate dropdown glyph outlines with `python tools/build-font-preview-icons.py`, then `node tools/bump-cache.js`. This tool reads the manifest without changing it, uses the editor's script-aware sample rules, and writes `js/generated/font-preview-icons.js`. It requires fontTools and brotli plus Node. System outlines come from Windows Fonts by default; `--system-font-dir` selects another installed-font directory. An unavailable system face is omitted and gets a live-lettering fallback in the editor. `--check` verifies the generated output on the same font environment. Home-card phrases and individual font samples still load the actual font; dropdown SVGs do not.

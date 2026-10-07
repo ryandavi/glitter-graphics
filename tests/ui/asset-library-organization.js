@@ -32,8 +32,17 @@ async function openPage(browser, before = false, real = false) {
 		const id = Number(new URL(route.request().url()).pathname.match(/(900\d)\.json/)[1]);
 		return route.fulfill({ json: items.find(item => item.id === id) });
 	});
-	if (before) {
-		for (const file of ['js/assets/AssetBrowser.js', 'js/ui/asset-browser-markup.js']) {
+	if (before && process.env.GLITTER_TEST_BASELINE) {
+		const baseline = process.env.GLITTER_TEST_BASELINE;
+		await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(path.join(baseline, 'style.css')) }));
+		await page.route('**/glitter/', route => route.fulfill({ contentType: 'text/html', body: fs.readFileSync(path.join(baseline, 'index.html')) }));
+		for (const file of ['js/assets/AssetBrowser.js', 'js/assets/AssetBrowserRail.js', 'js/assets/BrushTipManager.js', 'js/assets/ShapeBrowserManager.js', 'js/assets/FontBrowserManager.js', 'js/ui/asset-browser-markup.js']) {
+			await page.route('**/' + file + '*', route => route.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(baseline, file)) }));
+		}
+	} else if (before) {
+		await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: execFileSync('git', ['show', 'HEAD:css/style.css'], { cwd: root }) }));
+		await page.route('**/glitter/', route => route.fulfill({ contentType: 'text/html', body: execFileSync('git', ['show', 'HEAD:index.html'], { cwd: root }) }));
+		for (const file of ['js/assets/AssetBrowser.js', 'js/assets/AssetBrowserRail.js', 'js/assets/AssetBrowserFolders.js', 'js/assets/BrushTipManager.js', 'js/ui/asset-browser-markup.js']) {
 			await page.route('**/' + file + '*', route => route.fulfill({ contentType: 'application/javascript', body: execFileSync('git', ['show', 'HEAD:' + file], { cwd: root }) }));
 		}
 	}
@@ -103,6 +112,69 @@ async function screenshots(page, directory, before) {
 		e.mobileManager.openDrawer('design');
 	});
 	await shot('Mobile drawer');
+	for (const width of [1280, 390]) {
+		await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+		for (const prefix of ['glitter', 'sticker', 'brushTip', 'shape', 'font']) {
+			await page.evaluate(({ prefix, before, width }) => {
+				const e = window.editor;
+				const manager = { glitter: e.glitterLibrary, sticker: e.stickerLibrary, brushTip: e.brushTipManager, shape: e.shapeBrowserManager, font: e.fontBrowserManager }[prefix];
+				manager.activeFilters.search = '';
+				const b = manager.browser;
+				b.browseView = 'style';
+				if (!before) b.rail.selection = { root: LIBRARY_ALL_ID, set: null };
+				b.setState('CATEGORY_LIST');
+				document.getElementById('designGallerySection').dataset.pickerLibrary = prefix;
+				syncLibraryView();
+				if (width === 390) e.mobileManager.openDrawer('design');
+				else e.mobileManager.closeAllDrawers();
+			}, { prefix, before, width });
+			await shot(`${prefix} home ${width}`);
+		}
+	}
+	if (!before || process.env.GLITTER_TEST_BASELINE) {
+		for (const theme of ['dark', 'light']) {
+			for (const width of [1280, 390]) {
+				await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+				for (const prefix of ['glitter', 'sticker', 'brushTip', 'shape', 'font']) {
+					await page.evaluate(({ prefix, theme, width }) => {
+						const e = window.editor;
+						const manager = { glitter: e.glitterLibrary, sticker: e.stickerLibrary, brushTip: e.brushTipManager, shape: e.shapeBrowserManager, font: e.fontBrowserManager }[prefix];
+						document.documentElement.dataset.theme = theme;
+						PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), [prefix]: 'categories' });
+						manager.setLibraryIds('libraryRecents', manager.getAllContent().slice(0, 3).map(item => item.id));
+						manager.browser.browseView = 'style'; manager.browser.rail.select(LIBRARY_ALL_ID);
+						document.getElementById('designGallerySection').dataset.pickerLibrary = prefix; syncLibraryView();
+						if (width === 390) e.mobileManager.openDrawer('design');
+						else e.mobileManager.closeAllDrawers();
+					}, { prefix, theme, width });
+					await shot(`${prefix} categories ${theme} ${width}`);
+				}
+			}
+		}
+	}
+	if (!before || process.env.GLITTER_TEST_BASELINE) {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await page.evaluate(async () => {
+			document.documentElement.dataset.theme = 'dark';
+			window.editor.mobileManager.closeAllDrawers();
+			await window.editor.fontBrowserManager.ensureSamplesLoaded();
+		});
+		for (const prefix of ['shape', 'font']) {
+			await page.evaluate(prefix => {
+				document.getElementById('designGallerySection').dataset.pickerLibrary = prefix; syncLibraryView();
+				window.editor.setCollapsibleSectionOpen('designGallery', true, true);
+			}, prefix);
+			await page.locator(`#${prefix}Browser .asset-browser-rail select`).click();
+			await shot(`${prefix} category picker`);
+			await page.locator(`#${prefix}Browser .asset-browser-rail select`).click();
+		}
+		await page.evaluate(() => {
+			const section = document.getElementById('designGallerySection');
+			section.dataset.pickerLibrary = 'font'; section.classList.add('library-search-open'); syncLibraryView();
+			window.editor.fontBrowserManager.ui.filterToggle.click();
+		});
+		await shot('Font source filters');
+	}
 	fs.writeFileSync(path.join(directory, 'index.json'), JSON.stringify(index, null, 2));
 }
 
@@ -120,7 +192,7 @@ async function main() {
 	try {
 		if (process.argv.includes('--screenshots-only')) {
 			await captureComparison(browser);
-			console.log('PASS real wall counts/density and five before/after captures');
+			console.log('PASS real wall counts/density and library before/after captures');
 			return;
 		}
 		const { page, errors } = await openPage(browser);
@@ -147,8 +219,15 @@ async function main() {
 				select.dispatchEvent(new Event('change', { bubbles: true }));
 			};
 			expect(b.rail.selection.root === '__all' && b.rail.selection.set === null, 'Must open on All styles');
-			expect(b.wallGroups && b.elements.searchResults.querySelectorAll('.category-section').length === b.wallGroups.length, 'All styles must group by style');
-			expect(b.elements.categoryGrid.querySelectorAll('.category-card').length === 0, 'Glitter still has cards');
+			expect(b.homeCategories && b.elements.categoryGrid.querySelectorAll('.category-card').length === 2, 'Glitter must open on compact style covers');
+			PREFERENCES.set('libraryHome', { glitter: 'everything' });
+			expect(b.wallGroups && b.elements.searchResults.querySelectorAll('.category-section').length === b.wallGroups.length, 'Everything must group by style');
+			for (const group of b.wallGroups) {
+				const heading = b.elements.searchResults.querySelector(`[data-category-id="${group.id}"] .category-section-header`);
+				expect(heading.querySelector('.asset-set-header-title').textContent === group.name, 'Grouped heading lost category name');
+				expect(heading.querySelector('.asset-set-header-count').textContent === `${group.items.length} ${group.items.length === 1 ? 'item' : 'items'}`, 'Grouped count must use items formatting');
+				expect(!heading.querySelector('button') && getComputedStyle(heading).textTransform === 'none', 'Grouped headings must be sentence case without order controls');
+			}
 			choose(0, 'sparkle');
 			expect(b.wallItems.length === 4 && !b.wallGroups, 'Root wall must include its sets');
 			expect(b.rail.field.querySelector('option[value="sparkle"]').textContent.includes('4'), 'Root count is wrong');
@@ -193,8 +272,8 @@ async function main() {
 			b.setState('CATEGORY_LIST');
 			expect(!b.rail.element.hidden, 'Clearing search did not restore rails');
 			b.browseView = 'creator'; b.setState('CATEGORY_LIST');
-			expect(new Set([...b.rail.field.options].map(option => option.dataset.root)).size === 4, 'Expected three creators and Unknown');
-			expect(b.rail.field.querySelectorAll('optgroup').length === 2 && !b.rail.field.querySelector(':scope > option'), 'Every creator must sit under a heading');
+			expect(new Set([...b.rail.field.options].map(option => option.dataset.root)).size === 5, 'Expected All creators, three creators and Unknown');
+			expect(b.rail.field.querySelectorAll('optgroup').length === 2 && b.rail.field.querySelector(':scope > option').value === '__all', 'Creator home must precede grouped creators');
 			choose(0, 'aylana');
 			expect(b.wallItems.length === 2, 'Creator All must cross styles');
 			clickSet('bring-on-the-glitter');
@@ -208,17 +287,117 @@ async function main() {
 			await b.navigateToItem(9002);
 			expect(b.rail.selection.root === 'sparkle' && b.rail.selection.set === 'stardrops', 'Go-to-asset did not light chips');
 			expect(b.elements.itemGrid.querySelector('[data-id="9002"]'), 'Go-to-asset did not render tile');
-			const stickers = e.stickerLibrary.browser;
-			expect(stickers.elements.categoryGrid.querySelector('.category-card'), 'Stickers lost folder cards');
-			stickers.elements.categoryGrid.querySelector('.category-card').click();
-			expect(stickers.state === 'CATEGORY_DETAIL', 'Sticker folder cannot open');
-			const brushes = e.brushTipManager?.browser || e.brushTipLibrary?.browser;
-			expect(brushes, 'Brush library missing');
-			if (brushes) {
-				expect(brushes.elements.categoryGrid.querySelector('.category-card'), 'Brush tips lost folder cards');
-				brushes.elements.categoryGrid.querySelector('.category-card').click();
-				expect(brushes.state === 'CATEGORY_DETAIL', 'Brush folder cannot open');
+			const browsers = [b, e.stickerLibrary.browser, e.brushTipManager.browser, e.shapeBrowserManager.browser, e.fontBrowserManager.browser];
+			for (const browser of browsers) {
+				browser.browseView = 'style';
+				browser.rail.mode = 'style';
+				browser.rail.selection = { root: LIBRARY_ALL_ID, set: null };
+				browser.setState('CATEGORY_LIST');
+				expect(!browser.toolbar.hidden && !browser.rail.element.hidden && browser.rail.upButton.disabled, `${browser.prefix}: home toolbar`);
+				expect(browser.viewControl.querySelector('[data-view="favorites"]'), `${browser.prefix}: Favorites segment missing`);
+				const manager = browser.contentManager;
+				const first = manager.getAllContent()[0];
+				expect(first, `${browser.prefix}: empty fixture`);
+				const savedRecents = PREFERENCES.get('libraryRecents');
+				PREFERENCES.set('libraryRecents', { ...savedRecents, [browser.prefix]: [first.id] });
+				browser.updateShortcuts();
+				expect(!browser.shortcuts.hidden, `${browser.prefix}: home Quick picks missing`);
+				for (const view of ['categories', 'everything']) {
+					PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), [browser.prefix]: view });
+					expect(browser.homeCategories === (view === 'categories' || browser.prefix === 'brushTip'), `${browser.prefix}: home option failed`);
+					if (view === 'categories' || browser.prefix === 'brushTip') {
+						const cover = browser.elements.categoryGrid.querySelector('.category-card');
+						expect(cover, `${browser.prefix}: covers missing`);
+						expect(cover.classList.contains('action-card') && /\d+ items?$/.test(cover.querySelector('.category-card-count').textContent), `${browser.prefix}: cover conventions`);
+						cover.click();
+						expect(browser.rail.selection.root !== LIBRARY_ALL_ID && browser.shortcuts.hidden, `${browser.prefix}: cover navigation`);
+						while (!browser.rail.upButton.disabled) browser.rail.upButton.click();
+						expect(browser.rail.selection.root === LIBRARY_ALL_ID, `${browser.prefix}: Up from cover`);
+					} else {
+						while (browser.currentOffset < browser.getPagedItemCount()) browser.loadNextBatch();
+						expect(browser.getPagedItemCount() === manager.applyFilters().length, `${browser.prefix}: Everything cut off assets`);
+					}
+				}
+				await browser.navigateToItem(first.id);
+				expect(browser.findItemElement(first) && browser.shortcuts.hidden, `${browser.prefix}: go-to-asset`);
+				while (!browser.rail.upButton.disabled) browser.rail.upButton.click();
+				expect(browser.rail.selection.root === LIBRARY_ALL_ID, `${browser.prefix}: Up to home`);
+				PREFERENCES.set('libraryFavorites', { ...PREFERENCES.get('libraryFavorites'), [browser.prefix]: [first.id] });
+				browser.viewControl.querySelector('[data-view="favorites"]').click();
+				expect(browser.wallItems.length === 1 && browser.rail.element.hidden && browser.shortcuts.hidden, `${browser.prefix}: Favorites`);
+				browser.viewControl.querySelector('[data-view="style"]').click();
+				manager.activeFilters.search = first.name;
+				browser.setState('SEARCH_RESULTS');
+				expect(browser.toolbar.hidden && browser.shortcuts.hidden && browser.elements.searchResults.classList.contains('visible'), `${browser.prefix}: search`);
+				browser.elements.backBtn.click();
+				expect(browser.state === 'CATEGORY_LIST' && !browser.toolbar.hidden, `${browser.prefix}: search return`);
 			}
+			const fonts = e.fontBrowserManager;
+			const system = fonts.ui.filtersContainer.querySelector('[data-filter="font-source"][data-value="system"]');
+			const bundled = fonts.ui.filtersContainer.querySelector('[data-filter="font-source"][data-value="bundled"]');
+			expect(system && bundled, 'Font Source filter missing');
+			system.click();
+			expect(fonts.applyFilters().length > 0 && fonts.applyFilters().every(item => item.font.system), 'System Source filter failed');
+			bundled.click();
+			expect(fonts.applyFilters().length === fonts.content.length, 'Combined font sources must show all');
+			system.click();
+			expect(fonts.applyFilters().length > 0 && fonts.applyFilters().every(item => !item.font.system), 'Bundled Source filter failed');
+			fonts.activeFilters.scripts.add('ja');
+			expect(fonts.applyFilters().every(item => !item.font.system && item.scripts.includes('ja')), 'Source did not combine with Language');
+			fonts.clearFilters();
+			expect(!fonts.activeFilters.sources.size && fonts.applyFilters().length === fonts.content.length, 'Source clear failed');
+			for (const manager of [e.shapeBrowserManager, fonts]) {
+				const b = manager.browser;
+				b.browseView = 'style'; b.rail.select(LIBRARY_ALL_ID);
+				for (const category of b.categories) {
+					const option = [...b.rail.field.options].find(row => row.dataset.root === category.id);
+					expect(option.querySelector('.asset-browser-rail-preview'), `${b.prefix}: category preview missing`);
+					if (b.prefix === 'font') {
+						expect(option.querySelector('svg path'), 'Font picker must use outlined lettering');
+						expect(option.textContent.trim().startsWith(category.name), 'Font preview polluted native option label');
+					} else expect(option.querySelector('svg'), 'Shape picker must use SVG geometry');
+				}
+			}
+			const stickerManager = e.stickerLibrary;
+			const upload = { ...stickerManager.content[0], id: 'test-upload', category: 'user-uploads', isAnimated: true, isPixelated: true };
+			stickerManager.userContent.push(upload);
+			stickerManager.browser.browseView = 'style';
+			stickerManager.browser.rail.select(LIBRARY_ALL_ID);
+			expect(stickerManager.browser.rail.field.options[1].dataset.root === 'user-uploads', 'User Uploads must be first');
+			await stickerManager.browser.navigateToItem(upload.id);
+			const uploadCard = stickerManager.browser.findItemElement(upload);
+			expect(uploadCard.classList.contains('animated') && uploadCard.classList.contains('pixelated'), 'Sticker thumbnail flags lost');
+			stickerManager.userContent = stickerManager.userContent.filter(item => item !== upload);
+			stickerManager.browser.refresh();
+			expect(e.shapeBrowserManager.browser.elements.browser.querySelector('.asset-option .brush-shape-option-icon'), 'Shape icon cards lost');
+			expect(e.fontBrowserManager.browser.elements.browser.querySelector('.asset-option .text-font-option-sample'), 'Font sample cards lost');
+			const brushes = e.brushTipManager.browser;
+			PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), brushTip: 'categories' });
+			brushes.rail.select(LIBRARY_ALL_ID);
+			expect(!brushes.indexLead.hidden && brushes.indexLead.querySelector('.brush-basic-grid'), 'Basic brushes missing above covers');
+			const pack = brushes.categories.find(category => category.parent === 'raster');
+			expect(brushes.rail.field.options[1].dataset.root === 'basic', 'Basic brushes must precede Raster sets in the dropdown');
+			for (const view of ['categories', 'everything']) {
+				PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), brushTip: view });
+				brushes.rail.select(LIBRARY_ALL_ID);
+				const cards = [...brushes.elements.categoryGrid.children];
+				expect(cards.length === brushes.catalog.getSets('raster').length, 'Brush Home must show each Raster set as a card');
+				expect(cards.every(card => card.dataset.categoryId !== 'raster'), 'Brush Home must not wrap packs in one Raster card');
+				expect(!brushes.elements.itemGrid.children.length && !brushes.elements.searchResults.children.length, 'Brush Home expanded raster assets');
+				cards[0].click();
+				expect(brushes.rail.selection.set && brushes.elements.itemGrid.querySelector('.asset-option'), 'Pack card must open its brushes');
+			}
+			expect(brushes.rail.field.querySelector('optgroup[label="Raster brush sets"] option[value="raster"]'), 'All Raster brush sets missing');
+			expect(brushes.rail.field.querySelector(`option[value="raster/${pack.id}"]`), 'Raster subtype missing');
+			brushes.navigateToCategory(pack.id);
+			expect(brushes.setHeader.element.querySelector('.asset-collection-credit'), 'Brush pack credit missing');
+			brushes.rail.upButton.click();
+			expect(brushes.rail.selection.root === 'raster' && !brushes.rail.selection.set, 'Brush subtype Up skipped Raster all');
+			expect(brushes.homeCategories && brushes.elements.categoryGrid.children.length, 'Raster All must show pack cards');
+			expect(brushes.indexLead.hidden && !brushes.elements.itemGrid.children.length && !brushes.elements.searchResults.children.length, 'Raster All expanded brushes');
+			brushes.rail.upButton.click();
+			expect(brushes.rail.selection.root === LIBRARY_ALL_ID, 'Raster All Up missed home');
+			b.browseView = 'style'; b.rail.select(LIBRARY_ALL_ID);
 			const provenance = library.createAssetProvenance(library.getItemById(9002)).textContent;
 			expect(provenance.includes('Original name: Sparkbutton-gray') && provenance.includes('First published by Mica') && provenance.includes("Also in Aylana's Bring On The Glitter as blue-08"), 'Lineage text is incomplete');
 			b.browseView = 'style'; b.setState('CATEGORY_LIST');
@@ -241,7 +420,19 @@ async function main() {
 			b.setState('CATEGORY_DETAIL', 'sparkelies');
 			await new Promise(resolve => setTimeout(resolve, 350));
 			expect(b.currentCategoryId === 'sparkelies', 'A cleared search timer undid category navigation');
-			return 'Hierarchy, creators, paths, search, filtered counts, lineage, carried-over rows, navigation and picker routing';
+			return 'All five libraries: home options, paging, category/creator/Favorites/search navigation, kind-specific cards, Quick picks, lineage and picker routing';
+		});
+		await page.evaluate(async () => {
+			const library = window.editor.glitterLibrary, b = library.browser;
+			library.setLibraryIds('libraryRecents', [9002, 9003]);
+			b.browseView = 'style'; b.rail.select(LIBRARY_ALL_ID);
+			const order = () => [...b.shortcutGrid.children].map(tile => tile.dataset.id).join();
+			const before = order();
+			const picked = b.shortcutGrid.querySelector('[data-id="9003"]');
+			picked.click();
+			await new Promise(resolve => setTimeout(resolve, 250));
+			if (order() !== before || b.shortcutGrid.querySelector('[data-id="9003"]') !== picked) throw new Error('Clicking Quick picks moved or recreated its tile');
+			if (library.getLibraryIds('libraryRecents')[0] !== 9003) throw new Error('Stable Quick picks stopped saving recency');
 		});
 		await page.evaluate(() => {
 			const library = window.editor.glitterLibrary, b = library.browser;
@@ -255,8 +446,10 @@ async function main() {
 			if (b.elements.itemGrid.querySelector('[data-id="10050"]') !== tile || b.currentOffset !== offset || b.scrollContainer.scrollTop !== scrollTop) throw new Error('Favorite update rebuilt or moved the current wall');
 			window.editor.layerManager.getActiveLayer().fill.glitterId = 9002;
 			window.dispatchEvent(new CustomEvent('layerChanged'));
-			if (!b.shortcuts.querySelector('[data-id="9002"]')) throw new Error('Project shortcuts did not update immediately');
+			if (!b.shortcuts.hidden) throw new Error('Project shortcuts appeared off home');
 			if (b.elements.itemGrid.querySelector('[data-id="10050"]') !== tile || b.scrollContainer.scrollTop !== scrollTop) throw new Error('Project update rebuilt or moved the wall');
+			b.rail.select(LIBRARY_ALL_ID);
+			if (!b.shortcuts.querySelector('[data-id="9002"]')) throw new Error('Project shortcuts did not update on home');
 			const projectTile = b.shortcuts.querySelector('[data-id="9002"]');
 			b.updateShortcuts();
 			if (b.shortcuts.querySelector('[data-id="9002"]') !== projectTile) throw new Error('Unchanged project shortcut was recreated');
@@ -270,6 +463,7 @@ async function main() {
 			library.toggleFavorite(9002);
 			if (!b.elements.itemGrid.querySelector('[data-id="9002"]') || b.elements.emptyState.classList.contains('visible')) throw new Error('Adding a favorite did not update the empty Favorites wall');
 		});
+		await page.evaluate(() => window.editor.glitterLibrary.browser.viewControl.querySelector('[data-view="style"]').click());
 		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('transparent/clear');
 		await page.reload({ waitUntil: 'networkidle' });
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser?.rail);
@@ -286,8 +480,73 @@ async function main() {
 		await rootSelect.focus();
 		await rootSelect.selectOption('sparkle');
 		assert.strictEqual(await rootSelect.evaluate(select => select === document.activeElement), true, 'Selection lost keyboard focus');
+		await page.evaluate(() => {
+			const e = window.editor, section = document.getElementById('designGallerySection');
+			for (const manager of [e.glitterLibrary, e.stickerLibrary, e.brushTipManager, e.shapeBrowserManager, e.fontBrowserManager]) {
+				const b = manager.browser;
+				section.dataset.pickerLibrary = b.prefix; syncLibraryView();
+				PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), [b.prefix]: 'categories' });
+				manager.setLibraryIds('libraryRecents', manager.getAllContent().slice(0, 3).map(item => item.id));
+				b.browseView = 'style'; b.rail.select(LIBRARY_ALL_ID);
+				const cover = b.elements.categoryGrid.querySelector('.category-card');
+				const asset = b.shortcutGrid.querySelector('.asset-option');
+				if (cover.getBoundingClientRect().width <= asset.getBoundingClientRect().width) throw new Error(`${b.prefix}: category cover is not larger than assets`);
+				if (getComputedStyle(b.shortcuts).borderBottomStyle !== 'solid') throw new Error(`${b.prefix}: Quick picks lack a boundary`);
+			}
+			const shape = e.shapeBrowserManager.browser;
+			for (const theme of ['dark', 'light']) {
+				document.documentElement.dataset.theme = theme;
+				const svg = shape.elements.categoryGrid.querySelector('.brush-shape-option-icon svg');
+				if (getComputedStyle(svg).fill !== getComputedStyle(shape.elements.categoryGrid.querySelector('.action-card-title')).color) throw new Error(`${theme}: shape cover ignores theme color`);
+			}
+			document.documentElement.dataset.theme = 'dark';
+			const current = document.querySelector('#libraryViewMenuPanel [data-home-view="categories"] .app-menu-item-current use');
+			if (current?.getAttribute('href') !== '#icon-check') throw new Error('Home menu lacks its check icon');
+			for (const mark of document.querySelectorAll('#libraryViewMenuPanel .app-menu-item-current')) {
+				if (mark.querySelector('use')?.getAttribute('href') !== '#icon-check') throw new Error('Library menu checkmarks are inconsistent');
+			}
+			section.dataset.pickerLibrary = 'glitter'; syncLibraryView();
+			e.glitterLibrary.browser.navigateToCategory('sparkle');
+		});
 		await page.setViewportSize({ width: 390, height: 844 });
 		assert.strictEqual(await rootSelect.evaluate(select => select.scrollWidth <= select.clientWidth), true, 'Mobile category field overflows');
+		for (const prefix of ['glitter', 'sticker', 'brushTip', 'shape', 'font']) {
+			await page.evaluate(prefix => {
+				const e = window.editor;
+				document.getElementById('designGallerySection').dataset.pickerLibrary = prefix;
+				syncLibraryView();
+				e.mobileManager.openDrawer('design');
+			}, prefix);
+			const picker = page.locator(`#${prefix}Browser .asset-browser-rail select`);
+			assert.strictEqual(await picker.isVisible(), true, `${prefix}: phone picker hidden`);
+			assert.strictEqual(await picker.evaluate(select => select.scrollWidth <= select.clientWidth), true, `${prefix}: phone picker overflows`);
+		}
+		await page.evaluate(() => {
+			document.getElementById('designGallerySection').dataset.pickerLibrary = 'glitter'; syncLibraryView();
+			const b = window.editor.glitterLibrary.browser;
+			PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), glitter: 'categories' });
+			b.rail.select(LIBRARY_ALL_ID);
+			const columns = () => getComputedStyle(b.elements.categoryGrid).gridTemplateColumns.split(' ').length;
+			PREFERENCES.set('libraryTileSize', 's');
+			const small = columns();
+			PREFERENCES.set('libraryTileSize', 'l');
+			if (small <= columns()) throw new Error('Phone covers ignore tile size');
+			PREFERENCES.set('libraryTileSize', 'm');
+			PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), glitter: 'everything' });
+		});
+		await page.evaluate(() => {
+			const section = document.getElementById('designGallerySection');
+			section.dataset.pickerLibrary = 'font'; syncLibraryView();
+			const glitterHome = getLibraryHomeView('glitter');
+			document.querySelector('#libraryViewMenuPanel [data-home-view="categories"]').click();
+			if (getLibraryHomeView('font') !== 'categories' || getLibraryHomeView('glitter') !== glitterHome) throw new Error('Home menu wrote the wrong kind');
+			section.dataset.pickerLibrary = 'glitter'; syncLibraryView();
+		});
+		await page.waitForTimeout(0);
+		assert.strictEqual(await page.locator('#libraryViewMenuPanel [data-home-view="everything"]').getAttribute('aria-current'), 'true', 'Home menu did not sync to the active kind');
+		await page.reload({ waitUntil: 'networkidle' });
+		await page.waitForFunction(() => window.editor?.fontBrowserManager?.browser?.rail);
+		assert.deepStrictEqual(await page.evaluate(() => ({ font: getLibraryHomeView('font'), glitter: getLibraryHomeView('glitter') })), { font: 'categories', glitter: 'everything' }, 'Per-kind home choices were not remembered');
 		await page.setViewportSize({ width: 1280, height: 900 });
 		const shortcuts = page.locator('#glitterBrowser .asset-browser-shortcuts');
 		await page.evaluate(() => PREFERENCES.set('libraryQuickPicks', false));

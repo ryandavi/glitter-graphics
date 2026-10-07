@@ -1,4 +1,17 @@
 class AssetSetHeader {
+	static createTitleLine(name, itemCount) {
+		const line = document.createElement('div');
+		line.className = 'asset-set-header-line';
+		const title = document.createElement('span');
+		title.className = 'asset-set-header-title';
+		title.textContent = name;
+		const count = document.createElement('span');
+		count.className = 'asset-set-header-count';
+		count.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`;
+		line.append(title, count);
+		return line;
+	}
+
 	constructor(onOrderChanged) {
 		this.onOrderChanged = onOrderChanged;
 		this.categoryId = null;
@@ -17,15 +30,7 @@ class AssetSetHeader {
 		this.element.hidden = !category;
 		if (!category) return;
 		const attr = Attribution.resolve(category.attribution);
-		const line = document.createElement('div');
-		line.className = 'asset-set-header-line';
-		const title = document.createElement('span');
-		title.className = 'asset-set-header-title';
-		title.textContent = category.name;
-		const count = document.createElement('span');
-		count.className = 'asset-set-header-count';
-		count.textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
-		line.append(title, count);
+		const line = AssetSetHeader.createTitleLine(category.name, items.length);
 		if (items.some(item => item.originalOrder != null)) {
 			const toggle = document.createElement('button');
 			toggle.type = 'button';

@@ -19,7 +19,12 @@ class BrushTipManager extends ContentManager {
 
 	async initBrowser() {
 		this.browser = new AssetBrowser(this, 'brushTip');
-		await this.browser.init(CONFIG.tools.maskBrush.brushTips.categories);
+		await this.browser.loadCategories(CONFIG.tools.maskBrush.brushTips.categories);
+		await this.browser.init([
+			{ id: 'basic', name: 'Basic brushes', browseFirst: true },
+			{ id: 'raster', name: 'Raster brush sets', icon: this.browser.categories[0]?.icon },
+			...this.browser.categories.map(category => ({ ...category, parent: 'raster' }))
+		]);
 	}
 
 	getLayerType() { return null; }
@@ -36,15 +41,21 @@ class BrushTipManager extends ContentManager {
 		return super.itemMatchesFacet(item, key, value);
 	}
 	customizeItemElement(el, item) { el.classList.add(item.kind === 'raster' ? 'is-raster' : 'is-vector'); }
-	customizeCollectionCard(card) { card.classList.add('is-raster'); }
+	customizeCollectionCard(card, category) { card.classList.toggle('is-raster', category.id !== 'basic'); }
+
+	getBrowseCategories(selection, catalog) {
+		// Packs stay closed until selected, even on Everything home.
+		return !selection.set && (selection.root === LIBRARY_ALL_ID || selection.root === 'raster')
+			? catalog.getSets('raster') : null;
+	}
 
 	createCollectionIndexLead() {
 		const filtered = this.applyFilters();
 		const basic = filtered.filter((item) => item.kind === 'vector');
-		const raster = filtered.filter((item) => item.kind === 'raster');
-		if (!basic.length && !raster.length) return null;
+		if (!basic.length) return null;
 		const lead = document.createElement('div');
 		lead.className = 'brush-library-index';
+		lead.dataset.categoryId = 'basic';
 		if (basic.length) {
 			const heading = document.createElement('h3');
 			heading.className = 'asset-browser-section-title property-block-title';
@@ -54,12 +65,6 @@ class BrushTipManager extends ContentManager {
 			grid.className = 'asset-grid visible brush-basic-grid';
 			basic.forEach((item) => grid.appendChild(this.createItemElement(item)));
 			lead.appendChild(grid);
-		}
-		if (raster.length) {
-			const setsHeading = document.createElement('h3');
-			setsHeading.className = 'asset-browser-section-title property-block-title raster-sets-title';
-			setsHeading.textContent = 'Raster brush sets';
-			lead.appendChild(setsHeading);
 		}
 		return lead;
 	}

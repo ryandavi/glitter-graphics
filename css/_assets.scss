@@ -197,7 +197,9 @@
 // track count, so a wider panel shows more of them. The Library view menu
 // turns the row off (setupLibraryViewMenu).
 .asset-browser-shortcuts {
+	padding-bottom: var(--spacing-md);
 	margin-bottom: var(--spacing-md);
+	border-bottom: 1px solid var(--color-border);
 
 	&[hidden] { display: none; }
 }
@@ -217,18 +219,13 @@
 :root[data-theme='light'] [data-gallery-content="brush-tips"] .category-card.is-raster .category-card-image>img { filter: invert(1); }
 
 
-.asset-browser-index-lead + .category-grid.visible { margin-top: var(--spacing-sm); }
+.asset-browser-index-lead + .category-grid.visible,
+.asset-browser-index-lead:not([hidden]) + .asset-browser-category-heading { margin-top: var(--spacing-sm); }
 .asset-browser-section-title {
 	margin: 0 0 var(--spacing-sm);
 }
-.category-grid > .asset-browser-section-title { grid-column: 1 / -1; }
-.category-card-byline {
-	font-size: var(--font-size-xs);
-	color: var(--color-text-secondary);
-}
 .asset-browser-views > .segmented-option[hidden] { display: none; }
 .asset-browser-carried:not([hidden]) { margin-top: var(--spacing-md); }
-.brush-library-index .raster-sets-title { margin-top: var(--spacing-lg); margin-bottom: 0; }
 
 
 // A collection's credit line (Attribution.buildCreditLine): its names link out.
@@ -278,6 +275,8 @@
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-bg-secondary);
 
+		&[hidden] { display: none; }
+
 		>button {
 			width: var(--control-height);
 			height: var(--control-height);
@@ -317,58 +316,37 @@
 			}
 		}
 
+		// Navigation covers have their own floor, above each kind's asset floor.
 		>.category-grid {
-			grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+			grid-template-columns: repeat(auto-fill, minmax(min(calc(max(140px, var(--asset-tile-floor, 84px) * 1.5) * var(--asset-tile-scale, 1)), 100%), 1fr));
 			gap: var(--spacing-sm);
 
+			>.category-card>.category-card-image {
+				width: 100%;
+				aspect-ratio: 4 / 3;
+				margin-bottom: var(--spacing-xs);
+				border-radius: var(--radius-sm);
+				overflow: hidden;
+				background: var(--color-bg-tertiary);
+				color: var(--color-text-primary);
 
-
-			>.category-card {
-				background: var(--color-bg-secondary);
-				padding: var(--spacing-md);
-				display: flex;
-				flex-direction: column;
-				gap: var(--spacing-xs);
-
-				>.category-card-image {
+				>.brush-shape-option-icon {
 					width: 100%;
-					aspect-ratio: 1;
-					border-radius: var(--radius-sm);
-					overflow: hidden;
-					background: var(--color-bg-tertiary);
-					display: flex;
-					align-items: center;
-					justify-content: center;
-
-					>img {
-						@include pixelated-contain-image;
-					}
-
-					&.category-card-glitter-bg {
-						background-repeat: repeat;
-						background-size: auto;
-						image-rendering: pixelated;
-					}
-
-
+					height: 100%;
+					padding: var(--spacing-sm);
 				}
 
-				>.category-card-name {
-					font-weight: var(--font-weight-semibold);
-					color: var(--color-text-primary);
-					text-align: center;
-					font-size: var(--font-size-sm);
-
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
-
+				>img {
+					display: block;
+					width: 100%;
+					height: 100%;
+					object-fit: contain;
 				}
 
-				>.category-card-count {
-					font-size: var(--font-size-xs);
-					color: var(--color-text-secondary);
-					text-align: center;
+				&.category-card-glitter-bg {
+					background-repeat: repeat;
+					background-size: auto;
+					image-rendering: pixelated;
 				}
 			}
 		}
@@ -388,18 +366,6 @@
 				flex-direction: column;
 				gap: var(--spacing-sm);
 
-				>.category-section-header {
-
-					@include text-sm;
-					font-weight: var(--font-weight-semibold);
-					color: var(--color-text-tertiary);
-					text-transform: uppercase;
-
-
-					&:not(:first-child) {
-						margin-top: var(--spacing-lg);
-					}
-				}
 			}
 		}
 	}
@@ -414,15 +380,6 @@
 
 
 
-@include mobile {
-	.asset-browser {
-		>.asset-browser-content {
-			>.category-grid {
-				grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-			}
-		}
-	}
-}
 @media (max-width: 1700px) {
 	:root {
 		--layer-panel-width: 300px;

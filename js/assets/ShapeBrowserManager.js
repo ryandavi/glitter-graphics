@@ -1,9 +1,9 @@
 'use strict';
 
 // The Library's Shapes: ShapeLibrary's fill shapes on the shared
-// ContentManager path (search, recents, favorites), listed whole under their
-// category headings. What a pick does (reshape the selected shape, the one
-// being replaced, or add a new shape layer) belongs to ShapeGlitterManager.
+// ContentManager path (search, recents, favorites) and shared tree browser.
+// What a pick does (reshape the selected shape, replace it, or add a layer)
+// belongs to ShapeGlitterManager.
 class ShapeBrowserManager extends ContentManager {
 	setupUI() {
 		this.ui = getAssetBrowserUi('shape');
@@ -44,6 +44,16 @@ class ShapeBrowserManager extends ContentManager {
 
 	createItemCard(item) {
 		return createShapeCard(item.id, item.name, { className: 'asset-option shape-gallery-option', tag: 'div' });
+	}
+
+	createCollectionPreview(category) {
+		const item = this.content.find(entry => entry.category === category?.id);
+		return item ? this.createItemCard(item).querySelector('.brush-shape-option-icon') : null;
+	}
+
+	customizeCollectionCard(card, category) {
+		const icon = this.createCollectionPreview(category);
+		if (icon) card.querySelector('.category-card-image').replaceChildren(icon);
 	}
 
 	handleItemClick(item) {

@@ -20,6 +20,8 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	// and whether the Quick picks row shows.
 	libraryTileSize: { default: () => 'm' },
 	libraryQuickPicks: { default: () => true },
+	// Per-kind overrides of ASSET_BROWSERS' home defaults.
+	libraryHome: { default: () => ({}) },
 	// The Library's per-kind asset id lists: { glitter: [id, ...], font: [...] }.
 	libraryRecents: { default: () => ({}), keepOnReset: true },
 	libraryFavorites: { default: () => ({}), keepOnReset: true },

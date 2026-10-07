@@ -43,7 +43,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=16e1a800">
+	<link rel="stylesheet" href="css/style.css?v=80936af5">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -296,7 +296,7 @@
 										<span class="name">Add Custom Sticker</span>
 									</span>
 								</div>
-								<!-- Tile size for every kind's grid, and the Quick picks row.
+								<!-- Home view, tile size and the Quick picks row.
 								     setupLibraryViewMenu. -->
 								<div class="section-header-action app-menu library-view-action" id="libraryViewMenu" data-no-accordion-toggle="true">
 									<button type="button" class="section-header-action btn-icon app-menu-trigger icon-wrapper" id="libraryViewMenuBtn" title="View options" aria-label="View options" aria-haspopup="true" aria-expanded="false" aria-controls="libraryViewMenuPanel">
@@ -304,12 +304,16 @@
 										<span class="name">View options</span>
 									</button>
 									<div class="app-menu-panel" id="libraryViewMenuPanel" role="menu" hidden>
-										<div class="app-menu-group-label">Tile size</div>
-										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="s"><span class="app-menu-item-label">Small</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="m"><span class="app-menu-item-label">Medium</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="l"><span class="app-menu-item-label">Large</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<div class="app-menu-group-label">Home shows</div>
+										<button class="app-menu-item" type="button" role="menuitem" data-home-view="categories"><span class="app-menu-item-label">Categories</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+										<button class="app-menu-item" type="button" role="menuitem" data-home-view="everything"><span class="app-menu-item-label">Everything</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
 										<div class="app-menu-separator" role="separator"></div>
-										<button class="app-menu-item" type="button" role="menuitem" data-quick-picks><span class="app-menu-item-label">Quick picks</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+										<div class="app-menu-group-label">Tile size</div>
+										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="s"><span class="app-menu-item-label">Small</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="m"><span class="app-menu-item-label">Medium</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+										<button class="app-menu-item" type="button" role="menuitem" data-tile-size="l"><span class="app-menu-item-label">Large</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
+										<div class="app-menu-separator" role="separator"></div>
+										<button class="app-menu-item" type="button" role="menuitem" data-quick-picks><span class="app-menu-item-label">Quick picks</span><span class="app-menu-item-current" aria-hidden="true"><svg class="icon"><use href="#icon-check"></use></svg></span></button>
 									</div>
 								</div>
 								<!-- Every screen: the search row stays folded until asked for;
@@ -1695,10 +1699,10 @@
 		</button>
 	</template>
 	<template id="tpl-category-card">
-		<button class="choice-card category-card" type="button">
-			<div class="category-card-image"></div>
-			<div class="category-card-name"></div>
-			<div class="category-card-count"></div>
+		<button class="action-card category-card" type="button">
+			<div class="action-card-media category-card-image"></div>
+			<div class="action-card-title category-card-name"></div>
+			<div class="action-card-detail category-card-count"></div>
 		</button>
 	</template>
 
@@ -1729,7 +1733,7 @@
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
 	<script src="js/core/export-target.js?v=368d3fa5"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=f86bccaf"></script>
+	<script src="js/core/preferences.js?v=67f06411"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=88b2b84e"></script>
 	<script src="js/core/dom.js?v=b728eda1"></script>
@@ -1781,7 +1785,7 @@
 	<script src="js/ui/gradient-editor.js?v=1f691cff"></script>
 	<script src="js/ui/color-eyedropper.js?v=f997c28b"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
-	<script src="js/ui/asset-browser-markup.js?v=6db0e5e8"></script>
+	<script src="js/ui/asset-browser-markup.js?v=1c9959d9"></script>
 	<script src="js/ui/scroll-regions.js?v=6a69b215"></script>
 	<script src="js/ui/panel-renderer.js?v=ba58c781"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
@@ -1846,16 +1850,16 @@
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=8d1dd621"></script>
 	<script src="js/assets/LibraryCatalog.js?v=878aaf89"></script>
-	<script src="js/assets/AssetBrowserRail.js?v=5bfdefff"></script>
-	<script src="js/assets/AssetSetHeader.js?v=11883c4f"></script>
-	<script src="js/assets/AssetBrowserFolders.js?v=7708dec1"></script>
-	<script src="js/assets/AssetBrowser.js?v=575c539f"></script>
+	<script src="js/assets/AssetBrowserRail.js?v=c1562507"></script>
+	<script src="js/assets/AssetSetHeader.js?v=d04bf36a"></script>
+	<script src="js/assets/AssetBrowser.js?v=efa973eb"></script>
 	<script src="js/assets/ContentManager.js?v=008570a5"></script>
 	<script src="js/assets/GlitterBrowserManager.js?v=777ee882"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=04a85e03"></script>
-	<script src="js/assets/BrushTipManager.js?v=db7ee61f"></script>
-	<script src="js/assets/ShapeBrowserManager.js?v=76a6c1a3"></script>
-	<script src="js/assets/FontBrowserManager.js?v=a06886ab"></script>
+	<script src="js/assets/BrushTipManager.js?v=3ff954ac"></script>
+	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
+	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
+	<script src="js/assets/FontBrowserManager.js?v=6002c785"></script>
 	<script src="js/transforms/LayerTransform.js?v=7943bd6e"></script>
 	<script src="js/layers/GlitterManager.js?v=a80d8b44"></script>
 	<script src="js/layers/BaseBackgroundManager.js?v=0aaf2405"></script>

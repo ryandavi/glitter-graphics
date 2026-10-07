@@ -2,7 +2,7 @@
 
 // The Library: one entry per pickable asset kind (glitter, stickers, brush
 // tips, shapes, fonts). Each kind gets one search + filter block and one
-// browser (category grid, search results, item grid, lazy-load sentinel),
+// browser (tree picker, home covers, grouped tiles, search and paging),
 // rendered from the tpl-asset-search and tpl-asset-browser templates into its
 // hosts at boot, before the managers bind. Element ids follow
 // ASSET_BROWSER_ID_GRAMMAR; the managers read them through getAssetBrowserUi()
@@ -41,12 +41,12 @@ const ASSET_BROWSER_COLOR_CHIPS = ['red', 'orange', 'yellow', 'green', 'blue', '
 //   { kind: 'chips', label, filter, swatch?, attribute?, options: [{ value, label }] }
 //     static chips; `swatch` draws color dots without text, `attribute`
 //     names the data-* key holding the value (default 'color')
-// `layout`: 'folders' opens a category to show its items; 'grouped' lists
-// every item under its category heading (small collections).
+// `home` supplies the default home view; libraryHome overrides it per kind.
+// `browseLabel` names the first segment and the category picker.
 const ASSET_BROWSERS = Object.freeze([
 	{
 		prefix: 'glitter', searchHost: 'glitterSearchSection', browserHost: 'glitterOptions',
-		title: 'Glitter', layout: 'rail', placeholder: 'Search by name or tag...',
+		title: 'Glitter', home: 'categories', browseLabel: 'Style', placeholder: 'Search by name or tag...',
 		creatorView: true, tileCategoryIcon: true,
 		filters: [
 			{ kind: 'nameOnly' },
@@ -65,7 +65,7 @@ const ASSET_BROWSERS = Object.freeze([
 	},
 	{
 		prefix: 'sticker', searchHost: 'stickersSearchSection', browserHost: 'stickersOptions',
-		title: 'Stickers', layout: 'folders', placeholder: 'Search stickers...',
+		title: 'Stickers', home: 'categories', browseLabel: 'Style', placeholder: 'Search stickers...',
 		creatorView: true,
 		filters: [
 			{ kind: 'nameOnly' },
@@ -80,18 +80,21 @@ const ASSET_BROWSERS = Object.freeze([
 	},
 	{
 		prefix: 'brushTip', searchHost: 'brushTipSearchSection', browserHost: 'brushTipOptions',
-		title: 'Brush Tips', layout: 'folders', placeholder: 'Search brush tips...',
+		title: 'Brush Tips', home: 'categories', browseLabel: 'Browse', categoryHeading: 'Raster brush sets', placeholder: 'Search brush tips...',
 		filters: [{ kind: 'categories', label: 'Category' }]
 	},
 	{
 		prefix: 'shape', searchHost: 'shapesSearchSection', browserHost: 'shapesOptions',
-		title: 'Shapes', layout: 'grouped', placeholder: 'Search shapes...',
+		title: 'Shapes', home: 'everything', browseLabel: 'Browse', placeholder: 'Search shapes...',
 		filters: [{ kind: 'categories', label: 'Category' }]
 	},
 	{
 		prefix: 'font', searchHost: 'fontsSearchSection', browserHost: 'fontsOptions',
-		title: 'Fonts', layout: 'grouped', placeholder: 'Search fonts...',
+		title: 'Fonts', home: 'everything', browseLabel: 'Browse', placeholder: 'Search fonts...',
 		filters: [
+			{ kind: 'chips', label: 'Source', filter: 'font-source', attribute: 'value', options: [
+				{ value: 'system', label: 'System' }, { value: 'bundled', label: 'Bundled' }
+			] },
 			{ kind: 'categories', label: 'Category' },
 			{ kind: 'chips', label: 'Language', filter: 'script', attribute: 'value', options: [
 				{ value: 'latin', label: 'Latin' }, { value: 'ja', label: 'Japanese' },
@@ -100,6 +103,11 @@ const ASSET_BROWSERS = Object.freeze([
 		]
 	}
 ]);
+
+function getLibraryHomeView(prefix) {
+	const value = PREFERENCES.get('libraryHome')[prefix];
+	return ['categories', 'everything'].includes(value) ? value : getAssetBrowserSchema(prefix)?.home;
+}
 
 function getAssetBrowserIds(prefix) {
 	const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1);
@@ -265,8 +273,8 @@ function setupLibrarySearchToggle(editor) {
 	});
 }
 
-// Library header view menu: the tile size of every kind's grid, and the Quick
-// picks row. Both live in PREFERENCES; the section carries them for the
+// Library header view menu: per-kind home view, shared tile size and Quick
+// picks. They live in PREFERENCES; the section carries grid settings for the
 // stylesheet (`data-tile-size`, `.quick-picks-off`).
 function setupLibraryViewMenu() {
 	const root = document.getElementById('libraryViewMenu');
@@ -277,6 +285,11 @@ function setupLibraryViewMenu() {
 	const sync = () => {
 		const size = PREFERENCES.get('libraryTileSize');
 		const quickPicks = PREFERENCES.get('libraryQuickPicks');
+		const kind = section.dataset.library;
+		panel.querySelectorAll('[data-home-view]').forEach(item => {
+			item.disabled = !kind;
+			item.setAttribute('aria-current', String(item.dataset.homeView === getLibraryHomeView(kind)));
+		});
 		section.dataset.tileSize = size;
 		section.classList.toggle('quick-picks-off', !quickPicks);
 		panel.querySelectorAll('[data-tile-size]').forEach((item) => {
@@ -288,8 +301,12 @@ function setupLibraryViewMenu() {
 		const item = event.target.closest('.app-menu-item');
 		if (!item) return;
 		if (item.dataset.tileSize) PREFERENCES.set('libraryTileSize', item.dataset.tileSize);
-		else PREFERENCES.set('libraryQuickPicks', !PREFERENCES.get('libraryQuickPicks'));
+		else if (item.dataset.homeView && section.dataset.library) {
+			PREFERENCES.set('libraryHome', { ...PREFERENCES.get('libraryHome'), [section.dataset.library]: item.dataset.homeView });
+		} else if (item.hasAttribute('data-quick-picks')) PREFERENCES.set('libraryQuickPicks', !PREFERENCES.get('libraryQuickPicks'));
 	});
+	new MutationObserver(sync).observe(section, { attributes: true, attributeFilter: ['data-library'] });
+	PREFERENCES.onChange('libraryHome', sync);
 	PREFERENCES.onChange('libraryTileSize', sync);
 	PREFERENCES.onChange('libraryQuickPicks', sync);
 	sync();
