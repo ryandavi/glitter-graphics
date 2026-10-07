@@ -491,6 +491,29 @@ function buildFieldRevert(target, defaultValue) {
 	return button;
 }
 
+// Editable palette entries share the Layers / Auto Glitter list-row surface.
+// Selection is separate from the native picker so a second row click can clear
+// selection without opening or dismissing a color editor.
+function buildColorListRow({ id, label, coverage, value }) {
+	const row = panelDiv('color-list-row list-row');
+	const select = document.createElement('button');
+	select.type = 'button'; select.className = 'color-list-select list-row-text';
+	select.setAttribute('aria-pressed', 'false');
+	select.addEventListener('keydown', event => {
+		if (event.key !== ' ' && event.key !== 'Enter') return;
+		event.preventDefault(); event.stopPropagation();
+		if (!event.repeat) select.click();
+	});
+	const detail = document.createElement('span'); detail.className = 'list-row-meta'; detail.textContent = coverage;
+	select.append(detail);
+	const control = document.createElement('span'); control.className = 'color-list-control';
+	const input = document.createElement('input'); input.type = 'color'; input.id = id; input.value = value; input.setAttribute('aria-label', label);
+	const text = document.createElement('input'); text.type = 'text'; text.className = 'color-hex-input'; text.maxLength = 7; text.spellcheck = false; text.value = value; text.setAttribute('aria-label', `Hex ${label.toLowerCase()}`);
+	const revert = buildFieldRevert(id, value); revert.setAttribute('aria-label', `Revert ${label.toLowerCase()}`);
+	control.append(input, text); row.append(select, control, revert);
+	return { row, select, input, text, revert };
+}
+
 function buildNumberFieldPair(options) {
 	const row = panelDiv('property-row is-pair transform-pair-row');
 	if (options.rowId) row.id = options.rowId;

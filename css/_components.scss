@@ -476,6 +476,37 @@ input[type="range"] {
 	&.active { background: var(--color-accent-surface-strong); }
 }
 
+// Palette entry variant: the shared list surface and text tiers with a native
+// square swatch, eyedropper and editable hex value.
+.color-list-row {
+	padding-inline: var(--property-gutter);
+	> .property-revert { flex-shrink: 0; }
+}
+
+.color-list-row > .color-list-select {
+	flex: 0 0 3em;
+	justify-content: center;
+	min-height: var(--control-height);
+	padding: 0;
+	border: 0;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+	&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
+}
+
+.color-list-control {
+	@include palette-color-control;
+	flex: 1;
+}
+
+input.color-hex-input {
+	width: 100%;
+	min-width: 0;
+	height: var(--control-height);
+	font-variant-numeric: tabular-nums;
+}
+
 .list-row-handle {
 	display: flex;
 	width: 16px;

@@ -9,13 +9,9 @@
 		overflow: hidden;
 	}
 	.recolor-stage {
-		display: flex;
+		@include modal-preview-stage;
 		flex-direction: column;
 		gap: var(--spacing-md);
-		min-width: 0;
-		min-height: 0;
-		padding: var(--spacing-lg);
-		background: var(--color-bg-tertiary);
 	}
 	.recolor-stage-host {
 		display: flex;
@@ -39,21 +35,18 @@
 	.recolor-side {
 		min-width: 0;
 		min-height: 0;
-		padding: var(--spacing-lg);
+		padding: 0;
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}
-	#recolorSwatches .is-selected { outline: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+	.recolor-palette-row { --property-label-col: 6em; }
 	#recolorSwatches {
-		.property-row { --property-label-col: 3em; }
-		.recolor-color-control {
-			display: grid;
-			grid-column: 2 / -2;
-			grid-template-columns: minmax(0, 1fr) 7em;
-			gap: var(--spacing-sm);
-			min-width: 0;
-		}
-		.color-hex-input { width: 100%; min-width: 0; height: var(--control-height); font-variant-numeric: tabular-nums; }
+		display: flex;
+		flex-direction: column;
+	}
+	.recolor-color-control {
+		@include palette-color-control;
+		grid-column: 2 / -2;
 	}
 	.modal-footer > .btn-text { margin-right: auto; }
 	@media (max-width: 600px) {

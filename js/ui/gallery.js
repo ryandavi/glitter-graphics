@@ -48,6 +48,13 @@ function syncLibraryView() {
 	});
 	const title = document.getElementById('designGalleryTitleText');
 	if (schema && title) title.textContent = schema.title;
+	const recolor = document.getElementById('recolorGlitterBtn');
+	if (recolor) {
+		recolor.hidden = schema?.prefix !== 'glitter';
+		recolor.classList.toggle('visible', !recolor.hidden);
+	}
+	const upload = document.getElementById('uploadStickerBtn');
+	if (upload) upload.hidden = schema?.prefix !== 'sticker';
 	syncLibrarySearchState();
 	return schema?.prefix || null;
 }

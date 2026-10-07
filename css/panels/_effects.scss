@@ -106,29 +106,7 @@
 	}
 
 	.gradient-stop-color {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		min-width: 0;
-		cursor: pointer;
-
-		// Swatch + eyedropper are both fixed squares here. The shared wrapper's
-		// `1fr` swatch column has no width to resolve against inside this
-		// shrink-to-fit label, so it would collapse to 0.
-		> .color-input-with-eyedropper {
-			flex: 0 0 auto;
-			grid-template-columns: var(--control-height) var(--control-height);
-		}
-
-		// Square swatch, the same height as the Pos / Alpha number fields.
-		input[type="color"] {
-			flex: 0 0 auto;
-			width: var(--control-height);
-			height: var(--control-height);
-			aspect-ratio: 1;
-			padding: 2px;
-			border-radius: var(--radius-inner);
-		}
+		@include palette-color-control;
 	}
 
 	.gradient-stop-hex {

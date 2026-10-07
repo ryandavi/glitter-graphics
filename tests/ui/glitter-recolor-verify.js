@@ -15,13 +15,87 @@ async function main() {
 		await page.goto(APP_URL);
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser && document.querySelector('#recolorGlitterBtn'));
 		await page.evaluate(() => editor.modalManager.closeAll());
+		await page.evaluate(() => editor.loadBlankImage(100, 80, '#ffffff'));
+		await page.waitForFunction(() => Boolean(editor.originalImage));
 		await page.evaluate(() => COMMANDS.recolorGlitter.run(editor));
 		assert(await page.evaluate(() => Boolean(editor.glitterRecolor.pickerSession)));
+		assert(await page.locator('#designGalleryHeader #recolorGlitterBtn').evaluate(button => button.classList.contains('active') && button.getAttribute('aria-pressed') === 'true'));
+		assert(await page.locator('#recolorGlitterBtn').isVisible());
+		assert(!(await page.locator('#uploadStickerBtn').isVisible()));
+		assert.strictEqual(await page.locator('#uploadStickerBtn').evaluate(button => button.getBoundingClientRect().width), 0);
+		await page.locator('#recolorGlitterBtn').click();
+		assert(await page.evaluate(() => !editor.glitterRecolor.pickerSession));
+		await page.evaluate(() => COMMANDS.recolorGlitter.run(editor));
 		await page.evaluate(() => editor.glitterLibrary.browser.setState('CATEGORY_DETAIL', 'star-dust'));
 		assert(await page.locator('#glitterBrowser .recolor-unavailable').count() > 0);
 		await page.keyboard.press('Escape');
 		assert(await page.evaluate(() => !editor.glitterRecolor.pickerSession));
+		assert(await page.locator('#recolorGlitterBtn').evaluate(button => !button.classList.contains('active') && button.getAttribute('aria-pressed') === 'false'));
 		await page.evaluate(() => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(111)));
+		assert.deepStrictEqual(await page.locator('#recolorSwatches .color-list-select').allTextContents(), ['29%', '26%', '20%', '18%', '6%']);
+		assert(await page.locator('#recolorSwatch0').evaluate(input => {
+			const wrapper = input.parentElement;
+			return wrapper.children[0] === input && wrapper.children[1].matches('.color-hex-input') && wrapper.children[2].matches('.color-eyedropper-button');
+		}));
+		assert(await page.locator('#recolorApplyAdjust').isDisabled());
+		assert.strictEqual(await page.locator('#recolorSwatches .selected').count(), 0);
+		const select = page.locator('#recolorSwatches .color-list-select');
+		await select.nth(0).click();
+		assert.strictEqual(await select.nth(0).getAttribute('aria-pressed'), 'true');
+		await select.nth(1).click();
+		assert.strictEqual(await select.nth(0).getAttribute('aria-pressed'), 'false');
+		assert.strictEqual(await select.nth(1).getAttribute('aria-pressed'), 'true');
+		await select.nth(1).click();
+		assert.strictEqual(await page.locator('#recolorSwatches .selected').count(), 0);
+		await select.nth(0).focus(); await page.keyboard.press('Space');
+		assert.strictEqual(await select.nth(0).getAttribute('aria-pressed'), 'true');
+		await page.keyboard.press('Escape');
+		assert.strictEqual(await page.locator('#recolorSwatches .selected').count(), 0);
+		assert(await page.locator('#glitterRecolorModal').isVisible());
+		const pixels = await page.evaluate(() => {
+			const controller = editor.glitterRecolor, bounds = document.getElementById('recolorStage').getBoundingClientRect();
+			controller.rows.forEach(entry => { entry.input.showPicker = () => {}; });
+			return [0, 1].map(index => {
+				const pixel = controller.frames[controller.frame].map.indexOf(index), { width, height } = controller.session.analysis;
+				return { index, x: bounds.left + (pixel % width + 0.5) * bounds.width / width, y: bounds.top + (Math.floor(pixel / width) + 0.5) * bounds.height / height };
+			});
+		});
+		for (const pixel of pixels) {
+			await page.mouse.click(pixel.x, pixel.y);
+			assert.strictEqual(await select.nth(pixel.index).getAttribute('aria-pressed'), 'true');
+		}
+		await page.mouse.click(pixels[1].x, pixels[1].y);
+		assert.strictEqual(await page.locator('#recolorSwatches .selected').count(), 0);
+		await page.evaluate(() => editor.glitterRecolor.rows.forEach(entry => { delete entry.input.showPicker; }));
+		await page.locator('#recolorPlay').click();
+		assert.strictEqual(await page.locator('#recolorPlay').getAttribute('aria-label'), 'Pause');
+		await page.locator('#recolorPlay').click();
+		assert.strictEqual(await page.locator('#recolorPlay').getAttribute('aria-label'), 'Play');
+		const unchangedPreview = await page.locator('#recolorStage').evaluate(canvas => canvas.toDataURL());
+		await page.locator('#recolorSwatch0').hover();
+		assert.strictEqual(await page.locator('#recolorStage').evaluate(canvas => canvas.toDataURL()), unchangedPreview);
+		assert(await page.locator('#recolorSwatch0').evaluate(input => input.getBoundingClientRect().width >= parseFloat(getComputedStyle(input).height)));
+		const picker = await page.evaluate(() => {
+			const controller = editor.glitterRecolor, input = controller.rows[0].input;
+			const before = input.getBoundingClientRect();
+			input.addEventListener('click', event => event.preventDefault(), { once: true });
+			input.click();
+			const after = input.getBoundingClientRect();
+			return { stable: before.x === after.x && before.y === after.y, paused: !controller.playing, selected: controller.rows[0].row.classList.contains('selected') };
+		});
+		assert(picker.stable && picker.paused && picker.selected);
+		await page.evaluate(() => {
+			window.recolorTestEyeDropper = window.EyeDropper;
+			window.EyeDropper = class { async open() { return { sRGBHex: '#112233' }; } };
+		});
+		await page.locator('#recolorSwatches .color-eyedropper-button').first().click();
+		assert.strictEqual(await page.locator('#recolorSwatch0').inputValue(), '#112233');
+		await page.evaluate(() => { window.EyeDropper = window.recolorTestEyeDropper; delete window.recolorTestEyeDropper; });
+		await page.keyboard.press('Control+z');
+		await page.locator('input[aria-label="Hex color for all colors"]').fill('#18b7c9');
+		await page.locator('input[aria-label="Hex color for all colors"]').press('Tab');
+		assert.strictEqual(await page.locator('#recolorSwatch0').inputValue(), '#18b7c9');
+		await page.keyboard.press('Control+z');
 		await page.locator('#recolorFrames button').nth(1).click();
 		assert.strictEqual(await page.evaluate(() => editor.glitterRecolor.frame), 1);
 		await page.locator('#recolorSwatches input[type=text]').first().fill('#18b7c9');
@@ -36,8 +110,16 @@ async function main() {
 		assert(await page.evaluate(() => Object.entries(editor.glitterRecolor.session.colors).every(([key, value]) => key === value)));
 		await page.keyboard.press('Control+z');
 		assert((await page.evaluate(() => Object.values(editor.glitterRecolor.session.colors))).includes('18b7c9'));
+		const adjustTop = await page.locator('#recolorHue').evaluate(input => input.getBoundingClientRect().top);
 		await page.evaluate(() => { const slider = document.querySelector('#recolorHue'); slider.value = 40; slider.dispatchEvent(new Event('input')); });
 		assert(await page.locator('#recolorSwatch0').isDisabled());
+		assert.strictEqual(await page.locator('#recolorHue').evaluate(input => input.getBoundingClientRect().top), adjustTop);
+		assert.strictEqual(await page.locator('#recolorPendingHint').count(), 0);
+		assert(await page.locator('#recolorApplyAdjust').isEnabled());
+		assert(await page.evaluate(() => {
+			const cancel = document.getElementById('recolorCancelAdjust').getBoundingClientRect(), apply = document.getElementById('recolorApplyAdjust').getBoundingClientRect();
+			return cancel.top === apply.top && cancel.right <= apply.left;
+		}));
 		await page.locator('#recolorCancelAdjust').click();
 		assert(!(await page.locator('#recolorSwatch0').isDisabled()));
 		await page.evaluate(() => { const slider = document.querySelector('#recolorLightness'); slider.value = 10; slider.dispatchEvent(new Event('input')); });
@@ -142,10 +224,16 @@ async function main() {
 		await phone.evaluate(() => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(111)));
 		await phone.locator('#recolorFrames button').nth(2).tap();
 		assert.strictEqual(await phone.evaluate(() => editor.glitterRecolor.frame), 2);
+		await phone.locator('#recolorSwatches .color-list-select').nth(0).tap();
+		assert.strictEqual(await phone.locator('#recolorSwatches .color-list-select').nth(0).getAttribute('aria-pressed'), 'true');
+		await phone.locator('#recolorSwatches .color-list-select').nth(1).tap();
+		assert.strictEqual(await phone.locator('#recolorSwatches .color-list-select').nth(1).getAttribute('aria-pressed'), 'true');
+		await phone.locator('#recolorSwatches .color-list-select').nth(1).tap();
+		assert.strictEqual(await phone.locator('#recolorSwatches .selected').count(), 0);
 		if (process.env.GLITTER_TEST_CSS) {
 			assert(await phone.evaluate(() => {
 				const box = document.querySelector('#glitterRecolorModal .modal-content').getBoundingClientRect();
-				const row = document.querySelector('#recolorSwatches .property-row').getBoundingClientRect();
+				const row = document.querySelector('#recolorSwatches .list-row').getBoundingClientRect();
 				return box.left >= 0 && box.right <= innerWidth && box.bottom <= innerHeight && row.height < 60;
 			}));
 		}

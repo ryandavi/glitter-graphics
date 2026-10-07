@@ -538,3 +538,38 @@ $mobile-breakpoint: 800px;
 	pointer-events: none;
 	> * { mix-blend-mode: plus-lighter; }
 }
+
+// Shared by palette rows and gradient stops; neither may squeeze the native
+// color field to zero when an eyedropper is installed beside it.
+@mixin palette-color-control {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	min-width: 0;
+	cursor: pointer;
+	> .color-input-with-eyedropper {
+		flex: 0 0 auto;
+		grid-template-columns: var(--control-height) var(--control-height);
+		&.has-hex {
+			flex: 1;
+			grid-template-columns: var(--control-height) minmax(0, 1fr) var(--control-height);
+		}
+	}
+	input[type="color"] {
+		flex: 0 0 auto;
+		width: var(--control-height);
+		height: var(--control-height);
+		aspect-ratio: 1;
+		padding: 2px;
+		border-radius: var(--radius-inner);
+	}
+}
+
+// Export Ready and recolor share the preview surface inside the modal shell.
+@mixin modal-preview-stage($padding: var(--spacing-lg)) {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	padding: $padding;
+	background: var(--color-bg-tertiary);
+}

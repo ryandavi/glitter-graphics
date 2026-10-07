@@ -53,10 +53,12 @@ function initializeColorEyedroppers(editor) {
 	const install = (input) => {
 		if (input.dataset.eyedropperBound != null || input.closest('.color-input-with-eyedropper')) return;
 		input.dataset.eyedropperBound = '';
+		const hex = input.nextElementSibling?.matches('.color-hex-input') ? input.nextElementSibling : null;
 		const wrapper = document.createElement('span');
 		wrapper.className = 'color-input-with-eyedropper';
 		input.before(wrapper);
 		wrapper.appendChild(input);
+		if (hex) { wrapper.classList.add('has-hex'); wrapper.appendChild(hex); }
 		const button = document.createElement('button');
 		button.type = 'button';
 		button.className = 'btn-icon-simple icon-wrapper sm color-eyedropper-button';

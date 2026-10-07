@@ -49,6 +49,15 @@ class GlitterRecolorController {
 			this.sync();
 		});
 		this.byId('recolorAll').addEventListener('change', () => this.commit());
+		this.allText = this.addHexControl(this.byId('recolorAll'), 'Hex color for all colors');
+		this.allText.addEventListener('change', () => {
+			try {
+				const color = GlitterRecolor.hex(GlitterRecolor.rgb(this.allText.value));
+				this.allText.setCustomValidity('');
+				this.session.colors = GlitterRecolor.shiftAll(this.session.colors, this.session.analysis.swatches, color);
+				this.commit(); this.sync();
+			} catch { this.allText.setCustomValidity('Enter a six-digit hex color'); this.allText.reportValidity(); }
+		});
 		this.allRevert = buildFieldRevert('recolorAll');
 		this.byId('recolorAll').closest('.property-row').appendChild(this.allRevert);
 		this.allRevert.dataset.revertBound = '';
@@ -71,20 +80,23 @@ class GlitterRecolorController {
 		stage.addEventListener('click', event => {
 			if (this.pending()) return;
 			const index = this.hitTest(event);
-			if (index >= 0) this.selectSwatch(index, true);
+			if (index >= 0) {
+				if (index === this.selected) this.clearSelection();
+				else this.selectSwatch(index, true);
+			} else this.clearSelection();
 		});
-		stage.addEventListener('pointermove', event => {
-			this.hover = this.pending() ? -1 : this.hitTest(event);
-			this.draw();
+		this.byId('recolorStageHost').addEventListener('click', event => {
+			if (event.target === event.currentTarget) this.clearSelection();
 		});
-		stage.addEventListener('pointerleave', () => { this.hover = -1; this.draw(); });
 		stage.addEventListener('keydown', event => {
 			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
 				event.preventDefault(); this.setFrame(this.frame + (event.key === 'ArrowLeft' ? -1 : 1));
 			}
 		});
 		document.addEventListener('keydown', event => {
-			if (this.session && this.modal.classList.contains('visible') && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+			if (this.session && this.modal.classList.contains('visible') && !this.confirming && event.key === 'Escape' && this.selected >= 0) {
+				event.preventDefault(); event.stopImmediatePropagation(); this.clearSelection();
+			} else if (this.session && this.modal.classList.contains('visible') && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
 				event.preventDefault(); event.stopImmediatePropagation(); this.undo(event.shiftKey ? 1 : -1);
 			} else if (this.pickerSession && event.key === 'Escape') {
 				event.preventDefault(); event.stopImmediatePropagation(); this.closePickerSession();
@@ -93,12 +105,8 @@ class GlitterRecolorController {
 	}
 
 	installLibraryActions() {
-		const toolbar = this.library.browser.toolbar;
-		const button = document.createElement('button');
-		button.type = 'button'; button.id = 'recolorGlitterBtn'; button.className = 'btn-flat';
-		button.append(createIcon('recolor'), document.createTextNode('Recolor a glitter'));
+		const button = document.getElementById('recolorGlitterBtn');
 		button.addEventListener('click', () => COMMANDS.recolorGlitter.run(this.editor));
-		toolbar.appendChild(button);
 		this.libraryButton = button;
 		const header = this.library.browser.setHeader;
 		const render = header.render.bind(header);
@@ -128,6 +136,7 @@ class GlitterRecolorController {
 				pickerOpenSession(this, { slot: 'recolor' });
 				renderPickerStrip(this.getPickerStripState());
 				this.libraryButton.setAttribute('aria-pressed', 'true');
+				this.libraryButton.classList.add('active');
 				await revealAssetBrowser(this.editor, this.library);
 				const session = this.pickerSession;
 				const done = this.editor.beginActivity('glitter-recolor-gate', 'Checking glitter colors');
@@ -143,6 +152,7 @@ class GlitterRecolorController {
 		if (!this.pickerSession) return;
 		pickerCloseSession(this);
 		this.libraryButton.setAttribute('aria-pressed', 'false');
+		this.libraryButton.classList.remove('active');
 		renderPickerStrip({ ownsStrip: true, visible: false });
 		this.library.browser.refresh();
 	}
@@ -171,7 +181,7 @@ class GlitterRecolorController {
 			this.byId('recolorSave').querySelector('.name').textContent = this.session.canReplace ? 'Replace' : 'Save to My Glitter';
 			this.byId('recolorCopy').hidden = this.byId('recolorDelete').hidden = !this.library.userContent.includes(item);
 			this.byId('recolorBackdropRow').hidden = !this.frames.some(frame => frame.map.includes(-1));
-			this.frame = 0; this.hover = -1; this.selected = 0;
+			this.frame = 0; this.selected = -1;
 			this.resetAdjustments(); this.buildSwatches(); this.buildFrames();
 			this.history = [this.snapshot()]; this.historyIndex = 0; this.initial = JSON.stringify(this.snapshot());
 			this.playing = !PREFERENCES.get('reduceMotion');
@@ -205,15 +215,24 @@ class GlitterRecolorController {
 		});
 	}
 
+	addHexControl(input, label) {
+		input.closest('.property-row').classList.add('recolor-palette-row');
+		const text = document.createElement('input'); text.type = 'text'; text.maxLength = 7; text.className = 'color-hex-input'; text.setAttribute('aria-label', label); text.spellcheck = false;
+		const control = document.createElement('span'); control.className = 'recolor-color-control';
+		const swatch = input.closest('.color-input-with-eyedropper') || input;
+		swatch.before(control); control.append(swatch);
+		if (swatch !== input) {
+			swatch.classList.add('has-hex'); swatch.insertBefore(text, swatch.querySelector('.color-eyedropper-button'));
+		} else control.append(text);
+		return text;
+	}
+
 	buildSwatches() {
 		const host = this.byId('recolorSwatches'); host.replaceChildren(); this.rows = [];
 		this.session.analysis.swatches.forEach((swatch, index) => {
-			const row = buildPanelItem({ kind: 'field', type: 'color', id: `recolorSwatch${index}`, label: `${Math.round(swatch.share * 100)}%`, value: `#${swatch.key}` }, PANEL_SCHEMAS.glitterRecolor);
-			const input = row.querySelector('input'); input.setAttribute('aria-label', `Color ${index + 1}`);
-			const text = document.createElement('input'); text.type = 'text'; text.maxLength = 7; text.className = 'color-hex-input'; text.setAttribute('aria-label', `Hex color ${index + 1}`); text.spellcheck = false;
-			const revert = buildFieldRevert(input.id, `#${swatch.key}`); revert.dataset.revertBound = ''; revert.setAttribute('aria-label', `Revert color ${index + 1}`);
-			const control = document.createElement('span'); control.className = 'recolor-color-control'; control.append(input, text);
-			row.append(control, revert);
+			const entry = buildColorListRow({ id: `recolorSwatch${index}`, label: `Color ${index + 1}`, coverage: `${Math.round(swatch.share * 100)}%`, value: `#${swatch.key}` });
+			const { row, select, input, text, revert } = entry;
+			revert.dataset.revertBound = '';
 			const change = value => {
 				if (this.pending()) return;
 				try { this.session.colors[swatch.key] = GlitterRecolor.hex(GlitterRecolor.rgb(value)); text.setCustomValidity(''); this.sync(); }
@@ -222,10 +241,14 @@ class GlitterRecolorController {
 			input.addEventListener('input', () => change(input.value)); input.addEventListener('change', () => this.commit());
 			text.addEventListener('change', () => { change(text.value); this.commit(); });
 			revert.addEventListener('click', () => { change(swatch.key); this.commit(); });
-			row.addEventListener('pointerenter', () => { this.hover = index; this.draw(); });
-			row.addEventListener('pointerleave', () => { this.hover = -1; this.draw(); });
 			input.addEventListener('click', () => this.selectSwatch(index));
-			host.appendChild(row); this.rows.push({ row, input, text, revert });
+			text.addEventListener('focus', () => this.selectSwatch(index));
+			row.addEventListener('click', event => {
+				if (event.target.closest('input, .color-eyedropper-button, .property-revert')) return;
+				if (this.selected === index) this.clearSelection(); else this.selectSwatch(index);
+			});
+			select.setAttribute('aria-label', `Select color ${index + 1}`);
+			host.appendChild(row); this.rows.push(entry);
 		});
 	}
 
@@ -246,9 +269,23 @@ class GlitterRecolorController {
 		if (!this.frames[this.frame].map.includes(index)) {
 			const frame = this.frames.findIndex(frame => frame.map.includes(index)); if (frame >= 0) this.setFrame(frame);
 		}
-		this.rows[index].row.scrollIntoView({ block: 'nearest' });
-		this.rows.forEach((entry, i) => entry.row.classList.toggle('is-selected', i === index));
-		if (openPicker) this.rows[index].input.click();
+		this.playing = false; this.transport();
+		if (openPicker) this.rows[index].row.scrollIntoView({ block: 'nearest' });
+		this.syncSelection();
+		if (openPicker) {
+			const input = this.rows[index].input;
+			try { input.showPicker(); } catch { input.click(); }
+		}
+	}
+
+	clearSelection() { this.selected = -1; this.syncSelection(); }
+	syncSelection() {
+		this.rows.forEach((entry, index) => {
+			const selected = index === this.selected;
+			entry.row.classList.toggle('selected', selected);
+			entry.select.setAttribute('aria-pressed', String(selected));
+			entry.select.setAttribute('aria-label', `${selected ? 'Deselect' : 'Select'} color ${index + 1}`);
+		});
 	}
 
 	adjustments() { return Object.fromEntries(['Hue', 'Saturation', 'Lightness', 'Contrast'].map(axis => [axis.toLowerCase(), Number(this.byId(`recolor${axis}`).value)])); }
@@ -271,16 +308,19 @@ class GlitterRecolorController {
 	sync() {
 		if (!this.session) return;
 		const colors = this.previewColors(), pending = this.pending();
-		this.byId('recolorPending').hidden = !pending;
+		this.byId('recolorApplyAdjust').disabled = this.byId('recolorCancelAdjust').disabled = !pending;
 		this.byId('recolorAll').disabled = pending;
+		this.allText.disabled = pending;
 		this.allRevert.disabled = pending || this.session.analysis.swatches.every(swatch => (colors[swatch.key] || swatch.key) === swatch.key);
 		this.byId('recolorSwatches').inert = pending;
 		this.byId('recolorAll').value = `#${colors[this.session.analysis.swatches[0].key] || this.session.analysis.swatches[0].key}`;
+		this.allText.value = this.byId('recolorAll').value;
 		this.rows.forEach((entry, index) => {
 			const key = this.session.analysis.swatches[index].key, value = colors[key] || key;
 			entry.input.value = entry.text.value = `#${value}`; entry.input.disabled = entry.text.disabled = pending;
 			entry.revert.disabled = pending || value === key;
 		});
+		this.syncSelection();
 		this.draw();
 	}
 	hitTest(event) {
@@ -303,16 +343,6 @@ class GlitterRecolorController {
 		const zoom = Math.max(1, Math.min(CONFIG.tools.glitter.recolor.stageZoom, Math.floor(host.clientWidth / width), Math.floor(host.clientHeight / height)));
 		stage.width = width * zoom; stage.height = height * zoom;
 		const ctx = stage.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(tile, 0, 0, stage.width, stage.height);
-		if (this.hover >= 0 && !this.pending()) {
-			ctx.fillStyle = 'rgba(0,0,0,0.65)';
-			this.frames[this.frame].map.forEach((index, pixel) => { if (index >= 0 && index !== this.hover) ctx.fillRect(pixel % width * zoom, Math.floor(pixel / width) * zoom, zoom, zoom); });
-		}
-		if (zoom >= 4) {
-			ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.beginPath();
-			for (let x = zoom; x < stage.width; x += zoom) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, stage.height); }
-			for (let y = zoom; y < stage.height; y += zoom) { ctx.moveTo(0, y + 0.5); ctx.lineTo(stage.width, y + 0.5); }
-			ctx.stroke();
-		}
 		const repeat = this.byId('recolorRepeat'); repeat.width = host.clientWidth || width * 4; repeat.height = height * 2;
 		const repeatCtx = repeat.getContext('2d'); repeatCtx.fillStyle = repeatCtx.createPattern(tile, 'repeat'); repeatCtx.fillRect(0, 0, repeat.width, repeat.height);
 		this.byId('recolorFrames').querySelectorAll('button').forEach((button, index) => { button.classList.toggle('active', index === this.frame); button.setAttribute('aria-pressed', String(index === this.frame)); });
@@ -321,7 +351,9 @@ class GlitterRecolorController {
 	setFrame(frame) { this.frame = (frame + this.frames.length) % this.frames.length; this.playing = false; this.transport(); this.draw(); }
 	transport() {
 		clearTimeout(this.timer);
-		this.byId('recolorPlay').textContent = this.playing ? 'Pause' : 'Play';
+		const button = this.byId('recolorPlay'), label = this.playing ? 'Pause' : 'Play';
+		button.title = label; button.setAttribute('aria-label', label);
+		button.querySelector('use').setAttribute('href', this.playing ? '#icon-motion-pause' : '#icon-motion-play');
 		if (this.playing && this.session) this.timer = setTimeout(() => { this.frame = (this.frame + 1) % this.frames.length; this.draw(); this.transport(); }, this.frames[this.frame].delay);
 	}
 	async confirmDiscard() {

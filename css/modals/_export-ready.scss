@@ -34,13 +34,9 @@
 
 	.export-stage {
 		grid-area: stage;
-		display: flex;
+		@include modal-preview-stage(var(--export-pad));
 		align-items: center;
 		justify-content: center;
-		min-width: 0;
-		min-height: 0;
-		padding: var(--export-pad);
-		background: var(--color-bg-tertiary);
 		overflow: hidden;
 
 		img,
