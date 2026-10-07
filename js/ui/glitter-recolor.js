@@ -43,6 +43,14 @@ class GlitterRecolorController {
 		this.byId('recolorCopy').addEventListener('click', () => this.save(false));
 		this.byId('recolorDelete').addEventListener('click', () => this.delete());
 		this.byId('recolorName').addEventListener('change', () => this.commit());
+		this.nameRevert = this.modal.querySelector('[data-revert-for="recolorName"]');
+		this.nameRevert.dataset.revertBound = '';
+		this.byId('recolorName').addEventListener('input', () => this.syncNameRevert());
+		this.nameRevert.addEventListener('click', () => {
+			if (!this.session) return;
+			this.byId('recolorName').value = this.session.defaultName;
+			this.commit(); this.syncNameRevert();
+		});
 		this.byId('recolorAll').addEventListener('input', event => {
 			if (!this.session || this.pending()) return;
 			this.session.colors = GlitterRecolor.shiftAll(this.session.colors, this.session.analysis.swatches, event.target.value);
@@ -173,9 +181,10 @@ class GlitterRecolorController {
 			const { source, bytes, analysis } = await this.library.getRecolorSource(item);
 			const decoded = await decodeGif(bytes);
 			const colors = Object.fromEntries(analysis.swatches.map(swatch => [swatch.key, item.recipe?.colors[swatch.key] || swatch.key]));
-			this.session = { item, target, source, bytes, analysis, colors, canReplace: this.library.userContent.includes(item) };
+			const defaultName = item.recipe ? item.name : `${item.name} custom`;
+			this.session = { item, target, source, bytes, analysis, colors, defaultName, canReplace: this.library.userContent.includes(item) };
 			this.frames = this.composeFrames(decoded, analysis.swatches);
-			this.byId('recolorName').value = item.recipe ? item.name : `${item.name} custom`;
+			this.byId('recolorName').value = defaultName;
 			this.byId('recolorTitle').textContent = `Recolor glitter: ${item.name}`;
 			this.byId('recolorCredit').replaceChildren(this.library.createAssetProvenance(item.recipe ? item : { recipe: { sourceName: source.name }, attribution: this.library.browser.getAssetAttribution(source) }));
 			this.byId('recolorSave').querySelector('.name').textContent = this.session.canReplace ? 'Replace' : 'Save to My Glitter';
@@ -305,8 +314,10 @@ class GlitterRecolorController {
 		this.commit(); this.historyIndex = Math.max(0, Math.min(this.history.length - 1, this.historyIndex + direction));
 		const state = this.history[this.historyIndex]; this.session.colors = { ...state.colors }; this.byId('recolorName').value = state.name; this.sync();
 	}
+	syncNameRevert() { this.nameRevert.disabled = !this.session || this.byId('recolorName').value === this.session.defaultName; }
 	sync() {
 		if (!this.session) return;
+		this.syncNameRevert();
 		const colors = this.previewColors(), pending = this.pending();
 		this.byId('recolorApplyAdjust').disabled = this.byId('recolorCancelAdjust').disabled = !pending;
 		this.byId('recolorAll').disabled = pending;

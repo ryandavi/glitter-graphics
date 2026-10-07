@@ -334,7 +334,7 @@ const PANEL_SCHEMAS = {
 	glitterRecolor: {
 		prefix: 'recolor', section: { id: 'glitterRecolorSettings', bare: true },
 		groups: [
-			{ title: 'Name', sections: [{ kind: 'section', sets: [{ rows: [{ kind: 'field', id: 'recolorName', label: 'Name', maxlength: 100 }, { kind: 'host', id: 'recolorCredit' }] }] }] },
+			{ title: 'Name', sections: [{ kind: 'section', sets: [{ rows: [{ kind: 'field', id: 'recolorName', label: 'Name', maxlength: 100, revert: true }, { kind: 'host', id: 'recolorCredit' }] }] }] },
 			{ title: 'Colors', sections: [{ kind: 'section', sets: [{ rows: [
 				{ kind: 'host', id: 'recolorSwatches' }
 			] }] }] },

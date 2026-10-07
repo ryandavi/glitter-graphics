@@ -32,6 +32,17 @@ async function main() {
 		assert(await page.evaluate(() => !editor.glitterRecolor.pickerSession));
 		assert(await page.locator('#recolorGlitterBtn').evaluate(button => !button.classList.contains('active') && button.getAttribute('aria-pressed') === 'false'));
 		await page.evaluate(() => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(111)));
+		const defaultName = await page.locator('#recolorName').inputValue();
+		const nameWidth = await page.locator('#recolorName').evaluate(input => input.getBoundingClientRect().width);
+		assert(await page.locator('[data-revert-for="recolorName"]').isDisabled());
+		await page.locator('#recolorName').fill('Temporary name'); await page.locator('#recolorName').press('Tab');
+		assert.strictEqual(await page.locator('#recolorName').evaluate(input => input.getBoundingClientRect().width), nameWidth);
+		await page.locator('[data-revert-for="recolorName"]').click();
+		assert.strictEqual(await page.locator('#recolorName').inputValue(), defaultName);
+		await page.keyboard.press('Control+z');
+		assert.strictEqual(await page.locator('#recolorName').inputValue(), 'Temporary name');
+		await page.keyboard.press('Control+z');
+		assert.strictEqual(await page.locator('#recolorName').inputValue(), defaultName);
 		assert.deepStrictEqual(await page.locator('#recolorSwatches .color-list-select').allTextContents(), ['29%', '26%', '20%', '18%', '6%']);
 		assert(await page.locator('#recolorSwatch0').evaluate(input => {
 			const wrapper = input.parentElement;
