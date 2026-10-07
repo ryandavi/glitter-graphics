@@ -702,17 +702,19 @@ const CONFIG = deepFreeze({
 		},
 		// Bottom context bars. Keep eligibility here so adding a bar or extending
 		// one to another movable layer does not require another app.js branch.
+		// `mobile: false` drops a control from the bar at phone width; it must
+		// stay reachable from the layer's panel.
 		contextToolbars: [
 			{ id: 'textEditControls', session: 'textEdit', controls: [
 				{ kind: 'slider', id: 'contextTextSize', valueId: 'contextTextSizeValue', slider: 'textFontSize', action: 'textFontSize' },
 				{ kind: 'button', id: 'contextTextBold', glyph: 'B', name: 'Bold', title: 'Bold', textAction: 'bold', action: 'textToggleBold' },
 				{ kind: 'button', id: 'contextTextItalic', glyph: 'I', name: 'Italic', title: 'Italic', textAction: 'italic', action: 'textToggleItalic' },
 				{ kind: 'button', id: 'contextTextUnderline', glyph: 'U', name: 'Underline', title: 'Underline', textAction: 'underline', action: 'textToggleUnderline' },
-				{ kind: 'button', id: 'contextTextStrikethrough', glyph: 'S', name: 'Strikethrough', title: 'Strikethrough', textAction: 'strikethrough', action: 'textToggleStrikethrough' },
+				{ kind: 'button', id: 'contextTextStrikethrough', glyph: 'S', name: 'Strikethrough', title: 'Strikethrough', textAction: 'strikethrough', action: 'textToggleStrikethrough', mobile: false },
 				{ kind: 'button', id: 'contextTextLeft', icon: 'text-align-left', name: 'Left', title: 'Align left', textAction: 'align:left', action: 'textAlignLeft' },
 				{ kind: 'button', id: 'contextTextCenter', icon: 'text-align-center', name: 'Center', title: 'Align center', textAction: 'align:center', action: 'textAlignCenter' },
 				{ kind: 'button', id: 'contextTextRight', icon: 'text-align-right', name: 'Right', title: 'Align right', textAction: 'align:right', action: 'textAlignRight' },
-				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-left', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify' }
+				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-justify', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify', mobile: false }
 			] },
 			{ id: 'zoomControls', tool: 'zoom', controls: [
 				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },

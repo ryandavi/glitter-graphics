@@ -19,6 +19,7 @@ class ContextToolbarRenderer {
 			host.dataset.contextToolbar = '';
 			this.hosts.push(host);
 			this.bindPlacement(host, handle);
+			this.bindOverflowFade(host);
 		});
 
 		window.addEventListener('resize', () => this.hosts.forEach((host) => this.applyPlacement(host)), { passive: true });
@@ -26,6 +27,21 @@ class ContextToolbarRenderer {
 			const parent = this.hosts[0]?.offsetParent;
 			if (parent) new ResizeObserver(() => this.hosts.forEach((host) => this.applyPlacement(host))).observe(parent);
 		}
+	}
+
+	// A bar wider than the workspace scrolls sideways. Fade only the edge that
+	// has controls hidden past it; CSS keys off the classes.
+	bindOverflowFade(host) {
+		const update = () => {
+			const slack = host.scrollWidth - host.clientWidth;
+			const overflowing = slack > 1;
+			host.classList.toggle('has-overflow-start', overflowing && host.scrollLeft > 1);
+			host.classList.toggle('has-overflow-end', overflowing && host.scrollLeft < slack - 1);
+		};
+		host.addEventListener('scroll', update, { passive: true });
+		if (typeof ResizeObserver === 'function') new ResizeObserver(update).observe(host);
+		else window.addEventListener('resize', update);
+		update();
 	}
 
 	readPlacement() {
@@ -278,6 +294,7 @@ class ContextToolbarRenderer {
 		if (control.kind === 'button') {
 			const node = document.getElementById('tpl-context-button').content.firstElementChild.cloneNode(true);
 			node.id = control.id; node.title = control.title; node.dataset.action = control.action;
+			if (control.mobile === false) node.classList.add('desktop-only');
 			if (control.textAction) node.dataset.textAction = control.textAction;
 			if (control.textAction) node.addEventListener('pointerdown', event => event.preventDefault());
 			if (control.glyph) { node.querySelector('svg').remove(); node.prepend(document.createTextNode(control.glyph)); node.classList.add('context-letter-button'); }

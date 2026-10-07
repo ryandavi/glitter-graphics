@@ -4331,10 +4331,11 @@ body.mask-editing .sticker-element {
   transform: translate(-50%, 6px);
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-wrap: nowrap;
   gap: var(--spacing-sm);
   z-index: var(--z-canvas-chrome);
+  width: -moz-max-content;
+  width: max-content;
   max-width: calc(100% - var(--spacing-xl));
   opacity: 0;
   visibility: hidden;
@@ -4346,8 +4347,65 @@ body.mask-editing .sticker-element {
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
   pointer-events: auto;
-  overflow: hidden;
+  --context-bar-fade: var(--spacing-lg);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   pointer-events: none;
+}
+.zoom-controls::-webkit-scrollbar,
+.layer-center-controls::-webkit-scrollbar,
+.pan-controls::-webkit-scrollbar,
+.color-picker-controls::-webkit-scrollbar,
+.mask-brush-controls::-webkit-scrollbar {
+  display: none;
+}
+.zoom-controls.has-overflow-start.has-overflow-end,
+.layer-center-controls.has-overflow-start.has-overflow-end,
+.pan-controls.has-overflow-start.has-overflow-end,
+.color-picker-controls.has-overflow-start.has-overflow-end,
+.mask-brush-controls.has-overflow-start.has-overflow-end {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade), #000 calc(100% - var(--context-bar-fade)), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade), #000 calc(100% - var(--context-bar-fade)), transparent 100%);
+}
+.zoom-controls.has-overflow-start:not(.has-overflow-end),
+.layer-center-controls.has-overflow-start:not(.has-overflow-end),
+.pan-controls.has-overflow-start:not(.has-overflow-end),
+.color-picker-controls.has-overflow-start:not(.has-overflow-end),
+.mask-brush-controls.has-overflow-start:not(.has-overflow-end) {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade));
+          mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade));
+}
+.zoom-controls.has-overflow-end:not(.has-overflow-start),
+.layer-center-controls.has-overflow-end:not(.has-overflow-start),
+.pan-controls.has-overflow-end:not(.has-overflow-start),
+.color-picker-controls.has-overflow-end:not(.has-overflow-start),
+.mask-brush-controls.has-overflow-end:not(.has-overflow-start) {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 var(--context-bar-fade));
+          mask-image: linear-gradient(to left, transparent 0, #000 var(--context-bar-fade));
+}
+.zoom-controls > *,
+.layer-center-controls > *,
+.pan-controls > *,
+.color-picker-controls > *,
+.mask-brush-controls > * {
+  flex: 0 0 auto;
+}
+.zoom-controls .btn-icon,
+.layer-center-controls .btn-icon,
+.pan-controls .btn-icon,
+.color-picker-controls .btn-icon,
+.mask-brush-controls .btn-icon {
+  width: var(--control-height);
+  height: var(--control-height);
+}
+.zoom-controls .btn-icon > svg.icon,
+.layer-center-controls .btn-icon > svg.icon,
+.pan-controls .btn-icon > svg.icon,
+.color-picker-controls .btn-icon > svg.icon,
+.mask-brush-controls .btn-icon > svg.icon {
+  font-size: calc(var(--control-height) * 0.7);
 }
 .zoom-controls .context-toolbar-handle,
 .layer-center-controls .context-toolbar-handle,
@@ -4563,17 +4621,10 @@ body.mask-editing .sticker-element {
 
 .color-picker-controls > div:not(.context-slider-group) {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
   gap: var(--spacing-xs);
 }
 
 /* Mask Brush Controls Specific */
-.mask-brush-controls {
-  flex-wrap: nowrap;
-  justify-content: center;
-  max-width: min(90vw, 560px);
-}
 .mask-brush-controls .context-value {
   display: inline-block;
 }
@@ -5446,11 +5497,6 @@ body.tool-text .text-hover-baselines {
   to {
     visibility: hidden;
   }
-}
-#textEditControls {
-  width: -moz-max-content;
-  width: max-content;
-  flex-wrap: wrap;
 }
 #textEditControls .context-letter-button {
   font-weight: var(--font-weight-semibold);
@@ -11220,7 +11266,7 @@ body.modal-open {
   .pan-controls .context-slider,
   .color-picker-controls .context-slider,
   .mask-brush-controls .context-slider {
-    width: clamp(64px, 24vw, 88px);
+    width: clamp(56px, 18vw, 88px);
   }
   .zoom-controls .context-toggle-face,
   .layer-center-controls .context-toggle-face,

@@ -729,10 +729,12 @@ body.mask-editing {
 	transform: translate(-50%, 6px);
 	display: flex;
 	align-items: center;
-	justify-content: center;
 	flex-wrap: nowrap;
 	gap: var(--spacing-sm);
 	z-index: var(--z-canvas-chrome);
+	// Sized by its controls, never by the room left of its anchor; past
+	// max-width the one row scrolls sideways instead of wrapping.
+	width: max-content;
 	max-width: calc(100% - var(--spacing-xl));
 	opacity: 0;
 	visibility: hidden;
@@ -740,10 +742,41 @@ body.mask-editing {
 	transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 
 	@include floating-ui;
-	overflow: hidden;
+	// No scrollbar: a mask fades whichever edge hides controls past it, toggled
+	// by ContextToolbarRenderer.bindOverflowFade.
+	--context-bar-fade: var(--spacing-lg);
+	overflow-x: auto;
+	overflow-y: hidden;
+	overscroll-behavior-x: contain;
+	scrollbar-width: none;
 	// floating-ui is also used by always-interactive panels; context bars must not
 	// intercept canvas input while hidden.
 	pointer-events: none;
+
+	&::-webkit-scrollbar { display: none; }
+
+	&.has-overflow-start.has-overflow-end {
+		mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade), #000 calc(100% - var(--context-bar-fade)), transparent 100%);
+	}
+
+	&.has-overflow-start:not(.has-overflow-end) {
+		mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade));
+	}
+
+	&.has-overflow-end:not(.has-overflow-start) {
+		mask-image: linear-gradient(to left, transparent 0, #000 var(--context-bar-fade));
+	}
+
+	> * { flex: 0 0 auto; }
+
+	// Every control in a bar is one height, so buttons sit level with the
+	// sliders, chips and segmented controls beside them.
+	.btn-icon {
+		width: var(--control-height);
+		height: var(--control-height);
+
+		> svg.icon { font-size: calc(var(--control-height) * 0.7); }
+	}
 
 	.context-toolbar-handle {
 		align-self: stretch;
@@ -953,17 +986,11 @@ body.mask-editing {
 
 .color-picker-controls > div:not(.context-slider-group) {
 	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
 	gap: var(--spacing-xs);
 }
 
 /* Mask Brush Controls Specific */
 .mask-brush-controls {
-	flex-wrap: nowrap;
-	justify-content: center;
-	max-width: min(90vw, 560px);
-
 	.context-value {
 		display: inline-block;
 	}

@@ -126,5 +126,5 @@ defineOptions('textBoxMode', [
 	{ value: 'autoHeight', label: 'Auto Height', hint: 'Width stays fixed; height follows the wrapped text.' },
 	{ value: 'fixed', label: 'Fixed', hint: 'Text wraps inside the frame. Edge handles resize the box.' }
 ]);
-defineOptions('textAlign', ['left', 'center', 'right', 'justify'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: value === 'justify' ? 'text-align-left' : `text-align-${value}` })));
+defineOptions('textAlign', ['left', 'center', 'right', 'justify'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: `text-align-${value}` })));
 defineOptions('textVerticalAlign', ['top', 'middle', 'bottom'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: `text-align-${value}` })));

@@ -165,11 +165,7 @@
 .text-edit-selection { background: rgba(80, 140, 255, .4); }
 @keyframes text-caret-blink { to { visibility: hidden; } }
 
-#textEditControls {
-	width: max-content;
-	flex-wrap: wrap;
-	.context-letter-button { font-weight: var(--font-weight-semibold); }
-}
+#textEditControls .context-letter-button { font-weight: var(--font-weight-semibold); }
 
 // Symbols sit under the copy as one-click inserts, so several in a row need
 // no menu to reopen.
