@@ -291,6 +291,15 @@ const CONFIG = deepFreeze({
 			}
 		},
 		glitter: {
+			recolor: {
+				styles: ['sparkle', 'sparkle-flat', 'ember'],
+				maxSwatches: 8,
+				mergeDistance: 0.045,
+				stageZoom: 8,
+				maxSavedTiles: 200,
+				colorTagMinShare: 0.1,
+				neutralSaturation: 0.12
+			},
 			defaults: {
 				// Fill/border/shadow default glitter ids are keyed per layer type so a
 				// fresh glitter-fill layer, text layer, shape, and canvas background

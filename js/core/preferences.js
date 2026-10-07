@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFERENCE_SCHEMA = Object.freeze({
+	customGlitter: { default: () => [], keepOnReset: true },
 	showHints: { default: () => CONFIG.ui.hints.enabledByDefault },
 	confirmDestructiveActions: { default: () => true },
 	showWelcomeOnStartup: { default: () => true },

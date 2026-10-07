@@ -234,6 +234,14 @@ The policy lives in `NOTIFY_POLICY` (`js/ui/notify.js`), and `tests/unit/notific
 - Every wall shows library order: the exported `sortOrder` inside each style, arranged by hand in admin. The editor never sorts by color. Under a style the picker lists the sets that have tiles in it; a style whose tiles are all one set stands alone and its header carries that set's credit. Creator view lists the styles a creator's tiles are filed in. Search retains score ordering. Original order is a temporary set view option; the last style root is a per-library preference.
 
 
+## Custom glitter
+
+`js/effects/glitter-recolor.js` reads used GIF colors and rewrites global and local palette entries. It never re-encodes pixels or changes frame timing, disposal or transparent indexes. The phase 1 style allowlist and eight-swatch limit live in `CONFIG.tools.glitter.recolor`. OKLCH adjustments are applied into exact RGB swatches, with chroma reduction for gamut mapping.
+
+`GlitterBrowserManager` registers recolors as ordinary GIF assets with string ids. `PREFERENCES.customGlitter` stores immutable recipes across visits; My Glitter shows them newest first and carries source attribution. Replacement creates a new id and repoints all declared slots, including parked drafts, in one document history step. Retired assets remain resolvable for undo and export but stay out of the Library. Render/export consumers use `getRenderContent()`; browsing uses `getAllContent()`.
+
+Projects embed each referenced recipe and its recolored GIF in `customGlitter`, including assets used by parked slots. They also embed source GIF bytes so exact swatch editing remains possible when the source leaves the manifest. Opening registers the assets before layers deserialize; missing recipes without an embedded GIF or available source follow asset preflight.
+
 ## Content modals
 
 `modals/*.html` are loaded into the modals at runtime. Every one (guide, welcome, about, preservation, history, personal-web, and any local-only pages) is generated from `content/src/*.src.html` by `node tools/build-modals.js`; edit the source, never the output. How to write a page is in [content/AUTHORING.md](../content/AUTHORING.md).

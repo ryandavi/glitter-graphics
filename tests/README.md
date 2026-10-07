@@ -142,6 +142,8 @@ This is a documented headless gap rather than an app-code change.
 
 ## Suite notes
 
+`tests/unit/glitter-recolor-unit.js` checks palette-only rewrites against all published GIFs, including global/local tables and an index that is transparent in one frame and opaque in another. It checks exact mapped pixels, unchanged non-palette bytes and OKLCH helpers. `tests/ui/glitter-recolor-verify.js` covers picking, exact hex editing, local undo, Apply/Cancel, discard confirmation, Save as new/Delete, recipe persistence, replacement across multiple layers and undo, stable exports with an animated sticker, slot-targeted saving, and portable project restore/editing without the library source. `GLITTER_TEST_CSS` uses a scratch stylesheet and enables phone layout checks. `tools/ui-contact-sheet.js capture <dir> --only recolor --css <scratch.css>` captures original, recolored and pending-adjustment views at three widths and two themes.
+
 ### Transform-handle verification (`tests/ui/touch-handle-verify.js`)
 
 Check 18 above only exercises the move/bounding-box handle. Rotation, corner-scale, and fixed-text edge-resize handles get their own small deterministic script rather than more numbered checks in the main suite, while `touch-smoke.js` covers canvas routes and phone drawers.

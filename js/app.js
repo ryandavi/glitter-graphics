@@ -1881,7 +1881,7 @@ class GlitterEditor {
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
-			glitterGifs: this.glitterLibrary.content,
+			glitterGifs: this.glitterLibrary.getRenderContent(),
 			canvasData: {
 				width: this.originalCanvas.width,
 				height: this.originalCanvas.height,

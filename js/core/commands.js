@@ -1,4 +1,5 @@
 const COMMANDS = {
+	recolorGlitter: { label: 'Recolor a glitter', group: 'Library', run: (editor, target) => editor.glitterRecolor.command(target) },
 	copyStyleAsPreset: {
 		label: 'Copy style as preset', group: 'Text',
 		when: editor => CONFIG.debug.enabled && Boolean(editor.textGlitterManager?.getActiveTextLayer()),

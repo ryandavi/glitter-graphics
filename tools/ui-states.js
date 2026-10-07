@@ -282,4 +282,21 @@ async function phoneStates(page, visit, { set = 'all' } = {}) {
 	await closeModals(page);
 }
 
-module.exports = { chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates };
+async function recolorStates(page, visit, viewport) {
+	await page.waitForFunction(() => window.editor?.glitterLibrary?.browser);
+	await closeModals(page);
+	await page.evaluate(() => editor.glitterRecolor.open(editor.glitterLibrary.getItemById(111)));
+	await page.evaluate(() => editor.glitterRecolor.setFrame(0));
+	await wait(page);
+	await visit(`${viewport} recolor original`);
+	await page.evaluate(() => {
+		const field = document.getElementById('recolorAll'); field.value = '#18b7c9'; field.dispatchEvent(new Event('input')); field.dispatchEvent(new Event('change'));
+	});
+	await visit(`${viewport} recolor teal`);
+	await page.evaluate(() => {
+		const slider = document.getElementById('recolorLightness'); slider.value = 15; slider.dispatchEvent(new Event('input'));
+	});
+	await visit(`${viewport} recolor pending adjustment`);
+}
+
+module.exports = { chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates };

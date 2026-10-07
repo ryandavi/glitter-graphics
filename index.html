@@ -43,7 +43,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=9385b805">
+	<link rel="stylesheet" href="css/style.css?v=e67dc89d">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1266,6 +1266,33 @@
 		</div>
 	</div>
 
+	<template id="tpl-glitter-recolor">
+		<div class="modal-overlay" id="glitterRecolorModal" data-backdrop="checker">
+			<div class="modal-content modal-browse">
+				<div class="modal-header">
+					<div class="modal-title"><span class="modal-icon icon-wrapper"><svg class="icon"><use href="#icon-recolor"></use></svg><span class="name">Recolor</span></span><span class="modal-title-text" id="recolorTitle">Recolor glitter</span></div>
+					<button type="button" class="btn-icon icon-wrapper modal-close" id="recolorClose" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+				</div>
+				<div class="modal-body recolor-layout">
+					<div class="recolor-stage property-panel">
+						<div class="recolor-stage-host" id="recolorStageHost"><canvas id="recolorStage" tabindex="0" aria-label="Glitter preview. Click a pixel to edit its color. Left and right arrows step frames."></canvas></div>
+						<canvas id="recolorRepeat" aria-label="Pattern at actual size"></canvas>
+						<div class="property-note">Click a pixel to edit its color. Hover a color to see its pixels.</div>
+						<div class="recolor-transport"><button type="button" class="btn-flat" id="recolorPlay">Pause</button><div class="segmented-control" id="recolorFrames" role="group" aria-label="Frame"></div></div>
+						<div class="property-row" id="recolorBackdropRow"><label class="property-label" for="recolorBackdrop">Backdrop</label><select id="recolorBackdrop"><option value="checker">Checker</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+					</div>
+					<div class="recolor-side modal-form property-panel"><div id="recolorCredit"></div><div id="glitterRecolorSettings"></div></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn-text" id="recolorDelete">Delete</button>
+					<button type="button" class="btn-text-with-icon modal-action secondary" id="recolorCancel"><span class="name">Cancel</span></button>
+					<button type="button" class="btn-text-with-icon modal-action secondary" id="recolorCopy"><span class="name">Save as new</span></button>
+					<button type="button" class="btn-text-with-icon modal-action primary" id="recolorSave"><span class="name">Save to My Glitter</span></button>
+				</div>
+			</div>
+		</div>
+	</template>
+
 	<!-- Sticker Upload Modal -->
 	<div class="modal-overlay" id="stickerUploadModal">
 		<div class="modal-content modal-dialog">
@@ -1451,6 +1478,7 @@
 			<symbol id="icon-grip-vertical" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path fill="currentColor" d="M6 3.5a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Zm4 0a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3ZM6 6.85a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Zm4 0a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3ZM6 10.2a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Zm4 0a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" /></symbol>
 			<symbol id="icon-portrait" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="2" width="7" height="12" rx="1.25" /></symbol>
 			<symbol id="icon-landscape" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4.5" width="12" height="7" rx="1.25" /></symbol>
+			<symbol id="icon-recolor" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5a6.5 6.5 0 1 0 0 13h1a2 2 0 0 0 0-4h-.5a1.5 1.5 0 0 1 0-3H12a2.5 2.5 0 0 0 2.5-2.5C14.5 3 11 1.5 8 1.5Z"/><path d="M4.5 5h.01M7 3.8h.01M10 4.2h.01M3.5 8h.01"/></symbol>
 			<symbol id="icon-palette" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.25a5.75 5.75 0 0 0-.4 11.48c.9.06 1.5-.66 1.5-1.4 0-.36-.14-.68-.36-.92a1.35 1.35 0 0 1 1-2.24h1.42a3.2 3.2 0 0 0 3.19-3.34C14.6 4.4 11.66 2.25 8 2.25Z" /><path fill="currentColor" stroke="none" d="M5.4 6.1a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Zm2.6-1.35a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Zm2.9 1a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Z" /></symbol>
 			<symbol id="icon-paint-bucket" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.3 2.2 12.8 7.7a1 1 0 0 1 0 1.4l-4 4a2 2 0 0 1-2.8 0L2.7 9.6a1 1 0 0 1 0-1.4l4.6-4.6ZM6.2 3.3 4 5.5" /><path d="M13.5 10.5s-1.3 1.7-1.3 2.6a1.3 1.3 0 0 0 2.6 0c0-.9-1.3-2.6-1.3-2.6Z" /></symbol>
 				<symbol id="icon-eyedropper" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.55 5.05 10.95 8.45" /><path d="M8.2 5.7 10.3 3.6a1.5 1.5 0 0 1 2.1 2.1L10.3 7.8" /><path d="M8.25 6.2 3.15 11.3 2.45 13.55 4.7 12.85 9.8 7.75" /></symbol>
@@ -1713,13 +1741,13 @@
 
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=d00936bc"></script>
-	<script src="js/core/fields.js?v=b482eee5"></script>
-	<script src="js/core/config.js?v=a8995dcb"></script>
+	<script src="js/core/fields.js?v=2552e4f7"></script>
+	<script src="js/core/config.js?v=62139789"></script>
 	<script src="js/core/tools.js?v=c6495ef0"></script>
 	<script src="js/core/layer-types.js?v=79d7dbe5"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=66b70db4"></script>
-	<script src="js/ui/panel-schemas.js?v=d8bd8a61"></script>
+	<script src="js/ui/panel-schemas.js?v=7b5ca86f"></script>
 	<script src="js/paint/paint-slots.js?v=b7072032"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
 	<script src="js/layers/types/filter.js?v=bbe63a02"></script>
@@ -1734,9 +1762,9 @@
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
 	<script src="js/core/export-target.js?v=368d3fa5"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=67f06411"></script>
+	<script src="js/core/preferences.js?v=eb946adb"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=88b2b84e"></script>
+	<script src="js/core/commands.js?v=8891928f"></script>
 	<script src="js/core/dom.js?v=b728eda1"></script>
 	<script src="js/core/document-scaler.js?v=a90647ed"></script>
 	<script src="js/transforms/transform-math.js?v=80f99bc9"></script>
@@ -1759,6 +1787,7 @@
 	<script src="js/paint/mask-geometry.js?v=9631d04a"></script>
 	<script src="js/paint/bevel.js?v=05766329"></script>
 	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
+	<script src="js/effects/glitter-recolor.js?v=848fc71e"></script>
 	<script src="js/effects/pixel-effects.js?v=dcb26229"></script>
 	<script src="js/effects/blend-modes.js?v=57e7ac8f"></script>
 	<script src="js/effects/tone-adjust.js?v=9eba2e42"></script>
@@ -1781,35 +1810,36 @@
 	<script src="js/paint/text-layout.js?v=9340a6b5"></script>
 	<script src="js/paint/text-warp.js?v=b4c82e81"></script>
 	<script src="js/paint/style-presets.js?v=49c30e38"></script>
-	<script src="js/ui/paint-slot-controls.js?v=8355d7b4"></script>
+	<script src="js/ui/paint-slot-controls.js?v=15f2e17e"></script>
 	<script src="js/ui/style-preset-thumbnails.js?v=6746ebb5"></script>
 	<script src="js/ui/gradient-editor.js?v=1f691cff"></script>
-	<script src="js/ui/color-eyedropper.js?v=f997c28b"></script>
+	<script src="js/ui/color-eyedropper.js?v=57ed5a9b"></script>
 	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
 	<script src="js/ui/asset-browser-markup.js?v=1c9959d9"></script>
 	<script src="js/ui/scroll-regions.js?v=6a69b215"></script>
-	<script src="js/ui/panel-renderer.js?v=ba58c781"></script>
+	<script src="js/ui/panel-renderer.js?v=07cc6343"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=77f5f8d5"></script>
 	<script src="js/ui/menu-popover.js?v=a3940d89"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=5b94bd2a"></script>
-	<script src="js/editor/settings.js?v=b8dd663c"></script>
-	<script src="js/editor/panels.js?v=94027632"></script>
+	<script src="js/editor/settings.js?v=d1b9fc00"></script>
+	<script src="js/editor/panels.js?v=37e9c5a8"></script>
 	<script src="js/editor/fill-tool.js?v=6c2b0197"></script>
 	<script src="js/editor/disclosures.js?v=86ab4f66"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=af2511c8"></script>
 	<script src="js/editor/document-start.js?v=ca44fe0b"></script>
-		<script src="js/editor/modals-wiring.js?v=d68dd879"></script>
+		<script src="js/ui/glitter-recolor.js?v=d0c92e57"></script>
+		<script src="js/editor/modals-wiring.js?v=c1609951"></script>
 	<script src="js/editor/layer-panel.js?v=0ac8826f"></script>
 	<script src="js/editor/canvas-gestures.js?v=cafdf9d1"></script>
 	<script src="js/editor/canvas-size.js?v=69c7456a"></script>
 	<script src="js/editor/canvas-resize.js?v=ea25c5e4"></script>
 		<script src="js/ui/hints.js?v=fe0df968"></script>
-	<script src="js/ui/picker-session.js?v=6afcd21c"></script>
+	<script src="js/ui/picker-session.js?v=625be20f"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=93b572cf"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1817,7 +1847,7 @@
 
 	<!-- Classes -->
 	<script src="js/systems/GestureManager.js?v=b2ae695c"></script>
-	<script src="js/systems/ModalManager.js?v=34a62a73"></script>
+	<script src="js/systems/ModalManager.js?v=3cdaf63b"></script>
 	<script src="js/export/ExportTimeline.js?v=ca9a59d7"></script>
 	<script src="js/export/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/export/AuthoredFrameResolver.js?v=3139d2c3"></script>
@@ -1837,7 +1867,7 @@
 	<script src="js/transforms/selection-chrome.js?v=5ad5a8d7"></script>
 	<script src="js/systems/ViewportManager.js?v=0d72e3f2"></script>
 	<script src="js/systems/HistoryManager.js?v=290ea8db"></script>
-	<script src="js/export/ProjectSerializer.js?v=38bd5eb5"></script>
+	<script src="js/export/ProjectSerializer.js?v=3d28044b"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
 	<script src="js/assets/ShapeLibrary.js?v=75fed2ea"></script>
@@ -1855,7 +1885,7 @@
 	<script src="js/assets/AssetSetHeader.js?v=5a9f2d4a"></script>
 	<script src="js/assets/AssetBrowser.js?v=a4052512"></script>
 	<script src="js/assets/ContentManager.js?v=1c2a5705"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=ba3c0d61"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=d34ae064"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=04a85e03"></script>
 	<script src="js/assets/BrushTipManager.js?v=3ff954ac"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
@@ -1863,7 +1893,7 @@
 	<script src="js/assets/FontBrowserManager.js?v=6002c785"></script>
 	<script src="js/transforms/LayerTransform.js?v=7943bd6e"></script>
 	<script src="js/layers/GlitterManager.js?v=a80d8b44"></script>
-	<script src="js/layers/BaseBackgroundManager.js?v=0aaf2405"></script>
+	<script src="js/layers/BaseBackgroundManager.js?v=e216f446"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
 	<script src="js/systems/AutoGlitterManager.js?v=63e597bb"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
@@ -1872,15 +1902,15 @@
 	<script src="js/layers/TextGlitterManager.js?v=0b5c2c33"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=f2636f98"></script>
 	<script src="js/layers/StickerManager.js?v=cf61b3dc"></script>
-	<script src="js/layers/FilterLayerManager.js?v=f144687f"></script>
+	<script src="js/layers/FilterLayerManager.js?v=951304e7"></script>
 	<script src="js/layers/FrameLayerManager.js?v=e14c3806"></script>
-	<script src="js/layers/SparkleLayerManager.js?v=e4a1ef5f"></script>
+	<script src="js/layers/SparkleLayerManager.js?v=6e4484f9"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=bda989f5"></script>
 
 		<script src="js/systems/MobileManager.js?v=58e62a80"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=320b1b0d"></script>
+	<script src="js/app.js?v=7d23e2d3"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

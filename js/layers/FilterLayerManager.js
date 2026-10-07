@@ -428,7 +428,7 @@ class FilterLayerManager {
 	buildSnapshotParams(layers) {
 		return {
 			visibleLayers: layers,
-			glitterGifs: this.editor.glitterLibrary.content,
+			glitterGifs: this.editor.glitterLibrary.getRenderContent(),
 			canvasData: {
 				width: this.editor.originalCanvas.width,
 				height: this.editor.originalCanvas.height,
@@ -489,7 +489,7 @@ class FilterLayerManager {
 				// The filter itself joins the estimate so an animated Dither's
 				// shimmer sets the loop even over a still scene.
 				const estimate = await this.snapshotCompositor.estimateLoopDuration({
-					layers: [...layers, layer], library: this.editor.glitterLibrary.content,
+					layers: [...layers, layer], library: this.editor.glitterLibrary.getRenderContent(),
 					fallbackDuration: CONFIG.export.defaults.frameDelay,
 					maxFrames: 24, baseImage: true
 				});

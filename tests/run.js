@@ -4,6 +4,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/glitter-recolor-unit.js', tags: ['unit', 'assets', 'effects'] },
+	{ file: 'ui/glitter-recolor-verify.js', tags: ['assets', 'document', 'export', 'panels'] },
 	{ file: 'unit/library-catalog-unit.js', tags: ['unit', 'assets'] },
 	{ file: 'unit/glitter-color-order-unit.js', tags: ['unit', 'assets'] },
 	{ file: 'ui/text-tool-verify.js', tags: ['layers', 'touch'] },

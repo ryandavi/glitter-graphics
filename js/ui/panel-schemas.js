@@ -331,6 +331,20 @@ function createAnimationSectionSpec(prefix) {
 }
 
 const PANEL_SCHEMAS = {
+	glitterRecolor: {
+		prefix: 'recolor', section: { id: 'glitterRecolorSettings', bare: true },
+		groups: [
+			{ title: 'Colors', sections: [{ kind: 'section', sets: [{ rows: [
+				{ kind: 'field', type: 'color', id: 'recolorAll', label: 'All colors' },
+				{ kind: 'host', id: 'recolorSwatches' }
+			] }] }] },
+			{ title: 'Adjust all', sections: [{ kind: 'section', sets: [
+				{ rows: ['Hue', 'Saturation', 'Lightness', 'Contrast'].map(axis => ({ kind: 'slider', id: `recolor${axis}`, slider: `recolor${axis}` })) },
+				{ id: 'recolorPending', hidden: true, actions: [{ id: 'recolorCancelAdjust', label: 'Cancel' }, { id: 'recolorApplyAdjust', label: 'Apply', primary: true }] }
+			] }] },
+			{ title: 'Name', sections: [{ kind: 'section', sets: [{ rows: [{ kind: 'field', id: 'recolorName', label: 'Name', maxlength: 100 }] }] }] }
+		]
+	},
 	// The "nothing selected" panel: sits under the shared Library section header
 	// (so it renders headerless — `section.bare`) and carries two mutually
 	// exclusive `.settings-subsection` blocks. syncNoLayerPanelState toggles

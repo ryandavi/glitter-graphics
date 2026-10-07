@@ -256,6 +256,10 @@ Shadow sections share a Type row from `shadowKind`: Drop, Extrude and Cast. Cast
 
 ## Checking a styling change
 
+The glitter recolor modal uses a fixed `.modal-browse` frame, a pixel canvas stage and a scrolling `PANEL_SCHEMAS.glitterRecolor` form. On phones the stage stays above the form. Color rows reuse the color field, eyedropper and revert primitives; their paired hex field writes the exact RGB value. Whole-tile OKLCH sliders are a pending step: Apply writes their result into the swatches and centers them, Cancel centers them without changing the swatches, and saving applies a pending step first. Pending steps make the swatches and stage selection inert. The modal has its own undo history and confirms discarded changes independently of the destructive-action preference.
+
+Recolor opens from a paint slot's Color adjust set in Advanced, or from the Library's one-shot Recolor action. My Glitter's header offers Edit colors for its selected tile. Library originals always save a new tile; only a tile currently in My Glitter offers Replace and Delete. A retired tile still used by the document can be reopened and saved as a new tile.
+
 Both tools drive the real app through the states in `tools/ui-states.js` (every layer panel, every tool, the Library, each modal, the phone drawer). Compile a candidate to a scratch file first: `npx sass css/style.scss <scratch>/b.css --no-source-map`.
 
 - **A change meant to be invisible** (a refactor, a rename, a dead-rule sweep): `node tools/ui-ab.js <a.css> <b.css>` loads both stylesheets on the same DOM and reports every element whose computed style or box differs. It must report zero, or every difference must be listed with its reason in an `--allow` file.

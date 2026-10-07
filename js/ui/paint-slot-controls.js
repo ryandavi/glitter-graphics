@@ -354,6 +354,9 @@ function bindLayerFieldControls(host) {
 }
 
 function bindPaintSlotControls(host) {
+	(LAYER_UI_CONFIG[host.type]?.paintSlots || []).forEach((definition) => {
+		bindGlitterRecolorAction(host.editor, () => host.getLayer(), definition.key, definition.panelPrefix);
+	});
 	const byId = (id) => document.getElementById(id);
 	(LAYER_UI_CONFIG[host.type]?.paintSlots || []).forEach((definition) => {
 		const prefix = definition.panelPrefix;
@@ -490,6 +493,7 @@ function syncPaintSlotControls(host, layer) {
 		const data = readFieldPath(layer, definition.pathKeys);
 		const enabled = definition.enabledKeys ? Boolean(readFieldPath(layer, definition.enabledKeys)) : Boolean(data);
 		const shown = data || host.getSlotDefaults(definition.key);
+		syncGlitterRecolorAction(editor, layer, definition.key, prefix, () => host.getLayer());
 		if (data && data.mode === 'glitter' && !data.glitterId) {
 			data.glitterId = getPaintSlotDefaultGlitterId(host.type, definition);
 		}

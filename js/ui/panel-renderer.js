@@ -840,6 +840,7 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 	['hue', 'saturation', 'brightness'].forEach((role) => {
 		colorSet.appendChild(buildSliderRow({ id: ids[role] || `${prefix}${panelCap(role)}`, slider: role, label: options.owner ? named(FIELDS[role].label) : undefined }));
 	});
+	colorSet.appendChild(buildActionSet({ actions: [{ id: `${prefix}Recolor`, label: 'Recolor', icon: 'recolor' }] }));
 	if (!slot.texturePosition) return [colorSet];
 
 	const textureSet = buildSet('Texture', 'advanced-texture-position-group');

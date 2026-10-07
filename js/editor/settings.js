@@ -631,7 +631,7 @@ initializeExportSettings() {
 	estimateExportAnimation(layers) {
 		return this.sceneCompositor.estimateLoopDuration({
 			layers,
-			library: this.glitterLibrary.content,
+			library: this.glitterLibrary.getRenderContent(),
 			fallbackDuration: this.exportSettings.frameDelay,
 			smartReduction: this.exportSettings.smartFrameReduction,
 			exportFidelity: this.exportSettings.exportFidelity,

@@ -50,6 +50,7 @@ class ModalManager {
 			closeButtons: closeBtnIds.map(buttonId => document.getElementById(buttonId)).filter(Boolean),
 			onOpen: options.onOpen || null,
 			onClose: options.onClose || null,
+			beforeClose: options.beforeClose || null,
 			closeOnOutsideClick: options.closeOnOutsideClick !== false,
 			closeOnEscape: options.closeOnEscape !== false,
 			externalContentUrl: options.externalContentUrl || null,
@@ -220,6 +221,14 @@ class ModalManager {
 			return false;
 		}
 		if (!config.modal.classList.contains('visible')) return false;
+		if (config.beforeClose && !options.force) {
+			if (config.closing) return false;
+			config.closing = true;
+			Promise.resolve(config.beforeClose()).then((allowed) => {
+				if (allowed) this.close(id, { ...options, force: true });
+			}).finally(() => { config.closing = false; });
+			return false;
+		}
 
 		const modalBody = config.modal.querySelector('.modal-body');
 		if (modalBody) {

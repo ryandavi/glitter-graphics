@@ -1,0 +1,67 @@
+@use '../mixins' as *;
+
+#glitterRecolorModal {
+	.modal-content { --modal-width: var(--modal-width-reading); }
+	.modal-body.recolor-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 340px;
+		padding: 0;
+		overflow: hidden;
+	}
+	.recolor-stage {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		min-width: 0;
+		min-height: 0;
+		padding: var(--spacing-lg);
+		background: var(--color-bg-tertiary);
+	}
+	.recolor-stage-host {
+		display: flex;
+		flex: 1 1 auto;
+		align-items: center;
+		justify-content: center;
+		min-height: 0;
+		overflow: hidden;
+	}
+	canvas {
+		max-width: 100%;
+		image-rendering: pixelated;
+		background-color: #fff;
+		background-image: conic-gradient(#ddd 25%, transparent 0 50%, #ddd 0 75%, transparent 0);
+		background-size: 16px 16px;
+	}
+	#recolorStage { cursor: crosshair; }
+	&[data-backdrop='light'] canvas { background: #fff; }
+	&[data-backdrop='dark'] canvas { background: #222; }
+	.recolor-transport { display: flex; gap: var(--spacing-sm); }
+	.recolor-side {
+		min-width: 0;
+		min-height: 0;
+		padding: var(--spacing-lg);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+	#recolorSwatches .is-selected { outline: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+	#recolorSwatches {
+		.property-row { --property-label-col: 3em; }
+		.recolor-color-control {
+			display: grid;
+			grid-column: 2 / -2;
+			grid-template-columns: minmax(0, 1fr) 7em;
+			gap: var(--spacing-sm);
+			min-width: 0;
+		}
+		.color-hex-input { width: 100%; min-width: 0; height: var(--control-height); font-variant-numeric: tabular-nums; }
+	}
+	.modal-footer > .btn-text { margin-right: auto; }
+	@media (max-width: 600px) {
+		.modal-body.recolor-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(180px, 34%) minmax(0, 1fr); }
+		.recolor-stage { gap: var(--spacing-xs); padding: var(--spacing-md); }
+		.recolor-stage .property-note { display: none; }
+		#recolorRepeat { max-height: 40px; }
+	}
+}
+
+#glitterBrowser .asset-option.recolor-unavailable { opacity: 0.3; }

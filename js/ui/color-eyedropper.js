@@ -24,7 +24,7 @@ function initializeColorEyedroppers(editor) {
 		};
 		const composed = await editor.sceneCompositor.composeFrameAt({
 			visibleLayers: layers,
-			glitterGifs: editor.glitterLibrary.content,
+			glitterGifs: editor.glitterLibrary.getRenderContent(),
 			canvasData: {
 				width: editor.originalCanvas.width,
 				height: editor.originalCanvas.height,

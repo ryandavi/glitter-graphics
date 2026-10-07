@@ -26,6 +26,7 @@ updateOrientationButtons(width, height) {
 ,
 	setupModalListeners() {
 		this.modalManager = new ModalManager();
+		this.glitterRecolor = new GlitterRecolorController(this);
 
 		// Simple modals (inline content)
 		this.modalManager

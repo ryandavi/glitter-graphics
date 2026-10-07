@@ -222,6 +222,7 @@ class BaseBackgroundManager {
 		this.bindRange('Scale', 'scale');
 		this.bindRange('Opacity', 'opacity');
 		['Hue', 'Saturation', 'Brightness'].forEach((name) => this.bindColorAdjust(name));
+		bindGlitterRecolorAction(this.editor, () => this.getActiveLayer(), 'background', 'baseBackground');
 		bindSlotTextureCoordinateControls({
 			prefix: 'baseBackground',
 			getLayer: () => this.getActiveLayer(),
@@ -321,6 +322,7 @@ class BaseBackgroundManager {
 
 	loadLayerSettings(layer) {
 		if (layer?.type !== LayerType.BASE_IMAGE) return;
+		syncGlitterRecolorAction(this.editor, layer, 'background', 'baseBackground', () => this.getActiveLayer());
 		this.updateAutoGlitterAvailability(layer);
 		const modeButton = document.getElementById(`baseBackground${layer.background.mode[0].toUpperCase()}${layer.background.mode.slice(1)}`);
 		syncPaintSlotSourceUI(modeButton || document.getElementById('baseBackgroundImage'), layer.background.mode);

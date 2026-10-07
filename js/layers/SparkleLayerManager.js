@@ -190,7 +190,7 @@ class SparkleLayerManager {
 		const params = this.editor.filterLayerManager.buildSnapshotParams(layers);
 		const preparedContext = await this.sceneCompositor.prepareContext(params);
 		const estimate = await this.sceneCompositor.estimateLoopDuration({
-			layers, library: this.editor.glitterLibrary.content,
+			layers, library: this.editor.glitterLibrary.getRenderContent(),
 			fallbackDuration: CONFIG.export.defaults.frameDelay,
 			maxFrames: CONFIG.tools.sparkles.sceneSampleFrames, baseImage: true
 		});

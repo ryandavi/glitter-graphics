@@ -38,7 +38,8 @@ class ProjectSerializer {
 			activeLayerId: this.editor.activeLayerId,
 			masks: await this.serializeMasks(),
 			shapeFillImages: this.serializeShapeFillImages(layers),
-			customStickers: await this.serializeCustomStickers(layers)
+			customStickers: await this.serializeCustomStickers(layers),
+			customGlitter: await this.serializeCustomGlitter(layers)
 		};
 	}
 
@@ -100,6 +101,7 @@ class ProjectSerializer {
 		await this.loadBaseImage(migrated);
 		// Base-image loading resets manager state, so embedded assets must bind after it.
 		await this.registerCustomStickers(migrated.customStickers || {});
+		await this.registerCustomGlitter(migrated.customGlitter || {});
 		this.editor.shapeGlitterManager.clearImageFillAssets();
 		await this.registerShapeFillImages(migrated.shapeFillImages || {});
 
@@ -162,7 +164,9 @@ class ProjectSerializer {
 			const visit = (value) => {
 				if (!value || typeof value !== 'object') return;
 				Object.entries(value).forEach(([key, child]) => {
-					if (key === 'glitterId' && child && !this.editor.glitterLibrary.getItemById(child)) {
+					const custom = data.customGlitter?.[child];
+					const hasCustom = custom?.data || (custom?.recipe && this.editor.glitterLibrary.getItemById(custom.recipe.sourceId));
+					if (key === 'glitterId' && child && !hasCustom && !this.editor.glitterLibrary.getItemById(child)) {
 						issues.push({ kind: 'glitter', index, id: child, key, message: `${label}: glitter “${child}” is unavailable — default glitter will be substituted` });
 					} else if (typeof child === 'object') visit(child);
 				});
@@ -356,6 +360,27 @@ class ProjectSerializer {
 				id,
 				...payload
 			});
+		}
+	}
+
+	async serializeCustomGlitter(layers) {
+		const embedded = {};
+		const ids = new Set(layers.flatMap(layer => getLayerPaintSlots(layer, { includeDrafts: true }).map(({ data }) => data?.glitterId)));
+		for (const id of ids) {
+			const item = this.editor.glitterLibrary.getItemById(id);
+			if (!item?.recipe) continue;
+			embedded[id] = {
+				recipe: item.recipe,
+				data: await this.blobToDataUrl(new Blob([item.gifBytes], { type: 'image/gif' })),
+				sourceData: item.sourceBytes ? await this.blobToDataUrl(new Blob([item.sourceBytes], { type: 'image/gif' })) : null
+			};
+		}
+		return embedded;
+	}
+
+	async registerCustomGlitter(embedded) {
+		for (const payload of Object.values(embedded)) {
+			await this.editor.glitterLibrary.registerCustomGlitter(payload.recipe, { data: payload.data, sourceData: payload.sourceData });
 		}
 	}
 

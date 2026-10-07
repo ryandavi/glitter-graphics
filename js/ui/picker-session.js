@@ -87,13 +87,15 @@ function returnFromPickerToProperties(editor, options = {}) {
 }
 
 function renderPickerStrip(state = {}) {
+	const recolor = window.editor?.glitterRecolor;
+	if (recolor?.pickerSession) state = recolor.getPickerStripState();
 	const strip = document.getElementById('galleryPickerStrip');
 	if (!strip || !state.ownsStrip) return;
 	const title = document.getElementById('galleryPickerStripTitle');
 	const detail = document.getElementById('galleryPickerStripDetail');
 	const done = document.getElementById('galleryPickerStripDone');
 	const section = document.getElementById('designGallerySection');
-	const visible = Boolean(state.visible) && !window.editor?.layerManager?.hasMultiSelection();
+	const visible = Boolean(state.visible) && (Boolean(recolor?.pickerSession) || !window.editor?.layerManager?.hasMultiSelection());
 	const armed = visible && Boolean(state.armed);
 	const hint = visible && Boolean(state.hint);
 

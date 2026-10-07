@@ -648,6 +648,10 @@ isLayerContentLocked(layer) {
 		};
 
 		badgesEl.replaceChildren();
+		if (asset.recipe && manager?.createAssetProvenance) {
+			const provenance = manager.createAssetProvenance(asset);
+			addBadge('badge-recolored', provenance.textContent, provenance.textContent);
+		}
 
 		// Category badge reveals the asset in its gallery/category.
 		if (asset.category) {
@@ -731,7 +735,7 @@ isLayerContentLocked(layer) {
 
 		glitterOptions.forEach(opt => {
 			const isSelected = layer && selectedGlitterId != null &&
-				parseInt(opt.dataset.id, 10) === selectedGlitterId;
+				String(opt.dataset.id) === String(selectedGlitterId);
 			opt.classList.toggle('selected', isSelected);
 		});
 
