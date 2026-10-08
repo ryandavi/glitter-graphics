@@ -387,31 +387,6 @@ class GlitterEditor {
 			const btn = document.getElementById(id);
 			if (btn) btn.addEventListener('click', handler);
 		});
-
-		this.setupToolbarOverflowFade();
-	}
-
-	// Fade only the edge that actually has hidden tools past it: no top fade when
-	// scrolled to the top, no bottom fade when the last tool is fully in view,
-	// and no fade at all when the whole rail fits. CSS keys off the classes.
-	setupToolbarOverflowFade() {
-		const toolbar = document.querySelector('.toolbar');
-		if (!toolbar) return;
-
-		const update = () => {
-			const slack = toolbar.scrollHeight - toolbar.clientHeight;
-			const overflowing = slack > 1;
-			toolbar.classList.toggle('has-overflow-top', overflowing && toolbar.scrollTop > 1);
-			toolbar.classList.toggle('has-overflow-bottom', overflowing && toolbar.scrollTop < slack - 1);
-		};
-
-		toolbar.addEventListener('scroll', update, { passive: true });
-		if (typeof ResizeObserver === 'function') {
-			new ResizeObserver(update).observe(toolbar);
-		} else {
-			window.addEventListener('resize', update);
-		}
-		update();
 	}
 
 	getSelectedActionableLayers() {

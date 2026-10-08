@@ -953,6 +953,9 @@
   --line-height-relaxed: 1.7;
   /* Scrollbars */
   --scrollbar-width: 6px;
+  --scrollbar-hit-width: 12px;
+  --scrollbar-inset: 2px;
+  --scroll-fade-size: var(--spacing-md);
   --scrollbar-min-thumb: 28px;
   /* Transitions */
   --transition-fast: 0.2s;
@@ -1185,37 +1188,75 @@ select {
   scroll-behavior: auto !important;
 }
 
-.has-overlay-scrollbars .scroll-region {
-  scrollbar-width: none;
+@media (forced-colors: none) {
+  .has-overlay-scrollbars .scroll-region {
+    scrollbar-width: none;
+  }
+  .has-overlay-scrollbars .scroll-region::-webkit-scrollbar {
+    display: none;
+  }
 }
-.has-overlay-scrollbars .scroll-region::-webkit-scrollbar {
-  display: none;
-}
-
-.scroll-region-thumb {
+.scroll-region-track {
   position: fixed;
   z-index: var(--modal-z-index);
-  width: var(--scrollbar-width);
+  width: var(--scrollbar-hit-width);
   border-radius: var(--radius-sm);
-  background: var(--color-border-hover);
   opacity: 0;
   pointer-events: none;
   touch-action: none;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--transition-fast), background var(--transition-fast);
 }
-.scroll-region-thumb.is-visible {
+.scroll-region-track.is-visible {
   opacity: 1;
   pointer-events: auto;
 }
-.scroll-region-thumb:hover, .scroll-region-thumb.is-dragging {
+.scroll-region-track.is-touch {
+  pointer-events: none;
+}
+.scroll-region-track:hover, .scroll-region-track.is-dragging {
+  background: color-mix(in srgb, var(--color-text-tertiary) 14%, transparent);
+}
+@media (forced-colors: active) {
+  .scroll-region-track {
+    display: none;
+  }
+}
+
+.scroll-region-thumb {
+  position: absolute;
+  inset-inline: 0;
+}
+.scroll-region-thumb::after {
+  content: "";
+  position: absolute;
+  inset-block: var(--scrollbar-inset);
+  inset-inline-end: var(--scrollbar-inset);
+  width: var(--scrollbar-width);
+  border-radius: var(--radius-sm);
+  background: var(--color-border-hover);
+  transition: width var(--transition-fast), background var(--transition-fast);
+}
+.scroll-region-track:hover .scroll-region-thumb::after, .scroll-region-track.is-dragging .scroll-region-thumb::after {
+  width: calc(100% - 2 * var(--scrollbar-inset));
+}
+.scroll-region-thumb:hover::after, .scroll-region-track.is-dragging .scroll-region-thumb::after {
   background: var(--color-text-tertiary);
 }
 
-@media (pointer: coarse) {
-  .scroll-region-thumb.is-visible {
-    pointer-events: none;
-  }
+.has-scroll-fade::after {
+  content: "";
+  position: sticky;
+  bottom: calc(-1 * var(--scroll-fade-pad-bottom, 0px));
+  z-index: 1;
+  display: block;
+  flex: 0 0 var(--scroll-fade-size);
+  align-self: stretch;
+  height: var(--scroll-fade-size);
+  margin: calc(0px - var(--scroll-fade-size) - var(--scroll-fade-gap, 0px)) calc(-1 * var(--scroll-fade-pad-right, 0px)) 0 calc(-1 * var(--scroll-fade-pad-left, 0px));
+  background: var(--scroll-fade-paint, linear-gradient(to top, var(--color-shadow), transparent));
+  pointer-events: none;
 }
+
 /* ===== REUSABLE COMPONENTS ===== */
 img[data-pixel-scale] {
   display: block;
@@ -8435,7 +8476,8 @@ body.tool-text .text-hover-baselines {
 
 .property-scrollbox {
   --property-scrollbox-height: 232px;
-  --property-scrollbox-fade-size: 30px;
+  --scroll-fade-size: 30px;
+  --scroll-fade-paint: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
   --property-scrollbox-pad: var(--spacing-lg);
   position: relative;
   display: flex;
@@ -8449,22 +8491,6 @@ body.tool-text .text-hover-baselines {
   background: var(--color-bg-secondary);
   overflow: auto;
   overscroll-behavior: contain;
-}
-.property-scrollbox::after {
-  content: "";
-  position: sticky;
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * var(--property-scrollbox-pad));
-  flex: 0 0 var(--property-scrollbox-fade-size);
-  margin-top: calc(0px - var(--property-scrollbox-fade-size) - var(--property-scrollbox-pad));
-  background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-fast);
-}
-.property-scrollbox.has-overflow-bottom::after {
-  opacity: 1;
 }
 
 .property-panel .selected-colors-display {

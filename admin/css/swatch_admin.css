@@ -264,6 +264,9 @@
   --line-height-relaxed: 1.7;
   /* Scrollbars */
   --scrollbar-width: 6px;
+  --scrollbar-hit-width: 12px;
+  --scrollbar-inset: 2px;
+  --scroll-fade-size: var(--spacing-md);
   --scrollbar-min-thumb: 28px;
   /* Transitions */
   --transition-fast: 0.2s;

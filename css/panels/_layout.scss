@@ -239,7 +239,7 @@
 	// `overflow: hidden` the sidebar sections still use). No scrollbar — a wheel/
 	// trackpad/touch scroll is enough, and a bar in a ~50px rail looks bad
 	// (Safari renders it non-overlay). Instead a mask fades whichever edge
-	// currently hides tools past it, toggled by JS (setupToolbarOverflowFade):
+	// currently hides tools past it, toggled by scroll-regions.js:
 	// none at the top when scrolled up, none at the bottom when the last tool is
 	// fully shown, and none at all when the rail fits.
 	--toolbar-fade: var(--spacing-lg);
@@ -249,17 +249,7 @@
 
 	&::-webkit-scrollbar { display: none; }
 
-	&.has-overflow-top.has-overflow-bottom {
-		mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
-	}
-
-	&.has-overflow-top:not(.has-overflow-bottom) {
-		mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
-	}
-
-	&.has-overflow-bottom:not(.has-overflow-top) {
-		mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
-	}
+	@include overflow-edge-mask(var(--toolbar-fade));
 
 	>.toolbar-spacer {
 		flex: 1;

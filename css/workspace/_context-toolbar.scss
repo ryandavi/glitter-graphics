@@ -27,8 +27,7 @@
 	transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 
 	@include floating-ui;
-	// No scrollbar: a mask fades whichever edge hides controls past it, toggled
-	// by ContextToolbarRenderer.bindOverflowFade.
+	// No scrollbar: a mask fades whichever edge hides controls past it.
 	--context-bar-fade: var(--spacing-lg);
 	overflow-x: auto;
 	overflow-y: hidden;
@@ -40,17 +39,7 @@
 
 	&::-webkit-scrollbar { display: none; }
 
-	&.has-overflow-start.has-overflow-end {
-		mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade), #000 calc(100% - var(--context-bar-fade)), transparent 100%);
-	}
-
-	&.has-overflow-start:not(.has-overflow-end) {
-		mask-image: linear-gradient(to right, transparent 0, #000 var(--context-bar-fade));
-	}
-
-	&.has-overflow-end:not(.has-overflow-start) {
-		mask-image: linear-gradient(to left, transparent 0, #000 var(--context-bar-fade));
-	}
+	@include overflow-edge-mask(var(--context-bar-fade), $horizontal: true);
 
 	> * { flex: 0 0 auto; }
 

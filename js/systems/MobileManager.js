@@ -464,7 +464,7 @@ class MobileManager {
 				const header = event.target.closest('[data-mobile-drawer-handle], .mobile-sheet-drag-header');
 				let content = false;
 				if (!header) {
-					if (event.pointerType !== 'touch' || event.target.closest('input, select, textarea, .gradient-preview, .layer-drag-handle, .scroll-region-thumb, [data-pointer-drag]')) return;
+					if (event.pointerType !== 'touch' || event.target.closest('input, select, textarea, .gradient-preview, .layer-drag-handle, .scroll-region-track, [data-pointer-drag]')) return;
 					for (let node = event.target; node && node !== sheet; node = node.parentElement) {
 						const style = getComputedStyle(node);
 						if (style.touchAction === 'none' || (node.scrollWidth > node.clientWidth && /^(auto|scroll)$/.test(style.overflowX))) return;

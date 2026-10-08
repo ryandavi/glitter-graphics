@@ -1,29 +1,74 @@
-// Native scrolling owns input and momentum; the shared thumb occupies no space.
-.has-overlay-scrollbars .scroll-region {
-	scrollbar-width: none;
+// Native scrolling owns input and momentum; the shared bar occupies no space.
+// Forced colors repaint backgrounds, so that mode keeps the native bars.
+@media (forced-colors: none) {
+	.has-overlay-scrollbars .scroll-region {
+		scrollbar-width: none;
 
-	&::-webkit-scrollbar { display: none; }
+		&::-webkit-scrollbar { display: none; }
+	}
 }
 
-.scroll-region-thumb {
+// The track is the hit area over the region's edge; it tints only under the pointer.
+.scroll-region-track {
 	position: fixed;
 	z-index: var(--modal-z-index);
-	width: var(--scrollbar-width);
+	width: var(--scrollbar-hit-width);
 	border-radius: var(--radius-sm);
-	background: var(--color-border-hover);
 	opacity: 0;
 	pointer-events: none;
 	touch-action: none;
-	transition: opacity var(--transition-fast);
+	transition: opacity var(--transition-fast), background var(--transition-fast);
 
 	&.is-visible {
 		opacity: 1;
 		pointer-events: auto;
 	}
 
-	&:hover, &.is-dragging { background: var(--color-text-tertiary); }
+	&.is-touch { pointer-events: none; }
+
+	&:hover, &.is-dragging { background: color-mix(in srgb, var(--color-text-tertiary) 14%, transparent); }
+
+	@media (forced-colors: active) { display: none; }
 }
 
-@media (pointer: coarse) {
-	.scroll-region-thumb.is-visible { pointer-events: none; }
+.scroll-region-thumb {
+	position: absolute;
+	inset-inline: 0;
+
+	// The drawn pill sits inset from the track's edges and fills it under the pointer.
+	&::after {
+		content: '';
+		position: absolute;
+		inset-block: var(--scrollbar-inset);
+		inset-inline-end: var(--scrollbar-inset);
+		width: var(--scrollbar-width);
+		border-radius: var(--radius-sm);
+		background: var(--color-border-hover);
+		transition: width var(--transition-fast), background var(--transition-fast);
+	}
+
+	.scroll-region-track:hover &::after,
+	.scroll-region-track.is-dragging &::after { width: calc(100% - 2 * var(--scrollbar-inset)); }
+
+	&:hover::after,
+	.scroll-region-track.is-dragging &::after { background: var(--color-text-tertiary); }
+}
+
+// A bottom strip cues content below the fold. scroll-regions.js stamps the
+// class with the host's padding and gap: the strip is in flow and sticky, so
+// it steps out by the padding to sit flush and its margin cancels its height.
+// A shadow suits any surface; a host that knows its own background can set
+// --scroll-fade-paint and --scroll-fade-size to fade into it instead.
+.has-scroll-fade::after {
+	content: '';
+	position: sticky;
+	bottom: calc(-1 * var(--scroll-fade-pad-bottom, 0px));
+	z-index: 1;
+	display: block;
+	flex: 0 0 var(--scroll-fade-size);
+	align-self: stretch;
+	height: var(--scroll-fade-size);
+	margin: calc(0px - var(--scroll-fade-size) - var(--scroll-fade-gap, 0px)) calc(-1 * var(--scroll-fade-pad-right, 0px)) 0 calc(-1 * var(--scroll-fade-pad-left, 0px));
+	background: var(--scroll-fade-paint, linear-gradient(to top, var(--color-shadow), transparent));
+	pointer-events: none;
 }

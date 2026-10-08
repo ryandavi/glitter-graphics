@@ -1522,25 +1522,6 @@ function initializeModuleSummaries(root = document) {
 	});
 }
 
-// Every `.property-scrollbox` (font list, preset grids) fades its bottom edge
-// while more content sits below the fold.
-function initializeScrollBoundaryFades(root = document) {
-	const scrollboxes = [...root.querySelectorAll('.property-scrollbox')];
-	if (root.matches?.('.property-scrollbox')) scrollboxes.unshift(root);
-	scrollboxes.forEach((scrollbox) => {
-		if (scrollbox.dataset.scrollBoundaryFade !== undefined) return;
-		scrollbox.dataset.scrollBoundaryFade = '';
-		const update = () => {
-			const remaining = scrollbox.scrollHeight - scrollbox.clientHeight - scrollbox.scrollTop;
-			scrollbox.classList.toggle('has-overflow-bottom', remaining > 1);
-		};
-		scrollbox.addEventListener('scroll', update, { passive: true });
-		new MutationObserver(update).observe(scrollbox, { childList: true });
-		if (typeof ResizeObserver === 'function') new ResizeObserver(update).observe(scrollbox);
-		update();
-	});
-}
-
 // One state contract for every schema-rendered effect card. Managers supply
 // only the enabled value; expansion, accessibility, and paint-slot body
 // visibility stay owned by the shared panel primitive.
@@ -1765,7 +1746,6 @@ function renderBarePanelSection(schema) {
 	content.replaceChildren();
 	(schema.preamble || []).forEach((item) => content.appendChild(buildPanelItem(item, schema)));
 	renderPanelSubsections(schema, content);
-	initializeScrollBoundaryFades(host);
 	finishPanelMarkup(host);
 }
 
@@ -1865,7 +1845,6 @@ function renderPanelSection(schema) {
 	// Keep generated section chrome before any retained static host content.
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
-	initializeScrollBoundaryFades(host);
 	finishPanelMarkup(host);
 }
 

@@ -19,7 +19,6 @@ class ContextToolbarRenderer {
 			host.dataset.contextToolbar = '';
 			this.hosts.push(host);
 			this.bindPlacement(host, handle);
-			this.bindOverflowFade(host);
 		});
 
 		window.addEventListener('resize', () => this.hosts.forEach((host) => this.applyPlacement(host)), { passive: true });
@@ -27,21 +26,6 @@ class ContextToolbarRenderer {
 			const parent = this.hosts[0]?.offsetParent;
 			if (parent) new ResizeObserver(() => this.hosts.forEach((host) => this.applyPlacement(host))).observe(parent);
 		}
-	}
-
-	// A bar wider than the workspace scrolls sideways. Fade only the edge that
-	// has controls hidden past it; CSS keys off the classes.
-	bindOverflowFade(host) {
-		const update = () => {
-			const slack = host.scrollWidth - host.clientWidth;
-			const overflowing = slack > 1;
-			host.classList.toggle('has-overflow-start', overflowing && host.scrollLeft > 1);
-			host.classList.toggle('has-overflow-end', overflowing && host.scrollLeft < slack - 1);
-		};
-		host.addEventListener('scroll', update, { passive: true });
-		if (typeof ResizeObserver === 'function') new ResizeObserver(update).observe(host);
-		else window.addEventListener('resize', update);
-		update();
 	}
 
 	readPlacement() {

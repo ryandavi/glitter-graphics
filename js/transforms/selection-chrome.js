@@ -359,17 +359,21 @@ class SelectionChrome {
 		return Math.abs(localX) <= screen.hw && Math.abs(localY) <= screen.hh ? 'move' : null;
 	}
 
+	// The handle a pointer event on the chrome lands on: the node's own type,
+	// or for the body whatever hitTest finds under the point.
+	handleTypeAt(event) {
+		const directType = event.target.closest?.('[data-handle-type]')?.dataset.handleType;
+		if (!directType || directType !== 'move') return directType ?? null;
+		return this.hitTest(event.clientX, event.clientY, event.pointerType) || directType;
+	}
+
 	// Route every pointerdown on the chrome through hitTest. `element` is the
 	// node that received it (for pointer capture).
 	onPointerDown(callback) {
 		this.element.addEventListener('pointerdown', (event) => {
 			const element = event.target.closest('[data-handle-type]');
 			if (!element) return;
-			const directType = element.dataset.handleType;
-			const handleType = directType !== 'move'
-				? directType
-				: (this.hitTest(event.clientX, event.clientY, event.pointerType) || directType);
-			callback(handleType, event, element);
+			callback(this.handleTypeAt(event), event, element);
 		});
 	}
 

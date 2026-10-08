@@ -708,7 +708,7 @@ const CONFIG = deepFreeze({
 		},
 		// Arrow-key layer nudges within this window share one history entry.
 		history: { coalesceMs: 150 },
-		scrollbar: { hideDelayMs: 800 },
+		scrollbar: { hideDelayMs: 800, pageFraction: 0.875, pageRepeatDelayMs: 400, pageRepeatMs: 60 },
 		independentCollapsibleSections: ['layersPanel'],
 		// The Library's Recent strip, per asset kind.
 		library: {

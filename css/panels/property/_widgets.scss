@@ -39,11 +39,12 @@
 // ----- Picker frame ---------------------------------------------------------
 // The font list and every preset grid. A FIXED height: switching category or
 // selection never reflows the panel below, and a short list leaves empty space
-// instead of shrinking the box. `has-overflow-bottom`
-// (initializeScrollBoundaryFades) fades the bottom edge while more sits below.
+// instead of shrinking the box. The shared scroll-region strip fades the
+// bottom edge into the frame while more sits below.
 .property-scrollbox {
 	--property-scrollbox-height: 232px;
-	--property-scrollbox-fade-size: 30px;
+	--scroll-fade-size: 30px;
+	--scroll-fade-paint: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
 	--property-scrollbox-pad: var(--spacing-lg);
 	position: relative;
 	display: flex;
@@ -57,24 +58,6 @@
 	background: var(--color-bg-secondary);
 	overflow: auto;
 	overscroll-behavior: contain;
-
-	// Sticky insets measure from the content box, so the fade steps out by the
-	// padding to sit flush on the frame; the margin cancels its own height and gap.
-	&::after {
-		content: '';
-		position: sticky;
-		left: 0;
-		right: 0;
-		bottom: calc(-1 * var(--property-scrollbox-pad));
-		flex: 0 0 var(--property-scrollbox-fade-size);
-		margin-top: calc(0px - var(--property-scrollbox-fade-size) - var(--property-scrollbox-pad));
-		background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity var(--transition-fast);
-	}
-
-	&.has-overflow-bottom::after { opacity: 1; }
 }
 
 // ----- Selected color chips ---------------------------------------------------

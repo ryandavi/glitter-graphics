@@ -539,15 +539,54 @@ class TextGlitterManager {
 	fitBoxToText(layer) {
 		if (layer.textData.boxMode !== 'fixed') return;
 
+		const fit = this.getFitBoxSize(layer);
+		if (!fit) return;
+
+		layer.textData.boxWidth = fit.width;
+		layer.textData.boxHeight = fit.height;
+	}
+
+	// The box that shrink-wraps the currently wrapped lines (+1px so rounding
+	// can't re-wrap the widest line).
+	getFitBoxSize(layer) {
 		const entry = this.getMeasurementEntry(layer);
-		if (!entry.lines.length) return;
+		if (!entry.lines.length) return null;
 
 		const minBoxSize = this.getMinBoxSize();
 		const fullHeight = layer.textData.orientation === 'stacked' ? entry.layout.contentHeight : entry.ascent + (entry.lines.length - 1) * entry.lineHeightPx + entry.lines.at(-1).descent;
-		const maxLineWidth = entry.layout.contentWidth;
+		return {
+			width: Math.max(minBoxSize, Math.ceil(entry.layout.contentWidth) + 1),
+			height: Math.max(minBoxSize, Math.ceil(fullHeight) + 1)
+		};
+	}
 
-		layer.textData.boxWidth = Math.max(minBoxSize, Math.ceil(maxLineWidth) + 1);
-		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(fullHeight) + 1);
+	// Double-clicking a box edge, like Illustrator: that edge moves to the text
+	// while the opposite one stays put. Side edges fit the width, top and bottom
+	// the height (which an auto-height box already does).
+	fitBoxEdgeToText(layer, edge) {
+		if (!this.canResizeBoxEdges(layer)) return false;
+		const horizontal = edge === 'left' || edge === 'right';
+		if (!horizontal && layer.textData.boxMode !== 'fixed') return false;
+
+		const fit = this.getFitBoxSize(layer);
+		if (!fit) return false;
+		if (horizontal ? fit.width === layer.textData.boxWidth : fit.height === layer.textData.boxHeight) return false;
+
+		const dragState = { transform: getLayerTransform(layer), textResizeEdge: edge };
+		const metrics = this.getBoxResizeMetrics(layer, dragState);
+		const rect = {
+			left: -metrics.baseDisplayWidth / 2,
+			right: metrics.baseDisplayWidth / 2,
+			top: -metrics.baseDisplayHeight / 2,
+			bottom: metrics.baseDisplayHeight / 2
+		};
+		if (edge === 'right') rect.right = rect.left + fit.width * metrics.scaleX;
+		else if (edge === 'left') rect.left = rect.right - fit.width * metrics.scaleX;
+		else if (edge === 'bottom') rect.bottom = rect.top + fit.height * metrics.scaleY;
+		else if (edge === 'top') rect.top = rect.bottom - fit.height * metrics.scaleY;
+		else return false;
+
+		return this.applyResizedBoxRect(layer, dragState, rect, metrics);
 	}
 
 	// Slots resolve through their declared path, so a nested slot (Text

@@ -30,7 +30,6 @@ function installEffectGradientEditor(options) {
 	] }, { prefix: 'gradient' });
 	const presetGroup = presetSet.querySelector('select');
 	const presetGrid = presetSet.querySelector('.preset-grid');
-	initializeScrollBoundaryFades(presetGrid);
 	presetSet.dataset.paintSourceMode = 'gradient';
 	presetSet.hidden = true;
 

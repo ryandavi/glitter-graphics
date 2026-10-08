@@ -430,6 +430,33 @@ $modal-compact-breakpoint: 600px;
 	text-shadow: none;
 }
 
+// A bar-less scroller fades whichever edge hides content past it, keyed off
+// the `has-overflow-*` classes scroll-regions.js stamps.
+@mixin overflow-edge-mask($size, $horizontal: false) {
+	$start: 'top';
+	$end: 'bottom';
+	$forward: bottom;
+	$backward: top;
+	@if $horizontal {
+		$start: 'start';
+		$end: 'end';
+		$forward: right;
+		$backward: left;
+	}
+
+	&.has-overflow-#{$start}.has-overflow-#{$end} {
+		mask-image: linear-gradient(to $forward, transparent 0, #000 $size, #000 calc(100% - #{$size}), transparent 100%);
+	}
+
+	&.has-overflow-#{$start}:not(.has-overflow-#{$end}) {
+		mask-image: linear-gradient(to $forward, transparent 0, #000 $size);
+	}
+
+	&.has-overflow-#{$end}:not(.has-overflow-#{$start}) {
+		mask-image: linear-gradient(to $backward, transparent 0, #000 $size);
+	}
+}
+
 @mixin floating-ui {
 	@include glass-surface;
 	border-radius: var(--radius-sm);

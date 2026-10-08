@@ -91,6 +91,9 @@ const TEXT_EDIT_METHODS = {
 			if (this.editor.currentTool !== ToolType.SELECT && this.editor.currentTool !== ToolType.TEXT) return;
 			const layer = this.getTextLayerAt(event.target);
 			if (!layer) return;
+			// An edge of an area text's selection box fits the box instead.
+			const handleType = event.target.closest?.('.transform-handles') && this.layerTransforms.get(layer.id)?.chrome?.handleTypeAt(event);
+			if (handleType?.startsWith('edge-') && this.canResizeBoxEdges(layer)) return;
 			if (this.editSession?.layerId !== layer.id) this.beginTextEdit(layer);
 			if (this.editSession?.layerId !== layer.id) return;
 			event.preventDefault(); event.stopPropagation();

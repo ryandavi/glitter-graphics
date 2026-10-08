@@ -1104,6 +1104,18 @@ removeTransformHandles() {
 
 		this.chrome.onPointerDown((handleType, e, handle) => this.beginHandleDrag(handleType, e, handle));
 		this.transformHandles.addEventListener('dblclick', (event) => {
+			// An area text edge fits its box to the text on that side.
+			const handleType = this.chrome.handleTypeAt(event) || '';
+			if (handleType.startsWith('edge-')) {
+				const edge = handleType.replace('edge-', '');
+				if (this.layer.locked || !this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)) return;
+				event.stopPropagation();
+				if (this.editor.textGlitterManager.fitBoxEdgeToText(this.layer, edge)) {
+					this.scheduleSettingsSync();
+					this.editor.saveState('Fit text box');
+				}
+				return;
+			}
 			if (!event.target.closest('[data-handle-type="anchor"]')) return;
 			this.getTransform().anchor = { ...CONFIG.tools.stickers.defaults.transform.anchor };
 			this.updateHandlePositions();
