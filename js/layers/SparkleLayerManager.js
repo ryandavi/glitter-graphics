@@ -43,7 +43,7 @@ class SparkleLayerManager {
 			editor: this.editor,
 			getLayer: () => this.getActiveLayer(),
 			ensureSlot: (layer, key) => this.ensureSlot(layer, key),
-			getSlotDefaults: () => this.getDefaultSparkles(),
+			getSlotDefaults: () => getSlotDefaults(LayerType.SPARKLES, 'sparkles'),
 			apply: (layer, mutate, change) => {
 				mutate();
 				this.editor.requestPreviewUpdate();
@@ -75,21 +75,11 @@ class SparkleLayerManager {
 		});
 	}
 
-	getActiveLayer() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		return layer?.type === LayerType.SPARKLES ? layer : null;
-	}
-
 	// A new layer starts as the Winter Snow preset.
-	getDefaultSparkles() {
-		const data = buildDefaultSparkles();
-		SPARKLE_PRESETS.apply('winter-snow', data);
-		return data;
-	}
 
 	ensureSlot(layer, key) {
 		if (key !== 'sparkles' || !layer) return null;
-		layer.sparkles ||= this.getDefaultSparkles();
+		layer.sparkles ||= getSlotDefaults(LayerType.SPARKLES, 'sparkles');
 		return layer.sparkles;
 	}
 
@@ -102,7 +92,7 @@ class SparkleLayerManager {
 			visible: true,
 			locked: false,
 			opacity: FIELDS.layerOpacity.value,
-			sparkles: this.getDefaultSparkles()
+			sparkles: getSlotDefaults(LayerType.SPARKLES, 'sparkles')
 		});
 	}
 
@@ -228,7 +218,7 @@ class SparkleLayerManager {
 	}
 
 	removeLayerElement(layerId) {
-		removeManagedLayerElement(this.layerElements, layerId);
+		LAYER_ELEMENT_METHODS.removeLayerElement.call(this, layerId);
 		this.clearPendingScene(layerId);
 		this.sceneKeys.delete(layerId);
 	}
@@ -238,8 +228,7 @@ class SparkleLayerManager {
 	}
 
 	clearElements() {
-		this.layerElements.forEach((element) => element.remove());
-		this.layerElements.clear();
+		LAYER_ELEMENT_METHODS.clearElements.call(this);
 	}
 
 	loadLayerSettings(layer) {
@@ -273,3 +262,6 @@ class SparkleLayerManager {
 		};
 	}
 }
+
+SparkleLayerManager.LAYER_TYPE = LayerType.SPARKLES;
+Object.assign(SparkleLayerManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer });

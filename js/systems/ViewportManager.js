@@ -590,7 +590,7 @@ class ViewportManager {
 			return;
 		}
 
-		const decay = CONFIG.ui.gestures.inertia.decay ?? 0.92;
+		const decay = CONFIG.ui.gestures.inertia.decay;
 		this.cancelInertia();
 
 		this.inertiaVelocityX = velocityX;

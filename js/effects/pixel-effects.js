@@ -1,6 +1,8 @@
 // Shared, deterministic pixel pipeline for Base Image preview and export.
 // Pure pixel math keeps Safari/iOS support and makes both renderers byte-equal.
 (function (root) {
+	const { hexToRgb } = root.GlitterColor || (typeof require === 'function' ? require('../core/color.js') : null);
+	const { clamp } = root.GlitterMath || (typeof require === 'function' ? require('../core/math.js') : null);
 	const PaletteAnalysis = root.GlitterPaletteAnalysis || (typeof require === 'function' ? require('./palette-analysis.js') : null);
 	const BAYER_8 = [
 		0, 48, 12, 60, 3, 51, 15, 63, 32, 16, 44, 28, 35, 19, 47, 31,
@@ -9,9 +11,6 @@
 		10, 58, 6, 54, 9, 57, 5, 53, 42, 26, 38, 22, 41, 25, 37, 21
 	];
 
-	function clamp(value, minimum, maximum) {
-		return Math.min(maximum, Math.max(minimum, value));
-	}
 
 	function finiteNumber(value, fallback) {
 		if (value == null || value === '') return fallback;
@@ -19,10 +18,6 @@
 		return Number.isFinite(number) ? number : fallback;
 	}
 
-	function hexToRgb(value) {
-		const hex = String(value || '#000000').replace('#', '');
-		return [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16) || 0);
-	}
 
 	function colorDistance(left, right) {
 		const dr = left[0] - right[0];

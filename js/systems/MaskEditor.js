@@ -39,8 +39,7 @@ class MaskEditor {
 		this.liveOverlayQueued = false;
 		this.cursorVisible = false;
 		this.touchRingTimeout = null;
-		this.stampCacheKey = '';
-		this.stampCanvas = null;
+		this.stampCache = new BrushStampCache();
 		// Brush and Eraser keep independent setting sets. This store is the
 		// source of truth (the DOM panel is a view that setMode writes into); all
 		// getBrush*() getters read the ACTIVE mode's entry (getActiveMode(), so a
@@ -185,27 +184,15 @@ class MaskEditor {
 
 	_loadToolSettings() {
 		const defaults = this._defaultToolSettings();
-		try {
-			const raw = localStorage.getItem(MaskEditor.SETTINGS_STORAGE_KEY);
-			if (raw) {
-				const parsed = JSON.parse(raw);
-				return {
-					add: this._sanitizeSettings(parsed?.add, defaults.add),
-					sub: this._sanitizeSettings(parsed?.sub, defaults.sub)
-				};
-			}
-		} catch (error) {
-			// Ignore quota/JSON errors — defaults are a fine fallback.
-		}
-		return defaults;
+		const parsed = readStored(MaskEditor.SETTINGS_STORAGE_KEY, defaults);
+		return {
+			add: this._sanitizeSettings(parsed?.add, defaults.add),
+			sub: this._sanitizeSettings(parsed?.sub, defaults.sub)
+		};
 	}
 
 	_saveToolSettings() {
-		try {
-			localStorage.setItem(MaskEditor.SETTINGS_STORAGE_KEY, JSON.stringify(this.toolSettings));
-		} catch (error) {
-			// Non-fatal: settings just won't persist this session.
-		}
+		writeStored(MaskEditor.SETTINGS_STORAGE_KEY, this.toolSettings);
 	}
 
 	resetToolSettingsToDefaults() {
@@ -312,7 +299,7 @@ class MaskEditor {
 		this._syncDynamicsPanel();
 		// The stamp cache key embeds the shape/size/softness, so switching modes
 		// must invalidate the cached stamp.
-		this.stampCacheKey = '';
+		this.stampCache.clear();
 	}
 
 	_applyShapeToPicker(shape) {
@@ -422,7 +409,7 @@ class MaskEditor {
 		settings.shape = shape;
 		// The stamp cache key includes the shape, so the next stamp regenerates;
 		// clear it eagerly so nothing reuses the previous shape mid-session.
-		this.stampCacheKey = '';
+		this.stampCache.clear();
 		// Size and Spacing follow the brush (Photoshop presets do): a raster tip
 		// picks up the values you last gave it, else its authored diameter /
 		// spacing. Leaving a raster tip stashes the current values against it.
@@ -472,22 +459,11 @@ class MaskEditor {
 	// manifest default underneath and converts to engine units for the stamp loop.
 
 	_loadBrushDynamics() {
-		try {
-			const raw = localStorage.getItem(MaskEditor.DYNAMICS_STORAGE_KEY);
-			const parsed = raw ? JSON.parse(raw) : null;
-			if (parsed && typeof parsed === 'object') return parsed;
-		} catch (error) {
-			// Corrupt payload — start clean.
-		}
-		return {};
+		return readStored(MaskEditor.DYNAMICS_STORAGE_KEY, {});
 	}
 
 	_saveBrushDynamics() {
-		try {
-			localStorage.setItem(MaskEditor.DYNAMICS_STORAGE_KEY, JSON.stringify(this.brushDynamics));
-		} catch (error) {
-			// Non-fatal: overrides just won't persist this session.
-		}
+		writeStored(MaskEditor.DYNAMICS_STORAGE_KEY, this.brushDynamics);
 	}
 
 	// The brush's manifest defaults, in PANEL units, before user overrides.
@@ -679,14 +655,6 @@ class MaskEditor {
 		// Color-picker parity: usable whenever an image is loaded — painting on
 		// a non-glitter layer auto-creates a glitter layer (see _handlePointerDown).
 		return Boolean(this.editor.originalImage);
-	}
-
-	onToolChanged(tool) {
-		if (tool === ToolType.BRUSH) {
-			this.enterEditMode();
-		} else if (this.isEditing) {
-			this.exitEditMode({ switchTool: false });
-		}
 	}
 
 	enterEditMode() {
@@ -917,7 +885,7 @@ class MaskEditor {
 			sourceCtx.globalCompositeOperation = 'source-atop';
 			sourceCtx.globalAlpha = Math.min(
 				1,
-				CONFIG.tools.maskBrush.overlay.opacity + (CONFIG.tools.maskBrush.overlay.stripeOpacityBoost || 0)
+				CONFIG.tools.maskBrush.overlay.opacity + (CONFIG.tools.maskBrush.overlay.stripeOpacityBoost)
 			);
 			sourceCtx.fillStyle = stripePattern;
 			sourceCtx.fillRect(0, 0, width, height);
@@ -931,7 +899,7 @@ class MaskEditor {
 		if (this.getActiveMode() === 'sub') {
 			const bite = this._getEraseBiteCanvas(layer);
 			if (bite) {
-				sourceCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.eraseBiteOpacity ?? 0.6;
+				sourceCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.eraseBiteOpacity;
 				sourceCtx.drawImage(bite, 0, 0);
 				sourceCtx.globalAlpha = 1;
 			}
@@ -982,7 +950,7 @@ class MaskEditor {
 		ctx.drawImage(this.scratchAddCanvas, 0, 0);
 
 		ctx.globalCompositeOperation = 'source-in';
-		ctx.fillStyle = CONFIG.tools.maskBrush.overlay.eraseBiteColor || '#ff3b30';
+		ctx.fillStyle = CONFIG.tools.maskBrush.overlay.eraseBiteColor;
 		ctx.fillRect(0, 0, w, h);
 		ctx.globalCompositeOperation = 'source-over';
 
@@ -992,7 +960,6 @@ class MaskEditor {
 	_setupPointerListeners() {
 		const opts = { capture: true };
 
-		this.editor.previewContainer.addEventListener('pointerdown', (event) => this._handlePointerDown(event), opts);
 		this.editor.previewContainer.addEventListener('pointermove', (event) => this._handlePointerMove(event), opts);
 		this.editor.previewContainer.addEventListener('pointerup', (event) => this._handlePointerUp(event), opts);
 		this.editor.previewContainer.addEventListener('pointercancel', (event) => this._handlePointerCancel(event), opts);
@@ -1326,14 +1293,13 @@ class MaskEditor {
 	}
 
 	_startStrokeFromScreenPoint(screenX, screenY, options = {}) {
+		const canvasPoint = this.editor.viewport.screenToCanvas(screenX, screenY);
+		if (!this.editor.viewport.isWithinCanvas(canvasPoint.x, canvasPoint.y)) return false;
+		const layer = this._ensurePaintableLayer(canvasPoint.x, canvasPoint.y);
+		if (!layer) return false;
 		const point = this._getCanvasPointFromScreen(screenX, screenY);
 		if (!point) {
 			this._warnOutsideMaskSurface(screenX, screenY);
-			return false;
-		}
-
-		const layer = this._ensurePaintableLayer();
-		if (!layer) {
 			return false;
 		}
 
@@ -1406,35 +1372,9 @@ class MaskEditor {
 		this.editor.showError('This spot is outside the layer since it was moved. Paint on a new Fill layer, or use Reset Transform first');
 	}
 
-	_ensurePaintableLayer() {
-		let layer = this.editor.layerManager.getActiveLayer();
-		if (layer && layer.type === LayerType.GLITTER_FILL) {
-			if (!this.editor.canEditLayer(layer, { notify: true })) return null;
-			return layer;
-		}
-
-		// Erasing has nothing to do on a layer that can't hold glitter —
-		// don't create a fresh glitter layer just to immediately mark it dirty.
-		if (this.getActiveMode() === 'sub') {
-			this.editor.showError('Nothing to erase here — select a glitter layer first');
-			return null;
-		}
-
-		// Same convention as the color picker on a non-glitter layer:
-		// auto-create a glitter layer and work in it.
-		if (!CONFIG.app.behavior.autoCreateGlitterLayer) {
-			this.editor.showError('Select a glitter layer to paint on');
-			return null;
-		}
-
-		layer = this.editor.glitterManager.createLayer();
-		if (!layer) {
-			return null; // maxLayers reached — createLayer already showed the error
-		}
-
-		this.editor.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
-		this.editor.layerManager.setActiveLayer(layer.id);
-		this.editor.layerManager.renderLayersList();
+	_ensurePaintableLayer(x, y) {
+		const layer = this.editor.resolveFillLayer(x, y, { create: this.getActiveMode() !== 'sub', deferHistory: true });
+		if (!layer) this.editor.showError(this.getActiveMode() === 'sub' ? 'Nothing to erase here — select a fill layer first' : 'Select or create an editable fill layer');
 		return layer;
 	}
 
@@ -1669,88 +1609,7 @@ class MaskEditor {
 	}
 
 	_getStampCanvas() {
-		// Flow (and pressure) are applied as globalAlpha at draw time instead of
-		// being baked in here, since pressure varies per-stamp along a stroke.
-		const shape = this.getBrushShape();
-		const key = [
-			shape,
-			this.getBrushSize(),
-			this.getBrushSoftness(),
-			shouldUseCrispMaskEdges(),
-			CONFIG.rendering.maskAlphaThreshold
-		].join('|');
-		if (this.stampCacheKey === key && this.stampCanvas) {
-			return this.stampCanvas;
-		}
-
-		const size = this.getBrushSize();
-		const softness = this.getBrushSoftness() / 100;
-		const canvas = createAppCanvas(0, 0, 'systems/MaskEditor');
-		canvas.width = size;
-		canvas.height = size;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-		if (shape === 'round') {
-			this._drawRoundStamp(ctx, size, softness);
-		} else {
-			this._drawShapeStamp(ctx, shape, size, softness);
-		}
-		if (softness === 0 && shouldUseCrispMaskEdges()) {
-			binarizeCanvasAlpha(ctx);
-		}
-
-		this.stampCanvas = canvas;
-		this.stampCacheKey = key;
-		return canvas;
-	}
-
-	_drawRoundStamp(ctx, size, softness) {
-		const radius = size / 2;
-		const innerRadius = radius * (1 - softness);
-
-		if (innerRadius >= radius) {
-			// Softness 0: hard-edged circle. A radial gradient with equal inner
-			// and outer radius is degenerate and paints nothing per spec.
-			ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-			ctx.beginPath();
-			ctx.arc(radius, radius, radius, 0, Math.PI * 2);
-			ctx.fill();
-		} else {
-			const gradient = ctx.createRadialGradient(radius, radius, innerRadius, radius, radius, radius);
-			gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-			gradient.addColorStop(Math.max(0.001, innerRadius / radius), 'rgba(255, 255, 255, 1)');
-			gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-			ctx.fillStyle = gradient;
-			ctx.fillRect(0, 0, size, size);
-		}
-	}
-
-	// Non-round tips (square, calligraphy, star, heart). Softness feathers the
-	// edge with a distance-field falloff; the shape is inset by the blur radius so the
-	// feathered edge stays inside the size×size stamp (mirroring how the round
-	// tip's gradient reaches, but never exceeds, the brush radius).
-	_drawShapeStamp(ctx, shape, size, softness) {
-		const radius = size / 2;
-		const blurPx = softness * radius * 0.8;
-		const shapeRadius = Math.max(1, radius - blurPx);
-
-		ctx.save();
-		ctx.translate(radius, radius);
-		ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-		// Geometry lives in ShapeLibrary (shared with the Shape tool). trace() fills
-		// the shape itself. Brush stamps are uniform → same half-extent for W and H.
-		ShapeLibrary.trace(shape, ctx, shapeRadius, shapeRadius);
-		ctx.restore();
-		if (blurPx > 0.01) {
-			const feathered = createShadowMaskCanvas(ctx.canvas, 0, blurPx);
-			ctx.clearRect(0, 0, size, size);
-			ctx.drawImage(feathered, 0, 0);
-			ctx.save();
-			ctx.globalCompositeOperation = 'source-in';
-			ctx.fillStyle = '#ffffff';
-			ctx.fillRect(0, 0, size, size);
-			ctx.restore();
-		}
+		return this.stampCache.get(this.getBrushShape(), this.getBrushSize(), this.getBrushSoftness());
 	}
 
 	_getCanvasPointFromScreen(screenX, screenY) {
@@ -1781,7 +1640,7 @@ class MaskEditor {
 			return false;
 		}
 
-		if (event.target.closest('.ui-ignore-gestures') || event.target.closest('.transform-handles')) {
+		if (event.target.closest('.ui-ignore-gestures') || event.target.closest('.transform-handle-wrapper, .transform-handles')) {
 			return false;
 		}
 
@@ -1817,7 +1676,7 @@ class MaskEditor {
 			return false;
 		}
 
-		if (event.target.closest('.ui-ignore-gestures') || event.target.closest('.transform-handles')) {
+		if (event.target.closest('.ui-ignore-gestures') || event.target.closest('.transform-handle-wrapper, .transform-handles')) {
 			return false;
 		}
 
@@ -2019,15 +1878,9 @@ class MaskEditor {
 
 	_hexToRgb(hex) {
 		const normalized = this._normalizeOverlayColor(hex);
-		if (!normalized) {
-			return null;
-		}
-
-		return {
-			r: parseInt(normalized.slice(1, 3), 16),
-			g: parseInt(normalized.slice(3, 5), 16),
-			b: parseInt(normalized.slice(5, 7), 16)
-		};
+		if (!normalized) return null;
+		const [r, g, b] = hexToRgb(normalized);
+		return { r, g, b };
 	}
 
 	_withAlpha(hex, alpha) {
@@ -2089,11 +1942,11 @@ class MaskEditor {
 
 // localStorage key for the per-mode brush/eraser settings store. Bump the
 // version suffix if the stored shape ever changes incompatibly.
-MaskEditor.SETTINGS_STORAGE_KEY = 'glitter.toolSettings.v1';
+MaskEditor.SETTINGS_STORAGE_KEY = STORAGE_KEYS.brushSettings.key;
 
 // Per-brush scatter/jitter overrides (keyed by brush id), independent of the
 // per-mode settings above.
-MaskEditor.DYNAMICS_STORAGE_KEY = 'glitter.brushDynamics.v1';
+MaskEditor.DYNAMICS_STORAGE_KEY = STORAGE_KEYS.brushDynamics.key;
 
 // Minimum canvas-space travel before a Shift-drag commits to an axis-lock
 // direction — avoids a jittery direction pick on the first pixel of movement.

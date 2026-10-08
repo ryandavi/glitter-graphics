@@ -118,6 +118,10 @@ class BrushTipManager extends ContentManager {
 		this.updateSelection();
 	}
 
+	handlePickerDone() {
+		this.closePicker();
+	}
+
 	closePicker() {
 		this.closePickerSession();
 		// Leave the temporary Brush Tips panel mode before returning to settings.

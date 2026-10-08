@@ -466,3 +466,9 @@ function syncSlotStackTextureOrigins(stack, items, layer, getMaskCanvas) {
 		span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
 	});
 }
+
+function getSlotDefaults(type, key) {
+	const definition = getPaintSlotDefinition(type, key);
+	if (!definition?.defaults) throw new Error(`No defaults declared for ${type}.${key}`);
+	return definition.defaults();
+}

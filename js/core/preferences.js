@@ -32,16 +32,12 @@ const PREFERENCE_SCHEMA = Object.freeze({
 });
 
 class Preferences {
-	constructor(schema, storageKey = 'glitterEditorPreferences') {
+	constructor(schema, storageKey = STORAGE_KEYS.preferences.key) {
 		this.schema = schema;
 		this.storageKey = storageKey;
 		this.values = {};
 		this.listeners = new Map();
-		try {
-			this.values = JSON.parse(localStorage.getItem(storageKey) || '{}');
-		} catch (error) {
-			console.warn('Failed to load preferences:', error);
-		}
+		this.values = readStored(storageKey, {});
 	}
 
 	get(key) {
@@ -85,11 +81,7 @@ class Preferences {
 	}
 
 	persist() {
-		try {
-			localStorage.setItem(this.storageKey, JSON.stringify(this.values));
-		} catch (error) {
-			console.warn('Failed to save preferences:', error);
-		}
+		writeStored(this.storageKey, this.values);
 	}
 }
 

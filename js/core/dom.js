@@ -52,3 +52,15 @@ function loadScriptOnce(src) {
 	SCRIPT_LOADS.set(src, promise);
 	return promise;
 }
+
+async function loadImageElement(url) {
+	const image = new Image();
+	image.crossOrigin = 'anonymous';
+	await new Promise((resolve, reject) => {
+		image.onload = resolve;
+		image.onerror = () => reject(new Error(`Could not load image: ${url}`));
+		image.src = url;
+	});
+	await image.decode();
+	return image;
+}

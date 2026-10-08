@@ -174,7 +174,7 @@ const naturalOptions = {
 const naturalCount = reduce(12, naturalOptions).palette.length;
 assert.ok(vibrantCount < naturalCount, 'Vibrant still combines more neutral shades than Natural');
 
-const glitterIndex = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'glitter.index.json'), 'utf8'));
+const glitterIndex = require('../fixtures/glitter-catalog.json').items;
 const indexedSwatches = glitterIndex
 	.filter(glitter => !glitter.hasTransparency && glitter.colorCodes?.length)
 	.map(glitter => ({ id: glitter.id, colors: glitter.colorCodes, weights: glitter.colorWeights }));

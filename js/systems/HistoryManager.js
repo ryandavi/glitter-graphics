@@ -148,7 +148,7 @@ class HistoryManager {
 		// Re-enter mask editing against the restored layer if Brush/Eraser is
 		// still the active tool; otherwise just resync its button state.
 		if (this.editor.currentTool === ToolType.BRUSH) {
-			this.editor.maskEditor?.onToolChanged(ToolType.BRUSH);
+			TOOLS[this.editor.currentTool].onActivate(this.editor);
 		} else {
 			this.editor.maskEditor?.updateToolButtonState();
 		}

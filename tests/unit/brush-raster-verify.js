@@ -40,6 +40,22 @@ const stubCanvas = () => ({
 });
 
 // ---- BrushLibrary ------------------------------------------------------------
+
+// The vector stamp cache can be tested without loading MaskEditor or an editor.
+const stampCtx = {
+	CONFIG, ShapeLibrary, createAppCanvas: stubCanvas,
+	shouldUseCrispMaskEdges: () => false
+};
+vm.createContext(stampCtx);
+vm.runInContext(load('js/paint/brush-stamp.js') + '\nthis.BrushStampCache = BrushStampCache;', stampCtx);
+const stampCache = new stampCtx.BrushStampCache();
+const stamp = stampCache.get('round', 20, 50);
+assert.strictEqual(stamp.width, 20);
+assert.strictEqual(stampCache.get('round', 20, 50), stamp, 'same raster parameters reuse the stamp');
+assert.notStrictEqual(stampCache.get('round', 24, 50), stamp, 'size changes invalidate the stamp');
+stampCache.clear();
+assert.notStrictEqual(stampCache.get('round', 20, 50), stamp, 'clearing releases the cached stamp');
+
 const brushCtx = {
 	console, CONFIG, ShapeLibrary, Promise, Math, JSON, Object, Array, Number, String, Set, Map,
 	document: { createElement: stubCanvas },
@@ -124,6 +140,8 @@ const meCtx = {
 };
 meCtx.window = meCtx; meCtx.globalThis = meCtx;
 vm.createContext(meCtx);
+vm.runInContext(load('js/core/storage.js'), meCtx);
+vm.runInContext(load('js/paint/brush-stamp.js'), meCtx);
 vm.runInContext(
 	load('js/systems/MaskEditor.js') + '\nthis.maskMulberry32 = maskMulberry32; this.maskClamp = maskClamp; this.MaskEditor = MaskEditor;',
 	meCtx, { filename: 'MaskEditor.js' }

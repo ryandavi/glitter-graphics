@@ -1,53 +1,186 @@
 'use strict';
 
 registerLayerType(LayerType.TEXT_GLITTER, {
+	assetRefs: (layer) => [{ kind: 'font', id: layer.textData?.fontId }],
 	rasterizesScale: true,
-	describe: (layer, editor) => ({ name: layer.name || 'Text', detail: `Text · ${describeLayerPaint(editor, getLayerFillSlot(layer)).modeLabel}` }),
+	describe: (layer, editor) => ({
+		name: layer.name || 'Text',
+		detail: `Text · ${describeLayerPaint(editor, getLayerFillSlot(layer)).modeLabel}`
+	}),
 	displayName: 'Text',
 	paintSlots: [
 		{
-			key: 'backgroundFill', role: 'background', label: 'background', path: 'textData.textBackground.fill', enabledPath: 'textData.textBackground.enabled',
-			sourceLabel: 'backgroundFill', glitterDefault: 'backgroundGlitterId',
-			panelPrefix: 'textBackground', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultFill({
+					defaultGlitterId: CONFIG.tools.glitter.defaults.backgroundGlitterId
+				});
+			},
+			key: 'backgroundFill',
+			role: 'background',
+			label: 'background',
+			path: 'textData.textBackground.fill',
+			enabledPath: 'textData.textBackground.enabled',
+			sourceLabel: 'backgroundFill',
+			glitterDefault: 'backgroundGlitterId',
+			panelPrefix: 'textBackground',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'shadow', role: 'shadow', path: 'textData.shadow', draftPath: 'textData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'textShadow', modes: ['glitter', 'solid'],
-			fields: { castLength: false, castLean: false, castLengthRatio: 'textCastLength', castLeanRatio: 'textCastLean', castBlurRatio: 'textCastBlur' }
+			defaults: () => {
+				const shadow = buildDefaultShadow({
+					defaultMode: 'glitter',
+					defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.text,
+					castAnchor: 'baseline'
+				});
+				delete shadow.castLength;
+				delete shadow.castLean;
+				return {
+					...shadow,
+					castLengthRatio: FIELDS.textCastLength.value / 100,
+					castLeanRatio: FIELDS.textCastLean.value / 100,
+					castBlurRatio: FIELDS.textCastBlur.value / 100
+				};
+			},
+			key: 'shadow',
+			role: 'shadow',
+			path: 'textData.shadow',
+			draftPath: 'textData.effectDrafts.shadow',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'textShadow',
+			modes: ['glitter', 'solid'],
+			fields: {
+				castLength: false,
+				castLean: false,
+				castLengthRatio: 'textCastLength',
+				castLeanRatio: 'textCastLean',
+				castBlurRatio: 'textCastBlur'
+			}
 		},
 		{
-			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'textData.border', draftPath: 'textData.effectDrafts.border',
-			glitterDefault: 'borderGlitterId', panelPrefix: 'textBorder', modes: ['glitter', 'solid'],
+			defaults: () => {
+				return buildDefaultBorder({
+					config: CONFIG.tools.text.border,
+					slot: getPaintSlotDefinition(LayerType.TEXT_GLITTER, 'border'),
+					fallbackMode: 'glitter',
+					defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.text
+				});
+			},
+			key: 'border',
+			role: 'border',
+			edgeStyles: ['round', 'miter', 'hard'],
+			path: 'textData.border',
+			draftPath: 'textData.effectDrafts.border',
+			glitterDefault: 'borderGlitterId',
+			panelPrefix: 'textBorder',
+			modes: ['glitter', 'solid'],
 			fields: { widthPx: 'textBorderWidth' }
 		},
-		{ key: 'fill', role: 'fill', path: 'textData.fill', glitterDefault: 'fillGlitterId', panelPrefix: 'textFill', modes: ['none', 'glitter', 'solid'] },
 		{
-			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'textData.bevel.highlight', enabledPath: 'textData.bevel.enabled',
-			glitterDefault: 'fillGlitterId', panelPrefix: 'textBevel', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text });
+			},
+			key: 'fill',
+			role: 'fill',
+			path: 'textData.fill',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'textFill',
+			modes: ['none', 'glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'textData.bevel.shade', enabledPath: 'textData.bevel.enabled',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'textBevelShade', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().highlight;
+			},
+			key: 'bevelHighlight',
+			role: 'bevel',
+			label: 'bevel highlight',
+			path: 'textData.bevel.highlight',
+			enabledPath: 'textData.bevel.enabled',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'textBevel',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'sparkles', role: 'sparkles', path: 'textData.sparkles', draftPath: 'textData.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
-			panelPrefix: 'textSparkles', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().shade;
+			},
+			key: 'bevelShade',
+			role: 'bevel',
+			label: 'bevel shade',
+			path: 'textData.bevel.shade',
+			enabledPath: 'textData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'textBevelShade',
+			modes: ['glitter', 'solid']
+		},
+		{
+			defaults: () => {
+				return buildDefaultSparkles();
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'textData.sparkles',
+			draftPath: 'textData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'textSparkles',
+			modes: ['glitter', 'solid']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.textGlitterManager?.getSparkleHost(layer) || null,
 	fields: [
-		{ path: 'textData.fontSize', field: 'textFontSize', id: 'textFontSize', geometry: true, documentScale: 'geometry', minimum: 1 },
-		{ path: 'textData.letterSpacing', field: 'textLetterSpacing', id: 'textLetterSpacing', geometry: true, documentScale: 'geometry' },
+		{
+			path: 'textData.fontSize',
+			field: 'textFontSize',
+			id: 'textFontSize',
+			geometry: true,
+			documentScale: 'geometry',
+			minimum: 1
+		},
+		{
+			path: 'textData.letterSpacing',
+			field: 'textLetterSpacing',
+			id: 'textLetterSpacing',
+			geometry: true,
+			documentScale: 'geometry'
+		},
 		{ path: 'textData.lineHeight', field: 'textLineHeight', id: 'textLineHeight', factor: 100, geometry: true },
 		{ path: 'textData.warp.bend', field: 'textWarpBend', id: 'textWarpBend', geometry: true },
 		{ path: 'textData.boxWidth', documentScale: 'geometry', minimum: 1 },
 		{ path: 'textData.boxHeight', documentScale: 'geometry', minimum: 1 },
-		{ path: 'textData.textBackground.horizontalPadding', field: 'textBackgroundPaddingH', id: 'textBackgroundPaddingH', geometry: true, documentScale: 'geometry' },
-		{ path: 'textData.textBackground.verticalPadding', field: 'textBackgroundPaddingV', id: 'textBackgroundPaddingV', geometry: true, documentScale: 'geometry' },
-		{ path: 'textData.textBackground.cornerRadius', field: 'textBackgroundRadius', id: 'textBackgroundRadius', geometry: true, documentScale: 'geometry' },
-		{ path: 'textData.textBackground.mergeDistance', field: 'textBackgroundMergeDistance', id: 'textBackgroundMergeDistance', geometry: true, documentScale: 'geometry' },
-		{ path: 'textData.textBackground.lineSpacingSensitivity', field: 'textBackgroundSpacing', id: 'textBackgroundSpacing', geometry: true }
+		{
+			path: 'textData.textBackground.horizontalPadding',
+			field: 'textBackgroundPaddingH',
+			id: 'textBackgroundPaddingH',
+			geometry: true,
+			documentScale: 'geometry'
+		},
+		{
+			path: 'textData.textBackground.verticalPadding',
+			field: 'textBackgroundPaddingV',
+			id: 'textBackgroundPaddingV',
+			geometry: true,
+			documentScale: 'geometry'
+		},
+		{
+			path: 'textData.textBackground.cornerRadius',
+			field: 'textBackgroundRadius',
+			id: 'textBackgroundRadius',
+			geometry: true,
+			documentScale: 'geometry'
+		},
+		{
+			path: 'textData.textBackground.mergeDistance',
+			field: 'textBackgroundMergeDistance',
+			id: 'textBackgroundMergeDistance',
+			geometry: true,
+			documentScale: 'geometry'
+		},
+		{
+			path: 'textData.textBackground.lineSpacingSensitivity',
+			field: 'textBackgroundSpacing',
+			id: 'textBackgroundSpacing',
+			geometry: true
+		}
 	],
 	hasVisibleContent: (layer) => Boolean(layer.textData?.text?.trim()),
 	animatable: true,

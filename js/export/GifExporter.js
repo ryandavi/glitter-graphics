@@ -6,7 +6,7 @@
 class GifExporter {
 	constructor(compositor, options = {}) {
 		this.compositor = compositor;
-		this.fileName = `${CONFIG.export.core?.defaultBaseName || 'ryandavi-com_glitter'}.gif`;
+		this.fileName = `${CONFIG.export.core.defaultBaseName}.gif`;
 		this.resultPresenter = options.resultPresenter || (typeof ExportResultPresenter === 'function' ? new ExportResultPresenter() : null);
 		this.gifEncodingPipeline = options.gifEncodingPipeline || new GifEncodingPipeline();
 	}

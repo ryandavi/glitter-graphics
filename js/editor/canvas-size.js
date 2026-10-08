@@ -136,9 +136,9 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		if (!result.ok) this.showError(result.message);
 		else if (this.currentTool === ToolType.CROP) this.setTool(ToolType.SELECT);
 	},
-	cancelCanvasBounds() {
-		this.canvasBounds?.clear();
-		if (this.currentTool === ToolType.CROP) this.setTool(ToolType.SELECT);
+	cancelCanvasBounds({ keepTool = false } = {}) {
+		this.cropEdit.end();
+		if (!keepTool && this.currentTool === ToolType.CROP) this.setTool(ToolType.SELECT);
 		this.syncCanvasBoundsViews();
 	},
 

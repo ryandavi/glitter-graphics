@@ -9,7 +9,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const context = vm.createContext({ console, structuredClone, Math, navigator: { hardwareConcurrency: 4, userAgent: 'node' } });
-for (const file of ['js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/export-target.js', 'js/core/format.js', 'js/export/export-report.js']) {
+for (const file of ['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/export-target.js', 'js/core/format.js', 'js/export/export-report.js']) {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 }
 vm.runInContext('globalThis.api = { buildExportReport, EXPORT_TARGETS };', context);

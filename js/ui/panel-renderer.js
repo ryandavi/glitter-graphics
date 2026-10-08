@@ -1561,10 +1561,10 @@ function syncPanelEffectToggle(toggle, enabled) {
 
 // Remembered open/closed state for collapsible cards, keyed `prefix:title`
 // (data-collapse-key). Effect cards carry no key: their switch owns expansion.
-const PANEL_CARD_STATE_KEY = 'glitter.panelCards';
+const PANEL_CARD_STATE_KEY = STORAGE_KEYS.panelCards.key;
 
 function readPanelCardState() {
-	try { return JSON.parse(localStorage.getItem(PANEL_CARD_STATE_KEY) || '{}') || {}; } catch (error) { return {}; }
+	return readStored(PANEL_CARD_STATE_KEY, {});
 }
 
 // A section or a collapsible set: the toggle is its title row or its name.
@@ -1591,14 +1591,11 @@ function rememberPanelCardState(card) {
 	if (!key) return;
 	const state = readPanelCardState();
 	state[key] = !card.classList.contains('is-collapsed');
-	try { localStorage.setItem(PANEL_CARD_STATE_KEY, JSON.stringify(state)); } catch (error) { /* storage unavailable */ }
+	writeStored(PANEL_CARD_STATE_KEY, state);
 }
 
 function resetPanelCardStates() {
-	try {
-		localStorage.removeItem(PANEL_CARD_STATE_KEY);
-		localStorage.removeItem('glitter.panelGroups');
-	} catch (error) { /* storage unavailable */ }
+	removeStored(PANEL_CARD_STATE_KEY);
 	document.querySelectorAll('[data-collapse-key]').forEach((card) => {
 		setPanelCardCollapsed(card, card.dataset.collapseDefault === 'closed');
 	});

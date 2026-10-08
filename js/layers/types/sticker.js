@@ -1,6 +1,7 @@
 'use strict';
 
 registerLayerType(LayerType.STICKER, {
+	assetRefs: (layer) => [{ kind: 'sticker', id: layer.stickerSourceId }],
 	describe: (layer, editor) => {
 		const sticker = editor.stickerManager.getItemById(layer.stickerSourceId);
 		return { name: layer.name || 'Sticker', detail: sticker?.category ? `Sticker · ${sticker.category}` : 'Sticker' };
@@ -15,27 +16,84 @@ registerLayerType(LayerType.STICKER, {
 	// in the sticker's own pixels and scale with it.
 	paintSlots: [
 		{
-			key: 'shadow', role: 'shadow', path: 'stickerData.shadow', draftPath: 'stickerData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', framePadding: getShadowCanvasPadding,
-			panelPrefix: 'stickerShadow', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultShadow({
+					defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.sticker,
+					includeColorAdjust: true
+				});
+			},
+			key: 'shadow',
+			role: 'shadow',
+			path: 'stickerData.shadow',
+			draftPath: 'stickerData.effectDrafts.shadow',
+			glitterDefault: 'shadowGlitterId',
+			framePadding: getShadowCanvasPadding,
+			panelPrefix: 'stickerShadow',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'stickerData.border', draftPath: 'stickerData.effectDrafts.border',
-			glitterDefault: 'borderGlitterId', framePadding: (data) => Math.max(0, data?.widthPx || 0),
-			panelPrefix: 'stickerBorder', modes: ['glitter', 'solid'], fields: { widthPx: 'stickerOutlineWidth' }
+			defaults: () => {
+				return {
+					...buildDefaultBorder({
+						config: CONFIG.tools.stickers.outline,
+						slot: getPaintSlotDefinition(LayerType.STICKER, 'border'),
+						fallbackMode: 'glitter',
+						defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.sticker,
+						includeColorAdjust: true
+					}),
+					fillInterior: CONFIG.tools.stickers.outline.fillInterior,
+					unionFrames: CONFIG.tools.stickers.outline.useAllFrames
+				};
+			},
+			key: 'border',
+			role: 'border',
+			edgeStyles: ['round', 'miter', 'hard'],
+			path: 'stickerData.border',
+			draftPath: 'stickerData.effectDrafts.border',
+			glitterDefault: 'borderGlitterId',
+			framePadding: (data) => Math.max(0, data?.widthPx || 0),
+			panelPrefix: 'stickerBorder',
+			modes: ['glitter', 'solid'],
+			fields: { widthPx: 'stickerOutlineWidth' }
 		},
 		{
-			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'stickerData.bevel.highlight', enabledPath: 'stickerData.bevel.enabled',
-			glitterDefault: 'fillGlitterId', panelPrefix: 'stickerBevel', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().highlight;
+			},
+			key: 'bevelHighlight',
+			role: 'bevel',
+			label: 'bevel highlight',
+			path: 'stickerData.bevel.highlight',
+			enabledPath: 'stickerData.bevel.enabled',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'stickerBevel',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'stickerData.bevel.shade', enabledPath: 'stickerData.bevel.enabled',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'stickerBevelShade', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().shade;
+			},
+			key: 'bevelShade',
+			role: 'bevel',
+			label: 'bevel shade',
+			path: 'stickerData.bevel.shade',
+			enabledPath: 'stickerData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'stickerBevelShade',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'sparkles', role: 'sparkles', path: 'stickerData.sparkles', draftPath: 'stickerData.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
-			panelPrefix: 'stickerSparkles', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultSparkles();
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'stickerData.sparkles',
+			draftPath: 'stickerData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'stickerSparkles',
+			modes: ['glitter', 'solid']
 		}
 	],
 	// Sparkles read the sticker's own image; the base URL, so a resolution
@@ -102,9 +160,10 @@ registerLayerType(LayerType.STICKER, {
 	},
 	// The image box; the shadow only widens the visual bounds. An empty
 	// sticker has no frame, so it can't be clicked.
-	frame: (editor, layer) => (layer.stickerData && !layer.stickerData.isEmpty && layer.stickerData.url
-		? { width: layer.stickerData.width, height: layer.stickerData.height, offsetX: 0, offsetY: 0 }
-		: null),
+	frame: (editor, layer) =>
+		layer.stickerData && !layer.stickerData.isEmpty && layer.stickerData.url
+			? { width: layer.stickerData.width, height: layer.stickerData.height, offsetX: 0, offsetY: 0 }
+			: null,
 	// The frame is in the sticker's own pixels, so canvas-pixel effect padding
 	// is divided by the sticker scale.
 	visualBounds: (editor, layer) => {
@@ -113,9 +172,15 @@ registerLayerType(LayerType.STICKER, {
 		let padY = 0;
 		getLayerPaintSlots(layer).forEach((entry) => {
 			if (!entry.renders || !entry.definition.framePadding) return;
-			const padding = entry.role === 'shadow'
-				? getShadowCanvasPadding(entry.data, { x: 0, y: 0, width: layer.stickerData.width * Math.max(0.01, Math.abs(scale.x) / 100), height: layer.stickerData.height * Math.max(0.01, Math.abs(scale.y) / 100) })
-				: entry.definition.framePadding(entry.data);
+			const padding =
+				entry.role === 'shadow'
+					? getShadowCanvasPadding(entry.data, {
+							x: 0,
+							y: 0,
+							width: layer.stickerData.width * Math.max(0.01, Math.abs(scale.x) / 100),
+							height: layer.stickerData.height * Math.max(0.01, Math.abs(scale.y) / 100)
+						})
+					: entry.definition.framePadding(entry.data);
 			const local = entry.role === 'sparkles';
 			padX = Math.max(padX, local ? padding : padding / Math.max(0.01, Math.abs(scale.x) / 100));
 			padY = Math.max(padY, local ? padding : padding / Math.max(0.01, Math.abs(scale.y) / 100));

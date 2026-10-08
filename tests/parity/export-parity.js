@@ -54,11 +54,11 @@ async function buildComposition(page) {
 		paint.liveRevision += 1;
 		glitterLayer.maskHasContent = true;
 		editor.paintMaskStore.commitPaintState(glitterLayer);
-		glitterLayer.border = editor.glitterManager.getDefaultBorder();
+		glitterLayer.border = getSlotDefaults(LayerType.GLITTER_FILL, 'border');
 		glitterLayer.border.mode = 'solid';
 		glitterLayer.border.color = '#ffe600';
 		glitterLayer.border.widthPx = 5;
-		glitterLayer.shadow = editor.glitterManager.getDefaultShadow();
+		glitterLayer.shadow = getSlotDefaults(LayerType.GLITTER_FILL, 'shadow');
 		glitterLayer.shadow.mode = 'solid';
 		glitterLayer.shadow.color = '#550099';
 		glitterLayer.shadow.offsetX = 6;
@@ -75,7 +75,7 @@ async function buildComposition(page) {
 		stickerLayer.transform.scale.y = 120;
 		stickerLayer.transform.flipX = true;
 		stickerLayer.stickerData.colorAdjust = { hue: 55, saturation: 135, brightness: 92 };
-		stickerLayer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
+		stickerLayer.stickerData.shadow = getSlotDefaults(LayerType.STICKER, 'shadow');
 		stickerLayer.stickerData.shadow.mode = 'glitter';
 		stickerLayer.stickerData.shadow.glitterId = glitterB;
 		stickerLayer.animations = [
@@ -101,16 +101,16 @@ async function buildComposition(page) {
 		textLayer.textData.fontId = 'luckiest-guy';
 		editor.layerManager.insertLayer(textLayer);
 		textLayer.blendMode = 'overlay';
-		textLayer.textData.fill = editor.textGlitterManager.getDefaultFill();
+		textLayer.textData.fill = getSlotDefaults(LayerType.TEXT_GLITTER, 'fill');
 		textLayer.textData.fill.glitterId = glitterA;
 		textLayer.textData.fill.mode = 'gradient';
 		textLayer.textData.fill.gradient = { type: 'linear', angle: 70, interpolation: 'smooth', stops: [{ offset: 0, color: '#ff3300', alpha: 1 }, { offset: 0.45, color: '#ffee00', alpha: 0.8 }, { offset: 1, color: '#6633ff', alpha: 1 }] };
 		textLayer.textData.fill.colorAdjust = { hue: 90, saturation: 140, brightness: 110 };
-		textLayer.textData.border = editor.textGlitterManager.getDefaultBorder();
+		textLayer.textData.border = getSlotDefaults(LayerType.TEXT_GLITTER, 'border');
 		textLayer.textData.border.mode = 'solid';
 		textLayer.textData.border.color = '#113355';
 		textLayer.textData.border.widthPx = 4;
-		textLayer.textData.shadow = editor.textGlitterManager.getDefaultShadow();
+		textLayer.textData.shadow = getSlotDefaults(LayerType.TEXT_GLITTER, 'shadow');
 		textLayer.textData.shadow.mode = 'glitter';
 		textLayer.textData.shadow.glitterId = glitterB;
 		textLayer.textData.shadow.offsetX = 8;
@@ -133,11 +133,11 @@ async function buildComposition(page) {
 		shapeLayer.shapeData.fill.mode = 'gradient';
 		shapeLayer.shapeData.fill.gradient = { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#ffffff', alpha: 1 }, { offset: 1, color: '#00aacc', alpha: 0.65 }] };
 		shapeLayer.shapeData.fill.colorAdjust = { hue: -45, saturation: 130, brightness: 120 };
-		shapeLayer.shapeData.border = editor.shapeGlitterManager.getDefaultBorder();
+		shapeLayer.shapeData.border = getSlotDefaults(LayerType.SHAPE, 'border');
 		shapeLayer.shapeData.border.mode = 'solid';
 		shapeLayer.shapeData.border.color = '#29163f';
 		shapeLayer.shapeData.border.widthPx = 6;
-		shapeLayer.shapeData.shadow = editor.shapeGlitterManager.getDefaultShadow();
+		shapeLayer.shapeData.shadow = getSlotDefaults(LayerType.SHAPE, 'shadow');
 		shapeLayer.shapeData.shadow.mode = 'glitter';
 		shapeLayer.shapeData.shadow.glitterId = glitterA;
 		shapeLayer.shapeData.shadow.offsetX = -6;
@@ -206,7 +206,7 @@ async function verifyAnimatedShapeCompositesBeforeOpacity(page) {
 		layer.shapeData.fill.mode = 'solid';
 		layer.shapeData.fill.color = '#ff0000';
 		layer.shapeData.border = null;
-		layer.shapeData.shadow = editor.shapeGlitterManager.getDefaultShadow();
+		layer.shapeData.shadow = getSlotDefaults(LayerType.SHAPE, 'shadow');
 		layer.shapeData.shadow.mode = 'solid';
 		layer.shapeData.shadow.color = '#0000ff';
 		layer.shapeData.shadow.offsetX = 4;

@@ -178,7 +178,7 @@ class MobileManager {
 			resizeTimer = setTimeout(() => {
 				const nowMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
 				if (!this.isMobile && nowMobile) {
-					if (this.editor.currentTool === ToolType.BRUSH) this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+					if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
 					this.isMobile = true;
 					this.init();
 					requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -188,7 +188,7 @@ class MobileManager {
 						this.editor.updateTransparencyGrid();
 					}));
 				} else if (this.isMobile && !nowMobile) {
-					if (this.editor.currentTool === ToolType.BRUSH) this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+					if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
 					this.isMobile = false;
 					this.cleanup();
 					setTimeout(() => {
@@ -372,7 +372,7 @@ class MobileManager {
 
 	closeAllDrawers(options = {}) {
 		if (options.releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
-			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+			this.editor.setTool(ToolType.SELECT, { commitStroke: false });
 		}
 		const hadDrawerViewportSession = Boolean(this.activeDrawer || this.drawerViewportState);
 		const userState = this.drawerViewportUserState;

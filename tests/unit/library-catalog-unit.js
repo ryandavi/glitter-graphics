@@ -6,68 +6,31 @@ const vm = require('vm');
 const root = path.resolve(__dirname, '../..');
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(root, 'js/assets/LibraryCatalog.js'), 'utf8') + '\nthis.LibraryCatalog = LibraryCatalog;', context);
-const categories = JSON.parse(fs.readFileSync(path.join(root, 'data/glitter-categories.json')));
-const items = JSON.parse(fs.readFileSync(path.join(root, 'data/glitter.index.json')));
+const { categories, items } = require('../fixtures/glitter-catalog.json');
 const catalog = new context.LibraryCatalog(categories);
 const plain = value => JSON.parse(JSON.stringify(value));
-
-// Styles are flat; sets are separate entries that hold no tiles of their own.
-assert(categories.every(category => !('parent' in category)), 'A category still exports a parent');
-assert.deepStrictEqual(plain(catalog.getRoots().map(style => style.id)), ['sparkle', 'star-dust', 'ember', 'transparent', 'noise', 'noise-2', 'etc', 'unsorted']);
-assert.deepStrictEqual(plain(categories.filter(category => catalog.isSet(category)).map(set => set.id)), ['stardrops', 'sparkelies', 'bring-on-the-glitter', 'flashites']);
-assert(items.every(item => catalog.getRoots().some(style => style.id === item.category)), 'A tile is filed in something that is not a style');
-assert(items.every(item => !item.set || catalog.isSet(catalog.getCategoryById(item.set))), 'A tile points at something that is not a set');
-assert(catalog.getRoots().every(style => !style.attribution), 'A glitter style still carries a credit');
-assert(items.every(item => !item.attribution), 'A tile still carries its own copy of a set credit');
-
-const expected = {
-	sparkle: { total: 104, stardrops: 7, sparkelies: 16, 'bring-on-the-glitter': 59 },
-	'star-dust': { total: 25, 'bring-on-the-glitter': 25 },
-	ember: { total: 14, 'bring-on-the-glitter': 10 },
-	transparent: { total: 9, 'bring-on-the-glitter': 5 },
-	noise: { total: 8 },
-	'noise-2': { total: 26, 'bring-on-the-glitter': 26 },
-	etc: { total: 16, sparkelies: 1, 'bring-on-the-glitter': 6 },
-};
-for (const [id, { total, ...sets }] of Object.entries(expected)) {
-	assert.strictEqual(catalog.getRootItems(id, items).length, total, id);
-	assert.strictEqual(catalog.getRootCount(catalog.getCategoryById(id), catalog.getCategoryCounts(items)), total, id);
-	assert.deepStrictEqual(plain(catalog.getSetCounts(id, items)), sets, id);
-	for (const [set, count] of Object.entries(sets)) {
-		assert.strictEqual(catalog.getCategoryItems(set, catalog.getRootItems(id, items)).length, count, `${id}/${set}`);
-	}
+assert.deepStrictEqual(plain(catalog.getRoots().map(style => style.id)), ['sparkle', 'ember', 'noise']);
+for (const [style, count, sets] of [['sparkle', 5, { 'set-a': 2, 'set-b': 1 }], ['ember', 3, { 'set-a': 1 }], ['noise', 4, { 'set-b': 1 }]]) {
+	assert.strictEqual(catalog.getRootItems(style, items).length, count);
+	assert.strictEqual(catalog.getRootCount(catalog.getCategoryById(style), catalog.getCategoryCounts(items)), count);
+	assert.deepStrictEqual(plain(catalog.getSetCounts(style, items)), sets);
+	assert.deepStrictEqual(catalog.getRootItems(style, items).map(item => item.sortOrder), Array.from({ length: count }, (_, index) => index));
 }
-for (const [set, count] of [['stardrops', 7], ['sparkelies', 17], ['bring-on-the-glitter', 131], ['flashites', 0]]) {
-	assert.strictEqual(catalog.getCategoryItems(set, items).length, count, set);
-	assert.strictEqual(catalog.getCategoryById(set).count, count, `${set} exported count`);
-}
-
-// The Christmas tiles sit in Classic Sparkle and are still Bring On The Glitter.
-const christmas = items.filter(item => item.tags.includes('Christmas'));
-assert.strictEqual(christmas.length, 6);
-assert(christmas.every(item => item.category === 'sparkle' && item.set === 'bring-on-the-glitter' && catalog.getAssetAttribution(item).authorId === 'aylana'));
-
-assert.deepStrictEqual(plain(catalog.getCreators(items).map(creator => creator.id).sort()), ['__unknown', 'aylana', 'dan', 'mica']);
-assert.strictEqual(catalog.getCreators(items).at(-1).id, '__unknown', 'Unknown must be last');
-assert.strictEqual(catalog.getCreatorItems('dan', items).length, 17);
-assert.strictEqual(catalog.getCreatorItems('aylana', items).length, 131);
-assert.strictEqual(catalog.getCreatorItems('__unknown', items).length, 47);
-assert.deepStrictEqual(plain(catalog.getStylesByCreator('aylana', items).map(style => style.id)), ['sparkle', 'star-dust', 'ember', 'transparent', 'noise-2', 'etc']);
-assert.deepStrictEqual(plain(catalog.getStylesByCreator('mica', items).map(style => style.id)), ['sparkle']);
-assert.strictEqual(catalog.getSharedSet(catalog.getRootItems('star-dust', items)).id, 'bring-on-the-glitter');
+assert.strictEqual(catalog.getCreatorItems('alice', items).length, 3);
+assert.strictEqual(catalog.getCreatorItems('bob', items).length, 2);
+assert.strictEqual(catalog.getCreatorItems('__unknown', items).length, 7);
+assert.strictEqual(catalog.getCreators(items).at(-1).id, '__unknown');
+assert.deepStrictEqual(plain(catalog.getStylesByCreator('alice', items).map(style => style.id)), ['sparkle', 'ember']);
 assert.strictEqual(catalog.getSharedSet(catalog.getRootItems('sparkle', items)), null);
-assert.strictEqual(catalog.getSharedSet(catalog.getRootItems('noise', items)), null);
-assert(catalog.getUnknownGroups(items).every(group => group.items.every(item => !catalog.getAssetAttribution(item).authorId)));
-assert.strictEqual(catalog.getCategoryById('noise-2').name, 'Chunky Noise');
-assert(!items.some(item => /sparkSquare\.gif$/i.test(item.url)), 'Inactive Spark Square is still public');
-const opal = items.find(item => item.url === 'images/glitter/sparkelies/opal.gif');
-assert.strictEqual(opal.category, 'etc');
-assert.strictEqual(catalog.getAssetAttribution(opal).authorId, 'dan');
 
-// Each style's exported order is its own run from zero: the wall order.
-for (const style of catalog.getRoots()) {
-	assert.deepStrictEqual(catalog.getRootItems(style.id, items).map(item => item.sortOrder), catalog.getRootItems(style.id, items).map((item, index) => index), `${style.id} order`);
-}
+// Live manifests validate references and shape without pinning editorial data.
+const liveCategories = require('../../data/glitter-categories.json');
+const liveItems = require('../../data/glitter.index.json');
+const liveCatalog = new context.LibraryCatalog(liveCategories);
+assert(liveCategories.every(category => !('parent' in category)));
+assert.strictEqual(new Set(liveItems.map(item => item.id)).size, liveItems.length);
+assert(liveItems.every(item => item.name && item.url && Array.isArray(item.tags) && liveCatalog.getRoots().some(style => style.id === item.category)));
+assert(liveItems.every(item => !item.set || liveCatalog.isSet(liveCatalog.getCategoryById(item.set))));
 
 // Credit layers: the item's own over its set's over its style's.
 const fixture = new context.LibraryCatalog([

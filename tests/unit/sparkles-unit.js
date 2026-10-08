@@ -23,7 +23,7 @@ for (const file of [
 	'js/core/fields.js',
 	'js/core/config.js',
 	'js/core/options.js',
-	'js/effects/easing.js',
+	'js/core/math.js', 'js/effects/easing.js',
 	'js/effects/animation.js',
 	'js/effects/highlight-detect.js',
 	'js/ui/preset-library.js',

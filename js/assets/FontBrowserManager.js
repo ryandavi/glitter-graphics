@@ -39,9 +39,6 @@ class FontBrowserManager extends ContentManager {
 
 	setupEventListeners() {
 		super.setupEventListeners();
-		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => {
-			if (this.pickerSession) this.handlePickerDone();
-		});
 	}
 
 	async loadContent() {

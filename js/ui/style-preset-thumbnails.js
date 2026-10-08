@@ -35,7 +35,7 @@ function createStylePreviewLayer(manager, type, entry) {
 		layer.textData = {
 			text: 'Aa',
 			fontId: CONFIG.tools.text.defaultFontId,
-			fontWeight: CONFIG.tools.text.defaultFontWeight || 400,
+			fontWeight: CONFIG.tools.text.defaultFontWeight,
 			fontStyle: 'normal',
 			textCase: 'none',
 			fontSize: FIELDS.textFontSize.value,
@@ -56,10 +56,10 @@ function createStylePreviewLayer(manager, type, entry) {
 			shapeId,
 			width: sized.width,
 			height: sized.height,
-			fill: manager.getDefaultFill(),
+			fill: getSlotDefaults(type, 'fill'),
 			border: null,
 			shadow: null,
-			bevel: manager.getDefaultBevel()
+			bevel: buildDefaultBevel()
 		};
 	}
 	manager.normalizeLayer(layer);
@@ -68,12 +68,7 @@ function createStylePreviewLayer(manager, type, entry) {
 
 function loadStylePreviewImage(url) {
 	if (!STYLE_PREVIEW_IMAGES.has(url)) {
-		STYLE_PREVIEW_IMAGES.set(url, new Promise((resolve) => {
-			const image = new Image();
-			image.onload = () => resolve(image);
-			image.onerror = () => resolve(null);
-			image.src = url;
-		}));
+		STYLE_PREVIEW_IMAGES.set(url, loadImageElement(url).catch(() => null));
 	}
 	return STYLE_PREVIEW_IMAGES.get(url);
 }
@@ -136,7 +131,7 @@ async function renderStylePresetPreview(editor, type, entry) {
 	library.apply(entry, {
 		layer,
 		context: {
-			getSlotDefaults: (key) => (manager.getSlotDefaults || manager.getEffectDefaults).call(manager, key),
+			getSlotDefaults: (key) => getSlotDefaults(type, key),
 			glitterAvailable: (glitterId) => Boolean(editor.glitterLibrary?.getItemById(glitterId))
 		}
 	});

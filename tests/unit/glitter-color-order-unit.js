@@ -10,9 +10,9 @@ const { glitterColorOrder: key, sortByGlitterColor: sort } = context;
 // The editor shows library order and never sorts by color.
 assert(!/glitterColorOrder|sortByGlitterColor/.test(fs.readFileSync(path.join(root, 'js/paint/color-selection.js'), 'utf8')));
 assert(!/glitter_color_order/.test(fs.readFileSync(path.join(root, 'index.html'), 'utf8')));
-const items = JSON.parse(fs.readFileSync(path.join(root, 'data/glitter.index.json')));
+const items = require('../fixtures/glitter-catalog.json').items;
 const sorted = sort(items);
-assert.strictEqual(items.length, 202);
+
 assert.notStrictEqual(sorted, items);
 for (let index = 1; index < sorted.length; index++) {
 	const previous = key(sorted[index - 1]), current = key(sorted[index]);

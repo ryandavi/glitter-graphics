@@ -20,7 +20,7 @@ const path = require('path');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 1400, height: 1000 };
-const BASELINE_PATH = path.join(__dirname, '..', 'fixtures', 'panel-parity-baseline.json');
+const BASELINE_PATH = process.env.GLITTER_PANEL_BASELINE || path.join(__dirname, '..', 'fixtures', 'panel-parity-baseline.json');
 const MAX_REPORTED_DIFFS = 200;
 
 // Migration scope: the settings sections the template plan rewrites. The

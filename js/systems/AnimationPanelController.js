@@ -32,16 +32,14 @@ class AnimationPanelController {
 			}
 			if (image.dataset.motionSource) return;
 			image.dataset.motionSource = layer.stickerData.url;
-			const firstFrame = new Image();
-			firstFrame.onload = () => {
+			loadImageElement(layer.stickerData.url).then(firstFrame => {
 				if (!this.editor.animationTicker.paused || !image.isConnected) return;
 				const canvas = createAppCanvas(0, 0, 'systems/AnimationPanelController');
 				canvas.width = firstFrame.naturalWidth;
 				canvas.height = firstFrame.naturalHeight;
 				canvas.getContext('2d').drawImage(firstFrame, 0, 0);
 				image.src = canvas.toDataURL('image/png');
-			};
-			firstFrame.src = layer.stickerData.url;
+			}).catch(error => console.warn('Could not pause sticker image:', error));
 		});
 	}
 

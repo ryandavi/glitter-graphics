@@ -38,7 +38,7 @@ async function main() {
 			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 48, y: 48 } });
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
-			layer.shapeData.border = editor.shapeGlitterManager.getDefaultBorder();
+			layer.shapeData.border = getSlotDefaults(LayerType.SHAPE, 'border');
 			layer.shapeData.border.widthPx = 17;
 			editor.shapeGlitterManager.loadLayerSettings(layer);
 			window.changeEffectsToggle('shapeBorderEnabled', false);
@@ -57,7 +57,7 @@ async function main() {
 			const layer = editor.stickerManager.createLayer();
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
-			layer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
+			layer.stickerData.shadow = getSlotDefaults(LayerType.STICKER, 'shadow');
 			layer.stickerData.shadow.offsetX = 13;
 			editor.stickerManager.loadLayerSettings(layer);
 			window.changeEffectsToggle('stickerShadowEnabled', false);
@@ -74,7 +74,7 @@ async function main() {
 			const layer = editor.textGlitterManager.createLayer({ text: 'Effects' });
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
-			layer.textData.border = editor.textGlitterManager.getDefaultBorder();
+			layer.textData.border = getSlotDefaults(LayerType.TEXT_GLITTER, 'border');
 			layer.textData.border.widthPx = 9;
 			editor.textGlitterManager.loadLayerSettings(layer);
 			window.changeEffectsToggle('textBorderEnabled', false);
@@ -97,8 +97,8 @@ async function main() {
 			].map(([slot, buttonId, defaultKey]) => {
 				const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square' });
 				layer.shapeData[slot] = slot === 'border'
-					? editor.shapeGlitterManager.getDefaultBorder()
-					: editor.shapeGlitterManager.getDefaultShadow();
+					? getSlotDefaults(LayerType.SHAPE, 'border')
+					: getSlotDefaults(LayerType.SHAPE, 'shadow');
 				layer.shapeData[slot].mode = 'solid';
 				layer.shapeData[slot].glitterId = null;
 				editor.layerManager.insertLayer(layer);
@@ -126,7 +126,7 @@ async function main() {
 					prefix: 'stickerShadow',
 					create: () => editor.stickerManager.createLayer(),
 					manager: editor.stickerManager,
-					prepare: (layer) => { layer.stickerData.shadow = editor.stickerManager.getDefaultShadow(); },
+					prepare: (layer) => { layer.stickerData.shadow = getSlotDefaults(LayerType.STICKER, 'shadow'); },
 					getEffects: (layer) => [layer.stickerData.shadow]
 				},
 				{
@@ -134,8 +134,8 @@ async function main() {
 					create: () => editor.textGlitterManager.createLayer({ text: 'Offset' }),
 					manager: editor.textGlitterManager,
 					prepare: (layer) => {
-						layer.textData.border = editor.textGlitterManager.getDefaultBorder();
-						layer.textData.shadow = editor.textGlitterManager.getDefaultShadow();
+						layer.textData.border = getSlotDefaults(LayerType.TEXT_GLITTER, 'border');
+						layer.textData.shadow = getSlotDefaults(LayerType.TEXT_GLITTER, 'shadow');
 					},
 					getEffects: (layer) => [layer.textData.fill, layer.textData.border, layer.textData.shadow]
 				},
@@ -144,8 +144,8 @@ async function main() {
 					create: () => editor.shapeGlitterManager.createLayer({ shapeId: 'square' }),
 					manager: editor.shapeGlitterManager,
 					prepare: (layer) => {
-						layer.shapeData.border = editor.shapeGlitterManager.getDefaultBorder();
-						layer.shapeData.shadow = editor.shapeGlitterManager.getDefaultShadow();
+						layer.shapeData.border = getSlotDefaults(LayerType.SHAPE, 'border');
+						layer.shapeData.shadow = getSlotDefaults(LayerType.SHAPE, 'shadow');
 					},
 					getEffects: (layer) => [layer.shapeData.fill, layer.shapeData.border, layer.shapeData.shadow]
 				}

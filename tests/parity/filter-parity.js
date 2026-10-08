@@ -33,8 +33,8 @@ const Blur = require('../../js/effects/blur.js');
 const Presets = require('../../js/effects/filter-presets.js');
 const PresetLibrary = require('../../js/ui/preset-library.js');
 const Ops = require('../../js/effects/filter-ops.js');
-const Filters = require('../../js/effects/filters.js');
-const Filter = require('../../js/effects/filter.js');
+const Filters = require('../../js/effects/filter-looks.js');
+const Filter = require('../../js/effects/filter-render.js');
 
 assert.strictEqual(Blend.cssToGCO('normal'), 'source-over');
 assert.strictEqual(Blend.normalize('screen'), 'screen');

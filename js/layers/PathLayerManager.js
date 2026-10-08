@@ -71,7 +71,7 @@ class PathLayerManager {
 			editor: this.editor,
 			getLayer: () => this.getActiveLayer(),
 			ensureSlot: (layer, key) => this.ensureSlot(layer, key),
-			getSlotDefaults: (key) => this.getSlotDefaults(key),
+			getSlotDefaults: (key) => getSlotDefaults(LayerType.PATH, key),
 			apply: (layer, mutate, change) => {
 				mutate();
 				this.renderLayer(layer);
@@ -114,7 +114,7 @@ class PathLayerManager {
 			const data = layer.pathData;
 			data.border = null;
 			data.shadow = null;
-			data.bevel = this.getDefaultBevel();
+			data.bevel = buildDefaultBevel();
 			data.sparkles = null;
 			if (data.effectDrafts) ['border', 'shadow', 'sparkles'].forEach((key) => { delete data.effectDrafts[key]; });
 			return true;
@@ -143,55 +143,11 @@ class PathLayerManager {
 		}, label);
 	}
 
-	getActiveLayer() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		return layer?.type === LayerType.PATH ? layer : null;
-	}
-
 	// ===== DEFAULTS / DATA MODEL =====
-
-	getDefaultFill() {
-		return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.shape });
-	}
-
-	getDefaultStroke() {
-		return buildDefaultStroke({ defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.shape });
-	}
-
-	getDefaultBorder() {
-		return buildDefaultBorder({
-			config: CONFIG.tools.path.border,
-			slot: getPaintSlotDefinition(LayerType.PATH, 'border'),
-			includeColorAdjust: true,
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.shape
-		});
-	}
-
-	getDefaultShadow() {
-		return buildDefaultShadow({
-			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.shape,
-			includeColorAdjust: true
-		});
-	}
-
-	getDefaultBevel() {
-		return buildDefaultBevel();
-	}
-
-	getSlotDefaults(key) {
-		if (key === 'stroke') return this.getDefaultStroke();
-		if (key === 'border') return this.getDefaultBorder();
-		if (key === 'shadow') return this.getDefaultShadow();
-		if (key === 'sparkles') return buildDefaultSparkles();
-		if (key === 'bevelHighlight') return this.getDefaultBevel().highlight;
-		if (key === 'bevelShade') return this.getDefaultBevel().shade;
-		return this.getDefaultFill();
-	}
 
 	ensureSlot(layer, key) {
 		if (!layer?.pathData) return null;
-		return ensureLayerPaintSlot(layer, key, () => this.getSlotDefaults(key));
+		return ensureLayerPaintSlot(layer, key, () => getSlotDefaults(LayerType.PATH, key));
 	}
 
 	// Runs where a path enters the document (create, deserialize, project
@@ -201,10 +157,10 @@ class PathLayerManager {
 		const data = layer.pathData ||= {};
 		data.subpaths = PathGeometry.normalizeSubpaths(data.subpaths);
 		data.fillRule = data.fillRule === 'evenodd' ? 'evenodd' : 'nonzero';
-		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
+		data.fill = mergeSlotEffectDefaults(data.fill, getSlotDefaults(LayerType.PATH, 'fill'));
 		if (data.stroke === undefined) data.stroke = null;
 		if (data.stroke) {
-			data.stroke = mergeSlotEffectDefaults(data.stroke, this.getDefaultStroke());
+			data.stroke = mergeSlotEffectDefaults(data.stroke, getSlotDefaults(LayerType.PATH, 'stroke'));
 			data.stroke.edgeStyle = getStrokeEdgeStyle(data.stroke);
 			data.stroke.cap = getStrokeCap(data.stroke);
 			data.stroke.dashStyle = getStrokeDashStyle(data.stroke);
@@ -213,12 +169,12 @@ class PathLayerManager {
 			});
 		}
 		if (data.border === undefined) data.border = null;
-		if (data.border) data.border = mergeSlotEffectDefaults(data.border, this.getDefaultBorder());
+		if (data.border) data.border = mergeSlotEffectDefaults(data.border, getSlotDefaults(LayerType.PATH, 'border'));
 		if (data.shadow === undefined) data.shadow = null;
-		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, this.getDefaultShadow());
-		data.bevel ||= this.getDefaultBevel();
-		data.bevel.highlight = mergeSlotEffectDefaults(data.bevel.highlight, this.getDefaultBevel().highlight);
-		data.bevel.shade = mergeSlotEffectDefaults(data.bevel.shade, this.getDefaultBevel().shade);
+		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, getSlotDefaults(LayerType.PATH, 'shadow'));
+		data.bevel ||= buildDefaultBevel();
+		data.bevel.highlight = mergeSlotEffectDefaults(data.bevel.highlight, buildDefaultBevel().highlight);
+		data.bevel.shade = mergeSlotEffectDefaults(data.bevel.shade, buildDefaultBevel().shade);
 		normalizeBevelData(data.bevel.highlight);
 		data.sparkles = normalizeSparklesData(data.sparkles);
 		[data.fill, data.stroke, data.border, data.shadow, data.bevel.highlight, data.bevel.shade].forEach((slot) => normalizeSlotTextureCoordinates(slot));
@@ -243,10 +199,10 @@ class PathLayerManager {
 			] }]);
 		}
 		const closed = subpaths.every((subpath) => subpath.closed);
-		const fill = { ...this.getDefaultFill(), ...(closed ? {} : { mode: 'none' }), ...(options.fill || {}) };
-		let stroke = closed ? null : this.getDefaultStroke();
+		const fill = { ...getSlotDefaults(LayerType.PATH, 'fill'), ...(closed ? {} : { mode: 'none' }), ...(options.fill || {}) };
+		let stroke = closed ? null : getSlotDefaults(LayerType.PATH, 'stroke');
 		if (options.stroke === null) stroke = null;
-		else if (options.stroke) stroke = { ...this.getDefaultStroke(), ...options.stroke };
+		else if (options.stroke) stroke = { ...getSlotDefaults(LayerType.PATH, 'stroke'), ...options.stroke };
 
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
@@ -263,7 +219,7 @@ class PathLayerManager {
 				stroke,
 				border: null,
 				shadow: null,
-				bevel: this.getDefaultBevel()
+				bevel: buildDefaultBevel()
 			}
 		};
 		this.normalizeLayer(layer);
@@ -729,10 +685,6 @@ class PathLayerManager {
 		});
 	}
 
-	clearElements() {
-		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
-	}
-
 	renderLayer(layer) {
 		if (layer?.type !== LayerType.PATH) return;
 		let wrapper = this.layerElements.get(layer.id);
@@ -859,30 +811,6 @@ class PathLayerManager {
 		this.editor.pathEdit?.syncChrome();
 	}
 
-	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	alignToCanvas(layerId, mode) {
-		movableAlignToCanvas(this, layerId, mode, (layer) => this.loadLayerSettings(layer));
-	}
-
-	resetTransform(layerId) {
-		movableResetTransform(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	createTransformHandles(layerId) {
-		movableCreateTransformHandles(this, layerId);
-	}
-
-	removeTransformHandles() {
-		movableRemoveTransformHandles(this);
-	}
-
 	// ===== PANEL =====
 
 	// The ornament shapes as a preset-grid library: thumbnails, not names.
@@ -908,7 +836,7 @@ class PathLayerManager {
 		if (layer?.type !== LayerType.PATH) return;
 		const d = layer.pathData;
 		const stroke = d.stroke;
-		const shown = stroke || this.getDefaultStroke();
+		const shown = stroke || getSlotDefaults(LayerType.PATH, 'stroke');
 		const hasOpen = d.subpaths.some((subpath) => !subpath.closed);
 		const allClosed = d.subpaths.length > 0 && !hasOpen;
 		const presetId = findStrokePresetId(stroke);
@@ -965,15 +893,6 @@ class PathLayerManager {
 
 	// ===== HOUSEKEEPING =====
 
-	removeLayerElement(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) {
-			transform.removeTransformHandles();
-			this.layerTransforms.delete(layerId);
-		}
-		removeManagedLayerElement(this.layerElements, layerId);
-	}
-
 	releaseLayerResources(layer) {
 		this.removeLayerElement(layer?.id);
 	}
@@ -982,3 +901,8 @@ class PathLayerManager {
 		return context.compositor._buildSlotStackExportPlan(layer);
 	}
 }
+
+Object.assign(PathLayerManager.prototype, MOVABLE_LAYER_METHODS);
+
+PathLayerManager.LAYER_TYPE = LayerType.PATH;
+Object.assign(PathLayerManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer, clearElements: LAYER_ELEMENT_METHODS.clearElements, removeLayerElement: LAYER_ELEMENT_METHODS.removeLayerElement });

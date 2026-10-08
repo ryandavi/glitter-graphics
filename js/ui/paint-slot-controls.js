@@ -274,11 +274,10 @@ function readFieldControlValue(root, binding) {
 // A number input bound to one field: typing previews, a committed value
 // (Enter, blur, a key step) records history.
 function bindFieldNumberInput(input, spec, handlers) {
-	const clamp = (n) => Math.max(spec?.min ?? -Infinity, Math.min(spec?.max ?? Infinity, Math.round(n)));
 	const write = (commit) => {
 		const raw = parseFloat(input.value);
 		if (Number.isNaN(raw)) return;
-		handlers.apply(clamp(raw));
+		handlers.apply(clamp(Math.round(raw), spec?.min ?? -Infinity, spec?.max ?? Infinity));
 		if (commit) handlers.commit();
 	};
 	input.addEventListener('input', () => write(false));

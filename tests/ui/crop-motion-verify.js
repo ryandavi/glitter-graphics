@@ -101,7 +101,13 @@ async function main() {
 		await page.mouse.down(); await page.mouse.move(handle.x + handle.width / 2 - 30, handle.y + handle.height / 2 - 20, { steps: 6 }); await page.mouse.up();
 		assert(await page.evaluate(() => Number(document.getElementById('canvasSizeWidth').value) === editor.canvasBounds.rect.width && editor.canvasBounds.rect.width < 200), 'drag did not sync panel');
 		await page.keyboard.press('Escape');
-		assert(await page.evaluate(() => editor.currentTool === ToolType.SELECT && !editor.canvasBounds && editor.originalCanvas.width === 320));
+		assert(await page.evaluate(() => editor.currentTool === ToolType.CROP && !editor.canvasBounds && editor.originalCanvas.width === 320));
+		assert(await page.evaluate(() => {
+			const rect = editor.previewWrapper.getBoundingClientRect();
+			editor.cropEdit.press({ clientX: rect.left + 40, clientY: rect.top + 40, pointerType: 'mouse' });
+			editor.cropEdit.release();
+			return Boolean(editor.canvasBounds) && getSessionDefinition(editor)?.id === 'crop';
+		}), 'Crop could not restart after Escape preserved the tool');
 		await page.evaluate(() => { editor.setTool(ToolType.CROP); editor.setDocumentSizeMode('image'); });
 		assert(await page.evaluate(() => editor.currentTool === ToolType.SELECT && !editor.canvasBounds), 'Image mode left a crop session active');
 		const paint = await page.evaluate(() => {

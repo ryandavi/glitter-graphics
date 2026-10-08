@@ -85,7 +85,7 @@ const PREVIEW_EXPORT_TWINS = [
 	{
 		feature: 'animation transform origin',
 		shared: 'getLayerAnimationOrigin',
-		preview: ['animationPreview.paintLayerAnimationPreview'],
+		preview: [['animationPreview.paintLayerAnimationPreview', 'transformMath.getLayerAnimationSamplingContext']],
 		export: ['SceneCompositor._getAnimationBox', 'HtmlSceneExporter.createScene']
 	}
 ];

@@ -16,7 +16,7 @@ const COMMANDS = {
 			const layer = manager?.getActiveTextLayer();
 			if (!CONFIG.debug.enabled || !layer) return;
 			try {
-				const entry = createStylePresetEntryFromLayer(layer, key => manager.getEffectDefaults(key));
+				const entry = createStylePresetEntryFromLayer(layer, key => getSlotDefaults(layer.type, key));
 				await navigator.clipboard.writeText(JSON.stringify(entry, null, '\t') + ',');
 				editor.updateStatus('Style preset copied');
 			} catch (error) {
@@ -94,10 +94,12 @@ const COMMANDS = {
 		when: (editor) => !editor.mobileManager?.isMobile && Boolean(document.getElementById('designGallerySection')?.dataset.library),
 		run: () => focusLibrarySearch() },
 	...Object.fromEntries(Object.entries(TOOLS).flatMap(([tool, definition]) => [
-		[definition.command, { label: `${definition.name} Tool`, group: 'Tools', keys: [definition.key], displayKey: definition.key.toUpperCase(),
-			when: (editor) => definition.available(editor, { hasImage: Boolean(editor.originalImage), autoPreviewActive: editor.autoGlitterManager?.isSessionActive() }),
+		[definition.command, { tool, label: `${definition.name} Tool`, group: 'Tools', keys: [definition.key], displayKey: definition.key.toUpperCase(),
+			when: (editor) => editor.autoGlitterManager?.isSessionActive()
+				? Boolean(editor.originalImage) && editor.autoGlitterManager.allowsPreviewTool(tool)
+				: definition.available(editor, { hasImage: Boolean(editor.originalImage), autoPreviewActive: false }),
 			run: (editor) => { editor.setTool(tool); definition.onShortcut?.(editor); } }],
-		...(definition.shortcuts || []).map((shortcut) => [shortcut.command, { ...shortcut, group: 'Tools', keys: [shortcut.key], displayKey: shortcut.key.toUpperCase() }])
+		...(definition.shortcuts || []).map((shortcut) => [shortcut.command, { ...shortcut, tool, group: 'Tools', keys: [shortcut.key], displayKey: shortcut.key.toUpperCase() }])
 	])),
 	selectAll: {
 		label: 'Select All Movable Layers', group: 'Selection', keys: ['mod+a'], displayKey: 'Ctrl/Cmd + A',
@@ -140,7 +142,7 @@ const COMMANDS = {
 	gradientStopNudge: { label: 'Move Focused Gradient Stop 1%', group: 'Gradient', displayKey: 'Arrow Keys' },
 	gradientStopNudgeSnap: { label: 'Move Focused Gradient Stop 5%', group: 'Gradient', displayKey: 'Shift + Arrow Keys' },
 	gradientStopDelete: { label: 'Delete Focused Gradient Stop', group: 'Gradient', displayKey: 'Delete / Backspace' },
-	clearSelection: { label: 'Cancel Active Transform / Clear Multi-Selection', group: 'Selection', displayKey: 'Escape' },
+	clearSelection: { label: 'Cancel Current Action / Clear Selection', group: 'Selection', displayKey: 'Escape' },
 	duplicateDrag: { label: 'Duplicate Layer(s) While Dragging', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['alt'] } },
 	gradientStopDuplicateDrag: { label: 'Duplicate Gradient Stop While Dragging', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag gradient stop', modifiers: ['alt'] } },
 	gradientStopSnapDrag: { label: 'Snap Gradient Stop to 5% Steps', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag gradient stop', modifiers: ['shift'] } },

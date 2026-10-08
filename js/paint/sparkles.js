@@ -553,13 +553,7 @@ function loadSparkleImageHostPixels(url, isAnimated) {
 			decoded.frames.map((frame) => frame.imageData)
 		));
 	}
-	return new Promise((resolve, reject) => {
-		const image = new Image();
-		image.crossOrigin = 'anonymous';
-		image.onload = () => resolve(image);
-		image.onerror = () => reject(new Error(`Failed to load ${url}`));
-		image.src = url;
-	});
+	return loadImageElement(url);
 }
 
 // ===== EXPORT =====

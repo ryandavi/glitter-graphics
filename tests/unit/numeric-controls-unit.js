@@ -24,7 +24,7 @@ const context = vm.createContext({
 	clearTimeout: (id) => clock.timers.delete(id),
 	Event: class Event { constructor(type, init = {}) { this.type = type; this.bubbles = Boolean(init.bubbles); } }
 });
-['js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/ui/slider.js'].forEach((file) => {
+['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/ui/slider.js'].forEach((file) => {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 });
 const run = (code) => vm.runInContext(code, context);

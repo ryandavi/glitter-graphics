@@ -19,14 +19,14 @@ async function main() {
 			await window.editor.loadBlankImage(40, 20, '#ffffff');
 		});
 		await page.waitForFunction(() => window.editor.originalImage != null);
-		await page.waitForFunction(() => window.editor.glitterManager.getAllContent().length > 0);
+		await page.waitForFunction(() => window.editor.glitterLibrary.getAllContent().length > 0);
 
 		const initial = await page.evaluate(() => {
 			const auto = window.editor.autoGlitterManager;
 			window.editor.baseImageSource = { kind: 'file', hasBaseImage: true };
 			const base = window.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
 			window.editor.baseBackgroundManager.normalizeLayer(base).background.mode = 'image';
-			const glitter = window.editor.glitterManager.getAllContent().find((item) => item.isActive !== false && !item.hasTransparency);
+			const glitter = window.editor.glitterLibrary.getAllContent().find((item) => item.isActive !== false && !item.hasTransparency);
 			const baseIndex = window.editor.layers.findIndex((layer) => layer.type === LayerType.BASE_IMAGE);
 			const batchId = 'auto-glitter-reopen-test';
 			const createdAt = Date.now();
@@ -66,7 +66,15 @@ async function main() {
 		assert.strictEqual(initial.paletteSize, 2, 'Existing masks did not reopen as two Color Matches');
 		assert.strictEqual(initial.previewSize, 2, 'Existing batch did not create a two-layer preview');
 		assert.strictEqual(initial.oldHidden, true, 'Committed batch remained visible under its edit preview');
-		assert.strictEqual(initial.buttonLabel, 'Apply Changes', 'Edit mode did not use Apply Changes');
+		assert.strictEqual(initial.buttonLabel, 'Apply changes', 'Edit mode did not use Apply Changes');
+		assert(await page.evaluate(() => {
+			const event = key => new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+			const tool = editor.currentTool;
+			const count = editor.layers.length;
+			const blocked = dispatchKeyboardCommand(editor, event('b'));
+			const view = dispatchKeyboardCommand(editor, event('/'));
+			return !blocked && editor.currentTool === tool && editor.layers.length === count && view;
+		}), 'Auto Glitter did not apply the real View/Tools command policy');
 
 		const coalesced = await page.evaluate(async () => {
 			const auto = window.editor.autoGlitterManager;
@@ -134,7 +142,7 @@ async function main() {
 
 		const renamed = await page.evaluate(async () => {
 			const editor = window.editor;
-			const [first, second] = editor.glitterManager.getAllContent().filter((item) => item.isAnimated).slice(0, 2);
+			const [first, second] = editor.glitterLibrary.getAllContent().filter((item) => item.isAnimated).slice(0, 2);
 			if (!first || !second) throw new Error('Need two animated glitters for layer-name coverage');
 			const layer = editor.glitterManager.createLayer();
 			layer.fill.glitterId = first.id;

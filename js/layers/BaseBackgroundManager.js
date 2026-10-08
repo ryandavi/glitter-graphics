@@ -5,6 +5,14 @@ class BaseBackgroundManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.pickerSession = null;
+		this.slotPicker = new SlotGlitterPicker(editor, {
+			type: LayerType.BASE_IMAGE, defaultSlot: 'background', typeWord: 'canvas',
+			ensureSlot: (layer, key) => key === 'background' ? layer.background : this.sparkleFieldHost.ensureSlot(layer, key),
+			onPicked: (layer) => { this.loadLayerSettings(layer); this.editor.requestPreviewUpdate(); }
+		});
+		Object.defineProperty(this.slotPicker, 'pickerSession', { get: () => this.pickerSession, set: value => { this.pickerSession = value; } });
+		this.slotPicker.getTarget = () => this.getGlitterSelectionTarget();
+		this.slotPicker.updatePickerStrip = () => this.updatePickerStrip();
 		this.backgroundSourceCache = null;
 		// Glitter mode paints the background as a DOM element above the base
 		// canvas; image and gradient modes draw into the canvas (app.js
@@ -137,13 +145,8 @@ class BaseBackgroundManager {
 		this.sparkleElement = null;
 	}
 
-	getActiveLayer() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		return layer?.type === LayerType.BASE_IMAGE ? layer : null;
-	}
-
 	getBaseLayer() {
-		return this.editor.layers?.find((layer) => layer.type === LayerType.BASE_IMAGE) || null;
+		return this.editor.layerManager.getBaseLayer() || null;
 	}
 
 	hasBaseImage() {
@@ -218,7 +221,6 @@ class BaseBackgroundManager {
 		this.sparkleFieldHost = this.createSparkleFieldHost();
 		bindFieldControls(this.sparkleFieldHost);
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
-		this.ui.pickerDone?.addEventListener('click', () => { if (this.hasActivePickerSession()) this.closePicker(); });
 		this.bindRange('Scale', 'scale');
 		this.bindRange('Opacity', 'opacity');
 		['Hue', 'Saturation', 'Brightness'].forEach((name) => this.bindColorAdjust(name));
@@ -397,6 +399,10 @@ class BaseBackgroundManager {
 		});
 	}
 
+	handlePickerDone() {
+		this.closePicker();
+	}
+
 	closePicker() {
 		const focusId = this.getGlitterSelectionTarget() === 'sparkles' ? 'canvasSparklesGlitterChip' : 'baseBackgroundGlitterChip';
 		this.closePickerSession();
@@ -418,3 +424,6 @@ class BaseBackgroundManager {
 		return context.compositor._buildBaseImageExportPlan(layer);
 	}
 }
+
+BaseBackgroundManager.LAYER_TYPE = LayerType.BASE_IMAGE;
+Object.assign(BaseBackgroundManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer });

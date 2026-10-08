@@ -1,9 +1,7 @@
 (function (root) {
+	const { clamp } = root.GlitterMath || (typeof require === 'function' ? require('../core/math.js') : null);
 	const GRAIN_IDENTITY = Object.freeze({ amount: 0, size: 25, roughness: 0.5, monochrome: true });
 
-	function clamp(value, minimum, maximum) {
-		return Math.min(maximum, Math.max(minimum, value));
-	}
 
 	function normalizeGrain(value) {
 		const size = Number(value?.size);

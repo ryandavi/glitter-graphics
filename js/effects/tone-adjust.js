@@ -1,4 +1,5 @@
 (function (root) {
+	const { clamp } = root.GlitterMath || (typeof require === 'function' ? require('../core/math.js') : null);
 	const TONE_IDENTITY = Object.freeze({
 		brightness: 1,
 		contrast: 1,
@@ -15,9 +16,6 @@
 		return Number.isFinite(number) ? number : fallback;
 	}
 
-	function clamp(value, minimum, maximum) {
-		return Math.min(maximum, Math.max(minimum, value));
-	}
 
 	function normalizeTone(value) {
 		const source = value || {};

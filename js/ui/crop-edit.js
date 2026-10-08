@@ -50,6 +50,7 @@ class CropEditSession {
 		this.chrome.render({ frame: { centerX: x + width / 2, centerY: y + height / 2, width, height, rotation: 0 }, shade: !readOnly, guides: readOnly ? null : 'thirds', badge: { text: `${width} × ${height}`, mode: 'size' } });
 	}
 	press(input) {
+		if (!this.editor.canvasBounds) this.activate();
 		if (!this.editor.canvasBounds) return;
 		const point = this.editor.viewport.screenToCanvas(input.clientX, input.clientY);
 		const handle = this.chrome?.hitTest(input.clientX, input.clientY, input.pointerType) || 'draw';

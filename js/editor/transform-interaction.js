@@ -578,5 +578,79 @@ snapTransformPosition(transform, position, options = {}) {
 				this.loadTransformSettings(active.layer, prefix);
 			});
 		}
+	},
+
+	initializeAltDuplicateFeedback() {
+		const sync = (armed) => this.previewContainer?.classList.toggle(
+			'alt-duplicate-armed', Boolean(armed) && this.currentTool === ToolType.SELECT
+		);
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Alt' && !event.repeat) sync(true);
+		});
+		document.addEventListener('keyup', (event) => {
+			if (event.key === 'Alt') sync(false);
+		});
+		window.addEventListener('blur', () => {
+			sync(false);
+			this.endTemporaryHandTool();
+		});
+		document.getElementById('statusZoom')?.addEventListener('dblclick', () => {
+			if (this.originalImage) this.viewport.resetZoom({ animate: true });
+		});
+		document.getElementById('handTool')?.addEventListener('dblclick', () => {
+			if (this.originalImage) this.viewport.zoomToFit({ animate: true });
+		});
+		document.getElementById('zoomTool')?.addEventListener('dblclick', () => {
+			if (this.originalImage) this.viewport.resetZoom({ animate: true });
+		});
+
+	},
+
+	setDuplicateDragFeedback(active, count = 1) {
+		this.previewContainer?.classList.toggle('duplicate-drag-active', Boolean(active));
+		this.duplicateDragStatus = active ? (count > 1 ? `Duplicating ${count} layers` : 'Duplicating layer') : '';
+		const status = document.getElementById('statusText');
+		if (status) status.textContent = this.duplicateDragStatus;
+	},
+
+	addDuplicateGhost(sourceTransform, targetTransform) {
+		if (!sourceTransform?.element || !targetTransform || targetTransform.refreshElementReference?.()) return null;
+		const ghost = sourceTransform.element.cloneNode(true);
+		ghost.removeAttribute('id');
+		ghost.removeAttribute('data-layer-id');
+		ghost.querySelectorAll?.('[id], [data-layer-id]').forEach((node) => {
+			node.removeAttribute('id');
+			node.removeAttribute('data-layer-id');
+		});
+		ghost.dataset.duplicateGhost = '';
+		ghost.style.pointerEvents = 'none';
+		sourceTransform.element.parentElement?.appendChild(ghost);
+		this._duplicateGhosts ||= new Map();
+		this._duplicateGhosts.set(targetTransform, ghost);
+		this.syncDuplicateGhost(targetTransform);
+
+		let frames = 0;
+		const retireWhenReady = () => {
+			if (!ghost.isConnected) return;
+			if (targetTransform.refreshElementReference?.() || frames++ > 300) {
+				ghost.remove();
+				this._duplicateGhosts?.delete(targetTransform);
+				return;
+			}
+			requestAnimationFrame(retireWhenReady);
+		};
+		requestAnimationFrame(retireWhenReady);
+		return ghost;
+	},
+
+	syncDuplicateGhost(targetTransform) {
+		const ghost = this._duplicateGhosts?.get(targetTransform);
+		if (!ghost?.isConnected) return;
+		targetTransform.applyTransform(ghost, targetTransform.getDimensions());
+		ghost.style.pointerEvents = 'none';
+	},
+
+	syncDuplicateGhosts() {
+		this._duplicateGhosts?.forEach((_ghost, transform) => this.syncDuplicateGhost(transform));
 	}
 };

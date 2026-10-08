@@ -16,6 +16,7 @@
         0.13,
         0.13
     ],
+    "swatchCount": 5,
     "frameCount": 4,
     "frameRate": 20,
     "isVariableFramerate": 0,

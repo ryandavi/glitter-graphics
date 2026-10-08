@@ -7,11 +7,16 @@ const { GifReader, GifWriter } = require('../../js/vendor/omggif.js');
 global.GifReader = GifReader;
 global.GlitterPaletteAnalysis = require('../../js/effects/palette-analysis.js');
 const recolor = require('../../js/effects/glitter-recolor.js');
-const manifest = require('../../data/glitter.index.json');
+const vm = require('vm');
+const config = vm.createContext({ navigator: { hardwareConcurrency: 4 } });
+for (const file of ['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../..', file), 'utf8'), config);
+const styles = vm.runInContext('CONFIG.tools.glitter.recolor.styles', config);
+const manifest = require('../../data/glitter.index.json').filter(item => styles.includes(item.category));
 let local = 0, transparent = 0;
 for (const item of manifest) {
 	const bytes = new Uint8Array(fs.readFileSync(path.join(__dirname, '../..', item.url)));
 	const analysis = recolor.analyze(bytes);
+	assert.strictEqual(item.swatchCount, analysis.swatches.length, `${item.name}: exported swatch count`);
 	assert.deepStrictEqual(recolor.apply(bytes, {}), bytes, `${item.name}: empty recipe`);
 	const colors = Object.fromEntries(analysis.swatches.map((swatch, index) => [swatch.key, ['18b7c9', '9fe8f0', '0f0f0f'][index % 3]]));
 	const result = recolor.apply(bytes, colors, analysis);

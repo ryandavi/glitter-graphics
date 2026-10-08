@@ -36,12 +36,17 @@ class TextGlitterManager {
 		// resolution (resolvePaintSlotSource, shared with SceneCompositor) depends
 		// only on layer.textData, so preview↔export parity is unaffected.
 		this.pickerSession = null;
+		this.slotPicker = createManagerSlotPicker(this, {
+			type: LayerType.TEXT_GLITTER, defaultSlot: 'fill', typeWord: 'text',
+			onPicked: (layer, id) => {
+				return this.refreshLayer(layer, { saveHistory: false, refreshLayerList: false, refreshPreview: false });
+			}
+		});
 	}
 
 	async init() {
 		this.setupUI();
 		this.setupEventListeners();
-		this.setupPickerStripListeners();
 		this.setupTextEditing();
 		this.setupTextActions();
 	}
@@ -91,8 +96,8 @@ class TextGlitterManager {
 			type: LayerType.TEXT_GLITTER,
 			editor: this.editor,
 			getLayer: () => this.getActiveTextLayer(),
-			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getEffectDefaults(key)),
-			getSlotDefaults: (key) => this.getEffectDefaults(key),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => getSlotDefaults(LayerType.TEXT_GLITTER, key)),
+			getSlotDefaults: (key) => getSlotDefaults(LayerType.TEXT_GLITTER, key),
 			apply: (layer, mutate, change) => this.runLayoutRefreshWithAnchor(layer, mutate, change.live
 				? { saveHistory: false, refreshLayerList: false, refreshPreview: Boolean(change.geometry), isCurrent: change.ticket?.isCurrent }
 				: { saveHistory: true, refreshPreview: false }
@@ -380,43 +385,10 @@ class TextGlitterManager {
 	// Effects default to GLITTER using the per-effect default id so the slot
 	// shows a real glitter (not the "No glitter selected" solid placeholder) the
 	// moment it's enabled. See buildDefaultBorder in effects/slot-effects.js.
-	getDefaultBorder() {
-		return buildDefaultBorder({
-			config: CONFIG.tools.text.border,
-			slot: getPaintSlotDefinition(LayerType.TEXT_GLITTER, 'border'),
-			fallbackMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.text
-		});
-	}
-
-	getDefaultShadow() {
-		const shadow = buildDefaultShadow({
-			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.text,
-			castAnchor: 'baseline'
-		});
-		delete shadow.castLength;
-		delete shadow.castLean;
-		return { ...shadow, castLengthRatio: FIELDS.textCastLength.value / 100, castLeanRatio: FIELDS.textCastLean.value / 100, castBlurRatio: FIELDS.textCastBlur.value / 100 };
-	}
-
-	getDefaultBevel() {
-		return buildDefaultBevel();
-	}
-
-	getDefaultFill() {
-		return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text });
-	}
 
 	// textBackground.fill is its own full paint slot (scale/colorAdjust
 	// included, like border/shadow) — the canonical Fill representation, not a
-	// Text Background-specific paint model (DYNAMIC-TEXT-BACKGROUND-
-	// IMPLEMENTATION-PLAN.md "Fill integration").
-	getDefaultBackgroundFill() {
-		return buildDefaultFill({
-			defaultGlitterId: CONFIG.tools.glitter.defaults.backgroundGlitterId
-		});
-	}
+	// Text Background-specific paint model.
 
 	// Geometry defaults to the "Instagram" preset (TEXT_BACKGROUND_PRESETS,
 	// matches TEXT_BACKGROUND_PRESET_OPTIONS' default selection) rather than
@@ -427,7 +399,7 @@ class TextGlitterManager {
 	}
 
 	getMinBoxSize() {
-		return Math.max(1, Math.round(CONFIG.tools.text.minBoxSize || 40));
+		return Math.max(1, Math.round(CONFIG.tools.text.minBoxSize));
 	}
 
 	// Runs where a text layer enters the document (create, deserialize, project
@@ -439,20 +411,20 @@ class TextGlitterManager {
 			layer.textData.border = null;
 		}
 		if (layer.textData.border) {
-			layer.textData.border = mergeSlotEffectDefaults(layer.textData.border, this.getDefaultBorder());
+			layer.textData.border = mergeSlotEffectDefaults(layer.textData.border, getSlotDefaults(LayerType.TEXT_GLITTER, 'border'));
 		}
 		if (layer.textData.shadow === undefined) {
 			layer.textData.shadow = null;
 		}
 		if (layer.textData.shadow) {
-			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, this.getDefaultShadow());
+			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, getSlotDefaults(LayerType.TEXT_GLITTER, 'shadow'));
 		}
-		layer.textData.bevel ||= this.getDefaultBevel();
-		layer.textData.bevel.highlight = mergeSlotEffectDefaults(layer.textData.bevel.highlight, this.getDefaultBevel().highlight);
-		layer.textData.bevel.shade = mergeSlotEffectDefaults(layer.textData.bevel.shade, this.getDefaultBevel().shade);
+		layer.textData.bevel ||= buildDefaultBevel();
+		layer.textData.bevel.highlight = mergeSlotEffectDefaults(layer.textData.bevel.highlight, buildDefaultBevel().highlight);
+		layer.textData.bevel.shade = mergeSlotEffectDefaults(layer.textData.bevel.shade, buildDefaultBevel().shade);
 		normalizeBevelData(layer.textData.bevel.highlight);
 		layer.textData.sparkles = normalizeSparklesData(layer.textData.sparkles);
-		layer.textData.fill = mergeSlotEffectDefaults(layer.textData.fill, this.getDefaultFill());
+		layer.textData.fill = mergeSlotEffectDefaults(layer.textData.fill, getSlotDefaults(LayerType.TEXT_GLITTER, 'fill'));
 		normalizeSlotTextureCoordinates(layer.textData.fill);
 		normalizeSlotTextureCoordinates(layer.textData.border);
 		normalizeSlotTextureCoordinates(layer.textData.shadow);
@@ -462,7 +434,7 @@ class TextGlitterManager {
 			layer.textData.boxMode = CONFIG.tools.text.defaultBoxMode;
 		}
 		if (!layer.textData.verticalAlign) {
-			layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign || 'top';
+			layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign;
 		}
 		if (layer.textData.boxMode === 'autoHeight') delete layer.textData.boxHeight;
 		if (!isOptionValue('textAlign', layer.textData.align)) layer.textData.align = 'left';
@@ -474,10 +446,10 @@ class TextGlitterManager {
 			layer.textData.lineHeight = FIELDS.textLineHeight.value / 100;
 		}
 		if (!layer.textData.fontWeight) {
-			layer.textData.fontWeight = CONFIG.tools.text.defaultFontWeight || 400;
+			layer.textData.fontWeight = CONFIG.tools.text.defaultFontWeight;
 		}
 		if (!layer.textData.fontStyle) {
-			layer.textData.fontStyle = CONFIG.tools.text.defaultFontStyle || 'normal';
+			layer.textData.fontStyle = CONFIG.tools.text.defaultFontStyle;
 		}
 		if (!isOptionValue('textOrientation', layer.textData.orientation)) {
 			layer.textData.orientation = CONFIG.tools.text.defaultOrientation;
@@ -488,7 +460,7 @@ class TextGlitterManager {
 		layer.textData.warp = normalizeTextWarp(layer.textData.warp);
 	}
 
-	// Phase 2 (data model): defaults, clamping, and the point-vs-box mode
+	// Defaults, clamping, and the point-vs-box mode
 	// guard. `enabled`/`mode`/`lineConnection`/padding/radius/merge fields and
 	// `fill` (the canonical Fill shape) are the ONLY persisted state — presets
 	// just write into these same fields (see applyTextBackgroundPreset).
@@ -502,15 +474,11 @@ class TextGlitterManager {
 		tb.enabled = Boolean(tb.enabled);
 		if (!TEXT_BACKGROUND_MODES.includes(tb.mode)) tb.mode = defaults.mode;
 		if (!TEXT_BACKGROUND_CONNECTIONS.includes(tb.lineConnection)) tb.lineConnection = defaults.lineConnection;
-		const clamp = (value, fallback, min, max) => {
-			const num = Number(value);
-			return Number.isFinite(num) ? Math.max(min, Math.min(max, num)) : fallback;
-		};
-		tb.horizontalPadding = clamp(tb.horizontalPadding, defaults.horizontalPadding, 0, 400);
-		tb.verticalPadding = clamp(tb.verticalPadding, defaults.verticalPadding, 0, 400);
-		tb.cornerRadius = clamp(tb.cornerRadius, defaults.cornerRadius, 0, 400);
-		tb.mergeDistance = clamp(tb.mergeDistance, defaults.mergeDistance, 0, 400);
-		tb.lineSpacingSensitivity = clamp(tb.lineSpacingSensitivity, defaults.lineSpacingSensitivity, 0, 100);
+		tb.horizontalPadding = clampNumber(tb.horizontalPadding, 0, 400, defaults.horizontalPadding);
+		tb.verticalPadding = clampNumber(tb.verticalPadding, 0, 400, defaults.verticalPadding);
+		tb.cornerRadius = clampNumber(tb.cornerRadius, 0, 400, defaults.cornerRadius);
+		tb.mergeDistance = clampNumber(tb.mergeDistance, 0, 400, defaults.mergeDistance);
+		tb.lineSpacingSensitivity = clampNumber(tb.lineSpacingSensitivity, 0, 100, defaults.lineSpacingSensitivity);
 		tb.fill = mergeSlotEffectDefaults(tb.fill, defaults.fill);
 		normalizeSlotTextureCoordinates(tb.fill);
 		// Point text has no independent container — Text Box can only ever be
@@ -586,7 +554,7 @@ class TextGlitterManager {
 	// Background's fill, the two bevel paints) reads like any other.
 	ensureEffectData(layer, effectName) {
 		if (!layer?.textData) return null;
-		return ensureLayerPaintSlot(layer, effectName, () => this.getEffectDefaults(effectName));
+		return ensureLayerPaintSlot(layer, effectName, () => getSlotDefaults(LayerType.TEXT_GLITTER, effectName));
 	}
 
 	getEffectData(layer, effectName) {
@@ -695,15 +663,15 @@ class TextGlitterManager {
 			textData: {
 				text: defaultText,
 				fontId: CONFIG.tools.text.defaultFontId,
-				fontWeight: CONFIG.tools.text.defaultFontWeight || 400,
-				fontStyle: CONFIG.tools.text.defaultFontStyle || 'normal',
+				fontWeight: CONFIG.tools.text.defaultFontWeight,
+				fontStyle: CONFIG.tools.text.defaultFontStyle,
 				textCase: CONFIG.tools.text.defaultTextCase,
 				orientation: CONFIG.tools.text.defaultOrientation,
 				fontSize: FIELDS.textFontSize.value,
 				letterSpacing: FIELDS.textLetterSpacing.value,
 				lineHeight: FIELDS.textLineHeight.value / 100,
 				align: initialAlign,
-				verticalAlign: CONFIG.tools.text.defaultVerticalAlign || 'top',
+				verticalAlign: CONFIG.tools.text.defaultVerticalAlign,
 				boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode,
 				boxWidth: options.boxWidth,
 				boxHeight: options.boxHeight,
@@ -826,7 +794,6 @@ class TextGlitterManager {
 		});
 	}
 
-
 	updateAlignmentSelection(align) {
 		this.ui.alignButtons.forEach((button) => {
 			button.classList.toggle('active', button.dataset.textAlign === align);
@@ -895,31 +862,10 @@ class TextGlitterManager {
 		this.updatePickerStrip();
 	}
 
-	setupPickerStripListeners() {
-		this.ui.pickerStripDone?.addEventListener('click', () => {
-			// The strip is shared by every asset/effect manager. Text may only own
-			// Done while a text layer has an armed text picker session.
-			if (this.editor.layerManager.getActiveLayer()?.type !== LayerType.TEXT_GLITTER || !this.pickerSession) return;
-			const slot = this.pickerSession?.slot || 'fill';
-			this.closePickerSession();
-			this.returnToTextProperties(slot);
-		});
-
-		// Single global Esc listener: exits picker mode, but stays out of the way
-		// when the user is typing or a modal owns the interaction.
-		document.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape' || !this.pickerSession) return;
-			const active = document.activeElement;
-			const isTyping = active && (active.tagName === 'INPUT'
-				|| active.tagName === 'TEXTAREA' || active.isContentEditable);
-			if (isTyping) return;
-			if (this.editor.modalManager?.isAnyOpen?.()) return;
-			event.preventDefault();
-			const slot = this.pickerSession?.slot || 'fill';
-			this.closePickerSession();
-			this.returnToTextProperties(slot);
-			this.editor.updateStatus('Exited glitter picker. Gallery clicks now change the text fill.');
-		});
+	handlePickerDone() {
+		const slot = this.pickerSession?.slot || 'fill';
+		this.closePickerSession();
+		this.returnToTextProperties(slot);
 	}
 
 	// Explicit exit from picker mode (Done / Esc) returns focus to where the
@@ -967,15 +913,6 @@ class TextGlitterManager {
 	}
 
 	// One place each slot's default comes from.
-	getEffectDefaults(effectName) {
-		if (effectName === 'fill') return this.getDefaultFill();
-		if (effectName === 'shadow') return this.getDefaultShadow();
-		if (effectName === 'backgroundFill') return this.getDefaultBackgroundFill();
-		if (effectName === 'sparkles') return buildDefaultSparkles();
-		if (effectName === 'bevelHighlight') return this.getDefaultBevel().highlight;
-		if (effectName === 'bevelShade') return this.getDefaultBevel().shade;
-		return this.getDefaultBorder();
-	}
 
 	getEffectTitle(effectName) {
 		return getPaintSlotLabel(LayerType.TEXT_GLITTER, effectName);
@@ -1057,7 +994,7 @@ class TextGlitterManager {
 
 		const font = FontLibrary.getFont(layer.textData.fontId);
 		const ctx = this.measureCtx;
-		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
+		const padding = CONFIG.rendering.maskPaddingPx;
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;
 		const lineHeightPx = fontSize * layer.textData.lineHeight;
@@ -1429,9 +1366,6 @@ class TextGlitterManager {
 		return TextLayout.getAlignOffset(align, maxWidth, lineWidth);
 	}
 
-
-
-
 	// Glyph-by-glyph layout for warped text (js/paint/text-warp.js), in the
 	// same unshifted space as the flat layout. Each glyph keeps its flat advance
 	// (per-glyph drawing drops kerning, as letter spacing already does) and
@@ -1439,7 +1373,6 @@ class TextGlitterManager {
 	layoutWarpedTextGlyphs(ctx, lines, options) {
 		return TextLayout.layoutWarpedTextGlyphs(ctx, lines, options);
 	}
-
 
 	// Every slot mask for export, in text-local space: the canvases the
 	// preview masks with, with the shadow offset baked in (preview translates
@@ -2032,10 +1965,6 @@ class TextGlitterManager {
 		syncPropertyReverts();
 	}
 
-	createTransformHandles(layerId) {
-		movableCreateTransformHandles(this, layerId);
-	}
-
 	// ===== TRANSFORM UPDATES (Delegation to LayerTransform, mirrors StickerManager) =====
 
 	updateTransform(layerId, updates) {
@@ -2056,50 +1985,16 @@ class TextGlitterManager {
 
 	// ===== CENTERING METHODS (Delegation to LayerTransform, mirrors StickerManager) =====
 
-	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	alignToCanvas(layerId, mode) {
-		movableAlignToCanvas(this, layerId, mode, (layer) => this.loadLayerSettings(layer));
-	}
-
-	resetTransform(layerId) {
-		movableResetTransform(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	removeTransformHandles() {
-		movableRemoveTransformHandles(this);
-	}
-
 	removeLayerElement(layerId) {
 		this.previewMaskUrls.deleteWhere((key) => key.startsWith(`${layerId}|`));
-
-		const element = this.layerElements.get(layerId);
-		if (element?.parentNode) {
-			element.parentNode.removeChild(element);
-		}
-
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) {
-			transform.destroy();
-			this.layerTransforms.delete(layerId);
-		}
-
-		this.layerElements.delete(layerId);
+		LAYER_ELEMENT_METHODS.removeLayerElement.call(this, layerId);
 	}
 
 	clearElements() {
 		// New document / image reset: no layer survives, so any armed picker
 		// session is stale.
 		this.closePickerSession();
-		Array.from(this.layerElements.keys()).forEach((layerId) => {
-			this.removeLayerElement(layerId);
-		});
+		LAYER_ELEMENT_METHODS.clearElements.call(this);
 	}
 
 	clearPreviewMaskUrls() {
@@ -2129,3 +2024,5 @@ class TextGlitterManager {
 }
 
 Object.assign(TextGlitterManager.prototype, TEXT_EDIT_METHODS, TEXT_ACTION_METHODS);
+
+Object.assign(TextGlitterManager.prototype, MOVABLE_LAYER_METHODS);

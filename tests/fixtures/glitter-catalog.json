@@ -1,0 +1,192 @@
+{
+	"categories": [
+		{
+			"id": "sparkle",
+			"name": "Sparkle"
+		},
+		{
+			"id": "ember",
+			"name": "Ember"
+		},
+		{
+			"id": "noise",
+			"name": "Noise"
+		},
+		{
+			"id": "set-a",
+			"kind": "set",
+			"name": "A",
+			"attribution": {
+				"authorId": "alice",
+				"author": "Alice"
+			}
+		},
+		{
+			"id": "set-b",
+			"kind": "set",
+			"name": "B",
+			"attribution": {
+				"authorId": "bob",
+				"author": "Bob"
+			}
+		}
+	],
+	"items": [
+		{
+			"id": 1,
+			"name": "Swatch 1",
+			"category": "sparkle",
+			"set": null,
+			"colorCodes": [
+				"#000000"
+			],
+			"tags": [
+				"Neutral"
+			],
+			"sortOrder": 0,
+			"url": "fixture-0.gif"
+		},
+		{
+			"id": 2,
+			"name": "Swatch 2",
+			"category": "sparkle",
+			"set": "set-a",
+			"colorCodes": [
+				"#404040"
+			],
+			"tags": [
+				"Neutral"
+			],
+			"sortOrder": 1,
+			"url": "fixture-1.gif"
+		},
+		{
+			"id": 3,
+			"name": "Swatch 3",
+			"category": "sparkle",
+			"set": "set-a",
+			"colorCodes": [
+				"#808080"
+			],
+			"tags": [
+				"Neutral"
+			],
+			"sortOrder": 2,
+			"url": "fixture-2.gif"
+		},
+		{
+			"id": 4,
+			"name": "Swatch 4",
+			"category": "sparkle",
+			"set": "set-b",
+			"colorCodes": [
+				"#e0e0e0"
+			],
+			"tags": [
+				"Neutral"
+			],
+			"sortOrder": 3,
+			"url": "fixture-3.gif"
+		},
+		{
+			"id": 5,
+			"name": "Swatch 5",
+			"category": "ember",
+			"set": "set-a",
+			"colorCodes": [
+				"#ff0000"
+			],
+			"tags": [],
+			"sortOrder": 0,
+			"url": "fixture-4.gif"
+		},
+		{
+			"id": 6,
+			"name": "Swatch 6",
+			"category": "ember",
+			"set": null,
+			"colorCodes": [
+				"#00ff00"
+			],
+			"tags": [],
+			"sortOrder": 1,
+			"url": "fixture-5.gif"
+		},
+		{
+			"id": 7,
+			"name": "Swatch 7",
+			"category": "noise",
+			"set": "set-b",
+			"colorCodes": [
+				"#0000ff"
+			],
+			"tags": [],
+			"sortOrder": 0,
+			"url": "fixture-6.gif"
+		},
+		{
+			"id": 8,
+			"name": "Swatch 8",
+			"category": "noise",
+			"set": null,
+			"colorCodes": [
+				"#85858a"
+			],
+			"tags": [
+				"Neutral"
+			],
+			"sortOrder": 1,
+			"url": "fixture-7.gif"
+		},
+		{
+			"id": 9,
+			"name": "Swatch 9",
+			"category": "noise",
+			"set": null,
+			"colorCodes": [
+				"#f0d2b4"
+			],
+			"tags": [],
+			"sortOrder": 2,
+			"url": "fixture-8.gif"
+		},
+		{
+			"id": 10,
+			"name": "Swatch 10",
+			"category": "sparkle",
+			"set": null,
+			"colorCodes": [
+				"#ffff00"
+			],
+			"tags": [],
+			"sortOrder": 4,
+			"url": "fixture-9.gif"
+		},
+		{
+			"id": 11,
+			"name": "Swatch 11",
+			"category": "ember",
+			"set": null,
+			"colorCodes": [
+				"#ff00ff"
+			],
+			"tags": [],
+			"sortOrder": 2,
+			"url": "fixture-10.gif"
+		},
+		{
+			"id": 12,
+			"name": "Swatch 12",
+			"category": "noise",
+			"set": null,
+			"colorCodes": [
+				"#00ffff"
+			],
+			"tags": [
+				"Pattern"
+			],
+			"sortOrder": 3,
+			"url": "fixture-11.gif"
+		}
+	]
+}

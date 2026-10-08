@@ -1,28 +1,66 @@
 'use strict';
 
 registerLayerType(LayerType.FRAME, {
+	assetRefs: (layer) => [{ kind: 'sticker', id: layer.frameData?.image?.stickerId }],
 	displayName: 'Frame',
 	// The style kind paints its ring with the fill slot; the image kind draws
 	// a frame sticker instead (js/paint/frames.js FRAME_KINDS).
 	paintSlots: [
-		{ key: 'fill', role: 'fill', path: 'frameData.fill', glitterDefault: 'fillGlitterId', sourceLabel: null, panelPrefix: 'frameFill', modes: ['glitter', 'solid'] },
 		{
-			key: 'sparkles', role: 'sparkles', path: 'frameData.sparkles', draftPath: 'frameData.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
-			panelPrefix: 'frameSparkles', modes: ['glitter', 'solid']
+			defaults: () => {
+				const defaults = CONFIG.tools.frames.defaults;
+				return {
+					...buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.frame }),
+					mode: defaults.fillMode,
+					color: defaults.color
+				};
+			},
+			key: 'fill',
+			role: 'fill',
+			path: 'frameData.fill',
+			glitterDefault: 'fillGlitterId',
+			sourceLabel: null,
+			panelPrefix: 'frameFill',
+			modes: ['glitter', 'solid']
+		},
+		{
+			defaults: () => {
+				return buildDefaultSparkles();
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'frameData.sparkles',
+			draftPath: 'frameData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'frameSparkles',
+			modes: ['glitter', 'solid']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.frameLayerManager?.getSparkleHost(layer) || null,
 	fields: [
-		{ path: 'frameData.widthPx', field: 'frameThickness', id: 'frameThickness', geometry: true, documentScale: 'geometry' },
+		{
+			path: 'frameData.widthPx',
+			field: 'frameThickness',
+			id: 'frameThickness',
+			geometry: true,
+			documentScale: 'geometry'
+		},
 		{ path: 'frameData.inset', field: 'frameInset', id: 'frameInset', geometry: true, documentScale: 'geometry' },
 		{ path: 'frameData.radius', field: 'frameRadius', id: 'frameRadius', geometry: true, documentScale: 'corner' },
-		{ path: 'frameData.sliceScale', field: 'frameSliceScale', id: 'frameSliceScale', geometry: true, documentScale: 'geometry' },
+		{
+			path: 'frameData.sliceScale',
+			field: 'frameSliceScale',
+			id: 'frameSliceScale',
+			geometry: true,
+			documentScale: 'geometry'
+		},
 		{ path: 'frameData.shade', field: 'frameShade', id: 'frameShade' },
 		{ path: 'frameData.width', documentScale: 'geometry', minimum: 1 },
 		{ path: 'frameData.height', documentScale: 'geometry', minimum: 1 }
 	],
-	hasVisibleContent: (layer) => Boolean(layer.frameData) && (layer.frameData.kind !== 'image' || Boolean(layer.frameData.image?.url)),
+	hasVisibleContent: (layer) =>
+		Boolean(layer.frameData) && (layer.frameData.kind !== 'image' || Boolean(layer.frameData.image?.url)),
 	timelineSources: (layer, context) => context.compositor._createSparkleTimelineSources(layer),
 	serialization: {
 		dataKey: 'frameData',

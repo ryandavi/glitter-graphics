@@ -1,7 +1,7 @@
 'use strict';
 
 const GlitterEasing = (() => {
-	const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
+	const { clamp01 } = globalThis.GlitterMath || (typeof require === 'function' ? require('../core/math.js') : null);
 	const EASINGS = Object.freeze({
 		linear: (t) => clamp01(t),
 		ease: (t) => {

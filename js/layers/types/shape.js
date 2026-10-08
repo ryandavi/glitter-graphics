@@ -1,41 +1,116 @@
 'use strict';
 
 registerLayerType(LayerType.SHAPE, {
+	assetRefs: (layer) => [{ kind: 'shape', id: layer.shapeData?.shapeId }],
 	rasterizesScale: true,
-	describe: (layer, editor) => ({ name: layer.name || 'Shape', detail: `Shape · ${describeLayerPaint(editor, getLayerFillSlot(layer)).modeLabel}` }),
+	describe: (layer, editor) => ({
+		name: layer.name || 'Shape',
+		detail: `Shape · ${describeLayerPaint(editor, getLayerFillSlot(layer)).modeLabel}`
+	}),
 	displayName: 'Shape',
 	paintSlots: [
 		{
-			key: 'shadow', role: 'shadow', path: 'shapeData.shadow', draftPath: 'shapeData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'shapeShadow', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultShadow({
+					defaultMode: 'glitter',
+					defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.shape,
+					includeColorAdjust: true
+				});
+			},
+			key: 'shadow',
+			role: 'shadow',
+			path: 'shapeData.shadow',
+			draftPath: 'shapeData.effectDrafts.shadow',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'shapeShadow',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', edgeStyles: ['round', 'miter'], path: 'shapeData.border', draftPath: 'shapeData.effectDrafts.border',
-			glitterDefault: 'borderGlitterId', panelPrefix: 'shapeBorder', modes: ['glitter', 'solid'],
+			defaults: () => {
+				return buildDefaultBorder({
+					config: CONFIG.tools.shapes.border,
+					slot: getPaintSlotDefinition(LayerType.SHAPE, 'border'),
+					fallbackMode: 'glitter',
+					includeShapeStyle: true,
+					includeColorAdjust: true,
+					defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.shape
+				});
+			},
+			key: 'border',
+			role: 'border',
+			edgeStyles: ['round', 'miter'],
+			path: 'shapeData.border',
+			draftPath: 'shapeData.effectDrafts.border',
+			glitterDefault: 'borderGlitterId',
+			panelPrefix: 'shapeBorder',
+			modes: ['glitter', 'solid'],
 			fields: { widthPx: 'borderWidth', dotSpacingPx: 'borderDotSpacing' }
 		},
 		{
-			key: 'fill', role: 'fill', path: 'shapeData.fill', glitterDefault: 'fillGlitterId',
-			panelPrefix: 'shapeFill', modes: ['none', 'image', 'glitter', 'solid'],
-			fields: { imageScalePercent: 'shapeImageScale', offsetXPercent: 'shapeImageOffsetX', offsetYPercent: 'shapeImageOffsetY' }
+			defaults: () => {
+				return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.shape });
+			},
+			key: 'fill',
+			role: 'fill',
+			path: 'shapeData.fill',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'shapeFill',
+			modes: ['none', 'image', 'glitter', 'solid'],
+			fields: {
+				imageScalePercent: 'shapeImageScale',
+				offsetXPercent: 'shapeImageOffsetX',
+				offsetYPercent: 'shapeImageOffsetY'
+			}
 		},
 		{
-			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'shapeData.bevel.highlight', enabledPath: 'shapeData.bevel.enabled',
-			glitterDefault: 'fillGlitterId', panelPrefix: 'shapeBevel', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().highlight;
+			},
+			key: 'bevelHighlight',
+			role: 'bevel',
+			label: 'bevel highlight',
+			path: 'shapeData.bevel.highlight',
+			enabledPath: 'shapeData.bevel.enabled',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'shapeBevel',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'shapeData.bevel.shade', enabledPath: 'shapeData.bevel.enabled',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'shapeBevelShade', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().shade;
+			},
+			key: 'bevelShade',
+			role: 'bevel',
+			label: 'bevel shade',
+			path: 'shapeData.bevel.shade',
+			enabledPath: 'shapeData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'shapeBevelShade',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'sparkles', role: 'sparkles', path: 'shapeData.sparkles', draftPath: 'shapeData.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
-			panelPrefix: 'shapeSparkles', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultSparkles();
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'shapeData.sparkles',
+			draftPath: 'shapeData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'shapeSparkles',
+			modes: ['glitter', 'solid']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.shapeGlitterManager?.getSparkleHost(layer) || null,
 	fields: [
-		{ path: 'shapeData.cornerRadiusPx', field: 'shapeRadius', id: 'shapeRadius', geometry: true, documentScale: 'corner' },
+		{
+			path: 'shapeData.cornerRadiusPx',
+			field: 'shapeRadius',
+			id: 'shapeRadius',
+			geometry: true,
+			documentScale: 'corner'
+		},
 		{ path: 'shapeData.width', documentScale: 'geometry', minimum: 1 },
 		{ path: 'shapeData.height', documentScale: 'geometry', minimum: 1 }
 	],
@@ -63,14 +138,16 @@ registerLayerType(LayerType.SHAPE, {
 		description: 'Add a shape with an image, glitter, color, or a gradient',
 		quickAddId: 'quickActionAddShape',
 		quickAddOrder: 3,
-		quickAddVariants: [{
-			id: 'quickActionAddPhotoShape',
-			order: 4,
-			label: 'Photo in Shape',
-			icon: 'open-image',
-			description: 'Crop a photo inside a shape',
-			createOptions: { shapeLayer: { fillMode: 'image', openImagePicker: true } }
-		}]
+		quickAddVariants: [
+			{
+				id: 'quickActionAddPhotoShape',
+				order: 4,
+				label: 'Photo in Shape',
+				icon: 'open-image',
+				description: 'Crop a photo inside a shape',
+				createOptions: { shapeLayer: { fillMode: 'image', openImagePicker: true } }
+			}
+		]
 	},
 	// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 	// Shape Properties panel. Selection Settings doesn't apply.

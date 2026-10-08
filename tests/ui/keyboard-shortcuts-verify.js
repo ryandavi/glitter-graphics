@@ -48,8 +48,53 @@ async function main() {
 		await page.evaluate(() => editor.shapeGlitterManager.armPicker('fill'));
 		assert(await page.locator('#galleryPickerStripTitle').textContent() === 'Choosing fill glitter', 'Fill picker lost its glitter label');
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'glitter', 'Fill picker showed the wrong library');
+		for (const width of [1200, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.evaluate(() => {
+				editor.setTool(ToolType.TEXT);
+				editor.shapeGlitterManager.armPicker('border');
+				document.activeElement.blur();
+				window.auditSelected = editor.activeLayerId;
+			});
+			await page.keyboard.press('Escape');
+			assert(await page.evaluate(() => !editor.pickers.active && editor.currentTool === ToolType.TEXT && editor.activeLayerId === window.auditSelected), `${width}: picker Escape changed tool or selection`);
+			await page.keyboard.press('Escape');
+			assert(await page.evaluate(() => editor.currentTool === ToolType.TEXT && editor.layerManager.getSelectedLayers().length === 0), `${width}: deselection changed tool`);
+			assert(await page.evaluate(async () => {
+				const item = editor.glitterLibrary.getAllContent().find(item => item.category === 'sparkle');
+				await editor.glitterLibrary.selectGlitter(item.id);
+				const base = editor.layerManager.getBaseLayer();
+				return base.background.mode === 'glitter' && base.background.glitterId === item.id && editor.activeLayerId === null;
+			}), `${width}: unselected glitter did not set background`);
+			await page.evaluate(() => {
+				editor.layerManager.setActiveLayer(window.auditSelected);
+				editor.shapeGlitterManager.armPicker('fill');
+				window.auditDoneCalls = 0;
+				const manager = editor.shapeGlitterManager;
+				const done = manager.handlePickerDone.bind(manager);
+				manager.handlePickerDone = () => { window.auditDoneCalls++; done(); };
+				document.getElementById('galleryPickerStripDone').click();
+				manager.handlePickerDone = done;
+			});
+			assert(await page.evaluate(() => window.auditDoneCalls === 1 && !editor.pickers.active), `${width}: Done ran more than once`);
+		}
+		await page.setViewportSize({ width: 1200, height: 900 });
+		await page.evaluate(() => {
+			const layer = editor.layerManager.addLayer(LayerType.TEXT_GLITTER);
+			editor.setTool(ToolType.TEXT);
+			editor.textGlitterManager.beginTextEdit(layer, { focus: false });
+			window.auditTextSession = editor.textGlitterManager.editSession;
+			document.activeElement.blur();
+		});
+		await page.keyboard.down('Space');
+		assert(await page.evaluate(() => editor.currentTool === ToolType.HAND && editor.textGlitterManager.editSession === window.auditTextSession), 'Temporary Hand ended the text session');
+		await page.keyboard.up('Space');
+		assert(await page.evaluate(() => editor.currentTool === ToolType.TEXT && editor.textGlitterManager.editSession === window.auditTextSession), 'Temporary Hand did not resume the text session');
+		await page.evaluate(() => editor.setTool(ToolType.HAND));
+		assert(await page.evaluate(() => !editor.textGlitterManager.editSession), 'Ordinary tool change did not end the text session');
 		process.stdout.write('PASS shortcut dispatch requires exact modifiers\n');
 		process.stdout.write('PASS shape picker labels and text/layer copy priority\n');
+		process.stdout.write('PASS desktop/mobile single-owner Done, Escape tool preservation and unselected background picks\n');
 	} finally {
 		await browser.close();
 	}

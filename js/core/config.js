@@ -50,7 +50,7 @@ const CONFIG = deepFreeze({
 			autoCreateGlitterLayer: true
 		},
 		assets: {
-			manifestVersion: '2026-10-07b'
+			manifestVersion: '2026-10-08-audit'
 		}
 	},
 
@@ -311,6 +311,7 @@ const CONFIG = deepFreeze({
 					glitterLayer: 111,
 					text: 17,
 					shape: 67,
+					path: 67,
 					sticker: 17,
 					canvasBackground: 101,
 					frame: 9
@@ -321,12 +322,16 @@ const CONFIG = deepFreeze({
 					glitterLayer: 9,
 					text: 9,
 					shape: 68,
+					path: 68,
+					frame: 68,
 					sticker: 9
 				},
 				shadowGlitterId: {
 					glitterLayer: 109,
 					text: 109,
 					shape: 34,
+					path: 34,
+					frame: 34,
 					sticker: 83
 				},
 				fillColor: '#ff66cc',
@@ -787,7 +792,7 @@ const CONFIG = deepFreeze({
 		// stay reachable from the layer's panel.
 		nudge: { step: 1, fastStep: 10 },
 		contextToolbars: [
-			{ id: 'textEditControls', session: 'textEdit', controls: [
+			{ id: 'textEditControls', session: 'textEdit', when: editor => editor.getActiveSession() === 'textEdit', controls: [
 				{ kind: 'slider', id: 'contextTextSize', valueId: 'contextTextSizeValue', slider: 'textFontSize', action: 'textFontSize' },
 				{ kind: 'button', id: 'contextTextBold', glyph: 'B', name: 'Bold', title: 'Bold', textAction: 'bold', action: 'textToggleBold' },
 				{ kind: 'button', id: 'contextTextItalic', glyph: 'I', name: 'Italic', title: 'Italic', textAction: 'italic', action: 'textToggleItalic' },
@@ -798,14 +803,14 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'contextTextRight', icon: 'text-align-right', name: 'Right', title: 'Align right', textAction: 'align:right', action: 'textAlignRight' },
 				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-justify', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify', mobile: false }
 			] },
-			{ id: 'cropEditControls', session: 'crop', controls: [
+			{ id: 'cropEditControls', session: 'crop', when: editor => editor.getActiveSession() === 'crop', controls: [
 				{ kind: 'button', id: 'contextCropRatio', icon: 'crop', name: 'Ratio', title: 'Crop ratio or size', action: 'canvasBoundsRatioMenu' },
 				{ kind: 'button', id: 'contextCropSwap', icon: 'swap', name: 'Swap', title: 'Swap orientation', action: 'canvasBoundsSwap' },
 				{ kind: 'button', id: 'contextCropFit', icon: 'fit-screen', name: 'Fit', title: 'Fit crop bounds', action: 'canvasBoundsFitMenu' },
 				{ kind: 'button', id: 'contextCropCancel', icon: 'x-mark', name: 'Cancel', title: 'Cancel (Esc)', action: 'canvasBoundsCancel' },
 				{ kind: 'button', id: 'contextCropDone', icon: 'check', name: 'Done', title: 'Apply crop (Enter)', action: 'canvasBoundsApply' }
 			] },
-			{ id: 'pathEditControls', session: 'pathEdit', controls: [
+			{ id: 'pathEditControls', session: 'pathEdit', when: editor => editor.getActiveSession() === 'pathEdit', controls: [
 				{ kind: 'segmented', id: 'contextPathNextPoint', label: 'Next point', options: [
 					{ label: 'Corner', value: 'corner', action: 'pathNextCorner', title: 'Clicks place corners. Drag to pull a curve.' },
 					{ label: 'Curve', value: 'curve', action: 'pathNextCurve', title: 'Clicks place points the curve flows through' }
@@ -819,21 +824,22 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'contextPathClose', icon: 'path-close', name: 'Close', title: 'Close or open the path', action: 'pathToggleClosed' },
 				{ kind: 'button', id: 'contextPathDone', icon: 'check', name: 'Done', title: 'Finish (Enter)', action: 'sessionConfirm' }
 			] },
-			{ id: 'zoomControls', tool: 'zoom', controls: [
+			{ id: 'zoomControls', tool: 'zoom', when: (_editor, { tool }) => tool === 'zoom', controls: [
 				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },
 				{ kind: 'readout', id: 'zoomPercentage', title: 'Click to reset to 100%', value: '100%', action: 'zoomReset' },
 				{ kind: 'button', id: 'zoomIn', icon: 'plus', name: 'Zoom In', title: 'Zoom In (+)', action: 'zoomIn' },
 				{ kind: 'button', id: 'fitScreen', icon: 'fit-screen', name: 'Fit Screen', title: 'Fit Screen (Ctrl+0)', action: 'zoomFit' },
 				{ kind: 'button', id: 'fillScreen', icon: 'maximize', name: 'Fill Screen', title: 'Fill Screen', action: 'zoomFill' }
 			] },
-			{ id: 'panControls', tool: 'hand', controls: [
+			{ id: 'panControls', tool: 'hand', when: (_editor, { tool }) => tool === 'hand', controls: [
 				{ kind: 'button', id: 'centerCanvasHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerCanvasH' },
 				{ kind: 'button', id: 'centerCanvasVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerCanvasV' }
 			] },
 			{
 				id: 'layerCenterControls',
 				tool: 'select',
-				allowMultiSelection: true,
+				when: (_editor, { tool }) => tool === 'select',
+				sync: editor => syncSelectionContextToolbar(editor),
 				controls: [
 					{ kind: 'toggle', id: 'contextAutoSelect', label: 'Auto-Select' },
 					{ kind: 'button', id: 'contextRemoveBackground', icon: 'eraser', name: 'Remove background', title: 'Remove background from this uploaded sticker', action: 'removeBackground' },
@@ -842,14 +848,14 @@ const CONFIG = deepFreeze({
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
 				]
 			},
-			{ id: 'colorPickerControls', tool: 'glitterFill', layerTypes: ['glitter-fill'], controls: [
+			{ id: 'colorPickerControls', tool: 'glitterFill', when: (_editor, { layer, tool }) => tool === 'glitterFill' && layer?.type === 'glitter-fill', sync: editor => editor.updateColorPickerControls(), controls: [
 				{ kind: 'slider', id: 'contextThreshold', valueId: 'contextThresholdValue', slider: 'threshold' },
 				{ kind: 'group', controls: [
 					{ kind: 'toggle', id: 'contextMultiSelect', label: 'Multi', countId: 'contextSelectionCount' },
 					{ kind: 'toggle', id: 'contextContiguous', label: 'Contiguous' }
 				] }
 			] },
-			{ id: 'maskBrushControls', tool: 'brush', controls: [
+			{ id: 'maskBrushControls', tool: 'brush', when: (_editor, { tool }) => tool === 'brush', controls: [
 				{ kind: 'segmented', id: 'maskBrushMode', options: [
 					{ label: 'Paint', mode: 'add', action: 'brushSetPaint', title: 'Paint mask (B)' },
 					{ label: 'Erase', mode: 'sub', action: 'brushSetErase', title: 'Erase mask (E / X)' }
@@ -915,7 +921,7 @@ const CONFIG = deepFreeze({
 			// phone - more GIF-encoding workers than cores adds context-switch
 			// overhead instead of speed.
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
-			workerScript: 'js/workers/gif-encode.worker.js?v=3897e51f',
+			workerScript: 'js/workers/gif-encode.worker.js?v=3aa17c20',
 			quality: 1,
 			timing: {
 				forceDelay: 100,

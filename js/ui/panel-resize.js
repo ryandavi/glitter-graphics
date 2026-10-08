@@ -12,7 +12,7 @@
 // Mobile is excluded outright: MobileManager turns these columns into bottom
 // drawers whose size is owned by the sheet-drag handle instead.
 
-const PANEL_RESIZE_STORAGE_KEY = 'glitter.panelWidths';
+const PANEL_RESIZE_STORAGE_KEY = STORAGE_KEYS.panelWidths.key;
 
 const PANEL_RESIZE_TARGETS = Object.freeze({
 	layers: {
@@ -45,21 +45,13 @@ const PANEL_RESIZE_SNAP_TOLERANCE = 10;
 // The canvas is the point of the app; sidebars never squeeze it below this.
 const PANEL_RESIZE_MIN_CANVAS = 360;
 
+
 function readPanelWidths() {
-	try {
-		const stored = JSON.parse(localStorage.getItem(PANEL_RESIZE_STORAGE_KEY) || '{}');
-		return stored && typeof stored === 'object' ? stored : {};
-	} catch (error) {
-		return {};
-	}
+	return readStored(PANEL_RESIZE_STORAGE_KEY, {});
 }
 
 function writePanelWidths(widths) {
-	try {
-		localStorage.setItem(PANEL_RESIZE_STORAGE_KEY, JSON.stringify(widths));
-	} catch (error) {
-		// A full or blocked store must not break resizing for this session.
-	}
+	writeStored(PANEL_RESIZE_STORAGE_KEY, widths);
 }
 
 // The largest this panel may become without starving the canvas or the other

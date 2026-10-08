@@ -174,20 +174,9 @@ class ContentManager {
 		const existing = this.assetImageReadyPromises.get(asset.url);
 		if (existing) return existing;
 
-		const promise = new Promise((resolve) => {
-			const image = new Image();
-			image.decoding = 'async';
-			image.onload = async () => {
-				try {
-					await image.decode?.();
-				} catch (_error) {
-					// A loaded animated image can still reject decode(); the
-					// browser cache is warm enough to make the visible swap.
-				}
-				resolve();
-			};
-			image.onerror = resolve;
-			image.src = asset.url;
+		const promise = loadImageElement(asset.url).catch(error => {
+			this.assetImageReadyPromises.delete(asset.url);
+			throw error;
 		});
 		this.assetImageReadyPromises.set(asset.url, promise);
 		return promise;
@@ -249,6 +238,7 @@ class ContentManager {
 			colorCodes,
 			colorWeights: Array.isArray(raw.colorWeights) ? raw.colorWeights : (defaults.colorWeights ?? null),
 			paletteType: raw.paletteType ?? defaults.paletteType ?? null,
+			swatchCount: this.normalizeNumberValue(raw.swatchCount, defaults.swatchCount ?? 0),
 			frameCount: this.normalizeNumberValue(raw.frameCount, defaults.frameCount ?? 0),
 			frameRate: this.normalizeNumberValue(raw.frameRate, defaults.frameRate ?? 10),
 			isVariableFramerate: this.normalizeBooleanValue(raw.isVariableFramerate, defaults.isVariableFramerate ?? false),
@@ -748,13 +738,7 @@ class ContentManager {
 	}
 
 	async processUploadedImage(item, file) {
-		const img = new Image();
-
-		await new Promise((resolve, reject) => {
-			img.onload = resolve;
-			img.onerror = () => reject(new Error('Failed to load image'));
-			img.src = item.url;
-		});
+		const img = await loadImageElement(item.url);
 
 		// Store dimensions
 		item.width = img.naturalWidth;

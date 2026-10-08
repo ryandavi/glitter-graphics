@@ -24,7 +24,7 @@ const { chromium } = require('playwright');
 				const layer = createStylePreviewLayer(manager, LayerType.TEXT_GLITTER, entry);
 				layer.textData.text = 'WordArt';
 				layer.textData.fontSize = 64;
-				library.apply(entry, { layer, context: { getSlotDefaults: key => manager.getEffectDefaults(key), glitterAvailable: id => Boolean(editor.glitterLibrary.getItemById(id)) } });
+				library.apply(entry, { layer, context: { getSlotDefaults: key => getSlotDefaults(layer.type, key), glitterAvailable: id => Boolean(editor.glitterLibrary.getItemById(id)) } });
 				await FontLibrary.ensureLoaded(layer.textData.fontId);
 				for (const slot of Object.values(entry.value.slots)) if (slot.mode === 'glitter') await editor.glitterLibrary.ensureAssetDetails(slot.glitterId);
 				const masks = await manager.renderSlotMasks(layer);

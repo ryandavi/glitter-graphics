@@ -204,7 +204,7 @@ function fillEnclosedMaskAreas(targetCanvas, sourceCanvas) {
 	const source = sourceCtx.getImageData(0, 0, width, height).data;
 	const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
 	const target = targetCtx.getImageData(0, 0, width, height);
-	const threshold = CONFIG.rendering.maskAlphaThreshold ?? 128;
+	const threshold = CONFIG.rendering.maskAlphaThreshold;
 	const outside = new Uint8Array(width * height);
 	const queue = new Int32Array(width * height);
 	let head = 0;
@@ -403,7 +403,7 @@ function createSignedDistanceField(sourceCanvas, alphaThreshold = null, antialia
 	const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
 	const rgba = ctx.getImageData(0, 0, width, height).data;
 	const inside = new Uint8Array(width * height);
-	const threshold = Number.isFinite(alphaThreshold) ? alphaThreshold : (CONFIG.rendering.maskAlphaThreshold ?? 128);
+	const threshold = Number.isFinite(alphaThreshold) ? alphaThreshold : (CONFIG.rendering.maskAlphaThreshold);
 	for (let index = 0; index < inside.length; index++) inside[index] = rgba[index * 4 + 3] >= threshold ? 1 : 0;
 	const nearestInside = antialias ? new Int32Array(inside.length) : null;
 	const nearestOutside = antialias ? new Int32Array(inside.length) : null;

@@ -67,6 +67,11 @@ togglePreview() {
 			});
 		}
 
+		this.previewContainer.addEventListener('pointerdown', event => {
+			if (event.pointerType === 'touch' || !this.originalImage || event.target.closest('.ui-ignore-gestures, .transform-handle-wrapper, .transform-handles')) return;
+			TOOLS[this.currentTool].onCanvasPointerDown?.(this, event);
+		}, { capture: true });
+
 		// In setupEventListeners() or wherever you set up preview container events
 		this.previewContainer.addEventListener('pointerdown', (e) => {
 			if (e.pointerType === 'touch') {
@@ -87,11 +92,7 @@ togglePreview() {
 				this.startSelectionMarquee(e);
 				return;
 			}
-			// A tool that owns its presses (the Pen).
-			if (TOOLS[this.currentTool]?.onCanvasPointerDown && this.originalImage && e.button === 0) {
-				TOOLS[this.currentTool].onCanvasPointerDown(this, e);
-				return;
-			}
+
 			// Shape tool: drag out the initial size (Photoshop-style); a plain click
 			// with no drag falls back to a default-size shape at the click point.
 			if (TOOLS[this.currentTool]?.onCanvasDrag && this.originalImage && e.button === 0) {

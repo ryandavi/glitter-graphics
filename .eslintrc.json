@@ -7,7 +7,9 @@
 	"parserOptions": {
 		"ecmaVersion": 2022,
 		"sourceType": "script",
-		"ecmaFeatures": { "globalReturn": false }
+		"ecmaFeatures": {
+			"globalReturn": false
+		}
 	},
 	"rules": {
 		"no-unreachable": "error",
@@ -20,12 +22,35 @@
 		],
 		"no-dupe-class-members": "error",
 		"no-fallthrough": "error",
-		"no-self-assign": "error"
+		"no-self-assign": "error",
+		"no-restricted-syntax": [
+			"error",
+			{
+				"selector": "MemberExpression[optional=true][object.name='CONFIG']",
+				"message": "CONFIG is always present; read its declared defaults directly."
+			},
+			{
+				"selector": "UnaryExpression[operator='typeof'][argument.name='CONFIG']",
+				"message": "CONFIG is always present in editor scripts."
+			}
+		]
 	},
 	"ignorePatterns": [
 		"js/vendor/**",
 		"js/workers/gif.worker.js",
 		"js/generated/**",
 		"node_modules/**"
+	],
+	"overrides": [
+		{
+			"files": [
+				"js/core/debug.js",
+				"js/effects/**",
+				"js/workers/**"
+			],
+			"rules": {
+				"no-restricted-syntax": "off"
+			}
+		}
 	]
 }

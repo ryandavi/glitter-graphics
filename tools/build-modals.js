@@ -37,9 +37,9 @@ function getAppRegistries() {
 	};
 	vm.createContext(context);
 	[
-		'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js',
+		'js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js', 'js/core/sessions.js',
 		'js/core/layer-types.js', 'js/core/options.js', 'js/core/key-labels.js', 'js/core/commands.js',
-		'js/effects/animation.js', 'js/editor/canvas-bounds.js', 'js/ui/panel-schemas.js'
+		'js/effects/animation.js', 'js/systems/CanvasBounds.js', 'js/ui/panel-schemas.js'
 	].forEach(file => vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file }));
 	vm.runInContext('globalThis.__registries = { CONFIG, ToolType, TOOLS, TOOL_ORDER, COMMANDS, PANEL_SCHEMAS, getShortcutGroups };', context);
 	appRegistries = context.__registries;

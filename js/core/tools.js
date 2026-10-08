@@ -134,9 +134,10 @@ const TOOLS = {
 		toolbarGroup: 'create',
 		titleNote: ' — Paint/Erase in the context bar, or X to swap',
 		groups: ['paint', 'contentEditing'],
-		// The mask editor decides (a glitter fill layer must be active).
-		available: (editor, { autoPreviewActive }) => Boolean(editor.maskEditor?.canActivate()) && !autoPreviewActive
-		// Painting is handled by MaskEditor's own pointer listeners.
+		available: editingAvailable,
+		onActivate: editor => editor.maskEditor.enterEditMode(),
+		onDeactivate: (editor, _nextTool, options = {}) => editor.maskEditor.exitEditMode({ switchTool: false, commitStroke: options.commitStroke !== false }),
+		onCanvasPointerDown: (editor, event) => editor.maskEditor._handlePointerDown(event)
 	},
 	[ToolType.TEXT]: {
 		key: 't',
@@ -342,52 +343,4 @@ function renderToolButtons(container) {
 		previousGroup = definition.toolbarGroup;
 	});
 	container.replaceChildren(...children);
-}
-
-function createTextAt(editor, options = {}) {
-	const position = options.position || { x: editor.originalCanvas.width / 2, y: editor.originalCanvas.height / 2 };
-	const placeholder = options.text === undefined;
-	const layer = editor.layerManager.addLayer(LayerType.TEXT_GLITTER, { skipHistory: true, textLayer: { ...options, text: placeholder ? CONFIG.tools.text.placeholderText : options.text, position, align: 'left' } });
-	if (!layer) return null;
-	editor.finishLayerCreation(layer);
-	const manager = editor.textGlitterManager;
-	const placeText = () => {
-		const entry = manager.getMeasurementEntry(layer);
-		if (layer.textData.boxMode === 'point') manager.setTextOriginWorldPosition(layer, position, entry);
-		else manager.setWorldPointFromLocal(layer.transform, { x: entry.layoutOffsetX - entry.width / 2, y: entry.layoutOffsetY - entry.height / 2 }, position);
-	};
-	placeText();
-	manager.beginTextEdit(layer, { created: true, selectAll: placeholder });
-	FontLibrary.ensureLoaded(layer.textData.fontId).then(() => {
-		if (!editor.layers.includes(layer)) return;
-		placeText();
-		manager.renderTextSelection();
-	}).catch(error => manager.reportFontLoadError(error));
-	return layer;
-}
-
-// An edit session owns its keys; adding a session adds no command dispatch branch.
-const SESSIONS = Object.freeze([
-	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP, mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds(), nudge: (editor, event) => editor.cropEdit.nudge(event) },
-	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession),
-		mode: { label: 'Text', icon: 'text' }, cancel: (editor) => editor.textGlitterManager.endTextEdit() },
-	{ id: 'pathEdit', isActive: (editor) => Boolean(editor.pathEdit?.session),
-		mode: { label: 'Pen', icon: 'pen' }, canConfirm: (editor) => editor.pathEdit?.canHandleEnter(),
-		confirm: (editor) => editor.pathEdit.handleEnter(), cancel: (editor) => editor.pathEdit.handleEscape(),
-		delete: (editor) => editor.pathEdit.deleteSelection(), nudge: (editor, event) => editor.pathEdit.nudge(event),
-		shortcuts: [
-			{ label: 'Delete Selected Points / Last Point While Drawing', group: 'Pen', displayKey: 'Delete / Backspace' },
-			{ label: 'Nudge Selected Points', group: 'Pen', displayKey: 'Arrow Keys' },
-			{ label: 'Nudge Selected Points 10px', group: 'Pen', displayKey: 'Shift + Arrow Keys' },
-			{ label: 'Finish Path / Edit Selected Path', group: 'Pen', displayKey: 'Enter' },
-			{ label: 'Finish Path / Clear Point Selection', group: 'Pen', displayKey: 'Escape' }
-		] }
-]);
-
-function getSessionDefinition(editor, handler) {
-	return SESSIONS.find((session) => session.isActive(editor) || (handler === 'confirm' && session.canConfirm?.(editor))) || null;
-}
-
-function dispatchSessionKey(editor, handler, event) {
-	return getSessionDefinition(editor, handler)?.[handler]?.(editor, event);
 }

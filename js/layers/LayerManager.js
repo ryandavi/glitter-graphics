@@ -105,7 +105,6 @@ class LayerManager {
 		this.editor.selectedLayerIds = value;
 	}
 
-
 	getLayerZIndex(layerId) {
 		const index = this.layers.findIndex(l => l.id === layerId);
 		return index !== -1 ? index + 1 : 1;
@@ -210,9 +209,6 @@ class LayerManager {
 		return restored;
 	}
 
-
-
-
 	insertLayer(layer, options = {}) {
 		const { suppressDesignGalleryFocus = false } = options;
 		if (LAYER_UI_CONFIG[layer.type]?.blendable) layer.blendMode = GlitterBlendModes.forLayer(layer);
@@ -297,7 +293,6 @@ class LayerManager {
 		this.editor.updateStatus(cfg.addedStatusMessage || 'New layer added');
 		return layer;
 	}
-
 
 	deleteLayer(layerId, options = {}) {
 		this.deleteLayers([layerId], options);
@@ -553,7 +548,6 @@ class LayerManager {
 		});
 	}
 
-
 	setActiveLayer(layerId, options = {}) {
 		if (!layerId) {
 			this.clearSelection();
@@ -577,6 +571,9 @@ class LayerManager {
 		});
 	}
 
+	getBaseLayer() {
+		return this.layers.find(layer => layer.type === LayerType.BASE_IMAGE) || null;
+	}
 
 	getActiveLayer() {
 		return this.getLayerById(this.activeLayerId);
@@ -617,8 +614,6 @@ class LayerManager {
 		}
 	}
 
-
-
 	// ===== LAYER PICKING (SELECT TOOL) =====
 
 	// In LayerManager class
@@ -651,7 +646,6 @@ class LayerManager {
 			}
 
 			this.selectLayerFromCanvas(layer.id);
-
 
 			const flash = document.createElement('div');
 			flash.className = 'layer-pick-flash';
@@ -839,7 +833,6 @@ class LayerManager {
 			}
 		}
 	}
-
 
 	updateBottomBarButtons() {
 		const selectedLayers = this.getSelectedLayers();
@@ -1065,8 +1058,6 @@ class LayerManager {
 			this.goToLayerSource(layer.id);
 		});
 
-
-
 		// 3. Info (Name & Type)
 		const info = document.createElement('div');
 		info.className = 'list-row-text';
@@ -1136,9 +1127,6 @@ class LayerManager {
 		});
 
 		info.append(nameText, metaRow);
-
-
-
 
 		// 4. Visibility belongs with layer identity, matching modern layer panels.
 		const visBtn = this.createIconButton({

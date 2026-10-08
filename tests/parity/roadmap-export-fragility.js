@@ -76,7 +76,7 @@ async function buildComposition(page) {
 			subpaths: [{ closed: false, points: [{ x: 40, y: 205 }, { x: 150, y: 215, in: { x: -30, y: -30 } }] }],
 			stroke: { dashStyle: 'dashed', endShapeId: 'arrowHead' }
 		}));
-		arrow.pathData.border = editor.pathLayerManager.getDefaultBorder();
+		arrow.pathData.border = getSlotDefaults(LayerType.PATH, 'border');
 		editor.pathLayerManager.renderLayer(arrow);
 
 		// Pinned bevel frame and whole-picture weather.

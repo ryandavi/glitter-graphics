@@ -32,6 +32,7 @@ class GlitterAPI extends AssetAPI
             'hue' => $asset['hue'] ? (float)$asset['hue'] : null,
             'colorCodes' => $colorCodes,
             'colorWeights' => $colorWeights,
+			'swatchCount' => GifAnalyzer::swatchCount($this->paths->urlToFile($asset['url'], 'glitter', true)),
             'frameCount' => (int)($asset['frame_count'] ?? 0),
             'frameRate' => (int)($asset['frame_rate'] ?? 10),
             'isVariableFramerate' => (int)$asset['is_variable_framerate'],

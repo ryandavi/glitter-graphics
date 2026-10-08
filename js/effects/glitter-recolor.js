@@ -3,12 +3,9 @@
 // Recoloring changes palette bytes only: image indexes, timing and disposal
 // remain the source GIF's. The same file serves preview and export.
 (function (root) {
-	const hex = (rgb) => rgb.map(value => Math.round(value).toString(16).padStart(2, '0')).join('');
-	const rgb = (value) => {
-		const normalized = String(value).replace(/^#/, '').toLowerCase();
-		if (!/^[0-9a-f]{6}$/.test(normalized)) throw new Error('Enter a six-digit hex color');
-		return [0, 2, 4].map(offset => parseInt(normalized.slice(offset, offset + 2), 16));
-	};
+	const Color = root.GlitterColor || (typeof require === 'function' ? require('../core/color.js') : null);
+	const hex = rgb => Color.rgbToHex(rgb).slice(1);
+	const rgb = Color.hexToRgb;
 	function analyze(bytes) {
 		const reader = new root.GifReader(bytes);
 		if (!reader.numFrames()) throw new Error('GIF has no frames');

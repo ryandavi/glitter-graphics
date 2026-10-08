@@ -67,7 +67,7 @@ class HtmlSceneExporter {
 		this.ui.maxWidth.disabled = !responsive;
 		this.ui.fit.disabled = !responsive;
 		this.ui.customBackground.disabled = this.ui.background.value !== 'solid';
-		const baseMode = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE)?.background?.mode;
+		const baseMode = this.editor.layerManager.getBaseLayer()?.background?.mode;
 		const usesGlitter = this.ui.background.value === 'glitter' || (this.ui.background.value === 'canvas' && baseMode === 'glitter');
 		this.ui.backgroundRepeat.disabled = !usesGlitter;
 		const hasBaseImage = Boolean(this.editor.originalImage && this.editor.baseBackgroundManager?.hasBaseImage());
@@ -283,7 +283,7 @@ class HtmlSceneExporter {
 	}
 
 	async resolveBackground(options) {
-		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.editor.layerManager.getBaseLayer();
 		const data = baseLayer?.background || {};
 		let mode = options.background;
 		if (mode === 'canvas') {

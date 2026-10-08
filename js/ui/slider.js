@@ -10,7 +10,6 @@ function sliderScaleFor(el) {
 	const posMax = Number(el.max) || 1000;
 	const lo = Math.log(Number(el.dataset.scaleMin) || 1);
 	const hi = Math.log(Number(el.dataset.scaleMax) || 100);
-	const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 	return {
 		toValue: (pos) => Math.round(Math.exp(lo + (clamp(pos, 0, posMax) / posMax) * (hi - lo))),
 		toPosition: (val) => Math.round(posMax * (Math.log(clamp(Number(val), Math.exp(lo), Math.exp(hi))) - lo) / (hi - lo))

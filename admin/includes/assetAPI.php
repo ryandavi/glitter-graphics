@@ -1695,6 +1695,7 @@ abstract class AssetAPI
             // width/height size the preview tile before the GIF is decoded.
             $fields[] = 'colorCodes';
             $fields[] = 'colorWeights';
+			$fields[] = 'swatchCount';
             $fields[] = 'width';
             $fields[] = 'height';
         }

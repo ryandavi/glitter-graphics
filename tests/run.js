@@ -4,6 +4,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'ui/brush-target-settings-verify.js', tags: ['panels', 'mask'] },
+	{ file: 'unit/script-globals-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/canvas-bounds-unit.js', tags: ['unit', 'document'] },
 	{ file: 'ui/crop-motion-verify.js', tags: ['document', 'touch', 'export'] },
 	{ file: 'unit/glitter-recolor-unit.js', tags: ['unit', 'assets', 'effects'] },
@@ -101,6 +103,7 @@ function main() {
 		throw new Error(`No test suites are tagged "${tag}"`);
 	}
 
+	const failed = [];
 	for (const suite of selected) {
 		const command = suite.command || process.execPath;
 		const testPath = path.join(__dirname, suite.file);
@@ -110,10 +113,15 @@ function main() {
 			env: process.env,
 			stdio: 'inherit'
 		});
-		if (result.error) throw result.error;
-		if (result.status !== 0) process.exit(result.status || 1);
+		if (result.error) process.stderr.write(`${result.error.message}\n`);
+		if (result.error || result.status !== 0) failed.push(suite.file);
 	}
 
+	if (failed.length) {
+		process.stderr.write(`\nFAIL ${failed.length}/${selected.length} suites: ${failed.join(', ')}\n`);
+		process.exitCode = 1;
+		return;
+	}
 	process.stdout.write(`\nPASS ${selected.length} suite${selected.length === 1 ? '' : 's'}\n`);
 }
 

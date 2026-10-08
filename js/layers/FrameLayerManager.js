@@ -58,7 +58,7 @@ class FrameLayerManager {
 			editor: this.editor,
 			getLayer: () => this.getActiveLayer(),
 			ensureSlot: (layer, key) => this.ensureSlot(layer, key),
-			getSlotDefaults: (key) => (key === 'sparkles' ? buildDefaultSparkles() : this.getDefaultFill()),
+			getSlotDefaults: (key) => getSlotDefaults(LayerType.FRAME, key),
 			apply: (layer, mutate, change) => {
 				mutate();
 				this.renderLayer(layer);
@@ -110,26 +110,12 @@ class FrameLayerManager {
 		this.ui.pinned?.addEventListener('change', () => edit((layer) => this.setPinned(layer, this.ui.pinned.checked), 'Pin frame'));
 	}
 
-	getActiveLayer() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		return layer?.type === LayerType.FRAME ? layer : null;
-	}
-
 	// ===== DATA =====
-
-	getDefaultFill() {
-		const defaults = CONFIG.tools.frames.defaults;
-		return {
-			...buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.frame }),
-			mode: defaults.fillMode,
-			color: defaults.color
-		};
-	}
 
 	ensureSlot(layer, key) {
 		if (!layer?.frameData) return null;
 		return ensureSlotEffectData(layer.frameData, key, {
-			builders: { fill: () => this.getDefaultFill(), sparkles: () => buildDefaultSparkles() }
+			builders: { fill: () => getSlotDefaults(LayerType.FRAME, 'fill'), sparkles: () => buildDefaultSparkles() }
 		});
 	}
 
@@ -156,7 +142,7 @@ class FrameLayerManager {
 				shade: FIELDS.frameShade.value,
 				width: 0,
 				height: 0,
-				fill: this.getDefaultFill(),
+				fill: getSlotDefaults(LayerType.FRAME, 'fill'),
 				image: null,
 				sparkles: null
 			}
@@ -183,7 +169,7 @@ class FrameLayerManager {
 			const value = Number(data[key]);
 			data[key] = Number.isFinite(value) ? value : FIELDS[spec].value;
 		});
-		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
+		data.fill = mergeSlotEffectDefaults(data.fill, getSlotDefaults(LayerType.FRAME, 'fill'));
 		normalizeSlotTextureCoordinates(data.fill);
 		data.image ??= null;
 		if (data.image) data.image.slice = normalizeSlice(data.image.slice, data.image.width, data.image.height);
@@ -273,10 +259,15 @@ class FrameLayerManager {
 			if (!url) return null;
 			let image = this.hitImages.get(url);
 			if (!image) {
-				image = new Image();
-				image.onload = () => this.hitAlpha.clear();
-				image.src = url;
-				this.hitImages.set(url, image);
+				this.hitImages.set(url, { pending: true });
+				loadImageElement(url).then(decoded => {
+					this.hitImages.set(url, decoded);
+					this.hitAlpha.clear();
+				}).catch(error => {
+					this.hitImages.delete(url);
+					console.warn('Could not decode frame image:', error);
+				});
+				return null;
 			}
 			if (!image.complete || !image.naturalWidth) return null;
 			key = `image:${url}:${data.fit}:${data.sliceScale}:${JSON.stringify(data.image.slice)}:${width}x${height}`;
@@ -344,30 +335,6 @@ class FrameLayerManager {
 			transform.applyTransform(element, { width: layer.frameData.width, height: layer.frameData.height });
 			if (transform.transformHandles) transform.updateHandlePositions();
 		}
-	}
-
-	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	alignToCanvas(layerId, mode) {
-		movableAlignToCanvas(this, layerId, mode, (layer) => this.loadLayerSettings(layer));
-	}
-
-	resetTransform(layerId) {
-		movableResetTransform(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	createTransformHandles(layerId) {
-		movableCreateTransformHandles(this, layerId);
-	}
-
-	removeTransformHandles() {
-		movableRemoveTransformHandles(this);
 	}
 
 	// ===== PAINT =====
@@ -567,19 +534,6 @@ class FrameLayerManager {
 		stack.style.width = `${Math.round(layer.frameData.width)}px`;
 		stack.style.height = `${Math.round(layer.frameData.height)}px`;
 		stack.style.transform = `scale(${(transform.scale.x || 100) / 100}, ${(transform.scale.y || 100) / 100})`;
-	}
-
-	clearElements() {
-		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
-	}
-
-	removeLayerElement(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) {
-			transform.removeTransformHandles();
-			this.layerTransforms.delete(layerId);
-		}
-		removeManagedLayerElement(this.layerElements, layerId);
 	}
 
 	releaseLayerResources(layer) {
@@ -815,3 +769,8 @@ class FrameLayerManager {
 		};
 	}
 }
+
+Object.assign(FrameLayerManager.prototype, MOVABLE_LAYER_METHODS);
+
+FrameLayerManager.LAYER_TYPE = LayerType.FRAME;
+Object.assign(FrameLayerManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer, clearElements: LAYER_ELEMENT_METHODS.clearElements, removeLayerElement: LAYER_ELEMENT_METHODS.removeLayerElement });

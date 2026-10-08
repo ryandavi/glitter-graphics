@@ -159,14 +159,14 @@ class ProjectSerializer {
 				issues.push({ kind: 'layer', index, message: `${label}: unknown layer type “${layer.type}” — the layer will be skipped` });
 				return;
 			}
-			if (layer.type === LayerType.STICKER && layer.stickerSourceId && !embedded[layer.stickerSourceId] && !this.editor.stickerManager.getItemById(layer.stickerSourceId)) {
-				issues.push({ kind: 'sticker', index, id: layer.stickerSourceId, message: `${label}: sticker “${layer.stickerSourceId}” is missing — the layer will load empty` });
-			}
-			if (layer.type === LayerType.TEXT_GLITTER && layer.textData?.fontId && !FontLibrary.has(layer.textData.fontId)) {
-				issues.push({ kind: 'font', index, id: layer.textData.fontId, message: `${label}: font “${layer.textData.fontId}” is unavailable — the default font will be used` });
-			}
-			if (layer.type === LayerType.SHAPE && !ShapeLibrary.FILL_SHAPES.some((shape) => shape.id === layer.shapeData?.shapeId)) {
-				issues.push({ kind: 'shape', index, id: layer.shapeData?.shapeId, message: `${label}: shape “${layer.shapeData?.shapeId}” is unavailable — the default shape will be used` });
+			const available = {
+				sticker: id => embedded[id] || this.editor.stickerManager.getItemById(id),
+				font: id => FontLibrary.has(id),
+				shape: id => ShapeLibrary.FILL_SHAPES.some(shape => shape.id === id),
+				image: id => data.shapeFillImages?.[id]?.data || this.editor.shapeGlitterManager.getImageFillAsset(id)
+			};
+			for (const { kind, id } of getLayerAssetRefs(layer)) {
+				if (!available[kind](id)) issues.push({ kind, index, id, message: `${label}: ${kind} "${id}" is unavailable; the default or an empty source will be used` });
 			}
 			const visit = (value) => {
 				if (!value || typeof value !== 'object') return;
@@ -306,11 +306,7 @@ class ProjectSerializer {
 
 	async serializeCustomStickers(layers) {
 		const customStickers = {};
-		const usedIds = new Set(
-			layers
-				.filter((layer) => layer?.type === LayerType.STICKER && String(layer.stickerSourceId || '').startsWith('user-upload-'))
-				.map((layer) => layer.stickerSourceId)
-		);
+		const usedIds = new Set(layers.flatMap(getLayerAssetRefs).filter(ref => ref.kind === 'sticker' && String(ref.id).startsWith('user-upload-')).map(ref => ref.id));
 
 		for (const stickerId of usedIds) {
 			const sticker = this.editor.stickerManager.getItemById(stickerId);
@@ -330,11 +326,7 @@ class ProjectSerializer {
 
 	serializeShapeFillImages(layers) {
 		const images = {};
-		const usedRefs = new Set(
-			layers
-				.filter((layer) => layer?.type === LayerType.SHAPE && layer.shapeData?.fill?.imageRef)
-				.map((layer) => layer.shapeData.fill.imageRef)
-		);
+		const usedRefs = new Set(layers.flatMap(getLayerAssetRefs).filter(ref => ref.kind === 'image').map(ref => ref.id));
 		usedRefs.forEach((imageRef) => {
 			const asset = this.editor.shapeGlitterManager.getImageFillAsset(imageRef);
 			if (!asset?.dataUrl) return;
@@ -475,12 +467,7 @@ class ProjectSerializer {
 	}
 
 	decodeImage(src) {
-		return new Promise((resolve, reject) => {
-			const img = new Image();
-			img.onload = () => resolve(img);
-			img.onerror = () => reject(new Error('Failed to decode embedded image data.'));
-			img.src = src;
-		});
+		return loadImageElement(src);
 	}
 
 	blobToDataUrl(blob) {

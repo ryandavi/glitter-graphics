@@ -27,19 +27,11 @@ const TEXT_BACKGROUND_MODES = ['lines', 'text-bounds', 'text-box'];
 const TEXT_BACKGROUND_CONNECTIONS = ['separate', 'merge-adjacent', 'connected'];
 
 // 'Connected' reuses the exact merge-adjacent adjacency/grouping code with a
-// more permissive effective threshold (plan: "Do not create a second
-// connected-shape algorithm... the intended visual difference should come
-// from property values"), not a second algorithm.
+// more permissive effective threshold; the visual difference comes from property values.
 const CONNECTED_MERGE_MULTIPLIER = 2.2;
 
-function clampNumber(value, min, max, fallback = min) {
-	const num = Number(value);
-	if (!Number.isFinite(num)) return fallback;
-	return Math.max(min, Math.min(max, num));
-}
-
 // One explicit interpretation of mergeDistance + lineSpacingSensitivity so
-// every line-connection mode shares the same rule (plan "Merge calculation").
+// every line-connection mode shares the same rule.
 // Tighter-than-normal spacing (actualGap < expectedGap) raises the effective
 // threshold; looser spacing lowers it; sensitivity 0 disables the adjustment.
 function computeEffectiveMergeThreshold({ mergeDistance, lineSpacingSensitivity, actualGap, expectedGap, permissive }) {

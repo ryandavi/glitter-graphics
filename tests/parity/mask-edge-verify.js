@@ -66,8 +66,8 @@ async function getStickerOutlineProfiles(page) {
 		const pixel = createOutlineMaskCanvas(source, 2, 'hard', false);
 		const backing = createOutlineMaskCanvas(source, 2, 'round', true);
 		return {
-			defaultUnionFrames: window.editor.stickerManager.getDefaultBorder().unionFrames,
-			defaultFillInterior: window.editor.stickerManager.getDefaultBorder().fillInterior,
+			defaultUnionFrames: getSlotDefaults(LayerType.STICKER, 'border').unionFrames,
+			defaultFillInterior: getSlotDefaults(LayerType.STICKER, 'border').fillInterior,
 			smooth: profile(smooth),
 			pixel: profile(pixel),
 			backing: profile(backing)
@@ -147,7 +147,7 @@ async function main() {
 			const initialChecked = input.checked;
 			input.checked = true;
 			input.dispatchEvent(new Event('change', { bubbles: true }));
-			const saved = JSON.parse(localStorage.getItem('glitterEditorPreferences'));
+			const saved = readStored(STORAGE_KEYS.preferences.key, {});
 			return {
 				initialChecked,
 				crispMaskEdges: PREFERENCES.get('crispMaskEdges'),
@@ -162,7 +162,7 @@ async function main() {
 			const canvas = document.createElement('canvas');
 			canvas.width = canvas.height = 96;
 			const ctx = canvas.getContext('2d');
-			window.editor.maskEditor._drawShapeStamp(ctx, shape, 96, 0.6);
+			drawShapeBrushStamp(ctx, shape, 96, 0.6);
 			const pixels = ctx.getImageData(0, 0, 96, 96).data;
 			let partial = 0;
 			for (let i = 3; i < pixels.length; i += 4) {

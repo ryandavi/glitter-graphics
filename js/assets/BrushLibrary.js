@@ -242,10 +242,7 @@ const BrushLibrary = {
 		const brush = this.BRUSHES[id];
 		if (!brush) return Promise.reject(new Error(`Unknown raster brush "${id}"`));
 
-		const promise = new Promise((resolve, reject) => {
-			const image = new Image();
-			image.decoding = 'async';
-			image.onload = () => {
+		const promise = loadImageElement(brush.tip.src).then(image => {
 				const canvas = createAppCanvas(0, 0, 'assets/BrushLibrary');
 				canvas.width = brush.tip.width;
 				canvas.height = brush.tip.height;
@@ -253,10 +250,7 @@ const BrushLibrary = {
 				ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 				this._normalizeTip(ctx, canvas.width, canvas.height);
 				this._tipCanvas.set(id, canvas);
-				resolve(canvas);
-			};
-			image.onerror = () => reject(new Error(`Failed to load brush tip: ${brush.tip.src}`));
-			image.src = brush.tip.src;
+				return canvas;
 		});
 		this._tipPromise.set(id, promise);
 		return promise;

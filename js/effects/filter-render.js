@@ -1,19 +1,17 @@
 (function (root) {
+	const { clamp } = root.GlitterMath || (typeof require === 'function' ? require('../core/math.js') : null);
 	const Tone = root.GlitterToneAdjust || (typeof require === 'function' ? require('./tone-adjust.js') : null);
 	const Grain = root.GlitterGrain || (typeof require === 'function' ? require('./grain.js') : null);
 	const Blur = root.GlitterBlur || (typeof require === 'function' ? require('./blur.js') : null);
 	const BlendModes = root.GlitterBlendModes || (typeof require === 'function' ? require('./blend-modes.js') : null);
 	const Ops = root.GlitterFilterOps || (typeof require === 'function' ? require('./filter-ops.js') : null);
-	const Filters = root.GlitterFilters || (typeof require === 'function' ? require('./filters.js') : null);
+	const Filters = root.GlitterFilters || (typeof require === 'function' ? require('./filter-looks.js') : null);
 	const FILTER_TYPES = Filters.FILTER_TYPES;
 
 	function config() {
 		return CONFIG.tools.filter;
 	}
 
-	function clamp(value, minimum, maximum) {
-		return Math.min(maximum, Math.max(minimum, value));
-	}
 
 	function number(value, fallback) {
 		const parsed = Number(value);
@@ -123,7 +121,7 @@
 		return styles;
 	}
 
-	// Reused across calls (see EXPORT-PERFORMANCE-PLAN.md Part 2b): one canvas
+	// Reused across calls: one canvas
 	// per named role instead of a fresh allocation per call. Safe because
 	// renderToCanvas is only ever invoked from SceneCompositor.js (verified — no
 	// live-preview call site) with layers rendered strictly sequentially, never
@@ -142,7 +140,7 @@
 		return canvas;
 	}
 
-	// Reused across calls (see EXPORT-PERFORMANCE-PLAN.md Part 2a): both are
+	// Reused across calls: both are
 	// fully consumed within renderToCanvas's color-burn branch (composited is
 	// written back via context.putImageData before the function returns) and
 	// never stored past that call, so pooling is safe. renderToCanvas is only

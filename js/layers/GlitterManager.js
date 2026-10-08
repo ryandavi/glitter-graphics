@@ -19,6 +19,16 @@ class GlitterManager {
 		// before it replaces the visible one, so painting never flashes unmasked.
 		this.effectMaskImages = new Map();
 		this.pickerSession = null;
+		this.slotPicker = createManagerSlotPicker(this, {
+			type: LayerType.GLITTER_FILL, defaultSlot: 'fill', typeWord: 'fill layer',
+			onPicked: (layer, id, previousId) => {
+				const previous = this.editor.glitterLibrary.getItemById(previousId);
+				if (this.getGlitterSelectionTarget(layer) === 'fill' && layer.name === previous?.name) layer.name = this.editor.glitterLibrary.getItemById(id).name;
+				this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+				syncFieldControls(this.fieldHost, layer);
+				this.editor.requestPreviewUpdate();
+			}
+		});
 
 		// G-1: tracks in-flight mask encodes per layer (for the busy cursor / status)
 		// and the timestamp of the click that kicked off the current mask request
@@ -86,9 +96,6 @@ class GlitterManager {
 			this.editor.layerManager.renderLayersList();
 			this.editor.saveState('Reset fill effects');
 		});
-		this.ui.pickerStripDone?.addEventListener('click', () => {
-			if (this.hasActivePickerSession()) this.handlePickerDone();
-		});
 	}
 
 	// slot: null for the fill itself, 'sparkles' for the sparkles slot.
@@ -104,6 +111,10 @@ class GlitterManager {
 	// The slot data the next gallery pick writes to.
 	resolveSelectedGlitterId(layer) {
 		return this.getGlitterSelectionSlot(layer)?.glitterId ?? null;
+	}
+
+	getGlitterSelectionTarget() {
+		return (this.hasActivePickerSession() && this.pickerSession.slot) || 'fill';
 	}
 
 	getGlitterSelectionSlot(layer) {
@@ -152,7 +163,7 @@ class GlitterManager {
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
-			fill: this.getDefaultFill(),
+			fill: getSlotDefaults(LayerType.GLITTER_FILL, 'fill'),
 			settings: {
 				threshold: FIELDS.threshold.value,
 				feather: FIELDS.feather.value,
@@ -174,46 +185,14 @@ class GlitterManager {
 		return layer;
 	}
 
-	getDefaultFill() {
-		return {
-			...buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.glitterLayer }),
-			gradient: normalizeEffectGradient(CONFIG.rendering.gradient)
-		};
-	}
-
-	getDefaultBorder() {
-		return buildDefaultBorder({
-			config: CONFIG.tools.glitter.border,
-			slot: getPaintSlotDefinition(LayerType.GLITTER_FILL, 'border'),
-			fallbackMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.glitterLayer,
-			includeColorAdjust: true
-		});
-	}
-
-	getDefaultShadow() {
-		return buildDefaultShadow({
-			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.glitterLayer,
-			includeColorAdjust: true
-		});
-	}
-
-	getSlotDefaults(key) {
-		if (key === 'border') return this.getDefaultBorder();
-		if (key === 'shadow') return this.getDefaultShadow();
-		if (key === 'sparkles') return buildDefaultSparkles();
-		return this.getDefaultFill();
-	}
-
 	// Runs where a fill layer enters the document (deserialize, project load).
 	normalizeLayer(layer) {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		layer.transform = cloneTransform(layer.transform || LAYER_UI_CONFIG[LayerType.GLITTER_FILL].defaultTransform(this.editor));
-		layer.fill = mergeSlotEffectDefaults(layer.fill, this.getDefaultFill());
+		layer.fill = mergeSlotEffectDefaults(layer.fill, getSlotDefaults(LayerType.GLITTER_FILL, 'fill'));
 		normalizeSlotTextureCoordinates(layer.fill);
-		if (layer.border) layer.border = mergeSlotEffectDefaults(layer.border, this.getDefaultBorder());
-		if (layer.shadow) layer.shadow = mergeSlotEffectDefaults(layer.shadow, this.getDefaultShadow());
+		if (layer.border) layer.border = mergeSlotEffectDefaults(layer.border, getSlotDefaults(LayerType.GLITTER_FILL, 'border'));
+		if (layer.shadow) layer.shadow = mergeSlotEffectDefaults(layer.shadow, getSlotDefaults(LayerType.GLITTER_FILL, 'shadow'));
 		normalizeSlotTextureCoordinates(layer.border);
 		normalizeSlotTextureCoordinates(layer.shadow);
 		layer.sparkles = normalizeSparklesData(layer.sparkles);
@@ -352,8 +331,8 @@ class GlitterManager {
 			type: LayerType.GLITTER_FILL,
 			editor: this.editor,
 			getLayer: active,
-			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getSlotDefaults(key)),
-			getSlotDefaults: (key) => this.getSlotDefaults(key),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => getSlotDefaults(LayerType.GLITTER_FILL, key)),
+			getSlotDefaults: (key) => getSlotDefaults(LayerType.GLITTER_FILL, key),
 			apply: (layer, mutate, change) => {
 				mutate();
 				const glitter = this.editor.glitterLibrary.getItemById(layer.fill.glitterId);
@@ -428,10 +407,6 @@ class GlitterManager {
 		});
 	}
 
-	clearElements() {
-		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
-	}
-
 	getSlotStack(layer) {
 		return buildSlotStack(layer, (entry) => {
 			const source = resolvePaintSlotPreviewSource(this.editor, layer, entry);
@@ -480,8 +455,7 @@ class GlitterManager {
 		if (cached?.pendingKey !== mask.cacheKey) {
 			const url = mask.canvas.toDataURL('image/png');
 			this.effectMaskImages.set(slotKey, { ...cached, pendingKey: mask.cacheKey });
-			const image = new Image();
-			image.onload = () => {
+			loadImageElement(url).then(() => {
 				const pending = this.effectMaskImages.get(slotKey);
 				if (pending?.pendingKey !== mask.cacheKey) return;
 				this.effectMaskImages.set(slotKey, { key: mask.cacheKey, url });
@@ -489,8 +463,10 @@ class GlitterManager {
 				if (current?.type === LayerType.GLITTER_FILL) {
 					this.renderLayer(current, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
 				}
-			};
-			image.src = url;
+			}).catch(error => {
+				this.effectMaskImages.delete(slotKey);
+				console.warn('Could not decode effect mask:', error);
+			});
 		}
 		return cached?.url || null;
 	}
@@ -592,15 +568,6 @@ class GlitterManager {
 		this.maskBoundsCache.delete(layer.id);
 	}
 
-	removeLayerElement(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) {
-			transform.destroy?.();
-			this.layerTransforms.delete(layerId);
-		}
-		removeManagedLayerElement(this.layerElements, layerId);
-	}
-
 	updateTransform(layerId, updates) {
 		const transform = this.layerTransforms.get(layerId);
 		const layer = this.editor.layerManager.getLayerById(layerId);
@@ -609,30 +576,6 @@ class GlitterManager {
 		transform.updateTransform(updates);
 		transform.applyTransform(element, this.getMaskDimensions());
 		if (transform.transformHandles) transform.updateHandlePositions();
-	}
-
-	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
-	}
-
-	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
-	}
-
-	alignToCanvas(layerId, mode) {
-		movableAlignToCanvas(this, layerId, mode, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
-	}
-
-	resetTransform(layerId) {
-		movableResetTransform(this, layerId, (layer) => this.editor.loadTransformSettings(layer, 'glitter'));
-	}
-
-	createTransformHandles(layerId) {
-		movableCreateTransformHandles(this, layerId);
-	}
-
-	removeTransformHandles() {
-		movableRemoveTransformHandles(this);
 	}
 
 	// LayerTransform calls this after every live transform edit. The stack stays
@@ -778,8 +721,7 @@ class GlitterManager {
 		// alive until the swap lands — otherwise the element renders a
 		// frame with a missing mask (visible flash while painting/picking).
 		const decodeStart = performance.now();
-		const img = new Image();
-		img.onload = () => {
+		loadImageElement(nextUrl).then(() => {
 			dbg(`[G-1] ${isDraft ? 'draft' : 'full'} decode: ${(performance.now() - decodeStart).toFixed(1)}ms`);
 
 			const cacheNow = this.maskImages.get(layer.id);
@@ -808,12 +750,10 @@ class GlitterManager {
 			}
 
 			this._decrementMaskPending(layer.id);
-		};
-		img.onerror = () => {
+		}).catch(() => {
 			URL.revokeObjectURL(nextUrl);
 			this._decrementMaskPending(layer.id);
-		};
-		img.src = nextUrl;
+		});
 	}
 
 	getSelectionCacheKey(layer) {
@@ -887,3 +827,8 @@ class GlitterManager {
 	getItemById(id) { return this.editor.glitterLibrary.getItemById(id); }
 	async init() { this.setupUI(); this.setupEventListeners(); }
 }
+
+Object.assign(GlitterManager.prototype, MOVABLE_LAYER_METHODS);
+
+GlitterManager.LAYER_TYPE = LayerType.GLITTER_FILL;
+Object.assign(GlitterManager.prototype, { clearElements: LAYER_ELEMENT_METHODS.clearElements, removeLayerElement: LAYER_ELEMENT_METHODS.removeLayerElement });

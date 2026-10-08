@@ -5,7 +5,7 @@ const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 const context = vm.createContext({ CONFIG: { canvas: { limits: { maxWidth: 1024, maxHeight: 1024 }, defaults: { blankDocument: { color: '#ffffff' } } } } });
-for (const file of ['js/core/canvas.js', 'js/editor/canvas-bounds.js', 'js/transforms/transform-gestures.js']) vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8'), context);
+for (const file of ['js/core/canvas.js', 'js/systems/CanvasBounds.js', 'js/transforms/transform-gestures.js']) vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8'), context);
 vm.runInContext('globalThis.Bounds = CanvasBounds', context);
 const plain = (value) => JSON.parse(JSON.stringify(value));
 let artwork = { minX: -10, minY: 20, width: 120, height: 90 };

@@ -73,7 +73,7 @@ function createExportPhaseTimer() {
 // in window.exportTimingHistory so runs under different settings line up in
 // one table. `details` carries the exporter's own columns.
 function logExportTimings(format, { plan, context, exportSettings, blob, details = {} }) {
-	if (typeof CONFIG === 'undefined' || !CONFIG.debug?.enabled) return;
+	if (!CONFIG.debug.enabled) return;
 	const phases = plan.phaseTimings || [];
 	const record = {
 		format,
@@ -91,14 +91,14 @@ function logExportTimings(format, { plan, context, exportSettings, blob, details
 		...details
 	};
 	window.exportTimingHistory = [...(window.exportTimingHistory || []), record];
-	console.log('[Export timings] this session (copy(JSON.stringify(exportTimingHistory)) to share):');
-	console.table(window.exportTimingHistory);
+	dbg('[Export timings] this session (copy(JSON.stringify(exportTimingHistory)) to share):');
+	dbg(window.exportTimingHistory);
 	const layerTimes = [...(context?.layerRenderMs || [])].map(([layer, ms]) => ({
 		layer: layer.name || layer.id, type: layer.type, totalMs: Math.round(ms), perFrameMs: Number((ms / Math.max(1, record.drawn)).toFixed(1))
 	}));
 	if (layerTimes.length) {
-		console.log('[Export timings] layer draw time for the last export:');
-		console.table(layerTimes);
+		dbg('[Export timings] layer draw time for the last export:');
+		dbg(layerTimes);
 	}
 }
 
@@ -118,9 +118,9 @@ function resetCanvasContext(ctx, width, height, imageSmoothingEnabled = true) {
 class SceneCompositor {
 	constructor(options = {}) {
 		this.editor = options.editor || null;
-		const exportConfig = CONFIG.export || {};
+		const exportConfig = CONFIG.export;
 		this.config = {
-			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug?.enabled : false,
+			debug: CONFIG.debug.enabled,
 			watermarkAlphaThreshold: exportConfig.watermark.alphaThreshold
 		};
 
@@ -1821,43 +1821,33 @@ class SceneCompositor {
 				// For static images
 				callbacks.onSourceProgress?.('Decoding watermark image…', 0, 0);
 				await this._yieldForProgress();
-				return new Promise((resolve, reject) => {
-					const img = new Image();
-					const objectUrl = URL.createObjectURL(blob);
+				const objectUrl = URL.createObjectURL(blob);
+				try {
+					const img = await loadImageElement(objectUrl);
+					const canvas = createAppCanvas(0, 0, 'export/SceneCompositor');
+					canvas.width = img.naturalWidth;
+					canvas.height = img.naturalHeight;
+					const ctx = canvas.getContext('2d', { alpha: true });
+					ctx.drawImage(img, 0, 0);
 
-					img.onload = () => {
-						URL.revokeObjectURL(objectUrl);
-						const canvas = createAppCanvas(0, 0, 'export/SceneCompositor');
-						canvas.width = img.naturalWidth;
-						canvas.height = img.naturalHeight;
-						const ctx = canvas.getContext('2d', { alpha: true });
-						ctx.drawImage(img, 0, 0);
+					const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-						let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-						// Process alpha threshold ONCE during load
-						if (this.config.watermarkAlphaThreshold > 0) {
-							const data = imageData.data;
-							for (let i = 3; i < data.length; i += 4) {
-								data[i] = data[i] < this.config.watermarkAlphaThreshold ? 0 : 255;
-							}
+					// Process alpha threshold ONCE during load
+					if (this.config.watermarkAlphaThreshold > 0) {
+						const data = imageData.data;
+						for (let i = 3; i < data.length; i += 4) {
+							data[i] = data[i] < this.config.watermarkAlphaThreshold ? 0 : 255;
 						}
+					}
 
-						resolve({
-							isAnimated: false,
-							width: img.naturalWidth,
-							height: img.naturalHeight,
-							imageData: imageData,
-							alphaProcessed: true
-						});
+					return {
+						isAnimated: false,
+						width: img.naturalWidth,
+						height: img.naturalHeight,
+						imageData: imageData,
+						alphaProcessed: true
 					};
-
-					img.onerror = () => {
-						URL.revokeObjectURL(objectUrl);
-						reject(new Error('Failed to load watermark image'));
-					};
-					img.src = objectUrl;
-				});
+				} finally { URL.revokeObjectURL(objectUrl); }
 			}
 		} catch (error) {
 			if (this.config.debug) console.error('[SceneCompositor] Watermark load error:', error);

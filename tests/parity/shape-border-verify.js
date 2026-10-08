@@ -41,13 +41,13 @@ async function createBorderedShape(page, options = {}) {
 		editor.layerManager.insertLayer(layer);
 		editor.layerManager.setActiveLayer(layer.id);
 
-		layer.shapeData.border = editor.shapeGlitterManager.getDefaultBorder();
+		layer.shapeData.border = getSlotDefaults(LayerType.SHAPE, 'border');
 		layer.shapeData.border.widthPx = shapeOptions.borderWidth || 20;
 		layer.shapeData.border.style = shapeOptions.borderStyle || 'solid';
 		layer.shapeData.border.dotSpacingPx = shapeOptions.dotSpacingPx || 10;
 
 		if (shapeOptions.shadow) {
-			layer.shapeData.shadow = editor.shapeGlitterManager.getDefaultShadow();
+			layer.shapeData.shadow = getSlotDefaults(LayerType.SHAPE, 'shadow');
 			layer.shapeData.shadow.offsetX = shapeOptions.shadow.offsetX;
 			layer.shapeData.shadow.offsetY = shapeOptions.shadow.offsetY;
 		}
@@ -452,8 +452,8 @@ async function check8(page) {
 		const editor = window.editor;
 		const manager = editor.shapeGlitterManager;
 		const layer = manager.createLayer({ shapeId: 'square', width: 96, height: 72, position: { x: 250, y: 200 } });
-		layer.shapeData.bevel = manager.getDefaultBevel();
-		layer.shapeData.shadow = manager.getDefaultShadow();
+		layer.shapeData.bevel = buildDefaultBevel();
+		layer.shapeData.shadow = getSlotDefaults(layer.type, 'shadow');
 		layer.shapeData.shadow.offsetX = 0;
 		layer.shapeData.shadow.offsetY = 0;
 		layer.shapeData.shadow.spread = 8;

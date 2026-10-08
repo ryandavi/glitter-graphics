@@ -11,6 +11,7 @@ const vm = require('vm');
 
 const context = { Math };
 vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../../js/core/math.js'), 'utf8'), context);
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'paint', 'text-background-geometry.js'), 'utf8');
 vm.runInContext(`${source}\nglobalThis.generateTextBackgroundGeometry = generateTextBackgroundGeometry;`, context);
 const generate = context.generateTextBackgroundGeometry;

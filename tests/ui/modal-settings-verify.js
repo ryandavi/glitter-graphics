@@ -102,8 +102,8 @@ function check(name, cond, detail='') {
 		}
 		PREFERENCES.set('welcomeLastSeenRelease', 'test-release');
 		window.editor.saveSettingsToStorage();
-		const stored = JSON.parse(localStorage.getItem('glitterEditorPreferences'));
-		const exported = JSON.parse(localStorage.getItem('glitterEditorSettings'));
+		const stored = readStored(STORAGE_KEYS.preferences.key, {});
+		const exported = readStored(STORAGE_KEYS.exportSettings.key, {});
 		return pairs.every(([, key]) => stored[key] === !PREFERENCE_SCHEMA[key].default())
 			&& Object.keys(exported).every(key => Object.values(EXPORT_SETTINGS_SCHEMA).some(spec => spec.storageKey === key))
 			&& ['showHints', 'showWelcomeOnStartup', 'confirmDestructiveActions', 'antialiasEdges', 'scaleEffectsOnTransform', 'scaleTexturesOnTransform']
@@ -327,8 +327,8 @@ function check(name, cond, detail='') {
 	await page.reload({ waitUntil: 'networkidle' });
 	check('theme survives reload through its early-paint key', await page.evaluate(() =>
 		document.documentElement.dataset.theme === 'light' && window.editor.interfaceTheme === 'light'
-			&& localStorage.getItem('glitterEditorTheme') === 'light'
-			&& !Object.hasOwn(JSON.parse(localStorage.getItem('glitterEditorSettings')), 'interfaceTheme')));
+			&& readStored(STORAGE_KEYS.theme.key, null) === 'light'
+			&& !Object.hasOwn(readStored(STORAGE_KEYS.exportSettings.key, {}), 'interfaceTheme')));
 	await browser.close();
 
 	let failed = 0;

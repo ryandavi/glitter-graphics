@@ -446,7 +446,7 @@ async function checkStickerOutlineTracksLiveScale(page) {
 	await selectLayer(page, sticker.layerId);
 	await page.evaluate((layerId) => {
 		const layer = window.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		layer.stickerData.border = window.editor.stickerManager.getDefaultBorder();
+		layer.stickerData.border = getSlotDefaults(LayerType.STICKER, 'border');
 		window.editor.stickerManager.renderLayer(layer);
 	}, sticker.layerId);
 	await page.waitForTimeout(100);
@@ -822,7 +822,7 @@ async function checkSharpOutlineDragBounds(page) {
 	const id = await page.evaluate(() => {
 		const editor = window.editor;
 		const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 120, y: 90 } });
-		layer.shapeData.border = { ...editor.shapeGlitterManager.getDefaultBorder(), mode: 'solid', widthPx: 10, edgeStyle: 'miter', placement: 'outside' };
+		layer.shapeData.border = { ...getSlotDefaults(LayerType.SHAPE, 'border'), mode: 'solid', widthPx: 10, edgeStyle: 'miter', placement: 'outside' };
 		editor.layerManager.insertLayer(layer);
 		editor.layerManager.setActiveLayer(layer.id);
 		editor.requestPreviewUpdate();

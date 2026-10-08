@@ -255,7 +255,7 @@ async function checkBodyMask(page) {
 		const editor = window.editor;
 		const layer = editor.layerManager.getActiveLayer();
 		const manager = editor.pathLayerManager;
-		layer.pathData.border = { ...manager.getDefaultBorder(), mode: 'solid', color: '#0000ff', widthPx: 4 };
+		layer.pathData.border = { ...getSlotDefaults(LayerType.PATH, 'border'), mode: 'solid', color: '#0000ff', widthPx: 4 };
 		manager.renderLayer(layer);
 	});
 	await exportFrame(page);
@@ -291,7 +291,7 @@ async function checkBodyMask(page) {
 	await page.evaluate((layerId) => {
 		const editor = window.editor;
 		const layer = editor.layerManager.getLayerById(layerId);
-		layer.pathData.stroke = { ...editor.pathLayerManager.getDefaultStroke(), mode: 'solid', color: '#ff0000', widthPx: 10, edgeStyle: 'miter' };
+		layer.pathData.stroke = { ...getSlotDefaults(LayerType.PATH, 'stroke'), mode: 'solid', color: '#ff0000', widthPx: 10, edgeStyle: 'miter' };
 		editor.pathLayerManager.renderLayer(layer);
 	}, closed);
 	bounds = await exportFrame(page);
@@ -308,7 +308,7 @@ async function checkStrokeGeometry(page) {
 		const editor = window.editor;
 		const manager = editor.pathLayerManager;
 		const line = (length) => [{ closed: false, points: [{ x: -length / 2, y: 0, in: null, out: null, type: 'corner' }, { x: length / 2, y: 0, in: null, out: null, type: 'corner' }] }];
-		const stroke = { ...manager.getDefaultStroke(), widthPx: 6, startShapeId: 'arrowHead', endShapeId: 'arrowHead', startSize: 4, endSize: 4 };
+		const stroke = { ...getSlotDefaults(LayerType.PATH, 'stroke'), widthPx: 6, startShapeId: 'arrowHead', endShapeId: 'arrowHead', startSize: 4, endSize: 4 };
 		const long = planStrokeSubpath(line(200)[0], stroke);
 		const short = planStrokeSubpath(line(20)[0], stroke);
 		const closed = planStrokeSubpath({ ...line(200)[0], closed: true, points: [...line(200)[0].points, { x: 0, y: 50, in: null, out: null, type: 'corner' }] }, stroke);
@@ -423,7 +423,7 @@ async function checkConvertShape(page) {
 		const editor = window.editor;
 		const shape = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: 'heart', width: 120, height: 100, position: { x: 150, y: 110 } } });
 		shape.shapeData.fill = { ...shape.shapeData.fill, mode: 'solid', color: '#ff0000' };
-		shape.shapeData.shadow = { ...editor.shapeGlitterManager.getDefaultShadow(), mode: 'solid', color: '#0000ff', offsetX: 12, offsetY: 8, blur: 0, spread: 0 };
+		shape.shapeData.shadow = { ...getSlotDefaults(LayerType.SHAPE, 'shadow'), mode: 'solid', color: '#0000ff', offsetX: 12, offsetY: 8, blur: 0, spread: 0 };
 		shape.transform.rotation = 20;
 		const above = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: 'circle', width: 20, height: 20, position: { x: 20, y: 20 } } });
 		editor.layerManager.setActiveLayer(shape.id);
@@ -840,9 +840,9 @@ async function checkLiveDragCost(page) {
 			points.push({ x: Math.round(500 + Math.cos(angle) * radius), y: Math.round(400 + Math.sin(angle) * radius), type: 'auto' });
 		}
 		const layer = editor.layerManager.addLayer(LayerType.PATH, { pathLayer: { subpaths: [{ closed: true, points }] } });
-		layer.pathData.stroke = manager.getDefaultStroke();
-		layer.pathData.border = manager.getDefaultBorder();
-		layer.pathData.shadow = manager.getDefaultShadow();
+		layer.pathData.stroke = getSlotDefaults(LayerType.PATH, 'stroke');
+		layer.pathData.border = getSlotDefaults(LayerType.PATH, 'border');
+		layer.pathData.shadow = getSlotDefaults(LayerType.PATH, 'shadow');
 		const host = manager.createEditHost(layer.id);
 		const times = [];
 		for (let step = 0; step < 5; step++) {

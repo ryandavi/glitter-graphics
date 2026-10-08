@@ -12,34 +12,101 @@ registerLayerType(LayerType.PATH, {
 	displayName: 'Path',
 	paintSlots: [
 		{
-			key: 'shadow', role: 'shadow', path: 'pathData.shadow', draftPath: 'pathData.effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'pathShadow', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultShadow({
+					defaultMode: 'glitter',
+					defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.path,
+					includeColorAdjust: true
+				});
+			},
+			key: 'shadow',
+			role: 'shadow',
+			path: 'pathData.shadow',
+			draftPath: 'pathData.effectDrafts.shadow',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'pathShadow',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'pathData.border', draftPath: 'pathData.effectDrafts.border',
-			glitterDefault: 'borderGlitterId', panelPrefix: 'pathBorder', modes: ['glitter', 'solid'],
+			defaults: () => {
+				return buildDefaultBorder({
+					config: CONFIG.tools.path.border,
+					slot: getPaintSlotDefinition(LayerType.PATH, 'border'),
+					includeColorAdjust: true,
+					defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.path
+				});
+			},
+			key: 'border',
+			role: 'border',
+			edgeStyles: ['round', 'miter', 'hard'],
+			path: 'pathData.border',
+			draftPath: 'pathData.effectDrafts.border',
+			glitterDefault: 'borderGlitterId',
+			panelPrefix: 'pathBorder',
+			modes: ['glitter', 'solid'],
 			fields: { widthPx: 'borderWidth' }
 		},
 		{
-			key: 'fill', role: 'fill', path: 'pathData.fill', glitterDefault: 'fillGlitterId',
-			panelPrefix: 'pathFill', modes: ['none', 'glitter', 'solid']
+			defaults: () => {
+				return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.path });
+			},
+			key: 'fill',
+			role: 'fill',
+			path: 'pathData.fill',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'pathFill',
+			modes: ['none', 'glitter', 'solid']
 		},
 		{
-			key: 'stroke', role: 'stroke', path: 'pathData.stroke', draftPath: 'pathData.effectDrafts.stroke',
-			glitterDefault: 'borderGlitterId', panelPrefix: 'pathStroke', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultStroke({ defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.path });
+			},
+			key: 'stroke',
+			role: 'stroke',
+			path: 'pathData.stroke',
+			draftPath: 'pathData.effectDrafts.stroke',
+			glitterDefault: 'borderGlitterId',
+			panelPrefix: 'pathStroke',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelHighlight', role: 'bevel', label: 'bevel highlight', path: 'pathData.bevel.highlight', enabledPath: 'pathData.bevel.enabled',
-			glitterDefault: 'fillGlitterId', panelPrefix: 'pathBevel', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().highlight;
+			},
+			key: 'bevelHighlight',
+			role: 'bevel',
+			label: 'bevel highlight',
+			path: 'pathData.bevel.highlight',
+			enabledPath: 'pathData.bevel.enabled',
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'pathBevel',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'bevelShade', role: 'bevel', label: 'bevel shade', path: 'pathData.bevel.shade', enabledPath: 'pathData.bevel.enabled',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'pathBevelShade', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultBevel().shade;
+			},
+			key: 'bevelShade',
+			role: 'bevel',
+			label: 'bevel shade',
+			path: 'pathData.bevel.shade',
+			enabledPath: 'pathData.bevel.enabled',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'pathBevelShade',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'sparkles', role: 'sparkles', path: 'pathData.sparkles', draftPath: 'pathData.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', framePadding: (data) => getSparkleFramePadding(data),
-			panelPrefix: 'pathSparkles', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultSparkles();
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'pathData.sparkles',
+			draftPath: 'pathData.effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			framePadding: (data) => getSparkleFramePadding(data),
+			panelPrefix: 'pathSparkles',
+			modes: ['glitter', 'solid']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.pathLayerManager?.getSparkleHost(layer) || null,

@@ -6,7 +6,7 @@ class ContextToolbarRenderer {
 	}
 
 	render() {
-		(CONFIG.ui.contextToolbars || []).forEach((toolbar) => {
+		(CONFIG.ui.contextToolbars).forEach((toolbar) => {
 			const host = document.getElementById(toolbar.id);
 			if (!host) return;
 			const handle = document.createElement('button');
@@ -45,18 +45,16 @@ class ContextToolbarRenderer {
 	}
 
 	readPlacement() {
-		try {
-			const value = JSON.parse(localStorage.getItem('glitterEditor_contextToolbarPlacement'));
-			if (value?.anchor
-				|| (Number.isFinite(value?.centerX) && Number.isFinite(value?.centerY))
-				|| (Number.isFinite(value?.x) && Number.isFinite(value?.y))) return value;
-		} catch (_) { /* A corrupt preference should never prevent the editor booting. */ }
+		const value = readStored(STORAGE_KEYS.toolbarPlacement.key, null);
+		if (value?.anchor
+			|| (Number.isFinite(value?.centerX) && Number.isFinite(value?.centerY))
+			|| (Number.isFinite(value?.x) && Number.isFinite(value?.y))) return value;
 		return { anchor: 'bottom-center' };
 	}
 
 	savePlacement(placement) {
 		this.placement = placement;
-		localStorage.setItem('glitterEditor_contextToolbarPlacement', JSON.stringify(placement));
+		writeStored(STORAGE_KEYS.toolbarPlacement.key, placement);
 	}
 
 	// Returning the bar home is reachable two ways: double-clicking its handle,
@@ -278,7 +276,7 @@ class ContextToolbarRenderer {
 					centerX: (position.x + host.offsetWidth / 2) / Math.max(1, parentWidth),
 					centerY: (position.y + host.offsetHeight / 2) / Math.max(1, parentHeight)
 				};
-				localStorage.setItem('glitterEditor_contextToolbarPlacement', JSON.stringify(this.placement));
+				writeStored(STORAGE_KEYS.toolbarPlacement.key, this.placement);
 			}
 			this.setFreePosition(host, Math.min(maxX, Math.max(0, position.x)), Math.min(maxY, Math.max(0, position.y)));
 			host.dataset.placement = this.placement.anchor || 'free';
@@ -353,4 +351,13 @@ class ContextToolbarRenderer {
 
 	setValue(id, value) { const node = document.getElementById(id); if (node) node.textContent = value; }
 	setEnabled(id, enabled) { const node = document.getElementById(id); if (node) node.disabled = !enabled; }
+}
+
+function syncSelectionContextToolbar(editor) {
+	const layer = editor.layerManager.getActiveLayer();
+	const multi = editor.layerManager.hasMultiSelection();
+	const canTransform = multi ? editor.layerManager.canTransformMultiSelection() : Boolean(layer && isLayerTransformable(layer) && !layer.locked && LAYER_UI_CONFIG[layer.type].hasVisibleContent?.(layer) !== false);
+	for (const id of ['centerLayerHorizontal', 'centerLayerVertical', 'duplicateLayerSelection']) {
+		document.getElementById(id).hidden = !canTransform;
+	}
 }

@@ -13,6 +13,13 @@ class StickerManager {
 		// Store LayerTransform instances for each layer
 		this.layerTransforms = new Map(); // layerId -> LayerTransform
 		this.pickerSession = null;
+		this.slotPicker = createManagerSlotPicker(this, {
+			type: LayerType.STICKER, defaultSlot: null, typeWord: 'sticker',
+			onPicked: (layer, id) => {
+				this.renderLayer(layer);
+				this.loadLayerSettings(layer);
+			}
+		});
 		this.effectMaskCache = new Map();
 	}
 
@@ -27,14 +34,6 @@ class StickerManager {
 			this.getLayerType(),
 			(layer) => this.renderLayer(layer)
 		);
-	}
-
-	clearElements() {
-		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
-	}
-
-	removeLayerElement(layerId) {
-		removeManagedLayerElement(this.layerElements, layerId);
 	}
 
 	setupUI() {
@@ -62,8 +61,8 @@ class StickerManager {
 				const layer = this.editor.layerManager.getActiveLayer();
 				return layer?.type === LayerType.STICKER ? layer : null;
 			},
-			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getSlotDefaults(key)),
-			getSlotDefaults: (key) => this.getSlotDefaults(key),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => getSlotDefaults(LayerType.STICKER, key)),
+			getSlotDefaults: (key) => getSlotDefaults(LayerType.STICKER, key),
 			apply: (layer, mutate, change) => {
 				mutate();
 				this.renderLayer(layer);
@@ -117,49 +116,7 @@ class StickerManager {
 			this.loadLayerSettings(layer);
 			this.editor.saveState('Edit sticker');
 		});
-		// Shared picker strip: Done (only acts while a sticker is armed) + global Esc.
-		this.ui.pickerStripDone?.addEventListener('click', () => {
-			if (this.editor.layerManager.getActiveLayer()?.type === LayerType.STICKER && this.pickerSession) this.closePicker();
-		});
-		document.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape' || !this.pickerSession) return;
-			if (this.editor.layerManager.getActiveLayer()?.type !== LayerType.STICKER) return;
-			const active = document.activeElement;
-			if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
-			if (this.editor.modalManager?.isAnyOpen?.()) return;
-			event.preventDefault();
-			this.closePicker();
-		});
-	}
 
-	getDefaultShadow() {
-		return buildDefaultShadow({ defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.sticker, includeColorAdjust: true });
-	}
-
-	getDefaultBorder() {
-		return {
-			...buildDefaultBorder({
-				config: CONFIG.tools.stickers.outline,
-				slot: getPaintSlotDefinition(LayerType.STICKER, 'border'),
-				fallbackMode: 'glitter',
-				defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.sticker,
-				includeColorAdjust: true
-			}),
-			fillInterior: CONFIG.tools.stickers.outline.fillInterior,
-			unionFrames: CONFIG.tools.stickers.outline.useAllFrames
-		};
-	}
-
-	getDefaultBevel() {
-		return buildDefaultBevel();
-	}
-
-	getSlotDefaults(key) {
-		if (key === 'sparkles') return buildDefaultSparkles();
-		if (key === 'border') return this.getDefaultBorder();
-		if (key === 'bevelHighlight') return this.getDefaultBevel().highlight;
-		if (key === 'bevelShade') return this.getDefaultBevel().shade;
-		return this.getDefaultShadow();
 	}
 
 	refreshColorAdjustVisuals(layer) {
@@ -210,6 +167,10 @@ class StickerManager {
 			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.stickerLibrary, layer.stickerSourceId)
 		});
+	}
+
+	handlePickerDone() {
+		this.closePicker();
 	}
 
 	closePicker() {
@@ -491,7 +452,7 @@ class StickerManager {
 				maskEnabled: false,
 				shadow: null,
 				border: null,
-				bevel: this.getDefaultBevel()
+				bevel: buildDefaultBevel()
 			}
 		};
 
@@ -843,31 +804,7 @@ updateTransform(layerId, updates) {
 
 	// ===== CENTERING METHODS (Delegation to LayerTransform) =====
 
-	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	alignToCanvas(layerId, mode) {
-		movableAlignToCanvas(this, layerId, mode, (layer) => this.editor.loadTransformSettings?.(layer, 'sticker'));
-	}
-
-	resetTransform(layerId) {
-		movableResetTransform(this, layerId, (layer) => this.editor.loadTransformSettings?.(layer, 'sticker'));
-	}
-
 	// ===== TRANSFORM HANDLES (Delegation to LayerTransform) =====
-
-	createTransformHandles(layerId) {
-		movableCreateTransformHandles(this, layerId);
-	}
-
-	removeTransformHandles() {
-		movableRemoveTransformHandles(this);
-	}
 
 	// ===== LAYER REMOVAL =====
 
@@ -973,11 +910,11 @@ updateTransform(layerId, updates) {
 		layerData.stickerData.isPixelated = sticker.isPixelated !== false;
 		layerData.stickerData.slice = normalizeSlice(layerData.stickerData.slice, layerData.stickerData.width, layerData.stickerData.height);
 		layerData.stickerData.colorAdjust = normalizeColorAdjust(layerData.stickerData.colorAdjust);
-		if (layerData.stickerData.border) layerData.stickerData.border = { ...this.getDefaultBorder(), ...layerData.stickerData.border };
-		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...this.getDefaultShadow(), ...layerData.stickerData.shadow };
-		layerData.stickerData.bevel ||= this.getDefaultBevel();
-		layerData.stickerData.bevel.highlight = mergeSlotEffectDefaults(layerData.stickerData.bevel.highlight, this.getDefaultBevel().highlight);
-		layerData.stickerData.bevel.shade = mergeSlotEffectDefaults(layerData.stickerData.bevel.shade, this.getDefaultBevel().shade);
+		if (layerData.stickerData.border) layerData.stickerData.border = { ...getSlotDefaults(LayerType.STICKER, 'border'), ...layerData.stickerData.border };
+		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...getSlotDefaults(LayerType.STICKER, 'shadow'), ...layerData.stickerData.shadow };
+		layerData.stickerData.bevel ||= buildDefaultBevel();
+		layerData.stickerData.bevel.highlight = mergeSlotEffectDefaults(layerData.stickerData.bevel.highlight, buildDefaultBevel().highlight);
+		layerData.stickerData.bevel.shade = mergeSlotEffectDefaults(layerData.stickerData.bevel.shade, buildDefaultBevel().shade);
 		normalizeBevelData(layerData.stickerData.bevel.highlight);
 		normalizeSlotTextureCoordinates(layerData.stickerData.border);
 		normalizeSlotTextureCoordinates(layerData.stickerData.shadow);
@@ -1020,3 +957,8 @@ updateTransform(layerId, updates) {
 	getItemById(id) { return this.editor.stickerLibrary.getItemById(id); }
 	async init() { this.setupUI(); this.setupEventListeners(); }
 }
+
+Object.assign(StickerManager.prototype, MOVABLE_LAYER_METHODS);
+
+StickerManager.LAYER_TYPE = LayerType.STICKER;
+Object.assign(StickerManager.prototype, { clearElements: LAYER_ELEMENT_METHODS.clearElements, removeLayerElement: LAYER_ELEMENT_METHODS.removeLayerElement });

@@ -59,6 +59,64 @@ class GifAnalyzer
 		return @imagecreatefromstring(substr_replace($data, pack('vv', $bounds[0], $bounds[1]), 6, 4));
 	}
 
+	// Count used opaque RGB colors across every frame, including local palettes.
+	// A standalone frame lets GD decode LZW without counting the logical-screen background.
+	public static function swatchCount($path)
+	{
+		$data = @file_get_contents($path);
+		if (!$data || !in_array(substr($data, 0, 6), ['GIF87a', 'GIF89a'], true)) return 0;
+		$length = strlen($data);
+		if ($length < 13) throw new RuntimeException('Truncated GIF header');
+		$globalSize = (ord($data[10]) & 128) ? 3 * (1 << ((ord($data[10]) & 7) + 1)) : 0;
+		$header = substr($data, 0, 13 + $globalSize);
+		$screen = unpack('vwidth/vheight', substr($data, 6, 4));
+		$offset = 13 + $globalSize;
+		$control = '';
+		$colors = [];
+		while ($offset < $length) {
+			$start = $offset;
+			$block = ord($data[$offset++]);
+			if ($block === 0x3b) break;
+			if ($block === 0x21) {
+				if ($offset >= $length) throw new RuntimeException('Truncated GIF extension');
+				$label = ord($data[$offset++]);
+			} elseif ($block === 0x2c) {
+				if ($offset + 9 > $length) throw new RuntimeException('Truncated GIF frame');
+				$frame = unpack('vleft/vtop/vwidth/vheight/Cpacked', substr($data, $offset, 9));
+				$offset += 9 + (($frame['packed'] & 128) ? 3 * (1 << (($frame['packed'] & 7) + 1)) : 0) + 1;
+			} else throw new RuntimeException('Invalid GIF block');
+			do {
+				if ($offset >= $length) throw new RuntimeException('Truncated GIF data');
+				$size = ord($data[$offset++]);
+				$offset += $size;
+				if ($offset > $length) throw new RuntimeException('Truncated GIF data');
+			} while ($size);
+			$bytes = substr($data, $start, $offset - $start);
+			if ($block === 0x21) {
+				if ($label === 0xf9) $control = $bytes;
+				continue;
+			}
+			$frameHeader = substr_replace($header, pack('vv', $frame['width'], $frame['height']), 6, 4);
+			$bytes = substr_replace($bytes, pack('vv', 0, 0), 1, 4);
+			$image = @imagecreatefromstring($frameHeader . $control . $bytes . "\x3b");
+			$control = '';
+			if (!$image) throw new RuntimeException('Could not decode GIF frame');
+			$visible = [];
+			for ($y = 0; $y < imagesy($image); $y++) {
+				for ($x = 0; $x < imagesx($image); $x++) {
+					$position = ($frame['top'] + $y) * $screen['width'] + $frame['left'] + $x;
+					if ($position >= $screen['width'] * $screen['height']) continue;
+					$rgba = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+					if ($rgba['alpha'] >= 127) continue;
+					$visible[$position] = ($rgba['red'] << 16) | ($rgba['green'] << 8) | $rgba['blue'];
+				}
+			}
+			foreach ($visible as $color) $colors[$color] = true;
+			imagedestroy($image);
+		}
+		return count($colors);
+	}
+
 	private $imagePath;
 	private $config;
 

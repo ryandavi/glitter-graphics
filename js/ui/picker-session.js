@@ -4,6 +4,7 @@ class PickerRegistry {
 	constructor(editor) {
 		this.editor = editor;
 		this.managers = new Set();
+		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => this.closeActive());
 	}
 
 	register(manager) {
@@ -18,24 +19,20 @@ class PickerRegistry {
 	closeActive({ returnToProperties = true } = {}) {
 		const manager = this.active;
 		if (!manager) return false;
-		const slot = manager.pickerSession?.slot || 'fill';
-		if (returnToProperties && typeof manager.handlePickerDone === 'function') {
-			manager.handlePickerDone();
-		} else if (returnToProperties && typeof manager.closePicker === 'function') {
-			manager.closePicker();
-		} else {
-			manager.closePickerSession?.();
-			if (returnToProperties) manager.returnToTextProperties?.(slot);
-		}
+		if (returnToProperties) manager.handlePickerDone();
+		else manager.closePickerSession({ restorePicker: false });
 		return true;
 	}
 
-	closeAll() {
-		this.managers.forEach((manager) => manager.closePickerSession?.({ restorePicker: false }));
+	closeAll({ except = null } = {}) {
+		this.managers.forEach(manager => {
+			if (manager !== except && manager.pickerSession) manager.closePickerSession({ restorePicker: false });
+		});
 	}
 }
 
 function pickerOpenSession(manager, session, options = {}) {
+	manager.editor?.pickers?.closeAll({ except: manager });
 	manager.pickerSession = { ...session };
 	options.refresh?.();
 	options.reveal?.();
@@ -129,9 +126,6 @@ class SlotGlitterPicker {
 		this.ensureSlot = ensureSlot;
 		this.onPicked = onPicked;
 		this.pickerSession = null;
-		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => {
-			if (this.getArmedSlot(this.getLayer())) this.handlePickerDone();
-		});
 	}
 
 	getLayer() {
@@ -170,10 +164,11 @@ class SlotGlitterPicker {
 	applyPick(layer, glitterId) {
 		const data = this.ensureSlot(layer, this.getTarget(layer));
 		if (!data) return false;
+		const previousId = data.glitterId;
 		data.glitterId = glitterId;
 		data.mode = 'glitter';
 		data.colorAdjust = null;
-		this.onPicked(layer);
+		this.pendingPick = Promise.resolve(this.onPicked(layer, glitterId, previousId));
 		this.updatePickerStrip();
 		return true;
 	}
@@ -204,4 +199,22 @@ class SlotGlitterPicker {
 			updateSelection: () => this.editor.updateGlitterSelection()
 		});
 	}
+}
+
+// Mixed asset/paint pickers keep their asset UI while the slot picker owns paint writes.
+function createManagerSlotPicker(manager, { type, defaultSlot, typeWord, onPicked }) {
+	const picker = new SlotGlitterPicker(manager.editor, {
+		type, defaultSlot, typeWord,
+		ensureSlot: (layer, key) => manager.fieldHost.ensureSlot(layer, key),
+		onPicked
+	});
+	Object.defineProperty(picker, 'pickerSession', {
+		get: () => manager.pickerSession,
+		set: (value) => { manager.pickerSession = value; }
+	});
+	picker.getTarget = (layer) => manager.getGlitterSelectionTarget(layer);
+	picker.updatePickerStrip = () => manager.updatePickerStrip();
+	picker.handlePickerDone = () => manager.handlePickerDone();
+	picker.closePickerSession = () => manager.closePickerSession();
+	return picker;
 }

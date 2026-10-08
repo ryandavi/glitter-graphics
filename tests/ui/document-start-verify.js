@@ -26,9 +26,8 @@ async function main() {
 	try {
 		const startupContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 		await startupContext.addInitScript(() => {
-			localStorage.setItem('glitterEditorTheme', 'bubblegum');
-			localStorage.setItem('glitterEditorSettings', JSON.stringify({
-				interfaceTheme: 'bubblegum',
+			localStorage.setItem('glitter.theme', JSON.stringify('bubblegum'));
+			localStorage.setItem('glitter.preferences', JSON.stringify({
 				showWelcomeOnStartup: true
 			}));
 			localStorage.removeItem('glitterEditor_welcomeModalSeen');

@@ -1,21 +1,26 @@
 'use strict';
 
 const EDITOR_FILL_TOOL_METHODS = {
-	handleColorPickAction(x, y, event = null) {
-		if (this.currentTool !== ToolType.GLITTER_FILL || !this.originalImage) return;
+	resolveFillLayer(x, y, { create = true, deferHistory = false } = {}) {
 		let layer = this.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.GLITTER_FILL) {
 			layer = this.layerManager.getLayersAtPoint(x, y).find(candidate => candidate.type === LayerType.GLITTER_FILL);
 			if (layer) this.layerManager.selectLayerFromCanvas(layer.id);
-			else {
-				if (!CONFIG.app.behavior.autoCreateGlitterLayer) {
-					this.showError('Please create a fill layer first');
-					return;
-				}
-				layer = this.layerManager.addLayer(LayerType.GLITTER_FILL);
+			else if (create && CONFIG.app.behavior.autoCreateGlitterLayer) {
+				if (deferHistory) {
+					layer = this.glitterManager.createLayer();
+					if (layer) this.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
+				} else layer = this.layerManager.addLayer(LayerType.GLITTER_FILL);
 			}
 		}
-		if (!layer || !this.canEditLayer(layer, { notify: true })) return;
+		return layer && this.canEditLayer(layer, { notify: true }) ? layer : null;
+	},
+	handleColorPickAction(x, y, event = null) {
+		if (this.currentTool !== ToolType.GLITTER_FILL || !this.originalImage) return;
+		if (!this.resolveFillLayer(x, y)) {
+			this.showError('Please select or create an editable fill layer first');
+			return;
+		}
 		this.glitterFillSelector(x, y, event);
 	},
 	glitterFillSelector(x, y, event) {

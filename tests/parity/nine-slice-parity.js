@@ -78,10 +78,10 @@ async function main() {
 						const originalFill = compositor._renderFilledMaskInto;
 						const originalDraw = compositor._drawTransformedCanvas;
 						for (const effect of ['border', 'shadow', 'bevel']) {
-							layer.stickerData.border = effect === 'border' ? { ...manager.getDefaultBorder(), mode: 'solid', color: '#ffffff', widthPx: 2 } : null;
+							layer.stickerData.border = effect === 'border' ? { ...getSlotDefaults(layer.type, 'border'), mode: 'solid', color: '#ffffff', widthPx: 2 } : null;
 							// Compare local masks: preview places offsets in CSS, export bakes them into the mask.
-							layer.stickerData.shadow = effect === 'shadow' ? { ...manager.getDefaultShadow(), mode: 'solid', color: '#ffffff', offsetX: 0, offsetY: 0, spread: 1, blur: 1 } : null;
-							layer.stickerData.bevel = manager.getDefaultBevel();
+							layer.stickerData.shadow = effect === 'shadow' ? { ...getSlotDefaults(layer.type, 'shadow'), mode: 'solid', color: '#ffffff', offsetX: 0, offsetY: 0, spread: 1, blur: 1 } : null;
+							layer.stickerData.bevel = buildDefaultBevel();
 							if (effect === 'bevel') { layer.stickerData.bevel.enabled = true; layer.stickerData.bevel.highlight.mode = 'solid'; layer.stickerData.bevel.shade.mode = 'solid'; }
 							manager.reconcileStickerEffectSpans(layer, element, img);
 							const exported = [];
@@ -106,7 +106,7 @@ async function main() {
 								for(let pixel=3;pixel<aa.length;pixel+=4) if(Math.abs(aa[pixel]-bb[pixel])>1) throw new Error(`${effect} effect mask parity at ${pixel}: ${aa[pixel]} vs ${bb[pixel]}`);
 							}
 						}
-						layer.stickerData.border = null; layer.stickerData.shadow = null; layer.stickerData.bevel = manager.getDefaultBevel();
+						layer.stickerData.border = null; layer.stickerData.shadow = null; layer.stickerData.bevel = buildDefaultBevel();
 					}
 					const again = document.createElement('canvas'); again.width = 80; again.height = 60;
 					editor.sceneCompositor._renderLayerToCanvas(layer, again.getContext('2d'), 0, null, null, scratch);

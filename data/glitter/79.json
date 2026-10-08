@@ -12,6 +12,7 @@
     "colorWeights": [
         0
     ],
+    "swatchCount": 5,
     "frameCount": 3,
     "frameRate": 11,
     "isVariableFramerate": 0,

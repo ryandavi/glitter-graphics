@@ -22,6 +22,7 @@ function matchShortcut(event) {
 function dispatchKeyboardCommand(editor, event, { isTyping = false } = {}) {
 	const combo = normalizeShortcutEvent(event);
 	const command = Object.values(COMMANDS).find((candidate) => candidate.keys?.includes(combo)
+		&& sessionAllowsCommand(editor, candidate)
 		&& !(isTyping && !candidate.allowWhileTyping)
 		&& candidate.when?.(editor, event) !== false);
 	if (!command) return false;

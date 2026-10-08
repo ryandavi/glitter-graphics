@@ -186,13 +186,6 @@ function renderSettingsModals() {
 	renderSettingsGroups(document.getElementById('settingsGroups'), APP_SETTINGS_LAYOUT);
 }
 
-function clampNumber(value, minimum, maximum, fallback, integer = false) {
-	const numeric = Number(value);
-	if (!Number.isFinite(numeric)) return fallback;
-	const clamped = Math.min(maximum, Math.max(minimum, numeric));
-	return integer ? Math.round(clamped) : clamped;
-}
-
 class SettingsStore {
 	constructor(schema) {
 		this.schema = schema;

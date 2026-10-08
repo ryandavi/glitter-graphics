@@ -55,24 +55,12 @@ const EDITOR_SETTINGS_METHODS = {
 saveSettingsToStorage() {
 		const settings = this.settingsStore.serialize(this.exportSettings);
 
-		try {
-			localStorage.setItem('glitterEditorSettings', JSON.stringify(settings));
-		} catch (e) {
-			console.warn('Failed to save settings to localStorage:', e);
-		}
+		writeStored(STORAGE_KEYS.exportSettings.key, settings);
 	}
 
 ,
 	loadSettingsFromStorage() {
-		try {
-			const saved = localStorage.getItem('glitterEditorSettings');
-			if (saved) {
-				return JSON.parse(saved);
-			}
-		} catch (e) {
-			console.warn('Failed to load settings from localStorage:', e);
-		}
-		return null;
+		return readStored(STORAGE_KEYS.exportSettings.key, null);
 	}
 
 
@@ -683,7 +671,7 @@ initializeExportSettings() {
 	applyInterfaceTheme() {
 		document.documentElement.dataset.theme = this.interfaceTheme;
 		try {
-			localStorage.setItem('glitterEditorTheme', this.interfaceTheme);
+			writeStored(STORAGE_KEYS.theme.key, this.interfaceTheme);
 		} catch (error) {
 			console.warn('Failed to save interface theme:', error);
 		}
@@ -776,20 +764,12 @@ async resetAllSettings() {
 		return;
 	}
 
-	this.settingsStore.reset(this.exportSettings);
-
-	PREFERENCES.resetAll();
+	resetStoredSettings(this);
 	this.refreshMaskEdgeRendering();
 	this.applyReduceMotion();
 	this.applyShowAllControls();
-	this.viewport?.applyTransform();
-	this.filterLayerManager?.refreshSnapshots();
-	this.syncCanvasPreferenceControls();
-	this.contextToolbarRenderer?.resetPlacement?.();
-	this.interfaceTheme = 'dark';
-	this.applyInterfaceTheme();
-	this.maskEditor?.resetToolSettingsToDefaults();
-	this.applyDefaultPanelLayout();
+	this.viewport.applyTransform();
+	this.filterLayerManager.refreshSnapshots();
 
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();

@@ -1,7 +1,7 @@
 // ============================================
 // STICKER MULTI-RESOLUTION SUPPORT
 // ============================================
-// See docs/STICKER-MULTI-RESOLUTION-PLAN.md. Stickers with `variantUrls` (a
+// Stickers with `variantUrls` (a
 // {"<measured width>": {url, width, height}} map from the sticker's detail
 // JSON) can swap to a higher- or lower-resolution source file as they're
 // resized, the way Twitter's own sticker viewer does: crisp at rest, no
@@ -15,15 +15,9 @@ const AssetImageCache = {
 	get(url) {
 		if (!url) return Promise.reject(new Error('AssetImageCache: no url given'));
 		if (!this._cache.has(url)) {
-			this._cache.set(url, new Promise((resolve, reject) => {
-				const img = new Image();
-				img.decoding = 'async';
-				img.onload = () => resolve(img);
-				img.onerror = () => {
-					this._cache.delete(url);
-					reject(new Error(`Failed to load image: ${url}`));
-				};
-				img.src = url;
+			this._cache.set(url, loadImageElement(url).catch(error => {
+				this._cache.delete(url);
+				throw error;
 			}));
 		}
 		return this._cache.get(url);

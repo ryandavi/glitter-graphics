@@ -762,11 +762,10 @@ class PathEditSession {
 		session.selection = new Set();
 		const layer = session.host.getLayer();
 		if (session.created && layer && layer.pathData.fill.mode === 'none') {
-			const manager = this.editor.pathLayerManager;
 			const fill = layer.pathData.fill;
-			fill.mode = manager.getDefaultFill().mode;
+			fill.mode = getSlotDefaults(LayerType.PATH, 'fill').mode;
 			if (fill.mode === 'glitter' && !fill.glitterId) fill.glitterId = getPaintSlotDefaultGlitterId(LayerType.PATH, getPaintSlotDefinition(LayerType.PATH, 'fill'));
-			toggleSlotEffect(layer, getPaintSlotDefinition(LayerType.PATH, 'stroke'), false, () => manager.getDefaultStroke());
+			toggleSlotEffect(layer, getPaintSlotDefinition(LayerType.PATH, 'stroke'), false, () => getSlotDefaults(LayerType.PATH, 'stroke'));
 		}
 		this.commit(subpaths, 'Close path');
 		this.editor.updateStatus('Path closed');

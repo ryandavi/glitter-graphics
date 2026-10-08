@@ -20,7 +20,7 @@ class GifEncodingPipeline {
 	}
 
 	_analyzeColors(frames, alphaThreshold = 1) {
-		const settings = CONFIG.export?.limits?.colorAnalysis;
+		const settings = CONFIG.export.limits.colorAnalysis;
 		if (!settings || !frames?.length) return null;
 		const count = Math.min(frames.length, settings.maxFrames);
 		const indexes = new Set(Array.from({ length: count }, (_, index) => count === 1 ? 0 : Math.round(index * (frames.length - 1) / (count - 1))));

@@ -31,6 +31,13 @@ class ShapeGlitterManager {
 		// Gallery picker session (reuses the shared strip + Done UX from text):
 		// { layerId, slot } while the user is choosing a glitter for a slot.
 		this.pickerSession = null;
+		this.slotPicker = createManagerSlotPicker(this, {
+			type: LayerType.SHAPE, defaultSlot: 'fill', typeWord: 'shape',
+			onPicked: (layer, id) => {
+				this.renderLayer(layer);
+				this.loadLayerSettings(layer);
+			}
+		});
 		// Layer whose underlying shape asset is being replaced. Asset replacement
 		// and glitter-slot picking are mutually exclusive picker modes.
 		this.shapeChangeLayerId = null;
@@ -80,8 +87,8 @@ class ShapeGlitterManager {
 			type: LayerType.SHAPE,
 			editor: this.editor,
 			getLayer: () => this.getActiveShapeLayer(),
-			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => this.getSlotDefaults(key)),
-			getSlotDefaults: (key) => this.getSlotDefaults(key),
+			ensureSlot: (layer, key) => ensureLayerPaintSlot(layer, key, () => getSlotDefaults(LayerType.SHAPE, key)),
+			getSlotDefaults: (key) => getSlotDefaults(LayerType.SHAPE, key),
 			apply: (layer, mutate, change) => {
 				if (change.geometry) this.mutateGeometryPreservingShape(layer, mutate);
 				else mutate();
@@ -210,19 +217,6 @@ class ShapeGlitterManager {
 			});
 		});
 
-		// Shared picker strip: Done (only acts while a shape is armed) + global Esc.
-		this.ui.pickerStripDone?.addEventListener('click', () => {
-			if (this.getActiveShapeLayer() && (this.pickerSession || this.shapeChangeLayerId)) this.handlePickerDone();
-		});
-		document.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape' || (!this.pickerSession && !this.shapeChangeLayerId) || !this.getActiveShapeLayer()) return;
-			const a = document.activeElement;
-			if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
-			if (this.editor.modalManager?.isAnyOpen?.()) return;
-			event.preventDefault();
-			this.handlePickerDone();
-		});
-
 		this.ui.resetEffects?.addEventListener('click', () => this._resetEffects());
 	}
 
@@ -299,12 +293,7 @@ class ShapeGlitterManager {
 
 	async registerImageFillAsset(imageRef, payload) {
 		if (!imageRef || !payload?.dataUrl) return null;
-		const image = await new Promise((resolve, reject) => {
-			const candidate = new Image();
-			candidate.onload = () => resolve(candidate);
-			candidate.onerror = () => reject(new Error('Could not decode that image.'));
-			candidate.src = payload.dataUrl;
-		});
+		const image = await loadImageElement(payload.dataUrl);
 		const asset = {
 			image,
 			url: payload.dataUrl,
@@ -406,12 +395,12 @@ class ShapeGlitterManager {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.shapeChangeLayerId = layer.id;
-		pickerCloseSession(this, { refresh: () => this.updatePickerStrip() });
-		this.updatePickerStrip();
+		pickerOpenSession(this, { kind: 'asset', layerId: layer.id }, { refresh: () => this.updatePickerStrip() });
 		revealAssetBrowser(this.editor, this.editor.shapeBrowserManager, layer.shapeData.shapeId);
 	}
 
 	closePickerSession() {
+		this.shapeChangeLayerId = null;
 		pickerCloseSession(this, {
 			refresh: () => this.updatePickerStrip(),
 			updateSelection: () => this.editor.updateGlitterSelection()
@@ -459,8 +448,7 @@ class ShapeGlitterManager {
 	// Done/Esc from the shared strip when a shape is active.
 	handlePickerDone() {
 		if (this.shapeChangeLayerId) {
-			this.shapeChangeLayerId = null;
-			this.updatePickerStrip();
+			this.closePickerSession();
 			this.returnToShapeProperties('asset');
 			return;
 		}
@@ -545,56 +533,20 @@ class ShapeGlitterManager {
 
 	// ===== DEFAULTS / DATA MODEL =====
 
-	getDefaultFill() {
-		return buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.shape });
-	}
-
-	getDefaultBorder() {
-		return buildDefaultBorder({
-			config: CONFIG.tools.shapes.border,
-			slot: getPaintSlotDefinition(LayerType.SHAPE, 'border'),
-			fallbackMode: 'glitter',
-			includeShapeStyle: true,
-			includeColorAdjust: true,
-			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.shape
-		});
-	}
-
-	getDefaultShadow() {
-		return buildDefaultShadow({
-			defaultMode: 'glitter',
-			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.shape,
-			includeColorAdjust: true
-		});
-	}
-
-	getDefaultBevel() {
-		return buildDefaultBevel();
-	}
-
-	getSlotDefaults(key) {
-		if (key === 'border') return this.getDefaultBorder();
-		if (key === 'shadow') return this.getDefaultShadow();
-		if (key === 'sparkles') return buildDefaultSparkles();
-		if (key === 'bevelHighlight') return this.getDefaultBevel().highlight;
-		if (key === 'bevelShade') return this.getDefaultBevel().shade;
-		return this.getDefaultFill();
-	}
-
 	// Runs where a shape enters the document (create, deserialize, project
 	// load). Getters and render paths read the canonical shape directly.
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const data = layer.shapeData;
 		data.cornerRadiusPx ??= FIELDS.shapeRadius.value;
-		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
+		data.fill = mergeSlotEffectDefaults(data.fill, getSlotDefaults(LayerType.SHAPE, 'fill'));
 		if (data.border === undefined) data.border = null;
-		if (data.border) data.border = mergeSlotEffectDefaults(data.border, this.getDefaultBorder());
+		if (data.border) data.border = mergeSlotEffectDefaults(data.border, getSlotDefaults(LayerType.SHAPE, 'border'));
 		if (data.shadow === undefined) data.shadow = null;
-		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, this.getDefaultShadow());
-		data.bevel ||= this.getDefaultBevel();
-		data.bevel.highlight = mergeSlotEffectDefaults(data.bevel.highlight, this.getDefaultBevel().highlight);
-		data.bevel.shade = mergeSlotEffectDefaults(data.bevel.shade, this.getDefaultBevel().shade);
+		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, getSlotDefaults(LayerType.SHAPE, 'shadow'));
+		data.bevel ||= buildDefaultBevel();
+		data.bevel.highlight = mergeSlotEffectDefaults(data.bevel.highlight, buildDefaultBevel().highlight);
+		data.bevel.shade = mergeSlotEffectDefaults(data.bevel.shade, buildDefaultBevel().shade);
 		normalizeBevelData(data.bevel.highlight);
 		data.sparkles = normalizeSparklesData(data.sparkles);
 		normalizeSlotTextureCoordinates(data.fill);
@@ -634,7 +586,7 @@ class ShapeGlitterManager {
 		const transform = createDefaultTransform({
 			position: { x: position.x, y: position.y }
 		});
-		const fill = this.getDefaultFill();
+		const fill = getSlotDefaults(LayerType.SHAPE, 'fill');
 		if (options.fillMode === 'image') fill.mode = 'image';
 
 		const layer = {
@@ -652,7 +604,7 @@ class ShapeGlitterManager {
 				fill,
 				border: null,
 				shadow: null,
-				bevel: this.getDefaultBevel()
+				bevel: buildDefaultBevel()
 			}
 		};
 
@@ -683,7 +635,7 @@ class ShapeGlitterManager {
 	// bevel paints) reads like any other.
 	ensureEffectData(layer, slot) {
 		if (!layer?.shapeData) return null;
-		return ensureLayerPaintSlot(layer, slot, () => this.getSlotDefaults(slot));
+		return ensureLayerPaintSlot(layer, slot, () => getSlotDefaults(LayerType.SHAPE, slot));
 	}
 
 	getBorderOutsidePadding(borderData) {
@@ -702,7 +654,7 @@ class ShapeGlitterManager {
 			d.width,
 			d.height,
 			LAYER_UI_CONFIG[LayerType.SHAPE].supportsCornerRadius(layer) ? d.cornerRadiusPx : null,
-			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
+			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? getSlotDefaults(LayerType.SHAPE, 'border').dotSpacingPx, getBorderPlacement(d.border), getBorderEdgeStyle(d.border)] : null,
 			d.shadow ? getShadowMaskKey(d.shadow) : null,
 			shouldUseCrispMaskEdges(),
 			CONFIG.rendering.maskAlphaThreshold
@@ -838,7 +790,7 @@ class ShapeGlitterManager {
 		const borderStyle = getBorderStyle(borderData);
 		const placement = getBorderPlacement(borderData);
 		const edgeStyle = getBorderEdgeStyle(borderData);
-		const dotSpacingPx = Math.max(1, borderData?.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx);
+		const dotSpacingPx = Math.max(1, borderData?.dotSpacingPx ?? getSlotDefaults(LayerType.SHAPE, 'border').dotSpacingPx);
 		const canvas = createAppCanvas(0, 0, 'layers/ShapeGlitterManager');
 		canvas.width = measurement.canvas.width;
 		canvas.height = measurement.canvas.height;
@@ -858,8 +810,8 @@ class ShapeGlitterManager {
 			// don't clip, so they're free to use the full configured limit to keep
 			// convex points (star, sparkle) from bevelling off.
 			ctx.miterLimit = placement === 'inside'
-				? CONFIG.tools.shapes.border?.hardEdgeInsideMiterLimit ?? 2
-				: Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2);
+				? CONFIG.tools.shapes.border.hardEdgeInsideMiterLimit
+				: Math.max(1, CONFIG.tools.shapes.border.hardEdgeMiterLimit);
 			ctx.lineCap = borderStyle === 'dotted' ? 'square' : 'butt';
 		} else {
 			ctx.lineJoin = 'round';
@@ -931,10 +883,6 @@ class ShapeGlitterManager {
 		layersToShow.forEach((layer) => {
 			if (layer.type === LayerType.SHAPE) this.renderLayer(layer);
 		});
-	}
-
-	clearElements() {
-		Array.from(this.layerElements.keys()).forEach((layerId) => this.removeLayerElement(layerId));
 	}
 
 	renderLayer(layer) {
@@ -1037,7 +985,7 @@ class ShapeGlitterManager {
 			return {
 				rasterScale: measurement.rasterScale,
 				canvas: this.getBorderMaskCanvas(measurement, border, underlap),
-				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}:${underlap}`
+				cacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? getSlotDefaults(LayerType.SHAPE, 'border').dotSpacingPx}:${getBorderPlacement(border)}:${getBorderDrawOrder(border)}:${getBorderEdgeStyle(border)}:${Boolean(border.fillEnclosed)}:${underlap}`
 			};
 		}
 		if (slot.role === 'shadow') {
@@ -1135,22 +1083,6 @@ class ShapeGlitterManager {
 
 	// ===== SETTINGS / UI =====
 
-	centerHorizontal(layerId) {
-		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	centerVertical(layerId) {
-		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
-	alignToCanvas(layerId, mode) {
-		movableAlignToCanvas(this, layerId, mode, (layer) => this.loadLayerSettings(layer));
-	}
-
-	resetTransform(layerId) {
-		movableResetTransform(this, layerId, (layer) => this.loadLayerSettings(layer));
-	}
-
 	// ===== HOUSEKEEPING =====
 
 	mutateGeometryPreservingShape(layer, mutate) {
@@ -1183,31 +1115,17 @@ class ShapeGlitterManager {
 		this.maskUrlCache.clear();
 	}
 
-	removeLayerElement(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) {
-			transform.removeTransformHandles();
-			this.layerTransforms.delete(layerId);
-		}
-		const element = this.layerElements.get(layerId);
-		if (element?.parentNode) element.parentNode.removeChild(element);
-		this.layerElements.delete(layerId);
-	}
-
 	releaseLayerResources(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		this.removeLayerElement(layer.id);
-	}
-
-	removeTransformHandles() {
-		movableRemoveTransformHandles(this);
-	}
-
-	createTransformHandles(layerId) {
-		movableCreateTransformHandles(this, layerId);
 	}
 
 	buildExportPlan(layer, context) {
 		return context.compositor._buildSlotStackExportPlan(layer);
 	}
 }
+
+Object.assign(ShapeGlitterManager.prototype, MOVABLE_LAYER_METHODS);
+
+ShapeGlitterManager.LAYER_TYPE = LayerType.SHAPE;
+Object.assign(ShapeGlitterManager.prototype, { clearElements: LAYER_ELEMENT_METHODS.clearElements, removeLayerElement: LAYER_ELEMENT_METHODS.removeLayerElement });

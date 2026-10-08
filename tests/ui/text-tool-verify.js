@@ -210,7 +210,7 @@ async function main() {
 			const fits = !manager.getMeasurementEntry(layer).hasOverflow;
 			Object.assign(layer.textData, { text: 'W\n\ni', boxMode: 'point' });
 			const empty = manager.getMeasurementEntry(layer).layout.lines;
-			Object.assign(layer.textData, { text: 'AB', boxMode: 'point', textBackground: buildDefaultTextBackground(), decoration: { underline: false, strikethrough: false }, fill: { ...manager.getDefaultFill(), mode: 'solid', color: '#000000' }, border: null, shadow: null });
+			Object.assign(layer.textData, { text: 'AB', boxMode: 'point', textBackground: buildDefaultTextBackground(), decoration: { underline: false, strikethrough: false }, fill: { ...getSlotDefaults(layer.type, 'fill'), mode: 'solid', color: '#000000' }, border: null, shadow: null });
 			manager.beginTextEdit(layer, { focus: false }); manager.setTextSelection(0, 0);
 			manager.moveTextCaretVertically(1, false);
 			const down = manager.editSession.selectionStart;

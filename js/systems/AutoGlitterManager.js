@@ -44,9 +44,6 @@ class AutoGlitterManager {
 		this.ui.open?.addEventListener('click', () => this.open());
 		this.ui.cancel?.addEventListener('click', () => this.requestDiscardSession());
 		this.ui.create?.addEventListener('click', () => this.createLayers());
-		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => {
-			if (this.hasActivePickerSession()) this.closePickerSession(true);
-		});
 		this.ui.paletteStyles.forEach((button) => button.addEventListener('click', () => {
 			if (button.dataset.value === this.paletteStyle) return;
 			this.setPaletteStyle(button.dataset.value);
@@ -299,7 +296,7 @@ class AutoGlitterManager {
 		this.setCanvasPreviewState(false);
 		if (options.cancel !== false) this.cancelSession();
 		if (previousShowAllLayers === false && this.editor.showAllLayers) this.editor.togglePreview();
-		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.editor.layerManager.getBaseLayer();
 		const activeLayer = this.editor.layerManager.getActiveLayer();
 		const targetLayer = activeLayer && !activeLayer.isPreview ? activeLayer : baseLayer;
 		this.editor.updateSidePanelUI(targetLayer);
@@ -612,6 +609,7 @@ class AutoGlitterManager {
 	}
 
 	updatePickerStrip() {
+		if (!this.isSessionActive() && !this.pickerSession) return;
 		const armed = this.hasActivePickerSession();
 		const index = this.pickerSession?.paletteIndex;
 		renderPickerStrip({
@@ -638,7 +636,12 @@ class AutoGlitterManager {
 		this.editor.glitterManager.updateSelection();
 	}
 
+	handlePickerDone() {
+		this.closePickerSession(true);
+	}
+
 	closePickerSession(returnToPanel = false) {
+		if (typeof returnToPanel === 'object') returnToPanel = false;
 		const index = this.pickerSession?.paletteIndex;
 		pickerCloseSession(this, { refresh: () => this.updatePickerStrip() });
 		if (!returnToPanel) return;
@@ -770,7 +773,7 @@ class AutoGlitterManager {
 	// ===== EPHEMERAL PREVIEW SESSION =====
 
 	startSession() {
-		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.editor.layerManager.getBaseLayer();
 		const previousShowAllLayers = this.editor.showAllLayers;
 		if (!this.editor.showAllLayers) this.editor.togglePreview();
 		this.session = {
@@ -790,7 +793,7 @@ class AutoGlitterManager {
 	}
 
 	showSessionPanel() {
-		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.editor.layerManager.getBaseLayer();
 		this.editor.updateSidePanelUI(baseLayer);
 		this.editor.updateContextToolbars();
 		this.editor.setCollapsibleSectionOpen?.('autoGlitterSettings', true, true);
@@ -1023,7 +1026,7 @@ class AutoGlitterManager {
 		this.editor.historyManager.updateButtons();
 		this.editor.layerManager.renderLayersList();
 		this.editor.requestPreviewUpdate();
-		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.editor.layerManager.getBaseLayer();
 		if (baseLayer) this.editor.layerManager.setActiveLayer(baseLayer.id);
 		this.editor.updateActionButtons();
 		this.editor.saveState('Apply Auto Glitter');

@@ -3,23 +3,77 @@
 registerLayerType(LayerType.GLITTER_FILL, {
 	describe: (layer, editor) => {
 		const fill = describeLayerPaint(editor, getLayerFillSlot(layer));
-		return { name: layer.name || fill.glitter?.name || fill.name || `${fill.modeLabel} Fill`, detail: `Fill · ${fill.mode === 'none' ? 'None' : fill.modeLabel}` };
+		return {
+			name: layer.name || fill.glitter?.name || fill.name || `${fill.modeLabel} Fill`,
+			detail: `Fill · ${fill.mode === 'none' ? 'None' : fill.modeLabel}`
+		};
 	},
 	displayName: 'Fill Layer',
 	paintSlots: [
 		{
-			key: 'shadow', role: 'shadow', path: 'shadow', draftPath: 'effectDrafts.shadow',
-			glitterDefault: 'shadowGlitterId', panelPrefix: 'glitterShadow', modes: ['glitter', 'solid']
+			defaults: () => {
+				return buildDefaultShadow({
+					defaultMode: 'glitter',
+					defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId.glitterLayer,
+					includeColorAdjust: true
+				});
+			},
+			key: 'shadow',
+			role: 'shadow',
+			path: 'shadow',
+			draftPath: 'effectDrafts.shadow',
+			glitterDefault: 'shadowGlitterId',
+			panelPrefix: 'glitterShadow',
+			modes: ['glitter', 'solid']
 		},
 		{
-			key: 'border', role: 'border', edgeStyles: ['round', 'miter', 'hard'], path: 'border', draftPath: 'effectDrafts.border',
-			glitterDefault: 'borderGlitterId', panelPrefix: 'glitterBorder', modes: ['glitter', 'solid'],
+			defaults: () => {
+				return buildDefaultBorder({
+					config: CONFIG.tools.glitter.border,
+					slot: getPaintSlotDefinition(LayerType.GLITTER_FILL, 'border'),
+					fallbackMode: 'glitter',
+					defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId.glitterLayer,
+					includeColorAdjust: true
+				});
+			},
+			key: 'border',
+			role: 'border',
+			edgeStyles: ['round', 'miter', 'hard'],
+			path: 'border',
+			draftPath: 'effectDrafts.border',
+			glitterDefault: 'borderGlitterId',
+			panelPrefix: 'glitterBorder',
+			modes: ['glitter', 'solid'],
 			fields: { widthPx: 'borderWidth' }
 		},
-		{ key: 'fill', role: 'fill', path: 'fill', wholeLayer: true, sourceLabel: null, glitterDefault: 'fillGlitterId', panelPrefix: 'glitterFill', modes: ['glitter', 'solid'], fields: { opacity: false } },
 		{
-			key: 'sparkles', role: 'sparkles', path: 'sparkles', draftPath: 'effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', panelPrefix: 'glitterSparkles', modes: ['glitter', 'solid']
+			defaults: () => {
+				return {
+					...buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.glitterLayer }),
+					gradient: normalizeEffectGradient(CONFIG.rendering.gradient)
+				};
+			},
+			key: 'fill',
+			role: 'fill',
+			path: 'fill',
+			wholeLayer: true,
+			sourceLabel: null,
+			glitterDefault: 'fillGlitterId',
+			panelPrefix: 'glitterFill',
+			modes: ['glitter', 'solid'],
+			fields: { opacity: false }
+		},
+		{
+			defaults: () => {
+				return buildDefaultSparkles();
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'sparkles',
+			draftPath: 'effectDrafts.sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			panelPrefix: 'glitterSparkles',
+			modes: ['glitter', 'solid']
 		}
 	],
 	fields: [
@@ -66,12 +120,13 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	blendable: true,
 	// An empty fill has nothing to grab; it gets handles once it has a mask.
 	transformable: (layer) => hasMaskContent(layer),
-	defaultTransform: (editor) => createDefaultTransform({
-		position: {
-			x: (editor.originalCanvas?.width || 0) / 2,
-			y: (editor.originalCanvas?.height || 0) / 2
-		}
-	}),
+	defaultTransform: (editor) =>
+		createDefaultTransform({
+			position: {
+				x: (editor.originalCanvas?.width || 0) / 2,
+				y: (editor.originalCanvas?.height || 0) / 2
+			}
+		}),
 	// The mask is a canvas-sized surface placed by the transform; its frame is
 	// the painted pixels inside it.
 	elementBox: (editor) => editor.glitterManager?.getMaskDimensions() || null,

@@ -258,7 +258,7 @@ class GestureManager {
 	}
 
 	isLikelyPalmContact(event) {
-		const maxPx = CONFIG.ui.gestures.palmRejectionContactPx || 0;
+		const maxPx = CONFIG.ui.gestures.palmRejectionContactPx;
 		if (!maxPx) return false;
 
 		const width = Number(event.width);
@@ -274,7 +274,7 @@ class GestureManager {
 
 	schedulePendingSingleStart() {
 		this.clearPendingSingleStart();
-		const graceMs = Math.max(0, CONFIG.ui.gestures.secondFingerGraceMs || 0);
+		const graceMs = Math.max(0, CONFIG.ui.gestures.secondFingerGraceMs);
 		if (!graceMs) return;
 		this.pendingSingleTimer = setTimeout(() => {
 			this.pendingSingleTimer = null;
@@ -371,9 +371,9 @@ class GestureManager {
 		if (distance <= CONFIG.ui.gestures.tapSlopPx) {
 			return;
 		}
-		const commitSlop = CONFIG.ui.gestures.secondFingerCommitSlopPx ?? (CONFIG.ui.gestures.tapSlopPx * 2.5);
+		const commitSlop = CONFIG.ui.gestures.secondFingerCommitSlopPx;
 		if (!graceElapsed && distance < commitSlop &&
-			Date.now() - pointer.downTime < (CONFIG.ui.gestures.secondFingerGraceMs || 0)) {
+			Date.now() - pointer.downTime < (CONFIG.ui.gestures.secondFingerGraceMs)) {
 			return;
 		}
 

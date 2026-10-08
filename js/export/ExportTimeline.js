@@ -330,7 +330,7 @@ class Mp4RenderClockPlanner {
 
 class CompositeFrameReducer {
 	static hash(frame) {
-		// Sampled, not exhaustive (see EXPORT-PERFORMANCE-PLAN.md Part 2) — same
+		// Sampled, not exhaustive — same
 		// strided-prefilter idea as difference() below. Safe because callers only
 		// use this hash to decide whether to run the full equals() check; a real
 		// duplicate's sampled bytes always match too, so this can't miss one, it

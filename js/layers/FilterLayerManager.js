@@ -66,11 +66,6 @@ class FilterLayerManager {
 		};
 	}
 
-	getActiveLayer() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		return layer?.type === LayerType.FILTER ? layer : null;
-	}
-
 	update(key, value, commit = false) {
 		if (this.loadingSettings) return;
 		const layer = this.getActiveLayer();
@@ -612,7 +607,7 @@ class FilterLayerManager {
 		this.animatedPreviews.delete(layerId);
 		this.snapshotInputs.delete(layerId);
 		this.snapshotOutputs.delete(layerId);
-		removeManagedLayerElement(this.layerElements, layerId);
+		LAYER_ELEMENT_METHODS.removeLayerElement.call(this, layerId);
 	}
 
 	releaseLayerResources(layer) {
@@ -620,8 +615,7 @@ class FilterLayerManager {
 	}
 
 	clearElements() {
-		this.layerElements.forEach((element) => element.remove());
-		this.layerElements.clear();
+		LAYER_ELEMENT_METHODS.clearElements.call(this);
 		this.grainTileCache.clear();
 		this.snapshotInputs.clear();
 		this.snapshotOutputs.clear();
@@ -639,3 +633,6 @@ class FilterLayerManager {
 		return context.compositor._buildFilterExportPlan(layer);
 	}
 }
+
+FilterLayerManager.LAYER_TYPE = LayerType.FILTER;
+Object.assign(FilterLayerManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer });

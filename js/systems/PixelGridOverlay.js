@@ -11,7 +11,7 @@ class PixelGridOverlay {
 	constructor(previewContainer, previewWrapper) {
 		this.container = previewContainer;
 		this.artwork = previewWrapper.querySelector('.preview-canvas');
-		this.canvas = document.createElement('canvas');
+		this.canvas = createAppCanvas(0, 0, 'systems/PixelGridOverlay');
 		this.canvas.className = 'pixel-grid-overlay';
 		this.canvas.setAttribute('aria-hidden', 'true');
 		this.canvas.hidden = true;

@@ -126,6 +126,7 @@ class GlitterEditor {
 			this.glitterManager,
 			this.baseBackgroundManager,
 			this.brushTipManager,
+			this.autoGlitterManager,
 			this.frameLayerManager.slotPicker,
 			this.sparkleLayerManager.slotPicker,
 			this.pathLayerManager.slotPicker
@@ -144,7 +145,7 @@ class GlitterEditor {
 		// INITIALIZATION
 		// ============================================================================
 		this.initializeProjectNameInput();
-		const storedTool = sessionStorage.getItem('glitter:lastTool');
+		const storedTool = readStored(STORAGE_KEYS.lastTool.key, null);
 		const rememberedTool = storedTool === 'colorPicker' ? ToolType.GLITTER_FILL : storedTool;
 		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
 		this.setTool(this.mobileManager.isMobile && initialTool === ToolType.HAND ? ToolType.SELECT : initialTool, { announce: false });
@@ -168,86 +169,11 @@ class GlitterEditor {
 			(this.originalImageData?.data?.byteLength || 0) + (this.originalAlphaChannel?.byteLength || 0) });
 	}
 
-	initializeAltDuplicateFeedback() {
-		const sync = (armed) => this.previewContainer?.classList.toggle(
-			'alt-duplicate-armed', Boolean(armed) && this.currentTool === ToolType.SELECT
-		);
-		document.addEventListener('keydown', (event) => {
-			if (event.key === 'Alt' && !event.repeat) sync(true);
-		});
-		document.addEventListener('keyup', (event) => {
-			if (event.key === 'Alt') sync(false);
-		});
-		window.addEventListener('blur', () => {
-			sync(false);
-			this.endTemporaryHandTool();
-		});
-		document.getElementById('statusZoom')?.addEventListener('dblclick', () => {
-			if (this.originalImage) this.viewport.resetZoom({ animate: true });
-		});
-		document.getElementById('handTool')?.addEventListener('dblclick', () => {
-			if (this.originalImage) this.viewport.zoomToFit({ animate: true });
-		});
-		document.getElementById('zoomTool')?.addEventListener('dblclick', () => {
-			if (this.originalImage) this.viewport.resetZoom({ animate: true });
-		});
-
-	}
-
-	setDuplicateDragFeedback(active, count = 1) {
-		this.previewContainer?.classList.toggle('duplicate-drag-active', Boolean(active));
-		this.duplicateDragStatus = active ? (count > 1 ? `Duplicating ${count} layers` : 'Duplicating layer') : '';
-		const status = document.getElementById('statusText');
-		if (status) status.textContent = this.duplicateDragStatus;
-	}
-
-	addDuplicateGhost(sourceTransform, targetTransform) {
-		if (!sourceTransform?.element || !targetTransform || targetTransform.refreshElementReference?.()) return null;
-		const ghost = sourceTransform.element.cloneNode(true);
-		ghost.removeAttribute('id');
-		ghost.removeAttribute('data-layer-id');
-		ghost.querySelectorAll?.('[id], [data-layer-id]').forEach((node) => {
-			node.removeAttribute('id');
-			node.removeAttribute('data-layer-id');
-		});
-		ghost.dataset.duplicateGhost = '';
-		ghost.style.pointerEvents = 'none';
-		sourceTransform.element.parentElement?.appendChild(ghost);
-		this._duplicateGhosts ||= new Map();
-		this._duplicateGhosts.set(targetTransform, ghost);
-		this.syncDuplicateGhost(targetTransform);
-
-		let frames = 0;
-		const retireWhenReady = () => {
-			if (!ghost.isConnected) return;
-			if (targetTransform.refreshElementReference?.() || frames++ > 300) {
-				ghost.remove();
-				this._duplicateGhosts?.delete(targetTransform);
-				return;
-			}
-			requestAnimationFrame(retireWhenReady);
-		};
-		requestAnimationFrame(retireWhenReady);
-		return ghost;
-	}
-
-	syncDuplicateGhost(targetTransform) {
-		const ghost = this._duplicateGhosts?.get(targetTransform);
-		if (!ghost?.isConnected) return;
-		targetTransform.applyTransform(ghost, targetTransform.getDimensions());
-		ghost.style.pointerEvents = 'none';
-	}
-
-	syncDuplicateGhosts() {
-		this._duplicateGhosts?.forEach((_ghost, transform) => this.syncDuplicateGhost(transform));
-	}
-
 	// ===== DEBUG CONFIGURATION LOADER =====
 	async loadDebugConfig() {
 		if (!DEBUG_CONFIG.enabled) return;
 
-
-		// 1. Load blank canvas
+		// Load blank canvas
 		await this.loadBlankImage(
 			DEBUG_CONFIG.canvas.width,
 			DEBUG_CONFIG.canvas.height,
@@ -264,7 +190,7 @@ class GlitterEditor {
 			}, 50);
 		});
 
-		// 2. Load each sticker preset
+		// Load each sticker preset
 		for (const stickerPreset of DEBUG_CONFIG.stickers) {
 			const stickerId = stickerPreset.id;
 			const stickerInfo = this.stickerManager.getItemById(stickerId);
@@ -290,7 +216,7 @@ class GlitterEditor {
 			dbg(`[DEBUG] Loaded sticker: ${stickerInfo.name} at (${stickerPreset.x}, ${stickerPreset.y})`);
 		}
 
-		// 3. Update UI
+		// Update UI
 		this.layerManager.renderLayersList();
 		this.requestPreviewUpdate();
 		this.updateActionButtons();
@@ -440,8 +366,6 @@ class GlitterEditor {
 		});
 	}
 
-
-
 	// ===== TOOLBAR LISTENERS =====
 	setupToolbarListeners() {
 		// One button per registered tool. The Mask Brush's Paint vs Erase lives in
@@ -489,7 +413,6 @@ class GlitterEditor {
 		}
 		update();
 	}
-
 
 	getSelectedActionableLayers() {
 		return this.layerManager.getSelectedLayers().filter((layer) => layer.type !== LayerType.BASE_IMAGE);
@@ -540,25 +463,8 @@ class GlitterEditor {
 		return this.layerManager.deleteLayer(selectedLayers[0].id);
 	}
 
-
-
-
-
-
-
-
-
-
 	// Mirrors a canonical slider's value onto a compact duplicate (the floating
 	// quick-access brush size, mirroring the sidebar's canonical Size slider).
-
-
-
-
-
-
-
-
 
 	async loadBlankImage(width, height, color = CONFIG.canvas.defaults.blankDocument.color, options = {}) {
 		const canvas = createAppCanvas(0, 0, 'app');
@@ -587,7 +493,7 @@ class GlitterEditor {
 				preset: { width, height, color }
 			}
 		});
-		const baseLayer = this.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.layerManager.getBaseLayer();
 		if (baseLayer) {
 			baseLayer.background.mode = color === 'transparent' ? 'none' : 'solid';
 			if (color !== 'transparent') baseLayer.background.color = color;
@@ -602,8 +508,7 @@ class GlitterEditor {
 	}
 
 	setTool(tool, options = {}) {
-		if (tool !== this.currentTool) this.textGlitterManager?.endTextEdit();
-		if (tool === ToolType.BRUSH && !this.maskEditor?.canActivate()) return;
+		if (!TOOLS[tool]) return;
 
 		if (this.currentTool === tool) {
 			// Clicking the active tool is still a meaningful exit from a gallery
@@ -636,11 +541,13 @@ class GlitterEditor {
 
 		// The temporary Hand (Space) is a detour, not a tool change: the tool
 		// it interrupts keeps its session.
-		if (!this.temporaryHandToolActive) TOOLS[this.currentTool]?.onDeactivate?.(this, tool);
+		if (!this.temporaryHandToolActive && !options.resumeTemporary) {
+			getSessionDefinition(this)?.end?.(this);
+			TOOLS[this.currentTool]?.onDeactivate?.(this, tool, options);
+		}
 		this.currentTool = tool;
-		if (!this.temporaryHandToolActive && options.persist !== false) sessionStorage.setItem('glitter:lastTool', tool);
+		if (!this.temporaryHandToolActive && options.persist !== false) writeStored(STORAGE_KEYS.lastTool.key, tool);
 		this.currentHintDismissed = false; // Reset dismissed flag when tool changes
-
 
 		// Remove all tool classes from body
 		document.body.classList.remove(...TOOL_ORDER.map((name) => `tool-${name}`));
@@ -648,14 +555,14 @@ class GlitterEditor {
 		// Add current tool class
 		document.body.classList.add(`tool-${tool}`);
 
-		// 1. Update Toolbar Buttons
+		// Update Toolbar Buttons
 		document.querySelectorAll('.toolbar-group button').forEach(btn => {
 			btn.classList.remove('active');
 		});
 
 		document.getElementById(getToolButtonId(tool))?.classList.add('active');
 
-		// 2. Update Cursors (each tool declares its canvas cursor classes)
+		// Update Cursors (each tool declares its canvas cursor classes)
 		const definition = TOOLS[tool];
 		if (this.previewContainer) {
 			this.previewContainer.classList.remove('zoom-out-mode', ...TOOL_ORDER.map((name) => TOOLS[name].containerClass).filter(Boolean));
@@ -667,15 +574,12 @@ class GlitterEditor {
 			if (definition?.wrapperClass) this.previewWrapper.classList.add(definition.wrapperClass);
 		}
 
-		// NEW: Handle transform handles visibility
+		// Transform handles follow the active tool.
 		this.syncTransformHandlesForActiveLayer();
 
-		// Sync mask editing with the active tool (enter/exit brush painting)
-		this.maskEditor?.onToolChanged(tool);
+		if (!this.temporaryHandToolActive && !options.resumeTemporary) definition?.onActivate?.(this);
 
-		if (!this.temporaryHandToolActive) definition?.onActivate?.(this);
-
-		// 3. Update Context Toolbars
+		// Update Context Toolbars
 		this.updateContextToolbars();
 
 		// Reconcile the sidebar accordion with the new tool: entering Brush/Eraser
@@ -692,12 +596,11 @@ class GlitterEditor {
 
 	}
 
-
 	updateContextToolbars() {
 		const removeBackgroundButton = document.getElementById('contextRemoveBackground');
 		if (removeBackgroundButton) removeBackgroundButton.hidden = !this.stickerManager.canRemoveBackground();
 		const brushSettingsSection = document.getElementById('brushSettingsSection');
-		const toolbarConfigs = CONFIG.ui.contextToolbars || [];
+		const toolbarConfigs = CONFIG.ui.contextToolbars;
 		const toolbars = toolbarConfigs.map((config) => ({
 			config,
 			element: document.getElementById(config.id)
@@ -711,40 +614,13 @@ class GlitterEditor {
 
 		const layer = this.layerManager.getActiveLayer();
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
-		const activeToolbar = [...toolbars.filter(({ config }) => config.session), ...toolbars.filter(({ config }) => !config.session)].find(({ config, element }) => {
-			if (!element) return false;
-			if (config.session ? config.session !== this.getActiveSession() : config.tool !== this.currentTool) return false;
-			if (hasMultiSelection && config.allowMultiSelection) return true;
-			if (config.layerTypes && (!layer || !config.layerTypes.includes(layer.type))) return false;
-			if (config.requiresStickerSource && layer?.type === LayerType.STICKER && !layer.stickerSourceId) return false;
-			if (config.requiresSelections && !layer?.selections?.length) return false;
-			return true;
-		});
-
-		activeToolbar?.element.classList.add('visible');
-		if (activeToolbar?.element) this.contextToolbarRenderer?.applyPlacement(activeToolbar.element);
-		if (activeToolbar?.config.id === 'layerCenterControls') {
-			const canTransformSelection = (hasMultiSelection && this.layerManager.canTransformMultiSelection()) || Boolean(
-				layer
-				&& isLayerTransformable(layer)
-				&& !layer.locked
-				&& (layer.type !== LayerType.STICKER || layer.stickerSourceId)
-			);
-			['centerLayerHorizontal', 'centerLayerVertical', 'duplicateLayerSelection'].forEach((id) => {
-				const button = document.getElementById(id);
-				if (button) button.hidden = !canTransformSelection;
-			});
+		const context = { layer, tool: this.currentTool, multi: hasMultiSelection };
+		const activeToolbar = toolbars.find(({ config, element }) => element && config.when(this, context));
+		if (activeToolbar) {
+			activeToolbar.element.classList.add('visible');
+			this.contextToolbarRenderer.applyPlacement(activeToolbar.element);
+			activeToolbar.config.sync?.(this, context);
 		}
-
-		if (this.currentTool === ToolType.SELECT && layer?.type === LayerType.STICKER && !hasMultiSelection) {
-			if (layer.stickerSourceId) {
-				this.setSettingsEmptyState('stickerSettings', false);
-				this.stickerManager.loadLayerSettings(layer);
-			} else {
-				this.setSettingsEmptyState('stickerSettings', true);
-			}
-		}
-		if (activeToolbar?.config.id === 'colorPickerControls') this.updateColorPickerControls();
 
 		if (this.currentTool === ToolType.BRUSH) {
 			if (brushSettingsSection) {
@@ -767,7 +643,6 @@ class GlitterEditor {
 	updateHelpfulMessage() {
 		updateHelpfulMessageFromRules(this);
 	}
-
 
 	setupHelpfulMessageListeners() {
 		const helpfulMessage = document.getElementById('helpfulMessage');
@@ -820,125 +695,10 @@ class GlitterEditor {
 				// Disable hints
 				PREFERENCES.set('showHints', false);
 
-				// Update checkbox in settings
-				const showHintsInput = document.getElementById('showHelpfulHints');
-				if (showHintsInput) {
-					showHintsInput.checked = false;
-				}
-
-				// Save to storage
-				this.saveSettingsToStorage();
-
 				// Hide message
 				helpfulMessage.classList.remove('visible');
 			});
 		}
-	}
-
-
-
-	handleKeyUp(e) {
-		this.shiftHeld = e.shiftKey;
-		if (e.code === 'Space' && this.temporaryHandToolActive) {
-			this.endTemporaryHandTool();
-		}
-		if (e.key === 'Alt') {
-			if (this.currentTool === ToolType.ZOOM) {
-				this.previewContainer.classList.remove('zoom-out-mode');
-			}
-		}
-	}
-
-	endTemporaryHandTool() {
-		if (!this.temporaryHandToolActive) return;
-		this.temporaryHandToolActive = false;
-		if (this.currentTool === ToolType.HAND) {
-			this.setTool(this.toolBeforeTemporaryHand || ToolType.SELECT);
-		}
-		this.toolBeforeTemporaryHand = null;
-	}
-
-	handleKeyboard(e) {
-		// Track Shift so slider drags (which fire modifier-less 'input' events) can
-		// snap — mirrors the rotation handle's Shift-to-snap.
-		this.shiftHeld = e.shiftKey;
-
-		// Don't trigger shortcuts when typing in input fields
-		const isTyping = focusKeyClaim().typing;
-
-		if (e.code === 'Space' && !isTyping && !e.repeat && this.originalImage && !this.temporaryHandToolActive) {
-			e.preventDefault();
-			this.toolBeforeTemporaryHand = this.currentTool;
-			this.temporaryHandToolActive = true;
-			this.setTool(ToolType.HAND);
-			return;
-		}
-
-		// Arrow keys nudge the selected movable layer (sticker/text/shape) before
-		// the typing guard runs: a selected layer treats arrows as "move me", the
-		// sticker behavior. If focus is parked in the text layer's own content field
-		// (post-create / post-edit), blur it so moving takes over — the same as
-		// clicking off the field. A focused control that uses the arrows itself
-		// keeps them.
-		if (!this.autoGlitterManager?.isSessionActive() && /^Arrow/.test(e.key) && dispatchKeyboardCommand(this, e, { isTyping: false })) return;
-
-		// Typing shortcuts follow the command registry's policy.
-		if (isTyping && e.key !== 'Escape' && !matchShortcut(e)?.allowWhileTyping) return;
-
-		if (e.key === 'Alt' && this.currentTool === ToolType.ZOOM) {
-			this.previewContainer.classList.add('zoom-out-mode');
-		}
-
-		if (e.key === 'Escape') {
-			if (this.autoGlitterManager?.isSessionActive()) {
-				this.autoGlitterManager.requestDiscardSession();
-				e.preventDefault();
-				return;
-			}
-			const activeGradientEditor = document.activeElement?.closest?.('.effect-gradient-editor');
-			if (activeGradientEditor) {
-				document.activeElement.blur();
-				e.preventDefault();
-				return;
-			}
-			if (this.pickers.closeActive()) {
-				e.preventDefault();
-				return;
-			}
-			// Let ModalManager handle modal closing
-			if (this.modalManager.closeTopModal()) {
-				return; // A modal was closed, we're done
-			}
-
-			// An edit session with its own Escape command takes it first.
-			if (dispatchKeyboardCommand(this, e, { isTyping })) return;
-
-			const activeLayer = this.layerManager.getActiveLayer();
-			const activeTransform = this.getMovableLayerContext(activeLayer)?.manager?.layerTransforms?.get(activeLayer?.id);
-			if (this.groupTransformManager?.cancelActiveDrag?.() || activeTransform?.cancelActiveDrag?.()) {
-				e.preventDefault();
-				return;
-			}
-
-			// No modal was open, switch to select tool
-			if (this.layerManager.hasMultiSelection()) this.layerManager.clearSelection();
-			this.setTool(ToolType.SELECT);
-		}
-
-		if (this.autoGlitterManager?.isSessionActive()) {
-			let handled = true;
-			if (e.key === 'h' || e.key === 'H') this.setTool(ToolType.HAND);
-			else if (!e.ctrlKey && !e.metaKey && (e.key === 'z' || e.key === 'Z')) this.setTool(ToolType.ZOOM);
-			else if ((e.ctrlKey || e.metaKey) && e.key === '0') this.viewport.zoomToFit({ animate: true });
-			else if ((e.ctrlKey || e.metaKey) && e.key === '1') this.viewport.resetZoom({ animate: true });
-			else if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) this.viewport.zoomIn(null, null, { animate: true });
-			else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) this.viewport.zoomOut(null, null, { animate: true });
-			else handled = false;
-			if (handled || ((e.ctrlKey || e.metaKey) && /[aszy]/i.test(e.key))) e.preventDefault();
-			return;
-		}
-
-		dispatchKeyboardCommand(this, e, { isTyping });
 	}
 
 	// Arrow-key nudge for the selected movable layer (1px, 10px with Shift).
@@ -947,59 +707,9 @@ class GlitterEditor {
 	// blurred on the first nudge so continued typing needs a deliberate refocus.
 	// Arrows belong to the focused control when it uses them (a field, select,
 	// slider, list or grid: focusKeyClaim) and to the layer otherwise.
-	tryArrowNudge(e) {
-		if (this.currentTool !== ToolType.SELECT) return false;
-		if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' &&
-			e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return false;
-		const active = document.activeElement;
-		const focusOwnsKey = focusClaimsArrowKey(e.key, active);
-		if (focusOwnsKey && active !== this.textGlitterManager?.ui?.textInput) return false;
-
-		const hasMultiSelection = this.layerManager.hasMultiSelection();
-		if (hasMultiSelection && !this.layerManager.canTransformMultiSelection()) {
-			e.preventDefault();
-			this.showError('This selection cannot move because it includes a locked, pinned, empty, or Base Image layer');
-			return true;
-		}
-		const layer = this.layerManager.getActiveLayer();
-		const ctx = this.getMovableLayerContext(layer);
-		const transform = this.getLayerTransformData(layer);
-		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform || !this.canTransformLayer(layer))) return false;
-
-		// The text layer's own content field gives up focus so moving takes over.
-		if (focusOwnsKey) active.blur();
-
-		e.preventDefault();
-		const step = e.shiftKey ? CONFIG.ui.nudge.fastStep : CONFIG.ui.nudge.step;
-		const deltaX = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
-		const deltaY = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
-
-		if (hasMultiSelection) {
-			this.groupTransformManager?.nudge(deltaX, deltaY);
-		} else {
-			ctx.manager.updateTransform(layer.id, {
-				position: {
-					x: transform.position.x + deltaX,
-					y: transform.position.y + deltaY
-				}
-			});
-
-			this.loadTransformSettings(layer, ctx.prefix);
-		}
-		this.scheduleNudgeSave();
-		return true;
-	}
 
 	// Collapses a burst of arrow-key nudges (held key / rapid presses) into a
 	// single history entry, the same debounce pattern sliders use.
-	scheduleNudgeSave() {
-		clearTimeout(this._nudgeSaveTimer);
-		const layerIds = this.layerManager.getSelectedLayers().map((layer) => layer.id).join(',');
-		this._nudgeSaveTimer = setTimeout(
-			() => this.saveState('Move layer', { coalesceKey: `nudge:${layerIds}` }),
-			CONFIG.ui.history.coalesceMs
-		);
-	}
 
 	// ===== HISTORY =====
 
@@ -1249,297 +959,7 @@ class GlitterEditor {
 		window.dispatchEvent(new Event('imageRemoved'));
 	}
 
-
 	// ===== IMAGE LOADING =====
-	getConstrainedCanvasSize(width, height) {
-		const scale = Math.min(
-			1,
-			CONFIG.canvas.limits.maxWidth / width,
-			CONFIG.canvas.limits.maxHeight / height
-		);
-		return {
-			width: Math.max(1, Math.floor(width * scale)),
-			height: Math.max(1, Math.floor(height * scale)),
-			resized: !validateCanvasSize(width, height).ok
-		};
-	}
-
-	confirmOversizedImageResize({ fileName, width, height, targetWidth, targetHeight, action = 'Open' }) {
-		return this.confirmAction({
-			title: 'Resize this image?',
-			message: `This image is larger than the ${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight}px canvas limit.`,
-			subject: {
-				label: 'File',
-				value: fileName || 'Untitled image'
-			},
-			facts: [
-				{ label: 'Original', value: `${width} × ${height}px` },
-				{ label: 'After resize', value: `${targetWidth} × ${targetHeight}px` }
-			],
-			outro: 'The original file on your device will not be changed.',
-			confirmLabel: `Resize & ${action}`,
-			cancelLabel: 'Cancel'
-		});
-	}
-
-	async replaceBaseImageFile(file) {
-		if (!file || !this.originalImageData) return false;
-		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
-			this.showError(`Image too large. Maximum size is ${CONFIG.canvas.limits.maxFileSizeMB}MB`);
-			return false;
-		}
-		const objectUrl = URL.createObjectURL(file);
-		const image = await new Promise((resolve) => {
-			const next = new Image();
-			next.onload = () => resolve(next);
-			next.onerror = () => resolve(null);
-			next.src = objectUrl;
-		});
-		if (!image) {
-			URL.revokeObjectURL(objectUrl);
-			this.showError('Could not load that image. The file may be corrupt or unsupported.');
-			return false;
-		}
-		const fittedSize = this.getConstrainedCanvasSize(image.width, image.height);
-		if (fittedSize.resized) {
-			const confirmed = await this.confirmOversizedImageResize({
-				fileName: file.name,
-				width: image.width,
-				height: image.height,
-				targetWidth: fittedSize.width,
-				targetHeight: fittedSize.height,
-				action: 'Replace'
-			});
-			if (!confirmed) {
-				URL.revokeObjectURL(objectUrl);
-				return false;
-			}
-		}
-		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
-		const { width, height } = fittedSize;
-		const offsetX = Math.round((width - this.originalCanvas.width) / 2);
-		const offsetY = Math.round((height - this.originalCanvas.height) / 2);
-		const previousImageUrl = this.originalImage?.src?.startsWith('blob:') ? this.originalImage.src : null;
-		this.resizeCanvas(width, height, offsetX, offsetY, { saveHistory: false, updateStatus: false });
-		this.originalCtx.clearRect(0, 0, width, height);
-		this.originalCtx.drawImage(image, 0, 0, width, height);
-		this.originalImage = image;
-		this.originalImageData = this.originalCtx.getImageData(0, 0, width, height);
-		this.originalAlphaChannel = new Uint8Array(width * height);
-		for (let i = 0; i < this.originalAlphaChannel.length; i++) this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
-		this.baseImageSource = { kind: 'file', file, renderedWidth: width, renderedHeight: height, hasBaseImage: true };
-		if (previousImageUrl && previousImageUrl !== objectUrl) URL.revokeObjectURL(previousImageUrl);
-		this.layerManager.updateBaseImageSwatchCache();
-		const layer = this.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
-		if (layer) layer.background.mode = 'image';
-		this.requestPreviewUpdate();
-		this.layerManager.renderLayersList();
-		if (layer) this.baseBackgroundManager?.loadLayerSettings(layer);
-		this.saveState('Edit document');
-		this.updateStatus('Base image replaced');
-		return true;
-	}
-
-	async loadImage(event) {
-		const file = event.target.files[0];
-		if (!file) return;
-		try {
-			// Once a project exists, every image-upload surface means “replace the
-			// protected background image”; it must never clear the layer stack.
-			if (this.originalImage && this.layers?.some((layer) => layer.type === LayerType.BASE_IMAGE)) {
-				return await this.replaceBaseImageFile(file);
-			}
-			return await this.loadImageFile(file);
-		} finally {
-			if (event.target && 'value' in event.target) event.target.value = '';
-		}
-	}
-
-	async loadImageFile(file, options = {}) {
-		if (!file) return false;
-
-		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
-			this.showError(`Image too large. Maximum size is ${CONFIG.canvas.limits.maxFileSizeMB}MB`);
-			return false;
-		}
-
-		return this.loadImageFromBlob(file, {
-			...options,
-			fileName: options.fileName || file.name,
-			source: options.source || {
-				kind: 'file',
-				file
-			}
-		});
-	}
-
-	async loadImageFromBlob(blob, options = {}) {
-		if (!blob) return false;
-
-		const {
-			fileName = 'image.png',
-			source = null,
-			preserveProjectName = false
-		} = options;
-
-		const objectUrl = URL.createObjectURL(blob);
-		const decoded = this.beginActivity('open-image', 'Opening image');
-		const img = await new Promise((resolve, reject) => {
-			const image = new Image();
-			image.onerror = () => {
-				URL.revokeObjectURL(objectUrl);
-				reject(new Error('Could not load that image. The file may be corrupt or unsupported.'));
-			};
-			image.onload = () => resolve(image);
-			image.src = objectUrl;
-		}).catch((error) => {
-			this.showError(error.message);
-			return null;
-		}).finally(decoded);
-
-		if (!img) {
-			return false;
-		}
-		const fittedSize = this.getConstrainedCanvasSize(img.width, img.height);
-		if (fittedSize.resized && source?.kind !== 'preset') {
-			const confirmed = await this.confirmOversizedImageResize({
-				fileName,
-				width: img.width,
-				height: img.height,
-				targetWidth: fittedSize.width,
-				targetHeight: fittedSize.height
-			});
-			if (!confirmed) {
-				URL.revokeObjectURL(objectUrl);
-				return false;
-			}
-		}
-
-		this.exportResultPresenter?.clear();
-		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
-			URL.revokeObjectURL(this.originalImage.src);
-		}
-		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
-
-		const { width, height } = fittedSize;
-
-		this.originalImage = img;
-		this.originalCanvas.width = width;
-		this.originalCanvas.height = height;
-		this.previewCanvas.width = width;
-		this.previewCanvas.height = height;
-		this._basePreviewCache = null;
-
-		this.previewWrapper.style.width = width + 'px';
-		this.previewWrapper.style.height = height + 'px';
-		this.previewWrapper.classList.add('hasImage');
-
-		this.originalCtx.drawImage(img, 0, 0, width, height);
-		this.originalImageData = this.originalCtx.getImageData(0, 0, width, height);
-		this.baseImageSource = source?.kind === 'preset'
-			? {
-				kind: 'preset',
-				preset: { ...source.preset },
-				hasBaseImage: false,
-				renderedWidth: width,
-				renderedHeight: height
-			}
-			: {
-				kind: source?.kind || 'file',
-				hasBaseImage: source?.hasBaseImage !== false,
-				file: blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' }),
-				renderedWidth: width,
-				renderedHeight: height
-			};
-
-		this.originalAlphaChannel = new Uint8Array(width * height);
-		for (let i = 0; i < width * height; i++) {
-			this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
-		}
-
-		this.layerManager.updateBaseImageSwatchCache();
-		this.viewport.setCanvasDimensions(this.previewCanvas.width, this.previewCanvas.height);
-		this.viewport.resetZoomSmart();
-		this.updateZoomUI();
-
-		this.originalCanvas.classList.add('visible');
-
-		if (this.glitterManager) {
-			this.layerManager.layers.forEach((layer) => {
-				this.glitterManager.releaseLayerResources(layer);
-			});
-			this.paintMaskStore.clearAllPaintData();
-		}
-		this.layers = [];
-		this.canvasElementsContainer.innerHTML = '';
-		this.viewport.selectionOverlay.clear();
-
-			if (CONFIG.app.startup.layers.createBaseImage) {
-			const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
-			this.layers.push(layer);
-		}
-
-		if (CONFIG.app.startup.layers.createDefaultGlitterFill) {
-			const layer = this.createLayer();
-			this.layers.push(layer);
-			this.layerManager.setActiveLayer(layer.id);
-		} else if (this.layers.length === 0) {
-			this.activeLayerId = null;
-			this.updateSidePanelUI(null);
-		}
-
-		this.historyManager.reset(this.historyManager.createStateSnapshot());
-		this.isSaved = false;
-		if (!preserveProjectName) {
-			this.setProjectName('', { markDirty: false });
-		}
-
-		this.updateSidePanelUI();
-		this.layerManager.renderLayersList();
-		this.updateHistoryButtons();
-		this.updateActionButtons();
-		this.updateStatusBar();
-		this.updateHelpfulMessage();
-
-		this.previewCtx.putImageData(this.originalImageData, 0, 0);
-		FontLibrary.ensureLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});
-		window.dispatchEvent(new Event('imageLoaded'));
-		return true;
-	}
-
-	async saveProjectFile() {
-		if (!this.originalImage) {
-			this.showError('Load an image before saving a project.');
-			return;
-		}
-
-		const done = this.beginActivity('save-project', 'Saving project');
-		try {
-			const blob = await this.projectSerializer.serializeToBlob();
-			downloadBlob(blob, this.getProjectDownloadName());
-			this.isSaved = true;
-			this.updateStatus('Project saved');
-		} catch (error) {
-			console.error('Project save failed:', error);
-			this.showError(error.message || 'Failed to save project.');
-		} finally {
-			done();
-		}
-	}
-
-	async openProjectFile(file) {
-		if (!file) return false;
-		const done = this.beginActivity('open-project', 'Opening project');
-		try {
-			return await this.projectSerializer.loadFile(file);
-		} catch (error) {
-			console.error('Project load failed:', error);
-			this.showError(error.message || 'Failed to open project.');
-			return false;
-		} finally {
-			done();
-		}
-	}
 
 	// ===== CANVAS SIZE (Photoshop-style) =====
 
@@ -1579,7 +999,6 @@ class GlitterEditor {
 		TOOLS[tool]?.onCanvasAction?.(this, { x, y, clientX, clientY, hitCanvas, event, options });
 	}
 
-
 	handlePreviewContainerClick(e) {
 		dbg('📍 Click handler fired', e.type);
 
@@ -1589,17 +1008,17 @@ class GlitterEditor {
 			return;
 		}
 
-		// 1. IGNORE TRANSFORM HANDLES
+		// IGNORE TRANSFORM HANDLES
 		const clickedGroupBoundingBox = e.target.closest('.group-transform-handles .transform-bounding-box');
 		if ((e.target.closest('.transform-handles') ||
 			e.target.classList.contains('transform-bounding-box')) && !clickedGroupBoundingBox) return;
 
-		// 2. IGNORE UI ELEMENTS
+		// IGNORE UI ELEMENTS
 		if (e.target.closest('.ui-ignore-gestures')) {
 			return;
 		}
 
-		// 3. MOUSE BUTTON CHECKS
+		// MOUSE BUTTON CHECKS
 		if (e.button === 1) return; // Ignore middle mouse button
 		// Ignore right-click for all tools EXCEPT zoom tool
 		if (e.button === 2 && this.currentTool !== ToolType.ZOOM) {
@@ -1668,7 +1087,6 @@ class GlitterEditor {
 		});
 	}
 
-
 	handleLayerSelectAction(x, y, options = {}) {
 		if (this.currentTool !== ToolType.SELECT) return;
 		if (this.autoGlitterManager?.isSessionActive()) {
@@ -1691,10 +1109,6 @@ class GlitterEditor {
 
 		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
 	}
-
-
-
-
 
 	// G-1b: fires whenever a mask encode starts/settles for any glitter layer.
 	// Recomputed from ground truth (isMaskPending for the CURRENTLY active layer)
@@ -1720,10 +1134,6 @@ class GlitterEditor {
 			this.updateStatus('Glitter applied');
 		}
 	}
-
-
-
-
 
 	clearPreview() {
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
@@ -1772,7 +1182,7 @@ class GlitterEditor {
 		// ============================================================
 
 		// Find the Base Image layer in the stack
-		const baseLayer = this.layers.find(l => l.type === LayerType.BASE_IMAGE);
+		const baseLayer = this.layerManager.getBaseLayer();
 
 		// If the base layer exists and is set to hidden, stop here (leave canvas transparent)
 		if (baseLayer && !baseLayer.visible) {
@@ -1823,133 +1233,6 @@ class GlitterEditor {
 	}
 
 	// ===== EXPORT PROGRESS =====
-	showExportProgress(target) { this.exportProgressPresenter.show(target); }
-	updateExportProgress(...args) { this.exportProgressPresenter.update(...args); }
-	_updateExportProgressTime() { this.exportProgressPresenter.updateTime(); }
-	hideExportProgress() { this.exportProgressPresenter.hide(); }
-
-	validateExportSettings() {
-		this.settingsStore.validate(this.exportSettings);
-	}
-
-	_layerIntersectsExportCanvas(layer) {
-		if (!isTransformableLayerType(layer?.type)) return true;
-		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
-		if (GlitterAnimation.includesOffCanvas(layer.animations)) return true;
-
-		try {
-			const box = getLayerCanvasBox(this, layer, { visual: true });
-			return !box || (box.right > 0 && box.bottom > 0 && box.left < this.originalCanvas.width && box.top < this.originalCanvas.height);
-		} catch (error) {
-			dbg('[Export] Could not measure layer bounds; keeping layer in export.', layer?.id, error);
-			return true;
-		}
-	}
-
-	async exportCurrentTarget() {
-		if (this.exportInProgress) return;
-		// Filter visible layers (ephemeral Auto Glitter previews never export)
-		const candidateLayers = this.layers.filter(l => {
-			if (!l.visible || l.isPreview) return false;
-			return layerHasVisibleContent(l);
-		});
-		const visibleLayers = candidateLayers.filter((layer) => this._layerIntersectsExportCanvas(layer));
-		const offCanvasLayerCount = candidateLayers.length - visibleLayers.length;
-		if (offCanvasLayerCount > 0) dbg(`[Export] Skipping ${offCanvasLayerCount} fully off-canvas layer(s).`);
-
-		if (visibleLayers.length === 0) {
-			this.showError(candidateLayers.length
-				? 'All visible content is outside the canvas.'
-				: 'No visible layers with content to export!');
-			return;
-		}
-
-		// Validate export settings before proceeding
-		this.validateExportSettings();
-		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
-		const exportSettings = structuredClone(this.exportSettings);
-		if (!target.supportsTransparency) exportSettings.transparency = false;
-		const activeExporter = this[target.exporter];
-		activeExporter.setFileName(this.getProjectFileName(target.extension));
-
-		this.exportInProgress = true;
-		const memoryConfirmed = await this.confirmExportMemory(target, visibleLayers);
-		this.exportInProgress = false;
-		if (!memoryConfirmed) return;
-
-		this.exportInProgress = true;
-		this.updateExportActionUI();
-		this.showExportProgress(target);
-
-		// Exporters receive this immutable snapshot; UI changes cannot alter a running job.
-		dbg('Export settings:', exportSettings);
-		let finished = false;
-		const finishExport = () => {
-			if (finished) return;
-			finished = true;
-			this.exportInProgress = false;
-			this.hideExportProgress();
-			this.updateExportActionUI();
-		};
-
-		const exportParams = {
-			visibleLayers: visibleLayers,
-			glitterGifs: this.glitterLibrary.getRenderContent(),
-			canvasData: {
-				width: this.originalCanvas.width,
-				height: this.originalCanvas.height,
-				originalData: new Uint8ClampedArray(this.originalImageData.data),
-				originalAlpha: this.originalAlphaChannel,
-				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
-				hasBaseImage: this.baseBackgroundManager?.hasBaseImage() ?? true
-			},
-			exportSettings,
-			target,
-			timestamp: target.isStill && exportSettings.stillFrame === 'current' ? this.animationTicker.getCurrentTime() : 0,
-			callbacks: {
-				progressFormat: target.isStill ? 'still' : target.format,
-				phaseTimer: createExportPhaseTimer(),
-				onStatus: (msg) => this.updateStatus(msg),
-				onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
-					if (this.exportCancelled) throw new Error('Export cancelled');
-					this.updateExportProgress(percent, text, currentFrame, totalFrames, progressInfo);
-				},
-				onComplete: () => {
-					this.isSaved = true;
-					finishExport();
-				},
-
-				onError: (error) => {
-					// Fired by gif.js encoder events, outside our try/catch below
-					finishExport();
-					if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
-					if (error.message !== 'Export cancelled') {
-						this.showError('Export failed: ' + error.message);
-					}
-				},
-				isCancelled: () => this.exportCancelled,
-				createMask: (layer) => this.maskCompositor.getMaskData(layer),
-				renderSlotMasks: (layer) => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
-				ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
-			}
-		};
-
-		setTimeout(async () => {
-			try {
-				await activeExporter.process(exportParams);
-			} catch (error) {
-				dbg('Export error:', error);
-				finishExport();
-				if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
-				if (error.message !== 'Export cancelled') {
-					this.showError('Export failed: ' + error.message);
-				}
-			} finally {
-				// Decoded animation frames are only needed while composing.
-				this.sceneCompositor.releaseDecodedSources();
-			}
-		}, 50);
-	}
 
 	showError(message) {
 		this.notifications.notify('error', message);
@@ -1977,6 +1260,9 @@ class GlitterEditor {
 Object.assign(
 	GlitterEditor.prototype,
 	EDITOR_SETTINGS_METHODS,
+	EDITOR_DOCUMENT_IO_METHODS,
+	EDITOR_EXPORT_FLOW_METHODS,
+	EDITOR_KEYBOARD_METHODS,
 	EDITOR_PANEL_METHODS,
 	EDITOR_FILL_TOOL_METHODS,
 	EDITOR_DISCLOSURE_METHODS,

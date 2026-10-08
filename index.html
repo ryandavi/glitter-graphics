@@ -6,9 +6,10 @@
 	<meta charset="UTF-8">
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+	<script src="js/core/storage.js?v=e5332f73"></script>
 	<script>
 		try {
-			const savedTheme = localStorage.getItem('glitterEditorTheme');
+			const savedTheme = readStored(STORAGE_KEYS.theme.key, null);
 			const allowedThemes = ['dark', 'light', 'llama', 'cyber-chrome', 'bubblegum', 'bliss', 'dew', 'aqua', 'p2p', 'homepage', 'buddy-list'];
 			if (allowedThemes.includes(savedTheme)) {
 				document.documentElement.dataset.theme = savedTheme;
@@ -45,9 +46,9 @@
 	<!-- Stylesheets -->
 	<link rel="stylesheet" href="css/style.css?v=e2df1c5e">
 	<!-- shell:manifests:start -->
-	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-07b">
-	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-07b">
-	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/fonts.json?v=2026-10-07b">
+	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
+	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
+	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/fonts.json?v=2026-10-08-audit">
 	<!-- shell:manifests:end -->
 
 	<!-- Favicon -->
@@ -1779,33 +1780,36 @@
 	<!-- Shared Config -->
 	<script src="js/core/releases.js?v=4a3f258f"></script>
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
-	<script src="js/core/config.js?v=b639775e"></script>
-	<script src="js/core/tools.js?v=34b94138"></script>
-	<script src="js/core/layer-types.js?v=9f8d10db"></script>
+	<script src="js/core/color.js?v=ebbbb501"></script>
+	<script src="js/core/math.js?v=54cfcc75"></script>
+	<script src="js/core/config.js?v=31f441b9"></script>
+	<script src="js/core/tools.js?v=ec345147"></script>
+	<script src="js/core/sessions.js?v=09f6cc66"></script>
+	<script src="js/core/layer-types.js?v=c09148c0"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
-	<script src="js/editor/canvas-bounds.js?v=b377bf55"></script>
+	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
 	<script src="js/ui/panel-schemas.js?v=bfda1330"></script>
-	<script src="js/paint/paint-slots.js?v=cd52ce6b"></script>
+	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
 	<script src="js/layers/types/filter.js?v=bbe63a02"></script>
-	<script src="js/layers/types/glitter-fill.js?v=ef4a4b07"></script>
-	<script src="js/layers/types/sticker.js?v=1b9ede95"></script>
-	<script src="js/layers/types/text.js?v=9d1d6590"></script>
-	<script src="js/layers/types/frame.js?v=a1968a16"></script>
-	<script src="js/layers/types/sparkles.js?v=980b665e"></script>
-	<script src="js/layers/types/shape.js?v=41c8ca04"></script>
-	<script src="js/layers/types/path.js?v=7f5308c1"></script>
+	<script src="js/layers/types/glitter-fill.js?v=b353c6e9"></script>
+	<script src="js/layers/types/sticker.js?v=31371535"></script>
+	<script src="js/layers/types/text.js?v=77263538"></script>
+	<script src="js/layers/types/frame.js?v=9c0e2cfa"></script>
+	<script src="js/layers/types/sparkles.js?v=7842a64e"></script>
+	<script src="js/layers/types/shape.js?v=62cdfcbb"></script>
+	<script src="js/layers/types/path.js?v=4c55e9b6"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=d276b6ae"></script>
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
 	<script src="js/core/export-target.js?v=368d3fa5"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=e51eb62e"></script>
+	<script src="js/core/preferences.js?v=bc1c5833"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=bda57cf5"></script>
-	<script src="js/core/dom.js?v=b728eda1"></script>
+	<script src="js/core/commands.js?v=30001188"></script>
+	<script src="js/core/dom.js?v=545e364f"></script>
 	<script src="js/core/document-scaler.js?v=6625b551"></script>
 	<script src="js/transforms/transform-math.js?v=00be3fd4"></script>
 	<script src="js/transforms/movable-layer.js?v=98aa9235"></script>
@@ -1813,9 +1817,9 @@
 	<!-- Utils -->
 	<script src="js/core/format.js?v=b94f96b9"></script>
 	<script src="js/core/attribution.js?v=874e3b39"></script>
-	<script src="js/core/sticker-variants.js?v=ec43b61f"></script>
+	<script src="js/core/sticker-variants.js?v=b11a1da3"></script>
 	<script src="js/core/layer-elements.js?v=32584e3b"></script>
-	<script src="js/ui/slider.js?v=e3221e03"></script>
+	<script src="js/ui/slider.js?v=b7de997d"></script>
 	<script src="js/ui/tooltip.js?v=69670448"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=c01b60dc"></script>
@@ -1825,26 +1829,26 @@
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/paint/mask-raster.js?v=b97cd63f"></script>
 	<script src="js/paint/mask-surface.js?v=37e85b70"></script>
-	<script src="js/paint/mask-geometry.js?v=9631d04a"></script>
+	<script src="js/paint/mask-geometry.js?v=97fd1004"></script>
 	<script src="js/paint/bevel.js?v=05766329"></script>
 	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
-	<script src="js/effects/glitter-recolor.js?v=848fc71e"></script>
-	<script src="js/effects/pixel-effects.js?v=dcb26229"></script>
+	<script src="js/effects/glitter-recolor.js?v=94118312"></script>
+	<script src="js/effects/pixel-effects.js?v=fdbb054d"></script>
 	<script src="js/effects/blend-modes.js?v=57e7ac8f"></script>
-	<script src="js/effects/tone-adjust.js?v=9eba2e42"></script>
-	<script src="js/effects/grain.js?v=e7eda617"></script>
+	<script src="js/effects/tone-adjust.js?v=e9fc9d15"></script>
+	<script src="js/effects/grain.js?v=f371508f"></script>
 	<script src="js/effects/blur.js?v=98b130a6"></script>
 	<script src="js/effects/filter-presets.js?v=8554f8b5"></script>
 	<script src="js/effects/filter-ops.js?v=eca8bcea"></script>
-	<script src="js/effects/filters.js?v=cb09be86"></script>
-	<script src="js/effects/filter.js?v=706f97c7"></script>
+	<script src="js/effects/filter-looks.js?v=cb09be86"></script>
+	<script src="js/effects/filter-render.js?v=c339d545"></script>
 	<script src="js/ui/filter-thumbnail.js?v=e5334b55"></script>
 	<script src="js/paint/effect-source.js?v=36d8fe51"></script>
 	<script src="js/paint/gradient-presets.js?v=13f26de6"></script>
-	<script src="js/effects/easing.js?v=7b2c85e4"></script>
+	<script src="js/effects/easing.js?v=dcce1ce7"></script>
 	<script src="js/effects/highlight-detect.js?v=8393431a"></script>
 	<script src="js/paint/slot-effects.js?v=1df8181a"></script>
-	<script src="js/paint/sparkles.js?v=491aab5a"></script>
+	<script src="js/paint/sparkles.js?v=116c8c68"></script>
 	<script src="js/paint/nine-slice.js?v=e6df48e5"></script>
 	<script src="js/paint/frames.js?v=333bc0a2"></script>
 	<script src="js/paint/text-layout.js?v=b43665a6"></script>
@@ -1852,75 +1856,79 @@
 	<script src="js/paint/path-geometry.js?v=343a3836"></script>
 	<script src="js/paint/stroke-mask.js?v=a7652230"></script>
 	<script src="js/paint/style-presets.js?v=655db1fa"></script>
-	<script src="js/ui/paint-slot-controls.js?v=45264a5d"></script>
-	<script src="js/ui/style-preset-thumbnails.js?v=6746ebb5"></script>
+	<script src="js/ui/paint-slot-controls.js?v=0a42c9dc"></script>
+	<script src="js/ui/style-preset-thumbnails.js?v=85cedaf5"></script>
 	<script src="js/ui/gradient-editor.js?v=1f691cff"></script>
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
-	<script src="js/paint/text-background-geometry.js?v=115bc203"></script>
+	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=da569ee3"></script>
 	<script src="js/ui/scroll-regions.js?v=6a69b215"></script>
-	<script src="js/ui/panel-renderer.js?v=f19c28dd"></script>
+	<script src="js/ui/panel-renderer.js?v=048a443a"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
-	<script src="js/ui/settings-store.js?v=77f5f8d5"></script>
+	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
 	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
-	<script src="js/ui/keyboard.js?v=2f09db82"></script>
+	<script src="js/ui/keyboard.js?v=4490df0b"></script>
 	<script src="js/ui/clipboard.js?v=5b94bd2a"></script>
-	<script src="js/editor/settings.js?v=217c18c9"></script>
+	<script src="js/editor/document-io.js?v=f4337b16"></script>
+	<script src="js/editor/export-flow.js?v=139644d1"></script>
+	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
+	<script src="js/editor/settings.js?v=e5b592f4"></script>
 	<script src="js/editor/panels.js?v=ee149c49"></script>
-	<script src="js/editor/fill-tool.js?v=6c2b0197"></script>
+	<script src="js/editor/fill-tool.js?v=462be798"></script>
 	<script src="js/editor/disclosures.js?v=86ab4f66"></script>
-	<script src="js/ui/panel-resize.js?v=df66b6f5"></script>
+	<script src="js/ui/panel-resize.js?v=01a2a1c8"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
-	<script src="js/editor/transform-interaction.js?v=f8a5d289"></script>
+	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
 	<script src="js/editor/document-start.js?v=49d7c529"></script>
-		<script src="js/ui/glitter-recolor.js?v=b04415ed"></script>
-		<script src="js/editor/modals-wiring.js?v=36c09e53"></script>
+		<script src="js/ui/glitter-recolor-tool.js?v=e6664314"></script>
+		<script src="js/editor/modals-wiring.js?v=bea302e1"></script>
 	<script src="js/editor/layer-panel.js?v=79b69f89"></script>
-	<script src="js/editor/canvas-gestures.js?v=abb2b862"></script>
-	<script src="js/editor/canvas-size.js?v=b69d0e2b"></script>
+	<script src="js/editor/canvas-gestures.js?v=1c03aa6a"></script>
+	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/picker-session.js?v=2c686827"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=de67bf0a"></script>
+	<script src="js/ui/picker-session.js?v=376a3eaf"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=ae9fa2cd"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
-	<script src="js/systems/GestureManager.js?v=ea6856b9"></script>
+	<script src="js/systems/GestureManager.js?v=53579816"></script>
 	<script src="js/systems/ModalManager.js?v=70541ac2"></script>
-	<script src="js/export/ExportTimeline.js?v=ca9a59d7"></script>
+	<script src="js/export/ExportTimeline.js?v=2a6fc547"></script>
 	<script src="js/export/GifPalette.js?v=ac210d6f"></script>
 	<script src="js/export/AuthoredFrameResolver.js?v=3139d2c3"></script>
-	<script src="js/export/GifEncodingPipeline.js?v=c2c19474"></script>
+	<script src="js/export/GifEncodingPipeline.js?v=15841da6"></script>
 	<script src="js/systems/AnimationTicker.js?v=082dc529"></script>
-	<script src="js/systems/AnimationPanelController.js?v=b70ba8eb"></script>
+	<script src="js/systems/AnimationPanelController.js?v=071a7412"></script>
 	<script src="js/ui/task-progress-presenter.js?v=c31306fb"></script>
 	<script src="js/export/ExportProgressPresenter.js?v=88bcac01"></script>
 	<script src="js/export/export-report.js?v=3ee6ae81"></script>
 	<script src="js/export/ExportResultPresenter.js?v=cf3b502a"></script>
-	<script src="js/export/SceneCompositor.js?v=f7a3d94c"></script>
-	<script src="js/export/GifExporter.js?v=8b89baa2"></script>
+	<script src="js/export/SceneCompositor.js?v=d99423aa"></script>
+	<script src="js/export/GifExporter.js?v=aca102c5"></script>
 	<script src="js/export/StillImageExporter.js?v=ec58b58a"></script>
 	<script src="js/export/Mp4Exporter.js?v=ca0864d0"></script>
-	<script src="js/systems/PixelGridOverlay.js?v=f8614a9b"></script>
+	<script src="js/systems/PixelGridOverlay.js?v=7e307abe"></script>
 	<script src="js/transforms/selection-overlay.js?v=73c30c00"></script>
 	<script src="js/transforms/transform-gestures.js?v=8e167cf4"></script>
 	<script src="js/transforms/selection-chrome.js?v=bd0113d4"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
-	<script src="js/systems/ViewportManager.js?v=0d72e3f2"></script>
-	<script src="js/systems/HistoryManager.js?v=290ea8db"></script>
-	<script src="js/export/ProjectSerializer.js?v=cf13c26a"></script>
+	<script src="js/systems/ViewportManager.js?v=0541a594"></script>
+	<script src="js/systems/HistoryManager.js?v=22004311"></script>
+	<script src="js/export/ProjectSerializer.js?v=987be688"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
 	<script src="js/assets/ShapeLibrary.js?v=75f07dcd"></script>
-	<script src="js/assets/BrushLibrary.js?v=c610c9a7"></script>
+	<script src="js/assets/BrushLibrary.js?v=dbe8686a"></script>
 	<script src="js/assets/FontLibrary.js?v=0a049983"></script>
-	<script src="js/systems/MaskEditor.js?v=c3c3a5f3"></script>
+	<script src="js/paint/brush-stamp.js?v=a343d53e"></script>
+	<script src="js/systems/MaskEditor.js?v=a9d8289d"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=5ae83ca6"></script>
+	<script src="js/layers/LayerManager.js?v=54f8775d"></script>
 
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
@@ -1928,36 +1936,38 @@
 	<script src="js/assets/AssetBrowserRail.js?v=d77f73d7"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
-	<script src="js/assets/ContentManager.js?v=fd3b2c99"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=3fb1b2f8"></script>
+	<script src="js/assets/ContentManager.js?v=0ebf028c"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=47393fe5"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=c1230583"></script>
-	<script src="js/assets/BrushTipManager.js?v=43771a20"></script>
+	<script src="js/assets/BrushTipManager.js?v=d52c0ad2"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
-	<script src="js/assets/FontBrowserManager.js?v=6002c785"></script>
+	<script src="js/assets/FontBrowserManager.js?v=33436453"></script>
 	<script src="js/transforms/LayerTransform.js?v=7943bd6e"></script>
-	<script src="js/layers/GlitterManager.js?v=a80d8b44"></script>
-	<script src="js/layers/BaseBackgroundManager.js?v=e216f446"></script>
+	<script src="js/layers/movable-layer-methods.js?v=55908f90"></script>
+	<script src="js/layers/layer-element-methods.js?v=32e0fa0a"></script>
+	<script src="js/layers/GlitterManager.js?v=5fb4c0df"></script>
+	<script src="js/layers/BaseBackgroundManager.js?v=dcff544d"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=be4706a5"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=6bacaee8"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
-	<script src="js/ui/text-actions.js?v=b2e02ec7"></script>
+	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=315c75c4"></script>
-	<script src="js/ui/crop-edit.js?v=f54d3e63"></script>
-	<script src="js/ui/path-edit.js?v=3fd4c8de"></script>
-	<script src="js/layers/TextGlitterManager.js?v=5f029365"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=d7f72267"></script>
-	<script src="js/layers/StickerManager.js?v=b5ec705e"></script>
-	<script src="js/layers/FilterLayerManager.js?v=01e1bf03"></script>
-	<script src="js/layers/FrameLayerManager.js?v=e14c3806"></script>
-	<script src="js/layers/SparkleLayerManager.js?v=6e4484f9"></script>
-	<script src="js/layers/PathLayerManager.js?v=d2e9c92f"></script>
+	<script src="js/ui/crop-edit.js?v=4aed6e38"></script>
+	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
+	<script src="js/layers/TextGlitterManager.js?v=8ffc71d7"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=0b39aa5d"></script>
+	<script src="js/layers/StickerManager.js?v=1d7dd114"></script>
+	<script src="js/layers/FilterLayerManager.js?v=3763d4be"></script>
+	<script src="js/layers/FrameLayerManager.js?v=3a8e7cae"></script>
+	<script src="js/layers/SparkleLayerManager.js?v=d5529c7b"></script>
+	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=58e62a80"></script>
+		<script src="js/systems/MobileManager.js?v=f4c2b455"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=2764779c"></script>
+	<script src="js/app.js?v=00744118"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

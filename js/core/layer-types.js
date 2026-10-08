@@ -25,7 +25,7 @@ const LAYER_TYPE_GLITTER_CONTEXT = {
 	[LayerType.BASE_IMAGE]: 'canvasBackground',
 	[LayerType.STICKER]: 'sticker',
 	[LayerType.FRAME]: 'frame',
-	[LayerType.PATH]: 'shape'
+	[LayerType.PATH]: 'path'
 };
 
 function hasMaskContent(layer) {
@@ -297,4 +297,12 @@ function describeLayer(layer, editor) {
 		name: layer?.name || config?.displayName || 'Unknown Layer',
 		detail: config?.displayName || 'Unknown'
 	};
+}
+
+function getLayerAssetRefs(layer) {
+	const declared = LAYER_UI_CONFIG[layer.type]?.assetRefs?.(layer) || [];
+	const images = getLayerPaintSlots(layer, { includeDrafts: true })
+		.filter(entry => entry.data?.imageRef)
+		.map(entry => ({ kind: 'image', id: entry.data.imageRef }));
+	return [...declared, ...images].filter(ref => ref.id);
 }

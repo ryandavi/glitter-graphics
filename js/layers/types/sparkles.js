@@ -6,7 +6,19 @@
 registerLayerType(LayerType.SPARKLES, {
 	displayName: 'Sparkles',
 	paintSlots: [
-		{ key: 'sparkles', role: 'sparkles', path: 'sparkles', glitterDefault: 'sparklesGlitterId', panelPrefix: 'layerSparkles', modes: ['glitter', 'solid'] }
+		{
+			defaults: () => {
+				const data = buildDefaultSparkles();
+				SPARKLE_PRESETS.apply('winter-snow', data);
+				return data;
+			},
+			key: 'sparkles',
+			role: 'sparkles',
+			path: 'sparkles',
+			glitterDefault: 'sparklesGlitterId',
+			panelPrefix: 'layerSparkles',
+			modes: ['glitter', 'solid']
+		}
 	],
 	// The whole canvas, no pixels of its own: Highlights reads the scene
 	// below the layer.

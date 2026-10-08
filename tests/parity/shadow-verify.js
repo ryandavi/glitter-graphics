@@ -72,7 +72,7 @@ const { exportBytes, hashBytes, assertByteIdentity } = require('./export-harness
 			text.textData.fontId = 'impact'; text.textData.fontSize = 54;
 			text.textData.warp = { type: 'rise', bend: 35 };
 			await FontLibrary.ensureLoaded('impact');
-			check(e.textGlitterManager.getDefaultShadow().castAnchor === 'baseline' && e.shapeGlitterManager.getDefaultShadow().castAnchor === 'bottom', 'Text defaults to Baseline; other artwork to Bottom edge');
+			check(getSlotDefaults(LayerType.TEXT_GLITTER, 'shadow').castAnchor === 'baseline' && getSlotDefaults(LayerType.SHAPE, 'shadow').castAnchor === 'bottom', 'Text defaults to Baseline; other artwork to Bottom edge');
 			const originalWarp = text.textData.warp;
 			text.textData.warp = { type: 'none', bend: 0 };
 			text.textData.text = 'H';
@@ -106,7 +106,7 @@ const { exportBytes, hashBytes, assertByteIdentity } = require('./export-harness
 			for (const entry of entries) {
 				const { layer, manager, data, prefix } = entry;
 				if (layer !== glitter) e.layerManager.insertLayer(layer);
-				data.shadow = { ...manager.getDefaultShadow(), mode: 'solid', color: '#663399', offsetX: -17, offsetY: 13 };
+				data.shadow = { ...getSlotDefaults(layer.type, 'shadow'), mode: 'solid', color: '#663399', offsetX: -17, offsetY: 13 };
 				if (data.fill) { data.fill.mode = 'solid'; data.fill.color = '#ffcc00'; }
 				e.layerManager.setActiveLayer(layer.id);
 				for (const kind of ['drop', 'cast', 'extrude']) {
