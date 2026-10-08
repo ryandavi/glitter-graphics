@@ -88,7 +88,7 @@ const CONFIG = deepFreeze({
 	canvas: {
 		limits: {
 			// Smallest side of a new blank canvas.
-			minSize: 100,
+			minSize: 1,
 			maxWidth: 1024,
 			maxHeight: 1024,
 			maxFileSizeMB: 10
@@ -375,12 +375,14 @@ const CONFIG = deepFreeze({
 				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity },
 				zoom: { periodMs: 8000, easing: 'easeOut', amount: 15, direction: 'alternate', iterations: Infinity },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity },
-				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, includeWhenOffCanvas: true },
+				marquee: { periodMs: 4000, easing: 'linear', angle: 180, direction: 'normal', iterations: Infinity },
+				ricochet: { periodMs: 6000, easing: 'linear', turns: 1, maxTrips: 12, angle: 45, iterations: Infinity },
+				wander: { periodMs: 6000, easing: 'linear', amount: 20, iterations: Infinity, harmonics: { x: [{ frequency: 1, weight: 0.6 }, { frequency: 2, weight: 0.4 }], y: [{ frequency: 1, weight: 0.6 }, { frequency: 3, weight: 0.4 }] } },
 				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity },
 				// Particle-only motions (Sparkles): they need the emitter area to
 				// wrap in, so the layer animation picker leaves them out.
-				fall: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity, particleOnly: true },
-				rise: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity, particleOnly: true }
+				fall: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity },
+				rise: { periodMs: 4000, easing: 'linear', direction: 'normal', iterations: Infinity }
 			},
 			jitterQuantMs: 60,
 			maxPeriodMs: 20000,
@@ -478,7 +480,6 @@ const CONFIG = deepFreeze({
 				closeRadiusCoarse: 24,
 				dragThresholdPx: 3
 			},
-			nudge: { step: 1, fastStep: 10 },
 			// What a click places while drawing: 'corner' (Classic) or 'curve'
 			// (Curvature: handles follow the neighbouring points). Touch has no
 			// drag-to-curve precision, so it starts on curves.
@@ -678,6 +679,7 @@ const CONFIG = deepFreeze({
 			enabled: true,
 			threshold: 6,
 			targets: {
+				crop: { canvasEdges: true, canvasCenter: true, layerEdges: true, layerCenters: true },
 				move: { canvasEdges: true, canvasCenter: true, layerEdges: true, layerCenters: true },
 				scale: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false },
 				textBox: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false, ownInk: true },
@@ -783,6 +785,7 @@ const CONFIG = deepFreeze({
 		// one to another movable layer does not require another app.js branch.
 		// `mobile: false` drops a control from the bar at phone width; it must
 		// stay reachable from the layer's panel.
+		nudge: { step: 1, fastStep: 10 },
 		contextToolbars: [
 			{ id: 'textEditControls', session: 'textEdit', controls: [
 				{ kind: 'slider', id: 'contextTextSize', valueId: 'contextTextSizeValue', slider: 'textFontSize', action: 'textFontSize' },
@@ -795,6 +798,13 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'contextTextRight', icon: 'text-align-right', name: 'Right', title: 'Align right', textAction: 'align:right', action: 'textAlignRight' },
 				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-justify', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify', mobile: false }
 			] },
+			{ id: 'cropEditControls', session: 'crop', controls: [
+				{ kind: 'button', id: 'contextCropRatio', icon: 'crop', name: 'Ratio', title: 'Crop ratio or size', action: 'canvasBoundsRatioMenu' },
+				{ kind: 'button', id: 'contextCropSwap', icon: 'swap', name: 'Swap', title: 'Swap orientation', action: 'canvasBoundsSwap' },
+				{ kind: 'button', id: 'contextCropFit', icon: 'fit-screen', name: 'Fit', title: 'Fit crop bounds', action: 'canvasBoundsFitMenu' },
+				{ kind: 'button', id: 'contextCropCancel', icon: 'x-mark', name: 'Cancel', title: 'Cancel (Esc)', action: 'canvasBoundsCancel' },
+				{ kind: 'button', id: 'contextCropDone', icon: 'check', name: 'Done', title: 'Apply crop (Enter)', action: 'canvasBoundsApply' }
+			] },
 			{ id: 'pathEditControls', session: 'pathEdit', controls: [
 				{ kind: 'segmented', id: 'contextPathNextPoint', label: 'Next point', options: [
 					{ label: 'Corner', value: 'corner', action: 'pathNextCorner', title: 'Clicks place corners. Drag to pull a curve.' },
@@ -805,9 +815,9 @@ const CONFIG = deepFreeze({
 					{ label: 'Smooth', value: 'smooth', action: 'pathPointSmooth', title: 'Smooth: handles stay in line' },
 					{ label: 'Mirrored', value: 'mirrored', action: 'pathPointMirrored', title: 'Mirrored: handles stay in line and equal' }
 				] },
-				{ kind: 'button', id: 'contextPathDelete', icon: 'trash', name: 'Delete point', title: 'Delete the selected points (Delete)', action: 'pathDeletePoints' },
+				{ kind: 'button', id: 'contextPathDelete', icon: 'trash', name: 'Delete point', title: 'Delete the selected points (Delete)', action: 'sessionDelete' },
 				{ kind: 'button', id: 'contextPathClose', icon: 'path-close', name: 'Close', title: 'Close or open the path', action: 'pathToggleClosed' },
-				{ kind: 'button', id: 'contextPathDone', icon: 'check', name: 'Done', title: 'Finish (Enter)', action: 'pathDone' }
+				{ kind: 'button', id: 'contextPathDone', icon: 'check', name: 'Done', title: 'Finish (Enter)', action: 'sessionConfirm' }
 			] },
 			{ id: 'zoomControls', tool: 'zoom', controls: [
 				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },

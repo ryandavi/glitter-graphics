@@ -224,11 +224,8 @@ class ProjectSerializer {
 
 		const width = data.canvas?.width;
 		const height = data.canvas?.height;
-		if (!Number.isInteger(width) || !Number.isInteger(height) ||
-			width < 1 || height < 1 ||
-			width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
-			throw new Error('That project file has invalid canvas dimensions.');
-		}
+		const sizeValidation = validateCanvasSize(width, height);
+		if (!sizeValidation.ok) throw new Error(`That project file has invalid canvas dimensions. ${sizeValidation.message}`);
 
 		if (!Array.isArray(data.layers)) {
 			throw new Error('That project file is missing its layers.');

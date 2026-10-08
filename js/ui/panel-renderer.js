@@ -207,6 +207,15 @@ function syncPropertyReverts(root = document) {
 // the history entry. Handles a <select> (including buildSelectProxy's), a
 // .segmented-control, or a bare color input.
 function attachOptionRevert(row, control, spec = {}) {
+	if (spec.model) {
+		const button = spec.button || buildFieldRevert(spec.roleId);
+		if (!spec.button) row.appendChild(button);
+		const sync = () => { button.disabled = spec.model.isDefault(); };
+		button.dataset.revertBound = '';
+		button.addEventListener('click', () => { spec.model.reset(); sync(); });
+		sync();
+		return sync;
+	}
 	const select = control.tagName === 'SELECT' ? control : control.querySelector?.('select');
 	const color = !select && control.matches?.('input[type="color"]') ? control : null;
 	const segmented = select || color ? null
@@ -1037,6 +1046,7 @@ function buildActionSet(set) {
 	const row = addPanelClasses(panelDiv('property-set property-actions'), set.classes);
 	if (set.id) row.id = set.id;
 	if (set.hidden) row.hidden = true;
+	Object.entries(set.attrs || {}).forEach(([name, value]) => row.setAttribute(name, value));
 	set.actions.forEach((action) => {
 		const button = document.createElement('button');
 		button.type = 'button';
@@ -1044,6 +1054,7 @@ function buildActionSet(set) {
 		// `primary` marks the one main action of a form.
 		button.className = action.primary ? 'btn-flat primary' : 'btn-flat';
 		button.id = action.id;
+		if (action.command) button.addEventListener('click', () => COMMANDS[action.command]?.run(window.editor));
 		if (action.icon) button.appendChild(createIcon(action.icon));
 		const name = document.createElement('span');
 		name.className = 'name';
@@ -1297,6 +1308,7 @@ function buildPanelItem(item, schema) {
 					button.type = 'button';
 					button.className = 'btn-icon-simple icon-wrapper';
 					button.id = action.id;
+		if (action.command) button.addEventListener('click', () => COMMANDS[action.command]?.run(window.editor));
 					if (action.title) button.title = action.title;
 					button.setAttribute('aria-label', action.title || action.label || '');
 					button.appendChild(createIcon(action.icon));

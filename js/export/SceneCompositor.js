@@ -210,11 +210,10 @@ class SceneCompositor {
 		}];
 	}
 
-	_createLayerAnimationTimelineSources(layer, { canvasData = null } = {}) {
+	_createLayerAnimationTimelineSources(layer) {
 		const animations = GlitterAnimation.normalizeAnimations(layer.animations);
 		if (!animations.some((animation) => GlitterAnimation.isActive(animation))) return [];
-		const box = this._getAnimationBox(layer, canvasData?.width || 1, canvasData?.height || 1);
-		const samplingContext = this._buildAnimationSamplingContext(layer, box, canvasData);
+		const samplingContext = this._buildAnimationSamplingContext(layer);
 		return animations.map((animation, index) => ({ animation, index }))
 			.filter(({ animation }) => GlitterAnimation.isActive(animation))
 			.map(({ animation, index }) => ({
@@ -353,7 +352,8 @@ class SceneCompositor {
 		ctx.globalAlpha *= layer.opacity / 100;
 		if (animation) {
 			ctx.globalAlpha *= animation.opacity;
-			ctx.translate(animation.tx, animation.ty);
+			const { move } = GlitterAnimation.splitSample(animation);
+			ctx.translate(move.x, move.y);
 		}
 		ctx.translate(metrics.centerX, metrics.centerY);
 
@@ -364,9 +364,7 @@ class SceneCompositor {
 		ctx.scale(metrics.signedScaleX / (rasterScale?.x || 1), metrics.signedScaleY / (rasterScale?.y || 1));
 		if (animation) {
 			ctx.translate(-width / 2, -height / 2);
-			const localAnimation = animation.matrix
-				? { ...animation, tx: 0, ty: 0, matrix: { ...animation.matrix, e: 0, f: 0 } }
-				: { ...animation, tx: 0, ty: 0 };
+			const { local: localAnimation } = GlitterAnimation.splitSample(animation);
 			GlitterAnimation.applyToContext(ctx, localAnimation, width, height);
 			ctx.translate(width / 2, height / 2);
 		}
@@ -406,15 +404,8 @@ class SceneCompositor {
 		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height, origin };
 	}
 
-	_buildAnimationSamplingContext(layer, box, canvasData = null) {
-		return {
-			canvasW: Number(canvasData?.width) || 1,
-			canvasH: Number(canvasData?.height) || 1,
-			boxW: Number(box?.width) || 1,
-			boxH: Number(box?.height) || 1,
-			layerId: layer.id,
-			seed: 0
-		};
+	_buildAnimationSamplingContext(layer) {
+		return getLayerAnimationSamplingContext(this.editor, layer);
 	}
 
 	_renderLayerToCanvas(layer, ctx, frameIndex, sourceSelectionMap = null, resolvedFramesBySource = null, scratch = null, timestamp = 0) {
@@ -1506,11 +1497,8 @@ class SceneCompositor {
 			for (const unit of animationUnits) {
 				renderCtx.save();
 				if (unit.animData) {
-					const origin = [unit.anchorBox.origin?.x ?? 0.5, unit.anchorBox.origin?.y ?? 0.5];
-					const samplingContext = {
-						...this._buildAnimationSamplingContext(layer, unit.anchorBox, { width, height }),
-						origin
-					};
+					const samplingContext = this._buildAnimationSamplingContext(layer);
+					const { origin } = samplingContext;
 					const sampled = unit.animData.map((animation, index) => ({ animation, index }))
 						.filter(({ animation }) => GlitterAnimation.isActive(animation))
 						.map(({ animation, index }) =>

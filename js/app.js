@@ -113,6 +113,7 @@ class GlitterEditor {
 		this.sparkleLayerManager = new SparkleLayerManager(this);
 		this.pathLayerManager = new PathLayerManager(this);
 		this.pathEdit = new PathEditSession(this);
+		this.cropEdit = new CropEditSession(this);
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
 		// Registration order is the picker-strip refresh order: the text
@@ -421,7 +422,6 @@ class GlitterEditor {
 		this.setupGlobalListeners();
 		this.setupHelpfulMessageListeners();
 		this.setupCanvasSizeControls();
-		this.setupScaleDesignControls();
 	}
 
 	setupAutoSelectListener() {
@@ -682,7 +682,8 @@ class GlitterEditor {
 		// opens its Settings; leaving a settings tool returns focus to the selected
 		// layer's Properties (or the Gallery). Only on an actual tool change (setTool
 		// early-returns when unchanged), so it never fights a manual accordion toggle.
-		this.syncCollapsibleSections?.(this.getPreferredDesignSection(this.layerManager.getActiveLayer()));
+		if (this.originalImage) this.updateSidePanelUI(this.layerManager.getActiveLayer());
+		else this.syncCollapsibleSections?.(this.getPreferredDesignSection(this.layerManager.getActiveLayer()));
 
 		// Update helpful message
 		this.updateHelpfulMessage();
@@ -879,7 +880,7 @@ class GlitterEditor {
 		// (post-create / post-edit), blur it so moving takes over — the same as
 		// clicking off the field. A focused control that uses the arrows itself
 		// keeps them.
-		if (!this.autoGlitterManager?.isSessionActive() && this.tryArrowNudge(e)) return;
+		if (!this.autoGlitterManager?.isSessionActive() && /^Arrow/.test(e.key) && dispatchKeyboardCommand(this, e, { isTyping: false })) return;
 
 		// Typing shortcuts follow the command registry's policy.
 		if (isTyping && e.key !== 'Escape' && !matchShortcut(e)?.allowWhileTyping) return;
@@ -969,7 +970,7 @@ class GlitterEditor {
 		if (focusOwnsKey) active.blur();
 
 		e.preventDefault();
-		const step = e.shiftKey ? 10 : 1;
+		const step = e.shiftKey ? CONFIG.ui.nudge.fastStep : CONFIG.ui.nudge.step;
 		const deltaX = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
 		const deltaY = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
 
@@ -1259,7 +1260,7 @@ class GlitterEditor {
 		return {
 			width: Math.max(1, Math.floor(width * scale)),
 			height: Math.max(1, Math.floor(height * scale)),
-			resized: scale < 1
+			resized: !validateCanvasSize(width, height).ok
 		};
 	}
 
@@ -1837,14 +1838,8 @@ class GlitterEditor {
 		if (GlitterAnimation.includesOffCanvas(layer.animations)) return true;
 
 		try {
-			const context = this.getMovableLayerContext(layer);
-			const layerTransform = context?.manager?.layerTransforms?.get(layer.id) || new LayerTransform(layer, this);
-			// Visual bounds cover every painted pixel, shadows included.
-			const metrics = layerTransform.getFrameMetrics(undefined, layerTransform.getVisualBounds());
-			return metrics.maxX > 0
-				&& metrics.maxY > 0
-				&& metrics.minX < this.originalCanvas.width
-				&& metrics.minY < this.originalCanvas.height;
+			const box = getLayerCanvasBox(this, layer, { visual: true });
+			return !box || (box.right > 0 && box.bottom > 0 && box.left < this.originalCanvas.width && box.top < this.originalCanvas.height);
 		} catch (error) {
 			dbg('[Export] Could not measure layer bounds; keeping layer in export.', layer?.id, error);
 			return true;
@@ -1994,7 +1989,8 @@ Object.assign(
 	CANVAS_SIZE_CONTROL_METHODS,
 	CANVAS_RESIZE_METHODS
 );
-GlitterEditor.CANVAS_ANCHORS = CANVAS_SIZE_CONTROL_METHODS.CANVAS_ANCHORS;
+
+Object.defineProperty(GlitterEditor.prototype, 'canvasBounds', Object.getOwnPropertyDescriptor(CANVAS_SIZE_CONTROL_METHODS, 'canvasBounds'));
 
 // everything inside IIFE
 (async () => {

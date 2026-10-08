@@ -2,23 +2,15 @@
 
 const assert = require('assert');
 
-const types = [
-	'breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'glint', 'pulse', 'heartbeat', 'blink',
-	'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band',
-	'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee', 'rainbow'
-];
-const presets = Object.fromEntries(types.map((type) => [type, {
-	periodMs: 1000, easing: 'linear', amount: 10, distance: 20, radius: 20, turns: 1,
-	duty: 50, opacityFloor: 20, direction: 'normal', iterations: Infinity, anchor: 'center'
-}]));
-Object.assign(presets.marquee, { includeWhenOffCanvas: true });
-
-global.CONFIG = { tools: { animation: {
-	defaultType: 'pulse', presets, jitterQuantMs: 60, rotateSnapStepDeg: 15,
-	scaleSnapStep: 0.05, maxPeriodMs: 20000, exportFps: 30
-} } };
 global.GlitterEasing = require('../../js/effects/easing.js');
 const Animation = require('../../js/effects/animation.js');
+const types = Animation.ANIMATION_TYPES;
+const presets = Object.fromEntries(types.map((type) => [type, {
+	periodMs: 1000, easing: 'linear', amount: 10, distance: 20, radius: 20, turns: 1,
+	duty: 50, opacityFloor: 20, direction: 'normal', iterations: Infinity,
+	maxTrips: 12, harmonics: { x: [{ frequency: 1, weight: 0.6 }, { frequency: 2, weight: 0.4 }], y: [{ frequency: 1, weight: 0.6 }, { frequency: 3, weight: 0.4 }] }
+}]));
+global.CONFIG = { tools: { animation: { defaultType: 'pulse', presets, jitterQuantMs: 60 } } };
 
 const keys = ['tx', 'ty', 'rotate', 'scaleX', 'scaleY', 'skewX', 'skewY', 'opacity', 'originX', 'originY', 'hue'];
 const near = (a, b, tolerance = 1e-6) => Math.abs(a - b) <= tolerance;
@@ -28,25 +20,25 @@ Animation.ANIMATION_TYPES.forEach((type) => {
 	const entry = Animation.MOTION_REGISTRY[type];
 	assert.strictEqual(entry.id, type);
 	assert.strictEqual(typeof entry.needsBounds, 'boolean');
-	assert.strictEqual(typeof entry.particleSafe, 'boolean');
+	assert(Array.isArray(entry.targets));
 });
 assert.strictEqual(Animation.MOTION_REGISTRY.marquee.needsBounds, true);
-assert.strictEqual(Animation.MOTION_REGISTRY.rotate.particleSafe, true);
-assert.strictEqual(Animation.MOTION_REGISTRY.tada.particleSafe, false);
+assert.strictEqual(Animation.MOTION_REGISTRY.rotate.targets.includes('particle'), true);
+assert.strictEqual(Animation.MOTION_REGISTRY.tada.targets.includes('particle'), false);
 
 types.forEach((type) => {
 	const data = Animation.normalizeAnimation({ type });
 	assert.strictEqual(data.type, type);
-	const sample = Animation.sampleAt(data, 375, { layerId: 'layer-a' });
+	const sample = Animation.sampleAt(data, 375, { id: 'layer-a' });
 	assert.deepStrictEqual(Object.keys(sample), keys);
 	assert(sample.opacity >= 0 && sample.opacity <= 1);
 	assert(Number.isFinite(sample.scaleX) && Number.isFinite(sample.scaleY));
-	assert.deepStrictEqual(sample, Animation.sampleAt(data, 375, { layerId: 'layer-a' }));
+	assert.deepStrictEqual(sample, Animation.sampleAt(data, 375, { id: 'layer-a' }));
 	if (!Number.isFinite(data.iterations)) {
 		assert.strictEqual(Animation.loopDurationMs(data), Infinity);
 		assert(Animation.isSeamlessLoop(data), `${type} should loop seamlessly`);
-		const start = Animation.sampleAt(data, 0, { layerId: 'layer-a' });
-		const end = Animation.sampleAt(data, data.periodMs, { layerId: 'layer-a' });
+		const start = Animation.sampleAt(data, 0, { id: 'layer-a' });
+		const end = Animation.sampleAt(data, data.periodMs, { id: 'layer-a' });
 		keys.forEach((key) => assert(near(start[key], end[key]), `${type}.${key} seam`));
 	}
 });
@@ -55,7 +47,7 @@ assert.strictEqual(Animation.normalizeAnimation({ type: 'pulse', iterations: nul
 assert.strictEqual(Animation.loopDurationMs({ type: 'pulse', iterations: 1 }), 1000);
 assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee' }), true);
 assert.strictEqual(Animation.includesOffCanvas({ type: 'move' }), false);
-assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 }), false);
+assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 }), true);
 
 // Every preset now loops indefinitely by default (no built-in "play once"
 // transitions), but the engine still supports an explicit finite `iterations`
@@ -65,8 +57,8 @@ assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 })
 	const data = Animation.normalizeAnimation({ type, iterations: 1, fillMode: 'forwards' });
 	assert(!Animation.isSeamlessLoop(data));
 	assert.deepStrictEqual(
-		Animation.sampleAt(data, data.periodMs, { layerId: 'transition' }),
-		Animation.sampleAt(data, data.periodMs * 2, { layerId: 'transition' })
+		Animation.sampleAt(data, data.periodMs, { id: 'transition' }),
+		Animation.sampleAt(data, data.periodMs * 2, { id: 'transition' })
 	);
 });
 
@@ -89,23 +81,23 @@ assert.strictEqual(Animation.sampleAt(blink, 1000).opacity, 1);
 
 const offsetPulse = Animation.normalizeAnimation({ type: 'pulse', phase: 0.25 });
 assert.deepStrictEqual(
-	Animation.sampleAt(offsetPulse, 0, { layerId: 'offset' }),
-	Animation.sampleAt({ ...offsetPulse, phase: 0 }, offsetPulse.periodMs * 0.25, { layerId: 'offset' })
+	Animation.sampleAt(offsetPulse, 0, { id: 'offset' }),
+	Animation.sampleAt({ ...offsetPulse, phase: 0 }, offsetPulse.periodMs * 0.25, { id: 'offset' })
 );
 
-const verticalFloat = Animation.sampleAt({ ...presets.float, type: 'float', angle: 270 }, 125, { layerId: 'float' });
+const verticalFloat = Animation.sampleAt({ ...presets.float, type: 'float', angle: 270 }, 125, { id: 'float' });
 assert(near(verticalFloat.tx, 0));
 
-const snapped = Animation.sampleAt({ ...presets.move, type: 'move', snapMode: 'pixel-snap' }, 330, { layerId: 'snap' });
+const snapped = Animation.sampleAt({ ...presets.move, type: 'move', snapMode: 'pixel-snap' }, 330, { id: 'snap' });
 assert(Number.isInteger(snapped.tx) && Number.isInteger(snapped.ty));
-const normal = Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, { layerId: 'direction' });
-const reverse = Animation.sampleAt({ ...presets.rotate, type: 'rotate', direction: 'reverse' }, 750, { layerId: 'direction' });
+const normal = Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, { id: 'direction' });
+const reverse = Animation.sampleAt({ ...presets.rotate, type: 'rotate', direction: 'reverse' }, 750, { id: 'direction' });
 assert(near(normal.rotate, reverse.rotate));
 assert.strictEqual(GlitterEasing.easingFn('linear')(0.37), 0.37);
 assert.strictEqual(GlitterEasing.stepsEase(0.49, 2), 0);
 assert.strictEqual(GlitterEasing.stepsEase(0.5, 2), 0.5);
 
-const matrixSample = Animation.sampleAt({ ...presets.jello, type: 'jello' }, 250, { layerId: 'matrix' });
+const matrixSample = Animation.sampleAt({ ...presets.jello, type: 'jello' }, 250, { id: 'matrix' });
 const cssNumbers = Animation.domTransformString(matrixSample).match(/-?\d+(?:\.\d+)?/g).map(Number);
 assert.deepStrictEqual(cssNumbers, [
 	matrixSample.tx, matrixSample.ty, matrixSample.rotate, matrixSample.scaleX,
@@ -121,12 +113,49 @@ assert.deepStrictEqual(calls[0], ['translate', matrixSample.tx, matrixSample.ty]
 assert.deepStrictEqual(calls[1], ['translate', matrixSample.originX * 80, matrixSample.originY * 40]);
 assert.deepStrictEqual(calls.at(-1), ['translate', -matrixSample.originX * 80, -matrixSample.originY * 40]);
 
-const bounds = { canvasW: 640, canvasH: 480, boxW: 80, boxH: 40, layerId: 'bounds', seed: 7 };
+const bounds = Animation.createSamplingContext({ area: { width: 640, height: 480 }, rest: { left: 100, top: 100, right: 180, bottom: 140 }, id: 'bounds', seed: 7 });
 assert.deepStrictEqual(
 	Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, bounds),
 	Animation.sampleAt({ ...presets.rotate, type: 'rotate' }, 250, bounds)
 );
 assert.strictEqual(Animation.isSeamlessLoop({ ...presets.rotate, type: 'rotate' }, bounds), true);
+
+
+for (const entry of Object.values(Animation.MOTION_REGISTRY).filter((entry) => entry.needsBounds)) {
+	const data = { type: entry.id };
+	assert(Animation.isSeamlessLoop(data, bounds), `${entry.id} bounded loop`);
+	assert.deepStrictEqual(Animation.sampleAt(data, 375), { tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, opacity: 1, originX: 0.5, originY: 0.5, hue: 0 });
+}
+for (const width of [400, 800]) for (const turns of [1, 2, 3, 4]) {
+	const context = Animation.createSamplingContext({ area: { width, height: 400 }, rest: { left: 50, top: 70, right: 90, bottom: 110 } });
+	for (let t = 0; t <= 1000; t += 5) {
+		const sample = Animation.sampleAt({ type: 'ricochet', turns, angle: 45 }, t, context);
+		assert(context.rest.left + sample.tx >= -1e-6 && context.rest.right + sample.tx <= width + 1e-6);
+		assert(context.rest.top + sample.ty >= -1e-6 && context.rest.bottom + sample.ty <= 400 + 1e-6);
+	}
+}
+for (const angle of [0, 37, 90, 180, 270]) {
+	assert(Animation.isSeamlessLoop({ type: 'marquee', angle }, bounds));
+	let previous = Animation.sampleAt({ type: 'marquee', angle }, 0, bounds);
+	let jumped = false;
+	for (let t = 1; t < 1000; t++) {
+		const next = Animation.sampleAt({ type: 'marquee', angle }, t, bounds);
+		if (Math.hypot(next.tx - previous.tx, next.ty - previous.ty) > 10) {
+			const outside = (pose) => bounds.rest.right + pose.tx <= 1 || bounds.rest.left + pose.tx >= bounds.area.width - 1 || bounds.rest.bottom + pose.ty <= 1 || bounds.rest.top + pose.ty >= bounds.area.height - 1;
+			assert(outside(previous) && outside(next), `marquee ${angle} visible jump`);
+			jumped = true;
+		}
+		previous = next;
+	}
+	assert(jumped);
+}
+assert.notDeepStrictEqual(Animation.sampleAt({ type: 'wander' }, 300, { ...bounds, id: 'a' }), Animation.sampleAt({ type: 'wander' }, 300, { ...bounds, id: 'b' }));
+const oversized = Animation.createSamplingContext({ area: { width: 40, height: 400 }, rest: { left: -10, top: 70, right: 90, bottom: 110 } });
+for (let t = 0; t <= 1000; t += 5) {
+	const sample = Animation.sampleAt({ type: 'ricochet', angle: 45 }, t, oversized);
+	assert.strictEqual(sample.tx, 0, 'oversized subject moved on its blocked axis');
+	assert(oversized.rest.top + sample.ty >= -1e-6 && oversized.rest.bottom + sample.ty <= 400 + 1e-6);
+}
 
 const stacked = Animation.sampleAt([
 	{ ...presets.move, type: 'move', angle: 0, distance: 20, opacityFloor: 0 },
@@ -134,7 +163,7 @@ const stacked = Animation.sampleAt([
 	{ ...presets.rainbow, type: 'rainbow' },
 	{ ...presets.rainbow, type: 'rainbow', direction: 'reverse' },
 	{ ...presets.dim, type: 'dim', opacityFloor: 20 }
-], 250, { layerId: 'stacked' });
+], 250, { id: 'stacked' });
 assert(stacked.matrix, 'stacked animations should compose into one affine transform');
 assert(near(stacked.tx, 20 * Math.sin(Math.PI * 0.25)));
 assert(near(stacked.opacity, 1 - 0.8 * Math.sin(Math.PI * 0.25)));

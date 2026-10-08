@@ -7,10 +7,10 @@ const TRANSFORM_INTERACTION_METHODS = {
 		if (policy.canvasCenter) { x.push(this.originalCanvas.width / 2); y.push(this.originalCanvas.height / 2); }
 		if (policy.layerEdges || policy.layerCenters) this.layerManager.layers.forEach((layer) => {
 			if (excludedIds.includes(layer.id) || layer.visible === false || layer.locked) return;
-			const frame = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+			const frame = getLayerCanvasBox(this, layer);
 			if (!frame) return;
-			if (policy.layerEdges) { x.push(frame.minX, frame.maxX); y.push(frame.minY, frame.maxY); }
-			if (policy.layerCenters) { x.push((frame.minX + frame.maxX) / 2); y.push((frame.minY + frame.maxY) / 2); }
+			if (policy.layerEdges) { x.push(frame.left, frame.right); y.push(frame.top, frame.bottom); }
+			if (policy.layerCenters) { x.push((frame.left + frame.right) / 2); y.push((frame.top + frame.bottom) / 2); }
 		});
 		return { x, y };
 	},
@@ -29,16 +29,9 @@ applyTransformEditWithAnchor(layer, manager, mutate) {
 
 ,
 zoomToSelection(options = {}) {
-		const metrics = this.layerManager.getSelectedLayers()
-			.map((layer) => this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.())
-			.filter(Boolean);
-		if (!metrics.length) return false;
-		this.viewport.zoomToBounds({
-			left: Math.min(...metrics.map((item) => item.minX)),
-			top: Math.min(...metrics.map((item) => item.minY)),
-			right: Math.max(...metrics.map((item) => item.maxX)),
-			bottom: Math.max(...metrics.map((item) => item.maxY))
-		}, options);
+		const bounds = getLayersCanvasBox(this, this.layerManager.getSelectedLayers());
+		if (!bounds) return false;
+		this.viewport.zoomToBounds(bounds, options);
 		return true;
 	}
 
@@ -89,7 +82,7 @@ snapTransformPosition(transform, position, options = {}) {
 			return point;
 		}
 		const axes = options.axes || 'xy';
-		const { x: targetsX, y: targetsY } = this.collectSnapTargets(options.kind || 'scale', options.excludedIds || [transform.layer.id]);
+		const { x: targetsX, y: targetsY } = this.collectSnapTargets(options.kind || 'scale', options.excludedIds || (transform ? [transform.layer.id] : []));
 		if (options.targets) { targetsX.push(...options.targets.x); targetsY.push(...options.targets.y); }
 		if (options.line) {
 			const { origin, dir } = options.line;

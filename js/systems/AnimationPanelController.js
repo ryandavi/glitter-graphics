@@ -6,11 +6,7 @@ class AnimationPanelController {
 		this.prefixByType = new Map(Object.entries(LAYER_UI_CONFIG)
 			.filter(([, config]) => config.animatable && config.transformPrefix)
 			.map(([type, config]) => [type, config.transformPrefix]));
-		this.fields = {
-			PeriodMs: 'periodMs', Amount: 'amount', Angle: 'angle', Distance: 'distance', Radius: 'radius',
-			Turns: 'turns', Duty: 'duty', OpacityFloor: 'opacityFloor',
-			DelayMs: 'delayMs', Phase: 'phase', AnchorX: 'anchorX', AnchorY: 'anchorY'
-		};
+
 		this.selectedByLayer = new Map();
 		this.prefixByType.forEach((_prefix, type) => this._bind(type));
 		this.pauseButton = document.getElementById('pauseMotionTool');
@@ -179,12 +175,11 @@ class AnimationPanelController {
 		};
 		this._id(prefix, 'PresetPrev')?.addEventListener('click', () => cyclePreset(-1));
 		this._id(prefix, 'PresetNext')?.addEventListener('click', () => cyclePreset(1));
-		this.fields && Object.entries(this.fields).forEach(([suffix, field]) => {
+		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field).forEach(({ suffix, key: field, field: spec, scale }) => {
 			const slider = this._id(prefix, suffix);
 			if (!slider) return;
-			const sliderRole = slider.closest('.property-row')?.dataset.role?.replace(/-row$/, '');
 			bindSlider(slider, this._id(prefix, `${suffix}Value`), {
-				suffix: FIELDS[sliderRole]?.unit || '',
+				suffix: FIELDS[spec]?.unit || '',
 				parseValue: Number,
 				apply: (value) => {
 					const layer = this._active(type);
@@ -192,28 +187,27 @@ class AnimationPanelController {
 					if (!animation) return;
 					if (field === 'anchorX' || field === 'anchorY') {
 						const key = field.endsWith('X') ? 'x' : 'y';
-						if (animation.type === 'orbit') animation[`orbitCenter${key.toUpperCase()}`] = value / 100;
-						else this._updateLayerAnchor(layer, { ...getLayerTransform(layer).anchor, [key]: value / 100 });
-					} else animation[field] = field === 'phase' ? value / 100 : value;
+						if (this._anchorDefinition(animation).stores === 'motion') animation[`orbitCenter${key.toUpperCase()}`] = value / scale;
+						else this._updateLayerAnchor(layer, { ...getLayerTransform(layer).anchor, [key]: value / scale });
+					} else animation[field] = value / scale;
 					this._renderLayer(layer);
 					this._syncSummary(prefix, layer.animations, animation);
 				},
 				onCommit: () => {
 					const layer = this._active(type);
-					this.editor.saveState(this._selected(layer)?.type !== 'orbit' && (field === 'anchorX' || field === 'anchorY') ? 'Change anchor' : 'Edit animation');
+					this.editor.saveState(this._anchorDefinition(this._selected(layer)).stores === 'layer' && (field === 'anchorX' || field === 'anchorY') ? 'Change anchor' : 'Edit animation');
 				}
 			});
 		});
-		['Easing', 'Direction', 'FillMode', 'Anchor', 'SnapMode'].forEach((suffix) => {
+		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => !control.field).forEach(({ suffix, key: field }) => {
 			this._id(prefix, suffix)?.addEventListener('change', (event) => {
 				const layer = this._active(type);
 				const animation = this._selected(layer);
 				if (!animation) return;
-				const field = suffix.charAt(0).toLowerCase() + suffix.slice(1);
 				if (field === 'anchor') {
 					if (event.target.value === 'custom') return;
 					const [x, y] = event.target.value.split(',').map(Number);
-					if (animation.type === 'orbit') {
+					if (this._anchorDefinition(animation).stores === 'motion') {
 						animation.orbitCenter = event.target.value;
 						animation.orbitCenterX = x;
 						animation.orbitCenterY = y;
@@ -223,7 +217,7 @@ class AnimationPanelController {
 					}
 				} else animation[field] = event.target.value;
 				this._render(layer);
-				this.editor.saveState(field === 'anchor' && animation.type !== 'orbit' ? 'Change anchor' : 'Edit animation');
+				this.editor.saveState(field === 'anchor' && this._anchorDefinition(animation).stores === 'layer' ? 'Change anchor' : 'Edit animation');
 			});
 		});
 		this._id(prefix, 'Iterations')?.addEventListener('change', (event) => {
@@ -237,7 +231,7 @@ class AnimationPanelController {
 			const layer = this._active(type);
 			const animation = this._selected(layer);
 			if (!animation) return;
-			animation.steps = Math.max(2, Math.min(60, Number(event.target.value) || 2));
+			animation.steps = Math.max(FIELDS.animSteps.min, Math.min(FIELDS.animSteps.max, Number(event.target.value) || FIELDS.animSteps.value));
 			this._render(layer, true);
 		});
 	}
@@ -248,7 +242,7 @@ class AnimationPanelController {
 		const hint = this._id(prefix, 'LoopHint');
 		if (hint) hint.textContent = Number.isFinite(selected?.iterations)
 			? 'Plays a fixed number of times'
-			: (GlitterAnimation.isSeamlessLoop(selected) ? 'Loops seamlessly' : 'Restarts abruptly each loop');
+			: (GlitterAnimation.isSeamlessLoop(selected, getLayerAnimationSamplingContext(this.editor, this.editor.layerManager.getActiveLayer())) ? 'Loops seamlessly' : 'Restarts abruptly each loop');
 	}
 
 	load(layer) {
@@ -267,62 +261,56 @@ class AnimationPanelController {
 		const anchorControl = this._id(prefix, 'Anchor');
 		const anchorRow = anchorControl?.closest('.property-row');
 		const anchorLabel = anchorRow?.querySelector('.property-label');
-		if (anchorLabel) anchorLabel.textContent = data.type === 'orbit' ? 'Orbit center' : 'Anchor';
-		if (anchorRow) {
-			let note = anchorRow.nextElementSibling?.matches('.animation-anchor-note') ? anchorRow.nextElementSibling : null;
-			if (!note) {
-				note = document.createElement('div');
-				note.className = 'property-note animation-anchor-note';
-				anchorRow.after(note);
-			}
-			note.textContent = data.type === 'orbit' ? 'Sets the center of the orbit path.' : 'Also sets the layer transform anchor.';
-		}
-		['Type', 'Easing', 'Direction', 'FillMode', 'Anchor', 'SnapMode'].forEach((suffix) => {
+		const anchor = this._anchorDefinition(data);
+		if (anchorLabel) anchorLabel.textContent = anchor.label;
+		const note = this._id(prefix, 'AnchorNote');
+		if (note) note.textContent = anchor.note;
+		const typeControl = this._id(prefix, 'Type');
+		if (typeControl) typeControl.value = data.type;
+		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => !control.field).forEach(({ suffix, key }) => {
 			const control = this._id(prefix, suffix);
-			const field = suffix.charAt(0).toLowerCase() + suffix.slice(1);
-			if (control) {
-				if (field === 'anchor') control.value = data.type === 'orbit' ? this._orbitPreset(data) : this._anchorPreset(getLayerTransform(layer).anchor);
-				else control.value = data[field];
-			}
+			if (control) control.value = key === 'anchor' ? this._selectedAnchorPreset(layer, data) : data[key];
 		});
 		const iterations = this._id(prefix, 'Iterations');
 		if (iterations) iterations.value = Number.isFinite(data.iterations) ? String(data.iterations) : 'Infinity';
 		const steps = this._id(prefix, 'Steps');
 		if (steps) steps.value = data.steps;
-		Object.entries(this.fields).forEach(([suffix, field]) => {
+		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field).forEach(({ suffix, key: field, field: spec, scale }) => {
 			const control = this._id(prefix, suffix);
 			if (!control) return;
 			let source = data[field];
 			if (field === 'anchorX' || field === 'anchorY') {
 				const key = field.endsWith('X') ? 'x' : 'y';
-				source = data.type === 'orbit' ? data[`orbitCenter${key.toUpperCase()}`] : getLayerTransform(layer).anchor[key];
+				source = this._anchorDefinition(data).stores === 'motion' ? data[`orbitCenter${key.toUpperCase()}`] : getLayerTransform(layer).anchor[key];
 			}
-			const value = ['phase', 'anchorX', 'anchorY'].includes(field) ? source * 100 : source;
+			const value = source * scale;
 			writeSliderValue(control, value);
 			const readout = this._id(prefix, `${suffix}Value`);
 			if (!readout) return;
-			const sliderRole = control.closest('.property-row')?.dataset.role?.replace(/-row$/, '');
 			const rounded = Math.round(value * 10) / 10;
-			readout.innerHTML = formatUnit(rounded, FIELDS[sliderRole]?.unit || '');
+			readout.innerHTML = formatUnit(rounded, FIELDS[spec]?.unit || '');
 		});
-		const rows = {
-			// Intensity only does something where pose() actually reads `amount`
-			// (drift falls back to it when Distance is 0, so it stays listed).
-			Amount: ['breath', 'float', 'sway', 'drift', 'pulse', 'heartbeat', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band', 'zoom', 'rotate', 'glint'],
-			Angle: ['move', 'bounce', 'drift', 'marquee', 'float', 'flip'], Distance: ['move', 'drift', 'marquee'], Radius: ['orbit', 'ping'],
-			Turns: ['rotate', 'flip'], Duty: ['blink', 'twinkle', 'glint'], OpacityFloor: ['dim', 'twinkle', 'ping', 'move']
-		};
-		Object.entries(rows).forEach(([suffix, types]) => {
+		const motion = GlitterAnimation.MOTION_REGISTRY[data.type];
+		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field).forEach(({ key, suffix }) => {
 			const row = this._id(prefix, `${suffix}Row`);
-			if (row) row.hidden = !types.includes(data.type);
+			if (row && !['periodMs', 'delayMs', 'phase', 'anchorX', 'anchorY'].includes(key)) row.hidden = !motion.fields.includes(key);
 		});
 		const stepsRow = this._id(prefix, 'Steps')?.closest('.property-row');
 		if (stepsRow) stepsRow.hidden = data.easing !== 'steps';
 		['AnchorX', 'AnchorY'].forEach((suffix) => {
 			const row = this._id(prefix, `${suffix}Row`);
-			if (row) row.hidden = (data.type === 'orbit' ? this._orbitPreset(data) : this._anchorPreset(getLayerTransform(layer).anchor)) !== 'custom';
+			if (row) row.hidden = this._selectedAnchorPreset(layer, data) !== 'custom';
 		});
 		this._syncSummary(prefix, layer.animations, data);
+	}
+
+	_anchorDefinition(animation) {
+		return GlitterAnimation.MOTION_REGISTRY[animation?.type || CONFIG.tools.animation.defaultType].anchor;
+	}
+
+	_selectedAnchorPreset(layer, animation) {
+		return this._anchorDefinition(animation).stores === 'motion'
+			? this._orbitPreset(animation) : this._anchorPreset(getLayerTransform(layer).anchor);
 	}
 
 	_anchorPreset(anchor) {

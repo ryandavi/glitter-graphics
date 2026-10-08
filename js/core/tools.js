@@ -3,7 +3,7 @@
 // The tool registry: one entry per canvas tool.
 // ============================================
 // Each entry holds every fact about a tool, so adding one means adding an
-// entry here (plus its command in COMMANDS):
+// entry here, including its key and preferred panel:
 // - name, buttonLabel, icon: the toolbar button (rendered from this table in
 //   toolbar order), the helpful-message chip and the guide.
 // - command: the COMMANDS id whose key goes in the button title.
@@ -30,6 +30,7 @@ const ToolType = {
 	SHAPE: 'shape',
 	LINE: 'line',
 	PEN: 'pen',
+	CROP: 'crop',
 	HAND: 'hand',
 	GLITTER_FILL: 'glitterFill',
 	BRUSH: 'brush',
@@ -43,6 +44,8 @@ const navigationAvailable = (_editor, { hasImage }) => hasImage;
 
 const TOOLS = {
 	[ToolType.SELECT]: {
+		key: 'v',
+		panel: () => null,
 		name: 'Select',
 		buttonLabel: 'Select',
 		icon: 'hand-pointer',
@@ -63,6 +66,8 @@ const TOOLS = {
 		}
 	},
 	[ToolType.HAND]: {
+		key: 'h',
+		panel: () => null,
 		name: 'Hand',
 		buttonLabel: 'Move',
 		icon: 'hand',
@@ -77,6 +82,8 @@ const TOOLS = {
 		}
 	},
 	[ToolType.ZOOM]: {
+		key: 'z',
+		panel: () => null,
 		name: 'Zoom',
 		buttonLabel: 'Zoom',
 		icon: 'magnifying-glass',
@@ -92,6 +99,8 @@ const TOOLS = {
 		}
 	},
 	[ToolType.GLITTER_FILL]: {
+		key: 'i',
+		panel: (_editor, layer) => layer?.type === LayerType.GLITTER_FILL ? 'layerSettings' : null,
 		name: 'Glitter Fill',
 		buttonLabel: 'Glitter Fill',
 		icon: 'paint-bucket',
@@ -110,6 +119,8 @@ const TOOLS = {
 		}
 	},
 	[ToolType.BRUSH]: {
+		key: 'b',
+		panel: () => 'brushSettings',
 		name: 'Glitter Brush',
 		buttonLabel: 'Glitter Brush',
 		icon: 'brush',
@@ -118,6 +129,8 @@ const TOOLS = {
 			? { icon: 'eraser', name: 'Eraser Tool' }
 			: { icon: 'brush', name: 'Glitter Brush' }),
 		command: 'toolBrush',
+		shortcuts: [{ key: 'e', command: 'toolEraser', label: 'Mask Eraser Tool', run: (editor) => { editor.setTool(ToolType.BRUSH); editor.maskEditor?.setMode('sub'); } }],
+		onShortcut: (editor) => editor.maskEditor?.setMode('add'),
 		toolbarGroup: 'create',
 		titleNote: ' — Paint/Erase in the context bar, or X to swap',
 		groups: ['paint', 'contentEditing'],
@@ -126,6 +139,8 @@ const TOOLS = {
 		// Painting is handled by MaskEditor's own pointer listeners.
 	},
 	[ToolType.TEXT]: {
+		key: 't',
+		panel: () => null,
 		name: 'Text',
 		buttonLabel: 'Text',
 		icon: 'text',
@@ -154,6 +169,8 @@ const TOOLS = {
 		}
 	},
 	[ToolType.SHAPE]: {
+		key: 'u',
+		panel: () => null,
 		name: 'Shape',
 		buttonLabel: 'Shape',
 		icon: 'square',
@@ -181,6 +198,8 @@ const TOOLS = {
 		}
 	},
 	[ToolType.LINE]: {
+		key: 'l',
+		panel: () => null,
 		name: 'Line',
 		buttonLabel: 'Line',
 		icon: 'line',
@@ -205,7 +224,20 @@ const TOOLS = {
 			return layer;
 		}
 	},
+	[ToolType.CROP]: {
+		name: 'Crop', buttonLabel: 'Crop', icon: 'crop', command: 'toolCrop', key: 'c',
+		panel: () => 'baseLayerSettings', toolbarGroup: 'canvas', groups: ['contentEditing'],
+		touchRoute: 'toolDrag', available: editingAvailable,
+		onActivate: (editor) => editor.cropEdit.activate(), onDeactivate: (editor) => editor.cropEdit.end(),
+		onCanvasPointerDown: (editor, event) => editor.cropEdit.handlePointerDown(event),
+		onTouchDragStart: (editor, point) => editor.cropEdit.press({ ...point, pointerType: 'touch' }),
+		onTouchDragMove: (editor, point) => editor.cropEdit.move({ ...point, pointerType: 'touch' }),
+		onTouchDragEnd: (editor, point) => editor.cropEdit.release(point),
+		onTouchDragCancel: (editor) => editor.cropEdit.cancelDrag()
+	},
 	[ToolType.PEN]: {
+		key: 'p',
+		panel: () => null,
 		name: 'Pen',
 		buttonLabel: 'Pen',
 		icon: 'pen',
@@ -236,6 +268,7 @@ const TOOL_ORDER = Object.freeze([
 	ToolType.PEN,
 	ToolType.GLITTER_FILL,
 	ToolType.BRUSH,
+	ToolType.CROP,
 	ToolType.HAND,
 	ToolType.ZOOM
 ]);
@@ -331,4 +364,30 @@ function createTextAt(editor, options = {}) {
 		manager.renderTextSelection();
 	}).catch(error => manager.reportFontLoadError(error));
 	return layer;
+}
+
+// An edit session owns its keys; adding a session adds no command dispatch branch.
+const SESSIONS = Object.freeze([
+	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP, mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds(), nudge: (editor, event) => editor.cropEdit.nudge(event) },
+	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession),
+		mode: { label: 'Text', icon: 'text' }, cancel: (editor) => editor.textGlitterManager.endTextEdit() },
+	{ id: 'pathEdit', isActive: (editor) => Boolean(editor.pathEdit?.session),
+		mode: { label: 'Pen', icon: 'pen' }, canConfirm: (editor) => editor.pathEdit?.canHandleEnter(),
+		confirm: (editor) => editor.pathEdit.handleEnter(), cancel: (editor) => editor.pathEdit.handleEscape(),
+		delete: (editor) => editor.pathEdit.deleteSelection(), nudge: (editor, event) => editor.pathEdit.nudge(event),
+		shortcuts: [
+			{ label: 'Delete Selected Points / Last Point While Drawing', group: 'Pen', displayKey: 'Delete / Backspace' },
+			{ label: 'Nudge Selected Points', group: 'Pen', displayKey: 'Arrow Keys' },
+			{ label: 'Nudge Selected Points 10px', group: 'Pen', displayKey: 'Shift + Arrow Keys' },
+			{ label: 'Finish Path / Edit Selected Path', group: 'Pen', displayKey: 'Enter' },
+			{ label: 'Finish Path / Clear Point Selection', group: 'Pen', displayKey: 'Escape' }
+		] }
+]);
+
+function getSessionDefinition(editor, handler) {
+	return SESSIONS.find((session) => session.isActive(editor) || (handler === 'confirm' && session.canConfirm?.(editor))) || null;
+}
+
+function dispatchSessionKey(editor, handler, event) {
+	return getSessionDefinition(editor, handler)?.[handler]?.(editor, event);
 }

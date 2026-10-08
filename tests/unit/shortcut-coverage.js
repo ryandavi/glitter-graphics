@@ -9,6 +9,7 @@ const root = path.join(__dirname, '..', '..');
 const source = fs.readFileSync(path.join(root, 'js/core/commands.js'), 'utf8');
 const context = {};
 vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(root, 'js/core/tools.js'), 'utf8'), context);
 vm.runInContext(`${source}\nglobalThis.__commands = COMMANDS; globalThis.__getShortcutGroups = getShortcutGroups;`, context);
 
 Object.entries(context.__commands).forEach(([id, command]) => {

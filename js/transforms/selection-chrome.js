@@ -133,8 +133,9 @@ class SelectionChrome {
 		});
 
 		overlay.placeFrame(this.box, frame, view);
+		this.box.classList.toggle('has-shade', Boolean(model.shade));
 		this.box.querySelectorAll('.slice-resize-guide').forEach((guide) => guide.remove());
-		['xs', 'ys'].forEach((axis) => (model.sliceGuides?.[axis] || []).forEach((fraction) => {
+		['xs', 'ys'].forEach((axis) => (model.guides === 'thirds' ? [1 / 3, 2 / 3] : model.sliceGuides?.[axis] || []).forEach((fraction) => {
 			const guide = document.createElement('span');
 			guide.className = `slice-resize-guide ui-ignore-gestures ${axis === 'xs' ? 'is-vertical' : 'is-horizontal'}`;
 			Object.assign(guide.style, axis === 'xs'

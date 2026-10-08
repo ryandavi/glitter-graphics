@@ -324,3 +324,28 @@ function padFrame(frame, paddingX, paddingY = paddingX) {
 	if (!frame || !(paddingX > 0 || paddingY > 0)) return frame;
 	return { ...frame, width: frame.width + Math.max(0, paddingX) * 2, height: frame.height + Math.max(0, paddingY) * 2 };
 }
+
+// Shared document-space boxes: frame for interaction, visual bounds for paint.
+function getLayerCanvasBox(editor, layer, { visual = false } = {}) {
+	if (!isTransformableLayerType(layer?.type)) return null;
+	const manager = getLayerManagerForType(editor, layer.type);
+	const transform = manager?.layerTransforms?.get(layer.id) || new LayerTransform(layer, editor);
+	const metrics = visual ? transform.getFrameMetrics(undefined, transform.getVisualBounds()) : transform.getFrameMetrics();
+	return { left: metrics.minX, top: metrics.minY, right: metrics.maxX, bottom: metrics.maxY };
+}
+
+function getLayersCanvasBox(editor, layers, options = {}) {
+	const boxes = layers.map((layer) => getLayerCanvasBox(editor, layer, options)).filter(Boolean);
+	if (!boxes.length) return null;
+	return { left: Math.min(...boxes.map((box) => box.left)), top: Math.min(...boxes.map((box) => box.top)), right: Math.max(...boxes.map((box) => box.right)), bottom: Math.max(...boxes.map((box) => box.bottom)) };
+}
+
+function getLayerAnimationSamplingContext(editor, layer) {
+	const dimensions = LAYER_UI_CONFIG[layer?.type]?.animationBox?.(editor, layer, editor.originalCanvas);
+	const origin = getLayerAnimationOrigin(editor, layer, dimensions);
+	return GlitterAnimation.createSamplingContext({
+		area: { width: editor.originalCanvas.width, height: editor.originalCanvas.height },
+		rest: getLayerCanvasBox(editor, layer), restVisual: getLayerCanvasBox(editor, layer, { visual: true }),
+		id: layer.id, seed: 0, origin: [origin.x, origin.y]
+	});
+}

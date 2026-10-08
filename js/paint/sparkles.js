@@ -13,11 +13,10 @@
 //            pixels), `highlights` (Kira Kira) puts one star on each
 //            detected highlight (js/effects/highlight-detect.js).
 //   motion   sampleSparkleFrame(data, layout, t) samples each particle with a
-//            GlitterAnimation motion (particleLabel entries only), period
+//            GlitterAnimation motion (particle targets only), period
 //            cycleMs / blinks, so every particle returns to its start when
-//            the slot's cycle ends and GIF loops close. Motions marked wrapY
-//            (fall, rise) travel one emitter-area height per period and wrap
-//            inside it.
+//            the slot's cycle ends and GIF loops close. Bounds-dependent motions
+//            use the emitter area and each glyph's visual extent.
 //   preview  reconcileSparkleLayer: a .sparkle-layer of masked spans in the
 //            host element, transformed each frame by AnimationTicker.
 //   export   drawSparkleFrame: the same particles, glyph masks, transforms and
@@ -138,10 +137,10 @@ const SPARKLE_STYLE_TIERS = Object.freeze({
 });
 
 // Particle motions come from the one motion library: every motion that
-// declares a particleLabel and is particleSafe.
+// declares a particle target.
 const SPARKLE_BEHAVIORS = Object.freeze(Object.values(GlitterAnimation.MOTION_REGISTRY)
-	.filter((motion) => motion.particleLabel && motion.particleSafe)
-	.map((motion) => Object.freeze({ value: motion.id, label: motion.particleLabel })));
+	.filter((motion) => motion.targets.includes('particle'))
+	.map((motion) => Object.freeze({ value: motion.id, label: motion.particleLabel || motion.label })));
 defineOptions('sparkleBehavior', SPARKLE_BEHAVIORS);
 
 // ===== DATA =====
@@ -339,6 +338,7 @@ function computeSparkleLayout(data, host) {
 	particles.forEach((particle, index) => {
 		particle.index = index;
 		particle.areaHeight = height;
+		particle.areaWidth = width;
 	});
 	return particles;
 }
@@ -359,13 +359,13 @@ function getSparkleWrapMargin(particle) {
 function sampleSparkleFrame(data, layout, tMs, sampleKey) {
 	const cycle = Math.max(1, Number(data.cycleMs) || FIELDS.sparkleCycle.value);
 	const base = GlitterAnimation.normalizeAnimation({ type: data.behavior });
-	const wrapY = Boolean(GlitterAnimation.MOTION_REGISTRY[base.type]?.wrapY);
 	const localTime = ((Number(tMs) || 0) % cycle + cycle) % cycle;
 	return layout.map((particle) => {
-		const margin = wrapY ? getSparkleWrapMargin(particle) : 0;
-		const span = (particle.areaHeight || 0) + margin * 2;
+		const margin = getSparkleWrapMargin(particle);
+		const context = GlitterAnimation.createSamplingContext({ area: { width: particle.areaWidth, height: particle.areaHeight }, rest: { left: particle.x - margin, top: particle.y - margin, right: particle.x + margin, bottom: particle.y + margin }, id: `${sampleKey}:${particle.index}`, seed: data.seed });
 		const sample = GlitterAnimation.sampleAt({
 			...base,
+			...GlitterAnimation.MOTION_REGISTRY[base.type].particleData?.(context),
 			periodMs: cycle / particle.blinks,
 			phase: particle.phase,
 			delayMs: 0,
@@ -373,16 +373,11 @@ function sampleSparkleFrame(data, layout, tMs, sampleKey) {
 			iterations: Infinity,
 			fillMode: 'none',
 			snapMode: 'smooth'
-		}, localTime, { layerId: `${sampleKey}:${particle.index}`, seed: data.seed, origin: [0.5, 0.5], boxH: span });
-		let ty = sample.ty;
-		if (wrapY && span > 0) {
-			const y = particle.y + ty + margin;
-			ty = ((y % span) + span) % span - margin - particle.y;
-		}
+		}, localTime, context);
 		return {
 			particle,
 			tx: sample.tx,
-			ty,
+			ty: sample.ty,
 			rotate: particle.rotation + sample.rotate,
 			scaleX: sample.scaleX,
 			scaleY: sample.scaleY,

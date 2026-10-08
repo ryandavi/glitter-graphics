@@ -1,4 +1,11 @@
 const COMMANDS = {
+	canvasBoundsRatioMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropRatio', getCanvasRatioOptions(editor), (id) => editor.setCanvasBoundsRatio(id)) },
+	canvasBoundsFitMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropFit', CANVAS_BOUNDS_SOURCES, (id) => editor.ensureCanvasBounds().setSource(id)) },
+	canvasBoundsApply: { run: (editor) => editor.applyCanvasBounds() },
+	canvasBoundsCancel: { run: (editor) => editor.cancelCanvasBounds() },
+	canvasBoundsSwap: { run: (editor) => editor.ensureCanvasBounds().swapOrientation() },
+	documentScaleApply: { run: (editor) => editor.applyScaleDesign() },
+	documentScaleReset: { run: (editor) => editor.setDocumentScale(editor.documentSizeDefaults().scale) },
 	removeBackground: { label: 'Remove background', group: 'Sticker', when: editor => editor.stickerManager.canRemoveBackground(), run: editor => editor.stickerManager.removeBackground() },
 	recolorGlitter: { label: 'Recolor a glitter', group: 'Library', run: (editor, target) => editor.glitterRecolor.command(target) },
 	copyStyleAsPreset: {
@@ -86,16 +93,12 @@ const COMMANDS = {
 	librarySearch: { label: 'Search the Library', group: 'View', keys: ['/', 'shift+/'], displayKey: '/',
 		when: (editor) => !editor.mobileManager?.isMobile && Boolean(document.getElementById('designGallerySection')?.dataset.library),
 		run: () => focusLibrarySearch() },
-	toolSelect: { label: 'Select Tool', group: 'Tools', keys: ['v'], displayKey: 'V', run: (editor) => editor.setTool(ToolType.SELECT) },
-	toolText: { label: 'Text Tool', group: 'Tools', keys: ['t'], displayKey: 'T', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.TEXT) },
-	toolShape: { label: 'Shape Tool', group: 'Tools', keys: ['u'], displayKey: 'U', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.SHAPE) },
-	toolLine: { label: 'Line Tool', group: 'Tools', keys: ['l'], displayKey: 'L', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.LINE) },
-	toolPen: { label: 'Pen Tool', group: 'Tools', keys: ['p'], displayKey: 'P', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.PEN) },
-	toolGlitterFill: { label: 'Glitter Fill Tool', group: 'Tools', keys: ['i'], displayKey: 'I', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.GLITTER_FILL) },
-	toolBrush: { label: 'Glitter Brush Tool', group: 'Tools', keys: ['b'], displayKey: 'B', run: (editor) => { editor.setTool(ToolType.BRUSH); editor.maskEditor?.setMode('add'); } },
-	toolEraser: { label: 'Mask Eraser Tool', group: 'Tools', keys: ['e'], displayKey: 'E', run: (editor) => { editor.setTool(ToolType.BRUSH); editor.maskEditor?.setMode('sub'); } },
-	toolHand: { label: 'Hand Tool', group: 'Tools', keys: ['h'], displayKey: 'H', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.HAND) },
-	toolZoom: { label: 'Zoom Tool', group: 'Tools', keys: ['z'], displayKey: 'Z', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.ZOOM) },
+	...Object.fromEntries(Object.entries(TOOLS).flatMap(([tool, definition]) => [
+		[definition.command, { label: `${definition.name} Tool`, group: 'Tools', keys: [definition.key], displayKey: definition.key.toUpperCase(),
+			when: (editor) => definition.available(editor, { hasImage: Boolean(editor.originalImage), autoPreviewActive: editor.autoGlitterManager?.isSessionActive() }),
+			run: (editor) => { editor.setTool(tool); definition.onShortcut?.(editor); } }],
+		...(definition.shortcuts || []).map((shortcut) => [shortcut.command, { ...shortcut, group: 'Tools', keys: [shortcut.key], displayKey: shortcut.key.toUpperCase() }])
+	])),
 	selectAll: {
 		label: 'Select All Movable Layers', group: 'Selection', keys: ['mod+a'], displayKey: 'Ctrl/Cmd + A',
 		run: (editor) => {
@@ -103,13 +106,9 @@ const COMMANDS = {
 			if (ids.length) editor.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1] });
 		}
 	},
-	// Path point editing (js/ui/path-edit.js). A session takes Delete, the
-	// arrows, Enter and Escape before the layer commands that share them.
-	pathDeletePoints: { label: 'Delete Selected Points / Last Point While Drawing', group: 'Pen', keys: ['Delete', 'Backspace'], displayKey: 'Delete / Backspace', when: (editor) => editor.getActiveSession() === 'pathEdit', run: (editor) => editor.pathEdit.deleteSelection() },
-	pathNudge: { label: 'Nudge Selected Points', group: 'Pen', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'], displayKey: 'Arrow Keys', when: (editor, event) => editor.getActiveSession() === 'pathEdit' && !focusClaimsArrowKey(event.key), run: (editor, event) => editor.pathEdit.nudge(event) },
-	pathNudgeFast: { label: 'Nudge Selected Points 10px', group: 'Pen', keys: ['shift+ArrowLeft', 'shift+ArrowRight', 'shift+ArrowUp', 'shift+ArrowDown'], displayKey: 'Shift + Arrow Keys', when: (editor, event) => editor.getActiveSession() === 'pathEdit' && !focusClaimsArrowKey(event.key), run: (editor, event) => editor.pathEdit.nudge(event) },
-	pathDone: { label: 'Finish Path / Edit Selected Path', group: 'Pen', keys: ['Enter'], displayKey: 'Enter', when: (editor) => editor.pathEdit.canHandleEnter(), run: (editor) => editor.pathEdit.handleEnter() },
-	pathEscape: { label: 'Finish Path / Clear Point Selection', group: 'Pen', keys: ['Escape'], displayKey: 'Escape', when: (editor) => editor.getActiveSession() === 'pathEdit', run: (editor) => editor.pathEdit.handleEscape() },
+	sessionDelete: { label: 'Delete session selection', keys: ['Delete', 'Backspace'], when: (editor) => Boolean(getSessionDefinition(editor)?.delete), run: (editor, event) => dispatchSessionKey(editor, 'delete', event) },
+	sessionConfirm: { label: 'Finish editing', keys: ['Enter'], when: (editor) => Boolean(getSessionDefinition(editor, 'confirm')?.confirm), run: (editor, event) => dispatchSessionKey(editor, 'confirm', event) },
+	sessionCancel: { label: 'Cancel editing', keys: ['Escape'], allowWhileTyping: true, when: (editor) => Boolean(getSessionDefinition(editor)?.cancel), run: (editor, event) => dispatchSessionKey(editor, 'cancel', event) },
 	pathToggleClosed: { run: (editor) => editor.pathEdit.toggleClosed() },
 	pathPointCorner: { run: (editor) => editor.pathEdit.setSelectionType('corner') },
 	pathPointSmooth: { run: (editor) => editor.pathEdit.setSelectionType('smooth') },
@@ -136,7 +135,7 @@ const COMMANDS = {
 	undo: { label: 'Undo', group: 'History', keys: ['mod+z'], displayKey: 'Ctrl/Cmd + Z', allowWhileTyping: true, run: (editor) => editor.undo() },
 	redo: { label: 'Redo', group: 'History', keys: ['mod+shift+z', 'mod+y'], displayKey: 'Ctrl/Cmd + Shift + Z / Ctrl/Cmd + Y', allowWhileTyping: true, run: (editor) => editor.redo() },
 	temporaryHand: { label: 'Temporarily Use Hand Tool', group: 'View', displayKey: 'Space', instruction: 'Hold' },
-	nudge: { label: 'Nudge Selected Layer', group: 'Transform', displayKey: 'Arrow Keys' },
+	nudge: { label: 'Nudge Selected Layer', group: 'Transform', displayKey: 'Arrow Keys', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'shift+ArrowLeft', 'shift+ArrowRight', 'shift+ArrowUp', 'shift+ArrowDown'], when: (editor, event) => (!focusClaimsArrowKey(event.key) || (editor.currentTool === ToolType.SELECT && document.activeElement === editor.textGlitterManager?.ui?.textInput)) && Boolean(editor.originalImage), run: (editor, event) => getSessionDefinition(editor)?.nudge ? dispatchSessionKey(editor, 'nudge', event) : editor.tryArrowNudge(event) },
 	nudgeFast: { label: 'Nudge Selected Layer 10px', group: 'Transform', displayKey: 'Shift + Arrow Keys' },
 	gradientStopNudge: { label: 'Move Focused Gradient Stop 1%', group: 'Gradient', displayKey: 'Arrow Keys' },
 	gradientStopNudgeSnap: { label: 'Move Focused Gradient Stop 5%', group: 'Gradient', displayKey: 'Shift + Arrow Keys' },
@@ -165,7 +164,7 @@ function isGestureCommand(command) {
 
 function getShortcutGroups(kind = 'keyboard') {
 	const groups = new Map();
-	Object.values(COMMANDS).filter((command) => {
+	[...Object.values(COMMANDS), ...SESSIONS.flatMap((session) => session.shortcuts || [])].filter((command) => {
 		if (!command.label) return false;
 		return kind === 'gesture' ? isGestureCommand(command) : Boolean(command.displayKey) && !isGestureCommand(command);
 	}).forEach((command) => {

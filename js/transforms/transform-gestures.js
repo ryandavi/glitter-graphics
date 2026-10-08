@@ -61,6 +61,35 @@ function anchoredHandlePoint(handleStart, grabPoint, point) {
 	return { x: handleStart.x + point.x - grabPoint.x, y: handleStart.y + point.y - grabPoint.y };
 }
 
+function resizeRectFromHandle(rect, handle, point, { ratio = null, fromCenter = false } = {}) {
+	const left = handle.endsWith('tl') || handle.endsWith('bl') || handle === 'edge-left';
+	const top = handle.endsWith('tl') || handle.endsWith('tr') || handle === 'edge-top';
+	const horizontal = handle.startsWith('corner-') || handle === 'edge-left' || handle === 'edge-right';
+	const vertical = handle.startsWith('corner-') || handle === 'edge-top' || handle === 'edge-bottom';
+	const sx = left ? -1 : 1, sy = top ? -1 : 1;
+	const pivot = {
+		x: fromCenter || !horizontal ? rect.x + rect.width / 2 : rect.x + (left ? rect.width : 0),
+		y: fromCenter || !vertical ? rect.y + rect.height / 2 : rect.y + (top ? rect.height : 0)
+	};
+	const factor = fromCenter ? 2 : 1;
+	let width = horizontal ? Math.max(1, (point.x - pivot.x) * sx * factor) : rect.width;
+	let height = vertical ? Math.max(1, (point.y - pivot.y) * sy * factor) : rect.height;
+	if (ratio) {
+		const value = typeof ratio === 'number' ? ratio : ratio.w / ratio.h;
+		if (horizontal && vertical) {
+			height = Math.max(1, (width * value + height) / (value * value + 1));
+			width = height * value;
+		} else if (horizontal) height = width / value;
+		else width = height * value;
+	}
+	width = Math.max(1, Math.round(width)); height = Math.max(1, Math.round(height));
+	return {
+		x: Math.round(pivot.x - (fromCenter || !horizontal ? width / 2 : left ? width : 0)),
+		y: Math.round(pivot.y - (fromCenter || !vertical ? height / 2 : top ? height : 0)),
+		width, height
+	};
+}
+
 // Canvas-space point of a handle on a frame, from getFrameMetrics-style
 // metrics (corners in tl, tr, br, bl order). Corners are the frame corners;
 // edges are edge midpoints.

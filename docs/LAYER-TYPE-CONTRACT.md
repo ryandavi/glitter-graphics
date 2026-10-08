@@ -87,3 +87,5 @@ Common optional fields:
 5. Run `node tests/run.js --tag quick` and `--tag export`, plus the export fragility routine from `CONTRIBUTING.md`.
 
 That should be enough for create, delete, visibility, selection, go-to-source, mobile settings routing, undo, clipboard, project save and load, and the Add Layer modal.
+
+Canvas-space measurements come from `getLayerCanvasBox(editor, layer, { visual })`, and unions from `getLayersCanvasBox`. These use the same transformed frame metrics for snapping, zoom, fitted canvas bounds, animation sampling and export culling. Keep layer-local frame declarations on the type.

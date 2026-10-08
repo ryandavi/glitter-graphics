@@ -1,5 +1,17 @@
 'use strict';
 
+const ANCHOR_POINTS = Object.freeze([
+	{ id: 'top-left', fx: 0, fy: 0, label: 'Top left', arrow: '\u2196' },
+	{ id: 'top-center', fx: 0.5, fy: 0, label: 'Top', arrow: '\u2191' },
+	{ id: 'top-right', fx: 1, fy: 0, label: 'Top right', arrow: '\u2197' },
+	{ id: 'center-left', fx: 0, fy: 0.5, label: 'Left', arrow: '\u2190' },
+	{ id: 'center', fx: 0.5, fy: 0.5, label: 'Center', arrow: '\u2022' },
+	{ id: 'center-right', fx: 1, fy: 0.5, label: 'Right', arrow: '\u2192' },
+	{ id: 'bottom-left', fx: 0, fy: 1, label: 'Bottom left', arrow: '\u2199' },
+	{ id: 'bottom-center', fx: 0.5, fy: 1, label: 'Bottom', arrow: '\u2193' },
+	{ id: 'bottom-right', fx: 1, fy: 1, label: 'Bottom right', arrow: '\u2198' }
+].map(Object.freeze));
+
 const OPTION_REGISTRY = Object.create(null);
 
 function defineOptions(name, options) {
@@ -149,3 +161,5 @@ defineOptions('textBoxMode', [
 ]);
 defineOptions('textAlign', ['left', 'center', 'right', 'justify'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: `text-align-${value}` })));
 defineOptions('textVerticalAlign', ['top', 'middle', 'bottom'].map(value => ({ value, label: value[0].toUpperCase() + value.slice(1), icon: `text-align-${value}` })));
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { ANCHOR_POINTS };

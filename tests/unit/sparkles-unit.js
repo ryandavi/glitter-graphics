@@ -75,7 +75,7 @@ Object.keys(run('CONFIG.tools.sparkles.defaults.glyphs')).forEach((id) => {
 if (behaviors.length < 2) fail('expected at least twinkle and glint behaviors');
 behaviors.forEach(({ value }) => {
 	const motion = animation.MOTION_REGISTRY[value];
-	if (!motion?.particleSafe) fail(`behavior ${value} is not a particle-safe motion`);
+	if (!motion?.targets.includes('particle')) fail(`behavior ${value} is not a particle-safe motion`);
 	if (!animation.isSeamlessLoop({ type: value })) fail(`behavior ${value} does not loop seamlessly`);
 });
 

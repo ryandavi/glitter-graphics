@@ -4,6 +4,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/canvas-bounds-unit.js', tags: ['unit', 'document'] },
+	{ file: 'ui/crop-motion-verify.js', tags: ['document', 'touch', 'export'] },
 	{ file: 'unit/glitter-recolor-unit.js', tags: ['unit', 'assets', 'effects'] },
 	{ file: 'ui/personal-assets-verify.js', tags: ['assets', 'document', 'export'] },
 	{ file: 'ui/glitter-recolor-verify.js', tags: ['assets', 'document', 'export', 'panels'] },

@@ -12,6 +12,7 @@
             <a href="#getting-started">Getting Started</a>
             <ol>
                 <li><a href="#uploading-images">Load Your Image</a></li>
+				<li><a href="#crop-tool">Crop</a></li>
             </ol>
         </li>
         <li>
@@ -194,12 +195,18 @@
                         <li><strong>Background</strong> – Choose Image, Transparent, Glitter, Solid, or Gradient. <strong>Replace</strong> is the explicit way to change the base image without disturbing other layers.</li>
 						<li><strong>Image</strong> – Enter a linked pixel size or percentage to resize the canvas and every editable layer together. Choose whether glitter textures and visual effects scale with the design.</li>
 						<li><strong>Canvas</strong> – Crop or extend without scaling content. Use Relative for pixel deltas, choose an anchor, and fill new canvas area with transparency or a color.</li>
-						<li><strong>Artwork</strong> – Crop or extend the canvas to exactly fit your stickers, text, and shapes, with optional padding on every side.</li>
+						<li><strong>Fit</strong> – Crop or extend the canvas to fit all artwork or the selected layers, with optional padding on every side. Choose a ratio or named canvas size in Canvas mode.</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
+
+	<div class="guide-section">
+		<h3 id="crop-tool">{ui-tool:crop}</h3>
+		<p>Press <kbd class="guide-kbd">C</kbd> or choose Crop to edit the canvas bounds. Drag a handle to resize, drag inside to move the bounds, or drag outside to draw new bounds. The Size panel shows the same rectangle and provides ratios, named sizes, fit to artwork or selection, padding, and extension fill. Swap changes orientation.</p>
+		<p>A locked ratio wins; Shift toggles it for a drag. Alt resizes from the center and Ctrl bypasses snapping. Arrow keys move the crop by one pixel, or ten with Shift. Press Enter or double-click inside to apply; Escape cancels. On touchscreens, use one finger to edit, two to pan or zoom, and Done or Cancel in the context bar. Crop can extend beyond the current canvas, and applying it is one undo step.</p>
+	</div>
 
     <!-- BASICS -->
     <div class="guide-section">
@@ -772,6 +779,9 @@
 				<div class="guide-item-content">
 					<p><strong>Tune the result</strong> – Use <strong>Speed</strong> and <strong>Intensity</strong> for the main adjustment. Open <strong>Advanced</strong> to control easing, direction, iterations, delay, start offset, fill mode, the shared layer anchor, and motion sampling. Orbit keeps a separate orbit center. Layer animations share one canvas timeline by default; <strong>Start offset</strong> shifts an individual layer around its loop by a percentage.</p>
 					<ul>
+							<li><strong>Marquee</strong> fits its travel to the canvas and wraps after the whole layer, including its shadow, leaves an edge. Angle controls its direction.</li>
+						<li><strong>Ricochet</strong> bounces between canvas edges. Turns counts whole round trips along the roomier axis; Angle chooses the starting quadrant.</li>
+						<li><strong>Wander</strong> follows a stable looping path. Intensity controls its range. Ricochet and Wander are also Sparkles behaviors; Wander gives particles a firefly motion.</li>
 						<li><strong>Pixel snap</strong> keeps pixel-art movement aligned to the pixel grid.</li>
 						<li>Finite iterations play the effect a set number of times; continuous motion loops while the layer is visible.</li>
 					</ul>

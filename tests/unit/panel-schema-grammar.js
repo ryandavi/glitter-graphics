@@ -13,7 +13,7 @@ const vm = require('vm');
 const root = path.join(__dirname, '..', '..');
 const context = { console, navigator: { hardwareConcurrency: 4 }, localStorage: { getItem: () => null } };
 vm.createContext(context);
-['js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js', 'js/core/layer-types.js', 'js/core/options.js', 'js/core/preferences.js', 'js/ui/settings-store.js'].forEach((file) => {
+['js/core/releases.js', 'js/core/fields.js', 'js/core/config.js', 'js/core/tools.js', 'js/core/layer-types.js', 'js/core/options.js', 'js/effects/animation.js', 'js/editor/canvas-bounds.js', 'js/core/preferences.js', 'js/ui/settings-store.js'].forEach((file) => {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 });
 // Registries that load after the schemas in the app (frames, sparkles) are

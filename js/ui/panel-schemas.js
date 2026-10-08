@@ -59,26 +59,14 @@ const TEXT_BACKGROUND_PRESET_OPTIONS = [
 	{ value: 'labelPill', label: 'Label / pill' }
 ];
 
-const ANIMATION_PRESET_GROUPS = {
-	Ambient: ['breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'glint', 'pulse'],
-	Attention: ['heartbeat', 'blink', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band'],
-	Movement: ['move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'],
-	Color: ['rainbow']
-};
-const ANIMATION_PRESET_GROUP_BY_TYPE = Object.fromEntries(
-	Object.entries(ANIMATION_PRESET_GROUPS).flatMap(([group, types]) => types.map((type) => [type, group]))
-);
-const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).filter((value) => !CONFIG.tools.animation.presets[value].particleOnly).map((value) => ({
-	value,
-	label: sentenceCaseOption(value),
-	selected: value === CONFIG.tools.animation.defaultType,
-	group: ANIMATION_PRESET_GROUP_BY_TYPE[value]
-}));
+const ANIMATION_PRESET_OPTIONS = Object.values(GlitterAnimation.MOTION_REGISTRY)
+	.filter((motion) => motion.targets.includes('layer')).map((motion) => ({
+		value: motion.id, label: motion.label, group: motion.group,
+		selected: motion.id === CONFIG.tools.animation.defaultType
+	}));
 
 const ANCHOR_SELECT_OPTIONS = Object.freeze([
-	{ value: '0,0', label: 'Top left' }, { value: '0.5,0', label: 'Top' }, { value: '1,0', label: 'Top right' },
-	{ value: '0,0.5', label: 'Left' }, { value: '0.5,0.5', label: 'Center' }, { value: '1,0.5', label: 'Right' },
-	{ value: '0,1', label: 'Bottom left' }, { value: '0.5,1', label: 'Bottom' }, { value: '1,1', label: 'Bottom right' },
+	...ANCHOR_POINTS.map((anchor) => ({ value: `${anchor.fx},${anchor.fy}`, label: anchor.label })),
 	{ value: 'custom', label: 'Custom', disabled: true }
 ]);
 
@@ -260,6 +248,8 @@ function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
 
 function createAnimationSectionSpec(prefix) {
 	const id = (suffix) => `${prefix}Anim${suffix}`;
+	const sliders = (keys, hidden = false) => GlitterAnimation.ANIMATION_CONTROLS.filter((control) => keys.includes(control.key))
+		.map((control) => ({ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`), hidden }));
 	return {
 		// Toggle-gated like every effect section: the shared `is-collapsed`
 		// accordion (syncPanelEffectToggle) hides the whole body.
@@ -277,14 +267,8 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'note', id: id('LoopHint'), classes: 'animation-loop-hint' }
 			] },
 			{ label: 'Movement', rows: [
-				{ kind: 'slider', id: id('PeriodMs'), slider: 'animSpeed', label: 'Speed' },
-				{ kind: 'slider', id: id('Amount'), slider: 'animAmount', rowId: id('AmountRow') },
-				{ kind: 'slider', id: id('Angle'), slider: 'animAngle', rowId: id('AngleRow'), hidden: true },
-				{ kind: 'slider', id: id('Distance'), slider: 'animDistance', rowId: id('DistanceRow'), hidden: true },
-				{ kind: 'slider', id: id('Radius'), slider: 'animRadius', rowId: id('RadiusRow'), hidden: true },
-				{ kind: 'slider', id: id('Turns'), slider: 'animTurns', rowId: id('TurnsRow'), hidden: true },
-				{ kind: 'slider', id: id('Duty'), slider: 'animDuty', rowId: id('DutyRow'), hidden: true },
-				{ kind: 'slider', id: id('OpacityFloor'), slider: 'animOpacityFloor', rowId: id('OpacityFloorRow'), hidden: true }
+				...GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field && !['delayMs', 'phase', 'anchorX', 'anchorY'].includes(control.key))
+					.map((control) => ({ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`) }))
 			] }
 		],
 		advancedId: id('Advanced'),
@@ -295,7 +279,7 @@ function createAnimationSectionSpec(prefix) {
 					{ value: 'easeOut', label: 'Ease out' }, { value: 'easeInOut', label: 'Ease in-out' },
 					{ value: 'bounceOut', label: 'Bounce out' }, { value: 'elasticOut', label: 'Elastic out' }, { value: 'steps', label: 'Steps' }
 				] },
-				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', min: 2, max: 60, step: 1, value: 2, rowId: id('StepsRow') },
+				{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', ...FIELDS.animSteps, rowId: id('StepsRow') },
 				{ kind: 'select', id: id('Direction'), label: 'Direction', options: [
 					{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
 					{ value: 'alternate', label: 'Alternate' }, { value: 'alternate-reverse', label: 'Alternate reverse' }
@@ -305,8 +289,7 @@ function createAnimationSectionSpec(prefix) {
 				] }
 			] },
 			{ label: 'Start', rows: [
-				{ kind: 'slider', id: id('DelayMs'), slider: 'animDelay' },
-				{ kind: 'slider', id: id('Phase'), slider: 'animPhase' },
+				...sliders(['delayMs', 'phase']),
 				{ kind: 'select', id: id('FillMode'), label: 'Fill', ariaLabel: 'Fill mode',
 					hint: 'Whether the layer holds its start pose before a delay, and its end pose after a limited number of iterations finishes. Has no effect with no delay and infinite iterations.',
 					options: [
@@ -316,8 +299,8 @@ function createAnimationSectionSpec(prefix) {
 			] },
 			{ label: 'Pivot', rows: [
 				{ kind: 'select', id: id('Anchor'), label: 'Anchor', options: ANCHOR_SELECT_OPTIONS },
-				{ kind: 'slider', id: id('AnchorX'), slider: 'animAnchorX', rowId: id('AnchorXRow'), hidden: true },
-				{ kind: 'slider', id: id('AnchorY'), slider: 'animAnchorY', rowId: id('AnchorYRow'), hidden: true },
+				{ kind: 'note', id: id('AnchorNote'), classes: 'animation-anchor-note' },
+				...sliders(['anchorX', 'anchorY'], true),
 				{ kind: 'select', id: id('SnapMode'), label: 'Motion', ariaLabel: 'Motion sampling', options: [
 					{ value: 'smooth', label: 'Smooth' }, { value: 'pixel-snap', label: 'Pixel snap' }, { value: 'step', label: 'Step' }
 				] }
@@ -1122,7 +1105,7 @@ const PANEL_SCHEMAS = {
 		]
 	},
 	// The document-size form (Image Size / Canvas Size). ONE self-contained
-	// "Size" section, mounted into #noLayerCanvasSizeHost at boot;
+	// "Size" section, mounted into #baseCanvasSizeHost at boot;
 	// updateSidePanelUI and BaseBackgroundManager relocate this single node to
 	// #baseCanvasSizeHost for Canvas Properties. Defined last so its mount host
 	// (from the noSelection schema) already exists. canvas-size.js owns every
@@ -1139,14 +1122,14 @@ const PANEL_SCHEMAS = {
 					{ kind: 'segmented', id: 'documentSizeMode', label: 'Operation', ariaLabel: 'Sizing operation',
 						classes: 'document-size-mode', options: [
 							{ label: 'Image', active: true, attrs: { 'data-size-mode': 'image', 'aria-pressed': 'true' } },
-							{ label: 'Canvas', attrs: { 'data-size-mode': 'canvas', 'aria-pressed': 'false' } },
-							{ label: 'Artwork', attrs: { 'data-size-mode': 'artwork', 'aria-pressed': 'false' } }
+							{ label: 'Canvas', attrs: { 'data-size-mode': 'canvas', 'aria-pressed': 'false' } }
 						] },
-					{ kind: 'note', attrs: { 'data-size-mode-note': 'image' }, text: 'Resize the canvas and everything in the design. Proportions stay linked.' },
-					{ kind: 'note', hidden: true, attrs: { 'data-size-mode-note': 'canvas' }, text: 'Crop or extend the canvas without scaling content.' },
-					{ kind: 'note', hidden: true, attrs: { 'data-size-mode-note': 'artwork' }, text: 'Crop or extend the canvas to fit the artwork, with optional padding.' }
+					{ kind: 'note', attrs: { 'data-size-modes': 'image' }, text: 'Resize the canvas and everything in the design. Proportions stay linked.' },
+					{ kind: 'note', hidden: true, attrs: { 'data-size-modes': 'canvas' }, text: 'Crop or extend the canvas without scaling content.' },
 				] },
-				{ id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, rows: [
+				{ attrs: { 'data-size-modes': 'canvas' }, id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, rows: [
+					{ kind: 'select', id: 'canvasBoundsSource', label: 'Fit', options: CANVAS_BOUNDS_SOURCES.map((source) => ({ value: source.id, label: source.label })) },
+					{ kind: 'select', id: 'canvasBoundsRatio', label: 'Ratio', options: [] },
 					{ kind: 'numberPair', label: 'Size', revert: 'canvasSizeWidth canvasSizeHeight', items: [
 						{ id: 'canvasSizeWidth', mark: 'W', label: 'Width', min: 1, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
 						{ id: 'canvasSizeHeight', mark: 'H', label: 'Height', min: 1, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
@@ -1156,46 +1139,41 @@ const PANEL_SCHEMAS = {
 						classes: 'anchor-grid', attrs: { role: 'radiogroup', 'aria-label': 'Canvas resize anchor' } } },
 					{ kind: 'toggle', id: 'canvasSizeRelative', label: 'Relative', revert: 'canvasSizeRelative' }
 				] },
-				{ id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', rows: [
+				{ attrs: { 'data-size-modes': 'image' }, id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', rows: [
 					{ kind: 'numberPair', label: 'Size', revert: 'scaleDesignWidth scaleDesignHeight', items: [
 						{ id: 'scaleDesignWidth', mark: 'W', label: 'Width', min: 1, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
 						{ id: 'scaleDesignHeight', mark: 'H', label: 'Height', min: 1, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
 					{ kind: 'slider', id: 'scaleDesignPercent', slider: 'documentScale', label: 'Scale' }
 				] },
-				{ attrs: { 'data-size-mode-note': 'image' }, rows: [
+				{ attrs: { 'data-size-modes': 'image' }, rows: [
 					{ kind: 'toggle', id: 'scaleDesignTextures', label: 'Scale textures', checked: true, revert: 'scaleDesignTextures' },
 					{ kind: 'toggle', id: 'scaleDesignEffects', label: 'Scale effects', checked: true, revert: 'scaleDesignEffects' }
 				] },
-				{ id: 'artworkCropPanel', classes: 'document-size-panel artwork-crop-controls', hidden: true, rows: [
-					{ kind: 'field', id: 'artworkCropPadding', label: 'Padding', type: 'number', unit: 'px', min: 0, step: 1, value: 0, revert: 'artworkCropPadding' },
-					{ kind: 'note', id: 'artworkCropSummary', classes: 'artwork-crop-summary', attrs: { role: 'status' } }
+				{ attrs: { 'data-size-modes': 'canvas' }, rows: [
+					{ kind: 'field', id: 'artworkCropPadding', rowId: 'canvasBoundsPaddingRow', label: 'Padding', type: 'number', unit: 'px', min: 0, step: 1, value: 0, revert: 'artworkCropPadding' }
 				] },
 				// Extension fill applies to both structural resizes that can grow the
 				// canvas beyond its current bounds — Canvas Size, and Artwork padding
 				// that pushes past the old edges — so it's one shared set shown for
 				// either mode.
-				{ hidden: true, attrs: { 'data-size-mode-note': 'canvas artwork' }, rows: [
+				{ hidden: true, attrs: { 'data-size-modes': 'canvas' }, rows: [
 					{ kind: 'segmented', id: 'canvasExtensionMode', label: 'Extension', ariaLabel: 'Canvas extension fill',
 						classes: 'canvas-extension-mode', revert: 'canvasExtensionMode', options: [
 							{ label: 'Transparent', active: true, attrs: { 'data-extension-mode': 'transparent', 'aria-pressed': 'true' } },
 							{ label: 'Color', attrs: { 'data-extension-mode': 'color', 'aria-pressed': 'false' } }
 						] },
 					{ kind: 'field', id: 'canvasExtensionColor', rowId: 'canvasExtensionColorRow', label: 'Fill color',
-						type: 'color', value: '#ffffff', hidden: true, revert: true }
+						type: 'color', value: '#ffffff', hidden: true, revert: 'canvasExtensionColor' }
 				] },
-				{ id: 'canvasSizeActions', classes: 'canvas-size-actions is-split', hidden: true, actions: [
-					{ id: 'canvasSizeReset', label: 'Reset' },
-					{ id: 'canvasSizeApply', label: 'Resize canvas', primary: true }
+				{ attrs: { 'data-size-modes': 'canvas' }, id: 'canvasSizeActions', classes: 'canvas-size-actions is-split', hidden: true, actions: [
+					{ id: 'canvasSizeReset', label: 'Reset', command: 'canvasBoundsCancel' },
+					{ id: 'canvasSizeApply', label: 'Apply', primary: true, command: 'canvasBoundsApply' }
 				] },
-				{ id: 'scaleDesignActions', classes: 'scale-design-actions is-split', actions: [
-					{ id: 'scaleDesignReset', label: 'Reset' },
-					{ id: 'scaleDesignApply', label: 'Scale image', primary: true }
+				{ attrs: { 'data-size-modes': 'image' }, id: 'scaleDesignActions', classes: 'scale-design-actions is-split', actions: [
+					{ id: 'scaleDesignReset', label: 'Reset', command: 'documentScaleReset' },
+					{ id: 'scaleDesignApply', label: 'Scale image', primary: true, command: 'documentScaleApply' }
 				] },
-				{ id: 'artworkCropActions', classes: 'artwork-crop-actions is-split', hidden: true, actions: [
-					{ id: 'artworkCropReset', label: 'Reset' },
-					{ id: 'artworkCropApply', label: 'Crop to artwork', primary: true }
-				] }
 			]
 		}
 	}

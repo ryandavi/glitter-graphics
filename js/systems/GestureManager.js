@@ -73,7 +73,7 @@ class GestureManager {
 			return;
 		}
 		const transformHandles = event.target.closest('.transform-handles');
-		if (transformHandles && this.pointers.size === 0) {
+		if (transformHandles && this.pointers.size === 0 && TOOL_TOUCH_ROUTES[this.editor.currentTool] !== 'toolDrag') {
 			if (!event.target.closest('.transform-bounding-box')) return;
 			const activeLayer = this.editor.layerManager.getActiveLayer();
 			const context = this.editor.getMovableLayerContext?.(activeLayer);

@@ -277,6 +277,9 @@ isLayerContentLocked(layer) {
 				designPanel.dataset.homeLibrary = config.library || '';
 			}
 		}
+		const preferredPanel = TOOLS[this.currentTool]?.panel?.(this, layer);
+		const preferredSection = preferredPanel && document.getElementById(`${preferredPanel}Section`);
+		if (preferredSection) { preferredSection.style.display = ''; preferredSection.classList.add('visible'); }
 		this.syncLayerBlendModeControl(layer);
 
 		this.syncToolSettingsSectionVisibility(layer);
@@ -287,13 +290,9 @@ isLayerContentLocked(layer) {
 
 		this.syncNoLayerPanelState();
 		syncLibraryView();
-		// The document-size form is one self-contained "Size" card (PANEL_SCHEMAS
-		// .documentSize). Relocate the single node between the no-selection panel
-		// and Canvas Properties; it carries identical chrome in both.
+		// Canvas Properties owns the document-size card for every tool.
 		const documentSize = document.getElementById('documentSizeGroup');
-		const sizeHost = !layer && !hasMultiSelection
-			? document.getElementById('noLayerCanvasSizeHost')
-			: document.getElementById('baseCanvasSizeHost');
+		const sizeHost = document.getElementById('baseCanvasSizeHost');
 		if (documentSize && sizeHost && documentSize.parentElement !== sizeHost) sizeHost.appendChild(documentSize);
 		this.syncLockedLayerUI(layer);
 
@@ -303,11 +302,7 @@ isLayerContentLocked(layer) {
 		// alone (the text manager performs the initial hide for non-text layers).
 		this.pickers.managers.forEach((manager) => manager.updatePickerStrip?.());
 
-		// Canvas Size belongs to Canvas Background; drop its temporary preview
-		// when editing any content layer or when no image is loaded.
-		if ((layer && layer.type !== LayerType.BASE_IMAGE) || hasMultiSelection || !this.originalImage) {
-			this.hideCanvasResizePreview();
-		}
+		this.syncCanvasBoundsViews();
 	}
 
 ,
@@ -354,13 +349,8 @@ isLayerContentLocked(layer) {
 			return 'designGallery';
 		}
 
-		// Tool settings take focus when the active layer can use that tool.
-		if (this.currentTool === ToolType.BRUSH) {
-			return 'brushSettings';
-		}
-		if (this.currentTool === ToolType.GLITTER_FILL && layer?.type === LayerType.GLITTER_FILL) {
-			return 'layerSettings';
-		}
+		const panel = TOOLS[this.currentTool]?.panel?.(this, layer);
+		if (panel) return panel;
 
 		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer) {
 			return 'designGallery';

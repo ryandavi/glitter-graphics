@@ -22,7 +22,7 @@ for (const file of [
 	'js/core/tools.js',
 	'js/core/layer-types.js',
 	'js/core/options.js',
-	'js/ui/panel-schemas.js',
+	'js/effects/animation.js', 'js/editor/canvas-bounds.js', 'js/ui/panel-schemas.js',
 	'js/paint/paint-slots.js',
 	...typeFiles,
 	'js/ui/gallery.js',

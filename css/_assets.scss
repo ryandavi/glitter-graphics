@@ -507,3 +507,7 @@
 	&.is-vertical { border-left: 1px dashed rgba(255, 255, 255, .6); }
 	&.is-horizontal { border-top: 1px dashed rgba(255, 255, 255, .6); }
 }
+
+.transform-bounding-box.has-shade {
+	box-shadow: 0 0 0 100vmax var(--color-overlay);
+}

@@ -834,7 +834,7 @@ class PathEditSession {
 	nudge(event) {
 		const session = this.session;
 		if (!session?.selection.size || session.drag) return;
-		const config = CONFIG.tools.path.nudge;
+		const config = CONFIG.ui.nudge;
 		const step = event.shiftKey ? config.fastStep : config.step;
 		const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
 		const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;

@@ -1,11 +1,9 @@
 const CANVAS_GESTURE_METHODS = {
 	// The kind of the edit session that owns the canvas and keyboard right
-	// now ('textEdit', 'pathEdit'), or null. Context toolbars and commands
+	// now, or null. Context toolbars and commands
 	// that must not fire inside a session read it.
 	getActiveSession() {
-		if (this.textGlitterManager?.editSession) return 'textEdit';
-		if (this.pathEdit?.session) return 'pathEdit';
-		return null;
+		return getSessionDefinition(this)?.id || null;
 	}
 
 ,

@@ -429,13 +429,8 @@ setupImageListeners() {
 				}
 				const width = parseInt(widthInput.value);
 				const height = parseInt(heightInput.value);
-				const { minSize, maxWidth, maxHeight } = CONFIG.canvas.limits;
-				if (!Number.isInteger(width) || !Number.isInteger(height) ||
-					width < minSize || height < minSize ||
-					width > maxWidth || height > maxHeight) {
-					this.showError(`Canvas dimensions must be between ${minSize} and ${maxWidth} pixels.`);
-					return;
-				}
+				const validation = validateCanvasSize(width, height);
+				if (!validation.ok) { this.showError(validation.message); return; }
 				const backgroundType = document.querySelector('#newCanvasBackground .segmented-option.active')?.dataset.value;
 				const color = backgroundType === 'transparent' ? 'transparent' : colorInput.value;
 

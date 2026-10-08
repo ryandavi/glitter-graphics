@@ -87,18 +87,7 @@ class GroupTransformManager {
 			return null;
 		}
 
-		let minX = Number.POSITIVE_INFINITY;
-		let minY = Number.POSITIVE_INFINITY;
-		let maxX = Number.NEGATIVE_INFINITY;
-		let maxY = Number.NEGATIVE_INFINITY;
-
-		entries.forEach(({ transform }) => {
-			const metrics = transform.getFrameMetrics();
-			minX = Math.min(minX, metrics.minX);
-			minY = Math.min(minY, metrics.minY);
-			maxX = Math.max(maxX, metrics.maxX);
-			maxY = Math.max(maxY, metrics.maxY);
-		});
+		const { left: minX, top: minY, right: maxX, bottom: maxY } = getLayersCanvasBox(this.editor, entries.map(({ layer }) => layer));
 
 		return {
 			left: minX,
