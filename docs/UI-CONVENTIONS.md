@@ -235,10 +235,13 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
   | Folder | Holds |
   |---|---|
   | `css/` | Foundation shared with the admin (`_tokens`, `_themes`, `_mixins`, `_base`), app-wide components and controls, `_mobile` |
-  | `css/panels/` | One partial per panel surface or feature (layout, Library, layers list, preview bars, effects, paint slots) |
+  | `css/panels/` | One partial per sidebar panel or feature (layout, layers list, the Library column, effects, paint slots) |
+  | `css/library/` | The Library inside its column: search and filters, the picker strip, the browser (rail, wall, set headers), asset tiles, the selected-asset header |
+  | `css/workspace/` | Everything in the canvas column: the stage and tool cursors, start card, canvas chrome, context toolbars, brush cursor, status bar, layer preview elements, selection and path chrome |
   | `css/panels/property/` | The property vocabulary, one partial per concern; `_tokens.scss` opens with the map. Loaded last of the panel sheets so it wins the cascade |
   | `css/modals/` | `_shell`, `_forms`, then one partial per modal; `_responsive` supplies the common phone layout, followed by `_confirmation` for its stacked action buttons |
 
+- **Shared shapes are mixins** (`css/_mixins.scss`): `truncate` for one line ending in an ellipsis, `cover` for an absolutely positioned child that fills its parent, `modal-compact` for the modal single-column breakpoint beside `mobile`. `[hidden]` hides globally (`css/_base.scss`), so no component declares its own `[hidden]` rule.
 - **Each rule is declared once.** `.property-panel` (a whole surface) and `.property-section` (one schema-rendered section) share one token set. A panel-wide class takes no scope; a rule that restyles a global control (select, input) is scoped to `.property-panel` or `.property-section`. Never add a second, more specific copy of a rule to override the first: change the first. **When a change supersedes styling, remove what it supersedes in the same change.**
 - **No `:has()`.** State the stylesheet reads is a class the code stamps where that state already changes:
 

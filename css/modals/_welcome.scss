@@ -51,7 +51,6 @@
 
 		// Hidden while startup Welcome is gated off; must beat the per-layout
 		// display rules for both the footer and mobile copies.
-		&[hidden] { display: none !important; }
 
 		>input[type="checkbox"] {
 			@include visually-hidden-control;
@@ -364,4 +363,14 @@
 			margin-inline: auto;
 		}
 	}
+}
+
+.welcome-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: var(--spacing-sm);
+
+	>button { flex: 0 1 auto; }
 }

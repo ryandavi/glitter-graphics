@@ -84,7 +84,6 @@
 			padding-right: calc(1px + var(--spacing-sm));
 		}
 
-		&[hidden] { display: none; }
 	}
 
 	.gradient-stops {
@@ -111,13 +110,11 @@
 
 	.gradient-stop-hex {
 		min-width: 0;
-		overflow: hidden;
+		@include truncate;
 		font-size: var(--font-size-sm);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.02em;
 		color: var(--color-text-primary);
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	// Pos / Alpha: same box, size and unit treatment as a `.property-value`
@@ -201,8 +198,7 @@
 	}
 
 	> .gradient-preview-markers {
-		position: absolute;
-		inset: 0;
+		@include cover;
 		pointer-events: none;
 	}
 
@@ -246,12 +242,6 @@
 .gradient-advanced .property-value .setting-unit {
 	margin-left: 2px;
 	color: var(--color-text-tertiary);
-}
-
-.asset-info-change.target-active,
-.asset-info-thumbnail.target-active {
-	border-color: var(--color-accent);
-	box-shadow: 0 0 0 1px var(--color-accent-border);
 }
 
 .property-color-row {
@@ -309,7 +299,6 @@
 .animation-stack {
 	flex-wrap: wrap;
 
-	&[hidden] { display: none; }
 
 	.animation-stack-item {
 		flex: 1 1 calc(50% - 1px);
@@ -334,7 +323,6 @@
 		flex-direction: column;
 		gap: var(--spacing-sm);
 
-		&[hidden] { display: none; }
 
 		// The summary is a plain `.property-note`; only its warning state is
 		// auto-glitter-specific.
@@ -348,7 +336,6 @@
 		flex-direction: column;
 		gap: var(--spacing-sm);
 
-		&[hidden] { display: none; }
 	}
 
 	.auto-glitter-match {

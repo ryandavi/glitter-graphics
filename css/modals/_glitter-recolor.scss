@@ -69,7 +69,7 @@
 		grid-column: 2 / -2;
 	}
 	.modal-footer > .btn-text { margin-right: auto; }
-	@media (max-width: 600px) {
+	@include modal-compact {
 		.modal-body.recolor-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(180px, 50%) minmax(0, 1fr); }
 		.recolor-stage { gap: var(--spacing-xs); padding: var(--spacing-md); }
 		.recolor-hint { display: none; }

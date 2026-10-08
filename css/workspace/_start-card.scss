@@ -1,0 +1,159 @@
+@use '../mixins' as *;
+
+// The empty-document start card.
+
+.workspace-start {
+	@include cover;
+	z-index: 20;
+	display: flex;
+	justify-content: center;
+	padding: clamp(var(--spacing-md), 4vw, var(--spacing-xl));
+	overflow: auto;
+	overscroll-behavior: contain;
+	touch-action: pan-y;
+
+	&.drag-over .workspace-start-card {
+		border-color: var(--color-accent);
+		background: var(--color-bg-primary);
+		transform: translateY(-2px);
+	}
+}
+
+.workspace-start-card {
+	width: min(560px, 100%);
+	display: flex;
+	flex-direction: column;
+	margin-block: auto;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	background: var(--panel-bg);
+	text-align: center;
+	transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+body.is-booting .workspace-start button {
+	opacity: var(--opacity-disabled);
+	pointer-events: none;
+	cursor: default;
+}
+
+// The card is two bands: the main content with its own padding, then the
+// links strip along the bottom edge.
+.workspace-start-main {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-xl);
+	padding: clamp(12px, 2vw, 20px) clamp(24px, 4vw, 40px);
+}
+
+.workspace-start-copy {
+	h2 {
+		margin: 0;
+		color: var(--color-text-primary);
+		font-size: clamp(22px, 4vw, 30px);
+
+		@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+			background-image: var(--workspace-heading-glitter-image);
+			background-repeat: repeat;
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+		}
+
+		@media (forced-colors: active), (prefers-reduced-motion: reduce) {
+			background-image: none;
+			color: var(--color-text-primary);
+		}
+	}
+
+	p {
+		max-width: 420px;
+		margin: var(--spacing-xs) 0 0;
+		color: var(--color-text-secondary);
+		line-height: 1.5;
+	}
+}
+
+.workspace-start-presets {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+}
+
+// The tiles are quiet `.action-card`s; only the preview box is sized here.
+.workspace-start-preset-preview {
+	width: 100%;
+	height: 64px;
+	margin-bottom: var(--spacing-xs);
+
+	>.icon-wrapper>svg.icon { font-size: 36px; }
+}
+
+.workspace-start-preset-shape {
+	height: 100%;
+	max-width: 100%;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--new-canvas-preview-bg);
+}
+
+.workspace-start-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--spacing-sm);
+
+	>button { min-height: var(--row-height); }
+}
+
+.workspace-start-drop {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+
+	small {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+	}
+}
+
+.workspace-start-links {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--spacing-xs) var(--spacing-lg);
+	padding: var(--spacing-md);
+	border-top: 1px solid var(--color-border);
+}
+
+.workspace-start-link {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+
+	&:hover,
+	&:focus-visible {
+		color: var(--color-text-primary);
+		text-decoration: underline;
+	}
+
+	// An unseen release, shown in place of reopening Welcome on load.
+	&.has-update::after {
+		content: '';
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		margin-left: var(--spacing-xs);
+		border-radius: 50%;
+		background: var(--color-accent);
+		vertical-align: middle;
+	}
+}

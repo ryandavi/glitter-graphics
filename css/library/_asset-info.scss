@@ -1,0 +1,122 @@
+@use '../mixins' as *;
+
+// The selected-asset header.
+
+/* ===== ASSET INFO ===== */
+.asset-info-header {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-sm);
+
+	.asset-info-thumbnail {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		flex-shrink: 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-inner);
+		background: var(--color-bg-tertiary);
+		overflow: hidden;
+		cursor: pointer;
+		transition: border-color var(--transition-fast), transform var(--transition-fast);
+
+		&:hover {
+			border-color: var(--color-accent);
+			transform: scale(1.05);
+		}
+
+		>img { @include pixelated-contain-image; }
+
+		// Sticker asset-info thumbnails carry .pixelated from the asset flag.
+		&:not(.pixelated)>img { image-rendering: auto; }
+
+		&.glitter-bg {
+			background-repeat: repeat;
+			background-size: auto;
+			image-rendering: pixelated;
+		}
+
+		&.base-image-thumbnail>img {
+			object-fit: cover;
+			image-rendering: auto;
+		}
+	}
+
+	.asset-info-details {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+
+		.asset-info-name {
+			@include truncate;
+			color: var(--color-text-primary);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		.asset-info-badges {
+			display: flex;
+			flex-wrap: wrap;
+			gap: var(--spacing-xs);
+
+			.asset-info-badge {
+				@include badge-base;
+				gap: var(--spacing-xs);
+				max-width: 200px;
+				padding: 2px var(--spacing-sm);
+				overflow: hidden;
+				font-family: inherit;
+				font-weight: var(--font-weight-normal);
+				line-height: 1.2;
+				text-overflow: ellipsis;
+				appearance: none;
+
+				&.badge-variable-fps {
+					border-color: var(--color-warning-border);
+					background: var(--color-warning-surface);
+					color: var(--color-warning-emphasis);
+				}
+
+				&.badge-category {
+					border: 1px solid var(--color-border);
+					background: var(--color-bg-tertiary);
+					color: var(--color-text-secondary);
+					cursor: pointer;
+					transition:
+						background-color var(--transition-fast),
+						border-color var(--transition-fast),
+						color var(--transition-fast);
+
+					&:hover {
+						border-color: var(--color-accent);
+						background: var(--color-bg-secondary);
+						color: var(--color-text-primary);
+					}
+				}
+
+				&.badge-stretchable, &.badge-animated {
+					border-color: var(--color-accent-border);
+					background: var(--color-accent-surface);
+					color: var(--color-accent-light);
+				}
+
+				&.badge-transparency {
+					border-color: color-mix(in srgb, var(--color-info) 45%, var(--color-border));
+					background: var(--color-info-surface);
+					color: var(--color-info-text);
+				}
+			}
+		}
+	}
+}
+
+// The chip an armed picker is filling.
+.asset-info-change.target-active,
+.asset-info-thumbnail.target-active {
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 1px var(--color-accent-border);
+}

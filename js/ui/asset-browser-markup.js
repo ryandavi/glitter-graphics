@@ -249,7 +249,7 @@ function focusLibrarySearch() {
 }
 
 // Library header search button: unfolds the active kind's search row, which
-// _gallery.scss keeps folded on every screen. Folding is always allowed, even
+// library/_browser.scss keeps folded on every screen. Folding is always allowed, even
 // mid-search; the active-filter chips and the button's accent dot stay.
 // On a collapsed Library (desktop accordion) the button opens the Library
 // with the row shown, never hides a row the user couldn't see.

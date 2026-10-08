@@ -1,0 +1,236 @@
+@use '../mixins' as *;
+
+// Canvas stage: the preview column, its container and wrapper, tool cursors and stage overlays.
+
+/* ===== PREVIEW PANEL (canvas workspace column) ===== */
+.preview-panel {
+	flex: 1;
+	order: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
+	position: relative;
+	z-index: var(--z-panel);
+
+}
+
+.preview-container {
+	flex: 1;
+	display: block;
+	position: relative;
+	// The viewport is the hard visual boundary for artwork. Without clipping,
+	// a panned canvas can paint over sibling sidebars regardless of their z-index.
+	overflow: hidden;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	cursor: default;
+	touch-action: none;
+
+	&.workspace-drop-active::after {
+		content: 'Drop to add as a new layer';
+		position: absolute;
+		inset: var(--spacing-lg);
+		z-index: 30;
+		display: grid;
+		place-items: center;
+		border: 2px dashed var(--color-accent);
+		border-radius: var(--radius-lg);
+		background: color-mix(in srgb, var(--color-bg-primary) 88%, transparent);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-lg);
+		font-weight: var(--font-weight-semibold);
+		pointer-events: none;
+	}
+
+	&.transparent-bg {
+
+		.preview-wrapper {
+			background-image:
+				linear-gradient(45deg, var(--color-checkerboard) 25%, transparent 25%),
+				linear-gradient(-45deg, var(--color-checkerboard) 25%, transparent 25%),
+				linear-gradient(45deg, transparent 75%, var(--color-checkerboard) 75%),
+				linear-gradient(-45deg, transparent 75%, var(--color-checkerboard) 75%);
+			background-color: var(--color-bg-tertiary);
+		}
+	}
+
+	&.bounds {
+		.preview-wrapper {
+			outline: calc(2px / var(--zoom, 1)) dashed var(--bounds-outline-color);
+			outline-offset: calc(-2px / var(--zoom, 1));
+			/* Draws inside the canvas edge */
+			box-shadow:
+				0 0 0 calc(1px / var(--zoom, 1)) var(--color-shadow-strong),
+				0 0 calc(8px / var(--zoom, 1)) var(--color-shadow-strong);
+			/* Contrast ring follows the theme's shadow tier (black reads as dirt on light UIs) */
+			/* Clip any layer content that extends past the canvas edge - the
+			   toggle's whole point is previewing what's actually inside bounds. */
+			overflow: hidden;
+		}
+	}
+
+	&.zoom-cursor {
+		cursor: zoom-in;
+	}
+
+	&.zoom-out-mode {
+		cursor: zoom-out !important;
+	}
+
+	&.panning {
+		cursor: grabbing !important;
+	}
+
+	&.hand-cursor {
+		cursor: grab;
+	}
+}
+
+body.no-document .preview-container.workspace-drop-active::after {
+	content: 'Drop to start creating';
+}
+
+body.no-document .main-content {
+	>.layers-panel,
+	>.design-panel {
+		display: none;
+	}
+}
+
+.preview-wrapper {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
+	pointer-events: auto;
+	image-rendering: auto;
+
+	&.viewport-transforming,
+	&.viewport-transition { will-change: transform; }
+
+	&.shows-pixels,
+	&.shows-pixels * {
+		image-rendering: crisp-edges;
+		image-rendering: pixelated;
+	}
+
+	&.viewport-transition {
+		transition: transform var(--transition-base);
+	}
+
+	&.color-picker-mode {
+		cursor: crosshair;
+	}
+
+	>.preview-canvas,
+	>.mask-overlay-canvas {
+		width: 100%;
+		height: 100%;
+	}
+
+	.mask-overlay-canvas {
+		@include cover;
+		z-index: 20;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	.preview-canvas {
+		position: relative;
+		z-index: 2;
+		display: block;
+		max-width: none;
+		max-height: none;
+
+		&.selected {
+			@include selected();
+
+		}
+
+	}
+
+	&.hasImage>.preview-canvas:not(.selected) {
+		outline: calc(1px / var(--zoom, 1)) solid var(--gray-600);
+	}
+
+	&.viewport-transforming::after {
+		display: none;
+	}
+}
+
+// Unscaled sibling of the zoomed wrapper; PixelGridOverlay sizes and snaps it
+// to device pixels. No z-index: DOM order puts it above the canvas stack and
+// below the preview chrome that follows it.
+.pixel-grid-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+
+}
+
+.memory-overlay {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	z-index: 10000;
+	max-width: min(430px, calc(100vw - 24px));
+	max-height: calc(100vh - 24px);
+	margin: 0;
+	padding: 12px;
+	overflow: auto;
+	border: 1px solid rgb(255 255 255 / 18%);
+	border-radius: 8px;
+	background: rgb(18 18 22 / 94%);
+	box-shadow: 0 8px 30px rgb(0 0 0 / 35%);
+	color: #f4f4f7;
+	font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+	pointer-events: none;
+}
+
+// Alt-drag duplicates: the copy cursor while armed and while dragging.
+.preview-container.alt-duplicate-armed,
+.preview-container.alt-duplicate-armed [data-layer-id],
+.preview-container.alt-duplicate-armed .transform-handle,
+.preview-container.alt-duplicate-armed .transform-bounding-box,
+.preview-container.duplicate-drag-active,
+.preview-container.duplicate-drag-active [data-layer-id] {
+	cursor: copy !important;
+}
+
+// Tool cursors.
+body.tool-text {
+	.preview-canvas,
+	.preview-wrapper { cursor: crosshair; }
+
+	// Over text, a press places the caret.
+	.text-glitter-element {
+		cursor: text;
+
+		// A press on locked text neither edits it nor starts a new text.
+		&.is-locked { cursor: default; }
+	}
+}
+
+body.tool-shape,
+body.tool-line,
+body.tool-pen {
+	.preview-container,
+	.preview-canvas,
+	#canvasElementsContainer { cursor: crosshair; }
+}
+
+// The cursor says what a press would do: move over a layer a drag would move,
+// the arrow over empty canvas and over a locked layer. A layer's element is
+// larger than its frame (shadow and outline padding), so LayerTransform stamps
+// .is-frame-hover while the pointer is where a press would take hold.
+body.tool-select {
+	:is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element).is-frame-hover:not(.is-locked) { cursor: move; }
+
+	// A layer picked on the canvas (a fill) has no element of its own, so the
+	// container carries the cursor while the pointer is over its paint.
+	.preview-container.is-over-picked-layer { cursor: move; }
+}

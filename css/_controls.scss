@@ -79,9 +79,7 @@
 	font-weight: var(--font-weight-semibold);
 	padding: var(--spacing-sm) var(--spacing-base);
 
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	@include truncate;
 	// remove outline on focus
 	outline: none;
 
@@ -177,9 +175,7 @@
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
 	line-height: 1.2;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	@include truncate;
 	cursor: pointer;
 	transition:
 		background-color var(--transition-fast),

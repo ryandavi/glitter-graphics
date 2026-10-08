@@ -364,7 +364,6 @@ body.modal-open {
 	background: var(--color-bg-tertiary);
 	padding: var(--spacing-md);
 
-	&[hidden] { display: none; }
 
 	>.modal-nav-scope {
 		flex: 0 0 auto;
@@ -388,7 +387,7 @@ body.modal-open {
 			top: 50%;
 			right: var(--spacing-sm);
 			max-width: 6.5rem;
-			overflow: hidden;
+			@include truncate;
 			padding: var(--spacing-2xs) var(--spacing-sm);
 			transform: translateY(-50%);
 			border: 1px solid var(--color-border);
@@ -398,8 +397,6 @@ body.modal-open {
 			font-size: var(--font-size-xs);
 			font-variant-numeric: tabular-nums;
 			line-height: 1;
-			text-overflow: ellipsis;
-			white-space: nowrap;
 
 			&:empty {
 				display: none;
@@ -411,7 +408,7 @@ body.modal-open {
 // Narrow bars stack their slots rather than starving the search field: a
 // scope control and a search input side by side at phone width leaves the
 // placeholder truncated to two characters.
-@media (max-width: 600px) {
+@include modal-compact {
 	.modal-nav.search-toggle-row {
 		flex-wrap: wrap;
 
@@ -456,7 +453,6 @@ body.modal-open {
 		@include visually-hidden;
 	}
 
-	>.document-back-to-top[hidden] { display: none; }
 
 	>.document-toc-panel,
 	>.document-search-results {
@@ -474,7 +470,6 @@ body.modal-open {
 		background: var(--color-bg-primary);
 		box-shadow: 0 12px 28px var(--color-shadow-strong);
 
-		&[hidden] { display: none; }
 	}
 
 	.document-toc-menu {
@@ -598,9 +593,7 @@ body.modal-open {
 	.document-search-result-excerpt {
 		display: block;
 		width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		@include truncate;
 	}
 
 	.document-search-empty {

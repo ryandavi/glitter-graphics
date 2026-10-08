@@ -132,8 +132,7 @@
 	resize: none;
 }
 .text-edit-overlay {
-	position: absolute;
-	inset: 0;
+	@include cover;
 	// Above the paint spans it shares the stack with.
 	z-index: 1;
 	pointer-events: none;
@@ -142,8 +141,7 @@
 // Text tool hover: each line's baseline, a constant screen thickness at any
 // zoom or layer scale. Hidden outside the Text tool, so a stale one never shows.
 .text-hover-baselines {
-	position: absolute;
-	inset: 0;
+	@include cover;
 	z-index: 1;
 	display: none;
 	pointer-events: none;

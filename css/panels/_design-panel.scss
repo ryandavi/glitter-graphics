@@ -1,0 +1,95 @@
+@use '../mixins' as *;
+
+/* ===== GLITTER COLUMN ===== */
+.design-panel {
+	width: var(--glitter-panel-width);
+	flex: 0 0 var(--glitter-panel-width);
+	background: var(--color-bg-primary);
+	border-left: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+	order: 2;
+	position: relative;
+	z-index: var(--z-panel-elevated);
+
+	>.section>.section-content {
+		padding: 0;
+	}
+
+	>.collapsible-section {
+		position: relative;
+		z-index: 100;
+	}
+
+	// The Library shows one asset kind at a time (syncLibraryView hides the
+	// other kinds' hosts); stickers and fills share the upload action.
+	>.design-gallery-section:is([data-library="sticker"], [data-library="glitter"])>.section-header.section-header-with-action .library-upload-action {
+		visibility: visible;
+		pointer-events: auto;
+	}
+
+	// A layer type with no library (showDesignGallery: false) drops the Library
+	// from the sidebar. `.section` keeps this ahead of the panel shell's
+	// `> .section.main-section` display. The phone's Library drawer keeps its
+	// title row.
+	@media (min-width: ($mobile-breakpoint + 1px)) {
+		&[data-gallery-visible="false"] > .section.design-gallery-section {
+			display: none;
+		}
+	}
+
+	// The Library's search row folds behind the header search button
+	// (setupLibrarySearchToggle) on every screen, even while a search or filter
+	// is active. Folded, the active-filter chips still show, and the button
+	// carries an accent dot, so a narrowed grid is never unexplained.
+	>.design-gallery-section {
+		&[data-library]>.section-header>.section-header-actions>.library-search-action {
+			position: relative;
+			visibility: visible;
+			pointer-events: auto;
+
+			&.active { color: var(--color-accent); }
+		}
+
+		// The view menu (setupLibraryViewMenu). Its slot holds the trigger and
+		// the dropdown; the trigger is the header action, so it reads like the
+		// search button beside it on every screen.
+		&[data-library]>.section-header>.section-header-actions>.library-view-action {
+			visibility: visible;
+			pointer-events: auto;
+
+			>.section-header-action {
+				width: 100%;
+				height: 100%;
+
+				&,
+				&:hover { background-color: unset; }
+			}
+		}
+
+		&:not(.library-search-open)>.section-header>.section-header-actions>.library-search-action.has-active-query::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			right: 0;
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--color-accent);
+		}
+
+		&:not(.library-search-open)>.design-gallery-content>.gallery-search-section>.glitter-search {
+			> .search-controls > .search-toggle-row,
+			> .search-controls > .search-chip-slot > .recent-searches,
+			>.filters-container { display: none; }
+
+		}
+
+		// Folded with nothing active, the host has nothing left to show.
+		&:not(.library-search-open)>.design-gallery-content>.gallery-search-section:not(.has-filter-summary) {
+			display: none;
+		}
+	}
+}

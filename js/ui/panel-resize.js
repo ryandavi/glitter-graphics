@@ -5,7 +5,7 @@
 // writes those custom properties on :root and persists the result.
 //
 // Only a user-chosen width is ever written. Untouched panels keep falling
-// through to the stylesheet's responsive defaults (css/_assets.scss narrows both
+// through to the stylesheet's responsive defaults (css/panels/_layout.scss narrows both
 // columns under 1700px and 1200px), so the app still adapts on its own until
 // someone expresses a preference.
 //

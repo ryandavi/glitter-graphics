@@ -36,8 +36,7 @@
 .property-panel .asset-info-change {
 	@include flat-control(0);
 	display: flex;
-	position: absolute;
-	inset: 0;
+	@include cover;
 	align-items: center;
 	justify-content: flex-end;
 	width: 100%;
@@ -74,11 +73,9 @@
 .property-panel .asset-info-name {
 	display: block;
 	max-width: 100%;
-	overflow: hidden;
+	@include truncate;
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
-	white-space: nowrap;
-	text-overflow: ellipsis;
 }
 
 // Badges are hidden until the attribution pass decides what they say.

@@ -55,9 +55,7 @@
 			}
 
 			>.section-header-title-text {
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
+				@include truncate;
 			}
 
 			>.section-header-title-count {

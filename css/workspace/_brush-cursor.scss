@@ -1,0 +1,155 @@
+@use '../mixins' as *;
+
+// Glitter Brush on the canvas: the brush cursor and mask-editing state.
+
+.mask-brush-cursor {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
+	border-radius: var(--radius-full);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	z-index: 30;
+	display: none;
+	box-shadow: 0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
+
+	&.visible {
+		display: block;
+	}
+
+	&.touch-preview {
+		&::before,
+		&::after,
+		>.mask-brush-cursor-dot {
+			display: none;
+		}
+	}
+
+	&::before,
+	&::after {
+		content: "";
+		position: absolute;
+		background: var(--color-accent);
+		opacity: 0.75;
+	}
+
+	&::before {
+		top: 50%;
+		left: 50%;
+		width: calc(12px / var(--zoom, 1));
+		height: calc(1px / var(--zoom, 1));
+		transform: translate(-50%, -50%);
+	}
+
+	&::after {
+		top: 50%;
+		left: 50%;
+		width: calc(1px / var(--zoom, 1));
+		height: calc(12px / var(--zoom, 1));
+		transform: translate(-50%, -50%);
+	}
+
+	>.mask-brush-cursor-dot {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: calc(4px / var(--zoom, 1));
+		height: calc(4px / var(--zoom, 1));
+		border-radius: var(--radius-full);
+		background: var(--color-bg-primary);
+		border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
+		transform: translate(-50%, -50%);
+	}
+
+	// Erase mode: dashed warning-tinted ring with a minus (drop the vertical bar
+	// of the crosshair) so the pointer itself shows you're removing, not adding.
+	&.erasing {
+		border-style: dashed;
+		border-color: var(--color-warning);
+
+		&::before,
+		&::after {
+			background: var(--color-warning);
+		}
+
+		&::after {
+			display: none;
+		}
+
+		>.mask-brush-cursor-dot {
+			border-color: var(--color-warning);
+		}
+	}
+
+	// Non-round tips: swap the CSS circle for a stroked silhouette of the actual
+	// brush shape (same geometry as the shape picker), so a square / star /
+	// calligraphy nib is obvious before the first stroke. Populated by
+	// MaskEditor._syncCursorAppearance.
+	>.mask-brush-cursor-shape {
+		@include cover;
+		display: none;
+
+		svg {
+			display: block;
+			width: 100%;
+			height: 100%;
+			overflow: visible;
+			fill: none;
+			stroke: var(--color-accent);
+			stroke-width: 1.5;
+			vector-effect: non-scaling-stroke;
+			filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+		}
+	}
+
+	&.shaped {
+		border-color: transparent;
+		box-shadow: none;
+
+		>.mask-brush-cursor-shape {
+			display: block;
+		}
+	}
+
+	&.shaped.erasing >.mask-brush-cursor-shape svg {
+		stroke: var(--color-warning);
+		stroke-dasharray: 4 3;
+	}
+
+	// Raster tips show their own stamp bitmap, faint, instead of a stroked
+	// silhouette (there is no vector outline to trace).
+	&.raster >.mask-brush-cursor-shape img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		opacity: 0.5;
+		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+	}
+
+	&.raster.erasing >.mask-brush-cursor-shape img {
+		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+		opacity: 0.4;
+	}
+
+	// Flip X/Y: mirror the tip silhouette so the cursor matches the stamp the
+	// brush's Flip dynamics will actually lay down.
+	&.flip-x >.mask-brush-cursor-shape { transform: scaleX(-1); }
+	&.flip-y >.mask-brush-cursor-shape { transform: scaleY(-1); }
+	&.flip-x.flip-y >.mask-brush-cursor-shape { transform: scale(-1, -1); }
+}
+
+body.mask-editing {
+	.preview-wrapper,
+	.preview-wrapper .preview-canvas,
+	.preview-wrapper .mask-overlay-canvas {
+		cursor: none !important;
+	}
+
+	.sticker-element {
+		pointer-events: none !important;
+	}
+}

@@ -560,13 +560,11 @@ input.color-hex-input {
 }
 
 .list-row-name {
-	overflow: hidden;
+	@include truncate;
 	color: var(--color-text-primary);
 	font-size: var(--font-size-title);
 	font-weight: var(--font-weight-semibold);
 	line-height: 1.25;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .list-row-meta {
@@ -574,13 +572,11 @@ input.color-hex-input {
 	align-items: center;
 	gap: var(--spacing-xs);
 	min-width: 0;
-	overflow: hidden;
+	@include truncate;
 	color: var(--color-text-secondary);
 	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-normal);
 	line-height: 1.25;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 
 	> :first-child {
 		min-width: 0;
@@ -627,141 +623,4 @@ input.color-hex-input {
 
 		&:disabled { opacity: var(--opacity-disabled); }
 	}
-}
-
-// Transform Handles (Figma-style)
-// Drawn in the screen-space selection overlay (js/transforms/selection-overlay.js,
-// selection-chrome.js), outside the zoomed canvas, so every size here is a plain
-// screen pixel. JS snaps positions to device pixels; keep the hit sizes in
-// config even so centering them with translate(-50%, -50%) stays on whole pixels.
-.selection-overlay {
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-}
-
-.transform-handles {
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-}
-
-.transform-bounding-box {
-	@include selection-line;
-	position: absolute;
-	pointer-events: auto; // Now draggable
-	touch-action: none;
-	cursor: move;
-}
-
-// Real hitbox wrappers (not pseudo-elements). JS sets their size from
-// CONFIG.ui.stickerHandles.handleHitSize so drawing and hit-testing share it.
-.transform-handle-wrapper {
-	pointer-events: auto;
-	position: absolute;
-	transform: translate(-50%, -50%);
-	touch-action: none;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.transform-handle {
-	flex: none;
-	pointer-events: none; // Wrapper handles clicks
-	box-sizing: border-box;
-	// White fill + theme-accent ring (Figma convention) — the old
-	// text-primary fill went near-black on light themes and muddied against
-	// the accent bounding box. Shadow separates the handle from light artwork.
-	background: var(--handle-fill);
-	border: var(--selection-stroke) solid var(--handle-border-color);
-	box-shadow: var(--handle-shadow);
-
-	&.transform-handle-corner {
-		width: 8px;
-		height: 8px;
-		border-radius: 2px;
-	}
-
-	// Odd size so its center lands on a pixel center, on the 1px stalk's
-	// center line.
-	&.transform-handle-rotation {
-		width: 11px;
-		height: 11px;
-		border-radius: var(--radius-full);
-	}
-
-	&.transform-handle-edge {
-		display: none;
-	}
-
-	&.transform-handle-rotate {
-		display: none;
-	}
-
-	&.transform-handle-radius {
-		width: 8px;
-		height: 8px;
-		border-radius: var(--radius-full);
-	}
-
-	// Odd size so the 1px crosshair sits on a pixel center.
-	&.transform-handle-anchor {
-		width: 11px;
-		height: 11px;
-		border-radius: var(--radius-full);
-		background:
-			linear-gradient(var(--color-accent), var(--color-accent)) center / 100% var(--selection-stroke) no-repeat,
-			linear-gradient(90deg, var(--color-accent), var(--color-accent)) center / var(--selection-stroke) 100% no-repeat,
-			var(--handle-fill);
-		// Sits on the artwork itself, so it gets a double-width halo.
-		box-shadow: 0 0 0 calc(var(--selection-halo) * 2) rgb(255 255 255 / 80%), 0 1px 3px rgb(0 0 0 / 35%);
-	}
-}
-
-// Hover states on wrappers
-.transform-handle-wrapper:hover .transform-handle {
-	background: var(--color-accent);
-	border-color: var(--handle-fill);
-}
-
-// A centered anchor is always there but faint: a bare crosshair with a white
-// halo. Hovering drops this and shows the normal handle hover state.
-.transform-handle-wrapper.is-subtle:not(:hover) .transform-handle-anchor {
-	border-color: transparent;
-	background:
-		linear-gradient(var(--color-accent), var(--color-accent)) center / 100% var(--selection-stroke) no-repeat border-box,
-		linear-gradient(90deg, var(--color-accent), var(--color-accent)) center / var(--selection-stroke) 100% no-repeat border-box;
-	box-shadow: none;
-	width: 13px;
-	height: 13px;
-	filter: drop-shadow(0 0 var(--selection-halo) #ffffff) drop-shadow(0 0 var(--selection-halo) #ffffff);
-	opacity: 0.9;
-}
-
-.transform-handles.is-edge-hover .transform-bounding-box {
-	border-width: calc(var(--selection-stroke) + 1px);
-}
-
-.selection-badge {
-	position: absolute;
-	transform: translate(-50%, -50%) rotate(var(--badge-angle, 0deg));
-	padding: var(--spacing-2xs) var(--spacing-sm);
-	border-radius: var(--radius-sm);
-	background: var(--color-accent);
-	color: var(--color-text-on-accent);
-	font-size: var(--font-size-xs);
-	font-variant-numeric: tabular-nums;
-	line-height: 1.2;
-	white-space: nowrap;
-	pointer-events: none;
-}
-
-.transform-rotation-line {
-	position: absolute;
-	width: var(--selection-stroke);
-	transform-origin: top center;
-	background: var(--color-accent);
-	box-shadow: var(--handle-halo);
-	pointer-events: none;
 }

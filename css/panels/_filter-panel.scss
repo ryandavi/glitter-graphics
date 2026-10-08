@@ -1,3 +1,5 @@
+@use '../mixins' as *;
+
 // Every preset grid is a `.property-scrollbox` (tpl-preset-grid): the frame,
 // fixed height and bottom fade come from there; this file styles the tiles.
 .filter-looks-picker {
@@ -52,9 +54,7 @@
 .preset-grid-thumbnail.filter-css-thumbnail { height: var(--preset-grid-thumbnail-height); }
 
 .preset-grid-label {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	@include truncate;
 	font-size: var(--font-size-xs);
 }
 
@@ -73,8 +73,7 @@
 	background: #7b5cc4;
 
 	> span {
-		position: absolute;
-		inset: 0;
+		@include cover;
 		display: block;
 	}
 }
@@ -99,8 +98,7 @@
 	.filter-css-thumbnail-grain,
 	&::after {
 		content: '';
-		position: absolute;
-		inset: 0;
+		@include cover;
 		background-image:
 			repeating-radial-gradient(circle at 17% 29%, rgba(255, 255, 255, 0.9) 0 0.6px, transparent 0.8px 2.4px),
 			repeating-radial-gradient(circle at 71% 63%, rgba(0, 0, 0, 0.85) 0 0.7px, transparent 0.9px 2.8px);

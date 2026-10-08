@@ -1,0 +1,144 @@
+@use 'mixins' as *;
+
+// Progress: the inline processing status and the export progress bar.
+
+// ===========================================================================
+// INLINE PROCESSING STATUS
+// ---------------------------------------------------------------------------
+// The small spinner + label that appears inline in a panel header while an
+// async task (auto-glitter, mask raster, export prep) runs.
+// ===========================================================================
+
+@keyframes inline-processing-spin {
+	to { transform: rotate(360deg); }
+}
+
+.inline-processing-status {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+	min-width: 0;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-normal);
+	letter-spacing: normal;
+	line-height: var(--line-height-tight);
+	text-transform: none;
+	visibility: hidden;
+	opacity: 0;
+	pointer-events: none;
+	transition: color var(--transition-fast), opacity var(--transition-fast);
+
+	&.is-active,
+	&.is-error {
+		visibility: visible;
+		opacity: 1;
+	}
+
+	&.is-error {
+		color: var(--color-warning);
+		.inline-processing-spinner { display: none; }
+	}
+}
+
+.inline-processing-spinner {
+	width: 12px;
+	height: 12px;
+	flex: 0 0 auto;
+	border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+	border-top-color: currentColor;
+	border-radius: var(--radius-full);
+	animation: inline-processing-spin 700ms linear infinite;
+}
+
+.inline-processing-label {
+	min-width: 0;
+	@include truncate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.inline-processing-spinner { animation: none; }
+}
+
+/* ===== EXPORT PROGRESS ===== */
+// The activity pill's long form: it opens in the top zone's stack, in place of
+// the pill and the hint, for work that has a percentage and a Cancel.
+.export-progress {
+	display: none;
+	gap: var(--spacing-md);
+	width: min(300px, 100%);
+	padding: var(--spacing-md);
+	@include mini-modal($layer: null);
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-tight);
+
+	&.visible { display: grid; }
+	.export-progress-heading, .export-progress-status {
+		@include spread-row;
+		white-space: nowrap;
+	}
+	.export-progress-heading { font-weight: var(--font-weight-semibold); }
+	.export-progress-status {
+		min-height: calc(var(--font-size-sm) * var(--line-height-tight) + 2 * var(--spacing-xs));
+		color: var(--color-text-secondary);
+	}
+	.export-progress-detail {
+		min-width: 0;
+		padding-block: var(--spacing-xs);
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.export-progress-time, .export-progress-percent { flex: 0 0 auto; }
+	.export-progress-announcement { @include visually-hidden; }
+	.export-progress-cancel { width: 100%; }
+	.export-progress-bar {
+		height: var(--spacing-base);
+		background: var(--progress-track);
+		box-shadow: inset 0 0 0 1px var(--progress-track-border);
+		border-radius: var(--radius-pill);
+		overflow: hidden;
+	}
+	.export-progress-fill {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		background: var(--color-accent);
+		transform: translateX(var(--export-progress-offset, -100%));
+		transition: transform var(--transition-base) ease;
+		&::after {
+			content: '';
+			@include cover;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+			animation: export-progress-sheen 3s linear infinite;
+		}
+	}
+	&.is-indeterminate .export-progress-fill {
+		transform-origin: left;
+		transition: none;
+		animation: export-progress-indeterminate 2s ease-in-out infinite;
+		opacity: 0.45;
+	}
+}
+
+@keyframes export-progress-indeterminate {
+	from { transform: translateX(-35%) scaleX(0.35); }
+	to { transform: translateX(100%) scaleX(0.35); }
+}
+
+@keyframes export-progress-sheen {
+	from { transform: translateX(-100%); }
+	to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.export-progress-fill { transition: none; }
+	.export-progress.is-indeterminate .export-progress-fill { animation: none; transform: scaleX(0.35); }
+	.export-progress-fill::after { animation: none; display: none; }
+}
+
+:root[data-reduce-motion="true"] .export-progress-fill::after { animation: none; display: none; }
+
+:root[data-reduce-motion="true"] .export-progress.is-indeterminate .export-progress-fill {
+	animation: none;
+	transform: scaleX(0.35);
+}

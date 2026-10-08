@@ -1,11 +1,12 @@
+@use '../mixins' as *;
+
 // Path point editor chrome (js/transforms/path-chrome.js): one SVG in the
 // screen-space selection overlay, so every size here is a plain screen pixel.
 // Geometry comes from JS; this sheet owns only how it is drawn. The chrome
 // takes no pointer events: the edit session hit-tests from the same numbers.
 
 .path-chrome {
-	position: absolute;
-	inset: 0;
+	@include cover;
 	width: 100%;
 	height: 100%;
 	overflow: visible;

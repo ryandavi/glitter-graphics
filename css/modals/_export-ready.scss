@@ -91,9 +91,6 @@
 	}
 
 	.export-fact-line {
-		&[hidden],
-		> span[hidden] { display: none; }
-
 		> span + span::before {
 			content: '\00b7';
 			padding-inline: var(--spacing-sm);
@@ -102,10 +99,8 @@
 	}
 
 	.export-fact-name {
-		overflow: hidden;
+		@include truncate;
 		color: var(--color-text-tertiary);
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.export-side {
@@ -134,7 +129,6 @@
 		flex: 1 1 auto;
 		width: auto;
 
-		&[hidden] { display: none; }
 	}
 
 	.export-pane {
@@ -143,7 +137,6 @@
 		flex-direction: column;
 		gap: var(--spacing-md);
 
-		&[hidden] { display: none; }
 	}
 
 	.export-notices {
@@ -151,7 +144,6 @@
 		flex-direction: column;
 		gap: var(--spacing-xs);
 
-		&[hidden] { display: none; }
 	}
 
 	// The warning is the one box in the notes. Its rows are a table: service,
@@ -164,7 +156,6 @@
 		border-radius: var(--radius-md);
 		background: var(--color-warning-surface);
 
-		&[hidden] { display: none; }
 	}
 
 	.export-limits-title {
@@ -195,18 +186,15 @@
 
 	.export-limit-note {
 		min-width: 0;
-		overflow: hidden;
+		@include truncate;
 		color: var(--color-text-tertiary);
 		font-size: var(--font-size-xs);
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.export-save-guide {
 		color: var(--color-text-secondary);
 		font-size: var(--font-size-sm);
 
-		&[hidden] { display: none; }
 
 		.export-instruction-heading {
 			display: flex;
@@ -336,7 +324,7 @@
 	// ----- Phone ------------------------------------------------------------
 	// One column. The facts become one meta line under the preview and the
 	// Ko-fi link takes its own footer line.
-	@media (max-width: 600px) {
+	@include modal-compact {
 		--export-pad: var(--spacing-md);
 
 		.export-result {

@@ -1,6 +1,6 @@
 @use '../mixins' as *;
 
-@media (max-width: 600px) {
+@include modal-compact {
 	.modal-overlay {
 		padding:
 			max(12px, env(safe-area-inset-top))

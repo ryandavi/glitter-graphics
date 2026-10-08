@@ -35,15 +35,13 @@
 		border: 0;
 		background: var(--color-bg-secondary);
 		color: var(--color-text-secondary);
-		overflow: hidden;
+		@include truncate;
 		font-family: inherit;
 		font-size: var(--font-size-sm);
 		font-weight: var(--font-weight-normal);
 		letter-spacing: 0;
 		line-height: 1;
-		text-overflow: ellipsis;
 		text-transform: none;
-		white-space: nowrap;
 		cursor: pointer;
 		transition: background-color var(--transition-fast), color var(--transition-fast);
 

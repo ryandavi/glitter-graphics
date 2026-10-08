@@ -1,0 +1,388 @@
+@use '../mixins' as *;
+
+// Library browser: kind hosts, shortcuts, rail, wall and set headers.
+
+// One Library kind host shows at a time; syncLibraryView toggles `.visible`.
+[data-gallery-content] {
+	display: none;
+
+	&.visible { display: block; }
+}
+
+// Library view menu tile sizes; medium is each kind's own floor.
+.design-gallery-section {
+	&[data-tile-size="s"] { --asset-tile-scale: 0.75; }
+	&[data-tile-size="l"] { --asset-tile-scale: 1.5; }
+}
+
+// Quick picks: one row above the browser, in the kind's own tile grid. No
+// scroller: AssetBrowser._fitShortcutRow hides the tiles past the auto-fill
+// track count, so a wider panel shows more of them. The Library view menu
+// turns the row off (setupLibraryViewMenu).
+.asset-browser-shortcuts {
+	padding-bottom: var(--spacing-md);
+	margin-bottom: var(--spacing-md);
+	border-bottom: 1px solid var(--color-border);
+
+}
+
+.design-gallery-section.quick-picks-off .asset-browser-shortcuts { display: none; }
+
+.asset-browser-index-lead + .category-grid.visible,
+.asset-browser-index-lead:not([hidden]) + .asset-browser-category-heading { margin-top: var(--spacing-sm); }
+
+.asset-browser-section-title {
+	margin: 0 0 var(--spacing-sm);
+}
+
+.asset-browser-carried:not([hidden]) { margin-top: var(--spacing-md); }
+
+// A collection's credit line (Attribution.buildCreditLine): its names link out.
+.asset-collection-credit a {
+	color: inherit;
+	text-decoration: underline;
+
+	&:hover { color: var(--color-accent); }
+}
+
+/* ===== ASSET BROWSER ===== */
+.asset-browser {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+
+	&:not(.visible) {
+		display: none;
+	}
+
+	>.asset-browser-content {
+		flex: 1;
+		padding: var(--spacing-md);
+
+		>.category-grid,
+		>.asset-grid {
+			display: none;
+
+			&.visible {
+				display: grid;
+			}
+		}
+
+		// Navigation covers have their own floor, above each kind's asset floor.
+		>.category-grid {
+			grid-template-columns: repeat(auto-fill, minmax(min(calc(max(140px, var(--asset-tile-floor, 84px) * 1.5) * var(--asset-tile-scale, 1)), 100%), 1fr));
+			gap: var(--spacing-sm);
+
+			>.category-card>.category-card-image {
+				width: 100%;
+				aspect-ratio: 4 / 3;
+				margin-bottom: var(--spacing-xs);
+				border-radius: var(--radius-sm);
+				overflow: hidden;
+				background: var(--color-bg-tertiary);
+				color: var(--color-text-primary);
+
+				>.brush-shape-option-icon {
+					width: 100%;
+					height: 100%;
+					padding: var(--spacing-sm);
+				}
+
+				>img {
+					display: block;
+					width: 100%;
+					height: 100%;
+					object-fit: contain;
+				}
+
+				&.category-card-previews {
+					display: grid;
+					align-items: stretch;
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					grid-template-rows: repeat(2, minmax(0, 1fr));
+					gap: var(--spacing-2xs);
+					&[data-preview-count="1"] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+					&[data-preview-count="2"] { grid-template-rows: 1fr; }
+					&[data-preview-count="3"] >:first-child { grid-row: span 2; }
+					>.category-card-preview {
+						min-width: 0;
+						min-height: 0;
+						background-repeat: repeat;
+						>img { width: 100%; height: 100%; object-fit: contain; }
+					}
+				}
+			}
+		}
+
+		>.search-results-container {
+			display: none;
+			flex-direction: column;
+			gap: var(--spacing-md);
+
+			&.visible {
+				display: flex;
+			}
+
+			>.category-section {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-sm);
+
+			}
+		}
+	}
+
+	>.asset-browser-sentinel {
+		height: 1px;
+		visibility: hidden;
+	}
+}
+
+.design-gallery-content {
+	> .gallery-search-section.visible {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		overflow: hidden;
+
+		&:not(.filters-open) {
+			> .glitter-search { height: auto; }
+		}
+
+		&.filters-open {
+			flex: 1 1 auto;
+			min-height: 0;
+
+			>.glitter-search {
+				border: 0;
+			}
+
+		}
+	}
+
+	// Every search host sits directly before its own browser host.
+	> .gallery-search-section.filters-open + .asset-options {
+		display: none;
+	}
+
+	> .gallery-search-section.filters-returning + .asset-options {
+		animation: filter-surface-enter var(--transition-fast) ease-out;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.filters-container.visible,
+	.design-gallery-content > .gallery-search-section.filters-returning + .asset-options {
+		animation: none;
+	}
+}
+
+// A browser's navigation (AssetBrowser.toolbar): browse-by, then one tree
+// picker with Up. It sits above the scrolling content like the search
+// row, on the same surface, with the content's own inset on every side.
+.asset-browser-toolbar {
+	display: grid;
+	flex-shrink: 0;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-md);
+	border-bottom: 1px solid var(--color-border);
+
+}
+
+// The wall's picker (AssetBrowserRail): Up, then one select holding the
+// whole tree.
+.asset-browser-rail {
+	display: flex;
+	gap: var(--spacing-sm);
+	min-width: 0;
+
+	> select {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
+.asset-browser-rail-up { flex: 0 0 auto; }
+
+// Where the browser has the customizable select, each row is thumbnail, name
+// and count, and sets sit under their style's heading. Elsewhere, and on
+// phones (the system picker is better there), it is the native select with
+// the same rows as text.
+@supports (appearance: base-select) {
+	@media (min-width: ($mobile-breakpoint + 1px)) {
+		.asset-browser-rail > select {
+			--asset-rail-icon-size: 20px;
+
+			&,
+			&::picker(select) { appearance: base-select; }
+
+			// The shared select style already draws the arrow.
+			&::picker-icon { display: none; }
+
+			&::picker(select) {
+				max-height: min(320px, 60vh);
+				overflow-y: auto;
+				margin-top: var(--spacing-xs);
+				padding: var(--spacing-xs);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-sm);
+				background: var(--color-bg-secondary);
+				box-shadow: 0 2px 5px var(--color-shadow-strong);
+			}
+
+			optgroup {
+				padding-top: var(--spacing-sm);
+				color: var(--color-text-tertiary);
+				font-size: var(--font-size-xs);
+				font-weight: var(--font-weight-semibold);
+			}
+
+			// Sets home apart from the groups, edge to edge across the picker's
+			// own padding.
+			hr {
+				margin: var(--spacing-xs) calc(-1 * var(--spacing-xs));
+				border: 0;
+				border-top: 1px solid var(--color-border);
+			}
+
+			option {
+				display: flex;
+				align-items: center;
+				gap: var(--spacing-sm);
+				padding: var(--spacing-sm);
+				border-radius: var(--radius-xs);
+				color: var(--color-text-primary);
+				font-size: var(--font-size-sm);
+				font-weight: var(--font-weight-normal);
+
+				&::checkmark { display: none; }
+
+				&:hover,
+				&:focus-visible {
+					background: var(--color-bg-tertiary);
+					outline: none;
+				}
+
+				&:checked {
+					background: var(--color-bg-accent-tint);
+					color: var(--color-accent);
+				}
+			}
+		}
+
+		// Marks a set as sitting under the "All" row above it; the thumbnail's
+		// size, so the two read as one pair.
+		.asset-browser-rail > select .asset-browser-rail-child {
+			flex: 0 0 auto;
+			width: var(--asset-rail-icon-size);
+			height: var(--asset-rail-icon-size);
+			color: var(--color-text-tertiary);
+		}
+
+		.asset-browser-rail-icon {
+			flex: 0 0 auto;
+			width: var(--asset-rail-icon-size);
+			height: var(--asset-rail-icon-size);
+			border-radius: var(--radius-xs);
+			object-fit: cover;
+			image-rendering: pixelated;
+		}
+
+		.asset-browser-rail > select .asset-browser-rail-preview {
+			flex: 0 0 auto;
+			width: var(--asset-rail-icon-size);
+			height: var(--asset-rail-icon-size);
+			margin: 0;
+			display: grid;
+			place-items: center;
+			color: inherit;
+			font-size: var(--font-size-base);
+			line-height: 1;
+
+			&:is(svg, [data-sample]) { width: calc(var(--asset-rail-icon-size) * 1.5); }
+
+			// Native option text remains name/count; only styled rows draw samples.
+			&[data-sample] {
+				font-size: var(--font-size-sm);
+				&::before { content: attr(data-sample); }
+			}
+		}
+
+		.asset-browser-rail-name {
+			flex: 1 1 auto;
+			min-width: 0;
+			@include truncate;
+		}
+
+		.asset-browser-rail-count {
+			flex: 0 0 auto;
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+		}
+
+		.asset-browser-rail-paren { display: none; }
+	}
+}
+
+// The glitter wall: small tiles, packed edge to edge.
+.asset-browser-wall {
+	--asset-tile-floor: 48px;
+	--asset-tile-gap: 2px;
+}
+
+// What the grid below is (AssetSetHeader): the set's name and size over one
+// quiet line of who made it, then what it is and any note. Two text styles:
+// the title, and small secondary prose.
+.asset-set-header {
+	display: grid;
+	gap: var(--spacing-sm);
+	margin-bottom: var(--spacing-md);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	line-height: 1.4;
+
+	p { margin: 0; }
+}
+
+.asset-set-header-heading {
+	display: grid;
+	gap: var(--spacing-2xs);
+}
+
+.asset-set-header-line {
+	display: flex;
+	align-items: baseline;
+	gap: var(--spacing-sm);
+
+	// The Original order toggle (AssetSetHeader) is shelved: sets stay in
+	// color order.
+	button { display: none; }
+}
+
+.asset-set-header-title {
+	min-width: 0;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-base);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1.3;
+}
+
+.asset-set-header-count {
+	flex-shrink: 0;
+	margin-left: auto;
+	white-space: nowrap;
+}
+
+.asset-set-header-count,
+.asset-set-header-meta {
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+}
+
+// A note is an aside, often a quote: ruled off from the description.
+.asset-set-header-note {
+	padding-left: var(--spacing-sm);
+	border-left: 2px solid var(--color-border);
+	color: var(--color-text-tertiary);
+}

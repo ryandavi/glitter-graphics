@@ -571,7 +571,7 @@ class FilterLayerManager {
 
 	applySnapshotVisibility(layersToShow) {
 		this.editor.previewCanvas.style.visibility = '';
-		// [data-filter-snapshot-hidden] hides by opacity in _workspace.scss so the
+		// [data-filter-snapshot-hidden] hides by opacity in workspace/_layer-elements.scss so the
 		// covered layers stay clickable under the snapshot.
 		// The wrapper, not the elements container: the base image's sparkles sit
 		// beside #previewCanvas (BaseBackgroundManager.renderSparkleElement).

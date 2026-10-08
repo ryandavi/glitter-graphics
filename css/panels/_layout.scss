@@ -79,9 +79,7 @@
 			font-weight: var(--font-weight-semibold);
 			line-height: 1;
 			text-decoration: none;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
+			@include truncate;
 
 			>img,
 			>svg {
@@ -354,3 +352,15 @@ body.is-resizing-panel {
 	canvas { pointer-events: none; }
 }
 
+// The side panels narrow as the window does.
+@media (max-width: 1700px) {
+	:root {
+		--layer-panel-width: 300px;
+	}
+}
+
+@media (max-width: 1200px) {
+	:root {
+		--glitter-panel-width: 250px;
+	}
+}

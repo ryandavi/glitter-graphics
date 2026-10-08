@@ -572,7 +572,7 @@
 		}
 	}
 
-	@media (max-width: 600px) {
+	@include modal-compact {
 		.timeline-legend {
 			flex-wrap: wrap;
 			gap: var(--spacing-xs);
@@ -645,7 +645,7 @@
 	.highlight {
 		background: var(--theme-glitter-image) repeat;
 		color: var(--color-accent);
-		transition: background-color 0.3s ease;
+		transition: background-color var(--transition-base) ease;
 		border-radius: 2px;
 	}
 
@@ -669,7 +669,7 @@
 	}
 
 	>.modal-content>.modal-body ol li {
-		transition: background-color 0.2s ease;
+		transition: background-color var(--transition-fast) ease;
 
 		&:hover {
 			background-color: rgba(0, 102, 204, 0.05);

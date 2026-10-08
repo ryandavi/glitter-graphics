@@ -15,7 +15,6 @@
 	gap: var(--property-row-gap);
 }
 
-.brush-dynamic-row[hidden] { display: none; }
 
 .brush-dynamic-row.is-overridden .property-label::after {
 	content: '•';
@@ -28,7 +27,6 @@
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--property-row-gap);
 
-	label[hidden] { display: none; }
 }
 
 .brush-shape-option {
@@ -71,4 +69,19 @@
 	line-height: 1.1;
 	text-align: center;
 	color: inherit;
+}
+
+#brushTipThumbnail {
+	padding: var(--spacing-sm);
+
+	>svg, >img { display: block; width: 100%; height: 100%; object-fit: contain; }
+	&.is-vector {
+		color: var(--shape-asset-icon-color);
+		>svg { fill: currentColor; }
+	}
+	&.is-raster>img { image-rendering: pixelated; }
+	// Match the brush's Flip X/Y dynamics in the tip preview.
+	&.flip-x>img { transform: scaleX(-1); }
+	&.flip-y>img { transform: scaleY(-1); }
+	&.flip-x.flip-y>img { transform: scale(-1, -1); }
 }

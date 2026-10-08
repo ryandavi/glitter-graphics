@@ -1,0 +1,273 @@
+@use '../mixins' as *;
+
+// Library search field, recent searches and the filter surface.
+
+// The search field and the collapsible filter surface above every Library
+// grid. The strip takes the height its grid leaves and its filters scroll.
+.glitter-search {
+	--search-clear-size: 20px;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	position: relative;
+	z-index: 100;
+	overflow: hidden;
+	border-bottom: 1px solid var(--color-border);
+
+	> .search-controls {
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+		min-width: 0;
+		padding: var(--spacing-md);
+		gap: var(--spacing-sm);
+	}
+
+	> .search-controls > .search-toggle-row>.has-active-filters {
+		color: var(--color-accent);
+		border-color: var(--color-accent-border);
+	}
+
+	&.has-active-search > .search-controls > .search-toggle-row > .search-input-wrapper > input,
+	&.has-active-filters > .search-controls > .search-toggle-row > .search-input-wrapper > input {
+		border-color: var(--color-accent-border);
+	}
+
+	> .search-controls > .search-toggle-row {
+		> .search-input-wrapper { height: var(--row-height); }
+		> [data-browser-role="filterToggle"] {
+			width: var(--row-height);
+			height: var(--row-height);
+		}
+		> .search-input-wrapper {
+			> input { 
+				height: 100%; padding-right: calc(var(--search-clear-size) + var(--spacing-xs) * 2); 
+			}
+			> .search-clear {
+				position: absolute;
+				right: var(--spacing-xs);
+				top: 50%;
+				transform: translateY(-50%);
+				display: grid;
+				place-items: center;
+				width: var(--search-clear-size);
+				height: var(--search-clear-size);
+				padding: 0;
+				border: 0;
+				border-radius: var(--radius-xs);
+				background: none;
+				color: var(--color-text-tertiary);
+				cursor: pointer;
+				> .icon { width: 14px; height: 14px; }
+				&:hover { color: var(--color-text-primary); }
+				&:focus-visible { outline: none; box-shadow: var(--control-focus-ring); }
+			}
+		}
+	}
+
+	> .search-controls > .search-chip-slot {
+		flex-shrink: 0;
+		// height: calc(var(--chip-height) + var(--spacing-md));
+		box-sizing: border-box;
+
+		> :is(.recent-searches, .active-filter-summary) {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-xs);
+			// The chip outline extends 4px beyond its border on every side.
+			// height: calc(var(--chip-height) + var(--spacing-xs) * 2);
+			box-sizing: border-box;
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			overscroll-behavior-x: contain;
+			scrollbar-width: none;
+			> * { flex-shrink: 0; }
+		}
+		> .recent-searches > .filter-chip > span,
+		> .active-filter-summary > .is-search-term > span {
+			max-width: 16ch;
+			min-width: 0;
+			@include truncate;
+		}
+		.recent-searches-label {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+		}
+	}
+
+	> .filters-container {
+		flex: 1;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+		border-top: 1px solid var(--color-border);
+
+		> .filters-container-inner {
+			flex: 1;
+			min-height: 0;
+			max-height: none;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+	}
+}
+
+/* ===== FILTERS CONTAINER ===== */
+.gallery-search-section {
+	container-type: inline-size;
+	container-name: propertypanel;
+}
+
+.filters-container {
+	display: none;
+	flex-direction: column;
+	gap: 0;
+
+	&.visible {
+		display: flex;
+		animation: filter-surface-enter var(--transition-fast) ease-out;
+	}
+
+	// Filter sections scroll independently of the search row and action band.
+	>.filters-container-inner {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.filter-chips {
+		grid-column: 1 / -1;
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+	}
+
+	.color-filter-chips {
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(var(--color-filter-chip-size), 1fr));
+		align-items: start;
+		grid-auto-rows: auto;
+		gap: var(--spacing-sm);
+	}
+
+	>.filter-actions.property-set.property-actions {
+		flex-shrink: 0;
+		border-top: 1px solid var(--color-border);
+		padding-block: var(--spacing-md);
+	}
+}
+
+.color-filter-chip {
+	padding: var(--spacing-sm);
+	border-radius: var(--radius-full);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	aspect-ratio: 1/1;
+
+	&[data-color="red"] {
+		background: linear-gradient(135deg, var(--color-danger-bright), #cc0000);
+	}
+
+	&[data-color="orange"] {
+		background: linear-gradient(135deg, #ff8844, #ff6600);
+	}
+
+	&[data-color="yellow"] {
+		background: linear-gradient(135deg, #ffdd44, #ffaa00);
+	}
+
+	&[data-color="green"] {
+		background: linear-gradient(135deg, #44ff88, #00cc44);
+	}
+
+	&[data-color="blue"] {
+		background: linear-gradient(135deg, #4488ff, #0044cc);
+	}
+
+	&[data-color="purple"] {
+		background: linear-gradient(135deg, #aa44ff, #6600cc);
+	}
+
+	&[data-color="pink"] {
+		background: linear-gradient(135deg, #ff88cc, #ff4488);
+	}
+
+	&[data-color="neutral"] {
+		background: linear-gradient(135deg, #ffffff, #666666);
+	}
+
+	&[data-color="earth"] {
+		background: linear-gradient(135deg, #d4a574, #8b6f47);
+	}
+
+	&[data-color="metallic"] {
+		background: linear-gradient(135deg, #ffd700, #c0c0c0, #cd7f32);
+	}
+}
+
+.text-filter-chip {
+	&[data-color="light"] {
+		background: linear-gradient(135deg, var(--color-off-white), #e8e8e8);
+		color: var(--color-text-tertiary);
+	}
+
+	&[data-color="dark"] {
+		background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+		color: var(--color-off-white);
+	}
+
+	&[data-color="pastel"] {
+		background: linear-gradient(135deg, #ffb8df, #b4eeff, #cbffda);
+		color: #444;
+	}
+
+	&[data-color="neon"] {
+		background: linear-gradient(135deg, #7bff00, #00fff2, #ff00ff);
+		color: var(--color-text-tertiary);
+		text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+	}
+
+	&[data-color="jewel"] {
+		background: linear-gradient(135deg, #9b2c6f, #1a5490, #0d6e4f);
+		color: var(--color-off-white);
+	}
+
+	&[data-color="pattern"] {
+		background:
+			repeating-linear-gradient(45deg, #666 0px, #666 10px, #888 10px, #888 20px),
+			linear-gradient(135deg, #555, #777);
+		color: var(--color-off-white);
+		text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+	}
+
+	&[data-color="multicolor"] {
+		background: linear-gradient(90deg, var(--color-danger-bright) 0%, #ff8844 16.67%, #ffdd44 33.33%, #44ff88 50%, #4488ff 66.67%, #aa44ff 83.33%, #ff88cc 100%);
+		color: var(--color-text-tertiary);
+		text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+	}
+}
+
+@keyframes filter-surface-enter {
+	from {
+		opacity: 0;
+		transform: translateY(var(--spacing-xs));
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+// A kind's search host shows only while that kind is the Library's view
+// (syncLibraryView stamps `.visible`).
+.section > .gallery-search-section {
+	display: none;
+	padding: 0;
+	border-bottom: 1px solid var(--color-border);
+
+	&.visible { display: block; }
+}

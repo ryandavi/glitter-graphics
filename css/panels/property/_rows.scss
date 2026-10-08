@@ -16,7 +16,6 @@
 	min-height: var(--property-row-height);
 	padding: 0 var(--property-gutter);
 
-	&[hidden] { display: none; }
 
 	// The row applies the gutter; its label must not apply it a second time.
 	> .property-label { padding-inline: 0; }
@@ -111,7 +110,6 @@
 	gap: var(--property-row-gap);
 	width: 100%;
 
-	&[hidden] { display: none; }
 
 	> * { min-width: 0; }
 }
@@ -155,7 +153,6 @@
 
 	> .property-group-label { padding: var(--spacing-xs) var(--property-gutter) 0; }
 
-	&[hidden] { display: none; }
 }
 
 // ===== The revert ==========================================================

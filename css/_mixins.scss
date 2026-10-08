@@ -8,6 +8,15 @@ $mobile-breakpoint: 800px;
 	}
 }
 
+// Modals drop to their single-column layout below this width.
+$modal-compact-breakpoint: 600px;
+
+@mixin modal-compact {
+	@media (max-width: $modal-compact-breakpoint) {
+		@content;
+	}
+}
+
 @mixin glass-surface {
 	background: var(--color-bg-translucent);
 	border: 1px solid var(--color-border);
@@ -43,6 +52,19 @@ $mobile-breakpoint: 800px;
 	border-bottom: 1.5px solid currentColor;
 	transform: rotate(-45deg);
 	transition: transform var(--transition-fast);
+}
+
+// One line of text that ends in an ellipsis instead of wrapping.
+@mixin truncate {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+// Fills its positioned parent edge to edge.
+@mixin cover {
+	position: absolute;
+	inset: 0;
 }
 
 @mixin spread-row {
@@ -437,7 +459,7 @@ $mobile-breakpoint: 800px;
 @mixin secondary-button-filters {
 	&:before {
 		filter: var(--btn-secondary-filter);
-		transition: filter 0.2s;
+		transition: filter var(--transition-fast);
 	}
 
 	&:not(:disabled):hover:before {

@@ -1,38 +1,6 @@
-@use 'mixins' as *;
+@use '../mixins' as *;
 
-/* ===== CANVAS WORKSPACE ===== */
-
-body.tool-text {
-	.preview-canvas,
-	.preview-wrapper { cursor: crosshair; }
-
-	// Over text, a press places the caret.
-	.text-glitter-element {
-		cursor: text;
-
-		// A press on locked text neither edits it nor starts a new text.
-		&.is-locked { cursor: default; }
-	}
-}
-
-.smart-guide {
-	// In the screen-space selection overlay; JS sets the span and snaps the
-	// line's leading edge to a device pixel.
-	position: absolute;
-	background: var(--smart-guide-color);
-	box-shadow:
-		0 0 0 var(--selection-halo) rgba(255, 255, 255, 0.9),
-		0 0 3px 0.5px rgba(0, 0, 0, 0.65);
-	pointer-events: none;
-
-	&-x {
-		width: var(--selection-stroke);
-	}
-
-	&-y {
-		height: var(--selection-stroke);
-	}
-}
+// Layer preview elements on the canvas.
 
 .sticker-element,
 .text-glitter-element,
@@ -74,6 +42,22 @@ body.tool-text {
 	// without this a scaled-up pixel sticker is smoothed at 100% and below.
 	&.pixelated img { image-rendering: pixelated; }
 
+	.sticker-effect-layer {
+		@include cover;
+		pointer-events: none;
+		background-repeat: repeat;
+	}
+
+	// Not a direct-child (>) selector: the animation preview wrapper
+	// (layer-anim-wrapper) nests the image one level deeper once a layer
+	// animation is active, and this stacking still needs to apply then.
+	img.sticker-image { position: relative; z-index: 2; }
+	.sticker-effect-shadow { z-index: 0; }
+	.sticker-effect-border { z-index: 1; }
+	.sticker-effect-bevel { z-index: 3; }
+	// Sparkles drawn behind sit between the shadow and the image.
+	.sparkle-layer { z-index: 4; }
+	.sparkle-layer[data-order="behind"] { z-index: 1; }
 }
 
 // A path is picked on its geometry (LAYER_UI_CONFIG pickedOnCanvas), so like
@@ -118,8 +102,7 @@ body.tool-text {
 .shape-glitter-content,
 .frame-layer-content,
 .path-layer-content {
-	position: absolute;
-	inset: 0;
+	@include cover;
 	box-sizing: border-box;
 	background-repeat: repeat;
 	overflow: visible;
@@ -139,95 +122,6 @@ body.tool-text {
 	pointer-events: none;
 	z-index: 1;
 }
-
-.sticker-element.has-transform-handles,
-.text-glitter-element.has-transform-handles,
-.shape-glitter-element.has-transform-handles {
-	pointer-events: none !important;
-}
-
-body.tool-shape,
-body.tool-line,
-body.tool-pen {
-	.preview-container,
-	.preview-canvas,
-	#canvasElementsContainer { cursor: crosshair; }
-}
-
-.creation-drag-preview {
-	position: absolute;
-	z-index: 200;
-	border: 2px dashed var(--color-accent);
-	background: color-mix(in srgb, var(--color-accent) 18%, transparent);
-	box-shadow:
-		0 0 0 1px rgba(0, 0, 0, 0.75),
-		inset 0 0 0 1px rgba(255, 255, 255, 0.85),
-		0 0 6px rgba(0, 0, 0, 0.45);
-	pointer-events: none;
-
-	// A line tool drags out a line, not a box: JS places it at the start
-	// point and turns it toward the pointer.
-	&.is-line {
-		height: 0;
-		border-width: 2px 0 0;
-		background: none;
-		transform-origin: 0 0;
-	}
-}
-
-// The cursor says what a press would do: move over a layer a drag would move,
-// the arrow over empty canvas and over a locked layer. A layer's element is
-// larger than its frame (shadow and outline padding), so LayerTransform stamps
-// .is-frame-hover while the pointer is where a press would take hold.
-body.tool-select {
-	:is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element).is-frame-hover:not(.is-locked) { cursor: move; }
-
-	// A layer picked on the canvas (a fill) has no element of its own, so the
-	// container carries the cursor while the pointer is over its paint.
-	.preview-container.is-over-picked-layer { cursor: move; }
-}
-
-.transform-hover-outline {
-	// In the screen-space selection overlay: the selection box's line without
-	// handles, as in Figma, so clicking only adds the handles.
-	@include selection-line;
-	position: absolute;
-	pointer-events: none;
-}
-
-.selection-marquee {
-	@include selection-line;
-	position: absolute;
-	z-index: 12;
-	background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-	pointer-events: none;
-}
-
-.layer-pick-flash {
-	position: absolute;
-	z-index: var(--z-drawer);
-	width: calc(var(--row-height) / var(--zoom, 1));
-	height: calc(var(--row-height) / var(--zoom, 1));
-	margin-top: calc(var(--icon-size-xs) * -1 / var(--zoom, 1));
-	margin-left: calc(var(--icon-size-xs) * -1 / var(--zoom, 1));
-	border: calc(3px / var(--zoom, 1)) solid var(--color-accent);
-	border-radius: var(--radius-full);
-	pointer-events: none;
-	animation: pickFlash var(--transition-base) ease-out;
-}
-
-@keyframes pickFlash {
-	0% {
-		transform: scale(0.5);
-		opacity: 1;
-	}
-
-	100% {
-		transform: scale(1.5);
-		opacity: 0;
-	}
-}
-
 
 // ===== Glitter render layer ===============================================
 // The wrapper GlitterManager mounts over the canvas; sibling of
@@ -266,13 +160,11 @@ body.tool-select {
 }
 
 .filter-layer-overlay {
-	position: absolute;
-	inset: 0;
+	@include cover;
 	pointer-events: none;
 
 	> * {
-		position: absolute;
-		inset: 0;
+		@include cover;
 	}
 }
 
@@ -294,8 +186,45 @@ body.tool-select {
 }
 
 .layer-anim-wrapper {
-	position: absolute;
-	inset: 0;
+	@include cover;
 	pointer-events: none;
 	image-rendering: inherit;
+}
+
+// Sparkles slot particles (js/paint/sparkles.js): a host-sized layer of
+// absolutely placed spans, one per particle, each painting the slot through
+// its glyph mask. AnimationTicker writes every particle's transform and
+// opacity; text and shape layers stack in DOM order.
+.sparkle-layer,
+.sparkle-host-element {
+	position: absolute;
+	left: 0;
+	top: 0;
+	pointer-events: none;
+}
+
+.sparkle-particle,
+.sparkle-paint {
+	position: absolute;
+	display: block;
+	pointer-events: none;
+}
+
+.sparkle-particle { transform-origin: 50% 50%; }
+
+.sparkle-paint {
+	mask-repeat: no-repeat;
+	-webkit-mask-repeat: no-repeat;
+	mask-position: 0 0;
+	-webkit-mask-position: 0 0;
+}
+
+.sticker-slices {
+	z-index: 2;
+	@include slice-group;
+}
+
+.sticker-slice {
+	position: absolute;
+	background-repeat: no-repeat;
 }

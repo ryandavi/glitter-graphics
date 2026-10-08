@@ -183,7 +183,6 @@
 		max-width: none;
 	}
 
-	&[hidden] { display: none; }
 
 	&.is-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -220,9 +219,7 @@
 	flex: 0 1 auto;
 	max-width: 55%;
 	min-width: 0;
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+	@include truncate;
 	text-align: right;
 	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-normal);

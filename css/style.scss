@@ -5,10 +5,24 @@
 @use 'scroll-regions';
 @use 'components';
 @use 'controls';
+@use 'progress';
 @use 'panels/layout';
 @use 'panels/layers-list';
-@use 'panels/gallery';
-@use 'panels/preview';
+@use 'panels/design-panel';
+@use 'library/search-filters';
+@use 'library/picker-strip';
+@use 'library/browser';
+@use 'library/tile';
+@use 'library/asset-info';
+@use 'workspace/stage';
+@use 'workspace/start-card';
+@use 'workspace/canvas-chrome';
+@use 'workspace/context-toolbar';
+@use 'workspace/brush-cursor';
+@use 'workspace/status-bar';
+@use 'workspace/layer-elements';
+@use 'workspace/selection-chrome';
+@use 'workspace/path-chrome';
 @use 'panels/panel-shell';
 @use 'panels/panel-mobile';
 @use 'panels/text-panel';
@@ -16,13 +30,9 @@
 @use 'panels/brush-panel';
 @use 'panels/paint-slot';
 @use 'panels/effects';
-@use 'workspace';
-@use 'path-chrome';
 @use 'panels/transform-panel';
 @use 'panels/panel-sections';
 @use 'panels/layer-picker';
-@use 'processing-status';
-@use 'assets';
 
 // LAST of the panel sheets on purpose: the property vocabulary has to win the
 // cascade against the feature sheets above it.
