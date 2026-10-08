@@ -1,6 +1,6 @@
 'use strict';
 
-// The gallery order reserves cells for looks awaiting stacked text or lit 3D.
+// The gallery order reserves cells for the deferred lit perspective 3D looks.
 // Samples use the real slot masks at 64px, with no document mutation.
 const fs = require('fs');
 const path = require('path');
@@ -24,14 +24,15 @@ const { chromium } = require('playwright');
 				const layer = createStylePreviewLayer(manager, LayerType.TEXT_GLITTER, entry);
 				layer.textData.text = 'WordArt';
 				layer.textData.fontSize = 64;
-				library.apply(entry, { layer, context: { getSlotDefaults: key => manager.getEffectDefaults(key), glitterAvailable: () => false } });
+				library.apply(entry, { layer, context: { getSlotDefaults: key => manager.getEffectDefaults(key), glitterAvailable: id => Boolean(editor.glitterLibrary.getItemById(id)) } });
 				await FontLibrary.ensureLoaded(layer.textData.fontId);
+				for (const slot of Object.values(entry.value.slots)) if (slot.mode === 'glitter') await editor.glitterLibrary.ensureAssetDetails(slot.glitterId);
 				const masks = await manager.renderSlotMasks(layer);
 				const canvas = createAppCanvas(masks.renderWidth || masks.fill.width, masks.renderHeight || masks.fill.height, 'test/wordart');
 				const surface = createAppCanvas(0, 0, 'test/wordart');
 				for (const item of buildSlotStack(layer, slot => resolvePaintSlotPreviewSource(editor, layer, slot))) {
 					if (!masks[item.key]) continue;
-					await paintStylePreviewSlot(editor, surface, masks[item.key], item.source);
+					if (!await paintStylePreviewSlot(editor, surface, masks[item.key], item.source)) throw new Error(`Missing WordArt paint: ${entry.id}/${item.key}`);
 					canvas.getContext('2d').drawImage(surface, 0, 0, canvas.width, canvas.height);
 				}
 				if (!getStylePreviewInkBox(canvas)) throw new Error(`Empty WordArt render: ${entry.id}`);
@@ -43,7 +44,7 @@ const { chromium } = require('playwright');
 		if (errors.length) throw new Error(errors.join('\n'));
 		const order = ['outline', 'up', 'arc', 'squeeze', 'inverted-arc', 'basic-stack', 'italic-outline', 'slate', 'mauve', 'graydient', 'red-blue', 'brown-stack', 'radial', 'purple', 'green-marble', 'rainbow', 'aqua', 'texture-stack', 'paper-bag', 'sunset', 'tilt', 'blues', 'yellow-dash', 'green-stack', 'chrome', 'marble-slab', 'gray-block', 'superhero', 'horizon', 'stack-3d'];
 		const reference = fs.readFileSync(path.join(__dirname, '../docs/local/WORDART-EXAMPLES.png')).toString('base64');
-		const html = `<!doctype html><meta charset="utf-8"><title>WordArt comparison</title><style>body{font:14px Arial;background:#eee;margin:20px}main{display:flex;gap:20px;align-items:flex-start}.grid{display:grid;grid-template-columns:repeat(6,225px);gap:8px}.cell{background:white;padding:8px;height:145px}.cell img{display:block;width:100%;height:115px;object-fit:contain}.pending{color:#777}aside{width:420px}aside img{width:420px}</style><h1>WordArt — 64px samples</h1><p>Current default font where a look awaits WP-4. No aspect stretch. Pending cells await stacked text or lit 3D.</p><main><div class="grid">${order.map((id, index) => `<div class="cell ${samples[id] ? '' : 'pending'}">${index + 1}. ${samples[id]?.label || id}${samples[id] ? `<img src="${samples[id].url}">` : '<p>Pending later work package</p>'}</div>`).join('')}</div><aside><img src="data:image/png;base64,${reference}"><p>Original Office gallery</p></aside></main>`;
+		const html = `<!doctype html><meta charset="utf-8"><title>WordArt comparison</title><style>body{font:14px Arial;background:#eee;margin:20px}main{display:flex;gap:20px;align-items:flex-start}.grid{display:grid;grid-template-columns:repeat(6,225px);gap:8px}.cell{background:white;padding:8px;height:145px}.cell img{display:block;width:100%;height:115px;object-fit:contain}.pending{color:#777}aside{width:420px}aside img{width:420px}</style><h1>WordArt — 64px samples</h1><p>Original system fonts and Office textures. No aspect stretch. Marble Slab and Gray Block await the deferred lit perspective 3D engine; Stack 3D and Superhero use flat extrusion.</p><main><div class="grid">${order.map((id, index) => `<div class="cell ${samples[id] ? '' : 'pending'}">${index + 1}. ${samples[id]?.label || id}${samples[id] ? `<img src="${samples[id].url}">` : '<p>Pending later work package</p>'}</div>`).join('')}</div><aside><img src="data:image/png;base64,${reference}"><p>Original Office gallery</p></aside></main>`;
 		fs.writeFileSync(path.join(out, 'comparison.html'), html);
 		await page.setContent(html);
 		await page.screenshot({ path: path.join(out, 'comparison.png'), fullPage: true });

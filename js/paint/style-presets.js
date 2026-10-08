@@ -38,6 +38,7 @@ const STYLE_PRESET_TEXT_DEFAULTS = Object.freeze({
 	'textData.fontWeight': CONFIG.tools.text.defaultFontWeight,
 	'textData.fontStyle': CONFIG.tools.text.defaultFontStyle,
 	'textData.textCase': CONFIG.tools.text.defaultTextCase,
+	'textData.orientation': CONFIG.tools.text.defaultOrientation,
 	'textData.letterSpacing': FIELDS.textLetterSpacing.value,
 	'textData.lineHeight': FIELDS.textLineHeight.value / 100,
 	'textData.warp.type': CONFIG.tools.text.defaultWarpType,
@@ -63,6 +64,11 @@ const STYLE_PRESET_ENTRIES = (() => {
 		slots, data: { 'textData.textCase': 'upper', 'textData.fontStyle': 'normal', 'textData.letterSpacing': 0, ...data }
 	} });
 	const impact = { 'textData.fontId': 'impact' };
+	const sans = { 'textData.fontId': 'arial' };
+	const heavy = { 'textData.fontId': 'arial-black' };
+	const serif = { 'textData.fontId': 'times-new-roman' };
+	const boldSerif = { ...serif, 'textData.fontWeight': 700 };
+	const stacked = { 'textData.orientation': 'stacked' };
 	const warp = (type, bend) => ({ 'textData.warp.type': type, 'textData.warp.bend': bend });
 	const hardShadow = (color, offsetX, offsetY, extra = {}) => solid(color, { offsetX, offsetY, spread: 0, blur: 0, ...extra });
 	const extrude = (color, x, y) => hardShadow(color, x, y, { kind: 'extrude' });
@@ -76,7 +82,7 @@ const STYLE_PRESET_ENTRIES = (() => {
 			value: {
 				slots: { fill: buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text }) },
 				data: { 'textData.fontId': CONFIG.tools.text.defaultFontId, 'textData.fontStyle': CONFIG.tools.text.defaultFontStyle, 'textData.textCase': CONFIG.tools.text.defaultTextCase,
-					'textData.letterSpacing': FIELDS.textLetterSpacing.value, 'textData.warp.type': CONFIG.tools.text.defaultWarpType, 'textData.warp.bend': FIELDS.textWarpBend.value }
+					'textData.orientation': CONFIG.tools.text.defaultOrientation, 'textData.letterSpacing': FIELDS.textLetterSpacing.value, 'textData.warp.type': CONFIG.tools.text.defaultWarpType, 'textData.warp.bend': FIELDS.textWarpBend.value }
 			}
 		},
 		{ id: 'plain', label: 'Plain', group: 'classic', targets: ['shape', 'sticker'], tags: ['none', 'reset'], value: { slots: {} } },
@@ -133,31 +139,37 @@ const STYLE_PRESET_ENTRIES = (() => {
 			} }
 		},
 
-		// Serif and Arial Black looks use the default font until those faces
-		// are available. Unnamed warps draw flat.
-		wordart('outline', 'Outline', { fill: solid('#ffffff'), border: solid('#000000', { widthPx: 1 }) }, impact),
+		// System faces keep the original gallery's serif/sans distinction.
+		// Unnamed warps draw flat; stacked looks use the shared text layout.
+		wordart('outline', 'Outline', { fill: solid('#ffffff'), border: solid('#000000', { widthPx: 1 }) }, heavy),
 		wordart('up', 'Up', { fill: solid('#000000') }, { ...impact, ...warp('rise', 35) }),
-		wordart('arc', 'Arc', { fill: solid('#000000') }, { ...warp('arc', 25), 'textData.letterSpacing': 6 }),
+		wordart('arc', 'Arc', { fill: solid('#000000') }, { ...heavy, ...warp('arc', 25), 'textData.letterSpacing': 6 }),
 		wordart('squeeze', 'Squeeze', { fill: solid('#000000') }, { ...impact, ...warp('bulge', -60) }),
-		wordart('inverted-arc', 'Inverted Arc', { fill: solid('#000000') }, warp('arc', -25)),
-		wordart('italic-outline', 'Italic Outline', { fill: solid('#ffffff'), border: solid('#000000', { widthPx: 1 }), shadow: hardShadow('#999999', 3, 2) }, { 'textData.fontStyle': 'italic' }),
-		wordart('slate', 'Slate', { fill: solid('#336699'), shadow: hardShadow('#c1c1c1', 3, 2) }),
+		wordart('inverted-arc', 'Inverted Arc', { fill: solid('#000000') }, { ...serif, ...warp('arc', -25) }),
+		wordart('basic-stack', 'Basic Stack', { fill: solid('#000000') }, { ...heavy, ...stacked }),
+		wordart('italic-outline', 'Italic Outline', { fill: solid('#ffffff'), border: solid('#000000', { widthPx: 1 }), shadow: hardShadow('#999999', 3, 2) }, { ...sans, 'textData.fontStyle': 'italic' }),
+		wordart('slate', 'Slate', { fill: solid('#336699'), shadow: hardShadow('#c1c1c1', 3, 2) }, serif),
 		wordart('mauve', 'Mauve', { fill: solid('#a6a7dc'), border: solid('#6e6dc4', { widthPx: 2 }), shadow: hardShadow('#9392e4', 4, 4) }, impact),
-		wordart('graydient', 'Graydient', { fill: inlineGradient(['#adadad', '#ffffff']), shadow: hardShadow('#7f7f7f', 4, 3) }, { 'textData.letterSpacing': 12 }),
+		wordart('graydient', 'Graydient', { fill: inlineGradient(['#adadad', '#ffffff']), shadow: hardShadow('#7f7f7f', 4, 3) }, { ...sans, 'textData.letterSpacing': 12 }),
 		wordart('red-blue', 'Red Blue', { fill: solid('#0363ca'), border: solid('#bad1f5', { widthPx: 2 }), shadow: hardShadow('#732d40', 4, 4) }, impact),
+		wordart('brown-stack', 'Brown Stack', { fill: solid('#750f0d'), shadow: hardShadow('#51080a', 2, 2) }, { ...impact, ...stacked, 'textData.fontStyle': 'italic' }),
 		wordart('radial', 'Radial', { fill: inlineGradient(['#fdef50', '#f29f42'], { type: 'radial' }), shadow: hardShadow('#c9c9c9', 3, 3) }, impact),
 		wordart('purple', 'Purple', { fill: inlineGradient(['#773fc9', '#bf47cc']), shadow: hardShadow('#bea5f8', 4, 4) }, { ...impact, ...warp('rise', 15) }),
-		wordart('green-marble', 'Green Marble', { fill: solid('#106229'), shadow: hardShadow('#d9e8e0', 0, -18) }),
-		wordart('rainbow', 'Rainbow', { fill: inlineGradient([[0.18, '#d31573'], [0.31, '#e74b2e'], [0.44, '#f7a51d'], [0.57, '#fbec3d'], [0.7, '#3aa33f'], [0.83, '#2941b5'], [1, '#6f0bc3']], { angle: 90 }), shadow: cast('#c8c8c8') }, impact),
-		wordart('aqua', 'Aqua', { fill: inlineGradient(['#a6aedd', '#729ebb', '#4f9aa0']), shadow: hardShadow('#c9d2da', 3, 3) }, warp('ripple', 50)),
-		wordart('paper-bag', 'Paper Bag', { fill: solid('#95795b'), shadow: extrude('#221103', 5, 5) }, impact),
-		wordart('sunset', 'Sunset', { fill: inlineGradient(['#f4f4eb', '#ebb0ae']), shadow: extrude('#084d92', -4, -8) }, warp('arch', 40)),
+		wordart('green-marble', 'Green Marble', { fill: solid('#106229'), shadow: hardShadow('#d9e8e0', 0, -18) }, serif),
+		wordart('rainbow', 'Rainbow', { fill: inlineGradient([[0.18, '#d31573'], [0.31, '#e74b2e'], [0.44, '#f7a51d'], [0.57, '#fbec3d'], [0.7, '#3aa33f'], [0.83, '#2941b5'], [1, '#6f0bc3']], { angle: 90 }), shadow: cast('#c8c8c8') }, heavy),
+		wordart('aqua', 'Aqua', { fill: inlineGradient(['#a6aedd', '#729ebb', '#4f9aa0']), shadow: hardShadow('#c9d2da', 3, 3) }, { ...serif, ...warp('ripple', 50) }),
+		wordart('texture-stack', 'Texture Stack', { fill: glitter(427, '#a3a3a3', { textureAnchor: 'layer' }), border: solid('#777777', { widthPx: 1 }) }, { ...serif, ...stacked }),
+		wordart('paper-bag', 'Paper Bag', { fill: glitter(417, '#95795b', { textureAnchor: 'layer' }), shadow: extrude('#221103', 5, 5) }, impact),
+		wordart('sunset', 'Sunset', { fill: inlineGradient(['#f4f4eb', '#ebb0ae']), shadow: extrude('#084d92', -4, -8) }, { ...boldSerif, ...warp('arch', 40) }),
 		wordart('tilt', 'Tilt', { fill: inlineGradient(['#623608', '#debc41']), shadow: cast('#705522') }, { ...impact, 'textData.fontStyle': 'italic' }),
 		wordart('blues', 'Blues', { fill: solid('#54ccfa'), border: solid('#2969b6', { widthPx: 2 }), shadow: extrude('#0b3198', 8, -8) }, { ...impact, ...warp('ripple', 50) }),
 		wordart('yellow-dash', 'Yellow Dash', { fill: solid('#f4f621'), border: solid('#434308', { widthPx: 2 }), shadow: hardShadow('#abab74', 3, 3) }, { ...impact, ...warp('climb', 40) }),
-		wordart('chrome', 'Chrome', { fill: inlineGradient(['#484848', '#dadada', '#5f5f5f', '#aaaaaa', '#f4f4f4']), shadow: extrude('#393939', 4, 3) }),
+		wordart('green-stack', 'Green Stack', { fill: inlineGradient(['#39e639', '#33ccff']), shadow: extrude('#1a1a8f', 5, 5) }, { ...impact, ...stacked }),
+		wordart('chrome', 'Chrome', { fill: inlineGradient(['#484848', '#dadada', '#5f5f5f', '#aaaaaa', '#f4f4f4']), shadow: extrude('#393939', 4, 3) }, boldSerif),
 		wordart('superhero', 'Superhero', { fill: inlineGradient(['#fdd213', '#f97306']), shadow: extrude('#8b3802', -6, 10) }, { ...impact, ...warp('rise', 35) }),
 		wordart('horizon', 'Horizon', { fill: inlineGradient([[0, '#7f95ac'], [0.5, '#dfe3e7'], [0.51, '#98514e'], [1, '#b89695']]), shadow: extrude('#110e0e', -5, 5) }, impact),
+
+		wordart('stack-3d', 'Stack 3D', { fill: solid('#c5856e'), shadow: extrude('#750f0d', -8, 8) }, { ...impact, ...stacked }),
 
 		// Shiny: each leans on a different effect so they read apart at a
 		// glance: chisel metal, pillow candy, gloss gel, glow, offset retro.

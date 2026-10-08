@@ -226,18 +226,20 @@ const TEXT_EDIT_METHODS = {
 			const x = warped ? warped.placement.x - glyph.advance / 2 * Math.cos(rotation) : glyph.x;
 			const y = warped ? warped.placement.y - glyph.advance / 2 * Math.sin(rotation) : glyph.baseline;
 			boundaries.push({ index: glyph.sourceIndex, x, y, line: glyph.line, rotation: warped?.placement.rotation || 0, scaleY: warped?.placement.scaleY || 1 });
-			boundaries.push({ index: glyph.sourceEnd, x: x + glyph.advance * Math.cos(rotation), y: y + glyph.advance * Math.sin(rotation), line: glyph.line, rotation: warped?.placement.rotation || 0, scaleY: warped?.placement.scaleY || 1 });
+			boundaries.push({ index: glyph.sourceEnd, x: x + glyph.advance * Math.cos(rotation), y: y + glyph.advance * Math.sin(rotation), line: glyph.line, rotation: warped?.placement.rotation || 0, scaleY: warped?.placement.scaleY || 1, glyphEnd: true });
 		});
 		entry.layout.visibleLines.forEach((line, index) => {
 			const last = boundaries.filter(boundary => boundary.line === index).at(-1);
-			const next = entry.layout.lines[index + 1];
+			const next = entry.layout.visibleLines[index + 1];
 			if (last && next) {
 				let offset = line.sourceEnd;
 				for (const char of splitGraphemes(layer.textData.text.slice(offset, next.sourceStart))) { boundaries.push({ ...last, index: offset }); offset += char.length; }
 			}
-			if (!line.text) boundaries.push({ index: line.sourceStart, x: 0, y: entry.contentOffsetY + entry.ascent + index * entry.lineHeightPx, line: index, rotation: 0, scaleY: 1 });
+			if (!line.text) boundaries.push({ index: line.sourceStart, x: line.x, y: line.baseline, line: index, rotation: 0, scaleY: 1 });
 		});
 		if (!boundaries.length) boundaries.push({ index: 0, x: 0, y: entry.ascent, line: 0, rotation: 0, scaleY: 1 });
+		// Editing uses the next row's start; hit testing still needs both edges.
+		if (layer.textData.orientation === 'stacked') boundaries.sort((a, b) => Number(Boolean(a.glyphEnd)) - Number(Boolean(b.glyphEnd)));
 		return boundaries;
 	},
 	hitTextBoundary(layer, clientX, clientY) {

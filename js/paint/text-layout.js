@@ -169,39 +169,66 @@ TextLayout.layout = function(ctx, text, data, options) {
 	const { fontSize, letterSpacing, lineHeightPx, ascent, descent, minBoxSize } = options;
 	const source = getTextContent(text, data.textCase);
 	const display = source.map(glyph => glyph.char).join('');
+	const stacked = data.orientation === 'stacked';
 	const boxed = data.boxMode !== 'point';
 	const layoutWidth = boxed ? Math.max(minBoxSize, Math.round(data.boxWidth || minBoxSize)) : null;
-	const lines = boxed ? this.wrapTextLines(ctx, display.split('\n'), layoutWidth, letterSpacing, fontSize).lines : display.split('\n').map(line => this.measureLine(ctx, line, letterSpacing, fontSize));
+	let lines = stacked ? [] : boxed ? this.wrapTextLines(ctx, display.split('\n'), layoutWidth, letterSpacing, fontSize).lines : display.split('\n').map(line => this.measureLine(ctx, line, letterSpacing, fontSize));
+	let stackWidth = 0;
+	let stackRows = 0;
+	if (stacked) {
+		const columns = [[]];
+		for (const glyph of source) {
+			if (glyph.char === '\n') columns.push([]);
+			else columns.at(-1).push(glyph);
+		}
+		lines = [];
+		let emptyStart = 0;
+		columns.forEach((column, columnIndex) => {
+			const measured = column.map(glyph => ({ ...this.measureLine(ctx, glyph.char, 0, fontSize), displayStart: glyph.displayIndex, sourceStart: glyph.sourceIndex, sourceEnd: glyph.sourceEnd }));
+			const columnWidth = measured.length ? Math.max(...measured.map(line => line.width)) : ctx.measureText('M').width;
+			if (!measured.length) {
+				const sourceIndex = source.find(glyph => glyph.displayIndex === emptyStart)?.sourceIndex ?? text.length;
+				measured.push({ ...this.measureLine(ctx, '', 0, fontSize), displayStart: emptyStart, sourceStart: sourceIndex, sourceEnd: sourceIndex });
+			}
+			measured.forEach((line, row) => lines.push({ ...line, row, column: columnIndex, columnX: stackWidth, columnWidth }));
+			stackWidth += columnWidth + (columnIndex < columns.length - 1 ? Math.max(0, letterSpacing) : 0);
+			stackRows = Math.max(stackRows, measured.length);
+			emptyStart = (column.at(-1)?.displayIndex ?? emptyStart) + (column.at(-1)?.char.length ?? 0) + 1;
+		});
+	}
 	let cursor = 0;
 	lines.forEach((line, index) => {
 		const found = display.indexOf(line.text, cursor);
-		line.displayStart = found < 0 ? cursor : found;
+		line.displayStart = stacked ? line.displayStart : found < 0 ? cursor : found;
 		cursor = line.displayStart + line.text.length;
 		const nextBreak = display.indexOf('\n', cursor);
-		line.wrapped = boxed && index < lines.length - 1 && (nextBreak < 0 || /\S/u.test(display.slice(cursor, nextBreak)));
+		line.wrapped = !stacked && boxed && index < lines.length - 1 && (nextBreak < 0 || /\S/u.test(display.slice(cursor, nextBreak)));
 		const first = source.find(glyph => glyph.displayIndex >= line.displayStart);
 		const last = source.filter(glyph => glyph.displayIndex < cursor).at(-1);
-		line.sourceStart = first?.sourceIndex ?? text.length;
-		line.sourceEnd = last?.sourceEnd ?? line.sourceStart;
+		line.sourceStart = stacked ? line.sourceStart : first?.sourceIndex ?? text.length;
+		line.sourceEnd = stacked ? line.sourceEnd : last?.sourceEnd ?? line.sourceStart;
 		if (display[cursor] === '\n') cursor++;
 	});
-	const width = layoutWidth ?? lines.reduce((max, line) => Math.max(max, line.width), 0);
-	const contentHeight = ascent + descent + lineHeightPx * Math.max(lines.length - 1, 0);
+	const width = layoutWidth ?? (stacked ? stackWidth : lines.reduce((max, line) => Math.max(max, line.width), 0));
+	const contentHeight = ascent + descent + lineHeightPx * Math.max((stacked ? stackRows : lines.length) - 1, 0);
 	const height = data.boxMode === 'fixed' ? Math.max(minBoxSize, Math.round(data.boxHeight || minBoxSize)) : contentHeight;
-	const visible = data.boxMode === 'fixed' ? lines.filter((line, index) => ascent + index * lineHeightPx + line.descent <= height).length : lines.length;
-	const visibleLines = lines.slice(0, visible);
+	const fittingLines = data.boxMode === 'fixed' ? lines.filter((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx + line.descent <= height && (!stacked || line.columnX + line.columnWidth <= width)) : lines;
+	const visibleLines = stacked ? fittingLines : lines.slice(0, fittingLines.length);
+	const visible = visibleLines.length;
 	let offsetY = 0;
 	if (data.boxMode === 'fixed' && visible) {
-		const top = Math.min(...visibleLines.map((line, index) => ascent + index * lineHeightPx - line.ascent));
-		const bottom = Math.max(...visibleLines.map((line, index) => ascent + index * lineHeightPx + line.descent));
+		const top = Math.min(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx - line.ascent));
+		const bottom = Math.max(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx + line.descent));
 		offsetY = this.getVerticalAlignOffset(data.verticalAlign, height, bottom - top) - top;
 	}
 	const glyphs = [];
 	const runs = [];
 	const decorations = [];
 	visibleLines.forEach((line, lineIndex) => {
-		const baseline = offsetY + ascent + lineIndex * lineHeightPx;
-		const startX = this.getAlignOffset(data.align, width, line.width);
+		const baseline = offsetY + ascent + (stacked ? line.row : lineIndex) * lineHeightPx;
+		const startX = stacked ? this.getAlignOffset(data.align, width, stackWidth) + line.columnX + (line.columnWidth - line.width) / 2 : this.getAlignOffset(data.align, width, line.width);
+		line.x = startX;
+		line.baseline = baseline;
 		const firstGlyph = glyphs.length;
 		const chars = splitGraphemes(line.text);
 		const gaps = (line.text.match(/\s+/gu) || []).length;
@@ -246,7 +273,7 @@ TextLayout.layout = function(ctx, text, data, options) {
 		const ratios = CONFIG.tools.text.decoration;
 		for (const kind of ['underline', 'strikethrough']) if (data.decoration?.[kind] && line.text) decorations.push({ x: startX, y: baseline + fontSize * ratios[kind], width: justify ? width : line.width, height: Math.max(1, fontSize * ratios.thickness), line: lineIndex });
 	});
-	return { lines, visibleLines, glyphs, runs, decorations, layoutWidth: width, layoutHeight: height, contentOffsetY: offsetY, hasOverflow: visible < lines.length };
+	return { lines, visibleLines, glyphs, runs, decorations, contentWidth: stacked ? stackWidth : Math.max(0, ...lines.map(line => line.width)), contentHeight, layoutWidth: width, layoutHeight: height, contentOffsetY: offsetY, hasOverflow: visible < lines.length };
 };
 
 TextLayout.warpDecorations = function(layout, glyphs, letterSpacing) {

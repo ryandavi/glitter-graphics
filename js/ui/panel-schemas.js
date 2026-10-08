@@ -806,6 +806,9 @@ const PANEL_SCHEMAS = {
 						// CONFIG.tools.text.symbols.
 						{ kind: 'host', id: 'textSymbols', classes: 'property-inset text-symbol-grid', attrs: { role: 'group', 'aria-label': 'Insert a symbol' } }
 					] },
+					{ rows: [
+						{ kind: 'segmented', label: 'Orientation', ariaLabel: 'Text orientation', options: getOptions('textOrientation').map(option => ({ label: option.label, attrs: { 'data-text-orientation': option.value } })) }
+					] },
 					{ label: 'Box', rows: [
 						{ kind: 'segmented', label: 'Mode', ariaLabel: 'Text box mode', classes: 'text-box-mode-group', stacked: true, revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
 						{ kind: 'note', id: 'textBoxModeHint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' }

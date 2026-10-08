@@ -56,6 +56,7 @@ class TextGlitterManager {
 			fontBold: document.getElementById('textFontBold'),
 			fontItalic: document.getElementById('textFontItalic'),
 			textCaseSelect: document.getElementById('textCaseSelect'),
+			orientationButtons: Array.from(document.querySelectorAll('[data-text-orientation]')),
 			warpPresets: document.getElementById('textWarpPresets'),
 			warpBendRow: document.getElementById('textWarpBendRow'),
 			warpSummary: document.getElementById('textWarpSummary'),
@@ -151,6 +152,14 @@ class TextGlitterManager {
 				this.reportFontLoadError(error);
 			}
 		};
+
+		this.ui.orientationButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer || layer.textData.orientation === button.dataset.textOrientation) return;
+				editLayout(layer, () => { layer.textData.orientation = button.dataset.textOrientation; });
+			});
+		});
 
 		this.ui.verticalAlignButtons.forEach((button) => {
 			button.addEventListener('click', () => {
@@ -470,6 +479,9 @@ class TextGlitterManager {
 		if (!layer.textData.fontStyle) {
 			layer.textData.fontStyle = CONFIG.tools.text.defaultFontStyle || 'normal';
 		}
+		if (!isOptionValue('textOrientation', layer.textData.orientation)) {
+			layer.textData.orientation = CONFIG.tools.text.defaultOrientation;
+		}
 		if (!isOptionValue('textCase', layer.textData.textCase)) {
 			layer.textData.textCase = CONFIG.tools.text.defaultTextCase;
 		}
@@ -563,9 +575,8 @@ class TextGlitterManager {
 		if (!entry.lines.length) return;
 
 		const minBoxSize = this.getMinBoxSize();
-		const lastLine = entry.lines[entry.lines.length - 1];
-		const fullHeight = entry.ascent + (entry.lines.length - 1) * entry.lineHeightPx + lastLine.descent;
-		const maxLineWidth = entry.lines.reduce((max, line) => Math.max(max, line.width), 0);
+		const fullHeight = layer.textData.orientation === 'stacked' ? entry.layout.contentHeight : entry.ascent + (entry.lines.length - 1) * entry.lineHeightPx + entry.lines.at(-1).descent;
+		const maxLineWidth = entry.layout.contentWidth;
 
 		layer.textData.boxWidth = Math.max(minBoxSize, Math.ceil(maxLineWidth) + 1);
 		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(fullHeight) + 1);
@@ -687,6 +698,7 @@ class TextGlitterManager {
 				fontWeight: CONFIG.tools.text.defaultFontWeight || 400,
 				fontStyle: CONFIG.tools.text.defaultFontStyle || 'normal',
 				textCase: CONFIG.tools.text.defaultTextCase,
+				orientation: CONFIG.tools.text.defaultOrientation,
 				fontSize: FIELDS.textFontSize.value,
 				letterSpacing: FIELDS.textLetterSpacing.value,
 				lineHeight: FIELDS.textLineHeight.value / 100,
@@ -807,6 +819,11 @@ class TextGlitterManager {
 			button?.setAttribute('aria-pressed', String(active));
 		});
 		if (this.ui.textCaseSelect) this.ui.textCaseSelect.value = textData.textCase;
+		this.ui.orientationButtons.forEach(button => {
+			const active = button.dataset.textOrientation === textData.orientation;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
 	}
 
 
@@ -984,6 +1001,7 @@ class TextGlitterManager {
 			textData.text,
 			getCommittedRasterScale(this.editor, layer).x, getCommittedRasterScale(this.editor, layer).y,
 			textData.textCase,
+			textData.orientation,
 			textData.fontId,
 			textData.fontWeight,
 			textData.fontStyle,
@@ -1072,9 +1090,9 @@ class TextGlitterManager {
 		// own rectangle.
 		const positionedLines = [];
 
-		visibleLines.forEach((line, index) => {
-			const offsetX = this.getAlignOffset(layer.textData.align, layoutWidth, line.width);
-			const baselineY = contentOffsetY + ascent + index * lineHeightPx;
+		visibleLines.forEach(line => {
+			const offsetX = line.x;
+			const baselineY = line.baseline;
 			const isBlank = !line.text || (line.inkRight - line.inkLeft) <= 0;
 			if (isBlank) {
 				positionedLines.push({ blank: true });
@@ -1175,8 +1193,8 @@ class TextGlitterManager {
 		// A trailing blank line has no floor; multiline text uses its last ink line.
 		const lastInkLine = positionedLines.findLastIndex(line => !line.blank);
 		const shadowBaseline = warpedGlyphs
-			? Math.max(...warpedGlyphs.filter(glyph => glyph.line === lastInkLine && glyph.bounds).map(glyph => glyph.placement.y))
-			: contentOffsetY + ascent + Math.max(0, lastInkLine) * lineHeightPx;
+			? Math.max(...warpedGlyphs.filter(glyph => glyph.bounds && (layer.textData.orientation === 'stacked' || glyph.line === lastInkLine)).map(glyph => glyph.placement.y))
+			: layer.textData.orientation === 'stacked' ? Math.max(ascent, ...visibleLines.filter(line => line.text).map(line => line.baseline)) : contentOffsetY + ascent + Math.max(0, lastInkLine) * lineHeightPx;
 		const shadowBounds = getShadowSlotBounds({ x: textInkLeft * sx, y: textInkTop * sy, width: (textInkRight - textInkLeft) * sx, height: (textInkBottom - textInkTop) * sy, baseline: shadowBaseline * sy, castSize: { x: fontSize * sx, y: fontSize * sy } }, layer.textData.shadow);
 		const artLeft = Math.min(textInkLeft - borderReserve / sx, shadowBounds.x / sx, backgroundBounds ? backgroundBounds.x : Infinity);
 		const artRight = Math.max(textInkRight + borderReserve / sx, (shadowBounds.x + shadowBounds.width) / sx, backgroundBounds ? backgroundBounds.x + backgroundBounds.width : -Infinity);

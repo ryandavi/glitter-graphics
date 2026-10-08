@@ -534,6 +534,7 @@ const CONFIG = deepFreeze({
 		},
 		text: {
 			defaultTextCase: 'none',
+			defaultOrientation: 'horizontal',
 			// WARP_TYPES id (js/paint/text-warp.js); 'none' draws text flat.
 			defaultWarpType: 'none',
 			// Canvas input uses the same string and layout as the panel.

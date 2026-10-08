@@ -124,6 +124,7 @@ Object.entries(libraries).forEach(([type, library]) => {
 			if (dataPath === 'textData.fontId' && !fontIds.has(value)) fail(`${where} font ${value} is not in the font manifest`);
 			if (dataPath === 'textData.warp.type' && !run('WARP_TYPES')[value]) fail(`${where} invalid warp ${value}`);
 			if (dataPath === 'textData.fontStyle' && !['normal', 'italic'].includes(value)) fail(`${where} invalid font style`);
+			if (dataPath === 'textData.orientation' && !run('isOptionValue')('textOrientation', value)) fail(`${where} invalid orientation`);
 			if (dataPath === 'textData.textCase' && !run('isOptionValue')('textCase', value)) fail(`${where} invalid case`);
 			const spec = dataPath === 'textData.warp.bend' ? run('FIELDS.textWarpBend') : dataPath === 'textData.letterSpacing' ? run('FIELDS.textLetterSpacing') : null;
 			if (spec && (!Number.isFinite(value) || value < spec.min || value > spec.max)) fail(`${where} ${dataPath} outside field range`);
@@ -161,7 +162,7 @@ Object.entries(libraries).forEach(([type, library]) => {
 
 // A missing glitter falls back to the slot's default instead of an empty slot.
 const textLibrary = libraries[LayerType.TEXT_GLITTER];
-if (entries.filter(entry => entry.group === 'wordart').length !== 23 || entries.some(entry => entry.group === 'wordart' && JSON.stringify(entry.targets) !== '["text"]')) fail('WordArt must contain the 23 available text-only looks');
+if (entries.filter(entry => entry.group === 'wordart').length !== 28 || entries.some(entry => entry.group === 'wordart' && JSON.stringify(entry.targets) !== '["text"]')) fail('WordArt must contain the 28 available text-only looks');
 const warped = makeLayer(LayerType.TEXT_GLITTER);
 warped.textData.warp = { type: 'taper', bend: -37 };
 applyTo(warped, textLibrary.get('slate'));
@@ -174,6 +175,7 @@ for (const previous of textLibrary.entries) {
 		switched.textData.fill.textureOffsetX = 23;
 		switched.textData.fill.textureOffsetY = -19;
 		switched.textData.fontWeight = 700;
+		switched.textData.orientation = 'stacked';
 		switched.textData.decoration = { underline: true, strikethrough: true };
 		switched.textData.lineHeight = 2;
 		switched.textData.textBackground = { enabled: true, horizontalPadding: 40 };
@@ -204,6 +206,7 @@ for (const entry of textLibrary.entries) {
 		if (definition.enabledKeys && !run('readFieldPath')(original, definition.enabledKeys)) continue;
 		if (JSON.stringify(before) !== JSON.stringify(after)) fail(`${entry.id}: copied ${definition.key} did not round-trip`);
 	}
+	if (original.textData.orientation !== restored.textData.orientation) fail('copy lost orientation');
 	if (JSON.stringify(original.textData.warp) !== JSON.stringify(restored.textData.warp)) fail('copy lost warp');
 }
 // Default restores every value a text style owns while preserving content
@@ -217,6 +220,7 @@ for (const entry of textLibrary.entries) {
 	const defaults = makeLayer(LayerType.TEXT_GLITTER).textData;
 	if (JSON.stringify(defaultText.textData.fill) !== JSON.stringify(defaults.fill)) fail(`Default after ${entry.id} did not restore the fill`);
 	if (defaultText.textData.fontId !== run('CONFIG.tools.text.defaultFontId') || defaultText.textData.textCase !== run('CONFIG.tools.text.defaultTextCase')) fail(`Default after ${entry.id} did not restore font and case`);
+	if (defaultText.textData.orientation !== run('CONFIG.tools.text.defaultOrientation')) fail(`Default after ${entry.id} did not reset orientation`);
 	if (defaultText.textData.fontStyle !== defaults.fontStyle || defaultText.textData.letterSpacing !== defaults.letterSpacing || JSON.stringify(defaultText.textData.warp) !== JSON.stringify(defaults.warp)) fail(`Default after ${entry.id} did not restore style, spacing and warp`);
 	if (defaultText.textData.border || defaultText.textData.shadow || defaultText.textData.bevel.enabled) fail(`Default after ${entry.id} left effects on`);
 	if (defaultText.textData.text !== 'Keep my text' || defaultText.transform.position.x !== 45 || defaultText.transform.position.y !== 67) fail('Default changed content or placement');

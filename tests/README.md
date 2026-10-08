@@ -39,6 +39,8 @@ Prefer quiet output where a command supports it, and summarize passing checks in
 
 Test behavior, not implementation. Before writing a new test, check whether an existing one can be extended, and prefer table-driven cases over near-duplicate tests.
 
+`tests/ui/text-tool-verify.js` also covers stacked orientation: grapheme/source ranges, centered rows and newline columns, empty columns, cache invalidation, backgrounds and envelope masks, fixed overflow and Fit box to text, selection, Split placement and one-step orientation undo. `tests/unit/style-presets-unit.js` verifies all 28 WordArt recipes, all-pairs switching, orientation reset and clipboard copy round trips. `node tools/wordart-contact-sheet.js` renders those looks with real system fonts and Office textures beside the original gallery under `docs/local/wordart-preview/`.
+
 ## Headless probe gotchas
 
 `node tests/ui/background-removal-browser.js` checks the lazy action, static-upload eligibility, Cancel/Discard/Keep, phone viewport fit, retained transforms/effects, one-step undo/redo, embedded project reload, repeated PNG exports and transparent GIF export. It substitutes a deterministic worker so the lifecycle check does not depend on model downloads. Real model inference is verified separately with the seven background-removal spike fixtures.

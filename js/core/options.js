@@ -138,6 +138,10 @@ defineOptions('textCase', [
 	{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' },
 	{ value: 'alternating', label: 'aLtErNaTiNg' }
 ]);
+defineOptions('textOrientation', [
+	{ value: 'horizontal', label: 'Horizontal' },
+	{ value: 'stacked', label: 'Stacked' }
+]);
 defineOptions('textBoxMode', [
 	{ value: 'point', label: 'Point', hint: 'Point text hugs the glyphs. Corner handles scale it.' },
 	{ value: 'autoHeight', label: 'Auto Height', hint: 'Width stays fixed; height follows the wrapped text.' },
