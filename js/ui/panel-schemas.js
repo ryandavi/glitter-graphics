@@ -1057,10 +1057,12 @@ const PANEL_SCHEMAS = {
 							{ kind: 'slider', id: 'pathStrokeGap', slider: 'strokeGap' },
 							{ kind: 'slider', id: 'pathStrokeDashOffset', slider: 'strokeDashOffset', title: 'Slides the dashes along the line' }
 						] },
-						{ id: 'pathStrokeEnds', label: 'Ends', rows: [
-							{ kind: 'labeled', label: 'Start', stacked: true, control: { kind: 'presetGrid', id: 'pathStrokeStartShapes', label: 'Start of line', classes: 'property-inset stroke-ornaments' } },
+						{ id: 'pathStrokeEnds', label: 'Start', rows: [
+							{ kind: 'presetGrid', id: 'pathStrokeStartShapes', label: 'Start of line', classes: 'property-inset stroke-ornaments' },
 							{ kind: 'slider', id: 'pathStrokeStartSize', slider: 'strokeOrnamentSize', label: 'Start size', title: 'Size of the start shape, as a share of the line width' },
-							{ kind: 'labeled', label: 'End', stacked: true, control: { kind: 'presetGrid', id: 'pathStrokeEndShapes', label: 'End of line', classes: 'property-inset stroke-ornaments' } },
+						] },
+						{ id: 'pathStrokeEndSet', label: 'End', rows: [
+							{ kind: 'presetGrid', id: 'pathStrokeEndShapes', label: 'End of line', classes: 'property-inset stroke-ornaments' },
 							{ kind: 'slider', id: 'pathStrokeEndSize', slider: 'strokeOrnamentSize', label: 'End size', title: 'Size of the end shape, as a share of the line width' }
 						] }
 					] }

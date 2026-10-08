@@ -489,6 +489,102 @@ async function checkLineTool(page) {
 	assert(state.count === 2 && flat[0].y === flat[1].y, `Shift line is horizontal ${JSON.stringify(flat)}`);
 }
 
+async function checkAuditRegressions(page) {
+	await reset(page);
+	const id = await addPath(page, {
+		subpaths: [{ closed: false, points: [{ x: 40, y: 60 }, { x: 200, y: 60 }] }],
+		stroke: { ...RED, widthPx: 6 }
+	});
+	const scaling = await page.evaluate(async (layerId) => {
+		const editor = window.editor;
+		const layer = editor.layerManager.getLayerById(layerId);
+		const copy = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
+		scaleDocumentLayerState(copy, 2, 2, 2);
+		editor.scaleDocument(640, 480, 2, { saveHistory: false });
+		return {
+			canvas: editor.pathLayerManager.readCanvasSubpaths(layer),
+			template: editor.pathLayerManager.readCanvasSubpaths(copy),
+			width: layer.pathData.stroke.widthPx
+		};
+	}, id);
+	for (const points of [scaling.canvas, scaling.template]) {
+		near(points[0].points[0].x, 80, 0.01, 'scaled path start');
+		near(points[0].points[1].x, 400, 0.01, 'scaled path end');
+	}
+	assert(scaling.width === 12, 'document scaling scales the stroke');
+	await page.evaluate(() => window.editor.scaleDocument(320, 240, 0.5, { saveHistory: false }));
+	await reset(page);
+	const paths = [];
+	for (let i = 0; i < 6; i++) paths.push(await addPath(page, {
+		subpaths: [{ closed: false, points: [{ x: 40, y: 30 + i * 25 }, { x: 200, y: 30 + i * 25 }] }],
+		stroke: { ...RED, widthPx: 6 }
+	}));
+	const noRaster = await page.evaluate((ids) => {
+		const editor = window.editor;
+		const manager = editor.pathLayerManager;
+		const measure = manager.getMeasurementEntry;
+		manager.getMeasurementEntry = () => { throw new Error('picking rasterized a mask'); };
+		try {
+			for (let test = 0; test < 20; test++) ids.forEach((id, i) => {
+				if (!manager.hitTest(editor.layerManager.getLayerById(id), 100, 30 + i * 25)) throw new Error('missed path');
+			});
+			return true;
+		} finally { manager.getMeasurementEntry = measure; }
+	}, paths);
+	assert(noRaster, 'six distinct paths pick without masks');
+	for (const toggle of ['toggleLayerVisibility', 'toggleLayerLock']) {
+		const dropped = await page.evaluate(({ id, toggle }) => {
+			const editor = window.editor;
+			const layer = editor.layerManager.getLayerById(id);
+			editor.pathEdit.begin(layer);
+			editor.pathEdit.session.selection = new Set(['0:0']);
+			editor.pathEdit.setSelectionType('mirrored');
+			editor.layerManager[toggle](id);
+			const dropped = editor.pathEdit.session === null;
+			editor.layerManager[toggle](id);
+			return dropped;
+		}, { id: paths[0], toggle });
+		assert(dropped, `${toggle} ends point editing`);
+	}
+	await reset(page);
+	const endpointId = await addPath(page, {
+		subpaths: [{ closed: false, points: [{ x: 40, y: 60 }, { x: 200, y: 60 }] }],
+		stroke: { ...RED, widthPx: 6 }
+	});
+	await page.evaluate((id) => window.editor.pathEdit.begin(window.editor.layerManager.getLayerById(id)), endpointId);
+	const beforeEndpoint = (await pathState(page)).history;
+	await click(page, 200, 60, { fast: true });
+	await click(page, 200, 60);
+	let endpointState = await pathState(page);
+	assert(endpointState.subpaths[0].points[1].out && endpointState.session.mode === 'edit', 'endpoint double-click creates a smooth handle pair');
+	assert(endpointState.history === beforeEndpoint + 1, 'endpoint double-click records one visible edit');
+	await click(page, 200, 60, { fast: true });
+	await click(page, 200, 60);
+	endpointState = await pathState(page);
+	assert(!endpointState.subpaths[0].points[1].out, 'endpoint double-click returns to Corner');
+	const fractional = await page.evaluate(() => {
+		const editor = window.editor;
+		const collect = editor.collectSnapTargets;
+		const snapping = PREFERENCES.get('snappingEnabled');
+		editor.collectSnapTargets = () => ({ x: [160.5], y: [120.5] });
+		PREFERENCES.set('snappingEnabled', true);
+		try { return editor.pathEdit.snapAnchor({ x: 160.2, y: 120.2 }, {}, [], { guides: false }); }
+		finally {
+			editor.collectSnapTargets = collect;
+			PREFERENCES.set('snappingEnabled', snapping);
+		}
+	});
+	assert(fractional.x === 161 && fractional.y === 121, 'fractional snap targets obey whole-pixel rounding');
+	const label = await page.evaluate(() => {
+		const layer = window.editor.layerManager.getActiveLayer();
+		layer.pathData.fill.mode = 'solid';
+		layer.pathData.stroke.mode = 'glitter';
+		return LAYER_UI_CONFIG[LayerType.PATH].describe(layer, window.editor).detail;
+	});
+	assert(label.endsWith('Solid'), `label follows the fill swatch: ${label}`);
+	await reset(page);
+}
+
 // ===== PEN =====
 
 async function checkPenDrawing(page) {
@@ -501,12 +597,12 @@ async function checkPenDrawing(page) {
 	await click(page, 60, 60);
 	let state = await pathState(page);
 	assert(state.count === 1 && state.session?.mode === 'draw' && state.activeSession === 'pathEdit', `first click starts a path ${JSON.stringify(state.session)}`);
-	assert(state.history === historyBefore + 1, 'the first point is one history step');
+	assert(state.history === historyBefore, 'the first point stays out of history');
 	await click(page, 160, 60);
 	await click(page, 160, 140);
 	state = await pathState(page);
 	assert(state.subpaths[0].points.length === 3, `three clicks, three points (${state.subpaths[0].points.length})`);
-	assert(state.history === historyBefore + 3, 'each point is one history step');
+	assert(state.history === historyBefore + 2, 'history starts at the second point');
 	assert(state.subpaths[0].points.every((point) => point.in === null && point.out === null), 'clicks place corners');
 
 	// Undo removes the last point and drawing continues.
@@ -567,11 +663,13 @@ async function checkPenDrawing(page) {
 	// A path left with one point is removed.
 	await reset(page);
 	await page.evaluate(() => window.editor.setTool(ToolType.PEN));
+	const onePointHistory = (await pathState(page)).history;
 	await click(page, 100, 100);
-	await page.keyboard.press('Escape');
+	await page.keyboard.press('Enter');
 	await page.waitForTimeout(120);
 	state = await pathState(page);
 	assert(state.count === 0 && state.session === null, 'a one-point path is removed when drawing ends');
+	assert(state.history === onePointHistory, 'discarding a one-point path records no history');
 
 	// Curve points: handles follow the neighbours.
 	await page.evaluate(() => {
@@ -843,6 +941,7 @@ async function checkTouch(browser) {
 		const context = await browser.newContext({ viewport: VIEWPORT });
 		const { page, errors } = await openEditor(context);
 		const checks = [
+			['audit regressions', checkAuditRegressions],
 			['layer contract', checkLayerContract],
 			['body mask', checkBodyMask],
 			['stroke geometry', checkStrokeGeometry],

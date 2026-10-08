@@ -92,7 +92,7 @@ class PathEditSession {
 		const layer = session.host.getLayer();
 		if (layer && PathGeometry.countPoints(layer.pathData.subpaths) < 2) {
 			this.editor.layerManager.deleteLayer(layer.id, { skipHistory: true });
-			this.editor.saveState('Edit path');
+			if (!session.created || session.historyCommitted) this.editor.saveState('Edit path');
 			this.editor.requestPreviewUpdate();
 		}
 		this.syncPanel();
@@ -229,7 +229,9 @@ class PathEditSession {
 		if (!session) return;
 		subpaths.forEach((subpath) => PathGeometry.solveAutoHandles(subpath));
 		session.drag = null;
-		session.host.write(subpaths, { label, coalesceKey });
+		const provisional = session.created && !session.historyCommitted && PathGeometry.countPoints(subpaths) < 2;
+		session.host.write(subpaths, { label: provisional ? null : label, coalesceKey });
+		if (!provisional) session.historyCommitted = true;
 		this.refresh();
 	}
 
@@ -391,7 +393,7 @@ class PathEditSession {
 			if (guides) this.editor.clearSmartGuides();
 			return rounded;
 		}
-		const targets = this.editor.collectSnapTargets('point', [this.session.layerId]);
+		const targets = this.editor.collectSnapTargets('point', this.session ? [this.session.layerId] : []);
 		if (CONFIG.snapping.targets.point.ownPoints) {
 			subpaths.forEach((subpath, s) => subpath.points.forEach((other, p) => {
 				if (exclude?.has(`${s}:${p}`)) return;
@@ -411,7 +413,9 @@ class PathEditSession {
 		const x = nearest(point.x, targets.x);
 		const y = nearest(point.y, targets.y);
 		if (guides) this.editor.renderSmartGuides(x ?? undefined, y ?? undefined);
-		return { x: x ?? rounded.x, y: y ?? rounded.y };
+		const snapped = { x: x ?? rounded.x, y: y ?? rounded.y };
+		return CONFIG.tools.stickers.transform.roundValues
+			? { x: Math.round(snapped.x), y: Math.round(snapped.y) } : snapped;
 	}
 
 	// Where the next drawn point goes: Shift holds the segment to angle steps
@@ -423,7 +427,8 @@ class PathEditSession {
 		if (input.shiftKey && previous) {
 			if (options.guides !== false) this.editor.clearSmartGuides();
 			const constrained = PathGeometry.constrainAngle(previous, canvasPoint, CONFIG.tools.path.line.angleStepDeg);
-			return { x: Math.round(constrained.x), y: Math.round(constrained.y) };
+			return CONFIG.tools.stickers.transform.roundValues
+				? { x: Math.round(constrained.x), y: Math.round(constrained.y) } : constrained;
 		}
 		return this.snapAnchor(canvasPoint, input, subpaths, options);
 	}
@@ -496,12 +501,11 @@ class PathEditSession {
 	}
 
 	// The first press of the Pen on empty canvas: a path is a real layer from
-	// its first point (created without a history step; placing the point
-	// records one).
+	// its first point; history starts when the second point is placed.
 	startNewPath(canvasPoint, input) {
 		const editor = this.editor;
 		if (!editor.viewport.isWithinCanvas(canvasPoint.x, canvasPoint.y) && input.pointerType === 'touch') return;
-		const point = { x: Math.round(canvasPoint.x), y: Math.round(canvasPoint.y) };
+		const point = this.snapAnchor(canvasPoint, input, []);
 		const layer = editor.layerManager.addLayer(LayerType.PATH, {
 			skipHistory: true,
 			pathLayer: { subpaths: [{ closed: false, points: [{ ...point, type: this.nextPointType === 'curve' ? 'auto' : 'corner' }] }] }
@@ -645,7 +649,16 @@ class PathEditSession {
 				// A second click on the point just placed switches it between a
 				// corner and a curve the path flows through.
 				const point = subpaths[drag.address[0]].points[drag.address[1]];
-				if (point.type === 'auto') PathGeometry.removeHandles(subpaths[drag.address[0]], drag.address[1]);
+				const subpath = subpaths[drag.address[0]];
+				const isEnd = !subpath.closed && (drag.address[1] === 0 || drag.address[1] === subpath.points.length - 1);
+				if (isEnd || doubleClick) {
+					if (point.in || point.out) PathGeometry.removeHandles(subpath, drag.address[1]);
+					else PathGeometry.setPointType(subpath, drag.address[1], 'smooth');
+					if (doubleClick) {
+						session.mode = 'edit';
+						session.drawEnd = null;
+					}
+				} else if (point.type === 'auto') PathGeometry.removeHandles(subpath, drag.address[1]);
 				else {
 					point.in = null;
 					point.out = null;

@@ -308,6 +308,7 @@ class LayerManager {
 		if (!layer) return;
 
 		layer.visible = !layer.visible;
+		this.editor.pathEdit?.revalidate();
 
 		// Keep the live sticker DOM in sync with the layer visibility toggle.
 		const manager = getLayerManagerForType(this.editor, layer.type);
@@ -326,6 +327,7 @@ class LayerManager {
 		const layer = this.getLayerById(layerId);
 		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
 		layer.locked = !layer.locked;
+		this.editor.pathEdit?.revalidate();
 		if (isLayerFullyLocked(layer) && this.activeLayerId === layer.id) {
 			this.editor.textGlitterManager?.closePickerSession();
 			this.editor.shapeGlitterManager?.closePickerSession();

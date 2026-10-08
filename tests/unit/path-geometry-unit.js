@@ -246,4 +246,52 @@ Object.keys(fixtures).forEach((name) => {
 	near(diagonal.x, diagonal.y, 1e-9, 'constrain to diagonal');
 }
 
+
+// Handleless endpoints and isolated points accept every explicit point type.
+{
+	for (const points of [[{ x: 0, y: 0 }], [{ x: 0, y: 0 }, { x: 60, y: 0 }], [{ x: 0, y: 0 }, { x: 0, y: 0 }]]) {
+		for (const type of ['smooth', 'mirrored']) {
+			const subpath = G.normalizeSubpaths([{ closed: false, points }])[0];
+			G.setPointType(subpath, 0, type);
+			G.setPointType(subpath, points.length - 1, type);
+			if (subpath.points.some((point) => point.type !== type)) fail('endpoint point type');
+			if (points.length === 2 && points[1].x === 60) {
+				near(subpath.points[0].out.x, 20, 1e-9, 'endpoint leading handle');
+				near(subpath.points[1].in.x, -20, 1e-9, 'endpoint trailing handle');
+			}
+		}
+	}
+	for (const data of ['M0 0 L5 5 Z 3 4', 'M0 0 z 3']) {
+		let threw = false;
+		try { G.parseSvgPath(data); } catch (error) { threw = /Malformed/.test(error.message); }
+		if (!threw) fail('numbers after close must throw');
+	}
+	if (G.parseSvgPath('M0 0 L5 5 Z M3 4 L7 8').length !== 2) fail('command after close');
+}
+
+// Placement honors the rounding switch before creating or constraining points.
+{
+	const context = {
+		CONFIG: { tools: { stickers: { transform: { roundValues: false } }, path: { line: { angleStepDeg: 45 } } }, snapping: { targets: { point: {} }, threshold: 5 } },
+		PREFERENCES: { get: () => false }, PathGeometry: G, LayerType: { PATH: 'path' }
+	};
+	require('vm').createContext(context);
+	require('vm').runInContext(fs.readFileSync(path.join(root, 'js/ui/path-edit.js'), 'utf8') + '\nthis.PathEditSession = PathEditSession;', context);
+	const session = Object.create(context.PathEditSession.prototype);
+	let placed;
+	session.editor = {
+		clearSmartGuides() {}, viewport: { isWithinCanvas: () => true },
+		layerManager: { addLayer: (type, options) => { placed = options.pathLayer.subpaths[0].points[0]; return null; } }
+	};
+	session.startNewPath({ x: 10.25, y: 20.75 }, {});
+	near(placed.x, 10.25, 1e-9, 'fractional first point');
+	session.session = { mode: 'draw', drawEnd: { subpath: 0, atStart: false } };
+	const subpaths = [{ points: [{ x: 0, y: 0 }] }];
+	const target = { x: 10.25, y: 1.25 };
+	const expected = G.constrainAngle(subpaths[0].points[0], target, 45);
+	near(session.resolvePlacement(target, { shiftKey: true }, subpaths).x, expected.x, 1e-9, 'fractional constrained placement');
+	context.CONFIG.tools.stickers.transform.roundValues = true;
+	near(session.resolvePlacement(target, { shiftKey: true }, subpaths).x, Math.round(expected.x), 1e-9, 'rounded constrained placement');
+}
+
 console.log('path-geometry-unit: ok');

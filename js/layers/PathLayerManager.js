@@ -55,6 +55,7 @@ class PathLayerManager {
 			gapRow: id('pathStrokeGap')?.closest('.property-row') || null,
 			dashOffsetRow: id('pathStrokeDashOffset')?.closest('.property-row') || null,
 			endsSet: id('pathStrokeEnds'),
+			endSet: id('pathStrokeEndSet'),
 			startShapes: id('pathStrokeStartShapes'),
 			endShapes: id('pathStrokeEndShapes'),
 			startSizeRow: id('pathStrokeStartSize')?.closest('.property-row') || null,
@@ -349,6 +350,10 @@ class PathLayerManager {
 
 	// ===== GEOMETRY =====
 
+	static scaleDocumentGeometry(layer, scaleX, scaleY) {
+		PathGeometry.scaleSubpaths(layer.pathData.subpaths, scaleX, scaleY);
+	}
+
 	// Bring the points back around the origin after a geometry change and move
 	// the layer by the same offset through its rotation and flip, so nothing
 	// shifts on canvas.
@@ -368,7 +373,9 @@ class PathLayerManager {
 
 	// Canvas px <-> path-local px through the layer transform as rendered.
 	getPlacement(layer) {
-		const box = this.getElementBox(layer);
+		const { extentX, extentY } = this.getMaskExtents(layer);
+		const padding = CONFIG.rendering.maskPaddingPx;
+		const box = { width: Math.max(1, (extentX + padding) * 2), height: Math.max(1, (extentY + padding) * 2) };
 		const metrics = computeLayerTransform(getLayerTransform(layer), box);
 		return { metrics, cos: Math.cos(metrics.rotationRad), sin: Math.sin(metrics.rotationRad) };
 	}
@@ -489,17 +496,9 @@ class PathLayerManager {
 		]);
 	}
 
-	// Rasterize the fill, the stroke and their union (the body) into one padded
-	// surface whose center is the path's origin, so the layer transform places
-	// the element by the same point the geometry is stored around.
-	getMeasurementEntry(layer) {
-		const key = this.getMeasurementCacheKey(layer);
-		const cached = this.measurementCache.get(key);
-		if (cached) return cached;
-
+	getMaskExtents(layer) {
 		const d = layer.pathData;
 		const stroke = this.getActiveStroke(layer);
-		const fillActive = this.isFillActive(layer);
 		const bounds = PathGeometry.getBounds(d.subpaths) || { minX: 0, minY: 0, maxX: 0, maxY: 0, width: 0, height: 0 };
 		const reach = stroke ? getStrokeReach(d.subpaths, stroke) : 0;
 		const borderReach = getBorderOutsidePadding(d.border);
@@ -513,6 +512,21 @@ class PathLayerManager {
 			borderReach - bodyBox.y, bodyBox.y + bodyBox.height + borderReach,
 			-shadowBox.y, shadowBox.y + shadowBox.height
 		));
+		return { bounds, borderReach, extentX, extentY };
+	}
+
+	// Rasterize the fill, the stroke and their union (the body) into one padded
+	// surface whose center is the path's origin, so the layer transform places
+	// the element by the same point the geometry is stored around.
+	getMeasurementEntry(layer) {
+		const key = this.getMeasurementCacheKey(layer);
+		const cached = this.measurementCache.get(key);
+		if (cached) return cached;
+
+		const d = layer.pathData;
+		const stroke = this.getActiveStroke(layer);
+		const fillActive = this.isFillActive(layer);
+		const { bounds, borderReach, extentX, extentY } = this.getMaskExtents(layer);
 		const surface = allocatePaddedMaskCanvas(
 			{ left: -extentX, top: -extentY, right: extentX, bottom: extentY },
 			'layers/PathLayerManager'
@@ -912,6 +926,7 @@ class PathLayerManager {
 		// the path is closed.
 		if (this.ui.capRow) this.ui.capRow.hidden = !hasOpen;
 		if (this.ui.endsSet) this.ui.endsSet.hidden = !hasOpen;
+		if (this.ui.endSet) this.ui.endSet.hidden = !hasOpen;
 		const dashStyle = getStrokeDashStyle(shown);
 		if (this.ui.dashRow) this.ui.dashRow.hidden = dashStyle !== 'dashed';
 		if (this.ui.gapRow) this.ui.gapRow.hidden = dashStyle === 'solid';

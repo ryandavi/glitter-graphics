@@ -5,8 +5,8 @@
 // is what the outline, shadow, bevel and sparkles are derived from.
 registerLayerType(LayerType.PATH, {
 	describe: (layer, editor) => {
-		const stroke = layer.pathData?.stroke;
-		const paint = stroke ? stroke : getLayerFillSlot(layer);
+		const fill = getLayerFillSlot(layer);
+		const paint = fill?.mode !== 'none' ? fill : layer.pathData?.stroke || fill;
 		return { name: layer.name || 'Path', detail: `Path · ${describeLayerPaint(editor, paint).modeLabel}` };
 	},
 	displayName: 'Path',
@@ -76,6 +76,7 @@ registerLayerType(LayerType.PATH, {
 	elementClass: 'path-layer-element',
 	transformable: true,
 	managerKey: 'pathLayerManager',
+	scaleDocumentGeometry: (layer, scaleX, scaleY) => PathLayerManager.scaleDocumentGeometry(layer, scaleX, scaleY),
 	blendable: true,
 	// The fill is None on most open paths, so the thumbnail falls back to the
 	// stroke's paint.

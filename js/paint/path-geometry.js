@@ -443,6 +443,13 @@ const PathGeometry = (() => {
 			const direction = normalize(point[present]);
 			point[missing] = { x: -direction.x * size, y: -direction.y * size };
 		}
+		if (isZero(point.in) && isZero(point.out)) {
+			const neighbour = subpath.points[index + 1] || subpath.points[index - 1];
+			if (!neighbour) return subpath;
+			const vector = index === 0 ? sub(neighbour, point) : sub(point, neighbour);
+			point.out = scale(vector, AUTO_HANDLE_RATIO);
+			point.in = scale(point.out, -1);
+		}
 		const anchor = isZero(point.out) ? 'in' : 'out';
 		if (type === 'mirrored') {
 			const size = (length(point.in || { x: 0, y: 0 }) + length(point.out || { x: 0, y: 0 })) / 2;
@@ -806,6 +813,8 @@ const PathGeometry = (() => {
 			if (token.command) {
 				command = token.command;
 				cursor++;
+			} else if (command.toUpperCase() === 'Z') {
+				throw new Error('Malformed SVG path data');
 			} else if (!command) {
 				throw new Error('SVG path data must start with a command');
 			} else if (command === 'M') {
