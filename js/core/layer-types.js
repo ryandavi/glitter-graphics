@@ -9,7 +9,8 @@ const LayerType = {
 	BASE_IMAGE: 'base-image',
 	FILTER: 'filter',
 	FRAME: 'frame',
-	SPARKLES: 'sparkles'
+	SPARKLES: 'sparkles',
+	PATH: 'path'
 };
 
 // Maps a layer type to its key in CONFIG.tools.glitter.defaults.fillGlitterId
@@ -23,7 +24,8 @@ const LAYER_TYPE_GLITTER_CONTEXT = {
 	[LayerType.SHAPE]: 'shape',
 	[LayerType.BASE_IMAGE]: 'canvasBackground',
 	[LayerType.STICKER]: 'sticker',
-	[LayerType.FRAME]: 'frame'
+	[LayerType.FRAME]: 'frame',
+	[LayerType.PATH]: 'shape'
 };
 
 function hasMaskContent(layer) {

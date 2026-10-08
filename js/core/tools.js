@@ -14,11 +14,22 @@
 // - containerClass / wrapperClass: canvas cursor classes while active.
 // - onCanvasAction(editor, action): a click or tap on the workspace. `action`
 //   is { x, y, clientX, clientY, hitCanvas, event, options }.
+// - onCanvasDrag(editor, drag): a drag that makes something (the creation
+//   gesture, mouse and touch). `drag` is { box, isClick, start, end,
+//   shiftKey }; `dragPreview: 'line'` previews it as a line, not a box.
+// - onCanvasPointerDown(editor, event): the tool takes mouse and pen presses
+//   on the workspace itself (the Pen). With `touchRoute: 'toolDrag'` its
+//   onTouchDragStart / Move / End / Cancel(editor, { clientX, clientY })
+//   receive a one-finger drag, and onCanvasAction a tap.
+// - onActivate(editor) / onDeactivate(editor, nextTool): entering and leaving
+//   the tool. Neither runs for the temporary Hand (Space).
 
 const ToolType = {
 	SELECT: 'select',
 	TEXT: 'text',
 	SHAPE: 'shape',
+	LINE: 'line',
+	PEN: 'pen',
 	HAND: 'hand',
 	GLITTER_FILL: 'glitterFill',
 	BRUSH: 'brush',
@@ -168,6 +179,51 @@ const TOOLS = {
 			});
 			editor.finishLayerCreation(layer);
 		}
+	},
+	[ToolType.LINE]: {
+		name: 'Line',
+		buttonLabel: 'Line',
+		icon: 'line',
+		hintName: 'Line Tool',
+		command: 'toolLine',
+		toolbarGroup: 'create',
+		groups: ['creation', 'contentEditing'],
+		touchRoute: 'creationDrag',
+		dragPreview: 'line',
+		available: editingAvailable,
+		// A drag runs from its start to its end; a click or tap makes a line of
+		// the default length centered there.
+		onCanvasDrag(editor, { isClick, start, end }) {
+			const half = CONFIG.tools.path.line.defaultLength / 2;
+			const from = isClick ? { x: start.x - half, y: start.y } : start;
+			const to = isClick ? { x: start.x + half, y: start.y } : end;
+			const layer = editor.layerManager.addLayer(LayerType.PATH, { pathLayer: {
+				name: 'Line',
+				subpaths: [{ closed: false, points: [{ x: Math.round(from.x), y: Math.round(from.y) }, { x: Math.round(to.x), y: Math.round(to.y) }] }]
+			} });
+			editor.finishLayerCreation(layer);
+			return layer;
+		}
+	},
+	[ToolType.PEN]: {
+		name: 'Pen',
+		buttonLabel: 'Pen',
+		icon: 'pen',
+		hintName: 'Pen Tool',
+		command: 'toolPen',
+		toolbarGroup: 'create',
+		groups: ['creation', 'contentEditing'],
+		touchRoute: 'toolDrag',
+		available: editingAvailable,
+		// The point editor (js/ui/path-edit.js) owns every press.
+		onActivate: (editor) => editor.pathEdit.onToolActivated(),
+		onDeactivate: (editor) => editor.pathEdit.end(),
+		onCanvasPointerDown: (editor, event) => editor.pathEdit.handlePointerDown(event),
+		onCanvasAction: (editor, action) => { if (action.options?.source === 'touch') editor.pathEdit.handleTap(action); },
+		onTouchDragStart: (editor, point) => editor.pathEdit.beginTouchDrag(point),
+		onTouchDragMove: (editor, point) => editor.pathEdit.moveTouchDrag(point),
+		onTouchDragEnd: (editor, point) => editor.pathEdit.endTouchDrag(point),
+		onTouchDragCancel: (editor) => editor.pathEdit.cancelDrag()
 	}
 };
 
@@ -176,6 +232,8 @@ const TOOL_ORDER = Object.freeze([
 	ToolType.SELECT,
 	ToolType.TEXT,
 	ToolType.SHAPE,
+	ToolType.LINE,
+	ToolType.PEN,
 	ToolType.GLITTER_FILL,
 	ToolType.BRUSH,
 	ToolType.HAND,

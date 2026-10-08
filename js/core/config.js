@@ -50,7 +50,7 @@ const CONFIG = deepFreeze({
 			autoCreateGlitterLayer: true
 		},
 		assets: {
-			manifestVersion: '2026-10-07'
+			manifestVersion: '2026-10-07b'
 		}
 	},
 
@@ -437,6 +437,53 @@ const CONFIG = deepFreeze({
 				color: '#ffd84a'
 			}
 		},
+		// Path layers, the Line tool and the Pen. Stroke width, dash, gap and
+		// ornament size ranges and defaults are field specs (strokeWidth,
+		// strokeDash, strokeGap, strokeOrnamentSize in js/core/fields.js).
+		path: {
+			stroke: {
+				source: 'glitter',
+				color: '#ff66cc',
+				edgeStyle: 'round',
+				cap: 'round',
+				// Canvas bevels a Sharp join once its point would pass this many
+				// half-widths; it also sizes the stroke mask's reserve.
+				miterLimit: 8
+			},
+			// The path's Outline: a color by default, so it reads against a
+			// glitter line.
+			border: {
+				defaultSource: 'solid',
+				defaultPlacement: 'outside',
+				defaultDrawOrder: 'behind',
+				defaultEdgeStyle: 'round'
+			},
+			line: {
+				// Canvas px of a line made by a click or from the Add menu.
+				defaultLength: 160,
+				// Shift constrains a segment or a handle to these steps.
+				angleStepDeg: 45
+			},
+			// Point editor chrome, in CSS px (js/transforms/path-chrome.js).
+			chrome: {
+				anchorSize: 8,
+				handleSize: 7,
+				// Hit targets are larger than the dots they are drawn as.
+				hitRadius: 8,
+				hitRadiusCoarse: 22,
+				segmentHitRadius: 6,
+				segmentHitRadiusCoarse: 16,
+				// Pointer distance from the first point that closes a path.
+				closeRadius: 10,
+				closeRadiusCoarse: 24,
+				dragThresholdPx: 3
+			},
+			nudge: { step: 1, fastStep: 10 },
+			// What a click places while drawing: 'corner' (Classic) or 'curve'
+			// (Curvature: handles follow the neighbouring points). Touch has no
+			// drag-to-curve precision, so it starts on curves.
+			nextPoint: { fine: 'corner', coarse: 'curve' }
+		},
 		backgroundRemoval: {
 			enabled: true,
 			inputSize: 1024,
@@ -632,7 +679,9 @@ const CONFIG = deepFreeze({
 			targets: {
 				move: { canvasEdges: true, canvasCenter: true, layerEdges: true, layerCenters: true },
 				scale: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false },
-				textBox: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false, ownInk: true }
+				textBox: { canvasEdges: true, canvasCenter: false, layerEdges: false, layerCenters: false, ownInk: true },
+				// A path point also lines up with its own path's other points.
+				point: { canvasEdges: true, canvasCenter: true, layerEdges: true, layerCenters: true, ownPoints: true }
 			}
 	},
 
@@ -744,6 +793,20 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'contextTextCenter', icon: 'text-align-center', name: 'Center', title: 'Align center', textAction: 'align:center', action: 'textAlignCenter' },
 				{ kind: 'button', id: 'contextTextRight', icon: 'text-align-right', name: 'Right', title: 'Align right', textAction: 'align:right', action: 'textAlignRight' },
 				{ kind: 'button', id: 'contextTextJustify', icon: 'text-align-justify', name: 'Justify', title: 'Align justify', textAction: 'align:justify', action: 'textAlignJustify', mobile: false }
+			] },
+			{ id: 'pathEditControls', session: 'pathEdit', controls: [
+				{ kind: 'segmented', id: 'contextPathNextPoint', label: 'Next point', options: [
+					{ label: 'Corner', value: 'corner', action: 'pathNextCorner', title: 'Clicks place corners. Drag to pull a curve.' },
+					{ label: 'Curve', value: 'curve', action: 'pathNextCurve', title: 'Clicks place points the curve flows through' }
+				] },
+				{ kind: 'segmented', id: 'contextPathPointType', label: 'Point type', options: [
+					{ label: 'Corner', value: 'corner', action: 'pathPointCorner', title: 'Corner: handles move on their own' },
+					{ label: 'Smooth', value: 'smooth', action: 'pathPointSmooth', title: 'Smooth: handles stay in line' },
+					{ label: 'Mirrored', value: 'mirrored', action: 'pathPointMirrored', title: 'Mirrored: handles stay in line and equal' }
+				] },
+				{ kind: 'button', id: 'contextPathDelete', icon: 'trash', name: 'Delete point', title: 'Delete the selected points (Delete)', action: 'pathDeletePoints' },
+				{ kind: 'button', id: 'contextPathClose', icon: 'path-close', name: 'Close', title: 'Close or open the path', action: 'pathToggleClosed' },
+				{ kind: 'button', id: 'contextPathDone', icon: 'check', name: 'Done', title: 'Finish (Enter)', action: 'pathDone' }
 			] },
 			{ id: 'zoomControls', tool: 'zoom', controls: [
 				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },

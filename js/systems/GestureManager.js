@@ -404,6 +404,8 @@ class GestureManager {
 			this.editor.beginCreationGesture?.(pointer.startX, pointer.startY, {
 				suppressNextClick: false
 			});
+		} else if (route.type === 'toolDrag' && pointer) {
+			TOOLS[this.editor.currentTool]?.onTouchDragStart?.(this.editor, { clientX: pointer.startX, clientY: pointer.startY });
 		}
 	}
 
@@ -414,6 +416,8 @@ class GestureManager {
 
 		if (route.type === 'creationDrag') {
 			this.editor.cancelCreationGesture?.();
+		} else if (route.type === 'toolDrag') {
+			TOOLS[this.editor.currentTool]?.onTouchDragCancel?.(this.editor);
 		}
 	}
 
@@ -433,6 +437,8 @@ class GestureManager {
 			transform?.dragByScreenDelta?.(dx, dy);
 		} else if (this.route?.type === 'creationDrag') {
 			this.editor.updateCreationGesture?.(pointer.x, pointer.y, false);
+		} else if (this.route?.type === 'toolDrag') {
+			TOOLS[this.editor.currentTool]?.onTouchDragMove?.(this.editor, { clientX: pointer.x, clientY: pointer.y });
 		} else {
 			this.viewport.panBy(dx, dy);
 			this.recordSinglePanVelocity(dx, dy);
@@ -615,7 +621,7 @@ class GestureManager {
 			return false;
 		}
 
-		if (route?.type === 'creationDrag' || route?.type === 'tapCreate') {
+		if (route?.type === 'creationDrag' || route?.type === 'tapCreate' || route?.type === 'toolDrag') {
 			return true;
 		}
 
@@ -658,6 +664,7 @@ class GestureManager {
 			}
 
 			this.editor.layerManager.selectLayerFromCanvas(layer.id);
+			LAYER_UI_CONFIG[layer.type]?.onDoubleClick?.(this.editor, layer);
 			if (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
 				if (layer.type === LayerType.TEXT_GLITTER && CONFIG.tools.text.canvasEditing) {
 					this.editor.textGlitterManager?.beginTextEdit(layer);
@@ -734,6 +741,9 @@ class GestureManager {
 					suppressNextClick: false
 				});
 			}
+		} else if (route.type === 'toolDrag') {
+			// Without a pointer the drag was cancelled, not released.
+			if (pointer) TOOLS[this.editor.currentTool]?.onTouchDragEnd?.(this.editor, { clientX: pointer.x, clientY: pointer.y });
 		}
 	}
 

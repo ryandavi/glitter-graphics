@@ -6374,15 +6374,23 @@ body.tool-text .text-glitter-element.is-locked {
   image-rendering: pixelated;
 }
 
+.path-layer-element {
+  position: absolute;
+  transform-origin: center;
+  touch-action: none;
+}
+
 .text-glitter-element,
 .shape-glitter-element,
-.frame-layer-element {
+.frame-layer-element,
+.path-layer-element {
   overflow: visible;
 }
 
 .text-glitter-stack,
 .shape-glitter-stack,
-.frame-layer-stack {
+.frame-layer-stack,
+.path-layer-stack {
   position: absolute;
   top: 0;
   left: 0;
@@ -6413,7 +6421,8 @@ body.tool-text .text-glitter-element.is-locked {
 
 .text-glitter-content,
 .shape-glitter-content,
-.frame-layer-content {
+.frame-layer-content,
+.path-layer-content {
   position: absolute;
   inset: 0;
   box-sizing: border-box;
@@ -6443,7 +6452,13 @@ body.tool-text .text-glitter-element.is-locked {
 
 body.tool-shape .preview-container,
 body.tool-shape .preview-canvas,
-body.tool-shape #canvasElementsContainer {
+body.tool-shape #canvasElementsContainer,
+body.tool-line .preview-container,
+body.tool-line .preview-canvas,
+body.tool-line #canvasElementsContainer,
+body.tool-pen .preview-container,
+body.tool-pen .preview-canvas,
+body.tool-pen #canvasElementsContainer {
   cursor: crosshair;
 }
 
@@ -6454,6 +6469,12 @@ body.tool-shape #canvasElementsContainer {
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.85), 0 0 6px rgba(0, 0, 0, 0.45);
   pointer-events: none;
+}
+.creation-drag-preview.is-line {
+  height: 0;
+  border-width: 2px 0 0;
+  background: none;
+  transform-origin: 0 0;
 }
 
 body.tool-select :is(.sticker-element, .text-glitter-element, .shape-glitter-element, .frame-layer-element).is-frame-hover:not(.is-locked) {
@@ -6565,6 +6586,97 @@ body.tool-select .preview-container.is-over-picked-layer {
   inset: 0;
   pointer-events: none;
   image-rendering: inherit;
+}
+
+.path-chrome {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.path-chrome-outline,
+.path-chrome-outline-halo,
+.path-chrome-preview,
+.path-chrome-tangent {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.path-chrome-outline-halo {
+  stroke: rgba(255, 255, 255, 0.8);
+  stroke-width: calc(var(--selection-stroke) + var(--selection-halo) * 2);
+}
+
+.path-chrome-outline {
+  stroke: var(--color-accent);
+  stroke-width: var(--selection-stroke);
+}
+
+.path-chrome-preview {
+  stroke: var(--color-accent);
+  stroke-width: var(--selection-stroke);
+  stroke-dasharray: 4 3;
+}
+
+.path-chrome-tangent {
+  stroke: var(--color-accent);
+  stroke-width: var(--selection-stroke);
+  opacity: 0.8;
+}
+
+.path-chrome-anchor,
+.path-chrome-handle {
+  fill: var(--handle-fill);
+  stroke: var(--handle-border-color);
+  stroke-width: var(--selection-stroke);
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+}
+
+.path-chrome-anchor.is-selected {
+  fill: var(--color-accent);
+  stroke: var(--handle-fill);
+}
+.path-chrome-anchor.is-hover {
+  stroke-width: calc(var(--selection-stroke) * 2);
+}
+.path-chrome-anchor.is-draw-end {
+  stroke-width: calc(var(--selection-stroke) * 2);
+}
+.path-chrome-anchor.is-close-target {
+  fill: var(--color-accent);
+  stroke-width: calc(var(--selection-stroke) * 3);
+}
+
+.path-chrome-handle.is-hover {
+  fill: var(--color-accent);
+}
+
+.path-chrome-marquee {
+  fill: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  stroke: var(--color-accent);
+  stroke-width: var(--selection-stroke);
+}
+
+body.tool-pen .preview-container[data-path-hover=anchor],
+body.tool-pen .preview-container[data-path-hover=anchor] .preview-canvas,
+body.tool-pen .preview-container[data-path-hover=anchor] #canvasElementsContainer, body.tool-pen .preview-container[data-path-hover=handle],
+body.tool-pen .preview-container[data-path-hover=handle] .preview-canvas,
+body.tool-pen .preview-container[data-path-hover=handle] #canvasElementsContainer {
+  cursor: move;
+}
+body.tool-pen .preview-container[data-path-hover=segment],
+body.tool-pen .preview-container[data-path-hover=segment] .preview-canvas,
+body.tool-pen .preview-container[data-path-hover=segment] #canvasElementsContainer {
+  cursor: copy;
+}
+body.tool-pen .preview-container[data-path-hover=empty],
+body.tool-pen .preview-container[data-path-hover=empty] .preview-canvas,
+body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer {
+  cursor: default;
 }
 
 .number-field-pair {

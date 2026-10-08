@@ -26,6 +26,8 @@ const SUITES = [
 	{ file: 'unit/nine-slice-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/bevel-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/text-warp-unit.js', tags: ['unit', 'effects', 'quick'] },
+	{ file: 'unit/path-geometry-unit.js', tags: ['unit', 'effects', 'quick'] },
+	{ file: 'ui/path-tool-verify.js', tags: ['layers', 'touch', 'shape'] },
 	{ file: 'unit/style-presets-unit.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'unit/panel-schema-grammar.js', tags: ['unit', 'panels', 'quick'] },
 	{ file: 'unit/paint-slot-picker-unit.js', tags: ['unit', 'panels', 'quick'] },

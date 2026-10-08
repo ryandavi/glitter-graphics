@@ -89,6 +89,8 @@ const COMMANDS = {
 	toolSelect: { label: 'Select Tool', group: 'Tools', keys: ['v'], displayKey: 'V', run: (editor) => editor.setTool(ToolType.SELECT) },
 	toolText: { label: 'Text Tool', group: 'Tools', keys: ['t'], displayKey: 'T', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.TEXT) },
 	toolShape: { label: 'Shape Tool', group: 'Tools', keys: ['u'], displayKey: 'U', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.SHAPE) },
+	toolLine: { label: 'Line Tool', group: 'Tools', keys: ['l'], displayKey: 'L', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.LINE) },
+	toolPen: { label: 'Pen Tool', group: 'Tools', keys: ['p'], displayKey: 'P', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.PEN) },
 	toolGlitterFill: { label: 'Glitter Fill Tool', group: 'Tools', keys: ['i'], displayKey: 'I', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.setTool(ToolType.GLITTER_FILL) },
 	toolBrush: { label: 'Glitter Brush Tool', group: 'Tools', keys: ['b'], displayKey: 'B', run: (editor) => { editor.setTool(ToolType.BRUSH); editor.maskEditor?.setMode('add'); } },
 	toolEraser: { label: 'Mask Eraser Tool', group: 'Tools', keys: ['e'], displayKey: 'E', run: (editor) => { editor.setTool(ToolType.BRUSH); editor.maskEditor?.setMode('sub'); } },
@@ -100,6 +102,29 @@ const COMMANDS = {
 			const ids = editor.layerManager.layers.filter((layer) => !layer.locked && layer.type !== LayerType.BASE_IMAGE).map((layer) => layer.id);
 			if (ids.length) editor.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1] });
 		}
+	},
+	// Path point editing (js/ui/path-edit.js). A session takes Delete, the
+	// arrows, Enter and Escape before the layer commands that share them.
+	pathDeletePoints: { label: 'Delete Selected Points / Last Point While Drawing', group: 'Pen', keys: ['Delete', 'Backspace'], displayKey: 'Delete / Backspace', when: (editor) => editor.getActiveSession() === 'pathEdit', run: (editor) => editor.pathEdit.deleteSelection() },
+	pathNudge: { label: 'Nudge Selected Points', group: 'Pen', keys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'], displayKey: 'Arrow Keys', when: (editor, event) => editor.getActiveSession() === 'pathEdit' && !focusClaimsArrowKey(event.key), run: (editor, event) => editor.pathEdit.nudge(event) },
+	pathNudgeFast: { label: 'Nudge Selected Points 10px', group: 'Pen', keys: ['shift+ArrowLeft', 'shift+ArrowRight', 'shift+ArrowUp', 'shift+ArrowDown'], displayKey: 'Shift + Arrow Keys', when: (editor, event) => editor.getActiveSession() === 'pathEdit' && !focusClaimsArrowKey(event.key), run: (editor, event) => editor.pathEdit.nudge(event) },
+	pathDone: { label: 'Finish Path / Edit Selected Path', group: 'Pen', keys: ['Enter'], displayKey: 'Enter', when: (editor) => editor.pathEdit.canHandleEnter(), run: (editor) => editor.pathEdit.handleEnter() },
+	pathEscape: { label: 'Finish Path / Clear Point Selection', group: 'Pen', keys: ['Escape'], displayKey: 'Escape', when: (editor) => editor.getActiveSession() === 'pathEdit', run: (editor) => editor.pathEdit.handleEscape() },
+	pathToggleClosed: { run: (editor) => editor.pathEdit.toggleClosed() },
+	pathPointCorner: { run: (editor) => editor.pathEdit.setSelectionType('corner') },
+	pathPointSmooth: { run: (editor) => editor.pathEdit.setSelectionType('smooth') },
+	pathPointMirrored: { run: (editor) => editor.pathEdit.setSelectionType('mirrored') },
+	pathNextCorner: { run: (editor) => editor.pathEdit.setNextPointType('corner') },
+	pathNextCurve: { run: (editor) => editor.pathEdit.setNextPointType('curve') },
+	pathConstrain: { label: 'Constrain Segment or Handle to 45deg', group: 'Pen', binding: { type: 'gesture', device: 'pointer', gesture: 'Draw or drag a handle', modifiers: ['shift'] } },
+	pathBreakHandles: { label: 'Break a Handle Pair', group: 'Pen', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag a handle', modifiers: ['alt'] } },
+	pathInsertPoint: { label: 'Add a Point', group: 'Pen', binding: { type: 'gesture', device: 'pointer', gesture: 'Click a segment' } },
+	pathBendSegment: { label: 'Bend a Segment', group: 'Pen', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag a segment' } },
+	pathTogglePoint: { label: 'Switch a Point Between Corner and Smooth', group: 'Pen', binding: { type: 'gesture', device: 'pointer', gesture: 'Double-click a point' } },
+	convertShapeToPath: {
+		label: 'Convert Shape to Path', group: 'Pen',
+		when: (editor) => editor.layerManager.getActiveLayer()?.type === LayerType.SHAPE && !editor.layerManager.hasMultiSelection(),
+		run: (editor) => editor.pathLayerManager.convertShapeLayer(editor.layerManager.getActiveLayer())
 	},
 	deleteSelection: { label: 'Delete Selected Layer(s)', group: 'Transform', keys: ['Delete', 'Backspace'], displayKey: 'Delete / Backspace', when: (editor) => editor.getSelectedActionableLayers().length > 0, run: (editor) => editor.deleteSelectedLayers() },
 	swapBrushMode: { label: 'Swap Paint/Erase (Glitter Brush)', group: 'Brush', keys: ['x'], displayKey: 'X', when: (editor) => editor.currentTool === ToolType.BRUSH, run: (editor) => editor.maskEditor?.toggleMode() },
@@ -145,14 +170,14 @@ function getShortcutGroups(kind = 'keyboard') {
 		return kind === 'gesture' ? isGestureCommand(command) : Boolean(command.displayKey) && !isGestureCommand(command);
 	}).forEach((command) => {
 		const group = kind === 'gesture'
-			? (command.group === 'Transform' ? 'Move & Transform' : 'Navigate')
+			? ({ Transform: 'Move & Transform', Pen: 'Pen' }[command.group] || 'Navigate')
 			: (SHORTCUT_GROUP_ALIASES[command.group] || command.group);
 		if (!groups.has(group)) groups.set(group, []);
 		groups.get(group).push(command);
 	});
 	const order = kind === 'gesture'
-		? ['Navigate', 'Move & Transform']
-		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Gradient'];
+		? ['Navigate', 'Move & Transform', 'Pen']
+		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Pen', 'Gradient'];
 	const rank = (title) => {
 		const index = order.indexOf(title);
 		return index === -1 ? order.length : index;

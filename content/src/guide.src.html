@@ -65,6 +65,15 @@
             </ol>
         </li>
         <li>
+            <a href="#paths">Lines &amp; Paths</a>
+            <ol>
+                <li><a href="#create-line">Draw a Line or an Arrow</a></li>
+                <li><a href="#pen-tool">Draw with the Pen</a></li>
+                <li><a href="#edit-points">Edit Points</a></li>
+                <li><a href="#path-stroke">Fill, Stroke &amp; Outline</a></li>
+            </ol>
+        </li>
+        <li>
             <a href="#frames">Frames &amp; Sparkles</a>
             <ol>
                 <li><a href="#create-frame">Add a Frame</a></li>
@@ -317,6 +326,38 @@
                     <p><strong>{ui-tool:shape}</strong> – Drag on the canvas to draw a shape at that size (<kbd class="guide-kbd">Shift</kbd> = square), or click for a default size.</p>
                     <ul>
                         <li>See <a href="#shapes">Shapes</a> for shape choices and fill/border/shadow options.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            {ui-tool-icon:line}
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>{ui-tool:line}</strong> – Drag on the canvas to draw a straight line (<kbd class="guide-kbd">Shift</kbd> = 45° steps), or click for a default length.</p>
+                    <ul>
+                        <li>See <a href="#create-line">Draw a Line or an Arrow</a> for arrowheads, dashes and dots.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            {ui-tool-icon:pen}
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>{ui-tool:pen}</strong> – Click to place the points of a path, drag to pull a curve, and click the first point to close it. On a selected path the Pen edits its points.</p>
+                    <ul>
+                        <li>See <a href="#pen-tool">Draw with the Pen</a> and <a href="#edit-points">Edit Points</a>.</li>
                     </ul>
                 </div>
             </div>
@@ -1606,6 +1647,250 @@
                     <p><strong>Outline</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter, solid color, or gradient, plus width/offset and opacity. Outlines follow the shape's true edge, can be solid or dotted, and expose smooth/pixel edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- LINES & PATHS -->
+    <div class="guide-section">
+        <h3 id="paths">
+            <span class="icon-wrapper">
+                <svg class="icon">
+                    <use href="#icon-pen"></use>
+                </svg>
+            </span>
+            Lines &amp; Paths
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="create-line">Draw a Line or an Arrow</h4>
+            <p>A path is a layer made of points joined by straight or curved segments. A line is the simplest one: two points. Paths are painted with a <strong>Stroke</strong> (the line itself) and a <strong>Fill</strong> (the area inside), each in glitter or a color.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-line"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Click the <strong>Line</strong> tool in the toolbar, or press <kbd class="guide-kbd">L</kbd>. <strong>Drag</strong> from where the line starts to where it ends (hold <kbd class="guide-kbd">Shift</kbd> for horizontal, vertical and 45° lines), or <strong>click</strong> for a line of the default length. You can also click <strong>+</strong> in the Layers panel and choose <strong>Line</strong>.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>In {ui-panel:pathSettingsSection}, pick a <strong>preset</strong> to turn the line into an <strong>Arrow</strong>, a <strong>Double Arrow</strong>, a <strong>Dashed</strong> or <strong>Dotted</strong> line, or a <strong>Heart String</strong>. Presets change only the shape of the line: its dashes and what sits on its ends. Its glitter, color and width stay as they are.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-hand-pointer"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>With the <strong>Select</strong> tool a path moves, resizes, rotates and flips like any other layer. Click right on the line to pick it: a click beside a diagonal line reaches the layer under it. A resize moves the points and leaves no stretched pixels; the stroke width follows it when <strong>Scale Outlines &amp; Effects</strong> is on in Settings.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="pen-tool">Draw with the Pen</h4>
+            <p>The Pen draws any outline, one point at a time. Trace around part of the picture and close the path to get a glitter region with exactly the edge you drew.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-pen"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Click the <strong>Pen</strong> tool, or press <kbd class="guide-kbd">P</kbd>. <strong>Click</strong> to place a corner. <strong>Click and drag</strong> to place a smooth point and pull its handles, which bend the path on both sides. Hold <kbd class="guide-kbd">Shift</kbd> to keep a segment or a handle on 45° steps, and <kbd class="guide-kbd">Alt</kbd> while dragging to move one handle without the other.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-path-close"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Click the first point</strong> to close the path. A closed path you just drew switches to a glitter <strong>Fill</strong> with no Stroke; an open one keeps its Stroke and no Fill. Press <kbd class="guide-kbd">Enter</kbd> or <kbd class="guide-kbd">Esc</kbd> to finish a path and leave it open.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-point-smooth"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Next point</strong> in the bar under the canvas chooses what a click places. <strong>Corner</strong> places corners. <strong>Curve</strong> places points the path flows through, with handles worked out from the points on either side, so a few clicks trace a smooth outline. Click the point you just placed to switch it between the two.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-undo"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Every point is its own undo step: <kbd class="guide-kbd">Ctrl/Cmd</kbd> + <kbd class="guide-kbd">Z</kbd> or <kbd class="guide-kbd">Backspace</kbd> takes back the last point and you keep drawing. Hold <kbd class="guide-kbd">Space</kbd> to pan, or scroll and pinch to zoom, without ending the path. A path left with a single point is removed.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-hand"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>On a phone or tablet</strong>, tap to place points and drag from empty canvas to pull a curve. Two fingers always pan and zoom and never place a point. Use <strong>Close</strong> and <strong>Done</strong> in the bar under the canvas.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="edit-points">Edit Points</h4>
+            <p>The Pen is also how a path is reshaped. With the <strong>Select</strong> tool, double-click a path (or select it and press <kbd class="guide-kbd">Enter</kbd>, or use <strong>Edit points</strong> in {ui-panel:pathSettingsSection}) to switch to the Pen with its points showing.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-point-corner"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Points</strong> – Click a point to select it, <kbd class="guide-kbd">Shift</kbd>-click to add to the selection, or drag across empty canvas to select every point in a box. Drag a point to move it with the rest of the selection, or nudge with the arrow keys (<kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps). Points land on whole pixels and snap to the canvas, to other layers and into line with the path's other points.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-point-mirrored"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Handles</strong> – A selected point shows its handles. A <strong>Corner</strong>'s two handles move on their own, a <strong>Smooth</strong> point keeps them in one line, and a <strong>Mirrored</strong> point also keeps them the same length. Set the type in the bar under the canvas or in the <strong>Point</strong> section, which also has the point's exact X and Y. Double-click a point to switch it between a corner and a smooth point.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-plus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Segments</strong> – Click a segment to add a point there without changing the outline. Drag a segment to bend it; a straight one becomes a curve. Press <kbd class="guide-kbd">Delete</kbd> to remove the selected points: the path closes up around them and keeps as much of its outline as it can.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-check"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Continue, close, finish</strong> – Click either end of an open path to keep drawing from it. <strong>Close path</strong> joins the ends, <strong>Reverse</strong> swaps which end is the start, and <strong>Swap ends</strong> trades the shapes on the two ends. <kbd class="guide-kbd">Esc</kbd> clears the point selection, then leaves the editor; <kbd class="guide-kbd">Enter</kbd> or <strong>Done</strong> leaves it at once.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-square"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>From a shape</strong> – <strong>Convert to path</strong> in {ui-panel:shapeSettingsSection} replaces a shape with a path of the same outline, in the same place and with the same fill and effects, so its points can be edited.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="path-stroke">Fill, Stroke &amp; Outline</h4>
+            <p><strong>Stroke</strong> is the line the Pen draws. <strong>Outline</strong> is an effect around the whole object, as it is on text and shapes, so a line can have an outline of its own.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Stroke</strong> – Glitter or a color, with a <strong>Width</strong>. <strong>Edges</strong> picks smooth or sharp corners, and <strong>Cap</strong> picks how an open line ends: flat, round or square. <strong>Dashes</strong> turns the line into dashes (with their own Dash and Gap lengths) or dots, and <strong>Dash offset</strong> slides them along.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-arrow-left"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Ends</strong> – Put a shape on the <strong>Start</strong> or <strong>End</strong> of an open line: arrows, a triangle, a diamond, a circle, a bar, a star, a heart and more. Each has a <strong>Size</strong> measured against the line width, turns to follow the direction of the path, and is painted with the stroke, so glitter runs unbroken from line into arrowhead.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-filter"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Outline</strong>, <strong>Shadow</strong>, <strong>Bevel &amp; gloss</strong> and <strong>Sparkles</strong> work as they do on shapes, and follow whatever the path shows. With no Fill, the outline wraps both sides of the line and the shadow is the line's shadow.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 

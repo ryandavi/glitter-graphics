@@ -345,6 +345,15 @@ class ManifestAdmin {
 				${this.row('Category', `<select name="category" ${shape.uses.includes('shape') ? '' : 'disabled'}>${categories}</select>`)}
 				${this.row('Shape order', this.input('shapeOrder', shape.shapeOrder ?? this.nextOrder('shape'), 'number', !shape.uses.includes('shape')))}
 				${this.row('Brush order', this.input('brushOrder', shape.brushOrder ?? this.nextOrder('brush'), 'number', !shape.uses.includes('brush')))}
+				${this.row('Line ornament', this.checkbox('useOrnament', shape.uses.includes('ornament')))}
+				${this.row('Ornament order', this.input('ornamentOrder', shape.ornamentOrder ?? this.nextOrder('ornament'), 'number', !shape.uses.includes('ornament')))}
+				${this.row('Ornament anchor', `<select name="ornamentAnchor" ${shape.uses.includes('ornament') ? '' : 'disabled'}>
+					${['tip', 'center'].map((anchor) => `<option value="${anchor}" ${(shape.ornament?.anchor || 'center') === anchor ? 'selected' : ''}>${anchor}</option>`).join('')}
+				</select>`)}
+				${this.row('Ornament tip X', this.input('ornamentTipX', shape.ornament?.tip?.[0] ?? shape.viewBox, 'number', !shape.uses.includes('ornament')))}
+				${this.row('Ornament tip Y', this.input('ornamentTipY', shape.ornament?.tip?.[1] ?? shape.viewBox / 2, 'number', !shape.uses.includes('ornament')))}
+				${this.row('Ornament angle', this.input('ornamentAngle', shape.ornament?.angle ?? 0, 'number', !shape.uses.includes('ornament')))}
+				${this.row('Ornament trim', this.input('ornamentTrim', shape.ornament?.trim ?? 0, 'number', !shape.uses.includes('ornament')))}
 				${this.row('Primitive', `<select name="primitive">
 					<option value="" ${shape.primitive ? '' : 'selected'}>SVG path</option>
 					${['circle', 'square', 'calligraphy'].map((primitive) => `<option value="${primitive}" ${shape.primitive === primitive ? 'selected' : ''}>${primitive}</option>`).join('')}
@@ -458,6 +467,7 @@ class ManifestAdmin {
 		const uses = [];
 		if (checked('useShape')) uses.push('shape');
 		if (checked('useBrush')) uses.push('brush');
+		if (checked('useOrnament')) uses.push('ornament');
 		const item = {
 			id: value('id'),
 			label: value('label'),
@@ -469,6 +479,11 @@ class ManifestAdmin {
 			item.shapeOrder = Number(value('shapeOrder'));
 		}
 		if (uses.includes('brush')) item.brushOrder = Number(value('brushOrder'));
+		if (uses.includes('ornament')) {
+			item.ornamentOrder = Number(value('ornamentOrder'));
+			item.ornament = { anchor: value('ornamentAnchor'), trim: Number(value('ornamentTrim')), angle: Number(value('ornamentAngle')) };
+			if (item.ornament.anchor === 'tip') item.ornament.tip = [Number(value('ornamentTipX')), Number(value('ornamentTipY'))];
+		}
 		if (value('primitive')) item.primitive = value('primitive');
 		else item.svgPath = value('svgPath');
 		// sourceBounds is the sheet-import bbox — not editable here, but it must
@@ -769,7 +784,7 @@ class ManifestAdmin {
 	}
 
 	nextOrder(usage) {
-		const key = usage === 'shape' ? 'shapeOrder' : 'brushOrder';
+		const key = `${usage}Order`;
 		const values = this.items().filter((item) => item.uses.includes(usage)).map((item) => Number(item[key]));
 		return values.length ? Math.max(...values) + 1 : 0;
 	}

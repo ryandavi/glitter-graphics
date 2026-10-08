@@ -316,7 +316,7 @@ class ContextToolbarRenderer {
 			node.className = 'segmented-control context-segmented-control';
 			node.id = control.id;
 			node.setAttribute('role', 'group');
-			node.setAttribute('aria-label', 'Brush mode');
+			node.setAttribute('aria-label', control.label || 'Brush mode');
 			node.append(...control.options.map((option) => {
 				const button = document.createElement('button');
 				button.type = 'button';
@@ -324,6 +324,7 @@ class ContextToolbarRenderer {
 				button.textContent = option.label;
 				if (option.title) button.title = option.title;
 				if (option.mode) button.dataset.brushMode = option.mode;
+				if (option.value) button.dataset.value = option.value;
 				button.setAttribute('aria-pressed', 'false');
 				button.addEventListener('click', () => COMMANDS[option.action]?.run(this.editor));
 				return button;

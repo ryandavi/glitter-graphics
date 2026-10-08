@@ -2,15 +2,15 @@
 
 // The export fragility routine (CONTRIBUTING.md) over the effects the feature
 // roadmap added: sticker outline, bevel, glow spread, Sparkles and Kira Kira
-// slots, text warp, a pinned frame, the whole-picture Sparkles layer, and CSS
-// and pixel filter looks. Back-to-back exports and edit -> undo -> export must
+// slots, text warp, a pinned frame, the whole-picture Sparkles layer, a path
+// (stroke, dashes, ornament, outline), and CSS and pixel filter looks. Back-to-back exports and edit -> undo -> export must
 // be byte-identical, matte and transparent.
 
 const { chromium } = require('playwright');
 const { assertByteIdentity, exportSnapshot } = require('./export-harness');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
-const MIN_LAYERS = 8;
+const MIN_LAYERS = 9;
 
 async function openEditor(page) {
 	await page.goto(APP_URL, { waitUntil: 'networkidle' });
@@ -69,6 +69,15 @@ async function buildComposition(page) {
 		const shape = insert(editor.shapeGlitterManager.createLayer({ shapeId: 'heart', width: 70, height: 60, position: { x: 250, y: 70 } }));
 		applyStyle(editor.shapeGlitterManager, shape, 'neon-pop');
 		editor.shapeGlitterManager.renderLayer(shape);
+
+		// A curved, dashed glitter arrow with an outline: the stroke slot, its
+		// ornament and the body mask the outline is derived from.
+		const arrow = insert(editor.pathLayerManager.createLayer({
+			subpaths: [{ closed: false, points: [{ x: 40, y: 205 }, { x: 150, y: 215, in: { x: -30, y: -30 } }] }],
+			stroke: { dashStyle: 'dashed', endShapeId: 'arrowHead' }
+		}));
+		arrow.pathData.border = editor.pathLayerManager.getDefaultBorder();
+		editor.pathLayerManager.renderLayer(arrow);
 
 		// Pinned bevel frame and whole-picture weather.
 		const frame = insert(editor.frameLayerManager.createLayer());

@@ -7,7 +7,7 @@ const PREVIEW_EXPORT_TWINS = [
 	{
 		feature: 'slot stack order',
 		shared: 'buildSlotStack',
-		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack', 'GlitterManager.getSlotStack'],
+		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack', 'GlitterManager.getSlotStack', 'PathLayerManager.getSlotStack'],
 		export: ['SceneCompositor._renderSlotStackToCanvas', 'SceneCompositor._renderStickerEffects', 'SceneCompositor._buildGlitterFillExportPlan']
 	},
 	{
@@ -27,6 +27,12 @@ const PREVIEW_EXPORT_TWINS = [
 		shared: 'getSlotMask',
 		preview: ['ShapeGlitterManager.getSlotMask'],
 		export: ['ShapeGlitterManager.renderSlotMasks']
+	},
+	{
+		feature: 'path slot masks',
+		shared: 'getSlotMask',
+		preview: ['PathLayerManager.renderLayer'],
+		export: ['PathLayerManager.renderSlotMasks']
 	},
 	{
 		feature: 'sticker shadow mask',

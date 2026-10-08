@@ -111,6 +111,8 @@ class GlitterEditor {
 		this.filterLayerManager = new FilterLayerManager(this);
 		this.frameLayerManager = new FrameLayerManager(this);
 		this.sparkleLayerManager = new SparkleLayerManager(this);
+		this.pathLayerManager = new PathLayerManager(this);
+		this.pathEdit = new PathEditSession(this);
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
 		// Registration order is the picker-strip refresh order: the text
@@ -124,7 +126,8 @@ class GlitterEditor {
 			this.baseBackgroundManager,
 			this.brushTipManager,
 			this.frameLayerManager.slotPicker,
-			this.sparkleLayerManager.slotPicker
+			this.sparkleLayerManager.slotPicker,
+			this.pathLayerManager.slotPicker
 		].forEach((manager) => this.pickers.register(manager));
 		this.groupTransformManager = new GroupTransformManager(this);
 		this.mobileManager = new MobileManager(this);
@@ -631,6 +634,9 @@ class GlitterEditor {
 		// stale gallery strip cannot override Text, Shape, Brush, or Select UI.
 		this.pickers?.closeActive({ returnToProperties: false });
 
+		// The temporary Hand (Space) is a detour, not a tool change: the tool
+		// it interrupts keeps its session.
+		if (!this.temporaryHandToolActive) TOOLS[this.currentTool]?.onDeactivate?.(this, tool);
 		this.currentTool = tool;
 		if (!this.temporaryHandToolActive && options.persist !== false) sessionStorage.setItem('glitter:lastTool', tool);
 		this.currentHintDismissed = false; // Reset dismissed flag when tool changes
@@ -666,6 +672,8 @@ class GlitterEditor {
 
 		// Sync mask editing with the active tool (enter/exit brush painting)
 		this.maskEditor?.onToolChanged(tool);
+
+		if (!this.temporaryHandToolActive) definition?.onActivate?.(this);
 
 		// 3. Update Context Toolbars
 		this.updateContextToolbars();
@@ -704,7 +712,7 @@ class GlitterEditor {
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
 		const activeToolbar = [...toolbars.filter(({ config }) => config.session), ...toolbars.filter(({ config }) => !config.session)].find(({ config, element }) => {
 			if (!element) return false;
-			if (config.session ? !(config.session === 'textEdit' && this.textGlitterManager?.editSession) : config.tool !== this.currentTool) return false;
+			if (config.session ? config.session !== this.getActiveSession() : config.tool !== this.currentTool) return false;
 			if (hasMultiSelection && config.allowMultiSelection) return true;
 			if (config.layerTypes && (!layer || !config.layerTypes.includes(layer.type))) return false;
 			if (config.requiresStickerSource && layer?.type === LayerType.STICKER && !layer.stickerSourceId) return false;
@@ -901,6 +909,9 @@ class GlitterEditor {
 				return; // A modal was closed, we're done
 			}
 
+			// An edit session with its own Escape command takes it first.
+			if (dispatchKeyboardCommand(this, e, { isTyping })) return;
+
 			const activeLayer = this.layerManager.getActiveLayer();
 			const activeTransform = this.getMovableLayerContext(activeLayer)?.manager?.layerTransforms?.get(activeLayer?.id);
 			if (this.groupTransformManager?.cancelActiveDrag?.() || activeTransform?.cancelActiveDrag?.()) {
@@ -1004,11 +1015,13 @@ class GlitterEditor {
 	async undo() {
 		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.undo();
+		this.pathEdit?.revalidate();
 	}
 
 	async redo() {
 		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.redo();
+		this.pathEdit?.revalidate();
 	}
 
 	updateHistoryButtons() {

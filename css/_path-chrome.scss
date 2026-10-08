@@ -1,0 +1,94 @@
+// Path point editor chrome (js/transforms/path-chrome.js): one SVG in the
+// screen-space selection overlay, so every size here is a plain screen pixel.
+// Geometry comes from JS; this sheet owns only how it is drawn. The chrome
+// takes no pointer events: the edit session hit-tests from the same numbers.
+
+.path-chrome {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+// The outline reads on any artwork: an accent line over a white halo.
+.path-chrome-outline,
+.path-chrome-outline-halo,
+.path-chrome-preview,
+.path-chrome-tangent {
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.path-chrome-outline-halo {
+	stroke: rgb(255 255 255 / 80%);
+	stroke-width: calc(var(--selection-stroke) + var(--selection-halo) * 2);
+}
+
+.path-chrome-outline {
+	stroke: var(--color-accent);
+	stroke-width: var(--selection-stroke);
+}
+
+// The next segment, before its point is placed.
+.path-chrome-preview {
+	stroke: var(--color-accent);
+	stroke-width: var(--selection-stroke);
+	stroke-dasharray: 4 3;
+}
+
+.path-chrome-tangent {
+	stroke: var(--color-accent);
+	stroke-width: var(--selection-stroke);
+	opacity: 0.8;
+}
+
+.path-chrome-anchor,
+.path-chrome-handle {
+	fill: var(--handle-fill);
+	stroke: var(--handle-border-color);
+	stroke-width: var(--selection-stroke);
+	filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 35%));
+}
+
+.path-chrome-anchor {
+	&.is-selected { fill: var(--color-accent); stroke: var(--handle-fill); }
+	&.is-hover { stroke-width: calc(var(--selection-stroke) * 2); }
+
+	// The end a click continues from, and the point a click closes onto.
+	&.is-draw-end { stroke-width: calc(var(--selection-stroke) * 2); }
+	&.is-close-target { fill: var(--color-accent); stroke-width: calc(var(--selection-stroke) * 3); }
+}
+
+.path-chrome-handle.is-hover { fill: var(--color-accent); }
+
+.path-chrome-marquee {
+	fill: color-mix(in srgb, var(--color-accent) 14%, transparent);
+	stroke: var(--color-accent);
+	stroke-width: var(--selection-stroke);
+}
+
+// The Pen's cursor says what a press would do: place a point (crosshair, from
+// the tool), take hold of a point or handle, or add to or bend a segment.
+body.tool-pen .preview-container {
+	&[data-path-hover="anchor"],
+	&[data-path-hover="handle"] {
+		&,
+		.preview-canvas,
+		#canvasElementsContainer { cursor: move; }
+	}
+
+	&[data-path-hover="segment"] {
+		&,
+		.preview-canvas,
+		#canvasElementsContainer { cursor: copy; }
+	}
+
+	&[data-path-hover="empty"] {
+		&,
+		.preview-canvas,
+		#canvasElementsContainer { cursor: default; }
+	}
+}

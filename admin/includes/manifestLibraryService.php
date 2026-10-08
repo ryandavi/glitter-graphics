@@ -230,7 +230,8 @@ class ManifestLibraryService
 		$ids = [];
 		$shapeOrders = [];
 		$brushOrders = [];
-		$allowedUses = ['shape', 'brush'];
+		$ornamentOrders = [];
+		$allowedUses = ['shape', 'brush', 'ornament'];
 		$allowedPrimitives = ['circle', 'square', 'calligraphy'];
 		foreach ($manifest['shapes'] as $index => $shape) {
 			$id = $this->requireShapeId($shape['id'] ?? null, 'Shape ' . ($index + 1));
@@ -259,6 +260,18 @@ class ManifestLibraryService
 			}
 			if (in_array('brush', $uses, true)) {
 				$this->validateOrder($shape['brushOrder'] ?? null, $brushOrders, $id, 'brush');
+			}
+			if (in_array('ornament', $uses, true)) {
+				$this->validateOrder($shape['ornamentOrder'] ?? null, $ornamentOrders, $id, 'ornament');
+				$ornament = $shape['ornament'] ?? null;
+				$anchor = is_array($ornament) ? ($ornament['anchor'] ?? null) : null;
+				$tip = is_array($ornament) ? ($ornament['tip'] ?? null) : null;
+				$validTip = is_array($tip) && count($tip) === 2 && is_numeric($tip[0]) && is_numeric($tip[1]);
+				$trim = is_array($ornament) ? ($ornament['trim'] ?? null) : null;
+				if (!in_array($anchor, ['tip', 'center'], true) || ($anchor === 'tip' && !$validTip)
+					|| !is_numeric($trim) || $trim < 0 || $trim > 1 || !is_numeric($ornament['angle'] ?? null)) {
+					throw new InvalidArgumentException("Shape \"$id\" has invalid ornament data");
+				}
 			}
 		}
 		if (!isset($ids['circle'])) throw new InvalidArgumentException('Shapes manifest must include circle');

@@ -20,9 +20,8 @@ class ShapeGlitterManager {
 		this.editor = editor;
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
-		this.measurementCache = new Map();
-		this.maxMeasurementCacheEntries = 4;
-		this.maskUrlCache = new Map();
+		this.measurementCache = createMeasurementCache(4);
+		this.maskUrlCache = createMaskUrlCache(64);
 		// Uploaded pixels stay outside JSON-cloned layer/history state. Layers keep
 		// only an immutable ref, so old refs remain available to undo/redo.
 		this.imageFillAssets = new Map();
@@ -717,8 +716,6 @@ class ShapeGlitterManager {
 		const key = this.getMeasurementCacheKey(layer);
 		const cached = this.measurementCache.get(key);
 		if (cached) {
-			this.measurementCache.delete(key);
-			this.measurementCache.set(key, cached);
 			layer.shapeData.renderWidth = cached.width;
 			layer.shapeData.renderHeight = cached.height;
 			return cached;
@@ -730,7 +727,6 @@ class ShapeGlitterManager {
 		const w = d.width;
 		const h = d.height;
 		const shapePath = ShapeLibrary.buildTransformedPath(shapeId, w / 2, h / 2, { fit: 'fill', cornerRadiusPx });
-		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
 		// Canvas allocation reserves the worst-case hard-miter spike (miterLimit ×
 		// width) so a star point never clips; the user-facing frame uses only the
 		// nominal outward border extent so the transform box hugs the shape instead
@@ -751,17 +747,10 @@ class ShapeGlitterManager {
 		const frameTop = Math.min(-borderExtent / sy, shadowBounds.y / sy);
 		const frameBottom = Math.max(h + borderExtent / sy, (shadowBounds.y + shadowBounds.height) / sy);
 
-		const layoutX = padding - inkLeft;
-		const layoutY = padding - inkTop;
-		const canvasWidth = Math.max(1, Math.ceil(inkRight - inkLeft + padding * 2));
-		const canvasHeight = Math.max(1, Math.ceil(inkBottom - inkTop + padding * 2));
-
-		const canvas = createAppCanvas(0, 0, 'layers/ShapeGlitterManager');
-		canvas.width = canvasWidth;
-		canvas.height = canvasHeight;
-		canvas._textureOrigin = { x: layoutX, y: layoutY };
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+		const { canvas, ctx, layoutX, layoutY, width: canvasWidth, height: canvasHeight } = allocatePaddedMaskCanvas(
+			{ left: inkLeft, top: inkTop, right: inkRight, bottom: inkBottom },
+			'layers/ShapeGlitterManager'
+		);
 		ctx.fillStyle = '#ffffff';
 		ctx.save();
 		ctx.translate(layoutX + w / 2, layoutY + h / 2);
@@ -813,10 +802,6 @@ class ShapeGlitterManager {
 		canvas._shadowBounds = entry.shapeRect;
 
 		this.measurementCache.set(key, entry);
-		while (this.measurementCache.size > this.maxMeasurementCacheEntries) {
-			const oldestKey = this.measurementCache.keys().next().value;
-			this.measurementCache.delete(oldestKey);
-		}
 		d.renderWidth = canvasWidth;
 		d.renderHeight = canvasHeight;
 		return entry;
@@ -1068,15 +1053,7 @@ class ShapeGlitterManager {
 	}
 
 	getPreviewMaskDataUrl(canvas, cacheKey) {
-		if (this.maskUrlCache.has(cacheKey)) return this.maskUrlCache.get(cacheKey);
-		const url = canvas.toDataURL('image/png');
-		this.maskUrlCache.set(cacheKey, url);
-		// Bound the cache so long editing sessions don't grow it forever.
-		if (this.maskUrlCache.size > 64) {
-			const firstKey = this.maskUrlCache.keys().next().value;
-			this.maskUrlCache.delete(firstKey);
-		}
-		return url;
+		return this.maskUrlCache.get(canvas, cacheKey);
 	}
 
 	syncStackGeometry(stack, layer, measurement = null) {

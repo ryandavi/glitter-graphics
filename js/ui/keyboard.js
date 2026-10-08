@@ -17,9 +17,14 @@ function matchShortcut(event) {
 	return Object.values(COMMANDS).find((command) => command.keys?.includes(combo)) || null;
 }
 
+// Several commands may share a key (Delete removes path points in a path
+// session and layers otherwise): the first whose `when` holds runs.
 function dispatchKeyboardCommand(editor, event, { isTyping = false } = {}) {
-	const command = matchShortcut(event);
-	if (!command || (isTyping && !command.allowWhileTyping) || command.when?.(editor, event) === false) return false;
+	const combo = normalizeShortcutEvent(event);
+	const command = Object.values(COMMANDS).find((candidate) => candidate.keys?.includes(combo)
+		&& !(isTyping && !candidate.allowWhileTyping)
+		&& candidate.when?.(editor, event) !== false);
+	if (!command) return false;
 	event.preventDefault();
 	command.run(editor, event);
 	return true;

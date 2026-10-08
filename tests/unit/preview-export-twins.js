@@ -8,6 +8,7 @@ const root = path.join(__dirname, '..', '..');
 const sources = {
 	TextGlitterManager: fs.readFileSync(path.join(root, 'js/layers/TextGlitterManager.js'), 'utf8'),
 	ShapeGlitterManager: fs.readFileSync(path.join(root, 'js/layers/ShapeGlitterManager.js'), 'utf8'),
+	PathLayerManager: fs.readFileSync(path.join(root, 'js/layers/PathLayerManager.js'), 'utf8'),
 	StickerManager: fs.readFileSync(path.join(root, 'js/layers/StickerManager.js'), 'utf8'),
 	GlitterManager: fs.readFileSync(path.join(root, 'js/layers/GlitterManager.js'), 'utf8'),
 	AnimationTicker: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),

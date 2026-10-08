@@ -9,6 +9,13 @@
 //   - the picker thumbnail (getIconSvg() emits an <svg> using the same path).
 // So the thumbnail always matches what lands on the canvas.
 //
+// A shape whose `uses` include 'ornament' can end a path's stroke (an
+// arrowhead, a dot). Its `ornament` entry says how it attaches, in viewBox
+// units: `tip` is the point that lands on the path's endpoint (`anchor:
+// 'center'` pins the middle of the shape there instead), `angle` is the
+// direction the artwork points in degrees (0 = right, -90 = up), and `trim` is
+// how much of the ornament's size the stroke is shortened beneath it (0 to 1).
+//
 // Definitions are loaded from data/shapes.json before the editor is created.
 // Geometry, labels, categories, and picker availability live in that manifest;
 // ShapeLibrary remains the synchronous renderer after boot.
@@ -61,6 +68,8 @@ const ShapeLibrary = {
 		const ids = new Set();
 		const shapeOrders = new Set();
 		const brushOrders = new Set();
+		const ornamentOrders = new Set();
+		const allowedUses = new Set(['shape', 'brush', 'ornament']);
 		const allowedPrimitives = new Set(['circle', 'square', 'calligraphy']);
 		const defs = {};
 		manifest.shapes.forEach((shape) => {
@@ -70,8 +79,8 @@ const ShapeLibrary = {
 			if (!Number.isFinite(shape.viewBox) || shape.viewBox <= 0) {
 				throw new Error(`Shape "${shape.id}" needs a positive viewBox`);
 			}
-			if (!Array.isArray(shape.uses) || !shape.uses.length || shape.uses.some((use) => use !== 'shape' && use !== 'brush')) {
-				throw new Error(`Shape "${shape.id}" needs shape or brush usage`);
+			if (!Array.isArray(shape.uses) || !shape.uses.length || shape.uses.some((use) => !allowedUses.has(use))) {
+				throw new Error(`Shape "${shape.id}" needs shape, brush or ornament usage`);
 			}
 			if ((shape.primitive && !allowedPrimitives.has(shape.primitive)) || (!shape.primitive && !shape.svgPath)) {
 				throw new Error(`Shape "${shape.id}" needs a primitive or SVG path`);
@@ -94,6 +103,18 @@ const ShapeLibrary = {
 			if (shape.uses.includes('brush') && (!Number.isInteger(shape.brushOrder) || shape.brushOrder < 0 || brushOrders.has(shape.brushOrder))) {
 				throw new Error(`Shape "${shape.id}" needs a unique non-negative brush order`);
 			}
+			if (shape.uses.includes('ornament')) {
+				const ornament = shape.ornament;
+				const validTip = Array.isArray(ornament?.tip) && ornament.tip.length === 2 && ornament.tip.every((value) => Number.isFinite(value));
+				if (!ornament || !['tip', 'center'].includes(ornament.anchor) || (ornament.anchor === 'tip' && !validTip)
+					|| !Number.isFinite(ornament.trim) || ornament.trim < 0 || ornament.trim > 1 || !Number.isFinite(ornament.angle)) {
+					throw new Error(`Shape "${shape.id}" has invalid ornament data`);
+				}
+				if (!Number.isInteger(shape.ornamentOrder) || shape.ornamentOrder < 0 || ornamentOrders.has(shape.ornamentOrder)) {
+					throw new Error(`Shape "${shape.id}" needs a unique non-negative ornament order`);
+				}
+				ornamentOrders.add(shape.ornamentOrder);
+			}
 			ids.add(shape.id);
 			if (shape.uses.includes('shape')) shapeOrders.add(shape.shapeOrder);
 			if (shape.uses.includes('brush')) brushOrders.add(shape.brushOrder);
@@ -102,6 +123,12 @@ const ShapeLibrary = {
 				primitive: shape.primitive || null,
 				svg: shape.svgPath || null,
 				sourceBounds: shape.sourceBounds || null,
+				ornament: shape.uses.includes('ornament') ? {
+					tip: shape.ornament.tip ? [...shape.ornament.tip] : null,
+					anchor: shape.ornament.anchor,
+					trim: shape.ornament.trim,
+					angle: shape.ornament.angle
+				} : null,
 				// Sheet artwork is normalized into a square viewBox without
 				// changing its proportions. Keep that invariant when a shape is
 				// placed in a non-square layer frame.
@@ -125,6 +152,20 @@ const ShapeLibrary = {
 		this.FILL_SHAPE_CATEGORIES.splice(0, this.FILL_SHAPE_CATEGORIES.length, ...categories);
 		this.FILL_SHAPES.splice(0, this.FILL_SHAPES.length, ...fillShapes);
 		this.BRUSH_SHAPES.splice(0, this.BRUSH_SHAPES.length, ...brushShapes);
+		this.ORNAMENT_SHAPES.splice(0, this.ORNAMENT_SHAPES.length, ...manifest.shapes
+			.filter((shape) => shape.uses.includes('ornament'))
+			.sort((a, b) => a.ornamentOrder - b.ornamentOrder)
+			.map(({ id, label }) => ({ id, label })));
+	},
+
+	// What the stroke mask needs to place an ornament: its path and content
+	// bounds in viewBox units plus how it attaches. null for a shape that is
+	// not an ornament.
+	getOrnament(id) {
+		const def = this.DEFS[id];
+		if (!def?.ornament) return null;
+		const geometry = this._geometry(id);
+		return { ...def.ornament, path: geometry.path, bounds: geometry.bounds };
 	},
 
 	// Build (once) the Path2D and its rasterized content bounds for a shape.
@@ -256,6 +297,72 @@ const ShapeLibrary = {
 		return out;
 	},
 
+	// The same outline as buildTransformedPath, as editable Bézier subpaths
+	// (js/paint/path-geometry.js) centered on (0,0): what Convert to Path
+	// starts from. Every subpath is closed, as a fill closes it.
+	getSubpaths(id, halfW, halfH, options = {}) {
+		const def = this.DEFS[id] || this.DEFS.circle;
+		const KAPPA = 0.5522847498;
+		const point = (x, y, inX = 0, inY = 0, outX = 0, outY = 0) => ({
+			x, y,
+			in: inX || inY ? { x: inX, y: inY } : null,
+			out: outX || outY ? { x: outX, y: outY } : null,
+			type: inX || inY || outX || outY ? 'smooth' : 'corner'
+		});
+		const ellipse = (cx, cy, rx, ry) => [{ closed: true, points: [
+			point(cx + rx, cy, 0, -ry * KAPPA, 0, ry * KAPPA),
+			point(cx, cy + ry, rx * KAPPA, 0, -rx * KAPPA, 0),
+			point(cx - rx, cy, 0, ry * KAPPA, 0, -ry * KAPPA),
+			point(cx, cy - ry, -rx * KAPPA, 0, rx * KAPPA, 0)
+		] }];
+		if (def.primitive === 'square') {
+			let hw = halfW;
+			let hh = halfH;
+			if ((options.fit || 'contain') === 'contain') hw = hh = Math.min(halfW, halfH);
+			const r = Math.max(0, Math.min(Number(options.cornerRadiusPx) || 0, hw, hh));
+			if (!r) return [{ closed: true, points: [point(-hw, -hh), point(hw, -hh), point(hw, hh), point(-hw, hh)] }];
+			const k = r * KAPPA;
+			// Each corner is a quarter arc between two points with one handle.
+			return [{ closed: true, points: [
+				{ ...point(-hw + r, -hh, -k, 0), type: 'corner' }, { ...point(hw - r, -hh, 0, 0, k, 0), type: 'corner' },
+				{ ...point(hw, -hh + r, 0, -k), type: 'corner' }, { ...point(hw, hh - r, 0, 0, 0, k), type: 'corner' },
+				{ ...point(hw - r, hh, k, 0), type: 'corner' }, { ...point(-hw + r, hh, 0, 0, -k, 0), type: 'corner' },
+				{ ...point(-hw, hh - r, 0, k), type: 'corner' }, { ...point(-hw, -hh + r, 0, 0, 0, -k), type: 'corner' }
+			] }];
+		}
+		const viewBox = def.viewBox || 24;
+		let subpaths;
+		if (def.svg) {
+			subpaths = PathGeometry.parseSvgPath(def.svg);
+			if (def.sourceBounds) {
+				const matrix = this._getSourceTransform(def);
+				PathGeometry.scaleSubpaths(subpaths, matrix.a, matrix.d);
+				PathGeometry.translateSubpaths(subpaths, matrix.e, matrix.f);
+			}
+		} else {
+			subpaths = ellipse(viewBox / 2, viewBox / 2, viewBox / 2, def.primitive === 'calligraphy' ? viewBox * 0.16 : viewBox / 2);
+			if (def.primitive === 'calligraphy') {
+				// The flat nib sits at -45 degrees about the box center.
+				const turn = (v) => ({ x: (v.x + v.y) * Math.SQRT1_2, y: (v.y - v.x) * Math.SQRT1_2 });
+				subpaths[0].points.forEach((entry) => {
+					const moved = turn({ x: entry.x - viewBox / 2, y: entry.y - viewBox / 2 });
+					entry.x = moved.x + viewBox / 2;
+					entry.y = moved.y + viewBox / 2;
+					entry.in = turn(entry.in);
+					entry.out = turn(entry.out);
+				});
+			}
+		}
+		const bounds = this._geometry(id).bounds;
+		let sx = (2 * halfW) / ((bounds.maxX - bounds.minX) || 1);
+		let sy = (2 * halfH) / ((bounds.maxY - bounds.minY) || 1);
+		if (def.preserveAspect || (options.fit || 'contain') === 'contain') sx = sy = Math.min(sx, sy);
+		PathGeometry.translateSubpaths(subpaths, -(bounds.minX + bounds.maxX) / 2, -(bounds.minY + bounds.maxY) / 2);
+		PathGeometry.scaleSubpaths(subpaths, sx, sy);
+		subpaths.forEach((subpath) => { subpath.closed = true; });
+		return subpaths;
+	},
+
 	trace(id, ctx, halfW, halfH, options = {}) {
 		ctx.fill(this.buildTransformedPath(id, halfW, halfH, options));
 	},
@@ -320,3 +427,4 @@ const ShapeLibrary = {
 ShapeLibrary.BRUSH_SHAPES = [];
 ShapeLibrary.FILL_SHAPE_CATEGORIES = [];
 ShapeLibrary.FILL_SHAPES = [];
+ShapeLibrary.ORNAMENT_SHAPES = [];

@@ -76,13 +76,23 @@ body.tool-text {
 
 }
 
+// A path is picked on its geometry (LAYER_UI_CONFIG pickedOnCanvas), so like
+// a pinned frame its element takes no pointer events.
+.path-layer-element {
+	position: absolute;
+	transform-origin: center;
+	touch-action: none;
+}
+
 .text-glitter-element,
 .shape-glitter-element,
-.frame-layer-element { overflow: visible; }
+.frame-layer-element,
+.path-layer-element { overflow: visible; }
 
 .text-glitter-stack,
 .shape-glitter-stack,
-.frame-layer-stack {
+.frame-layer-stack,
+.path-layer-stack {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -106,7 +116,8 @@ body.tool-text {
 
 .text-glitter-content,
 .shape-glitter-content,
-.frame-layer-content {
+.frame-layer-content,
+.path-layer-content {
 	position: absolute;
 	inset: 0;
 	box-sizing: border-box;
@@ -135,7 +146,9 @@ body.tool-text {
 	pointer-events: none !important;
 }
 
-body.tool-shape {
+body.tool-shape,
+body.tool-line,
+body.tool-pen {
 	.preview-container,
 	.preview-canvas,
 	#canvasElementsContainer { cursor: crosshair; }
@@ -151,6 +164,15 @@ body.tool-shape {
 		inset 0 0 0 1px rgba(255, 255, 255, 0.85),
 		0 0 6px rgba(0, 0, 0, 0.45);
 	pointer-events: none;
+
+	// A line tool drags out a line, not a box: JS places it at the start
+	// point and turns it toward the pointer.
+	&.is-line {
+		height: 0;
+		border-width: 2px 0 0;
+		background: none;
+		transform-origin: 0 0;
+	}
 }
 
 // The cursor says what a press would do: move over a layer a drag would move,

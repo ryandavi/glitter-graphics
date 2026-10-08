@@ -17,7 +17,7 @@ The PHP and MySQL back office that manages the glitter and sticker libraries, th
 |---|---|
 | `index.php` | Dashboard: health, recent activity, export status |
 | `glitter.php`, `sticker.php` | The glitter and sticker libraries: upload and ingest review, analysis, tags, categories, attribution, variants |
-| `fonts.php`, `shapes.php`, `brushes.php` | The `data/fonts.json`, `data/shapes.json` and `data/brushes.json` manifests (shared page code in `includes/manifestAdminPage.php`) |
+| `fonts.php`, `shapes.php`, `brushes.php` | The `data/fonts.json`, `data/shapes.json` and `data/brushes.json` manifests (shared page code in `includes/manifestAdminPage.php`). A shape may be a line ornament (an arrowhead, a dot): tick **Line ornament** and set its order, anchor (`tip` pins the tip point to the line's end, `center` pins the middle of the shape), tip X/Y in viewBox units, angle (the direction the artwork points: 0 right, -90 up) and trim (0 to 1: how much of the ornament's size the line is shortened beneath it). A shape used only as an ornament needs no category. |
 
 The pages call one JSON endpoint, `includes/api.php`, which dispatches on an `action` parameter to `GlitterAPI` or `StickerAPI`. Both extend the shared `AssetAPI` (`includes/assetAPI.php`). Page scripts live in `admin/js/`, and styles in `admin/css/` (compiled from `swatch_admin.scss`, which shares tokens through `_admin-tokens.scss`).
 

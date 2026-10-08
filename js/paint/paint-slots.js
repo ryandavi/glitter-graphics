@@ -8,7 +8,10 @@
 //
 // A slot declaration:
 //   key            stable id; also the export source-key suffix and span key
-//   role           'fill' | 'border' | 'shadow' | 'background' | 'bevel' | 'sparkles'
+//   role           'fill' | 'stroke' | 'border' | 'shadow' | 'background' | 'bevel' |
+//                  'sparkles'. A stroke is the line a path is drawn with: part
+//                  of the artwork like a fill, switched on and off like an
+//                  effect.
 //   path           where the slot object lives on the layer ('textData.fill')
 //   enabledPath    optional toggle that must be truthy for the slot to count
 //   draftPath      optional parked copy kept while the effect is switched off
@@ -45,6 +48,16 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 		widthPx: { suffix: 'Width', geometry: true, documentScale: 'effect' },
 		dotSpacingPx: { suffix: 'DotSpacing', geometry: true, documentScale: 'effect' }
 	},
+	// Canvas pixels, like outline width. Ornament sizes are multiples of the
+	// stroke width, so they follow it without a scale class of their own.
+	stroke: {
+		widthPx: { field: 'strokeWidth', suffix: 'Width', geometry: true, documentScale: 'effect' },
+		dashPx: { field: 'strokeDash', suffix: 'Dash', geometry: true, documentScale: 'effect' },
+		gapPx: { field: 'strokeGap', suffix: 'Gap', geometry: true, documentScale: 'effect' },
+		dashOffsetPx: { field: 'strokeDashOffset', suffix: 'DashOffset', geometry: true, documentScale: 'effect' },
+		startSize: { field: 'strokeOrnamentSize', suffix: 'StartSize', factor: 100, geometry: true },
+		endSize: { field: 'strokeOrnamentSize', suffix: 'EndSize', factor: 100, geometry: true }
+	},
 	shadow: {
 		castLengthRatio: { suffix: 'CastLength', factor: 100, geometry: true },
 		castLeanRatio: { suffix: 'CastLean', factor: 100, geometry: true },
@@ -74,7 +87,7 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 	}
 });
 
-const PAINT_SLOT_ROLES = Object.freeze(['fill', 'border', 'shadow', 'background', 'bevel', 'sparkles']);
+const PAINT_SLOT_ROLES = Object.freeze(['fill', 'stroke', 'border', 'shadow', 'background', 'bevel', 'sparkles']);
 
 // Kept for callers that read slot paths; field paths use the same format.
 const readPaintSlotPath = readFieldPath;
@@ -133,12 +146,12 @@ function getPaintSlotFieldDefault(definition, path, fallback) {
 	return definition?.fields.find((binding) => binding.path === path)?.spec?.value ?? fallback;
 }
 
-// A zero-width border or a zero-count sparkles slot is present (it keeps its
+// A zero-width border or stroke or a zero-count sparkles slot is present (it keeps its
 // settings and badge) but draws nothing. Every other slot draws whenever it
 // is present.
 function paintSlotRenders(definition, data) {
 	if (!data) return false;
-	if (definition.role === 'border') return Number(data.widthPx) > 0;
+	if (definition.role === 'border' || definition.role === 'stroke') return Number(data.widthPx) > 0;
 	if (definition.role === 'sparkles') return Number(data.count) > 0;
 	return true;
 }

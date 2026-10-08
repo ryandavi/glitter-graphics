@@ -118,7 +118,7 @@ function renderPickerStrip(state = {}) {
 // (Frame, Sparkles): arm a slot, route the next gallery pick into it, and
 // drive the gallery strip while such a layer is active. Registered with the
 // PickerRegistry like the managers' own sessions. Unarmed picks go to
-// defaultSlot.
+// defaultSlot: a slot key, or (layer) => key where it depends on the layer.
 class SlotGlitterPicker {
 	constructor(editor, { type, defaultSlot, section, typeWord, ensureSlot, onPicked }) {
 		this.editor = editor;
@@ -152,8 +152,12 @@ class SlotGlitterPicker {
 		return pickerSelectionTarget(this, layer);
 	}
 
+	getDefaultSlot(layer) {
+		return typeof this.defaultSlot === 'function' ? this.defaultSlot(layer) : this.defaultSlot;
+	}
+
 	getTarget(layer) {
-		return this.getArmedSlot(layer) || this.defaultSlot;
+		return this.getArmedSlot(layer) || this.getDefaultSlot(layer);
 	}
 
 	resolveSelectedGlitterId(layer) {
@@ -189,7 +193,7 @@ class SlotGlitterPicker {
 	}
 
 	handlePickerDone() {
-		const slot = this.pickerSession?.slot || this.defaultSlot;
+		const slot = this.pickerSession?.slot || this.getDefaultSlot(this.getLayer());
 		this.closePickerSession();
 		returnFromPickerToProperties(this.editor, { section: this.section, focusId: getPaintSlotChipId(this.type, slot) });
 	}

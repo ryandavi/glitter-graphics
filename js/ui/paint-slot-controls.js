@@ -174,6 +174,11 @@ const SLOT_OPTION_CONTROLS = Object.freeze({
 		{ key: 'placement', geometry: true, read: getBorderPlacement, options: { outside: 'PositionOutside', center: 'PositionCenter', inside: 'PositionInside' } },
 		{ key: 'drawOrder', read: getBorderDrawOrder, options: { behind: 'OrderBehind', front: 'OrderFront' } }
 	]),
+	stroke: Object.freeze([
+		{ key: 'edgeStyle', geometry: true, read: getBorderEdgeStyle, options: Object.fromEntries(getOptions('borderEdgeStyle').map(({ value, suffix }) => [value, suffix])) },
+		{ key: 'cap', geometry: true, read: (data) => data.cap, options: Object.fromEntries(getOptions('strokeCap').map(({ value, suffix }) => [value, suffix])) },
+		{ key: 'dashStyle', geometry: true, read: (data) => data.dashStyle, options: Object.fromEntries(getOptions('strokeDashStyle').map(({ value, suffix }) => [value, suffix])) }
+	]),
 	sparkles: Object.freeze([
 		{ key: 'emitter', read: (data) => data.emitter, get options() { return optionControlSuffixes('sparkleEmitter', 'Emitter'); } },
 		{ key: 'style', read: (data) => data.style, get options() { return optionControlSuffixes('sparkleStyle', 'Style'); } },

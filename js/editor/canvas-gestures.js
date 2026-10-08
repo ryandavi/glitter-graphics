@@ -1,4 +1,14 @@
 const CANVAS_GESTURE_METHODS = {
+	// The kind of the edit session that owns the canvas and keyboard right
+	// now ('textEdit', 'pathEdit'), or null. Context toolbars and commands
+	// that must not fire inside a session read it.
+	getActiveSession() {
+		if (this.textGlitterManager?.editSession) return 'textEdit';
+		if (this.pathEdit?.session) return 'pathEdit';
+		return null;
+	}
+
+,
 togglePreview() {
 		if (this.autoGlitterManager?.isSessionActive()) return;
 		this.showAllLayers = !this.showAllLayers;
@@ -79,6 +89,11 @@ togglePreview() {
 				this.startSelectionMarquee(e);
 				return;
 			}
+			// A tool that owns its presses (the Pen).
+			if (TOOLS[this.currentTool]?.onCanvasPointerDown && this.originalImage && e.button === 0) {
+				TOOLS[this.currentTool].onCanvasPointerDown(this, e);
+				return;
+			}
 			// Shape tool: drag out the initial size (Photoshop-style); a plain click
 			// with no drag falls back to a default-size shape at the click point.
 			if (TOOLS[this.currentTool]?.onCanvasDrag && this.originalImage && e.button === 0) {
@@ -90,6 +105,15 @@ togglePreview() {
 
 		this.previewContainer.addEventListener('click', (e) => {
 			this.handlePreviewContainerClick(e);
+		});
+
+		// With Select, a double-click opens the editor of a type that has one
+		// (LAYER_UI_CONFIG onDoubleClick: a path's points).
+		this.previewContainer.addEventListener('dblclick', (e) => {
+			if (this.currentTool !== ToolType.SELECT || !this.originalImage || e.target.closest('.ui-ignore-gestures')) return;
+			const point = this.viewport.screenToCanvas(e.clientX, e.clientY);
+			const layer = this.layerManager.getTopVisibleLayerAtPoint(point.x, point.y, { includeBase: false, excludeLocked: true });
+			if (layer) LAYER_UI_CONFIG[layer.type]?.onDoubleClick?.(this, layer);
 		});
 
 		// The move cursor for a canvas-picked layer follows the same test as the
@@ -295,9 +319,32 @@ togglePreview() {
 	}
 
 ,
+	// Where a line-shaped creation drag ends: the pointer, or with Shift the
+	// nearest angle step around the start.
+	getCreationLineEnd(clientX, clientY, useCanvas = false, shiftKey = false) {
+		const session = this.creationGesture;
+		const start = useCanvas ? session.startCanvas : session.startScreen;
+		const end = useCanvas
+			? this.viewport.screenToCanvas(clientX, clientY)
+			: { x: clientX - session.containerRect.left, y: clientY - session.containerRect.top };
+		return shiftKey ? PathGeometry.constrainAngle(start, end, CONFIG.tools.path.line.angleStepDeg) : end;
+	}
+
+,
 	updateCreationGesture(clientX, clientY, shiftKey = false) {
 		const session = this.creationGesture;
 		if (!session) {
+			return;
+		}
+
+		if (TOOLS[this.currentTool]?.dragPreview === 'line') {
+			const start = session.startScreen;
+			const end = this.getCreationLineEnd(clientX, clientY, false, shiftKey);
+			session.preview.classList.add('is-line');
+			session.preview.style.left = `${start.x}px`;
+			session.preview.style.top = `${start.y}px`;
+			session.preview.style.width = `${Math.hypot(end.x - start.x, end.y - start.y)}px`;
+			session.preview.style.transform = `rotate(${Math.atan2(end.y - start.y, end.x - start.x)}rad)`;
 			return;
 		}
 
@@ -331,6 +378,7 @@ togglePreview() {
 		}
 
 		const box = this.getCreationBox(clientX, clientY, true, Boolean(options.shiftKey));
+		const end = this.getCreationLineEnd(clientX, clientY, true, Boolean(options.shiftKey));
 		const suppressNextClick = options.suppressNextClick ?? session.suppressNextClick;
 
 		this.cancelCreationGesture();
@@ -340,7 +388,7 @@ togglePreview() {
 		}
 
 		const isClick = Math.max(box.width, box.height) < CONFIG.ui.gestures.creationDragThreshold;
-		const layer = TOOLS[this.currentTool]?.onCanvasDrag?.(this, { box, isClick, start: session.startCanvas });
+		const layer = TOOLS[this.currentTool]?.onCanvasDrag?.(this, { box, isClick, start: session.startCanvas, end, shiftKey: Boolean(options.shiftKey) });
 
 		if (suppressNextClick) {
 			this.ignoreNextClick = true;

@@ -928,6 +928,9 @@ const PANEL_SCHEMAS = {
 							name: 'shapeAssetName', badges: 'shapeAssetBadges', change: 'shapeAssetChange',
 							title: 'Choose another shape', compact: true },
 						{ kind: 'slider', id: 'shapeRadius', slider: 'shapeRadius', rowId: 'shapeRadiusRow', hidden: true }
+					] },
+					{ actions: [
+						{ id: 'shapeConvertToPath', label: 'Convert to path', icon: 'pen', title: 'Turn this shape into a path whose points you can edit with the Pen' }
 					] }
 				] }
 			] },
@@ -993,6 +996,90 @@ const PANEL_SCHEMAS = {
 		],
 		effectsReset: { id: 'resetShapeEffects', title: 'Disable all shape effects and clear their saved settings' },
 		motion: [createAnimationSectionSpec('shape')]
+	},
+	[LayerType.PATH]: {
+		prefix: 'path',
+		sectionPrefix: 'pathSettings',
+		mobileKey: 'path',
+		section: { id: 'pathSettingsSection', icon: 'pen', iconName: 'Path', title: 'Path Properties' },
+		groups: [
+			{ title: 'Content', sections: [
+				{ kind: 'section', title: 'Path', summary: { id: 'pathSummary' }, sets: [
+					{ label: 'Presets', collapse: 'open', rows: [
+						{ kind: 'presetGrid', id: 'pathStrokePresets', label: 'Line presets', classes: 'property-inset stroke-presets' }
+					] },
+					{ actions: [
+						{ id: 'pathEditPoints', label: 'Edit points', icon: 'pen', title: 'Move, add and remove points (Enter, or double-click the path)' },
+						{ id: 'pathToggleClosed', label: 'Close path', title: 'Join the last point to the first, or open a closed path' }
+					] },
+					{ actions: [
+						{ id: 'pathReverse', label: 'Reverse', title: 'Swap the start and end of the path' },
+						{ id: 'pathSwapEnds', label: 'Swap ends', title: 'Swap the shapes on the start and end of the line' }
+					] }
+				] },
+				// One selected point, while its points are being edited
+				// (js/ui/path-edit.js).
+				{ kind: 'section', id: 'pathPointSection', title: 'Point', hidden: true, sets: [
+					{ rows: [
+						{ kind: 'numberPair', label: 'Position', items: [
+							{ id: 'pathPointX', mark: 'X', label: 'Point X', unit: 'px', step: 1 },
+							{ id: 'pathPointY', mark: 'Y', label: 'Point Y', unit: 'px', step: 1 }
+						] },
+						{ kind: 'segmented', label: 'Type', get options() {
+							return getOptions('pathPointType').map(({ value, label, icon }) => ({ id: `pathPointType${panelCap(value)}`, value, label, icon }));
+						} }
+					] },
+					{ actions: [{ id: 'pathPointDelete', label: 'Delete point', icon: 'trash' }] }
+				] }
+			] },
+			{ title: 'Appearance', sections: [
+				createLayerSectionSpec('pathLayerOpacity', 'pathLayerBlendMode'),
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'pathFill', title: 'Fill',
+					texturePosition: true,
+					modes: ['none', 'glitter', 'solid'], activeMode: 'none',
+					color: '#ff66cc', chipTitle: 'Choose fill glitter' },
+				{ kind: 'paintSlot', slot: 'stroke', idPrefix: 'pathStroke', title: 'Stroke',
+					toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
+					color: CONFIG.tools.path.stroke.color, chipTitle: 'Choose stroke glitter',
+					sets: [
+						{ label: 'Line', rows: [
+							{ kind: 'slider', id: 'pathStrokeWidth', slider: 'strokeWidth' },
+							{ kind: 'segmented', label: 'Edges', revert: true, get options() {
+								return createBorderEdgeOptions('pathStroke').filter((option) => option.value !== 'hard');
+							} },
+							{ kind: 'segmented', label: 'Cap', rowId: 'pathStrokeCapRow', revert: true, get options() { return getOptions('strokeCap').map(({ value, label, suffix, icon }) => ({ id: `pathStroke${suffix}`, value, label, icon, active: value === CONFIG.tools.path.stroke.cap })); } }
+						] },
+						{ label: 'Dashes', rows: [
+							{ kind: 'segmented', label: 'Style', revert: true, get options() {
+								return getOptions('strokeDashStyle').map(({ value, label, suffix }) => ({ id: `pathStroke${suffix}`, value, label, active: value === 'solid' }));
+							} },
+							{ kind: 'slider', id: 'pathStrokeDash', slider: 'strokeDash' },
+							{ kind: 'slider', id: 'pathStrokeGap', slider: 'strokeGap' },
+							{ kind: 'slider', id: 'pathStrokeDashOffset', slider: 'strokeDashOffset', title: 'Slides the dashes along the line' }
+						] },
+						{ id: 'pathStrokeEnds', label: 'Ends', rows: [
+							{ kind: 'labeled', label: 'Start', stacked: true, control: { kind: 'presetGrid', id: 'pathStrokeStartShapes', label: 'Start of line', classes: 'property-inset stroke-ornaments' } },
+							{ kind: 'slider', id: 'pathStrokeStartSize', slider: 'strokeOrnamentSize', label: 'Start size', title: 'Size of the start shape, as a share of the line width' },
+							{ kind: 'labeled', label: 'End', stacked: true, control: { kind: 'presetGrid', id: 'pathStrokeEndShapes', label: 'End of line', classes: 'property-inset stroke-ornaments' } },
+							{ kind: 'slider', id: 'pathStrokeEndSize', slider: 'strokeOrnamentSize', label: 'End size', title: 'Size of the end shape, as a share of the line width' }
+						] }
+					] }
+			] },
+			{ title: 'Layout', sections: [{ kind: 'transform' }] }
+		],
+		effects: [
+			createOutlineSectionSpec('pathBorder',
+				[{ kind: 'slider', id: 'pathBorderWidth', slider: 'borderWidth' }],
+				[
+					...createOutlinePlacementRows('pathBorder'),
+					{ kind: 'toggle', id: 'pathBorderFillEnclosed', label: 'Fill enclosed areas', title: 'Fill transparent areas that are completely enclosed by the path' }
+				]),
+			createShadowSectionSpec('pathShadow'),
+			...createBevelSectionSpecs('pathBevel'),
+			createSparklesSectionSpec('pathSparkles')
+		],
+		effectsReset: { id: 'resetPathEffects', title: 'Disable all path effects and clear their saved settings' },
+		motion: [createAnimationSectionSpec('path')]
 	},
 	// The New Canvas modal's form. Its modal body carries `.property-panel`, so
 	// this headerless section renders the same sections and rows as the

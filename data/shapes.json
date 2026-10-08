@@ -35,11 +35,18 @@
 			"label": "Circle",
 			"viewBox": 24,
 			"uses": [
-				"shape"
+				"shape",
+				"ornament"
 			],
 			"category": "basic",
 			"shapeOrder": 0,
-			"primitive": "circle"
+			"primitive": "circle",
+			"ornamentOrder": 4,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 0
+			}
 		},
 		{
 			"id": "square",
@@ -47,34 +54,59 @@
 			"viewBox": 24,
 			"uses": [
 				"shape",
-				"brush"
+				"brush",
+				"ornament"
 			],
 			"category": "basic",
 			"shapeOrder": 1,
 			"brushOrder": 1,
-			"primitive": "square"
+			"primitive": "square",
+			"ornamentOrder": 5,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 0
+			}
 		},
 		{
 			"id": "triangle",
 			"label": "Triangle",
 			"viewBox": 24,
 			"uses": [
-				"shape"
+				"shape",
+				"ornament"
 			],
 			"category": "basic",
 			"shapeOrder": 2,
-			"svgPath": "M12 2 L22 21 L2 21 Z"
+			"svgPath": "M12 2 L22 21 L2 21 Z",
+			"ornamentOrder": 2,
+			"ornament": {
+				"tip": [
+					12,
+					2
+				],
+				"anchor": "tip",
+				"trim": 0.8,
+				"angle": -90
+			}
 		},
 		{
 			"id": "diamond",
 			"label": "Diamond",
 			"viewBox": 24,
 			"uses": [
-				"shape"
+				"shape",
+				"ornament"
 			],
 			"category": "basic",
 			"shapeOrder": 3,
-			"svgPath": "M12 1 L22 12 L12 23 L2 12 Z"
+			"svgPath": "M12 1 L22 12 L12 23 L2 12 Z",
+			"ornamentOrder": 3,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 0
+			}
 		},
 		{
 			"id": "pentagon",
@@ -121,12 +153,19 @@
 			"viewBox": 24,
 			"uses": [
 				"shape",
-				"brush"
+				"brush",
+				"ornament"
 			],
 			"category": "stars-bursts",
 			"shapeOrder": 8,
 			"brushOrder": 3,
-			"svgPath": "M12 2 L14.7 8.6 L21.8 9.2 L16.4 13.8 L18.1 20.8 L12 17 L5.9 20.8 L7.6 13.8 L2.2 9.2 L9.3 8.6 Z"
+			"svgPath": "M12 2 L14.7 8.6 L21.8 9.2 L16.4 13.8 L18.1 20.8 L12 17 L5.9 20.8 L7.6 13.8 L2.2 9.2 L9.3 8.6 Z",
+			"ornamentOrder": 8,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 0
+			}
 		},
 		{
 			"id": "puffyStar",
@@ -155,11 +194,18 @@
 			"label": "Sparkle",
 			"viewBox": 24,
 			"uses": [
-				"shape"
+				"shape",
+				"ornament"
 			],
 			"category": "stars-bursts",
 			"shapeOrder": 11,
-			"svgPath": "M24 12c-8 2.21-9.79 4-12 12-2.21-8-4-9.79-12-12C8 9.79 9.79 8 12 0c2.21 8 4 9.79 12 12Z"
+			"svgPath": "M24 12c-8 2.21-9.79 4-12 12-2.21-8-4-9.79-12-12C8 9.79 9.79 8 12 0c2.21 8 4 9.79 12 12Z",
+			"ornamentOrder": 9,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 0
+			}
 		},
 		{
 			"id": "sunburst",
@@ -223,12 +269,19 @@
 			"viewBox": 24,
 			"uses": [
 				"shape",
-				"brush"
+				"brush",
+				"ornament"
 			],
 			"category": "hearts-flowers",
 			"shapeOrder": 16,
 			"brushOrder": 4,
-			"svgPath": "M12 21 C12 21 3 14.6 3 8.8 C3 5.6 5.4 3.5 8 3.5 C10 3.5 11.4 4.8 12 6 C12.6 4.8 14 3.5 16 3.5 C18.6 3.5 21 5.6 21 8.8 C21 14.6 12 21 12 21 Z"
+			"svgPath": "M12 21 C12 21 3 14.6 3 8.8 C3 5.6 5.4 3.5 8 3.5 C10 3.5 11.4 4.8 12 6 C12.6 4.8 14 3.5 16 3.5 C18.6 3.5 21 5.6 21 8.8 C21 14.6 12 21 12 21 Z",
+			"ornamentOrder": 10,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 90
+			}
 		},
 		{
 			"id": "rounderHeart",
@@ -610,6 +663,78 @@
 			],
 			"brushOrder": 2,
 			"primitive": "calligraphy"
+		},
+		{
+			"id": "arrowHead",
+			"label": "Arrow",
+			"viewBox": 24,
+			"uses": [
+				"ornament"
+			],
+			"ornamentOrder": 0,
+			"ornament": {
+				"tip": [
+					22,
+					12
+				],
+				"anchor": "tip",
+				"trim": 0.7,
+				"angle": 0
+			},
+			"svgPath": "M22 12 L4 3 L8 12 L4 21 Z"
+		},
+		{
+			"id": "openArrow",
+			"label": "Open Arrow",
+			"viewBox": 24,
+			"uses": [
+				"ornament"
+			],
+			"ornamentOrder": 1,
+			"ornament": {
+				"tip": [
+					22,
+					12
+				],
+				"anchor": "tip",
+				"trim": 0.2,
+				"angle": 0
+			},
+			"svgPath": "M22 12 L6.5 2.5 L4.5 5.5 L15 12 L4.5 18.5 L6.5 21.5 Z"
+		},
+		{
+			"id": "barEnd",
+			"label": "Bar",
+			"viewBox": 24,
+			"uses": [
+				"ornament"
+			],
+			"ornamentOrder": 6,
+			"ornament": {
+				"anchor": "center",
+				"trim": 0,
+				"angle": 0
+			},
+			"svgPath": "M10 2 L14 2 L14 22 L10 22 Z"
+		},
+		{
+			"id": "chevronEnd",
+			"label": "Chevron",
+			"viewBox": 24,
+			"uses": [
+				"ornament"
+			],
+			"ornamentOrder": 7,
+			"ornament": {
+				"tip": [
+					19,
+					12
+				],
+				"anchor": "tip",
+				"trim": 0.3,
+				"angle": 0
+			},
+			"svgPath": "M9 2 L19 12 L9 22 L5 22 L15 12 L5 2 Z"
 		}
 	]
 }

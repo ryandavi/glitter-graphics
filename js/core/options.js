@@ -38,6 +38,23 @@ defineOptions('borderEdgeStyle', [
 	{ value: 'hard', label: 'Pixel', suffix: 'EdgeHard' }
 ]);
 
+// A stroke's joins reuse borderEdgeStyle (Smooth, Sharp); these are its own.
+defineOptions('strokeCap', [
+	{ value: 'flat', label: 'Flat', suffix: 'CapFlat', icon: 'cap-flat' },
+	{ value: 'round', label: 'Round', suffix: 'CapRound', icon: 'cap-round' },
+	{ value: 'square', label: 'Square', suffix: 'CapSquare', icon: 'cap-square' }
+]);
+defineOptions('strokeDashStyle', [
+	{ value: 'solid', label: 'Solid', suffix: 'DashSolid' },
+	{ value: 'dashed', label: 'Dashed', suffix: 'DashDashed' },
+	{ value: 'dotted', label: 'Dotted', suffix: 'DashDotted' }
+]);
+defineOptions('pathPointType', [
+	{ value: 'corner', label: 'Corner', icon: 'point-corner' },
+	{ value: 'smooth', label: 'Smooth', icon: 'point-smooth' },
+	{ value: 'mirrored', label: 'Mirrored', icon: 'point-mirrored' }
+]);
+
 defineOptions('paintMode', [
 	{ value: 'none', label: 'None' },
 	{ value: 'solid', label: 'Color' },

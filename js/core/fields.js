@@ -86,6 +86,12 @@ const FIELDS = Object.freeze({
 	textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, step: 1, value: 4, cost: 'raster' },
 	stickerOutlineWidth: { label: 'Width', unit: 'px', min: 1, max: 24, step: 1, value: 3, cost: 'raster' },
 	borderDotSpacing: { label: 'Dot spacing', unit: 'px', min: 1, max: 60, step: 1, value: 10, cost: 'raster' },
+	strokeWidth: { label: 'Width', unit: 'px', min: 1, max: 100, step: 1, value: 6, cost: 'raster' },
+	strokeDash: { label: 'Dash', unit: 'px', min: 1, max: 200, step: 1, value: 16, cost: 'raster' },
+	strokeGap: { label: 'Gap', unit: 'px', min: 1, max: 200, step: 1, value: 12, cost: 'raster' },
+	strokeDashOffset: { label: 'Dash offset', unit: 'px', min: 0, max: 200, step: 1, value: 0, cost: 'raster' },
+	// Ornament size as a multiple of the stroke width, in percent.
+	strokeOrnamentSize: { label: 'Size', unit: '%', min: 100, max: 1000, step: 10, value: 400, cost: 'raster' },
 	shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, step: 1, value: 0, cost: 'raster' },
 	shapeImageOffsetX: { label: 'Horizontal offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	shapeImageOffsetY: { label: 'Vertical offset', unit: '%', min: 0, max: 100, step: 1, value: 50 },
