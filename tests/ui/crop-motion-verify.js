@@ -44,12 +44,53 @@ async function main() {
 			const dx = -matrix.e, dy = matrix.f;
 			const canvasMove = { x: dx * Math.cos(rad) - dy * Math.sin(rad), y: dx * Math.sin(rad) + dy * Math.cos(rad) };
 			editor.saveState('Fixture');
-			return { id: layer.id, preview, exported, move, canvasMove, position: { ...layer.transform.position } };
+			const copies = wrapper._motionCopies.map((copy) => {
+				const matrix = new DOMMatrix(copy.style.transform);
+				const dx = -matrix.e, dy = matrix.f;
+				return { x: dx * Math.cos(rad) - dy * Math.sin(rad), y: dx * Math.sin(rad) + dy * Math.cos(rad) };
+			});
+			return { id: layer.id, preview, exported, move, canvasMove, copies, expectedCopies: sample.copies.filter(({ x, y }) => Math.abs(x) + Math.abs(y) > 1e-6).map(({ x, y }) => ({ x: move.x + x, y: move.y + y })), position: { ...layer.transform.position } };
 		});
 		assert.deepStrictEqual(setup.preview, setup.exported, `preview/export context differs: ${JSON.stringify({ preview: setup.preview, exported: setup.exported })}`);
 		assert(Math.hypot(setup.move.x - setup.canvasMove.x, setup.move.y - setup.canvasMove.y) < 0.001, 'canvas-space moves differ');
+		assert.strictEqual(setup.copies.length, 2);
+		setup.copies.forEach((copy, index) => assert(Math.hypot(copy.x - setup.expectedCopies[index].x, copy.y - setup.expectedCopies[index].y) < 0.001, 'marquee copy preview/export offsets differ'));
+		assert(await page.evaluate(() => {
+			const source = document.createElement('canvas'); source.width = 80; source.height = 40;
+			source.getContext('2d').fillRect(0, 0, 80, 40);
+			const output = document.createElement('canvas'); output.width = 320; output.height = 240;
+			const layer = { id: 'copy-fixture', type: LayerType.SHAPE, opacity: 100, transform: { position: { x: 160, y: 120 }, scale: { x: 100, y: 100 }, rotation: 0, flipX: false, flipY: false } };
+			const context = GlitterAnimation.createSamplingContext({ area: { width: 320, height: 240 }, rest: { left: 120, top: 100, right: 200, bottom: 140 } });
+			const animation = GlitterAnimation.normalizeAnimation({ type: 'marquee', angle: 0 });
+			editor.sceneCompositor._activeLayerAnimation = { layer, sample: GlitterAnimation.sampleAt(animation, animation.periodMs / 2, context) };
+			try { editor.sceneCompositor._drawTransformedCanvas(output.getContext('2d'), source, layer, 80, 40); }
+			finally { editor.sceneCompositor._activeLayerAnimation = null; }
+			const alpha = (x) => output.getContext('2d').getImageData(x, 120, 1, 1).data[3];
+			return alpha(0) === 255 && alpha(319) === 255 && alpha(160) === 0;
+		}), 'export omitted the incoming marquee copy');
 		await page.keyboard.press('c');
 		assert(await page.evaluate(() => editor.getActiveSession() === 'crop'));
+		const cropSnap = await page.evaluate(() => {
+			PREFERENCES.set('snappingEnabled', true);
+			editor.canvasBounds.setRect({ x: 30, y: 30, width: 100, height: 80 });
+			const box = editor.previewWrapper.getBoundingClientRect();
+			const zoom = editor.viewport.currentZoom;
+			const start = { x: box.left + 80 * zoom, y: box.top + 70 * zoom };
+			const end = { x: box.left + 159 * zoom, y: box.top + 119 * zoom };
+			editor.cropEdit.press({ clientX: start.x, clientY: start.y, pointerType: 'mouse' });
+			editor.cropEdit.move({ clientX: end.x, clientY: end.y, pointerType: 'mouse' });
+			const rect = { ...editor.canvasBounds.rect };
+			editor.cropEdit.release();
+			editor.canvasBounds.setRect({ x: 30, y: 30, width: 100, height: 80 });
+			editor.cropEdit.press({ clientX: start.x, clientY: start.y, pointerType: 'mouse' });
+			editor.cropEdit.move(Object.assign(Object.create({ ctrlKey: true }), { clientX: end.x, clientY: end.y, pointerType: 'mouse' }));
+			const bypassed = { ...editor.canvasBounds.rect };
+			editor.cropEdit.release();
+			editor.canvasBounds.setRect({ x: 0, y: 0, width: 320, height: 240 });
+			return { rect, bypassed };
+		});
+		assert.deepStrictEqual(cropSnap.rect, { x: 110, y: 80, width: 100, height: 80 }, 'crop center did not snap to canvas center');
+		assert.deepStrictEqual(cropSnap.bypassed, { x: 109, y: 79, width: 100, height: 80 }, 'Ctrl did not bypass crop snapping');
 		await page.locator('#canvasSizeWidth').fill('200');
 		assert.strictEqual(await page.evaluate(() => editor.canvasBounds.rect.width), 200);
 		await page.evaluate(() => document.activeElement.blur());

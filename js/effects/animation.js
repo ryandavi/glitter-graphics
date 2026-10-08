@@ -65,17 +65,19 @@ const GlitterAnimation = (() => {
 		}, { label: 'Flip', group: 'Movement', fields: ['angle', 'turns'], activeWhen: (data) => data.turns !== 0 }),
 		zoom: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { label: 'Zoom', group: 'Movement', fields: ['amount'] }),
 		ping: motion(({ out, data, p }) => { out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; }, { label: 'Ping', group: 'Movement', fields: ['radius', 'opacityFloor'], activeWhen: (data) => data.radius !== 0 }),
-		// The travel axis separates both boxes at the wrap, including shadows.
-		marquee: motion(wrapMotion(), { label: 'Marquee', group: 'Movement', fields: ['angle'], needsBounds: true, offCanvas: true, activeWhen: () => true }),
+		// Repeated copies exchange places at the wrap, including shadows.
+		marquee: motion(wrapMotion({ repeat: true }), { label: 'Marquee', group: 'Movement', fields: ['angle'], needsBounds: true, offCanvas: true, activeWhen: () => true }),
 		fall: motion(wrapMotion({ angle: 90 }), { label: 'Fall', group: 'Movement', targets: ['particle'], needsBounds: true, activeWhen: () => true }),
 		rise: motion(wrapMotion({ angle: 270 }), { label: 'Rise', group: 'Movement', targets: ['particle'], needsBounds: true, activeWhen: () => true }),
 		ricochet: motion(({ out, data, options, p, angle }) => {
 			const room = [options.area.width - (options.rest.right - options.rest.left), options.area.height - (options.rest.bottom - options.rest.top)];
 			const turns = Math.max(1, Math.round(data.turns));
 			const longest = Math.max(...room);
+			const components = [Math.abs(Math.cos(angle)), Math.abs(Math.sin(angle))].map((value) => value < 1e-6 ? 0 : value);
+			const smallest = Math.min(...components.filter((value) => value > 0));
 			['tx', 'ty'].forEach((key, axis) => {
-				if (room[axis] <= 0) return;
-				const trips = Math.min(data.maxTrips, Math.max(1, Math.round(turns * longest / room[axis])));
+				if (room[axis] <= 0 || !components[axis]) return;
+				const trips = Math.min(data.maxTrips, Math.max(1, Math.round(turns * longest / room[axis] * components[axis] / smallest)));
 				const direction = (axis ? Math.sin(angle) : Math.cos(angle)) < 0 ? -1 : 1;
 				out[key] = reflect(axis ? options.rest.top : options.rest.left, room[axis], trips * direction, p);
 			});
@@ -128,7 +130,7 @@ const GlitterAnimation = (() => {
 		return room > 0 ? room - Math.abs(mod(start + 2 * room * trips * progress, 2 * room) - room) - start : 0;
 	}
 
-	function wrapMotion({ angle: fixedAngle } = {}) {
+	function wrapMotion({ angle: fixedAngle, repeat = false } = {}) {
 		return ({ out, data, options, p }) => {
 			const angle = (fixedAngle ?? data.angle) * Math.PI / 180;
 			const dx = Math.cos(angle), dy = Math.sin(angle);
@@ -138,9 +140,11 @@ const GlitterAnimation = (() => {
 			};
 			const [cMin, cMax] = project({ left: 0, top: 0, right: options.area.width, bottom: options.area.height });
 			const [lMin, lMax] = project(options.restVisual);
-			const offset = wrap(lMax - cMin, cMax - cMin + lMax - lMin, p);
+			const span = repeat ? Math.max(cMax - cMin, lMax - lMin) : cMax - cMin + lMax - lMin;
+			const offset = wrap(lMax - cMin, span, p);
 			out.tx = dx * offset;
 			out.ty = dy * offset;
+			if (repeat) out.copies = [0, -1, 1].map((index) => ({ x: dx * span * index, y: dy * span * index }));
 		};
 	}
 
@@ -331,6 +335,13 @@ const GlitterAnimation = (() => {
 			(composed, sample) => multiplyMatrices(composed, sample.matrix || sampleMatrix(sample)),
 			{ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }
 		);
+		let copies = [{ x: 0, y: 0 }];
+		let preceding = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+		active.forEach((sample) => {
+			if (sample.copies) copies = copies.flatMap((copy) => sample.copies.map(({ x, y }) => ({ x: copy.x + preceding.a * x + preceding.c * y, y: copy.y + preceding.b * x + preceding.d * y })));
+			preceding = multiplyMatrices(preceding, sample.matrix || sampleMatrix(sample));
+		});
+		copies = copies.filter((copy, index) => !copies.slice(0, index).some((other) => Math.hypot(copy.x - other.x, copy.y - other.y) < 1e-6));
 		return {
 			...IDENTITY,
 			tx: matrix.e,
@@ -339,7 +350,8 @@ const GlitterAnimation = (() => {
 			hue: active.reduce((hue, sample) => hue + sample.hue, 0),
 			originX: origin[0],
 			originY: origin[1],
-			matrix
+			matrix,
+			...(active.some((sample) => sample.copies) ? { copies } : {})
 		};
 	}
 

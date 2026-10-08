@@ -205,7 +205,7 @@
 
 	<div class="guide-section">
 		<h3 id="crop-tool">Crop (<kbd class="guide-kbd">C</kbd>)</h3>
-		<p>Press <kbd class="guide-kbd">C</kbd> or choose Crop to edit the canvas bounds. Drag a handle to resize, drag inside to move the bounds, or drag outside to draw new bounds. The Size panel shows the same rectangle and provides ratios, named sizes, fit to artwork or selection, padding, and extension fill. Swap changes orientation.</p>
+		<p>Press <kbd class="guide-kbd">C</kbd> or choose Crop to edit the canvas bounds. Drag a handle to resize, drag inside to move the bounds with edge and center snapping, or drag outside to draw new bounds. The Size panel shows the same rectangle and provides ratios, named sizes, fit to artwork or selection, padding, and extension fill. Swap changes orientation.</p>
 		<p>A locked ratio wins; Shift toggles it for a drag. Alt resizes from the center and Ctrl bypasses snapping. Arrow keys move the crop by one pixel, or ten with Shift. Press Enter or double-click inside to apply; Escape cancels. On touchscreens, use one finger to edit, two to pan or zoom, and Done or Cancel in the context bar. Crop can extend beyond the current canvas, and applying it is one undo step.</p>
 	</div>
 
@@ -780,8 +780,8 @@
 				<div class="guide-item-content">
 					<p><strong>Tune the result</strong> – Use <strong>Speed</strong> and <strong>Intensity</strong> for the main adjustment. Open <strong>Advanced</strong> to control easing, direction, iterations, delay, start offset, fill mode, the shared layer anchor, and motion sampling. Orbit keeps a separate orbit center. Layer animations share one canvas timeline by default; <strong>Start offset</strong> shifts an individual layer around its loop by a percentage.</p>
 					<ul>
-							<li><strong>Marquee</strong> fits its travel to the canvas and wraps after the whole layer, including its shadow, leaves an edge. Angle controls its direction.</li>
-						<li><strong>Ricochet</strong> bounces between canvas edges. Turns counts whole round trips along the roomier axis; Angle chooses the starting quadrant.</li>
+							<li><strong>Marquee</strong> fits its travel to the canvas and repeats visual copies so one enters as another leaves, with a seamless wrap. Angle controls its direction.</li>
+						<li><strong>Ricochet</strong> bounces between canvas edges. Turns controls the number of round trips; Angle controls direction and the balance of horizontal and vertical bounces. Bounce counts use whole round trips to keep the loop seamless.</li>
 						<li><strong>Wander</strong> follows a stable looping path. Intensity controls its range. Ricochet and Wander are also Sparkles behaviors; Wander gives particles a firefly motion.</li>
 						<li><strong>Pixel snap</strong> keeps pixel-art movement aligned to the pixel grid.</li>
 						<li>Finite iterations play the effect a set number of times; continuous motion loops while the layer is visible.</li>

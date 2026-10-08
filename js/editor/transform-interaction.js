@@ -49,7 +49,7 @@ snapTransformPosition(transform, position, options = {}) {
 		const dy = position.y - current.y;
 		const movingX = [metrics.minX + dx, (metrics.minX + metrics.maxX) / 2 + dx, metrics.maxX + dx];
 		const movingY = [metrics.minY + dy, (metrics.minY + metrics.maxY) / 2 + dy, metrics.maxY + dy];
-		const { x: targetsX, y: targetsY } = this.collectSnapTargets('move', [transform.layer.id]);
+		const { x: targetsX, y: targetsY } = this.collectSnapTargets(options.kind || 'move', options.excludedIds || [transform.layer.id]);
 		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
 		const best = (moving, targets) => {
 			let result = null;

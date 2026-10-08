@@ -347,28 +347,6 @@ class SceneCompositor {
 			? this._activeLayerAnimation.sample
 			: null;
 
-		ctx.save();
-		ctx.imageSmoothingEnabled = smooth;
-		ctx.globalAlpha *= layer.opacity / 100;
-		if (animation) {
-			ctx.globalAlpha *= animation.opacity;
-			const { move } = GlitterAnimation.splitSample(animation);
-			ctx.translate(move.x, move.y);
-		}
-		ctx.translate(metrics.centerX, metrics.centerY);
-
-		if (metrics.rotationRad !== 0) {
-			ctx.rotate(metrics.rotationRad);
-		}
-
-		ctx.scale(metrics.signedScaleX / (rasterScale?.x || 1), metrics.signedScaleY / (rasterScale?.y || 1));
-		if (animation) {
-			ctx.translate(-width / 2, -height / 2);
-			const { local: localAnimation } = GlitterAnimation.splitSample(animation);
-			GlitterAnimation.applyToContext(ctx, localAnimation, width, height);
-			ctx.translate(width / 2, height / 2);
-		}
-
 		// Rainbow: rotate hue on the isolated source canvas before it's composited,
 		// mirroring the live-preview wrapper filter. sourceCanvas is rebuilt fresh
 		// every frame, so mutating it in place here is safe.
@@ -379,15 +357,40 @@ class SceneCompositor {
 			sourceCtx.putImageData(pixels, 0, 0);
 		}
 
-		ctx.drawImage(
-			sourceCanvas,
-			-width / 2 - padX,
-			-height / 2 - padY,
-			width + padX * 2,
-			height + padY * 2
-		);
+		for (const copy of animation?.copies || [{ x: 0, y: 0 }]) {
+			ctx.save();
+			ctx.translate(copy.x, copy.y);
+			ctx.imageSmoothingEnabled = smooth;
+			ctx.globalAlpha *= layer.opacity / 100;
+			if (animation) {
+				ctx.globalAlpha *= animation.opacity;
+				const { move } = GlitterAnimation.splitSample(animation);
+				ctx.translate(move.x, move.y);
+			}
+			ctx.translate(metrics.centerX, metrics.centerY);
 
-		ctx.restore();
+			if (metrics.rotationRad !== 0) {
+				ctx.rotate(metrics.rotationRad);
+			}
+
+			ctx.scale(metrics.signedScaleX / (rasterScale?.x || 1), metrics.signedScaleY / (rasterScale?.y || 1));
+			if (animation) {
+				ctx.translate(-width / 2, -height / 2);
+				const { local: localAnimation } = GlitterAnimation.splitSample(animation);
+				GlitterAnimation.applyToContext(ctx, localAnimation, width, height);
+				ctx.translate(width / 2, height / 2);
+			}
+
+			ctx.drawImage(
+				sourceCanvas,
+				-width / 2 - padX,
+				-height / 2 - padY,
+				width + padX * 2,
+				height + padY * 2
+			);
+
+			ctx.restore();
+		}
 	}
 
 	_getAnimationBox(layer, canvasWidth, canvasHeight) {

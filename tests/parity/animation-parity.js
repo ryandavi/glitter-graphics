@@ -141,14 +141,19 @@ for (const angle of [0, 37, 90, 180, 270]) {
 	for (let t = 1; t < 1000; t++) {
 		const next = Animation.sampleAt({ type: 'marquee', angle }, t, bounds);
 		if (Math.hypot(next.tx - previous.tx, next.ty - previous.ty) > 10) {
-			const outside = (pose) => bounds.rest.right + pose.tx <= 1 || bounds.rest.left + pose.tx >= bounds.area.width - 1 || bounds.rest.bottom + pose.ty <= 1 || bounds.rest.top + pose.ty >= bounds.area.height - 1;
-			assert(outside(previous) && outside(next), `marquee ${angle} visible jump`);
+			const nearestCopy = Math.min(...next.copies.map(({ x, y }) => Math.hypot(next.tx + x - previous.tx, next.ty + y - previous.ty)));
+			assert(nearestCopy < 2, `marquee ${angle} replicas did not meet at wrap`);
 			jumped = true;
 		}
 		previous = next;
 	}
 	assert(jumped);
 }
+const square = Animation.createSamplingContext({ area: { width: 400, height: 400 }, rest: { left: 180, top: 180, right: 220, bottom: 220 } });
+const angledBounce = Animation.sampleAt({ type: 'ricochet', angle: 30 }, 125, square);
+assert(!near(Math.abs(angledBounce.tx), Math.abs(angledBounce.ty)), 'square ricochet still follows its diagonal');
+assert.strictEqual(Animation.sampleAt({ type: 'ricochet', angle: 0 }, 125, square).ty, 0);
+assert.strictEqual(Animation.sampleAt({ type: 'ricochet', angle: 90 }, 125, square).tx, 0);
 assert.notDeepStrictEqual(Animation.sampleAt({ type: 'wander' }, 300, { ...bounds, id: 'a' }), Animation.sampleAt({ type: 'wander' }, 300, { ...bounds, id: 'b' }));
 const oversized = Animation.createSamplingContext({ area: { width: 40, height: 400 }, rest: { left: -10, top: 70, right: 90, bottom: 110 } });
 for (let t = 0; t <= 1000; t += 5) {
@@ -172,5 +177,9 @@ assert(Animation.domTransformString(stacked).startsWith('matrix('));
 assert.strictEqual(Animation.normalizeAnimations({ type: 'pulse' }).length, 1);
 assert.strictEqual(Animation.summaryText([{ type: 'pulse' }, { type: 'rotate' }]), '2 animations');
 assert.strictEqual(Animation.includesOffCanvas([{ type: 'move' }, { type: 'marquee' }]), true);
+const repeatStack = Animation.sampleAt([{ type: 'marquee', angle: 0 }, { type: 'marquee', angle: 0 }], 250, bounds);
+assert.strictEqual(repeatStack.copies.length, 5, 'overlapping repeat offsets must draw only once');
+const rotatedRepeat = Animation.sampleAt([{ type: 'rotate', turns: 1, amount: 0 }, { type: 'marquee', angle: 0 }], 250, bounds);
+assert(rotatedRepeat.copies.slice(1).every(({ x, y }) => near(x, 0) && near(Math.abs(y), 640)), 'stacked rotation must rotate repeat offsets');
 
 console.log(`animation-parity: ${types.length} presets passed`);

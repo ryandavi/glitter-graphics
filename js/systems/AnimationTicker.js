@@ -124,6 +124,54 @@ function paintLayerAnimationPreview(layer, elapsed, wrapper, context) {
 	// hue-rotate on the wrapper composes with each child's own static
 	// filter (fill/shadow color adjust) rather than overwriting it.
 	wrapper.style.filter = sample.hue ? `hue-rotate(${sample.hue}deg)` : '';
+	const offsets = (sample.copies || []).filter(({ x, y }) => Math.abs(x) + Math.abs(y) > 1e-6);
+	const copies = wrapper._motionCopies ||= [];
+	while (copies.length > offsets.length) copies.pop().remove();
+	while (copies.length < offsets.length) {
+		const copy = document.createElement('div');
+		copy.className = 'layer-anim-wrapper layer-anim-copy';
+		copy.setAttribute('aria-hidden', 'true');
+		(copies[copies.length - 1] || wrapper).after(copy);
+		copies.push(copy);
+		syncMotionCopyChildren(wrapper, copy);
+	}
+	if (copies.length && !wrapper._motionCopyObserver) {
+		wrapper._motionCopyObserver = new MutationObserver((records) => {
+			if (records.some((record) => record.target !== wrapper || record.type === 'childList')) copies.forEach((copy) => syncMotionCopyChildren(wrapper, copy));
+		});
+		wrapper._motionCopyObserver.observe(wrapper, { subtree: true, attributes: true, childList: true, characterData: true });
+	} else if (!copies.length) {
+		wrapper._motionCopyObserver?.disconnect();
+		wrapper._motionCopyObserver = null;
+	}
+	copies.forEach((copy, index) => {
+		const { x, y } = offsets[index];
+		const tx = domSample.tx + (Math.cos(radians) * x - Math.sin(radians) * y) * (transform.flipX ? -1 : 1);
+		const ty = domSample.ty + (Math.sin(radians) * x + Math.cos(radians) * y) * (transform.flipY ? -1 : 1);
+		copy.style.transform = GlitterAnimation.domTransformString({ ...domSample, tx, ty });
+		copy.style.opacity = wrapper.style.opacity;
+		copy.style.transformOrigin = wrapper.style.transformOrigin;
+		copy.style.filter = wrapper.style.filter;
+	});
+}
+
+// Reconcile the replicas so editing masks and animated particles never restarts GIFs.
+function syncMotionCopyChildren(source, target) {
+	Array.from(source.childNodes).forEach((node, index) => {
+		let copy = target.childNodes[index];
+		if (!copy || copy.nodeType !== node.nodeType || copy.nodeName !== node.nodeName) {
+			const replacement = node.cloneNode(false);
+			if (copy) copy.replaceWith(replacement); else target.appendChild(replacement);
+			copy = replacement;
+		}
+		if (node.nodeType === Node.ELEMENT_NODE) {
+			Array.from(copy.attributes).forEach(({ name }) => { if (name === 'id' || !node.hasAttribute(name)) copy.removeAttribute(name); });
+			Array.from(node.attributes).forEach(({ name, value }) => { if (name !== 'id' && copy.getAttribute(name) !== value) copy.setAttribute(name, value); });
+			syncMotionCopyChildren(node, copy);
+			if (node instanceof HTMLCanvasElement && node.width && node.height) copy.getContext('2d').drawImage(node, 0, 0);
+		} else if (copy.nodeValue !== node.nodeValue) copy.nodeValue = node.nodeValue;
+	});
+	while (target.childNodes.length > source.childNodes.length) target.lastChild.remove();
 }
 
 function animateTransformableLayerPreview(layer, elapsed, wrapper, context) {
@@ -136,6 +184,8 @@ function syncLayerAnimationPreview(element, layer, ticker) {
 	const active = GlitterAnimation.isActive(layer.animations);
 	if (!active) {
 		if (wrapper) {
+			wrapper._motionCopyObserver?.disconnect();
+			wrapper._motionCopies?.forEach((copy) => copy.remove());
 			while (wrapper.firstChild) element.insertBefore(wrapper.firstChild, wrapper);
 			wrapper.remove();
 		}
@@ -148,7 +198,7 @@ function syncLayerAnimationPreview(element, layer, ticker) {
 		element.insertBefore(wrapper, element.firstChild);
 	}
 	Array.from(element.children).forEach((child) => {
-		if (child !== wrapper && !child.matches('.transform-handle-wrapper, .layer-hover-outline')) wrapper.appendChild(child);
+		if (child !== wrapper && !child.matches('.transform-handle-wrapper, .layer-hover-outline, .layer-anim-copy')) wrapper.appendChild(child);
 	});
 	ticker.register(layer.id, {
 		targetId: layer.id,

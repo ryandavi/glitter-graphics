@@ -68,10 +68,13 @@ class CropEditSession {
 		const ratio = locked ? bounds.ratio || { w: drag.rect.width, h: drag.rect.height } : null;
 		if (drag.handle === 'move') {
 			const moved = { x: drag.rect.x + point.x - drag.point.x, y: drag.rect.y + point.y - drag.point.y };
-			const snapped = editor.snapScalePoint(null, moved, { ...input, kind: 'crop', excludedIds: [] });
+			const snapped = editor.snapTransformPosition({
+				getFrameMetrics: () => ({ minX: drag.rect.x, maxX: drag.rect.x + drag.rect.width, minY: drag.rect.y, maxY: drag.rect.y + drag.rect.height }),
+				getTransform: () => ({ position: { x: drag.rect.x, y: drag.rect.y } })
+			}, moved, { ctrlKey: input.ctrlKey, kind: 'crop', excludedIds: [] });
 			bounds.setRect({ ...drag.rect, x: snapped.x, y: snapped.y });
 		} else if (drag.handle === 'draw') {
-			const snapped = editor.snapScalePoint(null, point, { ...input, kind: 'crop', excludedIds: [] });
+			const snapped = editor.snapScalePoint(null, point, { ctrlKey: input.ctrlKey, kind: 'crop', excludedIds: [] });
 			let width = Math.abs(snapped.x - drag.point.x), height = Math.abs(snapped.y - drag.point.y);
 			if (ratio) height = width * ratio.h / ratio.w;
 			bounds.setRect({ x: input.altKey ? drag.point.x - width : snapped.x < drag.point.x ? drag.point.x - width : drag.point.x, y: input.altKey ? drag.point.y - height : snapped.y < drag.point.y ? drag.point.y - height : drag.point.y, width: Math.max(1, width * (input.altKey ? 2 : 1)), height: Math.max(1, height * (input.altKey ? 2 : 1)) });
@@ -82,7 +85,7 @@ class CropEditSession {
 			const center = { x: drag.rect.x + drag.rect.width / 2, y: drag.rect.y + drag.rect.height / 2 };
 			const origin = input.altKey ? center : { x: center.x * 2 - drag.handleStart.x, y: center.y * 2 - drag.handleStart.y };
 			const line = ratio && horizontal && vertical ? { origin, dir: { x: Math.sign(drag.handleStart.x - center.x) * ratio.w, y: Math.sign(drag.handleStart.y - center.y) * ratio.h } } : null;
-			const snapped = editor.snapScalePoint(null, target, { ...input, kind: 'crop', axes: horizontal && vertical ? 'xy' : horizontal ? 'x' : 'y', excludedIds: [], line });
+			const snapped = editor.snapScalePoint(null, target, { ctrlKey: input.ctrlKey, kind: 'crop', axes: horizontal && vertical ? 'xy' : horizontal ? 'x' : 'y', excludedIds: [], line });
 			bounds.setRect(resizeRectFromHandle(drag.rect, drag.handle, snapped, { ratio, fromCenter: input.altKey }));
 		}
 	}
