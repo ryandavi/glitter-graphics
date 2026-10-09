@@ -234,11 +234,9 @@
 	}
 }
 
-// The Smoothing Advanced disclosure is re-parented (by installEffectGradientEditor)
-// to sit beside the glitter source's own Advanced — a module-level sibling, not a
-// child of the editor. It reuses the shared `.advanced-disclosure` treatment
-// verbatim; effect-source.js toggles `hidden` (global `[hidden]` rule hides it).
-// It is gradient-only + Smooth-blend-only.
+// The Smoothing set sits in the section's one Advanced, beside the glitter
+// source's sets, not inside the editor. It is gradient-only and
+// Smooth-blend-only; the mode sync and the editor toggle `hidden`.
 .gradient-advanced .property-value .setting-unit {
 	margin-left: 2px;
 	color: var(--color-text-tertiary);
@@ -397,7 +395,7 @@
 
 .auto-glitter-gallery-empty { display: none; }
 
-.design-panel[data-panel-mode='auto-glitter'] .design-gallery-section:not(.picker-mode) .design-gallery-content {
+.design-panel[data-panel-mode='auto-glitter'] .design-gallery-section:not([data-picker-library]) .design-gallery-content {
 	> :not(.auto-glitter-gallery-empty) { display: none !important; }
 
 	> .auto-glitter-gallery-empty {

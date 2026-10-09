@@ -23,7 +23,7 @@ registerLayerType(LayerType.SHAPE, {
 			draftPath: 'shapeData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'shapeShadow',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -38,12 +38,13 @@ registerLayerType(LayerType.SHAPE, {
 			},
 			key: 'border',
 			role: 'border',
+			label: 'outline',
 			edgeStyles: ['round', 'miter'],
 			path: 'shapeData.border',
 			draftPath: 'shapeData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'shapeBorder',
-			modes: ['glitter', 'solid'],
+			modes: ['glitter', 'solid', 'gradient'],
 			fields: { widthPx: 'borderWidth', dotSpacingPx: 'borderDotSpacing' }
 		},
 		{
@@ -55,7 +56,7 @@ registerLayerType(LayerType.SHAPE, {
 			path: 'shapeData.fill',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'shapeFill',
-			modes: ['none', 'image', 'glitter', 'solid'],
+			modes: ['none', 'image', 'glitter', 'solid', 'gradient'],
 			fields: {
 				imageScalePercent: 'shapeImageScale',
 				offsetXPercent: 'shapeImageOffsetX',
@@ -73,7 +74,7 @@ registerLayerType(LayerType.SHAPE, {
 			enabledPath: 'shapeData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'shapeBevel',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -86,7 +87,7 @@ registerLayerType(LayerType.SHAPE, {
 			enabledPath: 'shapeData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'shapeBevelShade',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -99,7 +100,7 @@ registerLayerType(LayerType.SHAPE, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'shapeSparkles',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.shapeGlitterManager?.getSparkleHost(layer) || null,
@@ -191,9 +192,9 @@ registerLayerType(LayerType.SHAPE, {
 		reset: true
 	},
 	createOptionsKey: 'shapeLayer',
-	// Unlike text/glitter/sticker, tapping the Shape tool repeatedly to place
-	// several shapes shouldn't keep yanking the Design drawer open on mobile.
-	autoOpenDesignDrawerOnCreate: false,
+	// For a shape added from an Add control. The Shape tool places the shape
+	// it already holds and opens nothing, so several can be drawn in a row.
+	openOnCreate: 'asset',
 	mobileCreateBehavior: { skipReload: true },
 	onActivate: (editor, layer) => {
 		const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.SHAPE]);

@@ -20,17 +20,25 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 	}
 }
 
-// The Library shows one asset kind at a time: an armed picker's kind (a
-// glitter slot picker unless the strip names another library). The phone's
-// Library drawer also opens unarmed, on the panel's home kind
-// (LAYER_UI_CONFIG `library`). The section header names the kind; with no
+// The Library bar's text: what the armed session changes and where, or the
+// kind showing. It names a layer, so it is refreshed with the layer list.
+function syncLibraryTitle() {
+	const schema = getAssetBrowserSchema(document.getElementById('designGallerySection')?.dataset.library);
+	const title = document.getElementById('designGalleryTitleText');
+	if (schema && title) title.textContent = describePickerTarget(window.editor) || schema.title;
+}
+
+// The Library shows one asset kind at a time: the armed session's
+// (syncPickerTarget). The phone's Library drawer also opens unarmed, on the
+// panel's home kind (LAYER_UI_CONFIG `library`). The section's bar names what
+// a pick changes while a session is armed, and the kind otherwise; with no
 // kind (nothing selected, or a layer type with no library)
 // syncNoLayerPanelState owns the title.
 function syncLibraryView() {
 	const section = document.getElementById('designGallerySection');
 	if (!section) return null;
 	const home = document.getElementById('designPanel')?.dataset.homeLibrary || '';
-	const kind = section.dataset.pickerLibrary || (section.classList.contains('picker-mode') ? 'glitter' : home);
+	const kind = section.dataset.pickerLibrary || home;
 	const schema = kind ? getAssetBrowserSchema(kind) : null;
 	if (schema) section.dataset.library = schema.prefix;
 	else delete section.dataset.library;
@@ -43,8 +51,7 @@ function syncLibraryView() {
 			host.classList.toggle('visible', active);
 		});
 	});
-	const title = document.getElementById('designGalleryTitleText');
-	if (schema && title) title.textContent = schema.title;
+	syncLibraryTitle();
 	const recolor = document.getElementById('recolorGlitterBtn');
 	if (recolor) {
 		recolor.hidden = schema?.prefix !== 'glitter';
@@ -105,32 +112,4 @@ function setCollapsibleSectionState(section, content, toggle, isOpen) {
 	section?.classList.toggle('is-open', isOpen);
 	content?.classList.toggle('visible', isOpen);
 	toggle?.classList.toggle('collapsed', !isOpen);
-}
-
-// ============================================
-// VALUE + UNIT FORMATTING
-// ============================================
-// Render a numeric setting value with its unit in a muted, smaller span (same
-// look as .input-unit-suffix). Reusable for any value display — assign the
-// result to element.innerHTML. Units: 'px', '%', '°' etc. An empty unit (e.g.
-// Threshold, which is a unitless tolerance) renders just the number.
-function formatPickerTarget(layerName, typeWord) {
-	if (layerName) return `Applying to “${layerName}”`;
-	const label = typeWord.replace(/\b\w/g, (letter) => letter.toUpperCase());
-	return `Current ${label}${/\blayer\b/i.test(typeWord) ? '' : ' Layer'}`;
-}
-
-function formatPickerStripText(layer, slot, typeWord) {
-	return {
-		title: `Choosing ${getPaintSlotLabel(layer.type, slot)} glitter`,
-		detail: formatPickerTarget(layer.name, typeWord)
-	};
-}
-
-function formatAssetPickerStripText(assetType, layerName) {
-	const label = assetType.charAt(0).toUpperCase() + assetType.slice(1);
-	return {
-		title: `Choosing ${assetType}`,
-		detail: layerName ? `Replacing “${layerName}”` : `Current ${label} Layer`
-	};
 }

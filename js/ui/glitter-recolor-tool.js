@@ -191,8 +191,7 @@ class GlitterRecolorController {
 					: null;
 				this.editor.pickers.closeAll();
 				this.previousPicker = previousPicker;
-				pickerOpenSession(this, { slot: 'recolor' });
-				renderPickerStrip(this.getPickerStripState());
+				pickerOpenSession(this, { slot: 'recolor', label: 'Pick a glitter to recolor' });
 				this.libraryButton.setAttribute('aria-pressed', 'true');
 				this.libraryButton.classList.add('active');
 				if (this.editor.mobileManager?.isMobile) this.editor.mobileManager.openDrawer('design');
@@ -216,20 +215,8 @@ class GlitterRecolorController {
 			pickerOpenSession(previous.manager, previous.session);
 		this.libraryButton.setAttribute('aria-pressed', 'false');
 		this.libraryButton.classList.remove('active');
-		renderPickerStrip({ ownsStrip: true, visible: false });
-		this.editor.pickers.managers.forEach((manager) => manager.updatePickerStrip?.());
 		this.editor.updateGlitterSelection();
 		this.library.updateRecolorAvailability();
-	}
-	getPickerStripState() {
-		return {
-			ownsStrip: true,
-			visible: true,
-			armed: true,
-			library: 'glitter',
-			title: 'Pick a glitter to recolor',
-			showDone: false
-		};
 	}
 
 	async pick(item) {

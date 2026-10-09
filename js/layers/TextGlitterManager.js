@@ -79,12 +79,7 @@ class TextGlitterManager {
 			bgMergeDistance: document.getElementById('textBackgroundMergeDistance'),
 			bgPreset: document.getElementById('textBackgroundPreset'),
 			resetEffects: document.getElementById('resetTextEffects'),
-			// D-1c gallery picker strip
 			gallerySection: document.getElementById('designGallerySection'),
-			pickerStrip: document.getElementById('galleryPickerStrip'),
-			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),
-			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
-			pickerStripDone: document.getElementById('galleryPickerStripDone')
 		};
 	}
 
@@ -628,14 +623,14 @@ class TextGlitterManager {
 	armPicker(key) {
 		const layer = this.getActiveTextLayer();
 		if (!layer) return;
-		// A font picker left open (no Done, e.g. a drawer tab back to Edit) owns
-		// the strip and the Library view; a slot pick supersedes it.
+		// A font picker left open (e.g. a drawer tab back to Edit) owns the
+		// Library view; a slot pick supersedes it.
 		this.editor.fontBrowserManager?.closePickerSession();
 		this.ensureEffectData(layer, key);
 		this.openPickerSession(layer, key);
 		const selectedGlitterId = this.resolveSelectedGlitterId(layer);
 		revealAssetBrowser(this.editor, this.editor.glitterLibrary, selectedGlitterId);
-		this.editor.updateStatus(`Choose ${this.getEffectTitle(key)} glitter, then press Esc or Done.`);
+		this.editor.updateStatus(`Choose ${this.getEffectTitle(key)} glitter, then press Esc or Close.`);
 	}
 
 	// One font change: re-measure around the anchor, one history step.
@@ -755,7 +750,6 @@ class TextGlitterManager {
 		this.updateBoxModeSelection(layer);
 		this.syncTextBackgroundUI(layer);
 		this.syncWarpUI(layer);
-		this.updatePickerStrip();
 		this.editor.loadTransformSettings?.(layer, 'text');
 	}
 
@@ -898,7 +892,6 @@ class TextGlitterManager {
 
 	updateEffectTargetButtons(layer) {
 		syncPaintSlotPickerTargets(this.fieldHost, layer);
-		this.updatePickerStrip();
 	}
 
 	handlePickerDone() {
@@ -907,48 +900,12 @@ class TextGlitterManager {
 		this.returnToTextProperties(slot);
 	}
 
-	// Explicit exit from picker mode (Done / Esc) returns focus to where the
+	// Explicit exit from picker mode (Close / Esc) returns focus to where the
 	// user armed from. This is deliberately NOT part of closePickerSession —
 	// the automatic clears (layer switch, effect disable, history restore)
 	// already move the user elsewhere and must not yank the view back.
 	returnToTextProperties(slot = 'fill') {
 		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: getPaintSlotChipId(LayerType.TEXT_GLITTER, slot) });
-	}
-
-	// D-1c: the gallery status strip. Same copy/look whether armed or not —
-	// picker mode (an armed slot) adds a Done button; browse mode names the
-	// default slot (fill) a swatch click applies to. Driven from
-	// updateEffectTargetButtons (arm/disarm, fill-mode flips, layer activate)
-	// and app.updateSidePanelUI (switching to any layer type).
-	updatePickerStrip() {
-		// An open font picker owns the strip while it lasts.
-		if (this.editor.fontBrowserManager?.pickerSession) {
-			this.editor.fontBrowserManager.updatePickerStrip();
-			return;
-		}
-		const layer = this.getActiveTextLayer();
-		if (!layer) {
-			renderPickerStrip({ ownsStrip: true, visible: false });
-			return;
-		}
-		const armedSlot = pickerArmedSlot(this, layer);
-		const fillData = this.getEffectData(layer, 'fill');
-		const fillIsSolid = fillData?.mode === 'solid';
-		if (armedSlot) {
-			let stripText;
-			if (armedSlot === 'fill' && fillIsSolid) {
-				const color = (fillData.color || '#000000').toUpperCase();
-				stripText = { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${color}).` };
-			} else {
-				stripText = formatPickerStripText(layer, armedSlot, 'text');
-			}
-			renderPickerStrip({ ownsStrip: true, visible: true, armed: true, ...stripText });
-			return;
-		}
-		const stripText = fillIsSolid
-			? { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${(fillData.color || '#000000').toUpperCase()}).` }
-			: formatPickerStripText(layer, 'fill', 'text');
-		renderPickerStrip({ ownsStrip: true, visible: true, hint: true, ...stripText });
 	}
 
 	// One place each slot's default comes from.

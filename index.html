@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=72416535">
+	<link rel="stylesheet" href="css/style.css?v=d7342483">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -444,7 +444,7 @@
 										<span class="name">Search</span>
 									</span>
 								</button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle library-close-action visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper library-close-action visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 
 						</div>
@@ -454,17 +454,6 @@
 								<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
 								<div class="property-empty-title">Choose a Color Match</div>
 								<div class="property-empty-text">Select a glitter swatch in the Auto Glitter Color Matches panel to change it.</div>
-							</div>
-
-							<!-- Picker-mode strip (D-1c): names the armed destination.
-							     Hidden in browse mode unless the active text layer's
-							     fill is solid (then shows a passive hint). -->
-							<div class="gallery-picker-strip" id="galleryPickerStrip" role="status" aria-live="polite" hidden>
-								<div class="gallery-picker-strip-text">
-									<span class="gallery-picker-strip-title" id="galleryPickerStripTitle"></span>
-									<span class="gallery-picker-strip-detail" id="galleryPickerStripDetail"></span>
-								</div>
-								<button type="button" class="btn-flat primary gallery-picker-strip-done" id="galleryPickerStripDone">Done</button>
 							</div>
 
 							<!-- The Library: one search/filter block + browser pair per asset kind
@@ -1740,9 +1729,9 @@
 				<button type="button" class="property-revert gradient-blend-reset" title="Reset to default" aria-label="Reset gradient blend"><svg class="icon"><use href="#icon-reset"></use></svg></button>
 			</div>
 			<div class="property-row gradient-angle"><span class="property-label">Angle</span><input type="range" min="0" max="360"><span class="property-value gradient-angle-value">180&deg;</span><button type="button" class="property-revert gradient-angle-reset" title="Reset to default" aria-label="Reset gradient angle"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
-			<div class="property-set gradient-advanced" role="group" aria-label="Smooth blend" hidden>
-				<div class="property-row gradient-smoothing"><span class="property-label" title="Number of blend samples the Smooth blend mode inserts between stops">Samples</span><input type="range" min="3" max="16" step="1" aria-label="Smoothing samples"><span class="property-value gradient-smoothing-value">8&times;</span><button type="button" class="property-revert gradient-smoothing-reset" title="Reset to default" aria-label="Reset smoothing"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
-			</div>
+		</div>
+		<div class="property-set gradient-advanced" hidden>
+			<div class="property-row gradient-smoothing"><span class="property-label" title="Number of blend samples the Smooth blend mode inserts between stops">Samples</span><input type="range" min="3" max="16" step="1" aria-label="Smoothing samples"><span class="property-value gradient-smoothing-value">8&times;</span><button type="button" class="property-revert gradient-smoothing-reset" title="Reset to default" aria-label="Reset smoothing"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 		</div>
 	</template>
 	<template id="tpl-gradient-stop">
@@ -1799,7 +1788,7 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=d7000f26"></script>
+	<script src="js/core/config.js?v=69c3cfc2"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
 	<script src="js/core/sessions.js?v=09f6cc66"></script>
 	<script src="js/core/layer-types.js?v=04477dcc"></script>
@@ -1807,17 +1796,17 @@
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=d73b52cc"></script>
+	<script src="js/ui/panel-schemas.js?v=73ae5f8e"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
-	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
-	<script src="js/layers/types/filter.js?v=56765bd2"></script>
-	<script src="js/layers/types/glitter-fill.js?v=b353c6e9"></script>
-	<script src="js/layers/types/sticker.js?v=31371535"></script>
-	<script src="js/layers/types/text.js?v=77263538"></script>
-	<script src="js/layers/types/frame.js?v=9c0e2cfa"></script>
-	<script src="js/layers/types/sparkles.js?v=a5152bd3"></script>
-	<script src="js/layers/types/shape.js?v=62cdfcbb"></script>
-	<script src="js/layers/types/path.js?v=4c55e9b6"></script>
+	<script src="js/layers/types/base-image.js?v=38e57719"></script>
+	<script src="js/layers/types/filter.js?v=33cfb691"></script>
+	<script src="js/layers/types/glitter-fill.js?v=187894e3"></script>
+	<script src="js/layers/types/sticker.js?v=f8c8fba7"></script>
+	<script src="js/layers/types/text.js?v=82bac5d5"></script>
+	<script src="js/layers/types/frame.js?v=9d9620d2"></script>
+	<script src="js/layers/types/sparkles.js?v=9cb2ee75"></script>
+	<script src="js/layers/types/shape.js?v=8f78974e"></script>
+	<script src="js/layers/types/path.js?v=7b69eae2"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=d276b6ae"></script>
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
@@ -1832,7 +1821,7 @@
 	<script src="js/transforms/movable-layer.js?v=98aa9235"></script>
 
 	<!-- Utils -->
-	<script src="js/core/format.js?v=b94f96b9"></script>
+	<script src="js/core/format.js?v=e82ace6b"></script>
 	<script src="js/core/attribution.js?v=874e3b39"></script>
 	<script src="js/core/sticker-variants.js?v=b11a1da3"></script>
 	<script src="js/core/layer-elements.js?v=32584e3b"></script>
@@ -1840,7 +1829,7 @@
 	<script src="js/ui/tooltip.js?v=69670448"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=c01b60dc"></script>
-	<script src="js/ui/gallery.js?v=d3789570"></script>
+	<script src="js/ui/gallery.js?v=73299034"></script>
 	<script src="js/ui/preset-library.js?v=fcd22542"></script>
 	<script src="js/ui/template-library.js?v=f05db242"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -1873,14 +1862,14 @@
 	<script src="js/paint/path-geometry.js?v=343a3836"></script>
 	<script src="js/paint/stroke-mask.js?v=a7652230"></script>
 	<script src="js/paint/style-presets.js?v=655db1fa"></script>
-	<script src="js/ui/paint-slot-controls.js?v=0a42c9dc"></script>
+	<script src="js/ui/paint-slot-controls.js?v=37095cc2"></script>
 	<script src="js/ui/style-preset-thumbnails.js?v=85cedaf5"></script>
-	<script src="js/ui/gradient-editor.js?v=7c014f1f"></script>
+	<script src="js/ui/gradient-editor.js?v=a2f58930"></script>
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
 	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
-	<script src="js/ui/panel-renderer.js?v=69b4f067"></script>
+	<script src="js/ui/panel-renderer.js?v=c935ce13"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
@@ -1891,22 +1880,22 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=c3beca5d"></script>
-	<script src="js/editor/fill-tool.js?v=79353150"></script>
+	<script src="js/editor/panels.js?v=aa58a336"></script>
+	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
 	<script src="js/editor/disclosures.js?v=649823d5"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
 	<script src="js/editor/document-start.js?v=de92d90c"></script>
-		<script src="js/ui/glitter-recolor-tool.js?v=41078c7b"></script>
+		<script src="js/ui/glitter-recolor-tool.js?v=394056c7"></script>
 		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
-	<script src="js/editor/layer-panel.js?v=e2ffa4b8"></script>
+	<script src="js/editor/layer-panel.js?v=337227eb"></script>
 	<script src="js/editor/canvas-gestures.js?v=1c03aa6a"></script>
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
 	<script src="js/ui/library-window.js?v=312a0323"></script>
-	<script src="js/ui/picker-session.js?v=40504817"></script>
+	<script src="js/ui/picker-session.js?v=a5f30fd0"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1936,7 +1925,7 @@
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
 	<script src="js/systems/ViewportManager.js?v=0541a594"></script>
 	<script src="js/systems/HistoryManager.js?v=22004311"></script>
-	<script src="js/export/ProjectSerializer.js?v=987be688"></script>
+	<script src="js/export/ProjectSerializer.js?v=fc1570ca"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
 	<script src="js/assets/ShapeLibrary.js?v=75f07dcd"></script>
@@ -1946,7 +1935,7 @@
 	<script src="js/systems/MaskEditor.js?v=79efccb2"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=e2755759"></script>
+	<script src="js/layers/LayerManager.js?v=69906248"></script>
 
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
@@ -1956,26 +1945,26 @@
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
 	<script src="js/assets/ContentManager.js?v=0ebf028c"></script>
 	<script src="js/assets/GlitterBrowserManager.js?v=7e93ed2c"></script>
-	<script src="js/assets/StickerBrowserManager.js?v=c1230583"></script>
-	<script src="js/assets/BrushTipManager.js?v=d52c0ad2"></script>
+	<script src="js/assets/StickerBrowserManager.js?v=1f5aba35"></script>
+	<script src="js/assets/BrushTipManager.js?v=085ae15b"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
-	<script src="js/assets/FontBrowserManager.js?v=33436453"></script>
+	<script src="js/assets/FontBrowserManager.js?v=09091e39"></script>
 	<script src="js/transforms/LayerTransform.js?v=6e15e0c4"></script>
 	<script src="js/layers/movable-layer-methods.js?v=55908f90"></script>
 	<script src="js/layers/layer-element-methods.js?v=32e0fa0a"></script>
-	<script src="js/layers/GlitterManager.js?v=5fb4c0df"></script>
-	<script src="js/layers/BaseBackgroundManager.js?v=8ad17961"></script>
+	<script src="js/layers/GlitterManager.js?v=aefe65ad"></script>
+	<script src="js/layers/BaseBackgroundManager.js?v=8774bc29"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=173c021c"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=33e0c756"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
-	<script src="js/ui/text-edit.js?v=64090422"></script>
+	<script src="js/ui/text-edit.js?v=2df3f2cd"></script>
 	<script src="js/ui/crop-edit.js?v=4aed6e38"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
-	<script src="js/layers/TextGlitterManager.js?v=79deb5ac"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=0b39aa5d"></script>
-	<script src="js/layers/StickerManager.js?v=1d7dd114"></script>
+	<script src="js/layers/TextGlitterManager.js?v=35f44513"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=0fe3be23"></script>
+	<script src="js/layers/StickerManager.js?v=d6ed9192"></script>
 	<script src="js/layers/FilterLayerManager.js?v=3763d4be"></script>
 	<script src="js/layers/FrameLayerManager.js?v=3a8e7cae"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=d5529c7b"></script>

@@ -12,7 +12,6 @@ class BaseBackgroundManager {
 		});
 		Object.defineProperty(this.slotPicker, 'pickerSession', { get: () => this.pickerSession, set: value => { this.pickerSession = value; } });
 		this.slotPicker.getTarget = () => this.getGlitterSelectionTarget();
-		this.slotPicker.updatePickerStrip = () => this.updatePickerStrip();
 		this.backgroundSourceCache = null;
 		// Glitter mode paints the background as a DOM element above the base
 		// canvas; image and gradient modes draw into the canvas (app.js
@@ -195,8 +194,7 @@ class BaseBackgroundManager {
 			glitterLabel: id('baseBackgroundGlitterLabel'), glitterBadges: id('baseBackgroundGlitterBadges'),
 			glitterSize: id('baseBackgroundGlitterSize'), glitterFrames: id('baseBackgroundGlitterFrames'),
 			glitterChange: id('baseBackgroundGlitterChange'), color: id('baseBackgroundColor'),
-			gallerySection: id('designGallerySection'), pickerStrip: id('galleryPickerStrip'),
-			pickerTitle: id('galleryPickerStripTitle'), pickerDetail: id('galleryPickerStripDetail'), pickerDone: id('galleryPickerStripDone')
+			gallerySection: id('designGallerySection')
 		};
 		installEffectGradientEditor({
 			prefix: 'baseBackground',
@@ -206,7 +204,7 @@ class BaseBackgroundManager {
 	}
 
 	setupEventListeners() {
-		getOptionValues('paintMode').filter((mode) => mode !== 'gradient').forEach((mode) => {
+		getOptionValues('paintMode').forEach((mode) => {
 			document.getElementById(`baseBackground${mode[0].toUpperCase()}${mode.slice(1)}`)?.addEventListener('click', () => this.setMode(mode));
 		});
 		this.ui.color?.addEventListener('input', () => {
@@ -372,7 +370,6 @@ class BaseBackgroundManager {
 		if (!layer) return;
 		const glitterId = slot === 'sparkles' ? layer.background.sparkles?.glitterId : layer.background.glitterId;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
-			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, glitterId)
 		});
 	}
@@ -383,21 +380,6 @@ class BaseBackgroundManager {
 
 	getGlitterSelectionTarget() {
 		return this.hasActivePickerSession() ? this.pickerSession.slot || 'background' : 'background';
-	}
-
-	updatePickerStrip() {
-		const layer = this.getActiveLayer();
-		const armed = this.hasActivePickerSession();
-		// Unarmed, the strip's hint belongs to a selected canvas layer only.
-		if (!layer || (!armed && !this.editor.layerManager.getActiveLayer())) return;
-		renderPickerStrip({
-			ownsStrip: true,
-			visible: true,
-			armed,
-			hint: !armed,
-			title: this.getGlitterSelectionTarget() === 'sparkles' ? 'Choosing sparkle glitter' : 'Choosing background glitter',
-			detail: this.getGlitterSelectionTarget() === 'sparkles' ? 'Applying to Canvas Sparkles' : 'Applying to Canvas Background'
-		});
 	}
 
 	handlePickerDone() {
@@ -411,10 +393,7 @@ class BaseBackgroundManager {
 	}
 
 	closePickerSession() {
-		pickerCloseSession(this, {
-			refresh: () => this.updatePickerStrip(),
-			updateSelection: () => this.editor.updateGlitterSelection()
-		});
+		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
 
 	chooseReplacementImage() {

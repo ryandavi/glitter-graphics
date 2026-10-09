@@ -217,30 +217,12 @@ class FontBrowserManager extends ContentManager {
 		const layer = this.getTargetLayer();
 		if (!layer || !this.browser) return;
 		this.editor.textGlitterManager?.closePickerSession?.();
-		pickerOpenSession(this, { kind: 'font', layerId: layer.id }, {
-			refresh: () => this.updatePickerStrip(),
+		pickerOpenSession(this, { kind: 'font', layerId: layer.id, library: 'font', label: 'Font' }, {
 			reveal: () => revealAssetBrowser(this.editor, this, layer.textData.fontId)
 		});
 		this.ensureSamplesLoaded();
 		this.updateSelection();
-		this.editor.updateStatus('Choose a font, then press Esc or Done.');
-	}
-
-	updatePickerStrip(options = {}) {
-		const layer = this.getTargetLayer();
-		if (this.pickerSession && this.pickerSession.layerId !== layer?.id) {
-			this.closePickerSession();
-			return;
-		}
-		if (!this.pickerSession) {
-			// Hand the strip back to the text layer's own glitter hint.
-			if (options.closing) this.editor.textGlitterManager?.updatePickerStrip();
-			return;
-		}
-		renderPickerStrip({
-			ownsStrip: true, visible: true, armed: true, library: 'font',
-			title: 'Choosing font', detail: formatPickerTarget(layer.name, 'text')
-		});
+		this.editor.updateStatus('Choose a font, then press Esc or Close.');
 	}
 
 	handlePickerDone() {
@@ -249,9 +231,6 @@ class FontBrowserManager extends ContentManager {
 	}
 
 	closePickerSession() {
-		return pickerCloseSession(this, {
-			refresh: () => this.updatePickerStrip({ closing: true }),
-			updateSelection: () => this.updateSelection()
-		});
+		return pickerCloseSession(this, { updateSelection: () => this.updateSelection() });
 	}
 }

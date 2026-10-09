@@ -53,15 +53,15 @@ async function main() {
 		assert.deepStrictEqual(await page.evaluate(() => window.layerRevealCalls), [], 'ordinary selection does not move the Layers panel');
 		const pickerStates = await page.evaluate(({ baseId, shapeId }) => {
 			const editor = window.editor;
-			const strip = document.getElementById('galleryPickerStrip');
-			const singleVisible = !strip.hidden;
+			const armed = () => Boolean(editor.pickers.active);
+			editor.shapeGlitterManager.armPicker('fill');
+			const singleArmed = armed();
 			editor.layerManager.setSelection([baseId, shapeId], { activeLayerId: shapeId });
-			editor.shapeGlitterManager.updatePickerStrip();
-			const multiHidden = strip.hidden && !strip.classList.contains('is-hint') && !strip.classList.contains('is-armed');
+			const multiEnded = !armed();
 			editor.layerManager.setActiveLayer(shapeId);
-			return { singleVisible, multiHidden, restoredVisible: !strip.hidden };
+			return { singleArmed, multiEnded, staysEnded: !armed() };
 		}, ids);
-		assert.deepStrictEqual(pickerStates, { singleVisible: true, multiHidden: true, restoredVisible: true }, 'picker hints require a single selected layer');
+		assert.deepStrictEqual(pickerStates, { singleArmed: true, multiEnded: true, staysEnded: true }, 'an armed picker requires a single selected layer');
 
 		await page.evaluate(({ baseId }) => {
 			window.layerRevealCalls = [];

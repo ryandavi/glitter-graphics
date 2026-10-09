@@ -71,10 +71,6 @@ class GlitterManager {
 	setupUI() {
 		this.ui = {
 			gallerySection: document.getElementById('designGallerySection'),
-			pickerStrip: document.getElementById('galleryPickerStrip'),
-			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),
-			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
-			pickerStripDone: document.getElementById('galleryPickerStripDone'),
 			resetEffects: document.getElementById('resetGlitterEffects')
 
 		};
@@ -103,7 +99,6 @@ class GlitterManager {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
-			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot || 'fill')?.glitterId)
 		});
 	}
@@ -127,15 +122,6 @@ class GlitterManager {
 		return Boolean(layer?.type === LayerType.GLITTER_FILL && this.pickerSession?.layerId === layer.id);
 	}
 
-	updatePickerStrip() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		if (layer?.type !== LayerType.GLITTER_FILL) return;
-		if (this.pickerSession && this.pickerSession.layerId !== layer.id) pickerCloseSession(this);
-		const armed = this.hasActivePickerSession();
-		const copy = formatPickerStripText(layer, (armed && this.pickerSession.slot) || 'fill', 'fill layer');
-		renderPickerStrip({ ownsStrip: true, visible: true, armed, hint: !armed, ...copy });
-	}
-
 	handlePickerDone() {
 		const focusId = getPaintSlotChipId(LayerType.GLITTER_FILL, this.pickerSession?.slot) || 'glitterFillGlitterChip';
 		this.closePickerSession();
@@ -143,10 +129,7 @@ class GlitterManager {
 	}
 
 	closePickerSession() {
-		pickerCloseSession(this, {
-			refresh: () => this.updatePickerStrip(),
-			updateSelection: () => this.editor.updateGlitterSelection()
-		});
+		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
 
 	createLayer(options = {}) {

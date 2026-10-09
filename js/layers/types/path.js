@@ -25,7 +25,7 @@ registerLayerType(LayerType.PATH, {
 			draftPath: 'pathData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'pathShadow',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -38,12 +38,13 @@ registerLayerType(LayerType.PATH, {
 			},
 			key: 'border',
 			role: 'border',
+			label: 'outline',
 			edgeStyles: ['round', 'miter', 'hard'],
 			path: 'pathData.border',
 			draftPath: 'pathData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'pathBorder',
-			modes: ['glitter', 'solid'],
+			modes: ['glitter', 'solid', 'gradient'],
 			fields: { widthPx: 'borderWidth' }
 		},
 		{
@@ -55,7 +56,7 @@ registerLayerType(LayerType.PATH, {
 			path: 'pathData.fill',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'pathFill',
-			modes: ['none', 'glitter', 'solid']
+			modes: ['none', 'glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -67,7 +68,7 @@ registerLayerType(LayerType.PATH, {
 			draftPath: 'pathData.effectDrafts.stroke',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'pathStroke',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -80,7 +81,7 @@ registerLayerType(LayerType.PATH, {
 			enabledPath: 'pathData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'pathBevel',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -93,7 +94,7 @@ registerLayerType(LayerType.PATH, {
 			enabledPath: 'pathData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'pathBevelShade',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -106,7 +107,7 @@ registerLayerType(LayerType.PATH, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'pathSparkles',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.pathLayerManager?.getSparkleHost(layer) || null,
@@ -177,7 +178,6 @@ registerLayerType(LayerType.PATH, {
 		reset: true
 	},
 	createOptionsKey: 'pathLayer',
-	autoOpenDesignDrawerOnCreate: false,
 	mobileCreateBehavior: { skipReload: true },
 	onActivate: (editor, layer) => {
 		const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.PEN, ToolType.LINE]);

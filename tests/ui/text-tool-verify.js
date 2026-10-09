@@ -165,7 +165,9 @@ async function main() {
 			return { plates, pieces: [...editor.layerManager.selectedLayerIds].map(id => editor.layerManager.getLayerById(id).textData.text) };
 		});
 		assert(nested.plates); assert.deepEqual(nested.pieces, ['A', 'B']);
-		await page.evaluate(() => { editor.setTool(ToolType.TEXT); });
+		// A new text opens its Fill when typing ends; close it and let the view settle before measuring.
+		await page.evaluate(() => { editor.pickers.closeActive(); editor.setTool(ToolType.TEXT); });
+		await page.waitForTimeout(600);
 		const drag = await page.evaluate(() => {
 			const rect = editor.previewContainer.getBoundingClientRect();
 			const point = { x: 430, y: 300 };

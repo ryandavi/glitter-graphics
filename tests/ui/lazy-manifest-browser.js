@@ -92,7 +92,7 @@ async function main() {
 				width: 80, height: 20, isAnimated: false, isPixelated: false, frameCount: 1
 			});
 			AssetImageCache.get = () => preload;
-			const replacement = manager.addStickerToCanvas('replacement-next');
+			const replacement = manager.pickLibrarySticker('replacement-next');
 			await Promise.resolve();
 			await Promise.resolve();
 			const beforePreload = {

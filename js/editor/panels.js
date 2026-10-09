@@ -298,11 +298,10 @@ isLayerContentLocked(layer) {
 		if (documentSize && sizeHost && documentSize.parentElement !== sizeHost) sizeHost.appendChild(documentSize);
 		this.syncLockedLayerUI(layer);
 
-		// D-1c: keep the gallery picker strip in sync when the active layer
-		// changes to any type. The glitter, shape, text, and sticker managers each
-		// drive it for their own layer type and otherwise leave the active owner
-		// alone (the text manager performs the initial hide for non-text layers).
-		this.pickers.managers.forEach((manager) => manager.updatePickerStrip?.());
+		// A picker armed for another layer ends here; the Library's kind and
+		// title follow whatever is still armed.
+		this.pickers.closeStale();
+		syncPickerTarget(this);
 
 		this.syncCanvasBoundsViews();
 	}
@@ -325,6 +324,21 @@ isLayerContentLocked(layer) {
 	// mobile, where LAYER_UI_CONFIG[type].mobileCreateBehavior.skipReload opts out
 	// (reopening the panel on every tap is Design-drawer noise, not a Settings ask).
 ,
+	// What a new layer most likely needs next, from its type's `openOnCreate`:
+	// 'asset' is the Library on its asset, 'panel' is its properties (which
+	// only the phone has to open), and anything else is the key of a flyout
+	// section, which on the phone is that paint's Library.
+	openCreateTarget(layer) {
+		const target = LAYER_UI_CONFIG[layer?.type]?.openOnCreate;
+		if (!target || this.layerManager.getActiveLayer() !== layer) return;
+		const mobile = Boolean(this.mobileManager?.isMobile);
+		if (target === 'asset') getLayerManagerForType(this, layer.type).armAssetPicker();
+		else if (target === 'panel') {
+			if (mobile) this.mobileManager.openDrawer('edit');
+		} else if (mobile) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
+		else if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
+	},
+
 	finishLayerCreation(layer, { onDesktopReload } = {}) {
 		if (!layer) return;
 		this.setTool(ToolType.SELECT);

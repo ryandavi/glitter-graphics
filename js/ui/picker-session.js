@@ -7,7 +7,7 @@ class PickerRegistry {
 		// The flyout section the window shows, by its key (`data-flyout-key`).
 		// With an armed session this is the one open target.
 		this.flyout = null;
-		['galleryPickerStripDone', 'libraryWindowClose', 'flyoutClose'].forEach((id) => {
+		['libraryWindowClose', 'flyoutClose'].forEach((id) => {
 			document.getElementById(id)?.addEventListener('click', () => this.closeActive());
 		});
 	}
@@ -69,6 +69,15 @@ class PickerRegistry {
 			if (manager !== except && manager.pickerSession) manager.closePickerSession({ restorePicker: false });
 		});
 	}
+
+	// A session tied to a layer ends when another layer is inspected.
+	closeStale() {
+		const layer = this.editor.layerManager.getInspectedLayer();
+		this.managers.forEach((manager) => {
+			const layerId = manager.pickerSession?.layerId;
+			if (layerId != null && layerId !== layer?.id) manager.closePickerSession({ restorePicker: false });
+		});
+	}
 }
 
 // The paints of a section: its own, then any nested in it (Bevel's Shade).
@@ -82,6 +91,7 @@ function pickerOpenSession(manager, session, options = {}) {
 	if (registry?.flyout && !registry.sessionKeepsFlyout(manager, session)) registry.flyout = null;
 	manager.pickerSession = { ...session };
 	options.refresh?.();
+	syncPickerTarget(manager.editor);
 	options.reveal?.();
 	manager.editor?.libraryWindow?.sync();
 	return manager.pickerSession;
@@ -91,6 +101,7 @@ function pickerCloseSession(manager, options = {}) {
 	if (!manager.pickerSession && !options.force) return false;
 	manager.pickerSession = null;
 	options.refresh?.();
+	syncPickerTarget(manager.editor);
 	options.updateSelection?.();
 	manager.editor?.libraryWindow?.sync();
 	return true;
@@ -132,38 +143,38 @@ function returnFromPickerToProperties(editor, options = {}) {
 	}
 }
 
-function renderPickerStrip(state = {}) {
-	const recolor = window.editor?.glitterRecolor;
-	if (recolor?.pickerSession) state = recolor.getPickerStripState();
-	const strip = document.getElementById('galleryPickerStrip');
-	if (!strip || !state.ownsStrip) return;
-	const title = document.getElementById('galleryPickerStripTitle');
-	const detail = document.getElementById('galleryPickerStripDetail');
-	const done = document.getElementById('galleryPickerStripDone');
+// The Library's asset kind is the armed session's: `library` on the session,
+// or glitter for a paint slot. syncLibraryView reads it and names the target
+// in the Library's bar. A session is `{ layerId?, slot?, library?, label?,
+// target? }`; `label` and `target` name what a pick changes and where, for
+// sessions that are not a layer's paint slot.
+function syncPickerTarget(editor) {
 	const section = document.getElementById('designGallerySection');
-	const visible = Boolean(state.visible) && (Boolean(recolor?.pickerSession) || !window.editor?.layerManager?.hasMultiSelection());
-	const armed = visible && Boolean(state.armed);
-	const hint = visible && Boolean(state.hint);
+	if (!section) return;
+	const session = editor?.pickers?.active?.pickerSession;
+	if (session) section.dataset.pickerLibrary = session.library || 'glitter';
+	else delete section.dataset.pickerLibrary;
+	// With no kind left to show, the bar names the selection state again.
+	if (!syncLibraryView()) editor?.syncNoLayerPanelState?.();
+}
 
-	strip.hidden = !visible;
-	strip.classList.toggle('is-armed', armed);
-	strip.classList.toggle('is-hint', hint);
-	section?.classList.toggle('picker-mode', armed && state.pickerMode !== false);
-	if (section) {
-		if (visible && state.library) section.dataset.pickerLibrary = state.library;
-		else delete section.dataset.pickerLibrary;
-	}
-	syncLibraryView();
-	if (!visible) return;
-	if (title) title.textContent = state.title || '';
-	if (detail) detail.textContent = state.detail || '';
-	if (done) done.hidden = !armed || state.showDone === false;
+// "Outline · Hello": what the armed session changes and where, or '' when
+// nothing is armed or an open flyout section's bar already says it.
+function describePickerTarget(editor) {
+	const pickers = editor?.pickers;
+	const manager = pickers?.active;
+	const session = manager?.pickerSession;
+	if (!session || pickers.sessionKeepsFlyout(manager, session)) return '';
+	const layer = session.layerId == null ? null : editor.layerManager.getLayerById(session.layerId);
+	const what = session.label || (layer ? panelCap(getPaintSlotLabel(layer.type, session.slot || 'fill')) : '');
+	const where = session.target || (layer ? describeLayer(layer, editor).name : '');
+	return [what, where].filter(Boolean).join(' \u00b7 ');
 }
 
 // The glitter picker of a layer type whose paints are all declared slots
-// (Frame, Sparkles): arm a slot, route the next gallery pick into it, and
-// drive the gallery strip while such a layer is active. Registered with the
-// PickerRegistry like the managers' own sessions. Unarmed picks go to
+// (Frame, Sparkles): arm a slot and route the next gallery pick into it.
+// Registered with the PickerRegistry like the managers' own sessions. Unarmed
+// picks (the phone's Library drawer) go to
 // defaultSlot: a slot key, or (layer) => key where it depends on the layer.
 class SlotGlitterPicker {
 	constructor(editor, { type, defaultSlot, section, typeWord, ensureSlot, onPicked }) {
@@ -186,7 +197,6 @@ class SlotGlitterPicker {
 		const layer = this.getLayer();
 		if (!layer) return;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
-			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
@@ -218,22 +228,7 @@ class SlotGlitterPicker {
 		data.mode = 'glitter';
 		data.colorAdjust = null;
 		this.pendingPick = Promise.resolve(this.onPicked(layer, glitterId, previousId));
-		this.updatePickerStrip();
 		return true;
-	}
-
-	updatePickerStrip() {
-		const layer = this.getLayer();
-		if (!layer) return;
-		if (this.pickerSession && this.pickerSession.layerId !== layer.id) pickerCloseSession(this);
-		const armed = Boolean(this.getArmedSlot(layer));
-		renderPickerStrip({
-			ownsStrip: true,
-			visible: true,
-			armed,
-			hint: !armed,
-			...formatPickerStripText(layer, this.getTarget(layer), this.typeWord)
-		});
 	}
 
 	handlePickerDone() {
@@ -243,10 +238,7 @@ class SlotGlitterPicker {
 	}
 
 	closePickerSession() {
-		pickerCloseSession(this, {
-			refresh: () => this.updatePickerStrip(),
-			updateSelection: () => this.editor.updateGlitterSelection()
-		});
+		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
 }
 
@@ -262,7 +254,6 @@ function createManagerSlotPicker(manager, { type, defaultSlot, typeWord, onPicke
 		set: (value) => { manager.pickerSession = value; }
 	});
 	picker.getTarget = (layer) => manager.getGlitterSelectionTarget(layer);
-	picker.updatePickerStrip = () => manager.updatePickerStrip();
 	picker.handlePickerDone = () => manager.handlePickerDone();
 	picker.closePickerSession = () => manager.closePickerSession();
 	return picker;

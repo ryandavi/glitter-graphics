@@ -42,12 +42,7 @@ class StickerManager {
 			fillCanvas: document.getElementById('stickerFillCanvas'),
 			assetThumbnail: document.getElementById('stickerAssetThumbnail')
 		};
-		// Shared gallery picker strip (same DOM the text and shape pickers use).
 		this.ui.gallerySection = document.getElementById('designGallerySection');
-		this.ui.pickerStrip = document.getElementById('galleryPickerStrip');
-		this.ui.pickerStripTitle = document.getElementById('galleryPickerStripTitle');
-		this.ui.pickerStripDetail = document.getElementById('galleryPickerStripDetail');
-		this.ui.pickerStripDone = document.getElementById('galleryPickerStripDone');
 		this.ui.resetEffects = document.getElementById('resetStickerEffects');
 	}
 
@@ -155,7 +150,6 @@ class StickerManager {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.STICKER || !getLayerPaintSlot(layer, slot)) return;
 		pickerOpenSession(this, { kind: 'glitter', layerId: layer.id, slot }, {
-			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
@@ -163,8 +157,7 @@ class StickerManager {
 	armAssetPicker() {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.STICKER) return;
-		pickerOpenSession(this, { kind: 'asset', layerId: layer.id }, {
-			refresh: () => this.updatePickerStrip(),
+		pickerOpenSession(this, { kind: 'asset', layerId: layer.id, library: 'sticker', label: 'Sticker' }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.stickerLibrary, layer.stickerSourceId)
 		});
 	}
@@ -182,27 +175,7 @@ class StickerManager {
 	}
 
 	closePickerSession() {
-		pickerCloseSession(this, {
-			refresh: () => this.updatePickerStrip(),
-			updateSelection: () => this.editor.updateGlitterSelection()
-		});
-	}
-
-	// Only drives the strip while a sticker is active; the text manager hides it
-	// for every other layer type (all three are called from app.updateSidePanelUI).
-	// picker-mode on the gallery section swaps the sticker browser for the
-	// glitter browser (see the design-panel sticker rules in _panels.scss).
-	updatePickerStrip() {
-		if (!this.ui.pickerStrip || this.editor.layerManager.getActiveLayer()?.type !== LayerType.STICKER) return;
-		const layer = this.editor.layerManager.getActiveLayer();
-		const assetArmed = this.pickerSession?.kind === 'asset' && this.pickerSession.layerId === layer.id;
-		const armedSlot = this.getGlitterSelectionTarget(layer);
-		const glitterArmed = Boolean(armedSlot);
-		const armed = assetArmed || glitterArmed;
-		const stripText = glitterArmed
-			? formatPickerStripText(layer, armedSlot, 'sticker')
-			: formatAssetPickerStripText('sticker', layer.name);
-		renderPickerStrip({ ownsStrip: true, visible: true, armed, hint: !armed, pickerMode: glitterArmed, ...stripText });
+		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
 
 	// The slot the next gallery pick targets, or null when none is armed (a
@@ -241,7 +214,6 @@ class StickerManager {
 		const fillInterior = document.getElementById('stickerBorderFillInterior');
 		if (fillInterior) fillInterior.checked = layer.stickerData.border?.fillInterior ?? CONFIG.tools.stickers.outline.fillInterior;
 		this.refreshColorAdjustVisuals(layer);
-		this.updatePickerStrip();
 	}
 
 	// Canvas pixels the effect masks extend past the displayed sticker on each
@@ -501,79 +473,74 @@ class StickerManager {
 		this.editor.updateStatus('Background removed');
 	}
 
-	async addStickerToCanvas(stickerId) {
+	// A Library pick replaces the selected sticker. It never adds a layer.
+	async pickLibrarySticker(stickerId) {
 		if (!this.editor.originalImage) {
 			this.editor.showError('Please load an image first');
 			return;
 		}
 
 		const activeLayer = this.editor.layerManager.getActiveLayer();
+		if (activeLayer?.type !== LayerType.STICKER) {
+			this.editor.updateStatus('Select a sticker before choosing one from the Library');
+			return;
+		}
 		const stickerInfo = await this.editor.stickerLibrary.ensureAssetDetails(stickerId);
 
 		if (!stickerInfo) return;
 
-		// LOGIC: If active layer is a STICKER layer, replace it.
-		// Otherwise, create a NEW layer.
-		if (activeLayer && activeLayer.type === LayerType.STICKER) {
-			if (!this.editor.canEditLayer(activeLayer, { notify: true })) return;
-			const scalePercent = activeLayer.transform?.scale?.x ?? 100;
-			const renderedWidth = stickerInfo.width * (scalePercent / 100);
-			const nextUrl = StickerVariants.pickBestUrl(
-				stickerInfo.url, stickerInfo.width, stickerInfo.variantUrls, renderedWidth
-			);
-			try {
-				await AssetImageCache.get(nextUrl);
-			} catch (error) {
-				this.editor.showError('Unable to load that sticker');
-				return;
-			}
-			// Replace the sticker in the current layer
-			activeLayer.name = stickerInfo.name;
-			activeLayer.stickerSourceId = stickerInfo.id;
-
-			// Update data
-			activeLayer.stickerData.isEmpty = false;
-			activeLayer.stickerData.baseUrl = stickerInfo.url;
-			activeLayer.stickerData.variantUrls = stickerInfo.variantUrls || null;
-			activeLayer.stickerData.name = stickerInfo.name;
-			activeLayer.stickerData.source = stickerInfo.source;
-			activeLayer.stickerData.width = stickerInfo.width;
-			activeLayer.stickerData.height = stickerInfo.height;
-			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
-			activeLayer.stickerData.isPixelated = stickerInfo.isPixelated !== false;
-			activeLayer.stickerData.frameCount = stickerInfo.frameCount || 1;
-			activeLayer.stickerData.slice = normalizeSlice(stickerInfo.slice, stickerInfo.width, stickerInfo.height);
-			activeLayer.stickerData.sliceEnabled = Boolean(activeLayer.stickerData.slice);
-
-			// Pick the resolution that matches the layer's current (possibly
-			// scaled-up) size, not always the base — same rule commitResolutionSwap
-			// applies after a resize gesture.
-			activeLayer.stickerData.url = nextUrl;
-
-			// Clear the cached still frame when changing sticker
-			activeLayer.stickerData.staticImageData = null;
-
-			// New sticker → its colors are unrelated to the old ones, so a prior
-			// hue/sat/bright tweak would apply to the wrong palette. Reset it.
-			activeLayer.stickerData.colorAdjust = { ...COLOR_ADJUST_IDENTITY };
-
-			// Render
-			this.renderLayer(activeLayer);
-			this.editor.layerManager.renderLayersList();
-			this.editor.updateStickerSelection();
-			this.editor.updateStatus('Sticker replaced');
-			this.editor.saveState('Edit sticker');
-
-			// Hide empty state and load settings
-			this.editor.setSettingsEmptyState('stickerSettings', false);
-			this.loadLayerSettings(activeLayer);
-
-		} else {
-			// Create NEW layer
-			await this.createStickerLayer(stickerId);
-			this.editor.updateStickerSelection();
-			this.editor.updateStatus('Sticker added');
+		if (!this.editor.canEditLayer(activeLayer, { notify: true })) return;
+		const scalePercent = activeLayer.transform?.scale?.x ?? 100;
+		const renderedWidth = stickerInfo.width * (scalePercent / 100);
+		const nextUrl = StickerVariants.pickBestUrl(
+			stickerInfo.url, stickerInfo.width, stickerInfo.variantUrls, renderedWidth
+		);
+		try {
+			await AssetImageCache.get(nextUrl);
+		} catch (error) {
+			this.editor.showError('Unable to load that sticker');
+			return;
 		}
+		// Replace the sticker in the current layer
+		activeLayer.name = stickerInfo.name;
+		activeLayer.stickerSourceId = stickerInfo.id;
+
+		// Update data
+		activeLayer.stickerData.isEmpty = false;
+		activeLayer.stickerData.baseUrl = stickerInfo.url;
+		activeLayer.stickerData.variantUrls = stickerInfo.variantUrls || null;
+		activeLayer.stickerData.name = stickerInfo.name;
+		activeLayer.stickerData.source = stickerInfo.source;
+		activeLayer.stickerData.width = stickerInfo.width;
+		activeLayer.stickerData.height = stickerInfo.height;
+		activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+		activeLayer.stickerData.isPixelated = stickerInfo.isPixelated !== false;
+		activeLayer.stickerData.frameCount = stickerInfo.frameCount || 1;
+		activeLayer.stickerData.slice = normalizeSlice(stickerInfo.slice, stickerInfo.width, stickerInfo.height);
+		activeLayer.stickerData.sliceEnabled = Boolean(activeLayer.stickerData.slice);
+
+		// Pick the resolution that matches the layer's current (possibly
+		// scaled-up) size, not always the base — same rule commitResolutionSwap
+		// applies after a resize gesture.
+		activeLayer.stickerData.url = nextUrl;
+
+		// Clear the cached still frame when changing sticker
+		activeLayer.stickerData.staticImageData = null;
+
+		// New sticker → its colors are unrelated to the old ones, so a prior
+		// hue/sat/bright tweak would apply to the wrong palette. Reset it.
+		activeLayer.stickerData.colorAdjust = { ...COLOR_ADJUST_IDENTITY };
+
+		// Render
+		this.renderLayer(activeLayer);
+		this.editor.layerManager.renderLayersList();
+		this.editor.updateStickerSelection();
+		this.editor.updateStatus('Sticker replaced');
+		this.editor.saveState('Edit sticker');
+
+		// Hide empty state and load settings
+		this.editor.setSettingsEmptyState('stickerSettings', false);
+		this.loadLayerSettings(activeLayer);
 	}
 
 	// ===== RESIZE COMMIT =====

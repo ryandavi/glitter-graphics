@@ -239,7 +239,7 @@ The action → key registry lives in `content/icon-registry.json`; add a row the
   |---|---|
   | `css/` | Foundation shared with the admin (`_tokens`, `_themes`, `_mixins`, `_base`), app-wide components and controls, `_mobile` |
   | `css/panels/` | One partial per sidebar panel or feature (layout, layers list, the right columns, the Library window, effects, paint slots) |
-  | `css/library/` | The Library inside its window or drawer: search and filters, the picker strip, the browser (rail, wall, set headers), asset tiles, the selected-asset header |
+  | `css/library/` | The Library inside its window or drawer: search and filters, the browser (rail, wall, set headers), asset tiles, the selected-asset header |
   | `css/workspace/` | Everything in the canvas column: the stage and tool cursors, start card, canvas chrome, context toolbars, brush cursor, status bar, layer preview elements, selection and path chrome |
   | `css/panels/property/` | The property vocabulary, one partial per concern; `_tokens.scss` opens with the map. Loaded last of the panel sheets so it wins the cascade |
   | `css/modals/` | `_shell`, `_forms`, then one partial per modal; `_responsive` supplies the common phone layout, followed by `_confirmation` for its stacked action buttons |
@@ -276,7 +276,7 @@ Editable palette controls order the native swatch, hex input, then eyedropper in
 
 Recolor's preview compares the source's Original palette with the current Recolored draft at the same animation frame through a compact switch floating above the preview, centered horizontally. Switching does not change colors, pending adjustments or undo history. The tile canvas keeps its source-resolution pixels and fills the available width with its aspect ratio preserved; pixel picking maps the rendered bounds back to those source pixels. Tall tiles can scroll in the preview surface. A separate, taller repeat canvas draws the pattern at actual size. The stage omits size, count, zoom and view labels; percentage tooltips explain coverage across the original opaque pixels in all frames. Stage notes take no padding beyond the preview surface's inset.
 
-Toggling the Library's recolor picker updates availability on existing tiles without rebuilding or resetting its scroll. Exiting restores the selected layer's picker strip and any previous armed destination while that layer is still selected; closing all pickers discards that destination.
+Toggling the Library's recolor picker updates availability on existing tiles without rebuilding or resetting its scroll. Exiting restores any previous armed destination while that layer is still selected; closing all pickers discards that destination.
 
 - **A change meant to be invisible** (a refactor, a rename, a dead-rule sweep): `node tools/ui-ab.js <a.css> <b.css>` loads both stylesheets on the same DOM and reports every element whose computed style or box differs. It must report zero, or every difference must be listed with its reason in an `--allow` file.
 - **A change meant to be visible:** `node tools/ui-contact-sheet.js capture <dir> --css <compiled.css>` before and after, then `build <before> <after> <out.html>` for a page of real screenshots side by side at three widths and two themes. Review the page and the live app; tune by changing token values.

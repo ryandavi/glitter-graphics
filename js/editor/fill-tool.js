@@ -10,7 +10,10 @@ const EDITOR_FILL_TOOL_METHODS = {
 				if (deferHistory) {
 					layer = this.glitterManager.createLayer();
 					if (layer) this.layerManager.insertLayer(layer);
-				} else layer = this.layerManager.addLayer(LayerType.GLITTER_FILL);
+				} else {
+					layer = this.layerManager.addLayer(LayerType.GLITTER_FILL);
+					if (layer) requestAnimationFrame(() => this.openCreateTarget(layer));
+				}
 			}
 		}
 		return layer && this.canEditLayer(layer, { notify: true }) ? layer : null;

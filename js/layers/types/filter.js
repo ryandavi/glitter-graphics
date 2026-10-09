@@ -40,7 +40,7 @@ registerLayerType(LayerType.FILTER, {
 		context.swatch.append(thumbnail);
 		return true;
 	},
-	mobileCreateDrawer: 'edit',
+	openOnCreate: 'panel',
 	onActivate: (editor, layer) => {
 		editor.setTool(ToolType.SELECT);
 		editor.filterLayerManager?.loadLayerSettings(layer);

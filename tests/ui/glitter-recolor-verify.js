@@ -29,7 +29,7 @@ async function main() {
 			browser.scrollContainer.scrollTop = 120;
 			window.recolorBrowseBefore = {
 				tiles: [...browser.elements.itemGrid.children], scroll: browser.scrollContainer.scrollTop,
-				title: document.getElementById('galleryPickerStripTitle').textContent,
+				title: document.getElementById('designGalleryTitleText').textContent,
 				session: editor.glitterManager.pickerSession
 			};
 		});
@@ -48,9 +48,9 @@ async function main() {
 		await page.locator('#recolorGlitterBtn').click();
 		assert(await page.evaluate(() => !editor.glitterRecolor.pickerSession));
 		assert(await page.evaluate(() => {
-			const before = window.recolorBrowseBefore, strip = document.getElementById('galleryPickerStrip');
-			return !strip.hidden && strip.classList.contains('is-armed')
-				&& document.getElementById('galleryPickerStripTitle').textContent === before.title
+			const before = window.recolorBrowseBefore;
+			return document.getElementById('designGallerySection').dataset.pickerLibrary === 'glitter'
+				&& document.getElementById('designGalleryTitleText').textContent === before.title
 				&& editor.glitterManager.pickerSession.layerId === before.session.layerId
 				&& before.tiles.every(tile => tile.isConnected && !tile.classList.contains('recolor-unavailable') && !tile.hasAttribute('aria-disabled'));
 		}));

@@ -37,7 +37,6 @@ const getLayerPaintSlot = run('getLayerPaintSlot');
 const ensureLayerPaintSlot = run('ensureLayerPaintSlot');
 const pickerArmedSlot = run('pickerArmedSlot');
 const getPaintSlotChipId = run('getPaintSlotChipId');
-const formatPickerStripText = run('formatPickerStripText');
 
 let checked = 0;
 let nested = 0;
@@ -63,10 +62,9 @@ Object.entries(config).forEach(([type, entry]) => {
 		created.mode = 'glitter';
 		assert.strictEqual(definition.pathKeys.reduce((node, key) => node[key], layer).glitterId, 7, `${where}: a pick lands at ${definition.path}`);
 
-		// Done returns to the slot's own chip, and the strip names the slot in words.
+		// Close returns to the slot's own chip, and the Library names the slot in words.
 		assert.strictEqual(getPaintSlotChipId(type, definition.key), `${definition.panelPrefix}GlitterChip`, `${where}: return-focus id comes from panelPrefix`);
 		assert(/^[a-z]+( [a-z]+)*$/.test(definition.label), `${where}: label "${definition.label}" must be lowercase words, not a key`);
-		assert.strictEqual(formatPickerStripText(layer, definition.key, 'layer').title, `Choosing ${definition.label} glitter`, `${where}: strip title uses the label`);
 
 		checked += 1;
 		// The slots a `root[key]` lookup cannot find.

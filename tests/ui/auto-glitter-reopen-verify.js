@@ -155,14 +155,14 @@ async function main() {
 			const generatedName = layer.name;
 			const rowName = editor.layerManager.layersListContainer
 				.querySelector(`[data-layer-id="${layer.id}"] .layer-name`)?.textContent;
-			const pickerDetail = editor.glitterManager.ui.pickerStripDetail.textContent;
+			const pickerDetail = document.getElementById('designGalleryTitleText').textContent;
 			layer.name = 'My custom fill';
 			await editor.glitterManager.selectGlitter(first.id);
 			return { generatedName, rowName, pickerDetail, customName: layer.name, expected: second.name };
 		});
 		assert.strictEqual(renamed.generatedName, renamed.expected, 'Generated fill-layer name did not follow its new swatch');
 		assert.strictEqual(renamed.rowName, renamed.expected, 'Layers panel kept the previous swatch name');
-		assert.ok(renamed.pickerDetail.includes(renamed.expected), 'Gallery picker strip kept the previous swatch name');
+		assert.ok(renamed.pickerDetail.includes(renamed.expected), 'The Library title kept the previous swatch name');
 		assert.strictEqual(renamed.customName, 'My custom fill', 'Swatch selection replaced a custom layer name');
 		assert.deepStrictEqual(pageErrors, [], `Page errors: ${pageErrors.join('; ')}`);
 		console.log('PASS Auto Glitter reopens, cancels safely, and applies over the current batch');

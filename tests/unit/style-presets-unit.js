@@ -107,7 +107,7 @@ Object.entries(libraries).forEach(([type, library]) => {
 			if (!definition) fail(`${where} names slot ${key}, which the type does not declare`);
 			if (!roles.includes(definition.role)) fail(`${where} writes ${key}, a ${definition.role} slot styles never own`);
 			if (!paintModes.includes(partial.mode)) fail(`${where} ${key} mode ${partial.mode}`);
-			if (partial.mode !== 'gradient' && !definition.modes.includes(partial.mode)) fail(`${where} ${key} mode ${partial.mode} is not offered by the slot`);
+			if (!definition.modes.includes(partial.mode)) fail(`${where} ${key} mode ${partial.mode} is not offered by the slot`);
 			if (partial.mode === 'glitter' && !glitterIds.has(partial.glitterId)) fail(`${where} ${key} glitter ${partial.glitterId} is not in the library`);
 			if (partial.mode === 'glitter' && !/^#[0-9a-f]{6}$/i.test(partial.color || '')) fail(`${where} ${key} glitter needs a stand-in color`);
 			if (partial.mode === 'gradient' && !(partial.gradient?.stops?.length >= 2)) fail(`${where} ${key} gradient needs stops`);

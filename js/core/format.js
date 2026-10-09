@@ -22,12 +22,6 @@ function rangePercentToValue(percent, min, max) {
 	return Number(min) + clamped / 100 * (Number(max) - Number(min));
 }
 
-// ============================================
-// GALLERY PICKER STRIP COPY
-// ============================================
-// One wording for every armed glitter picker: what is being chosen, then the
-// destination. Named layers use their name; unnamed layers get a clean
-// "Current Text Layer"-style fallback without fabricated quoted names.
 function formatBytes(bytes, decimals = 2) {
 	if (!Number.isFinite(bytes) || bytes <= 0) return '0 Bytes';
 	const k = 1024;

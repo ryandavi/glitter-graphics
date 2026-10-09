@@ -781,8 +781,7 @@ function buildAssetInfo(options) {
 // The paint source of a section: the Source row, then whatever the chosen
 // source needs (asset chip, image chip, solid color). It is the section's
 // Source set. A flyout section has the room for the sources as tabs. The
-// Gradient option and its editor stay runtime-injected by
-// installEffectGradientEditor (it finds the source's option buttons by id).
+// Gradient source's own sets follow it (buildGradientSourceSets).
 function buildPaintSource(slot) {
 	const prefix = slot.idPrefix;
 	const assetPrefix = slot.assetIdPrefix || `${prefix}Glitter`;
@@ -853,6 +852,36 @@ function buildPaintOpacityRow(slot) {
 		id: slot.ids?.opacity || `${slot.idPrefix}Opacity`, rowId: slot.ids?.opacityRow,
 		slider: 'slotOpacity', extraClass: 'paint-slot-opacity', role: 'slot-opacity'
 	});
+}
+
+// The Gradient source's sets, laid out as the glitter source's are, with no
+// set inside a set: Presets (closed until asked for, one remembered state for
+// every editor), the stops (the preview bar over its stop table) and the
+// Type/Blend/Angle options are sets of the section body; the Smooth blend's
+// set joins the section's one Advanced. installEffectGradientEditor binds
+// them by `data-gradient-editor`. `owner` names a second paint source, as in
+// buildGlitterAdvancedSets.
+function buildGradientSourceSets(slot, options = {}) {
+	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
+	const presets = buildPanelSet({ label: 'Presets', collapse: 'closed', rows: [
+		{ kind: 'select', label: 'Category', ariaLabel: 'Gradient preset category', options: [] },
+		{ kind: 'presetGrid', label: 'Gradient presets', classes: 'property-inset' }
+	] }, { prefix: 'gradient' });
+	// Gradient-only, through the shared `[data-paint-source-mode]` sync.
+	presets.dataset.paintSourceMode = 'gradient';
+	presets.hidden = true;
+	const parts = {
+		presets,
+		stops: fragment.querySelector('.gradient-stop-set'),
+		options: fragment.querySelector('.effect-gradient-editor'),
+		smoothing: fragment.querySelector('.gradient-advanced')
+	};
+	Object.entries(parts).forEach(([part, set]) => {
+		set.dataset.gradientEditor = slot.idPrefix;
+		set.dataset.gradientPart = part;
+		if (options.owner) set.dataset.paintSlotOwner = options.owner;
+	});
+	return { body: [parts.presets, parts.stops, parts.options], advanced: parts.smoothing };
 }
 
 // A run of built nodes in a `.property-set`. For the renderer's own sets;
@@ -1007,8 +1036,9 @@ function buildNestedPaintSet(slot) {
 }
 
 // `{ kind: 'paintSlot' }`: a section whose body is one order for every paint:
-// `before` sets (presets), Source, Opacity directly under it (paint first,
-// then shape), the section's own `sets`, then Advanced.
+// `before` sets (presets), Source and its gradient sets, Opacity directly
+// under them (paint first, then shape), the section's own `sets`, then
+// Advanced. A paint with no opacity of its own keeps its gradient sets last.
 function buildPaintSlotSection(slot, schema) {
 	const card = buildSectionShell({
 		id: slot.id, title: slot.title, attrs: slot.attrs,
@@ -1039,7 +1069,15 @@ function buildPaintSlotSection(slot, schema) {
 	}
 	(slot.before || []).forEach((set) => body.appendChild(buildPanelSet(set, schema)));
 	body.appendChild(buildPaintSource(slot));
-	if (!slot.noSlotOpacity) body.appendChild(wrapPropertySet([buildPaintOpacityRow(slot)], 'paint-slot-primary-row'));
+	const gradients = [];
+	const addGradient = (paint, options) => {
+		if (!paint.modes.includes('gradient')) return [];
+		const gradient = buildGradientSourceSets(paint, options);
+		gradients.push(gradient.advanced);
+		return gradient.body;
+	};
+	const ownGradient = addGradient(slot);
+	if (!slot.noSlotOpacity) body.append(...ownGradient, wrapPropertySet([buildPaintOpacityRow(slot)], 'paint-slot-primary-row'));
 	const advanced = (slot.advanced || []).map((set) => buildPanelSet(set, schema));
 	advanced.push(...buildGlitterAdvancedSets(slot));
 	(slot.sets || []).forEach((set) => {
@@ -1047,9 +1085,11 @@ function buildPaintSlotSection(slot, schema) {
 			body.appendChild(buildPanelSet(set, schema));
 			return;
 		}
-		body.appendChild(buildNestedPaintSet(set.paint));
+		body.append(buildNestedPaintSet(set.paint), ...addGradient(set.paint, { owner: set.paint.id }));
 		advanced.push(...buildGlitterAdvancedSets(set.paint, { owner: set.paint.id }));
 	});
+	if (slot.noSlotOpacity) body.append(...ownGradient);
+	advanced.push(...gradients);
 	body.appendChild(buildAdvancedDisclosure({ sets: advanced }, schema));
 	return card;
 }

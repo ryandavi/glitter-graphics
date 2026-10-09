@@ -41,11 +41,12 @@
 	}
 
 	// The section's bar names the target and closes the window.
-	&.has-flyout > .design-gallery-section {
-		.gallery-picker-strip,
-		.library-close-action { display: none; }
-	}
+	&.has-flyout > .design-gallery-section .library-close-action { display: none; }
 }
+
+// The Library's Close ends the armed pick. The phone's drawer also opens
+// unarmed, with nothing to end.
+.design-gallery-section:not([data-picker-library]) .library-close-action { display: none; }
 
 // How the open window sits is chosen from the room left for the canvas. The
 // phone layout is CSS first and the window closes a moment later, so these

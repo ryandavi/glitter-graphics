@@ -3417,8 +3417,11 @@ body.is-resizing-panel canvas {
   flex-shrink: 0;
   max-height: 50%;
 }
-.library-window.has-flyout > .design-gallery-section .gallery-picker-strip,
 .library-window.has-flyout > .design-gallery-section .library-close-action {
+  display: none;
+}
+
+.design-gallery-section:not([data-picker-library]) .library-close-action {
   display: none;
 }
 
@@ -3673,59 +3676,6 @@ body.is-resizing-panel canvas {
   display: block;
 }
 
-/* ===== PICKER STRIP ===== */
-.gallery-picker-strip {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  min-height: var(--row-height);
-  padding: var(--spacing-xs) var(--property-gutter);
-  background: var(--color-bg-tertiary);
-}
-
-.gallery-picker-strip-text {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-xs);
-  flex: 1;
-  min-width: 0;
-  font-size: var(--font-size-sm);
-  white-space: nowrap;
-}
-
-.gallery-picker-strip-title {
-  flex-shrink: 0;
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
-}
-
-.gallery-picker-strip-detail {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-text-tertiary);
-}
-.gallery-picker-strip-detail::before {
-  content: "·";
-  margin-right: var(--spacing-xs);
-}
-.gallery-picker-strip-detail:empty {
-  display: none;
-}
-
-@media (max-width: 800px) {
-  .gallery-picker-strip-title {
-    flex-shrink: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .gallery-picker-strip-detail {
-    display: none;
-  }
-}
 [data-gallery-content] {
   display: none;
 }
@@ -7286,10 +7236,10 @@ body.tool-text .text-hover-baselines {
   display: none;
 }
 
-.design-panel[data-panel-mode=auto-glitter] .design-gallery-section:not(.picker-mode) .design-gallery-content > :not(.auto-glitter-gallery-empty) {
+.design-panel[data-panel-mode=auto-glitter] .design-gallery-section:not([data-picker-library]) .design-gallery-content > :not(.auto-glitter-gallery-empty) {
   display: none !important;
 }
-.design-panel[data-panel-mode=auto-glitter] .design-gallery-section:not(.picker-mode) .design-gallery-content > .auto-glitter-gallery-empty {
+.design-panel[data-panel-mode=auto-glitter] .design-gallery-section:not([data-picker-library]) .design-gallery-content > .auto-glitter-gallery-empty {
   display: flex;
   min-height: 180px;
 }

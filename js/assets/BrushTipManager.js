@@ -108,8 +108,8 @@ class BrushTipManager extends ContentManager {
 
 	openPicker() {
 		const layer = this.editor.layerManager.getActiveLayer();
-		pickerOpenSession(this, { kind: 'brush-tip', layerId: layer?.id ?? null }, {
-			refresh: () => this.updatePickerStrip(),
+		const target = this.editor.maskEditor?.getActiveMode?.() === 'sub' ? 'Eraser' : 'Brush';
+		pickerOpenSession(this, { kind: 'brush-tip', layerId: layer?.id ?? null, library: 'brushTip', label: 'Brush tip', target }, {
 			reveal: () => {
 				this.editor.updateSidePanelUI(layer);
 				revealAssetBrowser(this.editor, this, this.editor.maskEditor.getBrushShape());
@@ -131,22 +131,6 @@ class BrushTipManager extends ContentManager {
 	}
 
 	closePickerSession() {
-		return pickerCloseSession(this, { refresh: () => this.updatePickerStrip({ closing: true }), updateSelection: () => this.updateSelection() });
-	}
-
-	updatePickerStrip(options = {}) {
-		const toolName = this.editor.maskEditor?.getActiveMode?.() === 'sub' ? 'Eraser' : 'Brush';
-		const copy = {
-			title: 'Choosing brush tip',
-			detail: `For the active ${toolName} tool`
-		};
-		renderPickerStrip({
-			ownsStrip: Boolean(this.pickerSession) || options.closing === true, visible: Boolean(this.pickerSession),
-			armed: Boolean(this.pickerSession), library: 'brushTip', ...copy, showDone: false
-		});
-		if (!this.pickerSession && !this.editor.pickers.active) {
-			document.getElementById('designGallerySection')?.classList.remove('picker-mode');
-			syncLibraryView();
-		}
+		return pickerCloseSession(this, { updateSelection: () => this.updateSelection() });
 	}
 }

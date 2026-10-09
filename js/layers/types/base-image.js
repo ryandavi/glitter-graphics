@@ -10,7 +10,7 @@ registerLayerType(LayerType.BASE_IMAGE, {
 		{ key: 'background', role: 'fill', path: 'background', wholeLayer: true, sourceLabel: 'background', glitterDefault: 'fillGlitterId', countsAsEffect: false },
 		{
 			key: 'sparkles', role: 'sparkles', path: 'background.sparkles', draftPath: 'background.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', panelPrefix: 'canvasSparkles', modes: ['glitter', 'solid']
+			glitterDefault: 'sparklesGlitterId', panelPrefix: 'canvasSparkles', modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	// Kira Kira on the photo: the base image is always a still, so it is

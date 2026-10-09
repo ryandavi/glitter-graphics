@@ -21,7 +21,7 @@ registerLayerType(LayerType.FRAME, {
 			glitterDefault: 'fillGlitterId',
 			sourceLabel: null,
 			panelPrefix: 'frameFill',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -34,7 +34,7 @@ registerLayerType(LayerType.FRAME, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'frameSparkles',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.frameLayerManager?.getSparkleHost(layer) || null,
@@ -116,8 +116,7 @@ registerLayerType(LayerType.FRAME, {
 		align: true,
 		reset: true
 	},
-	autoOpenDesignDrawerOnCreate: false,
-	mobileCreateDrawer: 'edit',
+	openOnCreate: 'panel',
 	onActivate: (editor, layer) => {
 		editor.setTool(ToolType.SELECT);
 		editor.updateGlitterSelection();

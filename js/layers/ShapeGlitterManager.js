@@ -58,12 +58,7 @@ class ShapeGlitterManager {
 		this.ui.assetName = id('shapeAssetName');
 		this.ui.assetChange = id('shapeAssetChange');
 		this.ui.radiusRow = id('shapeRadiusRow');
-		// Shared gallery picker strip (same DOM the text picker uses).
 		this.ui.gallerySection = id('designGallerySection');
-		this.ui.pickerStrip = id('galleryPickerStrip');
-		this.ui.pickerStripTitle = id('galleryPickerStripTitle');
-		this.ui.pickerStripDetail = id('galleryPickerStripDetail');
-		this.ui.pickerStripDone = id('galleryPickerStripDone');
 		this.ui.resetEffects = id('resetShapeEffects');
 		this.ui.fillImageThumbnail = id('shapeFillImageThumbnail');
 		this.ui.fillImageName = id('shapeFillImageName');
@@ -122,18 +117,13 @@ class ShapeGlitterManager {
 		this.syncShapeSelection();
 	}
 
-	// A Library pick: reshape the shape being replaced or the selected shape,
-	// or add a new shape layer.
+	// A Library pick reshapes the shape being replaced or the selected shape.
+	// It never adds a layer.
 	pickLibraryShape(shapeId) {
 		const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
 		const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
-		if (targetLayer) {
-			this.applyShapeToLayer(targetLayer, shapeId);
-			if (this.shapeChangeLayerId) this.updatePickerStrip();
-			return;
-		}
-		const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId } });
-		if (layer) this.editor.finishLayerCreation(layer);
+		if (targetLayer) this.applyShapeToLayer(targetLayer, shapeId);
+		else this.editor.updateStatus('Select a shape before choosing one from the Library');
 	}
 
 	syncShapeSelection() {
@@ -155,7 +145,7 @@ class ShapeGlitterManager {
 		bindFieldControls(this.fieldHost);
 
 		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
-			control.addEventListener('click', () => this.armShapeAssetPicker());
+			control.addEventListener('click', () => this.armAssetPicker());
 		});
 
 		// Shape picker: sets the active shape for new shapes, and reshapes the
@@ -378,33 +368,28 @@ class ShapeGlitterManager {
 
 	// ===== GALLERY PICKER SESSION (reuses the text strip + Done UX) =====
 
-	// Arm a slot for glitter picking: open the gallery, show the strip naming the
-	// destination + a Done button. Gallery clicks then route to this slot (see
-	// GlitterManager.selectGlitter's shape branch).
+	// Arm a slot for glitter picking: open the Library on it. Gallery clicks
+	// then route to this slot (see GlitterManager.selectGlitter's shape branch).
 	armPicker(slot) {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.shapeChangeLayerId = null;
 		pickerOpenSession(this, { layerId: layer.id, slot }, {
-			refresh: () => this.updatePickerStrip(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
 
-	armShapeAssetPicker() {
+	armAssetPicker() {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.shapeChangeLayerId = layer.id;
-		pickerOpenSession(this, { kind: 'asset', layerId: layer.id }, { refresh: () => this.updatePickerStrip() });
+		pickerOpenSession(this, { kind: 'asset', layerId: layer.id, library: 'shape', label: 'Shape' });
 		revealAssetBrowser(this.editor, this.editor.shapeBrowserManager, layer.shapeData.shapeId);
 	}
 
 	closePickerSession() {
 		this.shapeChangeLayerId = null;
-		pickerCloseSession(this, {
-			refresh: () => this.updatePickerStrip(),
-			updateSelection: () => this.editor.updateGlitterSelection()
-		});
+		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
 
 	// Which shape slot the next gallery pick targets ('fill' when not armed).
@@ -419,33 +404,7 @@ class ShapeGlitterManager {
 		return getLayerPaintSlot(layer, this.getGlitterSelectionTarget(layer))?.glitterId ?? null;
 	}
 
-	updatePickerStrip() {
-		const strip = this.ui.pickerStrip;
-		if (!strip) return;
-		const layer = this.getActiveShapeLayer();
-		const assetArmed = Boolean(layer && this.shapeChangeLayerId === layer.id);
-		const armedSlot = pickerArmedSlot(this, layer);
-		const armed = Boolean(armedSlot);
-
-		// Only drive the strip while a shape is active; otherwise leave it to the
-		// text manager (both are called from app.updateSidePanelUI).
-		if (!layer) return;
-
-		const stripText = !armed
-			? formatAssetPickerStripText('shape', layer.name)
-			: formatPickerStripText(layer, armedSlot, 'shape');
-		renderPickerStrip({
-			ownsStrip: true,
-			visible: true,
-			armed: armed || assetArmed,
-			hint: !armed && !assetArmed,
-			pickerMode: armed,
-			library: armed ? 'glitter' : 'shape',
-			...stripText
-		});
-	}
-
-	// Done/Esc from the shared strip when a shape is active.
+	// Close or Esc while a shape's picker is armed.
 	handlePickerDone() {
 		if (this.shapeChangeLayerId) {
 			this.closePickerSession();

@@ -1,51 +1,18 @@
+// Binds the Gradient source of one paint: its tab and the sets the renderer
+// built for it (buildGradientSourceSets). Choosing the tab is the paint's own
+// mode binding; the mode sync then draws the editor through
+// `_renderEffectGradient`.
 function installEffectGradientEditor(options) {
-	const solid = document.getElementById(`${options.prefix}Solid`);
-	const group = solid?.closest('.segmented-control');
-	if (!group || document.getElementById(`${options.prefix}Gradient`)) return;
-	const button = document.createElement('button');
-	button.type = 'button';
-	button.id = `${options.prefix}Gradient`;
-	button.className = 'segmented-option';
-	button.dataset.mode = 'gradient';
-	button.textContent = 'Gradient';
-	group.appendChild(button);
-	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
-	const slotCard = group.closest('.paint-slot-card') || group.closest('.property-card');
-	// A second source in a section (Bevel's Shade) is one set in that section's
-	// body: its gradient sets follow it there, marked as its own.
-	const nestedSource = Boolean(slotCard?.matches('[data-nested]'));
-	const slotBody = nestedSource ? slotCard.parentElement : slotCard?.querySelector(':scope > .property-card-body');
-	const slotAdvanced = slotBody?.querySelector(':scope > .advanced-disclosure');
-	const previewBar = fragment.querySelector('.gradient-preview');
-	const stopSet = fragment.querySelector('.gradient-stop-set');
-	const panel = fragment.querySelector('.effect-gradient-editor');
-	const advanced = fragment.querySelector('.gradient-advanced');
-	// Presets are a shortcut beside the editor: one set, closed until asked
-	// for, holding the Category row and the grid. One remembered state serves
-	// every slot's editor. Gradient-only, toggled by the shared
-	// `[data-paint-source-mode]` sync so it never shows for other modes.
-	const presetSet = buildPanelSet({ label: 'Presets', collapse: 'closed', rows: [
-		{ kind: 'select', label: 'Category', ariaLabel: 'Gradient preset category', options: [] },
-		{ kind: 'presetGrid', label: 'Gradient presets', classes: 'property-inset' }
-	] }, { prefix: 'gradient' });
+	const button = document.getElementById(`${options.prefix}Gradient`);
+	const part = (name) => document.querySelector(`[data-gradient-editor="${options.prefix}"][data-gradient-part="${name}"]`);
+	const presetSet = part('presets');
+	const stopSet = part('stops');
+	const panel = part('options');
+	const advanced = part('smoothing');
+	if (!button || !panel || panel._renderEffectGradient) return;
+	const previewBar = stopSet.querySelector('.gradient-preview');
 	const presetGroup = presetSet.querySelector('select');
 	const presetGrid = presetSet.querySelector('.preset-grid');
-	presetSet.dataset.paintSourceMode = 'gradient';
-	presetSet.hidden = true;
-
-	// Lay the editor out the way the glitter source is: NO set inside a set.
-	//   - Presets, then the stops (the preview bar over its stop table), then
-	//     the Type/Blend/Angle(/Opacity) options are sibling `.property-set`s
-	//     of the section body, before its Opacity set;
-	//   - the Smoothing set joins the section's one Advanced.
-	const primarySet = slotCard?.querySelector('.paint-slot-primary-row')?.closest('.property-set');
-	const gradientSets = [presetSet, stopSet, panel];
-	if (nestedSource) [...gradientSets, advanced].forEach((set) => { if (set) set.dataset.paintSlotOwner = slotCard.id; });
-	if (nestedSource) slotCard.after(...gradientSets);
-	else if (primarySet) primarySet.before(...gradientSets);
-	else if (slotAdvanced) slotAdvanced.before(...gradientSets);
-	else (slotBody || slotCard).append(...gradientSets);
-	if (advanced) (slotAdvanced?.querySelector(':scope > [data-advanced-content]') || panel).appendChild(advanced);
 	const defaults = CONFIG.rendering.gradient;
 	const update = (commit) => {
 		const data = options.getData();
@@ -70,10 +37,10 @@ function installEffectGradientEditor(options) {
 	const angleReset = angleRow.querySelector('.gradient-angle-reset');
 	const typeReset = panel.querySelector('.gradient-type-reset');
 	const blendReset = panel.querySelector('.gradient-blend-reset');
-	const smoothingRow = advanced?.querySelector('.gradient-smoothing');
-	const smoothingInput = smoothingRow?.querySelector('input');
-	const smoothingValue = smoothingRow?.querySelector('.gradient-smoothing-value');
-	const smoothingReset = smoothingRow?.querySelector('.gradient-smoothing-reset');
+	const smoothingRow = advanced.querySelector('.gradient-smoothing');
+	const smoothingInput = smoothingRow.querySelector('input');
+	const smoothingValue = smoothingRow.querySelector('.gradient-smoothing-value');
+	const smoothingReset = smoothingRow.querySelector('.gradient-smoothing-reset');
 	const editorBehavior = CONFIG.ui.gradientEditor;
 
 	// Which stop the list rows and one bar handle highlight. Transient UI state
@@ -348,7 +315,6 @@ function installEffectGradientEditor(options) {
 		focusSelectedMarker();
 	});
 	panel._renderEffectGradient = render;
-	button.addEventListener('click', () => { update(true); render(); });
 
 	// One helper for every "back to the CONFIG default" affordance in the editor.
 	const resetField = (key) => {
@@ -422,10 +388,10 @@ function installEffectGradientEditor(options) {
 		render();
 	});
 
-	// Make the Angle + Smoothing readouts type-editable. `advanced` has been
-	// re-parented out of `panel`, so it needs its own pass.
+	// Make the Angle + Smoothing readouts type-editable. The Smoothing set is
+	// in the section's Advanced, so it needs its own pass.
 	if (typeof initializeEditablePropertyValues === 'function') {
 		initializeEditablePropertyValues(panel);
-		if (advanced) initializeEditablePropertyValues(advanced);
+		initializeEditablePropertyValues(advanced);
 	}
 }

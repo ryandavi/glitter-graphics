@@ -141,7 +141,7 @@ function createSparklesSectionSpec(idPrefix, overrides = {}) {
 		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles', presentation: 'flyout',
 		attrs: { 'data-sparkle-controls': idPrefix },
 		texturePosition: true,
-		toggle: true, modes: ['glitter', 'solid'], activeMode: 'solid',
+		toggle: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'solid',
 		color: '#ffffff', chipTitle: 'Choose sparkle glitter',
 		before: [{ label: 'Presets', collapse: 'open', rows: [
 			{ kind: 'presetGrid', id: `${idPrefix}Presets`, label: 'Sparkle presets', classes: 'property-inset sparkle-presets' }
@@ -170,11 +170,11 @@ function createStylePresetSectionSpec(prefix) {
 function createBevelSectionSpecs(idPrefix) {
 	return [
 		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & gloss', presentation: 'flyout',
-			toggle: true, texturePosition: true, sourceLabel: 'Highlight', modes: ['glitter', 'solid'], activeMode: 'solid',
+			toggle: true, texturePosition: true, sourceLabel: 'Highlight', modes: ['glitter', 'solid', 'gradient'], activeMode: 'solid',
 			color: '#ffffff', chipTitle: 'Choose highlight glitter',
 			sets: [
 				{ paint: { id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, sourceLabel: 'Shade',
-					texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' } },
+					texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' } },
 				{ label: 'Shape', rows: [
 					{ kind: 'select', id: `${idPrefix}Profile`, label: 'Profile', ariaLabel: 'Bevel profile', revert: true,
 						options: getOptions('bevelProfile').map((option) => ({ ...option, selected: option.value === 'smooth' })) },
@@ -197,7 +197,7 @@ function createOutlineSectionSpec(idPrefix, stroke, placement) {
 	const edges = placement.filter((row) => row.label === 'Edges');
 	return { kind: 'paintSlot', slot: 'border', idPrefix, title: 'Outline', presentation: 'flyout',
 		summaryValue: stroke[0].id,
-		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
+		toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose outline glitter',
 		sets: [
 			{ label: 'Stroke', rows: [...stroke, ...edges] },
@@ -230,7 +230,7 @@ function createOutlinePlacementRows(idPrefix) {
 
 function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
 	return { kind: 'paintSlot', slot: 'shadow', idPrefix, title: 'Shadow', presentation: 'flyout',
-		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
+		toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose shadow glitter',
 		sets: [
 			{ rows: [{ kind: 'segmented', label: 'Type', revert: true, options: getOptions('shadowKind').map(({ value, label, suffix }) => ({ id: `${idPrefix}${suffix}`, value, label, active: value === 'drop' })) }] },
@@ -539,7 +539,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('frameLayerOpacity', 'frameLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['glitter', 'solid'], activeMode: 'glitter',
+					modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
 					color: CONFIG.tools.frames.defaults.color, chipTitle: 'Choose frame glitter' }
 			] },
 			{ title: 'Layout', sections: [{ kind: 'transform' }] }
@@ -572,7 +572,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('baseBackgroundOpacity'),
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
-					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
+					modes: ['image', 'none', 'glitter', 'solid', 'gradient'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
 					hidePrimaryModes: ['image'],
 					chipTitle: 'Choose background glitter',
@@ -664,7 +664,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('opacity', 'glitterLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
-					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
+					modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter',
 
 				}
@@ -840,7 +840,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('textLayerOpacity', 'textLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
+					modes: ['none', 'glitter', 'solid', 'gradient'], activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter'
 				}
 			] },
@@ -848,7 +848,7 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'backgroundFill', idPrefix: 'textBackground', title: 'Background', presentation: 'flyout',
-				toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
+				toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose background glitter',
 				before: [
 					{ rows: [
@@ -918,7 +918,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('shapeLayerOpacity', 'shapeLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['none', 'image', 'glitter', 'solid'], activeMode: 'solid',
+					modes: ['none', 'image', 'glitter', 'solid', 'gradient'], activeMode: 'solid',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter',
 					imageAsset: {
 						info: 'shapeFillImageInfo', thumbnail: 'shapeFillImageThumbnail',
@@ -1015,11 +1015,11 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('pathLayerOpacity', 'pathLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'pathFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['none', 'glitter', 'solid'], activeMode: 'none',
+					modes: ['none', 'glitter', 'solid', 'gradient'], activeMode: 'none',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter' },
 				{ kind: 'paintSlot', slot: 'stroke', idPrefix: 'pathStroke', title: 'Stroke', presentation: 'flyout',
 					summaryValue: 'pathStrokeWidth',
-					toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
+					toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
 					color: CONFIG.tools.path.stroke.color, chipTitle: 'Choose stroke glitter',
 					sets: [
 						{ label: 'Line', rows: [

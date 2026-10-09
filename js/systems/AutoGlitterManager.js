@@ -593,8 +593,7 @@ class AutoGlitterManager {
 		const color = this.result?.palette[index];
 		if (!this.session || !color || color.manualMergeTarget != null) return;
 		this.ui.results.querySelector(`[data-palette-index="${index}"] .auto-glitter-choice`)?.setAttribute('aria-expanded', 'true');
-		pickerOpenSession(this, { paletteIndex: index }, {
-			refresh: () => this.updatePickerStrip(),
+		pickerOpenSession(this, { paletteIndex: index, label: `Color match ${index + 1}` }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId)
 		});
 	}
@@ -606,19 +605,6 @@ class AutoGlitterManager {
 	getPickerGlitterId() {
 		if (!this.hasActivePickerSession()) return null;
 		return this.result.palette[this.pickerSession.paletteIndex].selectedGlitterId;
-	}
-
-	updatePickerStrip() {
-		if (!this.isSessionActive() && !this.pickerSession) return;
-		const armed = this.hasActivePickerSession();
-		const index = this.pickerSession?.paletteIndex;
-		renderPickerStrip({
-			ownsStrip: true,
-			visible: armed,
-			armed,
-			title: armed ? `Choosing glitter for Color ${index + 1}` : '',
-			detail: 'Auto Glitter preview'
-		});
 	}
 
 	selectPickerGlitter(id) {
@@ -643,7 +629,7 @@ class AutoGlitterManager {
 	closePickerSession(returnToPanel = false) {
 		if (typeof returnToPanel === 'object') returnToPanel = false;
 		const index = this.pickerSession?.paletteIndex;
-		pickerCloseSession(this, { refresh: () => this.updatePickerStrip() });
+		pickerCloseSession(this);
 		if (!returnToPanel) return;
 		returnFromPickerToProperties(this.editor, {
 			section: 'autoGlitterSettings',

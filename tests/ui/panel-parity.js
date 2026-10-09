@@ -185,13 +185,13 @@ const LAYER_SETUPS = {
 			const editor = window.editor;
 			const raf2 = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 			editor.brushTipManager.openPicker();
-			if (!editor.brushTipManager.pickerSession || !document.getElementById('galleryPickerStrip')?.classList.contains('is-armed')) throw new Error('Brush-tip picker did not arm for the filter-selection regression setup');
+			if (!editor.brushTipManager.pickerSession || document.getElementById('designGallerySection')?.dataset.pickerLibrary !== 'brushTip') throw new Error('Brush-tip picker did not arm for the filter-selection regression setup');
 			const layer = editor.filterLayerManager.createLayer();
 			layer.filterData = GlitterFilter.normalizeFilterData({ type: 'instagram', presetId: 'clarendon' });
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
 			const section = document.getElementById('filterSettingsSection');
-			if (editor.brushTipManager.pickerSession || document.getElementById('galleryPickerStrip')?.classList.contains('is-armed')) throw new Error('Selecting a filter did not close the brush-tip picker');
+			if (editor.brushTipManager.pickerSession || document.getElementById('designGallerySection')?.dataset.pickerLibrary) throw new Error('Selecting a filter did not close the brush-tip picker');
 			if (!section?.classList.contains('visible')) throw new Error('Filter Properties did not become visible');
 			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
 			if (editor.libraryWindow.isOpen) throw new Error('Selecting a filter left the Library window open');

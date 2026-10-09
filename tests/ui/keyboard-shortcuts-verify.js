@@ -27,14 +27,15 @@ async function main() {
 		await page.waitForFunction(() => editor.originalImage != null);
 		await page.evaluate(() => {
 			editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: 'rounderHeart' } });
-			editor.shapeGlitterManager.updatePickerStrip();
+			editor.pickers.closeAll();
 		});
-		assert(await page.locator('#galleryPickerStripTitle').textContent() === 'Choosing shape', 'Shapes library showed the glitter hint');
-		await page.evaluate(() => editor.shapeGlitterManager.armShapeAssetPicker());
+		assert(await page.locator('#designGalleryTitleText').textContent() === 'Shapes', 'A shape layer did not show the Shapes library');
+		await page.evaluate(() => editor.shapeGlitterManager.armAssetPicker());
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'shape', 'Shape picker showed the wrong library');
+		assert((await page.locator('#designGalleryTitleText').textContent()).startsWith('Shape · '), 'Shape picker did not name its target');
 		await page.evaluate(() => {
 			const range = document.createRange();
-			range.selectNodeContents(document.getElementById('galleryPickerStripTitle'));
+			range.selectNodeContents(document.getElementById('designGalleryTitleText'));
 			window.getSelection().removeAllRanges();
 			window.getSelection().addRange(range);
 			window.__glitterLayerClipboard = null;
@@ -46,7 +47,7 @@ async function main() {
 		await page.waitForFunction(() => window.__glitterLayerClipboard != null);
 		assert(await page.evaluate(() => JSON.parse(window.__glitterLayerClipboard).kind === 'glitter-layers'), 'Ctrl+C without highlighted text did not copy layers');
 		await page.evaluate(() => editor.shapeGlitterManager.armPicker('fill'));
-		assert(await page.locator('#galleryPickerStripTitle').textContent() === 'Choosing fill glitter', 'Fill picker lost its glitter label');
+		assert((await page.locator('#designGalleryTitleText').textContent()).startsWith('Fill · '), 'Fill picker did not name its target');
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'glitter', 'Fill picker showed the wrong library');
 		for (const width of [1200, 390]) {
 			await page.setViewportSize({ width, height: 900 });
@@ -73,10 +74,10 @@ async function main() {
 				const manager = editor.shapeGlitterManager;
 				const done = manager.handlePickerDone.bind(manager);
 				manager.handlePickerDone = () => { window.auditDoneCalls++; done(); };
-				document.getElementById('galleryPickerStripDone').click();
+				document.getElementById('libraryWindowClose').click();
 				manager.handlePickerDone = done;
 			});
-			assert(await page.evaluate(() => window.auditDoneCalls === 1 && !editor.pickers.active), `${width}: Done ran more than once`);
+			assert(await page.evaluate(() => window.auditDoneCalls === 1 && !editor.pickers.active), `${width}: Close ran more than once`);
 		}
 		await page.setViewportSize({ width: 1200, height: 900 });
 		await page.evaluate(() => {

@@ -145,8 +145,11 @@ const TEXT_EDIT_METHODS = {
 	// Escape and a press off the text: end the edit and return to Select with
 	// the layer selected, ready to move.
 	commitTextEdit() {
+		const created = this.editSession?.created ? this.editor.layerManager.getLayerById(this.editSession.layerId) : null;
 		this.endTextEdit();
 		if (this.editor.currentTool === ToolType.TEXT) this.editor.setTool(ToolType.SELECT);
+		// A new text that kept its words opens what it most likely needs next.
+		if (created && this.editor.layerManager.getLayerById(created.id)) this.editor.openCreateTarget(created);
 	},
 	beginTextEdit(layer, { focus = true, selectAll = false, created = false } = {}) {
 		if (layer?.type !== LayerType.TEXT_GLITTER || !this.editor.canEditLayer(layer, { notify: true })) return;

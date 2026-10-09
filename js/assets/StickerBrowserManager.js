@@ -69,7 +69,7 @@ class StickerBrowserManager extends ContentManager {
 	}
 
 	async handleItemClick(item) {
-		await this.editor.stickerManager.addStickerToCanvas(item.id);
+		await this.editor.stickerManager.pickLibrarySticker(item.id);
 
 		// Update helpful message
 		this.editor.updateHelpfulMessage();

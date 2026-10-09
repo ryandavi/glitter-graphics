@@ -88,6 +88,9 @@ setupLayerTypePickerListeners() {
 			: this.layerManager.addLayer(layerType, createOptions || {});
 		if (layer && createOptions?.shapeLayer?.openImagePicker) {
 			requestAnimationFrame(() => this.shapeGlitterManager?.chooseFillImage());
+		} else if (layer && layerType !== LayerType.TEXT_GLITTER) {
+			// After the creation flow has settled on its tool and panel.
+			requestAnimationFrame(() => this.openCreateTarget(layer));
 		}
 	}
 

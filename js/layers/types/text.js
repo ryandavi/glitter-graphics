@@ -23,7 +23,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			sourceLabel: 'backgroundFill',
 			glitterDefault: 'backgroundGlitterId',
 			panelPrefix: 'textBackground',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -47,7 +47,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			draftPath: 'textData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'textShadow',
-			modes: ['glitter', 'solid'],
+			modes: ['glitter', 'solid', 'gradient'],
 			fields: {
 				castLength: false,
 				castLean: false,
@@ -67,12 +67,13 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			},
 			key: 'border',
 			role: 'border',
+			label: 'outline',
 			edgeStyles: ['round', 'miter', 'hard'],
 			path: 'textData.border',
 			draftPath: 'textData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'textBorder',
-			modes: ['glitter', 'solid'],
+			modes: ['glitter', 'solid', 'gradient'],
 			fields: { widthPx: 'textBorderWidth' }
 		},
 		{
@@ -84,7 +85,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			path: 'textData.fill',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'textFill',
-			modes: ['none', 'glitter', 'solid']
+			modes: ['none', 'glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -97,7 +98,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			enabledPath: 'textData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'textBevel',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -110,7 +111,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			enabledPath: 'textData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'textBevelShade',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -123,7 +124,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'textSparkles',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	sparkleHost: (editor, layer) => editor.textGlitterManager?.getSparkleHost(layer) || null,
@@ -243,7 +244,8 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		reset: true
 	},
 	createOptionsKey: 'textLayer',
-	autoOpenDesignDrawerOnCreate: false,
+	// Opens once the first typing ends (TextGlitterManager.commitTextEdit).
+	openOnCreate: 'fill',
 	// Reopening the side panel after every tap-created layer is desktop
 	// convenience, not a mobile ask - Editor.finishLayerCreation() reads this.
 	mobileCreateBehavior: { skipReload: true },

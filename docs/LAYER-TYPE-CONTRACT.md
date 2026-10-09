@@ -79,7 +79,8 @@ Common optional fields:
 - `contentScalesWithTransform`: the type's content scales with its transform instead of being baked (stickers), so document scaling multiplies the transform scale. Outline, shadow and bevel sizes are still canvas pixels and rescale like any other type's; only sparkles, placed in the content's own pixels, are compensated instead.
 - `createOptionsKey`: the option payload key passed through `LayerManager.addLayer(...)`.
 - `lockScope: 'position'`: the layer's lock pins only its transform; editing, deleting, duplicating and reordering stay available (`isLayerFullyLocked`, `js/core/layer-types.js`). Without it a lock blocks all of those. `lockedOnCreate`: a new layer of this type starts locked.
-- `autoOpenDesignDrawerOnCreate`, `mobileCreateBehavior`, `mobileCreateDrawer`: gallery and mobile-drawer behavior on create.
+- `openOnCreate`: what opens after the layer is added from an Add control (`editor.openCreateTarget`), on desktop and phone alike. `'asset'` opens the Library on the layer's asset through the manager's `armAssetPicker()`; a flyout section's key (`'fill'`) opens that section; `'panel'` is the layer's own properties, which only the phone has to open. Text opens its target when the first typing ends. A layer drawn with a tool opens nothing.
+- `mobileCreateBehavior`: `skipReload` keeps the phone from reloading the panel after every tap-created layer.
 
 ## Checklist
 

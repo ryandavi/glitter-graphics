@@ -52,7 +52,7 @@ async function exportBytes(page, target = 'still:png') {
 			const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f00'; ctx.fillRect(0, 0, 16, 16);
 			const blob = await new Promise(resolve => canvas.toBlob(resolve));
 			const item = await editor.stickerLibrary.handleUserUpload(new File([blob], 'test.png', { type: 'image/png' }), { navigate: false });
-			await editor.stickerManager.addStickerToCanvas(item.id);
+			await editor.stickerManager.createStickerLayer(item.id);
 			window.originalId = item.id;
 			const layer = editor.layerManager.getActiveLayer();
 			layer.name = 'My photo'; layer.transform.rotation = 17; layer.stickerData.colorAdjust.hue = 20;
@@ -141,8 +141,8 @@ async function exportBytes(page, target = 'still:png') {
 				else await page.locator(`#${control}`).click();
 				assert(await page.evaluate(() => editor.stickerManager.pickerSession?.kind === 'asset'), 'Sticker control did not arm the asset picker');
 				await page.waitForSelector(`.asset-option[data-id="${kept.id}"]`, { state: 'visible' });
-				await page.locator('#galleryPickerStripDone').click();
-				assert(!await page.evaluate(() => editor.stickerManager.pickerSession), 'Done did not close the picker');
+				await page.locator('#libraryWindowClose').click();
+				assert(!await page.evaluate(() => editor.stickerManager.pickerSession), 'Close did not close the picker');
 			}
 		}
 		const exported = await exportBytes(page);
@@ -167,7 +167,7 @@ async function exportBytes(page, target = 'still:png') {
 			editor.stickerManager.backgroundRemover.releaseWorker();
 		});
 		await page.evaluate(async () => {
-			await editor.stickerManager.addStickerToCanvas(originalId);
+			await editor.stickerManager.pickLibrarySticker(originalId);
 			if (!editor.stickerManager.canRemoveBackground()) throw Error('Original upload lost Remove background');
 		});
 		await page.route('**/background-removal-worker.js*', route => route.fulfill({ contentType: 'text/javascript', body: `self.onmessage = () => self.postMessage({ type: 'error', message: 'Download failed' });` }));

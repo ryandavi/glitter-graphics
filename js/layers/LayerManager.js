@@ -269,13 +269,6 @@ class LayerManager {
 		this.insertLayer(layer);
 		this.setActiveLayer(layer.id);
 
-		// Mobile creation routes to the layer's declared workflow; legacy
-		// gallery-driven types default to Design.
-		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.ui.mobile.openDrawOnLayerAdd) {
-			const drawer = cfg.mobileCreateDrawer || (cfg.autoOpenDesignDrawerOnCreate ? 'design' : null);
-			if (drawer) this.editor.mobileManager.openDrawer(drawer);
-		}
-
 		this.renderLayersList();
 		if (!options.skipHistory) this.editor.saveState('Edit layers');
 		this.editor.updateActionButtons();
@@ -747,8 +740,9 @@ class LayerManager {
 
 	renderLayersList() {
 		const container = this.layersListContainer;
-		// The Inspector's bar shows the same layer name as the list.
+		// The Inspector's bar and the Library's show the same layer name as the list.
 		this.editor.syncInspectorHeader?.();
+		syncLibraryTitle();
 
 		// Add insertion line if it doesn't exist
 		let insertionLine = container.querySelector('.layer-insertion-line');

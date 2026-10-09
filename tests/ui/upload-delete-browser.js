@@ -42,7 +42,7 @@ async function exportPixels(page) {
 				const blob = await new Promise(resolve => canvas.toBlob(resolve));
 				const item = await library.handleUserUpload(new File([blob], `${kind}.png`, { type: 'image/png' }), { navigate: false });
 				window.uploadLibrary = library; window.uploadId = item.id;
-				if (kind === 'sticker') await editor.stickerManager.addStickerToCanvas(item.id);
+				if (kind === 'sticker') await editor.stickerManager.createStickerLayer(item.id);
 				else {
 					const layer = editor.textGlitterManager.createLayer({ text: 'Test' });
 					layer.textData.fill.glitterId = item.id;
@@ -50,7 +50,9 @@ async function exportPixels(page) {
 					editor.saveState('Use uploaded fill');
 				}
 				library.toggleFavorite(item.id); library.recordRecent(item.id);
-				await revealAssetBrowser(editor, library, item.id);
+				// The Library shows while a picker is armed; arming reveals the item.
+				if (kind === 'sticker') editor.stickerManager.armAssetPicker();
+				else editor.textGlitterManager.armPicker('fill');
 				window.uploadLayerId = editor.layerManager.getActiveLayer().id;
 				window.uploadHistoryLength = editor.historyManager.history.length;
 			}, kind);

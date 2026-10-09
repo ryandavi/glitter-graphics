@@ -24,7 +24,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			draftPath: 'effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'glitterShadow',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		},
 		{
 			defaults: () => {
@@ -38,12 +38,13 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			},
 			key: 'border',
 			role: 'border',
+			label: 'outline',
 			edgeStyles: ['round', 'miter', 'hard'],
 			path: 'border',
 			draftPath: 'effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'glitterBorder',
-			modes: ['glitter', 'solid'],
+			modes: ['glitter', 'solid', 'gradient'],
 			fields: { widthPx: 'borderWidth' }
 		},
 		{
@@ -60,7 +61,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			sourceLabel: null,
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'glitterFill',
-			modes: ['glitter', 'solid'],
+			modes: ['glitter', 'solid', 'gradient'],
 			fields: { opacity: false }
 		},
 		{
@@ -73,7 +74,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			draftPath: 'effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId',
 			panelPrefix: 'glitterSparkles',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	fields: [
@@ -151,7 +152,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		align: true,
 		reset: true
 	},
-	autoOpenDesignDrawerOnCreate: true,
+	openOnCreate: 'fill',
 	onActivate: (editor, layer) => {
 		if (!hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
 			editor.setTool(ToolType.GLITTER_FILL);

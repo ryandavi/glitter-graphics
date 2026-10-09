@@ -17,7 +17,7 @@ registerLayerType(LayerType.SPARKLES, {
 			path: 'sparkles',
 			glitterDefault: 'sparklesGlitterId',
 			panelPrefix: 'layerSparkles',
-			modes: ['glitter', 'solid']
+			modes: ['glitter', 'solid', 'gradient']
 		}
 	],
 	// The whole canvas, no pixels of its own: Highlights reads the scene
@@ -54,7 +54,7 @@ registerLayerType(LayerType.SPARKLES, {
 		context.swatch.classList.add('sparkle-layer-swatch');
 		return true;
 	},
-	mobileCreateDrawer: 'edit',
+	openOnCreate: 'panel',
 	onActivate: (editor, layer) => {
 		editor.setTool(ToolType.SELECT);
 		editor.updateGlitterSelection();

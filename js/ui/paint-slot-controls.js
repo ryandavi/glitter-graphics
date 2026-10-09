@@ -393,6 +393,7 @@ function bindPaintSlotControls(host) {
 					const data = host.ensureSlot(layer, key);
 					data.mode = mode;
 					if (mode === 'glitter' && !data.glitterId) data.glitterId = getPaintSlotDefaultGlitterId(host.type, definition);
+					if (mode === 'gradient') data.gradient = normalizeEffectGradient(data.gradient);
 				}, {});
 			}));
 		});

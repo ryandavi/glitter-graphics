@@ -103,7 +103,6 @@ class ProjectSerializer {
 		this.editor.stickerManager.closePickerSession();
 		this.editor.glitterManager.closePickerSession();
 		this.editor.baseBackgroundManager.closePickerSession();
-		document.getElementById('designGallerySection')?.classList.remove('picker-mode');
 
 		await this.loadBaseImage(migrated);
 		// Base-image loading resets manager state, so embedded assets must bind after it.

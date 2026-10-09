@@ -765,8 +765,7 @@ const CONFIG = deepFreeze({
 				flingVelocityPxMs: 0.6,
 				velocityWindowMs: 90
 			},
-			autoCloseDesignDrawer: false,
-			openDrawOnLayerAdd: true
+			autoCloseDesignDrawer: false
 		},
 		hints: {
 			enabledByDefault: true
