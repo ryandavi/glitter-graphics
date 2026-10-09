@@ -1841,6 +1841,12 @@ function finishPanelMarkup(root) {
 			set.prepend(label);
 		});
 	});
+	// A section holding a preset grid can give the grid the room it is given
+	// (the window); the marks say which set and which section.
+	root.querySelectorAll('.property-card-body > .property-set > .property-scrollbox').forEach((box) => {
+		box.parentElement.classList.add('has-scrollbox');
+		box.closest('.property-card').classList.add('has-scrollbox');
+	});
 	initializeEditablePropertyValues(root);
 }
 

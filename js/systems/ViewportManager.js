@@ -633,6 +633,8 @@ class ViewportManager {
 
 		// If canvas exists, adjust pan to keep centered
 		if (this.canvasWidth) {
+			// Animated, the recentring is part of the move, not a jump before it.
+			if (options.animate) this.startViewTransition();
 			const deltaX = newWidth - this.lastViewportWidth;
 			const deltaY = newHeight - this.lastViewportHeight;
 

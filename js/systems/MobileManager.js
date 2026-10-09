@@ -399,10 +399,13 @@ class MobileManager {
 		const title = document.getElementById('inspectorTitleText');
 		this.sheetSection = entry ? { key: entry.key, element: entry.element } : null;
 		if (!entry) {
+			if (title.dataset.sheetSection === undefined) return;
 			delete title.dataset.sheetSection;
+			this.editor.syncInspectorHeader();
 			return;
 		}
 		title.dataset.sheetSection = entry.title;
+		title.textContent = entry.title;
 		[entry.element, ...(entry.extras || [])].forEach((element) => {
 			element.classList.add('is-sheet-open');
 			element.parentElement.closest('.property-group')?.classList.add('has-sheet-open');
@@ -841,18 +844,23 @@ class MobileManager {
 
 	scheduleDrawerViewportUpdate(mode, restoreState = null) {
 		this.cancelDrawerViewportUpdate();
-		this.drawerLayoutFrame = requestAnimationFrame(() => {
-			this.drawerLayoutFrame = requestAnimationFrame(() => {
-				this.drawerViewportSyncing = true;
-				if (mode === 'restore' && restoreState) {
-					this.editor.viewport?.restoreViewState?.(restoreState, { animate: true });
-				} else {
-					this.editor.viewport?.performResizeUpdate({ animate: true });
-				}
-				this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
-				this.drawerViewportSyncing = false;
-				if (mode === 'restore') this.resetDrawerViewportSession();
-			});
+		const update = () => {
+			this.drawerLayoutFrame = null;
+			this.drawerViewportSyncing = true;
+			if (mode === 'restore' && restoreState) {
+				this.editor.viewport?.restoreViewState?.(restoreState, { animate: true });
+			} else {
+				this.editor.viewport?.performResizeUpdate({ animate: true });
+			}
+			this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
+			this.drawerViewportSyncing = false;
+			if (mode === 'restore') this.resetDrawerViewportSession();
+		};
+		// The bar layout's sheet and the canvas start in the same frame, so they
+		// move as one. The room the sheet takes is already in the layout here.
+		if (this.bar) update();
+		else this.drawerLayoutFrame = requestAnimationFrame(() => {
+			this.drawerLayoutFrame = requestAnimationFrame(update);
 		});
 	}
 

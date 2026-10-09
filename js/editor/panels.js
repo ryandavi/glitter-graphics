@@ -336,7 +336,11 @@ isLayerContentLocked(layer) {
 		else if (target === 'panel') {
 			if (mobile?.isMobile) mobile.openDrawer('edit');
 		} else if (mobile?.usesDrawers) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
-		else if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
+		else {
+			if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
+			// In the phone's sheet a section does not open its Library by itself.
+			if (mobile?.usesBar) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
+		}
 	},
 
 	finishLayerCreation(layer, { onDesktopReload } = {}) {
@@ -415,7 +419,8 @@ isLayerContentLocked(layer) {
 		else if (active) title = { icon: PANEL_SCHEMAS[active.type].section.icon, text: describeLayer(active, this).name };
 		else title = { icon: PANEL_SCHEMAS[LayerType.BASE_IMAGE].section.icon, text: 'Canvas' };
 		icon.setAttribute('href', `#icon-${title.icon}`);
-		text.textContent = title.text;
+		// As the phone's sheet the bar names the open section (MobileManager).
+		text.textContent = text.dataset.sheetSection || title.text;
 		badge.replaceChildren(...(session?.badge ? [buildFeatureBadge(session.badge)] : []));
 
 		const names = this.getVisibleSwitchPanels();

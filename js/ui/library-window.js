@@ -22,9 +22,6 @@ class LibraryWindow {
 		this.pending = false;
 		this.layoutFrame = null;
 		this.flyoutCard = null;
-		// The section whose Library the user closed in the phone's sheet, by id:
-		// it shows whole until its glitter is pressed again.
-		this.libraryDismissed = null;
 		// A source change or the switch of the open section arms or releases the
 		// Library.
 		this.flyoutObserver = new MutationObserver(() => this.sync());
@@ -130,10 +127,11 @@ class LibraryWindow {
 		if (card !== this.flyoutCard) {
 			this.flyoutObserver.disconnect();
 			this.flyoutCard?.classList.remove('is-flyout-open');
+			this.flyoutCard?.parentElement.classList.remove('has-flyout-open');
 			card?.classList.add('is-flyout-open');
+			card?.parentElement.classList.add('has-flyout-open');
 			if (card) this.flyoutObserver.observe(card, { subtree: true, attributes: true, attributeFilter: ['data-paint-mode', 'data-effect-enabled'] });
 			this.flyoutCard = card;
-			this.libraryDismissed = null;
 			const toggle = card ? buildFlyoutSwitch(card) : null;
 			document.getElementById('flyoutSwitch').replaceChildren(...(toggle ? [toggle] : []));
 			document.querySelectorAll('.property-line').forEach((line) => {
@@ -145,27 +143,30 @@ class LibraryWindow {
 		document.getElementById('flyoutSection').classList.toggle('visible', Boolean(card));
 		if (!card) return null;
 		document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${PANEL_SCHEMAS[layer.type].section.icon}`);
-		document.getElementById('flyoutTitleText').textContent = `${card.dataset.flyoutTitle} · ${describeLayer(layer, editor).name}`;
+		// Beside the Inspector the bar says where; the phone's sheet sits under
+		// the layer it changes and names the section alone.
+		document.getElementById('flyoutTitleText').textContent = editor.mobileManager?.usesBar
+			? card.dataset.flyoutTitle : `${card.dataset.flyoutTitle} · ${describeLayer(layer, editor).name}`;
 
 		// A Glitter source is the glitter Library: arm it through the paint's own
 		// chip, which is where every manager binds its picker. A section with two
-		// paints keeps the one the user armed, and otherwise takes the first.
+		// paints keeps the one the user armed, and otherwise takes the first. The
+		// phone's sheet has room for one of the two, so there the section shows
+		// and the Library opens over it when its glitter is pressed.
 		const usable = !card.classList.contains('is-off') && !editor.isLayerContentLocked(layer);
 		const glitterSlots = usable ? getSectionPaintSlots(card).filter((slot) => slot.dataset.paintMode === 'glitter') : [];
 		const armed = pickers.active && (pickers.active.pickerSession.slot || 'fill');
-		if (armed || !glitterSlots.length) this.libraryDismissed = null;
 		if (!glitterSlots.length) pickers.closeAll();
-		else if (this.libraryDismissed === card.id) return card;
+		else if (editor.mobileManager?.usesBar) return card;
 		else if (!glitterSlots.some((slot) => slot.dataset.slot === armed)) glitterSlots[0].querySelector('.asset-info.glitter-source-glitter .asset-info-thumbnail')?.click();
 		return card;
 	}
 
-	// In the phone's sheet the Library and a section share little room, so the
-	// Library's Close leaves the section. Returns whether it did.
-	dismissLibrary() {
+	// In the phone's sheet the Library opens over its section; Back returns to
+	// the section. Returns whether there was one to return to.
+	backToSection() {
 		const pickers = this.editor.pickers;
 		if (!this.editor.mobileManager?.usesBar || !this.flyoutCard || !pickers.active) return false;
-		this.libraryDismissed = this.flyoutCard.id;
 		pickers.closeAll();
 		this.sync();
 		return true;

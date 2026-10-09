@@ -3419,18 +3419,41 @@ body.is-resizing-panel canvas {
   max-height: 50%;
 }
 
+.library-window:not(.has-library) > .flyout-section {
+  flex: 1 1 auto;
+}
+.library-window:not(.has-library) > .flyout-section > .section-content {
+  display: flex;
+  flex-direction: column;
+}
+.library-window:not(.has-library) > .flyout-section .flyout-host.has-flyout-open,
+.library-window:not(.has-library) > .flyout-section .is-flyout-open.has-scrollbox,
+.library-window:not(.has-library) > .flyout-section .is-flyout-open.has-scrollbox > .property-card-body,
+.library-window:not(.has-library) > .flyout-section .is-flyout-open.has-scrollbox > .property-card-body > .has-scrollbox {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+.library-window:not(.has-library) > .flyout-section .is-flyout-open.has-scrollbox > .property-card-body > .has-scrollbox > .property-scrollbox {
+  flex: 1 1 var(--property-scrollbox-height);
+  height: auto;
+}
+
+.library-back-action {
+  display: none;
+}
+
 @media (min-width: 1041px) {
   .library-window.has-flyout > .design-gallery-section .library-close-action {
     display: none;
   }
 }
 @media (max-width: 1040px) {
-  .library-window.has-library > .flyout-section {
-    max-height: none;
-  }
-  .library-window.has-library > .flyout-section .is-flyout-open > .property-card-body > :not(.paint-slot-source),
-  .library-window.has-library > .flyout-section .is-flyout-open > .property-card-body > .paint-slot-source > .asset-info {
+  .library-window.has-library.has-flyout > .flyout-section {
     display: none;
+  }
+  .library-window.has-library.has-flyout .library-back-action {
+    display: inline-flex;
   }
 }
 .design-gallery-section:not([data-picker-library]) .library-close-action {
@@ -4059,7 +4082,7 @@ body.is-resizing-panel canvas {
 }
 .asset-options .asset-grid > .asset-option.highlight {
   outline-color: var(--color-accent);
-  animation: elementPulse 0.5s ease-in-out 2;
+  animation: tile-reveal 0.9s ease-out;
 }
 .asset-options .asset-grid > .asset-option:hover {
   outline-color: var(--color-border-hover);
@@ -4154,12 +4177,12 @@ body.is-resizing-panel canvas {
   text-overflow: ellipsis;
 }
 
-@keyframes elementPulse {
-  0%, 100% {
-    transform: scale(1);
+@keyframes tile-reveal {
+  from {
+    box-shadow: 0 0 0 3px var(--color-accent);
   }
-  50% {
-    transform: scale(1.05);
+  to {
+    box-shadow: 0 0 0 3px transparent;
   }
 }
 .asset-favorite-toggle, .asset-delete-button {
@@ -11473,7 +11496,8 @@ body.modal-open {
 .mobile-bottom-nav,
 .mobile-settings-drawer,
 .mobile-sheet-handle,
-.phone-chip-bar {
+.phone-chip-bar,
+.sheet-close-action {
   display: none;
 }
 
@@ -12008,8 +12032,14 @@ body.modal-open {
   body.phone-bar .inspector-section > .inspector-switch {
     display: none;
   }
-  body.phone-bar #inspectorTitleText[data-sheet-section]::before {
-    content: attr(data-sheet-section) " · ";
+  body.phone-bar .sheet-close-action {
+    display: inline-flex;
+  }
+  body.phone-bar .main-content > .design-panel > .section > .section-header {
+    border-bottom: 1px solid var(--color-border);
+  }
+  body.phone-bar .inspector-body .property-group {
+    border-top: 0;
   }
   body.phone-bar .inspector-body > :not(.has-sheet-open, .is-sheet-open),
   body.phone-bar .inspector-body > .has-sheet-open :is(.property-group:not(.has-sheet-open, .is-sheet-open), .property-group-label, .property-empty, .no-selection-intro),

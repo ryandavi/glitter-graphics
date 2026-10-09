@@ -7,10 +7,11 @@ class PickerRegistry {
 		// The flyout section the window shows, by its key (`data-flyout-key`).
 		// With an armed session this is the one open target.
 		this.flyout = null;
-		document.getElementById('flyoutClose')?.addEventListener('click', () => this.closeActive());
-		document.getElementById('libraryWindowClose')?.addEventListener('click', () => {
-			if (!this.editor.libraryWindow?.dismissLibrary()) this.closeActive();
+		['libraryWindowClose', 'flyoutClose'].forEach((id) => {
+			document.getElementById(id)?.addEventListener('click', () => this.closeActive());
 		});
+		document.getElementById('libraryBack')?.addEventListener('click', () => this.editor.libraryWindow?.backToSection());
+		document.getElementById('inspectorClose')?.addEventListener('click', () => this.editor.mobileManager?.closeAllDrawers());
 	}
 
 	// Pressing a line opens its section, swaps the window to it, or closes it.
@@ -166,14 +167,16 @@ function syncPickerTarget(editor) {
 }
 
 // "Outline · Hello": what the armed session changes and where, or '' when
-// nothing is armed or an open flyout section's bar already says it.
+// nothing is armed or an open flyout section's bar beside it already says it.
 function describePickerTarget(editor) {
 	const pickers = editor?.pickers;
 	const manager = pickers?.active;
 	const session = manager?.pickerSession;
-	if (!session || pickers.sessionKeepsFlyout(manager, session)) return '';
+	// In the phone's sheet the Library covers the section, so it names the target itself.
+	if (!session || (pickers.sessionKeepsFlyout(manager, session) && !editor.mobileManager?.usesBar)) return '';
 	const layer = session.layerId == null ? null : editor.layerManager.getLayerById(session.layerId);
 	const what = session.label || (layer ? panelCap(getPaintSlotLabel(layer.type, session.slot || 'fill')) : '');
+	if (editor.mobileManager?.usesBar) return what;
 	const where = session.target || (layer ? describeLayer(layer, editor).name : '');
 	return [what, where].filter(Boolean).join(' \u00b7 ');
 }
