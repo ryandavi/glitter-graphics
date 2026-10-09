@@ -407,6 +407,10 @@ async function main() {
 					if (b.prefix === 'font') {
 						expect(option.querySelector('svg path'), 'Font picker must use outlined lettering');
 						expect(option.textContent.trim().startsWith(category.name), 'Font preview polluted native option label');
+						const card = b.createCategoryCard(category, 1);
+						const cover = card.querySelector('.category-card-image');
+						expect(cover.classList.contains('font-category-preview') && !cover.classList.contains('category-card-previews'), 'Font cover must center a single preview');
+						expect(cover.querySelector('svg path')?.getAttribute('d') === option.querySelector('svg path').getAttribute('d'), 'Font cards and dropdown must share outlined lettering');
 					} else expect(option.querySelector('svg'), 'Shape picker must use SVG geometry');
 				}
 			}

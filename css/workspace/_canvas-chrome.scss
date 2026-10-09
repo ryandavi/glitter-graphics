@@ -10,8 +10,8 @@
 .preview-controls {
 	position: absolute;
 	top: var(--spacing-from-edge);
-	left: calc(var(--canvas-inset-left, 0px) + var(--spacing-from-edge));
-	right: calc(var(--canvas-inset-right, 0px) + var(--spacing-from-edge));
+	left: var(--spacing-from-edge);
+	right: var(--spacing-from-edge);
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	grid-template-areas:

@@ -3063,43 +3063,66 @@ body.no-document .app-header-right > .app-header-project {
   position: relative;
 }
 
-.panel-resize-handle {
+.panel-resize-handle,
+.library-split-handle {
   pointer-events: auto;
+  touch-action: none;
+  background: transparent;
+  outline: none;
+}
+.panel-resize-handle::before, .panel-resize-handle::after,
+.library-split-handle::before,
+.library-split-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-xs);
+  pointer-events: none;
+  transition: opacity var(--transition-fast), background-color var(--transition-fast);
+}
+.panel-resize-handle::before,
+.library-split-handle::before {
+  width: var(--split-grip-width, var(--spacing-2xs));
+  height: var(--split-grip-height, var(--spacing-xl));
+  background: var(--color-text-tertiary);
+  opacity: 0.55;
+}
+.panel-resize-handle::after,
+.library-split-handle::after {
+  width: var(--split-line-width, var(--spacing-2xs));
+  height: var(--split-line-height, 100%);
+  background: var(--color-accent);
+  opacity: 0;
+}
+.panel-resize-handle:hover::before, .panel-resize-handle:focus-visible::before, .panel-resize-handle.is-dragging::before,
+.library-split-handle:hover::before,
+.library-split-handle:focus-visible::before,
+.library-split-handle.is-dragging::before {
+  background: var(--color-accent);
+  opacity: 1;
+}
+.panel-resize-handle:hover::after, .panel-resize-handle:focus-visible::after, .panel-resize-handle.is-dragging::after,
+.library-split-handle:hover::after,
+.library-split-handle:focus-visible::after,
+.library-split-handle.is-dragging::after {
+  opacity: 0.7;
+}
+
+.panel-resize-handle {
   position: absolute;
   top: 0;
   bottom: 0;
   width: var(--spacing-base);
   z-index: var(--z-panel-elevated);
   cursor: col-resize;
-  touch-action: none;
-  background: transparent;
 }
 .panel-resize-handle.panel-resize-handle-start {
   left: 0;
 }
 .panel-resize-handle.panel-resize-handle-end {
   right: 0;
-}
-.panel-resize-handle::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  transform: translateX(-50%);
-  background: var(--color-accent);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-.panel-resize-handle:hover::after, .panel-resize-handle.is-dragging::after {
-  opacity: 0.7;
-}
-.panel-resize-handle:focus-visible {
-  outline: none;
-}
-.panel-resize-handle:focus-visible::after {
-  opacity: 1;
 }
 
 body.is-resizing-panel {
@@ -3468,15 +3491,14 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 }
 
 .library-split-handle {
+  --split-grip-width: var(--spacing-xl);
+  --split-grip-height: var(--spacing-2xs);
+  --split-line-width: 100%;
+  --split-line-height: var(--spacing-2xs);
+  position: relative;
   display: none;
   flex: 0 0 var(--spacing-base);
-  pointer-events: auto;
   cursor: row-resize;
-  touch-action: none;
-  border-radius: var(--radius-xs);
-}
-.library-split-handle:hover, .library-split-handle:focus-visible, .library-split-handle.is-dragging {
-  background: var(--color-accent-surface);
 }
 
 @media (min-width: 1041px) {
@@ -4795,8 +4817,8 @@ body.is-booting .workspace-start button {
 .preview-controls {
   position: absolute;
   top: var(--spacing-from-edge);
-  left: calc(var(--canvas-inset-left, 0px) + var(--spacing-from-edge));
-  right: calc(var(--canvas-inset-right, 0px) + var(--spacing-from-edge));
+  left: var(--spacing-from-edge);
+  right: var(--spacing-from-edge);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "view" "status" "stack";
@@ -5073,21 +5095,6 @@ body.is-booting .workspace-start button {
 .mask-brush-controls > .segmented-control {
   width: auto;
 }
-.zoom-controls .btn-icon,
-.layer-center-controls .btn-icon,
-.pan-controls .btn-icon,
-.color-picker-controls .btn-icon,
-.mask-brush-controls .btn-icon {
-  width: var(--control-height);
-  height: var(--control-height);
-}
-.zoom-controls .btn-icon > svg.icon,
-.layer-center-controls .btn-icon > svg.icon,
-.pan-controls .btn-icon > svg.icon,
-.color-picker-controls .btn-icon > svg.icon,
-.mask-brush-controls .btn-icon > svg.icon {
-  font-size: calc(var(--control-height) * 0.7);
-}
 .zoom-controls .context-toolbar-handle,
 .layer-center-controls .context-toolbar-handle,
 .pan-controls .context-toolbar-handle,
@@ -5133,6 +5140,14 @@ body.is-booting .workspace-start button {
   visibility: visible;
   pointer-events: auto;
   transition-delay: 0s;
+}
+
+:where(.preview-controls-view, [data-context-toolbar]) .btn-icon {
+  width: var(--control-height);
+  height: var(--control-height);
+}
+:where(.preview-controls-view, [data-context-toolbar]) .btn-icon > svg.icon {
+  font-size: calc(var(--control-height) * 0.7);
 }
 
 .context-toolbar-snap-guide {
@@ -6512,6 +6527,22 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 .text-font-option-sample {
   font-size: 25px;
   line-height: 1.12;
+}
+
+.font-category-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  box-sizing: border-box;
+}
+.font-category-preview > svg {
+  width: 100%;
+  height: 100%;
+}
+.font-category-preview > .text-font-option-sample {
+  font-size: var(--font-size-2xl);
+  text-align: center;
 }
 
 .text-font-option-name {

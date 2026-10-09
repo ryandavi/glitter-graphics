@@ -45,15 +45,6 @@
 
 	> .segmented-control { width: auto; }
 
-	// Every control in a bar is one height, so buttons sit level with the
-	// sliders, chips and segmented controls beside them.
-	.btn-icon {
-		width: var(--control-height);
-		height: var(--control-height);
-
-		> svg.icon { font-size: calc(var(--control-height) * 0.7); }
-	}
-
 	.context-toolbar-handle {
 		align-self: stretch;
 		width: 18px;
@@ -81,6 +72,16 @@
 		@include floating-visible;
 	}
 
+}
+
+// View and context controls share the same button scale.
+:where(.preview-controls-view, [data-context-toolbar]) {
+	.btn-icon {
+		width: var(--control-height);
+		height: var(--control-height);
+
+		> svg.icon { font-size: calc(var(--control-height) * 0.7); }
+	}
 }
 
 .context-toolbar-snap-guide {

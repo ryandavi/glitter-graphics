@@ -176,6 +176,14 @@ async function main() {
 		await page.screenshot({ path: path.join(output, 'desktop-overlay.png') });
 		if (css) {
 			const divider = page.locator('.library-split-handle');
+			assert(await page.evaluate(() => {
+				const rect = document.getElementById('viewMenu').getBoundingClientRect();
+				const workspace = document.getElementById('previewContainer').getBoundingClientRect();
+				const viewButton = document.getElementById('pauseMotionTool');
+				const contextButton = document.querySelector('#panControls .btn-icon');
+				return Math.abs(rect.x + rect.width / 2 - workspace.x - workspace.width / 2) < 1
+					&& getComputedStyle(viewButton).height === getComputedStyle(contextButton).height;
+			}), 'View menu shares the workspace center and context button scale');
 			assert(await divider.isVisible(), 'Both panes expose the divider');
 			const startHeight = await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height);
 			const bounds = await divider.boundingBox();
@@ -187,8 +195,12 @@ async function main() {
 			await divider.focus();
 			await page.keyboard.press('Home');
 			assert.equal(await divider.getAttribute('aria-valuenow'), '50');
+			await page.keyboard.press('ArrowDown');
 			await page.locator('#textFillGradient').click();
 			await wait(page);
+			assert.equal(await divider.getAttribute('aria-valuenow'), '52', 'Single pane retains the chosen split');
+			assert(await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height > node.parentElement.clientHeight * 0.9), 'A lone flyout fills the window');
+			assert(!await divider.isVisible(), 'Single pane hides its divider');
 			const presets = page.locator('[data-gradient-editor="textFill"][data-gradient-part="presets"]');
 			assert(await presets.evaluate((node) => node.classList.contains('is-collapsed')));
 			assert((await presets.boundingBox()).height < 50, 'Closed presets reserve only their title');

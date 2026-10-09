@@ -82,14 +82,14 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 }
 
 .library-split-handle {
+	--split-grip-width: var(--spacing-xl);
+	--split-grip-height: var(--spacing-2xs);
+	--split-line-width: 100%;
+	--split-line-height: var(--spacing-2xs);
+	position: relative;
 	display: none;
 	flex: 0 0 var(--spacing-base);
-	pointer-events: auto;
 	cursor: row-resize;
-	touch-action: none;
-	border-radius: var(--radius-xs);
-
-	&:hover, &:focus-visible, &.is-dragging { background: var(--color-accent-surface); }
 }
 
 @media (min-width: ($mobile-breakpoint + 1px)) {

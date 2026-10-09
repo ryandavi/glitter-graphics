@@ -158,7 +158,7 @@ class FontBrowserManager extends ContentManager {
 	createCollectionPreview(category, compact = false) {
 		const item = this.content.find(entry => entry.category === category?.id);
 		if (!item) return null;
-		const outline = compact && FONT_PREVIEW_ICONS[item.id];
+		const outline = FONT_PREVIEW_ICONS[item.id];
 		if (outline) {
 			const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 			svg.setAttribute('viewBox', outline.viewBox);
@@ -178,7 +178,12 @@ class FontBrowserManager extends ContentManager {
 
 	customizeCollectionCard(card, category) {
 		const sample = this.createCollectionPreview(category);
-		if (sample) card.querySelector('.category-card-image').replaceChildren(sample);
+		if (sample) {
+			const cover = card.querySelector('.category-card-image');
+			cover.classList.remove('category-card-previews');
+			cover.classList.add('font-category-preview');
+			cover.replaceChildren(sample);
+		}
 	}
 
 	getTargetLayer() {
