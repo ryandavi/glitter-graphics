@@ -243,7 +243,7 @@ isLayerContentLocked(layer) {
 		// tips configure the Brush/Eraser tool itself, so a Canvas selection (or no
 		// fill layer yet) must not show that panel under the tips while the picker
 		// is open. On desktop the tips are in the window and the Inspector stays.
-		if (this.mobileManager?.isMobile && this.brushTipManager?.pickerSession) {
+		if (this.mobileManager?.usesDrawers && this.brushTipManager?.pickerSession) {
 			config = {
 				designPanelSections: [],
 				library: 'brushTip',
@@ -331,11 +331,11 @@ isLayerContentLocked(layer) {
 	openCreateTarget(layer) {
 		const target = LAYER_UI_CONFIG[layer?.type]?.openOnCreate;
 		if (!target || this.layerManager.getActiveLayer() !== layer) return;
-		const mobile = Boolean(this.mobileManager?.isMobile);
+		const mobile = this.mobileManager;
 		if (target === 'asset') getLayerManagerForType(this, layer.type).armAssetPicker();
 		else if (target === 'panel') {
-			if (mobile) this.mobileManager.openDrawer('edit');
-		} else if (mobile) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
+			if (mobile?.isMobile) mobile.openDrawer('edit');
+		} else if (mobile?.usesDrawers) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
 		else if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
 	},
 

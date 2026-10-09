@@ -39,9 +39,23 @@
 		flex-shrink: 0;
 		max-height: 50%;
 	}
+}
 
-	// The section's bar names the target and closes the window.
-	&.has-flyout > .design-gallery-section .library-close-action { display: none; }
+// Beside a section, the section's bar names the target and closes the window.
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.library-window.has-flyout > .design-gallery-section .library-close-action { display: none; }
+}
+
+// As the phone's sheet the window is short, so it shows one thing at a time:
+// under the Library a section is its bar and its source tabs, and the
+// Library's Close gives the section the sheet (LibraryWindow.dismissLibrary).
+@include mobile {
+	.library-window.has-library > .flyout-section {
+		max-height: none;
+
+		.is-flyout-open > .property-card-body > :not(.paint-slot-source),
+		.is-flyout-open > .property-card-body > .paint-slot-source > .asset-info { display: none; }
+	}
 }
 
 // The Library's Close ends the armed pick. The phone's drawer also opens

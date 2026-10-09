@@ -15,7 +15,8 @@
 //              leaves one line in the panel and opens the section in the
 //              window beside it. A paintSlot's `summaryValue` is the id of
 //              the one slider whose value its summary states (an outline's
-//              width).
+//              width). `chips: 'buttons'` puts the section's buttons in the
+//              phone bar themselves, instead of one chip for the section.
 //   set      { label?, rows }, or { actions } for a set of buttons. `collapse:
 //            'open' | 'closed'` makes a labelled set's name a toggle.
 //   row      { kind: 'slider' | 'select' | 'segmented' | 'toggle' | 'field' |
@@ -349,7 +350,7 @@ const PANEL_SCHEMAS = {
 		subsections: [
 			{ id: 'noLayerDefaultGroups', groups: [
 				{ title: 'Add', sections: [
-					{ kind: 'section', title: 'Quick add', sets: [
+					{ kind: 'section', title: 'Quick add', chips: 'buttons', sets: [
 						{ rows: [{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }] }
 					] },
 					// The project (name, save, open) is in the app header; document

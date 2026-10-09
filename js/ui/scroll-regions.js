@@ -13,9 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	].join(', ');
 	// Every edge host gets `has-overflow-*` classes for the edges that hide
 	// content. Fade hosts draw a bottom strip from them; the bar-less rails
-	// (tool rail, context bars) mask their own edges instead.
+	// (tool rail, context bars, the phone's chip bar) mask their own edges instead.
 	const fadeHosts = '.section-content, .panel-scroll-region, .asset-options, .asset-browser-content, .property-scrollbox';
-	const edgeHosts = `${fadeHosts}, .toolbar, [data-context-toolbar]`;
+	const edgeHosts = `${fadeHosts}, .toolbar, [data-context-toolbar], .phone-chip-bar`;
 	const scrollable = (overflow) => /^(auto|scroll)$/.test(overflow);
 	const pendingEdges = new Set();
 	const syncEdges = (node) => {

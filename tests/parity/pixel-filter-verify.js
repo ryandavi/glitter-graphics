@@ -6,7 +6,7 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
 (async () => {
 	const browser = await chromium.launch({ headless: true });
-	const context = await browser.newContext({ viewport: { width: 1000, height: 760 } });
+	const context = await browser.newContext({ viewport: { width: 1200, height: 760 } });
 	await context.addInitScript(() => { localStorage.clear(); localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'); });
 	const page = await context.newPage();
 	const errors = [];

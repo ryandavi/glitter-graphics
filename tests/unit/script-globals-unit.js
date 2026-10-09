@@ -30,4 +30,10 @@ const color = require('../../js/core/color.js');
 assert.deepStrictEqual(color.hexToRgb('#ff60ba'), [255, 96, 186]);
 assert.strictEqual(color.rgbToHex([255, 96, 186]), '#ff60ba');
 assert.throws(() => color.hexToRgb('pink'));
-console.log(`PASS shared math and ${names.size} unique script globals`);
+// The phone layout's width is declared in CONFIG; Sass cannot read it, so the
+// stylesheet's copy has to match.
+const breakpoint = fs.readFileSync(path.join(root, 'js/core/config.js'), 'utf8').match(/mobile: \{[^}]*?breakpoint: (\d+)/);
+const sassBreakpoint = fs.readFileSync(path.join(root, 'css/_mixins.scss'), 'utf8').match(/\$mobile-breakpoint: (\d+)px/);
+assert(breakpoint && sassBreakpoint, 'the phone breakpoint is declared in CONFIG.ui.mobile and css/_mixins.scss');
+assert.strictEqual(sassBreakpoint[1], breakpoint[1], 'css/_mixins.scss $mobile-breakpoint matches CONFIG.ui.mobile.breakpoint');
+console.log(`PASS shared math, the phone breakpoint and ${names.size} unique script globals`);

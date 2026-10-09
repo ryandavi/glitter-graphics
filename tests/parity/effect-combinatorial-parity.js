@@ -19,7 +19,7 @@ function assert(condition, message) {
 async function main() {
 	const browser = await chromium.launch({ headless: true });
 	try {
-		const page = await browser.newPage({ viewport: { width: 1000, height: 760 } });
+		const page = await browser.newPage({ viewport: { width: 1200, height: 760 } });
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
 		await page.evaluate(async () => {
 			document.querySelectorAll('.modal-overlay.visible').forEach((node) => node.classList.remove('visible'));

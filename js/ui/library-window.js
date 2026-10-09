@@ -4,7 +4,8 @@
 // flyout section whose line was pressed, and the Library while a picker is
 // armed; a paint section on its Glitter source shows both. What is open is
 // derived from PickerRegistry (`flyout`, `active`), never set directly. At
-// phone width the Library is the design drawer, a flyout section sits in its
+// phone width it is the bar layout's sheet (MobileManager); with the drawer
+// layout the Library is the design drawer, a flyout section sits in its
 // panel, and the window stays closed.
 //
 // How it sits depends on the room left for the canvas (`data-library-window`
@@ -21,6 +22,9 @@ class LibraryWindow {
 		this.pending = false;
 		this.layoutFrame = null;
 		this.flyoutCard = null;
+		// The section whose Library the user closed in the phone's sheet, by id:
+		// it shows whole until its glitter is pressed again.
+		this.libraryDismissed = null;
 		// A source change or the switch of the open section arms or releases the
 		// Library.
 		this.flyoutObserver = new MutationObserver(() => this.sync());
@@ -67,20 +71,32 @@ class LibraryWindow {
 
 	apply() {
 		if (!this.element) return;
-		const mobile = Boolean(this.editor.mobileManager?.isMobile);
-		const card = this.syncFlyout(mobile);
+		const mobile = this.editor.mobileManager;
+		const sheet = Boolean(mobile?.usesBar);
+		const drawers = Boolean(mobile?.usesDrawers);
+		const card = this.syncFlyout(drawers);
 		const picking = Boolean(this.editor.pickers.active);
 		// The phone's Library drawer is always there to open.
-		document.getElementById('designGallerySection')?.classList.toggle('visible', mobile || picking);
+		document.getElementById('designGallerySection')?.classList.toggle('visible', drawers || picking);
 		this.element.classList.toggle('has-flyout', Boolean(card));
 		this.element.classList.toggle('has-library', picking);
-		const open = !mobile && (picking || Boolean(card));
+		const open = !drawers && (picking || Boolean(card));
 		if (open === this.isOpen) return;
 		const viewport = this.editor.viewport;
 		const current = viewport?.captureViewState?.() || null;
 		const tookCanvasSpace = this.isOpen && this.tier !== 'float';
 		this.isOpen = open;
 		this.element.classList.toggle('is-open', open);
+
+		// As a sheet, the phone's drawers own the canvas refit and the view.
+		if (sheet) {
+			this.viewState = null;
+			this.fitZoom = null;
+			this.setTier(null);
+			if (open) mobile.openDrawer('window');
+			else mobile.closeSheet('window');
+			return;
+		}
 
 		if (open) {
 			this.viewState = current;
@@ -103,11 +119,11 @@ class LibraryWindow {
 	// The open flyout section follows the inspected layer: the same line on
 	// another layer keeps the window and retitles it, no such line closes it.
 	// Returns the section showing, or null.
-	syncFlyout(mobile) {
+	syncFlyout(drawers) {
 		const editor = this.editor;
 		const pickers = editor.pickers;
 		const layer = editor.layerManager.getInspectedLayer();
-		const available = !mobile && editor.originalImage && !editor.autoGlitterManager?.isSessionActive();
+		const available = !drawers && editor.originalImage && !editor.autoGlitterManager?.isSessionActive();
 		const card = available ? pickers.getFlyoutCard() : null;
 		if (!card) pickers.flyout = null;
 
@@ -117,6 +133,7 @@ class LibraryWindow {
 			card?.classList.add('is-flyout-open');
 			if (card) this.flyoutObserver.observe(card, { subtree: true, attributes: true, attributeFilter: ['data-paint-mode', 'data-effect-enabled'] });
 			this.flyoutCard = card;
+			this.libraryDismissed = null;
 			const toggle = card ? buildFlyoutSwitch(card) : null;
 			document.getElementById('flyoutSwitch').replaceChildren(...(toggle ? [toggle] : []));
 			document.querySelectorAll('.property-line').forEach((line) => {
@@ -136,9 +153,22 @@ class LibraryWindow {
 		const usable = !card.classList.contains('is-off') && !editor.isLayerContentLocked(layer);
 		const glitterSlots = usable ? getSectionPaintSlots(card).filter((slot) => slot.dataset.paintMode === 'glitter') : [];
 		const armed = pickers.active && (pickers.active.pickerSession.slot || 'fill');
+		if (armed || !glitterSlots.length) this.libraryDismissed = null;
 		if (!glitterSlots.length) pickers.closeAll();
+		else if (this.libraryDismissed === card.id) return card;
 		else if (!glitterSlots.some((slot) => slot.dataset.slot === armed)) glitterSlots[0].querySelector('.asset-info.glitter-source-glitter .asset-info-thumbnail')?.click();
 		return card;
+	}
+
+	// In the phone's sheet the Library and a section share little room, so the
+	// Library's Close leaves the section. Returns whether it did.
+	dismissLibrary() {
+		const pickers = this.editor.pickers;
+		if (!this.editor.mobileManager?.usesBar || !this.flyoutCard || !pickers.active) return false;
+		this.libraryDismissed = this.flyoutCard.id;
+		pickers.closeAll();
+		this.sync();
+		return true;
 	}
 
 	// Measured with all four columns in flow, so the answer does not depend on

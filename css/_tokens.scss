@@ -347,6 +347,9 @@
 	--mobile-drawer-reserved-height: var(--mobile-drawer-height);
 	/* Modern browsers override */
 	--mobile-toolbar-width: 50px;
+	// A sheet stops widening here and centres, so it stays a sheet on a tablet
+	// held upright.
+	--mobile-sheet-max-width: 640px;
 	--mobile-settings-handle-height: 18px;
 
 	/* z indexes — app-wide surface layer scale. Each token gates one visual

@@ -1130,6 +1130,7 @@ function mountFlyoutSection(card, spec, schema) {
 	line.dataset.flyoutFor = card.id;
 	line.dataset.phoneHostFor = card.id;
 	line.dataset.phoneHostPlace = 'after';
+	line.dataset.phoneHostDrawers = '';
 	const title = line.querySelector('.property-card-title');
 	title.setAttribute('role', 'button');
 	title.setAttribute('tabindex', '0');
@@ -1766,17 +1767,61 @@ function buildPanelGroup(group, schema) {
 	// is on.
 	if (group.region === 'header' || group.region === 'footer') label.remove();
 	else label.textContent = group.title;
+	// Each section is stamped with its key for the section index
+	// (getPanelSectionIndex): a flyout section's line carries its card's key.
 	(group.sections || []).forEach((section) => {
 		const item = buildPanelItem(section, schema);
-		node.appendChild(section.presentation === 'flyout' ? mountFlyoutSection(item, section, schema) : item);
+		const placed = section.presentation === 'flyout' ? mountFlyoutSection(item, section, schema) : item;
+		placed.dataset.sectionKey = section.slot || section.title || section.kind;
+		if (section.chips) placed.dataset.sectionChips = section.chips;
+		node.appendChild(placed);
 	});
 	if (group.note) node.appendChild(buildPanelItem({ kind: 'note', ...(typeof group.note === 'string' ? { text: group.note } : group.note) }, schema));
 	(group.actions || []).forEach((set) => {
 		const actions = buildActionSet(set);
 		actions.classList.add('section-actions');
+		// Buttons that end a group of sections (Reset effects) are actions
+		// too: the index lists them with the Actions group, as one entry.
+		if (group.title !== 'Actions') actions.dataset.sectionAction = '';
 		node.appendChild(actions);
 	});
+	if (group.title === 'Actions') {
+		node.dataset.sectionKey = 'actions';
+		node.dataset.sectionTitle = 'More';
+	}
 	return node;
+}
+
+// The section index of a rendered panel host: one entry per section, in
+// panel order. The Inspector draws the same sections as lines and inline
+// blocks; the phone bar draws this index as chips. An entry is `{ key, title,
+// group, element }`, plus `line` for a flyout section and `button` for a
+// section whose buttons stand in the index themselves (`chips: 'buttons'`).
+// The panel's actions are one last entry, More: the Actions group and, in
+// `extras`, the buttons that end other groups. A sticky-region panel is one
+// entry: it only works whole.
+function getPanelSectionIndex(host) {
+	if (host.classList.contains('has-scroll-region')) {
+		return [{ key: 'panel', title: host.dataset.panelTitle || '', group: null, element: host }];
+	}
+	const label = (node) => node.dataset.sectionTitle
+		|| node.querySelector('.property-card-title > span')?.firstChild?.textContent.trim() || '';
+	const shown = (element) => !element.closest('[hidden]') && !element.classList.contains('is-vacant');
+	const actions = Array.from(host.querySelectorAll('[data-section-key="actions"], [data-section-action]')).filter(shown);
+	const more = actions.length ? [{ key: 'actions', title: 'More', group: 'Actions', element: actions[0], extras: actions.slice(1) }] : [];
+	return Array.from(host.querySelectorAll('[data-section-key]:not([data-section-key="actions"])')).flatMap((element) => {
+		if (!shown(element)) return [];
+		const group = element.closest('.property-group').dataset.panelGroup;
+		const entry = { key: element.dataset.sectionKey, title: label(element), group, element };
+		if (element.dataset.sectionChips === 'buttons') {
+			return Array.from(element.querySelectorAll('button')).filter((button) => !button.hidden).map((button, index) => ({
+				...entry, key: `${entry.key}:${index}`, button,
+				title: button.querySelector('.layer-type-name')?.textContent || button.textContent.trim() || button.title
+			}));
+		}
+		if (element.classList.contains('property-line')) entry.line = element;
+		return entry.title ? [entry] : [];
+	}).concat(more);
 }
 
 // The finishing pass every rendered schema root gets (full section, bare
@@ -1916,6 +1961,7 @@ function renderPanelSection(schema) {
 	// the panel vocabulary in css/panels/property/.
 	host.classList.add('property-section');
 	addPanelClasses(host, schema.section.classes);
+	host.dataset.panelTitle = schema.section.title;
 	host.replaceChildren();
 	document.getElementById(`${schema.sectionPrefix}Flyouts`)?.remove();
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);

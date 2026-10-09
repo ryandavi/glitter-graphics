@@ -7,7 +7,7 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
 async function main() {
 	const browser = await chromium.launch({ headless: true });
-	const page = await browser.newPage({ viewport: { width: 1000, height: 800 } });
+	const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
 	try {
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
 		await page.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((node) => node.classList.remove('visible')));

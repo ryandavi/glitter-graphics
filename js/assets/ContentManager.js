@@ -969,7 +969,7 @@ class ContentManager {
 		this.updateClearFiltersButton();
 
 		const mobileManager = this.editor.mobileManager;
-		if (!mobileManager?.isMobile || mobileManager.activeDrawer !== 'design') return;
+		if (!mobileManager?.isMobile || !['design', 'window'].includes(mobileManager.activeDrawer)) return;
 
 		if (isVisible) {
 			if (this.filterSheetHeight == null) this.filterSheetHeight = mobileManager.sheetHeight;

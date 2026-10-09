@@ -7,8 +7,9 @@ class PickerRegistry {
 		// The flyout section the window shows, by its key (`data-flyout-key`).
 		// With an armed session this is the one open target.
 		this.flyout = null;
-		['libraryWindowClose', 'flyoutClose'].forEach((id) => {
-			document.getElementById(id)?.addEventListener('click', () => this.closeActive());
+		document.getElementById('flyoutClose')?.addEventListener('click', () => this.closeActive());
+		document.getElementById('libraryWindowClose')?.addEventListener('click', () => {
+			if (!this.editor.libraryWindow?.dismissLibrary()) this.closeActive();
 		});
 	}
 
@@ -54,6 +55,12 @@ class PickerRegistry {
 	}
 
 	closeActive({ returnToProperties = true } = {}) {
+		// The phone's sheet slides away first and then lets go of what it showed.
+		const mobile = this.editor.mobileManager;
+		if (returnToProperties && mobile?.usesBar && mobile.activeDrawer === 'window') {
+			mobile.closeAllDrawers();
+			return true;
+		}
 		// A tool change ends the session it finds (`returnToProperties: false`),
 		// not the section the window shows: that follows the selection.
 		if (returnToProperties && this.closeFlyout()) return true;
@@ -130,7 +137,7 @@ function pickerArmedSlot(manager, layer, isValid = null) {
 
 function returnFromPickerToProperties(editor, options = {}) {
 	const { section, focusId } = options;
-	if (editor.mobileManager?.isMobile) {
+	if (editor.mobileManager?.usesDrawers) {
 		editor.mobileManager.openDrawer('edit');
 	}
 	// Mobile moves the same sections into the Edit drawer, so opening the

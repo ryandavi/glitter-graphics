@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=e0a6240a">
+	<link rel="stylesheet" href="css/style.css?v=0c8b5f3c">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -324,7 +324,7 @@
 				</div>
 
 				<!-- DesignColumn -->
-				<div class="design-panel inspector-panel property-panel" id="designPanel" data-phone-host-for="designGallerySection">
+				<div class="design-panel inspector-panel property-panel" id="designPanel" data-phone-host-for="designGallerySection" data-phone-host-drawers>
 					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="design" role="slider" tabindex="0" aria-label="Resize Design panel" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
 						<span></span>
 					</div>
@@ -376,6 +376,9 @@
 				     phone width the Library is the design drawer instead, and a
 				     flyout section sits in its panel. -->
 				<div class="design-panel library-window property-panel" id="libraryWindow">
+					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="window" role="slider" tabindex="0" aria-label="Resize the sheet" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
+						<span></span>
+					</div>
 					<!-- Each panel's flyout sections are rendered into #flyoutBody at
 					     boot (mountFlyoutSection). -->
 					<div class="section property-section flyout-section" id="flyoutSection">
@@ -449,7 +452,7 @@
 
 						</div>
 
-						<div class="section-content design-gallery-content" id="designGalleryContent" data-phone-host-for="noLayerSettingsSection">
+						<div class="section-content design-gallery-content" id="designGalleryContent" data-phone-host-for="noLayerSettingsSection" data-phone-host-drawers>
 							<div class="property-empty auto-glitter-gallery-empty" role="status">
 								<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
 								<div class="property-empty-title">Choose a Color Match</div>
@@ -1423,10 +1426,14 @@
 		<div class="mobile-drawer-btn-group">
 			<button class="mobile-drawer-btn" data-drawer="layers" aria-controls="layersPanel" aria-expanded="false">
 				<div class="mobile-layers-swatch empty"></div>
-				Layers
+				<span class="mobile-layers-label">Layers</span>
 				<span class="mobile-layers-count" data-count="0"></span>
 			</button>
 		</div>
+
+		<!-- The bar layout (CONFIG.ui.mobile.chipBar): the selection's sections
+		     as chips, in place of the three buttons after it (MobileManager). -->
+		<div class="phone-chip-bar" id="phoneChipBar" role="toolbar" aria-label="Properties"></div>
 
 		<div class="mobile-drawer-btn-group mobile-add-layer-group">
 			<button class="mobile-drawer-btn icon-wrapper" id="mobileAddLayerBtn" type="button" title="Add new layer" aria-label="Add new layer">
@@ -1789,7 +1796,7 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=69c3cfc2"></script>
+	<script src="js/core/config.js?v=3be375ce"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
 	<script src="js/core/sessions.js?v=09f6cc66"></script>
 	<script src="js/core/layer-types.js?v=04477dcc"></script>
@@ -1797,7 +1804,7 @@
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=1f35aa14"></script>
+	<script src="js/ui/panel-schemas.js?v=75fa6031"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=38e57719"></script>
 	<script src="js/layers/types/filter.js?v=33cfb691"></script>
@@ -1869,8 +1876,8 @@
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
-	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
-	<script src="js/ui/panel-renderer.js?v=31d784f8"></script>
+	<script src="js/ui/scroll-regions.js?v=8279fa24"></script>
+	<script src="js/ui/panel-renderer.js?v=a18a6dd4"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2fe36fa9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
@@ -1881,7 +1888,7 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=aa58a336"></script>
+	<script src="js/editor/panels.js?v=1359d8ea"></script>
 	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
 	<script src="js/editor/disclosures.js?v=649823d5"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
@@ -1895,8 +1902,8 @@
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/library-window.js?v=312a0323"></script>
-	<script src="js/ui/picker-session.js?v=a5f30fd0"></script>
+	<script src="js/ui/library-window.js?v=92291fd3"></script>
+	<script src="js/ui/picker-session.js?v=24b81ff3"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1944,7 +1951,7 @@
 	<script src="js/assets/AssetBrowserRail.js?v=d77f73d7"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
-	<script src="js/assets/ContentManager.js?v=0ebf028c"></script>
+	<script src="js/assets/ContentManager.js?v=d18d593e"></script>
 	<script src="js/assets/GlitterBrowserManager.js?v=7e93ed2c"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=1f5aba35"></script>
 	<script src="js/assets/BrushTipManager.js?v=085ae15b"></script>
@@ -1972,7 +1979,7 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=e1ac027d"></script>
+		<script src="js/systems/MobileManager.js?v=1afeba5c"></script>
 
 	<!-- App -->
 	<script src="js/app.js?v=ecf3fff0"></script>

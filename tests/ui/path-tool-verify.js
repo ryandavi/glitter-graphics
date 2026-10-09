@@ -879,7 +879,7 @@ async function tap(page, client, x, y) {
 }
 
 async function checkTouch(browser) {
-	const context = await browser.newContext({ viewport: { width: 900, height: 1100 }, hasTouch: true });
+	const context = await browser.newContext({ viewport: { width: 1200, height: 1100 }, hasTouch: true });
 	const { page, errors } = await openEditor(context);
 	const client = await context.newCDPSession(page);
 	await page.evaluate(() => {

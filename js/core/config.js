@@ -755,7 +755,14 @@ const CONFIG = deepFreeze({
 			defaultTab: 'glitter'
 		},
 		mobile: {
-			breakpoint: 800,
+			// The one width where the phone layout starts. css/_mixins.scss holds a
+			// compile-time copy that a unit test checks against this.
+			breakpoint: 1040,
+			// The phone layout on trial: the bottom bar is the selection's
+			// sections as chips and a chip opens one sheet (MobileManager). Off,
+			// the phone keeps its Layers, Library and Edit drawers. Add `?bar` to
+			// the address to turn it on.
+			chipBar: typeof location !== 'undefined' && new URLSearchParams(location.search).has('bar'),
 			sheetDetents: {
 				peek: 28,
 				half: 50,

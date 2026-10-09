@@ -1,6 +1,9 @@
 // CSS custom properties cannot drive media-query conditions. Keep the one
 // application breakpoint compile-time while runtime design values stay tokens.
-$mobile-breakpoint: 800px;
+// The source is CONFIG.ui.mobile.breakpoint; tests/unit/script-globals-unit.js
+// fails when this copy differs. It sits above a portrait tablet, so a touch
+// screen held upright gets the phone layout.
+$mobile-breakpoint: 1040px;
 
 @mixin mobile {
 	@media (max-width: $mobile-breakpoint) {

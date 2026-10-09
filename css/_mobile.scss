@@ -2,7 +2,8 @@
 
 .mobile-bottom-nav,
 .mobile-settings-drawer,
-.mobile-sheet-handle {
+.mobile-sheet-handle,
+.phone-chip-bar {
 	display: none;
 }
 
@@ -158,9 +159,7 @@
 		.context-label { font-size: var(--font-size-xs); }
 	}
 
-	body.designOpen,
-	body.layersOpen,
-	body.editOpen {
+	body.sheetOpen {
 		.preview-controls { left: var(--mobile-floating-inset); }
 
 		.toolbar,
@@ -309,6 +308,8 @@
 		bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-sheet-inset));
 		left: var(--mobile-sheet-inset);
 		right: var(--mobile-sheet-inset);
+		max-width: var(--mobile-sheet-max-width);
+		margin-inline: auto;
 		display: flex;
 		height: var(--mobile-drawer-height);
 		background: var(--panel-bg);
@@ -412,9 +413,9 @@
 		&.active { color: var(--color-accent); }
 	}
 
-	// The Inspector's panels are in the Edit sheet at this width, so the design
-	// drawer is the Library alone.
-	.main-content > .design-panel > .section.inspector-section { display: none; }
+	// With the drawers, the Inspector's panels are in the Edit sheet at this
+	// width, so the design drawer is the Library alone.
+	body:not(.phone-bar) .main-content > .design-panel > .section.inspector-section { display: none; }
 
 	// Drawer sections lose the window rim they have as sidebar sections.
 	.main-content > :is(.layers-panel, .design-panel) {
@@ -427,11 +428,12 @@
 		}
 	}
 
-	body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
+	body.sheetOpen .main-content > .preview-panel {
 		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
 	}
 
 	body.mobile-sheet-dragging,
+	body.mobile-sheet-swapping,
 	body.mobile-sheet-reduced-motion {
 		.mobile-settings-drawer,
 		.main-content > .design-panel,
@@ -457,6 +459,8 @@
 		left: var(--mobile-sheet-inset);
 		right: var(--mobile-sheet-inset);
 		width: auto;
+		max-width: var(--mobile-sheet-max-width);
+		margin-inline: auto;
 		height: var(--mobile-drawer-height);
 		background: var(--panel-bg);
 		backdrop-filter: var(--panel-backdrop);
@@ -478,6 +482,8 @@
 
 	body.editOpen .mobile-settings-drawer,
 	body.designOpen .main-content > .design-panel,
+	body.inspectorOpen .main-content > .inspector-panel,
+	body.windowOpen .main-content > .library-window,
 	body.layersOpen .main-content > .layers-panel {
 		transform: translateY(0);
 		opacity: 1;
@@ -501,6 +507,88 @@
 
 	.main-content .mobile-hidden-section-toggle {
 		display: none;
+	}
+
+	// ----- The bar layout (CONFIG.ui.mobile.chipBar) -------------------------
+	// The bottom bar is Layers and the selection's sections as chips. A chip
+	// opens one sheet: the window for a flyout section or an armed Library,
+	// and for any other section the Inspector narrowed to it (MobileManager
+	// stamps `.is-sheet-open` on the section and `.has-sheet-open` on what
+	// holds it).
+	body.phone-bar {
+		.mobile-bottom-nav {
+			> .mobile-drawer-btn-group {
+				flex: 0 0 auto;
+
+				&:not(:first-child),
+				.mobile-layers-label { display: none; }
+			}
+
+			> .phone-chip-bar { display: flex; }
+		}
+
+		// The layer list ends with its add buttons, as it does in the column.
+		.layers-section-bottom-bar { display: flex; }
+
+		.inspector-section > .inspector-switch { display: none; }
+
+		// "Outline · Hello", as the window's bar reads.
+		#inspectorTitleText[data-sheet-section]::before { content: attr(data-sheet-section) ' \00b7  '; }
+
+		.inspector-body {
+			> :not(.has-sheet-open, .is-sheet-open),
+			> .has-sheet-open :is(.property-group:not(.has-sheet-open, .is-sheet-open), .property-group-label, .property-empty, .no-selection-intro),
+			> .has-sheet-open .property-group.has-sheet-open > :not(.is-sheet-open),
+			.is-sheet-open.property-card > .property-card-title,
+			.is-sheet-open > .property-card > .property-card-title { display: none; }
+		}
+	}
+
+	.phone-chip-bar {
+		flex: 1 1 0;
+		min-width: 0;
+		gap: var(--spacing-xs);
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+		@include overflow-edge-mask(var(--spacing-xl), true);
+	}
+
+	// A chip is a flat label: the bar is the one piece of chrome here, and a
+	// row of glossy buttons would read as a dozen separate tools.
+	.phone-chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-sm);
+		flex: 0 0 auto;
+		min-width: 64px;
+		padding: 0 var(--spacing-md);
+		border: 0;
+		border-radius: var(--radius-control);
+		background: none;
+		color: var(--color-text-primary);
+		white-space: nowrap;
+		@include text-sm;
+
+		&.is-off { color: var(--color-text-tertiary); }
+
+		&.active {
+			background: var(--color-accent-surface);
+			color: var(--color-accent);
+		}
+
+		&:disabled { opacity: var(--opacity-disabled); }
+	}
+
+	.phone-chip-swatch {
+		width: 18px;
+		height: 18px;
+		flex: 0 0 auto;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+
+		&.is-unset { @include swatch-unset-fill; }
 	}
 
 	body.mobile-no-image {
