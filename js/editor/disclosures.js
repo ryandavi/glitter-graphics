@@ -1,7 +1,7 @@
 const EDITOR_DISCLOSURE_METHODS = {
 initializeCollapsibleSections() {
 		// The Inspector's switched panels by sectionPrefix. `.visible` on a host
-		// follows the selection and the tool (updateSidePanelUI); of the visible
+		// follows the selection and the tool (refreshInspector); of the visible
 		// ones exactly one is open, and the header's switch chooses which.
 		this.switchPanels = new Map(Object.values(PANEL_SCHEMAS)
 			.flatMap((schema) => [schema, ...(schema.auxiliarySections || [])])
@@ -31,14 +31,14 @@ initializeCollapsibleSections() {
 		this.syncCollapsibleSections();
 		this.initializeIndependentCollapsibles();
 
-		this.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
-		this.setSettingsEmptyState('glitterSettings', true);
-		this.setSettingsEmptyState('stickerSettings', true);
+		this.syncPanelEmptyStates();
 	}
 
 	// Each column's sections collapse independently (both can stay open).
 ,
 	initializeIndependentCollapsibles() {
+		const setters = new Map();
+		this.setIndependentSectionOpen = (name, isOpen) => setters.get(name)?.(isOpen);
 		CONFIG.ui.independentCollapsibleSections.forEach((name) => {
 			const section = document.getElementById(`${name}Section`);
 				const header = document.getElementById(`${name}Header`);
@@ -48,12 +48,14 @@ initializeCollapsibleSections() {
 
 				const setOpen = (isOpen) => {
 					setCollapsibleSectionState(section, content, toggle, isOpen);
-					// A column that stops short of its handle hides the grip.
+					// A column that stops short of its handle hides the grip. The
+					// window works that out itself: it knows which panes show, and
+					// splits its room only between two open ones.
 					const column = section.parentElement;
-					column.classList.toggle('has-collapsed-section', !column.querySelector(':scope > .section.is-open'));
-					// The window splits its room only between two open panes.
-					this.libraryWindow?.sync();
+					if (column === this.libraryWindow.element) this.libraryWindow.sync();
+					else column.classList.toggle('has-collapsed-section', !column.querySelector(':scope > .section.is-open'));
 				};
+			setters.set(name, setOpen);
 			setOpen(true);
 
 			header.addEventListener('click', (event) => {
@@ -78,8 +80,9 @@ initializeCollapsibleSections() {
 			const cards = [];
 			if (root.matches?.('.property-card')) cards.push(root);
 			root.querySelectorAll?.('.property-card').forEach((card) => cards.push(card));
-			// R5: give every effect module its collapsed one-line summary.
-			initializeModuleSummaries(root.querySelectorAll ? root : document);
+			// Every section with state to show (a summary, a swatch, a switch)
+			// gets the observer that announces it.
+			initializeSectionStates(root.querySelectorAll ? root : document);
 			cards.map((card) => card.querySelector(':scope > .property-card-title')).filter(Boolean).forEach((title) => {
 				const subsection = title.parentElement;
 				const enabled = title.querySelector('input[data-effect-toggle]');

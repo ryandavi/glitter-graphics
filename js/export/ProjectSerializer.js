@@ -98,11 +98,7 @@ class ProjectSerializer {
 				if (!this.editor.isSaved) return false;
 			}
 		}
-		this.editor.textGlitterManager.closePickerSession();
-		this.editor.shapeGlitterManager.closePickerSession();
-		this.editor.stickerManager.closePickerSession();
-		this.editor.glitterManager.closePickerSession();
-		this.editor.baseBackgroundManager.closePickerSession();
+		this.editor.pickers.closeAll();
 
 		await this.loadBaseImage(migrated);
 		// Base-image loading resets manager state, so embedded assets must bind after it.
@@ -127,13 +123,11 @@ class ProjectSerializer {
 		this.editor.historyManager.reset(this.editor.historyManager.createStateSnapshot());
 		this.editor.isSaved = true;
 		this.editor.openedFromNewerProjectVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
-		this.editor.updateSidePanelUI();
 		this.editor.layerManager.renderLayersList();
 		this.editor.updatePreview();
-		this.editor.loadActiveLayerSettings();
+		this.editor.refreshInspector();
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateActionButtons();
-		this.editor.updateGlitterSelection();
 		this.editor.updateSelectedColorsDisplay?.();
 		this.editor.updateStatusBar();
 		this.editor.updateHelpfulMessage();

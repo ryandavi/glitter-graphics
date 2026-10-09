@@ -129,7 +129,7 @@ registerLayerType(LayerType.STICKER, {
 		custom: { serialize: 'serializeSticker', deserialize: 'deserializeSticker' }
 	},
 	addedStatusMessage: 'New sticker layer added',
-	goTo: 'sticker',
+	goTo: 'asset',
 	addableViaModal: {
 		label: 'Sticker',
 		icon: 'sticker',
@@ -139,8 +139,6 @@ registerLayerType(LayerType.STICKER, {
 		quickAddId: 'quickActionAddSticker',
 		quickAddOrder: 1
 	},
-	designPanelSections: ['stickerSettingsSection'],
-	panelMode: 'sticker',
 	elementClass: 'sticker-element',
 	transformable: true,
 	managerKey: 'stickerManager',
@@ -202,18 +200,6 @@ registerLayerType(LayerType.STICKER, {
 		reset: true
 	},
 	openOnCreate: 'asset',
-	onActivate: (editor, layer) => {
-		editor.setTool(ToolType.SELECT);
-
-		const stickerContent = document.getElementById('stickerSettingsContent');
-		if (layer.stickerSourceId) {
-			editor.setSettingsEmptyState('stickerSettings', false);
-			editor.stickerManager.loadLayerSettings(layer);
-		} else {
-			if (stickerContent) stickerContent.classList.remove('visible');
-			editor.setSettingsEmptyState('stickerSettings', true);
-		}
-
-		editor.updateStickerSelection();
-	}
+	toolsOnSelect: [],
+	panelEmpty: (layer) => !layer.stickerSourceId
 });

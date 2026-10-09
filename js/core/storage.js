@@ -7,7 +7,7 @@ const STORAGE_KEYS = Object.freeze({
 	toolbarPlacement: { key: 'glitter.toolbar-placement', resetWith: editor => editor.contextToolbarRenderer.resetPlacement() },
 	brushSettings: { key: 'glitter.brush-settings', resetWith: editor => editor.maskEditor.resetToolSettingsToDefaults() },
 	brushDynamics: { key: 'glitter.brush-dynamics', resetWith: editor => { editor.maskEditor.brushDynamics = {}; editor.maskEditor._saveBrushDynamics(); editor.maskEditor._syncDynamicsPanel(); } },
-	panelWidths: { key: 'glitter.panel-widths', resetWith: () => Object.keys(PANEL_RESIZE_TARGETS).forEach(resetPanelWidth) },
+	panelWidths: { key: 'glitter.panel-widths', resetWith: editor => { Object.keys(PANEL_RESIZE_TARGETS).forEach(resetPanelWidth); editor.libraryWindow.resetSplit(); } },
 	panelCards: { key: 'glitter.panel-cards', resetWith: () => resetPanelCardStates() },
 	lastTool: { key: 'glitter.last-tool', session: true, resetWith: editor => editor.setTool(CONFIG.app.startup.tool) }
 });

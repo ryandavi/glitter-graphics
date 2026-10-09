@@ -129,7 +129,7 @@ registerLayerType(LayerType.PATH, {
 		normalize: (editor, layer) => editor.pathLayerManager?.normalizeLayer(layer)
 	},
 	addedStatusMessage: 'New path layer added',
-	goTo: 'glitter',
+	goTo: 'fill',
 	addableViaModal: {
 		label: 'Line',
 		icon: 'line',
@@ -137,8 +137,6 @@ registerLayerType(LayerType.PATH, {
 		order: 4,
 		description: 'Add a line or an arrow, in glitter or a color'
 	},
-	designPanelSections: ['pathSettingsSection'],
-	panelMode: 'path',
 	elementClass: 'path-layer-element',
 	transformable: true,
 	managerKey: 'pathLayerManager',
@@ -177,14 +175,5 @@ registerLayerType(LayerType.PATH, {
 		reset: true
 	},
 	createOptionsKey: 'pathLayer',
-	mobileCreateBehavior: { skipReload: true },
-	onActivate: (editor, layer) => {
-		const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.PEN, ToolType.LINE]);
-		if (!validTools.has(editor.currentTool)) {
-			editor.setTool(ToolType.SELECT);
-		}
-
-		editor.updateGlitterSelection();
-		editor.pathLayerManager?.loadLayerSettings(layer);
-	}
+	toolsOnSelect: [ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.PEN, ToolType.LINE]
 });

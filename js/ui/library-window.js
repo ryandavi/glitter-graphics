@@ -9,8 +9,12 @@ class LibraryWindow {
 		this.isOpen = false;
 		this.pending = false;
 		this.flyoutCard = null;
-		this.flyoutObserver = new MutationObserver(() => this.sync());
 		this.initializeSplit();
+		// A paint switching to or from glitter, or the section turning on or
+		// off, changes what the window arms.
+		document.addEventListener('sectionstatechange', (event) => {
+			if (event.target === this.flyoutCard) this.sync();
+		});
 
 		const pressLine = (event) => {
 			const title = event.target.closest?.('.property-line > .property-card-title');
@@ -43,16 +47,25 @@ class LibraryWindow {
 		let share = limits.defaultShare;
 		this.element.style.setProperty('--library-flyout-max', `${limits.maxShare}%`);
 		// Until the divider is moved the section fits its content, up to the
-		// largest share; a share the user set is held, and resetting returns to
-		// fitting.
-		const setShare = (value, chosen = true) => {
+		// largest share; a share the user set is held, and remembered like the
+		// column widths; resetting returns to fitting.
+		const applyShare = (value, chosen) => {
 			share = Math.max(limits.minShare, Math.min(limits.maxShare, value));
 			this.element.style.setProperty('--library-flyout-share', `${share}%`);
 			this.element.classList.toggle('has-chosen-split', chosen);
 			handle.setAttribute('aria-valuenow', String(Math.round(share)));
 		};
-		const resetShare = () => setShare(limits.defaultShare, false);
-		resetShare();
+		const setShare = (value) => {
+			applyShare(value, true);
+			writeLibrarySplit(share);
+		};
+		const resetShare = () => {
+			applyShare(limits.defaultShare, false);
+			writeLibrarySplit(null);
+		};
+		this.resetSplit = resetShare;
+		const stored = readLibrarySplit();
+		applyShare(stored ?? limits.defaultShare, stored !== null);
 		document.getElementById('flyoutSection').after(handle);
 		let pointer = null;
 		handle.addEventListener('pointerdown', (event) => {
@@ -101,7 +114,7 @@ class LibraryWindow {
 	apply() {
 		if (!this.element) return;
 		const mobile = this.editor.mobileManager;
-		const sheet = Boolean(mobile?.usesBar);
+		const sheet = Boolean(mobile?.isMobile);
 		const card = this.syncFlyout();
 		const picking = Boolean(this.editor.pickers.active);
 		document.getElementById('designGallerySection')?.classList.toggle('visible', picking);
@@ -109,7 +122,7 @@ class LibraryWindow {
 		this.element.classList.toggle('has-library', picking);
 		const panes = ['flyout', 'designGallery'].map((name) => document.getElementById(`${name}Section`));
 		// The sheet shows one pane at a time and has no bar to collapse it by.
-		if (sheet || mobile?.isMobile) panes.forEach((pane) => this.expandPane(pane));
+		if (sheet) panes.forEach((pane) => this.expandPane(pane));
 		// A collapsed pane is only its bar, so the other takes the room.
 		this.element.classList.toggle('is-split', picking && Boolean(card) && panes.every((pane) => pane.classList.contains('is-open')));
 		// The width handle's grip shows only while the panes fill the column:
@@ -126,21 +139,20 @@ class LibraryWindow {
 		// The column takes room from the canvas, so the artwork slides to stay
 		// centred in what is left, at the same zoom. The sheet's drawer frames
 		// the view itself.
-		const viewport = sheet || mobile?.isMobile ? null : this.editor.viewport;
+		const viewport = sheet ? null : this.editor.viewport;
 		const view = viewport?.captureViewState();
 		this.isOpen = open;
 		this.element.classList.toggle('is-open', open);
 		viewport?.restoreViewState(view, { animate: true });
 		if (sheet) {
 			if (open) mobile.openDrawer('window');
-			else mobile.closeSheet('window');
+			else if (mobile.activeDrawer === 'window') mobile.closeAllDrawers();
 		}
 		this.syncBack(sheet, picking, card);
 	}
 
 	expandPane(pane) {
-		setCollapsibleSectionState(pane, pane.querySelector(':scope > .section-content'),
-			pane.querySelector('.mobile-hidden-section-toggle'), true);
+		if (!pane.classList.contains('is-open')) this.editor.setIndependentSectionOpen(pane.id.replace(/Section$/, ''), true);
 	}
 
 	// The open flyout section follows the inspected layer: the same line on
@@ -150,46 +162,47 @@ class LibraryWindow {
 		const editor = this.editor;
 		const pickers = editor.pickers;
 		const layer = editor.layerManager.getInspectedLayer();
-		const available = editor.originalImage && !editor.autoGlitterManager?.isSessionActive();
+		const available = editor.originalImage && !getSessionDefinition(editor)?.closesLibrary;
 		const card = available ? pickers.getFlyoutCard() : null;
 		if (!card) pickers.flyout = null;
 
 		if (card !== this.flyoutCard) {
-			this.flyoutObserver.disconnect();
 			this.flyoutCard?.classList.remove('is-flyout-open');
 			this.flyoutCard?.parentElement.classList.remove('has-flyout-open');
 			card?.classList.add('is-flyout-open');
 			card?.parentElement.classList.add('has-flyout-open');
-			if (card) this.flyoutObserver.observe(card, { subtree: true, attributes: true, attributeFilter: ['data-paint-mode', 'data-effect-enabled'] });
 			this.flyoutCard = card;
 			// Opening a section shows it, even into a pane left collapsed.
 			if (card) this.expandPane(document.getElementById('flyoutSection'));
-			syncSectionHeaderReset(document.getElementById('flyoutReset'), card);
-			const toggle = card ? buildFlyoutSwitch(card) : null;
-			document.getElementById('flyoutSwitch').replaceChildren(...(toggle ? [toggle] : []));
+			// The window's bar is the section's: the Inspector's bar beside it
+			// names the layer.
+			bindSectionBar({
+				title: document.getElementById('flyoutTitleText'),
+				reset: document.getElementById('flyoutReset'),
+				switchHost: document.getElementById('flyoutSwitch')
+			}, card);
+			if (card) document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${PANEL_SCHEMAS[layer.type].section.icon}`);
 			document.querySelectorAll('.property-line').forEach((line) => {
 				const open = Boolean(card) && line.dataset.flyoutFor === card.id;
 				line.classList.toggle('is-flyout-open', open);
 				line.querySelector(':scope > .property-card-title').setAttribute('aria-expanded', String(open));
 			});
+			// The open line is the phone's active chip.
+			editor.mobileManager?.syncBar();
 		}
 		document.getElementById('flyoutSection').classList.toggle('visible', Boolean(card));
 		if (!card) return null;
-		document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${PANEL_SCHEMAS[layer.type].section.icon}`);
-		// The Inspector's bar beside it names the layer.
-		document.getElementById('flyoutTitleText').textContent = card.dataset.flyoutTitle;
 
-		// A Glitter source is the glitter Library: arm it through the paint's own
-		// chip, which is where every manager binds its picker. A section with two
-		// paints keeps the one the user armed, and otherwise takes the first. The
+		// A Glitter source is the glitter Library. A section with two paints
+		// keeps the one the user armed, and otherwise takes the first. The
 		// phone's sheet has room for one of the two, so there the section shows
 		// and the Library opens over it when its glitter is pressed.
 		const usable = !card.classList.contains('is-off') && !editor.isLayerContentLocked(layer);
 		const glitterSlots = usable ? getSectionPaintSlots(card).filter((slot) => slot.dataset.paintMode === 'glitter') : [];
-		const armed = pickers.active && (pickers.active.pickerSession.slot || 'fill');
+		const armed = pickers.active?.pickerSession.slot;
 		if (!glitterSlots.length) pickers.closeAll();
-		else if (editor.mobileManager?.usesBar) return card;
-		else if (!glitterSlots.some((slot) => slot.dataset.slot === armed)) glitterSlots[0].querySelector('.asset-info.glitter-source-glitter .asset-info-thumbnail')?.click();
+		else if (editor.mobileManager?.isMobile) return card;
+		else if (!glitterSlots.some((slot) => slot.dataset.slot === armed)) editor.armPaintSlot(layer, glitterSlots[0].dataset.slot);
 		return card;
 	}
 
@@ -202,7 +215,7 @@ class LibraryWindow {
 	backToSection() {
 		const pickers = this.editor.pickers;
 		const mobile = this.editor.mobileManager;
-		if (!mobile?.usesBar || !pickers.active) return false;
+		if (!mobile?.isMobile || !pickers.active) return false;
 		if (!this.flyoutCard) return mobile.returnToSection();
 		pickers.closeAll();
 		this.sync();

@@ -22,7 +22,6 @@ class FrameLayerManager {
 		this.slotPicker = new SlotGlitterPicker(editor, {
 			type: LayerType.FRAME,
 			defaultSlot: 'fill',
-			section: 'frameSettings',
 			typeWord: 'frame',
 			ensureSlot: (layer, key) => this.ensureSlot(layer, key),
 			onPicked: (layer) => {
@@ -72,7 +71,7 @@ class FrameLayerManager {
 				this.editor.saveState('Edit frame');
 				this.editor.layerManager.renderLayersList();
 			},
-			armPicker: (key) => this.slotPicker.arm(key),
+			armPicker: (key) => this.slotPicker.armPicker(key),
 			getArmedSlot: (layer) => this.slotPicker.getArmedSlot(layer)
 		};
 	}

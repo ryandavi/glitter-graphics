@@ -135,7 +135,7 @@ class TextGlitterManager {
 
 		// The current-font row opens the Library's Fonts in picker mode.
 		[this.ui.fontThumbnail, this.ui.fontChange].filter(Boolean).forEach((control) => {
-			control.addEventListener('click', () => pressAssetRow(this.editor, this.editor.fontBrowserManager, () => this.editor.fontBrowserManager?.openPicker()));
+			control.addEventListener('click', () => pressAssetRow(this.editor, this.editor.fontBrowserManager, () => this.armAssetPicker()));
 		});
 
 		this.ui.textCaseSelect?.addEventListener('change', async () => {
@@ -601,7 +601,7 @@ class TextGlitterManager {
 
 	openPickerSession(layer = this.getActiveTextLayer(), slot = 'fill') {
 		if (!layer) return;
-		pickerOpenSession(this, { layerId: layer.id, slot }, {
+		pickerOpenSession(this, { kind: 'paint', layerId: layer.id, slot }, {
 			refresh: () => this.updateEffectTargetButtons(layer)
 		});
 		this.editor.updateGlitterSelection();
@@ -623,14 +623,14 @@ class TextGlitterManager {
 	armPicker(key) {
 		const layer = this.getActiveTextLayer();
 		if (!layer) return;
-		// A font picker left open (e.g. a drawer tab back to Edit) owns the
-		// Library view; a slot pick supersedes it.
-		this.editor.fontBrowserManager?.closePickerSession();
 		this.ensureEffectData(layer, key);
 		this.openPickerSession(layer, key);
-		const selectedGlitterId = this.resolveSelectedGlitterId(layer);
-		revealAssetBrowser(this.editor, this.editor.glitterLibrary, selectedGlitterId);
-		this.editor.updateStatus(`Choose ${this.getEffectTitle(key)} glitter, then press Esc or Close.`);
+		revealAssetBrowser(this.editor, this.editor.glitterLibrary, this.resolveSelectedGlitterId(layer));
+	}
+
+	// A text layer's asset is its font.
+	armAssetPicker() {
+		this.editor.fontBrowserManager.openPicker();
 	}
 
 	// One font change: re-measure around the anchor, one history step.

@@ -4,9 +4,9 @@
 // PANEL HOSTS
 // ---------------------------------------------------------------------------
 // One host per panel. The same hosts sit in the Inspector's body and, on
-// phones, narrowed to one section in the sheet. `.visible` follows the selection and the tool
-// (updateSidePanelUI); of the switched panels showing together, `.is-open` is
-// the one the switch shows.
+// phones, narrowed to one section in the sheet. `.visible` follows the
+// selection and the tool (refreshInspector); of the switched panels showing
+// together, `.is-open` is the one the switch shows.
 // ===========================================================================
 
 .inspector-body > .section {
@@ -41,9 +41,9 @@
 	&:not(.visible) { display: none; }
 }
 
-// A panel with an empty state swaps it for its controls on `.visible`.
-#layerSettingsControls,
-#glitterSettingsControls {
+// A panel with an empty state (schema `controls`) swaps it for its controls
+// on `.visible`.
+.panel-controls {
 	display: none;
 
 	&.visible {

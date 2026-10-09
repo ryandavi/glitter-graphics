@@ -32,7 +32,6 @@ registerLayerType(LayerType.SPARKLES, {
 		normalize: (editor, layer) => editor.sparkleLayerManager?.normalizeLayer(layer)
 	},
 	addedStatusMessage: 'New sparkles layer added',
-	goTo: null,
 	addableViaModal: {
 		label: 'Sparkles',
 		icon: 'sparkles',
@@ -43,8 +42,6 @@ registerLayerType(LayerType.SPARKLES, {
 		quickAddOrder: 6,
 		phoneChip: false
 	},
-	designPanelSections: ['sparkleLayerSettingsSection'],
-	panelMode: 'sparkles',
 	elementClass: 'sparkle-layer-element',
 	transformable: false,
 	managerKey: 'sparkleLayerManager',
@@ -56,9 +53,5 @@ registerLayerType(LayerType.SPARKLES, {
 		return true;
 	},
 	openOnCreate: 'panel',
-	onActivate: (editor, layer) => {
-		editor.setTool(ToolType.SELECT);
-		editor.updateGlitterSelection();
-		editor.sparkleLayerManager?.loadLayerSettings(layer);
-	}
+	toolsOnSelect: []
 });

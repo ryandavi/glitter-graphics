@@ -13,10 +13,10 @@ const wait = (page) => page.waitForTimeout(400);
 async function press(page, title) {
 	await page.evaluate((name) => {
 		const mobile = window.editor.mobileManager;
-		mobile.renderBar();
-		const entry = mobile.barEntries.find((candidate) => candidate.title === name);
+		mobile.chipBar.render();
+		const entry = mobile.chipBar.entries.find((candidate) => candidate.title === name);
 		if (!entry) throw new Error(`Missing chip: ${name}`);
-		mobile.pressChip(entry);
+		mobile.chipBar.pressChip(entry);
 	}, title);
 	await wait(page);
 }
@@ -77,7 +77,7 @@ async function main() {
 			window.editor.setTool(ToolType.SELECT);
 		});
 		await wait(page);
-		assert.deepEqual(await page.evaluate(() => window.editor.mobileManager.barEntries.filter((entry) => entry.button).map((entry) => entry.title)), ['Sticker', 'Fill Layer', 'Shape', 'Text']);
+		assert.deepEqual(await page.evaluate(() => window.editor.mobileManager.chipBar.entries.filter((entry) => entry.button).map((entry) => entry.title)), ['Sticker', 'Fill Layer', 'Shape', 'Text']);
 		assert(await page.locator('.mobile-layers-swatch').evaluate((node) => node.classList.contains('is-unset')));
 		assert(await page.locator('.phone-chip.is-add').count() === 4);
 		assert(await page.locator('#quickActionAddSparkles').count() === 1, 'Sparkles remains available in Quick Add');
@@ -95,7 +95,7 @@ async function main() {
 		const samples = await page.evaluate(async () => {
 			const editor = window.editor;
 			const mobile = editor.mobileManager;
-			const entry = mobile.barEntries.find((candidate) => candidate.title === 'Size');
+			const entry = mobile.chipBar.entries.find((candidate) => candidate.title === 'Size');
 			const samples = [];
 			const sample = (phase) => new Promise((resolve) => {
 				const start = performance.now();
@@ -107,7 +107,7 @@ async function main() {
 				};
 				requestAnimationFrame(frame);
 			});
-			mobile.pressChip(entry);
+			mobile.chipBar.pressChip(entry);
 			await sample('open');
 			mobile.closeAllDrawers();
 			await sample('close');
@@ -146,7 +146,7 @@ async function main() {
 			return Math.abs(state.focusX - (box.left + box.right) / 2) < 1 && Math.abs(state.focusY - (box.top + box.bottom) / 2) < 1;
 		}), 'The edited object is centered above the sheet');
 		const editingView = await page.evaluate(() => window.editor.viewport.captureViewState());
-		if (css) assert.equal(await page.locator('[data-panel-resize="design"]').evaluate((node) => getComputedStyle(node).display), 'none', 'Desktop panel resize handle is hidden on mobile');
+		if (css) assert.equal(await page.locator('[data-panel-resize="inspector"]').evaluate((node) => getComputedStyle(node).display), 'none', 'Desktop panel resize handle is hidden on mobile');
 		await page.evaluate(() => window.editor.fontBrowserManager.openPicker());
 		await wait(page);
 		const libraryView = await page.evaluate(() => window.editor.viewport.captureViewState());
@@ -176,7 +176,7 @@ async function main() {
 		await page.evaluate(() => {
 			window.editor.mobileManager.closeAllDrawers({ immediate: true });
 			window.editor.setTool(ToolType.TEXT);
-			window.editor.mobileManager.renderBar();
+			window.editor.mobileManager.chipBar.render();
 		});
 		await press(page, 'Type');
 		const count = await page.evaluate(() => window.editor.layers.length);
@@ -271,6 +271,47 @@ async function main() {
 			await page.screenshot({ path: path.join(output, 'desktop-gradient-presets.png') });
 			console.log('PASS shared sheet shadow, pane scrolling, collapsible preset sizing and pointer/keyboard split resizing');
 		}
+		// Undo keeps the Library armed for the open section: the session is not
+		// ended and re-armed, so the Library is not revealed a second time.
+		const undone = await page.evaluate(async () => {
+			const editor = window.editor;
+			const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 60))));
+			editor.pickers.flyout = null;
+			editor.pickers.closeAll();
+			const shape = editor.layerManager.addLayer(LayerType.SHAPE);
+			await frames();
+			editor.pickers.flyout = null;
+			editor.pickers.closeAll();
+			editor.pickers.toggleFlyout('fill');
+			await frames();
+			let reveals = 0;
+			const reveal = window.revealAssetBrowser;
+			window.revealAssetBrowser = (...args) => { reveals += 1; return reveal(...args); };
+			editor.saveState('before');
+			shape.opacity = 0.5;
+			editor.saveState('after');
+			await editor.undo();
+			await frames();
+			window.revealAssetBrowser = reveal;
+			const session = editor.pickers.active?.pickerSession;
+			return { reveals, flyout: editor.pickers.flyout, kind: session?.kind, slot: session?.slot, layer: session?.layerId === shape.id };
+		});
+		assert.deepEqual(undone, { reveals: 0, flyout: 'fill', kind: 'paint', slot: 'fill', layer: true }, 'Undo with Fill open keeps its session and leaves the Library still');
+		// A panel showing its empty state lists no sections, so the phone bar has
+		// no chips for controls that are hidden.
+		const emptied = await page.evaluate(() => {
+			const editor = window.editor;
+			editor.pickers.flyout = null;
+			editor.pickers.closeAll();
+			const sticker = editor.layerManager.addLayer(LayerType.STICKER);
+			const host = document.getElementById('stickerSettingsSection');
+			const withSource = getPanelSectionIndex(host).length;
+			sticker.stickerSourceId = null;
+			editor.refreshInspector();
+			return { withSource: withSource > 0, sections: getPanelSectionIndex(host).length, empty: document.getElementById('stickerSettingsEmpty').classList.contains('visible') };
+		});
+		assert.deepEqual(emptied, { withSource: true, sections: 0, empty: true }, 'A sticker with no source shows its empty state and no sections');
+		console.log('PASS undo keeps an open section armed, and an empty panel lists no sections');
 		assert.deepEqual(errors, []);
 		console.log('PASS short screen, breakpoint cleanup and desktop workspace overlay; no page errors');
 	} finally {

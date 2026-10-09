@@ -1314,7 +1314,7 @@ async function openEditSheet(page) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
 	await createTestSticker(page, { position: { x: 110, y: 100 } });
-	await page.evaluate(() => window.editor.mobileManager.pressChip(window.editor.mobileManager.barEntries.find(entry => entry.title === 'Transform')));
+	await page.evaluate(() => window.editor.mobileManager.chipBar.pressChip(window.editor.mobileManager.chipBar.entries.find(entry => entry.title === 'Transform')));
 	await page.waitForTimeout(450);
 }
 
@@ -1331,8 +1331,8 @@ async function checkSheetFlick(page) {
 	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === null), `Fast downward header flick did not close Edit from half: ${JSON.stringify(await page.evaluate(() => window.__sheetRelease))}`);
 	await page.evaluate(() => {
 		const mobile = window.editor.mobileManager;
-		mobile.renderBar();
-		mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Transform'));
+		mobile.chipBar.render();
+		mobile.chipBar.pressChip(mobile.chipBar.entries.find(entry => entry.title === 'Transform'));
 		mobile.setSheetHeight(CONFIG.ui.mobile.sheetDetents.peek);
 	});
 	await page.waitForTimeout(450);
@@ -1409,7 +1409,7 @@ async function checkSheetContent(page) {
 	await dispatchTouch(page, 'touchStart', [start]);
 	await dispatchTouch(page, 'touchMove', [{ x: start.x, y: start.y + 50 }]);
 	await page.waitForTimeout(50);
-	assert(await page.evaluate(() => window.editor.mobileManager.sheetDrag?.mode === 'drag'), 'Pulling down top content did not drag the sheet');
+	assert(await page.evaluate(() => document.body.classList.contains('mobile-sheet-dragging')), 'Pulling down top content did not drag the sheet');
 	await page.waitForTimeout(120);
 	await dispatchTouch(page, 'touchEnd', []);
 	await page.waitForTimeout(400);
@@ -1434,7 +1434,7 @@ async function checkSheetContent(page) {
 		const railPull = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 		await dispatchTouch(page, 'touchStart', [railPull]);
 		await dispatchTouch(page, 'touchMove', [{ x: railPull.x, y: railPull.y + 35 }]);
-		assert(await page.evaluate(() => !window.editor.mobileManager.sheetDrag), 'Native category select must not drag the sheet');
+		assert(await page.evaluate(() => !document.body.classList.contains('mobile-sheet-dragging')), 'Native category select must not drag the sheet');
 		await dispatchTouch(page, 'touchEnd', []);
 		await page.waitForTimeout(150);
 	}
@@ -1443,13 +1443,13 @@ async function checkSheetContent(page) {
 	await dispatchTouch(page, 'touchStart', [pull]);
 	await dispatchTouch(page, 'touchMove', [{ x: pull.x, y: pull.y + 35 }]);
 	await page.waitForTimeout(50);
-	assert(await page.evaluate(() => window.editor.mobileManager.sheetDrag?.mode === 'drag'), 'Library content did not hand off its downward pull');
+	assert(await page.evaluate(() => document.body.classList.contains('mobile-sheet-dragging')), 'Library content did not hand off its downward pull');
 	await page.waitForTimeout(120);
 	await dispatchTouch(page, 'touchEnd', []);
 	await page.waitForTimeout(350);
 	await page.evaluate(() => {
 		const mobile = window.editor.mobileManager;
-		mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Type'));
+		mobile.chipBar.pressChip(mobile.chipBar.entries.find(entry => entry.title === 'Type'));
 		document.querySelectorAll('#inspectorBody [data-advanced]').forEach(node => node.classList.add('is-open'));
 	});
 	await page.waitForTimeout(450);
@@ -1469,8 +1469,8 @@ async function checkSheetContent(page) {
 		const mobile = window.editor.mobileManager;
 		mobile.closeAllDrawers({ immediate: true });
 		window.editor.setTool(ToolType.BRUSH);
-		mobile.renderBar();
-		mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Dynamics'));
+		mobile.chipBar.render();
+		mobile.chipBar.pressChip(mobile.chipBar.entries.find(entry => entry.title === 'Dynamics'));
 	});
 	await page.waitForTimeout(400);
 	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === 'inspector'), 'Tool chip did not open the Inspector sheet');

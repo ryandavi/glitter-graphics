@@ -345,7 +345,7 @@
 		}
 	}
 
-	// updateSidePanelUI and the window own the `.visible` class. Last, so it
+	// refreshInspector and the window own the `.visible` class. Last, so it
 	// holds over each section's own layout above.
 	> .section:not(.visible) {
 		display: none;

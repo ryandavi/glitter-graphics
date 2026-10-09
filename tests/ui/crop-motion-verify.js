@@ -179,8 +179,8 @@ async function main() {
 		await phone.page.evaluate(() => {
 			editor.beginActivity('overlay-test', 'Updating preview');
 			const mobile = editor.mobileManager;
-			mobile.renderBar();
-			mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Size'));
+			mobile.chipBar.render();
+			mobile.chipBar.pressChip(mobile.chipBar.entries.find(entry => entry.title === 'Size'));
 		});
 		await phone.page.waitForTimeout(400);
 		assert(await phone.page.evaluate(() => {

@@ -117,8 +117,8 @@ class GlitterEditor {
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
 		this.libraryWindow = new LibraryWindow(this);
-		// Registration order is the picker-strip refresh order: the text
-		// manager performs the initial hide for non-text layers.
+		// Every owner of a picker session. Only one holds a session at a time,
+		// so the order carries no meaning.
 		[
 			this.textGlitterManager,
 			this.fontBrowserManager,
@@ -316,7 +316,7 @@ class GlitterEditor {
 			this.shapeBrowserManager.init(),
 			this.fontBrowserManager.init()
 		]);
-		this.updateSidePanelUI(null);
+		this.refreshInspector();
 		document.body.classList.remove('is-booting');
 	}
 
@@ -477,11 +477,9 @@ class GlitterEditor {
 		if (!TOOLS[tool]) return;
 
 		if (this.currentTool === tool) {
-			// Clicking the active tool is still a meaningful exit from a gallery
-			// picker (for example Brush while "Choosing brush tip" is showing).
-			if (this.pickers?.closeActive({ returnToProperties: false })) {
-				this.syncCollapsibleSections?.(this.getPreferredDesignSection(this.layerManager.getActiveLayer()));
-			}
+			// Clicking the active tool is still a meaningful exit from a Library
+			// pick (for example Brush while its tip is being chosen).
+			if (this.pickers?.closeActive({ toolChange: true })) this.refreshInspector();
 			return;
 		}
 		if (this.autoGlitterManager?.isSessionActive() && !this.autoGlitterManager.allowsPreviewTool(tool)) {
@@ -500,10 +498,9 @@ class GlitterEditor {
 			return;
 		}
 
-		// Picker sessions belong to the tool/context that opened them. End the
-		// session before the destination tool computes its preferred panel, so a
-		// stale gallery strip cannot override Text, Shape, Brush, or Select UI.
-		this.pickers?.closeActive({ returnToProperties: false });
+		// Picker sessions belong to the tool that opened them, so the session
+		// ends before the destination tool's panels are worked out.
+		this.pickers?.closeActive({ toolChange: true });
 
 		// The temporary Hand (Space) is a detour, not a tool change: the tool
 		// it interrupts keeps its session.
@@ -549,12 +546,10 @@ class GlitterEditor {
 		// Update Context Toolbars
 		this.updateContextToolbars();
 
-		// Reconcile the sidebar accordion with the new tool: entering Brush/Eraser
-		// opens its Settings; leaving a settings tool returns focus to the selected
-		// layer's Properties (or the Gallery). Only on an actual tool change (setTool
-		// early-returns when unchanged), so it never fights a manual accordion toggle.
-		if (this.originalImage) this.updateSidePanelUI(this.layerManager.getActiveLayer());
-		else this.syncCollapsibleSections?.(this.getPreferredDesignSection(this.layerManager.getActiveLayer()));
+		// The Inspector follows the tool: a tool with a panel of its own leads,
+		// and leaving it returns to the selection's properties. Only on an actual
+		// tool change, so it never fights the panel switch.
+		this.refreshInspector();
 
 		// Update helpful message
 		this.updateHelpfulMessage();
@@ -566,7 +561,6 @@ class GlitterEditor {
 	updateContextToolbars() {
 		const removeBackgroundButton = document.getElementById('contextRemoveBackground');
 		if (removeBackgroundButton) removeBackgroundButton.hidden = !this.stickerManager.canRemoveBackground();
-		const brushSettingsSection = document.getElementById('brushSettingsSection');
 		const toolbarConfigs = CONFIG.ui.contextToolbars;
 		const toolbars = toolbarConfigs.map((config) => ({
 			config,
@@ -575,7 +569,6 @@ class GlitterEditor {
 
 		// Hide all first
 		toolbars.forEach(({ element }) => element?.classList.remove('visible'));
-		if (brushSettingsSection) brushSettingsSection.classList.remove('visible');
 		if (!this.originalImage) return;
 		if (this.autoGlitterManager?.isSessionActive() && !this.autoGlitterManager.allowsPreviewTool(this.currentTool)) return;
 
@@ -588,15 +581,6 @@ class GlitterEditor {
 			this.contextToolbarRenderer.applyPlacement(activeToolbar.element);
 			activeToolbar.config.sync?.(this, context);
 		}
-
-		if (this.currentTool === ToolType.BRUSH) {
-			if (brushSettingsSection) {
-				brushSettingsSection.classList.add('visible');
-				this.syncCollapsibleSections?.('brushSettings');
-			}
-		}
-
-		this.syncToolSettingsSectionVisibility?.(layer);
 
 		this.mobileManager?.syncBar();
 	}
@@ -884,10 +868,8 @@ class GlitterEditor {
 		// Apply the no-document layout before reconciling panel content so the
 		// start workspace never flashes stale side panels during reset.
 		this.syncDocumentStartState();
-		this.updateSidePanelUI(null);
-
-		this.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
-		this.setSettingsEmptyState('glitterSettings', true);
+		this.refreshInspector();
+		this.syncPanelEmptyStates();
 
 		// ======================
 		// Selected colors
@@ -1228,6 +1210,7 @@ Object.assign(
 	EDITOR_EXPORT_FLOW_METHODS,
 	EDITOR_KEYBOARD_METHODS,
 	EDITOR_PANEL_METHODS,
+	EDITOR_ASSET_INFO_METHODS,
 	EDITOR_FILL_TOOL_METHODS,
 	EDITOR_DISCLOSURE_METHODS,
 	TRANSFORM_PANEL_METHODS,

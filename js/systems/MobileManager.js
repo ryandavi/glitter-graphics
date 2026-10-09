@@ -5,34 +5,32 @@ class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.isMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
-		this.barEntries = [];
-		this.barFrame = null;
+		this.chipBar = new PhoneChipBar(editor, this);
 		this.sheetSection = null;
 		// The section a Library sheet was opened from, for its Back.
 		this.sheetReturn = null;
 		this.sheetHadLayer = false;
 		// What a closed sheet still shows while it slides away.
 		this.sheetRelease = null;
-		this.barObserver = new MutationObserver(() => this.syncBar());
 		this.activeDrawer = null;
 		this.phoneHostAnchors = new Map();
 		this.resizeObserver = null;
 		this.eventsBound = false;
-		this.sheetDrag = null;
+		this.sheetDrags = null;
 		this.sheetHeight = CONFIG.ui.mobile.sheetDetents.half;
-		// The bar layout's sheets keep the height the user left them at.
+		// Sheets keep the height the user left them at.
 		this.sheetRestHeight = this.sheetHeight;
 		this.drawerViewportState = null;
 		this.drawerViewportUserState = null;
 		this.drawerViewportUserZoomed = false;
 		this.drawerViewportLastZoom = null;
 		this.drawerViewportSyncing = false;
-		this.drawerLayoutFrame = null;
 		this.drawerCloseTimer = null;
 		this.drawerCloseElement = null;
-		this.drawerCloseListener = null;
 		this.historyStateKey = 'glitterSheet';
 		this.pendingHistoryBack = null;
+		this.pendingDrawerOpen = null;
+		this.sheetResizeFrame = null;
 
 		// index.html ships `mobile-no-image` on <body> so the empty-document mobile
 		// layout is correct on first paint; drop it when we boot on desktop.
@@ -47,20 +45,14 @@ class MobileManager {
 		document.body.classList.add('phone-bar');
 		document.getElementById('inspectorClose').classList.add('visible');
 		this.releaseSheet('window');
-		this.barObserver.observe(document.getElementById('inspectorBody'), { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
-		this.showMobileControls();
+		document.querySelector('.mobile-bottom-nav')?.classList.add('visible');
 		this.syncToolSwitch();
 		this.syncPhoneHosts();
 		this.editor.libraryWindow?.sync();
 		this.setupEventListeners();
 		this.setupSheetDrag();
 		this.syncImageState();
-		this.syncBar();
-
-	}
-
-	get usesBar() {
-		return this.isMobile;
+		this.chipBar.start();
 	}
 
 	// Controls that sit somewhere else at phone width. Each host names its
@@ -107,10 +99,6 @@ class MobileManager {
 		if (icon) toolSwitch.querySelector('use').setAttribute('href', `#icon-${icon}`);
 	}
 
-	showMobileControls() {
-		document.querySelector('.mobile-bottom-nav')?.classList.add('visible');
-	}
-
 	setupEventListeners() {
 		if (this.eventsBound) return;
 		window.addEventListener('popstate', (event) => {
@@ -140,19 +128,6 @@ class MobileManager {
 			if (!event.target.closest('.toolbar')) this.setToolRailOpen(false);
 		}, { capture: true });
 
-		const chipBar = document.getElementById('phoneChipBar');
-		chipBar?.addEventListener('click', (event) => {
-			const chip = event.target.closest('.phone-chip');
-			const entry = chip && this.barEntries[Number(chip.dataset.chipIndex)];
-			if (entry) this.pressChip(entry);
-		});
-		// The bar has no scrollbar, so a mouse wheel scrolls it sideways.
-		chipBar?.addEventListener('wheel', (event) => {
-			if (!event.deltaY || event.deltaX) return;
-			chipBar.scrollLeft += event.deltaY;
-			event.preventDefault();
-		}, { passive: false });
-
 		window.addEventListener('layerChanged', () => {
 			if (!this.isMobile) return;
 			const layer = this.editor.layerManager.getActiveLayer();
@@ -176,7 +151,8 @@ class MobileManager {
 			this.drawerViewportLastZoom = state.zoom;
 		});
 
-		this.editor.previewContainer?.addEventListener('pointerdown', () => this.finishViewportAnimation(), { capture: true });
+		this.editor.previewContainer?.addEventListener('pointerdown', () => this.editor.viewport?.cancelViewTransition?.(), { capture: true });
+		document.getElementById('inspectorClose').addEventListener('click', () => this.closeAllDrawers());
 
 		this.eventsBound = true;
 	}
@@ -246,157 +222,42 @@ class MobileManager {
 		return id ? document.getElementById(id) : null;
 	}
 
-	// ----- The bar layout ---------------------------------------------------
+	// ----- The chip bar (js/ui/phone-chip-bar.js) ----------------------------
 
-	// The chips: the section index of every panel the Inspector shows, in
-	// panel order, the tool's panel first.
 	syncBar() {
-		if (!this.usesBar) return;
-		cancelAnimationFrame(this.barFrame);
-		this.barFrame = requestAnimationFrame(() => this.renderBar());
+		this.chipBar.sync();
 	}
 
-	renderBar() {
-		const bar = document.getElementById('phoneChipBar');
-		const body = document.getElementById('inspectorBody');
-		if (!bar || !body || !this.usesBar) return;
-		const editor = this.editor;
-		const tool = `${TOOLS[editor.currentTool]?.panel?.(editor, editor.layerManager.getActiveLayer())}Section`;
-		const entries = Array.from(body.children)
-			.filter((host) => host.classList.contains('visible'))
-			.sort((a, b) => (b.id === tool) - (a.id === tool))
-			.flatMap((host) => getPanelSectionIndex(host).map((entry) => ({ ...entry, host })))
-			.filter((entry) => entry.button?.dataset.phoneChip !== 'false');
-		this.barEntries = entries;
-
-		// The open section follows the selection: the same section of the next
-		// layer keeps the sheet, and a layer without it closes the sheet.
-		if (this.sheetSection) {
-			const next = entries.find((entry) => entry.key === this.sheetSection.key && !entry.line && !entry.button);
-			if (!next) {
-				if (this.activeDrawer === 'inspector') this.closeAllDrawers();
-				else this.setSheetSection(null);
-			} else if (next.element !== this.sheetSection.element) {
-				this.openPanel(next.host);
-				this.setSheetSection(next);
-			}
-		}
-
-		const signature = entries.map((entry) => `${entry.host.id}/${entry.key}`).join('|');
-		if (bar.dataset.signature !== signature) {
-			bar.dataset.signature = signature;
-			bar.scrollLeft = 0;
-			bar.replaceChildren(...entries.map((entry, index) => {
-				const chip = document.createElement('button');
-				chip.type = 'button';
-				chip.className = entry.button ? 'phone-chip is-add' : 'phone-chip';
-				if (entry.button) {
-					chip.appendChild(createIcon('plus'));
-					chip.setAttribute('aria-label', `Add ${entry.title} layer`);
-				}
-				chip.dataset.chipIndex = String(index);
-				if (entry.line?.querySelector(':scope > .property-card-title > .property-card-swatch')) {
-					const swatch = document.createElement('span');
-					swatch.className = 'phone-chip-swatch';
-					chip.appendChild(swatch);
-				}
-				chip.append(entry.title);
-				return chip;
-			}));
-		}
-		entries.forEach((entry, index) => {
-			const chip = bar.children[index];
-			if (chip.lastChild?.nodeType === Node.TEXT_NODE) chip.lastChild.textContent = entry.title;
-			const swatch = entry.line?.querySelector(':scope > .property-card-title > .property-card-swatch');
-			if (swatch) {
-				// Off, a section has no paint to show, whatever it would use if on.
-				const unset = swatch.classList.contains('is-unset') || entry.line.classList.contains('is-off');
-				chip.firstElementChild.style.background = unset ? '' : swatch.style.background;
-				chip.firstElementChild.classList.toggle('is-unset', unset);
-			}
-			const open = !entry.button && (entry.line ? entry.line.classList.contains('is-flyout-open') : this.sheetSection?.element === entry.element);
-			if (open && !chip.classList.contains('active')) chip.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
-			chip.classList.toggle('active', Boolean(open));
-			chip.classList.toggle('is-off', Boolean(entry.line?.classList.contains('is-off')));
-			if (!entry.button) chip.setAttribute('aria-pressed', String(Boolean(open)));
-			chip.disabled = Boolean(entry.button?.disabled);
-		});
+	returnToSection() {
+		return this.chipBar.returnToSection();
 	}
 
-	// A chip opens its section, swaps the sheet to it, or closes it. A button
-	// chip is its button.
-	pressChip(entry) {
-		// A sheet still sliding away is done with.
-		this.cancelDrawerCloseFinalization();
-		if (entry.button) {
-			entry.button.click();
-			return;
-		}
-		if (entry.line) {
-			if (entry.line.classList.contains('is-flyout-open')) this.closeAllDrawers();
-			// The window owns a flyout section: its line opens it.
-			else entry.line.querySelector(':scope > .property-card-title').click();
-			return;
-		}
-		if (this.activeDrawer === 'inspector' && this.sheetSection?.element === entry.element) {
-			this.closeAllDrawers();
-			return;
-		}
-		this.openPanel(entry.host);
-		this.setSheetSection(entry);
-		if (this.activeDrawer !== 'inspector') this.toggleDrawer('inspector');
-		this.syncBar();
+	openLeadingSection() {
+		this.chipBar.openLeadingSection();
 	}
 
-	// Of a tool's panel and the layer's, the Inspector shows one.
-	openPanel(host) {
-		if (host.classList.contains('switch-panel') && !host.classList.contains('is-open')) {
-			this.editor.setCollapsibleSectionOpen(host.id.replace(/Section$/, ''), true);
-		}
-	}
+	// ----- Sheet state ------------------------------------------------------
 
 	// The Inspector as a sheet shows one section: the marks here are what its
 	// stylesheet rules read.
 	setSheetSection(entry) {
 		const body = document.getElementById('inspectorBody');
 		body.querySelectorAll('.is-sheet-open, .has-sheet-open').forEach((node) => node.classList.remove('is-sheet-open', 'has-sheet-open'));
-		const title = document.getElementById('inspectorTitleText');
-		this.sheetSection = entry ? { key: entry.key, element: entry.element } : null;
-		const resetCard = entry?.element.matches('.property-card') ? entry.element : entry?.element.querySelector('.property-card');
-		syncSectionHeaderReset(document.getElementById('inspectorReset'), resetCard);
-		if (!entry) {
-			if (title.dataset.sheetSection === undefined) return;
-			delete title.dataset.sheetSection;
-			this.editor.syncInspectorHeader();
-			return;
-		}
-		title.dataset.sheetSection = entry.title;
-		title.textContent = entry.title;
-		document.getElementById('inspectorTitleName').textContent = '';
+		const changed = Boolean(entry || this.sheetSection);
+		this.sheetSection = entry ? { key: entry.key, title: entry.title, element: entry.element } : null;
+		const card = entry && (entry.element.matches('.property-card') ? entry.element : entry.element.querySelector('.property-card'));
+		// The sheet's bar is the section's: its title (syncInspectorHeader) and
+		// its reset.
+		bindSectionBar({ reset: document.getElementById('inspectorReset') }, card);
+		if (changed) this.editor.syncInspectorHeader();
+		if (!entry) return;
 		[entry.element, ...(entry.extras || [])].forEach((element) => {
 			element.classList.add('is-sheet-open');
 			element.parentElement.closest('.property-group')?.classList.add('has-sheet-open');
 		});
 		if (entry.host !== entry.element) entry.host.classList.add('has-sheet-open');
 		// The sheet's bar is the section's title row, so it shows whole.
-		const card = entry.element.matches('.property-card') ? entry.element : entry.element.querySelector('.property-card');
 		if (card?.classList.contains('is-collapsed')) setPanelCardCollapsed(card, false);
-	}
-
-	// Back on a Library sheet that was opened from a section's sheet.
-	returnToSection() {
-		const entry = this.sheetReturn && this.barEntries.find((candidate) => candidate.key === this.sheetReturn && !candidate.line && !candidate.button);
-		if (!entry) return false;
-		this.pressChip(entry);
-		return true;
-	}
-
-	// Open the selection's first section from its layer-list row.
-	openLeadingSection() {
-		if (this.activeDrawer === 'inspector' || this.activeDrawer === 'window') return;
-		this.renderBar();
-		const entry = this.barEntries.find((candidate) => !candidate.button);
-		if (entry) this.pressChip(entry);
 	}
 
 	// Leaving a sheet ends what it showed.
@@ -409,10 +270,6 @@ class MobileManager {
 			pickers.closeAll();
 			this.editor.libraryWindow?.sync();
 		}
-	}
-
-	closeSheet(drawer) {
-		if (this.activeDrawer === drawer) this.closeAllDrawers();
 	}
 
 	// ----- Drawers and sheets -----------------------------------------------
@@ -467,7 +324,7 @@ class MobileManager {
 			button.classList.toggle('active', active);
 			button.setAttribute('aria-expanded', String(active));
 		});
-		if (openingFirstDrawer) this.scheduleDrawerViewportUpdate('fit');
+		if (openingFirstDrawer) this.updateDrawerViewport('fit');
 	}
 
 	closeAllDrawers(options = {}) {
@@ -488,9 +345,8 @@ class MobileManager {
 		const closingDrawer = this.activeDrawer;
 		const closingElement = this.getDrawerElement(closingDrawer);
 		this.activeDrawer = null;
-		this.sheetDrag = null;
+		this.sheetDrags?.forEach((drag) => drag.cancel());
 		this.sheetReturn = null;
-		document.body.classList.remove('mobile-sheet-dragging');
 		document.body.classList.remove('layersOpen', 'inspectorOpen', 'windowOpen', 'sheetOpen', 'mobile-sheet-expanded');
 		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
 			button.classList.remove('active');
@@ -502,7 +358,7 @@ class MobileManager {
 		this.sheetRelease = closingDrawer;
 		if (options.immediate || !closingElement) this.finishDrawerClose();
 		else this.deferSheetHeightReset(closingElement);
-		if (options.resize !== false && hadDrawerViewportSession) this.scheduleDrawerViewportUpdate('restore', restoreState);
+		if (options.resize !== false && hadDrawerViewportSession) this.updateDrawerViewport('restore', restoreState);
 		else this.resetDrawerViewportSession();
 	}
 
@@ -556,12 +412,8 @@ class MobileManager {
 	cancelDrawerCloseFinalization() {
 		if (this.sheetRelease) this.finishDrawerClose();
 		if (this.drawerCloseTimer) clearTimeout(this.drawerCloseTimer);
-		if (this.drawerCloseElement && this.drawerCloseListener) {
-			this.drawerCloseElement.removeEventListener('transitionend', this.drawerCloseListener);
-		}
 		this.drawerCloseTimer = null;
 		this.drawerCloseElement = null;
-		this.drawerCloseListener = null;
 		document.body.classList.remove('mobile-drawer-closing');
 	}
 
@@ -573,102 +425,18 @@ class MobileManager {
 		return parseFloat(duration) * (duration.endsWith('ms') ? 1 : 1000);
 	}
 
+	// Each sheet's drag gesture (js/ui/sheet-drag.js), bound once.
 	setupSheetDrag() {
 		this.setSheetHeight(this.sheetHeight, { resize: false });
-		document.querySelectorAll('[data-mobile-drawer-handle]').forEach((handle) => {
-			if (handle.dataset.bound === 'true') return;
-			handle.dataset.bound = 'true';
+		this.sheetDrags ||= Array.from(document.querySelectorAll('[data-mobile-drawer-handle]')).map((handle) => {
 			const sheet = handle.parentElement;
-			const headers = ':scope > .section > .section-header';
-			sheet.querySelectorAll(headers).forEach(header => header.classList.add('mobile-sheet-drag-header', 'ui-ignore-gestures'));
-			let suppressClick = false;
-			sheet.addEventListener('click', event => {
-				if (!suppressClick) return;
-				suppressClick = false;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-			}, true);
-			sheet.addEventListener('pointerdown', event => {
-				if (!this.isMobile || this.getDrawerElement(this.activeDrawer) !== sheet || this.sheetDrag || event.button !== 0) return;
-				suppressClick = false;
-				const header = event.target.closest('[data-mobile-drawer-handle], .mobile-sheet-drag-header');
-				let content = false;
-				if (!header) {
-					if (event.pointerType !== 'touch' || event.target.closest('input, select, textarea, .gradient-preview, .layer-drag-handle, .scroll-region-track, [data-pointer-drag]')) return;
-					for (let node = event.target; node && node !== sheet; node = node.parentElement) {
-						const style = getComputedStyle(node);
-						if (style.touchAction === 'none' || (node.scrollWidth > node.clientWidth && /^(auto|scroll)$/.test(style.overflowX))) return;
-						if (!/^(auto|scroll)$/.test(style.overflowY)) continue;
-						// Content scrolled anywhere up the chain scrolls back first.
-						if (node.scrollTop > 0) return;
-						content = true;
-					}
-					if (!content) return;
-				}
-				this.sheetDrag = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
-					startHeight: this.sheetHeight, content, mode: 'pending',
-					samples: [{ y: event.clientY, time: event.timeStamp }] };
-			}, true);
-			sheet.addEventListener('pointermove', event => {
-				const drag = this.sheetDrag;
-				if (!drag || event.pointerId !== drag.pointerId) return;
-				const dy = event.clientY - drag.startY;
-				if (drag.mode === 'pending') {
-					if (Math.abs(dy) <= CONFIG.ui.gestures.tapSlopPx) return;
-					if (Math.abs(event.clientX - drag.startX) > Math.abs(dy)) { this.sheetDrag = null; return; }
-					// Upward movement over content is the browser's own scroll.
-					if (drag.content && dy < 0) { this.sheetDrag = null; return; }
-					drag.mode = 'drag';
-					sheet.setPointerCapture(event.pointerId);
-					suppressClick = true;
-					this.cancelDrawerViewportUpdate();
-					cancelAnimationFrame(this.sheetResizeFrame);
-					document.body.classList.add('mobile-sheet-dragging');
-				}
-				const detents = CONFIG.ui.mobile.sheetDetents;
-				const height = drag.startHeight - dy / window.innerHeight * 100;
-				this.setSheetHeight(Math.max(detents.minDragHeight, Math.min(detents.full, height)), { live: true, resize: false });
-				const now = event.timeStamp;
-				drag.samples.push({ y: event.clientY, time: now });
-				while (drag.samples.length > 2 && drag.samples[1].time < now - detents.velocityWindowMs) drag.samples.shift();
-				event.preventDefault();
-				event.stopPropagation();
-			});
-			// Content scrolls natively, so it keeps momentum. A pull down from content
-			// resting at its top belongs to the sheet, and only a cancelled touchmove
-			// stops the browser from claiming that touch as a scroll.
-			sheet.addEventListener('touchmove', event => {
-				const drag = this.sheetDrag;
-				if (!drag?.content || !event.cancelable || event.touches.length !== 1) return;
-				const dx = event.touches[0].clientX - drag.startX;
-				const dy = event.touches[0].clientY - drag.startY;
-				if (drag.mode === 'drag' || (dy > 0 && dy >= Math.abs(dx))) event.preventDefault();
-			}, { passive: false });
-			const finish = event => {
-				if (event.type === 'lostpointercapture' && event.target !== sheet) return;
-				const drag = this.sheetDrag;
-				if (!drag || event.pointerId !== drag.pointerId) return;
-				this.sheetDrag = null;
-				if (sheet.hasPointerCapture(event.pointerId)) sheet.releasePointerCapture(event.pointerId);
-				document.body.classList.remove('mobile-sheet-dragging');
-				if (drag.mode === 'drag') {
-					const now = event.timeStamp;
-					const recent = drag.samples.filter(sample => sample.time >= now - CONFIG.ui.mobile.sheetDetents.velocityWindowMs);
-					const first = recent[0];
-					const velocity = event.type === 'pointercancel' || !first
-						? 0 : (event.clientY - first.y) / Math.max(1, now - first.time);
-					this.settleSheet(velocity, drag.startHeight);
-				}
-			};
-			sheet.addEventListener('pointerup', finish);
-			sheet.addEventListener('pointercancel', finish);
-			sheet.addEventListener('lostpointercapture', finish);
-			handle.addEventListener('keydown', event => {
-				if (!this.isMobile || this.getDrawerElement(this.activeDrawer) !== sheet) return;
-				if (!['Escape', 'ArrowDown', 'ArrowUp'].includes(event.key)) return;
-				event.preventDefault();
-				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: false });
-				else this.settleSheet(event.key === 'ArrowDown' ? CONFIG.ui.mobile.sheetDetents.flingVelocityPxMs : -CONFIG.ui.mobile.sheetDetents.flingVelocityPxMs, this.sheetHeight, true);
+			return bindSheetDrag(sheet, handle, {
+				isActive: () => this.isMobile && this.getDrawerElement(this.activeDrawer) === sheet,
+				getHeight: () => this.sheetHeight,
+				setHeight: (height) => this.setSheetHeight(height, { live: true, resize: false }),
+				begin: () => cancelAnimationFrame(this.sheetResizeFrame),
+				settle: (velocity, startHeight, keyboard) => this.settleSheet(velocity, startHeight, keyboard),
+				close: () => this.closeAllDrawers({ releaseBrush: false })
 			});
 		});
 	}
@@ -732,32 +500,18 @@ class MobileManager {
 		});
 	}
 
-	scheduleDrawerViewportUpdate(mode, restoreState = null) {
-		this.cancelDrawerViewportUpdate();
-		const update = () => {
-			this.drawerLayoutFrame = null;
-			this.drawerViewportSyncing = true;
-			if (mode === 'restore' && restoreState) {
-				this.editor.viewport?.restoreViewState?.(restoreState, { animate: true });
-			} else {
-				this.refitDrawerViewport();
-			}
-			this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
-			this.drawerViewportSyncing = false;
-			if (mode === 'restore') this.resetDrawerViewportSession();
-		};
-		// The bar layout's sheet and the canvas start in the same frame, so they
-		// move as one. The room the sheet takes is already in the layout here.
-		update();
-	}
-
-	cancelDrawerViewportUpdate() {
-		if (this.drawerLayoutFrame) cancelAnimationFrame(this.drawerLayoutFrame);
-		this.drawerLayoutFrame = null;
-	}
-
-	finishViewportAnimation() {
-		this.editor.viewport?.cancelViewTransition?.();
+	// The sheet and the canvas start in the same frame, so they move as one.
+	// The room the sheet takes is already in the layout here.
+	updateDrawerViewport(mode, restoreState = null) {
+		this.drawerViewportSyncing = true;
+		if (mode === 'restore' && restoreState) {
+			this.editor.viewport?.restoreViewState?.(restoreState, { animate: true });
+		} else {
+			this.refitDrawerViewport();
+		}
+		this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
+		this.drawerViewportSyncing = false;
+		if (mode === 'restore') this.resetDrawerViewportSession();
 	}
 
 	resetDrawerViewportSession() {
@@ -768,27 +522,15 @@ class MobileManager {
 	}
 
 	cleanup() {
-		this.cancelDrawerViewportUpdate();
 		this.cancelDrawerCloseFinalization();
 		this.closeAllDrawers({ releaseBrush: true, resize: false, immediate: true });
 		this.syncPhoneHosts();
 		this.editor.libraryWindow?.sync();
-		this.barObserver.disconnect();
-		cancelAnimationFrame(this.barFrame);
+		this.chipBar.stop();
 		document.querySelector('.mobile-bottom-nav')?.classList.remove('visible');
 		document.getElementById('inspectorClose').classList.remove('visible');
-		document.body.classList.remove('mobile-no-image', 'has-layer-settings', 'mobile-sheet-dragging', 'phone-bar');
+		document.body.classList.remove('mobile-no-image', 'phone-bar');
 		document.documentElement.style.removeProperty('--mobile-drawer-height');
 		document.documentElement.style.removeProperty('--mobile-drawer-reserved-height');
-		this.sheetDrag = null;
-
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		if (activeLayer) {
-			LAYER_UI_CONFIG[activeLayer.type]?.onActivate?.(this.editor, activeLayer);
-		} else {
-			this.editor.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
-			this.editor.setSettingsEmptyState('glitterSettings', true);
-			this.editor.setSettingsEmptyState('stickerSettings', true);
-		}
 	}
 }

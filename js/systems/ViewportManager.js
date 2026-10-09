@@ -164,7 +164,7 @@ class ViewportManager {
 			if (inspector?.getClientRects().length) right = inspector.getBoundingClientRect().left - rect.left;
 			// The open Library window is a column like the other two (as the bar
 			// layout's sheet it is the drawer above instead).
-			const library = mobile?.usesBar ? null : document.getElementById('libraryWindow');
+			const library = mobile?.isMobile ? null : document.getElementById('libraryWindow');
 			if (library?.classList?.contains('is-open') && library.getClientRects().length) right = Math.min(right, library.getBoundingClientRect().left - rect.left);
 		}
 		this.previewContainer.parentElement.style.setProperty('--canvas-inset-left', `${left}px`);

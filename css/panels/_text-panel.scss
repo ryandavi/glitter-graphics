@@ -7,16 +7,6 @@
 // the font picker (scrolling list, gallery-card options, language badges).
 // ===========================================================================
 
-// Sticker Properties controls host — visibility only; the controls themselves
-// are the shared property vocabulary.
-#stickerSettingsControls {
-	display: none;
-
-	&.visible {
-		display: block;
-	}
-}
-
 .text-settings-section textarea {
 	width: 100%;
 	height: 52px;

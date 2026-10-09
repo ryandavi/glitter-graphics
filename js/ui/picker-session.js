@@ -1,5 +1,14 @@
 'use strict';
 
+// A picker session is what the Library's next pick changes. Every session is
+// `{ kind, layerId?, slot?, library?, label? }`:
+//   kind: 'paint'  one of a layer's paint slots; `slot` is its key (the
+//                  layer's own fill is 'fill', never null) and the Library
+//                  shows glitter.
+//   kind: 'asset'  anything else (a sticker, a shape, a font, a brush tip, a
+//                  colour match); `library` is the Library kind it shows and
+//                  `label` names what a pick changes.
+// `layerId` ties the session to a layer: it ends when another is inspected.
 class PickerRegistry {
 	constructor(editor) {
 		this.editor = editor;
@@ -11,7 +20,6 @@ class PickerRegistry {
 			document.getElementById(id)?.addEventListener('click', () => this.closeActive());
 		});
 		document.getElementById('libraryBack')?.addEventListener('click', () => this.editor.libraryWindow?.backToSection());
-		document.getElementById('inspectorClose')?.addEventListener('click', () => this.editor.mobileManager?.closeAllDrawers());
 	}
 
 	// Pressing a line opens its section, swaps the window to it, or closes it.
@@ -35,15 +43,14 @@ class PickerRegistry {
 		return (this.flyout && prefix) ? document.querySelector(`#${prefix}Flyouts > [data-flyout-key="${this.flyout}"]`) : null;
 	}
 
-	// A glitter session for one of the open section's paints keeps the window
-	// on it. A session with no slot is the layer's fill.
+	// A paint session for one of the open section's paints keeps the window
+	// on it.
 	sessionKeepsFlyout(manager, session) {
 		const layer = this.editor.layerManager.getInspectedLayer();
 		const owner = layer && getLayerManagerForType(this.editor, layer.type);
 		const card = this.getFlyoutCard();
 		if (!owner || !card || (manager !== owner && manager !== owner.slotPicker)) return false;
-		if (session.kind && session.kind !== 'glitter') return false;
-		return getSectionPaintSlots(card).some((slot) => slot.dataset.slot === (session.slot || 'fill'));
+		return session.kind === 'paint' && getSectionPaintSlots(card).some((slot) => slot.dataset.slot === session.slot);
 	}
 
 	register(manager) {
@@ -55,16 +62,17 @@ class PickerRegistry {
 		return Array.from(this.managers).find((manager) => manager.pickerSession) || null;
 	}
 
-	closeActive({ returnToProperties = true } = {}) {
+	// The user dismissing what is open (Close, Escape). A tool change ends the
+	// session it finds instead (`toolChange`), not the section the window
+	// shows: that follows the selection.
+	closeActive({ toolChange = false } = {}) {
 		// The phone's sheet slides away first and then lets go of what it showed.
 		const mobile = this.editor.mobileManager;
-		if (returnToProperties && mobile?.usesBar && mobile.activeDrawer === 'window') {
+		if (!toolChange && mobile?.isMobile && mobile.activeDrawer === 'window') {
 			mobile.closeAllDrawers();
 			return true;
 		}
-		// A tool change ends the session it finds (`returnToProperties: false`),
-		// not the section the window shows: that follows the selection.
-		if (returnToProperties && this.closeFlyout()) return true;
+		if (!toolChange && this.closeFlyout()) return true;
 		const manager = this.active;
 		if (!manager) return false;
 		manager.closePickerSession({ restorePicker: false });
@@ -77,12 +85,21 @@ class PickerRegistry {
 		});
 	}
 
-	// A session tied to a layer ends when another layer is inspected.
+	// A session tied to a layer ends when another layer is inspected, or when
+	// the paint it is armed for is gone from the layer (undo).
 	closeStale() {
 		const layer = this.editor.layerManager.getInspectedLayer();
 		this.managers.forEach((manager) => {
-			const layerId = manager.pickerSession?.layerId;
-			if (layerId != null && layerId !== layer?.id) manager.closePickerSession({ restorePicker: false });
+			const session = manager.pickerSession;
+			if (session?.layerId == null) return;
+			const gone = session.layerId !== layer?.id || (session.kind === 'paint' && !getLayerPaintSlot(layer, session.slot));
+			if (gone) manager.closePickerSession({ restorePicker: false });
+		});
+	}
+
+	closeForLayer(layerId) {
+		this.managers.forEach((manager) => {
+			if (manager.pickerSession?.layerId === layerId) manager.closePickerSession({ restorePicker: false });
 		});
 	}
 }
@@ -137,17 +154,14 @@ function pickerArmedSlot(manager, layer, isValid = null) {
 
 // The Library's asset kind is the armed session's: `library` on the session,
 // or glitter for a paint slot. syncLibraryView reads it and names the target
-// in the Library's bar. A session is `{ layerId?, slot?, library?, label? }`;
-// `label` names what a pick changes, for sessions that are not a layer's
-// paint slot.
+// in the Library's bar.
 function syncPickerTarget(editor) {
 	const section = document.getElementById('designGallerySection');
 	if (!section) return;
 	const session = editor?.pickers?.active?.pickerSession;
 	if (session) section.dataset.pickerLibrary = session.library || 'glitter';
 	else delete section.dataset.pickerLibrary;
-	// With no kind left to show, the bar names the selection state again.
-	if (!syncLibraryView()) editor?.syncNoLayerPanelState?.();
+	syncLibraryView();
 }
 
 // "Outline": what the armed session changes, or '' when nothing is armed or
@@ -158,15 +172,15 @@ function describePickerTarget(editor) {
 	const manager = pickers?.active;
 	const session = manager?.pickerSession;
 	// In the phone's sheet the Library covers the section, so it names the target itself.
-	if (!session || (pickers.sessionKeepsFlyout(manager, session) && !editor.mobileManager?.usesBar)) return '';
+	if (!session || (pickers.sessionKeepsFlyout(manager, session) && !editor.mobileManager?.isMobile)) return '';
 	const layer = session.layerId == null ? null : editor.layerManager.getLayerById(session.layerId);
-	return session.label || (layer ? panelCap(getPaintSlotLabel(layer.type, session.slot || 'fill')) : '');
+	return session.label || (layer ? panelCap(getPaintSlotLabel(layer.type, session.slot)) : '');
 }
 
 // An asset row opens its Library, and pressed again closes it, as a line
 // does its section. `owner` is the manager holding the row's session.
 function pressAssetRow(editor, owner, arm) {
-	if (owner?.pickerSession && !owner.pickerSession.slot) editor.pickers.closeActive();
+	if (owner?.pickerSession?.kind === 'asset') editor.pickers.closeActive();
 	else arm();
 }
 
@@ -175,11 +189,10 @@ function pressAssetRow(editor, owner, arm) {
 // Registered with the PickerRegistry like the managers' own sessions.
 // defaultSlot is a slot key, or (layer) => key where it depends on the layer.
 class SlotGlitterPicker {
-	constructor(editor, { type, defaultSlot, section, typeWord, ensureSlot, onPicked }) {
+	constructor(editor, { type, defaultSlot, typeWord, ensureSlot, onPicked }) {
 		this.editor = editor;
 		this.type = type;
 		this.defaultSlot = defaultSlot;
-		this.section = section;
 		this.typeWord = typeWord;
 		this.ensureSlot = ensureSlot;
 		this.onPicked = onPicked;
@@ -191,10 +204,10 @@ class SlotGlitterPicker {
 		return layer?.type === this.type ? layer : null;
 	}
 
-	arm(slot) {
+	armPicker(slot) {
 		const layer = this.getLayer();
 		if (!layer) return;
-		pickerOpenSession(this, { layerId: layer.id, slot }, {
+		pickerOpenSession(this, { kind: 'paint', layerId: layer.id, slot }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}

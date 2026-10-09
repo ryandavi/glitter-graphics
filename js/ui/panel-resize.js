@@ -6,56 +6,27 @@
 // those custom properties on :root and persists the result.
 //
 // Only a user-chosen width is ever written. Untouched panels keep falling
-// through to the stylesheet's responsive defaults (css/panels/_layout.scss narrows both
-// columns under 1700px and 1200px), so the app still adapts on its own until
-// someone expresses a preference.
+// through to the stylesheet's responsive defaults (css/panels/_layout.scss
+// narrows the Layers column under 1700px and 1200px), so the app still adapts
+// on its own until someone expresses a preference. The viewport follows the
+// columns through its own ResizeObserver.
 //
-// Mobile is excluded outright: MobileManager turns these columns into bottom
-// drawers whose size is owned by the sheet-drag handle instead.
+// Mobile is excluded outright: MobileManager turns these columns into sheets
+// whose size is owned by the sheet-drag handle instead.
 
 const PANEL_RESIZE_STORAGE_KEY = STORAGE_KEYS.panelWidths.key;
 
-const PANEL_RESIZE_TARGETS = Object.freeze({
-	layers: {
-		variable: '--layer-panel-width',
-		selector: '.layers-panel',
-		// The handle lives on the inner edge - the side facing the canvas.
-		edge: 'end',
-		min: 240,
-		max: 620,
-		// Snap points are the widths where the panel's own layout changes:
-		// the layer list's thumbnail grid steps at 300 and 400.
-		snaps: [260, 300, 360, 400, 480],
-		label: 'Resize Layers panel'
-	},
-	design: {
-		variable: '--glitter-panel-width',
-		selector: '.inspector-panel',
-		edge: 'start',
-		min: 300,
-		max: 720,
-		// 300 is the gallery's 2-column floor; 350 is today's default; 420 is
-		// where property pairs stop being cramped; 520 fits 4 gallery columns.
-		snaps: [300, 350, 420, 520, 620],
-		label: 'Resize Design panel'
-	},
-	// Follows the Inspector's width until it is dragged, so it starts as wide
-	// as the Library column it replaces and carries the same snap points.
-	library: {
-		variable: '--library-window-width',
-		selector: '.library-window',
-		edge: 'start',
-		min: 300,
-		max: 720,
-		snaps: [300, 350, 420, 520, 620],
-		label: 'Resize Library window'
-	}
-});
+// Each column's custom property, element and handle edge (the handle lives on
+// the side facing the canvas). Its limits and snap points are
+// CONFIG.ui.panelResize.panels, merged in here.
+const PANEL_RESIZE_TARGETS = Object.freeze(Object.fromEntries(Object.entries({
+	layers: { variable: '--layer-panel-width', selector: '.layers-panel', edge: 'end', label: 'Resize Layers panel' },
+	inspector: { variable: '--glitter-panel-width', selector: '.inspector-panel', edge: 'start', label: 'Resize Inspector' },
+	library: { variable: '--library-window-width', selector: '.library-window', edge: 'start', label: 'Resize Library window' }
+}).map(([key, target]) => [key, { ...target, ...CONFIG.ui.panelResize.panels[key] }])));
 
-// How close to a snap point a drag has to land before it sticks.
-const PANEL_RESIZE_SNAP_TOLERANCE = 10;
-// The canvas is the point of the app; sidebars never squeeze it below this.
-const PANEL_RESIZE_MIN_CANVAS = 360;
+// The same store holds the Library window's section share under this key.
+const PANEL_SPLIT_STORAGE_FIELD = 'librarySplit';
 
 
 function readPanelWidths() {
@@ -83,7 +54,7 @@ function getPanelResizeMax(key) {
 		.reduce((total, name) => total + getPanelFlowWidth(name), 0);
 	const toolbar = document.querySelector('.toolbar');
 	const toolbarWidth = toolbar ? toolbar.getBoundingClientRect().width : 0;
-	const available = window.innerWidth - otherWidth - toolbarWidth - PANEL_RESIZE_MIN_CANVAS;
+	const available = window.innerWidth - otherWidth - toolbarWidth - CONFIG.ui.panelResize.minCanvas;
 	return Math.max(config.min, Math.min(config.max, Math.round(available)));
 }
 
@@ -97,7 +68,7 @@ function clampPanelWidth(key, width) {
 function snapPanelWidth(key, width, disableSnap) {
 	if (disableSnap) return width;
 	const snap = PANEL_RESIZE_TARGETS[key].snaps
-		.find((point) => Math.abs(point - width) <= PANEL_RESIZE_SNAP_TOLERANCE);
+		.find((point) => Math.abs(point - width) <= CONFIG.ui.panelResize.snapTolerance);
 	return snap === undefined ? width : snap;
 }
 
@@ -122,7 +93,6 @@ function setPanelWidth(key, width, { persist = true, snap = false } = {}) {
 		widths[key] = next;
 		writePanelWidths(widths);
 	}
-	document.dispatchEvent(new CustomEvent('panelresize', { detail: { panel: key, width: next } }));
 	return next;
 }
 
@@ -131,7 +101,20 @@ function resetPanelWidth(key) {
 	const widths = readPanelWidths();
 	delete widths[key];
 	writePanelWidths(widths);
-	document.dispatchEvent(new CustomEvent('panelresize', { detail: { panel: key, width: getPanelWidth(key) } }));
+}
+
+// The share of the Library window its open section holds, or null while the
+// section fits its content.
+function readLibrarySplit() {
+	const share = readPanelWidths()[PANEL_SPLIT_STORAGE_FIELD];
+	return typeof share === 'number' ? share : null;
+}
+
+function writeLibrarySplit(share) {
+	const widths = readPanelWidths();
+	if (share === null) delete widths[PANEL_SPLIT_STORAGE_FIELD];
+	else widths[PANEL_SPLIT_STORAGE_FIELD] = share;
+	writePanelWidths(widths);
 }
 
 function buildPanelResizeHandle(key) {
@@ -164,8 +147,8 @@ function initializePanelResize(editor) {
 		let pointerId = null;
 
 		const onMove = (event) => {
-			// Dragging the design panel's handle rightwards makes it narrower;
-			// the layers handle works the other way round.
+			// Dragging the Inspector's handle rightwards makes it narrower; the
+			// layers handle works the other way round.
 			const delta = config.edge === 'start' ? startX - event.clientX : event.clientX - startX;
 			const raw = startWidth + delta;
 			applyPanelWidth(key, clampPanelWidth(key, snapPanelWidth(key, raw, event.altKey)));
@@ -181,7 +164,6 @@ function initializePanelResize(editor) {
 			window.removeEventListener('pointerup', onUp);
 			window.removeEventListener('pointercancel', onUp);
 			setPanelWidth(key, getPanelWidth(key));
-			editor?.viewport?.handleResize?.();
 		};
 
 		handle.addEventListener('pointerdown', (event) => {
@@ -199,23 +181,18 @@ function initializePanelResize(editor) {
 		});
 
 		// Double-click returns the panel to the stylesheet's responsive default.
-		handle.addEventListener('dblclick', () => {
-			resetPanelWidth(key);
-			editor?.viewport?.handleResize?.();
-		});
+		handle.addEventListener('dblclick', () => resetPanelWidth(key));
 
 		handle.addEventListener('keydown', (event) => {
-			const step = event.shiftKey ? 40 : 8;
+			const step = event.shiftKey ? CONFIG.ui.panelResize.fastKeyStep : CONFIG.ui.panelResize.keyStep;
 			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
 				event.preventDefault();
 				const direction = event.key === 'ArrowRight' ? 1 : -1;
 				const delta = config.edge === 'start' ? -direction * step : direction * step;
 				setPanelWidth(key, getPanelWidth(key) + delta);
-				editor?.viewport?.handleResize?.();
 			} else if (event.key === 'Home' || event.key === 'Escape') {
 				event.preventDefault();
 				resetPanelWidth(key);
-				editor?.viewport?.handleResize?.();
 			}
 		});
 	});

@@ -69,7 +69,6 @@ registerLayerType(LayerType.FRAME, {
 		normalize: (editor, layer) => editor.frameLayerManager?.normalizeLayer(layer)
 	},
 	addedStatusMessage: 'New frame layer added',
-	goTo: null,
 	addableViaModal: {
 		label: 'Frame',
 		icon: 'frame',
@@ -77,8 +76,6 @@ registerLayerType(LayerType.FRAME, {
 		order: 1,
 		description: 'Put a border or an ornate frame around the picture'
 	},
-	designPanelSections: ['frameSettingsSection'],
-	panelMode: 'frame',
 	elementClass: 'frame-layer-element',
 	// Pinned frames follow the canvas and have no handles; unpinned ones move
 	// and resize like shapes.
@@ -115,9 +112,5 @@ registerLayerType(LayerType.FRAME, {
 		reset: true
 	},
 	openOnCreate: 'panel',
-	onActivate: (editor, layer) => {
-		editor.setTool(ToolType.SELECT);
-		editor.updateGlitterSelection();
-		editor.frameLayerManager?.loadLayerSettings(layer);
-	}
+	toolsOnSelect: []
 });

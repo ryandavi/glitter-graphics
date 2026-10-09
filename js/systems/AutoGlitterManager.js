@@ -296,10 +296,7 @@ class AutoGlitterManager {
 		this.setCanvasPreviewState(false);
 		if (options.cancel !== false) this.cancelSession();
 		if (previousShowAllLayers === false && this.editor.showAllLayers) this.editor.togglePreview();
-		const baseLayer = this.editor.layerManager.getBaseLayer();
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		const targetLayer = activeLayer && !activeLayer.isPreview ? activeLayer : baseLayer;
-		this.editor.updateSidePanelUI(targetLayer);
+		this.editor.refreshInspector();
 		if (previousTool && previousTool !== this.editor.currentTool) this.editor.setTool(previousTool, { persist: false });
 		else this.editor.updateContextToolbars();
 		this.editor.updateActionButtons();
@@ -592,7 +589,7 @@ class AutoGlitterManager {
 		const color = this.result?.palette[index];
 		if (!this.session || !color || color.manualMergeTarget != null) return;
 		this.ui.results.querySelector(`[data-palette-index="${index}"] .auto-glitter-choice`)?.setAttribute('aria-expanded', 'true');
-		pickerOpenSession(this, { paletteIndex: index, defaultAssetId: color.suggestedGlitterId, label: `Color match ${index + 1}` }, {
+		pickerOpenSession(this, { kind: 'asset', paletteIndex: index, defaultAssetId: color.suggestedGlitterId, label: `Color match ${index + 1}` }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId)
 		});
 	}
@@ -768,8 +765,7 @@ class AutoGlitterManager {
 	}
 
 	showSessionPanel() {
-		const baseLayer = this.editor.layerManager.getBaseLayer();
-		this.editor.updateSidePanelUI(baseLayer);
+		this.editor.refreshInspector();
 		this.editor.updateContextToolbars();
 		this.editor.setCollapsibleSectionOpen?.('autoGlitterSettings', true);
 		this.editor.notifications.setMode({

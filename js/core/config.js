@@ -768,6 +768,25 @@ const CONFIG = deepFreeze({
 			}
 		},
 		librarySplit: { defaultShare: 50, minShare: 20, maxShare: 80, keyStep: 2, fastKeyStep: 10 },
+		// Column widths in px (js/ui/panel-resize.js). Snap points are the
+		// widths where a panel's own layout changes: the layer list's thumbnail
+		// grid steps at 300 and 400; 300 is the Library's 2-column floor, 350
+		// the default, 420 where property pairs stop being cramped, and 520
+		// fits 4 Library columns. The Library window follows the Inspector's
+		// width until it is dragged, so it carries the same points.
+		panelResize: {
+			// How close to a snap point a drag has to land before it sticks.
+			snapTolerance: 10,
+			// The canvas is the point of the app; columns never squeeze it below this.
+			minCanvas: 360,
+			keyStep: 8,
+			fastKeyStep: 40,
+			panels: {
+				layers: { min: 240, max: 620, snaps: [260, 300, 360, 400, 480] },
+				inspector: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] },
+				library: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] }
+			}
+		},
 		hints: {
 			enabledByDefault: true
 		},
@@ -1112,18 +1131,6 @@ const TEXT_BACKGROUND_PRESETS = {
 	labelPill: { mode: 'text-bounds', horizontalPadding: 28, verticalPadding: 6, cornerRadius: 100 }
 };
 const ASSET_TYPE_CONFIG = {
-	glitter: {
-		prefix: 'glitterAsset',
-		managerKey: 'glitterLibrary',
-		renderThumbnail: (thumbnail, asset) => {
-			thumbnail.className = 'asset-info-thumbnail glitter-bg';
-			thumbnail.style.backgroundImage = `url(${asset.url})`;
-			thumbnail.innerHTML = '';
-		},
-		getExtraBadges: (asset) => {
-			return [];
-		}
-	},
 	sticker: {
 		prefix: 'stickerAsset',
 		managerKey: 'stickerLibrary',

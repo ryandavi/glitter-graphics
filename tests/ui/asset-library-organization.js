@@ -56,7 +56,7 @@ async function openPage(browser, before = false, real = false) {
 		await e.loadBlankImage(240, 180, '#ffffff');
 		e.layerManager.insertLayer(e.glitterManager.createLayer());
 		e.layerManager.setActiveLayer(e.layers.at(-1).id);
-		e.glitterManager.armAssetPicker();
+		e.glitterManager.armPicker();
 		document.querySelectorAll('.modal-overlay.visible').forEach(modal => modal.classList.remove('visible'));
 	});
 	return { page, errors };
@@ -161,7 +161,7 @@ async function screenshots(page, directory, before) {
 		});
 		for (const prefix of ['shape', 'font']) {
 			await page.evaluate(prefix => {
-				window.editor.glitterManager.armAssetPicker();
+				window.editor.glitterManager.armPicker();
 				document.getElementById('designGallerySection').dataset.pickerLibrary = prefix; syncLibraryView();
 			}, prefix);
 			await page.locator(`#${prefix}Browser .asset-browser-rail select`).click();
@@ -457,7 +457,7 @@ async function main() {
 			const provenance = library.createAssetProvenance(library.getItemById(9002)).textContent;
 			expect(provenance.includes('Original name: Sparkbutton-gray') && provenance.includes('First published by Mica') && provenance.includes("Also in Aylana's Bring On The Glitter as blue-08"), 'Lineage text is incomplete');
 			b.browseView = 'style'; b.setState('CATEGORY_LIST');
-			e.glitterManager.armAssetPicker();
+			e.glitterManager.armPicker();
 			await library.selectGlitter(9004);
 			expect(e.layerManager.getActiveLayer().fill.glitterId === 9004, 'Browser pick did not update fill layer');
 			e.glitterManager.closePickerSession?.();
@@ -521,7 +521,7 @@ async function main() {
 		});
 		// The Library only shows while a picker is armed.
 		await page.evaluate(() => {
-			window.editor.glitterManager.armAssetPicker();
+			window.editor.glitterManager.armPicker();
 			window.editor.glitterLibrary.browser.viewControl.querySelector('[data-view="style"]').click();
 		});
 		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('sparkle/sparkelies');
@@ -533,7 +533,7 @@ async function main() {
 			await e.loadBlankImage(240, 180, '#ffffff');
 			e.layerManager.insertLayer(e.glitterManager.createLayer());
 			e.layerManager.setActiveLayer(e.layers.at(-1).id);
-			e.glitterManager.armAssetPicker();
+			e.glitterManager.armPicker();
 			document.querySelectorAll('.modal-overlay.visible').forEach(modal => modal.classList.remove('visible'));
 		});
 		const rootSelect = page.locator('#glitterBrowser .asset-browser-rail select').first();

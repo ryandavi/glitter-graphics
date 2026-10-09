@@ -366,7 +366,7 @@ class ShapeGlitterManager {
 		this.editor.layerManager.renderLayersList();
 	}
 
-	// ===== GALLERY PICKER SESSION (reuses the text strip + Done UX) =====
+	// ===== LIBRARY PICKER SESSION =====
 
 	// Arm a slot for glitter picking: open the Library on it. Gallery clicks
 	// then route to this slot (see GlitterManager.selectGlitter's shape branch).
@@ -374,7 +374,7 @@ class ShapeGlitterManager {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.shapeChangeLayerId = null;
-		pickerOpenSession(this, { layerId: layer.id, slot }, {
+		pickerOpenSession(this, { kind: 'paint', layerId: layer.id, slot }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}

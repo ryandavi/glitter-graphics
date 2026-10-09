@@ -103,24 +103,20 @@ class BrushTipManager extends ContentManager {
 
 	handleItemClick(item) {
 		this.editor.maskEditor.setBrushShape(item.id);
-		this.closePicker();
+		this.closePickerSession();
 	}
 
 	openPicker() {
 		const layer = this.editor.layerManager.getActiveLayer();
-		pickerOpenSession(this, { kind: 'brush-tip', layerId: layer?.id ?? null, library: 'brushTip', label: 'Brush tip' }, {
+		pickerOpenSession(this, { kind: 'asset', layerId: layer?.id ?? null, library: 'brushTip', label: 'Brush tip' }, {
 			reveal: () => {
-				this.editor.updateSidePanelUI(layer);
+				this.editor.refreshInspector();
 				revealAssetBrowser(this.editor, this, this.editor.maskEditor.getBrushShape());
 			}
 		});
 		this.updateSelection();
 	}
 
-
-	closePicker() {
-		this.closePickerSession();
-	}
 
 	closePickerSession() {
 		return pickerCloseSession(this, { updateSelection: () => this.updateSelection() });

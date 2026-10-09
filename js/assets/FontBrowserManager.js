@@ -221,8 +221,7 @@ class FontBrowserManager extends ContentManager {
 	openPicker() {
 		const layer = this.getTargetLayer();
 		if (!layer || !this.browser) return;
-		this.editor.textGlitterManager?.closePickerSession?.();
-		pickerOpenSession(this, { kind: 'font', layerId: layer.id, library: 'font', label: 'Font' }, {
+		pickerOpenSession(this, { kind: 'asset', layerId: layer.id, library: 'font', label: 'Font' }, {
 			reveal: () => revealAssetBrowser(this.editor, this, layer.textData.fontId)
 		});
 		this.ensureSamplesLoaded();

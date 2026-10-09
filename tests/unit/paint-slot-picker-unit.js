@@ -1,7 +1,7 @@
 'use strict';
 
-// Glitter pickers resolve a paint slot through its declaration (path, label,
-// panelPrefix), never by reading the layer's data root with the slot key. A
+// Glitter pickers resolve a paint slot through its declaration (path, label),
+// never by reading the layer's data root with the slot key. A
 // slot stored at a nested path (the bevel paints at `bevel.highlight`) is
 // invisible to a root lookup, which is how a Change button ends up opening the
 // wrong library or writing to the fill. This walks every declared slot that
@@ -39,7 +39,6 @@ const config = run('LAYER_UI_CONFIG');
 const getLayerPaintSlot = run('getLayerPaintSlot');
 const ensureLayerPaintSlot = run('ensureLayerPaintSlot');
 const pickerArmedSlot = run('pickerArmedSlot');
-const getPaintSlotChipId = run('getPaintSlotChipId');
 
 let checked = 0;
 let nested = 0;
@@ -48,7 +47,7 @@ Object.entries(config).forEach(([type, entry]) => {
 		if (!definition.panelPrefix || !definition.modes?.includes('glitter')) return;
 		const where = `${type}.${definition.key}`;
 		const layer = { id: 'layer-1', type, name: 'Layer' };
-		const manager = { pickerSession: { layerId: layer.id, slot: definition.key } };
+		const manager = { pickerSession: { kind: 'paint', layerId: layer.id, slot: definition.key } };
 		const editor = { pickers: { active: manager }, layerManager: { getLayerById: () => layer, getInspectedLayer: () => layer } };
 		const schema = run("getAssetBrowserSchema('glitter')");
 		const defaultId = schema.pickerDefault(editor);
@@ -76,8 +75,7 @@ Object.entries(config).forEach(([type, entry]) => {
 		created.mode = 'glitter';
 		assert.strictEqual(definition.pathKeys.reduce((node, key) => node[key], layer).glitterId, 7, `${where}: a pick lands at ${definition.path}`);
 
-		// Close returns to the slot's own chip, and the Library names the slot in words.
-		assert.strictEqual(getPaintSlotChipId(type, definition.key), `${definition.panelPrefix}GlitterChip`, `${where}: return-focus id comes from panelPrefix`);
+		// The Library names the slot in words.
 		assert(/^[a-z]+( [a-z]+)*$/.test(definition.label), `${where}: label "${definition.label}" must be lowercase words, not a key`);
 
 		checked += 1;

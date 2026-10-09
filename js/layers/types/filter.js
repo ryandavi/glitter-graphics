@@ -11,7 +11,6 @@ registerLayerType(LayerType.FILTER, {
 		normalize: (editor, layer) => editor.filterLayerManager?.normalizeLayer(layer)
 	},
 	addedStatusMessage: 'New filter layer added',
-	goTo: null,
 	addableViaModal: {
 		label: 'Filter',
 		icon: 'sliders',
@@ -19,8 +18,6 @@ registerLayerType(LayerType.FILTER, {
 		order: 1,
 		description: 'Adjust the appearance of every layer below'
 	},
-	designPanelSections: ['filterSettingsSection'],
-	panelMode: 'filter',
 	elementClass: 'filter-layer-overlay',
 	transformable: false,
 	// A pixel size of 1 means off; only a real mosaic rescales. Pixelate keeps
@@ -40,8 +37,5 @@ registerLayerType(LayerType.FILTER, {
 		return true;
 	},
 	openOnCreate: 'panel',
-	onActivate: (editor, layer) => {
-		editor.setTool(ToolType.SELECT);
-		editor.filterLayerManager?.loadLayerSettings(layer);
-	}
+	toolsOnSelect: []
 });

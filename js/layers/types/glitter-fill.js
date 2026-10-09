@@ -102,7 +102,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		normalize: (editor, layer) => editor.glitterManager?.normalizeLayer(layer)
 	},
 	addedStatusMessage: 'New fill layer added',
-	goTo: 'glitter',
+	goTo: 'fill',
 	addableViaModal: {
 		label: 'Fill Layer',
 		icon: 'glitter',
@@ -112,8 +112,6 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		quickAddId: 'quickActionAddGlitter',
 		quickAddOrder: 2
 	},
-	designPanelSections: ['glitterSettingsSection'],
-	panelMode: 'glitter',
 	elementClass: 'glitter-element',
 	managerKey: 'glitterManager',
 	blendable: true,
@@ -151,13 +149,10 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		reset: true
 	},
 	openOnCreate: 'fill',
+	// A fill layer with nothing painted yet is selected to be filled.
 	onActivate: (editor, layer) => {
 		if (!hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
 			editor.setTool(ToolType.GLITTER_FILL);
 		}
-		editor.updateGlitterSelection();
-		editor.setSettingsEmptyState('layerSettings', false);
-		editor.setSettingsEmptyState('glitterSettings', false);
-		editor.loadActiveLayerSettings();
 	}
 });

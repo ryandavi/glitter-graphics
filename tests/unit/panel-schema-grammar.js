@@ -24,6 +24,11 @@ vm.runInContext(`
 `, context);
 vm.runInContext(`${fs.readFileSync(path.join(root, 'js/ui/panel-schemas.js'), 'utf8')}\nglobalThis.__schemas = PANEL_SCHEMAS;`, context, { filename: 'js/ui/panel-schemas.js' });
 const schemas = context.__schemas;
+// The layer types' paint slots: a schema names a slot, the registry declares it.
+['js/paint/paint-slots.js', ...fs.readdirSync(path.join(root, 'js/layers/types')).filter((file) => file.endsWith('.js')).map((file) => `js/layers/types/${file}`)].forEach((file) => {
+	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
+});
+const layerTypes = vm.runInContext('LAYER_UI_CONFIG', context);
 
 const LAYER_GROUPS = ['Content', 'Appearance', 'Layout', 'Effects', 'Motion', 'Actions'];
 const SECTION_KINDS = new Set(['section', 'paintSlot', 'transform', 'mount']);
@@ -31,7 +36,7 @@ const ROW_KINDS = new Set([
 	'slider', 'pair', 'numberPair', 'select', 'segmented', 'radioSegmented', 'toggle', 'field', 'labeled',
 	'note', 'assetInfo', 'presetGrid', 'textarea', 'host', 'sparkleGlyphs', 'processingStatus'
 ]);
-const GROUP_KEYS = new Set(['title', 'sections', 'note', 'actions', 'region', 'classes']);
+const GROUP_KEYS = new Set(['title', 'sections', 'note', 'actions', 'region', 'classes', 'role']);
 const SET_KEYS = new Set(['id', 'label', 'collapse', 'hidden', 'attrs', 'classes', 'rows', 'actions', 'paint']);
 // Spellings the grammar replaced. None may come back on any object.
 const RETIRED_KEYS = [
@@ -89,11 +94,32 @@ function checkSet(set, where) {
 	if (set.paint) assert(set.paint.id && set.paint.sourceLabel, `${where}: a second paint source needs an id and a sourceLabel`);
 }
 
-function checkSection(section, where) {
+// A paint is declared once, on its layer type: the schema names the slot and
+// its id prefix, and never restates what the registry holds.
+function checkPaint(paint, where, layerType) {
+	assert(!Object.prototype.hasOwnProperty.call(paint, 'modes'), `${where}: a paint's modes are declared on the layer type's paint slot`);
+	const definition = (layerTypes[layerType]?.paintSlots || []).find((entry) => entry.key === paint.slot);
+	assert(definition, `${where}: "${paint.slot}" is not a paint slot of ${layerType}`);
+	assert(Array.isArray(definition.modes) && definition.modes.length, `${where}: paint slot "${paint.slot}" declares no modes`);
+	if (definition.panelPrefix) assert.strictEqual(paint.idPrefix, definition.panelPrefix, `${where}: idPrefix must equal the paint slot's panelPrefix`);
+}
+
+function checkSection(section, where, layerType = null, keys = null) {
 	assert(section && SECTION_KINDS.has(section.kind), `${where}: "${section?.kind}" is not a section kind`);
 	checkRetired(section, where);
 	if (section.kind === 'transform' || section.kind === 'mount') return;
 	const name = `${where} "${section.title || section.id || section.classes}"`;
+	// A section's key names it to the open flyout, the phone's sheet and
+	// `openOnCreate`, so no two in a panel share one.
+	const key = section.key || section.slot || section.title;
+	if (key && keys) {
+		assert(!keys.has(key), `${name}: section key "${key}" is used twice in this panel`);
+		keys.add(key);
+	}
+	if (section.kind === 'paintSlot') {
+		checkPaint(section, name, layerType);
+		(section.sets || []).filter((set) => set.paint).forEach((set) => checkPaint(set.paint, `${name} > ${set.paint.slot}`, layerType));
+	}
 	// A flyout section is one line in the panel, so it needs the line's name.
 	if (section.presentation != null) assert(section.presentation === 'flyout' && section.title, `${name}: presentation is "flyout", on a titled section`);
 	if (section.kind === 'section') assert(Array.isArray(section.sets), `${name}: a section lists sets`);
@@ -113,14 +139,18 @@ function checkSection(section, where) {
 	}
 }
 
-function checkGroup(group, where, layerPanel) {
+function checkGroup(group, where, layerType, keys) {
+	const layerPanel = Boolean(layerType);
 	assert(group.title, `${where}: a group needs a title`);
 	const name = `${where} group "${group.title}"`;
 	checkRetired(group, name);
 	Object.keys(group).forEach((key) => assert(GROUP_KEYS.has(key), `${name}: unknown group key "${key}"`));
+	// The renderer finds the actions group by its role; its title is only a label.
+	if (group.role != null) assert.strictEqual(group.role, 'actions', `${name}: the only group role is "actions"`);
+	assert.strictEqual(group.role === 'actions', group.title === 'Actions', `${name}: the Actions group carries role "actions"`);
 	const sections = group.sections || [];
 	assert(sections.length || group.actions?.length, `${name}: a group holds sections or actions`);
-	sections.forEach((section, index) => checkSection(section, `${name} section ${index}`));
+	sections.forEach((section, index) => checkSection(section, `${name} section ${index}`, layerType, keys));
 	(group.actions || []).forEach((set, index) => {
 		assert(set.actions && !set.rows, `${name} actions[${index}]: a group ends with sets of buttons`);
 		checkSet(set, `${name} actions[${index}]`);
@@ -148,11 +178,13 @@ function checkPanel(schema, key) {
 	// A layer panel is keyed by its layer type; tool panels keep their own
 	// middle groups.
 	const layerPanel = Object.values(context.LayerType || vm.runInContext('LayerType', context)).includes(key);
+	const layerType = layerPanel ? key : null;
+	const keys = new Set();
 	const blocks = schema.subsections || [{ groups: schema.groups }];
 	blocks.forEach((block) => {
 		assert(!block.sections, `${key}: a subsection lists groups`);
 		const groups = block.groups || [];
-		groups.forEach((group) => checkGroup(group, key, layerPanel));
+		groups.forEach((group) => checkGroup(group, key, layerType, keys));
 		if (layerPanel) {
 			// Effects and Motion come from the schema's own keys, in that place.
 			const order = Array.from(groups, (group) => LAYER_GROUPS.indexOf(group.title));
@@ -162,8 +194,8 @@ function checkPanel(schema, key) {
 			assert.strictEqual(groups[groups.length - 1].title, 'Actions', `${key}: Actions is the last group`);
 		}
 	});
-	(schema.effects || []).forEach((section, index) => checkSection(section, `${key} effects[${index}]`));
-	(schema.motion || []).forEach((section, index) => checkSection(section, `${key} motion[${index}]`));
+	(schema.effects || []).forEach((section, index) => checkSection(section, `${key} effects[${index}]`, layerType, keys));
+	(schema.motion || []).forEach((section, index) => checkSection(section, `${key} motion[${index}]`, layerType, keys));
 	(schema.preamble || []).forEach((row, index) => checkRow(row, `${key} preamble[${index}]`));
 	(schema.auxiliarySections || []).forEach((aux) => checkPanel(aux, `${key} > ${aux.prefix}`));
 }

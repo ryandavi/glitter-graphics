@@ -307,16 +307,13 @@ class LayerManager {
 		layer.locked = !layer.locked;
 		this.editor.pathEdit?.revalidate();
 		if (isLayerFullyLocked(layer) && this.activeLayerId === layer.id) {
-			this.editor.textGlitterManager?.closePickerSession();
-			this.editor.shapeGlitterManager?.closePickerSession();
-			this.editor.glitterManager?.closePickerSession?.();
-			this.editor.stickerManager?.closePickerSession?.();
+			this.editor.pickers.closeForLayer(layer.id);
 			this.editor.maskEditor?.releaseBrushTool?.({ commitStroke: true });
 			if (this.editor.currentTool === ToolType.GLITTER_FILL) this.editor.setTool(ToolType.SELECT);
 		}
 		this.renderLayersList();
 		this.editor.syncTransformHandlesForActiveLayer?.();
-		this.editor.updateSidePanelUI(this.getActiveLayer());
+		this.editor.refreshInspector();
 		this.editor.updateActionButtons();
 		this.editor.saveState('Edit layers');
 		this.editor.updateStatus(`${layer.locked ? 'Locked' : 'Unlocked'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
@@ -449,15 +446,6 @@ class LayerManager {
 		this.selectedLayerIds = new Set(normalized);
 		this.selectionCycleState = null;
 
-		// D-1c: any layer change ends an armed gallery picker session. The
-		// session is layer-bound, so leaving its layer must return the gallery
-		// to browse mode (a click applies to the new active layer's own fill).
-		this.editor.textGlitterManager?.closePickerSession();
-		this.editor.shapeGlitterManager?.closePickerSession();
-		this.editor.glitterManager?.closePickerSession?.();
-		this.editor.stickerManager?.closePickerSession?.();
-		this.editor.baseBackgroundManager?.closePickerSession?.();
-		this.editor.brushTipManager?.closePickerSession?.();
 		this.editor.maskEditor?.handleLayerChange(this.activeLayerId);
 		this.updateActiveLayerListSelection();
 		if (options.source === 'canvas') this.revealLayerInList(this.activeLayerId);
@@ -471,19 +459,14 @@ class LayerManager {
 		this.updateSelectionHighlight();
 		this.editor.requestPreviewUpdate();
 		this.editor.syncTransformHandlesForActiveLayer?.();
-		this.editor.updateSidePanelUI(activeLayer);
-		if (selectedCount === 1 && activeLayer) this.editor.animationPanel?.load(activeLayer);
-
 		if (selectedCount === 1 && activeLayer) {
+			// A type keeps the tools it lists (`toolsOnSelect`); any other tool
+			// gives way to Select.
 			const config = LAYER_UI_CONFIG[activeLayer.type];
-			if (config?.onActivate) {
-				config.onActivate(this.editor, activeLayer);
-			}
-		} else if (selectedCount === 0) {
-			this.editor.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
-			this.editor.setSettingsEmptyState('glitterSettings', true);
-			this.editor.setSettingsEmptyState('stickerSettings', true);
+			if (config.toolsOnSelect && !config.toolsOnSelect.includes(this.editor.currentTool)) this.editor.setTool(ToolType.SELECT);
+			config.onActivate?.(this.editor, activeLayer);
 		}
+		this.editor.refreshInspector();
 
 		if (this.activeLayerId) {
 			document.body.classList.add('has-active-layer');
@@ -576,32 +559,13 @@ class LayerManager {
 
 	// ===== LAYER NAVIGATION =====
 
-	goToGlitter(layerId) {
-		const layer = this.getLayerById(layerId);
-		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'glitter') return;
-
-		this.setActiveLayer(layerId);
-		this.editor.openCreateTarget(layer, 'fill');
-	}
-
-	goToSticker(layerId) {
-		const layer = this.getLayerById(layerId);
-		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'sticker') return;
-
-		this.setActiveLayer(layerId);
-		this.editor.openCreateTarget(layer, 'asset');
-	}
-
+	// A type's `goTo` names what its source is, in `openOnCreate`'s values.
 	goToLayerSource(layerId) {
 		const layer = this.getLayerById(layerId);
-		if (!layer) return;
-
-		const goToTarget = LAYER_UI_CONFIG[layer.type]?.goTo;
-		if (goToTarget === 'sticker') {
-			this.goToSticker(layerId);
-		} else if (goToTarget === 'glitter') {
-			this.goToGlitter(layerId);
-		}
+		const target = layer && LAYER_UI_CONFIG[layer.type]?.goTo;
+		if (!target) return;
+		this.setActiveLayer(layerId);
+		this.editor.openCreateTarget(layer, target);
 	}
 
 	// ===== LAYER PICKING (SELECT TOOL) =====
@@ -1152,7 +1116,7 @@ class LayerManager {
 		const sourceType = LAYER_UI_CONFIG[layer.type]?.goTo;
 		const arrowBtn = this.createIconButton({
 			className: `list-row-action goto-glitter${sourceType ? '' : ' unavailable'}`,
-			title: sourceType ? (sourceType === 'sticker' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
+			title: sourceType ? (sourceType === 'asset' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
 			iconType: 'locate',
 			disabled: !sourceType,
 			onClick: (e) => {

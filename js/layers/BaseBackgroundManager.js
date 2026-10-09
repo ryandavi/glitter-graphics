@@ -7,7 +7,7 @@ class BaseBackgroundManager {
 		this.pickerSession = null;
 		this.slotPicker = new SlotGlitterPicker(editor, {
 			type: LayerType.BASE_IMAGE, defaultSlot: 'background', typeWord: 'canvas',
-			ensureSlot: (layer, key) => key === 'background' ? layer.background : this.sparkleFieldHost.ensureSlot(layer, key),
+			ensureSlot: (layer, key) => key === 'background' ? layer.background : this.fieldHost.ensureSlot(layer, key),
 			onPicked: (layer) => { this.loadLayerSettings(layer); this.editor.requestPreviewUpdate(); }
 		});
 		Object.defineProperty(this.slotPicker, 'pickerSession', { get: () => this.pickerSession, set: value => { this.pickerSession = value; } });
@@ -109,9 +109,10 @@ class BaseBackgroundManager {
 		};
 	}
 
-	// How the declared field binder edits the canvas's sparkles slot. The
-	// background slot itself keeps its own bindings above.
-	createSparkleFieldHost() {
+	// How the declared field binder edits the canvas's sparkles slot, and how
+	// either of its paints is armed. The background slot itself keeps its own
+	// bindings above.
+	createFieldHost() {
 		return {
 			type: LayerType.BASE_IMAGE,
 			editor: this.editor,
@@ -216,8 +217,8 @@ class BaseBackgroundManager {
 		});
 		this.ui.color?.addEventListener('change', () => this.editor.saveState('Edit background'));
 		[this.ui.glitterChip, this.ui.glitterChange].forEach((button) => button?.addEventListener('click', () => this.armPicker()));
-		this.sparkleFieldHost = this.createSparkleFieldHost();
-		bindFieldControls(this.sparkleFieldHost);
+		this.fieldHost = this.createFieldHost();
+		bindFieldControls(this.fieldHost);
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
 		this.bindRange('Scale', 'scale');
 		this.bindRange('Opacity', 'opacity');
@@ -349,7 +350,7 @@ class BaseBackgroundManager {
 		}
 		setAssetChangeLabel(this.ui.imageChange, hasImage ? 'Replace' : 'Choose Image');
 		this.updateGlitterInfo(layer);
-		if (this.sparkleFieldHost) syncFieldControls(this.sparkleFieldHost, layer);
+		if (this.fieldHost) syncFieldControls(this.fieldHost, layer);
 	}
 
 	updateGlitterInfo(layer) {
@@ -369,7 +370,7 @@ class BaseBackgroundManager {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
 		const glitterId = slot === 'sparkles' ? layer.background.sparkles?.glitterId : layer.background.glitterId;
-		pickerOpenSession(this, { layerId: layer.id, slot }, {
+		pickerOpenSession(this, { kind: 'paint', layerId: layer.id, slot }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, glitterId)
 		});
 	}
@@ -379,12 +380,7 @@ class BaseBackgroundManager {
 	}
 
 	getGlitterSelectionTarget() {
-		return this.hasActivePickerSession() ? this.pickerSession.slot || 'background' : 'background';
-	}
-
-
-	closePicker() {
-		this.closePickerSession();
+		return this.hasActivePickerSession() ? this.pickerSession.slot : 'background';
 	}
 
 	closePickerSession() {

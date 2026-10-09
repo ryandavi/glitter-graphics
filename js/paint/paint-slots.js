@@ -127,12 +127,6 @@ function getPaintSlotLabel(type, key) {
 	return getPaintSlotDefinition(type, key)?.label || key;
 }
 
-// The slot's glitter chip in its panel: where an explicit picker exit returns.
-function getPaintSlotChipId(type, key) {
-	const prefix = getPaintSlotDefinition(type, key)?.panelPrefix;
-	return prefix ? `${prefix}GlitterChip` : null;
-}
-
 // The glitter a slot falls back to when it has none (a fresh glitter source,
 // or a project whose glitter is missing).
 function getPaintSlotDefaultGlitterId(type, definition) {

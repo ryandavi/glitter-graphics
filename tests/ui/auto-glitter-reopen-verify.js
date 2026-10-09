@@ -150,7 +150,7 @@ async function main() {
 			layer.fill.glitterId = first.id;
 			layer.name = first.name;
 			editor.layerManager.insertLayer(layer);
-			editor.glitterManager.armAssetPicker();
+			editor.glitterManager.armPicker();
 			await editor.glitterManager.selectGlitter(second.id);
 			const generatedName = layer.name;
 			const rowName = editor.layerManager.layersListContainer

@@ -2,9 +2,13 @@
 
 // An edit session owns its keys; adding a session adds no command dispatch branch.
 // A session with steps of its own returns them from `history` ({ undo, redo,
-// canUndo, canRedo }) and takes Undo and Redo for as long as it lasts.
+// canUndo, canRedo }) and takes Undo and Redo for as long as it lasts. `panel`
+// names the Inspector panel (a `sectionPrefix`) that stands in for the
+// selection's while the session lasts, and `closesLibrary` keeps the Library
+// window shut for it.
 const SESSIONS = Object.freeze([
 	{ id: 'autoGlitter', isActive: editor => editor.autoGlitterManager.isSessionActive(),
+		panel: 'autoGlitterSettings', closesLibrary: true,
 		cancel: editor => editor.autoGlitterManager.requestDiscardSession(),
 		allows: (editor, command) => command.group === 'View' || (command.group === 'Tools' && editor.autoGlitterManager.allowsPreviewTool(command.tool)) },
 	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event), history: (editor) => editor.canvasBounds },

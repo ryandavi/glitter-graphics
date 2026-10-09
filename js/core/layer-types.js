@@ -52,20 +52,7 @@ function layerHasVisibleContent(layer) {
 // The titles live in PANEL_SCHEMAS (`section.title`), which the phone's sheet
 // bar and the guide read. Section *ids* are historically all
 // `*SettingsSection` regardless of title — that's internal only, don't rename.
-const LAYER_UI_CONFIG = {
-	NO_IMAGE: {
-		designPanelSections: [],
-		panelMode: 'welcome'
-	},
-	NO_LAYER: {
-		designPanelSections: ['noLayerSettingsSection'],
-		panelMode: 'no-layer'
-	},
-	AUTO_GLITTER: {
-		designPanelSections: ['autoGlitterSettingsSection'],
-		panelMode: 'auto-glitter'
-	}
-};
+const LAYER_UI_CONFIG = {};
 
 // Layer types register themselves from js/layers/types/<type>.js, which load
 // right after this file. A definition carries the type's panel wiring, its

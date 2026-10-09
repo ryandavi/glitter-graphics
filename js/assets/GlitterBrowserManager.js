@@ -357,10 +357,6 @@ class GlitterBrowserManager extends ContentManager {
 		window.dispatchEvent(new CustomEvent('layerChanged'));
 
 
-		if (glitter) {
-			this.editor.updateGlitterAssetInfo(glitter);
-		}
-
 		// Keep the asset-info thumbnail + swatches in sync with the layer's hue
 		// (identity after a fresh pick above, so this clears any prior tint).
 		this.editor.refreshGlitterSwatchVisuals(layer);

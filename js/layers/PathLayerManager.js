@@ -27,7 +27,6 @@ class PathLayerManager {
 			// The paint a gallery pick lands on: the fill while it is on, the
 			// stroke of a line that has none.
 			defaultSlot: (layer) => (layer?.pathData?.fill?.mode !== 'none' || !layer?.pathData?.stroke ? 'fill' : 'stroke'),
-			section: 'pathSettings',
 			typeWord: 'path',
 			ensureSlot: (layer, key) => this.ensureSlot(layer, key),
 			onPicked: (layer) => {
@@ -85,7 +84,7 @@ class PathLayerManager {
 				this.editor.saveState('Edit path');
 				this.editor.layerManager.renderLayersList();
 			},
-			armPicker: (key) => this.slotPicker.arm(key),
+			armPicker: (key) => this.slotPicker.armPicker(key),
 			getArmedSlot: (layer) => this.slotPicker.getArmedSlot(layer)
 		};
 	}

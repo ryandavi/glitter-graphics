@@ -107,11 +107,6 @@ class HistoryManager {
 		if (state.canvas) {
 			this.editor.applyCanvasStateFromHistory(state.canvas);
 		}
-		// D-1c: the picker session is transient UI state that isn't snapshotted;
-		// the armed slot may not even exist in the restored layer set. Drop it
-		// here — the full UI refresh at the end of this method repaints the
-		// gallery in browse mode.
-		this.editor.pickers?.closeAll();
 		const restoredLayers = [];
 
 		for (const layerData of state.layers) {
@@ -130,10 +125,13 @@ class HistoryManager {
 
 		this.editor.layerManager.renderLayersList();
 		this.editor.requestPreviewUpdate();
-		this.editor.loadActiveLayerSettings();
+		// The selection may be the same layers in another state (a lock, a
+		// rename, an emptied source), so the Inspector refreshes regardless. A
+		// picker session is not snapshotted: the refresh ends one whose layer
+		// or paint the restore removed, and keeps the rest armed.
+		this.editor.refreshInspector();
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateActionButtons();
-		this.editor.updateGlitterSelection();
 
 		requestAnimationFrame(() => {
 			const activeLayer = this.editor.layerManager.getActiveLayer();

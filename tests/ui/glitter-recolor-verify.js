@@ -20,7 +20,7 @@ async function main() {
 		await page.evaluate(() => {
 			const layer = editor.glitterManager.createLayer();
 			editor.layerManager.insertLayer(layer);
-			editor.glitterManager.armAssetPicker();
+			editor.glitterManager.armPicker();
 			editor.glitterLibrary.browser.setState('CATEGORY_DETAIL', 'star-dust');
 		});
 		await page.waitForTimeout(500);

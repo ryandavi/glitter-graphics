@@ -201,7 +201,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		}
 	},
 	addedStatusMessage: 'New text layer added',
-	goTo: 'glitter',
+	goTo: 'fill',
 	addableViaModal: {
 		label: 'Text',
 		icon: 'text',
@@ -214,8 +214,6 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	// No layerSettingsSection / 'tool': Selection Settings only applies to
 	// color-picked glitter fills — text layers hide it instead of showing an
 	// explanatory empty state.
-	designPanelSections: ['textSettingsSection'],
-	panelMode: 'text',
 	elementClass: 'text-glitter-element',
 	transformable: true,
 	managerKey: 'textGlitterManager',
@@ -245,16 +243,5 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	createOptionsKey: 'textLayer',
 	// Opens once the first typing ends (TextGlitterManager.commitTextEdit).
 	openOnCreate: 'fill',
-	// Reopening the side panel after every tap-created layer is desktop
-	// convenience, not a mobile ask - Editor.finishLayerCreation() reads this.
-	mobileCreateBehavior: { skipReload: true },
-	onActivate: (editor, layer) => {
-		const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.BRUSH]);
-		if (!validTools.has(editor.currentTool)) {
-			editor.setTool(ToolType.SELECT);
-		}
-
-		editor.updateGlitterSelection();
-		editor.textGlitterManager?.loadLayerSettings(layer);
-	}
+	toolsOnSelect: [ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.BRUSH]
 });

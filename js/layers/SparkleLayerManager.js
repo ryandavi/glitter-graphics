@@ -14,7 +14,6 @@ class SparkleLayerManager {
 		this.slotPicker = new SlotGlitterPicker(editor, {
 			type: LayerType.SPARKLES,
 			defaultSlot: 'sparkles',
-			section: 'sparkleLayerSettings',
 			typeWord: 'sparkles layer',
 			ensureSlot: (layer, key) => this.ensureSlot(layer, key),
 			onPicked: (layer) => {
@@ -54,7 +53,7 @@ class SparkleLayerManager {
 			},
 			render: () => this.editor.requestPreviewUpdate(),
 			commit: () => this.editor.saveState('Edit sparkles'),
-			armPicker: (key) => this.slotPicker.arm(key),
+			armPicker: (key) => this.slotPicker.armPicker(key),
 			getArmedSlot: (layer) => this.slotPicker.getArmedSlot(layer)
 		};
 	}

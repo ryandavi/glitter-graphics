@@ -3510,7 +3510,7 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
   display: flex;
   flex-direction: column;
 }
-.library-window > .flyout-section .flyout-host.has-flyout-open:has(.is-preset-content),
+.library-window > .flyout-section .flyout-host.has-flyout-open.has-preset-content,
 .library-window > .flyout-section .is-flyout-open.is-preset-content,
 .library-window > .flyout-section .is-flyout-open.is-preset-content > .property-card-body,
 .library-window > .flyout-section .is-flyout-open.is-preset-content > .property-card-body > .has-scrollbox {
@@ -6598,13 +6598,6 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
     box-shadow: none;
   }
 }
-#stickerSettingsControls {
-  display: none;
-}
-#stickerSettingsControls.visible {
-  display: block;
-}
-
 .text-settings-section textarea {
   width: 100%;
   height: 52px;
@@ -7539,12 +7532,10 @@ body.tool-text .text-hover-baselines {
   display: none;
 }
 
-#layerSettingsControls,
-#glitterSettingsControls {
+.panel-controls {
   display: none;
 }
-#layerSettingsControls.visible,
-#glitterSettingsControls.visible {
+.panel-controls.visible {
   display: block;
 }
 
@@ -12092,7 +12083,6 @@ body.modal-open {
     height: var(--mobile-drawer-height);
     background: var(--panel-bg);
     backdrop-filter: var(--panel-backdrop);
-    padding-top: var(--spacing-lg);
     z-index: var(--z-header-menu-elevated);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-panel);

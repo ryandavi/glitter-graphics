@@ -7,7 +7,7 @@ registerLayerType(LayerType.BASE_IMAGE, {
 	// draw into the base canvas instead of the slot paint path; its color
 	// adjust is a canvas setting, not a layer effect.
 	paintSlots: [
-		{ key: 'background', role: 'fill', path: 'background', wholeLayer: true, sourceLabel: 'background', glitterDefault: 'fillGlitterId', countsAsEffect: false },
+		{ key: 'background', role: 'fill', path: 'background', wholeLayer: true, sourceLabel: 'background', glitterDefault: 'fillGlitterId', countsAsEffect: false, modes: ['image', 'none', 'glitter', 'solid', 'gradient'] },
 		{
 			key: 'sparkles', role: 'sparkles', path: 'background.sparkles', draftPath: 'background.effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId', panelPrefix: 'canvasSparkles', modes: ['glitter', 'solid', 'gradient']
@@ -36,10 +36,4 @@ registerLayerType(LayerType.BASE_IMAGE, {
 		}
 		return true;
 	},
-	goTo: null,
-	designPanelSections: ['baseLayerSettingsSection'],
-	panelMode: 'base-layer',
-	onActivate: (editor, layer) => {
-		editor.baseBackgroundManager?.loadLayerSettings(layer);
-	}
 });

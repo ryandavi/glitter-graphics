@@ -1,3 +1,7 @@
+// The host that stands for "no single layer": what can be added, or the
+// multi-selection's actions.
+const NO_SELECTION_PANEL = 'noLayerSettings';
+
 const EDITOR_PANEL_METHODS = {
 	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue, field = null) {
 		const slider = document.getElementById(sliderId);
@@ -214,72 +218,50 @@ isLayerContentLocked(layer) {
 	}
 
 ,
-	updateSidePanelUI(layer) {
+	// The Inspector's panels by `sectionPrefix`, in the order the switch and the
+	// phone bar show them: the tool's own panel leads, then the session's or
+	// the selection's. With nothing selected the canvas's own properties show
+	// under what can be added.
+	getVisiblePanels() {
+		if (!this.originalImage) return [];
+		const manager = this.layerManager;
+		const layer = manager.getInspectedLayer();
+		const session = getSessionDefinition(this)?.panel;
+		const panels = [];
+		if (session) panels.push(session);
+		else {
+			if (!manager.getActiveLayer() || manager.hasMultiSelection()) panels.push(NO_SELECTION_PANEL);
+			if (layer) panels.push(PANEL_SCHEMAS[layer.type].sectionPrefix);
+		}
+		const tool = TOOLS[this.currentTool]?.panel(this, layer);
+		return tool ? [tool, ...panels.filter((name) => name !== tool)] : panels;
+	}
+
+,
+	// The one way the Inspector follows the editor: which panels show, their
+	// values, the lock state, the header, and pickers armed for another layer.
+	// Selection, tools, undo, project load and sessions all end here.
+	refreshInspector() {
 		this.setupLayerBlendModeListeners();
-		const hasMultiSelection = this.layerManager?.hasMultiSelection?.() ?? false;
-		// With nothing selected the Inspector shows the canvas's own properties
-		// under what can be added.
-		const nothingSelected = !layer && !hasMultiSelection;
-		if (nothingSelected) layer = this.layerManager?.getInspectedLayer() || null;
-		const noLayer = LAYER_UI_CONFIG.NO_LAYER;
-
-		// 1. Define ALL possible sections to hide them first
-		const allSections = [...new Set(Object.values(LAYER_UI_CONFIG)
-			.flatMap((entry) => entry.designPanelSections || []))];
-
-		// 2. Hide everything
-		allSections.forEach(id => {
-			const el = document.getElementById(id);
-			if (el) {
-				el.classList.remove('visible', 'is-open');
-				el.querySelector(':scope > .section-content')?.classList.remove('visible');
-				el.style.display = 'none';
-			}
+		const layer = this.layerManager.getInspectedLayer();
+		// A picker armed for another layer ends before the panels load.
+		this.pickers.closeStale();
+		const names = this.getVisiblePanels();
+		Array.from(document.getElementById('inspectorBody').children).forEach((host) => {
+			const shown = names.includes(host.id.replace(/Section$/, ''));
+			host.classList.toggle('visible', shown);
+			if (shown) return;
+			host.classList.remove('is-open');
+			host.querySelector(':scope > .section-content')?.classList.remove('visible');
 		});
-
-		// 3. Determine which config to use
-		let config;
-		if (this.autoGlitterManager?.isSessionActive()) {
-			config = LAYER_UI_CONFIG.AUTO_GLITTER;
-		} else if (!this.originalImage) {
-			config = LAYER_UI_CONFIG.NO_IMAGE;
-		} else if (hasMultiSelection || !layer) {
-			config = noLayer;
-		} else if (nothingSelected) {
-			config = { ...noLayer, designPanelSections: [...noLayer.designPanelSections, ...LAYER_UI_CONFIG[layer.type].designPanelSections] };
-		} else {
-			config = LAYER_UI_CONFIG[layer.type];
-		}
-
-		// 4. Show the appropriate sections
-		if (config) {
-			config.designPanelSections.forEach(id => {
-				const el = document.getElementById(id);
-				if (el) {
-					el.style.display = '';
-					el.classList.add('visible');
-				}
-			});
-
-			// 5. Set panel mode
-			const designPanel = document.getElementById('designPanel');
-			if (designPanel) {
-				designPanel.dataset.panelMode = config.panelMode;
-			}
-		}
-		const preferredPanel = TOOLS[this.currentTool]?.panel?.(this, layer);
-		const preferredSection = preferredPanel && document.getElementById(`${preferredPanel}Section`);
-		if (preferredSection) { preferredSection.style.display = ''; preferredSection.classList.add('visible'); }
-		this.syncLayerBlendModeControl(layer);
-
-		this.syncToolSettingsSectionVisibility(layer);
-
-		if (this.syncCollapsibleSections) {
-			this.syncCollapsibleSections(this.getPreferredDesignSection(layer));
-		}
-
+		this.syncPanelEmptyStates(layer);
+		this.syncCollapsibleSections?.(names.find((name) => this.switchPanels.has(name)));
 		this.syncNoLayerPanelState();
-		if (nothingSelected) this.loadActiveLayerSettings();
+
+		this.syncLayerBlendModeControl(layer);
+		this.loadActiveLayerSettings();
+		this.updateGlitterSelection();
+		this.updateStickerSelection();
 		syncLibraryView();
 		// Canvas Properties owns the document-size card for every tool.
 		const documentSize = document.getElementById('documentSizeGroup');
@@ -287,31 +269,12 @@ isLayerContentLocked(layer) {
 		if (documentSize && sizeHost && documentSize.parentElement !== sizeHost) sizeHost.appendChild(documentSize);
 		this.syncLockedLayerUI(layer);
 
-		// A picker armed for another layer ends here; the Library's kind and
-		// title follow whatever is still armed.
-		this.pickers.closeStale();
+		// The Library's kind and title follow whatever is still armed.
 		syncPickerTarget(this);
 
 		this.syncCanvasBoundsViews();
 	}
 
-,
-	syncToolSettingsSectionVisibility(layer = this.layerManager?.getActiveLayer()) {
-		const section = document.getElementById('layerSettingsSection');
-		if (!section) return;
-		const visible = Boolean(
-			this.originalImage
-			&& !this.layerManager?.hasMultiSelection?.()
-			&& this.currentTool === ToolType.GLITTER_FILL
-			&& layer?.type === LayerType.GLITTER_FILL
-		);
-		section.classList.toggle('visible', visible);
-	}
-
-	// Shared tail end of "create a layer via a tool" (Text/Shape click-to-create):
-	// select it, and reload the side panel to show its Properties - except on
-	// mobile, where LAYER_UI_CONFIG[type].mobileCreateBehavior.skipReload opts out
-	// (reloading the panel on every placement interrupts the current tool).
 ,
 	// What a new layer most likely needs next, from its type's `openOnCreate`:
 	// 'asset' is the Library on its asset, 'panel' is its properties (which
@@ -327,53 +290,36 @@ isLayerContentLocked(layer) {
 		} else {
 			if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
 			// In the phone's sheet a section does not open its Library by itself.
-			if (mobile?.usesBar) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
+			if (mobile?.isMobile) this.armPaintSlot(layer, target);
 		}
 	},
 
-	finishLayerCreation(layer, { onDesktopReload } = {}) {
+	// Open the glitter Library on one of a layer's paints, through the type's
+	// own field host: the call its glitter chip makes.
+	armPaintSlot(layer, slotKey) {
+		const host = getLayerManagerForType(this, layer.type).fieldHost;
+		if (getPaintSlotDefinition(layer.type, slotKey) && host.getLayer() === layer) host.armPicker(slotKey);
+	},
+
+	// The tail end of "a tool made a layer": back to Select, and the panel
+	// reloads once the caller has finished placing it.
+	finishLayerCreation(layer) {
 		if (!layer) return;
 		this.setTool(ToolType.SELECT);
-
-		const skipReload = this.mobileManager?.isMobile
-			&& LAYER_UI_CONFIG[layer.type]?.mobileCreateBehavior?.skipReload;
-		if (skipReload) return;
-
-		setTimeout(() => {
-			this.updateSidePanelUI(layer);
-			this.loadActiveLayerSettings();
-			onDesktopReload?.();
-		}, 0);
-	}
-
-	// The single source of truth for "which of the Inspector's panels shows".
-	// Model: tool-scoped settings win while a settings tool (Brush/Eraser) is
-	// active (Photoshop Options-bar behavior); otherwise the inspected layer's
-	// Properties.
-,
-	getPreferredDesignSection(layer) {
-		const panel = TOOLS[this.currentTool]?.panel?.(this, layer);
-		if (panel) return panel;
-
-		if (!this.originalImage || this.layerManager?.hasMultiSelection?.()) return null;
-		layer ||= this.layerManager?.getInspectedLayer();
-		return PANEL_SCHEMAS[layer?.type]?.sectionPrefix || null;
+		setTimeout(() => this.refreshInspector(), 0);
 	}
 
 ,
 	getVisibleSwitchPanels() {
-		return [...this.switchPanels.keys()].filter((name) => document.getElementById(`${name}Section`)?.classList.contains('visible'));
+		return this.getVisiblePanels().filter((name) => this.switchPanels.has(name));
 	}
 
 	// The switch between panels showing together (a tool's settings beside the
-	// layer's properties). One host on desktop, the Edit sheet's bar on phones.
+	// layer's properties).
 ,
 	renderPanelSwitch(host, names) {
 		host.replaceChildren();
 		if (names.length < 2) return;
-		// The tool's own panel leads.
-		const tool = TOOLS[this.currentTool]?.panel?.(this, this.layerManager.getActiveLayer());
-		names = [...names].sort((a, b) => (b === tool) - (a === tool));
 		const group = tplClone('tpl-segmented');
 		group.setAttribute('role', 'group');
 		group.setAttribute('aria-label', 'Panel');
@@ -399,7 +345,7 @@ isLayerContentLocked(layer) {
 		if (!icon || !text || !badge || !bar || !this.switchPanels) return;
 		const count = this.layerManager?.getSelectedLayers?.().length || 0;
 		const active = this.layerManager?.getActiveLayer?.();
-		const session = this.autoGlitterManager?.isSessionActive() ? PANEL_SCHEMAS.autoGlitterSession.section : null;
+		const session = this.switchPanels.get(getSessionDefinition(this)?.panel)?.section;
 		let title = { icon: 'sliders', text: 'Properties' };
 		if (session) title = { icon: session.icon, text: session.title };
 		else if (!this.originalImage) title = { ...title };
@@ -413,9 +359,10 @@ isLayerContentLocked(layer) {
 		}
 		else title = { icon: PANEL_SCHEMAS[LayerType.BASE_IMAGE].section.icon, text: 'Canvas' };
 		icon.setAttribute('href', `#icon-${title.icon}`);
-		// As the phone's sheet the bar names the open section (MobileManager).
-		text.textContent = text.dataset.sheetSection || title.text;
-		document.getElementById('inspectorTitleName').textContent = text.dataset.sheetSection ? '' : title.name || '';
+		// As the phone's sheet the bar names the open section.
+		const sheet = this.mobileManager?.sheetSection;
+		text.textContent = sheet ? sheet.title : title.text;
+		document.getElementById('inspectorTitleName').textContent = sheet ? '' : title.name || '';
 		badge.replaceChildren(...(session?.badge ? [buildFeatureBadge(session.badge)] : []));
 
 		const names = this.getVisibleSwitchPanels();
@@ -462,15 +409,19 @@ isLayerContentLocked(layer) {
 	// ===== UX: EMPTY STATE MANAGEMENT =====,
 
 ,
-	setSettingsEmptyState(prefix, visible, { title, subtext } = {}) {
-		const empty = document.getElementById(`${prefix}Empty`);
-		const controls = document.getElementById(`${prefix}Controls`);
-		const emptyText = document.getElementById(`${prefix}EmptyText`);
-		const emptySubtext = document.getElementById(`${prefix}EmptySubtext`);
-		empty?.classList.toggle('visible', visible);
-		controls?.classList.toggle('visible', !visible);
-		if (emptyText && title !== undefined) emptyText.textContent = title;
-		if (emptySubtext && subtext !== undefined) emptySubtext.textContent = subtext;
+	// A panel with an empty state (schema `controls`) shows its controls while
+	// the inspected layer is of the panel's type and has something to edit
+	// (the type's `panelEmpty`). Pass no layer to reset every panel.
+	syncPanelEmptyStates(layer = null) {
+		Object.values(LayerType).forEach((type) => {
+			const schema = PANEL_SCHEMAS[type];
+			const filled = layer?.type === type && !LAYER_UI_CONFIG[type].panelEmpty?.(layer);
+			[schema, ...(schema.auxiliarySections || [])].filter((panel) => panel.controls).forEach((panel) => {
+				document.getElementById(panel.controls.emptyId).classList.toggle('visible', !filled);
+				document.getElementById(panel.controls.id).classList.toggle('visible', filled);
+			});
+		});
+		this.mobileManager?.syncBar();
 	}
 
 ,
@@ -481,15 +432,12 @@ isLayerContentLocked(layer) {
 		const defaultGroups = document.getElementById('noLayerDefaultGroups');
 		const multiGroup = document.getElementById('multiLayerSelectionGroup');
 		const emptyText = document.getElementById('noLayerEmptyText');
-		// The phone's Library drawer holds this panel, so its bar names the state.
-		const designTitle = document.getElementById('designGalleryTitleText');
 		const emptySubtext = document.getElementById('noLayerEmptySubtext');
 
 		if (multiCount > 1) {
 			if (defaultGroups) defaultGroups.hidden = true;
 			if (multiGroup) multiGroup.hidden = false;
 			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
-			if (designTitle) designTitle.textContent = `${multiCount} layers selected`;
 			if (emptySubtext) emptySubtext.textContent = canTransform
 				? 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.'
 				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, pinned, empty, or Base Image layer.';
@@ -511,255 +459,7 @@ isLayerContentLocked(layer) {
 		if (defaultGroups) defaultGroups.hidden = false;
 		if (multiGroup) multiGroup.hidden = true;
 		if (emptyText) emptyText.textContent = 'Nothing selected';
-		// A selected layer with no library kind (a filter) is still a selection.
-		if (designTitle) designTitle.textContent = this.layerManager?.getActiveLayer?.() ? 'Library' : 'Nothing selected';
 		if (emptySubtext) emptySubtext.textContent = 'Pick a layer to edit it, or add content below.';
-	}
-
-,
-	updateAssetInfo(asset, type) {
-		if (!asset) return;
-
-		const config = ASSET_TYPE_CONFIG[type];
-		if (!config) {
-			console.warn(`Unknown asset type: ${type}`);
-			return;
-		}
-
-		const { prefix, managerKey, renderThumbnail, getExtraBadges } = config;
-		const manager = this[managerKey];
-		const assetId = String(asset.id);
-
-		const thumbnail = document.getElementById(`${prefix}Thumbnail`);
-		const name = document.getElementById(`${prefix}Name`);
-		const badges = document.getElementById(`${prefix}Badges`);
-			const size = document.getElementById(`${prefix}Size`);
-			const frames = document.getElementById(`${prefix}Frames`);
-			const change = document.getElementById(`${prefix}Change`);
-			const revealAsset = () => {
-				if (type === 'glitter' && this.glitterManager?.armAssetPicker) {
-					this.glitterManager.armAssetPicker();
-					return;
-				}
-				if (type === 'sticker' && this.stickerManager?.armAssetPicker) {
-					pressAssetRow(this, this.stickerManager, () => this.stickerManager.armAssetPicker());
-					return;
-				}
-				revealAssetBrowser(this, manager, asset.id);
-			};
-
-		// Thumbnail with click handler
-		if (thumbnail) {
-			renderThumbnail(thumbnail, asset);
-			thumbnail.style.cursor = 'pointer';
-
-			// Remove old listeners and add new one
-			thumbnail.replaceWith(thumbnail.cloneNode(true));
-			const newThumbnail = document.getElementById(`${prefix}Thumbnail`);
-			newThumbnail.dataset.assetId = assetId;
-
-			// Re-render after cloning
-			renderThumbnail(newThumbnail, asset);
-
-				newThumbnail.addEventListener('click', revealAsset);
-			}
-
-			if (change) {
-				change.replaceWith(change.cloneNode(true));
-				document.getElementById(`${prefix}Change`)?.addEventListener('click', revealAsset);
-			}
-
-		// Name
-		if (name) name.textContent = asset.name || 'Undefined';
-
-		this.renderAssetBadges(badges, asset, manager, getExtraBadges);
-
-		// Size + frames use the shared formatters so Glitter Properties, Sticker
-		// Properties, and the text Fill/Border/Shadow pickers all read identically.
-		if (size) size.innerHTML = this.formatAssetSize(asset);
-		if (frames) frames.innerHTML = this.formatAssetFrames(asset);
-
-		// Indexed manifests intentionally omit the heavier dimensions/animation
-		// metadata. Fill it in when this properties card becomes visible, while
-		// guarding against an older request overwriting a newer selection.
-		if (!asset._detailLoaded && manager?.ensureAssetDetails) {
-			manager.ensureAssetDetails(asset).then((detailedAsset) => {
-				const currentThumbnail = document.getElementById(`${prefix}Thumbnail`);
-				if (!detailedAsset || currentThumbnail?.dataset.assetId !== assetId) return;
-				if (size) size.innerHTML = this.formatAssetSize(detailedAsset);
-				if (frames) frames.innerHTML = this.formatAssetFrames(detailedAsset);
-				this.renderAssetBadges(badges, detailedAsset, manager, getExtraBadges);
-			}).catch((error) => console.warn(`Could not load ${type} details:`, error));
-		}
-	}
-
-	// ===== Shared asset-info formatting (one place to change size/frames text) =====,
-
-,
-	formatAssetSize(asset) {
-		if (asset?.width && asset?.height) {
-			return formatDimensions(asset.width, asset.height);
-		}
-		return '—';
-	}
-
-,
-	formatAssetFrames(asset) {
-		if (asset?.frameCount === undefined || asset?.frameCount === null) {
-			return '—';
-		}
-		if (asset.frameCount <= 1 && !asset.isAnimated) {
-			return 'Static';
-		}
-		const frames = `${asset.frameCount} ${asset.frameCount === 1 ? 'frame' : 'frames'}`;
-		const rate = asset.isVariableFramerate
-			? 'variable'
-			: asset.frameRate ? `${asset.frameRate} fps` : '';
-		return rate ? `${frames}<span class="setting-separator"> · </span>${rate}` : frames;
-	}
-
-	// Populate a glitter asset-info block (thumbnail + name + badges + size +
-	// frames) from a glitter library item. Reused by the text Fill/Border/Shadow
-	// source cards so their glitter display matches Glitter Properties' Asset
-	// section exactly. `els` holds the target elements (any may be omitted).
-,
-	renderGlitterAssetDisplay(els, glitter, colorAdjust = null) {
-		if (!glitter) return;
-		const assetId = String(glitter.id);
-		const displayNodes = [els.thumbnail, els.name, els.badges, els.size, els.frames].filter(Boolean);
-		displayNodes.forEach((node) => { node.dataset.assetId = assetId; });
-		if (els.thumbnail) {
-			els.thumbnail.classList.add('glitter-bg');
-			els.thumbnail.style.backgroundImage = `url(${glitter.url})`;
-			els.thumbnail.style.backgroundColor = 'transparent';
-			// Mirror the slot's hue/sat/bright so the chip matches the canvas.
-			els.thumbnail.style.filter = buildCssColorFilter(colorAdjust);
-		}
-		if (els.name) {
-			els.name.textContent = glitter.name;
-			els.name.title = glitter.name;
-		}
-		if (els.badges) {
-			this.renderAssetBadges(els.badges, glitter, this.glitterLibrary, () => []);
-		}
-		if (els.size) els.size.innerHTML = this.formatAssetSize(glitter);
-		if (els.frames) els.frames.innerHTML = this.formatAssetFrames(glitter);
-
-		// Indexed gallery records omit dimensions and animation timing. Hydrate
-		// them in this shared renderer so Shape, Text, Background, and effect fills
-		// all show the same authoritative metadata. Asset markers prevent a slow
-		// response from repainting a slot after another glitter has been selected.
-		if (!glitter._detailLoaded && this.glitterLibrary?.ensureAssetDetails) {
-			this.glitterLibrary.ensureAssetDetails(glitter).then((detailedGlitter) => {
-				if (!detailedGlitter || displayNodes.some((node) => node.dataset.assetId !== assetId)) return;
-				if (els.badges) this.renderAssetBadges(els.badges, detailedGlitter, this.glitterLibrary, () => []);
-				if (els.size) els.size.innerHTML = this.formatAssetSize(detailedGlitter);
-				if (els.frames) els.frames.innerHTML = this.formatAssetFrames(detailedGlitter);
-			}).catch((error) => console.warn('Could not load glitter details:', error));
-		}
-	}
-
-	// A glitter source whose asset can't be resolved (missing or not loaded
-	// yet): reset the display to a neutral placeholder.
-,
-	clearGlitterAssetDisplay(els, placeholder = 'No glitter selected') {
-		[els.thumbnail, els.name, els.badges, els.size, els.frames]
-			.filter(Boolean)
-			.forEach((node) => { delete node.dataset.assetId; });
-		if (els.thumbnail) {
-			els.thumbnail.classList.remove('glitter-bg');
-			els.thumbnail.style.backgroundImage = 'none';
-			els.thumbnail.style.backgroundColor = 'transparent';
-			els.thumbnail.style.filter = '';
-		}
-		if (els.name) {
-			els.name.textContent = placeholder;
-			els.name.title = '';
-		}
-		if (els.badges) els.badges.innerHTML = '';
-		if (els.size) els.size.textContent = '';
-		if (els.frames) els.frames.textContent = '';
-	}
-
-	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text
-	// layer's Fill/Border/Shadow glitter pickers — same badge vocabulary
-	// (category/animated/transparency/variable-fps) wherever a glitter or
-	// sticker asset is shown.
-,
-	renderAssetBadges(badgesEl, asset, manager, getExtraBadges) {
-		if (!badgesEl) return;
-
-		// Badge text can carry asset data (category names, sticker text), so every
-		// badge is built as an element with textContent rather than interpolated.
-		const addBadge = (className, text, title) => {
-			const badge = document.createElement('span');
-			badge.className = `asset-info-badge ${className}`;
-			badge.title = title;
-			badge.textContent = text;
-			badgesEl.appendChild(badge);
-		};
-
-		badgesEl.replaceChildren();
-		if (asset.recipe && manager?.createAssetProvenance) {
-			const provenance = manager.createAssetProvenance(asset);
-			addBadge('badge-recolored', provenance.textContent, provenance.textContent);
-		}
-
-		// Category badge reveals the asset in its gallery/category.
-		if (asset.category) {
-			const categoryName = manager?.browser?.getCategoryPath(asset.category) || asset.category;
-			const badge = document.createElement('button');
-			badge.type = 'button';
-			badge.className = 'asset-info-badge badge-category';
-			badge.dataset.category = asset.category;
-			badge.title = `Show ${categoryName} in Design`;
-			badge.textContent = categoryName;
-			badgesEl.appendChild(badge);
-		}
-
-		if (asset.sliced || asset.slice) {
-			addBadge('badge-stretchable', 'Stretchable', 'Stretches without distorting its corners.');
-		}
-
-		if (asset.isAnimated) {
-			addBadge('badge-animated', 'Animated', 'This asset contains animation frames');
-		}
-
-		if (asset.hasTransparency) {
-			addBadge('badge-transparency', 'Transparent', 'This asset contains transparent pixels');
-		}
-
-		if (asset.isVariableFramerate) {
-			addBadge('badge-variable-fps', 'Variable FPS', 'Animation frames use variable timing');
-		}
-
-		// Type-specific badges
-		if (getExtraBadges) {
-			getExtraBadges(asset).forEach(badge => {
-				addBadge(badge.class, badge.text, 'Asset property');
-			});
-		}
-
-		// Add click listener to category badge
-		const categoryBadge = badgesEl.querySelector('.badge-category');
-		if (categoryBadge) {
-			categoryBadge.addEventListener('click', () => {
-				if (!manager?.browser) return;
-				revealAssetBrowser(this, manager);
-				manager.browser.navigateToCategory(asset.category);
-			});
-		}
-	}
-
-	// Convenience wrappers
-,
-	updateGlitterAssetInfo(glitter) {
-		this.updateAssetInfo(glitter, 'glitter');
-	}
-
-,
-	updateStickerAssetInfo(sticker) {
-		this.updateAssetInfo(sticker, 'sticker');
 	}
 
 ,

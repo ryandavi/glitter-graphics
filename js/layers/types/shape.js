@@ -130,7 +130,7 @@ registerLayerType(LayerType.SHAPE, {
 		normalize: (editor, layer) => editor.shapeGlitterManager?.normalizeLayer(layer)
 	},
 	addedStatusMessage: 'New shape layer added',
-	goTo: 'glitter',
+	goTo: 'fill',
 	addableViaModal: {
 		label: 'Shape',
 		icon: 'square',
@@ -152,8 +152,6 @@ registerLayerType(LayerType.SHAPE, {
 	},
 	// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 	// Shape Properties panel. Selection Settings doesn't apply.
-	designPanelSections: ['shapeSettingsSection'],
-	panelMode: 'shape',
 	elementClass: 'shape-glitter-element',
 	transformable: true,
 	managerKey: 'shapeGlitterManager',
@@ -194,14 +192,5 @@ registerLayerType(LayerType.SHAPE, {
 	// For a shape added from an Add control. The Shape tool places the shape
 	// it already holds and opens nothing, so several can be drawn in a row.
 	openOnCreate: 'asset',
-	mobileCreateBehavior: { skipReload: true },
-	onActivate: (editor, layer) => {
-		const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.SHAPE]);
-		if (!validTools.has(editor.currentTool)) {
-			editor.setTool(ToolType.SELECT);
-		}
-
-		editor.updateGlitterSelection();
-		editor.shapeGlitterManager?.loadLayerSettings(layer);
-	}
+	toolsOnSelect: [ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.SHAPE]
 });

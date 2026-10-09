@@ -6,7 +6,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-	<script src="js/core/storage.js?v=e5332f73"></script>
+	<script src="js/core/storage.js?v=81883375"></script>
 	<script>
 		try {
 			const savedTheme = readStored(STORAGE_KEYS.theme.key, null);
@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=fc9a468d">
+	<link rel="stylesheet" href="css/style.css?v=60c4dc22">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -361,8 +361,7 @@
 						<div class="inspector-switch" id="inspectorSwitch" hidden></div>
 						<div class="section-content inspector-body" id="inspectorBody">
 							<!-- Nothing selected, or several layers. Rendered from
-							     PANEL_SCHEMAS.noSelection at boot. At phone width it sits at
-							     the end of the Library drawer (data-phone-host-for). -->
+							     PANEL_SCHEMAS.noSelection at boot. -->
 							<div class="no-layer-settings-section section" id="noLayerSettingsSection">
 								<div class="section-content visible" id="noLayerSettingsContent"></div>
 							</div>
@@ -385,12 +384,11 @@
 
 				</div>
 
-				<!-- The window: one column between the canvas and the Inspector. It
+				<!-- The window: one column over the canvas, beside the Inspector. It
 				     shows the flyout section whose line was pressed, and the Library
 				     while a picker is armed (LibraryWindow). It carries the
 				     Inspector's classes so both are styled by the same rules. At
-				     phone width the Library is the design drawer instead, and a
-				     flyout section sits in its panel. -->
+				     phone width the same window is a sheet. -->
 				<div class="design-panel library-window property-panel" id="libraryWindow">
 					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="window" role="slider" tabindex="0" aria-label="Resize the sheet" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
 						<span></span>
@@ -1790,25 +1788,25 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=bf48a4c8"></script>
+	<script src="js/core/config.js?v=1f45943b"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
-	<script src="js/core/sessions.js?v=5eb4597c"></script>
-	<script src="js/core/layer-types.js?v=6a76bc6d"></script>
+	<script src="js/core/sessions.js?v=c6232a50"></script>
+	<script src="js/core/layer-types.js?v=3b8de41b"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=13cd842c"></script>
-	<script src="js/ui/panel-schemas.js?v=e33dc8c0"></script>
-	<script src="js/paint/paint-slots.js?v=e05a9c48"></script>
-	<script src="js/layers/types/base-image.js?v=aff54838"></script>
-	<script src="js/layers/types/filter.js?v=c5949302"></script>
-	<script src="js/layers/types/glitter-fill.js?v=31ed196b"></script>
-	<script src="js/layers/types/sticker.js?v=6d138267"></script>
-	<script src="js/layers/types/text.js?v=26cdf4fc"></script>
-	<script src="js/layers/types/frame.js?v=2dd1db11"></script>
-	<script src="js/layers/types/sparkles.js?v=6c3d105c"></script>
-	<script src="js/layers/types/shape.js?v=01f9adac"></script>
-	<script src="js/layers/types/path.js?v=77f568eb"></script>
+	<script src="js/ui/panel-schemas.js?v=050479ee"></script>
+	<script src="js/paint/paint-slots.js?v=02fa61ef"></script>
+	<script src="js/layers/types/base-image.js?v=b0a6edb7"></script>
+	<script src="js/layers/types/filter.js?v=79d1cee1"></script>
+	<script src="js/layers/types/glitter-fill.js?v=f98dbe22"></script>
+	<script src="js/layers/types/sticker.js?v=a9638fcc"></script>
+	<script src="js/layers/types/text.js?v=02bb5e97"></script>
+	<script src="js/layers/types/frame.js?v=248f7c16"></script>
+	<script src="js/layers/types/sparkles.js?v=91b05bea"></script>
+	<script src="js/layers/types/shape.js?v=05e7ea29"></script>
+	<script src="js/layers/types/path.js?v=b4897e60"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=d276b6ae"></script>
 	<script src="js/core/gif-decode.js?v=7a21ae0c"></script>
@@ -1871,33 +1869,34 @@
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=d42e02a7"></script>
 	<script src="js/ui/scroll-regions.js?v=8bbc6cb1"></script>
-	<script src="js/ui/panel-renderer.js?v=5930c114"></script>
+	<script src="js/ui/panel-renderer.js?v=d1d81823"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2fe36fa9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
 	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
 	<script src="js/ui/keyboard.js?v=4490df0b"></script>
 	<script src="js/ui/clipboard.js?v=b3ca4df1"></script>
-	<script src="js/editor/document-io.js?v=f4337b16"></script>
+	<script src="js/editor/document-io.js?v=06a068ca"></script>
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=2f3c8a6b"></script>
+	<script src="js/editor/panels.js?v=9acf1053"></script>
+	<script src="js/editor/asset-info.js?v=151ea110"></script>
 	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
-	<script src="js/editor/disclosures.js?v=9c20ac59"></script>
-	<script src="js/ui/panel-resize.js?v=970297d7"></script>
+	<script src="js/editor/disclosures.js?v=79449da5"></script>
+	<script src="js/ui/panel-resize.js?v=e865367b"></script>
 	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
 	<script src="js/editor/transform-interaction.js?v=dbbff5f8"></script>
 	<script src="js/editor/document-start.js?v=de92d90c"></script>
-		<script src="js/ui/glitter-recolor-tool.js?v=30088261"></script>
+		<script src="js/ui/glitter-recolor-tool.js?v=2bf5492f"></script>
 		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
 	<script src="js/editor/layer-panel.js?v=3efaa4cb"></script>
 	<script src="js/editor/canvas-gestures.js?v=46918e0a"></script>
 	<script src="js/editor/canvas-size.js?v=cb9a1432"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=40cdc72a"></script>
-	<script src="js/ui/library-window.js?v=69b78b3d"></script>
-	<script src="js/ui/picker-session.js?v=58e42fef"></script>
+	<script src="js/ui/library-window.js?v=d530af9b"></script>
+	<script src="js/ui/picker-session.js?v=1d928f27"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=e79cafca"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=167b89e0"></script>
@@ -1925,9 +1924,9 @@
 	<script src="js/transforms/transform-gestures.js?v=8e167cf4"></script>
 	<script src="js/transforms/selection-chrome.js?v=71ec7b3c"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
-	<script src="js/systems/ViewportManager.js?v=c97d5bed"></script>
-	<script src="js/systems/HistoryManager.js?v=641bbfcc"></script>
-	<script src="js/export/ProjectSerializer.js?v=fc1570ca"></script>
+	<script src="js/systems/ViewportManager.js?v=bd6c5566"></script>
+	<script src="js/systems/HistoryManager.js?v=45c9d2e8"></script>
+	<script src="js/export/ProjectSerializer.js?v=590588cd"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
 	<script src="js/assets/ShapeLibrary.js?v=75f07dcd"></script>
@@ -1937,7 +1936,7 @@
 	<script src="js/systems/MaskEditor.js?v=af7b5482"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=41bc9323"></script>
+	<script src="js/layers/LayerManager.js?v=3f4c5cb9"></script>
 
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
@@ -1945,38 +1944,40 @@
 	<script src="js/assets/AssetBrowserRail.js?v=d77f73d7"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
-	<script src="js/assets/ContentManager.js?v=d18d593e"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=7e93ed2c"></script>
+	<script src="js/assets/ContentManager.js?v=81c04186"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=9eb247e7"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=1f5aba35"></script>
-	<script src="js/assets/BrushTipManager.js?v=8116e5e5"></script>
+	<script src="js/assets/BrushTipManager.js?v=c54763d1"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
-	<script src="js/assets/FontBrowserManager.js?v=d995ec61"></script>
+	<script src="js/assets/FontBrowserManager.js?v=9a84d65b"></script>
 	<script src="js/transforms/LayerTransform.js?v=6e15e0c4"></script>
 	<script src="js/layers/movable-layer-methods.js?v=55908f90"></script>
 	<script src="js/layers/layer-element-methods.js?v=32e0fa0a"></script>
-	<script src="js/layers/GlitterManager.js?v=4cc7d0b4"></script>
-	<script src="js/layers/BaseBackgroundManager.js?v=1a9debc3"></script>
+	<script src="js/layers/GlitterManager.js?v=a43b43b7"></script>
+	<script src="js/layers/BaseBackgroundManager.js?v=ee5d1f7f"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=87c0ffde"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=bec2dc25"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=764b8297"></script>
 	<script src="js/ui/crop-edit.js?v=b393f9d0"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
-	<script src="js/layers/TextGlitterManager.js?v=6715c3b9"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=aea8d68a"></script>
-	<script src="js/layers/StickerManager.js?v=03dad774"></script>
+	<script src="js/layers/TextGlitterManager.js?v=87810845"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=2881fd94"></script>
+	<script src="js/layers/StickerManager.js?v=550cfae4"></script>
 	<script src="js/layers/FilterLayerManager.js?v=3763d4be"></script>
-	<script src="js/layers/FrameLayerManager.js?v=1a5282ab"></script>
-	<script src="js/layers/SparkleLayerManager.js?v=d5529c7b"></script>
-	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
+	<script src="js/layers/FrameLayerManager.js?v=aa3befc4"></script>
+	<script src="js/layers/SparkleLayerManager.js?v=b5459f2a"></script>
+	<script src="js/layers/PathLayerManager.js?v=446bfc20"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=7842d28b"></script>
+		<script src="js/ui/phone-chip-bar.js?v=4557a33b"></script>
+		<script src="js/ui/sheet-drag.js?v=4d40fe41"></script>
+		<script src="js/systems/MobileManager.js?v=0015b4ef"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=665e02c1"></script>
+	<script src="js/app.js?v=fab01a0b"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

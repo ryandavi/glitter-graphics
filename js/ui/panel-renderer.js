@@ -117,10 +117,6 @@ const TRANSFORM_ID_GRAMMAR = Object.freeze({
 	resetTransform: 'reset{P}Transform'
 });
 
-// Per-prefix id overrides for the transform grammar. Empty since the v2 opacity
-// model removed the transform-panel opacity control (its text-only id override).
-const TRANSFORM_ID_EXCEPTIONS = Object.freeze({});
-
 function getPanelTransformIds(prefix) {
 	// Every type's transform card has its own ids; an unknown prefix reads the
 	// text card's.
@@ -129,8 +125,7 @@ function getPanelTransformIds(prefix) {
 	const capitalized = panelCap(normalizedPrefix);
 	return Object.fromEntries(Object.entries(TRANSFORM_ID_GRAMMAR).map(([role, pattern]) => [
 		role,
-		TRANSFORM_ID_EXCEPTIONS[normalizedPrefix]?.[role]
-			|| pattern.replaceAll('{p}', normalizedPrefix).replaceAll('{P}', capitalized)
+		pattern.replaceAll('{p}', normalizedPrefix).replaceAll('{P}', capitalized)
 	]));
 }
 
@@ -379,10 +374,6 @@ function initializeEditablePropertyValues(root = document) {
 	});
 }
 
-// Sliders whose range or precision earns a full-width track (R2). Everything
-// else uses the compact inline row (R1) - this list is the entire exception.
-const PROPERTY_WIDE_SLIDERS = new Set([]);
-
 // One property row (R1): label | control | value | revert. Ids follow the role
 // grammar (`{id}Value`, `reset{Id}`); ranges come from FIELDS.
 // The boot value text is plain `value+unit` to match the static markup —
@@ -414,7 +405,7 @@ function buildSliderRow(options) {
 	reset.dataset.role = `${options.role || options.slider}-reset`;
 	// R2: precision controls keep a full-width track instead of sharing the
 	// row with the label. Declared per slider, never inferred.
-	if (options.wide || PROPERTY_WIDE_SLIDERS.has(options.slider)) row.classList.add('is-stacked');
+	if (options.wide) row.classList.add('is-stacked');
 	return row;
 }
 
@@ -955,6 +946,13 @@ function buildAdvancedDisclosure(spec = {}, schema) {
 	return advanced;
 }
 
+// A section's stable key: what `openOnCreate`, the open flyout, the phone's
+// open sheet and a test name it by. Its paint slot, else its title, unless
+// the schema gives a `key` so the title can be reworded.
+function getSectionKey(spec) {
+	return spec.key || spec.slot || spec.title || spec.kind;
+}
+
 // Section chrome and collapse state are shared by ordinary and paint sections.
 function buildPropertyCardToggle(options, title) {
 	const toggle = tplClone('tpl-checkbox');
@@ -978,7 +976,7 @@ function buildSectionShell(spec, schema) {
 	// its open state is remembered under this key. `collapsed` starts it
 	// closed. A section with an enable switch gets no key: the switch
 	// owns its expansion.
-	if (spec.title && !spec.toggle) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${spec.title}`;
+	if (spec.title && !spec.toggle) card.dataset.collapseKey = `${schema?.prefix || 'panel'}:${spec.key || spec.title}`;
 	if (spec.collapsed) {
 		card.classList.add('is-collapsed');
 		card.dataset.collapseDefault = 'closed';
@@ -1042,13 +1040,21 @@ function buildNestedPaintSet(slot) {
 	return set;
 }
 
+// A paint's source modes are declared once, on its layer type's paint slot
+// (`modes`); the schema names the slot and the renderer reads the rest.
+function withPaintSlotModes(paint, schema) {
+	const type = Object.values(LayerType).find((entry) => PANEL_SCHEMAS[entry] === schema);
+	return { ...paint, modes: getPaintSlotDefinition(type, paint.slot).modes };
+}
+
 // `{ kind: 'paintSlot' }`: a section whose body is one order for every paint:
 // `before` sets (presets), Source and its gradient sets, Opacity directly
 // under them (paint first, then shape), the section's own `sets`, then
 // Advanced. A paint with no opacity of its own keeps its gradient sets last.
-function buildPaintSlotSection(slot, schema) {
+function buildPaintSlotSection(spec, schema) {
+	const slot = withPaintSlotModes(spec, schema);
 	const card = buildSectionShell({
-		id: slot.id, title: slot.title, attrs: slot.attrs,
+		id: slot.id, key: slot.key, title: slot.title, attrs: slot.attrs,
 		classes: 'paint-slot-card', swatch: true,
 		toggle: slot.toggle ? { id: `${slot.idPrefix}Enabled`, label: 'Enabled' } : null
 	}, schema);
@@ -1092,8 +1098,9 @@ function buildPaintSlotSection(slot, schema) {
 			body.appendChild(buildPanelSet(set, schema));
 			return;
 		}
-		body.append(buildNestedPaintSet(set.paint), ...addGradient(set.paint, { owner: set.paint.id }));
-		advanced.push(...buildGlitterAdvancedSets(set.paint, { owner: set.paint.id }));
+		const paint = withPaintSlotModes(set.paint, schema);
+		body.append(buildNestedPaintSet(paint), ...addGradient(paint, { owner: paint.id }));
+		advanced.push(...buildGlitterAdvancedSets(paint, { owner: paint.id }));
 	});
 	if (slot.noSlotOpacity) body.append(...ownGradient);
 	advanced.push(...gradients);
@@ -1116,6 +1123,35 @@ function buildFlyoutSwitch(card) {
 	return toggle;
 }
 
+// A bar that stands for a section (the window's, and the Inspector's as the
+// phone's sheet): the section's title, its switch and its reset. The switch
+// and the reset press the section's own, so defaults and manager bindings
+// keep one owner. Pass no card to let the bar go.
+function bindSectionBar({ title, reset, switchHost }, card) {
+	if (title && card) title.textContent = card.dataset.flyoutTitle;
+	if (switchHost) {
+		const toggle = card ? buildFlyoutSwitch(card) : null;
+		switchHost.replaceChildren(...(toggle ? [toggle] : []));
+	}
+	if (!reset) return;
+	const source = card?.querySelector(':scope > .property-card-title > .property-card-reset');
+	if (reset._resetSource === source) return;
+	reset._resetObserver?.disconnect();
+	reset._resetSource = source;
+	reset.onclick = () => source?.click();
+	const sync = () => {
+		reset.hidden = !source;
+		reset.disabled = !source || source.disabled;
+		reset.title = source?.title || 'Reset section';
+		reset.setAttribute('aria-label', reset.title);
+	};
+	if (source) {
+		reset._resetObserver = new MutationObserver(sync);
+		reset._resetObserver.observe(source, { attributes: true, attributeFilter: ['disabled'] });
+	}
+	sync();
+}
+
 // `presentation: 'flyout'`: the section is rendered once into its panel's
 // flyout host in the window (LibraryWindow shows the open one), and the panel
 // keeps one line for it: the section's closed title row. Phone chips open
@@ -1128,8 +1164,8 @@ function mountFlyoutSection(card, spec, schema) {
 		host.id = `${prefix}Flyouts`;
 		document.getElementById('flyoutBody').appendChild(host);
 	}
-	if (!card.id) card.id = spec.idPrefix ? `${spec.idPrefix}Section` : `${schema.prefix}${panelCap(spec.title)}Section`;
-	card.dataset.flyoutKey = spec.slot || spec.title;
+	if (!card.id) card.id = spec.idPrefix ? `${spec.idPrefix}Section` : `${schema.prefix}${panelCap(spec.key || spec.title)}Section`;
+	card.dataset.flyoutKey = getSectionKey(spec);
 	card.dataset.flyoutTitle = spec.title;
 	host.appendChild(card);
 
@@ -1145,18 +1181,12 @@ function mountFlyoutSection(card, spec, schema) {
 	label.classList.add('property-card-label', 'feature-name');
 	label.textContent = spec.title;
 	if (spec.badge) label.appendChild(buildFeatureBadge(spec.badge));
+	// The summary, the swatch and the switch follow the section's state
+	// (syncFlyoutLine).
 	const summary = document.createElement('span');
 	summary.className = 'property-card-summary';
 	title.appendChild(summary);
-	const cardTitle = card.querySelector(':scope > .property-card-title');
-	summary.textContent = cardTitle.querySelector(':scope > .property-card-summary')?.textContent || '';
-	line.classList.toggle('is-off', card.classList.contains('is-off'));
-	if (cardTitle.querySelector(':scope > .property-card-swatch')) title.appendChild(panelDiv('property-card-swatch'));
-	// Managers and the summary observer write the section's title row; the
-	// line follows it.
-	const follow = new MutationObserver(() => syncFlyoutLine(card));
-	follow.observe(cardTitle, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'style'] });
-	follow.observe(card, { attributes: true, attributeFilter: ['class'] });
+	if (card.querySelector(':scope > .property-card-title > .property-card-swatch')) title.appendChild(panelDiv('property-card-swatch'));
 	const toggle = buildFlyoutSwitch(card);
 	if (toggle) title.appendChild(toggle);
 	const chevron = document.createElement('span');
@@ -1166,22 +1196,21 @@ function mountFlyoutSection(card, spec, schema) {
 	return line;
 }
 
-// What a flyout section's line and switches show is the section's own state.
-function syncFlyoutLine(card) {
+// What a flyout section's line and switches show is the section's own state
+// (`sectionstatechange`, dispatched by syncSectionState).
+function syncFlyoutLine(card, state) {
+	if (!card.dataset.flyoutKey) return;
 	const line = document.querySelector(`.property-line[data-flyout-for="${card.id}"]`);
 	if (!line) return;
-	const from = (selector) => card.querySelector(`:scope > .property-card-title > ${selector}`);
-	const to = (selector) => line.querySelector(`:scope > .property-card-title > ${selector}`);
-	to('.property-card-summary').textContent = from('.property-card-summary')?.textContent || '';
-	const swatch = from('.property-card-swatch');
-	const lineSwatch = to('.property-card-swatch');
-	if (swatch && lineSwatch) {
-		lineSwatch.style.background = swatch.style.background;
-		lineSwatch.classList.toggle('is-unset', swatch.classList.contains('is-unset'));
+	const title = line.querySelector(':scope > .property-card-title');
+	title.querySelector(':scope > .property-card-summary').textContent = state.summary;
+	const swatch = title.querySelector(':scope > .property-card-swatch');
+	if (swatch) {
+		swatch.style.background = state.swatch || '';
+		swatch.classList.toggle('is-unset', state.unset);
 	}
-	line.classList.toggle('is-off', card.classList.contains('is-off'));
-	const source = card.querySelector(':scope > .property-card-title input[type="checkbox"]');
-	if (source) document.querySelectorAll(`[data-flyout-switch-for="${card.id}"] > input`).forEach((input) => { input.checked = source.checked; });
+	line.classList.toggle('is-off', state.off);
+	document.querySelectorAll(`[data-flyout-switch-for="${card.id}"] > input`).forEach((input) => { input.checked = state.enabled; });
 }
 
 // A set of buttons: `{ actions: [...] }` in a section's `sets` or a group's
@@ -1555,10 +1584,7 @@ function buildSparkleGlyphChips(item) {
 }
 
 // R5: a module row states what it is currently set to, so a collapsed effect
-// is still readable ("Sparkle Pink - 80%") without expanding it. Managers write
-// their values straight into the DOM without firing events, so the summary
-// mirrors the card's own nodes through an observer rather than trying to hook
-// every manager's sync path.
+// is still readable ("Sparkle Pink - 80%") without expanding it.
 function buildModuleSummary(card) {
 	if (!card || card.querySelector(':scope > .property-card-title > .property-card-summary')) return null;
 	const title = card.querySelector(':scope > .property-card-title');
@@ -1580,7 +1606,7 @@ function readModuleSummary(card) {
 		return card.querySelector('.asset-info-name')?.textContent?.trim() || '';
 	}
 	// A disabled effect module reads "Off" beside its title — it pairs with the
-	// hatched "unset" swatch (`.is-unset`, stamped by syncModuleSummary) so a
+	// hatched "unset" swatch (`.is-unset`, stamped by syncSectionState) so a
 	// switched-off module still states its condition
 	// whether collapsed or open, the same way a None paint slot reads "None".
 	const toggle = card.querySelector(':scope > .property-card-title input[data-effect-toggle]');
@@ -1614,60 +1640,111 @@ function readModuleSummary(card) {
 	return parts.join(' · ');
 }
 
-function syncModuleSummary(card) {
-	const summary = card.querySelector(':scope > .property-card-title > .property-card-summary');
-	if (!summary) return;
-	const text = readModuleSummary(card);
-	if (summary.textContent !== text) summary.textContent = text;
-	const swatch = card.querySelector(':scope > .property-card-title > .property-card-swatch');
-	if (swatch) {
-		const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
-		const chip = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail:not(.empty)');
-		// The base-image chip holds an <img>, not an inline background (unlike a
-		// glitter chip) — mirror its src so Image mode still gets a real swatch.
-		const chipImg = chip?.querySelector(':scope > img')?.src;
-		const solid = card.querySelector('.property-color-row:not([hidden]) input[type="color"]');
-		// Only mirror the gradient editor's preview bar while gradient is the
-		// ACTIVE mode — the editor stays in the DOM (hidden) in every other mode
-		// with its last gradient still inline, which would otherwise leak in.
-		const gradient = mode === 'gradient' ? card.querySelector('.gradient-preview-bar') : null;
-		swatch.style.background = solid?.value
-			|| chip?.style.background
-			|| chip?.style.backgroundImage
-			|| (chipImg ? `center / cover no-repeat url("${chipImg}")` : '')
-			|| gradient?.style.backgroundImage
-			|| '';
-		// A switched-off slot, a None source, or a source whose asset chip is
-		// still empty all read as "no value": `.is-unset` draws the hatch over
-		// whatever background the last active source left inline.
-		swatch.classList.toggle('is-unset', Boolean(
-			card.querySelector(':scope > .property-card-title input:not(:checked)')
-			|| card.querySelector('.segmented-option[data-mode="none"].active')
-			|| card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty')
-		));
-	}
+// What a section's line, its phone chip and the window's bar show: its
+// summary text, its swatch (null without one), whether that swatch has no
+// value, whether the section is switched off, its switch (null without one)
+// and the source mode of each of its paints. Read from the controls its
+// manager writes.
+function readSectionState(card) {
+	const title = card.querySelector(':scope > .property-card-title');
+	const toggle = title?.querySelector('input[type="checkbox"]');
+	const state = {
+		summary: card.dataset.moduleSummary !== undefined
+			? readModuleSummary(card)
+			: title?.querySelector(':scope > .property-card-summary')?.textContent || '',
+		swatch: null,
+		unset: false,
+		off: card.classList.contains('is-off'),
+		enabled: toggle ? toggle.checked : null,
+		paints: getSectionPaintSlots(card).map((slot) => `${slot.dataset.slot}:${slot.dataset.paintMode || ''}`).join(' ')
+	};
+	if (!title?.querySelector(':scope > .property-card-swatch')) return state;
+	const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
+	const chip = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail:not(.empty)');
+	// The base-image chip holds an <img>, not an inline background (unlike a
+	// glitter chip) — mirror its src so Image mode still gets a real swatch.
+	const chipImg = chip?.querySelector(':scope > img')?.src;
+	const solid = card.querySelector('.property-color-row:not([hidden]) input[type="color"]');
+	// Only mirror the gradient editor's preview bar while gradient is the
+	// ACTIVE mode — the editor stays in the DOM (hidden) in every other mode
+	// with its last gradient still inline, which would otherwise leak in.
+	const gradient = mode === 'gradient' ? card.querySelector('.gradient-preview-bar') : null;
+	state.swatch = solid?.value
+		|| chip?.style.background
+		|| chip?.style.backgroundImage
+		|| (chipImg ? `center / cover no-repeat url("${chipImg}")` : '')
+		|| gradient?.style.backgroundImage
+		|| '';
+	// A switched-off slot, a None source, or a source whose asset chip is
+	// still empty all read as "no value": `.is-unset` draws the hatch over
+	// whatever background the last active source left inline.
+	state.unset = Boolean(
+		title.querySelector('input:not(:checked)')
+		|| card.querySelector('.segmented-option[data-mode="none"].active')
+		|| card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty')
+	);
+	return state;
 }
 
-function initializeModuleSummaries(root = document) {
-	root.querySelectorAll('[data-role="paint-slot"]:not([data-nested]), [data-module-summary-type]').forEach((card) => {
-		if (card.dataset.moduleSummary !== undefined) return;
-		card.dataset.moduleSummary = '';
-		buildModuleSummary(card);
-		syncModuleSummary(card);
+// Write a section's state into its own title row, and tell whoever mirrors
+// it (its line, the phone bar, the window's bar) with one bubbling
+// `sectionstatechange` when it changed. The event's detail is the state.
+function syncSectionState(card) {
+	const state = readSectionState(card);
+	if (card.dataset.moduleSummary !== undefined) {
+		const title = card.querySelector(':scope > .property-card-title');
+		const summary = title.querySelector(':scope > .property-card-summary');
+		if (summary && summary.textContent !== state.summary) summary.textContent = state.summary;
+		const swatch = title.querySelector(':scope > .property-card-swatch');
+		if (swatch) {
+			swatch.style.background = state.swatch;
+			swatch.classList.toggle('is-unset', state.unset);
+		}
+	}
+	const signature = JSON.stringify(state);
+	if (card._sectionStateSignature === signature) return;
+	card._sectionStateSignature = signature;
+	card._sectionState = state;
+	card.dispatchEvent(new CustomEvent('sectionstatechange', { bubbles: true, detail: state }));
+}
+
+// The last state a section announced, for a mirror drawn after the event.
+function getSectionState(card) {
+	return card._sectionState || readSectionState(card);
+}
+
+// Managers write their values straight into the DOM without firing events,
+// so each section with state to show has one observer that turns those
+// writes into its state: a paint or asset section is read from its controls,
+// any other flyout section from the title row its manager writes.
+function initializeSectionStates(root = document) {
+	root.querySelectorAll('[data-role="paint-slot"]:not([data-nested]), [data-module-summary-type], [data-flyout-key]').forEach((card) => {
+		if (card.dataset.sectionState !== undefined) return;
+		card.dataset.sectionState = '';
+		const module = card.matches('[data-role="paint-slot"], [data-module-summary-type]');
 		let queued = false;
-		const observer = new MutationObserver(() => {
+		const sync = () => {
 			if (queued) return;
 			queued = true;
 			requestAnimationFrame(() => {
 				queued = false;
-				syncModuleSummary(card);
+				syncSectionState(card);
 			});
-		});
-		observer.observe(card, {
-			childList: true, subtree: true, characterData: true,
-			attributes: true, attributeFilter: ['hidden', 'data-paint-mode', 'value', 'checked', 'class']
-		});
-		card.addEventListener('change', () => syncModuleSummary(card));
+		};
+		if (module) {
+			card.dataset.moduleSummary = '';
+			buildModuleSummary(card);
+			new MutationObserver(sync).observe(card, {
+				childList: true, subtree: true, characterData: true,
+				attributes: true, attributeFilter: ['hidden', 'data-paint-mode', 'value', 'checked', 'class']
+			});
+		} else {
+			const observer = new MutationObserver(() => syncSectionState(card));
+			observer.observe(card.querySelector(':scope > .property-card-title'), { subtree: true, childList: true, characterData: true });
+			observer.observe(card, { attributes: true, attributeFilter: ['class'] });
+		}
+		card.addEventListener('change', () => syncSectionState(card));
+		syncSectionState(card);
 	});
 }
 
@@ -1686,7 +1763,7 @@ function syncPanelEffectToggle(toggle, enabled) {
 	card.classList.toggle('is-off', !next);
 	if (previous == null || String(next) !== previous) card.classList.toggle('is-collapsed', !next);
 	card.querySelector(':scope > .property-card-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
-	if (card.dataset.moduleSummary !== undefined) syncModuleSummary(card);
+	if (card.dataset.sectionState !== undefined) syncSectionState(card);
 }
 
 // Remembered open/closed state for collapsible cards, keyed `prefix:title`
@@ -1758,27 +1835,6 @@ function buildPanelCardReset(node, title, spec) {
 	return button;
 }
 
-// A sheet replaces the section title, including its reset. Forward to the
-// original button so defaults and manager bindings keep one owner.
-function syncSectionHeaderReset(button, card) {
-	const source = card?.querySelector(':scope > .property-card-title > .property-card-reset');
-	if (button._resetSource === source) return;
-	button._resetObserver?.disconnect();
-	button._resetSource = source;
-	button.onclick = () => source?.click();
-	const sync = () => {
-		button.hidden = !source;
-		button.disabled = !source || source.disabled;
-		button.title = source?.title || 'Reset section';
-		button.setAttribute('aria-label', button.title);
-	};
-	if (source) {
-		button._resetObserver = new MutationObserver(sync);
-		button._resetObserver.observe(source, { attributes: true, attributeFilter: ['disabled'] });
-	}
-	sync();
-}
-
 // A group: a label, its sections, then an optional note and the buttons it
 // ends with. Its children sit directly in it, so a row has one wrapper chain
 // in every panel.
@@ -1798,7 +1854,7 @@ function buildPanelGroup(group, schema) {
 	(group.sections || []).forEach((section) => {
 		const item = buildPanelItem(section, schema);
 		const placed = section.presentation === 'flyout' ? mountFlyoutSection(item, section, schema) : item;
-		placed.dataset.sectionKey = section.slot || section.title || section.kind;
+		placed.dataset.sectionKey = getSectionKey(section);
 		if (section.chips) placed.dataset.sectionChips = section.chips;
 		node.appendChild(placed);
 	});
@@ -1807,11 +1863,11 @@ function buildPanelGroup(group, schema) {
 		const actions = buildActionSet(set);
 		actions.classList.add('section-actions');
 		// Buttons that end a group of sections (Reset effects) are actions
-		// too: the index lists them with the Actions group, as one entry.
-		if (group.title !== 'Actions') actions.dataset.sectionAction = '';
+		// too: the index lists them with the actions group, as one entry.
+		if (group.role !== 'actions') actions.dataset.sectionAction = '';
 		node.appendChild(actions);
 	});
-	if (group.title === 'Actions') {
+	if (group.role === 'actions') {
 		node.dataset.sectionKey = 'actions';
 		node.dataset.sectionTitle = 'More';
 	}
@@ -1821,8 +1877,9 @@ function buildPanelGroup(group, schema) {
 // The section index of a rendered panel host: one entry per section, in
 // panel order. The Inspector draws the same sections as lines and inline
 // blocks; the phone bar draws this index as chips. An entry is `{ key, title,
-// group, element }`, plus `line` for a flyout section and `button` for a
-// section whose buttons stand in the index themselves (`chips: 'buttons'`).
+// group, element }`, plus `line` and `card` for a flyout section (the card is
+// where its state is read, getSectionState) and `button` for a section whose
+// buttons stand in the index themselves (`chips: 'buttons'`).
 // The panel's actions are one last entry, More: the Actions group and, in
 // `extras`, the buttons that end other groups. A sticky-region panel is one
 // entry: it only works whole.
@@ -1834,7 +1891,7 @@ function getPanelSectionIndex(host) {
 		|| node.querySelector('.property-card-title > span')?.firstChild?.textContent.trim() || '';
 	const shown = (element) => {
 		if (element.closest('[hidden], .is-vacant')) return false;
-		const controls = element.closest('#glitterSettingsControls, #layerSettingsControls');
+		const controls = element.closest('.panel-controls');
 		return !controls || controls.classList.contains('visible');
 	};
 	const actions = Array.from(host.querySelectorAll('[data-section-key="actions"], [data-section-action]')).filter(shown);
@@ -1849,7 +1906,10 @@ function getPanelSectionIndex(host) {
 				title: button.querySelector('.layer-type-name')?.textContent || button.textContent.trim() || button.title
 			}));
 		}
-		if (element.classList.contains('property-line')) entry.line = element;
+		if (element.classList.contains('property-line')) {
+			entry.line = element;
+			entry.card = document.getElementById(element.dataset.flyoutFor);
+		}
 		return entry.title ? [entry] : [];
 	}).concat(more);
 }
@@ -1877,7 +1937,10 @@ function finishPanelMarkup(root) {
 		box.parentElement.classList.add('has-scrollbox');
 		const card = box.closest('.property-card');
 		card.classList.add('has-scrollbox');
-		if (!card.classList.contains('paint-slot-card') && !box.parentElement.querySelector('[data-set-toggle]')) card.classList.add('is-preset-content');
+		if (card.classList.contains('paint-slot-card') || box.parentElement.querySelector('[data-set-toggle]')) return;
+		card.classList.add('is-preset-content');
+		// A flyout host holding such a section fills the pane while open.
+		card.closest('.flyout-host')?.classList.add('has-preset-content');
 	});
 	initializeEditablePropertyValues(root);
 }
@@ -2031,8 +2094,8 @@ function renderPanelSection(schema) {
 		}
 	};
 	// Group order (docs/UI-CONVENTIONS.md): the schema's own groups, then
-	// Effects, then Motion, with an Actions group always last.
-	const isActions = (group) => group.title === 'Actions';
+	// Effects, then Motion, with the actions group (`role: 'actions'`) last.
+	const isActions = (group) => group.role === 'actions';
 	schema.groups.filter((group) => !isActions(group)).forEach((group) => placeGroup(group, buildPanelGroup(group, schema)));
 	if (schema.effects?.length) {
 		const effects = { title: 'Effects', sections: schema.effects };
@@ -2057,7 +2120,7 @@ function renderPanelSection(schema) {
 	if (schema.controls) {
 		const content = fragment.querySelector('.section-content');
 		const empty = buildPropertyEmpty({ id: schema.controls.emptyId, visible: true, ...schema.controls.empty });
-		const controls = document.createElement('div');
+		const controls = panelDiv('panel-controls');
 		controls.id = schema.controls.id;
 		controls.appendChild(subsection);
 		content.replaceChildren(empty, controls);
@@ -2075,6 +2138,7 @@ function renderPanelSection(schema) {
 // Fragment schemas (documentSize) run last so their mount hosts — created by an
 // earlier section schema — already exist.
 function renderPanelSections(editor) {
+	document.addEventListener('sectionstatechange', (event) => syncFlyoutLine(event.target, event.detail));
 	Object.values(PANEL_SCHEMAS).forEach((schema) => {
 		if (schema.mountInto) renderPanelFragment(schema);
 		else renderPanelSection(schema);

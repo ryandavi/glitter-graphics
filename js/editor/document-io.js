@@ -224,7 +224,6 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 			this.layerManager.setActiveLayer(layer.id);
 		} else if (this.layers.length === 0) {
 			this.activeLayerId = null;
-			this.updateSidePanelUI(null);
 		}
 
 		this.historyManager.reset(this.historyManager.createStateSnapshot());
@@ -233,7 +232,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 			this.setProjectName('', { markDirty: false });
 		}
 
-		this.updateSidePanelUI();
+		this.refreshInspector();
 		this.layerManager.renderLayersList();
 		this.updateHistoryButtons();
 		this.updateActionButtons();

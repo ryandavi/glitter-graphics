@@ -191,10 +191,9 @@ class GlitterRecolorController {
 					: null;
 				this.editor.pickers.closeAll();
 				this.previousPicker = previousPicker;
-				pickerOpenSession(this, { slot: 'recolor', label: 'Pick a glitter to recolor' });
+				pickerOpenSession(this, { kind: 'asset', label: 'Pick a glitter to recolor' });
 				this.libraryButton.setAttribute('aria-pressed', 'true');
 				this.libraryButton.classList.add('active');
-				if (this.editor.mobileManager?.isMobile) this.editor.mobileManager.openDrawer('design');
 				this.library.updateRecolorAvailability();
 			}
 		} catch (error) {

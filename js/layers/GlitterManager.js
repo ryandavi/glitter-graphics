@@ -94,12 +94,11 @@ class GlitterManager {
 		});
 	}
 
-	// slot: null for the fill itself, 'sparkles' for the sparkles slot.
-	armAssetPicker(slot = null) {
+	armPicker(slot = 'fill') {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
-		pickerOpenSession(this, { layerId: layer.id, slot }, {
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot || 'fill')?.glitterId)
+		pickerOpenSession(this, { kind: 'paint', layerId: layer.id, slot }, {
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
 
@@ -109,12 +108,11 @@ class GlitterManager {
 	}
 
 	getGlitterSelectionTarget() {
-		return (this.hasActivePickerSession() && this.pickerSession.slot) || 'fill';
+		return this.hasActivePickerSession() ? this.pickerSession.slot : 'fill';
 	}
 
 	getGlitterSelectionSlot(layer) {
-		const slot = this.hasActivePickerSession() ? this.pickerSession.slot : null;
-		return (slot && getLayerPaintSlot(layer, slot)) || layer.fill;
+		return getLayerPaintSlot(layer, this.getGlitterSelectionTarget()) || layer.fill;
 	}
 
 	hasActivePickerSession() {
@@ -332,8 +330,8 @@ class GlitterManager {
 				this.editor.updateColorPickerControls();
 				this.editor.updateHelpfulMessage();
 			},
-			armPicker: (key) => this.armAssetPicker(key),
-			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot || null : null)
+			armPicker: (key) => this.armPicker(key),
+			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot : null)
 		};
 	}
 

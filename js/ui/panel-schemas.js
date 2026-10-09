@@ -8,12 +8,18 @@
 //
 //   panel    a PANEL_SCHEMAS entry: `groups` (plus `effects` and `motion`,
 //            which the renderer turns into the Effects and Motion groups)
-//   group    { title, sections, note?, actions? }
+//   group    { title, sections, note?, actions?, role? }. `role: 'actions'`
+//            marks the group of a panel's own buttons: it comes last, and
+//            the phone bar lists it as More.
 //   section  { kind: 'section' | 'paintSlot' | 'transform' | 'mount', title,
 //              sets, advanced? }. `advanced` is a list of sets under the
 //              section's one "Advanced" disclosure. `presentation: 'flyout'`
 //              leaves one line in the panel and opens the section in the
-//              window beside it. A paintSlot's `summaryValue` is the id of
+//              window beside it. `key` names a section where its title must
+//              be free to change (it defaults to the paint slot, then the
+//              title). A paintSlot names its `slot` and `idPrefix`; its
+//              source modes are the layer type's (`paintSlots[].modes`). Its
+//              `summaryValue` is the id of
 //              the one slider whose value its summary states (an outline's
 //              width). `chips: 'buttons'` puts the section's buttons in the
 //              phone bar themselves, instead of one chip for the section.
@@ -142,7 +148,7 @@ function createSparklesSectionSpec(idPrefix, overrides = {}) {
 		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles', presentation: 'flyout',
 		attrs: { 'data-sparkle-controls': idPrefix },
 		texturePosition: true,
-		toggle: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'solid',
+		toggle: true, activeMode: 'solid',
 		color: '#ffffff', chipTitle: 'Choose sparkle glitter',
 		before: [{ label: 'Presets', collapse: 'open', rows: [
 			{ kind: 'presetGrid', id: `${idPrefix}Presets`, label: 'Sparkle presets', classes: 'property-inset sparkle-presets' }
@@ -171,11 +177,11 @@ function createStylePresetSectionSpec(prefix) {
 function createBevelSectionSpecs(idPrefix) {
 	return [
 		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & gloss', presentation: 'flyout',
-			toggle: true, texturePosition: true, sourceLabel: 'Highlight', modes: ['glitter', 'solid', 'gradient'], activeMode: 'solid',
+			toggle: true, texturePosition: true, sourceLabel: 'Highlight', activeMode: 'solid',
 			color: '#ffffff', chipTitle: 'Choose highlight glitter',
 			sets: [
 				{ paint: { id: `${idPrefix}ShadeCard`, slot: 'bevelShade', idPrefix: `${idPrefix}Shade`, sourceLabel: 'Shade',
-					texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' } },
+					texturePosition: true, activeMode: 'solid', color: '#000000', chipTitle: 'Choose shade glitter' } },
 				{ label: 'Shape', rows: [
 					{ kind: 'select', id: `${idPrefix}Profile`, label: 'Profile', ariaLabel: 'Bevel profile', revert: true,
 						options: getOptions('bevelProfile').map((option) => ({ ...option, selected: option.value === 'smooth' })) },
@@ -198,7 +204,7 @@ function createOutlineSectionSpec(idPrefix, stroke, placement) {
 	const edges = placement.filter((row) => row.label === 'Edges');
 	return { kind: 'paintSlot', slot: 'border', idPrefix, title: 'Outline', presentation: 'flyout',
 		summaryValue: stroke[0].id,
-		toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
+		toggle: true, texturePosition: true, activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose outline glitter',
 		sets: [
 			{ label: 'Stroke', rows: [...stroke, ...edges] },
@@ -231,7 +237,7 @@ function createOutlinePlacementRows(idPrefix) {
 
 function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
 	return { kind: 'paintSlot', slot: 'shadow', idPrefix, title: 'Shadow', presentation: 'flyout',
-		toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
+		toggle: true, texturePosition: true, activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose shadow glitter',
 		sets: [
 			{ rows: [{ kind: 'segmented', label: 'Type', revert: true, options: getOptions('shadowKind').map(({ value, label, suffix }) => ({ id: `${idPrefix}${suffix}`, value, label, active: value === 'drop' })) }] },
@@ -389,7 +395,7 @@ const PANEL_SCHEMAS = {
 						] }
 					] }
 				] },
-				{ title: 'Actions', actions: [
+				{ title: 'Actions', role: 'actions', actions: [
 					{ classes: 'multi-selection-actions', actions: [
 						{ id: 'multiSelectionDuplicateBtn', label: 'Duplicate' },
 						{ id: 'multiSelectionDeleteBtn', label: 'Delete' }
@@ -454,7 +460,7 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Actions', region: 'footer', actions: [
+			{ title: 'Actions', role: 'actions', region: 'footer', actions: [
 				{ classes: 'auto-glitter-actions is-split', actions: [
 					{ id: 'cancelAutoGlitterBtn', label: 'Cancel' },
 					{ id: 'autoGlitterCreateBtn', label: 'Create layers', primary: true }
@@ -537,7 +543,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('frameLayerOpacity', 'frameLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
+					activeMode: 'glitter',
 					color: CONFIG.tools.frames.defaults.color, chipTitle: 'Choose frame glitter' }
 			] },
 			{ title: 'Layout', sections: [{ kind: 'transform' }] }
@@ -568,7 +574,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('baseBackgroundOpacity'),
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
-					modes: ['image', 'none', 'glitter', 'solid', 'gradient'], activeMode: 'image', color: '#ffffff',
+					activeMode: 'image', color: '#ffffff',
 					hidePrimaryModes: ['image'],
 					chipTitle: 'Choose background glitter',
 					imageAsset: {
@@ -581,7 +587,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Layout', sections: [
 				{ kind: 'mount', id: 'baseCanvasSizeHost' }
 			] },
-			{ title: 'Actions',
+			{ title: 'Actions', role: 'actions',
 				note: 'Turn the image colors into editable glitter fill layers.',
 				actions: [{ actions: [
 					{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', icon: 'magic-wand', badge: 'beta', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
@@ -625,7 +631,7 @@ const PANEL_SCHEMAS = {
 					{ rows: [{ kind: 'host', id: 'brushDynamicsHost', classes: 'brush-dynamics' }] }
 				] }
 			] },
-			{ title: 'Actions',
+			{ title: 'Actions', role: 'actions',
 				note: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.',
 				actions: [{ actions: [
 					{ id: 'maskCopyOppositeSettings', label: 'Copy eraser settings', title: 'Copy the other tool\'s settings into this one' },
@@ -657,7 +663,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('opacity', 'glitterLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
-					modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter', color: '#ff4fa3',
+					activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter',
 
 				}
@@ -831,7 +837,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('textLayerOpacity', 'textLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['none', 'glitter', 'solid', 'gradient'], activeMode: 'glitter', color: '#000000',
+					activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter'
 				}
 			] },
@@ -839,7 +845,7 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'backgroundFill', idPrefix: 'textBackground', title: 'Background', presentation: 'flyout',
-				toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
+				toggle: true, texturePosition: true, activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose background glitter',
 				before: [
 					{ rows: [
@@ -908,7 +914,7 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('shapeLayerOpacity', 'shapeLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['none', 'image', 'glitter', 'solid', 'gradient'], activeMode: 'solid',
+					activeMode: 'solid',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter',
 					imageAsset: {
 						info: 'shapeFillImageInfo', thumbnail: 'shapeFillImageThumbnail',
@@ -1004,11 +1010,11 @@ const PANEL_SCHEMAS = {
 				createLayerSectionSpec('pathLayerOpacity', 'pathLayerBlendMode'),
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'pathFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
-					modes: ['none', 'glitter', 'solid', 'gradient'], activeMode: 'none',
+					activeMode: 'none',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter' },
 				{ kind: 'paintSlot', slot: 'stroke', idPrefix: 'pathStroke', title: 'Stroke', presentation: 'flyout',
 					summaryValue: 'pathStrokeWidth',
-					toggle: true, texturePosition: true, modes: ['glitter', 'solid', 'gradient'], activeMode: 'glitter',
+					toggle: true, texturePosition: true, activeMode: 'glitter',
 					color: CONFIG.tools.path.stroke.color, chipTitle: 'Choose stroke glitter',
 					sets: [
 						{ label: 'Line', rows: [
@@ -1089,7 +1095,7 @@ const PANEL_SCHEMAS = {
 	},
 	// The document-size form (Image Size / Canvas Size). ONE self-contained
 	// "Size" section, mounted into #baseCanvasSizeHost at boot;
-	// updateSidePanelUI and BaseBackgroundManager relocate this single node to
+	// refreshInspector and BaseBackgroundManager relocate this single node to
 	// #baseCanvasSizeHost for Canvas Properties. Defined last so its mount host
 	// (from the noSelection schema) already exists. canvas-size.js owns every
 	// value and range, and shows the sets of the chosen operation: a mode's own

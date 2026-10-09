@@ -38,7 +38,8 @@ class StickerManager {
 
 	setupUI() {
 		this.ui = {
-			assetThumbnail: document.getElementById('stickerAssetThumbnail')
+			assetThumbnail: document.getElementById('stickerAssetThumbnail'),
+			assetChange: document.getElementById('stickerAssetChange')
 		};
 		this.ui.gallerySection = document.getElementById('designGallerySection');
 		this.ui.resetEffects = document.getElementById('resetStickerEffects');
@@ -77,6 +78,9 @@ class StickerManager {
 
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
+		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
+			control.addEventListener('click', () => pressAssetRow(this.editor, this, () => this.armAssetPicker()));
+		});
 		[
 			['stickerBorderFillInterior', 'fillInterior'],
 			['stickerBorderUnionFrames', 'unionFrames']
@@ -124,7 +128,7 @@ class StickerManager {
 	armPicker(slot) {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.STICKER || !getLayerPaintSlot(layer, slot)) return;
-		pickerOpenSession(this, { kind: 'glitter', layerId: layer.id, slot }, {
+		pickerOpenSession(this, { kind: 'paint', layerId: layer.id, slot }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerPaintSlot(layer, slot)?.glitterId)
 		});
 	}
@@ -137,11 +141,6 @@ class StickerManager {
 		});
 	}
 
-
-	closePicker() {
-		this.closePickerSession();
-	}
-
 	closePickerSession() {
 		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
@@ -149,7 +148,7 @@ class StickerManager {
 	// The slot the next gallery pick targets, or null when none is armed (a
 	// sticker has no fill slot to fall back to).
 	getGlitterSelectionTarget(layer = this.editor.layerManager.getActiveLayer()) {
-		return pickerArmedSlot(this, layer, (session) => session.kind !== 'asset');
+		return pickerArmedSlot(this, layer);
 	}
 
 	resolveSelectedGlitterId(layer) {
@@ -167,7 +166,6 @@ class StickerManager {
 		this.editor.loadTransformSettings(layer, 'sticker');
 		const asset = this.editor.stickerLibrary.getItemById(layer.stickerSourceId);
 		if (asset) this.editor.updateStickerAssetInfo(asset);
-		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.closePicker();
 		syncFieldControls(this.fieldHost, layer);
 		const sliceToggle = document.getElementById('stickerSliceEnabled');
 		if (sliceToggle) {
@@ -506,8 +504,7 @@ class StickerManager {
 		this.editor.updateStatus('Sticker replaced');
 		this.editor.saveState('Edit sticker');
 
-		// Hide empty state and load settings
-		this.editor.setSettingsEmptyState('stickerSettings', false);
+		this.editor.syncPanelEmptyStates(activeLayer);
 		this.loadLayerSettings(activeLayer);
 	}
 

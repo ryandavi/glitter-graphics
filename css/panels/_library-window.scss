@@ -1,7 +1,7 @@
 @use '../mixins' as *;
 
-// The window: the column between the canvas and the Inspector that shows the
-// open flyout section, and the Library while a picker is armed
+// The window: the column over the canvas, beside the Inspector, that shows
+// the open flyout section, and the Library while a picker is armed
 // (js/ui/library-window.js). It shares the Inspector's shell (.design-panel),
 // so both are styled by the same rules as in a panel. At phone width the
 // same window becomes a sheet.
@@ -74,7 +74,7 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 .library-window > .flyout-section {
 	> .section-content { display: flex; flex-direction: column; }
 
-	.flyout-host.has-flyout-open:has(.is-preset-content),
+	.flyout-host.has-flyout-open.has-preset-content,
 	.is-flyout-open.is-preset-content,
 	.is-flyout-open.is-preset-content > .property-card-body,
 	.is-flyout-open.is-preset-content > .property-card-body > .has-scrollbox {
