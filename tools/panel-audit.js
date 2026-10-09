@@ -21,7 +21,9 @@ const CHROME = process.env.CHROME_PATH
 const SECTIONS = [
 	'noLayerSettingsSection', 'baseLayerSettingsSection', 'glitterSettingsSection',
 	'brushSettingsSection', 'stickerSettingsSection', 'textSettingsSection',
-	'shapeSettingsSection', 'layerSettingsSection', 'autoGlitterSettingsSection'
+	'shapeSettingsSection', 'layerSettingsSection', 'autoGlitterSettingsSection',
+	// Every panel's flyout sections.
+	'flyoutSection'
 ];
 
 function serve() {
@@ -102,6 +104,9 @@ async function expandAll(page) {
 			s.classList.add('visible', 'is-open');
 			s.querySelector(':scope > .section-content')?.classList.add('visible');
 		});
+		// Flyout sections live in the window.
+		document.querySelectorAll('.library-window, .flyout-section').forEach((n) => n.classList.add('visible', 'is-open'));
+		document.querySelectorAll('.flyout-host > .property-card').forEach((n) => n.classList.add('is-flyout-open'));
 		document.querySelectorAll('.collapsed').forEach((n) => n.classList.remove('collapsed'));
 		document.querySelectorAll('.is-collapsed').forEach((n) => n.classList.remove('is-collapsed'));
 		document.querySelectorAll('[data-advanced]').forEach((n) => n.classList.add('is-open'));

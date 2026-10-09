@@ -62,7 +62,7 @@ const TEXT_EDIT_METHODS = {
 				return;
 			}
 			if (!this.editSession) return;
-			if (event.target === this.textProxy || event.target === this.ui.textInput || event.target.closest('#textSettingsSection, #textEditControls, .app-menu-popover, .transform-handle-wrapper, .transform-handles')) return;
+			if (event.target === this.textProxy || event.target === this.ui.textInput || event.target.closest('#textSettingsSection, #libraryWindow, #textEditControls, .app-menu-popover, .transform-handle-wrapper, .transform-handles')) return;
 			// A press off the text commits it and hands back to Select, so the
 			// next drag moves the layer instead of starting another text.
 			if (textTool && this.editor.previewContainer.contains(event.target) && !event.target.closest('button, a, input, select, textarea')) {

@@ -84,7 +84,9 @@ initializeCollapsibleSections() {
 				// Every titled section collapses, so the panel behaves one way. Two
 				// exceptions: a section nested in another is a labelled set, and a
 				// form modal's groups stay open so its search can always show a row.
-				const collapsible = !subsection.parentElement.closest('.property-card') && !subsection.closest('.modal-form');
+				// A flyout section's line opens the window instead.
+				const collapsible = !subsection.parentElement.closest('.property-card') && !subsection.closest('.modal-form')
+					&& !subsection.matches('.property-line');
 				if (collapsible) {
 					if (subsection.dataset.collapsibleCard === undefined) applyPanelCardState(subsection);
 					subsection.dataset.collapsibleCard = '';

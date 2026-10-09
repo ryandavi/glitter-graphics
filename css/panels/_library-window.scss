@@ -1,10 +1,10 @@
 @use '../mixins' as *;
 
-// The Library window: the column between the canvas and the Inspector that
-// holds the Library while a picker is armed (js/ui/library-window.js). It
-// shares the Inspector's shell (.design-panel), so the Library is styled by
-// the same rules in either home. At phone width the Library is the design
-// drawer and this column never opens.
+// The window: the column between the canvas and the Inspector that shows the
+// open flyout section, and the Library while a picker is armed
+// (js/ui/library-window.js). It shares the Inspector's shell (.design-panel),
+// so both are styled by the same rules as in a panel. At phone width the
+// Library is the design drawer and this column never opens.
 .library-window {
 	width: var(--library-window-width);
 	flex: 0 0 var(--library-window-width);
@@ -12,6 +12,40 @@
 }
 
 .main-content > .design-panel.library-window:not(.is-open) { display: none; }
+
+// The open flyout section takes its own height and scrolls past the column's;
+// with the Library under it (a paint on its Glitter source) it keeps to half.
+.library-window {
+	> .flyout-section {
+		display: flex;
+		flex-direction: column;
+		flex: 0 1 auto;
+		min-height: 0;
+		background: var(--panel-bg);
+		-webkit-backdrop-filter: var(--panel-backdrop);
+		backdrop-filter: var(--panel-backdrop);
+
+		> .section-header > .section-header-title > .section-header-title-text { text-transform: none; }
+
+		> .section-content {
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+	}
+
+	&.has-library > .flyout-section {
+		flex-shrink: 0;
+		max-height: 50%;
+	}
+
+	// The section's bar names the target and closes the window.
+	&.has-flyout > .design-gallery-section {
+		.gallery-picker-strip,
+		.library-close-action { display: none; }
+	}
+}
 
 // How the open window sits is chosen from the room left for the canvas. The
 // phone layout is CSS first and the window closes a moment later, so these

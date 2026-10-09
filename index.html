@@ -369,11 +369,30 @@
 
 				</div>
 
-				<!-- The window: one column between the canvas and the Inspector that
-				     holds the Library while a picker is armed (syncLibraryWindow). It
-				     carries the Inspector's classes so the Library's rules apply. At
-				     phone width the Library is the design drawer instead. -->
+				<!-- The window: one column between the canvas and the Inspector. It
+				     shows the flyout section whose line was pressed, and the Library
+				     while a picker is armed (LibraryWindow). It carries the
+				     Inspector's classes so both are styled by the same rules. At
+				     phone width the Library is the design drawer instead, and a
+				     flyout section sits in its panel. -->
 				<div class="design-panel library-window property-panel" id="libraryWindow">
+					<!-- Each panel's flyout sections are rendered into #flyoutBody at
+					     boot (mountFlyoutSection). -->
+					<div class="section property-section flyout-section" id="flyoutSection">
+						<div class="section-header section-header-with-action" id="flyoutHeader">
+							<h3 class="section-header-title">
+								<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
+										<use id="flyoutTitleIcon" href="#icon-sliders"></use>
+									</svg></span>
+								<span class="section-header-title-text" id="flyoutTitleText"></span>
+							</h3>
+							<div class="section-header-actions">
+								<span class="flyout-switch" id="flyoutSwitch"></span>
+								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutClose" title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+							</div>
+						</div>
+						<div class="section-content" id="flyoutBody"></div>
+					</div>
 					<div class="section main-section collapsible-section design-gallery-section visible" id="designGallerySection">
 						<div class="section-header section-header-with-action" id="designGalleryHeader">
 							<h3 class="section-header-title">
@@ -425,7 +444,7 @@
 										<span class="name">Search</span>
 									</span>
 								</button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle library-close-action visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 
 						</div>
@@ -1788,7 +1807,7 @@
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=9bafc573"></script>
+	<script src="js/ui/panel-schemas.js?v=dcaef9c1"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
 	<script src="js/layers/types/filter.js?v=56765bd2"></script>
@@ -1861,7 +1880,7 @@
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
 	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
-	<script src="js/ui/panel-renderer.js?v=1b85f282"></script>
+	<script src="js/ui/panel-renderer.js?v=a058d5d3"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
@@ -1872,9 +1891,9 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=f6e442d8"></script>
+	<script src="js/editor/panels.js?v=c3beca5d"></script>
 	<script src="js/editor/fill-tool.js?v=79353150"></script>
-	<script src="js/editor/disclosures.js?v=d67aa104"></script>
+	<script src="js/editor/disclosures.js?v=649823d5"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
@@ -1886,8 +1905,8 @@
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/library-window.js?v=d0b8aea1"></script>
-	<script src="js/ui/picker-session.js?v=e4181001"></script>
+	<script src="js/ui/library-window.js?v=c84cb033"></script>
+	<script src="js/ui/picker-session.js?v=d4f8a32c"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1951,7 +1970,7 @@
 	<script src="js/systems/AutoGlitterManager.js?v=173c021c"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
-	<script src="js/ui/text-edit.js?v=9e04b649"></script>
+	<script src="js/ui/text-edit.js?v=64090422"></script>
 	<script src="js/ui/crop-edit.js?v=4aed6e38"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
 	<script src="js/layers/TextGlitterManager.js?v=79deb5ac"></script>
@@ -1963,7 +1982,7 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=e3a6f067"></script>
+		<script src="js/systems/MobileManager.js?v=e1ac027d"></script>
 
 	<!-- App -->
 	<script src="js/app.js?v=ecf3fff0"></script>

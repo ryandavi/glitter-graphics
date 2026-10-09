@@ -11,7 +11,9 @@
 //   group    { title, sections, note?, actions? }
 //   section  { kind: 'section' | 'paintSlot' | 'transform' | 'mount', title,
 //              sets, advanced? }. `advanced` is a list of sets under the
-//              section's one "Advanced" disclosure.
+//              section's one "Advanced" disclosure. `presentation: 'flyout'`
+//              leaves one line in the panel and opens the section in the
+//              window beside it.
 //   set      { label?, rows }, or { actions } for a set of buttons. `collapse:
 //            'open' | 'closed'` makes a labelled set's name a toggle.
 //   row      { kind: 'slider' | 'select' | 'segmented' | 'toggle' | 'field' |
@@ -531,7 +533,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', sections: [
 				createLayerSectionSpec('frameLayerOpacity', 'frameLayerBlendMode'),
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill',
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'frameFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter',
 					color: CONFIG.tools.frames.defaults.color, chipTitle: 'Choose frame glitter' }
@@ -656,7 +658,7 @@ const PANEL_SCHEMAS = {
 				// A Fill layer is a single masked paint, so its only opacity is the
 				// whole-layer opacity.
 				createLayerSectionSpec('opacity', 'glitterLayerBlendMode'),
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter',
@@ -832,7 +834,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Appearance', sections: [
 				createStylePresetSectionSpec('text'),
 				createLayerSectionSpec('textLayerOpacity', 'textLayerBlendMode'),
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter'
@@ -910,7 +912,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Appearance', sections: [
 				createStylePresetSectionSpec('shape'),
 				createLayerSectionSpec('shapeLayerOpacity', 'shapeLayerBlendMode'),
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill',
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					modes: ['none', 'image', 'glitter', 'solid'], activeMode: 'solid',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter',
@@ -1007,7 +1009,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', sections: [
 				createLayerSectionSpec('pathLayerOpacity', 'pathLayerBlendMode'),
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'pathFill', title: 'Fill',
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'pathFill', title: 'Fill', presentation: 'flyout',
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'none',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter' },

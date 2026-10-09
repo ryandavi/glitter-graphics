@@ -36,7 +36,9 @@ const SECTION_IDS = [
 	'textSettingsSection',
 	'shapeSettingsSection',
 	'filterSettingsSection',
-	'layerSettingsSection'
+	'layerSettingsSection',
+	// Every panel's flyout sections.
+	'flyoutSection'
 ];
 
 function assert(condition, message) {

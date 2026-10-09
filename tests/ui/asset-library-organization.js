@@ -515,7 +515,11 @@ async function main() {
 			library.toggleFavorite(9002);
 			if (!b.elements.itemGrid.querySelector('[data-id="9002"]') || b.elements.emptyState.classList.contains('visible')) throw new Error('Adding a favorite did not update the empty Favorites wall');
 		});
-		await page.evaluate(() => window.editor.glitterLibrary.browser.viewControl.querySelector('[data-view="style"]').click());
+		// The Library only shows while a picker is armed.
+		await page.evaluate(() => {
+			window.editor.glitterManager.armAssetPicker();
+			window.editor.glitterLibrary.browser.viewControl.querySelector('[data-view="style"]').click();
+		});
 		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('sparkle/sparkelies');
 		await page.reload({ waitUntil: 'networkidle' });
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser?.rail);

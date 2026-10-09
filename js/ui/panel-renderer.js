@@ -780,7 +780,8 @@ function buildAssetInfo(options) {
 
 // The paint source of a section: the Source row, then whatever the chosen
 // source needs (asset chip, image chip, solid color). It is the section's
-// Source set. The Gradient option and its editor stay runtime-injected by
+// Source set. A flyout section has the room for the sources as tabs. The
+// Gradient option and its editor stay runtime-injected by
 // installEffectGradientEditor (it finds the source's option buttons by id).
 function buildPaintSource(slot) {
 	const prefix = slot.idPrefix;
@@ -812,16 +813,20 @@ function buildPaintSource(slot) {
 		active: mode === slot.activeMode,
 		mode
 	}));
-	const sourceChoices = buildSelectProxy(sourceEntries, { label: `${slot.title || sourceLabel} source` });
-	const sourceRow = buildOptionGroup(sourceLabel, [sourceChoices]);
-	attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: sourceLabel });
-	// The option buttons managers bind sit beside the row, not inside it.
-	const hooks = sourceRow.querySelector('.property-select-hooks');
-	if (hooks) {
-		hooks.remove();
-		source.prepend(hooks);
+	if (slot.presentation === 'flyout') {
+		source.prepend(buildSegmented(sourceEntries, { label: `${slot.title || sourceLabel} source` }));
+	} else {
+		const sourceChoices = buildSelectProxy(sourceEntries, { label: `${slot.title || sourceLabel} source` });
+		const sourceRow = buildOptionGroup(sourceLabel, [sourceChoices]);
+		attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: sourceLabel });
+		// The option buttons managers bind sit beside the row, not inside it.
+		const hooks = sourceRow.querySelector('.property-select-hooks');
+		if (hooks) {
+			hooks.remove();
+			source.prepend(hooks);
+		}
+		source.prepend(sourceRow);
 	}
-	source.prepend(sourceRow);
 	const colorRow = source.querySelector('.property-color-row');
 	colorRow.id = `${prefix}ColorRow`;
 	colorRow.dataset.role = 'solid-color-row';
@@ -1018,7 +1023,9 @@ function buildPaintSlotSection(slot, schema) {
 		input.checked = slot.activeMode !== 'none';
 		input.dataset.paintSlotToggle = '';
 		input.addEventListener('change', () => {
-			const mode = input.checked ? (card._lastPaintMode || 'glitter') : 'none';
+			// A select source records the last mode itself; tabs leave it to
+			// syncPaintSlotSourceUI.
+			const mode = input.checked ? (card._lastPaintMode || card.dataset.lastPaintMode || 'glitter') : 'none';
 			card.querySelector(`.segmented-option[data-mode="${mode}"]`)?.click();
 		});
 		header.appendChild(toggle);
@@ -1038,6 +1045,81 @@ function buildPaintSlotSection(slot, schema) {
 	});
 	body.appendChild(buildAdvancedDisclosure({ sets: advanced }, schema));
 	return card;
+}
+
+// A flyout section's switch, repeated on its line and in the window's bar.
+// It presses the section's own switch, which stays the one the managers bind.
+function buildFlyoutSwitch(card) {
+	const source = card.querySelector(':scope > .property-card-title input[type="checkbox"]');
+	if (!source) return null;
+	const toggle = buildPropertyCardToggle({ label: 'Enabled' }, card.dataset.flyoutTitle);
+	toggle.dataset.flyoutSwitchFor = card.id;
+	const input = toggle.querySelector('input');
+	input.checked = source.checked;
+	input.addEventListener('change', () => {
+		if (source.checked !== input.checked) source.click();
+	});
+	return toggle;
+}
+
+// `presentation: 'flyout'`: the section is rendered once into its panel's
+// flyout host in the window (LibraryWindow shows the open one), and the panel
+// keeps one line for it: the section's closed title row. On phones the
+// section itself takes the line's place (data-phone-host-for).
+function mountFlyoutSection(card, spec, schema) {
+	const prefix = schema.sectionPrefix;
+	let host = document.getElementById(`${prefix}Flyouts`);
+	if (!host) {
+		host = panelDiv('settings-subsection flyout-host');
+		host.id = `${prefix}Flyouts`;
+		document.getElementById('flyoutBody').appendChild(host);
+	}
+	if (!card.id) card.id = spec.idPrefix ? `${spec.idPrefix}Section` : `${schema.prefix}${panelCap(spec.title)}Section`;
+	card.dataset.flyoutKey = spec.slot || spec.title;
+	card.dataset.flyoutTitle = spec.title;
+	host.appendChild(card);
+
+	const line = tplClone('tpl-card');
+	line.classList.add('property-line');
+	line.dataset.flyoutFor = card.id;
+	line.dataset.phoneHostFor = card.id;
+	line.dataset.phoneHostPlace = 'after';
+	const title = line.querySelector('.property-card-title');
+	title.setAttribute('role', 'button');
+	title.setAttribute('tabindex', '0');
+	title.setAttribute('aria-expanded', 'false');
+	title.setAttribute('aria-controls', card.id);
+	const label = title.querySelector(':scope > span');
+	label.classList.add('property-card-label', 'feature-name');
+	label.textContent = spec.title;
+	const summary = document.createElement('span');
+	summary.className = 'property-card-summary';
+	title.append(summary, panelDiv('property-card-swatch'));
+	const toggle = buildFlyoutSwitch(card);
+	if (toggle) title.appendChild(toggle);
+	const chevron = document.createElement('span');
+	chevron.className = 'property-card-chevron icon-wrapper';
+	chevron.appendChild(createIcon('chevron-right'));
+	title.appendChild(chevron);
+	return line;
+}
+
+// What a flyout section's line and switches show is the section's own state.
+function syncFlyoutLine(card) {
+	if (!card.dataset.flyoutKey) return;
+	const line = document.querySelector(`.property-line[data-flyout-for="${card.id}"]`);
+	if (!line) return;
+	const from = (selector) => card.querySelector(`:scope > .property-card-title > ${selector}`);
+	const to = (selector) => line.querySelector(`:scope > .property-card-title > ${selector}`);
+	to('.property-card-summary').textContent = from('.property-card-summary')?.textContent || '';
+	const swatch = from('.property-card-swatch');
+	if (swatch) {
+		to('.property-card-swatch').style.background = swatch.style.background;
+		to('.property-card-swatch').classList.toggle('is-unset', swatch.classList.contains('is-unset'));
+	}
+	line.classList.toggle('is-off', card.classList.contains('is-off'));
+	const source = card.querySelector(':scope > .property-card-title input[type="checkbox"]');
+	if (source) document.querySelectorAll(`[data-flyout-switch-for="${card.id}"] > input`).forEach((input) => { input.checked = source.checked; });
 }
 
 // A set of buttons: `{ actions: [...] }` in a section's `sets` or a group's
@@ -1497,6 +1579,7 @@ function syncModuleSummary(card) {
 			|| card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty')
 		));
 	}
+	syncFlyoutLine(card);
 }
 
 function initializeModuleSummaries(root = document) {
@@ -1623,7 +1706,10 @@ function buildPanelGroup(group, schema) {
 	// is on.
 	if (group.region === 'header' || group.region === 'footer') label.remove();
 	else label.textContent = group.title;
-	(group.sections || []).forEach((section) => node.appendChild(buildPanelItem(section, schema)));
+	(group.sections || []).forEach((section) => {
+		const item = buildPanelItem(section, schema);
+		node.appendChild(section.presentation === 'flyout' ? mountFlyoutSection(item, section, schema) : item);
+	});
 	if (group.note) node.appendChild(buildPanelItem({ kind: 'note', ...(typeof group.note === 'string' ? { text: group.note } : group.note) }, schema));
 	(group.actions || []).forEach((set) => {
 		const actions = buildActionSet(set);
@@ -1657,7 +1743,7 @@ function finishPanelMarkup(root) {
 // by setting `hidden` and write values straight into the DOM, so one observer
 // keeps `.is-vacant` in step instead of every manager remembering to.
 const PANEL_VACANCY_CONTAINERS = [
-	'.property-card:not([data-effect-card])', '.property-card-body', '.advanced-disclosure-content',
+	'.property-card:not([data-effect-card], .property-line)', '.property-card-body', '.advanced-disclosure-content',
 	'.property-pair-group', '.property-set', '.property-actions', '.property-meta-cell'
 ].join(', ');
 // A container's own heading does not count as content.
@@ -1771,6 +1857,7 @@ function renderPanelSection(schema) {
 	host.classList.add('property-section');
 	addPanelClasses(host, schema.section.classes);
 	host.replaceChildren();
+	document.getElementById(`${schema.sectionPrefix}Flyouts`)?.remove();
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
 	// The panel has no bar of its own: the Inspector's header and the phone's
 	// sheet bar read `section.icon`, `title`, `tab` and `badge` from the schema.
@@ -1835,6 +1922,8 @@ function renderPanelSection(schema) {
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
 	finishPanelMarkup(host);
+	const flyouts = document.getElementById(`${schema.sectionPrefix}Flyouts`);
+	if (flyouts) finishPanelMarkup(flyouts);
 }
 
 // Boot entry point. Must run before renderTransformPanels (it creates the

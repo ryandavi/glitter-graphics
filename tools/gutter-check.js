@@ -40,6 +40,9 @@ const CHROME = process.env.CHROME_PATH || undefined;
 				s.classList.add('visible', 'is-open');
 				s.querySelector(':scope > .section-content')?.classList.add('visible');
 			});
+			// Flyout sections live in the window.
+			document.querySelectorAll('.library-window, .flyout-section').forEach((n) => n.classList.add('visible', 'is-open'));
+			document.querySelectorAll('.flyout-host > .property-card').forEach((n) => n.classList.add('is-flyout-open'));
 			document.querySelectorAll('.collapsed, .is-collapsed').forEach((n) => n.classList.remove('collapsed', 'is-collapsed'));
 			document.querySelectorAll('[data-advanced]').forEach((n) => n.classList.add('is-open'));
 			document.querySelectorAll('input[data-effect-toggle]').forEach((c) => { if (!c.checked) c.click(); });

@@ -5,6 +5,8 @@
 //   .settings-subsection           the panel's column of groups
 //   └ .property-group              L1 group: a line, then an uppercase label
 //     ├ .property-card             L2 section: title row + body, flat
+//     ├ .property-card.property-line   a flyout section's line: its title row,
+//     │                                with the section itself in the window
 //     │ └ .property-card-body
 //     │   ├ .property-set > .property-row          runs of rows
 //     │   └ .advanced-disclosure > … > .property-set > .property-row
@@ -196,16 +198,39 @@
 // ----- Collapsing -----------------------------------------------------------
 // The title row is the click target. With no box around it, the hover tint is
 // what says so.
-[data-collapsible-card] {
+[data-collapsible-card],
+.property-line {
 	> .property-card-title {
 		cursor: pointer;
 		transition: background-color var(--transition-fast);
 	}
+}
 
-	&.is-collapsed {
-		> .property-card-title > .property-card-chevron { transform: rotate(-90deg); }
-		> :not(.property-card-title) { display: none; }
-	}
+// Open in the window, a section shows whole whatever its collapsed state.
+[data-collapsible-card].is-collapsed:not(.is-flyout-open) {
+	> .property-card-title > .property-card-chevron { transform: rotate(-90deg); }
+	> :not(.property-card-title) { display: none; }
+}
+
+// ----- Flyout sections --------------------------------------------------------
+// A `presentation: 'flyout'` section is one line in its panel and opens in the
+// window (LibraryWindow), whose bar is then its title row. On phones the
+// section sits in the panel in place of its line.
+.property-panel .property-line.is-flyout-open > .property-card-title { background: var(--color-accent-surface); }
+
+.property-panel .flyout-host > .property-card {
+	&:not(.is-flyout-open) { display: none; }
+	> .property-card-title { display: none; }
+	> .property-card-body { padding-top: var(--property-section-pad-top); }
+}
+
+.flyout-host.is-layer-edit-locked {
+	opacity: var(--opacity-disabled);
+	cursor: not-allowed;
+}
+
+@include mobile {
+	.property-panel .property-line { display: none; }
 }
 
 // ----- Nothing renders an empty shell ----------------------------------------

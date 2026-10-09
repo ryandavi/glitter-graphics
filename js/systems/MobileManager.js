@@ -102,7 +102,9 @@ class MobileManager {
 	}
 
 	// Controls that sit somewhere else at phone width. Each host names its
-	// controls in data-phone-host-for, so the markup is the one list.
+	// controls in data-phone-host-for, so the markup is the one list. A host
+	// with data-phone-host-place="after" is followed by its control instead of
+	// holding it.
 	syncPhoneHosts() {
 		document.querySelectorAll('[data-phone-host-for]').forEach((host) => {
 			host.dataset.phoneHostFor.split(' ').forEach((id) => {
@@ -112,7 +114,8 @@ class MobileManager {
 					if (!this.phoneHostAnchors.has(id)) {
 						this.phoneHostAnchors.set(id, { parent: control.parentElement, next: control.nextElementSibling });
 					}
-					host.appendChild(control);
+					if (host.dataset.phoneHostPlace === 'after') host.after(control);
+					else host.appendChild(control);
 					return;
 				}
 				const anchor = this.phoneHostAnchors.get(id);

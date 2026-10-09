@@ -4,8 +4,33 @@ class PickerRegistry {
 	constructor(editor) {
 		this.editor = editor;
 		this.managers = new Set();
-		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => this.closeActive());
-		document.getElementById('libraryWindowClose')?.addEventListener('click', () => this.closeActive());
+		// The flyout section the window shows, by its key (`data-flyout-key`).
+		// With an armed session this is the one open target.
+		this.flyout = null;
+		['galleryPickerStripDone', 'libraryWindowClose', 'flyoutClose'].forEach((id) => {
+			document.getElementById(id)?.addEventListener('click', () => this.closeActive());
+		});
+	}
+
+	// Pressing a line opens its section, swaps the window to it, or closes it.
+	toggleFlyout(key) {
+		this.flyout = this.flyout === key ? null : key;
+		this.closeAll();
+		this.editor.libraryWindow?.sync();
+	}
+
+	closeFlyout() {
+		if (!this.flyout) return false;
+		this.toggleFlyout(this.flyout);
+		return true;
+	}
+
+	// A paint session of the open section keeps the window on it. A session
+	// with no slot is the layer's fill.
+	sessionKeepsFlyout(manager, session) {
+		const layer = this.editor.layerManager.getInspectedLayer();
+		const owner = layer && getLayerManagerForType(this.editor, layer.type);
+		return Boolean(owner) && (manager === owner || manager === owner.slotPicker) && (session.slot || 'fill') === this.flyout;
 	}
 
 	register(manager) {
@@ -18,6 +43,9 @@ class PickerRegistry {
 	}
 
 	closeActive({ returnToProperties = true } = {}) {
+		// A tool change ends the session it finds (`returnToProperties: false`),
+		// not the section the window shows: that follows the selection.
+		if (returnToProperties && this.closeFlyout()) return true;
 		const manager = this.active;
 		if (!manager) return false;
 		if (returnToProperties) manager.handlePickerDone();
@@ -33,7 +61,9 @@ class PickerRegistry {
 }
 
 function pickerOpenSession(manager, session, options = {}) {
-	manager.editor?.pickers?.closeAll({ except: manager });
+	const registry = manager.editor?.pickers;
+	registry?.closeAll({ except: manager });
+	if (registry?.flyout && !registry.sessionKeepsFlyout(manager, session)) registry.flyout = null;
 	manager.pickerSession = { ...session };
 	options.refresh?.();
 	options.reveal?.();

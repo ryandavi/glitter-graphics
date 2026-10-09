@@ -210,11 +210,6 @@
 }
 
 .design-panel {
-	// updateSidePanelUI and the Library window own the `.visible` class.
-	> .section:not(.visible) {
-		display: none;
-	}
-
 	> .section.main-section {
 		display: flex;
 		flex-direction: column;
@@ -286,6 +281,12 @@
 			overflow-y: auto;
 			overscroll-behavior: contain;
 		}
+	}
+
+	// updateSidePanelUI and the window own the `.visible` class. Last, so it
+	// holds over each section's own layout above.
+	> .section:not(.visible) {
+		display: none;
 	}
 
 	> .section.main-section > .section-content > .asset-options {

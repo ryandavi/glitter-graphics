@@ -94,6 +94,8 @@ function checkSection(section, where) {
 	checkRetired(section, where);
 	if (section.kind === 'transform' || section.kind === 'mount') return;
 	const name = `${where} "${section.title || section.id || section.classes}"`;
+	// A flyout section is one line in the panel, so it needs the line's name.
+	if (section.presentation != null) assert(section.presentation === 'flyout' && section.title, `${name}: presentation is "flyout", on a titled section`);
 	if (section.kind === 'section') assert(Array.isArray(section.sets), `${name}: a section lists sets`);
 	['before', 'sets', 'advanced'].forEach((key) => {
 		(section[key] || []).forEach((set, index) => checkSet(set, `${name} ${key}[${index}]`));

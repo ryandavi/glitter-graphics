@@ -177,13 +177,16 @@ isLayerContentLocked(layer) {
 ,
 	syncLockedLayerUI(layer) {
 		const locked = this.isLayerContentLocked(layer) && !this.layerManager.hasMultiSelection();
-		const propertySectionIds = [...new Set(Object.values(LayerType)
-			.map((type) => PANEL_SCHEMAS[type]?.section?.id)
-			.filter(Boolean))];
-		propertySectionIds.forEach((id) => {
-			const section = document.getElementById(id);
+		Object.values(LayerType).map((type) => PANEL_SCHEMAS[type]).filter(Boolean).forEach((schema) => {
+			const section = document.getElementById(schema.section.id);
 			if (!section) return;
 			const sectionLocked = locked && section.classList.contains('visible');
+			// The panel's flyout sections live in the window.
+			const flyouts = document.getElementById(`${schema.sectionPrefix}Flyouts`);
+			if (flyouts) {
+				flyouts.inert = sectionLocked;
+				flyouts.classList.toggle('is-layer-edit-locked', sectionLocked);
+			}
 			section.classList.toggle('is-layer-edit-locked', sectionLocked);
 			const content = section.querySelector(':scope > .section-content');
 			if (content) {
@@ -405,6 +408,8 @@ isLayerContentLocked(layer) {
 		bar.hidden = names.length < 2;
 		this.renderPanelSwitch(bar, names);
 		this.mobileManager?.syncEditTitle();
+		// The window names the same layer, and follows the selection.
+		this.libraryWindow?.sync();
 	}
 
 ,
