@@ -108,7 +108,6 @@ const TRANSFORM_ID_GRAMMAR = Object.freeze({
 	flipX: '{p}FlipX',
 	flipY: '{p}FlipY',
 	resetFlip: 'reset{P}Flip',
-	resetProportional: 'reset{P}ProportionalScale',
 	alignLeft: '{p}AlignLeft',
 	alignCenterX: '{p}AlignCenterX',
 	alignRight: '{p}AlignRight',

@@ -234,6 +234,8 @@ async function main() {
 		assert(stacked.indices.includes(8) && stacked.cacheChanged && stacked.background && stacked.mask && stacked.warped === 5);
 		assert(stacked.overflow && stacked.fits && stacked.emptyColumn && stacked.selection === 1 && stacked.splitStable && stacked.down === 1);
 		await page.evaluate(() => editor.layerManager.setSelection([editor.layerManager.activeLayerId]));
+		// Orientation is in Type's Advanced.
+		await page.evaluate(() => setAdvancedDisclosureOpen(document.querySelector('[data-text-orientation]').closest('[data-advanced]'), true));
 		await page.locator('[data-text-orientation="horizontal"]').click();
 		await page.waitForFunction(() => editor.layerManager.getActiveLayer().textData.orientation === 'horizontal');
 		await page.evaluate(() => editor.undo());

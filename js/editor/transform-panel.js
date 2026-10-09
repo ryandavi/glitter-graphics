@@ -82,8 +82,6 @@ renderTransformPanels() {
 		// Per-row reverts: on only when their control is away from its default.
 		const resetFlip = document.getElementById(ids.resetFlip);
 		if (resetFlip) resetFlip.disabled = !(transform?.flipX || transform?.flipY);
-		const resetProportional = document.getElementById(ids.resetProportional);
-		if (resetProportional) resetProportional.disabled = transform?.proportionalScale !== false;
 		const resetAnchor = document.getElementById(ids.resetAnchor);
 		if (resetAnchor) resetAnchor.disabled = Math.abs(transform.anchor.x - 0.5) < 1e-6 && Math.abs(transform.anchor.y - 0.5) < 1e-6;
 	}

@@ -1,11 +1,37 @@
 // ===== The Transform module ================================================
-// One section on every layer type: Position, Anchor, Size, Scale, Rotation,
-// Flip, Align. Markup is `tpl-transform-panel`.
+// One section on every layer type: Position, Size, Rotation, Flip, Align,
+// then Anchor, Scale and Fit canvas under Advanced. Markup is
+// `tpl-transform-panel`.
+@use '../../mixins' as *;
 
 .property-section {
 	// Aspect ratio locked: the X slider drives both axes and reads "Scale", so
 	// the separate Y row is redundant.
 	.is-aspect-locked .transform-scale-y { display: none; }
+
+	// Size's aspect lock is an icon in the row's revert column, lit while the
+	// ratio is locked.
+	.transform-aspect-lock {
+		grid-column: 3;
+		display: grid;
+		place-items: center;
+		width: var(--property-revert-col);
+		height: var(--property-revert-col);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-tertiary);
+		cursor: pointer;
+
+		> input { @include visually-hidden-control; }
+
+		> .icon {
+			width: 12px;
+			height: 12px;
+			border-radius: var(--radius-sm);
+		}
+
+		> input:checked + .icon { color: var(--color-accent); }
+		> input:focus-visible + .icon { box-shadow: var(--control-focus-ring); }
+	}
 
 	// X/Y and W/H: each field is one boxed control holding its mark and input.
 	.transform-pair-row > .property-pair { gap: var(--spacing-sm); }

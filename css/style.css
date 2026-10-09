@@ -8409,6 +8409,34 @@ body.tool-text .text-hover-baselines {
 .property-section .is-aspect-locked .transform-scale-y {
   display: none;
 }
+.property-section .transform-aspect-lock {
+  grid-column: 3;
+  display: grid;
+  place-items: center;
+  width: var(--property-revert-col);
+  height: var(--property-revert-col);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+.property-section .transform-aspect-lock > input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+}
+.property-section .transform-aspect-lock > .icon {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+.property-section .transform-aspect-lock > input:checked + .icon {
+  color: var(--color-accent);
+}
+.property-section .transform-aspect-lock > input:focus-visible + .icon {
+  box-shadow: var(--control-focus-ring);
+}
 .property-section .transform-pair-row > .property-pair {
   gap: var(--spacing-sm);
 }
@@ -8628,7 +8656,7 @@ body.tool-text .text-hover-baselines {
   .property-panel .property-row.is-pair > .property-pair {
     grid-column: 1/-1;
   }
-  .property-panel .property-row.is-pair > .property-revert {
+  .property-panel .property-row.is-pair > :is(.property-revert, .transform-aspect-lock) {
     grid-column: 1/-1;
     justify-self: end;
   }

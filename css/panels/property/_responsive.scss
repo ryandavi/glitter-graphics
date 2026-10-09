@@ -30,7 +30,7 @@
 		> .property-label,
 		> .property-pair { grid-column: 1 / -1; }
 
-		> .property-revert {
+		> :is(.property-revert, .transform-aspect-lock) {
 			grid-column: 1 / -1;
 			justify-self: end;
 		}

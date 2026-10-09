@@ -534,22 +534,6 @@ snapTransformPosition(transform, position, options = {}) {
 			});
 		}
 
-		// Per-row revert for Lock aspect ratio: the default is locked (an unlocked
-		// ratio is what hasResettableTransformAdjustments counts as an adjustment).
-		const resetProportional = document.getElementById(ids.resetProportional);
-		if (resetProportional) {
-			resetProportional.addEventListener('click', () => {
-				const active = activeManager();
-				if (!active) return;
-				const checkbox = document.getElementById(ids.proportional);
-				if (checkbox) checkbox.checked = true;
-				active.manager.updateTransform(active.layer.id, { proportionalScale: true });
-				this.loadTransformSettings(active.layer, prefix);
-				this.syncResetTransformState(prefix, active.layer);
-				this.saveState('Transform layer');
-			});
-		}
-
 		[
 			['left', ids.alignLeft],
 			['centerX', ids.alignCenterX],

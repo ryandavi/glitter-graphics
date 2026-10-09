@@ -1,10 +1,10 @@
 // ===========================================================================
 // TRANSFORM PANEL RENDERER
 // ---------------------------------------------------------------------------
-// Builds the shared Transform section (Position / Size / Scale / Rotation /
-// Flip / Align) into the sticker, text, shape, frame and fill panels from
-// `tpl-transform-panel`, stamping each type's ids and dropping the rows its
-// `transformCapabilities` do not declare.
+// Builds the shared Transform section (Position / Size / Rotation / Flip /
+// Align, with Anchor, Scale and Fit canvas under Advanced) into the sticker,
+// text, shape, frame and fill panels from `tpl-transform-panel`, stamping each
+// type's ids and dropping the rows its `transformCapabilities` do not declare.
 //
 // Plain global script — loads AFTER js/ui/panel-renderer.js (uses its builders
 // and PANEL_SCHEMAS) and BEFORE js/editor/transform-panel.js (its only caller).
@@ -41,7 +41,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	};
 	fragment.querySelector('[data-transform-number-pair="position"]').replaceWith(buildNumberPair(['posX', 'posY'], ['X', 'Y']));
 	fragment.querySelector('[data-transform-number-pair="size"]').replaceWith(buildNumberPair(['sizeWidth', 'sizeHeight'], ['W', 'H'], 1));
-	// Anchor is the point Position measures to, so it sits right under it.
+	// Anchor, the point Position measures to, leads the section's Advanced.
 	const anchorRow = buildPanelItem({
 		kind: 'select',
 		id: ids.anchorSelect,
@@ -49,7 +49,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 		options: ANCHOR_SELECT_OPTIONS
 	});
 	anchorRow.appendChild(buildTransformRevertControl('resetAnchor'));
-	fragment.querySelector('[data-transform-role="sizeGroup"]').before(anchorRow);
+	fragment.querySelector('[data-transform-advanced]').prepend(anchorRow);
 	const transformCard = fragment.querySelector('[data-transform-card]');
 	transformCard.dataset.transformPrefix = prefix;
 	transformCard.dataset.collapseKey = `${prefix}:Transform`;
@@ -76,6 +76,9 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	if (!capabilities.lockAspect) fragment.querySelector('[data-transform-lock]').remove();
 	if (!capabilities.scaleReadout) fragment.querySelectorAll('[data-transform-scale-readout]').forEach((element) => element.remove());
 	if (!capabilities.fitCanvas) fragment.querySelector('[data-transform-fit]').remove();
+	// The rows set once and left alone: one Advanced, as every section has.
+	const advancedSets = Array.from(fragment.querySelectorAll('[data-transform-advanced]'));
+	transformCard.querySelector(':scope > .property-card-body').appendChild(buildAdvancedDisclosure({ sets: advancedSets }));
 	container.replaceChildren(fragment);
 	initializeEditablePropertyValues(container);
 }

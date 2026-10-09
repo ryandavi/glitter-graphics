@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=d7342483">
+	<link rel="stylesheet" href="css/style.css?v=e0a6240a">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -1748,17 +1748,18 @@
 			<div class="property-card-body">
 				<div class="property-set">
 					<div class="property-row is-pair transform-pair-row"><span class="property-label">Position</span><div data-transform-number-pair="position"></div></div>
-					<div class="property-row is-pair transform-pair-row" data-transform-role="sizeGroup"><span class="property-label">Size</span><div data-transform-number-pair="size"></div></div>
-					<label class="property-row is-toggle" data-transform-lock title="Lock aspect ratio when editing size"><span class="property-label">Lock aspect ratio</span><input type="checkbox" data-transform-role="proportional" checked><span class="property-switch" aria-hidden="true"></span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetProportional" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></label>
-					<div class="property-row transform-scale-x" data-transform-scale-readout><span class="property-label">Scale</span><input type="range" data-transform-role="scaleX"><span class="property-value" data-transform-role="scaleXValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleX" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
-					<div class="property-row transform-scale-y" data-transform-scale-readout><span class="property-label">Scale Y</span><input type="range" data-transform-role="scaleY"><span class="property-value" data-transform-role="scaleYValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleY" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
+					<div class="property-row is-pair transform-pair-row" data-transform-role="sizeGroup"><span class="property-label">Size</span><div data-transform-number-pair="size"></div><label class="transform-aspect-lock" data-transform-lock title="Lock aspect ratio"><input type="checkbox" data-transform-role="proportional" aria-label="Lock aspect ratio" checked><svg class="icon"><use href="#icon-lock"></use></svg></label></div>
 				</div>
 				<div class="property-set">
 					<div class="property-row"><span class="property-label">Rotation</span><input type="range" data-transform-role="rotation"><span class="property-value" data-transform-role="rotationValue">0&deg;</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetRotation" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 					<div class="property-row"><span class="property-label">Flip</span><div class="segmented-control transform-flip-control"><label class="segmented-option" title="Flip horizontally" aria-label="Flip horizontally"><input type="checkbox" data-transform-role="flipX"><span><svg class="icon"><use href="#icon-flip-x"></use></svg></span></label><label class="segmented-option" title="Flip vertically" aria-label="Flip vertically"><input type="checkbox" data-transform-role="flipY"><span><svg class="icon"><use href="#icon-flip-y"></use></svg></span></label></div><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetFlip" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 					<div class="property-row is-pair" data-transform-align><span class="property-label" title="Align to the canvas">Align</span><div class="property-pair"><div class="segmented-control" role="group" aria-label="Align horizontally"><button class="segmented-option" type="button" title="Align left to canvas" aria-label="Align left to canvas" data-transform-role="alignLeft"><svg class="icon"><use href="#icon-align-left"></use></svg></button><button class="segmented-option" type="button" title="Center horizontally on canvas" aria-label="Center horizontally on canvas" data-transform-role="alignCenterX"><svg class="icon"><use href="#icon-align-center-x"></use></svg></button><button class="segmented-option" type="button" title="Align right to canvas" aria-label="Align right to canvas" data-transform-role="alignRight"><svg class="icon"><use href="#icon-align-right"></use></svg></button></div><div class="segmented-control" role="group" aria-label="Align vertically"><button class="segmented-option" type="button" title="Align top to canvas" aria-label="Align top to canvas" data-transform-role="alignTop"><svg class="icon"><use href="#icon-align-top"></use></svg></button><button class="segmented-option" type="button" title="Center vertically on canvas" aria-label="Center vertically on canvas" data-transform-role="alignCenterY"><svg class="icon"><use href="#icon-align-center-y"></use></svg></button><button class="segmented-option" type="button" title="Align bottom to canvas" aria-label="Align bottom to canvas" data-transform-role="alignBottom"><svg class="icon"><use href="#icon-align-bottom"></use></svg></button></div></div></div>
 				</div>
-				<div class="property-set property-actions is-split" data-transform-fit><button class="btn-flat" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-flat" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
+				<div class="property-set" data-transform-advanced>
+					<div class="property-row transform-scale-x" data-transform-scale-readout><span class="property-label">Scale</span><input type="range" data-transform-role="scaleX"><span class="property-value" data-transform-role="scaleXValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleX" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
+					<div class="property-row transform-scale-y" data-transform-scale-readout><span class="property-label">Scale Y</span><input type="range" data-transform-role="scaleY"><span class="property-value" data-transform-role="scaleYValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleY" disabled><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
+				</div>
+				<div class="property-set property-actions is-split" data-transform-fit data-transform-advanced><button class="btn-flat" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-flat" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
 			</div>
 		</div>
 	</template>
@@ -1796,7 +1797,7 @@
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=73ae5f8e"></script>
+	<script src="js/ui/panel-schemas.js?v=1f35aa14"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=38e57719"></script>
 	<script src="js/layers/types/filter.js?v=33cfb691"></script>
@@ -1869,8 +1870,8 @@
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
 	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
-	<script src="js/ui/panel-renderer.js?v=c935ce13"></script>
-	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
+	<script src="js/ui/panel-renderer.js?v=31d784f8"></script>
+	<script src="js/ui/transform-panel-renderer.js?v=2fe36fa9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
 	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
@@ -1884,8 +1885,8 @@
 	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
 	<script src="js/editor/disclosures.js?v=649823d5"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
-	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
-	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
+	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
+	<script src="js/editor/transform-interaction.js?v=dbbff5f8"></script>
 	<script src="js/editor/document-start.js?v=de92d90c"></script>
 		<script src="js/ui/glitter-recolor-tool.js?v=394056c7"></script>
 		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>

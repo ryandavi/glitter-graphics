@@ -782,13 +782,6 @@ const PANEL_SCHEMAS = {
 						// CONFIG.tools.text.symbols.
 						{ kind: 'host', id: 'textSymbols', classes: 'property-inset text-symbol-grid', attrs: { role: 'group', 'aria-label': 'Insert a symbol' } }
 					] },
-					{ rows: [
-						{ kind: 'segmented', label: 'Orientation', ariaLabel: 'Text orientation', options: getOptions('textOrientation').map(option => ({ label: option.label, attrs: { 'data-text-orientation': option.value } })) }
-					] },
-					{ label: 'Box', rows: [
-						{ kind: 'segmented', label: 'Mode', ariaLabel: 'Text box mode', classes: 'text-box-mode-group', stacked: true, revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
-						{ kind: 'note', id: 'textBoxModeHint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' }
-					] },
 					{ classes: 'text-actions-group', actions: [
 						{ id: 'textSplit', label: 'Split text', title: 'Split into characters, words or lines', menu: true },
 						...(CONFIG.debug.enabled ? [{ id: 'textCopyStyleAsPreset', label: 'Copy style as preset', title: 'Copy the current style for the preset registry' }] : []),
@@ -798,7 +791,7 @@ const PANEL_SCHEMAS = {
 				// Everything about how the letters are set, in one section: the
 				// face, its metrics, then how lines sit in the box.
 				{ kind: 'section', title: 'Type', summary: 'asset', classes: 'text-font-module', sets: [
-					{ label: 'Font', rows: [
+					{ rows: [
 						// The current font; Change opens the Library's Fonts.
 						{ kind: 'assetInfo', info: 'textFontInfo', thumbnail: 'textFontThumbnail',
 							name: 'textFontName', badges: 'textFontBadges', change: 'textFontChange',
@@ -812,6 +805,12 @@ const PANEL_SCHEMAS = {
 							{ id: 'textUnderline', label: 'Underline', text: 'U', contentTag: 'u' },
 							{ id: 'textStrikethrough', label: 'Strikethrough', text: 'S', contentTag: 's' }
 						] },
+						{ kind: 'segmented', label: 'Align', ariaLabel: 'Horizontal text alignment', classes: 'text-align-group', options: getOptions('textAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-align': option.value } })) }
+					] }
+				],
+				// Set once for a piece of text and then left alone.
+				advanced: [
+					{ label: 'Letters', rows: [
 						{ kind: 'select', id: 'textCaseSelect', label: 'Case', ariaLabel: 'Text case', classes: 'text-case-select', revert: true, options: getOptions('textCase') },
 						{ kind: 'toggle', id: 'textColorEmoji', label: 'Color emoji', checked: CONFIG.tools.text.defaultColorEmoji, revert: true, title: 'Keep system emoji colors instead of filling emoji like letters' }
 					] },
@@ -819,8 +818,10 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'textLetterSpacing', slider: 'textLetterSpacing', label: 'Letter' },
 						{ kind: 'slider', id: 'textLineHeight', slider: 'textLineHeight', label: 'Line', classes: 'text-line-height-row' }
 					] },
-					{ label: 'Alignment', rows: [
-						{ kind: 'segmented', label: 'Align', ariaLabel: 'Horizontal text alignment', classes: 'text-align-group', options: getOptions('textAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-align': option.value } })) },
+					{ label: 'Box', rows: [
+						{ kind: 'segmented', label: 'Orientation', ariaLabel: 'Text orientation', options: getOptions('textOrientation').map(option => ({ label: option.label, attrs: { 'data-text-orientation': option.value } })) },
+						{ kind: 'segmented', label: 'Mode', ariaLabel: 'Text box mode', classes: 'text-box-mode-group', stacked: true, revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
+						{ kind: 'note', id: 'textBoxModeHint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
 						{ kind: 'segmented', label: 'Vertical', ariaLabel: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: getOptions('textVerticalAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-valign': option.value } })) }
 					] }
 				] },
