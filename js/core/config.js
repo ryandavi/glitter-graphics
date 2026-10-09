@@ -764,6 +764,7 @@ const CONFIG = deepFreeze({
 				velocityWindowMs: 90
 			}
 		},
+		librarySplit: { defaultShare: 50, minShare: 20, maxShare: 80, keyStep: 2, fastKeyStep: 10 },
 		hints: {
 			enabledByDefault: true
 		},

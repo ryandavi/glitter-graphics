@@ -48,39 +48,54 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 		}
 	}
 
-	// With the Library under it the section is exactly half, whatever it
-	// holds, so the Library starts in the same place for every section.
-	&.has-library > .flyout-section { flex: 0 0 50%; }
+	// Both panes start equal; the divider lets the user redistribute the room.
+	&.has-library.has-flyout > .flyout-section { flex: 0 0 var(--library-flyout-share, 50%); }
+	&.has-library.has-flyout > .section.design-gallery-section { flex: 1 1 0; }
 }
 
-// A section alone in the window fills it, and a preset grid in that section
-// takes the room left over instead of its fixed height.
-.library-window:not(.has-library) > .flyout-section {
-	flex: 1 1 auto;
+// Only sections whose primary content is a preset picker use the full pane.
+// Their tiles scroll with the pane, preserving the shared horizontal gutter.
+.library-window:not(.has-library) > .flyout-section { flex: 1 1 0; }
 
-	> .section-content {
-		display: flex;
-		flex-direction: column;
-	}
+.library-window > .flyout-section {
+	> .section-content { display: flex; flex-direction: column; }
 
-	.flyout-host.has-flyout-open,
-	.is-flyout-open.has-scrollbox,
-	.is-flyout-open.has-scrollbox > .property-card-body,
-	.is-flyout-open.has-scrollbox > .property-card-body > .has-scrollbox {
+	.flyout-host.has-flyout-open:has(.is-preset-content),
+	.is-flyout-open.is-preset-content,
+	.is-flyout-open.is-preset-content > .property-card-body,
+	.is-flyout-open.is-preset-content > .property-card-body > .has-scrollbox {
 		display: flex;
 		flex: 1 0 auto;
 		flex-direction: column;
 	}
 
-	// Filling the window, the grid is the section's body: a frame of its own
-	// would be a box inside a box.
-	.is-flyout-open.has-scrollbox > .property-card-body > .has-scrollbox > .property-scrollbox {
-		flex: 1 1 var(--property-scrollbox-height);
+	.is-flyout-open.is-preset-content > .property-card-body > .has-scrollbox > .property-scrollbox {
+		flex: 1 0 auto;
 		height: auto;
-		padding: 0;
+		min-height: var(--property-scrollbox-height);
+		padding: var(--spacing-xs);
 		border: 0;
 		border-radius: 0;
 		background: none;
+		overflow: visible;
+	}
+}
+
+.library-split-handle {
+	display: none;
+	flex: 0 0 var(--spacing-base);
+	pointer-events: auto;
+	cursor: row-resize;
+	touch-action: none;
+	border-radius: var(--radius-xs);
+
+	&:hover, &:focus-visible, &.is-dragging { background: var(--color-accent-surface); }
+}
+
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.library-window.has-library.has-flyout {
+		gap: 0;
+		> .library-split-handle { display: block; }
 	}
 }
 

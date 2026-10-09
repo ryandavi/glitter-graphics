@@ -133,8 +133,8 @@ registerLayerType(LayerType.STICKER, {
 	addableViaModal: {
 		label: 'Sticker',
 		icon: 'sticker',
-		group: 'basics',
-		order: 2,
+		group: 'layers',
+		order: 1,
 		description: 'Place an image or animated graphic',
 		quickAddId: 'quickActionAddSticker',
 		quickAddOrder: 1

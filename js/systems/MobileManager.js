@@ -235,7 +235,8 @@ class MobileManager {
 		const entries = Array.from(body.children)
 			.filter((host) => host.classList.contains('visible'))
 			.sort((a, b) => (b.id === tool) - (a.id === tool))
-			.flatMap((host) => getPanelSectionIndex(host).map((entry) => ({ ...entry, host })));
+			.flatMap((host) => getPanelSectionIndex(host).map((entry) => ({ ...entry, host })))
+			.filter((entry) => entry.button?.dataset.phoneChip !== 'false');
 		this.barEntries = entries;
 
 		// The open section follows the selection: the same section of the next

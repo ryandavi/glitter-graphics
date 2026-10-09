@@ -137,6 +137,7 @@ function getAddableLayerTypes() {
 }
 
 const ADD_MENU_GROUPS = Object.freeze([
+	{ id: 'layers', label: 'Layers', order: 0, primary: true },
 	{ id: 'basics', label: 'Basics', order: 1 },
 	{ id: 'decorate', label: 'Decorate', order: 2 },
 	{ id: 'effects', label: 'Effects', order: 3 },

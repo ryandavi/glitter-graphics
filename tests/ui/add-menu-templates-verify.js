@@ -1,6 +1,7 @@
 'use strict';
 
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 
@@ -12,6 +13,7 @@ async function openEditor(browser) {
 	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
 	const page = await context.newPage();
+	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', (route) => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
 	const errors = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -35,7 +37,10 @@ async function main() {
 			overlay: Boolean(document.querySelector('[data-add-id="impact-meme"]')),
 			photoShape: Boolean(document.querySelector('[data-add-id="quickActionAddPhotoShape"]'))
 		}));
-		assert(menu.groups.join('|') === 'Basics|Decorate|Effects|Generate', 'Add menu groups are incomplete or out of order');
+		assert(menu.groups.join('|') === 'Layers|Basics|Decorate|Effects|Generate', 'Add menu groups are incomplete or out of order');
+		const primary = overlay.page.locator('[data-add-group="layers"] .layer-type-option');
+		assert((await primary.locator('.layer-type-name').allTextContents()).join('|') === 'Sticker|Fill Layer|Shape|Text', 'Main layers have their own ordered group');
+		assert(await primary.count() === 4 && await primary.evaluateAll((nodes) => nodes.every((node) => !node.classList.contains('is-horizontal'))), 'Only the main layers use prominent tiles');
 		assert(menu.autoGlitter && menu.overlay && menu.photoShape, 'Add menu is missing a generator or creation variant');
 
 		await overlay.page.click('[data-add-id="impact-meme"]');

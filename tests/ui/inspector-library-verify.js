@@ -49,9 +49,10 @@ async function main() {
 			window.editor.setTool(ToolType.SELECT);
 		});
 		await wait(page);
-		assert.deepEqual(await page.evaluate(() => window.editor.mobileManager.barEntries.filter((entry) => entry.button).map((entry) => entry.title)), ['Sticker', 'Fill Layer', 'Shape', 'Text']);
+		assert.deepEqual(await page.evaluate(() => window.editor.mobileManager.barEntries.filter((entry) => entry.button).map((entry) => entry.title)), ['Sticker', 'Fill Layer', 'Shape', 'Text', 'Sparkles']);
 		assert(await page.locator('.mobile-layers-swatch').evaluate((node) => node.classList.contains('is-unset')));
-		assert(await page.locator('.phone-chip.is-add').count() === 4);
+		assert(await page.locator('.phone-chip.is-add').count() === 5);
+		assert(await page.locator('#quickActionAddPhotoShape').count() === 1, 'Photo in Shape remains available in Quick Add');
 		for (let run = 0; browserType === chromium && run < 3; run++) {
 			await page.locator('#phoneChipBar').evaluate((node) => { node.scrollLeft = 0; });
 			const rect = await page.locator('#phoneChipBar').boundingBox();
@@ -115,6 +116,12 @@ async function main() {
 		assert(await page.locator('#flyoutSection').isVisible());
 		await page.screenshot({ path: path.join(output, 'phone-fill-back.png') });
 		console.log('PASS Library Back returns to both inline and flyout sections');
+		if (css) {
+			await press(page, 'Style');
+			assert.equal(await page.locator('#libraryWindow').evaluate((node) => getComputedStyle(node).boxShadow), 'none', 'Flyout sheets share the Inspector shadow');
+			assert.equal(await page.locator('#textStylePresets').evaluate((node) => getComputedStyle(node).overflowY), 'visible', 'Style uses the pane scroller');
+			await page.screenshot({ path: path.join(output, 'phone-style.png') });
+		}
 
 		await page.evaluate(() => {
 			window.editor.mobileManager.closeAllDrawers({ immediate: true });
@@ -167,6 +174,29 @@ async function main() {
 		assert.equal(before.rect.width, await page.locator('.main-content').evaluate((node) => node.clientWidth));
 		assert(await page.locator('#layersPanel').isVisible(), 'Library must retain Layers');
 		await page.screenshot({ path: path.join(output, 'desktop-overlay.png') });
+		if (css) {
+			const divider = page.locator('.library-split-handle');
+			assert(await divider.isVisible(), 'Both panes expose the divider');
+			const startHeight = await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height);
+			const bounds = await divider.boundingBox();
+			await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 80);
+			await page.mouse.up();
+			assert(await page.locator('#flyoutSection').evaluate((node) => node.getBoundingClientRect().height) > startHeight + 40, 'Dragging redistributes pane height');
+			await divider.focus();
+			await page.keyboard.press('Home');
+			assert.equal(await divider.getAttribute('aria-valuenow'), '50');
+			await page.locator('#textFillGradient').click();
+			await wait(page);
+			const presets = page.locator('[data-gradient-editor="textFill"][data-gradient-part="presets"]');
+			assert(await presets.evaluate((node) => node.classList.contains('is-collapsed')));
+			assert((await presets.boundingBox()).height < 50, 'Closed presets reserve only their title');
+			await presets.locator('[data-set-toggle]').click();
+			assert.equal(await presets.locator('.property-scrollbox').evaluate((node) => getComputedStyle(node).height), '232px', 'Gradient presets keep their fixed height');
+			await page.screenshot({ path: path.join(output, 'desktop-gradient-presets.png') });
+			console.log('PASS shared sheet shadow, pane scrolling, collapsible preset sizing and pointer/keyboard split resizing');
+		}
 		assert.deepEqual(errors, []);
 		console.log('PASS short screen, breakpoint cleanup and desktop workspace overlay; no page errors');
 	} finally {

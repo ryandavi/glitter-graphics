@@ -805,7 +805,8 @@ function buildPaintSource(slot) {
 	});
 	source.querySelector('.property-color-row').before(assetInfo);
 	const sourceLabel = slot.sourceLabel || 'Source';
-	const sourceEntries = slot.modes.map((mode) => ({
+	const sourceModes = slot.modes.includes('none') ? ['none', ...slot.modes.filter((mode) => mode !== 'none')] : slot.modes;
+	const sourceEntries = sourceModes.map((mode) => ({
 		id: panelRoleId(prefix, `source${panelCap(mode)}`),
 		label: slot.modeLabels?.[mode] || panelCap(mode),
 		active: mode === slot.activeMode,
@@ -832,6 +833,13 @@ function buildPaintSource(slot) {
 		source.prepend(sourceRow);
 	}
 	const colorRow = source.querySelector('.property-color-row');
+	if (slot.modes.includes('none')) {
+		const empty = buildPropertyEmpty({ title: 'No fill', text: 'Choose a source to add a fill.' });
+		empty.classList.add('visible');
+		empty.dataset.paintSourceMode = 'none';
+		empty.hidden = slot.activeMode !== 'none';
+		source.appendChild(empty);
+	}
 	colorRow.id = `${prefix}ColorRow`;
 	colorRow.dataset.role = 'solid-color-row';
 	colorRow.hidden = slot.activeMode !== 'solid';
@@ -1867,7 +1875,9 @@ function finishPanelMarkup(root) {
 	// (the window); the marks say which set and which section.
 	root.querySelectorAll('.property-card-body > .property-set > .property-scrollbox').forEach((box) => {
 		box.parentElement.classList.add('has-scrollbox');
-		box.closest('.property-card').classList.add('has-scrollbox');
+		const card = box.closest('.property-card');
+		card.classList.add('has-scrollbox');
+		if (!card.classList.contains('paint-slot-card') && !box.parentElement.querySelector('[data-set-toggle]')) card.classList.add('is-preset-content');
 	});
 	initializeEditablePropertyValues(root);
 }

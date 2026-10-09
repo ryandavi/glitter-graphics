@@ -28,7 +28,7 @@ setupLayerTypePickerListeners() {
 ,
 	createAddMenuButton(entry) {
 		const button = tplClone('tpl-layer-type-option');
-		button.classList.add('is-horizontal');
+		if (!ADD_MENU_GROUPS.find((group) => group.id === entry.group)?.primary) button.classList.add('is-horizontal');
 		button.dataset.addKind = entry.kind;
 		button.dataset.addId = entry.id;
 		if (entry.type) button.dataset.layerType = entry.type;
@@ -65,6 +65,7 @@ setupLayerTypePickerListeners() {
 			if (!groupEntries.length) return;
 			const section = document.createElement('section');
 			section.className = 'add-menu-group';
+			section.dataset.addGroup = group.id;
 			const title = document.createElement('h3');
 			title.className = 'add-menu-group-title';
 			title.textContent = group.label;
@@ -109,6 +110,7 @@ setupLayerTypePickerListeners() {
 		button.querySelector('.layer-type-name').textContent = entry?.label || modalConfig.label;
 		button.querySelector('.layer-type-description').textContent = entry?.description || modalConfig.description;
 		button._createOptions = entry?.createOptions || null;
+		if (entry?.phoneChip === false) button.dataset.phoneChip = 'false';
 		return button;
 	}
 

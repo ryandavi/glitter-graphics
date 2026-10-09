@@ -10,6 +10,7 @@ class LibraryWindow {
 		this.pending = false;
 		this.flyoutCard = null;
 		this.flyoutObserver = new MutationObserver(() => this.sync());
+		this.initializeSplit();
 
 		const pressLine = (event) => {
 			const title = event.target.closest?.('.property-line > .property-card-title');
@@ -25,6 +26,58 @@ class LibraryWindow {
 		document.addEventListener('click', pressLine);
 		document.addEventListener('keydown', (event) => {
 			if ((event.key === 'Enter' || event.key === ' ') && pressLine(event)) event.preventDefault();
+		});
+	}
+
+	initializeSplit() {
+		if (!this.element) return;
+		const limits = CONFIG.ui.librarySplit;
+		const handle = document.createElement('div');
+		handle.className = 'library-split-handle ui-ignore-gestures';
+		handle.tabIndex = 0;
+		handle.setAttribute('role', 'separator');
+		handle.setAttribute('aria-orientation', 'horizontal');
+		handle.setAttribute('aria-label', 'Resize properties and library');
+		handle.setAttribute('aria-valuemin', String(limits.minShare));
+		handle.setAttribute('aria-valuemax', String(limits.maxShare));
+		let share = limits.defaultShare;
+		const setShare = (value) => {
+			share = Math.max(limits.minShare, Math.min(limits.maxShare, value));
+			this.element.style.setProperty('--library-flyout-share', `${share}%`);
+			handle.setAttribute('aria-valuenow', String(Math.round(share)));
+		};
+		setShare(share);
+		document.getElementById('flyoutSection').after(handle);
+		let pointer = null;
+		handle.addEventListener('pointerdown', (event) => {
+			if (event.button !== 0 || this.editor.mobileManager?.isMobile) return;
+			event.preventDefault();
+			pointer = event.pointerId;
+			handle.setPointerCapture(pointer);
+			handle.classList.add('is-dragging');
+		});
+		handle.addEventListener('pointermove', (event) => {
+			if (event.pointerId !== pointer) return;
+			const bounds = this.element.getBoundingClientRect();
+			setShare((event.clientY - bounds.top) / bounds.height * 100);
+		});
+		const finish = (event) => {
+			if (event.pointerId !== pointer) return;
+			pointer = null;
+			handle.classList.remove('is-dragging');
+		};
+		handle.addEventListener('pointerup', finish);
+		handle.addEventListener('pointercancel', finish);
+		handle.addEventListener('lostpointercapture', finish);
+		handle.addEventListener('dblclick', () => setShare(limits.defaultShare));
+		handle.addEventListener('keydown', (event) => {
+			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+				event.preventDefault();
+				setShare(share + (event.key === 'ArrowUp' ? -1 : 1) * (event.shiftKey ? limits.fastKeyStep : limits.keyStep));
+			} else if (event.key === 'Home' || event.key === 'Escape') {
+				event.preventDefault();
+				setShare(limits.defaultShare);
+			}
 		});
 	}
 

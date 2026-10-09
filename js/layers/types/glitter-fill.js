@@ -106,8 +106,8 @@ registerLayerType(LayerType.GLITTER_FILL, {
 	addableViaModal: {
 		label: 'Fill Layer',
 		icon: 'glitter',
-		group: 'basics',
-		order: 4,
+		group: 'layers',
+		order: 2,
 		description: 'Paint glitter, color, or a gradient onto the canvas',
 		quickAddId: 'quickActionAddGlitter',
 		quickAddOrder: 2

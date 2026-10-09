@@ -38,7 +38,9 @@ registerLayerType(LayerType.SPARKLES, {
 		icon: 'sparkles',
 		group: 'decorate',
 		order: 2,
-		description: 'Snow, hearts or sparkles over the whole picture'
+		description: 'Snow, hearts or sparkles over the whole picture',
+		quickAddId: 'quickActionAddSparkles',
+		quickAddOrder: 6
 	},
 	designPanelSections: ['sparkleLayerSettingsSection'],
 	panelMode: 'sparkles',

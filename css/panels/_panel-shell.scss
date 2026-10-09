@@ -188,7 +188,7 @@
 		// closes, it never collapses.
 		&:not(.design-gallery-section) >.section-header { cursor: pointer; }
 
-		@include windows7-bar(true);
+		&:not(.design-gallery-section) { @include windows7-bar(true); }
 	}
 }
 

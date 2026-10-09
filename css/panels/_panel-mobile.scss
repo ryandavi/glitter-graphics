@@ -20,7 +20,8 @@
 	}
 
 	body.layersOpen .main-content > .layers-panel,
-	body.inspectorOpen .main-content > .design-panel {
+	body.inspectorOpen .main-content > .design-panel,
+	body.windowOpen .main-content > .design-panel {
 		border: 0;
 		box-shadow: none;
 	}

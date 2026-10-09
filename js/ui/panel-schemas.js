@@ -569,7 +569,6 @@ const PANEL_SCHEMAS = {
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
 					modes: ['image', 'none', 'glitter', 'solid', 'gradient'], activeMode: 'image', color: '#ffffff',
-					modeLabels: { none: 'Transparent' },
 					hidePrimaryModes: ['image'],
 					chipTitle: 'Choose background glitter',
 					imageAsset: {

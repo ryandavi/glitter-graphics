@@ -134,11 +134,21 @@ registerLayerType(LayerType.SHAPE, {
 	addableViaModal: {
 		label: 'Shape',
 		icon: 'square',
-		group: 'basics',
+		group: 'layers',
 		order: 3,
 		description: 'Add a shape with an image, glitter, color, or a gradient',
 		quickAddId: 'quickActionAddShape',
-		quickAddOrder: 3
+		quickAddOrder: 3,
+		quickAddVariants: [{
+			id: 'quickActionAddPhotoShape',
+			order: 5,
+			group: 'basics',
+			label: 'Photo in Shape',
+			phoneChip: false,
+			icon: 'open-image',
+			description: 'Crop a photo inside a shape',
+			createOptions: { shapeLayer: { fillMode: 'image', openImagePicker: true } }
+		}]
 	},
 	// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 	// Shape Properties panel. Selection Settings doesn't apply.
