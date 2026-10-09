@@ -21,7 +21,8 @@ class LibraryWindow {
 		this.pending = false;
 		this.layoutFrame = null;
 		this.flyoutCard = null;
-		// A source change in the open section arms or releases the Library.
+		// A source change or the switch of the open section arms or releases the
+		// Library.
 		this.flyoutObserver = new MutationObserver(() => this.sync());
 		// The view the user had before the window took canvas space, and the
 		// zoom the refit chose, so a zoom they pick while it is open survives.
@@ -39,7 +40,12 @@ class LibraryWindow {
 			const title = event.target.closest?.('.property-line > .property-card-title');
 			if (!title || event.target.closest('.property-header-switch')) return false;
 			const card = document.getElementById(title.parentElement.dataset.flyoutFor);
-			if (card) this.editor.pickers.toggleFlyout(card.dataset.flyoutKey);
+			if (!card) return true;
+			const pickers = this.editor.pickers;
+			pickers.toggleFlyout(card.dataset.flyoutKey);
+			// A line that is off turns on and opens in one press.
+			const power = card.querySelector(':scope > .property-card-title input[type="checkbox"]');
+			if (pickers.flyout && power && !power.checked) power.click();
 			return true;
 		};
 		document.addEventListener('click', pressLine);
@@ -101,17 +107,15 @@ class LibraryWindow {
 		const editor = this.editor;
 		const pickers = editor.pickers;
 		const layer = editor.layerManager.getInspectedLayer();
-		const prefix = layer && PANEL_SCHEMAS[layer.type]?.sectionPrefix;
-		const available = !mobile && prefix && editor.originalImage && !editor.autoGlitterManager?.isSessionActive();
-		const card = (pickers.flyout && available)
-			? document.querySelector(`#${prefix}Flyouts > [data-flyout-key="${pickers.flyout}"]`) : null;
+		const available = !mobile && editor.originalImage && !editor.autoGlitterManager?.isSessionActive();
+		const card = available ? pickers.getFlyoutCard() : null;
 		if (!card) pickers.flyout = null;
 
 		if (card !== this.flyoutCard) {
 			this.flyoutObserver.disconnect();
 			this.flyoutCard?.classList.remove('is-flyout-open');
 			card?.classList.add('is-flyout-open');
-			if (card) this.flyoutObserver.observe(card, { attributes: true, attributeFilter: ['data-paint-mode'] });
+			if (card) this.flyoutObserver.observe(card, { subtree: true, attributes: true, attributeFilter: ['data-paint-mode', 'data-effect-enabled'] });
 			this.flyoutCard = card;
 			const toggle = card ? buildFlyoutSwitch(card) : null;
 			document.getElementById('flyoutSwitch').replaceChildren(...(toggle ? [toggle] : []));
@@ -126,11 +130,14 @@ class LibraryWindow {
 		document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${PANEL_SCHEMAS[layer.type].section.icon}`);
 		document.getElementById('flyoutTitleText').textContent = `${card.dataset.flyoutTitle} · ${describeLayer(layer, editor).name}`;
 
-		// The Glitter source is the glitter Library: arm it through the section's
-		// own chip, which is where every manager binds its picker.
-		const wantsLibrary = card.dataset.paintMode === 'glitter' && !editor.isLayerContentLocked(layer);
-		if (wantsLibrary && !pickers.active) document.getElementById(getPaintSlotChipId(layer.type, pickers.flyout))?.click();
-		else if (!wantsLibrary && pickers.active) pickers.closeAll();
+		// A Glitter source is the glitter Library: arm it through the paint's own
+		// chip, which is where every manager binds its picker. A section with two
+		// paints keeps the one the user armed, and otherwise takes the first.
+		const usable = !card.classList.contains('is-off') && !editor.isLayerContentLocked(layer);
+		const glitterSlots = usable ? getSectionPaintSlots(card).filter((slot) => slot.dataset.paintMode === 'glitter') : [];
+		const armed = pickers.active && (pickers.active.pickerSession.slot || 'fill');
+		if (!glitterSlots.length) pickers.closeAll();
+		else if (!glitterSlots.some((slot) => slot.dataset.slot === armed)) glitterSlots[0].querySelector('.asset-info.glitter-source-glitter .asset-info-thumbnail')?.click();
 		return card;
 	}
 

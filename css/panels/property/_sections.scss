@@ -303,11 +303,12 @@
 
 // ----- A switched-off module -------------------------------------------------
 // `.is-off` is stamped by syncPanelEffectToggle. Off, a module reads as one
-// quiet line; opened anyway, its body is an inert preview.
+// quiet line; opened anyway (or open in the window), its body is an inert
+// preview.
 .property-panel .property-card.is-off {
 	> .property-card-title > span:first-of-type { color: var(--color-text-tertiary); }
 
-	&:not(.is-collapsed) > :not(.property-card-title) {
+	&:is(:not(.is-collapsed), .is-flyout-open) > :not(.property-card-title) {
 		opacity: var(--opacity-disabled);
 		pointer-events: none;
 	}

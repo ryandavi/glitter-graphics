@@ -13,7 +13,9 @@
 //              sets, advanced? }. `advanced` is a list of sets under the
 //              section's one "Advanced" disclosure. `presentation: 'flyout'`
 //              leaves one line in the panel and opens the section in the
-//              window beside it.
+//              window beside it. A paintSlot's `summaryValue` is the id of
+//              the one slider whose value its summary states (an outline's
+//              width).
 //   set      { label?, rows }, or { actions } for a set of buttons. `collapse:
 //            'open' | 'closed'` makes a labelled set's name a toggle.
 //   row      { kind: 'slider' | 'select' | 'segmented' | 'toggle' | 'field' |
@@ -132,10 +134,11 @@ function createSparkleAdvancedSets(p) {
 }
 
 // The Sparkles section (a `sparkles` paint slot). Every host shares it.
-// overrides: the Sparkles layer's section has no on/off switch.
+// overrides: the Sparkles layer's section is its content, so it has no
+// on/off switch and stays in the panel.
 function createSparklesSectionSpec(idPrefix, overrides = {}) {
 	return {
-		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles',
+		kind: 'paintSlot', slot: 'sparkles', idPrefix, title: 'Sparkles', presentation: 'flyout',
 		attrs: { 'data-sparkle-controls': idPrefix },
 		texturePosition: true,
 		toggle: true, modes: ['glitter', 'solid'], activeMode: 'solid',
@@ -154,7 +157,7 @@ function createSparklesSectionSpec(idPrefix, overrides = {}) {
 function createStylePresetSectionSpec(prefix) {
 	// Collapsed by default: the header names the applied look (or Custom), so
 	// a styled layer still reads at a glance.
-	return { kind: 'section', title: 'Style', collapsed: true,
+	return { kind: 'section', title: 'Style', collapsed: true, presentation: 'flyout',
 		summary: { id: `${prefix}StyleSummary` }, sets: [
 		{ rows: [
 			{ kind: 'presetGrid', id: `${prefix}StylePresets`, label: 'Style presets', classes: 'property-inset style-presets' }
@@ -166,7 +169,7 @@ function createStylePresetSectionSpec(prefix) {
 // is a second source in a set of its own.
 function createBevelSectionSpecs(idPrefix) {
 	return [
-		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & gloss',
+		{ kind: 'paintSlot', slot: 'bevelHighlight', idPrefix, title: 'Bevel & gloss', presentation: 'flyout',
 			toggle: true, texturePosition: true, sourceLabel: 'Highlight', modes: ['glitter', 'solid'], activeMode: 'solid',
 			color: '#ffffff', chipTitle: 'Choose highlight glitter',
 			sets: [
@@ -192,7 +195,8 @@ function createBevelSectionSpecs(idPrefix) {
 // `stroke` and `placement` are that type's rows.
 function createOutlineSectionSpec(idPrefix, stroke, placement) {
 	const edges = placement.filter((row) => row.label === 'Edges');
-	return { kind: 'paintSlot', slot: 'border', idPrefix, title: 'Outline',
+	return { kind: 'paintSlot', slot: 'border', idPrefix, title: 'Outline', presentation: 'flyout',
+		summaryValue: stroke[0].id,
 		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose outline glitter',
 		sets: [
@@ -225,7 +229,7 @@ function createOutlinePlacementRows(idPrefix) {
 }
 
 function createShadowSectionSpec(idPrefix, { baseline = false } = {}) {
-	return { kind: 'paintSlot', slot: 'shadow', idPrefix, title: 'Shadow',
+	return { kind: 'paintSlot', slot: 'shadow', idPrefix, title: 'Shadow', presentation: 'flyout',
 		toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 		color: '#000000', chipTitle: 'Choose shadow glitter',
 		sets: [
@@ -255,7 +259,7 @@ function createAnimationSectionSpec(prefix) {
 	return {
 		// Toggle-gated like every effect section: the shared `is-collapsed`
 		// accordion (syncPanelEffectToggle) hides the whole body.
-		kind: 'section', title: 'Animation', badge: 'beta', classes: 'animation-module',
+		kind: 'section', title: 'Animation', badge: 'beta', classes: 'animation-module', presentation: 'flyout',
 		summary: { id: id('Summary'), text: 'Off' },
 		toggle: { id: id('Enabled'), label: '', title: 'Enable animation' },
 		sets: [
@@ -549,7 +553,7 @@ const PANEL_SCHEMAS = {
 		section: { id: 'sparkleLayerSettingsSection', icon: 'sparkles', tab: 'Sparkles', title: 'Sparkles Properties' },
 		groups: [
 			{ title: 'Content', sections: [
-				createSparklesSectionSpec('layerSparkles', { toggle: false })
+				createSparklesSectionSpec('layerSparkles', { toggle: false, presentation: null })
 			] },
 			{ title: 'Appearance', sections: [
 				createLayerSectionSpec('sparkleLayerOpacity', 'sparkleLayerBlendMode')
@@ -566,7 +570,7 @@ const PANEL_SCHEMAS = {
 				// The canvas layer is a single paint; its only opacity is the
 				// whole-layer opacity.
 				createLayerSectionSpec('baseBackgroundOpacity'),
-				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
+				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background', presentation: 'flyout',
 					texturePosition: true, noSlotOpacity: true,
 					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
@@ -823,7 +827,7 @@ const PANEL_SCHEMAS = {
 				// Warp bends glyph placement (js/paint/text-warp.js): presets first,
 				// Bend tunes the chosen one. Collapsed by default with the warp's
 				// name in the header.
-				{ kind: 'section', title: 'Warp', collapsed: true,
+				{ kind: 'section', title: 'Warp', collapsed: true, presentation: 'flyout',
 					summary: { id: 'textWarpSummary' }, sets: [
 					{ rows: [
 						{ kind: 'presetGrid', id: 'textWarpPresets', label: 'Text warp presets', classes: 'property-inset text-warp-presets' },
@@ -843,7 +847,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Layout', sections: [{ kind: 'transform' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'textBackground', idPrefix: 'textBackground', title: 'Background',
+			{ kind: 'paintSlot', slot: 'backgroundFill', idPrefix: 'textBackground', title: 'Background', presentation: 'flyout',
 				toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose background glitter',
 				before: [
@@ -1013,7 +1017,8 @@ const PANEL_SCHEMAS = {
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'none',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter' },
-				{ kind: 'paintSlot', slot: 'stroke', idPrefix: 'pathStroke', title: 'Stroke',
+				{ kind: 'paintSlot', slot: 'stroke', idPrefix: 'pathStroke', title: 'Stroke', presentation: 'flyout',
+					summaryValue: 'pathStrokeWidth',
 					toggle: true, texturePosition: true, modes: ['glitter', 'solid'], activeMode: 'glitter',
 					color: CONFIG.tools.path.stroke.color, chipTitle: 'Choose stroke glitter',
 					sets: [

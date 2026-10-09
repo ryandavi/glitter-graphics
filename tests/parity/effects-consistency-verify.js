@@ -31,7 +31,7 @@ async function main() {
 				sharedEffectCardCount: document.querySelectorAll('[data-effect-card] > .property-card-title input[data-effect-toggle]').length
 			};
 		});
-		assert.deepStrictEqual(canvasStructure, { outerToggle: false, pixelCards: false, sharedEffectCardCount: 22 });
+		assert.deepStrictEqual(canvasStructure, { outerToggle: false, pixelCards: false, sharedEffectCardCount: 28 });
 
 		const shape = await page.evaluate(() => {
 			const editor = window.editor;

@@ -25,12 +25,23 @@ class PickerRegistry {
 		return true;
 	}
 
-	// A paint session of the open section keeps the window on it. A session
-	// with no slot is the layer's fill.
+	// The open section's card for the inspected layer, or null: the same key
+	// names the same line on every layer type that has it.
+	getFlyoutCard() {
+		const layer = this.editor.layerManager.getInspectedLayer();
+		const prefix = layer && PANEL_SCHEMAS[layer.type]?.sectionPrefix;
+		return (this.flyout && prefix) ? document.querySelector(`#${prefix}Flyouts > [data-flyout-key="${this.flyout}"]`) : null;
+	}
+
+	// A glitter session for one of the open section's paints keeps the window
+	// on it. A session with no slot is the layer's fill.
 	sessionKeepsFlyout(manager, session) {
 		const layer = this.editor.layerManager.getInspectedLayer();
 		const owner = layer && getLayerManagerForType(this.editor, layer.type);
-		return Boolean(owner) && (manager === owner || manager === owner.slotPicker) && (session.slot || 'fill') === this.flyout;
+		const card = this.getFlyoutCard();
+		if (!owner || !card || (manager !== owner && manager !== owner.slotPicker)) return false;
+		if (session.kind && session.kind !== 'glitter') return false;
+		return getSectionPaintSlots(card).some((slot) => slot.dataset.slot === (session.slot || 'fill'));
 	}
 
 	register(manager) {
@@ -58,6 +69,11 @@ class PickerRegistry {
 			if (manager !== except && manager.pickerSession) manager.closePickerSession({ restorePicker: false });
 		});
 	}
+}
+
+// The paints of a section: its own, then any nested in it (Bevel's Shade).
+function getSectionPaintSlots(card) {
+	return [card, ...card.querySelectorAll('[data-role="paint-slot"][data-nested]')].filter((slot) => slot.dataset.slot);
 }
 
 function pickerOpenSession(manager, session, options = {}) {

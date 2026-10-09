@@ -815,6 +815,12 @@ function buildPaintSource(slot) {
 	}));
 	if (slot.presentation === 'flyout') {
 		source.prepend(buildSegmented(sourceEntries, { label: `${slot.title || sourceLabel} source` }));
+		// Tabs carry no row label, so a section with a second source names
+		// this one as a set.
+		if (slot.sourceLabel) {
+			source.setAttribute('role', 'group');
+			source.setAttribute('aria-label', slot.sourceLabel);
+		}
 	} else {
 		const sourceChoices = buildSelectProxy(sourceEntries, { label: `${slot.title || sourceLabel} source` });
 		const sourceRow = buildOptionGroup(sourceLabel, [sourceChoices]);
@@ -1011,6 +1017,7 @@ function buildPaintSlotSection(slot, schema) {
 	}, schema);
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
+	if (slot.summaryValue) card.dataset.summaryValue = slot.summaryValue;
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
 	const header = card.querySelector('.property-card-title');
 	const body = card.querySelector(':scope > .property-card-body');
@@ -1092,9 +1099,19 @@ function mountFlyoutSection(card, spec, schema) {
 	const label = title.querySelector(':scope > span');
 	label.classList.add('property-card-label', 'feature-name');
 	label.textContent = spec.title;
+	if (spec.badge) label.appendChild(buildFeatureBadge(spec.badge));
 	const summary = document.createElement('span');
 	summary.className = 'property-card-summary';
-	title.append(summary, panelDiv('property-card-swatch'));
+	title.appendChild(summary);
+	const cardTitle = card.querySelector(':scope > .property-card-title');
+	summary.textContent = cardTitle.querySelector(':scope > .property-card-summary')?.textContent || '';
+	line.classList.toggle('is-off', card.classList.contains('is-off'));
+	if (cardTitle.querySelector(':scope > .property-card-swatch')) title.appendChild(panelDiv('property-card-swatch'));
+	// Managers and the summary observer write the section's title row; the
+	// line follows it.
+	const follow = new MutationObserver(() => syncFlyoutLine(card));
+	follow.observe(cardTitle, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'style'] });
+	follow.observe(card, { attributes: true, attributeFilter: ['class'] });
 	const toggle = buildFlyoutSwitch(card);
 	if (toggle) title.appendChild(toggle);
 	const chevron = document.createElement('span');
@@ -1106,16 +1123,16 @@ function mountFlyoutSection(card, spec, schema) {
 
 // What a flyout section's line and switches show is the section's own state.
 function syncFlyoutLine(card) {
-	if (!card.dataset.flyoutKey) return;
 	const line = document.querySelector(`.property-line[data-flyout-for="${card.id}"]`);
 	if (!line) return;
 	const from = (selector) => card.querySelector(`:scope > .property-card-title > ${selector}`);
 	const to = (selector) => line.querySelector(`:scope > .property-card-title > ${selector}`);
 	to('.property-card-summary').textContent = from('.property-card-summary')?.textContent || '';
 	const swatch = from('.property-card-swatch');
-	if (swatch) {
-		to('.property-card-swatch').style.background = swatch.style.background;
-		to('.property-card-swatch').classList.toggle('is-unset', swatch.classList.contains('is-unset'));
+	const lineSwatch = to('.property-card-swatch');
+	if (swatch && lineSwatch) {
+		lineSwatch.style.background = swatch.style.background;
+		lineSwatch.classList.toggle('is-unset', swatch.classList.contains('is-unset'));
 	}
 	line.classList.toggle('is-off', card.classList.contains('is-off'));
 	const source = card.querySelector(':scope > .property-card-title input[type="checkbox"]');
@@ -1542,8 +1559,13 @@ function readModuleSummary(card) {
 		const type = card.querySelector('.effect-gradient-editor [data-type].active')?.dataset.type;
 		parts.push(type === 'radial' ? 'Radial gradient' : 'Linear gradient');
 	}
+	// One value after the identifier: the section's defining one where it
+	// names one (`summaryValue`), otherwise an opacity that is not full.
 	const opacity = card.querySelector('.paint-slot-opacity .property-value')?.textContent?.trim();
-	if (opacity && opacity !== '100%') parts.push(opacity);
+	const detail = card.dataset.summaryValue
+		? document.getElementById(`${card.dataset.summaryValue}Value`)?.textContent?.trim()
+		: (opacity !== '100%' && opacity);
+	if (detail) parts.push(detail);
 	return parts.join(' · ');
 }
 
@@ -1579,7 +1601,6 @@ function syncModuleSummary(card) {
 			|| card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty')
 		));
 	}
-	syncFlyoutLine(card);
 }
 
 function initializeModuleSummaries(root = document) {
