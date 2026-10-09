@@ -358,7 +358,8 @@ function applyPaintSourceToElement(element, source, options = {}) {
 		// Same fallback as SceneCompositor._paintSourceInto: a mask without its
 		// own paint box is filled across its whole surface.
 		const placement = getImageFillPlacement(source, maskCanvas?._paintBox || (maskCanvas ? { x: 0, y: 0, width: maskCanvas.width, height: maskCanvas.height } : null));
-		style.backgroundImage = `url(${source.url})`;
+		const url = glitterLibrary?.editor?.animationPanel?.getPreviewImageUrl(source.url) || source.url;
+		style.backgroundImage = `url(${url})`;
 		style.backgroundColor = 'transparent';
 		style.backgroundSize = `${placement.dw}px ${placement.dh}px`;
 		style.backgroundPosition = `${placement.dx}px ${placement.dy}px`;
@@ -379,7 +380,8 @@ function applyPaintSourceToElement(element, source, options = {}) {
 		return;
 	}
 
-	style.backgroundImage = `url(${glitter.url})`;
+	const url = glitterLibrary?.editor?.animationPanel?.getPreviewImageUrl(glitter.url) || glitter.url;
+	style.backgroundImage = `url(${url})`;
 	style.backgroundColor = 'transparent';
 	// CSS filter mirrors the export color-adjust matrix pass.
 	style.filter = buildCssColorFilter(source.colorAdjust);

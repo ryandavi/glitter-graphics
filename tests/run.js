@@ -8,6 +8,7 @@ const SUITES = [
 	{ file: 'unit/script-globals-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/canvas-bounds-unit.js', tags: ['unit', 'document'] },
 	{ file: 'ui/crop-motion-verify.js', tags: ['document', 'touch', 'export'] },
+	{ file: 'ui/preview-motion-verify.js', tags: ['panels', 'effects', 'export'] },
 	{ file: 'unit/glitter-recolor-unit.js', tags: ['unit', 'assets', 'effects'] },
 	{ file: 'ui/personal-assets-verify.js', tags: ['assets', 'document', 'export'] },
 	{ file: 'ui/glitter-recolor-verify.js', tags: ['assets', 'document', 'export', 'panels'] },

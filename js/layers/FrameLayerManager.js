@@ -507,7 +507,8 @@ class FrameLayerManager {
 					const place = getFrameImagePlacement(data.fit, data.image?.width, data.image?.height, width, height);
 					Object.assign(image.style, { left: `${place.x}px`, top: `${place.y}px`, width: `${place.width}px`, height: `${place.height}px`, backgroundSize: '100% 100%', backgroundPosition: '0 0' });
 				}
-				const background = data.image?.url ? `url("${data.image.url}")` : 'none';
+				const previewUrl = this.editor.animationPanel?.getPreviewImageUrl(data.image?.url) || data.image?.url;
+				const background = previewUrl ? `url("${previewUrl}")` : 'none';
 				if (image.style.backgroundImage !== background) image.style.backgroundImage = background;
 				image.classList.toggle('pixelated', data.image?.isPixelated !== false);
 			});

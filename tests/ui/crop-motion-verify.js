@@ -68,8 +68,21 @@ async function main() {
 			const alpha = (x) => output.getContext('2d').getImageData(x, 120, 1, 1).data[3];
 			return alpha(0) === 255 && alpha(319) === 255 && alpha(160) === 0;
 		}), 'export omitted the incoming marquee copy');
+		const beforeCropView = await page.evaluate(() => {
+			editor.viewport.setZoom(4);
+			return editor.viewport.captureViewState();
+		});
 		await page.keyboard.press('c');
+		await page.waitForTimeout(400);
 		assert(await page.evaluate(() => editor.getActiveSession() === 'crop'));
+		assert(await page.evaluate(() => {
+			const rect = editor.viewport.getUsableRect();
+			const box = editor.previewWrapper.getBoundingClientRect();
+			const workspace = editor.previewContainer.getBoundingClientRect();
+			const padding = CONFIG.ui.zoom.cropPadding / 2;
+			return box.left >= workspace.left + rect.left + padding - 1 && box.right <= workspace.left + rect.left + rect.width - padding + 1
+				&& box.top >= workspace.top + padding - 1 && box.bottom <= workspace.top + rect.height - padding + 1;
+		}), 'Crop entry fits the full canvas with handle padding');
 		const cropSnap = await page.evaluate(() => {
 			PREFERENCES.set('snappingEnabled', true);
 			editor.canvasBounds.setRect({ x: 30, y: 30, width: 100, height: 80 });
@@ -101,6 +114,7 @@ async function main() {
 		await page.mouse.down(); await page.mouse.move(handle.x + handle.width / 2 - 30, handle.y + handle.height / 2 - 20, { steps: 6 }); await page.mouse.up();
 		assert(await page.evaluate(() => Number(document.getElementById('canvasSizeWidth').value) === editor.canvasBounds.rect.width && editor.canvasBounds.rect.width < 200), 'drag did not sync panel');
 		await page.keyboard.press('Escape');
+		assert.deepStrictEqual(await page.evaluate(() => editor.viewport.captureViewState()), beforeCropView, 'Cancel restores the view from before Crop');
 		assert(await page.evaluate(() => editor.currentTool === ToolType.CROP && !editor.canvasBounds && editor.originalCanvas.width === 320));
 		assert(await page.evaluate(() => {
 			const rect = editor.previewWrapper.getBoundingClientRect();
@@ -132,7 +146,21 @@ async function main() {
 		await context.close();
 
 		const phone = await boot(browser, true);
-		await phone.page.evaluate(() => { editor.setTool(ToolType.CROP); editor.mobileManager.closeDrawers?.(); });
+		await phone.page.evaluate(() => { editor.viewport.setZoom(4); editor.setTool(ToolType.CROP); editor.mobileManager.closeDrawers?.(); });
+		await phone.page.waitForTimeout(400);
+		assert(await phone.page.evaluate(() => {
+			const usable = editor.viewport.getUsableRect();
+			const workspace = editor.previewContainer.getBoundingClientRect();
+			return [...document.querySelectorAll('.canvas-bounds-chrome [data-handle-type]')].every(node => {
+				const box = node.getBoundingClientRect();
+				return box.left >= workspace.left + usable.left && box.right <= workspace.left + usable.left + usable.width
+					&& box.top >= workspace.top && box.bottom <= workspace.top + usable.height;
+			});
+		}), 'Phone Crop handles fit inside the available workspace');
+		assert(await phone.page.evaluate(() => [...document.querySelectorAll('.canvas-bounds-chrome [data-handle-type]')].every(node => {
+			const box = node.getBoundingClientRect();
+			return node.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+		})), 'Phone Crop handles are not covered by the rail, hints or context controls');
 		const client = await phone.context.newCDPSession(phone.page);
 		const touch = (type, points) => client.send('Input.dispatchTouchEvent', { type, touchPoints: points.map((point, id) => ({ ...point, id, radiusX: 4, radiusY: 4, force: 1 })) });
 		const center = await phone.page.evaluate(() => { const box = editor.previewWrapper.getBoundingClientRect(); return { x: box.left + box.width / 2, y: box.top + box.height / 2 }; });
@@ -148,6 +176,28 @@ async function main() {
 		assert(await phone.page.evaluate((zoom) => editor.viewport.currentZoom > zoom, before.zoom), 'crop pinch did not zoom viewport');
 		assert.deepStrictEqual(await phone.page.evaluate(() => ({ ...editor.canvasBounds.rect })), pending, 'pinch changed pending crop');
 		assert(await phone.page.locator('#contextCropDone').isVisible());
+		await phone.page.evaluate(() => {
+			editor.beginActivity('overlay-test', 'Updating preview');
+			const mobile = editor.mobileManager;
+			mobile.renderBar();
+			mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Size'));
+		});
+		await phone.page.waitForTimeout(400);
+		assert(await phone.page.evaluate(() => {
+			const area = editor.viewport.getOverlayRect();
+			const workspace = editor.previewContainer.getBoundingClientRect();
+			const center = workspace.left + area.left + area.width / 2;
+			return ['viewMenu', 'canvasActivity', 'cropEditControls'].every(id => {
+				const node = document.getElementById(id);
+				const box = node.getBoundingClientRect();
+				return Math.abs(box.left + box.width / 2 - center) < 1 && getComputedStyle(node).visibility !== 'hidden';
+			});
+		}), 'Phone activity, view menu and Crop bar share the page center with a drawer open');
+		assert(await phone.page.evaluate(() => {
+			const button = document.getElementById('contextCropCancel');
+			const box = button.getBoundingClientRect();
+			return button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
+		}), 'Crop completion controls remain accessible above the open drawer');
 		await phone.page.locator('#contextCropCancel').click();
 		assert(await phone.page.evaluate(() => !editor.canvasBounds && editor.currentTool === ToolType.SELECT));
 		assert.deepStrictEqual(phone.errors, []);

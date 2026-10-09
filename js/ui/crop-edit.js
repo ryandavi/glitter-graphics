@@ -6,6 +6,8 @@ class CropEditSession {
 		this.editor = editor;
 		this.chrome = null;
 		this.drag = null;
+		this.viewState = null;
+		this.fitFrame = null;
 		this.syncChrome = () => this.render();
 		editor.previewContainer.addEventListener('dblclick', (event) => {
 			if (editor.getActiveSession() === 'crop' && this.chrome?.hitTest(event.clientX, event.clientY) === 'move') editor.applyCanvasBounds();
@@ -14,17 +16,49 @@ class CropEditSession {
 	activate() {
 		const editor = this.editor;
 		if (!editor.originalImage || !editor.documentSize) return;
+		this.viewState = {
+			...editor.viewport.captureViewState(),
+			width: editor.viewport.canvasWidth, height: editor.viewport.canvasHeight
+		};
 		editor.canvasBounds?.clear();
 		editor.setDocumentSizeMode('canvas');
 		const session = getSessionDefinition(editor);
 		editor.notifications.setMode({ ...session.mode, onExit: () => editor.cancelCanvasBounds() });
 		this.render();
+		this.fitFrame = requestAnimationFrame(() => {
+			this.fitFrame = null;
+			this.fitView();
+		});
+	}
+	fitView() {
+		const editor = this.editor;
+		const viewport = editor.viewport;
+		const usable = viewport.getUsableRect();
+		const workspace = editor.previewContainer.getBoundingClientRect();
+		const rail = document.querySelector('.toolbar')?.getBoundingClientRect();
+		const topControls = document.getElementById('previewControls')?.getBoundingClientRect();
+		const cropControls = document.getElementById('cropEditControls')?.getBoundingClientRect();
+		const left = Math.max(usable.left, rail?.width ? rail.right - workspace.left : usable.left);
+		const top = Math.max(usable.top, topControls?.height ? topControls.bottom - workspace.top : usable.top);
+		const right = usable.left + usable.width;
+		const bottom = Math.min(usable.top + usable.height, cropControls?.height ? cropControls.top - workspace.top : usable.top + usable.height);
+		viewport.zoomToFit({
+			animate: true, padding: CONFIG.ui.zoom.cropPadding,
+			rect: { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) }
+		});
 	}
 	end() {
+		cancelAnimationFrame(this.fitFrame);
+		this.fitFrame = null;
 		this.cancelDrag();
 		this.editor.canvasBounds?.clear();
 		this.editor.notifications.setMode(null);
 		this.editor.syncCanvasBoundsViews();
+		const viewport = this.editor.viewport;
+		if (this.viewState?.width === viewport.canvasWidth && this.viewState.height === viewport.canvasHeight) {
+			viewport.restoreViewState(this.viewState, { animate: true });
+		}
+		this.viewState = null;
 	}
 	render() {
 		const editor = this.editor;

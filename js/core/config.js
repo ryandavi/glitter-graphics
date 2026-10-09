@@ -693,6 +693,7 @@ const CONFIG = deepFreeze({
 	},
 
 	ui: {
+		canvasAlignment: { desktop: 'workspace', mobile: 'page' },
 		// Live canvas updates while a control changes (js/ui/slider.js). A field's
 		// FIELDS `cost` picks its tier; these are the tiers' budgets.
 		numericScrub: { thresholdPx: 3 },
@@ -716,6 +717,7 @@ const CONFIG = deepFreeze({
 			recentSearchCount: 5
 		},
 		zoom: {
+			cropPadding: 80,
 			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 			pixelGridMinZoom: 6,
 			pixelGridEnabled: true,
@@ -751,6 +753,7 @@ const CONFIG = deepFreeze({
 			defaultTab: 'glitter'
 		},
 		mobile: {
+			editingViewportPadding: 40,
 			// The one width where the phone layout starts. css/_mixins.scss holds a
 			// compile-time copy that a unit test checks against this.
 			breakpoint: 1040,

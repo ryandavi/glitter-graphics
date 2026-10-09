@@ -40,7 +40,8 @@ registerLayerType(LayerType.SPARKLES, {
 		order: 2,
 		description: 'Snow, hearts or sparkles over the whole picture',
 		quickAddId: 'quickActionAddSparkles',
-		quickAddOrder: 6
+		quickAddOrder: 6,
+		phoneChip: false
 	},
 	designPanelSections: ['sparkleLayerSettingsSection'],
 	panelMode: 'sparkles',

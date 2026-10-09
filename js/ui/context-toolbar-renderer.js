@@ -122,7 +122,8 @@ class ContextToolbarRenderer {
 
 	anchorPositions(host) {
 		const parent = host.offsetParent;
-		const inset = 12;
+		const area = this.editor.viewport.getOverlayRect();
+		const inset = area.inset;
 		const parentRect = parent?.getBoundingClientRect();
 		// The top zone is one container; its height is whatever it currently shows.
 		const topChrome = document.getElementById('previewControls')?.getBoundingClientRect();
@@ -130,18 +131,18 @@ class ContextToolbarRenderer {
 		const safeTop = Math.min(Math.max(inset, topChromeBottom + inset), Math.max(inset, (parent?.clientHeight || 0) / 2));
 		const maxX = Math.max(0, (parent?.clientWidth || 0) - host.offsetWidth);
 		const maxY = Math.max(0, (parent?.clientHeight || 0) - host.offsetHeight);
-		const centerX = maxX / 2;
-		const centerY = Math.max(safeTop, maxY / 2);
+		const centerX = area.left + (area.width - host.offsetWidth) / 2;
+		const centerY = Math.max(safeTop, area.top + (area.height - host.offsetHeight) / 2);
 		return {
 			horizontal: [
-				{ name: 'left', value: Math.min(inset, maxX) },
+				{ name: 'left', value: Math.min(area.left, maxX) },
 				{ name: 'center', value: centerX },
-				{ name: 'right', value: Math.max(0, maxX - inset) }
+				{ name: 'right', value: Math.max(0, area.left + area.width - host.offsetWidth) }
 			],
 			vertical: [
 				{ name: 'top', value: Math.min(safeTop, maxY) },
 				{ name: 'center', value: centerY },
-				{ name: 'bottom', value: Math.max(0, maxY - inset) }
+				{ name: 'bottom', value: Math.max(0, area.top + area.height - host.offsetHeight) }
 			]
 		};
 	}

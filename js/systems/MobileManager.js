@@ -436,7 +436,7 @@ class MobileManager {
 			button.classList.toggle('active', active);
 			button.setAttribute('aria-expanded', String(active));
 		});
-		this.scheduleDrawerViewportUpdate('fit');
+		if (openingFirstDrawer) this.scheduleDrawerViewportUpdate('fit');
 	}
 
 	closeAllDrawers(options = {}) {
@@ -678,9 +678,26 @@ class MobileManager {
 		cancelAnimationFrame(this.sheetResizeFrame);
 		this.sheetResizeFrame = requestAnimationFrame(() => {
 			this.drawerViewportSyncing = true;
-			this.editor.viewport?.performResizeUpdate({ animate: true });
+			this.refitDrawerViewport();
 			this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
 			this.drawerViewportSyncing = false;
+		});
+	}
+
+	refitDrawerViewport() {
+		const viewport = this.editor.viewport;
+		if (!viewport) return;
+		if (this.drawerViewportUserState) {
+			viewport.restoreViewState(this.drawerViewportUserState, { animate: true });
+			return;
+		}
+		const layers = this.activeDrawer === 'layers' ? [] : this.editor.layerManager.getSelectedLayers();
+		const bounds = getLayersCanvasBox(this.editor, layers, { visual: true }) || {
+			left: 0, top: 0, right: viewport.canvasWidth, bottom: viewport.canvasHeight
+		};
+		viewport.performResizeUpdate({
+			animate: true, bounds,
+			padding: CONFIG.ui.mobile.editingViewportPadding
 		});
 	}
 
@@ -692,7 +709,7 @@ class MobileManager {
 			if (mode === 'restore' && restoreState) {
 				this.editor.viewport?.restoreViewState?.(restoreState, { animate: true });
 			} else {
-				this.editor.viewport?.performResizeUpdate({ animate: true });
+				this.refitDrawerViewport();
 			}
 			this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
 			this.drawerViewportSyncing = false;

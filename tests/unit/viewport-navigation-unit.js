@@ -28,6 +28,7 @@ const context = {
 	console,
 	CONFIG: {
 		ui: {
+			canvasAlignment: { desktop: 'workspace', mobile: 'page' },
 			mobile: { breakpoint: 1040 },
 			zoom: { levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16], pixelGridMinZoom: 6 },
 			gestures: { inertia: { enabled: false, decay: 0.92 } }
@@ -37,11 +38,12 @@ const context = {
 	GestureManager: class GestureManager {},
 	PixelGridOverlay: class PixelGridOverlay { setVisible() {} },
 	SelectionOverlay: class SelectionOverlay {},
+	ResizeObserver: class ResizeObserver { observe() {} },
 	PREFERENCES: { get: () => false },
 	CustomEvent: class CustomEvent {
 		constructor(type, options) { this.type = type; this.detail = options?.detail; }
 	},
-	document: { getElementById: () => null, documentElement: {} },
+	document: { getElementById: () => null, querySelectorAll: () => [], querySelector: () => null, documentElement: {} },
 	getComputedStyle: () => ({ getPropertyValue: () => '0.3s' }),
 	performance,
 	window: {
@@ -104,6 +106,12 @@ const fittedCenter = canvasAt(500, 400);
 assert(Math.abs(fittedCenter.x - 200) < 1e-9, 'Zoom to bounds did not center X');
 assert(Math.abs(fittedCenter.y - 150) < 1e-9, 'Zoom to bounds did not center Y');
 
+viewport.performResizeUpdate({ bounds: { left: 100, top: 100, right: 300, bottom: 200 }, padding: 40 });
+assert.strictEqual(viewport.currentZoom, 4.8, 'Drawer framing fits small artwork into the available space');
+viewport.performResizeUpdate({ bounds: { left: 0, top: 0, right: 2000, bottom: 1600 }, padding: 40 });
+assert(viewport.currentZoom < 1, 'Drawer framing must zoom out to fit oversized artwork');
+viewport.zoomToBounds({ left: 100, top: 100, right: 300, bottom: 200 }, { padding: 100 });
+
 viewport.zoomByFactor(2, anchor.x, anchor.y);
 assert.strictEqual(viewport.currentZoom, 9, 'Continuous zoom did not use continuous zoom');
 
@@ -117,6 +125,72 @@ assert.strictEqual(viewport.currentZoom, 1.5, 'Atomic gesture transform did not 
 
 viewport.panBy(100000, 100000);
 assert(viewport.panX < 100000 && viewport.panY < 100000, 'Pan bounds allowed the canvas to disappear');
+
+// Unequal panel widths must not shift centering back to the full page.
+context.document.getElementById = id => ({
+	layersPanel: { getClientRects: () => [1], getBoundingClientRect: () => ({ right: 250 }) },
+	designPanel: { getClientRects: () => [1], getBoundingClientRect: () => ({ left: 850 }) }
+}[id] || null);
+for (const zoom of [0.5, 1, 4]) {
+	viewport.setZoom(zoom);
+	viewport.panY = 123;
+	viewport.centerHorizontal();
+	assert.strictEqual(viewport.panX + 400 * zoom / 2, 550, 'Horizontal center ignored the panel offset');
+	assert.strictEqual(viewport.panY, 123, 'Horizontal centering changed vertical pan');
+	const panX = viewport.panX;
+	viewport.centerVertical();
+	assert.strictEqual(viewport.panY + 300 * zoom / 2, 400, 'Vertical center drifted at oversized zoom');
+	assert.strictEqual(viewport.panX, panX, 'Vertical centering changed horizontal pan');
+	assert.strictEqual(viewport.currentZoom, zoom, 'Centering changed zoom');
+}
+for (const method of ['resetZoom', 'resetViewport', 'zoomToFit', 'zoomToFill']) {
+	viewport[method]();
+	assert.strictEqual(viewport.panX + 400 * viewport.currentZoom / 2, 550, `${method} ignored the panel offset`);
+}
+viewport.setCanvasDimensions(700, 300);
+viewport.resetZoomSmart();
+assert(viewport.currentZoom < 1, 'Smart reset used space hidden behind the panels');
+viewport.setCanvasDimensions(400, 300);
+viewport.resetViewport();
+viewport.zoomIn();
+const buttonZoomCenter = canvasAt(550, 400);
+assert.strictEqual(buttonZoomCenter.x, 200, 'Button zoom anchored to the full preview instead of the usable center');
+assert.strictEqual(buttonZoomCenter.y, 150, 'Button zoom moved the center on Y');
+viewport.setZoom(2);
+viewport.panBy(100000, 100000);
+assert.strictEqual(viewport.panX, 730, 'Pan limit allowed the artwork to disappear behind the Inspector');
+viewport.panBy(-100000, -100000);
+assert.strictEqual(viewport.panX, -430, 'Pan limit ignored the Layers edge');
+context.CONFIG.ui.canvasAlignment.desktop = 'page';
+viewport.resetViewport();
+assert.strictEqual(viewport.panX + 200, 500, 'Changing the shared policy did not change canvas centering');
+const pageOverlay = viewport.getOverlayRect();
+assert.strictEqual(pageOverlay.left + pageOverlay.width / 2, 500, 'Changing the shared policy did not change overlay centering');
+context.CONFIG.ui.canvasAlignment.desktop = 'workspace';
+context.document.getElementById = () => null;
+
+const physicalRect = container.getBoundingClientRect;
+container.getBoundingClientRect = () => ({ left: 0, top: 50, width: 390, height: 794 });
+context.window.innerWidth = 390;
+context.window.innerHeight = 844;
+context.document.querySelector = selector => ({
+	'.toolbar': { getBoundingClientRect: () => ({ width: 48, right: 56 }) },
+	'.mobile-bottom-nav': { getBoundingClientRect: () => ({ height: 60 }) }
+}[selector] || null);
+assert.strictEqual(viewport.getUsableRect().width, 390, 'Mobile page alignment should keep the full width');
+assert.strictEqual(viewport.getUsableRect().height, 734, 'Available height must exclude the phone nav');
+context.window.visualViewport = { offsetTop: 0, height: 500 };
+assert.strictEqual(viewport.getUsableRect().height, 450, 'Available height must exclude the keyboard');
+context.CONFIG.ui.canvasAlignment.mobile = 'workspace';
+const railArea = viewport.getUsableRect();
+assert(railArea.left > 56, 'Mobile workspace alignment must exclude the tool rail');
+const railOverlay = viewport.getOverlayRect();
+assert(Math.abs(railArea.left + railArea.width / 2 - railOverlay.left - railOverlay.width / 2) < 1e-9, 'Mobile overlays and artwork must share their alignment policy');
+context.CONFIG.ui.canvasAlignment.mobile = 'page';
+context.window.visualViewport = null;
+context.window.innerWidth = 1440;
+context.document.querySelector = () => null;
+container.getBoundingClientRect = physicalRect;
 
 (async () => {
 	// Frame-batched wheel input: deltas accumulate and apply once per frame.

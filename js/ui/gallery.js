@@ -1,6 +1,14 @@
 // Shared Library reveal path for primary asset Change buttons and armed
-// paint-slot pickers. LibraryWindow presents the armed session; this only scrolls.
+// paint-slot pickers. Defaults browse All; other assets reveal their category.
 function revealAssetBrowser(editor, manager = null, assetId = null) {
+	const browser = manager?.browser;
+	const defaultId = browser?.schema?.pickerDefault?.(editor);
+	if (assetId != null && defaultId != null && String(assetId) === String(defaultId)) {
+		manager.clearFilters({ refreshBrowser: false });
+		browser.browseView = 'style';
+		browser.rail.select(LIBRARY_ALL_ID);
+		assetId = null;
+	}
 	const revealRequestedGallery = () => {
 		// Gallery panels own their scrolling. scrollIntoView can also scroll the
 		// document, pulling all three editor columns underneath the fixed header.

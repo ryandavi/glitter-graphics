@@ -656,9 +656,10 @@ class StickerManager {
 		}
 
 		// Reassigning an identical URL restarts animated GIFs in some browsers.
-		if (img.dataset.sourceUrl !== layer.stickerData.url) {
-			img.src = layer.stickerData.url;
-			img.dataset.sourceUrl = layer.stickerData.url;
+		const previewUrl = (layer.stickerData.isAnimated && this.editor.animationPanel?.getPreviewImageUrl(layer.stickerData.url)) || layer.stickerData.url;
+		if (img.dataset.sourceUrl !== previewUrl) {
+			img.src = previewUrl;
+			img.dataset.sourceUrl = previewUrl;
 		}
 		img.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
 		// The canvas stack declares image-rendering: pixelated and every child

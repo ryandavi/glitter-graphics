@@ -25,12 +25,15 @@ for (const file of [
 	'js/effects/animation.js', 'js/systems/CanvasBounds.js', 'js/ui/panel-schemas.js',
 	'js/paint/paint-slots.js',
 	...typeFiles,
+	'js/ui/asset-browser-markup.js',
 	'js/ui/gallery.js',
 	'js/ui/picker-session.js'
 ]) {
 	vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 }
 const run = (code) => vm.runInContext(code, context);
+context.LIBRARY_ALL_ID = 'all';
+context.requestAnimationFrame = (callback) => callback();
 
 const config = run('LAYER_UI_CONFIG');
 const getLayerPaintSlot = run('getLayerPaintSlot');
@@ -46,6 +49,17 @@ Object.entries(config).forEach(([type, entry]) => {
 		const where = `${type}.${definition.key}`;
 		const layer = { id: 'layer-1', type, name: 'Layer' };
 		const manager = { pickerSession: { layerId: layer.id, slot: definition.key } };
+		const editor = { pickers: { active: manager }, layerManager: { getLayerById: () => layer, getInspectedLayer: () => layer } };
+		const schema = run("getAssetBrowserSchema('glitter')");
+		const defaultId = schema.pickerDefault(editor);
+		assert.strictEqual(defaultId, run('getPaintSlotDefaultGlitterId')(type, definition), `${where}: picker uses its declared default`);
+		const browser = { schema, rail: { select: (value) => { browser.selected = value; } }, navigateToItem: (value) => { browser.navigated = value; } };
+		const library = { browser, clearFilters: () => { library.cleared = true; } };
+		run('revealAssetBrowser')(editor, library, defaultId);
+		assert.strictEqual(browser.selected, 'all', `${where}: default opens All`);
+		assert(library.cleared, `${where}: All clears stale filters`);
+		run('revealAssetBrowser')(editor, library, 'custom-asset');
+		assert.strictEqual(browser.navigated, 'custom-asset', `${where}: custom assets retain their category reveal`);
 
 		// Nothing stored yet: the slot is not armable, and no root lookup says otherwise.
 		assert.strictEqual(getLayerPaintSlot(layer, definition.key), null, `${where}: an empty layer has no slot data`);
@@ -73,6 +87,20 @@ Object.entries(config).forEach(([type, entry]) => {
 });
 assert(checked > 0, 'no glitter slots were checked');
 assert(nested > 0, 'expected at least one nested-path slot (bevel) to be covered');
+
+['font', 'sticker', 'shape', 'brushTip'].forEach((kind) => {
+	const schema = run('getAssetBrowserSchema')(kind);
+	const browser = { schema, browseView: 'favorites', rail: { select: (value) => { browser.selected = value; } }, navigateToItem: (value) => { browser.navigated = value; } };
+	const library = { browser, clearFilters: () => { library.cleared = true; } };
+	run('revealAssetBrowser')({}, library, String(schema.pickerDefault()));
+	assert.strictEqual(browser.selected, 'all', `${kind}: default opens All regardless of id type`);
+	assert.strictEqual(browser.browseView, 'style', `${kind}: default leaves Favorites`);
+	assert(library.cleared, `${kind}: default clears stale filters`);
+	assert.strictEqual(browser.navigated, undefined, `${kind}: default does not reveal its category`);
+	run('revealAssetBrowser')({}, library, 'custom-asset');
+	assert.strictEqual(browser.navigated, 'custom-asset', `${kind}: a custom asset reveals its category`);
+});
+assert.strictEqual(run("getAssetBrowserSchema('glitter')").pickerDefault({ pickers: { active: { pickerSession: { defaultAssetId: 123 } } } }), 123, 'Auto Glitter uses its suggested match as the default');
 
 // The stale lookup itself must not come back: no picker path may index a
 // layer's data root with a computed slot key.

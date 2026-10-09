@@ -592,7 +592,7 @@ class AutoGlitterManager {
 		const color = this.result?.palette[index];
 		if (!this.session || !color || color.manualMergeTarget != null) return;
 		this.ui.results.querySelector(`[data-palette-index="${index}"] .auto-glitter-choice`)?.setAttribute('aria-expanded', 'true');
-		pickerOpenSession(this, { paletteIndex: index, label: `Color match ${index + 1}` }, {
+		pickerOpenSession(this, { paletteIndex: index, defaultAssetId: color.suggestedGlitterId, label: `Color match ${index + 1}` }, {
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId)
 		});
 	}

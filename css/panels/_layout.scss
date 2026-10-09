@@ -401,6 +401,7 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	&.panel-resize-handle-start { left: 0; }
 	&.panel-resize-handle-end { right: 0; }
 
+	@include mobile { display: none; }
 }
 
 body.is-resizing-panel {

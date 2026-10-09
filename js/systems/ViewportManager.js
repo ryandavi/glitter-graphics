@@ -64,6 +64,11 @@ class ViewportManager {
 		// Window resize
 		window.addEventListener('resize', () => this.handleWindowResize());
 		window.visualViewport?.addEventListener('resize', () => this.handleWindowResize());
+		if (typeof ResizeObserver === 'function') {
+			this.overlayResizeObserver = new ResizeObserver(() => this.syncOverlayLayout());
+			[this.previewContainer, ...document.querySelectorAll('#layersPanel, #designPanel, .toolbar, .mobile-bottom-nav')]
+				.forEach(element => this.overlayResizeObserver.observe(element));
+		}
 
 		// Mouse pan. The editor starts left-button Hand-tool pans; the viewport
 		// owns middle-button navigation so it remains available from every tool.
@@ -133,23 +138,26 @@ class ViewportManager {
 		return Math.round(this.currentZoom * 100);
 	}
 
-	/**
-	 * Capture the canvas point currently under the center of the viewport.
-	 * Canvas-space focus survives layout changes; raw pan offsets do not.
-	 */
-	// Fit and Fill use the unobstructed area; transforms stay in workspace coordinates.
+	// All view framing uses this policy; pointer coordinates remain relative to the physical preview.
 	getUsableRect() {
 		const rect = this.previewContainer.getBoundingClientRect();
 		let left = 0;
 		let right = rect.width;
 		let height = rect.height;
 		const mobile = this.editor?.mobileManager;
-		if (window.innerWidth <= CONFIG.ui.mobile.breakpoint) {
+		const isMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
+		const alignment = CONFIG.ui.canvasAlignment[isMobile ? 'mobile' : 'desktop'];
+		if (isMobile) {
 			const root = getComputedStyle(document.documentElement);
 			height -= document.querySelector('.mobile-bottom-nav')?.getBoundingClientRect().height || 0;
 			const inset = parseFloat(root.getPropertyValue('--spacing-sm')) || 0;
 			if (mobile?.activeDrawer) height -= window.innerHeight * mobile.sheetHeight / 100 + inset;
-		} else {
+			if (window.visualViewport) height = Math.min(height, window.visualViewport.offsetTop + window.visualViewport.height - rect.top);
+			if (alignment === 'workspace') {
+				const rail = document.querySelector('.toolbar')?.getBoundingClientRect();
+				if (rail?.width) left = Math.max(0, rail.right - rect.left) + inset;
+			}
+		} else if (alignment === 'workspace') {
 			const layers = document.getElementById('layersPanel');
 			const inspector = document.getElementById('designPanel');
 			if (layers?.getClientRects().length) left = layers.getBoundingClientRect().right - rect.left;
@@ -158,6 +166,37 @@ class ViewportManager {
 		this.previewContainer.parentElement.style.setProperty('--canvas-inset-left', `${left}px`);
 		this.previewContainer.parentElement.style.setProperty('--canvas-inset-right', `${rect.width - right}px`);
 		return { left, top: 0, width: Math.max(1, right - left), height: Math.max(1, height) };
+	}
+
+	getOverlayRect() {
+		const usable = this.getUsableRect();
+		const mobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
+		const root = getComputedStyle(document.documentElement);
+		const inset = parseFloat(root.getPropertyValue(mobile ? '--mobile-floating-inset' : '--spacing-from-edge')) || 0;
+		const alignment = CONFIG.ui.canvasAlignment[mobile ? 'mobile' : 'desktop'];
+		let clearance = inset;
+		if (mobile && alignment === 'page') {
+			const railWidth = document.querySelector('.toolbar')?.getBoundingClientRect().width || 0;
+			clearance = railWidth + inset * 2;
+		}
+		return { left: usable.left + clearance, top: usable.top + inset, width: Math.max(1, usable.width - clearance * 2), height: Math.max(1, usable.height - inset * 2), inset };
+	}
+
+	syncOverlayLayout() {
+		if (!this.editor) return;
+		const rect = this.getOverlayRect();
+		const workspace = this.previewContainer.getBoundingClientRect();
+		const key = `${rect.left}/${rect.top}/${rect.width}/${rect.height}/${workspace.width}/${workspace.height}`;
+		if (this.overlayLayoutKey === key) return;
+		this.overlayLayoutKey = key;
+		const style = this.previewContainer.style;
+		style.setProperty('--canvas-overlay-left', `${rect.left}px`);
+		style.setProperty('--canvas-overlay-right', `${workspace.width - rect.left - rect.width}px`);
+		style.setProperty('--canvas-overlay-top', `${rect.top}px`);
+		style.setProperty('--canvas-overlay-bottom', `${workspace.height - rect.top - rect.height}px`);
+		style.setProperty('--canvas-overlay-center', `${rect.left + rect.width / 2}px`);
+		style.setProperty('--canvas-overlay-width', `${rect.width}px`);
+		this.editor.contextToolbarRenderer?.hosts.forEach(host => this.editor.contextToolbarRenderer.applyPlacement(host));
 	}
 
 	captureViewState() {
@@ -175,8 +214,7 @@ class ViewportManager {
 		const rect = this.getUsableRect();
 		this.currentZoom = state.zoom;
 		this._syncZoomIndex();
-		this.panX = (rect.left + rect.width / 2) - state.focusX * this.currentZoom;
-		this.panY = (rect.top + rect.height / 2) - state.focusY * this.currentZoom;
+		Object.assign(this, this.getCenteredPan(rect, state.focusX, state.focusY));
 		this.lastViewportWidth = rect.width;
 		this.lastViewportHeight = rect.height;
 		this.applyTransform();
@@ -260,8 +298,9 @@ class ViewportManager {
 			screenX = clickX - containerRect.left;
 			screenY = clickY - containerRect.top;
 		} else {
-			screenX = containerRect.width / 2;
-			screenY = containerRect.height / 2;
+			const usable = this.getUsableRect();
+			screenX = usable.left + usable.width / 2;
+			screenY = usable.top + usable.height / 2;
 		}
 
 		// 2. Find where that click lands in "Canvas Pixel" space
@@ -386,8 +425,8 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.prepareViewChange(options);
 
-		const containerRect = this.getUsableRect();
-		const padding = 40;
+		const containerRect = options.rect || this.getUsableRect();
+		const padding = options.padding ?? 40;
 
 		const scaleX = (containerRect.width - padding) / this.canvasWidth;
 		const scaleY = (containerRect.height - padding) / this.canvasHeight;
@@ -400,8 +439,7 @@ class ViewportManager {
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 0;
 
 		// Center the canvas
-		this.panX = containerRect.left + (containerRect.width - (this.canvasWidth * fitZoom)) / 2;
-		this.panY = containerRect.top + (containerRect.height - (this.canvasHeight * fitZoom)) / 2;
+		Object.assign(this, this.getCenteredPan(containerRect));
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -425,8 +463,7 @@ class ViewportManager {
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.ui.zoom.levels.length - 1;
 
 		// Center the canvas
-		this.panX = containerRect.left + (containerRect.width - (this.canvasWidth * fillZoom)) / 2;
-		this.panY = containerRect.top + (containerRect.height - (this.canvasHeight * fillZoom)) / 2;
+		Object.assign(this, this.getCenteredPan(containerRect));
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -449,8 +486,7 @@ class ViewportManager {
 		this.prepareViewChange(options);
 		this.currentZoom = zoom;
 		this._syncZoomIndex();
-		this.panX = (rect.left + rect.width / 2) - ((bounds.left + bounds.right) / 2) * zoom;
-		this.panY = (rect.top + rect.height / 2) - ((bounds.top + bounds.bottom) / 2) * zoom;
+		Object.assign(this, this.getCenteredPan(rect, (bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2));
 		this.applyTransform();
 		this._notifyViewportChanged();
 	}
@@ -466,8 +502,7 @@ class ViewportManager {
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
 
 		// Center the canvas
-		this.panX = (containerRect.width - this.canvasWidth) / 2;
-		this.panY = (containerRect.height - this.canvasHeight) / 2;
+		Object.assign(this, this.getCenteredPan(containerRect));
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -477,7 +512,7 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.cancelInertia();
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
+		const containerRect = this.getUsableRect();
 
 		// Safety check for hidden container
 		if (containerRect.width === 0 || containerRect.height === 0) return;
@@ -510,23 +545,27 @@ class ViewportManager {
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
 
 		// Center the canvas
-		this.panX = (containerRect.width - this.canvasWidth) / 2;
-		this.panY = (containerRect.height - this.canvasHeight) / 2;
+		Object.assign(this, this.getCenteredPan());
 
 		this.applyTransform();
 	}
 
 	// ===== CENTERING METHODS =====
 
+	getCenteredPan(rect = this.getUsableRect(), centerX = this.canvasWidth / 2, centerY = this.canvasHeight / 2) {
+		// Negative pan keeps oversized artwork centered, with equal overflow.
+		return {
+			panX: rect.left + rect.width / 2 - centerX * this.currentZoom,
+			panY: rect.top + rect.height / 2 - centerY * this.currentZoom
+		};
+	}
+
 	centerHorizontal(options = {}) {
 		if (!this.canvasWidth) return;
 		this.prepareViewChange(options);
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const scaledWidth = this.canvasWidth * this.currentZoom;
-
 		// Center horizontally, keep vertical position
-		this.panX = (containerRect.width - scaledWidth) / 2;
+		this.panX = this.getCenteredPan().panX;
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -536,11 +575,8 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.prepareViewChange(options);
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const scaledHeight = this.canvasHeight * this.currentZoom;
-
 		// Center vertically, keep horizontal position
-		this.panY = (containerRect.height - scaledHeight) / 2;
+		this.panY = this.getCenteredPan().panY;
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -568,15 +604,15 @@ class ViewportManager {
 			return;
 		}
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
+		const containerRect = this.getUsableRect();
 		const scaledWidth = this.canvasWidth * this.currentZoom;
 		const scaledHeight = this.canvasHeight * this.currentZoom;
 		const minVisibleWidth = Math.min(containerRect.width, scaledWidth * 0.15);
 		const minVisibleHeight = Math.min(containerRect.height, scaledHeight * 0.15);
-		const minPanX = minVisibleWidth - scaledWidth;
-		const maxPanX = containerRect.width - minVisibleWidth;
-		const minPanY = minVisibleHeight - scaledHeight;
-		const maxPanY = containerRect.height - minVisibleHeight;
+		const minPanX = containerRect.left + minVisibleWidth - scaledWidth;
+		const maxPanX = containerRect.left + containerRect.width - minVisibleWidth;
+		const minPanY = containerRect.top + minVisibleHeight - scaledHeight;
+		const maxPanY = containerRect.top + containerRect.height - minVisibleHeight;
 
 		this.panX = Math.min(maxPanX, Math.max(minPanX, this.panX));
 		this.panY = Math.min(maxPanY, Math.max(minPanY, this.panY));
@@ -690,24 +726,19 @@ class ViewportManager {
 	}
 
 	performResizeUpdate(options = {}) {
+		if (this.canvasWidth && options.bounds) {
+			this.zoomToBounds(options.bounds, options);
+			const rect = this.previewContainer.getBoundingClientRect();
+			this.lastViewportWidth = rect.width;
+			this.lastViewportHeight = rect.height;
+			return;
+		}
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const newWidth = containerRect.width;
 		const newHeight = containerRect.height;
 
-		// If canvas exists, adjust pan to keep centered
+		// Fit supplies the resize target from the shared available-space policy.
 		if (this.canvasWidth) {
-			// Animated, the recentring is part of the move, not a jump before it.
-			if (options.animate) this.startViewTransition();
-			const deltaX = newWidth - this.lastViewportWidth;
-			const deltaY = newHeight - this.lastViewportHeight;
-
-			this.panX += deltaX / 2;
-			this.panY += deltaY / 2;
-
-			this.applyTransform();
-			this._notifyViewportChanged();
-
-			// Optional: auto-fit on resize
 			this.zoomToFit({ animate: options.animate === true });
 		}
 
@@ -784,6 +815,7 @@ class ViewportManager {
 	}
 
 	_notifyViewportChanged() {
+		this.syncOverlayLayout();
 		// Dispatch custom event for editor to listen to
 		window.dispatchEvent(new CustomEvent('viewportChanged', {
 			detail: {

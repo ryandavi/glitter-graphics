@@ -19,6 +19,7 @@
 		position: relative;
 		border-bottom: 1px solid var(--color-border);
 		flex-shrink: 0;
+		min-height: calc(var(--row-height) + var(--spacing-sm) * 2);
 
 		padding: var(--spacing-sm);
 
@@ -26,7 +27,9 @@
 		justify-content: space-between;
 		align-items: center;
 
-		@include windows7-bar();
+		@media (min-width: ($mobile-breakpoint + 1px)) {
+			@include windows7-bar();
+		}
 
 		>.section-header-title {
 
@@ -188,7 +191,9 @@
 		// closes, it never collapses.
 		&:not(.design-gallery-section) >.section-header { cursor: pointer; }
 
-		&:not(.design-gallery-section) { @include windows7-bar(true); }
+		@media (min-width: ($mobile-breakpoint + 1px)) {
+			&:not(.design-gallery-section) { @include windows7-bar(true); }
+		}
 	}
 }
 

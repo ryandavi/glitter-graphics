@@ -8,6 +8,7 @@ class AnimationPanelController {
 			.map(([type, config]) => [type, config.transformPrefix]));
 
 		this.selectedByLayer = new Map();
+		this.previewFrames = new Map();
 		this.prefixByType.forEach((_prefix, type) => this._bind(type));
 		this.pauseButton = document.getElementById('pauseMotionTool');
 		this.pauseButton?.addEventListener('click', () => this.setPaused(!this.editor.animationTicker.paused));
@@ -21,26 +22,44 @@ class AnimationPanelController {
 			this.pauseButton.title = paused ? 'Resume motion' : 'Pause motion';
 			this.pauseButton.querySelector('.name').textContent = paused ? 'Resume motion' : 'Pause motion';
 		}
-		this.editor.layerManager.layers.forEach((layer) => {
-			if (layer.type !== LayerType.STICKER || !layer.stickerData?.isAnimated) return;
-			const image = this.editor.stickerManager.layerElements.get(layer.id)?.querySelector('img.sticker-image');
-			if (!image) return;
-			if (!paused) {
-				if (image.dataset.motionSource) image.src = image.dataset.motionSource;
-				delete image.dataset.motionSource;
-				return;
-			}
-			if (image.dataset.motionSource) return;
-			image.dataset.motionSource = layer.stickerData.url;
-			loadImageElement(layer.stickerData.url).then(firstFrame => {
-				if (!this.editor.animationTicker.paused || !image.isConnected) return;
-				const canvas = createAppCanvas(0, 0, 'systems/AnimationPanelController');
-				canvas.width = firstFrame.naturalWidth;
-				canvas.height = firstFrame.naturalHeight;
-				canvas.getContext('2d').drawImage(firstFrame, 0, 0);
-				image.src = canvas.toDataURL('image/png');
-			}).catch(error => console.warn('Could not pause sticker image:', error));
-		});
+		if (!paused) this.previewFrames.clear();
+		this.editor.requestPreviewUpdate();
+	}
+
+	getPreviewImageUrl(url) {
+		if (!url || !this.editor.animationTicker.paused) return url;
+		let entry = this.previewFrames.get(url);
+		if (!entry) {
+			entry = { url: null };
+			this.previewFrames.set(url, entry);
+			this.loadPreviewFrame(url).then(frameUrl => {
+				entry.url = frameUrl;
+				if (this.previewFrames.get(url) === entry && this.editor.animationTicker.paused) this.editor.requestPreviewUpdate();
+			}).catch(error => {
+				entry.url = url;
+				console.warn('Could not pause preview image:', error);
+			});
+		}
+		return entry.url || url;
+	}
+
+	async loadPreviewFrame(url) {
+		const bytes = await fetchGifBytes(url);
+		const canvas = createAppCanvas(0, 0, 'systems/AnimationPanelController');
+		if (bytes[0] === 71 && bytes[1] === 73 && bytes[2] === 70) {
+			const reader = openGifReader(bytes);
+			canvas.width = reader.width;
+			canvas.height = reader.height;
+			const pixels = new Uint8ClampedArray(reader.width * reader.height * 4);
+			reader.decodeAndBlitFrameRGBA(0, pixels);
+			canvas.getContext('2d').putImageData(new ImageData(pixels, reader.width, reader.height), 0, 0);
+		} else {
+			const image = await loadImageElement(url);
+			canvas.width = image.naturalWidth;
+			canvas.height = image.naturalHeight;
+			canvas.getContext('2d').drawImage(image, 0, 0);
+		}
+		return canvas.toDataURL('image/png');
 	}
 
 	_id(prefix, suffix) {

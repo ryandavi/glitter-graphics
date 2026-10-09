@@ -191,6 +191,7 @@ function getQuickAddLayerEntries() {
 			type,
 			id: config.quickAddId,
 			order: config.quickAddOrder,
+			phoneChip: config.phoneChip,
 			label: config.label,
 			icon: config.icon,
 			description: config.description,

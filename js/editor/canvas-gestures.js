@@ -505,7 +505,7 @@ togglePreview() {
 			if (nativeGestureActive || performance.now() < nativeGestureSuppressWheelUntil) return;
 
 			const input = VIEWPORT_INPUT.normalizeWheel(e, {
-				pageSize: this.previewContainer.clientHeight,
+				pageSize: this.viewport.getUsableRect().height,
 				zoomSensitivity: CONFIG.ui.gestures.wheelZoomSensitivity
 			});
 			if (input.type === 'zoom') {

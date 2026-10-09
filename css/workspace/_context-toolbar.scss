@@ -9,8 +9,8 @@
 .color-picker-controls,
 .mask-brush-controls {
 	position: absolute;
-	bottom: var(--spacing-from-edge);
-	left: 50%;
+	bottom: var(--canvas-overlay-bottom, var(--spacing-from-edge));
+	left: var(--canvas-overlay-center, 50%);
 	transform: translate(-50%, 6px);
 	display: flex;
 	align-items: center;
@@ -20,7 +20,7 @@
 	// Sized by its controls, never by the room left of its anchor; past
 	// max-width the one row scrolls sideways instead of wrapping.
 	width: max-content;
-	max-width: calc(100% - var(--spacing-xl));
+	max-width: var(--canvas-overlay-width, calc(100% - var(--spacing-xl)));
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;

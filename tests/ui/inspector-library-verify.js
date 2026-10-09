@@ -33,6 +33,34 @@ async function swipe(page, start, end) {
 	await session.detach();
 }
 
+async function verifyCanvasCentering(page) {
+	await page.evaluate(() => window.editor.setTool(ToolType.HAND));
+	for (const zoom of [0.5, 4]) {
+		const before = await page.evaluate(value => {
+			const viewport = window.editor.viewport;
+			viewport.setZoom(value);
+			viewport.panBy(73, 61);
+			return { x: viewport.panX, y: viewport.panY };
+		}, zoom);
+		await page.locator('#centerCanvasHorizontal').click();
+		await wait(page);
+		assert.equal(await page.evaluate(() => window.editor.viewport.panY), before.y, 'Center H preserves vertical pan');
+		const centeredX = await page.evaluate(() => window.editor.viewport.panX);
+		await page.locator('#centerCanvasVertical').click();
+		await wait(page);
+		assert.equal(await page.evaluate(() => window.editor.viewport.panX), centeredX, 'Center V preserves horizontal pan');
+		assert(await page.evaluate(value => {
+			const viewport = window.editor.viewport;
+			const area = viewport.getUsableRect();
+			const workspace = window.editor.previewContainer.getBoundingClientRect();
+			const canvas = window.editor.previewWrapper.getBoundingClientRect();
+			return viewport.currentZoom === value
+				&& Math.abs(canvas.left + canvas.width / 2 - workspace.left - area.left - area.width / 2) < 1
+				&& Math.abs(canvas.top + canvas.height / 2 - workspace.top - area.top - area.height / 2) < 1;
+		}, zoom), 'Hand controls center the actual canvas in the usable area at small and oversized zoom');
+	}
+}
+
 async function main() {
 	fs.mkdirSync(output, { recursive: true });
 	const browser = await browserType.launch();
@@ -49,9 +77,10 @@ async function main() {
 			window.editor.setTool(ToolType.SELECT);
 		});
 		await wait(page);
-		assert.deepEqual(await page.evaluate(() => window.editor.mobileManager.barEntries.filter((entry) => entry.button).map((entry) => entry.title)), ['Sticker', 'Fill Layer', 'Shape', 'Text', 'Sparkles']);
+		assert.deepEqual(await page.evaluate(() => window.editor.mobileManager.barEntries.filter((entry) => entry.button).map((entry) => entry.title)), ['Sticker', 'Fill Layer', 'Shape', 'Text']);
 		assert(await page.locator('.mobile-layers-swatch').evaluate((node) => node.classList.contains('is-unset')));
-		assert(await page.locator('.phone-chip.is-add').count() === 5);
+		assert(await page.locator('.phone-chip.is-add').count() === 4);
+		assert(await page.locator('#quickActionAddSparkles').count() === 1, 'Sparkles remains available in Quick Add');
 		assert(await page.locator('#quickActionAddPhotoShape').count() === 1, 'Photo in Shape remains available in Quick Add');
 		for (let run = 0; browserType === chromium && run < 3; run++) {
 			await page.locator('#phoneChipBar').evaluate((node) => { node.scrollLeft = 0; });
@@ -102,8 +131,28 @@ async function main() {
 		});
 		await wait(page);
 		await press(page, 'Type');
+		assert(await page.evaluate(() => {
+			const editor = window.editor;
+			const box = getLayersCanvasBox(editor, editor.layerManager.getSelectedLayers(), { visual: true });
+			const rect = editor.viewport.getUsableRect();
+			const padding = CONFIG.ui.mobile.editingViewportPadding;
+			const expected = Math.max(CONFIG.ui.zoom.levels[0], Math.min(CONFIG.ui.zoom.levels.at(-1),
+				(rect.width - padding) / (box.right - box.left), (rect.height - padding) / (box.bottom - box.top)));
+			return Math.abs(editor.viewport.currentZoom - expected) < 0.001;
+		}), 'The selected object fits the available editing area with padding');
+		assert(await page.evaluate(() => {
+			const box = getLayersCanvasBox(window.editor, window.editor.layerManager.getSelectedLayers(), { visual: true });
+			const state = window.editor.viewport.captureViewState();
+			return Math.abs(state.focusX - (box.left + box.right) / 2) < 1 && Math.abs(state.focusY - (box.top + box.bottom) / 2) < 1;
+		}), 'The edited object is centered above the sheet');
+		const editingView = await page.evaluate(() => window.editor.viewport.captureViewState());
+		if (css) assert.equal(await page.locator('[data-panel-resize="design"]').evaluate((node) => getComputedStyle(node).display), 'none', 'Desktop panel resize handle is hidden on mobile');
 		await page.evaluate(() => window.editor.fontBrowserManager.openPicker());
 		await wait(page);
+		const libraryView = await page.evaluate(() => window.editor.viewport.captureViewState());
+		assert.equal(libraryView.zoom, editingView.zoom, 'Switching to Library preserves zoom');
+		assert(Math.abs(libraryView.focusX - editingView.focusX) < 1 && Math.abs(libraryView.focusY - editingView.focusY) < 1, 'Switching to Library preserves focus');
+		assert(await page.evaluate(() => window.editor.fontBrowserManager.browser.rail.selection.root === LIBRARY_ALL_ID), 'Default font opens All');
 		assert(await page.locator('#libraryBack').isVisible(), 'Font Library must have Back');
 		await page.locator('#libraryBack').click();
 		await wait(page);
@@ -111,6 +160,7 @@ async function main() {
 		await press(page, 'Fill');
 		await page.evaluate(() => window.editor.textGlitterManager.armPicker('fill'));
 		await wait(page);
+		assert(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root === LIBRARY_ALL_ID), 'Default fill opens All');
 		await page.locator('#libraryBack').click();
 		await wait(page);
 		assert(await page.locator('#flyoutSection').isVisible());
@@ -163,8 +213,15 @@ async function main() {
 		await wait(page);
 		assert.equal(await page.evaluate(() => window.editor.mobileManager.activeDrawer), null, 'Escape must dismiss inline sheets');
 		console.log('PASS browser Back, Forward and Escape dismiss sheets without stale sessions');
+		await verifyCanvasCentering(page);
+		await press(page, 'Transform');
+		await verifyCanvasCentering(page);
+		await page.keyboard.press('Escape');
+		await wait(page);
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.waitForTimeout(800);
+		await verifyCanvasCentering(page);
+		console.log('PASS Hand centering keeps zoom and the other axis on phone and desktop, including oversized canvases');
 		await page.evaluate((id) => { window.editor.setTool(ToolType.SELECT); window.editor.layerManager.setActiveLayer(id); window.editor.viewport.zoomToFill(); }, textId);
 		const before = await page.evaluate(() => ({ rect: window.editor.previewContainer.getBoundingClientRect().toJSON(), view: window.editor.viewport.captureViewState(), usable: window.editor.viewport.getUsableRect() }));
 		await page.evaluate(() => window.editor.pickers.toggleFlyout('fill'));
@@ -179,9 +236,10 @@ async function main() {
 			assert(await page.evaluate(() => {
 				const rect = document.getElementById('viewMenu').getBoundingClientRect();
 				const workspace = document.getElementById('previewContainer').getBoundingClientRect();
+				const area = editor.viewport.getOverlayRect();
 				const viewButton = document.getElementById('pauseMotionTool');
 				const contextButton = document.querySelector('#panControls .btn-icon');
-				return Math.abs(rect.x + rect.width / 2 - workspace.x - workspace.width / 2) < 1
+				return Math.abs(rect.x + rect.width / 2 - workspace.x - area.left - area.width / 2) < 1
 					&& getComputedStyle(viewButton).height === getComputedStyle(contextButton).height;
 			}), 'View menu shares the workspace center and context button scale');
 			assert(await divider.isVisible(), 'Both panes expose the divider');

@@ -281,13 +281,12 @@ const TEXT_EDIT_METHODS = {
 		const viewport = window.visualViewport;
 		if (!viewport) return;
 		const container = this.editor.previewContainer.getBoundingClientRect();
-		const occluded = Math.max(0, container.bottom - viewport.offsetTop - viewport.height);
+		this.editor.viewport.syncOverlayLayout();
 		const toolbar = document.getElementById('textEditControls');
-		if (toolbar) toolbar.style.bottom = `calc(${occluded}px + var(--mobile-floating-inset))`;
 		const caret = this.layerElements.get(this.editSession.layerId)?.querySelector('.text-edit-caret')?.getBoundingClientRect();
 		if (!caret) return;
 		const safeTop = Math.max(container.top, viewport.offsetTop);
-		const safeBottom = Math.min(container.bottom, viewport.offsetTop + viewport.height) - (toolbar?.offsetHeight || 0);
+		const safeBottom = Math.min(container.bottom, viewport.offsetTop + viewport.height, toolbar?.getBoundingClientRect().top ?? container.bottom);
 		if (caret.bottom > safeBottom) this.editor.viewport.panBy(0, safeBottom - caret.bottom);
 		else if (caret.top < safeTop) this.editor.viewport.panBy(0, safeTop - caret.top);
 	},

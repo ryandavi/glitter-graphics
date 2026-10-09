@@ -183,6 +183,8 @@ async function main() {
 		if (process.env.GLITTER_TEST_REVIEW) { await page.waitForTimeout(250); await page.screenshot({ path: `${process.env.GLITTER_TEST_REVIEW}/desktop-edit.png` }); }
 		await page.keyboard.press('Escape');
 		const selectedBody = page.locator('.transform-handles[data-layer-id="' + await page.evaluate(() => editor.layerManager.activeLayerId) + '"] .transform-bounding-box');
+		await page.evaluate(() => editor.pickers.closeActive());
+		await page.waitForTimeout(350);
 		await selectedBody.dblclick({ position: { x: 25, y: 25 } });
 		assert(await page.evaluate(() => Boolean(editor.textGlitterManager.editSession)), 'Double-click on selected chrome starts editing');
 		await page.keyboard.press('Escape');
@@ -257,6 +259,22 @@ async function main() {
 		assert.equal(await phone.page.evaluate(() => editor.layerManager.getActiveLayer().textData.boxMode), 'fixed');
 		assert.equal(await phone.page.evaluate(() => document.activeElement.id), 'canvasTextInput');
 		await phone.page.locator('#canvasTextInput').fill('Phone');
+		assert(await phone.page.evaluate(() => {
+			const bar = document.getElementById('textEditControls').getBoundingClientRect();
+			const nav = document.querySelector('.mobile-bottom-nav').getBoundingClientRect();
+			return bar.bottom <= nav.top && Math.abs(bar.left + bar.width / 2 - window.innerWidth / 2) < 1;
+		}), 'Phone text actions share the page center above the nav');
+		assert(await phone.page.evaluate(() => {
+			const descriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+			Object.defineProperty(window, 'visualViewport', { configurable: true, value: { offsetTop: 0, height: 500 } });
+			try {
+				editor.textGlitterManager.syncTextKeyboardViewport();
+				return document.getElementById('textEditControls').getBoundingClientRect().bottom <= 500;
+			} finally {
+				Object.defineProperty(window, 'visualViewport', descriptor);
+				editor.textGlitterManager.syncTextKeyboardViewport();
+			}
+		}), 'Phone text actions clear the onscreen keyboard');
 		if (process.env.GLITTER_TEST_REVIEW) { await phone.page.waitForTimeout(250); await phone.page.screenshot({ path: `${process.env.GLITTER_TEST_REVIEW}/phone-edit.png` }); }
 		await phone.page.keyboard.press('Escape');
 		assert.deepEqual(phone.errors, []);

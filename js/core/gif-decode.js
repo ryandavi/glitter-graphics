@@ -1,9 +1,10 @@
 'use strict';
 
 // One GIF decoder for the app (omggif's GifReader underneath). Preview never
-// decodes pixels: it shows the GIF file itself and reads its size from the
+// decodes playing pixels: it shows the GIF file itself and reads its size from the
 // manifest. Export decodes on demand (SceneCompositor), and code that only
 // needs timing reads it with readGifTiming, which skips pixel decoding.
+// Pause motion decodes only the first frame for a static preview texture.
 
 // Canonical frame duration: a missing or zero delay becomes the fallback, and
 // nothing plays faster than 20 ms, which is what browsers do with such GIFs.

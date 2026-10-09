@@ -45,6 +45,12 @@ const ASSET_BROWSER_COLOR_CHIPS = ['red', 'orange', 'yellow', 'green', 'blue', '
 const ASSET_BROWSERS = Object.freeze([
 	{
 		prefix: 'glitter', searchHost: 'glitterSearchSection', browserHost: 'glitterOptions',
+		pickerDefault: (editor) => {
+			const session = editor.pickers.active?.pickerSession;
+			if (session?.defaultAssetId != null) return session.defaultAssetId;
+			const layer = editor.layerManager.getLayerById(session?.layerId) || editor.layerManager.getInspectedLayer();
+			return getPaintSlotDefaultGlitterId(layer?.type, getPaintSlotDefinition(layer?.type, session?.slot || 'fill'));
+		},
 		title: 'Glitter', home: 'categories', browseLabel: 'Style', placeholder: 'Search by name or tag...',
 		creatorView: true, tileCategoryIcon: true,
 		filters: [
@@ -64,6 +70,7 @@ const ASSET_BROWSERS = Object.freeze([
 	},
 	{
 		prefix: 'sticker', searchHost: 'stickersSearchSection', browserHost: 'stickersOptions',
+		pickerDefault: () => CONFIG.tools.stickers.defaultStickerId,
 		title: 'Stickers', home: 'categories', browseLabel: 'Style', placeholder: 'Search stickers...',
 		creatorView: true,
 		filters: [
@@ -79,16 +86,19 @@ const ASSET_BROWSERS = Object.freeze([
 	},
 	{
 		prefix: 'brushTip', searchHost: 'brushTipSearchSection', browserHost: 'brushTipOptions',
+		pickerDefault: () => CONFIG.tools.maskBrush.defaultShape,
 		title: 'Brush Tips', home: 'categories', browseLabel: 'Browse', categoryHeading: 'Raster brush sets', placeholder: 'Search brush tips...',
 		filters: [{ kind: 'categories', label: 'Category' }]
 	},
 	{
 		prefix: 'shape', searchHost: 'shapesSearchSection', browserHost: 'shapesOptions',
+		pickerDefault: () => CONFIG.tools.shapes.defaultShapeId,
 		title: 'Shapes', home: 'everything', browseLabel: 'Browse', placeholder: 'Search shapes...',
 		filters: [{ kind: 'categories', label: 'Category' }]
 	},
 	{
 		prefix: 'font', searchHost: 'fontsSearchSection', browserHost: 'fontsOptions',
+		pickerDefault: () => CONFIG.tools.text.defaultFontId,
 		title: 'Fonts', home: 'everything', browseLabel: 'Browse', placeholder: 'Search fonts...',
 		filters: [
 			{ kind: 'chips', label: 'Source', filter: 'font-source', attribute: 'value', options: [

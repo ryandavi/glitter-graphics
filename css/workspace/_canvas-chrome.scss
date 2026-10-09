@@ -9,9 +9,9 @@
 //   row 3: the hint, or the export progress card
 .preview-controls {
 	position: absolute;
-	top: var(--spacing-from-edge);
-	left: var(--spacing-from-edge);
-	right: var(--spacing-from-edge);
+	top: var(--canvas-overlay-top, var(--spacing-from-edge));
+	left: var(--canvas-overlay-left, var(--spacing-from-edge));
+	right: var(--canvas-overlay-right, var(--spacing-from-edge));
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	grid-template-areas:

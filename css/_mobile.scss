@@ -121,37 +121,17 @@
 		overscroll-behavior: contain;
 		touch-action: pan-y;
 
-		>.toolbar-group+.toolbar-group {
-			margin: 0;
-			padding: 0;
-			border: 0;
-		}
-
 		>.toolbar-utility-group { display: none; }
 	}
 
 	// Roomier touch targets for the header menu on phones.
 	.app-menu-item { padding: var(--spacing-md) var(--spacing-sm); }
 
-	.preview-controls {
-		top: var(--mobile-floating-inset);
-		// Start past the floating tool rail (fixed, left edge) so the top controls
-		// can never sit on top of it whatever the pill's height does.
-		left: calc(var(--mobile-toolbar-width) + var(--mobile-floating-inset) * 2);
-		right: var(--mobile-floating-inset);
-
-		// The zone starts past the rail, so its own centre is right of the
-		// screen's. The view toggles go back by half the difference.
-		>.preview-controls-view { transform: translateX(calc((var(--mobile-toolbar-width) + var(--mobile-floating-inset)) / -2)); }
-	}
-
 	.zoom-controls,
 	.layer-center-controls,
 	.pan-controls,
 	.color-picker-controls,
 	.mask-brush-controls {
-		bottom: var(--mobile-floating-inset);
-		max-width: calc(100% - var(--mobile-floating-inset) * 2);
 		gap: var(--spacing-xs);
 		padding: var(--spacing-xs);
 
@@ -161,21 +141,12 @@
 		.context-label { font-size: var(--font-size-xs); }
 	}
 
-	// The rail and the context bars step aside for a sheet. Nothing else moves:
-	// the top controls keep the place they have beside the rail.
+	// The rail steps aside for a sheet; the active context bar stays above it.
 	body.sheetOpen {
-		.toolbar,
-		.zoom-controls,
-		.layer-center-controls,
-		.pan-controls,
-		.color-picker-controls,
-		.mask-brush-controls {
+		.toolbar {
 			opacity: 0;
 			visibility: hidden;
 			pointer-events: none;
-		}
-
-		.toolbar {
 			transform: translate(calc(-100% - var(--mobile-floating-inset)), -50%);
 			transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 		}
@@ -239,7 +210,11 @@
 		background-position: center;
 		flex-shrink: 0;
 
-		&.is-unset { @include swatch-unset-fill; }
+		&.is-unset {
+			@include swatch-unset-fill;
+			background-color: var(--color-text-on-accent);
+			box-shadow: 0 0 0 1px var(--color-text-on-accent);
+		}
 
 		&.pixelated {
 			image-rendering: pixelated;
@@ -312,9 +287,9 @@
 		align-items: center;
 		gap: var(--spacing-sm);
 		flex: 0 0 auto;
-		min-height: var(--touch-target-min);
+		height: var(--touch-target-min);
 		touch-action: none;
-		padding: 0 var(--spacing-base) var(--spacing-xs) var(--spacing-lg);
+		padding: 0 var(--spacing-base);
 		border: 0;
 		background: none;
 		text-shadow: none;
@@ -435,8 +410,7 @@
 			> .mobile-drawer-btn-group {
 				flex: 0 0 auto;
 
-				&:not(:first-child),
-				.mobile-layers-label { display: none; }
+				&:not(:first-child) { display: none; }
 			}
 
 			> .phone-chip-bar { display: flex; }
