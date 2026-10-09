@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=8ed654b0">
+	<link rel="stylesheet" href="css/style.css?v=d21abc74">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -341,9 +341,11 @@
 								<span class="inspector-title-badge" id="inspectorTitleBadge"></span>
 								<span class="locked-layer-badge" id="inspectorLockedBadge" hidden>Locked</span>
 							</h3>
-							<!-- The Inspector as the phone's sheet closes like the window. -->
+							<!-- The Inspector as the phone's sheet closes like the window. In
+							     the column the button is hidden and keeps the bar as tall as
+							     every other panel's. -->
 							<div class="section-header-actions">
-								<button type="button" class="section-header-action btn-icon icon-wrapper sheet-close-action visible" id="inspectorClose" title="Close" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper sheet-close-action" id="inspectorClose" title="Close" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 						</div>
 						<div class="inspector-switch" id="inspectorSwitch" hidden></div>
@@ -1820,7 +1822,7 @@
 	<script src="js/layers/types/text.js?v=82bac5d5"></script>
 	<script src="js/layers/types/frame.js?v=9d9620d2"></script>
 	<script src="js/layers/types/sparkles.js?v=9cb2ee75"></script>
-	<script src="js/layers/types/shape.js?v=8f78974e"></script>
+	<script src="js/layers/types/shape.js?v=a8d58983"></script>
 	<script src="js/layers/types/path.js?v=7b69eae2"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=d276b6ae"></script>
@@ -1895,7 +1897,7 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=dc47055d"></script>
+	<script src="js/editor/panels.js?v=48440193"></script>
 	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
 	<script src="js/editor/disclosures.js?v=649823d5"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
@@ -1909,8 +1911,8 @@
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/library-window.js?v=948a36dd"></script>
-	<script src="js/ui/picker-session.js?v=ed8a137c"></script>
+	<script src="js/ui/library-window.js?v=25721425"></script>
+	<script src="js/ui/picker-session.js?v=f3a32188"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1947,7 +1949,7 @@
 	<script src="js/assets/BrushLibrary.js?v=dbe8686a"></script>
 	<script src="js/assets/FontLibrary.js?v=0a049983"></script>
 	<script src="js/paint/brush-stamp.js?v=a343d53e"></script>
-	<script src="js/systems/MaskEditor.js?v=79efccb2"></script>
+	<script src="js/systems/MaskEditor.js?v=af7b5482"></script>
 
 	<!-- Layers-->
 	<script src="js/layers/LayerManager.js?v=69906248"></script>
@@ -1961,7 +1963,7 @@
 	<script src="js/assets/ContentManager.js?v=d18d593e"></script>
 	<script src="js/assets/GlitterBrowserManager.js?v=7e93ed2c"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=1f5aba35"></script>
-	<script src="js/assets/BrushTipManager.js?v=085ae15b"></script>
+	<script src="js/assets/BrushTipManager.js?v=1f7c4152"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
 	<script src="js/assets/FontBrowserManager.js?v=09091e39"></script>
@@ -1977,16 +1979,16 @@
 	<script src="js/ui/text-edit.js?v=2df3f2cd"></script>
 	<script src="js/ui/crop-edit.js?v=4aed6e38"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
-	<script src="js/layers/TextGlitterManager.js?v=35f44513"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=0fe3be23"></script>
-	<script src="js/layers/StickerManager.js?v=d6ed9192"></script>
+	<script src="js/layers/TextGlitterManager.js?v=0f4a8582"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=9d3c1ecd"></script>
+	<script src="js/layers/StickerManager.js?v=4e7356aa"></script>
 	<script src="js/layers/FilterLayerManager.js?v=3763d4be"></script>
 	<script src="js/layers/FrameLayerManager.js?v=3a8e7cae"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=d5529c7b"></script>
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=caffed1f"></script>
+		<script src="js/systems/MobileManager.js?v=2d6bc9ac"></script>
 
 	<!-- App -->
 	<script src="js/app.js?v=ecf3fff0"></script>

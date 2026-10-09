@@ -261,6 +261,9 @@
 		-webkit-backdrop-filter: var(--panel-backdrop);
 		backdrop-filter: var(--panel-backdrop);
 
+		// As tall as a collapsible section's bar, which has no line of its own.
+		> .section-header { border-bottom: unset; }
+
 		// The bar reads a layer's own name, so it keeps its case.
 		> .section-header > .section-header-title > .section-header-title-text { text-transform: none; }
 

@@ -38,8 +38,6 @@ class StickerManager {
 
 	setupUI() {
 		this.ui = {
-			fitCanvas: document.getElementById('stickerFitCanvas'),
-			fillCanvas: document.getElementById('stickerFillCanvas'),
 			assetThumbnail: document.getElementById('stickerAssetThumbnail')
 		};
 		this.ui.gallerySection = document.getElementById('designGallerySection');
@@ -77,8 +75,6 @@ class StickerManager {
 	setupEventListeners() {
 		document.getElementById('stickerRemoveBackground')?.addEventListener('click', () => COMMANDS.removeBackground.run(this.editor));
 
-		this.ui.fitCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fit'));
-		this.ui.fillCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fill'));
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
 		[
@@ -123,27 +119,6 @@ class StickerManager {
 			this.ui.assetThumbnail.style.filter = filter;
 		}
 		this.editor.refreshLayerSwatchFilter(layer);
-	}
-
-	// 'fit' = contain (whole sticker visible), 'fill' = cover (canvas fully
-	// covered). Both center the sticker and scale proportionally.
-	scaleActiveStickerToCanvas(mode) {
-		const layer = this.editor.layerManager.getActiveLayer();
-		if (layer?.type !== LayerType.STICKER || layer.stickerData?.isEmpty) return;
-		const width = Math.max(1, layer.stickerData.width);
-		const height = Math.max(1, layer.stickerData.height);
-		const pick = mode === 'fill' ? Math.max : Math.min;
-		const scale = clampLayerScale(pick(
-			this.editor.originalCanvas.width / width,
-			this.editor.originalCanvas.height / height
-		) * 100);
-		this.updateTransform(layer.id, {
-			position: { x: this.editor.originalCanvas.width / 2, y: this.editor.originalCanvas.height / 2 },
-			scale: { x: scale, y: scale },
-			proportionalScale: true
-		});
-		this.editor.loadTransformSettings(layer, 'sticker');
-		this.editor.saveState('Edit sticker');
 	}
 
 	armPicker(slot) {

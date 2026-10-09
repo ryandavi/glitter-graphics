@@ -78,7 +78,10 @@ class LibraryWindow {
 		this.element.classList.toggle('has-flyout', Boolean(card));
 		this.element.classList.toggle('has-library', picking);
 		const open = !drawers && (picking || Boolean(card));
-		if (open === this.isOpen) return;
+		if (open === this.isOpen) {
+			this.syncBack(sheet, picking, card);
+			return;
+		}
 		const viewport = this.editor.viewport;
 		const current = viewport?.captureViewState?.() || null;
 		const tookCanvasSpace = this.isOpen && this.tier !== 'float';
@@ -92,6 +95,7 @@ class LibraryWindow {
 			this.setTier(null);
 			if (open) mobile.openDrawer('window');
 			else mobile.closeSheet('window');
+			this.syncBack(sheet, picking, card);
 			return;
 		}
 
@@ -143,10 +147,8 @@ class LibraryWindow {
 		document.getElementById('flyoutSection').classList.toggle('visible', Boolean(card));
 		if (!card) return null;
 		document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${PANEL_SCHEMAS[layer.type].section.icon}`);
-		// Beside the Inspector the bar says where; the phone's sheet sits under
-		// the layer it changes and names the section alone.
-		document.getElementById('flyoutTitleText').textContent = editor.mobileManager?.usesBar
-			? card.dataset.flyoutTitle : `${card.dataset.flyoutTitle} · ${describeLayer(layer, editor).name}`;
+		// The Inspector's bar beside it names the layer.
+		document.getElementById('flyoutTitleText').textContent = card.dataset.flyoutTitle;
 
 		// A Glitter source is the glitter Library: arm it through the paint's own
 		// chip, which is where every manager binds its picker. A section with two
@@ -162,11 +164,17 @@ class LibraryWindow {
 		return card;
 	}
 
-	// In the phone's sheet the Library opens over its section; Back returns to
-	// the section. Returns whether there was one to return to.
+	// In the phone's sheet the Library opens over the section it picks for,
+	// whichever sheet that section is in; Back returns to it.
+	syncBack(sheet, picking, card) {
+		this.element.classList.toggle('has-back', sheet && picking && Boolean(card || this.editor.mobileManager.sheetReturn));
+	}
+
 	backToSection() {
 		const pickers = this.editor.pickers;
-		if (!this.editor.mobileManager?.usesBar || !this.flyoutCard || !pickers.active) return false;
+		const mobile = this.editor.mobileManager;
+		if (!mobile?.usesBar || !pickers.active) return false;
+		if (!this.flyoutCard) return mobile.returnToSection();
 		pickers.closeAll();
 		this.sync();
 		return true;

@@ -185,6 +185,7 @@ registerLayerType(LayerType.SHAPE, {
 		// sit as an unbaked CSS stretch; handles bake theirs on release.
 		scaleReadout: false,
 		lockAspect: true,
+		fitCanvas: true,
 		rotation: true,
 		opacity: true,
 		flip: true,

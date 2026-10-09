@@ -136,7 +136,7 @@ class MaskEditor {
 		});
 
 		[this.ui.tipThumbnail, this.ui.tipChange].forEach((control) => {
-			control?.addEventListener('click', () => this.editor.brushTipManager?.openPicker());
+			control?.addEventListener('click', () => pressAssetRow(this.editor, this.editor.brushTipManager, () => this.editor.brushTipManager?.openPicker()));
 		});
 		this.renderDynamicsPanel();
 

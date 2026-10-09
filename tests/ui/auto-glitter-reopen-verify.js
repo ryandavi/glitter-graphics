@@ -162,7 +162,7 @@ async function main() {
 		});
 		assert.strictEqual(renamed.generatedName, renamed.expected, 'Generated fill-layer name did not follow its new swatch');
 		assert.strictEqual(renamed.rowName, renamed.expected, 'Layers panel kept the previous swatch name');
-		assert.ok(renamed.pickerDetail.includes(renamed.expected), 'The Library title kept the previous swatch name');
+		assert.strictEqual(renamed.pickerDetail, 'Fill', 'The Library title names what a pick changes, not the layer');
 		assert.strictEqual(renamed.customName, 'My custom fill', 'Swatch selection replaced a custom layer name');
 		assert.deepStrictEqual(pageErrors, [], `Page errors: ${pageErrors.join('; ')}`);
 		console.log('PASS Auto Glitter reopens, cancels safely, and applies over the current batch');

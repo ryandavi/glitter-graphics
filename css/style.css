@@ -3393,6 +3393,15 @@ body.is-resizing-panel canvas {
   order: 2;
 }
 
+.design-panel.library-window {
+  padding-right: 0;
+}
+
+.flyout-switch {
+  display: flex;
+  align-items: center;
+}
+
 .main-content > .design-panel.library-window:not(.is-open) {
   display: none;
 }
@@ -3404,6 +3413,9 @@ body.is-resizing-panel canvas {
   min-height: 0;
   background: var(--panel-bg);
   backdrop-filter: var(--panel-backdrop);
+}
+.library-window > .flyout-section > .section-header {
+  border-bottom: unset;
 }
 .library-window > .flyout-section > .section-header > .section-header-title > .section-header-title-text {
   text-transform: none;
@@ -3452,7 +3464,7 @@ body.is-resizing-panel canvas {
   .library-window.has-library.has-flyout > .flyout-section {
     display: none;
   }
-  .library-window.has-library.has-flyout .library-back-action {
+  .library-window.has-back .library-back-action {
     display: inline-flex;
   }
 }
@@ -6367,6 +6379,9 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
   min-height: 0;
   background: var(--panel-bg);
   backdrop-filter: var(--panel-backdrop);
+}
+.design-panel > .section.inspector-section > .section-header {
+  border-bottom: unset;
 }
 .design-panel > .section.inspector-section > .section-header > .section-header-title > .section-header-title-text {
   text-transform: none;
@@ -11496,8 +11511,7 @@ body.modal-open {
 .mobile-bottom-nav,
 .mobile-settings-drawer,
 .mobile-sheet-handle,
-.phone-chip-bar,
-.sheet-close-action {
+.phone-chip-bar {
   display: none;
 }
 
@@ -11659,9 +11673,6 @@ body.modal-open {
   .color-picker-controls .context-label,
   .mask-brush-controls .context-label {
     font-size: var(--font-size-xs);
-  }
-  body.sheetOpen .preview-controls {
-    left: var(--mobile-floating-inset);
   }
   body.sheetOpen .toolbar,
   body.sheetOpen .zoom-controls,
@@ -12032,10 +12043,11 @@ body.modal-open {
   body.phone-bar .inspector-section > .inspector-switch {
     display: none;
   }
-  body.phone-bar .sheet-close-action {
-    display: inline-flex;
+  body.phone-bar .inspector-section > .section-header .sheet-close-action {
+    visibility: visible;
+    pointer-events: auto;
   }
-  body.phone-bar .main-content > .design-panel > .section > .section-header {
+  body.phone-bar .main-content > .design-panel > .section:not(.design-gallery-section) > .section-header {
     border-bottom: 1px solid var(--color-border);
   }
   body.phone-bar .inspector-body .property-group {

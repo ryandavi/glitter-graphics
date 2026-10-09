@@ -13,6 +13,8 @@ class MobileManager {
 		this.barEntries = [];
 		this.barFrame = null;
 		this.sheetSection = null;
+		// The section a Library sheet was opened from, for its Back.
+		this.sheetReturn = null;
 		this.sheetHadLayer = false;
 		// What a closed sheet still shows while it slides away.
 		this.sheetRelease = null;
@@ -171,11 +173,18 @@ class MobileManager {
 			});
 		});
 
-		document.getElementById('phoneChipBar')?.addEventListener('click', (event) => {
+		const chipBar = document.getElementById('phoneChipBar');
+		chipBar?.addEventListener('click', (event) => {
 			const chip = event.target.closest('.phone-chip');
 			const entry = chip && this.barEntries[Number(chip.dataset.chipIndex)];
 			if (entry) this.pressChip(entry);
 		});
+		// The bar has no scrollbar, so a mouse wheel scrolls it sideways.
+		chipBar?.addEventListener('wheel', (event) => {
+			if (!event.deltaY || event.deltaX) return;
+			chipBar.scrollLeft += event.deltaY;
+			event.preventDefault();
+		}, { passive: false });
 
 		window.addEventListener('layerChanged', () => {
 			if (!this.isMobile) return;
@@ -348,10 +357,13 @@ class MobileManager {
 			const chip = bar.children[index];
 			const swatch = entry.line?.querySelector(':scope > .property-card-title > .property-card-swatch');
 			if (swatch) {
-				chip.firstElementChild.style.background = swatch.style.background;
-				chip.firstElementChild.classList.toggle('is-unset', swatch.classList.contains('is-unset'));
+				// Off, a section has no paint to show, whatever it would use if on.
+				const unset = swatch.classList.contains('is-unset') || entry.line.classList.contains('is-off');
+				chip.firstElementChild.style.background = unset ? '' : swatch.style.background;
+				chip.firstElementChild.classList.toggle('is-unset', unset);
 			}
 			const open = !entry.button && (entry.line ? entry.line.classList.contains('is-flyout-open') : this.sheetSection?.element === entry.element);
+			if (open && !chip.classList.contains('active')) chip.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
 			chip.classList.toggle('active', Boolean(open));
 			chip.classList.toggle('is-off', Boolean(entry.line?.classList.contains('is-off')));
 			if (!entry.button) chip.setAttribute('aria-pressed', String(Boolean(open)));
@@ -414,6 +426,14 @@ class MobileManager {
 		// The sheet's bar is the section's title row, so it shows whole.
 		const card = entry.element.matches('.property-card') ? entry.element : entry.element.querySelector('.property-card');
 		if (card?.classList.contains('is-collapsed')) setPanelCardCollapsed(card, false);
+	}
+
+	// Back on a Library sheet that was opened from a section's sheet.
+	returnToSection() {
+		const entry = this.sheetReturn && this.barEntries.find((candidate) => candidate.key === this.sheetReturn && !candidate.line && !candidate.button);
+		if (!entry) return false;
+		this.pressChip(entry);
+		return true;
 	}
 
 	// What the drawer layout calls opening Edit: the selection's first section.
@@ -482,6 +502,7 @@ class MobileManager {
 		}
 
 		this.activeDrawer = drawer;
+		this.sheetReturn = previous === 'inspector' && drawer === 'window' ? this.sheetSection?.key || null : null;
 		if (previous && this.bar) {
 			// One sheet takes another's place without either sliding.
 			document.body.classList.add('mobile-sheet-swapping');
@@ -641,6 +662,7 @@ class MobileManager {
 		const closingElement = this.getDrawerElement(closingDrawer);
 		this.activeDrawer = null;
 		this.sheetDrag = null;
+		this.sheetReturn = null;
 		document.body.classList.remove('mobile-sheet-dragging');
 		document.body.classList.remove('designOpen', 'layersOpen', 'editOpen', 'inspectorOpen', 'windowOpen', 'sheetOpen', 'mobile-sheet-expanded');
 		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {

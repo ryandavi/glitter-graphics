@@ -145,7 +145,7 @@ class ShapeGlitterManager {
 		bindFieldControls(this.fieldHost);
 
 		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
-			control.addEventListener('click', () => this.armAssetPicker());
+			control.addEventListener('click', () => pressAssetRow(this.editor, this, () => this.armAssetPicker()));
 		});
 
 		// Shape picker: sets the active shape for new shapes, and reshapes the

@@ -11,6 +11,15 @@
 	order: 2;
 }
 
+// The Inspector's own padding is the space between the two, so it matches
+// the space around every panel.
+.design-panel.library-window { padding-right: 0; }
+
+.flyout-switch {
+	display: flex;
+	align-items: center;
+}
+
 .main-content > .design-panel.library-window:not(.is-open) { display: none; }
 
 // The open flyout section takes its own height and scrolls past the column's;
@@ -25,6 +34,7 @@
 		-webkit-backdrop-filter: var(--panel-backdrop);
 		backdrop-filter: var(--panel-backdrop);
 
+		> .section-header { border-bottom: unset; }
 		> .section-header > .section-header-title > .section-header-title-text { text-transform: none; }
 
 		> .section-content {
@@ -77,10 +87,8 @@
 // the Library opens over the section it picks for, names the target in its
 // own bar, and has Back to return to the section.
 @include mobile {
-	.library-window.has-library.has-flyout {
-		> .flyout-section { display: none; }
-		.library-back-action { display: inline-flex; }
-	}
+	.library-window.has-library.has-flyout > .flyout-section { display: none; }
+	.library-window.has-back .library-back-action { display: inline-flex; }
 }
 
 // The Library's Close ends the armed pick. The phone's drawer also opens

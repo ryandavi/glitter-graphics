@@ -135,7 +135,7 @@ class TextGlitterManager {
 
 		// The current-font row opens the Library's Fonts in picker mode.
 		[this.ui.fontThumbnail, this.ui.fontChange].filter(Boolean).forEach((control) => {
-			control.addEventListener('click', () => this.editor.fontBrowserManager?.openPicker());
+			control.addEventListener('click', () => pressAssetRow(this.editor, this.editor.fontBrowserManager, () => this.editor.fontBrowserManager?.openPicker()));
 		});
 
 		this.ui.textCaseSelect?.addEventListener('change', async () => {

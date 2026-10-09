@@ -3,8 +3,7 @@
 .mobile-bottom-nav,
 .mobile-settings-drawer,
 .mobile-sheet-handle,
-.phone-chip-bar,
-.sheet-close-action {
+.phone-chip-bar {
 	display: none;
 }
 
@@ -160,9 +159,9 @@
 		.context-label { font-size: var(--font-size-xs); }
 	}
 
+	// The rail and the context bars step aside for a sheet. Nothing else moves:
+	// the top controls keep the place they have beside the rail.
 	body.sheetOpen {
-		.preview-controls { left: var(--mobile-floating-inset); }
-
 		.toolbar,
 		.zoom-controls,
 		.layer-center-controls,
@@ -532,11 +531,15 @@
 		.layers-section-bottom-bar { display: flex; }
 
 		.inspector-section > .inspector-switch { display: none; }
-		.sheet-close-action { display: inline-flex; }
+		.inspector-section > .section-header .sheet-close-action {
+			visibility: visible;
+			pointer-events: auto;
+		}
 
 		// Every sheet's bar ends in one line, and the section under it brings
-		// none of its own (a later group's top line in the column).
-		.main-content > .design-panel > .section > .section-header { border-bottom: 1px solid var(--color-border); }
+		// none of its own (a later group's top line in the column). The
+		// Library's line is its content's.
+		.main-content > .design-panel > .section:not(.design-gallery-section) > .section-header { border-bottom: 1px solid var(--color-border); }
 		.inspector-body .property-group { border-top: 0; }
 
 		.inspector-body {

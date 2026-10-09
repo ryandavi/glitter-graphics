@@ -32,7 +32,7 @@ async function main() {
 		assert(await page.locator('#designGalleryTitleText').textContent() === 'Shapes', 'A shape layer did not show the Shapes library');
 		await page.evaluate(() => editor.shapeGlitterManager.armAssetPicker());
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'shape', 'Shape picker showed the wrong library');
-		assert((await page.locator('#designGalleryTitleText').textContent()).startsWith('Shape · '), 'Shape picker did not name its target');
+		assert((await page.locator('#designGalleryTitleText').textContent()) === 'Shape', 'Shape picker did not name what it changes');
 		await page.evaluate(() => {
 			const range = document.createRange();
 			range.selectNodeContents(document.getElementById('designGalleryTitleText'));
@@ -47,7 +47,7 @@ async function main() {
 		await page.waitForFunction(() => window.__glitterLayerClipboard != null);
 		assert(await page.evaluate(() => JSON.parse(window.__glitterLayerClipboard).kind === 'glitter-layers'), 'Ctrl+C without highlighted text did not copy layers');
 		await page.evaluate(() => editor.shapeGlitterManager.armPicker('fill'));
-		assert((await page.locator('#designGalleryTitleText').textContent()).startsWith('Fill · '), 'Fill picker did not name its target');
+		assert((await page.locator('#designGalleryTitleText').textContent()) === 'Fill', 'Fill picker did not name what it changes');
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'glitter', 'Fill picker showed the wrong library');
 		for (const width of [1200, 390]) {
 			await page.setViewportSize({ width, height: 900 });

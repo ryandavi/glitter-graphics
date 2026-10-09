@@ -108,8 +108,7 @@ class BrushTipManager extends ContentManager {
 
 	openPicker() {
 		const layer = this.editor.layerManager.getActiveLayer();
-		const target = this.editor.maskEditor?.getActiveMode?.() === 'sub' ? 'Eraser' : 'Brush';
-		pickerOpenSession(this, { kind: 'brush-tip', layerId: layer?.id ?? null, library: 'brushTip', label: 'Brush tip', target }, {
+		pickerOpenSession(this, { kind: 'brush-tip', layerId: layer?.id ?? null, library: 'brushTip', label: 'Brush tip' }, {
 			reveal: () => {
 				this.editor.updateSidePanelUI(layer);
 				revealAssetBrowser(this.editor, this, this.editor.maskEditor.getBrushShape());

@@ -153,9 +153,9 @@ function returnFromPickerToProperties(editor, options = {}) {
 
 // The Library's asset kind is the armed session's: `library` on the session,
 // or glitter for a paint slot. syncLibraryView reads it and names the target
-// in the Library's bar. A session is `{ layerId?, slot?, library?, label?,
-// target? }`; `label` and `target` name what a pick changes and where, for
-// sessions that are not a layer's paint slot.
+// in the Library's bar. A session is `{ layerId?, slot?, library?, label? }`;
+// `label` names what a pick changes, for sessions that are not a layer's
+// paint slot.
 function syncPickerTarget(editor) {
 	const section = document.getElementById('designGallerySection');
 	if (!section) return;
@@ -166,8 +166,9 @@ function syncPickerTarget(editor) {
 	if (!syncLibraryView()) editor?.syncNoLayerPanelState?.();
 }
 
-// "Outline · Hello": what the armed session changes and where, or '' when
-// nothing is armed or an open flyout section's bar beside it already says it.
+// "Outline": what the armed session changes, or '' when nothing is armed or
+// an open flyout section's bar beside it already says it. Which layer is the
+// Inspector's bar to say.
 function describePickerTarget(editor) {
 	const pickers = editor?.pickers;
 	const manager = pickers?.active;
@@ -175,10 +176,14 @@ function describePickerTarget(editor) {
 	// In the phone's sheet the Library covers the section, so it names the target itself.
 	if (!session || (pickers.sessionKeepsFlyout(manager, session) && !editor.mobileManager?.usesBar)) return '';
 	const layer = session.layerId == null ? null : editor.layerManager.getLayerById(session.layerId);
-	const what = session.label || (layer ? panelCap(getPaintSlotLabel(layer.type, session.slot || 'fill')) : '');
-	if (editor.mobileManager?.usesBar) return what;
-	const where = session.target || (layer ? describeLayer(layer, editor).name : '');
-	return [what, where].filter(Boolean).join(' \u00b7 ');
+	return session.label || (layer ? panelCap(getPaintSlotLabel(layer.type, session.slot || 'fill')) : '');
+}
+
+// An asset row opens its Library, and pressed again closes it, as a line
+// does its section. `owner` is the manager holding the row's session.
+function pressAssetRow(editor, owner, arm) {
+	if (owner?.pickerSession && !owner.pickerSession.slot) editor.pickers.closeActive();
+	else arm();
 }
 
 // The glitter picker of a layer type whose paints are all declared slots
