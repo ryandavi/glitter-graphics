@@ -785,9 +785,8 @@ class LayerManager {
 
 		// Update add button states
 		const addLayerBtn = document.getElementById('addLayerBtn');
-		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
 		const addGate = this.canAddLayers();
-		[addLayerBtn, mobileAddLayerBtn].forEach((button) => {
+		[addLayerBtn].forEach((button) => {
 			if (!button) return;
 			button.disabled = !addGate.ok;
 			if (!addGate.ok) button.title = addGate.reason;
@@ -1322,7 +1321,10 @@ class LayerManager {
 	updateMobileLayersSwatch() {
 		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
 		if (!mobileLayersSwatch) return;
-		this.renderLayerSwatch(mobileLayersSwatch, this.getActiveLayer(), { compact: true });
+		const layer = this.getActiveLayer();
+		this.renderLayerSwatch(mobileLayersSwatch, layer, { compact: true });
+		mobileLayersSwatch.classList.toggle('is-unset', !layer);
+		if (!layer) mobileLayersSwatch.classList.remove('empty');
 	}
 
 	// ===== DRAG AND DROP (DESKTOP) =====

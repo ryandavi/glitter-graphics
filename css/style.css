@@ -997,7 +997,6 @@
   /* Modern browsers override */
   --mobile-toolbar-width: 50px;
   --mobile-sheet-max-width: 640px;
-  --mobile-settings-handle-height: 18px;
   /* z indexes — app-wide surface layer scale. Each token gates one visual
      layer in the global stack; local intra-component stacking (-1, 0, 1, 2,
      10, 20, 30, 100...) inside a single element's own children is NOT part
@@ -2973,6 +2972,7 @@ body.no-document .app-header-right > .app-header-project {
 
 /* ===== MAIN AREA ===== */
 .main-area {
+  position: relative;
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -2989,7 +2989,10 @@ body.no-document .app-header-right > .app-header-project {
   padding: var(--spacing-sm);
   gap: var(--spacing-sm);
   flex-shrink: 0;
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
   z-index: var(--z-panel-elevated);
   margin: var(--spacing-base);
   margin-right: 0;
@@ -3046,6 +3049,11 @@ body.no-document .app-header-right > .app-header-project {
   margin-top: auto;
 }
 
+@media (min-width: 1041px) {
+  .main-content > .layers-panel {
+    margin-left: calc(var(--toolbar-width) + var(--spacing-base));
+  }
+}
 /* ===== MAIN CONTENT ===== */
 .main-content {
   display: flex;
@@ -3056,6 +3064,7 @@ body.no-document .app-header-right > .app-header-project {
 }
 
 .panel-resize-handle {
+  pointer-events: auto;
   position: absolute;
   top: 0;
   bottom: 0;
@@ -3387,6 +3396,10 @@ body.is-resizing-panel canvas {
   order: 2;
 }
 
+.design-panel.inspector-panel {
+  margin-left: auto;
+}
+
 .design-panel.library-window {
   padding-right: 0;
 }
@@ -3470,16 +3483,11 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 }
 
 @media (min-width: 1041px) {
-  body[data-library-window=fold] .main-content > .layers-panel {
-    display: none;
-  }
-  body[data-library-window=float] .main-content > .library-window {
+  .main-content > .library-window {
     position: absolute;
     top: 0;
     bottom: 0;
     right: var(--glitter-panel-width);
-    background: var(--color-bg-secondary);
-    box-shadow: -4px 0 12px var(--color-shadow-strong);
   }
 }
 .glitter-search {
@@ -4420,14 +4428,14 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 
 /* ===== PREVIEW PANEL (canvas workspace column) ===== */
 .preview-panel {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   order: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: visible;
-  position: relative;
-  z-index: var(--z-panel);
+  z-index: 0;
 }
 
 .preview-container {
@@ -4761,8 +4769,8 @@ body.is-booting .workspace-start button {
 .preview-controls {
   position: absolute;
   top: var(--spacing-from-edge);
-  left: var(--spacing-from-edge);
-  right: var(--spacing-from-edge);
+  left: calc(var(--canvas-inset-left, 0px) + var(--spacing-from-edge));
+  right: calc(var(--canvas-inset-right, 0px) + var(--spacing-from-edge));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "view" "status" "stack";
@@ -6323,6 +6331,9 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 
 .design-panel,
 .layers-panel {
+  position: relative;
+  z-index: var(--z-panel);
+  pointer-events: none;
   background: unset;
   padding: var(--spacing-base);
   gap: var(--spacing-base);
@@ -6331,6 +6342,7 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 
 .layers-panel > .section,
 .design-panel > .section {
+  pointer-events: auto;
   border: 1px solid var(--color-window-border);
   border-radius: var(--radius-panel);
   overflow: hidden;
@@ -6420,7 +6432,7 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
     min-height: unset;
   }
   body.layersOpen .main-content > .layers-panel,
-  body.designOpen .main-content > .design-panel {
+  body.inspectorOpen .main-content > .design-panel {
     border: 0;
     box-shadow: none;
   }
@@ -7279,23 +7291,6 @@ body.tool-text .text-hover-baselines {
   image-rendering: pixelated;
 }
 
-.auto-glitter-gallery-empty {
-  display: none;
-}
-
-.design-panel[data-panel-mode=auto-glitter] .design-gallery-section:not([data-picker-library]) .design-gallery-content > :not(.auto-glitter-gallery-empty) {
-  display: none !important;
-}
-.design-panel[data-panel-mode=auto-glitter] .design-gallery-section:not([data-picker-library]) .design-gallery-content > .auto-glitter-gallery-empty {
-  display: flex;
-  min-height: 180px;
-}
-
-@media (max-width: 1040px) {
-  .auto-glitter-settings-section .auto-glitter-drag-handle {
-    display: flex;
-  }
-}
 .number-field-pair {
   display: flex;
   gap: var(--spacing-md);
@@ -7337,10 +7332,10 @@ body.tool-text .text-hover-baselines {
   cursor: not-allowed;
 }
 
-:is(.inspector-body, .mobile-settings-content) > .section {
+.inspector-body > .section {
   flex: 0 0 auto;
 }
-:is(.inspector-body, .mobile-settings-content) > .section:not(.visible), :is(.inspector-body, .mobile-settings-content) > .section.switch-panel:not(.is-open) {
+.inspector-body > .section:not(.visible), .inspector-body > .section.switch-panel:not(.is-open) {
   display: none;
 }
 
@@ -11506,7 +11501,6 @@ body.modal-open {
 }
 
 .mobile-bottom-nav,
-.mobile-settings-drawer,
 .mobile-sheet-handle,
 .phone-chip-bar {
   display: none;
@@ -11564,13 +11558,14 @@ body.modal-open {
     width: 100%;
     top: var(--mobile-header-height);
     left: 0;
-    z-index: var(--z-drawer);
+    z-index: 0;
     display: none;
   }
   .main-content > .preview-panel {
     display: flex;
+    margin-left: 0;
     height: calc(100dvh - var(--mobile-header-height));
-    padding-bottom: var(--mobile-bottom-nav-height);
+    padding-bottom: 0;
   }
   .layers-panel,
   .design-panel,
@@ -11591,6 +11586,7 @@ body.modal-open {
   }
   .toolbar {
     position: fixed;
+    bottom: auto;
     top: calc(var(--mobile-header-height) + (100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height)) / 2);
     left: var(--mobile-floating-inset);
     margin: 0;
@@ -11779,34 +11775,18 @@ body.modal-open {
     align-items: center;
     gap: var(--spacing-base);
   }
-  .mobile-bottom-nav .mobile-add-layer-group {
-    flex: 0 0 var(--touch-target-min);
-  }
-  .mobile-bottom-nav .mobile-add-layer-group #mobileAddLayerBtn {
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    aspect-ratio: 1;
-    color: var(--btn-text-color);
-  }
-  .mobile-bottom-nav .mobile-add-layer-group #mobileAddLayerBtn > .icon {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
-    opacity: var(--btn-icon-opacity);
-  }
   .mobile-layers-swatch {
     width: 18px;
     height: 18px;
     border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
   }
-  .mobile-layers-swatch.empty {
-    background-image: linear-gradient(45deg, white 25%, transparent 25%), linear-gradient(-45deg, white 25%, transparent 25%), linear-gradient(45deg, transparent 75%, white 75%), linear-gradient(-45deg, transparent 75%, white 75%);
-    background-size: 8px 8px;
-    background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+  .mobile-layers-swatch.is-unset {
+    background: repeating-linear-gradient(135deg, transparent 0 3px, var(--color-border) 3px 4px);
+    border-color: var(--color-border);
   }
   .mobile-layers-swatch.pixelated {
     image-rendering: pixelated;
@@ -11838,48 +11818,6 @@ body.modal-open {
     content: attr(data-count);
   }
   .layers-section-bottom-bar {
-    display: none;
-  }
-  .mobile-settings-drawer {
-    position: fixed;
-    bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-sheet-inset));
-    left: var(--mobile-sheet-inset);
-    right: var(--mobile-sheet-inset);
-    max-width: var(--mobile-sheet-max-width);
-    margin-inline: auto;
-    display: flex;
-    height: var(--mobile-drawer-height);
-    background: var(--panel-bg);
-    backdrop-filter: var(--panel-backdrop);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-panel);
-    box-shadow: 0 -4px 12px var(--color-shadow-soft);
-    z-index: var(--z-header-menu-elevated);
-    transform: translateY(100%);
-    opacity: 1;
-    visibility: hidden;
-    pointer-events: none;
-    transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .mobile-settings-drawer .mobile-settings-content {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .mobile-settings-drawer .mobile-settings-content > .section {
-    border: 0;
-    margin: 0;
-    padding: 0;
-  }
-  .mobile-settings-drawer .mobile-settings-content > .section > .section-content {
-    padding: 0;
-  }
-  .mobile-settings-drawer .mobile-settings-content .property-group > .property-group-label {
     display: none;
   }
   .mobile-sheet-handle {
@@ -11941,9 +11879,6 @@ body.modal-open {
   .main-content > :is(.layers-panel, .design-panel) > .section > .section-header .section-header-action.active {
     color: var(--color-accent);
   }
-  body:not(.phone-bar) .main-content > .design-panel > .section.inspector-section {
-    display: none;
-  }
   .main-content > :is(.layers-panel, .design-panel) {
     padding: 0;
   }
@@ -11952,18 +11887,12 @@ body.modal-open {
     border-radius: 0;
     box-shadow: none;
   }
-  body.sheetOpen .main-content > .preview-panel {
-    padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
-  }
-  body.mobile-sheet-dragging .mobile-settings-drawer,
   body.mobile-sheet-dragging .main-content > .design-panel,
   body.mobile-sheet-dragging .main-content > .layers-panel,
   body.mobile-sheet-dragging .main-content > .preview-panel,
-  body.mobile-sheet-swapping .mobile-settings-drawer,
   body.mobile-sheet-swapping .main-content > .design-panel,
   body.mobile-sheet-swapping .main-content > .layers-panel,
   body.mobile-sheet-swapping .main-content > .preview-panel,
-  body.mobile-sheet-reduced-motion .mobile-settings-drawer,
   body.mobile-sheet-reduced-motion .main-content > .design-panel,
   body.mobile-sheet-reduced-motion .main-content > .layers-panel,
   body.mobile-sheet-reduced-motion .main-content > .preview-panel {
@@ -12002,8 +11931,6 @@ body.modal-open {
     pointer-events: none;
     transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
   }
-  body.editOpen .mobile-settings-drawer,
-  body.designOpen .main-content > .design-panel,
   body.inspectorOpen .main-content > .inspector-panel,
   body.windowOpen .main-content > .library-window,
   body.layersOpen .main-content > .layers-panel {
@@ -12012,9 +11939,6 @@ body.modal-open {
     visibility: visible;
     pointer-events: auto;
     transition-delay: 0s;
-  }
-  body.designOpen .main-content > .design-panel > .section:not(.design-gallery-section) {
-    display: none !important;
   }
   body:not(.mobile-no-image) .main-content > .layers-panel .image-container,
   body:not(.mobile-no-image) .main-content > .layers-panel .layer-settings-section {
@@ -12033,12 +11957,11 @@ body.modal-open {
   body.phone-bar .mobile-bottom-nav > .phone-chip-bar {
     display: flex;
   }
-  body.phone-bar .inspector-section > .inspector-switch {
+  body.phone-bar.sheetOpen #helpfulMessage {
     display: none;
   }
-  body.phone-bar .inspector-section > .section-header .sheet-close-action {
-    visibility: visible;
-    pointer-events: auto;
+  body.phone-bar .inspector-section > .inspector-switch {
+    display: none;
   }
   body.phone-bar .main-content > .design-panel > .section:not(.design-gallery-section) > .section-header {
     border-bottom: 1px solid var(--color-border);
@@ -12059,6 +11982,7 @@ body.modal-open {
     gap: var(--spacing-xs);
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    touch-action: pan-x;
     scrollbar-width: none;
   }
   .phone-chip-bar.has-overflow-start.has-overflow-end {
@@ -12086,8 +12010,16 @@ body.modal-open {
     background: none;
     color: var(--color-text-primary);
     white-space: nowrap;
+    cursor: pointer;
     font-size: var(--font-size-sm);
     letter-spacing: 0.5px;
+  }
+  .phone-chip.is-add {
+    background: var(--color-bg-tertiary);
+  }
+  .phone-chip.is-add > .icon {
+    width: 14px;
+    height: 14px;
   }
   .phone-chip.is-off {
     color: var(--color-text-tertiary);
@@ -12098,6 +12030,7 @@ body.modal-open {
   }
   .phone-chip:disabled {
     opacity: var(--opacity-disabled);
+    cursor: not-allowed;
   }
   .phone-chip-swatch {
     width: 18px;
@@ -12112,7 +12045,6 @@ body.modal-open {
   }
   body.mobile-no-image .toolbar,
   body.mobile-no-image .mobile-bottom-nav,
-  body.mobile-no-image .mobile-settings-drawer,
   body.mobile-no-image .main-content > .layers-panel,
   body.mobile-no-image .main-content > .design-panel {
     display: none;

@@ -1205,7 +1205,7 @@ async function check21(page) {
 
 	assert(await getActiveLayerId(page) === layerId, 'Double-tap on text did not keep the text layer selected');
 	assert(!mobileState.settingsOpen, 'Canvas text editing unexpectedly opened the mobile Edit drawer');
-	assert(!mobileState.bodyClass.includes('editOpen'), 'Double-tap on text unexpectedly opened the mobile Edit drawer');
+	assert(!mobileState.bodyClass.includes('inspectorOpen'), 'Double-tap on text unexpectedly opened the mobile Edit drawer');
 	assert(mobileState.activeElementId === 'canvasTextInput', 'Double-tap on text did not focus the text input');
 }
 
@@ -1314,7 +1314,7 @@ async function openEditSheet(page) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
 	await createTestSticker(page, { position: { x: 110, y: 100 } });
-	await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
+	await page.evaluate(() => window.editor.mobileManager.pressChip(window.editor.mobileManager.barEntries.find(entry => entry.title === 'Transform')));
 	await page.waitForTimeout(450);
 }
 
@@ -1325,17 +1325,18 @@ async function checkSheetFlick(page) {
 		const settle = mobile.settleSheet.bind(mobile);
 		mobile.settleSheet = (...args) => { window.__sheetRelease = args; settle(...args); };
 	});
-	const header = await getElementCenter(page, '#mobileEditTitle');
+	const header = await getElementCenter(page, '#inspectorHeader');
 	await oneFingerFlick(page, header, { x: header.x, y: header.y + 120 }, 2, 0, true);
 	await page.waitForTimeout(450);
 	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === null), `Fast downward header flick did not close Edit from half: ${JSON.stringify(await page.evaluate(() => window.__sheetRelease))}`);
 	await page.evaluate(() => {
 		const mobile = window.editor.mobileManager;
-		mobile.openDrawer('edit');
+		mobile.renderBar();
+		mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Transform'));
 		mobile.setSheetHeight(CONFIG.ui.mobile.sheetDetents.peek);
 	});
 	await page.waitForTimeout(450);
-	const peek = await getElementCenter(page, '#mobileEditTitle');
+	const peek = await getElementCenter(page, '#inspectorHeader');
 	await oneFingerFlick(page, peek, { x: peek.x, y: peek.y + 80 }, 2, 0, true);
 	await page.waitForTimeout(450);
 	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === null), 'Downward flick did not close peek');
@@ -1350,7 +1351,7 @@ async function checkSheetSettle(page) {
 		viewport.performResizeUpdate = options => { window.__sheetResizeCalls++; resize(options); };
 	});
 	const before = await getViewportMetrics(page);
-	const header = await getElementCenter(page, '#mobileEditTitle');
+	const header = await getElementCenter(page, '#inspectorHeader');
 	await dispatchTouch(page, 'touchStart', [header]);
 	for (let step = 1; step <= 8; step++) {
 		await page.waitForTimeout(45);
@@ -1366,7 +1367,7 @@ async function checkSheetSettle(page) {
 	await page.waitForTimeout(450);
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Slow release between detents did not settle to half');
 	assert(await page.evaluate(() => window.__sheetResizeCalls === 1), 'Sheet settle did not refit exactly once');
-	await page.locator('#mobileSettingsSheetHandle').focus();
+	await page.locator('[data-mobile-drawer-handle="inspector"]').focus();
 	await page.keyboard.press('ArrowDown');
 	await page.waitForTimeout(350);
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.peek), 'Keyboard did not step to peek');
@@ -1377,19 +1378,19 @@ async function checkSheetSettle(page) {
 		PREFERENCES.set('reduceMotion', true);
 		window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.full);
 	});
-	assert(await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('mobileSettingsDrawer')).transitionDuration) === 0), 'App Reduce Motion did not disable sheet transitions');
+	assert(await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('designPanel')).transitionDuration) === 0), 'App Reduce Motion did not disable sheet transitions');
 	await page.evaluate(() => PREFERENCES.set('reduceMotion', false));
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.evaluate(() => window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.half));
-	assert(await page.evaluate(() => getComputedStyle(document.getElementById('mobileSettingsDrawer')).transitionDuration === '0s'), 'OS Reduce Motion did not disable sheet transitions');
+	assert(await page.evaluate(() => getComputedStyle(document.getElementById('designPanel')).transitionDuration === '0s'), 'OS Reduce Motion did not disable sheet transitions');
 	await page.evaluate(() => {
 		document.documentElement.style.setProperty('--mobile-safe-area-bottom', '34px');
 		window.editor.mobileManager.setSheetHeight(CONFIG.ui.mobile.sheetDetents.full);
 	});
 	const safe = await page.evaluate(() => ({
-		height: document.getElementById('mobileSettingsDrawer').getBoundingClientRect().height,
+		height: document.getElementById('designPanel').getBoundingClientRect().height,
 		expected: window.innerHeight * CONFIG.ui.mobile.sheetDetents.full / 100,
-		buttonBottom: document.getElementById('mobileSettingsBtn').getBoundingClientRect().bottom
+		buttonBottom: document.getElementById('inspectorClose').getBoundingClientRect().bottom
 	}));
 	approxEqual(safe.height, safe.expected, 1, 'Safe-area inset changed the full detent height');
 	assert(safe.buttonBottom <= VIEWPORT.height - 34, 'Bottom nav button did not clear the simulated home indicator');
@@ -1421,9 +1422,13 @@ async function checkSheetContent(page) {
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Content scroll changed the detent');
 	await oneFingerDrag(page, at, { x: at.x, y: at.y + 30 });
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Scrolled list handed off before the touch ended');
-	await page.evaluate(() => window.editor.mobileManager.openDrawer('design'));
+	await page.evaluate(() => {
+		const editor = window.editor;
+		editor.layerManager.setActiveLayer(editor.layers.find(layer => layer.type === LayerType.TEXT_GLITTER).id);
+		editor.textGlitterManager.armPicker('fill');
+	});
 	await page.waitForTimeout(450);
-	const rail = page.locator('#designPanel .asset-browser-rail:visible select').first();
+	const rail = page.locator('#libraryWindow .asset-browser-rail:visible select').first();
 	if (await rail.count()) {
 		const box = await rail.boundingBox();
 		const railPull = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
@@ -1433,7 +1438,7 @@ async function checkSheetContent(page) {
 		await dispatchTouch(page, 'touchEnd', []);
 		await page.waitForTimeout(150);
 	}
-	const library = await page.locator('#designPanel .asset-browser-content:visible .asset-grid.visible').first().boundingBox();
+	const library = await page.locator('#libraryWindow .asset-browser-content:visible').first().boundingBox();
 	const pull = { x: library.x + library.width / 2, y: library.y + 25 };
 	await dispatchTouch(page, 'touchStart', [pull]);
 	await dispatchTouch(page, 'touchMove', [{ x: pull.x, y: pull.y + 35 }]);
@@ -1442,31 +1447,35 @@ async function checkSheetContent(page) {
 	await page.waitForTimeout(120);
 	await dispatchTouch(page, 'touchEnd', []);
 	await page.waitForTimeout(350);
-	await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
+	await page.evaluate(() => {
+		const mobile = window.editor.mobileManager;
+		mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Type'));
+		document.querySelectorAll('#inspectorBody [data-advanced]').forEach(node => node.classList.add('is-open'));
+	});
 	await page.waitForTimeout(450);
-	const edit = await page.locator('#mobileSettingsContainer').boundingBox();
+	const edit = await page.locator('#inspectorBody').boundingBox();
 	const swipe = { x: edit.x + 24, y: edit.y + edit.height - 30 };
 	await oneFingerDrag(page, swipe, { x: swipe.x, y: swipe.y - 120 });
-	assert(await page.evaluate(() => Array.from(document.querySelectorAll('#mobileSettingsContainer, #mobileSettingsContainer .section-content')).some(node => node.scrollTop > 0)), 'Upward movement from top did not scroll Edit');
+	assert(await page.evaluate(() => Array.from(document.querySelectorAll('#inspectorBody, #inspectorBody .section-content')).some(node => node.scrollTop > 0)), 'Upward movement from top did not scroll Edit');
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Edit content scroll changed the detent');
-	const slider = page.locator('#mobileSettingsContainer input[type="range"]:visible').first();
+	const slider = page.locator('#inspectorBody input[type="range"]:visible').first();
 	await slider.scrollIntoViewIfNeeded();
 	const range = await slider.boundingBox();
 	const value = await slider.inputValue();
 	await oneFingerDrag(page, { x: range.x + range.width * 0.3, y: range.y + range.height / 2 }, { x: range.x + range.width * 0.7, y: range.y + range.height / 2 });
 	assert(await slider.inputValue() !== value, 'Edit slider stopped accepting horizontal drag');
 	assert(await page.evaluate(() => window.editor.mobileManager.sheetHeight === CONFIG.ui.mobile.sheetDetents.half), 'Slider drag moved the sheet');
-	await page.evaluate(() => window.editor.setTool(ToolType.BRUSH));
-	await page.waitForTimeout(100);
-	const closed = page.locator('#mobileSettingsContainer > .section:not(.is-open)');
-	assert(await closed.count() === 1, 'Edit did not hold the layer panel beside Mask Settings with one open');
-	assert(!await closed.isVisible(), 'The panel the Edit switch is not on still shows');
-	const otherId = await closed.getAttribute('id');
-	await page.locator('#mobileEditTitle .segmented-option:not(.active)').tap();
-	assert(await page.evaluate((id) => {
-		const sections = Array.from(document.querySelectorAll('#mobileSettingsContainer > .section'));
-		return sections.filter(section => section.classList.contains('is-open')).map(section => section.id).join() === id;
-	}, otherId), 'Tapping the Edit switch did not show that panel alone');
+	await page.evaluate(() => {
+		const mobile = window.editor.mobileManager;
+		mobile.closeAllDrawers({ immediate: true });
+		window.editor.setTool(ToolType.BRUSH);
+		mobile.renderBar();
+		mobile.pressChip(mobile.barEntries.find(entry => entry.title === 'Dynamics'));
+	});
+	await page.waitForTimeout(400);
+	assert(await page.evaluate(() => window.editor.mobileManager.activeDrawer === 'inspector'), 'Tool chip did not open the Inspector sheet');
+	assert(await page.locator('#inspectorTitleText').textContent() === 'Dynamics', 'Tool sheet did not name its section');
+
 }
 
 async function checkNumericScrub(page) {
@@ -1570,7 +1579,7 @@ async function runSuite(browser, runNumber) {
 		['Mobile layer reorder uses touch pointer events to move a layer in the list', check22],
 		['Two-finger pinch inside the shared group box scales the group without zooming the viewport', check24],
 		['Second finger on a corner joins a proportional pinch with one undo step', checkCornerPinch],
-		['Fast downward Edit header flick closes half and peek', checkSheetFlick],
+		['Fast downward Properties header flick closes half and peek', checkSheetFlick],
 		['Slow sheet drag settles at a detent and refits once; arrows step detents', checkSheetSettle],
 		['Top content pulls the sheet; upward and scrolled content stay scrolling', checkSheetContent],
 		['Number-pair scrubs ignore touch; mouse threshold, capture, history and Escape work', checkNumericScrub]

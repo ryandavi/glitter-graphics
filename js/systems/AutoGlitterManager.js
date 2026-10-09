@@ -303,7 +303,6 @@ class AutoGlitterManager {
 		if (previousTool && previousTool !== this.editor.currentTool) this.editor.setTool(previousTool, { persist: false });
 		else this.editor.updateContextToolbars();
 		this.editor.updateActionButtons();
-		if (this.editor.mobileManager?.isMobile && targetLayer) this.editor.mobileManager.prepareSettings(targetLayer);
 	}
 
 	clearResult() {
@@ -622,19 +621,9 @@ class AutoGlitterManager {
 		this.editor.glitterManager.updateSelection();
 	}
 
-	handlePickerDone() {
-		this.closePickerSession(true);
-	}
 
-	closePickerSession(returnToPanel = false) {
-		if (typeof returnToPanel === 'object') returnToPanel = false;
-		const index = this.pickerSession?.paletteIndex;
+	closePickerSession() {
 		pickerCloseSession(this);
-		if (!returnToPanel) return;
-		returnFromPickerToProperties(this.editor, {
-			section: 'autoGlitterSettings',
-			focusId: index == null ? null : `autoGlitterMatch${index}`
-		});
 	}
 
 	bindMergeHandle(handle, row, index) {
@@ -791,8 +780,7 @@ class AutoGlitterManager {
 		});
 		this.setCanvasPreviewState(true, 'Analyzing image');
 		if (this.editor.mobileManager?.isMobile) {
-			this.editor.mobileManager.prepareSettings(baseLayer, { keys: LAYER_UI_CONFIG.AUTO_GLITTER.mobileSettingsSections, preserveDrawer: true });
-			this.editor.mobileManager.openDrawer('edit');
+			this.editor.mobileManager.openLeadingSection();
 		}
 	}
 

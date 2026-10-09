@@ -237,8 +237,12 @@ async function phoneStates(page, visit, { set = 'all' } = {}) {
 	if (set === 'drawers') {
 		const ids = await addLayers(page);
 		await page.evaluate(i => window.editor.layerManager.setActiveLayer(i.text), ids);
-		for (const drawer of ['layers', 'design', 'edit']) {
-			await page.evaluate(name => window.editor.mobileManager.openDrawer(name), drawer);
+		for (const drawer of ['layers', 'window', 'inspector']) {
+			await page.evaluate(name => {
+				if (name === 'window') window.editor.textGlitterManager.armPicker('fill');
+				else if (name === 'inspector') window.editor.mobileManager.openLeadingSection();
+				else window.editor.mobileManager.openDrawer(name);
+			}, drawer);
 			for (const height of [28, 50, 85]) {
 				await page.evaluate(h => window.editor.mobileManager.setSheetHeight(h), height);
 				await wait(page, 700);
@@ -249,28 +253,38 @@ async function phoneStates(page, visit, { set = 'all' } = {}) {
 		}
 		return;
 	}
-	const tab = async (label) => {
-		try { await page.locator('button').filter({ hasText: new RegExp(`^\\s*${label}`) }).first().tap({ timeout: 3000 }); } catch (e) { console.log(`(phone tab ${label}: not tappable)`); }
-		await wait(page, 600);
-	};
 	await visit('phone start-card');
 	const ids = await addLayers(page);
 	await activityStates(page, visit, 'phone');
-	await page.evaluate((i) => window.editor.layerManager.setActiveLayer(i.text), ids);
-	await wait(page, 600);
-	await visit('phone text');
-	for (const label of ['Edit', 'Library', 'Layers']) {
-		await tab(label);
-		await visit(`phone tab ${label}`);
+	for (const [type, id] of Object.entries(ids).filter(([key]) => !key.endsWith('_error'))) {
+		await page.evaluate((layerId) => {
+			window.editor.mobileManager.closeAllDrawers({ immediate: true });
+			window.editor.layerManager.setActiveLayer(layerId);
+		}, id);
+		await wait(page, 300);
+		await visit(`phone ${type} bar`);
+		await page.evaluate(() => window.editor.mobileManager.openLeadingSection());
+		await wait(page, 400);
+		await visit(`phone ${type} sheet`);
 	}
-	await tab('Edit');
-	await forceOpen(page);
-	await wait(page, 500);
-	if (full) await visit('phone edit all-open effects-off');
-	await toggleEffects(page, true);
-	await forceOpen(page);
-	await wait(page, 700);
-	await visit('phone edit all-open effects-on');
+	await page.evaluate((i) => {
+		window.editor.mobileManager.closeAllDrawers({ immediate: true });
+		window.editor.layerManager.setActiveLayer(i.text);
+		window.editor.mobileManager.renderBar();
+		window.editor.mobileManager.pressChip(window.editor.mobileManager.barEntries.find(entry => entry.title === 'Fill'));
+	}, ids);
+	await wait(page, 400);
+	await visit('phone Fill section');
+	await page.evaluate(() => window.editor.textGlitterManager.armPicker('fill'));
+	await wait(page, 400);
+	await visit('phone Fill Library');
+	await page.evaluate(() => window.editor.libraryWindow.backToSection());
+	await wait(page, 300);
+	await visit('phone Fill Back');
+	await page.evaluate(() => window.editor.mobileManager.openDrawer('layers'));
+	await wait(page, 400);
+	await visit('phone Layers');
+
 	for (const id of PHONE_MODALS) {
 		try {
 			await page.evaluate((m) => window.editor.modalManager.open(m), id);

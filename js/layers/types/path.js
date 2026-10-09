@@ -137,9 +137,7 @@ registerLayerType(LayerType.PATH, {
 		order: 4,
 		description: 'Add a line or an arrow, in glitter or a color'
 	},
-	library: 'glitter',
 	designPanelSections: ['pathSettingsSection'],
-	mobileSettingsSections: ['path'],
 	panelMode: 'path',
 	elementClass: 'path-layer-element',
 	transformable: true,

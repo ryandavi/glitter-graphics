@@ -137,11 +137,9 @@ registerLayerType(LayerType.STICKER, {
 		order: 2,
 		description: 'Place an image or animated graphic',
 		quickAddId: 'quickActionAddSticker',
-		quickAddOrder: 2
+		quickAddOrder: 1
 	},
-	library: 'sticker',
 	designPanelSections: ['stickerSettingsSection'],
-	mobileSettingsSections: ['sticker'],
 	panelMode: 'sticker',
 	elementClass: 'sticker-element',
 	transformable: true,

@@ -294,6 +294,8 @@ class GestureManager {
 			return { type: 'viewport' };
 		}
 
+		if (editor.isCanvasToolSuspended?.()) return { type: 'viewport' };
+
 		if (editor.currentTool === ToolType.BRUSH) {
 			return { type: 'brush' };
 		}
@@ -331,6 +333,7 @@ class GestureManager {
 
 	resolveTwoFingerRoute() {
 		const editor = this.editor;
+		if (editor?.isCanvasToolSuspended?.()) return { type: 'viewportTwoFinger' };
 		if (!editor) {
 			return { type: 'viewportTwoFinger' };
 		}
@@ -671,10 +674,7 @@ class GestureManager {
 					return;
 				}
 				if (this.editor.mobileManager?.isMobile) {
-					this.editor.mobileManager.prepareSettings?.(layer);
-					if (!this.editor.mobileManager.settingsOpen) {
-						this.editor.mobileManager.toggleSettings?.();
-					}
+					this.editor.mobileManager.openLeadingSection();
 					this.editor.setCollapsibleSectionOpen?.('textSettings', true);
 					requestAnimationFrame(() => {
 						requestAnimationFrame(() => {

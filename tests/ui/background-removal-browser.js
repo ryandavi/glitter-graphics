@@ -135,7 +135,10 @@ async function exportBytes(page, target = 'still:png') {
 			await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
 			await page.waitForTimeout(500);
 			for (const control of ['stickerAssetThumbnail', 'stickerAssetChange']) {
-				await page.evaluate(() => returnFromPickerToProperties(editor, { section: 'stickerSettings' }));
+				await page.evaluate(() => {
+					editor.mobileManager.closeAllDrawers({ immediate: true });
+					editor.mobileManager.openLeadingSection();
+				});
 				// The shared Change button overlays the thumbnail; check both handlers.
 				if (control === 'stickerAssetThumbnail') await page.locator(`#${control}`).dispatchEvent('click');
 				else await page.locator(`#${control}`).click();

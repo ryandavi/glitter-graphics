@@ -4,12 +4,12 @@
 // PANEL HOSTS
 // ---------------------------------------------------------------------------
 // One host per panel. The same hosts sit in the Inspector's body and, on
-// phones, in the Edit sheet. `.visible` follows the selection and the tool
+// phones, narrowed to one section in the sheet. `.visible` follows the selection and the tool
 // (updateSidePanelUI); of the switched panels showing together, `.is-open` is
 // the one the switch shows.
 // ===========================================================================
 
-:is(.inspector-body, .mobile-settings-content) > .section {
+.inspector-body > .section {
 	flex: 0 0 auto;
 
 	&:not(.visible),
@@ -34,8 +34,7 @@
 	}
 }
 
-// On phones the nothing-selected panel ends the Library drawer and scrolls
-// there.
+// Canvas Properties shares the Inspector body.
 .no-layer-settings-section {
 	overflow-y: auto;
 

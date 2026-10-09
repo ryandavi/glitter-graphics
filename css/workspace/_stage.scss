@@ -4,14 +4,14 @@
 
 /* ===== PREVIEW PANEL (canvas workspace column) ===== */
 .preview-panel {
-	flex: 1;
+	position: absolute;
+	inset: 0;
 	order: 1;
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	overflow: visible;
-	position: relative;
-	z-index: var(--z-panel);
+	z-index: 0;
 
 }
 
@@ -19,8 +19,7 @@
 	flex: 1;
 	display: block;
 	position: relative;
-	// The viewport is the hard visual boundary for artwork. Without clipping,
-	// a panned canvas can paint over sibling sidebars regardless of their z-index.
+	// Artwork clips at the workspace boundary and paints behind the panels.
 	overflow: hidden;
 	-webkit-user-select: none;
 	-moz-user-select: none;

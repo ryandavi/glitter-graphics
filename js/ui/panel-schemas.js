@@ -403,7 +403,6 @@ const PANEL_SCHEMAS = {
 	autoGlitterSession: {
 		prefix: 'autoGlitter',
 		sectionPrefix: 'autoGlitterSettings',
-		mobileKey: 'autoGlitter',
 		section: { id: 'autoGlitterSettingsSection', icon: 'magic-wand', tab: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
 		groups: [
 			{ title: 'Preview', region: 'header', sections: [
@@ -466,7 +465,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.FILTER]: {
 		prefix: 'filter',
 		sectionPrefix: 'filterSettings',
-		mobileKey: 'filter',
 		section: { id: 'filterSettingsSection', icon: 'sliders', tab: 'Filter', title: 'Filter Properties' },
 		groups: [
 			{ title: 'Content', sections: [
@@ -501,7 +499,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.FRAME]: {
 		prefix: 'frame',
 		sectionPrefix: 'frameSettings',
-		mobileKey: 'frame',
 		section: { id: 'frameSettingsSection', icon: 'frame', tab: 'Frame', title: 'Frame Properties' },
 		groups: [
 			{ title: 'Content', sections: [
@@ -550,7 +547,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.SPARKLES]: {
 		prefix: 'sparkleLayer',
 		sectionPrefix: 'sparkleLayerSettings',
-		mobileKey: 'sparkleLayer',
 		section: { id: 'sparkleLayerSettingsSection', icon: 'sparkles', tab: 'Sparkles', title: 'Sparkles Properties' },
 		groups: [
 			{ title: 'Content', sections: [
@@ -564,7 +560,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.BASE_IMAGE]: {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',
-		mobileKey: 'background',
 		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', tab: 'Canvas', title: 'Canvas Properties' },
 		groups: [
 			{ title: 'Appearance', sections: [
@@ -600,7 +595,6 @@ const PANEL_SCHEMAS = {
 	brush: {
 		prefix: 'brush',
 		sectionPrefix: 'brushSettings',
-		mobileKey: 'brush',
 		section: { id: 'brushSettingsSection', icon: 'brush', tab: 'Mask', title: 'Mask Settings' },
 		groups: [
 			{ title: 'Content', sections: [
@@ -644,7 +638,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.GLITTER_FILL]: {
 		prefix: 'glitter',
 		sectionPrefix: 'glitterSettings',
-		mobileKey: 'glitter',
 		section: { id: 'glitterSettingsSection', icon: 'glitter', tab: 'Fill', title: 'Fill Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
@@ -688,7 +681,6 @@ const PANEL_SCHEMAS = {
 		auxiliarySections: [{
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',
-			mobileKey: 'tool',
 			section: { id: 'layerSettingsSection', icon: 'paint-bucket', tab: 'Selection', title: 'Glitter Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
@@ -723,7 +715,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.STICKER]: {
 		prefix: 'sticker',
 		sectionPrefix: 'stickerSettings',
-		mobileKey: 'sticker',
 		section: { id: 'stickerSettingsSection', icon: 'sticker', tab: 'Sticker', title: 'Sticker Properties' },
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 		groups: [
@@ -771,7 +762,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.TEXT_GLITTER]: {
 		prefix: 'text',
 		sectionPrefix: 'textSettings',
-		mobileKey: 'text',
 		section: { id: 'textSettingsSection', icon: 'text', tab: 'Text', title: 'Text Properties' },
 		groups: [
 			// Type it, choose the face, set the metrics, then place it.
@@ -899,7 +889,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.SHAPE]: {
 		prefix: 'shape',
 		sectionPrefix: 'shapeSettings',
-		mobileKey: 'shape',
 		section: { id: 'shapeSettingsSection', icon: 'square', tab: 'Shape', title: 'Shape Properties' },
 		groups: [
 			{ title: 'Content', sections: [
@@ -981,7 +970,6 @@ const PANEL_SCHEMAS = {
 	[LayerType.PATH]: {
 		prefix: 'path',
 		sectionPrefix: 'pathSettings',
-		mobileKey: 'path',
 		section: { id: 'pathSettingsSection', icon: 'pen', tab: 'Path', title: 'Path Properties' },
 		groups: [
 			{ title: 'Content', sections: [

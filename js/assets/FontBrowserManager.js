@@ -225,10 +225,6 @@ class FontBrowserManager extends ContentManager {
 		this.editor.updateStatus('Choose a font, then press Esc or Close.');
 	}
 
-	handlePickerDone() {
-		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: 'textFontChange' });
-	}
 
 	closePickerSession() {
 		return pickerCloseSession(this, { updateSelection: () => this.updateSelection() });

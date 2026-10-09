@@ -249,10 +249,11 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 
 /* ===== MAIN AREA ===== */
 .main-area {
+	position: relative;
 	display: flex;
 	flex: 1;
 	overflow: hidden;
-		  background: var(--color-bg-workspace);
+	background: var(--color-bg-workspace);
 }
 
 /* ===== TOOLBAR ===== */
@@ -266,7 +267,10 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	padding: var(--spacing-sm);
 	gap: var(--spacing-sm);
 	flex-shrink: 0;
-	position: relative;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
 	z-index: var(--z-panel-elevated);
 
 	margin: var(--spacing-base);
@@ -327,19 +331,24 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 
 }
 
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.main-content > .layers-panel { margin-left: calc(var(--toolbar-width) + var(--spacing-base)); }
+}
+
 /* ===== MAIN CONTENT ===== */
 .main-content {
 	display: flex;
 	flex: 1;
 	min-height: 0;
 	overflow: visible;
-	// The floating Library window is placed against this row.
+	// Panels overlay the canvas; the toolbar still occupies its own rail.
 	position: relative;
 }
 
 // ===== Sidebar resize handles ==============================================
 
 .panel-resize-handle {
+	pointer-events: auto;
 	position: absolute;
 	top: 0;
 	bottom: 0;

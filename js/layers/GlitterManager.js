@@ -122,11 +122,6 @@ class GlitterManager {
 		return Boolean(layer?.type === LayerType.GLITTER_FILL && this.pickerSession?.layerId === layer.id);
 	}
 
-	handlePickerDone() {
-		const focusId = getPaintSlotChipId(LayerType.GLITTER_FILL, this.pickerSession?.slot) || 'glitterFillGlitterChip';
-		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: 'glitterSettings', focusId });
-	}
 
 	closePickerSession() {
 		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });

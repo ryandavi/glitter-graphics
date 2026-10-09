@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const hosts = [
 		'.section-content', '.panel-scroll-region', '.layers-list',
 		'.asset-options', '.asset-browser-content', '.filters-container-inner',
-		'.property-scrollbox', '.mobile-settings-content',
+		'.property-scrollbox',
 		'.welcome-section', '.no-layer-settings-section', '.base-layer-settings-section',
 		'.modal-body', '.confirmation-message', '.timeline-list',
 		'.document-toc-panel', '.document-search-results', '.app-menu-panel', '.export-side'

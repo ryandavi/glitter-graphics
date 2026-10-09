@@ -405,21 +405,7 @@ class ShapeGlitterManager {
 	}
 
 	// Close or Esc while a shape's picker is armed.
-	handlePickerDone() {
-		if (this.shapeChangeLayerId) {
-			this.closePickerSession();
-			this.returnToShapeProperties('asset');
-			return;
-		}
-		const slot = this.pickerSession?.slot || 'fill';
-		this.closePickerSession();
-		this.returnToShapeProperties(slot);
-	}
 
-	returnToShapeProperties(slot = 'fill') {
-		const focusId = slot === 'asset' ? 'shapeAssetChange' : getPaintSlotChipId(LayerType.SHAPE, slot);
-		returnFromPickerToProperties(this.editor, { section: 'shapeSettings', focusId });
-	}
 
 	loadLayerSettings(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;

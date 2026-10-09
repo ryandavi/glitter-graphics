@@ -29,7 +29,7 @@ async function main() {
 			editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: 'rounderHeart' } });
 			editor.pickers.closeAll();
 		});
-		assert(await page.locator('#designGalleryTitleText').textContent() === 'Shapes', 'A shape layer did not show the Shapes library');
+		assert(await page.evaluate(() => !editor.pickers.active), 'Closing the picker left an unarmed Library');
 		await page.evaluate(() => editor.shapeGlitterManager.armAssetPicker());
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'shape', 'Shape picker showed the wrong library');
 		assert((await page.locator('#designGalleryTitleText').textContent()) === 'Shape', 'Shape picker did not name what it changes');
@@ -51,6 +51,7 @@ async function main() {
 		assert(await page.locator('#designGallerySection').getAttribute('data-library') === 'glitter', 'Fill picker showed the wrong library');
 		for (const width of [1200, 390]) {
 			await page.setViewportSize({ width, height: 900 });
+			await page.waitForTimeout(400);
 			await page.evaluate(() => {
 				editor.setTool(ToolType.TEXT);
 				editor.shapeGlitterManager.armPicker('border');
@@ -58,8 +59,10 @@ async function main() {
 				window.auditSelected = editor.activeLayerId;
 			});
 			await page.keyboard.press('Escape');
+			await page.waitForTimeout(350);
 			assert(await page.evaluate(() => !editor.pickers.active && editor.currentTool === ToolType.TEXT && editor.activeLayerId === window.auditSelected), `${width}: picker Escape changed tool or selection`);
 			await page.keyboard.press('Escape');
+			await page.waitForTimeout(350);
 			assert(await page.evaluate(() => editor.currentTool === ToolType.TEXT && editor.layerManager.getSelectedLayers().length === 0), `${width}: deselection changed tool`);
 			assert(await page.evaluate(async () => {
 				const item = editor.glitterLibrary.getAllContent().find(item => item.category === 'sparkle');
@@ -72,12 +75,14 @@ async function main() {
 				editor.shapeGlitterManager.armPicker('fill');
 				window.auditDoneCalls = 0;
 				const manager = editor.shapeGlitterManager;
-				const done = manager.handlePickerDone.bind(manager);
-				manager.handlePickerDone = () => { window.auditDoneCalls++; done(); };
+				const done = manager.closePickerSession.bind(manager);
+				manager.closePickerSession = (...args) => { window.auditDoneCalls++; return done(...args); };
 				document.getElementById('libraryWindowClose').click();
-				manager.handlePickerDone = done;
+				window.auditCloseOriginal = done;
 			});
+			await page.waitForTimeout(350);
 			assert(await page.evaluate(() => window.auditDoneCalls === 1 && !editor.pickers.active), `${width}: Close ran more than once`);
+			await page.evaluate(() => { editor.shapeGlitterManager.closePickerSession = window.auditCloseOriginal; });
 		}
 		await page.setViewportSize({ width: 1200, height: 900 });
 		await page.evaluate(() => {

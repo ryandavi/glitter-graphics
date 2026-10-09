@@ -137,23 +137,46 @@ class ViewportManager {
 	 * Capture the canvas point currently under the center of the viewport.
 	 * Canvas-space focus survives layout changes; raw pan offsets do not.
 	 */
-	captureViewState() {
+	// Fit and Fill use the unobstructed area; transforms stay in workspace coordinates.
+	getUsableRect() {
 		const rect = this.previewContainer.getBoundingClientRect();
+		let left = 0;
+		let right = rect.width;
+		let height = rect.height;
+		const mobile = this.editor?.mobileManager;
+		if (window.innerWidth <= CONFIG.ui.mobile.breakpoint) {
+			const root = getComputedStyle(document.documentElement);
+			height -= document.querySelector('.mobile-bottom-nav')?.getBoundingClientRect().height || 0;
+			const inset = parseFloat(root.getPropertyValue('--spacing-sm')) || 0;
+			if (mobile?.activeDrawer) height -= window.innerHeight * mobile.sheetHeight / 100 + inset;
+		} else {
+			const layers = document.getElementById('layersPanel');
+			const inspector = document.getElementById('designPanel');
+			if (layers?.getClientRects().length) left = layers.getBoundingClientRect().right - rect.left;
+			if (inspector?.getClientRects().length) right = inspector.getBoundingClientRect().left - rect.left;
+		}
+		this.previewContainer.parentElement.style.setProperty('--canvas-inset-left', `${left}px`);
+		this.previewContainer.parentElement.style.setProperty('--canvas-inset-right', `${rect.width - right}px`);
+		return { left, top: 0, width: Math.max(1, right - left), height: Math.max(1, height) };
+	}
+
+	captureViewState() {
+		const rect = this.getUsableRect();
 		return {
 			zoom: this.currentZoom,
-			focusX: (rect.width / 2 - this.panX) / this.currentZoom,
-			focusY: (rect.height / 2 - this.panY) / this.currentZoom
+			focusX: ((rect.left + rect.width / 2) - this.panX) / this.currentZoom,
+			focusY: ((rect.top + rect.height / 2) - this.panY) / this.currentZoom
 		};
 	}
 
 	restoreViewState(state, options = {}) {
 		if (!state || !this.canvasWidth) return;
 		this.prepareViewChange(options);
-		const rect = this.previewContainer.getBoundingClientRect();
+		const rect = this.getUsableRect();
 		this.currentZoom = state.zoom;
 		this._syncZoomIndex();
-		this.panX = rect.width / 2 - state.focusX * this.currentZoom;
-		this.panY = rect.height / 2 - state.focusY * this.currentZoom;
+		this.panX = (rect.left + rect.width / 2) - state.focusX * this.currentZoom;
+		this.panY = (rect.top + rect.height / 2) - state.focusY * this.currentZoom;
 		this.lastViewportWidth = rect.width;
 		this.lastViewportHeight = rect.height;
 		this.applyTransform();
@@ -165,7 +188,7 @@ class ViewportManager {
 	// (`viewTween.shown`), so it moves in the same frame as the canvas. A CSS
 	// transition runs off the main thread and the chrome trails it.
 	startViewTransition() {
-		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+		if (PREFERENCES.get('reduceMotion') || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
 		// Called before the next method writes its target; a second call while
 		// one is running carries on from what is on screen.
 		const from = this.viewTween?.shown || { zoom: this.currentZoom, panX: this.panX, panY: this.panY };
@@ -363,7 +386,7 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.prepareViewChange(options);
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
+		const containerRect = this.getUsableRect();
 		const padding = 40;
 
 		const scaleX = (containerRect.width - padding) / this.canvasWidth;
@@ -377,8 +400,8 @@ class ViewportManager {
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 0;
 
 		// Center the canvas
-		this.panX = (containerRect.width - (this.canvasWidth * fitZoom)) / 2;
-		this.panY = (containerRect.height - (this.canvasHeight * fitZoom)) / 2;
+		this.panX = containerRect.left + (containerRect.width - (this.canvasWidth * fitZoom)) / 2;
+		this.panY = containerRect.top + (containerRect.height - (this.canvasHeight * fitZoom)) / 2;
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -388,7 +411,7 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.prepareViewChange(options);
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
+		const containerRect = this.getUsableRect();
 		const padding = 40;
 
 		const scaleX = (containerRect.width - padding) / this.canvasWidth;
@@ -402,8 +425,8 @@ class ViewportManager {
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.ui.zoom.levels.length - 1;
 
 		// Center the canvas
-		this.panX = (containerRect.width - (this.canvasWidth * fillZoom)) / 2;
-		this.panY = (containerRect.height - (this.canvasHeight * fillZoom)) / 2;
+		this.panX = containerRect.left + (containerRect.width - (this.canvasWidth * fillZoom)) / 2;
+		this.panY = containerRect.top + (containerRect.height - (this.canvasHeight * fillZoom)) / 2;
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -413,7 +436,7 @@ class ViewportManager {
 		if (!bounds || !this.canvasWidth) return;
 		const width = Math.max(1, bounds.right - bounds.left);
 		const height = Math.max(1, bounds.bottom - bounds.top);
-		const rect = this.previewContainer.getBoundingClientRect();
+		const rect = this.getUsableRect();
 		const padding = options.padding ?? 80;
 		const availableWidth = Math.max(1, rect.width - padding);
 		const availableHeight = Math.max(1, rect.height - padding);
@@ -426,8 +449,8 @@ class ViewportManager {
 		this.prepareViewChange(options);
 		this.currentZoom = zoom;
 		this._syncZoomIndex();
-		this.panX = rect.width / 2 - ((bounds.left + bounds.right) / 2) * zoom;
-		this.panY = rect.height / 2 - ((bounds.top + bounds.bottom) / 2) * zoom;
+		this.panX = (rect.left + rect.width / 2) - ((bounds.left + bounds.right) / 2) * zoom;
+		this.panY = (rect.top + rect.height / 2) - ((bounds.top + bounds.bottom) / 2) * zoom;
 		this.applyTransform();
 		this._notifyViewportChanged();
 	}
@@ -436,7 +459,7 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.prepareViewChange(options);
 
-		const containerRect = this.previewContainer.getBoundingClientRect();
+		const containerRect = this.getUsableRect();
 
 		this.currentZoom = 1;
 		this.currentZoomIndex = CONFIG.ui.zoom.levels.indexOf(1);
@@ -733,7 +756,7 @@ class ViewportManager {
 	}
 
 	_commitPixelZoom() {
-		if (this.currentZoom <= 1) return;
+		if (this.viewTween || this.currentZoom <= 1) return;
 		// Ending a continuous wheel/pinch gesture must invalidate the compositor's
 		// scaled texture. Discrete zoom already gets this flush from its transition.
 		this.previewWrapper.classList.remove('shows-pixels');

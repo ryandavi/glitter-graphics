@@ -1110,8 +1110,8 @@ function buildFlyoutSwitch(card) {
 
 // `presentation: 'flyout'`: the section is rendered once into its panel's
 // flyout host in the window (LibraryWindow shows the open one), and the panel
-// keeps one line for it: the section's closed title row. On phones the
-// section itself takes the line's place (data-phone-host-for).
+// keeps one line for it: the section's closed title row. Phone chips open
+// that same section in the window sheet.
 function mountFlyoutSection(card, spec, schema) {
 	const prefix = schema.sectionPrefix;
 	let host = document.getElementById(`${prefix}Flyouts`);
@@ -1128,9 +1128,6 @@ function mountFlyoutSection(card, spec, schema) {
 	const line = tplClone('tpl-card');
 	line.classList.add('property-line');
 	line.dataset.flyoutFor = card.id;
-	line.dataset.phoneHostFor = card.id;
-	line.dataset.phoneHostPlace = 'after';
-	line.dataset.phoneHostDrawers = '';
 	const title = line.querySelector('.property-card-title');
 	title.setAttribute('role', 'button');
 	title.setAttribute('tabindex', '0');
@@ -1753,6 +1750,27 @@ function buildPanelCardReset(node, title, spec) {
 	return button;
 }
 
+// A sheet replaces the section title, including its reset. Forward to the
+// original button so defaults and manager bindings keep one owner.
+function syncSectionHeaderReset(button, card) {
+	const source = card?.querySelector(':scope > .property-card-title > .property-card-reset');
+	if (button._resetSource === source) return;
+	button._resetObserver?.disconnect();
+	button._resetSource = source;
+	button.onclick = () => source?.click();
+	const sync = () => {
+		button.hidden = !source;
+		button.disabled = !source || source.disabled;
+		button.title = source?.title || 'Reset section';
+		button.setAttribute('aria-label', button.title);
+	};
+	if (source) {
+		button._resetObserver = new MutationObserver(sync);
+		button._resetObserver.observe(source, { attributes: true, attributeFilter: ['disabled'] });
+	}
+	sync();
+}
+
 // A group: a label, its sections, then an optional note and the buttons it
 // ends with. Its children sit directly in it, so a row has one wrapper chain
 // in every panel.
@@ -1806,7 +1824,11 @@ function getPanelSectionIndex(host) {
 	}
 	const label = (node) => node.dataset.sectionTitle
 		|| node.querySelector('.property-card-title > span')?.firstChild?.textContent.trim() || '';
-	const shown = (element) => !element.closest('[hidden]') && !element.classList.contains('is-vacant');
+	const shown = (element) => {
+		if (element.closest('[hidden], .is-vacant')) return false;
+		const controls = element.closest('#glitterSettingsControls, #layerSettingsControls');
+		return !controls || controls.classList.contains('visible');
+	};
 	const actions = Array.from(host.querySelectorAll('[data-section-key="actions"], [data-section-action]')).filter(shown);
 	const more = actions.length ? [{ key: 'actions', title: 'More', group: 'Actions', element: actions[0], extras: actions.slice(1) }] : [];
 	return Array.from(host.querySelectorAll('[data-section-key]:not([data-section-key="actions"])')).flatMap((element) => {

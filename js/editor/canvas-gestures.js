@@ -1,4 +1,11 @@
 const CANVAS_GESTURE_METHODS = {
+	// Tool settings remain editable in a sheet, but its hidden tool cannot draw.
+	isCanvasToolSuspended() {
+		return Boolean(this.mobileManager?.isMobile && this.mobileManager.activeDrawer && this.currentTool !== ToolType.SELECT);
+	}
+
+,
+
 	// The kind of the edit session that owns the canvas and keyboard right
 	// now, or null. Context toolbars and commands
 	// that must not fire inside a session read it.
@@ -68,13 +75,13 @@ togglePreview() {
 		}
 
 		this.previewContainer.addEventListener('pointerdown', event => {
-			if (event.pointerType === 'touch' || !this.originalImage || event.target.closest('.ui-ignore-gestures, .transform-handle-wrapper, .transform-handles')) return;
+			if (this.isCanvasToolSuspended() || event.pointerType === 'touch' || !this.originalImage || event.target.closest('.ui-ignore-gestures, .transform-handle-wrapper, .transform-handles')) return;
 			TOOLS[this.currentTool].onCanvasPointerDown?.(this, event);
 		}, { capture: true });
 
 		// In setupEventListeners() or wherever you set up preview container events
 		this.previewContainer.addEventListener('pointerdown', (e) => {
-			if (e.pointerType === 'touch') {
+			if (this.isCanvasToolSuspended() || e.pointerType === 'touch') {
 				return;
 			}
 			if (e.target.closest('.ui-ignore-gestures')) {

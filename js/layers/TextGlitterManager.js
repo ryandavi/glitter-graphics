@@ -894,19 +894,11 @@ class TextGlitterManager {
 		syncPaintSlotPickerTargets(this.fieldHost, layer);
 	}
 
-	handlePickerDone() {
-		const slot = this.pickerSession?.slot || 'fill';
-		this.closePickerSession();
-		this.returnToTextProperties(slot);
-	}
 
 	// Explicit exit from picker mode (Close / Esc) returns focus to where the
 	// user armed from. This is deliberately NOT part of closePickerSession —
 	// the automatic clears (layer switch, effect disable, history restore)
 	// already move the user elsewhere and must not yank the view back.
-	returnToTextProperties(slot = 'fill') {
-		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: getPaintSlotChipId(LayerType.TEXT_GLITTER, slot) });
-	}
 
 	// One place each slot's default comes from.
 

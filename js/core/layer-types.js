@@ -55,18 +55,14 @@ function layerHasVisibleContent(layer) {
 const LAYER_UI_CONFIG = {
 	NO_IMAGE: {
 		designPanelSections: [],
-		mobileSettingsSections: [],
 		panelMode: 'welcome'
 	},
 	NO_LAYER: {
 		designPanelSections: ['noLayerSettingsSection'],
-		mobileSettingsSections: [],
 		panelMode: 'no-layer'
 	},
 	AUTO_GLITTER: {
-		library: 'glitter',
 		designPanelSections: ['autoGlitterSettingsSection'],
-		mobileSettingsSections: ['autoGlitter'],
 		panelMode: 'auto-glitter'
 	}
 };

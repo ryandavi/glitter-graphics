@@ -41,6 +41,11 @@ const ESCAPE_HANDLERS = Object.freeze([
 		return true;
 	} },
 	{ id: 'modal', handle: editor => editor.modalManager.closeTopModal() },
+	{ id: 'sheet', handle: editor => {
+		if (!editor.mobileManager?.isMobile || !editor.mobileManager.activeDrawer) return false;
+		editor.mobileManager.closeAllDrawers();
+		return true;
+	} },
 	{ id: 'picker', handle: editor => editor.pickers.closeActive() },
 	{ id: 'drag', handle: editor => {
 		if (editor.maskEditor.strokeActive) { editor.maskEditor._cancelStroke(); return true; }

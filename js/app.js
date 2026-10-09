@@ -75,8 +75,8 @@ class GlitterEditor {
 		// PANEL_SCHEMAS), then the shared transform panels into the hosts the
 		// schemas created, BEFORE manager setup — every manager binds against
 		// one generated DOM structure, built once (never re-rendered after
-		// boot; rebuilding would orphan listeners). MobileManager later moves
-		// these same nodes into drawers, so bindings survive re-parenting.
+		// boot; rebuilding would orphan listeners). Phone sheets expose the
+		// same stable hosts, with no runtime re-parenting.
 		renderPanelSections(this);
 		renderAssetBrowsers();
 		setupLibrarySearchToggle();
@@ -597,11 +597,7 @@ class GlitterEditor {
 
 		this.syncToolSettingsSectionVisibility?.(layer);
 
-		// On mobile the brush settings section is tool-scoped, so relocate it into
-		// the settings drawer while brushing instead of letting it show in the
-		// Design drawer (it keeps the .visible class set/cleared just above).
-		this.mobileManager?.syncToolSettingsPlacement?.();
-		this.mobileManager?.syncBrushSettingsPlacement?.();
+		this.mobileManager?.syncBar();
 	}
 
 	// ===== HELPFUL MESSAGES =====
@@ -954,6 +950,7 @@ class GlitterEditor {
 	// ===== CLICK HANDLERS =====
 
 	handleWorkspaceAction(clientX, clientY, options = {}) {
+		if (this.isCanvasToolSuspended()) return;
 		const tool = options.tool || this.currentTool;
 		const event = options.event || null;
 		const canvasPoint = this.viewport.screenToCanvas(clientX, clientY);
@@ -965,6 +962,7 @@ class GlitterEditor {
 	}
 
 	handlePreviewContainerClick(e) {
+		if (this.isCanvasToolSuspended()) return;
 		dbg('📍 Click handler fired', e.type);
 
 		// 0. IGNORE IF JUST FINISHED HANDLE DRAGGING

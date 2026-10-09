@@ -7,7 +7,7 @@ const APP_URL = process.env.GLITTER_APP_URL || 'http://localhost/glitter/';
 
 async function main() {
 	const browser = await chromium.launch({ headless: true });
-	const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+	const page = await browser.newPage({ viewport: { width: Number(process.env.GLITTER_TEST_WIDTH) || 1280, height: 900 } });
 	const pageErrors = [];
 	page.on('pageerror', (error) => pageErrors.push(error.message || String(error)));
 	try {

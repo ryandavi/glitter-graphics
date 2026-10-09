@@ -195,6 +195,9 @@
 
 .design-panel,
 .layers-panel {
+	position: relative;
+	z-index: var(--z-panel);
+	pointer-events: none;
 	background: unset;
 	padding: var(--spacing-base);
 	gap: var(--spacing-base);
@@ -206,6 +209,7 @@
 
 .layers-panel > .section,
 .design-panel > .section {
+	pointer-events: auto;
 	border: 1px solid var(--color-window-border);
 	border-radius: var(--radius-panel);
 	overflow: hidden;

@@ -239,17 +239,7 @@ isLayerContentLocked(layer) {
 
 		// 3. Determine which config to use
 		let config;
-		// The phone's Library drawer also holds the nothing-selected panel. Brush
-		// tips configure the Brush/Eraser tool itself, so a Canvas selection (or no
-		// fill layer yet) must not show that panel under the tips while the picker
-		// is open. On desktop the tips are in the window and the Inspector stays.
-		if (this.mobileManager?.usesDrawers && this.brushTipManager?.pickerSession) {
-			config = {
-				designPanelSections: [],
-				library: 'brushTip',
-				panelMode: 'brush-tips'
-			};
-		} else if (this.autoGlitterManager?.isSessionActive()) {
+		if (this.autoGlitterManager?.isSessionActive()) {
 			config = LAYER_UI_CONFIG.AUTO_GLITTER;
 		} else if (!this.originalImage) {
 			config = LAYER_UI_CONFIG.NO_IMAGE;
@@ -275,7 +265,6 @@ isLayerContentLocked(layer) {
 			const designPanel = document.getElementById('designPanel');
 			if (designPanel) {
 				designPanel.dataset.panelMode = config.panelMode;
-				designPanel.dataset.homeLibrary = config.library || '';
 			}
 		}
 		const preferredPanel = TOOLS[this.currentTool]?.panel?.(this, layer);
@@ -322,7 +311,7 @@ isLayerContentLocked(layer) {
 	// Shared tail end of "create a layer via a tool" (Text/Shape click-to-create):
 	// select it, and reload the side panel to show its Properties - except on
 	// mobile, where LAYER_UI_CONFIG[type].mobileCreateBehavior.skipReload opts out
-	// (reopening the panel on every tap is Design-drawer noise, not a Settings ask).
+	// (reloading the panel on every placement interrupts the current tool).
 ,
 	// What a new layer most likely needs next, from its type's `openOnCreate`:
 	// 'asset' is the Library on its asset, 'panel' is its properties (which
@@ -334,9 +323,8 @@ isLayerContentLocked(layer) {
 		const mobile = this.mobileManager;
 		if (target === 'asset') getLayerManagerForType(this, layer.type).armAssetPicker();
 		else if (target === 'panel') {
-			if (mobile?.isMobile) mobile.openDrawer('edit');
-		} else if (mobile?.usesDrawers) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
-		else {
+			if (mobile?.isMobile) mobile.openLeadingSection();
+		} else {
 			if (this.pickers.flyout !== target) this.pickers.toggleFlyout(target);
 			// In the phone's sheet a section does not open its Library by itself.
 			if (mobile?.usesBar) document.getElementById(getPaintSlotChipId(layer.type, target))?.click();
@@ -426,7 +414,7 @@ isLayerContentLocked(layer) {
 		const names = this.getVisibleSwitchPanels();
 		bar.hidden = names.length < 2;
 		this.renderPanelSwitch(bar, names);
-		this.mobileManager?.syncEditTitle();
+		this.mobileManager?.syncBar();
 		// The window names the same layer, and follows the selection.
 		this.libraryWindow?.sync();
 	}

@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=ecb40e12">
+	<link rel="stylesheet" href="css/style.css?v=40eca383">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -322,8 +322,8 @@
 				</div>
 
 				<!-- DesignColumn -->
-				<div class="design-panel inspector-panel property-panel" id="designPanel" data-phone-host-for="designGallerySection" data-phone-host-drawers>
-					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="design" role="slider" tabindex="0" aria-label="Resize Design panel" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
+				<div class="design-panel inspector-panel property-panel" id="designPanel">
+					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="inspector" role="slider" tabindex="0" aria-label="Resize Properties sheet" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
 						<span></span>
 					</div>
 					<!-- The Inspector: one bar that names the selection, one scroll. Of
@@ -343,6 +343,7 @@
 							     the column the button is hidden and keeps the bar as tall as
 							     every other panel's. -->
 							<div class="section-header-actions">
+								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="inspectorReset" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
 								<button type="button" class="section-header-action btn-icon icon-wrapper sheet-close-action" id="inspectorClose" title="Close" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 						</div>
@@ -395,6 +396,7 @@
 							</h3>
 							<div class="section-header-actions">
 								<span class="flyout-switch" id="flyoutSwitch"></span>
+								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutReset" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
 								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutClose" title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 						</div>
@@ -459,12 +461,7 @@
 
 						</div>
 
-						<div class="section-content design-gallery-content" id="designGalleryContent" data-phone-host-for="noLayerSettingsSection" data-phone-host-drawers>
-							<div class="property-empty auto-glitter-gallery-empty" role="status">
-								<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
-								<div class="property-empty-title">Choose a Color Match</div>
-								<div class="property-empty-text">Select a glitter swatch in the Auto Glitter Color Matches panel to change it.</div>
-							</div>
+						<div class="section-content design-gallery-content" id="designGalleryContent">
 
 							<!-- The Library: one search/filter block + browser pair per asset kind
 							     (ASSET_BROWSERS in js/ui/asset-browser-markup.js), rendered from
@@ -1429,44 +1426,18 @@
 	</div>
 
 	<!-- Mobile Bottom Navigation -->
-	<div class="mobile-bottom-nav">
+	<div class="mobile-bottom-nav ui-ignore-gestures">
 		<div class="mobile-drawer-btn-group">
 			<button class="mobile-drawer-btn" data-drawer="layers" aria-controls="layersPanel" aria-expanded="false">
-				<div class="mobile-layers-swatch empty"></div>
+				<div class="mobile-layers-swatch is-unset"></div>
 				<span class="mobile-layers-label">Layers</span>
 				<span class="mobile-layers-count" data-count="0"></span>
 			</button>
 		</div>
 
-		<!-- The bar layout (CONFIG.ui.mobile.chipBar): the selection's sections
-		     as chips, in place of the three buttons after it (MobileManager). -->
+		<!-- The selection's sections as chips. -->
 		<div class="phone-chip-bar" id="phoneChipBar" role="toolbar" aria-label="Properties"></div>
 
-		<div class="mobile-drawer-btn-group mobile-add-layer-group">
-			<button class="mobile-drawer-btn icon-wrapper" id="mobileAddLayerBtn" type="button" title="Add new layer" aria-label="Add new layer">
-				<svg class="icon"><use href="#icon-plus"></use></svg>
-			</button>
-		</div>
-
-		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="design" aria-controls="designPanel" aria-expanded="false">Library</button>
-		</div>
-
-		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="edit" id="mobileSettingsBtn" aria-controls="mobileSettingsDrawer" aria-expanded="false" disabled>Edit</button>
-		</div>
-	</div>
-
-	<!-- Mobile Settings Drawer -->
-	<div class="mobile-settings-drawer property-panel" id="mobileSettingsDrawer">
-		<div class="mobile-sheet-handle ui-ignore-gestures" id="mobileSettingsSheetHandle" data-mobile-drawer-handle="edit" role="slider" tabindex="0" aria-label="Resize Edit panel" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
-			<span></span>
-		</div>
-
-		<div class="mobile-sheet-bar" id="mobileEditTitle"></div>
-		<div class="mobile-settings-content" id="mobileSettingsContainer">
-			<!-- Desktop settings sections will be moved here temporarily on mobile -->
-		</div>
 	</div>
 
 	<!-- SVG Sprite Definition (Place at the bottom of your body tag) -->
@@ -1803,25 +1774,25 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=3be375ce"></script>
+	<script src="js/core/config.js?v=05d6d886"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
-	<script src="js/core/sessions.js?v=09f6cc66"></script>
-	<script src="js/core/layer-types.js?v=04477dcc"></script>
+	<script src="js/core/sessions.js?v=43a32f03"></script>
+	<script src="js/core/layer-types.js?v=c44d1f78"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=75fa6031"></script>
+	<script src="js/ui/panel-schemas.js?v=6195adee"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
-	<script src="js/layers/types/base-image.js?v=38e57719"></script>
-	<script src="js/layers/types/filter.js?v=33cfb691"></script>
-	<script src="js/layers/types/glitter-fill.js?v=187894e3"></script>
-	<script src="js/layers/types/sticker.js?v=f8c8fba7"></script>
-	<script src="js/layers/types/text.js?v=dff756cb"></script>
-	<script src="js/layers/types/frame.js?v=9d9620d2"></script>
-	<script src="js/layers/types/sparkles.js?v=9cb2ee75"></script>
-	<script src="js/layers/types/shape.js?v=a8d58983"></script>
-	<script src="js/layers/types/path.js?v=20cecb7e"></script>
+	<script src="js/layers/types/base-image.js?v=aff54838"></script>
+	<script src="js/layers/types/filter.js?v=c5949302"></script>
+	<script src="js/layers/types/glitter-fill.js?v=322621fe"></script>
+	<script src="js/layers/types/sticker.js?v=eb67c06d"></script>
+	<script src="js/layers/types/text.js?v=908c00db"></script>
+	<script src="js/layers/types/frame.js?v=2dd1db11"></script>
+	<script src="js/layers/types/sparkles.js?v=c293cfe8"></script>
+	<script src="js/layers/types/shape.js?v=3cc453a3"></script>
+	<script src="js/layers/types/path.js?v=77f568eb"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
 	<script src="js/core/canvas.js?v=d276b6ae"></script>
 	<script src="js/core/gif-decode.js?v=46de64fe"></script>
@@ -1844,7 +1815,7 @@
 	<script src="js/ui/tooltip.js?v=69670448"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=c01b60dc"></script>
-	<script src="js/ui/gallery.js?v=73299034"></script>
+	<script src="js/ui/gallery.js?v=c9b05f65"></script>
 	<script src="js/ui/preset-library.js?v=fcd22542"></script>
 	<script src="js/ui/template-library.js?v=f05db242"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -1883,8 +1854,8 @@
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
-	<script src="js/ui/scroll-regions.js?v=04a8f088"></script>
-	<script src="js/ui/panel-renderer.js?v=1ed6fffd"></script>
+	<script src="js/ui/scroll-regions.js?v=8bbc6cb1"></script>
+	<script src="js/ui/panel-renderer.js?v=ee1aea02"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2fe36fa9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
@@ -1895,29 +1866,29 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=ca8dbaca"></script>
+	<script src="js/editor/panels.js?v=32931064"></script>
 	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
 	<script src="js/editor/disclosures.js?v=649823d5"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
 	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
 	<script src="js/editor/transform-interaction.js?v=dbbff5f8"></script>
 	<script src="js/editor/document-start.js?v=de92d90c"></script>
-		<script src="js/ui/glitter-recolor-tool.js?v=394056c7"></script>
+		<script src="js/ui/glitter-recolor-tool.js?v=30088261"></script>
 		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
-	<script src="js/editor/layer-panel.js?v=337227eb"></script>
-	<script src="js/editor/canvas-gestures.js?v=1c03aa6a"></script>
+	<script src="js/editor/layer-panel.js?v=650b9bf4"></script>
+	<script src="js/editor/canvas-gestures.js?v=5f0834c5"></script>
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/library-window.js?v=76a8c2ac"></script>
-	<script src="js/ui/picker-session.js?v=f3a32188"></script>
+	<script src="js/ui/library-window.js?v=8ee6cb9a"></script>
+	<script src="js/ui/picker-session.js?v=58e42fef"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
-	<script src="js/systems/GestureManager.js?v=53579816"></script>
+	<script src="js/systems/GestureManager.js?v=03ba36ea"></script>
 	<script src="js/systems/ModalManager.js?v=70541ac2"></script>
 	<script src="js/export/ExportTimeline.js?v=2a6fc547"></script>
 	<script src="js/export/GifPalette.js?v=ac210d6f"></script>
@@ -1938,7 +1909,7 @@
 	<script src="js/transforms/transform-gestures.js?v=8e167cf4"></script>
 	<script src="js/transforms/selection-chrome.js?v=71ec7b3c"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
-	<script src="js/systems/ViewportManager.js?v=b7809a4c"></script>
+	<script src="js/systems/ViewportManager.js?v=378b60ba"></script>
 	<script src="js/systems/HistoryManager.js?v=22004311"></script>
 	<script src="js/export/ProjectSerializer.js?v=fc1570ca"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
@@ -1950,7 +1921,7 @@
 	<script src="js/systems/MaskEditor.js?v=af7b5482"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=15859ebc"></script>
+	<script src="js/layers/LayerManager.js?v=41bc9323"></script>
 
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
@@ -1961,35 +1932,35 @@
 	<script src="js/assets/ContentManager.js?v=d18d593e"></script>
 	<script src="js/assets/GlitterBrowserManager.js?v=7e93ed2c"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=1f5aba35"></script>
-	<script src="js/assets/BrushTipManager.js?v=1f7c4152"></script>
+	<script src="js/assets/BrushTipManager.js?v=8116e5e5"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
-	<script src="js/assets/FontBrowserManager.js?v=09091e39"></script>
+	<script src="js/assets/FontBrowserManager.js?v=4a876c0c"></script>
 	<script src="js/transforms/LayerTransform.js?v=6e15e0c4"></script>
 	<script src="js/layers/movable-layer-methods.js?v=55908f90"></script>
 	<script src="js/layers/layer-element-methods.js?v=32e0fa0a"></script>
-	<script src="js/layers/GlitterManager.js?v=aefe65ad"></script>
-	<script src="js/layers/BaseBackgroundManager.js?v=8774bc29"></script>
+	<script src="js/layers/GlitterManager.js?v=4cc7d0b4"></script>
+	<script src="js/layers/BaseBackgroundManager.js?v=1a9debc3"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=33e0c756"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=2ba0d245"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=2df3f2cd"></script>
 	<script src="js/ui/crop-edit.js?v=4aed6e38"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
-	<script src="js/layers/TextGlitterManager.js?v=0f4a8582"></script>
-	<script src="js/layers/ShapeGlitterManager.js?v=9d3c1ecd"></script>
-	<script src="js/layers/StickerManager.js?v=4e7356aa"></script>
+	<script src="js/layers/TextGlitterManager.js?v=6715c3b9"></script>
+	<script src="js/layers/ShapeGlitterManager.js?v=aea8d68a"></script>
+	<script src="js/layers/StickerManager.js?v=19e7c3ba"></script>
 	<script src="js/layers/FilterLayerManager.js?v=3763d4be"></script>
 	<script src="js/layers/FrameLayerManager.js?v=3a8e7cae"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=d5529c7b"></script>
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=dad68a5a"></script>
+		<script src="js/systems/MobileManager.js?v=cd9f2472"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=a0ed6b2c"></script>
+	<script src="js/app.js?v=c47ad2c4"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

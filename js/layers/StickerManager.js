@@ -137,16 +137,9 @@ class StickerManager {
 		});
 	}
 
-	handlePickerDone() {
-		this.closePicker();
-	}
 
 	closePicker() {
-		const focusId = this.pickerSession?.kind === 'glitter'
-			? getPaintSlotChipId(LayerType.STICKER, this.pickerSession.slot)
-			: 'stickerAssetThumbnail';
 		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: 'stickerSettings', focusId });
 	}
 
 	closePickerSession() {

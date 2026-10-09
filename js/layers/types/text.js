@@ -209,14 +209,12 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		order: 1,
 		description: 'Add editable text with glitter, color, or a gradient',
 		quickAddId: 'quickActionAddText',
-		quickAddOrder: 1
+		quickAddOrder: 4
 	},
 	// No layerSettingsSection / 'tool': Selection Settings only applies to
 	// color-picked glitter fills — text layers hide it instead of showing an
 	// explanatory empty state.
-	library: 'glitter',
 	designPanelSections: ['textSettingsSection'],
-	mobileSettingsSections: ['text'],
 	panelMode: 'text',
 	elementClass: 'text-glitter-element',
 	transformable: true,

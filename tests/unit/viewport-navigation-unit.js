@@ -28,6 +28,7 @@ const context = {
 	console,
 	CONFIG: {
 		ui: {
+			mobile: { breakpoint: 1040 },
 			zoom: { levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16], pixelGridMinZoom: 6 },
 			gestures: { inertia: { enabled: false, decay: 0.92 } }
 		},
@@ -44,6 +45,7 @@ const context = {
 	getComputedStyle: () => ({ getPropertyValue: () => '0.3s' }),
 	performance,
 	window: {
+		innerWidth: 1440,
 		addEventListener() {},
 		dispatchEvent() {},
 		matchMedia: () => ({ matches: false }),
@@ -59,6 +61,7 @@ const source = fs.readFileSync(path.join(__dirname, '../../js/systems/ViewportMa
 vm.runInContext(`${source}\nglobalThis.__ViewportManager = ViewportManager;`, context);
 
 const container = createElement();
+container.parentElement = createElement();
 const wrapper = createElement({ left: 300, top: 250, width: 400, height: 300 });
 const viewport = new context.__ViewportManager(container, wrapper);
 viewport.setCanvasDimensions(400, 300);

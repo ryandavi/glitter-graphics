@@ -67,8 +67,7 @@ class PickerRegistry {
 		if (returnToProperties && this.closeFlyout()) return true;
 		const manager = this.active;
 		if (!manager) return false;
-		if (returnToProperties) manager.handlePickerDone();
-		else manager.closePickerSession({ restorePicker: false });
+		manager.closePickerSession({ restorePicker: false });
 		return true;
 	}
 
@@ -136,21 +135,6 @@ function pickerArmedSlot(manager, layer, isValid = null) {
 	});
 }
 
-function returnFromPickerToProperties(editor, options = {}) {
-	const { section, focusId } = options;
-	if (editor.mobileManager?.usesDrawers) {
-		editor.mobileManager.openDrawer('edit');
-	}
-	// Mobile moves the same sections into the Edit drawer, so opening the
-	// drawer and expanding the originating section are separate requirements.
-	if (section) editor.setCollapsibleSectionOpen?.(section, true);
-	if (focusId) {
-		requestAnimationFrame(() => {
-			document.getElementById(focusId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-		});
-	}
-}
-
 // The Library's asset kind is the armed session's: `library` on the session,
 // or glitter for a paint slot. syncLibraryView reads it and names the target
 // in the Library's bar. A session is `{ layerId?, slot?, library?, label? }`;
@@ -188,9 +172,8 @@ function pressAssetRow(editor, owner, arm) {
 
 // The glitter picker of a layer type whose paints are all declared slots
 // (Frame, Sparkles): arm a slot and route the next gallery pick into it.
-// Registered with the PickerRegistry like the managers' own sessions. Unarmed
-// picks (the phone's Library drawer) go to
-// defaultSlot: a slot key, or (layer) => key where it depends on the layer.
+// Registered with the PickerRegistry like the managers' own sessions.
+// defaultSlot is a slot key, or (layer) => key where it depends on the layer.
 class SlotGlitterPicker {
 	constructor(editor, { type, defaultSlot, section, typeWord, ensureSlot, onPicked }) {
 		this.editor = editor;
@@ -246,12 +229,6 @@ class SlotGlitterPicker {
 		return true;
 	}
 
-	handlePickerDone() {
-		const slot = this.pickerSession?.slot || this.getDefaultSlot(this.getLayer());
-		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: this.section, focusId: getPaintSlotChipId(this.type, slot) });
-	}
-
 	closePickerSession() {
 		pickerCloseSession(this, { updateSelection: () => this.editor.updateGlitterSelection() });
 	}
@@ -269,7 +246,6 @@ function createManagerSlotPicker(manager, { type, defaultSlot, typeWord, onPicke
 		set: (value) => { manager.pickerSession = value; }
 	});
 	picker.getTarget = (layer) => manager.getGlitterSelectionTarget(layer);
-	picker.handlePickerDone = () => manager.handlePickerDone();
 	picker.closePickerSession = () => manager.closePickerSession();
 	return picker;
 }

@@ -1,7 +1,6 @@
 @use 'mixins' as *;
 
 .mobile-bottom-nav,
-.mobile-settings-drawer,
 .mobile-sheet-handle,
 .phone-chip-bar {
 	display: none;
@@ -65,14 +64,15 @@
 			width: 100%;
 			top: var(--mobile-header-height);
 			left: 0;
-			z-index: var(--z-drawer);
+			z-index: 0;
 			display: none;
 		}
 
 		>.preview-panel {
 			display: flex;
+			margin-left: 0;
 			height: calc(100dvh - var(--mobile-header-height));
-			padding-bottom: var(--mobile-bottom-nav-height);
+			padding-bottom: 0;
 		}
 	}
 
@@ -99,6 +99,7 @@
 
 	.toolbar {
 		position: fixed;
+		bottom: auto;
 		// Balance the rail in the workspace between the app header and bottom nav.
 		// Its max-height still protects short screens and turns overflow into scroll.
 		top: calc(var(--mobile-header-height) + (100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height)) / 2);
@@ -227,43 +228,18 @@
 			}
 		}
 
-		.mobile-add-layer-group {
-			flex: 0 0 var(--touch-target-min);
-
-			#mobileAddLayerBtn {
-				align-items: center;
-				justify-content: center;
-				padding: 0;
-				aspect-ratio: 1;
-				color: var(--btn-text-color);
-
-				>.icon {
-					width: 18px;
-					height: 18px;
-					fill: currentColor;
-					opacity: var(--btn-icon-opacity);
-				}
-			}
-		}
 	}
 
 	.mobile-layers-swatch {
 		width: 18px;
 		height: 18px;
 		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-border);
 		background-size: cover;
 		background-position: center;
 		flex-shrink: 0;
 
-		&.empty {
-			background-image:
-				linear-gradient(45deg, white 25%, transparent 25%),
-				linear-gradient(-45deg, white 25%, transparent 25%),
-				linear-gradient(45deg, transparent 75%, white 75%),
-				linear-gradient(-45deg, transparent 75%, white 75%);
-			background-size: 8px 8px;
-			background-position: 0 0, 0 4px, 4px -4px, -4px 0;
-		}
+		&.is-unset { @include swatch-unset-fill; }
 
 		&.pixelated {
 			image-rendering: pixelated;
@@ -302,53 +278,6 @@
 
 	.layers-section-bottom-bar {
 		display: none;
-	}
-
-	.mobile-settings-drawer {
-		position: fixed;
-		bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-sheet-inset));
-		left: var(--mobile-sheet-inset);
-		right: var(--mobile-sheet-inset);
-		max-width: var(--mobile-sheet-max-width);
-		margin-inline: auto;
-		display: flex;
-		height: var(--mobile-drawer-height);
-		background: var(--panel-bg);
-		backdrop-filter: var(--panel-backdrop);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-panel);
-		box-shadow: 0 -4px 12px var(--color-shadow-soft);
-		z-index: var(--z-header-menu-elevated);
-		transform: translateY(100%);
-		opacity: 1;
-		visibility: hidden;
-		pointer-events: none;
-		transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
-		flex-direction: column;
-		overflow: hidden;
-
-		// The drawer is the panel: the open section sits directly on its
-		// surface, named in the bar above it.
-		.mobile-settings-content {
-			display: flex;
-			flex: 1;
-			flex-direction: column;
-			min-height: 0;
-			overflow-y: auto;
-			overscroll-behavior: contain;
-
-			> .section {
-				border: 0;
-				margin: 0;
-				padding: 0;
-
-				> .section-content { padding: 0; }
-			}
-
-			// The grabber row already names the panel; a group label above the
-			// first section would only push the first control down.
-			.property-group > .property-group-label { display: none; }
-		}
 	}
 
 	// The grabber: the whole strip drags, the pill is what shows.
@@ -414,11 +343,7 @@
 		&.active { color: var(--color-accent); }
 	}
 
-	// With the drawers, the Inspector's panels are in the Edit sheet at this
-	// width, so the design drawer is the Library alone.
-	body:not(.phone-bar) .main-content > .design-panel > .section.inspector-section { display: none; }
-
-	// Drawer sections lose the window rim they have as sidebar sections.
+	// Sheet sections lose the window rim they have as sidebar sections.
 	.main-content > :is(.layers-panel, .design-panel) {
 		padding: 0;
 
@@ -429,14 +354,10 @@
 		}
 	}
 
-	body.sheetOpen .main-content > .preview-panel {
-		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-reserved-height) + var(--mobile-sheet-inset));
-	}
 
 	body.mobile-sheet-dragging,
 	body.mobile-sheet-swapping,
 	body.mobile-sheet-reduced-motion {
-		.mobile-settings-drawer,
 		.main-content > .design-panel,
 		.main-content > .layers-panel,
 		.main-content > .preview-panel {
@@ -481,8 +402,6 @@
 		transition: height var(--transition-base), transform var(--transition-base), visibility 0s var(--transition-base);
 	}
 
-	body.editOpen .mobile-settings-drawer,
-	body.designOpen .main-content > .design-panel,
 	body.inspectorOpen .main-content > .inspector-panel,
 	body.windowOpen .main-content > .library-window,
 	body.layersOpen .main-content > .layers-panel {
@@ -493,11 +412,6 @@
 		transition-delay: 0s;
 	}
 
-	body.designOpen .main-content > .design-panel {
-		>.section:not(.design-gallery-section) {
-			display: none !important;
-		}
-	}
 
 	body:not(.mobile-no-image) .main-content > .layers-panel {
 		.image-container,
@@ -510,7 +424,7 @@
 		display: none;
 	}
 
-	// ----- The bar layout (CONFIG.ui.mobile.chipBar) -------------------------
+	// ----- The phone bar -------------------------
 	// The bottom bar is Layers and the selection's sections as chips. A chip
 	// opens one sheet: the window for a flyout section or an armed Library,
 	// and for any other section the Inspector narrowed to it (MobileManager
@@ -528,11 +442,9 @@
 			> .phone-chip-bar { display: flex; }
 		}
 
+		&.sheetOpen #helpfulMessage { display: none; }
+
 		.inspector-section > .inspector-switch { display: none; }
-		.inspector-section > .section-header .sheet-close-action {
-			visibility: visible;
-			pointer-events: auto;
-		}
 
 		// Every sheet's bar ends in one line, and the section under it brings
 		// none of its own (a later group's top line in the column). The
@@ -555,6 +467,7 @@
 		gap: var(--spacing-xs);
 		overflow-x: auto;
 		overscroll-behavior-x: contain;
+		touch-action: pan-x;
 		scrollbar-width: none;
 		@include overflow-edge-mask(var(--spacing-xl), true);
 	}
@@ -574,7 +487,13 @@
 		background: none;
 		color: var(--color-text-primary);
 		white-space: nowrap;
+		cursor: pointer;
 		@include text-sm;
+
+		&.is-add {
+			background: var(--color-bg-tertiary);
+			> .icon { width: 14px; height: 14px; }
+		}
 
 		&.is-off { color: var(--color-text-tertiary); }
 
@@ -583,7 +502,7 @@
 			color: var(--color-accent);
 		}
 
-		&:disabled { opacity: var(--opacity-disabled); }
+		&:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
 	}
 
 	.phone-chip-swatch {
@@ -599,8 +518,7 @@
 	body.mobile-no-image {
 		.toolbar,
 		.mobile-bottom-nav,
-		.mobile-settings-drawer,
-		.main-content > .layers-panel,
+				.main-content > .layers-panel,
 		.main-content > .design-panel {
 			display: none;
 		}

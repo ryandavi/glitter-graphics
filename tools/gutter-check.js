@@ -62,7 +62,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 				'property-label', 'number-field-pair'
 			];
 			const isStructural = (el) => STRUCTURAL.some((c) => el.classList.contains(c));
-			const gutter = (el) => parseFloat(getComputedStyle(el.closest('.design-panel, .mobile-settings-drawer') || document.documentElement)
+			const gutter = (el) => parseFloat(getComputedStyle(el.closest('.design-panel') || document.documentElement)
 				.getPropertyValue('--property-gutter')) || 10;
 			// The closest any content may sit to the panel wall: the boxed-container
 			// inset.
@@ -76,7 +76,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 			};
 			const label = (el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}.${(el.className || '').toString().trim().split(/\s+/).slice(0, 3).join('.')}`;
 			const out = [];
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
+			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
 				root.querySelectorAll('*').forEach((el) => {
 					if (!isStructural(el)) return;
 					const own = inset(el);
@@ -96,7 +96,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 			// are legitimately flush - their child rows apply the gutter - so the
 			// only meaningful test is whether something you can see or click ends
 			// up against the edge. Zeroing a shared rule causes exactly this.
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
+			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
 				const rootLeft = root.getBoundingClientRect().left;
 				const rootInset = edgeInset(root);
 				root.querySelectorAll('input, select, textarea, button, .property-label, .property-value, .segmented-control, .asset-info').forEach((el) => {
@@ -124,7 +124,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 			// Overflow: anything rendering past the panel's right edge. `width:100%`
 			// combined with a horizontal margin is the usual cause, and it is
 			// invisible in a narrow screenshot until a field is already clipped.
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
+			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
 				const rootRight = root.getBoundingClientRect().right;
 				root.querySelectorAll('*').forEach((el) => {
 					if (!el.getClientRects().length) return;
@@ -142,7 +142,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 
 			// Vertical clearance: a section whose last child sits on its hairline. The counterpart to the horizontal checks - it is the
 			// same defect turned ninety degrees, and just as easy to miss.
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .property-card').forEach((card) => {
+			document.querySelectorAll('#designPanel .property-card').forEach((card) => {
 				const cs = getComputedStyle(card);
 				if (parseFloat(cs.borderBottomWidth) < 1) return;
 				if (!card.getClientRects().length) return;
@@ -172,7 +172,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 			// Actions owns one equal inset around its buttons. If a card or wrapper
 			// adds another trailing gutter, the last button looks vertically off-
 			// centre even though the Actions rule itself is symmetric.
-			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .property-actions').forEach((actions) => {
+			document.querySelectorAll('#designPanel .property-actions').forEach((actions) => {
 				if (!actions.getClientRects().length) return;
 				const buttons = [...actions.children].filter((child) => child.matches('button') && child.getClientRects().length);
 				if (!buttons.length) return;
@@ -224,17 +224,16 @@ const CHROME = process.env.CHROME_PATH || undefined;
 		await mobilePage.evaluate(async () => { await window.editor.textGlitterManager?.addTextLayer?.(); });
 		await mobilePage.waitForTimeout(900);
 		await mobilePage.evaluate(() => {
-			const layer = window.editor.layerManager.getActiveLayer();
-			window.editor.mobileManager.prepareSettings(layer, { preserveDrawer: true });
-			window.editor.mobileManager.openDrawer('edit');
-			document.querySelectorAll('#mobileSettingsContainer .section:is(.collapsible-section, .switch-panel)').forEach((section) => {
+			window.editor.mobileManager.closeAllDrawers({ immediate: true });
+			window.editor.mobileManager.openLeadingSection();
+			document.querySelectorAll('#inspectorBody .section:is(.collapsible-section, .switch-panel)').forEach((section) => {
 				section.classList.add('visible', 'is-open');
 				section.querySelector(':scope > .section-content')?.classList.add('visible');
 			});
-			document.querySelectorAll('#mobileSettingsContainer .collapsed, #mobileSettingsContainer .is-collapsed')
+			document.querySelectorAll('#inspectorBody .collapsed, #inspectorBody .is-collapsed')
 				.forEach((node) => node.classList.remove('collapsed', 'is-collapsed'));
-			document.querySelectorAll('#mobileSettingsContainer [data-advanced]').forEach((node) => node.classList.add('is-open'));
-			document.querySelectorAll('#mobileSettingsContainer input[data-effect-toggle]').forEach((control) => { if (!control.checked) control.click(); });
+			document.querySelectorAll('#inspectorBody [data-advanced]').forEach((node) => node.classList.add('is-open'));
+			document.querySelectorAll('#inspectorBody input[data-effect-toggle]').forEach((control) => { if (!control.checked) control.click(); });
 		});
 		await mobilePage.waitForTimeout(600);
 		for (const theme of themes) {

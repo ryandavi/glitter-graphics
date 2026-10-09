@@ -221,7 +221,7 @@ setupLayerTypePickerListeners() {
 ,
 	setupLayerPanelListeners() {
 		// Add layer buttons - open layer type picker
-		['addLayerBtn', 'mobileAddLayerBtn'].forEach((id) => {
+		['addLayerBtn'].forEach((id) => {
 			const addLayerBtn = document.getElementById(id);
 			if (addLayerBtn) addLayerBtn.addEventListener('click', () => {
 				this.modalManager.open('layerTypePickerModal');

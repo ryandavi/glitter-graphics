@@ -202,9 +202,6 @@ class GlitterRecolorController {
 		}
 	}
 
-	handlePickerDone() {
-		this.closePickerSession();
-	}
 
 	closePickerSession({ restorePicker = true } = {}) {
 		if (!this.pickerSession) return;

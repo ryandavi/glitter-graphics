@@ -20,7 +20,6 @@ registerLayerType(LayerType.FILTER, {
 		description: 'Adjust the appearance of every layer below'
 	},
 	designPanelSections: ['filterSettingsSection'],
-	mobileSettingsSections: ['filter'],
 	panelMode: 'filter',
 	elementClass: 'filter-layer-overlay',
 	transformable: false,

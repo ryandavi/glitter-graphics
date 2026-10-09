@@ -37,9 +37,7 @@ registerLayerType(LayerType.BASE_IMAGE, {
 		return true;
 	},
 	goTo: null,
-	library: 'glitter',
 	designPanelSections: ['baseLayerSettingsSection'],
-	mobileSettingsSections: ['background'],
 	panelMode: 'base-layer',
 	onActivate: (editor, layer) => {
 		editor.baseBackgroundManager?.loadLayerSettings(layer);

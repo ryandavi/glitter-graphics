@@ -709,10 +709,6 @@ const CONFIG = deepFreeze({
 		history: { coalesceMs: 150 },
 		scrollbar: { hideDelayMs: 800, pageFraction: 0.875, pageRepeatDelayMs: 400, pageRepeatMs: 60 },
 		independentCollapsibleSections: ['layersPanel'],
-		// The window column that holds the Library while a picker is armed. It
-		// docks beside the canvas while the canvas keeps this width; otherwise
-		// the Layers column folds away, and failing that the window floats.
-		libraryWindow: { minCanvasWidth: 500 },
 		// The Library's Recent strip, per asset kind.
 		library: {
 			recentCount: 12,
@@ -758,11 +754,6 @@ const CONFIG = deepFreeze({
 			// The one width where the phone layout starts. css/_mixins.scss holds a
 			// compile-time copy that a unit test checks against this.
 			breakpoint: 1040,
-			// The phone layout on trial: the bottom bar is the selection's
-			// sections as chips and a chip opens one sheet (MobileManager). Off,
-			// the phone keeps its Layers, Library and Edit drawers. Add `?bar` to
-			// the address to turn it on.
-			chipBar: typeof location !== 'undefined' && new URLSearchParams(location.search).has('bar'),
 			sheetDetents: {
 				peek: 28,
 				half: 50,
@@ -771,8 +762,7 @@ const CONFIG = deepFreeze({
 				dismissBelow: 20,
 				flingVelocityPxMs: 0.6,
 				velocityWindowMs: 90
-			},
-			autoCloseDesignDrawer: false
+			}
 		},
 		hints: {
 			enabledByDefault: true

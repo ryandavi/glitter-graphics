@@ -382,14 +382,9 @@ class BaseBackgroundManager {
 		return this.hasActivePickerSession() ? this.pickerSession.slot || 'background' : 'background';
 	}
 
-	handlePickerDone() {
-		this.closePicker();
-	}
 
 	closePicker() {
-		const focusId = this.getGlitterSelectionTarget() === 'sparkles' ? 'canvasSparklesGlitterChip' : 'baseBackgroundGlitterChip';
 		this.closePickerSession();
-		returnFromPickerToProperties(this.editor, { section: 'baseLayerSettings', focusId });
 	}
 
 	closePickerSession() {

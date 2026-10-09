@@ -4,7 +4,7 @@
 // open flyout section, and the Library while a picker is armed
 // (js/ui/library-window.js). It shares the Inspector's shell (.design-panel),
 // so both are styled by the same rules as in a panel. At phone width the
-// Library is the design drawer and this column never opens.
+// same window becomes a sheet.
 .library-window {
 	width: var(--library-window-width);
 	flex: 0 0 var(--library-window-width);
@@ -13,6 +13,7 @@
 
 // The Inspector's own padding is the space between the two, so it matches
 // the space around every panel.
+.design-panel.inspector-panel { margin-left: auto; }
 .design-panel.library-window { padding-right: 0; }
 
 .flyout-switch {
@@ -98,23 +99,15 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 	.library-window.has-back .library-back-action { display: inline-flex; }
 }
 
-// The Library's Close ends the armed pick. The phone's drawer also opens
-// unarmed, with nothing to end.
+// The Library's Close ends its armed pick.
 .design-gallery-section:not([data-picker-library]) .library-close-action { display: none; }
 
-// How the open window sits is chosen from the room left for the canvas. The
-// phone layout is CSS first and the window closes a moment later, so these
-// never apply at its width.
+// Desktop Library floats beside the Inspector without moving the canvas.
 @media (min-width: ($mobile-breakpoint + 1px)) {
-	body[data-library-window='fold'] .main-content > .layers-panel { display: none; }
-
-	body[data-library-window='float'] .main-content > .library-window {
+	.main-content > .library-window {
 		position: absolute;
 		top: 0;
 		bottom: 0;
 		right: var(--glitter-panel-width);
-		// Its sections are cards on the app surface; over the canvas it needs one.
-		background: var(--color-bg-secondary);
-		box-shadow: -4px 0 12px var(--color-shadow-strong);
 	}
 }

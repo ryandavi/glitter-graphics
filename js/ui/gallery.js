@@ -1,6 +1,5 @@
 // Shared Library reveal path for primary asset Change buttons and armed
-// paint-slot pickers. Mobile uses the Library drawer; on desktop the armed
-// session opens the window (LibraryWindow), so this only scrolls.
+// paint-slot pickers. LibraryWindow presents the armed session; this only scrolls.
 function revealAssetBrowser(editor, manager = null, assetId = null) {
 	const revealRequestedGallery = () => {
 		// Gallery panels own their scrolling. scrollIntoView can also scroll the
@@ -8,7 +7,6 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 		const scrollContainer = manager?.browser?.scrollContainer || manager?.ui?.panel;
 		scrollContainer?.scrollTo?.({ top: 0, behavior: 'smooth' });
 	};
-	if (editor.mobileManager?.isMobile) editor.mobileManager.openDrawer('design');
 	// Align the requested browser after the window or drawer has completed
 	// its layout instead of accepting a partially-visible `nearest` result.
 	if (assetId != null) {
@@ -28,17 +26,11 @@ function syncLibraryTitle() {
 	if (schema && title) title.textContent = describePickerTarget(window.editor) || schema.title;
 }
 
-// The Library shows one asset kind at a time: the armed session's
-// (syncPickerTarget). The phone's Library drawer also opens unarmed, on the
-// panel's home kind (LAYER_UI_CONFIG `library`). The section's bar names what
-// a pick changes while a session is armed, and the kind otherwise; with no
-// kind (nothing selected, or a layer type with no library)
-// syncNoLayerPanelState owns the title.
+// The armed session is the sole source for the Library kind.
 function syncLibraryView() {
 	const section = document.getElementById('designGallerySection');
 	if (!section) return null;
-	const home = document.getElementById('designPanel')?.dataset.homeLibrary || '';
-	const kind = section.dataset.pickerLibrary || home;
+	const kind = section.dataset.pickerLibrary;
 	const schema = kind ? getAssetBrowserSchema(kind) : null;
 	if (schema) section.dataset.library = schema.prefix;
 	else delete section.dataset.library;

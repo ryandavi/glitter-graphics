@@ -350,7 +350,6 @@
 	// A sheet stops widening here and centres, so it stays a sheet on a tablet
 	// held upright.
 	--mobile-sheet-max-width: 640px;
-	--mobile-settings-handle-height: 18px;
 
 	/* z indexes — app-wide surface layer scale. Each token gates one visual
 	   layer in the global stack; local intra-component stacking (-1, 0, 1, 2,

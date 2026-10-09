@@ -110,11 +110,9 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		order: 4,
 		description: 'Paint glitter, color, or a gradient onto the canvas',
 		quickAddId: 'quickActionAddGlitter',
-		quickAddOrder: 5
+		quickAddOrder: 2
 	},
-	library: 'glitter',
 	designPanelSections: ['glitterSettingsSection'],
-	mobileSettingsSections: ['glitter'],
 	panelMode: 'glitter',
 	elementClass: 'glitter-element',
 	managerKey: 'glitterManager',

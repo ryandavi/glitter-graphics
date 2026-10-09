@@ -77,9 +77,7 @@ registerLayerType(LayerType.FRAME, {
 		order: 1,
 		description: 'Put a border or an ornate frame around the picture'
 	},
-	library: 'glitter',
 	designPanelSections: ['frameSettingsSection'],
-	mobileSettingsSections: ['frame'],
 	panelMode: 'frame',
 	elementClass: 'frame-layer-element',
 	// Pinned frames follow the canvas and have no handles; unpinned ones move

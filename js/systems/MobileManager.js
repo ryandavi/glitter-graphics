@@ -5,11 +5,6 @@ class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.isMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
-		// The bar layout (CONFIG.ui.mobile.chipBar): the bottom bar is the section
-		// index as chips, and the sheet is the Inspector narrowed to one section
-		// ('inspector') or the window ('window'). Without it the phone has its
-		// Library ('design') and Edit ('edit') drawers. Layers is a sheet in both.
-		this.bar = CONFIG.ui.mobile.chipBar;
 		this.barEntries = [];
 		this.barFrame = null;
 		this.sheetSection = null;
@@ -20,9 +15,6 @@ class MobileManager {
 		this.sheetRelease = null;
 		this.barObserver = new MutationObserver(() => this.syncBar());
 		this.activeDrawer = null;
-		this.settingsRegistry = {};
-		this.settingsSections = {};
-		this.originalParents = new Map();
 		this.phoneHostAnchors = new Map();
 		this.resizeObserver = null;
 		this.eventsBound = false;
@@ -39,6 +31,8 @@ class MobileManager {
 		this.drawerCloseTimer = null;
 		this.drawerCloseElement = null;
 		this.drawerCloseListener = null;
+		this.historyStateKey = 'glitterSheet';
+		this.pendingHistoryBack = null;
 
 		// index.html ships `mobile-no-image` on <body> so the empty-document mobile
 		// layout is correct on first paint; drop it when we boot on desktop.
@@ -48,39 +42,12 @@ class MobileManager {
 		this.setupImageEvents();
 	}
 
-	buildSettingsRegistry() {
-		const registry = {};
-		const register = (schema) => {
-			if (!schema?.mobileKey || !schema.section?.id) return;
-			const element = document.getElementById(schema.section.id);
-			registry[schema.mobileKey] = {
-				element,
-				collapsibleName: schema.sectionPrefix || null,
-				title: schema.section.title
-			};
-		};
-		Object.values(PANEL_SCHEMAS).forEach((schema) => {
-			register(schema);
-			(schema.auxiliarySections || []).forEach(register);
-		});
-		this.settingsRegistry = registry;
-		this.settingsSections = Object.fromEntries(
-			Object.entries(registry).map(([key, value]) => [key, value.element])
-		);
-	}
-
 	init() {
 		dbg('Mobile: Initializing mobile manager');
-		document.body.classList.toggle('phone-bar', this.bar);
-		if (this.bar) {
-			// Whatever the window showed as a column ends here; the sheet starts closed.
-			this.releaseSheet('window');
-			this.barObserver.observe(document.getElementById('inspectorBody'), { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
-		} else {
-			this.buildSettingsRegistry();
-			this.cacheSettingsSections();
-			dbg('Mobile: Schema settings registry:', Object.keys(this.settingsRegistry));
-		}
+		document.body.classList.add('phone-bar');
+		document.getElementById('inspectorClose').classList.add('visible');
+		this.releaseSheet('window');
+		this.barObserver.observe(document.getElementById('inspectorBody'), { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
 		this.showMobileControls();
 		this.syncPhoneHosts();
 		this.editor.libraryWindow?.sync();
@@ -89,57 +56,19 @@ class MobileManager {
 		this.syncImageState();
 		this.syncBar();
 
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		if (activeLayer && this.hasLayerSettings(activeLayer)) this.prepareSettings(activeLayer);
 	}
 
 	get usesBar() {
-		return this.isMobile && this.bar;
-	}
-
-	get usesDrawers() {
-		return this.isMobile && !this.bar;
-	}
-
-	hasLayerSettings(layer) {
-		const sections = this.getLayerSettingsKeys(layer);
-		return Boolean(sections?.some((key) => this.settingsRegistry[key]?.element));
-	}
-
-	getLayerSettingsKeys(layer) {
-		// An Auto Glitter session owns the edit drawer regardless of which layer
-		// is active — its panel replaces the active layer's own settings, the
-		// same way editor-panels.js swaps in LAYER_UI_CONFIG.AUTO_GLITTER. Without
-		// this, openDrawer('edit') re-runs prepareSettings off the active (base)
-		// layer and clobbers the just-mounted Auto Glitter section.
-		if (this.editor.autoGlitterManager?.isSessionActive()) return [...LAYER_UI_CONFIG.AUTO_GLITTER.mobileSettingsSections];
-		if (!layer) return [];
-		const keys = [...(LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [])];
-		if (this.editor.currentTool === ToolType.GLITTER_FILL && layer.type === LayerType.GLITTER_FILL) {
-			keys.unshift('tool');
-		}
-		return keys;
-	}
-
-	cacheSettingsSections() {
-		Object.entries(this.settingsRegistry).forEach(([key, entry]) => {
-			if (entry.element && !this.originalParents.has(key)) {
-				this.originalParents.set(key, {
-					parent: entry.element.parentElement,
-					next: entry.element.nextElementSibling
-				});
-			}
-		});
+		return this.isMobile;
 	}
 
 	// Controls that sit somewhere else at phone width. Each host names its
 	// controls in data-phone-host-for, so the markup is the one list. A host
 	// with data-phone-host-place="after" is followed by its control instead of
-	// holding it. A host marked data-phone-host-drawers belongs to the drawer
-	// layout: the bar layout leaves its control where it is.
+	// holding it.
 	syncPhoneHosts() {
 		document.querySelectorAll('[data-phone-host-for]').forEach((host) => {
-			const hosts = this.isMobile && !(this.bar && host.dataset.phoneHostDrawers !== undefined);
+			const hosts = this.isMobile;
 			host.dataset.phoneHostFor.split(' ').forEach((id) => {
 				const control = document.getElementById(id);
 				if (!control) return;
@@ -164,6 +93,16 @@ class MobileManager {
 
 	setupEventListeners() {
 		if (this.eventsBound) return;
+		window.addEventListener('popstate', (event) => {
+			if (this.pendingHistoryBack) return;
+			if (!event.state?.[this.historyStateKey] && this.activeDrawer) this.closeAllDrawers({ fromHistory: true });
+			// Forward never revives a dismissed sheet or its expired picker.
+			if (event.state?.[this.historyStateKey] && !this.activeDrawer) {
+				const state = { ...history.state };
+				delete state[this.historyStateKey];
+				history.replaceState(state, '', location.href);
+			}
+		});
 
 		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
 			button.addEventListener('click', (event) => {
@@ -188,25 +127,13 @@ class MobileManager {
 		window.addEventListener('layerChanged', () => {
 			if (!this.isMobile) return;
 			const layer = this.editor.layerManager.getActiveLayer();
-			if (this.bar) {
-				// A sheet follows the selection (renderBar). Deselecting ends one
-				// that was opened on a layer.
-				const sheetOpen = this.activeDrawer === 'inspector' || this.activeDrawer === 'window';
-				if (sheetOpen && this.sheetHadLayer && !layer && !this.editor.layerManager.hasMultiSelection()) this.closeAllDrawers();
-				return;
-			}
-			if (layer && this.hasLayerSettings(layer)) {
-				this.prepareSettings(layer);
-			} else {
-				this.returnSettingsSections();
-				this.syncEditAvailability();
-				if (this.activeDrawer === 'edit') this.closeAllDrawers();
-			}
+			const sheetOpen = this.activeDrawer === 'inspector' || this.activeDrawer === 'window';
+			if (sheetOpen && this.sheetHadLayer && !layer && !this.editor.layerManager.hasMultiSelection()) this.closeAllDrawers();
 		});
 
 		window.addEventListener('layerItemClick', (event) => {
 			if (!this.isMobile || event.detail.layerId !== this.editor.layerManager.activeLayerId) return;
-			this.openDrawer('edit');
+			this.openLeadingSection();
 		});
 
 		window.addEventListener('viewportChanged', () => {
@@ -284,19 +211,9 @@ class MobileManager {
 		this.resizeObserver.observe(document.body);
 	}
 
-	normalizeDrawer(drawer) {
-		if (drawer === 'add') return 'design';
-		if (drawer === 'settings') return 'edit';
-		return drawer;
-	}
-
 	getDrawerElement(drawer) {
-		const id = { edit: 'mobileSettingsDrawer', design: 'designPanel', inspector: 'designPanel', layers: 'layersPanel', window: 'libraryWindow' }[drawer];
+		const id = { inspector: 'designPanel', layers: 'layersPanel', window: 'libraryWindow' }[drawer];
 		return id ? document.getElementById(id) : null;
-	}
-
-	get settingsOpen() {
-		return this.activeDrawer === 'edit';
 	}
 
 	// ----- The bar layout ---------------------------------------------------
@@ -334,14 +251,18 @@ class MobileManager {
 			}
 		}
 
-		const signature = entries.map((entry) => `${entry.host.id}/${entry.key}/${entry.title}`).join('|');
+		const signature = entries.map((entry) => `${entry.host.id}/${entry.key}`).join('|');
 		if (bar.dataset.signature !== signature) {
 			bar.dataset.signature = signature;
 			bar.scrollLeft = 0;
 			bar.replaceChildren(...entries.map((entry, index) => {
 				const chip = document.createElement('button');
 				chip.type = 'button';
-				chip.className = 'phone-chip';
+				chip.className = entry.button ? 'phone-chip is-add' : 'phone-chip';
+				if (entry.button) {
+					chip.appendChild(createIcon('plus'));
+					chip.setAttribute('aria-label', `Add ${entry.title} layer`);
+				}
 				chip.dataset.chipIndex = String(index);
 				if (entry.line?.querySelector(':scope > .property-card-title > .property-card-swatch')) {
 					const swatch = document.createElement('span');
@@ -354,6 +275,7 @@ class MobileManager {
 		}
 		entries.forEach((entry, index) => {
 			const chip = bar.children[index];
+			if (chip.lastChild?.nodeType === Node.TEXT_NODE) chip.lastChild.textContent = entry.title;
 			const swatch = entry.line?.querySelector(':scope > .property-card-title > .property-card-swatch');
 			if (swatch) {
 				// Off, a section has no paint to show, whatever it would use if on.
@@ -409,6 +331,8 @@ class MobileManager {
 		body.querySelectorAll('.is-sheet-open, .has-sheet-open').forEach((node) => node.classList.remove('is-sheet-open', 'has-sheet-open'));
 		const title = document.getElementById('inspectorTitleText');
 		this.sheetSection = entry ? { key: entry.key, element: entry.element } : null;
+		const resetCard = entry?.element.matches('.property-card') ? entry.element : entry?.element.querySelector('.property-card');
+		syncSectionHeaderReset(document.getElementById('inspectorReset'), resetCard);
 		if (!entry) {
 			if (title.dataset.sheetSection === undefined) return;
 			delete title.dataset.sheetSection;
@@ -435,7 +359,7 @@ class MobileManager {
 		return true;
 	}
 
-	// What the drawer layout calls opening Edit: the selection's first section.
+	// Open the selection's first section from its layer-list row.
 	openLeadingSection() {
 		if (this.activeDrawer === 'inspector' || this.activeDrawer === 'window') return;
 		this.renderBar();
@@ -462,38 +386,34 @@ class MobileManager {
 	// ----- Drawers and sheets -----------------------------------------------
 
 	openDrawer(drawer) {
-		drawer = this.normalizeDrawer(drawer);
 		if (this.activeDrawer !== drawer) this.toggleDrawer(drawer);
 	}
 
 	toggleDrawer(drawer) {
-		drawer = this.normalizeDrawer(drawer);
-		if (this.bar) {
-			// The Library opens with whatever is armed (LibraryWindow).
-			if (drawer === 'design') return;
-			if (drawer === 'edit') {
-				this.openLeadingSection();
-				return;
-			}
-		}
-		this.cancelDrawerCloseFinalization();
-		if (drawer === 'edit' && !this.canOpenEditDrawer()) return;
-		if (this.activeDrawer === drawer) {
-			this.closeAllDrawers({ releaseBrush: drawer === 'edit' });
+		if (!this.isMobile || !this.getDrawerElement(drawer)) return;
+		if (this.pendingHistoryBack) {
+			const request = { drawer };
+			this.pendingDrawerOpen = request;
+			this.pendingHistoryBack.then(() => {
+				if (this.pendingDrawerOpen !== request) return;
+				this.pendingDrawerOpen = null;
+				this.toggleDrawer(drawer);
+			});
 			return;
 		}
-
-		if (drawer === 'edit') {
-			const layer = this.editor.layerManager.getActiveLayer();
-			if (layer && this.hasLayerSettings(layer)) this.prepareSettings(layer, { preserveDrawer: true });
-			this.syncBrushSettingsPlacement();
+		if (drawer === 'window' && !this.editor.libraryWindow.isOpen) return;
+		this.cancelDrawerCloseFinalization();
+		if (this.activeDrawer === drawer) {
+			this.closeAllDrawers();
+			return;
 		}
 
 		const openingFirstDrawer = !this.activeDrawer;
 		const previous = this.activeDrawer;
 		if (openingFirstDrawer) {
+			history.pushState({ ...history.state, [this.historyStateKey]: true }, '', location.href);
 			this.sheetHadLayer = Boolean(this.editor.layerManager.getActiveLayer());
-			this.setSheetHeight(this.bar ? this.sheetRestHeight : CONFIG.ui.mobile.sheetDetents.half, { resize: false });
+			this.setSheetHeight(this.sheetRestHeight, { resize: false });
 			this.drawerViewportState = this.editor.viewport?.captureViewState?.() || null;
 			this.drawerViewportUserState = null;
 			this.drawerViewportUserZoomed = false;
@@ -502,149 +422,25 @@ class MobileManager {
 
 		this.activeDrawer = drawer;
 		this.sheetReturn = previous === 'inspector' && drawer === 'window' ? this.sheetSection?.key || null : null;
-		if (previous && this.bar) {
+		if (previous) {
 			// One sheet takes another's place without either sliding.
 			document.body.classList.add('mobile-sheet-swapping');
 			requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('mobile-sheet-swapping')));
 			this.releaseSheet(previous);
 		}
-		['design', 'layers', 'edit', 'inspector', 'window'].forEach((name) => document.body.classList.toggle(`${name}Open`, drawer === name));
+		['layers', 'inspector', 'window'].forEach((name) => document.body.classList.toggle(`${name}Open`, drawer === name));
 		document.body.classList.add('sheetOpen');
-		if (drawer === 'design') this.editor.setCollapsibleSectionOpen?.('designGallery', true);
 		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
-			const active = this.normalizeDrawer(button.dataset.drawer) === drawer;
+			const active = button.dataset.drawer === drawer;
 			button.classList.toggle('active', active);
 			button.setAttribute('aria-expanded', String(active));
 		});
 		this.scheduleDrawerViewportUpdate('fit');
 	}
 
-	canOpenEditDrawer() {
-		return document.body.classList.contains('has-layer-settings');
-	}
-
-	prepareSettings(layer, options = {}) {
-		const container = document.getElementById('mobileSettingsContainer');
-		if (!container || this.bar) return;
-		const wasEditOpen = this.activeDrawer === 'edit';
-		this.returnSettingsSections();
-		let hasSettings = false;
-		const keys = options.keys || this.getLayerSettingsKeys(layer);
-		keys.forEach((key) => {
-			const section = this.settingsRegistry[key]?.element;
-			if (!section) return;
-			container.appendChild(section);
-			section.classList.add('visible');
-			hasSettings = true;
-		});
-		document.body.classList.toggle('has-layer-settings', hasSettings);
-		document.getElementById('mobileSettingsBtn')?.toggleAttribute('disabled', !hasSettings);
-		this.syncBrushSettingsPlacement();
-		this.syncEditSections();
-		if (!options.preserveDrawer && CONFIG.ui.mobile.autoCloseDesignDrawer && this.activeDrawer === 'design') {
-			this.closeAllDrawers();
-		}
-		if (wasEditOpen) this.activeDrawer = 'edit';
-	}
-
-	// One panel shows at a time. Two can be present (a fill layer beside its
-	// tool settings, a layer beside Mask Settings): the sheet's bar then holds
-	// the same switch as the Inspector.
-	syncEditSections() {
-		const present = this.getPresentSettingsKeys();
-		// A new pairing opens on the tool being used; after that the panel the
-		// user switched to stands.
-		const pairing = present.join();
-		const open = present.find((key) => this.settingsRegistry[key].element.classList.contains('is-open'));
-		const toolKey = this.editor.currentTool === ToolType.BRUSH && present.includes('brush') ? 'brush' : present[0];
-		const activeKey = pairing === this.editSectionPairing && open ? open : toolKey;
-		this.editSectionPairing = pairing;
-		const name = this.settingsRegistry[activeKey]?.collapsibleName;
-		if (name && this.editor.setCollapsibleSectionOpen) this.editor.setCollapsibleSectionOpen(name, true);
-		else this.syncEditTitle();
-	}
-
-	getPresentSettingsKeys() {
-		const container = document.getElementById('mobileSettingsContainer');
-		return Array.from(container?.children || [])
-			.map((element) => Object.keys(this.settingsRegistry).find((key) => this.settingsRegistry[key].element === element))
-			.filter(Boolean);
-	}
-
-	// The sheet's bar: the panel's title, or the switch when two are present.
-	syncEditTitle() {
-		const bar = document.getElementById('mobileEditTitle');
-		this.syncBar();
-		if (!bar || !this.usesDrawers) return;
-		const present = this.getPresentSettingsKeys().map((key) => this.settingsRegistry[key]);
-		if (present.length > 1 && this.editor.switchPanels) {
-			this.editor.renderPanelSwitch(bar, present.map((entry) => entry.collapsibleName));
-			return;
-		}
-		const title = document.createElement('span');
-		title.className = 'mobile-sheet-title';
-		title.textContent = present[0]?.title || '';
-		bar.replaceChildren(title);
-	}
-
-	returnSettingsSections() {
-		Object.keys(this.settingsRegistry).forEach((key) => this.returnSettingsSection(key));
-		const container = document.getElementById('mobileSettingsContainer');
-		if (container) container.replaceChildren();
-	}
-
-	returnSettingsSection(key) {
-		const section = this.settingsRegistry[key]?.element;
-		const anchor = this.originalParents.get(key);
-		if (!section || !anchor?.parent || anchor.parent.contains(section)) return;
-		anchor.parent.insertBefore(section, anchor.next?.parentElement === anchor.parent ? anchor.next : null);
-	}
-
-	returnBrushSection() {
-		this.returnSettingsSection('brush');
-	}
-
-	syncToolSettingsPlacement() {
-		if (!this.usesDrawers) return;
-		const layer = this.editor.layerManager.getActiveLayer();
-		if (this.activeDrawer === 'edit' && layer) {
-			this.prepareSettings(layer, { preserveDrawer: true });
-			return;
-		}
-		this.returnSettingsSection('tool');
-		this.syncEditAvailability();
-	}
-
-	syncBrushSettingsPlacement() {
-		if (!this.usesDrawers) return;
-		const section = this.settingsRegistry.brush?.element;
-		const container = document.getElementById('mobileSettingsContainer');
-		if (!section) return;
-		if (this.editor.currentTool === ToolType.BRUSH && container) {
-			if (!container.contains(section)) container.appendChild(section);
-			section.classList.add('visible');
-			document.body.classList.add('has-layer-settings');
-			document.getElementById('mobileSettingsBtn')?.removeAttribute('disabled');
-			this.syncEditSections();
-			return;
-		}
-		this.returnBrushSection();
-		this.syncEditAvailability();
-		this.syncEditSections();
-	}
-
-	syncEditAvailability() {
-		const layer = this.editor.layerManager.getActiveLayer();
-		const hasSettings = Boolean(layer && this.hasLayerSettings(layer)) || this.editor.currentTool === ToolType.BRUSH;
-		document.body.classList.toggle('has-layer-settings', hasSettings);
-		document.getElementById('mobileSettingsBtn')?.toggleAttribute('disabled', !hasSettings);
-	}
-
-	toggleSettings() {
-		this.toggleDrawer('edit');
-	}
-
 	closeAllDrawers(options = {}) {
+		this.pendingDrawerOpen = null;
+		if (!options.fromHistory && this.activeDrawer) this.popSheetHistory();
 		if (options.releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
 			this.editor.setTool(ToolType.SELECT, { commitStroke: false });
 		}
@@ -663,7 +459,7 @@ class MobileManager {
 		this.sheetDrag = null;
 		this.sheetReturn = null;
 		document.body.classList.remove('mobile-sheet-dragging');
-		document.body.classList.remove('designOpen', 'layersOpen', 'editOpen', 'inspectorOpen', 'windowOpen', 'sheetOpen', 'mobile-sheet-expanded');
+		document.body.classList.remove('layersOpen', 'inspectorOpen', 'windowOpen', 'sheetOpen', 'mobile-sheet-expanded');
 		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
 			button.classList.remove('active');
 			button.setAttribute('aria-expanded', 'false');
@@ -676,6 +472,31 @@ class MobileManager {
 		else this.deferSheetHeightReset(closingElement);
 		if (options.resize !== false && hadDrawerViewportSession) this.scheduleDrawerViewportUpdate('restore', restoreState);
 		else this.resetDrawerViewportSession();
+	}
+
+	popSheetHistory() {
+		if (this.pendingHistoryBack || !history.state?.[this.historyStateKey]) return;
+		const modals = this.editor.modalManager;
+		if (modals.stack.length) {
+			const state = { ...history.state };
+			delete state[this.historyStateKey];
+			history.replaceState(state, '', location.href);
+			return;
+		}
+		// Modal opens already wait for this shared history boundary. A sheet
+		// closed immediately before a modal must not navigate back through it.
+		modals.navigatingBack = true;
+		const pending = new Promise(resolve => {
+			window.addEventListener('popstate', resolve, { once: true });
+			history.back();
+		});
+		this.pendingHistoryBack = pending;
+		modals.pendingHistoryBack = pending;
+		pending.then(() => {
+			this.pendingHistoryBack = null;
+			if (modals.pendingHistoryBack === pending) modals.pendingHistoryBack = null;
+			modals.navigatingBack = false;
+		});
 	}
 
 	deferSheetHeightReset(closingElement) {
@@ -696,7 +517,7 @@ class MobileManager {
 		const drawer = this.sheetRelease;
 		this.sheetRelease = null;
 		if (drawer) this.releaseSheet(drawer);
-		if (!this.activeDrawer) this.setSheetHeight(this.bar ? this.sheetRestHeight : CONFIG.ui.mobile.sheetDetents.half, { resize: false });
+		if (!this.activeDrawer) this.setSheetHeight(this.sheetRestHeight, { resize: false });
 		this.syncBar();
 	}
 
@@ -726,8 +547,7 @@ class MobileManager {
 			if (handle.dataset.bound === 'true') return;
 			handle.dataset.bound = 'true';
 			const sheet = handle.parentElement;
-			const name = handle.dataset.mobileDrawerHandle;
-			const headers = name === 'edit' ? '.mobile-sheet-bar' : ':scope > .section > .section-header';
+			const headers = ':scope > .section > .section-header';
 			sheet.querySelectorAll(headers).forEach(header => header.classList.add('mobile-sheet-drag-header', 'ui-ignore-gestures'));
 			let suppressClick = false;
 			sheet.addEventListener('click', event => {
@@ -815,7 +635,7 @@ class MobileManager {
 				if (!this.isMobile || this.getDrawerElement(this.activeDrawer) !== sheet) return;
 				if (!['Escape', 'ArrowDown', 'ArrowUp'].includes(event.key)) return;
 				event.preventDefault();
-				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: name === 'edit' });
+				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: false });
 				else this.settleSheet(event.key === 'ArrowDown' ? CONFIG.ui.mobile.sheetDetents.flingVelocityPxMs : -CONFIG.ui.mobile.sheetDetents.flingVelocityPxMs, this.sheetHeight, true);
 			});
 		});
@@ -827,7 +647,7 @@ class MobileManager {
 		const down = velocity >= config.flingVelocityPxMs;
 		const up = velocity <= -config.flingVelocityPxMs;
 		if (this.sheetHeight < config.dismissBelow || (down && startHeight <= (keyboard ? config.peek : config.half))) {
-			this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
+			this.closeAllDrawers({ releaseBrush: false });
 			return;
 		}
 		let height = heights.reduce((best, value) => Math.abs(value - this.sheetHeight) < Math.abs(best - this.sheetHeight) ? value : best);
@@ -879,16 +699,12 @@ class MobileManager {
 		};
 		// The bar layout's sheet and the canvas start in the same frame, so they
 		// move as one. The room the sheet takes is already in the layout here.
-		if (this.bar) update();
-		else this.drawerLayoutFrame = requestAnimationFrame(() => {
-			this.drawerLayoutFrame = requestAnimationFrame(update);
-		});
+		update();
 	}
 
 	cancelDrawerViewportUpdate() {
 		if (this.drawerLayoutFrame) cancelAnimationFrame(this.drawerLayoutFrame);
 		this.drawerLayoutFrame = null;
-		this.finishViewportAnimation();
 	}
 
 	finishViewportAnimation() {
@@ -906,12 +722,12 @@ class MobileManager {
 		this.cancelDrawerViewportUpdate();
 		this.cancelDrawerCloseFinalization();
 		this.closeAllDrawers({ releaseBrush: true, resize: false, immediate: true });
-		this.returnSettingsSections();
 		this.syncPhoneHosts();
 		this.editor.libraryWindow?.sync();
 		this.barObserver.disconnect();
 		cancelAnimationFrame(this.barFrame);
 		document.querySelector('.mobile-bottom-nav')?.classList.remove('visible');
+		document.getElementById('inspectorClose').classList.remove('visible');
 		document.body.classList.remove('mobile-no-image', 'has-layer-settings', 'mobile-sheet-dragging', 'phone-bar');
 		document.documentElement.style.removeProperty('--mobile-drawer-height');
 		document.documentElement.style.removeProperty('--mobile-drawer-reserved-height');
