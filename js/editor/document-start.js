@@ -4,7 +4,7 @@ setupImageListeners() {
 		const projectUpload = document.getElementById('projectUpload');
 		const workspaceStart = document.getElementById('workspaceStart');
 		const openProjectBtn = document.getElementById('openProjectBtn');
-		const openProjectSidebarBtn = document.getElementById('openProjectSidebarBtn');
+		const openProjectMenuItem = document.getElementById('openProjectMenuItem');
 		const openImageBtn = document.getElementById('openImageBtn');
 
 		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
@@ -42,7 +42,7 @@ setupImageListeners() {
 			});
 		}
 
-		[openProjectBtn, openProjectSidebarBtn].forEach((button) => {
+		[openProjectBtn, openProjectMenuItem].forEach((button) => {
 			if (button && projectUpload) {
 				button.addEventListener('click', () => {
 					projectUpload.click();

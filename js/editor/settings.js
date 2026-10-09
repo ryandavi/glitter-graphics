@@ -814,10 +814,9 @@ async resetAllSettings() {
 			this.exportCurrentTarget();
 		});
 
-		const saveProject = document.getElementById('saveProject');
-		if (saveProject) {
-			saveProject.addEventListener('click', () => this.saveProjectFile());
-		}
+		document.querySelectorAll('#saveProject, #saveProjectMenuItem').forEach((button) => {
+			button.addEventListener('click', () => this.saveProjectFile());
+		});
 	}
 
 ,

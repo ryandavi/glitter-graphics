@@ -346,18 +346,8 @@ const PANEL_SCHEMAS = {
 					{ kind: 'section', title: 'Quick add', sets: [
 						{ rows: [{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }] }
 					] },
-					{ kind: 'section', title: 'Project',
-						summary: { id: 'projectNameSummary', text: 'Untitled project' }, sets: [
-						{ rows: [
-							{ kind: 'field', id: 'projectNameInput', label: 'Name', type: 'text',
-								maxlength: 60, spellcheck: false, placeholder: 'Name...' }
-						] },
-						{ classes: 'canvas-project-actions is-split', actions: [
-							{ id: 'openProjectSidebarBtn', label: 'Open project', icon: 'open-project' },
-							{ id: 'saveProject', label: 'Save project', icon: 'save', primary: true, disabled: true }
-						] }
-					] },
-					// Document sizing belongs to Canvas Properties.
+					// The project (name, save, open) is in the app header; document
+					// sizing belongs to Canvas Properties.
 				] }
 			] },
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [

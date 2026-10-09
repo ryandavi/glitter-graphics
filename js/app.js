@@ -230,19 +230,10 @@ class GlitterEditor {
 		const input = document.getElementById('projectNameInput');
 		if (!input) return;
 
-		input.placeholder = 'Name...';
 		input.value = this.projectName;
-		this.syncProjectNameSummary();
 		input.addEventListener('input', () => {
 			this.setProjectName(input.value, { markDirty: true, syncInput: false });
 		});
-	}
-
-	// The Project card's title readout (#projectNameSummary) — shows the current
-	// name when the card is collapsed.
-	syncProjectNameSummary() {
-		const summary = document.getElementById('projectNameSummary');
-		if (summary) summary.textContent = this.projectName || 'Untitled project';
 	}
 
 	setProjectName(name, options = {}) {
@@ -258,7 +249,6 @@ class GlitterEditor {
 				input.value = this.projectName;
 			}
 		}
-		this.syncProjectNameSummary();
 
 		if (markDirty && (this.originalImage || this.historyManager.canUndo())) {
 			this.isSaved = false;
@@ -737,7 +727,6 @@ class GlitterEditor {
 		const clearAllTool = document.getElementById('clearAllTool');
 		const layersBarClearAll = document.getElementById('layersBarClearAll');
 		const exportGif = document.getElementById('exportGif');
-		const saveProject = document.getElementById('saveProject');
 		const addBtn = document.getElementById('addLayerBtn');
 		const previewToggle = document.getElementById('previewModeToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
@@ -749,7 +738,9 @@ class GlitterEditor {
 		if (clearAllTool) clearAllTool.disabled = !hasImage || autoPreviewActive;
 		if (layersBarClearAll) layersBarClearAll.disabled = !hasImage || autoPreviewActive;
 		if (exportGif) exportGif.disabled = !hasAnySelection || autoPreviewActive || this.exportInProgress;
-		if (saveProject) saveProject.disabled = !hasImage || autoPreviewActive;
+		document.querySelectorAll('#saveProject, #saveProjectMenuItem').forEach((button) => {
+			button.disabled = !hasImage || autoPreviewActive;
+		});
 
 		if (transparencyToggle) transparencyToggle.disabled = !hasImage;
 		if (boundsToggle) boundsToggle.disabled = !hasImage;

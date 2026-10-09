@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=e2df1c5e">
+	<link rel="stylesheet" href="css/style.css?v=33ce201e">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -68,6 +68,27 @@
 				<a href="index.html" class="app-header-title">RYBABY LABS</a>
 			</div>
 			<div class="app-header-right">
+				<!-- Undo and Redo live here at phone width (data-phone-host-for). -->
+				<div class="app-header-history" id="appHeaderHistory" data-phone-host-for="undoTool redoTool"></div>
+				<div class="app-header-project" id="appHeaderProject">
+					<input class="app-header-project-name" id="projectNameInput" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="Untitled project" aria-label="Project name" title="Project name">
+					<button class="btn-icon icon-wrapper" id="saveProject" type="button" title="Save project (Ctrl/Cmd+S)" aria-label="Save project" disabled><svg class="icon"><use href="#icon-save"></use></svg><span class="name">Save project</span></button>
+					<div class="app-menu export-split-control" id="exportMenu">
+						<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export GIF" aria-label="Export GIF"><svg class="icon"><use href="#icon-export"></use></svg><span class="name">Export GIF</span></button>
+						<button class="btn-icon export-action-btn app-menu-trigger icon-wrapper" id="exportMenuBtn" type="button" title="Export menu" aria-label="Export menu" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenuPanel"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Export menu</span></button>
+						<div class="app-menu-panel" id="exportMenuPanel" role="menu" aria-labelledby="exportMenuBtn" hidden>
+							<div class="app-menu-group-label">Still Image</div>
+							<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">Export PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+							<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:jpeg"><span class="app-menu-item-label">Export JPG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+							<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:gif"><span class="app-menu-item-label">Export Still GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+							<div class="app-menu-separator" role="separator"></div><div class="app-menu-group-label">Animation</div>
+							<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:gif"><span class="app-menu-item-label">Export GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+							<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:mp4"><span class="app-menu-item-label">Export MP4</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
+							<div class="app-menu-separator" role="separator"></div>
+							<button class="app-menu-item" id="exportSettingsMenuItem" type="button" role="menuitem"><span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span><span class="app-menu-item-label">Export Settings…</span></button>
+						</div>
+					</div>
+				</div>
 				<div class="app-menu" id="appMenu">
 					<button class="btn-icon-simple icon-wrapper app-menu-trigger" id="appMenuBtn" type="button"
 						title="Menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false"
@@ -77,6 +98,19 @@
 					</button>
 
 					<div class="app-menu-panel" id="appMenuPanel" role="menu" aria-labelledby="appMenuBtn" hidden>
+						<!-- The project name lives here at phone width (data-phone-host-for). -->
+						<div class="app-menu-field" id="appMenuProjectName" data-phone-host-for="projectNameInput"></div>
+						<button class="app-menu-item" id="openProjectMenuItem" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-open-project"></use></svg></span>
+							<span class="app-menu-item-label">Open Project…</span>
+						</button>
+						<button class="app-menu-item" id="saveProjectMenuItem" type="button" role="menuitem" disabled>
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-save"></use></svg></span>
+							<span class="app-menu-item-label">Save Project</span>
+						</button>
+
+						<div class="app-menu-separator" role="separator"></div>
+
 						<button class="app-menu-item" id="openWelcomeModal" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-glitter"></use></svg></span>
 							<span class="app-menu-item-label">Welcome</span>
@@ -575,23 +609,6 @@
 									</span>
 									<span id="canvasActivityStatus" aria-live="polite"></span>
 									<button class="btn-text" id="canvasActivityExit" type="button" hidden>Exit</button>
-								</div>
-							</div>
-							<div class="preview-controls-export">
-								<div class="app-menu export-split-control" id="exportMenu">
-									<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export GIF" aria-label="Export GIF"><svg class="icon"><use href="#icon-export"></use></svg><span class="name">Export GIF</span></button>
-									<button class="btn-icon export-action-btn app-menu-trigger icon-wrapper" id="exportMenuBtn" type="button" title="Export menu" aria-label="Export menu" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenuPanel"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Export menu</span></button>
-									<div class="app-menu-panel" id="exportMenuPanel" role="menu" aria-labelledby="exportMenuBtn" hidden>
-										<div class="app-menu-group-label">Still Image</div>
-										<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">Export PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:jpeg"><span class="app-menu-item-label">Export JPG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:gif"><span class="app-menu-item-label">Export Still GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<div class="app-menu-separator" role="separator"></div><div class="app-menu-group-label">Animation</div>
-										<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:gif"><span class="app-menu-item-label">Export GIF</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<button class="app-menu-item" type="button" role="menuitem" data-export-target="animation:mp4"><span class="app-menu-item-label">Export MP4</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
-										<div class="app-menu-separator" role="separator"></div>
-										<button class="app-menu-item" id="exportSettingsMenuItem" type="button" role="menuitem"><span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span><span class="app-menu-item-label">Export Settings…</span></button>
-									</div>
 								</div>
 							</div>
 							<div class="preview-controls-stack">
@@ -1782,7 +1799,7 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=31f441b9"></script>
+	<script src="js/core/config.js?v=f92df240"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
 	<script src="js/core/sessions.js?v=09f6cc66"></script>
 	<script src="js/core/layer-types.js?v=c09148c0"></script>
@@ -1790,7 +1807,7 @@
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=bfda1330"></script>
+	<script src="js/ui/panel-schemas.js?v=c7d5fd81"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
 	<script src="js/layers/types/filter.js?v=bbe63a02"></script>
@@ -1858,12 +1875,12 @@
 	<script src="js/paint/style-presets.js?v=655db1fa"></script>
 	<script src="js/ui/paint-slot-controls.js?v=0a42c9dc"></script>
 	<script src="js/ui/style-preset-thumbnails.js?v=85cedaf5"></script>
-	<script src="js/ui/gradient-editor.js?v=1f691cff"></script>
+	<script src="js/ui/gradient-editor.js?v=7c014f1f"></script>
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=da569ee3"></script>
-	<script src="js/ui/scroll-regions.js?v=6a69b215"></script>
-	<script src="js/ui/panel-renderer.js?v=048a443a"></script>
+	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
+	<script src="js/ui/panel-renderer.js?v=87ce78ec"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
@@ -1873,23 +1890,23 @@
 	<script src="js/editor/document-io.js?v=f4337b16"></script>
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
-	<script src="js/editor/settings.js?v=e5b592f4"></script>
+	<script src="js/editor/settings.js?v=34be9b4b"></script>
 	<script src="js/editor/panels.js?v=ee149c49"></script>
 	<script src="js/editor/fill-tool.js?v=462be798"></script>
 	<script src="js/editor/disclosures.js?v=86ab4f66"></script>
 	<script src="js/ui/panel-resize.js?v=01a2a1c8"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
-	<script src="js/editor/document-start.js?v=49d7c529"></script>
+	<script src="js/editor/document-start.js?v=de92d90c"></script>
 		<script src="js/ui/glitter-recolor-tool.js?v=e6664314"></script>
-		<script src="js/editor/modals-wiring.js?v=bea302e1"></script>
+		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
 	<script src="js/editor/layer-panel.js?v=79b69f89"></script>
 	<script src="js/editor/canvas-gestures.js?v=1c03aa6a"></script>
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
 	<script src="js/ui/picker-session.js?v=376a3eaf"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=ae9fa2cd"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
@@ -1914,7 +1931,7 @@
 	<script src="js/systems/PixelGridOverlay.js?v=7e307abe"></script>
 	<script src="js/transforms/selection-overlay.js?v=73c30c00"></script>
 	<script src="js/transforms/transform-gestures.js?v=8e167cf4"></script>
-	<script src="js/transforms/selection-chrome.js?v=bd0113d4"></script>
+	<script src="js/transforms/selection-chrome.js?v=71ec7b3c"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
 	<script src="js/systems/ViewportManager.js?v=0541a594"></script>
 	<script src="js/systems/HistoryManager.js?v=22004311"></script>
@@ -1943,7 +1960,7 @@
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
 	<script src="js/generated/font-preview-icons.js?v=22f95f8c"></script>
 	<script src="js/assets/FontBrowserManager.js?v=33436453"></script>
-	<script src="js/transforms/LayerTransform.js?v=7943bd6e"></script>
+	<script src="js/transforms/LayerTransform.js?v=6e15e0c4"></script>
 	<script src="js/layers/movable-layer-methods.js?v=55908f90"></script>
 	<script src="js/layers/layer-element-methods.js?v=32e0fa0a"></script>
 	<script src="js/layers/GlitterManager.js?v=5fb4c0df"></script>
@@ -1952,10 +1969,10 @@
 	<script src="js/systems/AutoGlitterManager.js?v=6bacaee8"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
-	<script src="js/ui/text-edit.js?v=315c75c4"></script>
+	<script src="js/ui/text-edit.js?v=9e04b649"></script>
 	<script src="js/ui/crop-edit.js?v=4aed6e38"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
-	<script src="js/layers/TextGlitterManager.js?v=8ffc71d7"></script>
+	<script src="js/layers/TextGlitterManager.js?v=79deb5ac"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=0b39aa5d"></script>
 	<script src="js/layers/StickerManager.js?v=1d7dd114"></script>
 	<script src="js/layers/FilterLayerManager.js?v=3763d4be"></script>
@@ -1964,10 +1981,10 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=f4c2b455"></script>
+		<script src="js/systems/MobileManager.js?v=f65c4ecf"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=00744118"></script>
+	<script src="js/app.js?v=35261fa2"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

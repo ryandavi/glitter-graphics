@@ -201,8 +201,7 @@ updateOrientationButtons(width, height) {
 		this.exportMenuPopover = setupMenuPopover({
 			root: document.getElementById('exportMenu'),
 			trigger: document.getElementById('exportMenuBtn'),
-			panel: document.getElementById('exportMenuPanel'),
-			liftHost: document.getElementById('exportMenu')?.closest('.preview-controls')
+			panel: document.getElementById('exportMenuPanel')
 		});
 		setupMenuPopover({
 			root: document.getElementById('exportResultMenu'),

@@ -9,6 +9,7 @@ class MobileManager {
 		this.settingsRegistry = {};
 		this.settingsSections = {};
 		this.originalParents = new Map();
+		this.phoneHostAnchors = new Map();
 		this.resizeObserver = null;
 		this.eventsBound = false;
 		this.sheetDrag = null;
@@ -58,6 +59,7 @@ class MobileManager {
 		this.cacheSettingsSections();
 		dbg('Mobile: Schema settings registry:', Object.keys(this.settingsRegistry));
 		this.showMobileControls();
+		this.syncPhoneHosts();
 		this.setupEventListeners();
 		this.setupSheetDrag();
 		this.syncImageState();
@@ -94,6 +96,27 @@ class MobileManager {
 					next: entry.element.nextElementSibling
 				});
 			}
+		});
+	}
+
+	// Controls that sit somewhere else at phone width. Each host names its
+	// controls in data-phone-host-for, so the markup is the one list.
+	syncPhoneHosts() {
+		document.querySelectorAll('[data-phone-host-for]').forEach((host) => {
+			host.dataset.phoneHostFor.split(' ').forEach((id) => {
+				const control = document.getElementById(id);
+				if (!control) return;
+				if (this.isMobile) {
+					if (!this.phoneHostAnchors.has(id)) {
+						this.phoneHostAnchors.set(id, { parent: control.parentElement, next: control.nextElementSibling });
+					}
+					host.appendChild(control);
+					return;
+				}
+				const anchor = this.phoneHostAnchors.get(id);
+				if (!anchor || anchor.parent.contains(control)) return;
+				anchor.parent.insertBefore(control, anchor.next?.parentElement === anchor.parent ? anchor.next : null);
+			});
 		});
 	}
 
@@ -623,6 +646,7 @@ class MobileManager {
 		this.cancelDrawerCloseFinalization();
 		this.closeAllDrawers({ releaseBrush: true, resize: false, immediate: true });
 		this.returnSettingsSections();
+		this.syncPhoneHosts();
 		document.querySelector('.mobile-bottom-nav')?.classList.remove('visible');
 		document.body.classList.remove('mobile-no-image', 'has-layer-settings', 'mobile-sheet-dragging');
 		document.documentElement.style.removeProperty('--mobile-drawer-height');
