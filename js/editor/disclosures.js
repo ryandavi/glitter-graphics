@@ -51,6 +51,9 @@ initializeCollapsibleSections() {
 
 				const setOpen = (isOpen) => {
 					setCollapsibleSectionState(section, content, toggle, isOpen);
+					// A column of bars has nothing to resize (its handle hides).
+					const column = section.parentElement;
+					column.classList.toggle('all-sections-collapsed', !column.querySelector(':scope > .section.is-open'));
 				};
 			setOpen(true);
 

@@ -142,10 +142,13 @@
   /* Modal context must remain recognizable across themes. */
   --modal-backdrop-blur: 4px;
   /* Panel surfaces (toolbar, image/layers sections, design-panel collapsible
-     sections) — opaque by default; glass themes go translucent and set a
-     backdrop so the workspace shows through the chrome. */
-  --panel-bg: var(--color-bg-primary);
-  --panel-backdrop: none;
+     sections) overlay the canvas, so they are slightly translucent over a
+     backdrop blur. Themes with their own --panel-bg mix --panel-alpha into
+     its colors; glass themes go more transparent and turn the blur up. */
+  --panel-alpha: 97%;
+  --panel-blur: 10px;
+  --panel-bg: color-mix(in srgb, var(--color-bg-primary) var(--panel-alpha), transparent);
+  --panel-backdrop: blur(var(--panel-blur));
   /* Canvas workspace floor — must contrast with both dark and white canvases */
   --color-bg-workspace: var(--color-bg-secondary);
   /* Miniature page in New Canvas preset cards. It stays a distinct surface
@@ -654,7 +657,9 @@
   --color-bg-accent-tint: #cfe5ff;
   --color-checkerboard: #cbd3da;
   --color-bg-translucent: rgb(244 247 249 / 94%);
-  --panel-bg: repeating-linear-gradient(to bottom, #f1f2f3 0, #f1f2f3 2px, #e5e7e9 2px, #e5e7e9 4px);
+  --panel-stripe-light: color-mix(in srgb, #f1f2f3 var(--panel-alpha), transparent);
+  --panel-stripe-dark: color-mix(in srgb, #e5e7e9 var(--panel-alpha), transparent);
+  --panel-bg: repeating-linear-gradient(to bottom, var(--panel-stripe-light) 0, var(--panel-stripe-light) 2px, var(--panel-stripe-dark) 2px, var(--panel-stripe-dark) 4px);
   /* Candy selection blue */
   --color-accent: #2d7fdc;
   --color-accent-hover: #1d67c2;
@@ -721,7 +726,7 @@
   --color-bg-accent-tint: #dcebc3;
   --color-checkerboard: #c7cec7;
   --color-bg-translucent: rgb(231 235 231 / 96%);
-  --panel-bg: linear-gradient(to bottom, #eef1ee 0%, #d4d9d4 100%);
+  --panel-bg: linear-gradient(to bottom, color-mix(in srgb, #eef1ee var(--panel-alpha), transparent) 0%, color-mix(in srgb, #d4d9d4 var(--panel-alpha), transparent) 100%);
   /* LimeWire-style connection green */
   --color-accent: #72ad22;
   --color-accent-hover: #598e16;
@@ -788,7 +793,7 @@
   --color-bg-accent-tint: #e3d8ff;
   --color-checkerboard: #d4c8dc;
   --color-bg-translucent: rgb(248 243 252 / 96%);
-  --panel-bg: #eee8f4;
+  --panel-bg: color-mix(in srgb, #eee8f4 var(--panel-alpha), transparent);
   /* Default-link blue is the interaction color; purple remains visited. */
   --color-accent: #0000ee;
   --color-accent-hover: #0000aa;
@@ -923,7 +928,7 @@
   --color-bg-accent-tint: #123d59;
   --color-checkerboard: #252c48;
   --color-bg-translucent: rgb(12 15 31 / 95%);
-  --panel-bg: linear-gradient(to bottom, #242b49 0%, #171c33 100%);
+  --panel-bg: linear-gradient(to bottom, color-mix(in srgb, #242b49 var(--panel-alpha), transparent) 0%, color-mix(in srgb, #171c33 var(--panel-alpha), transparent) 100%);
   /* Cold cathode cyan */
   --color-accent: #20d9ff;
   --color-accent-hover: #00b9e6;

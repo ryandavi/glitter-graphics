@@ -293,7 +293,9 @@
   --color-bg-accent-tint: #cfe5ff;
   --color-checkerboard: #cbd3da;
   --color-bg-translucent: rgb(244 247 249 / 94%);
-  --panel-bg: repeating-linear-gradient(to bottom, #f1f2f3 0, #f1f2f3 2px, #e5e7e9 2px, #e5e7e9 4px);
+  --panel-stripe-light: color-mix(in srgb, #f1f2f3 var(--panel-alpha), transparent);
+  --panel-stripe-dark: color-mix(in srgb, #e5e7e9 var(--panel-alpha), transparent);
+  --panel-bg: repeating-linear-gradient(to bottom, var(--panel-stripe-light) 0, var(--panel-stripe-light) 2px, var(--panel-stripe-dark) 2px, var(--panel-stripe-dark) 4px);
   /* Candy selection blue */
   --color-accent: #2d7fdc;
   --color-accent-hover: #1d67c2;
@@ -360,7 +362,7 @@
   --color-bg-accent-tint: #dcebc3;
   --color-checkerboard: #c7cec7;
   --color-bg-translucent: rgb(231 235 231 / 96%);
-  --panel-bg: linear-gradient(to bottom, #eef1ee 0%, #d4d9d4 100%);
+  --panel-bg: linear-gradient(to bottom, color-mix(in srgb, #eef1ee var(--panel-alpha), transparent) 0%, color-mix(in srgb, #d4d9d4 var(--panel-alpha), transparent) 100%);
   /* LimeWire-style connection green */
   --color-accent: #72ad22;
   --color-accent-hover: #598e16;
@@ -427,7 +429,7 @@
   --color-bg-accent-tint: #e3d8ff;
   --color-checkerboard: #d4c8dc;
   --color-bg-translucent: rgb(248 243 252 / 96%);
-  --panel-bg: #eee8f4;
+  --panel-bg: color-mix(in srgb, #eee8f4 var(--panel-alpha), transparent);
   /* Default-link blue is the interaction color; purple remains visited. */
   --color-accent: #0000ee;
   --color-accent-hover: #0000aa;
@@ -562,7 +564,7 @@
   --color-bg-accent-tint: #123d59;
   --color-checkerboard: #252c48;
   --color-bg-translucent: rgb(12 15 31 / 95%);
-  --panel-bg: linear-gradient(to bottom, #242b49 0%, #171c33 100%);
+  --panel-bg: linear-gradient(to bottom, color-mix(in srgb, #242b49 var(--panel-alpha), transparent) 0%, color-mix(in srgb, #171c33 var(--panel-alpha), transparent) 100%);
   /* Cold cathode cyan */
   --color-accent: #20d9ff;
   --color-accent-hover: #00b9e6;
@@ -831,10 +833,13 @@
   /* Modal context must remain recognizable across themes. */
   --modal-backdrop-blur: 4px;
   /* Panel surfaces (toolbar, image/layers sections, design-panel collapsible
-     sections) — opaque by default; glass themes go translucent and set a
-     backdrop so the workspace shows through the chrome. */
-  --panel-bg: var(--color-bg-primary);
-  --panel-backdrop: none;
+     sections) overlay the canvas, so they are slightly translucent over a
+     backdrop blur. Themes with their own --panel-bg mix --panel-alpha into
+     its colors; glass themes go more transparent and turn the blur up. */
+  --panel-alpha: 97%;
+  --panel-blur: 10px;
+  --panel-bg: color-mix(in srgb, var(--color-bg-primary) var(--panel-alpha), transparent);
+  --panel-backdrop: blur(var(--panel-blur));
   /* Canvas workspace floor — must contrast with both dark and white canvases */
   --color-bg-workspace: var(--color-bg-secondary);
   /* Miniature page in New Canvas preset cards. It stays a distinct surface
@@ -980,7 +985,9 @@
   --icon-size-xs: 20px;
   /* PANELS */
   --layer-panel-width: 400px;
-  --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+  /* As wide as the left side (the rail, its gutter and the Layers column),
+     so the canvas between them is centred in the window. */
+  --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width) + var(--spacing-base));
   /* The Library window is as wide as the Inspector until it is resized. */
   --library-window-width: var(--glitter-panel-width);
   --color-filter-chip-size: var(--row-height);
@@ -3130,6 +3137,10 @@ body.no-document .app-header-right > .app-header-project {
   }
 }
 
+.all-sections-collapsed > .panel-resize-handle {
+  display: none;
+}
+
 body.is-resizing-panel {
   cursor: col-resize !important;
   -webkit-user-select: none;
@@ -3148,7 +3159,7 @@ body.is-resizing-panel canvas {
 }
 @media (max-width: 1200px) {
   :root {
-    --glitter-panel-width: 250px;
+    --layer-panel-width: 250px;
   }
 }
 .layers-panel {
@@ -3495,6 +3506,11 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
   overflow: visible;
 }
 
+@media (min-width: 1041px) {
+  .library-window > .flyout-section > .section-content {
+    border-top: 1px solid var(--color-border);
+  }
+}
 .library-split-handle {
   --split-grip-width: var(--spacing-xl);
   --split-grip-height: var(--spacing-2xs);
@@ -4695,6 +4711,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--panel-bg);
+  backdrop-filter: var(--panel-backdrop);
   text-align: center;
   transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
@@ -6442,6 +6459,43 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 }
 .design-panel > .section.inspector-section > .section-header {
   border-bottom: unset;
+}
+.design-panel > .section.inspector-section > .section-header .sheet-close-action:not(.visible) {
+  display: none;
+}
+.design-panel > .section.inspector-section > .section-header > .section-header-actions > .section-header-action {
+  background-color: unset;
+}
+.design-panel > .section.inspector-section > .section-header > .section-header-actions > .section-header-action:hover {
+  background-color: unset;
+}
+.design-panel > .section.inspector-section > .section-header > .section-header-actions > .section-header-action.collapsed .icon {
+  transform: rotate(-90deg);
+}
+@media (min-width: 1041px) {
+  .design-panel > .section.inspector-section > .section-header {
+    cursor: pointer;
+  }
+  .design-panel > .section.inspector-section > .section-header:not(:disabled):hover {
+    filter: var(--bar-hover-filter);
+  }
+  .design-panel > .section.inspector-section > .section-header:not(:disabled):active {
+    filter: var(--bar-active-filter);
+  }
+  .design-panel > .section.inspector-section:not(.is-open) {
+    flex: 0 0 auto;
+  }
+  .design-panel > .section.inspector-section:not(.is-open) > .inspector-switch,
+  .design-panel > .section.inspector-section:not(.is-open) > .inspector-body {
+    display: none;
+  }
+  .design-panel > .section.inspector-section > .inspector-switch {
+    border-top: 1px solid var(--color-border);
+    border-bottom: 0;
+  }
+  .design-panel > .section.inspector-section > .inspector-body {
+    border-top: 1px solid var(--color-border);
+  }
 }
 .design-panel > .section.inspector-section > .section-header > .section-header-title > .section-header-title-text {
   text-transform: none;

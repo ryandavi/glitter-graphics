@@ -329,7 +329,7 @@
 					<!-- The Inspector: one bar that names the selection, one scroll. Of
 					     the panels showing together (a tool's settings beside the layer's
 					     properties) the switch shows one (syncInspectorHeader). -->
-					<div class="section inspector-section visible" id="inspectorSection">
+					<div class="section inspector-section visible is-open" id="inspectorSection">
 						<div class="section-header section-header-with-action" id="inspectorHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
@@ -340,11 +340,16 @@
 								<span class="locked-layer-badge" id="inspectorLockedBadge" hidden>Locked</span>
 							</h3>
 							<!-- The Inspector as the phone's sheet closes like the window. In
-							     the column the button is hidden and keeps the bar as tall as
-							     every other panel's. -->
+							     the column it collapses to its bar like the Layers panel. -->
 							<div class="section-header-actions">
-								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="inspectorReset" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper sheet-close-action" id="inspectorClose" title="Close" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="inspectorReset" data-no-accordion-toggle="true" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper sheet-close-action" id="inspectorClose" title="Close" aria-label="Close" data-no-accordion-toggle="true"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="inspectorToggle" title="Collapse section">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+									<span class="name">Collapse</span>
+								</button>
 							</div>
 						</div>
 						<div class="inspector-switch" id="inspectorSwitch" hidden></div>

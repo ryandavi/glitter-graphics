@@ -354,7 +354,9 @@
 	--color-bg-accent-tint: #cfe5ff;
 	--color-checkerboard: #cbd3da;
 	--color-bg-translucent: rgb(244 247 249 / 94%);
-	--panel-bg: repeating-linear-gradient(to bottom, #f1f2f3 0, #f1f2f3 2px, #e5e7e9 2px, #e5e7e9 4px);
+	--panel-stripe-light: color-mix(in srgb, #f1f2f3 var(--panel-alpha), transparent);
+	--panel-stripe-dark: color-mix(in srgb, #e5e7e9 var(--panel-alpha), transparent);
+	--panel-bg: repeating-linear-gradient(to bottom, var(--panel-stripe-light) 0, var(--panel-stripe-light) 2px, var(--panel-stripe-dark) 2px, var(--panel-stripe-dark) 4px);
 
 	/* Candy selection blue */
 	--color-accent: #2d7fdc;
@@ -434,7 +436,7 @@
 	--color-bg-accent-tint: #dcebc3;
 	--color-checkerboard: #c7cec7;
 	--color-bg-translucent: rgb(231 235 231 / 96%);
-	--panel-bg: linear-gradient(to bottom, #eef1ee 0%, #d4d9d4 100%);
+	--panel-bg: linear-gradient(to bottom, color-mix(in srgb, #eef1ee var(--panel-alpha), transparent) 0%, color-mix(in srgb, #d4d9d4 var(--panel-alpha), transparent) 100%);
 
 	/* LimeWire-style connection green */
 	--color-accent: #72ad22;
@@ -514,7 +516,7 @@
 	--color-bg-accent-tint: #e3d8ff;
 	--color-checkerboard: #d4c8dc;
 	--color-bg-translucent: rgb(248 243 252 / 96%);
-	--panel-bg: #eee8f4;
+	--panel-bg: color-mix(in srgb, #eee8f4 var(--panel-alpha), transparent);
 
 	/* Default-link blue is the interaction color; purple remains visited. */
 	--color-accent: #0000ee;
@@ -677,7 +679,7 @@
 	--color-bg-accent-tint: #123d59;
 	--color-checkerboard: #252c48;
 	--color-bg-translucent: rgb(12 15 31 / 95%);
-	--panel-bg: linear-gradient(to bottom, #242b49 0%, #171c33 100%);
+	--panel-bg: linear-gradient(to bottom, color-mix(in srgb, #242b49 var(--panel-alpha), transparent) 0%, color-mix(in srgb, #171c33 var(--panel-alpha), transparent) 100%);
 
 	/* Cold cathode cyan */
 	--color-accent: #20d9ff;

@@ -276,6 +276,41 @@
 		// As tall as a collapsible section's bar, which has no line of its own.
 		> .section-header { border-bottom: unset; }
 
+		// The sheet's Close button takes no room in the column.
+		> .section-header .sheet-close-action:not(.visible) { display: none; }
+
+		> .section-header > .section-header-actions > .section-header-action {
+			background-color: unset;
+
+			&:hover { background-color: unset; }
+			&.collapsed .icon { transform: rotate(-90deg); }
+		}
+
+		// In the column the bar is the toggle and the section collapses to it,
+		// like the Layers panel. The phone's sheet opens and closes instead.
+		@media (min-width: ($mobile-breakpoint + 1px)) {
+			> .section-header {
+				cursor: pointer;
+				@include hover-states(true);
+			}
+
+			&:not(.is-open) {
+				flex: 0 0 auto;
+
+				> .inspector-switch,
+				> .inspector-body { display: none; }
+			}
+
+			// The line under the bar belongs to what follows it, as in a
+			// collapsible section, so the collapsed bar has none.
+			> .inspector-switch {
+				border-top: 1px solid var(--color-border);
+				border-bottom: 0;
+			}
+
+			> .inspector-body { border-top: 1px solid var(--color-border); }
+		}
+
 		// The bar reads a layer's own name, so it keeps its case.
 		> .section-header > .section-header-title > .section-header-title-text { text-transform: none; }
 

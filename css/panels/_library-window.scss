@@ -81,6 +81,12 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 	}
 }
 
+// The line under the section's bar, as under every panel's. The phone's sheet
+// draws it on the bar itself.
+@media (min-width: ($mobile-breakpoint + 1px)) {
+	.library-window > .flyout-section > .section-content { border-top: 1px solid var(--color-border); }
+}
+
 .library-split-handle {
 	--split-grip-width: var(--spacing-xl);
 	--split-grip-height: var(--spacing-2xs);

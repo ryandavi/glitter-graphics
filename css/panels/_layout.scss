@@ -404,6 +404,9 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	@include mobile { display: none; }
 }
 
+// A collapsed column keeps its width; its handle returns with its content.
+.all-sections-collapsed > .panel-resize-handle { display: none; }
+
 body.is-resizing-panel {
 	cursor: col-resize !important;
 	user-select: none;
@@ -421,6 +424,6 @@ body.is-resizing-panel {
 
 @media (max-width: 1200px) {
 	:root {
-		--glitter-panel-width: 250px;
+		--layer-panel-width: 250px;
 	}
 }

@@ -158,10 +158,13 @@
 	--modal-backdrop-blur: 4px;
 
 	/* Panel surfaces (toolbar, image/layers sections, design-panel collapsible
-	   sections) — opaque by default; glass themes go translucent and set a
-	   backdrop so the workspace shows through the chrome. */
-	--panel-bg: var(--color-bg-primary);
-	--panel-backdrop: none;
+	   sections) overlay the canvas, so they are slightly translucent over a
+	   backdrop blur. Themes with their own --panel-bg mix --panel-alpha into
+	   its colors; glass themes go more transparent and turn the blur up. */
+	--panel-alpha: 97%;
+	--panel-blur: 10px;
+	--panel-bg: color-mix(in srgb, var(--color-bg-primary) var(--panel-alpha), transparent);
+	--panel-backdrop: blur(var(--panel-blur));
 
 	/* Canvas workspace floor — must contrast with both dark and white canvases */
 	--color-bg-workspace: var(--color-bg-secondary);
@@ -330,7 +333,9 @@
 
 	/* PANELS */
 	--layer-panel-width: 400px;
-	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+	/* As wide as the left side (the rail, its gutter and the Layers column),
+	   so the canvas between them is centred in the window. */
+	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width) + var(--spacing-base));
 	/* The Library window is as wide as the Inspector until it is resized. */
 	--library-window-width: var(--glitter-panel-width);
 	--color-filter-chip-size: var(--row-height);

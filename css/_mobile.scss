@@ -360,6 +360,7 @@
 		margin-inline: auto;
 		height: var(--mobile-drawer-height);
 		background: var(--panel-bg);
+		-webkit-backdrop-filter: var(--panel-backdrop);
 		backdrop-filter: var(--panel-backdrop);
 		padding-top: var(--spacing-lg);
 		z-index: var(--z-header-menu-elevated);
