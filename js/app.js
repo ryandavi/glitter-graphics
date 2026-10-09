@@ -149,7 +149,7 @@ class GlitterEditor {
 		const storedTool = readStored(STORAGE_KEYS.lastTool.key, null);
 		const rememberedTool = storedTool === 'colorPicker' ? ToolType.GLITTER_FILL : storedTool;
 		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
-		this.setTool(this.mobileManager.isMobile && initialTool === ToolType.HAND ? ToolType.SELECT : initialTool, { announce: false });
+		this.setTool(initialTool, { announce: false });
 		this.setupEventListeners();
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();

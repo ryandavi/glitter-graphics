@@ -171,6 +171,7 @@ registerLayerType(LayerType.PATH, {
 		// No Scale sliders: a resize is baked into the points on release.
 		scaleReadout: false,
 		lockAspect: true,
+		fitCanvas: true,
 		rotation: true,
 		opacity: true,
 		flip: true,

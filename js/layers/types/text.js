@@ -237,6 +237,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		size: true,
 		scaleReadout: true,
 		lockAspect: true,
+		fitCanvas: true,
 		rotation: true,
 		opacity: true,
 		flip: true,

@@ -43,10 +43,9 @@ class LibraryWindow {
 			const card = document.getElementById(title.parentElement.dataset.flyoutFor);
 			if (!card) return true;
 			const pickers = this.editor.pickers;
+			// Opening a section only shows it: one that is off opens as an inert
+			// preview, and the switch in the bar turns it on.
 			pickers.toggleFlyout(card.dataset.flyoutKey);
-			// A line that is off turns on and opens in one press.
-			const power = card.querySelector(':scope > .property-card-title input[type="checkbox"]');
-			if (pickers.flyout && power && !power.checked) power.click();
 			return true;
 		};
 		document.addEventListener('click', pressLine);

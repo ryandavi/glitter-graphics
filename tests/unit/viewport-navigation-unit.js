@@ -40,7 +40,9 @@ const context = {
 	CustomEvent: class CustomEvent {
 		constructor(type, options) { this.type = type; this.detail = options?.detail; }
 	},
-	document: { getElementById: () => null },
+	document: { getElementById: () => null, documentElement: {} },
+	getComputedStyle: () => ({ getPropertyValue: () => '0.3s' }),
+	performance,
 	window: {
 		addEventListener() {},
 		dispatchEvent() {},
@@ -79,8 +81,13 @@ assert.strictEqual(viewport.currentZoom, 2, 'Continuous zoom did not apply its f
 
 viewport.setZoom(1, null, null, { animate: true });
 assert(wrapper.classList.contains('viewport-transition'), 'Animated zoom did not start a view transition');
+assert.strictEqual(viewport.viewTween.shown.zoom, 2, 'An animated zoom starts from what is on screen');
+assert(wrapper.style.transform.includes('scale(2)'), 'An animated zoom wrote its target before its first step');
 viewport.zoomByFactor(1.1, anchor.x, anchor.y);
 assert(!wrapper.classList.contains('viewport-transition'), 'Continuous zoom did not cancel an active view transition');
+assert(!viewport.viewTween && wrapper.style.transform.includes('scale(1.1)'), 'A cancelled view transition did not land on its target');
+const ease = context.__ViewportManager.easeTransition;
+assert(ease(0) === 0 && Math.abs(ease(1) - 1) < 1e-9 && Math.abs(ease(0.5) - 0.8024) < 0.001, 'The view transition does not follow the CSS ease curve');
 
 viewport.setZoom(1.1);
 viewport.zoomIn();

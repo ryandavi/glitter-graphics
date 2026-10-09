@@ -20,7 +20,9 @@
 	align-items: center;
 }
 
-.main-content > .design-panel.library-window:not(.is-open) { display: none; }
+// Closed, the column is gone. As the bar layout's sheet it stays in the
+// layout, out of sight, so it can slide in when it opens.
+body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) { display: none; }
 
 // The open flyout section takes its own height and scrolls past the column's;
 // with the Library under it (a paint on its Glitter source) it keeps to half.
@@ -45,10 +47,9 @@
 		}
 	}
 
-	&.has-library > .flyout-section {
-		flex-shrink: 0;
-		max-height: 50%;
-	}
+	// With the Library under it the section is exactly half, whatever it
+	// holds, so the Library starts in the same place for every section.
+	&.has-library > .flyout-section { flex: 0 0 50%; }
 }
 
 // A section alone in the window fills it, and a preset grid in that section
@@ -70,9 +71,15 @@
 		flex-direction: column;
 	}
 
+	// Filling the window, the grid is the section's body: a frame of its own
+	// would be a box inside a box.
 	.is-flyout-open.has-scrollbox > .property-card-body > .has-scrollbox > .property-scrollbox {
 		flex: 1 1 var(--property-scrollbox-height);
 		height: auto;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: none;
 	}
 }
 

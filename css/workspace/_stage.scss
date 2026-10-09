@@ -116,10 +116,6 @@ body.no-document .main-content {
 		image-rendering: pixelated;
 	}
 
-	&.viewport-transition {
-		transition: transform var(--transition-base);
-	}
-
 	&.color-picker-mode {
 		cursor: crosshair;
 	}

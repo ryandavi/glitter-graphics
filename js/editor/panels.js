@@ -327,9 +327,9 @@ isLayerContentLocked(layer) {
 	// What a new layer most likely needs next, from its type's `openOnCreate`:
 	// 'asset' is the Library on its asset, 'panel' is its properties (which
 	// only the phone has to open), and anything else is the key of a flyout
-	// section, which on the phone is that paint's Library.
-	openCreateTarget(layer) {
-		const target = LAYER_UI_CONFIG[layer?.type]?.openOnCreate;
+	// section, which on the phone is that paint's Library. The layer list's
+	// "go to" buttons name their target themselves.
+	openCreateTarget(layer, target = LAYER_UI_CONFIG[layer?.type]?.openOnCreate) {
 		if (!target || this.layerManager.getActiveLayer() !== layer) return;
 		const mobile = this.mobileManager;
 		if (target === 'asset') getLayerManagerForType(this, layer.type).armAssetPicker();

@@ -98,17 +98,12 @@
 		min-width: 0;
 		margin-left: auto;
 
-		>.app-header-history,
 		>.app-header-project {
 			display: flex;
 			align-items: center;
 			gap: var(--spacing-sm);
+			min-width: 0;
 		}
-
-		>.app-header-project { min-width: 0; }
-
-		// Empty until the phone layout moves Undo and Redo in.
-		>.app-header-history:empty { display: none; }
 
 		// Reads as the document's title on the bar until it is hovered or
 		// focused, when it becomes a field.
@@ -153,7 +148,7 @@
 }
 
 // The project is nothing to name, save or export until a document is open.
-body.no-document .app-header-right > :is(.app-header-history, .app-header-project) { display: none; }
+body.no-document .app-header-right > .app-header-project { display: none; }
 
 // The project name's phone home at the top of the "…" menu.
 .app-menu-field {
@@ -348,14 +343,16 @@ body.no-document .app-header-right > :is(.app-header-history, .app-header-projec
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	width: 9px;
+	// The space between two panels is the panel's own padding on that side,
+	// so the handle covers exactly that and its line is centred in it.
+	width: var(--spacing-base);
 	z-index: var(--z-panel-elevated);
 	cursor: col-resize;
 	touch-action: none;
 	background: transparent;
 
-	&.panel-resize-handle-start { left: -4px; }
-	&.panel-resize-handle-end { right: -4px; }
+	&.panel-resize-handle-start { left: 0; }
+	&.panel-resize-handle-end { right: 0; }
 
 	&::after {
 		content: '';

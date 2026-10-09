@@ -126,9 +126,6 @@
 			border: 0;
 		}
 
-		#handTool { display: none; }
-		// Undo and Redo are in the app header at this width.
-		>#toolbarHistoryGroup,
 		>.toolbar-utility-group { display: none; }
 	}
 
@@ -141,6 +138,10 @@
 		// can never sit on top of it whatever the pill's height does.
 		left: calc(var(--mobile-toolbar-width) + var(--mobile-floating-inset) * 2);
 		right: var(--mobile-floating-inset);
+
+		// The zone starts past the rail, so its own centre is right of the
+		// screen's. The view toggles go back by half the difference.
+		>.preview-controls-view { transform: translateX(calc((var(--mobile-toolbar-width) + var(--mobile-floating-inset)) / -2)); }
 	}
 
 	.zoom-controls,
@@ -526,9 +527,6 @@
 
 			> .phone-chip-bar { display: flex; }
 		}
-
-		// The layer list ends with its add buttons, as it does in the column.
-		.layers-section-bottom-bar { display: flex; }
 
 		.inspector-section > .inspector-switch { display: none; }
 		.inspector-section > .section-header .sheet-close-action {

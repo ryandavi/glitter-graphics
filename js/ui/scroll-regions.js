@@ -46,11 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		pendingEdges.add(node);
 	};
-	// A host's overflow changes when it or any direct child resizes.
+	// A host's overflow changes when it or any direct child resizes. Resize
+	// callbacks run before paint, so the edges are right in the frame a region
+	// first shows, not one frame later.
 	const edgeSizes = new ResizeObserver((entries) => {
+		const seen = new Set();
 		for (const { target } of entries) {
-			queueEdges(target);
-			queueEdges(target.parentElement);
+			[target, target.parentElement].forEach((node) => {
+				if (node instanceof Element && node.matches(edgeHosts) && !seen.has(node)) {
+					seen.add(node);
+					syncEdges(node);
+				}
+			});
 		}
 	});
 	const markNode = (node) => {

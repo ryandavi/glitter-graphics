@@ -81,7 +81,10 @@ async function doubleTap(page, point) {
 	await tap(page, point);
 	await page.waitForTimeout(60);
 	await tap(page, point);
-	await page.waitForTimeout(300);
+	// The animated view change lands on the first frame at or after
+	// --transition-base (300ms); check 16 reads the canvas's place on screen,
+	// so wait past it.
+	await page.waitForTimeout(400);
 }
 
 async function oneFingerDrag(page, from, to, steps = GESTURE_STEPS) {

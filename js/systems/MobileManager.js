@@ -71,7 +71,6 @@ class MobileManager {
 
 	init() {
 		dbg('Mobile: Initializing mobile manager');
-		if (this.editor.currentTool === ToolType.HAND) this.editor.setTool(ToolType.SELECT);
 		document.body.classList.toggle('phone-bar', this.bar);
 		if (this.bar) {
 			// Whatever the window showed as a column ends here; the sheet starts closed.
@@ -382,7 +381,7 @@ class MobileManager {
 		}
 		if (entry.line) {
 			if (entry.line.classList.contains('is-flyout-open')) this.closeAllDrawers();
-			// The window owns a flyout section: its line opens it, and turns it on.
+			// The window owns a flyout section: its line opens it.
 			else entry.line.querySelector(':scope > .property-card-title').click();
 			return;
 		}

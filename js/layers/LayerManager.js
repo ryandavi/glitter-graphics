@@ -581,7 +581,7 @@ class LayerManager {
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'glitter') return;
 
 		this.setActiveLayer(layerId);
-		revealAssetBrowser(this.editor, this.editor.glitterLibrary, getLayerFillGlitterId(layer));
+		this.editor.openCreateTarget(layer, 'fill');
 	}
 
 	goToSticker(layerId) {
@@ -589,7 +589,7 @@ class LayerManager {
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'sticker') return;
 
 		this.setActiveLayer(layerId);
-		revealAssetBrowser(this.editor, this.editor.stickerLibrary, layer.stickerSourceId);
+		this.editor.openCreateTarget(layer, 'asset');
 	}
 
 	goToLayerSource(layerId) {

@@ -46,7 +46,6 @@ class SelectionOverlay {
 		this.element.className = 'selection-overlay';
 		(insertAfter || this.wrapper).after(this.element);
 		this.syncers = new Set();
-		this.followFrame = null;
 
 		// Mutation and resize callbacks run before paint, so the chrome moves in
 		// the same frame as the canvas.
@@ -66,12 +65,6 @@ class SelectionOverlay {
 			// A stale syncer (its layer already gone) must not stop the others.
 			try { fn(); } catch (error) { console.warn('Selection overlay sync failed', error); }
 		});
-		if (this.wrapper.classList.contains('viewport-transition') && !this.followFrame) {
-			this.followFrame = requestAnimationFrame(() => {
-				this.followFrame = null;
-				this.sync();
-			});
-		}
 	}
 
 	append(node) {
@@ -85,16 +78,9 @@ class SelectionOverlay {
 	}
 
 	getMapping() {
-		if (this.wrapper.classList.contains('viewport-transition')) {
-			const wrapperRect = this.wrapper.getBoundingClientRect();
-			const ownRect = this.element.getBoundingClientRect();
-			const layoutWidth = this.wrapper.offsetWidth;
-			return {
-				zoom: layoutWidth > 0 ? wrapperRect.width / layoutWidth : this.viewport.currentZoom,
-				originX: wrapperRect.left - ownRect.left,
-				originY: wrapperRect.top - ownRect.top
-			};
-		}
+		// Mid-animation the canvas shows the step it is on, not its target.
+		const shown = this.viewport.viewTween?.shown;
+		if (shown) return { zoom: shown.zoom, originX: shown.panX, originY: shown.panY };
 		return { zoom: this.viewport.currentZoom, originX: this.viewport.panX, originY: this.viewport.panY };
 	}
 

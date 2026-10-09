@@ -144,7 +144,6 @@
 		>.section-header {
 
 			border-bottom: unset;
-			cursor: pointer;
 
 			>h3.section-header-title {
 				+.section-header-action {
@@ -184,6 +183,10 @@
 				display: block;
 			}
 		}
+
+		// The bar is the toggle, except the Library's: its window opens and
+		// closes, it never collapses.
+		&:not(.design-gallery-section) >.section-header { cursor: pointer; }
 
 		@include windows7-bar(true);
 	}

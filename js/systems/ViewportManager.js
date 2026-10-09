@@ -35,7 +35,8 @@ class ViewportManager {
 		this.lastViewportWidth = 0;
 		this.lastViewportHeight = 0;
 		this.resizeTimeout = null;
-		this.viewTransitionTimer = null;
+		this.viewTween = null;
+		this.viewFrame = null;
 		this.transformActivityTimer = null;
 
 		// Canvas dimensions (set by editor when image loads)
@@ -159,18 +160,57 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
+	// An animated view change is stepped here, not left to a CSS transition:
+	// the selection chrome is drawn in screen space from the same numbers
+	// (`viewTween.shown`), so it moves in the same frame as the canvas. A CSS
+	// transition runs off the main thread and the chrome trails it.
 	startViewTransition() {
 		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-		if (this.viewTransitionTimer) clearTimeout(this.viewTransitionTimer);
+		// Called before the next method writes its target; a second call while
+		// one is running carries on from what is on screen.
+		const from = this.viewTween?.shown || { zoom: this.currentZoom, panX: this.panX, panY: this.panY };
+		const duration = getComputedStyle(document.documentElement).getPropertyValue('--transition-base').trim();
+		this.viewTween = {
+			from: { ...from },
+			shown: { ...from },
+			start: performance.now(),
+			duration: parseFloat(duration) * (duration.endsWith('ms') ? 1 : 1000) || 300
+		};
 		this.previewWrapper.classList.add('viewport-transition');
-		// Commit the current transform before the next method writes its target.
-		void this.previewWrapper.offsetWidth;
-		this.viewTransitionTimer = setTimeout(() => this.cancelViewTransition(), 350);
+	}
+
+	stepViewTransition() {
+		this.viewFrame = null;
+		const tween = this.viewTween;
+		if (!tween) return;
+		const progress = Math.min(1, (performance.now() - tween.start) / tween.duration);
+		const eased = ViewportManager.easeTransition(progress);
+		const mix = (from, to) => from + (to - from) * eased;
+		tween.shown = { zoom: mix(tween.from.zoom, this.currentZoom), panX: mix(tween.from.panX, this.panX), panY: mix(tween.from.panY, this.panY) };
+		this.writeTransform(tween.shown.zoom, tween.shown.panX, tween.shown.panY);
+		if (progress >= 1) this.cancelViewTransition();
+		else this.viewFrame = requestAnimationFrame(() => this.stepViewTransition());
+	}
+
+	// CSS `ease`, cubic-bezier(0.25, 0.1, 0.25, 1): the curve the sheets and
+	// columns that move with the canvas use.
+	static easeTransition(x) {
+		const curve = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * t ** 2 * (1 - t) + t ** 3;
+		let t = x;
+		for (let i = 0; i < 6; i++) {
+			const slope = 3 * 0.25 * (1 - t) ** 2 + 6 * 0 * t * (1 - t) + 3 * 0.75 * t ** 2;
+			t -= (curve(0.25, 0.25, t) - x) / Math.max(1e-6, slope);
+		}
+		return curve(0.1, 1, Math.min(1, Math.max(0, t)));
 	}
 
 	cancelViewTransition() {
-		if (this.viewTransitionTimer) clearTimeout(this.viewTransitionTimer);
-		this.viewTransitionTimer = null;
+		cancelAnimationFrame(this.viewFrame);
+		this.viewFrame = null;
+		if (this.viewTween) {
+			this.viewTween = null;
+			this.writeTransform(this.currentZoom, this.panX, this.panY);
+		}
 		this.previewWrapper.classList.remove('viewport-transition');
 		this._syncPixelGrid();
 	}
@@ -663,14 +703,21 @@ class ViewportManager {
 			this._commitPixelZoom();
 		}, 120);
 
-		this.previewWrapper.style.transform =
-			`translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
-
-		// 2. Pass the zoom value to CSS as a variable
-		// We set it on previewWrapper so all children (stickers, canvas) can see it
-		this.previewWrapper.style.setProperty('--zoom', this.currentZoom);
+		// Animated, the steps write what is on screen until the target is reached.
+		if (this.viewTween) {
+			if (!this.viewFrame) this.viewFrame = requestAnimationFrame(() => this.stepViewTransition());
+		} else {
+			this.writeTransform(this.currentZoom, this.panX, this.panY);
+		}
 		this._syncPixelZoomClasses();
 		this._syncPixelGrid();
+	}
+
+	writeTransform(zoom, panX, panY) {
+		this.previewWrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+		// The zoom as a CSS variable, on previewWrapper so every child (stickers,
+		// canvas) can see it.
+		this.previewWrapper.style.setProperty('--zoom', zoom);
 	}
 
 	_syncPixelZoomClasses() {
