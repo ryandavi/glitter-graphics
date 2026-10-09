@@ -59,7 +59,7 @@ async function pasteLayerPayload(editor, payload) {
 			transform.position.y += 20;
 		}
 		layer.maskVersion = 0;
-		editor.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
+		editor.layerManager.insertLayer(layer);
 		const mask = payload.masks?.[sourceId];
 		if (layer.type === LayerType.GLITTER_FILL && (mask?.add || mask?.sub)) {
 			const paint = editor.paintMaskStore.ensurePaintMask(layer.id);

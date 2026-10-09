@@ -79,8 +79,8 @@ class GlitterEditor {
 		// these same nodes into drawers, so bindings survive re-parenting.
 		renderPanelSections(this);
 		renderAssetBrowsers();
-		setupLibrarySearchToggle(this);
-		setupLibraryViewMenu(this);
+		setupLibrarySearchToggle();
+		setupLibraryViewMenu();
 		this.renderTransformPanels();
 		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
 		this.contextToolbarRenderer.render();
@@ -116,6 +116,7 @@ class GlitterEditor {
 		this.cropEdit = new CropEditSession(this);
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
+		this.libraryWindow = new LibraryWindow(this);
 		// Registration order is the picker-strip refresh order: the text
 		// manager performs the initial hide for non-text layers.
 		[

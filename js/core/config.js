@@ -710,6 +710,10 @@ const CONFIG = deepFreeze({
 		history: { coalesceMs: 150 },
 		scrollbar: { hideDelayMs: 800, pageFraction: 0.875, pageRepeatDelayMs: 400, pageRepeatMs: 60 },
 		independentCollapsibleSections: ['layersPanel'],
+		// The window column that holds the Library while a picker is armed. It
+		// docks beside the canvas while the canvas keeps this width; otherwise
+		// the Layers column folds away, and failing that the window floats.
+		libraryWindow: { minCanvasWidth: 500 },
 		// The Library's Recent strip, per asset kind.
 		library: {
 			recentCount: 12,

@@ -196,7 +196,6 @@ class GlitterRecolorController {
 				this.libraryButton.setAttribute('aria-pressed', 'true');
 				this.libraryButton.classList.add('active');
 				if (this.editor.mobileManager?.isMobile) this.editor.mobileManager.openDrawer('design');
-				else this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
 				this.library.updateRecolorAvailability();
 			}
 		} catch (error) {

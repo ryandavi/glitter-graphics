@@ -60,6 +60,7 @@ class MobileManager {
 		dbg('Mobile: Schema settings registry:', Object.keys(this.settingsRegistry));
 		this.showMobileControls();
 		this.syncPhoneHosts();
+		this.editor.libraryWindow?.sync();
 		this.setupEventListeners();
 		this.setupSheetDrag();
 		this.syncImageState();
@@ -647,6 +648,7 @@ class MobileManager {
 		this.closeAllDrawers({ releaseBrush: true, resize: false, immediate: true });
 		this.returnSettingsSections();
 		this.syncPhoneHosts();
+		this.editor.libraryWindow?.sync();
 		document.querySelector('.mobile-bottom-nav')?.classList.remove('visible');
 		document.body.classList.remove('mobile-no-image', 'has-layer-settings', 'mobile-sheet-dragging');
 		document.documentElement.style.removeProperty('--mobile-drawer-height');

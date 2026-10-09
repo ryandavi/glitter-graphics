@@ -9,7 +9,7 @@ const EDITOR_FILL_TOOL_METHODS = {
 			else if (create && CONFIG.app.behavior.autoCreateGlitterLayer) {
 				if (deferHistory) {
 					layer = this.glitterManager.createLayer();
-					if (layer) this.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
+					if (layer) this.layerManager.insertLayer(layer);
 				} else layer = this.layerManager.addLayer(LayerType.GLITTER_FILL);
 			}
 		}

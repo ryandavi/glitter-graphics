@@ -210,7 +210,6 @@ class LayerManager {
 	}
 
 	insertLayer(layer, options = {}) {
-		const { suppressDesignGalleryFocus = false } = options;
 		if (LAYER_UI_CONFIG[layer.type]?.blendable) layer.blendMode = GlitterBlendModes.forLayer(layer);
 
 		// Insert above the currently selected layer, or at the top if none selected
@@ -230,15 +229,6 @@ class LayerManager {
 
 		this.setActiveLayer(layer.id);
 		this.renderLayersList();
-
-		// Sticker and glitter-fill layers are gallery-driven picks — keep the
-		// Design Gallery open (instead of jumping to the layer's Settings
-		// section) so adding one doesn't cost an extra click to browse for the
-		// next. Text layers have no gallery step, so they keep the default
-		// (jump straight to Text Settings, see getPreferredDesignSection).
-		if (!suppressDesignGalleryFocus && (layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL)) {
-			this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
-		}
 	}
 
 	canAddLayers(count = 1) {

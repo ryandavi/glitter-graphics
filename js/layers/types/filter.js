@@ -19,7 +19,6 @@ registerLayerType(LayerType.FILTER, {
 		order: 1,
 		description: 'Adjust the appearance of every layer below'
 	},
-	showDesignGallery: false,
 	designPanelSections: ['filterSettingsSection'],
 	mobileSettingsSections: ['filter'],
 	panelMode: 'filter',

@@ -91,7 +91,7 @@ const COMMANDS = {
 		instruction: 'Paste'
 	},
 	librarySearch: { label: 'Search the Library', group: 'View', keys: ['/', 'shift+/'], displayKey: '/',
-		when: (editor) => !editor.mobileManager?.isMobile && Boolean(document.getElementById('designGallerySection')?.dataset.library),
+		when: (editor) => editor.libraryWindow.isOpen,
 		run: () => focusLibrarySearch() },
 	...Object.fromEntries(Object.entries(TOOLS).flatMap(([tool, definition]) => [
 		[definition.command, { tool, label: `${definition.name} Tool`, group: 'Tools', keys: [definition.key], displayKey: definition.key.toUpperCase(),

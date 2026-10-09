@@ -1,8 +1,9 @@
 'use strict';
 
-// Desktop sidebar resizing. The layers and design columns are fixed-width flex
-// items driven by --layer-panel-width / --glitter-panel-width; dragging a handle
-// writes those custom properties on :root and persists the result.
+// Desktop sidebar resizing. The layers, Inspector and Library window columns
+// are fixed-width flex items driven by --layer-panel-width,
+// --glitter-panel-width and --library-window-width; dragging a handle writes
+// those custom properties on :root and persists the result.
 //
 // Only a user-chosen width is ever written. Untouched panels keep falling
 // through to the stylesheet's responsive defaults (css/panels/_layout.scss narrows both
@@ -29,7 +30,7 @@ const PANEL_RESIZE_TARGETS = Object.freeze({
 	},
 	design: {
 		variable: '--glitter-panel-width',
-		selector: '.design-panel',
+		selector: '.inspector-panel',
 		edge: 'start',
 		min: 300,
 		max: 720,
@@ -37,6 +38,17 @@ const PANEL_RESIZE_TARGETS = Object.freeze({
 		// where property pairs stop being cramped; 520 fits 4 gallery columns.
 		snaps: [300, 350, 420, 520, 620],
 		label: 'Resize Design panel'
+	},
+	// Follows the Inspector's width until it is dragged, so it starts as wide
+	// as the Library column it replaces and carries the same snap points.
+	library: {
+		variable: '--library-window-width',
+		selector: '.library-window',
+		edge: 'start',
+		min: 300,
+		max: 720,
+		snaps: [300, 350, 420, 520, 620],
+		label: 'Resize Library window'
 	}
 });
 
@@ -54,15 +66,21 @@ function writePanelWidths(widths) {
 	writeStored(PANEL_RESIZE_STORAGE_KEY, widths);
 }
 
+// A column's live width, or 0 while it is hidden or floats over the canvas.
+function getPanelFlowWidth(key) {
+	const panel = document.querySelector(PANEL_RESIZE_TARGETS[key].selector);
+	if (!panel) return 0;
+	const style = getComputedStyle(panel);
+	return style.display === 'none' || style.position === 'absolute' ? 0 : panel.getBoundingClientRect().width;
+}
+
 // The largest this panel may become without starving the canvas or the other
-// sidebar. Measured live, so it stays correct as the window resizes.
+// columns. Measured live, so it stays correct as the window resizes.
 function getPanelResizeMax(key) {
 	const config = PANEL_RESIZE_TARGETS[key];
-	const other = Object.entries(PANEL_RESIZE_TARGETS).find(([name]) => name !== key)?.[1];
-	const otherPanel = other ? document.querySelector(other.selector) : null;
-	const otherWidth = otherPanel && getComputedStyle(otherPanel).display !== 'none'
-		? otherPanel.getBoundingClientRect().width
-		: 0;
+	const otherWidth = Object.keys(PANEL_RESIZE_TARGETS)
+		.filter((name) => name !== key)
+		.reduce((total, name) => total + getPanelFlowWidth(name), 0);
 	const toolbar = document.querySelector('.toolbar');
 	const toolbarWidth = toolbar ? toolbar.getBoundingClientRect().width : 0;
 	const available = window.innerWidth - otherWidth - toolbarWidth - PANEL_RESIZE_MIN_CANVAS;

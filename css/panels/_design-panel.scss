@@ -1,16 +1,16 @@
 @use '../mixins' as *;
 
-/* ===== GLITTER COLUMN ===== */
+/* ===== RIGHT COLUMNS ===== */
+// Two columns share this shell: the Inspector (.inspector-panel) and the
+// Library window (.library-window, panels/_library-window.scss). Each sets its
+// own width and place in the row.
 .design-panel {
-	width: var(--glitter-panel-width);
-	flex: 0 0 var(--glitter-panel-width);
 	background: var(--color-bg-primary);
 	border-left: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
 	overflow: hidden;
-	order: 2;
 	position: relative;
 	z-index: var(--z-panel-elevated);
 
@@ -28,16 +28,6 @@
 	>.design-gallery-section:is([data-library="sticker"], [data-library="glitter"])>.section-header.section-header-with-action .library-upload-action {
 		visibility: visible;
 		pointer-events: auto;
-	}
-
-	// A layer type with no library (showDesignGallery: false) drops the Library
-	// from the sidebar. `.section` keeps this ahead of the panel shell's
-	// `> .section.main-section` display. The phone's Library drawer keeps its
-	// title row.
-	@media (min-width: ($mobile-breakpoint + 1px)) {
-		&[data-gallery-visible="false"] > .section.design-gallery-section {
-			display: none;
-		}
 	}
 
 	// The Library's search row folds behind the header search button
@@ -92,4 +82,10 @@
 			display: none;
 		}
 	}
+}
+
+.inspector-panel {
+	width: var(--glitter-panel-width);
+	flex: 0 0 var(--glitter-panel-width);
+	order: 3;
 }

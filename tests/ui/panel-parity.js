@@ -192,7 +192,7 @@ const LAYER_SETUPS = {
 			if (editor.brushTipManager.pickerSession || document.getElementById('galleryPickerStrip')?.classList.contains('is-armed')) throw new Error('Selecting a filter did not close the brush-tip picker');
 			if (!section?.classList.contains('visible')) throw new Error('Filter Properties did not become visible');
 			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
-			if (document.getElementById('designPanel')?.dataset.galleryVisible !== 'false') throw new Error('Filter did not opt out of the Design Gallery');
+			if (editor.libraryWindow.isOpen) throw new Error('Selecting a filter left the Library window open');
 			const lookOptions = [...document.querySelectorAll('#filterLooksPicker .preset-grid-option')];
 			const instagramOptions = lookOptions.filter((option) => option.dataset.presetId.startsWith('instagram:'));
 			if (instagramOptions[0]?.dataset.presetId !== 'instagram:rio' || instagramOptions.at(-1)?.dataset.presetId !== 'instagram:hefe') throw new Error('Instagram look order is incorrect');

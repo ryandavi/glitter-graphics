@@ -239,11 +239,11 @@ isLayerContentLocked(layer) {
 
 		// 3. Determine which config to use
 		let config;
-		// Asset pickers are temporary panel modes and take precedence over the
-		// selected layer. Brush tips configure the Brush/Eraser tool itself, so a
-		// Canvas selection (or no fill layer yet) must not route the drawer back to
-		// Canvas Quick Add / Project content while the picker is open.
-		if (this.brushTipManager?.pickerSession) {
+		// The phone's Library drawer also holds the nothing-selected panel. Brush
+		// tips configure the Brush/Eraser tool itself, so a Canvas selection (or no
+		// fill layer yet) must not show that panel under the tips while the picker
+		// is open. On desktop the tips are in the window and the Inspector stays.
+		if (this.mobileManager?.isMobile && this.brushTipManager?.pickerSession) {
 			config = {
 				designPanelSections: [],
 				library: 'brushTip',
@@ -273,7 +273,6 @@ isLayerContentLocked(layer) {
 			const designPanel = document.getElementById('designPanel');
 			if (designPanel) {
 				designPanel.dataset.panelMode = config.panelMode;
-				designPanel.dataset.galleryVisible = String(config.showDesignGallery !== false);
 				designPanel.dataset.homeLibrary = config.library || '';
 			}
 		}
@@ -341,22 +340,17 @@ isLayerContentLocked(layer) {
 	// The single source of truth for "which accordion section should be open".
 	// Model: tool-scoped settings win while a settings tool (Brush/Eraser) is
 	// active (Photoshop Options-bar behavior); otherwise the SELECTED layer's
-	// Properties; otherwise the Design Gallery (nothing to edit / browse mode).
+	// Properties. With nothing to edit there is no accordion section to open.
 ,
 	getPreferredDesignSection(layer) {
-		// An armed picker keeps the gallery focused (Done/selection returns you).
-		if (this.pickers.active) {
-			return 'designGallery';
-		}
-
 		const panel = TOOLS[this.currentTool]?.panel?.(this, layer);
 		if (panel) return panel;
 
 		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer) {
-			return 'designGallery';
+			return null;
 		}
 
-		return PANEL_SCHEMAS[layer.type]?.sectionPrefix || 'designGallery';
+		return PANEL_SCHEMAS[layer.type]?.sectionPrefix || null;
 	}
 
 ,

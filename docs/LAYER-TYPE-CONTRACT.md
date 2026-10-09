@@ -46,7 +46,7 @@ Required for an addable type:
 - `managerKey`: the editor property holding the manager instance.
 - `elementClass`: the preview DOM class used by shared selectors.
 - `designPanelSections`, `mobileSettingsSections` and `panelMode`: which sidebar sections show and which mobile drawers they map to. This entry is what makes mobile drawers work. Library hosts never go in `designPanelSections`.
-- `library`: the Library kind (`ASSET_BROWSERS` prefix: `glitter`, `sticker`, `shape`, …) shown while the layer is selected. An armed picker overrides it; `syncLibraryView` (`js/ui/gallery.js`) is the one place that shows a kind.
+- `library`: the Library kind (`ASSET_BROWSERS` prefix: `glitter`, `sticker`, `shape`, …) the phone's Library drawer shows while the layer is selected. An armed picker overrides it, and on desktop the Library only shows while a picker is armed; `syncLibraryView` (`js/ui/gallery.js`) is the one place that shows a kind.
 - `onActivate(editor, layer)`: runs when the layer becomes active.
 - `hasVisibleContent(layer)`: whether the layer has anything to draw (read by `layerHasVisibleContent`).
 - `paintSlots`: the type's paint slots, back to front. Each is `{ key, role, path, defaults: () => ... }` plus optional `enabledPath`, `draftPath`, `glitterDefault`, `wholeLayer`, `sourceLabel`, `countsAsEffect`, `framePadding`, `panelPrefix`, `modes`, `edgeStyles` and `fields`. Border slots declare their supported `borderEdgeStyle` values in `edgeStyles`; panel options and labels derive from that list and the options registry. Every slot of a role carries that role's editable fields (`PAINT_SLOT_ROLE_FIELDS`); `fields: { path: 'specKey' }` adds or re-specs one (`false` omits a role field, as Text replaces pixel cast distances with relative fields), such as a type-specific border width. `getSlotDefaults(type, key)` calls the declared factory, returning fresh data; managers do not own parallel default chains. Path and Frame have their own CONFIG glitter IDs. The meanings are documented at the top of `js/paint/paint-slots.js`. Roles are `fill`, `stroke`, `border`, `shadow`, `background`, `bevel` and `sparkles`. Adding a role is a sweep, not one line: besides `PAINT_SLOT_ROLES` and `PAINT_SLOT_ROLE_FIELDS`, decide `paintSlotRenders`, the role's option buttons (`SLOT_OPTION_CONTROLS`, `js/ui/paint-slot-controls.js`), and whether style presets own it (`STYLE_PRESET_ROLES`).
@@ -79,7 +79,7 @@ Common optional fields:
 - `contentScalesWithTransform`: the type's content scales with its transform instead of being baked (stickers), so document scaling multiplies the transform scale. Outline, shadow and bevel sizes are still canvas pixels and rescale like any other type's; only sparkles, placed in the content's own pixels, are compensated instead.
 - `createOptionsKey`: the option payload key passed through `LayerManager.addLayer(...)`.
 - `lockScope: 'position'`: the layer's lock pins only its transform; editing, deleting, duplicating and reordering stay available (`isLayerFullyLocked`, `js/core/layer-types.js`). Without it a lock blocks all of those. `lockedOnCreate`: a new layer of this type starts locked.
-- `showDesignGallery`, `autoOpenDesignDrawerOnCreate`, `mobileCreateBehavior`, `mobileCreateDrawer`: gallery and mobile-drawer behavior on create.
+- `autoOpenDesignDrawerOnCreate`, `mobileCreateBehavior`, `mobileCreateDrawer`: gallery and mobile-drawer behavior on create.
 
 ## Checklist
 

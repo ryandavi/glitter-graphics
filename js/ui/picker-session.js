@@ -5,6 +5,7 @@ class PickerRegistry {
 		this.editor = editor;
 		this.managers = new Set();
 		document.getElementById('galleryPickerStripDone')?.addEventListener('click', () => this.closeActive());
+		document.getElementById('libraryWindowClose')?.addEventListener('click', () => this.closeActive());
 	}
 
 	register(manager) {
@@ -36,6 +37,7 @@ function pickerOpenSession(manager, session, options = {}) {
 	manager.pickerSession = { ...session };
 	options.refresh?.();
 	options.reveal?.();
+	manager.editor?.libraryWindow?.sync();
 	return manager.pickerSession;
 }
 
@@ -44,6 +46,7 @@ function pickerCloseSession(manager, options = {}) {
 	manager.pickerSession = null;
 	options.refresh?.();
 	options.updateSelection?.();
+	manager.editor?.libraryWindow?.sync();
 	return true;
 }
 
@@ -73,7 +76,7 @@ function returnFromPickerToProperties(editor, options = {}) {
 	if (editor.mobileManager?.isMobile) {
 		editor.mobileManager.openDrawer('edit');
 	}
-	// Mobile moves the same accordion into the Edit drawer, so opening the
+	// Mobile moves the same sections into the Edit drawer, so opening the
 	// drawer and expanding the originating section are separate requirements.
 	if (section) editor.setCollapsibleSectionOpen?.(section, true, true);
 	if (focusId) {

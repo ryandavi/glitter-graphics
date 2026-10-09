@@ -62,10 +62,10 @@ async function main() {
 			assert(await page.evaluate(() => editor.currentTool === ToolType.TEXT && editor.layerManager.getSelectedLayers().length === 0), `${width}: deselection changed tool`);
 			assert(await page.evaluate(async () => {
 				const item = editor.glitterLibrary.getAllContent().find(item => item.category === 'sparkle');
+				const before = JSON.stringify(editor.layerManager.getBaseLayer().background);
 				await editor.glitterLibrary.selectGlitter(item.id);
-				const base = editor.layerManager.getBaseLayer();
-				return base.background.mode === 'glitter' && base.background.glitterId === item.id && editor.activeLayerId === null;
-			}), `${width}: unselected glitter did not set background`);
+				return JSON.stringify(editor.layerManager.getBaseLayer().background) === before && editor.activeLayerId === null;
+			}), `${width}: a glitter pick with nothing selected changed the background`);
 			await page.evaluate(() => {
 				editor.layerManager.setActiveLayer(window.auditSelected);
 				editor.shapeGlitterManager.armPicker('fill');
@@ -94,7 +94,7 @@ async function main() {
 		assert(await page.evaluate(() => !editor.textGlitterManager.editSession), 'Ordinary tool change did not end the text session');
 		process.stdout.write('PASS shortcut dispatch requires exact modifiers\n');
 		process.stdout.write('PASS shape picker labels and text/layer copy priority\n');
-		process.stdout.write('PASS desktop/mobile single-owner Done, Escape tool preservation and unselected background picks\n');
+		process.stdout.write('PASS desktop/mobile single-owner Done, Escape tool preservation and no pick without a selection\n');
 	} finally {
 		await browser.close();
 	}

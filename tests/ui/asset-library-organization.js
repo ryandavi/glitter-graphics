@@ -56,7 +56,7 @@ async function openPage(browser, before = false, real = false) {
 		await e.loadBlankImage(240, 180, '#ffffff');
 		e.layerManager.insertLayer(e.glitterManager.createLayer());
 		e.layerManager.setActiveLayer(e.layers.at(-1).id);
-		e.setCollapsibleSectionOpen('designGallery', true, true);
+		e.glitterManager.armAssetPicker();
 		document.querySelectorAll('.modal-overlay.visible').forEach(modal => modal.classList.remove('visible'));
 	});
 	return { page, errors };
@@ -161,8 +161,8 @@ async function screenshots(page, directory, before) {
 		});
 		for (const prefix of ['shape', 'font']) {
 			await page.evaluate(prefix => {
+				window.editor.glitterManager.armAssetPicker();
 				document.getElementById('designGallerySection').dataset.pickerLibrary = prefix; syncLibraryView();
-				window.editor.setCollapsibleSectionOpen('designGallery', true, true);
 			}, prefix);
 			await page.locator(`#${prefix}Browser .asset-browser-rail select`).click();
 			await shot(`${prefix} category picker`);
@@ -525,7 +525,7 @@ async function main() {
 			await e.loadBlankImage(240, 180, '#ffffff');
 			e.layerManager.insertLayer(e.glitterManager.createLayer());
 			e.layerManager.setActiveLayer(e.layers.at(-1).id);
-			e.setCollapsibleSectionOpen('designGallery', true, true);
+			e.glitterManager.armAssetPicker();
 			document.querySelectorAll('.modal-overlay.visible').forEach(modal => modal.classList.remove('visible'));
 		});
 		const rootSelect = page.locator('#glitterBrowser .asset-browser-rail select').first();

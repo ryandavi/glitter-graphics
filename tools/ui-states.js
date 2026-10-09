@@ -174,22 +174,24 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 	await toggleEffects(page, false);
 	await wait(page);
 	if (full) await visit(`${tag} all-open effects-off-again`);
+	// The Library shows in its window while a picker is armed.
 	await page.evaluate(() => {
-		const g = document.getElementById('designGallerySection');
-		g?.classList.add('is-open', 'visible');
-		g?.querySelector(':scope > .section-content')?.classList.add('visible');
+		const e = window.editor;
+		e.layerManager.setActiveLayer(e.layers.find((layer) => layer.type === LayerType.TEXT_GLITTER).id);
+		e.textGlitterManager.armPicker('fill');
 		document.querySelector('.library-search-action')?.click();
 		try { window.editor.glitterLibrary.toggleFiltersUI(true); } catch (e) { /* no filter drawer */ }
 	});
 	await wait(page, 500);
-	await visit(`${tag} library search+filters`, { shot: '#designPanel' });
+	await visit(`${tag} library window`);
+	await visit(`${tag} library search+filters`, { shot: '#libraryWindow' });
 	await page.evaluate(() => {
 		try { window.editor.glitterLibrary.toggleFiltersUI(false); } catch (e) { /* no filter drawer */ }
 		const input = document.querySelector('#glitterSearchSection [data-browser-role="search"]');
 		if (input) { input.value = 'pink'; input.dispatchEvent(new Event('input', { bubbles: true })); }
 	});
 	await wait(page, 700);
-	await visit(`${tag} library query unfolded`, { shot: '#designPanel' });
+	await visit(`${tag} library query unfolded`, { shot: '#libraryWindow' });
 	await page.evaluate(() => document.getElementById('librarySearchToggle')?.click());
 	await wait(page, 400);
 	if (full) await visit(`${tag} library query folded`);
@@ -199,6 +201,8 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 	});
 	await wait(page, 500);
 	if (full) await visit(`${tag} library folded idle`);
+	await page.evaluate(() => window.editor.pickers.closeActive());
+	await wait(page, 300);
 	await page.evaluate(() => document.getElementById('exportMenuBtn')?.click());
 	await wait(page, 300);
 	await visit(`${tag} export menu open`);

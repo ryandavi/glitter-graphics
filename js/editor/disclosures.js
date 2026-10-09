@@ -1,6 +1,6 @@
 const EDITOR_DISCLOSURE_METHODS = {
 initializeCollapsibleSections() {
-		const sections = ['designGallery', ...new Set(Object.values(PANEL_SCHEMAS)
+		const sections = [...new Set(Object.values(PANEL_SCHEMAS)
 			.flatMap((schema) => [schema, ...(schema.auxiliarySections || [])])
 			.map((schema) => schema.sectionPrefix)
 			.filter(Boolean))];
@@ -12,14 +12,8 @@ initializeCollapsibleSections() {
 				setCollapsibleSectionState(section, content, toggle, isOpen);
 
 			if (isOpen && accordion && CONFIG.layers.ui.designPanelAccordion) {
-				const isMobile = this.mobileManager?.isMobile;
 				sections.forEach((other) => {
-					if (other === name) return;
-					// On mobile, the Design Gallery lives in its own tab/drawer,
-					// separate from the settings sections' drawer — opening one
-					// shouldn't collapse the other.
-					if (isMobile && (other === 'designGallery' || name === 'designGallery')) return;
-					setOpen(other, false, false);
+					if (other !== name) setOpen(other, false, false);
 				});
 			}
 		};
@@ -45,17 +39,7 @@ initializeCollapsibleSections() {
 				? preferredName
 				: (openSections[0] || visibleSections[0]);
 
-			const isMobile = this.mobileManager?.isMobile;
-			sections.forEach((name) => {
-				// Same mobile scoping as the accordion sweep above: Design Gallery
-				// and the settings sections live in separate drawers on mobile, so
-				// syncing toward one shouldn't touch the other's open state.
-				if (isMobile && (name === 'designGallery') !== (targetName === 'designGallery')) {
-					return;
-				}
-				const shouldOpen = name === targetName;
-				setOpen(name, shouldOpen, false);
-			});
+			sections.forEach((name) => setOpen(name, name === targetName, false));
 		};
 
 		sections.forEach((name) => {
@@ -64,18 +48,10 @@ initializeCollapsibleSections() {
 			const toggle = document.getElementById(`${name}Toggle`);
 			if (!header || !content || !toggle) return;
 
-			// Start with Design open and the rest collapsed
-			setOpen(name, name === 'designGallery');
+			setOpen(name, false);
 
 			header.addEventListener('click', (event) => {
 				if (event.target.closest('[data-no-accordion-toggle]')) {
-					return;
-				}
-
-				// On mobile the design drawer's header closes the drawer
-				// (MobileManager) — accordion-collapsing the gallery there would
-				// make the next drawer open show a bare header bar.
-				if (name === 'designGallery' && this.mobileManager?.isMobile) {
 					return;
 				}
 
@@ -85,7 +61,9 @@ initializeCollapsibleSections() {
 			});
 		});
 
-		this.syncCollapsibleSections('designGallery');
+		// The Library is never collapsed: its window or drawer opens and closes.
+		setOpen('designGallery', true);
+		this.syncCollapsibleSections();
 		this.initializeIndependentCollapsibles();
 
 		this.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });

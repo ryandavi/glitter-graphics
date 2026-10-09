@@ -339,8 +339,8 @@ body.no-document .app-header-right > :is(.app-header-history, .app-header-projec
 	flex: 1;
 	min-height: 0;
 	overflow: visible;
-
-
+	// The floating Library window is placed against this row.
+	position: relative;
 }
 
 // ===== Sidebar resize handles ==============================================

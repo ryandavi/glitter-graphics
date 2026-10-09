@@ -140,12 +140,6 @@ setupLayerTypePickerListeners() {
 		const dropzone = document.getElementById('stickerUploadDropzone');
 		const input = document.getElementById('stickerUploadInput');
 
-		// The header button sits on a Library that may be collapsed (desktop
-		// accordion); open it so the upload lands somewhere visible.
-		document.getElementById('uploadStickerBtn')?.addEventListener('click', () => {
-			if (!this.mobileManager?.isMobile) this.setCollapsibleSectionOpen?.('designGallery', true, true);
-		});
-
 		const uploadAndUse = async (files) => {
 			const library = this.assetUploadLibrary || this.stickerLibrary;
 			for (const file of files) {

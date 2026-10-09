@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=33ce201e">
+	<link rel="stylesheet" href="css/style.css?v=d11ff76f">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -324,11 +324,57 @@
 				</div>
 
 				<!-- DesignColumn -->
-				<div class="design-panel property-panel" id="designPanel">
+				<div class="design-panel inspector-panel property-panel" id="designPanel" data-phone-host-for="designGallerySection">
 					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="design" role="slider" tabindex="0" aria-label="Resize Design panel" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
 						<span></span>
 					</div>
-					<!-- Gallery Header with Tabs -->
+					<!-- Nothing selected, or several layers. Headerless; rendered from
+					     PANEL_SCHEMAS.noSelection at boot. At phone width it sits at the
+					     end of the Library drawer (data-phone-host-for). -->
+					<div class="no-layer-settings-section section" id="noLayerSettingsSection">
+						<div class="section-content visible" id="noLayerSettingsContent"></div>
+					</div>
+
+					<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection"></div>
+
+					<div class="auto-glitter-settings-section section collapsible-section" id="autoGlitterSettingsSection"></div>
+
+						<!-- Fill Properties Section -->
+						<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
+						</div>
+
+						<!-- Generated from PANEL_SCHEMAS.brush at boot. -->
+					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection"></div>
+
+						<!-- Sticker Properties Section -->
+							<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection"></div>
+
+							<!-- Text Settings -->
+							<div class="text-settings-section section collapsible-section" id="textSettingsSection"></div>
+
+					<!-- Shape Properties Section (WP5b) -->
+					<div class="shape-settings-section section collapsible-section" id="shapeSettingsSection">
+					</div>
+
+					<!-- Filter Properties Section -->
+					<div class="filter-settings-section section collapsible-section" id="filterSettingsSection"></div>
+
+					<!-- Generated from PANEL_SCHEMAS[LayerType.FRAME] / [LayerType.SPARKLES] at boot. -->
+					<div class="frame-settings-section section collapsible-section" id="frameSettingsSection"></div>
+					<div class="sparkle-layer-settings-section section collapsible-section" id="sparkleLayerSettingsSection"></div>
+					<div class="path-settings-section section collapsible-section" id="pathSettingsSection"></div>
+
+					<!-- Color Fill Settings Section -->
+					<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
+					</div>
+
+				</div>
+
+				<!-- The window: one column between the canvas and the Inspector that
+				     holds the Library while a picker is armed (syncLibraryWindow). It
+				     carries the Inspector's classes so the Library's rules apply. At
+				     phone width the Library is the design drawer instead. -->
+				<div class="design-panel library-window property-panel" id="libraryWindow">
 					<div class="section main-section collapsible-section design-gallery-section visible" id="designGallerySection">
 						<div class="section-header section-header-with-action" id="designGalleryHeader">
 							<h3 class="section-header-title">
@@ -380,18 +426,12 @@
 										<span class="name">Search</span>
 									</span>
 								</button>
-								<div class="section-header-action btn-icon mobile-hidden-section-toggle visible" id="designGalleryToggle">
-									<span class="icon-wrapper">
-										<svg class="icon">
-											<use href="#icon-chevron-down"></use>
-										</svg>
-									</span>
-								</div>
+								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 
 						</div>
 
-						<div class="section-content design-gallery-content" id="designGalleryContent">
+						<div class="section-content design-gallery-content" id="designGalleryContent" data-phone-host-for="noLayerSettingsSection">
 							<div class="property-empty auto-glitter-gallery-empty" role="status">
 								<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
 								<div class="property-empty-title">Choose a Color Match</div>
@@ -423,56 +463,9 @@
 							<div class="asset-options" id="shapesOptions" data-gallery-content="shapes"></div>
 							<div class="section-content gallery-search-section" id="fontsSearchSection" data-gallery-search="fonts"></div>
 							<div class="asset-options" id="fontsOptions" data-gallery-content="fonts"></div>
-
-
-							<!-- NO LAYER SELECTED (image loaded, nothing selected). Headerless —
-							     sits under the shared Design gallery header. Contents rendered
-							     from PANEL_SCHEMAS.noSelection at boot; #documentSizeGroup is
-							     PANEL_SCHEMAS.documentSize, mounted in Canvas Properties;
-							     editor-panels.js moves it here when nothing is selected.
-							     NOTE: kept inside #designGalleryContent — it shares the gallery's
-							     scroll region; its .section-content parity is handled in SCSS
-							     (.section.property-section:not(.collapsible-section) > .section-content). -->
-							<div class="no-layer-settings-section section" id="noLayerSettingsSection">
-								<div class="section-content visible" id="noLayerSettingsContent"></div>
-							</div>
 						</div>
 
 					</div>
-
-					<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection"></div>
-
-					<div class="auto-glitter-settings-section section collapsible-section" id="autoGlitterSettingsSection"></div>
-
-						<!-- Fill Properties Section -->
-						<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
-						</div>
-
-						<!-- Generated from PANEL_SCHEMAS.brush at boot. -->
-					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection"></div>
-
-						<!-- Sticker Properties Section -->
-							<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection"></div>
-
-							<!-- Text Settings -->
-							<div class="text-settings-section section collapsible-section" id="textSettingsSection"></div>
-
-					<!-- Shape Properties Section (WP5b) -->
-					<div class="shape-settings-section section collapsible-section" id="shapeSettingsSection">
-					</div>
-
-					<!-- Filter Properties Section -->
-					<div class="filter-settings-section section collapsible-section" id="filterSettingsSection"></div>
-
-					<!-- Generated from PANEL_SCHEMAS[LayerType.FRAME] / [LayerType.SPARKLES] at boot. -->
-					<div class="frame-settings-section section collapsible-section" id="frameSettingsSection"></div>
-					<div class="sparkle-layer-settings-section section collapsible-section" id="sparkleLayerSettingsSection"></div>
-					<div class="path-settings-section section collapsible-section" id="pathSettingsSection"></div>
-
-					<!-- Color Fill Settings Section -->
-					<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
-					</div>
-
 				</div>
 
 				<!-- Preview Panel -->
@@ -1799,7 +1792,7 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=f92df240"></script>
+	<script src="js/core/config.js?v=b2bca7c6"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
 	<script src="js/core/sessions.js?v=09f6cc66"></script>
 	<script src="js/core/layer-types.js?v=c09148c0"></script>
@@ -1810,12 +1803,12 @@
 	<script src="js/ui/panel-schemas.js?v=c7d5fd81"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
-	<script src="js/layers/types/filter.js?v=bbe63a02"></script>
+	<script src="js/layers/types/filter.js?v=56765bd2"></script>
 	<script src="js/layers/types/glitter-fill.js?v=b353c6e9"></script>
 	<script src="js/layers/types/sticker.js?v=31371535"></script>
 	<script src="js/layers/types/text.js?v=77263538"></script>
 	<script src="js/layers/types/frame.js?v=9c0e2cfa"></script>
-	<script src="js/layers/types/sparkles.js?v=7842a64e"></script>
+	<script src="js/layers/types/sparkles.js?v=a5152bd3"></script>
 	<script src="js/layers/types/shape.js?v=62cdfcbb"></script>
 	<script src="js/layers/types/path.js?v=4c55e9b6"></script>
 	<script src="js/systems/MemoryLedger.js?v=f5dd2030"></script>
@@ -1825,7 +1818,7 @@
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=bc1c5833"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=30001188"></script>
+	<script src="js/core/commands.js?v=a9ce973f"></script>
 	<script src="js/core/dom.js?v=545e364f"></script>
 	<script src="js/core/document-scaler.js?v=6625b551"></script>
 	<script src="js/transforms/transform-math.js?v=00be3fd4"></script>
@@ -1840,7 +1833,7 @@
 	<script src="js/ui/tooltip.js?v=69670448"></script>
 	<script src="js/ui/doc-modal.js?v=9d6dffb4"></script>
 	<script src="js/ui/about-timeline.js?v=c01b60dc"></script>
-	<script src="js/ui/gallery.js?v=49f948d5"></script>
+	<script src="js/ui/gallery.js?v=d3789570"></script>
 	<script src="js/ui/preset-library.js?v=fcd22542"></script>
 	<script src="js/ui/template-library.js?v=f05db242"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
@@ -1878,7 +1871,7 @@
 	<script src="js/ui/gradient-editor.js?v=7c014f1f"></script>
 	<script src="js/ui/color-eyedropper.js?v=855b0934"></script>
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
-	<script src="js/ui/asset-browser-markup.js?v=da569ee3"></script>
+	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
 	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
 	<script src="js/ui/panel-renderer.js?v=87ce78ec"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
@@ -1886,26 +1879,27 @@
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
 	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
 	<script src="js/ui/keyboard.js?v=4490df0b"></script>
-	<script src="js/ui/clipboard.js?v=5b94bd2a"></script>
+	<script src="js/ui/clipboard.js?v=b3ca4df1"></script>
 	<script src="js/editor/document-io.js?v=f4337b16"></script>
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=ee149c49"></script>
-	<script src="js/editor/fill-tool.js?v=462be798"></script>
-	<script src="js/editor/disclosures.js?v=86ab4f66"></script>
-	<script src="js/ui/panel-resize.js?v=01a2a1c8"></script>
+	<script src="js/editor/panels.js?v=7ab40310"></script>
+	<script src="js/editor/fill-tool.js?v=79353150"></script>
+	<script src="js/editor/disclosures.js?v=3b0cd518"></script>
+	<script src="js/ui/panel-resize.js?v=970297d7"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
 	<script src="js/editor/document-start.js?v=de92d90c"></script>
-		<script src="js/ui/glitter-recolor-tool.js?v=e6664314"></script>
+		<script src="js/ui/glitter-recolor-tool.js?v=41078c7b"></script>
 		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
-	<script src="js/editor/layer-panel.js?v=79b69f89"></script>
+	<script src="js/editor/layer-panel.js?v=e2ffa4b8"></script>
 	<script src="js/editor/canvas-gestures.js?v=1c03aa6a"></script>
 	<script src="js/editor/canvas-size.js?v=3342b973"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/picker-session.js?v=376a3eaf"></script>
+	<script src="js/ui/library-window.js?v=d0b8aea1"></script>
+	<script src="js/ui/picker-session.js?v=0ecd6baf"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1945,7 +1939,7 @@
 	<script src="js/systems/MaskEditor.js?v=a9d8289d"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=54f8775d"></script>
+	<script src="js/layers/LayerManager.js?v=2b51dfee"></script>
 
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
@@ -1954,7 +1948,7 @@
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
 	<script src="js/assets/ContentManager.js?v=0ebf028c"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=47393fe5"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=3e587817"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=c1230583"></script>
 	<script src="js/assets/BrushTipManager.js?v=d52c0ad2"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
@@ -1981,10 +1975,10 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=f65c4ecf"></script>
+		<script src="js/systems/MobileManager.js?v=7f9de247"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=35261fa2"></script>
+	<script src="js/app.js?v=6a73a007"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

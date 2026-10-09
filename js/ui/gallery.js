@@ -1,6 +1,6 @@
 // Shared Library reveal path for primary asset Change buttons and armed
-// paint-slot pickers. Mobile uses the Library drawer; desktop uses the same
-// accordion section and scroll target for every asset manager.
+// paint-slot pickers. Mobile uses the Library drawer; on desktop the armed
+// session opens the window (LibraryWindow), so this only scrolls.
 function revealAssetBrowser(editor, manager = null, assetId = null) {
 	const revealRequestedGallery = () => {
 		// Gallery panels own their scrolling. scrollIntoView can also scroll the
@@ -8,12 +8,8 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 		const scrollContainer = manager?.browser?.scrollContainer || manager?.ui?.panel;
 		scrollContainer?.scrollTo?.({ top: 0, behavior: 'smooth' });
 	};
-	if (editor.mobileManager?.isMobile) {
-		editor.mobileManager.openDrawer('design');
-	} else {
-		editor.setCollapsibleSectionOpen?.('designGallery', true, true);
-	}
-	// Align the requested browser after the accordion or drawer has completed
+	if (editor.mobileManager?.isMobile) editor.mobileManager.openDrawer('design');
+	// Align the requested browser after the window or drawer has completed
 	// its layout instead of accepting a partially-visible `nearest` result.
 	if (assetId != null) {
 		// navigateToItem owns the inner item scroll and centers the selection.
@@ -25,9 +21,10 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 }
 
 // The Library shows one asset kind at a time: an armed picker's kind (a
-// glitter slot picker unless the strip names another library), else the
-// panel's home kind (LAYER_UI_CONFIG `library`). The section header names it;
-// with no kind (nothing selected, or a layer type with no library)
+// glitter slot picker unless the strip names another library). The phone's
+// Library drawer also opens unarmed, on the panel's home kind
+// (LAYER_UI_CONFIG `library`). The section header names the kind; with no
+// kind (nothing selected, or a layer type with no library)
 // syncNoLayerPanelState owns the title.
 function syncLibraryView() {
 	const section = document.getElementById('designGallerySection');

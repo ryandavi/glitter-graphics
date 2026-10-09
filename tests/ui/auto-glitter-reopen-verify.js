@@ -72,7 +72,9 @@ async function main() {
 			const tool = editor.currentTool;
 			const count = editor.layers.length;
 			const blocked = dispatchKeyboardCommand(editor, event('b'));
-			const view = dispatchKeyboardCommand(editor, event('/'));
+			// Fit Screen stands for the View group: the Library search shortcut
+			// only exists while the Library window is open.
+			const view = dispatchKeyboardCommand(editor, new KeyboardEvent('keydown', { key: '0', ctrlKey: true, bubbles: true, cancelable: true }));
 			return !blocked && editor.currentTool === tool && editor.layers.length === count && view;
 		}), 'Auto Glitter did not apply the real View/Tools command policy');
 

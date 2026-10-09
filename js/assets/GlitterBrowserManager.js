@@ -325,8 +325,11 @@ class GlitterBrowserManager extends ContentManager {
 			return;
 		}
 
-		const layer = this.editor.layerManager.getActiveLayer() || this.editor.layerManager.getBaseLayer();
-		if (!layer) return;
+		const layer = this.editor.layerManager.getActiveLayer();
+		if (!layer) {
+			this.editor.updateStatus('Select a layer before choosing a glitter');
+			return;
+		}
 		if (!this.editor.canEditLayer(layer, { notify: true })) return;
 
 		const picker = getLayerManagerForType(this.editor, layer.type)?.slotPicker;

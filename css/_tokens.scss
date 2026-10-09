@@ -331,6 +331,8 @@
 	/* PANELS */
 	--layer-panel-width: 400px;
 	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+	/* The Library window is as wide as the Inspector until it is resized. */
+	--library-window-width: var(--glitter-panel-width);
 	--color-filter-chip-size: var(--row-height);
 
 	/* MOBILE */

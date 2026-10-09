@@ -240,7 +240,7 @@ function focusLibrarySearch() {
 	const section = document.getElementById('designGallerySection');
 	const host = document.getElementById(getAssetBrowserSchema(section?.dataset.library)?.searchHost);
 	if (!host) return;
-	if (!section.classList.contains('is-open') || !section.classList.contains('library-search-open')) {
+	if (!section.classList.contains('library-search-open')) {
 		document.getElementById('librarySearchToggle')?.click();
 	}
 	const input = host.querySelector('[data-browser-role="search"]');
@@ -251,16 +251,12 @@ function focusLibrarySearch() {
 // Library header search button: unfolds the active kind's search row, which
 // library/_browser.scss keeps folded on every screen. Folding is always allowed, even
 // mid-search; the active-filter chips and the button's accent dot stay.
-// On a collapsed Library (desktop accordion) the button opens the Library
-// with the row shown, never hides a row the user couldn't see.
-function setupLibrarySearchToggle(editor) {
+function setupLibrarySearchToggle() {
 	const button = document.getElementById('librarySearchToggle');
 	const section = document.getElementById('designGallerySection');
 	if (!button || !section) return;
 	button.addEventListener('click', () => {
-		const collapsed = !section.classList.contains('is-open');
-		if (collapsed) editor?.setCollapsibleSectionOpen?.('designGallery', true, true);
-		const open = collapsed || !section.classList.contains('library-search-open');
+		const open = !section.classList.contains('library-search-open');
 		section.classList.toggle('library-search-open', open);
 		button.classList.toggle('active', open);
 		button.setAttribute('aria-expanded', String(open));
@@ -279,12 +275,12 @@ function setupLibrarySearchToggle(editor) {
 // Library header view menu: per-kind home view, shared tile size and Quick
 // picks. They live in PREFERENCES; the section carries grid settings for the
 // stylesheet (`data-tile-size`, `.quick-picks-off`).
-function setupLibraryViewMenu(editor) {
+function setupLibraryViewMenu() {
 	const root = document.getElementById('libraryViewMenu');
 	const panel = document.getElementById('libraryViewMenuPanel');
 	const section = document.getElementById('designGallerySection');
 	if (!root || !panel || !section) return;
-	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel, fixed: true, beforeOpen: () => editor?.setCollapsibleSectionOpen?.('designGallery', true, true) });
+	setupMenuPopover({ root, trigger: document.getElementById('libraryViewMenuBtn'), panel, fixed: true });
 	const sync = () => {
 		const size = PREFERENCES.get('libraryTileSize');
 		const quickPicks = PREFERENCES.get('libraryQuickPicks');

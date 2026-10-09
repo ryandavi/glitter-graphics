@@ -27,7 +27,7 @@ async function main() {
 			await editor.loadBlankImage(100, 80, '#ffffff');
 			const layer = editor.glitterManager.createLayer();
 			editor.layerManager.insertLayer(layer); editor.layerManager.setActiveLayer(layer.id);
-			editor.setCollapsibleSectionOpen('designGallery', true, true);
+			editor.glitterManager.armAssetPicker();
 		});
 		const png = await page.evaluate(() => {
 			const canvas = document.createElement('canvas'); canvas.width = canvas.height = 4;
