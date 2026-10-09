@@ -133,8 +133,7 @@ const CONFIG = deepFreeze({
 			frameRateSource: 'first-layer'
 		},
 		ui: {
-			settingsOpenByDefault: false,
-			designPanelAccordion: true
+			settingsOpenByDefault: false
 		},
 		reorder: {
 			autoScroll: {

@@ -325,8 +325,8 @@
 		flex-direction: column;
 		overflow: hidden;
 
-		// The drawer is the panel: a lone section sits directly on its surface
-		// with no bar of its own. Two stack under flat bars, one open at a time.
+		// The drawer is the panel: the open section sits directly on its
+		// surface, named in the bar above it.
 		.mobile-settings-content {
 			display: flex;
 			flex: 1;
@@ -340,23 +340,7 @@
 				margin: 0;
 				padding: 0;
 
-				> .section-content {
-					padding: 0;
-
-					&:not(.visible) { display: none; }
-				}
-			}
-
-			&:not(.has-section-stack) > .section > .section-header { display: none; }
-
-			&.has-section-stack > .section > .section-header {
-				min-height: var(--touch-target-min);
-				padding: 0 var(--spacing-base) 0 var(--spacing-lg);
-				border: 0;
-				border-top: 1px solid var(--color-border);
-				background: none;
-				text-shadow: none;
-				filter: none;
+				> .section-content { padding: 0; }
 			}
 
 			// The grabber row already names the panel; a group label above the
@@ -407,7 +391,6 @@
 	}
 
 	.mobile-sheet-title,
-	.mobile-settings-content > .section > .section-header > .section-header-title,
 	.main-content > :is(.layers-panel, .design-panel) > .section > .section-header > .section-header-title {
 		color: var(--color-text-primary);
 		font-size: var(--font-size-title);
@@ -420,7 +403,6 @@
 
 	// A bar action here is a flat glyph: the gloss belongs to chrome, and this
 	// row is the top of a body.
-	.mobile-settings-content > .section > .section-header .section-header-action,
 	.main-content > :is(.layers-panel, .design-panel) > .section > .section-header .section-header-action {
 		border: 0;
 		background: none;
@@ -429,6 +411,10 @@
 		&::before { display: none; }
 		&.active { color: var(--color-accent); }
 	}
+
+	// The Inspector's panels are in the Edit sheet at this width, so the design
+	// drawer is the Library alone.
+	.main-content > .design-panel > .section.inspector-section { display: none; }
 
 	// Drawer sections lose the window rim they have as sidebar sections.
 	.main-content > :is(.layers-panel, .design-panel) {

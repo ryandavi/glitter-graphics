@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=d11ff76f">
+	<link rel="stylesheet" href="css/style.css?v=25b7ebc0">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -328,44 +328,43 @@
 					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="design" role="slider" tabindex="0" aria-label="Resize Design panel" aria-orientation="vertical" aria-valuemin="12" aria-valuemax="85" aria-valuenow="50">
 						<span></span>
 					</div>
-					<!-- Nothing selected, or several layers. Headerless; rendered from
-					     PANEL_SCHEMAS.noSelection at boot. At phone width it sits at the
-					     end of the Library drawer (data-phone-host-for). -->
-					<div class="no-layer-settings-section section" id="noLayerSettingsSection">
-						<div class="section-content visible" id="noLayerSettingsContent"></div>
-					</div>
-
-					<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection"></div>
-
-					<div class="auto-glitter-settings-section section collapsible-section" id="autoGlitterSettingsSection"></div>
-
-						<!-- Fill Properties Section -->
-						<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
+					<!-- The Inspector: one bar that names the selection, one scroll. Of
+					     the panels showing together (a tool's settings beside the layer's
+					     properties) the switch shows one (syncInspectorHeader). -->
+					<div class="section inspector-section visible" id="inspectorSection">
+						<div class="section-header" id="inspectorHeader">
+							<h3 class="section-header-title">
+								<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
+										<use id="inspectorTitleIcon" href="#icon-sliders"></use>
+									</svg></span>
+								<span class="section-header-title-text" id="inspectorTitleText">Properties</span>
+								<span class="inspector-title-badge" id="inspectorTitleBadge"></span>
+								<span class="locked-layer-badge" id="inspectorLockedBadge" hidden>Locked</span>
+							</h3>
 						</div>
+						<div class="inspector-switch" id="inspectorSwitch" hidden></div>
+						<div class="section-content inspector-body" id="inspectorBody">
+							<!-- Nothing selected, or several layers. Rendered from
+							     PANEL_SCHEMAS.noSelection at boot. At phone width it sits at
+							     the end of the Library drawer (data-phone-host-for). -->
+							<div class="no-layer-settings-section section" id="noLayerSettingsSection">
+								<div class="section-content visible" id="noLayerSettingsContent"></div>
+							</div>
 
-						<!-- Generated from PANEL_SCHEMAS.brush at boot. -->
-					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection"></div>
-
-						<!-- Sticker Properties Section -->
-							<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection"></div>
-
-							<!-- Text Settings -->
-							<div class="text-settings-section section collapsible-section" id="textSettingsSection"></div>
-
-					<!-- Shape Properties Section (WP5b) -->
-					<div class="shape-settings-section section collapsible-section" id="shapeSettingsSection">
-					</div>
-
-					<!-- Filter Properties Section -->
-					<div class="filter-settings-section section collapsible-section" id="filterSettingsSection"></div>
-
-					<!-- Generated from PANEL_SCHEMAS[LayerType.FRAME] / [LayerType.SPARKLES] at boot. -->
-					<div class="frame-settings-section section collapsible-section" id="frameSettingsSection"></div>
-					<div class="sparkle-layer-settings-section section collapsible-section" id="sparkleLayerSettingsSection"></div>
-					<div class="path-settings-section section collapsible-section" id="pathSettingsSection"></div>
-
-					<!-- Color Fill Settings Section -->
-					<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
+							<!-- One host per panel, rendered from PANEL_SCHEMAS at boot. -->
+							<div class="base-layer-settings-section section switch-panel" id="baseLayerSettingsSection"></div>
+							<div class="auto-glitter-settings-section section switch-panel" id="autoGlitterSettingsSection"></div>
+							<div class="glitter-settings-section section switch-panel" id="glitterSettingsSection"></div>
+							<div class="brush-settings-section section switch-panel" id="brushSettingsSection"></div>
+							<div class="sticker-settings-section section switch-panel" id="stickerSettingsSection"></div>
+							<div class="text-settings-section section switch-panel" id="textSettingsSection"></div>
+							<div class="shape-settings-section section switch-panel" id="shapeSettingsSection"></div>
+							<div class="filter-settings-section section switch-panel" id="filterSettingsSection"></div>
+							<div class="frame-settings-section section switch-panel" id="frameSettingsSection"></div>
+							<div class="sparkle-layer-settings-section section switch-panel" id="sparkleLayerSettingsSection"></div>
+							<div class="path-settings-section section switch-panel" id="pathSettingsSection"></div>
+							<div class="layer-settings-section section switch-panel" id="layerSettingsSection"></div>
+						</div>
 					</div>
 
 				</div>
@@ -1586,17 +1585,6 @@
 	     FIELDS (js/core/fields.js). Markup is copied verbatim from the pre-template
 	     static panels - class names and nesting must not drift. -->
 	<template id="tpl-section">
-		<div class="section-header section-header-with-action">
-			<h3 class="section-header-title">
-				<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
-						<use></use>
-					</svg><span class="name"></span></span>
-				<span class="section-header-title-text"></span>
-			</h3>
-			<div class="section-header-action btn-icon visible collapsed"><span class="icon-wrapper"><svg class="icon">
-						<use href="#icon-chevron-down"></use>
-					</svg></span></div>
-		</div>
 		<div class="section-content">
 			<div class="settings-subsection"></div>
 		</div>
@@ -1792,15 +1780,15 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=b2bca7c6"></script>
+	<script src="js/core/config.js?v=d7000f26"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
 	<script src="js/core/sessions.js?v=09f6cc66"></script>
-	<script src="js/core/layer-types.js?v=c09148c0"></script>
+	<script src="js/core/layer-types.js?v=04477dcc"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
 	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
-	<script src="js/ui/panel-schemas.js?v=c7d5fd81"></script>
+	<script src="js/ui/panel-schemas.js?v=9bafc573"></script>
 	<script src="js/paint/paint-slots.js?v=b59ed179"></script>
 	<script src="js/layers/types/base-image.js?v=68f59c86"></script>
 	<script src="js/layers/types/filter.js?v=56765bd2"></script>
@@ -1873,7 +1861,7 @@
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=fd356d49"></script>
 	<script src="js/ui/scroll-regions.js?v=a271524d"></script>
-	<script src="js/ui/panel-renderer.js?v=87ce78ec"></script>
+	<script src="js/ui/panel-renderer.js?v=1b85f282"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=ef10ceb9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
 	<script src="js/ui/settings-store.js?v=6802bf0c"></script>
@@ -1884,9 +1872,9 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=7ab40310"></script>
+	<script src="js/editor/panels.js?v=f6e442d8"></script>
 	<script src="js/editor/fill-tool.js?v=79353150"></script>
-	<script src="js/editor/disclosures.js?v=3b0cd518"></script>
+	<script src="js/editor/disclosures.js?v=d67aa104"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
 	<script src="js/editor/transform-panel.js?v=db13fbc5"></script>
 	<script src="js/editor/transform-interaction.js?v=de6a0cc8"></script>
@@ -1899,7 +1887,7 @@
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
 		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
 	<script src="js/ui/library-window.js?v=d0b8aea1"></script>
-	<script src="js/ui/picker-session.js?v=0ecd6baf"></script>
+	<script src="js/ui/picker-session.js?v=e4181001"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=224b3bce"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=fdcf54f7"></script>
@@ -1936,10 +1924,10 @@
 	<script src="js/assets/BrushLibrary.js?v=dbe8686a"></script>
 	<script src="js/assets/FontLibrary.js?v=0a049983"></script>
 	<script src="js/paint/brush-stamp.js?v=a343d53e"></script>
-	<script src="js/systems/MaskEditor.js?v=a9d8289d"></script>
+	<script src="js/systems/MaskEditor.js?v=79efccb2"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=2b51dfee"></script>
+	<script src="js/layers/LayerManager.js?v=e2755759"></script>
 
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=563eec75"></script>
@@ -1948,7 +1936,7 @@
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=6d614230"></script>
 	<script src="js/assets/ContentManager.js?v=0ebf028c"></script>
-	<script src="js/assets/GlitterBrowserManager.js?v=3e587817"></script>
+	<script src="js/assets/GlitterBrowserManager.js?v=7e93ed2c"></script>
 	<script src="js/assets/StickerBrowserManager.js?v=c1230583"></script>
 	<script src="js/assets/BrushTipManager.js?v=d52c0ad2"></script>
 	<script src="js/assets/ShapeBrowserManager.js?v=488a1dfd"></script>
@@ -1958,9 +1946,9 @@
 	<script src="js/layers/movable-layer-methods.js?v=55908f90"></script>
 	<script src="js/layers/layer-element-methods.js?v=32e0fa0a"></script>
 	<script src="js/layers/GlitterManager.js?v=5fb4c0df"></script>
-	<script src="js/layers/BaseBackgroundManager.js?v=dcff544d"></script>
+	<script src="js/layers/BaseBackgroundManager.js?v=8ad17961"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=6bacaee8"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=173c021c"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=9e04b649"></script>
@@ -1975,10 +1963,10 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=7f9de247"></script>
+		<script src="js/systems/MobileManager.js?v=e3a6f067"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=6a73a007"></script>
+	<script src="js/app.js?v=ecf3fff0"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

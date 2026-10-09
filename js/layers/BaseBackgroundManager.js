@@ -387,8 +387,9 @@ class BaseBackgroundManager {
 
 	updatePickerStrip() {
 		const layer = this.getActiveLayer();
-		if (!layer) return;
 		const armed = this.hasActivePickerSession();
+		// Unarmed, the strip's hint belongs to a selected canvas layer only.
+		if (!layer || (!armed && !this.editor.layerManager.getActiveLayer())) return;
 		renderPickerStrip({
 			ownsStrip: true,
 			visible: true,
@@ -426,4 +427,11 @@ class BaseBackgroundManager {
 }
 
 BaseBackgroundManager.LAYER_TYPE = LayerType.BASE_IMAGE;
-Object.assign(BaseBackgroundManager.prototype, { getActiveLayer: LAYER_ELEMENT_METHODS.getActiveLayer });
+// Canvas Properties also shows with nothing selected, so the canvas is this
+// manager's layer then too.
+Object.assign(BaseBackgroundManager.prototype, {
+	getActiveLayer() {
+		const layer = this.editor.layerManager.getInspectedLayer();
+		return layer?.type === LayerType.BASE_IMAGE ? layer : null;
+	}
+});

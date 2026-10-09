@@ -39,7 +39,8 @@ class MobileManager {
 			const element = document.getElementById(schema.section.id);
 			registry[schema.mobileKey] = {
 				element,
-				collapsibleName: schema.sectionPrefix || null
+				collapsibleName: schema.sectionPrefix || null,
+				title: schema.section.title
 			};
 		};
 		Object.values(PANEL_SCHEMAS).forEach((schema) => {
@@ -307,33 +308,42 @@ class MobileManager {
 		if (wasEditOpen) this.activeDrawer = 'edit';
 	}
 
-	// A lone section sits bare on the drawer, named in the grabber row. Two (a
-	// fill layer beside its tool settings, a layer beside Mask Settings) stack
-	// under their own bars and collapse as the sidebar accordion does.
+	// One panel shows at a time. Two can be present (a fill layer beside its
+	// tool settings, a layer beside Mask Settings): the sheet's bar then holds
+	// the same switch as the Inspector.
 	syncEditSections() {
+		const present = this.getPresentSettingsKeys();
+		// A new pairing opens on the tool being used; after that the panel the
+		// user switched to stands.
+		const pairing = present.join();
+		const open = present.find((key) => this.settingsRegistry[key].element.classList.contains('is-open'));
+		const toolKey = this.editor.currentTool === ToolType.BRUSH && present.includes('brush') ? 'brush' : present[0];
+		const activeKey = pairing === this.editSectionPairing && open ? open : toolKey;
+		this.editSectionPairing = pairing;
+		const name = this.settingsRegistry[activeKey]?.collapsibleName;
+		if (name && this.editor.setCollapsibleSectionOpen) this.editor.setCollapsibleSectionOpen(name, true);
+		else this.syncEditTitle();
+	}
+
+	getPresentSettingsKeys() {
 		const container = document.getElementById('mobileSettingsContainer');
-		const bar = document.getElementById('mobileEditTitle');
-		if (!container || !bar) return;
-		const present = Array.from(container.children)
+		return Array.from(container?.children || [])
 			.map((element) => Object.keys(this.settingsRegistry).find((key) => this.settingsRegistry[key].element === element))
 			.filter(Boolean);
-		const stacked = present.length > 1;
-		container.classList.toggle('has-section-stack', stacked);
-		// A new pairing opens on the tool being used; after that the bars the
-		// user opened and closed stand.
-		const pairing = present.join();
-		const open = present.filter((key) => this.settingsRegistry[key].element.classList.contains('is-open'));
-		const toolKey = this.editor.currentTool === ToolType.BRUSH && present.includes('brush') ? 'brush' : present[0];
-		const activeKey = stacked && pairing === this.editSectionPairing && open.length === 1 ? open[0] : toolKey;
-		this.editSectionPairing = pairing;
-		present.forEach((key) => {
-			const entry = this.settingsRegistry[key];
-			if (entry.collapsibleName) this.editor.setCollapsibleSectionOpen?.(entry.collapsibleName, key === activeKey);
-		});
+	}
+
+	// The sheet's bar: the panel's title, or the switch when two are present.
+	syncEditTitle() {
+		const bar = document.getElementById('mobileEditTitle');
+		if (!bar || !this.isMobile) return;
+		const present = this.getPresentSettingsKeys().map((key) => this.settingsRegistry[key]);
+		if (present.length > 1 && this.editor.switchPanels) {
+			this.editor.renderPanelSwitch(bar, present.map((entry) => entry.collapsibleName));
+			return;
+		}
 		const title = document.createElement('span');
 		title.className = 'mobile-sheet-title';
-		title.textContent = stacked ? 'Edit'
-			: (present.length ? this.settingsRegistry[present[0]].element.querySelector('.section-header-title-text')?.textContent || '' : '');
+		title.textContent = present[0]?.title || '';
 		bar.replaceChildren(title);
 	}
 

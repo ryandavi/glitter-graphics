@@ -191,17 +191,9 @@ isLayerContentLocked(layer) {
 				content.setAttribute('aria-disabled', String(sectionLocked));
 				content.title = sectionLocked ? 'Unlock this layer to edit its properties' : '';
 			}
-			const title = section.querySelector(':scope > .section-header .section-header-title');
-			let badge = title?.querySelector('.locked-layer-badge');
-			if (sectionLocked && title && !badge) {
-				badge = document.createElement('span');
-				badge.className = 'locked-layer-badge';
-				badge.textContent = 'Locked';
-				title.appendChild(badge);
-			} else if (!sectionLocked) {
-				badge?.remove();
-			}
 		});
+		const badge = document.getElementById('inspectorLockedBadge');
+		if (badge) badge.hidden = !locked;
 
 		// A position-only lock (see isLayerFullyLocked) leaves the panel editable
 		// apart from its Transform controls.
@@ -222,6 +214,11 @@ isLayerContentLocked(layer) {
 	updateSidePanelUI(layer) {
 		this.setupLayerBlendModeListeners();
 		const hasMultiSelection = this.layerManager?.hasMultiSelection?.() ?? false;
+		// With nothing selected the Inspector shows the canvas's own properties
+		// under what can be added.
+		const nothingSelected = !layer && !hasMultiSelection;
+		if (nothingSelected) layer = this.layerManager?.getInspectedLayer() || null;
+		const noLayer = LAYER_UI_CONFIG.NO_LAYER;
 
 		// 1. Define ALL possible sections to hide them first
 		const allSections = [...new Set(Object.values(LAYER_UI_CONFIG)
@@ -254,7 +251,9 @@ isLayerContentLocked(layer) {
 		} else if (!this.originalImage) {
 			config = LAYER_UI_CONFIG.NO_IMAGE;
 		} else if (hasMultiSelection || !layer) {
-			config = LAYER_UI_CONFIG.NO_LAYER;
+			config = noLayer;
+		} else if (nothingSelected) {
+			config = { ...noLayer, designPanelSections: [...noLayer.designPanelSections, ...LAYER_UI_CONFIG[layer.type].designPanelSections] };
 		} else {
 			config = LAYER_UI_CONFIG[layer.type];
 		}
@@ -288,6 +287,7 @@ isLayerContentLocked(layer) {
 		}
 
 		this.syncNoLayerPanelState();
+		if (nothingSelected) this.loadActiveLayerSettings();
 		syncLibraryView();
 		// Canvas Properties owns the document-size card for every tool.
 		const documentSize = document.getElementById('documentSizeGroup');
@@ -337,20 +337,74 @@ isLayerContentLocked(layer) {
 		}, 0);
 	}
 
-	// The single source of truth for "which accordion section should be open".
+	// The single source of truth for "which of the Inspector's panels shows".
 	// Model: tool-scoped settings win while a settings tool (Brush/Eraser) is
-	// active (Photoshop Options-bar behavior); otherwise the SELECTED layer's
-	// Properties. With nothing to edit there is no accordion section to open.
+	// active (Photoshop Options-bar behavior); otherwise the inspected layer's
+	// Properties.
 ,
 	getPreferredDesignSection(layer) {
 		const panel = TOOLS[this.currentTool]?.panel?.(this, layer);
 		if (panel) return panel;
 
-		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer) {
-			return null;
-		}
+		if (!this.originalImage || this.layerManager?.hasMultiSelection?.()) return null;
+		layer ||= this.layerManager?.getInspectedLayer();
+		return PANEL_SCHEMAS[layer?.type]?.sectionPrefix || null;
+	}
 
-		return PANEL_SCHEMAS[layer.type]?.sectionPrefix || null;
+,
+	getVisibleSwitchPanels() {
+		return [...this.switchPanels.keys()].filter((name) => document.getElementById(`${name}Section`)?.classList.contains('visible'));
+	}
+
+	// The switch between panels showing together (a tool's settings beside the
+	// layer's properties). One host on desktop, the Edit sheet's bar on phones.
+,
+	renderPanelSwitch(host, names) {
+		host.replaceChildren();
+		if (names.length < 2) return;
+		// The tool's own panel leads.
+		const tool = TOOLS[this.currentTool]?.panel?.(this, this.layerManager.getActiveLayer());
+		names = [...names].sort((a, b) => (b === tool) - (a === tool));
+		const group = tplClone('tpl-segmented');
+		group.setAttribute('role', 'group');
+		group.setAttribute('aria-label', 'Panel');
+		names.forEach((name) => {
+			const button = tplClone('tpl-segmented-option');
+			const open = document.getElementById(`${name}Section`)?.classList.contains('is-open');
+			button.textContent = this.switchPanels.get(name).section.tab;
+			button.classList.toggle('active', open);
+			button.setAttribute('aria-pressed', String(open));
+			button.addEventListener('click', () => this.setCollapsibleSectionOpen(name, true));
+			group.appendChild(button);
+		});
+		host.appendChild(group);
+	}
+
+	// The Inspector's one bar names the selection; the panels below it never do.
+,
+	syncInspectorHeader() {
+		const icon = document.getElementById('inspectorTitleIcon');
+		const text = document.getElementById('inspectorTitleText');
+		const badge = document.getElementById('inspectorTitleBadge');
+		const bar = document.getElementById('inspectorSwitch');
+		if (!icon || !text || !badge || !bar || !this.switchPanels) return;
+		const count = this.layerManager?.getSelectedLayers?.().length || 0;
+		const active = this.layerManager?.getActiveLayer?.();
+		const session = this.autoGlitterManager?.isSessionActive() ? PANEL_SCHEMAS.autoGlitterSession.section : null;
+		let title = { icon: 'sliders', text: 'Properties' };
+		if (session) title = { icon: session.icon, text: session.title };
+		else if (!this.originalImage) title = { ...title };
+		else if (count > 1) title = { icon: 'layers', text: `${count} layers` };
+		else if (active) title = { icon: PANEL_SCHEMAS[active.type].section.icon, text: describeLayer(active, this).name };
+		else title = { icon: PANEL_SCHEMAS[LayerType.BASE_IMAGE].section.icon, text: 'Canvas' };
+		icon.setAttribute('href', `#icon-${title.icon}`);
+		text.textContent = title.text;
+		badge.replaceChildren(...(session?.badge ? [buildFeatureBadge(session.badge)] : []));
+
+		const names = this.getVisibleSwitchPanels();
+		bar.hidden = names.length < 2;
+		this.renderPanelSwitch(bar, names);
+		this.mobileManager?.syncEditTitle();
 	}
 
 ,
@@ -401,12 +455,6 @@ isLayerContentLocked(layer) {
 	}
 
 ,
-	collapseSettingsSection(prefix) {
-		document.getElementById(`${prefix}Content`)?.classList.remove('visible');
-		document.getElementById(`${prefix}Toggle`)?.classList.add('collapsed');
-	}
-
-,
 	syncNoLayerPanelState() {
 		const selectedLayers = this.layerManager?.getSelectedLayers?.() || [];
 		const multiCount = selectedLayers.length;
@@ -414,6 +462,7 @@ isLayerContentLocked(layer) {
 		const defaultGroups = document.getElementById('noLayerDefaultGroups');
 		const multiGroup = document.getElementById('multiLayerSelectionGroup');
 		const emptyText = document.getElementById('noLayerEmptyText');
+		// The phone's Library drawer holds this panel, so its bar names the state.
 		const designTitle = document.getElementById('designGalleryTitleText');
 		const emptySubtext = document.getElementById('noLayerEmptySubtext');
 
@@ -696,9 +745,7 @@ isLayerContentLocked(layer) {
 
 ,
 	loadActiveLayerSettings() {
-		if (this.layerManager.hasMultiSelection()) return;
-
-		const layer = this.layerManager.getActiveLayer();
+		const layer = this.layerManager.getInspectedLayer();
 		if (!layer) return;
 		this.animationPanel?.load(layer);
 
@@ -708,7 +755,7 @@ isLayerContentLocked(layer) {
 
 ,
 	updateGlitterSelection() {
-		const layer = this.layerManager.getActiveLayer();
+		const layer = this.layerManager.getInspectedLayer();
 		const manager = getLayerManagerForType(this, layer?.type);
 		const selectedGlitterId = manager?.resolveSelectedGlitterId?.(layer)
 			?? manager?.slotPicker?.resolveSelectedGlitterId(layer)

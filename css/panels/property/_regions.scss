@@ -5,8 +5,10 @@
 // groups `.panel-sticky-header` / `.panel-sticky-footer`, and stamps
 // `.has-scroll-region` on the section. First user: Auto Glitter.
 .section.has-scroll-region {
-	> .section-content { padding: 0; }
-	&.is-open > .section-content.visible { overflow: hidden; }
+	> .section-content {
+		padding: 0;
+		overflow: hidden;
+	}
 
 	> .section-content .settings-subsection {
 		display: flex;
@@ -56,11 +58,6 @@
 			}
 		}
 	}
-}
-
-// The outer accordion stays flush around the independently scrolling middle.
-.design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
-	padding: 0;
 }
 
 // ----- Auto Glitter ----------------------------------------------------------

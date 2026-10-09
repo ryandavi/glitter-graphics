@@ -796,7 +796,7 @@ class AutoGlitterManager {
 		const baseLayer = this.editor.layerManager.getBaseLayer();
 		this.editor.updateSidePanelUI(baseLayer);
 		this.editor.updateContextToolbars();
-		this.editor.setCollapsibleSectionOpen?.('autoGlitterSettings', true, true);
+		this.editor.setCollapsibleSectionOpen?.('autoGlitterSettings', true);
 		this.editor.notifications.setMode({
 			label: 'Auto Glitter Mode',
 			icon: 'magic-wand',

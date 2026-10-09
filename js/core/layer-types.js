@@ -49,8 +49,8 @@ function layerHasVisibleContent(layer) {
 //                          (Glitter Properties, Sticker Properties, Text Properties).
 //   "<Tool> Settings"     — configuration of a TOOL/action, not a specific layer
 //                          (Brush Settings, Color Fill Settings).
-// The visible titles live in index.html (.section-header-title-text); the guide
-// (modals/guide.html) must mirror them. Section *ids* are historically all
+// The titles live in PANEL_SCHEMAS (`section.title`), which the phone's sheet
+// bar and the guide read. Section *ids* are historically all
 // `*SettingsSection` regardless of title — that's internal only, don't rename.
 const LAYER_UI_CONFIG = {
 	NO_IMAGE: {

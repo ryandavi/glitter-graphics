@@ -98,7 +98,7 @@ async function captureVisibility(page) {
 // collapse state (which the refactor intentionally changes).
 async function expandAll(page) {
 	await page.evaluate(() => {
-		document.querySelectorAll('.section.collapsible-section').forEach((s) => {
+		document.querySelectorAll('.section:is(.collapsible-section, .switch-panel)').forEach((s) => {
 			s.classList.add('visible', 'is-open');
 			s.querySelector(':scope > .section-content')?.classList.add('visible');
 		});

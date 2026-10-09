@@ -1,7 +1,6 @@
 @use '../mixins' as *;
 
-// Image and Layers use the canonical collapsible chrome/state contract but
-// remain independently toggleable instead of joining the design accordion.
+// The Layers column's sections collapse independently.
 .layers-panel > .section.collapsible-section:not(.is-open) {
 	flex: 0 0 auto;
 

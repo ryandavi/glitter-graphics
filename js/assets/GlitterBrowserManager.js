@@ -325,7 +325,10 @@ class GlitterBrowserManager extends ContentManager {
 			return;
 		}
 
-		const layer = this.editor.layerManager.getActiveLayer();
+		// With nothing selected only the canvas's own armed picker names a target.
+		const layers = this.editor.layerManager;
+		const layer = layers.getActiveLayer()
+			|| (this.editor.baseBackgroundManager?.hasActivePickerSession() ? layers.getInspectedLayer() : null);
 		if (!layer) {
 			this.editor.updateStatus('Select a layer before choosing a glitter');
 			return;

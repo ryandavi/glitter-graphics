@@ -569,6 +569,13 @@ class LayerManager {
 		return this.getLayerById(this.activeLayerId);
 	}
 
+	// The layer the Inspector shows: the selection, or the canvas when nothing
+	// is selected. A multi-selection has none.
+	getInspectedLayer() {
+		if (this.hasMultiSelection()) return null;
+		return this.getActiveLayer() || this.getBaseLayer();
+	}
+
 	getLayerById(layerId) {
 		if (layerId == null) return null;
 		return this.layers.find((layer) => layer.id === layerId) || null;
@@ -740,6 +747,8 @@ class LayerManager {
 
 	renderLayersList() {
 		const container = this.layersListContainer;
+		// The Inspector's bar shows the same layer name as the list.
+		this.editor.syncInspectorHeader?.();
 
 		// Add insertion line if it doesn't exist
 		let insertionLine = container.querySelector('.layer-insertion-line');

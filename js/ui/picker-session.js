@@ -78,7 +78,7 @@ function returnFromPickerToProperties(editor, options = {}) {
 	}
 	// Mobile moves the same sections into the Edit drawer, so opening the
 	// drawer and expanding the originating section are separate requirements.
-	if (section) editor.setCollapsibleSectionOpen?.(section, true, true);
+	if (section) editor.setCollapsibleSectionOpen?.(section, true);
 	if (focusId) {
 		requestAnimationFrame(() => {
 			document.getElementById(focusId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

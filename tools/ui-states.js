@@ -52,7 +52,7 @@ const closeModals = async (page) => {
 };
 
 const forceOpen = (page) => page.evaluate(() => {
-	document.querySelectorAll('.section.collapsible-section').forEach((s) => {
+	document.querySelectorAll('.section:is(.collapsible-section, .switch-panel)').forEach((s) => {
 		s.classList.add('visible', 'is-open');
 		s.querySelector(':scope > .section-content')?.classList.add('visible');
 	});

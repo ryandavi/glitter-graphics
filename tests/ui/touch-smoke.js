@@ -1456,13 +1456,14 @@ async function checkSheetContent(page) {
 	await page.evaluate(() => window.editor.setTool(ToolType.BRUSH));
 	await page.waitForTimeout(100);
 	const closed = page.locator('#mobileSettingsContainer > .section:not(.is-open)');
-	assert(await closed.count() === 1, 'Edit did not stack the layer panel beside Mask Settings with one open');
-	const stackedId = await closed.getAttribute('id');
-	await closed.locator('> .section-header').tap();
+	assert(await closed.count() === 1, 'Edit did not hold the layer panel beside Mask Settings with one open');
+	assert(!await closed.isVisible(), 'The panel the Edit switch is not on still shows');
+	const otherId = await closed.getAttribute('id');
+	await page.locator('#mobileEditTitle .segmented-option:not(.active)').tap();
 	assert(await page.evaluate((id) => {
 		const sections = Array.from(document.querySelectorAll('#mobileSettingsContainer > .section'));
 		return sections.filter(section => section.classList.contains('is-open')).map(section => section.id).join() === id;
-	}, stackedId), 'Tapping a stacked Edit bar did not open that panel alone');
+	}, otherId), 'Tapping the Edit switch did not show that panel alone');
 }
 
 async function checkNumericScrub(page) {

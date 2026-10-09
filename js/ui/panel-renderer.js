@@ -1727,9 +1727,9 @@ function renderPanelSubsections(schema, parent) {
 	});
 }
 
-// A headerless ("bare") schema section: no tpl-section chrome, no accordion —
-// the groups render straight into the host's existing `.section-content` (the
-// no-selection panel, which sits under the shared Design gallery header).
+// A "bare" schema section is not one of the Inspector's switched panels: the
+// groups render straight into the host's existing `.section-content` (the
+// no-selection panel, a form modal's body).
 // `preamble` items render ahead of the subsections (the "nothing selected"
 // intro note keeps its id so syncNoLayerPanelState still drives its text).
 function renderBarePanelSection(schema) {
@@ -1772,20 +1772,9 @@ function renderPanelSection(schema) {
 	addPanelClasses(host, schema.section.classes);
 	host.replaceChildren();
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
+	// The panel has no bar of its own: the Inspector's header and the phone's
+	// sheet bar read `section.icon`, `title`, `tab` and `badge` from the schema.
 	const sectionPrefix = schema.sectionPrefix || `${schema.prefix}Settings`;
-	fragment.querySelector('.section-header').id = `${sectionPrefix}Header`;
-	const titleIcon = fragment.querySelector('use');
-	titleIcon.setAttribute('href', `#icon-${schema.section.icon}`);
-	if (schema.section.titleIconId) titleIcon.id = schema.section.titleIconId;
-	fragment.querySelector('.name').textContent = schema.section.iconName;
-	const titleText = fragment.querySelector('.section-header-title-text');
-	titleText.textContent = schema.section.title;
-	if (schema.section.titleTextId) titleText.id = schema.section.titleTextId;
-	// Sections use the same schema badge primitive as cards and actions.
-	if (schema.section.badge) {
-		titleText.after(buildFeatureBadge(schema.section.badge));
-	}
-	fragment.querySelector('.section-header-action').id = `${sectionPrefix}Toggle`;
 	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;
 	const subsection = fragment.querySelector('.settings-subsection');
 	// Sticky-region layout: a group's `region` puts it in a fixed `header` /

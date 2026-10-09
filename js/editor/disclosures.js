@@ -1,68 +1,36 @@
 const EDITOR_DISCLOSURE_METHODS = {
 initializeCollapsibleSections() {
-		const sections = [...new Set(Object.values(PANEL_SCHEMAS)
+		// The Inspector's switched panels by sectionPrefix. `.visible` on a host
+		// follows the selection and the tool (updateSidePanelUI); of the visible
+		// ones exactly one is open, and the header's switch chooses which.
+		this.switchPanels = new Map(Object.values(PANEL_SCHEMAS)
 			.flatMap((schema) => [schema, ...(schema.auxiliarySections || [])])
-			.map((schema) => schema.sectionPrefix)
-			.filter(Boolean))];
+			.filter((schema) => schema.sectionPrefix)
+			.map((schema) => [schema.sectionPrefix, schema]));
+		const sections = [...this.switchPanels.keys()];
 
-			const setOpen = (name, isOpen, accordion = false) => {
-				const section = document.getElementById(`${name}Section`);
-				const content = document.getElementById(`${name}Content`);
-				const toggle = document.getElementById(`${name}Toggle`);
-				setCollapsibleSectionState(section, content, toggle, isOpen);
-
-			if (isOpen && accordion && CONFIG.layers.ui.designPanelAccordion) {
-				sections.forEach((other) => {
-					if (other !== name) setOpen(other, false, false);
-				});
-			}
+		const applyOpen = (name, isOpen) => setCollapsibleSectionState(
+			document.getElementById(`${name}Section`), document.getElementById(`${name}Content`), null, isOpen);
+		const setOpen = (name, isOpen) => {
+			if (isOpen) sections.forEach((other) => applyOpen(other, other === name));
+			else applyOpen(name, false);
+			this.syncInspectorHeader();
 		};
 		this.setCollapsibleSectionOpen = setOpen;
 
 		this.syncCollapsibleSections = (preferredName = null) => {
-			const visibleSections = sections.filter((name) => {
-				const section = document.getElementById(`${name}Section`);
-				if (!section) return false;
-				return section.classList.contains('visible');
-			});
-
+			const visibleSections = this.getVisibleSwitchPanels();
 			if (!visibleSections.length) {
+				this.syncInspectorHeader();
 				return;
 			}
-
-			const openSections = visibleSections.filter((name) => {
-				const content = document.getElementById(`${name}Content`);
-				return content?.classList.contains('visible');
-			});
-
-			const targetName = visibleSections.includes(preferredName)
-				? preferredName
-				: (openSections[0] || visibleSections[0]);
-
-			sections.forEach((name) => setOpen(name, name === targetName, false));
+			const open = visibleSections.find((name) => document.getElementById(`${name}Section`).classList.contains('is-open'));
+			setOpen(visibleSections.includes(preferredName) ? preferredName : (open || visibleSections[0]), true);
 		};
 
-		sections.forEach((name) => {
-			const header = document.getElementById(`${name}Header`);
-			const content = document.getElementById(`${name}Content`);
-			const toggle = document.getElementById(`${name}Toggle`);
-			if (!header || !content || !toggle) return;
-
-			setOpen(name, false);
-
-			header.addEventListener('click', (event) => {
-				if (event.target.closest('[data-no-accordion-toggle]')) {
-					return;
-				}
-
-				const isOpen = !content.classList.contains('visible');
-				setOpen(name, isOpen, true);
-				if (isOpen) requestAnimationFrame(() => header.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
-			});
-		});
-
 		// The Library is never collapsed: its window or drawer opens and closes.
-		setOpen('designGallery', true);
+		setCollapsibleSectionState(document.getElementById('designGallerySection'),
+			document.getElementById('designGalleryContent'), null, true);
 		this.syncCollapsibleSections();
 		this.initializeIndependentCollapsibles();
 
@@ -71,8 +39,7 @@ initializeCollapsibleSections() {
 		this.setSettingsEmptyState('stickerSettings', true);
 	}
 
-	// Image and Layers sections collapse independently (both can stay open) —
-	// same header/chevron conventions as the design panel, minus the accordion.
+	// The Layers column's sections collapse independently (both can stay open).
 ,
 	initializeIndependentCollapsibles() {
 		CONFIG.ui.independentCollapsibleSections.forEach((name) => {

@@ -328,10 +328,10 @@ const PANEL_SCHEMAS = {
 			] }] }
 		]
 	},
-	// The "nothing selected" panel: sits under the shared Library section header
-	// (so it renders headerless — `section.bare`) and carries two mutually
-	// exclusive `.settings-subsection` blocks. syncNoLayerPanelState toggles
-	// #noLayerDefaultGroups vs #multiLayerSelectionGroup by id.
+	// The "nothing selected" panel (`section.bare`) carries two mutually
+	// exclusive `.settings-subsection` blocks: what can be added, shown above
+	// Canvas Properties, and the multi-selection groups. syncNoLayerPanelState
+	// toggles #noLayerDefaultGroups vs #multiLayerSelectionGroup by id.
 	noSelection: {
 		prefix: 'noLayer',
 		section: { id: 'noLayerSettingsSection', bare: true },
@@ -342,7 +342,7 @@ const PANEL_SCHEMAS = {
 		],
 		subsections: [
 			{ id: 'noLayerDefaultGroups', groups: [
-				{ title: 'Start', sections: [
+				{ title: 'Add', sections: [
 					{ kind: 'section', title: 'Quick add', sets: [
 						{ rows: [{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }] }
 					] },
@@ -397,7 +397,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'autoGlitter',
 		sectionPrefix: 'autoGlitterSettings',
 		mobileKey: 'autoGlitter',
-		section: { id: 'autoGlitterSettingsSection', icon: 'magic-wand', iconName: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
+		section: { id: 'autoGlitterSettingsSection', icon: 'magic-wand', tab: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
 		groups: [
 			{ title: 'Preview', region: 'header', sections: [
 				{ kind: 'section', classes: 'auto-glitter-preview-card', sets: [
@@ -460,7 +460,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'filter',
 		sectionPrefix: 'filterSettings',
 		mobileKey: 'filter',
-		section: { id: 'filterSettingsSection', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
+		section: { id: 'filterSettingsSection', icon: 'sliders', tab: 'Filter', title: 'Filter Properties' },
 		groups: [
 			{ title: 'Content', sections: [
 				{ kind: 'section', title: 'Looks', sets: [
@@ -495,7 +495,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'frame',
 		sectionPrefix: 'frameSettings',
 		mobileKey: 'frame',
-		section: { id: 'frameSettingsSection', icon: 'frame', iconName: 'Frame', title: 'Frame Properties' },
+		section: { id: 'frameSettingsSection', icon: 'frame', tab: 'Frame', title: 'Frame Properties' },
 		groups: [
 			{ title: 'Content', sections: [
 				// Both kinds share one shape: Kind, then a grid of choices, then
@@ -544,7 +544,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'sparkleLayer',
 		sectionPrefix: 'sparkleLayerSettings',
 		mobileKey: 'sparkleLayer',
-		section: { id: 'sparkleLayerSettingsSection', icon: 'sparkles', iconName: 'Sparkles', title: 'Sparkles Properties' },
+		section: { id: 'sparkleLayerSettingsSection', icon: 'sparkles', tab: 'Sparkles', title: 'Sparkles Properties' },
 		groups: [
 			{ title: 'Content', sections: [
 				createSparklesSectionSpec('layerSparkles', { toggle: false })
@@ -558,7 +558,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',
 		mobileKey: 'background',
-		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties' },
+		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', tab: 'Canvas', title: 'Canvas Properties' },
 		groups: [
 			{ title: 'Appearance', sections: [
 				// The canvas layer is a single paint; its only opacity is the
@@ -594,10 +594,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'brush',
 		sectionPrefix: 'brushSettings',
 		mobileKey: 'brush',
-		section: {
-			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
-			titleIconId: 'brushSettingsTitleIcon', titleTextId: 'brushSettingsTitleText'
-		},
+		section: { id: 'brushSettingsSection', icon: 'brush', tab: 'Mask', title: 'Mask Settings' },
 		groups: [
 			{ title: 'Content', sections: [
 				{ kind: 'section', title: 'Tip', summary: 'asset', sets: [
@@ -641,7 +638,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'glitter',
 		sectionPrefix: 'glitterSettings',
 		mobileKey: 'glitter',
-		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
+		section: { id: 'glitterSettingsSection', icon: 'glitter', tab: 'Fill', title: 'Fill Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
 			{ title: 'Content', sections: [
@@ -685,7 +682,7 @@ const PANEL_SCHEMAS = {
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',
 			mobileKey: 'tool',
-			section: { id: 'layerSettingsSection', icon: 'paint-bucket', iconName: 'Sliders', title: 'Glitter Fill Settings' },
+			section: { id: 'layerSettingsSection', icon: 'paint-bucket', tab: 'Selection', title: 'Glitter Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
 				empty: { icon: 'paint-bucket', titleId: 'layerSettingsEmptyText', title: 'No layer selected', textId: 'layerSettingsEmptySubtext', text: '' }
@@ -720,7 +717,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'sticker',
 		sectionPrefix: 'stickerSettings',
 		mobileKey: 'sticker',
-		section: { id: 'stickerSettingsSection', icon: 'sticker', iconName: 'Sticker', title: 'Sticker Properties' },
+		section: { id: 'stickerSettingsSection', icon: 'sticker', tab: 'Sticker', title: 'Sticker Properties' },
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 		groups: [
 			{ title: 'Content', sections: [
@@ -768,7 +765,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'text',
 		sectionPrefix: 'textSettings',
 		mobileKey: 'text',
-		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
+		section: { id: 'textSettingsSection', icon: 'text', tab: 'Text', title: 'Text Properties' },
 		groups: [
 			// Type it, choose the face, set the metrics, then place it.
 			{ title: 'Content', sections: [
@@ -895,7 +892,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'shape',
 		sectionPrefix: 'shapeSettings',
 		mobileKey: 'shape',
-		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
+		section: { id: 'shapeSettingsSection', icon: 'square', tab: 'Shape', title: 'Shape Properties' },
 		groups: [
 			{ title: 'Content', sections: [
 				{ kind: 'section', title: 'Asset', summary: 'asset', classes: 'shape-asset-module', sets: [
@@ -977,7 +974,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'path',
 		sectionPrefix: 'pathSettings',
 		mobileKey: 'path',
-		section: { id: 'pathSettingsSection', icon: 'pen', iconName: 'Path', title: 'Path Properties' },
+		section: { id: 'pathSettingsSection', icon: 'pen', tab: 'Path', title: 'Path Properties' },
 		groups: [
 			{ title: 'Content', sections: [
 				{ kind: 'section', title: 'Path', summary: { id: 'pathSummary' }, sets: [

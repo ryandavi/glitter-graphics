@@ -364,14 +364,9 @@ class MaskEditor {
 		return badge;
 	}
 
-	// Keep the shared Mask Settings title stable and swap its header icon to show
-	// the active paint mode (Brush ↔ Eraser). Mobile relocates the same section.
+	// Mask Settings serves Brush and Eraser; its action labels follow the mode.
 	_updatePanelTitle() {
 		const isEraser = this.mode === 'sub';
-		const titleText = document.getElementById('brushSettingsTitleText');
-		if (titleText) titleText.textContent = 'Mask Settings';
-		const titleIcon = document.getElementById('brushSettingsTitleIcon');
-		if (titleIcon) titleIcon.setAttribute('href', isEraser ? '#icon-eraser' : '#icon-brush');
 		if (this.ui.copySettingsButton) {
 			this.ui.copySettingsButton.textContent = isEraser ? 'Copy brush settings' : 'Copy eraser settings';
 			this.ui.copySettingsButton.title = isEraser

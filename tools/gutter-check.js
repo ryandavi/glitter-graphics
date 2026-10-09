@@ -36,7 +36,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 		await page.evaluate(async () => { await window.editor.textGlitterManager?.addTextLayer?.(); });
 		await page.waitForTimeout(900);
 		await page.evaluate(() => {
-			document.querySelectorAll('.section.collapsible-section').forEach((s) => {
+			document.querySelectorAll('.section:is(.collapsible-section, .switch-panel)').forEach((s) => {
 				s.classList.add('visible', 'is-open');
 				s.querySelector(':scope > .section-content')?.classList.add('visible');
 			});
@@ -224,7 +224,7 @@ const CHROME = process.env.CHROME_PATH || undefined;
 			const layer = window.editor.layerManager.getActiveLayer();
 			window.editor.mobileManager.prepareSettings(layer, { preserveDrawer: true });
 			window.editor.mobileManager.openDrawer('edit');
-			document.querySelectorAll('#mobileSettingsContainer .section.collapsible-section').forEach((section) => {
+			document.querySelectorAll('#mobileSettingsContainer .section:is(.collapsible-section, .switch-panel)').forEach((section) => {
 				section.classList.add('visible', 'is-open');
 				section.querySelector(':scope > .section-content')?.classList.add('visible');
 			});

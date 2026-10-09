@@ -891,8 +891,6 @@ class GlitterEditor {
 
 		this.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
 		this.setSettingsEmptyState('glitterSettings', true);
-		this.collapseSettingsSection('layerSettings');
-		this.collapseSettingsSection('glitterSettings');
 
 		// ======================
 		// Selected colors
