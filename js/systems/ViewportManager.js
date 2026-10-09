@@ -66,7 +66,7 @@ class ViewportManager {
 		window.visualViewport?.addEventListener('resize', () => this.handleWindowResize());
 		if (typeof ResizeObserver === 'function') {
 			this.overlayResizeObserver = new ResizeObserver(() => this.syncOverlayLayout());
-			[this.previewContainer, ...document.querySelectorAll('#layersPanel, #designPanel, .toolbar, .mobile-bottom-nav')]
+			[this.previewContainer, ...document.querySelectorAll('#layersPanel, #designPanel, #libraryWindow, .toolbar, .mobile-bottom-nav')]
 				.forEach(element => this.overlayResizeObserver.observe(element));
 		}
 
@@ -171,6 +171,13 @@ class ViewportManager {
 	getOverlayRect() {
 		const usable = this.getUsableRect();
 		const mobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
+		// The Library window floats over the canvas without moving the artwork,
+		// but the chrome keeps clear of it.
+		const library = mobile ? null : document.getElementById('libraryWindow');
+		if (library?.classList?.contains('is-open') && library.getClientRects().length) {
+			const edge = library.getBoundingClientRect().left - this.previewContainer.getBoundingClientRect().left;
+			usable.width = Math.max(1, Math.min(usable.width, edge - usable.left));
+		}
 		const root = getComputedStyle(document.documentElement);
 		const inset = parseFloat(root.getPropertyValue(mobile ? '--mobile-floating-inset' : '--spacing-from-edge')) || 0;
 		const alignment = CONFIG.ui.canvasAlignment[mobile ? 'mobile' : 'desktop'];

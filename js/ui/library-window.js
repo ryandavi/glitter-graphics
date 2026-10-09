@@ -41,12 +41,18 @@ class LibraryWindow {
 		handle.setAttribute('aria-valuemin', String(limits.minShare));
 		handle.setAttribute('aria-valuemax', String(limits.maxShare));
 		let share = limits.defaultShare;
-		const setShare = (value) => {
+		this.element.style.setProperty('--library-flyout-max', `${limits.maxShare}%`);
+		// Until the divider is moved the section fits its content, up to the
+		// largest share; a share the user set is held, and resetting returns to
+		// fitting.
+		const setShare = (value, chosen = true) => {
 			share = Math.max(limits.minShare, Math.min(limits.maxShare, value));
 			this.element.style.setProperty('--library-flyout-share', `${share}%`);
+			this.element.classList.toggle('has-chosen-split', chosen);
 			handle.setAttribute('aria-valuenow', String(Math.round(share)));
 		};
-		setShare(share);
+		const resetShare = () => setShare(limits.defaultShare, false);
+		resetShare();
 		document.getElementById('flyoutSection').after(handle);
 		let pointer = null;
 		handle.addEventListener('pointerdown', (event) => {
@@ -69,14 +75,14 @@ class LibraryWindow {
 		handle.addEventListener('pointerup', finish);
 		handle.addEventListener('pointercancel', finish);
 		handle.addEventListener('lostpointercapture', finish);
-		handle.addEventListener('dblclick', () => setShare(limits.defaultShare));
+		handle.addEventListener('dblclick', resetShare);
 		handle.addEventListener('keydown', (event) => {
 			if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
 				event.preventDefault();
 				setShare(share + (event.key === 'ArrowUp' ? -1 : 1) * (event.shiftKey ? limits.fastKeyStep : limits.keyStep));
 			} else if (event.key === 'Home' || event.key === 'Escape') {
 				event.preventDefault();
-				setShare(limits.defaultShare);
+				resetShare();
 			}
 		});
 	}
@@ -101,6 +107,17 @@ class LibraryWindow {
 		document.getElementById('designGallerySection')?.classList.toggle('visible', picking);
 		this.element.classList.toggle('has-flyout', Boolean(card));
 		this.element.classList.toggle('has-library', picking);
+		const panes = ['flyout', 'designGallery'].map((name) => document.getElementById(`${name}Section`));
+		// The sheet shows one pane at a time and has no bar to collapse it by.
+		if (sheet || mobile?.isMobile) panes.forEach((pane) => this.expandPane(pane));
+		// A collapsed pane is only its bar, so the other takes the room.
+		this.element.classList.toggle('is-split', picking && Boolean(card) && panes.every((pane) => pane.classList.contains('is-open')));
+		// The width handle's grip shows only while the panes fill the column:
+		// with one collapsed they stop short and it would hang over the canvas.
+		// Only the panes showing count; the hidden one keeps whatever state it
+		// was left in.
+		const showing = panes.filter((pane, index) => (index ? picking : Boolean(card)));
+		this.element.classList.toggle('has-collapsed-section',showing.some((pane) => !pane.classList.contains('is-open')));
 		const open = (picking || Boolean(card));
 		if (open === this.isOpen) {
 			this.syncBack(sheet, picking, card);
@@ -113,6 +130,11 @@ class LibraryWindow {
 			else mobile.closeSheet('window');
 		}
 		this.syncBack(sheet, picking, card);
+	}
+
+	expandPane(pane) {
+		setCollapsibleSectionState(pane, pane.querySelector(':scope > .section-content'),
+			pane.querySelector('.mobile-hidden-section-toggle'), true);
 	}
 
 	// The open flyout section follows the inspected layer: the same line on
@@ -134,6 +156,8 @@ class LibraryWindow {
 			card?.parentElement.classList.add('has-flyout-open');
 			if (card) this.flyoutObserver.observe(card, { subtree: true, attributes: true, attributeFilter: ['data-paint-mode', 'data-effect-enabled'] });
 			this.flyoutCard = card;
+			// Opening a section shows it, even into a pane left collapsed.
+			if (card) this.expandPane(document.getElementById('flyoutSection'));
 			syncSectionHeaderReset(document.getElementById('flyoutReset'), card);
 			const toggle = card ? buildFlyoutSwitch(card) : null;
 			document.getElementById('flyoutSwitch').replaceChildren(...(toggle ? [toggle] : []));

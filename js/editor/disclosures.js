@@ -28,9 +28,6 @@ initializeCollapsibleSections() {
 			setOpen(visibleSections.includes(preferredName) ? preferredName : (open || visibleSections[0]), true);
 		};
 
-		// The Library is never collapsed: its window or drawer opens and closes.
-		setCollapsibleSectionState(document.getElementById('designGallerySection'),
-			document.getElementById('designGalleryContent'), null, true);
 		this.syncCollapsibleSections();
 		this.initializeIndependentCollapsibles();
 
@@ -39,7 +36,7 @@ initializeCollapsibleSections() {
 		this.setSettingsEmptyState('stickerSettings', true);
 	}
 
-	// The Layers column's sections collapse independently (both can stay open).
+	// Each column's sections collapse independently (both can stay open).
 ,
 	initializeIndependentCollapsibles() {
 		CONFIG.ui.independentCollapsibleSections.forEach((name) => {
@@ -51,9 +48,11 @@ initializeCollapsibleSections() {
 
 				const setOpen = (isOpen) => {
 					setCollapsibleSectionState(section, content, toggle, isOpen);
-					// A column of bars has nothing to resize (its handle hides).
+					// A column that stops short of its handle hides the grip.
 					const column = section.parentElement;
-					column.classList.toggle('all-sections-collapsed', !column.querySelector(':scope > .section.is-open'));
+					column.classList.toggle('has-collapsed-section', !column.querySelector(':scope > .section.is-open'));
+					// The window splits its room only between two open panes.
+					this.libraryWindow?.sync();
 				};
 			setOpen(true);
 

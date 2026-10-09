@@ -1,7 +1,7 @@
 'use strict';
 
 const HINT_RULES = [
-	{ id: 'crop-editing', tool: true, when: (editor) => editor.getActiveSession() === 'crop', hint: 'Drag the handles to crop or extend the canvas', context: { desktop: 'Drag inside to move, outside to draw. Shift toggles the ratio, Alt resizes from the center, and Ctrl bypasses snapping. Enter applies; Esc cancels.', mobile: 'Drag with one finger. Use two fingers to pan or zoom. Done applies the crop; Cancel discards it.' } },
+	{ id: 'crop-editing', tool: true, when: (editor) => editor.getActiveSession() === 'crop', hint: 'Drag the handles to crop or extend the canvas', context: { desktop: 'Drag inside to move, outside to draw. Shift toggles the ratio, Alt resizes from the center, and Ctrl bypasses snapping. Enter applies; Esc cancels.', mobile: 'Drag with one finger. Use two fingers to pan or zoom. The check applies the crop; the X discards it.' } },
 	{
 		id: 'brush-editing',
 		tool: true,

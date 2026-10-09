@@ -25,8 +25,7 @@
 // layout, out of sight, so it can slide in when it opens.
 body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) { display: none; }
 
-// The open flyout section takes its own height and scrolls past the column's;
-// with the Library under it (a paint on its Glitter source) it keeps to half.
+// The open flyout section takes its own height and scrolls past the column's.
 .library-window {
 	> .flyout-section {
 		display: flex;
@@ -38,7 +37,6 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 		backdrop-filter: var(--panel-backdrop);
 
 		> .section-header { border-bottom: unset; }
-		> .section-header > .section-header-title > .section-header-title-text { text-transform: none; }
 
 		> .section-content {
 			flex: 1 1 auto;
@@ -48,14 +46,30 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 		}
 	}
 
-	// Both panes start equal; the divider lets the user redistribute the room.
-	&.has-library.has-flyout > .flyout-section { flex: 0 0 var(--library-flyout-share, 50%); }
-	&.has-library.has-flyout > .section.design-gallery-section { flex: 1 1 0; }
+	// Both panes open (.is-split, LibraryWindow.apply): the section takes its
+	// own height, short of the room the Library always keeps, and the Library
+	// takes the rest. Moving the divider (.has-chosen-split) holds the section
+	// at the share instead.
+	&.is-split > .flyout-section { max-height: var(--library-flyout-max, 80%); }
+	&.is-split.has-chosen-split > .flyout-section { flex: 0 0 var(--library-flyout-share, 50%); }
+	// Named as the open main section it is (panels/_panel-shell.scss), whose
+	// content-sized basis would grow with the grid and squeeze the section.
+	&.is-split > .section.main-section.design-gallery-section.is-open { flex: 1 1 0; }
+
+	// A pane collapses to its bar like the Inspector, and the other pane comes
+	// up to it.
+	> .flyout-section:not(.is-open) { flex: 0 0 auto; }
+
+	// Named as the bare property section it is, whose content rule
+	// (property/_sections.scss) would otherwise keep it showing.
+	> .section.property-section.flyout-section:not(.is-open) > .section-content { display: none; }
+
+	> .flyout-section > .section-header > .section-header-actions > .section-header-action.collapsed .icon { transform: rotate(-90deg); }
 }
 
 // Only sections whose primary content is a preset picker use the full pane.
 // Their tiles scroll with the pane, preserving the shared horizontal gutter.
-.library-window:not(.has-library) > .flyout-section { flex: 1 1 0; }
+.library-window:not(.has-library) > .flyout-section.is-open { flex: 1 1 0; }
 
 .library-window > .flyout-section {
 	> .section-content { display: flex; flex-direction: column; }
@@ -99,9 +113,15 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 }
 
 @media (min-width: ($mobile-breakpoint + 1px)) {
-	.library-window.has-library.has-flyout {
+	.library-window.is-split {
 		gap: 0;
 		> .library-split-handle { display: block; }
+	}
+
+	// The bar is the toggle.
+	.library-window > .flyout-section > .section-header {
+		cursor: pointer;
+		@include hover-states(true);
 	}
 }
 

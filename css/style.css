@@ -787,7 +787,9 @@
   	color-mix(in srgb, var(--color-danger) 62%, black) 70%,
   	color-mix(in srgb, var(--color-danger-bright) 58%, white) 100%);
   --danger-btn-border-color: color-mix(in srgb, var(--color-danger) 75%, black);
-  --danger-btn-text-color: var(--color-text-on-accent);
+  /* Not --color-text-on-accent: that follows the accent's lightness (dark on
+     bright-accent themes), while this gradient is deep red on every dark ramp. */
+  --danger-btn-text-color: #fff;
   --danger-btn-hover-filter: brightness(1.12) saturate(1.08);
   --danger-btn-active-filter: brightness(0.88) saturate(1.05);
   /* Gloss buttons are rimless by default; themes whose source UI rims its
@@ -3137,7 +3139,7 @@ body.no-document .app-header-right > .app-header-project {
   }
 }
 
-.all-sections-collapsed > .panel-resize-handle {
+.has-collapsed-section > .panel-resize-handle::before {
   display: none;
 }
 
@@ -3463,23 +3465,32 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 .library-window > .flyout-section > .section-header {
   border-bottom: unset;
 }
-.library-window > .flyout-section > .section-header > .section-header-title > .section-header-title-text {
-  text-transform: none;
-}
 .library-window > .flyout-section > .section-content {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.library-window.has-library.has-flyout > .flyout-section {
+.library-window.is-split > .flyout-section {
+  max-height: var(--library-flyout-max, 80%);
+}
+.library-window.is-split.has-chosen-split > .flyout-section {
   flex: 0 0 var(--library-flyout-share, 50%);
 }
-.library-window.has-library.has-flyout > .section.design-gallery-section {
+.library-window.is-split > .section.main-section.design-gallery-section.is-open {
   flex: 1 1 0;
 }
+.library-window > .flyout-section:not(.is-open) {
+  flex: 0 0 auto;
+}
+.library-window > .section.property-section.flyout-section:not(.is-open) > .section-content {
+  display: none;
+}
+.library-window > .flyout-section > .section-header > .section-header-actions > .section-header-action.collapsed .icon {
+  transform: rotate(-90deg);
+}
 
-.library-window:not(.has-library) > .flyout-section {
+.library-window:not(.has-library) > .flyout-section.is-open {
   flex: 1 1 0;
 }
 
@@ -3523,11 +3534,20 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 }
 
 @media (min-width: 1041px) {
-  .library-window.has-library.has-flyout {
+  .library-window.is-split {
     gap: 0;
   }
-  .library-window.has-library.has-flyout > .library-split-handle {
+  .library-window.is-split > .library-split-handle {
     display: block;
+  }
+  .library-window > .flyout-section > .section-header {
+    cursor: pointer;
+  }
+  .library-window > .flyout-section > .section-header:not(:disabled):hover {
+    filter: var(--bar-hover-filter);
+  }
+  .library-window > .flyout-section > .section-header:not(:disabled):active {
+    filter: var(--bar-active-filter);
   }
 }
 .library-back-action {
@@ -4955,7 +4975,8 @@ body.is-booting .workspace-start button {
   align-items: center;
   gap: var(--spacing-sm);
   min-width: 0;
-  min-height: calc(var(--row-height) + var(--spacing-sm) * 2 + 2px);
+  box-sizing: border-box;
+  height: calc(var(--control-height) + var(--spacing-sm) * 2 + 2px);
   white-space: nowrap;
   cursor: default;
   animation: canvas-activity-in var(--transition-fast) ease-out;
@@ -4994,8 +5015,18 @@ body.is-booting .workspace-start button {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 }
-.canvas-activity > .btn-text {
+.canvas-activity.has-actions {
+  padding-inline-end: var(--spacing-sm);
+}
+.canvas-activity > .canvas-activity-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   flex: 0 0 auto;
+  align-self: stretch;
+  margin-inline-start: var(--spacing-xs);
+  padding-inline-start: var(--spacing-sm);
+  border-inline-start: 1px solid var(--color-border);
 }
 .canvas-activity.has-mode > .inline-processing-status {
   position: absolute;
@@ -5164,11 +5195,11 @@ body.is-booting .workspace-start button {
   transition-delay: 0s;
 }
 
-:where(.preview-controls-view, [data-context-toolbar]) .btn-icon {
+:where(.preview-controls-view, .canvas-activity-actions, [data-context-toolbar]) .btn-icon {
   width: var(--control-height);
   height: var(--control-height);
 }
-:where(.preview-controls-view, [data-context-toolbar]) .btn-icon > svg.icon {
+:where(.preview-controls-view, .canvas-activity-actions, [data-context-toolbar]) .btn-icon > svg.icon {
   font-size: calc(var(--control-height) * 0.7);
 }
 
@@ -6255,7 +6286,6 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
   gap: var(--spacing-base);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
   color: var(--color-text-secondary);
 }
 .section > .section-header > .section-header-title > .section-header-title-icon {
@@ -6266,6 +6296,19 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.section > .section-header > .section-header-title > .section-header-title-detail {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  flex: 0 1 auto;
+  color: var(--bar-icon-color);
+  font-weight: var(--font-weight-normal);
+}
+.section > .section-header > .section-header-title > .section-header-title-detail:empty {
+  display: none;
 }
 .section > .section-header > .section-header-title > .locked-layer-badge {
   flex-shrink: 0;
@@ -6358,7 +6401,7 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 .section.collapsible-section > .section-content.visible {
   display: block;
 }
-.section.collapsible-section:not(.design-gallery-section) > .section-header {
+.section.collapsible-section > .section-header {
   cursor: pointer;
 }
 @media (min-width: 1041px) {
@@ -6498,7 +6541,7 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
   }
 }
 .design-panel > .section.inspector-section > .section-header > .section-header-title > .section-header-title-text {
-  text-transform: none;
+  flex-shrink: 0;
 }
 .design-panel > .section.inspector-section > .inspector-switch {
   flex: 0 0 auto;

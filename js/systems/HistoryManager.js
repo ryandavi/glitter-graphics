@@ -154,8 +154,21 @@ class HistoryManager {
 		}
 	}
 
+	// The steps of the open session, when it keeps its own (a pending crop).
+	// They are not document history: leaving the session drops them.
+	sessionHistory() {
+		return getSessionDefinition(this.editor)?.history?.(this.editor) || null;
+	}
+
 	async undo() {
 		if (!this.canUndo()) {
+			return;
+		}
+
+		const session = this.sessionHistory();
+		if (session) {
+			session.undo();
+			this.updateButtons();
 			return;
 		}
 
@@ -166,6 +179,13 @@ class HistoryManager {
 
 	async redo() {
 		if (!this.canRedo()) {
+			return;
+		}
+
+		const session = this.sessionHistory();
+		if (session) {
+			session.redo();
+			this.updateButtons();
 			return;
 		}
 
@@ -192,27 +212,32 @@ class HistoryManager {
 		// A restore while an Auto Glitter session is open would rebuild the
 		// layer stack under the ephemeral preview batch.
 		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
+		const session = this.sessionHistory();
+		if (session) return session.canUndo;
 		return this.historyIndex > 0;
 	}
 
 	canRedo() {
 		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
+		const session = this.sessionHistory();
+		if (session) return session.canRedo;
 		return this.historyIndex >= 0 && this.historyIndex < this.history.length - 1;
 	}
 
 	updateButtons() {
 		const undoButton = document.getElementById('undoTool');
 		const redoButton = document.getElementById('redoTool');
+		const session = this.sessionHistory();
 
 		if (undoButton) {
 			undoButton.disabled = !this.canUndo();
-			const label = this.canUndo() ? this.history[this.historyIndex]?.label : null;
+			const label = this.canUndo() && !session ? this.history[this.historyIndex]?.label : null;
 			undoButton.title = label ? `Undo ${label}` : 'Undo';
 		}
 
 		if (redoButton) {
 			redoButton.disabled = !this.canRedo();
-			const label = this.canRedo() ? this.history[this.historyIndex + 1]?.label : null;
+			const label = this.canRedo() && !session ? this.history[this.historyIndex + 1]?.label : null;
 			redoButton.title = label ? `Redo ${label}` : 'Redo';
 		}
 	}

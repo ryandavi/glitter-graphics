@@ -43,7 +43,7 @@
 
 			font-size: var(--font-size-base);
 			font-weight: var(--font-weight-semibold);
-			text-transform: uppercase;
+			// Natural case on every bar: some name a layer or its text.
 			color: var(--color-text-secondary);
 
 
@@ -55,6 +55,17 @@
 
 			>.section-header-title-text {
 				@include truncate;
+			}
+
+			// The Inspector's bar names the kind of layer, then the layer.
+			>.section-header-title-detail {
+				@include truncate;
+				@include text-sm;
+				flex: 0 1 auto;
+				color: var(--bar-icon-color);
+				font-weight: var(--font-weight-normal);
+
+				&:empty { display: none; }
 			}
 
 			// The Inspector's bar marks a locked selection.
@@ -187,10 +198,11 @@
 			}
 		}
 
-		// The bar is the toggle, except the Library's: its window opens and
-		// closes, it never collapses.
-		&:not(.design-gallery-section) >.section-header { cursor: pointer; }
+		// The bar is the toggle.
+		>.section-header { cursor: pointer; }
 
+		// The Library's bar holds its view menu, which a hover filter on the
+		// bar would tint along with it.
 		@media (min-width: ($mobile-breakpoint + 1px)) {
 			&:not(.design-gallery-section) { @include windows7-bar(true); }
 		}
@@ -311,8 +323,8 @@
 			> .inspector-body { border-top: 1px solid var(--color-border); }
 		}
 
-		// The bar reads a layer's own name, so it keeps its case.
-		> .section-header > .section-header-title > .section-header-title-text { text-transform: none; }
+		// The kind of layer always shows whole; the layer's name gives way.
+		> .section-header > .section-header-title > .section-header-title-text { flex-shrink: 0; }
 
 		// Shown when a tool's settings and the layer's properties are both
 		// available (syncInspectorHeader).

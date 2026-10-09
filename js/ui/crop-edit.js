@@ -23,8 +23,8 @@ class CropEditSession {
 		editor.canvasBounds?.clear();
 		editor.setDocumentSizeMode('canvas');
 		const session = getSessionDefinition(editor);
-		editor.notifications.setMode({ ...session.mode, onExit: () => editor.cancelCanvasBounds() });
-		this.render();
+		editor.notifications.setMode({ ...session.mode, exitLabel: 'Cancel crop (Esc)', onExit: () => editor.cancelCanvasBounds(), confirmLabel: 'Apply crop (Enter)', onConfirm: () => editor.applyCanvasBounds() });
+		editor.syncCanvasBoundsViews();
 		this.fitFrame = requestAnimationFrame(() => {
 			this.fitFrame = null;
 			this.fitView();
@@ -90,7 +90,7 @@ class CropEditSession {
 		const handle = this.chrome?.hitTest(input.clientX, input.clientY, input.pointerType) || 'draw';
 		const rect = { ...this.editor.canvasBounds.rect };
 		const metrics = { corners: [{ x: rect.x, y: rect.y }, { x: rect.x + rect.width, y: rect.y }, { x: rect.x + rect.width, y: rect.y + rect.height }, { x: rect.x, y: rect.y + rect.height }], centerX: rect.x + rect.width / 2, centerY: rect.y + rect.height / 2 };
-		this.drag = { handle, rect, source: this.editor.canvasBounds.source, point, client: { x: input.clientX, y: input.clientY }, handleStart: getFrameHandlePoint(metrics, handle) };
+		this.drag = { handle, rect, point, client: { x: input.clientX, y: input.clientY }, handleStart: getFrameHandlePoint(metrics, handle) };
 	}
 	move(input) {
 		const drag = this.drag;
@@ -99,7 +99,8 @@ class CropEditSession {
 		const point = editor.viewport.screenToCanvas(input.clientX, input.clientY);
 		const bounds = editor.canvasBounds;
 		if (!bounds) return;
-		const locked = resolveAspectLock({ proportionalScale: Boolean(bounds.ratio) }, input);
+		bounds.beginStep();
+		const locked =resolveAspectLock({ proportionalScale: Boolean(bounds.ratio) }, input);
 		const ratio = locked ? bounds.ratio || { w: drag.rect.width, h: drag.rect.height } : null;
 		if (drag.handle === 'move') {
 			const moved = { x: drag.rect.x + point.x - drag.point.x, y: drag.rect.y + point.y - drag.point.y };
@@ -124,14 +125,9 @@ class CropEditSession {
 			bounds.setRect(resizeRectFromHandle(drag.rect, drag.handle, snapped, { ratio, fromCenter: input.altKey }));
 		}
 	}
-	release(input) { if (input) this.move(input); this.drag = null; this.editor.clearSmartGuides(); }
+	release(input) { if (input) this.move(input); this.drag = null; this.editor.canvasBounds?.endStep(); this.editor.clearSmartGuides(); }
 	cancelDrag() {
-		if (this.drag && this.editor.canvasBounds) {
-			const { rect, source } = this.drag;
-			this.editor.canvasBounds.setRect(rect);
-			this.editor.canvasBounds.setSource(source);
-		}
-		this.drag = null; this.editor.clearSmartGuides();
+		this.drag = null; this.editor.canvasBounds?.cancelStep(); this.editor.clearSmartGuides();
 	}
 	handlePointerDown(event) {
 		if (event.pointerType === 'touch' || event.button !== 0 || this.editor.currentTool !== ToolType.CROP || event.target.closest('.ui-ignore-gestures')) return;
@@ -149,6 +145,6 @@ class CropEditSession {
 		const bounds = this.editor.canvasBounds;
 		if (!bounds) return;
 		const step = event.shiftKey ? CONFIG.ui.nudge.fastStep : CONFIG.ui.nudge.step;
-		bounds.setRect({ ...bounds.rect, x: bounds.rect.x + (event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0), y: bounds.rect.y + (event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0) });
+		bounds.setRect({ ...bounds.rect, x: bounds.rect.x + (event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0), y: bounds.rect.y + (event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0) }, 'nudge');
 	}
 }

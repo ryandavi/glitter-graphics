@@ -404,8 +404,9 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	@include mobile { display: none; }
 }
 
-// A collapsed column keeps its width; its handle returns with its content.
-.all-sections-collapsed > .panel-resize-handle { display: none; }
+// With a section collapsed the column stops short of its handle, so the grip
+// would hang over the canvas. The handle itself still resizes the column.
+.has-collapsed-section > .panel-resize-handle::before { display: none; }
 
 body.is-resizing-panel {
 	cursor: col-resize !important;

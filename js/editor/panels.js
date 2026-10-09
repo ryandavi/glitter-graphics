@@ -404,11 +404,18 @@ isLayerContentLocked(layer) {
 		if (session) title = { icon: session.icon, text: session.title };
 		else if (!this.originalImage) title = { ...title };
 		else if (count > 1) title = { icon: 'layers', text: `${count} layers` };
-		else if (active) title = { icon: PANEL_SCHEMAS[active.type].section.icon, text: describeLayer(active, this).name };
+		else if (active) {
+			// The kind of layer, then its name: a fill layer is named by its paint
+			// (a glitter, a hex colour), which alone does not read as a title.
+			const name = describeLayer(active, this).name;
+			const kind = LAYER_UI_CONFIG[active.type]?.displayName || name;
+			title = { icon: PANEL_SCHEMAS[active.type].section.icon, text: kind, name: name === kind ? '' : name };
+		}
 		else title = { icon: PANEL_SCHEMAS[LayerType.BASE_IMAGE].section.icon, text: 'Canvas' };
 		icon.setAttribute('href', `#icon-${title.icon}`);
 		// As the phone's sheet the bar names the open section (MobileManager).
 		text.textContent = text.dataset.sheetSection || title.text;
+		document.getElementById('inspectorTitleName').textContent = text.dataset.sheetSection ? '' : title.name || '';
 		badge.replaceChildren(...(session?.badge ? [buildFeatureBadge(session.badge)] : []));
 
 		const names = this.getVisibleSwitchPanels();

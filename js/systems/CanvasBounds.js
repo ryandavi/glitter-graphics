@@ -17,6 +17,68 @@ class CanvasBounds {
 		this.editor = editor;
 		this.sync = sync;
 		Object.assign(this, this.defaults());
+		// Steps of the pending bounds; they last as long as the bounds do.
+		this.undoStack = [];
+		this.redoStack = [];
+		this.step = null;
+		this.stepKey = null;
+		this.changing = false;
+	}
+
+	snapshot() {
+		const { rect, source, padding, ratio, extension } = this;
+		return { rect: { ...rect }, source, padding, ratio: ratio && { ...ratio }, extension: { ...extension } };
+	}
+
+	record(before) {
+		if (JSON.stringify(before) === JSON.stringify(this.snapshot())) return false;
+		this.undoStack.push(before);
+		this.redoStack.length = 0;
+		return true;
+	}
+
+	// Every edit goes through here, so each is one undo step. Repeating a key
+	// (a held arrow, a typed size) extends the step it started; an open step
+	// (a drag) records once, when it ends.
+	change(apply, key = null) {
+		if (this.changing) { apply(); return; }
+		const before = this.snapshot();
+		this.changing = true;
+		try { apply(); } finally { this.changing = false; }
+		if (!this.step && !(key && key === this.stepKey) && this.record(before)) this.stepKey = key;
+		this.sync();
+	}
+
+	beginStep() { this.step ||= this.snapshot(); }
+	endStep() {
+		if (this.step) this.record(this.step);
+		this.step = null;
+		this.stepKey = null;
+		this.sync();
+	}
+	cancelStep() {
+		const before = this.step;
+		this.step = null;
+		if (before) this.restore(before);
+	}
+
+	restore(state) {
+		Object.assign(this, state);
+		this.stepKey = null;
+		this.sync();
+	}
+
+	get canUndo() { return this.undoStack.length > 0; }
+	get canRedo() { return this.redoStack.length > 0; }
+	undo() {
+		if (!this.canUndo) return;
+		this.redoStack.push(this.snapshot());
+		this.restore(this.undoStack.pop());
+	}
+	redo() {
+		if (!this.canRedo) return;
+		this.undoStack.push(this.snapshot());
+		this.restore(this.redoStack.pop());
 	}
 
 	defaults() {
@@ -29,15 +91,16 @@ class CanvasBounds {
 		};
 	}
 
-	setRect(rect) {
-		this.rect = Object.fromEntries(Object.entries(rect).map(([key, value]) => [key, Math.round(value)]));
-		this.source = 'custom';
-		this.sync();
+	setRect(rect, stepKey = null) {
+		this.change(() => {
+			this.rect = Object.fromEntries(Object.entries(rect).map(([key, value]) => [key, Math.round(value)]));
+			this.source = 'custom';
+		}, stepKey);
 	}
 
-	setSize(width, height, anchor = { fx: 0.5, fy: 0.5 }) {
+	setSize(width, height, anchor = { fx: 0.5, fy: 0.5 }, stepKey = null) {
 		width = Math.round(width); height = Math.round(height);
-		this.setRect({ x: this.rect.x + (this.rect.width - width) * anchor.fx, y: this.rect.y + (this.rect.height - height) * anchor.fy, width, height });
+		this.setRect({ x: this.rect.x + (this.rect.width - width) * anchor.fx, y: this.rect.y + (this.rect.height - height) * anchor.fy, width, height }, stepKey);
 	}
 
 	refreshSource() {
@@ -49,23 +112,28 @@ class CanvasBounds {
 
 	setSource(source) {
 		if (!CANVAS_BOUNDS_SOURCES.some((entry) => entry.id === source)) return;
-		this.source = source;
-		if (source !== 'custom') this.ratio = null;
-		this.refreshSource();
-		this.sync();
+		this.change(() => {
+			this.source = source;
+			if (source !== 'custom') this.ratio = null;
+			this.refreshSource();
+		});
 	}
 
-	setPadding(value) { this.padding = Math.max(0, Math.round(value) || 0); this.refreshSource(); this.sync(); }
+	setPadding(value) { this.change(() => { this.padding = Math.max(0, Math.round(value) || 0); this.refreshSource(); }, 'padding'); }
 	setRatio(ratio) {
-		this.ratio = ratio && ratio.w > 0 && ratio.h > 0 ? { ...ratio } : null;
-		if (this.ratio) this.setSize(this.rect.width, this.rect.width * this.ratio.h / this.ratio.w);
-		else this.sync();
+		this.change(() => {
+			this.ratio = ratio && ratio.w > 0 && ratio.h > 0 ? { ...ratio } : null;
+			if (this.ratio) this.setSize(this.rect.width, this.rect.width * this.ratio.h / this.ratio.w);
+		});
 	}
 	swapOrientation() {
-		if (this.ratio) this.ratio = { w: this.ratio.h, h: this.ratio.w };
-		this.setSize(this.rect.height, this.rect.width);
+		this.change(() => {
+			if (this.ratio) this.ratio = { w: this.ratio.h, h: this.ratio.w };
+			this.setSize(this.rect.height, this.rect.width);
+		});
 	}
-	setExtension(extension) { this.extension = { ...this.extension, ...extension }; this.sync(); }
+	// A dragged color well reports every color it passes: one step.
+	setExtension(extension) { this.change(() => { this.extension = { ...this.extension, ...extension }; }, extension.mode ? null : 'extension-color'); }
 	validate() {
 		this.refreshSource();
 		return this.sourceAvailable ? validateCanvasSize(this.rect.width, this.rect.height) : { ok: false, message: 'There is no artwork to fit.' };

@@ -94,7 +94,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		const bounds = this.ensureCanvasBounds();
 		const size = { width: bounds.rect.width, height: bounds.rect.height, [axis]: value + (relative ? this.originalCanvas[axis] : 0) };
 		if (bounds.ratio) size[axis === 'width' ? 'height' : 'width'] = axis === 'width' ? size.width * bounds.ratio.h / bounds.ratio.w : size.height * bounds.ratio.w / bounds.ratio.h;
-		bounds.setSize(size.width, size.height, ANCHOR_POINTS.find((point) => point.id === this.documentSize.anchor));
+		bounds.setSize(size.width, size.height, ANCHOR_POINTS.find((point) => point.id === this.documentSize.anchor), `size-${axis}`);
 	},
 	setCanvasBoundsRatio(id) {
 		const option = getCanvasRatioOptions(this).find((option) => option.id === id);
@@ -201,7 +201,9 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		const colorRow = document.getElementById('canvasExtensionColorRow'); if (colorRow) colorRow.hidden = extension.mode !== 'color';
 		const paddingRow = document.getElementById('canvasBoundsPaddingRow'); if (paddingRow) paddingRow.hidden = bounds?.source === 'custom' || !bounds;
 		const note = document.getElementById('canvasSizeLimitMessage'); if (note) note.textContent = result?.message || '';
-		['canvasSizeApply', 'contextCropDone'].forEach((id) => { const node = document.getElementById(id); if (node) node.disabled = !bounds || !result?.ok; });
+		const applyButton = document.getElementById('canvasSizeApply'); if (applyButton) applyButton.disabled = !bounds || !result?.ok;
+		if (this.getActiveSession() === 'crop') this.notifications.setConfirmEnabled(Boolean(result?.ok));
+		this.updateHistoryButtons();
 		if (this.originalImage) {
 			const ratio = document.getElementById('canvasBoundsRatio');
 			if (ratio) {

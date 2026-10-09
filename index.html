@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=05883241">
+	<link rel="stylesheet" href="css/style.css?v=217881ac">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -336,6 +336,7 @@
 										<use id="inspectorTitleIcon" href="#icon-sliders"></use>
 									</svg></span>
 								<span class="section-header-title-text" id="inspectorTitleText">Properties</span>
+								<span class="section-header-title-detail" id="inspectorTitleName"></span>
 								<span class="inspector-title-badge" id="inspectorTitleBadge"></span>
 								<span class="locked-layer-badge" id="inspectorLockedBadge" hidden>Locked</span>
 							</h3>
@@ -400,9 +401,10 @@
 								<span class="section-header-title-text" id="flyoutTitleText"></span>
 							</h3>
 							<div class="section-header-actions">
-								<span class="flyout-switch" id="flyoutSwitch"></span>
-								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutReset" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
-								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutClose" title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
+								<span class="flyout-switch" id="flyoutSwitch" data-no-accordion-toggle="true"></span>
+								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutReset" data-no-accordion-toggle="true" hidden><svg class="icon"><use href="#icon-reset"></use></svg></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="flyoutToggle" title="Collapse section"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Collapse</span></button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper visible" id="flyoutClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 						</div>
 						<div class="section-content" id="flyoutBody"></div>
@@ -461,6 +463,7 @@
 										<span class="name">Search</span>
 									</span>
 								</button>
+								<button type="button" class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="designGalleryToggle" title="Collapse section"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Collapse</span></button>
 								<button type="button" class="section-header-action btn-icon icon-wrapper library-close-action visible" id="libraryWindowClose" data-no-accordion-toggle="true" title="Close (Esc)" aria-label="Close the Library"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button>
 							</div>
 
@@ -620,7 +623,10 @@
 										<span class="feature-badge feature-badge-beta" id="canvasActivityModeBadge" hidden></span>
 									</span>
 									<span id="canvasActivityStatus" aria-live="polite"></span>
-									<button class="btn-text" id="canvasActivityExit" type="button" hidden>Exit</button>
+									<span class="canvas-activity-actions" id="canvasActivityActions" hidden>
+										<button class="btn-icon icon-wrapper secondary" id="canvasActivityExit" type="button" title="Exit" hidden><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Exit</span></button>
+										<button class="btn-icon icon-wrapper primary" id="canvasActivityConfirm" type="button" hidden><svg class="icon"><use href="#icon-check"></use></svg><span class="name"></span></button>
+									</span>
 								</div>
 							</div>
 							<div class="preview-controls-stack">
@@ -1779,14 +1785,14 @@
 	<script src="js/core/fields.js?v=9ea0efc4"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=96639c4d"></script>
+	<script src="js/core/config.js?v=bf48a4c8"></script>
 	<script src="js/core/tools.js?v=ec345147"></script>
-	<script src="js/core/sessions.js?v=43a32f03"></script>
+	<script src="js/core/sessions.js?v=5eb4597c"></script>
 	<script src="js/core/layer-types.js?v=6a76bc6d"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=c9aacabf"></script>
 	<script src="js/effects/animation.js?v=17119e84"></script>
-	<script src="js/systems/CanvasBounds.js?v=b377bf55"></script>
+	<script src="js/systems/CanvasBounds.js?v=13cd842c"></script>
 	<script src="js/ui/panel-schemas.js?v=e33dc8c0"></script>
 	<script src="js/paint/paint-slots.js?v=e05a9c48"></script>
 	<script src="js/layers/types/base-image.js?v=aff54838"></script>
@@ -1871,9 +1877,9 @@
 	<script src="js/editor/export-flow.js?v=139644d1"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=34be9b4b"></script>
-	<script src="js/editor/panels.js?v=32931064"></script>
+	<script src="js/editor/panels.js?v=2f3c8a6b"></script>
 	<script src="js/editor/fill-tool.js?v=2c4e6971"></script>
-	<script src="js/editor/disclosures.js?v=649823d5"></script>
+	<script src="js/editor/disclosures.js?v=9c20ac59"></script>
 	<script src="js/ui/panel-resize.js?v=970297d7"></script>
 	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
 	<script src="js/editor/transform-interaction.js?v=dbbff5f8"></script>
@@ -1882,14 +1888,14 @@
 		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
 	<script src="js/editor/layer-panel.js?v=3efaa4cb"></script>
 	<script src="js/editor/canvas-gestures.js?v=46918e0a"></script>
-	<script src="js/editor/canvas-size.js?v=3342b973"></script>
+	<script src="js/editor/canvas-size.js?v=cb9a1432"></script>
 	<script src="js/editor/canvas-resize.js?v=0fd34a17"></script>
-		<script src="js/ui/hints.js?v=c5e5a1d6"></script>
-	<script src="js/ui/library-window.js?v=35bee994"></script>
+		<script src="js/ui/hints.js?v=40cdc72a"></script>
+	<script src="js/ui/library-window.js?v=a73d502e"></script>
 	<script src="js/ui/picker-session.js?v=58e42fef"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=e79cafca"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
-	<script src="js/ui/notify.js?v=fdcf54f7"></script>
+	<script src="js/ui/notify.js?v=167b89e0"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
@@ -1914,8 +1920,8 @@
 	<script src="js/transforms/transform-gestures.js?v=8e167cf4"></script>
 	<script src="js/transforms/selection-chrome.js?v=71ec7b3c"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
-	<script src="js/systems/ViewportManager.js?v=cc065a35"></script>
-	<script src="js/systems/HistoryManager.js?v=22004311"></script>
+	<script src="js/systems/ViewportManager.js?v=c2b229c7"></script>
+	<script src="js/systems/HistoryManager.js?v=641bbfcc"></script>
 	<script src="js/export/ProjectSerializer.js?v=fc1570ca"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
@@ -1951,7 +1957,7 @@
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=764b8297"></script>
-	<script src="js/ui/crop-edit.js?v=a487b222"></script>
+	<script src="js/ui/crop-edit.js?v=b393f9d0"></script>
 	<script src="js/ui/path-edit.js?v=e5ecbff5"></script>
 	<script src="js/layers/TextGlitterManager.js?v=6715c3b9"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=aea8d68a"></script>
@@ -1962,7 +1968,7 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=ab72c45e"></script>
+		<script src="js/systems/MobileManager.js?v=e0c45d32"></script>
 
 	<!-- App -->
 	<script src="js/app.js?v=c47ad2c4"></script>

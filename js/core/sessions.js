@@ -1,11 +1,13 @@
 'use strict';
 
 // An edit session owns its keys; adding a session adds no command dispatch branch.
+// A session with steps of its own returns them from `history` ({ undo, redo,
+// canUndo, canRedo }) and takes Undo and Redo for as long as it lasts.
 const SESSIONS = Object.freeze([
 	{ id: 'autoGlitter', isActive: editor => editor.autoGlitterManager.isSessionActive(),
 		cancel: editor => editor.autoGlitterManager.requestDiscardSession(),
 		allows: (editor, command) => command.group === 'View' || (command.group === 'Tools' && editor.autoGlitterManager.allowsPreviewTool(command.tool)) },
-	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event) },
+	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event), history: (editor) => editor.canvasBounds },
 	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession),
 		mode: { label: 'Text', icon: 'text' }, end: editor => editor.textGlitterManager.endTextEdit(), cancel: (editor) => editor.textGlitterManager.endTextEdit() },
 	{ id: 'pathEdit', isActive: (editor) => Boolean(editor.pathEdit?.session),

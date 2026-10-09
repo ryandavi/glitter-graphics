@@ -709,7 +709,7 @@ const CONFIG = deepFreeze({
 		// Arrow-key layer nudges within this window share one history entry.
 		history: { coalesceMs: 150 },
 		scrollbar: { hideDelayMs: 800, pageFraction: 0.875, pageRepeatDelayMs: 400, pageRepeatMs: 60 },
-		independentCollapsibleSections: ['layersPanel', 'inspector'],
+		independentCollapsibleSections: ['layersPanel', 'inspector', 'flyout', 'designGallery'],
 		// The Library's Recent strip, per asset kind.
 		library: {
 			recentCount: 12,
@@ -809,9 +809,7 @@ const CONFIG = deepFreeze({
 			{ id: 'cropEditControls', session: 'crop', when: editor => editor.getActiveSession() === 'crop', controls: [
 				{ kind: 'button', id: 'contextCropRatio', icon: 'crop', name: 'Ratio', title: 'Crop ratio or size', action: 'canvasBoundsRatioMenu' },
 				{ kind: 'button', id: 'contextCropSwap', icon: 'swap', name: 'Swap', title: 'Swap orientation', action: 'canvasBoundsSwap' },
-				{ kind: 'button', id: 'contextCropFit', icon: 'fit-screen', name: 'Fit', title: 'Fit crop bounds', action: 'canvasBoundsFitMenu' },
-				{ kind: 'button', id: 'contextCropCancel', icon: 'x-mark', name: 'Cancel', title: 'Cancel (Esc)', action: 'canvasBoundsCancel' },
-				{ kind: 'button', id: 'contextCropDone', icon: 'check', name: 'Done', title: 'Apply crop (Enter)', action: 'canvasBoundsApply' }
+				{ kind: 'button', id: 'contextCropFit', icon: 'fit-screen', name: 'Fit', title: 'Fit crop bounds', action: 'canvasBoundsFitMenu' }
 			] },
 			{ id: 'pathEditControls', session: 'pathEdit', when: editor => editor.getActiveSession() === 'pathEdit', controls: [
 				{ kind: 'segmented', id: 'contextPathNextPoint', label: 'Next point', options: [

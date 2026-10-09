@@ -342,6 +342,7 @@ class MobileManager {
 		}
 		title.dataset.sheetSection = entry.title;
 		title.textContent = entry.title;
+		document.getElementById('inspectorTitleName').textContent = '';
 		[entry.element, ...(entry.extras || [])].forEach((element) => {
 			element.classList.add('is-sheet-open');
 			element.parentElement.closest('.property-group')?.classList.add('has-sheet-open');

@@ -175,7 +175,7 @@ async function main() {
 		await touch('touchEnd', []);
 		assert(await phone.page.evaluate((zoom) => editor.viewport.currentZoom > zoom, before.zoom), 'crop pinch did not zoom viewport');
 		assert.deepStrictEqual(await phone.page.evaluate(() => ({ ...editor.canvasBounds.rect })), pending, 'pinch changed pending crop');
-		assert(await phone.page.locator('#contextCropDone').isVisible());
+		assert(await phone.page.locator('#canvasActivityConfirm').isVisible());
 		await phone.page.evaluate(() => {
 			editor.beginActivity('overlay-test', 'Updating preview');
 			const mobile = editor.mobileManager;
@@ -194,11 +194,11 @@ async function main() {
 			});
 		}), 'Phone activity, view menu and Crop bar share the page center with a drawer open');
 		assert(await phone.page.evaluate(() => {
-			const button = document.getElementById('contextCropCancel');
+			const button = document.getElementById('canvasActivityExit');
 			const box = button.getBoundingClientRect();
 			return button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
 		}), 'Crop completion controls remain accessible above the open drawer');
-		await phone.page.locator('#contextCropCancel').click();
+		await phone.page.locator('#canvasActivityExit').click();
 		assert(await phone.page.evaluate(() => !editor.canvasBounds && editor.currentTool === ToolType.SELECT));
 		assert.deepStrictEqual(phone.errors, []);
 		await phone.context.close();

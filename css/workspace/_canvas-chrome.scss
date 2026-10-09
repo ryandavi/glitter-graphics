@@ -124,15 +124,17 @@
 	align-items: center;
 	gap: var(--spacing-sm);
 	min-width: 0;
-	// Matches the cluster beside it: its buttons plus floating-ui padding.
-	min-height: calc(var(--row-height) + var(--spacing-sm) * 2 + 2px);
+	// As tall as the view cluster and the context bars: one control, the
+	// floating-ui padding and its border.
+	box-sizing: border-box;
+	height: calc(var(--control-height) + var(--spacing-sm) * 2 + 2px);
 	white-space: nowrap;
 	cursor: default;
 	animation: canvas-activity-in var(--transition-fast) ease-out;
 	@include floating-ui;
 	padding-inline: var(--spacing-md);
 
-	// When the pill is squeezed the labels give way; the spinner and Exit never do.
+	// When the pill is squeezed the labels give way; the spinner and the buttons never do.
 	>.canvas-activity-mode {
 		display: flex;
 		align-items: center;
@@ -165,13 +167,26 @@
 		font-size: var(--font-size-sm);
 	}
 
-	>.btn-text { flex: 0 0 auto; }
+	// Leaving and committing the mode: the bars' own icon buttons, cancel then
+	// commit, set off from the mode's name and flush with the pill's padding.
+	&.has-actions { padding-inline-end: var(--spacing-sm); }
+
+	>.canvas-activity-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		flex: 0 0 auto;
+		align-self: stretch;
+		margin-inline-start: var(--spacing-xs);
+		padding-inline-start: var(--spacing-sm);
+		border-inline-start: 1px solid var(--color-border);
+	}
 
 	&.has-mode >.inline-processing-status { @include visually-hidden; }
 	&.is-busy >.canvas-activity-mode >.icon-wrapper >.icon { visibility: hidden; }
 
 	// A narrow workspace (a phone, or a laptop with both panels open): the mode
-	// keeps the mode icon and Exit, or the standalone status spinner.
+	// keeps the mode icon and its buttons, or the standalone status spinner.
 	@container canvastop (max-width: 640px) {
 		>.canvas-activity-mode >strong,
 		>.canvas-activity-mode >.feature-badge { display: none; }

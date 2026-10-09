@@ -25,7 +25,9 @@ class NotificationCenter {
 			pillModeLabel: 'canvasActivityModeLabel',
 			pillModeBadge: 'canvasActivityModeBadge',
 			pillStatus: 'canvasActivityStatus',
-			pillExit: 'canvasActivityExit'
+			pillActions: 'canvasActivityActions',
+			pillExit: 'canvasActivityExit',
+			pillConfirm: 'canvasActivityConfirm'
 		});
 		this.toast = nodes.toast;
 		this.errorText = nodes.errorText;
@@ -42,6 +44,7 @@ class NotificationCenter {
 		this.activitySuspended = false;
 		initializeInlineProcessingStatus(nodes.pillStatus);
 		nodes.pillExit?.addEventListener('click', () => this.mode?.onExit?.());
+		nodes.pillConfirm?.addEventListener('click', () => this.mode?.onConfirm?.());
 	}
 
 	// Returns an idempotent `done`. Beginning a key that is already running
@@ -68,11 +71,22 @@ class NotificationCenter {
 		if (this.activities.delete(key)) this.syncActivity();
 	}
 
-	// A session mode (Auto Glitter) occupies the pill for as long as it lasts:
-	// { label, icon, badge, exitLabel, onExit }, or null to leave the mode.
+	// A session mode (Auto Glitter, Crop) occupies the pill for as long as it
+	// lasts: { label, icon, badge, exitLabel, onExit, confirmLabel, onConfirm },
+	// or null to leave the mode. Leaving and committing a mode live here, not in
+	// its context bar.
 	setMode(mode) {
 		this.mode = mode || null;
-		const { pillMode, pillModeIcon, pillModeLabel, pillModeBadge, pillExit } = this.pill;
+		const { pill, pillMode, pillModeIcon, pillModeLabel, pillModeBadge, pillActions, pillExit, pillConfirm } = this.pill;
+		const hasActions = Boolean(this.mode?.onExit || this.mode?.onConfirm);
+		if (pillActions) pillActions.hidden = !hasActions;
+		pill?.classList.toggle('has-actions', hasActions);
+		if (pillConfirm) {
+			pillConfirm.hidden = !this.mode?.onConfirm;
+			pillConfirm.disabled = false;
+			// Icon only: the label is the tooltip and the accessible name.
+			pillConfirm.title = pillConfirm.querySelector('.name').textContent = this.mode?.confirmLabel || 'Done';
+		}
 		if (pillMode) {
 			pillMode.hidden = !this.mode;
 			// The label gives way in a narrow workspace; the name stays reachable.
@@ -92,9 +106,13 @@ class NotificationCenter {
 				pillModeBadge.hidden = !this.mode.badge;
 				pillModeBadge.textContent = this.mode.badge || '';
 			}
-			if (pillExit) pillExit.textContent = this.mode.exitLabel || 'Exit';
+			if (pillExit) pillExit.title = pillExit.querySelector('.name').textContent = this.mode.exitLabel || 'Exit';
 		}
 		this.renderActivity();
+	}
+
+	setConfirmEnabled(enabled) {
+		if (this.pill.pillConfirm) this.pill.pillConfirm.disabled = !enabled;
 	}
 
 	// The export card takes over the pill's slot while it is open.

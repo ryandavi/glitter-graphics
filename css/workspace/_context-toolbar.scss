@@ -74,8 +74,8 @@
 
 }
 
-// View and context controls share the same button scale.
-:where(.preview-controls-view, [data-context-toolbar]) {
+// View, mode and context controls share the same button scale.
+:where(.preview-controls-view, .canvas-activity-actions, [data-context-toolbar]) {
 	.btn-icon {
 		width: var(--control-height);
 		height: var(--control-height);
