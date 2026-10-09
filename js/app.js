@@ -527,6 +527,7 @@ class GlitterEditor {
 		});
 
 		document.getElementById(getToolButtonId(tool))?.classList.add('active');
+		this.mobileManager?.syncToolSwitch();
 
 		// Update Cursors (each tool declares its canvas cursor classes)
 		const definition = TOOLS[tool];

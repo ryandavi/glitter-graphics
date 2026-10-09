@@ -49,6 +49,7 @@ class MobileManager {
 		this.releaseSheet('window');
 		this.barObserver.observe(document.getElementById('inspectorBody'), { subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
 		this.showMobileControls();
+		this.syncToolSwitch();
 		this.syncPhoneHosts();
 		this.editor.libraryWindow?.sync();
 		this.setupEventListeners();
@@ -87,6 +88,25 @@ class MobileManager {
 		});
 	}
 
+	// The phone rail is its switch, Undo and Redo until it is opened. Picking a
+	// tool or pressing anywhere off the rail closes it.
+	setToolRailOpen(open) {
+		document.querySelector('.toolbar').classList.toggle('is-open', open);
+		document.getElementById('toolSwitch').setAttribute('aria-expanded', String(open));
+		this.syncToolSwitch();
+	}
+
+	// Closed, the switch is the current tool; open, it is the chevron that
+	// closes the rail, and the rail's own button marks the tool.
+	syncToolSwitch() {
+		const toolSwitch = document.getElementById('toolSwitch');
+		const open = toolSwitch.getAttribute('aria-expanded') === 'true';
+		toolSwitch.classList.toggle('active', !open);
+		// No tool is current until the editor's first setTool; the markup's icon stands until then.
+		const icon = open ? 'chevron-up' : TOOLS[this.editor.currentTool]?.icon;
+		if (icon) toolSwitch.querySelector('use').setAttribute('href', `#icon-${icon}`);
+	}
+
 	showMobileControls() {
 		document.querySelector('.mobile-bottom-nav')?.classList.add('visible');
 	}
@@ -110,6 +130,15 @@ class MobileManager {
 				if (!button.disabled) this.toggleDrawer(button.dataset.drawer);
 			});
 		});
+
+		const toolSwitch = document.getElementById('toolSwitch');
+		toolSwitch.addEventListener('click', () => this.setToolRailOpen(toolSwitch.getAttribute('aria-expanded') !== 'true'));
+		document.getElementById('toolbarToolsGroup').addEventListener('click', (event) => {
+			if (event.target.closest('button[data-tool]')) this.setToolRailOpen(false);
+		});
+		document.addEventListener('pointerdown', (event) => {
+			if (!event.target.closest('.toolbar')) this.setToolRailOpen(false);
+		}, { capture: true });
 
 		const chipBar = document.getElementById('phoneChipBar');
 		chipBar?.addEventListener('click', (event) => {
@@ -198,6 +227,7 @@ class MobileManager {
 				} else if (this.isMobile && !nowMobile) {
 					if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
 					this.isMobile = false;
+					this.setToolRailOpen(false);
 					this.cleanup();
 					setTimeout(() => {
 						if (!this.editor.originalImage) return;

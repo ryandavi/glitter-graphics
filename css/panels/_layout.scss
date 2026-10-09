@@ -306,18 +306,6 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 		flex: 0 0 auto;
 		gap: var(--spacing-sm);
 
-		+.toolbar-group {
-			border-top: 2px solid var(--color-border);
-			padding-top: var(--spacing-base);
-			margin-top: var(--spacing-xs);
-		}
-
-		>.btn-icon {
-			width: 100%;
-			height: auto;
-			aspect-ratio: 1/1;
-		}
-
 		>.toolbar-tool-separator {
 			display: block;
 			height: 2px;
@@ -327,7 +315,36 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 		}
 	}
 
+	// A line divides the groups, and the open phone rail's switch from its tools.
+	>.toolbar-group + .toolbar-group,
+	&.is-open >.toolbar-switch + .toolbar-group {
+		border-top: 2px solid var(--color-border);
+		padding-top: var(--spacing-base);
+		margin-top: var(--spacing-xs);
+	}
+
 	>.toolbar-group.toolbar-utility-group { margin-top: auto; }
+
+	>.toolbar-switch,
+	>.toolbar-group >.btn-icon {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 1/1;
+		flex: 0 0 auto;
+	}
+
+	// Closed, the phone rail's switch shows the current tool with the corner
+	// mark of a button that opens more; open, it is the chevron that closes it.
+	&:not(.is-open) >.toolbar-switch::after {
+		content: '';
+		position: absolute;
+		right: 3px;
+		bottom: 3px;
+		border: 3px solid transparent;
+		border-right-color: currentColor;
+		border-bottom-color: currentColor;
+		opacity: var(--btn-icon-opacity);
+	}
 
 }
 

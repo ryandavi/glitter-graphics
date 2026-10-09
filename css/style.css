@@ -1004,7 +1004,7 @@
   --mobile-drawer-height: 50dvh;
   --mobile-drawer-reserved-height: var(--mobile-drawer-height);
   /* Modern browsers override */
-  --mobile-toolbar-width: 50px;
+  --mobile-toolbar-width: calc(var(--control-height) + 2 * var(--spacing-sm) + 2px);
   --mobile-sheet-max-width: 640px;
   /* z indexes — app-wide surface layer scale. Each token gates one visual
      layer in the global stack; local intra-component stacking (-1, 0, 1, 2,
@@ -3037,16 +3037,6 @@ body.no-document .app-header-right > .app-header-project {
   flex: 0 0 auto;
   gap: var(--spacing-sm);
 }
-.toolbar > .toolbar-group + .toolbar-group {
-  border-top: 2px solid var(--color-border);
-  padding-top: var(--spacing-base);
-  margin-top: var(--spacing-xs);
-}
-.toolbar > .toolbar-group > .btn-icon {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1/1;
-}
 .toolbar > .toolbar-group > .toolbar-tool-separator {
   display: block;
   height: 2px;
@@ -3054,8 +3044,30 @@ body.no-document .app-header-right > .app-header-project {
   background: var(--color-border);
   border-radius: var(--radius-pill);
 }
+.toolbar > .toolbar-group + .toolbar-group, .toolbar.is-open > .toolbar-switch + .toolbar-group {
+  border-top: 2px solid var(--color-border);
+  padding-top: var(--spacing-base);
+  margin-top: var(--spacing-xs);
+}
 .toolbar > .toolbar-group.toolbar-utility-group {
   margin-top: auto;
+}
+.toolbar > .toolbar-switch,
+.toolbar > .toolbar-group > .btn-icon {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1/1;
+  flex: 0 0 auto;
+}
+.toolbar:not(.is-open) > .toolbar-switch::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  border: 3px solid transparent;
+  border-right-color: currentColor;
+  border-bottom-color: currentColor;
+  opacity: var(--btn-icon-opacity);
 }
 
 @media (min-width: 1041px) {
@@ -11769,10 +11781,9 @@ body.modal-open {
   .toolbar {
     position: fixed;
     bottom: auto;
-    top: calc(var(--mobile-header-height) + (100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height)) / 2);
+    top: calc(var(--mobile-header-height) + var(--mobile-floating-inset));
     left: var(--mobile-floating-inset);
     margin: 0;
-    transform: translateY(-50%);
     width: var(--mobile-toolbar-width);
     height: auto;
     max-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height) - var(--mobile-floating-inset) * 2);
@@ -11791,8 +11802,11 @@ body.modal-open {
     overscroll-behavior: contain;
     touch-action: pan-y;
   }
-  .toolbar > .toolbar-utility-group {
+  .toolbar > .toolbar-utility-group, .toolbar:not(.is-open) > #toolbarToolsGroup {
     display: none;
+  }
+  .toolbar .btn-icon > svg.icon {
+    font-size: calc(var(--control-height) * 0.7);
   }
   .app-menu-item {
     padding: var(--spacing-md) var(--spacing-sm);
@@ -11837,7 +11851,7 @@ body.modal-open {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translate(calc(-100% - var(--mobile-floating-inset)), -50%);
+    transform: translateX(calc(-100% - var(--mobile-floating-inset)));
     transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   }
   .mobile-only-action {

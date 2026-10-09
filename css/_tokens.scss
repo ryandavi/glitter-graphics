@@ -353,7 +353,7 @@
 	--mobile-drawer-height: 50dvh;
 	--mobile-drawer-reserved-height: var(--mobile-drawer-height);
 	/* Modern browsers override */
-	--mobile-toolbar-width: 50px;
+	--mobile-toolbar-width: calc(var(--control-height) + 2 * var(--spacing-sm) + 2px);
 	// A sheet stops widening here and centres, so it stays a sheet on a tablet
 	// held upright.
 	--mobile-sheet-max-width: 640px;

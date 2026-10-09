@@ -42,7 +42,7 @@
 			>.app-header-right {
 				gap: var(--spacing-xs);
 
-				// Save is in the "…" menu here; the bar keeps Undo, Redo and Export.
+				// Save is in the "…" menu here; the bar keeps Export.
 				>.app-header-project >#saveProject { display: none; }
 			}
 		}
@@ -100,12 +100,12 @@
 	.toolbar {
 		position: fixed;
 		bottom: auto;
-		// Balance the rail in the workspace between the app header and bottom nav.
-		// Its max-height still protects short screens and turns overflow into scroll.
-		top: calc(var(--mobile-header-height) + (100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height)) / 2);
+		// The rail hangs from the workspace's top left corner: closed it is the
+		// switch over Undo and Redo, and open it grows down with the tools.
+		// Its max-height protects short screens and turns overflow into scroll.
+		top: calc(var(--mobile-header-height) + var(--mobile-floating-inset));
 		left: var(--mobile-floating-inset);
 		margin: 0;
-		transform: translateY(-50%);
 		width: var(--mobile-toolbar-width);
 		height: auto;
 		max-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height) - var(--mobile-floating-inset) * 2);
@@ -121,7 +121,11 @@
 		overscroll-behavior: contain;
 		touch-action: pan-y;
 
-		>.toolbar-utility-group { display: none; }
+		>.toolbar-utility-group,
+		&:not(.is-open) >#toolbarToolsGroup { display: none; }
+
+		// The rail's buttons match the view and context controls beside them.
+		.btn-icon > svg.icon { font-size: calc(var(--control-height) * 0.7); }
 	}
 
 	// Roomier touch targets for the header menu on phones.
@@ -147,7 +151,7 @@
 			opacity: 0;
 			visibility: hidden;
 			pointer-events: none;
-			transform: translate(calc(-100% - var(--mobile-floating-inset)), -50%);
+			transform: translateX(calc(-100% - var(--mobile-floating-inset)));
 			transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 		}
 	}

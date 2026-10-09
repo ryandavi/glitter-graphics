@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=94bd95ad">
+	<link rel="stylesheet" href="css/style.css?v=fc9a468d">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-08-audit">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-08-audit">
@@ -159,6 +159,11 @@
 		<div class="main-area">
 			<!-- Toolbar -->
 			<div class="toolbar">
+				<!-- At phone width the rail is this button, showing the current tool, until it is opened. -->
+				<button class="btn-icon icon-wrapper toolbar-switch mobile-only-action active" id="toolSwitch" type="button" title="Tools" aria-label="Tools" aria-expanded="false" aria-controls="toolbarToolsGroup">
+					<svg class="icon"><use href="#icon-hand-pointer"></use></svg>
+					<span class="name">Tools</span>
+				</button>
 				<!-- Tools Group -->
 				<!-- Tool buttons are generated from TOOLS (js/core/tools.js). -->
 				<div class="toolbar-group" id="toolbarToolsGroup">
@@ -1968,10 +1973,10 @@
 	<script src="js/layers/PathLayerManager.js?v=353744c5"></script>
 	<script src="js/transforms/GroupTransformManager.js?v=2e45b791"></script>
 
-		<script src="js/systems/MobileManager.js?v=e0c45d32"></script>
+		<script src="js/systems/MobileManager.js?v=7842d28b"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=c47ad2c4"></script>
+	<script src="js/app.js?v=665e02c1"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.
