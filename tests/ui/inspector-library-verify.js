@@ -227,7 +227,11 @@ async function main() {
 		await page.evaluate(() => window.editor.pickers.toggleFlyout('fill'));
 		await wait(page);
 		const after = await page.evaluate(() => ({ rect: window.editor.previewContainer.getBoundingClientRect().toJSON(), view: window.editor.viewport.captureViewState(), usable: window.editor.viewport.getUsableRect() }));
-		assert.deepEqual(after, before, 'Desktop Library must overlay without moving the canvas');
+		assert.deepEqual(after.rect, before.rect, 'Desktop Library must not resize the workspace');
+		assert.equal(after.view.zoom, before.view.zoom, 'Opening the Library keeps the zoom');
+		assert(Math.abs(after.view.focusX - before.view.focusX) < 1 && Math.abs(after.view.focusY - before.view.focusY) < 1, 'Opening the Library keeps the artwork centred in the room left');
+		const windowWidth = await page.locator('#libraryWindow').evaluate((node) => node.getBoundingClientRect().width);
+		assert(Math.abs(before.usable.width - after.usable.width - windowWidth) < 1, 'The open Library takes its width from the usable area');
 		assert.equal(before.rect.width, await page.locator('.main-content').evaluate((node) => node.clientWidth));
 		assert(await page.locator('#layersPanel').isVisible(), 'Library must retain Layers');
 		await page.screenshot({ path: path.join(output, 'desktop-overlay.png') });

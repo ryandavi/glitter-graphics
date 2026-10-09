@@ -143,7 +143,8 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 // The Library's Close ends its armed pick.
 .design-gallery-section:not([data-picker-library]) .library-close-action { display: none; }
 
-// Desktop Library floats beside the Inspector without moving the canvas.
+// Desktop Library sits beside the Inspector over the workspace; the view pans
+// to stay centred in the room left (LibraryWindow.apply).
 @media (min-width: ($mobile-breakpoint + 1px)) {
 	.main-content > .library-window {
 		position: absolute;

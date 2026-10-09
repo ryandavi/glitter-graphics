@@ -162,6 +162,10 @@ class ViewportManager {
 			const inspector = document.getElementById('designPanel');
 			if (layers?.getClientRects().length) left = layers.getBoundingClientRect().right - rect.left;
 			if (inspector?.getClientRects().length) right = inspector.getBoundingClientRect().left - rect.left;
+			// The open Library window is a column like the other two (as the bar
+			// layout's sheet it is the drawer above instead).
+			const library = mobile?.usesBar ? null : document.getElementById('libraryWindow');
+			if (library?.classList?.contains('is-open') && library.getClientRects().length) right = Math.min(right, library.getBoundingClientRect().left - rect.left);
 		}
 		this.previewContainer.parentElement.style.setProperty('--canvas-inset-left', `${left}px`);
 		this.previewContainer.parentElement.style.setProperty('--canvas-inset-right', `${rect.width - right}px`);
@@ -171,13 +175,6 @@ class ViewportManager {
 	getOverlayRect() {
 		const usable = this.getUsableRect();
 		const mobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
-		// The Library window floats over the canvas without moving the artwork,
-		// but the chrome keeps clear of it.
-		const library = mobile ? null : document.getElementById('libraryWindow');
-		if (library?.classList?.contains('is-open') && library.getClientRects().length) {
-			const edge = library.getBoundingClientRect().left - this.previewContainer.getBoundingClientRect().left;
-			usable.width = Math.max(1, Math.min(usable.width, edge - usable.left));
-		}
 		const root = getComputedStyle(document.documentElement);
 		const inset = parseFloat(root.getPropertyValue(mobile ? '--mobile-floating-inset' : '--spacing-from-edge')) || 0;
 		const alignment = CONFIG.ui.canvasAlignment[mobile ? 'mobile' : 'desktop'];

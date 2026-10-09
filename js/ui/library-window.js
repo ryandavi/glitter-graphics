@@ -123,8 +123,14 @@ class LibraryWindow {
 			this.syncBack(sheet, picking, card);
 			return;
 		}
+		// The column takes room from the canvas, so the artwork slides to stay
+		// centred in what is left, at the same zoom. The sheet's drawer frames
+		// the view itself.
+		const viewport = sheet || mobile?.isMobile ? null : this.editor.viewport;
+		const view = viewport?.captureViewState();
 		this.isOpen = open;
 		this.element.classList.toggle('is-open', open);
+		viewport?.restoreViewState(view, { animate: true });
 		if (sheet) {
 			if (open) mobile.openDrawer('window');
 			else mobile.closeSheet('window');
