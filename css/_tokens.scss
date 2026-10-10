@@ -405,6 +405,9 @@
 		--control-height: 40px;
 		--row-height: 44px;
 		--list-row-height: 52px;
+		/* The header grows with its buttons, so they keep clear of its edges. */
+		--header-height: 56px;
+		--mobile-header-height: 56px;
 	}
 }
 

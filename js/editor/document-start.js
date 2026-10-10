@@ -15,7 +15,9 @@ setupImageListeners() {
 		this.renderWorkspaceStartPresets();
 
 		document.getElementById('workspaceStartTutorial')?.addEventListener('click', () => this.openGuideAt('getting-started'));
-		document.getElementById('workspaceStartAbout')?.addEventListener('click', () => this.modalManager.open('aboutModal'));
+		document.querySelectorAll('#workspaceStartAbout, #appHeaderTitle').forEach((button) => {
+			button.addEventListener('click', () => this.modalManager.open('aboutModal'));
+		});
 		document.getElementById('workspaceStartWhatsNew')?.addEventListener('click', (event) => {
 			try {
 				PREFERENCES.set('welcomeLastSeenRelease', CONFIG.app.currentRelease);

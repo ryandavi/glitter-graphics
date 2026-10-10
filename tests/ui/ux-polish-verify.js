@@ -162,11 +162,12 @@ async function main() {
 		console.log('PASS Ctrl+Y redo alias');
 
 		await page.evaluate(() => window.editor.viewport.setZoom(2));
-		await page.dblclick('#statusZoom');
-		await page.waitForTimeout(80);
+		await page.click('#statusZoom');
+		await page.click('[data-status-command="zoomReset"]');
+		await page.waitForTimeout(400);
 		assert(await page.evaluate(() => Math.abs(window.editor.viewport.currentZoom - 1) < 0.001),
-			'Double-clicking zoom readout did not reset to 100%');
-		console.log('PASS Zoom readout double-click reset');
+			'The zoom readout menu did not reset to 100%');
+		console.log('PASS Zoom readout menu reset');
 
 		const canvasCenter = await page.locator('#previewContainer').boundingBox().then((box) => ({
 			x: box.x + box.width / 2,

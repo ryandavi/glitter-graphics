@@ -269,6 +269,17 @@ class GlitterEditor {
 	}
 
 	// ===== GETTERS & SETTERS =====
+	// The status bar's save field follows every write.
+	get isSaved() {
+		return this._isSaved;
+	}
+
+	set isSaved(value) {
+		this._isSaved = Boolean(value);
+		this.updateStatusBar();
+	}
+
+
 	get layers() {
 		return this.layerManager.layers;
 	}
@@ -664,6 +675,7 @@ class GlitterEditor {
 	saveState(label = null, options = {}) {
 		this.historyManager.saveState(label, { coalesceKey: currentStepCoalesceKey(), ...options });
 		this.filterLayerManager?.noteSceneEdited();
+		this.isSaved = false;
 	}
 
 	async restoreState(state) {
@@ -672,12 +684,14 @@ class GlitterEditor {
 	async undo() {
 		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.undo();
+		this.isSaved = false;
 		this.pathEdit?.revalidate();
 	}
 
 	async redo() {
 		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.redo();
+		this.isSaved = false;
 		this.pathEdit?.revalidate();
 	}
 
@@ -915,21 +929,6 @@ class GlitterEditor {
 
 	// Editable document scaling. Base pixels and painted masks are resampled with
 	// nearest-neighbor; layer geometry stays live and history retains old buffers.
-
-	updateStatusBar() {
-		if (this.originalImage) {
-			document.getElementById('statusDimensions').innerHTML = formatDimensions(this.originalCanvas.width, this.originalCanvas.height);
-
-			const zoomPct = Math.round(this.viewport.currentZoom * 100);
-			const count = this.layerManager?.getSelectedLayers().length || 0;
-			document.getElementById('statusZoom').innerHTML = count > 1
-				? `${formatUnit(zoomPct, '%')}<span class="setting-separator"> · </span>${count} layers selected`
-				: formatUnit(zoomPct, '%');
-		} else {
-			document.getElementById('statusDimensions').textContent = '';
-			document.getElementById('statusZoom').textContent = '';
-		}
-	}
 
 	// ===== CLICK HANDLERS =====
 

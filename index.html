@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=1560cf64">
+	<link rel="stylesheet" href="css/style.css?v=d95495b9">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-10-timing">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-10-timing">
@@ -65,16 +65,18 @@
 				<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com">
 					<span class="logo" aria-hidden="true"></span>
 				</a>
-				<a href="index.html" class="app-header-title">RYBABY LABS</a>
+				<button class="app-header-title" id="appHeaderTitle" type="button" title="About">RYBABY LABS</button>
+				<div class="app-header-history mobile-only-action" data-phone-host-for="toolbarHistoryGroup"></div>
+			</div>
+			<div class="app-header-center">
+				<input class="app-header-project-name" id="projectNameInput" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="Untitled project" aria-label="Project name" title="Project name">
 			</div>
 			<div class="app-header-right">
-				<div class="app-header-history mobile-only-action" data-phone-host-for="toolbarHistoryGroup"></div>
 				<div class="app-header-project" id="appHeaderProject">
-					<input class="app-header-project-name" id="projectNameInput" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="Untitled project" aria-label="Project name" title="Project name">
-					<button class="btn-icon icon-wrapper" id="saveProject" type="button" title="Save project (Ctrl/Cmd+S)" aria-label="Save project" disabled><svg class="icon"><use href="#icon-save"></use></svg><span class="name">Save project</span></button>
+					<button class="btn-icon-simple icon-wrapper" id="saveProject" type="button" title="Save project (Ctrl/Cmd+S)" aria-label="Save project" disabled><svg class="icon"><use href="#icon-save"></use></svg><span class="name">Save project</span></button>
 					<div class="app-menu export-split-control" id="exportMenu">
 						<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export GIF" aria-label="Export GIF"><svg class="icon"><use href="#icon-export"></use></svg><span class="name">Export GIF</span></button>
-						<button class="btn-icon export-action-btn app-menu-trigger icon-wrapper" id="exportMenuBtn" type="button" title="Export menu" aria-label="Export menu" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenuPanel"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Export menu</span></button>
+						<button class="btn-icon export-action-btn app-menu-trigger icon-wrapper primary" id="exportMenuBtn" type="button" title="Export menu" aria-label="Export menu" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenuPanel"><svg class="icon"><use href="#icon-chevron-down"></use></svg><span class="name">Export</span></button>
 						<div class="app-menu-panel" id="exportMenuPanel" role="menu" aria-labelledby="exportMenuBtn" hidden>
 							<div class="app-menu-group-label">Still Image</div>
 							<button class="app-menu-item" type="button" role="menuitem" data-export-target="still:png"><span class="app-menu-item-label">Export PNG</span><span class="app-menu-item-current" aria-hidden="true">✓</span></button>
@@ -702,8 +704,18 @@
 		<!-- Status Bar -->
 		<div class="status-bar">
 			<span class="status-bar-field status-text" id="statusText" role="status" aria-live="polite">Pick a canvas size or open an image to begin</span>
-			<span class="status-bar-field status-dimensions" id="statusDimensions"></span>
-			<span class="status-bar-field status-zoom" id="statusZoom" title="Double-click to reset zoom to 100%"></span>
+			<span class="status-bar-field status-selection" id="statusSelection"></span>
+			<span class="status-bar-field status-cursor" id="statusCursor"></span>
+			<button class="status-bar-field status-dimensions" id="statusDimensions" type="button" title="Canvas size"></button>
+			<button class="status-bar-field status-save" id="statusSave" type="button" title="Save project (Ctrl/Cmd+S)"></button>
+			<div class="app-menu" id="statusZoomMenu">
+				<button class="status-bar-field status-zoom app-menu-trigger" id="statusZoom" type="button" title="Zoom" aria-haspopup="menu" aria-expanded="false" aria-controls="statusZoomPanel"></button>
+				<div class="app-menu-panel" id="statusZoomPanel" role="menu" aria-labelledby="statusZoom" hidden>
+					<button class="app-menu-item" type="button" role="menuitem" data-status-command="zoomFit"><span class="app-menu-item-label">Fit Screen</span></button>
+					<button class="app-menu-item" type="button" role="menuitem" data-status-command="zoomReset"><span class="app-menu-item-label">100%</span></button>
+					<button class="app-menu-item" type="button" role="menuitem" data-status-command="zoomDouble"><span class="app-menu-item-label">200%</span></button>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -1823,7 +1835,7 @@
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=47b7b1a0"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=29b7ab66"></script>
+	<script src="js/core/commands.js?v=71f1f62d"></script>
 	<script src="js/core/dom.js?v=545e364f"></script>
 	<script src="js/core/document-scaler.js?v=6625b551"></script>
 	<script src="js/transforms/transform-math.js?v=00be3fd4"></script>
@@ -1889,18 +1901,18 @@
 	<script src="js/editor/export-flow.js?v=a6bea5a7"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=10833bbf"></script>
-	<script src="js/editor/panels.js?v=3e6c8cbb"></script>
+	<script src="js/editor/panels.js?v=3249a343"></script>
 	<script src="js/editor/asset-info.js?v=151ea110"></script>
 	<script src="js/editor/fill-tool.js?v=059bcd7a"></script>
 	<script src="js/editor/disclosures.js?v=79449da5"></script>
 	<script src="js/ui/panel-resize.js?v=e57af07d"></script>
 	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
-	<script src="js/editor/transform-interaction.js?v=dbbff5f8"></script>
-	<script src="js/editor/document-start.js?v=de92d90c"></script>
+	<script src="js/editor/transform-interaction.js?v=9f6320b7"></script>
+	<script src="js/editor/document-start.js?v=598d93d3"></script>
 		<script src="js/ui/glitter-recolor-tool.js?v=2bf5492f"></script>
-		<script src="js/editor/modals-wiring.js?v=8c9e2d40"></script>
+		<script src="js/editor/modals-wiring.js?v=9bb4ab3a"></script>
 	<script src="js/editor/layer-panel.js?v=3efaa4cb"></script>
-	<script src="js/editor/canvas-gestures.js?v=46918e0a"></script>
+	<script src="js/editor/canvas-gestures.js?v=9f7f72c8"></script>
 	<script src="js/editor/canvas-size.js?v=cb9a1432"></script>
 	<script src="js/editor/canvas-resize.js?v=23b3a9f8"></script>
 		<script src="js/ui/hints.js?v=396382d7"></script>
@@ -1969,7 +1981,7 @@
 	<script src="js/layers/GlitterManager.js?v=5c342346"></script>
 	<script src="js/layers/BaseBackgroundManager.js?v=b05fbbdb"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=45f96a66"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=04040216"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=764b8297"></script>
@@ -1990,7 +2002,7 @@
 		<script src="js/systems/MobileManager.js?v=59fbf1a3"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=27766c9d"></script>
+	<script src="js/app.js?v=1b49df54"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

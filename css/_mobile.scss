@@ -29,26 +29,38 @@
 
 		>.app-header {
 			height: var(--mobile-header-height);
-			padding: var(--spacing-sm) var(--spacing-md);
 			position: relative;
 			z-index: var(--z-app-header-elevated);
 
+			// The logo alone is the brand here; undo and redo sit beside it,
+			// quiet like the bar's other marks, leaving Export the one heavy button.
 			>.app-header-left {
 				gap: var(--spacing-sm);
-				flex: 0 1 auto;
-				min-width: 0;
 
-				>.app-header-title { max-width: 140px; }
+				>.app-header-title { display: none; }
+
+				// With no chrome to fill, a full square leaves the two glyphs far
+				// apart: no gap, and each box is only a little wider than its glyph.
+				>.app-header-history > .toolbar-group {
+					display: flex;
+
+					>.btn-icon {
+						width: calc(var(--font-size-2xl) + var(--spacing-md));
+						border-color: transparent;
+						color: var(--bar-btn-color);
+
+						&::before { display: none; }
+
+						&:not(:disabled):active {
+							background: var(--bar-btn-hover-bg);
+							color: var(--bar-btn-hover-color);
+						}
+					}
+				}
 			}
 
 			>.app-header-right {
 				gap: var(--spacing-xs);
-				flex: 0 0 auto;
-
-				>.app-header-history > .toolbar-group {
-					display: flex;
-					gap: var(--spacing-xs);
-				}
 
 				// Save is in the "…" menu here; the bar keeps Export.
 				>.app-header-project >#saveProject { display: none; }

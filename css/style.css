@@ -1051,6 +1051,9 @@
     --control-height: 40px;
     --row-height: 44px;
     --list-row-height: 52px;
+    /* The header grows with its buttons, so they keep clear of its edges. */
+    --header-height: 56px;
+    --mobile-header-height: 56px;
   }
 }
 @media (min-resolution: 2dppx) {
@@ -2734,10 +2737,11 @@ input.color-hex-input {
   height: var(--header-height);
   background: var(--color-bg-secondary);
   border-bottom: 1px solid var(--color-window-border);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-md);
+  gap: var(--spacing-md);
+  padding: 0 var(--spacing-md);
   flex-shrink: 0;
   box-shadow: 0 2px 2px var(--color-shadow);
 }
@@ -2762,11 +2766,20 @@ input.color-hex-input {
 .app-header.collapsible-section > .section-header > .section-header-title {
   color: var(--bar-title-color);
 }
+.app-header .btn-icon-simple.icon-wrapper {
+  width: var(--row-height);
+  height: var(--row-height);
+}
+.app-header .btn-icon-simple.icon-wrapper > svg.icon {
+  font-size: var(--font-size-2xl);
+}
 .app-header > .app-header-left {
+  grid-column: 1;
+  justify-self: start;
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  flex: 0 0 auto;
+  min-width: 0;
 }
 .app-header > .app-header-left > .app-header-logo {
   display: flex;
@@ -2795,11 +2808,16 @@ input.color-hex-input {
 .app-header > .app-header-left > .app-header-title {
   display: flex;
   align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--bar-title-color);
+  font-family: inherit;
   font-size: var(--app-header-mark-size);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
-  text-decoration: none;
+  text-shadow: inherit;
+  cursor: pointer;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -2810,50 +2828,46 @@ input.color-hex-input {
   width: auto;
   height: var(--app-header-mark-size);
 }
+.app-header > .app-header-center {
+  grid-column: 2;
+  min-width: 0;
+}
+.app-header > .app-header-center > .app-header-project-name {
+  width: 320px;
+  max-width: 100%;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+.app-header > .app-header-center > .app-header-project-name:not(:focus-visible) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--bar-title-color);
+}
+.app-header > .app-header-center > .app-header-project-name:not(:focus-visible)::-moz-placeholder {
+  color: inherit;
+  opacity: 0.7;
+}
+.app-header > .app-header-center > .app-header-project-name:not(:focus-visible)::placeholder {
+  color: inherit;
+  opacity: 0.7;
+}
+.app-header > .app-header-center > .app-header-project-name:not(:focus-visible):hover {
+  background: var(--bar-btn-hover-bg);
+}
+.app-header > .app-header-center > .app-header-project-name:focus-visible {
+  text-shadow: none;
+}
 .app-header > .app-header-right {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  flex: 0 1 auto;
-  min-width: 0;
-  margin-left: auto;
 }
 .app-header > .app-header-right > .app-header-project {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  min-width: 0;
-}
-.app-header > .app-header-right > .app-header-project > .app-header-project-name {
-  flex: 0 1 220px;
-  width: 220px;
-  min-width: 80px;
-  text-overflow: ellipsis;
-}
-.app-header > .app-header-right > .app-header-project > .app-header-project-name:not(:focus-visible) {
-  border-color: transparent;
-  background: transparent;
-  color: var(--bar-title-color);
-  text-align: right;
-}
-.app-header > .app-header-right > .app-header-project > .app-header-project-name:not(:focus-visible)::-moz-placeholder {
-  color: inherit;
-  opacity: 0.7;
-}
-.app-header > .app-header-right > .app-header-project > .app-header-project-name:not(:focus-visible)::placeholder {
-  color: inherit;
-  opacity: 0.7;
-}
-.app-header > .app-header-right > .app-header-project > .app-header-project-name:not(:focus-visible):hover {
-  background: var(--bar-btn-hover-bg);
-}
-.app-header > .app-header-right > .app-header-project > .app-header-project-name:focus-visible {
-  text-shadow: none;
-}
-.app-header > .app-header-right > .icon-wrapper > svg.icon {
-  width: var(--app-header-mark-size);
-  height: var(--app-header-mark-size);
-  font-size: var(--app-header-mark-size);
 }
 
 /* ===== APP MENU (header "…" popover) ===== */
@@ -2863,7 +2877,8 @@ input.color-hex-input {
   align-items: center;
 }
 
-body.no-document .app-header-right > .app-header-project {
+body.no-document .app-header > .app-header-center,
+body.no-document .app-header > .app-header-right > .app-header-project {
   display: none;
 }
 
@@ -2875,12 +2890,6 @@ body.no-document .app-header-right > .app-header-project {
 }
 .app-menu-field > input {
   width: 100%;
-}
-
-#appMenu > .app-menu-trigger.icon-wrapper > svg.icon {
-  width: var(--app-header-mark-size);
-  height: var(--app-header-mark-size);
-  font-size: var(--app-header-mark-size);
 }
 
 .app-menu-panel {
@@ -2931,12 +2940,32 @@ body.no-document .app-header-right > .app-header-project {
   visibility: visible;
 }
 
-.export-split-control > #exportGif {
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+@media (min-width: 1041px) {
+  .export-split-control > #exportGif {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+  .export-split-control > #exportMenuBtn {
+    width: var(--spacing-xl);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
 }
-.export-split-control > #exportMenuBtn {
-  width: var(--spacing-xl);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+@media (max-width: 1040px) {
+  .export-split-control > #exportGif {
+    display: none;
+  }
+  .export-split-control > #exportMenuBtn {
+    flex-direction: row-reverse;
+    gap: var(--spacing-xs);
+    width: auto;
+    padding: 0 var(--spacing-md);
+    aspect-ratio: auto;
+  }
+  .export-split-control > #exportMenuBtn > svg.icon {
+    font-size: var(--font-size-md);
+  }
+  .export-split-control > #exportMenuBtn > .name {
+    display: block;
+  }
 }
 
 .app-menu-item {
@@ -3110,6 +3139,12 @@ body.no-document .app-header-right > .app-header-project {
   touch-action: none;
   background: transparent;
   outline: none;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+.panel-resize-handle.is-dragging,
+.library-split-handle.is-dragging {
+  opacity: 1;
 }
 .panel-resize-handle::before, .panel-resize-handle::after,
 .library-split-handle::before,
@@ -3153,13 +3188,11 @@ body.no-document .app-header-right > .app-header-project {
 
 .panel-resize-handle {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: var(--spacing-base);
+  bottom: var(--spacing-base);
   width: var(--spacing-base);
   z-index: var(--z-panel-elevated);
   cursor: col-resize;
-  border-radius: 100px;
-  opacity: 0.5;
 }
 .panel-resize-handle.panel-resize-handle-start {
   left: 0;
@@ -3174,8 +3207,6 @@ body.no-document .app-header-right > .app-header-project {
 }
 
 .main-area > .panel-resize-handle {
-  top: var(--spacing-base);
-  bottom: var(--spacing-base);
   left: calc(var(--toolbar-width) + var(--spacing-base));
   right: auto;
 }
@@ -5572,23 +5603,54 @@ body.mask-editing .sticker-element {
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
   display: flex;
-  align-items: center;
-  padding: 0 var(--spacing-md);
+  align-items: stretch;
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
   flex-shrink: 0;
-  gap: var(--spacing-lg);
+}
+.status-bar .status-bar-field {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  height: 100%;
+  padding: 0 var(--spacing-md);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--color-text-tertiary);
+  font: inherit;
+  white-space: nowrap;
+}
+.status-bar .status-bar-field:not(.status-text) {
+  border-left: 1px solid var(--color-border);
+  box-shadow: -1px 0 0 var(--color-shadow);
+}
+.status-bar .status-bar-field:not(.status-text):empty {
+  display: none;
+}
+.status-bar button.status-bar-field {
+  cursor: pointer;
+}
+.status-bar button.status-bar-field:hover, .status-bar button.status-bar-field:focus-visible {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  outline: none;
 }
 .status-bar > .status-text {
-  flex: 1;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: inherit;
+  line-height: 23px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.status-bar > .status-dimensions,
-.status-bar > .status-zoom {
-  color: var(--color-text-tertiary);
-}
-.status-bar > .status-zoom:not(:empty) {
-  cursor: pointer;
+.status-bar > .status-cursor {
+  min-width: 9ch;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes blinker {
@@ -11782,24 +11844,31 @@ body.modal-open {
   }
   .app-container > .app-header {
     height: var(--mobile-header-height);
-    padding: var(--spacing-sm) var(--spacing-md);
     position: relative;
     z-index: var(--z-app-header-elevated);
   }
   .app-container > .app-header > .app-header-left {
     gap: var(--spacing-sm);
-    flex: 0 1 auto;
-    min-width: 0;
   }
   .app-container > .app-header > .app-header-left > .app-header-title {
-    max-width: 140px;
+    display: none;
+  }
+  .app-container > .app-header > .app-header-left > .app-header-history > .toolbar-group {
+    display: flex;
+  }
+  .app-container > .app-header > .app-header-left > .app-header-history > .toolbar-group > .btn-icon {
+    width: calc(var(--font-size-2xl) + var(--spacing-md));
+    border-color: transparent;
+    color: var(--bar-btn-color);
+  }
+  .app-container > .app-header > .app-header-left > .app-header-history > .toolbar-group > .btn-icon::before {
+    display: none;
+  }
+  .app-container > .app-header > .app-header-left > .app-header-history > .toolbar-group > .btn-icon:not(:disabled):active {
+    background: var(--bar-btn-hover-bg);
+    color: var(--bar-btn-hover-color);
   }
   .app-container > .app-header > .app-header-right {
-    gap: var(--spacing-xs);
-    flex: 0 0 auto;
-  }
-  .app-container > .app-header > .app-header-right > .app-header-history > .toolbar-group {
-    display: flex;
     gap: var(--spacing-xs);
   }
   .app-container > .app-header > .app-header-right > .app-header-project > #saveProject {

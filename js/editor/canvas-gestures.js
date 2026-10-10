@@ -449,7 +449,6 @@ togglePreview() {
 		window.addEventListener('viewportChanged', () => {
 			this.updateZoomUI();
 			this.updateTransparencyGrid();
-			this.updateStatusBar();
 			this.maskEditor?._updateBrushCursorSize();
 			this.maskEditor?.renderOverlay();
 			this.requestPreviewUpdate();

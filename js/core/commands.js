@@ -38,6 +38,7 @@ const COMMANDS = {
 	zoomOut: { label: 'Zoom Out', group: 'View', keys: ['mod+-'], displayKey: 'Ctrl/Cmd + -', run: (editor) => editor.viewport.zoomOut(null, null, { animate: true }) },
 	zoomReset: { label: 'Reset Zoom (100%)', group: 'View', keys: ['mod+1'], displayKey: 'Ctrl/Cmd + 1', run: (editor) => editor.viewport.resetZoom({ animate: true }) },
 	zoomFit: { label: 'Fit Screen', group: 'View', keys: ['mod+0'], displayKey: 'Ctrl/Cmd + 0', run: (editor) => editor.viewport.zoomToFit({ animate: true }) },
+	zoomDouble: { run: (editor) => editor.viewport.setZoom(2, null, null, { animate: true }) },
 	zoomFill: { run: (editor) => editor.viewport.zoomToFill({ animate: true }) },
 	toggleMemoryOverlay: {
 		label: 'Toggle Memory Overlay', group: 'View', keys: ['mod+shift+alt+m'], displayKey: 'Ctrl/Cmd + Alt + Shift + M',

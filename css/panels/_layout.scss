@@ -26,21 +26,36 @@
 	height: var(--header-height);
 	background: var(--color-bg-secondary);
 	border-bottom: 1px solid var(--color-window-border);
-	display: flex;
+	// Equal side columns keep the project name centred on the bar itself,
+	// whatever the two sides hold.
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
 	align-items: center;
-	justify-content: space-between;
-	padding: var(--spacing-md);
+	gap: var(--spacing-md);
+	// No block padding: the one row is the bar's full height, so a control
+	// taller than a padded row still centres instead of spilling downward.
+	padding: 0 var(--spacing-md);
 	flex-shrink: 0;
 	box-shadow: 0 2px 2px var(--color-shadow);
 
 	@include windows7-bar();
 
+	// Every mark but Export is a quiet square, the size and glyph of the
+	// chrome icon button (`.btn-icon`) everywhere else.
+	.btn-icon-simple.icon-wrapper {
+		width: var(--row-height);
+		height: var(--row-height);
+
+		> svg.icon { font-size: var(--font-size-2xl); }
+	}
 
 	>.app-header-left {
+		grid-column: 1;
+		justify-self: start;
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-md);
-		flex: 0 0 auto;
+		min-width: 0;
 
 		>.app-header-logo {
 			display: flex;
@@ -72,12 +87,17 @@
 		>.app-header-title {
 			display: flex;
 			align-items: center;
+			padding: 0;
+			border: 0;
+			background: none;
 			// Sits on the bar chrome, so it follows the bar's caption color.
 			color: var(--bar-title-color);
+			font-family: inherit;
 			font-size: var(--app-header-mark-size);
 			font-weight: var(--font-weight-semibold);
 			line-height: 1;
-			text-decoration: none;
+			text-shadow: inherit;
+			cursor: pointer;
 			@include truncate;
 
 			>img,
@@ -89,35 +109,22 @@
 		}
 	}
 
-	>.app-header-right {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		// The project name is the part that gives way when the bar is short.
-		flex: 0 1 auto;
+	// Reads as the document's title on the bar until it is hovered or
+	// focused, when it becomes a field.
+	>.app-header-center {
+		grid-column: 2;
 		min-width: 0;
-		margin-left: auto;
 
-		>.app-header-project {
-			display: flex;
-			align-items: center;
-			gap: var(--spacing-sm);
-			min-width: 0;
-		}
-
-		// Reads as the document's title on the bar until it is hovered or
-		// focused, when it becomes a field.
-		>.app-header-project >.app-header-project-name {
-			flex: 0 1 220px;
-			width: 220px;
-			min-width: 80px;
+		>.app-header-project-name {
+			width: 320px;
+			max-width: 100%;
+			text-align: center;
 			text-overflow: ellipsis;
 
 			&:not(:focus-visible) {
 				border-color: transparent;
 				background: transparent;
 				color: var(--bar-title-color);
-				text-align: right;
 
 				&::placeholder { color: inherit; opacity: 0.7; }
 				&:hover { background: var(--bar-btn-hover-bg); }
@@ -125,11 +132,19 @@
 
 			&:focus-visible { text-shadow: none; }
 		}
+	}
 
-		>.icon-wrapper > svg.icon {
-			width: var(--app-header-mark-size);
-			height: var(--app-header-mark-size);
-			font-size: var(--app-header-mark-size);
+	>.app-header-right {
+		grid-column: 3;
+		justify-self: end;
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+
+		>.app-header-project {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-sm);
 		}
 	}
 
@@ -148,7 +163,10 @@
 }
 
 // The project is nothing to name, save or export until a document is open.
-body.no-document .app-header-right > .app-header-project { display: none; }
+body.no-document .app-header {
+	> .app-header-center,
+	> .app-header-right > .app-header-project { display: none; }
+}
 
 // The project name's phone home at the top of the "…" menu.
 .app-menu-field {
@@ -157,16 +175,6 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	&:empty { display: none; }
 
 	> input { width: 100%; }
-}
-
-// Keep the header "…" trigger glyph the same size as the other header marks
-// even though it is no longer a direct child of .app-header-right. Scoped to
-// the header menu specifically so other .app-menu instances (e.g. the export
-// split button) keep their own .btn-icon sizing instead of inheriting this.
-#appMenu > .app-menu-trigger.icon-wrapper > svg.icon {
-	width: var(--app-header-mark-size);
-	height: var(--app-header-mark-size);
-	font-size: var(--app-header-mark-size);
 }
 
 .app-menu-panel {
@@ -195,9 +203,28 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 .app-menu-item-current { visibility: hidden; }
 .app-menu-item[aria-current="true"] .app-menu-item-current { visibility: visible; }
 
+// A split button where there is room; at phone width the menu half alone is
+// the Export button, labelled.
 .export-split-control {
-	> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
-	> #exportMenuBtn { width: var(--spacing-xl); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+	@media (min-width: ($mobile-breakpoint + 1px)) {
+		> #exportGif { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+		> #exportMenuBtn { width: var(--spacing-xl); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+	}
+
+	@include mobile {
+		> #exportGif { display: none; }
+
+		> #exportMenuBtn {
+			flex-direction: row-reverse;
+			gap: var(--spacing-xs);
+			width: auto;
+			padding: 0 var(--spacing-md);
+			aspect-ratio: auto;
+
+			> svg.icon { font-size: var(--font-size-md); }
+			> .name { display: block; }
+		}
+	}
 }
 
 .app-menu-item {
@@ -394,6 +421,11 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	touch-action: none;
 	background: transparent;
 	outline: none;
+	// Quiet until it is being dragged.
+	opacity: 0.5;
+	transition: opacity var(--transition-fast);
+
+	&.is-dragging { opacity: 1; }
 
 	&::before,
 	&::after {
@@ -431,15 +463,15 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 
 .panel-resize-handle {
 	position: absolute;
-	top: 0;
-	bottom: 0;
+	// Stops at the margin around every panel, so the line is as tall as the
+	// panels beside it.
+	top: var(--spacing-base);
+	bottom: var(--spacing-base);
 	// The space between two panels is the panel's own padding on that side,
 	// so the handle covers exactly that and its line is centred in it.
 	width: var(--spacing-base);
 	z-index: var(--z-panel-elevated);
 	cursor: col-resize;
-	border-radius: 100px;
-    opacity: .5;
 
 	&.panel-resize-handle-start { left: 0; }
 	&.panel-resize-handle-end { right: 0; }
@@ -449,8 +481,6 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 
 // The rail scrolls; its edge handle stays fixed beside it.
 .main-area > .panel-resize-handle {
-	top: var(--spacing-base);
-	bottom: var(--spacing-base);
 	left: calc(var(--toolbar-width) + var(--spacing-base));
 	right: auto;
 }

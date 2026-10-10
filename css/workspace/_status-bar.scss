@@ -7,24 +7,60 @@
 	background: var(--color-bg-secondary);
 	border-top: 1px solid var(--color-border);
 	display: flex;
-	align-items: center;
-	padding: 0 var(--spacing-md);
+	align-items: stretch;
 	@include text-sm;
 	color: var(--color-text-secondary);
 	flex-shrink: 0;
-	gap: var(--spacing-lg);
+
+	// One cell per fact. An empty cell takes no room; a cell that does
+	// something is a button.
+	.status-bar-field {
+		display: flex;
+		align-items: center;
+		flex: 0 0 auto;
+		height: 100%;
+		padding: 0 var(--spacing-md);
+		border: 0;
+		border-radius: 0;
+		background: none;
+		color: var(--color-text-tertiary);
+		font: inherit;
+		white-space: nowrap;
+
+		// The etched divider of a desktop status bar: a dark line beside a
+		// light one. The message cell stays when empty: it is the bar's spring.
+		&:not(.status-text) {
+			border-left: 1px solid var(--color-border);
+			box-shadow: -1px 0 0 var(--color-shadow);
+
+			&:empty { display: none; }
+		}
+	}
+
+	button.status-bar-field {
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-primary);
+			outline: none;
+		}
+	}
 
 	>.status-text {
-		flex: 1;
+		display: block;
+		flex: 1 1 auto;
+		min-width: 0;
+		color: inherit;
+		line-height: 23px;
+		@include truncate;
 	}
 
-	>.status-dimensions,
-	>.status-zoom {
-		color: var(--color-text-tertiary);
-	}
-
-	>.status-zoom:not(:empty) {
-		cursor: pointer;
+	>.status-cursor {
+		min-width: 9ch;
+		justify-content: center;
+		font-variant-numeric: tabular-nums;
 	}
 }
 

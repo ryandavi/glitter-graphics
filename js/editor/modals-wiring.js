@@ -209,6 +209,7 @@ updateOrientationButtons(width, height) {
 			panel: document.getElementById('exportResultMenuPanel')
 		});
 		this.setupViewMenu();
+		this.setupStatusBar();
 
 		// Any activated item runs its own handler (modal open, resetAll, …) — we
 		// just dismiss the panel afterwards.

@@ -372,6 +372,60 @@ isLayerContentLocked(layer) {
 		this.mobileManager?.syncBar();
 		// The window names the same layer, and follows the selection.
 		this.libraryWindow?.sync();
+		this.updateStatusBar();
+	}
+
+,
+	// One field per fact, left to right: selection, pointer, document, save
+	// state, zoom. An empty field takes no room.
+	updateStatusBar() {
+		const fields = els({
+			selection: 'statusSelection',
+			dimensions: 'statusDimensions',
+			save: 'statusSave',
+			zoom: 'statusZoom'
+		});
+		if (!fields.zoom) return;
+		if (!this.originalImage) {
+			Object.values(fields).forEach((field) => { field.textContent = ''; });
+			document.getElementById('statusCursor').textContent = '';
+			return;
+		}
+		const count = this.layerManager.getSelectedLayers().length;
+		const active = this.layerManager.getActiveLayer();
+		fields.selection.textContent = count > 1 ? `${count} layers selected` : active ? describeLayer(active, this).name : '';
+		fields.dimensions.innerHTML = formatDimensions(this.originalCanvas.width, this.originalCanvas.height);
+		fields.save.textContent = this.isSaved ? 'Saved' : 'Unsaved';
+		fields.zoom.innerHTML = formatUnit(this.viewport.getZoomPercentage(), '%');
+	}
+
+,
+	setupStatusBar() {
+		// The bar sits on the window's bottom edge, so its menu is placed by the
+		// popover (fixed), which opens upward when there is no room below.
+		setupMenuPopover({
+			root: document.getElementById('statusZoomMenu'),
+			trigger: document.getElementById('statusZoom'),
+			panel: document.getElementById('statusZoomPanel'),
+			fixed: true
+		});
+		document.querySelectorAll('[data-status-command]').forEach((item) => {
+			item.addEventListener('click', () => COMMANDS[item.dataset.statusCommand].run(this));
+		});
+		document.getElementById('statusSave').addEventListener('click', () => this.saveProjectFile());
+		// Canvas size is edited with the Crop tool.
+		document.getElementById('statusDimensions').addEventListener('click', () => {
+			if (!document.getElementById(getToolButtonId(ToolType.CROP))?.disabled) this.setTool(ToolType.CROP);
+		});
+
+		const cursor = document.getElementById('statusCursor');
+		const container = document.getElementById('previewContainer');
+		container.addEventListener('pointermove', (event) => {
+			if (!this.originalImage || event.pointerType === 'touch') return;
+			const point = this.viewport.screenToCanvas(event.clientX, event.clientY);
+			cursor.textContent = `${Math.round(point.x)}, ${Math.round(point.y)}`;
+		});
+		container.addEventListener('pointerleave', () => { cursor.textContent = ''; });
 	}
 
 ,
@@ -379,8 +433,7 @@ isLayerContentLocked(layer) {
 		const percentage = this.viewport.getZoomPercentage();
 		// Zoom context toolbar reads with the muted-unit treatment like the panels.
 		this.contextToolbarRenderer?.setValue('zoomPercentage', `${percentage}%`);
-		document.getElementById('statusZoom').innerHTML = formatUnit(percentage, '%');
-
+		this.updateStatusBar();
 
 		this.contextToolbarRenderer?.setEnabled('zoomOut', this.viewport.currentZoomIndex > 0);
 		document.getElementById('zoomIn').disabled = this.viewport.currentZoomIndex >= CONFIG.ui.zoom.levels.length - 1;

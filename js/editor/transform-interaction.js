@@ -578,9 +578,6 @@ snapTransformPosition(transform, position, options = {}) {
 			sync(false);
 			this.endTemporaryHandTool();
 		});
-		document.getElementById('statusZoom')?.addEventListener('dblclick', () => {
-			if (this.originalImage) this.viewport.resetZoom({ animate: true });
-		});
 		document.getElementById('handTool')?.addEventListener('dblclick', () => {
 			if (this.originalImage) this.viewport.zoomToFit({ animate: true });
 		});
@@ -593,8 +590,7 @@ snapTransformPosition(transform, position, options = {}) {
 	setDuplicateDragFeedback(active, count = 1) {
 		this.previewContainer?.classList.toggle('duplicate-drag-active', Boolean(active));
 		this.duplicateDragStatus = active ? (count > 1 ? `Duplicating ${count} layers` : 'Duplicating layer') : '';
-		const status = document.getElementById('statusText');
-		if (status) status.textContent = this.duplicateDragStatus;
+		this.updateStatus(this.duplicateDragStatus);
 	},
 
 	addDuplicateGhost(sourceTransform, targetTransform) {
