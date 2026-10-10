@@ -19,7 +19,7 @@ const GlitterAnimation = (() => {
 		}, { label: 'Float', group: 'Ambient', fields: ['amount', 'angle'], targets: ['layer', 'particle'], particleLabel: 'Float' }),
 		sway: motion(({ out, amount, oscillation }) => { out.rotate = amount * oscillation; }, { label: 'Sway', group: 'Ambient', fields: ['amount'] }),
 		dim: motion(({ out, data, wave }) => { out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Dim', group: 'Ambient', fields: ['opacityFloor'], activeWhen: (data) => data.opacityFloor < 100 }),
-		drift: motion(({ data, p, vector }) => vector(Number(data.distance) * p), { label: 'Drift', group: 'Ambient', fields: ['angle', 'distance'], activeWhen: (data) => data.distance !== 0 }),
+		drift: motion(({ data, p, vector }) => vector(Number(data.distance) * p), { label: 'Drift', group: 'Ambient', fields: ['angle', 'distance'], travels: true, activeWhen: (data) => data.distance !== 0 }),
 		twinkle: motion(({ out, data, p, random }) => {
 			out.opacity = random(2) < (data.duty / 50 - 1) ? 1 : data.opacityFloor / 100;
 			if (p === 0 || p === 1) out.opacity = 1;
@@ -48,13 +48,13 @@ const GlitterAnimation = (() => {
 		swing: motion(({ out, amount, p }) => { out.rotate = amount * Math.sin(4 * Math.PI * p) * (1 - p); }, { label: 'Swing', group: 'Attention', fields: ['amount'] }),
 		'rubber-band': motion(({ out, amount, oscillation, p }) => { out.scaleX = 1 + amount / 100 * oscillation * (1 - p); out.scaleY = 1 - amount / 140 * oscillation * (1 - p); }, { label: 'Rubber band', group: 'Attention', fields: ['amount'] }),
 		// OpacityFloor adds a fade synchronized with the movement wave.
-		move: motion(({ out, data, wave, vector }) => { vector(Number(data.distance) * wave); if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Move', group: 'Movement', fields: ['angle', 'distance', 'opacityFloor'], activeWhen: (data) => data.distance !== 0 }),
+		move: motion(({ out, data, wave, vector }) => { vector(Number(data.distance) * wave); if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; }, { label: 'Move', group: 'Movement', fields: ['angle', 'distance', 'opacityFloor'], travels: true, activeWhen: (data) => data.distance !== 0 }),
 		// The orbit center offsets the path independently of the transform anchor.
 		orbit: motion(({ out, data, p }) => {
 			const [anchorX, anchorY] = resolveOrigin(data, 'orbitCenter');
 			out.tx = (anchorX - 0.5) * 2 * data.radius + data.radius * Math.cos(2 * Math.PI * p);
 			out.ty = (anchorY - 0.5) * 2 * data.radius + data.radius * Math.sin(2 * Math.PI * p);
-		}, { label: 'Orbit', group: 'Movement', fields: ['radius'], targets: ['layer', 'particle'], activeWhen: (data) => data.radius !== 0, anchor: { stores: 'motion', label: 'Orbit center', note: 'Sets the center of the orbit path.' }, particleLabel: 'Orbit' }),
+		}, { label: 'Orbit', group: 'Movement', fields: ['radius'], travels: true, targets: ['layer', 'particle'], activeWhen: (data) => data.radius !== 0, anchor: { stores: 'motion', label: 'Orbit center', note: 'Sets the center of the orbit path.' }, particleLabel: 'Orbit' }),
 		// Amount adds a scale pulse to the spin.
 		rotate: motion(({ out, data, amount, oscillation, p }) => { out.rotate = data.turns * 360 * p; if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; }, { label: 'Rotate', group: 'Movement', fields: ['amount', 'turns'], targets: ['layer', 'particle'], activeWhen: (data) => data.turns !== 0, particleLabel: 'Spin' }),
 		// Angle selects the closest horizontal or vertical flip axis.
@@ -65,10 +65,11 @@ const GlitterAnimation = (() => {
 		}, { label: 'Flip', group: 'Movement', fields: ['angle', 'turns'], activeWhen: (data) => data.turns !== 0 }),
 		zoom: motion(({ out, amount, wave }) => { out.scaleX = out.scaleY = 1 + amount / 100 * wave; }, { label: 'Zoom', group: 'Movement', fields: ['amount'] }),
 		ping: motion(({ out, data, p }) => { out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; }, { label: 'Ping', group: 'Movement', fields: ['radius', 'opacityFloor'], activeWhen: (data) => data.radius !== 0 }),
+		// Repeat picks the wrap: none, a copy on the opposite edge, or a tiled row.
 		// Repeated copies exchange places at the wrap, including shadows.
-		marquee: motion(wrapMotion({ repeat: true }), { label: 'Marquee', group: 'Movement', fields: ['angle'], needsBounds: true, offCanvas: true, activeWhen: () => true }),
-		fall: motion(wrapMotion({ angle: 90 }), { label: 'Fall', group: 'Movement', targets: ['particle'], needsBounds: true, activeWhen: () => true }),
-		rise: motion(wrapMotion({ angle: 270 }), { label: 'Rise', group: 'Movement', targets: ['particle'], needsBounds: true, activeWhen: () => true }),
+		marquee: motion(wrapMotion(), { label: 'Marquee', group: 'Movement', fields: ['angle', 'repeat', 'gap'], fieldWhen: { gap: (data) => data.repeat === 'tile' }, travels: true, needsBounds: true, offCanvas: true, activeWhen: () => true }),
+		fall: motion(wrapMotion({ angle: 90, repeat: 'none' }), { label: 'Fall', group: 'Movement', targets: ['particle'], needsBounds: true, activeWhen: () => true }),
+		rise: motion(wrapMotion({ angle: 270, repeat: 'none' }), { label: 'Rise', group: 'Movement', targets: ['particle'], needsBounds: true, activeWhen: () => true }),
 		ricochet: motion(({ out, data, options, p, angle }) => {
 			const room = [options.area.width - (options.rest.right - options.rest.left), options.area.height - (options.rest.bottom - options.rest.top)];
 			const turns = Math.max(1, Math.round(data.turns));
@@ -81,7 +82,7 @@ const GlitterAnimation = (() => {
 				const direction = (axis ? Math.sin(angle) : Math.cos(angle)) < 0 ? -1 : 1;
 				out[key] = reflect(axis ? options.rest.top : options.rest.left, room[axis], trips * direction, p);
 			});
-		}, { particleData: (context) => ({ angle: mulberry32(hashString(context.id) ^ Number(context.seed))() * 360 }), label: 'Ricochet', group: 'Movement', fields: ['turns', 'angle'], targets: ['layer', 'particle'], needsBounds: true, offCanvas: true, activeWhen: () => true }),
+		}, { particleData: (context) => ({ angle: mulberry32(hashString(context.id) ^ Number(context.seed))() * 360 }), label: 'Ricochet', group: 'Movement', fields: ['turns', 'angle'], travels: true, targets: ['layer', 'particle'], needsBounds: true, offCanvas: true, activeWhen: () => true }),
 		wander: motion(({ out, data, options, p }) => {
 			const random = mulberry32(hashString(options.id) ^ Number(options.seed));
 			['x', 'y'].forEach((axis) => {
@@ -102,14 +103,15 @@ const GlitterAnimation = (() => {
 		Object.freeze({ id, ...definition })
 	])));
 	const ANIMATION_CONTROLS = Object.freeze([
-		['periodMs', 'PeriodMs', 'animSpeed', 1], ['amount', 'Amount', 'animAmount', 1],
+		['periodMs', 'PeriodMs', 'animDuration', 0.001], ['amount', 'Amount', 'animAmount', 1],
 		['angle', 'Angle', 'animAngle', 1], ['distance', 'Distance', 'animDistance', 1],
 		['radius', 'Radius', 'animRadius', 1], ['turns', 'Turns', 'animTurns', 1],
 		['duty', 'Duty', 'animDuty', 1], ['opacityFloor', 'OpacityFloor', 'animOpacityFloor', 1],
-		['delayMs', 'DelayMs', 'animDelay', 1], ['phase', 'Phase', 'animPhase', 100],
+		['gap', 'Gap', 'animGap', 1],
+		['delayMs', 'DelayMs', 'animDelay', 0.001], ['phase', 'Phase', 'animPhase', 100],
 		['anchorX', 'AnchorX', 'animAnchorX', 100], ['anchorY', 'AnchorY', 'animAnchorY', 100],
 		['easing', 'Easing'], ['direction', 'Direction'], ['fillMode', 'FillMode'],
-		['anchor', 'Anchor'], ['snapMode', 'SnapMode']
+		['anchor', 'Anchor'], ['snapMode', 'SnapMode'], ['repeat', 'Repeat']
 	].map(([key, suffix, field, scale = 1]) => Object.freeze({ key, suffix, field, scale })));
 	const ANIMATION_TYPES = Object.freeze(Object.keys(MOTION_REGISTRY));
 	const IDENTITY = Object.freeze({
@@ -119,7 +121,7 @@ const GlitterAnimation = (() => {
 	const BASE_DEFAULTS = Object.freeze({
 		periodMs: 1000, easing: 'linear', steps: 2, direction: 'normal', iterations: Infinity,
 		delayMs: 0, phase: 0, fillMode: 'none', amount: 0, angle: 0, distance: 0,
-		radius: 0, turns: 0, duty: 50, opacityFloor: 0,
+		radius: 0, turns: 0, duty: 50, opacityFloor: 0, repeat: 'none', gap: 0,
 		orbitCenter: 'center', orbitCenterX: 0.5, orbitCenterY: 0.5, snapMode: 'smooth'
 	});
 	function mod(value, span) { return ((value % span) + span) % span; }
@@ -130,8 +132,12 @@ const GlitterAnimation = (() => {
 		return room > 0 ? room - Math.abs(mod(start + 2 * room * trips * progress, 2 * room) - room) - start : 0;
 	}
 
-	function wrapMotion({ angle: fixedAngle, repeat = false } = {}) {
+	// `repeat`: 'none' leaves the area before it re-enters, 'wrap' re-enters on
+	// the opposite edge as it leaves, and 'tile' fills the travel axis with
+	// copies one gap apart. Each mode crosses a whole number of spans per cycle.
+	function wrapMotion({ angle: fixedAngle, repeat: fixedRepeat } = {}) {
 		return ({ out, data, options, p }) => {
+			const repeat = fixedRepeat ?? data.repeat;
 			const angle = (fixedAngle ?? data.angle) * Math.PI / 180;
 			const dx = Math.cos(angle), dy = Math.sin(angle);
 			const project = ({ left, top, right, bottom }) => {
@@ -140,11 +146,36 @@ const GlitterAnimation = (() => {
 			};
 			const [cMin, cMax] = project({ left: 0, top: 0, right: options.area.width, bottom: options.area.height });
 			const [lMin, lMax] = project(options.restVisual);
-			const span = repeat ? Math.max(cMax - cMin, lMax - lMin) : cMax - cMin + lMax - lMin;
-			const offset = wrap(lMax - cMin, span, p);
-			out.tx = dx * offset;
-			out.ty = dy * offset;
-			if (repeat) out.copies = [0, -1, 1].map((index) => ({ x: dx * span * index, y: dy * span * index }));
+			const travel = cMax - cMin, extent = lMax - lMin;
+			if (repeat !== 'tile') {
+				const span = repeat === 'wrap' ? Math.max(travel, extent) : travel + extent;
+				const offset = wrap(lMax - cMin, span, p);
+				out.tx = dx * offset;
+				out.ty = dy * offset;
+				if (repeat === 'wrap') out.copies = [0, -1, 1].map((index) => ({ x: dx * span * index, y: dy * span * index }));
+				return;
+			}
+			// Neighbors meet on whichever pair of box edges touches first along the
+			// travel line, so the gap is the same clear space at every angle.
+			// maxCopies bounds the row a small layer tiles across a large canvas.
+			const gap = Math.max(0, Number(data.gap));
+			const reach = (size, component) => Math.abs(component) < 1e-6 ? Infinity : (Math.floor(size + 1e-6) + gap) / Math.abs(component);
+			const pitch = Math.max(1, travel / data.maxCopies, Math.min(
+				reach(options.restVisual.right - options.restVisual.left, dx),
+				reach(options.restVisual.bottom - options.restVisual.top, dy)
+			));
+			// Whole-pixel steps and offsets keep every copy on the layer's own pixel
+			// phase; a fractional seam between neighbors antialiases into a visible line.
+			const stepX = Math.round(dx * pitch), stepY = Math.round(dy * pitch);
+			const span = stepX * dx + stepY * dy;
+			// A cycle crosses whole tiles, close to the one canvas the other modes cross.
+			const progress = mod(Math.max(1, Math.round(travel / span)) * p, 1);
+			out.tx = Math.round(stepX * progress);
+			out.ty = Math.round(stepY * progress);
+			// The range covers every offset in a span, so the copy count holds through a cycle.
+			const indices = [0];
+			for (let index = Math.ceil((cMin - lMax) / span) - 1; index <= Math.floor((cMax - lMin) / span); index++) if (index) indices.push(index);
+			out.copies = indices.map((index) => ({ x: stepX * index, y: stepY * index }));
 		};
 	}
 
@@ -211,6 +242,22 @@ const GlitterAnimation = (() => {
 	function loopDurationMs(value) {
 		const data = normalizeAnimation(value);
 		return Number.isFinite(data.iterations) ? data.periodMs * Math.max(0, data.iterations) : Infinity;
+	}
+
+	// Typical canvas speed of a traveling motion in px/s: the median step over
+	// one cycle, so a wrap's jump and an easing's slow ends do not skew it.
+	function travelSpeed(value, samplingContext = {}, steps = 48) {
+		const data = { ...normalizeAnimation(value), delayMs: 0, phase: 0 };
+		if (!MOTION_REGISTRY[data.type].travels) return 0;
+		const distances = [];
+		let previous = sampleAt(data, 0, samplingContext);
+		for (let index = 1; index <= steps; index++) {
+			const next = sampleAt(data, data.periodMs * index / steps, samplingContext);
+			distances.push(Math.hypot(next.tx - previous.tx, next.ty - previous.ty));
+			previous = next;
+		}
+		distances.sort((a, b) => a - b);
+		return distances[steps >> 1] * steps * 1000 / data.periodMs;
 	}
 
 	function hashString(value) {
@@ -395,7 +442,7 @@ const GlitterAnimation = (() => {
 
 	return {
 		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, normalizeAnimation, normalizeAnimations, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
+		isSeamlessLoop, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, wrap, reflect
 	};
 })();

@@ -8,7 +8,7 @@
 // slots' `fields` say which data path each spec edits (js/layers/types/).
 //
 // `scale: 'log'` maps the DOM track geometrically onto [min, max] (slider.js);
-// `value` is always the real value. Loads before config.js.
+// `value` is always the real value, and values land on `step`. Loads before config.js.
 //
 // `typeMin` / `typeMax` let a typed value run past the track: the slider
 // covers min..max, and its readout accepts typeMin..typeMax (slider.js).
@@ -24,7 +24,7 @@ const FIELDS = Object.freeze({
 	recolorLightness: { label: 'Lightness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 	recolorContrast: { label: 'Contrast', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 	animSteps: { label: 'Steps', min: 2, max: 60, step: 1, value: 2 },
-	animSpeed: { label: 'Speed', unit: 'ms', min: 120, max: 20000, step: 10, value: 1400 },
+	animDuration: { label: 'Duration', unit: 's', min: 0.1, max: 20, step: 0.01, value: 1.4, scale: 'log' },
 	animAmount: { label: 'Intensity', unit: '', min: 0, max: 200, step: 1, value: 10 },
 	animAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 0 },
 	animDistance: { label: 'Distance', unit: 'px', min: 0, max: 2000, step: 1, value: 60 },
@@ -32,7 +32,8 @@ const FIELDS = Object.freeze({
 	animTurns: { label: 'Turns', unit: '×', min: 1, max: 8, step: 1, value: 1 },
 	animDuty: { label: 'Duty cycle', unit: '%', min: 5, max: 95, step: 1, value: 50 },
 	animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
-	animDelay: { label: 'Delay', unit: 'ms', min: 0, max: 20000, step: 10, value: 0 },
+	animGap: { label: 'Gap', unit: 'px', min: 0, max: 500, step: 1, value: 0 },
+	animDelay: { label: 'Delay', unit: 's', min: 0, max: 20, step: 0.05, value: 0 },
 	animPhase: { label: 'Start offset', unit: '%', min: 0, max: 100, step: 1, value: 0 },
 	animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 	animAnchorY: { label: 'Anchor Y', unit: '%', min: 0, max: 100, step: 1, value: 50 },

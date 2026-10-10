@@ -280,8 +280,12 @@ function createAnimationSectionSpec(prefix) {
 				{ kind: 'note', id: id('LoopHint'), classes: 'animation-loop-hint' }
 			] },
 			{ label: 'Movement', rows: [
-				...GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field && !['delayMs', 'phase', 'anchorX', 'anchorY'].includes(control.key))
-					.map((control) => ({ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`) }))
+				...GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field && !['gap', 'delayMs', 'phase', 'anchorX', 'anchorY'].includes(control.key))
+					.map((control) => ({ kind: 'slider', id: id(control.suffix), slider: control.field, rowId: id(`${control.suffix}Row`) })),
+				{ kind: 'select', id: id('Repeat'), label: 'Repeat', rowId: id('RepeatRow'), hidden: true,
+					hint: 'None leaves the canvas before it returns. Wrap enters the opposite edge as it leaves. Tile fills the canvas with copies.',
+					options: [{ value: 'none', label: 'None' }, { value: 'wrap', label: 'Wrap' }, { value: 'tile', label: 'Tile' }] },
+				...sliders(['gap'], true)
 			] }
 		],
 		advancedId: id('Advanced'),

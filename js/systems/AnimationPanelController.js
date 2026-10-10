@@ -206,7 +206,7 @@ class AnimationPanelController {
 						const key = field.endsWith('X') ? 'x' : 'y';
 						if (this._anchorDefinition(animation).stores === 'motion') animation[`orbitCenter${key.toUpperCase()}`] = value / scale;
 						else this._updateLayerAnchor(layer, { ...getLayerTransform(layer).anchor, [key]: value / scale });
-					} else animation[field] = value / scale;
+					} else animation[field] = Number((value / scale).toFixed(6));
 					this._renderLayer(layer);
 					this._syncSummary(prefix, layer.animations, animation);
 				},
@@ -257,9 +257,14 @@ class AnimationPanelController {
 		const summary = this._id(prefix, 'Summary');
 		if (summary) summary.textContent = GlitterAnimation.summaryText(animations);
 		const hint = this._id(prefix, 'LoopHint');
-		if (hint) hint.textContent = Number.isFinite(selected?.iterations)
+		if (!hint) return;
+		const context = getLayerAnimationSamplingContext(this.editor, this.editor.layerManager.getActiveLayer());
+		const loop = Number.isFinite(selected?.iterations)
 			? 'Plays a fixed number of times'
-			: (GlitterAnimation.isSeamlessLoop(selected, getLayerAnimationSamplingContext(this.editor, this.editor.layerManager.getActiveLayer())) ? 'Loops seamlessly' : 'Restarts abruptly each loop');
+			: (GlitterAnimation.isSeamlessLoop(selected, context) ? 'Loops seamlessly' : 'Restarts abruptly each loop');
+		// Duration is the cycle length; a traveling preset also reads as a speed.
+		const speed = selected ? Math.round(GlitterAnimation.travelSpeed(selected, context)) : 0;
+		hint.textContent = speed > 0 ? `${loop} · about ${speed} px/s` : loop;
 	}
 
 	load(layer) {
@@ -304,13 +309,13 @@ class AnimationPanelController {
 			writeSliderValue(control, value);
 			const readout = this._id(prefix, `${suffix}Value`);
 			if (!readout) return;
-			const rounded = Math.round(value * 10) / 10;
+			const rounded = Number(value.toFixed(Math.max(1, stepDecimals(FIELDS[spec].step))));
 			readout.innerHTML = formatUnit(rounded, FIELDS[spec]?.unit || '');
 		});
 		const motion = GlitterAnimation.MOTION_REGISTRY[data.type];
-		GlitterAnimation.ANIMATION_CONTROLS.filter((control) => control.field).forEach(({ key, suffix }) => {
+		GlitterAnimation.ANIMATION_CONTROLS.forEach(({ key, suffix }) => {
 			const row = this._id(prefix, `${suffix}Row`);
-			if (row && !['periodMs', 'delayMs', 'phase', 'anchorX', 'anchorY'].includes(key)) row.hidden = !motion.fields.includes(key);
+			if (row && !['periodMs', 'delayMs', 'phase', 'anchorX', 'anchorY'].includes(key)) row.hidden = !motion.fields.includes(key) || motion.fieldWhen?.[key]?.(data) === false;
 		});
 		const stepsRow = this._id(prefix, 'Steps')?.closest('.property-row');
 		if (stepsRow) stepsRow.hidden = data.easing !== 'steps';

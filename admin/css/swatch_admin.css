@@ -96,7 +96,9 @@
   	color-mix(in srgb, var(--color-danger) 62%, black) 70%,
   	color-mix(in srgb, var(--color-danger-bright) 58%, white) 100%);
   --danger-btn-border-color: color-mix(in srgb, var(--color-danger) 75%, black);
-  --danger-btn-text-color: var(--color-text-on-accent);
+  /* Not --color-text-on-accent: that follows the accent's lightness (dark on
+     bright-accent themes), while this gradient is deep red on every dark ramp. */
+  --danger-btn-text-color: #fff;
   --danger-btn-hover-filter: brightness(1.12) saturate(1.08);
   --danger-btn-active-filter: brightness(0.88) saturate(1.05);
   /* Gloss buttons are rimless by default; themes whose source UI rims its
@@ -294,7 +296,9 @@
   --icon-size-xs: 20px;
   /* PANELS */
   --layer-panel-width: 400px;
-  --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+  /* As wide as the left side (the rail, its gutter and the Layers column),
+     so the canvas between them is centred in the window. */
+  --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width) + var(--spacing-base));
   /* The Library window is as wide as the Inspector until it is resized. */
   --library-window-width: var(--glitter-panel-width);
   --color-filter-chip-size: var(--row-height);
@@ -309,7 +313,7 @@
   --mobile-drawer-height: 50dvh;
   --mobile-drawer-reserved-height: var(--mobile-drawer-height);
   /* Modern browsers override */
-  --mobile-toolbar-width: 50px;
+  --mobile-toolbar-width: calc(var(--control-height) + 2 * var(--spacing-sm) + 2px);
   --mobile-sheet-max-width: 640px;
   /* z indexes — app-wide surface layer scale. Each token gates one visual
      layer in the global stack; local intra-component stacking (-1, 0, 1, 2,

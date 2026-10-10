@@ -8,7 +8,7 @@ const types = Animation.ANIMATION_TYPES;
 const presets = Object.fromEntries(types.map((type) => [type, {
 	periodMs: 1000, easing: 'linear', amount: 10, distance: 20, radius: 20, turns: 1,
 	duty: 50, opacityFloor: 20, direction: 'normal', iterations: Infinity,
-	maxTrips: 12, harmonics: { x: [{ frequency: 1, weight: 0.6 }, { frequency: 2, weight: 0.4 }], y: [{ frequency: 1, weight: 0.6 }, { frequency: 3, weight: 0.4 }] }
+	maxTrips: 12, maxCopies: 48, harmonics: { x: [{ frequency: 1, weight: 0.6 }, { frequency: 2, weight: 0.4 }], y: [{ frequency: 1, weight: 0.6 }, { frequency: 3, weight: 0.4 }] }
 }]));
 global.CONFIG = { tools: { animation: { defaultType: 'pulse', presets, jitterQuantMs: 60 } } };
 
@@ -135,20 +135,43 @@ for (const width of [400, 800]) for (const turns of [1, 2, 3, 4]) {
 	}
 }
 for (const angle of [0, 37, 90, 180, 270]) {
-	assert(Animation.isSeamlessLoop({ type: 'marquee', angle }, bounds));
-	let previous = Animation.sampleAt({ type: 'marquee', angle }, 0, bounds);
-	let jumped = false;
-	for (let t = 1; t < 1000; t++) {
-		const next = Animation.sampleAt({ type: 'marquee', angle }, t, bounds);
-		if (Math.hypot(next.tx - previous.tx, next.ty - previous.ty) > 10) {
-			const nearestCopy = Math.min(...next.copies.map(({ x, y }) => Math.hypot(next.tx + x - previous.tx, next.ty + y - previous.ty)));
-			assert(nearestCopy < 2, `marquee ${angle} replicas did not meet at wrap`);
-			jumped = true;
+	for (const repeat of ['wrap', 'tile']) {
+		const data = { type: 'marquee', angle, repeat, gap: 12 };
+		assert(Animation.isSeamlessLoop(data, bounds));
+		let previous = Animation.sampleAt(data, 0, bounds);
+		let jumped = false;
+		for (let t = 1; t < 1000; t++) {
+			const next = Animation.sampleAt(data, t, bounds);
+			assert.strictEqual(next.copies.length, previous.copies.length, `marquee ${repeat} ${angle} copy count changed mid-cycle`);
+			if (Math.hypot(next.tx - previous.tx, next.ty - previous.ty) > 10) {
+				const nearestCopy = Math.min(...next.copies.map(({ x, y }) => Math.hypot(next.tx + x - previous.tx, next.ty + y - previous.ty)));
+				assert(nearestCopy < 2, `marquee ${repeat} ${angle} replicas did not meet at wrap`);
+				jumped = true;
+			}
+			previous = next;
 		}
-		previous = next;
+		assert(jumped);
 	}
-	assert(jumped);
+	assert(Animation.isSeamlessLoop({ type: 'marquee', angle }, bounds));
+	assert.strictEqual(Animation.sampleAt({ type: 'marquee', angle }, 250, bounds).copies, undefined, 'an unrepeated marquee draws once');
 }
+// Tiles sit one layer width plus the gap apart and cover the canvas at every offset.
+for (let t = 0; t < 1000; t += 7) {
+	const tiled = Animation.sampleAt({ type: 'marquee', angle: 0, repeat: 'tile', gap: 20 }, t, bounds);
+	const lefts = tiled.copies.map(({ x }) => bounds.rest.left + tiled.tx + x).sort((a, b) => a - b);
+	lefts.slice(1).forEach((left, index) => assert(near(left - lefts[index], 100), 'tile pitch is not width plus gap'));
+	assert(lefts[0] <= 0 && lefts.at(-1) + 80 >= 640, 'tiles left part of the canvas empty');
+}
+// At an angle the neighbors touch on one pair of box edges, so that axis steps by size plus gap.
+for (const [angle, gap, step] of [[45, 10, { x: 50, y: 50 }], [30, 0, { x: 69, y: 40 }], [300, 6, { x: 27, y: -46 }], [90, 4, { x: 0, y: 44 }]]) {
+	const tiled = Animation.sampleAt({ type: 'marquee', angle, repeat: 'tile', gap }, 333, bounds);
+	assert(Number.isInteger(tiled.tx) && Number.isInteger(tiled.ty), 'tiled offsets stay on whole pixels');
+	assert(tiled.copies.some(({ x, y }) => x === step.x && y === step.y), `tile step at ${angle} is not ${JSON.stringify(step)}`);
+}
+assert(Animation.sampleAt({ type: 'marquee', angle: 0, repeat: 'tile' }, 250, { ...bounds, rest: { left: 100, top: 100, right: 101, bottom: 101 }, restVisual: { left: 100, top: 100, right: 101, bottom: 101 } }).copies.length <= 51, 'tile copies are not capped');
+assert(near(Animation.travelSpeed({ type: 'drift', distance: 120, periodMs: 2000 }), 60), 'drift speed is distance over duration');
+assert(near(Animation.travelSpeed({ type: 'marquee', angle: 0, repeat: 'wrap', periodMs: 4000 }, bounds), 160), 'a wrapped marquee crosses the canvas each cycle');
+assert.strictEqual(Animation.travelSpeed({ type: 'pulse' }, bounds), 0, 'a motion that stays in place has no speed');
 const square = Animation.createSamplingContext({ area: { width: 400, height: 400 }, rest: { left: 180, top: 180, right: 220, bottom: 220 } });
 const angledBounce = Animation.sampleAt({ type: 'ricochet', angle: 30 }, 125, square);
 assert(!near(Math.abs(angledBounce.tx), Math.abs(angledBounce.ty)), 'square ricochet still follows its diagonal');
@@ -177,9 +200,9 @@ assert(Animation.domTransformString(stacked).startsWith('matrix('));
 assert.strictEqual(Animation.normalizeAnimations({ type: 'pulse' }).length, 1);
 assert.strictEqual(Animation.summaryText([{ type: 'pulse' }, { type: 'rotate' }]), '2 animations');
 assert.strictEqual(Animation.includesOffCanvas([{ type: 'move' }, { type: 'marquee' }]), true);
-const repeatStack = Animation.sampleAt([{ type: 'marquee', angle: 0 }, { type: 'marquee', angle: 0 }], 250, bounds);
+const repeatStack = Animation.sampleAt([{ type: 'marquee', angle: 0, repeat: 'wrap' }, { type: 'marquee', angle: 0, repeat: 'wrap' }], 250, bounds);
 assert.strictEqual(repeatStack.copies.length, 5, 'overlapping repeat offsets must draw only once');
-const rotatedRepeat = Animation.sampleAt([{ type: 'rotate', turns: 1, amount: 0 }, { type: 'marquee', angle: 0 }], 250, bounds);
+const rotatedRepeat = Animation.sampleAt([{ type: 'rotate', turns: 1, amount: 0 }, { type: 'marquee', angle: 0, repeat: 'wrap' }], 250, bounds);
 assert(rotatedRepeat.copies.slice(1).every(({ x, y }) => near(x, 0) && near(Math.abs(y), 640)), 'stacked rotation must rotate repeat offsets');
 
 console.log(`animation-parity: ${types.length} presets passed`);

@@ -27,7 +27,7 @@ async function main() {
 			const layer = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: 'rectangle', position: { x: 160, y: 120 }, width: 80, height: 60 } });
 			layer.transform.scale = { x: 150, y: 150 }; layer.transform.rotation = 30; layer.transform.flipX = true;
 			layer.transform.anchor = { x: 0.3, y: 0.7 };
-			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'marquee', angle: 37 })];
+			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'marquee', angle: 37, repeat: 'wrap' })];
 			editor.shapeGlitterManager.renderLayer(layer);
 			const wrapper = editor.shapeGlitterManager.layerElements.get(layer.id).querySelector('.layer-anim-wrapper');
 			const box = editor.sceneCompositor._getAnimationBox(layer, 320, 240);
@@ -61,7 +61,7 @@ async function main() {
 			const output = document.createElement('canvas'); output.width = 320; output.height = 240;
 			const layer = { id: 'copy-fixture', type: LayerType.SHAPE, opacity: 100, transform: { position: { x: 160, y: 120 }, scale: { x: 100, y: 100 }, rotation: 0, flipX: false, flipY: false } };
 			const context = GlitterAnimation.createSamplingContext({ area: { width: 320, height: 240 }, rest: { left: 120, top: 100, right: 200, bottom: 140 } });
-			const animation = GlitterAnimation.normalizeAnimation({ type: 'marquee', angle: 0 });
+			const animation = GlitterAnimation.normalizeAnimation({ type: 'marquee', angle: 0, repeat: 'wrap' });
 			editor.sceneCompositor._activeLayerAnimation = { layer, sample: GlitterAnimation.sampleAt(animation, animation.periodMs / 2, context) };
 			try { editor.sceneCompositor._drawTransformedCanvas(output.getContext('2d'), source, layer, 80, 40); }
 			finally { editor.sceneCompositor._activeLayerAnimation = null; }

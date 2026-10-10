@@ -1,8 +1,9 @@
 // A range input's raw position (an integer over its min..max) can map to a
 // different logical value via data-scale. Only 'log' exists: position runs
 // geometrically across [data-scale-min, data-scale-max], so the low end of the
-// track gets far more resolution. With no data-scale, value === position, so
-// every existing slider is untouched.
+// track gets far more resolution. Values land on data-scale-step (whole
+// numbers without it). With no data-scale, value === position, so every
+// existing slider is untouched.
 function sliderScaleFor(el) {
 	if (!el || el.dataset.scale !== 'log') {
 		return { toValue: (pos) => pos, toPosition: (val) => val };
@@ -10,8 +11,9 @@ function sliderScaleFor(el) {
 	const posMax = Number(el.max) || 1000;
 	const lo = Math.log(Number(el.dataset.scaleMin) || 1);
 	const hi = Math.log(Number(el.dataset.scaleMax) || 100);
+	const grid = Number(el.dataset.scaleStep) || 1;
 	return {
-		toValue: (pos) => Math.round(Math.exp(lo + (clamp(pos, 0, posMax) / posMax) * (hi - lo))),
+		toValue: (pos) => Number((Math.round(Math.exp(lo + (clamp(pos, 0, posMax) / posMax) * (hi - lo)) / grid) * grid).toFixed(stepDecimals(grid))),
 		toPosition: (val) => Math.round(posMax * (Math.log(clamp(Number(val), Math.exp(lo), Math.exp(hi))) - lo) / (hi - lo))
 	};
 }
@@ -379,6 +381,12 @@ function stepNumericControl(control, direction, { shift = false, alt = false, sc
 		decimals = stepDecimals(grid);
 	}
 	next = Number(Math.min(high, Math.max(low, next)).toFixed(decimals));
+	// A log track holds one value across several positions where its value grid
+	// is coarser than the track, so a step moves on to the next value.
+	if (isRange && !pastTrack && target.dataset.scale === 'log') {
+		const scale = sliderScaleFor(target);
+		while (next > low && next < high && scale.toValue(next) === scale.toValue(current)) next += direction;
+	}
 	if (next === current) return false;
 	if (pastTrack) writeSliderValue(target, next);
 	else {

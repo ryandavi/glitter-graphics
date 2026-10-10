@@ -37,6 +37,7 @@ const EDITOR_PANEL_METHODS = {
 			quick.dataset.scale = canonical.dataset.scale;
 			quick.dataset.scaleMin = canonical.dataset.scaleMin;
 			quick.dataset.scaleMax = canonical.dataset.scaleMax;
+			if (canonical.dataset.scaleStep) quick.dataset.scaleStep = canonical.dataset.scaleStep;
 			quick.step = canonical.step;
 		}
 		quick.value = canonical.value;

@@ -379,7 +379,7 @@ const CONFIG = deepFreeze({
 				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity },
 				zoom: { periodMs: 8000, easing: 'easeOut', amount: 15, direction: 'alternate', iterations: Infinity },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity },
-				marquee: { periodMs: 4000, easing: 'linear', angle: 180, direction: 'normal', iterations: Infinity },
+				marquee: { periodMs: 4000, easing: 'linear', angle: 180, repeat: 'none', gap: 0, maxCopies: 48, direction: 'normal', iterations: Infinity },
 				ricochet: { periodMs: 6000, easing: 'linear', turns: 1, maxTrips: 12, angle: 30, iterations: Infinity },
 				wander: { periodMs: 6000, easing: 'linear', amount: 20, iterations: Infinity, harmonics: { x: [{ frequency: 1, weight: 0.6 }, { frequency: 2, weight: 0.4 }], y: [{ frequency: 1, weight: 0.6 }, { frequency: 3, weight: 0.4 }] } },
 				rainbow: { periodMs: 3000, easing: 'linear', direction: 'normal', iterations: Infinity },

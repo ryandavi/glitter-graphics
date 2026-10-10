@@ -130,6 +130,14 @@ assert.deepStrictEqual(step(slider, 1, { alt: true }).events, [], 'Alt never ste
 slider = makeInput('range', { min: '0', max: '1000', step: '1', value: '1000', dataset: { scale: 'log', scaleMin: '1', scaleMax: '1000' } });
 assert.strictEqual(step(slider, 1).changed, false, 'a slider at its end does not move');
 assert.strictEqual(step(slider, -1).value, 999, 'a log slider steps one track position');
+// A log track with a value grid lands on it, and a step reaches the next value.
+slider = makeInput('range', { min: '0', max: '1000', step: '1', value: '0', dataset: { scale: 'log', scaleMin: '0.1', scaleMax: '20', scaleStep: '0.01' } });
+context.probe = slider;
+assert.strictEqual(run('sliderScaleFor(probe).toValue(0)'), 0.1);
+assert.strictEqual(run('sliderScaleFor(probe).toValue(1000)'), 20);
+assert.strictEqual(run('sliderScaleFor(probe).toValue(sliderScaleFor(probe).toPosition(1.4))'), 1.4);
+step(slider, 1);
+assert.strictEqual(run('sliderScaleFor(probe).toValue(Number(probe.value))'), 0.11, 'a step on a coarse log grid reaches the next value');
 slider = makeInput('range', { value: '95' });
 assert.strictEqual(step(slider, 1, { shift: true }).value, 100, 'a slider with no attributes uses the 0..100 default');
 

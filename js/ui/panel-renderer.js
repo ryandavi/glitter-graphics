@@ -148,6 +148,7 @@ function applySliderSpec(input, spec) {
 		input.dataset.scale = 'log';
 		input.dataset.scaleMin = String(spec.min);
 		input.dataset.scaleMax = String(spec.max);
+		if (spec.step != null && spec.step !== 1) input.dataset.scaleStep = String(spec.step);
 		input.setAttribute('value', String(sliderScaleFor(input).toPosition(spec.value)));
 	} else {
 		input.min = String(spec.min);

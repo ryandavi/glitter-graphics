@@ -1982,7 +1982,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Tune the result</strong> – <strong>Speed</strong> and <strong>Intensity</strong> are the main adjustments. Open <strong>Advanced</strong> for easing, direction, iterations, delay, start offset, fill mode, the shared layer anchor, and motion sampling. Orbit keeps a separate orbit center.</p>
+                    <p><strong>Tune the result</strong> – <strong>Duration</strong> and <strong>Intensity</strong> are the main adjustments. Duration is the length of one cycle in seconds, so a shorter duration is faster. Presets that travel also show their speed in pixels per second. Open <strong>Advanced</strong> for easing, direction, iterations, delay, start offset, fill mode, the shared layer anchor, and motion sampling. Orbit keeps a separate orbit center.</p>
                     <ul>
                         <li><strong>Timeline</strong> – Layer animations share one canvas timeline by default. <strong>Start offset</strong> shifts one layer around its loop by a percentage.</li>
                         <li><strong>Iterations</strong> – Finite iterations play the effect a set number of times. Continuous motion loops while the layer is visible.</li>
@@ -1998,7 +1998,7 @@
                 <div class="guide-item-content">
                     <p><strong>Path presets</strong></p>
                     <ul>
-                        <li><strong>Marquee</strong> – Fits its travel to the canvas and repeats copies, so one enters as another leaves, with a seamless wrap. Angle sets the direction.</li>
+                        <li><strong>Marquee</strong> – Fits its travel to the canvas and loops seamlessly. Angle sets the direction. <strong>Repeat</strong> sets what happens at the edge: <strong>None</strong> leaves the canvas before it returns, <strong>Wrap</strong> enters the opposite edge as it leaves, and <strong>Tile</strong> fills the canvas with copies, with <strong>Gap</strong> setting the space between them.</li>
                         <li><strong>Ricochet</strong> – Bounces between the canvas edges. Turns sets the number of round trips. Angle sets the direction and the balance of horizontal and vertical bounces. Bounce counts use whole round trips to keep the loop seamless.</li>
                         <li><strong>Wander</strong> – Follows a stable looping path. Intensity sets its range. Ricochet and Wander are also Sparkles behaviors, where Wander gives particles a firefly motion.</li>
                     </ul>

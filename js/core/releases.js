@@ -24,7 +24,7 @@ const RELEASES = [
 		summary: 'Added layer animation, filter, frame, and Sparkles layers, richer layer styling, still-image export, and more faithful animation output.',
 		features: [
 			{ type: 'added', text: 'Added the Crop tool with canvas handles, ratios, fit to artwork or selection, extension fill, keyboard and touch controls, and one-step undo.', guide: 'crop-tool' },
-			{ type: 'changed', text: 'Marquee now fits and wraps seamlessly around the canvas. Added looping Ricochet and Wander for layers and Sparkles.', guide: 'layer-animation' },
+			{ type: 'changed', text: 'Marquee now fits the canvas and loops seamlessly, with a choice of no repeat, an edge wrap, or a tiled row with an adjustable gap. Added looping Ricochet and Wander for layers and Sparkles.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added canvas text editing, drag-to-create text boxes, splitting text into characters, words or lines, color emoji, auto-height boxes, justified text, underline and strikethrough, symbols, alternating caps, and plain-text paste.', guide: 'text-typography' },
 			{ type: 'added', text: 'Added stackable Animation to Glitter Fill, Sticker, Text, and Shape layers, with presets for ambient movement, attention effects, motion, rainbow color, and one-time transitions.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added Filter layers that non-destructively process every layer beneath them, with adjustment, Instagram, Web & Film, and Pixel & Damage looks including light leaks, scanlines, dreamy glow, JPEG crunch, RGB split, and gradient maps.', guide: 'filters' },
