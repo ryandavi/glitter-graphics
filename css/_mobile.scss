@@ -35,12 +35,20 @@
 
 			>.app-header-left {
 				gap: var(--spacing-sm);
+				flex: 0 1 auto;
+				min-width: 0;
 
 				>.app-header-title { max-width: 140px; }
 			}
 
 			>.app-header-right {
 				gap: var(--spacing-xs);
+				flex: 0 0 auto;
+
+				>.app-header-history > .toolbar-group {
+					display: flex;
+					gap: var(--spacing-xs);
+				}
 
 				// Save is in the "…" menu here; the bar keeps Export.
 				>.app-header-project >#saveProject { display: none; }
@@ -107,6 +115,7 @@
 		left: var(--mobile-floating-inset);
 		margin: 0;
 		width: var(--mobile-toolbar-width);
+		min-width: var(--mobile-toolbar-width);
 		height: auto;
 		max-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height) - var(--mobile-floating-inset) * 2);
 		z-index: var(--z-header-menu);

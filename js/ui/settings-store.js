@@ -148,6 +148,7 @@ const APP_SETTINGS_LAYOUT = (() => {
 			toggle('reduceMotion', 'Reduce Motion', 'Turn off interface transitions and animated previews. Exported animation is unaffected.', { default: preference('reduceMotion'), aliases: 'animation accessibility motion transitions' })
 		] },
 		{ title: 'Tools & Workspace', section: 'tools', rows: [
+			toggle('balanceSidebars', 'Balance Sidebar Widths', 'On desktop, match Inspector to the combined toolbar and Layers width, within the available space. Dragging Inspector turns this off so you can size it independently.', { default: preference('balanceSidebars'), aliases: 'panels layout symmetric widths resize' }),
 			{ field: { id: 'filterPreviewLevel', label: 'Pixel Filter Preview', description: 'Choose whether pixel-only filter layers render on the canvas. Animated previews use more memory and may fall back to Still.', control: { type: 'select', options: [{ value: 'off', label: 'Off' }, { value: 'still', label: 'Still' }, { value: 'animated', label: 'Animated (uses more memory)' }] }, default: preference('filterPreviewLevel') } },
 			toggle('autoSelectLayers', 'Auto-Select Layers', 'Clicking the canvas selects the layer under the pointer. Turn off to keep the current selection while dragging on the canvas.', { default: preference('autoSelect'), aliases: 'click pick layer canvas' }),
 			toggle('snappingEnabled', 'Snapping', 'Align layers to the canvas edges, its center, and other layers while dragging.', { default: preference('snappingEnabled'), aliases: 'snap align guides magnetic' }),

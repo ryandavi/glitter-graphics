@@ -213,6 +213,8 @@
 	@media (min-width: ($mobile-breakpoint + 1px)) {
 		.asset-browser-rail > select {
 			--asset-rail-icon-size: 20px;
+			// The customizable select is a flex row; its label sits mid-bar.
+			align-items: center;
 
 			&,
 			&::picker(select) { appearance: base-select; }

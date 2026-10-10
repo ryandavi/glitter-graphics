@@ -193,6 +193,13 @@ class ViewportManager {
 		const key = `${rect.left}/${rect.top}/${rect.width}/${rect.height}/${workspace.width}/${workspace.height}`;
 		if (this.overlayLayoutKey === key) return;
 		this.overlayLayoutKey = key;
+		if (this.panelResizeCentering) {
+			const centered = this.getCenteredPan();
+			if (this.panelResizeCentering.x) this.panX = centered.panX;
+			if (this.panelResizeCentering.y) this.panY = centered.panY;
+			this.applyTransform();
+			this._notifyViewportChanged();
+		}
 		const style = this.previewContainer.style;
 		style.setProperty('--canvas-overlay-left', `${rect.left}px`);
 		style.setProperty('--canvas-overlay-right', `${workspace.width - rect.left - rect.width}px`);
@@ -201,6 +208,23 @@ class ViewportManager {
 		style.setProperty('--canvas-overlay-center', `${rect.left + rect.width / 2}px`);
 		style.setProperty('--canvas-overlay-width', `${rect.width}px`);
 		this.editor.contextToolbarRenderer?.hosts.forEach(host => this.editor.contextToolbarRenderer.applyPlacement(host));
+	}
+
+	beginPanelResize() {
+		if (!this.canvasWidth || window.innerWidth <= CONFIG.ui.mobile.breakpoint) return;
+		this.prepareViewChange();
+		const rect = this.getUsableRect();
+		const centered = this.getCenteredPan(rect);
+		const tolerance = CONFIG.ui.panelResize.centerTolerance;
+		this.panelResizeCentering = {
+			x: Math.abs(this.panX - centered.panX) <= rect.width * tolerance,
+			y: Math.abs(this.panY - centered.panY) <= rect.height * tolerance
+		};
+	}
+
+	endPanelResize() {
+		this.syncOverlayLayout();
+		this.panelResizeCentering = null;
 	}
 
 	captureViewState() {

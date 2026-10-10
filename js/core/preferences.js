@@ -17,6 +17,7 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	pixelGrid: { default: () => CONFIG.ui.zoom.pixelGridEnabled },
 	reduceMotion: { default: () => false },
 	showAllControls: { default: () => false },
+	balanceSidebars: { default: () => true },
 	filterPreviewLevel: { default: () => 'still' },
 	// The Library view menu: tile size ('s' | 'm' | 'l') for every kind's grid,
 	// and whether the Quick picks row shows.

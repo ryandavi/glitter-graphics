@@ -201,7 +201,7 @@ class AutoGlitterManager {
 			this.scopeRail = new AssetBrowserRail(library.browser.catalog, () => {
 				this.scopeRail.render(this.getEligibleGlitters(), 'style');
 				this.scheduleReduce();
-			}, library.browser.schema, category => library.createCollectionPreview?.(category, true));
+			}, library.browser.schema, category => library.createCollectionPreview?.(category, true), { up: false });
 			this.ui.scope.appendChild(this.scopeRail.element);
 		}
 		this.scopeRail.selection = { ...selection };
@@ -449,12 +449,7 @@ class AutoGlitterManager {
 		this.analysisRunId = analysisId;
 		this.setCanvasPreviewState(true, this.segmentDirty ? 'Analyzing image' : 'Updating preview');
 		this.ui.status.textContent = this.segmentDirty ? 'Finding distinct colors…' : 'Updating color matches…';
-		const swatches = this.getScopedGlitters().map(glitter => {
-			const weights = Array.isArray(glitter.colorWeights) && glitter.colorWeights.length === glitter.colorCodes.length
-				? glitter.colorWeights.map(Number)
-				: glitter.colorCodes.map(() => 1 / glitter.colorCodes.length);
-			return { id: glitter.id, colors: glitter.colorCodes, weights, timing: `${glitter.frameCount}:${glitter.frameRate}` };
-		});
+		const swatches = this.getScopedGlitters().map(glitter => ({ id: glitter.id, colors: glitter.colorCodes, weights: glitter.colorWeights, timing: `${glitter.frameCount}:${glitter.frameRate}` }));
 		let previewUpdated = false;
 
 		try {
@@ -498,6 +493,8 @@ class AutoGlitterManager {
 			...CONFIG.tools.autoGlitter.paletteStyles[this.paletteStyle],
 			mergeDistinctness: Number(this.ui.mergeDistinctness.value),
 			minImportanceShare: this.ui.autoCount.checked ? CONFIG.tools.autoGlitter.analysis.autoMinImportanceShare : 0,
+			// A chosen count is kept even where two regions end up on one glitter.
+			foldSharedMatches: this.ui.autoCount.checked,
 			// Mixing every style is the user's call; a picked style keeps its timing.
 			swatchTimingBias: this.isScopeNarrowed() ? CONFIG.tools.autoGlitter.analysis.swatchTimingBias : 0,
 			tuneGlitterHue: this.ui.tuneHue.checked,
@@ -511,7 +508,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=6a415bc3');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=3dda36ed');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;
@@ -620,7 +617,7 @@ class AutoGlitterManager {
 		} else {
 			this.ui.status.textContent = hasManualMerges
 				? `${actual} ${actual === 1 ? 'layer' : 'layers'} will be created. Combined regions remain fully covered.`
-				: (actual === Number(this.ui.count.value)
+				: (activeIndices.length === Number(this.ui.count.value)
 					? 'Review the glitter matches, then create the layers.'
 					: `Close shades were combined. ${actual} ${actual === 1 ? 'layer' : 'layers'} will be created.`);
 		}

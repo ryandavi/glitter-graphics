@@ -159,7 +159,7 @@ const CONFIG = deepFreeze({
 			// `autoColorLayers` caps the count the image picks for itself.
 			limits: { minColorLayers: 2, maxColorLayers: 20, autoColorLayers: 8, maxSamples: 24000 },
 			timing: { reduceThrottleMs: 80 },
-			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, autoMinImportanceShare: 0.04 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, swatchReusePenalty: 0.006, autoMinImportanceShare: 0.04 },
 			cleanup: {
 				aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
 				despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
@@ -794,6 +794,7 @@ const CONFIG = deepFreeze({
 		// fits 4 Library columns. The Library window follows the Inspector's
 		// width until it is dragged, so it carries the same points.
 		panelResize: {
+			centerTolerance: 0.05,
 			// How close to a snap point a drag has to land before it sticks.
 			snapTolerance: 10,
 			// The canvas is the point of the app; columns never squeeze it below this.
@@ -801,6 +802,7 @@ const CONFIG = deepFreeze({
 			keyStep: 8,
 			fastKeyStep: 40,
 			panels: {
+				toolbar: { max: 240, namesWidth: 100, snaps: [200, 240] },
 				layers: { min: 240, max: 620, snaps: [260, 300, 360, 400, 480] },
 				inspector: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] },
 				library: { min: 300, max: 720, snaps: [300, 350, 420, 520, 620] }

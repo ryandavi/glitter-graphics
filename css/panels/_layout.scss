@@ -259,6 +259,7 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 /* ===== TOOLBAR ===== */
 .toolbar {
 	width: var(--toolbar-width);
+	min-width: var(--toolbar-compact-width);
 	background: var(--panel-bg);
 	-webkit-backdrop-filter: var(--panel-backdrop);
 	backdrop-filter: var(--panel-backdrop);
@@ -349,6 +350,29 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 }
 
 @media (min-width: ($mobile-breakpoint + 1px)) {
+	.toolbar > .toolbar-group > .btn-icon {
+		height: var(--row-height);
+		aspect-ratio: auto;
+	}
+
+	.tool-names-visible .toolbar {
+		>.toolbar-group >.btn-icon {
+			justify-content: flex-start;
+			gap: var(--spacing-base);
+			padding: 0 var(--spacing-sm);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+			white-space: nowrap;
+
+			>.name {
+				display: inline;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+	}
+
 	.main-content > .layers-panel { margin-left: calc(var(--toolbar-width) + var(--spacing-base)); }
 }
 
@@ -414,11 +438,21 @@ body.no-document .app-header-right > .app-header-project { display: none; }
 	width: var(--spacing-base);
 	z-index: var(--z-panel-elevated);
 	cursor: col-resize;
+	border-radius: 100px;
+    opacity: .5;
 
 	&.panel-resize-handle-start { left: 0; }
 	&.panel-resize-handle-end { right: 0; }
 
 	@include mobile { display: none; }
+}
+
+// The rail scrolls; its edge handle stays fixed beside it.
+.main-area > .panel-resize-handle {
+	top: var(--spacing-base);
+	bottom: var(--spacing-base);
+	left: calc(var(--toolbar-width) + var(--spacing-base));
+	right: auto;
 }
 
 // With a section collapsed the column stops short of its handle, so the grip
@@ -436,12 +470,12 @@ body.is-resizing-panel {
 // The side panels narrow as the window does.
 @media (max-width: 1700px) {
 	:root {
-		--layer-panel-width: 300px;
+		--layer-panel-default-width: 300px;
 	}
 }
 
 @media (max-width: 1200px) {
 	:root {
-		--layer-panel-width: 250px;
+		--layer-panel-default-width: 250px;
 	}
 }

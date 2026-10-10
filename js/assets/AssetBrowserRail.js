@@ -1,9 +1,10 @@
 // The wall's picker: one select holding the whole tree. Home, then each style
 // with the sets found in it (or each creator with their styles) grouped under it. An Up button beside it steps
-// one level toward home. The navigation owns selection; filters and item
+// one level toward home; a rail that sets a value instead of navigating a wall
+// (`up: false`) leaves it out. The navigation owns selection; filters and item
 // rendering belong to the browser.
 class AssetBrowserRail {
-	constructor(catalog, onChange, schema, createPreview) {
+	constructor(catalog, onChange, schema, createPreview, { up = true } = {}) {
 		this.catalog = catalog;
 		this.schema = schema;
 		this.createPreview = createPreview;
@@ -17,6 +18,8 @@ class AssetBrowserRail {
 			const option = this.field.selectedOptions[0];
 			if (option) this.select(option.dataset.root, option.dataset.set || null);
 		});
+		this.element.append(this.field);
+		if (!up) return;
 		// Up, not Back: the tree has a parent for every level and no history.
 		this.upButton = document.createElement('button');
 		this.upButton.type = 'button';
@@ -25,7 +28,7 @@ class AssetBrowserRail {
 		this.upButton.addEventListener('click', () => {
 			if (this.parent) this.select(this.parent.root, this.parent.set);
 		});
-		this.element.append(this.upButton, this.field);
+		this.element.prepend(this.upButton);
 	}
 
 	select(root, set = null) {
@@ -107,6 +110,7 @@ class AssetBrowserRail {
 		this.parent = (current?.set && entries.find(entry => entry.root === current.root && !entry.set))
 			|| (current && current.root !== LIBRARY_ALL_ID && entries.find(entry => entry.root === LIBRARY_ALL_ID))
 			|| null;
+		if (!this.upButton) return this.selection;
 		const label = this.parent ? `Up to ${this.parent.name}` : 'Up';
 		this.upButton.disabled = !this.parent;
 		this.upButton.title = label;

@@ -101,6 +101,7 @@ initializeExportSettings() {
 			pixelGrid: { checked: PREFERENCES.get('pixelGrid') },
 			reduceMotion: { checked: PREFERENCES.get('reduceMotion') },
 			showAllControls: { checked: PREFERENCES.get('showAllControls') },
+			balanceSidebars: { checked: PREFERENCES.get('balanceSidebars') },
 			filterPreviewLevel: { value: PREFERENCES.get('filterPreviewLevel') },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
@@ -384,6 +385,7 @@ initializeExportSettings() {
 		this.bindPreferenceToggle('pixelGrid', 'pixelGrid', () => this.viewport?.applyTransform());
 		this.bindPreferenceToggle('reduceMotion', 'reduceMotion', () => this.applyReduceMotion());
 		this.bindPreferenceToggle('showAllControls', 'showAllControls', () => this.applyShowAllControls());
+		this.bindPreferenceToggle('balanceSidebars', 'balanceSidebars');
 		const filterPreviewLevel = document.getElementById('filterPreviewLevel');
 		filterPreviewLevel?.addEventListener('change', () => {
 			const value = ['off', 'still', 'animated'].includes(filterPreviewLevel.value) ? filterPreviewLevel.value : 'still';

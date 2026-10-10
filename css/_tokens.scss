@@ -322,10 +322,11 @@
 	/* tags and pills, a step under a control */
 	--control-padding-inline: var(--spacing-md);
 	--control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
-	--touch-target-min: 44px;
+	--touch-target-min: 32px;
 	--header-height: 50px;
 	/* the tool rail: one tool button, its padding and its border */
-	--toolbar-width: calc(var(--row-height) + 2 * var(--spacing-sm) + 2px);
+	--toolbar-compact-width: calc(var(--row-height) + 2 * var(--spacing-sm) + 2px);
+	--toolbar-width: var(--toolbar-compact-width);
 
 
 
@@ -334,10 +335,10 @@
 
 
 	/* PANELS */
-	--layer-panel-width: 400px;
-	/* As wide as the left side (the rail, its gutter and the Layers column),
-	   so the canvas between them is centred in the window. */
-	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width) + var(--spacing-base));
+	--layer-panel-default-width: 400px;
+	--layer-panel-width: var(--layer-panel-default-width);
+	/* Independent starting widths; panel-resize.js applies optional sidebar balance. */
+	--glitter-panel-width: calc(var(--layer-panel-default-width) + var(--toolbar-compact-width) + var(--spacing-base));
 	/* The Library window is as wide as the Inspector until it is resized. */
 	--library-window-width: var(--glitter-panel-width);
 	--color-filter-chip-size: var(--row-height);

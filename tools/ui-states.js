@@ -119,6 +119,13 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 	const full = set === 'all';
 	const tag = viewport;
 	await visit(`${tag} start-card`);
+	const railHandle = page.locator('[data-panel-resize="toolbar"]');
+	if (await railHandle.count()) {
+		await visit(`${tag} toolbar compact`);
+		await page.evaluate(() => setPanelWidth('toolbar', CONFIG.ui.panelResize.panels.toolbar.snaps[0], { persist: false }));
+		await visit(`${tag} toolbar expanded`);
+		await page.evaluate(() => resetPanelWidth('toolbar'));
+	}
 	const ids = await addLayers(page);
 	await activityStates(page, visit, tag);
 	await wait(page, 600);

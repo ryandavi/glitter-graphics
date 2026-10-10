@@ -44,7 +44,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=a7bff708">
+	<link rel="stylesheet" href="css/style.css?v=1560cf64">
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-10-timing">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-10-timing">
@@ -68,6 +68,7 @@
 				<a href="index.html" class="app-header-title">RYBABY LABS</a>
 			</div>
 			<div class="app-header-right">
+				<div class="app-header-history mobile-only-action" data-phone-host-for="toolbarHistoryGroup"></div>
 				<div class="app-header-project" id="appHeaderProject">
 					<input class="app-header-project-name" id="projectNameInput" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="Untitled project" aria-label="Project name" title="Project name">
 					<button class="btn-icon icon-wrapper" id="saveProject" type="button" title="Save project (Ctrl/Cmd+S)" aria-label="Save project" disabled><svg class="icon"><use href="#icon-save"></use></svg><span class="name">Save project</span></button>
@@ -173,6 +174,19 @@
 						<span class="name">Select</span>
 					</button>
 					<span class="toolbar-tool-separator" aria-hidden="true"></span>
+					<button class="btn-icon icon-wrapper" id="brushTool" type="button" data-tool="brush" title="Glitter Brush (B) — Paint/Erase in the context bar, or X to swap" disabled>
+						<svg class="icon"><use href="#icon-brush"></use></svg>
+						<span class="name">Glitter Brush</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="glitterFillTool" type="button" data-tool="glitterFill" title="Glitter Fill (I)" disabled>
+						<svg class="icon"><use href="#icon-paint-bucket"></use></svg>
+						<span class="name">Glitter Fill</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="areaTool" type="button" data-tool="area" title="Select Area (M)" disabled>
+						<svg class="icon"><use href="#icon-area-select"></use></svg>
+						<span class="name">Select Area</span>
+					</button>
+					<span class="toolbar-tool-separator" aria-hidden="true"></span>
 					<button class="btn-icon icon-wrapper" id="textTool" type="button" data-tool="text" title="Text (T)" disabled>
 						<svg class="icon"><use href="#icon-text"></use></svg>
 						<span class="name">Text</span>
@@ -189,18 +203,6 @@
 						<svg class="icon"><use href="#icon-pen"></use></svg>
 						<span class="name">Pen</span>
 					</button>
-					<button class="btn-icon icon-wrapper" id="glitterFillTool" type="button" data-tool="glitterFill" title="Glitter Fill (I)" disabled>
-						<svg class="icon"><use href="#icon-paint-bucket"></use></svg>
-						<span class="name">Glitter Fill</span>
-					</button>
-					<button class="btn-icon icon-wrapper" id="brushTool" type="button" data-tool="brush" title="Glitter Brush (B) — Paint/Erase in the context bar, or X to swap" disabled>
-						<svg class="icon"><use href="#icon-brush"></use></svg>
-						<span class="name">Glitter Brush</span>
-					</button>
-					<button class="btn-icon icon-wrapper" id="areaTool" type="button" data-tool="area" title="Select Area (M)" disabled>
-						<svg class="icon"><use href="#icon-area-select"></use></svg>
-						<span class="name">Select Area</span>
-					</button>
 					<span class="toolbar-tool-separator" aria-hidden="true"></span>
 					<button class="btn-icon icon-wrapper" id="cropTool" type="button" data-tool="crop" title="Crop (C)" disabled>
 						<svg class="icon"><use href="#icon-crop"></use></svg>
@@ -209,7 +211,7 @@
 					<span class="toolbar-tool-separator" aria-hidden="true"></span>
 					<button class="btn-icon icon-wrapper" id="handTool" type="button" data-tool="hand" title="Hand (H)" disabled>
 						<svg class="icon"><use href="#icon-hand"></use></svg>
-						<span class="name">Move</span>
+						<span class="name">Hand</span>
 					</button>
 					<button class="btn-icon icon-wrapper" id="zoomTool" type="button" data-tool="zoom" title="Zoom (Z)" disabled>
 						<svg class="icon"><use href="#icon-magnifying-glass"></use></svg>
@@ -1795,9 +1797,9 @@
 	<script src="js/core/fields.js?v=76b09dbd"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=0e590bc2"></script>
-	<script src="js/core/tools.js?v=af65a352"></script>
-	<script src="js/core/sessions.js?v=e5011ca2"></script>
+	<script src="js/core/config.js?v=33afff43"></script>
+	<script src="js/core/tools.js?v=04750072"></script>
+	<script src="js/core/sessions.js?v=8bd07b6e"></script>
 	<script src="js/core/layer-types.js?v=3b8de41b"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=b091d412"></script>
@@ -1819,9 +1821,9 @@
 	<script src="js/core/gif-decode.js?v=7a21ae0c"></script>
 	<script src="js/core/export-target.js?v=ee1b160b"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
-	<script src="js/core/preferences.js?v=bc1c5833"></script>
+	<script src="js/core/preferences.js?v=47b7b1a0"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=a1718cd2"></script>
+	<script src="js/core/commands.js?v=29b7ab66"></script>
 	<script src="js/core/dom.js?v=545e364f"></script>
 	<script src="js/core/document-scaler.js?v=6625b551"></script>
 	<script src="js/transforms/transform-math.js?v=00be3fd4"></script>
@@ -1879,19 +1881,19 @@
 	<script src="js/ui/panel-renderer.js?v=00ec2b87"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=2fe36fa9"></script>
 	<script src="js/ui/settings-renderer.js?v=45587b13"></script>
-	<script src="js/ui/settings-store.js?v=659ff7f6"></script>
+	<script src="js/ui/settings-store.js?v=1f3ce85a"></script>
 	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
 	<script src="js/ui/keyboard.js?v=4490df0b"></script>
 	<script src="js/ui/clipboard.js?v=b3ca4df1"></script>
 	<script src="js/editor/document-io.js?v=980d401e"></script>
 	<script src="js/editor/export-flow.js?v=a6bea5a7"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
-	<script src="js/editor/settings.js?v=90d41f94"></script>
+	<script src="js/editor/settings.js?v=10833bbf"></script>
 	<script src="js/editor/panels.js?v=3e6c8cbb"></script>
 	<script src="js/editor/asset-info.js?v=151ea110"></script>
 	<script src="js/editor/fill-tool.js?v=059bcd7a"></script>
 	<script src="js/editor/disclosures.js?v=79449da5"></script>
-	<script src="js/ui/panel-resize.js?v=e865367b"></script>
+	<script src="js/ui/panel-resize.js?v=e57af07d"></script>
 	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
 	<script src="js/editor/transform-interaction.js?v=dbbff5f8"></script>
 	<script src="js/editor/document-start.js?v=de92d90c"></script>
@@ -1901,7 +1903,7 @@
 	<script src="js/editor/canvas-gestures.js?v=46918e0a"></script>
 	<script src="js/editor/canvas-size.js?v=cb9a1432"></script>
 	<script src="js/editor/canvas-resize.js?v=23b3a9f8"></script>
-		<script src="js/ui/hints.js?v=08112f07"></script>
+		<script src="js/ui/hints.js?v=396382d7"></script>
 	<script src="js/ui/library-window.js?v=d530af9b"></script>
 	<script src="js/ui/picker-session.js?v=1d928f27"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=dcfabf01"></script>
@@ -1933,7 +1935,7 @@
 	<script src="js/transforms/selection-chrome.js?v=71ec7b3c"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
 	<script src="js/transforms/area-chrome.js?v=494ad5d5"></script>
-	<script src="js/systems/ViewportManager.js?v=bd6c5566"></script>
+	<script src="js/systems/ViewportManager.js?v=b3594d48"></script>
 	<script src="js/systems/HistoryManager.js?v=45c9d2e8"></script>
 	<script src="js/export/ProjectSerializer.js?v=996b5016"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
@@ -1951,7 +1953,7 @@
 	<!-- Content -->
 	<script src="js/paint/color-selection.js?v=c8c8a7e0"></script>
 	<script src="js/assets/LibraryCatalog.js?v=8578e98c"></script>
-	<script src="js/assets/AssetBrowserRail.js?v=3cd7fbc2"></script>
+	<script src="js/assets/AssetBrowserRail.js?v=935226da"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
 	<script src="js/assets/AssetBrowser.js?v=a45e0179"></script>
 	<script src="js/assets/ContentManager.js?v=81c04186"></script>
@@ -1967,12 +1969,12 @@
 	<script src="js/layers/GlitterManager.js?v=5c342346"></script>
 	<script src="js/layers/BaseBackgroundManager.js?v=b05fbbdb"></script>
 	<script src="js/systems/preview-layer-session.js?v=441d6d7b"></script>
-	<script src="js/systems/AutoGlitterManager.js?v=17e9b323"></script>
+	<script src="js/systems/AutoGlitterManager.js?v=45f96a66"></script>
 	<script src="js/systems/TemplateManager.js?v=61308e6f"></script>
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=764b8297"></script>
 	<script src="js/ui/crop-edit.js?v=b393f9d0"></script>
-	<script src="js/ui/area-select.js?v=c4343319"></script>
+	<script src="js/ui/area-select.js?v=15bedc5e"></script>
 	<script src="js/ui/path-edit.js?v=b6e29cd7"></script>
 	<script src="js/layers/TextGlitterManager.js?v=87810845"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=2881fd94"></script>
@@ -1985,7 +1987,7 @@
 
 		<script src="js/ui/phone-chip-bar.js?v=4557a33b"></script>
 		<script src="js/ui/sheet-drag.js?v=4d40fe41"></script>
-		<script src="js/systems/MobileManager.js?v=0015b4ef"></script>
+		<script src="js/systems/MobileManager.js?v=59fbf1a3"></script>
 
 	<!-- App -->
 	<script src="js/app.js?v=27766c9d"></script>

@@ -70,7 +70,7 @@ const TOOLS = {
 		key: 'h',
 		panel: () => null,
 		name: 'Hand',
-		buttonLabel: 'Move',
+		buttonLabel: 'Hand',
 		icon: 'hand',
 		hintName: 'Hand Tool',
 		command: 'toolHand',
@@ -107,7 +107,7 @@ const TOOLS = {
 		icon: 'paint-bucket',
 		hintName: 'Glitter Fill',
 		command: 'toolGlitterFill',
-		toolbarGroup: 'create',
+		toolbarGroup: 'paint',
 		groups: ['paint', 'contentEditing'],
 		available: editingAvailable,
 		wrapperClass: 'color-picker-mode',
@@ -132,7 +132,7 @@ const TOOLS = {
 		command: 'toolBrush',
 		shortcuts: [{ key: 'e', command: 'toolEraser', label: 'Mask Eraser Tool', run: (editor) => { editor.setTool(ToolType.BRUSH); editor.maskEditor?.setMode('sub'); } }],
 		onShortcut: (editor) => editor.maskEditor?.setMode('add'),
-		toolbarGroup: 'create',
+		toolbarGroup: 'paint',
 		titleNote: ' — Paint/Erase in the context bar, or X to swap',
 		groups: ['paint', 'contentEditing'],
 		available: editingAvailable,
@@ -148,7 +148,7 @@ const TOOLS = {
 		icon: 'area-select',
 		hintName: 'Select Area Tool',
 		command: 'toolArea',
-		toolbarGroup: 'create',
+		toolbarGroup: 'paint',
 		groups: ['paint', 'contentEditing'],
 		touchRoute: 'toolDrag',
 		available: editingAvailable,
@@ -285,16 +285,16 @@ const TOOLS = {
 	}
 };
 
-// Toolbar order is the registry's insertion order.
+// Selection, painting, creation, canvas editing, then navigation.
 const TOOL_ORDER = Object.freeze([
 	ToolType.SELECT,
+	ToolType.BRUSH,
+	ToolType.GLITTER_FILL,
+	ToolType.AREA,
 	ToolType.TEXT,
 	ToolType.SHAPE,
 	ToolType.LINE,
 	ToolType.PEN,
-	ToolType.GLITTER_FILL,
-	ToolType.BRUSH,
-	ToolType.AREA,
 	ToolType.CROP,
 	ToolType.HAND,
 	ToolType.ZOOM

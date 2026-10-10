@@ -215,4 +215,27 @@ assert.strictEqual(reduce(2, baseOptions, timedSwatches('#d82131')).palette[0].s
 assert.strictEqual(reduce(2, timingOptions, timedSwatches('#d82131')).palette[0].suggestedGlitterId, 'common-a', 'a near tie goes to the common frame timing');
 assert.strictEqual(reduce(2, timingOptions, [...timedSwatches('#dc1e28'), { id: 'far', colors: ['#804048'], timing: '3:11' }].filter(swatch => swatch.id !== 'common-a')).palette[0].suggestedGlitterId, 'odd', 'a clearly closer swatch wins on any timing');
 
+// Shared matches: two regions closest to one glitter take different ones when
+// the pool has another near; left sharing, Auto folds them into one region.
+const twoReds = image(60, 20, x => x < 30 ? [225, 30, 40] : [170, 20, 30]);
+segment(twoReds, 60, 20);
+const redPool = [{ id: 'red', colors: ['#d21e28'] }, { id: 'crimson', colors: ['#a01420'] }, { id: 'blue', colors: ['#2040c0'] }];
+const shareOptions = { ...baseOptions, mergeDistinctness: 0.01, tuneGlitterHue: false, swatchReusePenalty: 0.006 };
+result = reduce(2, shareOptions, redPool);
+assert.strictEqual(result.palette.map(color => color.suggestedGlitterId).sort().join(), 'crimson,red', 'each region takes its own near glitter');
+result = reduce(2, shareOptions, [redPool[0], redPool[2]]);
+assert.strictEqual(result.palette.map(color => color.suggestedGlitterId).join(), 'red,red', 'regions share a glitter when nothing else is near');
+const threeReds = image(90, 20, x => x < 40 ? [225, 30, 40] : (x < 70 ? [170, 20, 30] : [30, 60, 200]));
+segment(threeReds, 90, 20);
+result = reduce(3, { ...shareOptions, foldSharedMatches: true }, [redPool[0], redPool[2]]);
+assert.strictEqual(result.palette.length, 2, 'Auto folds regions left on one glitter');
+assert.strictEqual(result.palette[0].count, 70 * 20, 'the folded region covers both of its parts');
+assert.ok(result.labels.every(label => label < 2), 'folded labels point at the remaining regions');
+
+// A single-color swatch with no recorded coverage is not handicapped against
+// a multi-color swatch whose main color is further away.
+segment(solidRed, 20, 20);
+result = reduce(2, baseOptions, [{ id: 'single', colors: ['#d7212f'], weights: [0] }, { id: 'multi', colors: ['#cf2a3a', '#ffffff'], weights: [0.9, 0.1] }]);
+assert.strictEqual(result.palette[0].suggestedGlitterId, 'single', 'a missing coverage share counts as full coverage');
+
 console.log('auto-glitter analysis checks passed');

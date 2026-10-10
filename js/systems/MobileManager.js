@@ -80,7 +80,7 @@ class MobileManager {
 		});
 	}
 
-	// The phone rail is its switch, Undo and Redo until it is opened. Picking a
+	// The phone rail is its switch until it is opened. Picking a
 	// tool or pressing anywhere off the rail closes it.
 	setToolRailOpen(open) {
 		document.querySelector('.toolbar').classList.toggle('is-open', open);
@@ -185,34 +185,30 @@ class MobileManager {
 	}
 
 	setupResizeObserver() {
-		let resizeTimer;
 		this.resizeObserver = new ResizeObserver(() => {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				const nowMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
-				if (!this.isMobile && nowMobile) {
-					if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
-					this.isMobile = true;
-					this.init();
-					requestAnimationFrame(() => requestAnimationFrame(() => {
-						this.editor.viewport.performResizeUpdate();
-						this.editor.viewport.resetViewport();
-						this.editor.updateZoomUI();
-						this.editor.updateTransparencyGrid();
-					}));
-				} else if (this.isMobile && !nowMobile) {
-					if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
-					this.isMobile = false;
-					this.setToolRailOpen(false);
-					this.cleanup();
-					setTimeout(() => {
-						if (!this.editor.originalImage) return;
-						this.editor.viewport.performResizeUpdate();
-						this.editor.viewport.resetViewport();
-						this.editor.updateZoomUI();
-					}, 50);
-				}
-			}, 250);
+			const nowMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
+			if (!this.isMobile && nowMobile) {
+				if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
+				this.isMobile = true;
+				this.init();
+				requestAnimationFrame(() => requestAnimationFrame(() => {
+					this.editor.viewport.performResizeUpdate();
+					this.editor.viewport.resetViewport();
+					this.editor.updateZoomUI();
+					this.editor.updateTransparencyGrid();
+				}));
+			} else if (this.isMobile && !nowMobile) {
+				if (this.editor.currentTool === ToolType.BRUSH) this.editor.setTool(ToolType.SELECT, { commitStroke: false });
+				this.isMobile = false;
+				this.setToolRailOpen(false);
+				this.cleanup();
+				setTimeout(() => {
+					if (!this.editor.originalImage) return;
+					this.editor.viewport.performResizeUpdate();
+					this.editor.viewport.resetViewport();
+					this.editor.updateZoomUI();
+				}, 50);
+			}
 		});
 		this.resizeObserver.observe(document.body);
 	}

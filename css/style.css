@@ -979,17 +979,18 @@
   /* tags and pills, a step under a control */
   --control-padding-inline: var(--spacing-md);
   --control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
-  --touch-target-min: 44px;
+  --touch-target-min: 32px;
   --header-height: 50px;
   /* the tool rail: one tool button, its padding and its border */
-  --toolbar-width: calc(var(--row-height) + 2 * var(--spacing-sm) + 2px);
+  --toolbar-compact-width: calc(var(--row-height) + 2 * var(--spacing-sm) + 2px);
+  --toolbar-width: var(--toolbar-compact-width);
   /* a glyph that stands alone on a surface (notices, banners) */
   --icon-size-xs: 20px;
   /* PANELS */
-  --layer-panel-width: 400px;
-  /* As wide as the left side (the rail, its gutter and the Layers column),
-     so the canvas between them is centred in the window. */
-  --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width) + var(--spacing-base));
+  --layer-panel-default-width: 400px;
+  --layer-panel-width: var(--layer-panel-default-width);
+  /* Independent starting widths; panel-resize.js applies optional sidebar balance. */
+  --glitter-panel-width: calc(var(--layer-panel-default-width) + var(--toolbar-compact-width) + var(--spacing-base));
   /* The Library window is as wide as the Inspector until it is resized. */
   --library-window-width: var(--glitter-panel-width);
   --color-filter-chip-size: var(--row-height);
@@ -2991,6 +2992,7 @@ body.no-document .app-header-right > .app-header-project {
 /* ===== TOOLBAR ===== */
 .toolbar {
   width: var(--toolbar-width);
+  min-width: var(--toolbar-compact-width);
   background: var(--panel-bg);
   backdrop-filter: var(--panel-backdrop);
   display: flex;
@@ -3071,6 +3073,24 @@ body.no-document .app-header-right > .app-header-project {
 }
 
 @media (min-width: 1041px) {
+  .toolbar > .toolbar-group > .btn-icon {
+    height: var(--row-height);
+    aspect-ratio: auto;
+  }
+  .tool-names-visible .toolbar > .toolbar-group > .btn-icon {
+    justify-content: flex-start;
+    gap: var(--spacing-base);
+    padding: 0 var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+  .tool-names-visible .toolbar > .toolbar-group > .btn-icon > .name {
+    display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .main-content > .layers-panel {
     margin-left: calc(var(--toolbar-width) + var(--spacing-base));
   }
@@ -3138,6 +3158,8 @@ body.no-document .app-header-right > .app-header-project {
   width: var(--spacing-base);
   z-index: var(--z-panel-elevated);
   cursor: col-resize;
+  border-radius: 100px;
+  opacity: 0.5;
 }
 .panel-resize-handle.panel-resize-handle-start {
   left: 0;
@@ -3149,6 +3171,13 @@ body.no-document .app-header-right > .app-header-project {
   .panel-resize-handle {
     display: none;
   }
+}
+
+.main-area > .panel-resize-handle {
+  top: var(--spacing-base);
+  bottom: var(--spacing-base);
+  left: calc(var(--toolbar-width) + var(--spacing-base));
+  right: auto;
 }
 
 .has-collapsed-section > .panel-resize-handle::before {
@@ -3168,12 +3197,12 @@ body.is-resizing-panel canvas {
 
 @media (max-width: 1700px) {
   :root {
-    --layer-panel-width: 300px;
+    --layer-panel-default-width: 300px;
   }
 }
 @media (max-width: 1200px) {
   :root {
-    --layer-panel-width: 250px;
+    --layer-panel-default-width: 250px;
   }
 }
 .layers-panel {
@@ -4022,6 +4051,7 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
   @media (min-width: 1041px) {
     .asset-browser-rail > select {
       --asset-rail-icon-size: 20px;
+      align-items: center;
     }
     .asset-browser-rail > select, .asset-browser-rail > select::picker(select) {
       -webkit-appearance: base-select;
@@ -4593,6 +4623,18 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 }
 .preview-container.area-cursor {
   cursor: crosshair;
+}
+.preview-container.area-cursor[data-area-cursor=move] {
+  cursor: move;
+}
+.preview-container.area-cursor[data-area-cursor=add] {
+  cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke-linecap='square'><path d='M8.5 1v15M1 8.5h15M15 19.5h7M18.5 16v7' stroke='white' stroke-width='3'/><path d='M8.5 1v15M1 8.5h15M15 19.5h7M18.5 16v7' stroke='black'/></svg>") 8 8, crosshair;
+}
+.preview-container.area-cursor[data-area-cursor=subtract] {
+  cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke-linecap='square'><path d='M8.5 1v15M1 8.5h15M15 19.5h7' stroke='white' stroke-width='3'/><path d='M8.5 1v15M1 8.5h15M15 19.5h7' stroke='black'/></svg>") 8 8, crosshair;
+}
+.preview-container.area-cursor[data-area-cursor=intersect] {
+  cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke-linecap='square'><path d='M8.5 1v15M1 8.5h15M16 17l5 5M21 17l-5 5' stroke='white' stroke-width='3'/><path d='M8.5 1v15M1 8.5h15M16 17l5 5M21 17l-5 5' stroke='black'/></svg>") 8 8, crosshair;
 }
 
 body.no-document .preview-container.workspace-drop-active::after {
@@ -11746,11 +11788,18 @@ body.modal-open {
   }
   .app-container > .app-header > .app-header-left {
     gap: var(--spacing-sm);
+    flex: 0 1 auto;
+    min-width: 0;
   }
   .app-container > .app-header > .app-header-left > .app-header-title {
     max-width: 140px;
   }
   .app-container > .app-header > .app-header-right {
+    gap: var(--spacing-xs);
+    flex: 0 0 auto;
+  }
+  .app-container > .app-header > .app-header-right > .app-header-history > .toolbar-group {
+    display: flex;
     gap: var(--spacing-xs);
   }
   .app-container > .app-header > .app-header-right > .app-header-project > #saveProject {
@@ -11804,6 +11853,7 @@ body.modal-open {
     left: var(--mobile-floating-inset);
     margin: 0;
     width: var(--mobile-toolbar-width);
+    min-width: var(--mobile-toolbar-width);
     height: auto;
     max-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height) - var(--mobile-floating-inset) * 2);
     z-index: var(--z-header-menu);
