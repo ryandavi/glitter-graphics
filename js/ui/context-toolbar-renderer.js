@@ -196,25 +196,31 @@ class ContextToolbarRenderer {
 	}
 
 	showSnapPreview(host, snap) {
-		const previousName = this.previewedSnap?.name || null;
-		const nextName = snap?.name || null;
-		if (previousName === nextName && this.snapGuide?.isConnected === Boolean(snap)) return;
+		const changed = (this.previewedSnap?.name || null) !== (snap?.name || null);
+		// A snap on one axis keeps its name while the free axis moves, so the
+		// position is stored and the guide repositioned on every call.
 		this.previewedSnap = snap;
-		this.snapTargets?.querySelectorAll('.is-active').forEach((guide) => guide.classList.remove('is-active'));
-		if (snap?.horizontal) this.snapTargets?.querySelector(`.is-vertical.is-${snap.horizontal}`)?.classList.add('is-active');
-		if (snap?.vertical) this.snapTargets?.querySelector(`.is-horizontal.is-${snap.vertical}`)?.classList.add('is-active');
-		this.snapGuide?.remove();
-		this.snapGuide = null;
-		host.classList.toggle('has-snap-preview', Boolean(snap));
-		if (!snap || !host.offsetParent) return;
-		const guide = document.createElement('div');
-		guide.className = 'context-toolbar-snap-guide';
+		if (changed) {
+			this.snapTargets?.querySelectorAll('.is-active').forEach((guide) => guide.classList.remove('is-active'));
+			if (snap?.horizontal) this.snapTargets?.querySelector(`.is-vertical.is-${snap.horizontal}`)?.classList.add('is-active');
+			if (snap?.vertical) this.snapTargets?.querySelector(`.is-horizontal.is-${snap.vertical}`)?.classList.add('is-active');
+			host.classList.toggle('has-snap-preview', Boolean(snap));
+		}
+		if (!snap || !host.offsetParent) {
+			this.snapGuide?.remove();
+			this.snapGuide = null;
+			return;
+		}
+		if (!this.snapGuide?.isConnected) {
+			this.snapGuide = document.createElement('div');
+			this.snapGuide.className = 'context-toolbar-snap-guide';
+			host.offsetParent.appendChild(this.snapGuide);
+		}
+		const guide = this.snapGuide;
 		guide.style.left = `${snap.x}px`;
 		guide.style.top = `${snap.y}px`;
 		guide.style.width = `${host.offsetWidth}px`;
 		guide.style.height = `${host.offsetHeight}px`;
-		host.offsetParent.appendChild(guide);
-		this.snapGuide = guide;
 	}
 
 	setFreePosition(host, x, y) {
