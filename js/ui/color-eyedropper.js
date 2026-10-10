@@ -25,15 +25,8 @@ function initializeColorEyedroppers(editor) {
 		const composed = await editor.sceneCompositor.composeFrameAt({
 			visibleLayers: layers,
 			glitterGifs: editor.glitterLibrary.getRenderContent(),
-			canvasData: {
-				width: editor.originalCanvas.width,
-				height: editor.originalCanvas.height,
-				originalData: new Uint8ClampedArray(editor.originalImageData.data),
-				originalAlpha: editor.originalAlphaChannel,
-				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
-				hasBaseImage: editor.baseBackgroundManager?.hasBaseImage() ?? true
-			},
-			exportSettings: { ...structuredClone(editor.exportSettings), watermarkEnabled: false, transparency: true },
+			canvasData: editor.getExportCanvasData(),
+			exportSettings: editor.getSceneSnapshotSettings(),
 			target: EXPORT_TARGETS['still:png'],
 			timestamp: editor.animationTicker.getCurrentTime(),
 			callbacks

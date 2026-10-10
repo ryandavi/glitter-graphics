@@ -997,13 +997,7 @@ class PathEditSession {
 
 	syncToolbar() {
 		const session = this.session;
-		const setActive = (groupId, current) => {
-			document.querySelectorAll(`#${groupId} [data-value]`).forEach((button) => {
-				const active = button.dataset.value === current;
-				button.classList.toggle('active', active);
-				button.setAttribute('aria-pressed', String(active));
-			});
-		};
+		const setActive = (groupId, current) => this.editor.contextToolbarRenderer?.setSegmentedValue(groupId, current);
 		setActive('contextPathNextPoint', this.nextPointType);
 		if (!session) return;
 		const subpaths = this.read();

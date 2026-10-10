@@ -133,6 +133,16 @@ const COMMANDS = {
 	brushSetErase: { run: (editor) => editor.maskEditor?.setMode('sub') },
 	brushSizeDown: { label: 'Decrease Brush Size', group: 'Brush', keys: ['BracketLeft', 'shift+BracketLeft'], displayKey: '[ / Shift + [', when: (editor) => editor.currentTool === ToolType.BRUSH, run: (editor, event) => editor.maskEditor?.adjustBrushSize(event.shiftKey ? -10 : -5) },
 	brushSizeUp: { label: 'Increase Brush Size', group: 'Brush', keys: ['BracketRight', 'shift+BracketRight'], displayKey: '] / Shift + ]', when: (editor) => editor.currentTool === ToolType.BRUSH, run: (editor, event) => editor.maskEditor?.adjustBrushSize(event.shiftKey ? 10 : 5) },
+	areaShapeRect: { run: (editor) => editor.areaSelect.setShape('rect') },
+	areaShapeEllipse: { run: (editor) => editor.areaSelect.setShape('ellipse') },
+	areaShapeLasso: { run: (editor) => editor.areaSelect.setShape('lasso') },
+	areaModeNew: { run: (editor) => editor.areaSelect.setMode('new') },
+	areaModeAdd: { run: (editor) => editor.areaSelect.setMode('add') },
+	areaModeSubtract: { run: (editor) => editor.areaSelect.setMode('subtract') },
+	areaInvert: { label: 'Invert the Area', group: 'Select Area', keys: ['mod+shift+i'], displayKey: 'Ctrl/Cmd + Shift + I', when: (editor) => !editor.areaSelection.isEmpty, run: (editor) => editor.areaSelect.invert() },
+	areaDeselect: { run: (editor) => editor.areaSelect.deselect() },
+	areaAdd: { label: 'Add to the Area', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['shift'] } },
+	areaSubtract: { label: 'Subtract from the Area', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['alt'] } },
 	saveProject: { label: 'Save Project', group: 'File', keys: ['mod+s'], displayKey: 'Ctrl/Cmd + S', allowWhileTyping: true, run: (editor) => editor.saveProjectFile() },
 	undo: { label: 'Undo', group: 'History', keys: ['mod+z'], displayKey: 'Ctrl/Cmd + Z', allowWhileTyping: true, run: (editor) => editor.undo() },
 	redo: { label: 'Redo', group: 'History', keys: ['mod+shift+z', 'mod+y'], displayKey: 'Ctrl/Cmd + Shift + Z / Ctrl/Cmd + Y', allowWhileTyping: true, run: (editor) => editor.redo() },
@@ -171,14 +181,14 @@ function getShortcutGroups(kind = 'keyboard') {
 		return kind === 'gesture' ? isGestureCommand(command) : Boolean(command.displayKey) && !isGestureCommand(command);
 	}).forEach((command) => {
 		const group = kind === 'gesture'
-			? ({ Transform: 'Move & Transform', Pen: 'Pen' }[command.group] || 'Navigate')
+			? ({ Transform: 'Move & Transform', Pen: 'Pen', 'Select Area': 'Select Area' }[command.group] || 'Navigate')
 			: (SHORTCUT_GROUP_ALIASES[command.group] || command.group);
 		if (!groups.has(group)) groups.set(group, []);
 		groups.get(group).push(command);
 	});
 	const order = kind === 'gesture'
-		? ['Navigate', 'Move & Transform', 'Pen']
-		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Pen', 'Gradient'];
+		? ['Navigate', 'Move & Transform', 'Pen', 'Select Area']
+		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Select Area', 'Pen', 'Gradient'];
 	const rank = (title) => {
 		const index = order.indexOf(title);
 		return index === -1 ? order.length : index;

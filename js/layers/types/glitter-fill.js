@@ -149,9 +149,10 @@ registerLayerType(LayerType.GLITTER_FILL, {
 		reset: true
 	},
 	openOnCreate: 'fill',
-	// A fill layer with nothing painted yet is selected to be filled.
+	// A fill layer with nothing painted yet is selected to be filled, unless
+	// a paint tool is already about to do that.
 	onActivate: (editor, layer) => {
-		if (!hasMaskContent(layer) && layer.fill?.glitterId && editor.currentTool !== ToolType.BRUSH) {
+		if (!hasMaskContent(layer) && layer.fill?.glitterId && !TOOL_GROUPS.paint.includes(editor.currentTool)) {
 			editor.setTool(ToolType.GLITTER_FILL);
 		}
 	}

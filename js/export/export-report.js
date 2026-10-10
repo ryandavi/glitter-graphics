@@ -4,27 +4,37 @@
 // the save guide, which footer action leads, the notices and the Details
 // tables. DOM-free so the rules run under node; ExportResultPresenter renders it.
 
-// One row per service. Tiers of a service collapse to the smallest limit the
-// file is over, with the note of the smallest tier it still fits.
-function resolveUploadLimits(size, sizeWarnings) {
-	const megabyte = 1024 * 1024;
+// One row per service, from the size targets that warn. Tiers of a service
+// collapse to the smallest limit the file is over, with the note of the
+// smallest tier it still fits. `goal` is what the row's Fit button aims for.
+function resolveUploadLimits(size, sizeTargets) {
 	const services = new Map();
-	sizeWarnings.forEach((tier) => {
-		if (!services.has(tier.service)) services.set(tier.service, []);
-		services.get(tier.service).push(tier);
+	sizeTargets.filter((target) => target.warn).forEach((target) => {
+		if (!services.has(target.service)) services.set(target.service, []);
+		services.get(target.service).push(target);
 	});
 	const rows = [];
 	services.forEach((tiers, service) => {
-		const ordered = [...tiers].sort((a, b) => a.limitMB - b.limitMB);
-		const exceeded = ordered.filter((tier) => size > tier.limitMB * megabyte);
+		const ordered = [...tiers].sort((a, b) => a.limitKB - b.limitKB);
+		const exceeded = ordered.filter((tier) => size > tier.limitKB * 1024);
 		if (!exceeded.length) return;
 		const fits = ordered[exceeded.length];
-		rows.push({ service, limitMB: exceeded[0].limitMB, limit: `${exceeded[0].limitMB} MB`, note: fits?.note || '' });
+		rows.push({ service, limitKB: exceeded[0].limitKB, limit: formatSizeLimit(exceeded[0].limitKB), note: fits?.note || '', goal: describeSizeTarget(exceeded[0]) });
 	});
-	return rows.sort((a, b) => a.limitMB - b.limitMB);
+	return rows.sort((a, b) => a.limitKB - b.limitKB);
 }
 
-function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
+// Exporters hand a finished file here. The export flow takes the result
+// itself (callbacks.present) when it compares attempts before showing one.
+function deliverExportResult(callbacks, presenter, { blob, fileName, completion = {}, ...result }) {
+	callbacks.onStatus('Export complete!');
+	callbacks.onComplete(completion);
+	const delivered = { ...result, blob, file: new File([blob], fileName, { type: result.target.mimeType, lastModified: Date.now() }) };
+	if (callbacks.present) callbacks.present(delivered);
+	else presenter?.show(delivered);
+}
+
+function buildExportDetails({ target, timelinePlan, colorAnalysis, fit = null }) {
 	const reduction = timelinePlan.reduction;
 	// A cell is plain text, a measure ({ value, unit, from }) the presenter
 	// formats with formatUnit, or a state badge ({ badge, on }).
@@ -127,13 +137,29 @@ function buildExportDetails({ target, timelinePlan, colorAnalysis }) {
 		});
 	}
 
+	if (fit) tables.push(buildFitTable(fit));
+
 	return tables.length ? { tables } : null;
 }
 
-function buildExportReport({ blob, fileName, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, platform = {} }) {
+// One row per attempt of a size fit; the kept one is the total row.
+function buildFitTable(fit) {
+	return {
+		id: 'fit',
+		title: `Fit under ${fit.label}`,
+		columns: [{ label: 'Attempt' }, { label: 'Size', numeric: true }, { label: 'Fits' }],
+		lines: [],
+		rows: fit.attempts.map((attempt) => ({
+			strong: attempt.chosen,
+			cells: [attempt.changes, formatBytes(attempt.bytes), { badge: attempt.fits ? 'Yes' : 'No', on: attempt.fits }]
+		}))
+	};
+}
+
+function buildExportReport({ blob, fileName, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null, platform = {} }) {
 	const plan = target.isAnimation ? timelinePlan : null;
 	const analysis = target.isGif ? (colorAnalysis || plan?.colorAnalysis || null) : null;
-	const uploadLimits = resolveUploadLimits(blob.size, CONFIG.export.limits.sizeWarnings);
+	const uploadLimits = resolveUploadLimits(blob.size, CONFIG.export.sizeTargets);
 	const facts = {
 		size: formatBytes(blob.size),
 		sizeWarning: uploadLimits.length > 0,
@@ -153,6 +179,12 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 	const primaryAction = actions.save ? 'save' : actions.share ? 'share' : null;
 
 	const notices = [];
+	if (fit?.reached) {
+		notices.push({ id: 'fit', level: 'info', text: `Fitted under ${fit.label}: ${fit.changes}. Your Export Settings were not changed.` });
+	} else if (fit) {
+		const advice = target.isStill ? 'Try a smaller canvas.' : `Try a shorter animation${target.isGif ? ', a smaller canvas or MP4' : ' or a smaller canvas'}.`;
+		notices.push({ id: 'fit', level: 'warning', text: `Could not fit under ${fit.label}. This is the smallest version${fit.changes ? ` (${fit.changes})` : ''}. ${advice}` });
+	}
 	if (plan) {
 		const reduction = plan.reduction;
 		if (!reduction.durationPreserved) notices.push({ id: 'speed', level: 'warning', text: 'The exported animation may play at a different speed than the preview.' });
@@ -172,6 +204,6 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 		primaryAction,
 		uploadLimits,
 		notices,
-		details: plan ? buildExportDetails({ target, timelinePlan: plan, colorAnalysis: analysis }) : null
+		details: plan ? buildExportDetails({ target, timelinePlan: plan, colorAnalysis: analysis, fit }) : fit ? { tables: [buildFitTable(fit)] } : null
 	};
 }

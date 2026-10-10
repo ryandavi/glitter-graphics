@@ -94,8 +94,7 @@ class Mp4Exporter {
 		// averaged delays.
 		const averageFrameDuration = outputDuration / outputSchedule.length;
 		const muxerFrameRate = Math.max(1, Math.round(plan.renderClock?.outputFps || (1000 / averageFrameDuration)));
-		const preset = CONFIG.export.mp4.qualityPresets[exportSettings.mp4Quality];
-		const encoderConfig = await Mp4Exporter.getSupportedConfig(width, height, preset.bitrate);
+		const encoderConfig = await Mp4Exporter.getSupportedConfig(width, height, resolveMp4Bitrate(exportSettings));
 		if (!encoderConfig) {
 			throw new Error(`MP4 export cannot encode a ${width} × ${height} canvas with this browser's available H.264 profiles.`);
 		}
@@ -175,10 +174,17 @@ class Mp4Exporter {
 		reportExportProgress(callbacks, 'finalizing', 1, '');
 		plan.phaseTimings = callbacks.phaseTimer?.finish();
 		plan.outputFrameCount = totalFrames;
-		callbacks.onStatus('Export complete!');
-		callbacks.onComplete({ smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan });
-		const file = new File([blob], this.fileName, { type: 'video/mp4', lastModified: Date.now() });
-		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:mp4'], width, height, frameCount: totalFrames, duration: timestampMs / 1000, timelinePlan: plan });
+		deliverExportResult(callbacks, this.resultPresenter, {
+			blob,
+			fileName: this.fileName,
+			completion: { smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan },
+			target: EXPORT_TARGETS['animation:mp4'],
+			width,
+			height,
+			frameCount: totalFrames,
+			duration: timestampMs / 1000,
+			timelinePlan: plan
+		});
 		return blob;
 	}
 }

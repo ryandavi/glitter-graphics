@@ -91,7 +91,14 @@ const CONFIG = deepFreeze({
 			minSize: 1,
 			maxWidth: 1024,
 			maxHeight: 1024,
-			maxFileSizeMB: 10
+			maxFileSizeMB: 10,
+			// An uploaded GIF past any of these opens as a still image. Duration
+			// follows the longest loop an export keeps (export.timeline).
+			animatedBase: {
+				maxFrames: 300,
+				maxDurationMs: 12000,
+				maxDecodedMB: 384
+			}
 		},
 		defaults: {
 			blankDocument: { width: 400, height: 400, color: '#ffffff' }
@@ -446,6 +453,15 @@ const CONFIG = deepFreeze({
 		// Path layers, the Line tool and the Pen. Stroke width, dash, gap and
 		// ornament size ranges and defaults are field specs (strokeWidth,
 		// strokeDash, strokeGap, strokeOrnamentSize in js/core/fields.js).
+		// The Select Area tool.
+		area: {
+			ellipseSegments: 96,
+			// Screen px the pointer travels between lasso points.
+			lassoSpacing: 3,
+			// Marching ants: stripe period in device px, and ms per step.
+			antsStripe: 8,
+			antsStepMs: 90
+		},
 		path: {
 			stroke: {
 				source: 'glitter',
@@ -875,12 +891,30 @@ const CONFIG = deepFreeze({
 					{ kind: 'toggle', id: 'contextContiguous', label: 'Contiguous' }
 				] }
 			] },
-			{ id: 'maskBrushControls', tool: 'brush', when: (_editor, { tool }) => tool === 'brush', controls: [
-				{ kind: 'segmented', id: 'maskBrushMode', options: [
-					{ label: 'Paint', mode: 'add', action: 'brushSetPaint', title: 'Paint mask (B)' },
-					{ label: 'Erase', mode: 'sub', action: 'brushSetErase', title: 'Erase mask (E / X)' }
+			{ id: 'areaSelectControls', tool: 'area', when: (_editor, { tool }) => tool === 'area', sync: editor => editor.areaSelect.syncToolbar(), controls: [
+				{ kind: 'segmented', id: 'contextAreaShape', label: 'Area shape', options: [
+					{ label: 'Rectangle', value: 'rect', action: 'areaShapeRect', title: 'Drag a rectangle. Shift keeps it square, Alt draws from the center.' },
+					{ label: 'Ellipse', value: 'ellipse', action: 'areaShapeEllipse', title: 'Drag an ellipse. Shift keeps it round, Alt draws from the center.' },
+					{ label: 'Lasso', value: 'lasso', action: 'areaShapeLasso', title: 'Draw the area freehand' }
 				] },
-				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', slider: 'maskBrushSize' }
+				{ kind: 'segmented', id: 'contextAreaMode', label: 'Area mode', options: [
+					{ label: 'New', value: 'new', action: 'areaModeNew', title: 'Each drag starts a new area' },
+					{ label: 'Add', value: 'add', action: 'areaModeAdd', title: 'Each drag adds to the area (hold Shift)' },
+					{ label: 'Subtract', value: 'subtract', action: 'areaModeSubtract', title: 'Each drag cuts out of the area (hold Alt)' }
+				] },
+				{ kind: 'button', id: 'contextAreaFill', icon: 'paint-bucket', name: 'Fill', title: 'Fill the area with glitter (Enter)', action: 'sessionConfirm' },
+				{ kind: 'button', id: 'contextAreaErase', icon: 'eraser', name: 'Erase', title: 'Erase glitter in the area (Delete)', action: 'sessionDelete' },
+				{ kind: 'button', id: 'contextAreaInvert', icon: 'area-invert', name: 'Invert', title: 'Select everything outside the area', action: 'areaInvert' },
+				{ kind: 'button', id: 'contextAreaDeselect', icon: 'x-mark', name: 'Deselect', title: 'Deselect the area (Esc)', action: 'areaDeselect' }
+			] },
+			{ id: 'maskBrushControls', tool: 'brush', when: (_editor, { tool }) => tool === 'brush', sync: editor => editor.areaSelect.syncToolbar(), controls: [
+				{ kind: 'segmented', id: 'maskBrushMode', label: 'Brush mode', options: [
+					{ label: 'Paint', value: 'add', action: 'brushSetPaint', title: 'Paint mask (B)' },
+					{ label: 'Erase', value: 'sub', action: 'brushSetErase', title: 'Erase mask (E / X)' }
+				] },
+				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', slider: 'maskBrushSize' },
+				// Shown while an area is selected: the brush only paints inside it.
+				{ kind: 'button', id: 'maskBrushDeselect', icon: 'x-mark', name: 'Deselect area', title: 'The brush only paints inside the selected area. Deselect it (Esc)', action: 'areaDeselect' }
 			] }
 		],
 		// Valid values for the Settings > Theme select; each needs a matching
@@ -1021,7 +1055,10 @@ const CONFIG = deepFreeze({
 			maxSamplingFps: 'auto',
 			visualErrorThreshold: 'auto',
 			watermarkEnabled: false,
-			watermark: 'images/watermark/2.png'
+			watermark: 'images/watermark/2.png',
+			outputScale: 100,
+			targetSize: 'none',
+			targetSizeKB: 1024
 		},
 		mp4: {
 			lengthMode: 'duration',
@@ -1055,23 +1092,63 @@ const CONFIG = deepFreeze({
 		},
 		limits: {
 			maxFramesHardLimit: 1000,
+			// Smallest Export Size, as a percent of the canvas.
+			minOutputScale: 10,
 			colorAnalysis: {
 				paletteSize: 256,
 				significantColorCount: 1024,
 				maxFrames: 12,
 				maxPixelsPerFrame: 65536
-			},
-			// Upload limits, one entry per tier of a service. Export Ready shows one
-			// row per service: the smallest limit the file is over, with the `note`
-			// of the smallest tier it still fits.
-			sizeWarnings: [
-				{ service: 'X', limitMB: 5 },
-				{ service: 'X', limitMB: 15, note: 'fits on the web' },
-				{ service: 'Tumblr', limitMB: 5 },
-				{ service: 'Discord', limitMB: 10 },
-				{ service: 'Discord', limitMB: 50, note: 'fits with Nitro Basic' },
-				{ service: 'Discord', limitMB: 500, note: 'fits with Nitro' }
-			]
+			}
+		},
+		// File-size targets, one entry per tier of a service. The single list
+		// behind the "Too large to post on" rows in Export Ready (entries with
+		// `warn`; one row per service: the smallest limit the file is over, with
+		// the `note` of the smallest tier it still fits), their Fit buttons and
+		// the Target Size export setting.
+		sizeTargets: [
+			{ id: 'x', service: 'X', limitKB: 5 * 1024, warn: true },
+			{ id: 'x-web', service: 'X', limitKB: 15 * 1024, note: 'fits on the web', warn: true },
+			{ id: 'tumblr', service: 'Tumblr', limitKB: 5 * 1024, warn: true },
+			{ id: 'discord', service: 'Discord', limitKB: 10 * 1024, warn: true },
+			{ id: 'discord-nitro-basic', service: 'Discord', limitKB: 50 * 1024, note: 'fits with Nitro Basic', warn: true },
+			{ id: 'discord-nitro', service: 'Discord', limitKB: 500 * 1024, note: 'fits with Nitro', warn: true },
+			{ id: 'livejournal-icon', service: 'LiveJournal icon', limitKB: 40, warn: false }
+		],
+		// Fitting an export under a size target (js/export/export-fit.js).
+		fit: {
+			maxAttempts: 5,
+			// Aim a little under the limit, so a near miss still fits.
+			margin: 0.97,
+			// A fit that fills this share of the limit is good enough; a smaller
+			// file may have given up more than it had to, so a gentler step is tried.
+			acceptRatio: 0.7,
+			minTargetKB: 10,
+			maxTargetKB: 500 * 1024,
+			minMp4Bitrate: 150000,
+			// Composed GIF frames are kept between attempts that only change the
+			// encoding, up to this many bytes.
+			frameCacheBytes: 256 * 1024 * 1024,
+			// Steps from least to most visible, applied cumulatively. A target only
+			// takes the steps for its own levers (EXPORT_TARGETS fitLevers), and
+			// only those that go below the current settings.
+			ladder: [
+				{ exportFidelity: 3 }, { exportFidelity: 4 }, { ditherEnabled: false },
+				{ jpegQuality: 80 }, { jpegQuality: 70 }, { colorCount: 128 },
+				{ outputScale: 85 }, { jpegQuality: 60 }, { outputScale: 75 },
+				{ colorCount: 64 }, { jpegQuality: 50 }, { outputScale: 60 },
+				{ outputScale: 50 }, { colorCount: 32 }, { jpegQuality: 40 },
+				{ outputScale: 40 }, { outputScale: 33 }, { outputScale: 25 }
+			],
+			// How much each lever is expected to shrink the file. Only used to pick
+			// which step to try next; every attempt is measured.
+			estimate: {
+				scaleExponent: 1.8,
+				colorHalving: 0.82,
+				ditherOff: 0.75,
+				jpegQualityExponent: 1.6,
+				fidelityStops: [1, 0.97, 0.9, 0.75, 0.65]
+			}
 		},
 		watermark: {
 			alphaThreshold: 128,

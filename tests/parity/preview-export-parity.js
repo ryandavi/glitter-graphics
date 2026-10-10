@@ -11,6 +11,14 @@ const PREVIEW_EXPORT_TWINS = [
 		export: ['SceneCompositor._renderSlotStackToCanvas', 'SceneCompositor._renderStickerEffects', 'SceneCompositor._buildGlitterFillExportPlan']
 	},
 	{
+		// The preview plays the uploaded GIF as an element; export draws its
+		// decoded frames. Both place and clip it from the same placement.
+		feature: 'animated base image placement',
+		shared: 'animation.placement',
+		preview: ['BaseBackgroundManager.renderAnimationElement'],
+		export: ['SceneCompositor._drawBaseAnimationFrame']
+	},
+	{
 		feature: 'paint source',
 		shared: 'resolvePaintSlotSource',
 		preview: ['paintSlots.resolvePaintSlotPreviewSource'],

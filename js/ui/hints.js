@@ -3,6 +3,20 @@
 const HINT_RULES = [
 	{ id: 'crop-editing', tool: true, when: (editor) => editor.getActiveSession() === 'crop', hint: 'Drag the handles to crop or extend the canvas', context: { desktop: 'Drag inside to move, outside to draw. Shift toggles the ratio, Alt resizes from the center, and Ctrl bypasses snapping. Enter applies; Esc cancels.', mobile: 'Drag with one finger. Use two fingers to pan or zoom. The check applies the crop; the X discards it.' } },
 	{
+		id: 'area-selected',
+		tool: true,
+		when: (editor) => editor.getActiveSession() === 'area',
+		hint: (editor) => editor.currentTool === ToolType.BRUSH ? 'The brush only paints inside the selected area' : 'Fill the area with glitter, erase inside it, or paint in it with the Glitter Brush',
+		context: { desktop: 'Enter fills and Delete erases. Shift-drag adds to the area and Alt-drag subtracts. Esc deselects.', mobile: 'Use Fill or Erase in the bar, or switch to the Glitter Brush to paint inside the area.' }
+	},
+	{
+		id: 'area-tool',
+		tool: true,
+		when: (editor) => editor.currentTool === ToolType.AREA,
+		hint: 'Drag to select an area for glitter',
+		context: { desktop: 'Choose Rectangle, Ellipse or Lasso in the bar. During a drag, Shift keeps the shape square and Alt draws it from the center.', mobile: 'Choose Rectangle, Ellipse or Lasso in the bar.' }
+	},
+	{
 		id: 'brush-editing',
 		tool: true,
 		when: (editor, { layer }) => editor.maskEditor?.isEditing && layer?.type === LayerType.GLITTER_FILL,

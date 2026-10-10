@@ -33,6 +33,62 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		});
 	},
 
+	// An uploaded GIF with more than one frame animates the base image. Only
+	// its timing is read here: the preview plays the file itself and export
+	// decodes it. The still base (originalImageData) stays its first frame.
+	async readBaseAnimation(file) {
+		if (file?.type !== 'image/gif') return null;
+		let timing;
+		try {
+			timing = readGifTiming(new Uint8Array(await file.arrayBuffer()));
+		} catch (error) {
+			return null;
+		}
+		if (timing.frameCount < 2) return null;
+		const limits = CONFIG.canvas.limits.animatedBase;
+		const totalDuration = timing.frameDelays.reduce((sum, delay) => sum + delay, 0);
+		const decodedMB = timing.width * timing.height * 4 * timing.frameCount / (1024 * 1024);
+		const reason = timing.frameCount > limits.maxFrames ? `it has ${timing.frameCount} frames (the limit is ${limits.maxFrames})`
+			: totalDuration > limits.maxDurationMs ? `it runs ${(totalDuration / 1000).toFixed(1)} s (the limit is ${limits.maxDurationMs / 1000} s)`
+			: decodedMB > limits.maxDecodedMB ? 'it needs too much memory to play' : '';
+		if (reason) {
+			this.showError(`This GIF opened as a still image because ${reason}.`);
+			return null;
+		}
+		const url = URL.createObjectURL(file);
+		this.baseAnimationUrls.add(url);
+		return { file, url, width: timing.width, height: timing.height, frameCount: timing.frameCount, frameDelays: timing.frameDelays, totalDuration };
+	},
+
+	// Undo can bring back an earlier base image, so its animation URL lives
+	// until the document that made it is replaced.
+	releaseBaseAnimationUrls() {
+		this.baseAnimationUrls.forEach((url) => URL.revokeObjectURL(url));
+		this.baseAnimationUrls.clear();
+	},
+
+	// Where an animated base sits, in canvas px: the box of its full frame,
+	// and `clip`, the part of that box a crop has left. Pixels a crop removed
+	// stay removed when the canvas grows again, as they do in the still base.
+	createBaseAnimationPlacement(width, height) {
+		return { x: 0, y: 0, width, height, clip: { x: 0, y: 0, width, height } };
+	},
+
+	// History snapshots share baseImageSource, so a change makes a new one.
+	updateBaseAnimationPlacement(map) {
+		const source = this.baseImageSource;
+		if (source?.animation) this.baseImageSource = { ...source, placement: map(source.placement) };
+	},
+
+	// A project whose canvas was resized stores the still canvas and the
+	// animated file apart; this puts the animation back over the loaded still.
+	async attachBaseAnimation(file, placement) {
+		const animation = await this.readBaseAnimation(file);
+		if (!animation) return;
+		this.baseImageSource = { ...this.baseImageSource, animation, placement: structuredClone(placement) };
+		this.requestPreviewUpdate();
+	},
+
 	async replaceBaseImageFile(file) {
 		if (!file || !this.originalImageData) return false;
 		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
@@ -63,6 +119,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		}
 		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
 		const { width, height } = fittedSize;
+		const animation = await this.readBaseAnimation(file);
 		const offsetX = Math.round((width - this.originalCanvas.width) / 2);
 		const offsetY = Math.round((height - this.originalCanvas.height) / 2);
 		const previousImageUrl = this.originalImage?.src?.startsWith('blob:') ? this.originalImage.src : null;
@@ -73,7 +130,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.originalImageData = this.originalCtx.getImageData(0, 0, width, height);
 		this.originalAlphaChannel = new Uint8Array(width * height);
 		for (let i = 0; i < this.originalAlphaChannel.length; i++) this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
-		this.baseImageSource = { kind: 'file', file, renderedWidth: width, renderedHeight: height, hasBaseImage: true };
+		this.baseImageSource = { kind: 'file', file, renderedWidth: width, renderedHeight: height, hasBaseImage: true, animation, placement: this.createBaseAnimationPlacement(width, height) };
 		if (previousImageUrl && previousImageUrl !== objectUrl) URL.revokeObjectURL(previousImageUrl);
 		this.layerManager.updateBaseImageSwatchCache();
 		const layer = this.layerManager.getBaseLayer();
@@ -154,6 +211,10 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 			}
 		}
 
+		const file = blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' });
+		this.releaseBaseAnimationUrls();
+		const animation = source?.kind === 'preset' ? null : await this.readBaseAnimation(file);
+
 		this.exportResultPresenter?.clear();
 		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
 			URL.revokeObjectURL(this.originalImage.src);
@@ -186,9 +247,11 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 			: {
 				kind: source?.kind || 'file',
 				hasBaseImage: source?.hasBaseImage !== false,
-				file: blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' }),
+				file,
 				renderedWidth: width,
-				renderedHeight: height
+				renderedHeight: height,
+				animation,
+				placement: this.createBaseAnimationPlacement(width, height)
 			};
 
 		this.originalAlphaChannel = new Uint8Array(width * height);
@@ -211,15 +274,16 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		}
 		this.layers = [];
 		this.canvasElementsContainer.innerHTML = '';
+		this.areaSelection.clear();
 		this.viewport.selectionOverlay.clear();
 
-			if (CONFIG.app.startup.layers.createBaseImage) {
+		if (CONFIG.app.startup.layers.createBaseImage) {
 			const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
 			this.layers.push(layer);
 		}
 
 		if (CONFIG.app.startup.layers.createDefaultGlitterFill) {
-			const layer = this.createLayer();
+			const layer = this.glitterManager.createLayer();
 			this.layers.push(layer);
 			this.layerManager.setActiveLayer(layer.id);
 		} else if (this.layers.length === 0) {

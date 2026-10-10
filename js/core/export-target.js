@@ -1,11 +1,13 @@
 'use strict';
 
+// `fitLevers` are the export settings a size fit may lower for this target
+// (js/export/export-fit.js).
 const EXPORT_TARGETS = Object.freeze({
-	'still:png': Object.freeze({ mode: 'still', format: 'png', id: 'still:png', exporter: 'stillImageExporter', label: 'PNG', exportLabel: 'Export PNG', mimeType: 'image/png', extension: 'png', isStill: true, isAnimation: false, isGif: false, isVideo: false, supportsTransparency: true, usesMatte: true, supportsGifLook: false, supportsTemporalGifLook: false, supportsPlaybackSettings: false, supportsAnimationOptimization: false, supportsJpegCompression: false }),
-	'still:jpeg': Object.freeze({ mode: 'still', format: 'jpeg', id: 'still:jpeg', exporter: 'stillImageExporter', label: 'JPG', exportLabel: 'Export JPG', mimeType: 'image/jpeg', extension: 'jpg', isStill: true, isAnimation: false, isGif: false, isVideo: false, supportsTransparency: false, usesMatte: true, supportsGifLook: false, supportsTemporalGifLook: false, supportsPlaybackSettings: false, supportsAnimationOptimization: false, supportsJpegCompression: true }),
-	'still:gif': Object.freeze({ mode: 'still', format: 'gif', id: 'still:gif', exporter: 'stillImageExporter', label: 'Still GIF', exportLabel: 'Export Still GIF', mimeType: 'image/gif', extension: 'gif', isStill: true, isAnimation: false, isGif: true, isVideo: false, supportsTransparency: true, usesMatte: true, supportsGifLook: true, supportsTemporalGifLook: false, supportsPlaybackSettings: false, supportsAnimationOptimization: false, supportsJpegCompression: false }),
-	'animation:gif': Object.freeze({ mode: 'animation', format: 'gif', id: 'animation:gif', exporter: 'exporter', label: 'GIF', exportLabel: 'Export GIF', mimeType: 'image/gif', extension: 'gif', isStill: false, isAnimation: true, isGif: true, isVideo: false, supportsTransparency: true, usesMatte: true, supportsGifLook: true, supportsTemporalGifLook: true, supportsPlaybackSettings: true, supportsAnimationOptimization: true, supportsJpegCompression: false }),
-	'animation:mp4': Object.freeze({ mode: 'animation', format: 'mp4', id: 'animation:mp4', exporter: 'mp4Exporter', label: 'MP4', exportLabel: 'Export MP4', mimeType: 'video/mp4', extension: 'mp4', isStill: false, isAnimation: true, isGif: false, isVideo: true, supportsTransparency: false, usesMatte: true, supportsGifLook: false, supportsTemporalGifLook: false, supportsPlaybackSettings: true, supportsAnimationOptimization: true, supportsJpegCompression: false })
+	'still:png': Object.freeze({ mode: 'still', format: 'png', id: 'still:png', exporter: 'stillImageExporter', label: 'PNG', exportLabel: 'Export PNG', mimeType: 'image/png', extension: 'png', isStill: true, isAnimation: false, isGif: false, isVideo: false, supportsTransparency: true, usesMatte: true, supportsGifLook: false, supportsTemporalGifLook: false, supportsPlaybackSettings: false, supportsAnimationOptimization: false, supportsJpegCompression: false, fitLevers: Object.freeze(['outputScale']) }),
+	'still:jpeg': Object.freeze({ mode: 'still', format: 'jpeg', id: 'still:jpeg', exporter: 'stillImageExporter', label: 'JPG', exportLabel: 'Export JPG', mimeType: 'image/jpeg', extension: 'jpg', isStill: true, isAnimation: false, isGif: false, isVideo: false, supportsTransparency: false, usesMatte: true, supportsGifLook: false, supportsTemporalGifLook: false, supportsPlaybackSettings: false, supportsAnimationOptimization: false, supportsJpegCompression: true, fitLevers: Object.freeze(['jpegQuality', 'outputScale']) }),
+	'still:gif': Object.freeze({ mode: 'still', format: 'gif', id: 'still:gif', exporter: 'stillImageExporter', label: 'Still GIF', exportLabel: 'Export Still GIF', mimeType: 'image/gif', extension: 'gif', isStill: true, isAnimation: false, isGif: true, isVideo: false, supportsTransparency: true, usesMatte: true, supportsGifLook: true, supportsTemporalGifLook: false, supportsPlaybackSettings: false, supportsAnimationOptimization: false, supportsJpegCompression: false, fitLevers: Object.freeze(['ditherEnabled', 'colorCount', 'outputScale']) }),
+	'animation:gif': Object.freeze({ mode: 'animation', format: 'gif', id: 'animation:gif', exporter: 'exporter', label: 'GIF', exportLabel: 'Export GIF', mimeType: 'image/gif', extension: 'gif', isStill: false, isAnimation: true, isGif: true, isVideo: false, supportsTransparency: true, usesMatte: true, supportsGifLook: true, supportsTemporalGifLook: true, supportsPlaybackSettings: true, supportsAnimationOptimization: true, supportsJpegCompression: false, fitLevers: Object.freeze(['exportFidelity', 'ditherEnabled', 'colorCount', 'outputScale']) }),
+	'animation:mp4': Object.freeze({ mode: 'animation', format: 'mp4', id: 'animation:mp4', exporter: 'mp4Exporter', label: 'MP4', exportLabel: 'Export MP4', mimeType: 'video/mp4', extension: 'mp4', isStill: false, isAnimation: true, isGif: false, isVideo: true, supportsTransparency: false, usesMatte: true, supportsGifLook: false, supportsTemporalGifLook: false, supportsPlaybackSettings: true, supportsAnimationOptimization: true, supportsJpegCompression: false, fitLevers: Object.freeze(['mp4Bitrate', 'outputScale']) })
 });
 
 function getExportFormats(mode) {
@@ -27,4 +29,10 @@ function setActiveExportTarget(settings, targetId) {
 	if (target.isStill) settings.stillFormat = target.format;
 	else settings.animationFormat = target.format;
 	return target;
+}
+
+// The exported pixel size: the canvas at the Export Size percent.
+function getExportOutputSize(width, height, outputScale = 100) {
+	const scale = Math.min(100, Math.max(CONFIG.export.limits.minOutputScale, Number(outputScale) || 100)) / 100;
+	return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)), scaled: scale < 1 };
 }

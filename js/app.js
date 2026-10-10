@@ -56,6 +56,7 @@ class GlitterEditor {
 		this.isSaved = false;
 		this.projectName = '';
 		this.baseImageSource = null;
+		this.baseAnimationUrls = new Set();
 		this.touchGestureActive = false;
 		this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
 		this.pendingConfirmationResolve = null;
@@ -114,6 +115,8 @@ class GlitterEditor {
 		this.pathLayerManager = new PathLayerManager(this);
 		this.pathEdit = new PathEditSession(this);
 		this.cropEdit = new CropEditSession(this);
+		this.areaSelection = new AreaSelection(this);
+		this.areaSelect = new AreaSelectSession(this);
 		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
 		this.libraryWindow = new LibraryWindow(this);
@@ -291,7 +294,7 @@ class GlitterEditor {
 		initPixelScaler();
 		initTooltips();
 		installClipboardHandlers(this);
-		this.exportResultPresenter = new ExportResultPresenter({ onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal') });
+		this.exportResultPresenter = new ExportResultPresenter({ onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
 		this.exportProgressPresenter = new ExportProgressPresenter(this);
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
@@ -811,6 +814,7 @@ class GlitterEditor {
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
 		this.baseImageSource = null;
+		this.releaseBaseAnimationUrls();
 		this.maskEditor?.exitEditMode({ commitStroke: false });
 		this.layerManager.clearBaseImageSwatchCache();
 
@@ -836,6 +840,7 @@ class GlitterEditor {
 
 		this.clearPreview();
 		this.canvasElementsContainer.innerHTML = '';
+		this.areaSelection.clear();
 		this.viewport.selectionOverlay.clear();
 
 		// ======================
@@ -1141,7 +1146,11 @@ class GlitterEditor {
 		if ((mode === 'image' && this.baseBackgroundManager?.hasBaseImage()) || mode === 'gradient') {
 			const width = this.previewCanvas.width;
 			const height = this.previewCanvas.height;
-			this.renderBasePreviewImageData(baseLayer, this.baseBackgroundManager.getBackgroundSourceImageData(background, width, height));
+			const source = this.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
+			// A playing base animation covers its own rectangle, which leaves the
+			// canvas nothing to draw when the animation fills it.
+			if (source) this.renderBasePreviewImageData(baseLayer, source);
+			else this.clearBasePreviewCanvas();
 		} else if (mode === 'solid') {
 			const key = `solid:${this.previewCanvas.width}x${this.previewCanvas.height}:${background.color}:${baseLayer.opacity}`;
 			if (this._basePreviewCache?.key === key) return;
@@ -1162,11 +1171,7 @@ class GlitterEditor {
 		const { background, opacity } = baseLayer;
 		const key = `${processed.width}x${processed.height}:${opacity}:${JSON.stringify(background.colorAdjust)}`;
 		if (this._basePreviewCache?.key === key && this._basePreviewCache.source === processed) return;
-		const image = new ImageData(new Uint8ClampedArray(processed.data), processed.width, processed.height);
-		applyColorAdjustToImageData(image, background.colorAdjust);
-		if (opacity < 100) {
-			for (let offset = 3; offset < image.data.length; offset += 4) image.data[offset] = Math.round(image.data[offset] * opacity / 100);
-		}
+		const image = adjustImageDataCopy(processed, background.colorAdjust, opacity);
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this.previewCtx.putImageData(image, 0, 0);
 		this._basePreviewCache = { key, source: processed, image };

@@ -3,9 +3,10 @@
 // Renders one buildExportReport() into the Export Ready modal and wires its
 // footer actions. What is shown, and when, is decided in export-report.js.
 class ExportResultPresenter {
-	constructor({ onStatus = () => {}, onShow = () => {} } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; }
+	// onFit(goal) re-exports under a size target's limit.
+	constructor({ onStatus = () => {}, onShow = () => {}, onFit = null } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; this.onFit = onFit; }
 	clear() { if (this.previewBlobUrl) URL.revokeObjectURL(this.previewBlobUrl); this.previewBlobUrl = null; }
-	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null }) {
+	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null }) {
 		this.clear();
 		const blobUrl = URL.createObjectURL(blob);
 		this.previewBlobUrl = blobUrl;
@@ -19,13 +20,13 @@ class ExportResultPresenter {
 		let canShare = false;
 		try { canShare = Boolean(navigator.canShare?.({ files: [file] })); } catch (error) { canShare = false; }
 		const report = buildExportReport({
-			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis,
+			blob, fileName: file.name, target, width, height, frameCount, duration, timelinePlan, colorAnalysis, fit,
 			platform: { isIOS: CONFIG.debug.forceIOSExportPreview || isIOSDevice(), canShare }
 		});
 
 		this._renderFacts(report.facts);
 		this._renderSaveGuide(modal, report.saveGuide);
-		this._renderUploadLimits(report.uploadLimits);
+		this._renderUploadLimits(report.uploadLimits, fit);
 		this._renderNotices(report.notices);
 		this._renderDetails(report.details);
 		this._showView('result');
@@ -80,13 +81,18 @@ class ExportResultPresenter {
 		guide.hidden = !template;
 	}
 
-	_renderUploadLimits(uploadLimits) {
+	// A limit this result already tried and missed offers no second Fit.
+	_renderUploadLimits(uploadLimits, fit) {
 		document.getElementById('exportSizeWarnings').hidden = uploadLimits.length === 0;
 		document.getElementById('exportSizeWarningList').replaceChildren(...uploadLimits.map((limit) => {
 			const row = document.getElementById('tpl-export-limit').content.firstElementChild.cloneNode(true);
 			row.querySelector('.export-limit-service').textContent = limit.service;
 			row.querySelector('.export-limit-note').textContent = limit.note;
 			row.querySelector('.export-limit-value').textContent = limit.limit;
+			const fitButton = row.querySelector('.export-limit-fit');
+			fitButton.hidden = !this.onFit || fit?.label === limit.goal.label;
+			fitButton.title = `Export again under ${limit.goal.label}`;
+			fitButton.onclick = () => this.onFit(limit.goal);
 			return row;
 		}));
 	}

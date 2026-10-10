@@ -3,10 +3,11 @@ class ExportProgressPresenter extends TaskProgressPresenter {
 		super(editor, document.getElementById('exportProgress'), () => { editor.exportCancelled = true; });
 	}
 
-	show(target) {
+	// A size fit names its goal and attempt in place of the default title.
+	show(target, { title = `Exporting ${target.label}`, detail = 'Preparing export' } = {}) {
 		this.target = target;
 		this.editor.exportCancelled = false;
-		super.show({ title: `Exporting ${target.label}`, detail: 'Preparing export' });
+		super.show({ title, detail });
 	}
 
 	update(percent, message, current = 0, total = 0, info = {}) {

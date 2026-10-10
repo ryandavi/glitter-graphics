@@ -116,6 +116,7 @@ initializeExportSettings() {
 		this.updateDitherDependentUI();
 		this.updateMatteColorUI();
 		this.updateWatermarkUI?.();
+		this.updateTargetSizeUI();
 		this.updateGifLookSummary();
 		this.updateExportFidelityUI();
 		this.updateExportFormatUI();
@@ -133,6 +134,11 @@ initializeExportSettings() {
 		const inactive = !this.exportSettings.ditherEnabled;
 		['ditherTypeRow', 'ditherAmountRow', 'ditherScaleRow', 'ditherTemporalModeRow', 'ditherEdgeProtectionRow']
 			.forEach((id) => setSettingsRowInactive(document.getElementById(id), inactive));
+	}
+
+,
+	updateTargetSizeUI() {
+		setSettingsRowInactive(document.getElementById('exportTargetSizeKBRow'), this.exportSettings.targetSize !== 'custom');
 	}
 
 ,
@@ -267,6 +273,7 @@ initializeExportSettings() {
 			this.updateExportDuration();
 			if (key === 'ditherEnabled') this.updateDitherDependentUI();
 			if (key === 'watermarkEnabled') this.updateWatermarkUI?.();
+			if (key === 'targetSize') this.updateTargetSizeUI();
 			if (key === 'watermark') {
 				this.updateWatermarkPreview?.();
 			}
@@ -629,6 +636,7 @@ initializeExportSettings() {
 			maxFrames: this.exportSettings.maxFrames,
 			manualFrameSkip: this.exportSettings.exportFrameSkip,
 			baseImage: this.exportSettings.baseImage,
+			baseAnimation: this.baseBackgroundManager.getAnimation(),
 			visualErrorThreshold: this.exportSettings.visualErrorThreshold,
 			// The render clock is format-specific, so the estimate must be
 			// realized by the same planner the export will actually use.
@@ -650,8 +658,7 @@ initializeExportSettings() {
 			dbg('[Export] Memory estimate failed; exporting anyway.', error);
 			return true;
 		}
-		const width = this.originalCanvas.width;
-		const height = this.originalCanvas.height;
+		const { width, height } = getExportOutputSize(this.originalCanvas.width, this.originalCanvas.height, this.exportSettings.outputScale);
 		const bytes = estimate.estimatedFrameCount * width * height * CONFIG.memory.gifBytesPerPixel;
 		if (bytes <= getMemoryBudget().exportBytes) return true;
 		return this.confirmAction({
@@ -659,7 +666,7 @@ initializeExportSettings() {
 			message: 'This GIF may need more memory than this device has, which can stop the export or reload the page. Lower Frame Limit or Export Fidelity in Export Settings, or use a smaller canvas.',
 			facts: [
 				{ label: 'Frames', value: `about ${estimate.estimatedFrameCount}` },
-				{ label: 'Canvas', value: `${width} × ${height} px` },
+				{ label: 'Size', value: `${width} × ${height} px` },
 				{ label: 'Memory', value: `about ${Math.ceil(bytes / (1024 * 1024))} MB` }
 			],
 			confirmLabel: 'Export Anyway',

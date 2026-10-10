@@ -424,15 +424,8 @@ class FilterLayerManager {
 		return {
 			visibleLayers: layers,
 			glitterGifs: this.editor.glitterLibrary.getRenderContent(),
-			canvasData: {
-				width: this.editor.originalCanvas.width,
-				height: this.editor.originalCanvas.height,
-				originalData: new Uint8ClampedArray(this.editor.originalImageData.data),
-				originalAlpha: this.editor.originalAlphaChannel,
-				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
-				hasBaseImage: this.editor.baseBackgroundManager?.hasBaseImage() ?? true
-			},
-			exportSettings: { ...this.editor.exportSettings, baseImage: true, watermarkEnabled: false, transparency: true },
+			canvasData: this.editor.getExportCanvasData(),
+			exportSettings: this.editor.getSceneSnapshotSettings({ baseImage: true }),
 			target: { supportsTransparency: true },
 			callbacks: {
 				onStatus: () => {}, onProgress: () => {}, onLayerLoaded: () => {}, isCancelled: () => false,
@@ -486,7 +479,7 @@ class FilterLayerManager {
 				const estimate = await this.snapshotCompositor.estimateLoopDuration({
 					layers: [...layers, layer], library: this.editor.glitterLibrary.getRenderContent(),
 					fallbackDuration: CONFIG.export.defaults.frameDelay,
-					maxFrames: 24, baseImage: true
+					maxFrames: 24, baseImage: true, baseAnimation: this.editor.baseBackgroundManager.getAnimation()
 				});
 				duration = estimate.duration || 1200;
 				const frameBytes = input.imageData.width * input.imageData.height * 4;

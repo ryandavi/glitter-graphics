@@ -12,6 +12,7 @@ const sources = {
 	PathLayerManager: fs.readFileSync(path.join(root, 'js/layers/PathLayerManager.js'), 'utf8'),
 	StickerManager: fs.readFileSync(path.join(root, 'js/layers/StickerManager.js'), 'utf8'),
 	GlitterManager: fs.readFileSync(path.join(root, 'js/layers/GlitterManager.js'), 'utf8'),
+	BaseBackgroundManager: fs.readFileSync(path.join(root, 'js/layers/BaseBackgroundManager.js'), 'utf8'),
 	AnimationTicker: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),
 	animationPreview: fs.readFileSync(path.join(root, 'js/systems/AnimationTicker.js'), 'utf8'),
 	SceneCompositor: fs.readFileSync(path.join(root, 'js/export/SceneCompositor.js'), 'utf8'),

@@ -147,7 +147,8 @@
 	}
 
 	// The warning is the one box in the notes. Its rows are a table: service,
-	// limit, note, each in its own column so the badges line up.
+	// limit, note and the Fit action, each in its own column so the badges
+	// line up.
 	.export-limits {
 		display: flex;
 		flex-direction: column;
@@ -167,7 +168,7 @@
 
 	.export-limit-list {
 		display: grid;
-		grid-template-columns: max-content max-content minmax(0, 1fr);
+		grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
 		align-items: center;
 		gap: var(--spacing-xs) var(--spacing-md);
 		margin: 0;

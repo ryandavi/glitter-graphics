@@ -203,6 +203,17 @@
 	pointer-events: none;
 }
 
+// An animated base image playing over the base canvas, placed and clipped
+// to the canvas by BaseBackgroundManager.
+.base-animation-element {
+	position: absolute;
+	display: block;
+	max-width: none;
+	max-height: none;
+	pointer-events: none;
+	image-rendering: inherit;
+}
+
 .sparkle-particle,
 .sparkle-paint {
 	position: absolute;

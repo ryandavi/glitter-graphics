@@ -586,7 +586,15 @@ const PANEL_SCHEMAS = {
 						name: 'baseBackgroundImageName', badges: 'baseBackgroundImageBadges',
 						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true
 					}
-				}
+				},
+				// Shown for an animated GIF base image only.
+				{ kind: 'section', id: 'baseBackgroundAnimationSection', title: 'Animation', hidden: true, sets: [
+					{ rows: [
+						{ kind: 'toggle', id: 'baseBackgroundAnimate', label: 'Play animation', checked: true,
+							title: 'Play the animated GIF on the canvas and in exports. Off uses its first frame.' },
+						{ kind: 'note', id: 'baseBackgroundAnimateNote' }
+					] }
+				] }
 			] },
 			{ title: 'Layout', sections: [
 				{ kind: 'mount', id: 'baseCanvasSizeHost' }

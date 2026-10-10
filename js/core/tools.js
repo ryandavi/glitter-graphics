@@ -30,6 +30,7 @@ const ToolType = {
 	SHAPE: 'shape',
 	LINE: 'line',
 	PEN: 'pen',
+	AREA: 'area',
 	CROP: 'crop',
 	HAND: 'hand',
 	GLITTER_FILL: 'glitterFill',
@@ -138,6 +139,30 @@ const TOOLS = {
 		onActivate: editor => editor.maskEditor.enterEditMode(),
 		onDeactivate: (editor, _nextTool, options = {}) => editor.maskEditor.exitEditMode({ switchTool: false, commitStroke: options.commitStroke !== false }),
 		onCanvasPointerDown: (editor, event) => editor.maskEditor._handlePointerDown(event)
+	},
+	[ToolType.AREA]: {
+		key: 'm',
+		panel: (_editor, layer) => layer?.type === LayerType.GLITTER_FILL ? 'layerSettings' : null,
+		name: 'Select Area',
+		buttonLabel: 'Select Area',
+		icon: 'area-select',
+		hintName: 'Select Area Tool',
+		command: 'toolArea',
+		toolbarGroup: 'create',
+		groups: ['paint', 'contentEditing'],
+		touchRoute: 'toolDrag',
+		available: editingAvailable,
+		containerClass: 'area-cursor',
+		// The area outlives the tool, so the brush can paint inside it; leaving
+		// only drops a drag in progress. The session (js/ui/area-select.js) owns
+		// every press.
+		onDeactivate: (editor) => editor.areaSelect.cancelDrag(),
+		onCanvasPointerDown: (editor, event) => editor.areaSelect.handlePointerDown(event),
+		onCanvasAction: (editor, action) => { if (action.options?.source === 'touch') editor.areaSelect.handleTap(); },
+		onTouchDragStart: (editor, point) => editor.areaSelect.press(point),
+		onTouchDragMove: (editor, point) => editor.areaSelect.move(point),
+		onTouchDragEnd: (editor, point) => editor.areaSelect.release(point),
+		onTouchDragCancel: (editor) => editor.areaSelect.cancelDrag()
 	},
 	[ToolType.TEXT]: {
 		key: 't',
@@ -269,6 +294,7 @@ const TOOL_ORDER = Object.freeze([
 	ToolType.PEN,
 	ToolType.GLITTER_FILL,
 	ToolType.BRUSH,
+	ToolType.AREA,
 	ToolType.CROP,
 	ToolType.HAND,
 	ToolType.ZOOM

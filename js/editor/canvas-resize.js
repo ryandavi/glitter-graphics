@@ -39,6 +39,15 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 
 		this.glitterManager?.scaleSelectionsForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
 		this.paintMaskStore.scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
+		this.areaSelection.transformPoints((point) => ({ x: point.x * scaleX, y: point.y * scaleY }));
+		this.updateBaseAnimationPlacement((box) => {
+			const left = Math.round(box.clip.x * scaleX);
+			const top = Math.round(box.clip.y * scaleY);
+			return {
+				x: box.x * scaleX, y: box.y * scaleY, width: box.width * scaleX, height: box.height * scaleY,
+				clip: { x: left, y: top, width: Math.round((box.clip.x + box.clip.width) * scaleX) - left, height: Math.round((box.clip.y + box.clip.height) * scaleY) - top }
+			};
+		});
 		scaleDocumentLayerStates(this.layers, scaleX, scaleY, uniformScale, {
 			...options,
 			// Read after the canvas took its new size above.
@@ -128,6 +137,14 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 		);
 		this.glitterManager?.reanchorSelectionsForCanvasResize(offsetX, offsetY, this.layers);
 		this.paintMaskStore.reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, this.layers);
+		this.areaSelection.transformPoints((point) => ({ x: point.x + offsetX, y: point.y + offsetY }));
+		this.updateBaseAnimationPlacement((box) => {
+			const left = Math.max(0, box.clip.x + offsetX);
+			const top = Math.max(0, box.clip.y + offsetY);
+			const right = Math.min(newWidth, box.clip.x + offsetX + box.clip.width);
+			const bottom = Math.min(newHeight, box.clip.y + offsetY + box.clip.height);
+			return { ...box, x: box.x + offsetX, y: box.y + offsetY, clip: { x: left, y: top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) } };
+		});
 
 		// 4. Sticker / text positions shift with the content (canvas coords).
 		this.layers.forEach((layer) => {
@@ -189,6 +206,8 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 			// Live paint buffers are now the wrong size; restorePaintState (runs
 			// next) rebuilds them at this size from each layer's snapshot.
 			this.paintMaskStore?.discardLivePaintBuffers();
+			// The area is not in history, so it cannot follow a size it never saw.
+			this.areaSelection.clear();
 			this.viewport.setCanvasDimensions(width, height);
 			this.viewport.resetZoomSmart();
 			this.updateZoomUI();

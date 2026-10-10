@@ -43,7 +43,15 @@
 
 	> * { flex: 0 0 auto; }
 
-	> .segmented-control { width: auto; }
+	// As wide as its labels, which are never cut short.
+	> .segmented-control {
+		width: auto;
+
+		> .segmented-option {
+			flex: 0 0 auto;
+			padding-inline: var(--spacing-sm);
+		}
+	}
 
 	.context-toolbar-handle {
 		align-self: stretch;

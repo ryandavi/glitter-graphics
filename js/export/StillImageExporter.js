@@ -25,9 +25,9 @@ class StillImageExporter {
 			if (encoded.analysis) colorAnalysis = { ...encoded.analysis, paletteSize: encoded.paletteSize, paletteMode: encoded.paletteMode };
 		}
 		if (callbacks.isCancelled?.()) throw new Error('Export cancelled');
-		reportExportProgress(callbacks, 'finalizing', 1); callbacks.onStatus('Export complete!');
-		const file = new File([blob], this.fileName, { type: target.mimeType, lastModified: Date.now() });
-		callbacks.onComplete({ still: true }); this.resultPresenter.show({ blob, file, target, width: composed.width, height: composed.height, colorAnalysis }); return blob;
+		reportExportProgress(callbacks, 'finalizing', 1);
+		deliverExportResult(callbacks, this.resultPresenter, { blob, fileName: this.fileName, completion: { still: true }, target, width: composed.width, height: composed.height, colorAnalysis });
+		return blob;
 	}
 	async _encodeJpeg(canvas, settings, callbacks) {
 		reportExportProgress(callbacks, 'encoding', 0.95, '', 1, 1);

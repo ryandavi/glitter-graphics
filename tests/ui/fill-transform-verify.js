@@ -129,7 +129,11 @@ async function previewBounds(page, beforeShot = null) {
 		canvas.height = image.height;
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 		ctx.drawImage(image, 0, 0);
-		const area = document.getElementById('previewContainer').getBoundingClientRect();
+		// Only the part of the workspace no panel covers: a panel over it can
+		// show the fill color too (the Fill swatch).
+		const container = document.getElementById('previewContainer').getBoundingClientRect();
+		const usable = window.editor.viewport.getUsableRect();
+		const area = { left: container.left + usable.left, top: container.top + usable.top, width: usable.width, height: usable.height };
 		const left = Math.max(0, Math.floor(area.left));
 		const top = Math.max(0, Math.floor(area.top));
 		const width = Math.min(canvas.width - left, Math.ceil(area.width));

@@ -100,3 +100,16 @@ function applyColorAdjustToImageData(imageData, adjust) {
 	}
 	return imageData;
 }
+
+// A layer's color adjust and opacity as one pixel pass: the base image in
+// the preview and in export, and each frame of an animated one. Returns
+// `imageData` itself when both are neutral, a new ImageData otherwise.
+function adjustImageDataCopy(imageData, adjust, opacity = 100) {
+	if (isIdentityColorAdjust(adjust) && opacity === 100) return imageData;
+	const result = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+	applyColorAdjustToImageData(result, adjust);
+	if (opacity < 100) {
+		for (let offset = 3; offset < result.data.length; offset += 4) result.data[offset] = Math.round(result.data[offset] * opacity / 100);
+	}
+	return result;
+}

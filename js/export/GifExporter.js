@@ -19,10 +19,7 @@ class GifExporter {
 
 	async process(params) {
 		const { visibleLayers, callbacks } = params;
-		const { plan, context, exportSettings, preserveAlpha } = await this.compositor.planAnimation({ ...params, outputFormat: 'gif' });
-		const frames = plan.frames;
-		plan.frameCount = frames.length;
-		delete plan.frames;
+		const { plan, frames, context, exportSettings, preserveAlpha } = await this._planFrames(params);
 		const encoded = await this.gifEncodingPipeline.encode({
 			frames,
 			delays: plan.frameDurations,
@@ -56,21 +53,38 @@ class GifExporter {
 		return encoded.blob;
 	}
 
+	// Plans and composes the frames. A size fit passes `frameCache`, so an
+	// attempt that only changes the encoding reuses the previous attempt's
+	// frames. The encoder empties the list it is given, hence the copies.
+	async _planFrames(params) {
+		const cache = params.frameCache;
+		const key = cache ? JSON.stringify(Object.entries(params.exportSettings).filter(([name]) => !GIF_ENCODE_ONLY_SETTINGS.includes(name))) : '';
+		if (cache && cache.key === key) return { ...cache.planned, plan: { ...cache.planned.plan }, frames: [...cache.frames] };
+		const planned = await this.compositor.planAnimation({ ...params, outputFormat: 'gif' });
+		const frames = planned.plan.frames;
+		planned.plan.frameCount = frames.length;
+		delete planned.plan.frames;
+		if (!cache) return { ...planned, frames };
+		const bytes = frames.reduce((sum, frame) => sum + frame.data.byteLength, 0);
+		const keep = bytes <= CONFIG.export.fit.frameCacheBytes;
+		Object.assign(cache, { key: keep ? key : null, planned: keep ? planned : null, frames: keep ? frames : null });
+		return { ...planned, plan: { ...planned.plan }, frames: keep ? [...frames] : frames };
+	}
+
 	_handleFileSave(blob, callbacks, plan) {
 		dbg('_handleFileSave called with blob size:', blob.size);
 		reportExportProgress(callbacks, 'finalizing', 1, 'Export complete');
 		plan.phaseTimings = callbacks.phaseTimer?.finish();
-		callbacks.onStatus('Export complete!');
-		callbacks.onComplete({
-			smartReduced: plan.reduction.framesRemoved > 0,
+		deliverExportResult(callbacks, this.resultPresenter, {
+			blob,
+			fileName: this.fileName,
+			completion: { smartReduced: plan.reduction.framesRemoved > 0, timelinePlan: plan },
+			target: EXPORT_TARGETS['animation:gif'],
+			width: plan.width,
+			height: plan.height,
+			frameCount: plan.frameCount,
+			duration: plan.totalDuration / 1000,
 			timelinePlan: plan
 		});
-
-		const file = new File([blob], this.fileName, {
-			type: 'image/gif',
-			lastModified: Date.now()
-		});
-
-		this.resultPresenter?.show({ blob, file, target: EXPORT_TARGETS['animation:gif'], width: plan.width, height: plan.height, frameCount: plan.frameCount, duration: plan.totalDuration / 1000, timelinePlan: plan });
 	}
 }

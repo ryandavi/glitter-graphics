@@ -1032,6 +1032,7 @@ class MaskEditor {
 			this._stampAlongPath(layer, paint, this.lastPoint, nextPoint);
 			this.lastPoint = nextPoint;
 		}
+		this._clipStrokeToArea(layer);
 	}
 
 	// Coalesced pointer samples when the browser exposes them, else the event
@@ -1149,6 +1150,7 @@ class MaskEditor {
 		const smoothed = this._applySmoothing(point);
 		this._stampAlongPath(layer, paint, this.lastPoint, smoothed);
 		this.lastPoint = smoothed;
+		this._clipStrokeToArea(layer);
 		return true;
 	}
 
@@ -1210,15 +1212,8 @@ class MaskEditor {
 		}
 
 		if (this.strokeChanged) {
-			this.pendingCommitLayerId = layer.id;
-			this.editor.paintMaskStore.commitPaintState(layer);
-			this.editor.requestPreviewUpdate();
-			this.editor.layerManager.renderLayersList();
-			this.editor.updateActionButtons();
-			this.editor.updateHelpfulMessage();
-			this.editor.saveState('Paint mask');
-			this.loadLayer(layer);
-			this.renderOverlay();
+			this._clipStrokeToArea(layer);
+			this.commitPaintEdit(layer, 'Paint mask');
 		}
 
 		this.editor.ignoreNextClick = true;
@@ -1227,6 +1222,31 @@ class MaskEditor {
 		}, 0);
 
 		this._resetStrokeState();
+	}
+
+	// Commits an edit already drawn into a fill layer's paint canvases (a
+	// stroke, or a Fill or Erase of the selected area) as one undo step.
+	commitPaintEdit(layer, label) {
+		this.pendingCommitLayerId = layer.id;
+		this.editor.paintMaskStore.commitPaintState(layer);
+		this.editor.requestPreviewUpdate();
+		this.editor.layerManager.renderLayersList();
+		this.editor.updateActionButtons();
+		this.editor.updateHelpfulMessage();
+		this.editor.saveState(label);
+		this.loadLayer(layer);
+		this.renderOverlay();
+	}
+
+	// With an area selected (the Select Area tool), a stroke only changes
+	// pixels inside it. Runs once per pointer event, after its stamps, so the
+	// live preview never shows paint outside the area.
+	_clipStrokeToArea(layer) {
+		if (!this._areaClipPending) return;
+		this._areaClipPending = false;
+		const paint = this.editor.paintMaskStore.getPaintMask(layer.id);
+		if (!paint || !this.scratchAddCanvas) return;
+		this.editor.areaSelection.clipPaint(layer, paint, { add: this.scratchAddCanvas, sub: this.scratchSubCanvas });
 	}
 
 	_cancelStroke() {
@@ -1258,6 +1278,7 @@ class MaskEditor {
 
 		this.strokeActive = false;
 		this.strokeChanged = false;
+		this._areaClipPending = false;
 		this.strokeModeOverride = null;
 		this.activePointerId = null;
 		this.lastPoint = null;
@@ -1341,6 +1362,7 @@ class MaskEditor {
 		this.strokeOrigin = { x: point.x, y: point.y };
 		this.axisLockDir = null;
 		this._stampAtPoint(layer, paint, point.x, point.y, point.pressure);
+		this._clipStrokeToArea(layer);
 		return true;
 	}
 
@@ -1459,6 +1481,7 @@ class MaskEditor {
 		paint.hasContent = true;
 		layer.maskHasContent = true;
 		this.strokeChanged = true;
+		this._areaClipPending = true;
 		this._queueOverlayRefresh();
 	}
 
@@ -1795,11 +1818,7 @@ class MaskEditor {
 		// segmented control in the mask-brush context bar.
 		const isBrushActive = this.editor.currentTool === ToolType.BRUSH;
 		document.getElementById('brushTool')?.classList.toggle('active', isBrushActive);
-		document.querySelectorAll('#maskBrushControls [data-brush-mode]').forEach((option) => {
-			const on = option.dataset.brushMode === this.mode;
-			option.classList.toggle('active', on);
-			option.setAttribute('aria-pressed', on ? 'true' : 'false');
-		});
+		this.editor.contextToolbarRenderer?.setSegmentedValue('maskBrushMode', this.mode);
 	}
 
 	_getOverlayPalette(layer) {

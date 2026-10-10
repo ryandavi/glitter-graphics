@@ -181,7 +181,7 @@ class SparkleLayerManager {
 		const estimate = await this.sceneCompositor.estimateLoopDuration({
 			layers, library: this.editor.glitterLibrary.getRenderContent(),
 			fallbackDuration: CONFIG.export.defaults.frameDelay,
-			maxFrames: CONFIG.tools.sparkles.sceneSampleFrames, baseImage: true
+			maxFrames: CONFIG.tools.sparkles.sceneSampleFrames, baseImage: true, baseAnimation: params.canvasData.baseAnimation
 		});
 		const count = Math.max(1, Math.min(CONFIG.tools.sparkles.sceneSampleFrames, estimate.estimatedFrameCount || 1));
 		const frames = [];

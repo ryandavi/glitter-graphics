@@ -102,17 +102,9 @@ function logExportTimings(format, { plan, context, exportSettings, blob, details
 	}
 }
 
-function ensureCanvasSize(canvas, width, height) {
-	if (canvas.width !== width) canvas.width = width;
-	if (canvas.height !== height) canvas.height = height;
-}
-
-function resetCanvasContext(ctx, width, height, imageSmoothingEnabled = true) {
-	ctx.setTransform(1, 0, 0, 1, 0, 0);
-	ctx.globalAlpha = 1;
-	ctx.globalCompositeOperation = 'source-over';
-	ctx.imageSmoothingEnabled = imageSmoothingEnabled;
-	ctx.clearRect(0, 0, width, height);
+// The authored-source key of an animated base image.
+function getBaseAnimationSourceKey(layer) {
+	return `${layer.id}:image`;
 }
 
 class SceneCompositor {
@@ -126,6 +118,9 @@ class SceneCompositor {
 
 		// Reusable canvas elements
 		this.canvas = createAppCanvas(0, 0, 'export/SceneCompositor');
+		// Export Size below 100% resamples the composed canvas into this one.
+		this.outputCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
+		this.outputScratch = [createAppCanvas(0, 0, 'export/SceneCompositor'), createAppCanvas(0, 0, 'export/SceneCompositor')];
 		this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
 		this.helperCanvas = createAppCanvas(0, 0, 'export/SceneCompositor');
@@ -1088,32 +1083,50 @@ class SceneCompositor {
 			sourceCtx.fillStyle = createEffectCanvasGradient(sourceCtx, background.gradient, { x: 0, y: 0, width, height });
 			sourceCtx.fillRect(0, 0, width, height);
 			source = sourceCtx.getImageData(0, 0, width, height);
+		} else if (canvasData.baseAnimation) {
+			// The still parts around the animation; null when it fills the canvas.
+			source = canvasData.baseAnimation.plate;
 		} else {
 			source = new ImageData(new Uint8ClampedArray(originalData), width, height);
 		}
+		const animation = background.mode === 'image' ? canvasData.baseAnimation || null : null;
 		return {
 			source,
 			colorAdjust: normalizeColorAdjust(background.colorAdjust),
 			opacity: layer.opacity,
-			processed: null
+			processed: null,
+			animation,
+			animationKey: animation ? getBaseAnimationSourceKey(layer) : null,
+			frameCanvas: animation ? createAppCanvas(0, 0, 'export/SceneCompositor') : null
 		};
 	}
 
 	_getBasePipelineImageData(context) {
 		const pipeline = context.basePipeline;
 		if (!pipeline) throw new Error('Missing prepared base pipeline');
-		if (pipeline.processed) return pipeline.processed;
-		if (isIdentityColorAdjust(pipeline.colorAdjust) && pipeline.opacity === 100) {
-			pipeline.processed = pipeline.source;
-			return pipeline.source;
-		}
-		const result = new ImageData(new Uint8ClampedArray(pipeline.source.data), pipeline.source.width, pipeline.source.height);
-		applyColorAdjustToImageData(result, pipeline.colorAdjust);
-		if (pipeline.opacity < 100) {
-			for (let offset = 3; offset < result.data.length; offset += 4) result.data[offset] = Math.round(result.data[offset] * pipeline.opacity / 100);
-		}
-		pipeline.processed = result;
-		return result;
+		if (!pipeline.source) return null;
+		pipeline.processed ||= adjustImageDataCopy(pipeline.source, pipeline.colorAdjust, pipeline.opacity);
+		return pipeline.processed;
+	}
+
+	// The animated base image's frame for one output frame, drawn where the
+	// source sits on the canvas, with the base's color adjust and opacity.
+	_drawBaseAnimationFrame(ctx, pipeline, { frameIndex, sourceSelectionMap, resolvedFramesBySource }) {
+		const frames = resolvedFramesBySource?.get(pipeline.animationKey);
+		if (!frames?.length) throw new Error('Missing resolved frame for the animated base image');
+		const index = this._getReducedFrameIndex(frameIndex, frames.length, sourceSelectionMap?.get(pipeline.animationKey));
+		const resolved = this._getFrameImageData(this._readResolvedSource(frames, index));
+		if (!resolved) throw new Error(`Invalid frame ${index} of the animated base image`);
+		const frame = adjustImageDataCopy(resolved, pipeline.colorAdjust, pipeline.opacity);
+		ensureCanvasSize(pipeline.frameCanvas, frame.width, frame.height);
+		pipeline.frameCanvas.getContext('2d').putImageData(frame, 0, 0);
+		const { x, y, width, height, clip } = pipeline.animation.placement;
+		ctx.save();
+		ctx.beginPath();
+		ctx.rect(clip.x, clip.y, clip.width, clip.height);
+		ctx.clip();
+		ctx.drawImage(pipeline.frameCanvas, x, y, width, height);
+		ctx.restore();
 	}
 
 	_getResolvedFrame(sourceKey, frameIndex, sourceSelectionMap, resolvedFramesBySource) {
@@ -1158,12 +1171,46 @@ class SceneCompositor {
 		};
 	}
 
+	// Every animated file the scene plays. A base layer that is not exported
+	// brings none, so a background nobody sees cannot set the loop; an
+	// animated base image is the base layer's own source.
+	_collectAuthoredSources(layerPlans, library, { includeBaseImage = true, baseAnimation = null } = {}) {
+		const sources = layerPlans.flatMap(({ layer, plan }) => {
+			if (layer.type !== LayerType.BASE_IMAGE) return plan.getAuthoredSources(library);
+			if (!includeBaseImage) return [];
+			return [...(baseAnimation ? [this._createBaseAnimationDescriptor(layer, baseAnimation)] : []), ...plan.getAuthoredSources(library)];
+		});
+		this._validateAuthoredSourceKeys(sources);
+		return sources;
+	}
+
+	// The uploaded GIF of an animated base image, read like an animated
+	// sticker: decoded for the export and replayed with its own disposal.
+	_createBaseAnimationDescriptor(layer, animation) {
+		return {
+			key: getBaseAnimationSourceKey(layer),
+			label: animation.name,
+			ownerLayerId: layer.id,
+			effectSlot: null,
+			role: 'base-image',
+			replayPolicy: 'native-layer',
+			sourceIdentity: animation.file,
+			ensureLoaded: async (callbacks, { timingOnly = false } = {}) => {
+				await this._loadAnimatedSource(animation.url, {
+					timingOnly,
+					onStatus: () => callbacks.onStatus(`Loading ${animation.name}...`),
+					failure: 'Failed to load the animated base image'
+				});
+			},
+			getAnimation: () => this._getAnimatedSource(animation.url)
+		};
+	}
+
 	async _prepareExportContext(params) {
 		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
 		const settingsSnapshot = Object.freeze({ ...exportSettings });
 		const layerPlans = visibleLayers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
-		const authoredSources = layerPlans.flatMap(({ plan }) => plan.getAuthoredSources(glitterGifs));
-		this._validateAuthoredSourceKeys(authoredSources);
+		const authoredSources = this._collectAuthoredSources(layerPlans, glitterGifs, { includeBaseImage: settingsSnapshot.baseImage, baseAnimation: canvasData.baseAnimation });
 		const sourceKeys = new Set(authoredSources.map((descriptor) => descriptor.key));
 		for (const descriptor of authoredSources) {
 			await descriptor.ensureLoaded(callbacks);
@@ -1362,8 +1409,9 @@ class SceneCompositor {
 		const plan = schedule
 			? planner.planSchedule(plannerOptions)
 			: await planner.plan(plannerOptions);
-		plan.width = canvasData.width;
-		plan.height = canvasData.height;
+		const output = this._getOutputSize(context);
+		plan.width = output.width;
+		plan.height = output.height;
 		dbg('[SceneCompositor] Render clock:', {
 			mode: plan.renderClock.mode,
 			targetDuration: plan.renderClock.targetDuration,
@@ -1425,8 +1473,7 @@ class SceneCompositor {
 		});
 		return {
 			imageData,
-			width: canvasData.width,
-			height: canvasData.height,
+			...this._getOutputSize(context),
 			timestamp,
 			transparency: { enabled: preserveAlpha, ditherSoftEdges: preserveAlpha && visibleLayers.some(layerHasSoftShadow) }
 		};
@@ -1469,9 +1516,14 @@ class SceneCompositor {
 		// matte, normal alpha compositing blends the base against it.
 		if (shouldRenderBase && ((baseMode === 'image' && canvasData.hasBaseImage !== false) || baseMode === 'gradient')) {
 			const baseImage = this._getBasePipelineImageData(context);
-			resetCanvasContext(hCtx, width, height);
-			hCtx.putImageData(baseImage, 0, 0);
-			ctx.drawImage(this.helperCanvas, 0, 0);
+			if (baseImage) {
+				resetCanvasContext(hCtx, width, height);
+				hCtx.putImageData(baseImage, 0, 0);
+				ctx.drawImage(this.helperCanvas, 0, 0);
+			}
+			if (context.basePipeline.animation) {
+				this._drawBaseAnimationFrame(ctx, context.basePipeline, { frameIndex, sourceSelectionMap, resolvedFramesBySource });
+			}
 		}
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
@@ -1557,15 +1609,24 @@ class SceneCompositor {
 			this._renderWatermarkToCanvas(watermark, watermarkCanvas, ctx, width, height, watermarkFrame, resolvedFramesBySource?.get('__watermark'));
 		}
 
-		return this.canvas;
+		// 7. Export Size: every format takes the frame from here, so the
+		// composed canvas is resampled once, in one place.
+		const output = this._getOutputSize(context);
+		return output.scaled
+			? downscaleCanvas(this.canvas, this.outputCanvas, output.width, output.height, this.outputScratch)
+			: this.canvas;
+	}
+
+	_getOutputSize({ canvasData, exportSettings }) {
+		const { width, height } = getExportOutputSize(canvasData.width, canvasData.height, exportSettings.outputScale);
+		return { width, height, scaled: width !== canvasData.width || height !== canvasData.height };
 	}
 
 	// phaseTimer (optional) times the pixel readback apart from the drawing.
 	async _renderFrame(options, phaseTimer = null) {
-		await this._renderFrameToCanvas(options);
-		const { width, height } = options.context.canvasData;
+		const canvas = await this._renderFrameToCanvas(options);
 		const phase = phaseTimer?.mark('Reading pixels');
-		const imageData = this.ctx.getImageData(0, 0, width, height);
+		const imageData = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height);
 		if (phase) phaseTimer.mark(phase);
 		return imageData;
 	}
@@ -1584,6 +1645,7 @@ class SceneCompositor {
 		maxFrames = CONFIG.export.defaults.maxFrames,
 		manualFrameSkip = CONFIG.export.defaults.frameSkip,
 		baseImage = true,
+		baseAnimation = null,
 		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold,
 		outputFormat = 'gif'
 	}) {
@@ -1592,8 +1654,7 @@ class SceneCompositor {
 			ensureTextFont: async () => {}
 		};
 		const layerPlans = layers.map((layer) => ({ layer, plan: this._buildLayerExportPlan(layer) }));
-		const descriptors = layerPlans.flatMap(({ plan }) => plan.getAuthoredSources(library));
-		this._validateAuthoredSourceKeys(descriptors);
+		const descriptors = this._collectAuthoredSources(layerPlans, library, { includeBaseImage: baseImage, baseAnimation });
 		for (const descriptor of descriptors) {
 			await descriptor.ensureLoaded(callbacks, { timingOnly: true });
 		}

@@ -13,8 +13,8 @@ registerLayerType(LayerType.BASE_IMAGE, {
 			glitterDefault: 'sparklesGlitterId', panelPrefix: 'canvasSparkles', modes: ['glitter', 'solid', 'gradient']
 		}
 	],
-	// Kira Kira on the photo: the base image is always a still, so it is
-	// detected once per image.
+	// Kira Kira on the photo reads the still base (the first frame of an
+	// animated one), so it is detected once per image.
 	sparkleHost: (editor, layer) => editor.baseBackgroundManager?.getSparkleHost(layer) || null,
 	hasVisibleContent: () => true,
 	serialization: {

@@ -259,8 +259,17 @@ class ProjectSerializer {
 
 		const sourceWidth = source?.renderedWidth ?? source?.preset?.width ?? this.editor.originalCanvas.width;
 		const sourceHeight = source?.renderedHeight ?? source?.preset?.height ?? this.editor.originalCanvas.height;
-		if (sourceWidth !== this.editor.originalCanvas.width || sourceHeight !== this.editor.originalCanvas.height) {
+		const { width, height } = this.editor.originalCanvas;
+		const placement = source?.animation ? source.placement : null;
+		const animationMoved = Boolean(placement) && JSON.stringify(placement) !== JSON.stringify(this.editor.createBaseAnimationPlacement(width, height));
+		if (sourceWidth !== width || sourceHeight !== height || animationMoved) {
 			baseImage.canvasData = this.editor.originalCanvas.toDataURL('image/png');
+		}
+		// An animated base image: where it sits, and its file when the base
+		// file is no longer it (a project reopened from its still canvas).
+		if (placement) {
+			baseImage.animation = { placement: structuredClone(placement) };
+			if (source.animation.file !== source.file) baseImage.animation.data = await this.blobToDataUrl(source.animation.file);
 		}
 
 		return baseImage;
@@ -392,6 +401,12 @@ class ProjectSerializer {
 				}
 			});
 			if (!loaded) throw new Error('Could not load the project base image.');
+			// The canvas is the still; the animated file goes back over it.
+			const animated = baseImage.animation?.data || (baseImage.animation && baseImage.data);
+			if (animated) {
+				const file = new File([this.dataUrlToBlob(animated)], `${projectData.name || 'project-base'}.gif`, { type: 'image/gif' });
+				await this.editor.attachBaseAnimation(file, baseImage.animation.placement);
+			}
 			return;
 		}
 

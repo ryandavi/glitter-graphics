@@ -85,6 +85,10 @@
 	&.hand-cursor {
 		cursor: grab;
 	}
+
+	&.area-cursor {
+		cursor: crosshair;
+	}
 }
 
 body.no-document .preview-container.workspace-drop-active::after {

@@ -4591,6 +4591,9 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
 .preview-container.hand-cursor {
   cursor: grab;
 }
+.preview-container.area-cursor {
+  cursor: crosshair;
+}
 
 body.no-document .preview-container.workspace-drop-active::after {
   content: "Drop to start creating";
@@ -5385,6 +5388,15 @@ body.is-booting .workspace-start button {
   gap: var(--spacing-xs);
 }
 
+.context-segmented-control {
+  flex: 0 0 auto;
+  width: auto;
+}
+.context-segmented-control > .segmented-option {
+  flex: 0 0 auto;
+  padding-inline: var(--spacing-sm);
+}
+
 /* Mask Brush Controls Specific */
 .mask-brush-controls .context-value {
   display: inline-block;
@@ -5927,6 +5939,15 @@ body.mask-editing .sticker-element {
   pointer-events: none;
 }
 
+.base-animation-element {
+  position: absolute;
+  display: block;
+  max-width: none;
+  max-height: none;
+  pointer-events: none;
+  image-rendering: inherit;
+}
+
 .sparkle-particle,
 .sparkle-paint {
   position: absolute;
@@ -6168,6 +6189,14 @@ body.mask-editing .sticker-element {
   width: 100%;
   height: 100%;
   overflow: visible;
+  pointer-events: none;
+}
+
+.area-chrome {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
@@ -9633,7 +9662,7 @@ body.modal-open {
 }
 #exportPreviewModal .export-limit-list {
   display: grid;
-  grid-template-columns: max-content max-content minmax(0, 1fr);
+  grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
   align-items: center;
   gap: var(--spacing-xs) var(--spacing-md);
   margin: 0;

@@ -27,7 +27,30 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		}
 	},
 
-	async exportCurrentTarget() {
+	// The document as an export or a scene snapshot composes it.
+	getExportCanvasData() {
+		return {
+			width: this.originalCanvas.width,
+			height: this.originalCanvas.height,
+			originalData: new Uint8ClampedArray(this.originalImageData.data),
+			originalAlpha: this.originalAlphaChannel,
+			alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
+			hasBaseImage: this.baseBackgroundManager?.hasBaseImage() ?? true,
+			// Set when the base image is an animated GIF that plays.
+			baseAnimation: this.baseBackgroundManager?.getAnimation() || null
+		};
+	},
+
+	// Export settings for a picture of the scene at document size (filter
+	// previews, the eyedropper): never watermarked, matted or resized.
+	getSceneSnapshotSettings(overrides = {}) {
+		return { ...structuredClone(this.exportSettings), watermarkEnabled: false, transparency: true, outputScale: CONFIG.export.defaults.outputScale, ...overrides };
+	},
+
+	// `fit` ({ label, limitBytes }) exports under a file size; without it the
+	// Target Size export setting decides. A fit lowers settings on the job's
+	// own snapshot and never writes to the stored export settings.
+	async exportCurrentTarget({ fit = null } = {}) {
 		if (this.exportInProgress) return;
 		// Filter visible layers (ephemeral Auto Glitter previews never export)
 		const candidateLayers = this.layers.filter(l => {
@@ -50,6 +73,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		const exportSettings = structuredClone(this.exportSettings);
 		if (!target.supportsTransparency) exportSettings.transparency = false;
+		const goal = fit || resolveFitTarget(exportSettings);
 		const activeExporter = this[target.exporter];
 		activeExporter.setFileName(this.getProjectFileName(target.extension));
 
@@ -62,69 +86,73 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		this.updateExportActionUI();
 		this.showExportProgress(target);
 
-		// Exporters receive this immutable snapshot; UI changes cannot alter a running job.
-		dbg('Export settings:', exportSettings);
-		let finished = false;
 		const finishExport = () => {
-			if (finished) return;
-			finished = true;
 			this.exportInProgress = false;
 			this.hideExportProgress();
 			this.updateExportActionUI();
+		};
+		const failExport = (error) => {
+			dbg('Export error:', error);
+			finishExport();
+			if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
+			else this.showError('Export failed: ' + error.message);
 		};
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
 			glitterGifs: this.glitterLibrary.getRenderContent(),
-			canvasData: {
-				width: this.originalCanvas.width,
-				height: this.originalCanvas.height,
-				originalData: new Uint8ClampedArray(this.originalImageData.data),
-				originalAlpha: this.originalAlphaChannel,
-				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
-				hasBaseImage: this.baseBackgroundManager?.hasBaseImage() ?? true
-			},
-			exportSettings,
+			canvasData: this.getExportCanvasData(),
 			target,
 			timestamp: target.isStill && exportSettings.stillFrame === 'current' ? this.animationTicker.getCurrentTime() : 0,
-			callbacks: {
-				progressFormat: target.isStill ? 'still' : target.format,
-				phaseTimer: createExportPhaseTimer(),
-				onStatus: (msg) => this.updateStatus(msg),
-				onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
-					if (this.exportCancelled) throw new Error('Export cancelled');
-					this.updateExportProgress(percent, text, currentFrame, totalFrames, progressInfo);
-				},
-				onComplete: () => {
-					this.isSaved = true;
-					finishExport();
-				},
-
-				onError: (error) => {
-					// Fired by gif.js encoder events, outside our try/catch below
-					finishExport();
-					if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
-					if (error.message !== 'Export cancelled') {
-						this.showError('Export failed: ' + error.message);
-					}
-				},
-				isCancelled: () => this.exportCancelled,
-				createMask: (layer) => this.maskCompositor.getMaskData(layer),
-				renderSlotMasks: (layer) => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
-				ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
-			}
+			// Composed frames shared by the attempts of a fit.
+			frameCache: goal ? {} : null
+		};
+		// One export. Exporters receive an immutable settings snapshot; UI
+		// changes cannot alter a running job. The result comes back here, not
+		// to Export Ready, so a fit can compare attempts before showing one.
+		const runAttempt = async (settings) => {
+			dbg('Export settings:', settings);
+			let result = null;
+			await activeExporter.process({
+				...exportParams,
+				exportSettings: settings,
+				callbacks: {
+					progressFormat: target.isStill ? 'still' : target.format,
+					phaseTimer: createExportPhaseTimer(),
+					onStatus: (msg) => this.updateStatus(msg),
+					onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
+						if (this.exportCancelled) throw new Error('Export cancelled');
+						this.updateExportProgress(percent, text, currentFrame, totalFrames, progressInfo);
+					},
+					onComplete: () => {},
+					present: (delivered) => { result = delivered; },
+					isCancelled: () => this.exportCancelled,
+					createMask: (layer) => this.maskCompositor.getMaskData(layer),
+					renderSlotMasks: (layer) => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
+					ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
+				}
+			});
+			return result;
 		};
 
 		setTimeout(async () => {
 			try {
-				await activeExporter.process(exportParams);
-			} catch (error) {
-				dbg('Export error:', error);
-				finishExport();
-				if (error.message === 'Export cancelled') this.updateStatus('Export cancelled');
-				if (error.message !== 'Export cancelled') {
-					this.showError('Export failed: ' + error.message);
+				const attempts = [{ step: 0, overrides: {}, result: await runAttempt(exportSettings) }];
+				let chosen = { best: 0, reached: true };
+				while (goal) {
+					attempts[attempts.length - 1].bytes = attempts[attempts.length - 1].result.blob.size;
+					const next = planFitAttempt({ target, settings: exportSettings, limitBytes: goal.limitBytes, attempts });
+					if (next.done) { chosen = next; break; }
+					this.exportProgressPresenter.show(target, { title: `Fitting under ${goal.label}`, detail: `Attempt ${attempts.length + 1} of up to ${CONFIG.export.fit.maxAttempts}` });
+					attempts.push({ ...next, result: await runAttempt({ ...exportSettings, ...next.overrides }) });
 				}
+				// Only a fit that had to change something is reported.
+				const fitSummary = goal && attempts.length > 1 ? summarizeFit({ goal, attempts, ...chosen }) : null;
+				this.isSaved = true;
+				finishExport();
+				this.exportResultPresenter.show({ ...attempts[chosen.best].result, fit: fitSummary });
+			} catch (error) {
+				failExport(error);
 			} finally {
 				// Decoded animation frames are only needed while composing.
 				this.sceneCompositor.releaseDecodedSources();

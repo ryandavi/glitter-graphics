@@ -24,6 +24,17 @@ const SESSIONS = Object.freeze([
 			{ label: 'Nudge Selected Points 10px', group: 'Pen', displayKey: 'Shift + Arrow Keys' },
 			{ label: 'Finish Path / Edit Selected Path', group: 'Pen', displayKey: 'Enter' },
 			{ label: 'Finish Path / Clear Point Selection', group: 'Pen', displayKey: 'Escape' }
+		] },
+	// A selected area owns Enter, Delete, Escape and the arrows in the tools
+	// that use it. Last, so every editing session above takes its keys first.
+	{ id: 'area', isActive: (editor) => !editor.areaSelection.isEmpty && [ToolType.AREA, ToolType.BRUSH].includes(editor.currentTool),
+		confirm: (editor) => editor.areaSelect.fill(), cancel: (editor) => editor.areaSelect.deselect(),
+		delete: (editor) => editor.areaSelect.erase(), nudge: (editor, event) => editor.areaSelect.nudge(event),
+		shortcuts: [
+			{ label: 'Fill the Area with Glitter', group: 'Select Area', displayKey: 'Enter' },
+			{ label: 'Erase Glitter in the Area', group: 'Select Area', displayKey: 'Delete / Backspace' },
+			{ label: 'Move the Area', group: 'Select Area', displayKey: 'Arrow Keys' },
+			{ label: 'Deselect the Area', group: 'Select Area', displayKey: 'Escape' }
 		] }
 ]);
 
@@ -57,6 +68,7 @@ const ESCAPE_HANDLERS = Object.freeze([
 		if (editor.maskEditor.strokeActive) { editor.maskEditor._cancelStroke(); return true; }
 		if (editor.pathEdit.session?.drag) { editor.pathEdit.cancelDrag(); return true; }
 		if (editor.cropEdit.drag) { editor.cropEdit.cancelDrag(); return true; }
+		if (editor.areaSelect.drag) { editor.areaSelect.cancelDrag(); return true; }
 		const layer = editor.layerManager.getActiveLayer();
 		const transform = editor.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer?.id);
 		return editor.groupTransformManager.cancelActiveDrag() || transform?.cancelActiveDrag();

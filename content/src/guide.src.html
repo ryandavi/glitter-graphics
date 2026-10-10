@@ -143,6 +143,7 @@
                     <ul>
                         <li>Images larger than 1024<span class="setting-separator"> × </span>1024<span class="setting-unit">px</span> are resized to fit. Glitter shows the new dimensions first, and you can continue or cancel. Your original file is never changed.</li>
                         <li>The maximum file size is 10<span class="setting-unit">MB</span>.</li>
+                        <li>An animated GIF plays on the canvas and in animated exports. Glitter picked by color, Auto Glitter, and Kira Kira read its first frame, so they stay put while the picture moves. A GIF longer than 12 seconds or 300 frames opens as a still image.</li>
                         <li>Once a document is open, dropping another image onto the workspace adds it as a new Sticker layer. It does not replace the canvas.</li>
                     </ul>
                 </div>
@@ -271,6 +272,21 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>{ui-tool:brush}</strong> – Press <kbd class="guide-kbd">B</kbd>. Paint or erase the mask of a Glitter Fill layer on the canvas. See <a href="#mask-brush">Glitter Brush</a>.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon">{ui-tool-icon:area}</svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p id="select-area-tool"><strong>{ui-tool:area}</strong> – Press <kbd class="guide-kbd">M</kbd>. Drag a rectangle, an ellipse, or a freehand lasso to select an area of the canvas. <strong>Fill</strong> (<kbd class="guide-kbd">Enter</kbd>) puts glitter in the whole area and <strong>Erase</strong> (<kbd class="guide-kbd">Delete</kbd>) removes it. While an area is selected, the Glitter Brush and its eraser only change what is inside it.</p>
+                    <ul>
+                        <li><strong>Combine shapes</strong> – Hold <kbd class="guide-kbd">Shift</kbd> as you start a drag to add to the area, or <kbd class="guide-kbd">Alt</kbd> to cut out of it. The New, Add, and Subtract buttons do the same on a phone.</li>
+                        <li><strong>Shape the drag</strong> – Press <kbd class="guide-kbd">Shift</kbd> during a rectangle or ellipse drag to keep it square or round, and <kbd class="guide-kbd">Alt</kbd> to draw it from its center.</li>
+                        <li><strong>Invert and deselect</strong> – <strong>Invert</strong> selects everything outside the area. Click once, press <kbd class="guide-kbd">Esc</kbd>, or use <strong>Deselect</strong> to clear it. The arrow keys move the area.</li>
+                        <li><strong>Not saved</strong> – The area is a working aid. It is not part of the project file, and Undo steps through fills and strokes, not through the area itself.</li>
+                    </ul>
                 </div>
             </div>
 
@@ -592,6 +608,7 @@
                     <p><strong>Base Image settings</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>{ui-panel:baseLayerSettingsSection}</strong>.</p>
                     <ul>
                         <li><strong>Background</strong> – Choose Image, Transparent, Glitter, Solid, or Gradient. <strong>Replace</strong> swaps the base image without disturbing other layers.</li>
+                        <li><strong>Animation</strong> – Shown when the base image is an animated GIF. Turn off <strong>Play animation</strong> to use its first frame as a still.</li>
                         <li><strong>Image</strong> – Enter a linked pixel size or percentage to resize the canvas and every editable layer together. Choose whether glitter textures and visual effects scale with the design.</li>
                         <li><strong>Canvas</strong> – Crop or extend the canvas without scaling content. Use Relative for pixel deltas, choose an anchor, and fill the new area with transparency or a color.</li>
                         <li><strong>Fit</strong> – Crop or extend the canvas to fit all artwork or the selected layers, with optional padding on every side. In Canvas mode you can also choose a ratio or a named size.</li>
@@ -2138,7 +2155,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-export"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Export</strong> – Click <strong>Export</strong> to generate an animated GIF. MP4 is also available when the browser supports video encoding. The result screen shows the file size, frame count, duration, and dimensions before you save, open, or share the file.</p>
+                    <p><strong>Export</strong> – Click <strong>Export</strong> to generate an animated GIF. MP4 is also available when the browser supports video encoding. The result screen shows the file size, frame count, duration, and dimensions before you save, open, or share the file. When the file is over a service's upload limit, the result lists it under <strong>Too large to post on</strong>. Click <strong>Fit</strong> on a row to export again under that limit. A fit uses fewer frames first, then fewer colors, then a smaller size, and it leaves your Export Settings as they were.</p>
                 </div>
             </div>
 
@@ -2171,7 +2188,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Output</strong> – Choose GIF or MP4, preserve transparency where supported, set the matte color used behind transparent areas, and optionally add the watermark. MP4 appears only when the device supports video encoding. MP4 always uses the matte color, because video does not support transparency.</p>
+                    <p><strong>Output</strong> – Choose GIF or MP4, preserve transparency where supported, set the matte color used behind transparent areas, and optionally add the watermark. MP4 appears only when the device supports video encoding. MP4 always uses the matte color, because video does not support transparency. <strong>Export Size</strong> exports smaller than the canvas without changing the project. <strong>Target Size</strong> keeps every export under a file size, either a service's upload limit or your own number.</p>
                 </div>
             </div>
 

@@ -18,6 +18,10 @@ class BaseBackgroundManager {
 		// renderPreviewCanvas). Not in a layerElements map: the background is
 		// never outlined as selected or hidden per element.
 		this.backgroundElement = null;
+		// An animated base image plays as an <img> of the uploaded file, as an
+		// animated sticker does, right above the base canvas.
+		this.animationElement = null;
+		this.animationPlateCache = null;
 		this.sparkleElement = null;
 		this.sparkleImageKeys = new WeakMap();
 		this.sparkleImageCounter = 0;
@@ -27,7 +31,81 @@ class BaseBackgroundManager {
 
 	renderContent() {
 		this.renderBackgroundElement();
+		this.renderAnimationElement();
 		this.renderSparkleElement();
+	}
+
+	// The base image's animation, when it has one and it is on: the uploaded
+	// GIF's timing and file, where its full frame sits on the canvas
+	// (`placement`), and the still parts of the base around it (`plate`).
+	getAnimation(layer = this.getBaseLayer()) {
+		const source = this.editor.baseImageSource;
+		if (!source?.animation || !this.hasBaseImage()) return null;
+		if (layer?.background?.mode !== 'image' || layer.background.animate === false) return null;
+		return { ...source.animation, name: source.file?.name || 'Base Image', placement: source.placement, plate: this.getAnimationPlate(source) };
+	}
+
+	// The animation the canvas shows: none while motion is paused.
+	getPreviewAnimation(layer = this.getBaseLayer()) {
+		return layer?.visible && !this.editor.animationTicker.paused ? this.getAnimation(layer) : null;
+	}
+
+	// The still base with the animation's rectangle cleared, so a canvas
+	// extension shows around the animation and never through it. Null when
+	// the animation covers the whole canvas.
+	getAnimationPlate(source) {
+		const still = this.editor.originalImageData;
+		const { x, y, width, height } = source.placement.clip;
+		const left = x;
+		const top = y;
+		const right = x + width;
+		const bottom = y + height;
+		if (left <= 0 && top <= 0 && right >= still.width && bottom >= still.height) return null;
+		const cache = this.animationPlateCache;
+		const key = `${left},${top},${right},${bottom}`;
+		if (cache?.still === still && cache.key === key) return cache.plate;
+		const plate = new ImageData(new Uint8ClampedArray(still.data), still.width, still.height);
+		for (let row = top; row < bottom; row++) {
+			plate.data.fill(0, (row * still.width + left) * 4, (row * still.width + right) * 4);
+		}
+		this.animationPlateCache = { still, key, plate };
+		return plate;
+	}
+
+	// Reconciled, never rebuilt: a new element would restart the GIF.
+	renderAnimationElement() {
+		const layer = this.getBaseLayer();
+		const animation = this.getPreviewAnimation(layer);
+		if (!animation) {
+			this.animationElement?.remove();
+			this.animationElement = null;
+			return;
+		}
+		let image = this.animationElement;
+		if (!image) {
+			image = document.createElement('img');
+			image.className = 'base-animation-element';
+			image.alt = '';
+			image.draggable = false;
+			this.animationElement = image;
+		}
+		const canvas = this.editor.previewCanvas;
+		if (canvas.nextSibling !== image) canvas.after(image);
+		if (image.dataset.source !== animation.url) {
+			image.dataset.source = animation.url;
+			image.src = animation.url;
+		}
+		const { x, y, width, height, clip } = animation.placement;
+		image.style.left = `${x}px`;
+		image.style.top = `${y}px`;
+		image.style.width = `${width}px`;
+		image.style.height = `${height}px`;
+		// Only the part a crop has left shows.
+		const inset = [clip.y - y, x + width - clip.x - clip.width, y + height - clip.y - clip.height, clip.x - x].map((value) => `${Math.max(0, value)}px`);
+		image.style.clipPath = `inset(${inset.join(' ')})`;
+		image.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+		image.style.opacity = String(layer.opacity / 100);
+		image.style.filter = buildCssColorFilter(layer.background.colorAdjust);
 	}
 
 	renderBackgroundElement() {
@@ -77,8 +155,9 @@ class BaseBackgroundManager {
 			host.className = 'sparkle-host-element';
 			this.sparkleElement = host;
 		}
-		const canvas = this.editor.previewCanvas;
-		if (canvas.nextSibling !== host) canvas.after(host);
+		// Above the photo: the base canvas, or the animation playing over it.
+		const photo = this.animationElement || this.editor.previewCanvas;
+		if (photo.nextSibling !== host) photo.after(host);
 		host.dataset.layerId = layer.id;
 		host.style.width = `${size.width}px`;
 		host.style.height = `${size.height}px`;
@@ -141,6 +220,8 @@ class BaseBackgroundManager {
 
 	clearElements() {
 		this.clearBackgroundElement();
+		this.animationElement?.remove();
+		this.animationElement = null;
 		this.sparkleElement?.remove();
 		this.sparkleElement = null;
 	}
@@ -174,7 +255,9 @@ class BaseBackgroundManager {
 			mode: isOptionValue('paintMode', layer.background.mode) ? layer.background.mode : 'image',
 			color: layer.background.color || '#ffffff',
 			scale: Number(layer.background.scale ?? FIELDS.textureScale.value),
-			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
+			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust),
+			// Whether an animated base image plays; a still one ignores it.
+			animate: layer.background.animate !== false
 		});
 		normalizeSlotTextureCoordinates(layer.background);
 		layer.background.sparkles = normalizeSparklesData(layer.background.sparkles);
@@ -195,6 +278,8 @@ class BaseBackgroundManager {
 			glitterLabel: id('baseBackgroundGlitterLabel'), glitterBadges: id('baseBackgroundGlitterBadges'),
 			glitterSize: id('baseBackgroundGlitterSize'), glitterFrames: id('baseBackgroundGlitterFrames'),
 			glitterChange: id('baseBackgroundGlitterChange'), color: id('baseBackgroundColor'),
+			imageBadges: id('baseBackgroundImageBadges'), animationSection: id('baseBackgroundAnimationSection'),
+			animate: id('baseBackgroundAnimate'), animateNote: id('baseBackgroundAnimateNote'),
 			gallerySection: id('designGallerySection')
 		};
 		installEffectGradientEditor({
@@ -220,6 +305,12 @@ class BaseBackgroundManager {
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
+		this.ui.animate?.addEventListener('change', () => {
+			const layer = this.getActiveLayer();
+			if (!layer) return;
+			layer.background.animate = this.ui.animate.checked;
+			this.applyChange(true);
+		});
 		this.bindRange('Scale', 'scale');
 		this.bindRange('Opacity', 'opacity');
 		['Hue', 'Saturation', 'Brightness'].forEach((name) => this.bindColorAdjust(name));
@@ -286,8 +377,13 @@ class BaseBackgroundManager {
 		if (commit) this.editor.saveState('Edit background');
 	}
 
+	// What the base canvas draws. With the animation playing over it, that is
+	// only the plate around the animation.
 	getBackgroundSourceImageData(background, width, height) {
-		if (background.mode === 'image') return this.editor.originalImageData;
+		if (background.mode === 'image') {
+			const animation = this.getPreviewAnimation();
+			return animation ? animation.plate : this.editor.originalImageData;
+		}
 		if (background.mode !== 'gradient') return null;
 		const key = `${width}x${height}:${JSON.stringify(background.gradient)}`;
 		if (this.backgroundSourceCache?.key === key) return this.backgroundSourceCache.data;
@@ -349,8 +445,21 @@ class BaseBackgroundManager {
 			this.ui.imageThumbnail.classList.toggle('empty', !hasImage);
 		}
 		setAssetChangeLabel(this.ui.imageChange, hasImage ? 'Replace' : 'Choose Image');
+		this.syncAnimationControls(layer);
 		this.updateGlitterInfo(layer);
 		if (this.fieldHost) syncFieldControls(this.fieldHost, layer);
+	}
+
+	// The Animation section shows only for an animated base image.
+	syncAnimationControls(layer) {
+		const animation = this.hasBaseImage() ? this.editor.baseImageSource?.animation : null;
+		if (this.ui.animationSection) this.ui.animationSection.hidden = !animation || layer.background.mode !== 'image';
+		this.editor.renderAssetBadges(this.ui.imageBadges, { isAnimated: Boolean(animation) }, null);
+		if (!animation) return;
+		if (this.ui.animate) this.ui.animate.checked = layer.background.animate !== false;
+		if (this.ui.animateNote) {
+			this.ui.animateNote.textContent = `${animation.frameCount} frames, ${(animation.totalDuration / 1000).toFixed(1)} s. Glitter picked by color, Auto Glitter and Kira Kira read the first frame.`;
+		}
 	}
 
 	updateGlitterInfo(layer) {

@@ -5,6 +5,8 @@ const path = require('path');
 
 const SUITES = [
 	{ file: 'ui/brush-target-settings-verify.js', tags: ['panels', 'mask'] },
+	{ file: 'ui/area-select-verify.js', tags: ['mask', 'export'] },
+	{ file: 'ui/animated-base-verify.js', tags: ['document', 'export'] },
 	{ file: 'unit/script-globals-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/canvas-bounds-unit.js', tags: ['unit', 'document'] },
 	{ file: 'ui/crop-motion-verify.js', tags: ['document', 'touch', 'export'] },
@@ -21,6 +23,7 @@ const SUITES = [
 	{ file: 'unit/export-timeline-unit.js', tags: ['unit', 'export'] },
 	{ file: 'unit/gif-palette-unit.js', tags: ['unit', 'export'] },
 	{ file: 'unit/export-report-unit.js', tags: ['unit', 'export', 'quick'] },
+	{ file: 'unit/export-fit-unit.js', tags: ['unit', 'export', 'quick'] },
 	{ file: 'unit/text-background-geometry-unit.js', tags: ['unit', 'effects'] },
 	{ file: 'parity/filter-parity.js', tags: ['unit', 'effects', 'quick'] },
 	{ file: 'parity/pixel-filter-verify.js', tags: ['export', 'effects', 'quick'] },
@@ -42,6 +45,7 @@ const SUITES = [
 	{ file: 'parity/export-compositor-fast-path.js', tags: ['export'] },
 	{ file: 'parity/export-transparency-correctness.js', tags: ['export'] },
 	{ file: 'parity/export-formats-verify.js', tags: ['export'] },
+	{ file: 'parity/export-fit-verify.js', tags: ['export'] },
 	{ file: 'unit/viewport-navigation-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'unit/gesture-manager-unit.js', tags: ['unit', 'quick', 'touch'] },
 	{ file: 'unit/transform-gestures-unit.js', tags: ['unit', 'quick', 'touch'] },
