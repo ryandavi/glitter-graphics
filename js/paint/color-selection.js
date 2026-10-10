@@ -44,7 +44,7 @@ function featherColorSelection(editor, mask, radius) {
 	}
 }
 
-function floodColorSelection(editor, mask, startX, startY, targetColor, thresholdSq) {
+function floodColorSelection(editor, mask, startX, startY, targetColor, thresholdSq, clip = null) {
 	const width = editor.originalCanvas.width;
 	const height = editor.originalCanvas.height;
 	const totalPixels = width * height;
@@ -59,6 +59,7 @@ function floodColorSelection(editor, mask, startX, startY, targetColor, threshol
 
 		// 1. Skip if this pixel is already marked in the mask
 		if (mask[idx] === 255) continue;
+		if (clip && !clip[idx]) continue;
 
 		const r = data[idx * 4];
 		const g = data[idx * 4 + 1];
@@ -116,9 +117,11 @@ function buildColorSelectionMask(editor, layer) {
 	const alphaChannel = editor.originalAlphaChannel;
 
 	layer.selections.forEach(sel => {
+		// A color picked inside a selected area only matches inside that area.
+		const clip = sel.area ? editor.areaSelection.getCoverage(sel.area) : null;
 		if (layer.settings.contiguous) {
 			const floodStart = performance.now();
-			floodColorSelection(editor, mask, sel.x, sel.y, sel, thresholdSq);
+			floodColorSelection(editor, mask, sel.x, sel.y, sel, thresholdSq, clip);
 			dbg(`[G-1] floodFill: ${(performance.now() - floodStart).toFixed(1)}ms`);
 			return;
 		}
@@ -126,6 +129,7 @@ function buildColorSelectionMask(editor, layer) {
 		const scanStart = performance.now();
 		for (let i = 0; i < len; i++) {
 			if (mask[i] === 255) continue;
+			if (clip && !clip[i]) continue;
 
 			if (sel.isTransparent) {
 				if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) {

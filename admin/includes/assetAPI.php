@@ -1698,6 +1698,9 @@ abstract class AssetAPI
 			$fields[] = 'swatchCount';
             $fields[] = 'width';
             $fields[] = 'height';
+            // Auto Glitter keeps one batch on one frame timing.
+            $fields[] = 'frameCount';
+            $fields[] = 'frameRate';
         }
         return array_intersect_key($asset, array_flip($fields));
     }

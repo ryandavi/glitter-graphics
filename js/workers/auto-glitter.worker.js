@@ -1,4 +1,4 @@
-importScripts('../effects/palette-analysis.js?v=0394371e');
+importScripts('../effects/palette-analysis.js?v=41b8b251');
 
 let segmentCache = null;
 
@@ -33,6 +33,12 @@ function assignSuggestedSwatches(palette, swatches, options) {
 		primary: hexToLab(swatch.colors[0]),
 		averageChroma: getAverageChroma(swatch.colors.map(hexToLab), swatch.weights)
 	}));
+	// One batch reads best on one frame timing: swatches off the pool's most
+	// common timing must be clearly closer in color to win.
+	const timingCounts = new Map();
+	preparedSwatches.forEach(swatch => timingCounts.set(swatch.timing, (timingCounts.get(swatch.timing) || 0) + 1));
+	const commonTiming = [...timingCounts].reduce((best, entry) => entry[1] > best[1] ? entry : best, [null, 0])[0];
+	const timingPenalty = swatch => swatch.timing === commonTiming ? 1 : 1 + (options.swatchTimingBias || 0);
 	const neutralSwatches = preparedSwatches.filter(swatch => swatch.averageChroma < options.hueMinChroma * 0.25);
 	for (const entry of palette) {
 		let bestIndex = -1;
@@ -52,8 +58,8 @@ function assignSuggestedSwatches(palette, swatches, options) {
 				return distance < best.distance ? { ...item, distance, penalty } : best;
 			}, { color: candidates[0].color, colorIndex: candidates[0].colorIndex, distance: Infinity, penalty: 1 });
 			const closestColor = closest.color;
-			const distance = GlitterPaletteAnalysis.distanceSquared(entry.lab, swatch.primary) * options.swatchPrimaryWeight
-				+ GlitterPaletteAnalysis.distanceSquared(entry.lab, closestColor) * closest.penalty * (1 - options.swatchPrimaryWeight);
+			const distance = (GlitterPaletteAnalysis.distanceSquared(entry.lab, swatch.primary) * options.swatchPrimaryWeight
+				+ GlitterPaletteAnalysis.distanceSquared(entry.lab, closestColor) * closest.penalty * (1 - options.swatchPrimaryWeight)) * timingPenalty(swatch);
 			if (distance < bestDistance) {
 				bestDistance = distance;
 				bestIndex = index;

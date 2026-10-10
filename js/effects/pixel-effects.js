@@ -122,7 +122,7 @@
 			for (const color of visible) {
 				const index = nearestColorIndex(color, centroids);
 				const chroma = Math.max(...color) - Math.min(...color);
-				const styleWeight = settings.paletteStyle === 'vibrant' ? 1 + chroma / 255 : (settings.paletteStyle === 'natural' ? 1 : 1 + chroma / 510);
+				const styleWeight = settings.paletteStyle === 'vibrant' ? 1 + chroma / 255 : 1;
 				for (let channel = 0; channel < 3; channel++) totals[index][channel] += color[channel] * styleWeight;
 				totals[index][3] += styleWeight;
 			}
@@ -242,7 +242,7 @@
 			pixelSize,
 			paletteMode,
 			colorCount: clamp(Math.round(finiteNumber(source.colorCount, defaults.colorCount)), config.limits.minColors, config.limits.maxColors),
-			paletteStyle: ['vibrant', 'balanced', 'natural'].includes(source.paletteStyle) ? source.paletteStyle : defaults.paletteStyle,
+			paletteStyle: ['vibrant', 'natural'].includes(source.paletteStyle) ? source.paletteStyle : defaults.paletteStyle,
 			mergeDistinctness: clamp(finiteNumber(source.mergeDistinctness, defaults.mergeDistinctness), 0.01, 0.12),
 			detail: clamp(Math.round(finiteNumber(source.detail, defaults.detail)), 1, 64),
 			cleanEdges: source.cleanEdges == null ? defaults.cleanEdges : Boolean(source.cleanEdges),

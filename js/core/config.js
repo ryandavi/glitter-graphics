@@ -50,7 +50,7 @@ const CONFIG = deepFreeze({
 			autoCreateGlitterLayer: true
 		},
 		assets: {
-			manifestVersion: '2026-10-08-audit'
+			manifestVersion: '2026-10-10-timing'
 		}
 	},
 
@@ -153,19 +153,20 @@ const CONFIG = deepFreeze({
 	tools: {
 		nineSlice: { maxTiles: 256 },
 		autoGlitter: {
-			defaults: { colorLayers: FIELDS.paletteColorCount.value, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, cleanEdges: true, detail: FIELDS.paletteDetail.value },
+			// `glitterScope` is a Library rail selection: the style (and set) matches are drawn from.
+			defaults: { colorLayers: FIELDS.paletteColorCount.value, autoColorCount: true, glitterScope: { root: 'sparkle', set: null }, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, cleanEdges: true, detail: FIELDS.paletteDetail.value },
 			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },
-			limits: { minColorLayers: 2, maxColorLayers: 20, maxSamples: 24000 },
+			// `autoColorLayers` caps the count the image picks for itself.
+			limits: { minColorLayers: 2, maxColorLayers: 20, autoColorLayers: 8, maxSamples: 24000 },
 			timing: { reduceThrottleMs: 80 },
-			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, autoMinImportanceShare: 0.04 },
 			cleanup: {
 				aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
 				despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
 			},
 			paletteStyles: {
-				vibrant: { mergeDistinctness: 0.045, matchedSaturation: 125, neutralSimilarityScale: 2.333333, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
-				balanced: { mergeDistinctness: 0.045, matchedSaturation: 110, neutralSimilarityScale: 1.444444, neutralChromaThreshold: 0.06, chromaWeight: 8, maxColorBoost: 2, neutralImportance: 0.82, coherenceBase: 0.5, coherenceScale: 0.65, connectedAreaWeight: 3, maxConnectedBoost: 0.75, connectedNeutralProtection: 0.75, fragmentedSimilarityBoost: 0.35 },
-				natural: { mergeDistinctness: 0.035, matchedSaturation: 100, neutralSimilarityScale: 1.285714, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
+				vibrant: { matchedSaturation: 125, neutralSimilarityScale: 2.333333, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
+				natural: { matchedSaturation: 100, neutralSimilarityScale: 1.285714, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
 			}
 		},
 		pixelEffects: {
@@ -458,9 +459,11 @@ const CONFIG = deepFreeze({
 			ellipseSegments: 96,
 			// Screen px the pointer travels between lasso points.
 			lassoSpacing: 3,
-			// Marching ants: stripe period in device px, and ms per step.
-			antsStripe: 8,
-			antsStepMs: 90
+			// Marching ants: dash and gap length in CSS px, and ms per one-pixel step.
+			antsDash: 4,
+			antsStepMs: 90,
+			// How dark the document gets outside the area.
+			outsideDim: 0.25
 		},
 		path: {
 			stroke: {
@@ -884,12 +887,14 @@ const CONFIG = deepFreeze({
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
 				]
 			},
-			{ id: 'colorPickerControls', tool: 'glitterFill', when: (_editor, { layer, tool }) => tool === 'glitterFill' && layer?.type === 'glitter-fill', sync: editor => editor.updateColorPickerControls(), controls: [
+			{ id: 'colorPickerControls', tool: 'glitterFill', when: (_editor, { layer, tool }) => tool === 'glitterFill' && layer?.type === 'glitter-fill', sync: editor => { editor.updateColorPickerControls(); editor.areaSelect.syncToolbar(); }, controls: [
 				{ kind: 'slider', id: 'contextThreshold', valueId: 'contextThresholdValue', slider: 'threshold' },
 				{ kind: 'group', controls: [
 					{ kind: 'toggle', id: 'contextMultiSelect', label: 'Multi', countId: 'contextSelectionCount' },
 					{ kind: 'toggle', id: 'contextContiguous', label: 'Contiguous' }
-				] }
+				] },
+				// Shown while an area is selected: a pick only matches inside it.
+				{ kind: 'button', id: 'contextFillDeselect', icon: 'x-mark', name: 'Deselect area', title: 'Colors are only picked inside the selected area. Deselect it (Esc)', action: 'areaDeselect' }
 			] },
 			{ id: 'areaSelectControls', tool: 'area', when: (_editor, { tool }) => tool === 'area', sync: editor => editor.areaSelect.syncToolbar(), controls: [
 				{ kind: 'segmented', id: 'contextAreaShape', label: 'Area shape', options: [
@@ -898,14 +903,16 @@ const CONFIG = deepFreeze({
 					{ label: 'Lasso', value: 'lasso', action: 'areaShapeLasso', title: 'Draw the area freehand' }
 				] },
 				{ kind: 'segmented', id: 'contextAreaMode', label: 'Area mode', options: [
-					{ label: 'New', value: 'new', action: 'areaModeNew', title: 'Each drag starts a new area' },
+					{ label: 'New', value: 'new', action: 'areaModeNew', title: 'Each drag starts a new area. Drag inside the area to move it.' },
 					{ label: 'Add', value: 'add', action: 'areaModeAdd', title: 'Each drag adds to the area (hold Shift)' },
-					{ label: 'Subtract', value: 'subtract', action: 'areaModeSubtract', title: 'Each drag cuts out of the area (hold Alt)' }
+					{ label: 'Subtract', value: 'subtract', action: 'areaModeSubtract', title: 'Each drag cuts out of the area (hold Alt)' },
+					{ label: 'Intersect', value: 'intersect', action: 'areaModeIntersect', title: 'Each drag keeps only where it overlaps the area (hold Shift and Alt)' }
 				] },
 				{ kind: 'button', id: 'contextAreaFill', icon: 'paint-bucket', name: 'Fill', title: 'Fill the area with glitter (Enter)', action: 'sessionConfirm' },
 				{ kind: 'button', id: 'contextAreaErase', icon: 'eraser', name: 'Erase', title: 'Erase glitter in the area (Delete)', action: 'sessionDelete' },
+				{ kind: 'button', id: 'contextAreaCrop', icon: 'crop', name: 'Crop', title: 'Crop the canvas to the area', action: 'areaCrop' },
 				{ kind: 'button', id: 'contextAreaInvert', icon: 'area-invert', name: 'Invert', title: 'Select everything outside the area', action: 'areaInvert' },
-				{ kind: 'button', id: 'contextAreaDeselect', icon: 'x-mark', name: 'Deselect', title: 'Deselect the area (Esc)', action: 'areaDeselect' }
+				{ kind: 'button', id: 'contextAreaDeselect', icon: 'x-mark', name: 'Deselect', title: 'Deselect the area (Esc or Ctrl+D)', action: 'areaDeselect' }
 			] },
 			{ id: 'maskBrushControls', tool: 'brush', when: (_editor, { tool }) => tool === 'brush', sync: editor => editor.areaSelect.syncToolbar(), controls: [
 				{ kind: 'segmented', id: 'maskBrushMode', label: 'Brush mode', options: [
@@ -975,7 +982,7 @@ const CONFIG = deepFreeze({
 			// phone - more GIF-encoding workers than cores adds context-switch
 			// overhead instead of speed.
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
-			workerScript: 'js/workers/gif-encode.worker.js?v=3aa17c20',
+			workerScript: 'js/workers/gif-encode.worker.js?v=77ee2fd9',
 			quality: 1,
 			timing: {
 				forceDelay: 100,
@@ -1109,10 +1116,19 @@ const CONFIG = deepFreeze({
 		sizeTargets: [
 			{ id: 'x', service: 'X', limitKB: 5 * 1024, warn: true },
 			{ id: 'x-web', service: 'X', limitKB: 15 * 1024, note: 'fits on the web', warn: true },
-			{ id: 'tumblr', service: 'Tumblr', limitKB: 5 * 1024, warn: true },
+			{ id: 'tumblr', service: 'Tumblr', limitKB: 10 * 1024, warn: true },
 			{ id: 'discord', service: 'Discord', limitKB: 10 * 1024, warn: true },
 			{ id: 'discord-nitro-basic', service: 'Discord', limitKB: 50 * 1024, note: 'fits with Nitro Basic', warn: true },
 			{ id: 'discord-nitro', service: 'Discord', limitKB: 500 * 1024, note: 'fits with Nitro', warn: true },
+			// A server can set its own limit; this is the Mastodon default.
+			{ id: 'mastodon', service: 'Mastodon', limitKB: 16 * 1024, warn: true },
+			// Icons and emoji are targets to fit on purpose, never a warning: an
+			// ordinary export is over every one of them.
+			{ id: 'twitch-emote', service: 'Twitch emote', limitKB: 1024, warn: false },
+			{ id: 'discord-sticker', service: 'Discord sticker', limitKB: 512, warn: false },
+			{ id: 'discord-emoji', service: 'Discord emoji', limitKB: 256, warn: false },
+			{ id: 'slack-emoji', service: 'Slack emoji', limitKB: 128, warn: false },
+			{ id: 'dreamwidth-icon', service: 'Dreamwidth icon', limitKB: 60, warn: false },
 			{ id: 'livejournal-icon', service: 'LiveJournal icon', limitKB: 40, warn: false }
 		],
 		// Fitting an export under a size target (js/export/export-fit.js).

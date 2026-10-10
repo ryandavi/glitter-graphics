@@ -752,6 +752,7 @@ class GlitterManager {
 			(layer.selections || []).forEach((sel) => {
 				if (typeof sel.x === 'number') sel.x += offsetX;
 				if (typeof sel.y === 'number') sel.y += offsetY;
+				if (sel.area) sel.area = mapAreaOps(sel.area, (point) => ({ x: point.x + offsetX, y: point.y + offsetY }));
 			});
 			this.editor.maskCompositor?.invalidate(layer.id);
 		});
@@ -763,6 +764,7 @@ class GlitterManager {
 			(layer.selections || []).forEach((selection) => {
 				if (typeof selection.x === 'number') selection.x = Math.max(0, Math.min(newWidth - 1, Math.round(selection.x * scaleX)));
 				if (typeof selection.y === 'number') selection.y = Math.max(0, Math.min(newHeight - 1, Math.round(selection.y * scaleY)));
+				if (selection.area) selection.area = mapAreaOps(selection.area, (point) => ({ x: point.x * scaleX, y: point.y * scaleY }));
 			});
 			this.editor.maskCompositor?.invalidate(layer.id);
 		});

@@ -82,7 +82,6 @@ defineOptions('paletteStyle', [
 ]);
 defineOptions('analysisPaletteStyle', [
 	{ value: 'natural', label: 'Natural' },
-	{ value: 'balanced', label: 'Balanced' },
 	{ value: 'vibrant', label: 'Vibrant' }
 ]);
 defineOptions('gifLook', [

@@ -30,7 +30,7 @@
 	];
 	const paletteStyleOptions = () => (typeof getOptions === 'function'
 		? getOptions('analysisPaletteStyle')
-		: [{ value: 'natural', label: 'Natural' }, { value: 'balanced', label: 'Balanced' }, { value: 'vibrant', label: 'Vibrant' }]
+		: [{ value: 'natural', label: 'Natural' }, { value: 'vibrant', label: 'Vibrant' }]
 	).map((entry) => ({ value: entry.value, label: entry.label }));
 	const autoPalette = (values) => values.palette == null || values.palette === 'auto';
 	const patterned = (values) => ['bayer', 'halftone'].includes(values.algorithm);

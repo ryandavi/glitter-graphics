@@ -54,6 +54,7 @@ function createPaletteControlRows(prefix, options = {}) {
 				active: entry.value === styleDefault,
 				attrs: options.styleTitles?.[entry.value] ? { title: options.styleTitles[entry.value] } : undefined
 			})) },
+		...(options.countLead || []),
 		{ kind: 'slider', id: `${prefix}ColorCount`, slider: 'paletteColorCount', label: options.colorLabel || 'Colors' },
 		{ kind: 'slider', id: `${prefix}MergeDistinctness`, slider: 'paletteMerge', label: options.mergeLabel, valueScale: 'percent' }
 	];
@@ -437,17 +438,22 @@ const PANEL_SCHEMAS = {
 			{ title: 'Colors', region: 'scroll', sections: [
 				{ kind: 'section', title: 'Palette', sets: [
 					{ rows: [
+						// The Library's own style picker, filled by AutoGlitterManager.
+						{ kind: 'labeled', label: 'Glitter', stacked: true, control: { kind: 'host', id: 'autoGlitterScope' } },
+						{ kind: 'note', text: 'Matches come from this style. One style usually shares one frame timing.' }
+					] },
+					{ rows: [
 						...createPaletteControlRows('autoGlitter', {
 							styleDefault: CONFIG.tools.autoGlitter.defaults.paletteStyle,
 							styleClasses: 'auto-glitter-palette-style',
 							mergeLabel: 'Merge',
+							countLead: [{ kind: 'toggle', id: 'autoGlitterAutoCount', label: 'Auto colors', checked: CONFIG.tools.autoGlitter.defaults.autoColorCount, title: 'Let the image decide how many colors become layers' }],
 							styleTitles: {
-								natural: 'Preserve the image\'s color balance without boosting saturation',
-								balanced: 'Gently favor colorful regions and boost glitter saturation',
-								vibrant: 'Prioritize colorful accents and strongly boost glitter saturation'
+								natural: 'Give layers to the largest areas of the image without boosting saturation',
+								vibrant: 'Give layers to colorful accents first and boost glitter saturation'
 							}
 						}),
-						{ kind: 'note', text: 'Natural follows the image; Balanced and Vibrant progressively emphasize color.' },
+						{ kind: 'note', text: 'Natural follows the largest areas of the image; Vibrant keeps small colorful accents.' },
 						{ kind: 'note', id: 'autoGlitterCapacity' }
 					] }
 				], advanced: [

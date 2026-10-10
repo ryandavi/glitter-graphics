@@ -3,7 +3,8 @@
 const CANVAS_BOUNDS_SOURCES = Object.freeze([
 	{ id: 'custom', label: 'Custom', historyLabel: 'Resize canvas', rect: (_editor, { rect }) => rect },
 	{ id: 'artwork', label: 'Artwork', historyLabel: 'Fit canvas to artwork', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(), options.padding) },
-	{ id: 'selection', label: 'Selection', historyLabel: 'Fit canvas to selection', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(editor.layerManager.getSelectedLayers()), options.padding) }
+	{ id: 'selection', label: 'Selection', historyLabel: 'Fit canvas to selection', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(editor.layerManager.getSelectedLayers()), options.padding) },
+	{ id: 'area', label: 'Selected Area', historyLabel: 'Fit canvas to selected area', rect: (editor, options) => fittedCanvasRect(editor.areaSelection.getBounds(), options.padding) }
 ].map(Object.freeze));
 
 function fittedCanvasRect(bounds, padding) {

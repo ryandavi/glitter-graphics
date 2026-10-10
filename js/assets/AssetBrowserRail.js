@@ -33,6 +33,14 @@ class AssetBrowserRail {
 		this.onChange(this.selection);
 	}
 
+	// What a selection holds: everything at home, else its style or creator,
+	// narrowed to the picked set.
+	getItems(items, selection = this.selection, mode = this.mode) {
+		if (selection.root === LIBRARY_ALL_ID) return items;
+		const wall = mode === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
+		return selection.set ? this.catalog.getCategoryItems(selection.set, wall) : wall;
+	}
+
 	// The tree as picker entries, every row under a heading: a root with sets
 	// is a group that opens with its own "All" entry; the roots without sets
 	// (a root that is nothing but one set is that set) share a closing group.

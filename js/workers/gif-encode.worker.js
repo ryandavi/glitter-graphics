@@ -2,7 +2,7 @@
 // per-pixel dither runs off the main thread and across every encoder worker.
 // GifEncodingPipeline passes { settings, config } as gif.js's `dither` option;
 // gif.worker.js itself only ever sees `dither: false`.
-importScripts('../core/math.js?v=54cfcc75', '../core/color.js?v=ebbbb501', '../effects/pixel-effects.js?v=fdbb054d', 'gif.worker.js?v=638b1a97');
+importScripts('../core/math.js?v=54cfcc75', '../core/color.js?v=ebbbb501', '../effects/pixel-effects.js?v=e23f5337', 'gif.worker.js?v=638b1a97');
 
 const encodeFrame = self.onmessage;
 self.onmessage = (event) => {

@@ -381,7 +381,7 @@ async function configurePixelFilter(page, type, { shimmer = false } = {}) {
 			editor.layers.splice(editor.layers.indexOf(layer) + 1, 0, filter);
 		}
 		filter.filterData = GlitterFilter.normalizeFilterData(type === 'posterize'
-			? { type, colors: 5, style: 'balanced', merge: 0.045, detail: 4, cleanEdges: true, pixelSize: 3 }
+			? { type, colors: 5, style: 'natural', merge: 0.045, detail: 4, cleanEdges: true, pixelSize: 3 }
 			: { type, algorithm: 'halftone', angle: 35, strength: 88, palette: 'duotone', duotoneDark: '#120b24', duotoneLight: '#ffd36a', shimmer, pixelSize: 3 });
 		editor.updatePreview();
 		editor.saveState();

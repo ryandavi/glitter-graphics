@@ -250,13 +250,11 @@ class AssetBrowser {
 			// A style is one color-ordered wall. Home's styles, and a creator's
 			// sets, are unrelated to each other, so each keeps its own heading
 			// and color order.
+			wall = this.rail.getItems(items, selection, this.browseView);
 			if (selection.root === LIBRARY_ALL_ID) {
-				wall = items;
 				groups = () => this.browseView === 'creator' ? this.getCreatorGroups(wall) : this.getStyleGroups(wall);
 			} else {
-				wall = this.browseView === 'creator' ? this.catalog.getCreatorItems(selection.root, items) : this.catalog.getRootItems(selection.root, items);
-				if (selection.set) wall = this.catalog.getCategoryItems(selection.set, wall);
-				else if (this.browseView === 'creator') groups = () => this.getSetGroups(wall);
+				if (!selection.set && this.browseView === 'creator') groups = () => this.getSetGroups(wall);
 				category = this.getHeaderCategory(selection, wall);
 			}
 		}
@@ -402,7 +400,9 @@ class AssetBrowser {
 		});
 	}
 
-	async navigateToItem(itemId) {
+	// `scope` is a rail selection to stay in when it holds the item; otherwise
+	// the item's own style opens.
+	async navigateToItem(itemId, scope = null) {
 		// Find which category contains this item
 		const allItems = this.contentManager.getAllContent();
 		const item = allItems.find(i => i.id === itemId);
@@ -422,7 +422,14 @@ class AssetBrowser {
 		if (input) input.value = '';
 		this.contentManager.activeFilters.search = '';
 		this.contentManager.updateClearFiltersButton();
-		this.setState('CATEGORY_DETAIL', item.category);
+		if (scope && this.rail.getItems([item], scope, 'style').length) {
+			this.browseView = 'style';
+			this.rail.mode = 'style';
+			this.rail.selection = { ...scope };
+			this.setState('CATEGORY_LIST');
+		} else {
+			this.setState('CATEGORY_DETAIL', item.category);
+		}
 
 		// Wait for initial render
 		await new Promise(resolve => setTimeout(resolve, 50));

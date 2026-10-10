@@ -107,10 +107,10 @@ for (const [colorAnalysis, target, expected] of colorCases) {
 // note of the smallest tier that still fits.
 const limitCases = [
 	[4 * MB, ''],
-	[8 * MB, 'X 5 MB fits on the web|Tumblr 5 MB'],
-	[12 * MB, 'X 5 MB fits on the web|Tumblr 5 MB|Discord 10 MB fits with Nitro Basic'],
-	[60 * MB, 'X 5 MB|Tumblr 5 MB|Discord 10 MB fits with Nitro'],
-	[600 * MB, 'X 5 MB|Tumblr 5 MB|Discord 10 MB']
+	[8 * MB, 'X 5 MB fits on the web'],
+	[12 * MB, 'X 5 MB fits on the web|Tumblr 10 MB|Discord 10 MB fits with Nitro Basic'],
+	[60 * MB, 'X 5 MB|Tumblr 10 MB|Discord 10 MB fits with Nitro|Mastodon 16 MB'],
+	[600 * MB, 'X 5 MB|Tumblr 10 MB|Discord 10 MB|Mastodon 16 MB']
 ];
 for (const [size, expected] of limitCases) {
 	const result = report({ size });

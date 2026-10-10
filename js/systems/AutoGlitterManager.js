@@ -22,6 +22,8 @@ class AutoGlitterManager {
 	bindUI() {
 		this.ui = {
 			open: document.getElementById('autoGlitterImageBtn'),
+			scope: document.getElementById('autoGlitterScope'),
+			autoCount: document.getElementById('autoGlitterAutoCount'),
 			count: document.getElementById('autoGlitterColorCount'),
 			mergeDistinctness: document.getElementById('autoGlitterMergeDistinctness'),
 			detail: document.getElementById('autoGlitterDetail'),
@@ -47,11 +49,11 @@ class AutoGlitterManager {
 		this.ui.paletteStyles.forEach((button) => button.addEventListener('click', () => {
 			if (button.dataset.value === this.paletteStyle) return;
 			this.setPaletteStyle(button.dataset.value);
-			this.ui.mergeDistinctness.value = CONFIG.tools.autoGlitter.paletteStyles[this.paletteStyle].mergeDistinctness;
-			this.updateControlReadout(this.ui.mergeDistinctness);
 			this.scheduleReduce();
 		}));
 		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => input?.addEventListener('input', () => {
+			// Choosing a count takes it back from the image.
+			if (input === this.ui.count) this.ui.autoCount.checked = false;
 			this.updateControlReadout(input);
 			this.applyCapacity();
 			this.scheduleReduce();
@@ -69,9 +71,10 @@ class AutoGlitterManager {
 			resetBtn.addEventListener('click', () => {
 				input.value = spec.value;
 				input.dispatchEvent(new Event('input', { bubbles: true }));
+				if (input === this.ui.count) this.ui.autoCount.checked = CONFIG.tools.autoGlitter.defaults.autoColorCount;
 			});
 		});
-		[this.ui.tuneHue, this.ui.cleanEdges].forEach((input) => input?.addEventListener('change', () => this.scheduleReduce()));
+		[this.ui.autoCount, this.ui.tuneHue, this.ui.cleanEdges].forEach((input) => input?.addEventListener('change', () => this.scheduleReduce()));
 		this.ui.previewModes.forEach((button) => button.addEventListener('click', () => {
 			const mode = button.dataset.value;
 			this.ui.previewModes.forEach((option) => {
@@ -137,6 +140,8 @@ class AutoGlitterManager {
 			? saved.paletteStyle
 			: defaults.paletteStyle;
 		this.ui.count.value = saved ? saved.colorCount : defaults.colorLayers;
+		this.ui.autoCount.checked = saved?.autoCount ?? defaults.autoColorCount;
+		this.setScope(saved?.glitterScope || defaults.glitterScope);
 		this.setPaletteStyle(paletteStyle);
 		this.ui.mergeDistinctness.value = saved
 			? saved.mergeDistinctness
@@ -150,6 +155,8 @@ class AutoGlitterManager {
 		return {
 			version: 1,
 			colorCount: Number(this.ui.count.value),
+			autoCount: this.ui.autoCount.checked,
+			glitterScope: { ...(this.scopeRail?.selection || CONFIG.tools.autoGlitter.defaults.glitterScope) },
 			paletteStyle: this.paletteStyle,
 			mergeDistinctness: Number(this.ui.mergeDistinctness.value),
 			detail: Number(this.ui.detail.value),
@@ -166,6 +173,39 @@ class AutoGlitterManager {
 			button.classList.toggle('active', active);
 			button.setAttribute('aria-pressed', active ? 'true' : 'false');
 		});
+	}
+
+	// The pool matches are drawn from: every glitter that can fill a region,
+	// narrowed to the style or set picked on the Library's own rail.
+	getEligibleGlitters() {
+		return this.editor.glitterLibrary.getAllContent().filter(glitter => glitter.isActive !== false
+			&& !glitter.hasTransparency
+			&& glitter.colorCodes?.length
+			&& !glitter.tags?.some(tag => String(tag).toLowerCase() === 'pattern'));
+	}
+
+	getScopedGlitters() {
+		const eligible = this.getEligibleGlitters();
+		const scoped = this.scopeRail ? this.scopeRail.getItems(eligible) : eligible;
+		return scoped.length ? scoped : eligible;
+	}
+
+	isScopeNarrowed() {
+		return Boolean(this.scopeRail) && this.scopeRail.selection.root !== LIBRARY_ALL_ID;
+	}
+
+	setScope(selection) {
+		const library = this.editor.glitterLibrary;
+		if (!this.scopeRail) {
+			if (!library.browser?.catalog) return;
+			this.scopeRail = new AssetBrowserRail(library.browser.catalog, () => {
+				this.scopeRail.render(this.getEligibleGlitters(), 'style');
+				this.scheduleReduce();
+			}, library.browser.schema, category => library.createCollectionPreview?.(category, true));
+			this.ui.scope.appendChild(this.scopeRail.element);
+		}
+		this.scopeRail.selection = { ...selection };
+		this.scopeRail.render(this.getEligibleGlitters(), 'style');
 	}
 
 	updateControlReadout(input) {
@@ -297,7 +337,7 @@ class AutoGlitterManager {
 		if (options.cancel !== false) this.cancelSession();
 		if (previousShowAllLayers === false && this.editor.showAllLayers) this.editor.togglePreview();
 		this.editor.refreshInspector();
-		if (previousTool && previousTool !== this.editor.currentTool) this.editor.setTool(previousTool, { persist: false });
+		if (previousTool && previousTool !== this.editor.currentTool) this.editor.setTool(previousTool);
 		else this.editor.updateContextToolbars();
 		this.editor.updateActionButtons();
 	}
@@ -394,28 +434,27 @@ class AutoGlitterManager {
 		this.analysisQueued = false;
 		const limits = CONFIG.tools.autoGlitter.limits;
 		const available = this.getAvailableSlots();
+		// Auto asks for the ceiling and lets the analysis stop short of it.
+		const autoCount = this.ui.autoCount.checked;
 		const count = Math.max(limits.minColorLayers, Math.min(
-			Math.round(Number(this.ui.count.value)) || CONFIG.tools.autoGlitter.defaults.colorLayers,
+			autoCount ? limits.autoColorLayers : (Math.round(Number(this.ui.count.value)) || CONFIG.tools.autoGlitter.defaults.colorLayers),
 			limits.maxColorLayers,
 			available
 		));
-		this.ui.count.value = count;
-		this.updateControlReadout(this.ui.count);
+		if (!autoCount) {
+			this.ui.count.value = count;
+			this.updateControlReadout(this.ui.count);
+		}
 		const analysisId = (this.analysisRunId || 0) + 1;
 		this.analysisRunId = analysisId;
 		this.setCanvasPreviewState(true, this.segmentDirty ? 'Analyzing image' : 'Updating preview');
 		this.ui.status.textContent = this.segmentDirty ? 'Finding distinct colors…' : 'Updating color matches…';
-		const swatches = this.editor.glitterLibrary.getAllContent()
-			.filter(glitter => glitter.isActive !== false
-				&& !glitter.hasTransparency
-				&& glitter.colorCodes?.length
-				&& !glitter.tags?.some(tag => String(tag).toLowerCase() === 'pattern'))
-			.map(glitter => {
-				const weights = Array.isArray(glitter.colorWeights) && glitter.colorWeights.length === glitter.colorCodes.length
-					? glitter.colorWeights.map(Number)
-					: glitter.colorCodes.map(() => 1 / glitter.colorCodes.length);
-				return { id: glitter.id, colors: glitter.colorCodes, weights };
-			});
+		const swatches = this.getScopedGlitters().map(glitter => {
+			const weights = Array.isArray(glitter.colorWeights) && glitter.colorWeights.length === glitter.colorCodes.length
+				? glitter.colorWeights.map(Number)
+				: glitter.colorCodes.map(() => 1 / glitter.colorCodes.length);
+			return { id: glitter.id, colors: glitter.colorCodes, weights, timing: `${glitter.frameCount}:${glitter.frameRate}` };
+		});
 		let previewUpdated = false;
 
 		try {
@@ -424,6 +463,10 @@ class AutoGlitterManager {
 			const result = await this.requestWorker('reduce', { colorCount: count, options: this.getWorkerOptions(), swatches });
 			if (analysisId !== this.analysisRunId) return;
 			this.result = result;
+			if (autoCount) {
+				this.ui.count.value = result.palette.length;
+				this.updateControlReadout(this.ui.count);
+			}
 			this.renderReviewResults();
 			previewUpdated = true;
 		} catch (error) {
@@ -454,6 +497,9 @@ class AutoGlitterManager {
 			...CONFIG.tools.autoGlitter.analysis,
 			...CONFIG.tools.autoGlitter.paletteStyles[this.paletteStyle],
 			mergeDistinctness: Number(this.ui.mergeDistinctness.value),
+			minImportanceShare: this.ui.autoCount.checked ? CONFIG.tools.autoGlitter.analysis.autoMinImportanceShare : 0,
+			// Mixing every style is the user's call; a picked style keeps its timing.
+			swatchTimingBias: this.isScopeNarrowed() ? CONFIG.tools.autoGlitter.analysis.swatchTimingBias : 0,
 			tuneGlitterHue: this.ui.tuneHue.checked,
 			maxSamples: CONFIG.tools.autoGlitter.limits.maxSamples,
 			cleanup: {
@@ -465,7 +511,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=1e96c6cf');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=6a415bc3');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;
@@ -590,7 +636,7 @@ class AutoGlitterManager {
 		if (!this.session || !color || color.manualMergeTarget != null) return;
 		this.ui.results.querySelector(`[data-palette-index="${index}"] .auto-glitter-choice`)?.setAttribute('aria-expanded', 'true');
 		pickerOpenSession(this, { kind: 'asset', paletteIndex: index, defaultAssetId: color.suggestedGlitterId, label: `Color match ${index + 1}` }, {
-			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId)
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId, this.isScopeNarrowed() ? this.scopeRail.selection : null)
 		});
 	}
 
@@ -760,7 +806,7 @@ class AutoGlitterManager {
 			previousSelectedLayerIds: [...this.editor.layerManager.selectedLayerIds]
 		};
 		this.editor.historyManager.updateButtons();
-		this.editor.setTool(ToolType.HAND, { persist: false });
+		this.editor.setTool(ToolType.HAND);
 		this.editor.updateActionButtons();
 	}
 

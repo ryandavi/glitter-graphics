@@ -8,17 +8,12 @@ const STORAGE_KEYS = Object.freeze({
 	brushSettings: { key: 'glitter.brush-settings', resetWith: editor => editor.maskEditor.resetToolSettingsToDefaults() },
 	brushDynamics: { key: 'glitter.brush-dynamics', resetWith: editor => { editor.maskEditor.brushDynamics = {}; editor.maskEditor._saveBrushDynamics(); editor.maskEditor._syncDynamicsPanel(); } },
 	panelWidths: { key: 'glitter.panel-widths', resetWith: editor => { Object.keys(PANEL_RESIZE_TARGETS).forEach(resetPanelWidth); editor.libraryWindow.resetSplit(); } },
-	panelCards: { key: 'glitter.panel-cards', resetWith: () => resetPanelCardStates() },
-	lastTool: { key: 'glitter.last-tool', session: true, resetWith: editor => editor.setTool(CONFIG.app.startup.tool) }
+	panelCards: { key: 'glitter.panel-cards', resetWith: () => resetPanelCardStates() }
 });
-
-function storedArea(key) {
-	return Object.values(STORAGE_KEYS).find(spec => spec.key === key)?.session ? sessionStorage : localStorage;
-}
 
 function readStored(key, fallback) {
 	try {
-		const raw = storedArea(key).getItem(key);
+		const raw = localStorage.getItem(key);
 		if (raw === null) return fallback;
 		const value = JSON.parse(raw);
 		if (fallback && typeof fallback === 'object' && (!value || typeof value !== 'object' || Array.isArray(value) !== Array.isArray(fallback))) return fallback;
@@ -28,13 +23,13 @@ function readStored(key, fallback) {
 
 function writeStored(key, value) {
 	try {
-		storedArea(key).setItem(key, JSON.stringify(value));
+		localStorage.setItem(key, JSON.stringify(value));
 		return true;
 	} catch { return false; }
 }
 
 function removeStored(key) {
-	try { storedArea(key).removeItem(key); } catch { /* Storage can be blocked. */ }
+	try { localStorage.removeItem(key); } catch { /* Storage can be blocked. */ }
 }
 
 function resetStoredSettings(editor) {

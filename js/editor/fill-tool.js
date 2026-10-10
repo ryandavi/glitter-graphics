@@ -33,6 +33,14 @@ const EDITOR_FILL_TOOL_METHODS = {
 		// A color pick reads the base image under the pointer, so the seed stays
 		// in document px whatever the layer's transform. The selection it builds
 		// is then placed by that transform like the rest of the mask.
+		// With an area selected, a pick only counts inside it and only matches
+		// inside it; the selection keeps its own copy of that area.
+		const area = this.areaSelection;
+		if (!area.isEmpty && !area.contains({ x, y })) {
+			this.updateStatus('Pick a color inside the selected area, or press Esc to deselect it');
+			return;
+		}
+
 		const pixelIndex = y * this.originalCanvas.width + x;
 		const alpha = this.originalAlphaChannel[pixelIndex];
 		const isTransparent = alpha < CONFIG.tools.selection.transparency.alphaThreshold;
@@ -75,7 +83,8 @@ const EDITOR_FILL_TOOL_METHODS = {
 		// 4. Save the Selection
 		layer.selections.push({
 			r, g, b, x, y,
-			isTransparent: isTransparent
+			isTransparent: isTransparent,
+			...(area.isEmpty ? {} : { area: mapAreaOps(area.ops) })
 		});
 
 		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)

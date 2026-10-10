@@ -190,4 +190,29 @@ assert.ok(grayscaleMatches.every(glitter => glitter?.tags.includes('Neutral')), 
 assert.ok(new Set(grayscaleMatches.map(glitter => glitter?.id)).size >= 3, 'grayscale brightness levels do not collapse to one glitter match');
 assert.ok(result.palette.every(color => color.suggestedColorAdjust?.saturation === 0), 'grayscale matches remove residual glitter color casts');
 
+// Auto count: the image stops short of the ceiling. Six flat regions all
+// survive; a 20-pixel grey fleck is folded away even though the ceiling has room.
+const flatColors = [[70, 130, 230], [60, 60, 70], [230, 40, 60], [250, 250, 250], [255, 210, 40], [40, 200, 90]];
+const flatPixels = image(120, 40, (x, y) => (x >= 4 && x < 9 && y >= 4 && y < 8) ? [120, 120, 126] : flatColors[Math.floor(x / 20)]);
+segment(flatPixels, 120, 40);
+const autoOptions = { ...naturalOptions, mergeDistinctness: 0.045, minImportanceShare: 0.04 };
+result = reduce(8, autoOptions);
+assert.strictEqual(result.palette.length, 6, 'Auto keeps every substantial flat color and drops a negligible fleck');
+assert.strictEqual(reduce(4, autoOptions).palette.length, 4, 'Auto still honors the ceiling');
+assert.strictEqual(reduce(8, { ...autoOptions, minImportanceShare: 0 }).palette.length, 7, 'a manual count keeps the fleck when the ceiling has room');
+
+// Timing bias: inside one pool, a slightly closer swatch on an odd frame
+// timing loses to the pool's common timing; a clearly closer one still wins.
+const solidRed = image(20, 20, () => [220, 30, 40]);
+segment(solidRed, 20, 20);
+const timedSwatches = (oddColor) => [
+	{ id: 'common-a', colors: ['#d7212f'], timing: '3:11' },
+	{ id: 'common-b', colors: ['#2040c0'], timing: '3:11' },
+	{ id: 'odd', colors: [oddColor], timing: '2:11' }
+];
+const timingOptions = { ...baseOptions, swatchTimingBias: 0.35 };
+assert.strictEqual(reduce(2, baseOptions, timedSwatches('#d82131')).palette[0].suggestedGlitterId, 'odd', 'without a bias the closest swatch wins');
+assert.strictEqual(reduce(2, timingOptions, timedSwatches('#d82131')).palette[0].suggestedGlitterId, 'common-a', 'a near tie goes to the common frame timing');
+assert.strictEqual(reduce(2, timingOptions, [...timedSwatches('#dc1e28'), { id: 'far', colors: ['#804048'], timing: '3:11' }].filter(swatch => swatch.id !== 'common-a')).palette[0].suggestedGlitterId, 'odd', 'a clearly closer swatch wins on any timing');
+
 console.log('auto-glitter analysis checks passed');

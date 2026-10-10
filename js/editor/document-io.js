@@ -302,6 +302,8 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.updateActionButtons();
 		this.updateStatusBar();
 		this.updateHelpfulMessage();
+		// The active tool was chosen before there was a document to show its bar on.
+		this.updateContextToolbars();
 
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
 		FontLibrary.ensureLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});

@@ -149,10 +149,7 @@ class GlitterEditor {
 		// INITIALIZATION
 		// ============================================================================
 		this.initializeProjectNameInput();
-		const storedTool = readStored(STORAGE_KEYS.lastTool.key, null);
-		const rememberedTool = storedTool === 'colorPicker' ? ToolType.GLITTER_FILL : storedTool;
-		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
-		this.setTool(initialTool, { announce: false });
+		this.setTool(CONFIG.app.startup.tool, { announce: false });
 		this.setupEventListeners();
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
@@ -512,7 +509,6 @@ class GlitterEditor {
 			TOOLS[this.currentTool]?.onDeactivate?.(this, tool, options);
 		}
 		this.currentTool = tool;
-		if (!this.temporaryHandToolActive && options.persist !== false) writeStored(STORAGE_KEYS.lastTool.key, tool);
 		this.currentHintDismissed = false; // Reset dismissed flag when tool changes
 
 		// Remove all tool classes from body

@@ -3,7 +3,7 @@ const PixelEffects = require('../../js/effects/pixel-effects.js');
 
 const config = {
 	defaults: {
-		pixelateEnabled: false, paletteEnabled: false, pixelSize: 1, paletteMode: 'posterize', colorCount: 4, paletteStyle: 'balanced', mergeDistinctness: 0.045, detail: 2, cleanEdges: true,
+		pixelateEnabled: false, paletteEnabled: false, pixelSize: 1, paletteMode: 'posterize', colorCount: 4, paletteStyle: 'natural', mergeDistinctness: 0.045, detail: 2, cleanEdges: true,
 		dither: { algorithm: 'bayer', angle: 45, strength: 100, palette: 'bw', duotone: ['#000000', '#ffffff'], shimmer: false }
 	},
 	limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 12 },

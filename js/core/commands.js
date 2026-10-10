@@ -66,6 +66,10 @@ const COMMANDS = {
 	centerCanvasV: { run: (editor) => editor.viewport.centerVertical({ animate: true }) },
 	centerSelectionH: { run: (editor) => centerSelection(editor, 'centerHorizontal', 'centerX') },
 	centerSelectionV: { run: (editor) => centerSelection(editor, 'centerVertical', 'centerY') },
+	// Ahead of the layer commands that share their keys: an area takes Ctrl/Cmd+D
+	// in the tools that use it, and the Select Area tool takes Ctrl/Cmd+A.
+	areaDeselect: { label: 'Deselect the Area', group: 'Select Area', keys: ['mod+d'], displayKey: 'Escape / Ctrl/Cmd + D', when: (editor) => getSessionDefinition(editor)?.id === 'area', run: (editor) => editor.areaSelect.deselect() },
+	areaSelectAll: { label: 'Select the Whole Canvas', group: 'Select Area', keys: ['mod+a'], displayKey: 'Ctrl/Cmd + A', when: (editor) => editor.currentTool === ToolType.AREA && Boolean(editor.originalImage), run: (editor) => editor.areaSelect.selectAll() },
 	duplicateSelection: {
 		label: 'Duplicate Selected Layer(s)', group: 'Transform', keys: ['mod+d'], displayKey: 'Ctrl/Cmd + D',
 		when: (editor) => editor.getSelectedActionableLayers().length > 0,
@@ -139,10 +143,14 @@ const COMMANDS = {
 	areaModeNew: { run: (editor) => editor.areaSelect.setMode('new') },
 	areaModeAdd: { run: (editor) => editor.areaSelect.setMode('add') },
 	areaModeSubtract: { run: (editor) => editor.areaSelect.setMode('subtract') },
+	areaModeIntersect: { run: (editor) => editor.areaSelect.setMode('intersect') },
 	areaInvert: { label: 'Invert the Area', group: 'Select Area', keys: ['mod+shift+i'], displayKey: 'Ctrl/Cmd + Shift + I', when: (editor) => !editor.areaSelection.isEmpty, run: (editor) => editor.areaSelect.invert() },
-	areaDeselect: { run: (editor) => editor.areaSelect.deselect() },
+	areaCrop: { run: (editor) => editor.areaSelect.crop() },
 	areaAdd: { label: 'Add to the Area', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['shift'] } },
 	areaSubtract: { label: 'Subtract from the Area', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['alt'] } },
+	areaIntersect: { label: 'Keep Only the Overlap with the Area', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['shift', 'alt'] } },
+	areaMove: { label: 'Move the Area', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag inside the area' } },
+	areaCarryShape: { label: 'Move the Shape Being Drawn', group: 'Select Area', binding: { type: 'gesture', device: 'pointer', gesture: 'Hold Space during a drag' } },
 	saveProject: { label: 'Save Project', group: 'File', keys: ['mod+s'], displayKey: 'Ctrl/Cmd + S', allowWhileTyping: true, run: (editor) => editor.saveProjectFile() },
 	undo: { label: 'Undo', group: 'History', keys: ['mod+z'], displayKey: 'Ctrl/Cmd + Z', allowWhileTyping: true, run: (editor) => editor.undo() },
 	redo: { label: 'Redo', group: 'History', keys: ['mod+shift+z', 'mod+y'], displayKey: 'Ctrl/Cmd + Shift + Z / Ctrl/Cmd + Y', allowWhileTyping: true, run: (editor) => editor.redo() },

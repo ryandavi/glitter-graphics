@@ -140,8 +140,46 @@ async function drag(page, from, to, { modifiers = [], steps = 6 } = {}) {
 	assert(await page.evaluate(() => window.editor.areaSelection.isEmpty && document.getElementById('maskBrushDeselect').hidden), 'Escape in the Brush did not deselect the area');
 	console.log('PASS Clipped stroke undoes in one step; Escape deselects from the Brush');
 
-	// Lasso and invert.
+	// A drag inside the area moves it, and a click inside deselects.
 	await page.keyboard.press('m');
+	await page.evaluate(() => window.editor.areaSelect.setShape('rect'));
+	const layerCount = await page.evaluate(() => window.editor.layers.length);
+	const bounds = () => page.evaluate(() => { const box = window.editor.areaSelection.getBounds(); return box && [box.minX, box.minY, box.width, box.height].join(); });
+	await drag(page, [20, 20], [60, 60]);
+	await drag(page, [40, 40], [70, 50]);
+	assert(await bounds() === '50,30,40,40' && await page.evaluate(() => window.editor.areaSelection.ops.length) === 1, `Drag inside the area: ${await bounds()}`);
+	assert(await page.evaluate(() => window.editor.previewContainer.dataset.areaCursor) === 'move', 'No move cursor over the area');
+	await drag(page, [60, 40], [120, 100], { modifiers: ['Shift', 'Alt'] });
+	assert(await bounds() === '60,40,30,30', `Shift+Alt intersect: ${await bounds()}`);
+	await drag(page, [70, 50], [70, 50]);
+	assert(await page.evaluate(() => window.editor.areaSelection.isEmpty), 'A click inside the area did not deselect');
+	console.log('PASS Drag inside moves the area; Shift+Alt intersects; a click deselects');
+
+	// Space carries the shape being drawn, and the tool stays.
+	const at = (x, y) => page.evaluate(([x, y]) => {
+		const rect = window.editor.previewWrapper.getBoundingClientRect();
+		const zoom = window.editor.viewport.currentZoom;
+		return [rect.left + x * zoom, rect.top + y * zoom];
+	}, [x, y]);
+	const stops = [await at(20, 20), await at(60, 60), await at(80, 70)];
+	await page.mouse.move(...stops[0]);
+	await page.mouse.down();
+	await page.mouse.move(...stops[1], { steps: 4 });
+	await page.keyboard.down('Space');
+	await page.mouse.move(...stops[2], { steps: 4 });
+	await page.keyboard.up('Space');
+	await page.mouse.up();
+	assert(await bounds() === '40,30,40,40' && await page.evaluate(() => window.editor.currentTool) === 'area', `Space during a drag: ${await bounds()}`);
+	console.log('PASS Space moves the shape being drawn');
+
+	// Ctrl+A selects the canvas and Ctrl+D deselects, without touching layers.
+	await page.keyboard.press('Control+a');
+	assert(await bounds() === '0,0,200,160', `Ctrl+A: ${await bounds()}`);
+	await page.keyboard.press('Control+d');
+	assert(await page.evaluate(() => window.editor.areaSelection.isEmpty) && await page.evaluate(() => window.editor.layers.length) === layerCount, 'Ctrl+D did not deselect the area alone');
+	console.log('PASS Ctrl+A selects the whole canvas; Ctrl+D deselects');
+
+	// Lasso and invert.
 	await page.evaluate(() => window.editor.areaSelect.setShape('lasso'));
 	const corners = [[10, 120], [60, 120], [60, 155], [10, 155], [10, 122]];
 	const screen = await page.evaluate((points) => {
@@ -209,6 +247,30 @@ async function drag(page, from, to, { modifiers = [], steps = 6 } = {}) {
 	});
 	assert(placed.inside > 0 && !placed.outside, `Fill on a moved layer: ${JSON.stringify(placed)}`);
 	console.log('PASS Fill lands under the area on a moved fill layer');
+
+	// Glitter Fill only picks and matches inside the area, and Crop fits it.
+	const picked = await page.evaluate(() => {
+		const editor = window.editor;
+		const layer = editor.layerManager.addLayer(LayerType.GLITTER_FILL);
+		editor.layerManager.setActiveLayer(layer.id);
+		layer.settings.contiguous = false;
+		editor.areaSelection.apply([{ x: 10, y: 10 }, { x: 50, y: 10 }, { x: 50, y: 60 }, { x: 10, y: 60 }], 'new');
+		editor.setTool(ToolType.GLITTER_FILL);
+		editor.glitterFillSelector(120, 30, null);
+		const ignored = layer.selections.length === 0;
+		editor.glitterFillSelector(20, 20, null);
+		const mask = buildColorSelectionMask(editor, layer);
+		const width = editor.originalCanvas.width;
+		const result = { ignored, inside: mask[30 * width + 30], outside: mask[30 * width + 120], deselect: !document.getElementById('contextFillDeselect').hidden };
+		editor.setTool(ToolType.AREA);
+		editor.areaSelect.crop();
+		result.crop = { tool: editor.currentTool, source: editor.canvasBounds.source, width: editor.canvasBounds.rect.width, height: editor.canvasBounds.rect.height };
+		editor.cancelCanvasBounds();
+		return result;
+	});
+	assert(picked.ignored && picked.inside === 255 && picked.outside === 0 && picked.deselect, `Glitter Fill in an area: ${JSON.stringify(picked)}`);
+	assert(picked.crop.tool === 'crop' && picked.crop.source === 'area' && picked.crop.width === 40 && picked.crop.height === 50, `Crop to the area: ${JSON.stringify(picked.crop)}`);
+	console.log('PASS Glitter Fill stays inside the area; Crop fits it');
 
 	assert(errors.length === 0, `Page errors: ${errors.join(' | ')}`);
 	await browser.close();

@@ -1,9 +1,10 @@
 // Shared Library reveal path for primary asset Change buttons and armed
-// paint-slot pickers. Defaults browse All; other assets reveal their category.
-function revealAssetBrowser(editor, manager = null, assetId = null) {
+// paint-slot pickers. Defaults browse All; other assets reveal their category,
+// or stay inside `scope` (a rail selection) when it holds them.
+function revealAssetBrowser(editor, manager = null, assetId = null, scope = null) {
 	const browser = manager?.browser;
 	const defaultId = browser?.schema?.pickerDefault?.(editor);
-	if (assetId != null && defaultId != null && String(assetId) === String(defaultId)) {
+	if (!scope && assetId != null && defaultId != null && String(assetId) === String(defaultId)) {
 		manager.clearFilters({ refreshBrowser: false });
 		browser.browseView = 'style';
 		browser.rail.select(LIBRARY_ALL_ID);
@@ -20,7 +21,7 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 	if (assetId != null) {
 		// navigateToItem owns the inner item scroll and centers the selection.
 		// Resetting the same container afterward would immediately hide it again.
-		Promise.resolve(manager?.browser?.navigateToItem(assetId));
+		Promise.resolve(manager?.browser?.navigateToItem(assetId, scope));
 	} else {
 		requestAnimationFrame(() => requestAnimationFrame(revealRequestedGallery));
 	}

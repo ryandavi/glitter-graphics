@@ -13,7 +13,43 @@
 // FORMAT_VERSION a release reads and writes, so format changes are traceable from the
 // changelog. `unreleased: true` stages an entry without publishing it — it is hidden
 // from the version history and skipped when resolving `currentRelease`.
+// `lastCommit` is the last commit a release contains, so the next release is
+// `git log <lastCommit>..HEAD` whatever branches the work passed through. Dates
+// are nominal (the first of a month) and never mark that boundary. Set it when
+// a release ships; an unreleased entry has none.
 const RELEASES = [
+	{
+		id: 'v0.6.0',
+		version: '0.6.0',
+		name: 'Paths, Crop & Library',
+		date: '2026-11-01',
+		dateLabel: 'November 1, 2026',
+		projectFormat: 6,
+		unreleased: true,
+		summary: 'Added the Pen, Line, Crop, and Select Area tools, canvas text editing, animated base images, and size-targeted export, and rebuilt the workspace around one Library window.',
+		features: [
+			{ type: 'added', text: 'Added the Pen and Line tools and Path layers: draw straight or curved paths, lines, and arrows, edit their points, and give each a glitter or color stroke, fill, and outline.', guide: 'paths' },
+			{ type: 'added', text: 'Added canvas text editing, drag-to-create text boxes, splitting text into characters, words or lines, color emoji, auto-height boxes, justified text, underline and strikethrough, symbols, alternating caps, and plain-text paste.', guide: 'text-typography' },
+			{ type: 'added', text: 'Added the Crop tool with canvas handles, ratios, fit to artwork, selection, or a selected area, extension fill, keyboard and touch controls, and one-step undo.', guide: 'crop-tool' },
+			{ type: 'added', text: 'Added the Select Area tool: drag a rectangle, ellipse, or lasso, then fill it with glitter, erase inside it, crop the canvas to it, or work inside it with the Glitter Brush and Glitter Fill.', guide: 'select-area-tool' },
+			{ type: 'changed', text: 'Rebuilt the workspace around one Library window for glitters, stickers, shapes, fonts, and brushes, with a right column that shows only the properties of the selected layer or active tool.', guide: 'library' },
+			{ type: 'changed', text: 'Reorganized the glitter and sticker libraries by style and set, with tile sizes, quick picks, and broader search.', guide: 'library' },
+			{ type: 'added', text: 'An animated GIF opened as the Base Image now plays on the canvas and in exports, with a Play animation switch in Canvas Properties. Auto Glitter is unavailable while it plays.', guide: 'getting-started' },
+			{ type: 'added', text: 'Added Export Size and Target Size to Export Settings, and a Fit button in the export result that exports again under a service\'s upload limit, including Mastodon and emoji, sticker, and icon sizes.', guide: 'export-settings' },
+			{ type: 'changed', text: 'Marquee now fits the canvas and loops seamlessly, with a choice of no repeat, an edge wrap, or a tiled row with an adjustable gap. Added looping Ricochet and Wander for layers and Sparkles.', guide: 'layer-animation' },
+			{ type: 'added', text: 'Added stretchable stickers and frames, which keep their corners and edges crisp at any size.', guide: 'stretchable-assets' },
+			{ type: 'added', text: 'Added Remove background for uploaded stickers, turning a PNG or JPG into a cutout.', guide: 'manage-stickers' },
+			{ type: 'added', text: 'Added stacked text orientation, with stacked looks and paper and stone textures in the WordArt style gallery.', guide: 'text-typography' },
+			{ type: 'added', text: 'Added a glitter recolor tool with a side-by-side comparison of the original and recolored glitter.' },
+			{ type: 'changed', text: 'Redesigned the phone layout around a chip bar for the selected layer\'s properties.', guide: 'mobile' },
+			{ type: 'changed', text: 'Redesigned New Canvas, Settings, Export Settings, and Commands & Shortcuts as titled cards, with resets for a single setting, a group, or everything.', guide: 'app-settings' },
+			{ type: 'added', text: 'Added one-click canvas presets to the start screen.', guide: 'getting-started' },
+			{ type: 'changed', text: 'Layer locks now block canvas transforms and property changes while leaving the layer selectable.', guide: 'working-with-layers' },
+			{ type: 'changed', text: 'Export now reports its progress step by step, and long-running work shows an activity indicator on the canvas.', guide: 'exporting-process' },
+			{ type: 'added', text: 'Added new fonts, glitters, and sparkle sets.' },
+			{ type: 'fixed', text: 'Fixed the context bar not appearing for the active tool when a document starts.' }
+		]
+	},
 	{
 		id: 'v0.5.0',
 		version: '0.5.0',
@@ -21,11 +57,9 @@ const RELEASES = [
 		date: '2026-10-01',
 		dateLabel: 'October 1, 2026',
 		projectFormat: 6,
+		lastCommit: 'e6bc6510',
 		summary: 'Added layer animation, filter, frame, and Sparkles layers, richer layer styling, still-image export, and more faithful animation output.',
 		features: [
-			{ type: 'added', text: 'Added the Crop tool with canvas handles, ratios, fit to artwork or selection, extension fill, keyboard and touch controls, and one-step undo.', guide: 'crop-tool' },
-			{ type: 'changed', text: 'Marquee now fits the canvas and loops seamlessly, with a choice of no repeat, an edge wrap, or a tiled row with an adjustable gap. Added looping Ricochet and Wander for layers and Sparkles.', guide: 'layer-animation' },
-			{ type: 'added', text: 'Added canvas text editing, drag-to-create text boxes, splitting text into characters, words or lines, color emoji, auto-height boxes, justified text, underline and strikethrough, symbols, alternating caps, and plain-text paste.', guide: 'text-typography' },
 			{ type: 'added', text: 'Added stackable Animation to Glitter Fill, Sticker, Text, and Shape layers, with presets for ambient movement, attention effects, motion, rainbow color, and one-time transitions.', guide: 'layer-animation' },
 			{ type: 'added', text: 'Added Filter layers that non-destructively process every layer beneath them, with adjustment, Instagram, Web & Film, and Pixel & Damage looks including light leaks, scanlines, dreamy glow, JPEG crunch, RGB split, and gradient maps.', guide: 'filters' },
 			{ type: 'changed', text: 'Moved the canvas Pixelate and Palette effects into Pixelate, Posterize, and Dither filter layers, which can now process any layers beneath them. Projects that used them open with an equivalent filter layer above the canvas.', guide: 'pixel-filters' },
@@ -36,9 +70,6 @@ const RELEASES = [
 			{ type: 'added', text: 'Added Text warp presets for arcs, arches, circles, bulges, waves, and flags, with adjustable bend.', guide: 'text-typography' },
 			{ type: 'added', text: 'Added image fills for Shape layers, with fit, scale, alignment, offset, and pixelated or smooth sampling controls.', guide: 'shape-fill' },
 			{ type: 'added', text: 'Added still-image export as PNG, JPG, or GIF, with a choice of the first or current animation frame and optional generational JPG recompression.', guide: 'exporting-process' },
-			{ type: 'added', text: 'An animated GIF opened as the Base Image now plays on the canvas and in exports, with a Play animation switch in Canvas Properties.', guide: 'getting-started' },
-			{ type: 'added', text: 'Added the Select Area tool: drag a rectangle, ellipse, or lasso, then fill it with glitter, erase inside it, or paint in it with the Glitter Brush.', guide: 'select-area-tool' },
-			{ type: 'added', text: 'Added Export Size and Target Size to Export Settings, and a Fit button in the export result that exports again under a service\'s upload limit.', guide: 'export-settings' },
 			{ type: 'changed', text: 'Rebuilt animation export planning so generated motion and animated assets share a deliberate render clock, close their loops more cleanly, and preserve authored GIF timing.', guide: 'export-settings' },
 			{ type: 'added', text: 'Added layer blend modes including Multiply, Screen, Overlay, Difference, Hue, Color, and Luminosity.', guide: 'working-with-layers' },
 			{ type: 'added', text: 'Added a movable anchor point for each layer, controlling the point used for rotation, flipping, scaling, and animation.', guide: 'working-with-layers' },

@@ -140,9 +140,18 @@
 			merge(source, source === left ? right : left);
 		}
 
-		while (roots().length > requestedCount) {
+		// `requestedCount` is a ceiling. With `minImportanceShare` the image picks
+		// its own count under it: regions that carry less than that share of the
+		// palette's total importance fold into their nearest neighbor.
+		while (true) {
 			const active = roots();
-			const source = active.reduce((lowest, index) => paletteImportance(palette[index], visiblePixelCount, options) < paletteImportance(palette[lowest], visiblePixelCount, options) ? index : lowest, active[0]);
+			if (active.length < 2) break;
+			const scores = active.map(index => paletteImportance(palette[index], visiblePixelCount, options));
+			const lowest = scores.reduce((best, score, position) => score < scores[best] ? position : best, 0);
+			const negligible = options.minImportanceShare > 0 && active.length > 2
+				&& scores[lowest] < options.minImportanceShare * scores.reduce((sum, score) => sum + score, 0);
+			if (active.length <= requestedCount && !negligible) break;
+			const source = active[lowest];
 			merge(source, nearestRoot(source, active.filter(index => index !== source)));
 		}
 

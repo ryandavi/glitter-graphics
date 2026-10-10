@@ -143,7 +143,7 @@
                     <ul>
                         <li>Images larger than 1024<span class="setting-separator"> × </span>1024<span class="setting-unit">px</span> are resized to fit. Glitter shows the new dimensions first, and you can continue or cancel. Your original file is never changed.</li>
                         <li>The maximum file size is 10<span class="setting-unit">MB</span>.</li>
-                        <li>An animated GIF plays on the canvas and in animated exports. Glitter picked by color, Auto Glitter, and Kira Kira read its first frame, so they stay put while the picture moves. A GIF longer than 12 seconds or 300 frames opens as a still image.</li>
+                        <li>An animated GIF plays on the canvas and in animated exports. Glitter picked by color and Kira Kira read its first frame, so they stay put while the picture moves. Auto Glitter needs a still image, so it is unavailable until you turn off <strong>Play animation</strong>. A GIF longer than 12 seconds or 300 frames opens as a still image.</li>
                         <li>Once a document is open, dropping another image onto the workspace adds it as a new Sticker layer. It does not replace the canvas.</li>
                     </ul>
                 </div>
@@ -280,11 +280,12 @@
                     <span class="icon-wrapper sm"><svg class="icon">{ui-tool-icon:area}</svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p id="select-area-tool"><strong>{ui-tool:area}</strong> – Press <kbd class="guide-kbd">M</kbd>. Drag a rectangle, an ellipse, or a freehand lasso to select an area of the canvas. <strong>Fill</strong> (<kbd class="guide-kbd">Enter</kbd>) puts glitter in the whole area and <strong>Erase</strong> (<kbd class="guide-kbd">Delete</kbd>) removes it. While an area is selected, the Glitter Brush and its eraser only change what is inside it.</p>
+                    <p id="select-area-tool"><strong>{ui-tool:area}</strong> – Press <kbd class="guide-kbd">M</kbd>. Drag a rectangle, an ellipse, or a freehand lasso to select an area of the canvas. <strong>Fill</strong> (<kbd class="guide-kbd">Enter</kbd>) puts glitter in the whole area and <strong>Erase</strong> (<kbd class="guide-kbd">Delete</kbd>) removes it. While an area is selected, the Glitter Brush and its eraser only change what is inside it, and Glitter Fill only picks and matches colors inside it. <strong>Crop</strong> opens the Crop tool fitted to the area.</p>
                     <ul>
-                        <li><strong>Combine shapes</strong> – Hold <kbd class="guide-kbd">Shift</kbd> as you start a drag to add to the area, or <kbd class="guide-kbd">Alt</kbd> to cut out of it. The New, Add, and Subtract buttons do the same on a phone.</li>
-                        <li><strong>Shape the drag</strong> – Press <kbd class="guide-kbd">Shift</kbd> during a rectangle or ellipse drag to keep it square or round, and <kbd class="guide-kbd">Alt</kbd> to draw it from its center.</li>
-                        <li><strong>Invert and deselect</strong> – <strong>Invert</strong> selects everything outside the area. Click once, press <kbd class="guide-kbd">Esc</kbd>, or use <strong>Deselect</strong> to clear it. The arrow keys move the area.</li>
+                        <li><strong>Combine shapes</strong> – Hold <kbd class="guide-kbd">Shift</kbd> as you start a drag to add to the area, <kbd class="guide-kbd">Alt</kbd> to cut out of it, or both to keep only where the new shape overlaps it. The New, Add, Subtract, and Intersect buttons do the same on a phone.</li>
+                        <li><strong>Shape the drag</strong> – Press <kbd class="guide-kbd">Shift</kbd> during a rectangle or ellipse drag to keep it square or round, and <kbd class="guide-kbd">Alt</kbd> to draw it from its center. Hold <kbd class="guide-kbd">Space</kbd> to move the shape while you are still drawing it.</li>
+                        <li><strong>Move the area</strong> – In New mode, drag from inside the area to move it. <kbd class="guide-kbd">Shift</kbd> keeps the move straight, and the arrow keys move it a pixel at a time.</li>
+                        <li><strong>Invert and deselect</strong> – <strong>Invert</strong> selects everything outside the area. Click once, press <kbd class="guide-kbd">Esc</kbd> or <kbd class="guide-kbd">Ctrl</kbd>+<kbd class="guide-kbd">D</kbd>, or use <strong>Deselect</strong> to clear it. <kbd class="guide-kbd">Ctrl</kbd>+<kbd class="guide-kbd">A</kbd> selects the whole canvas.</li>
                         <li><strong>Not saved</strong> – The area is a working aid. It is not part of the project file, and Undo steps through fills and strokes, not through the area itself.</li>
                     </ul>
                 </div>
@@ -611,7 +612,7 @@
                         <li><strong>Animation</strong> – Shown when the base image is an animated GIF. Turn off <strong>Play animation</strong> to use its first frame as a still.</li>
                         <li><strong>Image</strong> – Enter a linked pixel size or percentage to resize the canvas and every editable layer together. Choose whether glitter textures and visual effects scale with the design.</li>
                         <li><strong>Canvas</strong> – Crop or extend the canvas without scaling content. Use Relative for pixel deltas, choose an anchor, and fill the new area with transparency or a color.</li>
-                        <li><strong>Fit</strong> – Crop or extend the canvas to fit all artwork or the selected layers, with optional padding on every side. In Canvas mode you can also choose a ratio or a named size.</li>
+                        <li><strong>Fit</strong> – Crop or extend the canvas to fit all artwork, the selected layers, or the area drawn with the Select Area tool, with optional padding on every side. In Canvas mode you can also choose a ratio or a named size.</li>
                     </ul>
                 </div>
             </div>
@@ -976,7 +977,7 @@
 
         <div class="guide-subsection">
             <h4 id="auto-glitter">Auto Glitter <span class="feature-badge feature-badge-beta">Beta</span></h4>
-            <p><strong>Auto Glitter</strong> scans the Base Image and turns its colors into animated Glitter Fill layers. It is available when <strong>Canvas Background</strong> is set to <strong>Image</strong>. It opens the <strong>Auto Glitter</strong> panel and previews the glitter live on the canvas. It is in <strong>Beta</strong> and still being refined.</p>
+            <p><strong>Auto Glitter</strong> scans the Base Image and turns its colors into animated Glitter Fill layers. It is available when <strong>Canvas Background</strong> is set to <strong>Image</strong> and the image is not a playing animation. It opens the <strong>Auto Glitter</strong> panel and previews the glitter live on the canvas. It is in <strong>Beta</strong> and still being refined.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1006,11 +1007,12 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Palette</strong> – <strong>Colors</strong> and <strong>Combine Similar</strong> update the preview instantly, without repeating the image scan. <strong>Style</strong> sets which colors are kept and how strongly the matched glitter is saturated:</p>
+                    <p><strong>Palette</strong> – <strong>Glitter</strong> picks the style or set the matches come from, with the same picker as the Library. It starts on <strong>All Classic Sparkle</strong>. Tiles of one style usually share one frame timing, so a single style animates as one piece. Choose <strong>All styles</strong> to mix them.</p>
+                    <p><strong>Auto colors</strong> lets the image decide how many colors become layers, up to 8. Drag <strong>Colors</strong> to set the count yourself. <strong>Merge</strong> sets how close two shades must be to share a layer. All three update the preview without repeating the image scan.</p>
+                    <p><strong>Style</strong> sets which colors are kept when the image has more than the count allows:</p>
                     <ul>
-                        <li><strong>Faithful</strong> – The default. Stays closest to the image's colors and does not boost saturation.</li>
-                        <li><strong>Balanced</strong> – Favors colorful regions slightly and adds a small saturation boost.</li>
-                        <li><strong>Vibrant</strong> – Prioritizes colorful accents, combines more neutral shades, and boosts saturation strongly.</li>
+                        <li><strong>Natural</strong> – The default. Gives layers to the largest areas of the image and does not boost saturation.</li>
+                        <li><strong>Vibrant</strong> – Gives layers to small colorful accents first, combines more neutral shades, and boosts the matched glitter's saturation.</li>
                     </ul>
                     <p>Black-and-white source colors stay monochrome. Auto Glitter removes color casts from their matched glitter.</p>
                 </div>

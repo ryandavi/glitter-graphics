@@ -27,14 +27,13 @@ const SESSIONS = Object.freeze([
 		] },
 	// A selected area owns Enter, Delete, Escape and the arrows in the tools
 	// that use it. Last, so every editing session above takes its keys first.
-	{ id: 'area', isActive: (editor) => !editor.areaSelection.isEmpty && [ToolType.AREA, ToolType.BRUSH].includes(editor.currentTool),
+	{ id: 'area', isActive: (editor) => !editor.areaSelection.isEmpty && [ToolType.AREA, ToolType.BRUSH, ToolType.GLITTER_FILL].includes(editor.currentTool),
 		confirm: (editor) => editor.areaSelect.fill(), cancel: (editor) => editor.areaSelect.deselect(),
 		delete: (editor) => editor.areaSelect.erase(), nudge: (editor, event) => editor.areaSelect.nudge(event),
 		shortcuts: [
 			{ label: 'Fill the Area with Glitter', group: 'Select Area', displayKey: 'Enter' },
 			{ label: 'Erase Glitter in the Area', group: 'Select Area', displayKey: 'Delete / Backspace' },
-			{ label: 'Move the Area', group: 'Select Area', displayKey: 'Arrow Keys' },
-			{ label: 'Deselect the Area', group: 'Select Area', displayKey: 'Escape' }
+			{ label: 'Move the Area', group: 'Select Area', displayKey: 'Arrow Keys' }
 		] }
 ]);
 

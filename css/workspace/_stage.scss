@@ -1,5 +1,13 @@
 @use '../mixins' as *;
 
+// A crosshair with a badge at its lower right, drawn white under black so it
+// reads on any artwork. `$badge` is the badge's SVG path.
+@function area-cursor($badge) {
+	$paths: "M8.5 1v15M1 8.5h15#{$badge}";
+	$svg: "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke-linecap='square'><path d='#{$paths}' stroke='white' stroke-width='3'/><path d='#{$paths}' stroke='black'/></svg>";
+	@return url("data:image/svg+xml,#{$svg}") 8 8, crosshair;
+}
+
 // Canvas stage: the preview column, its container and wrapper, tool cursors and stage overlays.
 
 /* ===== PREVIEW PANEL (canvas workspace column) ===== */
@@ -86,8 +94,25 @@
 		cursor: grab;
 	}
 
+	// The Select Area tool names what a press would do (js/ui/area-select.js).
 	&.area-cursor {
 		cursor: crosshair;
+
+		&[data-area-cursor="move"] {
+			cursor: move;
+		}
+
+		&[data-area-cursor="add"] {
+			cursor: area-cursor('M15 19.5h7M18.5 16v7');
+		}
+
+		&[data-area-cursor="subtract"] {
+			cursor: area-cursor('M15 19.5h7');
+		}
+
+		&[data-area-cursor="intersect"] {
+			cursor: area-cursor('M16 17l5 5M21 17l-5 5');
+		}
 	}
 }
 

@@ -3,7 +3,7 @@ const assert = require('assert');
 global.CONFIG = {
 	tools: {
 		pixelEffects: {
-			defaults: { pixelateEnabled: false, paletteEnabled: false, pixelSize: 1, paletteMode: 'posterize', colorCount: 4, paletteStyle: 'balanced', mergeDistinctness: 0.045, detail: 2, cleanEdges: true, dither: { algorithm: 'bayer', angle: 45, strength: 100, scale: 1, edgeProtection: true, serpentine: true, palette: 'bw', duotone: ['#000000', '#ffffff'], shimmer: false } },
+			defaults: { pixelateEnabled: false, paletteEnabled: false, pixelSize: 1, paletteMode: 'posterize', colorCount: 4, paletteStyle: 'natural', mergeDistinctness: 0.045, detail: 2, cleanEdges: true, dither: { algorithm: 'bayer', angle: 45, strength: 100, scale: 1, edgeProtection: true, serpentine: true, palette: 'bw', duotone: ['#000000', '#ffffff'], shimmer: false } },
 			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 24 }, analysis: { maxSamples: 100, iterations: 2 }, presets: { bw: ['#000000', '#ffffff'] }, animation: { algorithms: {} }
 		},
 		filter: {

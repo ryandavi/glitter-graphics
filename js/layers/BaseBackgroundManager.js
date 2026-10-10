@@ -406,6 +406,11 @@ class BaseBackgroundManager {
 		if (layer?.background.mode !== 'image') {
 			return { available: false, message: 'Switch Canvas Background to Image before using Auto Glitter' };
 		}
+		// Auto Glitter reads one still image, so its layers would only match
+		// one frame of a playing animation.
+		if (this.getAnimation(layer)) {
+			return { available: false, message: 'Auto Glitter needs a still image. Turn off Play animation to use it' };
+		}
 		return { available: true, message: 'Turn the image colors into editable glitter fill layers' };
 	}
 

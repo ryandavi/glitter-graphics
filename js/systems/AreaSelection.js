@@ -6,22 +6,30 @@
 // the only place the Glitter Brush and Eraser change pixels while it exists.
 // ============================================
 // The area is a list of operations in document px, applied in order:
-// { op: 'add' | 'subtract', points } closes a polygon (a rectangle is four
-// points, an ellipse a many-sided polygon, a lasso its own trace), and
-// { op: 'invert' } flips everything inside the document. Points make a canvas
-// resize, crop or document scale a plain point transform.
+// { op: 'add' | 'subtract' | 'intersect', points } closes a polygon (a
+// rectangle is four points, an ellipse a many-sided polygon, a lasso its own
+// trace), and { op: 'invert' } flips everything inside the document. Points
+// make a canvas resize, crop or document scale a plain point transform.
 //
 // It is working state, like the tool's own options: not in undo history and
 // not in the project file. Fill and Erase are ordinary paint commits.
 //
 // Masks rasterize the operations into a target space and binarize them, so
 // clipping a stroke is exact and can be repeated without eroding its edge.
+
+// Area operations with every point passed through `map`: a copy, so a color
+// pick keeps the area it was made in while the live area moves on.
+function mapAreaOps(ops, map = (point) => ({ ...point })) {
+	return ops.map((entry) => (entry.points ? { ...entry, points: entry.points.map(map) } : { ...entry }));
+}
+
 class AreaSelection {
 	constructor(editor) {
 		this.editor = editor;
 		this.ops = [];
 		this.revision = 0;
 		this.masks = new Map();
+		this.coverage = new WeakMap();
 		this.scratch = createAppCanvas(0, 0, 'systems/AreaSelection');
 	}
 
@@ -29,13 +37,25 @@ class AreaSelection {
 		return this.ops.length === 0;
 	}
 
-	// mode: 'new' replaces the area, 'add' and 'subtract' combine with it.
+	// The operations the area would hold after a shape is drawn in `mode`:
+	// 'new' replaces the area, 'add', 'subtract' and 'intersect' combine with
+	// it. Subtracting from or intersecting with no area leaves none.
+	combine(points, mode = 'new') {
+		if (mode === 'new' || (mode === 'add' && this.isEmpty)) return [{ op: 'add', points }];
+		return this.isEmpty ? [] : [...this.ops, { op: mode, points }];
+	}
+
 	apply(points, mode = 'new') {
 		if (points.length < 3) return;
-		if (mode === 'subtract' && this.isEmpty) return;
-		if (mode === 'new') this.ops = [];
-		this.ops.push({ op: mode === 'subtract' ? 'subtract' : 'add', points });
+		const ops = this.combine(points, mode);
+		if (!ops.length) return;
+		this.ops = ops;
 		this.changed();
+	}
+
+	selectAll() {
+		const { width, height } = this.getDocumentSize();
+		this.apply([{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }]);
 	}
 
 	invert() {
@@ -54,7 +74,7 @@ class AreaSelection {
 	// Canvas resize, crop and document scale move the document under the area.
 	transformPoints(map) {
 		if (this.isEmpty) return;
-		this.ops.forEach((entry) => { if (entry.points) entry.points = entry.points.map(map); });
+		this.ops = mapAreaOps(this.ops, map);
 		this.changed();
 	}
 
@@ -75,7 +95,7 @@ class AreaSelection {
 		const documentOutline = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
 		ctx.save();
 		ops.forEach(({ op, points = documentOutline }) => {
-			ctx.globalCompositeOperation = op === 'add' ? 'source-over' : op === 'subtract' ? 'destination-out' : 'xor';
+			ctx.globalCompositeOperation = { add: 'source-over', subtract: 'destination-out', intersect: 'destination-in', invert: 'xor' }[op];
 			ctx.beginPath();
 			points.forEach((point, index) => {
 				const mapped = mapPoint(point);
@@ -94,14 +114,50 @@ class AreaSelection {
 		let mask = this.masks.get(key);
 		if (mask) return mask;
 		if (this.masks.size >= 2) this.masks.delete(this.masks.keys().next().value);
-		const { width, height } = this.getDocumentSize();
-		mask = createAppCanvas(width, height, 'systems/AreaSelection');
-		const ctx = mask.getContext('2d', { willReadFrequently: true });
-		ctx.fillStyle = '#fff';
-		this.trace(ctx, mapPoint);
-		binarizeCanvasAlpha(ctx, width, height);
+		mask = this._rasterize(mapPoint);
 		this.masks.set(key, mask);
 		return mask;
+	}
+
+	_rasterize(mapPoint, ops = this.ops) {
+		const { width, height } = this.getDocumentSize();
+		const mask = createAppCanvas(width, height, 'systems/AreaSelection');
+		const ctx = mask.getContext('2d', { willReadFrequently: true });
+		ctx.fillStyle = '#fff';
+		this.trace(ctx, mapPoint, ops);
+		binarizeCanvasAlpha(ctx, width, height);
+		return mask;
+	}
+
+	// One byte per document pixel, nonzero inside `ops`: the area a color pick
+	// was made in (js/paint/color-selection.js). Kept per operation list, so a
+	// threshold drag rasterizes it once.
+	getCoverage(ops) {
+		const { width, height } = this.getDocumentSize();
+		let cached = this.coverage.get(ops);
+		if (cached?.width === width && cached.height === height) return cached.data;
+		const pixels = this._rasterize((point) => point, ops).getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height).data;
+		const data = new Uint8Array(width * height);
+		for (let index = 0; index < data.length; index++) data[index] = pixels[index * 4 + 3];
+		cached = { width, height, data };
+		this.coverage.set(ops, cached);
+		return data;
+	}
+
+	// The smallest document rectangle that holds the area, or null.
+	getBounds() {
+		if (this.isEmpty) return null;
+		const { width, height } = this.getDocumentSize();
+		const coverage = this.getCoverage(this.ops);
+		let minX = width, minY = height, maxX = -1, maxY = -1;
+		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+			if (!coverage[y * width + x]) continue;
+			if (x < minX) minX = x;
+			if (x > maxX) maxX = x;
+			if (y < minY) minY = y;
+			if (y > maxY) maxY = y;
+		}
+		return maxX < 0 ? null : { minX, minY, width: maxX - minX + 1, height: maxY - minY + 1 };
 	}
 
 	getDocumentMask() {

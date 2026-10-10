@@ -16,6 +16,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -42,6 +44,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -77,6 +81,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -111,6 +117,8 @@
             0.5
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -142,6 +150,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -162,12 +172,16 @@
         "generatedName": "Muted Pink",
         "sortOrder": 5,
         "colorCodes": [
-            "#D269C3"
+            "#D92BC2",
+            "#FFFFFF"
         ],
         "colorWeights": [
-            0
+            0.87,
+            0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -200,6 +214,8 @@
             0.12
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -232,6 +248,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -270,6 +288,8 @@
             0.05
         ],
         "swatchCount": 36,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -297,6 +317,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -322,6 +344,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -354,6 +378,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -386,6 +412,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -418,6 +446,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -464,6 +494,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -502,6 +534,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -535,6 +569,8 @@
             0.12
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -570,6 +606,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -599,6 +637,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -624,6 +664,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -660,6 +702,8 @@
             0.12
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -689,6 +733,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -722,6 +768,8 @@
             0.12
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -751,6 +799,8 @@
             0.06
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -776,6 +826,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -809,6 +861,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -835,6 +889,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -866,6 +922,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -901,6 +959,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -930,6 +990,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -955,6 +1017,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -990,6 +1054,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1015,6 +1081,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1047,6 +1115,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1085,6 +1155,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1116,6 +1188,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1147,6 +1221,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1175,6 +1251,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1206,6 +1284,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1239,6 +1319,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1278,6 +1360,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1309,6 +1393,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1334,6 +1420,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1371,6 +1459,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1396,6 +1486,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1430,6 +1522,8 @@
             0.13
         ],
         "swatchCount": 122,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1455,6 +1549,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1499,6 +1595,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1533,6 +1631,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1572,6 +1672,8 @@
             0.06
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1599,6 +1701,8 @@
             0.5
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1624,22 +1728,16 @@
         "generatedName": "Very Light Desaturated Cyan-Blue",
         "sortOrder": 51,
         "colorCodes": [
-            "#9CD6FB",
-            "#2FADFB",
-            "#79C9FB",
-            "#FFFFFF",
-            "#5BBDFB",
-            "#B4E0FB"
+            "#73C7FB",
+            "#FFFFFF"
         ],
         "colorWeights": [
-            0,
-            0.1667,
-            0.1667,
-            0.1667,
-            0.1667,
-            0.1667
+            0.86,
+            0.14
         ],
         "swatchCount": 6,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1665,6 +1763,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1697,6 +1797,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1729,6 +1831,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1774,6 +1878,8 @@
             0.06
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1805,6 +1911,8 @@
             0.06
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1830,6 +1938,8 @@
             0
         ],
         "swatchCount": 10,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1857,6 +1967,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -1877,12 +1989,18 @@
         "generatedName": "Muted Purple",
         "sortOrder": 60,
         "colorCodes": [
-            "#A569D2"
+            "#8A05DD",
+            "#A76BD2",
+            "#FFFFFF"
         ],
         "colorWeights": [
-            0
+            0.55,
+            0.32,
+            0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1911,6 +2029,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1936,6 +2056,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -1972,6 +2094,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2001,6 +2125,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2030,6 +2156,8 @@
             0.06
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2055,6 +2183,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2092,6 +2222,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2124,16 +2256,20 @@
         "generatedName": "Jewel Tone Purple",
         "sortOrder": 68,
         "colorCodes": [
-            "#3C0078",
+            "#41007F",
             "#000000",
-            "#8700FF"
+            "#8F00FF",
+            "#FFFFFF"
         ],
         "colorWeights": [
-            0,
-            0.3333,
-            0.3333
+            0.32,
+            0.29,
+            0.26,
+            0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2166,6 +2302,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2202,6 +2340,8 @@
             0.48
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2229,6 +2369,8 @@
             0.19
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2254,6 +2396,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2287,6 +2431,8 @@
             0
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2324,6 +2470,8 @@
             0.06
         ],
         "swatchCount": 36,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2355,6 +2503,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2384,6 +2534,8 @@
             0.38
         ],
         "swatchCount": 1,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2417,6 +2569,8 @@
             0.29
         ],
         "swatchCount": 1,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2446,6 +2600,8 @@
             0.09
         ],
         "swatchCount": 30,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2471,6 +2627,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2497,6 +2655,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2524,6 +2684,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2557,6 +2719,8 @@
             0.05
         ],
         "swatchCount": 340,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 94,
@@ -2592,6 +2756,8 @@
             0.03
         ],
         "swatchCount": 1,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2623,6 +2789,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2650,6 +2818,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2676,6 +2846,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2707,6 +2879,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2740,6 +2914,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2771,6 +2947,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -2808,6 +2986,8 @@
             0.05
         ],
         "swatchCount": 11,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 52,
@@ -2840,6 +3020,8 @@
             0.3333
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2874,16 +3056,18 @@
         "generatedName": "Red and Purple",
         "sortOrder": 92,
         "colorCodes": [
-            "#F09696",
-            "#6900C3",
-            "#A500FF"
+            "#8A05DD",
+            "#EF9C99",
+            "#FFFFFF"
         ],
         "colorWeights": [
-            0,
-            0.3333,
-            0.3333
+            0.55,
+            0.32,
+            0.13
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2915,6 +3099,8 @@
             0.5
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -2952,6 +3138,8 @@
             0.5
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3004,6 +3192,8 @@
             0.02
         ],
         "swatchCount": 243,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -3039,6 +3229,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3093,6 +3285,8 @@
             0.05
         ],
         "swatchCount": 25,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 47,
@@ -3130,6 +3324,8 @@
             0.13
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3162,6 +3358,8 @@
             0.13
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3192,6 +3390,8 @@
             0.5
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3221,16 +3421,18 @@
         "generatedName": "Green and Red",
         "sortOrder": 101,
         "colorCodes": [
-            "#00D200",
-            "#F00000",
-            "#D2002D"
+            "#DD0016",
+            "#00CC00",
+            "#FFFF00"
         ],
         "colorWeights": [
-            0,
-            0.3333,
-            0.3333
+            0.54,
+            0.33,
+            0.13
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3266,6 +3468,8 @@
             0.13
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3298,6 +3502,8 @@
             0.13
         ],
         "swatchCount": 4,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3328,6 +3534,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3352,6 +3560,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3376,6 +3586,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3400,6 +3612,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3424,6 +3638,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3448,6 +3664,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3472,6 +3690,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3496,6 +3716,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3520,6 +3742,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3544,6 +3768,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3568,6 +3794,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3592,6 +3820,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3616,6 +3846,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3640,6 +3872,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3664,6 +3898,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3688,6 +3924,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3712,6 +3950,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3736,6 +3976,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3760,6 +4002,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3784,6 +4028,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3808,6 +4054,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3832,6 +4080,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3856,6 +4106,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3880,6 +4132,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3904,6 +4158,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3928,6 +4184,8 @@
             0.08
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3952,6 +4210,8 @@
             0.13
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -3976,6 +4236,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4000,6 +4262,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4024,6 +4288,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4048,6 +4314,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4072,6 +4340,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4096,6 +4366,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4120,6 +4392,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4144,6 +4418,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4168,6 +4444,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4192,6 +4470,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4216,6 +4496,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4240,6 +4522,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4264,6 +4548,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4288,6 +4574,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4312,6 +4600,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4336,6 +4626,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4360,6 +4652,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4384,6 +4678,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4408,6 +4704,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4432,6 +4730,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4456,6 +4756,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4480,6 +4782,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4504,6 +4808,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4528,6 +4834,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4552,6 +4860,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4576,6 +4886,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4600,6 +4912,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4624,6 +4938,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4648,6 +4964,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4672,6 +4990,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4696,6 +5016,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4720,6 +5042,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4744,6 +5068,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4768,6 +5094,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4792,6 +5120,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4816,6 +5146,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4840,6 +5172,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4864,6 +5198,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4888,6 +5224,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4912,6 +5250,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4936,6 +5276,8 @@
             0.11
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4960,6 +5302,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -4984,6 +5328,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5008,6 +5354,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5032,6 +5380,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5054,6 +5404,8 @@
             0
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5082,6 +5434,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5106,6 +5460,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5130,6 +5486,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5154,6 +5512,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5178,6 +5538,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5202,6 +5564,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5226,6 +5590,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5250,6 +5616,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5274,6 +5642,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5298,6 +5668,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5322,6 +5694,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5346,6 +5720,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5370,6 +5746,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5394,6 +5772,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5416,6 +5796,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5438,6 +5820,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5460,6 +5844,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5482,6 +5868,8 @@
             1
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5504,6 +5892,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5526,6 +5916,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5548,6 +5940,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5570,6 +5964,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5592,6 +5988,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5614,6 +6012,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5636,6 +6036,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5660,6 +6062,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5684,6 +6088,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5706,6 +6112,8 @@
             0
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 0,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5733,6 +6141,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5755,6 +6165,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5777,6 +6189,8 @@
             1
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5801,6 +6215,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5825,6 +6241,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5849,6 +6267,8 @@
             0.12
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5873,6 +6293,8 @@
             0.13
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5901,6 +6323,8 @@
             0.02
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5932,6 +6356,8 @@
             0.03
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5961,6 +6387,8 @@
             0.13
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -5994,6 +6422,8 @@
             0.09
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6021,6 +6451,8 @@
             0.13
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6048,6 +6480,8 @@
             0.15
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6075,6 +6509,8 @@
             0.14
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6102,6 +6538,8 @@
             0.12
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6131,6 +6569,8 @@
             0.05
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6160,6 +6600,8 @@
             0.13
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6189,6 +6631,8 @@
             0.14
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6218,6 +6662,8 @@
             0.14
         ],
         "swatchCount": 112,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6245,6 +6691,8 @@
             0.12
         ],
         "swatchCount": 112,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6276,6 +6724,8 @@
             0.16
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6307,6 +6757,8 @@
             0.12
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6338,6 +6790,8 @@
             0.12
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6371,6 +6825,8 @@
             0.09
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6402,6 +6858,8 @@
             0.08
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6431,6 +6889,8 @@
             0.14
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6462,6 +6922,8 @@
             0.04
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6491,6 +6953,8 @@
             0.13
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6522,6 +6986,8 @@
             0.08
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6551,6 +7017,8 @@
             0.13
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6584,6 +7052,8 @@
             0.03
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6615,6 +7085,8 @@
             0.03
         ],
         "swatchCount": 111,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6644,6 +7116,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6679,6 +7153,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6715,6 +7191,8 @@
             0.3333
         ],
         "swatchCount": 3,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6745,6 +7223,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6782,6 +7262,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6811,6 +7293,8 @@
             0.3333
         ],
         "swatchCount": 3,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6842,6 +7326,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6871,6 +7357,8 @@
             0.3333
         ],
         "swatchCount": 3,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6901,6 +7389,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6937,6 +7427,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6966,6 +7458,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -6995,6 +7489,8 @@
             0.3333
         ],
         "swatchCount": 3,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7024,6 +7520,8 @@
             0.3333
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7061,6 +7559,8 @@
             0.13
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7094,6 +7594,8 @@
             0.2
         ],
         "swatchCount": 5,
+        "frameCount": 4,
+        "frameRate": 5,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 64,
@@ -7122,6 +7624,8 @@
             0.09
         ],
         "swatchCount": 0,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 60,
@@ -7153,6 +7657,8 @@
             0.14
         ],
         "swatchCount": 0,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 60,
@@ -7182,6 +7688,8 @@
             0.14
         ],
         "swatchCount": 0,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 60,
@@ -7209,6 +7717,8 @@
             0.34
         ],
         "swatchCount": 0,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 60,
@@ -7236,6 +7746,8 @@
             0.46
         ],
         "swatchCount": 5,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 60,
@@ -7267,6 +7779,8 @@
             0.25
         ],
         "swatchCount": 34,
+        "frameCount": 8,
+        "frameRate": 15,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 52,
@@ -7306,6 +7820,8 @@
             0.25
         ],
         "swatchCount": 4,
+        "frameCount": 9,
+        "frameRate": 8,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 77,
@@ -7339,6 +7855,8 @@
             0
         ],
         "swatchCount": 3,
+        "frameCount": 16,
+        "frameRate": 15,
         "isAnimated": 1,
         "hasTransparency": 1,
         "width": 24,
@@ -7368,6 +7886,8 @@
             0
         ],
         "swatchCount": 13,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7396,6 +7916,8 @@
             0
         ],
         "swatchCount": 10,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7423,6 +7945,8 @@
             0
         ],
         "swatchCount": 13,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7451,6 +7975,8 @@
             0
         ],
         "swatchCount": 14,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7478,6 +8004,8 @@
             0
         ],
         "swatchCount": 13,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7506,6 +8034,8 @@
             0
         ],
         "swatchCount": 3,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7534,6 +8064,8 @@
             0
         ],
         "swatchCount": 4,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7560,6 +8092,8 @@
             0
         ],
         "swatchCount": 9,
+        "frameCount": 4,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -7587,6 +8121,8 @@
             1
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7612,6 +8148,8 @@
             0
         ],
         "swatchCount": 74,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7645,6 +8183,8 @@
             0.46
         ],
         "swatchCount": 72,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7672,6 +8212,8 @@
             0.46
         ],
         "swatchCount": 72,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7701,6 +8243,8 @@
             0.14
         ],
         "swatchCount": 76,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7726,6 +8270,8 @@
             0
         ],
         "swatchCount": 99,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7758,6 +8304,8 @@
             1
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7783,6 +8331,8 @@
             0
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7818,6 +8368,8 @@
             0.11
         ],
         "swatchCount": 43,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7849,6 +8401,8 @@
             0.11
         ],
         "swatchCount": 43,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7880,6 +8434,8 @@
             0.07
         ],
         "swatchCount": 37,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7905,6 +8461,8 @@
             0
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7938,6 +8496,8 @@
             0
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -7972,6 +8532,8 @@
             0.05
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8003,6 +8565,8 @@
             0.05
         ],
         "swatchCount": 8,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8032,6 +8596,8 @@
             0.06
         ],
         "swatchCount": 13,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8063,6 +8629,8 @@
             0.05
         ],
         "swatchCount": 8,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8088,6 +8656,8 @@
             0
         ],
         "swatchCount": 5,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8124,6 +8694,8 @@
             0.05
         ],
         "swatchCount": 8,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8151,6 +8723,8 @@
             0.05
         ],
         "swatchCount": 7,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8176,6 +8750,8 @@
             0
         ],
         "swatchCount": 55,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -8208,6 +8784,8 @@
             0
         ],
         "swatchCount": 51,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8248,6 +8826,8 @@
             0.05
         ],
         "swatchCount": 8,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8281,6 +8861,8 @@
             0.06
         ],
         "swatchCount": 7,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8306,6 +8888,8 @@
             0
         ],
         "swatchCount": 75,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8338,6 +8922,8 @@
             0
         ],
         "swatchCount": 31,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8373,6 +8959,8 @@
             0
         ],
         "swatchCount": 252,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8409,6 +8997,8 @@
             0.04
         ],
         "swatchCount": 182,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8434,6 +9024,8 @@
             0
         ],
         "swatchCount": 156,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 61,
@@ -8460,6 +9052,8 @@
             0
         ],
         "swatchCount": 255,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -8485,6 +9079,8 @@
             0
         ],
         "swatchCount": 252,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8511,6 +9107,8 @@
             0
         ],
         "swatchCount": 254,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 72,
@@ -8538,6 +9136,8 @@
             0
         ],
         "swatchCount": 254,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 100,
@@ -8566,6 +9166,8 @@
             0
         ],
         "swatchCount": 172,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8594,6 +9196,8 @@
             0
         ],
         "swatchCount": 124,
+        "frameCount": 3,
+        "frameRate": 0,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 55,
@@ -8623,6 +9227,8 @@
             0.23
         ],
         "swatchCount": 3,
+        "frameCount": 3,
+        "frameRate": 20,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 120,
@@ -8648,6 +9254,8 @@
             0
         ],
         "swatchCount": 2,
+        "frameCount": 3,
+        "frameRate": 10,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8680,6 +9288,8 @@
             0
         ],
         "swatchCount": 304,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8714,6 +9324,8 @@
             0.21
         ],
         "swatchCount": 45,
+        "frameCount": 5,
+        "frameRate": 2,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8741,6 +9353,8 @@
             0.22
         ],
         "swatchCount": 2,
+        "frameCount": 2,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8766,6 +9380,8 @@
             0
         ],
         "swatchCount": 255,
+        "frameCount": 3,
+        "frameRate": 8,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 78,
@@ -8792,6 +9408,8 @@
             0
         ],
         "swatchCount": 27,
+        "frameCount": 3,
+        "frameRate": 11,
         "isAnimated": 1,
         "hasTransparency": 0,
         "width": 60,
@@ -8828,6 +9446,8 @@
             0.05
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -8853,6 +9473,8 @@
             0.98
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -8878,6 +9500,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -8907,6 +9531,8 @@
             0.23
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 64,
@@ -8932,6 +9558,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -8959,6 +9587,8 @@
             0.25
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -8986,6 +9616,8 @@
             0.24
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9011,6 +9643,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9036,6 +9670,8 @@
             0.96
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9061,6 +9697,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9086,6 +9724,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9111,6 +9751,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9136,6 +9778,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9161,6 +9805,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9186,6 +9832,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9211,6 +9859,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9238,6 +9888,8 @@
             0.1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9265,6 +9917,8 @@
             0.05
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9292,6 +9946,8 @@
             0.06
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9317,6 +9973,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9344,6 +10002,8 @@
             0.2
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9369,6 +10029,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9394,6 +10056,8 @@
             0.96
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9419,6 +10083,8 @@
             0.96
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,
@@ -9444,6 +10110,8 @@
             1
         ],
         "swatchCount": 0,
+        "frameCount": 1,
+        "frameRate": 0,
         "isAnimated": 0,
         "hasTransparency": 0,
         "width": 128,

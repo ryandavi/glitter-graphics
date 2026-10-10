@@ -7,14 +7,14 @@ const HINT_RULES = [
 		tool: true,
 		when: (editor) => editor.getActiveSession() === 'area',
 		hint: (editor) => editor.currentTool === ToolType.BRUSH ? 'The brush only paints inside the selected area' : 'Fill the area with glitter, erase inside it, or paint in it with the Glitter Brush',
-		context: { desktop: 'Enter fills and Delete erases. Shift-drag adds to the area and Alt-drag subtracts. Esc deselects.', mobile: 'Use Fill or Erase in the bar, or switch to the Glitter Brush to paint inside the area.' }
+		context: { desktop: 'Enter fills and Delete erases. Drag inside the area to move it. Shift-drag adds to it and Alt-drag subtracts. Esc deselects.', mobile: 'Drag inside the area to move it. Use Fill or Erase in the bar, or switch to the Glitter Brush to paint inside the area.' }
 	},
 	{
 		id: 'area-tool',
 		tool: true,
 		when: (editor) => editor.currentTool === ToolType.AREA,
 		hint: 'Drag to select an area for glitter',
-		context: { desktop: 'Choose Rectangle, Ellipse or Lasso in the bar. During a drag, Shift keeps the shape square and Alt draws it from the center.', mobile: 'Choose Rectangle, Ellipse or Lasso in the bar.' }
+		context: { desktop: 'Choose Rectangle, Ellipse or Lasso in the bar. During a drag, Shift keeps the shape square, Alt draws it from the center, and Space moves it.', mobile: 'Choose Rectangle, Ellipse or Lasso in the bar.' }
 	},
 	{
 		id: 'brush-editing',

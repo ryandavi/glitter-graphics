@@ -7,18 +7,20 @@
     "sortOrder": 68,
     "hue": 1.2,
     "colorCodes": [
-        "#3C0078",
+        "#41007F",
         "#000000",
-        "#8700FF"
+        "#8F00FF",
+        "#FFFFFF"
     ],
     "colorWeights": [
-        0,
-        0.3333,
-        0.3333
+        0.32,
+        0.29,
+        0.26,
+        0.13
     ],
     "swatchCount": 5,
     "frameCount": 3,
-    "frameRate": 0,
+    "frameRate": 11,
     "isVariableFramerate": 0,
     "isAnimated": 1,
     "hasTransparency": 0,

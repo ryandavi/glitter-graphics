@@ -5163,6 +5163,14 @@ body.is-booting .workspace-start button {
 .mask-brush-controls > .segmented-control {
   width: auto;
 }
+.zoom-controls > .segmented-control > .segmented-option,
+.layer-center-controls > .segmented-control > .segmented-option,
+.pan-controls > .segmented-control > .segmented-option,
+.color-picker-controls > .segmented-control > .segmented-option,
+.mask-brush-controls > .segmented-control > .segmented-option {
+  flex: 0 0 auto;
+  padding-inline: var(--spacing-sm);
+}
 .zoom-controls .context-toolbar-handle,
 .layer-center-controls .context-toolbar-handle,
 .pan-controls .context-toolbar-handle,
@@ -5386,15 +5394,6 @@ body.is-booting .workspace-start button {
 .color-picker-controls > div:not(.context-slider-group) {
   display: flex;
   gap: var(--spacing-xs);
-}
-
-.context-segmented-control {
-  flex: 0 0 auto;
-  width: auto;
-}
-.context-segmented-control > .segmented-option {
-  flex: 0 0 auto;
-  padding-inline: var(--spacing-sm);
 }
 
 /* Mask Brush Controls Specific */
