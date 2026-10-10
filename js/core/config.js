@@ -886,7 +886,8 @@ const CONFIG = deepFreeze({
 					{ kind: 'button', id: 'contextRemoveBackground', icon: 'eraser', name: 'Remove background', title: 'Remove background from this uploaded sticker', action: 'removeBackground' },
 					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
 					{ kind: 'button', id: 'centerLayerVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
-					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
+					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' },
+					{ kind: 'button', id: 'contextCropLayers', icon: 'crop', name: 'Crop', title: 'Crop the canvas to the selected layer(s), or to all the artwork when nothing is selected', action: 'cropToLayers' }
 				]
 			},
 			{ id: 'colorPickerControls', tool: 'glitterFill', when: (_editor, { layer, tool }) => tool === 'glitterFill' && layer?.type === 'glitter-fill', sync: editor => { editor.updateColorPickerControls(); editor.areaSelect.syncToolbar(); }, controls: [

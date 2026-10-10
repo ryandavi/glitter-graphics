@@ -26,7 +26,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 			bind(`scaleDesign${axis === 'width' ? 'Width' : 'Height'}`, 'input', (input) => this.setDocumentScale({ percent: Number(input.value) / this.originalCanvas[axis] * 100 }));
 		});
 		bind('canvasSizeRelative', 'change', (input) => this.setCanvasRelative(input.checked));
-		bind('canvasBoundsSource', 'change', (input) => this.ensureCanvasBounds().setSource(input.value));
+		bind('canvasBoundsSource', 'change', (input) => this.setCanvasBoundsSource(input.value));
 		bind('canvasBoundsRatio', 'change', (input) => this.setCanvasBoundsRatio(input.value));
 		bind('artworkCropPadding', 'input', (input) => this.ensureCanvasBounds().setPadding(Number(input.value)));
 		bind('canvasExtensionColor', 'input', (input) => this.ensureCanvasBounds().setExtension({ color: input.value }));
@@ -142,6 +142,24 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		this.syncCanvasBoundsViews();
 	},
 
+	// Opens the Crop tool with its bounds fitted to a source; Enter applies.
+	cropTo(source) {
+		if (!this.originalImage || !this.canFitCanvasBounds(source)) return;
+		this.setTool(ToolType.CROP);
+		if (this.currentTool === ToolType.CROP) this.ensureCanvasBounds().setSource(source);
+	},
+
+	// Says why when a source has nothing to fit.
+	canFitCanvasBounds(source) {
+		const available = canFitCanvasBounds(this, source);
+		if (!available) this.showError(CANVAS_BOUNDS_SOURCES.find((entry) => entry.id === source).emptyMessage);
+		return available;
+	},
+	setCanvasBoundsSource(source) {
+		if (this.canFitCanvasBounds(source)) this.ensureCanvasBounds().setSource(source);
+		else this.syncCanvasBoundsViews();
+	},
+
 	openCanvasBoundsMenu(triggerId, options, apply) {
 		const trigger = document.getElementById(triggerId);
 		let root = trigger.closest('.app-menu');
@@ -154,7 +172,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		}
 		const panel = root.querySelector('.app-menu-panel');
 		panel.replaceChildren(...options.map((option) => {
-			const button = document.createElement('button'); button.type = 'button'; button.className = 'app-menu-item'; button.textContent = option.label;
+			const button = document.createElement('button'); button.type = 'button'; button.className = 'app-menu-item'; button.textContent = option.label; button.disabled = Boolean(option.disabled);
 			button.addEventListener('click', () => apply(option.id)); return button;
 		}));
 		root._popover.open();

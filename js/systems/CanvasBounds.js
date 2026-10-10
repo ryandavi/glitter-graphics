@@ -2,14 +2,30 @@
 
 const CANVAS_BOUNDS_SOURCES = Object.freeze([
 	{ id: 'custom', label: 'Custom', historyLabel: 'Resize canvas', rect: (_editor, { rect }) => rect },
-	{ id: 'artwork', label: 'Artwork', historyLabel: 'Fit canvas to artwork', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(), options.padding) },
-	{ id: 'selection', label: 'Selection', historyLabel: 'Fit canvas to selection', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(editor.layerManager.getSelectedLayers()), options.padding) },
-	{ id: 'area', label: 'Selected Area', historyLabel: 'Fit canvas to selected area', rect: (editor, options) => fittedCanvasRect(editor.areaSelection.getBounds(), options.padding) }
+	{ id: 'artwork', label: 'Artwork', historyLabel: 'Fit canvas to artwork', emptyMessage: 'There is no artwork to fit.', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(), options.padding) },
+	{ id: 'motion', label: 'Artwork with Motion', historyLabel: 'Fit canvas to artwork and its motion', emptyMessage: 'There is no artwork to fit.', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(undefined, { motion: true }), options.padding) },
+	{ id: 'selection', label: 'Selection', historyLabel: 'Fit canvas to selection', emptyMessage: 'Select a layer with something on it to fit.', rect: (editor, options) => fittedCanvasRect(editor.getArtworkBounds(editor.layerManager.getSelectedLayers()), options.padding) },
+	{ id: 'area', label: 'Selected Area', historyLabel: 'Fit canvas to selected area', emptyMessage: 'Select an area to fit.', rect: (editor, options) => fittedCanvasRect(editor.areaSelection.getBounds(), options.padding) },
+	{ id: 'trim', label: 'Trim Transparent', historyLabel: 'Trim canvas', emptyMessage: 'There is nothing visible to trim to.', rect: (editor, options) => fittedCanvasRect(editor.getTrimBounds(), options.padding) },
+	{ id: 'reveal', label: 'Reveal All', historyLabel: 'Reveal all artwork', emptyMessage: 'There is no artwork to reveal.', rect: (editor, options) => fittedCanvasRect(editor.getRevealBounds(), options.padding) },
+	{ id: 'base', label: 'Base Image', historyLabel: 'Fit canvas to Base Image', emptyMessage: 'The Base Image has nothing to fit.', rect: (editor, options) => fittedCanvasRect(editor.getBaseContentBounds(), options.padding) }
 ].map(Object.freeze));
 
+// A source needs at least 1 × 1 px to fit.
 function fittedCanvasRect(bounds, padding) {
-	if (!bounds) return null;
+	if (!(bounds?.width >= 1 && bounds.height >= 1)) return null;
 	return { x: bounds.minX - padding, y: bounds.minY - padding, width: bounds.width + padding * 2, height: bounds.height + padding * 2 };
+}
+
+// A fitted source with a locked ratio grows to it around its center, never cropping what it fits.
+function coverCanvasRatio(rect, ratio) {
+	const width = Math.max(rect.width, Math.ceil(rect.height * ratio.w / ratio.h));
+	const height = Math.max(rect.height, Math.ceil(width * ratio.h / ratio.w));
+	return { x: rect.x - Math.floor((width - rect.width) / 2), y: rect.y - Math.floor((height - rect.height) / 2), width, height };
+}
+
+function canFitCanvasBounds(editor, id) {
+	return id === 'custom' || Boolean(CANVAS_BOUNDS_SOURCES.find((entry) => entry.id === id)?.rect(editor, { padding: 0 }));
 }
 
 // Pending bounds are document coordinates, independent of any input or chrome.
@@ -108,14 +124,13 @@ class CanvasBounds {
 		const entry = CANVAS_BOUNDS_SOURCES.find((entry) => entry.id === this.source);
 		const rect = entry.rect(this.editor, this);
 		this.sourceAvailable = Boolean(rect);
-		if (rect) this.rect = { ...rect };
+		if (rect) this.rect = this.ratio && this.source !== 'custom' ? coverCanvasRatio(rect, this.ratio) : { ...rect };
 	}
 
 	setSource(source) {
 		if (!CANVAS_BOUNDS_SOURCES.some((entry) => entry.id === source)) return;
 		this.change(() => {
 			this.source = source;
-			if (source !== 'custom') this.ratio = null;
 			this.refreshSource();
 		});
 	}
@@ -124,20 +139,22 @@ class CanvasBounds {
 	setRatio(ratio) {
 		this.change(() => {
 			this.ratio = ratio && ratio.w > 0 && ratio.h > 0 ? { ...ratio } : null;
-			if (this.ratio) this.setSize(this.rect.width, this.rect.width * this.ratio.h / this.ratio.w);
+			if (this.source !== 'custom') this.refreshSource();
+			else if (this.ratio) this.setSize(this.rect.width, this.rect.width * this.ratio.h / this.ratio.w);
 		});
 	}
 	swapOrientation() {
 		this.change(() => {
 			if (this.ratio) this.ratio = { w: this.ratio.h, h: this.ratio.w };
-			this.setSize(this.rect.height, this.rect.width);
+			if (this.ratio && this.source !== 'custom') this.refreshSource();
+			else this.setSize(this.rect.height, this.rect.width);
 		});
 	}
 	// A dragged color well reports every color it passes: one step.
 	setExtension(extension) { this.change(() => { this.extension = { ...this.extension, ...extension }; }, extension.mode ? null : 'extension-color'); }
 	validate() {
 		this.refreshSource();
-		return this.sourceAvailable ? validateCanvasSize(this.rect.width, this.rect.height) : { ok: false, message: 'There is no artwork to fit.' };
+		return this.sourceAvailable ? validateCanvasSize(this.rect.width, this.rect.height) : { ok: false, message: CANVAS_BOUNDS_SOURCES.find((entry) => entry.id === this.source).emptyMessage };
 	}
 	apply() {
 		const result = this.validate();
@@ -171,4 +188,4 @@ function getCanvasRatioOptions(editor) {
 	];
 }
 
-if (typeof module !== 'undefined' && module.exports) module.exports = { CanvasBounds, CANVAS_BOUNDS_SOURCES, fittedCanvasRect };
+if (typeof module !== 'undefined' && module.exports) module.exports = { CanvasBounds, CANVAS_BOUNDS_SOURCES, fittedCanvasRect, canFitCanvasBounds };

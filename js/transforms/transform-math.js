@@ -320,6 +320,11 @@ function unionRects(a, b) {
 	};
 }
 
+function unionBoxes(a, b) {
+	if (!a || !b) return a || b || null;
+	return { left: Math.min(a.left, b.left), top: Math.min(a.top, b.top), right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom) };
+}
+
 function padFrame(frame, paddingX, paddingY = paddingX) {
 	if (!frame || !(paddingX > 0 || paddingY > 0)) return frame;
 	return { ...frame, width: frame.width + Math.max(0, paddingX) * 2, height: frame.height + Math.max(0, paddingY) * 2 };
@@ -335,9 +340,42 @@ function getLayerCanvasBox(editor, layer, { visual = false } = {}) {
 }
 
 function getLayersCanvasBox(editor, layers, options = {}) {
-	const boxes = layers.map((layer) => getLayerCanvasBox(editor, layer, options)).filter(Boolean);
+	// `minSize` drops layers with nothing to measure, such as an empty fill.
+	const minSize = options.minSize || 0;
+	// `motion` measures what each layer's animation sweeps, not its rest box.
+	const boxes = layers.map((layer) => options.motion ? getLayerMotionBox(editor, layer) : getLayerCanvasBox(editor, layer, options)).filter((box) => box && box.right - box.left >= minSize && box.bottom - box.top >= minSize);
 	if (!boxes.length) return null;
 	return { left: Math.min(...boxes.map((box) => box.left)), top: Math.min(...boxes.map((box) => box.top)), right: Math.max(...boxes.map((box) => box.right)), bottom: Math.max(...boxes.map((box) => box.bottom)) };
+}
+
+// The box a layer's animation sweeps, sampled over its loop. Scale and
+// rotation turn about the animation origin on the rest box. A motion that
+// travels the canvas (Marquee, Ricochet, Wander) is shaped by it, so it
+// claims the whole canvas: cropping into it would change the motion.
+function getLayerMotionBox(editor, layer, steps = 64) {
+	const rest = getLayerCanvasBox(editor, layer, { visual: true });
+	const animations = GlitterAnimation.normalizeAnimations(layer.animations).filter((animation) => GlitterAnimation.isActive(animation));
+	if (!rest || !animations.length) return rest;
+	if (animations.some((animation) => GlitterAnimation.MOTION_REGISTRY[animation.type].needsBounds)) return { left: 0, top: 0, right: editor.originalCanvas.width, bottom: editor.originalCanvas.height };
+	const context = getLayerAnimationSamplingContext(editor, layer);
+	const frame = getLayerCanvasBox(editor, layer);
+	const originX = frame.left + (frame.right - frame.left) * context.origin[0], originY = frame.top + (frame.bottom - frame.top) * context.origin[1];
+	const corners = [[rest.left, rest.top], [rest.right, rest.top], [rest.right, rest.bottom], [rest.left, rest.bottom]];
+	// Layered animations with different periods need several of the longest to cover their combinations.
+	const samples = steps * animations.length;
+	const duration = Math.max(...animations.map((animation) => animation.delayMs + animation.periodMs * (Number.isFinite(animation.iterations) ? animation.iterations : 1))) * animations.length;
+	const box = { ...rest };
+	for (let index = 0; index <= samples; index++) {
+		const { matrix, tx, ty, copies = [{ x: 0, y: 0 }] } = GlitterAnimation.sampleAt(animations, duration * index / samples, context);
+		corners.forEach(([x, y]) => {
+			const px = originX + matrix.a * (x - originX) + matrix.c * (y - originY) + tx, py = originY + matrix.b * (x - originX) + matrix.d * (y - originY) + ty;
+			copies.forEach((copy) => {
+				box.left = Math.min(box.left, px + copy.x); box.right = Math.max(box.right, px + copy.x);
+				box.top = Math.min(box.top, py + copy.y); box.bottom = Math.max(box.bottom, py + copy.y);
+			});
+		});
+	}
+	return box;
 }
 
 function getLayerAnimationSamplingContext(editor, layer) {

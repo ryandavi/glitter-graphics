@@ -30,7 +30,7 @@ const RELEASES = [
 		features: [
 			{ type: 'added', text: 'Added the Pen and Line tools and Path layers: draw straight or curved paths, lines, and arrows, edit their points, and give each a glitter or color stroke, fill, and outline.', guide: 'paths' },
 			{ type: 'added', text: 'Added canvas text editing, drag-to-create text boxes, splitting text into characters, words or lines, color emoji, auto-height boxes, justified text, underline and strikethrough, symbols, alternating caps, and plain-text paste.', guide: 'text-typography' },
-			{ type: 'added', text: 'Added the Crop tool with canvas handles, ratios, fit to artwork, selection, or a selected area, extension fill, keyboard and touch controls, and one-step undo.', guide: 'crop-tool' },
+			{ type: 'added', text: 'Added the Crop tool with canvas handles, ratios, fits to artwork, its motion, a selection, a selected area, trimmed transparent edges, or all hidden artwork, extension fill, keyboard and touch controls, and one-step undo.', guide: 'crop-tool' },
 			{ type: 'added', text: 'Added the Select Area tool: drag a rectangle, ellipse, or lasso, then fill it with glitter, erase inside it, crop the canvas to it, or work inside it with the Glitter Brush and Glitter Fill.', guide: 'select-area-tool' },
 			{ type: 'changed', text: 'Rebuilt the workspace around one Library window for glitters, stickers, shapes, fonts, and brushes, with a right column that shows only the properties of the selected layer or active tool.', guide: 'library' },
 			{ type: 'changed', text: 'Reorganized the glitter and sticker libraries by style and set, with tile sizes, quick picks, and broader search.', guide: 'library' },

@@ -78,13 +78,56 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 	// common case. Fill layers contribute their transformed visible-mask bounds.
 	// Returns null when there are no movable painted layers.
 ,
-	getArtworkBounds(layers = this.layers) {
+	getArtworkBounds(layers = this.layers, options = {}) { return this.boxToBounds(this.getArtworkBox(layers, options)); },
+	// `motion` includes everything the layers' animations sweep.
+	getArtworkBox(layers = this.layers, { motion = false } = {}) {
 		if (!this.originalImage) return null;
-		const box = getLayersCanvasBox(this, layers.filter((layer) => layer.visible !== false), { visual: true });
+		return getLayersCanvasBox(this, layers.filter((layer) => layer.visible !== false), { visual: true, minSize: 1, motion });
+	},
+	boxToBounds(box) {
 		if (!box) return null;
 		const minX = Math.floor(box.left), minY = Math.floor(box.top);
 		return { minX, minY, width: Math.max(1, Math.ceil(box.right) - minX), height: Math.max(1, Math.ceil(box.bottom) - minY) };
-	}
+	},
+	getCanvasBox() { return { left: 0, top: 0, right: this.originalCanvas.width, bottom: this.originalCanvas.height }; },
+
+	// What the Base Image layer paints: the whole canvas for a solid, gradient
+	// or glitter background, and the image's own pixels otherwise. The scan is
+	// kept until the base pixels are replaced.
+	getBaseContentBox() {
+		const layer = this.layerManager.getBaseLayer();
+		const mode = layer?.background?.mode || 'image';
+		if (!this.originalImage || !layer || layer.visible === false || mode === 'none') return null;
+		if (mode !== 'image') return this.getCanvasBox();
+		const alpha = this.originalAlphaChannel;
+		if (this._baseContentBox?.alpha !== alpha) {
+			const { width, height } = this.originalCanvas;
+			let left = width, top = height, right = -1, bottom = -1;
+			for (let y = 0; y < height; y++) {
+				for (let x = 0, index = y * width; x < width; x++, index++) {
+					if (!alpha[index]) continue;
+					if (x < left) left = x;
+					if (x > right) right = x;
+					if (y < top) top = y;
+					bottom = y;
+				}
+			}
+			this._baseContentBox = { alpha, box: right < 0 ? null : { left, top, right: right + 1, bottom: bottom + 1 } };
+		}
+		return this._baseContentBox.box;
+	},
+	getBaseContentBounds() { return this.boxToBounds(this.getBaseContentBox()); },
+
+	// Photoshop's Trim: everything visible, never beyond the canvas.
+	getTrimBounds() {
+		const box = unionBoxes(this.getBaseContentBox(), this.getArtworkBox());
+		if (!box) return null;
+		const canvas = this.getCanvasBox();
+		const trimmed = { left: Math.max(canvas.left, box.left), top: Math.max(canvas.top, box.top), right: Math.min(canvas.right, box.right), bottom: Math.min(canvas.bottom, box.bottom) };
+		return trimmed.right - trimmed.left >= 1 && trimmed.bottom - trimmed.top >= 1 ? this.boxToBounds(trimmed) : null;
+	},
+	// Photoshop's Reveal All: the canvas grown to hold the artwork that hangs off it.
+	getRevealBounds() { return this.originalImage ? this.boxToBounds(unionBoxes(this.getCanvasBox(), this.getArtworkBox())) : null; }
 
 	// Structural canvas resize (Photoshop "Canvas Size"): change the canvas
 	// bounds WITHOUT resampling. Content keeps its pixel size; it's translated by

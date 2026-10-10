@@ -241,11 +241,8 @@ class AreaSelectSession {
 	deselect() { this.cancelDrag(); this.area.clear(); }
 	selectAll() { this.cancelDrag(); this.area.selectAll(); }
 
-	// Opens the Crop tool with its bounds fitted to the area; Enter applies.
 	crop() {
-		if (this.area.isEmpty) return;
-		this.editor.setTool(ToolType.CROP);
-		this.editor.ensureCanvasBounds().setSource('area');
+		if (!this.area.isEmpty) this.editor.cropTo('area');
 	}
 
 	// Fill or Erase the whole area on the fill layer it lands on. Fill makes

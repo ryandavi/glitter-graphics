@@ -1,9 +1,11 @@
 const COMMANDS = {
 	canvasBoundsRatioMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropRatio', getCanvasRatioOptions(editor), (id) => editor.setCanvasBoundsRatio(id)) },
-	canvasBoundsFitMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropFit', CANVAS_BOUNDS_SOURCES, (id) => editor.ensureCanvasBounds().setSource(id)) },
+	canvasBoundsFitMenu: { run: (editor) => editor.openCanvasBoundsMenu('contextCropFit', CANVAS_BOUNDS_SOURCES.map((source) => ({ ...source, disabled: !canFitCanvasBounds(editor, source.id) })), (id) => editor.setCanvasBoundsSource(id)) },
 	canvasBoundsApply: { run: (editor) => editor.applyCanvasBounds() },
 	canvasBoundsCancel: { run: (editor) => editor.cancelCanvasBounds() },
 	canvasBoundsSwap: { run: (editor) => editor.ensureCanvasBounds().swapOrientation() },
+	// The selected layer(s), or all the artwork when nothing is selected.
+	cropToLayers: { label: 'Crop to Selected Layer(s) or Artwork', group: 'Selection', when: (editor) => Boolean(editor.originalImage), run: (editor) => editor.cropTo(editor.getSelectedActionableLayers().length ? 'selection' : 'artwork') },
 	documentScaleApply: { run: (editor) => editor.applyScaleDesign() },
 	documentScaleReset: { run: (editor) => editor.setDocumentScale(editor.documentSizeDefaults().scale) },
 	removeBackground: { label: 'Remove background', group: 'Sticker', when: editor => editor.stickerManager.canRemoveBackground(), run: editor => editor.stickerManager.removeBackground() },
