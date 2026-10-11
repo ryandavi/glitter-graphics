@@ -745,11 +745,9 @@ class GlitterEditor {
 		// UX: Can't add layers until image is loaded
 		if (addBtn) {
 			const gate = this.layerManager.canAddLayers();
-			addBtn.disabled = !hasImage || !APP_BOOT.isComplete('library') || autoPreviewActive || !gate.ok;
+			addBtn.disabled = !hasImage || autoPreviewActive || !gate.ok;
 			if (!hasImage) {
 				addBtn.title = 'Load an image first';
-			} else if (!APP_BOOT.isComplete('library')) {
-				addBtn.title = 'Loading the Library';
 			} else if (autoPreviewActive) {
 				addBtn.title = 'Exit Auto Glitter before adding layers';
 			} else if (!gate.ok) {

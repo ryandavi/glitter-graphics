@@ -4910,7 +4910,7 @@ body.tool-select .preview-container.is-over-picked-layer {
   transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
-body.is-booting .workspace-start button {
+body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   opacity: var(--opacity-disabled);
   pointer-events: none;
   cursor: default;

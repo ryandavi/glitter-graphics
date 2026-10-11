@@ -233,9 +233,12 @@ class LayerManager {
 		this.renderLayersList();
 	}
 
+	// The one gate every way of adding a layer goes through. New layers look
+	// their assets up in the Library, so none can be added before it has loaded.
 	canAddLayers(count = 1) {
 		const occupied = this.layers.filter((layer) => !layer.isPreview).length;
 		const remaining = Math.max(0, CONFIG.app.limits.maxLayers - occupied);
+		if (!APP_BOOT.isComplete('library')) return { ok: false, remaining, reason: 'The Library is still loading' };
 		if (remaining >= count) return { ok: true, remaining };
 		return {
 			ok: false,
