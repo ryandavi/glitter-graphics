@@ -417,9 +417,9 @@ class LayerManager {
 		this.setSelection(nextIds, { activeLayerId: layerId });
 	}
 
-	restoreSelectionState(activeLayerId, selectedLayerIds = null) {
+	restoreSelectionState(activeLayerId, selectedLayerIds = null, options = {}) {
 		const fallbackIds = activeLayerId ? [activeLayerId] : [];
-		this.setSelection(selectedLayerIds ?? fallbackIds, { activeLayerId });
+		this.setSelection(selectedLayerIds ?? fallbackIds, { ...options, activeLayerId });
 	}
 
 	setSelection(layerIds, options = {}) {
@@ -464,7 +464,7 @@ class LayerManager {
 		this.updateSelectionHighlight();
 		this.editor.requestPreviewUpdate();
 		this.editor.syncTransformHandlesForActiveLayer?.();
-		if (selectedCount === 1 && activeLayer) {
+		if (options.source !== 'history' && selectedCount === 1 && activeLayer) {
 			// A type keeps the tools it lists (`toolsOnSelect`); any other tool
 			// gives way to Select.
 			const config = LAYER_UI_CONFIG[activeLayer.type];
@@ -486,9 +486,9 @@ class LayerManager {
 			}
 		}));
 
-		if (selectedCount > 1) {
+		if (options.source !== 'history' && selectedCount > 1) {
 			this.editor.updateStatus(`${selectedCount} layers selected`);
-		} else if (activeLayer) {
+		} else if (options.source !== 'history' && activeLayer) {
 			this.editor.updateStatus(`Selected: ${describeLayer(activeLayer, this.editor).name}`);
 		}
 

@@ -246,6 +246,8 @@ Pixel-level math only: never `ctx.filter`, because iOS Safari doesn't support it
 
 ## Undo and redo
 
+History restores document and selection, never the current tool. Selection uses a history source that skips user-selection tool rules, activation hooks and selection status, while still refreshing the Inspector, handles and layer-change listeners. Other selection restores (projects, templates and Auto Glitter) keep their normal activation behavior.
+
 - Call `editor.saveState(label)` once per **committed** user edit, not on every slider tick. Slider bindings usually save on commit.
 - Repeated small edits share a `coalesceKey`, for example `saveState('Move layer', { coalesceKey: \`nudge:${ids}\` })`.
 - A snapshot is `LayerManager.serializeLayer` for every layer, plus canvas size and base-image references. Painted masks are stored separately as versioned binaries; snapshots hold `maskVersion` pointers. Anything that serializes state must account for that.

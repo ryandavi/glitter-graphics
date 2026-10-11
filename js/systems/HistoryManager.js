@@ -124,7 +124,7 @@ class HistoryManager {
 		await this.editor.glitterManager?.ensureLayersPreviewAssetsReady(restoredLayers);
 		this.editor.layers = restoredLayers;
 		this.editor.paintMaskStore?.restorePaintState(this.editor.layers);
-		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds);
+		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds, { source: 'history' });
 
 		this.editor.layerManager.renderLayersList();
 		this.editor.requestPreviewUpdate();

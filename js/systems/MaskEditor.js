@@ -735,8 +735,8 @@ class MaskEditor {
 	}
 
 	handleStateRestore() {
-		// Undo/redo shouldn't kick the user out of the Brush/Eraser tool —
-		// exit the live stroke state only, and leave currentTool alone.
+		// History restores document and selection without changing the tool.
+		// Drop the live stroke state without committing it.
 		this.exitEditMode({ commitStroke: false, switchTool: false });
 		// The mask underneath changed — drop the Shift-click connect anchor so it
 		// can't draw from a point that no longer reflects what's on the canvas.
