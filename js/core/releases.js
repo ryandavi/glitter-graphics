@@ -28,6 +28,7 @@ const RELEASES = [
 		unreleased: true,
 		summary: 'Added the Pen, Line, Crop, and Select Area tools, canvas text editing, animated base images, and size-targeted export, and rebuilt the workspace around one Library window.',
 		features: [
+			{ type: 'added', text: 'Added two-color pattern paints with presets, motif shapes and looping scroll, plus Subtitle, Caption Bar, Date Stamp and Demotivational Poster templates.', guide: 'pattern-paint' },
 			{ type: 'added', text: 'Added the Pen and Line tools and Path layers: draw straight or curved paths, lines, and arrows, edit their points, and give each a glitter or color stroke, fill, and outline.', guide: 'paths' },
 			{ type: 'added', text: 'Added canvas text editing, drag-to-create text boxes, splitting text into characters, words or lines, color emoji, auto-height boxes, justified text, underline and strikethrough, symbols, alternating caps, and plain-text paste.', guide: 'text-typography' },
 			{ type: 'added', text: 'Added the Crop tool with canvas handles, ratios, fits to artwork, its motion, a selection, a selected area, trimmed transparent edges, or all hidden artwork, extension fill, keyboard and touch controls, and one-step undo.', guide: 'crop-tool' },

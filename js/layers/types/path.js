@@ -26,7 +26,7 @@ registerLayerType(LayerType.PATH, {
 			draftPath: 'pathData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'pathShadow',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -45,7 +45,7 @@ registerLayerType(LayerType.PATH, {
 			draftPath: 'pathData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'pathBorder',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: { widthPx: 'borderWidth' }
 		},
 		{
@@ -57,7 +57,7 @@ registerLayerType(LayerType.PATH, {
 			path: 'pathData.fill',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'pathFill',
-			modes: ['none', 'glitter', 'solid', 'gradient']
+			modes: ['none', ...STANDARD_PAINT_MODES]
 		},
 		{
 			defaults: () => {
@@ -69,7 +69,7 @@ registerLayerType(LayerType.PATH, {
 			draftPath: 'pathData.effectDrafts.stroke',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'pathStroke',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -82,7 +82,7 @@ registerLayerType(LayerType.PATH, {
 			enabledPath: 'pathData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'pathBevel',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -95,7 +95,7 @@ registerLayerType(LayerType.PATH, {
 			enabledPath: 'pathData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'pathBevelShade',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -108,7 +108,7 @@ registerLayerType(LayerType.PATH, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'pathSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	sparkleHost: (editor, layer) => editor.pathLayerManager?.getSparkleHost(layer) || null,

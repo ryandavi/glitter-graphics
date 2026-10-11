@@ -50,6 +50,7 @@ class AnimationTicker {
 	}
 
 	refresh() {
+		this.editor.canvasElementsContainer?.classList.toggle('preview-motion-paused', this._isPreviewPaused());
 		this._paint(performance.now());
 		if (this._isPreviewPaused() || !this.targets.size) this.stop();
 		else this.start();

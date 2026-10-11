@@ -263,6 +263,8 @@ function describeLayerPaint(editor, paint, imageAsset = null) {
 	let name = null;
 	if (mode === 'solid') {
 		name = formatColor(paint?.color) || 'Solid Fill';
+	} else if (mode === 'pattern') {
+		name = describeEffectPattern(paint?.pattern);
 	} else if (mode === 'gradient') {
 		const stops = normalizeEffectGradient(paint?.gradient).stops;
 		const first = formatColor(stops[0]?.color);

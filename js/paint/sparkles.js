@@ -529,7 +529,9 @@ function paintSparkleMaskHost(maskCanvas, fill) {
 	const canvas = createAppCanvas(maskCanvas.width, maskCanvas.height, 'paint/sparkles');
 	const ctx = canvas.getContext('2d');
 	ctx.fillStyle = fill?.mode === 'solid' ? fill.color : '#ffffff';
-	if (fill?.mode === 'gradient') {
+	if (fill?.mode === 'pattern') {
+		ctx.fillStyle = normalizeEffectPattern(fill.pattern).color;
+	} else if (fill?.mode === 'gradient') {
 		ctx.fillStyle = createEffectCanvasGradient(ctx, normalizeEffectGradient(fill.gradient), { x: 0, y: 0, width: canvas.width, height: canvas.height });
 	}
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -540,6 +542,7 @@ function paintSparkleMaskHost(maskCanvas, fill) {
 
 function getSparkleMaskHostKey(fill) {
 	if (fill?.mode === 'solid') return `solid:${fill.color}`;
+	if (fill?.mode === 'pattern') return `pattern:${JSON.stringify(fill.pattern)}`;
 	if (fill?.mode === 'gradient') return `gradient:${JSON.stringify(fill.gradient)}`;
 	return 'white';
 }

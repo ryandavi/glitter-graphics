@@ -1,5 +1,23 @@
 @use '../mixins' as *;
 
+.pattern-preview {
+	height: var(--control-height);
+	border-radius: var(--radius-sm);
+}
+
+.pattern-scrolling {
+	animation: pattern-scroll var(--pattern-cycle) steps(var(--pattern-steps)) infinite;
+}
+
+.preview-motion-paused .pattern-scrolling {
+	animation: none;
+}
+
+@keyframes pattern-scroll {
+	from { background-position: var(--pattern-origin-x) var(--pattern-origin-y); }
+	to { background-position: calc(var(--pattern-origin-x) + var(--pattern-distance-x)) calc(var(--pattern-origin-y) + var(--pattern-distance-y)); }
+}
+
 // ===== Canvas Size (Photoshop-style resize) =====
 .canvas-size-controls {
 	display: flex;

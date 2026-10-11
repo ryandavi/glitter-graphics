@@ -164,12 +164,34 @@ class SceneCompositor {
 
 	_collectProceduralSources(layers, { includeBaseImage = true, canvasData = null } = {}) {
 		return layers.flatMap((layer) => {
-			const sources = LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || [];
+			const sources = [
+				...(LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || []),
+				...this._createPatternTimelineSources(layer, includeBaseImage)
+			];
 			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null })) : sources;
 		});
 	}
 
 	// Animated looks join the shared clock, including over an otherwise still scene.
+	_createPatternTimelineSources(layer, includeBaseImage) {
+		if (layer.visible === false) return [];
+		return getLayerPaintSlots(layer).filter((entry) => entry.renders && entry.data.mode === 'pattern'
+			&& (!entry.definition.wholeLayer || includeBaseImage || layer !== this.editor.layerManager.getBaseLayer()))
+			.flatMap((entry) => {
+				const pattern = normalizeEffectPattern(entry.data.pattern);
+				if (pattern.scroll === 'none') return [];
+				return [{
+					key: `__pattern_${getPaintSlotSourceKey(layer, entry)}`,
+					label: `${layer.name || 'Layer'} pattern scroll`, ownerLayerId: layer.id, effectSlot: entry.key,
+					naturalPeriod: pattern.scrollCycleMs,
+					periodRange: { min: FIELDS.patternScrollCycle.min, max: FIELDS.patternScrollCycle.max },
+					setPeriod: (ms) => { entry.data.pattern.scrollCycleMs = Math.min(FIELDS.patternScrollCycle.max, Math.max(FIELDS.patternScrollCycle.min, ms)); },
+					preferredSamplingRate: CONFIG.rendering.pattern.exportFps,
+					sampleAt: (time, period = pattern.scrollCycleMs) => ({ time: time * pattern.scrollCycleMs / period })
+				}];
+			});
+	}
+
 	_createFilterTimelineSources(layer) {
 		if (layer.visible === false || !GlitterFilter.isActive(layer.filterData, layer.opacity)) return [];
 		const animation = GlitterFilter.animation(layer.filterData);
@@ -783,7 +805,7 @@ class SceneCompositor {
 			getAuthoredSources,
 			render: ({ ctx, frameIndex, timestamp, sourceSelectionMap, resolvedFramesBySource, width, height }) => {
 				const [entry] = getLayerPaintSlots(layer);
-				const source = mode === 'solid' || mode === 'glitter' ? this._getSlotSource(layer, entry) : null;
+				const source = ['solid', 'glitter', 'pattern'].includes(mode) ? this._getSlotSource(layer, entry) : null;
 				if (source) {
 					ctx.save();
 					this._paintSourceInto(ctx, width, height, source, {
@@ -964,6 +986,14 @@ class SceneCompositor {
 		let fillsSurface = true;
 		if (source.mode === 'solid') {
 			ctx.fillStyle = source.color;
+		} else if (source.mode === 'pattern') {
+			const tile = getPatternTile(source.pattern, source.scale);
+			const origin = getPatternTextureOrigin(maskCanvas, source, layer);
+			const sample = sourceSelectionMap?.get(`__pattern_${sourceKey}`);
+			const offset = getPatternScrollOffset(source.pattern, tile.size, sample?.time || 0);
+			const pattern = ctx.createPattern(tile.canvas, 'repeat');
+			pattern.setTransform(new DOMMatrix().translateSelf(origin.x + offset.x, origin.y + offset.y));
+			ctx.fillStyle = pattern;
 		} else if (source.mode === 'gradient') {
 			ctx.fillStyle = createEffectCanvasGradient(ctx, source.gradient, {
 				x: 0, y: 0, width, height

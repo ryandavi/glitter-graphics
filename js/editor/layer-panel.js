@@ -48,7 +48,7 @@ setupLayerTypePickerListeners() {
 			templateEntries = (await TemplateLibrary.list('overlay')).map((template, index) => ({
 				kind: 'template',
 				id: template.id,
-				group: 'generate',
+				group: template.group,
 				order: 10 + index,
 				label: template.label,
 				icon: template.icon || 'image',

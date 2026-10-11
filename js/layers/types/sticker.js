@@ -29,7 +29,7 @@ registerLayerType(LayerType.STICKER, {
 			glitterDefault: 'shadowGlitterId',
 			framePadding: getShadowCanvasPadding,
 			panelPrefix: 'stickerShadow',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -54,7 +54,7 @@ registerLayerType(LayerType.STICKER, {
 			glitterDefault: 'borderGlitterId',
 			framePadding: (data) => Math.max(0, data?.widthPx || 0),
 			panelPrefix: 'stickerBorder',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: { widthPx: 'stickerOutlineWidth' }
 		},
 		{
@@ -68,7 +68,7 @@ registerLayerType(LayerType.STICKER, {
 			enabledPath: 'stickerData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'stickerBevel',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -81,7 +81,7 @@ registerLayerType(LayerType.STICKER, {
 			enabledPath: 'stickerData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'stickerBevelShade',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -94,7 +94,7 @@ registerLayerType(LayerType.STICKER, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'stickerSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	// Sparkles read the sticker's own image; the base URL, so a resolution

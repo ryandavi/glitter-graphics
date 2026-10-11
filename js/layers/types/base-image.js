@@ -7,10 +7,10 @@ registerLayerType(LayerType.BASE_IMAGE, {
 	// draw into the base canvas instead of the slot paint path; its color
 	// adjust is a canvas setting, not a layer effect.
 	paintSlots: [
-		{ key: 'background', role: 'fill', path: 'background', wholeLayer: true, sourceLabel: 'background', glitterDefault: 'fillGlitterId', countsAsEffect: false, modes: ['image', 'none', 'glitter', 'solid', 'gradient'] },
+		{ key: 'background', role: 'fill', path: 'background', wholeLayer: true, sourceLabel: 'background', glitterDefault: 'fillGlitterId', countsAsEffect: false, modes: ['image', 'none', ...STANDARD_PAINT_MODES] },
 		{
 			key: 'sparkles', role: 'sparkles', path: 'background.sparkles', draftPath: 'background.effectDrafts.sparkles',
-			glitterDefault: 'sparklesGlitterId', panelPrefix: 'canvasSparkles', modes: ['glitter', 'solid', 'gradient']
+			glitterDefault: 'sparklesGlitterId', panelPrefix: 'canvasSparkles', modes: STANDARD_PAINT_MODES
 		}
 	],
 	// Kira Kira on the photo reads the still base (the first frame of an

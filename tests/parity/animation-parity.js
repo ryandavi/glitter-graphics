@@ -2,6 +2,14 @@
 
 const assert = require('assert');
 
+const patternContext = require('../fixtures/pattern-source-context')();
+const patternOffset = require('vm').runInContext('getPatternScrollOffset', patternContext);
+for (const scroll of ['up', 'down', 'left', 'right', 'up-left', 'up-right', 'down-left', 'down-right']) {
+	assert.strictEqual(JSON.stringify(patternOffset({ scroll }, 32, 0)), JSON.stringify(patternOffset({ scroll }, 32, 2000)));
+	const halfway = patternOffset({ scroll }, 32, 1000);
+	assert(Number.isInteger(halfway.x) && Number.isInteger(halfway.y));
+}
+
 global.GlitterEasing = require('../../js/effects/easing.js');
 const Animation = require('../../js/effects/animation.js');
 const types = Animation.ANIMATION_TYPES;

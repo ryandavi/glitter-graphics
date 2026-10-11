@@ -7281,6 +7281,27 @@ body.tool-text .text-hover-baselines {
   transform: scale(-1, -1);
 }
 
+.pattern-preview {
+  height: var(--control-height);
+  border-radius: var(--radius-sm);
+}
+
+.pattern-scrolling {
+  animation: pattern-scroll var(--pattern-cycle) steps(var(--pattern-steps)) infinite;
+}
+
+.preview-motion-paused .pattern-scrolling {
+  animation: none;
+}
+
+@keyframes pattern-scroll {
+  from {
+    background-position: var(--pattern-origin-x) var(--pattern-origin-y);
+  }
+  to {
+    background-position: calc(var(--pattern-origin-x) + var(--pattern-distance-x)) calc(var(--pattern-origin-y) + var(--pattern-distance-y));
+  }
+}
 .canvas-size-controls {
   display: flex;
   flex-direction: column;

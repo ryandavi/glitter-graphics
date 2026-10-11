@@ -682,6 +682,11 @@ const CONFIG = deepFreeze({
 			// the sparkle grain stays consistent across layers.
 			scaleTextures: false
 		},
+		pattern: {
+			type: 'checker', color: '#ff4fa3', backgroundColor: '#ffffff',
+			transparentBackground: false, direction: 'diagonal-up', stagger: true,
+			scroll: 'none', maxTilePx: 1024, exportFps: 30
+		},
 		gradient: {
 			type: 'linear',
 			angle: 180,

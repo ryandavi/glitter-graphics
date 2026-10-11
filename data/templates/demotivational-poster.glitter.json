@@ -1,0 +1,439 @@
+{
+	"format": "glitter-project",
+	"version": 6,
+	"appVersion": "0.5.0",
+	"savedAt": "2026-10-11T21:08:27.382Z",
+	"name": "Demotivational Poster",
+	"canvas": {
+		"width": 750,
+		"height": 600
+	},
+	"baseImage": {
+		"mimeType": null,
+		"data": null,
+		"preset": {
+			"width": 750,
+			"height": 600,
+			"color": "#000000"
+		},
+		"hasBaseImage": false
+	},
+	"layers": [
+		{
+			"id": "layer-1791752907089-0vuwujb1a",
+			"type": "base-image",
+			"visible": true,
+			"locked": true,
+			"opacity": 100,
+			"background": {
+				"mode": "solid",
+				"color": "#000000",
+				"gradient": {
+					"type": "linear",
+					"angle": 180,
+					"interpolation": "linear",
+					"smoothSubdivisions": 8,
+					"stops": [
+						{
+							"offset": 0,
+							"color": "#ff4fa3",
+							"alpha": 1
+						},
+						{
+							"offset": 1,
+							"color": "#6554ff",
+							"alpha": 1
+						}
+					]
+				},
+				"glitterId": 101,
+				"scale": 100,
+				"colorAdjust": {
+					"hue": 0,
+					"saturation": 100,
+					"brightness": 100
+				},
+				"animate": true,
+				"textureAnchor": "artwork",
+				"textureOffsetX": 0,
+				"textureOffsetY": 0,
+				"sparkles": null
+			}
+		},
+		{
+			"id": "layer-1791752907225-z6xilnyh4",
+			"type": "shape",
+			"name": "Photo",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": {
+				"position": {
+					"x": 375,
+					"y": 230
+				},
+				"anchor": {
+					"x": 0.5,
+					"y": 0.5
+				},
+				"rotation": 0,
+				"scale": {
+					"x": 100,
+					"y": 100
+				},
+				"proportionalScale": true,
+				"flipX": false,
+				"flipY": false
+			},
+			"blendMode": "normal",
+			"shapeData": {
+				"shapeId": "square",
+				"width": 640,
+				"height": 380,
+				"fill": {
+					"mode": "solid",
+					"color": "#222222",
+					"opacity": 100,
+					"imageRef": null,
+					"fit": "cover",
+					"imageScalePercent": 100,
+					"offsetXPercent": 50,
+					"offsetYPercent": 50,
+					"tile": false,
+					"imageRendering": "smooth",
+					"textureAnchor": "artwork",
+					"textureOffsetX": 0,
+					"textureOffsetY": 0,
+					"glitterId": 67,
+					"scale": 100,
+					"colorAdjust": null
+				},
+				"border": {
+					"widthPx": 2,
+					"style": "solid",
+					"dotSpacingPx": 10,
+					"placement": "outside",
+					"edgeStyle": "round",
+					"drawOrder": "behind",
+					"fillEnclosed": false,
+					"mode": "solid",
+					"glitterId": 68,
+					"color": "#ffffff",
+					"scale": 100,
+					"opacity": 100,
+					"textureAnchor": "artwork",
+					"textureOffsetX": 0,
+					"textureOffsetY": 0,
+					"colorAdjust": null
+				},
+				"shadow": null,
+				"bevel": {
+					"enabled": false,
+					"highlight": {
+						"mode": "solid",
+						"glitterId": null,
+						"color": "#ffffff",
+						"scale": 100,
+						"opacity": 100,
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"colorAdjust": null,
+						"size": 6,
+						"depth": 60,
+						"angle": 135,
+						"altitude": 35,
+						"soften": 1,
+						"profile": "smooth"
+					},
+					"shade": {
+						"mode": "solid",
+						"glitterId": null,
+						"color": "#000000",
+						"scale": 100,
+						"opacity": 100,
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"colorAdjust": null
+					}
+				},
+				"cornerRadiusPx": 0,
+				"sparkles": null,
+				"renderWidth": 660,
+				"renderHeight": 400
+			}
+		},
+		{
+			"id": "layer-1791752907319-arhhx5dga",
+			"type": "text-glitter",
+			"name": "YOUR TITLE",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": {
+				"position": {
+					"x": 375,
+					"y": 475
+				},
+				"anchor": {
+					"x": 0.5,
+					"y": 0.5
+				},
+				"rotation": 0,
+				"scale": {
+					"x": 100,
+					"y": 100
+				},
+				"proportionalScale": true,
+				"flipX": false,
+				"flipY": false
+			},
+			"blendMode": "normal",
+			"textData": {
+				"text": "YOUR TITLE",
+				"fontId": "times-new-roman",
+				"fontWeight": 400,
+				"fontStyle": "normal",
+				"textCase": "none",
+				"orientation": "horizontal",
+				"fontSize": 42,
+				"letterSpacing": 6,
+				"lineHeight": 1,
+				"align": "center",
+				"verticalAlign": "top",
+				"boxMode": "autoHeight",
+				"boxWidth": 700,
+				"colorEmoji": true,
+				"decoration": {
+					"underline": false,
+					"strikethrough": false
+				},
+				"width": 716,
+				"height": 53,
+				"border": null,
+				"shadow": null,
+				"bevel": {
+					"enabled": false,
+					"highlight": {
+						"mode": "solid",
+						"glitterId": null,
+						"color": "#ffffff",
+						"scale": 100,
+						"opacity": 100,
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"colorAdjust": null,
+						"size": 6,
+						"depth": 60,
+						"angle": 135,
+						"altitude": 35,
+						"soften": 1,
+						"profile": "smooth"
+					},
+					"shade": {
+						"mode": "solid",
+						"glitterId": null,
+						"color": "#000000",
+						"scale": 100,
+						"opacity": 100,
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"colorAdjust": null
+					}
+				},
+				"sparkles": null,
+				"fill": {
+					"mode": "solid",
+					"color": "#ffffff",
+					"opacity": 100,
+					"imageRef": null,
+					"fit": "cover",
+					"imageScalePercent": 100,
+					"offsetXPercent": 50,
+					"offsetYPercent": 50,
+					"tile": false,
+					"imageRendering": "smooth",
+					"textureAnchor": "artwork",
+					"textureOffsetX": 0,
+					"textureOffsetY": 0,
+					"glitterId": 17,
+					"scale": 100,
+					"colorAdjust": null
+				},
+				"textBackground": {
+					"enabled": false,
+					"mode": "lines",
+					"lineConnection": "merge-adjacent",
+					"horizontalPadding": 20,
+					"verticalPadding": 10,
+					"cornerRadius": 16,
+					"mergeDistance": 20,
+					"lineSpacingSensitivity": 60,
+					"fill": {
+						"mode": "glitter",
+						"color": "#ff66cc",
+						"opacity": 100,
+						"imageRef": null,
+						"fit": "cover",
+						"imageScalePercent": 100,
+						"offsetXPercent": 50,
+						"offsetYPercent": 50,
+						"tile": false,
+						"imageRendering": "smooth",
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"glitterId": 96,
+						"scale": 100,
+						"colorAdjust": null
+					}
+				},
+				"warp": {
+					"type": "none",
+					"bend": 50
+				}
+			}
+		},
+		{
+			"id": "layer-1791752907348-y501fvsqu",
+			"type": "text-glitter",
+			"name": "Your subtitle goes...",
+			"visible": true,
+			"locked": false,
+			"opacity": 100,
+			"transform": {
+				"position": {
+					"x": 375,
+					"y": 535
+				},
+				"anchor": {
+					"x": 0.5,
+					"y": 0.5
+				},
+				"rotation": 0,
+				"scale": {
+					"x": 100,
+					"y": 100
+				},
+				"proportionalScale": true,
+				"flipX": false,
+				"flipY": false
+			},
+			"blendMode": "normal",
+			"textData": {
+				"text": "Your subtitle goes here",
+				"fontId": "times-new-roman",
+				"fontWeight": 400,
+				"fontStyle": "normal",
+				"textCase": "none",
+				"orientation": "horizontal",
+				"fontSize": 20,
+				"letterSpacing": 0,
+				"lineHeight": 1,
+				"align": "center",
+				"verticalAlign": "top",
+				"boxMode": "autoHeight",
+				"boxWidth": 700,
+				"colorEmoji": true,
+				"decoration": {
+					"underline": false,
+					"strikethrough": false
+				},
+				"width": 716,
+				"height": 34,
+				"border": null,
+				"shadow": null,
+				"bevel": {
+					"enabled": false,
+					"highlight": {
+						"mode": "solid",
+						"glitterId": null,
+						"color": "#ffffff",
+						"scale": 100,
+						"opacity": 100,
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"colorAdjust": null,
+						"size": 6,
+						"depth": 60,
+						"angle": 135,
+						"altitude": 35,
+						"soften": 1,
+						"profile": "smooth"
+					},
+					"shade": {
+						"mode": "solid",
+						"glitterId": null,
+						"color": "#000000",
+						"scale": 100,
+						"opacity": 100,
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"colorAdjust": null
+					}
+				},
+				"sparkles": null,
+				"fill": {
+					"mode": "solid",
+					"color": "#ffffff",
+					"opacity": 100,
+					"imageRef": null,
+					"fit": "cover",
+					"imageScalePercent": 100,
+					"offsetXPercent": 50,
+					"offsetYPercent": 50,
+					"tile": false,
+					"imageRendering": "smooth",
+					"textureAnchor": "artwork",
+					"textureOffsetX": 0,
+					"textureOffsetY": 0,
+					"glitterId": 17,
+					"scale": 100,
+					"colorAdjust": null
+				},
+				"textBackground": {
+					"enabled": false,
+					"mode": "lines",
+					"lineConnection": "merge-adjacent",
+					"horizontalPadding": 20,
+					"verticalPadding": 10,
+					"cornerRadius": 16,
+					"mergeDistance": 20,
+					"lineSpacingSensitivity": 60,
+					"fill": {
+						"mode": "glitter",
+						"color": "#ff66cc",
+						"opacity": 100,
+						"imageRef": null,
+						"fit": "cover",
+						"imageScalePercent": 100,
+						"offsetXPercent": 50,
+						"offsetYPercent": 50,
+						"tile": false,
+						"imageRendering": "smooth",
+						"textureAnchor": "artwork",
+						"textureOffsetX": 0,
+						"textureOffsetY": 0,
+						"glitterId": 96,
+						"scale": 100,
+						"colorAdjust": null
+					}
+				},
+				"warp": {
+					"type": "none",
+					"bend": 50
+				}
+			}
+		}
+	],
+	"activeLayerId": "layer-1791752907348-y501fvsqu",
+	"masks": {},
+	"shapeFillImages": {},
+	"customStickers": {},
+	"customGlitter": {}
+}

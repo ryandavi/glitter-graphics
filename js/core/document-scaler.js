@@ -80,7 +80,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 	}
 	config?.scaleDocumentGeometry?.(layer, scaleX, scaleY, uniformScale);
 	const layerFactors = factorsFor(scalesWithTransform);
-	(config?.fields || []).forEach((binding) => scaleFieldBinding(layer, binding, layerFactors[binding.documentScale]));
+	(config?.fields || []).forEach((binding) => scaleFieldBinding(layer, binding, binding.documentScaleAxis === 'x' ? scaleX : binding.documentScaleAxis === 'y' ? scaleY : layerFactors[binding.documentScale]));
 	getLayerPaintSlots(layer, { includeDrafts: true }).forEach(({ definition, data }) => {
 		const factors = factorsFor(slotFieldsFollowTransform(layer, definition));
 		definition.fields.forEach((binding) => scaleFieldBinding(data, binding, factors[binding.documentScale]));

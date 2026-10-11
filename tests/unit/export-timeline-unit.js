@@ -19,6 +19,16 @@ const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 
 vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit };`, context);
 const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit } = context.timelineExports;
 
+const patternContext = require('../fixtures/pattern-source-context')();
+const samplePattern = vm.runInContext('getPatternScrollOffset', patternContext);
+const scrollingPattern = new ProceduralAnimationSource({
+	key: 'pattern-scroll', naturalPeriod: 2000, preferredSamplingRate: 30,
+	periodRange: { min: 100, max: 20000 }, setPeriod: () => {},
+	sampler: (time, period = 2000) => samplePattern({ scroll: 'down-right' }, 31, time, period)
+});
+assert(JSON.stringify(scrollingPattern.sampler(0)) === JSON.stringify(scrollingPattern.sampler(2000)), 'Pattern scroll must close at its declared period');
+assert(scrollingPattern.sampler(1000).x === 15, 'Pattern timeline must retain whole-pixel scroll steps');
+
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
 }

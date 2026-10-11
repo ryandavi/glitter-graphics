@@ -30,7 +30,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			sourceLabel: 'backgroundFill',
 			glitterDefault: 'backgroundGlitterId',
 			panelPrefix: 'textBackground',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -54,7 +54,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			draftPath: 'textData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'textShadow',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: {
 				castLength: false,
 				castLean: false,
@@ -80,7 +80,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			draftPath: 'textData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'textBorder',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: { widthPx: 'textBorderWidth' }
 		},
 		{
@@ -92,7 +92,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			path: 'textData.fill',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'textFill',
-			modes: ['none', 'glitter', 'solid', 'gradient']
+			modes: ['none', ...STANDARD_PAINT_MODES]
 		},
 		{
 			defaults: () => {
@@ -105,7 +105,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			enabledPath: 'textData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'textBevel',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -118,7 +118,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			enabledPath: 'textData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'textBevelShade',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -131,7 +131,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'textSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	sparkleHost: (editor, layer) => editor.textGlitterManager?.getSparkleHost(layer) || null,
@@ -153,7 +153,7 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 		},
 		{ path: 'textData.lineHeight', field: 'textLineHeight', id: 'textLineHeight', factor: 100, geometry: true },
 		{ path: 'textData.warp.bend', field: 'textWarpBend', id: 'textWarpBend', geometry: true },
-		{ path: 'textData.boxWidth', documentScale: 'geometry', minimum: 1 },
+		{ path: 'textData.boxWidth', documentScale: 'geometry', documentScaleAxis: 'x', minimum: 1 },
 		{ path: 'textData.boxHeight', documentScale: 'geometry', minimum: 1 },
 		{
 			path: 'textData.textBackground.horizontalPadding',

@@ -28,7 +28,45 @@
 			"label": "Meme Captions",
 			"description": "Add large editable Impact captions to this image",
 			"src": "data/templates/impact-meme.glitter.json",
-			"icon": "text"
+			"icon": "text",
+			"group": "decorate"
+		},
+		{
+			"id": "caption-subtitle",
+			"mode": "overlay",
+			"label": "Subtitle",
+			"description": "Add an editable yellow subtitle at the bottom",
+			"src": "data/templates/caption-subtitle.glitter.json",
+			"icon": "text",
+			"group": "decorate"
+		},
+		{
+			"id": "caption-bar",
+			"mode": "overlay",
+			"label": "Caption Bar",
+			"description": "Add editable white text on a translucent black bar",
+			"src": "data/templates/caption-bar.glitter.json",
+			"icon": "text",
+			"group": "decorate"
+		},
+		{
+			"id": "caption-date-stamp",
+			"mode": "overlay",
+			"label": "Date Stamp",
+			"description": "Add an editable orange camera date stamp",
+			"src": "data/templates/caption-date-stamp.glitter.json",
+			"icon": "text",
+			"group": "decorate"
+		},
+		{
+			"id": "demotivational-poster",
+			"mode": "project",
+			"label": "Demotivational Poster",
+			"description": "Set the Photo shape's fill to Image, then edit the title and subtitle",
+			"src": "data/templates/demotivational-poster.glitter.json",
+			"icon": "text",
+			"aspectRatio": "5 / 4",
+			"preview": "linear-gradient(#111111, #000000)"
 		}
 	]
 }

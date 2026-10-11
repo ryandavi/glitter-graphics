@@ -48,6 +48,7 @@ async function main() {
 			const makeFill = (mode) => {
 				if (mode === 'glitter') return { mode, glitterId };
 				if (mode === 'image') return { mode, imageRef: 'parity-image', fit: 'cover', offsetXPercent: 25, offsetYPercent: 75, opacity: 83 };
+				if (mode === 'pattern') return { mode, pattern: normalizeEffectPattern({ type: 'stripes', thickness: 25 }), scale: 100, opacity: 83 };
 				if (mode === 'gradient') {
 					return {
 						mode,
@@ -145,8 +146,9 @@ async function main() {
 			return { textCases, shapeCases };
 		}, PREVIEW_EXPORT_SWEEP);
 
-		assert(result.textCases === 48, `Expected 48 text combinations, got ${result.textCases}`);
-		assert(result.shapeCases === 48, `Expected 48 shape combinations, got ${result.shapeCases}`);
+		const expectedCases = PREVIEW_EXPORT_SWEEP.placements.length * PREVIEW_EXPORT_SWEEP.edgeStyles.length * PREVIEW_EXPORT_SWEEP.drawOrders.length * PREVIEW_EXPORT_SWEEP.fillModes.length;
+		assert(result.textCases === expectedCases, `Expected ${expectedCases} text combinations, got ${result.textCases}`);
+		assert(result.shapeCases === expectedCases, `Expected ${expectedCases} shape combinations, got ${result.shapeCases}`);
 		process.stdout.write(`Combinatorial preview/export parity passed (${result.textCases + result.shapeCases} cases)\n`);
 	} finally {
 		await browser.close();

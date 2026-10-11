@@ -290,7 +290,7 @@ class HtmlSceneExporter {
 			mode = baseLayer?.visible === false ? 'transparent' : data.mode;
 			if (mode === 'image' || mode === 'none') mode = 'transparent';
 		}
-		if (!['transparent', 'solid', 'gradient', 'glitter'].includes(mode)) mode = 'transparent';
+		if (!['transparent', 'solid', 'gradient', 'glitter', 'pattern'].includes(mode)) mode = 'transparent';
 
 		const background = {
 			mode,
@@ -301,6 +301,13 @@ class HtmlSceneExporter {
 			background.color = options.background === 'solid'
 				? this.normalizeColor(options.customBackground)
 				: this.normalizeColor(data.color);
+		} else if (mode === 'pattern') {
+			const tile = getPatternTile(data.pattern, data.scale);
+			background.image = this.toCssUrl(tile.url);
+			background.size = tile.size;
+			background.repeat = 'repeat';
+			background.offsetX = Number(data.textureOffsetX) || 0;
+			background.offsetY = Number(data.textureOffsetY) || 0;
 		} else if (mode === 'gradient') {
 			background.image = effectGradientToCss(data.gradient);
 		} else if (mode === 'glitter') {

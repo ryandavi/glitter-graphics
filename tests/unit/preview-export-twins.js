@@ -6,6 +6,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const sources = {
+	patternSource: fs.readFileSync(path.join(root, 'js/paint/pattern-source.js'), 'utf8'),
 	FilterLayerManager: fs.readFileSync(path.join(root, 'js/layers/FilterLayerManager.js'), 'utf8'),
 	transformMath: fs.readFileSync(path.join(root, 'js/transforms/transform-math.js'), 'utf8'),
 	TextGlitterManager: fs.readFileSync(path.join(root, 'js/layers/TextGlitterManager.js'), 'utf8'),
@@ -30,7 +31,7 @@ vm.runInNewContext(`${paritySource}\nglobalThis.twins = PREVIEW_EXPORT_TWINS;`, 
 function memberBody(className, methodName) {
 	const source = sources[className];
 	if (!source) return null;
-	const [starts, end] = className === 'transformMath' || className === 'paintSlots' || className === 'sparkles' || className === 'animationPreview'
+	const [starts, end] = className === 'patternSource' || className === 'transformMath' || className === 'paintSlots' || className === 'sparkles' || className === 'animationPreview'
 		? [[`\nfunction ${methodName}(`], '\n}\n']
 		: [[`\n\t${methodName}(`, `\n\tasync ${methodName}(`], '\n\t}\n'];
 	const index = starts.map((start) => source.indexOf(start)).find((found) => found !== -1) ?? -1;

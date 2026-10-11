@@ -21,7 +21,7 @@ registerLayerType(LayerType.FRAME, {
 			glitterDefault: 'fillGlitterId',
 			sourceLabel: null,
 			panelPrefix: 'frameFill',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -34,7 +34,7 @@ registerLayerType(LayerType.FRAME, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'frameSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	sparkleHost: (editor, layer) => editor.frameLayerManager?.getSparkleHost(layer) || null,

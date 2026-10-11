@@ -4,6 +4,9 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/pattern-source-unit.js', tags: ['effects', 'export'] },
+	{ file: 'unit/pattern-presets.js', tags: ['unit', 'effects'] },
+	{ file: 'parity/pattern-paint-parity.js', tags: ['effects', 'export'] },
 	{ file: 'ui/history-contract-verify.js', tags: ['layers', 'document', 'panels'] },
 	{ file: 'unit/svg-geometry-unit.js', tags: ['unit', 'document', 'export'] },
 	{ file: 'ui/svg-verify.js', tags: ['document', 'export', 'panels'] },

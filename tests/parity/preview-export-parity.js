@@ -4,6 +4,8 @@
 // Members are Class.method, or paintSlots.functionName / sparkles.functionName
 // for the top-level functions of js/paint/paint-slots.js / js/paint/sparkles.js.
 const PREVIEW_EXPORT_TWINS = [
+	{ feature: 'pattern pixels', shared: 'getPatternTile', preview: [['paintSlots.applyPaintSourceToElement', 'patternSource.applyPatternTileStyle']], export: ['SceneCompositor._paintSourceInto'] },
+	{ feature: 'pattern registration', shared: 'getPatternTextureOrigin', preview: ['paintSlots.applyPaintSourceToElement'], export: ['SceneCompositor._paintSourceInto'] },
 	{
 		feature: 'scanline crawl timing', shared: 'GlitterFilter.animation',
 		preview: ['FilterLayerManager.renderLayer'], export: ['SceneCompositor._createFilterTimelineSources']
@@ -110,5 +112,5 @@ const PREVIEW_EXPORT_SWEEP = Object.freeze({
 	placements: Object.freeze(['outside', 'center', 'inside']),
 	edgeStyles: Object.freeze(['round', 'hard']),
 	drawOrders: Object.freeze(['behind', 'front']),
-	fillModes: Object.freeze(['solid', 'gradient', 'glitter', 'image'])
+	fillModes: Object.freeze(['solid', 'gradient', 'pattern', 'glitter', 'image'])
 });

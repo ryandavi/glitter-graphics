@@ -22,6 +22,10 @@ function resolveEffectPaintSource(effectData, options = {}) {
 		? effectData.mode === 'glitter'
 		: Boolean(glitterId);
 
+	if (effectData.mode === 'pattern') {
+		return { mode: 'pattern', pattern: normalizeEffectPattern(effectData.pattern), scale, opacity: opacity / 100, textureAnchor, textureOffsetX, textureOffsetY };
+	}
+
 	if (effectData.mode === 'gradient') {
 		return {
 			mode: 'gradient',

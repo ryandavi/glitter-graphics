@@ -71,8 +71,27 @@ defineOptions('paintMode', [
 	{ value: 'none', label: 'None' },
 	{ value: 'solid', label: 'Color' },
 	{ value: 'gradient', label: 'Gradient' },
+	{ value: 'pattern', label: 'Pattern' },
 	{ value: 'glitter', label: 'Glitter' },
 	{ value: 'image', label: 'Image' }
+]);
+const STANDARD_PAINT_MODES = Object.freeze(['glitter', 'solid', 'gradient', 'pattern']);
+defineOptions('patternType', [
+	{ value: 'checker', label: 'Checker' }, { value: 'gingham', label: 'Gingham' },
+	{ value: 'grid', label: 'Grid' }, { value: 'brick', label: 'Brick' },
+	{ value: 'stripes', label: 'Stripes' }, { value: 'zigzag', label: 'Zigzag' },
+	{ value: 'motif', label: 'Motif' }
+]);
+defineOptions('patternDirection', [
+	{ value: 'horizontal', label: 'Horizontal' }, { value: 'vertical', label: 'Vertical' },
+	{ value: 'diagonal-up', label: 'Diagonal up' }, { value: 'diagonal-down', label: 'Diagonal down' }
+]);
+defineOptions('patternScroll', [
+	{ value: 'none', label: 'Off', x: 0, y: 0 },
+	{ value: 'up', label: 'Up', x: 0, y: -1 }, { value: 'down', label: 'Down', x: 0, y: 1 },
+	{ value: 'left', label: 'Left', x: -1, y: 0 }, { value: 'right', label: 'Right', x: 1, y: 0 },
+	{ value: 'up-left', label: 'Up left', x: -1, y: -1 }, { value: 'up-right', label: 'Up right', x: 1, y: -1 },
+	{ value: 'down-left', label: 'Down left', x: -1, y: 1 }, { value: 'down-right', label: 'Down right', x: 1, y: 1 }
 ]);
 defineOptions('paletteStyle', [
 	{ value: 'vivid', label: 'Vivid Web' },

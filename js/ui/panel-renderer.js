@@ -68,6 +68,7 @@ const PANEL_ROLES = Object.freeze({
 		sourceNone: 'None',
 		sourceGlitter: 'Glitter',
 		sourceSolid: 'Solid',
+		sourcePattern: 'Pattern',
 		sourceGradient: 'Gradient'
 	})
 });
@@ -901,6 +902,53 @@ function buildPaintOpacityRow(slot) {
 // set joins the section's one Advanced. installEffectGradientEditor binds
 // them by `data-gradient-editor`. `owner` names a second paint source, as in
 // buildGlitterAdvancedSets.
+function buildPatternSourceSets(slot, options = {}) {
+	const prefix = slot.idPrefix;
+	const defaults = normalizeEffectPattern(null);
+	const select = (key, label, list) => ({ kind: 'select', id: `${prefix}Pattern${panelCap(key)}`, label, revert: true,
+		options: getOptions(list).map((option) => ({ ...option, selected: option.value === defaults[key] })) });
+	const field = (key, label) => ({ kind: 'field', type: 'color', id: `${prefix}Pattern${panelCap(key)}`, label, value: defaults[key], revert: true });
+	const toggle = (key, label) => ({ kind: 'toggle', id: `${prefix}Pattern${panelCap(key)}`, label, checked: defaults[key], revert: true });
+	const presets = buildPanelSet({ label: 'Presets', collapse: 'open', rows: [
+		{ kind: 'select', label: 'Category', options: [] }, { kind: 'presetGrid', label: 'Pattern presets', classes: 'property-inset' }
+	] }, { prefix });
+	presets.querySelector('.preset-grid').dataset.patternPresets = '';
+	const colors = buildPanelSet({ label: 'Colors', rows: [field('color', 'Color'), field('backgroundColor', 'Background'), toggle('transparentBackground', 'Transparent background')] });
+	const preview = panelDiv('pattern-preview property-inset');
+	preview.setAttribute('aria-hidden', 'true');
+	colors.appendChild(preview);
+	const types = buildPanelSet({ label: 'Type', rows: [select('type', 'Type', 'patternType')] });
+	const numeric = { thickness: 'patternThickness', shapeSize: 'patternShapeSize', rotation: 'patternRotation' };
+	Object.entries(numeric).forEach(([key, slider]) => {
+		const row = buildSliderRow({ id: `${prefix}Pattern${panelCap(key)}`, slider });
+		row.dataset.patternField = key;
+		types.appendChild(row);
+	});
+	const direction = buildPanelItem(select('direction', 'Direction', 'patternDirection'));
+	direction.dataset.patternField = 'direction';
+	types.appendChild(direction);
+	const stagger = buildPanelItem(toggle('stagger', 'Stagger'));
+	stagger.dataset.patternField = 'stagger';
+	types.appendChild(stagger);
+	const shapes = buildPanelItem({ kind: 'presetGrid', label: 'Motif shapes', classes: 'property-inset' });
+	shapes.dataset.patternField = 'shapeId';
+	shapes.dataset.patternShapes = '';
+	types.appendChild(shapes);
+	const scroll = buildPanelSet({ label: 'Scroll', rows: [select('scroll', 'Scroll', 'patternScroll'), { kind: 'slider', id: `${prefix}PatternScrollCycle`, slider: 'patternScrollCycle' }] });
+	scroll.querySelector('.property-row:last-child').dataset.patternField = 'scrollCycleMs';
+	[...colors.querySelectorAll('input'), ...types.querySelectorAll('select, input[type="checkbox"]'), ...scroll.querySelectorAll('select')].forEach((input) => {
+		const key = input.id.slice(`${prefix}Pattern`.length);
+		input.dataset.patternKey = key.charAt(0).toLowerCase() + key.slice(1);
+	});
+	[presets, colors, types, scroll].forEach((set) => {
+		set.dataset.paintSourceMode = 'pattern';
+		set.dataset.patternEditor = prefix;
+		set.hidden = true;
+		if (options.owner) set.dataset.paintSlotOwner = options.owner;
+	});
+	return { body: [presets, colors, types], advanced: scroll };
+}
+
 function buildGradientSourceSets(slot, options = {}) {
 	const fragment = document.getElementById('tpl-gradient-editor').content.cloneNode(true);
 	const presets = buildPanelSet({ label: 'Presets', collapse: 'closed', rows: [
@@ -956,6 +1004,8 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 	if (!slot.texturePosition) return [colorSet];
 
 	const textureSet = buildSet('Texture', 'advanced-texture-position-group');
+	textureSet.classList.remove('glitter-source-glitter');
+	textureSet.dataset.paintSourceMode = 'glitter pattern';
 	textureSet.appendChild(buildSliderRow({
 		id: ids.scale || `${prefix}Scale`,
 		rowId: ids.scaleRow,
@@ -1130,7 +1180,10 @@ function buildPaintSlotSection(spec, schema) {
 		if (!paint.modes.includes('gradient')) return [];
 		const gradient = buildGradientSourceSets(paint, options);
 		gradients.push(gradient.advanced);
-		return gradient.body;
+		if (!paint.modes.includes('pattern')) return gradient.body;
+		const pattern = buildPatternSourceSets(paint, options);
+		gradients.push(pattern.advanced);
+		return [...gradient.body, ...pattern.body];
 	};
 	const ownGradient = addGradient(slot);
 	if (!slot.noSlotOpacity) body.append(...ownGradient, wrapPropertySet([buildPaintOpacityRow(slot)], 'paint-slot-primary-row'));
@@ -1680,6 +1733,9 @@ function readModuleSummary(card) {
 	} else if (mode === 'gradient') {
 		const type = card.querySelector('.effect-gradient-editor [data-type].active')?.dataset.type;
 		parts.push(type === 'radial' ? 'Radial gradient' : 'Linear gradient');
+	} else if (mode === 'pattern') {
+		const type = card.querySelector('[data-pattern-editor]')?.dataset.patternType;
+		parts.push(PATTERN_TYPES[type]?.label || 'Pattern');
 	}
 	// One value after the identifier: the section's defining one where it
 	// names one (`summaryValue`), otherwise an opacity that is not full.
@@ -1715,12 +1771,14 @@ function readSectionState(card) {
 	// The base-image chip holds an <img>, not an inline background (unlike a
 	// glitter chip) — mirror its src so Image mode still gets a real swatch.
 	const chipImg = chip?.querySelector(':scope > img')?.src;
-	const solid = card.querySelector('.property-color-row:not([hidden]) input[type="color"]');
+	const solid = mode === 'solid' ? card.querySelector('.glitter-source-solid input[type="color"]') : null;
 	// Only mirror the gradient editor's preview bar while gradient is the
 	// ACTIVE mode — the editor stays in the DOM (hidden) in every other mode
 	// with its last gradient still inline, which would otherwise leak in.
 	const gradient = mode === 'gradient' ? card.querySelector('.gradient-preview-bar') : null;
-	state.swatch = solid?.value
+	const pattern = mode === 'pattern' ? card.querySelector('.pattern-preview') : null;
+	state.swatch = (pattern ? `0 0 / 100% 100% repeat ${pattern.style.backgroundImage}` : '')
+		|| solid?.value
 		|| chip?.style.background
 		|| chip?.style.backgroundImage
 		|| (chipImg ? `center / cover no-repeat url("${chipImg}")` : '')

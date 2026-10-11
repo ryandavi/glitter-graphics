@@ -113,7 +113,7 @@ class BaseBackgroundManager {
 		const glitter = layer?.visible && layer.background?.mode === 'glitter'
 			? this.editor.glitterLibrary.getItemById(layer.background.glitterId)
 			: null;
-		if (!glitter) {
+		if (!glitter && !(layer?.visible && layer.background?.mode === 'pattern')) {
 			// A missing glitter keeps the last element, as the fill layers do.
 			if (!layer?.visible || layer.background?.mode !== 'glitter') this.clearBackgroundElement();
 			return;
@@ -128,7 +128,7 @@ class BaseBackgroundManager {
 		}
 		wrapper.dataset.layerId = layer.id;
 		const inner = wrapper.firstElementChild;
-		inner.className = 'glitter-background visible';
+		inner.classList.add('glitter-background', 'visible');
 		const [entry] = getLayerPaintSlots(layer);
 		applyPaintSourceToElement(inner, resolvePaintSlotPreviewSource(this.editor, layer, entry), { glitterLibrary: this.editor.glitterLibrary });
 		inner.style.maskImage = 'none';
@@ -196,7 +196,7 @@ class BaseBackgroundManager {
 			type: LayerType.BASE_IMAGE,
 			editor: this.editor,
 			getLayer: () => this.getActiveLayer(),
-			ensureSlot: (layer, key) => (layer.background[key] ||= buildDefaultSparkles()),
+			ensureSlot: (layer, key) => key === 'background' ? layer.background : (layer.background[key] ||= buildDefaultSparkles()),
 			getSlotDefaults: () => buildDefaultSparkles(),
 			apply: (layer, mutate, change) => {
 				mutate();
@@ -204,10 +204,10 @@ class BaseBackgroundManager {
 				if (change.live) return;
 				this.loadLayerSettings(layer);
 				this.editor.layerManager.renderLayersList();
-				this.editor.saveState('Edit canvas sparkles');
+				this.editor.saveState('Edit canvas paint');
 			},
 			render: () => this.renderContent(),
-			commit: () => this.editor.saveState('Edit canvas sparkles'),
+			commit: () => this.editor.saveState('Edit canvas paint'),
 			armPicker: (key) => this.armPicker(key),
 			getArmedSlot: () => (this.hasActivePickerSession() ? this.pickerSession.slot : null)
 		};
@@ -304,6 +304,8 @@ class BaseBackgroundManager {
 		[this.ui.glitterChip, this.ui.glitterChange].forEach((button) => button?.addEventListener('click', () => this.armPicker()));
 		this.fieldHost = this.createFieldHost();
 		bindFieldControls(this.fieldHost);
+		bindPaintSlotFields(this.fieldHost, getPaintSlotDefinition(LayerType.BASE_IMAGE, 'background'), 'baseBackground', (binding) => binding.keys[0] === 'pattern');
+		installEffectPatternEditor({ prefix: 'baseBackground', getData: () => this.getActiveLayer()?.background || null, onUpdate: (commit) => this.applyChange(commit) });
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
 		this.ui.animate?.addEventListener('change', () => {
 			const layer = this.getActiveLayer();
@@ -366,6 +368,7 @@ class BaseBackgroundManager {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
 		layer.background.mode = mode;
+		if (mode === 'pattern') layer.background.pattern = normalizeEffectPattern(layer.background.pattern);
 		syncPaintSlotSourceUI(document.getElementById(`baseBackground${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
 		this.applyChange(true);
 	}
@@ -434,6 +437,11 @@ class BaseBackgroundManager {
 		const adjust = normalizeColorAdjust(layer.background.colorAdjust);
 		['hue', 'saturation', 'brightness'].forEach(key => syncSlider(document.getElementById(`baseBackground${fieldControlCap(key)}`), adjust[key]));
 		syncSlotTextureCoordinateControls('baseBackground', layer.background);
+		syncEffectPatternEditor('baseBackground', layer.background);
+		getPaintSlotDefinition(LayerType.BASE_IMAGE, 'background').fields.filter((binding) => binding.keys[0] === 'pattern').forEach((binding) => {
+			const control = document.getElementById(`baseBackground${binding.suffix}`);
+			if (control) syncFieldControl(control, readFieldControlValue(layer.background, binding));
+		});
 		const hasImage = this.hasBaseImage();
 		if (this.ui.imageName) this.ui.imageName.textContent = hasImage
 			? (this.editor.baseImageSource?.file?.name || 'Base Image')

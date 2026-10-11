@@ -29,7 +29,7 @@ registerLayerType(LayerType.SHAPE, {
 			draftPath: 'shapeData.effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'shapeShadow',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -50,7 +50,7 @@ registerLayerType(LayerType.SHAPE, {
 			draftPath: 'shapeData.effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'shapeBorder',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: { widthPx: 'borderWidth', dotSpacingPx: 'borderDotSpacing' }
 		},
 		{
@@ -62,7 +62,7 @@ registerLayerType(LayerType.SHAPE, {
 			path: 'shapeData.fill',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'shapeFill',
-			modes: ['none', 'image', 'glitter', 'solid', 'gradient'],
+			modes: ['none', 'image', ...STANDARD_PAINT_MODES],
 			fields: {
 				imageScalePercent: 'shapeImageScale',
 				offsetXPercent: 'shapeImageOffsetX',
@@ -80,7 +80,7 @@ registerLayerType(LayerType.SHAPE, {
 			enabledPath: 'shapeData.bevel.enabled',
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'shapeBevel',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -93,7 +93,7 @@ registerLayerType(LayerType.SHAPE, {
 			enabledPath: 'shapeData.bevel.enabled',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'shapeBevelShade',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -106,7 +106,7 @@ registerLayerType(LayerType.SHAPE, {
 			glitterDefault: 'sparklesGlitterId',
 			framePadding: (data) => getSparkleFramePadding(data),
 			panelPrefix: 'shapeSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	sparkleHost: (editor, layer) => editor.shapeGlitterManager?.getSparkleHost(layer) || null,

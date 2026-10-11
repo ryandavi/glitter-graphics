@@ -71,12 +71,52 @@ async function main() {
 			'Show All Controls did not reveal disclosures');
 		assert(overlay.errors.length === 0, `Browser errors: ${overlay.errors.join('; ')}`);
 		await overlay.context.close();
+		for (const [id, width, height] of [['caption-subtitle', 800, 400], ['caption-subtitle', 400, 800], ['caption-bar', 800, 400], ['caption-bar', 400, 800], ['caption-date-stamp', 500, 500]]) {
+			const caption = await openEditor(browser);
+			await caption.page.evaluate(([w, h]) => editor.loadBlankImage(w, h, '#222222'), [width, height]);
+			await caption.page.waitForFunction(() => editor.originalImage);
+			await caption.page.click('#addLayerBtn');
+			await caption.page.waitForSelector(`[data-add-id="${id}"]`);
+			assert(await caption.page.locator(`[data-add-group="decorate"] [data-add-id="${id}"]`).count() === 1, 'Caption must be grouped in Decorate');
+			const before = await caption.page.evaluate(() => editor.historyManager.history.length);
+			await caption.page.click(`[data-add-id="${id}"]`);
+			await caption.page.waitForSelector('#confirmationModal.visible');
+			const preview = await caption.page.evaluate(() => {
+				const layer = editor.layers.find(l => l.isPreview);
+				return { boxWidth: layer.textData.boxWidth, type: layer.type };
+			});
+			assert(preview.type === 'text-glitter', 'Caption must be editable text');
+			if (id === 'caption-bar') assert(preview.boxWidth === width, 'Caption Bar must span non-square canvas width');
+			if (id === 'caption-subtitle') assert(preview.boxWidth === width * 0.9, 'Subtitle must retain its canvas margin');
+			await caption.page.click('#confirmationCancelBtn');
+			await caption.page.waitForFunction(() => !editor.layers.some(l => l.isPreview));
+			assert(await caption.page.evaluate(() => editor.layers.length === 1), 'Cancel left caption layers behind');
+			await caption.page.evaluate(id => { window.captionPreview = editor.templateManager.previewOverlay(id); }, id);
+			await caption.page.waitForSelector('#confirmationModal.visible');
+			await caption.page.click('#confirmationConfirmBtn');
+			await caption.page.evaluate(() => window.captionPreview);
+			assert(await caption.page.evaluate(() => editor.historyManager.history.length) === before + 1, 'Caption must commit as one history step');
+			const saved = await caption.page.evaluate(() => editor.projectSerializer.serialize());
+			await caption.page.evaluate(() => editor.historyManager.undo());
+			assert(await caption.page.evaluate(() => editor.layers.length === 1), 'Undo must remove the caption');
+			await caption.page.evaluate(async project => {
+				editor.isSaved = true;
+				const confirm = editor.confirmAction;
+				editor.confirmAction = async () => true;
+				try { await editor.projectSerializer.load(project); } finally { editor.confirmAction = confirm; }
+			}, saved);
+			assert(await caption.page.evaluate(() => editor.layers.filter(l => l.type === LayerType.TEXT_GLITTER).length === 1), 'Caption did not survive reopen');
+			assert(caption.errors.length === 0, caption.errors.join('; '));
+			await caption.context.close();
+		}
+
 
 		const project = await openEditor(browser);
 		await project.page.click('#openNewCanvasBtn');
 		await project.page.waitForSelector('[data-template-id="impact-meme-canvas"]');
 		assert(await project.page.locator('[data-template-id="impact-meme-canvas"]').count() === 1,
 			'Meme captions are not available as a New Canvas template');
+		assert(await project.page.locator('[data-template-id="demotivational-poster"]').count() === 1, 'Poster must appear in New Canvas');
 		assert(await project.page.locator('[data-template-id="blingee-nameplate"]').count() === 0,
 			'Inactive Glitter Nameplate template is still visible');
 		assert(await project.page.evaluate(async () => {
@@ -86,6 +126,16 @@ async function main() {
 		}), 'Inactive Glitter Nameplate template is not retained safely in the manifest');
 		assert(project.errors.length === 0, `Browser errors: ${project.errors.join('; ')}`);
 		await project.context.close();
+		const poster = await openEditor(browser);
+		await poster.page.click('#openNewCanvasBtn');
+		await poster.page.waitForSelector('[data-template-id="demotivational-poster"]');
+		await poster.page.click('[data-template-id="demotivational-poster"]');
+		await poster.page.click('#createCanvasBtn');
+		await poster.page.waitForFunction(() => editor.layers.some(layer => layer.name === 'Photo'));
+		assert(await poster.page.evaluate(() => editor.originalCanvas.width === 750 && editor.originalCanvas.height === 600
+			&& editor.layers.filter(layer => layer.type === LayerType.TEXT_GLITTER).length === 2), 'Poster did not open with its editable photo and captions');
+		assert(poster.errors.length === 0, poster.errors.join('; '));
+		await poster.context.close();
 
 		const memeProject = await openEditor(browser);
 		await memeProject.page.click('#openNewCanvasBtn');

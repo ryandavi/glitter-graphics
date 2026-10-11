@@ -17,10 +17,11 @@ const TemplateLibrary = (() => {
 					entries.forEach((entry) => {
 						if (!entry?.id || ids.has(entry.id)) throw new Error('Template ids must be unique and non-empty.');
 						if (!['project', 'overlay'].includes(entry.mode)) throw new Error(`Unknown template mode: ${entry.mode}`);
+						if (entry.group && !ADD_MENU_GROUPS.some((group) => group.id === entry.group)) throw new Error(`Unknown template group: ${entry.group}`);
 						if (!entry.src || !entry.label) throw new Error(`Template ${entry.id} is incomplete.`);
 						ids.add(entry.id);
 					});
-					return Object.freeze(entries.map((entry) => Object.freeze({ ...entry })));
+					return Object.freeze(entries.map((entry) => Object.freeze({ ...entry, group: entry.group || 'generate' })));
 				});
 		}
 		return manifestPromise;

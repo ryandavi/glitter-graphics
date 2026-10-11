@@ -78,6 +78,16 @@ const STYLE_PRESET_ENTRIES = (() => {
 	// look to it).
 	return [
 		{
+			id: 'subtitle', label: 'Subtitle', group: 'classic', targets: ['text'], tags: ['caption'],
+			value: { slots: { fill: solid('#ffff00'), border: solid('#000000', { widthPx: 3 }) },
+				data: { ...sans, 'textData.fontWeight': 700, 'textData.fontStyle': 'italic' } }
+		},
+		{
+			id: 'date-stamp', label: 'Date Stamp', group: 'classic', targets: ['text'], tags: ['caption'],
+			value: { slots: { fill: solid('#ff9a1f'), shadow: solid('#ff3d00', { offsetX: 0, offsetY: 0, spread: 0, blur: 4 }) },
+				data: { 'textData.fontId': 'silkscreen' } }
+		},
+		{
 			id: 'default', label: 'Default', group: 'classic', targets: ['text'], tags: ['reset'],
 			value: {
 				slots: { fill: buildDefaultFill({ defaultGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId.text }) },
@@ -400,6 +410,11 @@ function applyStylePresetSamplePaint(sample, paint, clipToText) {
 	const style = sample.style;
 	if (!paint || paint.mode === 'none') {
 		style.color = 'transparent';
+		return;
+	}
+	if (paint.mode === 'pattern') {
+		applyPatternTileStyle(sample, paint.pattern, paint.scale);
+		if (clipToText) { style.backgroundClip = 'text'; style.webkitBackgroundClip = 'text'; style.color = 'transparent'; }
 		return;
 	}
 	const url = paint.mode === 'glitter' ? stylePresetGlitterUrl(paint.glitterId) : null;

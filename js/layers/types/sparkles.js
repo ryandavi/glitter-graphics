@@ -17,7 +17,7 @@ registerLayerType(LayerType.SPARKLES, {
 			path: 'sparkles',
 			glitterDefault: 'sparklesGlitterId',
 			panelPrefix: 'layerSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	// The whole canvas, no pixels of its own: Highlights reads the scene

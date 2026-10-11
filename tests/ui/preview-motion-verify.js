@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert/strict');
+const fs = require('fs');
 const { chromium } = require('playwright');
 const { exportSnapshot, assertByteIdentity } = require('../parity/export-harness');
 
@@ -8,6 +9,7 @@ async function main() {
 	const browser = await chromium.launch();
 	try {
 		const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+		if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
 		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/', { waitUntil: 'networkidle' });
 		await page.evaluate(async () => {
 			const editor = window.editor;
@@ -35,6 +37,19 @@ async function main() {
 			editor.requestPreviewUpdate();
 		});
 		await page.waitForTimeout(400);
+		await page.evaluate(async () => {
+			const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 20, height: 20, position: { x: 20, y: 20 } });
+			shape.shapeData.fill.mode = 'pattern';
+			shape.shapeData.fill.pattern = normalizeEffectPattern({ scroll: 'right' });
+			editor.layerManager.insertLayer(shape);
+			await new Promise(resolve => setTimeout(resolve, 100));
+			const span = editor.shapeGlitterManager.layerElements.get(shape.id).querySelector('.pattern-scrolling');
+			const animation = span.getAnimations()[0];
+			if (!animation) throw Error('Pattern scroll animation did not start');
+			window.motionFixture.patternId = shape.id;
+			editor.shapeGlitterManager.renderLayer(shape);
+			if (span.getAnimations()[0] !== animation) throw Error('Reconciling the pattern restarted its animation');
+		});
 		assert(await page.evaluate(() => [...window.editor.canvasElementsContainer.querySelectorAll('*')].filter(node => node.style.backgroundImage.startsWith('url("data:image/gif')).length >= 4), 'Fixture paints start with animated GIF textures');
 		const playing = await exportSnapshot(page, {}, { minLayers: 3 });
 		await page.evaluate(() => window.editor.animationPanel.setPaused(true));
@@ -61,6 +76,10 @@ async function main() {
 		assert.deepEqual(paused.pixel, [255, 0, 0, 255], 'Pause uses the actual first GIF frame');
 		assert(paused.frozenPaints >= 4, `Fill, outline, shadow and canvas background freeze: ${JSON.stringify(paused)}`);
 		assert.equal(paused.playingPaints, 0, 'No fixture texture keeps playing');
+		assert(await page.evaluate(() => {
+			const span = editor.shapeGlitterManager.layerElements.get(window.motionFixture.patternId).querySelector('.pattern-scrolling');
+			return span.getAnimations().length === 0 && getComputedStyle(span).backgroundPosition === span.style.backgroundPosition;
+		}), 'Pause motion must reset pattern scroll to its texture origin');
 		assert.equal(paused.original, await page.evaluate(() => window.motionFixture.url), 'Preview freezing preserves authored sources');
 		assertByteIdentity(playing, await exportSnapshot(page, {}, { minLayers: 3 }), 'Paused preview export');
 		await page.evaluate(() => {
@@ -80,6 +99,7 @@ async function main() {
 		await page.evaluate(() => window.editor.animationPanel.setPaused(false));
 		await page.waitForFunction(() => [...window.editor.stickerManager.layerElements.values()].every(node => node.querySelector('img').src === window.motionFixture.url));
 		assert.equal(await page.evaluate(() => window.editor.animationPanel.previewFrames.size), 0, 'Resume releases cached preview frames');
+		assert(await page.evaluate(() => editor.shapeGlitterManager.layerElements.get(window.motionFixture.patternId).querySelector('.pattern-scrolling').getAnimations().length === 1), 'Resume must restart pattern scroll');
 		assert(await page.evaluate(() => [...window.editor.canvasElementsContainer.querySelectorAll('*')].filter(node => node.style.backgroundImage.startsWith('url("data:image/gif')).length >= 4), 'Resume restores animated paint textures');
 		await page.evaluate(() => { window.editor.animationPanel.setPaused(true); window.editor.animationPanel.setPaused(false); });
 		await page.waitForTimeout(200);

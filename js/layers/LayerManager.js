@@ -1271,6 +1271,11 @@ class LayerManager {
 				swatch.style.backgroundColor = source?.color || '#ff66cc';
 				return true;
 			}
+			if (mode === 'pattern') {
+				applyPatternTileStyle(swatch, source.pattern, source.scale);
+				swatch.style.backgroundSize = '100% 100%';
+				return true;
+			}
 			if (mode === 'gradient') {
 				swatch.style.backgroundImage = effectGradientToCss(source?.gradient);
 				return true;

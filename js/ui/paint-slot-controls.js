@@ -42,7 +42,7 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	parts('.glitter-source-glitter').forEach((element) => { element.hidden = normalizedMode !== 'glitter'; });
 	parts('.glitter-source-solid').forEach((element) => { element.hidden = normalizedMode !== 'solid'; });
 	parts('[data-paint-source-mode]').forEach((element) => {
-		element.hidden = element.dataset.paintSourceMode !== normalizedMode;
+		element.hidden = !element.dataset.paintSourceMode.split(/\s+/).includes(normalizedMode);
 	});
 	const primaryRow = slot.querySelector('.paint-slot-primary-row');
 	const opacity = primaryRow?.querySelector('.paint-slot-opacity');
@@ -59,6 +59,7 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	// handled by the `[data-paint-source-mode]` loop above).
 	const gradientStops = parts('.gradient-stop-set')[0];
 	const gradient = parts('.effect-gradient-editor')[0];
+	if (normalizedMode === 'pattern') parts('[data-pattern-editor]')[0]?._renderEffectPattern?.();
 	if (gradientStops) gradientStops.hidden = normalizedMode !== 'gradient';
 	if (gradient) {
 		gradient.hidden = normalizedMode !== 'gradient';
@@ -357,6 +358,25 @@ function bindLayerFieldControls(host) {
 	});
 }
 
+function bindPaintSlotFields(host, definition, prefix, include = () => true, withLayer = (run) => {
+	const layer = host.getLayer();
+	return layer ? run(layer) : undefined;
+}) {
+	definition.fields.filter(include).forEach((binding) => {
+		const control = document.getElementById(`${prefix}${binding.suffix}`);
+		if (!control) return;
+		bindFieldControl(control, binding, {
+			apply: (value, ticket) => withLayer((layer) => {
+				const result = host.apply(layer, () => writeFieldValue(host.ensureSlot(layer, definition.key), binding, value), { live: true, geometry: binding.geometry, ticket });
+				refreshSlotFieldSwatch(host, layer, definition, binding);
+				host.afterFieldChange?.(layer, definition.key, binding);
+				return result;
+			}),
+			commit: () => withLayer((layer) => host.commit(layer))
+		});
+	});
+}
+
 function bindPaintSlotControls(host) {
 	(LAYER_UI_CONFIG[host.type]?.paintSlots || []).forEach((definition) => {
 		bindGlitterRecolorAction(host.editor, () => host.getLayer(), definition.key, definition.panelPrefix);
@@ -394,6 +414,7 @@ function bindPaintSlotControls(host) {
 					data.mode = mode;
 					if (mode === 'glitter' && !data.glitterId) data.glitterId = getPaintSlotDefaultGlitterId(host.type, definition);
 					if (mode === 'gradient') data.gradient = normalizeEffectGradient(data.gradient);
+					if (mode === 'pattern') data.pattern = normalizeEffectPattern(data.pattern);
 				}, {});
 			}));
 		});
@@ -418,19 +439,7 @@ function bindPaintSlotControls(host) {
 			else commit();
 		});
 
-		definition.fields.forEach((binding) => {
-			const control = byId(`${prefix}${binding.suffix}`);
-			if (!control) return;
-			bindFieldControl(control, binding, {
-				apply: (value, ticket) => withLayer((layer) => {
-					const result = host.apply(layer, () => writeFieldValue(host.ensureSlot(layer, key), binding, value), { live: true, geometry: binding.geometry, ticket });
-					refreshSlotFieldSwatch(host, layer, definition, binding);
-					host.afterFieldChange?.(layer, key, binding);
-					return result;
-				}),
-				commit: () => withLayer((layer) => host.commit(layer))
-			});
-		});
+		bindPaintSlotFields(host, definition, prefix, () => true, withLayer);
 
 		(SLOT_OPTION_CONTROLS[definition.role] || []).forEach((option) => {
 			Object.entries(option.options).forEach(([value, suffix]) => {
@@ -468,6 +477,11 @@ function bindPaintSlotControls(host) {
 				host.render(layer);
 				if (commit) host.commit(layer);
 			})
+		});
+		installEffectPatternEditor({
+			prefix,
+			getData: () => withLayer((layer) => host.ensureSlot(layer, key)) || null,
+			onUpdate: (commit) => withLayer((layer) => { host.render(layer); if (commit) host.commit(layer); })
 		});
 	});
 }
@@ -569,6 +583,7 @@ function syncPaintSlotControls(host, layer) {
 		}
 
 		syncSlotTextureCoordinateControls(prefix, shown);
+		syncEffectPatternEditor(prefix, shown);
 	});
 }
 

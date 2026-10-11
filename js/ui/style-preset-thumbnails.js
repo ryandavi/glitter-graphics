@@ -82,7 +82,9 @@ async function paintStylePreviewSlot(editor, surface, mask, source) {
 	surface.height = mask.height;
 	const ctx = surface.getContext('2d');
 	ctx.globalAlpha = source.opacity ?? 1;
-	if (source.mode === 'gradient') {
+	if (source.mode === 'pattern') {
+		ctx.fillStyle = ctx.createPattern(getPatternTile(source.pattern, source.scale).canvas, 'repeat');
+	} else if (source.mode === 'gradient') {
 		ctx.fillStyle = createEffectCanvasGradient(ctx, source.gradient, { x: 0, y: 0, width: surface.width, height: surface.height });
 	} else if (source.mode === 'glitter') {
 		const url = editor.glitterLibrary?.getItemById(source.glitterId)?.url;

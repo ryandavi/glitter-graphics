@@ -46,6 +46,10 @@ async function buildComposition(page) {
 			SPARKLE_PRESETS.apply(presetId, manager.fieldHost.ensureSlot(layer, 'sparkles'));
 		};
 
+		const pattern = insert(editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 90, height: 70, position: { x: 255, y: 175 } }));
+		pattern.shapeData.fill.mode = 'pattern';
+		pattern.shapeData.fill.pattern = normalizeEffectPattern({ type: 'stripes', direction: 'diagonal-down', transparentBackground: true, thickness: 8, scroll: 'left', scrollCycleMs: 2000 });
+
 		const animatedSticker = editor.stickerLibrary.content.find((item) => item.isAnimated);
 		if (!animatedSticker) throw new Error('Need an animated sticker for fragility coverage');
 
@@ -118,9 +122,9 @@ async function main() {
 		console.log(`Composition: ${types.join(', ')}`);
 
 		const settings = {
-			// Eight frames keep twelve exports of a heavy scene within one run.
-			matte: { transparency: false, matteColor: '#ffffff', maxFrames: 8 },
-			transparent: { transparency: true, matteColor: '#ffffff', maxFrames: 8 }
+			// The frame target is soft; explicit thinning bounds this heavy fixture.
+			matte: { transparency: false, matteColor: '#ffffff', maxFrames: 8, exportFrameSkip: 4 },
+			transparent: { transparency: true, matteColor: '#ffffff', maxFrames: 8, exportFrameSkip: 4 }
 		};
 		const reference = {};
 		for (const [name, overrides] of Object.entries(settings)) {

@@ -35,6 +35,10 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 	all: {
 		opacity: { field: 'slotOpacity', suffix: 'Opacity' },
 		scale: { field: 'textureScale', suffix: 'Scale', documentScale: 'texture' },
+		'pattern.thickness': { field: 'patternThickness', suffix: 'PatternThickness' },
+		'pattern.shapeSize': { field: 'patternShapeSize', suffix: 'PatternShapeSize' },
+		'pattern.rotation': { field: 'patternRotation', suffix: 'PatternRotation' },
+		'pattern.scrollCycleMs': { field: 'patternScrollCycle', suffix: 'PatternScrollCycle' },
 		'colorAdjust.hue': { field: 'hue', suffix: 'Hue', colorAdjust: true },
 		'colorAdjust.saturation': { field: 'saturation', suffix: 'Saturation', colorAdjust: true },
 		'colorAdjust.brightness': { field: 'brightness', suffix: 'Brightness', colorAdjust: true }
@@ -332,12 +336,14 @@ function getGlitterTileSize(glitter) {
 function applyPaintSourceToElement(element, source, options = {}) {
 	const { glitterLibrary = null, layer = null, maskCanvas = null, localOffsetX = 0, localOffsetY = 0 } = options;
 	const style = element.style;
+	glitterLibrary?.editor?.canvasElementsContainer?.classList.toggle('preview-motion-paused', Boolean(glitterLibrary.editor.animationTicker?._isPreviewPaused()));
 	style.backgroundSize = '';
 	style.backgroundPosition = '';
 	style.backgroundRepeat = '';
 	style.imageRendering = '';
 	style.filter = '';
 	element.classList.remove('pixelated');
+	element.classList.toggle('pattern-scrolling', source?.mode === 'pattern' && source.pattern.scroll !== 'none');
 
 	if (!source) {
 		style.backgroundImage = 'none';
@@ -365,6 +371,21 @@ function applyPaintSourceToElement(element, source, options = {}) {
 	if (source.mode === 'solid' || source.mode === 'gradient') {
 		style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
 		style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
+		return;
+	}
+
+	if (source.mode === 'pattern') {
+		const tile = applyPatternTileStyle(element, source.pattern, source.scale);
+		const origin = getPatternTextureOrigin(maskCanvas, source, layer, { localOffsetX, localOffsetY });
+		style.backgroundColor = 'transparent';
+		style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+		const direction = getOptions('patternScroll').find((option) => option.value === source.pattern.scroll);
+		style.setProperty('--pattern-origin-x', `${origin.x}px`);
+		style.setProperty('--pattern-origin-y', `${origin.y}px`);
+		style.setProperty('--pattern-distance-x', `${direction.x * tile.size}px`);
+		style.setProperty('--pattern-distance-y', `${direction.y * tile.size}px`);
+		style.setProperty('--pattern-cycle', `${source.pattern.scrollCycleMs}ms`);
+		style.setProperty('--pattern-steps', String(tile.size));
 		return;
 	}
 
@@ -421,6 +442,7 @@ function reconcileSlotStack(stack, items, options) {
 	Array.from(stack.children).forEach((child) => {
 		if (child.dataset.spanKey) existing.set(child.dataset.spanKey, child);
 	});
+	let previous = null;
 
 	items.forEach((item) => {
 		const mask = getMask(item);
@@ -440,7 +462,10 @@ function reconcileSlotStack(stack, items, options) {
 			localOffsetX: item.offsetX,
 			localOffsetY: item.offsetY
 		});
-		stack.appendChild(span);
+		// Moving an unchanged node restarts its CSS background animation.
+		const next = previous ? previous.nextElementSibling : stack.firstElementChild;
+		if (span !== next) stack.insertBefore(span, next);
+		previous = span;
 		existing.delete(item.key);
 	});
 
@@ -452,14 +477,16 @@ function reconcileSlotStack(stack, items, options) {
 function syncSlotStackTextureOrigins(stack, items, layer, getMaskCanvas) {
 	const spans = new Map(Array.from(stack.children).map((span) => [span.dataset.spanKey, span]));
 	items.forEach((item) => {
-		if (item.source?.mode !== 'glitter' || item.source.textureAnchor !== 'canvas') return;
+		if (!['glitter', 'pattern'].includes(item.source?.mode) || item.source.textureAnchor !== 'canvas') return;
 		const span = spans.get(item.key);
 		if (!span) return;
-		const origin = getSlotTexturePatternOrigin(getMaskCanvas(item), item.source, layer, {
+		const origin = (item.source.mode === 'pattern' ? getPatternTextureOrigin : getSlotTexturePatternOrigin)(getMaskCanvas(item), item.source, layer, {
 			localOffsetX: item.offsetX,
 			localOffsetY: item.offsetY
 		});
 		span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+		span.style.setProperty('--pattern-origin-x', `${origin.x}px`);
+		span.style.setProperty('--pattern-origin-y', `${origin.y}px`);
 	});
 }
 

@@ -198,6 +198,9 @@ function shadeFramePaintSource(source, shade, depth) {
 	const brightness = getFrameShadeBrightness(shade, depth);
 	if (brightness === 100) return source;
 	if (source.mode === 'solid') return { ...source, color: shadeFrameHexColor(source.color, brightness) };
+	if (source.mode === 'pattern') {
+		return { ...source, pattern: { ...source.pattern, color: shadeFrameHexColor(source.pattern.color, brightness), backgroundColor: shadeFrameHexColor(source.pattern.backgroundColor, brightness) } };
+	}
 	if (source.mode === 'gradient') {
 		return {
 			...source,

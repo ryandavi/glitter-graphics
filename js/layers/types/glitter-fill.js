@@ -24,7 +24,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			draftPath: 'effectDrafts.shadow',
 			glitterDefault: 'shadowGlitterId',
 			panelPrefix: 'glitterShadow',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		},
 		{
 			defaults: () => {
@@ -44,7 +44,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			draftPath: 'effectDrafts.border',
 			glitterDefault: 'borderGlitterId',
 			panelPrefix: 'glitterBorder',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: { widthPx: 'borderWidth' }
 		},
 		{
@@ -61,7 +61,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			sourceLabel: null,
 			glitterDefault: 'fillGlitterId',
 			panelPrefix: 'glitterFill',
-			modes: ['glitter', 'solid', 'gradient'],
+			modes: STANDARD_PAINT_MODES,
 			fields: { opacity: false }
 		},
 		{
@@ -74,7 +74,7 @@ registerLayerType(LayerType.GLITTER_FILL, {
 			draftPath: 'effectDrafts.sparkles',
 			glitterDefault: 'sparklesGlitterId',
 			panelPrefix: 'glitterSparkles',
-			modes: ['glitter', 'solid', 'gradient']
+			modes: STANDARD_PAINT_MODES
 		}
 	],
 	fields: [
