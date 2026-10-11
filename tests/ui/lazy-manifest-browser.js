@@ -38,6 +38,7 @@ async function main() {
 		assert(boot.fonts === require('../../data/fonts.json').fonts.length, 'Font boot manifest is incomplete');
 		assert(boot.rasterBrushes === require('../../data/brushes.json').brushes.length, 'Raster brush boot manifest is incomplete');
 		assert(boot.brushes === boot.rasterBrushes + boot.vectors, 'Concurrent boot lost brush definitions');
+		assert(await page.evaluate(() => APP_BOOT.isComplete('interactive') && APP_BOOT.isComplete('library')), 'Editor was exposed before its Library stage completed');
 		assert(boot.preloads.every((url) => manifestRequests.includes(url)), 'Preload and loader manifest URLs differ');
 
 		const initialResources = [...resourceRequests];
@@ -151,6 +152,44 @@ async function main() {
 			'Sticker replacement did not commit its source and geometry together after preload'
 		);
 		process.stdout.write('Lazy asset manifest verification passed\n');
+
+		const gap = await browser.newPage();
+		let releaseLibrary;
+		const libraryGate = new Promise((resolve) => { releaseLibrary = resolve; });
+		await gap.route('**/data/*.index.json?*', async (route) => { await libraryGate; await route.continue(); });
+		await gap.goto(APP_URL, { waitUntil: 'domcontentloaded' });
+		await gap.waitForFunction(() => document.body.classList.contains('boot-interactive'));
+		assert(await gap.evaluate(() => !window.editor), 'Global editor became visible during the Library gap');
+		await gap.locator('#workspaceStart [data-preset-id="classic-blingee"]').click();
+		await gap.waitForFunction(() => APP_BOOT.editor.originalImage);
+		assert(await gap.evaluate(() => ['textTool', 'shapeTool', 'glitterFillTool', 'brushTool', 'lineTool', 'penTool', 'addLayerBtn'].every((id) => document.getElementById(id).disabled)), 'Asset creation was enabled before Library readiness');
+		assert(await gap.evaluate(() => !COMMANDS.toolText.when(APP_BOOT.editor)), 'Asset shortcut bypassed the boot gate');
+		await gap.evaluate(() => {
+			window.projectLoadStarted = false;
+			APP_BOOT.editor.projectSerializer.loadFile = async () => { window.projectLoadStarted = true; return true; };
+			window.pendingProjectLoad = APP_BOOT.editor.openProjectFile(new File(['{}'], 'test.glitter.json'));
+		});
+		assert(await gap.evaluate(() => !window.projectLoadStarted), 'Project loading did not await the Library');
+		releaseLibrary();
+		await gap.waitForFunction(() => window.editor);
+		assert(await gap.evaluate(async () => await window.pendingProjectLoad && window.projectLoadStarted), 'Waiting project load did not resume');
+		assert(await gap.evaluate(() => !document.getElementById('textTool').disabled), 'Asset tools did not enable after the Library');
+		await gap.close();
+
+		for (const failure of ['shapes', 'glitter']) {
+			const failed = await browser.newPage();
+			await failed.route(failure === 'shapes' ? '**/data/shapes.json?*' : /\/data\/glitter(?:\.index)?\.json(?:\?.*)?$/u, (route) => route.abort());
+			await failed.goto(APP_URL, { waitUntil: 'domcontentloaded' });
+			await failed.waitForFunction(() => document.body.classList.contains('boot-failed'));
+			assert(await failed.locator('#bootReload').isVisible(), `${failure} failure did not offer Reload`);
+			if (failure === 'glitter') {
+				await failed.locator('#workspaceStart [data-preset-id="classic-blingee"]').click();
+				await failed.waitForFunction(() => APP_BOOT.editor.originalImage);
+				assert(await failed.evaluate(() => !document.getElementById('selectTool').disabled), 'Library failure blocked canvas creation');
+			} else assert(await failed.evaluate(() => !APP_BOOT.isComplete('interactive')), 'Shape failure enabled the editor');
+			await failed.close();
+		}
+		process.stdout.write('Staged boot gap and failure verification passed\n');
 	} finally {
 		await browser.close();
 	}

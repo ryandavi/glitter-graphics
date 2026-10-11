@@ -297,8 +297,7 @@ class GlitterBrowserManager extends ContentManager {
 			this.populateCategoryChips();
 
 		} catch (error) {
-			console.error('Failed to load swatches:', error);
-			this.editor.showError('Failed to load glitter library');
+			throw new Error(`Failed to load glitter library: ${error.message}`, { cause: error });
 		}
 	}
 
@@ -389,3 +388,5 @@ class GlitterBrowserManager extends ContentManager {
 	}
 
 }
+
+BOOT_TASKS.register('glitterIndex', ({ editor }) => editor.glitterLibrary.init(), ['editor']);

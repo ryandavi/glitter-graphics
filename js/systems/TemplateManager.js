@@ -7,7 +7,9 @@ class TemplateManager {
 	}
 
 	async applyProject(templateId) {
+		const done = this.editor.beginActivity('template', 'Opening template');
 		try {
+			await this.editor.whenBooted('library');
 			const entry = await TemplateLibrary.get(templateId);
 			if (!entry || entry.mode !== 'project') throw new Error('That project template is unavailable.');
 			const project = await TemplateLibrary.loadProject(templateId);
@@ -17,7 +19,7 @@ class TemplateManager {
 		} catch (error) {
 			this.editor.showError(`Could not open template. ${error.message}`);
 			return false;
-		}
+		} finally { done(); }
 	}
 
 	async previewOverlay(templateId) {
@@ -26,7 +28,9 @@ class TemplateManager {
 			return false;
 		}
 		this.cancelPreview();
+		const done = this.editor.beginActivity('template', 'Opening template');
 		try {
+			await this.editor.whenBooted('library');
 			const entry = await TemplateLibrary.get(templateId);
 			if (!entry || entry.mode !== 'overlay') throw new Error('That overlay template is unavailable.');
 			const project = this.editor.projectSerializer.runMigrations(await TemplateLibrary.loadProject(templateId));
@@ -77,7 +81,7 @@ class TemplateManager {
 			this.cancelPreview();
 			this.editor.showError(`Could not add template. ${error.message}`);
 			return false;
-		}
+		} finally { done(); }
 	}
 
 	commitPreview() {

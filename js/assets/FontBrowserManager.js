@@ -45,8 +45,7 @@ class FontBrowserManager extends ContentManager {
 		try {
 			await FontLibrary.loadManifest();
 		} catch (error) {
-			this.editor.textGlitterManager?.reportFontLoadError(error);
-			return;
+			throw new Error(`Failed to load font library: ${error.message}`, { cause: error });
 		}
 		const styleTags = FontLibrary.tagGroups.find((group) => group.id === FONT_CATEGORY_TAG_GROUP)?.tags || [];
 		const styleIds = new Set(styleTags.map((tag) => tag.id));
@@ -234,3 +233,5 @@ class FontBrowserManager extends ContentManager {
 		return pickerCloseSession(this, { updateSelection: () => this.updateSelection() });
 	}
 }
+
+BOOT_TASKS.register('browsers', ({ editor }) => Promise.all([editor.brushTipManager.init(), editor.shapeBrowserManager.init(), editor.fontBrowserManager.init()]), ['editor', 'fonts']);

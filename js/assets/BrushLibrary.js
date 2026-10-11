@@ -50,7 +50,6 @@ const BrushLibrary = {
 			// Validation checks raster ids against the vector brush definitions.
 			await ShapeLibrary.loadManifest();
 			this.applyManifest(manifest);
-			await this._preloadTips();
 			return manifest;
 		})();
 
@@ -251,6 +250,9 @@ const BrushLibrary = {
 				this._normalizeTip(ctx, canvas.width, canvas.height);
 				this._tipCanvas.set(id, canvas);
 				return canvas;
+		}).catch((error) => {
+			this._tipPromise.delete(id);
+			throw error;
 		});
 		this._tipPromise.set(id, promise);
 		return promise;
@@ -287,3 +289,6 @@ const BrushLibrary = {
 		return `<img src="${brush.tip.src}" alt="" draggable="false">`;
 	}
 };
+
+BOOT_TASKS.register('brushManifest', () => BrushLibrary.loadManifest());
+BOOT_TASKS.register('brushTips', () => BrushLibrary._preloadTips(), ['brushManifest', 'editor']);

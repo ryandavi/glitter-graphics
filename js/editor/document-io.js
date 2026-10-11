@@ -335,6 +335,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		if (!file) return false;
 		const done = this.beginActivity('open-project', 'Opening project');
 		try {
+			await this.whenBooted('library');
 			return await this.projectSerializer.loadFile(file);
 		} catch (error) {
 			console.error('Project load failed:', error);

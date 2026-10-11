@@ -1,4 +1,6 @@
 const DOCUMENT_START_METHODS = {
+	whenBooted(stageId) { return APP_BOOT.whenBooted(stageId); },
+
 setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
 		const projectUpload = document.getElementById('projectUpload');

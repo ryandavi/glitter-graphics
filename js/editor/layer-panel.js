@@ -79,6 +79,7 @@ setupLayerTypePickerListeners() {
 
 ,
 	createLayerByType(layerType, createOptions = null) {
+		if (!APP_BOOT.isComplete('library')) return;
 		if (!LAYER_UI_CONFIG[layerType]?.addableViaModal) {
 			dbg(`Unknown add-layer type: ${layerType}`);
 			return;

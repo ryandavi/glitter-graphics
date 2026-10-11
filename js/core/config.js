@@ -21,6 +21,17 @@ const CONFIG = deepFreeze({
 		fileNameSuffix: '_ryandavi-com'
 	},
 	app: {
+		boot: {
+			stages: [
+				{ id: 'shell', tasks: [] },
+				{ id: 'interactive', tasks: ['shapes', 'brushManifest', 'editor'] },
+				{ id: 'library', tasks: ['glitterIndex', 'stickerIndex', 'fonts', 'browsers'] },
+				{ id: 'idle', tasks: ['brushTips'] }
+			],
+			indicator: { delayMs: 400, minVisibleMs: 300 },
+			idleTimeoutMs: 1000,
+			budgets: {}
+		},
 		siteName: 'ryandavi.com glitter editor',
 		status: {
 			noDocument: 'Pick a canvas size or open an image to begin'

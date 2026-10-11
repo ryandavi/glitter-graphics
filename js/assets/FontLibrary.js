@@ -193,3 +193,5 @@ const FontLibrary = {
 		return this.allLoadedPromise;
 	}
 };
+
+BOOT_TASKS.register('fonts', () => FontLibrary.loadManifest(), ['editor']);

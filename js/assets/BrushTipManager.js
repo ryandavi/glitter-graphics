@@ -101,12 +101,13 @@ class BrushTipManager extends ContentManager {
 		});
 	}
 
-	handleItemClick(item) {
-		this.editor.maskEditor.setBrushShape(item.id);
+	async handleItemClick(item) {
+		await this.editor.maskEditor.setBrushShape(item.id);
 		this.closePickerSession();
 	}
 
 	openPicker() {
+		this.editor.maskEditor.ensureBrushTip();
 		const layer = this.editor.layerManager.getActiveLayer();
 		pickerOpenSession(this, { kind: 'asset', layerId: layer?.id ?? null, library: 'brushTip', label: 'Brush tip' }, {
 			reveal: () => {

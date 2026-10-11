@@ -318,18 +318,8 @@ class GlitterEditor {
 		this.mp4Exporter = new Mp4Exporter(this.sceneCompositor, this.exportResultPresenter);
 		this.svgExporter = new SvgExporter(this, this.exportResultPresenter);
 		this.stillImageExporter = new StillImageExporter(this.sceneCompositor, this.exportResultPresenter, this.gifEncodingPipeline);
-		await Promise.all([
-			this.stickerManager.init(),
-			this.stickerLibrary.init(),
-			this.glitterManager.init(),
-			this.glitterLibrary.init(),
-			this.brushTipManager.init(),
-			this.textGlitterManager.init(),
-			this.shapeBrowserManager.init(),
-			this.fontBrowserManager.init()
-		]);
+		await Promise.all([this.stickerManager.init(), this.glitterManager.init(), this.textGlitterManager.init()]);
 		this.refreshInspector();
-		document.body.classList.remove('is-booting');
 	}
 
 	// ===== EVENT LISTENERS =====
@@ -487,6 +477,7 @@ class GlitterEditor {
 
 	setTool(tool, options = {}) {
 		if (!TOOLS[tool]) return;
+		if (!APP_BOOT.isComplete('library') && !TOOLS[tool].available(this, { hasImage: Boolean(this.originalImage), libraryReady: false, autoPreviewActive: false }) && tool !== CONFIG.app.startup.tool) return;
 
 		if (this.currentTool === tool) {
 			// Clicking the active tool is still a meaningful exit from a Library
@@ -705,6 +696,7 @@ class GlitterEditor {
 	updateToolButtons() {
 		const state = {
 			hasImage: this.originalImage !== null,
+			libraryReady: APP_BOOT.isComplete('library'),
 			autoPreviewActive: Boolean(this.autoGlitterManager?.isSessionActive())
 		};
 		TOOL_ORDER.forEach((tool) => {
@@ -753,9 +745,11 @@ class GlitterEditor {
 		// UX: Can't add layers until image is loaded
 		if (addBtn) {
 			const gate = this.layerManager.canAddLayers();
-			addBtn.disabled = !hasImage || autoPreviewActive || !gate.ok;
+			addBtn.disabled = !hasImage || !APP_BOOT.isComplete('library') || autoPreviewActive || !gate.ok;
 			if (!hasImage) {
 				addBtn.title = 'Load an image first';
+			} else if (!APP_BOOT.isComplete('library')) {
+				addBtn.title = 'Loading the Library';
 			} else if (autoPreviewActive) {
 				addBtn.title = 'Exit Auto Glitter before adding layers';
 			} else if (!gate.ok) {
@@ -1228,29 +1222,15 @@ Object.assign(
 
 Object.defineProperty(GlitterEditor.prototype, 'canvasBounds', Object.getOwnPropertyDescriptor(CANVAS_SIZE_CONTROL_METHODS, 'canvasBounds'));
 
-// everything inside IIFE
-(async () => {
-	performance.mark('glitter:scripts-parsed');
-	// Raster brush packs sit on top of the vector tips; a failure here must not
-	// block the editor (the Basic vector tips still work).
-	await Promise.all([
-		ShapeLibrary.loadManifest(),
-		BrushLibrary.loadManifest().catch((error) => {
-			console.warn('Raster brush packs unavailable:', error);
-		})
-	]);
-	performance.mark('glitter:manifests-loaded');
-	const editor = new GlitterEditor();
-	performance.mark('glitter:constructor-done');
-	await editor.init();
-	performance.mark('glitter:init-done');
+BOOT_TASKS.register('editor', async ({ boot }) => {
+	boot.editor = new GlitterEditor();
+	await boot.editor.init();
+}, ['shapes', 'brushManifest']);
 
-	// Load debug configuration if enabled
-	if (DEBUG_CONFIG.enabled) {
-		await editor.loadDebugConfig();
-	}
-
-	// Make editor globally accessible (optional, useful for debugging)
+APP_BOOT.run(async (stage, editor) => {
+	if (stage !== 'library') return;
+	if (DEBUG_CONFIG.enabled) await editor.loadDebugConfig();
 	window.editor = editor;
-	performance.mark('glitter:editor-ready');
-})();
+}).catch((error) => {
+	console.error('Boot failed:', error);
+});

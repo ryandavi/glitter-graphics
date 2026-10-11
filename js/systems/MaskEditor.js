@@ -396,8 +396,9 @@ class MaskEditor {
 		return this.toolSettings[this.getActiveMode()].shape || 'round';
 	}
 
-	setBrushShape(shape) {
+	async setBrushShape(shape) {
 		if (!MaskEditor.isKnownBrushShape(shape)) return;
+		if (!await this.ensureBrushTip(shape)) return;
 		const settings = this.toolSettings[this.mode];
 		if (settings.shape === shape) return;
 		const prevShape = settings.shape;
@@ -425,6 +426,18 @@ class MaskEditor {
 		this._applySettingsToDOM(this.mode);
 		this._syncDynamicsPanel();
 		this._updateBrushCursorSize();
+	}
+
+	async ensureBrushTip(shape = this.getBrushShape()) {
+		if (!BrushLibrary.isRaster(shape) || BrushLibrary.getTipCanvas(shape)) return true;
+		const done = this.editor.beginActivity('brush-tip', 'Loading brush tip');
+		try {
+			await BrushLibrary.loadTip(shape);
+			return true;
+		} catch (error) {
+			this.editor.showError(`Could not load brush tip: ${error.message}`);
+			return false;
+		} finally { done(); }
 	}
 
 	// A raster tip's authored spacing as a panel-unit percentage (manifest stores
@@ -671,6 +684,7 @@ class MaskEditor {
 	}
 
 	exitEditMode(options = {}) {
+		this.pendingTipStroke = null;
 		if (!this.isEditing) {
 			return;
 		}
@@ -1092,6 +1106,7 @@ class MaskEditor {
 	}
 
 	_handlePointerUp(event) {
+		if (this.pendingTipStroke?.options.pointerId === event.pointerId) this.pendingTipStroke = null;
 		if (!this.strokeActive || event.pointerId !== this.activePointerId) {
 			return;
 		}
@@ -1102,6 +1117,7 @@ class MaskEditor {
 	}
 
 	_handlePointerCancel(event) {
+		if (this.pendingTipStroke?.options.pointerId === event.pointerId) this.pendingTipStroke = null;
 		if (!this.strokeActive || event.pointerId !== this.activePointerId) {
 			return;
 		}
@@ -1160,7 +1176,7 @@ class MaskEditor {
 		}
 
 		const started = this._startStrokeFromScreenPoint(screenX, screenY, {
-			showTouchRing: true
+			showTouchRing: true, finishOnReady: true
 		});
 		if (!started) {
 			return false;
@@ -1171,12 +1187,14 @@ class MaskEditor {
 	}
 
 	handleTouchGestureStart(gestureType) {
+		if (gestureType === 'two_finger') this.pendingTipStroke = null;
 		if (gestureType === 'two_finger' && this.strokeActive) {
 			this._cancelStroke();
 		}
 	}
 
 	handleTouchGestureEnd() {
+		this.pendingTipStroke = null;
 		if (this.strokeActive) {
 			this._finishStroke();
 		}
@@ -1309,6 +1327,22 @@ class MaskEditor {
 	}
 
 	_startStrokeFromScreenPoint(screenX, screenY, options = {}) {
+		const shape = this.getBrushShape();
+		if (BrushLibrary.isRaster(shape) && !BrushLibrary.getTipCanvas(shape)) {
+			if (!this.pendingTipStroke) {
+				const pending = { options, image: this.editor.originalImage, layerId: this.editor.activeLayerId, mode: this.getActiveMode() };
+				this.pendingTipStroke = pending;
+				if (options.pointerId != null) this.editor.previewContainer.setPointerCapture(options.pointerId);
+				this.ensureBrushTip(shape).then((ready) => {
+					if (this.pendingTipStroke !== pending) return;
+					this.pendingTipStroke = null;
+					if (!ready || !this.isEditing || this.getBrushShape() !== shape || this.editor.originalImage !== pending.image || this.editor.activeLayerId !== pending.layerId) return;
+					this.strokeModeOverride = pending.mode;
+					if (this._startStrokeFromScreenPoint(screenX, screenY, options) && options.finishOnReady) this._finishStroke();
+				});
+			}
+			return false;
+		}
 		const canvasPoint = this.editor.viewport.screenToCanvas(screenX, screenY);
 		if (!this.editor.viewport.isWithinCanvas(canvasPoint.x, canvasPoint.y)) return false;
 		const layer = this._ensurePaintableLayer(canvasPoint.x, canvasPoint.y);

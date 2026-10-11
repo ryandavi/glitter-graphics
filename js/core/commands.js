@@ -104,7 +104,7 @@ const COMMANDS = {
 		[definition.command, { tool, label: `${definition.name} Tool`, group: 'Tools', keys: [definition.key], displayKey: definition.key.toUpperCase(),
 			when: (editor) => editor.autoGlitterManager?.isSessionActive()
 				? Boolean(editor.originalImage) && editor.autoGlitterManager.allowsPreviewTool(tool)
-				: definition.available(editor, { hasImage: Boolean(editor.originalImage), autoPreviewActive: false }),
+				: definition.available(editor, { hasImage: Boolean(editor.originalImage), libraryReady: APP_BOOT.isComplete('library'), autoPreviewActive: false }),
 			run: (editor) => { editor.setTool(tool); definition.onShortcut?.(editor); } }],
 		...(definition.shortcuts || []).map((shortcut) => [shortcut.command, { ...shortcut, tool, group: 'Tools', keys: [shortcut.key], displayKey: shortcut.key.toUpperCase() }])
 	])),

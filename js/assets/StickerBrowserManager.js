@@ -108,8 +108,7 @@ class StickerBrowserManager extends ContentManager {
 			// Populate category chips after loading
 			this.populateCategoryChips();
 		} catch (error) {
-			console.error('Failed to load preset stickers:', error);
-			this.editor.showError('Failed to load sticker library');
+			throw new Error(`Failed to load sticker library: ${error.message}`, { cause: error });
 		}
 	}
 
@@ -165,3 +164,5 @@ class StickerBrowserManager extends ContentManager {
 	}
 
 }
+
+BOOT_TASKS.register('stickerIndex', ({ editor }) => editor.stickerLibrary.init(), ['editor']);

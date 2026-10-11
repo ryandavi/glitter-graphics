@@ -428,3 +428,5 @@ ShapeLibrary.BRUSH_SHAPES = [];
 ShapeLibrary.FILL_SHAPE_CATEGORIES = [];
 ShapeLibrary.FILL_SHAPES = [];
 ShapeLibrary.ORNAMENT_SHAPES = [];
+
+BOOT_TASKS.register('shapes', () => ShapeLibrary.loadManifest());

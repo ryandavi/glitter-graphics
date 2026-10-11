@@ -41,6 +41,7 @@ const ToolType = {
 // Editing tools are unavailable before an image exists and while Auto Glitter
 // previews; navigation only needs an image.
 const editingAvailable = (_editor, { hasImage, autoPreviewActive }) => hasImage && !autoPreviewActive;
+const assetEditingAvailable = (editor, state) => state.libraryReady && editingAvailable(editor, state);
 const navigationAvailable = (_editor, { hasImage }) => hasImage;
 
 const TOOLS = {
@@ -110,7 +111,7 @@ const TOOLS = {
 		command: 'toolGlitterFill',
 		toolbarGroup: 'paint',
 		groups: ['paint', 'contentEditing'],
-		available: editingAvailable,
+		available: assetEditingAvailable,
 		wrapperClass: 'color-picker-mode',
 		onCanvasAction(editor, { x, y, hitCanvas, event }) {
 			if (hitCanvas) {
@@ -137,7 +138,7 @@ const TOOLS = {
 		toolbarGroup: 'paint',
 		titleNote: ' — Paint/Erase in the context bar, or X to swap',
 		groups: ['paint', 'contentEditing'],
-		available: editingAvailable,
+		available: assetEditingAvailable,
 		onActivate: editor => editor.maskEditor.enterEditMode(),
 		onDeactivate: (editor, _nextTool, options = {}) => editor.maskEditor.exitEditMode({ switchTool: false, commitStroke: options.commitStroke !== false }),
 		onCanvasPointerDown: (editor, event) => editor.maskEditor._handlePointerDown(event)
@@ -178,7 +179,7 @@ const TOOLS = {
 		toolbarGroup: 'create',
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'creationDrag',
-		available: editingAvailable,
+		available: assetEditingAvailable,
 		onCanvasDrag(editor, { box, isClick, start }) {
 			if (isClick) return this.onCanvasAction(editor, { x: start.x, y: start.y, hitCanvas: true });
 			return createTextAt(editor, { position: { x: box.left, y: box.top }, boxMode: 'fixed', boxWidth: Math.max(CONFIG.tools.text.minBoxSize, box.width), boxHeight: Math.max(FIELDS.textFontSize.value * FIELDS.textLineHeight.value / 100, box.height) });
@@ -208,7 +209,7 @@ const TOOLS = {
 		toolbarGroup: 'create',
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'creationDrag',
-		available: editingAvailable,
+		available: assetEditingAvailable,
 		// Clicks and touch taps use the same default-size creation path.
 		onCanvasDrag(editor, { box, isClick, start }) {
 			const layer = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: editor.shapeGlitterManager.getActiveShapeId(), position: isClick ? start : { x: box.centerX, y: box.centerY }, ...(isClick ? {} : { width: box.width, height: box.height }) } });
@@ -238,7 +239,7 @@ const TOOLS = {
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'creationDrag',
 		dragPreview: 'line',
-		available: editingAvailable,
+		available: assetEditingAvailable,
 		// A drag runs from its start to its end; a click or tap makes a line of
 		// the default length centered there.
 		onCanvasDrag(editor, { isClick, start, end }) {
@@ -275,7 +276,7 @@ const TOOLS = {
 		toolbarGroup: 'create',
 		groups: ['creation', 'contentEditing'],
 		touchRoute: 'toolDrag',
-		available: editingAvailable,
+		available: assetEditingAvailable,
 		// The point editor (js/ui/path-edit.js) owns every press.
 		onActivate: (editor) => editor.pathEdit.onToolActivated(),
 		onDeactivate: (editor) => editor.pathEdit.end(),
