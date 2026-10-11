@@ -143,6 +143,16 @@ async function check2(page) {
 	approxEqual(reselected.transform.position.y, selected.transform.position.y, POSITION_TOLERANCE_PX, 'Transform Y shifted after reselect');
 }
 
+// A slot's controls live in a flyout section, opened from its line in the Inspector.
+async function revealControl(page, selector) {
+	if (await page.locator(selector).isVisible()) return;
+	const lineSelector = await page.evaluate((target) => {
+		const card = document.querySelector(target).closest('[data-flyout-key]');
+		return card ? `.property-line[data-flyout-for="${card.id}"]` : null;
+	}, selector);
+	if (lineSelector) await page.click(lineSelector);
+}
+
 async function check3(page) {
 	const layerId = await createBorderedShape(page, {
 		shapeId: 'circle',
@@ -151,6 +161,7 @@ async function check3(page) {
 		borderWidth: 12
 	});
 
+	await revealControl(page, '#shapeBorderStyleDotted');
 	await page.click('#shapeBorderStyleDotted');
 	const dotted = await page.evaluate((id) => {
 		const editor = window.editor;

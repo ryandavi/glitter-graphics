@@ -26,6 +26,8 @@ function assert(condition, message) {
 		const check = (condition, message) => { if (!condition) throw new Error(message); };
 		const editor = window.editor;
 		const exporter = editor.exporter;
+		// The encoder's frame methods load with the gif-codec group on first export.
+		await exporter.gifEncodingPipeline._hydrate();
 		const compositor = editor.sceneCompositor;
 
 		const SIZE = 64;

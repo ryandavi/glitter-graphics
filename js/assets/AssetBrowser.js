@@ -419,6 +419,9 @@ class AssetBrowser {
 			return;
 		}
 
+		// The view is built on first show; navigating to an item is a show.
+		this.ensureView();
+
 		// Source navigation must reveal the requested asset even when the current
 		// gallery filters exclude it.
 		if (!this.getFilteredItems().includes(item)) {

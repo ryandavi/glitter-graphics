@@ -327,9 +327,9 @@ class MaskEditor {
 	// threshold them (shouldUseCrispMaskEdges), which can read as chunky on fine
 	// sparkle / swirl tips. The panel surfaces that shared preference as a plain
 	// toggle row (R4); the note below it (R7) only explains the trade-off when a
-	// raster tip is active and edges are crisp. The toggle mirrors the modal's
-	// #antialiasMaskEdges — flipping it here routes through that one handler and
-	// this method syncs the checked state back.
+	// raster tip is active and edges are crisp. The toggle shows the same
+	// preference as Settings; both write it through editor.setMaskEdgeAntialias
+	// and this method syncs the checked state back.
 	_syncAntialiasControls() {
 		const toggle = this.ui.antialiasToggle;
 		const note = this.ui.antialiasNote;
@@ -339,10 +339,8 @@ class MaskEditor {
 			if (!toggle.dataset.wired) {
 				toggle.dataset.wired = '1';
 				toggle.addEventListener('change', () => {
-					const master = document.getElementById('antialiasMaskEdges');
-					if (!master || master.checked === toggle.checked) return;
-					master.checked = toggle.checked;
-					master.dispatchEvent(new Event('change', { bubbles: true }));
+					if (toggle.checked === !shouldUseCrispMaskEdges()) return;
+					this.editor.setMaskEdgeAntialias(toggle.checked);
 				});
 			}
 			toggle.checked = !edgesCrisp;

@@ -121,10 +121,11 @@ async function captureExport(page, targetId, { overrides = {}, fit = null } = {}
 	console.log('PASS Target Size fits only an export that is over it');
 
 	// Settings rows.
-	const rows = await page.evaluate(() => {
+	const rows = await page.evaluate(async () => {
 		const editor = window.editor;
 		editor.modalManager.close('exportPreviewModal');
-		editor.modalManager.open('exportSettingsModal');
+		// The modal body is built on first open.
+		await editor.modalManager.open('exportSettingsModal');
 		const select = document.getElementById('exportTargetSize');
 		const row = document.getElementById('exportTargetSizeKBRow');
 		const state = () => row.classList.contains('disabled') || row.classList.contains('is-inactive') || document.getElementById('exportTargetSizeKB').disabled;

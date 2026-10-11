@@ -142,6 +142,8 @@ async function main() {
 		assert(pointerPressure.trackpad === null, 'Mouse/trackpad pressure was not ignored');
 		assert(pointerPressure.pen === 0.25, 'Pen pressure was not preserved');
 
+		// The Settings body is built on first open.
+		await page.evaluate(async () => { await editor.modalManager.open('settingsModal'); editor.modalManager.close('settingsModal'); });
 		const settingsState = await page.evaluate(() => {
 			const input = document.getElementById('antialiasMaskEdges');
 			const initialChecked = input.checked;
@@ -174,6 +176,8 @@ async function main() {
 		softTips.forEach(({ shape, partial }) => assert(partial > 500, `${shape} tip has no soft edge falloff`));
 
 		await page.reload({ waitUntil: 'networkidle' });
+		await page.waitForFunction(() => window.editor?.settingsStore);
+		await page.evaluate(async () => { await editor.modalManager.open('settingsModal'); editor.modalManager.close('settingsModal'); });
 		const persistedState = await page.evaluate(() => ({
 			checked: document.getElementById('antialiasMaskEdges').checked,
 			crispMaskEdges: PREFERENCES.get('crispMaskEdges')

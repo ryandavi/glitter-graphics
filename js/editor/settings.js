@@ -376,6 +376,17 @@ initializeExportSettings() {
 	}
 
 ,
+	// The one writer of the mask-edge preference. Settings and the Brush panel
+	// both show it, and the Settings body may not have been built yet.
+	setMaskEdgeAntialias(enabled) {
+		PREFERENCES.set('crispMaskEdges', !enabled);
+		const master = document.getElementById('antialiasMaskEdges');
+		if (master) master.checked = enabled;
+		this.refreshMaskEdgeRendering();
+		this.updateStatus(enabled ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
+	}
+
+,
 	setupAppSettingsListeners() {
 		this.bindPreferenceToggle('showHelpfulHints', 'showHints', () => this.updateHelpfulMessage());
 		this.bindPreferenceToggle('showWelcomeOnStartup', 'showWelcomeOnStartup');
@@ -383,11 +394,7 @@ initializeExportSettings() {
 		this.bindPreferenceToggle('scaleEffectsOnTransform', 'scaleEffects');
 		this.bindPreferenceToggle('scaleCorners', 'scaleCorners');
 		this.bindPreferenceToggle('scaleTexturesOnTransform', 'scaleTextures');
-		document.getElementById('antialiasMaskEdges')?.addEventListener('change', (e) => {
-			PREFERENCES.set('crispMaskEdges', !e.target.checked);
-			this.refreshMaskEdgeRendering();
-			this.updateStatus(e.target.checked ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
-		});
+		document.getElementById('antialiasMaskEdges')?.addEventListener('change', (e) => this.setMaskEdgeAntialias(e.target.checked));
 
 		const themeInput = document.getElementById('interfaceTheme');
 		themeInput?.addEventListener('change', (e) => {
