@@ -116,7 +116,7 @@ class MaskEditor {
 			this.editor.layerManager.renderLayersList();
 			this.editor.updateActionButtons();
 			this.editor.updateHelpfulMessage();
-			this.editor.saveState('Paint mask');
+			this.editor.saveState('Clear paint');
 			this.loadLayer(layer);
 			this.renderOverlay();
 		});
@@ -1229,7 +1229,7 @@ class MaskEditor {
 
 		if (this.strokeChanged) {
 			this._clipStrokeToArea(layer);
-			this.commitPaintEdit(layer, 'Paint mask');
+			this.commitPaintEdit(layer, this.getActiveMode() === 'sub' ? 'Erase stroke' : 'Paint stroke');
 		}
 
 		this.editor.ignoreNextClick = true;

@@ -144,7 +144,7 @@ class LayerManager {
 		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
 		if (spec.custom) {
 			const manager = getLayerManagerForType(this.editor, type);
-			return manager?.[spec.custom.serialize]?.(layer) || null;
+			return this.serializePaintSlots(manager?.[spec.custom.serialize]?.(layer) || null);
 		}
 
 		const serialized = {};
@@ -165,6 +165,16 @@ class LayerManager {
 			serialized[key] = layer[key] == null ? fallback : structuredClone(layer[key]);
 		});
 		if (includeMaskVersion && spec.includeMaskVersion) serialized.maskVersion = layer.maskVersion || 0;
+		return this.serializePaintSlots(serialized);
+	}
+
+	serializePaintSlots(serialized) {
+		// Missing optional paint slots and explicit null have the same document
+		// meaning. Canonical snapshots survive hydration without gaining fields.
+		for (const { definition, data } of getLayerPaintSlots(serialized)) {
+			const parent = readFieldPath(serialized, definition.pathKeys.slice(0, -1));
+			if (data == null && parent) writeFieldPath(serialized, definition.pathKeys, null);
+		}
 		return serialized;
 	}
 
@@ -275,7 +285,7 @@ class LayerManager {
 		this.setActiveLayer(layer.id);
 
 		this.renderLayersList();
-		if (!options.skipHistory) this.editor.saveState('Edit layers');
+		if (!options.skipHistory) this.editor.saveState('Add layer');
 		this.editor.updateActionButtons();
 
 		this.editor.updateStatus(cfg.addedStatusMessage || 'New layer added');
@@ -301,7 +311,7 @@ class LayerManager {
 		}
 
 		this.renderLayersList();
-		this.editor.saveState('Edit layers');
+		this.editor.saveState(layer.visible ? 'Show layer' : 'Hide layer');
 		this.editor.requestPreviewUpdate();
 		this.editor.updateStatus(`${layer.visible ? 'Shown' : 'Hidden'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
@@ -320,7 +330,7 @@ class LayerManager {
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.refreshInspector();
 		this.editor.updateActionButtons();
-		this.editor.saveState('Edit layers');
+		this.editor.saveState(layer.locked ? 'Lock layer' : 'Unlock layer');
 		this.editor.updateStatus(`${layer.locked ? 'Locked' : 'Unlocked'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 
@@ -847,7 +857,7 @@ class LayerManager {
 		this.renderLayersList();
 		this.reorderLayers();
 
-		if (!options.skipHistory) this.editor.saveState('Edit layers');
+		if (!options.skipHistory) this.editor.saveState('Duplicate layer');
 		this.editor.updateActionButtons();
 
 		return clonedLayer;
@@ -921,7 +931,7 @@ class LayerManager {
 		this.renderLayersList();
 		this.reorderLayers();
 		this.editor.requestPreviewUpdate();
-		if (!options.skipHistory) this.editor.saveState('Edit layers');
+		if (!options.skipHistory) this.editor.saveState('Duplicate layer');
 		this.editor.updateActionButtons();
 
 		return clones.length === 1 ? clones[0] : clones;
@@ -969,7 +979,7 @@ class LayerManager {
 			activeLayerId: nextLayer?.id || null
 		});
 		this.renderLayersList();
-		if (!options.skipHistory) this.editor.saveState('Edit layers');
+		if (!options.skipHistory) this.editor.saveState('Delete layer');
 		this.editor.requestPreviewUpdate();
 		this.editor.updateActionButtons();
 		if (!options.silent) this.editor.updateStatus(uniqueIds.length > 1 ? 'Layers deleted' : 'Layer deleted');
@@ -1049,7 +1059,7 @@ class LayerManager {
 				const nextName = input.value.trim();
 				if (commit && nextName && nextName !== layer.name) {
 					layer.name = nextName;
-					this.editor.saveState('Edit layers');
+					this.editor.saveState('Rename layer');
 				}
 				this.renderLayersList();
 			};
@@ -1453,7 +1463,7 @@ class LayerManager {
 		// OPTIMIZED: Just reorder DOM instead of recreating
 		this.reorderLayerItems();
 		this.reorderLayers();
-		this.editor.saveState('Edit layers');
+		this.editor.saveState('Reorder layers');
 	}
 
 	handleLayerDragEnd(event) {
@@ -1614,7 +1624,7 @@ class LayerManager {
 				this.layers.splice(newIndex, 0, draggedLayer);
 				this.reorderLayerItems();
 				this.reorderLayers();
-				this.editor.saveState('Edit layers');
+				this.editor.saveState('Reorder layers');
 			}
 		}
 

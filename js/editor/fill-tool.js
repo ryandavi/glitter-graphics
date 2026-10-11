@@ -80,7 +80,7 @@ const EDITOR_FILL_TOOL_METHODS = {
 		});
 
 		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
-		this.saveState('Edit document'); // For Undo/Redo
+		this.saveState('Pick color');
 
 		// Paint the chip/status/toolbar feedback on this frame, *before*
 		// kicking off the (potentially slow) mask pipeline, so the click never
@@ -146,7 +146,7 @@ const EDITOR_FILL_TOOL_METHODS = {
 		}
 
 		layer.selections.splice(index, 1);
-		this.saveState('Edit document');
+		this.saveState('Remove color');
 
 		if (hasMaskContent(layer)) {
 			this.requestPreviewUpdate();

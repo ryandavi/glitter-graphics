@@ -138,7 +138,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		this.requestPreviewUpdate();
 		this.layerManager.renderLayersList();
 		if (layer) this.baseBackgroundManager?.loadLayerSettings(layer);
-		this.saveState('Edit document');
+		this.saveState('Replace image');
 		this.updateStatus('Base image replaced');
 		return true;
 	},

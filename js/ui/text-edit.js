@@ -216,7 +216,8 @@ const TEXT_EDIT_METHODS = {
 	recordTextStep(layer, value, selection) {
 		const session = this.editSession, before = this.textEditSnapshot(), now = performance.now();
 		const delta = value.length - before.text.length;
-		const kind = delta > 0 ? 'insert' : delta < 0 ? 'delete' : 'replace';
+		const insertedLength = delta + before.end - before.start;
+		const kind = insertedLength > 0 ? 'insert' : delta < 0 ? 'delete' : 'replace';
 		const caretMoved = session.lastCaret && (before.start !== session.lastCaret.start || before.end !== session.lastCaret.end);
 		const startsWord = kind === 'insert' && /\s$/u.test(before.text.slice(0, before.start)) && !/\s/u.test(value[before.start] || '');
 		const crossesDeletedWord = kind === 'delete' && session.deletedSpace && !/\s/u.test(before.text[before.start - 1] || '');
@@ -229,7 +230,7 @@ const TEXT_EDIT_METHODS = {
 		session.lastEditKind = kind;
 		session.lastCaret = selection || { start: value.length, end: value.length };
 		session.deletedSpace = kind === 'delete' && /\s/u.test(before.text[before.start - 1] || '');
-		session.groupClosed = Math.abs(delta) !== 1;
+		session.groupClosed = kind === 'insert' ? insertedLength !== 1 : Math.abs(delta) !== 1;
 	},
 
 	getTextEditHistory(direction) {

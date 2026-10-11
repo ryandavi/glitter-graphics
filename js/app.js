@@ -227,7 +227,7 @@ class GlitterEditor {
 		this.layerManager.renderLayersList();
 		this.requestPreviewUpdate();
 		this.updateActionButtons();
-		this.saveState('Edit document');
+		this.saveState('Add stickers');
 
 	}
 

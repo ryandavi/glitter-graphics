@@ -106,11 +106,13 @@ const EDITOR_KEYBOARD_METHODS = {
 
 	scheduleNudgeSave() {
 		clearTimeout(this._nudgeSaveTimer);
+		const ids = this.layerManager.getSelectedLayers().map(layer => layer.id).join(',');
+		const coalesceKey = this.historyManager.burstCoalesceKey(`nudge:${ids}`);
 		this.registerPendingCommit('nudge', () => {
 			clearTimeout(this._nudgeSaveTimer);
 			this._nudgeSaveTimer = null;
 			// A timer-delimited burst is one step; a later burst always pushes.
-			this.saveState('Move layer');
+			this.saveState('Move layer', { coalesceKey });
 		});
 		this._nudgeSaveTimer = setTimeout(() => this.runPendingCommit('nudge'), CONFIG.ui.history.coalesceMs);
 	},

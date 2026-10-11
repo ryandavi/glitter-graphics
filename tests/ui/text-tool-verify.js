@@ -69,9 +69,11 @@ async function main() {
 		await page.keyboard.press('Escape');
 		assert.equal(await page.evaluate(() => editor.layers.filter(layer => layer.textData).length), 0, 'Empty committed text is deleted');
 		await page.evaluate(() => editor.undo());
-		assert.equal(await page.evaluate(() => editor.layerManager.getActiveLayer().textData.text), 'First');
+		assert.equal(await page.evaluate(() => editor.layers.find(layer => layer.textData)?.textData.text), 'First');
+		assert.equal(await page.evaluate(() => editor.layerManager.getActiveLayer().type), 'base-image', 'Undo keeps the deletion step\'s surviving selection');
 		await page.evaluate(() => {
-			const manager = editor.textGlitterManager, layer = editor.layerManager.getActiveLayer();
+			const manager = editor.textGlitterManager, layer = editor.layers.find(layer => layer.textData);
+			editor.layerManager.setActiveLayer(layer.id);
 			manager.beginTextEdit(layer); manager.setTextSelection(1, 3); manager.insertTextSymbol('\u2605');
 		});
 		assert.equal(await page.locator('#canvasTextInput').inputValue(), 'F\u2605st');

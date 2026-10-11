@@ -44,7 +44,7 @@ class CanvasBounds {
 
 	snapshot() {
 		const { rect, source, padding, ratio, extension } = this;
-		return { rect: { ...rect }, source, padding, ratio: ratio && { ...ratio }, extension: { ...extension } };
+		return { rect: { ...rect }, source, padding, ratio: ratio && { ...ratio }, extension: { ...extension }, label: 'Edit crop bounds' };
 	}
 
 	record(before) {

@@ -7,9 +7,19 @@ class HistoryManager {
 		this.serial = 0;
 		this.restoreQueue = Promise.resolve();
 		this.coalescingOpen = false;
+		this.burstSerial = 0;
 	}
 
 	nextSerial() { return ++this.serial; }
+
+	burstCoalesceKey(group) {
+		const now = performance.now();
+		if (!this.activeBurst || this.activeBurst.group !== group || now - this.activeBurst.time > CONFIG.ui.history.coalesceMs) {
+			this.activeBurst = { group, key: `${group}:${++this.burstSerial}` };
+		}
+		this.activeBurst.time = now;
+		return this.activeBurst.key;
+	}
 
 	createStateSnapshot() {
 		return {
@@ -103,8 +113,9 @@ class HistoryManager {
 		}
 	}
 
-	async restoreState(state) {
+	async restoreState(state, touchedState = null) {
 		this.coalescingOpen = false;
+		this.activeBurst = null;
 		this.editor.maskEditor?.handleStateRestore();
 
 		// Restore canvas dimensions + base image FIRST, before paint/layers: the
@@ -128,7 +139,10 @@ class HistoryManager {
 		await this.editor.glitterManager?.ensureLayersPreviewAssetsReady(restoredLayers);
 		this.editor.layers = restoredLayers;
 		this.editor.paintMaskStore?.restorePaintState(this.editor.layers);
-		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds, { source: 'history' });
+		const touchedIds = touchedState?.selectedLayerIds?.filter(id => restoredLayers.some(layer => layer.id === id));
+		const selection = touchedIds?.length ? touchedIds : state.selectedLayerIds;
+		const activeId = touchedIds?.length ? touchedState.activeLayerId : state.activeLayerId;
+		this.editor.layerManager.restoreSelectionState(activeId, selection, { source: 'history' });
 
 		this.editor.layerManager.renderLayersList();
 		this.editor.requestPreviewUpdate();
@@ -187,14 +201,18 @@ class HistoryManager {
 		const session = this.sessionHistory(direction);
 		this.coalescingOpen = false;
 		if (session) {
+			const label = session[`${direction}Stack`]?.at(-1)?.label;
 			await session[direction]();
+			if (label) this.editor.updateStatus(`${direction === 'undo' ? 'Undo' : 'Redo'}: ${label}`);
 			this.updateButtons();
 			return;
 		}
 		const previousIndex = this.historyIndex;
 		this.historyIndex += direction === 'undo' ? -1 : 1;
 		try {
-			await this.restoreState(this.history[this.historyIndex]);
+			const touchedState = this.history[direction === 'undo' ? previousIndex : this.historyIndex];
+			await this.restoreState(this.history[this.historyIndex], touchedState);
+			if (touchedState.label) this.editor.updateStatus(`${direction === 'undo' ? 'Undo' : 'Redo'}: ${touchedState.label}`);
 		} catch (error) {
 			this.historyIndex = previousIndex;
 			throw error;
@@ -203,6 +221,7 @@ class HistoryManager {
 
 	reset(initialState = null) {
 		this.coalescingOpen = false;
+		this.activeBurst = null;
 		if (initialState) {
 			this.history = [{ ...initialState, serial: this.nextSerial() }];
 			this.historyIndex = 0;

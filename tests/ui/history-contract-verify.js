@@ -2,6 +2,8 @@
 
 const assert = require('assert');
 const { chromium } = require('playwright');
+const { execFileSync } = require('child_process');
+const { assertByteIdentity, exportSnapshot } = require('../parity/export-harness');
 
 async function main() {
 	const browser = await chromium.launch();
@@ -10,6 +12,16 @@ async function main() {
 		const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 		const errors = [];
 		page.on('pageerror', error => errors.push(error.message));
+		// Replay the audit against an earlier revision without changing the tree.
+		if (process.env.HISTORY_BASELINE) {
+			const revision = process.env.HISTORY_BASELINE;
+			const paths = execFileSync('git', ['diff', '--name-only', revision, '--', 'js'], { encoding: 'utf8' }).trim().split('\n');
+			const sources = new Map(paths.filter(path => path.endsWith('.js')).map(path => [path, execFileSync('git', ['show', `${revision}:${path}`], { maxBuffer: 10 * 1024 * 1024 })]));
+			await page.route('**/js/**', route => {
+				const path = new URL(route.request().url()).pathname.replace(/^.*?\/js\//u, 'js/');
+				return sources.has(path) ? route.fulfill({ contentType: 'text/javascript', body: sources.get(path) }) : route.continue();
+			});
+		}
 		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/');
 		await page.waitForFunction(() => window.editor && APP_BOOT.isComplete('library'));
 		await page.evaluate(async () => {
@@ -47,6 +59,13 @@ async function main() {
 			};
 		});
 		const rows = [
+			['Replace base image', '', 'const canvas = document.createElement("canvas"); canvas.width = 160; canvas.height = 120; const ctx = canvas.getContext("2d"); ctx.fillStyle = "#00ff00"; ctx.fillRect(0, 0, 160, 120); const blob = await new Promise(resolve => canvas.toBlob(resolve)); await editor.replaceBaseImageFile(new File([blob], "replacement.png", { type: "image/png" }))'],
+			['Duplicate selection', 'historyAudit.shape(); historyAudit.shape(); editor.layerManager.setSelection(editor.layers.slice(1).map(layer => layer.id))', 'editor.layerManager.cloneLayers([...editor.selectedLayerIds])'],
+			['Delete selection', 'historyAudit.shape(); historyAudit.shape(); editor.layerManager.setSelection(editor.layers.slice(1).map(layer => layer.id))', 'editor.layerManager.deleteLayers([...editor.selectedLayerIds])'],
+			['Brush from sticker selection', 'editor.layerManager.addLayer(LayerType.STICKER); editor.setTool(ToolType.BRUSH)', 'historyAudit.stroke()'],
+			['Fill from sticker selection', 'editor.layerManager.addLayer(LayerType.STICKER); editor.setTool(ToolType.GLITTER_FILL)', 'editor.handleColorPickAction(80, 60)'],
+			['Select stays selected over empty fill restore', 'editor.layerManager.addLayer(LayerType.GLITTER_FILL); editor.setTool(ToolType.SELECT)', 'historyAudit.shape()'],
+			['Color control', 'editor.layerManager.setSelection([editor.layers[0].id])', 'historyAudit.change("baseBackgroundColor", "#ff0000")'],
 			['Add frame', '', 'editor.layerManager.addLayer(LayerType.FRAME)'],
 			['Add sparkles', '', 'editor.layerManager.addLayer(LayerType.SPARKLES)'],
 			['Add sticker', '', 'editor.layerManager.addLayer(LayerType.STICKER)'],
@@ -87,9 +106,10 @@ async function main() {
 					const after = historyAudit.document(), tool = editor.currentTool;
 					await editor.undo();
 					const undone = historyAudit.document(), undoTool = editor.currentTool;
+					const undoStatus = document.getElementById('statusText').textContent;
 					const step = editor.historyManager.history[editor.historyManager.historyIndex + 1];
 					await editor.redo();
-					return { before, after, undone, redone: historyAudit.document(), tool, undoTool, redoTool: editor.currentTool, delta: editor.historyManager.historyIndex - start, label: step?.label };
+					return { before, after, undone, redone: historyAudit.document(), tool, undoTool, redoTool: editor.currentTool, delta: editor.historyManager.historyIndex - start, label: step?.label, undoStatus, redoStatus: document.getElementById('statusText').textContent };
 				}, { setup, action });
 				assert.equal(result.delta, 1, 'action must add one step');
 				assert.notEqual(result.before, result.after, 'action must change document');
@@ -99,10 +119,176 @@ async function main() {
 				assert.equal(result.undoTool, result.tool, 'undo tool');
 				assert.equal(result.redoTool, result.tool, 'redo tool');
 				assert(result.label && !['Edit layers', 'Edit document', 'Paint mask'].includes(result.label), `retired label: ${result.label}`);
+				assert.equal(result.undoStatus, `Undo: ${result.label}`, 'undo feedback');
+				assert.equal(result.redoStatus, `Redo: ${result.label}`, 'redo feedback');
 				console.log(`PASS ${name}`);
 			} catch (error) { failures.push(`${name}: ${error.message.split('\n')[0]}`); }
 		}
 		const probes = [
+			['Ten queued undos and redos', async () => {
+				assert(await page.evaluate(async () => {
+					const index = editor.historyManager.historyIndex;
+					for (let i = 0; i < 10; i++) historyAudit.shape();
+					const after = historyAudit.document(), tool = editor.currentTool;
+					await Promise.all(Array.from({ length: 10 }, () => editor.undo()));
+					if (editor.historyManager.historyIndex !== index || editor.layers.length !== 1 || editor.currentTool !== tool) return false;
+					await Promise.all(Array.from({ length: 10 }, () => editor.redo()));
+					return historyAudit.document() === after && editor.currentTool === tool;
+				}), 'queued steps did not return to the same document');
+			}],
+			['Text pause, caret and branching', async () => {
+				await page.evaluate(() => createTextAt(editor, { position: { x: 20, y: 40 } }));
+				const initialText = await page.locator('#canvasTextInput').inputValue();
+				await page.locator('#canvasTextInput').pressSequentially('ab');
+				await page.waitForTimeout(await page.evaluate(() => CONFIG.ui.history.textPauseMs + 20));
+				await page.locator('#canvasTextInput').pressSequentially('cd');
+				await page.keyboard.press('Control+z');
+				assert.equal(await page.locator('#canvasTextInput').inputValue(), 'ab');
+				assert.deepEqual(await page.evaluate(() => { const s = editor.textGlitterManager.editSession; return [s.selectionStart, s.selectionEnd]; }), [2, 2]);
+				await page.locator('#canvasTextInput').pressSequentially('e');
+				assert.equal(await page.evaluate(() => editor.historyManager.canRedo()), false);
+				await page.keyboard.press('Control+z'); assert.equal(await page.locator('#canvasTextInput').inputValue(), 'ab');
+				await page.keyboard.press('Control+z'); assert.equal(await page.locator('#canvasTextInput').inputValue(), initialText);
+				await page.keyboard.press('Control+z');
+				assert.equal(await page.evaluate(() => editor.textGlitterManager.editSession), null, 'exhausted session falls through');
+				assert.equal(await page.evaluate(() => editor.layers.filter(layer => layer.textData).length), 0);
+			}],
+			['Path nudges split across pauses', async () => {
+				assert(await page.evaluate(async () => {
+					editor.setTool(ToolType.LINE); TOOLS[ToolType.LINE].onCanvasDrag(editor, { isClick: false, start: { x: 20, y: 20 }, end: { x: 100, y: 60 } });
+					editor.pathEdit.begin(editor.layerManager.getActiveLayer()); editor.pathEdit.session.selection = new Set(['0:1']);
+					const index = editor.historyManager.historyIndex;
+					editor.pathEdit.nudge({ key: 'ArrowRight' }); await new Promise(resolve => setTimeout(resolve, CONFIG.ui.history.coalesceMs + 20));
+					editor.pathEdit.nudge({ key: 'ArrowRight' }); return editor.historyManager.historyIndex === index + 2;
+				}), 'path nudges across a pause merged');
+			}],
+			['Pending panel text commits before undo', async () => {
+				assert(await page.evaluate(async () => {
+					await createTextAt(editor, { position: { x: 20, y: 40 } });
+					const manager = editor.textGlitterManager;
+					manager.applyTextEdit(editor.layerManager.getActiveLayer(), 'Before'); manager.endTextEdit();
+					manager.applyTextEdit(editor.layerManager.getActiveLayer(), 'After'); await editor.undo();
+					await new Promise(resolve => setTimeout(resolve, CONFIG.ui.live.settleMs + 50));
+					return editor.layerManager.getActiveLayer().textData.text === 'Before' && editor.historyManager.canRedo();
+				}), 'pending text was lost or its timer cleared redo');
+			}],
+			['Nudge pauses split bursts', async () => {
+				assert(await page.evaluate(async () => {
+					historyAudit.shape(); await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+					const index = editor.historyManager.historyIndex;
+					historyAudit.key('ArrowRight'); await new Promise(resolve => setTimeout(resolve, CONFIG.ui.history.coalesceMs + 20));
+					historyAudit.key('ArrowRight'); await new Promise(resolve => setTimeout(resolve, CONFIG.ui.history.coalesceMs + 20));
+					return editor.historyManager.historyIndex === index + 2;
+				}), 'nudges across a pause merged');
+			}],
+			['Crop session steps', async () => {
+				assert(await page.evaluate(async () => {
+					editor.setTool(ToolType.CROP); const bounds = editor.canvasBounds;
+					const before = JSON.stringify(bounds.snapshot()), index = editor.historyManager.historyIndex;
+					bounds.setRect({ x: 10, y: 10, width: 100, height: 80 }); const after = JSON.stringify(bounds.snapshot());
+					if (bounds.undoStack.length !== 1) return false;
+					if (!bounds.undoStack.at(-1).label) throw new Error('Crop session step has no label');
+					await editor.undo(); if (JSON.stringify(bounds.snapshot()) !== before || editor.currentTool !== ToolType.CROP) return false;
+					await editor.redo(); return JSON.stringify(bounds.snapshot()) === after && editor.historyManager.historyIndex === index && editor.currentTool === ToolType.CROP;
+				}), 'crop session leaked into document history');
+			}],
+			['Polygon area session', async () => {
+				assert(await page.evaluate(async () => {
+					editor.setTool(ToolType.AREA); const index = editor.historyManager.historyIndex;
+					for (const [x, y] of [[20, 20], [100, 20], [100, 80]]) editor.areaSelect.addPolygonCorner(historyAudit.point(x, y));
+					if (editor.areaSelection.history.undoStack.length) return false;
+					editor.areaSelect.closePolygon(); const after = JSON.stringify(editor.areaSelection.ops);
+					if (editor.areaSelection.history.undoStack.length !== 1 || !editor.areaSelection.history.undoStack.at(-1).label) return false;
+					await editor.undo(); if (!editor.areaSelection.isEmpty) return false;
+					await editor.redo(); return JSON.stringify(editor.areaSelection.ops) === after && editor.historyManager.historyIndex === index && editor.currentTool === ToolType.AREA;
+				}), 'polygon corners must commit one area step on closure');
+			}],
+			['Modify Area session', async () => {
+				assert(await page.evaluate(async () => {
+					editor.setTool(ToolType.AREA); editor.areaSelection.apply([[{ x: 20, y: 20 }, { x: 80, y: 20 }, { x: 80, y: 70 }, { x: 20, y: 70 }]]);
+					const area = editor.areaSelection, index = editor.historyManager.historyIndex, before = JSON.stringify(area.ops), steps = area.history.undoStack.length;
+					editor.areaSelect.beginModify(Object.keys(AREA_MODIFIERS)[0]); editor.areaSelect.setModifyAmount(8);
+					if (area.history.undoStack.length !== steps) return false;
+					editor.areaSelect.applyModify(); const after = JSON.stringify(area.ops);
+					if (after === before || area.history.undoStack.length !== steps + 1 || !area.history.undoStack.at(-1).label) return false;
+					await editor.undo(); if (JSON.stringify(area.ops) !== before) return false;
+					await editor.redo(); return JSON.stringify(area.ops) === after && editor.historyManager.historyIndex === index && editor.currentTool === ToolType.AREA;
+				}), 'area modifications must commit one area step on Apply');
+			}],
+			['Select Area session steps', async () => {
+				assert(await page.evaluate(async () => {
+					editor.setTool(ToolType.AREA); const area = editor.areaSelection, index = editor.historyManager.historyIndex;
+					area.apply([[{ x: 10, y: 10 }, { x: 80, y: 10 }, { x: 80, y: 70 }, { x: 10, y: 70 }]]);
+					const after = JSON.stringify(area.ops); if (area.history.undoStack.length !== 1) return false;
+					await editor.undo(); if (!area.isEmpty || editor.currentTool !== ToolType.AREA) return false;
+					await editor.redo(); return JSON.stringify(area.ops) === after && editor.historyManager.historyIndex === index && editor.currentTool === ToolType.AREA;
+				}), 'area session undo/redo');
+			}],
+			['Auto Glitter blocks document history', async () => {
+				assert(await page.evaluate(async () => {
+					historyAudit.shape(); editor.autoGlitterManager.startSession();
+					const before = historyAudit.document(), index = editor.historyManager.historyIndex, tool = editor.currentTool;
+					await editor.undo(); await editor.redo();
+					return historyAudit.document() === before && editor.historyManager.historyIndex === index && editor.currentTool === tool;
+				}), 'history changed during Auto Glitter');
+				await page.evaluate(() => { editor.autoGlitterManager.session = null; });
+			}],
+			['Number and color fields use document history', async () => {
+				for (const kind of ['number', 'color', 'hex', 'readout']) {
+					assert(await page.evaluate(async kind => {
+						historyAudit.shape(); const index = editor.historyManager.historyIndex;
+						const control = document.createElement(kind === 'readout' ? 'span' : 'input');
+						if (kind === 'readout') { control.contentEditable = 'true'; control.setAttribute('role', 'spinbutton'); }
+						else control.type = kind === 'hex' ? 'text' : kind;
+						if (kind === 'hex') control.className = 'color-hex-input';
+						document.body.append(control); control.focus();
+						const event = new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true, cancelable: true }); control.dispatchEvent(event);
+						await editor.historyManager.restoreQueue; control.remove();
+						return event.defaultPrevented && editor.historyManager.historyIndex === index - 1;
+					}, kind), `${kind} kept native undo`);
+				}
+			}],
+			['Native field undo changes typing only', async () => {
+				await page.evaluate(() => { historyAudit.shape(); const field = document.createElement('input'); field.id = 'historyNativeField'; field.type = 'search'; document.body.append(field); });
+				const before = await page.evaluate(() => historyAudit.document());
+				await page.locator('#historyNativeField').pressSequentially('Search words');
+				await page.keyboard.press('Control+z');
+				assert.notEqual(await page.locator('#historyNativeField').inputValue(), 'Search words');
+				assert.equal(await page.evaluate(() => historyAudit.document()), before);
+				await page.locator('#historyNativeField').evaluate(node => node.remove());
+			}],
+			['Pointer path drag cancels before history', async () => {
+				assert(await page.evaluate(async () => {
+					editor.setTool(ToolType.PEN); editor.pathEdit.press(historyAudit.point(20, 20)); editor.pathEdit.release(historyAudit.point(20, 20));
+					editor.pathEdit.press(historyAudit.point(100, 60)); const index = editor.historyManager.historyIndex;
+					await editor.undo(); return !editor.pathEdit.session?.drag && editor.historyManager.historyIndex === index;
+				}), 'path drag survived or document stepped');
+			}],
+			['Pointer area drag cancels before history', async () => {
+				assert(await page.evaluate(async () => {
+					historyAudit.shape(); editor.setTool(ToolType.AREA); editor.areaSelect.press(historyAudit.point(20, 20)); editor.areaSelect.move(historyAudit.point(100, 60));
+					const index = editor.historyManager.historyIndex; await editor.undo();
+					return !editor.areaSelect.drag && editor.historyManager.historyIndex === index;
+				}), 'area drag survived or document stepped');
+			}],
+			['Navigation and selection are not document steps', async () => {
+				assert(await page.evaluate(() => {
+					historyAudit.shape(); const before = historyAudit.document(), index = editor.historyManager.historyIndex;
+					editor.setTool(ToolType.SELECT); TOOLS[ToolType.SELECT].onCanvasAction(editor, { x: 1, y: 1, hitCanvas: true });
+					const point = historyAudit.point(80, 60);
+					editor.setTool(ToolType.HAND); TOOLS[ToolType.HAND].onCanvasAction(editor, point); editor.viewport.endPan();
+					editor.setTool(ToolType.ZOOM); TOOLS[ToolType.ZOOM].onCanvasAction(editor, { ...point, options: {} });
+					return historyAudit.document() === before && editor.historyManager.historyIndex === index;
+				}), 'view or selection entered history');
+			}],
+			['Animated sticker export survives undo', async () => {
+				await page.evaluate(() => { editor.layerManager.addLayer(LayerType.STICKER); editor.updatePreview(); });
+				const first = await exportSnapshot(page, { maxFrames: 2 }, { minLayers: 2 });
+				const second = await exportSnapshot(page, { maxFrames: 2 }, { minLayers: 2 });
+				assertByteIdentity(first, second, 'Repeat animated sticker export');
+				await page.evaluate(async () => { editor.layerManager.toggleLayerVisibility(editor.activeLayerId); await editor.undo(); });
+				assertByteIdentity(first, await exportSnapshot(page, { maxFrames: 2 }, { minLayers: 2 }), 'Edit undo animated sticker export');
+			}],
 			['Typing keeps edit session', async () => {
 				await page.evaluate(() => createTextAt(editor, { position: { x: 20, y: 40 } }));
 				await page.locator('#canvasTextInput').pressSequentially('one two three');

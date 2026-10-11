@@ -845,7 +845,7 @@ class PathEditSession {
 			point.x += dx;
 			point.y += dy;
 		});
-		this.commit(subpaths, 'Move points', `path-nudge:${session.layerId}`);
+		this.commit(subpaths, 'Move points', this.editor.historyManager.burstCoalesceKey(`path-nudge:${session.layerId}`));
 	}
 
 	// Enter opens the selected path with Select, finishes a path being drawn,
