@@ -188,10 +188,10 @@ const APP_SETTINGS_LAYOUT = (() => {
 	];
 })();
 
-// Render both settings modals. Runs before anything binds their controls.
-function renderSettingsModals() {
-	renderSettingsGroups(document.getElementById('exportSettingsGroups'), EXPORT_SETTINGS_LAYOUT);
-	renderSettingsGroups(document.getElementById('settingsGroups'), APP_SETTINGS_LAYOUT);
+// Render a settings body before binding its controls on first open.
+function renderSettingsModals(id) {
+	if (id === 'exportSettingsModal') renderSettingsGroups(document.getElementById('exportSettingsGroups'), EXPORT_SETTINGS_LAYOUT);
+	if (id === 'settingsModal') renderSettingsGroups(document.getElementById('settingsGroups'), APP_SETTINGS_LAYOUT);
 }
 
 class SettingsStore {

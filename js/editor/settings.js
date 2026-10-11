@@ -79,11 +79,40 @@ initializeExportSettings() {
 	// Sync UI to match exportSettings
 	this.syncExportSettingsToUI();
 
-	// Setup listeners
-	this.setupExportSettingsListeners();
+	// Detect export capabilities even before its settings UI exists.
+	Mp4Exporter.isSupported().then((supported) => {
+		this.mp4ExportSupported = supported;
+		if (!supported && this.exportSettings.animationFormat === 'mp4') { this.exportSettings.animationFormat = 'gif'; this.saveSettingsToStorage(); }
+		this.updateExportFormatUI();
+	}).catch(() => {
+		this.mp4ExportSupported = false;
+		if (this.exportSettings.animationFormat === 'mp4') { this.exportSettings.animationFormat = 'gif'; this.saveSettingsToStorage(); }
+		this.updateExportFormatUI();
+	});
+
 	this.setupSettingsResetListeners();
 	this.setupAnimationLoop();
 }
+
+,
+	ensureSettingsModal(id) {
+		const modal = document.getElementById(id);
+		if (modal.dataset.bodyReady) return;
+		const started = performance.now();
+		if (id === 'shortcutsModal') {
+			this.initializeShortcutsModal();
+			this.shortcutsFilter?.refresh();
+		} else {
+			renderSettingsModals(id);
+			if (id === 'settingsModal') this.setupAppSettingsListeners();
+			else this.setupExportSettingsListeners();
+			this.syncExportSettingsToUI();
+			this.applyShowAllControls();
+			(id === 'settingsModal' ? this.settingsFilter : this.exportSettingsFilter)?.refresh();
+		}
+		modal.dataset.bodyReady = 'true';
+		performance.measure(`glitter:modal:${id}`, { start: started, end: performance.now() });
+	}
 
 ,
 	syncExportSettingsToUI() {
@@ -146,7 +175,8 @@ initializeExportSettings() {
 ,
 	updateMatteColorUI() {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
-		document.getElementById('matteColorRow').hidden = !target.usesMatte;
+		const row = document.getElementById('matteColorRow');
+		if (row) row.hidden = !target.usesMatte;
 		setSettingsRowInactive(
 			document.getElementById('matteColorRow'),
 			target.supportsTransparency && this.exportSettings.transparency
@@ -343,17 +373,10 @@ initializeExportSettings() {
 			this.updateExportFormatUI();
 			this.saveSettingsToStorage();
 		});
+	}
 
-		Mp4Exporter.isSupported().then((supported) => {
-			this.mp4ExportSupported = supported;
-			if (!supported && this.exportSettings.animationFormat === 'mp4') { this.exportSettings.animationFormat = 'gif'; this.saveSettingsToStorage(); }
-			this.updateExportFormatUI();
-		}).catch(() => {
-			this.mp4ExportSupported = false;
-			if (this.exportSettings.animationFormat === 'mp4') { this.exportSettings.animationFormat = 'gif'; this.saveSettingsToStorage(); }
-			this.updateExportFormatUI();
-		});
-
+,
+	setupAppSettingsListeners() {
 		this.bindPreferenceToggle('showHelpfulHints', 'showHints', () => this.updateHelpfulMessage());
 		this.bindPreferenceToggle('showWelcomeOnStartup', 'showWelcomeOnStartup');
 		this.bindPreferenceToggle('confirmDestructiveActions', 'confirmDestructiveActions');
@@ -489,9 +512,9 @@ initializeExportSettings() {
 		if (formatRevert) formatRevert.disabled = target.format === CONFIG.export.defaults[target.isStill ? 'stillFormat' : 'animationFormat'];
 		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = !target.isGif);
 		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !target.isVideo);
-		document.getElementById('transparencySettingsRow').hidden = !target.supportsTransparency || target.isVector;
-		document.getElementById('exportStillFrameRow').hidden = !target.isStill || target.isVector || !this.hasAnimatedExportContent();
-		document.getElementById('exportJpegQualityRow').hidden = !target.supportsJpegCompression;
+		document.getElementById('transparencySettingsRow')?.toggleAttribute('hidden', !target.supportsTransparency || target.isVector);
+		document.getElementById('exportStillFrameRow')?.toggleAttribute('hidden', !target.isStill || target.isVector || !this.hasAnimatedExportContent());
+		document.getElementById('exportJpegQualityRow')?.toggleAttribute('hidden', !target.supportsJpegCompression);
 		document.querySelector('#exportDitherTemporalMode')?.closest('.settings-row')?.toggleAttribute('hidden', !target.supportsTemporalGifLook);
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
 			const section = group.dataset.section;

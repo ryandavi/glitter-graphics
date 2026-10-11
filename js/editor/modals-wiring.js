@@ -35,12 +35,16 @@ updateOrientationButtons(width, height) {
 				closeBtnId: 'closeShortcutsModal',
 				resetScrollOnOpen: true,
 				initialFocusSelector: '#shortcutSearch',
-				onOpen: () => this.shortcutsFilter?.reset()
+				onOpen: () => {
+					this.ensureSettingsModal('shortcutsModal');
+					this.shortcutsFilter?.reset();
+				}
 			})
 			.register('exportSettingsModal', {
 				closeBtnId: ['closeExportSettingsModal', 'closeExportSettingsModalFooter'],
 				resetScrollOnOpen: true,
 				onOpen: () => {
+					this.ensureSettingsModal('exportSettingsModal');
 					this.exportSettingsFilter?.reset();
 					this.updateExportDuration();
 					syncFieldReverts(document.getElementById('exportSettingsModal'));
@@ -51,6 +55,8 @@ updateOrientationButtons(width, height) {
 				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
 				resetScrollOnOpen: true,
 				onOpen: async () => {
+					this.ensureSettingsModal('settingsModal');
+					this.syncExportSettingsToUI();
 					// Canvas controls write some of these switches without an event.
 					syncFieldReverts(document.getElementById('settingsModal'));
 					const htmlSceneExporter = await this.ensureHtmlSceneExporter();

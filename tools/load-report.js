@@ -70,6 +70,7 @@ async function measure(browser, throttled) {
 				stagesMs: Object.fromEntries((CONFIG.app.boot?.stages || []).map(({ id }) => [id, id === 'shell' ? performance.getEntriesByName('first-paint')[0]?.startTime : performance.getEntriesByName(`glitter:boot:${id}`)[0]?.startTime])),
 				layoutShift: window.loadReportShifts.reduce((sum, value) => sum + value, 0),
 				phasesMs: Object.fromEntries(performance.getEntriesByType('mark').filter((entry) => entry.name.startsWith('glitter:')).map((entry) => [entry.name, entry.startTime])),
+				constructorMs: Object.fromEntries(performance.getEntriesByType('measure').filter((entry) => entry.name.startsWith('glitter:constructor:')).map((entry) => [entry.name.slice('glitter:constructor:'.length), entry.duration])),
 				longestTaskMs: Math.max(0, ...window.loadReportTasks)
 			}));
 			const breakdown = {};

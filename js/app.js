@@ -78,20 +78,24 @@ class GlitterEditor {
 		// one generated DOM structure, built once (never re-rendered after
 		// boot; rebuilding would orphan listeners). Phone sheets expose the
 		// same stable hosts, with no runtime re-parenting.
+		let constructorStepStarted = performance.now();
 		renderPanelSections(this);
+		performance.measure('glitter:constructor:renderPanelSections', { start: constructorStepStarted, end: performance.now() });
+		constructorStepStarted = performance.now();
 		renderAssetBrowsers();
+		performance.measure('glitter:constructor:renderAssetBrowsers', { start: constructorStepStarted, end: performance.now() });
 		setupLibrarySearchToggle();
 		setupLibraryViewMenu();
 		this.renderTransformPanels();
 		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
 		this.contextToolbarRenderer.render();
 		renderToolButtons(document.getElementById('toolbarToolsGroup'));
-		renderSettingsModals();
 		initializeColorEyedroppers(this);
 
 		// ============================================================================
 		// MANAGERS
 		// ============================================================================
+		constructorStepStarted = performance.now();
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
 		this.viewport.editor = this;
 		this.layerManager = new LayerManager(this);
@@ -144,20 +148,22 @@ class GlitterEditor {
 		this.templateManager = new TemplateManager(this);
 		this.htmlSceneExporter = null;
 		this._registerMemoryMeasurements();
+		performance.measure('glitter:constructor:managers', { start: constructorStepStarted, end: performance.now() });
 
 		// ============================================================================
 		// INITIALIZATION
 		// ============================================================================
 		this.initializeProjectNameInput();
 		this.setTool(CONFIG.app.startup.tool, { announce: false });
+		constructorStepStarted = performance.now();
 		this.setupEventListeners();
+		performance.measure('glitter:constructor:setupEventListeners', { start: constructorStepStarted, end: performance.now() });
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
 		this.initializeAdvancedDisclosures();
 		// Rule D: every panel slider's revert reflects whether it is at default.
 		initializePropertyReverts();
 		initializePanelResize(this);
-		this.initializeShortcutsModal();
 		this.initializeExportSettings();
 		this.initializeModalFilters();
 	}
