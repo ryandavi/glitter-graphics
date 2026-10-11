@@ -20,11 +20,14 @@ const EDITOR_FILL_TOOL_METHODS = {
 	},
 	handleColorPickAction(x, y, event = null) {
 		if (this.currentTool !== ToolType.GLITTER_FILL || !this.originalImage) return;
-		if (!this.resolveFillLayer(x, y)) {
+		const layerCount = this.layers.length;
+		const layer = this.resolveFillLayer(x, y, { deferHistory: true });
+		if (!layer) {
 			this.showError('Please select or create an editable fill layer first');
 			return;
 		}
 		this.glitterFillSelector(x, y, event);
+		if (this.layers.length > layerCount) requestAnimationFrame(() => this.openCreateTarget(layer));
 	},
 	glitterFillSelector(x, y, event) {
 		const layer = this.layerManager.getActiveLayer();

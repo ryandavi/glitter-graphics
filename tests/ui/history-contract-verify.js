@@ -23,6 +23,16 @@ async function main() {
 					editor.setTool(ToolType.SELECT);
 					document.activeElement?.blur();
 				},
+				change(id, value) {
+					const input = document.getElementById(id);
+					if (input.type === 'checkbox') input.checked = value; else input.value = value;
+					input.dispatchEvent(new Event('input', { bubbles: true }));
+					input.dispatchEvent(new Event('change', { bubbles: true }));
+				},
+				point(x, y) {
+					const rect = editor.previewWrapper.getBoundingClientRect();
+					return { clientX: rect.left + x * editor.viewport.currentZoom, clientY: rect.top + y * editor.viewport.currentZoom, pointerType: 'mouse', button: 0 };
+				},
 				shape() { return editor.layerManager.addLayer(LayerType.SHAPE); },
 				document() {
 					const state = editor.historyManager.createStateSnapshot();
@@ -37,6 +47,17 @@ async function main() {
 			};
 		});
 		const rows = [
+			['Add frame', '', 'editor.layerManager.addLayer(LayerType.FRAME)'],
+			['Add sparkles', '', 'editor.layerManager.addLayer(LayerType.SPARKLES)'],
+			['Add sticker', '', 'editor.layerManager.addLayer(LayerType.STICKER)'],
+			['Reorder layers', 'historyAudit.shape(); historyAudit.shape()', 'const lm = editor.layerManager; lm.draggedLayerId = editor.layers[1].id; lm.dropTargetId = editor.layers[2].id; lm.dropInsertAbove = true; lm.handleLayerDrop({ preventDefault() {} })'],
+			['Rename layer', 'historyAudit.shape()', 'document.querySelector(`[data-layer-id="${editor.activeLayerId}"] .layer-name`).dispatchEvent(new MouseEvent("dblclick", { bubbles: true })); const input = document.querySelector(".layer-name-input"); input.value = "Renamed"; input.blur()'],
+			['Number control', 'historyAudit.shape()', 'historyAudit.change("shapePosX", "90")'],
+			['Toggle control', 'historyAudit.shape()', 'historyAudit.change("shapeFlipX", true)'],
+			['Select control', 'historyAudit.shape()', 'historyAudit.change("shapeTransformAnchor", "0,0")'],
+			['Erase stroke', 'editor.setTool(ToolType.BRUSH); historyAudit.stroke(); editor.maskEditor.setMode("sub")', 'historyAudit.stroke()'],
+			['Clear paint', 'editor.setTool(ToolType.BRUSH); editor.maskEditor.setMode("add"); historyAudit.stroke()', 'const confirm = editor.confirmAction; editor.confirmAction = async () => true; document.getElementById("clearMaskPaint").click(); await new Promise(resolve => setTimeout(resolve, 0)); editor.confirmAction = confirm'],
+			['Pen first two points', 'editor.setTool(ToolType.PEN); editor.layerManager.clearSelection()', 'editor.pathEdit.press(historyAudit.point(20, 20)); editor.pathEdit.release(historyAudit.point(20, 20)); editor.pathEdit.press(historyAudit.point(100, 60)); editor.pathEdit.release(historyAudit.point(100, 60))'],
 			['Add fill', '', 'editor.layerManager.addLayer(LayerType.GLITTER_FILL)'],
 			['Add shape', '', 'historyAudit.shape()'],
 			['Add filter', '', 'editor.layerManager.addLayer(LayerType.FILTER)'],
@@ -73,6 +94,7 @@ async function main() {
 				assert.equal(result.delta, 1, 'action must add one step');
 				assert.notEqual(result.before, result.after, 'action must change document');
 				assert.equal(result.undone, result.before, 'undo document');
+				if (process.env.HISTORY_DIAGNOSTICS && result.redone !== result.after) console.log(name, JSON.stringify({ after: JSON.parse(result.after).layers, redone: JSON.parse(result.redone).layers }));
 				assert.equal(result.redone, result.after, 'redo document');
 				assert.equal(result.undoTool, result.tool, 'undo tool');
 				assert.equal(result.redoTool, result.tool, 'redo tool');
