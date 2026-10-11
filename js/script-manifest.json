@@ -4,7 +4,6 @@
 	],
 	"boot": [
 		"js/vendor/omggif.js",
-		"js/vendor/gif.js",
 		"js/core/releases.js",
 		"js/core/fields.js",
 		"js/core/color.js",
@@ -130,6 +129,7 @@
 		"js/export/ExportTimeline.js",
 		"js/export/GifPalette.js",
 		"js/export/AuthoredFrameResolver.js",
+		"js/export/DeferredExporter.js",
 		"js/export/GifEncodingPipeline.js",
 		"js/systems/AnimationTicker.js",
 		"js/systems/AnimationPanelController.js",
@@ -139,7 +139,6 @@
 		"js/export/export-report.js",
 		"js/export/ExportResultPresenter.js",
 		"js/export/SceneCompositor.js",
-		"js/export/DeferredExporter.js",
 		"js/export/GifExporter.js",
 		"js/export/SvgExporter.js",
 		"js/export/StillImageExporter.js",
@@ -226,5 +225,10 @@
 	"mp4-codec": [
 		"js/vendor/mp4-muxer.js",
 		"js/core/mp4-codec-group.js"
+	],
+	"gif-codec": [
+		"js/vendor/gif.js",
+		"js/export/GifFrameEncoder.js",
+		"js/core/gif-codec-group.js"
 	]
 }

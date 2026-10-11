@@ -269,6 +269,15 @@ async function main() {
 			const loads = await Promise.all([loadScriptGroup('export'), loadScriptGroup('export')]);
 			return loads[0] === loads[1];
 		}), 'Concurrent group loads did not share exports');
+
+		const gifFiles = require('../../js/script-manifest.json')['gif-codec'];
+		assert(!groupRequests.some(url => gifFiles.some(file => url.endsWith('/' + file))), 'PNG export downloaded the GIF encoder');
+		await firstUse.evaluate(() => { setActiveExportTarget(editor.exportSettings, 'animation:gif'); editor.exportCurrentTarget(); });
+		await firstUse.waitForFunction(() => window.exportedBytes.length === 3);
+		await firstUse.evaluate(() => editor.exportCurrentTarget());
+		await firstUse.waitForFunction(() => window.exportedBytes.length === 4);
+		assert(await firstUse.evaluate(() => JSON.stringify(window.exportedBytes[2]) === JSON.stringify(window.exportedBytes[3])), 'First-use GIF changed repeat output');
+		assert(gifFiles.every(file => groupRequests.filter(url => url.endsWith('/' + file)).length === 1), 'GIF encoder group was not loaded exactly once');
 		let failHtml = true;
 		await firstUse.route('**/js/export/HtmlSceneExporter.js?*', route => failHtml ? route.abort() : route.continue());
 		assert(await firstUse.evaluate(async () => { try { await loadScriptGroup('html'); return false; } catch { return true; } }), 'A failed code group did not reject');

@@ -1,13 +1,14 @@
 'use strict';
 
 class DeferredExporter {
-	constructor(encoder) {
+	constructor(encoder, group = 'export') {
 		this._encoder = encoder;
+		this._group = group;
 		this._hydration = null;
 	}
 
 	async _hydrate() {
-		if (!this._hydration) this._hydration = loadScriptGroup('export').then((exports) => {
+		if (!this._hydration) this._hydration = loadScriptGroup(this._group).then((exports) => {
 			this._encoderPrototype = exports[this._encoder].prototype;
 			for (const [name, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(this._encoderPrototype))) {
 				if (name !== 'constructor' && !Object.hasOwn(this, name)) Object.defineProperty(this, name, descriptor);
@@ -16,6 +17,7 @@ class DeferredExporter {
 		return this._hydration;
 	}
 
+	async encode(...args) { await this._hydrate(); return this._encoderPrototype.encode.call(this, ...args); }
 	async process(...args) { await this._hydrate(); return this._encoderPrototype.process.call(this, ...args); }
 	async serialize(...args) { await this._hydrate(); return this._encoderPrototype.serialize.call(this, ...args); }
 	async _planFrames(...args) { await this._hydrate(); return this._encoderPrototype._planFrames.call(this, ...args); }
