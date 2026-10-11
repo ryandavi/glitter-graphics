@@ -25,4 +25,43 @@ function getScriptUrls(group) {
 	});
 }
 
-module.exports = { scriptManifest, getScriptUrls };
+function getGroupGlobals() {
+	const espree = require('espree');
+	const groups = {};
+	const bindings = (node) => {
+		if (!node) return [];
+		if (node.type === 'Identifier') return [node.name];
+		if (node.type === 'RestElement') return bindings(node.argument);
+		if (node.type === 'AssignmentPattern') return bindings(node.left);
+		if (node.type === 'ArrayPattern') return node.elements.flatMap(bindings);
+		if (node.type === 'ObjectPattern') return node.properties.flatMap(property => bindings(property.value || property.argument));
+		return [];
+	};
+	for (const [id, files] of Object.entries(scriptManifest)) {
+		const names = files.flatMap(file => {
+			const ast = espree.parse(fs.readFileSync(path.join(root, file), 'utf8'), { ecmaVersion: 2022, sourceType: 'script' });
+			const declared = ast.body.flatMap(node => node.type === 'VariableDeclaration'
+				? node.declarations.flatMap(entry => bindings(entry.id))
+				: /^(Function|Class)Declaration$/u.test(node.type) ? bindings(node.id) : []);
+			const visit = (node) => {
+				if (!node || typeof node !== 'object') return;
+				const target = node.type === 'AssignmentExpression' && node.left;
+				if (target?.type === 'MemberExpression' && !target.computed
+					&& ['root', 'window', 'self', 'globalThis'].includes(target.object.name)) declared.push(target.property.name);
+				for (const value of Object.values(node)) {
+					if (Array.isArray(value)) value.forEach(visit);
+					else if (value && typeof value === 'object') visit(value);
+				}
+			};
+			visit(ast);
+			return declared;
+		});
+		// gif.js publishes its constructor through a UMD wrapper.
+		if (files.includes('js/vendor/gif.js')) names.push('GIF');
+		groups[id] = names;
+	}
+	groups.head.push('SCRIPT_GROUP_URLS');
+	return groups;
+}
+
+module.exports = { scriptManifest, getScriptUrls, getGroupGlobals };

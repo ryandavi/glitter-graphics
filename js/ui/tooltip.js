@@ -84,7 +84,7 @@ class TooltipManager {
 	// (where it lived, whose it is, the person's other accounts), then the
 	// gloss. Null when the element has no card or the data isn't loaded yet.
 	entityCard(element) {
-		const { ENTITY_DATA } = SCRIPT_GROUP_EXPORTS.get('entities') || {};
+		const { ENTITY_DATA, ENTITY_KIND_LABELS } = SCRIPT_GROUP_EXPORTS.get('entities') || {};
 		if (!('card' in element.dataset) || !SCRIPT_GROUP_EXPORTS.get('entities')) return null;
 		const entity = ENTITY_DATA[element.dataset.entity];
 		if (!entity) return null;

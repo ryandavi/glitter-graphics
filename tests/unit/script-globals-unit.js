@@ -34,4 +34,25 @@ const breakpoint = fs.readFileSync(path.join(root, 'js/core/config.js'), 'utf8')
 const sassBreakpoint = fs.readFileSync(path.join(root, 'css/_mixins.scss'), 'utf8').match(/\$mobile-breakpoint: (\d+)px/);
 assert(breakpoint && sassBreakpoint, 'the phone breakpoint is declared in CONFIG.ui.mobile and css/_mixins.scss');
 assert.strictEqual(sassBreakpoint[1], breakpoint[1], 'css/_mixins.scss $mobile-breakpoint matches CONFIG.ui.mobile.breakpoint');
-console.log(`PASS shared math, the phone breakpoint and ${names.size} unique script globals`);
+async function checkGroupBoundaries() {
+	const { ESLint } = require('eslint');
+	const { scriptManifest, getGroupGlobals } = require('../../tools/script-manifest');
+	const eslint = new ESLint({ cwd: root });
+	const groups = getGroupGlobals();
+	const lint = async (source, file) => (await eslint.lintText(source, { filePath: path.join(root, file) }))[0].messages;
+	const bootFile = 'js/core/dom.js';
+	assert.strictEqual((await lint('GifExporter; Math; VideoEncoder;', bootFile)).length, 0, 'Boot lost shared/native globals');
+	for (const [id, files] of Object.entries(scriptManifest)) {
+		if (id === 'head' || id === 'boot') continue;
+		const global = groups[id][0];
+		if (!global) continue;
+		for (const source of [`${global};`, `typeof ${global};`]) {
+			assert((await lint(source, bootFile)).some(message => message.ruleId === 'no-undef'), `Boot may reference ${id} global ${global}`);
+		}
+		assert((await lint(`window.${global};`, bootFile)).some(message => message.ruleId === 'no-restricted-properties'), `Boot may bypass the boundary through window.${global}`);
+		assert.strictEqual((await lint(`${global}; GifExporter;`, files.at(-1))).length, 0, `${id} lost its own/shared globals`);
+	}
+	assert((await lint('HtmlSceneExporter;', 'js/export/GifExportEncoder.js')).some(message => message.ruleId === 'no-undef'), 'A lazy group may reach into another lazy group');
+	console.log(`PASS shared math, the phone breakpoint, ${names.size} unique script globals and script-group lint boundaries`);
+}
+checkGroupBoundaries().catch(error => { console.error(error); process.exitCode = 1; });

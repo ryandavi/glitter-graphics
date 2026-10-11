@@ -1,4 +1,5 @@
-{
+const { scriptManifest, getGroupGlobals } = require('./tools/script-manifest');
+const config = {
 	"env": {
 		"browser": true,
 		"es2022": true,
@@ -53,4 +54,19 @@
 			}
 		}
 	]
+};
+
+config.globals = { VideoEncoder: 'readonly', VideoFrame: 'readonly', EyeDropper: 'readonly' };
+
+const groupGlobals = getGroupGlobals();
+const shared = [...groupGlobals.head, ...groupGlobals.boot];
+for (const [id, files] of Object.entries(scriptManifest)) {
+	const forbidden = Object.entries(groupGlobals).filter(([owner]) => owner !== id && owner !== 'head' && owner !== 'boot').flatMap(([owner, names]) => names.filter(name => !shared.includes(name)).flatMap(property => ['window', 'self', 'globalThis', 'root'].map(object => ({ object, property, message: `Load the ${owner} group and use its exports.` }))));
+	config.overrides.push({
+		files,
+		globals: Object.fromEntries([...shared, ...groupGlobals[id]].map(name => [name, 'readonly'])),
+		rules: { 'no-undef': ['error', { typeof: true }], 'no-restricted-properties': ['error', ...forbidden] }
+	});
 }
+
+module.exports = config;
