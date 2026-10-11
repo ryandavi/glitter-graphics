@@ -46,7 +46,7 @@ async function main() {
 				ctx.fillRect(0, 0, width, height);
 				frames.push(ctx.getImageData(0, 0, width, height));
 			}
-			const exporter = new Mp4Exporter(new SceneCompositor());
+			const exporter = new Mp4Exporter(new SceneCompositor(), editor.exportResultPresenter);
 			const originalDownload = window.downloadBlob;
 			window.downloadBlob = () => {};
 			let blob;

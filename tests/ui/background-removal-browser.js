@@ -145,6 +145,7 @@ async function exportBytes(page, target = 'still:png') {
 				assert(await page.evaluate(() => editor.stickerManager.pickerSession?.kind === 'asset'), 'Sticker control did not arm the asset picker');
 				await page.waitForSelector(`.asset-option[data-id="${kept.id}"]`, { state: 'visible' });
 				await page.locator('#libraryWindowClose').click();
+				await page.waitForFunction(() => !editor.mobileManager.sheetRelease);
 				assert(!await page.evaluate(() => editor.stickerManager.pickerSession), 'Close did not close the picker');
 			}
 		}

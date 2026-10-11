@@ -557,7 +557,7 @@ class SceneCompositor {
 			mask._textureOrigin = { x: pad - previewPad * 2, y: pad - previewPad * 2 };
 			// A shadow's offset is baked into its mask (the padding covers it); the
 			// texture origin moves with it.
-			if (item.offsetX || item.offsetY) mask = createOffsetMaskCanvas(mask, Math.round(item.offsetX), Math.round(item.offsetY));
+			if (item.offsetX || item.offsetY) mask = createOffsetMaskCanvas(mask, Math.round(item.offsetX), Math.round(item.offsetY), scratch.offsetMaskCanvas);
 			this._renderFilledMaskInto(scratch.shadowFillCanvas, mask, item.source, layer, frameIndex, item.sourceKey, sourceSelectionMap, resolvedFramesBySource);
 			this._drawTransformedCanvas(ctx, scratch.shadowFillCanvas, layer, layer.stickerData.width, layer.stickerData.height, {
 				smooth: layer.stickerData.isPixelated === false,
@@ -878,6 +878,7 @@ class SceneCompositor {
 		const scratch = {
 			sourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			shadowMaskCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
+			offsetMaskCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			shadowFillCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			unionSourceCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),
 			unionFrameCanvas: createAppCanvas(0, 0, 'export/SceneCompositor'),

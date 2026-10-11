@@ -221,6 +221,15 @@ function assert(condition, message) {
 		paintMask.width = 8;
 		paintMask.height = 8;
 		paintMask.getContext('2d').fillRect(0, 0, 8, 8);
+		const offsetScratch = document.createElement('canvas');
+		for (const [x, y] of [[2, 3], [-1, -2]]) {
+			const expected = createOffsetMaskCanvas(paintMask, x, y);
+			const actual = createOffsetMaskCanvas(paintMask, x, y, offsetScratch);
+			check(actual === offsetScratch
+				&& bytes(actual.getContext('2d').getImageData(0, 0, 8, 8)) === bytes(expected.getContext('2d').getImageData(0, 0, 8, 8))
+				&& JSON.stringify(actual._textureOrigin) === JSON.stringify(expected._textureOrigin),
+				'Reused offset mask changed pixels or texture registration');
+		}
 		const renderTarget = document.createElement('canvas');
 		renderTarget.width = 32;
 		renderTarget.height = 32;
@@ -238,6 +247,8 @@ function assert(condition, message) {
 		stickerLayer.stickerData.staticImageData = new ImageData(new Uint8ClampedArray(8 * 8 * 4).fill(255), 8, 8);
 		stickerLayer.stickerData.shadow = { mode: 'solid', color: '#000000', opacity: 1, offsetX: 2, offsetY: 3 };
 		const textPlan = compositor._buildLayerExportPlan(textLayer);
+		// Real exports prepare the text measurement while building slot masks.
+		editor.textGlitterManager.getMeasurementEntry(textLayer);
 		const shapePlan = compositor._buildLayerExportPlan(shapeLayer);
 		const stickerPlan = compositor._buildLayerExportPlan(stickerLayer);
 		const watermarkCanvas = document.createElement('canvas');
@@ -272,6 +283,7 @@ function assert(condition, message) {
 			&& compositor._resolvePreserveAlpha(true, { transparency: false }) === false,
 			'preserveAlpha no longer reflects target capability AND export setting alone');
 
+		await loadScriptGroup('gif-codec');
 		const OriginalGif = window.GIF;
 		let gifOptions;
 		const encodedFrames = [];
@@ -310,7 +322,11 @@ function assert(condition, message) {
 			check(exporter.gifEncodingPipeline._analyzeColors([transparentFrame], 128).observedColorCount === 1,
 				'Threshold-aware GIF color analysis counted a below-threshold pixel');
 
-			const opaqueOnly = new ImageData(new Uint8ClampedArray([5, 6, 7, 255, 8, 9, 10, 255]), 2, 1);
+			// Per-frame palettes require color-rich artwork; simple artwork uses a shared palette.
+			const opaqueOnly = new ImageData(CONFIG.export.limits.colorAnalysis.significantColorCount + 1, 1);
+			for (let pixel = 0; pixel < opaqueOnly.width; pixel++) {
+				opaqueOnly.data.set([pixel & 255, (pixel >> 8) & 255, 10, 255], pixel * 4);
+			}
 			const opaqueEncoded = await exporter.gifEncodingPipeline.encode({
 				frames: [opaqueOnly], settings: { colorCount: 'auto', ditherEnabled: false, quality: 1 },
 				transparency: { enabled: true }, mode: 'still'
