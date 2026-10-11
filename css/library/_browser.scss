@@ -2,6 +2,9 @@
 
 // Library browser: kind hosts, shortcuts, rail, wall and set headers.
 
+body.boot-library .boot-library-loading { display: none; }
+body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { display: none !important; }
+
 // One Library kind host shows at a time; syncLibraryView toggles `.visible`.
 [data-gallery-content] {
 	display: none;

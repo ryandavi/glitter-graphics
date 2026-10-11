@@ -3,7 +3,7 @@
 // Static server that gzips text responses, for load measurements. XAMPP and
 // `php -S` send no compression, which makes the stylesheet and scripts three
 // to six times larger on the wire than on a real host and hides what a change
-// did. Usage: node tools/serve.js [--port 8100] [--root .]
+// did. Usage: node tools/serve.js [--port 8100] [--root .] [--css scratch.css]
 
 const fs = require('fs');
 const http = require('http');
@@ -14,6 +14,7 @@ const args = process.argv.slice(2);
 const option = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
 const root = path.resolve(option('--root', path.join(__dirname, '..')));
 const port = Number(option('--port', 8100));
+const cssOverride = option('--css', null);
 
 const TYPES = {
 	'.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css',
@@ -26,7 +27,7 @@ const cache = new Map();
 http.createServer((request, response) => {
 	let relative = decodeURIComponent(request.url.split('?')[0]);
 	if (relative.endsWith('/')) relative += 'index.html';
-	const file = path.join(root, relative);
+	const file = cssOverride && relative === '/css/style.css' ? path.resolve(cssOverride) : path.join(root, relative);
 	if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
 		response.writeHead(404);
 		response.end();

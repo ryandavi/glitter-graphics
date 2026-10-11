@@ -91,6 +91,9 @@
 	.export-progress-time, .export-progress-percent { flex: 0 0 auto; }
 	.export-progress-announcement { @include visually-hidden; }
 	.export-progress-cancel { width: 100%; }
+}
+
+:is(.export-progress, .workspace-start-loading) {
 	.export-progress-bar {
 		height: var(--spacing-base);
 		background: var(--progress-track);
@@ -132,13 +135,13 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.export-progress-fill { transition: none; }
-	.export-progress.is-indeterminate .export-progress-fill { animation: none; transform: scaleX(0.35); }
+	:is(.export-progress, .workspace-start-loading).is-indeterminate .export-progress-fill { animation: none; transform: scaleX(0.35); }
 	.export-progress-fill::after { animation: none; display: none; }
 }
 
 :root[data-reduce-motion="true"] .export-progress-fill::after { animation: none; display: none; }
 
-:root[data-reduce-motion="true"] .export-progress.is-indeterminate .export-progress-fill {
+:root[data-reduce-motion="true"] :is(.export-progress, .workspace-start-loading).is-indeterminate .export-progress-fill {
 	animation: none;
 	transform: scaleX(0.35);
 }

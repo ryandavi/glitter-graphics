@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '..');
 const indexPath = path.join(root, 'index.html');
 
 function renderToolButtons(indent, registries) {
-	const { ToolType, TOOLS, TOOL_ORDER, COMMANDS } = registries;
+	const { ToolType, TOOLS, TOOL_ORDER, COMMANDS, CONFIG } = registries;
 	let previousGroup = null;
 	const lines = [];
 	TOOL_ORDER.forEach((tool) => {
@@ -18,7 +18,7 @@ function renderToolButtons(indent, registries) {
 		const title = `${definition.name}${key ? ` (${key})` : ''}${definition.titleNote || ''}`;
 		const disabled = tool === ToolType.SELECT ? '' : ' disabled';
 		lines.push(
-			`${indent}<button class="btn-icon icon-wrapper" id="${escapeHtml(`${tool}Tool`)}" type="button" data-tool="${escapeHtml(tool)}" title="${escapeHtml(title)}"${disabled}>`,
+			`${indent}<button class="btn-icon icon-wrapper${tool === CONFIG.app.startup.tool ? ' active' : ''}" id="${escapeHtml(`${tool}Tool`)}" type="button" data-tool="${escapeHtml(tool)}" title="${escapeHtml(title)}"${disabled}>`,
 			`${indent}\t<svg class="icon"><use href="#icon-${escapeHtml(definition.icon)}"></use></svg>`,
 			`${indent}\t<span class="name">${escapeHtml(definition.buttonLabel)}</span>`,
 			`${indent}</button>`
@@ -51,6 +51,7 @@ function replaceRegion(source, name, render) {
 function buildShell(source) {
 	const registries = getAppRegistries();
 	let output = replaceRegion(source, 'tools', (indent) => renderToolButtons(indent, registries));
+	output = replaceRegion(output, 'boot', (indent) => `${indent}<style>:root { --boot-indicator-delay: ${registries.CONFIG.app.boot.indicator.delayMs}ms; --boot-indicator-min-visible: ${registries.CONFIG.app.boot.indicator.minVisibleMs}ms; }</style>`);
 	output = replaceRegion(output, 'presets', (indent) => renderStartPresets(indent, registries));
 	output = replaceRegion(output, 'manifests', (indent) => {
 		const { CONFIG } = registries;

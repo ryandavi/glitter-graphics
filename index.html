@@ -45,6 +45,9 @@
 
 	<!-- Stylesheets -->
 	<link rel="stylesheet" href="css/style.css?v=e6a567fe">
+	<!-- shell:boot:start -->
+	<style>:root { --boot-indicator-delay: 400ms; --boot-indicator-min-visible: 300ms; }</style>
+	<!-- shell:boot:end -->
 	<!-- shell:manifests:start -->
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/shapes.json?v=2026-10-10-timing">
 	<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="data/brushes.json?v=2026-10-10-timing">
@@ -172,7 +175,7 @@
 				<!-- Tool buttons are generated from TOOLS (js/core/tools.js). -->
 				<div class="toolbar-group" id="toolbarToolsGroup">
 					<!-- shell:tools:start -->
-					<button class="btn-icon icon-wrapper" id="selectTool" type="button" data-tool="select" title="Select (V)">
+					<button class="btn-icon icon-wrapper active" id="selectTool" type="button" data-tool="select" title="Select (V)">
 						<svg class="icon"><use href="#icon-hand-pointer"></use></svg>
 						<span class="name">Select</span>
 					</button>
@@ -482,6 +485,7 @@
 						</div>
 
 						<div class="section-content design-gallery-content" id="designGalleryContent">
+							<div class="property-empty visible boot-library-loading" role="status">Loading Library…</div>
 
 							<!-- The Library: one search/filter block + browser pair per asset kind
 							     (ASSET_BROWSERS in js/ui/asset-browser-markup.js), rendered from
@@ -560,6 +564,10 @@
 										</button>
 									</div>
 									<div class="workspace-start-drop">
+										<div class="workspace-start-loading is-indeterminate" role="status" aria-label="Loading editor">
+											<span>Loading editor…</span>
+											<div class="export-progress-bar" aria-hidden="true"><div class="export-progress-fill"></div></div>
+										</div>
 										<span>or drop an image or Glitter project here</span>
 										<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
 									</div>
@@ -1822,7 +1830,7 @@
 	<script src="js/core/math.js?v=54cfcc75" defer></script>
 	<script src="js/core/area.js?v=bc664c06" defer></script>
 	<script src="js/core/config.js?v=5fd46062" defer></script>
-	<script src="js/core/boot.js?v=f1e8e896" defer></script>
+	<script src="js/core/boot.js?v=4cbcbf56" defer></script>
 	<script src="js/core/tools.js?v=6c22e89d" defer></script>
 	<script src="js/core/sessions.js?v=8f5b001d" defer></script>
 	<script src="js/core/layer-types.js?v=3b8de41b" defer></script>

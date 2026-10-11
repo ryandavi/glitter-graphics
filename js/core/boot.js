@@ -64,6 +64,12 @@ class BootRunner {
 				document.body.classList.remove('is-booting');
 				continue;
 			}
+			if (stage.id === 'interactive') {
+				const indicator = document.querySelector('.workspace-start-loading');
+				const elapsed = indicator?.getAnimations().find((animation) => animation.animationName === 'boot-indicator')?.currentTime;
+				const { delayMs, minVisibleMs } = this.config.indicator;
+				if (elapsed >= delayMs && elapsed < delayMs + minVisibleMs) await new Promise((resolve) => setTimeout(resolve, delayMs + minVisibleMs - elapsed));
+			}
 			this.completed.add(stage.id);
 			document.body.classList.add(`boot-${stage.id}`);
 			if (stage.id === 'interactive') {
