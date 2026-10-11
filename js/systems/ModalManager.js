@@ -457,6 +457,8 @@ class ModalManager {
 		}
 		const top = this.getTopOpenModalConfig().modal;
 		for (const element of document.body.children) {
+			// The shared scrollbar serves the open modal's own scroll regions.
+			if (element.matches('.scroll-region-track')) continue;
 			if (!this.backgroundState.some(entry => entry.element === element)) {
 				this.backgroundState.push({ element, inert: element.hasAttribute('inert'), ariaHidden: element.getAttribute('aria-hidden') });
 			}
