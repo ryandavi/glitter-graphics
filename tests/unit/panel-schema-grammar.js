@@ -33,7 +33,7 @@ const layerTypes = vm.runInContext('LAYER_UI_CONFIG', context);
 const LAYER_GROUPS = ['Content', 'Appearance', 'Layout', 'Effects', 'Motion', 'Actions'];
 const SECTION_KINDS = new Set(['section', 'paintSlot', 'transform', 'mount']);
 const ROW_KINDS = new Set([
-	'slider', 'pair', 'numberPair', 'select', 'segmented', 'radioSegmented', 'toggle', 'field', 'labeled',
+	'slider', 'steppedSlider', 'pair', 'numberPair', 'select', 'segmented', 'radioSegmented', 'toggle', 'field', 'labeled',
 	'note', 'assetInfo', 'presetGrid', 'textarea', 'host', 'sparkleGlyphs', 'processingStatus'
 ]);
 const GROUP_KEYS = new Set(['title', 'sections', 'note', 'actions', 'region', 'classes', 'role']);

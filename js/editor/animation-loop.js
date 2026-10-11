@@ -1,6 +1,5 @@
 const EDITOR_ANIMATION_LOOP_METHODS = {
 	setupAnimationLoop() {
-		document.getElementById('openAnimationLoop')?.addEventListener('click', () => this.openAnimationLoop());
 		document.getElementById('animationLoopCandidate')?.addEventListener('change', () => this.syncLoopCandidate());
 		document.getElementById('fitAnimationsToLoop')?.addEventListener('click', () => this.fitAnimationsToLoop());
 		document.getElementById('resetAnimationLoop')?.addEventListener('click', () => this.resetAnimationLoop());

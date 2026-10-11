@@ -1,3 +1,13 @@
+function syncSteppedSlider(input) {
+	const control = input?._steppedSlider;
+	if (!control) return;
+	const index = Number(input.value);
+	const label = control.stops[index].label;
+	control.output.textContent = label;
+	input.setAttribute('aria-valuetext', label);
+	Array.from(control.ticks.children).forEach((tick, position) => tick.classList.toggle('is-current', position === index));
+}
+
 // A range input's raw position (an integer over its min..max) can map to a
 // different logical value via data-scale. Only 'log' exists: position runs
 // geometrically across [data-scale-min, data-scale-max], so the low end of the

@@ -647,7 +647,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
 							name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
 							title: 'Choose another brush tip', compact: true },
-						{ kind: 'toggle', id: 'brushAntialiasToggle', label: 'Antialias edges',
+						{ kind: 'toggle', id: 'brushAntialiasToggle', label: 'Smooth Edges',
 							title: 'Smooth the edges of mask strokes. Off gives crisp pixel edges; a shared setting with text and shapes.' },
 						{ kind: 'note', id: 'brushAntialiasNote', hidden: true }
 					] }

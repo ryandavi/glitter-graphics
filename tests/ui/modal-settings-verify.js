@@ -13,6 +13,44 @@ const results = [];
 function check(name, cond, detail='') {
 	results.push({ name, ok: !!cond, detail });
 }
+async function verifySteppedSlider(page, width) {
+	const state = await page.evaluate(() => {
+		const input = document.getElementById('exportFidelity');
+		const output = document.getElementById('exportFidelityValue');
+		const ticks = [...input.parentElement.querySelectorAll('.stepped-slider-ticks > span')];
+		const rect = input.getBoundingClientRect();
+		const thumbSize = parseFloat(getComputedStyle(input).getPropertyValue('--slider-thumb-size'));
+		const positions = CONFIG.export.timeline.fidelityStops.map((stop, index, stops) => {
+			input.value = String(index);
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+			const dot = ticks[index].getBoundingClientRect();
+			const thumbCenter = rect.left + thumbSize / 2 + index / (stops.length - 1) * (rect.width - thumbSize);
+			return { error: Math.abs(dot.left + dot.width / 2 - thumbCenter),
+				label: output.textContent === stop.label && input.getAttribute('aria-valuetext') === output.textContent,
+				current: ticks.filter(tick => tick.classList.contains('is-current')).length === 1 && ticks[index].classList.contains('is-current') };
+		});
+		return { count: ticks.length, stopCount: CONFIG.export.timeline.fidelityStops.length, positions,
+			captions: [...input.closest('.stepped-slider').querySelectorAll('.stepped-slider-captions > span')].map(el => el.textContent),
+			status: document.getElementById('exportFidelityEstimate').getAttribute('role') };
+	});
+	check(`stepped slider has one aligned dot per stop at ${width}px`, state.count === state.stopCount && state.positions.every(stop => stop.error <= 1), JSON.stringify(state));
+	check(`stepped slider keeps its value text and current dot in sync at ${width}px`, state.positions.every(stop => stop.label && stop.current), JSON.stringify(state));
+	check(`stepped slider has end captions and an announced estimate at ${width}px`, state.captions.join('|') === 'Best quality|Smallest file' && state.status === 'status', JSON.stringify(state));
+	await page.locator('#exportFidelity').press('ArrowLeft');
+	check(`keyboard steps one named stop at ${width}px`, await page.evaluate(() => {
+		const input = document.getElementById('exportFidelity');
+		return Number(input.value) === CONFIG.export.timeline.fidelityStops.length - 2
+			&& input.getAttribute('aria-valuetext') === CONFIG.export.timeline.fidelityStops[Number(input.value)].label;
+	}));
+	await page.click('[data-revert-for="exportFidelity"]');
+	check(`revert restores Balanced and its dot at ${width}px`, await page.evaluate(() => {
+		const input = document.getElementById('exportFidelity');
+		return Number(input.value) === CONFIG.export.defaults.exportFidelity
+			&& document.getElementById('exportFidelityValue').textContent === 'Balanced'
+			&& input.parentElement.querySelectorAll('.stepped-slider-ticks > span')[Number(input.value)].classList.contains('is-current');
+	}));
+}
 (async () => {
 	const browser = await chromium.launch({ headless: true });
 	const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -68,7 +106,7 @@ function check(name, cond, detail='') {
 	// control's own change event; a card reset replays the lit reverts in it.
 	const resetState = () => page.evaluate(() => ({
 		row: !document.querySelector('[data-revert-for="panInertia"]').disabled,
-		group: !document.querySelector('[data-section="tools"] .property-card-reset').disabled,
+		group: !document.querySelector('[data-section="canvas"] .property-card-reset').disabled,
 		value: PREFERENCES.get('panInertia'),
 		theme: document.documentElement.dataset.theme
 	}));
@@ -154,6 +192,33 @@ function check(name, cond, detail='') {
 	await page.evaluate(() => window.editor.modalManager.open('exportSettingsModal'));
 	await page.waitForTimeout(400);
 
+
+	// Preview cells are integer device-pixel blocks, including fractional ratios.
+	for (const ratio of [1, 1.25, 1.5, 2]) {
+		await page.evaluate(value => Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value }), ratio);
+		const preview = await page.evaluate(() => {
+			editor.renderExportDitherPreview();
+			const canvas = document.getElementById('exportDitherPreview');
+			const rect = canvas.getBoundingClientRect();
+			const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+			const cell = Math.max(1, Math.round(CONFIG.export.ditherPreview.zoom * devicePixelRatio));
+			let uniform = true;
+			const colors = new Set();
+			for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+				const index = (y * canvas.width + x) * 4;
+				const origin = (Math.floor(y / cell) * cell * canvas.width + Math.floor(x / cell) * cell) * 4;
+				for (let channel = 0; channel < 4; channel++) if (pixels[index + channel] !== pixels[origin + channel]) uniform = false;
+				colors.add(`${pixels[index]},${pixels[index + 1]},${pixels[index + 2]}`);
+			}
+			return { uniform, colors: colors.size, sized: canvas.width === Math.round(rect.width * devicePixelRatio) && canvas.height === Math.round(rect.height * devicePixelRatio), fullWidth: Math.abs(rect.width + parseFloat(getComputedStyle(canvas).marginLeft) + parseFloat(getComputedStyle(canvas).marginRight) - canvas.parentElement.getBoundingClientRect().width) < 2 };
+		});
+		check(`preview uses crisp blocks at pixel ratio ${ratio}`, preview.uniform && preview.sized && preview.fullWidth, JSON.stringify(preview));
+		check(`Dithering off uses the full palette at pixel ratio ${ratio}`, preview.colors > 16, JSON.stringify(preview));
+	}
+	await page.evaluate(() => Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 1 }));
+	check('a static project has a plain one-frame estimate', await page.evaluate(async () => { await editor.updateExportDuration(); return document.getElementById('exportFidelityEstimate').textContent === 'Nothing in this project is animated, so the GIF has one frame.'; }));
+	await verifySteppedSlider(page, 1440);
+
 	const gifLook = await page.evaluate(() => {
 		const set = document.getElementById('exportGifLookSet');
 		return {
@@ -180,7 +245,7 @@ function check(name, cond, detail='') {
 		return {
 			isInactive: row.classList.contains('is-inactive'),
 			selectDisabled: document.getElementById('exportDitherType').disabled,
-			reason: row.querySelector('[data-inactive-reason-text]').textContent,
+			reason: document.querySelector('#ditherEnabledRow [data-inactive-reason-text]').textContent,
 			pointerEvents: getComputedStyle(row).pointerEvents
 		};
 	});
@@ -218,9 +283,9 @@ function check(name, cond, detail='') {
 		const row = document.getElementById('watermarkSelectionRow');
 		return { hidden: row.hidden, inactive: row.classList.contains('is-inactive'), disabled: document.getElementById('exportWatermark').disabled };
 	});
-	check('watermark style is shown inactive, not hidden', !wm.hidden && wm.inactive && wm.disabled, JSON.stringify(wm));
+	check('watermark style is hidden until Watermark is on', wm.hidden && !wm.inactive && !wm.disabled, JSON.stringify(wm));
 
-	// ---- Encoder Precision moved out of the rail ---------------------------
+	// ---- Color Accuracy belongs in Animation Advanced ---------------------------
 	const precision = await page.evaluate(() => {
 		const row = document.getElementById('exportQuality').closest('.settings-row');
 		return {
@@ -229,8 +294,46 @@ function check(name, cond, detail='') {
 			label: row.querySelector('.property-label').textContent
 		};
 	});
-	check('Encoder Precision sits in Optimization, not the GIF Look rail',
-		!precision.inRail && precision.group === 'Optimization', JSON.stringify(precision));
+	check('Color Accuracy sits in Animation Advanced',
+		precision.inRail && precision.group === 'Animation' && precision.label === 'Color Accuracy', JSON.stringify(precision));
+
+
+	// A parent keeps the hidden child's search terms; toggles reveal one row.
+	for (const [query, id] of [['matte', 'exportTransparency'], ['watermark', 'exportWatermarkEnabled'], ['limit', 'exportTargetSize'], ['dither', 'exportDitherEnabled']]) {
+		await page.fill('#exportSettingsSearch', query);
+		await page.waitForTimeout(250);
+		check(`search ${query} finds its parent`, await page.locator(`#${id}`).evaluate(el => { const row = el.closest('.settings-row'); return row.offsetParent !== null && !row.classList.contains('is-filtered-out'); }));
+	}
+	await page.fill('#exportSettingsSearch', '');
+	await page.selectOption('#exportTargetSize', 'custom');
+	check('Custom reveals Limit', await page.locator('#exportTargetSizeKB').isVisible());
+	await page.$eval('#exportTransparency', el => { el.checked = false; el.dispatchEvent(new Event('change', { bubbles: true })); });
+	check('Transparency off reveals Matte Color', await page.locator('#exportMatteColor').isVisible());
+	await page.$eval('#exportWatermarkEnabled', el => { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); });
+	check('Watermark on reveals its style and preview', await page.locator('#exportWatermark').isVisible() && await page.locator('#exportWatermarkPreview').isVisible());
+	await page.click('#exportGifLookSet [data-advanced-toggle]');
+	await page.selectOption('#exportDitherType', 'Stucki');
+	check('diffusion cannot scale or move', await page.locator('#exportDitherScale').isDisabled() && await page.locator('#exportDitherTemporalMode').isDisabled());
+	await page.selectOption('#exportDitherType', 'Bayer');
+	check('Grid can scale and move', await page.locator('#exportDitherScale').isEnabled() && await page.locator('#exportDitherTemporalMode').isEnabled());
+	await page.evaluate(() => { PREFERENCES.set('showAllControls', true); editor.applyShowAllControls(); });
+	await page.selectOption('#exportDitherPreset', 'clean');
+	await page.$eval('#exportFidelity', el => { el.value = '3'; el.dispatchEvent(new Event('change', { bubbles: true })); });
+	check('Show All Controls survives preset and fidelity changes', await page.evaluate(() => ['exportGifLookSet', 'exportFidelitySet'].every(id => document.getElementById(id).classList.contains('is-open'))));
+	await page.evaluate(() => { PREFERENCES.set('showAllControls', false); editor.applyShowAllControls(); editor.setGifLookExpanded(false); });
+	const transparencyStable = await page.evaluate(() => {
+		for (const target of Object.values(EXPORT_TARGETS)) {
+			setActiveExportTarget(editor.exportSettings, target.id);
+			for (let i = 0; i < 3; i++) {
+				editor.updateExportFormatUI();
+				if (document.getElementById('transparencySettingsRow').hidden !== (!target.supportsTransparency || target.isVector)) return false;
+				if (document.querySelector('[data-section="animation"]').hidden !== !target.supportsAnimationSettings) return false;
+			}
+		}
+		setActiveExportTarget(editor.exportSettings, 'animation:gif'); editor.syncExportSettingsToUI();
+		return true;
+	});
+	check('format visibility is stable through repeated refreshes', transparencyStable);
 
 	// ---- base image control exists and is wired ---------------------------
 	const baseImage = await page.evaluate(() => {
@@ -317,6 +420,7 @@ function check(name, cond, detail='') {
 	});
 	check('export settings does not scroll sideways at 360px',
 		overflow.scrollW <= overflow.clientW + 1, JSON.stringify(overflow));
+	await verifySteppedSlider(page, 360);
 
 	await page.evaluate(() => {
 		const editor = window.editor;

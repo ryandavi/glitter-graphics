@@ -379,6 +379,47 @@ function initializeEditablePropertyValues(root = document) {
 // grammar (`{id}Value`, `reset{Id}`); ranges come from FIELDS.
 // The boot value text is plain `value+unit` to match the static markup —
 // bindSlider swaps in formatUnit markup on first interaction, as it always has.
+function buildSteppedSliderRow(item) {
+	const stops = typeof item.stops === 'function' ? item.stops() : item.stops;
+	if (!Array.isArray(stops) || stops.length < 2) throw new Error('A stepped slider needs at least two stops');
+	const row = panelDiv('property-row is-stacked');
+	const label = document.createElement('label');
+	label.className = 'property-label';
+	label.htmlFor = item.id;
+	label.textContent = item.label;
+	const slider = panelDiv('stepped-slider');
+	const captions = panelDiv('stepped-slider-captions');
+	captions.setAttribute('aria-hidden', 'true');
+	(item.endLabels || [stops[0].label, stops[stops.length - 1].label]).forEach((text) => {
+		const caption = document.createElement('span');
+		caption.textContent = text;
+		captions.appendChild(caption);
+	});
+	const track = panelDiv('stepped-slider-track');
+	const ticks = panelDiv('stepped-slider-ticks');
+	ticks.setAttribute('aria-hidden', 'true');
+	stops.forEach(() => ticks.appendChild(document.createElement('span')));
+	const input = document.createElement('input');
+	input.id = item.id;
+	input.type = 'range';
+	input.min = '0';
+	input.max = String(stops.length - 1);
+	input.step = '1';
+	if (item.describedBy) input.setAttribute('aria-describedby', item.describedBy);
+	const output = document.createElement('output');
+	output.className = 'property-value';
+	output.id = item.outputId || `${item.id}Value`;
+	output.htmlFor = item.id;
+	input._steppedSlider = { stops, output, ticks };
+	input.addEventListener('input', () => syncSteppedSlider(input));
+	input.addEventListener('change', () => syncSteppedSlider(input));
+	track.append(ticks, input);
+	slider.append(captions, track);
+	row.append(label, slider, output);
+	syncSteppedSlider(input);
+	return row;
+}
+
 function buildSliderRow(options) {
 	const spec = FIELDS[options.slider];
 	const row = tplClone('tpl-slider-row');
@@ -942,6 +983,7 @@ function buildGlitterAdvancedSets(slot, options = {}) {
 function buildAdvancedDisclosure(spec = {}, schema) {
 	const advanced = tplClone('tpl-advanced');
 	if (spec.id) advanced.id = spec.id;
+	if (spec.label) advanced.querySelector('.advanced-disclosure-label').textContent = spec.label;
 	const content = advanced.querySelector('[data-advanced-content]');
 	(spec.sets || []).forEach((set) => content.appendChild(set instanceof Node ? set : buildPanelSet(set, schema)));
 	return advanced;
@@ -1366,6 +1408,8 @@ function buildPanelItem(item, schema) {
 			return buildAssetInfo(item);
 		case 'slider':
 			return buildSliderRow(item);
+		case 'steppedSlider':
+			return buildSteppedSliderRow(item);
 		case 'pair':
 			return buildPairRow(item);
 		case 'numberPair':

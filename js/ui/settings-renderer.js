@@ -17,11 +17,11 @@
 //   { id, label, description, control, default } (export settings pass their
 //   EXPORT_SETTINGS_SCHEMA entry, whose `element` is the control id);
 // - { host: 'templateId' }: a custom widget cloned from a <template>;
-// - { governed: { id, label, railId, header, rows, rowReverts, formatSection } }:
+// - { governed: { id, label, railId, header, between?, rows, rowReverts, formatSection, disclosureLabel? } }:
 //   a header row whose value sets the rows under it. The header is an ordinary
 //   row in the card body; the governed rows sit in the panel's Advanced
-//   disclosure (labelled Customize, id `id`), which is the card's footer as in
-//   a sidebar card, so a governed row is the last row of its group. A host
+//   disclosure (optional disclosureLabel, id `id`), which is the card's last
+//   row. `between` holds surface rows after the header and before it. A host
 //   header takes `revert`, the field its control edits.
 //
 // Resets follow the panel's rule D. A field that declares a `default` (a value
@@ -29,7 +29,8 @@
 // rows in it. Rows a preset writes (`rowReverts: false`) have none: the
 // preset row's revert restores them together.
 // Row options: rowId, hidden, formatSection (data-export-format-section),
-// aliases (data-search-aliases), filterPin, inactiveReason (why the row is
+// aliases (data-search-aliases), filterPin, revealedBy (parent control id;
+// the updater reveals this row), inactiveReason (why a row or group is
 // disabled; adds the reason line),
 // afterHeader / afterDescription (template ids for extra content), descId,
 // statusId (a live status line under the description).
@@ -39,6 +40,7 @@
 // { type: 'switch', ariaControls }; { type: 'number', min, max, step, value,
 // unit, inputMode, ariaLabel, placeholder }; { type: 'color', value };
 // { type: 'range', min, max, step, value, outputId, outputText, describedBy };
+// { type: 'steppedSlider', stops, endLabels?, outputId?, describedBy? };
 // { type: 'segmented', id, ariaLabel, options } with panel segmented options;
 // { type: 'button', id, label }; { type: 'actions', actions } with panel
 // action-set actions; { type: 'host', id, className } for a manager-filled box.
@@ -118,6 +120,8 @@ function buildSettingsControl(field) {
 				attrs: { 'aria-label': control.ariaLabel || field.label } });
 		case 'range':
 			return buildSettingsRangeRow(id, field);
+		case 'steppedSlider':
+			return buildPanelItem({ ...control, kind: 'steppedSlider', id, label: field.label });
 		case 'segmented':
 			return buildPanelItem({ kind: 'segmented', id: control.id, label: field.label,
 				ariaLabel: control.ariaLabel, options: control.options,
@@ -157,7 +161,8 @@ function buildSettingsFieldRow(row, rowReverts = true) {
 	const field = row.field;
 	const set = panelDiv('property-set settings-row');
 	if (row.rowId) set.id = row.rowId;
-	if (row.hidden) set.hidden = true;
+	if (row.hidden || row.revealedBy) set.hidden = true;
+	if (row.revealedBy) set.dataset.revealedBy = row.revealedBy;
 	if (row.formatSection) set.dataset.exportFormatSection = row.formatSection;
 	if (row.aliases) set.dataset.searchAliases = row.aliases;
 	if (row.filterPin) set.dataset.filterPin = '';
@@ -200,7 +205,7 @@ function buildGovernedHeader(governed) {
 }
 
 function buildGovernedDisclosure(governed) {
-	const disclosure = buildAdvancedDisclosure({ id: governed.id });
+	const disclosure = buildAdvancedDisclosure({ id: governed.id, label: governed.disclosureLabel });
 	if (governed.formatSection) disclosure.dataset.exportFormatSection = governed.formatSection;
 	const content = disclosure.querySelector('[data-advanced-content]');
 	content.id = governed.railId;
@@ -223,6 +228,7 @@ function buildSettingsGroup(group) {
 			return;
 		}
 		body.appendChild(buildGovernedHeader(row.governed));
+		(row.governed.between || []).forEach((child) => body.appendChild(buildSettingsRow(child)));
 		body.appendChild(buildGovernedDisclosure(row.governed));
 	});
 	card.classList.add('settings-group');

@@ -801,6 +801,8 @@
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
+  --slider-thumb-size: 16px;
+  --slider-tick-size: 6px;
   /* Export progress sits on translucent mini-modal glass, so its empty track
      needs a dedicated recessed surface and a visible inner rim. */
   --progress-track: var(--gray-700);
@@ -1751,14 +1753,14 @@ input[type=range] {
 }
 input[type=range]::-webkit-slider-runnable-track {
   height: 4px;
-  background: var(--color-slider-track);
+  background: var(--slider-track-background, var(--color-slider-track));
   border-radius: 2px;
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  margin-top: -6px;
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
+  margin-top: calc((4px - var(--slider-thumb-size)) / 2);
   background: var(--color-accent);
   border: 2px solid var(--color-bg-card);
   border-radius: var(--radius-full);
@@ -1766,12 +1768,13 @@ input[type=range]::-webkit-slider-thumb {
 }
 input[type=range]::-moz-range-track {
   height: 4px;
-  background: var(--color-slider-track);
+  background: var(--slider-track-background, var(--color-slider-track));
   border-radius: 2px;
 }
 input[type=range]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
+  box-sizing: border-box;
   background: var(--color-accent);
   border-radius: var(--radius-full);
   border: 2px solid var(--color-bg-card);
@@ -1785,6 +1788,43 @@ input[type=range]:focus-visible::-moz-range-thumb {
 input[type=range]:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
+}
+
+.stepped-slider-captions {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.stepped-slider-track {
+  position: relative;
+  background: linear-gradient(var(--color-slider-track), var(--color-slider-track)) center/100% 4px no-repeat;
+}
+.stepped-slider-track > input {
+  --slider-track-background: transparent;
+  position: relative;
+  margin: 0;
+}
+
+.stepped-slider-ticks {
+  position: absolute;
+  top: 50%;
+  inset-inline: calc((var(--slider-thumb-size) - var(--slider-tick-size)) / 2);
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.stepped-slider-ticks > span {
+  width: var(--slider-tick-size);
+  height: var(--slider-tick-size);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-slider-track), black 20%);
+}
+.stepped-slider-ticks > span.is-current {
+  background: var(--color-accent);
 }
 
 .list-row {
@@ -7991,6 +8031,7 @@ body.tool-text .text-hover-baselines {
   grid-area: 1/3/2/4;
 }
 .property-row.is-stacked > input[type=range],
+.property-row.is-stacked > .stepped-slider,
 .property-row.is-stacked > .segmented-control,
 .property-row.is-stacked > select,
 .property-row.is-stacked > .glitter-source,
@@ -11475,29 +11516,6 @@ body.modal-open {
 }
 
 /* ===== SETTINGS MODALS ===== */
-.export-fidelity-ticks {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-2xs);
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-}
-.export-fidelity-ticks > span {
-  text-align: center;
-}
-
-.export-fidelity-estimate {
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.export-fidelity-value {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  white-space: nowrap;
-}
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -11551,9 +11569,8 @@ body.modal-open {
 
 .export-dither-preview {
   display: block;
-  width: min(100%, 240px);
-  height: auto;
-  aspect-ratio: 10/3;
+  width: 100%;
+  height: var(--export-dither-preview-height);
   border-radius: var(--radius-sm);
   image-rendering: pixelated;
 }

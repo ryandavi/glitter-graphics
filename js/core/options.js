@@ -87,7 +87,7 @@ defineOptions('analysisPaletteStyle', [
 defineOptions('gifLook', [
 	{ value: 'clean', label: 'Clean · Automatic' },
 	{ value: 'classic', label: 'Classic Web' },
-	{ value: 'textured', label: 'Textured 64' },
+	{ value: 'textured', label: 'Textured' },
 	{ value: 'crunchy', label: 'Crunchy Pixel' },
 	{ value: 'shimmer', label: 'Sparkle Noise' },
 	{ value: 'custom', label: 'Custom' }

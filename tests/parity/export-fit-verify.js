@@ -2,7 +2,7 @@
 
 // Export Size and fitting an export under a size target, in the real app:
 // the resampled output, the fit loop for stills and an animated GIF, the Fit
-// button in Export Ready, and the Target Size setting.
+// button in Export Ready, and the File Size Limit setting.
 
 const { chromium } = require('playwright');
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
@@ -113,12 +113,12 @@ async function captureExport(page, targetId, { overrides = {}, fit = null } = {}
 	assert(missed.fit && !missed.fit.reached && missed.notices.some((text) => text.startsWith('Could not fit')), 'An unreachable limit was not reported as a miss');
 	console.log('PASS An unreachable limit reports the smallest version');
 
-	// The Target Size setting runs the same fit on every export.
+	// The File Size Limit setting runs the same fit on every export.
 	const standing = await captureExport(page, 'still:png', { overrides: { targetSize: 'custom', targetSizeKB: Math.max(10, Math.round(full.size * 0.6 / 1024)) } });
-	assert(standing.fit?.reached && standing.width < 240, `Target Size did not fit the export: ${JSON.stringify(standing.fit)}`);
+	assert(standing.fit?.reached && standing.width < 240, `File Size Limit did not fit the export: ${JSON.stringify(standing.fit)}`);
 	const roomy = await captureExport(page, 'still:png', { overrides: { targetSize: 'discord' } });
 	assert(!roomy.fit && roomy.width === 240, 'An export already under its target was changed');
-	console.log('PASS Target Size fits only an export that is over it');
+	console.log('PASS File Size Limit fits only an export that is over it');
 
 	// Settings rows.
 	const rows = await page.evaluate(async () => {
@@ -128,14 +128,14 @@ async function captureExport(page, targetId, { overrides = {}, fit = null } = {}
 		await editor.modalManager.open('exportSettingsModal');
 		const select = document.getElementById('exportTargetSize');
 		const row = document.getElementById('exportTargetSizeKBRow');
-		const state = () => row.classList.contains('disabled') || row.classList.contains('is-inactive') || document.getElementById('exportTargetSizeKB').disabled;
+		const state = () => row.hidden;
 		select.value = 'none'; select.dispatchEvent(new Event('change', { bubbles: true }));
 		const inactive = state();
 		select.value = 'custom'; select.dispatchEvent(new Event('change', { bubbles: true }));
 		return { inactive, active: !state(), options: select.options.length, scale: Boolean(document.getElementById('exportOutputScale')) };
 	});
 	assert(rows.scale && rows.options >= 9 && rows.inactive && rows.active, `Settings rows: ${JSON.stringify(rows)}`);
-	console.log('PASS Export Size and Target Size rows');
+	console.log('PASS Export Size and File Size Limit rows');
 
 	// The Fit button on a "Too large to post on" row.
 	const button = await page.evaluate(() => {

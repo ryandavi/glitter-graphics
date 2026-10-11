@@ -1,11 +1,8 @@
 'use strict';
 
-// A setting that exists and matters but is currently held off by another
-// control the reader can see. It stays in place, carries the real `disabled`
-// property on its own controls, and says what to turn on. Hiding it instead
-// would teach nothing; `pointer-events: none` alone would leave it reachable
-// by Tab. Its revert is left alone: `disabled` there means "at the default",
-// and a held-off value can still be put back.
+// Inapplicable rows are hidden; a single child is revealed by its parent.
+// Groups held off inside a disclosure stay visible with real disabled controls
+// and one reason on their parent. Reverts retain their default-state behavior.
 function setSettingsRowInactive(row, inactive) {
 	if (!row) return;
 	row.classList.toggle('is-inactive', inactive);
@@ -35,9 +32,9 @@ const GIF_LOOK_PRESETS = Object.freeze({
 // What the collapsed preset row says the current look actually means.
 function describeGifLook(settings) {
 	const patternNames = {
-		'FloydSteinberg-serpentine': 'Floyd-Steinberg', FloydSteinberg: 'Floyd-Steinberg',
-		FalseFloydSteinberg: 'False Floyd-Steinberg', Stucki: 'Stucki',
-		Atkinson: 'Atkinson', Bayer: 'Bayer', Halftone: 'Halftone'
+		'FloydSteinberg-serpentine': 'Smooth', FloydSteinberg: 'Classic',
+		FalseFloydSteinberg: 'Rough', Stucki: 'Soft',
+		Atkinson: 'Airy', Bayer: 'Grid', Halftone: 'Dots'
 	};
 	const parts = [settings.colorCount === 'auto' ? 'Automatic colors' : `${settings.colorCount} colors`];
 	if (!settings.ditherEnabled) {
@@ -45,10 +42,14 @@ function describeGifLook(settings) {
 	} else {
 		parts.push(patternNames[settings.ditherType] || 'dithered');
 		parts.push(`${settings.ditherAmount}%`);
-		if (settings.ditherScale > 1) parts.push(`${settings.ditherScale}\u00d7 scale`);
-		if (settings.ditherTemporalMode === 'animated') parts.push('animated');
+		if (isExportDitherOrdered(settings.ditherType) && settings.ditherScale > 1) parts.push(`${settings.ditherScale}\u00d7 scale`);
+		if (isExportDitherOrdered(settings.ditherType) && settings.ditherTemporalMode === 'animated') parts.push('animated');
 	}
 	return parts.join(' \u00b7 ');
+}
+
+function isExportDitherOrdered(pattern) {
+	return pattern === 'Bayer' || pattern === 'Halftone';
 }
 
 const EDITOR_SETTINGS_METHODS = {
@@ -150,6 +151,7 @@ initializeExportSettings() {
 		this.updateTargetSizeUI();
 		this.updateGifLookSummary();
 		this.updateExportFidelityUI();
+		this.updateExportOutputSizeUI();
 		this.updateExportFormatUI();
 		const ditherAmountValue = document.getElementById('exportDitherAmountValue');
 		if (ditherAmountValue) ditherAmountValue.textContent = `${this.exportSettings.ditherAmount}%`;
@@ -163,24 +165,39 @@ initializeExportSettings() {
 	// needs to see that dithering has options in order to know why to turn it on.
 	updateDitherDependentUI() {
 		const inactive = !this.exportSettings.ditherEnabled;
+		const parent = document.getElementById('ditherEnabledRow');
+		const reason = parent?.querySelector('[data-inactive-reason-text]');
+		if (reason) reason.textContent = inactive ? parent.dataset.inactiveReason : '';
 		['ditherTypeRow', 'ditherAmountRow', 'ditherScaleRow', 'ditherTemporalModeRow', 'ditherEdgeProtectionRow']
 			.forEach((id) => setSettingsRowInactive(document.getElementById(id), inactive));
+		const ordered = isExportDitherOrdered(this.exportSettings.ditherType);
+		['ditherScaleRow', 'ditherTemporalModeRow'].forEach((id) => {
+			const row = document.getElementById(id);
+			setSettingsRowInactive(row, inactive || !ordered);
+			const note = row?.querySelector('[data-inactive-reason-text]');
+			if (note && inactive) note.textContent = '';
+		});
+	}
+
+,
+	updateExportOutputSizeUI() {
+		const output = document.getElementById('exportOutputSize');
+		if (!output) return;
+		const { width, height } = getExportOutputSize(this.originalCanvas.width, this.originalCanvas.height, this.exportSettings.outputScale);
+		output.textContent = `Exports at ${width} \u00d7 ${height} px.`;
 	}
 
 ,
 	updateTargetSizeUI() {
-		setSettingsRowInactive(document.getElementById('exportTargetSizeKBRow'), this.exportSettings.targetSize !== 'custom');
+		const row = document.getElementById('exportTargetSizeKBRow');
+		if (row) row.hidden = this.exportSettings.targetSize !== 'custom' || getActiveExportTarget(this.exportSettings).isVector;
 	}
 
 ,
 	updateMatteColorUI() {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		const row = document.getElementById('matteColorRow');
-		if (row) row.hidden = !target.usesMatte;
-		setSettingsRowInactive(
-			document.getElementById('matteColorRow'),
-			target.supportsTransparency && this.exportSettings.transparency
-		);
+		if (row) row.hidden = !target.usesMatte || (target.supportsTransparency && this.exportSettings.transparency);
 	}
 
 ,
@@ -196,47 +213,59 @@ initializeExportSettings() {
 		const canvas = document.getElementById('exportDitherPreview');
 		const description = document.getElementById('exportDitherPreviewDescription');
 		if (!canvas || typeof GifPalette === 'undefined' || typeof GlitterPixelEffects === 'undefined') return;
-		const width = canvas.width;
-		const height = canvas.height;
+		const rect = canvas.getBoundingClientRect();
+		if (!rect.width || !rect.height) return;
+		const ratio = window.devicePixelRatio || 1;
+		const cellSize = Math.max(1, Math.round(CONFIG.export.ditherPreview.zoom * ratio));
+		canvas.width = Math.round(rect.width * ratio);
+		canvas.height = Math.round(rect.height * ratio);
+		const width = Math.ceil(canvas.width / cellSize);
+		const height = Math.ceil(canvas.height / cellSize);
 		const source = new Uint8ClampedArray(width * height * 4);
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
-			const t = x / (width - 1);
+			const t = x / Math.max(1, width - 1);
 			source[offset] = Math.round(255 * (1 - t) + 255 * Math.max(0, (t - 0.55) / 0.45));
 			source[offset + 1] = Math.round(225 * Math.max(0, (t - 0.45) / 0.55));
 			source[offset + 2] = Math.round(210 * Math.min(1, t * 1.8) * (1 - Math.max(0, (t - 0.7) / 0.3)));
-			if (y > 48 && x > 18 && x < 222) source[offset] = source[offset + 1] = source[offset + 2] = x < 120 ? 22 : 240;
+			if (y > height * 2 / 3 && x > width * 0.075 && x < width * 0.925) source[offset] = source[offset + 1] = source[offset + 2] = x < width / 2 ? 22 : 240;
 			source[offset + 3] = 255;
 		}
 		const original = new ImageData(source, width, height);
 		const count = GifPalette.resolveColorCount(this.exportSettings.colorCount, { observedColorCount: 1024 });
 		// A deliberately constrained demonstration palette makes each texture
 		// legible even when the actual export is set to Automatic/256 colors.
-		const paletteBytes = GifPalette.build([original], Math.min(count, 16), { style: this.exportSettings.paletteStyle });
+		const paletteBytes = GifPalette.build([original], this.exportSettings.ditherEnabled ? Math.min(count, 16) : count, { style: this.exportSettings.paletteStyle });
 		const palette = [];
 		for (let index = 0; index < paletteBytes.length; index += 3) palette.push(paletteBytes.slice(index, index + 3));
 		const type = String(this.exportSettings.ditherType || '').toLowerCase();
 		const algorithm = type.includes('atkinson') ? 'atkinson' : type.includes('falsefloyd') ? 'falsefloyd'
 			: type.includes('stucki') ? 'stucki' : type.includes('bayer') ? 'bayer' : type.includes('halftone') ? 'halftone' : 'floyd';
 		const pixels = GlitterPixelEffects.applyPixelEffects(source, width, height, {
-			pixelateEnabled: false, paletteEnabled: true, pixelSize: 1, paletteMode: 'dither',
+			pixelateEnabled: false, paletteEnabled: true, pixelSize: 1, paletteMode: this.exportSettings.ditherEnabled ? 'dither' : 'posterize',
 			dither: { algorithm, angle: 45, strength: this.exportSettings.ditherAmount, scale: this.exportSettings.ditherScale, edgeProtection: this.exportSettings.ditherEdgeProtection, serpentine: type.includes('serpentine'), shimmer: false, palette: 'auto', duotone: ['#000000', '#ffffff'] }
-		}, { pixelEffects: CONFIG.tools.pixelEffects, autoGlitter: CONFIG.tools.autoGlitter }, 0, palette);
-		canvas.getContext('2d').putImageData(new ImageData(pixels, width, height), 0, 0);
+		}, { pixelEffects: CONFIG.tools.pixelEffects }, 0, palette);
+		const logical = document.createElement('canvas');
+		logical.width = width;
+		logical.height = height;
+		logical.getContext('2d').putImageData(new ImageData(pixels, width, height), 0, 0);
+		const context = canvas.getContext('2d');
+		context.imageSmoothingEnabled = false;
+		context.drawImage(logical, 0, 0, width * cellSize, height * cellSize);
 		const descriptions = {
-			floyd: 'Diffusion: organic, Photoshop-like gradient texture.', falsefloyd: 'False Floyd–Steinberg: sharper and rougher with fewer neighboring dots.',
-			stucki: 'Stucki: soft, detailed diffusion with a wider texture field.', atkinson: 'Atkinson: airy Macintosh-style dots with stronger highlights.',
-			bayer: 'Bayer: regular tiled pixels—the clearest early-web pattern.', halftone: 'Halftone: graphic printed dots rather than photographic diffusion.'
+			floyd: type.includes('serpentine') ? 'Smooth: soft, even dots across gradients.' : 'Classic: familiar dots across gradients.',
+			falsefloyd: 'Rough: sharper texture with fewer neighboring dots.',
+			stucki: 'Soft: fine dots spread across a wider area.', atkinson: 'Airy: light dots with stronger highlights.',
+			bayer: 'Grid: regular tiled pixels, the classic early-web look.', halftone: 'Dots: round dots like a printed picture.'
 		};
-		if (description) description.textContent = `${this.exportSettings.ditherEnabled ? '' : 'Preview only—export dithering is currently off. '}${descriptions[algorithm]}`;
+		if (description) description.textContent = `${this.exportSettings.ditherEnabled ? descriptions[algorithm] : 'Dithering is off, so colors have sharp boundaries.'} Shown at ${CONFIG.export.ditherPreview.zoom}\u00d7.`;
 	}
 
 ,
 	updateWatermarkUI() {
 		const enabled = Boolean(this.exportSettings.watermarkEnabled);
-		// Governed by a toggle directly above it, so it stays visible and goes
-		// inactive rather than disappearing — the same rule the dither rows use.
-		setSettingsRowInactive(document.getElementById('watermarkSelectionRow'), !enabled);
+		const row = document.getElementById('watermarkSelectionRow');
+		if (row) row.hidden = !enabled || getActiveExportTarget(this.exportSettings).isVector;
 		this.updateWatermarkPreview?.();
 	}
 
@@ -251,7 +280,7 @@ initializeExportSettings() {
 
 ,
 	setGovernedSetExpanded(disclosure, expanded) {
-		if (disclosure) setAdvancedDisclosureOpen(disclosure, expanded);
+		if (disclosure) setAdvancedDisclosureOpen(disclosure, expanded || PREFERENCES.get('showAllControls'));
 	}
 
 ,
@@ -275,6 +304,11 @@ initializeExportSettings() {
 
 ,
 	setupExportSettingsListeners() {
+		const canvas = document.getElementById('exportDitherPreview');
+		canvas.style.setProperty('--export-dither-preview-height', `${CONFIG.export.ditherPreview.height}px`);
+		this.exportDitherPreviewObserver = new ResizeObserver(() => this.renderExportDitherPreview());
+		this.exportDitherPreviewObserver.observe(canvas);
+		document.getElementById('openAnimationLoop')?.addEventListener('click', () => this.openAnimationLoop());
 		const presetControl = document.getElementById('exportDitherPreset');
 		if (presetControl && !presetControl.dataset.bound) {
 			presetControl.dataset.bound = 'true';
@@ -304,14 +338,15 @@ initializeExportSettings() {
 			this.updateExportFidelityUI();
 			if (key === 'exportFidelity') this.setExportFidelityExpanded(false);
 			this.updateExportDuration();
-			if (key === 'ditherEnabled') this.updateDitherDependentUI();
+			if (key === 'ditherEnabled' || key === 'ditherType') this.updateDitherDependentUI();
 			if (key === 'watermarkEnabled') this.updateWatermarkUI?.();
 			if (key === 'targetSize') this.updateTargetSizeUI();
+			if (key === 'outputScale') this.updateExportOutputSizeUI();
 			if (key === 'watermark') {
 				this.updateWatermarkPreview?.();
 			}
 			if (key === 'transparency' || key === 'mp4LengthMode') this.updateExportFormatUI();
-			if (key === 'transparency' || key === 'format') this.updateMatteColorUI();
+			if (key === 'transparency') this.updateMatteColorUI();
 		});
 
 		// Delegate live repeat changes so the duration remains bound even if modal
@@ -383,7 +418,7 @@ initializeExportSettings() {
 		const master = document.getElementById('antialiasMaskEdges');
 		if (master) master.checked = enabled;
 		this.refreshMaskEdgeRendering();
-		this.updateStatus(enabled ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
+		this.updateStatus(enabled ? 'Smooth Edges on' : 'Smooth Edges off');
 	}
 
 ,
@@ -481,15 +516,15 @@ initializeExportSettings() {
 		if (formatDescription) {
 			let description = {
 				'still:svg': 'Export paths, shapes and editable text. Text needs the font installed; warp and text backing shapes are omitted. Textures and effects are omitted.',
-				'still:png': 'Export a lossless still image with optional transparency.',
-				'still:jpeg': 'Export a compressed still image. Transparent areas use the matte color.',
-				'still:gif': 'Export one selected frame as a palette-based GIF.',
+				'still:png': 'Export a still image with full detail and optional transparency.',
+				'still:jpeg': 'Export a smaller still image. Transparent areas use the matte color.',
+				'still:gif': 'Export one frame as a GIF.',
 				'animation:gif': 'Export an animated GIF.',
-				'animation:mp4': 'Export an H.264 video.'
+				'animation:mp4': 'Export a video.'
 			}[target.id];
 			const pixelLooks = this.layers.filter((layer) => layer.visible && layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3);
 			if (!target.isVector && pixelLooks.length) description += ` Active pixel look${pixelLooks.length === 1 ? '' : 's'}: ${pixelLooks.map((layer) => GlitterFilter.summaryText(layer.filterData)).join(', ')}.`;
-			if (target.isGif && pixelLooks.some((layer) => ['dither', 'posterize'].includes(layer.filterData.type))) description += ' Clean GIF Look avoids quantizing these pixels a second time.';
+			if (target.isGif && pixelLooks.some((layer) => ['dither', 'posterize'].includes(layer.filterData.type))) description += ' Clean GIF Look keeps these colors sharp.';
 			if (target.isGif && pixelLooks.some((layer) => layer.filterData.type === 'jpeg-crunch')) description += ' JPEG Crunch can make the GIF larger.';
 			if (target.isVector) { const count = SvgExporter.count(this.layers); description = `${count.vectors} vector layers. ${count.omitted} other layers are left out of an SVG. ${description}`; }
 			formatDescription.textContent = description;
@@ -527,15 +562,9 @@ initializeExportSettings() {
 			const section = group.dataset.section;
 			// Assigned for every group: the pass below hides one whose rows are
 			// all hidden, and it has to come back when the format changes.
-			group.hidden = (section === 'playback' && !target.supportsPlaybackSettings)
-				|| (section === 'optimization' && !target.supportsAnimationOptimization);
+			group.hidden = section === 'animation' && !target.supportsAnimationSettings;
 		});
-		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
-			if (group.hidden) return;
-			// The card body's children are the group's rows.
-			const hasVisibleRow = Array.from(group.querySelectorAll('.property-card-body > *')).some((child) => !child.hidden);
-			group.hidden = !hasVisibleRow;
-		});
+
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
 		const targetDurationRow = document.getElementById('exportMp4TargetDurationRow');
 		const loopCountRow = document.getElementById('exportMp4LoopCountRow');
@@ -545,9 +574,17 @@ initializeExportSettings() {
 		if (transparency) transparency.disabled = !target.supportsTransparency;
 		for (const key of ['outputScale', 'targetSize', 'targetSizeKB', 'baseImage', 'watermarkEnabled', 'watermark']) {
 			const row = document.getElementById(EXPORT_SETTINGS_SCHEMA[key].element)?.closest('.settings-row');
-			if (row) row.hidden = Boolean(target.isVector);
+			if (row) row.hidden = target.isVector;
 		}
 		this.updateMatteColorUI();
+		this.updateTargetSizeUI();
+		this.updateWatermarkUI();
+		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
+			if (group.hidden) return;
+			// The card body's children are the group's rows.
+			const hasVisibleRow = Array.from(group.querySelectorAll('.property-card-body > *')).some((child) => !child.hidden);
+			group.hidden = !hasVisibleRow;
+		});
 		this.updateExportActionUI?.();
 		this.exportSettingsFilter?.apply();
 		if (target.isAnimation) this.updateExportDuration();
@@ -572,8 +609,7 @@ initializeExportSettings() {
 	updateExportFidelityUI() {
 		const stop = CONFIG.export.timeline.fidelityStops[this.exportSettings.exportFidelity]
 			|| CONFIG.export.timeline.fidelityStops[CONFIG.export.defaults.exportFidelity];
-		const output = document.getElementById('exportFidelityValue');
-		if (output) output.textContent = stop.label;
+		syncSteppedSlider(document.getElementById('exportFidelity'));
 		const summary = document.querySelector('[data-export-fidelity-summary]');
 		if (!summary) return;
 		const samplesPerSecond = this.exportSettings.maxSamplingFps === 'auto'
@@ -643,7 +679,12 @@ initializeExportSettings() {
 		const visibleLayers = this.layers.filter((layer) => layer.visible
 			&& layerHasVisibleContent(layer)
 			&& this._layerIntersectsExportCanvas(layer));
-		if (!visibleLayers.length) { this.syncAnimationLoop(null); return; }
+		if (!visibleLayers.length) {
+			this.syncAnimationLoop(null);
+			if (fidelityOutput) fidelityOutput.textContent = getActiveExportTarget(this.exportSettings).isGif
+				? 'Nothing in this project is animated, so the GIF has one frame.' : 'Nothing in this project is animated.';
+			return;
+		}
 
 		try {
 			const estimate = await this.estimateExportAnimation(visibleLayers);
@@ -661,12 +702,11 @@ initializeExportSettings() {
 				output.textContent = `${formatSeconds(loopDurationSeconds * loopCount)}. ${loopCount} complete ${loopCount === 1 ? 'loop' : 'loops'}.`;
 			}
 			if (fidelityOutput) {
-				const stop = CONFIG.export.timeline.fidelityStops[this.exportSettings.exportFidelity]
-					|| CONFIG.export.timeline.fidelityStops[CONFIG.export.defaults.exportFidelity];
-				const visualError = Number.isFinite(this.exportSettings.visualErrorThreshold)
-					? this.exportSettings.visualErrorThreshold
-					: stop.visualError;
-				fidelityOutput.textContent = `~${estimate.estimatedFrameCount} frames · loop ${loopDurationSeconds.toFixed(1)} s · frames differ by ≤ ${(visualError * 100).toFixed(1)}%`;
+				fidelityOutput.textContent = estimate.sourceAnalysis?.length || estimate.loopFit?.oneShots.length || estimate.estimatedFrameCount > 1
+					? `About ${estimate.estimatedFrameCount} ${estimate.estimatedFrameCount === 1 ? 'frame' : 'frames'} in a ${loopDurationSeconds.toFixed(1)} s loop.`
+					: getActiveExportTarget(this.exportSettings).isGif
+						? 'Nothing in this project is animated, so the GIF has one frame.'
+						: 'Nothing in this project is animated.';
 			}
 		} catch (error) {
 			if (requestId !== this.exportDurationRequestId) return;
@@ -843,7 +883,7 @@ async resetAllSettings() {
 			tone: 'danger',
 			skippable: false,
 			title: 'Reset Export Settings',
-			message: 'Every setting in this window — Output, Playback, Quality, and Optimization — will be restored to its default.',
+			message: `Every setting in this window (${EXPORT_SETTINGS_LAYOUT.map((group) => group.title).join(', ')}) will be restored to its default.`,
 			confirmLabel: 'Reset'
 		});
 		if (!confirmed) return;

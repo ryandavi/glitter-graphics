@@ -8,29 +8,6 @@
 // follows is only what a settings list adds to the panel vocabulary: custom
 // widgets and inactive rows.
 
-.export-fidelity-ticks {
-	display: flex;
-	justify-content: space-between;
-	gap: var(--spacing-xs);
-	margin-top: var(--spacing-2xs);
-	color: var(--color-text-tertiary);
-	font-size: var(--font-size-xs);
-
-	>span { text-align: center; }
-}
-
-.export-fidelity-estimate {
-	color: var(--color-text-secondary);
-	font-variant-numeric: tabular-nums;
-}
-
-// The chosen stop's name, at the right of the slider's label.
-.export-fidelity-value {
-	color: var(--color-text-primary);
-	font-size: var(--font-size-sm);
-	white-space: nowrap;
-}
-
 // The design system's badge: `badge-base` corners, no case transform. Status
 // color is a modifier, never a new class.
 .badge {
@@ -52,12 +29,10 @@
 	}
 }
 
-// A setting that exists and matters but is currently held off by another
-// visible control. Its own controls carry the real `disabled` property —
-// this class only carries the look, and the reason note says what to turn
-// on. Never `pointer-events: none`: that stops the mouse and not the Tab
-// key, which leaves a "disabled" control a keyboard user can still change.
-// The row's revert stays live, so the dimming is applied around it.
+// Inapplicable rows are hidden; a single child is revealed by its parent.
+// Groups inside disclosures stay visible and inactive, with one reason under
+// their parent. Real disabled properties block keyboard input; this class
+// supplies the look and leaves default-state reverts alone.
 .settings-row.is-inactive {
 	> :not([data-inactive-reason-text]):not(.property-row),
 	> .property-row > :not(.property-revert) { opacity: var(--opacity-disabled); }
@@ -69,8 +44,7 @@
 
 // ---- Subordination ------------------------------------------------------
 // A row governed by the single row above it (Watermark → Watermark Style)
-// sits flush with its parent; its inactive state and reason note say what
-// controls it.
+// is hidden until the parent reveals it.
 //
 // A preset that writes many values (GIF Look → its palette and texture rows)
 // keeps them in the panel's Advanced disclosure, labelled Customize: the
@@ -99,9 +73,8 @@
 // actually do, drawn from the live values rather than described in prose.
 .export-dither-preview {
 	display: block;
-	width: min(100%, 240px);
-	height: auto;
-	aspect-ratio: 10 / 3;
+	width: 100%;
+	height: var(--export-dither-preview-height);
 	border-radius: var(--radius-sm);
 	image-rendering: pixelated;
 }

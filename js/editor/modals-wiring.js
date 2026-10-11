@@ -45,6 +45,8 @@ updateOrientationButtons(width, height) {
 				resetScrollOnOpen: true,
 				onOpen: () => {
 					this.ensureSettingsModal('exportSettingsModal');
+					this.updateExportOutputSizeUI();
+					requestAnimationFrame(() => this.renderExportDitherPreview());
 					this.exportSettingsFilter?.reset();
 					this.updateExportDuration();
 					syncFieldReverts(document.getElementById('exportSettingsModal'));

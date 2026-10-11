@@ -992,6 +992,7 @@ const CONFIG = deepFreeze({
 	},
 
 	export: {
+		ditherPreview: { height: 144, zoom: 2 },
 		authoredFrames: {
 			checkpointInterval: 12
 		},
@@ -1045,6 +1046,7 @@ const CONFIG = deepFreeze({
 				loopCandidateShortlist: 4
 			},
 			fidelityStops: EXPORT_FIDELITY_STOPS,
+			fidelityEndLabels: ['Best quality', 'Smallest file'],
 			defaultPreset: 'balanced',
 			presets: {
 				highFidelity: EXPORT_FIDELITY_STOPS[1],

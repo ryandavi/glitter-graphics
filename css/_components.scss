@@ -413,15 +413,15 @@ input[type="range"] {
 
 	&::-webkit-slider-runnable-track {
 		height: 4px;
-		background: var(--color-slider-track);
+		background: var(--slider-track-background, var(--color-slider-track));
 		border-radius: 2px;
 	}
 
 	&::-webkit-slider-thumb {
 		-webkit-appearance: none;
-		width: 16px;
-		height: 16px;
-		margin-top: -6px;
+		width: var(--slider-thumb-size);
+		height: var(--slider-thumb-size);
+		margin-top: calc((4px - var(--slider-thumb-size)) / 2);
 		background: var(--color-accent);
 		border: 2px solid var(--color-bg-card);
 		border-radius: var(--radius-full);
@@ -430,13 +430,14 @@ input[type="range"] {
 
 	&::-moz-range-track {
 		height: 4px;
-		background: var(--color-slider-track);
+		background: var(--slider-track-background, var(--color-slider-track));
 		border-radius: 2px;
 	}
 
 	&::-moz-range-thumb {
-		width: 16px;
-		height: 16px;
+		width: var(--slider-thumb-size);
+		height: var(--slider-thumb-size);
+		box-sizing: border-box;
 		background: var(--color-accent);
 		border-radius: var(--radius-full);
 		border: 2px solid var(--color-bg-card);
@@ -445,6 +446,44 @@ input[type="range"] {
 	&:focus-visible::-webkit-slider-thumb { box-shadow: var(--control-focus-ring); }
 	&:focus-visible::-moz-range-thumb { box-shadow: var(--control-focus-ring); }
 	&:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+}
+
+.stepped-slider-captions {
+	display: flex;
+	justify-content: space-between;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	white-space: nowrap;
+}
+
+.stepped-slider-track {
+	position: relative;
+	background: linear-gradient(var(--color-slider-track), var(--color-slider-track)) center / 100% 4px no-repeat;
+
+	> input {
+		--slider-track-background: transparent;
+		position: relative;
+		margin: 0;
+	}
+}
+
+.stepped-slider-ticks {
+	position: absolute;
+	top: 50%;
+	inset-inline: calc((var(--slider-thumb-size) - var(--slider-tick-size)) / 2);
+	display: flex;
+	justify-content: space-between;
+	transform: translateY(-50%);
+	pointer-events: none;
+
+	> span {
+		width: var(--slider-tick-size);
+		height: var(--slider-tick-size);
+		border-radius: var(--radius-full);
+		background: color-mix(in srgb, var(--color-slider-track), black 20%);
+
+		&.is-current { background: var(--color-accent); }
+	}
 }
 
 // ===========================================================================

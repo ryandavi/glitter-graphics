@@ -119,6 +119,8 @@
 	/* Range/switch track — must read against card AND panel backgrounds
 	   (recessed a step below --gray-800 so it never vanishes on cards) */
 	--color-slider-track: #14161a;
+	--slider-thumb-size: 16px;
+	--slider-tick-size: 6px;
 	/* Export progress sits on translucent mini-modal glass, so its empty track
 	   needs a dedicated recessed surface and a visible inner rim. */
 	--progress-track: var(--gray-700);

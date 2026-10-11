@@ -2102,7 +2102,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Antialias Edges</strong> – Smooths the one-pixel rendered edge of text and shapes, and the edges of future strokes on Glitter Fill masks. It does not make Text or Shape layers paintable with the Glitter Brush. Brush Softness is a separate, wider feather.</p>
+                    <p><strong>Smooth Edges</strong> – Smooths the one-pixel rendered edge of text and shapes, and the edges of future strokes on Glitter Fill masks. It does not make Text or Shape layers paintable with the Glitter Brush. Brush Softness is a separate, wider feather.</p>
                 </div>
             </div>
 
@@ -2120,7 +2120,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Transform Textures</strong> – Off by default. When off, resizing Text and Shape layers keeps the glitter texture's repeat size unchanged. Turn it on to scale the texture with the layer.</p>
+                    <p><strong>Scale Textures</strong> – Off by default. When off, resizing Text and Shape layers keeps the glitter texture's repeat size unchanged. Turn it on to scale the texture with the layer.</p>
                 </div>
             </div>
 
@@ -2190,14 +2190,14 @@
 
         <div class="guide-subsection">
             <h4 id="export-settings">Export Settings</h4>
-            <p>Search by setting name or description, or scan the <strong>Output</strong>, <strong>Playback</strong>, <strong>Quality</strong>, and <strong>Optimization</strong> groups. Quality and Optimization show their main choices first. Use <strong>Customize</strong> to reveal the settings each choice controls. GIF and MP4 controls appear only when that format is active.</p>
+            <p>Search by setting name or description, or scan the <strong>Format</strong>, <strong>Size</strong>, <strong>Contents</strong>, <strong>Quality</strong>, and <strong>Animation</strong> groups. Quality and Animation show their main choices first. Use <strong>Customize</strong> for GIF colors and texture, and <strong>Advanced</strong> for animation controls. GIF and MP4 controls appear only when that format is active.</p>
 
             <div class="figure-wrapper guide-screenshot guide-screenshot-modal">
                 <figure>
-                    <img src="images/guide/export-settings.png" alt="Export Settings dialog showing search, Output controls, and the beginning of Playback controls">
+                    <img src="images/guide/export-settings.png" alt="Export Settings dialog with searchable format, size, contents, quality and animation controls">
                     <figcaption>
                         <cite>Export Settings</cite>
-                        <span class="figure-description">Start with Output, then work down through Playback, Quality, and Optimization. Search filters all four groups.</span>
+                        <span class="figure-description">Start with Format, then work down through Size, Contents, Quality, and Animation. Search filters all five groups.</span>
                     </figcaption>
                 </figure>
             </div>
@@ -2207,7 +2207,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Output</strong> – Choose GIF or MP4, preserve transparency where supported, set the matte color used behind transparent areas, and optionally add the watermark. MP4 appears only when the device supports video encoding. MP4 always uses the matte color, because video does not support transparency. <strong>Export Size</strong> exports smaller than the canvas without changing the project. <strong>Target Size</strong> keeps every export under a file size, either a service's upload limit or your own number.</p>
+                    <p><strong>Format, Size &amp; Contents</strong> – Choose a still image or animation format, preserve transparency where supported, set the matte color used behind transparent areas, and optionally add the watermark. MP4 appears only when the device supports video encoding. MP4 always uses the matte color, because video does not support transparency. <strong>Export Size</strong> exports smaller than the canvas without changing the project. <strong>File Size Limit</strong> keeps every export under a file size, either a service's upload limit or your own number.</p>
                 </div>
             </div>
 
@@ -2216,7 +2216,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Playback</strong> – Normal GIF timing is preserved. <strong>Fallback Frame Time</strong> applies only when a source has no usable timing data. MP4 can use an exact duration or stop after complete loops, and its estimated duration updates before you export.</p>
+                    <p><strong>Video Length</strong> – Normal GIF timing is preserved. <strong>Default Frame Time</strong> applies only when a source has no usable timing data. MP4 can use an exact duration or stop after complete loops, and its estimated duration updates before you export.</p>
                 </div>
             </div>
 
@@ -2225,12 +2225,12 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Quality</strong> – Start with <strong>Clean · Automatic</strong>. It keeps the encoder's per-frame color selection and adds no export texture. The other GIF Look presets use a shared palette: 128 gives a classic-web balance, and 64 and 32 give progressively chunkier texture. The live preview shows the selected dither against gradients and hard edges. MP4 has Compact, Standard, and High bitrate presets.</p>
+                    <p><strong>Quality</strong> – Start with <strong>Clean · Automatic</strong>. It picks colors for each frame and adds no export texture. The other GIF Look presets use a shared palette: 128 gives a classic-web balance, and 64 and 32 give progressively chunkier texture. The live preview shows the selected dither against gradients and hard edges. MP4 has Compact, Standard, and High quality presets.</p>
                     <ul>
                         <li><strong>Creative dithering</strong> – Comes from a Dither filter layer and is part of the artwork. It appears in the preview, in PNG-style rendering, and in GIF and MP4 exports, and may shimmer by design.</li>
-                        <li><strong>Export dithering</strong> – Happens afterward, only while fitting the finished artwork into a GIF palette. Keep it stable for clean animation, or animate Bayer or Halftone for deliberate noise.</li>
+                        <li><strong>Export dithering</strong> – Happens afterward, only while fitting the finished artwork into a GIF palette. Keep it stable for clean animation, or animate Grid or Dots for deliberate noise.</li>
                         <li><strong>Using both</strong> – Allowed. It adds a second, finer export texture. The result screen notes this, so double dithering is deliberate.</li>
-                        <li><strong>Texture Scale</strong> – Enlarges the pattern without lowering artwork resolution. Pixelate changes the artwork itself by making larger color cells.</li>
+                        <li><strong>Pattern Scale</strong> – Enlarges the pattern without lowering artwork resolution. Pixelate changes the artwork itself by making larger color cells.</li>
                     </ul>
                 </div>
             </div>
@@ -2240,8 +2240,8 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Optimization</strong> – Export fidelity is a five-step choice, from an exact preview match to the smallest shareable file. Authored GIF timing is unchanged. Generated animation periods may be adjusted slightly so the loop closes cleanly on the composite loop. Every period change or removed frame is reported, and every reduction preserves the resolved loop length.</p>
-                    <p><strong>Customize</strong> exposes Motion Detail, Max frame difference, Frame Limit, Smart Frame Reduction, and manual frame skipping.</p>
+                    <p><strong>Animation</strong> – Export Fidelity is a five-step choice, from an exact preview match to the smallest shareable file. Authored GIF timing is unchanged. Generated animation periods may be adjusted slightly so the loop closes cleanly on the composite loop. Every period change or removed frame is reported, and every reduction preserves the resolved loop length.</p>
+                    <p><strong>Advanced</strong> exposes Motion Detail, Max Frame Difference, Frame Limit, Smart Frame Reduction, Keep Fewer Frames, Default Frame Time, and Color Accuracy.</p>
                     <p>After export, expand <strong>Animation analysis</strong> to see the native frame timing of authored assets, the periods and cycle counts of generated effects, and the rendered frame count and sampling rate of the export.</p>
                 </div>
             </div>
