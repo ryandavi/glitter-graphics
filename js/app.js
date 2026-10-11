@@ -1229,6 +1229,7 @@ APP_BOOT.run(async (stage, editor) => {
 	if (stage !== 'library') return;
 	if (DEBUG_CONFIG.enabled) await editor.loadDebugConfig();
 	window.editor = editor;
+	syncLibraryView();
 }).catch((error) => {
 	console.error('Boot failed:', error);
 });

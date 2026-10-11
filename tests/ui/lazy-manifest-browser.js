@@ -15,8 +15,10 @@ async function main() {
 		const manifestRequests = [];
 		// Source boot exceeds the browser's default Resource Timing buffer.
 		const resourceRequests = [];
+		const requestStarts = [];
 		page.on('request', (request) => {
 			resourceRequests.push(new URL(request.url()).pathname);
+			requestStarts.push(request);
 			if (/\/data\/(?:shapes|brushes|fonts|glitter\.index|stickers\.index)\.json\?/u.test(request.url())) manifestRequests.push(request.url());
 		});
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
@@ -40,6 +42,10 @@ async function main() {
 		assert(boot.brushes === boot.rasterBrushes + boot.vectors, 'Concurrent boot lost brush definitions');
 		assert(await page.evaluate(() => APP_BOOT.isComplete('interactive') && APP_BOOT.isComplete('library')), 'Editor was exposed before its Library stage completed');
 		assert(boot.preloads.every((url) => manifestRequests.includes(url)), 'Preload and loader manifest URLs differ');
+		const stage = await page.evaluate(() => ({ origin: performance.timeOrigin, interactive: performance.getEntriesByName('glitter:boot:interactive')[0].startTime }));
+		assert(requestStarts.filter((request) => /\/data\/(glitter|stickers)\.index\.json$/u.test(new URL(request.url()).pathname)).every((request) => request.timing().startTime >= stage.origin + stage.interactive), 'A browse index competed with the interactive stage');
+		assert(await page.evaluate(() => [editor.glitterLibrary, editor.stickerLibrary, editor.brushTipManager, editor.shapeBrowserManager, editor.fontBrowserManager].every((manager) => !manager.browser.hasView)), 'A hidden Library kind rendered at boot');
+		assert(await page.locator('#designGalleryContent .category-card, #designGalleryContent .asset-option').count() === 0, 'Boot created hidden Library thumbnails');
 
 		const initialResources = [...resourceRequests];
 		const result = await page.evaluate(async () => {
@@ -152,6 +158,23 @@ async function main() {
 			'Sticker replacement did not commit its source and geometry together after preload'
 		);
 		process.stdout.write('Lazy asset manifest verification passed\n');
+		const views = await page.evaluate(() => {
+			const managers = [editor.glitterLibrary, editor.stickerLibrary, editor.brushTipManager, editor.shapeBrowserManager, editor.fontBrowserManager];
+			return managers.map((manager, index) => {
+				document.getElementById('designGallerySection').dataset.pickerLibrary = manager.browser.prefix;
+				syncLibraryView();
+				const unchanged = manager.browser.elements.content.firstChild;
+				syncLibraryView();
+				return {
+					prefix: manager.browser.prefix,
+					count: manager.ui.panel.querySelectorAll('.category-card, .asset-option').length,
+					once: unchanged === manager.browser.elements.content.firstChild,
+					pending: managers.slice(index + 1).every((entry) => !entry.browser.hasView),
+					lazy: [...manager.ui.panel.querySelectorAll('.category-card img')].every((image) => image.loading === 'lazy')
+				};
+			});
+		});
+		for (const view of views) assert(view.count > 0 && view.once && view.pending && view.lazy, `${view.prefix} first-use rendering failed: ${JSON.stringify(view)}`);
 
 		const gap = await browser.newPage();
 		let releaseLibrary;

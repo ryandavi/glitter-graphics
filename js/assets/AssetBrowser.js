@@ -25,6 +25,7 @@ class AssetBrowser {
 		this.searchDebounceTimer = null;
 
 		this.categories = [];
+		this.hasView = false;
 
 		// HTML element references
 		this.elements = {
@@ -109,10 +110,15 @@ class AssetBrowser {
 		});
 		this.setupIntersectionObserver();
 		this.setupEventListeners();
-		this.setState('CATEGORY_LIST');
 
 		// Show browser
 		this.elements.browser.classList.add('visible');
+	}
+
+	ensureView() {
+		if (this.hasView) return;
+		this.hasView = true;
+		this.render();
 	}
 
 	addViewOption(view, label) {
@@ -211,6 +217,7 @@ class AssetBrowser {
 	}
 
 	render() {
+		if (!this.hasView) return;
 		// Narrowing is cross-library, regardless of the saved home or rail view.
 		this.state = this.contentManager.hasActiveFilters() ? 'SEARCH_RESULTS' : 'CATEGORY_LIST';
 		if (this.assetOptions) {
@@ -520,6 +527,7 @@ class AssetBrowser {
 	}
 
 	updateShortcuts() {
+		if (!this.hasView) return;
 		if (this.state === 'SEARCH_RESULTS') return;
 		this.preserveScrollPosition(() => this._renderShortcuts());
 		this.contentManager.updateSelection?.();
@@ -587,6 +595,7 @@ class AssetBrowser {
 					cell.style.imageRendering = item.isPixelated ? 'pixelated' : 'auto';
 				} else {
 					const img = document.createElement('img');
+					img.loading = 'lazy';
 					img.src = item.thumbnailUrl || item.url;
 					img.draggable = false;
 					img.alt = '';

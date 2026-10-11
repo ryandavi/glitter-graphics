@@ -43,6 +43,12 @@ function syncLibraryView() {
 	const schema = kind ? getAssetBrowserSchema(kind) : null;
 	if (schema) section.dataset.library = schema.prefix;
 	else delete section.dataset.library;
+	if (schema && APP_BOOT.isComplete('library')) {
+		const editor = APP_BOOT.editor;
+		const manager = [editor.glitterLibrary, editor.stickerLibrary, editor.brushTipManager, editor.shapeBrowserManager, editor.fontBrowserManager]
+			.find((entry) => entry.browser?.prefix === schema.prefix);
+		manager?.browser?.ensureView();
+	}
 	ASSET_BROWSERS.forEach((entry) => {
 		const active = entry === schema;
 		[entry.searchHost, entry.browserHost].forEach((id) => {

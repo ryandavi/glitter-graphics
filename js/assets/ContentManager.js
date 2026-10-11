@@ -697,6 +697,7 @@ class ContentManager {
 		const url = category.icon || item?.thumbnailUrl || item?.url;
 		if (!url) return null;
 		const image = document.createElement('img');
+		image.loading = 'lazy';
 		image.src = url;
 		image.alt = '';
 		image.className = 'asset-browser-rail-icon';

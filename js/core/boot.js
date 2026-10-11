@@ -43,7 +43,7 @@ class BootRunner {
 
 	async run(onStage) {
 		for (const stage of this.config.stages) {
-			if (stage.id === 'idle') await new Promise((resolve) => {
+			if (stage.id === 'idle' || stage.id === 'library') await new Promise((resolve) => {
 				if (window.requestIdleCallback) window.requestIdleCallback(resolve, { timeout: this.config.idleTimeoutMs });
 				else setTimeout(resolve, 0);
 			});
