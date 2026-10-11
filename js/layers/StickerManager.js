@@ -414,7 +414,7 @@ class StickerManager {
 		}
 		this.backgroundRemovalLoading = true;
 		try {
-			await loadScriptOnce('js/systems/BackgroundRemover.js?v=d2ed8cbf');
+			const { BackgroundRemover } = await loadScriptGroup('background-removal');
 			this.backgroundRemover ||= new BackgroundRemover(this.editor);
 			await this.backgroundRemover.run(layer, item);
 		} catch (error) { this.editor.showError(error.message); }

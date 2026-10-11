@@ -1,7 +1,7 @@
 const MODAL_METHODS = {
 async ensureHtmlSceneExporter() {
 		if (this.htmlSceneExporter) return this.htmlSceneExporter;
-		await loadScriptOnce('js/export/HtmlSceneExporter.js?v=af19f59b');
+		const { HtmlSceneExporter } = await loadScriptGroup('html');
 		this.htmlSceneExporter = new HtmlSceneExporter(this);
 		this.htmlSceneExporter.initialize();
 		return this.htmlSceneExporter;
@@ -95,8 +95,8 @@ updateOrientationButtons(width, height) {
 		this.registerDocumentModal('preservationModal', {
 			url: 'modals/preservation.html',
 			onLoaded: async (body) => {
-				await loadScriptOnce('js/generated/entities-data.js?v=b8b7d1f7');
-				await loadScriptOnce('js/ui/about-timeline-data.js?v=c875b6a5');
+				await loadScriptGroup('entities');
+				await loadScriptGroup('preservation');
 				initPreservationTimeline(body);
 			}
 		});

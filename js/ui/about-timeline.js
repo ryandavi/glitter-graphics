@@ -9,6 +9,8 @@
  * the page's search box sees the (unfiltered) rendered entries too.
  */
 function initPreservationTimeline(modalBody) {
+	const { ABOUT_TIMELINE, ABOUT_TIMELINE_TAG_LABELS, ABOUT_TIMELINE_COUNTRY_LABELS } = SCRIPT_GROUP_EXPORTS.get('preservation') || {};
+	const { ENTITY_DATA } = SCRIPT_GROUP_EXPORTS.get('entities') || {};
 	const filtersEl = modalBody.querySelector('#PreservationTimelineFilters');
 	const listEl = modalBody.querySelector('#PreservationTimelineList');
 	const summaryEl = modalBody.querySelector('#PreservationTimelineSummary');

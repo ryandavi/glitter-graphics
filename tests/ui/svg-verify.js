@@ -9,7 +9,8 @@ const { chromium } = require('playwright');
 		if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*',(route) => route.fulfill({ contentType: 'text/css',body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
 		const errors=[]; page.on('pageerror',e => errors.push(e.message));
 		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/',{ waitUntil: 'networkidle' });
-		await page.evaluate(() => editor.modalManager.closeAll({ force: true }));
+		await page.waitForFunction(() => window.editor);
+		await page.evaluate(async () => { await editor.modalManager.open('exportSettingsModal'); editor.modalManager.closeAll({ force: true }); });
 		const checks=await page.evaluate(async () => {
 			const check=(condition,message) => { if (!condition) throw new Error(message); };
 			const wrap=(body,attrs='viewBox="0 0 100 100"') => `<svg xmlns="http://www.w3.org/2000/svg" ${attrs}>${body}</svg>`;

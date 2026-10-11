@@ -70,6 +70,8 @@ async function main() {
 		assert(await page.evaluate(() => [editor.glitterLibrary, editor.stickerLibrary, editor.brushTipManager, editor.shapeBrowserManager, editor.fontBrowserManager].every((manager) => !manager.browser.hasView)), 'A hidden Library kind rendered at boot');
 		assert(await page.locator('#designGalleryContent .category-card, #designGalleryContent .asset-option').count() === 0, 'Boot created hidden Library thumbnails');
 
+		const lazyScripts = Object.entries(require('../../js/script-manifest.json')).filter(([id]) => id !== 'head' && id !== 'boot').flatMap(([, files]) => files);
+		assert(!resourceRequests.some((url) => lazyScripts.some((file) => url.endsWith('/' + file))), 'A first-use script group was fetched during boot');
 		const initialResources = [...resourceRequests];
 		const result = await page.evaluate(async () => {
 			const glitter = window.editor.glitterLibrary.content.find((asset) => asset._detailLoaded === false);
@@ -236,6 +238,45 @@ async function main() {
 			await failed.close();
 		}
 		process.stdout.write('Staged boot gap and failure verification passed\n');
+		const firstUse = await browser.newPage();
+		const groupRequests = [];
+		firstUse.on('request', request => groupRequests.push(new URL(request.url()).pathname));
+		await firstUse.goto(APP_URL, { waitUntil: 'networkidle' });
+		await firstUse.waitForFunction(() => window.editor);
+		let releaseExport;
+		const exportGate = new Promise(resolve => { releaseExport = resolve; });
+		await firstUse.route('**/js/export/GifExportEncoder.js?*', async route => { await exportGate; await route.continue(); });
+		await firstUse.evaluate(async () => {
+			await editor.loadBlankImage(32, 24, '#ff60ba');
+		});
+		await firstUse.waitForFunction(() => editor.originalImage);
+		await firstUse.evaluate(() => {
+			setActiveExportTarget(editor.exportSettings, 'still:png');
+			window.exportedBytes = [];
+			editor.exportResultPresenter.show = async result => { window.exportedBytes.push(Array.from(new Uint8Array(await result.blob.arrayBuffer()))); };
+			editor.exportCurrentTarget();
+		});
+		await firstUse.waitForFunction(() => editor.exportInProgress && document.getElementById('exportProgress').classList.contains('visible'));
+		assert(await firstUse.evaluate(() => !SCRIPT_GROUP_EXPORTS.has('export')), 'Export group bypassed the first-use loading wait');
+		releaseExport();
+		await firstUse.waitForFunction(() => window.exportedBytes.length === 1);
+		await firstUse.evaluate(() => editor.exportCurrentTarget());
+		await firstUse.waitForFunction(() => window.exportedBytes.length === 2);
+		assert(await firstUse.evaluate(() => JSON.stringify(window.exportedBytes[0]) === JSON.stringify(window.exportedBytes[1])), 'First-use export changed repeat output');
+		const exporterFiles = require('../../js/script-manifest.json').export;
+		assert(exporterFiles.every(file => groupRequests.filter(url => url.endsWith('/' + file)).length === 1), 'Repeated export refetched its code group');
+		assert(await firstUse.evaluate(async () => {
+			const loads = await Promise.all([loadScriptGroup('export'), loadScriptGroup('export')]);
+			return loads[0] === loads[1];
+		}), 'Concurrent group loads did not share exports');
+		let failHtml = true;
+		await firstUse.route('**/js/export/HtmlSceneExporter.js?*', route => failHtml ? route.abort() : route.continue());
+		assert(await firstUse.evaluate(async () => { try { await loadScriptGroup('html'); return false; } catch { return true; } }), 'A failed code group did not reject');
+		failHtml = false;
+		assert(await firstUse.evaluate(async () => Boolean((await loadScriptGroup('html')).HtmlSceneExporter)), 'A failed group could not retry');
+		await firstUse.close();
+		process.stdout.write('First-use script groups, export progress, repeat output and retry verification passed\n');
+
 	} finally {
 		await browser.close();
 	}

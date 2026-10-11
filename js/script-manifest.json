@@ -139,6 +139,7 @@
 		"js/export/export-report.js",
 		"js/export/ExportResultPresenter.js",
 		"js/export/SceneCompositor.js",
+		"js/export/DeferredExporter.js",
 		"js/export/GifExporter.js",
 		"js/export/SvgExporter.js",
 		"js/export/StillImageExporter.js",
@@ -198,5 +199,32 @@
 		"js/ui/sheet-drag.js",
 		"js/systems/MobileManager.js",
 		"js/app.js"
+	],
+	"export": [
+		"js/export/GifExportEncoder.js",
+		"js/export/SvgExportEncoder.js",
+		"js/export/StillImageExportEncoder.js",
+		"js/export/Mp4ExportEncoder.js",
+		"js/export/export-group.js"
+	],
+	"html": [
+		"js/export/HtmlSceneExporter.js",
+		"js/export/html-group.js"
+	],
+	"entities": [
+		"js/generated/entities-data.js",
+		"js/core/entities-group.js"
+	],
+	"preservation": [
+		"js/ui/about-timeline-data.js",
+		"js/core/preservation-group.js"
+	],
+	"background-removal": [
+		"js/systems/BackgroundRemover.js",
+		"js/core/background-removal-group.js"
+	],
+	"mp4-codec": [
+		"js/vendor/mp4-muxer.js",
+		"js/core/mp4-codec-group.js"
 	]
 }

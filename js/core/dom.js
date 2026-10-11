@@ -42,6 +42,7 @@ function loadScriptOnce(src) {
 		}, { once: true });
 		script.addEventListener('error', () => {
 			SCRIPT_LOADS.delete(src);
+			script.remove();
 			reject(new Error(`Could not load script: ${src}`));
 		}, { once: true });
 		if (!existing) {
@@ -51,6 +52,22 @@ function loadScriptOnce(src) {
 	});
 	SCRIPT_LOADS.set(src, promise);
 	return promise;
+}
+
+const SCRIPT_GROUP_LOADS = new Map();
+const SCRIPT_GROUP_EXPORTS = new Map();
+
+function loadScriptGroup(id) {
+	if (!Object.hasOwn(SCRIPT_GROUP_URLS, id)) return Promise.reject(new Error(`Unknown script group: ${id}`));
+	if (id === 'head' || id === 'boot') return Promise.reject(new Error(`Script group ${id} is loaded by the shell`));
+	if (!SCRIPT_GROUP_LOADS.has(id)) {
+		const promise = (async () => {
+			for (const src of SCRIPT_GROUP_URLS[id]) await loadScriptOnce(src);
+			return SCRIPT_GROUP_EXPORTS.get(id) || {};
+		})().catch((error) => { SCRIPT_GROUP_LOADS.delete(id); throw error; });
+		SCRIPT_GROUP_LOADS.set(id, promise);
+	}
+	return SCRIPT_GROUP_LOADS.get(id);
 }
 
 async function loadImageElement(url) {

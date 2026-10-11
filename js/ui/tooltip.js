@@ -75,8 +75,8 @@ class TooltipManager {
 	attachTooltipListeners(container = document) {
 		const targets = container.querySelectorAll(TOOLTIP_TARGETS);
 		targets.forEach(el => this.attachTo(el));
-		if (typeof ENTITY_DATA === 'undefined' && [...targets].some(el => 'card' in el.dataset)) {
-			loadScriptOnce('js/generated/entities-data.js?v=b8b7d1f7').catch((error) => dbg('Entity data failed to load:', error));
+		if (!SCRIPT_GROUP_EXPORTS.get('entities') && [...targets].some(el => 'card' in el.dataset)) {
+			loadScriptGroup('entities').catch((error) => dbg('Entity data failed to load:', error));
 		}
 	}
 
@@ -84,7 +84,8 @@ class TooltipManager {
 	// (where it lived, whose it is, the person's other accounts), then the
 	// gloss. Null when the element has no card or the data isn't loaded yet.
 	entityCard(element) {
-		if (!('card' in element.dataset) || typeof ENTITY_DATA === 'undefined') return null;
+		const { ENTITY_DATA } = SCRIPT_GROUP_EXPORTS.get('entities') || {};
+		if (!('card' in element.dataset) || !SCRIPT_GROUP_EXPORTS.get('entities')) return null;
 		const entity = ENTITY_DATA[element.dataset.entity];
 		if (!entity) return null;
 		const nameOf = slug => ENTITY_DATA[slug]?.name || slug;
@@ -207,7 +208,7 @@ class TooltipManager {
 			tooltip.classList.add('tooltip-has-entity');
 			tooltip.append(card);
 			// The gloss shows on every mention's card, not only the first.
-			const glossText = element.dataset.tooltip || ENTITY_DATA[element.dataset.entity]?.gloss;
+			const glossText = element.dataset.tooltip || SCRIPT_GROUP_EXPORTS.get('entities').ENTITY_DATA[element.dataset.entity]?.gloss;
 			if (glossText) {
 				const gloss = document.createElement('div');
 				gloss.className = 'tooltip-entity-gloss';

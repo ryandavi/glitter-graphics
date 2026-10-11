@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { getScriptUrls } = require('./script-manifest');
+const { scriptManifest, getScriptUrls } = require('./script-manifest');
 const { getAppRegistries, escapeHtml } = require('./build-modals');
 
 const root = path.resolve(__dirname, '..');
@@ -50,10 +50,11 @@ function replaceRegion(source, name, render) {
 }
 
 function renderScripts(indent) {
-	const urls = getScriptUrls('boot');
+	const groups = Object.fromEntries(Object.keys(scriptManifest).map((id) => [id, getScriptUrls(id)]));
 	return `${indent}<script>
+${indent}	const SCRIPT_GROUP_URLS = ${JSON.stringify(groups)};
 ${indent}	(() => {
-${indent}		const sources = ${JSON.stringify(urls)};
+${indent}		const sources = SCRIPT_GROUP_URLS.boot;
 ${indent}		const stylesheet = document.querySelector('link[rel="stylesheet"]');
 ${indent}		let started = false;
 ${indent}		const start = () => {

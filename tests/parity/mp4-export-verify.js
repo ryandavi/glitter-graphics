@@ -9,6 +9,8 @@ async function main() {
 	try {
 		const page = await browser.newPage();
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
+		await page.waitForFunction(() => window.editor);
+		await page.evaluate(async () => { await editor.modalManager.open('exportSettingsModal'); editor.modalManager.close('exportSettingsModal'); });
 		const result = await page.evaluate(async () => {
 			if (!await Mp4Exporter.isSupported()) return { supported: false };
 			const maxCanvasConfig = await Mp4Exporter.getSupportedConfig(
