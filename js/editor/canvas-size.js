@@ -155,21 +155,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 	},
 
 	openCanvasBoundsMenu(triggerId, options, apply) {
-		const trigger = document.getElementById(triggerId);
-		let root = trigger.closest('.app-menu');
-		if (!root) {
-			root = document.createElement('div'); root.className = 'app-menu app-menu-popover';
-			trigger.before(root); root.appendChild(trigger);
-			const panel = document.createElement('div'); panel.className = 'app-menu-panel'; panel.hidden = true;
-			root.appendChild(panel);
-			root._popover = setupMenuPopover({ root, trigger, panel, fixed: true, bindTrigger: false });
-		}
-		const panel = root.querySelector('.app-menu-panel');
-		panel.replaceChildren(...options.map((option) => {
-			const button = document.createElement('button'); button.type = 'button'; button.className = 'app-menu-item'; button.textContent = option.label; button.disabled = Boolean(option.disabled);
-			button.addEventListener('click', () => apply(option.id)); return button;
-		}));
-		root._popover.open();
+		this.contextToolbarRenderer.openMenu(triggerId, options.map(option => ({ label: option.label, disabled: option.disabled, run: () => apply(option.id) })));
 	},
 
 	syncCanvasBoundsViews() {

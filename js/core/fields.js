@@ -19,6 +19,7 @@
 //   raster   re-rasterizes a mask or canvas on the main thread
 //   compute  a whole-document recompute or a scene rebuild
 const FIELDS = Object.freeze({
+	areaModifyAmount: { label: 'Amount', unit: 'px', min: 1, max: 100, step: 1, value: 4, cost: 'compute' },
 	recolorHue: { label: 'Hue', unit: '°', min: -180, max: 180, step: 1, value: 0 },
 	recolorSaturation: { label: 'Saturation', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 	recolorLightness: { label: 'Lightness', unit: '%', min: -100, max: 100, step: 1, value: 0 },

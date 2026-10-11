@@ -694,6 +694,7 @@
 						<div class="layer-center-controls ui-ignore-gestures" id="textEditControls"></div>
 						<div class="layer-center-controls ui-ignore-gestures" id="pathEditControls"></div>
 						<div class="layer-center-controls ui-ignore-gestures" id="cropEditControls"></div>
+					<div class="layer-center-controls ui-ignore-gestures" id="areaModifyControls"></div>
 					<div class="layer-center-controls ui-ignore-gestures" id="areaSelectControls"></div>
 						<div class="layer-center-controls ui-ignore-gestures" id="layerCenterControls"></div>
 
@@ -1560,6 +1561,13 @@
 			<symbol id="icon-text" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5V3.5h9V5M8 3.5v9M6 12.5h4" /></symbol>
 			<symbol id="icon-magnet" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3H2v6a6 6 0 0 0 12 0V3h-2v6a4 4 0 0 1-8 0V3Z" /><path d="M2 6h2M12 6h2" /></symbol>
 			<symbol id="icon-bounding-box" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="10" height="10" rx="0.5" stroke-dasharray="2.5 2" /><path fill="currentColor" stroke="none" d="M8 7.05a.95.95 0 1 1 0 1.9.95.95 0 0 1 0-1.9Z" /></symbol>
+						<symbol id="icon-area-ellipse" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="8" rx="6" ry="4.5" stroke-dasharray="2 2"/></symbol>
+			<symbol id="icon-area-lasso" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12C1 11 1 5 5 3s9 0 9 4-5 6-9 5Zm0 0c-2 1-2 3 0 3s3-3 1-4"/></symbol>
+			<symbol id="icon-area-polygon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 10 2-2 8-8-3Z" stroke-dasharray="2 2"/></symbol>
+			<symbol id="icon-area-mode-new" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="10" height="10" stroke-dasharray="2 2"/></symbol>
+			<symbol id="icon-area-mode-add" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h8v8H2zM6 6h8v8H6z"/><path d="M11 9v4m-2-2h4"/></symbol>
+			<symbol id="icon-area-mode-subtract" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h8v8H2zM6 6h8v8H6z"/><path d="M9 11h4"/></symbol>
+			<symbol id="icon-area-mode-intersect" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h8v8H2zM6 6h8v8H6z"/><path d="M6 6h4v4H6z" fill="currentColor" stroke="none"/></symbol>
 			<symbol id="icon-area-select" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="11" height="9" rx="0.5" stroke-dasharray="2.2 1.9" /></symbol>
 			<symbol id="icon-area-invert" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="1" /><path fill="currentColor" stroke="none" d="M8 2.5h4.5a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H8Z" /></symbol>
 			<symbol id="icon-fit-screen" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.25" /><rect x="5.5" y="6" width="5" height="4" rx="0.5" /></symbol>
@@ -1807,13 +1815,14 @@
 	<script src="js/vendor/gif.js?v=d3648ca8"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/releases.js?v=75b1af47"></script>
-	<script src="js/core/fields.js?v=621bb9a3"></script>
+	<script src="js/core/releases.js?v=3c8ef3bf"></script>
+	<script src="js/core/fields.js?v=ae6b4374"></script>
 	<script src="js/core/color.js?v=ebbbb501"></script>
 	<script src="js/core/math.js?v=54cfcc75"></script>
-	<script src="js/core/config.js?v=bbfe4b5f"></script>
-	<script src="js/core/tools.js?v=04750072"></script>
-	<script src="js/core/sessions.js?v=8bd07b6e"></script>
+	<script src="js/core/area.js?v=bc664c06"></script>
+	<script src="js/core/config.js?v=6d196745"></script>
+	<script src="js/core/tools.js?v=7ee71413"></script>
+	<script src="js/core/sessions.js?v=8f5b001d"></script>
 	<script src="js/core/layer-types.js?v=3b8de41b"></script>
 	<script src="js/core/text-content.js?v=7f7b8fa3"></script>
 	<script src="js/core/options.js?v=f92c92dd"></script>
@@ -1837,7 +1846,7 @@
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=47b7b1a0"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=21258851"></script>
+	<script src="js/core/commands.js?v=242730fa"></script>
 	<script src="js/core/dom.js?v=545e364f"></script>
 	<script src="js/core/document-scaler.js?v=6625b551"></script>
 	<script src="js/transforms/transform-math.js?v=71149380"></script>
@@ -1858,7 +1867,7 @@
 	<script src="js/effects/color-adjust.js?v=7bd60e2a"></script>
 	<script src="js/paint/mask-raster.js?v=b97cd63f"></script>
 	<script src="js/paint/mask-surface.js?v=37e85b70"></script>
-	<script src="js/paint/mask-geometry.js?v=97fd1004"></script>
+	<script src="js/paint/mask-geometry.js?v=754ebe3a"></script>
 	<script src="js/paint/bevel.js?v=05766329"></script>
 	<script src="js/effects/palette-analysis.js?v=41b8b251"></script>
 	<script src="js/effects/glitter-recolor.js?v=94118312"></script>
@@ -1890,7 +1899,7 @@
 	<script src="js/ui/paint-slot-controls.js?v=37095cc2"></script>
 	<script src="js/ui/style-preset-thumbnails.js?v=85cedaf5"></script>
 	<script src="js/ui/gradient-editor.js?v=a2f58930"></script>
-	<script src="js/ui/color-eyedropper.js?v=1928818a"></script>
+	<script src="js/ui/color-eyedropper.js?v=8c579d43"></script>
 	<script src="js/paint/text-background-geometry.js?v=dd1ecfa1"></script>
 	<script src="js/ui/asset-browser-markup.js?v=d42e02a7"></script>
 	<script src="js/ui/scroll-regions.js?v=8bbc6cb1"></script>
@@ -1901,13 +1910,13 @@
 	<script src="js/ui/menu-popover.js?v=0ea0d93f"></script>
 	<script src="js/ui/keyboard.js?v=4490df0b"></script>
 	<script src="js/ui/clipboard.js?v=b3ca4df1"></script>
-	<script src="js/editor/document-io.js?v=980d401e"></script>
-	<script src="js/editor/export-flow.js?v=a14ffa4c"></script>
+	<script src="js/editor/document-io.js?v=26025c38"></script>
+	<script src="js/editor/export-flow.js?v=8fa31555"></script>
 	<script src="js/editor/keyboard.js?v=438fd8f0"></script>
 	<script src="js/editor/settings.js?v=251a126e"></script>
 	<script src="js/editor/panels.js?v=979c03f2"></script>
 	<script src="js/editor/asset-info.js?v=151ea110"></script>
-	<script src="js/editor/fill-tool.js?v=059bcd7a"></script>
+	<script src="js/editor/fill-tool.js?v=0985ef34"></script>
 	<script src="js/editor/disclosures.js?v=79449da5"></script>
 	<script src="js/ui/panel-resize.js?v=e57af07d"></script>
 	<script src="js/editor/transform-panel.js?v=71945d4d"></script>
@@ -1917,12 +1926,12 @@
 		<script src="js/editor/modals-wiring.js?v=9bb4ab3a"></script>
 	<script src="js/editor/layer-panel.js?v=96c4a95a"></script>
 	<script src="js/editor/canvas-gestures.js?v=9f7f72c8"></script>
-	<script src="js/editor/canvas-size.js?v=86c2a239"></script>
-	<script src="js/editor/canvas-resize.js?v=ff2b8aba"></script>
-		<script src="js/ui/hints.js?v=396382d7"></script>
+	<script src="js/editor/canvas-size.js?v=1cbcf78d"></script>
+	<script src="js/editor/canvas-resize.js?v=c44d779b"></script>
+		<script src="js/ui/hints.js?v=2426f0e4"></script>
 	<script src="js/ui/library-window.js?v=d530af9b"></script>
 	<script src="js/ui/picker-session.js?v=1d928f27"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=64c4dbcf"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=8aa6eeb2"></script>
 	<script src="js/ui/modal-filter.js?v=53aa0b1e"></script>
 	<script src="js/ui/notify.js?v=167b89e0"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
@@ -1951,12 +1960,12 @@
 	<script src="js/transforms/transform-gestures.js?v=8e167cf4"></script>
 	<script src="js/transforms/selection-chrome.js?v=71ec7b3c"></script>
 	<script src="js/transforms/path-chrome.js?v=80576595"></script>
-	<script src="js/transforms/area-chrome.js?v=494ad5d5"></script>
+	<script src="js/transforms/area-chrome.js?v=46035221"></script>
 	<script src="js/systems/ViewportManager.js?v=b3594d48"></script>
-	<script src="js/systems/HistoryManager.js?v=45c9d2e8"></script>
+	<script src="js/systems/HistoryManager.js?v=5ac67bc8"></script>
 	<script src="js/export/ProjectSerializer.js?v=996b5016"></script>
 	<script src="js/paint/PaintMaskStore.js?v=6f5352df"></script>
-	<script src="js/systems/AreaSelection.js?v=5726fdc2"></script>
+	<script src="js/systems/AreaSelection.js?v=034ae779"></script>
 	<script src="js/paint/MaskCompositor.js?v=231d97da"></script>
 	<script src="js/assets/ShapeLibrary.js?v=75f07dcd"></script>
 	<script src="js/assets/BrushLibrary.js?v=dbe8686a"></script>
@@ -1965,10 +1974,10 @@
 	<script src="js/systems/MaskEditor.js?v=8a1553ad"></script>
 
 	<!-- Layers-->
-	<script src="js/layers/LayerManager.js?v=3f4c5cb9"></script>
+	<script src="js/layers/LayerManager.js?v=43db7eaf"></script>
 
 	<!-- Content -->
-	<script src="js/paint/color-selection.js?v=c8c8a7e0"></script>
+	<script src="js/paint/color-selection.js?v=eaa4af2c"></script>
 	<script src="js/assets/LibraryCatalog.js?v=8578e98c"></script>
 	<script src="js/assets/AssetBrowserRail.js?v=935226da"></script>
 	<script src="js/assets/AssetSetHeader.js?v=9e907280"></script>
@@ -1991,12 +2000,12 @@
 	<script src="js/ui/text-actions.js?v=a6049727"></script>
 	<script src="js/ui/text-edit.js?v=764b8297"></script>
 	<script src="js/ui/crop-edit.js?v=b393f9d0"></script>
-	<script src="js/ui/area-select.js?v=050dd6dc"></script>
+	<script src="js/ui/area-select.js?v=fd6d57c6"></script>
 	<script src="js/ui/path-edit.js?v=b6e29cd7"></script>
 	<script src="js/layers/TextGlitterManager.js?v=87810845"></script>
 	<script src="js/layers/ShapeGlitterManager.js?v=2881fd94"></script>
 	<script src="js/layers/StickerManager.js?v=550cfae4"></script>
-	<script src="js/layers/FilterLayerManager.js?v=4144e417"></script>
+	<script src="js/layers/FilterLayerManager.js?v=ebe1a9e4"></script>
 	<script src="js/layers/FrameLayerManager.js?v=aa3befc4"></script>
 	<script src="js/layers/SparkleLayerManager.js?v=f2d4725b"></script>
 	<script src="js/layers/PathLayerManager.js?v=446bfc20"></script>
@@ -2007,7 +2016,7 @@
 		<script src="js/systems/MobileManager.js?v=59fbf1a3"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=ccf9ac6e"></script>
+	<script src="js/app.js?v=ce27c844"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

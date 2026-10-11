@@ -47,6 +47,24 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		return { ...structuredClone(this.exportSettings), watermarkEnabled: false, transparency: true, outputScale: CONFIG.export.defaults.outputScale, ...overrides };
 	},
 
+	getSceneSnapshotParams(layers, overrides = {}) {
+		return {
+			visibleLayers: layers,
+			glitterGifs: this.glitterLibrary.getRenderContent(),
+			canvasData: this.getExportCanvasData(),
+			exportSettings: this.getSceneSnapshotSettings({ baseImage: true }),
+			target: EXPORT_TARGETS['still:png'],
+			timestamp: this.animationTicker.getCurrentTime(),
+			callbacks: {
+				onStatus: () => {}, onProgress: () => {}, onLayerLoaded: () => {}, isCancelled: () => false,
+				createMask: layer => this.maskCompositor.getMaskData(layer),
+				renderSlotMasks: layer => getLayerManagerForType(this, layer.type).renderSlotMasks(layer),
+				ensureTextFont: fontId => FontLibrary.ensureLoaded(fontId)
+			},
+			...overrides
+		};
+	},
+
 	// `fit` ({ label, limitBytes }) exports under a file size; without it the
 	// Target Size export setting decides. A fit lowers settings on the job's
 	// own snapshot and never writes to the stored export settings.

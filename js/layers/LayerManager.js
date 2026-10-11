@@ -1008,9 +1008,14 @@ class LayerManager {
 		swatch.className = 'layer-swatch list-row-media';
 		this.renderLayerSwatch(swatch, layer);
 
-		// Double-click swatch behavior
+		swatch.title = `${swatch.title ? `${swatch.title}\n` : ''}${formatKeyLabel('Ctrl/Cmd')}+click to select its pixels`;
+		// A plain thumbnail click opens its source; modifier clicks read pixels.
 		swatch.addEventListener('click', (e) => {
 			e.stopPropagation();
+			if (e.ctrlKey || e.metaKey) {
+				this.editor.areaSelect.selectLayerPixels([layer], modeFromModifiers(e));
+				return;
+			}
 			this.goToLayerSource(layer.id);
 		});
 

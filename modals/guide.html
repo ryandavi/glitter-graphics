@@ -282,9 +282,10 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-area-select"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p id="select-area-tool"><strong>Select Area Tool (<kbd class="guide-kbd">M</kbd>)</strong> – Press <kbd class="guide-kbd">M</kbd>. Drag a rectangle, an ellipse, or a freehand lasso to select an area of the canvas. <strong>Fill</strong> (<kbd class="guide-kbd">Enter</kbd>) puts glitter in the whole area and <strong>Erase</strong> (<kbd class="guide-kbd">Delete</kbd>) removes it. While an area is selected, the Glitter Brush and its eraser only change what is inside it, and Glitter Fill only picks and matches colors inside it. <strong>Crop</strong> opens the Crop tool fitted to the area.</p>
+                    <p id="select-area-tool"><strong>Select Area Tool (<kbd class="guide-kbd">M</kbd>)</strong> – Press <kbd class="guide-kbd">M</kbd>. Drag a rectangle, ellipse, or freehand lasso; click corners for a polygon lasso and press Enter to close; or pick a color with the Magic Wand. Tolerance controls color matching and Contiguous limits it to the connected region. Ctrl/Cmd+click a layer thumbnail to select its pixels, including its outline. <strong>Fill</strong> (<kbd class="guide-kbd">Enter</kbd>) puts glitter in the area and <strong>Erase</strong> (<kbd class="guide-kbd">Delete</kbd>) removes it. The Glitter Brush and Glitter Fill work only inside the selected area. The <strong>Select</strong> menu offers Expand, Contract, Border and Smooth with a live Amount preview, Reselect, Crop Canvas to Area, and Area to Path Layer. Enter applies a Modify preview; Escape cancels. Area edits share Undo with document edits: Ctrl/Cmd+Z restores an accidentally deselected area, and Ctrl/Cmd+Shift+D reselects the last cleared area.</p>
                     <ul>
                         <li><strong>Combine shapes</strong> – Hold <kbd class="guide-kbd">Shift</kbd> as you start a drag to add to the area, <kbd class="guide-kbd">Alt</kbd> to cut out of it, or both to keep only where the new shape overlaps it. The New, Add, Subtract, and Intersect buttons do the same on a phone.</li>
+                        <li><strong>Magic Wand deselect</strong> – In New mode, click or tap inside the selection again to clear it. Add, Subtract, and Intersect keep their combining behavior.</li>
                         <li><strong>Shape the drag</strong> – Press <kbd class="guide-kbd">Shift</kbd> during a rectangle or ellipse drag to keep it square or round, and <kbd class="guide-kbd">Alt</kbd> to draw it from its center. Hold <kbd class="guide-kbd">Space</kbd> to move the shape while you are still drawing it.</li>
                         <li><strong>Move the area</strong> – In New mode, drag from inside the area to move it. <kbd class="guide-kbd">Shift</kbd> keeps the move straight, and the arrow keys move it a pixel at a time.</li>
                         <li><strong>Invert and deselect</strong> – <strong>Invert</strong> selects everything outside the area. Click once, press <kbd class="guide-kbd">Esc</kbd> or <kbd class="guide-kbd">Ctrl</kbd>+<kbd class="guide-kbd">D</kbd>, or use <strong>Deselect</strong> to clear it. <kbd class="guide-kbd">Ctrl</kbd>+<kbd class="guide-kbd">A</kbd> selects the whole canvas.</li>
@@ -2481,7 +2482,15 @@
                     <ul>
                         <li><strong>Deselect the Area</strong> – <kbd class="guide-kbd">Escape</kbd> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">D</kbd></span></li>
                         <li><strong>Select the Whole Canvas</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">A</kbd></span></li>
+                        <li><strong>Reselect the Last Area</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">D</kbd></span></li>
                         <li><strong>Invert the Area</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl/Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">I</kbd></span></li>
+                        <li><strong>Close Polygon Lasso</strong> – <kbd class="guide-kbd">Enter</kbd> or <kbd class="guide-kbd">Double-click</kbd></li>
+                        <li><strong>Remove Last Corner</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
+                        <li><strong>Cancel Polygon Lasso</strong> – <kbd class="guide-kbd">Escape</kbd></li>
+                        <li><strong>Apply Area Modification</strong> – <kbd class="guide-kbd">Enter</kbd></li>
+                        <li><strong>Cancel Area Modification</strong> – <kbd class="guide-kbd">Escape</kbd></li>
+                        <li><strong>Adjust Area Amount</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
+                        <li><strong>Adjust Area Amount by 10</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Arrow Keys</kbd></span></li>
                         <li><strong>Fill the Area with Glitter</strong> – <kbd class="guide-kbd">Enter</kbd></li>
                         <li><strong>Erase Glitter in the Area</strong> – <kbd class="guide-kbd">Delete</kbd> or <kbd class="guide-kbd">Backspace</kbd></li>
                         <li><strong>Move the Area</strong> – <kbd class="guide-kbd">Arrow Keys</kbd></li>
@@ -2621,6 +2630,7 @@
                 <div class="guide-item-content">
                     <p><strong>Select Area</strong></p>
                     <ul>
+                        <li><strong>Select Layer Pixels from Thumbnail</strong> – Mouse: <kbd class="guide-kbd">Ctrl/Cmd</kbd>-click a layer thumbnail</li>
                         <li><strong>Add to the Area</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd>-drag</li>
                         <li><strong>Subtract from the Area</strong> – Mouse: <kbd class="guide-kbd">Alt</kbd>-drag</li>
                         <li><strong>Keep Only the Overlap with the Area</strong> – Mouse: <kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Alt</kbd>-drag</li>

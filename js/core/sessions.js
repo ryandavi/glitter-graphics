@@ -25,9 +25,22 @@ const SESSIONS = Object.freeze([
 			{ label: 'Finish Path / Edit Selected Path', group: 'Pen', displayKey: 'Enter' },
 			{ label: 'Finish Path / Clear Point Selection', group: 'Pen', displayKey: 'Escape' }
 		] },
+	{ id: 'areaPolygon', isActive: editor => Boolean(editor.areaSelect.polygon), confirm: editor => editor.areaSelect.closePolygon(), cancel: editor => editor.areaSelect.cancelPolygon(), delete: editor => editor.areaSelect.removeLastCorner(),
+		shortcuts: [
+			{ label: 'Close Polygon Lasso', group: 'Select Area', displayKey: 'Enter / Double-click' },
+			{ label: 'Remove Last Corner', group: 'Select Area', displayKey: 'Delete / Backspace' },
+			{ label: 'Cancel Polygon Lasso', group: 'Select Area', displayKey: 'Escape' }
+		] },
+	{ id: 'areaModify', isActive: editor => Boolean(editor.areaSelect.modify), mode: { label: 'Modify Area', icon: 'area-select' }, confirm: editor => editor.areaSelect.applyModify(), cancel: editor => editor.areaSelect.cancelModify(), nudge: (editor, event) => editor.areaSelect.nudgeModifyAmount(event),
+		shortcuts: [
+			{ label: 'Apply Area Modification', group: 'Select Area', displayKey: 'Enter' },
+			{ label: 'Cancel Area Modification', group: 'Select Area', displayKey: 'Escape' },
+			{ label: 'Adjust Area Amount', group: 'Select Area', displayKey: 'Arrow Keys' },
+			{ label: 'Adjust Area Amount by 10', group: 'Select Area', displayKey: 'Shift + Arrow Keys' }
+		] },
 	// A selected area owns Enter, Delete, Escape and the arrows in the tools
 	// that use it. Last, so every editing session above takes its keys first.
-	{ id: 'area', isActive: (editor) => !editor.areaSelection.isEmpty && [ToolType.AREA, ToolType.BRUSH, ToolType.GLITTER_FILL].includes(editor.currentTool),
+	{ id: 'area', isActive: (editor) => !editor.areaSelection.isEmpty && toolUsesArea(editor.currentTool),
 		confirm: (editor) => editor.areaSelect.fill(), cancel: (editor) => editor.areaSelect.deselect(),
 		delete: (editor) => editor.areaSelect.erase(), nudge: (editor, event) => editor.areaSelect.nudge(event),
 		shortcuts: [

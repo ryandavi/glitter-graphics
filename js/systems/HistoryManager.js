@@ -4,7 +4,10 @@ class HistoryManager {
 		this.limit = limit;
 		this.history = [];
 		this.historyIndex = -1;
+		this.serial = 0;
 	}
+
+	nextSerial() { return ++this.serial; }
 
 	createStateSnapshot() {
 		return {
@@ -33,7 +36,7 @@ class HistoryManager {
 	}
 
 	saveState(label = null, { coalesceKey = null } = {}) {
-		const state = { ...this.createStateSnapshot(), label, coalesceKey };
+		const state = { ...this.createStateSnapshot(), label, coalesceKey, serial: this.nextSerial() };
 		// Serialized layers are the bytes a state holds on its own (UTF-16).
 		state.bytes = JSON.stringify(state.layers).length * 2;
 
@@ -154,8 +157,10 @@ class HistoryManager {
 
 	// The steps of the open session, when it keeps its own (a pending crop).
 	// They are not document history: leaving the session drops them.
-	sessionHistory() {
-		return getSessionDefinition(this.editor)?.history?.(this.editor) || null;
+	sessionHistory(direction) {
+		const session = getSessionDefinition(this.editor);
+		if (session?.history) return session.history(this.editor);
+		return !session || session.id === 'area' ? this.editor.areaSelection?.history.claim(direction) : null;
 	}
 
 	async undo() {
@@ -163,7 +168,7 @@ class HistoryManager {
 			return;
 		}
 
-		const session = this.sessionHistory();
+		const session = this.sessionHistory('undo');
 		if (session) {
 			session.undo();
 			this.updateButtons();
@@ -180,7 +185,7 @@ class HistoryManager {
 			return;
 		}
 
-		const session = this.sessionHistory();
+		const session = this.sessionHistory('redo');
 		if (session) {
 			session.redo();
 			this.updateButtons();
@@ -194,7 +199,7 @@ class HistoryManager {
 
 	reset(initialState = null) {
 		if (initialState) {
-			this.history = [initialState];
+			this.history = [{ ...initialState, serial: this.nextSerial() }];
 			this.historyIndex = 0;
 		} else {
 			this.history = [];
@@ -210,14 +215,14 @@ class HistoryManager {
 		// A restore while an Auto Glitter session is open would rebuild the
 		// layer stack under the ephemeral preview batch.
 		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
-		const session = this.sessionHistory();
+		const session = this.sessionHistory('undo');
 		if (session) return session.canUndo;
 		return this.historyIndex > 0;
 	}
 
 	canRedo() {
 		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
-		const session = this.sessionHistory();
+		const session = this.sessionHistory('redo');
 		if (session) return session.canRedo;
 		return this.historyIndex >= 0 && this.historyIndex < this.history.length - 1;
 	}
@@ -225,17 +230,18 @@ class HistoryManager {
 	updateButtons() {
 		const undoButton = document.getElementById('undoTool');
 		const redoButton = document.getElementById('redoTool');
-		const session = this.sessionHistory();
+		const undoSession = this.sessionHistory('undo');
+		const redoSession = this.sessionHistory('redo');
 
 		if (undoButton) {
 			undoButton.disabled = !this.canUndo();
-			const label = this.canUndo() && !session ? this.history[this.historyIndex]?.label : null;
+			const label = this.canUndo() ? (undoSession ? undoSession.undoStack?.at(-1)?.label : this.history[this.historyIndex]?.label) : null;
 			undoButton.title = label ? `Undo ${label}` : 'Undo';
 		}
 
 		if (redoButton) {
 			redoButton.disabled = !this.canRedo();
-			const label = this.canRedo() && !session ? this.history[this.historyIndex + 1]?.label : null;
+			const label = this.canRedo() ? (redoSession ? redoSession.redoStack?.at(-1)?.label : this.history[this.historyIndex + 1]?.label) : null;
 			redoButton.title = label ? `Redo ${label}` : 'Redo';
 		}
 	}

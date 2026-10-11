@@ -125,6 +125,24 @@ async function activityStates(page, visit, tag) {
 	await page.evaluate(() => { window.editor.endActivity('sheet'); window.editor.notifications.activityShown = false; window.editor.notifications.renderActivity(); });
 }
 
+async function areaStates(page, visit, tag) {
+	await page.evaluate(() => {
+		const e = window.editor;
+		e.mobileManager.closeAllDrawers({ immediate: true });
+		e.setTool('area'); e.areaSelection.selectAll();
+	});
+	await wait(page);
+	await visit(`${tag} area bar`);
+	const menu = page.locator('#contextAreaMenu');
+	if (await menu.count()) {
+		await menu.scrollIntoViewIfNeeded(); await menu.click(); await wait(page);
+	}
+	await visit(`${tag} area menu`);
+	if (await menu.count()) await page.keyboard.press('Escape');
+	await page.evaluate(() => window.editor.areaSelection.clear());
+	await page.evaluate(() => window.editor.setTool('select'));
+}
+
 async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {}) {
 	const full = set === 'all';
 	const tag = viewport;
@@ -137,6 +155,7 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 		await page.evaluate(() => resetPanelWidth('toolbar'));
 	}
 	const ids = await addLayers(page);
+	await areaStates(page, visit, tag);
 	await activityStates(page, visit, tag);
 	await wait(page, 600);
 	for (const [name, id] of Object.entries(ids)) {
@@ -276,6 +295,7 @@ async function phoneStates(page, visit, { set = 'all' } = {}) {
 	}
 	await visit('phone start-card');
 	const ids = await addLayers(page);
+	await areaStates(page, visit, 'phone');
 	await activityStates(page, visit, 'phone');
 	for (const [type, id] of Object.entries(ids).filter(([key]) => !key.endsWith('_error'))) {
 		await page.evaluate((layerId) => {

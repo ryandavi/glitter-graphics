@@ -76,7 +76,7 @@ class AreaChrome {
 			const screen = overlay.toScreen(point, view);
 			return { x: Math.round(screen.x * ratio), y: Math.round(screen.y * ratio) };
 		};
-		const ops = this.draft ? area.combine(this.draft.points, this.draft.mode) : area.ops;
+		const ops = this.draft ? this.draft.ops : area.ops;
 		const fillCtx = this.fill.getContext('2d');
 		resetCanvasContext(fillCtx, width, height, false);
 		fillCtx.fillStyle = '#000';
@@ -84,7 +84,7 @@ class AreaChrome {
 
 		const size = area.getDocumentSize();
 		this.documentPath = [{ x: 0, y: 0 }, { x: size.width, y: 0 }, { x: size.width, y: size.height }, { x: 0, y: size.height }].map(toDevice);
-		this.paths = ops.map((entry) => (entry.points ? entry.points.map(toDevice) : this.documentPath));
+		this.paths = ops.flatMap((entry) => entry.rings ? entry.rings.map(ring => ring.map(toDevice)) : [this.documentPath]);
 
 		// The outline is the ring one CSS pixel outside the filled area.
 		const outlineCtx = this.outline.getContext('2d');

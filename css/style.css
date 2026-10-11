@@ -5243,6 +5243,7 @@ body.is-booting .workspace-start button {
 .mask-brush-controls > .segmented-control > .segmented-option {
   flex: 0 0 auto;
   padding-inline: var(--spacing-sm);
+  min-width: var(--control-height);
 }
 .zoom-controls .context-toolbar-handle,
 .layer-center-controls .context-toolbar-handle,

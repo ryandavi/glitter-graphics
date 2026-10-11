@@ -851,7 +851,7 @@ class GlitterEditor {
 
 		this.clearPreview();
 		this.canvasElementsContainer.innerHTML = '';
-		this.areaSelection.clear();
+		this.areaSelection.reset();
 		this.viewport.selectionOverlay.clear();
 
 		// ======================

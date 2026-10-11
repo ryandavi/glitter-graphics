@@ -364,10 +364,10 @@ async function check4(page) {
 	});
 	await page.waitForTimeout(80);
 
-	const optionCount = await page.locator('#layerTypePickerModal .layer-type-option[data-layer-type="shape"]').count();
+	const optionCount = await page.locator('#layerTypePickerModal .layer-type-option[data-add-id="add-shape"]').count();
 	assert(optionCount === 1, 'Add Layer modal did not render exactly one Shape option');
 
-	await page.click('#layerTypePickerModal .layer-type-option[data-layer-type="shape"]');
+	await page.click('#layerTypePickerModal .layer-type-option[data-add-id="add-shape"]');
 	await page.waitForTimeout(120);
 
 	const after = await getShapeSummary(page);

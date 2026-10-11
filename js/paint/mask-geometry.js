@@ -133,9 +133,23 @@ function createBorderMaskCanvas(sourceCanvas, borderData, { underlap = true } = 
 function createMaskContourPath(canvas) {
 	const { width, height } = canvas;
 	const pixels = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height).data;
+	const coverage = new Uint8Array(width * height);
+	for (let index = 0; index < coverage.length; index++) coverage[index] = pixels[index * 4 + 3] >= CONFIG.rendering.maskAlphaThreshold ? 1 : 0;
+	const path = new Path2D();
+	traceMaskContours(coverage, width, height, CONFIG.rendering.maskContourTolerancePx).forEach(ring => {
+		path.moveTo(ring[0].x, ring[0].y);
+		ring.slice(1).forEach(point => path.lineTo(point.x, point.y));
+		path.closePath();
+	});
+	return path;
+}
+
+// Pixel-corner outlines: clockwise exteriors, counter-clockwise holes.
+// Zero tolerance removes only straight runs, preserving exact coverage.
+function traceMaskContours(coverage, width, height, tolerance) {
 	const edges = new Map();
 	const stride = width + 1;
-	const occupied = (x, y) => x >= 0 && x < width && y >= 0 && y < height && pixels[(y * width + x) * 4 + 3] >= CONFIG.rendering.maskAlphaThreshold;
+	const occupied = (x, y) => x >= 0 && x < width && y >= 0 && y < height && coverage[y * width + x] !== 0;
 	const add = (x, y, nx, ny) => {
 		const key = y * stride + x;
 		if (!edges.has(key)) edges.set(key, []);
@@ -151,7 +165,7 @@ function createMaskContourPath(canvas) {
 	const simplify = points => {
 		const keep = new Set([0, points.length - 1]);
 		const pending = [[0, points.length - 1]];
-		const toleranceSquared = CONFIG.rendering.maskContourTolerancePx ** 2;
+		const toleranceSquared = tolerance ** 2;
 		while (pending.length) {
 			const [first, last] = pending.pop();
 			const a = points[first], b = points[last];
@@ -168,7 +182,7 @@ function createMaskContourPath(canvas) {
 		}
 		return points.filter((point, index) => keep.has(index));
 	};
-	const path = new Path2D();
+	const rings = [];
 	while (edges.size) {
 		const start = edges.keys().next().value;
 		let current = start;
@@ -183,11 +197,9 @@ function createMaskContourPath(canvas) {
 		if (points.length < 3) continue;
 		points.push(points[0]);
 		const contour = simplify(points);
-		path.moveTo(contour[0].x, contour[0].y);
-		contour.slice(1).forEach(point => path.lineTo(point.x, point.y));
-		path.closePath();
+		rings.push(contour.slice(0, -1));
 	}
-	return path;
+	return rings;
 }
 
 // Keep edge-connected transparency open while adding every closed counter to

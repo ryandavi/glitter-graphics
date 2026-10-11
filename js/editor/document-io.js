@@ -274,7 +274,7 @@ const EDITOR_DOCUMENT_IO_METHODS = {
 		}
 		this.layers = [];
 		this.canvasElementsContainer.innerHTML = '';
-		this.areaSelection.clear();
+		this.areaSelection.reset();
 		this.viewport.selectionOverlay.clear();
 
 		if (CONFIG.app.startup.layers.createBaseImage) {

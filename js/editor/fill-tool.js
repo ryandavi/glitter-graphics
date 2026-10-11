@@ -41,24 +41,13 @@ const EDITOR_FILL_TOOL_METHODS = {
 			return;
 		}
 
-		const pixelIndex = y * this.originalCanvas.width + x;
-		const alpha = this.originalAlphaChannel[pixelIndex];
-		const isTransparent = alpha < CONFIG.tools.selection.transparency.alphaThreshold;
-
-		// 1. Config Check: Block if transparent and selection isn't allowed
+		const target = getColorSelectionTarget(this, x, y);
+		if (!target) return;
+		const { r, g, b, isTransparent } = target;
 		if (isTransparent && !CONFIG.tools.selection.transparency.allowTransparentSelection) {
 			this.showError('Cannot select transparent pixels');
 			return;
 		}
-
-		const i = pixelIndex * 4;
-
-		// 2. Data Extraction
-		// If it's transparent, we force RGB to 0 to be clean, 
-		// because the 'isTransparent' flag will do the heavy lifting in the mask logic.
-		const r = isTransparent ? 0 : this.originalImageData.data[i];
-		const g = isTransparent ? 0 : this.originalImageData.data[i + 1];
-		const b = isTransparent ? 0 : this.originalImageData.data[i + 2];
 
 		// 3. Multi-Select Logic with Shift Key Support
 		const shiftPressed = event && event.shiftKey;

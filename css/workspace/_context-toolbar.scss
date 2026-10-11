@@ -50,6 +50,7 @@
 		> .segmented-option {
 			flex: 0 0 auto;
 			padding-inline: var(--spacing-sm);
+			min-width: var(--control-height);
 		}
 	}
 

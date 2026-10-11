@@ -100,6 +100,7 @@ const TOOLS = {
 		}
 	},
 	[ToolType.GLITTER_FILL]: {
+		usesArea: true,
 		key: 'i',
 		panel: (_editor, layer) => layer?.type === LayerType.GLITTER_FILL ? 'layerSettings' : null,
 		name: 'Glitter Fill',
@@ -120,6 +121,7 @@ const TOOLS = {
 		}
 	},
 	[ToolType.BRUSH]: {
+		usesArea: true,
 		key: 'b',
 		panel: () => 'brushSettings',
 		name: 'Glitter Brush',
@@ -141,6 +143,7 @@ const TOOLS = {
 		onCanvasPointerDown: (editor, event) => editor.maskEditor._handlePointerDown(event)
 	},
 	[ToolType.AREA]: {
+		usesArea: true,
 		key: 'm',
 		panel: (_editor, layer) => layer?.type === LayerType.GLITTER_FILL ? 'layerSettings' : null,
 		name: 'Select Area',
@@ -156,9 +159,9 @@ const TOOLS = {
 		// The area outlives the tool, so the brush can paint inside it; leaving
 		// only drops a drag in progress. The session (js/ui/area-select.js) owns
 		// every press.
-		onDeactivate: (editor) => editor.areaSelect.cancelDrag(),
+		onDeactivate: (editor) => { editor.areaSelect.cancelDrag(); editor.areaSelect.cancelModify(); },
 		onCanvasPointerDown: (editor, event) => editor.areaSelect.handlePointerDown(event),
-		onCanvasAction: (editor, action) => { if (action.options?.source === 'touch') editor.areaSelect.handleTap(); },
+		onCanvasAction: (editor, action) => { if (action.options?.source === 'touch') editor.areaSelect.handleTap(action); },
 		onTouchDragStart: (editor, point) => editor.areaSelect.press(point),
 		onTouchDragMove: (editor, point) => editor.areaSelect.move(point),
 		onTouchDragEnd: (editor, point) => editor.areaSelect.release(point),
@@ -370,3 +373,5 @@ function renderToolButtons(container) {
 	});
 	container.replaceChildren(...children);
 }
+
+function toolUsesArea(tool) { return TOOLS[tool]?.usesArea === true; }

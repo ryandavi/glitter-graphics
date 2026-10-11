@@ -6,13 +6,13 @@
 // the only place the Glitter Brush and Eraser change pixels while it exists.
 // ============================================
 // The area is a list of operations in document px, applied in order:
-// { op: 'add' | 'subtract' | 'intersect', points } closes a polygon (a
+// { op: 'add' | 'subtract' | 'intersect', rings } closes polygons (a
 // rectangle is four points, an ellipse a many-sided polygon, a lasso its own
 // trace), and { op: 'invert' } flips everything inside the document. Points
 // make a canvas resize, crop or document scale a plain point transform.
 //
-// It is working state, like the tool's own options: not in undo history and
-// not in the project file. Fill and Erase are ordinary paint commits.
+// Working state has its own undo steps ordered with document history, and
+// stays out of project files. Fill and Erase are ordinary paint commits.
 //
 // Masks rasterize the operations into a target space and binarize them, so
 // clipping a stroke is exact and can be repeated without eroding its edge.
@@ -20,7 +20,7 @@
 // Area operations with every point passed through `map`: a copy, so a color
 // pick keeps the area it was made in while the live area moves on.
 function mapAreaOps(ops, map = (point) => ({ ...point })) {
-	return ops.map((entry) => (entry.points ? { ...entry, points: entry.points.map(map) } : { ...entry }));
+	return ops.map((entry) => (entry.rings ? { ...entry, rings: entry.rings.map(ring => ring.map(map)) } : { ...entry }));
 }
 
 class AreaSelection {
@@ -30,6 +30,14 @@ class AreaSelection {
 		this.revision = 0;
 		this.masks = new Map();
 		this.coverage = new WeakMap();
+		this.measurements = new WeakMap();
+		this.history = {
+			undoStack: [], redoStack: [], lastCleared: null,
+			claim: direction => this.claimHistory(direction),
+			undo: () => this.stepHistory('undo'), redo: () => this.stepHistory('redo'),
+			get canUndo() { return this.undoStack.length > 0; },
+			get canRedo() { return this.redoStack.length > 0; }
+		};
 		this.scratch = createAppCanvas(0, 0, 'systems/AreaSelection');
 	}
 
@@ -40,41 +48,83 @@ class AreaSelection {
 	// The operations the area would hold after a shape is drawn in `mode`:
 	// 'new' replaces the area, 'add', 'subtract' and 'intersect' combine with
 	// it. Subtracting from or intersecting with no area leaves none.
-	combine(points, mode = 'new') {
-		if (mode === 'new' || (mode === 'add' && this.isEmpty)) return [{ op: 'add', points }];
-		return this.isEmpty ? [] : [...this.ops, { op: mode, points }];
+	combine(rings, mode = 'new') {
+		if (mode === 'new' || (mode === 'add' && this.isEmpty)) return [{ op: 'add', rings }];
+		return this.isEmpty ? [] : [...this.ops, { op: mode, rings }];
 	}
 
-	apply(points, mode = 'new') {
-		if (points.length < 3) return;
-		const ops = this.combine(points, mode);
-		if (!ops.length) return;
-		this.ops = ops;
+	apply(rings, mode = 'new') {
+		rings = rings.filter(ring => ring.length >= 3);
+		if (!rings.length) return false;
+		const ops = this.combine(rings, mode);
+		if (!ops.length) return false;
+		this.commit(ops);
+		return true;
+	}
+
+	applyCoverage(coverage, mode = 'new') {
+		const { width, height } = this.getDocumentSize();
+		return this.apply(traceMaskContours(coverage, width, height, 0), mode);
+	}
+
+	commit(nextOps, { key = null, label = 'Area' } = {}) {
+		const history = this.history;
+		const serial = this.editor.historyManager.nextSerial();
+		const top = history.undoStack.at(-1);
+		if (!key || top?.key !== key || this.editor.historyManager.history[this.editor.historyManager.historyIndex]?.serial > top.serial) {
+			history.undoStack.push({ ops: this.ops, serial, key, label });
+			if (history.undoStack.length > CONFIG.tools.area.historyLimit) history.undoStack.shift();
+		} else { top.serial = serial; top.label = label; }
+		history.redoStack = [];
+		this.ops = nextOps;
 		this.changed();
 	}
 
+	replace(ops, options) { this.commit(ops, options); }
 	selectAll() {
 		const { width, height } = this.getDocumentSize();
-		this.apply([{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }]);
+		this.apply([[{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }]]);
 	}
-
 	invert() {
 		if (this.isEmpty) return;
-		if (this.ops[this.ops.length - 1].op === 'invert') this.ops.pop();
-		else this.ops.push({ op: 'invert' });
-		this.changed();
+		this.commit(this.ops.at(-1).op === 'invert' ? this.ops.slice(0, -1) : [...this.ops, { op: 'invert' }]);
 	}
-
 	clear() {
 		if (this.isEmpty) return;
+		this.history.lastCleared = this.ops;
+		this.commit([]);
+	}
+	reselect() {
+		if (this.isEmpty && this.history.lastCleared) this.commit(this.history.lastCleared);
+	}
+	reset() {
+		this.editor.areaSelect?.cancelDrag();
+		this.editor.areaSelect?.cancelModify();
 		this.ops = [];
+		this.history.undoStack = []; this.history.redoStack = []; this.history.lastCleared = null;
 		this.changed();
 	}
-
-	// Canvas resize, crop and document scale move the document under the area.
+	claimHistory(direction) {
+		const doc = this.editor.historyManager;
+		const entry = this.history[`${direction}Stack`].at(-1);
+		if (!entry) return null;
+		const state = doc.history[doc.historyIndex + (direction === 'redo' ? 1 : 0)];
+		return (direction === 'undo' ? entry.serial > (state?.serial || 0) : !state || entry.serial < state.serial) ? this.history : null;
+	}
+	stepHistory(direction) {
+		const entry = this.history[`${direction}Stack`].pop();
+		if (!entry) return;
+		this.history[direction === 'undo' ? 'redoStack' : 'undoStack'].push({ ...entry, ops: this.ops });
+		this.ops = entry.ops;
+		this.changed();
+	}
+	moveBy(dx, dy, options) {
+		if ((dx || dy) && !this.isEmpty) this.commit(mapAreaOps(this.ops, point => ({ x: point.x + dx, y: point.y + dy })), options);
+	}
 	transformPoints(map) {
-		if (this.isEmpty) return;
 		this.ops = mapAreaOps(this.ops, map);
+		for (const stack of [this.history.undoStack, this.history.redoStack]) for (const entry of stack) entry.ops = mapAreaOps(entry.ops, map);
+		if (this.history.lastCleared) this.history.lastCleared = mapAreaOps(this.history.lastCleared, map);
 		this.changed();
 	}
 
@@ -82,6 +132,7 @@ class AreaSelection {
 		this.revision++;
 		this.masks.clear();
 		this.editor.areaSelect?.onAreaChanged();
+		this.editor.historyManager?.updateButtons();
 	}
 
 	getDocumentSize() {
@@ -94,15 +145,17 @@ class AreaSelection {
 		const { width, height } = this.getDocumentSize();
 		const documentOutline = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
 		ctx.save();
-		ops.forEach(({ op, points = documentOutline }) => {
-			ctx.globalCompositeOperation = { add: 'source-over', subtract: 'destination-out', intersect: 'destination-in', invert: 'xor' }[op];
+		ops.forEach(({ op, rings = [documentOutline] }) => {
+			ctx.globalCompositeOperation = op === 'invert' ? AREA_INVERT_COMPOSITE : AREA_MODES[op].composite;
 			ctx.beginPath();
-			points.forEach((point, index) => {
-				const mapped = mapPoint(point);
-				if (index) ctx.lineTo(mapped.x, mapped.y); else ctx.moveTo(mapped.x, mapped.y);
+			rings.forEach(points => {
+				points.forEach((point, index) => {
+					const mapped = mapPoint(point);
+					if (index) ctx.lineTo(mapped.x, mapped.y); else ctx.moveTo(mapped.x, mapped.y);
+				});
+				ctx.closePath();
 			});
-			ctx.closePath();
-			ctx.fill();
+			ctx.fill('nonzero');
 		});
 		ctx.restore();
 	}
@@ -112,7 +165,7 @@ class AreaSelection {
 	// the fill layer being painted.
 	_getMask(key, mapPoint) {
 		let mask = this.masks.get(key);
-		if (mask) return mask;
+		if (mask) { this.masks.delete(key); this.masks.set(key, mask); return mask; }
 		if (this.masks.size >= 2) this.masks.delete(this.masks.keys().next().value);
 		mask = this._rasterize(mapPoint);
 		this.masks.set(key, mask);
@@ -132,7 +185,7 @@ class AreaSelection {
 	// One byte per document pixel, nonzero inside `ops`: the area a color pick
 	// was made in (js/paint/color-selection.js). Kept per operation list, so a
 	// threshold drag rasterizes it once.
-	getCoverage(ops) {
+	getCoverage(ops = this.ops) {
 		const { width, height } = this.getDocumentSize();
 		let cached = this.coverage.get(ops);
 		if (cached?.width === width && cached.height === height) return cached.data;
@@ -145,19 +198,34 @@ class AreaSelection {
 	}
 
 	// The smallest document rectangle that holds the area, or null.
-	getBounds() {
-		if (this.isEmpty) return null;
+	getBounds() { return this.getMeasurements().bounds; }
+	getMeasurements() {
 		const { width, height } = this.getDocumentSize();
-		const coverage = this.getCoverage(this.ops);
-		let minX = width, minY = height, maxX = -1, maxY = -1;
+		const cached = this.measurements.get(this.ops);
+		if (cached?.width === width && cached.height === height) return cached;
+		const coverage = this.getCoverage();
+		let minX = width, minY = height, maxX = -1, maxY = -1, sumX = 0, sumY = 0, count = 0;
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			if (!coverage[y * width + x]) continue;
-			if (x < minX) minX = x;
-			if (x > maxX) maxX = x;
-			if (y < minY) minY = y;
-			if (y > maxY) maxY = y;
+			minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+			sumX += x; sumY += y; count++;
 		}
-		return maxX < 0 ? null : { minX, minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+		let anchor = { x: Math.floor(width / 2), y: Math.floor(height / 2) };
+		if (count) {
+			const cx = sumX / count, cy = sumY / count;
+			anchor = { x: Math.round(cx), y: Math.round(cy) };
+			if (!coverage[anchor.y * width + anchor.x]) {
+				let nearest = Infinity;
+				for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+					if (!coverage[y * width + x]) continue;
+					const distance = (x - cx) ** 2 + (y - cy) ** 2;
+					if (distance < nearest) { nearest = distance; anchor = { x, y }; }
+				}
+			}
+		}
+		const result = { width, height, anchor, bounds: count ? { minX, minY, width: maxX - minX + 1, height: maxY - minY + 1 } : null };
+		this.measurements.set(this.ops, result);
+		return result;
 	}
 
 	getDocumentMask() {
@@ -175,20 +243,51 @@ class AreaSelection {
 		const x = Math.floor(point.x);
 		const y = Math.floor(point.y);
 		if (this.isEmpty || x < 0 || y < 0 || x >= width || y >= height) return false;
-		return this.getDocumentMask().getContext('2d', { willReadFrequently: true }).getImageData(x, y, 1, 1).data[3] > 0;
+		return this.getCoverage()[y * width + x] > 0;
 	}
 
 	// A document point inside the area's drawn shapes, for resolving which
 	// fill layer an action lands on.
-	getAnchorPoint() {
-		const points = this.ops.flatMap((entry) => (entry.op === 'add' ? entry.points : []));
-		const { width, height } = this.getDocumentSize();
-		if (!points.length) return { x: Math.floor(width / 2), y: Math.floor(height / 2) };
-		const clamp = (value, max) => Math.max(0, Math.min(max - 1, Math.round(value)));
-		return {
-			x: clamp(points.reduce((sum, point) => sum + point.x, 0) / points.length, width),
-			y: clamp(points.reduce((sum, point) => sum + point.y, 0) / points.length, height)
-		};
+	getAnchorPoint() { return this.getMeasurements().anchor; }
+
+	getDistanceField(margin) {
+		const bounds = this.getBounds();
+		if (!bounds) return null;
+		const size = this.getDocumentSize();
+		const x = Math.max(0, bounds.minX - margin), y = Math.max(0, bounds.minY - margin);
+		const width = Math.min(size.width, bounds.minX + bounds.width + margin) - x;
+		const height = Math.min(size.height, bounds.minY + bounds.height + margin) - y;
+		const canvas = createAppCanvas(width, height, 'systems/AreaSelection');
+		canvas.getContext('2d').drawImage(this.getDocumentMask(), x, y, width, height, 0, 0, width, height);
+		return { x, y, width, height, canvas, field: createSignedDistanceField(canvas) };
+	}
+
+	modifyCoverage(source, kind, amount) {
+		const size = this.getDocumentSize();
+		const result = new Uint8Array(size.width * size.height);
+		if (!source) return result;
+		let field = source.field;
+		const passes = AREA_MODIFIERS[kind].passes || [kind];
+		let coverage;
+		passes.forEach((pass, index) => {
+			coverage = new Uint8Array(field.distance.length);
+			const test = AREA_MODIFIERS[pass].test;
+			let changed = false;
+			for (let i = 0; i < coverage.length; i++) {
+				const inside = test(field.distance[i], amount);
+				coverage[i] = inside ? 255 : 0;
+				if (inside !== Boolean(field.inside[i])) changed = true;
+			}
+			if (index + 1 < passes.length && changed) {
+				const ctx = source.canvas.getContext('2d', { willReadFrequently: true });
+				const image = ctx.createImageData(source.width, source.height);
+				for (let i = 0; i < coverage.length; i++) image.data[i * 4 + 3] = coverage[i];
+				ctx.putImageData(image, 0, 0);
+				field = createSignedDistanceField(source.canvas);
+			}
+		});
+		for (let y = 0; y < source.height; y++) result.set(coverage.subarray(y * source.width, (y + 1) * source.width), (source.y + y) * size.width + source.x);
+		return result;
 	}
 
 	// Limits a brush stroke to the area: each paint canvas keeps what the

@@ -14,7 +14,7 @@ const context = vm.createContext({ console, structuredClone, Math, navigator: { 
 for (const file of [
 	'js/core/releases.js',
 	'js/core/fields.js',
-	'js/core/config.js',
+	'js/core/area.js', 'js/core/config.js',
 	'js/core/options.js',
 	'js/effects/color-adjust.js',
 	'js/ui/preset-library.js',

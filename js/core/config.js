@@ -457,6 +457,11 @@ const CONFIG = deepFreeze({
 		// The Select Area tool.
 		area: {
 			ellipseSegments: 96,
+			historyLimit: 30,
+			polygonCloseRadius: 8,
+			polygonTouchCloseRadius: 16,
+			polygonDoubleClickMs: 400,
+			smoothPreviewBudgetMs: 150,
 			// Screen px the pointer travels between lasso points.
 			lassoSpacing: 3,
 			// Marching ants: dash and gap length in CSS px, and ms per one-pixel step.
@@ -899,22 +904,18 @@ const CONFIG = deepFreeze({
 				// Shown while an area is selected: a pick only matches inside it.
 				{ kind: 'button', id: 'contextFillDeselect', icon: 'x-mark', name: 'Deselect area', title: 'Colors are only picked inside the selected area. Deselect it (Esc)', action: 'areaDeselect' }
 			] },
+			{ id: 'areaModifyControls', session: 'areaModify', when: editor => editor.getActiveSession() === 'areaModify', sync: editor => editor.areaSelect.syncToolbar(), controls: [
+				{ kind: 'segmented', id: 'contextAreaModifyKind', label: 'Modify', options: areaOptions(AREA_MODIFIERS, 'Modify') },
+				{ kind: 'slider', id: 'contextAreaModifyAmount', valueId: 'contextAreaModifyAmountValue', slider: 'areaModifyAmount', action: 'areaModifyAmount' }
+			] },
 			{ id: 'areaSelectControls', tool: 'area', when: (_editor, { tool }) => tool === 'area', sync: editor => editor.areaSelect.syncToolbar(), controls: [
-				{ kind: 'segmented', id: 'contextAreaShape', label: 'Area shape', options: [
-					{ label: 'Rectangle', value: 'rect', action: 'areaShapeRect', title: 'Drag a rectangle. Shift keeps it square, Alt draws from the center.' },
-					{ label: 'Ellipse', value: 'ellipse', action: 'areaShapeEllipse', title: 'Drag an ellipse. Shift keeps it round, Alt draws from the center.' },
-					{ label: 'Lasso', value: 'lasso', action: 'areaShapeLasso', title: 'Draw the area freehand' }
-				] },
-				{ kind: 'segmented', id: 'contextAreaMode', label: 'Area mode', options: [
-					{ label: 'New', value: 'new', action: 'areaModeNew', title: 'Each drag starts a new area. Drag inside the area to move it.' },
-					{ label: 'Add', value: 'add', action: 'areaModeAdd', title: 'Each drag adds to the area (hold Shift)' },
-					{ label: 'Subtract', value: 'subtract', action: 'areaModeSubtract', title: 'Each drag cuts out of the area (hold Alt)' },
-					{ label: 'Intersect', value: 'intersect', action: 'areaModeIntersect', title: 'Each drag keeps only where it overlaps the area (hold Shift and Alt)' }
-				] },
+				{ kind: 'segmented', id: 'contextAreaShape', label: 'Shape', options: areaOptions(AREA_SHAPES, 'Shape') },
+				{ kind: 'segmented', id: 'contextAreaMode', label: 'Mode', options: areaOptions(AREA_MODES, 'Mode') },
+				{ kind: 'slider', id: 'contextAreaTolerance', valueId: 'contextAreaToleranceValue', label: 'Tolerance', slider: 'threshold', action: 'areaWandTolerance' },
+				{ kind: 'toggle', id: 'contextAreaContiguous', label: 'Contiguous', action: 'areaWandContiguous' },
 				{ kind: 'button', id: 'contextAreaFill', icon: 'paint-bucket', name: 'Fill', title: 'Fill the area with glitter (Enter)', action: 'sessionConfirm' },
 				{ kind: 'button', id: 'contextAreaErase', icon: 'eraser', name: 'Erase', title: 'Erase glitter in the area (Delete)', action: 'sessionDelete' },
-				{ kind: 'button', id: 'contextAreaCrop', icon: 'crop', name: 'Crop', title: 'Crop the canvas to the area', action: 'areaCrop' },
-				{ kind: 'button', id: 'contextAreaInvert', icon: 'area-invert', name: 'Invert', title: 'Select everything outside the area', action: 'areaInvert' },
+				{ kind: 'menu', id: 'contextAreaMenu', icon: 'chevron-down', name: 'Select', title: 'Selection commands', items: ['areaSelectAll', 'areaDeselect', 'areaReselect', 'areaInvert', 'areaFromLayer', '-', ...areaOptions(AREA_MODIFIERS, 'Modify').map(entry => entry.action), '-', 'areaCrop', 'areaToPath'] },
 				{ kind: 'button', id: 'contextAreaDeselect', icon: 'x-mark', name: 'Deselect', title: 'Deselect the area (Esc or Ctrl+D)', action: 'areaDeselect' }
 			] },
 			{ id: 'maskBrushControls', tool: 'brush', when: (_editor, { tool }) => tool === 'brush', sync: editor => editor.areaSelect.syncToolbar(), controls: [

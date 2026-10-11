@@ -420,21 +420,7 @@ class FilterLayerManager {
 		return `${this.editor.originalCanvas.width}x${this.editor.originalCanvas.height}|image:${this.getImageIdentity(this.editor.originalImageData)}|${JSON.stringify(serialized)}`;
 	}
 
-	buildSnapshotParams(layers) {
-		return {
-			visibleLayers: layers,
-			glitterGifs: this.editor.glitterLibrary.getRenderContent(),
-			canvasData: this.editor.getExportCanvasData(),
-			exportSettings: this.editor.getSceneSnapshotSettings({ baseImage: true }),
-			target: { supportsTransparency: true },
-			callbacks: {
-				onStatus: () => {}, onProgress: () => {}, onLayerLoaded: () => {}, isCancelled: () => false,
-				createMask: (candidate) => this.editor.maskCompositor.getMaskData(candidate),
-				renderSlotMasks: (candidate) => getLayerManagerForType(this.editor, candidate.type).renderSlotMasks(candidate),
-				ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
-			}
-		};
-	}
+	buildSnapshotParams(layers) { return this.editor.getSceneSnapshotParams(layers); }
 
 	scheduleSnapshot(layer, options = {}) {
 		const level = PREFERENCES.get('filterPreviewLevel');

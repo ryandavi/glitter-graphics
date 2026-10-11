@@ -1,20 +1,22 @@
 'use strict';
 
 const HINT_RULES = [
+	{ id: 'area-modify', tool: true, when: editor => editor.getActiveSession() === 'areaModify', hint: 'Drag Amount to preview. Enter applies, Esc cancels.', context: { desktop: 'Arrow keys adjust Amount; hold Shift for steps of 10.', mobile: 'Drag Amount, then use the check to apply or the X to cancel.' } },
+	{ id: 'area-polygon', tool: true, when: editor => editor.getActiveSession() === 'areaPolygon', hint: 'Click to place corners. Enter or double-click closes the polygon.', context: { desktop: 'Shift constrains to 45 degrees. Backspace removes a corner; Esc cancels.', mobile: 'Tap each corner, then tap the first corner to close.' } },
 	{ id: 'crop-editing', tool: true, when: (editor) => editor.getActiveSession() === 'crop', hint: 'Drag the handles to crop or extend the canvas', context: { desktop: 'Drag inside to move, outside to draw. Shift toggles the ratio, Alt resizes from the center, and Ctrl bypasses snapping. Enter applies; Esc cancels.', mobile: 'Drag with one finger. Use two fingers to pan or zoom. The check applies the crop; the X discards it.' } },
 	{
 		id: 'area-selected',
 		tool: true,
-		when: (editor) => editor.getActiveSession() === 'area',
+		when: (editor) => toolUsesArea(editor.currentTool) && editor.getActiveSession() === 'area',
 		hint: (editor) => editor.currentTool === ToolType.BRUSH ? 'The brush only paints inside the selected area' : 'Fill the area with glitter, erase inside it, or paint in it with the Glitter Brush',
-		context: { desktop: 'Enter fills and Delete erases. Drag inside the area to move it. Shift-drag adds to it and Alt-drag subtracts. Esc deselects.', mobile: 'Drag inside the area to move it. Use Fill or Erase in the bar, or switch to the Glitter Brush to paint inside the area.' }
+		context: { desktop: 'Enter fills and Delete erases. Shift adds, Alt subtracts. Esc deselects; Ctrl+Z brings the area back. The Select menu modifies it or makes a Path layer.', mobile: 'Use Fill or Erase, or paint inside the area with the Glitter Brush. The Select menu modifies it or makes a Path layer; Undo brings it back.' }
 	},
 	{
 		id: 'area-tool',
 		tool: true,
 		when: (editor) => editor.currentTool === ToolType.AREA,
-		hint: 'Drag to select an area for glitter',
-		context: { desktop: 'Choose Rectangle, Ellipse or Lasso in the bar. During a drag, Shift keeps the shape square, Alt draws it from the center, and Space moves it.', mobile: 'Choose Rectangle, Ellipse or Lasso in the bar.' }
+		hint: editor => AREA_SHAPES[editor.areaSelect.shape].title,
+		context: () => `Choose ${Object.values(AREA_SHAPES).map(shape => shape.label).join(', ')}. Ctrl+click a layer thumbnail to select its pixels. Ctrl+Z restores an area.`
 	},
 	{
 		id: 'brush-editing',

@@ -9,7 +9,7 @@ global.GlitterPaletteAnalysis = require('../../js/effects/palette-analysis.js');
 const recolor = require('../../js/effects/glitter-recolor.js');
 const vm = require('vm');
 const config = vm.createContext({ navigator: { hardwareConcurrency: 4 } });
-for (const file of ['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/config.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../..', file), 'utf8'), config);
+for (const file of ['js/core/math.js', 'js/core/color.js', 'js/core/releases.js', 'js/core/fields.js', 'js/core/area.js', 'js/core/config.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../..', file), 'utf8'), config);
 const styles = vm.runInContext('CONFIG.tools.glitter.recolor.styles', config);
 const manifest = require('../../data/glitter.index.json').filter(item => styles.includes(item.category));
 let local = 0, transparent = 0;

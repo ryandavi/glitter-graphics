@@ -14,23 +14,7 @@ function initializeColorEyedroppers(editor) {
 		const layers = editor.showAllLayers
 			? editor.layers.filter((layer) => layer.visible && !layer.isPreview && layerHasVisibleContent(layer))
 			: [editor.layerManager.getActiveLayer()].filter((layer) => layer?.visible && layerHasVisibleContent(layer));
-		const callbacks = {
-			onStatus: () => {},
-			onProgress: () => {},
-			isCancelled: () => false,
-			createMask: (layer) => editor.maskCompositor.getMaskData(layer),
-			renderSlotMasks: (layer) => getLayerManagerForType(editor, layer.type).renderSlotMasks(layer),
-			ensureTextFont: (fontId) => FontLibrary.ensureLoaded(fontId)
-		};
-		const composed = await editor.sceneCompositor.composeFrameAt({
-			visibleLayers: layers,
-			glitterGifs: editor.glitterLibrary.getRenderContent(),
-			canvasData: editor.getExportCanvasData(),
-			exportSettings: editor.getSceneSnapshotSettings(),
-			target: EXPORT_TARGETS['still:png'],
-			timestamp: editor.animationTicker.getCurrentTime(),
-			callbacks
-		});
+		const composed = await editor.sceneCompositor.composeFrameAt(editor.getSceneSnapshotParams(layers));
 		const offset = (Math.max(0, Math.min(composed.height - 1, y)) * composed.width
 			+ Math.max(0, Math.min(composed.width - 1, x))) * 4;
 		const data = composed.imageData.data;

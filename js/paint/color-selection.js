@@ -106,52 +106,60 @@ function floodColorSelection(editor, mask, startX, startY, targetColor, threshol
 	}
 }
 
-function buildColorSelectionMask(editor, layer) {
-	const buildStart = performance.now();
-	const width = editor.originalCanvas.width;
-	const height = editor.originalCanvas.height;
-	const len = width * height;
-	const mask = new Uint8Array(len);
-	const thresholdSq = layer.settings.threshold * layer.settings.threshold;
+function getColorSelectionTarget(editor, x, y) {
+	x = Math.floor(x); y = Math.floor(y);
+	const { width, height } = editor.originalCanvas;
+	if (x < 0 || y < 0 || x >= width || y >= height) return null;
+	const index = y * width + x;
+	const isTransparent = editor.originalAlphaChannel[index] < CONFIG.tools.selection.transparency.alphaThreshold;
+	const data = editor.originalImageData.data;
+	return { x, y, isTransparent, r: isTransparent ? 0 : data[index * 4], g: isTransparent ? 0 : data[index * 4 + 1], b: isTransparent ? 0 : data[index * 4 + 2] };
+}
+
+function matchColorSelection(editor, mask, target, thresholdSq, contiguous, clip) {
+	const len = mask.length;
 	const data = editor.originalImageData.data;
 	const alphaChannel = editor.originalAlphaChannel;
+	if (contiguous) {
+		const floodStart = performance.now();
+		floodColorSelection(editor, mask, target.x, target.y, target, thresholdSq, clip);
+		dbg(`[G-1] floodFill: ${(performance.now() - floodStart).toFixed(1)}ms`);
+		return;
+	}
 
-	layer.selections.forEach(sel => {
-		// A color picked inside a selected area only matches inside that area.
-		const clip = sel.area ? editor.areaSelection.getCoverage(sel.area) : null;
-		if (layer.settings.contiguous) {
-			const floodStart = performance.now();
-			floodColorSelection(editor, mask, sel.x, sel.y, sel, thresholdSq, clip);
-			dbg(`[G-1] floodFill: ${(performance.now() - floodStart).toFixed(1)}ms`);
-			return;
-		}
+	const scanStart = performance.now();
+	for (let i = 0; i < len; i++) {
+		if (mask[i] === 255) continue;
+		if (clip && !clip[i]) continue;
 
-		const scanStart = performance.now();
-		for (let i = 0; i < len; i++) {
-			if (mask[i] === 255) continue;
-			if (clip && !clip[i]) continue;
-
-			if (sel.isTransparent) {
-				if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) {
-					mask[i] = 255;
-				}
-				continue;
-			}
-
-			if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) continue;
-
-			const idx = i * 4;
-			const r = data[idx];
-			const g = data[idx + 1];
-			const b = data[idx + 2];
-
-			if (selectionColorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
+		if (target.isTransparent) {
+			if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) {
 				mask[i] = 255;
 			}
+			continue;
 		}
-		dbg(`[G-1] non-contiguous scan: ${(performance.now() - scanStart).toFixed(1)}ms`);
-	});
 
+		if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) continue;
+
+		const idx = i * 4;
+		const r = data[idx];
+		const g = data[idx + 1];
+		const b = data[idx + 2];
+
+		if (selectionColorDistanceSq(r, g, b, target.r, target.g, target.b) <= thresholdSq) {
+			mask[i] = 255;
+		}
+	}
+	dbg(`[G-1] non-contiguous scan: ${(performance.now() - scanStart).toFixed(1)}ms`);
+}
+
+function buildColorSelectionMask(editor, layer) {
+	const buildStart = performance.now();
+	const mask = new Uint8Array(editor.originalCanvas.width * editor.originalCanvas.height);
+	layer.selections.forEach(sel => {
+		const clip = sel.area ? editor.areaSelection.getCoverage(sel.area) : null;
+		matchColorSelection(editor, mask, sel, layer.settings.threshold ** 2, layer.settings.contiguous, clip);
+	});
 	dbg(`[G-1] buildSelectionMask total: ${(performance.now() - buildStart).toFixed(1)}ms`);
 	return mask;
 }

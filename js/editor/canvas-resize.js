@@ -250,7 +250,7 @@ scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
 			// next) rebuilds them at this size from each layer's snapshot.
 			this.paintMaskStore?.discardLivePaintBuffers();
 			// The area is not in history, so it cannot follow a size it never saw.
-			this.areaSelection.clear();
+			this.areaSelection.reset();
 			this.viewport.setCanvasDimensions(width, height);
 			this.viewport.resetZoomSmart();
 			this.updateZoomUI();

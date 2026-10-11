@@ -275,6 +275,15 @@ class ContextToolbarRenderer {
 	}
 
 	build(control) {
+		if (control.kind === 'menu') {
+			const trigger = this.build({ ...control, kind: 'button' });
+			const root = this.buildMenu(trigger, () => control.items.map(id => {
+				if (id === '-') return null;
+				const command = COMMANDS[id];
+				return { label: command.menuLabel || command.label, hint: command.displayKey, disabled: command.when?.(this.editor) === false, run: () => command.run(this.editor) };
+			}));
+			return root;
+		}
 		if (control.kind === 'group') {
 			const group = document.createElement('div');
 			group.append(...control.controls.map((child) => this.build(child)));
@@ -282,7 +291,8 @@ class ContextToolbarRenderer {
 		}
 		if (control.kind === 'button') {
 			const node = document.getElementById('tpl-context-button').content.firstElementChild.cloneNode(true);
-			node.id = control.id; node.title = control.title; node.dataset.action = control.action;
+			node.id = control.id; node.title = control.title;
+			if (control.action) node.dataset.action = control.action;
 			if (control.mobile === false) node.classList.add('desktop-only');
 			if (control.textAction) node.dataset.textAction = control.textAction;
 			if (control.textAction) node.addEventListener('pointerdown', event => event.preventDefault());
@@ -311,7 +321,11 @@ class ContextToolbarRenderer {
 				button.type = 'button';
 				button.className = 'segmented-option';
 				button.textContent = option.label;
-				if (option.title) button.title = option.title;
+				if (option.icon) {
+					button.replaceChildren(createPanelGlyph(option.icon));
+					button.setAttribute('aria-label', option.label);
+				}
+				button.title = option.title ? `${option.label}\n${option.title}` : option.label;
 				if (option.value) button.dataset.value = option.value;
 				button.setAttribute('aria-pressed', 'false');
 				button.addEventListener('click', () => COMMANDS[option.action]?.run(this.editor));
@@ -327,16 +341,48 @@ class ContextToolbarRenderer {
 			applySliderSpec(input, spec);   // handles data-scale (log) sliders; plain min/max otherwise
 			input.setAttribute('aria-label', control.label || spec.label);
 			if (control.action) {
-				input.addEventListener('input', () => COMMANDS[control.action]?.run(this.editor, Number(input.value)));
-				input.addEventListener('change', () => COMMANDS[control.action]?.run(this.editor, Number(input.value)));
+				input.addEventListener('input', () => COMMANDS[control.action]?.run(this.editor, readSliderValue(input), 'input'));
+				input.addEventListener('change', () => COMMANDS[control.action]?.run(this.editor, readSliderValue(input), 'change'));
 			}
 			const value = node.querySelector('.context-value'); value.id = control.valueId; value.textContent = `${spec.value}${control.unit || spec.unit || ''}`;
 			return node;
 		}
 		const node = document.getElementById('tpl-context-toggle').content.firstElementChild.cloneNode(true);
 		node.querySelector('input').id = control.id; node.querySelector('.context-toggle-label').textContent = control.label;
+		if (control.action) node.querySelector('input').addEventListener('change', event => COMMANDS[control.action]?.run(this.editor, event.target.checked));
 		const count = node.querySelector('.context-count'); if (control.countId) count.id = control.countId; else count.remove();
 		return node;
+	}
+
+	buildMenu(trigger, items, bindTrigger = true) {
+		const root = document.createElement('div'); root.className = 'app-menu app-menu-popover';
+		trigger.before(root); root.appendChild(trigger);
+		const panel = document.createElement('div'); panel.className = 'app-menu-panel'; panel.hidden = true;
+		root.appendChild(panel);
+		trigger.setAttribute('aria-haspopup', 'menu');
+		trigger.setAttribute('aria-expanded', 'false');
+		root._popover = setupMenuPopover({ root, trigger, panel, fixed: true, bindTrigger, beforeOpen: () => {
+			panel.replaceChildren(...items().map(item => {
+				if (!item) {
+					const separator = document.createElement('div'); separator.className = 'app-menu-separator'; separator.setAttribute('role', 'separator'); return separator;
+				}
+				const button = document.createElement('button'); button.type = 'button'; button.className = 'app-menu-item'; button.disabled = Boolean(item.disabled);
+				const label = document.createElement('span'); label.className = 'app-menu-item-label'; label.textContent = item.label;
+				button.appendChild(label);
+				if (item.hint) { const hint = document.createElement('kbd'); hint.textContent = formatKeyLabel(item.hint); button.appendChild(hint); }
+				button.addEventListener('click', item.run);
+				return button;
+			}));
+		} });
+		return root;
+	}
+
+	openMenu(triggerId, items) {
+		const trigger = document.getElementById(triggerId);
+		let root = trigger.closest('.app-menu');
+		if (!root) root = this.buildMenu(trigger, () => root._items, false);
+		root._items = items;
+		root._popover.open();
 	}
 
 	setValue(id, value) { const node = document.getElementById(id); if (node) node.textContent = value; }

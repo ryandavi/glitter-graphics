@@ -21,7 +21,7 @@ const context = vm.createContext({
 for (const file of [
 	'js/core/releases.js',
 	'js/core/fields.js',
-	'js/core/config.js',
+	'js/core/area.js', 'js/core/config.js',
 	'js/core/options.js',
 	'js/core/math.js', 'js/effects/easing.js',
 	'js/effects/animation.js',

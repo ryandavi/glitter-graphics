@@ -18,7 +18,7 @@ const typeFiles = fs.readdirSync(path.join(root, 'js/layers/types')).filter((fil
 for (const file of [
 	'js/core/releases.js',
 	'js/core/fields.js',
-	'js/core/config.js',
+	'js/core/area.js', 'js/core/config.js',
 	'js/core/tools.js', 'js/core/sessions.js',
 	'js/core/layer-types.js',
 	'js/core/options.js',
