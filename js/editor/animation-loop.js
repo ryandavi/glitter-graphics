@@ -3,6 +3,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		document.getElementById('openAnimationLoop')?.addEventListener('click', () => this.openAnimationLoop());
 		document.getElementById('animationLoopCandidate')?.addEventListener('change', () => this.syncLoopCandidate());
 		document.getElementById('fitAnimationsToLoop')?.addEventListener('click', () => this.fitAnimationsToLoop());
+		document.getElementById('resetAnimationLoop')?.addEventListener('click', () => this.resetAnimationLoop());
 		this.scheduleExportDuration();
 	},
 
@@ -33,27 +34,40 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		const select = document.getElementById('animationLoopCandidate');
 		if (!status || !sources || !select) return;
 		const fit = estimate?.loopFit;
+		['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet'].forEach((id) => {
+			document.getElementById(id).hidden = !fit?.sources.length;
+		});
 		status.textContent = fit?.sources.length
-			? `${(estimate.duration / 1000).toFixed(2)} s, ${estimate.exact && !fit.oneShots.length ? 'seamless' : 'ends do not match'}`
+			? `Current export: ${(estimate.duration / 1000).toFixed(2)} s. ${estimate.exact && !fit.oneShots.length ? 'The loop closes cleanly.' : 'The ends do not match.'}`
 			: message;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map((entry) => [entry.key, entry]));
-		sources.replaceChildren(...(fit?.sources || []).map((source) => {
+		sources.replaceChildren();
+		const head = sources.createTHead().insertRow();
+		['Source', 'Current', 'Before fitting'].forEach((label, index) => {
+			const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = label;
+			if (index) cell.className = 'is-numeric';
+			head.append(cell);
+		});
+		const body = sources.createTBody();
+		(fit?.sources || []).forEach((source) => {
 			const analysis = analyses.get(source.key);
 			const period = source.kind === 'authored' ? source.cycleDuration : source.naturalPeriod;
 			const resolved = analysis?.resolvedPeriod || period;
-			const row = document.createElement('button');
-			row.type = 'button'; row.className = 'btn-flat list-row';
-			const text = document.createElement('span'); text.className = 'list-row-text';
-			const name = document.createElement('span'); name.className = 'list-row-name'; name.textContent = source.label || source.key;
-			const detail = document.createElement('span'); detail.className = 'list-row-meta';
-			detail.textContent = `${(period / 1000).toFixed(2)} s / ${(estimate.duration / resolved).toFixed(2)} plays${source.nonLooping ? ' / one-shot' : typeof source.setPeriod !== 'function' ? ' / fixed' : ''}${Math.abs(resolved - period) > 0.01 ? ` / export fits to ${(resolved / 1000).toFixed(2)} s` : ''}`;
-			text.append(name, detail); row.append(text);
-			row.title = `${name.textContent}: ${detail.textContent}`;
-			row.setAttribute('aria-label', row.title);
-			row.disabled = !source.ownerLayerId;
-			row.addEventListener('click', () => this.layerManager.setActiveLayer(source.ownerLayerId));
-			return row;
-		}));
+			const label = source.label || source.key;
+			const title = `Edit ${label}${source.nonLooping ? ' (plays once)' : typeof source.setPeriod !== 'function' ? ' (fixed timing)' : ''}${Math.abs(resolved - period) > 0.01 ? `. Export uses ${(resolved / 1000).toFixed(2)} s.` : ''}`;
+			const row = body.insertRow();
+			const name = document.createElement('th'); name.scope = 'row';
+			const button = document.createElement('button'); button.type = 'button'; button.className = 'btn-text';
+			button.textContent = label; button.title = title; button.setAttribute('aria-label', title);
+			button.disabled = !source.ownerLayerId;
+			button.addEventListener('click', () => this.layerManager.setActiveLayer(source.ownerLayerId));
+			name.append(button); row.append(name);
+			const previousPeriod = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
+			[period, previousPeriod].forEach((value) => {
+				const cell = row.insertCell(); cell.className = 'is-numeric';
+				cell.textContent = value == null ? '—' : `${(value / 1000).toFixed(2)} s`;
+			});
+		});
 		const previous = select.value;
 		select.replaceChildren(...(fit?.candidates || []).map((candidate) => {
 			const option = document.createElement('option');
@@ -62,7 +76,10 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			return option;
 		}));
 		if (Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
+		else if (Array.from(select.options).some((option) => Number(option.value) === estimate?.duration)) select.value = String(estimate.duration);
 		select.disabled = !select.options.length;
+		sources.hidden = !fit?.sources.length;
+		sources.parentElement.hidden = sources.hidden;
 		this.syncLoopCandidate();
 	},
 
@@ -89,6 +106,8 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		if (fit?.oneShots.length) notes.push(`One-shot animations (${fit.oneShots.map((source) => source.label || source.key).join(', ')}) do not repeat; their speeds are left unchanged.`);
 		note.textContent = notes.join(' ') || (candidate ? 'Editable animation speeds already fit this loop.' : 'Add animated artwork or an animated look to plan a loop.');
 		button.disabled = !candidate?.canApply;
+		const reset = document.getElementById('resetAnimationLoop');
+		if (reset) reset.disabled = !(fit?.sources || []).some((source) => typeof source.setPeriod === 'function' && this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] != null);
 	},
 
 	fitAnimationsToLoop() {
@@ -96,11 +115,38 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		if (!candidate?.canApply) return;
 		// A queued estimate is invalidated on every document commit or restore,
 		// so these setters always belong to the current layer objects.
-		candidate.fits.forEach((fit) => fit.source.setPeriod(fit.fittedPeriod));
+		candidate.fits.forEach((fit) => {
+			if (Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) < 0.01) return;
+			const layer = this.layers.find((entry) => entry.id === fit.source.ownerLayerId);
+			if (!layer) return;
+			layer.loopOriginalPeriods ||= {};
+			layer.loopOriginalPeriods[fit.source.key] ??= fit.source.naturalPeriod;
+			fit.source.setPeriod(fit.fittedPeriod);
+		});
 		this.layerManager.renderLayersList();
 		this.refreshInspector();
 		this.requestPreviewUpdate();
 		this.saveState('Fit animations to loop');
 		this.updateStatus('Animation speeds fitted to the loop');
+	},
+
+	resetAnimationLoop() {
+		let changed = false;
+		(this.loopEstimate?.loopFit.sources || []).forEach((source) => {
+			const layer = this.layers.find((entry) => entry.id === source.ownerLayerId);
+			const period = layer?.loopOriginalPeriods?.[source.key];
+			if (period == null || typeof source.setPeriod !== 'function') return;
+			source.setPeriod(period);
+			delete layer.loopOriginalPeriods[source.key];
+			if (!Object.keys(layer.loopOriginalPeriods).length) delete layer.loopOriginalPeriods;
+			changed = true;
+		});
+		if (!changed) return;
+		document.getElementById('animationLoopCandidate').value = '';
+		this.layerManager.renderLayersList();
+		this.refreshInspector();
+		this.requestPreviewUpdate();
+		this.saveState('Restore previous animation timing');
+		this.updateStatus('Restored animation timing from before fitting');
 	}
 };

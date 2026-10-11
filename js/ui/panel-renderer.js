@@ -1540,6 +1540,12 @@ function buildPanelItem(item, schema) {
 			if (item.classes) node.className = item.classes;
 			if (item.text) node.textContent = item.text;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));
+			if (item.rowClasses) {
+				const row = addPanelClasses(panelDiv('property-row'), item.rowClasses);
+				if (item.hidden) row.hidden = true;
+				row.appendChild(node);
+				return row;
+			}
 			return node;
 		}
 		case 'sparkleGlyphs':

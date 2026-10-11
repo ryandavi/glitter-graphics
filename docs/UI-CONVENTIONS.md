@@ -41,6 +41,8 @@ Literal colors are allowed only where the color must not follow the theme: selec
 |---|---|---|
 | Section | `.property-card` | Flat: no border, no background, no line. See Sidebar panels. |
 | Row | `.property-row` | `label \| control \| value \| revert`; `.is-stacked`, `.is-pair`, `.is-toggle` |
+| Data table | `.export-detail-table` | Shared by Export Details and the animation loop source table; numeric columns align right, source names can be `.btn-text` links. |
+| Inset surface | `.inset-surface` | Shared bordered card skin from the gradient stops box; its owner supplies layout and spacing. |
 | Field | select, number, text, `.property-value` | Flat, 1px border, `--control-height` |
 | Segmented control | `.segmented-control` | Sentence case. Defined once in `css/panels/property/_fields.scss`, used everywhere. An option that wraps its own input styles `input:checked + span`. |
 | Switch | `.property-switch` / `.property-header-switch` | 30 × 16 track |
@@ -60,7 +62,7 @@ Before adding a class, check this table. A feature hook beside a primitive (`lay
 - **Desktop tool rail.** Pull its gutter grip like a panel to reveal the existing button names; push it back for icons. It shares the panel resize handle, width storage, keyboard controls and double-click reset. The desktop rail width and Layers inset share `--toolbar-width`; phone tools keep their compact rail. Balance Sidebar Widths in Settings > Tools & Workspace is on by default: Inspector matches the combined toolbar and Layers width, within its limits and the available canvas space. Resizing Inspector turns balance off and remembers an independent width; the setting turns it back on. Existing manually sized Inspectors start independent. The setting applies only on desktop.
 
 - **Spacing is the parent's `gap`**, or an explicit `a + b { margin-top }`. Never a bare margin on a child: it survives when the neighbor is hidden and leaves phantom space.
-- **Horizontal inset is owned by rows and titles only** (`--property-gutter`). Bodies, sets and sections never add horizontal padding, so the left edge is one line down the panel. `tools/gutter-check.js` enforces it.
+- **Horizontal inset is owned by rows and titles only** (`--property-gutter`). Bodies, sets and sections never add horizontal padding, so the left edge is one line down the panel. A schema `host` can declare `rowClasses: 'is-control'` to wrap a full-width control in a gutter-owning row. `tools/gutter-check.js` enforces it.
 - **A box means an object.** The only boxes in a panel are things you can swap or pick from: the asset chip, a preset scrollbox, the gradient editor. The only line is the hairline above a group. The asset chip keeps `--property-set-gap` before the row after it, in whichever set that row sits.
 - **Uppercase is the group label's alone.**
 - **A revert sits at the right edge of what it reverts**, in a column that is always reserved, and is drawn only while the value differs from its default.

@@ -201,7 +201,7 @@ const CONFIG = deepFreeze({
 			}
 		},
 		filter: {
-			animation: { frameMs: 100, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
+			animation: { frameMs: 100, crawlSampleMs: 50, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },

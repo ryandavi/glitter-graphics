@@ -278,8 +278,8 @@ $modal-compact-breakpoint: 600px;
 	&::after { transform: translateX(calc(#{$width} - #{$height})); }
 }
 
-@mixin inset-surface {
-	padding: var(--spacing-md);
+@mixin inset-surface($padding: var(--spacing-md)) {
+	padding: $padding;
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
 	background: var(--color-bg-card);

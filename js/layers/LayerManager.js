@@ -152,6 +152,7 @@ class LayerManager {
 			if (!spec.omit?.includes(key)) serialized[key] = key === 'type' ? type : layer[key];
 		});
 		serialized.opacity = layer.opacity;
+		if (layer.loopOriginalPeriods) serialized.loopOriginalPeriods = structuredClone(layer.loopOriginalPeriods);
 		if (isTransformableLayerType(type)) serialized.transform = cloneTransform(getLayerTransform(layer));
 		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
 		if (layer.animations?.length && isAnimatableLayerType(type)) {
@@ -190,6 +191,7 @@ class LayerManager {
 			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
 		if (!spec.omit?.includes('name')) restored.name = layerData.name || spec.defaultName?.(this.editor, layerData[spec.dataKey]);
+		if (layerData.loopOriginalPeriods) restored.loopOriginalPeriods = structuredClone(layerData.loopOriginalPeriods);
 		if (!spec.omit?.includes('settings')) restored.settings = structuredClone(layerData.settings || {});
 		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
 			const fallback = key === 'selections' ? [] : null;

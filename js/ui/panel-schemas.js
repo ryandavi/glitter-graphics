@@ -369,12 +369,19 @@ const PANEL_SCHEMAS = {
 					// sizing belongs to Canvas Properties.
 				] },
 				{ title: 'Animation', sections: [
-					{ kind: 'section', id: 'animationLoopSection', title: 'Animation Loop', collapsed: true, sets: [{ rows: [
+					{ kind: 'section', id: 'animationLoopSection', key: 'Animation Loop', title: 'Animation loop', collapsed: true, sets: [{ rows: [
+						{ kind: 'note', text: 'Each animation has its own loop. Choose a shared length, then fit editable speeds so they finish together. Choosing a length only previews the changes.' },
 						{ kind: 'note', id: 'animationLoopStatus', text: 'No animation sources.' }
-					] }, { id: 'animationLoopSources', rows: [] }, { rows: [
+					] }, { id: 'animationLoopSourceSet', hidden: true, rows: [
+						{ kind: 'host', tag: 'table', id: 'animationLoopSources', classes: 'export-detail-table inset-surface', rowClasses: 'is-control', attrs: { 'aria-label': 'Animation loop times in seconds' } },
+						{ kind: 'note', text: 'Seconds per loop. Select a name to edit its source. Before fitting shows saved timing; — means no saved fit.' }
+					] }, { id: 'animationLoopLengthSet', hidden: true, rows: [
 						{ kind: 'select', id: 'animationLoopCandidate', label: 'Loop length', options: [] },
 						{ kind: 'note', id: 'animationLoopChanges' }
-					] }, { actions: [{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop' }] }] }
+					] }, { id: 'animationLoopActionSet', hidden: true, actions: [
+						{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop' },
+						{ id: 'resetAnimationLoop', label: 'Restore previous timing', title: 'Restore the timing saved before the first loop fit' }
+					] }] }
 				] }
 			] },
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [

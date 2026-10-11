@@ -51,7 +51,8 @@
 
 	function scanlineAnimation(values) {
 		const frameMs = CONFIG.tools.filter.animation.crawl[values.crawl].frameMs;
-		return frameMs ? { frames: values.spacing, frameMs } : null;
+		const sampleMs = CONFIG.tools.filter.animation.crawlSampleMs;
+		return frameMs ? { frames: values.spacing * frameMs / sampleMs, frameMs: sampleMs } : null;
 	}
 
 	function deepFryRecipe(values) {
@@ -164,7 +165,7 @@
 			set: (values, ms) => { values.crawl = Object.keys(CONFIG.tools.filter.animation.crawl).find((key) => CONFIG.tools.filter.animation.crawl[key].frameMs * values.spacing === ms); }
 		}, recipe: (values, frameIndex = 0) => [step('gradient', {
 			animation: scanlineAnimation(values) ? { ...scanlineAnimation(values), name: 'filter-scanline-crawl', distance: values.spacing } : null,
-			mode: 'overlay', opacity: 0.55 * values.strength / 100, gradient: { type: 'repeating-linear', angle: 180, size: values.spacing, offset: values.crawl === 'off' ? 0 : frameIndex % values.spacing, stops: [stop(0, 'rgba(0,0,0,0.55)'), stop(0.5, 'rgba(0,0,0,0.55)'), stop(0.5, 'transparent'), stop(1, 'transparent')] }
+			mode: 'overlay', opacity: 0.55 * values.strength / 100, gradient: { type: 'repeating-linear', angle: 180, size: values.spacing, offset: values.crawl === 'off' ? 0 : (frameIndex % scanlineAnimation(values).frames) * values.spacing / scanlineAnimation(values).frames, stops: [stop(0, 'rgba(0,0,0,0.55)'), stop(0.5, 'rgba(0,0,0,0.55)'), stop(0.5, 'transparent'), stop(1, 'transparent')] }
 		})] }),
 		'light-leak': Object.freeze({ id: 'light-leak', label: 'Light Leak', group: 'web', tags: ['film', 'warm'], fields: Object.freeze({
 			strength: numeric('filterLookStrength', 'filterLookStrength'), size: numeric('filterLightLeakSize', 'filterLightLeakSize')

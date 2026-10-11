@@ -1484,6 +1484,13 @@ textarea {
   display: none;
 }
 
+.inset-surface {
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+}
+
 .asset-info,
 .gradient-stops-box {
   display: flex;
@@ -1999,6 +2006,85 @@ input.color-hex-input {
     opacity: var(--opacity-disabled);
   }
 }
+.export-detail-table {
+  --detail-inset: var(--spacing-sm);
+  width: calc(100% + var(--detail-inset) * 2);
+  margin-inline: calc(var(--detail-inset) * -1);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+.export-detail-table th,
+.export-detail-table td {
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) 0;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-normal);
+  text-align: left;
+  white-space: nowrap;
+}
+.export-detail-table th:first-child,
+.export-detail-table td:first-child {
+  padding-left: var(--detail-inset);
+}
+.export-detail-table th:last-child,
+.export-detail-table td:last-child {
+  padding-right: var(--detail-inset);
+}
+.export-detail-table th.is-numeric,
+.export-detail-table td.is-numeric {
+  text-align: right;
+}
+.export-detail-table thead th {
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+}
+.export-detail-table tbody th {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.export-detail-table.is-key-value tbody th {
+  color: var(--color-text-secondary);
+}
+.export-detail-table .is-total > * {
+  padding-block: var(--spacing-sm);
+  background: var(--color-bg-tertiary);
+  font-weight: var(--font-weight-semibold);
+}
+.export-detail-table .is-total > *:first-child {
+  border-radius: var(--radius-control) 0 0 var(--radius-control);
+}
+.export-detail-table .is-total > *:last-child {
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+.export-detail-table .setting-unit {
+  margin-left: var(--spacing-2xs);
+  color: var(--color-text-tertiary);
+}
+.export-detail-table .setting-separator {
+  color: var(--color-text-tertiary);
+}
+
+.property-panel .export-detail-table {
+  --detail-inset: var(--spacing-sm);
+  width: 100%;
+  margin-inline: 0;
+}
+
+.export-detail-table .btn-text {
+  max-width: 100%;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+}
+.export-detail-table .btn-text:focus-visible {
+  outline: var(--spacing-2xs) solid var(--color-accent);
+  outline-offset: var(--spacing-2xs);
+}
+
 .tooltip {
   position: fixed;
   max-width: 240px;
@@ -7852,6 +7938,10 @@ body.tool-text .text-hover-baselines {
   justify-self: end;
 }
 
+.property-row.is-control {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {
   grid-column: 2/-2;
   margin-inline: 0;
@@ -8332,6 +8422,10 @@ body.tool-text .text-hover-baselines {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.property-panel #noLayerSettingsSection.visible + #baseLayerSettingsSection {
+  border-top: 1px solid var(--color-border);
 }
 
 .property-panel .transform-panel-host.is-position-locked {
@@ -9807,67 +9901,6 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-}
-#exportPreviewModal .export-detail-table {
-  --detail-inset: var(--spacing-sm);
-  width: calc(100% + var(--detail-inset) * 2);
-  margin-inline: calc(var(--detail-inset) * -1);
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.3;
-}
-#exportPreviewModal .export-detail-table th,
-#exportPreviewModal .export-detail-table td {
-  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) 0;
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-normal);
-  text-align: left;
-  white-space: nowrap;
-}
-#exportPreviewModal .export-detail-table th:first-child,
-#exportPreviewModal .export-detail-table td:first-child {
-  padding-left: var(--detail-inset);
-}
-#exportPreviewModal .export-detail-table th:last-child,
-#exportPreviewModal .export-detail-table td:last-child {
-  padding-right: var(--detail-inset);
-}
-#exportPreviewModal .export-detail-table th.is-numeric,
-#exportPreviewModal .export-detail-table td.is-numeric {
-  text-align: right;
-}
-#exportPreviewModal .export-detail-table thead th {
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-tertiary);
-}
-#exportPreviewModal .export-detail-table tbody th {
-  width: 100%;
-  max-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#exportPreviewModal .export-detail-table.is-key-value tbody th {
-  color: var(--color-text-secondary);
-}
-#exportPreviewModal .export-detail-table .is-total > * {
-  padding-block: var(--spacing-sm);
-  background: var(--color-bg-tertiary);
-  font-weight: var(--font-weight-semibold);
-}
-#exportPreviewModal .export-detail-table .is-total > *:first-child {
-  border-radius: var(--radius-control) 0 0 var(--radius-control);
-}
-#exportPreviewModal .export-detail-table .is-total > *:last-child {
-  border-radius: 0 var(--radius-control) var(--radius-control) 0;
-}
-#exportPreviewModal .export-detail-table .setting-unit {
-  margin-left: var(--spacing-2xs);
-  color: var(--color-text-tertiary);
-}
-#exportPreviewModal .export-detail-table .setting-separator {
-  color: var(--color-text-tertiary);
 }
 #exportPreviewModal .export-support-link {
   text-decoration: none;

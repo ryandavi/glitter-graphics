@@ -32,6 +32,9 @@
 	> input[type="color"] { justify-self: end; }
 }
 
+// A host with no label or revert uses the row's full width and gutter.
+.property-row.is-control { grid-template-columns: minmax(0, 1fr); }
+
 // A choice control stops short of the revert column, as does a field that a
 // revert follows.
 .property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {

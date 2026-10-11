@@ -565,6 +565,8 @@ initializeExportSettings() {
 		this.loopEstimate = null;
 		const fit = document.getElementById('fitAnimationsToLoop');
 		if (fit) fit.disabled = true;
+		const reset = document.getElementById('resetAnimationLoop');
+		if (reset) reset.disabled = true;
 		this.exportDurationTimer = setTimeout(() => this.updateExportDuration(), CONFIG.export.timeline.estimateDebounceMs);
 	}
 

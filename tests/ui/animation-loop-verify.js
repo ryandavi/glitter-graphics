@@ -15,6 +15,11 @@ const { chromium } = require('playwright');
 			document.querySelectorAll('.modal-overlay.visible').forEach((modal) => modal.classList.remove('visible'));
 			await editor.loadBlankImage(32, 24, '#a348cd');
 		});
+		await page.evaluate(async () => { editor.openAnimationLoop(); await editor.updateExportDuration(); });
+		assert(await page.locator('#animationLoopStatus').isVisible());
+		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet']) {
+			assert(!(await page.locator(`#${id}`).isVisible()), `${id} must be hidden with no animation sources`);
+		}
 		const timings = await page.evaluate(async () => {
 			const e = editor;
 			const scan = e.layerManager.addLayer(LayerType.FILTER);
@@ -43,7 +48,7 @@ const { chromium } = require('playwright');
 			e.layerManager.deleteLayer(hue.id, { skipHistory: true });
 			return { samples, offset, off, parity, changesHue, frames: output.frames.length };
 		});
-		assert.deepStrictEqual(timings.samples, [0, 1, 2, 3, 0]);
+		assert.deepStrictEqual(timings.samples, [0, 2, 4, 6, 0]);
 		if (process.env.GLITTER_TEST_CSS) assert.strictEqual(timings.offset, '2px', 'CSS crawl and export must have the same pixel offset');
 		assert.strictEqual(timings.off, 0);
 		assert(timings.parity && timings.changesHue && timings.frames > 1, 'Hue snapshots must animate and match export pixels');
@@ -79,6 +84,40 @@ const { chromium } = require('playwright');
 		assert.deepStrictEqual(fitting.fitted, { hue: 0.8, motion: 800, history: 1 });
 		assert.strictEqual(fitting.undone, 1.4); assert.strictEqual(fitting.refitted, 0.8);
 		assert(fitting.selected >= 3 && fitting.staleCleared);
+		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet']) {
+			assert(await page.locator(`#${id}`).isVisible(), `${id} must return when animation sources exist`);
+		}
+		const restored = await page.evaluate(async () => {
+			await editor.updateExportDuration();
+			const table = document.getElementById('animationLoopSources');
+			const row = Array.from(table.tBodies[0].rows).find((entry) => entry.cells[0].textContent.includes('Hue Cycle'));
+			const times = Array.from(row.cells).slice(1).map((cell) => cell.textContent);
+			const hueId = editor.layers.find((layer) => layer.filterData?.type === 'hue-cycle').id;
+			row.querySelector('th button').click();
+			const navigates = editor.layerManager.getActiveLayer().id === hueId;
+			editor.openAnimationLoop();
+			await editor.updateExportDuration();
+			const before = editor.historyManager.historyIndex;
+			const saved = editor.layers.filter((layer) => layer.loopOriginalPeriods).map((layer) => editor.layerManager.serializeLayer(layer));
+			const roundTrips = await Promise.all(saved.map((layer) => editor.layerManager.deserializeLayer(layer)));
+			const persists = roundTrips.every((layer, index) => JSON.stringify(layer.loopOriginalPeriods) === JSON.stringify(saved[index].loopOriginalPeriods));
+			document.getElementById('resetAnimationLoop').click();
+			const hue = editor.layers.find((layer) => layer.filterData?.type === 'hue-cycle');
+			const shape = editor.layers.find((layer) => layer.type === LayerType.SHAPE);
+			const result = { hue: hue.filterData.speed, motion: shape.animations[0].periodMs, history: editor.historyManager.historyIndex - before, persists, cleared: !hue.loopOriginalPeriods && !shape.loopOriginalPeriods, times, navigates };
+			await editor.historyManager.undo();
+			result.undo = editor.layers.find((layer) => layer.id === hue.id).filterData.speed;
+			await editor.historyManager.redo();
+			result.redo = editor.layers.find((layer) => layer.id === hue.id).filterData.speed;
+			return result;
+		});
+		assert.deepStrictEqual(restored, { hue: 1.4, motion: 1400, history: 1, persists: true, cleared: true, undo: 0.8, redo: 1.4, times: ['0.80 s', '1.40 s'], navigates: true });
+		const slow = await page.evaluate(() => {
+			const data = GlitterFilter.normalizeFilterData({ type: 'scanlines', spacing: 4, crawl: 'slow' });
+			const animation = GlitterFilter.animation(data);
+			return Array.from({ length: animation.frames + 1 }, (_, index) => GlitterFilter.resolve(data, index).ops[0].gradient.offset);
+		});
+		assert.deepStrictEqual(slow, [...Array.from({ length: 16 }, (_, index) => index / 4), 0], 'Slow crawl must advance uniformly through the wrap');
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.waitForFunction(() => editor.mobileManager.isMobile);
 		await page.evaluate(() => editor.openAnimationLoop());
