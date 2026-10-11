@@ -1841,6 +1841,7 @@ function buildPanelCardReset(node, title, spec) {
 // in every panel.
 function buildPanelGroup(group, schema) {
 	const node = tplClone('tpl-group');
+	if (group.region === 'header' || group.region === 'footer') node.classList.add(`panel-sticky-${group.region}`);
 	addPanelClasses(node, group.classes);
 	node.dataset.panelGroup = group.title;
 	const label = node.querySelector('.property-group-label');

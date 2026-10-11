@@ -40,9 +40,31 @@ class AutoGlitterManager {
 			addAnother: document.getElementById('autoGlitterAddAnother'),
 			paletteStyles: [...document.querySelectorAll('#autoGlitterPaletteStyle [data-value]')],
 			tuneHue: document.getElementById('autoGlitterTuneHue'),
+			hueLimit: document.getElementById('autoGlitterHueLimit'),
 			previewModes: [...document.querySelectorAll('#autoGlitterPreviewMode [data-value]')]
 		};
 
+		this.hueLimitSlider = bindSlider(this.ui.hueLimit, document.getElementById('autoGlitterHueLimitValue'), {
+			resetValue: FIELDS.paletteHueLimit.value, resetButton: document.getElementById('resetAutoGlitterHueLimit'),
+			onCommit: () => this.scheduleReduce()
+		});
+		this.sourceAdjust = { ...CONFIG.tools.autoGlitter.defaults.sourceAdjust };
+		this.sourceSliders = {};
+		for (const key of Object.keys(this.sourceAdjust)) {
+			const id = `autoGlitterSource${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+			const input = document.getElementById(id);
+			this.sourceSliders[key] = bindSlider(input, document.getElementById(`${id}Value`), {
+				resetValue: CONFIG.tools.autoGlitter.defaults.sourceAdjust[key], resetButton: document.getElementById(`reset${id.charAt(0).toUpperCase()}${id.slice(1)}`),
+				onCommit: (value) => {
+					if (this.sourceAdjust[key] === value) return;
+					this.sourceAdjust[key] = value;
+					this.sourceRevision = (this.sourceRevision || 0) + 1;
+					this.segmentDirty = true;
+					this.syncSourceAdjust();
+					this.scheduleReduce();
+				}
+			});
+		}
 		this.ui.open?.addEventListener('click', () => this.open());
 		this.ui.cancel?.addEventListener('click', () => this.requestDiscardSession());
 		this.ui.create?.addEventListener('click', () => this.createLayers());
@@ -139,6 +161,8 @@ class AutoGlitterManager {
 		const paletteStyle = saved && CONFIG.tools.autoGlitter.paletteStyles[saved.paletteStyle]
 			? saved.paletteStyle
 			: defaults.paletteStyle;
+		this.sourceAdjust = normalizeColorAdjust(saved?.sourceAdjust || defaults.sourceAdjust);
+		this.syncSourceAdjust();
 		this.ui.count.value = saved ? saved.colorCount : defaults.colorLayers;
 		this.ui.autoCount.checked = saved?.autoCount ?? defaults.autoColorCount;
 		this.setScope(saved?.glitterScope || defaults.glitterScope);
@@ -148,12 +172,18 @@ class AutoGlitterManager {
 			: defaults.mergeDistinctness;
 		this.ui.detail.value = saved ? saved.detail : defaults.detail;
 		this.ui.cleanEdges.checked = saved ? saved.cleanEdges : defaults.cleanEdges;
-		this.ui.tuneHue.checked = saved ? saved.tuneHue : defaults.tuneGlitterHue;
+		this.ui.tuneHue.checked = saved?.tuneHue ?? defaults.tuneGlitterHue;
+		const limit = Number(saved?.maxHueShift ?? defaults.maxHueShift);
+		const value = Number.isFinite(limit) ? Math.max(0, Math.min(180, limit)) : defaults.maxHueShift;
+		writeSliderValue(this.ui.hueLimit, value);
+		this.hueLimitSlider.updateDisplay(value);
+		this.hueLimitSlider.syncResetButton(value);
 	}
 
 	captureSessionSettings() {
 		return {
 			version: 1,
+			sourceAdjust: { ...this.sourceAdjust },
 			colorCount: Number(this.ui.count.value),
 			autoCount: this.ui.autoCount.checked,
 			glitterScope: { ...(this.scopeRail?.selection || CONFIG.tools.autoGlitter.defaults.glitterScope) },
@@ -161,8 +191,20 @@ class AutoGlitterManager {
 			mergeDistinctness: Number(this.ui.mergeDistinctness.value),
 			detail: Number(this.ui.detail.value),
 			cleanEdges: this.ui.cleanEdges.checked,
-			tuneHue: this.ui.tuneHue.checked
+			tuneHue: this.ui.tuneHue.checked,
+			maxHueShift: Number(this.ui.hueLimit.value)
 		};
+	}
+
+	syncSourceAdjust() {
+		for (const [key, value] of Object.entries(this.sourceAdjust)) {
+			const id = `autoGlitterSource${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+			writeSliderValue(document.getElementById(id), value);
+			this.sourceSliders[key]?.updateDisplay(value);
+			this.sourceSliders[key]?.syncResetButton(value);
+		}
+		const summary = document.getElementById('autoGlitterSourceSummary');
+		if (summary) summary.textContent = isIdentityColorAdjust(this.sourceAdjust) ? 'Off' : 'Adjusted';
 	}
 
 	setPaletteStyle(style) {
@@ -498,6 +540,7 @@ class AutoGlitterManager {
 			// Mixing every style is the user's call; a picked style keeps its timing.
 			swatchTimingBias: this.isScopeNarrowed() ? CONFIG.tools.autoGlitter.analysis.swatchTimingBias : 0,
 			tuneGlitterHue: this.ui.tuneHue.checked,
+			maxHueShift: Number(this.ui.hueLimit.value),
 			maxSamples: CONFIG.tools.autoGlitter.limits.maxSamples,
 			cleanup: {
 				aliasDissolve: { ...CONFIG.tools.autoGlitter.cleanup.aliasDissolve, enabled: this.ui.cleanEdges.checked },
@@ -508,7 +551,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=3dda36ed');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=67aee80b');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;
@@ -539,12 +582,14 @@ class AutoGlitterManager {
 		if (this.segmentPromise) return this.segmentPromise;
 		const source = this.editor.originalImageData;
 		const pixels = source.data.slice();
+		const revision = this.sourceRevision;
 		this.segmentPromise = this.requestWorker('segment', {
 			pixels: pixels.buffer,
+			sourceAdjust: { ...this.sourceAdjust },
 			width: source.width,
 			height: source.height,
 			options: this.getWorkerOptions()
-		}, [pixels.buffer]).then(() => { this.segmentDirty = false; }).finally(() => { this.segmentPromise = null; });
+		}, [pixels.buffer]).then(() => { this.segmentDirty = revision !== this.sourceRevision; }).finally(() => { this.segmentPromise = null; });
 		return this.segmentPromise;
 	}
 

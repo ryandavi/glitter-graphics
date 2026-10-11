@@ -309,15 +309,8 @@
 			&:not(.is-open) {
 				flex: 0 0 auto;
 
-				> .inspector-switch,
+				> #inspectorSwitch .panel-sticky-header,
 				> .inspector-body { display: none; }
-			}
-
-			// The line under the bar belongs to what follows it, as in a
-			// collapsible section, so the collapsed bar has none.
-			> .inspector-switch {
-				border-top: 1px solid var(--color-border);
-				border-bottom: 0;
 			}
 
 			> .inspector-body { border-top: 1px solid var(--color-border); }
@@ -328,11 +321,7 @@
 
 		// Shown when a tool's settings and the layer's properties are both
 		// available (syncInspectorHeader).
-		> .inspector-switch {
-			flex: 0 0 auto;
-			padding: var(--spacing-sm) var(--property-gutter);
-			border-bottom: 1px solid var(--color-border);
-		}
+		> #inspectorSwitch { flex: 0 0 auto; }
 
 		> .inspector-body {
 			display: flex;

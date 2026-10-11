@@ -18,6 +18,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+const { routeSourceSnapshot } = require('../../tools/ui-states');
+
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 1400, height: 1000 };
 const BASELINE_PATH = process.env.GLITTER_PANEL_BASELINE || path.join(__dirname, '..', 'fixtures', 'panel-parity-baseline.json');
@@ -48,6 +50,7 @@ function assert(condition, message) {
 }
 
 async function openEditor(page) {
+	await routeSourceSnapshot(page);
 	await page.goto(APP_URL, { waitUntil: 'networkidle' });
 	await page.evaluate(() => {
 		document.querySelectorAll('.modal-overlay.visible').forEach((node) => node.classList.remove('visible'));

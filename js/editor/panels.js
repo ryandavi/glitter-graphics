@@ -321,23 +321,28 @@ isLayerContentLocked(layer) {
 	renderPanelSwitch(host, names) {
 		host.replaceChildren();
 		if (names.length < 2) return;
-		const group = tplClone('tpl-segmented');
-		group.setAttribute('role', 'group');
-		group.setAttribute('aria-label', 'Panel');
-		names.forEach((name) => {
-			const button = tplClone('tpl-segmented-option');
-			const open = document.getElementById(`${name}Section`)?.classList.contains('is-open');
-			button.textContent = this.switchPanels.get(name).section.tab;
-			button.classList.toggle('active', open);
-			button.setAttribute('aria-pressed', String(open));
-			button.addEventListener('click', () => this.setCollapsibleSectionOpen(name, true));
-			group.appendChild(button);
+		const group = buildPanelGroup({ title: 'Panel', region: 'header', sections: [
+			{ kind: 'section', sets: [{ rows: [{ kind: 'segmented', ariaLabel: 'Panel', options: names.map((name) => ({
+				label: this.switchPanels.get(name).section.tab, value: name,
+				active: document.getElementById(`${name}Section`)?.classList.contains('is-open')
+			})) }] }] }
+		] }, {});
+		group.addEventListener('click', (event) => {
+			const name = event.target.closest('[data-value]')?.dataset.value;
+			if (names.includes(name)) this.setCollapsibleSectionOpen(name, true);
 		});
 		host.appendChild(group);
 	}
 
-	// The Inspector's one bar names the selection; the panels below it never do.
+	// The bar names the open panel and keeps the selected layer's name beside it.
 ,
+	getInspectorPanelTitle(name) {
+		const section = this.switchPanels.get(name)?.section;
+		const active = this.layerManager?.getActiveLayer?.();
+		const own = active && active.type !== LayerType.BASE_IMAGE && PANEL_SCHEMAS[active.type].sectionPrefix === name;
+		return section ? { icon: section.icon, text: own ? LAYER_UI_CONFIG[active.type].displayName : name === 'baseLayerSettings' ? section.tab : section.title } : { icon: 'sliders', text: 'Properties' };
+	},
+
 	syncInspectorHeader() {
 		const icon = document.getElementById('inspectorTitleIcon');
 		const text = document.getElementById('inspectorTitleText');
@@ -348,7 +353,10 @@ isLayerContentLocked(layer) {
 		const active = this.layerManager?.getActiveLayer?.();
 		const session = this.switchPanels.get(getSessionDefinition(this)?.panel)?.section;
 		let title = { icon: 'sliders', text: 'Properties' };
-		if (session) title = { icon: session.icon, text: session.title };
+		const names = this.getVisibleSwitchPanels();
+		const open = names.find((name) => document.getElementById(`${name}Section`)?.classList.contains('is-open'));
+		if (session) title = this.getInspectorPanelTitle(getSessionDefinition(this).panel);
+		else if (open) title = this.getInspectorPanelTitle(open);
 		else if (!this.originalImage) title = { ...title };
 		else if (count > 1) title = { icon: 'layers', text: `${count} layers` };
 		else if (active) {
@@ -358,7 +366,8 @@ isLayerContentLocked(layer) {
 			const kind = LAYER_UI_CONFIG[active.type]?.displayName || name;
 			title = { icon: PANEL_SCHEMAS[active.type].section.icon, text: kind, name: name === kind ? '' : name };
 		}
-		else title = { icon: PANEL_SCHEMAS[LayerType.BASE_IMAGE].section.icon, text: 'Canvas' };
+		else title = this.getInspectorPanelTitle('baseLayerSettings');
+		if (active && count === 1) title.name = describeLayer(active, this).name;
 		icon.setAttribute('href', `#icon-${title.icon}`);
 		// As the phone's sheet the bar names the open section.
 		const sheet = this.mobileManager?.sheetSection;
@@ -366,7 +375,6 @@ isLayerContentLocked(layer) {
 		document.getElementById('inspectorTitleName').textContent = sheet ? '' : title.name || '';
 		badge.replaceChildren(...(session?.badge ? [buildFeatureBadge(session.badge)] : []));
 
-		const names = this.getVisibleSwitchPanels();
 		bar.hidden = names.length < 2;
 		this.renderPanelSwitch(bar, names);
 		this.mobileManager?.syncBar();

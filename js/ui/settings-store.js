@@ -67,7 +67,7 @@ const EXPORT_SETTINGS_LAYOUT = (() => {
 			{ field: { label: 'Format', description: 'Export an animated GIF.', control: { type: 'segmented', id: 'exportFormatControl', ariaLabel: 'Export format', revertFor: 'exportFormatControl', options: [
 				formatOption('png', 'PNG', 'still'),
 				formatOption('jpeg', 'JPG', 'still'),
-				formatOption('gif', 'GIF', 'still'),
+				formatOption('gif', 'GIF', 'still'), formatOption('svg', 'SVG', 'still'),
 				formatOption('gif', 'GIF', 'animation', { active: true }),
 				formatOption('mp4', 'MP4', 'animation', { attrs: { hidden: '' } })
 			] } }, descId: 'exportFormatDescription' },

@@ -22,7 +22,8 @@ const context = {
 		}
 	}
 };
-context.importScripts = () => {
+context.importScripts = (url) => {
+	if (url.includes('color-adjust')) { vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../js/effects/color-adjust.js'), 'utf8'), context); return; }
 	vm.runInNewContext(sharedAnalysisSource, context, { filename: 'palette-analysis.js' });
 	context.GlitterPaletteAnalysis = context.self.GlitterPaletteAnalysis;
 };
@@ -117,6 +118,14 @@ const hueAdjustedRed = result.palette.find(color => color.r > 200 && color.g < 7
 assert.strictEqual(hueAdjustedRed.suggestedGlitterId, 'blue', 'a recolorable glitter can be selected for a vivid region');
 assert.ok(Math.abs(hueAdjustedRed.suggestedColorAdjust?.hue || 0) >= 2, 'the suggested glitter hue correction remains visible and editable');
 assert.strictEqual(hueAdjustedRed.suggestedColorAdjust?.saturation, 125, 'Vibrant boosts the matched glitter saturation');
+
+for (const limit of [0, 5, 90, 180]) {
+	const limited = reduce(3, { ...baseOptions, maxHueShift: limit }, [{ id: 'blue', colors: ['#234fd8'] }]);
+	const correction = limited.palette.find(color => color.r > 200 && color.g < 70 && color.b < 70)?.suggestedColorAdjust?.hue || 0;
+	assert.ok(Math.abs(correction) <= limit, `hue correction respects the ${limit} degree limit`);
+	if (limit === 0) assert.strictEqual(correction, 0, 'zero retains the matched swatch hue');
+	if (limit === 180) assert.ok(Math.abs(correction) > 20, 'a higher limit permits more recoloring than the old fixed cap');
+}
 
 const glyphWidth = 40;
 const glyphHeight = 24;
@@ -238,4 +247,13 @@ segment(solidRed, 20, 20);
 result = reduce(2, baseOptions, [{ id: 'single', colors: ['#d7212f'], weights: [0] }, { id: 'multi', colors: ['#cf2a3a', '#ffffff'], weights: [0.9, 0.1] }]);
 assert.strictEqual(result.palette[0].suggestedGlitterId, 'single', 'a missing coverage share counts as full coverage');
 
+// Source adjustment precedes segmentation and changes the detected palette.
+const sourcePixels = new Uint8ClampedArray([200, 40, 20, 255]);
+const workerPixels = sourcePixels.slice();
+context.self.onmessage({ data: { type: 'segment', requestId: ++requestId, pixels: workerPixels.buffer, width: 1, height: 1, options: baseOptions, sourceAdjust: { hue: 0, saturation: 0, brightness: 100 } } });
+assert.strictEqual(response.type, 'segmented');
+assert.strictEqual(workerPixels[0], workerPixels[1]);
+assert.strictEqual(workerPixels[1], workerPixels[2]);
+assert.strictEqual(workerPixels[3], 255);
+assert.deepStrictEqual(Array.from(sourcePixels), [200, 40, 20, 255]);
 console.log('auto-glitter analysis checks passed');

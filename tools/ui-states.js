@@ -9,6 +9,7 @@
 // and `tall` grows the viewport first so a scrolling panel shows whole.
 
 const path = require('path');
+const fs = require('fs');
 const { chromium } = require(path.join(__dirname, '..', 'node_modules', 'playwright'));
 
 const URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
@@ -27,7 +28,16 @@ const wait = (page, ms = 350) => page.waitForTimeout(ms);
 // `css` maps a route name to a stylesheet body; the page's own style.css is
 // replaced by `css.main` when given, so a scratch compile can be viewed without
 // touching the committed file.
+async function routeSourceSnapshot(page) {
+	if (process.env.GLITTER_UI_SOURCE_DIR) await page.route('**/js/**', (route) => {
+		const relative = new globalThis.URL(route.request().url()).pathname.split('/js/')[1];
+		const file = path.join(process.env.GLITTER_UI_SOURCE_DIR, 'js', relative);
+		return fs.existsSync(file) ? route.fulfill({ contentType: 'text/javascript', body: fs.readFileSync(file) }) : route.continue();
+	});
+}
+
 async function boot(page, css = {}) {
+	await routeSourceSnapshot(page);
 	for (const [name, body] of Object.entries(css)) {
 		if (name === 'main') continue;
 		await page.route(`**/css/__ab_${name}.css*`, (r) => r.fulfill({ contentType: 'text/css', body }));
@@ -145,11 +155,15 @@ async function desktopStates(page, visit, { set = 'all', viewport = 'desk' } = {
 	await page.evaluate(() => window.editor.layerManager.setSelection([]));
 	await wait(page);
 	await visit(`${tag} no-selection`, { shot: '#designPanel', tall: true });
-	for (const tool of ['brush', 'glitterFill', 'text', 'shape', 'select']) {
-		await page.evaluate(({ t, i }) => { window.editor.layerManager.setActiveLayer(i.fill); window.editor.setTool(t); }, { t: tool, i: ids });
+	for (const tool of ['brush', 'glitterFill', 'text', 'shape', 'select', 'crop']) {
+		await page.evaluate(({ t, i }) => { window.editor.layerManager.setActiveLayer(t === 'crop' ? i.shape : i.fill); window.editor.setTool(t); }, { t: tool, i: ids });
 		await wait(page);
 		await visit(`${tag} tool ${tool}`, { shot: '#designPanel', tall: true });
 	}
+	await page.evaluate((i) => { window.editor.setTool('select'); window.editor.layerManager.setActiveLayer(i.base); window.editor.autoGlitterManager.open(); }, ids);
+	await wait(page, 800);
+	await visit(`${tag} auto glitter`, { shot: '#autoGlitterSettingsSection', tall: true });
+	await page.evaluate(() => window.editor.autoGlitterManager.cancelSession());
 	await page.evaluate((i) => window.editor.layerManager.setActiveLayer(i.text), ids);
 	await forceOpen(page);
 	await wait(page);
@@ -277,8 +291,8 @@ async function phoneStates(page, visit, { set = 'all' } = {}) {
 	await page.evaluate((i) => {
 		window.editor.mobileManager.closeAllDrawers({ immediate: true });
 		window.editor.layerManager.setActiveLayer(i.text);
-		window.editor.mobileManager.renderBar();
-		window.editor.mobileManager.pressChip(window.editor.mobileManager.barEntries.find(entry => entry.title === 'Fill'));
+		window.editor.mobileManager.chipBar.render();
+		window.editor.mobileManager.chipBar.pressChip(window.editor.mobileManager.chipBar.entries.find(entry => entry.key === 'fill') || window.editor.mobileManager.chipBar.entries[0]);
 	}, ids);
 	await wait(page, 400);
 	await visit('phone Fill section');
@@ -335,7 +349,7 @@ async function backgroundRemovalStates(page, visit, viewport) {
 	await page.evaluate(() => {
 		const progress = editor.stickerManager.backgroundRemover.progress;
 		progress.started -= CONFIG.ui.taskProgress.slowPhaseNoticeMs;
-		progress.update(0, 'Removing background…', 0, 0, { indeterminate: true });
+		progress.update(0, 'Removing backgroundÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦', 0, 0, { indeterminate: true });
 	});
 	await visit(`${viewport} background removal still working`);
 	await page.evaluate(async () => {
@@ -349,4 +363,4 @@ async function backgroundRemovalStates(page, visit, viewport) {
 	await visit(`${viewport} background removal preview`);
 }
 
-module.exports = { chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates };
+module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates };

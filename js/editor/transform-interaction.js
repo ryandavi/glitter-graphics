@@ -322,7 +322,7 @@ snapTransformPosition(transform, position, options = {}) {
 		anchorSelect?.addEventListener('change', (event) => {
 			const active = activeManager();
 			if (!active || event.target.value === 'custom') return;
-			const [x, y] = event.target.value.split(',').map(Number);
+			const { fx: x, fy: y } = parseAnchorValue(event.target.value);
 			active.manager.updateTransform(active.layer.id, { anchor: { x, y } });
 			this.loadTransformSettings(active.layer, prefix);
 			this.saveState('Change anchor');

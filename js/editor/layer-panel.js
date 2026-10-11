@@ -147,10 +147,7 @@ setupLayerTypePickerListeners() {
 
 		const uploadAndUse = async (files) => {
 			const library = this.assetUploadLibrary || this.stickerLibrary;
-			for (const file of files) {
-				const item = await library.handleUserUpload(file);
-				if (item && !item.error && this.originalImage) await library.handleItemClick(item);
-			}
+			await openEditorFiles(this, files, { uploadLibrary: library });
 			this.modalManager.close('stickerUploadModal');
 		};
 

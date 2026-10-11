@@ -316,6 +316,7 @@ class GlitterEditor {
 			gifEncodingPipeline: this.gifEncodingPipeline
 		});
 		this.mp4Exporter = new Mp4Exporter(this.sceneCompositor, this.exportResultPresenter);
+		this.svgExporter = new SvgExporter(this, this.exportResultPresenter);
 		this.stillImageExporter = new StillImageExporter(this.sceneCompositor, this.exportResultPresenter, this.gifEncodingPipeline);
 		await Promise.all([
 			this.stickerManager.init(),

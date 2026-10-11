@@ -52,6 +52,8 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 	// own snapshot and never writes to the stored export settings.
 	async exportCurrentTarget({ fit = null } = {}) {
 		if (this.exportInProgress) return;
+		const selectedTarget = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
+		if (selectedTarget.isVector && !SvgExporter.count(this.layers).vectors) { this.showError('No visible vector layers to export.'); return; }
 		// Filter visible layers (ephemeral Auto Glitter previews never export)
 		const candidateLayers = this.layers.filter(l => {
 			if (!l.visible || l.isPreview) return false;
@@ -73,7 +75,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
 		const exportSettings = structuredClone(this.exportSettings);
 		if (!target.supportsTransparency) exportSettings.transparency = false;
-		const goal = fit || resolveFitTarget(exportSettings);
+		const goal = target.isVector ? null : fit || resolveFitTarget(exportSettings);
 		const activeExporter = this[target.exporter];
 		activeExporter.setFileName(this.getProjectFileName(target.extension));
 
@@ -101,7 +103,7 @@ const EDITOR_EXPORT_FLOW_METHODS = {
 		const exportParams = {
 			visibleLayers: visibleLayers,
 			glitterGifs: this.glitterLibrary.getRenderContent(),
-			canvasData: this.getExportCanvasData(),
+			canvasData: target.isVector ? { width: this.originalCanvas.width, height: this.originalCanvas.height } : this.getExportCanvasData(),
 			target,
 			timestamp: target.isStill && exportSettings.stillFrame === 'current' ? this.animationTicker.getCurrentTime() : 0,
 			// Composed frames shared by the attempts of a fit.

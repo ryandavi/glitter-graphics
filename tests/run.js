@@ -4,6 +4,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
+	{ file: 'unit/svg-geometry-unit.js', tags: ['unit', 'document', 'export'] },
+	{ file: 'ui/svg-verify.js', tags: ['document', 'export', 'panels'] },
 	{ file: 'ui/brush-target-settings-verify.js', tags: ['panels', 'mask'] },
 	{ file: 'ui/area-select-verify.js', tags: ['mask', 'export'] },
 	{ file: 'ui/animated-base-verify.js', tags: ['document', 'export'] },

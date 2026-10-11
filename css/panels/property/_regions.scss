@@ -18,20 +18,7 @@
 		gap: 0;
 		overflow: hidden;
 
-		> .panel-sticky-header,
 		> .panel-sticky-footer { flex: 0 0 auto; }
-
-		> .panel-sticky-header {
-			display: flex;
-			flex-direction: column;
-			gap: var(--spacing-sm);
-			padding: var(--spacing-md) 0;
-			border-bottom: 1px solid var(--color-border);
-
-			.property-card-body {
-				padding: 0 var(--property-gutter);
-			}
-		}
 
 		> .panel-sticky-footer {
 			border-top: 1px solid var(--color-border);
@@ -60,14 +47,14 @@
 	}
 }
 
-// ----- Auto Glitter ----------------------------------------------------------
-// The scroll-region internals, the color-match list and drag states live in
-// panels/_effects.scss.
-.property-section.auto-glitter-settings-section {
-	// The preview-mode toggle spans the panel: a mode switch, not a property
-	// control inset by the gutter.
-	.auto-glitter-preview-card .segmented-control {
-		width: 100%;
-		margin-inline: 0;
-	}
+// Header bands serve both panel modes and the Inspector's panel switch.
+.panel-sticky-header {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-md) 0;
+	border-bottom: 1px solid var(--color-border);
+	.property-card-body { padding: 0 var(--property-gutter); }
+	.segmented-control { width: 100%; margin-inline: 0; }
 }

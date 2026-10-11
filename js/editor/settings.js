@@ -145,6 +145,7 @@ initializeExportSettings() {
 ,
 	updateMatteColorUI() {
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
+		document.getElementById('matteColorRow').hidden = !target.usesMatte;
 		setSettingsRowInactive(
 			document.getElementById('matteColorRow'),
 			target.supportsTransparency && this.exportSettings.transparency
@@ -448,6 +449,7 @@ initializeExportSettings() {
 		const formatDescription = document.getElementById('exportFormatDescription');
 		if (formatDescription) {
 			let description = {
+				'still:svg': 'Export paths, shapes and editable text. Text needs the font installed; warp and text backing shapes are omitted. Textures and effects are omitted.',
 				'still:png': 'Export a lossless still image with optional transparency.',
 				'still:jpeg': 'Export a compressed still image. Transparent areas use the matte color.',
 				'still:gif': 'Export one selected frame as a palette-based GIF.',
@@ -455,9 +457,10 @@ initializeExportSettings() {
 				'animation:mp4': 'Export an H.264 video.'
 			}[target.id];
 			const pixelLooks = this.layers.filter((layer) => layer.visible && layer.type === LayerType.FILTER && GlitterFilters.tier(layer.filterData) === 3);
-			if (pixelLooks.length) description += ` Active pixel look${pixelLooks.length === 1 ? '' : 's'}: ${pixelLooks.map((layer) => GlitterFilter.summaryText(layer.filterData)).join(', ')}.`;
+			if (!target.isVector && pixelLooks.length) description += ` Active pixel look${pixelLooks.length === 1 ? '' : 's'}: ${pixelLooks.map((layer) => GlitterFilter.summaryText(layer.filterData)).join(', ')}.`;
 			if (target.isGif && pixelLooks.some((layer) => ['dither', 'posterize'].includes(layer.filterData.type))) description += ' Clean GIF Look avoids quantizing these pixels a second time.';
 			if (target.isGif && pixelLooks.some((layer) => layer.filterData.type === 'jpeg-crunch')) description += ' JPEG Crunch can make the GIF larger.';
+			if (target.isVector) { const count = SvgExporter.count(this.layers); description = `${count.vectors} vector layers. ${count.omitted} other layers are left out of an SVG. ${description}`; }
 			formatDescription.textContent = description;
 		}
 		document.querySelectorAll('#exportModeControl [data-export-mode]').forEach((button) => {
@@ -485,8 +488,8 @@ initializeExportSettings() {
 		if (formatRevert) formatRevert.disabled = target.format === CONFIG.export.defaults[target.isStill ? 'stillFormat' : 'animationFormat'];
 		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = !target.isGif);
 		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !target.isVideo);
-		document.getElementById('transparencySettingsRow').hidden = !target.supportsTransparency;
-		document.getElementById('exportStillFrameRow').hidden = !target.isStill || !this.hasAnimatedExportContent();
+		document.getElementById('transparencySettingsRow').hidden = !target.supportsTransparency || target.isVector;
+		document.getElementById('exportStillFrameRow').hidden = !target.isStill || target.isVector || !this.hasAnimatedExportContent();
 		document.getElementById('exportJpegQualityRow').hidden = !target.supportsJpegCompression;
 		document.querySelector('#exportDitherTemporalMode')?.closest('.settings-row')?.toggleAttribute('hidden', !target.supportsTemporalGifLook);
 		document.querySelectorAll('#exportSettingsGroups .settings-group').forEach((group) => {
@@ -509,6 +512,10 @@ initializeExportSettings() {
 		if (loopCountRow) loopCountRow.hidden = !isMp4 || usesTargetDuration;
 		const transparency = document.getElementById('exportTransparency');
 		if (transparency) transparency.disabled = !target.supportsTransparency;
+		for (const key of ['outputScale', 'targetSize', 'targetSizeKB', 'baseImage', 'watermarkEnabled', 'watermark']) {
+			const row = document.getElementById(EXPORT_SETTINGS_SCHEMA[key].element)?.closest('.settings-row');
+			if (row) row.hidden = Boolean(target.isVector);
+		}
 		this.updateMatteColorUI();
 		this.updateExportActionUI?.();
 		this.exportSettingsFilter?.apply();
@@ -832,23 +839,28 @@ async resetAllSettings() {
 	updateExportActionUI() {
 		if (!this.exportSettings) return;
 		const target = getActiveExportTarget(this.exportSettings, { mp4Supported: this.mp4ExportSupported !== false });
-		const hasContent = this.layers?.some((layer) => layerHasVisibleContent(layer)) && !this.autoGlitterManager?.isSessionActive();
+		const available = !this.autoGlitterManager?.isSessionActive();
+		const sceneContent = this.layers?.some((layer) => layerHasVisibleContent(layer)) && available;
+		const vectorContent = SvgExporter.count(this.layers).vectors > 0 && available;
+		const hasContent = target.isVector ? vectorContent : sceneContent;
 		const main = document.getElementById('exportGif');
 		if (main) {
 			main.disabled = !hasContent || this.exportInProgress;
-			main.title = target.exportLabel;
+			main.title = target.isVector && !hasContent ? 'No visible vector layers to export.' : target.exportLabel;
 			main.setAttribute('aria-label', target.exportLabel);
 			main.querySelector('.name').textContent = target.exportLabel;
 		}
 		const settingsExport = document.getElementById('exportSettingsExport');
 		if (settingsExport) {
 			settingsExport.disabled = !hasContent || this.exportInProgress;
+			settingsExport.title = target.isVector && !hasContent ? 'No visible vector layers to export.' : target.exportLabel;
 			settingsExport.querySelector('.name').textContent = target.exportLabel;
 		}
 		document.querySelectorAll('[data-export-target]').forEach((item) => {
 			const isMp4 = item.dataset.exportTarget === 'animation:mp4';
 			item.hidden = isMp4 && this.mp4ExportSupported === false;
-			item.disabled = !hasContent || this.exportInProgress || (isMp4 && this.mp4ExportSupported !== true);
+			const itemContent = EXPORT_TARGETS[item.dataset.exportTarget].isVector ? vectorContent : sceneContent;
+			item.disabled = !itemContent || this.exportInProgress || (isMp4 && this.mp4ExportSupported !== true);
 			const current = item.dataset.exportTarget === target.id;
 			item.classList.toggle('app-menu-item-current-target', current);
 			if (current) item.setAttribute('aria-current', 'true'); else item.removeAttribute('aria-current');

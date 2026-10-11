@@ -133,6 +133,7 @@
 
         <div class="guide-subsection">
             <h4 id="uploading-images">Start a Project</h4>
+            <p>Drop an SVG onto the workspace or choose it in Open Image or sticker upload to add editable Path layers. Supported outlines are grouped by paint. With no document open, it creates a transparent canvas. SVG stylesheets with ordinary class, id and element selectors are supported, along with solid strokes, opacity and pixel units. Unused filter, mask and clipping definitions do not block import. SVGs using images, text, filters, masks or clipping open as images, with the reason in the status line. Gradient and pattern paints currently use their first color. A file that exceeds the layer limit becomes one compound path using its first paint.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -566,6 +567,7 @@
 
         <div class="guide-subsection">
             <h4 id="crop-tool">Canvas Size &amp; Crop</h4>
+            <p>Crop opens Canvas in the Inspector. The panel switch keeps the selected layer's properties reachable and the header follows the open panel. The Canvas Size Anchor row uses the same nine-point select as layer anchors.</p>
             <p>The canvas size is the size of the exported image. Change it with the {ui-tool:crop} tool or in the Base Image settings. Both change the canvas bounds without scaling your layers, except the <strong>Image</strong> option, which scales everything.</p>
 
             <div class="guide-item">
@@ -1001,6 +1003,8 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-eye"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
+                    <p><strong>Source</strong> ? Hue, Saturation and Brightness adjust the colors before Auto Glitter finds regions and matches glitters. Release a slider to update the analysis. Original shows the untouched Base Image; Flat and Glitter show the adjusted result. These values reopen with Edit on a previous set. Vibrant boosts the matched glitter after analysis.</p>
+                    <p><strong>Hue correction limit</strong> controls how far Auto Glitter may recolor a matched swatch, from 0? (keep its hue) to 180? (any hue). The default is 20?. Turn off <strong>Tune matched glitter hue</strong> to disable hue correction. Saturation still follows Natural or Vibrant, and monochrome matches remove color casts. The limit reopens with Edit on a previous set.</p>
                     <p><strong>Compare</strong> – Use <strong>Original / Flat / Glitter</strong> at the top of the panel to compare the source image, the flattened posterized colors, and the final glitter. The create and cancel actions stay at the bottom. <strong>Palette</strong>, <strong>Color Matches</strong>, and <strong>Advanced</strong> scroll between them.</p>
                 </div>
             </div>
@@ -2136,6 +2140,7 @@
 
         <div class="guide-subsection">
             <h4 id="exporting-process">Exporting</h4>
+            <p>Choose Still Image and SVG in Export Settings for paths, shapes and editable text at canvas size. The dialog counts the vector layers and the layers left out. SVG leaves out textures, effects, animation and raster layers. Editable text needs its font installed and omits warp and backing shapes.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">

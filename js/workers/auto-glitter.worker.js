@@ -1,12 +1,16 @@
 importScripts('../effects/palette-analysis.js?v=41b8b251');
 
+importScripts('../effects/color-adjust.js?v=7bd60e2a');
+
 let segmentCache = null;
 
 self.onmessage = ({ data }) => {
 	const requestId = data.requestId;
 	try {
 		if (data.type === 'segment') {
-			segmentCache = GlitterPaletteAnalysis.segmentImage(new Uint8ClampedArray(data.pixels), data.width, data.height, data.options);
+			const imageData = { data: new Uint8ClampedArray(data.pixels), width: data.width, height: data.height };
+			applyColorAdjustToImageData(imageData, data.sourceAdjust);
+			segmentCache = GlitterPaletteAnalysis.segmentImage(imageData.data, data.width, data.height, data.options);
 			self.postMessage({ type: 'segmented', requestId, visiblePixelCount: segmentCache.visiblePixelCount });
 			return;
 		}

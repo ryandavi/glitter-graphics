@@ -436,6 +436,10 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Colors', region: 'scroll', sections: [
+				{ kind: 'section', title: 'Source', summary: { id: 'autoGlitterSourceSummary', text: 'Off' }, sets: [{ rows: [
+					...['hue', 'saturation', 'brightness'].map((key) => ({ kind: 'slider', id: `autoGlitterSource${key.charAt(0).toUpperCase()}${key.slice(1)}`, slider: key })),
+					{ kind: 'note', text: 'Adjust colors before analysis. Original preview and the Base Image stay unchanged.' }
+				] }] },
 				{ kind: 'section', title: 'Palette', sets: [
 					{ rows: [
 						// The Library's own style picker, filled by AutoGlitterManager.
@@ -450,7 +454,7 @@ const PANEL_SCHEMAS = {
 							countLead: [{ kind: 'toggle', id: 'autoGlitterAutoCount', label: 'Auto colors', checked: CONFIG.tools.autoGlitter.defaults.autoColorCount, title: 'Let the image decide how many colors become layers' }],
 							styleTitles: {
 								natural: 'Give layers to the largest areas of the image without boosting saturation',
-								vibrant: 'Give layers to colorful accents first and boost glitter saturation'
+								vibrant: 'Give layers to colorful accents first and boost glitter saturation after matching; Source saturation acts before analysis'
 							}
 						}),
 						{ kind: 'note', text: 'Natural follows the largest areas of the image; Vibrant keeps small colorful accents.' },
@@ -460,7 +464,8 @@ const PANEL_SCHEMAS = {
 					{ label: 'Regions', rows: [
 						{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels' },
 						{ kind: 'toggle', id: 'autoGlitterCleanEdges', label: 'Clean edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
-						{ kind: 'toggle', id: 'autoGlitterTuneHue', label: 'Tune matched glitter hue', checked: true, revert: true, title: 'Apply a small hue correction to improve the closest glitter match' }
+						{ kind: 'toggle', id: 'autoGlitterTuneHue', label: 'Tune matched glitter hue', checked: true, revert: true, title: 'Adjust the matched swatch hue within the chosen limit' },
+						{ kind: 'slider', id: 'autoGlitterHueLimit', slider: 'paletteHueLimit', title: 'Maximum hue change to a matched swatch: 0 keeps its hue, 180 allows any hue. Saturation follows the palette style.' }
 					] }
 				] },
 				{ kind: 'section', title: 'Color matches', classes: 'auto-glitter-review', sets: [
@@ -1142,8 +1147,7 @@ const PANEL_SCHEMAS = {
 						{ id: 'canvasSizeHeight', mark: 'H', label: 'Height', min: 1, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
 					{ kind: 'note', id: 'canvasSizeLimitMessage', classes: 'canvas-size-limit-message', attrs: { role: 'status' } },
-					{ kind: 'labeled', label: 'Anchor', stacked: true, revert: 'canvasSizeAnchor', control: { kind: 'host', id: 'canvasSizeAnchor',
-						classes: 'anchor-grid', attrs: { role: 'radiogroup', 'aria-label': 'Canvas resize anchor' } } },
+					{ kind: 'select', id: 'canvasSizeAnchor', label: 'Anchor', options: ANCHOR_SELECT_OPTIONS, revert: 'canvasSizeAnchor' },
 					{ kind: 'toggle', id: 'canvasSizeRelative', label: 'Relative', revert: 'canvasSizeRelative' }
 				] },
 				{ attrs: { 'data-size-modes': 'image' }, id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', rows: [

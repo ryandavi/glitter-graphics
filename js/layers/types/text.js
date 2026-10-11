@@ -1,6 +1,13 @@
 'use strict';
 
 registerLayerType(LayerType.TEXT_GLITTER, {
+	vectorGeometry: async (editor, layer) => {
+		const data = layer.textData;
+		await FontLibrary.ensureLoaded(data.fontId);
+		const entry = editor.textGlitterManager.getMeasurementEntry(layer);
+		return { fill: data.fill, offset: { x: entry.layoutOffsetX - entry.width / 2, y: entry.layoutOffsetY - entry.height / 2 },
+			text: { family: FontLibrary.getFamily(FontLibrary.getFont(data.fontId)), size: data.fontSize, weight: data.fontWeight, style: data.fontStyle, spacing: data.letterSpacing, decoration: [data.decoration?.underline ? 'underline' : '', data.decoration?.strikethrough ? 'line-through' : ''].filter(Boolean).join(' ') || 'none', runs: entry.layout.runs } };
+	},
 	assetRefs: (layer) => [{ kind: 'font', id: layer.textData?.fontId }],
 	rasterizesScale: true,
 	describe: (layer, editor) => ({

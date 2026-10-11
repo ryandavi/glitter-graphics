@@ -443,7 +443,7 @@
 
 		&.sheetOpen #helpfulMessage { display: none; }
 
-		.inspector-section > .inspector-switch { display: none; }
+		.inspector-section > #inspectorSwitch .panel-sticky-header { display: none; }
 
 		// Every sheet's bar ends in one line, and the section under it brings
 		// none of its own (a later group's top line in the column). The

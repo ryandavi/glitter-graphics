@@ -32,7 +32,10 @@ setupImageListeners() {
 		openImageBtn?.addEventListener('click', () => imageUpload?.click());
 
 		if (imageUpload) {
-			imageUpload.addEventListener('change', (e) => this.loadImage(e));
+			imageUpload.addEventListener('change', async (e) => {
+				await openEditorFiles(this, Array.from(e.target.files || []), { asDocument: true });
+				e.target.value = '';
+			});
 		}
 
 		if (projectUpload) {
@@ -78,30 +81,7 @@ setupImageListeners() {
 			setDropActive(false);
 			const files = Array.from(event.dataTransfer?.files || []);
 			if (!files.length) return;
-			const project = files.find((file) => file.type === 'application/json' || file.name.toLowerCase().endsWith('.json'));
-			if (project) {
-				await this.openProjectFile(project);
-				return;
-			}
-			const images = files.filter((file) => file.type.startsWith('image/'));
-			if (!images.length) {
-				this.showError('Drop an image or a saved Glitter project.');
-				return;
-			}
-			if (!this.originalImage) {
-				const loaded = await this.loadImage({ target: { files: [images.shift()] } });
-				if (loaded === false || !this.originalImage) return;
-			}
-			for (const file of images) {
-				const gate = this.layerManager.canAddLayers();
-				if (!gate.ok) {
-					this.showError(gate.reason);
-					break;
-				}
-				const sticker = await this.stickerManager.handleUserUpload(file, { navigate: false });
-				if (sticker && !sticker.error) await this.stickerManager.createStickerLayer(sticker.id);
-			}
-			if (images.length) this.updateStatus(images.length === 1 ? 'Image added as a new layer' : `${images.length} images added as new layers`);
+			await openEditorFiles(this, files);
 		});
 
 		this.syncDocumentStartState();

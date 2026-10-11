@@ -8,7 +8,7 @@ Adding a new layer type should need four things:
 
 1. A manager class that implements the manager interface below.
 2. One `LayerType` constant in `js/core/layer-types.js`, and one definition file `js/layers/types/<type>.js` that calls `registerLayerType(LayerType.X, { … })`. Its `paintSlots` list declares every fill, border, shadow, bevel or background the type paints with.
-3. A `buildExportPlan(layer, context)` method on the manager (canvas export for every format).
+3. A `buildExportPlan(layer, context)` method on the manager (raster export). Vector types additionally declare the optional `vectorGeometry` hook below.
 4. One `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js`, with guide titles generated from the schema by `node tools/build-modals.js`.
 
 If a new type needs a branch anywhere else, treat that as an architecture bug: fix the dispatch site so it reads `LAYER_UI_CONFIG`, instead of adding one more `if (layer.type === …)`.
@@ -42,6 +42,7 @@ Layer controllers do not extend `ContentManager`. Asset lookup, filtering, uploa
 Required for an addable type:
 
 - `displayName`: human-readable type label.
+- `vectorGeometry(editor, layer)`: optional SVG capability, returning (or resolving to) `{ subpaths, fill, stroke?, fillRule?, offset? }`, or `{ text: { family, size, weight, style, spacing, runs: [{ text, x, baseline }] }, fill, offset? }`. Geometry is layer-local; `offset` shifts its origin before the canonical layer transform. Return no effects or raster sources. `SvgExporter` discovers vector types from this hook, without type branches. Text uses the measured flat layout and an installed font; warp and backing shapes are omitted.
 - `assetRefs(layer)`: optional references `{ kind: 'sticker' | 'font' | 'shape' | 'image', id }`. Project preflight and embedding resolve them by kind. `getLayerAssetRefs` also includes `imageRef` from declared paint slots and parked drafts. Base lookup uses `LayerManager.getBaseLayer()` or `editor.getBaseLayer()`.
 - `serialization`: how the layer is saved to history, clipboard and project files. Either `{ dataKey, extraKeys, omit, defaults, defaultName, normalize, hydrate, includeMaskVersion, forceLocked }`, or `{ custom: { serialize, deserialize } }` naming manager methods. See `LayerManager.serializeLayer`.
 - `managerKey`: the editor property holding the manager instance.

@@ -159,7 +159,7 @@ function buildFitTable(fit) {
 function buildExportReport({ blob, fileName, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null, platform = {} }) {
 	const plan = target.isAnimation ? timelinePlan : null;
 	const analysis = target.isGif ? (colorAnalysis || plan?.colorAnalysis || null) : null;
-	const uploadLimits = resolveUploadLimits(blob.size, CONFIG.export.sizeTargets);
+	const uploadLimits = target.isVector ? [] : resolveUploadLimits(blob.size, CONFIG.export.sizeTargets);
 	const facts = {
 		size: formatBytes(blob.size),
 		sizeWarning: uploadLimits.length > 0,

@@ -4,6 +4,7 @@
 // a fill and a stroke. The body (fill plus stroke, each only while it renders)
 // is what the outline, shadow, bevel and sparkles are derived from.
 registerLayerType(LayerType.PATH, {
+	vectorGeometry: (editor, layer) => ({ subpaths: layer.pathData.subpaths, fill: layer.pathData.fill, stroke: layer.pathData.stroke, fillRule: layer.pathData.fillRule }),
 	describe: (layer, editor) => {
 		const fill = getLayerFillSlot(layer);
 		const paint = fill?.mode !== 'none' ? fill : layer.pathData?.stroke || fill;

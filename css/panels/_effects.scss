@@ -311,7 +311,6 @@
 	// `.section.has-scroll-region` block in panels/property/_regions.scss. Only the
 	// section-specific bits stay here.
 
-	.auto-glitter-preview-card .segmented-control,
 	.auto-glitter-palette-style {
 		width: 100%;
 	}
@@ -333,7 +332,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-sm);
-
+		margin: 0;
+		max-width: unset;
 	}
 
 	.auto-glitter-match {

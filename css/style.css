@@ -6672,13 +6672,9 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
   .design-panel > .section.inspector-section:not(.is-open) {
     flex: 0 0 auto;
   }
-  .design-panel > .section.inspector-section:not(.is-open) > .inspector-switch,
+  .design-panel > .section.inspector-section:not(.is-open) > #inspectorSwitch .panel-sticky-header,
   .design-panel > .section.inspector-section:not(.is-open) > .inspector-body {
     display: none;
-  }
-  .design-panel > .section.inspector-section > .inspector-switch {
-    border-top: 1px solid var(--color-border);
-    border-bottom: 0;
   }
   .design-panel > .section.inspector-section > .inspector-body {
     border-top: 1px solid var(--color-border);
@@ -6687,10 +6683,8 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
 .design-panel > .section.inspector-section > .section-header > .section-header-title > .section-header-title-text {
   flex-shrink: 0;
 }
-.design-panel > .section.inspector-section > .inspector-switch {
+.design-panel > .section.inspector-section > #inspectorSwitch {
   flex: 0 0 auto;
-  padding: var(--spacing-sm) var(--property-gutter);
-  border-bottom: 1px solid var(--color-border);
 }
 .design-panel > .section.inspector-section > .inspector-body {
   display: flex;
@@ -7151,39 +7145,6 @@ body.tool-text .text-hover-baselines {
   min-width: 148px;
 }
 
-.anchor-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  width: 66px;
-  height: 66px;
-  flex-shrink: 0;
-}
-
-.anchor-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: var(--color-bg-tertiary);
-  border: none;
-  outline: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: var(--font-size-xs);
-  line-height: 1;
-  transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
-}
-.anchor-cell:hover {
-  outline-color: var(--color-border-hover);
-  color: var(--color-text-primary);
-}
-.anchor-cell.active {
-  background: var(--color-accent);
-  outline-color: var(--color-accent);
-  color: var(--color-bg-primary);
-}
-
 .asset-grid > .shape-gallery-option {
   display: flex;
   align-items: center;
@@ -7528,7 +7489,6 @@ body.tool-text .text-hover-baselines {
   letter-spacing: 0;
 }
 
-.auto-glitter-settings-section .auto-glitter-preview-card .segmented-control,
 .auto-glitter-settings-section .auto-glitter-palette-style {
   width: 100%;
 }
@@ -7544,6 +7504,8 @@ body.tool-text .text-hover-baselines {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  margin: 0;
+  max-width: unset;
 }
 .auto-glitter-settings-section .auto-glitter-match {
   flex-wrap: wrap;
@@ -8947,19 +8909,8 @@ body.tool-text .text-hover-baselines {
   gap: 0;
   overflow: hidden;
 }
-.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-header,
 .section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-footer {
   flex: 0 0 auto;
-}
-.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-header .property-card-body {
-  padding: 0 var(--property-gutter);
 }
 .section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-footer {
   border-top: 1px solid var(--color-border);
@@ -8984,7 +8935,18 @@ body.tool-text .text-hover-baselines {
   max-width: 100%;
 }
 
-.property-section.auto-glitter-settings-section .auto-glitter-preview-card .segmented-control {
+.panel-sticky-header {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.panel-sticky-header .property-card-body {
+  padding: 0 var(--property-gutter);
+}
+.panel-sticky-header .segmented-control {
   width: 100%;
   margin-inline: 0;
 }
@@ -12272,7 +12234,7 @@ body.modal-open {
   body.phone-bar.sheetOpen #helpfulMessage {
     display: none;
   }
-  body.phone-bar .inspector-section > .inspector-switch {
+  body.phone-bar .inspector-section > #inspectorSwitch .panel-sticky-header {
     display: none;
   }
   body.phone-bar .main-content > .design-panel > .section:not(.design-gallery-section) > .section-header {

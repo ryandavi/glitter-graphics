@@ -7,20 +7,13 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 	},
 
 	documentSizeDefaults() {
-		return { operation: 'image', scale: { percent: 100, textures: true, effects: true }, anchor: 'center', relative: false, bounds: null };
+		return { operation: 'image', scale: { percent: 100, textures: true, effects: true }, anchor: '0.5,0.5', relative: false, bounds: null };
 	},
 
 	setupCanvasSizeControls() {
 		this.documentSize = this.documentSizeDefaults();
 		const bind = (id, event, setter) => document.getElementById(id)?.addEventListener(event, (event) => setter(event.target));
-		const grid = document.getElementById('canvasSizeAnchor');
-		grid?.replaceChildren(...ANCHOR_POINTS.map((anchor) => {
-			const button = document.createElement('button');
-			button.type = 'button'; button.className = 'anchor-cell'; button.dataset.anchor = anchor.id;
-			button.setAttribute('role', 'radio'); button.title = anchor.label;
-			button.addEventListener('click', () => this.setCanvasAnchor(anchor.id));
-			return button;
-		}));
+		bind('canvasSizeAnchor', 'change', (input) => this.setCanvasAnchor(input.value));
 		['width', 'height'].forEach((axis) => {
 			bind(`canvasSize${axis === 'width' ? 'Width' : 'Height'}`, 'input', (input) => this.setCanvasBoundsDimension(axis, input.value === '' ? NaN : Number(input.value)));
 			bind(`scaleDesign${axis === 'width' ? 'Width' : 'Height'}`, 'input', (input) => this.setDocumentScale({ percent: Number(input.value) / this.originalCanvas[axis] * 100 }));
@@ -52,7 +45,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		const fields = {
 			canvasSizeWidth: { read: () => this.canvasBounds?.rect.width || this.originalCanvas.width, default: () => this.originalCanvas.width, set: (value) => this.setCanvasBoundsDimension('width', value, false) },
 			canvasSizeHeight: { read: () => this.canvasBounds?.rect.height || this.originalCanvas.height, default: () => this.originalCanvas.height, set: (value) => this.setCanvasBoundsDimension('height', value, false) },
-			canvasSizeAnchor: { read: () => this.documentSize.anchor, default: () => 'center', set: (value) => this.setCanvasAnchor(value) },
+			canvasSizeAnchor: { read: () => this.documentSize.anchor, default: () => this.documentSizeDefaults().anchor, set: (value) => this.setCanvasAnchor(value) },
 			canvasSizeRelative: { read: () => this.documentSize.relative, default: () => false, set: (value) => this.setCanvasRelative(value) },
 			canvasExtensionMode: { read: () => this.canvasBounds?.extension.mode || new CanvasBounds(this).defaults().extension.mode, default: () => new CanvasBounds(this).defaults().extension.mode, set: (value) => this.ensureCanvasBounds().setExtension({ mode: value }) },
 			canvasExtensionColor: { read: () => this.canvasBounds?.extension.color || new CanvasBounds(this).defaults().extension.color, default: () => new CanvasBounds(this).defaults().extension.color, set: (value) => this.ensureCanvasBounds().setExtension({ color: value }) },
@@ -84,9 +77,10 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		this.syncCanvasBoundsViews();
 	},
 	setCanvasAnchor(anchor) {
+		if (!parseAnchorValue(anchor)) return;
 		this.documentSize.anchor = anchor;
 		const bounds = this.ensureCanvasBounds();
-		const point = ANCHOR_POINTS.find((point) => point.id === anchor);
+		const point = parseAnchorValue(anchor);
 		bounds.setRect({ ...bounds.rect, x: (this.originalCanvas.width - bounds.rect.width) * point.fx, y: (this.originalCanvas.height - bounds.rect.height) * point.fy });
 	},
 	setCanvasRelative(relative) { this.documentSize.relative = relative; this.syncCanvasBoundsViews(); },
@@ -94,7 +88,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		const bounds = this.ensureCanvasBounds();
 		const size = { width: bounds.rect.width, height: bounds.rect.height, [axis]: value + (relative ? this.originalCanvas[axis] : 0) };
 		if (bounds.ratio) size[axis === 'width' ? 'height' : 'width'] = axis === 'width' ? size.width * bounds.ratio.h / bounds.ratio.w : size.height * bounds.ratio.w / bounds.ratio.h;
-		bounds.setSize(size.width, size.height, ANCHOR_POINTS.find((point) => point.id === this.documentSize.anchor), `size-${axis}`);
+		bounds.setSize(size.width, size.height, parseAnchorValue(this.documentSize.anchor), `size-${axis}`);
 	},
 	setCanvasBoundsRatio(id) {
 		const option = getCanvasRatioOptions(this).find((option) => option.id === id);
@@ -193,6 +187,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		const check = (id, value) => { const node = document.getElementById(id); if (node) node.checked = value; };
 		write('canvasSizeWidth', rect.width - (relative ? this.originalCanvas.width : 0));
 		write('canvasSizeHeight', rect.height - (relative ? this.originalCanvas.height : 0));
+		write('canvasSizeAnchor', anchor);
 		write('canvasBoundsSource', bounds?.source || 'custom');
 		write('artworkCropPadding', bounds?.padding || 0);
 		check('canvasSizeRelative', relative);
@@ -207,10 +202,7 @@ const CANVAS_SIZE_CONTROL_METHODS = {
 		document.querySelectorAll('#documentSizeGroup [data-size-mode]').forEach((button) => {
 			const active = button.dataset.sizeMode === operation; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
 		});
-		document.querySelectorAll('#canvasSizeAnchor [data-anchor]').forEach((button) => {
-			const point = ANCHOR_POINTS.find((point) => point.id === button.dataset.anchor);
-			const active = point.id === anchor; button.classList.toggle('active', active); button.setAttribute('aria-checked', String(active)); button.textContent = active ? '\u2022' : point.arrow;
-		});
+
 		const extension = bounds?.extension || new CanvasBounds(this).defaults().extension;
 		write('canvasExtensionColor', extension.color);
 		document.querySelectorAll('#canvasExtensionMode [data-extension-mode]').forEach((button) => {

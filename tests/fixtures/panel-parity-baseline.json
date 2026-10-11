@@ -222,8 +222,8 @@
 		},
 		{
 			"id": "canvasSizeAnchor",
-			"tag": "div",
-			"classes": "anchor-grid",
+			"tag": "select",
+			"classes": "",
 			"parent": "canvasSizePanel"
 		},
 		{

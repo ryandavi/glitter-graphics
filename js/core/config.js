@@ -154,12 +154,12 @@ const CONFIG = deepFreeze({
 		nineSlice: { maxTiles: 256 },
 		autoGlitter: {
 			// `glitterScope` is a Library rail selection: the style (and set) matches are drawn from.
-			defaults: { colorLayers: FIELDS.paletteColorCount.value, autoColorCount: true, glitterScope: { root: 'sparkle', set: null }, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, cleanEdges: true, detail: FIELDS.paletteDetail.value },
+			defaults: { sourceAdjust: { hue: FIELDS.hue.value, saturation: FIELDS.saturation.value, brightness: FIELDS.brightness.value }, colorLayers: FIELDS.paletteColorCount.value, autoColorCount: true, glitterScope: { root: 'sparkle', set: null }, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, maxHueShift: FIELDS.paletteHueLimit.value, cleanEdges: true, detail: FIELDS.paletteDetail.value },
 			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },
 			// `autoColorLayers` caps the count the image picks for itself.
 			limits: { minColorLayers: 2, maxColorLayers: 20, autoColorLayers: 8, maxSamples: 24000 },
 			timing: { reduceThrottleMs: 80 },
-			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, swatchReusePenalty: 0.006, autoMinImportanceShare: 0.04 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: FIELDS.paletteHueLimit.value, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, swatchReusePenalty: 0.006, autoMinImportanceShare: 0.04 },
 			cleanup: {
 				aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
 				despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
@@ -296,7 +296,7 @@ const CONFIG = deepFreeze({
 		},
 		assetUpload: {
 			maxUploadSize: 10 * 1024 * 1024,
-			allowedTypes: ['image/png', 'image/jpeg', 'image/gif'],
+			allowedTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
 			renderingRulesPath: 'data/rendering-rules.json'
 		},
 		glitter: {

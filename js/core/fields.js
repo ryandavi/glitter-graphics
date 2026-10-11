@@ -65,6 +65,7 @@ const FIELDS = Object.freeze({
 	filterRgbSplit: { label: 'Offset', unit: 'px', min: 0, max: 40, step: 1, value: 6 },
 	paletteColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 	paletteMerge: { label: 'Combine similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
+	paletteHueLimit: { label: 'Hue correction limit', unit: '?', min: 0, max: 180, step: 1, value: 20 },
 	paletteDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
 	pixelEffectsPixelSize: { label: 'Pixel size', unit: 'px', min: 1, max: 8, step: 1, value: 1 },
 	pixelEffectsStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },

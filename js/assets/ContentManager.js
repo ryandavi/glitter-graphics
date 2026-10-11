@@ -724,7 +724,7 @@ class ContentManager {
 
 	validateUpload(file) {
 		if (!CONFIG.tools.assetUpload.allowedTypes.includes(file.type)) {
-			this.editor.showError('Please upload a PNG, JPG, or GIF image');
+			this.editor.showError('Please upload a PNG, JPG, GIF or SVG image');
 			return false;
 		}
 
