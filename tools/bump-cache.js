@@ -48,4 +48,6 @@ walk(path.join(root, 'js')).filter((file) => file.endsWith('.js')).forEach((file
 	if (next !== original) fs.writeFileSync(file, next, 'utf8');
 });
 
+require('./build-shell').main([]);
+
 process.stdout.write(`Stamped ${updatedCount} local asset references\n`);

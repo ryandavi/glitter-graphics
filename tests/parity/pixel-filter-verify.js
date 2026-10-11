@@ -13,6 +13,7 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
 	await page.waitForFunction(() => window.editor?.settingsStore);
+	await page.evaluate(async () => { await window.editor.modalManager.open('settingsModal'); });
 	await page.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((modal) => modal.classList.remove('visible')));
 	await page.evaluate(() => window.editor.loadBlankImage(24, 16, '#7b3fd1'));
 	await page.waitForFunction(() => window.editor.originalImage != null);

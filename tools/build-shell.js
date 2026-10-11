@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const scripts = require('../js/script-manifest.json');
 const { getAppRegistries, escapeHtml } = require('./build-modals');
 
 const root = path.resolve(__dirname, '..');
@@ -35,7 +37,7 @@ function renderStartPresets(indent, registries) {
 		`${indent}\t\t<span class="workspace-start-preset-shape" style="aspect-ratio: ${escapeHtml(preset.width)} / ${escapeHtml(preset.height)};"></span>`,
 		`${indent}\t</span>`,
 		`${indent}\t<strong class="action-card-title">${escapeHtml(preset.label)}</strong>`,
-		`${indent}\t<span class="action-card-detail">${escapeHtml(preset.width)} × ${escapeHtml(preset.height)} px</span>`,
+		`${indent}\t<span class="action-card-detail">${escapeHtml(preset.width)} Ã— ${escapeHtml(preset.height)} px</span>`,
 		`${indent}</button>`
 	].join('\n')).join('\n');
 }
@@ -46,6 +48,45 @@ function replaceRegion(source, name, render) {
 	if (!match) throw new Error(`Missing shell:${name} marker pair in index.html`);
 	const indent = match[1];
 	return source.replace(pattern, `${indent}<!-- shell:${name}:start -->\n${render(indent)}\n${indent}<!-- shell:${name}:end -->`);
+}
+
+function renderScripts(indent) {
+	const urls = scripts.boot.map((file) => {
+		const hash = crypto.createHash('md5').update(fs.readFileSync(path.join(root, file))).digest('hex').slice(0, 8);
+		return `${file}?v=${hash}`;
+	});
+	return `${indent}<script>
+${indent}	(() => {
+${indent}		const sources = ${JSON.stringify(urls)};
+${indent}		const stylesheet = document.querySelector('link[rel="stylesheet"]');
+${indent}		let started = false;
+${indent}		const start = () => {
+${indent}			if (started) return;
+${indent}			started = true;
+${indent}			const scripts = document.createDocumentFragment();
+${indent}			for (const src of sources) {
+${indent}				const script = document.createElement('script');
+${indent}				script.async = false;
+${indent}				script.src = src;
+${indent}				script.onerror = () => {
+${indent}					document.body.classList.add('boot-failed');
+${indent}					const startCard = document.getElementById('workspaceStart');
+${indent}					startCard.inert = false;
+${indent}					startCard.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+${indent}					const reload = document.getElementById('bootReload');
+${indent}					reload.hidden = false;
+${indent}					reload.disabled = false;
+${indent}					reload.onclick = () => location.reload();
+${indent}					reload.textContent = 'Could not load the editor. Reload';
+${indent}				};
+${indent}				scripts.appendChild(script);
+${indent}			}
+${indent}			document.body.appendChild(scripts);
+${indent}		};
+${indent}		stylesheet.addEventListener('load', start, { once: true });
+${indent}		if (stylesheet.sheet) start();
+${indent}	})();
+${indent}</script>`;
 }
 
 function buildShell(source) {
@@ -60,6 +101,7 @@ function buildShell(source) {
 			CONFIG.tools.text.fontsManifest];
 		return manifests.map((file) => `${indent}<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="${escapeHtml(file)}?v=${escapeHtml(CONFIG.app.assets.manifestVersion)}">`).join('\n');
 	});
+	output = replaceRegion(output, 'scripts', renderScripts);
 	return output;
 }
 

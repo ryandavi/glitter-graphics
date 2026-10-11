@@ -1,6 +1,6 @@
 // Classic native scrollbars reserve width even with a transparent track.
 // One floating bar serves opted-in vertical regions without changing overflow.
-document.addEventListener('DOMContentLoaded', () => {
+function initializeScrollRegions() {
 	const selector = '.scroll-region';
 	// Horizontal rails, native inputs and the canvas viewport keep their own treatment.
 	const hosts = [
@@ -240,4 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		deferHide();
 	});
 	document.documentElement.classList.add('has-overlay-scrollbars');
-}, { once: true });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeScrollRegions, { once: true });
+else initializeScrollRegions();

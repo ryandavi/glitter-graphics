@@ -12,6 +12,19 @@ async function main() {
 	const browser = await chromium.launch({ headless: true });
 	try {
 		const page = await browser.newPage({ viewport: { width: 1200, height: 760 } });
+		await page.addInitScript(() => {
+			performance.setResourceTimingBufferSize(2000);
+			window.bootScriptOrder = [];
+			const appendChild = Node.prototype.appendChild;
+			Node.prototype.appendChild = function (node) {
+				if (node.tagName === 'SCRIPT' && node.src) node.addEventListener('load', () => window.bootScriptOrder.push(new URL(node.src).pathname));
+				return appendChild.call(this, node);
+			};
+		});
+		const cdp = await page.context().newCDPSession(page);
+		await cdp.send('Network.enable');
+		await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 1.6 * 1024 * 1024 / 8, uploadThroughput: 750 * 1024 / 8 });
+		await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
 		const manifestRequests = [];
 		// Source boot exceeds the browser's default Resource Timing buffer.
 		const resourceRequests = [];
@@ -21,11 +34,21 @@ async function main() {
 			requestStarts.push(request);
 			if (/\/data\/(?:shapes|brushes|fonts|glitter\.index|stickers\.index)\.json\?/u.test(request.url())) manifestRequests.push(request.url());
 		});
-		await page.goto(APP_URL, { waitUntil: 'networkidle' });
+		await page.goto(APP_URL, { waitUntil: 'networkidle', timeout: 180000 });
 		await page.waitForFunction(() => (
 			window.editor?.glitterLibrary.content.length > 0
 			&& window.editor?.stickerLibrary.content.length > 0
 		));
+		const scriptOrder = await page.evaluate(() => ({
+			order: window.bootScriptOrder,
+			cssEnd: performance.getEntriesByType('resource').find((entry) => new URL(entry.name).pathname.endsWith('/css/style.css')).responseEnd,
+			requests: performance.getEntriesByType('resource').filter((entry) => entry.initiatorType === 'script').map((entry) => ({ path: new URL(entry.name).pathname, start: entry.startTime }))
+		}));
+		const bootScripts = require('../../js/script-manifest.json').boot;
+		assert(scriptOrder.order.length === bootScripts.length && scriptOrder.order.every((file, i) => file.endsWith('/' + bootScripts[i])), 'Boot scripts did not execute in manifest order');
+		assert(scriptOrder.requests.filter((entry) => bootScripts.some((file) => entry.path.endsWith('/' + file))).every((entry) => entry.start >= scriptOrder.cssEnd), 'A boot script started before the stylesheet response ended');
+		await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+		await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 		for (const file of ['shapes', 'brushes', 'fonts', 'glitter.index', 'stickers.index']) {
 			assert(manifestRequests.filter((url) => new URL(url).pathname.endsWith(`/data/${file}.json`)).length === 1,
 				`${file} manifest preload was not reused by the loader`);
