@@ -1,5 +1,6 @@
 {
 	"recommendations": [
-		"fabiospampinato.vscode-highlight"
+		"fabiospampinato.vscode-highlight",
+		"glenn2223.live-sass"
 	]
 }

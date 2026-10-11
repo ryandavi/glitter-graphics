@@ -28,7 +28,8 @@ jobs:
         shell: bash
         run: |
           npx sass css/style.scss /tmp/style.css --no-source-map
-          diff -u css/style.css /tmp/style.css
+          # Live Sass Compiler writes no final newline and the CLI does; ignore only that.
+          printf '%s\n' "$(cat css/style.css)" | diff -u - /tmp/style.css
       - name: Start app server
         run: php -S 127.0.0.1:8000 -t . > /tmp/glitter-php.log 2>&1 &
       - run: npm run test:quick

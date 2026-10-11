@@ -73,6 +73,7 @@
 				font-weight: var(--font-weight-normal);
 				line-height: 1.2;
 				text-overflow: ellipsis;
+				-webkit-appearance: none;
 				appearance: none;
 
 				&.badge-variable-fps {

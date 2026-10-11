@@ -135,6 +135,7 @@
 .property-row.is-toggle {
 	grid-template-columns: minmax(0, 1fr) auto;
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
 
 	> input[type="checkbox"] { @include visually-hidden-control; }

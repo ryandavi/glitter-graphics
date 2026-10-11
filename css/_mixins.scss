@@ -448,14 +448,17 @@ $modal-compact-breakpoint: 600px;
 	}
 
 	&.has-overflow-#{$start}.has-overflow-#{$end} {
+		-webkit-mask-image: linear-gradient(to $forward, transparent 0, #000 $size, #000 calc(100% - #{$size}), transparent 100%);
 		mask-image: linear-gradient(to $forward, transparent 0, #000 $size, #000 calc(100% - #{$size}), transparent 100%);
 	}
 
 	&.has-overflow-#{$start}:not(.has-overflow-#{$end}) {
+		-webkit-mask-image: linear-gradient(to $forward, transparent 0, #000 $size);
 		mask-image: linear-gradient(to $forward, transparent 0, #000 $size);
 	}
 
 	&.has-overflow-#{$end}:not(.has-overflow-#{$start}) {
+		-webkit-mask-image: linear-gradient(to $backward, transparent 0, #000 $size);
 		mask-image: linear-gradient(to $backward, transparent 0, #000 $size);
 	}
 }

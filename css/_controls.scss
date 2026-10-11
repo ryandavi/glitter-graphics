@@ -13,6 +13,7 @@
 // segmented control - but they share its height, radius and focus ring so the
 // sidebar has one selectable-token feel.
 .filter-chip {
+	-webkit-appearance: none;
 	appearance: none;
 	display: inline-flex;
 	align-items: center;

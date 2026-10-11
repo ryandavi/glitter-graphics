@@ -281,6 +281,7 @@
 	height: var(--control-height);
 	box-sizing: border-box;
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
 
 	> input[type="checkbox"] {

@@ -491,6 +491,7 @@ body.no-document .app-header {
 
 body.is-resizing-panel {
 	cursor: col-resize !important;
+	-webkit-user-select: none;
 	user-select: none;
 
 	iframe,

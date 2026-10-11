@@ -1,4 +1,6 @@
 {
+	"liveSassCompile.settings.autoprefix": false,
+	"liveSassCompile.settings.generateMap": false,
 	"highlight.regexes": {
 		"(\\{@[a-z0-9-]+(?:\\|[^{}\\r\\n]*)?\\}|\\{\\?[^{}\\r\\n]*\\}|\\{usenet:[^{}\\r\\n]*\\})": {
 			"filterFileRegex": "content[\\\\/]src[\\\\/].*\\.src\\.html$",

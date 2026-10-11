@@ -71,6 +71,7 @@
 
 	&.is-dragging {
 		transition: none;
+		-webkit-user-select: none;
 		user-select: none;
 		box-shadow: 0 8px 24px var(--color-shadow-strong), 0 0 0 2px var(--color-accent);
 
@@ -150,6 +151,7 @@
 		@include text-sm;
 		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
+		-webkit-appearance: none;
 		appearance: none;
 		padding: 0 var(--spacing-xs);
 		border: 0;

@@ -21,6 +21,7 @@
 	background-size: contain;
 	background-repeat: no-repeat;
 	background-position: center;
+	-webkit-mask-image: var(--entity-icon-mask, none);
 	mask-image: var(--entity-icon-mask, none);
 	mask-size: contain;
 	mask-repeat: no-repeat;
@@ -48,6 +49,7 @@
 // A mention with a hover card (handles, hosted sites) but no gloss: a faint
 // underline on hover says there is more to see.
 .entity[data-card]:not([data-tooltip]) {
+	-webkit-text-decoration: underline dotted transparent;
 	text-decoration: underline dotted transparent;
 	text-underline-offset: 2px;
 	transition: text-decoration-color var(--transition-fast);
@@ -92,6 +94,7 @@
 // Written under --watch only: an unknown slug or source, so a draft can be
 // previewed. --check refuses to pass while one is left.
 .draft-marker {
+	-webkit-text-decoration: underline wavy var(--color-warning);
 	text-decoration: underline wavy var(--color-warning);
 	text-underline-offset: 3px;
 }
