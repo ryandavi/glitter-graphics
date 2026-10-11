@@ -7868,8 +7868,13 @@ body.tool-text .text-hover-baselines {
 }
 
 .property-panel,
-.property-section {
+.property-section,
+.layers-panel {
   --property-gutter: var(--spacing-lg);
+}
+
+.property-panel,
+.property-section {
   --property-pad: var(--spacing-base);
   --property-row-height: var(--control-height);
   --property-title-height: calc(var(--control-height) + var(--spacing-xs));

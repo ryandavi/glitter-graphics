@@ -37,6 +37,13 @@
 //   - A revert sits at the right edge of what it reverts, never its own row.
 // ===========================================================================
 
+// Layers headers share the inset used by property rows, titles and notes.
+.property-panel,
+.property-section,
+.layers-panel {
+	--property-gutter: var(--spacing-lg);
+}
+
 // `.property-panel` is a whole surface (sidebar, drawer, form-modal body);
 // `.property-section` is one schema-rendered section inside it. Both carry the
 // tokens so a section also works on a surface that is not a panel. Heights
@@ -44,8 +51,6 @@
 .property-panel,
 .property-section {
 	// ---- insets ----------------------------------------------------------
-	// What rows, titles and notes apply.
-	--property-gutter: var(--spacing-lg);
 	// Inside a boxed object, from its own edge.
 	--property-pad: var(--spacing-base);
 
