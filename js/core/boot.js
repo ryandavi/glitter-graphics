@@ -61,7 +61,6 @@ class BootRunner {
 				reload.hidden = false;
 				reload.disabled = false;
 				reload.onclick = () => location.reload();
-				document.body.classList.remove('is-booting');
 				continue;
 			}
 			if (stage.id === 'interactive') {
@@ -74,8 +73,6 @@ class BootRunner {
 			document.body.classList.add(`boot-${stage.id}`);
 			if (stage.id === 'interactive') {
 				document.getElementById('workspaceStart').inert = false;
-				// Keep the committed stylesheet usable until its owner recompiles Sass.
-				document.body.classList.remove('is-booting');
 			}
 			this.editor?.updateActionButtons();
 			await onStage?.(stage.id, this.editor);
