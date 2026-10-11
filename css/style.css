@@ -668,6 +668,7 @@
      dark-on-dark */
   --swatch-empty-outline: var(--gray-400);
   --swatch-empty-bg: var(--gray-500);
+  --color-slider-tick: color-mix(in srgb, var(--color-slider-track), black 20%);
   --new-canvas-preview-bg: var(--color-bg-secondary);
   --color-off-white: var(--gray-100);
   --switch-knob-color: #fff;
@@ -801,6 +802,7 @@
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
+  --color-slider-tick: var(--gray-300);
   --slider-thumb-size: 16px;
   --slider-tick-size: 6px;
   /* Export progress sits on translucent mini-modal glass, so its empty track
@@ -1821,7 +1823,7 @@ input[type=range]:disabled {
   width: var(--slider-tick-size);
   height: var(--slider-tick-size);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-slider-track), black 20%);
+  background: var(--color-slider-tick);
 }
 .stepped-slider-ticks > span.is-current {
   background: var(--color-accent);

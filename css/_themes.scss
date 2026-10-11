@@ -804,6 +804,7 @@
 	   dark-on-dark */
 	--swatch-empty-outline: var(--gray-400);
 	--swatch-empty-bg: var(--gray-500);
+	--color-slider-tick: color-mix(in srgb, var(--color-slider-track), black 20%);
 	--new-canvas-preview-bg: var(--color-bg-secondary);
 	--color-off-white: var(--gray-100);
 	--switch-knob-color: #fff;

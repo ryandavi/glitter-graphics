@@ -480,7 +480,7 @@ input[type="range"] {
 		width: var(--slider-tick-size);
 		height: var(--slider-tick-size);
 		border-radius: var(--radius-full);
-		background: color-mix(in srgb, var(--color-slider-track), black 20%);
+		background: var(--color-slider-tick);
 
 		&.is-current { background: var(--color-accent); }
 	}
