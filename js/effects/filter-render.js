@@ -25,6 +25,7 @@
 
 	function isActive(value, opacity = 100) {
 		if (number(opacity, 100) <= 0) return false;
+		if (animation(value)) return true;
 		return Filters.recipe(normalizeFilterData(value)).some((entry) => Ops.get(entry.op)?.isActive?.(entry.params));
 	}
 
@@ -34,8 +35,8 @@
 		return filter.summary?.(data) || filter.label;
 	}
 
-	function resolve(value) {
-		const resolved = { tone: null, blur: null, ops: [], caption: null, steps: Filters.recipe(normalizeFilterData(value)) };
+	function resolve(value, frameIndex = 0) {
+		const resolved = { tone: null, blur: null, ops: [], caption: null, steps: Filters.recipe(normalizeFilterData(value), frameIndex) };
 		resolved.steps.forEach((entry) => {
 			if (entry.op === 'tone') resolved.tone = entry.params.tone;
 			else if (entry.op === 'blur' && !entry.params.composite) resolved.blur = entry.params;
@@ -45,13 +46,10 @@
 		return resolved;
 	}
 
-	// An animated Dither's shimmer cycle ({ frames, offsetPerFrame }), or null.
-	// Export samples it as its own timeline source so a still scene under the
-	// filter still exports as an animation.
-	function shimmerAnimation(value) {
-		const dither = Filters.recipe(normalizeFilterData(value)).find((entry) => entry.op === 'dither')?.params;
-		if (!dither?.shimmer) return null;
-		return GlitterPixelEffects.getShimmerAnimation(dither.algorithm, CONFIG.tools.pixelEffects);
+	// Each look owns its timing; preview and export sample the same whole steps.
+	function animation(value) {
+		const data = normalizeFilterData(value);
+		return Filters.get(data.type).animation?.(data) || null;
 	}
 
 	function toneCssFilter(value) {
@@ -167,8 +165,11 @@
 			spec.stops.forEach((entry) => gradient.addColorStop(clamp(entry.at, 0, 1), entry.color));
 			tileContext.fillStyle = gradient;
 			tileContext.fillRect(0, 0, size, size);
+			context.save();
+			context.translate(0, spec.offset || 0);
 			context.fillStyle = context.createPattern(tile, 'repeat');
-			context.fillRect(0, 0, width, height);
+			context.fillRect(0, -(spec.offset || 0), width, height);
+			context.restore();
 			return;
 		}
 		if (spec.type === 'linear') {
@@ -264,7 +265,7 @@
 		const before = context.getImageData(0, 0, width, height);
 		let rendered = new ImageData(new Uint8ClampedArray(before.data), width, height);
 		const pixelDefaults = GlitterPixelEffects.normalizeSettings({}, CONFIG.tools.pixelEffects);
-		const recipe = Filters.recipe(normalizeFilterData(value));
+		const recipe = Filters.recipe(normalizeFilterData(value), options.frameIndex || 0);
 		for (const entry of recipe) {
 			const op = Ops.get(entry.op);
 			if (!op?.pixel || op.isActive?.(entry.params) === false) continue;
@@ -295,7 +296,7 @@
 	async function renderToCanvas(context, width, height, value, strength, options = {}) {
 		if (!isActive(value, strength * 100)) return;
 		if (Filters.tier(value) === 3) return renderPixelRecipe(context, width, height, value, strength, options);
-		const resolved = resolve(value);
+		const resolved = resolve(value, options.frameIndex || 0);
 		const pre = context.getImageData(0, 0, width, height);
 		const sourceCanvas = getScratchCanvas('source', width, height);
 		const sourceContext = sourceCanvas.getContext('2d');
@@ -403,7 +404,7 @@
 			textAlign: 'center', textBaseline: 'middle' };
 	}
 
-	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, shimmerAnimation, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec, jpegRoundTrip };
+	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, animation, toneCssFilter, gradientCss, overlayLayerStyles, renderToCanvas, drawCaption, nameCaptionSpec, jpegRoundTrip };
 	root.GlitterFilter = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

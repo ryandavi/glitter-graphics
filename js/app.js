@@ -302,7 +302,7 @@ class GlitterEditor {
 		initPixelScaler();
 		initTooltips();
 		installClipboardHandlers(this);
-		this.exportResultPresenter = new ExportResultPresenter({ onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
+		this.exportResultPresenter = new ExportResultPresenter({ onFixLoop: () => this.openAnimationLoop(), onStatus: (message) => this.updateStatus(message), onShow: () => this.modalManager.open('exportPreviewModal'), onFit: (goal) => { this.modalManager.close('exportPreviewModal'); this.exportCurrentTarget({ fit: goal }); } });
 		this.exportProgressPresenter = new ExportProgressPresenter(this);
 		this.gifEncodingPipeline = new GifEncodingPipeline();
 		this.authoredFrameResolver = new AuthoredFrameResolver();
@@ -676,6 +676,7 @@ class GlitterEditor {
 	saveState(label = null, options = {}) {
 		this.historyManager.saveState(label, { coalesceKey: currentStepCoalesceKey(), ...options });
 		this.filterLayerManager?.noteSceneEdited();
+		this.scheduleExportDuration();
 		this.isSaved = false;
 	}
 
@@ -1191,8 +1192,8 @@ class GlitterEditor {
 
 	// Work that takes time before it shows on the canvas. Call the returned
 	// `done` from a `finally`.
-	beginActivity(key, label) {
-		return this.notifications.beginActivity(key, label);
+	beginActivity(key, label, options) {
+		return this.notifications.beginActivity(key, label, options);
 	}
 
 	updateActivity(key, changes) {
@@ -1207,6 +1208,7 @@ class GlitterEditor {
 Object.assign(
 	GlitterEditor.prototype,
 	EDITOR_SETTINGS_METHODS,
+	EDITOR_ANIMATION_LOOP_METHODS,
 	EDITOR_DOCUMENT_IO_METHODS,
 	EDITOR_EXPORT_FLOW_METHODS,
 	EDITOR_KEYBOARD_METHODS,

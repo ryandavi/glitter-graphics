@@ -45,6 +45,15 @@
 		return fallback.map((colorValue, index) => ({ offset: index / (fallback.length - 1), color: colorValue }));
 	};
 
+	function hueCycleAnimation(values) {
+		return { frames: Math.round(values.speed * 1000 / CONFIG.tools.filter.animation.frameMs), frameMs: CONFIG.tools.filter.animation.frameMs };
+	}
+
+	function scanlineAnimation(values) {
+		const frameMs = CONFIG.tools.filter.animation.crawl[values.crawl].frameMs;
+		return frameMs ? { frames: values.spacing, frameMs } : null;
+	}
+
 	function deepFryRecipe(values) {
 		const levels = {
 			light: { saturation: 1.35, contrast: 1.2, brightness: 1.04, sharpen: 0.35, noise: 0.05, quality: 48, generations: 1 },
@@ -124,14 +133,38 @@
 			amount: numeric('filterGrainAmount', 'filterGrainAmount'), size: numeric('filterGrainSize', 'filterGrainSize'),
 			roughness: numeric('filterGrainRoughness', 'filterGrainRoughness'), monochrome: boolean(true, 'filterGrainMono', 'Monochrome')
 		}), recipe: (values) => [step('grain', { mode: 'soft-light', amount: values.amount / 100, size: values.size, roughness: values.roughness / 100, monochrome: values.monochrome })] }),
+		'hue-cycle': Object.freeze({ id: 'hue-cycle', label: 'Hue Cycle', group: 'stylize', previewTier: 3,
+			description: 'Every frame changes the whole canvas; more steps make larger GIFs.',
+			fields: Object.freeze({ speed: numeric('filterHueCycleSpeed', 'filterHueCycleSpeed') }),
+			animation: hueCycleAnimation,
+			normalize: (values) => { values.speed = Math.round(values.speed * 1000 / CONFIG.tools.filter.animation.frameMs) * CONFIG.tools.filter.animation.frameMs / 1000; },
+			periodControl: {
+				range: () => ({ min: Fields.filterHueCycleSpeed.min * 1000, max: Fields.filterHueCycleSpeed.max * 1000 }),
+				resolve: (ms) => Math.round(ms / CONFIG.tools.filter.animation.frameMs) * CONFIG.tools.filter.animation.frameMs,
+				set: (values, ms) => { values.speed = ms / 1000; }
+			},
+			recipe: (values, frameIndex = 0) => {
+				const { frames } = hueCycleAnimation(values);
+				return [step('tone', { tone: { hueRotate: 360 * (frameIndex % frames) / frames } })];
+			}
+		}),
 		blur: Object.freeze({ id: 'blur', label: 'Blur', group: 'stylize', fields: Object.freeze({ radius: numeric('filterBlurRadius', 'filterBlurRadius') }), recipe: (values) => [step('blur', { radius: values.radius, mode: 'normal', opacity: 1 })] }),
 		instagram: Object.freeze({ id: 'instagram', label: 'Instagram', group: 'instagram', tags: ['cssgram'], fields: Object.freeze({
 			strength: numeric('filterInstagramStrength', 'filterStrength'), showName: boolean(false, 'filterShowName', 'Show Filter Name')
 		}), recipe: instagramRecipe, summary: (values) => Presets[values.presetId]?.name || Presets[values.presetId]?.instagramName || 'Instagram' }),
 		scanlines: Object.freeze({ id: 'scanlines', label: 'Scanlines', group: 'web', tags: ['crt', 'retro'], fields: Object.freeze({
-			strength: numeric('filterLookStrength', 'filterLookStrength'), spacing: numeric('filterScanlineSpacing', 'filterScanlineSpacing')
-		}), recipe: (values) => [step('gradient', {
-			mode: 'overlay', opacity: 0.55 * values.strength / 100, gradient: { type: 'repeating-linear', angle: 180, size: values.spacing, stops: [stop(0, 'rgba(0,0,0,0.55)'), stop(0.5, 'rgba(0,0,0,0.55)'), stop(0.5, 'transparent'), stop(1, 'transparent')] }
+			strength: numeric('filterLookStrength', 'filterLookStrength'), spacing: numeric('filterScanlineSpacing', 'filterScanlineSpacing'),
+			crawl: select('off', 'filterScanlineCrawl', 'Crawl', () => Object.entries(CONFIG.tools.filter.animation.crawl).map(([value, entry]) => ({ value, label: entry.label })))
+		}), normalize: (values) => { values.spacing = Math.round(values.spacing); }, animation: scanlineAnimation, periodControl: {
+			range: (values) => {
+				const periods = Object.values(CONFIG.tools.filter.animation.crawl).filter((entry) => entry.frameMs).map((entry) => entry.frameMs * values.spacing);
+				return { min: Math.min(...periods), max: Math.max(...periods) };
+			},
+			resolve: (ms, values) => Object.values(CONFIG.tools.filter.animation.crawl).filter((entry) => entry.frameMs).map((entry) => entry.frameMs * values.spacing).sort((a, b) => Math.abs(a - ms) - Math.abs(b - ms))[0],
+			set: (values, ms) => { values.crawl = Object.keys(CONFIG.tools.filter.animation.crawl).find((key) => CONFIG.tools.filter.animation.crawl[key].frameMs * values.spacing === ms); }
+		}, recipe: (values, frameIndex = 0) => [step('gradient', {
+			animation: scanlineAnimation(values) ? { ...scanlineAnimation(values), name: 'filter-scanline-crawl', distance: values.spacing } : null,
+			mode: 'overlay', opacity: 0.55 * values.strength / 100, gradient: { type: 'repeating-linear', angle: 180, size: values.spacing, offset: values.crawl === 'off' ? 0 : frameIndex % values.spacing, stops: [stop(0, 'rgba(0,0,0,0.55)'), stop(0.5, 'rgba(0,0,0,0.55)'), stop(0.5, 'transparent'), stop(1, 'transparent')] }
 		})] }),
 		'light-leak': Object.freeze({ id: 'light-leak', label: 'Light Leak', group: 'web', tags: ['film', 'warm'], fields: Object.freeze({
 			strength: numeric('filterLookStrength', 'filterLookStrength'), size: numeric('filterLightLeakSize', 'filterLightLeakSize')
@@ -165,7 +198,11 @@
 		}), recipe: (values) => [step('posterize', {
 			colors: values.colors, style: values.style, merge: values.merge, detail: values.detail, cleanEdges: values.cleanEdges, pixelSize: values.pixelSize
 		})] }),
-		dither: Object.freeze({ id: 'dither', label: 'Dither', group: 'pixel', fields: Object.freeze({
+		dither: Object.freeze({ animation: (values) => {
+			if (!values.shimmer || !patterned(values)) return null;
+			const animation = CONFIG.tools.pixelEffects.animation.algorithms[values.algorithm];
+			return { frames: animation.frames, frameMs: CONFIG.tools.filter.animation.frameMs };
+		}, id: 'dither', label: 'Dither', group: 'pixel', fields: Object.freeze({
 			algorithm: select('bayer', 'filterDitherAlgorithm', 'Pattern', ditherOptions),
 			palette: select('auto', 'filterDitherPalette', 'Color Palette', ditherPaletteOptions),
 			colors: numeric('paletteColorCount', 'filterDitherColors', { when: autoPalette }),
@@ -218,12 +255,13 @@
 		return normalized;
 	}
 
-	function recipe(value) {
+	function recipe(value, frameIndex = 0) {
 		const normalized = normalize(value?.type, value);
-		return FILTERS[normalized.type].recipe(normalized).map((entry) => ({ op: entry.op, params: clone(entry.params) }));
+		return FILTERS[normalized.type].recipe(normalized, frameIndex).map((entry) => ({ op: entry.op, params: clone(entry.params) }));
 	}
 
 	function tier(value) {
+		if (FILTERS[value?.type]?.previewTier) return FILTERS[value.type].previewTier;
 		return recipe(value).every((entry) => typeof Ops.get(entry.op)?.css === 'function') ? 1 : 3;
 	}
 

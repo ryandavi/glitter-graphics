@@ -6086,6 +6086,14 @@ body.mask-editing .sticker-element {
   background-repeat: no-repeat;
 }
 
+@keyframes filter-scanline-crawl {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: var(--filter-crawl-distance);
+  }
+}
 .selection-overlay {
   position: absolute;
   inset: 0;

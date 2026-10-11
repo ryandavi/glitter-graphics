@@ -64,3 +64,19 @@ async function loadImageElement(url) {
 	await image.decode();
 	return image;
 }
+
+// Hands the main thread back so progress can paint and Cancel can land. A
+// message task, never requestAnimationFrame: a frame callback waits for the
+// next screen refresh (twice as long in iOS Low Power Mode) and does not fire
+// in a hidden tab, so an export paced by it idles most of its time or stalls.
+function yieldToEventLoop() {
+	return new Promise((resolve) => {
+		const { port1, port2 } = new MessageChannel();
+		port1.onmessage = () => {
+			port1.close();
+			port2.close();
+			resolve();
+		};
+		port2.postMessage(null);
+	});
+}

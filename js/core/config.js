@@ -188,7 +188,6 @@ const CONFIG = deepFreeze({
 			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 24 },
 			analysis: { iterations: 10, maxSamples: 24000 },
 			animation: {
-				frameDurationMs: 100,
 				algorithms: {
 					bayer: { frames: 8, offsetPerFrame: 13 },
 					halftone: { frames: 16, offsetPerFrame: 0.5 }
@@ -202,6 +201,7 @@ const CONFIG = deepFreeze({
 			}
 		},
 		filter: {
+			animation: { frameMs: 100, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
@@ -224,7 +224,7 @@ const CONFIG = deepFreeze({
 				stampField: 'name'
 			},
 			grainTilePx: 256,
-			snapshot: { settleMs: 300 }
+			snapshot: { settleMs: 300, maxFrames: 24, fallbackDurationMs: 1200 }
 		},
 		selection: {
 			// Threshold and feather defaults and ranges: FIELDS.threshold / FIELDS.feather.
@@ -995,6 +995,7 @@ const CONFIG = deepFreeze({
 		},
 		progress: { yieldEveryFrames: 2 },
 		timeline: {
+			estimateDebounceMs: 150,
 			maxSamplingFps: 30,
 			proceduralPeriodTolerance: 0.10,
 			preRenderBudgetMultiplier: 1.5,

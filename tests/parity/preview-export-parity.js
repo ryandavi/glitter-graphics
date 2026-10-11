@@ -5,6 +5,14 @@
 // for the top-level functions of js/paint/paint-slots.js / js/paint/sparkles.js.
 const PREVIEW_EXPORT_TWINS = [
 	{
+		feature: 'scanline crawl timing', shared: 'GlitterFilter.animation',
+		preview: ['FilterLayerManager.renderLayer'], export: ['SceneCompositor._createFilterTimelineSources']
+	},
+	{
+		feature: 'hue cycle timing', shared: 'GlitterFilter.animation',
+		preview: ['FilterLayerManager.renderSnapshot'], export: ['SceneCompositor._createFilterTimelineSources']
+	},
+	{
 		feature: 'slot stack order',
 		shared: 'buildSlotStack',
 		preview: ['TextGlitterManager.getSlotStack', 'ShapeGlitterManager.getSlotStack', 'GlitterManager.getSlotStack', 'PathLayerManager.getSlotStack'],

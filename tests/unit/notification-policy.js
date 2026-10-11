@@ -36,3 +36,32 @@ for (const { file, source } of sources) {
 }
 
 process.stdout.write('Notification policy verification passed\n');
+
+// Known slow work bypasses the delay; replacing its key preserves ownership
+// and the minimum visible time when the older render finally exits.
+{
+	const vm = require('vm');
+	let now = 1000;
+	let timerId = 0;
+	const timers = new Map();
+	const context = {
+		CONFIG: { ui: { activity: { showDelayMs: 250, minVisibleMs: 300 } } },
+		Date: { now: () => now },
+		setTimeout: (callback, delay) => { timers.set(++timerId, { callback, delay }); return timerId; },
+		clearTimeout: (id) => timers.delete(id)
+	};
+	vm.runInNewContext(`${notify}\nglobalThis.Center = NotificationCenter;`, context);
+	const center = Object.create(context.Center.prototype);
+	Object.assign(center, { activities: new Map(), activityShown: false, renderActivity() {} });
+	const oldDone = center.beginActivity('preview', 'Rendering preview');
+	if (center.activityShown || timers.size !== 1) throw new Error('Fast work must keep the activity delay');
+	const done = center.beginActivity('preview', 'Rendering preview', { immediate: true });
+	if (!center.activityShown || timers.size) throw new Error('Immediate work must show and clear the delayed timer');
+	oldDone();
+	if (!center.activities.size) throw new Error('Superseded done must not clear its replacement');
+	now += 100; done(); done();
+	const timer = [...timers.values()][0];
+	if (!center.activityShown || timer.delay !== 200) throw new Error('Immediate work must retain minimum visibility');
+	timer.callback();
+	if (center.activityShown) throw new Error('Activity must hide after its minimum duration');
+}

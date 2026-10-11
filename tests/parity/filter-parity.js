@@ -7,6 +7,7 @@ global.CONFIG = {
 			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 24 }, analysis: { maxSamples: 100, iterations: 2 }, presets: { bw: ['#000000', '#ffffff'] }, animation: { algorithms: {} }
 		},
 		filter: {
+			animation: { frameMs: 100, crawl: { off: { label: 'Off', frameMs: 0 }, slow: { label: 'Slow', frameMs: 200 }, medium: { label: 'Medium', frameMs: 100 }, fast: { label: 'Fast', frameMs: 50 } } },
 			defaultType: 'basic',
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
@@ -48,7 +49,7 @@ Blend.compositeColorBurn(colorBurnBackdrop, colorBurnSource);
 assert.deepStrictEqual(Array.from(colorBurnBackdrop.data), [0, 0, 0, 255, 57, 255, 20, 255]);
 assert.deepStrictEqual(Array.from(Tone.composeToneAffine(null).m), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
 assert.strictEqual(Filter.normalizeFilterData({}).type, 'basic');
-assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'gradient-map']);
+assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'hue-cycle', 'blur', 'instagram', 'scanlines', 'light-leak', 'dreamy-glow', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'gradient-map']);
 assert.strictEqual(Filter.normalizeFilterData({ type: 'instagram' }).presetId, 'rio');
 assert.strictEqual(Object.keys(Presets)[0], 'rio');
 
@@ -88,7 +89,7 @@ for (const entry of Filters.list()) {
 	});
 	const normalized = Filters.normalize(entry.id);
 	for (const recipeStep of Filters.recipe(normalized)) assert(Ops.get(recipeStep.op), `${entry.id} uses unknown op ${recipeStep.op}`);
-	assert.strictEqual(Filters.tier(normalized), ['jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'gradient-map'].includes(entry.id) ? 3 : 1, `${entry.id} has the wrong render tier`);
+	assert.strictEqual(Filters.tier(normalized), ['hue-cycle', 'jpeg-crunch', 'deep-fry', 'pixelate', 'posterize', 'dither', 'rgb-split', 'gradient-map'].includes(entry.id) ? 3 : 1, `${entry.id} has the wrong render tier`);
 }
 for (const library of PresetLibrary.listPresetLibraries()) {
 	assert(library.id && library.entries.length, 'preset libraries require entries');

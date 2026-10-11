@@ -364,8 +364,17 @@ const PANEL_SCHEMAS = {
 					{ kind: 'section', title: 'Quick add', chips: 'buttons', sets: [
 						{ rows: [{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }] }
 					] },
+
 					// The project (name, save, open) is in the app header; document
 					// sizing belongs to Canvas Properties.
+				] },
+				{ title: 'Animation', sections: [
+					{ kind: 'section', id: 'animationLoopSection', title: 'Animation Loop', collapsed: true, sets: [{ rows: [
+						{ kind: 'note', id: 'animationLoopStatus', text: 'No animation sources.' }
+					] }, { id: 'animationLoopSources', rows: [] }, { rows: [
+						{ kind: 'select', id: 'animationLoopCandidate', label: 'Loop length', options: [] },
+						{ kind: 'note', id: 'animationLoopChanges' }
+					] }, { actions: [{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop' }] }] }
 				] }
 			] },
 			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [

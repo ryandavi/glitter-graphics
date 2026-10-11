@@ -39,6 +39,26 @@ const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 		if (!m.snapshotPlaybackFrame) throw new Error('Showing cached animation did not restart playback');
 		e.layerManager.deleteLayer(layer.id, { skipHistory: true });
 	});
+	const feedback = await page.evaluate(async () => {
+		const e = window.editor;
+		const m = e.filterLayerManager;
+		const layer = e.layerManager.addLayer(LayerType.FILTER);
+		layer.filterData = GlitterFilter.normalizeFilterData({ type: 'dither', shimmer: true });
+		clearTimeout(m.snapshotTimers.get(layer.id));
+		let observed = false;
+		const update = e.updateActivity;
+		e.updateActivity = function(key, changes) {
+			update.call(this, key, changes);
+			if (key === 'filter-preview' && changes.current < changes.total) {
+				const pill = document.getElementById('canvasActivity');
+				observed ||= !pill.hidden && pill.textContent.includes(`${changes.current}/${changes.total}`);
+			}
+		};
+		try { await m.renderSnapshot(layer, true); }
+		finally { e.updateActivity = update; e.layerManager.deleteLayer(layer.id, { skipHistory: true }); }
+		return observed;
+	});
+	assert(feedback, 'Animated Dither must show a current/total activity label before completing');
 	const result = await page.evaluate(async () => {
 		const editor = window.editor;
 		const layer = editor.layerManager.addLayer(LayerType.FILTER);

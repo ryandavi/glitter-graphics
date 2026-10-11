@@ -28,21 +28,6 @@ function reportExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phase
 	});
 }
 
-// Hands the main thread back so progress can paint and Cancel can land. A
-// message task, never requestAnimationFrame: a frame callback waits for the
-// next screen refresh (twice as long in iOS Low Power Mode) and does not fire
-// in a hidden tab, so an export paced by it idles most of its time or stalls.
-function yieldForExportProgress() {
-	return new Promise((resolve) => {
-		const { port1, port2 } = new MessageChannel();
-		port1.onmessage = () => {
-			port1.close();
-			resolve();
-		};
-		port2.postMessage(null);
-	});
-}
-
 // Wall-clock time per export phase, shown in the export result so a slow
 // export can be read on the device that ran it. mark() returns the phase it
 // replaced, so a caller can time a step inside a phase and then resume it.
@@ -178,25 +163,33 @@ class SceneCompositor {
 
 
 	_collectProceduralSources(layers, { includeBaseImage = true, canvasData = null } = {}) {
-		return layers.flatMap((layer) => LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, {
-			compositor: this,
-			includeBaseImage,
-			canvasData
-		}) || []);
+		return layers.flatMap((layer) => {
+			const sources = LAYER_UI_CONFIG[layer.type]?.timelineSources?.(layer, { compositor: this, includeBaseImage, canvasData }) || [];
+			return isLayerFullyLocked(layer) ? sources.map((source) => ({ ...source, setPeriod: null })) : sources;
+		});
 	}
 
-	// An animated Dither filter's shimmer, sampled on the shared clock so a
-	// still scene under it still exports as an animation.
+	// Animated looks join the shared clock, including over an otherwise still scene.
 	_createFilterTimelineSources(layer) {
 		if (layer.visible === false || !GlitterFilter.isActive(layer.filterData, layer.opacity)) return [];
-		const animation = GlitterFilter.shimmerAnimation(layer.filterData);
+		const animation = GlitterFilter.animation(layer.filterData);
 		if (!animation) return [];
-		const frameDuration = CONFIG.tools.pixelEffects.animation.frameDurationMs;
+		const frameDuration = animation.frameMs;
+		const control = GlitterFilters.get(layer.filterData.type).periodControl;
+		const data = layer.filterData;
 		return [{
-			key: `__filter_shimmer_${layer.id}`,
-			label: `${layer.name || 'Filter'} shimmer`,
+			key: `__filter_anim_${layer.id}`,
+			label: `${layer.name || 'Filter'} ${GlitterFilter.summaryText(layer.filterData)}`,
 			ownerLayerId: layer.id,
 			naturalPeriod: animation.frames * frameDuration,
+			...(control ? {
+				periodRange: control.range(data),
+				resolvePeriod: (ms) => control.resolve(ms, data),
+				setPeriod: (ms) => {
+					const range = control.range(data);
+					control.set(data, control.resolve(Math.min(range.max, Math.max(range.min, ms)), data));
+				}
+			} : {}),
 			preferredSamplingRate: 1000 / frameDuration,
 			sampleAt: (timestamp, period = animation.frames * frameDuration) => {
 				const cycleTime = ((timestamp % period) + period) % period;
@@ -217,6 +210,11 @@ class SceneCompositor {
 				ownerLayerId: layer.id,
 				effectSlot: `animation-${index}`,
 				naturalPeriod: animation.periodMs,
+				nonLooping: Number.isFinite(animation.iterations),
+				...(Number.isFinite(animation.iterations) ? {} : {
+					periodRange: { min: FIELDS.animDuration.min * 1000, max: FIELDS.animDuration.max * 1000 },
+					setPeriod: (ms) => { layer.animations[index].periodMs = Math.min(FIELDS.animDuration.max * 1000, Math.max(FIELDS.animDuration.min * 1000, ms)); }
+				}),
 				phase: animation.phase,
 				preferredSamplingRate: CONFIG.tools.animation.exportFps,
 				sampleAt: (timestamp, period = animation.periodMs) => ({
@@ -238,6 +236,8 @@ class SceneCompositor {
 				ownerLayerId: layer.id,
 				effectSlot: entry.key,
 				naturalPeriod: cycle,
+				periodRange: { min: FIELDS.sparkleCycle.min, max: FIELDS.sparkleCycle.max },
+				setPeriod: (ms) => { entry.data.cycleMs = Math.min(FIELDS.sparkleCycle.max, Math.max(FIELDS.sparkleCycle.min, ms)); },
 				preferredSamplingRate: CONFIG.tools.sparkles.exportFps,
 				sampleAt: (timestamp, period = cycle) => ({ time: timestamp * cycle / period })
 			};
@@ -925,7 +925,7 @@ class SceneCompositor {
 				await GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
 					keepAlpha,
 					alphaThreshold,
-					frameIndex: sourceSelectionMap?.get(`__filter_shimmer_${layer.id}`)?.frameIndex ?? frameIndex,
+					frameIndex: sourceSelectionMap?.get(`__filter_anim_${layer.id}`)?.frameIndex ?? frameIndex,
 					matteColor,
 					seed: layer.id,
 					tileCache: this.filterGrainTileCache,
@@ -1632,7 +1632,7 @@ class SceneCompositor {
 	}
 
 	_yieldForProgress() {
-		return yieldForExportProgress();
+		return yieldToEventLoop();
 	}
 
 	async estimateLoopDuration({
@@ -1706,6 +1706,8 @@ class SceneCompositor {
 		});
 		return {
 			...plan.loopSeam,
+			sourceAnalysis: plan.sourceAnalysis,
+			loopFit: planLoopFit(timelines, { config: timelineConfig, fallbackDuration }),
 			duration: plan.totalDuration,
 			estimatedFrameCount: plan.frameCount,
 			maximumVisualError: plan.reduction.maximumVisualError,

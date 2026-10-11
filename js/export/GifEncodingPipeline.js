@@ -276,7 +276,7 @@ class GifEncodingPipeline {
 			preparedFrame = null;
 			reportProgress?.('palette', 0.5 + ((index + 1) / frameCount * 0.5), '', index + 1, frameCount);
 			if (index + 1 < frameCount && (index + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
-				await yieldForExportProgress();
+				await yieldToEventLoop();
 			}
 		}
 		reportProgress?.('palette', 1, '', frameCount, frameCount);

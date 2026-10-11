@@ -217,7 +217,7 @@ finally { done(); }
 ```
 
 - Keys are stable per kind of work. Beginning a running key replaces it; an older run's `done` cannot end a newer one. Use `editor.endActivity(key)` where there is no single call to wrap (a pending flag that settles elsewhere).
-- Wire it unconditionally. Work faster than `CONFIG.ui.activity.showDelayMs` shows nothing, and once shown the pill stays `minVisibleMs`, so call sites never decide whether something is slow enough.
+- Wire it unconditionally. For work known to be slow, `beginActivity(key, label, { immediate: true })` bypasses the show delay; it still keeps the minimum visible time. Paint once before a known slow synchronous frame (a frame callback followed by `yieldToEventLoop`), and yield between frames in any loop that reports progress. Work faster than `CONFIG.ui.activity.showDelayMs` shows nothing, and once shown the pill stays `minVisibleMs`, so call sites never decide whether something is slow enough.
 - Labels are a short present participle with no ellipsis: "Opening image", "Applying glitter".
 - A session mode (Auto Glitter, Crop) takes the same slot with `editor.notifications.setMode({ label, icon, badge, onExit })` and `setMode(null)`. Do not build a separate mode banner.
 - Leaving and committing a mode belong to the pill, never to its context bar: `exitLabel`/`onExit` for the way out, `confirmLabel`/`onConfirm` for a mode that applies something (Crop). Both are icon buttons, the X then the check on the right, as in Photoshop's options bar; the labels are their tooltips, so name the key in them ("Apply crop (Enter)"). The context bar holds only what adjusts the work. `setConfirmEnabled(false)` disables the commit while the pending state is invalid.

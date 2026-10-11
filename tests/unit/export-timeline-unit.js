@@ -16,8 +16,8 @@ const context = { ImageData: ImageDataPolyfill, Uint8ClampedArray, Map, Set, Mat
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'core', 'gif-decode.js'), 'utf8'), context);
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 'ExportTimeline.js'), 'utf8');
-vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner };`, context);
-const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner } = context.timelineExports;
+vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit };`, context);
+const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit } = context.timelineExports;
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
@@ -407,3 +407,27 @@ main().catch((error) => {
 	console.error(error.stack || String(error));
 	process.exit(1);
 });
+
+// The helper may fit beyond export's quiet tolerance, but never outside the
+// source's writable range or discrete period vocabulary.
+{
+	const config = { ...createPlanner().config, maxLoopDurationMs: 12000 };
+	const fixed = timeline('fixed', 2, [500, 500]);
+	const writable = (period, range, resolvePeriod = null) => new ProceduralAnimationSource({
+		key: 'editable', naturalPeriod: period, preferredSamplingRate: 10, sampler: () => ({}),
+		setPeriod: () => {}, periodRange: range, resolvePeriod
+	});
+	const exact = planLoopFit([fixed, writable(1000, { min: 400, max: 8000 })], { config });
+	assert(exact.candidates[0].exact && !exact.candidates[0].canApply, 'Exact fit must need no edit');
+	const beyond = planLoopFit([fixed, writable(1400, { min: 400, max: 8000 })], { config });
+	assert(beyond.candidates[0].exact && beyond.candidates[0].fits[0].drift > 0.1, 'Helper must fit beyond quiet tolerance');
+	const clamped = planLoopFit([fixed, writable(4000, { min: 2000, max: 8000 })], { config });
+	assert(!clamped.candidates[0].exact && clamped.candidates[0].cannotFit.length === 1, 'Out-of-range fit must be rejected');
+	const clash = planLoopFit([timeline('a', 2, [305, 305]), timeline('b', 2, [355, 355])], { config });
+	assert(!clash.fixedLoop.exact && !clash.candidates[0].exact && clash.fixed.length === 2, 'Clashing GIFs must remain fixed');
+	const discrete = planLoopFit([fixed, writable(400, { min: 200, max: 800 }, (ms) => [200, 400, 800].sort((a,b) => Math.abs(a-ms)-Math.abs(b-ms))[0])], { config });
+	assert(discrete.candidates[0].fits[0].fittedPeriod === 200, 'Fit must search representable cycle counts');
+	const oneShot = writable(1000, { min: 400, max: 8000 }); oneShot.nonLooping = true;
+	assert(planLoopFit([fixed, oneShot], { config }).oneShots.length === 1, 'One shots must not be fitted');
+	assert(!planLoopFit([], { config }).candidates.length, 'Still scenes need no loop candidates');
+}

@@ -6,6 +6,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..', '..');
 const sources = {
+	FilterLayerManager: fs.readFileSync(path.join(root, 'js/layers/FilterLayerManager.js'), 'utf8'),
 	transformMath: fs.readFileSync(path.join(root, 'js/transforms/transform-math.js'), 'utf8'),
 	TextGlitterManager: fs.readFileSync(path.join(root, 'js/layers/TextGlitterManager.js'), 'utf8'),
 	ShapeGlitterManager: fs.readFileSync(path.join(root, 'js/layers/ShapeGlitterManager.js'), 'utf8'),

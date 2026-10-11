@@ -50,10 +50,10 @@ class NotificationCenter {
 	// Returns an idempotent `done`. Beginning a key that is already running
 	// replaces its label and keeps its place, so a superseded run never stacks,
 	// and an older run's `done` cannot end the newer one.
-	beginActivity(key, label) {
+	beginActivity(key, label, { immediate = false } = {}) {
 		const token = Symbol(key);
 		this.activities.delete(key);
-		this.activities.set(key, { token, label, current: 0, total: 0, startedAt: Date.now() });
+		this.activities.set(key, { token, label, immediate, current: 0, total: 0, startedAt: Date.now() });
 		this.syncActivity();
 		return () => {
 			if (this.activities.get(key)?.token === token) this.endActivity(key);
@@ -128,6 +128,12 @@ class NotificationCenter {
 		if (this.activities.size) {
 			clearTimeout(this.activityHideTimer);
 			this.activityHideTimer = null;
+			if (!this.activityShown && Array.from(this.activities.values()).some((entry) => entry.immediate)) {
+				clearTimeout(this.activityShowTimer);
+				this.activityShowTimer = null;
+				this.activityShown = true;
+				this.activityShownAt = Date.now();
+			}
 			if (this.activityShown) this.renderActivity();
 			else if (!this.activityShowTimer) {
 				this.activityShowTimer = setTimeout(() => {

@@ -42,6 +42,7 @@ const FIELDS = Object.freeze({
 	filterBrightness: { label: 'Brightness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 	filterContrast: { label: 'Contrast', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 	filterSaturation: { label: 'Saturation', unit: '%', min: -100, max: 100, step: 1, value: 0 },
+	filterHueCycleSpeed: { label: 'Speed', unit: 's', min: 0.4, max: 12, step: 0.1, value: 2.4 },
 	filterHue: { label: 'Hue', unit: '°', min: -180, max: 180, step: 1, value: 0 },
 	filterInvertAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 	filterGrayscaleAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },

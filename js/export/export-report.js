@@ -189,7 +189,7 @@ function buildExportReport({ blob, fileName, target, width, height, frameCount =
 		const reduction = plan.reduction;
 		if (!reduction.durationPreserved) notices.push({ id: 'speed', level: 'warning', text: 'The exported animation may play at a different speed than the preview.' });
 		if (reduction.budgetCompromiseRequired) notices.push({ id: 'motion', level: 'warning', text: 'This animation is longer than the export limit allows, so some motion detail may be reduced.' });
-		if (!plan.loopSeam.exact) notices.push({ id: 'seam', level: 'info', text: 'The animations repeat at different times, so the beginning and ending may not match perfectly.' });
+		if (!plan.loopSeam.exact) notices.push({ id: 'seam', level: 'info', action: { id: 'fix-loop', label: 'Fix loop' }, text: 'The animations repeat at different times, so the beginning and ending may not match perfectly.' });
 	}
 	// The observed count is a sampled lower bound, so this never fires on an
 	// image the palette could hold.

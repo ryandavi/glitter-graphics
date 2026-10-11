@@ -123,7 +123,13 @@
 		}),
 		gradient: Object.freeze({
 			id: 'gradient', params: Object.freeze({ gradient: Object.freeze({ kind: 'gradient' }), mode: Object.freeze({ kind: 'blendMode' }), opacity: Object.freeze({ min: 0, max: 1 }) }),
-			css: (params, context = {}) => ({ backgroundImage: context.gradientCss?.(params.gradient), mixBlendMode: params.mode, opacity: params.opacity }),
+			css: (params, context = {}) => ({
+				backgroundImage: context.gradientCss?.(params.gradient), mixBlendMode: params.mode, opacity: params.opacity,
+				...(params.animation ? {
+					animation: `${params.animation.name} ${params.animation.frames * params.animation.frameMs}ms steps(${params.animation.frames}) infinite`,
+					'--filter-crawl-distance': `${params.animation.distance}px`
+				} : {})
+			}),
 			pixel: (imageData, params, context = {}) => context.paintOverlay?.(imageData, { kind: 'gradient', ...params }),
 			isActive: (params) => Number(params.opacity) > 0
 		}),

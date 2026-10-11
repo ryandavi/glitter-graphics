@@ -128,6 +128,7 @@ class HistoryManager {
 
 		this.editor.layerManager.renderLayersList();
 		this.editor.requestPreviewUpdate();
+		this.editor.scheduleExportDuration();
 		// The selection may be the same layers in another state (a lock, a
 		// rename, an emptied source), so the Inspector refreshes regardless. A
 		// picker session is not snapshotted: the refresh ends one whose layer

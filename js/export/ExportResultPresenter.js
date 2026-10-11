@@ -4,7 +4,7 @@
 // footer actions. What is shown, and when, is decided in export-report.js.
 class ExportResultPresenter {
 	// onFit(goal) re-exports under a size target's limit.
-	constructor({ onStatus = () => {}, onShow = () => {}, onFit = null } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; this.onFit = onFit; }
+	constructor({ onStatus = () => {}, onShow = () => {}, onFit = null, onFixLoop = null } = {}) { this.previewBlobUrl = null; this.onStatus = onStatus; this.onShow = onShow; this.onFit = onFit; this.onFixLoop = onFixLoop; }
 	clear() { if (this.previewBlobUrl) URL.revokeObjectURL(this.previewBlobUrl); this.previewBlobUrl = null; }
 	show({ blob, file, target, width, height, frameCount = null, duration = null, timelinePlan = null, colorAnalysis = null, fit = null }) {
 		this.clear();
@@ -104,6 +104,12 @@ class ExportResultPresenter {
 			note.className = 'property-note';
 			note.classList.toggle('is-warning', notice.level === 'warning');
 			note.textContent = notice.text;
+			if (notice.action?.id === 'fix-loop' && this.onFixLoop) {
+				const action = document.createElement('button');
+				action.type = 'button'; action.className = 'btn-text'; action.textContent = notice.action.label;
+				action.addEventListener('click', this.onFixLoop);
+				note.append(' ', action);
+			}
 			return note;
 		}));
 		root.hidden = notices.length === 0;

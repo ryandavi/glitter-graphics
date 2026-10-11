@@ -111,6 +111,7 @@ const EXPORT_SETTINGS_LAYOUT = (() => {
 			} }
 		] },
 		{ title: 'Optimization', section: 'optimization', rows: [
+			{ field: { label: 'Animation Loop', description: 'See what sets the loop length and fit editable animations to it.', control: { type: 'button', id: 'openAnimationLoop', label: 'Open loop helper' } } },
 			field('quality', { formatSection: 'gif', aliases: 'color quality encoder accuracy precision' }),
 			{ governed: {
 				id: 'exportFidelitySet',

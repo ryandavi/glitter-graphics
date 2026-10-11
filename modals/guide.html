@@ -83,6 +83,7 @@
             <ol>
                 <li><a href="#create-filter">Add a Filter Layer</a></li>
                 <li><a href="#filter-types">Filter Types</a></li>
+                <li><a href="#animated-filters">Animated Filters and Loops</a></li>
                 <li><a href="#pixel-filters">Pixel Filters</a></li>
             </ol>
         </li>
@@ -1877,6 +1878,13 @@
                     <p><strong>Blur</strong> – A single Radius slider softens everything beneath the layer.</p>
                 </div>
             </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="animated-filters">Animated Filters and Loops</h4>
+            <p><strong>Scanlines</strong> offers Crawl: Off, Slow, Medium, or Fast. Each step moves the lines down one canvas pixel. <strong>Hue Cycle</strong> rotates the colors of everything below it. Speed sets the seconds per cycle; the step count follows automatically. More steps can make larger GIFs because the whole picture changes.</p>
+            <p>Hue Cycle uses Pixel Filter Preview. Still shows the starting frame; Animated or Preview animation plays the cycle. Pause motion freezes the preview and leaves exports animated.</p>
+            <p>With nothing selected, open <strong>Animation Loop</strong> to see the export loop length, its seam, and the animated sources that set it. Pick a loop length to review the required speed changes, then choose <strong>Fit animations to loop</strong>. All changes take one Undo step. Fixed GIFs, locked layers and one-shot motions keep their timing. If fixed sources share no loop within the limit, the helper names them and offers the closest loop.</p>
         </div>
 
         <div class="guide-subsection">

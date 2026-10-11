@@ -85,8 +85,8 @@ async function buildComposition(page) {
 		insert(editor.sparkleLayerManager.createLayer());
 
 		// A CSS-tier look and two pixel looks on top.
-		['scanlines', 'jpeg-crunch', 'rgb-split'].forEach((type) => {
-			const filter = editor.filterLayerManager.createLayer({ filterData: { type } });
+		['scanlines', 'hue-cycle', 'jpeg-crunch', 'rgb-split'].forEach((type) => {
+			const filter = editor.filterLayerManager.createLayer({ filterData: { type, ...(type === 'scanlines' ? { crawl: 'medium' } : {}) } });
 			filter.name = `Fragility ${type}`;
 			insert(filter);
 		});

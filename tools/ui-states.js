@@ -383,4 +383,35 @@ async function backgroundRemovalStates(page, visit, viewport) {
 	await visit(`${viewport} background removal preview`);
 }
 
-module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates };
+async function animatedFilterStates(page, visit, viewport) {
+	await page.evaluate(async () => {
+		const e = window.editor;
+		await e.loadBlankImage(160, 100, '#a348cd');
+		const filter = e.layerManager.addLayer(LayerType.FILTER);
+		filter.filterData = GlitterFilter.normalizeFilterData({ type: 'scanlines', crawl: 'medium' });
+		e.layerManager.setActiveLayer(filter.id);
+		e.filterLayerManager.loadLayerSettings(filter);
+		e.requestPreviewUpdate();
+		if (e.mobileManager.isMobile) e.mobileManager.openLeadingSection();
+	});
+	await wait(page, 500);
+	await visit(`${viewport} animated-filters scanlines`, { shot: '#designPanel', tall: viewport !== 'phone' });
+	await page.evaluate(() => {
+		const e = window.editor;
+		const layer = e.layerManager.getActiveLayer();
+		layer.filterData = GlitterFilter.normalizeFilterData({ type: 'hue-cycle' });
+		e.filterLayerManager.loadLayerSettings(layer); e.requestPreviewUpdate();
+	});
+	await wait(page, 600);
+	await visit(`${viewport} animated-filters hue-cycle`, { shot: '#designPanel', tall: viewport !== 'phone' });
+	await page.evaluate(async () => {
+		const e = window.editor;
+		e.layerManager.clearSelection();
+		if (e.openAnimationLoop) { e.openAnimationLoop(); await e.updateExportDuration(); }
+		if (e.mobileManager.isMobile) e.mobileManager.openLeadingSection();
+	});
+	await wait(page, 500);
+	await visit(`${viewport} animated-filters loop-helper`, { shot: '#designPanel', tall: viewport !== 'phone' });
+}
+
+module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates };

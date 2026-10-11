@@ -72,7 +72,7 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, preferredSamplingRate, sampler, resolvedPeriod = null }) {
+	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, periodRange = null, resolvePeriod = null, nonLooping = false }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
@@ -83,6 +83,7 @@ class ProceduralAnimationSource {
 		this.phase = Number(phase) || 0;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
+		Object.assign(this, { setPeriod, periodRange, resolvePeriod, nonLooping });
 	}
 
 	withPeriod(resolvedPeriod) {
@@ -95,7 +96,8 @@ class ProceduralAnimationSource {
 			phase: this.phase,
 			preferredSamplingRate: this.preferredSamplingRate,
 			sampler: this.sampler,
-			resolvedPeriod
+			resolvedPeriod,
+			setPeriod: this.setPeriod, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping
 		});
 	}
 
@@ -122,6 +124,53 @@ function fitProceduralPeriods(procedural, duration, tolerance) {
 		// keeps its configured period and crosses the seam out of phase.
 		toleranceMisses: fits.filter((fit) => !fit.fitted).length
 	};
+}
+
+// Timing only. Writable sources own their representable periods and setters;
+// fixed procedural steps have the same closure constraints as uploaded GIFs.
+function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDurationMs, fallbackDuration = 100 } = {}) {
+	const planner = new CompositeTimelinePlanner(config);
+	const animated = timelines.filter((source) => source.kind === 'procedural' || Number.isFinite(source.cycleDuration));
+	const oneShots = animated.filter((source) => source.nonLooping);
+	const repeating = animated.filter((source) => !source.nonLooping);
+	const adjustable = repeating.filter((source) => typeof source.setPeriod === 'function');
+	const fixed = repeating.filter((source) => typeof source.setPeriod !== 'function').map((source) => ({
+		source, cycleDuration: source.kind === 'procedural' ? source.naturalPeriod : source.cycleDuration
+	}));
+	const fixedLoop = planner._chooseLoopDuration(fixed, fallbackDuration, maxLoopDurationMs);
+	const durations = repeating.length
+		? planner._loopCandidateDurations(fixed, adjustable, fixedLoop, maxLoopDurationMs)
+		: new Set();
+	const candidates = [...durations].sort((a, b) => a - b).map((duration) => {
+		const fits = fitProceduralPeriods(adjustable, duration, Infinity).fits.map((fit) => {
+			const { source } = fit;
+			const range = source.periodRange || { min: 1, max: Infinity };
+			// Consider other cycle counts when the nearest period is out of range.
+			const minCycles = Math.max(1, Math.ceil(duration / range.max));
+			const maxCycles = Math.floor(duration / range.min);
+			let best = null;
+			for (let cycles = minCycles; cycles <= maxCycles; cycles++) {
+				const requested = duration / cycles;
+				const fittedPeriod = source.resolvePeriod ? source.resolvePeriod(requested) : requested;
+				if (fittedPeriod < range.min || fittedPeriod > range.max || Math.abs(fittedPeriod - requested) > 0.01) continue;
+				const drift = Math.abs(fittedPeriod - source.naturalPeriod) / source.naturalPeriod;
+				if (!best || drift < best.drift) best = { source, cycles, fittedPeriod, drift, fitted: true };
+			}
+			return best || { ...fit, fitted: false };
+		});
+		const fixedSeamError = fixed.reduce((sum, entry) => {
+			const remainder = duration % entry.cycleDuration;
+			return sum + Math.min(remainder, entry.cycleDuration - remainder) / entry.cycleDuration;
+		}, 0);
+		const cannotFit = fits.filter((fit) => !fit.fitted);
+		return {
+			duration, fits, cannotFit, fixedSeamError,
+			exact: fixedSeamError < 1e-8 && !cannotFit.length && !oneShots.length,
+			canApply: !cannotFit.length && fits.some((fit) => Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) > 0.01),
+			maximumDrift: fits.length ? Math.max(...fits.map((fit) => fit.drift)) : 0
+		};
+	});
+	return { candidates, fixed: fixed.map((entry) => entry.source), oneShots, fixedLoop, sources: animated };
 }
 
 // A committed clock is the single owner of displayed time: its frame-start

@@ -82,6 +82,7 @@ initializeExportSettings() {
 	// Setup listeners
 	this.setupExportSettingsListeners();
 	this.setupSettingsResetListeners();
+	this.setupAnimationLoop();
 }
 
 ,
@@ -558,10 +559,21 @@ initializeExportSettings() {
 	}
 
 ,
+	scheduleExportDuration() {
+		clearTimeout(this.exportDurationTimer);
+		this.exportDurationRequestId = (this.exportDurationRequestId || 0) + 1;
+		this.loopEstimate = null;
+		const fit = document.getElementById('fitAnimationsToLoop');
+		if (fit) fit.disabled = true;
+		this.exportDurationTimer = setTimeout(() => this.updateExportDuration(), CONFIG.export.timeline.estimateDebounceMs);
+	}
+
+,
 	async updateExportDuration() {
+		clearTimeout(this.exportDurationTimer);
 		const output = document.getElementById('exportMp4Duration');
 		const fidelityOutput = document.getElementById('exportFidelityEstimate');
-		if (!output && !fidelityOutput) return;
+		if (!output && !fidelityOutput && !document.getElementById('animationLoopStatus')) return;
 		const requestId = (this.exportDurationRequestId || 0) + 1;
 		this.exportDurationRequestId = requestId;
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
@@ -599,11 +611,12 @@ initializeExportSettings() {
 		const visibleLayers = this.layers.filter((layer) => layer.visible
 			&& layerHasVisibleContent(layer)
 			&& this._layerIntersectsExportCanvas(layer));
-		if (!visibleLayers.length) return;
+		if (!visibleLayers.length) { this.syncAnimationLoop(null); return; }
 
 		try {
 			const estimate = await this.estimateExportAnimation(visibleLayers);
 			if (requestId !== this.exportDurationRequestId) return;
+			this.syncAnimationLoop(estimate);
 			const loopDurationSeconds = estimate.duration / 1000;
 			if (output && usesTargetDuration) {
 				const repeats = targetDuration / loopDurationSeconds;
@@ -625,6 +638,7 @@ initializeExportSettings() {
 			}
 		} catch (error) {
 			if (requestId !== this.exportDurationRequestId) return;
+			this.syncAnimationLoop(null, 'Animation timing unavailable. Try again after the artwork loads.');
 			console.warn('Export duration estimate failed:', error);
 			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
 			if (fidelityOutput) fidelityOutput.textContent = 'Could not estimate this animation. Export will calculate it again.';
