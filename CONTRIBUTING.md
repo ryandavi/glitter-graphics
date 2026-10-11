@@ -11,6 +11,7 @@ Vanilla-JS glitter GIF editor (`index.html` + `js/`) with a PHP/MySQL admin (`ad
 | Adding or changing panels, toolbars, modals, buttons, icons or SCSS | [docs/UI-CONVENTIONS.md](docs/UI-CONVENTIONS.md) |
 | Running or writing tests, or probing the app headlessly | [tests/README.md](tests/README.md) |
 | Working in `admin/` or on the `data/` manifests | [admin/README.md](admin/README.md) |
+| Publishing the site, or changing what gets published | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): staging and production, the Deploy workflow and its one-time setup |
 | Writing or editing any modal page (`content/src`), its entities or its sources | [content/AUTHORING.md](content/AUTHORING.md): the closed token list, commands, and the rules for slugs and sources |
 | Editing the article pages' prose | `docs/local/HISTORY-PAGE-STYLE-GUIDE.md` (local-only) |
 | Picking up planned work, or writing or finishing a plan | `docs/README.md` (local-only): the index of active plans in `docs/plans/`, the archive in `docs/!old/`, and the plan lifecycle rules |
@@ -60,7 +61,7 @@ The current layout:
 
 ## Docs
 
-- Reference docs (this file, `docs/ARCHITECTURE.md`, `docs/LAYER-TYPE-CONTRACT.md`, `docs/UI-CONVENTIONS.md`, `tests/README.md`, `admin/README.md`) are tracked in git. Keep them current when behaviour they describe changes.
+- Reference docs (this file, `docs/ARCHITECTURE.md`, `docs/LAYER-TYPE-CONTRACT.md`, `docs/UI-CONVENTIONS.md`, `docs/DEPLOYMENT.md`, `tests/README.md`, `admin/README.md`) are tracked in git. Keep them current when behaviour they describe changes.
 - `docs/` has four parts. The root holds the tracked reference docs above. `docs/local/` holds private reference material, `docs/plans/` holds active plans and their delegation prompts, and `docs/!old/` is the archive of finished plans. The last three and `docs/README.md` are local-only, via `.git/info/exclude`, as are some private content pages.
 - **Plan lifecycle:** new plans go in `docs/plans/` with a `Status:` line under the title. When a plan is done, fold what is still true into the reference docs, then move it and its delegation prompts to `docs/!old/`. Run `node tools/docs-index.js` after any add or move; it regenerates the index in `docs/README.md`.
 - **Code comments must not cite plan files.** Plans are local-only and move when they finish. State the constraint in the comment, or point at a tracked reference doc.

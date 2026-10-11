@@ -1,0 +1,15 @@
+{
+	"publish": [
+		"index.html",
+		"css/style.css",
+		"js",
+		"data",
+		"images",
+		"fonts",
+		"modals"
+	],
+	"environments": {
+		"staging": { "analytics": false },
+		"production": { "analytics": true }
+	}
+}

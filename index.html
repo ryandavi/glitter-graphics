@@ -2019,11 +2019,14 @@
 	<!-- App -->
 	<script src="js/app.js?v=ec6d2660"></script>
 
+	<!-- site:analytics:start -->
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.
-	     The script skips counting on localhost, so local development stays out of the stats. -->
+	     The script skips counting on localhost, so local development stays out of the stats.
+	     tools/build-site.js removes this region for environments with analytics off. -->
 	<script data-goatcounter="https://ryandavi-glitter.goatcounter.com/count"
 		async src="//gc.zgo.at/count.js"></script>
+	<!-- site:analytics:end -->
 
 </body>
 

@@ -1,0 +1,47 @@
+name: Deploy
+
+# A push to the main branch publishes to staging. Production is published by
+# running this workflow by hand and choosing "production". Setup and daily use
+# are in docs/DEPLOYMENT.md.
+
+on:
+  push:
+    branches: [glitter-and-sticker-editor]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to publish
+        type: choice
+        options: [staging, production]
+        default: staging
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: verify
+    # Repository variable. Until it is 'true' this workflow only runs the checks.
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/build-site.js --env "${{ inputs.environment || 'staging' }}" --out _site
+      - name: Upload
+        # v4.3.5, pinned to its commit because this step receives the credentials.
+        uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          local-dir: ./_site/
+          server-dir: ${{ vars.FTP_SERVER_DIR }}

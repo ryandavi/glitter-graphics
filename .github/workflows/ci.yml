@@ -1,8 +1,11 @@
 name: CI
 
 on:
+  # The main branch is checked by the Deploy workflow, which calls this one.
   push:
+    branches-ignore: [glitter-and-sticker-editor]
   pull_request:
+  workflow_call:
 
 jobs:
   verify:
