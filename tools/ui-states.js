@@ -408,10 +408,26 @@ async function animatedFilterStates(page, visit, viewport) {
 		const e = window.editor;
 		e.layerManager.clearSelection();
 		if (e.openAnimationLoop) { e.openAnimationLoop(); await e.updateExportDuration(); }
-		if (e.mobileManager.isMobile) e.mobileManager.openLeadingSection();
 	});
 	await wait(page, 500);
 	await visit(`${viewport} animated-filters loop-helper`, { shot: '#designPanel', tall: viewport !== 'phone' });
+	await page.evaluate(async () => {
+		const e = window.editor;
+		const hue = e.layers.find((layer) => layer.filterData?.type === 'hue-cycle');
+		hue.filterData = GlitterFilter.normalizeFilterData({ type: 'hue-cycle', speed: 1.4 });
+		const fixed = e.layerManager.addLayer(LayerType.FILTER);
+		fixed.filterData = GlitterFilter.normalizeFilterData({ type: 'dither', shimmer: true, palette: 'bw' });
+		const shape = e.layerManager.addLayer(LayerType.SHAPE);
+		getLayerFillSlot(shape).mode = 'solid';
+		shape.animations = [GlitterAnimation.normalizeAnimation({ type: 'wobble', periodMs: 1400 })];
+		e.openAnimationLoop(); await e.updateExportDuration();
+		document.getElementById('animationLoopCandidate').value = '800'; e.syncLoopCandidate();
+	});
+	await wait(page, 300);
+	await visit(`${viewport} animated-filters loop-needs-fit`, { shot: '#designPanel', tall: viewport !== 'phone' });
+	await page.evaluate(async () => { editor.fitAnimationsToLoop(); await editor.updateExportDuration(); });
+	await wait(page, 300);
+	await visit(`${viewport} animated-filters loop-fitted`, { shot: '#designPanel', tall: viewport !== 'phone' });
 }
 
 module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates };

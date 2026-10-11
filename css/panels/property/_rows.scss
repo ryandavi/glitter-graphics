@@ -35,6 +35,20 @@
 // A host with no label or revert uses the row's full width and gutter.
 .property-row.is-control { grid-template-columns: minmax(0, 1fr); }
 
+// A result pairs its measured value with a status, without a field or button.
+.property-result {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--spacing-base);
+	font-size: var(--font-size-sm);
+	color: var(--color-text-primary);
+	align-items: center;
+
+	> .property-result-value {
+		font-variant-numeric: tabular-nums;
+	}
+}
+
 // A choice control stops short of the revert column, as does a field that a
 // revert follows.
 .property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {

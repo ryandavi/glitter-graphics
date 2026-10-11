@@ -37,15 +37,23 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet'].forEach((id) => {
 			document.getElementById(id).hidden = !fit?.sources.length;
 		});
-		status.textContent = fit?.sources.length
-			? `Current export: ${(estimate.duration / 1000).toFixed(2)} s. ${estimate.exact && !fit.oneShots.length ? 'The loop closes cleanly.' : 'The ends do not match.'}`
-			: message;
+		status.replaceChildren();
+		if (fit?.sources.length) {
+			const clean = estimate.exact && !fit.oneShots.length;
+			const value = document.createElement('span'); value.className = 'property-result-value'; value.textContent = `${(estimate.duration / 1000).toFixed(2)} s loop`;
+			const badge = document.createElement('span'); badge.className = `badge ${clean ? 'is-accent' : 'is-warning'}`;
+			badge.textContent = clean ? 'Seamless' : 'Visible seam';
+			badge.title = clean ? 'The loop closes cleanly.' : 'The end does not match the start.';
+			status.append(value, badge);
+		} else status.textContent = message;
 		const analyses = new Map((estimate?.sourceAnalysis || []).map((entry) => [entry.key, entry]));
+		const showBefore = (fit?.sources || []).some((source) => this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] != null);
 		sources.replaceChildren();
 		const head = sources.createTHead().insertRow();
-		['Source', 'Current', 'Before fitting'].forEach((label, index) => {
+		['Source', 'Current', ...(showBefore ? ['Before'] : [])].forEach((label, index) => {
 			const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = label;
 			if (index) cell.className = 'is-numeric';
+			if (label === 'Before') cell.title = 'Timing saved before the first fit';
 			head.append(cell);
 		});
 		const body = sources.createTBody();
@@ -63,9 +71,10 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			button.addEventListener('click', () => this.layerManager.setActiveLayer(source.ownerLayerId));
 			name.append(button); row.append(name);
 			const previousPeriod = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
-			[period, previousPeriod].forEach((value) => {
+			[period, ...(showBefore ? [previousPeriod] : [])].forEach((value) => {
 				const cell = row.insertCell(); cell.className = 'is-numeric';
-				cell.textContent = value == null ? '—' : `${(value / 1000).toFixed(2)} s`;
+				cell.textContent = value == null ? '-' : `${(value / 1000).toFixed(2)} s`;
+				if (value == null) cell.setAttribute('aria-label', 'No saved timing');
 			});
 		});
 		const previous = select.value;
@@ -104,10 +113,21 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 			if (!fit.fixedLoop.exact) notes.push(`Fixed sources (${fit.fixed.map((source) => source.label || source.key).join(', ')}) share no loop within the limit. This is the closest loop; editable speeds cannot close its seam.`);
 		}
 		if (fit?.oneShots.length) notes.push(`One-shot animations (${fit.oneShots.map((source) => source.label || source.key).join(', ')}) do not repeat; their speeds are left unchanged.`);
-		note.textContent = notes.join(' ') || (candidate ? 'Editable animation speeds already fit this loop.' : 'Add animated artwork or an animated look to plan a loop.');
+		note.textContent = notes.join('\n') || (candidate ? 'Timing already fits.' : '');
+		note.hidden = !fit?.sources.length || !note.textContent;
+		document.getElementById('animationLoopChangeSet').hidden = note.hidden;
 		button.disabled = !candidate?.canApply;
+		button.hidden = button.disabled;
 		const reset = document.getElementById('resetAnimationLoop');
-		if (reset) reset.disabled = !(fit?.sources || []).some((source) => typeof source.setPeriod === 'function' && this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key] != null);
+		if (reset) {
+			reset.disabled = !(fit?.sources || []).some((source) => {
+				const before = this.layers.find((layer) => layer.id === source.ownerLayerId)?.loopOriginalPeriods?.[source.key];
+				return typeof source.setPeriod === 'function' && before != null && Math.abs(before - source.naturalPeriod) > 0.01;
+			});
+			reset.hidden = reset.disabled;
+		}
+		document.getElementById('animationLoopLengthSet').hidden = !fit?.candidates.some((entry) => entry.canApply);
+		document.getElementById('animationLoopActionSet').hidden = button.hidden && (!reset || reset.hidden);
 	},
 
 	fitAnimationsToLoop() {

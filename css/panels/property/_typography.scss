@@ -70,6 +70,11 @@
 	padding: 0 var(--property-gutter);
 
 	&:empty { display: none; }
+	&.is-result {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+		white-space: pre-line;
+	}
 
 	&.is-error { color: var(--color-danger-bright); }
 	&.is-warning { color: var(--color-warning); }

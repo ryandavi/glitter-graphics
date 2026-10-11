@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
 		});
 		await page.evaluate(async () => { editor.openAnimationLoop(); await editor.updateExportDuration(); });
 		assert(await page.locator('#animationLoopStatus').isVisible());
-		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet']) {
+		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopChangeSet', 'animationLoopActionSet']) {
 			assert(!(await page.locator(`#${id}`).isVisible()), `${id} must be hidden with no animation sources`);
 		}
 		const timings = await page.evaluate(async () => {
@@ -66,6 +66,12 @@ const { chromium } = require('playwright');
 			await e.updateExportDuration();
 			const candidate = e.loopEstimate.loopFit.candidates.find((entry) => entry.duration === 800);
 			document.getElementById('animationLoopCandidate').value = '800'; e.syncLoopCandidate();
+			const beforeUi = {
+				fit: !document.getElementById('fitAnimationsToLoop').hidden,
+				length: !document.getElementById('animationLoopLengthSet').hidden,
+				restore: !document.getElementById('resetAnimationLoop').hidden
+			};
+			const beforeColumns = document.getElementById('animationLoopSources').tHead.rows[0].cells.length;
 			const before = e.historyManager.historyIndex;
 			e.fitAnimationsToLoop();
 			const fitted = { hue: hue.filterData.speed, motion: shape.animations[0].periodMs, history: e.historyManager.historyIndex - before };
@@ -78,15 +84,26 @@ const { chromium } = require('playwright');
 			const selected = document.getElementById('animationLoopSources').querySelectorAll('button').length;
 			const staleCandidate = e.loopEstimate;
 			e.saveState('Invalidate loop');
-			return { fitted, undone, refitted, seam, selected, candidate: candidate.exact, staleCleared: !e.loopEstimate && !!staleCandidate };
+			const fittedColumns = document.getElementById('animationLoopSources').tHead.rows[0].cells.length;
+			const badge = document.querySelector('#animationLoopStatus .badge').textContent;
+			return { fitted, undone, refitted, seam, selected, beforeUi, beforeColumns, fittedColumns, badge, candidate: candidate.exact, staleCleared: !e.loopEstimate && !!staleCandidate };
 		});
 		assert(fitting.candidate && fitting.seam);
 		assert.deepStrictEqual(fitting.fitted, { hue: 0.8, motion: 800, history: 1 });
 		assert.strictEqual(fitting.undone, 1.4); assert.strictEqual(fitting.refitted, 0.8);
 		assert(fitting.selected >= 3 && fitting.staleCleared);
-		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopActionSet']) {
-			assert(await page.locator(`#${id}`).isVisible(), `${id} must return when animation sources exist`);
-		}
+		assert.deepStrictEqual(fitting.beforeUi, { fit: true, length: true, restore: false });
+		assert.strictEqual(fitting.beforeColumns, 2);
+		assert.strictEqual(fitting.fittedColumns, 3);
+		assert.strictEqual(fitting.badge, 'Seamless');
+		assert.strictEqual(await page.locator('#animationLoopStatus').innerText(), '0.80 s loop\nSeamless');
+		assert(await page.locator('#animationLoopChangeSet').isVisible(), 'Already fitted timing belongs below the source table');
+		assert.strictEqual(await page.locator('#animationLoopChanges').innerText(), 'Timing already fits.');
+		assert.strictEqual(await page.locator('#animationLoopSources td[aria-label="No saved timing"]').innerText(), '-');
+		assert(await page.locator('#animationLoopSourceSet').isVisible());
+		assert(!(await page.locator('#animationLoopLengthSet').isVisible()), 'Already fitted timing with no useful alternative needs no length picker');
+		assert(!(await page.locator('#fitAnimationsToLoop').isVisible()), 'An unavailable fit action must be hidden');
+		assert(await page.locator('#resetAnimationLoop').isVisible(), 'Saved timing must remain available to restore');
 		const restored = await page.evaluate(async () => {
 			await editor.updateExportDuration();
 			const table = document.getElementById('animationLoopSources');

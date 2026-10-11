@@ -7904,6 +7904,11 @@ body.tool-text .text-hover-baselines {
 .property-note:empty {
   display: none;
 }
+.property-note.is-result {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  white-space: pre-line;
+}
 .property-note.is-error {
   color: var(--color-danger-bright);
 }
@@ -7940,6 +7945,18 @@ body.tool-text .text-hover-baselines {
 
 .property-row.is-control {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.property-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--spacing-base);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  align-items: center;
+}
+.property-result > .property-result-value {
+  font-variant-numeric: tabular-nums;
 }
 
 .property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {

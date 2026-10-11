@@ -52,6 +52,7 @@ Literal colors are allowed only where the color must not follow the theme: selec
 | List row | `.list-row` | Handle, media, name over one meta line, trailing actions. Layers and Auto Glitter matches. |
 | Tile | `.action-card` (does something), `.choice-card` (picks a value) | |
 | Empty state | `.property-empty` | |
+| Result summary | `.property-result` | A single line of body text beside a shared status badge, inside a gutter-owning row. Supporting results use `.property-note.is-result`. |
 | Disclosure | `.advanced-disclosure` and the section chevron | Chevron points right when closed, down when open. Everywhere. |
 | Dialog footer | `.modal-footer` | Actions right-aligned, primary last |
 

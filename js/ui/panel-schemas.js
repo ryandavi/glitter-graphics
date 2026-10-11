@@ -370,16 +370,16 @@ const PANEL_SCHEMAS = {
 				] },
 				{ title: 'Animation', sections: [
 					{ kind: 'section', id: 'animationLoopSection', key: 'Animation Loop', title: 'Animation loop', collapsed: true, sets: [{ rows: [
-						{ kind: 'note', text: 'Each animation has its own loop. Choose a shared length, then fit editable speeds so they finish together. Choosing a length only previews the changes.' },
-						{ kind: 'note', id: 'animationLoopStatus', text: 'No animation sources.' }
+						{ kind: 'host', id: 'animationLoopStatus', classes: 'property-result', rowClasses: 'is-control', text: 'No animation sources.', attrs: { 'aria-live': 'polite' } }
 					] }, { id: 'animationLoopSourceSet', hidden: true, rows: [
 						{ kind: 'host', tag: 'table', id: 'animationLoopSources', classes: 'export-detail-table inset-surface', rowClasses: 'is-control', attrs: { 'aria-label': 'Animation loop times in seconds' } },
-						{ kind: 'note', text: 'Seconds per loop. Select a name to edit its source. Before fitting shows saved timing; — means no saved fit.' }
+						{ kind: 'note', text: 'Select a source to edit.' }
 					] }, { id: 'animationLoopLengthSet', hidden: true, rows: [
-						{ kind: 'select', id: 'animationLoopCandidate', label: 'Loop length', options: [] },
-						{ kind: 'note', id: 'animationLoopChanges' }
+						{ kind: 'select', id: 'animationLoopCandidate', label: 'Fit to', options: [] }
+					] }, { id: 'animationLoopChangeSet', hidden: true, rows: [
+						{ kind: 'note', id: 'animationLoopChanges', classes: 'is-result' }
 					] }, { id: 'animationLoopActionSet', hidden: true, actions: [
-						{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop' },
+						{ id: 'fitAnimationsToLoop', label: 'Fit animations to loop', primary: true },
 						{ id: 'resetAnimationLoop', label: 'Restore previous timing', title: 'Restore the timing saved before the first loop fit' }
 					] }] }
 				] }
