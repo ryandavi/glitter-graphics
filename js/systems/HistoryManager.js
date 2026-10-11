@@ -164,7 +164,7 @@ class HistoryManager {
 	// They are not document history: leaving the session drops them.
 	sessionHistory(direction) {
 		const session = getSessionDefinition(this.editor);
-		if (session?.history) return session.history(this.editor);
+		if (session?.history) return session.history(this.editor, direction);
 		return !session || session.id === 'area' ? this.editor.areaSelection?.history.claim(direction) : null;
 	}
 
@@ -182,6 +182,7 @@ class HistoryManager {
 
 	async stepHistory(direction) {
 		await this.editor.flushPendingCommits();
+		if (!this.sessionHistory(direction)) this.editor.textGlitterManager?.endTextEdit();
 		if (!(direction === 'undo' ? this.canUndo() : this.canRedo())) return;
 		const session = this.sessionHistory(direction);
 		this.coalescingOpen = false;
@@ -221,6 +222,8 @@ class HistoryManager {
 		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
 		const session = this.sessionHistory('undo');
 		if (session) return session.canUndo;
+		const textSession = this.editor.textGlitterManager?.editSession;
+		if (textSession && (textSession.created || textSession.dirty || textSession.initialText !== this.editor.layerManager.getLayerById(textSession.layerId)?.textData.text)) return true;
 		return this.historyIndex > 0;
 	}
 

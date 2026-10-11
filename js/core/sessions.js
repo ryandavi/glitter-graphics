@@ -13,6 +13,7 @@ const SESSIONS = Object.freeze([
 		allows: (editor, command) => command.group === 'View' || (command.group === 'Tools' && editor.autoGlitterManager.allowsPreviewTool(command.tool)) },
 	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event), history: (editor) => editor.canvasBounds },
 	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession),
+		history: (editor, direction) => editor.textGlitterManager.getTextEditHistory(direction),
 		mode: { label: 'Text', icon: 'text' }, end: editor => editor.textGlitterManager.endTextEdit(), cancel: (editor) => editor.textGlitterManager.endTextEdit() },
 	{ id: 'pathEdit', isActive: (editor) => Boolean(editor.pathEdit?.session),
 		mode: { label: 'Pen', icon: 'pen' }, canConfirm: (editor) => editor.pathEdit?.canHandleEnter(),

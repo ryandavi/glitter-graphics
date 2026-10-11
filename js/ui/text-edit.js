@@ -160,6 +160,7 @@ const TEXT_EDIT_METHODS = {
 		if (this.editSession?.layerId !== layer.id) {
 			this.endTextEdit();
 			this.editSession = { layerId: layer.id, selectionStart: layer.textData.text.length, selectionEnd: layer.textData.text.length, initialText: layer.textData.text, created, dirty: false, coalesceKey: `textEdit:${layer.id}:${performance.now()}` };
+			Object.assign(this.editSession, { undoStack: [], redoStack: [], groupClosed: true });
 		}
 		this.textProxy.value = layer.textData.text;
 		this.textProxy.hidden = !CONFIG.tools.text.canvasEditing;
@@ -190,9 +191,10 @@ const TEXT_EDIT_METHODS = {
 		this.editor.updateContextToolbars();
 		this.editor.requestPreviewUpdate();
 	},
-	applyTextEdit(layer, value, selection = null) {
+	applyTextEdit(layer, value, selection = null, { recordHistory = true } = {}) {
 		if (!layer || !this.editor.canEditLayer(layer)) return;
 		value = clampTextLength(value, CONFIG.tools.text.maxTextLength);
+		if (recordHistory && value !== layer.textData.text && this.editSession?.layerId === layer.id) this.recordTextStep(layer, value, selection);
 		this.preparePendingAnchorPreservation(layer);
 		layer.textData.text = value;
 		layer.name = this.getLayerName(value);
@@ -203,6 +205,49 @@ const TEXT_EDIT_METHODS = {
 		this.editor.layerManager.renderLayersList();
 		this.editor.updateActionButtons();
 		this.scheduleTextCommit(layer);
+		this.editor.updateHistoryButtons();
+	},
+
+	textEditSnapshot() {
+		const session = this.editSession;
+		return { text: this.editor.layerManager.getLayerById(session.layerId).textData.text, start: session.selectionStart, end: session.selectionEnd, label: 'Edit text' };
+	},
+
+	recordTextStep(layer, value, selection) {
+		const session = this.editSession, before = this.textEditSnapshot(), now = performance.now();
+		const delta = value.length - before.text.length;
+		const kind = delta > 0 ? 'insert' : delta < 0 ? 'delete' : 'replace';
+		const caretMoved = session.lastCaret && (before.start !== session.lastCaret.start || before.end !== session.lastCaret.end);
+		const startsWord = kind === 'insert' && /\s$/u.test(before.text.slice(0, before.start)) && !/\s/u.test(value[before.start] || '');
+		const crossesDeletedWord = kind === 'delete' && session.deletedSpace && !/\s/u.test(before.text[before.start - 1] || '');
+		if (session.groupClosed || now - session.lastEditAt > CONFIG.ui.history.textPauseMs || kind !== session.lastEditKind || caretMoved || startsWord || crossesDeletedWord || before.start !== before.end || Math.abs(delta) !== 1) {
+			session.undoStack.push(before);
+			if (session.undoStack.length > CONFIG.app.limits.historyLimit) session.undoStack.shift();
+		}
+		session.redoStack.length = 0;
+		session.lastEditAt = now;
+		session.lastEditKind = kind;
+		session.lastCaret = selection || { start: value.length, end: value.length };
+		session.deletedSpace = kind === 'delete' && /\s/u.test(before.text[before.start - 1] || '');
+		session.groupClosed = Math.abs(delta) !== 1;
+	},
+
+	getTextEditHistory(direction) {
+		const session = this.editSession;
+		if (!session || (direction === 'undo' && !session.undoStack.length)) return null;
+		return {
+			undoStack: session.undoStack, redoStack: session.redoStack,
+			canUndo: session.undoStack.length > 0, canRedo: session.redoStack.length > 0,
+			undo: () => this.restoreTextStep('undo'), redo: () => this.restoreTextStep('redo')
+		};
+	},
+
+	restoreTextStep(direction) {
+		const session = this.editSession, stack = session[`${direction}Stack`], state = stack.pop();
+		if (!state) return;
+		session[direction === 'undo' ? 'redoStack' : 'undoStack'].push(this.textEditSnapshot());
+		session.groupClosed = true;
+		this.applyTextEdit(this.editor.layerManager.getLayerById(session.layerId), state.text, { start: state.start, end: state.end }, { recordHistory: false });
 	},
 	writeProxyText() {
 		const layer = this.editor.layerManager.getLayerById(this.editSession?.layerId);

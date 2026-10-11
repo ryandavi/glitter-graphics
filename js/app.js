@@ -681,14 +681,12 @@ class GlitterEditor {
 		await this.historyManager.restoreState(state);
 	}
 	async undo() {
-		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.undo();
 		this.isSaved = false;
 		this.pathEdit?.revalidate();
 	}
 
 	async redo() {
-		this.textGlitterManager?.endTextEdit();
 		await this.historyManager.redo();
 		this.isSaved = false;
 		this.pathEdit?.revalidate();

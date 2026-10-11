@@ -421,6 +421,14 @@ function focusKeyClaim(element = document.activeElement) {
 	return { typing, arrows };
 }
 
+// Free-text fields keep native undo. Canvas text owns session steps; numeric
+// and color controls have already committed document steps.
+function focusClaimsHistoryKey(element = document.activeElement) {
+	if (!focusKeyClaim(element).typing || element.id === 'canvasTextInput') return false;
+	if (element.matches('input[type="number"], input[type="range"], input[type="color"], .color-hex-input, [role="spinbutton"]')) return false;
+	return true;
+}
+
 function focusClaimsArrowKey(key, element = document.activeElement) {
 	const { arrows } = focusKeyClaim(element);
 	return arrows === 'all' || (arrows === 'vertical' && (key === 'ArrowUp' || key === 'ArrowDown'));
