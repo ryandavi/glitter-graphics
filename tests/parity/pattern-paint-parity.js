@@ -12,9 +12,11 @@ const assert = require('assert/strict');
 		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/');
 		await page.waitForFunction(() => window.editor);
 		const types = await page.evaluate(() => Object.keys(PATTERN_TYPES));
-		const cases = [...types.map(type => ({ type })), { type: 'motif', transparentBackground: true, shapeId: 'heart', shapeSize: 100, rotation: 45 }, { type: 'stripes', scroll: 'down-right' }];
+		const cases = [...types.map(type => ({ type })), { type: 'motif', transparentBackground: true, shapeId: 'heart', shapeSize: 100, rotation: 45 }, { type: 'stripes', scroll: 'down-right' },
+			...['grid', 'brick-row', 'brick-column', 'hex-row', 'hex-column'].flatMap(tileType => [true, false].map(crisp => ({ type: 'motif', tileType, brickOffset: '0.3333333333333333', spacing: 37, shapeSize: 170, rotation: 30, transparentBackground: true, scroll: 'down-right', crisp })))];
 		for (const [index, pattern] of cases.entries()) {
 			await page.evaluate(pattern => {
+				PREFERENCES.set('crispMaskEdges', pattern.crisp !== false);
 				document.getElementById('pattern-parity-fixture')?.remove();
 				const node = document.createElement('div');
 				node.id = 'pattern-parity-fixture';
@@ -29,9 +31,9 @@ const assert = require('assert/strict');
 			const times = pattern.scroll ? [0, 250, 1000, 1999, 2000] : [0];
 			for (const time of times) {
 				await page.evaluate(time => {
-					const animation = document.querySelector('#pattern-parity-fixture > div').getAnimations()[0];
-					if (window.patternParitySource.pattern.scroll !== 'none' && !animation) throw Error('Scrolling preview animation is missing; use GLITTER_TEST_CSS with compiled Sass');
-					if (animation) { animation.pause(); animation.currentTime = time; }
+					const animations = document.querySelector('#pattern-parity-fixture > div').getAnimations();
+					if (window.patternParitySource.pattern.scroll !== 'none' && !animations.length) throw Error('Scrolling preview animation is missing; use GLITTER_TEST_CSS with compiled Sass');
+					for (const animation of animations) { animation.pause(); animation.currentTime = time; }
 				}, time);
 				await page.waitForTimeout(25);
 				const shot = await page.locator('#pattern-parity-fixture').screenshot({ animations: 'allow' });

@@ -685,6 +685,7 @@ const CONFIG = deepFreeze({
 		pattern: {
 			type: 'checker', color: '#ff4fa3', backgroundColor: '#ffffff',
 			transparentBackground: false, direction: 'diagonal-up', stagger: true,
+			tileType: 'brick-row', brickOffset: '0.5', overlap: 'row', edgeSamples: 4,
 			scroll: 'none', maxTilePx: 1024, exportFps: 30
 		},
 		gradient: {

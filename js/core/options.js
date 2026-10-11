@@ -82,6 +82,19 @@ defineOptions('patternType', [
 	{ value: 'stripes', label: 'Stripes' }, { value: 'zigzag', label: 'Zigzag' },
 	{ value: 'motif', label: 'Motif' }
 ]);
+defineOptions('patternTileType', [
+	{ value: 'grid', label: 'Grid' }, { value: 'brick-row', label: 'Brick by row' },
+	{ value: 'brick-column', label: 'Brick by column' }, { value: 'hex-row', label: 'Hex by row' },
+	{ value: 'hex-column', label: 'Hex by column' }
+]);
+defineOptions('patternBrickOffset', [
+	{ value: '0.5', label: '1/2' }, { value: '0.3333333333333333', label: '1/3' },
+	{ value: '0.6666666666666666', label: '2/3' }, { value: '0.25', label: '1/4' }, { value: '0.75', label: '3/4' }
+]);
+defineOptions('patternOverlap', [
+	{ value: 'row', label: 'Lower rows in front' }, { value: 'row-reverse', label: 'Upper rows in front' },
+	{ value: 'column', label: 'Right columns in front' }, { value: 'column-reverse', label: 'Left columns in front' }
+]);
 defineOptions('patternDirection', [
 	{ value: 'horizontal', label: 'Horizontal' }, { value: 'vertical', label: 'Vertical' },
 	{ value: 'diagonal-up', label: 'Diagonal up' }, { value: 'diagonal-down', label: 'Diagonal down' }

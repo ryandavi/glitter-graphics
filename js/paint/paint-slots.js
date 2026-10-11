@@ -37,6 +37,7 @@ const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
 		scale: { field: 'textureScale', suffix: 'Scale', documentScale: 'texture' },
 		'pattern.thickness': { field: 'patternThickness', suffix: 'PatternThickness' },
 		'pattern.shapeSize': { field: 'patternShapeSize', suffix: 'PatternShapeSize' },
+		'pattern.spacing': { field: 'patternSpacing', suffix: 'PatternSpacing' },
 		'pattern.rotation': { field: 'patternRotation', suffix: 'PatternRotation' },
 		'pattern.scrollCycleMs': { field: 'patternScrollCycle', suffix: 'PatternScrollCycle' },
 		'colorAdjust.hue': { field: 'hue', suffix: 'Hue', colorAdjust: true },
@@ -382,10 +383,11 @@ function applyPaintSourceToElement(element, source, options = {}) {
 		const direction = getOptions('patternScroll').find((option) => option.value === source.pattern.scroll);
 		style.setProperty('--pattern-origin-x', `${origin.x}px`);
 		style.setProperty('--pattern-origin-y', `${origin.y}px`);
-		style.setProperty('--pattern-distance-x', `${direction.x * tile.size}px`);
-		style.setProperty('--pattern-distance-y', `${direction.y * tile.size}px`);
+		style.setProperty('--pattern-distance-x', `${direction.x * tile.width}px`);
+		style.setProperty('--pattern-distance-y', `${direction.y * tile.height}px`);
 		style.setProperty('--pattern-cycle', `${source.pattern.scrollCycleMs}ms`);
-		style.setProperty('--pattern-steps', String(tile.size));
+		style.setProperty('--pattern-steps-x', String(tile.width));
+		style.setProperty('--pattern-steps-y', String(tile.height));
 		return;
 	}
 

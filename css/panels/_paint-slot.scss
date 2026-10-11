@@ -1,21 +1,28 @@
 @use '../mixins' as *;
 
 .pattern-preview {
-	height: var(--control-height);
+	height: calc(var(--control-height) * 3);
+	padding: 0 var(--property-gutter);
 	border-radius: var(--radius-sm);
 }
 
 .pattern-scrolling {
-	animation: pattern-scroll var(--pattern-cycle) steps(var(--pattern-steps)) infinite;
+	animation: pattern-scroll-x var(--pattern-cycle) steps(var(--pattern-steps-x)) infinite,
+		pattern-scroll-y var(--pattern-cycle) steps(var(--pattern-steps-y)) infinite;
 }
 
 .preview-motion-paused .pattern-scrolling {
 	animation: none;
 }
 
-@keyframes pattern-scroll {
-	from { background-position: var(--pattern-origin-x) var(--pattern-origin-y); }
-	to { background-position: calc(var(--pattern-origin-x) + var(--pattern-distance-x)) calc(var(--pattern-origin-y) + var(--pattern-distance-y)); }
+@keyframes pattern-scroll-x {
+	from { background-position-x: var(--pattern-origin-x); }
+	to { background-position-x: calc(var(--pattern-origin-x) + var(--pattern-distance-x)); }
+}
+
+@keyframes pattern-scroll-y {
+	from { background-position-y: var(--pattern-origin-y); }
+	to { background-position-y: calc(var(--pattern-origin-y) + var(--pattern-distance-y)); }
 }
 
 // ===== Canvas Size (Photoshop-style resize) =====

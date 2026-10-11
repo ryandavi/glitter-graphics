@@ -7107,6 +7107,20 @@ body.tool-text .text-hover-baselines {
   border-radius: var(--radius-inner);
 }
 
+.preset-grid-thumbnail.shape-preset-thumbnail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+.preset-grid-thumbnail.shape-preset-thumbnail > svg {
+  display: block;
+  width: 75%;
+  height: 75%;
+  margin: auto;
+  fill: currentColor;
+}
+
 .preset-grid-thumbnail.filter-css-thumbnail {
   height: var(--preset-grid-thumbnail-height);
 }
@@ -7282,24 +7296,33 @@ body.tool-text .text-hover-baselines {
 }
 
 .pattern-preview {
-  height: var(--control-height);
+  height: calc(var(--control-height) * 3);
+  padding: 0 var(--property-gutter);
   border-radius: var(--radius-sm);
 }
 
 .pattern-scrolling {
-  animation: pattern-scroll var(--pattern-cycle) steps(var(--pattern-steps)) infinite;
+  animation: pattern-scroll-x var(--pattern-cycle) steps(var(--pattern-steps-x)) infinite, pattern-scroll-y var(--pattern-cycle) steps(var(--pattern-steps-y)) infinite;
 }
 
 .preview-motion-paused .pattern-scrolling {
   animation: none;
 }
 
-@keyframes pattern-scroll {
+@keyframes pattern-scroll-x {
   from {
-    background-position: var(--pattern-origin-x) var(--pattern-origin-y);
+    background-position-x: var(--pattern-origin-x);
   }
   to {
-    background-position: calc(var(--pattern-origin-x) + var(--pattern-distance-x)) calc(var(--pattern-origin-y) + var(--pattern-distance-y));
+    background-position-x: calc(var(--pattern-origin-x) + var(--pattern-distance-x));
+  }
+}
+@keyframes pattern-scroll-y {
+  from {
+    background-position-y: var(--pattern-origin-y);
+  }
+  to {
+    background-position-y: calc(var(--pattern-origin-y) + var(--pattern-distance-y));
   }
 }
 .canvas-size-controls {

@@ -62,6 +62,12 @@ class TemplateManager {
 					scaleEffects: true,
 					scaleTextures: true
 				});
+				if (entry.positionAnchor) {
+					const target = { ...layer.transform.position };
+					const anchor = getLayerAnchorPoint(this.editor, layer);
+					layer.transform.position.x += target.x - anchor.x;
+					layer.transform.position.y += target.y - anchor.y;
+				}
 				PreviewLayerSession.stage(layer);
 				layers.push(layer);
 			}

@@ -785,6 +785,7 @@ initializeExportSettings() {
 		this.textGlitterManager?.clearPreviewMaskUrls();
 		this.shapeGlitterManager?.invalidateMeasurement();
 		this.maskEditor?._syncAntialiasControls();
+		document.querySelectorAll('[data-pattern-editor]').forEach((set) => set._renderEffectPattern?.());
 		this.requestPreviewUpdate();
 	}
 

@@ -846,26 +846,13 @@ function buildPaintSource(slot) {
 		active: mode === slot.activeMode,
 		mode
 	}));
-	if (slot.presentation === 'flyout') {
-		source.prepend(buildSegmented(sourceEntries, { label: `${slot.title || sourceLabel} source` }));
-		// Tabs carry no row label, so a section with a second source names
-		// this one as a set.
-		if (slot.sourceLabel) {
-			source.setAttribute('role', 'group');
-			source.setAttribute('aria-label', slot.sourceLabel);
-		}
-	} else {
-		const sourceChoices = buildSelectProxy(sourceEntries, { label: `${slot.title || sourceLabel} source` });
-		const sourceRow = buildOptionGroup(sourceLabel, [sourceChoices]);
-		attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: sourceLabel });
-		// The option buttons managers bind sit beside the row, not inside it.
-		const hooks = sourceRow.querySelector('.property-select-hooks');
-		if (hooks) {
-			hooks.remove();
-			source.prepend(hooks);
-		}
-		source.prepend(sourceRow);
-	}
+	const sourceChoices = buildSelectProxy(sourceEntries, { label: `${slot.title || sourceLabel} source` });
+	const sourceRow = buildOptionGroup(sourceLabel, [sourceChoices]);
+	attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: sourceLabel });
+	// Managers bind the hidden option buttons outside the visible row.
+	const hooks = sourceRow.querySelector('.property-select-hooks');
+	if (hooks) { hooks.remove(); source.prepend(hooks); }
+	source.prepend(sourceRow);
 	const colorRow = source.querySelector('.property-color-row');
 	if (slot.modes.includes('none')) {
 		const empty = buildPropertyEmpty({ title: 'No fill', text: 'Choose a source to add a fill.' });
@@ -918,7 +905,7 @@ function buildPatternSourceSets(slot, options = {}) {
 	preview.setAttribute('aria-hidden', 'true');
 	colors.appendChild(preview);
 	const types = buildPanelSet({ label: 'Type', rows: [select('type', 'Type', 'patternType')] });
-	const numeric = { thickness: 'patternThickness', shapeSize: 'patternShapeSize', rotation: 'patternRotation' };
+	const numeric = { thickness: 'patternThickness', shapeSize: 'patternShapeSize', rotation: 'patternRotation', spacing: 'patternSpacing' };
 	Object.entries(numeric).forEach(([key, slider]) => {
 		const row = buildSliderRow({ id: `${prefix}Pattern${panelCap(key)}`, slider });
 		row.dataset.patternField = key;
@@ -927,9 +914,11 @@ function buildPatternSourceSets(slot, options = {}) {
 	const direction = buildPanelItem(select('direction', 'Direction', 'patternDirection'));
 	direction.dataset.patternField = 'direction';
 	types.appendChild(direction);
-	const stagger = buildPanelItem(toggle('stagger', 'Stagger'));
-	stagger.dataset.patternField = 'stagger';
-	types.appendChild(stagger);
+	[['tileType', 'Tile type', 'patternTileType'], ['brickOffset', 'Brick offset', 'patternBrickOffset'], ['overlap', 'Overlap', 'patternOverlap']].forEach(([key, label, list]) => {
+		const row = buildPanelItem(select(key, label, list));
+		row.dataset.patternField = key;
+		types.appendChild(row);
+	});
 	const shapes = buildPanelItem({ kind: 'presetGrid', label: 'Motif shapes', classes: 'property-inset' });
 	shapes.dataset.patternField = 'shapeId';
 	shapes.dataset.patternShapes = '';

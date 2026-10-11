@@ -6,7 +6,7 @@ function getPatternShapePresetLibrary() {
 	if (!patternShapePresetLibrary) patternShapePresetLibrary = GlitterPresetLibrary.createPresetLibrary({
 		id: 'pattern-shapes', groups: [{ id: 'shapes', label: 'Shapes' }],
 		entries: ShapeLibrary.FILL_SHAPES.map((shape) => ({ id: shape.id, label: shape.label, group: 'shapes', value: shape.id })),
-		renderThumbnail: (entry, element) => { element.innerHTML = ShapeLibrary.getIconSvg(entry.id); }
+		renderThumbnail: (entry, element) => { element.classList.add('shape-preset-thumbnail'); element.innerHTML = ShapeLibrary.getContentSvg(entry.id); }
 	});
 	return patternShapePresetLibrary;
 }
@@ -20,7 +20,7 @@ function syncEffectPatternEditor(prefix, data) {
 		set.dataset.patternType = pattern.type;
 		set.querySelectorAll('[data-pattern-field]').forEach((row) => {
 			const key = row.dataset.patternField;
-			row.hidden = key === 'scrollCycleMs' ? pattern.scroll === 'none' : !PATTERN_TYPES[pattern.type].fields.includes(key);
+			row.hidden = key === 'scrollCycleMs' ? pattern.scroll === 'none' : !PATTERN_TYPES[pattern.type].fields.includes(key) || key === 'brickOffset' && !pattern.tileType.startsWith('brick');
 		});
 		set.querySelectorAll('[data-pattern-key]').forEach((input) => {
 			if (input.type === 'checkbox') input.checked = pattern[input.dataset.patternKey];
@@ -58,8 +58,15 @@ function installEffectPatternEditor({ prefix, getData, onUpdate }) {
 	sets.forEach((set) => {
 		set.querySelectorAll('[data-pattern-key]').forEach((input) => {
 			const key = input.dataset.patternKey;
-			input.addEventListener('change', () => update(key, input.type === 'checkbox' ? input.checked : input.value, true));
-			if (input.type === 'color') input.addEventListener('input', () => update(key, input.value, false));
+			input.addEventListener('change', () => {
+				flushLiveApply(input);
+				update(key, input.type === 'checkbox' ? input.checked : input.value, true);
+			});
+			if (input.type === 'color') input.addEventListener('input', () => {
+				const data = getData();
+				const value = input.value;
+				scheduleLiveApply(input, 'raster', () => { if (getData() === data) update(key, value, false); });
+			});
 		});
 		const presets = set.querySelector('[data-pattern-presets]');
 		if (presets) presets._choosePattern = (entry) => {

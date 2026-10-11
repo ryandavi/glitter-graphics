@@ -48,6 +48,21 @@
 	border-radius: var(--radius-inner);
 }
 
+.preset-grid-thumbnail.shape-preset-thumbnail {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-primary);
+
+	>svg {
+		display: block;
+		width: 75%;
+		height: 75%;
+		margin: auto;
+		fill: currentColor;
+	}
+}
+
 // The filter painter and the grid thumbnail are the same element. Keep the
 // grid's fixed preview box from being collapsed by `.filter-css-thumbnail`'s
 // standalone `height: 100%` rule below.

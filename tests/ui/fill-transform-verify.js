@@ -455,9 +455,10 @@ async function setTransform(page, layerId, updates) {
 			&& window.editor.historyManager.history.length === count + 1, sourceHistory), 'Fill source buttons must commit once through the binder');
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.waitForFunction(() => window.editor.mobileManager.isMobile);
-		await page.evaluate(() => window.editor.mobileManager.openDrawer('edit'));
+		await page.evaluate(() => window.editor.mobileManager.closeAllDrawers());
+		await page.locator('#phoneChipBar .phone-chip').filter({ hasText: /^Fill$/ }).click();
 		await page.waitForTimeout(400);
-		assert(await page.locator('#glitterFillSolid').isVisible(), 'Fill properties must remain usable in the phone Edit drawer');
+		assert(await page.locator('#glitterFillSection select[aria-label="Fill source"]').isVisible(), 'Fill source dropdown must remain usable in the phone Fill sheet');
 		assert(pageErrors.length === 0, `Page errors: ${pageErrors.join(' | ')}`);
 		console.log('fill-transform-verify: all checks passed');
 	} finally {

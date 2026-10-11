@@ -20,7 +20,8 @@
 //   compute  a whole-document recompute or a scene rebuild
 const FIELDS = Object.freeze({
 	patternThickness: { label: 'Thickness', unit: '%', min: 1, max: 99, step: 1, value: 50 },
-	patternShapeSize: { label: 'Shape size', unit: '%', min: 5, max: 100, step: 1, value: 60 },
+	patternShapeSize: { label: 'Shape size', unit: '%', min: 5, max: 200, step: 1, value: 60 },
+	patternSpacing: { label: 'Spacing', unit: '%', min: 0, max: 200, step: 1, value: 0 },
 	patternRotation: { label: 'Rotation', unit: '\u00b0', min: 0, max: 359, step: 1, value: 0 },
 	patternScrollCycle: { label: 'Cycle', unit: 'ms', min: 100, max: 20000, step: 100, value: 2000, scale: 'log' },
 	areaModifyAmount: { label: 'Amount', unit: 'px', min: 1, max: 100, step: 1, value: 4, cost: 'compute' },

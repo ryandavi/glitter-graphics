@@ -430,4 +430,20 @@ async function animatedFilterStates(page, visit, viewport) {
 	await visit(`${viewport} animated-filters loop-fitted`, { shot: '#designPanel', tall: viewport !== 'phone' });
 }
 
-module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates };
+async function patternStates(page, visit, viewport) {
+	await page.evaluate(async () => {
+		await editor.loadBlankImage(400, 300, '#ffffff');
+		const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 240, height: 180 });
+		editor.layerManager.insertLayer(layer);
+		editor.layerManager.setActiveLayer(layer.id);
+		document.getElementById('shapeFillPattern').click();
+		const type = document.getElementById('shapeFillPatternType');
+		type.value = 'motif';
+		type.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+	await page.click('[data-flyout-for="shapeFillSection"] .property-card-title');
+	await wait(page);
+	await visit(`${viewport} patterns motif`, { shot: '#libraryWindow', tall: true });
+}
+
+module.exports = { routeSourceSnapshot, chromium, URL, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates, backgroundRemovalStates, animatedFilterStates, patternStates };

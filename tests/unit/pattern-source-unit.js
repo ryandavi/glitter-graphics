@@ -10,14 +10,14 @@ const { chromium } = require('playwright');
 		await page.waitForFunction(() => window.editor);
 		const result = await page.evaluate(async () => {
 			const assert = (value, message) => { if (!value) throw Error(message); };
-			const fields = { thickness: 'patternThickness', shapeSize: 'patternShapeSize', rotation: 'patternRotation', scrollCycleMs: 'patternScrollCycle' };
+			const fields = { thickness: 'patternThickness', shapeSize: 'patternShapeSize', rotation: 'patternRotation', spacing: 'patternSpacing', scrollCycleMs: 'patternScrollCycle' };
 			const defaults = normalizeEffectPattern(null);
 			const bad = normalizeEffectPattern({ type: 'bad', direction: 'bad', scroll: 'bad', color: 'red', backgroundColor: '#fff', shapeId: 'bad', thickness: -10, shapeSize: 999, rotation: Infinity, scrollCycleMs: NaN });
 			assert(bad.type === defaults.type && bad.color === defaults.color && bad.backgroundColor === defaults.backgroundColor, 'Invalid identifiers and colors must fall back');
 			assert(bad.thickness === FIELDS.patternThickness.min && bad.shapeSize === FIELDS.patternShapeSize.max && bad.rotation === defaults.rotation, 'Invalid numbers must clamp or fall back');
 			for (const type of Object.values(PATTERN_TYPES)) {
 				assert(normalizeEffectPattern({ type: type.id }).type === type.id, `${type.id} did not normalize`);
-				for (const field of type.fields) assert(fields[field] || getOptions(`pattern${field.charAt(0).toUpperCase()}${field.slice(1)}`).length || ['shapeId', 'stagger'].includes(field), `Undeclared ${field}`);
+				for (const field of type.fields) assert(fields[field] || getOptions(`pattern${field.charAt(0).toUpperCase()}${field.slice(1)}`).length || ['shapeId'].includes(field), `Undeclared ${field}`);
 				const pattern = normalizeEffectPattern({ type: type.id, transparentBackground: true, rotation: 45, shapeSize: 100 });
 				const tile = getPatternTile(pattern, 100);
 				assert(tile === getPatternTile({ ...pattern, scroll: 'right', scrollCycleMs: 1000 }, 100), 'Scroll must not regenerate tiles');
@@ -57,18 +57,38 @@ const { chromium } = require('playwright');
 					assert(Number.isInteger(offset.x) && Number.isInteger(offset.y), 'Scroll must land on whole pixels');
 				}
 			}
+			assert(normalizeEffectPattern({ stagger: false }).tileType === 'grid', 'Legacy grid motif changed');
+			const motif = { type: 'motif', shapeId: 'circle', rotation: 17, shapeSize: 73, transparentBackground: true };
+			PREFERENCES.set('crispMaskEdges', true);
+			const crisp = getPatternTile(motif, 100);
+			PREFERENCES.set('crispMaskEdges', false);
+			const smooth = getPatternTile(motif, 100);
+			assert(crisp !== smooth, 'Edge preference must invalidate the tile cache');
+			const pixels = smooth.canvas.getContext('2d').getImageData(0, 0, smooth.width, smooth.height).data;
+			assert(pixels.some((v, i) => i % 4 === 3 && v > 0 && v < 255), 'Smooth motifs must retain antialiasing');
+			PREFERENCES.set('crispMaskEdges', true);
+			const opaque = getPatternTile({ ...motif, transparentBackground: false, color: '#000000', backgroundColor: '#ffffff' }, 100);
+			assert(opaque.canvas.getContext('2d').getImageData(0, 0, opaque.width, opaque.height).data.every((v, i) => i % 4 === 3 || v === 0 || v === 255), 'Opaque motifs must also respect crisp edges');
 			await editor.loadBlankImage(200, 160, '#ffffff');
 			const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 100, height: 80 });
 			editor.layerManager.insertLayer(shape);
 			editor.layerManager.restoreSelectionState(shape.id);
 			editor.saveState('Pattern fixture');
-			document.getElementById('shapeFillPattern').click();
+			const source = document.querySelector('#shapeFillSection select[aria-label="Fill source"]');
+			assert(source.options.length === 6, 'Fill source must expose all six modes in its dropdown');
+			source.value = 'pattern'; source.dispatchEvent(new Event('change', { bubbles: true }));
 			assert(shape.shapeData.fill.mode === 'pattern', 'Pattern source control did not apply');
 			const type = document.getElementById('shapeFillPatternType');
 			type.value = 'motif'; type.dispatchEvent(new Event('change', { bubbles: true }));
 			assert(shape.shapeData.fill.pattern.type === 'motif', 'Declared type select did not apply');
 			assert(!document.getElementById('shapeFillPatternShapeSize').closest('.property-row').hidden, 'Motif row is hidden');
 			assert(document.getElementById('shapeFillPatternThickness').closest('.property-row').hidden, 'Unused row leaked');
+			const color = document.getElementById('shapeFillPatternColor');
+			const colorHistory = editor.historyManager.history.length;
+			for (const value of ['#112233', '#445566', '#778899']) { color.value = value; color.dispatchEvent(new Event('input', { bubbles: true })); }
+			color.dispatchEvent(new Event('change', { bubbles: true }));
+			await new Promise(resolve => requestAnimationFrame(resolve));
+			assert(shape.shapeData.fill.pattern.color === '#778899' && editor.historyManager.history.length === colorHistory + 1, 'Color picker must flush its newest color and commit once');
 			const scroll = document.getElementById('shapeFillPatternScroll');
 			scroll.value = 'right'; scroll.dispatchEvent(new Event('change', { bubbles: true }));
 			const procedural = editor.sceneCompositor._collectProceduralSources([shape]);

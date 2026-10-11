@@ -51,6 +51,7 @@
 		},
 		{
 			"id": "caption-date-stamp",
+			"positionAnchor": true,
 			"mode": "overlay",
 			"label": "Date Stamp",
 			"description": "Add an editable orange camera date stamp",
@@ -62,7 +63,7 @@
 			"id": "demotivational-poster",
 			"mode": "project",
 			"label": "Demotivational Poster",
-			"description": "Set the Photo shape's fill to Image, then edit the title and subtitle",
+			"description": "Choose an image for the Photo shape, then edit the title and subtitle",
 			"src": "data/templates/demotivational-poster.glitter.json",
 			"icon": "text",
 			"aspectRatio": "5 / 4",

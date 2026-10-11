@@ -990,7 +990,7 @@ class SceneCompositor {
 			const tile = getPatternTile(source.pattern, source.scale);
 			const origin = getPatternTextureOrigin(maskCanvas, source, layer);
 			const sample = sourceSelectionMap?.get(`__pattern_${sourceKey}`);
-			const offset = getPatternScrollOffset(source.pattern, tile.size, sample?.time || 0);
+			const offset = getPatternScrollOffset(source.pattern, tile, sample?.time || 0);
 			const pattern = ctx.createPattern(tile.canvas, 'repeat');
 			pattern.setTransform(new DOMMatrix().translateSelf(origin.x + offset.x, origin.y + offset.y));
 			ctx.fillStyle = pattern;

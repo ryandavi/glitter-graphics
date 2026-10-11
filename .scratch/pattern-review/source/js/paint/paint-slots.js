@@ -1,0 +1,497 @@
+'use strict';
+
+// Paint slots: the fills, borders, shadows and backgrounds a layer paints
+// with. Each layer type declares its slots once, back to front, in its
+// registerLayerType definition (js/layers/types/). Anything that needs to know
+// which slots a layer has, where their data lives, or how they stack reads
+// these helpers instead of listing slots per layer type.
+//
+// A slot declaration:
+//   key            stable id; also the export source-key suffix and span key
+//   role           'fill' | 'stroke' | 'border' | 'shadow' | 'background' | 'bevel' |
+//                  'sparkles'. A stroke is the line a path is drawn with: part
+//                  of the artwork like a fill, switched on and off like an
+//                  effect.
+//   path           where the slot object lives on the layer ('textData.fill')
+//   enabledPath    optional toggle that must be truthy for the slot to count
+//   draftPath      optional parked copy kept while the effect is switched off
+//   glitterDefault CONFIG.tools.glitter.defaults key used to repair a missing glitter
+//   wholeLayer     the slot is the layer's only paint: it covers the canvas,
+//                  uses the layer opacity and exports under the layer id
+//   sourceLabel    export source label suffix (null for none; defaults to key)
+//   countsAsEffect false keeps the slot's color adjust out of the Effects badge
+//   framePadding   (data) => px the slot paints outside the layer frame
+//   panelPrefix    id prefix of the slot's panel controls (PANEL_SCHEMAS idPrefix)
+//   label          lowercase words naming the slot in status copy (defaults to key)
+//   modes          paint modes its source control offers
+//   fields         { path: 'specKey' } adds or re-specs role fields (below)
+
+// Editable fields each slot of a role carries, keyed by path inside the slot
+// object (field bindings, see js/core/fields.js). `suffix` completes the panel
+// control id after the slot's panelPrefix. A role field without a spec (border
+// width differs per layer type) exists only on slots whose declaration names
+// one in `fields`.
+const PAINT_SLOT_ROLE_FIELDS = Object.freeze({
+	all: {
+		opacity: { field: 'slotOpacity', suffix: 'Opacity' },
+		scale: { field: 'textureScale', suffix: 'Scale', documentScale: 'texture' },
+		'pattern.thickness': { field: 'patternThickness', suffix: 'PatternThickness' },
+		'pattern.shapeSize': { field: 'patternShapeSize', suffix: 'PatternShapeSize' },
+		'pattern.rotation': { field: 'patternRotation', suffix: 'PatternRotation' },
+		'pattern.scrollCycleMs': { field: 'patternScrollCycle', suffix: 'PatternScrollCycle' },
+		'colorAdjust.hue': { field: 'hue', suffix: 'Hue', colorAdjust: true },
+		'colorAdjust.saturation': { field: 'saturation', suffix: 'Saturation', colorAdjust: true },
+		'colorAdjust.brightness': { field: 'brightness', suffix: 'Brightness', colorAdjust: true }
+	},
+	fill: {
+		imageScalePercent: { suffix: 'ImageScale' },
+		offsetXPercent: { suffix: 'ImageOffsetX' },
+		offsetYPercent: { suffix: 'ImageOffsetY' }
+	},
+	border: {
+		widthPx: { suffix: 'Width', geometry: true, documentScale: 'effect' },
+		dotSpacingPx: { suffix: 'DotSpacing', geometry: true, documentScale: 'effect' }
+	},
+	// Canvas pixels, like outline width. Ornament sizes are multiples of the
+	// stroke width, so they follow it without a scale class of their own.
+	stroke: {
+		widthPx: { field: 'strokeWidth', suffix: 'Width', geometry: true, documentScale: 'effect' },
+		dashPx: { field: 'strokeDash', suffix: 'Dash', geometry: true, documentScale: 'effect' },
+		gapPx: { field: 'strokeGap', suffix: 'Gap', geometry: true, documentScale: 'effect' },
+		dashOffsetPx: { field: 'strokeDashOffset', suffix: 'DashOffset', geometry: true, documentScale: 'effect' },
+		startSize: { field: 'strokeOrnamentSize', suffix: 'StartSize', factor: 100, geometry: true },
+		endSize: { field: 'strokeOrnamentSize', suffix: 'EndSize', factor: 100, geometry: true }
+	},
+	shadow: {
+		castLengthRatio: { suffix: 'CastLength', factor: 100, geometry: true },
+		castLeanRatio: { suffix: 'CastLean', factor: 100, geometry: true },
+		castBlurRatio: { suffix: 'CastBlur', factor: 100, geometry: true },
+		castLength: { field: 'shadowCastLength', suffix: 'CastLength', geometry: true, documentScale: 'effect' },
+		castLean: { field: 'shadowCastLean', suffix: 'CastLean', geometry: true, documentScale: 'effect' },
+		offsetX: { field: 'shadowOffsetX', suffix: 'OffsetX', geometry: true, documentScale: 'effect' },
+		offsetY: { field: 'shadowOffsetY', suffix: 'OffsetY', geometry: true, documentScale: 'effect' },
+		spread: { field: 'shadowSpread', suffix: 'Spread', geometry: true, documentScale: 'effect' },
+		blur: { field: 'shadowBlur', suffix: 'Blur', geometry: true, documentScale: 'effect' }
+	},
+	bevel: {
+		size: { field: 'bevelSize', suffix: 'Size', geometry: true, documentScale: 'effect' },
+		depth: { field: 'bevelDepth', suffix: 'Depth' },
+		angle: { field: 'bevelAngle', suffix: 'Angle' },
+		altitude: { field: 'bevelAltitude', suffix: 'Altitude' },
+		soften: { field: 'bevelSoften', suffix: 'Soften', geometry: true, documentScale: 'effect' }
+	},
+	// Particles (js/paint/sparkles.js). Sizes and spacing are host-local px.
+	sparkles: {
+		count: { field: 'sparkleCount', suffix: 'Count' },
+		sizeMin: { field: 'sparkleSizeMin', suffix: 'SizeMin', documentScale: 'effect' },
+		sizeMax: { field: 'sparkleSizeMax', suffix: 'SizeMax', documentScale: 'effect' },
+		cycleMs: { field: 'sparkleCycle', suffix: 'Cycle' },
+		sensitivity: { field: 'sparkleSensitivity', suffix: 'Sensitivity' },
+		spacing: { field: 'sparkleSpacing', suffix: 'Spacing', documentScale: 'effect' }
+	}
+});
+
+const PAINT_SLOT_ROLES = Object.freeze(['fill', 'stroke', 'border', 'shadow', 'background', 'bevel', 'sparkles']);
+
+// Kept for callers that read slot paths; field paths use the same format.
+const readPaintSlotPath = readFieldPath;
+
+function buildPaintSlotFields(definition, type) {
+	const roleFields = { ...PAINT_SLOT_ROLE_FIELDS.all, ...(PAINT_SLOT_ROLE_FIELDS[definition.role] || {}) };
+	const specs = definition.fields || {};
+	Object.keys(specs).forEach((path) => {
+		if (!roleFields[path]) throw new Error(`Unknown ${definition.role} slot field ${path} on layer type ${type}`);
+	});
+	return Object.freeze(Object.entries(roleFields)
+		.map(([path, base]) => ({ ...base, path, field: specs[path] ?? base.field }))
+		.filter((binding) => binding.field)
+		.map((binding) => normalizeFieldBinding(binding, `${type}.${definition.key}`)));
+}
+
+function normalizePaintSlotDefinition(definition, type) {
+	if (!definition?.key || !PAINT_SLOT_ROLES.includes(definition.role) || !definition.path) {
+		throw new Error(`Invalid paint slot on layer type ${type}`);
+	}
+	return Object.freeze({
+		...definition,
+		label: definition.label || definition.key,
+		pathKeys: splitFieldPath(definition.path),
+		enabledKeys: splitFieldPath(definition.enabledPath),
+		draftKeys: splitFieldPath(definition.draftPath),
+		fields: buildPaintSlotFields(definition, type)
+	});
+}
+
+function getPaintSlotDefinition(type, key) {
+	return LAYER_UI_CONFIG[type]?.paintSlots?.find((entry) => entry.key === key) || null;
+}
+
+// The words status copy uses for a slot ("Choosing bevel highlight glitter").
+function getPaintSlotLabel(type, key) {
+	return getPaintSlotDefinition(type, key)?.label || key;
+}
+
+// The glitter a slot falls back to when it has none (a fresh glitter source,
+// or a project whose glitter is missing).
+function getPaintSlotDefaultGlitterId(type, definition) {
+	const defaults = CONFIG.tools.glitter.defaults[definition?.glitterDefault || 'fillGlitterId'];
+	return typeof defaults === 'object' ? defaults[LAYER_TYPE_GLITTER_CONTEXT[type]] : defaults;
+}
+
+// Default value of one slot field, from its spec. fallback covers slots that
+// do not carry the field.
+function getPaintSlotFieldDefault(definition, path, fallback) {
+	return definition?.fields.find((binding) => binding.path === path)?.spec?.value ?? fallback;
+}
+
+// A zero-width border or stroke or a zero-count sparkles slot is present (it keeps its
+// settings and badge) but draws nothing. Every other slot draws whenever it
+// is present.
+function paintSlotRenders(definition, data) {
+	if (!data) return false;
+	if (definition.role === 'border' || definition.role === 'stroke') return Number(data.widthPx) > 0;
+	if (definition.role === 'sparkles') return Number(data.count) > 0;
+	return true;
+}
+
+// present: the slot object exists and its toggle, if any, is on.
+// renders: present and it would draw something.
+// includeDrafts adds the parked copies of switched-off effects (present and
+// renders are false for those), for passes that must reach every stored slot.
+function getLayerPaintSlots(layer, { includeDrafts = false } = {}) {
+	const definitions = LAYER_UI_CONFIG[layer?.type]?.paintSlots;
+	if (!definitions?.length) return [];
+	const entries = [];
+	definitions.forEach((definition) => {
+		const data = readPaintSlotPath(layer, definition.pathKeys);
+		const present = Boolean(data) && (!definition.enabledKeys || Boolean(readPaintSlotPath(layer, definition.enabledKeys)));
+		entries.push({
+			key: definition.key,
+			role: definition.role,
+			definition,
+			data,
+			present,
+			renders: present && paintSlotRenders(definition, data),
+			draft: false
+		});
+		if (includeDrafts && definition.draftKeys) {
+			const draft = readPaintSlotPath(layer, definition.draftKeys);
+			if (draft && typeof draft === 'object') {
+				entries.push({ key: definition.key, role: definition.role, definition, data: draft, present: false, renders: false, draft: true });
+			}
+		}
+	});
+	return entries;
+}
+
+function getLayerPaintSlot(layer, key) {
+	const definition = getPaintSlotDefinition(layer?.type, key);
+	return definition ? readPaintSlotPath(layer, definition.pathKeys) : null;
+}
+
+function ensureLayerPaintSlot(layer, key, buildDefault) {
+	const definition = getPaintSlotDefinition(layer?.type, key);
+	if (!definition) return null;
+	const current = readPaintSlotPath(layer, definition.pathKeys);
+	if (current) return current;
+	const created = buildDefault();
+	writeFieldPath(layer, definition.pathKeys, created);
+	return created;
+}
+
+// The paint slot that fills a layer's own artwork. Glitter fill and canvas
+// background layers are a single whole-layer paint.
+function getLayerFillSlot(layer) {
+	const definition = LAYER_UI_CONFIG[layer?.type]?.paintSlots?.find((entry) => entry.role === 'fill');
+	return definition ? readPaintSlotPath(layer, definition.pathKeys) : null;
+}
+
+function getLayerFillGlitterId(layer) {
+	return getLayerFillSlot(layer)?.glitterId ?? null;
+}
+
+function layerHasPaintSlotRole(layer, role) {
+	return getLayerPaintSlots(layer).some((entry) => entry.role === role && entry.present);
+}
+
+function layerHasBorderEffect(layer) {
+	return layerHasPaintSlotRole(layer, 'border');
+}
+
+// An outside outline runs under the antialiased edge of what it surrounds
+// (createOutlineCutoutCanvas). A layer whose fill is None has nothing there to
+// meet, so its outline keeps its exact width.
+function layerOutlineUnderlapsFill(layer) {
+	return getLayerFillSlot(layer)?.mode !== 'none';
+}
+
+function layerHasShadowEffect(layer) {
+	return layerHasPaintSlotRole(layer, 'shadow');
+}
+
+function layerHasActiveColorAdjust(layer) {
+	return getLayerPaintSlots(layer).some((entry) => entry.present
+		&& entry.definition.countsAsEffect !== false
+		&& entry.data.colorAdjust
+		&& !isIdentityColorAdjust(entry.data.colorAdjust));
+}
+
+// Glitter ids a layer's present slots point at (drafts excluded), for asset
+// preloading. Only slots in glitter mode count: a solid slot keeps its last
+// glitter id for when the user switches back, but does not need it decoded.
+function getLayerSlotGlitterIds(layer) {
+	return getLayerPaintSlots(layer)
+		.filter((entry) => entry.present && entry.data.mode === 'glitter' && entry.data.glitterId != null)
+		.map((entry) => entry.data.glitterId);
+}
+
+// Export frame-source key for one slot. Whole-layer slots keep the bare layer
+// id so their authored source keys match what earlier exports produced.
+function getPaintSlotSourceKey(layer, entry) {
+	return entry.definition.wholeLayer ? layer.id : `${layer.id}:${entry.key}`;
+}
+
+// Fill-role slots may be switched to None. Whole-layer slots fade with the
+// layer opacity instead of a slot opacity.
+function resolvePaintSlotSource(layer, entry, options = {}) {
+	return resolveEffectPaintSource(entry.data, {
+		allowNone: entry.role === 'fill',
+		...(entry.definition.wholeLayer ? { opacity: layer.opacity } : {}),
+		...options
+	});
+}
+
+// The preview resolves a slot exactly like export, plus a live check that
+// the glitter is in the library (a missing one shows the slot color).
+function resolvePaintSlotPreviewSource(editor, layer, entry) {
+	return resolvePaintSlotSource(layer, entry, {
+		glitterAvailable: (glitterId) => Boolean(editor.glitterLibrary?.getItemById(glitterId)),
+		imageResolver: (imageRef) => editor.shapeGlitterManager?.getImageFillAsset(imageRef)
+	});
+}
+
+// Back-to-front paint order for one layer: declaration order, except that a
+// border drawn in front of its fill moves after it. The DOM preview
+// (reconcileSlotStack) and the export compositor (SceneCompositor) both read this
+// list, so the ordering rules live here only. resolveSource(entry) returns a
+// paint source or null to skip the slot. Sparkles are particles, not a masked
+// surface; they draw through js/paint/sparkles.js instead.
+function buildSlotStack(layer, resolveSource) {
+	const stack = [];
+	const front = [];
+	getLayerPaintSlots(layer).forEach((entry) => {
+		if (!entry.renders || entry.role === 'sparkles') return;
+		const source = resolveSource(entry);
+		if (!source) return;
+		const offset = entry.role === 'shadow' ? getShadowSlotOffset(entry.data) : { x: 0, y: 0 };
+		const item = {
+			key: entry.key,
+			role: entry.role,
+			definition: entry.definition,
+			data: entry.data,
+			source,
+			sourceKey: getPaintSlotSourceKey(layer, entry),
+			offsetX: offset.x,
+			offsetY: offset.y
+		};
+		(entry.role === 'border' && getBorderDrawOrder(entry.data) === 'front' ? front : stack).push(item);
+	});
+	return stack.concat(front);
+}
+
+// Pixels the layer paints outside its own frame, for bounds tests.
+function getLayerSlotFramePadding(layer) {
+	return getLayerPaintSlots(layer).reduce((padding, entry) => (
+		entry.renders && entry.definition.framePadding
+			? Math.max(padding, entry.definition.framePadding(entry.data))
+			: padding
+	), 0);
+}
+
+// A blurred shadow paints partial alpha (a glow), which a transparent GIF
+// can only keep by dithering it (see GifEncodingPipeline).
+function layerHasSoftShadow(layer) {
+	return getLayerPaintSlots(layer).some((entry) => entry.renders && entry.role === 'shadow' && (getShadowKind(entry.data) === 'cast' && entry.data?.castBlurRatio != null ? Number(entry.data.castBlurRatio) > 0 : Number(entry.data?.blur) > 0));
+}
+
+// A sticker shadow is drawn on a canvas padded by its offset (plus a
+// two-pixel margin) so the shifted silhouette is never clipped.
+function getShadowCanvasPadding(shadow, box = { x: 0, y: 0, width: 0, height: 0 }) {
+	const bounds = getShadowSlotBounds(box, shadow);
+	return Math.ceil(Math.max(0, box.x - bounds.x, box.y - bounds.y, bounds.x + bounds.width - box.x - box.width, bounds.y + bounds.height - box.y - box.height)) + 2;
+}
+
+// Displayed tile width of a glitter at 100% scale. The manifest width is
+// authoritative; decoded frames only exist once the GIF has been parsed.
+function getGlitterTileSize(glitter) {
+	return glitter?.width || 50;
+}
+
+// ===== DOM PREVIEW =====
+
+// Paint one resolved source onto an element's background. Masks, offsets and
+// whole-element opacity for the layer are the caller's job. maskCanvas
+// supplies the texture origin and image-fill paint box; layer is only needed
+// for canvas-anchored textures.
+function applyPaintSourceToElement(element, source, options = {}) {
+	const { glitterLibrary = null, layer = null, maskCanvas = null, localOffsetX = 0, localOffsetY = 0 } = options;
+	const style = element.style;
+	glitterLibrary?.editor?.canvasElementsContainer?.classList.toggle('preview-motion-paused', Boolean(glitterLibrary.editor.animationTicker?._isPreviewPaused()));
+	style.backgroundSize = '';
+	style.backgroundPosition = '';
+	style.backgroundRepeat = '';
+	style.imageRendering = '';
+	style.filter = '';
+	element.classList.remove('pixelated');
+	element.classList.toggle('pattern-scrolling', source?.mode === 'pattern' && source.pattern.scroll !== 'none');
+
+	if (!source) {
+		style.backgroundImage = 'none';
+		style.backgroundColor = 'transparent';
+		style.opacity = '1';
+		return;
+	}
+
+	style.opacity = String(source.opacity ?? 1);
+
+	if (source.mode === 'image') {
+		// Same fallback as SceneCompositor._paintSourceInto: a mask without its
+		// own paint box is filled across its whole surface.
+		const placement = getImageFillPlacement(source, maskCanvas?._paintBox || (maskCanvas ? { x: 0, y: 0, width: maskCanvas.width, height: maskCanvas.height } : null));
+		const url = glitterLibrary?.editor?.animationPanel?.getPreviewImageUrl(source.url) || source.url;
+		style.backgroundImage = `url(${url})`;
+		style.backgroundColor = 'transparent';
+		style.backgroundSize = `${placement.dw}px ${placement.dh}px`;
+		style.backgroundPosition = `${placement.dx}px ${placement.dy}px`;
+		style.backgroundRepeat = source.tile ? 'repeat' : 'no-repeat';
+		style.imageRendering = source.imageRendering === 'pixelated' ? 'pixelated' : 'auto';
+		return;
+	}
+
+	if (source.mode === 'solid' || source.mode === 'gradient') {
+		style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
+		style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
+		return;
+	}
+
+	if (source.mode === 'pattern') {
+		const tile = applyPatternTileStyle(element, source.pattern, source.scale);
+		const origin = getPatternTextureOrigin(maskCanvas, source, layer, { localOffsetX, localOffsetY });
+		style.backgroundColor = 'transparent';
+		style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+		const direction = getOptions('patternScroll').find((option) => option.value === source.pattern.scroll);
+		style.setProperty('--pattern-origin-x', `${origin.x}px`);
+		style.setProperty('--pattern-origin-y', `${origin.y}px`);
+		style.setProperty('--pattern-distance-x', `${direction.x * tile.size}px`);
+		style.setProperty('--pattern-distance-y', `${direction.y * tile.size}px`);
+		style.setProperty('--pattern-cycle', `${source.pattern.scrollCycleMs}ms`);
+		style.setProperty('--pattern-steps', String(tile.size));
+		return;
+	}
+
+	const glitter = glitterLibrary?.getItemById(source.glitterId);
+	if (!glitter) {
+		applyPaintSourceToElement(element, { mode: 'solid', color: '#000000', opacity: 1 });
+		return;
+	}
+
+	const url = glitterLibrary?.editor?.animationPanel?.getPreviewImageUrl(glitter.url) || glitter.url;
+	style.backgroundImage = `url(${url})`;
+	style.backgroundColor = 'transparent';
+	// CSS filter mirrors the export color-adjust matrix pass.
+	style.filter = buildCssColorFilter(source.colorAdjust);
+	style.backgroundSize = `${Math.round(getGlitterTileSize(glitter) * (source.scale ?? 100) / 100)}px`;
+	const origin = getSlotTexturePatternOrigin(maskCanvas, source, layer, { localOffsetX, localOffsetY });
+	style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+	style.backgroundRepeat = 'repeat';
+	element.classList.toggle('pixelated', Boolean(glitter.isPixelated));
+}
+
+function applySlotSpanMask(span, width, height, maskUrl) {
+	span.style.display = 'block';
+	span.style.width = `${width}px`;
+	span.style.height = `${height}px`;
+	span.style.maskSize = `${width}px ${height}px`;
+	span.style.maskRepeat = 'no-repeat';
+	span.style.maskPosition = '0 0';
+	span.style.webkitMaskSize = `${width}px ${height}px`;
+	span.style.webkitMaskRepeat = 'no-repeat';
+	span.style.webkitMaskPosition = '0 0';
+	if (maskUrl) {
+		span.style.maskImage = `url(${maskUrl})`;
+		span.style.webkitMaskImage = `url(${maskUrl})`;
+		span.style.visibility = '';
+	} else {
+		span.style.visibility = 'hidden';
+	}
+}
+
+function applySlotSpanOffset(span, offsetX = 0, offsetY = 0) {
+	const x = offsetX || 0;
+	const y = offsetY || 0;
+	span.style.transform = (x || y) ? `translate(${x}px, ${y}px)` : 'none';
+}
+
+// One span per stack item, keyed by slot key, in stack order. A shadow uses
+// the unshifted artwork mask plus a live CSS translate so dragging its offset
+// is cheap; export bakes the same offset into its mask instead.
+// getMask(item) returns { canvas, url } or null to leave the slot out.
+function reconcileSlotStack(stack, items, options) {
+	const { spanClassName, width, height, layer, glitterLibrary, getMask } = options;
+	const existing = new Map();
+	Array.from(stack.children).forEach((child) => {
+		if (child.dataset.spanKey) existing.set(child.dataset.spanKey, child);
+	});
+	let previous = null;
+
+	items.forEach((item) => {
+		const mask = getMask(item);
+		if (!mask?.canvas) return;
+		let span = existing.get(item.key);
+		if (!span) {
+			span = document.createElement('span');
+			span.className = spanClassName;
+			span.dataset.spanKey = item.key;
+		}
+		applySlotSpanMask(span, width, height, mask.url);
+		applySlotSpanOffset(span, item.offsetX, item.offsetY);
+		applyPaintSourceToElement(span, item.source, {
+			glitterLibrary,
+			layer,
+			maskCanvas: mask.canvas,
+			localOffsetX: item.offsetX,
+			localOffsetY: item.offsetY
+		});
+		// Moving an unchanged node restarts its CSS background animation.
+		const next = previous ? previous.nextElementSibling : stack.firstElementChild;
+		if (span !== next) stack.insertBefore(span, next);
+		previous = span;
+		existing.delete(item.key);
+	});
+
+	existing.forEach((span) => span.remove());
+}
+
+// Canvas-anchored textures register against the document, so they move as the
+// layer transform changes. Drags bypass the full render, so re-register them.
+function syncSlotStackTextureOrigins(stack, items, layer, getMaskCanvas) {
+	const spans = new Map(Array.from(stack.children).map((span) => [span.dataset.spanKey, span]));
+	items.forEach((item) => {
+		if (!['glitter', 'pattern'].includes(item.source?.mode) || item.source.textureAnchor !== 'canvas') return;
+		const span = spans.get(item.key);
+		if (!span) return;
+		const origin = (item.source.mode === 'pattern' ? getPatternTextureOrigin : getSlotTexturePatternOrigin)(getMaskCanvas(item), item.source, layer, {
+			localOffsetX: item.offsetX,
+			localOffsetY: item.offsetY
+		});
+		span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+		span.style.setProperty('--pattern-origin-x', `${origin.x}px`);
+		span.style.setProperty('--pattern-origin-y', `${origin.y}px`);
+	});
+}
+
+function getSlotDefaults(type, key) {
+	const definition = getPaintSlotDefinition(type, key);
+	if (!definition?.defaults) throw new Error(`No defaults declared for ${type}.${key}`);
+	return definition.defaults();
+}

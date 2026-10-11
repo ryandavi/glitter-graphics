@@ -91,7 +91,7 @@
 				"width": 640,
 				"height": 380,
 				"fill": {
-					"mode": "solid",
+					"mode": "image",
 					"color": "#222222",
 					"opacity": 100,
 					"imageRef": null,

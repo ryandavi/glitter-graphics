@@ -83,9 +83,10 @@ async function main() {
 			await caption.page.waitForSelector('#confirmationModal.visible');
 			const preview = await caption.page.evaluate(() => {
 				const layer = editor.layers.find(l => l.isPreview);
-				return { boxWidth: layer.textData.boxWidth, type: layer.type };
+				return { boxWidth: layer.textData.boxWidth, type: layer.type, anchor: getLayerAnchorPoint(editor, layer) };
 			});
 			assert(preview.type === 'text-glitter', 'Caption must be editable text');
+			if (id === 'caption-date-stamp') assert(Math.abs(preview.anchor.x - width * 0.96) < 1 && Math.abs(preview.anchor.y - height * 0.96) < 1, 'Date stamp must place its bottom-right anchor inside the canvas');
 			if (id === 'caption-bar') assert(preview.boxWidth === width, 'Caption Bar must span non-square canvas width');
 			if (id === 'caption-subtitle') assert(preview.boxWidth === width * 0.9, 'Subtitle must retain its canvas margin');
 			await caption.page.click('#confirmationCancelBtn');
@@ -133,6 +134,7 @@ async function main() {
 		await poster.page.click('#createCanvasBtn');
 		await poster.page.waitForFunction(() => editor.layers.some(layer => layer.name === 'Photo'));
 		assert(await poster.page.evaluate(() => editor.originalCanvas.width === 750 && editor.originalCanvas.height === 600
+			&& editor.layers.find(layer => layer.name === 'Photo').shapeData.fill.mode === 'image'
 			&& editor.layers.filter(layer => layer.type === LayerType.TEXT_GLITTER).length === 2), 'Poster did not open with its editable photo and captions');
 		assert(poster.errors.length === 0, poster.errors.join('; '));
 		await poster.context.close();
