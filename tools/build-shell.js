@@ -36,7 +36,7 @@ function renderStartPresets(indent, registries) {
 		`${indent}\t\t<span class="workspace-start-preset-shape" style="aspect-ratio: ${escapeHtml(preset.width)} / ${escapeHtml(preset.height)};"></span>`,
 		`${indent}\t</span>`,
 		`${indent}\t<strong class="action-card-title">${escapeHtml(preset.label)}</strong>`,
-		`${indent}\t<span class="action-card-detail">${escapeHtml(preset.width)} Ã— ${escapeHtml(preset.height)} px</span>`,
+		`${indent}\t<span class="action-card-detail">${escapeHtml(preset.width)} × ${escapeHtml(preset.height)} px</span>`,
 		`${indent}</button>`
 	].join('\n')).join('\n');
 }

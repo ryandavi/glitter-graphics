@@ -369,7 +369,7 @@ async function backgroundRemovalStates(page, visit, viewport) {
 	await page.evaluate(() => {
 		const progress = editor.stickerManager.backgroundRemover.progress;
 		progress.started -= CONFIG.ui.taskProgress.slowPhaseNoticeMs;
-		progress.update(0, 'Removing backgroundÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦', 0, 0, { indeterminate: true });
+		progress.update(0, 'Removing background…', 0, 0, { indeterminate: true });
 	});
 	await visit(`${viewport} background removal still working`);
 	await page.evaluate(async () => {
