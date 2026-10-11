@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { scriptManifest, getScriptUrls } = require('./script-manifest');
+const { scriptManifest, bundleConfig, getAssetUrl, getScriptUrls } = require('./script-manifest');
 const { getAppRegistries, escapeHtml } = require('./build-modals');
 
 const root = path.resolve(__dirname, '..');
@@ -54,7 +54,10 @@ function renderScripts(indent) {
 	return `${indent}<script>
 ${indent}	const SCRIPT_GROUP_URLS = ${JSON.stringify(groups)};
 ${indent}	(() => {
-${indent}		const sources = SCRIPT_GROUP_URLS.boot;
+${indent}		const params = new URLSearchParams(location.search);
+${indent}		const useSources = params.get(${JSON.stringify(bundleConfig.bundleParam)}) !== '1'
+${indent}			&& (document.documentElement.classList.contains('is-localhost') || params.get(${JSON.stringify(bundleConfig.sourceParam)}) === '1');
+${indent}		const sources = useSources ? SCRIPT_GROUP_URLS.boot : [${JSON.stringify(getAssetUrl(bundleConfig.output))}];
 ${indent}		const stylesheet = document.querySelector('link[rel="stylesheet"]');
 ${indent}		let started = false;
 ${indent}		const start = () => {
@@ -99,6 +102,11 @@ function buildShell(source) {
 		return manifests.map((file) => `${indent}<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="${escapeHtml(file)}?v=${escapeHtml(CONFIG.app.assets.manifestVersion)}">`).join('\n');
 	});
 	output = replaceRegion(output, 'head-scripts', (indent) => getScriptUrls('head').map((url) => `${indent}<script src="${escapeHtml(url)}"></script>`).join('\n'));
+	output = replaceRegion(output, 'local-host', (indent) => `${indent}<script>
+${indent}	if (${JSON.stringify(bundleConfig.localHosts)}.includes(location.hostname)) {
+${indent}		document.documentElement.classList.add('is-localhost');
+${indent}	}
+${indent}</script>`);
 	output = replaceRegion(output, 'scripts', renderScripts);
 	return output;
 }

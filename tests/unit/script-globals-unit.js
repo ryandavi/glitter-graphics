@@ -19,6 +19,15 @@ for (const file of Object.values(require('../../tools/script-manifest').scriptMa
 	}
 }
 const math = require('../../js/core/math.js');
+const { scriptManifest, bundleConfig } = require('../../tools/script-manifest');
+const bundleAst = espree.parse(fs.readFileSync(path.join(root, bundleConfig.output), 'utf8'), { ecmaVersion: 2022, sourceType: 'script' });
+assert(bundleAst.body[0].type === 'ExpressionStatement' && !bundleAst.body[0].directive, 'Bundle must start outside a directive prologue');
+const bundledNames = new Set(bundleAst.body.flatMap(node => node.type === 'VariableDeclaration'
+	? node.declarations.map(entry => entry.id.name)
+	: /^(Function|Class)Declaration$/u.test(node.type) ? [node.id.name] : []));
+for (const [name, file] of names) {
+	if (scriptManifest.boot.includes(file)) assert(bundledNames.has(name), `Bundle lost top-level global ${name} from ${file}`);
+}
 assert.strictEqual(math.clampNumber(NaN, 3, 9), 3);
 assert.strictEqual(math.clampNumber(6.6, 3, 9, 3, true), 7);
 assert.strictEqual(math.clamp01(-1), 0);

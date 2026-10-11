@@ -12,7 +12,7 @@ Both are built from the same commit by the same steps. They differ only in where
 ## How it works
 
 1. A push to the main branch (`glitter-and-sticker-editor`) starts the **Deploy** workflow (`.github/workflows/deploy.yml`).
-2. It runs the same checks as CI: lint, shell markup, compiled CSS and the quick and export test suites. If any fail, nothing is published.
+2. It runs the same checks as CI: lint, shell markup, committed boot bundle freshness, compiled CSS and the quick and export test suites. If any fail, nothing is published. Run `node tools/build.js` after JavaScript changes before committing; the deploy copies the committed bundle alongside its sources.
 3. `tools/build-site.js` assembles the folder to upload. It copies only the paths listed under `publish` in `tools/site.json`, and only files tracked by git. `admin/`, `tests/`, `tools/`, `docs/`, `content/` and the SCSS sources are never published.
 4. The folder is uploaded to **staging** over FTPS. Only files that changed since the last deploy are sent, and files removed from the repo are removed from the server.
 5. **Production** is published the same way, but only when someone runs the workflow by hand and chooses `production`.

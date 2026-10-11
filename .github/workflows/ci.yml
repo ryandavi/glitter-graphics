@@ -23,6 +23,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run lint
       - run: node tools/build-shell.js --check
+      - run: node tools/build-bundle.js --check
       - name: Verify compiled CSS
         shell: bash
         run: |

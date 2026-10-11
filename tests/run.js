@@ -108,6 +108,12 @@ function readTag(argv) {
 }
 
 function main() {
+	if (process.argv.includes('--bundle')) {
+		const url = new URL(process.env.GLITTER_URL || 'http://localhost/glitter/');
+		url.searchParams.set(require('../tools/script-manifest').bundleConfig.bundleParam, '1');
+		process.env.GLITTER_URL = url.href;
+		process.env.GLITTER_APP_URL = url.href;
+	}
 	const tag = readTag(process.argv.slice(2));
 	const selected = tag ? SUITES.filter((suite) => suite.tags.includes(tag)) : SUITES;
 	if (!selected.length) {

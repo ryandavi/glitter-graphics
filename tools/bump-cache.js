@@ -6,6 +6,15 @@ const root = path.resolve(__dirname, '..');
 const indexPath = path.join(root, 'index.html');
 const assetPattern = /(<(?:script|link)\b[^>]*?\b(?:src|href))="([^"?#]+)(?:\?v=[^"]*)?"/gu;
 let updatedCount = 0;
+const check = process.argv.includes('--check');
+if (process.argv.slice(2).some(arg => arg !== '--check')) throw new Error('Usage: node tools/bump-cache.js [--check]');
+let stale = false;
+
+function writeChanged(file, original, next) {
+	if (next === original) return;
+	stale = true;
+	if (!check) fs.writeFileSync(file, next, 'utf8');
+}
 
 function stamp(match, prefix, assetPath, suffix, sourceDir = root) {
 	if (/^(?:[a-z]+:|\/\/)/iu.test(assetPath)) return match;
@@ -23,12 +32,12 @@ const updated = source.replace(assetPattern, (match, attribute, assetPath) => {
 	return stamp(match, `${attribute}="`, assetPath, '"');
 });
 
-fs.writeFileSync(indexPath, updated, 'utf8');
+writeChanged(indexPath, source, updated);
 
 function walk(directory) {
 	return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
 		const target = path.join(directory, entry.name);
-		return entry.isDirectory() ? walk(target) : [target];
+		return entry.isDirectory() ? (entry.name === 'dist' ? [] : walk(target)) : [target];
 	});
 }
 
@@ -45,9 +54,13 @@ walk(path.join(root, 'js')).filter((file) => file.endsWith('.js')).forEach((file
 		));
 		return `importScripts(${stampedArgs})`;
 	});
-	if (next !== original) fs.writeFileSync(file, next, 'utf8');
+	writeChanged(file, original, next);
 });
 
-require('./build-shell').main([]);
+process.exitCode = require('./build-shell').main(check ? ['--check'] : []);
+if (check && stale) {
+	process.stderr.write('Asset hashes are out of date; run node tools/build.js\n');
+	process.exitCode = 1;
+}
 
 process.stdout.write(`Stamped ${updatedCount} local asset references\n`);

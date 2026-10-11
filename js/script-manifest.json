@@ -1,4 +1,10 @@
 {
+	"bundle": {
+		"output": "js/dist/boot.js",
+		"localHosts": ["localhost", "127.0.0.1", "::1", "[::1]"],
+		"sourceParam": "src",
+		"bundleParam": "bundle"
+	},
 	"head": [
 		"js/core/storage.js"
 	],

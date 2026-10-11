@@ -3,8 +3,14 @@ const path = require('path');
 const crypto = require('crypto');
 
 const root = path.resolve(__dirname, '..');
-const scriptManifest = require('../js/script-manifest.json');
+const { bundle: bundleConfig, ...scriptManifest } = require('../js/script-manifest.json');
 const owners = new Map();
+
+if (bundleConfig?.output !== 'js/dist/boot.js'
+	|| !Array.isArray(bundleConfig.localHosts) || !bundleConfig.localHosts.every(host => typeof host === 'string')
+	|| !bundleConfig.sourceParam || !bundleConfig.bundleParam || bundleConfig.sourceParam === bundleConfig.bundleParam) {
+	throw new Error('Invalid bundle configuration');
+}
 
 for (const [group, files] of Object.entries(scriptManifest)) {
 	if (!Array.isArray(files)) throw new Error(`Script group ${group} must be an ordered array`);
@@ -17,12 +23,16 @@ for (const [group, files] of Object.entries(scriptManifest)) {
 }
 if (!scriptManifest.head || !scriptManifest.boot) throw new Error('The script manifest requires head and boot groups');
 
+function getAssetUrl(file) {
+	const absolute = path.join(root, file);
+	if (!fs.existsSync(absolute)) return file;
+	const hash = crypto.createHash('md5').update(fs.readFileSync(absolute)).digest('hex').slice(0, 8);
+	return `${file}?v=${hash}`;
+}
+
 function getScriptUrls(group) {
 	if (!scriptManifest[group]) throw new Error(`Unknown script group: ${group}`);
-	return scriptManifest[group].map((file) => {
-		const hash = crypto.createHash('md5').update(fs.readFileSync(path.join(root, file))).digest('hex').slice(0, 8);
-		return `${file}?v=${hash}`;
-	});
+	return scriptManifest[group].map(getAssetUrl);
 }
 
 function getGroupGlobals() {
@@ -64,4 +74,4 @@ function getGroupGlobals() {
 	return groups;
 }
 
-module.exports = { scriptManifest, getScriptUrls, getGroupGlobals };
+module.exports = { scriptManifest, bundleConfig, getAssetUrl, getScriptUrls, getGroupGlobals };

@@ -37,6 +37,7 @@ const config = {
 		]
 	},
 	"ignorePatterns": [
+		"js/dist/**",
 		"js/vendor/**",
 		"js/workers/gif.worker.js",
 		"js/generated/**",

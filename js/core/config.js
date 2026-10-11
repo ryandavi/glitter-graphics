@@ -31,10 +31,10 @@ const CONFIG = deepFreeze({
 			indicator: { delayMs: 400, minVisibleMs: 300 },
 			idleTimeoutMs: 1000,
 			budgets: {
-				'unthrottled-cold': { shell: 82, interactive: 314, library: 371, idle: 408 },
-				'unthrottled-warm': { shell: 58, interactive: 217, library: 264, idle: 290 },
-				'throttled-cold': { shell: 1244, interactive: 10115, library: 10915, idle: 12965 },
-				'throttled-warm': { shell: 279, interactive: 1439, library: 1762, idle: 1859 }
+				'unthrottled-cold': { shell: 90, interactive: 399, library: 470, idle: 518 },
+				'unthrottled-warm': { shell: 48, interactive: 244, library: 301, idle: 348 },
+				'throttled-cold': { shell: 1047, interactive: 5331, library: 6134, idle: 8103 },
+				'throttled-warm': { shell: 293, interactive: 1342, library: 1615, idle: 1723 }
 			}
 		},
 		siteName: 'ryandavi.com glitter editor',

@@ -3,6 +3,50 @@
 const { chromium } = require('playwright');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
+const { scriptManifest, bundleConfig } = require('../../tools/script-manifest');
+
+async function verifyShippingSwitch(browser) {
+	const base = new URL(APP_URL);
+	const remote = new URL(base);
+	remote.hostname = 'glitter.test';
+	const cases = [
+		{ remote: false, query: '', bundle: false },
+		{ remote: false, query: `${bundleConfig.bundleParam}=1`, bundle: true },
+		{ remote: true, query: '', bundle: true },
+		{ remote: true, query: `${bundleConfig.sourceParam}=1`, bundle: false },
+		{ remote: true, query: `${bundleConfig.sourceParam}=1&${bundleConfig.bundleParam}=1`, bundle: true }
+	];
+	for (const entry of cases) {
+		const page = await browser.newPage();
+		const errors = [];
+		const requests = [];
+		page.on('pageerror', error => errors.push(error.message));
+		page.on('request', request => requests.push(new URL(request.url()).pathname));
+		if (entry.remote) {
+			// Keep the document's non-local origin while serving the real app under a subfolder.
+			await page.route('**/*', async route => {
+				const url = new URL(route.request().url());
+				if (url.hostname !== remote.hostname) return route.continue();
+				url.host = base.host;
+				url.protocol = base.protocol;
+				url.pathname = url.pathname.replace('/shipping-check/', base.pathname);
+				await route.fulfill({ response: await route.fetch({ url: url.href }) });
+			});
+		}
+		const target = new URL(entry.remote ? remote : base);
+		if (entry.remote) target.pathname = '/shipping-check/';
+		target.search = entry.query;
+		await page.goto(target.href, { waitUntil: 'networkidle' });
+		await page.waitForFunction(() => window.editor);
+		const bundled = requests.filter(file => file.endsWith('/' + bundleConfig.output));
+		const sources = requests.filter(file => scriptManifest.boot.some(source => file.endsWith('/' + source)));
+		assert(entry.bundle ? bundled.length === 1 && sources.length === 0 : bundled.length === 0 && sources.length === scriptManifest.boot.length,
+			`Wrong boot payload for ${target.href}`);
+		assert(errors.length === 0, `Boot errors at ${target.href}: ${errors.join(', ')}`);
+		await page.close();
+	}
+	process.stdout.write('Local/remote source and bundle selection under a subfolder passed\n');
+}
 
 function assert(condition, message) {
 	if (!condition) throw new Error(message);
@@ -11,6 +55,7 @@ function assert(condition, message) {
 async function main() {
 	const browser = await chromium.launch({ headless: true });
 	try {
+		await verifyShippingSwitch(browser);
 		const page = await browser.newPage({ viewport: { width: 1200, height: 760 } });
 		await page.addInitScript(() => {
 			performance.setResourceTimingBufferSize(2000);
@@ -44,7 +89,8 @@ async function main() {
 			cssEnd: performance.getEntriesByType('resource').find((entry) => new URL(entry.name).pathname.endsWith('/css/style.css')).responseEnd,
 			requests: performance.getEntriesByType('resource').filter((entry) => entry.initiatorType === 'script').map((entry) => ({ path: new URL(entry.name).pathname, start: entry.startTime }))
 		}));
-		const bootScripts = require('../../js/script-manifest.json').boot;
+		const params = new URL(APP_URL).searchParams;
+		const bootScripts = params.get(bundleConfig.bundleParam) === '1' ? [bundleConfig.output] : scriptManifest.boot;
 		assert(scriptOrder.order.length === bootScripts.length && scriptOrder.order.every((file, i) => file.endsWith('/' + bootScripts[i])), 'Boot scripts did not execute in manifest order');
 		assert(scriptOrder.requests.filter((entry) => bootScripts.some((file) => entry.path.endsWith('/' + file))).every((entry) => entry.start >= scriptOrder.cssEnd), 'A boot script started before the stylesheet response ended');
 		await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
@@ -70,7 +116,7 @@ async function main() {
 		assert(await page.evaluate(() => [editor.glitterLibrary, editor.stickerLibrary, editor.brushTipManager, editor.shapeBrowserManager, editor.fontBrowserManager].every((manager) => !manager.browser.hasView)), 'A hidden Library kind rendered at boot');
 		assert(await page.locator('#designGalleryContent .category-card, #designGalleryContent .asset-option').count() === 0, 'Boot created hidden Library thumbnails');
 
-		const lazyScripts = Object.entries(require('../../js/script-manifest.json')).filter(([id]) => id !== 'head' && id !== 'boot').flatMap(([, files]) => files);
+		const lazyScripts = Object.entries(scriptManifest).filter(([id]) => id !== 'head' && id !== 'boot').flatMap(([, files]) => files);
 		assert(!resourceRequests.some((url) => lazyScripts.some((file) => url.endsWith('/' + file))), 'A first-use script group was fetched during boot');
 		const initialResources = [...resourceRequests];
 		const result = await page.evaluate(async () => {
@@ -241,7 +287,9 @@ async function main() {
 		const firstUse = await browser.newPage();
 		const groupRequests = [];
 		firstUse.on('request', request => groupRequests.push(new URL(request.url()).pathname));
-		await firstUse.goto(APP_URL, { waitUntil: 'networkidle' });
+		const bundledUrl = new URL(APP_URL);
+		bundledUrl.searchParams.set(bundleConfig.bundleParam, '1');
+		await firstUse.goto(bundledUrl.href, { waitUntil: 'networkidle' });
 		await firstUse.waitForFunction(() => window.editor);
 		let releaseExport;
 		const exportGate = new Promise(resolve => { releaseExport = resolve; });
