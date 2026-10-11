@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const scripts = require('../js/script-manifest.json');
+const { getScriptUrls } = require('./script-manifest');
 const { getAppRegistries, escapeHtml } = require('./build-modals');
 
 const root = path.resolve(__dirname, '..');
@@ -51,10 +50,7 @@ function replaceRegion(source, name, render) {
 }
 
 function renderScripts(indent) {
-	const urls = scripts.boot.map((file) => {
-		const hash = crypto.createHash('md5').update(fs.readFileSync(path.join(root, file))).digest('hex').slice(0, 8);
-		return `${file}?v=${hash}`;
-	});
+	const urls = getScriptUrls('boot');
 	return `${indent}<script>
 ${indent}	(() => {
 ${indent}		const sources = ${JSON.stringify(urls)};
@@ -101,6 +97,7 @@ function buildShell(source) {
 			CONFIG.tools.text.fontsManifest];
 		return manifests.map((file) => `${indent}<link rel="preload" as="fetch" crossorigin fetchpriority="low" href="${escapeHtml(file)}?v=${escapeHtml(CONFIG.app.assets.manifestVersion)}">`).join('\n');
 	});
+	output = replaceRegion(output, 'head-scripts', (indent) => getScriptUrls('head').map((url) => `${indent}<script src="${escapeHtml(url)}"></script>`).join('\n'));
 	output = replaceRegion(output, 'scripts', renderScripts);
 	return output;
 }

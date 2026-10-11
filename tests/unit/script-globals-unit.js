@@ -6,7 +6,7 @@ const path = require('path');
 const espree = require('espree');
 const root = path.resolve(__dirname, '../..');
 const names = new Map();
-for (const file of Object.values(require('../../js/script-manifest.json')).flat()) {
+for (const file of Object.values(require('../../tools/script-manifest').scriptManifest).flat()) {
 	if (file.startsWith('js/vendor/')) continue;
 	const ast = espree.parse(fs.readFileSync(path.join(root, file), 'utf8'), { ecmaVersion: 2022, sourceType: 'script' });
 	for (const node of ast.body) {
