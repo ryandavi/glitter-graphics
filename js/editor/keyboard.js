@@ -106,10 +106,39 @@ const EDITOR_KEYBOARD_METHODS = {
 
 	scheduleNudgeSave() {
 		clearTimeout(this._nudgeSaveTimer);
-		const layerIds = this.layerManager.getSelectedLayers().map((layer) => layer.id).join(',');
-		this._nudgeSaveTimer = setTimeout(
-			() => this.saveState('Move layer', { coalesceKey: `nudge:${layerIds}` }),
-			CONFIG.ui.history.coalesceMs
-		);
+		this.registerPendingCommit('nudge', () => {
+			clearTimeout(this._nudgeSaveTimer);
+			this._nudgeSaveTimer = null;
+			// A timer-delimited burst is one step; a later burst always pushes.
+			this.saveState('Move layer');
+		});
+		this._nudgeSaveTimer = setTimeout(() => this.runPendingCommit('nudge'), CONFIG.ui.history.coalesceMs);
+	},
+
+	registerPendingCommit(key, commit) {
+		this._pendingCommits ||= new Map();
+		this._pendingCommits.set(key, commit);
+	},
+
+	cancelPendingCommit(key) {
+		this._pendingCommits?.delete(key);
+	},
+
+	runPendingCommit(key) {
+		const commit = this._pendingCommits?.get(key);
+		if (!commit) return;
+		this._pendingCommits.delete(key);
+		this._commitsInFlight ||= new Set();
+		const result = Promise.resolve().then(commit);
+		this._commitsInFlight.add(result);
+		result.then(() => this._commitsInFlight.delete(result), () => this._commitsInFlight.delete(result));
+		return result;
+	},
+
+	async flushPendingCommits() {
+		while (this._pendingCommits?.size || this._commitsInFlight?.size) {
+			for (const key of this._pendingCommits?.keys() || []) this.runPendingCommit(key);
+			await Promise.all(this._commitsInFlight || []);
+		}
 	}
 };

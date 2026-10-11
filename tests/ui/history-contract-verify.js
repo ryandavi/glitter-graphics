@@ -60,6 +60,7 @@ async function main() {
 				await page.evaluate(() => historyAudit.reset());
 				const result = await page.evaluate(async ({ setup, action }) => {
 					await new Function(`return (async () => { ${setup} })()`)();
+					await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 					const before = historyAudit.document(), start = editor.historyManager.historyIndex;
 					await new Function(`return (async () => { ${action} })()`)();
 					const after = historyAudit.document(), tool = editor.currentTool;

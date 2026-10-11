@@ -5,6 +5,8 @@ class HistoryManager {
 		this.history = [];
 		this.historyIndex = -1;
 		this.serial = 0;
+		this.restoreQueue = Promise.resolve();
+		this.coalescingOpen = false;
 	}
 
 	nextSerial() { return ++this.serial; }
@@ -42,7 +44,7 @@ class HistoryManager {
 
 		this.history = this.history.slice(0, this.historyIndex + 1);
 		const current = this.history[this.historyIndex];
-		if (coalesceKey && current?.coalesceKey === coalesceKey) {
+		if (this.coalescingOpen && coalesceKey && current?.coalesceKey === coalesceKey) {
 			this.history[this.historyIndex] = state;
 			this.editor.paintMaskStore?.prunePaintHistory();
 			this.editor.shapeGlitterManager?.pruneImageFillAssets();
@@ -57,6 +59,7 @@ class HistoryManager {
 		}
 
 		this.history.push(state);
+		this.coalescingOpen = true;
 		this.trimToByteBudget();
 		this.editor.paintMaskStore?.prunePaintHistory();
 		this.editor.shapeGlitterManager?.pruneImageFillAssets();
@@ -101,6 +104,7 @@ class HistoryManager {
 	}
 
 	async restoreState(state) {
+		this.coalescingOpen = false;
 		this.editor.maskEditor?.handleStateRestore();
 
 		// Restore canvas dimensions + base image FIRST, before paint/layers: the
@@ -164,41 +168,38 @@ class HistoryManager {
 		return !session || session.id === 'area' ? this.editor.areaSelection?.history.claim(direction) : null;
 	}
 
-	async undo() {
-		if (!this.canUndo()) {
-			return;
-		}
+	undo() { return this.enqueueRestore('undo'); }
+	redo() { return this.enqueueRestore('redo'); }
 
-		const session = this.sessionHistory('undo');
-		if (session) {
-			session.undo();
-			this.updateButtons();
-			return;
-		}
-
-		this.historyIndex--;
-		await this.restoreState(this.history[this.historyIndex]);
-		this.updateButtons();
+	enqueueRestore(direction) {
+		const result = this.restoreQueue.then(() => this.stepHistory(direction));
+		// A failed restore rejects its caller, but does not poison later requests.
+		this.restoreQueue = result.catch(() => {});
+		return result;
 	}
 
-	async redo() {
-		if (!this.canRedo()) {
-			return;
-		}
-
-		const session = this.sessionHistory('redo');
+	async stepHistory(direction) {
+		await this.editor.flushPendingCommits();
+		if (!(direction === 'undo' ? this.canUndo() : this.canRedo())) return;
+		const session = this.sessionHistory(direction);
+		this.coalescingOpen = false;
 		if (session) {
-			session.redo();
+			await session[direction]();
 			this.updateButtons();
 			return;
 		}
-
-		this.historyIndex++;
-		await this.restoreState(this.history[this.historyIndex]);
-		this.updateButtons();
+		const previousIndex = this.historyIndex;
+		this.historyIndex += direction === 'undo' ? -1 : 1;
+		try {
+			await this.restoreState(this.history[this.historyIndex]);
+		} catch (error) {
+			this.historyIndex = previousIndex;
+			throw error;
+		} finally { this.updateButtons(); }
 	}
 
 	reset(initialState = null) {
+		this.coalescingOpen = false;
 		if (initialState) {
 			this.history = [{ ...initialState, serial: this.nextSerial() }];
 			this.historyIndex = 0;

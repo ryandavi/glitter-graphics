@@ -178,6 +178,7 @@ const TEXT_EDIT_METHODS = {
 		const layer = this.editor.layerManager.getLayerById(session.layerId);
 		this.editSession = null;
 		clearTimeout(this.textInputTimer);
+		this.editor.cancelPendingCommit('panelText');
 		this.textProxy.hidden = true;
 		this.textProxy.blur();
 		document.getElementById('textEditControls')?.style.removeProperty('bottom');

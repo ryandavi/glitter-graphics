@@ -908,7 +908,9 @@ class TextGlitterManager {
 
 	scheduleTextCommit(layer) {
 		clearTimeout(this.textInputTimer);
-		this.textInputTimer = setTimeout(async () => {
+		this.editor.registerPendingCommit('panelText', async () => {
+			clearTimeout(this.textInputTimer);
+			this.textInputTimer = null;
 			try {
 				await this.refreshLayer(layer, {
 					saveHistory: !this.editSession,
@@ -917,7 +919,8 @@ class TextGlitterManager {
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
-		}, CONFIG.ui.live.settleMs);
+		});
+		this.textInputTimer = setTimeout(() => this.editor.runPendingCommit('panelText'), CONFIG.ui.live.settleMs);
 	}
 
 	getCacheKeyForLayer(layer) {
