@@ -2727,14 +2727,15 @@ input.color-hex-input {
 .export-progress .export-progress-cancel {
   width: 100%;
 }
-.export-progress .export-progress-bar {
+
+:is(.export-progress, .workspace-start-loading) .export-progress-bar {
   height: var(--spacing-base);
   background: var(--progress-track);
   box-shadow: inset 0 0 0 1px var(--progress-track-border);
   border-radius: var(--radius-pill);
   overflow: hidden;
 }
-.export-progress .export-progress-fill {
+:is(.export-progress, .workspace-start-loading) .export-progress-fill {
   position: relative;
   width: 100%;
   height: 100%;
@@ -2742,14 +2743,14 @@ input.color-hex-input {
   transform: translateX(var(--export-progress-offset, -100%));
   transition: transform var(--transition-base) ease;
 }
-.export-progress .export-progress-fill::after {
+:is(.export-progress, .workspace-start-loading) .export-progress-fill::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   animation: export-progress-sheen 3s linear infinite;
 }
-.export-progress.is-indeterminate .export-progress-fill {
+:is(.export-progress, .workspace-start-loading).is-indeterminate .export-progress-fill {
   transform-origin: left;
   transition: none;
   animation: export-progress-indeterminate 2s ease-in-out infinite;
@@ -2776,7 +2777,7 @@ input.color-hex-input {
   .export-progress-fill {
     transition: none;
   }
-  .export-progress.is-indeterminate .export-progress-fill {
+  :is(.export-progress, .workspace-start-loading).is-indeterminate .export-progress-fill {
     animation: none;
     transform: scaleX(0.35);
   }
@@ -2790,7 +2791,7 @@ input.color-hex-input {
   display: none;
 }
 
-:root[data-reduce-motion=true] .export-progress.is-indeterminate .export-progress-fill {
+:root[data-reduce-motion=true] :is(.export-progress, .workspace-start-loading).is-indeterminate .export-progress-fill {
   animation: none;
   transform: scaleX(0.35);
 }
@@ -3975,6 +3976,14 @@ body:not(.phone-bar) .main-content > .design-panel.library-window:not(.is-open) 
   display: block;
 }
 
+body.boot-library .boot-library-loading {
+  display: none;
+}
+
+body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
+  display: none !important;
+}
+
 [data-gallery-content] {
   display: none;
 }
@@ -4931,6 +4940,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) or (-webkit-background-clip: text) {
   .workspace-start-copy h2 {
+    background-color: var(--color-accent);
     background-image: var(--workspace-heading-glitter-image);
     background-repeat: repeat;
     -webkit-background-clip: text;
@@ -4986,6 +4996,7 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
 }
 
 .workspace-start-drop {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -4997,6 +5008,30 @@ body:not(.boot-interactive):not(.boot-failed) .workspace-start button {
   font-size: var(--font-size-xs);
 }
 
+body:not(.boot-interactive):not(.boot-failed) .workspace-start-drop > :not(.workspace-start-loading) {
+  visibility: hidden;
+}
+
+.workspace-start-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: var(--spacing-xs);
+  visibility: hidden;
+  animation: boot-indicator var(--boot-indicator-min-visible) var(--boot-indicator-delay) forwards;
+}
+.workspace-start-loading .export-progress-bar {
+  align-self: center;
+}
+body.boot-interactive .workspace-start-loading, body.boot-failed .workspace-start-loading {
+  display: none;
+}
+
+@keyframes boot-indicator {
+  from, to {
+    visibility: visible;
+  }
+}
 .workspace-start-links {
   display: flex;
   flex-wrap: wrap;
