@@ -298,7 +298,7 @@ function bindFieldControl(control, binding, handlers) {
 		return;
 	}
 	bindSlider(control, document.getElementById(`${control.id}Value`), {
-		resetValue: binding.spec?.value,
+		resetValue: binding.field === 'patternSpacing' ? () => panelSliderDefault(control.id) : binding.spec?.value,
 		resetButton: document.getElementById(`reset${fieldControlCap(control.id)}`),
 		cost: binding.spec?.cost,
 		apply: (value, slider, event, ticket) => handlers.apply(value, ticket),

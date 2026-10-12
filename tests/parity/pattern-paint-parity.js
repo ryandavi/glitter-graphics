@@ -13,6 +13,10 @@ const assert = require('assert/strict');
 		await page.waitForFunction(() => window.editor);
 		const types = await page.evaluate(() => Object.keys(PATTERN_TYPES));
 		const cases = [...types.map(type => ({ type })), { type: 'motif', transparentBackground: true, shapeId: 'heart', shapeSize: 100, rotation: 45 }, { type: 'stripes', scroll: 'down-right' },
+			...['grid', 'brick', 'zigzag'].map(type => ({ type, spacing: 125, thickness: 8, transparentBackground: true, scroll: 'down-right' })),
+			...['horizontal', 'vertical', 'diagonal-up', 'diagonal-down'].map(direction => ({ type: 'stripes', direction, spacing: 75, thickness: 8, transparentBackground: true, scroll: 'down-right' })),
+			...['grid', 'brick', 'zigzag'].flatMap(type => [0, 200].map(spacing => ({ type, spacing, thickness: 8, transparentBackground: true }))),
+			...['horizontal', 'vertical', 'diagonal-up', 'diagonal-down'].flatMap(direction => [true, false].map(crisp => ({ type: 'stripes', direction, spacing: 0, thickness: 8, transparentBackground: true, crisp }))),
 			...['grid', 'brick-row', 'brick-column', 'hex-row', 'hex-column'].flatMap(tileType => [true, false].map(crisp => ({ type: 'motif', tileType, brickOffset: '0.3333333333333333', spacing: 37, shapeSize: 170, rotation: 30, transparentBackground: true, scroll: 'down-right', crisp })))];
 		for (const [index, pattern] of cases.entries()) {
 			await page.evaluate(pattern => {

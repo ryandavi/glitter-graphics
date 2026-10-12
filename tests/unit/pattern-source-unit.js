@@ -49,6 +49,45 @@ const { chromium } = require('playwright');
 					assert(first.every((v, i) => v === diagonal[i]), `${type.id} has a discontinuous period`);
 				}
 			}
+			for (const type of ['grid', 'brick', 'stripes', 'zigzag']) {
+				assert(normalizeEffectPattern({ type, thickness: 8 }).spacing === 92, `${type} legacy gap must be preserved when spacing is missing`);
+				const directions = type === 'stripes' ? getOptions('patternDirection').map(option => option.value) : ['horizontal'];
+				for (const direction of directions) for (const thickness of [1, 8, 25, 50, 99]) for (const scale of [37, 100, 137]) for (const crisp of [true, false]) {
+					PREFERENCES.set('crispMaskEdges', crisp);
+					for (const transparentBackground of [true, false]) {
+						const tile = getPatternTile({ type, direction, thickness, spacing: 0, transparentBackground, color: '#000000', backgroundColor: '#ffffff' }, scale);
+						const pixels = tile.canvas.getContext('2d').getImageData(0, 0, tile.width, tile.height).data;
+						assert(pixels.every((v, i) => v === (i % 4 === 3 ? 255 : 0)), `${type}/${direction} at thickness ${thickness}, scale ${scale}, crisp ${crisp} has a gap at 0%`);
+					}
+				}
+				PREFERENCES.set('crispMaskEdges', true);
+				const pattern = { type, direction: 'horizontal', thickness: 25, transparentBackground: true };
+				const original = getPatternTile(pattern, 100);
+				for (const spacing of [75, 100, 200]) {
+					const spaced = getPatternTile({ ...pattern, spacing }, 100);
+					assert(spaced.size === PATTERN_TYPES[type].baseTile * (pattern.thickness + spacing) / 100, `${type} repeat distance must equal line thickness plus gap`);
+					const linePixels = (tile) => {
+						const pixels = tile.canvas.getContext('2d').getImageData(tile.width - 1, 0, 1, tile.height).data;
+						return pixels.filter((v, i) => i % 4 === 3 && v === 255).length;
+					};
+					assert(linePixels(spaced) === linePixels(original), `${type} spacing must preserve line thickness`);
+					assert(spaced === getPatternTile({ ...pattern, spacing }, 100), `${type} spaced tile must be cached`);
+				}
+			}
+			for (const type of ['stripes', 'zigzag']) {
+				for (const direction of getOptions('patternDirection').map(option => option.value)) for (const spacing of [25, 50, 75, 100, 125, 200]) {
+					const tile = getPatternTile({ type, direction, thickness: 25, spacing, transparentBackground: true }, 100);
+					const pixels = tile.canvas.getContext('2d').getImageData(0, 0, tile.width, tile.height).data;
+					for (let column = 0; column < tile.width; column++) {
+						let stroke = 0;
+						for (let row = 0; row < tile.height; row++) {
+							const index = type === 'stripes' && direction === 'vertical' ? column * tile.width + row : row * tile.width + column;
+							if (pixels[index * 4 + 3] === 255) stroke++;
+						}
+						assert(stroke === 8, `${type}/${direction} at spacing ${spacing}, column ${column} changed the 8px stroke to ${stroke}px`);
+					}
+				}
+			}
 			for (const option of getOptions('patternScroll')) {
 				const pattern = { scroll: option.value };
 				assert(JSON.stringify(getPatternScrollOffset(pattern, 31, 0)) === JSON.stringify(getPatternScrollOffset(pattern, 31, defaults.scrollCycleMs)), 'Scroll loop does not close');
@@ -70,7 +109,7 @@ const { chromium } = require('playwright');
 			const opaque = getPatternTile({ ...motif, transparentBackground: false, color: '#000000', backgroundColor: '#ffffff' }, 100);
 			assert(opaque.canvas.getContext('2d').getImageData(0, 0, opaque.width, opaque.height).data.every((v, i) => i % 4 === 3 || v === 0 || v === 255), 'Opaque motifs must also respect crisp edges');
 			await editor.loadBlankImage(200, 160, '#ffffff');
-			const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 100, height: 80 });
+			let shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 100, height: 80 });
 			editor.layerManager.insertLayer(shape);
 			editor.layerManager.restoreSelectionState(shape.id);
 			editor.saveState('Pattern fixture');
@@ -79,8 +118,44 @@ const { chromium } = require('playwright');
 			source.value = 'pattern'; source.dispatchEvent(new Event('change', { bubbles: true }));
 			assert(shape.shapeData.fill.mode === 'pattern', 'Pattern source control did not apply');
 			const type = document.getElementById('shapeFillPatternType');
+			const spacing = document.getElementById('shapeFillPatternSpacing');
+			for (const value of ['grid', 'brick', 'stripes', 'zigzag']) {
+				type.value = value; type.dispatchEvent(new Event('change', { bubbles: true }));
+				assert(!spacing.closest('.property-row').hidden, `${value} spacing control is hidden`);
+				assert(shape.shapeData.fill.pattern.spacing === 50 && spacing.value === '50', `${value} must initialize its original gap`);
+				assert(document.getElementById('resetShapeFillPatternSpacing').disabled, `${value} initial gap must be the reset default`);
+			}
+			const spacingHistory = editor.historyManager.history.length;
+			spacing.value = '100'; spacing.dispatchEvent(new Event('input', { bubbles: true }));
+			spacing.dispatchEvent(new Event('change', { bubbles: true }));
+			await new Promise(resolve => setTimeout(resolve, 100));
+			assert(shape.shapeData.fill.pattern.spacing === 100 && editor.historyManager.history.length === spacingHistory + 1, 'Line spacing must apply with one undo step');
+			await editor.historyManager.undo();
+			assert(editor.layers.find(layer => layer.id === shape.id).shapeData.fill.pattern.spacing === 50, 'Undo must restore line spacing');
+			await editor.historyManager.redo();
+			assert(editor.layers.find(layer => layer.id === shape.id).shapeData.fill.pattern.spacing === 100, 'Redo must restore line spacing');
+			await editor.historyManager.undo();
+			spacing.value = '0'; spacing.dispatchEvent(new Event('input', { bubbles: true })); spacing.dispatchEvent(new Event('change', { bubbles: true }));
+			await new Promise(resolve => setTimeout(resolve, 100));
+			assert(editor.layers.find(layer => layer.id === shape.id).shapeData.fill.pattern.spacing === 0, 'Explicit zero gap must remain available');
+			document.getElementById('resetShapeFillPatternSpacing').click();
+			await new Promise(resolve => setTimeout(resolve, 100));
+			assert(editor.layers.find(layer => layer.id === shape.id).shapeData.fill.pattern.spacing === 50, 'Spacing reset must restore the original line gap');
+			const patternPresets = document.querySelector('[data-pattern-editor="shapeFill"] [data-pattern-presets]');
+			for (const id of ['scanlines', 'userbar-lines', 'stripes', 'zigzag']) {
+				const entry = PATTERN_PRESETS.entries.find(entry => entry.id === id);
+				patternPresets._choosePattern(entry);
+				const expected = normalizeEffectPattern(entry.value);
+				assert(spacing.value === String(expected.spacing) && document.getElementById('shapeFillPatternThickness').value === String(expected.thickness), `${id} sliders must show the applied preset values`);
+				assert(document.getElementById('shapeFillPatternSpacingValue').textContent === `${expected.spacing}%`, `${id} spacing readout is stale`);
+				assert(document.getElementById('resetShapeFillPatternSpacing').disabled, `${id} must use its original gap as the reset default`);
+			}
+			type.value = 'checker'; type.dispatchEvent(new Event('change', { bubbles: true }));
+			assert(spacing.closest('.property-row').hidden, 'Checker must hide unused spacing');
+			shape = editor.layers.find(layer => layer.id === shape.id);
 			type.value = 'motif'; type.dispatchEvent(new Event('change', { bubbles: true }));
 			assert(shape.shapeData.fill.pattern.type === 'motif', 'Declared type select did not apply');
+			assert(shape.shapeData.fill.pattern.spacing === 0 && spacing.value === '0', 'Motif must initialize its original spacing');
 			assert(!document.getElementById('shapeFillPatternShapeSize').closest('.property-row').hidden, 'Motif row is hidden');
 			assert(document.getElementById('shapeFillPatternThickness').closest('.property-row').hidden, 'Unused row leaked');
 			const color = document.getElementById('shapeFillPatternColor');
@@ -136,7 +211,7 @@ const { chromium } = require('playwright');
 				}
 			}
 			assert(count >= 20, 'Not enough layer slots were covered');
-			return `${Object.keys(PATTERN_TYPES).length} types, cache, alpha, seams and ${getOptions('patternScroll').length} scroll directions`;
+			return `${Object.keys(PATTERN_TYPES).length} types, zero-gap endpoints, independent thickness, cache, alpha, seams and ${getOptions('patternScroll').length} scroll directions`;
 		});
 		console.log(`PASS pattern source: ${result}`);
 	} finally { await browser.close(); }

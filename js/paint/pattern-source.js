@@ -22,19 +22,26 @@ function drawPatternPixels(ctx, size, pattern, coverage) {
 	ctx.putImageData(image, 0, 0);
 }
 
+function patternBandCoverage(position, width) {
+	const phase = position - Math.floor(position);
+	// Equivalent boundary samples must not gain or lose a pixel through rounding.
+	const tolerance = Number.EPSILON * 4;
+	return width >= 1 || phase >= 1 - tolerance || phase < width - tolerance ? 1 : 0;
+}
+
 const PATTERN_TYPES = Object.freeze(Object.fromEntries([
 	{ id: 'checker', baseTile: 32, fields: [], coverage: (x, y) => (x < 0.5) === (y < 0.5) ? 1 : 0 },
 	{ id: 'gingham', baseTile: 32, fields: [], coverage: (x, y) => 1 - (x < 0.5 ? 0.5 : 1) * (y < 0.5 ? 0.5 : 1) },
-	{ id: 'grid', baseTile: 32, fields: ['thickness'], coverage: (x, y, p) => x < p.thickness / 100 || y < p.thickness / 100 ? 1 : 0 },
-	{ id: 'brick', baseTile: 48, fields: ['thickness'], coverage: (x, y, p) => {
+	{ id: 'grid', baseTile: 32, fields: ['thickness', 'spacing'], coverage: (x, y, p) => x < p.thickness / (p.thickness + p.spacing) || y < p.thickness / (p.thickness + p.spacing) ? 1 : 0 },
+	{ id: 'brick', baseTile: 48, fields: ['thickness', 'spacing'], coverage: (x, y, p) => {
 		const shifted = (x + (y < 0.5 ? 0 : 0.5)) % 1;
-		return y % 0.5 < p.thickness / 200 || shifted < p.thickness / 100 ? 1 : 0;
+		return y % 0.5 < p.thickness / (2 * (p.thickness + p.spacing)) || shifted < p.thickness / (p.thickness + p.spacing) ? 1 : 0;
 	} },
-	{ id: 'stripes', baseTile: 32, fields: ['thickness', 'direction'], coverage: (x, y, p) => {
+	{ id: 'stripes', baseTile: 32, fields: ['thickness', 'spacing', 'direction'], coverage: (x, y, p) => {
 		const position = { horizontal: y, vertical: x, 'diagonal-up': x + y, 'diagonal-down': x - y + 1 }[p.direction];
-		return position % 1 < p.thickness / 100 ? 1 : 0;
+		return patternBandCoverage(position, p.thickness / (p.thickness + p.spacing));
 	} },
-	{ id: 'zigzag', baseTile: 32, fields: ['thickness'], coverage: (x, y, p) => ((y - Math.abs(x * 2 - 1) / 2 + 1) % 1) < p.thickness / 100 ? 1 : 0 },
+	{ id: 'zigzag', baseTile: 32, fields: ['thickness', 'spacing'], coverage: (x, y, p) => patternBandCoverage(y - Math.abs(x * 2 - 1) / 2, p.thickness / (p.thickness + p.spacing)) },
 	{ id: 'motif', baseTile: 48, fields: ['shapeId', 'shapeSize', 'rotation', 'spacing', 'tileType', 'brickOffset', 'overlap'], draw(ctx, size, p) {
 		const geometry = getPatternMotifGeometry(size, p);
 		const { columns, rows, width, height } = geometry;
@@ -80,13 +87,18 @@ function normalizeEffectPattern(value) {
 		const number = data[key] == null ? NaN : Number(data[key]);
 		result[key] = Number.isFinite(number) ? Math.min(spec.max, Math.max(spec.min, number)) : spec.value;
 	});
+	// Older line recipes without spacing used thickness as a fraction of a full cell.
+	if (data.spacing == null && result.type !== 'motif' && PATTERN_TYPES[result.type].fields.includes('spacing')) result.spacing = 100 - result.thickness;
 	return result;
 }
 
 function getPatternTileSize(pattern, scalePercent) {
 	const data = normalizeEffectPattern(pattern);
 	const scale = Number.isFinite(Number(scalePercent)) ? Number(scalePercent) : FIELDS.textureScale.value;
-	return Math.max(2, Math.min(CONFIG.rendering.pattern.maxTilePx, Math.round(PATTERN_TYPES[data.type].baseTile * scale / 100 * (data.type === 'motif' ? 1 + data.spacing / 100 : 1))));
+	const type = PATTERN_TYPES[data.type];
+	// Line repeat distance is the stroke plus the gap, both relative to the base cell.
+	const repeat = data.type === 'motif' ? 1 + data.spacing / 100 : type.fields.includes('spacing') ? (data.thickness + data.spacing) / 100 : 1;
+	return Math.max(2, Math.min(CONFIG.rendering.pattern.maxTilePx, Math.round(type.baseTile * scale / 100 * repeat)));
 }
 
 function getPatternMotifGeometry(size, p) {

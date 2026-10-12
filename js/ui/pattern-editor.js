@@ -16,11 +16,17 @@ function syncEffectPatternEditor(prefix, data) {
 	if (!sets.length) return;
 	if (data.mode !== 'pattern') return;
 	const pattern = normalizeEffectPattern(data.pattern);
+	const spacingDefault = normalizeEffectPattern({ type: pattern.type, thickness: pattern.thickness }).spacing;
 	sets.forEach((set) => {
 		set.dataset.patternType = pattern.type;
 		set.querySelectorAll('[data-pattern-field]').forEach((row) => {
 			const key = row.dataset.patternField;
 			row.hidden = key === 'scrollCycleMs' ? pattern.scroll === 'none' : !PATTERN_TYPES[pattern.type].fields.includes(key) || key === 'brickOffset' && !pattern.tileType.startsWith('brick');
+			const input = row.querySelector('input[type="range"]');
+			if (input) {
+				if (key === 'spacing') input.dataset.default = String(spacingDefault);
+				syncSlider(input, pattern[key]);
+			}
 		});
 		set.querySelectorAll('[data-pattern-key]').forEach((input) => {
 			if (input.type === 'checkbox') input.checked = pattern[input.dataset.patternKey];
@@ -51,6 +57,7 @@ function installEffectPatternEditor({ prefix, getData, onUpdate }) {
 		const data = getData();
 		if (!data) return;
 		data.pattern = normalizeEffectPattern(data.pattern);
+		if (key === 'type' && value !== data.pattern.type) data.pattern.spacing = normalizeEffectPattern({ type: value, thickness: data.pattern.thickness }).spacing;
 		data.pattern[key] = value;
 		onUpdate(commit);
 		syncEffectPatternEditor(prefix, data);
