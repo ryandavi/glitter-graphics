@@ -4,6 +4,7 @@
 // description and control (see js/ui/settings-renderer.js); `element` is the
 // control's id. EXPORT_SETTINGS_LAYOUT below places the rows.
 const EXPORT_SETTINGS_SCHEMA = Object.freeze({
+	svgTextMode: { label: 'SVG Text', description: 'Paths preserve lettering without installing fonts. Editable text requires the font; warped text always uses paths.', control: { type: 'select', options: [{ value: 'paths', label: 'Convert to paths' }, { value: 'editable', label: 'Editable text' }] }, storageKey: 'exportSvgTextMode', element: 'exportSvgTextMode', default: () => CONFIG.export.defaults.svgTextMode, validate: (value) => ['paths', 'editable'].includes(value) ? value : CONFIG.export.defaults.svgTextMode },
 	outputMode: { storageKey: 'exportOutputMode', default: () => CONFIG.export.defaults.outputMode, validate: (value) => ['still', 'animation'].includes(value) ? value : CONFIG.export.defaults.outputMode },
 	stillFormat: { storageKey: 'exportStillFormat', default: () => CONFIG.export.defaults.stillFormat, validate: (value) => getExportFormats('still').includes(value) ? value : CONFIG.export.defaults.stillFormat },
 	animationFormat: { storageKey: 'exportAnimationFormat', default: () => CONFIG.export.defaults.animationFormat, validate: (value) => getExportFormats('animation').includes(value) ? value : CONFIG.export.defaults.animationFormat },
@@ -72,6 +73,7 @@ const EXPORT_SETTINGS_LAYOUT = (() => {
 				formatOption('mp4', 'MP4', 'animation', { attrs: { hidden: '' } })
 			] } }, descId: 'exportFormatDescription' },
 			field('stillFrame', { rowId: 'exportStillFrameRow', hidden: true }),
+			field('svgTextMode', { formatSection: 'svg', hidden: true }),
 			field('mp4LengthMode', { formatSection: 'mp4', hidden: true }),
 			field('mp4TargetDuration', { rowId: 'exportMp4TargetDurationRow', formatSection: 'mp4', hidden: true }),
 			field('mp4LoopCount', { rowId: 'exportMp4LoopCountRow', formatSection: 'mp4', hidden: true }),

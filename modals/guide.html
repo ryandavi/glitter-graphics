@@ -2152,7 +2152,8 @@
 
         <div class="guide-subsection">
             <h4 id="exporting-process">Exporting</h4>
-            <p>Choose Still Image and SVG in Export Settings for paths, shapes and editable text at canvas size. The dialog counts the vector layers and the layers left out. SVG leaves out textures, effects, animation and raster layers. Editable text needs its font installed and omits warp and backing shapes.</p>
+            <p>Choose Still Image and SVG in Export Settings for shapes, paths, painted fills, style frames and non-image backgrounds at canvas size. SVG keeps gradients, patterns, strokes, arrowheads, outlines, shadows and bevels. Glitter becomes its dominant color. Images, pixel filters, sparkles and animation are left out; the dialog counts included and omitted layers.</p>
+            <p>SVG Text defaults to Convert to paths, preserving the lettering without requiring its font on another computer. Text paths, backing shapes and effects follow the rendered contours; soft effects use opacity bands. These approximate the rendered edges. Choose Editable text to revise the wording in another editor; it needs the font installed. Warped text always uses paths.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">

@@ -7,7 +7,7 @@ registerLayerType(LayerType.SHAPE, {
 	vectorGeometry: (editor, layer) => {
 		const data = layer.shapeData;
 		const entry = editor.shapeGlitterManager.getMeasurementEntry(layer);
-		return { subpaths: ShapeLibrary.getSubpaths(data.shapeId, data.width / 2, data.height / 2, { fit: 'fill', cornerRadiusPx: LAYER_UI_CONFIG[layer.type].supportsCornerRadius(layer) ? data.cornerRadiusPx : 0 }), fill: data.fill,
+		return { masks: editor.shapeGlitterManager.renderSlotMasks(layer), subpaths: ShapeLibrary.getSubpaths(data.shapeId, data.width / 2, data.height / 2, { fit: 'fill', cornerRadiusPx: LAYER_UI_CONFIG[layer.type].supportsCornerRadius(layer) ? data.cornerRadiusPx : 0 }), fill: data.fill,
 			offset: { x: entry.shapeRect.x + entry.shapeRect.width / 2 - entry.width / 2, y: entry.shapeRect.y + entry.shapeRect.height / 2 - entry.height / 2 } };
 	},
 	assetRefs: (layer) => [{ kind: 'shape', id: layer.shapeData?.shapeId }],

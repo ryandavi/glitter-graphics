@@ -1,6 +1,8 @@
 'use strict';
 
 registerLayerType(LayerType.FRAME, {
+	vectorEligible: (layer) => layer.frameData?.kind !== 'image',
+	vectorGeometry: (editor, layer) => ({ masks: editor.frameLayerManager.renderSlotMasks(layer), stack: editor.frameLayerManager.buildFrameStack(layer, entry => resolvePaintSlotSource(layer, entry)) }),
 	assetRefs: (layer) => [{ kind: 'sticker', id: layer.frameData?.image?.stickerId }],
 	displayName: 'Frame',
 	// The style kind paints its ring with the fill slot; the image kind draws

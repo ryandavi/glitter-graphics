@@ -989,6 +989,7 @@ const CONFIG = deepFreeze({
 	},
 
 	export: {
+		svg: { alphaLevels: 16 },
 		ditherPreview: { height: 144, zoom: 2 },
 		authoredFrames: {
 			checkpointInterval: 12
@@ -1046,6 +1047,7 @@ const CONFIG = deepFreeze({
 			stillFormat: 'png',
 			animationFormat: 'gif',
 			stillFrame: 'first',
+			svgTextMode: 'paths',
 			jpegQuality: 90,
 			baseImage: true,
 			glitter: true,

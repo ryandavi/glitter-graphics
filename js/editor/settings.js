@@ -450,7 +450,7 @@ initializeExportSettings() {
 		const formatDescription = document.getElementById('exportFormatDescription');
 		if (formatDescription) {
 			let description = {
-				'still:svg': 'Export paths, shapes and editable text. Text needs the font installed; warp and text backing shapes are omitted. Textures and effects are omitted.',
+				'still:svg': 'Export vector shapes, paths, text, painted fills and style frames with gradients, patterns, outlines, shadows and bevels. Glitter uses its dominant color. Images, pixel filters, sparkles and animation are omitted. Text paths and effect contours approximate the rendered edges.',
 				'still:png': 'Export a still image with full detail and optional transparency.',
 				'still:jpeg': 'Export a smaller still image. Transparent areas use the matte color.',
 				'still:gif': 'Export one frame as a GIF.',
@@ -489,6 +489,7 @@ initializeExportSettings() {
 		if (formatRevert) formatRevert.disabled = target.format === CONFIG.export.defaults[target.isStill ? 'stillFormat' : 'animationFormat'];
 		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = !target.isGif);
 		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !target.isVideo);
+		document.querySelectorAll('[data-export-format-section="svg"]').forEach((row) => row.hidden = !target.isVector);
 		document.getElementById('transparencySettingsRow')?.toggleAttribute('hidden', !target.supportsTransparency || target.isVector);
 		document.getElementById('exportStillFrameRow')?.toggleAttribute('hidden', !target.isStill || target.isVector || !this.hasAnimatedExportContent());
 		document.getElementById('exportJpegQualityRow')?.toggleAttribute('hidden', !target.supportsJpegCompression);

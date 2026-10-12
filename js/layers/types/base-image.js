@@ -1,6 +1,8 @@
 'use strict';
 
 registerLayerType(LayerType.BASE_IMAGE, {
+	vectorEligible: (layer) => !['image', 'none'].includes(layer.background?.mode),
+	vectorGeometry: (editor, layer) => ({ documentSpace: true, rect: { x: 0, y: 0, width: editor.originalCanvas.width, height: editor.originalCanvas.height }, fill: layer.background }),
 	protectedInStack: true,
 	describe: (layer) => ({ name: 'Base Image', detail: `Background · ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}` }),
 	displayName: 'Base Image',

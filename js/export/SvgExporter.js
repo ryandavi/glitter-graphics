@@ -5,13 +5,14 @@ class SvgExporter extends DeferredExporter {
 	setFileName(fileName) { if (fileName) this.fileName = fileName; }
 	static count(layers) {
 		const visible = layers.filter((layer) => layer.visible && !layer.isPreview && layerHasVisibleContent(layer));
-		const vectors = visible.filter((layer) => LAYER_UI_CONFIG[layer.type]?.vectorGeometry);
+		const vectors = visible.filter(SvgExporter.isEligible);
 		return { vectors: vectors.length, omitted: visible.length - vectors.length };
 	}
 	static escape(value) { return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]); }
-	static paint(slot, key) {
-		if (!slot || slot.mode === 'none') return `${key}="none"`;
-		return `${key}="${SvgExporter.escape(slot.color)}" ${key}-opacity="${slot.opacity / 100}"`;
+	static isEligible(layer) {
+		const type = LAYER_UI_CONFIG[layer.type];
+		return Boolean(type?.vectorGeometry && (!type.vectorEligible || type.vectorEligible(layer))
+			&& getLayerPaintSlots(layer).some(entry => entry.renders && entry.role !== 'sparkles' && !['none', 'image'].includes(entry.data.mode)));
 	}
 	static matrix(layer, offset = { x: 0, y: 0 }) {
 		const t = getLayerTransform(layer), angle = t.rotation * Math.PI / 180;

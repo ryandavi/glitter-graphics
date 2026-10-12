@@ -45,7 +45,7 @@ Paths below are relative to `tests/`. Related pure-logic contracts live in `unit
 | `ui/text-tool-verify.js`, `ui/text-chrome-verify.js` | Desktop/phone editing, word/drag selection, composition, wrapping, splitting, emoji, captions, overflow and sizing | Text input, geometry, preview or edit sessions |
 | `ui/shape-touch-verify.js`, `parity/shape-border-verify.js` | Shape interactions, masks, borders and shared slot-stack geometry | Shape geometry, mask, border or slot geometry |
 | `ui/crop-motion-verify.js`, `ui/animated-base-verify.js` | Crop handles/actions, transforms, one-step history, base pixels and animation placement | Canvas sizing, Crop or base animation |
-| `ui/svg-verify.js`, `unit/svg-geometry-unit.js` | SVG parser, primitives, paths, affine transforms, vector import and raster fallback | SVG import/export |
+| `ui/svg-verify.js`, `unit/svg-geometry-unit.js` | SVG parser/import/fallback, outlined/editable and warped text, gradient/pattern rendering, outlines/shadows/bevels, stroke ornaments, painted fills, backgrounds, image exclusion, settings and stable output | SVG import/export |
 | `ui/animation-loop-verify.js`, `ui/preview-motion-verify.js` | Frame indices, crawl offsets, pixel equality, loop fitting, Pause/Resume and export stability | Animation timing, loop fitting or preview playback |
 | `parity/export-parity.js` | Repeated matte/transparent exports, edit/undo byte identity and preview/export twins | Compositor, exporter, frames, timeline or effect sources |
 | `parity/effect-combinatorial-parity.js`, `parity/raster-scale-verify.js` | Combined effects, unequal scales, physical outlines and texture geometry | Shared effects, text/shape raster geometry or slot stacks |
