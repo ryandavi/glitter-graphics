@@ -139,11 +139,8 @@ class AssetBrowserRail {
 			preview.setAttribute('aria-hidden', 'true');
 			option.appendChild(preview);
 		} else if (entry.icon) {
-			const icon = document.createElement('img');
+			const icon = createLoadingImage({ src: entry.icon });
 			icon.className = 'asset-browser-rail-icon';
-			icon.src = entry.icon;
-			icon.alt = '';
-			icon.loading = 'lazy';
 			option.appendChild(icon);
 		}
 		const name = document.createElement('span');

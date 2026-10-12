@@ -277,29 +277,10 @@ const initModalCrossLinks = (modalBody, onOpen) => {
 };
 
 const initPixelScalerInContainer = (container = document) => {
-	const images = container.querySelectorAll('img[data-pixel-scale]');
-	if (images.length === 0) return;
-
-	const scaleImages = () => {
-		images.forEach(img => {
-			// Ensure image is loaded before calculating
-			if (!img.complete || img.naturalWidth === 0) {
-				img.onload = scaleImages;
-				return;
-			}
-
-			const scale = Number(img.dataset.pixelScale) || 1;
-			const targetWidth = img.naturalWidth * scale;
-
-			// Set the "ideal" width. 
-			// The CSS max-width: 100% will automatically shrink it 
-			// if the parent is smaller than this value.
-			img.style.width = `${targetWidth}px`;
-		});
-	};
-
-	// Initial Run
-	scaleImages();
+	container.querySelectorAll('img[data-pixel-scale]').forEach(img => {
+		// Build-time dimensions reserve the scaled space before lazy decoding.
+		img.style.width = `${img.getAttribute('width')}px`;
+	});
 };
 
 // ============================================

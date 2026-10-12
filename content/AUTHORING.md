@@ -26,6 +26,8 @@ Every modal (history, personal-web, aylana, preservation, about, welcome, guide)
 
 Everything else is plain HTML.
 
+Local images get real `width` and `height` (scaled by `data-pixel-scale`), `loading="lazy"` and `decoding="async"` from the build. Authors leave these attributes to the builder.
+
 | Command | Does |
 |---|---|
 | `node tools/entities.js find "neonlove.net"` | Which slug is this? Matches names, aliases and domains |

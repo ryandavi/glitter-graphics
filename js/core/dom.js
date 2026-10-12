@@ -82,6 +82,47 @@ async function loadImageElement(url) {
 	return image;
 }
 
+const DECODED_THUMBNAILS = new Set();
+
+// The caller may hold a paged image until its batch is ready. Other thumbnail
+// hosts reveal themselves; successful decodes skip entrance on later visits.
+function createLoadingImage({ src, alt = '', placeholderColor }) {
+	const image = document.createElement('img');
+	image.alt = alt;
+	image.decoding = 'async';
+	image.draggable = false;
+	image.loadingState = DECODED_THUMBNAILS.has(src) ? 'cached' : 'pending';
+	image.revealLoading = () => {
+		const host = image.parentElement;
+		if (!host) return;
+		host.classList.add('loading-image-host');
+		if (placeholderColor) host.style.setProperty('--tile-placeholder', placeholderColor);
+		for (const state of ['pending', 'ready', 'failed']) host.classList.toggle(`is-${state}`, image.loadingState === state || (state === 'ready' && image.loadingState === 'cached'));
+		host.classList.toggle('is-cached', image.loadingState === 'cached');
+	};
+	image.loadingReady = new Promise(resolve => {
+		const settle = state => {
+			image.onload = image.onerror = null;
+			image.loadingState = state;
+			if (state !== 'failed') DECODED_THUMBNAILS.add(src);
+			else DECODED_THUMBNAILS.delete(src);
+			if (!image.holdLoadingReveal || state === 'cached') image.revealLoading();
+			resolve();
+		};
+		image.onload = async () => {
+			try {
+				await image.decode();
+				settle(image.loadingState === 'cached' ? 'cached' : 'ready');
+			} catch { settle('failed'); }
+		};
+		image.onerror = () => settle('failed');
+		image.src = src;
+		if (image.complete && image.naturalWidth) image.loadingState = 'cached';
+		queueMicrotask(() => image.revealLoading());
+	});
+	return image;
+}
+
 // Hands the main thread back so progress can paint and Cancel can land. A
 // message task, never requestAnimationFrame: a frame callback waits for the
 // next screen refresh (twice as long in iOS Low Power Mode) and does not fire

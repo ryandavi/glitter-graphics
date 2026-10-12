@@ -231,6 +231,18 @@ test('header defaults on and can be disabled', () => {
 	assert(run('<p>Body</p>').output === '<p>Body</p>', 'header:false did not suppress the header');
 });
 
+test('local images reserve real and scaled sizes before lazy decoding', () => {
+	const bytes = fs.readFileSync(path.join(root, 'images/modal/glitter-text.gif'));
+	const width = bytes.readUInt16LE(6), height = bytes.readUInt16LE(8);
+	const source = '<img src="images/modal/glitter-text.gif"\n data-pixel-scale="3" width="1" height="1">\n<p>After</p>';
+	const result = run(source);
+	assert(!result.diagnostics.some(item => item.severity === 'error'), 'dimensions failed');
+	assert(result.output.includes(`width="${width * 3}" height="${height * 3}" loading="lazy" decoding="async"`), 'scaled dimensions or decoding attributes missing');
+	assert(result.output.split('\n').length === source.split('\n').length, 'image stamping changed the diagnostic line map');
+	assert(run('<img src="images/missing-test-image.gif">').diagnostics.some(item => item.rule === 'image-dimensions'), 'missing local image was accepted');
+	assert(run('<img src="https://example.test/image.gif">').output === '<img src="https://example.test/image.gif">', 'remote image was rewritten');
+});
+
 test('tag sweep tags the first untagged mention per section', () => {
 	const source = '<h2 id="A">A</h2>\n<p>WebTV and WebTV, DAN-411, a GIF, {link:external|https://x}WebTV{/link}</p>\n<h2 id="B">B</h2>\n<p>{@webtv} then WebTV</p>';
 	const { edits } = planTags(source, entities);

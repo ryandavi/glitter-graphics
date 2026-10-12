@@ -970,6 +970,7 @@
   --scrollbar-min-thumb: 28px;
   /* Transitions */
   --transition-fast: 0.2s;
+  --transition-reveal: 0.16s;
   --transition-base: 0.3s;
   /* Sizes. Density is these four values and nothing else: the coarse-pointer
      block at the end of this file is the only place they change. */
@@ -4147,7 +4148,7 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
   flex-direction: column;
   gap: var(--spacing-sm);
 }
-.asset-browser > .asset-browser-sentinel {
+.asset-browser > .asset-browser-content > .asset-browser-sentinel {
   height: 1px;
   visibility: hidden;
 }
@@ -4363,6 +4364,59 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
   padding-left: var(--spacing-sm);
   border-left: 2px solid var(--color-border);
   color: var(--color-text-tertiary);
+}
+
+.loading-image-host.is-pending {
+  background: var(--tile-placeholder, var(--color-bg-tertiary));
+  animation: tile-pending 2s ease-in-out infinite;
+}
+.loading-image-host.is-pending > img {
+  opacity: 0;
+}
+.loading-image-host.is-failed {
+  background: repeating-linear-gradient(135deg, transparent 0 3px, var(--color-border) 3px 4px);
+  border-color: var(--color-border);
+}
+.loading-image-host.is-failed > img {
+  visibility: hidden;
+}
+.loading-image-host.is-tiled-preview > img {
+  visibility: hidden;
+}
+.loading-image-host.is-tiled-preview.is-ready {
+  background-image: var(--tile-preview-image);
+}
+.loading-image-host.is-ready:not(.is-cached).is-tiled-preview, .loading-image-host.is-ready:not(.is-cached) > img {
+  animation: tile-enter var(--transition-reveal) ease-out both;
+  animation-delay: var(--tile-enter-delay, 0ms);
+}
+
+@keyframes tile-pending {
+  50% {
+    background-color: color-mix(in srgb, var(--tile-placeholder, var(--color-bg-tertiary)) 70%, var(--color-bg-primary));
+  }
+}
+@keyframes tile-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-image-host.is-pending,
+  .loading-image-host.is-ready:not(.is-cached).is-tiled-preview,
+  .loading-image-host.is-ready:not(.is-cached) > img {
+    animation: none;
+  }
+}
+:root[data-reduce-motion=true] .loading-image-host.is-pending,
+:root[data-reduce-motion=true] .loading-image-host.is-ready:not(.is-cached).is-tiled-preview,
+:root[data-reduce-motion=true] .loading-image-host.is-ready:not(.is-cached) > img {
+  animation: none;
 }
 
 .asset-options {

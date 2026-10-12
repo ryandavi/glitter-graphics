@@ -152,7 +152,7 @@ class ContentManager {
 		if (this.ui.searchNameOnly) {
 			this.ui.searchNameOnly.addEventListener('change', (e) => {
 				this.activeFilters.nameOnly = e.target.checked;
-				this.browser.refresh();        // ← REPLACE WITH THIS
+				this.browser.refresh();
 				this.updateClearFiltersButton();
 			});
 		}
@@ -631,8 +631,7 @@ class ContentManager {
 	createItemCard(item) {
 		const option = document.createElement('div');
 		option.className = 'choice-card asset-option';
-		const img = document.createElement('img');
-		img.src = item.thumbnailUrl || item.url;
+		const img = createLoadingImage({ src: item.thumbnailUrl || item.url });
 		option.appendChild(img);
 		return option;
 	}
@@ -674,9 +673,12 @@ class ContentManager {
 		}
 
 		const select = async () => {
-			await (onSelect ? onSelect(item) : this.handleItemClick(item));
-			this.recordRecent(item.id);
-			if (this.activeFilters.search) this.recordSearch();
+			const done = this.editor.beginActivity('library-pick', 'Loading asset');
+			try {
+				await (onSelect ? onSelect(item) : this.handleItemClick(item));
+				this.recordRecent(item.id);
+				if (this.activeFilters.search) this.recordSearch();
+			} finally { done(); }
 		};
 		option.addEventListener('click', (event) => {
 			if (event.target.closest('.asset-favorite-toggle, .asset-delete-button')) return;
@@ -696,10 +698,7 @@ class ContentManager {
 		const item = this.browser.getCategoryPreviewItems(category)[0];
 		const url = category.icon || item?.thumbnailUrl || item?.url;
 		if (!url) return null;
-		const image = document.createElement('img');
-		image.loading = 'lazy';
-		image.src = url;
-		image.alt = '';
+		const image = createLoadingImage({ src: url, placeholderColor: item?.colorCodes?.[0] });
 		image.className = 'asset-browser-rail-icon';
 		image.style.imageRendering = item?.isPixelated ? 'pixelated' : 'auto';
 		return image;

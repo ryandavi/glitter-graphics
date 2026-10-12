@@ -759,6 +759,11 @@ const CONFIG = deepFreeze({
 		// The Library's Recent strip, per asset kind.
 		library: {
 			recentCount: 12,
+			revealDeadlineMs: 300,
+			revealStepMs: 18,
+			revealMaxDelayMs: 90,
+			overscanRows: 3,
+			pagingMarginPx: 200,
 			// Recent search chips under an empty Library search field.
 			recentSearchCount: 5
 		},
@@ -1265,9 +1270,7 @@ const ASSET_TYPE_CONFIG = {
 			// Sticker names are user-supplied (uploads) - set as properties so a
 			// quote or angle bracket in the name can't break out of the markup.
 			thumbnail.replaceChildren();
-			const img = document.createElement('img');
-			img.src = asset.thumbnailUrl || asset.url;
-			img.alt = asset.name;
+			const img = createLoadingImage({ src: asset.thumbnailUrl || asset.url, alt: asset.name });
 			thumbnail.appendChild(img);
 		},
 		getExtraBadges: (asset) => {

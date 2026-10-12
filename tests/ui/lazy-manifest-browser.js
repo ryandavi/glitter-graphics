@@ -241,11 +241,11 @@ async function main() {
 					count: manager.ui.panel.querySelectorAll('.category-card, .asset-option').length,
 					once: unchanged === manager.browser.elements.content.firstChild,
 					pending: managers.slice(index + 1).every((entry) => !entry.browser.hasView),
-					lazy: [...manager.ui.panel.querySelectorAll('.category-card img')].every((image) => image.loading === 'lazy')
+					decoded: [...manager.ui.panel.querySelectorAll('.category-card img')].every((image) => image.decoding === 'async')
 				};
 			});
 		});
-		for (const view of views) assert(view.count > 0 && view.once && view.pending && view.lazy, `${view.prefix} first-use rendering failed: ${JSON.stringify(view)}`);
+		for (const view of views) assert(view.count > 0 && view.once && view.pending && view.decoded, `${view.prefix} first-use rendering failed: ${JSON.stringify(view)}`);
 
 		const gap = await browser.newPage();
 		let releaseLibrary;

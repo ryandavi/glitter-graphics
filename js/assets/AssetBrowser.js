@@ -21,7 +21,6 @@ class AssetBrowser {
 		this.state = 'CATEGORY_LIST';
 		this.currentCategoryId = null;
 		this.currentOffset = 0;
-		this.batchSize = 20;
 		this.searchDebounceTimer = null;
 
 		this.categories = [];
@@ -83,7 +82,7 @@ class AssetBrowser {
 
 		// Store parent containers
 		this.assetOptions = this.elements.browser.closest('.asset-options');
-		this.scrollContainer = this.elements.browser.closest('.asset-options'); // The actual scrollable element // this.elements.content; //
+		this.scrollContainer = this.elements.content;
 
 		this.observer = null;
 	}
@@ -145,14 +144,14 @@ class AssetBrowser {
 	setupIntersectionObserver() {
 		this.observer = new IntersectionObserver(
 			(entries) => {
-				if (entries[0].isIntersecting && this.isPagedState()) {
+				if (entries[0].isIntersecting && this.hasView && this.scrollContainer.clientHeight && this.isPagedState()) {
 					dbg('[Browser] Sentinel intersecting, loading more...');
 					this.loadMoreItems();
 				}
 			},
 			{
 				root: this.scrollContainer, // Use the actual scroll container
-				rootMargin: '200px',
+				rootMargin: `${CONFIG.ui.library.pagingMarginPx}px`,
 				threshold: 0
 			}
 		);
@@ -218,6 +217,8 @@ class AssetBrowser {
 
 	render() {
 		if (!this.hasView) return;
+		this.listingGroups = null;
+		this.listingItems = null;
 		// Narrowing is cross-library, regardless of the saved home or rail view.
 		this.state = this.contentManager.hasActiveFilters() ? 'SEARCH_RESULTS' : 'CATEGORY_LIST';
 		if (this.assetOptions) {
@@ -369,13 +370,64 @@ class AssetBrowser {
 			.map(([id, setItems]) => ({ id, name: this.getCategoryPath(id), items: this.sortItems(setItems) }));
 	}
 
-	loadRailItems() {
-		const batch = this.wallItems.slice(this.currentOffset, this.currentOffset + this.batchSize);
+	loadRailItems(throughOffset = 0) {
 		if (!this.wallItems.length) { this.showEmptyState(this.browseView === 'favorites' ? 'No favorites yet' : 'No items found'); return; }
-		batch.forEach(item => this.elements.itemGrid.appendChild(this.createItemElement(item)));
-		this.currentOffset += batch.length;
+		const grid = this.elements.itemGrid;
+		const tiles = [];
+		if (!grid.firstElementChild && this.currentOffset < this.wallItems.length) {
+			const tile = this.createItemElement(this.wallItems[this.currentOffset++]);
+			grid.appendChild(tile);
+			tiles.push(tile);
+		}
+		const { columns, rows } = this.getPageRows(grid);
+		const end = Math.min(this.wallItems.length, Math.ceil(Math.max(throughOffset, this.currentOffset + columns * rows - tiles.length) / columns) * columns);
+		while (this.currentOffset < end) {
+			const tile = this.createItemElement(this.wallItems[this.currentOffset++]);
+			grid.appendChild(tile);
+			tiles.push(tile);
+		}
+		this.finishPage(tiles);
+	}
+
+	getPageRows(grid) {
+		const style = getComputedStyle(grid);
+		const columns = Math.max(1, style.gridTemplateColumns.trim().split(/\s+/).length);
+		const rowHeight = Math.max(1, grid.firstElementChild?.getBoundingClientRect().height || 0) + (parseFloat(style.rowGap) || 0);
+		const rows = Math.ceil(this.scrollContainer.clientHeight / rowHeight) + CONFIG.ui.library.overscanRows;
+		return { columns, rows, rowHeight };
+	}
+
+	finishPage(tiles) {
+		this.revealBatch(tiles);
 		this.contentManager.updateSelection?.();
-		this.checkAndLoadMore();
+		this.rearmPaging();
+	}
+
+	rearmPaging() {
+		this.observer.unobserve(this.elements.sentinel);
+		if (this.isPagedState() && this.currentOffset < this.getPagedItemCount()) this.observer.observe(this.elements.sentinel);
+	}
+
+	async revealBatch(tiles) {
+		const images = tiles.flatMap(tile => [...tile.querySelectorAll('img')]).filter(image => image.loadingReady && image.loadingState !== 'cached');
+		if (!images.length) return;
+		images.forEach(image => { image.holdLoadingReveal = true; });
+		let timer;
+		await Promise.race([
+			Promise.all(images.map(image => image.loadingReady)),
+			new Promise(resolve => { timer = setTimeout(resolve, CONFIG.ui.library.revealDeadlineMs); })
+		]);
+		clearTimeout(timer);
+		images.forEach(image => {
+			const host = image.parentElement;
+			if (!host) return;
+			const index = tiles.findIndex(tile => tile.contains(image));
+			host.style.setProperty('--tile-enter-index', index);
+			host.style.setProperty('--tile-enter-delay', `${Math.min(index * CONFIG.ui.library.revealStepMs, CONFIG.ui.library.revealMaxDelayMs)}ms`);
+			image.holdLoadingReveal = false;
+			image.revealLoading();
+			if (image.loadingState === 'pending') host.style.setProperty('--tile-enter-delay', '0ms');
+		});
 	}
 
 	refresh() {
@@ -393,7 +445,7 @@ class AssetBrowser {
 		this.preserveScrollPosition(() => {
 			this.wallItems = this.sortItems(this.contentManager.getFavoriteItems(this.getFilteredItems()));
 			const existing = new Map([...this.elements.itemGrid.children].map(tile => [String(tile.dataset.id), tile]));
-			const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.batchSize));
+			const shown = this.wallItems.slice(0, Math.max(this.currentOffset, this.getPageRows(this.elements.itemGrid).columns * this.getPageRows(this.elements.itemGrid).rows));
 			const tiles = shown.map(item => existing.get(String(item.id)) || this.createItemElement(item));
 			for (const child of [...this.elements.itemGrid.children]) if (!tiles.includes(child)) child.remove();
 			tiles.forEach((tile, index) => {
@@ -402,7 +454,7 @@ class AssetBrowser {
 			this.currentOffset = tiles.length;
 			this.elements.emptyState.classList.remove('visible');
 			if (!this.wallItems.length) this.showEmptyState('No favorites yet');
-			else this.checkAndLoadMore();
+			else this.rearmPaging();
 			this.contentManager.updateSelection?.();
 		});
 	}
@@ -441,11 +493,10 @@ class AssetBrowser {
 			this.setState('CATEGORY_DETAIL', item.category);
 		}
 
-		// Wait for initial render
-		await new Promise(resolve => setTimeout(resolve, 50));
-
-		// Load items until we find our target
-		await this.loadUntilItemFound(item);
+		const index = this.isListingState()
+			? this.getListingItems().findIndex(entry => entry.item.id === item.id)
+			: this.wallItems.findIndex(entry => entry.id === item.id);
+		if (index >= this.currentOffset) this.loadNextBatch(index + 1);
 
 		// Scroll to the item
 		this.scrollToItem(item);
@@ -459,27 +510,6 @@ class AssetBrowser {
 			`.category-section[data-category-id="${CSS.escape(String(item.category))}"]`
 		);
 		return section?.querySelector(selector) || null;
-	}
-
-	async loadUntilItemFound(item) {
-		const maxAttempts = 50; // Prevent infinite loop
-		let attempts = 0;
-
-		while (attempts < maxAttempts) {
-			if (this.findItemElement(item)) return;
-
-			// If we've loaded everything, stop
-			if (this.currentOffset >= this.getPagedItemCount()) {
-				console.warn('[Browser] Item not found after loading all items');
-				return;
-			}
-
-			this.loadNextBatch();
-
-			// Wait for render
-			await new Promise(resolve => setTimeout(resolve, 50));
-			attempts++;
-		}
 	}
 
 	scrollToItem(item) {
@@ -581,10 +611,7 @@ class AssetBrowser {
 
 		const image = card.querySelector('.category-card-image');
 		if (category.icon) {
-			const img = document.createElement('img');
-			img.src = category.icon;
-			img.draggable = false;
-			img.alt = '';
+			const img = createLoadingImage({ src: category.icon, placeholderColor: category.color });
 			image.appendChild(img);
 		} else {
 			const samples = this.getCategoryPreviewItems(category);
@@ -593,17 +620,14 @@ class AssetBrowser {
 			for (const item of samples) {
 				const cell = document.createElement('span');
 				cell.className = 'category-card-preview';
+				const img = createLoadingImage({ src: item.thumbnailUrl || item.url, placeholderColor: item.colorCodes?.[0] });
+				img.style.imageRendering = item.isPixelated ? 'pixelated' : 'auto';
 				if (this.schema.tileCategoryIcon) {
-					cell.style.backgroundImage = `url("${item.url}")`;
-					cell.style.imageRendering = item.isPixelated ? 'pixelated' : 'auto';
-				} else {
-					const img = document.createElement('img');
-					img.loading = 'lazy';
-					img.src = item.thumbnailUrl || item.url;
-					img.draggable = false;
-					img.alt = '';
-					cell.appendChild(img);
+					cell.classList.add('is-tiled-preview');
+					cell.style.setProperty('--tile-preview-image', `url("${item.url}")`);
+					cell.style.imageRendering = img.style.imageRendering;
 				}
+				cell.appendChild(img);
 				image.appendChild(cell);
 			}
 		}
@@ -676,50 +700,34 @@ class AssetBrowser {
 		return 0;
 	}
 
-	loadNextBatch() {
-		if (this.isWallState()) this.loadRailItems();
-		else if (this.isListingState()) this.loadListingItems();
+	loadNextBatch(throughOffset = 0) {
+		if (this.isWallState()) this.loadRailItems(throughOffset);
+		else if (this.isListingState()) this.loadListingItems(throughOffset);
 	}
 
 	loadMoreItems() {
 		if (this.currentOffset < this.getPagedItemCount()) this.loadNextBatch();
 	}
 
-	checkAndLoadMore() {
-		// Wait for DOM to update
-		requestAnimationFrame(() => {
-			const sentinelRect = this.elements.sentinel.getBoundingClientRect();
-			const scrollRect = this.scrollContainer.getBoundingClientRect();
-
-			// Check if sentinel is within viewport + buffer zone (like our IntersectionObserver rootMargin)
-			const bufferZone = 400; // Load until sentinel is well beyond viewport
-			const isSentinelNearViewport = sentinelRect.top < (scrollRect.bottom + bufferZone);
-
-			// If sentinel is within our buffer zone, keep loading
-			if (isSentinelNearViewport && this.isPagedState() && this.currentOffset < this.getPagedItemCount()) {
-				this.loadNextBatch(); // This will recursively call checkAndLoadMore again
-			}
-		});
-	}
 
 	// Search preserves score order and groups by the asset's home category.
 	getListingGroups() {
-		if (this.wallGroups) return this.wallGroups;
+		if (this.listingGroups) return this.listingGroups;
+		if (this.wallGroups) return (this.listingGroups = this.wallGroups);
 		const byCategory = new Map();
 		this.getFilteredItems().forEach(item => {
 			if (!byCategory.has(item.category)) byCategory.set(item.category, []);
 			byCategory.get(item.category).push(item);
 		});
-		return [...byCategory.entries()].map(([id, items]) => ({ id, name: this.getCategoryPath(id), items }));
+		return (this.listingGroups = [...byCategory.entries()].map(([id, items]) => ({ id, name: this.getCategoryPath(id), items })));
 	}
 
 	getListingItems(groups = this.getListingGroups()) {
-		return groups.flatMap((entry) => entry.items.map((item) => ({ item, group: entry })));
+		return this.listingItems ||= groups.flatMap((entry) => entry.items.map((item) => ({ item, group: entry })));
 	}
 
-	loadListingItems() {
-		const groups = this.getListingGroups();
-		const entries = this.getListingItems(groups);
+	loadListingItems(throughOffset = 0) {
+		const entries = this.getListingItems();
 
 		if (entries.length === 0) {
 			this.elements.searchResults.classList.remove('visible');
@@ -729,48 +737,40 @@ class AssetBrowser {
 			return;
 		}
 
-		const batch = entries.slice(this.currentOffset, this.currentOffset + this.batchSize);
-
-		if (batch.length === 0) {
-			return; // No more items
-		}
-
-		let currentGroupId = null;
-		let currentGrid = null;
-
-		batch.forEach(({ item, group }) => {
-			if (group.id !== currentGroupId) {
-				currentGroupId = group.id;
-				let section = this.elements.searchResults.querySelector(`.category-section[data-category-id="${CSS.escape(String(group.id))}"]`);
-
-				if (!section) {
-					section = document.createElement('div');
-					section.className = 'category-section';
-					section.dataset.categoryId = group.id;
-
-					const header = AssetSetHeader.createTitleLine(group.name, group.items.length);
-					header.classList.add('category-section-header');
-					section.appendChild(header);
-
-					const grid = document.createElement('div');
-					grid.className = 'asset-grid visible';
-					section.appendChild(grid);
-
-					this.elements.searchResults.appendChild(section);
-				}
-				currentGrid = section.querySelector('.asset-grid');
+		const tiles = [];
+		let remainingHeight = this.scrollContainer.clientHeight;
+		while (this.currentOffset < entries.length) {
+			const { group } = entries[this.currentOffset];
+			let section = this.elements.searchResults.querySelector(`.category-section[data-category-id="${CSS.escape(String(group.id))}"]`);
+			if (!section) {
+				section = document.createElement('div');
+				section.className = 'category-section';
+				section.dataset.categoryId = group.id;
+				const header = AssetSetHeader.createTitleLine(group.name, group.items.length);
+				header.classList.add('category-section-header');
+				const grid = document.createElement('div');
+				grid.className = 'asset-grid visible';
+				section.append(header, grid);
+				this.elements.searchResults.appendChild(section);
+				remainingHeight -= header.getBoundingClientRect().height;
 			}
-
-			currentGrid.appendChild(this.createItemElement(item));
-		});
-
-		this.currentOffset += batch.length;
-
-		// Update selection state for newly rendered items
-		this.contentManager.updateSelection?.();
-
-		// Check if we need to load more
-		this.checkAndLoadMore();
+			const grid = section.querySelector('.asset-grid');
+			let appended = 0;
+			const append = () => {
+				const tile = this.createItemElement(entries[this.currentOffset++].item);
+				grid.appendChild(tile);
+				tiles.push(tile);
+				appended++;
+			};
+			if (!grid.firstElementChild) append();
+			const { columns, rowHeight } = this.getPageRows(grid);
+			const count = Math.ceil(Math.max(0, remainingHeight) / rowHeight) * columns + CONFIG.ui.library.overscanRows * columns;
+			while (this.currentOffset < entries.length && entries[this.currentOffset].group === group &&
+				(appended < count || this.currentOffset < throughOffset || grid.children.length % columns)) append();
+			remainingHeight -= Math.ceil(appended / columns) * rowHeight;
+			if (remainingHeight <= 0 && this.currentOffset >= throughOffset) break;
+		}
+		this.finishPage(tiles);
 	}
 
 	showEmptyState(message) {

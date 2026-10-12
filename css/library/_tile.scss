@@ -2,6 +2,49 @@
 
 // Asset tiles: the option grid, tile marks, favourite and delete buttons.
 
+.loading-image-host {
+	&.is-pending {
+		background: var(--tile-placeholder, var(--color-bg-tertiary));
+		animation: tile-pending 2s ease-in-out infinite;
+		>img { opacity: 0; }
+	}
+	&.is-failed {
+		@include swatch-unset-fill;
+		>img { visibility: hidden; }
+	}
+	&.is-tiled-preview {
+		>img { visibility: hidden; }
+		&.is-ready { background-image: var(--tile-preview-image); }
+	}
+	&.is-ready:not(.is-cached) {
+		&.is-tiled-preview, >img {
+			animation: tile-enter var(--transition-reveal) ease-out both;
+			animation-delay: var(--tile-enter-delay, 0ms);
+		}
+	}
+}
+
+@keyframes tile-pending {
+	50% { background-color: color-mix(in srgb, var(--tile-placeholder, var(--color-bg-tertiary)) 70%, var(--color-bg-primary)); }
+}
+
+@keyframes tile-enter {
+	from { opacity: 0; transform: scale(0.96); }
+	to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.loading-image-host.is-pending,
+	.loading-image-host.is-ready:not(.is-cached).is-tiled-preview,
+	.loading-image-host.is-ready:not(.is-cached)>img { animation: none; }
+}
+
+:root[data-reduce-motion="true"] {
+	.loading-image-host.is-pending,
+	.loading-image-host.is-ready:not(.is-cached).is-tiled-preview,
+	.loading-image-host.is-ready:not(.is-cached)>img { animation: none; }
+}
+
 .asset-options {
 	position: relative;
 	z-index: 0;

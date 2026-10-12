@@ -62,6 +62,129 @@ async function openPage(browser, before = false, real = false) {
 	return { page, errors };
 }
 
+async function verifyImageLoadingAndPaging(page) {
+	const gif = fs.readFileSync(path.join(root, source.url));
+	await page.route('**/image-loading-test-*.gif', async route => {
+		const url = route.request().url();
+		if (url.includes('failed')) return route.abort();
+		await new Promise(resolve => setTimeout(resolve, url.includes('slow') ? 800 : 40));
+		await route.fulfill({ contentType: 'image/gif', body: gif });
+	});
+	await page.evaluate(() => {
+		const grid = document.createElement('div');
+		grid.id = 'image-loading-test';
+		grid.className = 'asset-grid';
+		for (const name of ['fast', 'slow', 'failed']) {
+			const tile = document.createElement('div');
+			tile.className = 'asset-option';
+			tile.appendChild(createLoadingImage({ src: `image-loading-test-${name}.gif`, placeholderColor: '#123456' }));
+			grid.appendChild(tile);
+		}
+		document.body.appendChild(grid);
+		window.editor.glitterLibrary.browser.revealBatch([...grid.children]);
+	});
+	await page.waitForFunction(() => document.querySelector('#image-loading-test img').loadingState === 'ready');
+	assert(await page.locator('#image-loading-test > div').first().evaluate(tile => tile.classList.contains('is-pending')), 'Batch exposed a decoded image before its peers/deadline');
+	await page.waitForFunction(() => document.querySelector('#image-loading-test > div').classList.contains('is-ready'));
+	assert(await page.locator('#image-loading-test > div').nth(1).evaluate(tile => tile.classList.contains('is-pending')), 'Deadline waited for the slow image');
+	assert.equal(await page.locator('#image-loading-test > div').nth(2).locator('img').evaluate(img => getComputedStyle(img).visibility), 'hidden', 'Broken image icon was exposed');
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	assert.equal(await page.locator('#image-loading-test > div').nth(1).evaluate(tile => getComputedStyle(tile).animationName), 'none', 'System reduced motion did not stop pulse');
+	await page.emulateMedia({ reducedMotion: 'no-preference' });
+	await page.evaluate(() => { document.documentElement.dataset.reduceMotion = 'true'; });
+	assert.equal(await page.locator('#image-loading-test > div').nth(1).evaluate(tile => getComputedStyle(tile).animationName), 'none', 'App reduced motion did not stop pulse');
+	await page.waitForFunction(() => document.querySelectorAll('#image-loading-test .is-ready').length === 2);
+	assert.equal(await page.locator('#image-loading-test > div').nth(1).evaluate(tile => tile.style.getPropertyValue('--tile-enter-delay')), '0ms', 'Late image retained its stagger delay');
+	await page.evaluate(async () => {
+		const tile = document.createElement('div');
+		tile.appendChild(createLoadingImage({ src: 'image-loading-test-fast.gif' }));
+		document.getElementById('image-loading-test').appendChild(tile);
+		await Promise.resolve();
+		if (!tile.classList.contains('is-cached') || !tile.classList.contains('is-ready')) throw new Error('Cached thumbnail replayed loading');
+		document.getElementById('image-loading-test').remove();
+		delete document.documentElement.dataset.reduceMotion;
+	});
+	await page.setViewportSize({ width: 1280, height: 900 });
+	await page.reload({ waitUntil: 'networkidle' });
+	await page.waitForFunction(() => window.editor);
+	await page.evaluate(async () => {
+		const e = window.editor;
+		e.modalManager.closeAll({ force: true });
+		await e.loadBlankImage(240, 180, '#ffffff');
+		const layer = e.glitterManager.createLayer();
+		layer.maskHasContent = true;
+		e.layerManager.insertLayer(layer);
+		e.layerManager.setActiveLayer(layer.id);
+		e.glitterManager.armPicker();
+	});
+	await page.waitForFunction(() => window.editor.libraryWindow.isOpen && window.editor.glitterLibrary.browser.scrollContainer.clientHeight > 0);
+	await page.evaluate(async () => {
+		const e = window.editor, b = e.glitterLibrary.browser, manager = e.glitterLibrary;
+		e.glitterManager.armPicker();
+		document.getElementById('designGallerySection').dataset.pickerLibrary = 'glitter';
+		syncLibraryView();
+		const seed = manager.getAllContent()[0];
+		manager.content.push(...Array.from({ length: 1200 }, (_, i) => ({ ...seed, id: 20000 + i, category: 'sparkle' })));
+		for (const size of ['s', 'm', 'l']) {
+			PREFERENCES.set('libraryTileSize', size);
+			b.navigateToCategory('sparkle');
+			const { columns } = b.getPageRows(b.elements.itemGrid);
+			if (b.currentOffset % columns) throw new Error(`${size}: ragged page`);
+			if (b.elements.itemGrid.getBoundingClientRect().height < b.scrollContainer.clientHeight) throw new Error(`${size}: first page did not fill the host`);
+		}
+		const beforeScroll = b.currentOffset;
+		b.scrollContainer.scrollTop = b.scrollContainer.scrollHeight;
+		await new Promise(resolve => setTimeout(resolve, 150));
+		if (b.currentOffset <= beforeScroll) throw new Error(`Sentinel did not reveal more rows on scroll: ${JSON.stringify({ offset: b.currentOffset, beforeScroll, height: b.scrollContainer.clientHeight, scrollHeight: b.scrollContainer.scrollHeight, scrollTop: b.scrollContainer.scrollTop, sentinel: b.elements.sentinel.getBoundingClientRect().toJSON(), window: e.libraryWindow.isOpen })}`);
+		manager.activeFilters.search = seed.name;
+		b.refresh();
+		const listing = b.getListingItems(), groups = b.getListingGroups();
+		b.loadNextBatch();
+		if (b.getListingItems() !== listing || b.getListingGroups() !== groups) throw new Error('Paging rebuilt its listing');
+		manager.clearFilters();
+		const last = manager.content.at(-1);
+		const navigation = b.navigateToItem(last.id);
+		if (!b.findItemElement(last)) throw new Error('Deep navigation waited for incremental paging');
+		await navigation;
+		b.scrollContainer.scrollTop = 0;
+		b.navigateToCategory('sparkle');
+		document.getElementById('designGallerySection').dataset.pickerLibrary = 'sticker';
+		syncLibraryView();
+		b.refresh();
+		const hiddenCount = b.currentOffset;
+		await new Promise(resolve => setTimeout(resolve, 150));
+		if (b.currentOffset !== hiddenCount) throw new Error('Hidden Library kept paging');
+		manager.content = manager.content.filter(item => item.id < 20000);
+		PREFERENCES.set('libraryTileSize', 'm');
+	});
+	const fire = await page.evaluate(() => window.editor.stickerLibrary.getAllContent().find(item => /fire_4\.gif$/u.test(item.url)));
+	assert(fire, 'Heavy animated sticker fixture is missing');
+	await page.route(`**/data/stickers/${fire.id}.json*`, async route => {
+		await new Promise(resolve => setTimeout(resolve, 350));
+		await route.continue();
+	});
+	await page.route(`**/${fire.url}`, async route => {
+		await new Promise(resolve => setTimeout(resolve, 650));
+		await route.continue();
+	});
+	await page.evaluate(id => {
+		const e = window.editor;
+		e.layerManager.insertLayer(e.stickerManager.createLayer());
+		e.layerManager.setActiveLayer(e.layers.at(-1).id);
+		const card = e.stickerLibrary.createItemElement(e.stickerLibrary.getItemById(id));
+		card.id = 'image-loading-pick-test';
+		document.body.appendChild(card);
+		card.click();
+	}, fire.id);
+	await page.waitForFunction(() => window.editor.notifications.activities.has('library-pick'));
+	await page.waitForTimeout(450);
+	assert(await page.evaluate(() => window.editor.notifications.activities.has('library-pick')), 'Activity ended before the image loaded');
+	await page.waitForFunction(id => window.editor.layerManager.getActiveLayer().stickerSourceId === id, fire.id);
+	await page.waitForFunction(() => !window.editor.notifications.activities.has('library-pick'));
+	await page.evaluate(() => document.getElementById('image-loading-pick-test').remove());
+	console.log('PASS image deadline, failure hatch, cached reopen, both reduced-motion settings, whole-row paging, deep navigation and hidden refresh');
+}
+
 async function screenshots(page, directory, before) {
 	fs.mkdirSync(directory, { recursive: true });
 	const index = [];
@@ -307,6 +430,7 @@ async function main() {
 			expect(b.elements.itemGrid.querySelector('[data-id="9002"]'), 'Go-to-asset did not render tile');
 			const browsers = [b, e.stickerLibrary.browser, e.brushTipManager.browser, e.shapeBrowserManager.browser, e.fontBrowserManager.browser];
 			for (const browser of browsers) {
+				browser.ensureView();
 				browser.browseView = 'style';
 				browser.rail.mode = 'style';
 				browser.rail.selection = { root: LIBRARY_ALL_ID, set: null };
@@ -527,6 +651,7 @@ async function main() {
 		await page.locator('#glitterBrowser .asset-browser-rail select').first().selectOption('sparkle/sparkelies');
 		await page.reload({ waitUntil: 'networkidle' });
 		await page.waitForFunction(() => window.editor?.glitterLibrary?.browser?.rail);
+		await page.evaluate(() => window.editor.glitterLibrary.browser.ensureView());
 		assert.strictEqual(await page.evaluate(() => window.editor.glitterLibrary.browser.rail.selection.root), '__all', 'Library must reopen on All styles');
 		await page.evaluate(async () => {
 			const e = window.editor;
@@ -569,15 +694,18 @@ async function main() {
 			e.glitterLibrary.browser.navigateToCategory('sparkle');
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
+		await page.waitForFunction(() => window.editor.mobileManager.isMobile);
+		await page.evaluate(() => window.editor.glitterManager.armPicker());
 		assert.strictEqual(await rootSelect.evaluate(select => select.scrollWidth <= select.clientWidth), true, 'Mobile category field overflows');
 		for (const prefix of ['glitter', 'sticker', 'brushTip', 'shape', 'font']) {
 			await page.evaluate(prefix => {
 				const e = window.editor;
 				document.getElementById('designGallerySection').dataset.pickerLibrary = prefix;
 				syncLibraryView();
-				e.mobileManager.openDrawer('design');
+				e.mobileManager.openDrawer('window');
 			}, prefix);
 			const picker = page.locator(`#${prefix}Browser .asset-browser-rail select`);
+			await picker.waitFor({ state: 'visible' });
 			assert.strictEqual(await picker.isVisible(), true, `${prefix}: phone picker hidden`);
 			assert.strictEqual(await picker.evaluate(select => select.scrollWidth <= select.clientWidth), true, `${prefix}: phone picker overflows`);
 		}
@@ -615,6 +743,7 @@ async function main() {
 		await page.evaluate(() => PREFERENCES.set('libraryTileSize', 'l'));
 		assert.strictEqual(await page.locator('#designGallerySection').getAttribute('data-tile-size'), 'l', 'Tile size preference did not reach the Library');
 		await page.evaluate(() => PREFERENCES.set('libraryTileSize', 'm'));
+		await verifyImageLoadingAndPaging(page);
 		assert.deepStrictEqual(errors, [], 'App raised browser errors: ' + JSON.stringify(errors));
 		if (process.argv.includes('--screenshots')) await captureComparison(browser);
 		console.log('PASS ' + result);

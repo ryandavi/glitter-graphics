@@ -202,6 +202,7 @@ class GlitterBrowserManager extends ContentManager {
 	}
 
 	customizeItemElement(element, item) {
+		if (item.colorCodes?.[0]) element.style.setProperty('--tile-placeholder', item.colorCodes[0]);
 		const controller = this.editor.glitterRecolor;
 		const unavailable = Boolean(controller?.pickerSession && !this.canRecolor(item));
 		element.classList.toggle('recolor-unavailable', unavailable);

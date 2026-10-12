@@ -858,6 +858,57 @@ function createContext(source, options) {
 	};
 }
 
+function localImageSize(filename) {
+	const bytes = fs.readFileSync(filename);
+	if (bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+		return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
+	}
+	if (/^GIF8[79]a$/u.test(bytes.toString('ascii', 0, 6))) {
+		return [bytes.readUInt16LE(6), bytes.readUInt16LE(8)];
+	}
+	if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+		let offset = 2;
+		while (offset < bytes.length) {
+			if (bytes[offset++] !== 0xff) break;
+			while (bytes[offset] === 0xff) offset++;
+			const marker = bytes[offset++];
+			if (marker === 0xd9 || marker === 0xda) break;
+			if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+			const length = bytes.readUInt16BE(offset);
+			if (length < 2) break;
+			if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
+				return [bytes.readUInt16BE(offset + 5), bytes.readUInt16BE(offset + 3)];
+			}
+			offset += length;
+		}
+	}
+	throw new Error('Unsupported or invalid image dimensions');
+}
+
+function stampLocalImages(output, ctx) {
+	const images = tokenize(output).filter(token => token.tag === 'img' && token.type === 'selfclose');
+	for (const token of images.reverse()) {
+		const src = token.attrs.src;
+		if (typeof src !== 'string' || /^(?:[a-z][a-z0-9+.-]*:|\/\/)/iu.test(src)) continue;
+		try {
+			const filename = path.resolve(root, decodeURIComponent(src.replace(/[?#].*$/u, '').replace(/^\//u, '')));
+			const relative = path.relative(root, filename);
+			if (relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('Image path leaves the project');
+			const [width, height] = localImageSize(filename);
+			const scale = token.attrs['data-pixel-scale'] === undefined ? 1 : Number(token.attrs['data-pixel-scale']);
+			if (!(width > 0 && height > 0 && scale > 0 && Number.isFinite(scale))) throw new Error('Invalid image size or pixel scale');
+			const attrs = token.attrList.filter(([name]) => !['width', 'height', 'loading', 'decoding'].includes(name));
+			attrs.push(['width', width * scale], ['height', height * scale], ['loading', 'lazy'], ['decoding', 'async']);
+			const lineBreaks = '\n'.repeat((token.raw.match(/\n/gu) || []).length);
+			const tag = `<img${attrs.map(([name, value]) => value === true ? ` ${name}` : ` ${name}="${String(value).replace(/"/gu, '&quot;')}"`).join('')}${lineBreaks}>`;
+			output = output.slice(0, token.start) + tag + output.slice(token.end);
+		} catch (error) {
+			report(ctx, 0, 'error', 'image-dimensions', `Cannot size local image "${src}": ${error.message}`);
+		}
+	}
+	return output;
+}
+
 function compile(source, options = {}) {
 	const ctx = createContext(source, options);
 	let tokens = [];
@@ -897,6 +948,7 @@ function compile(source, options = {}) {
 	const tocResult = expandToc(output, source, ctx.diagnostics);
 	output = tocResult.output;
 	lineMap = tocResult.lineMap.map(line => lineMap[line - 1] || line);
+	if (!hasErrors(ctx.diagnostics)) output = stampLocalImages(output, ctx);
 	if (options.header !== false) {
 		const name = options.name || 'modal';
 		output = `<!-- GENERATED from content/src/${name}.src.html by tools/build-modals.js. Do not edit. -->\n${output}`;

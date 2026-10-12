@@ -134,11 +134,10 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) { di
 
 			}
 		}
-	}
-
-	>.asset-browser-sentinel {
-		height: 1px;
-		visibility: hidden;
+		>.asset-browser-sentinel {
+			height: 1px;
+			visibility: hidden;
+		}
 	}
 }
 
