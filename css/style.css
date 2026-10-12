@@ -8568,7 +8568,10 @@ body.tool-text .text-hover-baselines {
 }
 
 @media (any-hover: hover) {
-  .numeric-scrub-mark {
+  .numeric-scrub-mark,
+  .numeric-scrub-modifier :is(input[type=number], input[type=range], [data-editable-value]):not(:disabled):not([readonly]),
+  .is-numeric-scrubbing,
+  .is-numeric-scrubbing * {
     cursor: ew-resize;
   }
 }

@@ -1498,7 +1498,8 @@ async function checkNumericScrub(page) {
 	const inert = await page.evaluate(() => {
 		let count = 0;
 		for (const mark of document.querySelectorAll('.numeric-scrub-mark')) {
-			const input = mark.control;
+			const input = numericStepTarget(numericScrubLabelControl(mark));
+			if (!input) continue;
 			const before = input.value;
 			for (const [type, x] of [['pointerdown', 100], ['pointermove', 140], ['pointerup', 140]]) {
 				const event = new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 71, pointerType: 'touch', button: 0, clientX: x });
@@ -1549,6 +1550,82 @@ async function checkNumericScrub(page) {
 	assert(await getHistoryIndex(page) === history + 3, 'Typing then scrubbing did not preserve two separate edits');
 	await input.evaluate((node) => node.blur());
 	assert(await getHistoryIndex(page) === history + 3, 'Blur after typing and scrubbing committed twice');
+
+	// A late-mounted control uses the same delegates as editor panels.
+	await page.evaluate(() => {
+		const row = document.createElement('div');
+		row.className = 'property-row';
+		row.id = 'scrubFixture';
+		row.style.cssText = 'position:fixed;top:100px;left:10px;z-index:99999;background:white;display:flex;gap:10px';
+		row.innerHTML = '<label class="property-label" for="scrubFixtureInput">Value</label><input id="scrubFixtureInput" type="range" min="0" max="1000" step="1" value="0" data-scale="log" data-scale-min="1" data-scale-max="1000"><span class="property-value" data-editable-value="" role="spinbutton" contenteditable="true">1</span>';
+		document.body.append(row);
+		window.scrubFixtureChanges = 0;
+		const input = row.querySelector('input');
+		input.addEventListener('input', () => { row.querySelector('span').textContent = readSliderValue(input); });
+		input.addEventListener('change', () => { window.scrubFixtureChanges += 1; });
+	});
+	const readout = page.locator('#scrubFixture .property-value');
+	const value = () => page.evaluate(() => readSliderValue(document.getElementById('scrubFixtureInput')));
+	const dragReadout = async (distance, cancel = false) => {
+		const box = await readout.boundingBox();
+		await page.keyboard.down('Alt');
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(box.x + box.width / 2 + distance, box.y + box.height / 2, { steps: 5 });
+		if (cancel) await page.keyboard.press('Escape');
+		await page.mouse.up();
+		await page.keyboard.up('Alt');
+		await page.waitForTimeout(70);
+	};
+	await dragReadout(20);
+	approxEqual(await value(), 21, 0.1, 'Alt-readout scrub must use logical log values');
+	assert(await page.evaluate(() => window.scrubFixtureChanges) === 1, 'Readout scrub did not commit once');
+	await dragReadout(20, true);
+	approxEqual(await value(), 21, 0.1, 'Readout Escape did not restore logical value');
+	assert(await page.evaluate(() => window.scrubFixtureChanges) === 1, 'Cancelled readout committed');
+	await page.evaluate(() => {
+		const input = document.getElementById('scrubFixtureInput');
+		delete input.dataset.scale;
+		delete input.dataset.scaleMin;
+		delete input.dataset.scaleMax;
+		input.dataset.typeMin = '0';
+		input.dataset.typeMax = '2000';
+		writeSliderValue(input, 1100);
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+	});
+	await dragReadout(20);
+	approxEqual(await value(), 1120, 0.01, 'Extended readout scrub did not move beyond track');
+	assert(await page.evaluate(() => window.scrubFixtureChanges) === 2, 'Extended readout scrub failed to commit with a stationary thumb');
+	await dragReadout(20, true);
+	approxEqual(await value(), 1120, 0.01, 'Escape lost the extended readout value');
+	await page.evaluate(() => {
+		document.activeElement.blur();
+		const input = document.getElementById('scrubFixtureInput');
+		input.type = 'number';
+		input.step = '0.1';
+		input.value = '5';
+		delete input.dataset.typedValue;
+	});
+	const field = page.locator('#scrubFixtureInput');
+	const fieldBox = await field.boundingBox();
+	await page.mouse.move(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2);
+	await page.keyboard.down('Alt');
+	await page.mouse.down();
+	await page.mouse.move(fieldBox.x + fieldBox.width / 2 + 10, fieldBox.y + fieldBox.height / 2);
+	await page.mouse.up();
+	await page.keyboard.up('Alt');
+	await page.waitForTimeout(70);
+	approxEqual(Number(await field.inputValue()), 15, 0.01, 'Alt-field scrub incorrectly used fine speed');
+	await page.evaluate(() => document.activeElement.blur());
+	await field.dispatchEvent('wheel', { deltaY: -100, altKey: true });
+	approxEqual(Number(await field.inputValue()), 15.1, 0.01, 'Alt-wheel did not step an unfocused field');
+	await field.dispatchEvent('wheel', { deltaY: -100, altKey: true, shiftKey: true });
+	approxEqual(Number(await field.inputValue()), 16.1, 0.01, 'Shift-wheel did not accelerate by ten');
+	await page.keyboard.down('Shift');
+	await dragReadout(10); // No range remains: this readout must be ignored.
+	await page.keyboard.up('Shift');
+	approxEqual(Number(await field.inputValue()), 16.1, 0.01, 'Unbound readout changed the field');
+	await page.evaluate(() => document.getElementById('scrubFixture').remove());
 }
 
 async function runSuite(browser, runNumber) {

@@ -89,6 +89,18 @@ function stepNumericControlScrub(from, distance) {
 	run('stepNumericControl')(scrubField, distance, { scrub: true, from, commit: false });
 }
 
+const logScrub = makeInput('range', { min: '0', max: '1000', step: '1', value: '0', dataset: { scale: 'log', scaleMin: '1', scaleMax: '1000' } });
+stepNumericControl(logScrub, 20, { scrub: true, from: 1, commit: false });
+assert(Math.abs(run('readSliderValue')(logScrub) - 21) <= 1, 'log scrubs use logical values');
+const fractionalScrub = makeInput('range', { min: '0', max: '1', step: '0.01', value: '0.5' });
+stepNumericControl(fractionalScrub, 10, { scrub: true, from: 0.5, commit: false });
+assert.strictEqual(fractionalScrub.value, '0.6', 'fractional sliders scrub at their step size');
+const percentInput = makeInput('range', { min: '0.01', max: '0.12', step: '0.001', value: '0.065' });
+const percentReadout = { tagName: 'SPAN', dataset: { valueScale: 'percent' }, closest: () => ({ querySelector: () => percentInput }) };
+stepNumericControl(percentReadout, 10, { scrub: true, from: 0.065, commit: false });
+assert.strictEqual(percentInput.value, '0.076', 'percent readouts scrub in displayed percentage points');
+runFrame();
+
 // Plain, Shift and clamping on a number field.
 let field = makeInput('number', { id: 'posX', min: '0', max: '100', step: '1', value: '10' });
 assert.deepStrictEqual(step(field, 1), { changed: true, value: 11, events: ['input', 'change'] }, 'a step fires input then change, bubbling');

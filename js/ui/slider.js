@@ -371,17 +371,19 @@ function stepNumericControl(control, direction, { shift = false, alt = false, sc
 	const isRange = target.type === 'range';
 	const gridless = !isRange && target.step === 'any';
 	if (alt && !shift && !gridless && !scrub) return false;
-	const grid = Number(target.step) > 0 ? Number(target.step) : 1;
-	const step = (scrub ? 1 : grid) * (shift ? 10 : alt ? 0.1 : 1);
+	const logicalScrub = scrub && isRange;
+	const grid = Number(logicalScrub && target.dataset.scale === 'log' ? target.dataset.scaleStep : target.step) || 1;
+	const percentScrub = logicalScrub && control.dataset.valueScale === 'percent';
+	const step = (scrub && !isRange ? 1 : grid) * (shift ? 10 : alt ? 0.1 : 1);
 	const hasBound = (bound) => bound !== '' && bound != null;
-	const min = hasBound(target.min) ? Number(target.min) : (isRange ? 0 : -Infinity);
-	const max = hasBound(target.max) ? Number(target.max) : (isRange ? 100 : Infinity);
+	const min = logicalScrub && target.dataset.scaleMin !== undefined ? Number(target.dataset.scaleMin) : hasBound(target.min) ? Number(target.min) : (isRange ? 0 : -Infinity);
+	const max = logicalScrub && target.dataset.scaleMax !== undefined ? Number(target.dataset.scaleMax) : hasBound(target.max) ? Number(target.max) : (isRange ? 100 : Infinity);
 	// A readout steps as far as it can be typed; the track stops at its ends.
 	const pastTrack = isRange && control !== target && target.dataset.typeMax !== undefined;
 	const low = pastTrack ? Number(target.dataset.typeMin) : min;
 	const high = pastTrack ? Number(target.dataset.typeMax) : max;
-	const current = (isRange ? sliderTypedValue(target) : null) ?? (Number(target.value) || 0);
-	let next = (from ?? current) + direction * step;
+	const current = logicalScrub ? readSliderValue(target) : (isRange ? sliderTypedValue(target) : null) ?? (Number(target.value) || 0);
+	let next = (from ?? current) + direction * (percentScrub ? (max - min) / 100 : step);
 	let decimals = Math.max(stepDecimals(current), stepDecimals(step));
 	if (!gridless) {
 		// Land on the step grid (counted from min, as the browser does), so a
@@ -393,12 +395,12 @@ function stepNumericControl(control, direction, { shift = false, alt = false, sc
 	next = Number(Math.min(high, Math.max(low, next)).toFixed(decimals));
 	// A log track holds one value across several positions where its value grid
 	// is coarser than the track, so a step moves on to the next value.
-	if (isRange && !pastTrack && target.dataset.scale === 'log') {
+	if (isRange && !logicalScrub && !pastTrack && target.dataset.scale === 'log') {
 		const scale = sliderScaleFor(target);
 		while (next > low && next < high && scale.toValue(next) === scale.toValue(current)) next += direction;
 	}
 	if (next === current) return false;
-	if (pastTrack) writeSliderValue(target, next);
+	if (pastTrack || logicalScrub) writeSliderValue(target, next);
 	else {
 		target.value = String(next);
 		if (isRange) delete target.dataset.typedValue;
@@ -489,18 +491,17 @@ function cancelEditableReadout(readout) {
 // step; a trackpad's small deltas add up to CONFIG.ui.numericWheel.stepPx.
 let numericWheelTravel = 0;
 
-function stepNumericControlByWheel(event) {
+function stepNumericControlByWheel(event, control = event.currentTarget) {
 	if (event.ctrlKey || event.metaKey) return;
 	// Shift turns a vertical wheel into a horizontal one on some platforms.
 	const delta = event.deltaY || event.deltaX;
 	if (!delta) return;
 	event.preventDefault();
-	const control = event.currentTarget;
 	numericWheelTravel = Math.sign(delta) === Math.sign(numericWheelTravel) ? numericWheelTravel + delta : delta;
 	if (event.deltaMode === 0 && Math.abs(numericWheelTravel) < CONFIG.ui.numericWheel.stepPx) return;
 	numericWheelTravel = 0;
 	if (control.tagName !== 'INPUT') editedReadouts.delete(control);
-	stepNumericControl(control, delta < 0 ? 1 : -1, { shift: event.shiftKey, alt: event.altKey });
+	stepNumericControl(control, delta < 0 ? 1 : -1, { shift: event.shiftKey });
 	if (document.activeElement === control) selectNumericControlText(control);
 }
 
@@ -508,6 +509,20 @@ function stepNumericControlByWheel(event) {
 // Fractional motion accumulates before stepNumericControl lands on that grid.
 function numericScrubDelta(distance, { shift = false, alt = false } = {}) {
 	return distance * (shift ? 10 : alt ? 0.1 : 1);
+}
+
+// Resolve labels and readouts at interaction time, including controls mounted
+// later by settings and paint editors. No per-panel scrub wiring is needed.
+function numericScrubControl(element) {
+	if (!element?.matches?.(NUMERIC_CONTROL_SELECTOR)) return null;
+	const input = numericStepTarget(element);
+	return input && !input.disabled && !input.readOnly && !input._steppedSlider && !element.closest('[inert]') ? element : null;
+}
+
+function numericScrubLabelControl(mark) {
+	if (mark?.control) return numericScrubControl(mark.control);
+	const inputs = mark?.closest('.property-pair-cell, .property-row')?.querySelectorAll('input[type="number"], input[type="range"]');
+	return inputs?.length === 1 ? numericScrubControl(inputs[0]) : null;
 }
 
 function installNumericControlKeys() {
@@ -523,23 +538,27 @@ function installNumericControlKeys() {
 			scrubbedMark = drag.mark;
 			if (cancel) {
 				drag.input.value = drag.startText;
+				if (drag.startTyped === undefined) delete drag.input.dataset.typedValue;
+				else drag.input.dataset.typedValue = drag.startTyped;
 				scheduleLiveApply(drag.input, drag.input.dataset.numericCost || 'style', () => drag.input.dispatchEvent(new Event('input', { bubbles: true })));
 			}
 			const settled = flushLiveApply(drag.input);
 			const commit = () => {
-				if (!cancel && drag.input.value !== drag.startText) drag.input.dispatchEvent(new Event('change', { bubbles: true }));
+				if (!cancel && (drag.input.value !== drag.startText || drag.input.dataset.typedValue !== drag.startTyped)) drag.input.dispatchEvent(new Event('change', { bubbles: true }));
 			};
 			if (settled) settled.then(commit, commit);
 			else commit();
 		}
 		if (drag.mark.hasPointerCapture(drag.pointerId)) drag.mark.releasePointerCapture(drag.pointerId);
-		drag.input.focus({ preventScroll: true });
+		drag.control.focus({ preventScroll: true });
+		document.body.classList.remove('is-numeric-scrubbing');
 	};
 	let pointerFocusCandidate = null;
 	let pendingPointerSelect = null;
 	const controlOf = (target) => (target?.matches?.(NUMERIC_CONTROL_SELECTOR) ? target : null);
 
 	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Alt') document.body.classList.add('numeric-scrub-modifier');
 		if (scrub && event.key === 'Escape') {
 			event.preventDefault();
 			event.stopImmediatePropagation();
@@ -605,6 +624,26 @@ function installNumericControlKeys() {
 		stepNumericControl(control, direction, { shift: event.shiftKey || page, alt: event.altKey });
 		if (!isRange && document.activeElement === control) selectNumericControlText(control);
 	}, true);
+	document.addEventListener('keyup', (event) => {
+		if (event.key === 'Alt') document.body.classList.remove('numeric-scrub-modifier');
+	}, true);
+	window.addEventListener('blur', () => {
+		document.body.classList.remove('numeric-scrub-modifier');
+		finishScrub(true);
+	});
+	document.addEventListener('wheel', (event) => {
+		const control = numericScrubControl(event.target);
+		if (!control || scrub || event.ctrlKey || event.metaKey || (!event.altKey && (document.activeElement !== control || control.type === 'range'))) return;
+		if (event.altKey && document.activeElement !== control) {
+			numericFocusSession += 1;
+			control.focus({ preventScroll: true });
+		}
+		stepNumericControlByWheel(event, control);
+	}, { capture: true, passive: false });
+	document.addEventListener('pointerover', (event) => {
+		const mark = event.target.closest?.('label, .property-label, .property-pair-mark');
+		if (mark) mark.classList.toggle('numeric-scrub-mark', Boolean(numericScrubLabelControl(mark)));
+	});
 
 	document.addEventListener('input', (event) => {
 		if (event.target?.matches?.('[role="spinbutton"][data-editable-value]')) editedReadouts.add(event.target);
@@ -620,12 +659,14 @@ function installNumericControlKeys() {
 	// focus would otherwise drop a caret into the selection on mouseup.
 	document.addEventListener('pointerdown', (event) => {
 		scrubbedMark = null;
-		const mark = event.target.closest?.('.numeric-scrub-mark');
-		const input = mark?.control;
-		if (mark && (event.pointerType === 'mouse' || event.pointerType === 'pen') && event.button === 0 && input && !input.disabled && !input.readOnly && !scrub) {
+		const label = event.target.closest?.('label, .property-label, .property-pair-mark');
+		const control = label ? numericScrubLabelControl(label) : event.altKey ? numericScrubControl(event.target) : null;
+		const mark = label || control;
+		const input = numericStepTarget(control);
+		if (mark && (event.pointerType === 'mouse' || event.pointerType === 'pen') && event.button === 0 && input && !scrub && !event.ctrlKey && !event.metaKey) {
 			// Deferring label focus until release avoids blur commits mid-drag.
 			event.preventDefault();
-			scrub = { mark, input, pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, startText: input.value, start: Number(input.value) || 0, distance: 0, started: false };
+			scrub = { mark, control, input, modifier: !label, pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, startText: input.value, startTyped: input.dataset.typedValue, start: input.type === 'range' ? readSliderValue(input) : Number(input.value) || 0, distance: 0, started: false };
 			mark.setPointerCapture(event.pointerId);
 		}
 		pointerFocusCandidate = controlOf(event.target);
@@ -634,6 +675,7 @@ function installNumericControlKeys() {
 		if (!scrub || scrub.pointerId !== event.pointerId) return;
 		if (!scrub.started && Math.abs(event.clientX - scrub.startX) < CONFIG.ui.numericScrub.thresholdPx) return;
 		if (!scrub.started) {
+			if (scrub.control !== scrub.input) commitEditableReadout(scrub.control);
 			// Native typed changes commit on blur. Finish that edit before the
 			// drag so a later blur cannot record the same scrub a second time.
 			if (document.activeElement === scrub.input && committedValues.get(scrub.input) !== scrub.input.value) {
@@ -641,13 +683,17 @@ function installNumericControlKeys() {
 				scrub.startText = scrub.input.value;
 				scrub.start = Number(scrub.input.value) || 0;
 			}
-			scrub.input.focus({ preventScroll: true });
+			scrub.startText = scrub.input.value;
+			scrub.startTyped = scrub.input.dataset.typedValue;
+			scrub.start = scrub.input.type === 'range' ? readSliderValue(scrub.input) : Number(scrub.input.value) || 0;
+			scrub.control.focus({ preventScroll: true });
+			document.body.classList.add('is-numeric-scrubbing');
 		}
 		scrub.started = true;
 		event.preventDefault();
-		scrub.distance += numericScrubDelta(event.clientX - scrub.lastX, { shift: event.shiftKey, alt: event.altKey });
+		scrub.distance += numericScrubDelta(event.clientX - scrub.lastX, { shift: event.shiftKey, alt: event.altKey && !scrub.modifier });
 		scrub.lastX = event.clientX;
-		stepNumericControl(scrub.input, scrub.distance, { scrub: true, from: scrub.start, commit: false });
+		stepNumericControl(scrub.control, scrub.distance, { scrub: true, from: scrub.start, commit: false });
 	}, true);
 	document.addEventListener('pointerup', (event) => {
 		if (scrub?.pointerId === event.pointerId) finishScrub(false);
@@ -659,7 +705,7 @@ function installNumericControlKeys() {
 		if (scrub?.pointerId === event.pointerId) finishScrub(true);
 	}, true);
 	document.addEventListener('click', (event) => {
-		if (event.target === scrubbedMark) {
+		if (scrubbedMark && (event.target === scrubbedMark || scrubbedMark.contains(event.target))) {
 			event.preventDefault();
 			event.stopPropagation();
 			scrubbedMark = null;
@@ -672,12 +718,8 @@ function installNumericControlKeys() {
 		if (control.type === 'range') return;
 		if (control.type === 'number') committedValues.set(control, control.value);
 		numericWheelTravel = 0;
-		control.addEventListener('wheel', stepNumericControlByWheel, { passive: false });
 		selectNumericControlText(control);
 		pendingPointerSelect = pointerFocusCandidate === control ? control : null;
-	});
-	document.addEventListener('focusout', (event) => {
-		event.target?.removeEventListener?.('wheel', stepNumericControlByWheel);
 	});
 	document.addEventListener('mouseup', (event) => {
 		const control = pendingPointerSelect;
