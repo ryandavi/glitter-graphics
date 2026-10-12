@@ -341,7 +341,7 @@ updateTransform(updates) {
 			&& Math.abs(localY) <= Math.abs(metrics.displayHeight) / 2 + tolerance;
 	}
 
-	showHoverOutline() {
+	showHoverOutline(mode = 'outline') {
 		if (
 			this.editor.currentTool !== ToolType.SELECT
 			|| this.editor.layerManager.isLayerSelected(this.layer.id)
@@ -350,11 +350,15 @@ updateTransform(updates) {
 		) return;
 
 		this.removeHoverOutline();
+		this.hoverMode = mode;
 		const outline = document.createElement('div');
 		outline.className = 'transform-hover-outline';
 		outline.dataset.layerId = this.layer.id;
 		this.editor.viewport.selectionOverlay.append(outline);
 		this.hoverOutline = outline;
+		this.hoverBaselines = document.createElement('div');
+		this.hoverBaselines.className = 'text-baselines ui-ignore-gestures';
+		this.editor.viewport.selectionOverlay.append(this.hoverBaselines);
 		this.editor.viewport.selectionOverlay.addSyncer(this.syncHoverOutline);
 		this.updateHoverOutlinePosition();
 	}
@@ -363,6 +367,8 @@ updateTransform(updates) {
 		if (!this.hoverOutline) return;
 		const transform = this.getTransform();
 		const metrics = this.getFrameMetrics(transform);
+		this.hoverOutline.hidden = this.hoverMode === 'baselines';
+		SelectionChrome.renderBaselines(this.editor.viewport.selectionOverlay, this.hoverBaselines, this.hoverMode === 'baselines' ? LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.describe(this.editor, this.layer)?.baselines || [] : []);
 		this.editor.viewport.selectionOverlay.placeFrame(this.hoverOutline, {
 			centerX: metrics.centerX,
 			centerY: metrics.centerY,
@@ -374,6 +380,9 @@ updateTransform(updates) {
 
 	removeHoverOutline() {
 		this.editor.viewport.selectionOverlay.removeSyncer(this.syncHoverOutline);
+		this.hoverBaselines?.remove();
+		this.hoverBaselines = null;
+		this.hoverMode = null;
 		this.hoverOutline?.remove();
 		this.hoverOutline = null;
 	}
@@ -525,10 +534,13 @@ setupMouseDrag(element) {
 		if (event.pointerType !== 'mouse' || event.buttons) return;
 		const zoom = this.editor.viewport.currentZoom || 1;
 		const point = this.getCanvasPointFromClient(event.clientX, event.clientY);
-		const inFrame = this.containsPoint(point, CONFIG.ui.stickerHandles.frameHitTolerance / zoom);
+		const tolerance = CONFIG.ui.stickerHandles.frameHitTolerance / zoom;
+		const inFrame = this.containsPoint(point, tolerance);
+		const hoverMode = LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.hoverMode;
+		const mode = inFrame ? (hoverMode ? hoverMode(this.editor, this.layer, point, tolerance) : 'outline') : null;
 		element.classList.toggle('is-frame-hover', inFrame);
-		if (inFrame) {
-			if (!this.hoverOutline) this.showHoverOutline();
+		if (mode) {
+			if (!this.hoverOutline || this.hoverMode !== mode) this.showHoverOutline(mode);
 		} else {
 			this.removeHoverOutline();
 		}
@@ -947,6 +959,7 @@ createTransformHandles() {
 	const readOnly = !isLayerTransformable(this.layer);
 	const handles = readOnly ? [] : ['corner-tl', 'corner-tr', 'corner-br', 'corner-bl'];
 	if (!readOnly && this.supportsEdgeResize()) handles.push('edge-top', 'edge-right', 'edge-bottom', 'edge-left');
+	if (!readOnly) handles.push(...(LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.handles || []));
 	if (!readOnly) handles.push('rotate-tl', 'rotate-tr', 'rotate-br', 'rotate-bl', 'rotation', 'anchor');
 	if (!readOnly && LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer)) {
 		handles.push('radius-tl', 'radius-tr', 'radius-br', 'radius-bl');
@@ -960,6 +973,7 @@ createTransformHandles() {
 			move: 'Move. Shift constrains movement; Alt-drag duplicates; Ctrl bypasses snapping.',
 			corner: 'Resize. Lock aspect wins; Shift constrains when unlocked. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
 			edge: 'Resize one side. Shift temporarily toggles aspect lock, preserving the current proportions when constrained. Snaps to edges; Alt resizes from the center; Ctrl bypasses snapping.',
+			'text-mode': 'Convert between point text and a fixed text box.',
 			rotation: 'Rotate. Hold Shift to snap to 15 degree increments.'
 		}
 	});
@@ -1018,7 +1032,8 @@ createTransformHandles() {
 			resizeFrame: boxFrame ? describe(this.getFrameMetrics(transform, boxFrame)) : null,
 			anchorPoint: showAnchor ? getLayerAnchorPoint(this.editor, this.layer) : null,
 			anchorSubtle: !customAnchor && !pivoting && active !== 'anchor',
-			badge
+			badge,
+			...LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.describe(this.editor, this.layer)
 		};
 		if (LAYER_UI_CONFIG[this.layer.type]?.supportsCornerRadius?.(this.layer) && !this.isDraggingHandle || active.startsWith('radius-')) {
 			const zoom = this.editor.viewport.currentZoom || 1;
@@ -1127,6 +1142,8 @@ removeTransformHandles() {
 	beginHandleDrag(handleType, e, handle) {
 		if (this.layer.locked) return;
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+		if (LAYER_UI_CONFIG[this.layer.type]?.selectionChrome?.onPointerDown?.(this.editor, this.layer, handleType, e)) return;
 
 		const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
 		if (handleType.startsWith('rotate-')) handleType = 'rotation';

@@ -233,6 +233,19 @@ registerLayerType(LayerType.TEXT_GLITTER, {
 	},
 	frame: (editor, layer) => editor.textGlitterManager?.getTextBodyFrame(layer) || null,
 	visualBounds: (editor, layer) => editor.textGlitterManager?.getTextVisualFrame(layer) || null,
+	selectionChrome: {
+		handles: ['text-mode'],
+		hoverMode: (editor, layer, point, tolerance) => editor.textGlitterManager.getTextHoverMode(layer, point, tolerance),
+		describe: (editor, layer) => ({ baselines: editor.textGlitterManager.getTextWorldBaselines(layer), textMode: layer.textData.boxMode }),
+		onPointerDown: (editor, layer, handleType, event) => {
+			if (handleType !== 'text-mode') return false;
+			event.preventDefault();
+			event.stopPropagation();
+			const manager = editor.textGlitterManager;
+			manager.toggleTextBoxMode(layer).catch(error => manager.reportFontLoadError(error));
+			return true;
+		}
+	},
 	transformPrefix: 'text',
 	transformCapabilities: {
 		edgeResize: true,

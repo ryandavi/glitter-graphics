@@ -960,6 +960,7 @@ const CONFIG = deepFreeze({
 			// tokens (--handle-*, --selection-*).
 			outwardOffset: 4,
 			rotationHandleDistance: 30,
+			textModeHandleDistance: { fine: 30, coarse: 64 },
 			edgeHitWidth: 8,
 			rotateZoneSize: 20,
 			minChromeSpan: 24,

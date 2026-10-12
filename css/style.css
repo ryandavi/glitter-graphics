@@ -6292,6 +6292,11 @@ body.mask-editing .sticker-element {
 .transform-handle.transform-handle-rotate {
   display: none;
 }
+.transform-handle.transform-handle-text-mode {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+}
 .transform-handle.transform-handle-radius {
   width: 8px;
   height: 8px;
@@ -6435,6 +6440,23 @@ body.mask-editing .sticker-element {
 
 .transform-bounding-box.has-shade {
   box-shadow: 0 0 0 100vmax var(--color-overlay);
+}
+
+.text-baselines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.text-baselines > span {
+  position: absolute;
+  height: var(--selection-stroke);
+  background: var(--color-accent);
+  box-shadow: var(--handle-halo);
+  transform-origin: 0 0;
+}
+
+.transform-handle-wrapper.is-point-text .transform-handle-text-mode {
+  background: var(--color-accent);
 }
 
 .path-chrome {

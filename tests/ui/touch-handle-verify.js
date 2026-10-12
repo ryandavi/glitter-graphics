@@ -7,6 +7,7 @@
 // not regress desktop behavior.
 
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 390, height: 844 };
@@ -142,6 +143,7 @@ async function createHarnessPage(browser) {
 	});
 
 	const page = await context.newPage();
+	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
 	const consoleErrors = [];
 	const pageErrors = [];
 

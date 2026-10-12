@@ -70,6 +70,12 @@
 		display: none;
 	}
 
+	&.transform-handle-text-mode {
+		width: 10px;
+		height: 10px;
+		border-radius: var(--radius-full);
+	}
+
 	&.transform-handle-radius {
 		width: 8px;
 		height: 8px;
@@ -233,4 +239,21 @@
 
 .transform-bounding-box.has-shade {
 	box-shadow: 0 0 0 100vmax var(--color-overlay);
+}
+
+.text-baselines {
+	@include cover;
+	pointer-events: none;
+
+	> span {
+		position: absolute;
+		height: var(--selection-stroke);
+		background: var(--color-accent);
+		box-shadow: var(--handle-halo);
+		transform-origin: 0 0;
+	}
+}
+
+.transform-handle-wrapper.is-point-text .transform-handle-text-mode {
+	background: var(--color-accent);
 }

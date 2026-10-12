@@ -212,14 +212,29 @@ TextLayout.layout = function(ctx, text, data, options) {
 	const width = layoutWidth ?? (stacked ? stackWidth : lines.reduce((max, line) => Math.max(max, line.width), 0));
 	const contentHeight = ascent + descent + lineHeightPx * Math.max((stacked ? stackRows : lines.length) - 1, 0);
 	const height = data.boxMode === 'fixed' ? Math.max(minBoxSize, Math.round(data.boxHeight || minBoxSize)) : contentHeight;
-	const fittingLines = data.boxMode === 'fixed' ? lines.filter((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx + line.descent <= height && (!stacked || line.columnX + line.columnWidth <= width)) : lines;
+	// Fit the visible ink after alignment, rather than reserving the sample
+	// font's ascent above a lowercase line that will be shifted upward.
+	let fitTop = Infinity;
+	let fitBottom = -Infinity;
+	let full = false;
+	const fittingLines = data.boxMode === 'fixed' ? lines.filter((line, index) => {
+		const baseline = ascent + (stacked ? line.row : index) * lineHeightPx;
+		const top = Math.min(fitTop, baseline - line.ascent);
+		const bottom = Math.max(fitBottom, baseline + line.descent);
+		const fits = bottom - top <= height && (!stacked || line.columnX + line.columnWidth <= width);
+		if (!fits && !stacked) full = true;
+		if (full || !fits) return false;
+		fitTop = top;
+		fitBottom = bottom;
+		return true;
+	}) : lines;
 	const visibleLines = stacked ? fittingLines : lines.slice(0, fittingLines.length);
 	const visible = visibleLines.length;
 	let offsetY = 0;
-	if (data.boxMode === 'fixed' && visible) {
+	if (boxed && visible) {
 		const top = Math.min(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx - line.ascent));
 		const bottom = Math.max(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx + line.descent));
-		offsetY = this.getVerticalAlignOffset(data.verticalAlign, height, bottom - top) - top;
+		offsetY = this.getVerticalAlignOffset(data.boxMode === 'autoHeight' ? 'middle' : data.verticalAlign, height, bottom - top) - top;
 	}
 	const glyphs = [];
 	const runs = [];

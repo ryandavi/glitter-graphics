@@ -548,7 +548,10 @@ class TextGlitterManager {
 		if (!entry.lines.length) return null;
 
 		const minBoxSize = this.getMinBoxSize();
-		const fullHeight = layer.textData.orientation === 'stacked' ? entry.layout.contentHeight : entry.ascent + (entry.lines.length - 1) * entry.lineHeightPx + entry.lines.at(-1).descent;
+		const stacked = layer.textData.orientation === 'stacked';
+		const tops = entry.lines.map((line, index) => (stacked ? line.row : index) * entry.lineHeightPx - line.ascent);
+		const bottoms = entry.lines.map((line, index) => (stacked ? line.row : index) * entry.lineHeightPx + line.descent);
+		const fullHeight = Math.max(entry.layout.contentHeight, Math.max(...bottoms) - Math.min(...tops));
 		return {
 			width: Math.max(minBoxSize, Math.ceil(entry.layout.contentWidth) + 1),
 			height: Math.max(minBoxSize, Math.ceil(fullHeight) + 1)
@@ -1275,7 +1278,7 @@ class TextGlitterManager {
 				width: textInkRight - textInkLeft,
 				height: textInkBottom - textInkTop
 			},
-			boxRect: boxMode === 'fixed'
+			boxRect: boxMode !== 'point'
 				? { x: layoutX, y: layoutY, width: layoutWidth, height: layoutHeight }
 				: null,
 			// The layer's frame: handles, hit-testing, alignment (see getTextBodyFrame).

@@ -1,4 +1,16 @@
 const TEXT_ACTION_METHODS = {
+	async toggleTextBoxMode(layer) {
+		return this.runLayoutRefreshWithAnchor(layer, () => {
+			if (layer.textData.boxMode === 'point') this.ensureFixedBox(layer);
+			else {
+				layer.textData.boxMode = 'point';
+				delete layer.textData.boxWidth;
+				delete layer.textData.boxHeight;
+				this.normalizeTextBackground(layer);
+			}
+		}, { preservePointAnchor: true, saveHistory: true });
+	},
+
 	setupTextActions() {
 		const bind = (selector, command) => document.querySelectorAll(selector).forEach(button => button.addEventListener('click', () => COMMANDS[typeof command === 'function' ? command(button) : command]?.run(this.editor)));
 		bind('#textFontBold', 'textToggleBold');

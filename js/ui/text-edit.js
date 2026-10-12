@@ -125,11 +125,16 @@ const TEXT_EDIT_METHODS = {
 		const entry = this.getMeasurementEntry(layer);
 		const overlay = document.createElement('div');
 		overlay.className = 'text-hover-baselines';
-		const addLine = (x, y, width, rotation = 0) => {
+		this.getTextBaselines(layer, entry).forEach(({ x, y, width, rotation }) => {
 			const line = document.createElement('span');
 			Object.assign(line.style, { left: `${entry.layoutOffsetX + x}px`, top: `${entry.layoutOffsetY + y}px`, width: `${width}px`, transform: `rotate(${rotation}rad)` });
 			overlay.appendChild(line);
-		};
+		});
+		stack.appendChild(overlay);
+	},
+	getTextBaselines(layer, entry = this.getMeasurementEntry(layer)) {
+		const segments = [];
+		const addLine = (x, y, width, rotation = 0) => segments.push({ x, y, width, rotation });
 		if (entry.warpedGlyphs) entry.layout.glyphs.forEach((glyph, index) => {
 			const placement = entry.warpedGlyphs[index]?.placement;
 			if (placement) addLine(placement.x - glyph.advance / 2 * Math.cos(placement.rotation), placement.y - glyph.advance / 2 * Math.sin(placement.rotation), glyph.advance, placement.rotation);
@@ -140,7 +145,32 @@ const TEXT_EDIT_METHODS = {
 			const left = Math.min(...glyphs.map(glyph => glyph.x));
 			addLine(left, glyphs[0].baseline, Math.max(...glyphs.map(glyph => glyph.x + glyph.advance)) - left);
 		});
-		stack.appendChild(overlay);
+		return segments;
+	},
+	getTextHoverMode(layer, point, tolerance) {
+		const entry = this.getMeasurementEntry(layer);
+		const transform = getLayerTransform(layer);
+		const angle = transform.rotation * Math.PI / 180;
+		const dx = point.x - transform.position.x;
+		const dy = point.y - transform.position.y;
+		const x = (dx * Math.cos(angle) + dy * Math.sin(angle)) / (transform.scale.x / 100) * (transform.flipX ? -1 : 1) + entry.width / 2;
+		const y = (-dx * Math.sin(angle) + dy * Math.cos(angle)) / (transform.scale.y / 100) * (transform.flipY ? -1 : 1) + entry.height / 2;
+		if (entry.positionedLines.some(line => !line.blank
+			&& x >= entry.layoutOffsetX + line.left && x <= entry.layoutOffsetX + line.right
+			&& y >= entry.layoutOffsetY + line.top && y <= entry.layoutOffsetY + line.bottom)) return 'baselines';
+		const frame = entry.bodyRect;
+		const tx = tolerance / (transform.scale.x / 100);
+		const ty = tolerance / (transform.scale.y / 100);
+		return x <= frame.x + tx || x >= frame.x + frame.width - tx
+			|| y <= frame.y + ty || y >= frame.y + frame.height - ty ? 'outline' : null;
+	},
+	getTextWorldBaselines(layer) {
+		if (!layer?.textData) return [];
+		const entry = this.getMeasurementEntry(layer);
+		const world = (x, y) => this.getWorldPointFromLocal(layer.transform, { x: entry.layoutOffsetX + x - entry.width / 2, y: entry.layoutOffsetY + y - entry.height / 2 });
+		return this.getTextBaselines(layer, entry).map(({ x, y, width, rotation }) => ({
+			start: world(x, y), end: world(x + width * Math.cos(rotation), y + width * Math.sin(rotation))
+		}));
 	},
 	// Escape and a press off the text: end the edit and return to Select with
 	// the layer selected, ready to move.

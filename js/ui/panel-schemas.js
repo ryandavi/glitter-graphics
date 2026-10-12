@@ -855,7 +855,7 @@ const PANEL_SCHEMAS = {
 					] },
 					{ label: 'Box', rows: [
 						{ kind: 'segmented', label: 'Orientation', ariaLabel: 'Text orientation', options: getOptions('textOrientation').map(option => ({ label: option.label, attrs: { 'data-text-orientation': option.value } })) },
-						{ kind: 'segmented', label: 'Mode', ariaLabel: 'Text box mode', classes: 'text-box-mode-group', stacked: true, revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
+						{ kind: 'segmented', label: 'Mode', ariaLabel: 'Text box mode', classes: 'text-box-mode-group', revert: true, options: getOptions('textBoxMode').map(option => ({ label: option.label, attrs: { 'data-text-box-mode': option.value } })) },
 						{ kind: 'note', id: 'textBoxModeHint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
 						{ kind: 'segmented', label: 'Vertical', ariaLabel: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: getOptions('textVerticalAlign').map(option => ({ label: option.label, icon: option.icon, attrs: { 'data-text-valign': option.value } })) }
 					] }

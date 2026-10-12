@@ -226,5 +226,17 @@ for (const file of ['js/core/text-content.js', 'js/paint/text-layout.js']) vm.ru
 	assert.equal(emoji.runs.length, 3);
 	assert.equal(emoji.glyphs[2].sourceIndex, 5);
 	assert.equal(textLayout.layout(ctx, 'abcdef', { ...data, boxWidth: 20 }, metrics).lines.length, 3);
+	const lowerCtx = { measureText(text) { return { ...ctx.measureText(text), actualBoundingBoxAscent: 5, actualBoundingBoxDescent: 2 }; } };
+	for (const verticalAlign of ['top', 'middle', 'bottom']) {
+		const lower = textLayout.layout(lowerCtx, 'gyp', { ...data, boxMode: 'fixed', boxHeight: 7, verticalAlign }, metrics);
+		assert.equal(lower.hasOverflow, false, 'Lowercase ink fits after vertical alignment');
+		assert.equal(lower.visibleLines[0].baseline, 5);
+	}
+	const capCtx = { measureText(text) { return { ...ctx.measureText(text), actualBoundingBoxDescent: 0 }; } };
+	for (const measureCtx of [capCtx, lowerCtx, ctx]) {
+		const centered = textLayout.layout(measureCtx, 'ABC', data, metrics);
+		const line = centered.visibleLines[0];
+		assert.equal(line.baseline - line.ascent, centered.layoutHeight - line.baseline - line.descent, 'Auto Height centers the visible ink');
+	}
 	process.stdout.write('Text content/layout verification passed\n');
 }

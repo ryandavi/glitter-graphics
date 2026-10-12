@@ -25,6 +25,7 @@ function getRotationZoneCursor(handleType, rotation) {
 
 // Resize cursors turn with the layer, in 45° steps.
 function getHandleCursor(handleType, rotation) {
+	if (handleType === 'text-mode') return 'pointer';
 	if (handleType === 'rotation') return getRotationCursor(45 + rotation);
 	if (handleType.startsWith('rotate-')) return getRotationZoneCursor(handleType, rotation);
 	const baseIndex = {
@@ -66,6 +67,9 @@ class SelectionChrome {
 		this.box = box;
 		if (readOnly) box.style.pointerEvents = 'none';
 
+		this.baselines = document.createElement('div');
+		this.baselines.className = 'text-baselines ui-ignore-gestures';
+		container.appendChild(this.baselines);
 		this.wrappers = new Map();
 		handles.forEach((handleType) => {
 			const kind = handleKind(handleType);
@@ -92,6 +96,11 @@ class SelectionChrome {
 			this.stalk.className = 'transform-rotation-line';
 			container.appendChild(this.stalk);
 		}
+		if (handles.includes('text-mode')) {
+			this.modeStalk = document.createElement('div');
+			this.modeStalk.className = 'transform-rotation-line';
+			container.appendChild(this.modeStalk);
+		}
 		this.badge = document.createElement('div');
 		this.badge.className = 'selection-badge ui-ignore-gestures';
 		this.badge.hidden = true;
@@ -100,6 +109,17 @@ class SelectionChrome {
 		this.wrappers.forEach((wrapper) => container.appendChild(wrapper));
 
 		overlay.append(container);
+	}
+
+	static renderBaselines(overlay, container, baselines, view = overlay.getMapping()) {
+		container.replaceChildren();
+		baselines.forEach(({ start, end }) => {
+			const a = overlay.toScreen(start, view);
+			const b = overlay.toScreen(end, view);
+			const line = document.createElement('span');
+			Object.assign(line.style, { left: `${a.x}px`, top: `${a.y}px`, width: `${Math.hypot(b.x - a.x, b.y - a.y)}px`, transform: `rotate(${Math.atan2(b.y - a.y, b.x - a.x)}rad)` });
+			container.appendChild(line);
+		});
 	}
 
 	// Hit squares are screen pixels, larger on coarse pointers.
@@ -172,6 +192,12 @@ class SelectionChrome {
 			stalkBase.y = SelectionOverlay.snap(stalkBase.y);
 			points.rotation = { x: stalkBase.x, y: stalkBase.y - config.rotationHandleDistance };
 		}
+		const modeDistance = window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0
+			? config.textModeHandleDistance.coarse : config.textModeHandleDistance.fine;
+		if (model.textMode) points['text-mode'] = at(resize, resize.hw + modeDistance, 0);
+		if (this.modeStalk) overlay.placeStalk(this.modeStalk, at(resize, resize.hw, 0), modeDistance, rotation + 90);
+		SelectionChrome.renderBaselines(overlay, this.baselines, model.baselines || [], view);
+		this.wrappers.get('text-mode')?.classList.toggle('is-point-text', model.textMode === 'point');
 		if (model.anchorPoint) {
 			// Pixel-centered like the rotation handle, so the marker's 1px
 			// crosshair renders crisp.
@@ -195,7 +221,7 @@ class SelectionChrome {
 				? !(compactWidth || compactHeight)
 				: !(compactWidth && compactHeight);
 			if (handleType === 'edge-left' || handleType === 'edge-right') return !compactWidth;
-			if (handleType === 'edge-top' || handleType === 'edge-bottom') return !compactHeight;
+			if (handleType === 'edge-top' || handleType === 'edge-bottom') return !compactHeight || Boolean(model.textMode && resize.hw * 2 >= minSpan);
 			if (handleType === 'rotation') return !compactHeight && (config.rotationHandle === 'always' || (config.rotationHandle === 'coarse' && isTouch));
 			if (handleType.startsWith('rotate-')) return !isTouch;
 			if (handleType.startsWith('radius-')) return Boolean(points[handleType]);

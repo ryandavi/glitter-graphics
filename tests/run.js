@@ -25,6 +25,7 @@ const SUITES = [
 	{ file: 'unit/library-catalog-unit.js', tags: ['unit', 'assets'] },
 	{ file: 'unit/glitter-color-order-unit.js', tags: ['unit', 'assets'] },
 	{ file: 'ui/text-tool-verify.js', tags: ['layers', 'touch'] },
+	{ file: 'ui/text-chrome-verify.js', tags: ['layers', 'touch'] },
 	{ file: 'ui/inspector-library-verify.js', tags: ['panels', 'touch'] },
 	{ file: 'ui/panel-resize-verify.js', tags: ['panels', 'touch'] },
 	{ file: 'ui/touch-smoke.js', tags: ['quick', 'touch'] },
