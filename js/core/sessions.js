@@ -5,12 +5,15 @@
 // canUndo, canRedo }) and takes Undo and Redo for as long as it lasts. `panel`
 // names the Inspector panel (a `sectionPrefix`) that stands in for the
 // selection's while the session lasts, and `closesLibrary` keeps the Library
-// window shut for it.
+// window shut for it. `flyout` returns the session's own section for the
+// window to show in a layer section's place, or null.
 const SESSIONS = Object.freeze([
 	{ id: 'autoGlitter', isActive: editor => editor.autoGlitterManager.isSessionActive(),
 		panel: 'autoGlitterSettings', closesLibrary: true,
 		cancel: editor => editor.autoGlitterManager.requestDiscardSession(),
-		allows: (editor, command) => command.group === 'View' || (command.group === 'Tools' && editor.autoGlitterManager.allowsPreviewTool(command.tool)) },
+		history: editor => editor.autoGlitterManager.getHistory(),
+		flyout: editor => editor.autoGlitterManager.getFlyoutCard(),
+		allows: (editor, command) => command.group === 'View' || command.group === 'History' || (command.group === 'Tools' && editor.autoGlitterManager.allowsPreviewTool(command.tool)) },
 	{ id: 'crop', isActive: (editor) => editor.currentTool === ToolType.CROP && Boolean(editor.canvasBounds), mode: { label: 'Crop', icon: 'crop' }, confirm: (editor) => editor.applyCanvasBounds(), cancel: (editor) => editor.cancelCanvasBounds({ keepTool: true }), nudge: (editor, event) => editor.cropEdit.nudge(event), history: (editor) => editor.canvasBounds },
 	{ id: 'textEdit', isActive: (editor) => Boolean(editor.textGlitterManager?.editSession),
 		history: (editor, direction) => editor.textGlitterManager.getTextEditHistory(direction),

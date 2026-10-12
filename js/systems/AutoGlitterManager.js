@@ -12,10 +12,10 @@ class AutoGlitterManager {
 		// Ephemeral preview batch shown on the real canvas while the Auto
 		// Glitter UI is open. Layers carry `isPreview = true`, which excludes
 		// them from history snapshots, the layers list, export, and project
-		// save until commit. Undo/redo is disabled while a session is active
-		// (HistoryManager.canUndo/canRedo) — ephemeral layers must never enter
-		// a history state.
+		// save until commit. Ephemeral layers must never enter a history state,
+		// so Undo and Redo walk the session's own steps while it is open.
 		this.session = null;
+		this.steps = this.emptySteps();
 		this.bindUI();
 	}
 
@@ -39,32 +39,45 @@ class AutoGlitterManager {
 			replacePrevious: document.getElementById('autoGlitterReplacePrevious'),
 			addAnother: document.getElementById('autoGlitterAddAnother'),
 			paletteStyles: [...document.querySelectorAll('#autoGlitterPaletteStyle [data-value]')],
-			tuneHue: document.getElementById('autoGlitterTuneHue'),
 			hueLimit: document.getElementById('autoGlitterHueLimit'),
 			previewModes: [...document.querySelectorAll('#autoGlitterPreviewMode [data-value]')]
 		};
 
-		this.hueLimitSlider = bindSlider(this.ui.hueLimit, document.getElementById('autoGlitterHueLimitValue'), {
-			resetValue: FIELDS.paletteHueLimit.value, resetButton: document.getElementById('resetAutoGlitterHueLimit'),
-			onCommit: () => this.scheduleReduce()
-		});
+		// How far a matched glitter may be moved toward its region, one limit per
+		// axis of its color adjust; the setting and the worker option share a key.
+		this.corrections = Object.fromEntries(Object.entries({
+			maxHueShift: ['autoGlitterHueLimit', FIELDS.paletteHueLimit],
+			maxSaturationShift: ['autoGlitterSaturationLimit', FIELDS.paletteSaturationLimit],
+			maxBrightnessShift: ['autoGlitterBrightnessLimit', FIELDS.paletteBrightnessLimit]
+		}).map(([key, [id, field]]) => [key, this.bindSessionSlider(id, field, {
+			onCommit: (value) => {
+				if (value === this.steps.current?.settings[key]) return;
+				this.scheduleReduce();
+				this.recordStep(field.label, key);
+			}
+		})]));
 		this.sourceAdjust = { ...CONFIG.tools.autoGlitter.defaults.sourceAdjust };
-		this.sourceSliders = {};
-		for (const key of Object.keys(this.sourceAdjust)) {
-			const id = `autoGlitterSource${key.charAt(0).toUpperCase()}${key.slice(1)}`;
-			const input = document.getElementById(id);
-			this.sourceSliders[key] = bindSlider(input, document.getElementById(`${id}Value`), {
-				resetValue: CONFIG.tools.autoGlitter.defaults.sourceAdjust[key], resetButton: document.getElementById(`reset${id.charAt(0).toUpperCase()}${id.slice(1)}`),
-				onCommit: (value) => {
-					if (this.sourceAdjust[key] === value) return;
-					this.sourceAdjust[key] = value;
-					this.sourceRevision = (this.sourceRevision || 0) + 1;
-					this.segmentDirty = true;
-					this.syncSourceAdjust();
-					this.scheduleReduce();
-				}
-			});
-		}
+		// Source colors change the analysis, so they commit on release.
+		this.sourceSliders = this.bindAdjustSliders('autoGlitterSource', (key) => ({
+			onCommit: (value) => {
+				if (this.sourceAdjust[key] === value) return;
+				this.sourceAdjust[key] = value;
+				this.sourceRevision = (this.sourceRevision || 0) + 1;
+				this.segmentDirty = true;
+				this.syncSourceAdjust();
+				this.scheduleReduce();
+				this.recordStep('Source color', `source:${key}`);
+			}
+		}));
+		// A match's own adjust only retints its preview layer, so it is live.
+		this.matchSliders = this.bindAdjustSliders('autoGlitterMatch', (key) => ({
+			apply: (value) => this.setMatchAdjust(key, value),
+			onCommit: (value) => {
+				const index = this.pickerSession?.paletteIndex;
+				const before = normalizeColorAdjust(this.steps.current?.result?.palette[index]?.selectedColorAdjust);
+				if (index != null && before[key] !== value) this.recordStep('Adjust glitter color', `match:${index}:${key}`);
+			}
+		}));
 		this.ui.open?.addEventListener('click', () => this.open());
 		this.ui.cancel?.addEventListener('click', () => this.requestDiscardSession());
 		this.ui.create?.addEventListener('click', () => this.createLayers());
@@ -72,19 +85,21 @@ class AutoGlitterManager {
 			if (button.dataset.value === this.paletteStyle) return;
 			this.setPaletteStyle(button.dataset.value);
 			this.scheduleReduce();
-		}));
-		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => input?.addEventListener('input', () => {
-			// Choosing a count takes it back from the image.
-			if (input === this.ui.count) this.ui.autoCount.checked = false;
-			this.updateControlReadout(input);
-			this.applyCapacity();
-			this.scheduleReduce();
+			this.recordStep('Palette style');
 		}));
 		const paletteFields = new Map([
 			[this.ui.count, FIELDS.paletteColorCount],
 			[this.ui.mergeDistinctness, FIELDS.paletteMerge],
 			[this.ui.detail, FIELDS.paletteDetail]
 		]);
+		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => input?.addEventListener('input', () => {
+			// Choosing a count takes it back from the image.
+			if (input === this.ui.count) this.ui.autoCount.checked = false;
+			this.updateControlReadout(input);
+			this.applyCapacity();
+			this.scheduleReduce();
+			this.recordStep(paletteFields.get(input).label, input.id);
+		}));
 		paletteFields.forEach((spec, input) => {
 			const resetBtn = document.getElementById(`reset${input.id.charAt(0).toUpperCase()}${input.id.slice(1)}`);
 			if (!resetBtn) return;
@@ -93,10 +108,15 @@ class AutoGlitterManager {
 			resetBtn.addEventListener('click', () => {
 				input.value = spec.value;
 				input.dispatchEvent(new Event('input', { bubbles: true }));
-				if (input === this.ui.count) this.ui.autoCount.checked = CONFIG.tools.autoGlitter.defaults.autoColorCount;
+				if (input !== this.ui.count) return;
+				this.ui.autoCount.checked = CONFIG.tools.autoGlitter.defaults.autoColorCount;
+				this.steps.current = this.captureStep();
 			});
 		});
-		[this.ui.autoCount, this.ui.tuneHue, this.ui.cleanEdges].forEach((input) => input?.addEventListener('change', () => this.scheduleReduce()));
+		[[this.ui.autoCount, 'Auto colors'], [this.ui.cleanEdges, 'Clean edges']].forEach(([input, label]) => input?.addEventListener('change', () => {
+			this.scheduleReduce();
+			this.recordStep(label);
+		}));
 		this.ui.previewModes.forEach((button) => button.addEventListener('click', () => {
 			const mode = button.dataset.value;
 			this.ui.previewModes.forEach((option) => {
@@ -109,6 +129,7 @@ class AutoGlitterManager {
 		[this.ui.editCurrent, this.ui.replacePrevious, this.ui.addAnother].forEach((input) => input?.addEventListener('change', () => {
 			if (!input.checked) return;
 			this.changePreviousMode();
+			this.recordStep('Previous set handling');
 		}));
 		window.addEventListener('layerChanged', () => {
 			if (!this.session || this.editor.layerManager.activeLayerId === this.session.baseLayerId) return;
@@ -117,6 +138,30 @@ class AutoGlitterManager {
 				if (!discarded && this.session && baseLayerId != null) this.editor.layerManager.setActiveLayer(baseLayerId);
 			});
 		});
+	}
+
+	// One of the session's sliders. Its revert target and the cadence of its
+	// live `apply` come from its field; `set` writes a value without an event.
+	bindSessionSlider(id, field, handlers) {
+		const input = document.getElementById(id);
+		const slider = bindSlider(input, document.getElementById(`${id}Value`), {
+			resetValue: field.value, resetButton: document.getElementById(`reset${id.charAt(0).toUpperCase()}${id.slice(1)}`),
+			cost: field.cost, ...handlers
+		});
+		return {
+			input,
+			field,
+			set: (value) => {
+				writeSliderValue(input, value);
+				slider.updateDisplay(value);
+				slider.syncResetButton(value);
+			}
+		};
+	}
+
+	// The Hue, Saturation and Brightness sliders of one color adjust, by axis.
+	bindAdjustSliders(prefix, handlers) {
+		return Object.fromEntries(Object.keys(COLOR_ADJUST_IDENTITY).map((key) => [key, this.bindSessionSlider(`${prefix}${key.charAt(0).toUpperCase()}${key.slice(1)}`, FIELDS[key], handlers(key))]));
 	}
 
 	open() {
@@ -150,6 +195,7 @@ class AutoGlitterManager {
 		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => this.updateControlReadout(input));
 		this.clearResult();
 		this.startSession();
+		this.steps.current = this.captureStep();
 		this.segmentDirty = true;
 		this.showSessionPanel();
 		if (this.previousBatch) this.loadPreviousBatch();
@@ -172,12 +218,14 @@ class AutoGlitterManager {
 			: defaults.mergeDistinctness;
 		this.ui.detail.value = saved ? saved.detail : defaults.detail;
 		this.ui.cleanEdges.checked = saved ? saved.cleanEdges : defaults.cleanEdges;
-		this.ui.tuneHue.checked = saved?.tuneHue ?? defaults.tuneGlitterHue;
-		const limit = Number(saved?.maxHueShift ?? defaults.maxHueShift);
-		const value = Number.isFinite(limit) ? Math.max(0, Math.min(180, limit)) : defaults.maxHueShift;
-		writeSliderValue(this.ui.hueLimit, value);
-		this.hueLimitSlider.updateDisplay(value);
-		this.hueLimitSlider.syncResetButton(value);
+		for (const [key, { field, set }] of Object.entries(this.corrections)) {
+			const limit = Number(saved?.[key] ?? defaults[key]);
+			set(Number.isFinite(limit) ? Math.max(field.min, Math.min(field.max, limit)) : defaults[key]);
+		}
+	}
+
+	getCorrectionLimits() {
+		return Object.fromEntries(Object.entries(this.corrections).map(([key, { input }]) => [key, Number(input.value)]));
 	}
 
 	captureSessionSettings() {
@@ -191,18 +239,12 @@ class AutoGlitterManager {
 			mergeDistinctness: Number(this.ui.mergeDistinctness.value),
 			detail: Number(this.ui.detail.value),
 			cleanEdges: this.ui.cleanEdges.checked,
-			tuneHue: this.ui.tuneHue.checked,
-			maxHueShift: Number(this.ui.hueLimit.value)
+			...this.getCorrectionLimits()
 		};
 	}
 
 	syncSourceAdjust() {
-		for (const [key, value] of Object.entries(this.sourceAdjust)) {
-			const id = `autoGlitterSource${key.charAt(0).toUpperCase()}${key.slice(1)}`;
-			writeSliderValue(document.getElementById(id), value);
-			this.sourceSliders[key]?.updateDisplay(value);
-			this.sourceSliders[key]?.syncResetButton(value);
-		}
+		for (const [key, value] of Object.entries(this.sourceAdjust)) this.sourceSliders[key].set(value);
 		const summary = document.getElementById('autoGlitterSourceSummary');
 		if (summary) summary.textContent = isIdentityColorAdjust(this.sourceAdjust) ? 'Off' : 'Adjusted';
 	}
@@ -243,6 +285,7 @@ class AutoGlitterManager {
 			this.scopeRail = new AssetBrowserRail(library.browser.catalog, () => {
 				this.scopeRail.render(this.getEligibleGlitters(), 'style');
 				this.scheduleReduce();
+				this.recordStep('Glitter style');
 			}, library.browser.schema, category => library.createCollectionPreview?.(category, true), { up: false });
 			this.ui.scope.appendChild(this.scopeRail.element);
 		}
@@ -264,6 +307,7 @@ class AutoGlitterManager {
 		// Invalidate the running result immediately, but debounce the replacement.
 		// analyze() coalesces any timer that catches an in-flight worker request.
 		this.analysisRunId = (this.analysisRunId || 0) + 1;
+		if (this.result) this.result.stale = true;
 		this.ui.create.disabled = true;
 		this.setCanvasPreviewState(true, 'Updating preview');
 		clearTimeout(this.reduceTimer);
@@ -373,6 +417,7 @@ class AutoGlitterManager {
 		this.segmentDirty = true;
 		this.workerRequests.forEach(({ reject }) => reject(new Error('Analysis cancelled')));
 		this.workerRequests.clear();
+		this.steps = this.emptySteps();
 		this.closePickerSession(false);
 		this.editor.notifications.setMode(null);
 		this.setCanvasPreviewState(false);
@@ -398,9 +443,7 @@ class AutoGlitterManager {
 		if (!this.session || !this.previousBatch) return;
 		this.cancelAnalysis();
 		this.closePickerSession(false);
-		[...this.session.layers].forEach((layer) => this.removeSessionLayer(layer));
-		this.session.layers = [];
-		this.session.maskSignatures.clear();
+		this.clearSessionLayers();
 		this.clearResult();
 		this.syncPreviousBatchVisibility();
 		this.editor.requestPreviewUpdate();
@@ -446,9 +489,10 @@ class AutoGlitterManager {
 			const label = labels[pixelIndex];
 			if (label !== 255) palette[label].count++;
 		}
-		this.result = { labels, palette, visiblePixelCount };
+		this.result = { labels, palette, visiblePixelCount, revision: this.nextResultRevision() };
 		this.analysisRunId = (this.analysisRunId || 0) + 1;
 		this.renderReviewResults();
+		this.steps.current = this.captureStep();
 		this.ui.status.textContent = 'Editing the current Auto Glitter set. Palette or Advanced changes will rebuild it from the Base Image.';
 		this.setCanvasPreviewState(false);
 		this.applyCapacity();
@@ -499,12 +543,14 @@ class AutoGlitterManager {
 			if (analysisId !== this.analysisRunId) return;
 			const result = await this.requestWorker('reduce', { colorCount: count, options: this.getWorkerOptions(), swatches });
 			if (analysisId !== this.analysisRunId) return;
-			this.result = result;
+			this.carryChoices(this.result, result);
+			this.result = { ...result, revision: this.nextResultRevision() };
 			if (autoCount) {
 				this.ui.count.value = result.palette.length;
 				this.updateControlReadout(this.ui.count);
 			}
 			this.renderReviewResults();
+			this.steps.current = this.captureStep();
 			previewUpdated = true;
 		} catch (error) {
 			if (analysisId !== this.analysisRunId) return;
@@ -539,8 +585,7 @@ class AutoGlitterManager {
 			foldSharedMatches: this.ui.autoCount.checked,
 			// Mixing every style is the user's call; a picked style keeps its timing.
 			swatchTimingBias: this.isScopeNarrowed() ? CONFIG.tools.autoGlitter.analysis.swatchTimingBias : 0,
-			tuneGlitterHue: this.ui.tuneHue.checked,
-			maxHueShift: Number(this.ui.hueLimit.value),
+			...this.getCorrectionLimits(),
 			maxSamples: CONFIG.tools.autoGlitter.limits.maxSamples,
 			cleanup: {
 				aliasDissolve: { ...CONFIG.tools.autoGlitter.cleanup.aliasDissolve, enabled: this.ui.cleanEdges.checked },
@@ -551,7 +596,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=67aee80b');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=5d4b516f');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;
@@ -650,6 +695,7 @@ class AutoGlitterManager {
 		});
 
 		this.ui.results.hidden = false;
+		this.syncMatchAdjust();
 		this.reconcileSession();
 		const actual = activeIndices.filter((index) => !this.result.palette[index].skipped).length;
 		this.ui.create.disabled = !actual;
@@ -676,10 +722,42 @@ class AutoGlitterManager {
 	openGlitterPicker(index) {
 		const color = this.result?.palette[index];
 		if (!this.session || !color || color.manualMergeTarget != null) return;
-		this.ui.results.querySelector(`[data-palette-index="${index}"] .auto-glitter-choice`)?.setAttribute('aria-expanded', 'true');
 		pickerOpenSession(this, { kind: 'asset', paletteIndex: index, defaultAssetId: color.suggestedGlitterId, label: `Color match ${index + 1}` }, {
+			refresh: () => this.syncMatchAdjust(),
 			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterLibrary, color.selectedGlitterId, this.isScopeNarrowed() ? this.scopeRail.selection : null)
 		});
+	}
+
+	// The session's section in the window: the color adjust of the match the
+	// Library is choosing for, as a fill shows beside its glitter.
+	getFlyoutCard() {
+		return this.hasActivePickerSession() ? document.getElementById('autoGlitterMatchAdjustSection') : null;
+	}
+
+	syncMatchAdjust() {
+		const index = this.hasActivePickerSession() ? this.pickerSession.paletteIndex : null;
+		this.ui.results.querySelectorAll('.auto-glitter-choice').forEach((choice) => {
+			choice.setAttribute('aria-expanded', Number(choice.closest('[data-palette-index]').dataset.paletteIndex) === index ? 'true' : 'false');
+		});
+		if (index == null) return;
+		document.getElementById('autoGlitterMatchAdjustSection').dataset.flyoutTitle = `Color ${index + 1}`;
+		const adjust = normalizeColorAdjust(this.result.palette[index].selectedColorAdjust);
+		for (const [key, slider] of Object.entries(this.matchSliders)) slider.set(adjust[key]);
+	}
+
+	// An adjusted match is a choice: a rebuild that leaves its region alone keeps it.
+	setMatchAdjust(key, value) {
+		if (!this.hasActivePickerSession()) return;
+		const index = this.pickerSession.paletteIndex;
+		const color = this.result.palette[index];
+		const adjust = normalizeColorAdjust(color.selectedColorAdjust);
+		if (adjust[key] === value) return;
+		adjust[key] = value;
+		color.selectedColorAdjust = isIdentityColorAdjust(adjust) ? null : adjust;
+		color.manualGlitter = true;
+		const row = this.ui.results.querySelector(`[data-palette-index="${index}"]`);
+		if (row) this.updateMatchThumbnail(row, color);
+		this.reconcileSession();
 	}
 
 	hasActivePickerSession() {
@@ -700,15 +778,20 @@ class AutoGlitterManager {
 			return;
 		}
 		const color = this.result.palette[this.pickerSession.paletteIndex];
+		// A chosen glitter is used as the Library shows it; choosing the match
+		// again restores its correction.
+		const suggested = String(glitter.id) === String(color.suggestedGlitterId);
 		color.selectedGlitterId = glitter.id;
-		color.selectedColorAdjust = null;
+		color.selectedColorAdjust = suggested && color.suggestedColorAdjust ? { ...color.suggestedColorAdjust } : null;
+		color.manualGlitter = !suggested;
 		this.renderReviewResults();
+		this.recordStep('Choose glitter');
 		this.editor.glitterLibrary.updateSelection();
 	}
 
 
 	closePickerSession() {
-		pickerCloseSession(this);
+		pickerCloseSession(this, { refresh: () => this.syncMatchAdjust() });
 	}
 
 	bindMergeHandle(handle, row, index) {
@@ -812,11 +895,13 @@ class AutoGlitterManager {
 		this.result.palette[sourceIndex].manualMergeTarget = targetIndex;
 		this.closePickerSession(false);
 		this.renderReviewResults();
+		this.recordStep('Combine colors');
 	}
 
 	separateColor(index) {
 		delete this.result.palette[index].manualMergeTarget;
 		this.renderReviewResults();
+		this.recordStep('Separate color');
 	}
 
 	updateMatchThumbnail(row, color) {
@@ -828,6 +913,113 @@ class AutoGlitterManager {
 		const hue = color.selectedColorAdjust?.hue || 0;
 		const detail = hue ? `, hue ${hue > 0 ? '+' : ''}${hue}°` : '';
 		row.querySelector('.auto-glitter-choice').title = `${glitter?.name || 'Glitter'}${detail}`;
+	}
+
+	// ===== SESSION STEPS =====
+	// The session's own undo steps: its settings and the choices made on its
+	// matches. They are not document history; leaving the session drops them.
+
+	emptySteps() {
+		return { undoStack: [], redoStack: [], current: null, key: null };
+	}
+
+	nextResultRevision() {
+		this.resultRevision = (this.resultRevision || 0) + 1;
+		return this.resultRevision;
+	}
+
+	getPreviousMode() {
+		if (!this.previousBatch) return null;
+		return this.ui.editCurrent.checked ? 'edit' : (this.ui.replacePrevious.checked ? 'replace' : 'add');
+	}
+
+	// A `stale` result is one its settings have outrun; restoring it rebuilds it.
+	captureStep() {
+		return {
+			settings: this.captureSessionSettings(),
+			previousMode: this.getPreviousMode(),
+			result: this.result && { ...this.result, palette: this.result.palette.map((color) => ({ ...color })) }
+		};
+	}
+
+	// Called after each change the user makes: the step is the state before
+	// it. Repeating a key (one slider, dragged again) extends its step.
+	recordStep(label, key = null) {
+		if (!this.session) return;
+		const steps = this.steps;
+		if (!(key && key === steps.key)) {
+			steps.undoStack.push({ ...steps.current, label });
+			if (steps.undoStack.length > CONFIG.tools.autoGlitter.limits.historySteps) steps.undoStack.shift();
+		}
+		steps.key = key;
+		steps.redoStack.length = 0;
+		steps.current = this.captureStep();
+		this.editor.historyManager.updateButtons();
+	}
+
+	getHistory() {
+		const steps = this.steps;
+		const step = (from, to) => {
+			const entry = steps[from].pop();
+			if (!entry) return;
+			steps[to].push({ ...steps.current, label: entry.label });
+			steps.key = null;
+			this.restoreStep(entry);
+		};
+		return {
+			undoStack: steps.undoStack,
+			redoStack: steps.redoStack,
+			canUndo: steps.undoStack.length > 0,
+			canRedo: steps.redoStack.length > 0,
+			undo: () => step('undoStack', 'redoStack'),
+			redo: () => step('redoStack', 'undoStack')
+		};
+	}
+
+	restoreStep(state) {
+		this.cancelAnalysis();
+		this.closePickerSession(false);
+		if (JSON.stringify(state.settings.sourceAdjust) !== JSON.stringify(this.sourceAdjust)) {
+			this.sourceRevision = (this.sourceRevision || 0) + 1;
+			this.segmentDirty = true;
+		}
+		this.applySessionSettings(state.settings);
+		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => this.updateControlReadout(input));
+		if (state.previousMode !== this.getPreviousMode()) {
+			({ edit: this.ui.editCurrent, replace: this.ui.replacePrevious, add: this.ui.addAnother })[state.previousMode].checked = true;
+			this.clearSessionLayers();
+		}
+		if (state.result) {
+			this.result = { ...state.result, palette: state.result.palette.map((color) => ({ ...color })) };
+			this.renderReviewResults();
+		} else {
+			this.clearResult();
+		}
+		this.applyCapacity();
+		if (state.result && !state.result.stale) {
+			this.setCanvasPreviewState(false);
+		} else if (this.isEditingPrevious()) {
+			this.loadPreviousBatch();
+		} else {
+			this.ui.create.disabled = true;
+			this.analyze();
+		}
+		this.steps.current = this.captureStep();
+	}
+
+	// A rebuilt palette keeps the choices made on the regions it left as they were.
+	carryChoices(previous, next) {
+		if (!previous) return;
+		const key = (color) => `${color.r},${color.g},${color.b},${color.count}`;
+		const indexByKey = new Map(next.palette.map((color, index) => [key(color), index]));
+		previous.palette.forEach((color) => {
+			const target = next.palette[indexByKey.get(key(color))];
+			if (!target) return;
+			if (color.manualGlitter) Object.assign(target, { manualGlitter: true, selectedGlitterId: color.selectedGlitterId, selectedColorAdjust: color.selectedColorAdjust });
+			if (color.skipped) target.skipped = true;
+			const mergeTarget = color.manualMergeTarget != null ? indexByKey.get(key(previous.palette[color.manualMergeTarget])) : null;
+			if (mergeTarget != null && next.palette[mergeTarget] !== target) target.manualMergeTarget = mergeTarget;
+		});
 	}
 
 	// ===== EPHEMERAL PREVIEW SESSION =====
@@ -912,6 +1104,7 @@ class AutoGlitterManager {
 		const root = this.resolveManualMergeTarget(paletteIndex);
 		this.result.palette[root].skipped = Boolean(skipped);
 		this.renderReviewResults();
+		this.recordStep(skipped ? 'Skip color' : 'Include color');
 	}
 
 	// Sync the ephemeral batch to the current analysis result. Reuses layer
@@ -969,9 +1162,9 @@ class AutoGlitterManager {
 		for (let index = 0; index < manualRoots.length; index++) {
 			if (manualRoots[index] === rootIndex) members.push(index);
 		}
-		// Masks depend on the labels array (one per analysis) + which palette
+		// Masks depend on the labels array (one per result) + which palette
 		// entries fold into this root — skip the full-canvas rewrite otherwise.
-		const signature = `${this.analysisRunId}:${members.join(',')}`;
+		const signature = `${this.result.revision}:${members.join(',')}`;
 		if (this.session.maskSignatures.get(layer.id) === signature) return;
 
 		const { width, height, data } = this.editor.originalImageData;
@@ -1009,6 +1202,14 @@ class AutoGlitterManager {
 	restoreHiddenPreviousBatch() {
 		this.session?.hiddenPrevious?.forEach(({ layer, visible }) => { layer.visible = visible; });
 		if (this.session) this.session.hiddenPrevious = null;
+	}
+
+	// Edited and rebuilt sets start from different layers, so a change between
+	// them cannot reuse the batch.
+	clearSessionLayers() {
+		[...this.session.layers].forEach((layer) => this.removeSessionLayer(layer));
+		this.session.layers = [];
+		this.session.maskSignatures.clear();
 	}
 
 	removeSessionLayer(layer) {

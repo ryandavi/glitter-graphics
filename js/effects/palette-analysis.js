@@ -84,7 +84,7 @@
 			({ palette, labels } = dissolveAliases(palette, labels, cache.width, cache.height, cache.visiblePixelCount, options.cleanup.aliasDissolve));
 		}
 		if (options.cleanup.despeckle.enabled) {
-			const minimum = Math.max(options.cleanup.despeckle.absMin, cache.width * cache.height * options.cleanup.despeckle.shareMin);
+			const minimum = options.cleanup.despeckle.absMin * Math.max(1, cache.width * cache.height / options.cleanup.despeckle.referenceArea);
 			({ palette, labels } = despeckle(palette, labels, cache.width, cache.height, minimum));
 		}
 		return { labels, palette, visiblePixelCount: cache.visiblePixelCount };

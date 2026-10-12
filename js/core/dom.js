@@ -103,6 +103,13 @@ function createLoadingImage({ src, alt = '', placeholderColor }) {
 		for (const state of ['pending', 'ready', 'failed']) host.classList.toggle(`is-${state}`, visibleState === state || (state === 'ready' && visibleState === 'cached'));
 		host.classList.toggle('is-cached', image.loadingState === 'cached');
 	};
+	// An entrance plays once: a later class change on the host must not replay it.
+	image.addEventListener('animationend', () => {
+		if (image.loadingState !== 'ready' && !image.revealOnEntry) return;
+		image.loadingState = 'cached';
+		image.revealOnEntry = false;
+		image.revealLoading();
+	});
 	image.loadingReady = new Promise(resolve => {
 		const settle = state => {
 			image.onload = image.onerror = null;

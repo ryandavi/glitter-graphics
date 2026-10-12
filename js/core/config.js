@@ -160,15 +160,16 @@ const CONFIG = deepFreeze({
 		nineSlice: { maxTiles: 256 },
 		autoGlitter: {
 			// `glitterScope` is a Library rail selection: the style (and set) matches are drawn from.
-			defaults: { sourceAdjust: { hue: FIELDS.hue.value, saturation: FIELDS.saturation.value, brightness: FIELDS.brightness.value }, colorLayers: FIELDS.paletteColorCount.value, autoColorCount: true, glitterScope: { root: 'sparkle', set: null }, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, tuneGlitterHue: true, maxHueShift: FIELDS.paletteHueLimit.value, cleanEdges: true, detail: FIELDS.paletteDetail.value },
+			defaults: { sourceAdjust: { hue: FIELDS.hue.value, saturation: FIELDS.saturation.value, brightness: FIELDS.brightness.value }, colorLayers: FIELDS.paletteColorCount.value, autoColorCount: true, glitterScope: { root: 'sparkle', set: null }, paletteStyle: 'natural', mergeDistinctness: FIELDS.paletteMerge.value, maxHueShift: FIELDS.paletteHueLimit.value, maxSaturationShift: FIELDS.paletteSaturationLimit.value, maxBrightnessShift: FIELDS.paletteBrightnessLimit.value, cleanEdges: true, detail: FIELDS.paletteDetail.value },
 			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },
 			// `autoColorLayers` caps the count the image picks for itself.
-			limits: { minColorLayers: 2, maxColorLayers: 20, autoColorLayers: 8, maxSamples: 24000 },
+			limits: { minColorLayers: 2, maxColorLayers: 20, autoColorLayers: 8, maxSamples: 24000, historySteps: 30 },
 			timing: { reduceThrottleMs: 80 },
-			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: FIELDS.paletteHueLimit.value, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, swatchReusePenalty: 0.006, autoMinImportanceShare: 0.04 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, hueSearchStep: 6, swatchHueShiftBias: 0.25, matchTone: { step: 5, rounds: 2, shiftBias: 0.15, saturationCeiling: FIELDS.saturation.max }, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5, swatchTimingBias: 0.35, swatchReusePenalty: 0.006, autoMinImportanceShare: 0.04 },
+			// Despeckle's `absMin` is a region size at `referenceArea`; a larger image scales it up.
 			cleanup: {
 				aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
-				despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
+				despeckle: { enabled: true, absMin: 4, referenceArea: 100000 }
 			},
 			paletteStyles: {
 				vibrant: { matchedSaturation: 125, neutralSimilarityScale: 2.333333, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
@@ -999,7 +1000,7 @@ const CONFIG = deepFreeze({
 			// phone - more GIF-encoding workers than cores adds context-switch
 			// overhead instead of speed.
 			workers: Math.max(1, Math.min(4, navigator.hardwareConcurrency || 4)),
-			workerScript: 'js/workers/gif-encode.worker.js?v=77ee2fd9',
+			workerScript: 'js/workers/gif-encode.worker.js?v=f5317dc6',
 			quality: 1,
 
 		},

@@ -1,9 +1,9 @@
 // ===== Sticky-region sections ==============================================
 // A section with a fixed header and/or footer and one scrolling middle. Opt in
 // per schema group with `region: 'header' | 'scroll' | 'footer'`: the renderer
-// wraps the scroll groups in `.panel-scroll-region`, tags header and footer
-// groups `.panel-sticky-header` / `.panel-sticky-footer`, and stamps
-// `.has-scroll-region` on the section. First user: Auto Glitter.
+// wraps the header groups in `.panel-sticky-header` and the scroll groups in
+// `.panel-scroll-region`, tags the footer group `.panel-sticky-footer`, and
+// stamps `.has-scroll-region` on the section. First user: Auto Glitter.
 .section.has-scroll-region {
 	> .section-content {
 		padding: 0;
@@ -52,9 +52,8 @@
 	flex: 0 0 auto;
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-sm);
-	padding: var(--spacing-md) 0;
+	// Groups own vertical spacing; controls and rows own the horizontal gutter.
+	gap: 0;
+	padding: 0;
 	border-bottom: 1px solid var(--color-border);
-	.property-card-body { padding: 0 var(--property-gutter); }
-	.segmented-control { width: 100%; margin-inline: 0; }
 }

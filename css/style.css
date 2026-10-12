@@ -4368,7 +4368,7 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
   color: var(--color-text-tertiary);
 }
 
-.loading-image-host.is-waiting-reveal {
+.loading-image-host.is-waiting-reveal:not(.is-in-view) {
   opacity: 0;
 }
 .loading-image-host.is-pending {
@@ -4391,9 +4391,15 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
 .loading-image-host.is-tiled-preview.is-ready {
   background-image: var(--tile-preview-image);
 }
-.loading-image-host.is-ready.is-entry-reveal, .loading-image-host.is-ready:not(.is-cached).is-tiled-preview, .loading-image-host.is-ready:not(.is-cached, .is-entry-reveal) > img {
+.loading-image-host.is-ready:not(.is-cached).is-tiled-preview, .loading-image-host.is-ready.is-entry-reveal > img, .loading-image-host.is-ready:not(.is-cached) > img {
   animation: tile-enter var(--transition-reveal) ease-out backwards;
   animation-delay: var(--tile-enter-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion=true]) .loading-image-host.is-ready.is-entry-reveal {
+    background-color: var(--tile-placeholder, var(--color-bg-tertiary));
+  }
 }
 
 @keyframes tile-pending {
@@ -4413,14 +4419,14 @@ body:not(.boot-library) #designGalleryContent > :not(.boot-library-loading) {
 }
 @media (prefers-reduced-motion: reduce) {
   .loading-image-host.is-pending,
-  .loading-image-host.is-ready:is(.is-tiled-preview, .is-entry-reveal),
-  .loading-image-host.is-ready:not(.is-cached) > img {
+  .loading-image-host.is-ready.is-tiled-preview,
+  .loading-image-host.is-ready > img {
     animation: none;
   }
 }
 :root[data-reduce-motion=true] .loading-image-host.is-pending,
-:root[data-reduce-motion=true] .loading-image-host.is-ready:is(.is-tiled-preview, .is-entry-reveal),
-:root[data-reduce-motion=true] .loading-image-host.is-ready:not(.is-cached) > img {
+:root[data-reduce-motion=true] .loading-image-host.is-ready.is-tiled-preview,
+:root[data-reduce-motion=true] .loading-image-host.is-ready > img {
   animation: none;
 }
 
@@ -6911,7 +6917,7 @@ body.tool-pen .preview-container[data-path-hover=empty] #canvasElementsContainer
   .design-panel > .section.inspector-section:not(.is-open) > .inspector-body {
     display: none;
   }
-  .design-panel > .section.inspector-section > .inspector-body {
+  .design-panel > .section.inspector-section > #inspectorSwitch[hidden] + .inspector-body {
     border-top: 1px solid var(--color-border);
   }
 }
@@ -9224,16 +9230,9 @@ body.tool-text .text-hover-baselines {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) 0;
+  gap: 0;
+  padding: 0;
   border-bottom: 1px solid var(--color-border);
-}
-.panel-sticky-header .property-card-body {
-  padding: 0 var(--property-gutter);
-}
-.panel-sticky-header .segmented-control {
-  width: 100%;
-  margin-inline: 0;
 }
 
 @container propertypanel (min-width: 320px) {

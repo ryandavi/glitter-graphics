@@ -318,7 +318,8 @@
 				> .inspector-body { display: none; }
 			}
 
-			> .inspector-body { border-top: 1px solid var(--color-border); }
+			// The visible panel switch supplies its own divider.
+			> #inspectorSwitch[hidden] + .inspector-body { border-top: 1px solid var(--color-border); }
 		}
 
 		// The kind of layer always shows whole; the layer's name gives way.

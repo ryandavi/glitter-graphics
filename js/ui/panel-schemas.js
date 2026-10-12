@@ -15,7 +15,8 @@
 //              sets, advanced? }. `advanced` is a list of sets under the
 //              section's one "Advanced" disclosure. `presentation: 'flyout'`
 //              leaves one line in the panel and opens the section in the
-//              window beside it. `key` names a section where its title must
+//              window beside it; `line: false` leaves none, for a section a
+//              session opens itself (SESSIONS `flyout`). `key` names a section where its title must
 //              be free to change (it defaults to the paint slot, then the
 //              title). A paintSlot names its `slot` and `idPrefix`; its
 //              source modes are the layer type's (`paintSlots[].modes`). Its
@@ -439,7 +440,9 @@ const PANEL_SCHEMAS = {
 							{ label: 'Original', value: 'original' }, { label: 'Flat', value: 'flat' }, { label: 'Glitter', value: 'glitter', active: true }
 						] }
 					] }
-				] },
+				] }
+			] },
+			{ title: 'Previous set', region: 'header', sections: [
 				{ kind: 'section', id: 'autoGlitterExisting', classes: 'auto-glitter-existing', hidden: true, sets: [
 					{ rows: [
 						{ kind: 'note', id: 'autoGlitterExistingSummary' },
@@ -478,10 +481,11 @@ const PANEL_SCHEMAS = {
 					] }
 				], advanced: [
 					{ label: 'Regions', rows: [
-						{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels' },
+						{ kind: 'slider', id: 'autoGlitterDetail', slider: 'paletteDetail', label: 'Detail', title: 'Absorb connected regions smaller than this size. The size scales with the image.' },
 						{ kind: 'toggle', id: 'autoGlitterCleanEdges', label: 'Clean edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
-						{ kind: 'toggle', id: 'autoGlitterTuneHue', label: 'Tune matched glitter hue', checked: true, revert: true, title: 'Adjust the matched swatch hue within the chosen limit' },
-						{ kind: 'slider', id: 'autoGlitterHueLimit', slider: 'paletteHueLimit', title: 'Maximum hue change to a matched swatch: 0 keeps its hue, 180 allows any hue. Saturation follows the palette style.' }
+						{ kind: 'slider', id: 'autoGlitterHueLimit', slider: 'paletteHueLimit', title: 'How far a matched glitter\'s hue may move toward its region: 0 keeps its own hue, 180 allows any hue' },
+						{ kind: 'slider', id: 'autoGlitterSaturationLimit', slider: 'paletteSaturationLimit', title: 'How far a matched glitter\'s saturation may move toward its region. The palette style scales the result.' },
+						{ kind: 'slider', id: 'autoGlitterBrightnessLimit', slider: 'paletteBrightnessLimit', title: 'How far a matched glitter\'s brightness may move toward its region' }
 					] }
 				] },
 				{ kind: 'section', title: 'Color matches', classes: 'auto-glitter-review', sets: [
@@ -489,6 +493,11 @@ const PANEL_SCHEMAS = {
 						{ kind: 'note', id: 'autoGlitterStatus', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
 						{ kind: 'host', id: 'autoGlitterResults', classes: 'property-inset property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
 					] }
+				] },
+				// The match whose glitter the Library is choosing, in the window
+				// beside it, as a fill's own color adjust is. Its match row opens it.
+				{ kind: 'section', key: 'matchAdjust', title: 'Match color', presentation: 'flyout', line: false, sets: [
+					{ rows: ['hue', 'saturation', 'brightness'].map((key) => ({ kind: 'slider', id: `autoGlitterMatch${key.charAt(0).toUpperCase()}${key.slice(1)}`, slider: key })) }
 				] }
 			] },
 			{ title: 'Actions', role: 'actions', region: 'footer', actions: [

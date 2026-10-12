@@ -201,7 +201,6 @@
 			...autoConfig.analysis,
 			...autoConfig.paletteStyles[settings.paletteStyle],
 			mergeDistinctness: settings.mergeDistinctness,
-			tuneGlitterHue: false,
 			maxSamples: autoConfig.limits.maxSamples,
 			cleanup: {
 				aliasDissolve: { ...autoConfig.cleanup.aliasDissolve, enabled: cleanup && settings.cleanEdges },

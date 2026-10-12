@@ -141,7 +141,8 @@ async function verifyImageLoadingAndPaging(page) {
 	await page.waitForFunction(() => document.querySelectorAll('#viewport-reveal-test .is-ready').length === 9);
 	const revealDelays = await page.locator('#viewport-reveal-test > .asset-option').evaluateAll(tiles => tiles.map(tile => parseFloat(tile.style.getPropertyValue('--tile-enter-delay'))));
 	assert.deepStrictEqual(revealDelays.map(delay => delay - revealDelays[0]), Array.from({ length: 9 }, (_, index) => index * 10), 'Visible tiles did not stagger in grid order');
-	assert.equal(await page.locator('#viewport-reveal-test > .asset-option').last().evaluate(tile => getComputedStyle(tile).opacity), '0', 'Card background showed before its stagger delay');
+	assert.equal(await page.locator('#viewport-reveal-test > .asset-option').last().evaluate(tile => getComputedStyle(tile.querySelector('img')).opacity), '0', 'Image showed before its stagger delay');
+	assert.equal(await page.locator('#viewport-reveal-test > .asset-option').last().evaluate(tile => getComputedStyle(tile).opacity), '1', 'A tile in view hid its placeholder color');
 	await page.evaluate(() => {
 		const b = window.editor.glitterLibrary.browser;
 		const grid = document.getElementById('viewport-reveal-test');

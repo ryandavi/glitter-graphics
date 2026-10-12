@@ -314,7 +314,9 @@ isLayerContentLocked(layer) {
 			const name = event.target.closest('[data-value]')?.dataset.value;
 			if (names.includes(name)) this.setCollapsibleSectionOpen(name, true);
 		});
-		host.appendChild(group);
+		const header = panelDiv('panel-sticky-header');
+		header.appendChild(group);
+		host.appendChild(header);
 	},
 
 	// The bar names the open panel and keeps the selected layer's name beside it.

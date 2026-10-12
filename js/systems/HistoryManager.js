@@ -236,9 +236,6 @@ class HistoryManager {
 	}
 
 	canUndo() {
-		// A restore while an Auto Glitter session is open would rebuild the
-		// layer stack under the ephemeral preview batch.
-		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
 		const session = this.sessionHistory('undo');
 		if (session) return session.canUndo;
 		const textSession = this.editor.textGlitterManager?.editSession;
@@ -247,7 +244,6 @@ class HistoryManager {
 	}
 
 	canRedo() {
-		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
 		const session = this.sessionHistory('redo');
 		if (session) return session.canRedo;
 		return this.historyIndex >= 0 && this.historyIndex < this.history.length - 1;

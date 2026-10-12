@@ -2,8 +2,12 @@
 
 // Asset tiles: the option grid, tile marks, favourite and delete buttons.
 
+// A held tile stays hidden until it is seen in view. From then it shows its
+// placeholder color and its image fades in over that. The entrance is the
+// image's own animation, so one on the tile (the scrolled-to ring) cannot
+// replay it.
 .loading-image-host {
-	&.is-waiting-reveal { opacity: 0; }
+	&.is-waiting-reveal:not(.is-in-view) { opacity: 0; }
 	&.is-pending {
 		background: var(--tile-placeholder, var(--color-bg-tertiary));
 		animation: tile-pending 2s ease-in-out infinite;
@@ -18,13 +22,19 @@
 		&.is-ready { background-image: var(--tile-preview-image); }
 	}
 	&.is-ready {
-		&.is-entry-reveal,
 		&:not(.is-cached).is-tiled-preview,
-		&:not(.is-cached, .is-entry-reveal)>img {
+		&.is-entry-reveal>img,
+		&:not(.is-cached)>img {
 			animation: tile-enter var(--transition-reveal) ease-out backwards;
 			animation-delay: var(--tile-enter-delay, 0ms);
 		}
 	}
+}
+
+// The placeholder stays under a staggered image until its entrance ends,
+// which is what drops `is-entry-reveal`; without motion nothing would.
+:root:not([data-reduce-motion="true"]) .loading-image-host.is-ready.is-entry-reveal {
+	@media (prefers-reduced-motion: no-preference) { background-color: var(--tile-placeholder, var(--color-bg-tertiary)); }
 }
 
 @keyframes tile-pending {
@@ -38,14 +48,14 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.loading-image-host.is-pending,
-	.loading-image-host.is-ready:is(.is-tiled-preview, .is-entry-reveal),
-	.loading-image-host.is-ready:not(.is-cached)>img { animation: none; }
+	.loading-image-host.is-ready.is-tiled-preview,
+	.loading-image-host.is-ready>img { animation: none; }
 }
 
 :root[data-reduce-motion="true"] {
 	.loading-image-host.is-pending,
-	.loading-image-host.is-ready:is(.is-tiled-preview, .is-entry-reveal),
-	.loading-image-host.is-ready:not(.is-cached)>img { animation: none; }
+	.loading-image-host.is-ready.is-tiled-preview,
+	.loading-image-host.is-ready>img { animation: none; }
 }
 
 .asset-options {

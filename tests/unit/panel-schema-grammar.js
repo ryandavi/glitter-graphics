@@ -122,6 +122,7 @@ function checkSection(section, where, layerType = null, keys = null) {
 	}
 	// A flyout section is one line in the panel, so it needs the line's name.
 	if (section.presentation != null) assert(section.presentation === 'flyout' && section.title, `${name}: presentation is "flyout", on a titled section`);
+	if (section.line != null) assert(section.line === false && section.presentation === 'flyout', `${name}: line is false, on a flyout section`);
 	if (section.kind === 'section') assert(Array.isArray(section.sets), `${name}: a section lists sets`);
 	['before', 'sets', 'advanced'].forEach((key) => {
 		(section[key] || []).forEach((set, index) => checkSet(set, `${name} ${key}[${index}]`));

@@ -162,7 +162,8 @@ class LibraryWindow {
 		const editor = this.editor;
 		const pickers = editor.pickers;
 		const layer = editor.layerManager.getInspectedLayer();
-		const available = editor.originalImage && !getSessionDefinition(editor)?.closesLibrary;
+		const session = getSessionDefinition(editor);
+		const available = editor.originalImage && (session?.flyout || !session?.closesLibrary);
 		const card = available ? pickers.getFlyoutCard() : null;
 		if (!card) pickers.flyout = null;
 
@@ -181,7 +182,7 @@ class LibraryWindow {
 				reset: document.getElementById('flyoutReset'),
 				switchHost: document.getElementById('flyoutSwitch')
 			}, card);
-			if (card) document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${PANEL_SCHEMAS[layer.type].section.icon}`);
+			if (card) document.getElementById('flyoutTitleIcon').setAttribute('href', `#icon-${card.parentElement.dataset.flyoutIcon}`);
 			document.querySelectorAll('.property-line').forEach((line) => {
 				const open = Boolean(card) && line.dataset.flyoutFor === card.id;
 				line.classList.toggle('is-flyout-open', open);
@@ -192,6 +193,12 @@ class LibraryWindow {
 		}
 		document.getElementById('flyoutSection').classList.toggle('visible', Boolean(card));
 		if (!card) return null;
+		// A session's section names what it is showing, and arms nothing: the
+		// session opened the Library itself.
+		if (session?.flyout) {
+			document.getElementById('flyoutTitleText').textContent = card.dataset.flyoutTitle;
+			return card;
+		}
 
 		// A Glitter source is the glitter Library. A section with two paints
 		// keeps the one the user armed, and otherwise takes the first. The

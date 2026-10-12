@@ -50,6 +50,11 @@ const baseOptions = {
 	fragmentedSimilarityBoost: 0.6,
 	hueMinChroma: 0.04,
 	maxHueShift: 20,
+	maxSaturationShift: 50,
+	maxBrightnessShift: 30,
+	hueSearchStep: 6,
+	swatchHueShiftBias: 0.25,
+	matchTone: { step: 5, rounds: 2, shiftBias: 0.15, saturationCeiling: 200 },
 	neutralMatchSaturation: 0,
 	matchedSaturation: 125,
 	componentDensityBase: 0.55,
@@ -60,11 +65,10 @@ const baseOptions = {
 	swatchPrimaryWeight: 0.75,
 	swatchMinCoverage: 0.08,
 	swatchCoverageBias: 1.5,
-	tuneGlitterHue: true,
 	maxSamples: 24000,
 	cleanup: {
 		aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
-		despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
+		despeckle: { enabled: true, absMin: 4, referenceArea: 100000 }
 	}
 };
 
@@ -117,7 +121,22 @@ result = reduce(3, baseOptions, [{ id: 'blue', colors: ['#234fd8'] }]);
 const hueAdjustedRed = result.palette.find(color => color.r > 200 && color.g < 70 && color.b < 70);
 assert.strictEqual(hueAdjustedRed.suggestedGlitterId, 'blue', 'a recolorable glitter can be selected for a vivid region');
 assert.ok(Math.abs(hueAdjustedRed.suggestedColorAdjust?.hue || 0) >= 2, 'the suggested glitter hue correction remains visible and editable');
-assert.strictEqual(hueAdjustedRed.suggestedColorAdjust?.saturation, 125, 'Vibrant boosts the matched glitter saturation');
+const unboosted = reduce(3, { ...baseOptions, matchedSaturation: 100 }, [{ id: 'blue', colors: ['#234fd8'] }]).palette.find(color => color.r > 200 && color.g < 70 && color.b < 70);
+assert.strictEqual(hueAdjustedRed.suggestedColorAdjust?.saturation, Math.round((unboosted.suggestedColorAdjust?.saturation ?? 100) * 1.25), 'Vibrant boosts the matched glitter saturation');
+
+// Saturation and brightness close the distance the hue leaves: a dark, dull
+// region pulls a bright, vivid glitter of its own hue down toward it.
+const dullRed = image(20, 20, () => [120, 50, 55]);
+segment(dullRed, 20, 20);
+const toned = reduce(2, { ...baseOptions, matchedSaturation: 100 }, [{ id: 'red', colors: ['#ee1622'] }]).palette[0].suggestedColorAdjust;
+assert.ok(toned.saturation < 100 && toned.brightness < 100, `a dull dark region lowers its glitter's saturation and brightness: ${JSON.stringify(toned)}`);
+assert.strictEqual(reduce(2, { ...baseOptions, matchedSaturation: 100, maxHueShift: 0, maxSaturationShift: 0, maxBrightnessShift: 0 }, [{ id: 'red', colors: ['#ee1622'] }]).palette[0].suggestedColorAdjust, null, 'zero correction leaves the glitter as it is');
+const hueOnly = reduce(2, { ...baseOptions, matchedSaturation: 100, maxSaturationShift: 0, maxBrightnessShift: 0 }, [{ id: 'red', colors: ['#ee1622'] }]).palette[0].suggestedColorAdjust;
+assert.ok(!hueOnly || (hueOnly.saturation === 100 && hueOnly.brightness === 100), 'each correction answers to its own limit');
+// The closest color wins as it is: a hue limit wide enough to turn blue red does not pick blue.
+const closest = reduce(2, { ...baseOptions, maxHueShift: 180 }, [{ id: 'blue', colors: ['#7a2ad8'] }, { id: 'red', colors: ['#c8303a'] }]).palette[0];
+assert.strictEqual(closest.suggestedGlitterId, 'red', 'the glitter nearest in color is matched, whatever the hue limit');
+segment(accentPixels, width, height);
 
 for (const limit of [0, 5, 90, 180]) {
 	const limited = reduce(3, { ...baseOptions, maxHueShift: limit }, [{ id: 'blue', colors: ['#234fd8'] }]);
@@ -229,7 +248,7 @@ assert.strictEqual(reduce(2, timingOptions, [...timedSwatches('#dc1e28'), { id: 
 const twoReds = image(60, 20, x => x < 30 ? [225, 30, 40] : [170, 20, 30]);
 segment(twoReds, 60, 20);
 const redPool = [{ id: 'red', colors: ['#d21e28'] }, { id: 'crimson', colors: ['#a01420'] }, { id: 'blue', colors: ['#2040c0'] }];
-const shareOptions = { ...baseOptions, mergeDistinctness: 0.01, tuneGlitterHue: false, swatchReusePenalty: 0.006 };
+const shareOptions = { ...baseOptions, mergeDistinctness: 0.01, maxHueShift: 0, maxSaturationShift: 0, maxBrightnessShift: 0, swatchReusePenalty: 0.006 };
 result = reduce(2, shareOptions, redPool);
 assert.strictEqual(result.palette.map(color => color.suggestedGlitterId).sort().join(), 'crimson,red', 'each region takes its own near glitter');
 result = reduce(2, shareOptions, [redPool[0], redPool[2]]);

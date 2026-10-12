@@ -1247,6 +1247,8 @@ function mountFlyoutSection(card, spec, schema) {
 	if (!host) {
 		host = panelDiv('settings-subsection flyout-host');
 		host.id = `${prefix}Flyouts`;
+		// The window's bar wears the icon of the panel whose section it shows.
+		host.dataset.flyoutIcon = schema.section.icon;
 		document.getElementById('flyoutBody').appendChild(host);
 	}
 	if (!card.id) card.id = spec.idPrefix ? `${spec.idPrefix}Section` : `${schema.prefix}${panelCap(spec.key || spec.title)}Section`;
@@ -1938,7 +1940,6 @@ function buildPanelCardReset(node, title, spec) {
 // in every panel.
 function buildPanelGroup(group, schema) {
 	const node = tplClone('tpl-group');
-	if (group.region === 'header' || group.region === 'footer') node.classList.add(`panel-sticky-${group.region}`);
 	addPanelClasses(node, group.classes);
 	node.dataset.panelGroup = group.title;
 	const label = node.querySelector('.property-group-label');
@@ -1953,6 +1954,7 @@ function buildPanelGroup(group, schema) {
 	(group.sections || []).forEach((section) => {
 		const item = buildPanelItem(section, schema);
 		const placed = section.presentation === 'flyout' ? mountFlyoutSection(item, section, schema) : item;
+		if (section.line === false) return;
 		placed.dataset.sectionKey = getSectionKey(section);
 		if (section.chips) placed.dataset.sectionChips = section.chips;
 		node.appendChild(placed);
@@ -2049,7 +2051,7 @@ function finishPanelMarkup(root) {
 // keeps `.is-vacant` in step instead of every manager remembering to.
 const PANEL_VACANCY_CONTAINERS = [
 	'.property-card:not([data-effect-card], .property-line)', '.property-card-body', '.advanced-disclosure-content',
-	'.property-pair-group', '.property-set', '.property-actions', '.property-meta-cell'
+	'.property-pair-group', '.property-set', '.property-actions', '.property-meta-cell', '.property-group'
 ].join(', ');
 // A container's own heading does not count as content.
 const PANEL_VACANCY_CHROME = '.property-card-title, .property-group-label, .property-set-label';
@@ -2171,21 +2173,23 @@ function renderPanelSection(schema) {
 	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;
 	const subsection = fragment.querySelector('.settings-subsection');
 	// Sticky-region layout: a group's `region` puts it in a fixed `header` /
-	// `footer` band or the single scrolling middle. The structural CSS is generic
+	// `footer` band or the single scrolling middle. The header band and the
+	// scrolling middle each wrap their groups, so a group in them is laid out
+	// as a group is anywhere. The structural CSS is generic
 	// (`.section.has-scroll-region` in panels/property/_regions.scss); declare
 	// header/footer groups first/last so DOM order matches. First user: Auto Glitter.
-	let scrollRegion = null;
+	const wrappers = {};
 	let hasStickyRegions = false;
 	const placeGroup = (group, node) => {
-		if (group.region === 'scroll') {
-			if (!scrollRegion) {
-				scrollRegion = panelDiv('panel-scroll-region');
-				subsection.appendChild(scrollRegion);
+		if (group.region === 'scroll' || group.region === 'header') {
+			if (!wrappers[group.region]) {
+				wrappers[group.region] = panelDiv(group.region === 'scroll' ? 'panel-scroll-region' : 'panel-sticky-header');
+				subsection.appendChild(wrappers[group.region]);
 			}
-			scrollRegion.appendChild(node);
+			wrappers[group.region].appendChild(node);
 			hasStickyRegions = true;
-		} else if (group.region === 'header' || group.region === 'footer') {
-			node.classList.add(group.region === 'header' ? 'panel-sticky-header' : 'panel-sticky-footer');
+		} else if (group.region === 'footer') {
+			node.classList.add('panel-sticky-footer');
 			subsection.appendChild(node);
 			hasStickyRegions = true;
 		} else {

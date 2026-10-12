@@ -151,6 +151,7 @@ class AssetBrowser {
 		this.revealObserver = new IntersectionObserver(entries => {
 			for (const entry of entries) {
 				if (!this.revealTiles.has(entry.target)) continue;
+				entry.target.classList.toggle('is-in-view', entry.isIntersecting && entry.intersectionRatio > 0);
 				if (entry.isIntersecting && entry.intersectionRatio > 0) {
 					this.visibleRevealTiles.add(entry.target);
 				} else this.visibleRevealTiles.delete(entry.target);
@@ -579,10 +580,15 @@ class AssetBrowser {
 		return section?.querySelector(selector) || null;
 	}
 
-	scrollToItem(item) {
+	scrollToItem(item, retry = true) {
 		const element = this.findItemElement(item);
 		if (!element) {
 			console.warn('[Browser] Could not scroll to item:', item.id);
+			return;
+		}
+		// A window that is still opening has no layout to scroll yet.
+		if (retry && !this.scrollContainer.clientHeight) {
+			requestAnimationFrame(() => requestAnimationFrame(() => this.scrollToItem(item, false)));
 			return;
 		}
 

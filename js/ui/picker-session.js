@@ -38,6 +38,8 @@ class PickerRegistry {
 	// The open section's card for the inspected layer, or null: the same key
 	// names the same line on every layer type that has it.
 	getFlyoutCard() {
+		const session = getSessionDefinition(this.editor);
+		if (session?.flyout) return session.flyout(this.editor);
 		const layer = this.editor.layerManager.getInspectedLayer();
 		const prefix = layer && PANEL_SCHEMAS[layer.type]?.sectionPrefix;
 		return (this.flyout && prefix) ? document.querySelector(`#${prefix}Flyouts > [data-flyout-key="${this.flyout}"]`) : null;
