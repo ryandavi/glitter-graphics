@@ -351,6 +351,37 @@ body.modal-open {
 	}
 }
 
+.modal-overlay > .modal-content > .modal-body.modal-split {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) var(--modal-side-width);
+	padding: 0;
+	overflow: hidden;
+
+	> .modal-split-main,
+	> .modal-split-side {
+		min-width: 0;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	> .modal-split-side { border-left: 1px solid var(--color-border); }
+
+	@include modal-compact {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr) auto;
+		> .modal-split-side { border-left: 0; border-top: 1px solid var(--color-border); }
+	}
+
+	@media (max-height: 480px) {
+		display: block;
+		overflow-y: auto;
+		> .modal-split-main,
+		> .modal-split-side { overflow-y: visible; }
+		> .modal-split-side { border-left: 0; border-top: 1px solid var(--color-border); }
+	}
+}
+
 // The single chrome strip that sits between a modal's header and its body.
 // Every browse modal uses it, so the bar's height, ground and rhythm cannot
 // drift between Settings, Export Settings, Shortcuts, Guide and About. It

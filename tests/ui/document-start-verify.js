@@ -1,6 +1,7 @@
 'use strict';
 
 const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 const fs = require('fs');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
@@ -11,14 +12,32 @@ function assert(condition, message) {
 }
 
 async function openEditor(browser, viewport) {
-	const context = await browser.newContext({ viewport });
-	await context.addInitScript(() => localStorage.setItem('glitterEditor_welcomeModalSeen', 'true'));
-	const page = await context.newPage();
-	if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', route => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
-	await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
-	await page.waitForFunction(() => window.editor != null, null, { timeout: 15000 });
-	await page.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((modal) => modal.classList.remove('visible')));
-	return { context, page };
+	return openApp({ browser, viewport, touch: viewport.width < 600 });
+}
+
+async function verifyCanvasFormLayout(page) {
+	const before = await page.evaluate(() => {
+		const settings = document.getElementById('newCanvasSettingsSection');
+		const style = getComputedStyle(settings);
+		if (parseFloat(style.paddingTop) === 0 || parseFloat(style.paddingBottom) === 0) throw new Error('New Canvas settings lack vertical padding');
+		for (const button of document.querySelectorAll('#newCanvasOrientation button, #newCanvasBackground button')) {
+			if (button.scrollWidth > button.clientWidth + 1) throw new Error('New Canvas segmented option is clipped');
+		}
+		const pane = document.getElementById('newCanvasPresets');
+		if (!pane.classList.contains('scroll-region') || !pane.classList.contains('has-scroll-fade')) throw new Error('Preset pane lacks the shared scrollbar or fade');
+		return [pane.clientHeight, pane.getBoundingClientRect().bottom, settings.getBoundingClientRect().top, settings.offsetHeight];
+	});
+	await page.click('#newCanvasBackground [data-value="transparent"]');
+	await page.waitForTimeout(100);
+	const after = await page.evaluate(() => {
+		const pane = document.getElementById('newCanvasPresets');
+		const settings = document.getElementById('newCanvasSettingsSection');
+		return [pane.clientHeight, pane.getBoundingClientRect().bottom, settings.getBoundingClientRect().top, settings.offsetHeight];
+	});
+	assert(JSON.stringify(before) === JSON.stringify(after), 'Background change resized the presets or settings pane');
+	assert(await page.isDisabled('#newCanvasColor'), 'Transparent background left Color editable');
+	await page.click('#newCanvasBackground [data-value="color"]');
+	assert(await page.isEnabled('#newCanvasColor'), 'Color background did not restore the color field');
 }
 
 async function main() {
@@ -66,6 +85,8 @@ async function main() {
 		assert(await startupPage.evaluate(() => window.editor.previewCanvas.width === 400 && window.editor.previewCanvas.height === 400
 			&& document.getElementById('workspaceStart').hidden),
 			'A start card preset did not create its canvas in one click');
+		assert(await startupPage.evaluate(() => PREFERENCES.get('recentCanvasSizes')[0].width === 400
+			&& PREFERENCES.get('recentCanvasSizes')[0].height === 400), 'Start card creation did not record a recent size');
 		await startupContext.close();
 
 		const desktop = await openEditor(browser, { width: 1440, height: 900 });
@@ -111,6 +132,41 @@ async function main() {
 
 		await desktop.page.click('#openNewCanvasBtn');
 		assert(await desktop.page.isVisible('#newCanvasModal.visible'), 'New Canvas did not open from the start surface');
+		await desktop.page.waitForTimeout(250);
+		assert(await desktop.page.evaluate(() => document.activeElement.id === 'newCanvasWidth'), 'Desktop initial focus did not land on Width');
+		await verifyCanvasFormLayout(desktop.page);
+		await desktop.page.fill('#newCanvasName', 'Star Garden');
+		const presetBox = await desktop.page.locator('#newCanvasPresets').boundingBox();
+		await desktop.page.mouse.move(presetBox.x + presetBox.width / 2, presetBox.y + 70);
+		await desktop.page.waitForSelector('.scroll-region-track.is-visible');
+		const thumbBox = await desktop.page.locator('.scroll-region-thumb').boundingBox();
+		await desktop.page.mouse.move(thumbBox.x + thumbBox.width / 2, thumbBox.y + thumbBox.height / 2);
+		await desktop.page.mouse.down();
+		await desktop.page.mouse.move(thumbBox.x + thumbBox.width / 2, thumbBox.y + thumbBox.height / 2 + 40);
+		await desktop.page.mouse.up();
+		assert(await desktop.page.$eval('#newCanvasPresets', pane => pane.scrollTop > 0), 'Custom scrollbar did not scroll the preset pane');
+		const independentScroll = await desktop.page.evaluate(async () => {
+			const presets = document.getElementById('newCanvasPresets');
+			const settings = document.getElementById('newCanvasSettingsSection');
+			const before = settings.getBoundingClientRect().top;
+			presets.scrollTop = presets.scrollHeight;
+			await new Promise(resolve => requestAnimationFrame(resolve));
+			return presets.scrollTop > 0 && settings.getBoundingClientRect().top === before
+				&& document.querySelector('#newCanvasModal .modal-body').scrollTop === 0;
+		});
+		assert(independentScroll, 'Presets did not scroll independently of the settings');
+		await desktop.page.waitForTimeout(100);
+		assert(await desktop.page.evaluate(() => !document.getElementById('newCanvasPresets').classList.contains('has-scroll-fade')),
+			'Preset fade stayed visible at the end of the list');
+		await desktop.page.click('.new-canvas-template-btn');
+		assert(await desktop.page.evaluate(() => document.getElementById('newCanvasSettingsSection').inert
+			&& !document.getElementById('newCanvasTemplateNote').hidden
+			&& document.querySelector('#createCanvasBtn .name').textContent === 'Open Template'
+			&& !document.querySelector('.new-canvas-preset-btn.active')), 'Template selection did not disable settings and change the action');
+		await desktop.page.click('#newCanvasModal [data-preset-id="classic-blingee"]');
+		assert(await desktop.page.evaluate(() => !document.getElementById('newCanvasSettingsSection').inert
+			&& document.getElementById('newCanvasTemplateNote').hidden
+			&& document.querySelector('#createCanvasBtn .name').textContent === 'Create Canvas'), 'Size selection did not restore blank-canvas settings');
 		const landscapePreviewsFit = await desktop.page.evaluate(() => (
 			['landscape-video', 'classic-signature', 'general-landscape'].every((id) => {
 				const button = document.querySelector(`#newCanvasModal [data-preset-id="${id}"]`);
@@ -138,6 +194,43 @@ async function main() {
 				&& canvas.width <= workspace.width && canvas.height <= workspace.height;
 		});
 		assert(await desktop.page.$eval('#workspaceStart', (node) => node.hidden), 'Start surface stayed visible after canvas creation');
+		assert(await desktop.page.evaluate(async () => editor.projectName === 'Star Garden'
+			&& document.getElementById('projectNameInput').value === 'Star Garden'
+			&& (await editor.projectSerializer.serialize()).name === 'Star Garden'), 'New Canvas name did not reach the project and saved metadata');
+		await desktop.page.evaluate(() => editor.modalManager.open('newCanvasModal'));
+		assert(await desktop.page.inputValue('#newCanvasName') === '', 'New canvas kept the previous draft name');
+		await desktop.page.fill('#newCanvasName', 'Cancelled draft');
+		await desktop.page.click('#createCanvasCloseBtn');
+		assert(await desktop.page.evaluate(() => editor.projectName === 'Star Garden'), 'Cancelling changed the current project name');
+		await desktop.page.evaluate(() => editor.modalManager.open('newCanvasModal'));
+		assert(await desktop.page.$eval('[data-recent-group] .action-card-title', node => node.textContent === 'Story / Reel'),
+			'Preset-sized recent did not carry its preset label');
+		await desktop.page.fill('#newCanvasWidth', '88');
+		await desktop.page.fill('#newCanvasHeight', '31');
+		await desktop.page.click('#createCanvasBtn');
+		await desktop.page.waitForSelector('#newCanvasModal.visible', { state: 'hidden' });
+		await desktop.page.evaluate(() => editor.modalManager.open('newCanvasModal'));
+		assert(await desktop.page.$eval('[data-recent-group] .action-card-title', node => node.textContent === 'Custom'),
+			'Custom recent was not the first tile');
+		assert(await desktop.page.evaluate(() => document.getElementById('newCanvasWidth').value === '400'
+			&& document.getElementById('newCanvasHeight').value === '400'), 'Reopening did not reset to default dimensions');
+		await desktop.page.click('[data-recent-group] .new-canvas-preset-btn:first-child');
+		assert(await desktop.page.evaluate(() => document.getElementById('newCanvasWidth').value === '88'
+			&& document.getElementById('newCanvasHeight').value === '31'), 'Custom recent did not restore dimensions');
+		await desktop.page.fill('#newCanvasWidth', '1025');
+		await desktop.page.click('#createCanvasBtn');
+		assert(await desktop.page.evaluate(() => PREFERENCES.get('recentCanvasSizes').length === 2), 'Invalid size polluted recents');
+		await desktop.page.fill('#newCanvasWidth', '88');
+		await desktop.page.dblclick('[data-recent-group] .new-canvas-preset-btn:first-child');
+		await desktop.page.waitForSelector('#newCanvasModal.visible', { state: 'hidden' });
+		assert(await desktop.page.evaluate(() => PREFERENCES.get('recentCanvasSizes').length === 2), 'Repeated creation duplicated recent size');
+		await desktop.page.evaluate(async () => {
+			const before = JSON.stringify(PREFERENCES.get('recentCanvasSizes'));
+			PREFERENCES.resetAll();
+			if (JSON.stringify(PREFERENCES.get('recentCanvasSizes')) !== before) throw new Error('Settings reset cleared recent sizes');
+			await editor.loadBlankImage(576, 1024);
+			if (JSON.stringify(PREFERENCES.get('recentCanvasSizes')) !== before) throw new Error('Internal blank load recorded a recent size');
+		});
 
 		await desktop.page.evaluate(async (pngBase64) => {
 			const bytes = Uint8Array.from(atob(pngBase64), (character) => character.charCodeAt(0));
@@ -168,6 +261,51 @@ async function main() {
 		await desktop.context.close();
 
 		const mobile = await openEditor(browser, { width: 390, height: 844 });
+		await mobile.page.click('#openNewCanvasBtn');
+		await mobile.page.waitForTimeout(250);
+		assert(await mobile.page.evaluate(() => document.activeElement.matches('.modal-title-text')), 'Phone initial focus opened a numeric field');
+		await verifyCanvasFormLayout(mobile.page);
+		assert(await mobile.page.evaluate(() => {
+			const presets = document.getElementById('newCanvasPresets');
+			const settings = document.getElementById('newCanvasSettingsSection');
+			const top = settings.getBoundingClientRect().top;
+			presets.scrollTop = presets.scrollHeight;
+			return presets.scrollTop > 0 && settings.getBoundingClientRect().top === top;
+		}), 'Phone presets moved the fixed settings band');
+		await mobile.page.setViewportSize({ width: 360, height: 640 });
+		await mobile.page.waitForTimeout(100);
+		assert(await mobile.page.evaluate(() => {
+			const pane = document.getElementById('newCanvasPresets');
+			const group = pane.querySelector('.new-canvas-preset-group');
+			const tile = group.querySelector('.blank-image-option');
+			const grid = group.querySelector('.blank-image-grid');
+			return pane.clientHeight >= tile.offsetHeight + parseFloat(getComputedStyle(grid).rowGap)
+				+ group.querySelector('.property-group-label').offsetHeight;
+		}), '360 × 640 phone cannot show a complete preset row above the five-row form');
+		await mobile.page.evaluate(() => { document.getElementById('newCanvasPresets').scrollTop = 0; });
+		await mobile.page.waitForTimeout(100);
+		await verifyCanvasFormLayout(mobile.page);
+		await mobile.page.evaluate(() => { document.getElementById('newCanvasPresets').scrollTop = 0; });
+		fs.mkdirSync('.tmp/new-canvas', { recursive: true });
+		await mobile.page.screenshot({ path: '.tmp/new-canvas/phone-360x640.png' });
+		await mobile.page.evaluate(() => {
+			PREFERENCES.set('recentCanvasSizes', Array.from({ length: CONFIG.canvas.recentSizeCount }, (_, index) => ({ width: 88 + index, height: 31 })));
+			editor.initializeNewCanvasModal();
+		});
+		await mobile.page.waitForTimeout(100);
+		assert(await mobile.page.locator('[data-recent-group] .blank-image-option:visible').count() === 2,
+			'Phone recent sizes wrapped beyond a single row');
+		await mobile.page.setViewportSize({ width: 1200, height: 800 });
+		await mobile.page.waitForTimeout(100);
+		assert(await mobile.page.locator('[data-recent-group] .blank-image-option:visible').count() === 3,
+			'Recent row did not refit when the modal widened');
+		await mobile.page.setViewportSize({ width: 640, height: 360 });
+		assert(await mobile.page.evaluate(() => {
+			const body = document.querySelector('#newCanvasModal .modal-body');
+			return getComputedStyle(body).display === 'block' && body.scrollHeight > body.clientHeight;
+		}), 'Short viewport did not fall back to a scrolling body');
+		await mobile.page.evaluate(() => editor.modalManager.close('newCanvasModal'));
+		await mobile.page.setViewportSize({ width: 390, height: 844 });
 		const mobileStart = await mobile.page.evaluate(() => ({
 			startVisible: !document.getElementById('workspaceStart').hidden,
 			navHidden: getComputedStyle(document.querySelector('.mobile-bottom-nav')).display === 'none',

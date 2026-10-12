@@ -1144,20 +1144,19 @@ const PANEL_SCHEMAS = {
 		form: true,
 		section: { id: 'newCanvasSettingsSection', bare: true },
 		sections: [
-			{ kind: 'section', title: 'Dimensions', sets: [
+			{ kind: 'section', sets: [
 				{ rows: [
+					{ kind: 'field', id: 'newCanvasName', label: 'Name', type: 'text',
+						placeholder: CONFIG.project.name.placeholder, maxlength: CONFIG.project.name.maxLength,
+						attrs: { autocomplete: 'off', spellcheck: 'false' } },
 					{ kind: 'numberPair', label: 'Size', items: [
 						{ id: 'newCanvasWidth', mark: 'W', label: 'Width', min: CONFIG.canvas.limits.minSize, max: CONFIG.canvas.limits.maxWidth, step: 1, inputMode: 'numeric' },
 						{ id: 'newCanvasHeight', mark: 'H', label: 'Height', min: CONFIG.canvas.limits.minSize, max: CONFIG.canvas.limits.maxHeight, step: 1, inputMode: 'numeric' }
 					] },
 					{ kind: 'segmented', id: 'newCanvasOrientation', label: 'Orientation', ariaLabel: 'Canvas orientation', options: [
-						{ id: 'orientationPortrait', icon: 'portrait', label: 'Portrait', showLabel: true, value: 'portrait' },
-						{ id: 'orientationLandscape', icon: 'landscape', label: 'Landscape', showLabel: true, value: 'landscape' }
-					] }
-				] }
-			] },
-			{ kind: 'section', title: 'Background', sets: [
-				{ rows: [
+						{ id: 'orientationPortrait', icon: 'portrait', label: 'Portrait', value: 'portrait' },
+						{ id: 'orientationLandscape', icon: 'landscape', label: 'Landscape', value: 'landscape' }
+					] },
 					{ kind: 'segmented', id: 'newCanvasBackground', label: 'Fill', ariaLabel: 'Canvas background', options: [
 						{ label: 'Color', value: 'color', active: true },
 						{ label: 'Transparent', value: 'transparent' }

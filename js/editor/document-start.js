@@ -113,27 +113,10 @@ setupImageListeners() {
 		CONFIG.canvas.presets.filter((preset) => preset.quickStart).forEach((preset) => {
 			let button = host.querySelector(`[data-preset-id="${preset.id}"]`);
 			if (!button) {
-				button = document.createElement('button');
-				button.type = 'button';
-				button.className = 'action-card is-quiet workspace-start-preset';
-				button.dataset.presetId = preset.id;
-				button.setAttribute('aria-label', `New ${preset.label} canvas, ${preset.width} by ${preset.height} pixels`);
-				const preview = document.createElement('span');
-				preview.className = 'action-card-media workspace-start-preset-preview';
-				const shape = document.createElement('span');
-				shape.className = 'workspace-start-preset-shape';
-				shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
-				preview.appendChild(shape);
-				const label = document.createElement('strong');
-				label.className = 'action-card-title';
-				label.textContent = preset.label;
-				const dimensions = document.createElement('span');
-				dimensions.className = 'action-card-detail';
-				dimensions.textContent = `${preset.width} × ${preset.height} px`;
-				button.append(preview, label, dimensions);
+				button = buildCanvasSizeCard(preset, { quickStart: true });
 				host.insertBefore(button, morePresets);
 			}
-			button.addEventListener('click', () => this.loadBlankImage(preset.width, preset.height));
+			button.addEventListener('click', () => this.createBlankCanvas(preset.width, preset.height));
 		});
 	},
 
@@ -172,66 +155,19 @@ setupImageListeners() {
 		if (!host || host.dataset.rendered === 'true') return;
 		host.dataset.rendered = 'true';
 		host.replaceChildren();
-		// Each group is a label over its tiles.
-		const addGroup = (label, grid) => {
-			const group = panelDiv('new-canvas-preset-group');
-			const heading = panelDiv('property-group-label');
-			heading.textContent = label;
-			group.append(heading, grid);
-			host.appendChild(group);
-			return group;
-		};
-		// Display order. Templates load asynchronously and always come last.
-		const groups = [
-			{ id: 'classic', label: 'Web Classics' },
-			{ id: 'general', label: 'General' },
-			{ id: 'social', label: 'Social Media' }
-		];
-		groups.forEach((group) => {
+		CONFIG.canvas.presetGroups.forEach((group) => {
 			const presets = CONFIG.canvas.presets.filter((preset) => preset.group === group.id);
 			if (!presets.length) return;
 			const grid = document.createElement('div');
 			grid.className = 'blank-image-grid';
-			presets.forEach((preset) => {
-				const button = document.createElement('button');
-				button.type = 'button';
-				button.className = 'action-card blank-image-option new-canvas-preset-btn';
-				button.dataset.presetId = preset.id;
-				button.dataset.width = preset.width;
-				button.dataset.height = preset.height;
-				button.setAttribute('aria-label', `${preset.label}, ${preset.width} by ${preset.height} pixels`);
-				const previewWrapper = document.createElement('span');
-				previewWrapper.className = 'action-card-media blank-preview-wrapper';
-				const preview = document.createElement('span');
-				preview.className = 'blank-preview';
-				preview.style.aspectRatio = `${preset.width} / ${preset.height}`;
-				preview.classList.toggle('wide', preset.width > preset.height);
-				previewWrapper.appendChild(preview);
-				const label = document.createElement('strong');
-				label.className = 'action-card-title';
-				label.textContent = preset.label;
-				const dimensions = document.createElement('span');
-				dimensions.className = 'action-card-detail';
-				dimensions.textContent = `${preset.width} × ${preset.height}`;
-				const detail = document.createElement('span');
-				detail.className = 'action-card-detail blank-detail';
-				detail.textContent = preset.detail;
-				button.append(previewWrapper, label, dimensions, detail);
-				grid.appendChild(button);
-			});
-			addGroup(group.label, grid);
+			presets.forEach((preset) => grid.appendChild(buildCanvasSizeCard(preset)));
+			host.appendChild(buildCanvasPresetGroup(group.label, grid));
 		});
 		TemplateLibrary.list('project').then((templates) => {
 			if (!templates.length || host.querySelector('[data-template-group]')) return;
 			const grid = document.createElement('div');
 			grid.className = 'blank-image-grid';
 			templates.forEach((template) => {
-				const button = document.createElement('button');
-				button.type = 'button';
-				button.className = 'action-card blank-image-option new-canvas-template-btn';
-				button.dataset.templateId = template.id;
-				button.setAttribute('aria-pressed', 'false');
-				button.setAttribute('aria-label', `${template.label} template`);
 				const previewWrapper = document.createElement('span');
 				previewWrapper.className = 'action-card-media blank-preview-wrapper template-preview-wrapper';
 				const preview = document.createElement('span');
@@ -239,21 +175,21 @@ setupImageListeners() {
 				preview.style.aspectRatio = template.aspectRatio || '1 / 1';
 				preview.style.background = template.preview || 'var(--color-bg-primary)';
 				previewWrapper.appendChild(preview);
-				const label = document.createElement('strong');
-				label.className = 'action-card-title';
-				label.textContent = template.label;
-				const detail = document.createElement('span');
-				detail.className = 'action-card-detail blank-detail';
-				detail.textContent = template.description;
-				button.append(previewWrapper, label, detail);
+				const button = buildActionCard({
+					className: 'blank-image-option new-canvas-template-btn',
+					dataset: { templateId: template.id }, pressed: false,
+					ariaLabel: `${template.label} template`, media: previewWrapper,
+					title: template.label, details: [{ text: template.description, className: 'blank-detail' }]
+				});
 				grid.appendChild(button);
 			});
-			addGroup('Templates', grid).dataset.templateGroup = '';
+			const group = buildCanvasPresetGroup('Templates', grid);
+			group.dataset.templateGroup = '';
+			host.appendChild(group);
 		}).catch((error) => console.warn('Templates unavailable:', error));
 	},
 
-	// Color / Transparent is one segment; the color row shows only for Color,
-	// the same contract as the canvas extension fill.
+	// The inactive color keeps its row so the phone's settings band cannot resize.
 	setNewCanvasBackground(value) {
 		document.querySelectorAll('#newCanvasBackground .segmented-option').forEach((option) => {
 			const active = option.dataset.value === value;
@@ -261,108 +197,101 @@ setupImageListeners() {
 			option.setAttribute('aria-pressed', String(active));
 		});
 		const colorRow = document.getElementById('canvasColorRow');
-		if (colorRow) colorRow.hidden = value !== 'color';
+		if (colorRow) {
+			const unavailable = value !== 'color';
+			colorRow.classList.toggle('is-unavailable', unavailable);
+			colorRow.querySelectorAll('input, button').forEach(control => { control.disabled = unavailable; });
+		}
+	},
+
+	async createBlankCanvas(width, height, color = CONFIG.canvas.defaults.blankDocument.color) {
+		await this.loadBlankImage(width, height, color);
+		PREFERENCES.set('recentCanvasSizes', pushRecent(PREFERENCES.get('recentCanvasSizes'),
+			{ width, height }, CONFIG.canvas.recentSizeCount, (a, b) => a.width === b.width && a.height === b.height));
+	},
+
+	renderRecentCanvasSizes() {
+		const host = document.getElementById('newCanvasPresets');
+		host.querySelector('[data-recent-group]')?.remove();
+		const sizes = PREFERENCES.get('recentCanvasSizes').filter(size => validateCanvasSize(size.width, size.height).ok);
+		if (!sizes.length) return;
+		const grid = panelDiv('blank-image-grid');
+		sizes.forEach(size => {
+			const preset = CONFIG.canvas.presets.find(preset => preset.width === size.width && preset.height === size.height);
+			grid.appendChild(buildCanvasSizeCard({ ...size, label: preset?.label || 'Custom' }, { recent: true }));
+		});
+		const group = buildCanvasPresetGroup('Recent', grid);
+		group.dataset.recentGroup = '';
+		host.prepend(group);
+		fitGridRow(grid);
+	},
+
+	syncNewCanvasSelection() {
+		const host = document.getElementById('newCanvasPresets');
+		const templateId = host.dataset.selectedTemplateId;
+		const width = Number(document.getElementById('newCanvasWidth').value);
+		const height = Number(document.getElementById('newCanvasHeight').value);
+		host.querySelectorAll('.blank-image-option').forEach(button => {
+			const active = templateId ? button.dataset.templateId === templateId
+				: Number(button.dataset.width) === width && Number(button.dataset.height) === height;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+		const settings = document.getElementById('newCanvasSettingsSection');
+		settings.inert = Boolean(templateId);
+		settings.classList.toggle('is-unavailable', Boolean(templateId));
+		document.getElementById('newCanvasTemplateNote').hidden = !templateId;
+		document.querySelector('#createCanvasBtn .name').textContent = templateId ? 'Open Template' : 'Create Canvas';
+		this.updateOrientationButtons(width, height);
 	},
 
 	initializeNewCanvasModal() {
 		this.renderNewCanvasPresets();
-		const widthInput = document.getElementById('newCanvasWidth');
-		const heightInput = document.getElementById('newCanvasHeight');
-		const colorInput = document.getElementById('newCanvasColor');
-		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
-		const host = document.getElementById('newCanvasPresets');
-		delete host?.dataset.selectedTemplateId;
-		host?.querySelectorAll('.new-canvas-template-btn').forEach((button) => {
-			button.classList.remove('active');
-			button.setAttribute('aria-pressed', 'false');
-		});
-
-		// Reset to defaults
-		if (widthInput) widthInput.value = CONFIG.canvas.defaults.blankDocument.width;
-		if (heightInput) heightInput.value = CONFIG.canvas.defaults.blankDocument.height;
-		if (colorInput) colorInput.value = CONFIG.canvas.defaults.blankDocument.color;
-
+		this.renderRecentCanvasSizes();
+		delete document.getElementById('newCanvasPresets').dataset.selectedTemplateId;
+		const defaults = CONFIG.canvas.defaults.blankDocument;
+		document.getElementById('newCanvasWidth').value = defaults.width;
+		document.getElementById('newCanvasHeight').value = defaults.height;
+		document.getElementById('newCanvasColor').value = defaults.color;
+		document.getElementById('newCanvasName').value = '';
 		this.setNewCanvasBackground('color');
-
-		// Find and activate matching preset
-		let matchingPreset = null;
-		presetButtons.forEach(btn => {
-			btn.classList.remove('active');
-			btn.setAttribute('aria-pressed', 'false');
-			const width = parseInt(btn.dataset.width);
-			const height = parseInt(btn.dataset.height);
-			if (width === CONFIG.canvas.defaults.blankDocument.width && height === CONFIG.canvas.defaults.blankDocument.height) {
-				matchingPreset = btn;
-			}
-		});
-
-		if (matchingPreset) {
-			matchingPreset.classList.add('active');
-			matchingPreset.setAttribute('aria-pressed', 'true');
-		}
-
-		// Update orientation buttons based on default dimensions
-		this.updateOrientationButtons(CONFIG.canvas.defaults.blankDocument.width, CONFIG.canvas.defaults.blankDocument.height);
+		this.syncNewCanvasSelection();
 	},
 
 	setupNewCanvasModalListeners() {
 		this.renderNewCanvasPresets();
 		const createBtn = document.getElementById('createCanvasBtn');
 
-
 		const widthInput = document.getElementById('newCanvasWidth');
 		const heightInput = document.getElementById('newCanvasHeight');
 		const colorInput = document.getElementById('newCanvasColor');
-		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
+		const nameInput = document.getElementById('newCanvasName');
+		const projectNameInput = document.getElementById('projectNameInput');
+		projectNameInput.maxLength = CONFIG.project.name.maxLength;
+		projectNameInput.placeholder = CONFIG.project.name.placeholder;
 		const presetsHost = document.getElementById('newCanvasPresets');
 		if (widthInput) widthInput.max = CONFIG.canvas.limits.maxWidth;
 		if (heightInput) heightInput.max = CONFIG.canvas.limits.maxHeight;
 
-		// Presets are a shortcut, not a mode: highlight tracks whether the current
-		// dimensions exactly match a preset, so editing width/height/orientation
-		// deselects and swapping back re-selects.
-		const syncPresetHighlight = () => {
-			const width = parseInt(widthInput?.value);
-			const height = parseInt(heightInput?.value);
-			presetButtons.forEach(btn => {
-				const active = parseInt(btn.dataset.width) === width && parseInt(btn.dataset.height) === height;
-				btn.classList.toggle('active', active);
-				btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-			});
-		};
-
-		// Preset buttons
-		presetButtons.forEach(btn => {
-			btn.addEventListener('click', () => {
-				delete presetsHost?.dataset.selectedTemplateId;
-				presetsHost?.querySelectorAll('.new-canvas-template-btn').forEach((button) => {
-					button.classList.remove('active');
-					button.setAttribute('aria-pressed', 'false');
-				});
-				const width = parseInt(btn.dataset.width);
-				const height = parseInt(btn.dataset.height);
-
-				if (widthInput) widthInput.value = width;
-				if (heightInput) heightInput.value = height;
-
-				syncPresetHighlight();
-				this.updateOrientationButtons(width, height);
-			});
-		});
 		presetsHost?.addEventListener('click', (event) => {
-			const button = event.target.closest('.new-canvas-template-btn');
-			if (!button) return;
-			presetsHost.dataset.selectedTemplateId = button.dataset.templateId;
-			presetsHost.querySelectorAll('.new-canvas-template-btn').forEach((candidate) => {
-				const active = candidate === button;
-				candidate.classList.toggle('active', active);
-				candidate.setAttribute('aria-pressed', active ? 'true' : 'false');
-			});
-			presetButtons.forEach((candidate) => {
-				candidate.classList.remove('active');
-				candidate.setAttribute('aria-pressed', 'false');
-			});
+			const button = event.target.closest('.blank-image-option');
+			if (!button || !presetsHost.contains(button)) return;
+			if (button.dataset.templateId) {
+				presetsHost.dataset.selectedTemplateId = button.dataset.templateId;
+			} else {
+				delete presetsHost.dataset.selectedTemplateId;
+				widthInput.value = button.dataset.width;
+				heightInput.value = button.dataset.height;
+			}
+			this.syncNewCanvasSelection();
 		});
+		presetsHost?.addEventListener('dblclick', (event) => {
+			if (event.target.closest('.blank-image-option')) createBtn.click();
+		});
+		const recentGridObserver = new ResizeObserver(() => {
+			fitGridRow(presetsHost.querySelector('[data-recent-group] .blank-image-grid'));
+		});
+		recentGridObserver.observe(presetsHost);
 
 		// Orientation swaps the two dimensions; picking the current one does nothing.
 		document.getElementById('newCanvasOrientation')?.addEventListener('click', (event) => {
@@ -373,15 +302,13 @@ setupImageListeners() {
 			if (width === height || (option.dataset.value === 'portrait') === (height > width)) return;
 			widthInput.value = height;
 			heightInput.value = width;
-			syncPresetHighlight();
-			this.updateOrientationButtons(height, width);
+			this.syncNewCanvasSelection();
 		});
 
 		// Dimension inputs
 		if (widthInput && heightInput) {
 			const updateOrientation = () => {
-				syncPresetHighlight();
-				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
+				this.syncNewCanvasSelection();
 			};
 
 			widthInput.addEventListener('input', updateOrientation);
@@ -408,8 +335,10 @@ setupImageListeners() {
 				if (!validation.ok) { this.showError(validation.message); return; }
 				const backgroundType = document.querySelector('#newCanvasBackground .segmented-option.active')?.dataset.value;
 				const color = backgroundType === 'transparent' ? 'transparent' : colorInput.value;
+				const name = nameInput.value.trim();
 
-				await this.loadBlankImage(width, height, color);
+				await this.createBlankCanvas(width, height, color);
+				this.setProjectName(name, { markDirty: false });
 				this.modalManager.close('newCanvasModal');
 			});
 		}

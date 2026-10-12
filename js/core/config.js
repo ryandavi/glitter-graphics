@@ -18,7 +18,8 @@ const EXPORT_FIDELITY_STOPS = [
 const CONFIG = deepFreeze({
 	project: {
 		extension: 'glitter.json',
-		fileNameSuffix: '_ryandavi-com'
+		fileNameSuffix: '_ryandavi-com',
+		name: { maxLength: 60, placeholder: 'Untitled project' }
 	},
 	app: {
 		boot: {
@@ -121,6 +122,12 @@ const CONFIG = deepFreeze({
 		},
 		// `quickStart` presets also appear on the start card, where one click
 		// creates a blank canvas at that size.
+		recentSizeCount: 6,
+		presetGroups: [
+			{ id: 'classic', label: 'Web Classics' },
+			{ id: 'general', label: 'General' },
+			{ id: 'social', label: 'Social Media' }
+		],
 		presets: [
 			{ id: 'instagram-square', group: 'social', label: 'Instagram Square', detail: '1:1', width: 1024, height: 1024, quickStart: true },
 			{ id: 'instagram-portrait', group: 'social', label: 'Instagram Portrait', detail: '4:5', width: 800, height: 1000 },

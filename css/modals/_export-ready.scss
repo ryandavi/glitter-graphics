@@ -10,7 +10,6 @@
 // `.btn-flat` and sizes `.badge`s; only the regions, the facts, the limit
 // rows, the save steps and the detail table are styled here.
 #exportPreviewModal {
-	--export-side-width: 340px;
 	--export-pad: var(--spacing-lg);
 
 	.modal-body {
@@ -22,7 +21,7 @@
 
 	.export-result {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) var(--export-side-width);
+		grid-template-columns: minmax(0, 1fr) var(--modal-side-width);
 		grid-template-rows: auto auto minmax(0, 1fr);
 		grid-template-areas:
 			'stage facts'

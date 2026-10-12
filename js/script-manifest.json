@@ -14,6 +14,7 @@
 		"js/core/fields.js",
 		"js/core/color.js",
 		"js/core/math.js",
+		"js/core/recents.js",
 		"js/core/area.js",
 		"js/core/config.js",
 		"js/core/boot.js",

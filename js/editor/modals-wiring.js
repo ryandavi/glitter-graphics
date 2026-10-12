@@ -138,7 +138,7 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('newCanvasModal', {
 			closeBtnId: ['closeNewCanvasModal', 'createCanvasCloseBtn'],
 			resetScrollOnOpen: true,
-			initialFocusSelector: '#newCanvasWidth',
+			initialFocusSelector: window.matchMedia('(pointer: coarse)').matches ? '.modal-title-text' : '#newCanvasWidth',
 			confirmOnEnter: true,
 			enterActionSelector: '#createCanvasBtn',
 			onOpen: () => this.initializeNewCanvasModal()

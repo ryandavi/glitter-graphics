@@ -1044,6 +1044,7 @@
   --modal-width-form: 720px;
   --modal-width-reading: 880px;
   --modal-form-height: 720px;
+  --modal-side-width: 340px;
   /* ===== FORM MODALS ===== */
   /* The longest line of helper text under a row in a form modal. */
   --settings-desc-measure: 64ch;
@@ -9562,6 +9563,47 @@ body.modal-open {
   max-height: 88dvh;
 }
 
+.modal-overlay > .modal-content > .modal-body.modal-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--modal-side-width);
+  padding: 0;
+  overflow: hidden;
+}
+.modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-main,
+.modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-side {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-side {
+  border-left: 1px solid var(--color-border);
+}
+@media (max-width: 600px) {
+  .modal-overlay > .modal-content > .modal-body.modal-split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-side {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+}
+@media (max-height: 480px) {
+  .modal-overlay > .modal-content > .modal-body.modal-split {
+    display: block;
+    overflow-y: auto;
+  }
+  .modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-main,
+  .modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-side {
+    overflow-y: visible;
+  }
+  .modal-overlay > .modal-content > .modal-body.modal-split > .modal-split-side {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
 .modal-nav {
   position: relative;
   z-index: 3;
@@ -9830,11 +9872,12 @@ body.modal-open {
 }
 /* ===== NEW CANVAS MODAL ===== */
 #newCanvasModal .new-canvas-preset-groups {
+  --scroll-fade-paint: linear-gradient(to top, var(--color-bg-tertiary), transparent);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
   padding: var(--spacing-lg) 0;
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
 }
 #newCanvasModal .new-canvas-preset-group {
   display: flex;
@@ -9843,6 +9886,16 @@ body.modal-open {
 }
 #newCanvasModal .new-canvas-preset-group > .property-group-label {
   padding: 0 var(--property-gutter);
+}
+#newCanvasModal #newCanvasSettingsSection {
+  padding-block: var(--spacing-md);
+}
+#newCanvasModal #newCanvasSettingsSection.is-unavailable,
+#newCanvasModal #canvasColorRow.is-unavailable {
+  opacity: var(--opacity-disabled);
+}
+#newCanvasModal #newCanvasBackground > .segmented-option {
+  flex-basis: auto;
 }
 #newCanvasModal .template-preview-wrapper {
   background: var(--color-bg-primary);
@@ -9883,7 +9936,6 @@ body.modal-open {
 }
 
 #exportPreviewModal {
-  --export-side-width: 340px;
   --export-pad: var(--spacing-lg);
 }
 #exportPreviewModal .modal-body {
@@ -9894,7 +9946,7 @@ body.modal-open {
 }
 #exportPreviewModal .export-result {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--export-side-width);
+  grid-template-columns: minmax(0, 1fr) var(--modal-side-width);
   grid-template-rows: auto auto minmax(0, 1fr);
   grid-template-areas: "stage facts" "stage controls" "stage side";
   flex: 1 1 auto;
@@ -10130,11 +10182,8 @@ body.modal-open {
 #glitterRecolorModal .modal-content {
   --modal-width: var(--modal-width-reading);
 }
-#glitterRecolorModal .modal-body.recolor-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  padding: 0;
-  overflow: hidden;
+#glitterRecolorModal .modal-split > .modal-split-side {
+  border: 0;
 }
 #glitterRecolorModal .recolor-stage {
   display: flex;
@@ -10142,6 +10191,8 @@ body.modal-open {
   min-height: 0;
   padding: var(--spacing-lg);
   background: var(--color-bg-tertiary);
+  overflow-y: visible;
+  overscroll-behavior: auto;
   position: relative;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -10203,11 +10254,7 @@ body.modal-open {
   gap: var(--spacing-sm);
 }
 #glitterRecolorModal .recolor-side {
-  min-width: 0;
-  min-height: 0;
   padding: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 #glitterRecolorModal .recolor-palette-row {
   --property-label-col: 6em;
@@ -10246,8 +10293,7 @@ body.modal-open {
   margin-right: auto;
 }
 @media (max-width: 600px) {
-  #glitterRecolorModal .modal-body.recolor-layout {
-    grid-template-columns: minmax(0, 1fr);
+  #glitterRecolorModal .modal-body.modal-split {
     grid-template-rows: minmax(180px, 50%) minmax(0, 1fr);
   }
   #glitterRecolorModal .recolor-stage {

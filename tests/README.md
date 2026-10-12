@@ -31,6 +31,7 @@ Paths below are relative to `tests/`. Related pure-logic contracts live in `unit
 
 | Suite | Covers | Run after changing |
 |---|---|---|
+| `ui/document-start-verify.js`, `unit/recents-unit.js` | Start card, New Canvas split scrolling, template mode, recents, coarse-pointer focus and short viewport fallback | Document-start UI, blank creation or recency helpers |
 | `ui/history-contract-verify.js` | Action step counts, canonical undo/redo, native typing, pending commits, sessions, document replacement, failed decoding, queued restore and animated exports | History, selection, tools, sessions or document loading |
 | `ui/touch-smoke.js`, `ui/touch-handle-verify.js` | Pointer routing, pan/pinch/twist, selection, drawer detents, numeric scrubbing and individual/group handles | Touch, viewport, selection, mobile or transform interaction |
 | `ui/panel-resize-verify.js`, `ui/inspector-library-verify.js` | Responsive panel hosts, drawer handoff, fit and retained pan/zoom | Panel resizing, breakpoint or inspector ownership |

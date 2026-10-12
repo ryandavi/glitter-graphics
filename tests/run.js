@@ -7,6 +7,7 @@ const SUITES = [
 	{ file: 'unit/cross-language-contract-unit.js', tags: ['unit'] },
 	{ file: 'unit/suite-registry-unit.js', tags: ['unit'] },
 	{ file: 'unit/config-usage-unit.js', tags: ['unit'] },
+	{ file: 'unit/recents-unit.js', tags: ['unit', 'document', 'assets'] },
 	{ file: 'unit/doc-paths-unit.js', tags: ['unit'] },
 	{ file: 'ui/background-removal-browser.js', tags: ['assets', 'document'] },
 	{ file: 'ui/upload-delete-browser.js', tags: ['assets'] },

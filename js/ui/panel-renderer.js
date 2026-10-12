@@ -9,6 +9,52 @@
 // carry data-role/data-slot/data-mode so shared code can resolve meaning
 // without sniffing id suffixes.
 
+function buildActionCard({ className, dataset, ariaLabel, pressed, media, title, details = [] }) {
+	const button = document.createElement('button');
+	button.type = 'button';
+	button.className = `action-card ${className}`;
+	Object.assign(button.dataset, dataset);
+	button.setAttribute('aria-label', ariaLabel);
+	if (pressed !== undefined) button.setAttribute('aria-pressed', String(pressed));
+	const label = document.createElement('strong');
+	label.className = 'action-card-title';
+	label.textContent = title;
+	button.append(media, label);
+	details.forEach(({ text, className = '' }) => {
+		const detail = document.createElement('span');
+		detail.className = `action-card-detail ${className}`.trim();
+		detail.textContent = text;
+		button.appendChild(detail);
+	});
+	return button;
+}
+
+function buildCanvasPresetGroup(label, grid) {
+	const group = panelDiv('new-canvas-preset-group');
+	const heading = panelDiv('property-group-label');
+	heading.textContent = label;
+	group.append(heading, grid);
+	return group;
+}
+
+function buildCanvasSizeCard(preset, { quickStart = false, recent = false } = {}) {
+	const media = document.createElement('span');
+	media.className = `action-card-media ${quickStart ? 'workspace-start-preset-preview' : 'blank-preview-wrapper'}`;
+	const shape = document.createElement('span');
+	shape.className = quickStart ? 'workspace-start-preset-shape' : 'blank-preview';
+	shape.style.aspectRatio = `${preset.width} / ${preset.height}`;
+	if (!quickStart) shape.classList.toggle('wide', preset.width > preset.height);
+	media.appendChild(shape);
+	const details = [{ text: `${preset.width} × ${preset.height}${quickStart ? ' px' : ''}` }];
+	if (!quickStart && preset.detail) details.push({ text: preset.detail, className: 'blank-detail' });
+	return buildActionCard({
+		className: quickStart ? 'is-quiet workspace-start-preset' : 'blank-image-option new-canvas-preset-btn',
+		dataset: { ...(preset.id && !recent ? { presetId: preset.id } : {}), width: preset.width, height: preset.height },
+		ariaLabel: `${quickStart ? 'New ' : ''}${preset.label}${quickStart ? ' canvas' : ''}, ${preset.width} by ${preset.height} pixels`,
+		pressed: quickStart ? undefined : false, media, title: preset.label, details
+	});
+}
+
 function panelDiv(className) {
 	const node = document.createElement('div');
 	node.className = className;

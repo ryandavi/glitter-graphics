@@ -14,6 +14,15 @@ function els(ids, options = {}) {
 	);
 }
 
+// Resolved grid tracks define the one row that fits; later tiles stay hidden.
+function fitGridRow(grid) {
+	if (!grid?.clientWidth) return;
+	const fits = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length;
+	Array.from(grid.children).forEach((tile, index) => {
+		tile.style.display = index < fits ? '' : 'none';
+	});
+}
+
 // Markup lives in the index.html `tpl-*` <template>s; builders clone instead of
 // writing HTML strings so asset-derived text only ever lands in textContent.
 function tplClone(templateId) {

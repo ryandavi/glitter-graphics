@@ -656,12 +656,7 @@ class AssetBrowser {
 	// The grid's resolved auto-fill tracks are the count that fits one row;
 	// later items hide rather than wrap or scroll.
 	_fitShortcutRow() {
-		const grid = this.shortcutGrid;
-		if (!grid.clientWidth) return;
-		const fits = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length;
-		Array.from(grid.children).forEach((item, index) => {
-			item.style.display = index < fits ? '' : 'none';
-		});
+		fitGridRow(this.shortcutGrid);
 	}
 
 	_renderIndexLead() {

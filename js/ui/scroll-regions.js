@@ -6,7 +6,7 @@ function initializeScrollRegions() {
 	const hosts = [
 		'.section-content', '.panel-scroll-region', '.layers-list',
 		'.asset-options', '.asset-browser-content', '.filters-container-inner',
-		'.property-scrollbox',
+		'.property-scrollbox', '.modal-split-main', '.modal-split-side',
 		'.welcome-section', '.no-layer-settings-section', '.base-layer-settings-section',
 		'.modal-body', '.confirmation-message', '.timeline-list',
 		'.document-toc-panel', '.document-search-results', '.app-menu-panel', '.export-side'
@@ -14,7 +14,7 @@ function initializeScrollRegions() {
 	// Every edge host gets `has-overflow-*` classes for the edges that hide
 	// content. Fade hosts draw a bottom strip from them; the bar-less rails
 	// (tool rail, context bars, the phone's chip bar) mask their own edges instead.
-	const fadeHosts = '.section-content, .panel-scroll-region, .asset-options, .asset-browser-content, .property-scrollbox';
+	const fadeHosts = '.section-content, .panel-scroll-region, .asset-options, .asset-browser-content, .property-scrollbox, .new-canvas-preset-groups';
 	const edgeHosts = `${fadeHosts}, .toolbar, [data-context-toolbar], .phone-chip-bar`;
 	const scrollable = (overflow) => /^(auto|scroll)$/.test(overflow);
 	const pendingEdges = new Set();

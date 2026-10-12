@@ -2,14 +2,11 @@
 
 #glitterRecolorModal {
 	.modal-content { --modal-width: var(--modal-width-reading); }
-	.modal-body.recolor-layout {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 340px;
-		padding: 0;
-		overflow: hidden;
-	}
+	.modal-split > .modal-split-side { border: 0; }
 	.recolor-stage {
 		@include modal-preview-stage;
+		overflow-y: visible;
+		overscroll-behavior: auto;
 		position: relative;
 		flex-direction: column;
 		gap: var(--spacing-md);
@@ -52,13 +49,7 @@
 	&[data-backdrop='light'] canvas { background: #fff; }
 	&[data-backdrop='dark'] canvas { background: #222; }
 	.recolor-transport { display: flex; gap: var(--spacing-sm); }
-	.recolor-side {
-		min-width: 0;
-		min-height: 0;
-		padding: 0;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-	}
+	.recolor-side { padding: 0; }
 	.recolor-palette-row { --property-label-col: 6em; }
 	#recolorSwatches {
 		display: flex;
@@ -70,7 +61,7 @@
 	}
 	.modal-footer > .btn-text { margin-right: auto; }
 	@include modal-compact {
-		.modal-body.recolor-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(180px, 50%) minmax(0, 1fr); }
+		.modal-body.modal-split { grid-template-rows: minmax(180px, 50%) minmax(0, 1fr); }
 		.recolor-stage { gap: var(--spacing-xs); padding: var(--spacing-md); }
 		.recolor-hint { display: none; }
 	}

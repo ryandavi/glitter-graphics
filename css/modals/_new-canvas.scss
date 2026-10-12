@@ -5,11 +5,12 @@
 	// A group of presets is a label over its tiles, as in the Add menu: the
 	// tiles are the boxes, so the group draws none.
 	.new-canvas-preset-groups {
+		--scroll-fade-paint: linear-gradient(to top, var(--color-bg-tertiary), transparent);
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-lg);
 		padding: var(--spacing-lg) 0;
-		border-bottom: 1px solid var(--color-border);
+		background: var(--color-bg-tertiary);
 	}
 
 	.new-canvas-preset-group {
@@ -19,6 +20,11 @@
 
 		> .property-group-label { padding: 0 var(--property-gutter); }
 	}
+
+	#newCanvasSettingsSection { padding-block: var(--spacing-md); }
+	#newCanvasSettingsSection.is-unavailable,
+	#canvasColorRow.is-unavailable { opacity: var(--opacity-disabled); }
+	#newCanvasBackground > .segmented-option { flex-basis: auto; }
 
 	.template-preview-wrapper {
 		background: var(--color-bg-primary);

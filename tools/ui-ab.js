@@ -13,7 +13,7 @@
 // label, the property and "old -> new". Exit code 1 when anything differs.
 
 const fs = require('fs');
-const { chromium, VIEWPORTS, boot, desktopStates, phoneStates } = require('./ui-states');
+const { chromium, VIEWPORTS, boot, wait, desktopStates, phoneStates, recolorStates } = require('./ui-states');
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -153,7 +153,13 @@ const comparer = (page) => async (name) => {
 		const errors = [];
 		page.on('pageerror', (e) => errors.push(e.message));
 		await boot(page, css);
-		await (phone ? phoneStates : desktopStates)(page, comparer(page));
+		if (only === 'recolor') await recolorStates(page, comparer(page), phone ? 'phone' : 'desk');
+		else if (only === 'exportPreviewModal') {
+			await page.evaluate(() => editor.modalManager.open('exportPreviewModal'));
+			await wait(page, 350);
+			await comparer(page)(`${phone ? 'phone' : 'desk'} modal exportPreviewModal`);
+		}
+		else await (phone ? phoneStates : desktopStates)(page, comparer(page));
 		if (errors.length) console.log(`PAGE ERRORS (${phone ? 'phone' : 'desk'}):`, [...new Set(errors)].slice(0, 5));
 		await ctx.close();
 	}

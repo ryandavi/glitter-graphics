@@ -1,6 +1,7 @@
 'use strict';
 
 const PREFERENCE_SCHEMA = Object.freeze({
+	recentCanvasSizes: { default: () => [], keepOnReset: true },
 	customGlitter: { default: () => [], keepOnReset: true },
 	showHints: { default: () => CONFIG.ui.hints.enabledByDefault },
 	backgroundRemovalHintSeen: { default: () => false, keepOnReset: true },

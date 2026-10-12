@@ -565,10 +565,10 @@ class ContentManager {
 	recordSearch(query = this.ui.searchInput?.value) {
 		const text = String(query || '').trim();
 		if (!this.libraryKind || text.length < 2) return;
-		const list = this.getRecentSearches().filter((entry) => entry.toLowerCase() !== text.toLowerCase());
+		const list = this.getRecentSearches();
 		PREFERENCES.set('librarySearches', {
 			...PREFERENCES.get('librarySearches'),
-			[this.libraryKind]: [text, ...list].slice(0, CONFIG.ui.library.recentSearchCount)
+			[this.libraryKind]: pushRecent(list, text, CONFIG.ui.library.recentSearchCount, (a, b) => a.toLowerCase() === b.toLowerCase())
 		});
 		this.renderRecentSearches();
 	}
@@ -875,8 +875,8 @@ class ContentManager {
 
 	recordRecent(id) {
 		if (!this.libraryKind || !this.getItemById(id)) return;
-		const ids = this.getLibraryIds('libraryRecents').filter((entry) => String(entry) !== String(id));
-		this.setLibraryIds('libraryRecents', [id, ...ids].slice(0, CONFIG.ui.library.recentCount));
+		const ids = this.getLibraryIds('libraryRecents');
+		this.setLibraryIds('libraryRecents', pushRecent(ids, id, CONFIG.ui.library.recentCount, (a, b) => String(a) === String(b)));
 		this.browser?.updateShortcuts();
 	}
 
