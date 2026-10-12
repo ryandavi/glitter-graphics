@@ -231,10 +231,15 @@ TextLayout.layout = function(ctx, text, data, options) {
 	const visibleLines = stacked ? fittingLines : lines.slice(0, fittingLines.length);
 	const visible = visibleLines.length;
 	let offsetY = 0;
-	if (boxed && visible) {
+	if (data.boxMode === 'fixed' && visible) {
 		const top = Math.min(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx - line.ascent));
 		const bottom = Math.max(...visibleLines.map((line, index) => ascent + (stacked ? line.row : index) * lineHeightPx + line.descent));
-		offsetY = this.getVerticalAlignOffset(data.boxMode === 'autoHeight' ? 'middle' : data.verticalAlign, height, bottom - top) - top;
+		const rows = stacked ? Math.max(...visibleLines.map(line => line.row)) : visible - 1;
+		const lineBlockHeight = ascent + descent + rows * lineHeightPx;
+		// Font metrics hold the baseline still as ascenders and descenders change.
+		// Only a box smaller than that line block needs an ink-based fit correction.
+		offsetY = this.getVerticalAlignOffset(data.verticalAlign, height, lineBlockHeight);
+		offsetY = Math.max(-top, Math.min(offsetY, height - bottom));
 	}
 	const glyphs = [];
 	const runs = [];

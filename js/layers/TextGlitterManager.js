@@ -238,8 +238,14 @@ class TextGlitterManager {
 		});
 	}
 
-	getPointAnchorSnapshot(layer) {
+	getPointAnchorSnapshot(layer, { layoutBox = false } = {}) {
 		if (!layer?.textData) return null;
+		if (layoutBox && layer.textData.boxMode !== 'point') {
+			return {
+				world: this.getWorldPointFromLocal(getLayerTransform(layer), this.getBoxAnchorLocalPoint(layer)),
+				boxAnchor: true
+			};
+		}
 
 		return {
 			world: layer.textData.boxMode === 'autoHeight' ? getLayerAnchorPoint(this.editor, layer) : this.getTextOriginWorldPosition(layer),
@@ -248,9 +254,10 @@ class TextGlitterManager {
 	}
 
 	preparePendingAnchorPreservation(layer) {
-		if (!layer || layer._pendingPointAnchorSnapshot
-			|| !['point', 'autoHeight'].includes(layer.textData?.boxMode)) return;
-		layer._pendingPointAnchorSnapshot = this.getPointAnchorSnapshot(layer);
+		if (!layer || layer._pendingPointAnchorSnapshot) return;
+		// Typing follows the layout box; outlines and padded backgrounds can grow
+		// with a descender without recentering the letters.
+		layer._pendingPointAnchorSnapshot = this.getPointAnchorSnapshot(layer, { layoutBox: true });
 	}
 
 	async runLayoutRefreshWithAnchor(layer, mutateFn, options = {}) {
@@ -336,9 +343,20 @@ class TextGlitterManager {
 		}, worldPoint);
 	}
 
+	getBoxAnchorLocalPoint(layer, measurement = null) {
+		const frame = this.getFixedBoxFrame(layer, measurement);
+		const transform = getLayerTransform(layer);
+		return {
+			x: frame.offsetX + (transform.anchor.x - 0.5) * frame.width * (transform.flipX ? -1 : 1),
+			y: frame.offsetY + (transform.anchor.y - 0.5) * frame.height * (transform.flipY ? -1 : 1)
+		};
+	}
+
 	applyPointAnchorSnapshot(layer, snapshot, measurement = null) {
 		if (!snapshot || !layer?.textData) return;
-		if (snapshot.transformAnchor) {
+		if (snapshot.boxAnchor) {
+			this.setWorldPointFromLocal(getLayerTransform(layer), this.getBoxAnchorLocalPoint(layer, measurement), snapshot.world);
+		} else if (snapshot.transformAnchor) {
 			const after = getLayerAnchorPoint(this.editor, layer);
 			layer.transform.position.x += snapshot.world.x - after.x;
 			layer.transform.position.y += snapshot.world.y - after.y;

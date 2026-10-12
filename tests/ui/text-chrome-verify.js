@@ -35,7 +35,7 @@ const { chromium } = require('playwright');
 				await manager.refreshLayer(layer, { saveHistory: false });
 				const entry = manager.getMeasurementEntry(layer);
 				const ink = entry.textInkRect;
-				results.push(Math.abs(ink.y - entry.layoutOffsetY - (entry.layoutHeight - (ink.y - entry.layoutOffsetY + ink.height))) < 0.01);
+				results.push(entry.layout.visibleLines[0].baseline === entry.ascent && ink.height > 0);
 			}
 			layer.textData.boxHeight = Math.ceil(manager.getMeasurementEntry(layer).textInkRect.height);
 			layer.textData.boxMode = 'fixed';
@@ -43,7 +43,7 @@ const { chromium } = require('playwright');
 			results.push(!manager.getMeasurementEntry(layer).hasOverflow);
 			return results;
 		}, id);
-		assert(checks.every(Boolean), 'Caption ink centers in Auto Height and lowercase fits a fixed box');
+		assert(checks.every(Boolean), 'Caption baseline uses font metrics and lowercase fits a fixed box');
 		assert.equal(await page.locator(`${chrome} .text-baselines > span`).count(), 1);
 		assert.equal(await page.locator('.text-box-mode-group.is-stacked').count(), 0);
 		for (let index = 0; index < 2; index++) {
@@ -110,8 +110,78 @@ const { chromium } = require('playwright');
 			assert.equal(await page.locator(`${chrome} .text-baselines > span`).count(), 1, 'Selecting text also shows its baseline');
 			assert.equal(await page.locator('.transform-hover-outline:visible').count(), 0, 'Selection clears hover feedback');
 		}
+		const stable = await page.evaluate(async id => {
+			const manager = editor.textGlitterManager;
+			const layer = editor.layerManager.getLayerById(id);
+			const results = [];
+			for (const boxMode of ['point', 'autoHeight', 'fixed']) {
+				for (const verticalAlign of ['top', 'middle', 'bottom']) {
+					Object.assign(layer.textData, { text: 'aaa', boxMode, boxWidth: 200, boxHeight: 100, verticalAlign });
+					layer.textData.textBackground.enabled = true;
+					layer.textData.textBackground.mode = boxMode === 'point' ? 'text-bounds' : 'text-box';
+					await manager.refreshLayer(layer, { saveHistory: false });
+					const before = manager.getTextWorldBaselines(layer)[0].start;
+					manager.beginTextEdit(layer, { focus: false });
+					for (const text of ['aaay', 'aaa', 'aaaH', 'aaag', 'aaa']) {
+						manager.applyTextEdit(layer, text);
+						await editor.runPendingCommit('panelText');
+						const after = manager.getTextWorldBaselines(layer)[0].start;
+						// The layer is rotated/flipped: compare along the vertical local axis.
+						const angle = layer.transform.rotation * Math.PI / 180;
+						results.push(Math.abs(-(after.x - before.x) * Math.sin(angle) + (after.y - before.y) * Math.cos(angle)) < 0.01);
+					}
+					manager.endTextEdit();
+				}
+			}
+			return results;
+		}, id);
+		assert(stable.every(Boolean), 'Typing and deleting ascenders/descenders keeps the visible baseline stable in every text mode');
+		for (const boxMode of ['point', 'autoHeight', 'fixed']) {
+			await page.evaluate(async ({ id, boxMode }) => {
+				const manager = editor.textGlitterManager;
+				const layer = editor.layerManager.getLayerById(id);
+				manager.endTextEdit();
+				const library = STYLE_PRESETS[LayerType.TEXT_GLITTER];
+				library.apply(library.get('subtitle'), { layer, context: {
+					getSlotDefaults: key => getSlotDefaults(layer.type, key), glitterAvailable: () => true
+				} });
+				Object.assign(layer.textData, { text: 'aaa', boxMode, boxWidth: 220, boxHeight: 40, fontSize: 32, verticalAlign: 'top', align: 'left' });
+				Object.assign(layer.transform, { position: { x: 250, y: 250 }, rotation: 0, scale: { x: 100, y: 100 }, flipX: false });
+				editor.layerManager.setActiveLayer(id);
+				await manager.refreshLayer(layer, { saveHistory: false });
+			}, { id, boxMode });
+			let initial = null;
+			for (const text of ['aaa', 'aaay', 'aaa', 'aaag', 'aaa']) {
+				await page.locator('#textLayerInput').fill(text);
+				await page.evaluate(() => editor.runPendingCommit('panelText'));
+				await page.waitForTimeout(50);
+				const clip = await page.evaluate(() => {
+					const rect = editor.previewCanvas.getBoundingClientRect();
+					return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+				});
+				const screenshot = await page.screenshot({ clip });
+				const top = await page.evaluate(async base64 => {
+					const image = new Image();
+					image.src = `data:image/png;base64,${base64}`;
+					await image.decode();
+					const canvas = document.createElement('canvas');
+					canvas.width = image.width; canvas.height = image.height;
+					const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0);
+					const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+					for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+						const i = (y * canvas.width + x) * 4;
+						if (pixels[i] > 200 && pixels[i + 1] > 200 && pixels[i + 2] < 80) return y;
+					}
+					return null;
+				}, screenshot.toString('base64'));
+				assert.notEqual(top, null, 'Subtitle yellow letters are visible');
+				if (initial === null) initial = top;
+				assert.equal(top, initial, `${boxMode}: actual Subtitle pixels stay at the same height while typing/deleting descenders`);
+			}
+			await page.evaluate(() => editor.textGlitterManager.endTextEdit());
+		}
 		assert.deepEqual(errors, []);
-		process.stdout.write('Text chrome verification passed (caption centering, overset, repeated resizing, baselines, mode conversion and undo)\n');
+		process.stdout.write('Text chrome verification passed (caption baseline stability, overset, repeated resizing, baselines, mode conversion and undo)\n');
 	} finally {
 		await browser.close();
 	}

@@ -232,11 +232,12 @@ for (const file of ['js/core/text-content.js', 'js/paint/text-layout.js']) vm.ru
 		assert.equal(lower.hasOverflow, false, 'Lowercase ink fits after vertical alignment');
 		assert.equal(lower.visibleLines[0].baseline, 5);
 	}
-	const capCtx = { measureText(text) { return { ...ctx.measureText(text), actualBoundingBoxDescent: 0 }; } };
-	for (const measureCtx of [capCtx, lowerCtx, ctx]) {
-		const centered = textLayout.layout(measureCtx, 'ABC', data, metrics);
-		const line = centered.visibleLines[0];
-		assert.equal(line.baseline - line.ascent, centered.layoutHeight - line.baseline - line.descent, 'Auto Height centers the visible ink');
+	const changingCtx = { measureText(text) { return { ...ctx.measureText(text), actualBoundingBoxAscent: /[A-Z]/u.test(text) ? 8 : 5, actualBoundingBoxDescent: /[gypqj]/u.test(text) ? 2 : 0 }; } };
+	for (const boxMode of ['point', 'autoHeight', 'fixed']) {
+		for (const verticalAlign of ['top', 'middle', 'bottom']) {
+			const baselines = ['aaa', 'aaay', 'aaaH', 'aaag'].map(text => textLayout.layout(changingCtx, text, { ...data, boxMode, boxWidth: 100, boxHeight: 30, verticalAlign }, metrics).visibleLines[0].baseline);
+			assert(baselines.every(baseline => baseline === baselines[0]), 'Ascenders and descenders keep the same baseline');
+		}
 	}
 	process.stdout.write('Text content/layout verification passed\n');
 }
