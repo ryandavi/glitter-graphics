@@ -72,7 +72,7 @@ class AuthoredAnimationSource {
 }
 
 class ProceduralAnimationSource {
-	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, periodRange = null, resolvePeriod = null, nonLooping = false }) {
+	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, naturalPeriod, phase = 0, preferredSamplingRate, sampler, resolvedPeriod = null, setPeriod = null, periodRange = null, resolvePeriod = null, nonLooping = false, run = null, closesAt = null }) {
 		this.kind = 'procedural';
 		this.key = key;
 		this.label = label;
@@ -83,7 +83,7 @@ class ProceduralAnimationSource {
 		this.phase = Number(phase) || 0;
 		this.preferredSamplingRate = Math.max(1, Number(preferredSamplingRate));
 		this.sampler = sampler;
-		Object.assign(this, { setPeriod, periodRange, resolvePeriod, nonLooping });
+		Object.assign(this, { setPeriod, periodRange, resolvePeriod, nonLooping, run, closesAt });
 	}
 
 	withPeriod(resolvedPeriod) {
@@ -97,7 +97,8 @@ class ProceduralAnimationSource {
 			preferredSamplingRate: this.preferredSamplingRate,
 			sampler: this.sampler,
 			resolvedPeriod,
-			setPeriod: this.setPeriod, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping
+			setPeriod: this.setPeriod, periodRange: this.periodRange, resolvePeriod: this.resolvePeriod, nonLooping: this.nonLooping,
+			run: this.run, closesAt: this.closesAt
 		});
 	}
 
@@ -106,15 +107,22 @@ class ProceduralAnimationSource {
 	}
 }
 
+function sourceSeamError(source, duration, period = source.resolvedPeriod || source.cycleDuration) {
+	if (source.run && source.closesAt) return source.closesAt(duration, period) ? 0 : 1;
+	const remainder = duration % period;
+	return Math.min(remainder, period - remainder) / period;
+}
+
 // Period fitting always runs against the duration the format will actually
 // represent, never an earlier ideal one — quantizing the clock after the fit
 // would reopen a seam the planner believed closed.
 function fitProceduralPeriods(procedural, duration, tolerance) {
 	const fits = procedural.map((source) => {
-		const cycles = Math.max(1, Math.round(duration / source.naturalPeriod));
-		const fittedPeriod = duration / cycles;
+		const room = duration - (source.run?.start || 0);
+		const cycles = Math.max(1, Math.round(room / source.naturalPeriod));
+		const fittedPeriod = source.nonLooping ? source.naturalPeriod : room / cycles;
 		const drift = Math.abs(fittedPeriod - source.naturalPeriod) / source.naturalPeriod;
-		return { source, cycles, fittedPeriod, drift, fitted: drift <= tolerance };
+		return { source, cycles, fittedPeriod, drift, fitted: fittedPeriod > 0 && drift <= tolerance };
 	});
 	return {
 		fits,
@@ -139,18 +147,19 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 	}));
 	const fixedLoop = planner._chooseLoopDuration(fixed, fallbackDuration, maxLoopDurationMs);
 	const durations = repeating.length
-		? planner._loopCandidateDurations(fixed, adjustable, fixedLoop, maxLoopDurationMs)
-		: new Set();
+		? planner._loopCandidateDurations(fixed, [...adjustable, ...oneShots], fixedLoop, maxLoopDurationMs)
+		: oneShots.length ? planner._loopCandidateDurations([], oneShots, fixedLoop, maxLoopDurationMs) : new Set();
 	const candidates = [...durations].sort((a, b) => a - b).map((duration) => {
 		const fits = fitProceduralPeriods(adjustable, duration, Infinity).fits.map((fit) => {
 			const { source } = fit;
 			const range = source.periodRange || { min: 1, max: Infinity };
+			const room = duration - (source.run?.start || 0);
 			// Consider other cycle counts when the nearest period is out of range.
-			const minCycles = Math.max(1, Math.ceil(duration / range.max));
-			const maxCycles = Math.floor(duration / range.min);
+			const minCycles = Math.max(1, Math.ceil(room / range.max));
+			const maxCycles = Math.floor(room / range.min);
 			let best = null;
 			for (let cycles = minCycles; cycles <= maxCycles; cycles++) {
-				const requested = duration / cycles;
+				const requested = room / cycles;
 				const fittedPeriod = source.resolvePeriod ? source.resolvePeriod(requested) : requested;
 				if (fittedPeriod < range.min || fittedPeriod > range.max || Math.abs(fittedPeriod - requested) > 0.01) continue;
 				const drift = Math.abs(fittedPeriod - source.naturalPeriod) / source.naturalPeriod;
@@ -159,13 +168,14 @@ function planLoopFit(timelines, { config, maxLoopDurationMs = config.maxLoopDura
 			return best || { ...fit, fitted: false };
 		});
 		const fixedSeamError = fixed.reduce((sum, entry) => {
-			const remainder = duration % entry.cycleDuration;
-			return sum + Math.min(remainder, entry.cycleDuration - remainder) / entry.cycleDuration;
+			return sum + sourceSeamError(entry.source, duration, entry.cycleDuration);
 		}, 0);
 		const cannotFit = fits.filter((fit) => !fit.fitted);
 		return {
 			duration, fits, cannotFit, fixedSeamError,
-			exact: fixedSeamError < 1e-8 && !cannotFit.length && !oneShots.length,
+			exact: fixedSeamError < 1e-8 && !cannotFit.length
+				&& fits.every((fit) => sourceSeamError(fit.source, duration, fit.fittedPeriod) < 1e-8)
+				&& oneShots.every((source) => sourceSeamError(source, duration) < 1e-8),
 			canApply: !cannotFit.length && fits.some((fit) => Math.abs(fit.fittedPeriod - fit.source.naturalPeriod) > 0.01),
 			maximumDrift: fits.length ? Math.max(...fits.map((fit) => fit.drift)) : 0
 		};
@@ -320,7 +330,7 @@ class GifRenderClockPlanner {
 		const quantum = this.config.gifDelayQuantumMs;
 		const minimumUnits = Math.max(1, Math.round(this.config.gifMinimumDelayMs / quantum));
 		const maximumUnits = Math.max(minimumUnits, Math.round(this.config.gifMaximumDelayMs / quantum));
-		const totalUnits = Math.max(minimumUnits, Math.round(targetDuration / quantum));
+		const totalUnits = Math.max(minimumUnits, Math.ceil((context.minimumDuration || 0) / quantum), Math.round(targetDuration / quantum));
 		const duration = totalUnits * quantum;
 		const preferredInterval = RenderClock.preferredInterval(context);
 		const frameCounts = new Set();
@@ -359,7 +369,7 @@ class Mp4RenderClockPlanner {
 		let best = null;
 		[...stops].sort((left, right) => left - right).forEach((outputFps) => {
 			if (outputFps < 1 || outputFps > context.maxSamplingFps) return;
-			const frameCount = Math.max(1, Math.round(targetDuration * outputFps / 1000));
+			const frameCount = Math.max(1, Math.ceil((context.minimumDuration || 0) * outputFps / 1000), Math.round(targetDuration * outputFps / 1000));
 			if (frameCount > context.frameLimit) return;
 			const interval = 1000 / outputFps;
 			// Timestamps come from the frame index, never repeated addition, so no
@@ -586,16 +596,39 @@ class CompositeTimelinePlanner {
 	// is a compromise, not a base loop, so its multiples are not closures and are
 	// never searched.
 	_loopCandidateDurations(authored, procedural, authoredLoop, maximumDuration) {
+		const sources = [...authored.map((entry) => entry.source || entry), ...procedural];
+		const minimum = Math.max(0, ...sources.map((source) => Number.isFinite(source.run?.end) ? source.run.end
+			: source.run?.start > 0 ? source.run.start + source.naturalPeriod : 0));
 		const candidates = new Set([authoredLoop.duration]);
 		if (authored.length) {
-			if (!authoredLoop.exact) return candidates;
-			const limit = Math.max(maximumDuration, authoredLoop.duration);
-			for (let duration = authoredLoop.duration * 2; duration <= limit; duration += authoredLoop.duration) candidates.add(duration);
+			if (authored.some((entry) => entry.source?.run?.start > 0)) {
+				candidates.clear();
+				authored.forEach((entry) => {
+					const start = entry.source?.run?.start || 0;
+					const first = start + Math.max(1, Math.ceil((minimum - start) / entry.cycleDuration)) * entry.cycleDuration;
+					for (let duration = first; duration <= Math.max(maximumDuration, first); duration += entry.cycleDuration) candidates.add(duration);
+				});
+				return candidates;
+			}
+			const first = Math.max(1, Math.ceil(minimum / authoredLoop.duration)) * authoredLoop.duration;
+			const limit = Math.max(maximumDuration, first);
+			if (!authoredLoop.exact) {
+				if (authoredLoop.duration < minimum) candidates.clear();
+				if (!candidates.size) candidates.add(Math.max(minimum, limit));
+				return candidates;
+			}
+			candidates.clear();
+			for (let duration = first; duration <= limit; duration += authoredLoop.duration) candidates.add(duration);
 			return candidates;
 		}
 		candidates.clear();
-		procedural.forEach((source) => {
-			for (let duration = source.naturalPeriod; duration <= maximumDuration; duration += source.naturalPeriod) candidates.add(duration);
+		const repeating = procedural.filter((source) => !source.nonLooping);
+		if (!repeating.length) return new Set([minimum || authoredLoop.duration]);
+		repeating.forEach((source) => {
+			const start = source.run?.start || 0;
+			const first = start + Math.max(1, Math.ceil((minimum - start) / source.naturalPeriod)) * source.naturalPeriod;
+			const limit = source.run || minimum > 0 ? Math.max(maximumDuration, first) : maximumDuration;
+			for (let duration = first; duration <= limit; duration += source.naturalPeriod) candidates.add(duration);
 		});
 		if (!candidates.size) candidates.add(maximumDuration);
 		return candidates;
@@ -619,6 +652,7 @@ class CompositeTimelinePlanner {
 		const context = {
 			authored,
 			procedural,
+			minimumDuration: Math.max(0, ...procedural.map((source) => Number.isFinite(source.run?.end) ? source.run.end : 0)),
 			maxSamplingFps: options.maxSamplingFps,
 			frameLimit: options.hardFrameLimit,
 			resolveFrameLimit: options.resolveFrameLimit,
@@ -677,15 +711,18 @@ class CompositeTimelinePlanner {
 				fitted: fit.fitted
 			};
 		});
-		const fittedCount = fits.filter((fit) => fit.fitted).length;
+		const resolvedSources = timelines.map((timeline) => replacements.get(timeline) || timeline);
+		const errors = resolvedSources.filter((source) => source.kind === 'procedural' || Number.isFinite(source.cycleDuration))
+			.map((source) => sourceSeamError(source, clock.duration));
+		const completedSources = errors.filter((error) => error < 1e-8).length;
 		return {
 			clock,
-			timelines: timelines.map((timeline) => replacements.get(timeline) || timeline),
+			timelines: resolvedSources,
 			loop: {
 				duration: clock.duration,
-				exact: authoredLoop.exact && fittedCount === procedural.length,
-				seamError: authoredLoop.seamError + fits.filter((fit) => !fit.fitted).reduce((sum, fit) => sum + fit.driftPercent / 100, 0),
-				completedSources: authoredLoop.completedSources + fittedCount
+				exact: completedSources === errors.length,
+				seamError: errors.reduce((sum, error) => sum + error, 0),
+				completedSources
 			},
 			fits
 		};

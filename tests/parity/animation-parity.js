@@ -23,6 +23,8 @@ global.CONFIG = { tools: { animation: { defaultType: 'pulse', presets, jitterQua
 const keys = ['tx', 'ty', 'rotate', 'scaleX', 'scaleY', 'skewX', 'skewY', 'opacity', 'originX', 'originY', 'hue'];
 const near = (a, b, tolerance = 1e-6) => Math.abs(a - b) <= tolerance;
 
+assert(Animation.isSeamlessLoop({ type: 'rainbow', periodMs: 1000 }, {}, 1000.0001), 'Hue seam tolerance must work on both sides of a full turn');
+
 assert.deepStrictEqual(Object.keys(Animation.MOTION_REGISTRY), Animation.ANIMATION_TYPES);
 Animation.ANIMATION_TYPES.forEach((type) => {
 	const entry = Animation.MOTION_REGISTRY[type];
@@ -63,7 +65,7 @@ assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 })
 // dedicated one-shot preset.
 ['pulse', 'rotate', 'move'].forEach((type) => {
 	const data = Animation.normalizeAnimation({ type, iterations: 1, fillMode: 'forwards' });
-	assert(!Animation.isSeamlessLoop(data));
+	assert.strictEqual(Animation.isSeamlessLoop(data), type !== 'rotate');
 	assert.deepStrictEqual(
 		Animation.sampleAt(data, data.periodMs, { id: 'transition' }),
 		Animation.sampleAt(data, data.periodMs * 2, { id: 'transition' })

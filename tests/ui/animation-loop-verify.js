@@ -1,25 +1,42 @@
 const assert = require('assert');
-const fs = require('fs');
-const { chromium } = require('playwright');
+const { openApp } = require('../lib/app');
 
 (async () => {
-	const browser = await chromium.launch({ headless: true });
+	const { browser, page, errors } = await openApp({ viewport: { width: 1280, height: 800 }, document: { width: 32, height: 24, color: '#a348cd' } });
 	try {
-		const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-		const errors = [];
-		page.on('pageerror', (error) => errors.push(error.message));
-		if (process.env.GLITTER_TEST_CSS) await page.route('**/css/style.css*', (route) => route.fulfill({ contentType: 'text/css', body: fs.readFileSync(process.env.GLITTER_TEST_CSS) }));
-		await page.goto(process.env.GLITTER_URL || 'http://localhost/glitter/');
-		await page.waitForFunction(() => window.editor?.settingsStore);
-		await page.evaluate(async () => {
-			document.querySelectorAll('.modal-overlay.visible').forEach((modal) => modal.classList.remove('visible'));
-			await editor.loadBlankImage(32, 24, '#a348cd');
-		});
 		await page.evaluate(async () => { editor.openAnimationLoop(); await editor.updateExportDuration(); });
 		assert(await page.locator('#animationLoopStatus').isVisible());
 		for (const id of ['animationLoopSourceSet', 'animationLoopLengthSet', 'animationLoopChangeSet', 'animationLoopActionSet']) {
 			assert(!(await page.locator(`#${id}`).isVisible()), `${id} must be hidden with no animation sources`);
 		}
+		const replay = await page.evaluate(async () => {
+			const e = editor;
+			const layer = e.layerManager.addLayer(LayerType.SHAPE);
+			getLayerFillSlot(layer).mode = 'solid';
+			layer.animations = [GlitterAnimation.normalizeAnimation({ type: 'tada', periodMs: 1000, iterations: 1, delayMs: 2000 })];
+			e.shapeGlitterManager.renderLayer(layer);
+			await e.updateExportDuration();
+			e.animationTicker.stop();
+			const ticker = e.animationTicker;
+			const wrapper = ticker.targets.get(layer.id).target.getWrapper();
+			const start = ticker.timelineStartedAt;
+			ticker._paint(start + 2250);
+			const first = wrapper.style.transform;
+			ticker._paint(start + e.loopEstimate.duration + 2250);
+			const second = wrapper.style.transform;
+			ticker._paint(start + e.loopEstimate.duration + 1500);
+			const rest = wrapper.style.transform;
+			ticker.timelineStartedAt = performance.now() - e.loopEstimate.duration - 2250;
+			const current = ticker.getCurrentTime();
+			const result = { duration: e.loopEstimate.duration, replays: first === second && first !== rest, current,
+				badge: document.getElementById('animationLoopStatus').textContent };
+			e.layerManager.deleteLayer(layer.id, { skipHistory: true });
+			return result;
+		});
+		assert.strictEqual(replay.duration, 3000);
+		assert(replay.replays, 'Finite motion must move again after the loop wraps');
+		assert(replay.current >= 2250 && replay.current < 2300, 'Current frame must use wrapped time');
+		assert(replay.badge.includes('Seamless'), 'Returning finite motion must show a seamless badge');
 		const timings = await page.evaluate(async () => {
 			const e = editor;
 			const scan = e.layerManager.addLayer(LayerType.FILTER);

@@ -232,6 +232,8 @@ class SceneCompositor {
 				ownerLayerId: layer.id,
 				effectSlot: `animation-${index}`,
 				naturalPeriod: animation.periodMs,
+				run: GlitterAnimation.runTiming(animation),
+				closesAt: (duration, period) => GlitterAnimation.isSeamlessLoop({ ...animation, periodMs: period }, samplingContext, duration),
 				nonLooping: Number.isFinite(animation.iterations),
 				...(Number.isFinite(animation.iterations) ? {} : {
 					periodRange: { min: FIELDS.animDuration.min * 1000, max: FIELDS.animDuration.max * 1000 },

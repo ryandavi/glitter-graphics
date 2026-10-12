@@ -12,12 +12,22 @@ class ImageDataPolyfill {
 	}
 }
 
-const context = { ImageData: ImageDataPolyfill, Uint8ClampedArray, Map, Set, Math, Number, Infinity };
+const context = { ImageData: ImageDataPolyfill, Uint8ClampedArray, Map, Set, Math, Number, Infinity, navigator: { hardwareConcurrency: 4, userAgent: 'node' } };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'core', 'gif-decode.js'), 'utf8'), context);
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'export', 'ExportTimeline.js'), 'utf8');
 vm.runInContext(`${source}\nglobalThis.timelineExports = { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit };`, context);
 const { AuthoredAnimationSource, ProceduralAnimationSource, CompositeFrameReducer, CompositeTimelinePlanner, planLoopFit } = context.timelineExports;
+
+for (const file of ['core/releases.js', 'core/fields.js', 'core/math.js', 'core/area.js', 'core/config.js', 'effects/easing.js', 'effects/animation.js', 'export/SceneCompositor.js']) {
+	vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'js', file), 'utf8'), context);
+}
+const motionSources = vm.runInContext(`(animation) => {
+	const compositor = Object.create(SceneCompositor.prototype);
+	compositor._buildAnimationSamplingContext = () => ({ id: 'motion' });
+	const layer = { id: 'motion', animations: [GlitterAnimation.normalizeAnimation(animation)] };
+	return compositor._createProceduralTimelines(compositor._createLayerAnimationTimelineSources(layer));
+}`, context);
 
 const patternContext = require('../fixtures/pattern-source-context')();
 const samplePattern = vm.runInContext('getPatternScrollOffset', patternContext);
@@ -99,6 +109,48 @@ async function buildPlan(timelines, overrides = {}) {
 }
 
 async function main() {
+	const motionOptions = {
+		outputFormat: 'gif', fallbackDuration: 100, maxLoopDurationMs: 12000,
+		maxSamplingFps: 30, manualFrameSkip: 1, preferredFrameBudget: 1000, hardFrameLimit: 1000
+	};
+	const motionCases = [
+		{ type: 'pulse', periodMs: 1400, delayMs: 2000 },
+		{ type: 'pulse', periodMs: 1400, delayMs: 500 },
+		...[1, 3, 5].map((iterations) => ({ type: 'tada', periodMs: 1000, iterations })),
+		{ type: 'tada', periodMs: 1000, iterations: 1, delayMs: 2000 },
+		{ type: 'tada', periodMs: 1000, iterations: 3, authored: true },
+		{ type: 'rotate', periodMs: 1000, iterations: 1, fillMode: 'forwards', turns: 0.5 }
+	];
+	for (const motion of motionCases) {
+		const sources = motionSources(motion);
+		if (motion.authored) sources.push(timeline('gif', 2, [400, 400]));
+		const plan = createPlanner().planSchedule({ ...motionOptions, timelines: sources });
+		const duration = plan.loopSeam.duration;
+		const source = sources[0];
+		assert(plan.loopSeam.exact === (motion.fillMode !== 'forwards'), `Wrong motion seam: ${JSON.stringify(motion)}`);
+		if (source.nonLooping) {
+			assert(duration >= source.run.end, 'Finite run was truncated');
+			assert(plan.sourceAnalysis[0].resolvedPeriod === motion.periodMs, 'Finite speed changed');
+		} else {
+			const cycles = (duration - source.run.start) / plan.sourceAnalysis[0].resolvedPeriod;
+			assert(cycles >= 1 && Math.abs(cycles - Math.round(cycles)) < 1e-8, 'Delayed loop cuts a cycle');
+		}
+		if (motion.authored) assert(duration % 800 === 0, 'Authored loop did not close');
+		const rest = JSON.stringify(source.sampleAt(0));
+		assert(plan.entries.some((entry) => entry.timestamp >= source.run.start
+			&& entry.timestamp < source.run.end && JSON.stringify(entry.selection.get(source.key)) !== rest), 'Motion was never sampled');
+		const fit = planLoopFit(sources, { config: { ...createPlanner().config, maxLoopDurationMs: 12000 } });
+		assert(fit.candidates.some((candidate) => candidate.exact) === (motion.fillMode !== 'forwards'), 'Loop helper seam disagrees');
+		console.log(`Motion ${JSON.stringify(motion)}: ${duration} ms, exact=${plan.loopSeam.exact}`);
+	}
+	const capped = createPlanner().planSchedule({ ...motionOptions, maxLoopDurationMs: 1000,
+		timelines: [...motionSources({ type: 'tada', periodMs: 1000, iterations: 3 }), timeline('gif', 2, [400, 400])] });
+	assert(capped.loopSeam.duration === 3200 && capped.loopSeam.exact, 'Search cap truncated finite motion');
+	const phased = motionSources({ type: 'tada', periodMs: 1000, iterations: 3, delayMs: 2000, phase: 0.25 });
+	assert(phased[0].run.end === 4750, 'Phase was omitted from finite run end');
+	const quantized = createPlanner().planSchedule({ ...motionOptions,
+		timelines: motionSources({ type: 'tada', periodMs: 1001, iterations: 1 }) });
+	assert(quantized.loopSeam.duration >= 1001, 'Format rounding truncated the run');
 	const constant = timeline('constant', 4, [100, 100, 100, 100]);
 	assert(constant.frameIndexAt(0) === 0 && constant.frameIndexAt(399) === 3 && constant.frameIndexAt(400) === 0,
 		'Constant-rate source lookup failed.');

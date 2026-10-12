@@ -36,7 +36,7 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 		});
 		status.replaceChildren();
 		if (fit?.sources.length) {
-			const clean = estimate.exact && !fit.oneShots.length;
+			const clean = estimate.exact;
 			const value = document.createElement('span'); value.className = 'property-result-value'; value.textContent = `${(estimate.duration / 1000).toFixed(2)} s loop`;
 			const badge = document.createElement('span'); badge.className = `badge ${clean ? 'is-accent' : 'is-warning'}`;
 			badge.textContent = clean ? 'Seamless' : 'Visible seam';
@@ -105,9 +105,9 @@ const EDITOR_ANIMATION_LOOP_METHODS = {
 				if (!entry.fitted) notes.push(`Cannot fit ${label} within its available speeds.`);
 				else if (Math.abs(entry.fittedPeriod - entry.source.naturalPeriod) > 0.01) notes.push(`${label}: ${(entry.source.naturalPeriod / 1000).toFixed(2)} s to ${(entry.fittedPeriod / 1000).toFixed(2)} s.`);
 			});
-			if (!fit.fixedLoop.exact) notes.push(`Fixed sources (${fit.fixed.map((source) => source.label || source.key).join(', ')}) share no loop within the limit. This is the closest loop; editable speeds cannot close its seam.`);
+			if (candidate.fixedSeamError >= 1e-8) notes.push(`Fixed sources (${fit.fixed.map((source) => source.label || source.key).join(', ')}) do not close at this length; editable speeds cannot close their seam.`);
 		}
-		if (fit?.oneShots.length) notes.push(`One-shot animations (${fit.oneShots.map((source) => source.label || source.key).join(', ')}) do not repeat; their speeds are left unchanged.`);
+		if (fit?.oneShots.length) notes.push(`Finite animations (${fit.oneShots.map((source) => source.label || source.key).join(', ')}) keep their repeat counts; their speeds are left unchanged.`);
 		note.textContent = notes.join('\n') || (candidate ? 'Timing already fits.' : '');
 		note.hidden = !fit?.sources.length || !note.textContent;
 		document.getElementById('animationLoopChangeSet').hidden = note.hidden;

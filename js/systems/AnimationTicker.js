@@ -46,7 +46,18 @@ class AnimationTicker {
 
 	getCurrentTime() {
 		if (this._isPreviewPaused()) return 0;
-		return this.timelineStartedAt == null ? 0 : Math.max(0, performance.now() - this.timelineStartedAt);
+		return this._elapsedAt(performance.now());
+	}
+
+	_elapsedAt(now) {
+		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
+		const duration = this.editor.loopEstimate?.duration;
+		const hasRun = this.editor.layers.some((layer) => layer.visible !== false
+			&& GlitterAnimation.normalizeAnimations(layer.animations).some((animation) => {
+				const run = GlitterAnimation.runTiming(animation);
+				return GlitterAnimation.isActive(animation) && (run.start > 0 || Number.isFinite(run.end));
+			}));
+		return hasRun && duration > 0 ? elapsed % duration : elapsed;
 	}
 
 	refresh() {
@@ -78,17 +89,17 @@ class AnimationTicker {
 
 	_paint(now) {
 		const frozen = this._isPreviewPaused();
-		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, now, frozen));
+		const elapsed = frozen ? 0 : this._elapsedAt(now);
+		this.targets.forEach((entry, layerId) => this._paintEntry(layerId, entry, now, frozen, elapsed));
 	}
 
-	_paintEntry(layerId, entry, now, frozen) {
+	_paintEntry(layerId, entry, now, frozen, elapsed = this._elapsedAt(now)) {
 		const target = entry.target;
 		if (!target.getWrapper()?.isConnected) {
 			this.targets.delete(layerId);
 			return;
 		}
 		const wrapper = target.getWrapper();
-		const elapsed = this.timelineStartedAt == null ? 0 : Math.max(0, now - this.timelineStartedAt);
 		if (target.paint) {
 			target.paint(frozen ? 0 : elapsed);
 			return;

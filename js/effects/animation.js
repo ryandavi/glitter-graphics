@@ -244,6 +244,12 @@ const GlitterAnimation = (() => {
 		return Number.isFinite(data.iterations) ? data.periodMs * Math.max(0, data.iterations) : Infinity;
 	}
 
+	function runTiming(value) {
+		const data = normalizeAnimation(value);
+		const start = Number(data.delayMs);
+		return { start, end: Number.isFinite(data.iterations) ? Math.max(0, start + loopDurationMs(data) - Number(data.phase) * data.periodMs) : Infinity };
+	}
+
 	// Typical canvas speed of a traveling motion in px/s: the median step over
 	// one cycle, so a wrap's jump and an easing's slow ends do not skew it.
 	function travelSpeed(value, samplingContext = {}, steps = 48) {
@@ -402,16 +408,16 @@ const GlitterAnimation = (() => {
 		};
 	}
 
-	function isSeamlessLoop(value, samplingContext = {}) {
+	function isSeamlessLoop(value, samplingContext = {}, duration = normalizeAnimation(value).periodMs) {
 		const data = normalizeAnimation(value);
-		if (Number.isFinite(data.iterations)) return false;
 		const context = { id: '__seam__', seed: 0, ...samplingContext };
 		const a = sampleAt(data, 0, context);
-		const b = sampleAt(data, data.periodMs, context);
+		const b = sampleAt(data, duration, context);
 		// hue wraps at 360deg (0deg and 360deg render identically), so it needs a
 		// modular comparison instead of the other channels' exact equality.
 		const transformSeamless = Object.keys(IDENTITY).filter((key) => key !== 'hue').every((key) => Math.abs(a[key] - b[key]) <= 1e-3);
-		const hueSeamless = Math.abs(((a.hue - b.hue) % 360 + 360) % 360) <= 1e-3;
+		const hueDifference = ((a.hue - b.hue) % 360 + 360) % 360;
+		const hueSeamless = Math.min(hueDifference, 360 - hueDifference) <= 1e-3;
 		return transformSeamless && hueSeamless;
 	}
 
@@ -442,7 +448,7 @@ const GlitterAnimation = (() => {
 
 	return {
 		ANIMATION_TYPES, MOTION_REGISTRY, ANIMATION_CONTROLS, normalizeAnimation, normalizeAnimations, isActive, includesOffCanvas, summaryText, loopDurationMs,
-		isSeamlessLoop, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
+		isSeamlessLoop, runTiming, travelSpeed, sampleAt, composeSamples, seededRandom01, domTransformString, applyToContext, resolveOrigin,
 		hashString, mulberry32, createSamplingContext, splitSample, wrap, reflect
 	};
 })();
