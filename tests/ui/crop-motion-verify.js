@@ -23,6 +23,39 @@ async function main() {
 	const browser = await chromium.launch();
 	try {
 		const { context, page, errors } = await boot(browser);
+		const areaCrops = await page.evaluate(() => {
+			const results = [];
+			for (const shape of Object.keys(AREA_SHAPES)) {
+				editor.setTool(ToolType.AREA);
+				editor.areaSelect.setShape(shape);
+				if (shape === 'wand') {
+					const mask = new Uint8Array(320 * 240);
+					for (let y = 30; y < 90; y++) mask.fill(255, y * 320 + 20, y * 320 + 100);
+					editor.areaSelection.applyCoverage(mask);
+				} else {
+					const rings = AREA_SHAPES[shape].build?.({ x: 20, y: 30 }, { x: 100, y: 90 }, {})
+						|| [[{ x: 20, y: 30 }, { x: 100, y: 40 }, { x: 60, y: 90 }]];
+					editor.areaSelection.apply(rings);
+				}
+				const area = editor.areaSelection.getBounds();
+				const ops = JSON.stringify(editor.areaSelection.ops);
+				const history = editor.historyManager.historyIndex;
+				editor.setTool(ToolType.CROP);
+				results.push({ shape, expected: { x: area.minX, y: area.minY, width: area.width, height: area.height }, rect: { ...editor.canvasBounds.rect }, source: editor.canvasBounds.source,
+					unchanged: ops === JSON.stringify(editor.areaSelection.ops) && history === editor.historyManager.historyIndex, canUndo: editor.canvasBounds.canUndo });
+			}
+			editor.setTool(ToolType.SELECT);
+			editor.areaSelection.reset();
+			editor.setTool(ToolType.CROP);
+			results.push({ shape: 'empty', expected: { x: 0, y: 0, width: 320, height: 240 }, rect: { ...editor.canvasBounds.rect }, source: editor.canvasBounds.source, unchanged: true, canUndo: editor.canvasBounds.canUndo });
+			editor.setTool(ToolType.SELECT);
+			return results;
+		});
+		for (const result of areaCrops) {
+			assert.deepStrictEqual(result.rect, result.expected, `${result.shape}: Crop did not fit the selected area`);
+			assert.strictEqual(result.source, result.shape === 'empty' ? 'custom' : 'area');
+			assert(result.unchanged && !result.canUndo, `${result.shape}: Crop entry changed selection or history`);
+		}
 		const setup = await page.evaluate(() => {
 			const layer = editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: 'rectangle', position: { x: 160, y: 120 }, width: 80, height: 60 } });
 			layer.transform.scale = { x: 150, y: 150 }; layer.transform.rotation = 30; layer.transform.flipX = true;

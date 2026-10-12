@@ -22,6 +22,11 @@ class CropEditSession {
 		};
 		editor.canvasBounds?.clear();
 		editor.setDocumentSizeMode('canvas');
+		if (canFitCanvasBounds(editor, 'area')) {
+			// The selected area is the starting bounds, not an undoable crop edit.
+			editor.canvasBounds.source = 'area';
+			editor.canvasBounds.refreshSource();
+		}
 		const session = getSessionDefinition(editor);
 		editor.notifications.setMode({ ...session.mode, exitLabel: 'Cancel crop (Esc)', onExit: () => editor.cancelCanvasBounds(), confirmLabel: 'Apply crop (Enter)', onConfirm: () => editor.applyCanvasBounds() });
 		editor.syncCanvasBoundsViews();
